@@ -37,6 +37,8 @@ import (
 	"github.com/provenance-io/provenance/app"
 )
 
+const EnvTypeFlag = "testnet"
+
 var ChainID string
 
 // NewRootCmd creates a new root command for simd. It is called once in the
@@ -60,10 +62,11 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			if err := client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
 				return err
 			}
-
 			return server.InterceptConfigsPreRunHandler(cmd)
 		},
 	}
+
+	rootCmd.PersistentFlags().BoolP(EnvTypeFlag, "t", false, "Indicates this command should use the testnet configuration (default: false [mainnet])")
 
 	initRootCmd(rootCmd, encodingConfig)
 	overwriteFlagDefaults(rootCmd, map[string]string{
@@ -76,7 +79,11 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 
 // Execute executes the root command.
 func Execute(rootCmd *cobra.Command) error {
-	app.SetConfig()
+	testnet, err := rootCmd.PersistentFlags().GetBool(EnvTypeFlag)
+	if err != nil {
+		return err
+	}
+	app.SetConfig(testnet)
 
 	// Create and set a client.Context on the command's Context. During the pre-run
 	// of the root command, a default initialized client.Context is provided to
@@ -96,12 +103,13 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 	authclient.Codec = encodingConfig.Marshaler
 
 	rootCmd.AddCommand(
-		genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome(appName)),
+		InitCmd(app.ModuleBasics, app.DefaultNodeHome(appName)),
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome(appName)),
 		genutilcli.MigrateGenesisCmd(),
 		genutilcli.GenTxCmd(app.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome(appName)),
 		genutilcli.ValidateGenesisCmd(app.ModuleBasics),
 		AddGenesisAccountCmd(app.DefaultNodeHome(appName)),
+		AddRootDomainAccountCmd(app.DefaultNodeHome(appName)),
 		tmcli.NewCompletionCmd(rootCmd, true),
 		debug.Cmd(),
 	)

@@ -100,15 +100,19 @@ build-linux: go.sum
 # Run an instance of the daemon against a local config (create the config if it does not exit.)
 run-config:
 	@if [ ! -d "$(BUILDDIR)/run" ]; then \
-		$(BUILDDIR)/provenanced --home $(BUILDDIR)/run/provenanced init --chain-id=testing testing ; \
-		$(BUILDDIR)/provenanced --home $(BUILDDIR)/run/provenanced  keys add validator --keyring-backend test ; \
-		$(BUILDDIR)/provenanced --home $(BUILDDIR)/run/provenanced --keyring-backend test --home-client $(BUILDDIR)/run/provenanced add-genesis-account validator 100000000000000000000nhash,10000000000000vspn ; \
-		$(BUILDDIR)/provenanced --home $(BUILDDIR)/run/provenanced gentx --name validator --amount 1000000000000000nhash --keyring-backend test --home-client $(BUILDDIR)/run/provenanced ; \
-		$(BUILDDIR)/provenanced --home $(BUILDDIR)/run/provenanced collect-gentxs; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced init --chain-id=testing testing ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced keys add validator --keyring-backend test ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator pio --keyring-backend test ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator pb --restrict --keyring-backend test ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator io --restrict --keyring-backend test ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator provenance --keyring-backend test ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-account validator 100000000000000000000nhash --keyring-backend test ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced gentx validator 1000000000000000nhash --keyring-backend test --chain-id=testing; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced collect-gentxs; \
 	fi ;
 
 run: check-built run-config;
-	$(BUILDDIR)/provenanced --home $(BUILDDIR)/run/provenanced start --log_level "*:debug"
+	$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced start
 
 .PHONY: install build build-linux run
 
@@ -143,7 +147,7 @@ format:
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" | xargs goimports -w -local github.com/provenance-io/provenance
 
 check-built:
-	@if [ ! -f "$(BUILDDIR)/provenance" ]; then \
+	@if [ ! -f "$(BUILDDIR)/provenanced" ]; then \
 		echo "\n fatal: Nothing to run.  Try 'make build' first.\n" ; \
 		exit 1; \
 	fi
@@ -205,13 +209,13 @@ proto-lint:
 	@buf check lint --error-format=json
 
 proto-check-breaking:
-	@buf check breaking --against-input '.git#branch=master'
+	@buf check breaking --against-input '.git#branch=main'
 
 proto-lint-docker:
 	@$(DOCKER_BUF) check lint --error-format=json
 
 proto-check-breaking-docker:
-	@$(DOCKER_BUF) check breaking --against-input $(HTTPS_GIT)#branch=master
+	@$(DOCKER_BUF) check breaking --against-input $(HTTPS_GIT)#branch=main
 
 TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/v0.34.x/proto/tendermint
 GOGO_PROTO_URL   = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
