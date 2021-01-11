@@ -1,0 +1,88 @@
+run:
+  tests: false
+#   # timeout for analysis, e.g. 30s, 5m, default is 1m
+#   timeout: 5m
+
+linters:
+  disable-all: true
+  enable:
+    - bodyclose
+    - deadcode
+    - depguard
+    - dogsled
+    - errcheck
+    - funlen
+    - gocyclo
+    - gofmt
+    - goimports
+    - golint
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - interfacer
+    - lll
+    - misspell
+    - nakedret
+    - staticcheck
+    - structcheck
+    - stylecheck
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - varcheck
+    - whitespace
+
+issues:
+  exclude-rules:
+    - text: "Use of weak random number generator"
+      linters:
+        - gosec
+    - text: "comment on exported var"
+      linters:
+        - golint
+    - text: "don't use an underscore in package name"
+      linters:
+        - golint
+    - text: "ST1003:"
+      linters:
+        - stylecheck
+    # FIXME: Disabled until golangci-lint updates stylecheck with this fix:
+    # https://github.com/dominikh/go-tools/issues/389
+    - text: "ST1016:"
+      linters:
+        - stylecheck
+  max-issues-per-linter: 10000
+  max-same-issues: 10000
+
+linters-settings:
+  govet:
+    check-shadowing: true
+    settings:
+      printf:
+        funcs:
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
+  golint:
+    min-confidence: 0
+  gocyclo:
+    min-complexity: 15
+  maligned:
+    suggest-new: true
+  misspell:
+    locale: US
+  lll:
+    line-length: 120
+  funlen:
+    lines: 100
+    statements: 50
+  nakedret:
+    max-func-lines: 50
+  nolintlint:
+    allow-unused: false
+    allow-leading-space: true
+    require-explanation: false
+    require-specific: false

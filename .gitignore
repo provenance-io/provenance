@@ -1,0 +1,40 @@
+.DS_Store
+bin/
+.gradle/
+build/
+config/
+data/
+.idea/
+*.swp
+utils/
+.blockade
+blockade.yaml
+*.sock
+.provenance
+.provenanced
+keyring-*
+vendor/
+*.account
+
+# VS Code
+.history/
+.vscode/
+
+# Eclipse
+.project
+.classpath
+
+# Intellij
+out/
+.settings/
+profile.iml
+profile.ipr
+profile.iws
+/.datastore
+.idea/
+*.iml
+.history/
+
+# Tools make target marker
+tools-stamp
+tmp-swagger-gen
