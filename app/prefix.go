@@ -44,6 +44,4 @@ func SetConfig(testnet bool) {
 	config.SetBech32PrefixForValidator(ValidatorAddressPrefix, ValidatorPubKeyPrefix)
 	config.SetBech32PrefixForConsensusNode(ConsNodeAddressPrefix, ConsNodePubKeyPrefix)
 	config.Seal()
-
-	println("SET THE CONFIG NOW... USING testnet: %b", testnet)
 }

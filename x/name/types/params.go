@@ -59,8 +59,8 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 // DefaultParams defines the parameters for this module
 func DefaultParams() Params {
 	return NewParams(
-		DefaultMinSegmentLength,
 		DefaultMaxSegmentLength,
+		DefaultMinSegmentLength,
 		DefaultMaxSegments,
 		DefaultAllowUnrestrictedNames,
 	)
