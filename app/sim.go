@@ -5,8 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/provenance-io/provenance/app/params"
-
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -31,13 +29,7 @@ const (
 
 func setup(withGenesis bool, invCheckPeriod uint) (*App, GenesisState) {
 	db := dbm.NewMemDB()
-	simCdc := sdksim.MakeTestEncodingConfig()
-	encCdc := params.EncodingConfig{
-		InterfaceRegistry: simCdc.InterfaceRegistry,
-		Marshaler:         simCdc.Marshaler,
-		TxConfig:          simCdc.TxConfig,
-		Amino:             simCdc.Amino,
-	}
+	encCdc := MakeEncodingConfig()
 	app := New(appName, log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome(appName), invCheckPeriod, encCdc, sdksim.EmptyAppOptions{})
 	if withGenesis {
 		return app, NewDefaultGenesisState(encCdc.Marshaler)
