@@ -87,6 +87,11 @@ import (
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+
+	"github.com/provenance-io/provenance/x/attribute"
+	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
+	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
+
 	"github.com/provenance-io/provenance/x/name"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
@@ -137,6 +142,7 @@ var (
 		transfer.AppModuleBasic{},
 		vesting.AppModuleBasic{},
 
+		attribute.AppModuleBasic{},
 		name.AppModuleBasic{},
 	)
 
@@ -197,6 +203,7 @@ type App struct {
 	EvidenceKeeper   evidencekeeper.Keeper
 	TransferKeeper   ibctransferkeeper.Keeper
 
+	AttributeKeeper attributekeeper.Keeper
 	NameKeeper namekeeper.Keeper
 
 	// make scoped keepers public for test purposes
@@ -233,6 +240,7 @@ func New(
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
 
+		attributetypes.StoreKey,
 		nametypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -298,6 +306,10 @@ func New(
 		appCodec, keys[nametypes.StoreKey], app.GetSubspace(nametypes.ModuleName), app.AccountKeeper,
 	)
 
+	app.AttributeKeeper = attributekeeper.NewKeeper(
+		appCodec, keys[attributetypes.StoreKey], app.GetSubspace(attributetypes.ModuleName), app.AccountKeeper, app.NameKeeper,
+	)
+
 	// Create IBC Keeper
 	app.IBCKeeper = ibckeeper.NewKeeper(
 		appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), app.StakingKeeper, scopedIBCKeeper,
@@ -361,6 +373,7 @@ func New(
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper),
+		attribute.NewAppModule(app.AttributeKeeper),
 
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
@@ -396,6 +409,7 @@ func New(
 		minttypes.ModuleName,
 		crisistypes.ModuleName,
 		nametypes.ModuleName,
+		attributetypes.ModuleName,
 		ibchost.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
@@ -417,6 +431,7 @@ func New(
 		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper),
+		attribute.NewAppModule(app.AttributeKeeper),
 
 		params.NewAppModule(app.ParamsKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
@@ -633,6 +648,7 @@ func initParamsKeeper(appCodec codec.BinaryMarshaler, legacyAmino *codec.LegacyA
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 
 	paramsKeeper.Subspace(nametypes.ModuleName)
+	paramsKeeper.Subspace(attributetypes.ModuleName)
 
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)

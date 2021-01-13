@@ -99,7 +99,10 @@ build-linux: go.sum
 
 # Run an instance of the daemon against a local config (create the config if it does not exit.)
 run-config:
-	@if [ ! -d "$(BUILDDIR)/run" ]; then \
+	@if [ ! -d "$(BUILDDIR)/run/provenanced/data/snapshots/metadata.db" ]; then \
+		mkdir -p $(BUILDDIR)/run/provenanced/data/snapshots/metadata.db; \
+	fi ;
+	@if [ ! -d "$(BUILDDIR)/run/provenanced/config" ]; then \
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced init --chain-id=testing testing ; \
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced keys add validator --keyring-backend test ; \
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator pio --keyring-backend test ; \
@@ -189,7 +192,7 @@ benchmark:
 ##############################
 # Proto -> golang compilation
 ##############################
-proto-all: proto-tools proto-gen proto-lint proto-check-breaking proto-swagger-gen proto-format
+proto-all: proto-tools proto-gen proto-lint proto-check-breaking proto-swagger-gen proto-format protoc-gen-gocosmos protoc-gen-grpc-gateway
 
 proto-gen:
 	@./scripts/protocgen.sh
