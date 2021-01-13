@@ -215,7 +215,7 @@ proto-check-breaking-docker:
 TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/v0.34.x/proto/tendermint
 GOGO_PROTO_URL   = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
 COSMOS_PROTO_URL = https://raw.githubusercontent.com/regen-network/cosmos-proto/master
-COSMOS_SDK_URL   = https://raw.githubusercontent.com/cosmos/cosmos-sdk/v0.40.x/proto/cosmos
+COSMOS_SDK_URL   = https://raw.githubusercontent.com/cosmos/cosmos-sdk/release/v0.40.x/proto/cosmos
 CONFIO_URL       = https://raw.githubusercontent.com/confio/ics23/v0.6.3
 
 TM_CRYPTO_TYPES     = third_party/proto/tendermint/crypto
@@ -242,8 +242,8 @@ proto-update-deps:
 	@mkdir -p $(COSMOS_BASE_TYPES)/v1beta1
 	@curl -sSL $(COSMOS_SDK_URL)/base/v1beta1/coin.proto > $(COSMOS_BASE_TYPES)/v1beta1/coin.proto
 
-	@mkdir -p $(COSMOS_BASE_TYPES)/v1beta1
-	@curl -sSL $(COSMOS_SDK_URL)/base/v1beta1/coin.proto > $(COSMOS_BASE_TYPES)/v1beta1/coin.proto
+	@mkdir -p $(COSMOS_BASE_TYPES)/query/v1beta1
+	@curl -sSL $(COSMOS_SDK_URL)/base/query/v1beta1/pagination.proto > $(COSMOS_BASE_TYPES)/query/v1beta1/pagination.proto
 
 	@mkdir -p $(COSMOS_SIGNING_TYPES)/v1beta1
 	@curl -sSL $(COSMOS_SDK_URL)/tx/signing/v1beta1/signing.proto > $(COSMOS_SIGNING_TYPES)/v1beta1/signing.proto
