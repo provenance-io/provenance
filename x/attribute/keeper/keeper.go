@@ -1,0 +1,210 @@
+package keeper
+
+import (
+	"fmt"
+	"strings"
+
+	"github.com/provenance-io/provenance/x/attribute/types"
+	nametypes "github.com/provenance-io/provenance/x/name/types"
+	"github.com/tendermint/tendermint/libs/log"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+)
+
+// Handler is a name record handler function for use with IterateRecords.
+type Handler func(record types.Attribute) error
+
+// Keeper defines the account module Keeper
+type Keeper struct {
+	// The reference to the Paramstore to get and set account specific params
+	paramSpace paramtypes.Subspace
+
+	// Used to ensure accounts exist for addresses.
+	authKeeper types.AccountKeeper
+	// The keeper used for ensuring names resolve to owners.
+	nameKeeper types.NameKeeper
+
+	// Key to access the key-value store from sdk.Context.
+	storeKey sdk.StoreKey
+
+	// The codec codec for binary encoding/decoding.
+	cdc codec.BinaryMarshaler
+}
+
+// NewKeeper returns an account keeper. It handles:
+// - setting attributes against an account
+// - removing attributes
+// - scanning for existing attributes on an account
+//
+// CONTRACT: the parameter Subspace must have the param key table already initialized
+func NewKeeper(
+	cdc codec.BinaryMarshaler, key sdk.StoreKey, paramSpace paramtypes.Subspace,
+	authKeeper types.AccountKeeper, nameKeeper types.NameKeeper,
+) Keeper {
+
+	return Keeper{
+		storeKey:   key,
+		paramSpace: paramSpace,
+		authKeeper: authKeeper,
+		nameKeeper: nameKeeper,
+		cdc:        cdc,
+	}
+}
+
+// Logger returns a module-specific logger.
+func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
+
+// GetAllAttributes gets all attributes for account.
+func (k Keeper) GetAllAttributes(ctx sdk.Context, acc sdk.AccAddress) ([]types.Attribute, error) {
+	pred := func(s string) bool { return true }
+	return k.prefixScan(ctx, types.AccountAttributesKeyPrefix(acc), pred)
+}
+
+// GetAttributes gets all attributes with the given name from an account.
+func (k Keeper) GetAttributes(ctx sdk.Context, acc sdk.AccAddress, name string) ([]types.Attribute, error) {
+	name = strings.ToLower(strings.TrimSpace(name))
+	if _, err := k.nameKeeper.Resolve(ctx.Context(), &nametypes.QueryResolveRequest{Name: name}); err != nil { // Ensure name exists (ie was bound to an address)
+		return nil, err
+	}
+	pred := func(s string) bool { return strings.EqualFold(s, name) }
+	return k.prefixScan(ctx, types.AccountAttributesNameKeyPrefix(acc, name), pred)
+}
+
+// IterateRecords iterates over all the stored attribute records and passes them to a callback function.
+func (k Keeper) IterateRecords(ctx sdk.Context, handle Handler) error {
+	// Init a attribute record iterator
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, []byte(types.AttributeKeyPrefix))
+	defer iterator.Close()
+	// Iterate over records, processing callbacks.
+	for ; iterator.Valid(); iterator.Next() {
+		record := types.Attribute{}
+		if err := types.ModuleCdc.UnmarshalBinaryBare(iterator.Value(), &record); err != nil {
+			return err
+		}
+		// if address := parseAddressFromKey(iterator.Key()); address != "" {
+		// 	record.Address = address
+		// }
+		if err := handle(record); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Stores an attribute under the given account. The attribute name must resolve to the given owner address.
+func (k Keeper) SetAttribute(
+	ctx sdk.Context, acc sdk.AccAddress, attr types.Attribute, owner sdk.AccAddress,
+) error {
+	// Ensure attribute is valid
+	if err := attr.Validate(); err != nil {
+		return err
+	}
+	// Ensure name is stored in normalized format.
+	var err error
+	if attr.Name, err = k.nameKeeper.Normalize(ctx, attr.Name); err != nil {
+		return fmt.Errorf("unable to normalize attribute name \"%s\": %w", attr.Name, err)
+	}
+	// Verify an account exists for the given owner address
+	if ownerAcc := k.authKeeper.GetAccount(ctx, owner); ownerAcc == nil {
+		return fmt.Errorf("no account found for owner address \"%s\"", owner.String())
+	}
+	// Verify name resolves to owner
+	if !k.nameKeeper.ResolvesTo(ctx, attr.Name, owner) {
+		return fmt.Errorf("\"%s\" does not resolve to address \"%s\"", attr.Name, owner.String())
+	}
+	// Store the sanitized account attribute
+	bz, err := types.ModuleCdc.MarshalBinaryBare(&attr)
+	if err != nil {
+		return err
+	}
+	key := types.AccountAttributeKey(acc, attr)
+	store := ctx.KVStore(k.storeKey)
+	store.Set(key, bz)
+	return nil
+}
+
+// Removes attributes under the given account. The attribute name must resolve to the given owner address.
+func (k Keeper) DeleteAttribute(ctx sdk.Context, acc sdk.AccAddress, name string, owner sdk.AccAddress) error {
+	// Verify an account exists for the given owner address
+	if ownerAcc := k.authKeeper.GetAccount(ctx, owner); ownerAcc == nil {
+		return fmt.Errorf("no account found for owner address \"%s\"", owner.String())
+	}
+	// Verify name resolves to owner
+	if !k.nameKeeper.ResolvesTo(ctx, name, owner) {
+		return fmt.Errorf("\"%s\" does not resolve to address \"%s\"", name, owner.String())
+	}
+	// Delete all keys that match the name prefix
+	store := ctx.KVStore(k.storeKey)
+	it := sdk.KVStorePrefixIterator(store, types.AccountAttributesNameKeyPrefix(acc, name))
+	var count int
+	for ; it.Valid(); it.Next() {
+		attr := types.Attribute{}
+		if err := types.ModuleCdc.UnmarshalBinaryBare(it.Value(), &attr); err != nil {
+			return err
+		}
+		// Only delete exact matches
+		if attr.Name == name {
+			count++
+			store.Delete(it.Key())
+		}
+	}
+	if count == 0 {
+		errm := "no keys deleted"
+		ctx.Logger().Error(errm, "name", name)
+		return fmt.Errorf("%s with name %s", errm, name)
+	}
+	return nil
+}
+
+// A predicate function for matching names
+type namePred = func(string) bool
+
+// Scan all attributes that match the given prefix.
+func (k Keeper) prefixScan(ctx sdk.Context, prefix []byte, f namePred) (attrs []types.Attribute, err error) {
+	store := ctx.KVStore(k.storeKey)
+	it := sdk.KVStorePrefixIterator(store, prefix)
+	for ; it.Valid(); it.Next() {
+		attr := types.Attribute{}
+		if err = types.ModuleCdc.UnmarshalBinaryBare(it.Value(), &attr); err != nil {
+			return
+		}
+		if f(attr.Name) {
+			attrs = append(attrs, attr)
+		}
+	}
+	return
+}
+
+// A genesis helper that imports attribute state without owner checks.
+func (k Keeper) importAttribute(ctx sdk.Context, attr types.Attribute) error {
+	// Ensure attribute is valid
+	if err := attr.Validate(); err != nil {
+		return err
+	}
+	// Attribute must have a valid, non-empty address to import
+	if strings.TrimSpace(attr.Address) == "" {
+		return fmt.Errorf("unable to import attribute with empty address")
+	}
+	acc, err := sdk.AccAddressFromBech32(attr.Address)
+	if err != nil {
+		return err
+	}
+	// Ensure name is stored in normalized format.
+	if attr.Name, err = k.nameKeeper.Normalize(ctx, attr.Name); err != nil {
+		return fmt.Errorf("unable to normalize attribute name \"%s\": %w", attr.Name, err)
+	}
+	// Store the sanitized account attribute
+	bz, err := types.ModuleCdc.MarshalBinaryBare(&attr)
+	if err != nil {
+		return err
+	}
+	key := types.AccountAttributeKey(acc, attr)
+	store := ctx.KVStore(k.storeKey)
+	store.Set(key, bz)
+	return nil
+}

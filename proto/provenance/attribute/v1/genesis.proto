@@ -1,0 +1,21 @@
+syntax = "proto3";
+package provenance.attribute.v1;
+
+import "gogoproto/gogo.proto";
+import "provenance/attribute/v1/attribute.proto";
+
+option go_package = "github.com/provenance-io/provenance/x/attribute/types";
+
+option java_package        = "io.provenance.attribute.v1";
+option java_multiple_files = true;
+// GenesisState defines the account module's genesis state.
+message GenesisState {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // params defines all the parameters of the module.
+  Params params = 1 [(gogoproto.nullable) = false];
+
+  // deposits defines all the deposits present at genesis.
+  repeated Attribute attributes = 2 [(gogoproto.nullable) = false];
+}

@@ -23,6 +23,8 @@ require (
 	golang.org/x/net v0.0.0-20201010224723-4f7140c49acb // indirect
 	google.golang.org/genproto v0.0.0-20201214200347-8c77b98c765d
 	google.golang.org/grpc v1.33.2
+	google.golang.org/protobuf v1.25.0
+	gopkg.in/yaml.v2 v2.4.0
 
 )
 
