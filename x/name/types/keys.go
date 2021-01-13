@@ -27,9 +27,9 @@ var (
 	NameKeyPrefix = []byte{0x01}
 )
 
-// GetNameKey converts a name into key format.
+// GetNameKeyPrefix converts a name into key format.
 func GetNameKeyPrefix(name string) (key []byte, err error) {
-	if len(strings.TrimSpace(name)) == 0 {
+	if strings.TrimSpace(name) == "" {
 		err = fmt.Errorf("name can not be empty: %w", ErrNameInvalid)
 		return
 	}
@@ -46,7 +46,7 @@ func GetNameKeyPrefix(name string) (key []byte, err error) {
 	return
 }
 
-// GetAddressKey returns a store key for a name record address
+// GetAddressKeyPrefix returns a store key for a name record address
 func GetAddressKeyPrefix(address sdk.AccAddress) (key []byte, err error) {
 	err = sdk.VerifyAddressFormat(address.Bytes())
 	if err == nil {

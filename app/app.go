@@ -95,7 +95,7 @@ import (
 const (
 	// DefaultBondDenom is the denomination of coin to use for bond/staking
 	DefaultBondDenom = "nhash" // nano-hash
-	// DefaultFeeDenom is the denomination of coin to use for paying fees
+	// DefaultFeeDenom is the denomination of coin to use for fees
 	DefaultFeeDenom = "nhash" // nano-hash
 )
 
@@ -126,7 +126,8 @@ var (
 		mint.AppModuleBasic{},
 		distr.AppModuleBasic{},
 		gov.NewAppModuleBasic(
-			paramsclient.ProposalHandler, distrclient.ProposalHandler, upgradeclient.ProposalHandler, upgradeclient.CancelProposalHandler,
+			paramsclient.ProposalHandler, distrclient.ProposalHandler, upgradeclient.ProposalHandler,
+			upgradeclient.CancelProposalHandler,
 		),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},

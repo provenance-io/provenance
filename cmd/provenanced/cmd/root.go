@@ -37,8 +37,10 @@ import (
 	"github.com/provenance-io/provenance/app"
 )
 
+// EnvTypeFlag is a flag for indicating a testnet
 const EnvTypeFlag = "testnet"
 
+// ChainID is the id of the running chain
 var ChainID string
 
 // NewRootCmd creates a new root command for simd. It is called once in the

@@ -61,7 +61,7 @@ func (keeper Keeper) Logger(ctx sdk.Context) log.Logger {
 
 // ResolvesTo to determines whether a name resolves to a given address.
 func (keeper Keeper) ResolvesTo(ctx sdk.Context, name string, addr sdk.AccAddress) bool {
-	stored, err := keeper.Resolve(ctx.Context(), &types.QueryResolveRequest{Name: name})
+	stored, err := keeper.getRecordByName(ctx, name)
 	if err != nil {
 		return false
 	}
@@ -101,7 +101,7 @@ func (keeper Keeper) getRecordByName(ctx sdk.Context, name string) (record *type
 	}
 	store := ctx.KVStore(keeper.storeKey)
 	if !store.Has(key) {
-		return nil, nil
+		return nil, types.ErrNameNotBound
 	}
 	bz := store.Get(key)
 	record = &types.NameRecord{}
@@ -109,12 +109,45 @@ func (keeper Keeper) getRecordByName(ctx sdk.Context, name string) (record *type
 	return record, err
 }
 
-func (keeper Keeper) getRecordsByAddress(ctx sdk.Context, address sdk.AccAddress) (records types.NameRecords, err error) {
-	return
+// Logger returns a module-specific logger.
+func (keeper Keeper) nameExists(ctx sdk.Context, name string) bool {
+	key, err := types.GetNameKeyPrefix(name)
+	if err != nil {
+		return false
+	}
+	store := ctx.KVStore(keeper.storeKey)
+	return store.Has(key)
 }
 
-func (keeper Keeper) deleteRecord(ctx sdk.Context, name string) (err error) {
-	return
+func (keeper Keeper) getRecordsByAddress(ctx sdk.Context, address sdk.AccAddress) (types.NameRecords, error) {
+	//
+	// TODO: Refactor this once name records are indexed by address...
+	//
+	// Return value data structure.
+	records := types.NameRecords{}
+	// Handler that adds records if account address matches.
+	appendToRecords := func(record types.NameRecord) error {
+		if record.Address == address.String() {
+			records = append(records, record)
+		}
+		return nil
+	}
+	// Collect and return all names that match.
+	if err := keeper.IterateRecords(ctx, appendToRecords); err != nil {
+		return records, err
+	}
+	return records, nil
+}
+
+// Delete a name record from the kvstore.
+func (keeper Keeper) deleteRecord(ctx sdk.Context, name string) error {
+	key, err := types.GetNameKeyPrefix(name)
+	if err != nil {
+		return err
+	}
+	store := ctx.KVStore(keeper.storeKey)
+	store.Delete(key)
+	return nil
 }
 
 // IterateRecords iterates over all the stored name records and passes them to a callback function.
@@ -190,49 +223,3 @@ func isValidUUID(s string) bool {
 	}
 	return true
 }
-
-/*
-	// Validate
-	if err := msg.ValidateBasic(); err != nil {
-		keeper.Logger(ctx).Error("unable to validate message", "err", err)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
-	}
-	// Fetch the name record from the name keeper.
-	record, err := keeper.Resolve(ctx, msg.RootName)
-	if err != nil {
-		keeper.Logger(ctx).Error("unable to find root name record", "err", err)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
-	}
-	// Ensure that if the root name is restricted, it resolves to the given root address (message signer).
-	if record.Restricted && !keeper.ResolvesTo(ctx, msg.RootName, msg.RootAddress) {
-		errm := "root name is restricted and does not resolve to the provided root address"
-		keeper.Logger(ctx).Error(errm)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, errm)
-	}
-	// Combine names and check for existing record
-	name := fmt.Sprintf("%s.%s", msg.Name, msg.RootName)
-	existing, err := keeper.Resolve(ctx, name)
-	// Handle failures
-	if err != nil && err != ErrNameNotBound {
-		keeper.Logger(ctx).Error("resolve failure", "err", err)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
-	}
-	// Bind name to address
-	if err == ErrNameNotBound {
-		if berr := keeper.BindName(ctx, name, msg.Address, msg.Restricted); berr != nil {
-			keeper.Logger(ctx).Error("unable to bind name", "err", berr)
-			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, berr.Error())
-		}
-		// Emit event and return
-		events := []sdk.Event{sdk.NewEvent(
-			eventTypeNameBound,
-			sdk.NewAttribute(eventAttributeNameKeyAttribute, name),
-			sdk.NewAttribute(eventAddressKeyAttribute, msg.Address.String()),
-		)}
-		return &sdk.Result{Events: events}, nil
-	}
-	// Name is already bound.
-	keeper.Logger(ctx).Error("name already bound", "name", name, "address", existing)
-	return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "name already bound")
-
-*/

@@ -30,11 +30,12 @@ func NewTxCmd() *cobra.Command {
 	}
 	txCmd.AddCommand(
 		GetBindNameCmd(),
+		GetDeleteNameCmd(),
 	)
 	return txCmd
 }
 
-// The CLI command for binding a name to an address.
+// GetBindNameCmd is the CLI command for binding a name to an address.
 func GetBindNameCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "bind [name] [address] [root]",
@@ -49,7 +50,7 @@ $ %s tx name bind sample pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk root.example
 			)),
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -74,6 +75,31 @@ $ %s tx name bind sample pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk root.example
 	}
 	cmd.Flags().BoolP(flagRestricted, "r", true, "Restrict creation of child names to owner only")
 
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// GetDeleteNameCmd is the CLI command for deleting a bound name.
+func GetDeleteNameCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "delete [name]",
+		Short: "Delete a bound name from the provenance blockchain",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			msg := types.NewMsgDeleteNameRequest(
+				types.NewNameRecord(
+					strings.TrimSpace(strings.ToLower(args[0])),
+					clientCtx.FromAddress,
+					false,
+				),
+			)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
