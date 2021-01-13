@@ -1,0 +1,45 @@
+syntax = "proto3";
+package provenance.marker.v1;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+
+option go_package = "github.com/provenance-io/provenance/x/marker/types";
+
+option java_package        = "io.provenance.marker.v1";
+option java_multiple_files = true;
+
+// AccessGrant associates a colelction of permisssions with an address for delegated marker account control.
+message AccessGrant {
+  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.equal)            = true;
+
+  option (cosmos_proto.implements_interface) = "AccessGrantI";
+
+  string          address     = 1;
+  repeated Access permissions = 2 [(gogoproto.castrepeated) = "AccessList"];
+}
+
+// Access defines the different types of permissions that a marker supports granting to an address.
+enum Access {
+  // ACCESS_UNSPECIFIED defines a no-op vote option.
+  ACCESS_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "Unknown"];
+  // ACCESS_MINT is the ability to increase the supply of a marker
+  ACCESS_MINT = 1 [(gogoproto.enumvalue_customname) = "Mint"];
+  // ACCESS_BURN is the ability to decrease the supply of the marker using coin held by the marker.
+  ACCESS_BURN = 2 [(gogoproto.enumvalue_customname) = "Burn"];
+  // ACCESS_DEPOSIT is the ability to set a marker reference to this marker in the metadata/scopes module
+  ACCESS_DEPOSIT = 3 [(gogoproto.enumvalue_customname) = "Deposit"];
+  // ACCESS_WITHDRAW is the ability to remove marker references to this marker in from metadata/scopes or
+  // transfer coin from this marker account to another account.
+  ACCESS_WITHDRAW = 4 [(gogoproto.enumvalue_customname) = "Withdraw"];
+  // ACCESS_DELETE is the ability to move a proposed, finalized or active marker into the cancelled state. This
+  // access also allows cancelled markers to be marked for deletion
+  ACCESS_DELETE = 5 [(gogoproto.enumvalue_customname) = "Delete"];
+  // ACCESS_ADMIN is the ability to add access grants for accounts to the list of marker permissions.
+  ACCESS_ADMIN = 6 [(gogoproto.enumvalue_customname) = "Admin"];
+  // ACCESS_TRANSFER is the ability to invoke a send operation using the marker module to facilitate exchange.
+  // This capability is useful when the marker denomination has "send enabled = false" preventing normal bank transfer
+  ACCESS_TRANSFER = 7 [(gogoproto.enumvalue_customname) = "Transfer"];
+}

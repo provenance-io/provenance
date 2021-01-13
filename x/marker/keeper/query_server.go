@@ -1,0 +1,140 @@
+package keeper
+
+import (
+	"context"
+	"fmt"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
+	"github.com/cosmos/cosmos-sdk/store/prefix"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
+
+	"github.com/provenance-io/provenance/x/marker/types"
+)
+
+const defaultLimit = 100
+
+var _ types.QueryServer = Keeper{}
+
+// Params queries params of distribution module
+func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	var params types.Params
+	k.paramSpace.GetParamSet(ctx, &params)
+
+	return &types.QueryParamsResponse{Params: params}, nil
+}
+
+// AllMarkers returns a list of all markers on the blockchain
+func (k Keeper) AllMarkers(c context.Context, req *types.QueryAllMarkersRequest) (*types.QueryAllMarkersResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	markers := make([]*types.MarkerAccount, 0)
+	store := ctx.KVStore(k.storeKey)
+	markerStore := prefix.NewStore(store, types.MarkerStoreKeyPrefix)
+	pageRes, err := query.Paginate(markerStore, req.Pagination, func(key []byte, value []byte) error {
+		result, err := k.GetMarker(ctx, sdk.AccAddress(value))
+		markers = append(markers, result.Clone())
+		return err
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &types.QueryAllMarkersResponse{Markers: markers, Pagination: pageRes}, nil
+}
+
+// Marker query for a single marker by denom or address
+func (k Keeper) Marker(c context.Context, req *types.QueryMarkerRequest) (*types.QueryMarkerResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	marker, err := accountForDenomOrAddress(ctx, k, req.Id)
+	if err != nil {
+		return nil, err
+	}
+	return &types.QueryMarkerResponse{Marker: marker.Clone()}, nil
+}
+
+// Holding query for all accounts holding the given marker coins
+func (k Keeper) Holding(c context.Context, req *types.QueryHoldingRequest) (*types.QueryHoldingResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	marker, err := accountForDenomOrAddress(ctx, k, req.Id)
+	if err != nil {
+		return nil, err
+	}
+	pageRequest := req.Pagination
+	// if the PageRequest is nil, use default PageRequest
+	if pageRequest == nil {
+		pageRequest = &query.PageRequest{}
+	}
+
+	balances := k.GetAllMarkerHolders(ctx, marker.GetDenom())
+	limit := pageRequest.Limit
+	if limit == 0 {
+		limit = defaultLimit
+	}
+	end := pageRequest.Offset + limit
+	totalResults := uint64(len(balances))
+
+	if pageRequest.Offset > totalResults {
+		return nil, fmt.Errorf("invalid offset")
+	}
+
+	if end > totalResults {
+		end = totalResults
+	}
+
+	return &types.QueryHoldingResponse{
+		Balances:   balances[pageRequest.Offset:end],
+		Pagination: &query.PageResponse{Total: totalResults},
+	}, nil
+}
+
+// Supply query for supply of coin on a marker account
+func (k Keeper) Supply(c context.Context, req *types.QuerySupplyRequest) (*types.QuerySupplyResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	marker, err := accountForDenomOrAddress(ctx, k, req.Id)
+	if err != nil {
+		return nil, err
+	}
+	return &types.QuerySupplyResponse{Amount: marker.GetSupply()}, nil
+}
+
+// Escrow query for coins on a marker account
+func (k Keeper) Escrow(c context.Context, req *types.QueryEscrowRequest) (*types.QueryEscrowResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	marker, err := accountForDenomOrAddress(ctx, k, req.Id)
+	if err != nil {
+		return nil, err
+	}
+	escrow := k.bankKeeper.GetAllBalances(ctx, marker.GetAddress())
+
+	return &types.QueryEscrowResponse{Escrow: escrow}, nil
+}
+
+// Access query for access records on an account
+func (k Keeper) Access(c context.Context, req *types.QueryAccessRequest) (*types.QueryAccessResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	marker, err := accountForDenomOrAddress(ctx, k, req.Id)
+	if err != nil {
+		return nil, err
+	}
+	return &types.QueryAccessResponse{Accounts: marker.GetAccessList()}, nil
+}
