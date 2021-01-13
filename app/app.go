@@ -7,9 +7,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/spf13/cast"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
+	"github.com/spf13/cast"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -84,6 +84,12 @@ import (
 	appparams "github.com/provenance-io/provenance/app/params"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+)
+
+const (
+	// DefaultBondDenom is the denomination of coin to use for bond/staking
+	DefaultBondDenom = "nhash" // nano-hash
+	DefaultFeeDenom  = "nhash" // nano-hash
 )
 
 var (
