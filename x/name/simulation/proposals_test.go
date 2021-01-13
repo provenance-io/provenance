@@ -7,12 +7,12 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/name/keeper"
 	"github.com/provenance-io/provenance/x/name/simulation"
 	"github.com/provenance-io/provenance/x/name/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 func TestProposalContents(t *testing.T) {
@@ -38,8 +38,8 @@ func TestProposalContents(t *testing.T) {
 
 	content := w0.ContentSimulatorFn()(r, ctx, accounts)
 
-	require.Equal(t, "sTxPjfweXhSUkMhPjMaxKlMIJMOXcnQfyzeOcbWwNbeHVIkPZBSpYuLyYggwexjxusrBqDOTtGTOWeLrQKjLxzIivHSlcxgdXhhu", content.GetDescription())
-	require.Equal(t, "xKGLwQvuyN", content.GetTitle())
+	require.Equal(t, "hPjMaxKlMIJMOXcnQfyzeOcbWwNbeHVIkPZBSpYuLyYggwexjxusrBqDOTtGTOWeLrQKjLxzIivHSlcxgdXhhuTSkuxKGLwQvuyN", content.GetDescription())
+	require.Equal(t, "eAerqyNEUz", content.GetTitle())
 	require.Equal(t, "name", content.ProposalRoute())
-	require.Equal(t, "CreateRootName", content.ProposalType())
+	require.Equal(t, "CreateRootNameProposal", content.ProposalType())
 }

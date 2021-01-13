@@ -95,7 +95,8 @@ import (
 const (
 	// DefaultBondDenom is the denomination of coin to use for bond/staking
 	DefaultBondDenom = "nhash" // nano-hash
-	DefaultFeeDenom  = "nhash" // nano-hash
+	// DefaultFeeDenom is the denomination of coin to use for paying fees
+	DefaultFeeDenom = "nhash" // nano-hash
 )
 
 var (
