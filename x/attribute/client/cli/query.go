@@ -159,7 +159,7 @@ $ %s query attribute scan pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk name.suffix 
 			var response *types.QueryScanResponse
 			if response, err = queryClient.Scan(
 				context.Background(),
-				&types.QueryScanRequest{Account: address, Pagination: pageReq},
+				&types.QueryScanRequest{Account: address, Suffix: suffix, Pagination: pageReq},
 			); err != nil {
 				fmt.Printf("failed to query account \"%s\" attributes for suffix \"%s\": %v\n", address, suffix, err)
 				return nil
