@@ -201,6 +201,10 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 	}
 
 	snapshotDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data", "snapshots")
+	// Create the snapshot dir if not exists
+	if _, err := os.Stat(snapshotDir); os.IsNotExist(err) {
+		os.Mkdir(snapshotDir, 0755)
+	}
 	snapshotDB, err := sdk.NewLevelDB("metadata", snapshotDir)
 	if err != nil {
 		panic(err)
