@@ -99,9 +99,6 @@ build-linux: go.sum
 
 # Run an instance of the daemon against a local config (create the config if it does not exit.)
 run-config:
-	@if [ ! -d "$(BUILDDIR)/run/provenanced/data/snapshots/metadata.db" ]; then \
-		mkdir -p $(BUILDDIR)/run/provenanced/data/snapshots/metadata.db; \
-	fi ;
 	@if [ ! -d "$(BUILDDIR)/run/provenanced/config" ]; then \
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced init --chain-id=testing testing ; \
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced keys add validator --keyring-backend test ; \
