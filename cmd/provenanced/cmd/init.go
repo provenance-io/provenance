@@ -1,4 +1,4 @@
-// Package custom contains provenance daemon init functionality.
+// Package cmd contains provenance daemon init functionality.
 // nolint
 package cmd
 

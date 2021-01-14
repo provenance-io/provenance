@@ -24,8 +24,6 @@ func (keeper Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*
 // Resolve returns the address a name resolves to or an error.
 func (keeper Keeper) Resolve(c context.Context, request *types.QueryResolveRequest) (*types.QueryResolveResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	var err error
-
 	name, err := keeper.Normalize(ctx, request.Name)
 	if err != nil {
 		return nil, err

@@ -39,7 +39,7 @@ func (crnp *CreateRootNameProposal) GetTitle() string { return crnp.Title }
 // GetDescription returns the description of a community pool spend proposal.
 func (crnp *CreateRootNameProposal) GetDescription() string { return crnp.Description }
 
-// GetDescription returns the routing key of a community pool spend proposal.
+// ProposalRoute returns the routing key of a community pool spend proposal.
 func (crnp *CreateRootNameProposal) ProposalRoute() string { return RouterKey }
 
 // ProposalType returns the type of a community pool spend proposal.

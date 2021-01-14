@@ -65,9 +65,8 @@ func (msg MsgBindNameRequest) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgDeleteNameRequest creates a new Delete Name Request
-func NewMsgDeleteNameRequest(record, parent NameRecord) *MsgDeleteNameRequest {
+func NewMsgDeleteNameRequest(record NameRecord) *MsgDeleteNameRequest {
 	return &MsgDeleteNameRequest{
-		Parent: parent,
 		Record: record,
 	}
 }
@@ -80,17 +79,8 @@ func (msg MsgDeleteNameRequest) Type() string { return TypeMsgDeleteNameRequest 
 
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgDeleteNameRequest) ValidateBasic() error {
-	if strings.TrimSpace(msg.Parent.Name) == "" {
-		return fmt.Errorf("parent name cannot be empty")
-	}
-	if strings.TrimSpace(msg.Parent.Address) == "" {
-		return fmt.Errorf("parent address cannot be empty")
-	}
 	if strings.TrimSpace(msg.Record.Name) == "" {
 		return fmt.Errorf("name cannot be empty")
-	}
-	if strings.Contains(msg.Record.Name, ".") {
-		return fmt.Errorf("invalid name: \".\" is reserved")
 	}
 	if strings.TrimSpace(msg.Record.Address) == "" {
 		return fmt.Errorf("address cannot be empty")

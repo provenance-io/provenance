@@ -40,10 +40,8 @@ message MsgDeleteNameRequest {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  // The parent record the record to remove is under.
-  NameRecord parent = 1 [(gogoproto.nullable) = false];
   // The record being removed
-  NameRecord record = 2 [(gogoproto.nullable) = false];
+  NameRecord record = 1 [(gogoproto.nullable) = false];
 }
 
 // MsgDeleteNameResponse defines the Msg/DeleteName response type.
