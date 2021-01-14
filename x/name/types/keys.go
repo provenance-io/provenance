@@ -25,6 +25,8 @@ const (
 var (
 	// NameKeyPrefix is a prefix added to keys for adding/querying names.
 	NameKeyPrefix = []byte{0x01}
+	// AddressKeyPrefix is a prefix added to keys for indexing name records by address.
+	AddressKeyPrefix = []byte{0x02}
 )
 
 // GetNameKeyPrefix converts a name into key format.
@@ -50,7 +52,7 @@ func GetNameKeyPrefix(name string) (key []byte, err error) {
 func GetAddressKeyPrefix(address sdk.AccAddress) (key []byte, err error) {
 	err = sdk.VerifyAddressFormat(address.Bytes())
 	if err == nil {
-		key = address.Bytes()
+		key = append(AddressKeyPrefix, address.Bytes()...)
 	}
 	return
 }

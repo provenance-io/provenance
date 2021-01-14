@@ -31,7 +31,7 @@ func (keeper Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		return nil
 	}
 	// Collect and return genesis state.
-	if err := keeper.IterateRecords(ctx, appendToRecords); err != nil {
+	if err := keeper.IterateRecords(ctx, types.NameKeyPrefix, appendToRecords); err != nil {
 		panic(err)
 	}
 	return types.NewGenesisState(params, records)

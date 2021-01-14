@@ -91,6 +91,13 @@ func (keeper Keeper) setNameRecord(ctx sdk.Context, name string, addr sdk.AccAdd
 		return err
 	}
 	store.Set(key, bz)
+	// Now index by address
+	addrPrefix, err := types.GetAddressKeyPrefix(addr)
+	if err != nil {
+		return err
+	}
+	indexKey := append(addrPrefix, key...) // [0x02] :: [addr-bytes] :: [name-key-bytes]
+	store.Set(indexKey, bz)
 	return nil
 }
 
@@ -120,9 +127,6 @@ func (keeper Keeper) nameExists(ctx sdk.Context, name string) bool {
 }
 
 func (keeper Keeper) getRecordsByAddress(ctx sdk.Context, address sdk.AccAddress) (types.NameRecords, error) {
-	//
-	// TODO: Refactor this once name records are indexed by address...
-	//
 	// Return value data structure.
 	records := types.NameRecords{}
 	// Handler that adds records if account address matches.
@@ -132,8 +136,13 @@ func (keeper Keeper) getRecordsByAddress(ctx sdk.Context, address sdk.AccAddress
 		}
 		return nil
 	}
+	// Calculate address prefix
+	addrPrefix, err := types.GetAddressKeyPrefix(address)
+	if err != nil {
+		return nil, err
+	}
 	// Collect and return all names that match.
-	if err := keeper.IterateRecords(ctx, appendToRecords); err != nil {
+	if err := keeper.IterateRecords(ctx, addrPrefix, appendToRecords); err != nil {
 		return records, err
 	}
 	return records, nil
@@ -141,20 +150,39 @@ func (keeper Keeper) getRecordsByAddress(ctx sdk.Context, address sdk.AccAddress
 
 // Delete a name record from the kvstore.
 func (keeper Keeper) deleteRecord(ctx sdk.Context, name string) error {
+	// Need the record to clear the address index
+	record, err := keeper.getRecordByName(ctx, name)
+	if err != nil {
+		return err
+	}
+	address, err := sdk.AccAddressFromBech32(record.Address)
+	if err != nil {
+		return err
+	}
+	// Delete the main name record
 	key, err := types.GetNameKeyPrefix(name)
 	if err != nil {
 		return err
 	}
 	store := ctx.KVStore(keeper.storeKey)
 	store.Delete(key)
+	// Delete the address index record
+	addrPrefix, err := types.GetAddressKeyPrefix(address)
+	if err != nil {
+		return err
+	}
+	indexKey := append(addrPrefix, key...) // [0x02] :: [addr-bytes] :: [name-key-bytes]
+	if store.Has(indexKey) {
+		store.Delete(indexKey)
+	}
 	return nil
 }
 
 // IterateRecords iterates over all the stored name records and passes them to a callback function.
-func (keeper Keeper) IterateRecords(ctx sdk.Context, handle Handler) error {
+func (keeper Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle Handler) error {
 	// Init a name record iterator
 	store := ctx.KVStore(keeper.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.NameKeyPrefix)
+	iterator := sdk.KVStorePrefixIterator(store, prefix)
 	defer iterator.Close()
 	// Iterate over records, processing callbacks.
 	for ; iterator.Valid(); iterator.Next() {
