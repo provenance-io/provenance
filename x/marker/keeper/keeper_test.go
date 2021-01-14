@@ -3,6 +3,9 @@ package keeper_test
 import (
 	"testing"
 
+	simapp "github.com/provenance-io/provenance/app"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
@@ -13,7 +16,9 @@ import (
 )
 
 func TestAccountMapperGetSet(t *testing.T) {
-	app, ctx := createTestApp(true)
+	//app, ctx := createTestApp(true)
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addr := types.MustGetMarkerAddress("testcoin")
 	user := testUserAddress("test")
@@ -51,7 +56,9 @@ func TestAccountMapperGetSet(t *testing.T) {
 }
 
 func TestAccountKeeperReader(t *testing.T) {
-	app, ctx := createTestApp(true)
+	//app, ctx := createTestApp(true)
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addr := types.MustGetMarkerAddress("testcoin")
 	user := testUserAddress("test")
@@ -85,7 +92,9 @@ func TestAccountKeeperReader(t *testing.T) {
 
 // nolint:funlen
 func TestAccountKeeperManageAccess(t *testing.T) {
-	app, ctx := createTestApp(true)
+	//app, ctx := createTestApp(true)
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addr := types.MustGetMarkerAddress("testcoin")
 	// Easiest way to create a valid bech32 address for testing.
@@ -187,7 +196,9 @@ func TestAccountKeeperManageAccess(t *testing.T) {
 }
 
 func TestAccountKeeperCancelProposedByManager(t *testing.T) {
-	app, ctx := createTestApp(true)
+	//app, ctx := createTestApp(true)
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addr := types.MustGetMarkerAddress("testcoin")
 	// Easiest way to create a valid bech32 address for testing.
@@ -219,7 +230,9 @@ func TestAccountKeeperCancelProposedByManager(t *testing.T) {
 
 // nolint:funlen
 func TestAccountKeeperMintBurnCoins(t *testing.T) {
-	app, ctx := createTestApp(true)
+	//app, ctx := createTestApp(true)
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	addr := types.MustGetMarkerAddress("testcoin")
 	user := testUserAddress("test")
 
@@ -316,7 +329,9 @@ func TestAccountKeeperMintBurnCoins(t *testing.T) {
 }
 
 func TestAccountKeeperGetAll(t *testing.T) {
-	app, ctx := createTestApp(true)
+	//app, ctx := createTestApp(true)
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	user := testUserAddress("test")
 	mac := types.NewEmptyMarkerAccount("testcoin",
@@ -350,7 +365,9 @@ func TestAccountKeeperGetAll(t *testing.T) {
 }
 
 func TestAccountInsufficientExisting(t *testing.T) {
-	app, ctx := createTestApp(true)
+	//app, ctx := createTestApp(true)
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	pubkey := secp256k1.GenPrivKey().PubKey()
 	user := sdk.AccAddress(pubkey.Address())
@@ -388,7 +405,9 @@ func TestAccountInsufficientExisting(t *testing.T) {
 }
 
 func TestAccountImplictControl(t *testing.T) {
-	app, ctx := createTestApp(true)
+	//app, ctx := createTestApp(true)
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	user := testUserAddress("test")
 	user2 := testUserAddress("test2")
 

@@ -18,7 +18,7 @@ import (
 // Handler is a handler function for use with IterateRecords.
 type Handler func(record types.MarkerAccountI) error
 
-// MarkerKeeper provides a read/write iterate interface to marker acccounts in the auth account keeper store
+// MarkerKeeperI provides a read/write iterate interface to marker acccounts in the auth account keeper store
 type MarkerKeeperI interface {
 	// Returns a new marker instance with the address and baseaccount assigned.  Does not save to auth store
 	NewMarker(sdk.Context, types.MarkerAccountI) types.MarkerAccountI
@@ -121,7 +121,7 @@ func (k Keeper) RemoveMarker(ctx sdk.Context, marker types.MarkerAccountI) {
 	store.Delete(types.MarkerStoreKey(marker.GetAddress()))
 }
 
-// IterateMarkerAccounts  iterates all markers with the given handler function.
+// IterateMarkers  iterates all markers with the given handler function.
 func (k Keeper) IterateMarkers(ctx sdk.Context, cb func(marker types.MarkerAccountI) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.MarkerStoreKeyPrefix)

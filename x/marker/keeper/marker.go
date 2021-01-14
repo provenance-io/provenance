@@ -348,6 +348,8 @@ func (k Keeper) FinalizeMarker(ctx sdk.Context, caller sdk.AccAddress, denom str
 	return nil
 }
 
+// ActivateMarker transistions a marker into the active status, enforcing permissions, supply constraints, and minting
+// any supply as required.
 func (k Keeper) ActivateMarker(ctx sdk.Context, caller sdk.AccAddress, denom string) error {
 	m, err := k.GetMarkerByDenom(ctx, denom)
 	if err != nil {
@@ -488,7 +490,7 @@ func (k Keeper) DeleteMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 	return nil
 }
 
-// TransfeCoin transfers restricted coins between to accounts when the administrator account holds the transfer
+// TransferCoin transfers restricted coins between to accounts when the administrator account holds the transfer
 // access right and the marker type is restricted_coin
 func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, amount sdk.Coin) error {
 	m, err := k.GetMarkerByDenom(ctx, amount.Denom)

@@ -4,15 +4,19 @@ import (
 	"fmt"
 	"testing"
 
+	simapp "github.com/provenance-io/provenance/app"
+
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 func TestNewQuerier(t *testing.T) {
-	app, ctx := createTestApp(false)
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	cdc := app.LegacyAmino()
 	user := testUserAddress("test")
 
@@ -81,7 +85,8 @@ func TestNewQuerier(t *testing.T) {
 }
 
 func TestQuerierAccess(t *testing.T) {
-	app, ctx := createTestApp(false)
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	user := testUserAddress("test")
 	// create a marker account
 	mac := markertypes.NewEmptyMarkerAccount("testcoin", []markertypes.AccessGrant{*markertypes.NewAccessGrant(user,
@@ -104,7 +109,8 @@ func TestQuerierAccess(t *testing.T) {
 }
 
 func TestQuerierCoins(t *testing.T) {
-	app, ctx := createTestApp(false)
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	user := testUserAddress("test")
 	// create a marker account
 	mac := markertypes.NewEmptyMarkerAccount("testcoin", []markertypes.AccessGrant{*markertypes.NewAccessGrant(user,
@@ -127,7 +133,8 @@ func TestQuerierCoins(t *testing.T) {
 }
 
 func TestQuerierSupply(t *testing.T) {
-	app, ctx := createTestApp(false)
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	user := testUserAddress("test")
 	// create a marker account
 	mac := markertypes.NewEmptyMarkerAccount("testcoin", []markertypes.AccessGrant{*markertypes.NewAccessGrant(user,
