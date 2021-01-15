@@ -25,7 +25,7 @@ service Query {
 
   // Attributes queries attributes on a given account (address) for any defined attributes
   rpc Attributes(QueryAttributesRequest) returns (QueryAttributesResponse) {
-    option (google.api.http).get = "/provenance/attribute/v1/attribute/{account}";
+    option (google.api.http).get = "/provenance/attribute/v1/attributes/{account}";
   }
 
   // Scan queries attributes on a given account (address) for any that match the provided suffix

@@ -6,19 +6,28 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	dbm "github.com/tendermint/tm-db"
+
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	sdksim "github.com/cosmos/cosmos-sdk/simapp"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	simapp "github.com/provenance-io/provenance/app"
 
-	accounttypes "github.com/provenance-io/provenance/x/attribute/types"
+	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 
 	"github.com/gogo/protobuf/proto"
 
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
+	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 type IntegrationTestSuite struct {
@@ -38,7 +47,24 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.accountAddr = addr
 	s.T().Log("setting up integration test suite")
 
+	encCfg := simapp.MakeEncodingConfig()
 	cfg := testnet.DefaultConfig()
+	cfg.InterfaceRegistry = encCfg.InterfaceRegistry
+	cfg.Codec = encCfg.Marshaler
+	cfg.TxConfig = encCfg.TxConfig
+	cfg.LegacyAmino = encCfg.Amino
+
+	cfg.AppConstructor = func(val network.Validator) servertypes.Application {
+		return simapp.New("test",
+			val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
+			encCfg,
+			sdksim.EmptyAppOptions{},
+			baseapp.SetPruning(storetypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
+			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
+		)
+	}
+
+
 	genesisState := cfg.GenesisState
 	cfg.NumValidators = 1
 
@@ -65,22 +91,23 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	genesisState[nametypes.ModuleName] = nameDataBz
 
 	// Configure Genesis data for account module
-	var accountData accounttypes.GenesisState
+	var accountData attributetypes.GenesisState
 	accountData.Attributes = append(accountData.Attributes,
-		accounttypes.NewAttribute(
+		attributetypes.NewAttribute(
 			"example.attribute",
 			s.accountAddr,
-			accounttypes.AttributeType_String,
+			attributetypes.AttributeType_String,
 			[]byte("example attribute value string")))
 	accountData.Params.MaxValueLength = 32
 	accountDataBz, err := cfg.Codec.MarshalJSON(&accountData)
 	s.Require().NoError(err)
-	genesisState[accounttypes.ModuleName] = accountDataBz
+	genesisState[attributetypes.ModuleName] = accountDataBz
 
 	cfg.GenesisState = genesisState
 
 	s.cfg = cfg
-	//  TODO -- the following line needs to be patched because we must register our modules into this test node.
+
+	//   TODO -- the following line needs to be patched because we must register our modules into this test node.
 	s.testnet = testnet.New(s.T(), cfg)
 
 	_, err = s.testnet.WaitForHeight(1)
@@ -96,8 +123,6 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 	val := s.testnet.Validators[0]
 	baseURL := val.APIAddress
 
-	//consAddr := sdk.ConsAddress(val.PubKey.Address()).String()
-
 	testCases := []struct {
 		name     string
 		url      string
@@ -107,23 +132,88 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 		expected proto.Message
 	}{
 		{
-			"get signing infos (height specific)",
-			fmt.Sprintf("%s/provenance/attribute/v1/signing_infos", baseURL),
+			"get attribute params",
+			fmt.Sprintf("%s/provenance/attribute/v1/params", baseURL),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
 			false,
-			&accounttypes.QueryAttributeRequest{},
-			&accounttypes.QueryAttributeResponse{},
+			&attributetypes.QueryParamsResponse{},
+			&attributetypes.QueryParamsResponse{ Params: attributetypes.NewParams(32)},
 		},
 		{
-			"params",
-			fmt.Sprintf("%s/provenance/attribute/v1/params", baseURL),
+			"get account attributes",
+			fmt.Sprintf("%s/provenance/attribute/v1/attributes/%s", baseURL, s.accountAddr),
 			map[string]string{},
 			false,
-			&accounttypes.QueryParamsResponse{},
-			&accounttypes.QueryParamsResponse{
-				Params: accounttypes.DefaultParams(),
+			&attributetypes.QueryAttributesResponse{},
+			&attributetypes.QueryAttributesResponse{
+				Account: s.accountAddr.String(),
+				Attributes: []attributetypes.Attribute{
+					attributetypes.NewAttribute("example.attribute", 
+					s.accountAddr, 
+					attributetypes.AttributeType_String, 
+					[]byte("example attribute value string")),
+				},
+				Pagination: &query.PageResponse{NextKey: nil, Total: 1},
+			},
+		},
+		{
+			"get account attribute by name",
+			fmt.Sprintf("%s/provenance/attribute/v1/attribute/%s/%s", baseURL, s.accountAddr, "example.attribute"),
+			map[string]string{},
+			false,
+			&attributetypes.QueryAttributeResponse{},
+			&attributetypes.QueryAttributeResponse{
+				Account: s.accountAddr.String(),
+				Attributes: []attributetypes.Attribute{
+					attributetypes.NewAttribute("example.attribute", 
+					s.accountAddr, 
+					attributetypes.AttributeType_String, 
+					[]byte("example attribute value string")),
+				},
+				Pagination: &query.PageResponse{NextKey: nil, Total: 1},
+			},
+		},
+		{
+			"get non existint account attribute by name",
+			fmt.Sprintf("%s/provenance/attribute/v1/attribute/%s/%s", baseURL, s.accountAddr, "im.not.here.attribute"),
+			map[string]string{},
+			false,
+			&attributetypes.QueryAttributeResponse{},
+			&attributetypes.QueryAttributeResponse{
+				Account: s.accountAddr.String(),
+				Attributes: nil,
+				Pagination: &query.PageResponse{},
+			},
+		},
+		{
+			"scan account attribute by suffix",
+			fmt.Sprintf("%s/provenance/attribute/v1/attribute/%s/scan/%s", baseURL, s.accountAddr, "attribute"),
+			map[string]string{},
+			false,
+			&attributetypes.QueryScanResponse{},
+			&attributetypes.QueryScanResponse{
+				Account: s.accountAddr.String(),
+				Attributes: []attributetypes.Attribute{
+					attributetypes.NewAttribute("example.attribute", 
+					s.accountAddr, 
+					attributetypes.AttributeType_String, 
+					[]byte("example attribute value string")),
+				},
+				Pagination: &query.PageResponse{NextKey: nil, Total: 1},
+			},
+		},
+		{
+			"scan account attribute by suffix but send prefix",
+			fmt.Sprintf("%s/provenance/attribute/v1/attribute/%s/scan/%s", baseURL, s.accountAddr, "example"),
+			map[string]string{},
+			false,
+			&attributetypes.QueryScanResponse{},
+			&attributetypes.QueryScanResponse{
+				Account: s.accountAddr.String(),
+				Attributes: nil,
+				Pagination: &query.PageResponse{},
 			},
 		},
 	}
@@ -134,7 +224,6 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 		s.Run(tc.name, func() {
 			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
 			s.Require().NoError(err)
-
 			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType)
 
 			if tc.expErr {

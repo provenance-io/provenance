@@ -538,7 +538,7 @@ var (
 
 	pattern_Query_Attribute_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 1, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"provenance", "attribute", "v1", "account", "name"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_Attributes_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 1, 1, 0, 4, 1, 5, 3}, []string{"provenance", "attribute", "v1", "account"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Attributes_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"provenance", "attribute", "v1", "attributes", "account"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Query_Scan_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 1, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"provenance", "attribute", "v1", "account", "scan", "suffix"}, "", runtime.AssumeColonVerbOpt(true)))
 )

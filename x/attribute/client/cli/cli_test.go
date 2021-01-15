@@ -80,6 +80,16 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 	genesisState[nametypes.ModuleName] = nameDataBz
 
+	var authData authtypes.GenesisState
+	s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[authtypes.ModuleName], &authData))
+	genAccount, err := codectypes.NewAnyWithValue(&authtypes.BaseAccount{
+		Address:       s.accountAddr.String(),
+		AccountNumber: 1,
+		Sequence:      0,
+	})
+	s.Require().NoError(err)
+	authData.Accounts = append(authData.Accounts, genAccount)
+
 	// Configure Genesis data for attribute module
 	var attributeData attributetypes.GenesisState
 	attributeData.Attributes = append(attributeData.Attributes,

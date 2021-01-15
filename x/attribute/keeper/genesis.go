@@ -8,6 +8,7 @@ import (
 
 // InitGenesis creates the initial genesis state for the account module.
 func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
+	k.SetParams(ctx, data.Params)
 	if err := data.Validate(); err != nil {
 		panic(err)
 	}
