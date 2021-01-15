@@ -94,6 +94,35 @@ func (keeper Keeper) setNameRecord(ctx sdk.Context, name string, addr sdk.AccAdd
 	return nil
 }
 
+// setGenesisRecord will allow a record to be created for an address that does not exist if in proper format
+func (keeper Keeper) setGenesisRecord(ctx sdk.Context, name string, addr sdk.AccAddress, restrict bool) error {
+	var err error
+	if addr.Empty() {
+		return types.ErrNameInvalid
+	}
+	if err = sdk.VerifyAddressFormat(addr); err != nil {
+		return err
+	}
+	if name, err = keeper.Normalize(ctx, name); err != nil {
+		return err
+	}
+	key, err := types.GetNameKeyPrefix(name)
+	if err != nil {
+		return err
+	}
+	store := ctx.KVStore(keeper.storeKey)
+	if store.Has(key) {
+		return types.ErrNameAlreadyBound
+	}
+	record := types.NewNameRecord(name, addr, restrict)
+	bz, err := types.ModuleCdc.MarshalBinaryBare(&record)
+	if err != nil {
+		return err
+	}
+	store.Set(key, bz)
+	return nil
+}
+
 func (keeper Keeper) getRecordByName(ctx sdk.Context, name string) (record *types.NameRecord, err error) {
 	key, err := types.GetNameKeyPrefix(name)
 	if err != nil {

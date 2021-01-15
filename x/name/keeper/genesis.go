@@ -14,7 +14,7 @@ func (keeper Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		if err != nil {
 			panic(err)
 		}
-		if err := keeper.setNameRecord(ctx, record.Name, addr, record.Restricted); err != nil {
+		if err := keeper.setGenesisRecord(ctx, record.Name, addr, record.Restricted); err != nil {
 			panic(err)
 		}
 	}
