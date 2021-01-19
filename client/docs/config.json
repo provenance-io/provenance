@@ -13,10 +13,10 @@
         }
       },
       {
-        "url": "./tmp-swagger-gen/provenance/account/v1/query.swagger.json",
+        "url": "./tmp-swagger-gen/provenance/attribute/v1/query.swagger.json",
         "operationIds": {
           "rename": {
-            "Params": "AccountParams"
+            "Params": "AttributeParams"
           }
         }
       },      {

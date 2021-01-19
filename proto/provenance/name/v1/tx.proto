@@ -1,0 +1,48 @@
+syntax = "proto3";
+package provenance.name.v1;
+
+import "gogoproto/gogo.proto";
+import "provenance/name/v1/name.proto";
+
+option go_package = "github.com/provenance-io/provenance/x/name/types";
+
+option java_package        = "io.provenance.name.v1";
+option java_multiple_files = true;
+
+// Msg defines the bank Msg service.
+service Msg {
+  // BindName binds a name to an address under a root name.
+  rpc BindName(MsgBindNameRequest) returns (MsgBindNameResponse);
+
+  // DeleteName defines a method to verify a particular invariance.
+  rpc DeleteName(MsgDeleteNameRequest) returns (MsgDeleteNameResponse);
+}
+
+// MsgBindNameRequest defines an sdk.Msg type that is used to add an address/name binding under an optional parent name.
+// The record may optionally be restricted to prevent additional names from being added under this one without the
+// owner signing the request.
+message MsgBindNameRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // The parent record to bind this name under.
+  NameRecord parent = 1 [(gogoproto.nullable) = false];
+  // The name record to bind under the parent
+  NameRecord record = 2 [(gogoproto.nullable) = false];
+}
+
+// MsgBindNameResponse defines the Msg/BindName response type.
+message MsgBindNameResponse {}
+
+// MsgDeleteNameRequest defines an sdk.Msg type that is used to remove an existing address/name binding.  The binding
+// may not have any child names currently bound for this request to be successful.
+message MsgDeleteNameRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // The record being removed
+  NameRecord record = 1 [(gogoproto.nullable) = false];
+}
+
+// MsgDeleteNameResponse defines the Msg/DeleteName response type.
+message MsgDeleteNameResponse {}

@@ -1,0 +1,61 @@
+syntax = "proto3";
+package provenance.attribute.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/attribute/types";
+
+option java_package        = "io.provenance.attribute.v1";
+option java_multiple_files = true;
+
+import "gogoproto/gogo.proto";
+import "provenance/attribute/v1/attribute.proto";
+
+// Msg defines the bank Msg service.
+service Msg {
+  // AddAttribute defines a method to verify a particular invariance.
+  rpc AddAttribute(MsgAddAttributeRequest) returns (MsgAddAttributeResponse);
+
+  // DeleteAttribute defines a method to verify a particular invariance.
+  rpc DeleteAttribute(MsgDeleteAttributeRequest) returns (MsgDeleteAttributeResponse);
+}
+
+// MsgAddAttributeRequest defines an sdk.Msg type that is used to add a new attribute to an account
+// Attributes may only be set in an account by the account that the attribute name resolves to.
+message MsgAddAttributeRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  // The attribute name.
+  string name = 1;
+  // The attribute value.
+  bytes value = 2;
+  // The attribute value type.
+  AttributeType attribute_type = 3;
+  // The account to add the attribute to.
+  string account = 4;
+  // The address that the name must resolve to.
+  string owner = 5;
+}
+
+// MsgAddAttributeResponse defines the Msg/Vote response type.
+message MsgAddAttributeResponse {}
+
+// MsgDeleteAttributeRequest defines a message to delete an attribute from an account
+// Attributes may only be remove from an account by the account that the attribute name resolves to.
+message MsgDeleteAttributeRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  // The attribute name.
+  string name = 1;
+  // The account to add the attribute to.
+  string account = 2;
+  // The address that the name must resolve to.
+  string owner = 3;
+}
+
+// MsgDeleteAttributeResponse defines the Msg/Vote response type.
+message MsgDeleteAttributeResponse {}

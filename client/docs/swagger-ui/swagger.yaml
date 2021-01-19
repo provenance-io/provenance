@@ -304,11 +304,11 @@ paths:
           description: Unauthorized
         '500':
           description: Internal server error
-  '/account/{address}/attributes':
+  '/attribute/{address}/attributes':
     get:
       summary: Get all attributes for the given account address.
       tags:
-        - Account
+        - Attribute
       description: Get all account attributes
       produces:
         - application/json
@@ -324,11 +324,11 @@ paths:
           description: The typed key-value pair attributes for the account.
         '404':
           description: Not found
-  '/account/{address}/attributes/{name}':
+  '/attribute/{address}/attributes/{name}':
     get:
       summary: Get attributes for the account address with the given name.
       tags:
-        - Account
+        - Attribute
       description: Get account attributes by name
       produces:
         - application/json
@@ -350,11 +350,11 @@ paths:
           description: The typed attributes for the account.
         '404':
           description: Not found
-  '/account/{address}/scan/{suffix}':
+  '/attribute/{address}/scan/{suffix}':
     get:
       summary: Get attributes for the account address with the given name suffix
       tags:
-        - Account
+        - Attribute
       description: Get account attributes by name suffix
       produces:
         - application/json
@@ -376,13 +376,13 @@ paths:
           description: The typed attributes for the account.
         '404':
           description: Not found
-  /account/attributes:
+  /attribute/attributes:
     post:
       summary: >-
         Generate an unsigned transaction that will add an attribute to an
         account.
       tags:
-        - Account
+        - Attribute
       consumes:
         - application/json
       produces:

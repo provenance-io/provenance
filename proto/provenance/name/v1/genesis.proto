@@ -1,0 +1,21 @@
+syntax = "proto3";
+package provenance.name.v1;
+
+import "gogoproto/gogo.proto";
+import "provenance/name/v1/name.proto";
+
+option go_package          = "github.com/provenance-io/provenance/x/name/types";
+option java_package        = "io.provenance.name.v1";
+option java_multiple_files = true;
+
+// GenesisState defines the name module's genesis state.
+message GenesisState {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // params defines all the parameters of the module.
+  Params params = 1 [(gogoproto.nullable) = false];
+
+  // bindings defines all the name records present at genesis
+  repeated NameRecord bindings = 2 [(gogoproto.nullable) = false];
+}
