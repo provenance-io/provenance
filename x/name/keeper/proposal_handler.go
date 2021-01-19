@@ -9,7 +9,7 @@ import (
 
 // HandleCreateRootNameProposal is a handler for executing a passed create root name proposal
 func HandleCreateRootNameProposal(ctx sdk.Context, k Keeper, p *types.CreateRootNameProposal) error {
-	existing, err := k.getRecordByName(ctx, p.Name)
+	existing, err := k.GetRecordByName(ctx, p.Name)
 	if err != nil {
 		return err
 	}

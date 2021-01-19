@@ -6,13 +6,11 @@ import (
 	"encoding/json"
 	fmt "fmt"
 	"math/big"
-	"net/http"
 	"net/url"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	uuid "github.com/google/uuid"
-	"google.golang.org/protobuf/encoding/protowire"
 )
 
 // NewAttribute creates a new instance of an Attribute
@@ -79,7 +77,7 @@ func isValidValueForType(attrType AttributeType, value []byte) bool {
 	case AttributeType_Float:
 		return isValidFloat(value)
 	case AttributeType_Proto:
-		return isValidProto(value)
+		return true // Treat proto as just a special tag for bytes
 	case AttributeType_Bytes:
 		return true
 	default:
@@ -121,35 +119,6 @@ func isValidFloat(value []byte) bool {
 	s := strings.TrimSpace(string(value))
 	_, ok := new(big.Float).SetString(s)
 	return ok
-}
-
-// Validate whether a value is valid protobuf wire format.
-// This function does not deep check (ie when wire type is "bytes"), and assumes the message is not length delimited.
-func isValidProto(value []byte) bool {
-	// Sniff for known types
-	ct := http.DetectContentType(value)
-	if ct != "application/octet-stream" { // Bail early if a non-fallback MIME type was detected.
-		println(ct)
-		return false
-	}
-	for len(value) > 0 {
-		num, wtyp, tagLen := protowire.ConsumeTag(value)
-		if tagLen < 0 {
-			return false
-		}
-		if num > protowire.MaxValidNumber {
-			return false
-		}
-		valLen := protowire.ConsumeFieldValue(num, wtyp, value[tagLen:])
-		if valLen < 0 {
-			return false
-		}
-		if valLen > 0 {
-			tagLen += valLen
-		}
-		value = value[tagLen:]
-	}
-	return true
 }
 
 // AttributeTypeFromString returns a AttributeType from a string. It returns an error

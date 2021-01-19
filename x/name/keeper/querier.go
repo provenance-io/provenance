@@ -44,7 +44,7 @@ func queryResolveName(ctx sdk.Context, path []string, _ abci.RequestQuery, keepe
 	if name == "" {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "name cannot be empty")
 	}
-	record, err := keeper.getRecordByName(ctx, name)
+	record, err := keeper.GetRecordByName(ctx, name)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
@@ -69,7 +69,7 @@ func queryLookupNames(ctx sdk.Context, path []string, _ abci.RequestQuery, keepe
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
-	records, err := keeper.getRecordsByAddress(ctx, addr)
+	records, err := keeper.GetRecordsByAddress(ctx, addr)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
