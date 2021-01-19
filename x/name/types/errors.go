@@ -16,7 +16,7 @@ var (
 	ErrNameSegmentTooShort = sdkerrors.Register(ModuleName, 5, "segment of name is too short")
 	// ErrNameSegmentTooLong occurs when a segment of a name is longer than the maximum length
 	ErrNameSegmentTooLong = sdkerrors.Register(ModuleName, 6, "segment of name is too long")
-	// ErrNameHasTooManySegments occurs when a name has too many segments (names seperated by a period)
+	// ErrNameHasTooManySegments occurs when a name has too many segments (names separated by a period)
 	ErrNameHasTooManySegments = sdkerrors.Register(ModuleName, 7, "name has too many segments")
 	// ErrInvalidAddress indicates the address given does not match an existing account.
 	ErrInvalidAddress = sdkerrors.Register(ModuleName, 8, "address does not match an existing account")

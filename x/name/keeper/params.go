@@ -1,8 +1,8 @@
 package keeper
 
 import (
-	"github.com/provenance-io/provenance/x/name/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/provenance-io/provenance/x/name/types"
 )
 
 // GetParams returns the total set of distribution parameters.
@@ -35,7 +35,7 @@ func (k Keeper) GetMinSegmentLength(ctx sdk.Context) (min uint32) {
 	return min
 }
 
-// GetAllowUnrestrictedNames returns the current unrestriced names allowed parameter.
+// GetAllowUnrestrictedNames returns the current unrestricted names allowed parameter.
 func (k Keeper) GetAllowUnrestrictedNames(ctx sdk.Context) (enabled bool) {
 	k.paramSpace.Get(ctx, types.ParamStoreKeyAllowUnrestrictedNames, &enabled)
 	return enabled

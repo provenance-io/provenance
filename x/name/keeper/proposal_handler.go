@@ -3,8 +3,8 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/provenance-io/provenance/x/name/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/provenance-io/provenance/x/name/types"
 )
 
 // HandleCreateRootNameProposal is a handler for executing a passed create root name proposal

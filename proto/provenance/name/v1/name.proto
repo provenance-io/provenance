@@ -8,7 +8,7 @@ option go_package = "github.com/provenance-io/provenance/x/name/types";
 option java_package        = "io.provenance.name.v1";
 option java_multiple_files = true;
 
-// Params defines the set of params for the account module.
+// Params defines the set of params for the name module.
 message Params {
   // maximum length of name segment to allow
   uint32 max_segment_length = 1;

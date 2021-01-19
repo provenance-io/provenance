@@ -87,7 +87,6 @@ import (
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-
 	"github.com/provenance-io/provenance/x/attribute"
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
@@ -205,7 +204,7 @@ type App struct {
 	TransferKeeper   ibctransferkeeper.Keeper
 
 	AttributeKeeper attributekeeper.Keeper
-	NameKeeper namekeeper.Keeper
+	NameKeeper      namekeeper.Keeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper

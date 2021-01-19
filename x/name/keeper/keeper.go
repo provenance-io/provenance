@@ -34,7 +34,7 @@ type Keeper struct {
 }
 
 // NewKeeper returns a name keeper. It handles:
-// - managing a heirarchy of names
+// - managing a hierarchy of names
 // - enforcing permissions for name creation/deletion
 //
 // CONTRACT: the parameter Subspace must have the param key table already initialized

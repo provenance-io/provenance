@@ -64,7 +64,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		)
 	}
 
-
 	genesisState := cfg.GenesisState
 	cfg.NumValidators = 1
 
@@ -139,7 +138,7 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 			},
 			false,
 			&attributetypes.QueryParamsResponse{},
-			&attributetypes.QueryParamsResponse{ Params: attributetypes.NewParams(32)},
+			&attributetypes.QueryParamsResponse{Params: attributetypes.NewParams(32)},
 		},
 		{
 			"get account attributes",
@@ -150,10 +149,10 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 			&attributetypes.QueryAttributesResponse{
 				Account: s.accountAddr.String(),
 				Attributes: []attributetypes.Attribute{
-					attributetypes.NewAttribute("example.attribute", 
-					s.accountAddr, 
-					attributetypes.AttributeType_String, 
-					[]byte("example attribute value string")),
+					attributetypes.NewAttribute("example.attribute",
+						s.accountAddr,
+						attributetypes.AttributeType_String,
+						[]byte("example attribute value string")),
 				},
 				Pagination: &query.PageResponse{NextKey: nil, Total: 1},
 			},
@@ -167,10 +166,10 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 			&attributetypes.QueryAttributeResponse{
 				Account: s.accountAddr.String(),
 				Attributes: []attributetypes.Attribute{
-					attributetypes.NewAttribute("example.attribute", 
-					s.accountAddr, 
-					attributetypes.AttributeType_String, 
-					[]byte("example attribute value string")),
+					attributetypes.NewAttribute("example.attribute",
+						s.accountAddr,
+						attributetypes.AttributeType_String,
+						[]byte("example attribute value string")),
 				},
 				Pagination: &query.PageResponse{NextKey: nil, Total: 1},
 			},
@@ -182,7 +181,7 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 			false,
 			&attributetypes.QueryAttributeResponse{},
 			&attributetypes.QueryAttributeResponse{
-				Account: s.accountAddr.String(),
+				Account:    s.accountAddr.String(),
 				Attributes: nil,
 				Pagination: &query.PageResponse{},
 			},
@@ -196,10 +195,10 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 			&attributetypes.QueryScanResponse{
 				Account: s.accountAddr.String(),
 				Attributes: []attributetypes.Attribute{
-					attributetypes.NewAttribute("example.attribute", 
-					s.accountAddr, 
-					attributetypes.AttributeType_String, 
-					[]byte("example attribute value string")),
+					attributetypes.NewAttribute("example.attribute",
+						s.accountAddr,
+						attributetypes.AttributeType_String,
+						[]byte("example attribute value string")),
 				},
 				Pagination: &query.PageResponse{NextKey: nil, Total: 1},
 			},
@@ -211,7 +210,7 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 			false,
 			&attributetypes.QueryScanResponse{},
 			&attributetypes.QueryScanResponse{
-				Account: s.accountAddr.String(),
+				Account:    s.accountAddr.String(),
 				Attributes: nil,
 				Pagination: &query.PageResponse{},
 			},

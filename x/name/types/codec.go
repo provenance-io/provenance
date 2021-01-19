@@ -9,7 +9,7 @@ import (
 )
 
 // RegisterLegacyAminoCodec registers all the necessary types and interfaces for the
-// account module.
+// name module.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(MsgBindNameRequest{}, "provenance/name/v1/MsgBindNameRequest", nil)
 	cdc.RegisterConcrete(MsgDeleteNameRequest{}, "provenance/name/v1/MsgDeleteNameRequest", nil)
