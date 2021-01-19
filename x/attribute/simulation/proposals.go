@@ -5,7 +5,7 @@ import (
 	"github.com/provenance-io/provenance/x/attribute/keeper"
 )
 
-// ProposalContents defines the module weighted proposals' contents (none for account)
+// ProposalContents defines the module weighted proposals' contents (none for attribute)
 func ProposalContents(k keeper.Keeper) []simtypes.WeightedProposalContent {
 	return []simtypes.WeightedProposalContent{}
 }

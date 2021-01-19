@@ -15,7 +15,7 @@ import (
 	"github.com/provenance-io/provenance/x/attribute/types"
 )
 
-// NewTxCmd is the top-level command for account CLI transactions.
+// NewTxCmd is the top-level command for attribute CLI transactions.
 func NewTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        types.ModuleName,

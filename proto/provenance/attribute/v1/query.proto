@@ -11,9 +11,9 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "provenance/attribute/v1/attribute.proto";
 
-// Query defines the gRPC querier service for account module.
+// Query defines the gRPC querier service for attribute module.
 service Query {
-  // Params queries params of the account module.
+  // Params queries params of the attribute module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/provenance/attribute/v1/params";
   }

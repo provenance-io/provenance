@@ -16,7 +16,7 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
-// Params queries params of account module
+// Params queries params of attribute module
 func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	var params types.Params

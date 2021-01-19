@@ -502,7 +502,7 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// Params queries params of the account module.
+	// Params queries params of the attribute module.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// Attribute queries attributes on a given account (address) for one (or more) with the given name
 	Attribute(ctx context.Context, in *QueryAttributeRequest, opts ...grpc.CallOption) (*QueryAttributeResponse, error)

@@ -29,17 +29,17 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { maxValueLength = GenMaxValueLength(r) },
 	)
 
-	accountGenesis := types.GenesisState{
+	attributeGenesis := types.GenesisState{
 		Params: types.Params{
 			MaxValueLength: maxValueLength,
 		},
 		Attributes: []types.Attribute{},
 	}
 
-	bz, err := json.MarshalIndent(&accountGenesis, "", " ")
+	bz, err := json.MarshalIndent(&attributeGenesis, "", " ")
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Selected randomly generated account parameters:\n%s\n", bz)
-	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&accountGenesis)
+	fmt.Printf("Selected randomly generated attribute parameters:\n%s\n", bz)
+	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&attributeGenesis)
 }

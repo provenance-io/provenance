@@ -16,7 +16,7 @@
         "url": "./tmp-swagger-gen/provenance/attribute/v1/query.swagger.json",
         "operationIds": {
           "rename": {
-            "Params": "AccountParams"
+            "Params": "AttributeParams"
           }
         }
       },      {

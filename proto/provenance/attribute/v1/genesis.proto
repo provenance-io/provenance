@@ -8,7 +8,7 @@ option go_package = "github.com/provenance-io/provenance/x/attribute/types";
 option java_package        = "io.provenance.attribute.v1";
 option java_multiple_files = true;
 
-// GenesisState defines the account module's genesis state.
+// GenesisState defines the attribute module's genesis state.
 message GenesisState {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;

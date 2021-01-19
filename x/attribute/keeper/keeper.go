@@ -16,9 +16,9 @@ import (
 // Handler is a name record handler function for use with IterateRecords.
 type Handler func(record types.Attribute) error
 
-// Keeper defines the account module Keeper
+// Keeper defines the attribute module Keeper
 type Keeper struct {
-	// The reference to the Paramstore to get and set account specific params
+	// The reference to the Paramstore to get and set attribute specific params
 	paramSpace paramtypes.Subspace
 
 	// Used to ensure accounts exist for addresses.
@@ -33,7 +33,7 @@ type Keeper struct {
 	cdc codec.BinaryMarshaler
 }
 
-// NewKeeper returns an account keeper. It handles:
+// NewKeeper returns an attribute keeper. It handles:
 // - setting attributes against an account
 // - removing attributes
 // - scanning for existing attributes on an account
@@ -47,7 +47,7 @@ func NewKeeper(
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
-	
+
 	return Keeper{
 		storeKey:   key,
 		paramSpace: paramSpace,

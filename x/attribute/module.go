@@ -30,7 +30,7 @@ var (
 	_ module.AppModuleSimulation = AppModule{}
 )
 
-// AppModuleBasic contains non-dependent elements for the account module.
+// AppModuleBasic contains non-dependent elements for the attribute module.
 type AppModuleBasic struct {
 	cdc codec.Marshaler
 }
@@ -40,7 +40,7 @@ func (AppModuleBasic) Name() string {
 	return types.ModuleName
 }
 
-// RegisterLegacyAminoCodec registers the account module's types for the given codec.
+// RegisterLegacyAminoCodec registers the attribute module's types for the given codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	types.RegisterLegacyAminoCodec(cdc)
 }
@@ -50,7 +50,7 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
 	return cdc.MustMarshalJSON(types.DefaultGenesisState())
 }
 
-// ValidateGenesis performs genesis state validation for the account module.
+// ValidateGenesis performs genesis state validation for the attribute module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxEncodingConfig, bz json.RawMessage) error {
 	var data types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
@@ -65,7 +65,7 @@ func (AppModuleBasic) RegisterRESTRoutes(ctx client.Context, rtr *mux.Router) {
 	rest.RegisterHandlers(ctx, rtr)
 }
 
-// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the account module.
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the attribute module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
 	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
 }
@@ -87,7 +87,7 @@ func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 
 //____________________________________________________________________________
 
-// AppModule is the standard form account module.
+// AppModule is the standard form attribute module.
 type AppModule struct {
 	AppModuleBasic
 	keeper keeper.Keeper
@@ -106,7 +106,7 @@ func (AppModule) Name() string {
 // RegisterInvariants does nothing.
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
 
-// Route returns the message routing key for the account module.
+// Route returns the message routing key for the attribute module.
 func (am AppModule) Route() sdk.Route {
 	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
 }
@@ -127,7 +127,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 }
 
-// InitGenesis performs genesis initialization for the account module. It returns no validator updates.
+// InitGenesis performs genesis initialization for the attribute module. It returns no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
@@ -135,16 +135,16 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data j
 	return []abci.ValidatorUpdate{}
 }
 
-// ExportGenesis returns the exported genesis state as raw bytes for the account module.
+// ExportGenesis returns the exported genesis state as raw bytes for the attribute module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json.RawMessage {
 	gs := am.keeper.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(gs)
 }
 
-// BeginBlock returns the begin blocker for the account module.
+// BeginBlock returns the begin blocker for the attribute module.
 func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {}
 
-// EndBlock returns the end blocker for the account module. It returns no validator
+// EndBlock returns the end blocker for the attribute module. It returns no validator
 // updates.
 func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
@@ -154,28 +154,28 @@ func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.Validato
 
 // AppModuleSimulation functions
 
-// GenerateGenesisState creates a randomized GenState of the account module.
+// GenerateGenesisState creates a randomized GenState of the attribute module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
 }
 
-// ProposalContents returns all the account content functions used to
-// simulate account governance proposals.
+// ProposalContents returns all the attribute content functions used to
+// simulate attribute governance proposals.
 func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
 	return simulation.ProposalContents(am.keeper)
 }
 
-// RandomizedParams creates randomized account param changes for the simulator.
+// RandomizedParams creates randomized attribute param changes for the simulator.
 func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 	return simulation.ParamChanges(r)
 }
 
-// RegisterStoreDecoder registers a decoder for account module's types
+// RegisterStoreDecoder registers a decoder for attribute module's types
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 	//sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
-// WeightedOperations returns the all the account module operations with their respective weights.
+// WeightedOperations returns the all the attribute module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	//return simulation.WeightedOperations(
 	//	simState.AppParams, simState.Cdc, am.keeper, simState.Contents,

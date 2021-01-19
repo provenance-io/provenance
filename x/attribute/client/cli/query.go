@@ -14,7 +14,7 @@ import (
 	"github.com/provenance-io/provenance/x/attribute/types"
 )
 
-// GetQueryCmd is the top-level command for account CLI queries.
+// GetQueryCmd is the top-level command for attribute CLI queries.
 func GetQueryCmd() *cobra.Command {
 	queryCmd := &cobra.Command{
 		Use:                        types.ModuleName,
