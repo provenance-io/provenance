@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -19,12 +20,16 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+
+	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
 const (
 	flagVestingStart = "vesting-start-time"
 	flagVestingEnd   = "vesting-end-time"
 	flagVestingAmt   = "vesting-amount"
+
+	flagRestricted = "restrict"
 )
 
 // AddGenesisAccountCmd returns add-genesis-account cobra Command.
@@ -52,9 +57,9 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 			if err != nil {
 				inBuf := bufio.NewReader(cmd.InOrStdin())
 				keyringBackend, err := cmd.Flags().GetString(flags.FlagKeyringBackend)
-                if err != nil {
-                    return err
-                }
+				if err != nil {
+					return err
+				}
 
 				// attempt to lookup address from Keybase if no address was provided
 				kb, err := keyring.New(sdk.KeyringServiceName(), keyringBackend, clientCtx.HomeDir, inBuf)
@@ -76,17 +81,17 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 			}
 
 			vestingStart, err := cmd.Flags().GetInt64(flagVestingStart)
-            if err != nil {
-                return err
-            }
+			if err != nil {
+				return err
+			}
 			vestingEnd, err := cmd.Flags().GetInt64(flagVestingEnd)
-            if err != nil {
-                return err
-            }
+			if err != nil {
+				return err
+			}
 			vestingAmtStr, err := cmd.Flags().GetString(flagVestingAmt)
-            if err != nil {
-                return err
-            }
+			if err != nil {
+				return err
+			}
 
 			vestingAmt, err := sdk.ParseCoinsNormalized(vestingAmtStr)
 			if err != nil {
@@ -182,9 +187,98 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 	}
 
 	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
+	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test)")
 	cmd.Flags().String(flagVestingAmt, "", "amount of coins for vesting accounts")
 	cmd.Flags().Int64(flagVestingStart, 0, "schedule start time (unix epoch) for vesting accounts")
 	cmd.Flags().Int64(flagVestingEnd, 0, "schedule end time (unix epoch) for vesting accounts")
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// AddRootDomainAccountCmd returns add-genesis-root-name cobra command.
+func AddRootDomainAccountCmd(defaultNodeHome string) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "add-genesis-root-name [address_or_key_name] [root-name]",
+		Short: "Add a name binding to genesis.json",
+		Long: `Add a name binding to genesis.json. The provided account must specify
+	the account address or key name and domain-name to bind. If a key name is given,
+	the address will be looked up in the local Keybase.  The restricted flag can optionally be
+	included to lock or unlock an entry to child names.
+	`,
+		Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			depCdc := clientCtx.JSONMarshaler
+			cdc := depCdc.(codec.Marshaler)
+
+			serverCtx := server.GetServerContextFromCmd(cmd)
+			config := serverCtx.Config
+
+			config.SetRoot(clientCtx.HomeDir)
+
+			addr, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				inBuf := bufio.NewReader(cmd.InOrStdin())
+				keyringBackend, err := cmd.Flags().GetString(flags.FlagKeyringBackend)
+				if err != nil {
+					return err
+				}
+
+				// attempt to lookup address from Keybase if no address was provided
+				kb, err := keyring.New(sdk.KeyringServiceName(), keyringBackend, clientCtx.HomeDir, inBuf)
+				if err != nil {
+					return err
+				}
+
+				info, err := kb.Key(args[0])
+				if err != nil {
+					return fmt.Errorf("failed to get address from Keybase: %w", err)
+				}
+
+				addr = info.GetAddress()
+			}
+
+			genFile := config.GenesisFile()
+			appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
+			if err != nil {
+				return fmt.Errorf("failed to unmarshal genesis state: %w", err)
+			}
+
+			nameGenState := nametypes.GetGenesisStateFromAppState(cdc, appState)
+
+			for _, nr := range nameGenState.Bindings {
+				if nr.Name == strings.ToLower(strings.TrimSpace(args[1])) {
+					return fmt.Errorf("cannot add name already exists: %s", args[1])
+				}
+			}
+
+			isRestricted, err := cmd.Flags().GetBool(flagRestricted)
+			if err != nil {
+				return err
+			}
+			nameGenState.Bindings = append(nameGenState.Bindings, nametypes.NewNameRecord(args[1], addr, isRestricted))
+
+			nameGenStateBz, err := cdc.MarshalJSON(nameGenState)
+			if err != nil {
+				return fmt.Errorf("failed to marshal name genesis state: %w", err)
+			}
+
+			appState[nametypes.ModuleName] = nameGenStateBz
+
+			appStateJSON, err := json.Marshal(appState)
+			if err != nil {
+				return fmt.Errorf("failed to marshal application genesis state: %w", err)
+			}
+
+			genDoc.AppState = appStateJSON
+			return genutil.ExportGenesisFile(genDoc, genFile)
+		},
+	}
+
+	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test)")
+	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
+	cmd.Flags().BoolP(flagRestricted, "r", true, "Whether to make the new name restricted")
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd

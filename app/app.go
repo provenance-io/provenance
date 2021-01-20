@@ -4,6 +4,8 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -88,18 +90,36 @@ import (
 	"github.com/provenance-io/provenance/x/marker"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
+
+	"github.com/provenance-io/provenance/x/attribute"
+	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
+	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
+
+	"github.com/provenance-io/provenance/x/name"
+	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
+	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
 const (
 	// DefaultBondDenom is the denomination of coin to use for bond/staking
 	DefaultBondDenom = "nhash" // nano-hash
-	DefaultFeeDenom  = "nhash" // nano-hash
+	// DefaultFeeDenom is the denomination of coin to use for fees
+	DefaultFeeDenom = "nhash" // nano-hash
 )
 
 var (
 	// DefaultNodeHome default home directories for the application daemon
 	DefaultNodeHome = func(appName string) string {
-		return os.ExpandEnv("$HOME/.provenanced")
+		home := os.ExpandEnv("$PIO_HOME")
+
+		if strings.TrimSpace(home) == "" {
+			configDir, err := os.UserConfigDir()
+			if err != nil {
+				panic(err)
+			}
+			home = filepath.Join(configDir, "Provenance")
+		}
+		return home
 	}
 
 	// ModuleBasics defines the module BasicManager is in charge of setting up basic,
@@ -114,7 +134,8 @@ var (
 		mint.AppModuleBasic{},
 		distr.AppModuleBasic{},
 		gov.NewAppModuleBasic(
-			paramsclient.ProposalHandler, distrclient.ProposalHandler, upgradeclient.ProposalHandler, upgradeclient.CancelProposalHandler,
+			paramsclient.ProposalHandler, distrclient.ProposalHandler, upgradeclient.ProposalHandler,
+			upgradeclient.CancelProposalHandler,
 		),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
@@ -126,6 +147,8 @@ var (
 		vesting.AppModuleBasic{},
 
 		marker.AppModuleBasic{},
+		attribute.AppModuleBasic{},
+		name.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -186,7 +209,9 @@ type App struct {
 	EvidenceKeeper   evidencekeeper.Keeper
 	TransferKeeper   ibctransferkeeper.Keeper
 
-	MarkerKeeper markerkeeper.Keeper
+	MarkerKeeper    markerkeeper.Keeper
+	AttributeKeeper attributekeeper.Keeper
+	NameKeeper      namekeeper.Keeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
@@ -223,6 +248,8 @@ func New(
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
 
 		markertypes.StoreKey,
+		attributetypes.StoreKey,
+		nametypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -285,6 +312,14 @@ func New(
 
 	app.MarkerKeeper = markerkeeper.NewKeeper(
 		appCodec, keys[markertypes.StoreKey], app.GetSubspace(markertypes.ModuleName), app.AccountKeeper, app.BankKeeper,
+	)
+
+	app.NameKeeper = namekeeper.NewKeeper(
+		appCodec, keys[nametypes.StoreKey], app.GetSubspace(nametypes.ModuleName), app.AccountKeeper,
+	)
+
+	app.AttributeKeeper = attributekeeper.NewKeeper(
+		appCodec, keys[attributetypes.StoreKey], app.GetSubspace(attributetypes.ModuleName), app.AccountKeeper, app.NameKeeper,
 	)
 
 	// Create IBC Keeper
@@ -350,6 +385,8 @@ func New(
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 
 		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper),
+		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper),
+		attribute.NewAppModule(app.AttributeKeeper),
 
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
@@ -385,6 +422,8 @@ func New(
 		minttypes.ModuleName,
 		crisistypes.ModuleName,
 		markertypes.ModuleName,
+		nametypes.ModuleName,
+		attributetypes.ModuleName,
 		ibchost.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
@@ -407,6 +446,8 @@ func New(
 
 		// TODO -- add simulation to marker module
 		//marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper),
+		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper),
+		attribute.NewAppModule(app.AttributeKeeper),
 
 		params.NewAppModule(app.ParamsKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
@@ -623,6 +664,8 @@ func initParamsKeeper(appCodec codec.BinaryMarshaler, legacyAmino *codec.LegacyA
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 
 	paramsKeeper.Subspace(markertypes.ModuleName)
+	paramsKeeper.Subspace(nametypes.ModuleName)
+	paramsKeeper.Subspace(attributetypes.ModuleName)
 
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)

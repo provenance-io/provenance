@@ -1,0 +1,77 @@
+syntax = "proto3";
+package provenance.name.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/name/types";
+
+option java_package        = "io.provenance.name.v1";
+option java_multiple_files = true;
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "provenance/name/v1/name.proto";
+
+// Query defines the gRPC querier service for distribution module.
+service Query {
+  // Params queries params of the name module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/provenance/name/v1/params";
+  }
+
+  // Resolve queries for the address associated with a given name
+  rpc Resolve(QueryResolveRequest) returns (QueryResolveResponse) {
+    option (google.api.http).get = "/provenance/name/v1/resolve/{name}";
+  }
+
+  // ReverseLookup queries for all names bound against a given address
+  rpc ReverseLookup(QueryReverseLookupRequest) returns (QueryReverseLookupResponse) {
+    option (google.api.http).get = "/provenance/name/v1/lookup/{address}";
+  }
+}
+
+// QueryParamsRequest is the request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is the response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params defines the parameters of the module.
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryResolveRequest is the request type for the Query/Resolve method.
+message QueryResolveRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // name to resolve the address for
+  string name = 1;
+}
+
+// QueryResolveResponse is the response type for the Query/Resolve method.
+message QueryResolveResponse {
+  // a string containing the address the name resolves to
+  string address = 1;
+}
+
+// QueryReverseLookupRequest is the request type for the Query/ReverseLookup method.
+message QueryReverseLookupRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // address to find name records for
+  string address = 1;
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryReverseLookupResponse is the response type for the Query/Resolve method.
+message QueryReverseLookupResponse {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // an array of names bound against a given address
+  repeated string name = 1;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}

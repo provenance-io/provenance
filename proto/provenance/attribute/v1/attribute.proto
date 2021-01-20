@@ -1,0 +1,51 @@
+syntax = "proto3";
+package provenance.attribute.v1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/provenance-io/provenance/x/attribute/types";
+
+option java_package        = "io.provenance.attribute.v1";
+option java_multiple_files = true;
+
+// Params defines the set of params for the attribute module.
+message Params {
+  option (gogoproto.goproto_stringer) = false;
+  // maximum length of data to allow in an attribute value
+  uint32 max_value_length = 1;
+}
+
+// Attribute holds a typed key/value structure for data associated with an account
+message Attribute {
+  option (gogoproto.goproto_stringer) = false;
+  // The attribute name.
+  string name = 1;
+  // The attribute value.
+  bytes value = 2;
+  // The attribute value type.
+  AttributeType attribute_type = 3;
+  // The address the attribute is bound to
+  string address = 4;
+}
+
+// AttributeType defines the type of the data stored in the attribute value
+enum AttributeType {
+  // ATTRIBUTE_TYPE_UNSPECIFIED defines an unknown/invalid type
+  ATTRIBUTE_TYPE_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "Unspecified"];
+  // ATTRIBUTE_TYPE_UUID defines an attribute value that contains a string value representation of a V4 uuid
+  ATTRIBUTE_TYPE_UUID = 1 [(gogoproto.enumvalue_customname) = "UUID"];
+  // ATTRIBUTE_TYPE_JSON defines an attribute value that contains a byte string containing json data
+  ATTRIBUTE_TYPE_JSON = 2 [(gogoproto.enumvalue_customname) = "JSON"];
+  // ATTRIBUTE_TYPE_STRING defines an attribute value that contains a generic string value
+  ATTRIBUTE_TYPE_STRING = 3 [(gogoproto.enumvalue_customname) = "String"];
+  // ATTRIBUTE_TYPE_URI defines an attribute value that contains a URI
+  ATTRIBUTE_TYPE_URI = 4 [(gogoproto.enumvalue_customname) = "Uri"];
+  // ATTRIBUTE_TYPE_INT defines an attribute value that contains an integer (cast as int64)
+  ATTRIBUTE_TYPE_INT = 5 [(gogoproto.enumvalue_customname) = "Int"];
+  // ATTRIBUTE_TYPE_FLOAT defines an attribute value that contains a float
+  ATTRIBUTE_TYPE_FLOAT = 6 [(gogoproto.enumvalue_customname) = "Float"];
+  // ATTRIBUTE_TYPE_PROTO defines an attribute value that contains a serialized proto value in bytes
+  ATTRIBUTE_TYPE_PROTO = 7 [(gogoproto.enumvalue_customname) = "Proto"];
+  // ATTRIBUTE_TYPE_BYTES defines an attribute value that contains an untyped array of bytes
+  ATTRIBUTE_TYPE_BYTES = 8 [(gogoproto.enumvalue_customname) = "Bytes"];
+}

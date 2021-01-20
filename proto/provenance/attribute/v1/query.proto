@@ -1,0 +1,115 @@
+syntax = "proto3";
+package provenance.attribute.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/attribute/types";
+
+option java_package        = "io.provenance.attribute.v1";
+option java_multiple_files = true;
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "provenance/attribute/v1/attribute.proto";
+
+// Query defines the gRPC querier service for attribute module.
+service Query {
+  // Params queries params of the attribute module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/provenance/attribute/v1/params";
+  }
+
+  // Attribute queries attributes on a given account (address) for one (or more) with the given name
+  rpc Attribute(QueryAttributeRequest) returns (QueryAttributeResponse) {
+    option (google.api.http).get = "/provenance/attribute/v1/attribute/{account}/{name}";
+  }
+
+  // Attributes queries attributes on a given account (address) for any defined attributes
+  rpc Attributes(QueryAttributesRequest) returns (QueryAttributesResponse) {
+    option (google.api.http).get = "/provenance/attribute/v1/attributes/{account}";
+  }
+
+  // Scan queries attributes on a given account (address) for any that match the provided suffix
+  rpc Scan(QueryScanRequest) returns (QueryScanResponse) {
+    option (google.api.http).get = "/provenance/attribute/v1/attribute/{account}/scan/{suffix}";
+  }
+}
+
+// QueryParamsRequest is the request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is the response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params defines the parameters of the module.
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryAttributeRequest is the request type for the Query/Attribute method.
+message QueryAttributeRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // account defines the address to query for.
+  string account = 1;
+  // name is the attribute name to query for
+  string name = 2;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+// QueryAttributeResponse is the response type for the Query/Attribute method.
+message QueryAttributeResponse {
+  // a string containing the address of the account the attributes are assigned to.
+  string account = 1;
+  // a list of attribute values
+  repeated Attribute attributes = 2 [(gogoproto.nullable) = false];
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageResponse pagination = 3;
+}
+
+// QueryAttributesRequest is the request type for the Query/Attributes method.
+message QueryAttributesRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // account defines the address to query for.
+  string account = 1;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryAttributesResponse is the response type for the Query/Attribute method.
+message QueryAttributesResponse {
+  // a string containing the address of the account the attributes are assigned to=
+  string account = 1;
+  // a list of attribute values
+  repeated Attribute attributes = 2 [(gogoproto.nullable) = false];
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageResponse pagination = 3;
+}
+
+// QueryScanRequest is the request type for the Query/Scan account attributes method.
+message QueryScanRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // account defines the address to query for.
+  string account = 1;
+
+  // name defines the partial attribute name to search for base on names being in RDNS format.
+  string suffix = 2;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+// QueryScanResponse is the response type for the Query/Attribute method.
+message QueryScanResponse {
+  // a string containing the address of the account the attributes are assigned to=
+  string account = 1;
+  // a list of attribute values
+  repeated Attribute attributes = 2 [(gogoproto.nullable) = false];
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageResponse pagination = 3;
+}
