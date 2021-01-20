@@ -32,7 +32,7 @@ type AddAttributeParams struct {
 	// The attribute value.
 	Value []byte `json:"value"`
 	// The attribute value type.
-	ValueType string `json:"type"`
+	ValueType string `json:"value_type"`
 }
 
 // DeleteAttributeParams are params for encoding a MsgDeleteAttribute

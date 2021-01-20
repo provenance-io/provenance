@@ -18,7 +18,6 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
-	"github.com/tendermint/tmlibs/cli"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
@@ -329,8 +328,7 @@ func New(
 
 	// Init CosmWasm module
 	var wasmRouter = bApp.Router()
-	homeDir := viper.GetString(cli.HomeFlag)
-	wasmDir := filepath.Join(homeDir, "data", "wasm")
+	wasmDir := filepath.Join(homePath, "data", "wasm")
 
 	wasmWrap := WasmWrapper{Wasm: wasm.DefaultWasmConfig()}
 	err := viper.Unmarshal(&wasmWrap)
