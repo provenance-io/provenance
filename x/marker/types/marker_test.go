@@ -29,6 +29,7 @@ func TestNewEmptyMarkerValidate(t *testing.T) {
 	creatorAddr := accAddressFromBech32(t, creator(t).Address)
 	m := NewEmptyMarkerAccount(
 		"test",
+		creatorAddr.String(),
 		[]AccessGrant{{Address: creatorAddr.String(), Permissions: []Access{Access_Mint, Access_Admin}}},
 	)
 
@@ -98,7 +99,7 @@ func TestNewMarkerValidate(t *testing.T) {
 	}{
 		{
 			"emtpty marker is invalid",
-			NewEmptyMarkerAccount("test", nil),
+			NewEmptyMarkerAccount("test", "", nil),
 			fmt.Errorf("a manager is required if there are no accounts with ACCESS_ADMIN and marker is not ACTIVE"),
 		},
 		{

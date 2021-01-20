@@ -31,7 +31,14 @@ func (k Keeper) GetMarkerByDenom(ctx sdk.Context, denom string) (types.MarkerAcc
 	if err != nil {
 		return nil, err
 	}
-	return k.GetMarker(ctx, addr)
+	m, err := k.GetMarker(ctx, addr)
+	if err != nil {
+		return nil, err
+	}
+	if m == nil {
+		return nil, fmt.Errorf("marker %s not found for address: %s", denom, addr)
+	}
+	return m, nil
 }
 
 // AddMarkerAccount persists marker to the account keeper store.

@@ -311,7 +311,7 @@ func TestAccountKeeperMintBurnCoins(t *testing.T) {
 	// verify status is cancelled
 	m, err = app.MarkerKeeper.GetMarker(ctx, addr)
 	require.NoError(t, err)
-	require.EqualValues(t, m.GetStatus(), types.StatusCancelled.String())
+	require.EqualValues(t, types.StatusCancelled, m.GetStatus())
 
 	// succeeds on a cancelled marker (no-op)
 	require.NoError(t, app.MarkerKeeper.CancelMarker(ctx, user, "testcoin"))
@@ -321,7 +321,7 @@ func TestAccountKeeperMintBurnCoins(t *testing.T) {
 	// verify status is destroyed and supply is zero.
 	m, err = app.MarkerKeeper.GetMarker(ctx, addr)
 	require.NoError(t, err)
-	require.EqualValues(t, m.GetStatus(), types.StatusDestroyed.String())
+	require.EqualValues(t, types.StatusDestroyed, m.GetStatus())
 	require.EqualValues(t, m.GetSupply().Amount, sdk.ZeroInt())
 
 	// supply module should also indicate a zero supply

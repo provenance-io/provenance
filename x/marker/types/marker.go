@@ -46,12 +46,13 @@ type MarkerAccountI interface {
 }
 
 // NewEmptyMarkerAccount creates a new empty marker account in a Proposed state
-func NewEmptyMarkerAccount(denom string, grants []AccessGrant) *MarkerAccount {
+func NewEmptyMarkerAccount(denom, manager string, grants []AccessGrant) *MarkerAccount {
 	baseAcc := authtypes.NewBaseAccountWithAddress(MustGetMarkerAddress(denom))
 	return &MarkerAccount{
 		BaseAccount:   baseAcc,
 		AccessControl: grants,
 		Denom:         denom,
+		Manager:       manager,
 		Supply:        sdk.ZeroInt(),
 		Status:        StatusProposed,
 		MarkerType:    MarkerType_Coin,

@@ -97,7 +97,7 @@ func (k Keeper) GetMarker(ctx sdk.Context, address sdk.AccAddress) (types.Marker
 		}
 		return macc, nil
 	}
-	return nil, fmt.Errorf("marker not found for address: %s", address)
+	return nil, nil
 }
 
 // SetMarker sets a marker in the auth account store will panic if the marker account is not valid or
