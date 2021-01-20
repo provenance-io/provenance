@@ -10,5 +10,5 @@ type QueryResName struct {
 
 // QueryResNames contains a sequence of name records.
 type QueryResNames struct {
-	Records []QueryResName `json:"records"`
+	Records []QueryResName `json:"records,omitempty"`
 }

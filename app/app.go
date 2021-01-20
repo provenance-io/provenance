@@ -92,6 +92,7 @@ import (
 	"github.com/provenance-io/provenance/x/attribute"
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
+	attributewasm "github.com/provenance-io/provenance/x/attribute/wasm"
 
 	"github.com/provenance-io/provenance/x/name"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
@@ -341,10 +342,12 @@ func New(
 	// Init CosmWasm encoder integrations
 	encoderRegistry := provwasm.NewEncoderRegistry()
 	encoderRegistry.RegisterEncoder(nametypes.RouterKey, namewasm.Encoder)
+	encoderRegistry.RegisterEncoder(attributetypes.RouterKey, attributewasm.Encoder)
 
 	// Init CosmWasm query integrations
 	querierRegistry := provwasm.NewQuerierRegistry()
 	querierRegistry.RegisterQuerier(nametypes.RouterKey, namewasm.Querier(app.NameKeeper))
+	querierRegistry.RegisterQuerier(attributetypes.RouterKey, attributewasm.Querier(app.AttributeKeeper))
 
 	// Add the staking feature and indicate that provwasm contracts can be run on this chain.
 	supportedFeatures := "staking,provenance"
