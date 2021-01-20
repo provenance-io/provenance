@@ -19,14 +19,12 @@ func TestParamChanges(t *testing.T) {
 		simValue    string
 		subspace    string
 	}{
-		{"name/communitytax", "communitytax", "\"0.120000000000000000\"", "name"},
-		{"name/baseproposerreward", "baseproposerreward", "\"0.280000000000000000\"", "name"},
-		{"name/bonusproposerreward", "bonusproposerreward", "\"0.180000000000000000\"", "name"},
+		{"attribute/maxvaluelength", "maxvaluelength", "\"2596996162\"", "attribute"},
 	}
 
 	paramChanges := simulation.ParamChanges(r)
 
-	require.Len(t, paramChanges, 3)
+	require.Len(t, paramChanges, 1)
 
 	for i, p := range paramChanges {
 		require.Equal(t, expected[i].composedKey, p.ComposedKey())
