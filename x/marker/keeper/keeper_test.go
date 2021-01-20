@@ -8,6 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/stretchr/testify/require"
@@ -28,7 +29,7 @@ func TestAccountMapperGetSet(t *testing.T) {
 	require.Nil(t, acc)
 
 	// create account and check default values
-	acc = types.NewEmptyMarkerAccount("testcoin", nil)
+	acc = types.NewEmptyMarkerAccount("testcoin", user.String(), nil)
 	mac, ok := acc.(types.MarkerAccountI)
 	require.True(t, ok)
 	require.NotNil(t, mac)
@@ -65,6 +66,7 @@ func TestAccountKeeperReader(t *testing.T) {
 	// create account and check default values
 	mac := types.NewEmptyMarkerAccount(
 		"testcoin",
+		user.String(),
 		[]types.AccessGrant{*types.NewAccessGrant(user, []types.Access{types.Access_Mint})})
 
 	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
@@ -104,6 +106,7 @@ func TestAccountKeeperManageAccess(t *testing.T) {
 
 	// create account and check default values
 	mac := types.NewEmptyMarkerAccount("testcoin",
+		user1.String(),
 		[]types.AccessGrant{*types.NewAccessGrant(user1, []types.Access{types.Access_Burn}),
 			*types.NewAccessGrant(admin, []types.Access{types.Access_Admin})})
 
@@ -208,6 +211,7 @@ func TestAccountKeeperCancelProposedByManager(t *testing.T) {
 
 	// create account and check default values
 	mac := types.NewEmptyMarkerAccount("testcoin",
+		user1.String(),
 		[]types.AccessGrant{*types.NewAccessGrant(user1, []types.Access{types.Access_Burn}),
 			*types.NewAccessGrant(admin, []types.Access{types.Access_Admin})})
 
@@ -241,7 +245,7 @@ func TestAccountKeeperMintBurnCoins(t *testing.T) {
 	require.Error(t, app.MarkerKeeper.BurnCoin(ctx, user, sdk.NewInt64Coin("testcoin", 100)))
 
 	// create account and check default values
-	mac := types.NewEmptyMarkerAccount("testcoin", []types.AccessGrant{*types.NewAccessGrant(user,
+	mac := types.NewEmptyMarkerAccount("testcoin", user.String(), []types.AccessGrant{*types.NewAccessGrant(user,
 		[]types.Access{types.Access_Mint, types.Access_Burn, types.Access_Withdraw, types.Access_Delete})})
 	require.NoError(t, mac.SetManager(user))
 	require.NoError(t, mac.SetSupply(sdk.NewCoin("testcoin", sdk.NewInt(1000))))
@@ -335,11 +339,13 @@ func TestAccountKeeperGetAll(t *testing.T) {
 
 	user := testUserAddress("test")
 	mac := types.NewEmptyMarkerAccount("testcoin",
+		user.String(),
 		[]types.AccessGrant{*types.NewAccessGrant(user, []types.Access{types.Access_Deposit})})
 	require.NoError(t, mac.SetManager(user))
 	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
 
 	mac = types.NewEmptyMarkerAccount("secondcoin",
+		user.String(),
 		[]types.AccessGrant{*types.NewAccessGrant(user, []types.Access{types.Access_Deposit})})
 	require.NoError(t, mac.SetManager(user))
 	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
@@ -372,12 +378,15 @@ func TestAccountInsufficientExisting(t *testing.T) {
 	pubkey := secp256k1.GenPrivKey().PubKey()
 	user := sdk.AccAddress(pubkey.Address())
 
+	// setup an existing account with an existing balance (and matching supply)
 	existingSupply := sdk.NewCoin("testcoin", sdk.NewInt(10000))
 	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 0))
 	app.BankKeeper.SetBalance(ctx, user, existingSupply)
+	prevSupply := app.BankKeeper.GetSupply(ctx)
+	app.BankKeeper.SetSupply(ctx, banktypes.NewSupply(prevSupply.GetTotal().Add(existingSupply)))
 
 	// create account and check default values
-	mac := types.NewEmptyMarkerAccount("testcoin", []types.AccessGrant{*types.NewAccessGrant(user,
+	mac := types.NewEmptyMarkerAccount("testcoin", user.String(), []types.AccessGrant{*types.NewAccessGrant(user,
 		[]types.Access{types.Access_Mint, types.Access_Burn, types.Access_Withdraw, types.Access_Delete})})
 	require.NoError(t, mac.SetManager(user))
 	require.NoError(t, mac.SetSupply(sdk.NewCoin("testcoin", sdk.NewInt(1000))))
@@ -412,7 +421,7 @@ func TestAccountImplictControl(t *testing.T) {
 	user2 := testUserAddress("test2")
 
 	// create account and check default values
-	mac := types.NewEmptyMarkerAccount("testcoin", []types.AccessGrant{*types.NewAccessGrant(user,
+	mac := types.NewEmptyMarkerAccount("testcoin", user.String(), []types.AccessGrant{*types.NewAccessGrant(user,
 		[]types.Access{types.Access_Mint, types.Access_Burn, types.Access_Withdraw, types.Access_Delete})})
 	require.NoError(t, mac.SetManager(user))
 	require.NoError(t, mac.SetSupply(sdk.NewCoin("testcoin", sdk.NewInt(1000))))

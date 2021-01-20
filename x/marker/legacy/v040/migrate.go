@@ -17,7 +17,7 @@ import (
 func Migrate(oldGenState v039marker.GenesisState) *v040marker.GenesisState {
 	var markerAccounts = make([]v040marker.MarkerAccount, 0, len(oldGenState.Markers))
 	for _, mark := range oldGenState.Markers {
-		markerType := v040marker.MarkerType_value["MarkerType_"+strings.ToTitle(strings.ToLower(mark.MarkerType))]
+		markerType := v040marker.MarkerType_value["MARKER_TYPE_"+strings.ToUpper(mark.MarkerType)]
 		if markerType == int32(v040marker.MarkerType_Unknown) {
 			panic(fmt.Sprintf("unknown marker type %s", mark.MarkerType))
 		}

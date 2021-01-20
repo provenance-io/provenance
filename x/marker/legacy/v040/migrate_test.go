@@ -50,19 +50,27 @@ func TestMigrate(t *testing.T) {
 	expected := fmt.Sprintf(`{
   "markers": [
     {
-      "address": "%s",
-	  "account_number": 5,
-	  "sequence": 4,
+      "access_control": [],
+      "allow_governance_control": false,
+      "base_account": {
+        "account_number": "5",
+        "address": "%s",
+        "pub_key": null,
+        "sequence": "4"
+      },
       "denom": "hotdog",
-      "total_supply": 1,
-      "marker_type": "COIN"
+      "manager": "%s",
+      "marker_type": "MARKER_TYPE_COIN",
+      "status": "active",
+      "supply": "1",
+      "supply_fixed": false
     }
   ],
   "params": {
-	"enable_governance": true,
-	"max_total_supply": 100000000000
+    "enable_governance": true,
+    "max_total_supply": "100000000000"
   }
-}`, addr1.String())
+}`, addr1.String(), addr1.String())
 
 	bz, err := clientCtx.JSONMarshaler.MarshalJSON(migrated)
 	require.NoError(t, err)

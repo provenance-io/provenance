@@ -48,7 +48,7 @@ func TestNewQuerier(t *testing.T) {
 	require.Nil(t, err)
 
 	// create a marker account
-	mac := markertypes.NewEmptyMarkerAccount("testcoin", []markertypes.AccessGrant{*markertypes.NewAccessGrant(user,
+	mac := markertypes.NewEmptyMarkerAccount("testcoin", user.String(), []markertypes.AccessGrant{*markertypes.NewAccessGrant(user,
 		[]markertypes.Access{markertypes.Access_Mint})})
 	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
 
@@ -89,7 +89,7 @@ func TestQuerierAccess(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	user := testUserAddress("test")
 	// create a marker account
-	mac := markertypes.NewEmptyMarkerAccount("testcoin", []markertypes.AccessGrant{*markertypes.NewAccessGrant(user,
+	mac := markertypes.NewEmptyMarkerAccount("testcoin", user.String(), []markertypes.AccessGrant{*markertypes.NewAccessGrant(user,
 		[]markertypes.Access{markertypes.Access_Mint})})
 	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
 
@@ -113,7 +113,7 @@ func TestQuerierCoins(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	user := testUserAddress("test")
 	// create a marker account
-	mac := markertypes.NewEmptyMarkerAccount("testcoin", []markertypes.AccessGrant{*markertypes.NewAccessGrant(user,
+	mac := markertypes.NewEmptyMarkerAccount("testcoin", user.String(), []markertypes.AccessGrant{*markertypes.NewAccessGrant(user,
 		[]markertypes.Access{markertypes.Access_Mint})})
 	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
 
@@ -137,7 +137,7 @@ func TestQuerierSupply(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	user := testUserAddress("test")
 	// create a marker account
-	mac := markertypes.NewEmptyMarkerAccount("testcoin", []markertypes.AccessGrant{*markertypes.NewAccessGrant(user,
+	mac := markertypes.NewEmptyMarkerAccount("testcoin", user.String(), []markertypes.AccessGrant{*markertypes.NewAccessGrant(user,
 		[]markertypes.Access{markertypes.Access_Mint})})
 	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
 
