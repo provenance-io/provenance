@@ -290,7 +290,7 @@ func (this *Params) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if !this.MaxTotalSupply.Equal(that1.MaxTotalSupply) {
+	if this.MaxTotalSupply != that1.MaxTotalSupply {
 		return false
 	}
 	if this.EnableGovernance != that1.EnableGovernance {
