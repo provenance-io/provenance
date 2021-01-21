@@ -10,7 +10,9 @@ linters:
     - deadcode
     - depguard
     - dogsled
-    # - errcheck
+    - errcheck
+    # - funlen
+    # - gocyclo
     - goconst
     - gocritic
     - gofmt
@@ -21,6 +23,7 @@ linters:
     - govet
     - ineffassign
     - interfacer
+    # - lll
     - maligned
     - misspell
     - nakedret
@@ -34,6 +37,8 @@ linters:
     - unused
     - unparam
     # - wsl
+    - varcheck
+    - whitespace
     - nolintlint
 
 issues:
@@ -50,11 +55,6 @@ issues:
     - text: "ST1003:"
       linters:
         - stylecheck
-    # FIXME: Disabled until golangci-lint updates stylecheck with this fix:
-    # https://github.com/dominikh/go-tools/issues/389
-    # - text: "ST1016:"
-    #   linters:
-    #     - stylecheck
   max-issues-per-linter: 10000
   max-same-issues: 10000
 
@@ -68,8 +68,19 @@ linters-settings:
           - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
           - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
           - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
+  golint:
+    min-confidence: 0
+  # gocyclo:
+  #   min-complexity: 15
   dogsled:
     max-blank-identifiers: 3
+  # lll:
+  #   line-length: 120
+  # funlen:
+  #   lines: 100
+  #   statements: 50
+  # nakedret:
+  #   max-func-lines: 50
   maligned:
     suggest-new: true
   misspell:

@@ -39,8 +39,11 @@ type Keeper struct {
 //
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
-	cdc codec.BinaryMarshaler, key sdk.StoreKey, paramSpace paramtypes.Subspace, authKeeper types.AccountKeeper) Keeper {
-
+	cdc codec.BinaryMarshaler,
+	key sdk.StoreKey,
+	paramSpace paramtypes.Subspace,
+	authKeeper types.AccountKeeper,
+) Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
