@@ -50,7 +50,7 @@ func SplitAccountAttributeKey(key []byte) (addr sdk.AccAddress, name_id []byte, 
 		panic(fmt.Sprintf("unexpected key length (%d ≠ %d)", len(key), AttributeKeyLength))
 	}
 	// first byte is key prefix for AttributeKey
-	addr = sdk.AccAddress(key[1:sdk.AddrLen])
+	addr = sdk.AccAddress(key[1 : sdk.AddrLen+1])
 	name_id = key[1+sdk.AddrLen : sdk.AddrLen+32]
 	value_id = key[1+sdk.AddrLen+32 : 1+sdk.AddrLen+64]
 	return
