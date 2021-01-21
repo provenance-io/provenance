@@ -86,9 +86,5 @@ func queryLookupNames(ctx sdk.Context, path []string, _ abci.RequestQuery, keepe
 }
 
 func queryResFromNameRecord(r types.NameRecord) types.QueryNameResult {
-	return types.QueryNameResult{
-		Name:       r.Name,
-		Address:    r.Address,
-		Restricted: r.Restricted,
-	}
+	return types.QueryNameResult(r)
 }

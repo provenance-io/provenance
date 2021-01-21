@@ -43,7 +43,6 @@ func NewKeeper(
 	cdc codec.BinaryMarshaler, key sdk.StoreKey, paramSpace paramtypes.Subspace,
 	authKeeper types.AccountKeeper, nameKeeper types.NameKeeper,
 ) Keeper {
-
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
@@ -82,7 +81,7 @@ func (k Keeper) GetAttributes(ctx sdk.Context, acc sdk.AccAddress, name string) 
 func (k Keeper) IterateRecords(ctx sdk.Context, handle Handler) error {
 	// Init a attribute record iterator
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, []byte(types.AttributeKeyPrefix))
+	iterator := sdk.KVStorePrefixIterator(store, types.AttributeKeyPrefix)
 	defer iterator.Close()
 	// Iterate over records, processing callbacks.
 	for ; iterator.Valid(); iterator.Next() {

@@ -24,7 +24,6 @@ import (
 // SimAppChainID hardcoded chainID for simulation
 const (
 	appName = "provenanced"
-	chainID = "sim-provenance"
 )
 
 func setup(withGenesis bool, invCheckPeriod uint) (*App, GenesisState) {

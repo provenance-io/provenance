@@ -44,7 +44,8 @@ func GetNameKeyPrefix(name string) (key []byte, err error) {
 		}
 	}
 	sum := hsh.Sum(nil)
-	key = append(NameKeyPrefix, sum[:]...)
+	key = NameKeyPrefix
+	key = append(key, sum...)
 	return
 }
 
@@ -52,7 +53,8 @@ func GetNameKeyPrefix(name string) (key []byte, err error) {
 func GetAddressKeyPrefix(address sdk.AccAddress) (key []byte, err error) {
 	err = sdk.VerifyAddressFormat(address.Bytes())
 	if err == nil {
-		key = append(AddressKeyPrefix, address.Bytes()...)
+		key = AddressKeyPrefix
+		key = append(key, address.Bytes()...)
 	}
 	return
 }

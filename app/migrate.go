@@ -30,10 +30,8 @@ import (
 )
 
 const (
-	flagGenesisTime     = "genesis-time"
-	flagInitialHeight   = "initial-height"
-	flagReplacementKeys = "replacement-cons-keys"
-	flagNoProp29        = "no-prop-29"
+	flagGenesisTime   = "genesis-time"
+	flagInitialHeight = "initial-height"
 )
 
 // MigrateGenesisCmd returns a command to execute genesis state migration.
@@ -66,7 +64,7 @@ $ %s migrate /path/to/genesis.json --chain-id=provenance-2 --genesis-time=2020-0
 			}
 
 			var initialState types.AppMap
-			if err := json.Unmarshal(genDoc.AppState, &initialState); err != nil {
+			if err = json.Unmarshal(genDoc.AppState, &initialState); err != nil {
 				return errors.Wrap(err, "failed to JSON unmarshal initial genesis state")
 			}
 
@@ -110,7 +108,7 @@ $ %s migrate /path/to/genesis.json --chain-id=provenance-2 --genesis-time=2020-0
 			if genesisTime != "" {
 				var t time.Time
 
-				err := t.UnmarshalText([]byte(genesisTime))
+				err = t.UnmarshalText([]byte(genesisTime))
 				if err != nil {
 					return errors.Wrap(err, "failed to unmarshal genesis time")
 				}

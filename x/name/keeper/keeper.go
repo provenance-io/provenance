@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"strings"
 	"unicode"
 
@@ -57,11 +56,11 @@ func NewKeeper(
 
 // Logger returns a module-specific logger.
 func (keeper Keeper) Logger(ctx sdk.Context) log.Logger {
-	return keeper.Logger(ctx).With("module", fmt.Sprintf("x/%s", types.ModuleName))
+	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
 // ResolvesTo to determines whether a name resolves to a given address.
-func (keeper Keeper) ResolvesTo(ctx sdk.Context, name string, addr sdk.AccAddress) bool {
+func (keeper Keeper) ResolvesTo(ctx sdk.Context, name string, addr sdk.AccAddress) bool { // nolint:interfacer
 	stored, err := keeper.GetRecordByName(ctx, name)
 	if err != nil {
 		return false
@@ -231,7 +230,7 @@ func (keeper Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle Handl
 
 // Normalize returns a name is storage format.
 func (keeper Keeper) Normalize(ctx sdk.Context, name string) (string, error) {
-	var comps []string
+	comps := make([]string, 0)
 	for _, comp := range strings.Split(name, ".") {
 		comp = strings.ToLower(strings.TrimSpace(comp))
 		lenComp := uint32(len(comp))

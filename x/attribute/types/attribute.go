@@ -14,7 +14,7 @@ import (
 )
 
 // NewAttribute creates a new instance of an Attribute
-func NewAttribute(name string, account sdk.AccAddress, attrType AttributeType, value []byte) Attribute {
+func NewAttribute(name string, account sdk.AccAddress, attrType AttributeType, value []byte) Attribute { // nolint:interfacer
 	// Ensure string type values are trimmed.
 	if attrType != AttributeType_Bytes && attrType != AttributeType_Proto {
 		trimmed := strings.TrimSpace(string(value))

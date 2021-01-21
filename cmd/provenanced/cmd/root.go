@@ -115,6 +115,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		AddGenesisAccountCmd(app.DefaultNodeHome(appName)),
 		AddRootDomainAccountCmd(app.DefaultNodeHome(appName)),
 		tmcli.NewCompletionCmd(rootCmd, true),
+		testnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
 	)
 
@@ -204,7 +205,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 
 	snapshotDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data", "snapshots")
 	// Create the snapshot dir if not exists
-	if _, err := os.Stat(snapshotDir); os.IsNotExist(err) {
+	if _, err = os.Stat(snapshotDir); os.IsNotExist(err) {
 		os.Mkdir(snapshotDir, 0755)
 	}
 	snapshotDB, err := sdk.NewLevelDB("metadata", snapshotDir)
