@@ -66,6 +66,11 @@ func NewKeeper(
 	authKeeper authkeeper.AccountKeeper,
 	bankKeeper bankkeeper.Keeper,
 ) Keeper {
+
+	if !paramSpace.HasKeyTable() {
+		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
+	}
+
 	return Keeper{
 		paramSpace: paramSpace,
 		authKeeper: authKeeper,
