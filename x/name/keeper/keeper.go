@@ -61,7 +61,7 @@ func (keeper Keeper) Logger(ctx sdk.Context) log.Logger {
 
 // ResolvesTo to determines whether a name resolves to a given address.
 func (keeper Keeper) ResolvesTo(ctx sdk.Context, name string, addr sdk.AccAddress) bool {
-	stored, err := keeper.getRecordByName(ctx, name)
+	stored, err := keeper.GetRecordByName(ctx, name)
 	if err != nil {
 		return false
 	}
@@ -130,7 +130,8 @@ func (keeper Keeper) setGenesisRecord(ctx sdk.Context, name string, addr sdk.Acc
 	return nil
 }
 
-func (keeper Keeper) getRecordByName(ctx sdk.Context, name string) (record *types.NameRecord, err error) {
+// GetRecordByName resolves a record by name.
+func (keeper Keeper) GetRecordByName(ctx sdk.Context, name string) (record *types.NameRecord, err error) {
 	key, err := types.GetNameKeyPrefix(name)
 	if err != nil {
 		return nil, err
@@ -155,7 +156,8 @@ func (keeper Keeper) nameExists(ctx sdk.Context, name string) bool {
 	return store.Has(key)
 }
 
-func (keeper Keeper) getRecordsByAddress(ctx sdk.Context, address sdk.AccAddress) (types.NameRecords, error) {
+// GetRecordsByAddress looks up all names bound to an address.
+func (keeper Keeper) GetRecordsByAddress(ctx sdk.Context, address sdk.AccAddress) (types.NameRecords, error) {
 	// Return value data structure.
 	records := types.NameRecords{}
 	// Handler that adds records if account address matches.
@@ -180,7 +182,7 @@ func (keeper Keeper) getRecordsByAddress(ctx sdk.Context, address sdk.AccAddress
 // Delete a name record from the kvstore.
 func (keeper Keeper) deleteRecord(ctx sdk.Context, name string) error {
 	// Need the record to clear the address index
-	record, err := keeper.getRecordByName(ctx, name)
+	record, err := keeper.GetRecordByName(ctx, name)
 	if err != nil {
 		return err
 	}

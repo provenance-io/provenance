@@ -31,7 +31,7 @@ func (s msgServer) BindName(goCtx context.Context, msg *types.MsgBindNameRequest
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 	// Fetch the parent name record from the keeper.
-	record, err := s.Keeper.getRecordByName(ctx, msg.Parent.Name)
+	record, err := s.Keeper.GetRecordByName(ctx, msg.Parent.Name)
 	if err != nil {
 		ctx.Logger().Error("unable to find parent name record", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())

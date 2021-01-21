@@ -1,7 +1,6 @@
 package types
 
 import (
-	"context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
@@ -15,7 +14,7 @@ type AccountKeeper interface {
 
 // NameKeeper defines the expected account keeper used for simulations (noalias)
 type NameKeeper interface {
-	Resolve(context.Context, *nametypes.QueryResolveRequest) (*nametypes.QueryResolveResponse, error)
 	ResolvesTo(ctx sdk.Context, name string, addr sdk.AccAddress) bool
 	Normalize(ctx sdk.Context, name string) (string, error)
+	GetRecordByName(ctx sdk.Context, name string) (record *nametypes.NameRecord, err error)
 }

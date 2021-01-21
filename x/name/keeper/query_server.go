@@ -28,7 +28,7 @@ func (keeper Keeper) Resolve(c context.Context, request *types.QueryResolveReque
 	if err != nil {
 		return nil, err
 	}
-	record, err := keeper.getRecordByName(ctx, name)
+	record, err := keeper.GetRecordByName(ctx, name)
 	if err != nil {
 		return nil, err
 	}

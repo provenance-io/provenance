@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/provenance-io/provenance/x/attribute/types"
-	nametypes "github.com/provenance-io/provenance/x/name/types"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -71,7 +70,7 @@ func (k Keeper) GetAllAttributes(ctx sdk.Context, acc sdk.AccAddress) ([]types.A
 // GetAttributes gets all attributes with the given name from an account.
 func (k Keeper) GetAttributes(ctx sdk.Context, acc sdk.AccAddress, name string) ([]types.Attribute, error) {
 	name = strings.ToLower(strings.TrimSpace(name))
-	if _, err := k.nameKeeper.Resolve(ctx.Context(), &nametypes.QueryResolveRequest{Name: name}); err != nil { // Ensure name exists (ie was bound to an address)
+	if _, err := k.nameKeeper.GetRecordByName(ctx, name); err != nil { // Ensure name exists (ie was bound to an address)
 		return nil, err
 	}
 	pred := func(s string) bool { return strings.EqualFold(s, name) }
