@@ -39,7 +39,7 @@ jobs:
         excludelist+=" $(find ./ -type f -name '*.pb.gw.go')"
         excludelist+=" $(find ./ -type f -path './tests/mocks/*.go')"
         for filename in ${excludelist}; do
-          filename=$(echo $filename | sed 's/^./github.com\/provenance-io\/provenance/g')
+          filename=$(echo $filename | sed 's/^./github.com\/provenance\-io\/provenance/g')
           echo "Excluding ${filename} from coverage report..."
           sed -i "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
         done
