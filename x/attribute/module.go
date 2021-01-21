@@ -7,6 +7,7 @@ import (
 	"math/rand"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+
 	"github.com/provenance-io/provenance/x/attribute/client/cli"
 	"github.com/provenance-io/provenance/x/attribute/client/rest"
 	"github.com/provenance-io/provenance/x/attribute/keeper"

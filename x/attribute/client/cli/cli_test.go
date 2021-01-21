@@ -25,6 +25,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	simapp "github.com/provenance-io/provenance/app"
 
 	"github.com/provenance-io/provenance/x/attribute/client/cli"

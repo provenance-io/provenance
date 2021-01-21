@@ -84,9 +84,10 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	appparams "github.com/provenance-io/provenance/app/params"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	appparams "github.com/provenance-io/provenance/app/params"
 
 	"github.com/provenance-io/provenance/x/attribute"
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
@@ -100,6 +101,7 @@ import (
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
+
 	"github.com/provenance-io/provenance/internal/provwasm"
 )
 

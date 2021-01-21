@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/tendermint/tendermint/libs/log"
+
+	"github.com/provenance-io/provenance/x/attribute/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"

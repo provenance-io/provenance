@@ -12,6 +12,7 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	uuid "github.com/google/uuid"
+
 	"github.com/provenance-io/provenance/x/name/types"
 )
 
