@@ -2,8 +2,10 @@ syntax = "proto3";
 package provenance.marker.v1;
 
 import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
 import "google/api/annotations.proto";
 import "provenance/marker/v1/marker.proto";
 import "provenance/marker/v1/accessgrant.proto";
@@ -68,7 +70,7 @@ message QueryAllMarkersRequest {
 }
 // QueryAllMarkersResponse is the response type for the Query/AllMarkers method.
 message QueryAllMarkersResponse {
-  repeated MarkerAccount markers = 1;
+  repeated google.protobuf.Any markers = 1 [(cosmos_proto.accepts_interface) = "MarkerAccountI"];
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
@@ -80,7 +82,7 @@ message QueryMarkerRequest {
 }
 // QueryMarkerResponse is the response type for the Query/Marker method.
 message QueryMarkerResponse {
-  MarkerAccount marker = 1;
+  google.protobuf.Any marker = 1 [(cosmos_proto.accepts_interface) = "MarkerAccountI"];
 }
 
 // QueryHoldingRequest is the response type for the Query/MarkerHolders method.

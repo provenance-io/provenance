@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -33,12 +34,18 @@ func (k Keeper) AllMarkers(c context.Context, req *types.QueryAllMarkersRequest)
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	markers := make([]*types.MarkerAccount, 0)
+	markers := make([]*codectypes.Any, 0)
 	store := ctx.KVStore(k.storeKey)
 	markerStore := prefix.NewStore(store, types.MarkerStoreKeyPrefix)
 	pageRes, err := query.Paginate(markerStore, req.Pagination, func(key []byte, value []byte) error {
 		result, err := k.GetMarker(ctx, sdk.AccAddress(value))
-		markers = append(markers, result.Clone())
+		if err == nil {
+			any, anyErr := codectypes.NewAnyWithValue(result)
+			if anyErr != nil {
+				return status.Errorf(codes.Internal, anyErr.Error())
+			}
+			markers = append(markers, any)
+		}
 		return err
 	})
 	if err != nil {
@@ -57,7 +64,11 @@ func (k Keeper) Marker(c context.Context, req *types.QueryMarkerRequest) (*types
 	if err != nil {
 		return nil, err
 	}
-	return &types.QueryMarkerResponse{Marker: marker.Clone()}, nil
+	any, err := codectypes.NewAnyWithValue(marker)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+	return &types.QueryMarkerResponse{Marker: any}, nil
 }
 
 // Holding query for all accounts holding the given marker coins
