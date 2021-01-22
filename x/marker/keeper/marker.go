@@ -372,6 +372,16 @@ func (k Keeper) ActivateMarker(ctx sdk.Context, caller sdk.Address, denom string
 		return fmt.Errorf("can only activate markeraccounts in the Finalized status")
 	}
 
+	// Verify the send_enabled status of this coin denom matches the marker types
+	switch m.GetMarkerType() {
+	case types.MarkerType_Coin:
+		k.ensureSendEnabledStatus(ctx, denom, true)
+	case types.MarkerType_RestrictedCoin:
+		k.ensureSendEnabledStatus(ctx, denom, false)
+	default:
+		return fmt.Errorf("marker of %s type can not be activated", m.GetMarkerType())
+	}
+
 	// Amount to mint is typically the defined supply however...
 	supplyRequest := m.GetSupply()
 
@@ -538,4 +548,36 @@ func (k Keeper) accountControlsAllSupply(ctx sdk.Context, caller sdk.AccAddress,
 	// if the given account is currently holding 100% of the supply of a marker then it should be able to invoke
 	// the operations as an admin on the marker.
 	return m.GetSupply().IsEqual(sdk.NewCoin(m.GetDenom(), balance.Amount))
+}
+
+// getCurrentSendEnabledStatus returns true is the denom will support sending with the bank, either as
+// the default send enable or a specific record.
+func (k Keeper) getCurrentSendEnabledStatus(ctx sdk.Context, denom string) bool {
+	return k.bankKeeper.SendEnabledCoin(ctx, sdk.NewCoin(denom, sdk.ZeroInt()))
+}
+
+// ensureSendEnabledStatus checks to see if the configuration of SendEnabled for the current network matches
+// the requested value, sets
+func (k Keeper) ensureSendEnabledStatus(ctx sdk.Context, denom string, sendEnabled bool) {
+	if k.getCurrentSendEnabledStatus(ctx, denom) == sendEnabled {
+		return
+	}
+	// current state doesn't requested match so update configuration.
+	k.setSendEnabledStatus(ctx, denom, sendEnabled)
+}
+
+// setSendEnabledStatus will ensure an existing explicit denom SendEnabled bank param matches sendEnabled,
+// and create a new SendEnabled param and add it if required.
+func (k Keeper) setSendEnabledStatus(ctx sdk.Context, denom string, sendEnabled bool) {
+	bankParams := k.bankKeeper.GetParams(ctx)
+	for i := range bankParams.SendEnabled {
+		if bankParams.SendEnabled[i].Denom == denom {
+			bankParams.SendEnabled[i].Enabled = sendEnabled
+			k.bankKeeper.SetParams(ctx, bankParams)
+			return
+		}
+	}
+	// not found and set above so add a new explict record here.
+	bankParams.SendEnabled = append(bankParams.SendEnabled, banktypes.NewSendEnabled(denom, sendEnabled))
+	k.bankKeeper.SetParams(ctx, bankParams)
 }
