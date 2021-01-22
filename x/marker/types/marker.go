@@ -49,13 +49,15 @@ type MarkerAccountI interface {
 func NewEmptyMarkerAccount(denom, manager string, grants []AccessGrant) *MarkerAccount {
 	baseAcc := authtypes.NewBaseAccountWithAddress(MustGetMarkerAddress(denom))
 	return &MarkerAccount{
-		BaseAccount:   baseAcc,
-		AccessControl: grants,
-		Denom:         denom,
-		Manager:       manager,
-		Supply:        sdk.ZeroInt(),
-		Status:        StatusProposed,
-		MarkerType:    MarkerType_Coin,
+		BaseAccount:            baseAcc,
+		AccessControl:          grants,
+		Denom:                  denom,
+		Manager:                manager,
+		Supply:                 sdk.ZeroInt(),
+		Status:                 StatusProposed,
+		MarkerType:             MarkerType_Coin,
+		SupplyFixed:            true,
+		AllowGovernanceControl: true,
 	}
 }
 
@@ -73,13 +75,15 @@ func NewMarkerAccount(
 		manager = sdk.AccAddress{}
 	}
 	return &MarkerAccount{
-		BaseAccount:   baseAcc,
-		Denom:         totalSupply.Denom,
-		Manager:       manager.String(),
-		Supply:        totalSupply.Amount,
-		AccessControl: accessControls,
-		Status:        status,
-		MarkerType:    markerType,
+		BaseAccount:            baseAcc,
+		Denom:                  totalSupply.Denom,
+		Manager:                manager.String(),
+		Supply:                 totalSupply.Amount,
+		AccessControl:          accessControls,
+		Status:                 status,
+		MarkerType:             markerType,
+		SupplyFixed:            true,
+		AllowGovernanceControl: true,
 	}
 }
 
