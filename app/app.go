@@ -12,6 +12,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
+	"github.com/spf13/viper"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -83,10 +84,10 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	appparams "github.com/provenance-io/provenance/app/params"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	appparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/x/marker"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -94,10 +95,17 @@ import (
 	"github.com/provenance-io/provenance/x/attribute"
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
+	attributewasm "github.com/provenance-io/provenance/x/attribute/wasm"
 
 	"github.com/provenance-io/provenance/x/name"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
+	namewasm "github.com/provenance-io/provenance/x/name/wasm"
+
+	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
+
+	"github.com/provenance-io/provenance/internal/provwasm"
 )
 
 const (
@@ -133,9 +141,9 @@ var (
 		staking.AppModuleBasic{},
 		mint.AppModuleBasic{},
 		distr.AppModuleBasic{},
-		gov.NewAppModuleBasic(
+		gov.NewAppModuleBasic(append(wasmclient.ProposalHandlers,
 			paramsclient.ProposalHandler, distrclient.ProposalHandler, upgradeclient.ProposalHandler,
-			upgradeclient.CancelProposalHandler,
+			upgradeclient.CancelProposalHandler)...,
 		),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
@@ -149,6 +157,7 @@ var (
 		marker.AppModuleBasic{},
 		attribute.AppModuleBasic{},
 		name.AppModuleBasic{},
+		wasm.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -173,6 +182,12 @@ var (
 	_ CosmosApp               = (*App)(nil)
 	_ servertypes.Application = (*App)(nil)
 )
+
+// WasmWrapper allows us to use namespacing in the config file
+// This is only used for parsing in the app, x/wasm expects WasmConfig
+type WasmWrapper struct {
+	Wasm wasm.Config `mapstructure:"wasm"`
+}
 
 // App extends an ABCI application, but with most of its parameters exported.
 // They are exported for convenience in creating helper functions, as object
@@ -212,6 +227,7 @@ type App struct {
 	MarkerKeeper    markerkeeper.Keeper
 	AttributeKeeper attributekeeper.Keeper
 	NameKeeper      namekeeper.Keeper
+	WasmKeeper      wasm.Keeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
@@ -231,7 +247,6 @@ func New(
 	homePath string, invCheckPeriod uint, encodingConfig appparams.EncodingConfig,
 	appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
-
 	appCodec := encodingConfig.Marshaler
 	cdc := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
@@ -250,6 +265,7 @@ func New(
 		markertypes.StoreKey,
 		attributetypes.StoreKey,
 		nametypes.StoreKey,
+		wasm.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -322,6 +338,48 @@ func New(
 		appCodec, keys[attributetypes.StoreKey], app.GetSubspace(attributetypes.ModuleName), app.AccountKeeper, app.NameKeeper,
 	)
 
+	// Init CosmWasm module
+	var wasmRouter = bApp.Router()
+	wasmDir := filepath.Join(homePath, "data", "wasm")
+
+	wasmWrap := WasmWrapper{Wasm: wasm.DefaultWasmConfig()}
+	err := viper.Unmarshal(&wasmWrap)
+	if err != nil {
+		panic("error while reading wasm config: " + err.Error())
+	}
+	wasmConfig := wasmWrap.Wasm
+
+	// Init CosmWasm encoder integrations
+	encoderRegistry := provwasm.NewEncoderRegistry()
+	encoderRegistry.RegisterEncoder(nametypes.RouterKey, namewasm.Encoder)
+	encoderRegistry.RegisterEncoder(attributetypes.RouterKey, attributewasm.Encoder)
+
+	// Init CosmWasm query integrations
+	querierRegistry := provwasm.NewQuerierRegistry()
+	querierRegistry.RegisterQuerier(nametypes.RouterKey, namewasm.Querier(app.NameKeeper))
+	querierRegistry.RegisterQuerier(attributetypes.RouterKey, attributewasm.Querier(app.AttributeKeeper))
+
+	// Add the staking feature and indicate that provwasm contracts can be run on this chain.
+	supportedFeatures := "staking,provenance"
+
+	// The last arguments contain custom message handlers, and custom query handlers,
+	// to allow smart contracts to use provenance modules.
+	app.WasmKeeper = wasm.NewKeeper(
+		appCodec,
+		keys[wasm.StoreKey],
+		app.GetSubspace(wasm.ModuleName),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.StakingKeeper,
+		app.DistrKeeper,
+		wasmRouter,
+		wasmDir,
+		wasmConfig,
+		supportedFeatures,
+		provwasm.MessageEncoders(encoderRegistry, logger),
+		provwasm.QueryPlugins(querierRegistry),
+	)
+
 	// Create IBC Keeper
 	app.IBCKeeper = ibckeeper.NewKeeper(
 		appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), app.StakingKeeper, scopedIBCKeeper,
@@ -333,7 +391,8 @@ func New(
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
 		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper)).
-		AddRoute(ibchost.RouterKey, ibcclient.NewClientUpdateProposalHandler(app.IBCKeeper.ClientKeeper))
+		AddRoute(ibchost.RouterKey, ibcclient.NewClientUpdateProposalHandler(app.IBCKeeper.ClientKeeper)).
+		AddRoute(wasm.RouterKey, wasm.NewWasmProposalHandler(app.WasmKeeper, wasm.EnableAllProposals))
 	app.GovKeeper = govkeeper.NewKeeper(
 		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
 		&stakingKeeper, govRouter,
@@ -352,7 +411,7 @@ func New(
 	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferModule)
 	app.IBCKeeper.SetRouter(ibcRouter)
 
-	// Create evidence Keeper for to register the IBC light client misbehaviour evidence route
+	// Create evidence Keeper for to register the IBC light client misbehavior evidence route
 	evidenceKeeper := evidencekeeper.NewKeeper(
 		appCodec, keys[evidencetypes.StoreKey], &app.StakingKeeper, app.SlashingKeeper,
 	)
@@ -387,6 +446,7 @@ func New(
 		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper),
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper),
 		attribute.NewAppModule(app.AttributeKeeper),
+		wasm.NewAppModule(&app.WasmKeeper),
 
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
@@ -424,6 +484,7 @@ func New(
 		markertypes.ModuleName,
 		nametypes.ModuleName,
 		attributetypes.ModuleName,
+		wasm.ModuleName,
 		ibchost.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
@@ -448,6 +509,7 @@ func New(
 		//marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper),
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper),
 		attribute.NewAppModule(app.AttributeKeeper),
+		wasm.NewAppModule(&app.WasmKeeper),
 
 		params.NewAppModule(app.ParamsKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
@@ -666,6 +728,7 @@ func initParamsKeeper(appCodec codec.BinaryMarshaler, legacyAmino *codec.LegacyA
 	paramsKeeper.Subspace(markertypes.ModuleName)
 	paramsKeeper.Subspace(nametypes.ModuleName)
 	paramsKeeper.Subspace(attributetypes.ModuleName)
+	paramsKeeper.Subspace(wasm.ModuleName)
 
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)

@@ -8,6 +8,7 @@ import (
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
+
 	"github.com/provenance-io/provenance/x/attribute/types"
 )
 
@@ -16,7 +17,7 @@ const (
 	MaxValueLength = "max_value_length"
 )
 
-// GenMaxValueLength randomized CommunityTax
+// GenMaxValueLength randomized MaxValueLength
 func GenMaxValueLength(r *rand.Rand) uint32 {
 	return r.Uint32()
 }

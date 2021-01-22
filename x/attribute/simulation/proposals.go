@@ -2,6 +2,7 @@ package simulation
 
 import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+
 	"github.com/provenance-io/provenance/x/attribute/keeper"
 )
 

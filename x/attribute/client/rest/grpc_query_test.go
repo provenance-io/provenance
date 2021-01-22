@@ -19,6 +19,7 @@ import (
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
 	simapp "github.com/provenance-io/provenance/app"
 
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"

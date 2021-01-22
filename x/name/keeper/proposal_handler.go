@@ -4,12 +4,13 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/provenance-io/provenance/x/name/types"
 )
 
 // HandleCreateRootNameProposal is a handler for executing a passed create root name proposal
 func HandleCreateRootNameProposal(ctx sdk.Context, k Keeper, p *types.CreateRootNameProposal) error {
-	existing, err := k.getRecordByName(ctx, p.Name)
+	existing, err := k.GetRecordByName(ctx, p.Name)
 	if err != nil {
 		return err
 	}

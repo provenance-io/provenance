@@ -61,8 +61,8 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 
 			config.SetRoot(clientCtx.HomeDir)
 
-			addr, err := sdk.AccAddressFromBech32(args[0])
-			if err != nil {
+			addr, parseErr := sdk.AccAddressFromBech32(args[0])
+			if parseErr != nil {
 				inBuf := bufio.NewReader(cmd.InOrStdin())
 				keyringBackend, err := cmd.Flags().GetString(flags.FlagKeyringBackend)
 				if err != nil {
@@ -77,7 +77,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 
 				info, err := kb.Key(args[0])
 				if err != nil {
-					return fmt.Errorf("failed to get address from Keybase: %w", err)
+					return fmt.Errorf("failed to get address from Keybase: %w, could not use address as bech32 string: %s", err, parseErr.Error())
 				}
 
 				addr = info.GetAddress()
@@ -134,7 +134,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 				genAccount = baseAccount
 			}
 
-			if err := genAccount.Validate(); err != nil {
+			if err = genAccount.Validate(); err != nil {
 				return fmt.Errorf("failed to validate new genesis account: %w", err)
 			}
 
@@ -225,8 +225,8 @@ func AddRootDomainAccountCmd(defaultNodeHome string) *cobra.Command {
 
 			config.SetRoot(clientCtx.HomeDir)
 
-			addr, err := sdk.AccAddressFromBech32(args[0])
-			if err != nil {
+			addr, parseErr := sdk.AccAddressFromBech32(args[0])
+			if parseErr != nil {
 				inBuf := bufio.NewReader(cmd.InOrStdin())
 				keyringBackend, err := cmd.Flags().GetString(flags.FlagKeyringBackend)
 				if err != nil {
@@ -241,7 +241,7 @@ func AddRootDomainAccountCmd(defaultNodeHome string) *cobra.Command {
 
 				info, err := kb.Key(args[0])
 				if err != nil {
-					return fmt.Errorf("failed to get address from Keybase: %w", err)
+					return fmt.Errorf("failed to get address from Keybase: %w, could use use address as bech32 string: %s", err, parseErr.Error())
 				}
 
 				addr = info.GetAddress()

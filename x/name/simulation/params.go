@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+
 	"github.com/provenance-io/provenance/x/name/types"
 )
 

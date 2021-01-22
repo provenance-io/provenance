@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+
 	"github.com/provenance-io/provenance/cmd/provenanced/cmd"
 )
 

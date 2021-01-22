@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/snapshots"
+
 	"github.com/provenance-io/provenance/app/params"
 
 	"github.com/rs/zerolog"
@@ -36,6 +37,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+
 	"github.com/provenance-io/provenance/app"
 )
 
@@ -119,6 +121,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		AddRootDomainAccountCmd(app.DefaultNodeHome(appName)),
 		AddGenesisMarkerCmd(app.DefaultNodeHome(appName)),
 		tmcli.NewCompletionCmd(rootCmd, true),
+		testnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
 	)
 
@@ -208,8 +211,11 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 
 	snapshotDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data", "snapshots")
 	// Create the snapshot dir if not exists
-	if _, err := os.Stat(snapshotDir); os.IsNotExist(err) {
-		os.Mkdir(snapshotDir, 0755)
+	if _, err = os.Stat(snapshotDir); os.IsNotExist(err) {
+		err = os.Mkdir(snapshotDir, 0755)
+		if err != nil {
+			panic(err)
+		}
 	}
 	snapshotDB, err := sdk.NewLevelDB("metadata", snapshotDir)
 	if err != nil {
@@ -241,9 +247,14 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 }
 
 func createSimappAndExport(
-	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string,
-	appOpts servertypes.AppOptions) (servertypes.ExportedApp, error) {
-
+	logger log.Logger,
+	db dbm.DB,
+	traceStore io.Writer,
+	height int64,
+	forZeroHeight bool,
+	jailAllowedAddrs []string,
+	appOpts servertypes.AppOptions,
+) (servertypes.ExportedApp, error) {
 	encCfg := app.MakeEncodingConfig() // Ideally, we would reuse the one created by NewRootCmd.
 	encCfg.Marshaler = codec.NewProtoCodec(encCfg.InterfaceRegistry)
 	var a *app.App
@@ -264,7 +275,9 @@ func overwriteFlagDefaults(c *cobra.Command, defaults map[string]string) {
 	set := func(s *pflag.FlagSet, key, val string) {
 		if f := s.Lookup(key); f != nil {
 			f.DefValue = val
-			f.Value.Set(val)
+			if err := f.Value.Set(val); err != nil {
+				panic(err)
+			}
 		}
 	}
 	for key, val := range defaults {

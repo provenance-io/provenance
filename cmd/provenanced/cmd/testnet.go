@@ -35,10 +35,12 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	"github.com/provenance-io/provenance/app"
+	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
-var (
+const (
 	flagNodeDirPrefix     = "node-dir-prefix"
 	flagNumValidators     = "v"
 	flagOutputDir         = "output-dir"
@@ -97,7 +99,7 @@ Example:
 
 const nodeDirPerm = 0755
 
-// Initialize the testnet
+// InitTestnet initializes the testnet
 func InitTestnet(
 	clientCtx client.Context,
 	cmd *cobra.Command,
@@ -114,7 +116,6 @@ func InitTestnet(
 	algoStr string,
 	numValidators int,
 ) error {
-
 	if chainID == "" {
 		chainID = "chain-" + tmrand.NewRand().Str(6)
 	}
@@ -193,7 +194,7 @@ func InitTestnet(
 		}
 
 		// save private key seed words
-		if err := writeFile(fmt.Sprintf("%v.json", "key_seed"), nodeDir, cliPrint); err != nil {
+		if err = writeFile(fmt.Sprintf("%v.json", "key_seed"), nodeDir, cliPrint); err != nil {
 			return err
 		}
 
@@ -218,7 +219,7 @@ func InitTestnet(
 		)
 
 		txBuilder := clientCtx.TxConfig.NewTxBuilder()
-		if err := txBuilder.SetMsgs(createValMsg); err != nil {
+		if err = txBuilder.SetMsgs(createValMsg); err != nil {
 			return err
 		}
 
@@ -231,7 +232,7 @@ func InitTestnet(
 			WithKeybase(kb).
 			WithTxConfig(clientCtx.TxConfig)
 
-		if err := tx.Sign(txFactory, nodeDirName, txBuilder, true); err != nil {
+		if err = tx.Sign(txFactory, nodeDirName, txBuilder, true); err != nil {
 			return err
 		}
 
@@ -275,7 +276,6 @@ func initGenFiles(
 	genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance,
 	genFiles []string, numValidators int,
 ) error {
-
 	appGenState := mbm.DefaultGenesis(clientCtx.JSONMarshaler)
 
 	// set the accounts in the genesis state
@@ -328,7 +328,6 @@ func initGenFiles(
 	mintGenState.Params.InflationMin = sdk.ZeroDec()
 	appGenState[minttypes.ModuleName] = clientCtx.JSONMarshaler.MustMarshalJSON(&mintGenState)
 
-	/* TODO -- add with name module
 	// Set the root names
 	var nameGenState nametypes.GenesisState
 	clientCtx.JSONMarshaler.MustUnmarshalJSON(appGenState[nametypes.ModuleName], &nameGenState)
@@ -337,8 +336,8 @@ func initGenFiles(
 	nameGenState.Bindings = append(nameGenState.Bindings, nametypes.NewNameRecord("io", genAccounts[0].GetAddress(), true))
 	nameGenState.Bindings = append(nameGenState.Bindings, nametypes.NewNameRecord("pio", genAccounts[0].GetAddress(), false))
 	nameGenState.Bindings = append(nameGenState.Bindings, nametypes.NewNameRecord("provenance", genAccounts[0].GetAddress(), false))
-	appGenState[nametypes.ModuleName] = clientCtx.JSONMarshaler.MustMarshalJSON(nameGenState)
-	*/
+	appGenState[nametypes.ModuleName] = clientCtx.JSONMarshaler.MustMarshalJSON(&nameGenState)
+
 	// END OF PROVENANCE SPECIFIC CONFIG
 	// --------------------------------------------
 
@@ -367,7 +366,6 @@ func collectGenFiles(
 	nodeIDs []string, valPubKeys []cryptotypes.PubKey, numValidators int,
 	outputDir, nodeDirPrefix, nodeDaemonHome string, genBalIterator banktypes.GenesisBalancesIterator,
 ) error {
-
 	var appState json.RawMessage
 	genTime := tmtime.Now()
 

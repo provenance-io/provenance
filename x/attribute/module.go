@@ -7,6 +7,7 @@ import (
 	"math/rand"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+
 	"github.com/provenance-io/provenance/x/attribute/client/cli"
 	"github.com/provenance-io/provenance/x/attribute/client/rest"
 	"github.com/provenance-io/provenance/x/attribute/keeper"
@@ -31,9 +32,7 @@ var (
 )
 
 // AppModuleBasic contains non-dependent elements for the attribute module.
-type AppModuleBasic struct {
-	cdc codec.Marshaler
-}
+type AppModuleBasic struct{}
 
 // Name returns the module name.
 func (AppModuleBasic) Name() string {
@@ -67,7 +66,10 @@ func (AppModuleBasic) RegisterRESTRoutes(ctx client.Context, rtr *mux.Router) {
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the attribute module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+	err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+	if err != nil {
+		panic(err)
+	}
 }
 
 // GetTxCmd returns the root tx command for the distribution module.
@@ -85,7 +87,7 @@ func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
 
-//____________________________________________________________________________
+// ____________________________________________________________________________
 
 // AppModule is the standard form attribute module.
 type AppModule struct {
@@ -150,7 +152,7 @@ func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.Validato
 	return []abci.ValidatorUpdate{}
 }
 
-//____________________________________________________________________________
+// ____________________________________________________________________________
 
 // AppModuleSimulation functions
 
@@ -171,13 +173,13 @@ func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 }
 
 // RegisterStoreDecoder registers a decoder for attribute module's types
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	//sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
+func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
+	// sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
 // WeightedOperations returns the all the attribute module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	//return simulation.WeightedOperations(
+	// return simulation.WeightedOperations(
 	//	simState.AppParams, simState.Cdc, am.keeper, simState.Contents,
 	//)
 	return []simtypes.WeightedOperation{}

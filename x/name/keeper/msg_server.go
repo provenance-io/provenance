@@ -31,17 +31,17 @@ func (s msgServer) BindName(goCtx context.Context, msg *types.MsgBindNameRequest
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 	// Fetch the parent name record from the keeper.
-	record, err := s.Keeper.getRecordByName(ctx, msg.Parent.Name)
+	record, err := s.Keeper.GetRecordByName(ctx, msg.Parent.Name)
 	if err != nil {
 		ctx.Logger().Error("unable to find parent name record", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 	// Ensure that if the parent name is restricted, it resolves to the given parent address (message signer).
 	if record.Restricted {
-		parentAddress, err := sdk.AccAddressFromBech32(msg.Parent.Address)
-		if err != nil {
-			ctx.Logger().Error("unable to parse parent address", "err", err)
-			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		parentAddress, addrErr := sdk.AccAddressFromBech32(msg.Parent.Address)
+		if addrErr != nil {
+			ctx.Logger().Error("unable to parse parent address", "err", addrErr)
+			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, addrErr.Error())
 		}
 		if !s.Keeper.ResolvesTo(ctx, msg.Parent.Name, parentAddress) {
 			errm := "parent name is restricted and does not resolve to the provided parent address"

@@ -40,19 +40,19 @@ func AccountAttributesKeyPrefix(acc sdk.AccAddress) []byte {
 }
 
 // AccountAttributesNameKeyPrefix returns a prefix key for all attributes with a given name on an account
-func AccountAttributesNameKeyPrefix(acc sdk.AccAddress, attribute_name string) []byte {
+func AccountAttributesNameKeyPrefix(acc sdk.AccAddress, attributeName string) []byte {
 	key := append(AttributeKeyPrefix, acc.Bytes()...)
-	return append(key, GetNameKeyBytes(attribute_name)...)
+	return append(key, GetNameKeyBytes(attributeName)...)
 }
 
-func SplitAccountAttributeKey(key []byte) (addr sdk.AccAddress, name_id []byte, value_id []byte) {
+func SplitAccountAttributeKey(key []byte) (addr sdk.AccAddress, nameID []byte, valueID []byte) {
 	if len(key) != AttributeKeyLength {
 		panic(fmt.Sprintf("unexpected key length (%d ≠ %d)", len(key), AttributeKeyLength))
 	}
 	// first byte is key prefix for AttributeKey
-	addr = sdk.AccAddress(key[1:sdk.AddrLen])
-	name_id = key[1+sdk.AddrLen : sdk.AddrLen+32]
-	value_id = key[1+sdk.AddrLen+32 : 1+sdk.AddrLen+64]
+	addr = sdk.AccAddress(key[1 : sdk.AddrLen+1])
+	nameID = key[1+sdk.AddrLen : sdk.AddrLen+32]
+	valueID = key[1+sdk.AddrLen+32 : 1+sdk.AddrLen+64]
 	return
 }
 

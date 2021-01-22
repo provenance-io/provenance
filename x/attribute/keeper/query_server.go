@@ -46,7 +46,7 @@ func (k Keeper) Attribute(c context.Context, req *types.QueryAttributeRequest) (
 	attributeStore := prefix.NewStore(store, types.AccountAttributesNameKeyPrefix(accAddr, req.Name))
 	pageRes, err := query.Paginate(attributeStore, req.Pagination, func(key []byte, value []byte) error {
 		var result types.Attribute
-		err := k.cdc.UnmarshalBinaryBare(value, &result)
+		err = k.cdc.UnmarshalBinaryBare(value, &result)
 		if err != nil {
 			return err
 		}
@@ -78,7 +78,7 @@ func (k Keeper) Attributes(c context.Context, req *types.QueryAttributesRequest)
 
 	pageRes, err := query.Paginate(attributeStore, req.Pagination, func(key []byte, value []byte) error {
 		var result types.Attribute
-		err := k.cdc.UnmarshalBinaryBare(value, &result)
+		err = k.cdc.UnmarshalBinaryBare(value, &result)
 		if err != nil {
 			return err
 		}
@@ -115,7 +115,7 @@ func (k Keeper) Scan(c context.Context, req *types.QueryScanRequest) (*types.Que
 
 	pageRes, err := query.FilteredPaginate(attributeStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var result types.Attribute
-		err := k.cdc.UnmarshalBinaryBare(value, &result)
+		err = k.cdc.UnmarshalBinaryBare(value, &result)
 		if err != nil {
 			return false, err
 		}
