@@ -47,8 +47,10 @@ const (
 	// EventAttributeModuleNameKey is the attribute key for the entire marker module
 	EventAttributeModuleNameKey string = "module"
 
-	// EventTypeMarkerAdded emitted when marker addded
+	// EventTypeMarkerAdded emitted when marker added
 	EventTypeMarkerAdded string = EventAttributeMarkerKey + "_added"
+	// EventTypeMarkerUpdated emitted when marker updated
+	EventTypeMarkerUpdated string = EventAttributeMarkerKey + "_updated"
 
 	// EventTypeGrantAccess emitted when access grant made for user against marker
 	EventTypeGrantAccess string = EventAttributeMarkerKey + "_AccessGranted"

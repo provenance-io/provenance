@@ -540,6 +540,38 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 	return nil
 }
 
+// SetMarkerMetadata updates the denom metadata records for the current marker.
+func (k Keeper) SetMarkerMetadata(ctx sdk.Context, metadata banktypes.Metadata, caller sdk.AccAddress) error {
+	if metadata.Base == "" {
+		return fmt.Errorf("invalid metadata request, base denom must match existing marker")
+
+	}
+	m, err := k.GetMarkerByDenom(ctx, metadata.Base)
+	if err != nil {
+		return fmt.Errorf("marker not found for %s: %w", metadata.Base, err)
+	}
+	if !m.GetManager().Equals(caller) && !m.AddressHasAccess(caller, types.Access_Admin) {
+		return fmt.Errorf("%s is not allowed to manage marker metadata", caller.String())
+	}
+	// status must currently be set to proposed
+	if m.GetStatus() != types.StatusProposed {
+		return fmt.Errorf("can only set denom metadata for markers in the Proposed status")
+	}
+
+	// record the metadata with the bank
+	k.bankKeeper.SetDenomMetaData(ctx, metadata)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeMarkerUpdated,
+			sdk.NewAttribute(types.EventAttributeDenomKey, metadata.Base),
+			sdk.NewAttribute(types.EventAttributeAdministratorKey, caller.String()),
+			sdk.NewAttribute(types.EventAttributeModuleNameKey, types.ModuleName),
+		),
+	)
+	return nil
+}
+
 // accountControlsAllSupply return true if the caller account address possess 100% of the total supply of a marker.
 // This check is used to determine if an account should be allowed to perform defacto admin operations on a marker.
 func (k Keeper) accountControlsAllSupply(ctx sdk.Context, caller sdk.AccAddress, m types.MarkerAccountI) bool {

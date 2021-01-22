@@ -3,6 +3,7 @@ package provenance.marker.v1;
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/bank/v1beta1/bank.proto";
 import "provenance/marker/v1/marker.proto";
 import "provenance/marker/v1/accessgrant.proto";
 
@@ -35,17 +36,21 @@ service Msg {
   rpc AddMarker(MsgAddMarkerRequest) returns (MsgAddMarkerResponse);
   // Transfer marker denominated coin between accounts
   rpc Transfer(MsgTransferRequest) returns (MsgTransferResponse);
+  // Allows Denom Metadata (see bank module) to be set for the Marker's Denom
+  rpc SetDenomMetadata(MsgSetDenomMetadataRequest) returns (MsgSetDenomMetadataResponse);
 }
 
 // MsgAddMarkerRequest defines the Msg/AddMarker request type
 message MsgAddMarkerRequest {
   cosmos.base.v1beta1.Coin amount = 1
       [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
-  string               manager      = 3;
-  string               from_address = 4;
-  MarkerStatus         status       = 5;
-  MarkerType           marker_type  = 6;
-  repeated AccessGrant access_list  = 7 [(gogoproto.nullable) = false];
+  string               manager                  = 3;
+  string               from_address             = 4;
+  MarkerStatus         status                   = 5;
+  MarkerType           marker_type              = 6;
+  repeated AccessGrant access_list              = 7 [(gogoproto.nullable) = false];
+  bool                 supply_fixed             = 8;
+  bool                 allow_governance_control = 9;
 }
 
 // MsgAddMarkerResponse defines the Msg/AddMarker response type
@@ -142,3 +147,13 @@ message MsgTransferRequest {
 
 // MsgTransferResponse defines the Msg/Transfer response type
 message MsgTransferResponse {}
+
+// MsgSetDenomMetadataRequest defines the Msg/SetDenomMetadata request type
+message MsgSetDenomMetadataRequest {
+  cosmos.bank.v1beta1.Metadata metadata = 1
+    [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/x/bank/types.Metadata"];
+    string   administrator                   = 2;
+}
+
+// MsgSetDenomMetadataResponse defines the Msg/SetDenomMetadata response type
+message MsgSetDenomMetadataResponse {}

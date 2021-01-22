@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 const (
@@ -19,6 +20,7 @@ const (
 	TypeBurnRequest         = "burn"
 	TypeWithdrawRequest     = "withdraw"
 	TypeTransferRequest     = "transfer"
+	TypeSetMetadataRequest  = "setmetadata"
 )
 
 // Compile time interface check.
@@ -68,6 +70,9 @@ func (msg MsgWithdrawRequest) Type() string { return TypeWithdrawRequest }
 
 // Type returns the message action.
 func (msg MsgTransferRequest) Type() string { return TypeTransferRequest }
+
+// Type returns the message action.
+func (msg MsgSetDenomMetadataRequest) Type() string { return TypeSetMetadataRequest }
 
 // NewAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
 func NewAddMarkerRequest(
@@ -499,4 +504,64 @@ func (msg MsgTransferRequest) GetSigners() []sdk.AccAddress {
 	}
 
 	return []sdk.AccAddress{adminAddr, sourceAddr}
+}
+
+// NewSetDenomMetadataRequest  creates a new marker in a proposed state with a given total supply a denomination
+func NewSetDenomMetadataRequest(
+	metadata banktypes.Metadata, admin sdk.AccAddress, // nolint:interfacer
+) *MsgSetDenomMetadataRequest {
+	return &MsgSetDenomMetadataRequest{
+		Metadata:      metadata,
+		Administrator: admin.String(),
+	}
+}
+
+// Route returns the name of the module.
+func (msg MsgSetDenomMetadataRequest) Route() string { return ModuleName }
+
+// ValidateBasic runs stateless validation checks on the message.
+func (msg MsgSetDenomMetadataRequest) ValidateBasic() error {
+	if msg.Metadata.Base == "" {
+		return fmt.Errorf("invalid set denom metadata request, base denom value must be set")
+	}
+
+	hasBaseDenomUnits := false
+	hasDisplayDenomUnits := false
+
+	// if denom units are given and one matches the current base denom, then consider this valid.
+	for i := range msg.Metadata.DenomUnits {
+		if msg.Metadata.DenomUnits[i].Denom == msg.Metadata.Base {
+			hasBaseDenomUnits = true
+		}
+		if msg.Metadata.DenomUnits[i].Denom == msg.Metadata.Display {
+			hasDisplayDenomUnits = true
+		}
+		// TODO: should alternate denom units be required to derive from base in some way?
+	}
+
+	// If denom units are provided or a display denom record is set, denom unit records are required.
+	if len(msg.Metadata.DenomUnits) > 0 || len(msg.Metadata.Display) > 0 {
+		if !hasBaseDenomUnits {
+			return fmt.Errorf("invalid metadata, denom units does not contain record for marker denom")
+		}
+		if len(msg.Metadata.Display) > 0 && !hasDisplayDenomUnits {
+			return fmt.Errorf("missing denom unit definition for selected display")
+		}
+	}
+	return nil
+}
+
+// GetSignBytes encodes the message for signing.
+func (msg MsgSetDenomMetadataRequest) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// GetSigners indicates that the message must have been signed by the address provided.
+func (msg MsgSetDenomMetadataRequest) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Administrator)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
 }

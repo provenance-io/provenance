@@ -232,6 +232,7 @@ COSMOS_BASE_TYPES    = third_party/proto/cosmos/base
 COSMOS_SIGNING_TYPES = third_party/proto/cosmos/tx/signing
 COSMOS_CRYPTO_TYPES  = third_party/proto/cosmos/crypto
 COSMOS_AUTH_TYPES    = third_party/proto/cosmos/auth
+COSMOS_BANK_TYPES    = third_party/proto/cosmos/bank
 CONFIO_TYPES         = third_party/proto/confio
 
 proto-update-deps:
@@ -258,6 +259,9 @@ proto-update-deps:
 
 	@mkdir -p $(COSMOS_AUTH_TYPES)/v1beta1
 	@curl -sSL $(COSMOS_SDK_URL)/auth/v1beta1/auth.proto > $(COSMOS_AUTH_TYPES)/v1beta1/auth.proto
+
+	@mkdir -p $(COSMOS_BANK_TYPES)/v1beta1
+	@curl -sSL $(COSMOS_SDK_URL)/bank/v1beta1/bank.proto > $(COSMOS_BANK_TYPES)/v1beta1/bank.proto
 
 	@mkdir -p $(TM_ABCI_TYPES)
 	@curl -sSL $(TM_URL)/abci/types.proto > $(TM_ABCI_TYPES)/types.proto

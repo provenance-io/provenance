@@ -55,6 +55,9 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 		msg.AccessList,
 		msg.Status,
 		msg.MarkerType)
+	ma.SupplyFixed = msg.SupplyFixed
+	ma.AllowGovernanceControl = msg.AllowGovernanceControl
+
 	if err := k.Keeper.AddMarkerAccount(ctx, ma); err != nil {
 		ctx.Logger().Error("unable to add marker", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
@@ -336,4 +339,35 @@ func (k msgServer) Transfer(goCtx context.Context, msg *types.MsgTransferRequest
 		),
 	)
 	return &types.MsgTransferResponse{}, nil
+}
+
+// SetDenomMetadata handles a message setting metadata for a marker with the specified denom.
+func (k msgServer) SetDenomMetadata(
+	goCtx context.Context,
+	msg *types.MsgSetDenomMetadataRequest,
+) (*types.MsgSetDenomMetadataResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// Validate transaction message.
+	if err := msg.ValidateBasic(); err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
+	admin, err := sdk.AccAddressFromBech32(msg.Administrator)
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.SetMarkerMetadata(ctx, msg.Metadata, admin)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
+	return &types.MsgSetDenomMetadataResponse{}, nil
 }

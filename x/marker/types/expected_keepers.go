@@ -17,29 +17,23 @@ type AccountKeeper interface {
 
 // BankKeeper defines the expected bank keeper (keeper, sendkeeper, viewkeeper) (noalias)
 type BankKeeper interface {
-	// View ----------
-	ValidateBalance(ctx sdk.Context, addr sdk.AccAddress) error
-	HasBalance(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coin) bool
-
+	//
 	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
-	GetAccountsBalances(ctx sdk.Context) []types.Balance
 	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
-	LockedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
-	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 
-	IterateAccountBalances(ctx sdk.Context, addr sdk.AccAddress, cb func(coin sdk.Coin) (stop bool))
+	// Used in the Get all marker Holders Query function
 	IterateAllBalances(ctx sdk.Context, cb func(address sdk.AccAddress, coin sdk.Coin) (stop bool))
 
-	// Send ----------
+	// Required for moving coins between Marker Module account and marker accounts
 	InputOutputCoins(ctx sdk.Context, inputs []types.Input, outputs []types.Output) error
+
+	// Used by RESTRICTED_COIN markers for transfer between accounts.
 	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 
-	SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error
-	AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error
-
+	// used for unit-test only.
 	SetBalance(ctx sdk.Context, addr sdk.AccAddress, balance sdk.Coin) error
-	SetBalances(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error
 
+	// These two Params methods are required for controlling SendEnabled flags.
 	GetParams(ctx sdk.Context) types.Params
 	SetParams(ctx sdk.Context, params types.Params)
 
@@ -52,20 +46,13 @@ type BankKeeper interface {
 	GetSupply(ctx sdk.Context) exported.SupplyI
 	SetSupply(ctx sdk.Context, supply exported.SupplyI)
 
+	// TODO: future marker support for setting denom metadata
 	GetDenomMetaData(ctx sdk.Context, denom string) types.Metadata
 	SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metadata)
 	IterateAllDenomMetaData(ctx sdk.Context, cb func(types.Metadata) bool)
 
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
-	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
-	DelegateCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
-	UndelegateCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
 	BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
-
-	DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) error
-	UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) error
-	MarshalSupply(supplyI exported.SupplyI) ([]byte, error)
-	UnmarshalSupply(bz []byte) (exported.SupplyI, error)
 }
