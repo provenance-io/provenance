@@ -92,6 +92,7 @@ func MarkerAddress(denom string) (sdk.AccAddress, error) {
 	return sdk.AccAddress(crypto.AddressHash([]byte(fmt.Sprintf("%s/%s", ModuleName, denom)))), nil
 }
 
+// MustGetMarkerAddress returns the module account address for the given denomination, panics on error
 func MustGetMarkerAddress(denom string) sdk.AccAddress {
 	addr, err := MarkerAddress(denom)
 	if err != nil {
@@ -103,4 +104,9 @@ func MustGetMarkerAddress(denom string) sdk.AccAddress {
 // MarkerStoreKey turn an address to key used to get it from the account store
 func MarkerStoreKey(addr sdk.AccAddress) []byte {
 	return append(MarkerStoreKeyPrefix, addr.Bytes()...)
+}
+
+// SplitMarkerStoreKey returns an account address given a store key
+func SplitMarkerStoreKey(key []byte) sdk.AccAddress {
+	return sdk.AccAddress(key[1 : sdk.AddrLen+1])
 }

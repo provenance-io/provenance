@@ -13,7 +13,7 @@ import (
 func (k Keeper) GetAllMarkerHolders(ctx sdk.Context, denom string) []types.Balance {
 	var results []types.Balance
 	k.bankKeeper.IterateAllBalances(ctx, func(addr sdk.AccAddress, coin sdk.Coin) (stop bool) {
-		if coin.Denom == denom {
+		if coin.Denom == denom && !coin.Amount.IsZero() {
 			results = append(results,
 				types.Balance{
 					Address: addr.String(),

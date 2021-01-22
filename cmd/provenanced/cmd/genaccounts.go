@@ -492,6 +492,7 @@ enforced immediately.  An optional type flag can be provided or the default of C
 	}
 
 	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
+	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test)")
 
 	cmd.Flags().String(flagType, "", "a marker type to assign (default is COIN)")
 	cmd.Flags().String(flagManager, "", "a key name or address to assign as the token manager")

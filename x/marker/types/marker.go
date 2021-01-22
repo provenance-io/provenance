@@ -143,7 +143,7 @@ func (ma MarkerAccount) Validate() error {
 		return fmt.Errorf("address %s cannot be derived from the marker denom '%s'", ma.Address, ma.Denom)
 	}
 	if err := ValidateGrants(ma.AccessControl...); err != nil {
-		return fmt.Errorf("invalid access privileges granted: %v", err)
+		return fmt.Errorf("invalid access privileges granted: %w", err)
 	}
 	selfGrant := GrantsForAddress(ma.GetAddress(), ma.AccessControl...).GetAccessList()
 	if len(selfGrant) > 0 {

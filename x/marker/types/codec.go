@@ -70,11 +70,16 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	)
 
 	registry.RegisterInterface(
+		"provenance.marker.v1.MarkerAccount",
+		(*authtypes.GenesisAccount)(nil),
+		&MarkerAccount{},
+	)
+
+	registry.RegisterInterface(
 		"provenance.marker.v1.AccessGrant",
 		(*AccessGrantI)(nil),
 		&AccessGrant{},
 	)
-
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 

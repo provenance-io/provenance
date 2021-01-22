@@ -13,6 +13,17 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 	if err := data.Validate(); err != nil {
 		panic(err)
 	}
+	// ensure our store contains references to any marker accounts in auth genesis
+	store := ctx.KVStore(k.storeKey)
+	acc := k.authKeeper.GetAllAccounts(ctx)
+	for i := range acc {
+		if m, ok := acc[i].(types.MarkerAccountI); ok {
+			if err := m.Validate(); err == nil {
+				store.Set(types.MarkerStoreKey(m.GetAddress()), m.GetAddress())
+			}
+		}
+	}
+	// if any markers were included directly, add these as well.
 	if data.Markers != nil {
 		for i := range data.Markers {
 			k.SetMarker(ctx, &data.Markers[i])

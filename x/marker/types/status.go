@@ -62,7 +62,7 @@ func (rt *MarkerStatus) Unmarshal(data []byte) error {
 
 // MarshalJSON using string.
 func (rt MarkerStatus) MarshalJSON() ([]byte, error) {
-	return json.Marshal(rt.String())
+	return json.Marshal(MarkerStatus_name[int32(rt)])
 }
 
 // UnmarshalJSON decodes from JSON string version of this status
@@ -75,7 +75,12 @@ func (rt *MarkerStatus) UnmarshalJSON(data []byte) error {
 
 	bz2, err := MarkerStatusFromString(s)
 	if err != nil {
-		return err
+		// try using the Proto enum values
+		if val, ok := MarkerStatus_value[s]; ok {
+			bz2 = MarkerStatus(val)
+		} else {
+			return err
+		}
 	}
 
 	*rt = bz2
