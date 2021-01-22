@@ -344,18 +344,18 @@ enforced immediately.  An optional type flag can be provided or the default of C
 				managerAddr, err = sdk.AccAddressFromBech32(mgr)
 				if err != nil {
 					inBuf := bufio.NewReader(cmd.InOrStdin())
-					keyringBackend, err := cmd.Flags().GetString(flags.FlagKeyringBackend)
-					if err != nil {
-						return err
+					keyringBackend, keyFlagError := cmd.Flags().GetString(flags.FlagKeyringBackend)
+					if keyFlagError != nil {
+						return keyFlagError
 					}
 					// attempt to lookup address from Keybase if no address was provided
-					kb, err := keyring.New(sdk.KeyringServiceName(), keyringBackend, clientCtx.HomeDir, inBuf)
-					if err != nil {
-						return err
+					kb, newKeyringError := keyring.New(sdk.KeyringServiceName(), keyringBackend, clientCtx.HomeDir, inBuf)
+					if newKeyringError != nil {
+						return newKeyringError
 					}
-					info, err := kb.Key(mgr)
-					if err != nil {
-						return fmt.Errorf("failed to get address from Keybase: %w", err)
+					info, keyErr := kb.Key(mgr)
+					if keyErr != nil {
+						return fmt.Errorf("failed to get address from Keybase: %w", keyErr)
 					}
 
 					managerAddr = info.GetAddress()
@@ -421,7 +421,7 @@ enforced immediately.  An optional type flag can be provided or the default of C
 				markerStatus,
 				markertypes.MarkerType(markerType))
 
-			if err := genAccount.Validate(); err != nil {
+			if err = genAccount.Validate(); err != nil {
 				return fmt.Errorf("failed to validate new genesis account: %w", err)
 			}
 
@@ -437,17 +437,17 @@ enforced immediately.  An optional type flag can be provided or the default of C
 			}
 
 			if len(escrow) > 0 {
-				escrowCoins, err := sdk.ParseCoinsNormalized(escrow)
-				if err != nil {
-					return fmt.Errorf("failed to parse escrow coins: %w", err)
+				escrowCoins, parseCoinErr := sdk.ParseCoinsNormalized(escrow)
+				if parseCoinErr != nil {
+					return fmt.Errorf("failed to parse escrow coins: %w", parseCoinErr)
 				}
 				balances := banktypes.Balance{Address: genAccount.Address, Coins: escrowCoins}
 				bankGenState := banktypes.GetGenesisStateFromAppState(depCdc, appState)
 				bankGenState.Balances = append(bankGenState.Balances, balances)
 				bankGenState.Balances = banktypes.SanitizeGenesisBalances(bankGenState.Balances)
 
-				bankGenStateBz, err := cdc.MarshalJSON(bankGenState)
-				if err != nil {
+				bankGenStateBz, bankMarshalError := cdc.MarshalJSON(bankGenState)
+				if bankMarshalError != nil {
 					return fmt.Errorf("failed to marshal bank genesis state: %w", err)
 				}
 				appState[banktypes.ModuleName] = bankGenStateBz

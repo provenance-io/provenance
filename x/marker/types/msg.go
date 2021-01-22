@@ -71,7 +71,7 @@ func (msg MsgTransferRequest) Type() string { return TypeTransferRequest }
 
 // NewAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
 func NewAddMarkerRequest(
-	denom string, totalSupply sdk.Int, fromAddress sdk.AccAddress, manager sdk.AccAddress, markerType MarkerType,
+	denom string, totalSupply sdk.Int, fromAddress sdk.AccAddress, manager sdk.AccAddress, markerType MarkerType, // nolint:interfacer
 ) *MsgAddMarkerRequest {
 	return &MsgAddMarkerRequest{
 		Amount:      sdk.NewCoin(denom, totalSupply),
@@ -124,7 +124,7 @@ func (msg MsgAddMarkerRequest) GetSigners() []sdk.AccAddress {
 }
 
 // NewAddAccessRequest
-func NewAddAccessRequest(denom string, admin sdk.AccAddress, access AccessGrant) *MsgAddAccessRequest {
+func NewAddAccessRequest(denom string, admin sdk.AccAddress, access AccessGrant) *MsgAddAccessRequest { //nolint:interfacer
 	return &MsgAddAccessRequest{
 		Denom:         denom,
 		Administrator: admin.String(),
@@ -162,7 +162,7 @@ func (msg MsgAddAccessRequest) GetSigners() []sdk.AccAddress {
 }
 
 // NewDeleteAccessRequest
-func NewDeleteAccessRequest(denom string, admin sdk.AccAddress, removed sdk.AccAddress) *MsgDeleteAccessRequest {
+func NewDeleteAccessRequest(denom string, admin sdk.AccAddress, removed sdk.AccAddress) *MsgDeleteAccessRequest { // nolint:interfacer
 	return &MsgDeleteAccessRequest{
 		Denom:          denom,
 		Administrator:  admin.String(),
@@ -198,7 +198,7 @@ func (msg MsgDeleteAccessRequest) GetSigners() []sdk.AccAddress {
 }
 
 // NewFinalizeRequest
-func NewFinalizeRequest(denom string, admin sdk.AccAddress) *MsgFinalizeRequest {
+func NewFinalizeRequest(denom string, admin sdk.AccAddress) *MsgFinalizeRequest { // nolint:interfacer
 	return &MsgFinalizeRequest{
 		Denom:         denom,
 		Administrator: admin.String(),
@@ -232,7 +232,7 @@ func (msg MsgFinalizeRequest) GetSigners() []sdk.AccAddress {
 }
 
 // NewActivateRequest
-func NewActivateRequest(denom string, admin sdk.AccAddress) *MsgActivateRequest {
+func NewActivateRequest(denom string, admin sdk.AccAddress) *MsgActivateRequest { // nolint:interfacer
 	return &MsgActivateRequest{
 		Denom:         denom,
 		Administrator: admin.String(),
@@ -266,7 +266,7 @@ func (msg MsgActivateRequest) GetSigners() []sdk.AccAddress {
 }
 
 // NewCancelRequest
-func NewCancelRequest(denom string, admin sdk.AccAddress) *MsgCancelRequest {
+func NewCancelRequest(denom string, admin sdk.AccAddress) *MsgCancelRequest { // nolint:interfacer
 	return &MsgCancelRequest{
 		Denom:         denom,
 		Administrator: admin.String(),
@@ -300,7 +300,7 @@ func (msg MsgCancelRequest) GetSigners() []sdk.AccAddress {
 }
 
 // NewDeleteRequest
-func NewDeleteRequest(denom string, admin sdk.AccAddress) *MsgDeleteRequest {
+func NewDeleteRequest(denom string, admin sdk.AccAddress) *MsgDeleteRequest { // nolint:interfacer
 	return &MsgDeleteRequest{
 		Denom:         denom,
 		Administrator: admin.String(),
@@ -334,7 +334,7 @@ func (msg MsgDeleteRequest) GetSigners() []sdk.AccAddress {
 }
 
 // NewMintRequest creates a mint supply message
-func NewMintRequest(admin sdk.AccAddress, amount sdk.Coin) *MsgMintRequest {
+func NewMintRequest(admin sdk.AccAddress, amount sdk.Coin) *MsgMintRequest { // nolint:interfacer
 	return &MsgMintRequest{
 		Administrator: admin.String(),
 		Amount:        amount,
@@ -368,7 +368,7 @@ func (msg MsgMintRequest) GetSigners() []sdk.AccAddress {
 }
 
 // NewBurnRequest creates a burn supply message
-func NewBurnRequest(admin sdk.AccAddress, amount sdk.Coin) *MsgBurnRequest {
+func NewBurnRequest(admin sdk.AccAddress, amount sdk.Coin) *MsgBurnRequest { // nolint:interfacer
 	return &MsgBurnRequest{
 		Administrator: admin.String(),
 		Amount:        amount,
@@ -454,7 +454,7 @@ func (msg MsgWithdrawRequest) GetSigners() []sdk.AccAddress {
 
 // NewTransferRequest
 func NewTransferRequest(
-	admin, fromAddress, toAddress sdk.AccAddress, amount sdk.Coin,
+	admin, fromAddress, toAddress sdk.AccAddress, amount sdk.Coin, // nolint:interfacer
 ) *MsgTransferRequest {
 	return &MsgTransferRequest{
 		Administrator: admin.String(),

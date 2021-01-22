@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/rest"
 
 	"github.com/provenance-io/provenance/x/marker/types"
-	//metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
+	// metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
 const (
@@ -110,7 +110,7 @@ func queryMarkerHandlerFn(cliCtx client.Context, fn string) http.HandlerFunc {
 
 func queryMarkerAssetsHandlerFn(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		//_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 200)
+		// _, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 200)
 		_, _, _, err := rest.ParseHTTPArgsWithLimit(r, 200)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -138,7 +138,7 @@ func queryMarkerAssetsHandlerFn(cliCtx client.Context) http.HandlerFunc {
 		// 	Address: addr.String(),
 		// }
 
-		bz, err := []byte{}, fmt.Errorf("todo: import metadata module") //cliCtx.LegacyAmino.MarshalJSON(params)
+		bz, err := []byte{}, fmt.Errorf("todo: import metadata module") //  cliCtx.LegacyAmino.MarshalJSON(params)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return

@@ -35,7 +35,7 @@ func NewQuerier(keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier 
 }
 
 // query for a single marker by denom or address
-func queryMarker(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+func queryMarker(ctx sdk.Context, path []string, _ abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	account, err := accountForDenomOrAddress(ctx, keeper, path[0])
 	if err != nil {
 		return nil, err
@@ -51,7 +51,7 @@ func queryMarker(ctx sdk.Context, path []string, req abci.RequestQuery, keeper K
 }
 
 // query for access records on an account
-func queryAccess(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+func queryAccess(ctx sdk.Context, path []string, _ abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	account, err := accountForDenomOrAddress(ctx, keeper, path[0])
 	if err != nil {
 		return nil, err
@@ -67,7 +67,7 @@ func queryAccess(ctx sdk.Context, path []string, req abci.RequestQuery, keeper K
 }
 
 // query for coins on a marker account
-func queryCoins(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+func queryCoins(ctx sdk.Context, path []string, _ abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	account, err := accountForDenomOrAddress(ctx, keeper, path[0])
 	if err != nil {
 		return nil, err
@@ -83,7 +83,7 @@ func queryCoins(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 }
 
 // query for supply of coin on a marker account
-func querySupply(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+func querySupply(ctx sdk.Context, path []string, _ abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	account, err := accountForDenomOrAddress(ctx, keeper, path[0])
 	if err != nil {
 		return nil, err
@@ -99,7 +99,7 @@ func querySupply(ctx sdk.Context, path []string, req abci.RequestQuery, keeper K
 }
 
 // query for all marker accounts
-func queryMarkers(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+func queryMarkers(ctx sdk.Context, _ []string, req abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	var params types.QueryMarkersParams
 
 	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
@@ -132,7 +132,7 @@ func queryMarkers(ctx sdk.Context, path []string, req abci.RequestQuery, keeper 
 }
 
 // query for all accounts holding the given marker coins
-func queryHolders(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+func queryHolders(ctx sdk.Context, _ []string, req abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	var params types.QueryMarkersParams
 
 	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)

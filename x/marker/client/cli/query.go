@@ -65,7 +65,7 @@ func AllMarkersCmd() *cobra.Command {
 				context.Background(),
 				&types.QueryAllMarkersRequest{Status: status, Pagination: pageReq},
 			); err != nil {
-				fmt.Printf("failed to query markers: %w\n", err)
+				fmt.Printf("failed to query markers: %s\n", err.Error())
 				return nil
 			}
 			return clientCtx.PrintProto(response)
@@ -171,7 +171,7 @@ func MarkerAccessCmd() *cobra.Command {
 	}
 }
 
-//MarkerEscrowCmd is the CLI command for querying marker module registrations.
+// MarkerEscrowCmd is the CLI command for querying marker module registrations.
 func MarkerEscrowCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "escrow [address|denom]",
@@ -198,7 +198,7 @@ func MarkerEscrowCmd() *cobra.Command {
 	}
 }
 
-//MarkerSupplyCmd is the CLI command for querying marker module registrations.
+// MarkerSupplyCmd is the CLI command for querying marker module registrations.
 func MarkerSupplyCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "supply [address|denom]",

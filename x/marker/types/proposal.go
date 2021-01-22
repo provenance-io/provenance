@@ -50,7 +50,6 @@ func NewSupplyIncreaseProposal(title, description string, amount sdk.Coin, desti
 
 // Implements Proposal Interface
 
-// nolint
 func (sip SupplyIncreaseProposal) ProposalRoute() string { return RouterKey }
 func (sip SupplyIncreaseProposal) ProposalType() string  { return ProposalTypeIncreaseSupply }
 func (sip SupplyIncreaseProposal) ValidateBasic() error {
@@ -76,7 +75,6 @@ func NewSupplyDecreaseProposal(title, description string, amount sdk.Coin) *Supp
 
 // Implements Proposal Interface
 
-// nolint
 func (sdp SupplyDecreaseProposal) ProposalRoute() string { return RouterKey }
 func (sdp SupplyDecreaseProposal) ProposalType() string  { return ProposalTypeDecreaseSupply }
 func (sdp SupplyDecreaseProposal) ValidateBasic() error {
@@ -96,14 +94,13 @@ func (sdp SupplyDecreaseProposal) String() string {
 }
 
 func NewSetAdministratorProposal(
-	title, description string, marker sdk.AccAddress, accessGrants []AccessGrant,
+	title, description string, marker sdk.AccAddress, accessGrants []AccessGrant, // nolint:interfacer
 ) *SetAdministratorProposal {
 	return &SetAdministratorProposal{title, description, marker.String(), accessGrants}
 }
 
 // Implements Proposal Interface
 
-// nolint
 func (sap SetAdministratorProposal) ProposalRoute() string { return RouterKey }
 func (sap SetAdministratorProposal) ProposalType() string  { return ProposalTypeDecreaseSupply }
 func (sap SetAdministratorProposal) ValidateBasic() error {
@@ -132,7 +129,6 @@ func NewRemoveAdministratorProposal(
 
 // Implements Proposal Interface
 
-// nolint
 func (rap RemoveAdministratorProposal) ProposalRoute() string { return RouterKey }
 func (rap RemoveAdministratorProposal) ProposalType() string  { return ProposalTypeDecreaseSupply }
 func (rap RemoveAdministratorProposal) ValidateBasic() error {
@@ -154,13 +150,12 @@ func (rap RemoveAdministratorProposal) String() string {
 `, rap.Denom, rap.Title, rap.Description, rap.RemovedAddress)
 }
 
-func NewChangeStatusProposal(title, description string, marker sdk.AccAddress, status MarkerStatus) *ChangeStatusProposal {
+func NewChangeStatusProposal(title, description string, marker sdk.AccAddress, status MarkerStatus) *ChangeStatusProposal { // nolint:interfacer
 	return &ChangeStatusProposal{title, description, marker.String(), status}
 }
 
 // Implements Proposal Interface
 
-// nolint
 func (csp ChangeStatusProposal) ProposalRoute() string { return RouterKey }
 func (csp ChangeStatusProposal) ProposalType() string  { return ProposalTypeChangeStatus }
 func (csp ChangeStatusProposal) ValidateBasic() error {

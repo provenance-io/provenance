@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+
 	v039marker "github.com/provenance-io/provenance/x/marker/legacy/v039"
 	v040marker "github.com/provenance-io/provenance/x/marker/types"
 )

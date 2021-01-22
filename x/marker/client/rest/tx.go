@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 
-	//"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+	// "github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 
 	"github.com/provenance-io/provenance/x/marker/types"
 )
@@ -55,7 +55,7 @@ type (
 		MarkerType string         `json:"marker_type" yaml:"marker_type"`
 	}
 
-	//MarkerAccessRequest is used for grant/revoke permissions for a given address on a marker
+	// MarkerAccessRequest is used for grant/revoke permissions for a given address on a marker
 	MarkerAccessRequest struct {
 		BaseReq rest.BaseReq   `json:"base_req" yaml:"base_req"`
 		Address sdk.AccAddress `json:"address" yaml:"address"`

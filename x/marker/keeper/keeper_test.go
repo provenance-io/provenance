@@ -3,8 +3,9 @@ package keeper_test
 import (
 	"testing"
 
-	simapp "github.com/provenance-io/provenance/app"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	simapp "github.com/provenance-io/provenance/app"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"

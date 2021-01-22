@@ -63,7 +63,7 @@ func NewEmptyMarkerAccount(denom, manager string, grants []AccessGrant) *MarkerA
 func NewMarkerAccount(
 	baseAcc *authtypes.BaseAccount,
 	totalSupply sdk.Coin,
-	manager sdk.AccAddress,
+	manager sdk.AccAddress, // nolint:interfacer
 	accessControls []AccessGrant,
 	status MarkerStatus,
 	markerType MarkerType,
@@ -116,7 +116,7 @@ func (ma *MarkerAccount) AddressListForPermission(role Access) []sdk.AccAddress 
 			addressList = append(addressList, g.GetAddress())
 		}
 	}
-	return addressList[:]
+	return addressList
 }
 
 // Validate performs minimal sanity checking over the current MarkerAccount instance
@@ -281,7 +281,7 @@ func (ma *MarkerAccount) RevokeAccess(addr sdk.AccAddress) error {
 		}
 	}
 
-	ma.AccessControl = accessList[:]
+	ma.AccessControl = accessList
 	return nil
 }
 

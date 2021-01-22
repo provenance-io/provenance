@@ -103,7 +103,7 @@ func (k Keeper) AddAccess(
 	return nil
 }
 
-//RemoveAccess delete the AccessGrant for the specified user from the marker if the caller is allowed to make changes
+// RemoveAccess delete the AccessGrant for the specified user from the marker if the caller is allowed to make changes
 func (k Keeper) RemoveAccess(ctx sdk.Context, caller sdk.AccAddress, denom string, remove sdk.AccAddress) error {
 	// (if marker does not exist then fail)
 	m, err := k.GetMarkerByDenom(ctx, denom)
@@ -192,7 +192,7 @@ func (k Keeper) MintCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 	// mint actual coin.
 	if m.GetStatus() == types.StatusProposed || m.GetStatus() == types.StatusFinalized {
 		total := m.GetSupply().Add(coin)
-		if err := m.SetSupply(total); err != nil {
+		if err = m.SetSupply(total); err != nil {
 			return err
 		}
 		k.SetMarker(ctx, m)
@@ -312,7 +312,7 @@ func (k Keeper) DecreaseSupply(ctx sdk.Context, marker types.MarkerAccountI, coi
 
 // FinalizeMarker sets the state of the marker to finalized, mints the associated supply, assigns the minted coin to
 // the marker accounts, and transitions the state to active if successful
-func (k Keeper) FinalizeMarker(ctx sdk.Context, caller sdk.AccAddress, denom string) error {
+func (k Keeper) FinalizeMarker(ctx sdk.Context, caller sdk.Address, denom string) error {
 	// (if marker does not exist then fail)
 	m, err := k.GetMarkerByDenom(ctx, denom)
 	if err != nil {
@@ -357,7 +357,7 @@ func (k Keeper) FinalizeMarker(ctx sdk.Context, caller sdk.AccAddress, denom str
 
 // ActivateMarker transistions a marker into the active status, enforcing permissions, supply constraints, and minting
 // any supply as required.
-func (k Keeper) ActivateMarker(ctx sdk.Context, caller sdk.AccAddress, denom string) error {
+func (k Keeper) ActivateMarker(ctx sdk.Context, caller sdk.Address, denom string) error {
 	m, err := k.GetMarkerByDenom(ctx, denom)
 	if err != nil {
 		return fmt.Errorf("marker not found for %s: %s", denom, err)
@@ -536,6 +536,6 @@ func (k Keeper) accountControlsAllSupply(ctx sdk.Context, caller sdk.AccAddress,
 	balance := k.bankKeeper.GetBalance(ctx, caller, m.GetDenom())
 
 	// if the given account is currently holding 100% of the supply of a marker then it should be able to invoke
-	//e operations as an admin on the marker.
+	// the operations as an admin on the marker.
 	return m.GetSupply().IsEqual(sdk.NewCoin(m.GetDenom(), balance.Amount))
 }

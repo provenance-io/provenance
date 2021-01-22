@@ -73,7 +73,7 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 	return &types.MsgAddMarkerResponse{}, nil
 }
 
-//AddAccess handles a message to grant access to a marker account.
+// AddAccess handles a message to grant access to a marker account.
 func (k msgServer) AddAccess(goCtx context.Context, msg *types.MsgAddAccessRequest) (*types.MsgAddAccessResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -82,15 +82,15 @@ func (k msgServer) AddAccess(goCtx context.Context, msg *types.MsgAddAccessReque
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	for _, grant := range msg.Access {
-		if err := k.Keeper.AddAccess(ctx, msg.GetSigners()[0], msg.Denom, &grant); err != nil {
+	for i := range msg.Access {
+		if err := k.Keeper.AddAccess(ctx, msg.GetSigners()[0], msg.Denom, &msg.Access[i]); err != nil {
 			ctx.Logger().Error("unable to add access grant to marker", "err", err)
 			return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, err.Error())
 		}
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeGrantAccess,
-				sdk.NewAttribute(types.EventAttributeGrantKey, grant.String()),
+				sdk.NewAttribute(types.EventAttributeGrantKey, msg.Access[i].String()),
 				sdk.NewAttribute(types.EventAttributeDenomKey, msg.Denom),
 				sdk.NewAttribute(types.EventAttributeAdministratorKey, msg.Administrator),
 				sdk.NewAttribute(types.EventAttributeModuleNameKey, types.ModuleName),

@@ -119,7 +119,7 @@ func (ma *MarkerAccount) AddressListForPermission(role string) []sdk.AccAddress 
 			addressList = append(addressList, g.GetAddress())
 		}
 	}
-	return addressList[:]
+	return addressList
 }
 
 // Validate performs minimal sanity checking over the current MarkerAccount instance
@@ -253,7 +253,7 @@ func (ma *MarkerAccount) RevokeAccess(addr sdk.AccAddress) error {
 		}
 	}
 
-	ma.AccessControls = accessList[:]
+	ma.AccessControls = accessList
 	return nil
 }
 
@@ -503,7 +503,7 @@ func validateGranted(permissions ...string) error {
 		if strings.TrimSpace(permission) == "" {
 			return fmt.Errorf("access permission is empty")
 		}
-		if !strings.Contains(AllPermissions, permission) {
+		if !strings.Contains(AllPermissions, permission) { // nolint:gocritic
 			return fmt.Errorf("access permission [%s] is not a valid permission", permission)
 		}
 	}
@@ -566,12 +566,12 @@ func MarkerStatusFromString(str string) (MarkerStatus, error) {
 }
 
 // ValidMarkerStatus returns true if the marker status is valid and false otherwise.
-func ValidMarkerStatus(MarkerStatus MarkerStatus) bool {
-	if MarkerStatus == StatusProposed ||
-		MarkerStatus == StatusFinalized ||
-		MarkerStatus == StatusActive ||
-		MarkerStatus == StatusCancelled ||
-		MarkerStatus == StatusDestroyed {
+func ValidMarkerStatus(markerStatus MarkerStatus) bool {
+	if markerStatus == StatusProposed ||
+		markerStatus == StatusFinalized ||
+		markerStatus == StatusActive ||
+		markerStatus == StatusCancelled ||
+		markerStatus == StatusDestroyed {
 		return true
 	}
 	return false

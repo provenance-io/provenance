@@ -47,7 +47,7 @@ func supplyInvariant(mk Keeper, bk bankkeeper.Keeper) sdk.Invariant {
 				}
 				msg := fmt.Sprintf("invalid %s supply: required (%+v) current (%+v)\n",
 					requiredSupply.Denom, requiredSupply.Amount, currentSupply)
-				statusMessage = statusMessage + sdk.FormatInvariant(types.ModuleName, invariantName, msg)
+				statusMessage += sdk.FormatInvariant(types.ModuleName, invariantName, msg)
 			}
 			return false
 		})

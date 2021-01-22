@@ -14,8 +14,8 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 		panic(err)
 	}
 	if data.Markers != nil {
-		for _, m := range data.Markers {
-			k.SetMarker(ctx, &m)
+		for i := range data.Markers {
+			k.SetMarker(ctx, &data.Markers[i])
 		}
 	}
 }
