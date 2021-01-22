@@ -52,6 +52,12 @@ func TestAccountMapperGetSet(t *testing.T) {
 	require.True(t, ok)
 	require.True(t, mac.AddressHasAccess(user, types.Access_Admin))
 
+	app.MarkerKeeper.RemoveMarker(ctx, mac)
+
+	// getting account after delete should be nil
+	acc = app.AccountKeeper.GetAccount(ctx, addr)
+	require.Nil(t, acc)
+
 	// check for error on invaid marker denom
 	_, err := app.MarkerKeeper.GetMarkerByDenom(ctx, "doesntexist")
 	require.Error(t, err, "marker does not exist, should error")
@@ -424,6 +430,8 @@ func TestAccountImplictControl(t *testing.T) {
 	// create account and check default values
 	mac := types.NewEmptyMarkerAccount("testcoin", user.String(), []types.AccessGrant{*types.NewAccessGrant(user,
 		[]types.Access{types.Access_Mint, types.Access_Burn, types.Access_Withdraw, types.Access_Delete})})
+
+	mac.MarkerType = types.MarkerType_RestrictedCoin
 	require.NoError(t, mac.SetManager(user))
 	require.NoError(t, mac.SetSupply(sdk.NewCoin("testcoin", sdk.NewInt(1000))))
 
@@ -431,7 +439,11 @@ func TestAccountImplictControl(t *testing.T) {
 
 	// Moves to finalized, mints required supply, moves to active status.
 	require.NoError(t, app.MarkerKeeper.FinalizeMarker(ctx, user, "testcoin"))
+	// No send enabled flag enforced yet, default is allowed
+	require.True(t, app.BankKeeper.SendEnabledCoin(ctx, sdk.NewCoin("testcoin", sdk.NewInt(10))))
 	require.NoError(t, app.MarkerKeeper.ActivateMarker(ctx, user, "testcoin"))
+	// Activated restricted coins can not be sent directly, verify is false now
+	require.False(t, app.BankKeeper.SendEnabledCoin(ctx, sdk.NewCoin("testcoin", sdk.NewInt(10))))
 
 	// Must fail because user2 does not have any access
 	require.Error(t, app.MarkerKeeper.AddAccess(ctx, user2, "testcoin", types.NewAccessGrant(user2,
@@ -443,7 +455,12 @@ func TestAccountImplictControl(t *testing.T) {
 
 	// Succeeds now because user2 is holding all of the testcoin supply.
 	require.NoError(t, app.MarkerKeeper.AddAccess(ctx, user2, "testcoin",
-		types.NewAccessGrant(user2, []types.Access{types.Access_Mint, types.Access_Delete})))
+		types.NewAccessGrant(user2, []types.Access{types.Access_Mint, types.Access_Delete, types.Access_Transfer})))
+
+	// succeeds for a user with transfer rights
+	require.NoError(t, app.MarkerKeeper.TransferCoin(ctx, user2, user, user2, sdk.NewCoin("testcoin", sdk.NewInt(10))))
+	// fails if the admin user does not have transfer authority
+	require.Error(t, app.MarkerKeeper.TransferCoin(ctx, user, user2, user, sdk.NewCoin("testcoin", sdk.NewInt(10))))
 }
 
 // testUserAddress gives a quick way to make a valid test address (no keys though)

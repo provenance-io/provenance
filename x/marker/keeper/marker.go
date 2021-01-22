@@ -544,7 +544,6 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 func (k Keeper) SetMarkerMetadata(ctx sdk.Context, metadata banktypes.Metadata, caller sdk.AccAddress) error {
 	if metadata.Base == "" {
 		return fmt.Errorf("invalid metadata request, base denom must match existing marker")
-
 	}
 	m, err := k.GetMarkerByDenom(ctx, metadata.Base)
 	if err != nil {
@@ -594,7 +593,7 @@ func (k Keeper) ensureSendEnabledStatus(ctx sdk.Context, denom string, sendEnabl
 	if k.getCurrentSendEnabledStatus(ctx, denom) == sendEnabled {
 		return
 	}
-	// current state doesn't requested match so update configuration.
+	// current state doesn't match requested so update configuration.
 	k.setSendEnabledStatus(ctx, denom, sendEnabled)
 }
 
@@ -609,7 +608,7 @@ func (k Keeper) setSendEnabledStatus(ctx sdk.Context, denom string, sendEnabled 
 			return
 		}
 	}
-	// not found and set above so add a new explict record here.
+	// not found and set above so add a new explicit record here.
 	bankParams.SendEnabled = append(bankParams.SendEnabled, banktypes.NewSendEnabled(denom, sendEnabled))
 	k.bankKeeper.SetParams(ctx, bankParams)
 }
