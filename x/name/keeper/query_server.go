@@ -54,7 +54,7 @@ func (keeper Keeper) ReverseLookup(c context.Context, request *types.QueryRevers
 	nameStore := prefix.NewStore(store, key)
 	pageRes, err := query.FilteredPaginate(nameStore, request.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var record types.NameRecord
-		err := keeper.cdc.UnmarshalBinaryBare(value, &record)
+		err = keeper.cdc.UnmarshalBinaryBare(value, &record)
 		if err != nil {
 			return false, err
 		}

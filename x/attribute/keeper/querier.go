@@ -41,7 +41,7 @@ func queryParams(ctx sdk.Context, _ []string, _ abci.RequestQuery, k Keeper, leg
 }
 
 // Query for account attributes by name.
-func queryAttribute(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+func queryAttribute(ctx sdk.Context, path []string, _ abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	if len(path) < 2 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "missing account address and/or attribute name")
 	}
@@ -71,7 +71,7 @@ func queryAttribute(ctx sdk.Context, path []string, req abci.RequestQuery, keepe
 }
 
 // Query for all account attributes.
-func queryAttributes(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+func queryAttributes(ctx sdk.Context, path []string, _ abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	if len(path) < 1 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "missing account address")
 	}
@@ -97,7 +97,7 @@ func queryAttributes(ctx sdk.Context, path []string, req abci.RequestQuery, keep
 }
 
 // Query for scanning account attributes by name suffix.
-func scanAttributes(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+func scanAttributes(ctx sdk.Context, path []string, _ abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	if len(path) < 2 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "missing account address and/or name suffix")
 	}

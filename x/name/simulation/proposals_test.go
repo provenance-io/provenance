@@ -9,6 +9,7 @@ import (
 
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/name/keeper"
 	"github.com/provenance-io/provenance/x/name/simulation"

@@ -38,9 +38,9 @@ func NewParams(
 }
 
 // ParamSetPairs - Implements params.ParamSet
-func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
+func (params *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(ParamStoreKeyMaxValueLength, &p.MaxValueLength, validateMaxValueLength),
+		paramtypes.NewParamSetPair(ParamStoreKeyMaxValueLength, &params.MaxValueLength, validateMaxValueLength),
 	}
 }
 
@@ -52,13 +52,9 @@ func DefaultParams() Params {
 }
 
 func validateMaxValueLength(i interface{}) error {
-	v, ok := i.(uint32)
+	_, ok := i.(uint32)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	if v < 0 {
-		return fmt.Errorf("max value length must be greater than zero: %d", v)
 	}
 
 	return nil
