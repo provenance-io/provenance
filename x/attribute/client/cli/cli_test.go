@@ -101,6 +101,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			s.accountAddr,
 			attributetypes.AttributeType_String,
 			[]byte("example attribute value string")))
+	attributeData.Attributes = append(attributeData.Attributes,
+		attributetypes.NewAttribute(
+			"example.attribute.count",
+			s.accountAddr,
+			attributetypes.AttributeType_Int,
+			[]byte("2")))
 	attributeData.Params.MaxValueLength = 32
 	attributeDataBz, err := cfg.Codec.MarshalJSON(&attributeData)
 	s.Require().NoError(err)
@@ -128,12 +134,12 @@ func (s *IntegrationTestSuite) TestGetAccountAttributeCmd() {
 		expectedOutput string
 	}{
 		{
-			"json output",
+			"should get attribute by name with json output",
 			[]string{s.accountAddr.String(), "example.attribute", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			fmt.Sprintf(`{"account":"%s","attributes":[{"name":"example.attribute","value":"ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n","attribute_type":"ATTRIBUTE_TYPE_STRING","address":"%s"}],"pagination":{"next_key":null,"total":"0"}}`, s.accountAddr.String(), s.accountAddr.String()),
 		},
 		{
-			"text output",
+			"should get attribute by name with text output",
 			[]string{s.accountAddr.String(), "example.attribute", fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
 			fmt.Sprintf(`account: %s
 attributes:
@@ -145,6 +151,20 @@ pagination:
   next_key: null
   total: "0"`, s.accountAddr.String(), s.accountAddr.String()),
 		},
+		{
+			"should fail to find unknown attribute output",
+			[]string{s.accountAddr.String(), "example.none", fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			fmt.Sprintf(`account: %s
+attributes: []
+pagination:
+  next_key: null
+  total: "0"`, s.accountAddr.String()),
+		},
+		{
+			"should get attribute by name with json output",
+			[]string{s.accountAddr.String(), "example.attribute", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			fmt.Sprintf(`{"account":"%s","attributes":[],"pagination":{"next_key":null,"total":"0"}}`, s.accountAddr.String()),
+		},
 	}
 
 	for _, tc := range testCases {
@@ -152,6 +172,136 @@ pagination:
 
 		s.Run(tc.name, func() {
 			cmd := cli.GetAccountAttributeCmd()
+			clientCtx := s.testnet.Validators[0].ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestScanAccountAttributesCmd() {
+	testCases := []struct {
+		name           string
+		args           []string
+		expectedOutput string
+	}{
+		{
+			"should get attribute by suffix with json output",
+			[]string{s.accountAddr.String(), "attribute", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			fmt.Sprintf(`{"account":"%s","attributes":[{"name":"example.attribute","value":"ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n","attribute_type":"ATTRIBUTE_TYPE_STRING","address":"%s"}],"pagination":{"next_key":null,"total":"0"}}`, s.accountAddr.String(), s.accountAddr.String()),
+		},
+		{
+			"should get attribute by suffix with text output",
+			[]string{s.accountAddr.String(), "attribute", fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			fmt.Sprintf(`account: %s
+attributes:
+- address: %s
+  attribute_type: ATTRIBUTE_TYPE_STRING
+  name: example.attribute
+  value: ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n
+pagination:
+  next_key: null
+  total: "0"`, s.accountAddr.String(), s.accountAddr.String()),
+		},
+		{
+			"should fail to find unknown attribute suffix text output",
+			[]string{s.accountAddr.String(), "none", fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			fmt.Sprintf(`account: %s
+attributes: []
+pagination:
+  next_key: null
+  total: "0"`, s.accountAddr.String()),
+		},
+		{
+			"should get attribute by suffix with json output",
+			[]string{s.accountAddr.String(), "none", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			fmt.Sprintf(`{"account":"%s","attributes":[],"pagination":{"next_key":null,"total":"0"}}`, s.accountAddr.String()),
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.ScanAccountAttributesCmd()
+			clientCtx := s.testnet.Validators[0].ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestListAccountAttributesCmd() {
+	testCases := []struct {
+		name           string
+		args           []string
+		expectedOutput string
+	}{
+		{
+			"should list all attributes for account with json output",
+			[]string{s.accountAddr.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			fmt.Sprintf(`{"account":"%s","attributes":[{"name":"example.attribute.count","value":"Mg==","attribute_type":"ATTRIBUTE_TYPE_INT","address":"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"},{"name":"example.attribute","value":"ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n","attribute_type":"ATTRIBUTE_TYPE_STRING","address":"%s"}],"pagination":{"next_key":null,"total":"0"}}`, s.accountAddr.String(), s.accountAddr.String()),
+		},
+		{
+			"should list all attributes for account text output",
+			[]string{s.accountAddr.String(), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			fmt.Sprintf(`account: %s
+attributes:
+- address: %s
+  attribute_type: ATTRIBUTE_TYPE_INT
+  name: example.attribute.count
+  value: Mg==
+- address: %s
+  attribute_type: ATTRIBUTE_TYPE_STRING
+  name: example.attribute
+  value: ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n
+pagination:
+  next_key: null
+  total: "0"`, s.accountAddr.String(), s.accountAddr.String(), s.accountAddr.String()),
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.ListAccountAttributesCmd()
+			clientCtx := s.testnet.Validators[0].ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetAttributeParamsCmd() {
+	testCases := []struct {
+		name           string
+		args           []string
+		expectedOutput string
+	}{
+		{
+			"json output",
+			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			"{\"max_value_length\":32}",
+		},
+		{
+			"text output",
+			[]string{fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			"max_value_length: 32",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetAttributeParamsCmd()
 			clientCtx := s.testnet.Validators[0].ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
