@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 const flagType = "type"
@@ -57,23 +56,28 @@ Example:
 $ %s tx marker new 1000hotdogcoin --type COIN --from mykey
 `, version.AppName)),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-			markerType := types.MarkerType_Coin
+			markerType := "COIN"
 			coin, err := sdk.ParseCoinNormalized(args[0])
 			if err != nil {
-				return sdkErrors.Wrapf(sdkErrors.ErrInvalidCoins, "invalid coin %s", args[0])
+				return fmt.Errorf("invalid coin %s", args[0])
 			}
 			callerAddr := clientCtx.GetFromAddress()
-			if len(viper.GetString(flagType)) > 0 {
-				typeValue := types.MarkerType_value[viper.GetString(flagType)]
+			markerType, err = cmd.Flags().GetString(flagType)
+			if err != nil {
+				return fmt.Errorf("invalid marker type: %w", err)
+			}
+			typeValue := types.MarkerType_Coin
+			if len(markerType) > 0 {
+				typeValue = types.MarkerType(types.MarkerType_value["MARKER_TYPE_"+markerType])
 				if typeValue < 1 {
-					return sdkErrors.Wrap(sdkErrors.ErrInvalidRequest, "invalid marker type")
+					return fmt.Errorf("invalid marker type: %s; expected COIN|RESTRICTED", markerType)
 				}
 			}
-			msg := types.NewAddMarkerRequest(coin.Denom, coin.Amount, callerAddr, callerAddr, markerType)
+			msg := types.NewAddMarkerRequest(coin.Denom, coin.Amount, callerAddr, callerAddr, typeValue)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -98,7 +102,7 @@ Example:
 $ %s tx marker mint 1000hotdogcoin --from mykey
 `, version.AppName)),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -132,7 +136,7 @@ Example:
 $ %s tx marker burn 1000hotdogcoin --from mykey
 `, version.AppName)),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -165,7 +169,7 @@ Example:
 $ %s tx marker finalize hotdogcoin --from mykey
 `, version.AppName)),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -194,7 +198,7 @@ Example:
 $ %s tx marker activate hotdogcoin --from mykey
 `, version.AppName)),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -215,7 +219,7 @@ func GetCmdCancel() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Short: "Cancel the marker account",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -236,7 +240,7 @@ func GetCmdDelete() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Short: "Mark the marker for deletion",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -265,7 +269,7 @@ Example:
 $ %s tx marker grant pb1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj coindenom burn --from mykey
 `, version.AppName)),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -301,7 +305,7 @@ Example:
 $ %s tx marker revoke pb1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj coindenom --from mykey
 `, version.AppName)),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -328,7 +332,7 @@ func GetCmdWithdrawCoins() *cobra.Command {
 		Long: "Withdraw coins from the marker escrow account.  Must be called by a user with the appropriate permissions. " +
 			"If the recipient is not provided then the withdrawn amount is deposited in the caller's account.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}

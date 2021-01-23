@@ -260,6 +260,10 @@ func (k Keeper) BurnCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 func (k Keeper) IncreaseSupply(ctx sdk.Context, marker types.MarkerAccountI, coin sdk.Coin) error {
 	// using the marker, update the supply to ensure successful (save pending), abort on fail
 	total := marker.GetSupply().Add(coin)
+	maxAllowed := k.GetParams(ctx).MaxTotalSupply
+	if total.Amount.Uint64() > maxAllowed {
+		return fmt.Errorf("requested supply %d exceeds maximum allowed value %d", total.Amount, maxAllowed)
+	}
 	if err := marker.SetSupply(total); err != nil {
 		return err
 	}

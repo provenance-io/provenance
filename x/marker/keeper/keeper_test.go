@@ -244,6 +244,7 @@ func TestAccountKeeperMintBurnCoins(t *testing.T) {
 	//app, ctx := createTestApp(true)
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app.MarkerKeeper.SetParams(ctx, types.DefaultParams())
 	addr := types.MustGetMarkerAddress("testcoin")
 	user := testUserAddress("test")
 

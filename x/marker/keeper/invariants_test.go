@@ -18,6 +18,7 @@ func TestMarkerInvariant(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
+	app.MarkerKeeper.SetParams(ctx, markertypes.DefaultParams())
 	user := testUserAddress("test")
 
 	// Get a reference to our invariant checks

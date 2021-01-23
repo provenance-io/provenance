@@ -61,7 +61,7 @@ func TestMigrate(t *testing.T) {
       "denom": "hotdog",
       "manager": "%s",
       "marker_type": "MARKER_TYPE_COIN",
-      "status": "active",
+      "status": "MARKER_STATUS_ACTIVE",
       "supply": "1",
       "supply_fixed": false
     }
