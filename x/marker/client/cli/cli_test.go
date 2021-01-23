@@ -2,12 +2,14 @@ package cli_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
 
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -87,7 +89,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		{
 			BaseAccount: &authtypes.BaseAccount{
 				Address:       markertypes.MustGetMarkerAddress("lockedcoin").String(),
-				AccountNumber: 100,
+				AccountNumber: 110,
 				Sequence:      0,
 			},
 			Status:                 markertypes.StatusActive,
@@ -96,6 +98,19 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			AllowGovernanceControl: false,
 			Supply:                 sdk.NewInt(1000),
 			Denom:                  "lockedcoin",
+		},
+		{
+			BaseAccount: &authtypes.BaseAccount{
+				Address:       markertypes.MustGetMarkerAddress(cfg.BondDenom).String(),
+				AccountNumber: 120,
+				Sequence:      0,
+			},
+			Status:                 markertypes.StatusActive,
+			SupplyFixed:            true,
+			MarkerType:             markertypes.MarkerType_Coin,
+			AllowGovernanceControl: true,
+			Supply:                 cfg.BondedTokens.Mul(sdk.NewInt(int64(cfg.NumValidators))),
+			Denom:                  cfg.BondDenom,
 		},
 	}
 	markerDataBz, err := cfg.Codec.MarshalJSON(&markerData)
@@ -117,7 +132,101 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.testnet.Cleanup()
 }
 
-func (s *IntegrationTestSuite) TestAttributeTxCommands() {
+func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
+	testCases := []struct {
+		name           string
+		cmd            *cobra.Command
+		args           []string
+		expectedOutput string
+	}{
+		{
+			"get testcoin marker",
+			markercli.MarkerCmd(),
+			[]string{
+				"testcoin",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq","pub_key":null,"account_number":"100","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"testcoin","supply":"1000","marker_type":"MARKER_TYPE_COIN","supply_fixed":true,"allow_governance_control":false}}`,
+		},
+		{
+			"get testcoin marker",
+			markercli.MarkerCmd(),
+			[]string{
+				"testcoin",
+				fmt.Sprintf("--%s=text", tmcli.OutputFlag),
+			},
+			`marker:
+  '@type': /provenance.marker.v1.MarkerAccount
+  access_control: []
+  allow_governance_control: false
+  base_account:
+    account_number: "100"
+    address: cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq
+    pub_key: null
+    sequence: "0"
+  denom: testcoin
+  manager: ""
+  marker_type: MARKER_TYPE_COIN
+  status: MARKER_STATUS_ACTIVE
+  supply: "1000"
+  supply_fixed: true`,
+		},
+		{
+			"query non existant marker",
+			markercli.MarkerCmd(),
+			[]string{
+				"doesntexist",
+			},
+			"",
+		},
+		{
+			"get restricted  coin marker",
+			markercli.MarkerCmd(),
+			[]string{
+				"lockedcoin",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos16437wt0xtqtuw0pn4vt8rlf8gr2plz2det0mt2","pub_key":null,"account_number":"110","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"lockedcoin","supply":"1000","marker_type":"MARKER_TYPE_RESTRICTED","supply_fixed":true,"allow_governance_control":false}}`,
+		},
+		{
+			"query access",
+			markercli.MarkerAccessCmd(),
+			[]string{
+				s.cfg.BondDenom,
+			},
+			"accounts: []",
+		},
+		{
+			"query escrow",
+			markercli.MarkerEscrowCmd(),
+			[]string{
+				s.cfg.BondDenom,
+			},
+			"escrow: []",
+		},
+		{
+			"query supply",
+			markercli.MarkerSupplyCmd(),
+			[]string{
+				s.cfg.BondDenom,
+			},
+			fmt.Sprintf("amount:\n  amount: \"%s\"\n  denom: %s", s.cfg.BondedTokens.Mul(sdk.NewInt(int64(s.cfg.NumValidators))), s.cfg.BondDenom),
+		},
+	}
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			clientCtx := s.testnet.Validators[0].ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 	testCases := []struct {
 		name         string
 		cmd          *cobra.Command

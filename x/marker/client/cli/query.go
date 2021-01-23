@@ -74,7 +74,7 @@ func AllMarkersCmd() *cobra.Command {
 
 	cmd.Flags().Uint32(flags.FlagPage, 1, "Query a specific page of paginated results")
 	cmd.Flags().Uint32(flags.FlagLimit, 200, "Query number of results per page returned")
-
+	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }
 
@@ -113,13 +113,13 @@ func AllHoldersCmd() *cobra.Command {
 
 	cmd.Flags().Uint32(flags.FlagPage, 1, "Query a specific page of paginated results")
 	cmd.Flags().Uint32(flags.FlagLimit, 200, "Query number of results per page returned")
-
+	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }
 
 // MarkerCmd is the CLI command for querying marker module registrations.
 func MarkerCmd() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   " [address|denom]",
 		Short: "Get marker details",
 		Args:  cobra.ExactArgs(1),
@@ -142,11 +142,13 @@ func MarkerCmd() *cobra.Command {
 			return clientCtx.PrintProto(response)
 		},
 	}
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
 }
 
 // MarkerAccessCmd is the CLI command for querying marker access list.
 func MarkerAccessCmd() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "grants [address|denom]",
 		Short: "Get access grants defined for marker",
 		Args:  cobra.ExactArgs(1),
@@ -169,11 +171,13 @@ func MarkerAccessCmd() *cobra.Command {
 			return clientCtx.PrintProto(response)
 		},
 	}
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
 }
 
 // MarkerEscrowCmd is the CLI command for querying marker module registrations.
 func MarkerEscrowCmd() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "escrow [address|denom]",
 		Short: "Get coins in escrow by marker",
 		Args:  cobra.ExactArgs(1),
@@ -196,11 +200,13 @@ func MarkerEscrowCmd() *cobra.Command {
 			return clientCtx.PrintProto(response)
 		},
 	}
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
 }
 
 // MarkerSupplyCmd is the CLI command for querying marker module registrations.
 func MarkerSupplyCmd() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "supply [address|denom]",
 		Short: "Get total supply for marker",
 		Args:  cobra.ExactArgs(1),
@@ -223,4 +229,6 @@ func MarkerSupplyCmd() *cobra.Command {
 			return clientCtx.PrintProto(response)
 		},
 	}
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
 }

@@ -60,7 +60,7 @@ $ %s tx marker new 1000hotdogcoin --type COIN --from mykey
 			if err != nil {
 				return err
 			}
-			markerType := "COIN"
+			markerType := ""
 			coin, err := sdk.ParseCoinNormalized(args[0])
 			if err != nil {
 				return fmt.Errorf("invalid coin %s", args[0])
@@ -82,7 +82,7 @@ $ %s tx marker new 1000hotdogcoin --type COIN --from mykey
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-	cmd.Flags().String(flagType, "", "a marker type to assign (default is COIN)")
+	cmd.Flags().String(flagType, "COIN", "a marker type to assign (default is COIN)")
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
