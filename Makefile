@@ -20,6 +20,10 @@ COMMIT := $(shell git log -1 --format='%H')
 
 GO := go
 
+DOCKER := $(shell which docker)
+DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
+
+
 # The below include contains the tools target.
 include contrib/devtools/Makefile
 
