@@ -1,0 +1,74 @@
+version: '3'
+
+services:
+  node0:
+    container_name: node0
+    image: "provenance-io/blockchain-local"
+    ports:
+      - "26656-26657:26656-26657"
+      - "1317:1317"
+    environment:
+      - ID=0
+      - LOG=${LOG:-provenanced.log}
+      - PIO_HOME=/provenance
+    volumes:
+      - ./build:/provenance:Z
+
+    networks:
+      localnet:
+        ipv4_address: 192.168.20.2
+
+  node1:
+    container_name: node1
+    image: "provenance-io/blockchain-local"
+    ports:
+      - "26659-26660:26656-26657"
+    environment:
+      - ID=1
+      - LOG=${LOG:-provenanced.log}
+      - PIO_HOME=/provenance
+    volumes:
+      - ./build:/provenance:Z
+    networks:
+      localnet:
+        ipv4_address: 192.168.20.3
+
+  node2:
+    container_name: node2
+    image: "provenance-io/blockchain-local"
+    environment:
+      - ID=2
+      - LOG=${LOG:-provenanced.log}
+      - PIO_HOME=/provenance
+    ports:
+      - "26661-26662:26656-26657"
+    volumes:
+      - ./build:/provenance:Z
+    networks:
+      localnet:
+        ipv4_address: 192.168.20.4
+
+  node3:
+    container_name: node3
+    image: "provenance-io/blockchain-local"
+    environment:
+      - ID=3
+      - LOG=${LOG:-provenanced.log}
+      - PIO_HOME=/provenance
+    ports:
+      - "26663-26664:26656-26657"
+    volumes:
+      - ./build:/provenance:Z
+    networks:
+      localnet:
+        ipv4_address: 192.168.20.5
+
+networks:
+  localnet:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      -
+        subnet: 192.168.20.0/16
+
