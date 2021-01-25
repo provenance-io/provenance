@@ -122,7 +122,6 @@ run: check-built run-config;
 .PHONY: install build build-linux run
 
 
-
 ##############################
 # Tools / Dependencies
 ##############################
@@ -186,6 +185,34 @@ benchmark:
 	@go test -mod=readonly -bench=. ./...
 
 .PHONY: test test-all test-unit test-race test-cover test-build benchmark
+
+
+##############################
+# Test Network Targets
+##############################
+.PHONY: vendor
+vendor:
+	go mod vendor -v
+
+# Full build inside a docker container for a clean release build
+docker-build: vendor
+	docker build -t provenance-io/blockchain . -f docker/blockchain/Dockerfile
+	docker build -t provenance-io/blockchain-gateway . -f docker/gateway/Dockerfile
+
+# Quick build using local environment and go platform target options.
+docker-build-local: vendor
+	docker build --tag provenance-io/blockchain-local -f networks/local/blockchain-local/Dockerfile .
+
+# Run a 4-node testnet locally (replace docker-build with docker-build local for better speed)
+localnet-start: localnet-stop docker-build-local
+	@if ! [ -f build/node0/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-local testnet --v 4 -o . --starting-ip-address 192.168.20.2 --keyring-backend=test --chain-id=chain-local ; fi
+	docker-compose -f networks/local/docker-compose.yml --project-directory ./ up -d
+
+# Stop testnet
+localnet-stop:
+	docker-compose -f networks/local/docker-compose.yml --project-directory ./ down
+
+.PHONY: docker-build-local localnet-start localnet-stop
 
 
 ##############################
