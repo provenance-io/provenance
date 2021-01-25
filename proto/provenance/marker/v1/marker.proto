@@ -1,0 +1,85 @@
+syntax = "proto3";
+package provenance.marker.v1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/auth/v1beta1/auth.proto";
+import "cosmos_proto/cosmos.proto";
+import "provenance/marker/v1/accessgrant.proto";
+
+option go_package          = "github.com/provenance-io/provenance/x/marker/types";
+option java_package        = "io.provenance.marker.v1";
+option java_multiple_files = true;
+
+// Params defines the set of params for the account module.
+message Params {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  // maximum amount of supply to allow a marker to be created with
+  uint64 max_total_supply = 1 [(gogoproto.customtype) = "uint64", (gogoproto.nullable) = false];
+  // indicates if governance based controls of markers is allowed.
+  bool enable_governance = 2;
+}
+
+// MarkerAccount holds the marker configuration information in addition to a base account structure.
+message MarkerAccount {
+  option (gogoproto.goproto_getters)         = false;
+  option (gogoproto.goproto_stringer)        = false;
+  option (cosmos_proto.implements_interface) = "MarkerAccountI";
+
+  // base cosmos account information including address and coin holdings.
+  cosmos.auth.v1beta1.BaseAccount base_account = 1
+      [(gogoproto.embed) = true, (gogoproto.moretags) = "yaml:\"base_account\""];
+  // Address that owns the marker configuration.  This account must sign any requests
+  // to change marker config (only valid for statuses prior to finalization)
+  string manager = 2 [(gogoproto.moretags) = "json:\"manager,omitempty\""];
+  // Access control lists
+  repeated AccessGrant access_control = 3 [(gogoproto.nullable) = false];
+  // Indicates the current status of this marker record.
+  MarkerStatus status = 4;
+  // value denomination and total supply for the token.
+  string denom = 5;
+  // the total supply expected for a marker.  This is the amount that is minted when a marker is created.
+  string supply = 6 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false,
+    (gogoproto.moretags)   = "json:\"total_supply\" yaml:\"total_supply\""
+  ];
+  // Marker type information
+  MarkerType marker_type = 7 [(gogoproto.moretags) = "json:\"marker_type,omitempty\""];
+  // A fixed supply will mint additional coin automatically if the total supply decreases below a set value.  This
+  // may occur if the coin is burned or an account holding the coin is slashed. (default: true)
+  bool supply_fixed = 8;
+  // indicates that governance based control is allowed for this marker
+  bool allow_governance_control = 9;
+}
+
+// MarkerType defines the types of marker
+enum MarkerType {
+  // MARKER_TYPE_UNSPECIFIED is an invalid/unknown marker type.
+  MARKER_TYPE_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "Unknown"];
+  // MARKER_TYPE_COIN is a marker that represents a standard fungible coin (default).
+  MARKER_TYPE_COIN = 1 [(gogoproto.enumvalue_customname) = "Coin"];
+  // MARKER_TYPE_RESTRICTED is a marker that represents a denom with send_enabled = false.
+  MARKER_TYPE_RESTRICTED = 2 [(gogoproto.enumvalue_customname) = "RestrictedCoin"];
+}
+
+// MarkerStatus defines the various states a marker account can be in.
+enum MarkerStatus {
+  option (gogoproto.goproto_enum_prefix)   = false;
+  option (gogoproto.goproto_enum_stringer) = false;
+
+  // MARKER_STATUS_UNSPECIFIED - Unknown/Invalid Marker Status
+  MARKER_STATUS_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "StatusUndefined"];
+  // MARKER_STATUS_PROPOSED - Initial configuration period, updates allowed, token supply not created.
+  MARKER_STATUS_PROPOSED = 1 [(gogoproto.enumvalue_customname) = "StatusProposed"];
+  // MARKER_STATUS_FINALIZED - Configuration finalized, ready for supply creation
+  MARKER_STATUS_FINALIZED = 2 [(gogoproto.enumvalue_customname) = "StatusFinalized"];
+  // MARKER_STATUS_ACTIVE - Supply is created, rules are in force.
+  MARKER_STATUS_ACTIVE = 3 [(gogoproto.enumvalue_customname) = "StatusActive"];
+  // MARKER_STATUS_CANCELLED - Marker has been cancelled, pending destroy
+  MARKER_STATUS_CANCELLED = 4 [(gogoproto.enumvalue_customname) = "StatusCancelled"];
+  // MARKER_STATUS_DESTROYED - Marker supply has all been recalled, marker is considered destroyed and no further
+  // actions allowed.
+  MARKER_STATUS_DESTROYED = 5 [(gogoproto.enumvalue_customname) = "StatusDestroyed"];
+}

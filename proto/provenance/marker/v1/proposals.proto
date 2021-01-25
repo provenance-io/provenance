@@ -1,0 +1,72 @@
+syntax = "proto3";
+package provenance.marker.v1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "provenance/marker/v1/marker.proto";
+import "provenance/marker/v1/accessgrant.proto";
+
+option go_package = "github.com/provenance-io/provenance/x/marker/types";
+
+option java_package        = "io.provenance.marker.v1";
+option java_multiple_files = true;
+
+// SupplyIncreaseProposal defines a governance proposal to administer a marker and increase total supply of the marker
+// through minting coin and placing it within the marker or assigning it directly to an account
+message SupplyIncreaseProposal {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  string                   title       = 1;
+  string                   description = 2;
+  cosmos.base.v1beta1.Coin amount      = 3
+      [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
+  string target_adddress = 4; // an optional target address for the minted coin from this request
+}
+
+// SupplyDecreaseProposal defines a governance proposal to administer a marker and decrease the total supply through
+// burning coin held within the marker
+message SupplyDecreaseProposal {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  string                   title       = 1;
+  string                   description = 2;
+  cosmos.base.v1beta1.Coin amount      = 3
+      [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
+}
+
+// SetAdministratorProposal defines a governance proposal to administer a marker and set administrators with specific
+// access on the marker
+message SetAdministratorProposal {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  string               title       = 1;
+  string               description = 2;
+  string               denom       = 3;
+  repeated AccessGrant access      = 4 [(gogoproto.nullable) = false];
+}
+
+// RemoveAdministratorProposal defines a governance proposal to administer a marker and remove all permissions for a
+// given address
+message RemoveAdministratorProposal {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  string          title           = 1;
+  string          description     = 2;
+  string          denom           = 3;
+  repeated string removed_address = 4;
+}
+
+// ChangeStatusProposal defines a governance proposal to administer a marker to change its status
+message ChangeStatusProposal {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  string       title       = 1;
+  string       description = 2;
+  string       denom       = 3;
+  MarkerStatus new_status  = 4;
+}

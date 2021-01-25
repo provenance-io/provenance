@@ -1,0 +1,22 @@
+syntax = "proto3";
+package provenance.marker.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/marker/types";
+
+option java_package        = "io.provenance.marker.v1";
+option java_multiple_files = true;
+
+import "gogoproto/gogo.proto";
+import "provenance/marker/v1/marker.proto";
+
+// GenesisState defines the account module's genesis state.
+message GenesisState {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // params defines all the parameters of the module.
+  Params params = 1 [(gogoproto.nullable) = false];
+
+  // A collection of marker accounts to create on start
+  repeated MarkerAccount markers = 2 [(gogoproto.nullable) = false];
+}
