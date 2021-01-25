@@ -20,6 +20,10 @@ COMMIT := $(shell git log -1 --format='%H')
 
 GO := go
 
+DOCKER := $(shell which docker)
+DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
+
+
 # The below include contains the tools target.
 include contrib/devtools/Makefile
 
@@ -98,7 +102,7 @@ build-linux: go.sum
 	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build
 
 # Run an instance of the daemon against a local config (create the config if it does not exit.)
-run-config:
+run-config: check-built
 	@if [ ! -d "$(BUILDDIR)/run/provenanced/config" ]; then \
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced init --chain-id=testing testing ; \
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced keys add validator --keyring-backend test ; \
@@ -108,6 +112,7 @@ run-config:
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator provenance --keyring-backend test ; \
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-account validator 100000000000000000000nhash --keyring-backend test ; \
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced gentx validator 1000000000000000nhash --keyring-backend test --chain-id=testing; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-marker 100000000000000000000nhash --manager validator --access mint,burn,admin,withdraw,deposit --activate --keyring-backend test; \
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced collect-gentxs; \
 	fi ;
 
@@ -115,7 +120,6 @@ run: check-built run-config;
 	$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced start
 
 .PHONY: install build build-linux run
-
 
 
 ##############################
@@ -184,6 +188,34 @@ benchmark:
 
 
 ##############################
+# Test Network Targets
+##############################
+.PHONY: vendor
+vendor:
+	go mod vendor -v
+
+# Full build inside a docker container for a clean release build
+docker-build: vendor
+	docker build -t provenance-io/blockchain . -f docker/blockchain/Dockerfile
+	docker build -t provenance-io/blockchain-gateway . -f docker/gateway/Dockerfile
+
+# Quick build using local environment and go platform target options.
+docker-build-local: vendor
+	docker build --tag provenance-io/blockchain-local -f networks/local/blockchain-local/Dockerfile .
+
+# Run a 4-node testnet locally (replace docker-build with docker-build local for better speed)
+localnet-start: localnet-stop docker-build-local
+	@if ! [ -f build/node0/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-local testnet --v 4 -o . --starting-ip-address 192.168.20.2 --keyring-backend=test --chain-id=chain-local ; fi
+	docker-compose -f networks/local/docker-compose.yml --project-directory ./ up -d
+
+# Stop testnet
+localnet-stop:
+	docker-compose -f networks/local/docker-compose.yml --project-directory ./ down
+
+.PHONY: docker-build-local localnet-start localnet-stop
+
+
+##############################
 # Proto -> golang compilation
 ##############################
 proto-all: proto-tools proto-gen proto-lint proto-check-breaking proto-swagger-gen proto-format protoc-gen-gocosmos protoc-gen-grpc-gateway
@@ -216,7 +248,7 @@ proto-check-breaking-docker:
 TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/v0.34.x/proto/tendermint
 GOGO_PROTO_URL   = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
 COSMOS_PROTO_URL = https://raw.githubusercontent.com/regen-network/cosmos-proto/master
-COSMOS_SDK_URL   = https://raw.githubusercontent.com/cosmos/cosmos-sdk/v0.40.x/proto/cosmos
+COSMOS_SDK_URL   = https://raw.githubusercontent.com/cosmos/cosmos-sdk/release/v0.40.x/proto/cosmos
 CONFIO_URL       = https://raw.githubusercontent.com/confio/ics23/v0.6.3
 
 TM_CRYPTO_TYPES     = third_party/proto/tendermint/crypto
@@ -231,6 +263,7 @@ COSMOS_BASE_TYPES    = third_party/proto/cosmos/base
 COSMOS_SIGNING_TYPES = third_party/proto/cosmos/tx/signing
 COSMOS_CRYPTO_TYPES  = third_party/proto/cosmos/crypto
 COSMOS_AUTH_TYPES    = third_party/proto/cosmos/auth
+COSMOS_BANK_TYPES    = third_party/proto/cosmos/bank
 CONFIO_TYPES         = third_party/proto/confio
 
 proto-update-deps:
@@ -243,8 +276,8 @@ proto-update-deps:
 	@mkdir -p $(COSMOS_BASE_TYPES)/v1beta1
 	@curl -sSL $(COSMOS_SDK_URL)/base/v1beta1/coin.proto > $(COSMOS_BASE_TYPES)/v1beta1/coin.proto
 
-	@mkdir -p $(COSMOS_BASE_TYPES)/v1beta1
-	@curl -sSL $(COSMOS_SDK_URL)/base/v1beta1/coin.proto > $(COSMOS_BASE_TYPES)/v1beta1/coin.proto
+	@mkdir -p $(COSMOS_BASE_TYPES)/query/v1beta1
+	@curl -sSL $(COSMOS_SDK_URL)/base/query/v1beta1/pagination.proto > $(COSMOS_BASE_TYPES)/query/v1beta1/pagination.proto
 
 	@mkdir -p $(COSMOS_SIGNING_TYPES)/v1beta1
 	@curl -sSL $(COSMOS_SDK_URL)/tx/signing/v1beta1/signing.proto > $(COSMOS_SIGNING_TYPES)/v1beta1/signing.proto
@@ -257,6 +290,9 @@ proto-update-deps:
 
 	@mkdir -p $(COSMOS_AUTH_TYPES)/v1beta1
 	@curl -sSL $(COSMOS_SDK_URL)/auth/v1beta1/auth.proto > $(COSMOS_AUTH_TYPES)/v1beta1/auth.proto
+
+	@mkdir -p $(COSMOS_BANK_TYPES)/v1beta1
+	@curl -sSL $(COSMOS_SDK_URL)/bank/v1beta1/bank.proto > $(COSMOS_BANK_TYPES)/v1beta1/bank.proto
 
 	@mkdir -p $(TM_ABCI_TYPES)
 	@curl -sSL $(TM_URL)/abci/types.proto > $(TM_ABCI_TYPES)/types.proto
