@@ -76,15 +76,13 @@ func queryListAllMarkersHandlerFn(cliCtx client.Context) http.HandlerFunc {
 		}
 		params := types.NewQueryMarkersParams(page, limit, "", status)
 		bz, err := cliCtx.LegacyAmino.MarshalJSON(params)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryMarkers)
 		res, height, err := cliCtx.QueryWithData(route, bz)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
@@ -99,8 +97,7 @@ func queryMarkerHandlerFn(cliCtx client.Context, fn string) http.HandlerFunc {
 		id := vars[markerID]
 
 		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/%s/%s", types.ModuleName, fn, id), nil)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
@@ -112,8 +109,7 @@ func queryMarkerAssetsHandlerFn(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// _, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 200)
 		_, _, _, err := rest.ParseHTTPArgsWithLimit(r, 200)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 		vars := mux.Vars(r)
@@ -139,8 +135,7 @@ func queryMarkerAssetsHandlerFn(cliCtx client.Context) http.HandlerFunc {
 		// }
 
 		bz, err := []byte{}, fmt.Errorf("todo: import metadata module") //  cliCtx.LegacyAmino.MarshalJSON(params)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
@@ -155,8 +150,7 @@ func queryMarkerAssetsHandlerFn(cliCtx client.Context) http.HandlerFunc {
 		// returns scope uuids linked to it.
 		path := fmt.Sprintf("custom/%s/%s/%s", "metadata", "ownership", addr.String())
 		res, _, err := cliCtx.QueryWithData(path, bz)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
@@ -183,15 +177,13 @@ func queryListMarkerHoldersHandlerFn(cliCtx client.Context) http.HandlerFunc {
 
 		params := types.NewQueryMarkersParams(page, limit, vars[markerID], "")
 		bz, err := cliCtx.LegacyAmino.MarshalJSON(params)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryHolders)
 		res, height, err := cliCtx.QueryWithData(route, bz)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 

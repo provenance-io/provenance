@@ -172,7 +172,7 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
   supply_fixed: true`,
 		},
 		{
-			"query non existant marker",
+			"query non existent marker",
 			markercli.MarkerCmd(),
 			[]string{
 				"doesntexist",
