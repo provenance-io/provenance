@@ -162,3 +162,64 @@ func TestNewMarkerMsgEncoding(t *testing.T) {
 
 	require.NoError(t, newMsgMarker.ValidateBasic())
 }
+
+func TestMarkerTypeStrings(t *testing.T) {
+	tests := []struct {
+		name       string
+		typeString string
+		expType    MarkerType
+		expErr     error
+	}{
+		{
+			"standard coin",
+			"coin",
+			MarkerType_Coin,
+			nil,
+		},
+		{
+			"upper coin",
+			"COIN",
+			MarkerType_Coin,
+			nil,
+		},
+		{
+			"enum coin value",
+			"MARKER_TYPE_COIN",
+			MarkerType_Coin,
+			nil,
+		},
+		{
+			"plain restricted",
+			"restricted",
+			MarkerType_RestrictedCoin,
+			nil,
+		},
+		{
+			"restrictedcoin style",
+			"restrictedcoin",
+			MarkerType_RestrictedCoin,
+			nil,
+		},
+		{
+			"enum string restricted",
+			"MARKER_TYPE_RESTRICTED",
+			MarkerType_RestrictedCoin,
+			nil,
+		},
+		{
+			"invalid",
+			"invalid",
+			MarkerType_Unknown,
+			fmt.Errorf("'invalid' is not a valid marker status"),
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			m, err := MarkerTypeFromString(tt.typeString)
+			require.Equal(t, tt.expErr, err)
+			require.Equal(t, tt.expType, m)
+		})
+	}
+}

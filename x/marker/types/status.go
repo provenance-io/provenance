@@ -33,8 +33,12 @@ func MarkerStatusFromString(str string) (MarkerStatus, error) {
 		return StatusDestroyed, nil
 
 	default:
-		return MarkerStatus(0xff), fmt.Errorf("'%s' is not a valid marker status", str)
+		if val, ok := MarkerStatus_value[str]; ok {
+			return MarkerStatus(val), nil
+		}
 	}
+
+	return MarkerStatus(0xff), fmt.Errorf("'%s' is not a valid marker status", str)
 }
 
 // ValidMarkerStatus returns true if the marker status is valid and false otherwise.
@@ -75,12 +79,7 @@ func (rt *MarkerStatus) UnmarshalJSON(data []byte) error {
 
 	bz2, err := MarkerStatusFromString(s)
 	if err != nil {
-		// try using the Proto enum values
-		if val, ok := MarkerStatus_value[s]; ok {
-			bz2 = MarkerStatus(val)
-		} else {
-			return err
-		}
+		return err
 	}
 
 	*rt = bz2

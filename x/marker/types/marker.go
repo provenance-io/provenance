@@ -293,3 +293,23 @@ func (ma *MarkerAccount) RevokeAccess(addr sdk.AccAddress) error {
 func (ma *MarkerAccount) GetAccessList() []AccessGrant {
 	return ma.AccessControl
 }
+
+// MarkerTypeFromString returns a MarkerType from a string. It returns an error
+// if the string is invalid.
+func MarkerTypeFromString(str string) (MarkerType, error) {
+	switch strings.ToLower(str) {
+	case "coin":
+		return MarkerType_Coin, nil
+	case "restricted":
+		fallthrough
+	case "restrictedcoin":
+		return MarkerType_RestrictedCoin, nil
+
+	default:
+		if val, ok := MarkerType_value[str]; ok {
+			return MarkerType(val), nil
+		}
+	}
+
+	return MarkerType_Unknown, fmt.Errorf("'%s' is not a valid marker status", str)
+}

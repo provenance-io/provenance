@@ -151,7 +151,7 @@ func (k Keeper) WithdrawCoins(
 	}
 	// check to see if marker is active (the coins created by a marker can only be withdrawn when it is active)
 	// any other coins that may be present (collateralized assets?) can be transferred
-	if m.GetStatus() != types.StatusActive && coins.AmountOf(denom).GT(sdk.ZeroInt()) {
+	if m.GetStatus() != types.StatusActive {
 		return fmt.Errorf("cannot withdraw marker created coins from a marker that is not in Active status")
 	}
 

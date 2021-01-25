@@ -85,8 +85,8 @@ func mintSupplyHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		denom := mux.Vars(r)["denom"]
-		if err := sdk.ValidateDenom(denom); err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		err := sdk.ValidateDenom(denom)
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
@@ -99,17 +99,13 @@ func mintSupplyHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		if !req.BaseReq.ValidateBasic(w) {
 			return
 		}
+
 		fromAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		msg := types.NewMintRequest(fromAddr, req.Amount)
-		if err := msg.ValidateBasic(); err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
 		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
 }
@@ -123,8 +119,8 @@ func burnSupplyHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		denom := mux.Vars(r)["denom"]
-		if err := sdk.ValidateDenom(denom); err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		err := sdk.ValidateDenom(denom)
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
@@ -137,6 +133,7 @@ func burnSupplyHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		if !req.BaseReq.ValidateBasic(w) {
 			return
 		}
+
 		fromAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -144,10 +141,6 @@ func burnSupplyHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		msg := types.NewBurnRequest(fromAddr, req.Amount)
-		if err := msg.ValidateBasic(); err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
 		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
 }
@@ -161,8 +154,8 @@ func updateStatusHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		denom := mux.Vars(r)["denom"]
-		if err := sdk.ValidateDenom(denom); err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		err := sdk.ValidateDenom(denom)
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
@@ -172,14 +165,12 @@ func updateStatusHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		fromAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		status, err := types.MarkerStatusFromString(req.NewStatus)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
@@ -197,10 +188,7 @@ func updateStatusHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, "invalid status change request")
 			return
 		}
-		if err := msg.ValidateBasic(); err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
+
 		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
 }
@@ -214,18 +202,18 @@ func createMarkerHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		denom := mux.Vars(r)["denom"]
-		if err := sdk.ValidateDenom(denom); err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		err := sdk.ValidateDenom(denom)
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
+
 		req.BaseReq = req.BaseReq.Sanitize()
-		if !req.BaseReq.ValidateBasic(w) || !req.Supply.GT(sdk.ZeroInt()) {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, "request must have supply greater than or equal to one.")
+		if !req.BaseReq.ValidateBasic(w) {
 			return
 		}
+
 		fromAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
@@ -233,21 +221,12 @@ func createMarkerHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			req.Manager = fromAddr
 		}
 
-		if req.MarkerType == "" {
-			req.MarkerType = types.MarkerType_Coin.String()
-		}
-		typeValue := types.MarkerType_value[req.MarkerType]
-
-		if typeValue < 1 {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, "invalid marker type")
+		typeValue, err := types.MarkerTypeFromString(req.MarkerType)
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
-		msg := types.NewAddMarkerRequest(denom, req.Supply, fromAddr, req.Manager, types.MarkerType(typeValue))
-		if err := msg.ValidateBasic(); err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
+		msg := types.NewAddMarkerRequest(denom, req.Supply, fromAddr, req.Manager, typeValue)
 		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
 }
@@ -261,25 +240,22 @@ func withdrawSupplyHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		denom := mux.Vars(r)["denom"]
-		if err := sdk.ValidateDenom(denom); err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		err := sdk.ValidateDenom(denom)
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
+
 		req.BaseReq = req.BaseReq.Sanitize()
 		if !req.BaseReq.ValidateBasic(w) {
 			return
 		}
+
 		fromAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		msg := types.NewWithdrawRequest(fromAddr, req.Recipient, denom, sdk.NewCoins(req.Amount))
-		if err := msg.ValidateBasic(); err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
 		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
 }
@@ -293,27 +269,24 @@ func grantAccessHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		denom := mux.Vars(r)["denom"]
-		if err := sdk.ValidateDenom(denom); err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		err := sdk.ValidateDenom(denom)
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
+
 		req.BaseReq = req.BaseReq.Sanitize()
 		if !req.BaseReq.ValidateBasic(w) {
 			return
 		}
+
 		fromAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		grant := types.NewAccessGrant(req.Address, types.AccessListByNames(req.Grant))
 
 		msg := types.NewAddAccessRequest(denom, fromAddr, *grant)
-		if err := msg.ValidateBasic(); err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
 		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
 }
@@ -331,21 +304,18 @@ func revokeAccessHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
+
 		req.BaseReq = req.BaseReq.Sanitize()
 		if !req.BaseReq.ValidateBasic(w) {
 			return
 		}
+
 		fromAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		msg := types.NewDeleteAccessRequest(denom, fromAddr, req.Address)
-		if err := msg.ValidateBasic(); err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
 		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
 }
