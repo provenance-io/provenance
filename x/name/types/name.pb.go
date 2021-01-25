@@ -23,7 +23,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// Params defines the set of params for the account module.
+// Params defines the set of params for the name module.
 type Params struct {
 	// maximum length of name segment to allow
 	MaxSegmentLength uint32 `protobuf:"varint,1,opt,name=max_segment_length,json=maxSegmentLength,proto3" json:"max_segment_length,omitempty"`

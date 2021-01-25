@@ -4,7 +4,7 @@ package provenance.attribute.v1;
 import "gogoproto/gogo.proto";
 import "provenance/attribute/v1/attribute.proto";
 
-option go_package = "github.com/provenance-io/provenance/x/attribute/types";
+option go_package          = "github.com/provenance-io/provenance/x/attribute/types";
 option java_package        = "io.provenance.attribute.v1";
 option java_multiple_files = true;
 

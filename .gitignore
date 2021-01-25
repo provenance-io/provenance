@@ -38,3 +38,4 @@ profile.iws
 # Tools make target marker
 tools-stamp
 tmp-swagger-gen
+proto-tools-stamp

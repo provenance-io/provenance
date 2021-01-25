@@ -558,7 +558,7 @@ func (c *queryClient) Scan(ctx context.Context, in *QueryScanRequest, opts ...gr
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// Params queries params of the account module.
+	// Params queries params of the attribute module.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// Attribute queries attributes on a given account (address) for one (or more) with the given name
 	Attribute(context.Context, *QueryAttributeRequest) (*QueryAttributeResponse, error)
