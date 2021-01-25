@@ -33,8 +33,9 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper, 
 				ctx.Logger().Error(
 					fmt.Sprintf("Current %s supply is NOT at the required amount, burning %d to required supply level",
 						requiredSupply.Denom, offset.Amount))
-				err = k.IncreaseSupply(ctx, record, offset)
+				err = k.DecreaseSupply(ctx, record, offset)
 			}
+			// else supply is equal, nothing to do here.
 		}
 		return err != nil
 	})
