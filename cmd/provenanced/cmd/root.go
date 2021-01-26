@@ -68,12 +68,15 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			if err := client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
 				return err
 			}
-			return server.InterceptConfigsPreRunHandler(cmd)
+			if err := server.InterceptConfigsPreRunHandler(cmd); err != nil {
+				return err
+			}
+			// set app context based on initialized EnvTypeFlag
+			testnet := server.GetServerContextFromCmd(cmd).Viper.GetBool(EnvTypeFlag)
+			app.SetConfig(testnet)
+			return nil
 		},
 	}
-
-	rootCmd.PersistentFlags().BoolP(EnvTypeFlag, "t", false, "Indicates this command should use the testnet configuration (default: false [mainnet])")
-
 	initRootCmd(rootCmd, encodingConfig)
 	overwriteFlagDefaults(rootCmd, map[string]string{
 		flags.FlagChainID:        ChainID,
@@ -85,12 +88,6 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 
 // Execute executes the root command.
 func Execute(rootCmd *cobra.Command) error {
-	testnet, err := rootCmd.PersistentFlags().GetBool(EnvTypeFlag)
-	if err != nil {
-		return err
-	}
-	app.SetConfig(testnet)
-
 	// Create and set a client.Context on the command's Context. During the pre-run
 	// of the root command, a default initialized client.Context is provided to
 	// seed child command execution with values such as AccountRetriver, Keyring,
@@ -101,6 +98,7 @@ func Execute(rootCmd *cobra.Command) error {
 	ctx = context.WithValue(ctx, client.ClientContextKey, &client.Context{})
 	ctx = context.WithValue(ctx, server.ServerContextKey, server.NewDefaultContext())
 
+	rootCmd.PersistentFlags().BoolP(EnvTypeFlag, "t", false, "Indicates this command should use the testnet configuration (default: false [mainnet])")
 	rootCmd.PersistentFlags().String(flags.FlagLogLevel, zerolog.InfoLevel.String(), "The logging level (trace|debug|info|warn|error|fatal|panic)")
 	rootCmd.PersistentFlags().String(flags.FlagLogFormat, tmcfg.LogFormatPlain, "The logging format (json|plain)")
 
