@@ -10,23 +10,17 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	tmcli "github.com/tendermint/tendermint/libs/cli"
-	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	sdksim "github.com/cosmos/cosmos-sdk/simapp"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	simapp "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/testutil"
 
 	"github.com/provenance-io/provenance/x/attribute/client/cli"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
@@ -51,22 +45,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.accountAddr = addr
 	s.T().Log("setting up integration test suite")
 
-	encCfg := simapp.MakeEncodingConfig()
-	cfg := testnet.DefaultConfig()
-	cfg.InterfaceRegistry = encCfg.InterfaceRegistry
-	cfg.Codec = encCfg.Marshaler
-	cfg.TxConfig = encCfg.TxConfig
-	cfg.LegacyAmino = encCfg.Amino
-
-	cfg.AppConstructor = func(val network.Validator) servertypes.Application {
-		return simapp.New("test",
-			val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
-			encCfg,
-			sdksim.EmptyAppOptions{},
-			baseapp.SetPruning(storetypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
-			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
-		)
-	}
+	cfg := testutil.DefaultTestNetworkConfig()
 
 	genesisState := cfg.GenesisState
 	cfg.NumValidators = 1

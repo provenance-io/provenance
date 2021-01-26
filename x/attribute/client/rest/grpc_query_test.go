@@ -6,21 +6,14 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	dbm "github.com/tendermint/tm-db"
-
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	sdksim "github.com/cosmos/cosmos-sdk/simapp"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
+	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	simapp "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/testutil"
 
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
@@ -48,22 +41,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.accountAddr = addr
 	s.T().Log("setting up integration test suite")
 
-	encCfg := simapp.MakeEncodingConfig()
-	cfg := testnet.DefaultConfig()
-	cfg.InterfaceRegistry = encCfg.InterfaceRegistry
-	cfg.Codec = encCfg.Marshaler
-	cfg.TxConfig = encCfg.TxConfig
-	cfg.LegacyAmino = encCfg.Amino
-
-	cfg.AppConstructor = func(val network.Validator) servertypes.Application {
-		return simapp.New("test",
-			val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
-			encCfg,
-			sdksim.EmptyAppOptions{},
-			baseapp.SetPruning(storetypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
-			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
-		)
-	}
+	cfg := testutil.DefaultTestNetworkConfig()
 
 	genesisState := cfg.GenesisState
 	cfg.NumValidators = 1
@@ -222,7 +200,7 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
+			resp, err := sdktestutil.GetRequestWithHeaders(tc.url, tc.headers)
 			s.Require().NoError(err)
 			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType)
 
