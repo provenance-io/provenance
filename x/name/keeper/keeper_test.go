@@ -12,7 +12,7 @@ import (
 	"github.com/provenance-io/provenance/x/name/types"
 )
 
-func TestSetWithdrawAddr(t *testing.T) {
+func TestNameNormalization(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
