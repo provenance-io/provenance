@@ -560,6 +560,7 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 		s.Run(tc.name, func() {
 			clientCtx := s.testnet.Validators[0].ClientCtx
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
+
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -586,7 +587,7 @@ func (s *IntegrationTestSuite) TestDeleteAccountAttributeTxCommands() {
 			"bind a new attribute name for delete testing",
 			namecli.GetBindNameCmd(),
 			[]string{
-				"txtest",
+				"deletetest",
 				s.testnet.Validators[0].Address.String(),
 				"attribute",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -600,7 +601,7 @@ func (s *IntegrationTestSuite) TestDeleteAccountAttributeTxCommands() {
 			"add new attribute for delete testing",
 			cli.NewAddAccountAttributeCmd(),
 			[]string{
-				"txtest.attribute",
+				"deletetest.attribute",
 				s.testnet.Validators[0].Address.String(),
 				"string",
 				"test value",
@@ -614,7 +615,7 @@ func (s *IntegrationTestSuite) TestDeleteAccountAttributeTxCommands() {
 		{"delete attribute, should delete txtest.attribute",
 			cli.NewDeleteAccountAttributeCmd(),
 			[]string{
-				"txtest.attribute",
+				"deletetest.attribute",
 				s.testnet.Validators[0].Address.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -626,7 +627,7 @@ func (s *IntegrationTestSuite) TestDeleteAccountAttributeTxCommands() {
 		{"delete attribute, should fail to find txtest.attribute",
 			cli.NewDeleteAccountAttributeCmd(),
 			[]string{
-				"txtest.attribute",
+				"deletetest.attribute",
 				s.testnet.Validators[0].Address.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -642,6 +643,7 @@ func (s *IntegrationTestSuite) TestDeleteAccountAttributeTxCommands() {
 		s.Run(tc.name, func() {
 			clientCtx := s.testnet.Validators[0].ClientCtx
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
+
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
