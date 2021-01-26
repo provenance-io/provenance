@@ -161,8 +161,8 @@ pagination:
   total: "0"`, s.accountAddr.String()),
 		},
 		{
-			"should get attribute by name with json output",
-			[]string{s.accountAddr.String(), "example.attribute", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			"should fail to find unknown attribute by name with json output",
+			[]string{s.accountAddr.String(), "example.none", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			fmt.Sprintf(`{"account":"%s","attributes":[],"pagination":{"next_key":null,"total":"0"}}`, s.accountAddr.String()),
 		},
 	}
@@ -312,6 +312,15 @@ func (s *IntegrationTestSuite) TestGetAttributeParamsCmd() {
 }
 
 func (s *IntegrationTestSuite) TestAttributeTxCommands() {
+
+	testAttr, _ := codectypes.NewAnyWithValue(&attributetypes.Attribute{
+		Address:       s.accountAddr.String(),
+		AttributeType: 7,
+		Name:          "test proto",
+		Value:         []byte("test value"),
+	})
+	protoAttr, _ := testAttr.Marshal()
+
 	testCases := []struct {
 		name         string
 		cmd          *cobra.Command
@@ -379,21 +388,265 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 			},
 			false, &sdk.TxResponse{}, 1,
 		},
+		{
+			"set attribute, valid json",
+			cli.NewAddAccountAttributeCmd(),
+			[]string{
+				"txtest.attribute",
+				s.testnet.Validators[0].Address.String(),
+				"json",
+				"{\"key\":\"value\"}",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"set attribute, invalid json",
+			cli.NewAddAccountAttributeCmd(),
+			[]string{
+				"txtest.attribute",
+				s.testnet.Validators[0].Address.String(),
+				"json",
+				"{\"not proper json\"}",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 1,
+		},
+		{
+			"set attribute, valid uuid",
+			cli.NewAddAccountAttributeCmd(),
+			[]string{
+				"txtest.attribute",
+				s.testnet.Validators[0].Address.String(),
+				"uuid",
+				"deadbeef-cafe-8675-3099-feedfacebabe",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"set attribute, invalid uuid",
+			cli.NewAddAccountAttributeCmd(),
+			[]string{
+				"txtest.attribute",
+				s.testnet.Validators[0].Address.String(),
+				"uuid",
+				"not-a-uuid-vegan-deadbeef-cafe",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 1,
+		},
+		{
+			"set attribute, valid float",
+			cli.NewAddAccountAttributeCmd(),
+			[]string{
+				"txtest.attribute",
+				s.testnet.Validators[0].Address.String(),
+				"float",
+				"40.6",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"set attribute, invalid float",
+			cli.NewAddAccountAttributeCmd(),
+			[]string{
+				"txtest.attribute",
+				s.testnet.Validators[0].Address.String(),
+				"float",
+				"not a float",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 1,
+		},
+		{
+			"set attribute, valid uri",
+			cli.NewAddAccountAttributeCmd(),
+			[]string{
+				"txtest.attribute",
+				s.testnet.Validators[0].Address.String(),
+				"uri",
+				"http://provenance.io",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"set attribute, invalid uri",
+			cli.NewAddAccountAttributeCmd(),
+			[]string{
+				"txtest.attribute",
+				s.testnet.Validators[0].Address.String(),
+				"uri",
+				"not a uri",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 1,
+		},
+		{
+			"set attribute, valid bytes",
+			cli.NewAddAccountAttributeCmd(),
+			[]string{
+				"txtest.attribute",
+				s.testnet.Validators[0].Address.String(),
+				"bytes",
+				"ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"set attribute, valid proto",
+			cli.NewAddAccountAttributeCmd(),
+			[]string{
+				"txtest.attribute",
+				s.testnet.Validators[0].Address.String(),
+				"proto",
+				string(protoAttr),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"set attribute, unknown type",
+			cli.NewAddAccountAttributeCmd(),
+			[]string{
+				"txtest.attribute",
+				s.testnet.Validators[0].Address.String(),
+				"notdog",
+				"not a valid type",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, &sdk.TxResponse{}, 1,
+		},
 	}
 
 	for _, tc := range testCases {
 		tc := tc
-
 		s.Run(tc.name, func() {
 			clientCtx := s.testnet.Validators[0].ClientCtx
-
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-				println(out.String())
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestDeleteAccountAttributeTxCommands() {
+
+	testCases := []struct {
+		name         string
+		cmd          *cobra.Command
+		args         []string
+		expectErr    bool
+		respType     proto.Message
+		expectedCode uint32
+	}{
+		{
+			"bind a new attribute name for delete testing",
+			namecli.GetBindNameCmd(),
+			[]string{
+				"txtest",
+				s.testnet.Validators[0].Address.String(),
+				"attribute",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"add new attribute for delete testing",
+			cli.NewAddAccountAttributeCmd(),
+			[]string{
+				"txtest.attribute",
+				s.testnet.Validators[0].Address.String(),
+				"string",
+				"test value",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{"delete attribute, should delete txtest.attribute",
+			cli.NewDeleteAccountAttributeCmd(),
+			[]string{
+				"txtest.attribute",
+				s.testnet.Validators[0].Address.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{"delete attribute, should fail to find txtest.attribute",
+			cli.NewDeleteAccountAttributeCmd(),
+			[]string{
+				"txtest.attribute",
+				s.testnet.Validators[0].Address.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 1,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
 			}
