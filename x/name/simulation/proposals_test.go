@@ -41,5 +41,5 @@ func TestProposalContents(t *testing.T) {
 	require.Equal(t, "hPjMaxKlMIJMOXcnQfyzeOcbWwNbeHVIkPZBSpYuLyYggwexjxusrBqDOTtGTOWeLrQKjLxzIivHSlcxgdXhhuTSkuxKGLwQvuyN", content.GetDescription())
 	require.Equal(t, "eAerqyNEUz", content.GetTitle())
 	require.Equal(t, "name", content.ProposalRoute())
-	require.Equal(t, "CreateRootNameProposal", content.ProposalType())
+	require.Equal(t, "CreateRootName", content.ProposalType())
 }

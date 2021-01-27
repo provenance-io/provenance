@@ -6,6 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"strings"
+
+	tmrand "github.com/tendermint/tendermint/libs/rand"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 
@@ -22,17 +25,17 @@ const (
 
 // GenMaxSegmentLength randomized Max Segment Length
 func GenMaxSegmentLength(r *rand.Rand) uint32 {
-	return uint32(r.Intn(33))
+	return uint32(r.Intn(22) + 11) // ensures that max is always more than range of min values (1-11)
 }
 
 // GenMaxNameLevels randomized Maximum number of segment levels
 func GenMaxNameLevels(r *rand.Rand) uint32 {
-	return uint32(r.Intn(10))
+	return uint32(r.Intn(10) + 1)
 }
 
 // GenMinSegmentLength randomized minimum segment name length
 func GenMinSegmentLength(r *rand.Rand) uint32 {
-	return uint32(r.Intn(10))
+	return uint32(r.Intn(10) + 1)
 }
 
 // GenAllowUnrestrictedNames returns a randomized AllowUnrestrictedNames parameter.
@@ -66,6 +69,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { allowUnrestrictedNames = GenAllowUnrestrictedNames(r) },
 	)
 
+	rootNameSegment := strings.ToLower(tmrand.NewRand().Str(int(minValueLength)))
 	accountGenesis := types.GenesisState{
 		Params: types.Params{
 			MaxSegmentLength:       maxValueLength,
@@ -74,7 +78,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 			AllowUnrestrictedNames: allowUnrestrictedNames,
 		},
 		Bindings: []types.NameRecord{
-			types.NewNameRecord("sim", simState.Accounts[0].Address, false),
+			types.NewNameRecord(rootNameSegment, simState.Accounts[0].Address, false),
 		},
 	}
 
