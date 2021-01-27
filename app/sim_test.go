@@ -29,13 +29,54 @@ func init() {
 	simapp.GetSimulatorFlags()
 }
 
+func TestFullAppSimulation(t *testing.T) {
+	simapp.FlagEnabledValue = true
+	config, db, dir, logger, skip, err := simapp.SetupSimulation("leveldb-app-sim", "Simulation")
+	if skip {
+		t.Skip("skipping provenance application simulation")
+	}
+	require.NoError(t, err, "provenance simulation setup failed")
+
+	defer func() {
+		db.Close()
+		require.NoError(t, os.RemoveAll(dir))
+	}()
+
+	app := provenance.New(appName, logger, db, nil, true, map[int64]bool{}, provenance.DefaultNodeHome(appName), simapp.FlagPeriodValue, provenance.MakeEncodingConfig(), simapp.EmptyAppOptions{}, fauxMerkleModeOpt)
+	require.Equal(t, appName, app.Name())
+
+	fmt.Printf("running provenance full app simulation")
+
+	// run randomized simulation
+	_, simParams, simErr := simulation.SimulateFromSeed(
+		t,
+		os.Stdout,
+		app.BaseApp,
+		simapp.AppStateFn(app.AppCodec(), app.SimulationManager()),
+		simulation2.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
+		simapp.SimulationOperations(app, app.AppCodec(), config),
+		app.ModuleAccountAddrs(),
+		config,
+		app.AppCodec(),
+	)
+
+	// export state and simParams before the simulation error is checked
+	err = simapp.CheckExportSimulation(app, config, simParams)
+	require.NoError(t, err)
+	require.NoError(t, simErr)
+
+	if config.Commit {
+		simapp.PrintStats(db)
+	}
+}
+
 // Profile with:
 // /usr/local/go/bin/go test -benchmem -run=^$ github.com/provenance-io/provenance -bench ^BenchmarkFullAppSimulation$ -Commit=true -cpuprofile cpu.out
 func BenchmarkFullAppSimulation(b *testing.B) {
 	// uncomment to run in ide without flags.
 	//simapp.FlagEnabledValue = true
 	if !simapp.FlagEnabledValue {
-		b.Skip("skipping application benchmark simulation")
+		b.Skip("skipping provenance application benchmark simulation")
 	}
 
 	config, db, dir, logger, _, err := simapp.SetupSimulation("goleveldb-app-sim", "Simulation")
@@ -52,6 +93,8 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	}()
 
 	app := provenance.New(appName, logger, db, nil, true, map[int64]bool{}, provenance.DefaultNodeHome(appName), simapp.FlagPeriodValue, provenance.MakeEncodingConfig(), simapp.EmptyAppOptions{}, interBlockCacheOpt())
+
+	fmt.Printf("running provenance benchmark full app simulation")
 
 	// Run randomized simulation:w
 	_, simParams, simErr := simulation.SimulateFromSeed(
@@ -84,6 +127,12 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 // inter-block write-through cache.
 func interBlockCacheOpt() func(*baseapp.BaseApp) {
 	return baseapp.SetInterBlockCache(store.NewCommitKVStoreCacheManager())
+}
+
+// fauxMerkleModeOpt returns a BaseApp option to use a dbStoreAdapter instead of
+// an IAVLStore for faster simulation speed.
+func fauxMerkleModeOpt(bapp *baseapp.BaseApp) {
+	bapp.SetFauxMerkleMode()
 }
 
 //// TODO: Make another test for the fuzzer itself, which just has noOp txs
@@ -119,7 +168,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			app := provenance.New(appName, logger, db, nil, true, map[int64]bool{}, provenance.DefaultNodeHome(appName), simapp.FlagPeriodValue, provenance.MakeEncodingConfig(), simapp.EmptyAppOptions{}, interBlockCacheOpt())
 
 			fmt.Printf(
-				"running non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
+				"running provenance non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
 				config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
 			)
 
