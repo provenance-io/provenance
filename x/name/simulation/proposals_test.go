@@ -27,7 +27,6 @@ func TestProposalContents(t *testing.T) {
 	accounts := simtypes.RandomAccounts(r, 3)
 
 	// execute ProposalContents function
-	// TODO replace with simapp keeper instance for name module
 	weightedProposalContent := simulation.ProposalContents(keeper.NewKeeper(app.AppCodec(), app.GetKey(types.ModuleName), app.GetSubspace(types.ModuleName), app.AccountKeeper))
 	require.Len(t, weightedProposalContent, 1)
 
