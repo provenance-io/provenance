@@ -10,7 +10,7 @@ import (
 
 const (
 	// ProposalTypeCreateRootName defines the type for a CreateRootNameProposal
-	ProposalTypeCreateRootName = "CreateRootNameProposal"
+	ProposalTypeCreateRootName = "CreateRootName"
 )
 
 // Assert CreateRootNameProposal implements govtypes.Content at compile-time
