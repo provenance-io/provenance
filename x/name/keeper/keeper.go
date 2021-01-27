@@ -130,6 +130,13 @@ func (keeper Keeper) setGenesisRecord(ctx sdk.Context, name string, addr sdk.Acc
 		return err
 	}
 	store.Set(key, bz)
+	// Now index by address
+	addrPrefix, err := types.GetAddressKeyPrefix(addr)
+	if err != nil {
+		return err
+	}
+	indexKey := append(addrPrefix, key...) // [0x02] :: [addr-bytes] :: [name-key-bytes]
+	store.Set(indexKey, bz)
 	return nil
 }
 
