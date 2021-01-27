@@ -6,20 +6,28 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // RegisterLegacyAminoCodec registers all the necessary types and interfaces for the
 // name module.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(MsgBindNameRequest{}, "provenance/name/v1/MsgBindNameRequest", nil)
-	cdc.RegisterConcrete(MsgDeleteNameRequest{}, "provenance/name/v1/MsgDeleteNameRequest", nil)
+	cdc.RegisterConcrete(MsgBindNameRequest{}, "provenance/MsgBindNameRequest", nil)
+	cdc.RegisterConcrete(MsgDeleteNameRequest{}, "provenance/MsgDeleteNameRequest", nil)
+	cdc.RegisterConcrete(CreateRootNameProposal{}, "provenance/CreateRootNameProposal", nil)
 }
 
 // RegisterInterfaces registers concrete implentations for the given type names
 func RegisterInterfaces(registry types.InterfaceRegistry) {
-	registry.RegisterImplementations((*sdk.Msg)(nil),
+	registry.RegisterImplementations(
+		(*sdk.Msg)(nil),
 		&MsgBindNameRequest{},
 		&MsgDeleteNameRequest{},
+	)
+
+	registry.RegisterImplementations(
+		(*govtypes.Content)(nil),
+		&CreateRootNameProposal{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

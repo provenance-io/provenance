@@ -27,7 +27,6 @@ func TestProposalContents(t *testing.T) {
 	accounts := simtypes.RandomAccounts(r, 3)
 
 	// execute ProposalContents function
-	// TODO replace with simapp keeper instance for name module
 	weightedProposalContent := simulation.ProposalContents(keeper.NewKeeper(app.AppCodec(), app.GetKey(types.ModuleName), app.GetSubspace(types.ModuleName), app.AccountKeeper))
 	require.Len(t, weightedProposalContent, 1)
 
@@ -42,5 +41,5 @@ func TestProposalContents(t *testing.T) {
 	require.Equal(t, "hPjMaxKlMIJMOXcnQfyzeOcbWwNbeHVIkPZBSpYuLyYggwexjxusrBqDOTtGTOWeLrQKjLxzIivHSlcxgdXhhuTSkuxKGLwQvuyN", content.GetDescription())
 	require.Equal(t, "eAerqyNEUz", content.GetTitle())
 	require.Equal(t, "name", content.ProposalRoute())
-	require.Equal(t, "CreateRootNameProposal", content.ProposalType())
+	require.Equal(t, "CreateRootName", content.ProposalType())
 }
