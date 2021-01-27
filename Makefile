@@ -167,6 +167,8 @@ statik:
 ### Test
 ##############################
 
+include sims.mk
+
 test: test-unit
 test-all: test-unit test-ledger-mock test-race test-cover
 
