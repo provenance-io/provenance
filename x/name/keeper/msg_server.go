@@ -103,8 +103,8 @@ func (s msgServer) DeleteName(goCtx context.Context, msg *types.MsgDeleteNameReq
 	}
 	// Ensure the name exists
 	if !s.Keeper.nameExists(ctx, name) {
-		ctx.Logger().Error("invalid name", "err", err)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		ctx.Logger().Error("invalid name", "name", name)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "name does not exist")
 	}
 	// Ensure permission
 	if !s.Keeper.ResolvesTo(ctx, name, address) {
