@@ -30,7 +30,6 @@ func init() {
 }
 
 func TestFullAppSimulation(t *testing.T) {
-	simapp.FlagEnabledValue = true
 	config, db, dir, logger, skip, err := simapp.SetupSimulation("leveldb-app-sim", "Simulation")
 	if skip {
 		t.Skip("skipping provenance application simulation")
