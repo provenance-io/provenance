@@ -51,8 +51,10 @@ func (crnp *CreateRootNameProposal) ValidateBasic() error {
 	if err != nil {
 		return err
 	}
-	if strings.TrimSpace(crnp.Owner) == "" {
-		return ErrInvalidAddress
+	if strings.TrimSpace(crnp.Owner) != "" {
+		if _, err := sdk.AccAddressFromBech32(crnp.Owner); err != nil {
+			return ErrInvalidAddress
+		}
 	}
 	if strings.TrimSpace(crnp.Name) == "" {
 		return ErrInvalidLengthName
