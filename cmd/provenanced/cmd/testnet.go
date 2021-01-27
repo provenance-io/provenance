@@ -259,8 +259,15 @@ func InitTestnet(
 				markertypes.Access_Withdraw,
 			}),
 		})
-	markerAcc.SetSupply(sdk.NewCoin(app.DefaultBondDenom, sdk.NewInt(100_000_000_000).Mul(sdk.NewInt(1_000_000_000))))
-	markerAcc.SetStatus(markertypes.StatusActive)
+
+	if err := markerAcc.SetSupply(sdk.NewCoin(app.DefaultBondDenom, sdk.NewInt(100_000_000_000).Mul(sdk.NewInt(1_000_000_000)))); err != nil {
+		return err
+	}
+
+	if err := markerAcc.SetStatus(markertypes.StatusActive); err != nil {
+		return err
+	}
+
 	genMarkers = append(genMarkers, *markerAcc)
 
 	if err := initGenFiles(clientCtx, mbm, chainID, genAccounts, genBalances, genMarkers, genFiles, numValidators); err != nil {
@@ -346,7 +353,7 @@ func initGenFiles(
 	nameGenState.Bindings = append(nameGenState.Bindings, nametypes.NewNameRecord("provenance", genAccounts[0].GetAddress(), false))
 	appGenState[nametypes.ModuleName] = clientCtx.JSONMarshaler.MustMarshalJSON(&nameGenState)
 
-	//set markers
+	// set markers
 	var markerGenState markertypes.GenesisState
 	clientCtx.JSONMarshaler.MustUnmarshalJSON(appGenState[markertypes.ModuleName], &markerGenState)
 	markerGenState.Markers = genMarkers
