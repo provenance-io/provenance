@@ -34,16 +34,22 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-## [v0.1.0](https://github.com/provenance-io/provenance/releases/tag/v0.1.0) - 2021-01-26
+## [v0.1.1](https://github.com/provenance-io/provenance/releases/tag/v0.1.1) - 2021-01-27
 
-
+This is the intial beta release for the first Provenance public TESTNET.  This release is not intended for any type of
+production or reliable development as extensive work is still in progress to migrate the private network functionality
+into the public network.
 ### Features
 
 * Initial port of private Provenance blockchain modules `name`, `attribute`, and `marker` from v0.39.x Cosmos SDK chain
-into new 0.40.x base.  Minimal unit test coverage and features in place to begin setup of testnet process
+into new 0.40.x base.  Minimal unit test coverage and features in place to begin setup of testnet process.
 
 ## PRE-HISTORY
 
+## [v0.1.0](https://github.com/provenance-io/provenance/releases/tag/v0.1.0) - 2021-01-26
+
+* Test tag prior to initial testnet release.
+
 The Provenance Blockchain was started by Figure Technologies in 2018 using a Hyperledger Fabric derived private network.
 A subsequent migration was made to a new internal private network based on the 0.38-0.39 series of Cosmos SDK and 
-Tendermint.
+Tendermint.  The Provence-IO/Provenance Cosmos SDK derived public network is the 
