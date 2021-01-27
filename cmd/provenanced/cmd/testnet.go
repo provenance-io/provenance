@@ -37,6 +37,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/provenance-io/provenance/app"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
@@ -135,6 +136,7 @@ func InitTestnet(
 		genAccounts []authtypes.GenesisAccount
 		genBalances []banktypes.Balance
 		genFiles    []string
+		genMarkers  []markertypes.MarkerAccount
 	)
 
 	inBuf := bufio.NewReader(cmd.InOrStdin())
@@ -248,14 +250,20 @@ func InitTestnet(
 		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config/app.toml"), simappConfig)
 	}
 
-	// TODO -- add this when marker module is ready.
-	// stakeMarker := markertypes.NewEmptyMarkerAccount(app.DefaultBondDenom, []markertypes.AccessGrant{*markertypes.NewAccessGrant(genAccounts[0].GetAddress(), []string{"mint", "burn", "withdraw", "grant"})})
-	// stakeMarker.SetSupply(sdk.NewCoin(app.DefaultBondDenom, sdk.NewInt(100_000_000_000).Mul(sdk.NewInt(1_000_000_000))))
-	// stakeMarker.SetStatus(markertypes.StatusActive.String())
+	markerAcc := markertypes.NewEmptyMarkerAccount(app.DefaultBondDenom, genAccounts[0].GetAddress().String(),
+		[]markertypes.AccessGrant{
+			*markertypes.NewAccessGrant(genAccounts[0].GetAddress(), []markertypes.Access{
+				markertypes.Access_Admin,
+				markertypes.Access_Mint,
+				markertypes.Access_Burn,
+				markertypes.Access_Withdraw,
+			}),
+		})
+	markerAcc.SetSupply(sdk.NewCoin(app.DefaultBondDenom, sdk.NewInt(100_000_000_000).Mul(sdk.NewInt(1_000_000_000))))
+	markerAcc.SetStatus(markertypes.StatusActive)
+	genMarkers = append(genMarkers, *markerAcc)
 
-	// genAccounts = append(genAccounts, stakeMarker)
-
-	if err := initGenFiles(clientCtx, mbm, chainID, genAccounts, genBalances, genFiles, numValidators); err != nil {
+	if err := initGenFiles(clientCtx, mbm, chainID, genAccounts, genBalances, genMarkers, genFiles, numValidators); err != nil {
 		return err
 	}
 
@@ -274,7 +282,7 @@ func InitTestnet(
 func initGenFiles(
 	clientCtx client.Context, mbm module.BasicManager, chainID string,
 	genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance,
-	genFiles []string, numValidators int,
+	genMarkers []markertypes.MarkerAccount, genFiles []string, numValidators int,
 ) error {
 	appGenState := mbm.DefaultGenesis(clientCtx.JSONMarshaler)
 
@@ -337,6 +345,12 @@ func initGenFiles(
 	nameGenState.Bindings = append(nameGenState.Bindings, nametypes.NewNameRecord("pio", genAccounts[0].GetAddress(), false))
 	nameGenState.Bindings = append(nameGenState.Bindings, nametypes.NewNameRecord("provenance", genAccounts[0].GetAddress(), false))
 	appGenState[nametypes.ModuleName] = clientCtx.JSONMarshaler.MustMarshalJSON(&nameGenState)
+
+	//set markers
+	var markerGenState markertypes.GenesisState
+	clientCtx.JSONMarshaler.MustUnmarshalJSON(appGenState[markertypes.ModuleName], &markerGenState)
+	markerGenState.Markers = genMarkers
+	appGenState[markertypes.ModuleName] = clientCtx.JSONMarshaler.MustMarshalJSON(&markerGenState)
 
 	// END OF PROVENANCE SPECIFIC CONFIG
 	// --------------------------------------------

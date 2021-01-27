@@ -156,7 +156,7 @@ func initGenFile(cdc codec.JSONMarshaler, mbm module.BasicManager, moniker, chai
 	//cdc.MustUnmarshalJSON(appGenState[mint.ModuleName], &mintGenState)
 	mintGenState.Minter.Inflation = sdk.ZeroDec()
 	mintGenState.Minter.AnnualProvisions = sdk.OneDec()
-	mintGenState.Params.MintDenom = "nhash"
+	mintGenState.Params.MintDenom = app.DefaultBondDenom
 	mintGenState.Params.InflationMax = sdk.ZeroDec()
 	mintGenState.Params.InflationMin = sdk.ZeroDec()
 	mintGenState.Params.InflationRateChange = sdk.OneDec()
