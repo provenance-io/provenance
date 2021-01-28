@@ -1,10 +1,10 @@
 ---
-project_name: provenanced
+project_name: provenance
 
 release:
   github:
     owner: provenance-io
-    name: provenanced
+    name: provenance
 
 builds:
   - skip: true
