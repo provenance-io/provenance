@@ -1,0 +1,15 @@
+syntax = "proto3";
+package provenance.metadata.v1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/provenance-io/provenance/x/metadata/types";
+
+option java_package        = "io.provenance.metadata.v1";
+option java_multiple_files = true;
+
+// Params defines the set of params for the account module.
+message Params {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
+}

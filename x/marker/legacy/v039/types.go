@@ -503,7 +503,7 @@ func validateGranted(permissions ...string) error {
 		if strings.TrimSpace(permission) == "" {
 			return fmt.Errorf("access permission is empty")
 		}
-		if !strings.Contains(AllPermissions, permission) { // nolint:gocritic
+		if !strings.Contains(AllPermissions, permission) {
 			return fmt.Errorf("access permission [%s] is not a valid permission", permission)
 		}
 	}

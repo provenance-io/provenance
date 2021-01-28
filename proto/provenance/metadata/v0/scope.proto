@@ -1,0 +1,110 @@
+syntax = "proto3";
+
+package scope;
+
+option go_package          = "github.com/provenance-io/provenance/x/metadata/legacy/v039";
+option java_package        = "io.provenance.metadata.v0";
+option java_multiple_files = true;
+
+import "provenance/metadata/v0/contract.proto";
+import "provenance/metadata/v0/types.proto";
+
+import "google/protobuf/descriptor.proto";
+
+//
+// Overview
+//
+//   When memorializing a contract the only pieces that matter are the results and facts.  We scope these inside the
+//   contract_group structure to represent a scope around this information and keep the controlling parties (recitals)
+//   attached which prevents a co-mingling of the rights to change/update these records.  The proof submitted to record
+//   the facts is part of the readset (the submitted Contract package) and is not important now that the information has
+//   been recorded.  If the source is required it can be pulled from the ReadSet and referenced (or any of the members
+//   that stored it under the associated URI.
+
+// Event references in relation to scope
+message Event {
+  types.UUID group_uuid     = 1;
+  types.UUID execution_uuid = 2;
+}
+
+// A ContractScope is a context that binds multiple p8e working together to create a set of facts managed a defined
+// set of affiliates.
+message Scope {
+  // Unique ID for building up ProvenanceReferences
+  types.UUID uuid = 1;
+  // Required parties on this scope.  These are union with any contract specific recital requirements
+  repeated contract.Recital parties = 2;
+  // Each contract memorialized in this scope is stored in this list of contract_group.  The list of groups is keyed
+  // as a hashmap based on the contract_spec_ref as a unique key.
+  repeated scope.RecordGroup record_group = 3;
+  // Last event that resulted in scope changes.
+  scope.Event last_event = 4;
+}
+
+// A collection wrapper around scopes
+message ScopeCollection {
+  repeated scope.Scope scopes = 1;
+}
+
+// An record group is created for each contract memorialized against a scope.  This tracks who controls each record for
+// future use.
+message RecordGroup {
+  // contract.spec.data_location.hash -- the specific contract specification that was used to create this group.
+  string specification = 1;
+  // Unique ID for building up ProvenanceReferences.  Set to the value on of group_uuid on the incoming contract ref.
+  types.UUID group_uuid = 2;
+  // Identity that is memorializing this contract
+  types.SigningAndEncryptionPublicKeys executor = 3;
+  // Set of identities that signed this contract
+  repeated contract.Recital parties = 4;
+  // Accumulated records (of fact) resulting from Considerations
+  repeated scope.Record records = 5;
+  // name of the class associated with this record group specification
+  string classname = 6;
+  // Created by, updated by, timestamps, version number, and related info.
+  types.AuditFields audit = 99;
+}
+
+// A record (of fact) is attached to an group or each consideration output from a contract.
+message Record {
+  // ConsiderationSpec.func_name <--> ConsiderationProto.consideration_name (method on the classname below that
+  // generated this)
+  string name = 1;
+  // ConsiderationSpec.outputSpec.spec.resourceLocation.ref.hash (this is the hash of the consideration which generated
+  // the record, see also result_hash)
+  string hash = 2;
+  // ContractSpec.definition.resourceLocation.classname (class that contains the method 'name' as given above)
+  string classname = 3;
+  // ConsiderationProto.inputs for reference with ConsiderationSpec.input_spec for type
+  repeated RecordInput inputs = 4;
+  // ConsiderationProto.result.result      (indicates SKIP [not allowed], PASS, or FAIL result)
+  contract.ExecutionResultType result = 5;
+  // ConsiderationProto.result.output.name
+  string result_name = 6;
+  // ConsiderationProto.result.output.hash (the hash of the data output from the consideration)
+  string result_hash = 7;
+}
+
+// RecordInputType indicates if an input is data on or off chain.
+enum RecordInputType {
+  // invalid status
+  RECORD_INPUT_TYPE_UNKNOWN = 0;
+  // input is proposed data for recording to the blockchain
+  RECORD_INPUT_TYPE_PROPOSED = 1;
+  // input is a data element referencing an existing scope/record on chain
+  RECORD_INPUT_TYPE_FACT = 2;
+}
+
+// Tracks the inputs used with a Consideration to establish the output record.
+// FACT references must have come from the input fact list.
+// For proposed we will only have the hash
+message RecordInput {
+  // Name value included to link back to the definition spec.
+  string name = 1;
+  // For proposed facts we only have the hash ... for facts this hash maps to something in the input list.
+  string hash = 2;
+  // from proposed fact structure to unmarshal
+  string classname = 3;
+  // Indicates if this input was a recorded fact on chain or just a given hashed input
+  scope.RecordInputType type = 4;
+}

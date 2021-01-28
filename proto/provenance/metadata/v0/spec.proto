@@ -1,0 +1,51 @@
+syntax = 'proto3';
+
+package spec;
+
+option go_package          = "github.com/provenance-io/provenance/x/metadata/legacy/v039";
+option java_package        = "io.provenance.metadata.v0";
+option java_multiple_files = true;
+
+import "provenance/metadata/v0/types.proto";
+
+enum DefinitionSpecType {
+  DEFINITION_SPEC_TYPE_UNKNOWN   = 0;
+  DEFINITION_SPEC_TYPE_PROPOSED  = 1;
+  DEFINITION_SPEC_TYPE_FACT      = 2;
+  DEFINITION_SPEC_TYPE_FACT_LIST = 3;
+}
+
+message DefinitionSpec {
+  string                  name              = 1;
+  types.Location          resource_location = 2;
+  types.Signature         signature         = 3;
+  spec.DefinitionSpecType type              = 4;
+}
+
+message ContractSpec {
+  spec.DefinitionSpec definition                      = 1;
+  repeated spec.DefinitionSpec input_specs            = 2;
+  repeated types.PartyType parties_involved           = 3;
+  repeated spec.ConditionSpec condition_specs         = 4;
+  repeated spec.ConsiderationSpec consideration_specs = 5;
+}
+
+message ConditionSpec {
+  string   func_name                       = 1;
+  repeated spec.DefinitionSpec input_specs = 2;
+  spec.OutputSpec              output_spec = 3;
+}
+
+message ConsiderationSpec {
+  string func_name = 1;
+
+  // Invoking party
+  types.PartyType responsible_party = 2;
+
+  repeated spec.DefinitionSpec input_specs = 3;
+  spec.OutputSpec              output_spec = 4;
+}
+
+message OutputSpec {
+  spec.DefinitionSpec spec = 1;
+}
