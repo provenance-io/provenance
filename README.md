@@ -1,5 +1,9 @@
+<div align="center">
+<img src="./docs/logo.svg" alt="Provenance"/>
+</div>
+<br/><br/>
+
 # Provenance Blockchain
-![Provenance Logo](./docs/logo.svg)
 
 [Provenance] is a distributed, proof of stake blockchain designed for the financial services industry.
 
