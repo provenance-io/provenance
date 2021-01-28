@@ -1,4 +1,6 @@
 # Provenance Blockchain
+![Provenance Logo](./docs/logo.svg)
+
 [Provenance] is a distributed, proof of stake blockchain designed for the financial services industry.
 
 For more information about [Provenance Inc](https://provenance.io) visit https://provenance.io
