@@ -22,7 +22,7 @@ linters:
     - gosimple
     - govet
     - ineffassign
-    - interfacer
+    # - interfacer / disabled until 1.36 is available due to bugs for binarymarshaller that can't be muted with nolintlint
     # - lll
     - maligned
     - misspell
