@@ -64,11 +64,7 @@ func (contract Contract) GetSigners() (signers []sdk.AccAddress) {
 		if err != nil {
 			panic(err)
 		}
-		// Marker Parties are synthetic accounts that do not need to sign a contract, their context is verified
-		// through direct checks when recording results to a scope.
-		if p.SignerRole != PartyType_PARTY_TYPE_MARKER {
-			signers[i] = addr
-		}
+		signers[i] = addr
 	}
 	return
 }
