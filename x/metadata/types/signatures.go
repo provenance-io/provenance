@@ -34,7 +34,6 @@ func ValidateContractSignature(signature signing.SignatureDescriptor, sha512dige
 		err = multiPK.VerifyMultisignature(func(mode signing.SignMode) ([]byte, error) {
 			// the signing mode is specific to this type of contract signature, we are not using the sequence
 			// number construct here because these signatures do not count towards the committed signed tx count
-
 			// as the sequence number and chain-id are not included the signing bytes are always the same digest
 			return sha512digest, err
 		}, data)
