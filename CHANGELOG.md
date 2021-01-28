@@ -34,6 +34,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+## [v0.1.2](https://github.com/provenance-io/provenance/releases/tag/v0.1.1) - 2021-01-27
+
+### Bug Fixes
+
+* Update goreleaser configuration to match `provenance` repository name
+
 ## [v0.1.1](https://github.com/provenance-io/provenance/releases/tag/v0.1.1) - 2021-01-27
 
 This is the intial beta release for the first Provenance public TESTNET.  This release is not intended for any type of
