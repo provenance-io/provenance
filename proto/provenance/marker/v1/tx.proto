@@ -151,8 +151,8 @@ message MsgTransferResponse {}
 // MsgSetDenomMetadataRequest defines the Msg/SetDenomMetadata request type
 message MsgSetDenomMetadataRequest {
   cosmos.bank.v1beta1.Metadata metadata = 1
-    [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/x/bank/types.Metadata"];
-    string   administrator                   = 2;
+      [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/x/bank/types.Metadata"];
+  string administrator = 2;
 }
 
 // MsgSetDenomMetadataResponse defines the Msg/SetDenomMetadata response type

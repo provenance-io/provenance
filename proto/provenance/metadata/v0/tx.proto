@@ -1,0 +1,61 @@
+syntax = "proto3";
+package tx;
+
+import "gogoproto/gogo.proto";
+import "provenance/metadata/v0/contract.proto";
+import "provenance/metadata/v0/types.proto";
+
+option go_package = "github.com/provenance-io/provenance/x/metadata/legacy/v039";
+
+option java_package        = "io.provenance.metadata.v0";
+option java_multiple_files = true;
+
+// Msg defines the Metadata Msg service.
+service Msg {
+  // MemorializeContract records the results of a P8e contract execution as a record group and set of records in a scope
+  rpc MemorializeContract(MsgMemorializeContractRequest) returns (MemorializeContractResponse);
+  // ChangeOwnership allows P8e contracts to record a new set of owners on a scope
+  rpc ChangeOwnership(MsgChangeOwnershipRequest) returns (ChangeOwnershipResponse);
+}
+
+// MsgMemorializeContractRequest is a request from a P8e execution environment to record results of a contract
+message MsgMemorializeContractRequest {
+  // The scope of the object being modified on blockchain.
+  string scope_id = 1;
+  // The uuid of the contract execution.
+  string group_id = 2;
+  // Unique identifier for determining contract/group execution instance
+  string execution_id = 3;
+  // The executed contract.
+  contract.Contract contract = 4 [(gogoproto.nullable) = false];
+  // The contract signatures
+  types.SignatureSet signatures = 5 [(gogoproto.nullable) = false];
+  // ID of the scope snapshot reference for executing
+  string ScopeRefID = 6;
+  // The address of the notary (ie the broadcaster of this message).
+  string notary = 7;
+}
+
+// MemorializeContractResponse from a contract execution memorialization request
+message MemorializeContractResponse {}
+
+// MsgChangeOwnershipRequest records the result of a change ownership p8e contract execution
+message MsgChangeOwnershipRequest {
+  // The scope of the object being modified on blockchain.
+  string scope_id = 1;
+  // The uuid of the contract execution.
+  string group_id = 2;
+  // Unique identifier for determining contract/group execution instance
+  string execution_id = 3;
+  // The recitals to use for the scope parties
+  contract.Recitals recitals = 4 [(gogoproto.nullable) = false];
+  // The executed contract.
+  contract.Contract contract = 5 [(gogoproto.nullable) = false];
+  // The contract signatures
+  types.SignatureSet signatures = 6 [(gogoproto.nullable) = false];
+  // The address of the notary (ie the broadcaster of this message).
+  string notary = 7;
+}
+
+// ChangeOwnershipResponse from a contract execution ownership change request
+message ChangeOwnershipResponse {}
