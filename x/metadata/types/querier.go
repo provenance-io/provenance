@@ -5,8 +5,9 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	legacy "github.com/provenance-io/provenance/x/metadata/legacy/v039"
 	"gopkg.in/yaml.v2"
+
+	legacy "github.com/provenance-io/provenance/x/metadata/legacy/v039"
 )
 
 // query endpoints supported by the auth Querier
