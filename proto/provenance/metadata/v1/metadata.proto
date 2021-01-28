@@ -12,7 +12,4 @@ option java_multiple_files = true;
 message Params {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
-
-  // indicates if governance based controls of markers is allowed.
-  bool enable_governance = 2;
 }
