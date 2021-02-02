@@ -256,13 +256,16 @@ func (k Keeper) BurnCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 	return nil
 }
 
-// AdjustCirculation will mint/burn coin if required to ensure marker supply matches  amount in circulation
-func (k Keeper) AdjustCirculation(ctx sdk.Context, marker types.MarkerAccountI) error {
+// AdjustCirculation will mint/burn coin if required to ensure desired supply matches amount in circulation
+func (k Keeper) AdjustCirculation(ctx sdk.Context, marker types.MarkerAccountI, desiredSupply sdk.Coin) error {
 	currentSupply := k.bankKeeper.GetSupply(ctx).GetTotal().AmountOf(marker.GetDenom())
-	requiredSupply := marker.GetSupply().Amount
 
-	if requiredSupply.GT(currentSupply) { // not enough coin in circulation, mint more.
-		offset := sdk.NewCoin(marker.GetDenom(), requiredSupply.Sub(currentSupply))
+	if desiredSupply.Denom != marker.GetDenom() {
+		return fmt.Errorf("invalid denom for desired supply")
+	}
+
+	if desiredSupply.Amount.GT(currentSupply) { // not enough coin in circulation, mint more.
+		offset := sdk.NewCoin(marker.GetDenom(), desiredSupply.Amount.Sub(currentSupply))
 		ctx.Logger().Error(
 			fmt.Sprintf("Current %s supply is NOT at the required amount, minting %s to required supply level",
 				marker.GetDenom(), offset))
@@ -274,8 +277,8 @@ func (k Keeper) AdjustCirculation(ctx sdk.Context, marker types.MarkerAccountI) 
 		); err != nil {
 			return err
 		}
-	} else if requiredSupply.LT(currentSupply) { // too much coin in circulation, attempt to burn from marker account.
-		offset := sdk.NewCoin(marker.GetDenom(), currentSupply.Sub(requiredSupply))
+	} else if desiredSupply.Amount.LT(currentSupply) { // too much coin in circulation, attempt to burn from marker account.
+		offset := sdk.NewCoin(marker.GetDenom(), currentSupply.Sub(desiredSupply.Amount))
 		ctx.Logger().Error(
 			fmt.Sprintf("Current %s supply is NOT at the required amount, burning %s to required supply level",
 				marker.GetDenom(), offset))
@@ -294,32 +297,31 @@ func (k Keeper) AdjustCirculation(ctx sdk.Context, marker types.MarkerAccountI) 
 
 // IncreaseSupply will mint coins to the marker module coin pool account, then send these to the marker account
 func (k Keeper) IncreaseSupply(ctx sdk.Context, marker types.MarkerAccountI, coin sdk.Coin) error {
-	// using the marker, update the supply to ensure successful (save pending), abort on fail
-	total := marker.GetSupply().Add(coin)
+	inCirculation := sdk.NewCoin(marker.GetDenom(), k.bankKeeper.GetSupply(ctx).GetTotal().AmountOf(marker.GetDenom()))
+	total := inCirculation.Add(coin)
 	maxAllowed := k.GetParams(ctx).MaxTotalSupply
 	if total.Amount.Uint64() > maxAllowed {
 		return fmt.Errorf("requested supply %d exceeds maximum allowed value %d", total.Amount, maxAllowed)
 	}
-	if err := marker.SetSupply(total); err != nil {
-		return err
+
+	// If the marker has a fixed supply then adjust the supply to match the new total
+	if marker.HasFixedSupply() {
+		if err := marker.SetSupply(total); err != nil {
+			return err
+		}
+		// save the updated marker
+		k.SetMarker(ctx, marker)
 	}
 
-	// Create the coins
-	if err := k.bankKeeper.MintCoins(ctx, types.CoinPoolName, sdk.NewCoins(coin)); err != nil {
-		return fmt.Errorf("could not increase coin supply in marker module: %v", err)
-	}
-	// Create successful, save the updated marker
-	k.SetMarker(ctx, marker)
-
-	// dispense the coins from the marker module to the marker account.
-	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.CoinPoolName, marker.GetAddress(), sdk.NewCoins(coin))
+	return k.AdjustCirculation(ctx, marker, total)
 }
 
 // DecreaseSupply will move a given amount of coin from the marker to the markermodule coin pool account then burn it.
 func (k Keeper) DecreaseSupply(ctx sdk.Context, marker types.MarkerAccountI, coin sdk.Coin) error {
-	total := marker.GetSupply()
+	inCirculation := sdk.NewCoin(marker.GetDenom(), k.bankKeeper.GetSupply(ctx).GetTotal().AmountOf(marker.GetDenom()))
+
 	// Ensure the request will not send the total supply below zero
-	if total.IsLT(coin) {
+	if inCirculation.IsLT(coin) {
 		return fmt.Errorf("cannot reduce marker total supply below zero %s, %v", coin.Denom, coin.Amount)
 	}
 	// ensure the current marker account is holding enough coin to cover burn request
@@ -328,23 +330,18 @@ func (k Keeper) DecreaseSupply(ctx sdk.Context, marker types.MarkerAccountI, coi
 		return fmt.Errorf("marker account contains insufficient funds to burn %s, %v", coin.Denom, coin.Amount)
 	}
 	// Update the supply (abort if this can not be done)
-	total = total.Sub(coin)
-	if err := marker.SetSupply(total); err != nil {
-		return err
+	inCirculation = inCirculation.Sub(coin)
+	if marker.HasFixedSupply() {
+		if err := marker.SetSupply(inCirculation); err != nil {
+			return err
+		}
+		// Finalize supply update in marker record
+		k.SetMarker(ctx, marker)
 	}
 
-	// Finalize supply update in marker record
-	k.SetMarker(ctx, marker)
-
-	// Move coins to markermodule coin pool in preparation for burn
-	if err := k.bankKeeper.SendCoinsFromAccountToModule(
-		ctx, marker.GetAddress(), types.CoinPoolName, sdk.NewCoins(coin),
-	); err != nil {
-		panic(fmt.Errorf("could not send coin %v from marker account to module account: %w", coin, err))
-	}
-	// Perform controlled burn
-	if err := k.bankKeeper.BurnCoins(ctx, types.CoinPoolName, sdk.NewCoins(coin)); err != nil {
-		panic(fmt.Errorf("could not burn coin %v %w", coin, err))
+	// Adjust circulation to match configured supply.
+	if err := k.AdjustCirculation(ctx, marker, inCirculation); err != nil {
+		panic(err)
 	}
 
 	return nil

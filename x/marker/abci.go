@@ -17,12 +17,12 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper, 
 	k.IterateMarkers(ctx, func(record types.MarkerAccountI) bool {
 		// Supply checks are only done against active markers of regular coin type.
 		if record.GetStatus() == types.StatusActive && record.HasFixedSupply() {
-			requiredSupply := record.GetSupply().Amount
-			currentSupply := getCurrentSupply(ctx, record.GetDenom(), bk).Amount
+			requiredSupply := record.GetSupply()
+			currentSupply := getCurrentSupply(ctx, record.GetDenom(), bk)
 
 			// If the current amount of marker coin in circulation doesn't match configured supply, make adjustments
-			if !requiredSupply.Equal(currentSupply) {
-				err = k.AdjustCirculation(ctx, record)
+			if !requiredSupply.IsEqual(currentSupply) {
+				err = k.AdjustCirculation(ctx, record, requiredSupply)
 			}
 			// else supply is equal, nothing to do here.
 		}
