@@ -22,13 +22,13 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper, 
 			requiredSupply := record.GetSupply()
 			currentSupply := getCurrentSupply(ctx, requiredSupply.Denom, bk)
 
-			if requiredSupply.Amount.LT(currentSupply.Amount) {
+			if requiredSupply.Amount.GT(currentSupply.Amount) {
 				offset := requiredSupply.Sub(currentSupply)
 				ctx.Logger().Error(
 					fmt.Sprintf("Current %s supply is NOT at the required amount, minting %d to required supply level",
 						requiredSupply.Denom, offset.Amount))
 				err = k.IncreaseSupply(ctx, record, offset)
-			} else if requiredSupply.Amount.GT(currentSupply.Amount) {
+			} else if requiredSupply.Amount.LT(currentSupply.Amount) {
 				offset := currentSupply.Sub(requiredSupply)
 				ctx.Logger().Error(
 					fmt.Sprintf("Current %s supply is NOT at the required amount, burning %d to required supply level",
