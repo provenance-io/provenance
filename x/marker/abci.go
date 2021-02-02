@@ -15,7 +15,7 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper, 
 	// Iterate through all marker accounts and check for supply above or below expected targets.
 	var err error
 	k.IterateMarkers(ctx, func(record types.MarkerAccountI) bool {
-		// Supply checks are only done against active markers of regular coin type.
+		// Supply checks are only done against active markers with a fixed supply.
 		if record.GetStatus() == types.StatusActive && record.HasFixedSupply() {
 			requiredSupply := record.GetSupply()
 			currentSupply := getCurrentSupply(ctx, record.GetDenom(), bk)
