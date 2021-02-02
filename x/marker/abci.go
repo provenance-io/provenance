@@ -1,8 +1,6 @@
 package marker
 
 import (
-	"fmt"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/provenance-io/provenance/x/marker/keeper"
@@ -19,21 +17,12 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper, 
 	k.IterateMarkers(ctx, func(record types.MarkerAccountI) bool {
 		// Supply checks are only done against active markers of regular coin type.
 		if record.GetStatus() == types.StatusActive && record.HasFixedSupply() {
-			requiredSupply := record.GetSupply()
-			currentSupply := getCurrentSupply(ctx, requiredSupply.Denom, bk)
+			requiredSupply := record.GetSupply().Amount
+			currentSupply := getCurrentSupply(ctx, record.GetDenom(), bk).Amount
 
-			if requiredSupply.Amount.GT(currentSupply.Amount) {
-				offset := requiredSupply.Sub(currentSupply)
-				ctx.Logger().Error(
-					fmt.Sprintf("Current %s supply is NOT at the required amount, minting %d to required supply level",
-						requiredSupply.Denom, offset.Amount))
-				err = k.IncreaseSupply(ctx, record, offset)
-			} else if requiredSupply.Amount.LT(currentSupply.Amount) {
-				offset := currentSupply.Sub(requiredSupply)
-				ctx.Logger().Error(
-					fmt.Sprintf("Current %s supply is NOT at the required amount, burning %d to required supply level",
-						requiredSupply.Denom, offset.Amount))
-				err = k.DecreaseSupply(ctx, record, offset)
+			// If the current amount of marker coin in circulation doesn't match configured supply, make adjustments
+			if !requiredSupply.Equal(currentSupply) {
+				err = k.AdjustCirculation(ctx, record)
 			}
 			// else supply is equal, nothing to do here.
 		}

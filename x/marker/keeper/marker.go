@@ -256,6 +256,42 @@ func (k Keeper) BurnCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 	return nil
 }
 
+// AdjustCirculation will mint/burn coin if required to ensure marker supply matches  amount in circulation
+func (k Keeper) AdjustCirculation(ctx sdk.Context, marker types.MarkerAccountI) error {
+	currentSupply := k.bankKeeper.GetSupply(ctx).GetTotal().AmountOf(marker.GetDenom())
+	requiredSupply := marker.GetSupply().Amount
+
+	if requiredSupply.GT(currentSupply) { // not enough coin in circulation, mint more.
+		offset := sdk.NewCoin(marker.GetDenom(), requiredSupply.Sub(currentSupply))
+		ctx.Logger().Error(
+			fmt.Sprintf("Current %s supply is NOT at the required amount, minting %s to required supply level",
+				marker.GetDenom(), offset))
+		if err := k.bankKeeper.MintCoins(ctx, types.CoinPoolName, sdk.NewCoins(offset)); err != nil {
+			return err
+		}
+		if err := k.bankKeeper.SendCoinsFromModuleToAccount(
+			ctx, types.CoinPoolName, marker.GetAddress(), sdk.NewCoins(offset),
+		); err != nil {
+			return err
+		}
+	} else if requiredSupply.LT(currentSupply) { // too much coin in circulation, attempt to burn from marker account.
+		offset := sdk.NewCoin(marker.GetDenom(), currentSupply.Sub(requiredSupply))
+		ctx.Logger().Error(
+			fmt.Sprintf("Current %s supply is NOT at the required amount, burning %s to required supply level",
+				marker.GetDenom(), offset))
+		if err := k.bankKeeper.SendCoinsFromAccountToModule(
+			ctx, marker.GetAddress(), types.CoinPoolName, sdk.NewCoins(offset),
+		); err != nil {
+			return fmt.Errorf("could not send coin %v from marker account to module account: %w", offset, err)
+		}
+		// Perform controlled burn
+		if err := k.bankKeeper.BurnCoins(ctx, types.CoinPoolName, sdk.NewCoins(offset)); err != nil {
+			return fmt.Errorf("could not burn coin %v %w", offset, err)
+		}
+	}
+	return nil
+}
+
 // IncreaseSupply will mint coins to the marker module coin pool account, then send these to the marker account
 func (k Keeper) IncreaseSupply(ctx sdk.Context, marker types.MarkerAccountI, coin sdk.Coin) error {
 	// using the marker, update the supply to ensure successful (save pending), abort on fail
