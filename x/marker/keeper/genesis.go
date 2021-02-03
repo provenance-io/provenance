@@ -10,9 +10,11 @@ import (
 // InitGenesis creates the initial genesis state for the marker module.  Typically these
 // accounts would be listed with the rest of the accounts and not created here.
 func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
+	k.SetParams(ctx, data.Params)
 	if err := data.Validate(); err != nil {
 		panic(err)
 	}
+
 	// ensure our store contains references to any marker accounts in auth genesis
 	store := ctx.KVStore(k.storeKey)
 	acc := k.authKeeper.GetAllAccounts(ctx)
