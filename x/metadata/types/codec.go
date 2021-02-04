@@ -9,7 +9,7 @@ import (
 	// "github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
-// RegisterCodec registers concrete types on the Amino codec
+// RegisterLegacyAminoCodec registers concrete types on the Amino codec
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	// cdc.RegisterConcrete(MsgEnvelope{}, "provenance/metadata/MsgEnvelope", nil)
 	// cdc.RegisterConcrete(MsgOwnershipChange{}, "provenance/metadata/MsgOwnershipChange", nil)

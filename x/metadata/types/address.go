@@ -302,7 +302,7 @@ func (ma MetadataAddress) Size() int {
 	return len(ma)
 }
 
-// MarshallTo implements gogoproto custom type interface and writes the current bytes into the provided data structure
+// MarshalTo implements gogoproto custom type interface and writes the current bytes into the provided data structure
 func (ma *MetadataAddress) MarshalTo(data []byte) (int, error) {
 	if len(*ma) == 0 {
 		return 0, nil

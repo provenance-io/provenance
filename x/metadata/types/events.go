@@ -39,5 +39,6 @@ const (
 	// AttributeKeyTxHash is the attribute for the transaction hash.
 	AttributeKeyTxHash = "tx_hash"
 
+	// AttributeValueCategory indicates the category for this value
 	AttributeValueCategory = ModuleName
 )
