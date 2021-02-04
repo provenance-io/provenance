@@ -58,6 +58,34 @@ func (p Params) String() string {
 	return string(out)
 }
 
+func (p *Params) Equal(that interface{}) bool {
+	if that == nil {
+		return p == nil
+	}
+
+	that1, ok := that.(*Params)
+	if !ok {
+		that2, ok := that.(Params)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return p == nil
+	} else if p == nil {
+		return false
+	}
+	if p.MaxTotalSupply != that1.MaxTotalSupply {
+		return false
+	}
+	if p.EnableGovernance != that1.EnableGovernance {
+		return false
+	}
+	return true
+}
+
 func validateIntParam(i interface{}) error {
 	v, ok := i.(uint64)
 	if !ok {

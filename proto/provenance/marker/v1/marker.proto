@@ -12,7 +12,7 @@ option java_multiple_files = true;
 
 // Params defines the set of params for the account module.
 message Params {
-  option (gogoproto.equal)            = true;
+  option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
 
   // maximum amount of supply to allow a marker to be created with
