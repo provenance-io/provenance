@@ -1129,10 +1129,7 @@ func (m *SupplyIncreaseProposal) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthProposals
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthProposals
 			}
 			if (iNdEx + skippy) > l {
@@ -1279,10 +1276,7 @@ func (m *SupplyDecreaseProposal) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthProposals
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthProposals
 			}
 			if (iNdEx + skippy) > l {
@@ -1462,10 +1456,7 @@ func (m *SetAdministratorProposal) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthProposals
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthProposals
 			}
 			if (iNdEx + skippy) > l {
@@ -1643,10 +1634,7 @@ func (m *RemoveAdministratorProposal) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthProposals
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthProposals
 			}
 			if (iNdEx + skippy) > l {
@@ -1811,10 +1799,7 @@ func (m *ChangeStatusProposal) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthProposals
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthProposals
 			}
 			if (iNdEx + skippy) > l {
