@@ -449,7 +449,7 @@ func New(
 		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper),
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper),
 		attribute.NewAppModule(app.AttributeKeeper),
-		wasm.NewAppModule(&app.WasmKeeper),
+		wasm.NewAppModule(&app.WasmKeeper, app.StakingKeeper),
 
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
@@ -522,7 +522,7 @@ func New(
 		// marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper),
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper),
 		attribute.NewAppModule(app.AttributeKeeper),
-		wasm.NewAppModule(&app.WasmKeeper),
+		wasm.NewAppModule(&app.WasmKeeper, app.StakingKeeper),
 
 		params.NewAppModule(app.ParamsKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
