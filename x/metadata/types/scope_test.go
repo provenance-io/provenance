@@ -36,66 +36,63 @@ func (s *scopeTestSuite) TestScopeValidateBasic() {
 		wantErr bool
 	}{
 		{
-			"valid scope",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{
-				{
-					Address: addr.String(),
-					Role:    PartyType_PARTY_TYPE_OWNER,
-				},
-			}),
+			"valid scope one owner",
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []string{addr.String()}, []string{}, ""),
 			"",
 			false,
 		},
 		{
-			"no parties",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{}),
-			"scope must have at least one party",
+			"valid scope one owner, one data access",
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []string{addr.String()}, []string{addr.String()}, ""),
+			"",
+			false,
+		},
+		{
+			"no owners",
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []string{}, []string{}, ""),
+			"scope must have at least one owner",
+			true,
+		},
+		{
+			"no owners, data accesss",
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []string{}, []string{addr.String()}, ""),
+			"scope must have at least one owner",
 			true,
 		},
 		{
 			"invalid scope id",
-			NewScope(ScopeSpecMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{}),
+			NewScope(ScopeSpecMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []string{}, []string{}, ""),
 			"invalid scope identifier (expected: scope, got scopespec)",
 			true,
 		},
 		{
 			"invalid scope id - wrong address type",
-			NewScope(MetadataAddress(addr), ScopeSpecMetadataAddress(uuid.New()), []Party{}),
+			NewScope(MetadataAddress(addr), ScopeSpecMetadataAddress(uuid.New()), []string{}, []string{}, ""),
 			"invalid metadata address type (must be 0-4, actual: 133)",
 			true,
 		},
 		{
 			"invalid spec id",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeMetadataAddress(uuid.New()), []Party{}),
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeMetadataAddress(uuid.New()), []string{}, []string{}, ""),
 			"invalid scope specification identifier (expected: scopespec, got scope)",
 			true,
 		},
 		{
 			"invalid spec id - wrong address type",
-			NewScope(ScopeMetadataAddress(uuid.New()), MetadataAddress(addr), []Party{}),
+			NewScope(ScopeMetadataAddress(uuid.New()), MetadataAddress(addr), []string{}, []string{}, ""),
 			"invalid metadata address type (must be 0-4, actual: 133)",
 			true,
 		},
 		{
-			"invaid party on scope",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{
-				{
-					Address: addr.String(),
-					Role:    PartyType_PARTY_TYPE_UNSPECIFIED,
-				},
-			}),
-			"invalid party on scope: invalid party type;  party type not specified",
-			true,
-		},
-		{
-			"invaid party on scope",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{
-				{
-					Address: "",
-					Role:    PartyType_PARTY_TYPE_AFFILIATE,
-				},
-			}),
-			"invalid party on scope: invalid address: empty address string is not allowed",
+			"invaid owner on scope",
+			NewScope(ScopeMetadataAddress(
+				uuid.New()),
+				ScopeSpecMetadataAddress(uuid.New()),
+				[]string{":invalid"},
+				[]string{},
+				"",
+			),
+			"invalid owner on scope: decoding bech32 failed: invalid index of 1",
 			true,
 		},
 	}
@@ -120,13 +117,18 @@ func (s *scopeTestSuite) TestScopeString() {
 	s.T().Run("scope string", func(t *testing.T) {
 		scopeUuid = uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")
 		groupUuid = uuid.MustParse("c25c7bd4-c639-4367-a842-f64fa5fccc19")
-		scope := NewScope(ScopeMetadataAddress(scopeUuid), ScopeSpecMetadataAddress(groupUuid), []Party{
-			{
-				Address: addr.String(),
-				Role:    PartyType_PARTY_TYPE_OWNER,
-			},
-		})
-		require.Equal(t, "scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp [cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"+
-			" - PARTY_TYPE_OWNER] (scopespec1qnp9c775ccu5xeaggtmylf0uesvsqyrkq8)", scope.String())
+		scope := NewScope(ScopeMetadataAddress(
+			scopeUuid), ScopeSpecMetadataAddress(groupUuid),
+			[]string{addr.String()},
+			[]string{},
+			"")
+		require.Equal(t, `scope_id: scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp
+specification_id: scopespec1qnp9c775ccu5xeaggtmylf0uesvsqyrkq8
+owneraddress:
+- cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck
+dataaccess: []
+valueowneraddress: ""
+`,
+			scope.String())
 	})
 }
