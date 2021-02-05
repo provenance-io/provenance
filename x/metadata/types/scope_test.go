@@ -54,7 +54,7 @@ func (s *scopeTestSuite) TestScopeValidateBasic() {
 			true,
 		},
 		{
-			"no owners, data accesss",
+			"no owners, data access",
 			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []string{}, []string{addr.String()}, ""),
 			"scope must have at least one owner",
 			true,
