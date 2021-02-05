@@ -21,13 +21,13 @@ const (
 
 // Compile time interface checks.
 var (
-// _ sdk.Msg = MsgMemorializeContractRequest{}
-// _ sdk.Msg = MsgChangeOwnershipRequest{}
-// _ sdk.Msg = MsgAddScopeRequest{}
-// _ sdk.Msg = MsgAddRecordGroupRequest{}
-// _ sdk.Msg = MsgAddRecordRequest{}
-// _ sdk.Msg = MsgAddScopeSpecificationRequest{}
-// _ sdk.Msg = MsgAddGroupSpecificationRequest{}
+	_ sdk.Msg = &MsgMemorializeContractRequest{}
+	_ sdk.Msg = &MsgChangeOwnershipRequest{}
+	_ sdk.Msg = &MsgAddScopeRequest{}
+	_ sdk.Msg = &MsgAddRecordGroupRequest{}
+	_ sdk.Msg = &MsgAddRecordRequest{}
+	_ sdk.Msg = &MsgAddScopeSpecificationRequest{}
+	_ sdk.Msg = &MsgAddGroupSpecificationRequest{}
 )
 
 // ----------------------------------------------------------------------

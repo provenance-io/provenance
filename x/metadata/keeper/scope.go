@@ -81,6 +81,9 @@ func (k Keeper) IterateScopesForAddress(ctx sdk.Context, address sdk.AccAddress,
 
 // GetScope returns the scope with the given id.
 func (k Keeper) GetScope(ctx sdk.Context, id types.MetadataAddress) (scope types.Scope, found bool) {
+	if !id.IsScopeAddress() {
+		return scope, false
+	}
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(id.Bytes())
 	if b == nil {
