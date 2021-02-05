@@ -330,7 +330,8 @@ func backportAddressToParties(new []string, role v040metadata.PartyType) (old []
 		old[i].Address = addr
 		old[i].SignerRole = v039metadata.PartyType(int32(role))
 
-		// TODO consider including a context specific version here to path in the public keys by query of AccountKeeper
+		// TODO consider including a context here to bring in the public keys by query of AccountKeeper
+		// old[i].Signer.SigningPublicKey
 	}
 	return
 }
@@ -345,7 +346,8 @@ func backportParties(new []v040metadata.Party) (old []*v039metadata.Recital, err
 		old[i].Address = addr
 		old[i].SignerRole = v039metadata.PartyType(int32(n.Role))
 
-		// TODO consider including a context specific version here to path in the public keys by query of AccountKeeper
+		// TODO consider including a context here to bring in the public keys by query of AccountKeeper
+		// old[i].Signer.SigningPublicKey
 	}
 	return
 }
