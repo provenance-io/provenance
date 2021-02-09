@@ -244,10 +244,11 @@ func (keeper Keeper) Normalize(ctx sdk.Context, name string) (string, error) {
 	for _, comp := range strings.Split(name, ".") {
 		comp = strings.ToLower(strings.TrimSpace(comp))
 		lenComp := uint32(len(comp))
+		isUUID := isValidUUID(comp)
 		if lenComp < keeper.GetMinSegmentLength(ctx) {
 			return "", types.ErrNameSegmentTooShort
 		}
-		if lenComp > keeper.GetMaxSegmentLength(ctx) {
+		if lenComp > keeper.GetMaxSegmentLength(ctx) && !isUUID {
 			return "", types.ErrNameSegmentTooLong
 		}
 		if !isValid(comp) {
