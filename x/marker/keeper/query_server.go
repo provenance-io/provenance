@@ -156,7 +156,7 @@ func (k Keeper) DenomMetadata(c context.Context, req *types.QueryDenomMetadataRe
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	if req.Denom == "" {
+	if err := sdk.ValidateDenom(req.Denom); err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid denom")
 	}
 
