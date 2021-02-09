@@ -34,6 +34,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Bug Fixes
+
+* Updated the links in PULL_REQUEST_TEMPLATE.md to use correct 'main' branch
+
 ## [v0.1.2](https://github.com/provenance-io/provenance/releases/tag/v0.1.1) - 2021-01-27
 
 ### Bug Fixes
