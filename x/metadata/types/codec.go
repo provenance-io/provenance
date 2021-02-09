@@ -6,14 +6,17 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
-	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
 // RegisterLegacyAminoCodec registers concrete types on the Amino codec
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	// cdc.RegisterConcrete(MsgEnvelope{}, "provenance/metadata/MsgEnvelope", nil)
-	// cdc.RegisterConcrete(MsgOwnershipChange{}, "provenance/metadata/MsgOwnershipChange", nil)
-	legacytx.RegisterLegacyAminoCodec(cdc)
+	cdc.RegisterConcrete(&MsgMemorializeContractRequest{}, "provenance/metadata/MemorializeContractRequest", nil)
+	cdc.RegisterConcrete(&MsgChangeOwnershipRequest{}, "provenance/metadata/ChangeOwnershipRequest", nil)
+	cdc.RegisterConcrete(&MsgAddScopeRequest{}, "provenance/metadata/AddScopeRequest", nil)
+	cdc.RegisterConcrete(&MsgAddRecordGroupRequest{}, "provenance/metadata/AddRecordGroupRequest", nil)
+	cdc.RegisterConcrete(&MsgAddRecordRequest{}, "provenance/metadata/AddRecordRequest", nil)
+	cdc.RegisterConcrete(&MsgAddScopeSpecificationRequest{}, "provenance/metadata/AddScopeSpecificationRequest", nil)
+	cdc.RegisterConcrete(&MsgAddGroupSpecificationRequest{}, "provenance/metadata/AddGroupSpecificationRequest", nil)
 }
 
 // RegisterInterfaces registers implementations for the tx messages
