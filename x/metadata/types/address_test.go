@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	scopeUuid = uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")
-	groupUuid = uuid.MustParse("c25c7bd4-c639-4367-a842-f64fa5fccc19")
+	scopeUUID = uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")
+	groupUUID = uuid.MustParse("c25c7bd4-c639-4367-a842-f64fa5fccc19")
 
 	scopeHex     = "008D80B25AC0894446956E5D08CFE3E1A5"
 	scopeBech32  = "scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp"
@@ -57,7 +57,7 @@ func TestMetadataAddressWithInvalidData(t *testing.T) {
 	_, err = VerifyMetadataAddressFormat(addr[0:12])
 	require.EqualValues(t, fmt.Errorf("incorrect address length (must be at least 17, actual: %d)", 12), err)
 
-	scopeID := ScopeMetadataAddress(scopeUuid)
+	scopeID := ScopeMetadataAddress(scopeUUID)
 	padded := make([]byte, 20)
 	len, err := scopeID.MarshalTo(padded)
 	require.EqualValues(t, 17, len)
@@ -94,7 +94,7 @@ func TestMetadataAddressMarshal(t *testing.T) {
 	var scopeID, newInstance MetadataAddress
 	require.True(t, scopeID.Equals(newInstance), "two empty instances are equal")
 
-	scopeID = ScopeMetadataAddress(scopeUuid)
+	scopeID = ScopeMetadataAddress(scopeUUID)
 
 	bz, err := scopeID.Marshal()
 	require.NoError(t, err)
@@ -118,13 +118,13 @@ func TestMetadataAddressIteratorPrefix(t *testing.T) {
 	require.NoError(t, err, "empty address must return the root iterator prefix")
 	require.Equal(t, RecordKeyPrefix, bz)
 
-	scopeID = ScopeSpecMetadataAddress(scopeUuid)
+	scopeID = ScopeSpecMetadataAddress(scopeUUID)
 	bz, err = scopeID.ScopeRecordIteratorPrefix()
 	require.Error(t, err, "not possible to iterate Records off a scope specification")
 	require.Equal(t, []byte{}, bz)
 	require.Equal(t, fmt.Errorf("this metadata address does not contain a scope uuid"), err)
 
-	scopeID = ScopeMetadataAddress(scopeUuid)
+	scopeID = ScopeMetadataAddress(scopeUUID)
 
 	bz, err = scopeID.ScopeGroupIteratorPrefix()
 	require.NoError(t, err)
@@ -139,7 +139,7 @@ func TestMetadataAddressIteratorPrefix(t *testing.T) {
 
 func TestScopeMetadataAddress(t *testing.T) {
 	// Make an address instance for a scope uuid
-	scopeID := ScopeMetadataAddress(scopeUuid)
+	scopeID := ScopeMetadataAddress(scopeUUID)
 	require.NoError(t, scopeID.Validate())
 	require.True(t, scopeID.IsScopeAddress())
 	// Verify we can get a bech32 string for the scope
@@ -158,9 +158,9 @@ func TestScopeMetadataAddress(t *testing.T) {
 	require.Equal(t, fmt.Sprintf("%s", scopeHex), fmt.Sprintf("%X", scopeID))
 
 	// Ensure a second instance is equal to the first
-	scopeID2 := ScopeMetadataAddress(scopeUuid)
+	scopeID2 := ScopeMetadataAddress(scopeUUID)
 	require.True(t, scopeID.Equals(scopeID2))
-	require.False(t, scopeID.Equals(ScopeMetadataAddress(groupUuid)))
+	require.False(t, scopeID.Equals(ScopeMetadataAddress(groupUUID)))
 
 	json, err := scopeID.MarshalJSON()
 	require.NoError(t, err)
@@ -181,7 +181,7 @@ func TestScopeMetadataAddress(t *testing.T) {
 
 func TestGroupMetadataAddress(t *testing.T) {
 	// Construct a composite key for a group within a scope
-	groupAddress := GroupMetadataAddress(scopeUuid, groupUuid)
+	groupAddress := GroupMetadataAddress(scopeUUID, groupUUID)
 	require.NoError(t, groupAddress.Validate(), "expect a valid MetadataAddress for a group")
 	require.True(t, groupAddress.IsGroupAddress())
 
@@ -216,16 +216,16 @@ func TestGroupMetadataAddress(t *testing.T) {
 
 func TestRecordMetadataAddress(t *testing.T) {
 	// Construct a composite key for a record within a scope
-	scopeID := ScopeMetadataAddress(scopeUuid)
-	recordID := RecordMetadataAddress(scopeUuid, "test")
+	scopeID := ScopeMetadataAddress(scopeUUID)
+	recordID := RecordMetadataAddress(scopeUUID, "test")
 	require.True(t, recordID.IsRecordAddress())
 	require.Equal(t, recordBech32, recordID.String())
 	recordAddress, err := MetadataAddressFromBech32(recordBech32)
 	require.NoError(t, err)
 	require.Equal(t, recordID, recordAddress)
 
-	require.Equal(t, recordID, RecordMetadataAddress(scopeUuid, "tEst"))
-	require.Equal(t, recordID, RecordMetadataAddress(scopeUuid, "TEST"))
-	require.Equal(t, recordID, RecordMetadataAddress(scopeUuid, "   test   "))
+	require.Equal(t, recordID, RecordMetadataAddress(scopeUUID, "tEst"))
+	require.Equal(t, recordID, RecordMetadataAddress(scopeUUID, "TEST"))
+	require.Equal(t, recordID, RecordMetadataAddress(scopeUUID, "   test   "))
 	require.Equal(t, recordID, scopeID.GetRecordAddress("test"))
 }

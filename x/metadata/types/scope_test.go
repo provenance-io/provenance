@@ -115,10 +115,10 @@ func (s *scopeTestSuite) TestScopeValidateBasic() {
 
 func (s *scopeTestSuite) TestScopeString() {
 	s.T().Run("scope string", func(t *testing.T) {
-		scopeUuid = uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")
-		groupUuid = uuid.MustParse("c25c7bd4-c639-4367-a842-f64fa5fccc19")
+		scopeUUID := uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")
+		groupUUID := uuid.MustParse("c25c7bd4-c639-4367-a842-f64fa5fccc19")
 		scope := NewScope(ScopeMetadataAddress(
-			scopeUuid), ScopeSpecMetadataAddress(groupUuid),
+			scopeUUID), ScopeSpecMetadataAddress(groupUUID),
 			[]string{addr.String()},
 			[]string{},
 			"")
