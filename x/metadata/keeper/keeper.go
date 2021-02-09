@@ -46,7 +46,12 @@ type MetadataKeeperI interface {
 	// GetGroupSpecification returns the record with the given address.
 	GetGroupSpecification(sdk.Context, types.MetadataAddress) (types.GroupSpecification, bool)
 	// SetGroupSpecification persists the provided group specification
-	// SetGroupSpecification(sdk.Context, types.GroupSpecification)
+	SetGroupSpecification(sdk.Context, types.GroupSpecification)
+
+	// GetScopeSpecification returns the record with the given address.
+	GetScopeSpecification(sdk.Context, types.MetadataAddress) (types.ScopeSpecification, bool)
+	// SetScopeSpecification persists the provided scope specification
+	SetScopeSpecification(sdk.Context, types.ScopeSpecification)
 }
 
 // Keeper is the concrete state-based API for the metadata module.

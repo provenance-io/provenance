@@ -13,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/stretchr/testify/require"
 
-	"github.com/provenance-io/provenance/x/metadata/keeper"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -27,17 +26,15 @@ func TestMetadataScopeGetSet(t *testing.T) {
 
 	scopeID := types.ScopeMetadataAddress(scopeUUID)
 
-	k := keeper.NewKeeper(app.AppCodec(), app.GetKey(types.StoreKey), app.GetSubspace(types.ModuleName), app.AccountKeeper)
-
-	s, found := k.GetScope(ctx, scopeID)
-	require.Nil(t, s)
+	s, found := app.MetadataKeeper.GetScope(ctx, scopeID)
+	require.NotNil(t, s)
 	require.False(t, found)
 
 	ns := *types.NewScope(scopeID, nil, []string{user.String()}, []string{user.String()}, "")
 	require.NotNil(t, ns)
-	k.SetScope(ctx, ns)
+	app.MetadataKeeper.SetScope(ctx, ns)
 
-	s, found = k.GetScope(ctx, scopeID)
+	s, found = app.MetadataKeeper.GetScope(ctx, scopeID)
 	require.True(t, found)
 	require.NotNil(t, s)
 
