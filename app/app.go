@@ -161,6 +161,7 @@ var (
 		marker.AppModuleBasic{},
 		attribute.AppModuleBasic{},
 		name.AppModuleBasic{},
+		metadata.AppModuleBasic{},
 		wasm.AppModuleBasic{},
 	)
 
@@ -453,7 +454,7 @@ func New(
 		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 
-		metadata.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper),
+		metadata.NewAppModule(appCodec, app.MetadataKeeper, app.AccountKeeper),
 		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper),
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper),
 		attribute.NewAppModule(app.AttributeKeeper),
