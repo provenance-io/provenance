@@ -3,7 +3,7 @@ module github.com/provenance-io/provenance
 go 1.15
 
 require (
-	github.com/CosmWasm/wasmd v0.14.0
+	github.com/CosmWasm/wasmd v0.15.0
 	github.com/armon/go-metrics v0.3.6
 	github.com/btcsuite/btcd v0.21.0-beta
 	github.com/cosmos/cosmos-sdk v0.41.0
