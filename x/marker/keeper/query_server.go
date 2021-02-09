@@ -155,7 +155,14 @@ func (k Keeper) DenomMetadata(c context.Context, req *types.QueryDenomMetadataRe
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
+
+	if req.Denom == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid denom")
+	}
+
 	ctx := sdk.UnwrapSDKContext(c)
+
 	metadata := k.bankKeeper.GetDenomMetaData(ctx, req.Denom)
+
 	return &types.QueryDenomMetadataResponse{Metadata: metadata}, nil
 }
