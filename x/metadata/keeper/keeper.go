@@ -14,7 +14,7 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
-// MetadataKeeperI is the public read-only API definition for the metadata module.
+// MetadataKeeperI is the internal state api for the metadata module.
 type MetadataKeeperI interface {
 	// GetScope returns the scope with the given address.
 	GetScope(sdk.Context, types.MetadataAddress) (types.Scope, bool)
