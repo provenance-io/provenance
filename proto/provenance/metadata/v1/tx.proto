@@ -91,7 +91,6 @@ message MsgAddScopeRequest {
   option (gogoproto.goproto_getters)  = false;
 
   Scope  scope  = 1;
-  string notary = 2;
 }
 // AddScopeResponse from an add records request
 message AddScopeResponse {}

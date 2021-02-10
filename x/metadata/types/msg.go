@@ -58,8 +58,7 @@ func (msg MsgMemorializeContractRequest) GetSigners() []sdk.AccAddress {
 
 // GetSignBytes gets the bytes for the message signer to sign on
 func (msg MsgMemorializeContractRequest) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 //
@@ -113,8 +112,7 @@ func (msg MsgChangeOwnershipRequest) GetSigners() []sdk.AccAddress {
 
 // GetSignBytes gets the bytes for the message signer to sign on
 func (msg MsgChangeOwnershipRequest) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
@@ -145,10 +143,9 @@ func (msg MsgChangeOwnershipRequest) ValidateBasic() error {
 // ----------------------------------------------------------------------
 
 // NewMsgAddScopeRequest creates a new msg instance
-func NewMsgAddScopeRequest(scope *Scope, notary string) *MsgAddScopeRequest {
+func NewMsgAddScopeRequest(scope *Scope) *MsgAddScopeRequest {
 	return &MsgAddScopeRequest{
-		Scope:  scope,
-		Notary: notary,
+		Scope: scope,
 	}
 }
 
@@ -165,22 +162,25 @@ func (msg MsgAddScopeRequest) Type() string { return TypeMsgAddScopeRequest }
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgAddScopeRequest) GetSigners() []sdk.AccAddress {
-	delAddr, err := sdk.AccAddressFromBech32(msg.Notary)
-	if err != nil {
-		panic(err)
+	signers := make([]sdk.AccAddress, len(msg.Scope.OwnerAddress))
+	for i, ownerAddr := range msg.Scope.OwnerAddress {
+		signAddr, err := sdk.AccAddressFromBech32(ownerAddr)
+		if err != nil {
+			panic(err)
+		}
+		signers[i] = signAddr
 	}
-	return []sdk.AccAddress{delAddr}
+	return signers
 }
 
 // GetSignBytes gets the bytes for the message signer to sign on
 func (msg MsgAddScopeRequest) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
 func (msg MsgAddScopeRequest) ValidateBasic() error {
-	return nil
+	return msg.Scope.ValidateBasic()
 }
 
 // ----------------------------------------------------------------------
@@ -212,8 +212,7 @@ func (msg MsgAddRecordGroupRequest) GetSigners() []sdk.AccAddress {
 
 // GetSignBytes gets the bytes for the message signer to sign on
 func (msg MsgAddRecordGroupRequest) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
@@ -250,8 +249,7 @@ func (msg MsgAddRecordRequest) GetSigners() []sdk.AccAddress {
 
 // GetSignBytes gets the bytes for the message signer to sign on
 func (msg MsgAddRecordRequest) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
@@ -288,8 +286,7 @@ func (msg MsgAddScopeSpecificationRequest) GetSigners() []sdk.AccAddress {
 
 // GetSignBytes gets the bytes for the message signer to sign on
 func (msg MsgAddScopeSpecificationRequest) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
@@ -326,8 +323,7 @@ func (msg MsgAddGroupSpecificationRequest) GetSigners() []sdk.AccAddress {
 
 // GetSignBytes gets the bytes for the message signer to sign on
 func (msg MsgAddGroupSpecificationRequest) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
