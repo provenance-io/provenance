@@ -1,7 +1,6 @@
 package types
 
 import (
-	"crypto/sha512"
 	"fmt"
 	"strings"
 
@@ -21,13 +20,13 @@ const (
 
 // Compile time interface checks.
 var (
-// _ sdk.Msg = MsgMemorializeContractRequest{}
-// _ sdk.Msg = MsgChangeOwnershipRequest{}
-// _ sdk.Msg = MsgAddScopeRequest{}
-// _ sdk.Msg = MsgAddRecordGroupRequest{}
-// _ sdk.Msg = MsgAddRecordRequest{}
-// _ sdk.Msg = MsgAddScopeSpecificationRequest{}
-// _ sdk.Msg = MsgAddGroupSpecificationRequest{}
+	_ sdk.Msg = &MsgMemorializeContractRequest{}
+	_ sdk.Msg = &MsgChangeOwnershipRequest{}
+	_ sdk.Msg = &MsgAddScopeRequest{}
+	_ sdk.Msg = &MsgAddRecordGroupRequest{}
+	_ sdk.Msg = &MsgAddRecordRequest{}
+	_ sdk.Msg = &MsgAddScopeSpecificationRequest{}
+	_ sdk.Msg = &MsgAddGroupSpecificationRequest{}
 )
 
 // ----------------------------------------------------------------------
@@ -80,27 +79,6 @@ func (msg MsgMemorializeContractRequest) ValidateBasic() error {
 	}
 	if err := msg.Contract.ValidateBasic(); err != nil {
 		return err
-	}
-	contractBytes, err := msg.Contract.Marshal()
-	if err != nil {
-		return err
-	}
-	digest := sha512.Sum512(contractBytes)
-
-	signers := make(map[string]byte)
-	for _, s := range msg.Signatures.Signatures {
-		addr, err := ValidateContractSignature(*s, digest[:])
-		if err != nil {
-			return err
-		}
-		signers[addr.String()] = 1
-	}
-
-	requiredSigners := msg.Contract.GetSigners()
-	for _, s := range requiredSigners {
-		if signers[s.String()] != 1 {
-			return fmt.Errorf("missing required signer: %s", s)
-		}
 	}
 
 	return msg.Contract.ValidateBasic()
@@ -161,43 +139,17 @@ func (msg MsgChangeOwnershipRequest) ValidateBasic() error {
 	if msg.Contract != nil && msg.Recitals != nil {
 		return fmt.Errorf("only one of contract or recitals is allowed")
 	}
-
-	var err error
-	var payloadBytes []byte
-	if msg.Contract != nil {
-		payloadBytes, err = msg.Contract.Marshal()
-	} else {
-		payloadBytes, err = msg.Recitals.Marshal()
-	}
-	if err != nil {
-		return err
-	}
-	digest := sha512.Sum512(payloadBytes)
-
-	signers := make(map[string]byte)
-	for _, s := range msg.Signatures.Signatures {
-		addr, err := ValidateContractSignature(*s, digest[:])
-		if err != nil {
-			return err
-		}
-		signers[addr.String()] = 1
-	}
-
-	requiredSigners := msg.Contract.GetSigners()
-	for _, s := range requiredSigners {
-		if signers[s.String()] != 1 {
-			return fmt.Errorf("missing required signer: %s", s)
-		}
-	}
-
 	return msg.Contract.ValidateBasic()
 }
 
 // ----------------------------------------------------------------------
 
 // NewMsgAddScopeRequest creates a new msg instance
-func NewMsgAddScopeRequest() *MsgAddScopeRequest {
-	return &MsgAddScopeRequest{}
+func NewMsgAddScopeRequest(scope *Scope, notary string) *MsgAddScopeRequest {
+	return &MsgAddScopeRequest{
+		Scope:  scope,
+		Notary: notary,
+	}
 }
 
 func (msg MsgAddScopeRequest) String() string {

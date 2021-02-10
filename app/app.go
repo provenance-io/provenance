@@ -103,6 +103,10 @@ import (
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 	namewasm "github.com/provenance-io/provenance/x/name/wasm"
 
+	"github.com/provenance-io/provenance/x/metadata"
+	metadatakeeper "github.com/provenance-io/provenance/x/metadata/keeper"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
+
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
 
@@ -158,6 +162,7 @@ var (
 		marker.AppModuleBasic{},
 		attribute.AppModuleBasic{},
 		name.AppModuleBasic{},
+		metadata.AppModuleBasic{},
 		wasm.AppModuleBasic{},
 	)
 
@@ -226,6 +231,7 @@ type App struct {
 	TransferKeeper   ibctransferkeeper.Keeper
 
 	MarkerKeeper    markerkeeper.Keeper
+	MetadataKeeper  metadatakeeper.Keeper
 	AttributeKeeper attributekeeper.Keeper
 	NameKeeper      namekeeper.Keeper
 	WasmKeeper      wasm.Keeper
@@ -263,6 +269,7 @@ func New(
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
 
+		metadatatypes.StoreKey,
 		markertypes.StoreKey,
 		attributetypes.StoreKey,
 		nametypes.StoreKey,
@@ -325,6 +332,10 @@ func New(
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
 	app.StakingKeeper = *stakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
+	)
+
+	app.MetadataKeeper = metadatakeeper.NewKeeper(
+		appCodec, keys[metadatatypes.StoreKey], app.GetSubspace(metadatatypes.ModuleName), app.AccountKeeper,
 	)
 
 	app.MarkerKeeper = markerkeeper.NewKeeper(
@@ -446,6 +457,7 @@ func New(
 		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 
+		metadata.NewAppModule(appCodec, app.MetadataKeeper, app.AccountKeeper),
 		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper),
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper),
 		attribute.NewAppModule(app.AttributeKeeper),
@@ -497,6 +509,7 @@ func New(
 		markertypes.ModuleName,
 		nametypes.ModuleName,
 		attributetypes.ModuleName,
+		metadatatypes.ModuleName,
 		wasm.ModuleName,
 		ibchost.ModuleName,
 		genutiltypes.ModuleName,
@@ -518,6 +531,8 @@ func New(
 		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 
+		// TODO -- add simulation to metadata module
+		// metadata.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper),
 		// TODO -- add simulation to marker module
 		// marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper),
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper),
@@ -738,6 +753,7 @@ func initParamsKeeper(appCodec codec.BinaryMarshaler, legacyAmino *codec.LegacyA
 	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govtypes.ParamKeyTable())
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 
+	paramsKeeper.Subspace(metadatatypes.ModuleName)
 	paramsKeeper.Subspace(markertypes.ModuleName)
 	paramsKeeper.Subspace(nametypes.ModuleName)
 	paramsKeeper.Subspace(attributetypes.ModuleName)

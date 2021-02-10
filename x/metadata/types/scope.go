@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"gopkg.in/yaml.v2"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -16,12 +18,15 @@ const (
 // NewScope creates a new instance.
 func NewScope(
 	scopeID, scopeSpecification MetadataAddress,
-	parties []Party,
+	owners, dataAccess []string,
+	valueOwner string,
 ) *Scope {
 	return &Scope{
-		ScopeId:         scopeID,
-		SpecificationId: scopeSpecification,
-		Parties:         parties,
+		ScopeId:           scopeID,
+		SpecificationId:   scopeSpecification,
+		OwnerAddress:      owners,
+		DataAccess:        dataAccess,
+		ValueOwnerAddress: valueOwner,
 	}
 }
 
@@ -43,12 +48,22 @@ func (s *Scope) ValidateBasic() error {
 			return fmt.Errorf("invalid scope specification identifier (expected: %s, got %s)", PrefixScopeSpecification, prefix)
 		}
 	}
-	if len(s.Parties) < 1 {
-		return errors.New("scope must have at least one party")
+	if len(s.OwnerAddress) < 1 {
+		return errors.New("scope must have at least one owner")
 	}
-	for _, p := range s.Parties {
-		if err = p.ValidateBasic(); err != nil {
-			return fmt.Errorf("invalid party on scope: %w", err)
+	for _, o := range s.OwnerAddress {
+		if _, err = sdk.AccAddressFromBech32(o); err != nil {
+			return fmt.Errorf("invalid owner on scope: %w", err)
+		}
+	}
+	for _, d := range s.DataAccess {
+		if _, err = sdk.AccAddressFromBech32(d); err != nil {
+			return fmt.Errorf("invalid address in data access on scope: %w", err)
+		}
+	}
+	if len(s.ValueOwnerAddress) > 0 {
+		if _, err = sdk.AccAddressFromBech32(s.ValueOwnerAddress); err != nil {
+			return fmt.Errorf("invalid value owner address on scope: %w", err)
 		}
 	}
 	return nil
@@ -56,15 +71,8 @@ func (s *Scope) ValidateBasic() error {
 
 // String implements stringer interface
 func (s Scope) String() string {
-	out := s.ScopeId.String() + " ["
-	for _, p := range s.Parties {
-		out += fmt.Sprintf("%s, ", p)
-	}
-	out = strings.TrimRight(out, ", ") + "]"
-	if !s.SpecificationId.Empty() {
-		out += fmt.Sprintf(" (%s)", s.SpecificationId)
-	}
-	return out
+	out, _ := yaml.Marshal(s)
+	return string(out)
 }
 
 // NewRecordGroup creates a new instance
