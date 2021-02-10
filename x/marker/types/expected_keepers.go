@@ -46,7 +46,6 @@ type BankKeeper interface {
 	GetSupply(ctx sdk.Context) exported.SupplyI
 	SetSupply(ctx sdk.Context, supply exported.SupplyI)
 
-	// TODO: future marker support for setting denom metadata
 	GetDenomMetaData(ctx sdk.Context, denom string) types.Metadata
 	SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metadata)
 	IterateAllDenomMetaData(ctx sdk.Context, cb func(types.Metadata) bool)

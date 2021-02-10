@@ -149,3 +149,20 @@ func (k Keeper) Access(c context.Context, req *types.QueryAccessRequest) (*types
 	}
 	return &types.QueryAccessResponse{Accounts: marker.GetAccessList()}, nil
 }
+
+// DenomMetadata query for metadata on denom
+func (k Keeper) DenomMetadata(c context.Context, req *types.QueryDenomMetadataRequest) (*types.QueryDenomMetadataResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	if err := sdk.ValidateDenom(req.Denom); err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid denom")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	metadata := k.bankKeeper.GetDenomMetaData(ctx, req.Denom)
+
+	return &types.QueryDenomMetadataResponse{Metadata: metadata}, nil
+}
