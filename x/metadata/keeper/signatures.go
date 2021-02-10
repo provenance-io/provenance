@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -48,11 +47,6 @@ func (k Keeper) ValidateRawSignature(signature signing.SignatureDescriptor, mess
 // of building a signing structure with sequence, chain-id, and account number.  This approach is required for independent
 // signatures like those used in the contract memorialize process which are independent of blockchain tx and their replay protection.
 func (k Keeper) CreateRawSignature(txf clienttx.Factory, name string, txBuilder client.TxBuilder, message []byte, appendSignature bool) error {
-	signMode := txf.SignMode()
-	if signMode != signing.SignMode_SIGN_MODE_DIRECT {
-		return errors.New("only signing mode direct is supported for raw signatures")
-	}
-
 	key, err := txf.Keybase().Key(name)
 	if err != nil {
 		return err
@@ -76,7 +70,7 @@ func (k Keeper) CreateRawSignature(txf clienttx.Factory, name string, txBuilder 
 	sig := signing.SignatureV2{
 		PubKey: pubKey,
 		Data: &signing.SingleSignatureData{
-			SignMode:  signMode,
+			SignMode:  signing.SignMode_SIGN_MODE_UNSPECIFIED, // We are performing a custom signature that can't be validated in the normal way
 			Signature: sigBytes,
 		},
 		Sequence: txf.Sequence(),

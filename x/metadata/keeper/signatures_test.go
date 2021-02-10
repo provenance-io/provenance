@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
@@ -75,12 +74,14 @@ func TestValidateRawSingleSignature(t *testing.T) {
 	app := simapp.Setup(false)
 
 	txf := CreateTxFactory(t).WithSignMode(signingtypes.SignMode_SIGN_MODE_DIRECT)
-	testkey, err := txf.Keybase().Key("test_key1")
+	testkey1, err := txf.Keybase().Key("test_key1")
 	require.NoError(t, err)
 
-	s := types.NewScope(types.ScopeMetadataAddress(uuid.New()), nil, []string{testkey.GetAddress().String()}, []string{}, "")
-	fromAddr := sdk.AccAddress(testkey.GetPubKey().Address().Bytes()).String()
-	txb, err := tx.BuildUnsignedTx(txf, types.NewMsgAddScopeRequest(s, fromAddr))
+	testkey2, err := txf.Keybase().Key("test_key2")
+	require.NoError(t, err)
+
+	s := types.NewScope(types.ScopeMetadataAddress(uuid.New()), nil, []string{testkey1.GetAddress().String()}, []string{}, "")
+	txb, err := tx.BuildUnsignedTx(txf, types.NewMsgAddScopeRequest(s, testkey1.GetAddress().String()))
 	require.NoError(t, err)
 	require.NotNil(t, txb)
 
@@ -89,7 +90,7 @@ func TestValidateRawSingleSignature(t *testing.T) {
 	err = app.MetadataKeeper.CreateRawSignature(txf, "test_key1", txb, bytesToSign, true)
 	require.NoError(t, err)
 
-	err = app.MetadataKeeper.CreateRawSignature(txf, "test_key2", txb, bytesToSign, false)
+	err = app.MetadataKeeper.CreateRawSignature(txf, "test_key2", txb, bytesToSign, true)
 	require.NoError(t, err)
 
 	signedTx := txb.GetTx()
@@ -102,10 +103,15 @@ func TestValidateRawSingleSignature(t *testing.T) {
 	descriptors, err := sigV2ToDescriptors(sigs)
 	require.NoError(t, err)
 	require.NotEmpty(t, descriptors)
+	require.Equal(t, 2, len(sigs))
 
 	addr, err := app.MetadataKeeper.ValidateRawSignature(*descriptors[0], bytesToSign)
 	require.NoError(t, err)
-	require.Equal(t, fromAddr, addr.String())
+	require.EqualValues(t, testkey1.GetAddress(), addr)
+
+	addr, err = app.MetadataKeeper.ValidateRawSignature(*descriptors[1], bytesToSign)
+	require.NoError(t, err)
+	require.EqualValues(t, testkey2.GetAddress(), addr)
 }
 
 func sigV2ToDescriptors(sigs []signingtypes.SignatureV2) ([]*signingtypes.SignatureDescriptor, error) {
