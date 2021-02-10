@@ -305,15 +305,36 @@ func initGenFiles(
 	authGenState.Accounts = accounts
 	appGenState[authtypes.ModuleName] = clientCtx.JSONMarshaler.MustMarshalJSON(&authGenState)
 
+	// PROVENANCE SPECIFIC CONFIG
+	// ----------------------------------------
+
 	// set the balances in the genesis state
 	var bankGenState banktypes.GenesisState
 	clientCtx.JSONMarshaler.MustUnmarshalJSON(appGenState[banktypes.ModuleName], &bankGenState)
 
 	bankGenState.Balances = genBalances
+	nhashDenomUnit := banktypes.DenomUnit{
+		Exponent: 0,
+		Denom:    "nhash",
+		Aliases:  []string{"nanohash"},
+	}
+	hashDenomUnit := banktypes.DenomUnit{
+		Exponent: 9,
+		Denom:    "hash",
+	}
+	denomUnits := []*banktypes.DenomUnit{
+		&hashDenomUnit,
+		&nhashDenomUnit,
+	}
+	bankGenState.DenomMetadata = []banktypes.Metadata{
+		banktypes.Metadata{
+			Description: "The native staking token of the Provenance Blockchain.",
+			Display:     "hash",
+			Base:        "nhash",
+			DenomUnits:  denomUnits,
+		},
+	}
 	appGenState[banktypes.ModuleName] = clientCtx.JSONMarshaler.MustMarshalJSON(&bankGenState)
-
-	// PROVENANCE SPECIFIC CONFIG
-	// ----------------------------------------
 
 	// Set the staking denom
 	var stakeGenState stakingtypes.GenesisState
