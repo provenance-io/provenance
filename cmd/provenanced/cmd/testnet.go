@@ -326,14 +326,13 @@ func initGenFiles(
 		&hashDenomUnit,
 		&nhashDenomUnit,
 	}
-	bankGenState.DenomMetadata = []banktypes.Metadata{
-		banktypes.Metadata{
-			Description: "The native staking token of the Provenance Blockchain.",
-			Display:     "hash",
-			Base:        "nhash",
-			DenomUnits:  denomUnits,
-		},
+	denomMetadata := banktypes.Metadata{
+		Description: "The native staking token of the Provenance Blockchain.",
+		Display:     "hash",
+		Base:        "nhash",
+		DenomUnits:  denomUnits,
 	}
+	bankGenState.DenomMetadata = []banktypes.Metadata{denomMetadata}
 	appGenState[banktypes.ModuleName] = clientCtx.JSONMarshaler.MustMarshalJSON(&bankGenState)
 
 	// Set the staking denom
