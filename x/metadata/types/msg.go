@@ -143,9 +143,10 @@ func (msg MsgChangeOwnershipRequest) ValidateBasic() error {
 // ----------------------------------------------------------------------
 
 // NewMsgAddScopeRequest creates a new msg instance
-func NewMsgAddScopeRequest(scope *Scope) *MsgAddScopeRequest {
+func NewMsgAddScopeRequest(scope Scope, signers []string) *MsgAddScopeRequest {
 	return &MsgAddScopeRequest{
-		Scope: scope,
+		Scope:   scope,
+		Signers: signers,
 	}
 }
 
@@ -162,14 +163,16 @@ func (msg MsgAddScopeRequest) Type() string { return TypeMsgAddScopeRequest }
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgAddScopeRequest) GetSigners() []sdk.AccAddress {
-	signers := make([]sdk.AccAddress, len(msg.Scope.OwnerAddress))
-	for i, ownerAddr := range msg.Scope.OwnerAddress {
-		signAddr, err := sdk.AccAddressFromBech32(ownerAddr)
+	signers := make([]sdk.AccAddress, len(msg.Signers))
+
+	for i, signerAddress := range msg.Signers {
+		signAddr, err := sdk.AccAddressFromBech32(signerAddress)
 		if err != nil {
 			panic(err)
 		}
 		signers[i] = signAddr
 	}
+
 	return signers
 }
 
@@ -180,6 +183,9 @@ func (msg MsgAddScopeRequest) GetSignBytes() []byte {
 
 // ValidateBasic performs a quick validity check
 func (msg MsgAddScopeRequest) ValidateBasic() error {
+	if len(msg.Signers) < 1 {
+		return fmt.Errorf("at least one signer is required")
+	}
 	return msg.Scope.ValidateBasic()
 }
 

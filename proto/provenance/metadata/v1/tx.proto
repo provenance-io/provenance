@@ -90,7 +90,8 @@ message MsgAddScopeRequest {
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-  Scope  scope  = 1;
+  Scope           scope   = 1 [(gogoproto.nullable) = false];
+  repeated string signers = 2;
 }
 // AddScopeResponse from an add records request
 message AddScopeResponse {}

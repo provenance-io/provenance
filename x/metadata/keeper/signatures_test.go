@@ -80,8 +80,8 @@ func TestValidateRawSingleSignature(t *testing.T) {
 	testkey2, err := txf.Keybase().Key("test_key2")
 	require.NoError(t, err)
 
-	s := types.NewScope(types.ScopeMetadataAddress(uuid.New()), nil, []string{testkey1.GetAddress().String()}, []string{}, "")
-	txb, err := tx.BuildUnsignedTx(txf, types.NewMsgAddScopeRequest(s, testkey1.GetAddress().String()))
+	s := *types.NewScope(types.ScopeMetadataAddress(uuid.New()), nil, []string{testkey1.GetAddress().String()}, []string{}, "")
+	txb, err := tx.BuildUnsignedTx(txf, types.NewMsgAddScopeRequest(s, []string{testkey1.GetAddress().String()}))
 	require.NoError(t, err)
 	require.NotNil(t, txb)
 
