@@ -60,6 +60,7 @@ func (k Keeper) SetScope(ctx sdk.Context, scope types.Scope) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryBare(&scope)
 	store.Set(scope.ScopeId, b)
+	// TODO - add events here, deferred instrumentation for new scope?
 }
 
 // RemoveScope removes a scope from the module kv store.
@@ -102,9 +103,9 @@ func (k Keeper) RemoveScope(ctx sdk.Context, id types.MetadataAddress) {
 	store.Delete(id)
 }
 
-// ValidateUpdate checks the current scope and the proposed scope to determine if the the proposed changes are valid
+// ValidateScopeUpdate checks the current scope and the proposed scope to determine if the the proposed changes are valid
 // based on the existing state
-func (k Keeper) ValidateUpdate(ctx sdk.Context, existing, proposed types.Scope, signers []string) error {
+func (k Keeper) ValidateScopeUpdate(ctx sdk.Context, existing, proposed types.Scope, signers []string) error {
 	// IDs must match
 	if len(existing.ScopeId) > 0 {
 		if !proposed.ScopeId.Equals(existing.ScopeId) {

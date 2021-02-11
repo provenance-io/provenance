@@ -142,7 +142,7 @@ func (k msgServer) AddScope(
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	existing, _ := k.GetScope(ctx, msg.Scope.ScopeId)
-	if err := k.ValidateUpdate(ctx, existing, msg.Scope, msg.Signers); err != nil {
+	if err := k.ValidateScopeUpdate(ctx, existing, msg.Scope, msg.Signers); err != nil {
 		return nil, err
 	}
 

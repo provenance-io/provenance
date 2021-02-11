@@ -7,60 +7,89 @@ import (
 	"github.com/google/uuid"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/provenance-io/provenance/app"
 	simapp "github.com/provenance-io/provenance/app"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
-func TestMetadataScopeGetSet(t *testing.T) {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+type KeeperTestSuite struct {
+	suite.Suite
 
-	scopeUUID := uuid.New()
-	pubkey := secp256k1.GenPrivKey().PubKey()
-	user := sdk.AccAddress(pubkey.Address())
+	app         *app.App
+	ctx         sdk.Context
+	queryClient types.QueryClient
 
-	scopeID := types.ScopeMetadataAddress(scopeUUID)
+	pubkey1   cryptotypes.PubKey
+	user1     string
+	user1Addr sdk.AccAddress
 
-	s, found := app.MetadataKeeper.GetScope(ctx, scopeID)
-	require.NotNil(t, s)
-	require.False(t, found)
+	pubkey2   cryptotypes.PubKey
+	user2     string
+	user2Addr sdk.AccAddress
 
-	ns := *types.NewScope(scopeID, nil, []string{user.String()}, []string{user.String()}, "")
-	require.NotNil(t, ns)
-	app.MetadataKeeper.SetScope(ctx, ns)
-
-	s, found = app.MetadataKeeper.GetScope(ctx, scopeID)
-	require.True(t, found)
-	require.NotNil(t, s)
-
+	scopeUUID uuid.UUID
+	scopeID   types.MetadataAddress
 }
 
-func TestValidateUpdate(t *testing.T) {
+func (suite *KeeperTestSuite) SetupTest() {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	pubkey := secp256k1.GenPrivKey().PubKey()
-	user := sdk.AccAddress(pubkey.Address().Bytes())
+	suite.pubkey1 = secp256k1.GenPrivKey().PubKey()
+	suite.user1Addr = sdk.AccAddress(suite.pubkey1.Address())
+	suite.user1 = suite.user1Addr.String()
 
-	pubkey2 := secp256k1.GenPrivKey().PubKey()
-	user2 := sdk.AccAddress(pubkey2.Address().Bytes())
+	suite.pubkey2 = secp256k1.GenPrivKey().PubKey()
+	suite.user2Addr = sdk.AccAddress(suite.pubkey2.Address())
+	suite.user2 = suite.user2Addr.String()
 
+	suite.scopeUUID = uuid.New()
+	suite.scopeID = types.ScopeMetadataAddress(suite.scopeUUID)
+
+	suite.app = app
+	suite.ctx = ctx
+
+	suite.app.AccountKeeper.SetAccount(suite.ctx, suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, suite.user1Addr))
+
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, app.MetadataKeeper)
+	queryClient := types.NewQueryClient(queryHelper)
+	suite.queryClient = queryClient
+}
+
+func (suite *KeeperTestSuite) TestMetadataScopeGetSet() {
+	s, found := suite.app.MetadataKeeper.GetScope(suite.ctx, suite.scopeID)
+	suite.NotNil(s)
+	suite.False(found)
+
+	ns := *types.NewScope(suite.scopeID, nil, []string{suite.user1}, []string{suite.user1}, "")
+	suite.NotNil(ns)
+	suite.app.MetadataKeeper.SetScope(suite.ctx, ns)
+
+	s, found = suite.app.MetadataKeeper.GetScope(suite.ctx, suite.scopeID)
+	suite.True(found)
+	suite.NotNil(s)
+}
+
+func (suite *KeeperTestSuite) TestValidateScopeUpdate() {
 	markerAddr := markertypes.MustGetMarkerAddress("testcoin").String()
-	err := app.MarkerKeeper.AddMarkerAccount(ctx, &markertypes.MarkerAccount{
+	err := suite.app.MarkerKeeper.AddMarkerAccount(suite.ctx, &markertypes.MarkerAccount{
 		BaseAccount: &authtypes.BaseAccount{
 			Address:       markerAddr,
 			AccountNumber: 23,
 		},
 		AccessControl: []markertypes.AccessGrant{
 			{
-				Address:     user.String(),
+				Address:     suite.user1,
 				Permissions: markertypes.AccessListByNames("deposit,withdraw"),
 			},
 		},
@@ -69,92 +98,124 @@ func TestValidateUpdate(t *testing.T) {
 		MarkerType: markertypes.MarkerType_Coin,
 		Status:     markertypes.StatusActive,
 	})
-	require.NoError(t, err)
-	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, user))
-
-	scopeUUID := uuid.New()
-	scopeID := types.ScopeMetadataAddress(scopeUUID)
-	err = app.MetadataKeeper.ValidateUpdate(
-		ctx,
-		types.Scope{},
-		types.Scope{},
-		[]string{})
-	require.Error(t, err)
-	require.Equal(t, "incorrect address length (must be at least 17, actual: 0)", err.Error())
-
-	err = app.MetadataKeeper.ValidateUpdate(
-		ctx,
-		types.Scope{},
-		*types.NewScope(scopeID, nil, []string{user.String()}, []string{}, ""),
-		[]string{})
-	require.NoError(t, err)
-
+	suite.NoError(err)
 	changedID := types.ScopeMetadataAddress(uuid.New())
-	err = app.MetadataKeeper.ValidateUpdate(
-		ctx,
-		*types.NewScope(scopeID, nil, []string{user.String()}, []string{}, ""),
-		*types.NewScope(changedID, nil, []string{user.String()}, []string{}, ""),
-		[]string{})
-	require.Error(t, err, "can't change scope id in update")
-	require.Equal(t, fmt.Sprintf("cannot update scope identifier. expected %s, got %s", scopeID.String(), changedID.String()), err.Error())
 
-	err = app.MetadataKeeper.ValidateUpdate(
-		ctx,
-		*types.NewScope(scopeID, nil, []string{user.String()}, []string{}, ""),
-		*types.NewScope(scopeID, types.ScopeSpecMetadataAddress(scopeUUID), []string{user.String()}, []string{}, ""),
-		[]string{})
-	require.Error(t, err)
-	require.Equal(t, fmt.Sprintf("missing signature from existing owner %s; required for update", user.String()), err.Error())
+	cases := map[string]struct {
+		existing types.Scope
+		proposed types.Scope
+		signers  []string
+		wantErr  bool
+		errorMsg string
+	}{
+		"nil previous, proposed throws address error": {
+			existing: types.Scope{},
+			proposed: types.Scope{},
+			signers:  []string{suite.user1},
+			wantErr:  true,
+			errorMsg: "incorrect address length (must be at least 17, actual: 0)",
+		},
+		"valid proposed with nil existing doesn't error": {
+			existing: types.Scope{},
+			proposed: *types.NewScope(suite.scopeID, nil, []string{suite.user1}, []string{}, ""),
+			signers:  []string{suite.user1},
+			wantErr:  false,
+			errorMsg: "",
+		},
+		"can't change scope id in update": {
+			existing: *types.NewScope(suite.scopeID, nil, []string{suite.user1}, []string{}, ""),
+			proposed: *types.NewScope(changedID, nil, []string{suite.user1}, []string{}, ""),
+			signers:  []string{suite.user1},
+			wantErr:  true,
+			errorMsg: fmt.Sprintf("cannot update scope identifier. expected %s, got %s", suite.scopeID.String(), changedID.String()),
+		},
+		"missing existing owner signer on update fails": {
+			existing: *types.NewScope(suite.scopeID, nil, []string{suite.user1}, []string{}, ""),
+			proposed: *types.NewScope(suite.scopeID, types.ScopeSpecMetadataAddress(suite.scopeUUID), []string{suite.user1}, []string{}, ""),
+			signers:  []string{suite.user2},
+			wantErr:  true,
+			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", suite.user1),
+		},
+		"no error when update includes existing owner signer": {
+			existing: *types.NewScope(suite.scopeID, nil, []string{suite.user1}, []string{}, ""),
+			proposed: *types.NewScope(suite.scopeID, types.ScopeSpecMetadataAddress(suite.scopeUUID), []string{suite.user1}, []string{}, ""),
+			signers:  []string{suite.user1},
+			wantErr:  false,
+			errorMsg: "",
+		},
+		"setting value owner when unset does not error": {
+			existing: *types.NewScope(suite.scopeID, nil, []string{suite.user1}, []string{}, ""),
+			proposed: *types.NewScope(suite.scopeID, types.ScopeSpecMetadataAddress(suite.scopeUUID), []string{suite.user1}, []string{}, suite.user1),
+			signers:  []string{suite.user1},
+			wantErr:  false,
+			errorMsg: "",
+		},
+		"setting value owner to user does not require their signature": {
+			existing: *types.NewScope(suite.scopeID, nil, []string{suite.user1}, []string{}, ""),
+			proposed: *types.NewScope(suite.scopeID, types.ScopeSpecMetadataAddress(suite.scopeUUID), []string{suite.user1}, []string{}, suite.user2),
+			signers:  []string{suite.user1},
+			wantErr:  false,
+			errorMsg: "",
+		},
+		"setting value owner to new user does not require their signature": {
+			existing: *types.NewScope(suite.scopeID, nil, []string{suite.user1}, []string{}, suite.user1),
+			proposed: *types.NewScope(suite.scopeID, types.ScopeSpecMetadataAddress(suite.scopeUUID), []string{suite.user1}, []string{}, suite.user2),
+			signers:  []string{suite.user1},
+			wantErr:  false,
+			errorMsg: "",
+		},
+		"no change to value owner should not error": {
+			existing: *types.NewScope(suite.scopeID, nil, []string{suite.user1}, []string{}, suite.user1),
+			proposed: *types.NewScope(suite.scopeID, types.ScopeSpecMetadataAddress(suite.scopeUUID), []string{suite.user1}, []string{}, suite.user1),
+			signers:  []string{suite.user1},
+			wantErr:  false,
+			errorMsg: "",
+		},
+		"setting a new value owner should not error with withdraw permission": {
+			existing: *types.NewScope(suite.scopeID, nil, []string{suite.user1}, []string{}, markerAddr),
+			proposed: *types.NewScope(suite.scopeID, types.ScopeSpecMetadataAddress(suite.scopeUUID), []string{suite.user1}, []string{}, suite.user1),
+			signers:  []string{suite.user1},
+			wantErr:  false,
+			errorMsg: "",
+		},
+		"setting a new value owner fails if missing withdraw permission": {
+			existing: *types.NewScope(suite.scopeID, nil, []string{suite.user2}, []string{}, markerAddr),
+			proposed: *types.NewScope(suite.scopeID, types.ScopeSpecMetadataAddress(suite.scopeUUID), []string{suite.user2}, []string{}, suite.user2),
+			signers:  []string{suite.user2},
+			wantErr:  true,
+			errorMsg: fmt.Sprintf("missing signature for %s with authority to withdraw/remove existing value owner", markerAddr),
+		},
+		"setting a new value owner fails if missing deposit permission": {
+			existing: *types.NewScope(suite.scopeID, nil, []string{suite.user2}, []string{}, ""),
+			proposed: *types.NewScope(suite.scopeID, types.ScopeSpecMetadataAddress(suite.scopeUUID), []string{suite.user2}, []string{}, markerAddr),
+			signers:  []string{suite.user2},
+			wantErr:  true,
+			errorMsg: fmt.Sprintf("no signatures present with authority to add scope to marker %s", markerAddr),
+		},
+		"setting a new value owner fails for scope owner when value owner signature is missing": {
+			existing: *types.NewScope(suite.scopeID, nil, []string{suite.user1}, []string{}, suite.user2),
+			proposed: *types.NewScope(suite.scopeID, types.ScopeSpecMetadataAddress(suite.scopeUUID), []string{suite.user1}, []string{}, suite.user1),
+			signers:  []string{suite.user1},
+			wantErr:  true,
+			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", suite.user2),
+		},
+	}
 
-	err = app.MetadataKeeper.ValidateUpdate(
-		ctx,
-		*types.NewScope(scopeID, nil, []string{user.String()}, []string{}, ""),
-		*types.NewScope(scopeID, types.ScopeSpecMetadataAddress(scopeUUID), []string{user.String()}, []string{}, ""),
-		[]string{user.String()})
-	require.NoError(t, err, "no error when adding a scope spec and signed by current data owner")
+	for n, tc := range cases {
+		tc := tc
 
-	err = app.MetadataKeeper.ValidateUpdate(
-		ctx,
-		*types.NewScope(scopeID, nil, []string{user.String()}, []string{}, ""),
-		*types.NewScope(scopeID, types.ScopeSpecMetadataAddress(scopeUUID), []string{user.String()}, []string{}, user.String()),
-		[]string{user.String()})
-	require.NoError(t, err, "setting a value owner should not error")
+		suite.Run(n, func() {
+			err = suite.app.MetadataKeeper.ValidateScopeUpdate(suite.ctx, tc.existing, tc.proposed, tc.signers)
+			if tc.wantErr {
+				suite.Error(err)
+				suite.Equal(tc.errorMsg, err.Error())
+			} else {
+				suite.NoError(err)
+			}
+		})
+	}
+}
 
-	err = app.MetadataKeeper.ValidateUpdate(
-		ctx,
-		*types.NewScope(scopeID, nil, []string{user.String()}, []string{}, user.String()),
-		*types.NewScope(scopeID, types.ScopeSpecMetadataAddress(scopeUUID), []string{user.String()}, []string{}, user.String()),
-		[]string{user.String()})
-	require.NoError(t, err, "no change to value owner should not error")
-
-	err = app.MetadataKeeper.ValidateUpdate(
-		ctx,
-		*types.NewScope(scopeID, nil, []string{user.String()}, []string{}, markerAddr),
-		*types.NewScope(scopeID, types.ScopeSpecMetadataAddress(scopeUUID), []string{user.String()}, []string{}, user.String()),
-		[]string{user.String()})
-	require.NoError(t, err, "setting a new value owner should not error with withdraw permission")
-
-	err = app.MetadataKeeper.ValidateUpdate(
-		ctx,
-		*types.NewScope(scopeID, nil, []string{user2.String()}, []string{}, markerAddr),
-		*types.NewScope(scopeID, types.ScopeSpecMetadataAddress(scopeUUID), []string{user2.String()}, []string{}, user2.String()),
-		[]string{user2.String()})
-	require.Error(t, err, "setting a new value owner fails if missing withdraw permission")
-	require.Equal(t, fmt.Sprintf("missing signature for %s with authority to withdraw/remove existing value owner", markerAddr), err.Error())
-
-	err = app.MetadataKeeper.ValidateUpdate(
-		ctx,
-		*types.NewScope(scopeID, nil, []string{user2.String()}, []string{}, ""),
-		*types.NewScope(scopeID, types.ScopeSpecMetadataAddress(scopeUUID), []string{user2.String()}, []string{}, markerAddr),
-		[]string{user2.String()})
-	require.Error(t, err, "setting a new value owner fails if missing deposit permission")
-	require.Equal(t, fmt.Sprintf("no signatures present with authority to add scope to marker %s", markerAddr), err.Error())
-
-	err = app.MetadataKeeper.ValidateUpdate(
-		ctx,
-		*types.NewScope(scopeID, nil, []string{user.String()}, []string{}, user2.String()),
-		*types.NewScope(scopeID, types.ScopeSpecMetadataAddress(scopeUUID), []string{user.String()}, []string{}, user.String()),
-		[]string{user.String()})
-	require.Error(t, err, "setting a new value owner fails for scope owner when value owner signature is missing")
-	require.Equal(t, fmt.Sprintf("missing signature from existing owner %s; required for update", user2.String()), err.Error())
+func TestKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
 }
