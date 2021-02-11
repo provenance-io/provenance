@@ -39,6 +39,9 @@ type KeeperTestSuite struct {
 
 	scopeUUID uuid.UUID
 	scopeID   types.MetadataAddress
+
+	specUUID uuid.UUID
+	specID   types.MetadataAddress
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
@@ -56,6 +59,9 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.scopeUUID = uuid.New()
 	suite.scopeID = types.ScopeMetadataAddress(suite.scopeUUID)
 
+	suite.specUUID = uuid.New()
+	suite.specID = types.ScopeSpecMetadataAddress(suite.specUUID)
+
 	suite.app = app
 	suite.ctx = ctx
 
@@ -72,7 +78,7 @@ func (suite *KeeperTestSuite) TestMetadataScopeGetSet() {
 	suite.NotNil(s)
 	suite.False(found)
 
-	ns := *types.NewScope(suite.scopeID, nil, []string{suite.user1}, []string{suite.user1}, "")
+	ns := *types.NewScope(suite.scopeID, suite.specID, []string{suite.user1}, []string{suite.user1}, suite.user1)
 	suite.NotNil(ns)
 	suite.app.MetadataKeeper.SetScope(suite.ctx, ns)
 

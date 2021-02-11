@@ -155,6 +155,7 @@ func (k Keeper) clearScopeIndex(ctx sdk.Context, scope types.Scope) {
 			store.Delete(types.GetAddressCacheKey(addr, scope.ScopeId))
 		}
 	}
+	store.Delete(types.GetScopeSpecCacheKey(scope.SpecificationId, scope.ScopeId))
 }
 
 // indexScope create index records for the given scope
@@ -177,6 +178,9 @@ func (k Keeper) indexScope(ctx sdk.Context, scope types.Scope) {
 		if err == nil {
 			store.Set(types.GetAddressCacheKey(addr, scope.ScopeId), []byte{0x01})
 		}
+	}
+	if len(scope.SpecificationId) > 0 {
+		store.Set(types.GetScopeSpecCacheKey(scope.SpecificationId, scope.ScopeId), []byte{0x01})
 	}
 }
 
