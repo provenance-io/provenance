@@ -14,9 +14,9 @@ option java_multiple_files = true;
 
 // Query defines the Metadata Query service.
 service Query {
-  // Params queries the parameters of x/bank module.
+  // Params queries the parameters of x/metadata module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/provenance/marker/v1/params";
+    option (google.api.http).get = "/provenance/metadata/v1/params";
   }
 
   // Scope returns a specific scope by id
