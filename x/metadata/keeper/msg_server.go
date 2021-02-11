@@ -141,7 +141,12 @@ func (k msgServer) AddScope(
 ) (*types.AddScopeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// TODO (contract keeper class  methods to process request, keeper methods to record it)
+	existing, _ := k.GetScope(ctx, msg.Scope.ScopeId)
+	if err := k.ValidateUpdate(ctx, existing, msg.Scope, msg.Signers); err != nil {
+		return nil, err
+	}
+
+	k.SetScope(ctx, msg.Scope)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(

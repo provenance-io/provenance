@@ -5,17 +5,22 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	simapp "github.com/provenance-io/provenance/app"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -130,4 +135,113 @@ func sigV2ToDescriptors(sigs []signingtypes.SignatureV2) ([]*signingtypes.Signat
 		}
 	}
 	return descs, nil
+}
+
+func TestAccountIsMarker(t *testing.T) {
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	pubkey := secp256k1.GenPrivKey().PubKey()
+	user := sdk.AccAddress(pubkey.Address().Bytes())
+
+	markerAddr := markertypes.MustGetMarkerAddress("testcoin").String()
+	err := app.MarkerKeeper.AddMarkerAccount(ctx, &markertypes.MarkerAccount{
+		BaseAccount: &authtypes.BaseAccount{
+			Address:       markerAddr,
+			AccountNumber: 23,
+		},
+		AccessControl: []markertypes.AccessGrant{
+			{
+				Address:     user.String(),
+				Permissions: markertypes.AccessListByNames("deposit,withdraw"),
+			},
+		},
+		Denom:      "testcoin",
+		Supply:     sdk.NewInt(1000),
+		MarkerType: markertypes.MarkerType_Coin,
+		Status:     markertypes.StatusActive,
+	})
+	require.NoError(t, err)
+	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, user))
+
+	require.True(t, app.MetadataKeeper.AccountIsMarker(ctx, markerAddr), "is a marker")
+	require.False(t, app.MetadataKeeper.AccountIsMarker(ctx, user.String()), "exists, is a user, not a marker")
+	require.False(t, app.MetadataKeeper.AccountIsMarker(ctx, "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"), "doesn't exist, not a marker")
+	require.False(t, app.MetadataKeeper.AccountIsMarker(ctx, "invalid"), "invalid address not a marker")
+}
+
+func TestHasMarkerValueAuthority(t *testing.T) {
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	pubkey := secp256k1.GenPrivKey().PubKey()
+	user := sdk.AccAddress(pubkey.Address().Bytes())
+
+	markerAddr := markertypes.MustGetMarkerAddress("testcoin").String()
+	err := app.MarkerKeeper.AddMarkerAccount(ctx, &markertypes.MarkerAccount{
+		BaseAccount: &authtypes.BaseAccount{
+			Address:       markerAddr,
+			AccountNumber: 23,
+		},
+		AccessControl: []markertypes.AccessGrant{
+			{
+				Address:     user.String(),
+				Permissions: markertypes.AccessListByNames("deposit,withdraw"),
+			},
+		},
+		Denom:      "testcoin",
+		Supply:     sdk.NewInt(1000),
+		MarkerType: markertypes.MarkerType_Coin,
+		Status:     markertypes.StatusActive,
+	})
+	require.NoError(t, err)
+	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, user))
+
+	require.False(t,
+		app.MetadataKeeper.HasSignerWithMarkerValueAuthority(
+			ctx,
+			"invalid",
+			[]string{user.String()},
+			markertypes.Access_Deposit),
+		"invalid value owner")
+
+	require.False(t,
+		app.MetadataKeeper.HasSignerWithMarkerValueAuthority(
+			ctx,
+			"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck",
+			[]string{user.String()},
+			markertypes.Access_Deposit),
+		"value owner doesn't exist")
+
+	require.False(t,
+		app.MetadataKeeper.HasSignerWithMarkerValueAuthority(
+			ctx,
+			user.String(),
+			[]string{user.String()},
+			markertypes.Access_Deposit),
+		"user isn't a marker")
+
+	require.True(t,
+		app.MetadataKeeper.HasSignerWithMarkerValueAuthority(
+			ctx,
+			markerAddr,
+			[]string{user.String()},
+			markertypes.Access_Deposit),
+		"user has access")
+
+	require.True(t,
+		app.MetadataKeeper.HasSignerWithMarkerValueAuthority(
+			ctx,
+			markerAddr,
+			[]string{"invalidaddress", user.String()},
+			markertypes.Access_Deposit),
+		"user has access even with invalid signer")
+
+	require.False(t,
+		app.MetadataKeeper.HasSignerWithMarkerValueAuthority(
+			ctx,
+			markerAddr,
+			[]string{user.String()},
+			markertypes.Access_Burn),
+		"user doesn't have this access")
 }
