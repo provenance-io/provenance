@@ -12,6 +12,7 @@ const (
 	TypeMsgMemorializeContractRequest   = "memorialize_contract_request"
 	TypeMsgChangeOwnershipRequest       = "change_ownershipr_equest"
 	TypeMsgAddScopeRequest              = "add_scope_request"
+	TypeMsgRemoveScopeRequest           = "remove_scope_request"
 	TypeMsgAddRecordGroupRequest        = "add_recordgroup_request"
 	TypeMsgAddRecordRequest             = "add_record_request"
 	TypeMsgAddScopeSpecificationRequest = "add_scope_specification_request"
@@ -187,6 +188,58 @@ func (msg MsgAddScopeRequest) ValidateBasic() error {
 		return fmt.Errorf("at least one signer is required")
 	}
 	return msg.Scope.ValidateBasic()
+}
+
+// ----------------------------------------------------------------------
+
+// NewMsgRemoveScopeRequest creates a new msg instance
+func NewMsgRemoveScopeRequest(scopeID MetadataAddress, signers []string) *MsgRemoveScopeRequest {
+	return &MsgRemoveScopeRequest{
+		ScopeId: scopeID,
+		Signers: signers,
+	}
+}
+
+func (msg MsgRemoveScopeRequest) String() string {
+	out, _ := yaml.Marshal(msg)
+	return string(out)
+}
+
+// Route returns the module route
+func (msg MsgRemoveScopeRequest) Route() string { return ModuleName }
+
+// Type returns the type name for this msg
+func (msg MsgRemoveScopeRequest) Type() string { return TypeMsgRemoveScopeRequest }
+
+// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
+func (msg MsgRemoveScopeRequest) GetSigners() []sdk.AccAddress {
+	signers := make([]sdk.AccAddress, len(msg.Signers))
+
+	for i, signerAddress := range msg.Signers {
+		signAddr, err := sdk.AccAddressFromBech32(signerAddress)
+		if err != nil {
+			panic(err)
+		}
+		signers[i] = signAddr
+	}
+
+	return signers
+}
+
+// GetSignBytes gets the bytes for the message signer to sign on
+func (msg MsgRemoveScopeRequest) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// ValidateBasic performs a quick validity check
+func (msg MsgRemoveScopeRequest) ValidateBasic() error {
+	if len(msg.Signers) < 1 {
+		return fmt.Errorf("at least one signer is required")
+	}
+	if !msg.ScopeId.IsScopeAddress() {
+		return fmt.Errorf("invalid scope address")
+	}
+	return nil
 }
 
 // ----------------------------------------------------------------------

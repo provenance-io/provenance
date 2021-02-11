@@ -41,6 +41,26 @@ func (k Keeper) IterateScopesForAddress(ctx sdk.Context, address sdk.AccAddress,
 	return nil
 }
 
+// IterateScopesForScopeSpec processes scopes associated with the provided scope specification id with the given handler.
+func (k Keeper) IterateScopesForScopeSpec(ctx sdk.Context, scopeSpecID types.MetadataAddress,
+	handler func(scopeID types.MetadataAddress) (stop bool),
+) error {
+	store := ctx.KVStore(k.storeKey)
+	prefix := types.GetScopeSpecCacheIteratorPrefix(scopeSpecID)
+	it := sdk.KVStorePrefixIterator(store, prefix)
+	defer it.Close()
+	for ; it.Valid(); it.Next() {
+		var scopeID types.MetadataAddress
+		if err := scopeID.Unmarshal(it.Key()[len(prefix):]); err != nil {
+			return err
+		}
+		if handler(scopeID) {
+			break
+		}
+	}
+	return nil
+}
+
 // GetScope returns the scope with the given id.
 func (k Keeper) GetScope(ctx sdk.Context, id types.MetadataAddress) (scope types.Scope, found bool) {
 	if !id.IsScopeAddress() {
@@ -59,14 +79,34 @@ func (k Keeper) GetScope(ctx sdk.Context, id types.MetadataAddress) (scope types
 func (k Keeper) SetScope(ctx sdk.Context, scope types.Scope) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryBare(&scope)
+
+	eventType := types.EventTypeScopeCreated
+	if store.Has(scope.ScopeId) {
+		eventType = types.EventTypeScopeUpdated
+		k.clearScopeIndex(ctx, scope)
+	}
+
 	store.Set(scope.ScopeId, b)
-	// TODO - add events here, deferred instrumentation for new scope?
+	k.indexScope(ctx, scope)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			eventType,
+			sdk.NewAttribute(types.AttributeKeyScopeID, scope.ScopeId.String()),
+			sdk.NewAttribute(types.AttributeKeyScope, scope.String()),
+		),
+	)
 }
 
-// RemoveScope removes a scope from the module kv store.
-func (k Keeper) RemoveScope(ctx sdk.Context, id types.MetadataAddress) {
+// DeleteScope removes a scope from the module kv store.
+func (k Keeper) DeleteScope(ctx sdk.Context, id types.MetadataAddress) {
 	// iterate and remove all records, groups
 	store := ctx.KVStore(k.storeKey)
+
+	scope, found := k.GetScope(ctx, id)
+	if !found {
+		return
+	}
 
 	// Remove all records
 	prefix, err := id.ScopeRecordIteratorPrefix()
@@ -79,19 +119,9 @@ func (k Keeper) RemoveScope(ctx sdk.Context, id types.MetadataAddress) {
 		k.RemoveRecord(ctx, types.MetadataAddress(iter.Key()))
 	}
 
-	// Remove all record groups
-	prefix, err = id.ScopeGroupIteratorPrefix()
-	if err != nil {
-		panic(err)
-	}
-	iter = sdk.KVStorePrefixIterator(store, prefix)
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		k.RemoveRecordGroup(ctx, types.MetadataAddress(iter.Key()))
-	}
+	// RecordGroups will be removed as the last record in each is deleted.
 
-	// TODO : remove address index records for all OwnerAddress records.
-	// TODO : remove value_owner index record
+	k.clearScopeIndex(ctx, scope)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -101,6 +131,53 @@ func (k Keeper) RemoveScope(ctx sdk.Context, id types.MetadataAddress) {
 	)
 
 	store.Delete(id)
+}
+
+// clearScopeIndex delete any index records for this scope
+func (k Keeper) clearScopeIndex(ctx sdk.Context, scope types.Scope) {
+	store := ctx.KVStore(k.storeKey)
+
+	// Index all addresses on the scope
+	addresses := scope.OwnerAddress
+	addresses = append(addresses, scope.DataAccess...)
+	if len(scope.ValueOwnerAddress) > 0 {
+		// Add to list of general addresses to clear the cache of
+		addresses = append(addresses, scope.ValueOwnerAddress)
+		// Clear out the value owner cache
+		addr, err := sdk.AccAddressFromBech32(scope.ValueOwnerAddress)
+		if err == nil {
+			store.Delete(types.GetValueOwnerCacheKey(addr, scope.ScopeId))
+		}
+	}
+	for _, a := range addresses {
+		addr, err := sdk.AccAddressFromBech32(a)
+		if err == nil {
+			store.Delete(types.GetAddressCacheKey(addr, scope.ScopeId))
+		}
+	}
+}
+
+// indexScope create index records for the given scope
+func (k Keeper) indexScope(ctx sdk.Context, scope types.Scope) {
+	store := ctx.KVStore(k.storeKey)
+
+	// Index all addresses on the scope
+	addresses := scope.OwnerAddress
+	addresses = append(addresses, scope.DataAccess...)
+	if len(scope.ValueOwnerAddress) > 0 {
+		addresses = append(addresses, scope.ValueOwnerAddress)
+		// create a value owner cache entry as well.
+		addr, err := sdk.AccAddressFromBech32(scope.ValueOwnerAddress)
+		if err == nil {
+			store.Set(types.GetValueOwnerCacheKey(addr, scope.ScopeId), []byte{0x01})
+		}
+	}
+	for _, a := range addresses {
+		addr, err := sdk.AccAddressFromBech32(a)
+		if err == nil {
+			store.Set(types.GetAddressCacheKey(addr, scope.ScopeId), []byte{0x01})
+		}
+	}
 }
 
 // ValidateScopeUpdate checks the current scope and the proposed scope to determine if the the proposed changes are valid

@@ -78,6 +78,51 @@ func (suite *KeeperTestSuite) TestMetadataScopeGetSet() {
 	s, found = suite.app.MetadataKeeper.GetScope(suite.ctx, suite.scopeID)
 	suite.True(found)
 	suite.NotNil(s)
+
+	suite.app.MetadataKeeper.DeleteScope(suite.ctx, ns.ScopeId)
+	s, found = suite.app.MetadataKeeper.GetScope(suite.ctx, suite.scopeID)
+	suite.False(found)
+	suite.NotNil(s)
+}
+
+func (suite *KeeperTestSuite) TestMetadataScopeIterator() {
+	for i := 1; i <= 10; i++ {
+		valueOwner := ""
+		if i == 5 {
+			valueOwner = suite.user2
+		}
+		ns := types.NewScope(types.ScopeMetadataAddress(uuid.New()), nil, []string{suite.user1}, []string{suite.user1}, valueOwner)
+		suite.app.MetadataKeeper.SetScope(suite.ctx, *ns)
+	}
+	count := 0
+	suite.app.MetadataKeeper.IterateScopes(suite.ctx, func(s types.Scope) (stop bool) {
+		count++
+		return false
+	})
+	suite.Equal(10, count, "iterator should return a full list of scopes")
+
+	count = 0
+	suite.app.MetadataKeeper.IterateScopesForAddress(suite.ctx, suite.user1Addr, func(scopeID types.MetadataAddress) (stop bool) {
+		count++
+		suite.True(scopeID.IsScopeAddress())
+		return false
+	})
+	suite.Equal(10, count, "iterator should return ten scope addresses")
+
+	count = 0
+	suite.app.MetadataKeeper.IterateScopesForAddress(suite.ctx, suite.user2Addr, func(scopeID types.MetadataAddress) (stop bool) {
+		count++
+		suite.True(scopeID.IsScopeAddress())
+		return false
+	})
+	suite.Equal(1, count, "iterator should return a single address for the scope with value owned by user2")
+
+	count = 0
+	suite.app.MetadataKeeper.IterateScopes(suite.ctx, func(s types.Scope) (stop bool) {
+		count++
+		return count >= 5
+	})
+	suite.Equal(5, count, "using iterator stop function should stop iterator early")
 }
 
 func (suite *KeeperTestSuite) TestValidateScopeUpdate() {
@@ -198,6 +243,13 @@ func (suite *KeeperTestSuite) TestValidateScopeUpdate() {
 			signers:  []string{suite.user1},
 			wantErr:  true,
 			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", suite.user2),
+		},
+		"unsetting all fields on a scope should be successful": {
+			existing: *types.NewScope(suite.scopeID, types.ScopeSpecMetadataAddress(suite.scopeUUID), []string{suite.user1}, []string{}, suite.user1),
+			proposed: types.Scope{ScopeId: suite.scopeID, OwnerAddress: []string{suite.user1}},
+			signers:  []string{suite.user1},
+			wantErr:  false,
+			errorMsg: "",
 		},
 	}
 

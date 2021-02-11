@@ -21,7 +21,7 @@ type MetadataKeeperI interface {
 	// SetScope persists the provided scope
 	SetScope(sdk.Context, types.Scope)
 	// RemoveScope persists the provided scope
-	RemoveScope(sdk.Context, types.MetadataAddress)
+	DeleteScope(sdk.Context, types.MetadataAddress)
 
 	// IterateScopes processes all stored scopes with the given handler.
 	IterateScopes(sdk.Context, func(types.Scope) bool) error

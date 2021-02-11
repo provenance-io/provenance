@@ -22,6 +22,9 @@ service Msg {
 
   // AddScope adds a new scope
   rpc AddScope(MsgAddScopeRequest) returns (AddScopeResponse);
+  // Removes a scope and all associated Records, RecordGroups
+  rpc RemoveScope(MsgRemoveScopeRequest) returns (RemoveScopeResponse);
+
   // AddRecordGroup adds a new record group context to a scope
   rpc AddRecordGroup(MsgAddRecordGroupRequest) returns (AddRecordGroupResponse);
   // AddRecord adds a set of records in a record group within a scope
@@ -93,8 +96,26 @@ message MsgAddScopeRequest {
   Scope           scope   = 1 [(gogoproto.nullable) = false];
   repeated string signers = 2;
 }
-// AddScopeResponse from an add records request
+// AddScopeResponse from an add scope request
 message AddScopeResponse {}
+
+// MsgRemoveScopeRequest removes a scope
+message MsgRemoveScopeRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  // Unique ID for the scope to remove.s
+  bytes scope_id = 1 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customtype) = "MetadataAddress",
+    (gogoproto.moretags)   = "json:\"scope_id\" yaml:\"scope_id\""
+  ];
+  repeated string signers = 2;
+}
+// RemoveScopeResponse from a remove scope request
+message RemoveScopeResponse {}
 
 // MsgAddRecordGroupRequest adds a new scope
 message MsgAddRecordGroupRequest {
