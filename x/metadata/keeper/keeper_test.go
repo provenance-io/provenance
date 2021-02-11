@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	gocontext "context"
 	"fmt"
 	"testing"
 
@@ -266,6 +267,52 @@ func (suite *KeeperTestSuite) TestValidateScopeUpdate() {
 			}
 		})
 	}
+}
+
+func (suite *KeeperTestSuite) TestScopeQuery() {
+	app, ctx, queryClient, user1, user2 := suite.app, suite.ctx, suite.queryClient, suite.user1, suite.user2
+
+	testIDs := make([]types.MetadataAddress, 10)
+	for i := 0; i < 10; i++ {
+		valueOwner := ""
+		if i == 5 {
+			valueOwner = user2
+		}
+		testIDs[i] = types.ScopeMetadataAddress(uuid.New())
+		ns := types.NewScope(testIDs[i], nil, []string{user1}, []string{user1}, valueOwner)
+		app.MetadataKeeper.SetScope(ctx, *ns)
+	}
+	uuid, err := testIDs[0].ScopeUUID()
+	suite.NoError(err)
+
+	_, err = queryClient.Scope(gocontext.Background(), &types.ScopeRequest{})
+	suite.EqualError(err, "rpc error: code = InvalidArgument desc = scope id cannot be empty")
+
+	_, err = queryClient.Scope(gocontext.Background(), &types.ScopeRequest{ScopeId: "6332c1a4-foo1-bare-895b-invalid65cb6"})
+	suite.EqualError(err, "rpc error: code = InvalidArgument desc = invalid scope id: invalid UUID format")
+
+	scopeResponse, err := queryClient.Scope(gocontext.Background(), &types.ScopeRequest{ScopeId: uuid.String()})
+	suite.NoError(err)
+	suite.NotNil(scopeResponse.Scope)
+	suite.Equal(testIDs[0], scopeResponse.Scope.ScopeId)
+
+	// TODO assert records when available
+	// TODO assert record groups when available
+
+	// only one scope has value owner set (user2)
+	valueResponse, err := queryClient.ValueOwnership(gocontext.Background(), &types.ValueOwnershipRequest{Address: user2})
+	suite.NoError(err)
+	suite.Len(valueResponse.ScopeIds, 1)
+
+	// 10 entries as all scopes have user1 as data_owner
+	ownerResponse, err := queryClient.Ownership(gocontext.Background(), &types.OwnershipRequest{Address: user1})
+	suite.NoError(err)
+	suite.Len(ownerResponse.ScopeIds, 10)
+
+	// one entry for user2 (as value owner)
+	ownerResponse, err = queryClient.Ownership(gocontext.Background(), &types.OwnershipRequest{Address: user2})
+	suite.NoError(err)
+	suite.Len(ownerResponse.ScopeIds, 1)
 }
 
 func TestKeeperTestSuite(t *testing.T) {
