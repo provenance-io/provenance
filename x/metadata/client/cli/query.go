@@ -43,7 +43,6 @@ $ %s query metadata params
 				version.AppName,
 			)),
 		RunE: func(cmd *cobra.Command, args []string) error {
-
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
