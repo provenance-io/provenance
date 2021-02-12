@@ -9,7 +9,57 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
+
+func (k Keeper) AccountIsMarker(ctx sdk.Context, address string) bool {
+	addr, err := sdk.AccAddressFromBech32(address)
+	// if the value owner is invalid then it is not possible to have any authority for it. e.g. value owner is empty.
+	if err != nil {
+		return false
+	}
+
+	mac := k.authKeeper.GetAccount(ctx, addr)
+	if mac == nil {
+		return false
+	}
+
+	// Convert over to the actual underlying marker type, or not.
+	_, isMarker := mac.(*markertypes.MarkerAccount)
+
+	return isMarker
+}
+
+// HasSignerWithMarkerValueAuthority checks the list of signers for any that have the requested role.
+func (k Keeper) HasSignerWithMarkerValueAuthority(ctx sdk.Context, valueOwner string, signers []string, role markertypes.Access) bool {
+	valueOwnerAddr, err := sdk.AccAddressFromBech32(valueOwner)
+	// if the value owner is invalid then it is not possible to have any authority for it. e.g. value owner is empty.
+	if err != nil {
+		return false
+	}
+
+	mac := k.authKeeper.GetAccount(ctx, valueOwnerAddr)
+	if mac == nil {
+		return false
+	}
+
+	// Convert over to the actual underlying marker type, or not.
+	macc, isMarker := mac.(*markertypes.MarkerAccount)
+	if isMarker {
+		for _, signer := range signers {
+			address, err := sdk.AccAddressFromBech32(signer)
+			if err != nil {
+				continue // invalid address, loop to next.
+			}
+			// since this is a marker, check for the role and return true if found.
+			if macc.AddressHasAccess(address, role) {
+				return true
+			}
+		}
+	}
+	return false
+}
 
 // ValidateRawSignature takes a given message and verifies the signature instance is valid
 // for it directly without calculating a signing structure to wrap it. ValidateRawSignature returns the address of the

@@ -52,6 +52,10 @@ var (
 
 	// AddressCacheKeyPrefix for scope to address cache lookup
 	AddressCacheKeyPrefix = []byte{0x10}
+	// ScopeSpecCacheKeyPrefix for scope to scope specification cache lookup
+	ScopeSpecCacheKeyPrefix = []byte{0x11}
+	// ValueOwnerCacheKeyPrefix for scope to value owner address cache lookup
+	ValueOwnerCacheKeyPrefix = []byte{0x12}
 )
 
 // GetAddressCacheIteratorPrefix returns an iterator prefix for all scope cache entries assigned to a given address
@@ -62,4 +66,24 @@ func GetAddressCacheIteratorPrefix(addr sdk.AccAddress) []byte {
 // GetAddressCacheKey returns the store key for an address cache entry
 func GetAddressCacheKey(addr sdk.AccAddress, scopeID MetadataAddress) []byte {
 	return append(GetAddressCacheIteratorPrefix(addr), scopeID.Bytes()...)
+}
+
+// GetScopeSpecCacheIteratorPrefix returns an iterator prefix for all scope cache entries assigned to a given address
+func GetScopeSpecCacheIteratorPrefix(scopeSpecID MetadataAddress) []byte {
+	return append(ScopeSpecCacheKeyPrefix, scopeSpecID.Bytes()...)
+}
+
+// GetScopeSpecCacheKey returns the store key for an address cache entry
+func GetScopeSpecCacheKey(scopeSpecID MetadataAddress, scopeID MetadataAddress) []byte {
+	return append(GetScopeSpecCacheIteratorPrefix(scopeSpecID), scopeID.Bytes()...)
+}
+
+// GetValueOwnerCacheIteratorPrefix returns an iterator prefix for all scope cache entries assigned to a given address
+func GetValueOwnerCacheIteratorPrefix(addr sdk.AccAddress) []byte {
+	return append(ValueOwnerCacheKeyPrefix, addr.Bytes()...)
+}
+
+// GetValueOwnerCacheKey returns the store key for an address cache entry
+func GetValueOwnerCacheKey(addr sdk.AccAddress, scopeID MetadataAddress) []byte {
+	return append(GetValueOwnerCacheIteratorPrefix(addr), scopeID.Bytes()...)
 }
