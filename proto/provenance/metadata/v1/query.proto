@@ -34,9 +34,14 @@ service Query {
     option (google.api.http).get = "/provenance/metadata/v1/scope/{scope_id}/records/{name}";
   }
 
-  // Ownership returns a list of scope identifiers that list the given address as a party/owner
+  // Ownership returns a list of scope identifiers that list the given address as a data or value owner
   rpc Ownership(OwnershipRequest) returns (OwnershipResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/ownership/{address}";
+  }
+
+  // ValueOwnership returns a list of scope identifiers that list the given address as the value owner
+  rpc ValueOwnership(ValueOwnershipRequest) returns (ValueOwnershipResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/valueownership/{address}";
   }
 }
 
@@ -70,7 +75,25 @@ message OwnershipRequest {
 
 // OwnershipResponse is the reponse to the ownership request and includes a list of scope identifiers
 message OwnershipResponse {
-  repeated string scope_id = 1;
+  // A list of scope ids (uuid) associated with the given address.
+  repeated string scope_ids = 1;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// ValueOwnershipRequest looks for all scope level resources that have the address as the value owner
+message ValueOwnershipRequest {
+  string address = 1;
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// ValueOwnershipResponse is the reponse to the Valueownership request and includes a list of scope identifiers
+message ValueOwnershipResponse {
+  // A list of scope ids (uuid) associated with the given address.
+  repeated string scope_ids = 1;
+
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

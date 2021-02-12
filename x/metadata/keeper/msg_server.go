@@ -141,7 +141,37 @@ func (k msgServer) AddScope(
 ) (*types.AddScopeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// TODO (contract keeper class  methods to process request, keeper methods to record it)
+	existing, _ := k.GetScope(ctx, msg.Scope.ScopeId)
+	if err := k.ValidateScopeUpdate(ctx, existing, msg.Scope, msg.Signers); err != nil {
+		return nil, err
+	}
+
+	k.SetScope(ctx, msg.Scope)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, ""),
+		),
+	)
+
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (k msgServer) RemoveScope(
+	goCtx context.Context,
+	msg *types.MsgRemoveScopeRequest,
+) (*types.RemoveScopeResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	existing, _ := k.GetScope(ctx, msg.ScopeId)
+	// validate that all fields can be unset with the given list of signers
+	if err := k.ValidateScopeUpdate(ctx, existing, types.Scope{ScopeId: msg.ScopeId}, msg.Signers); err != nil {
+		return nil, err
+	}
+
+	k.DeleteScope(ctx, msg.ScopeId)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(

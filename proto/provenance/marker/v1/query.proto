@@ -56,7 +56,6 @@ service Query {
   rpc DenomMetadata(QueryDenomMetadataRequest) returns (QueryDenomMetadataResponse) {
     option (google.api.http).get = "/provenance/marker/v1/getdenommetadata/{denom}";
   }
-  
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -144,7 +143,7 @@ message QueryDenomMetadataRequest {
 }
 // QueryDenomMetadataResponse is the response type for the Query/DenomMetadata
 message QueryDenomMetadataResponse {
-    cosmos.bank.v1beta1.Metadata metadata = 1 [(gogoproto.nullable) = false];
+  cosmos.bank.v1beta1.Metadata metadata = 1 [(gogoproto.nullable) = false];
 }
 
 // Balance defines an account address and balance pair used in queries for accounts holding a marker

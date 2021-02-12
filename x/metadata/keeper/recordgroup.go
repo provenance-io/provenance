@@ -59,9 +59,9 @@ func (k Keeper) RemoveRecordGroup(ctx sdk.Context, id types.MetadataAddress) {
 }
 
 // IterateGroups processes all stored scopes with the given handler.
-func (k Keeper) IterateGroups(ctx sdk.Context, groupID types.MetadataAddress, handler func(types.RecordGroup) (stop bool)) error {
+func (k Keeper) IterateGroups(ctx sdk.Context, scopeID types.MetadataAddress, handler func(types.RecordGroup) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	prefix, err := groupID.ScopeGroupIteratorPrefix()
+	prefix, err := scopeID.ScopeGroupIteratorPrefix()
 	if err != nil {
 		return err
 	}
