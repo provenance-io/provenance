@@ -36,7 +36,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Add support for Scope objects to Metadata module #53
 * Denom Metadata config for nhash in testnet #42
-* DenomMetadata support for marker module #47
+* Denom Metadata support for marker module #47
 * WASM support for Marker module #28
 ### Bug Fixes
 
