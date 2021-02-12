@@ -137,7 +137,7 @@ func (k Keeper) DeleteScope(ctx sdk.Context, id types.MetadataAddress) {
 func (k Keeper) clearScopeIndex(ctx sdk.Context, scope types.Scope) {
 	store := ctx.KVStore(k.storeKey)
 
-	// Index all addresses on the scope
+	// add all owner addresses to the list of cache records to remove
 	addresses := scope.OwnerAddress
 	addresses = append(addresses, scope.DataAccess...)
 	if len(scope.ValueOwnerAddress) > 0 {
@@ -162,7 +162,7 @@ func (k Keeper) clearScopeIndex(ctx sdk.Context, scope types.Scope) {
 func (k Keeper) indexScope(ctx sdk.Context, scope types.Scope) {
 	store := ctx.KVStore(k.storeKey)
 
-	// Index all addresses on the scope
+	// Index all data owner addresses on the scope
 	addresses := scope.OwnerAddress
 	addresses = append(addresses, scope.DataAccess...)
 	if len(scope.ValueOwnerAddress) > 0 {
