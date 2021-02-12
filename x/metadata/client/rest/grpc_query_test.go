@@ -97,7 +97,7 @@ func (s *IntegrationTestSuite) TestGRPCQueories() {
 		expected proto.Message
 	}{
 		{
-			"get attribute params",
+			"get metadata params",
 			fmt.Sprintf("%s/provenance/metadata/v1/params", baseURL),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
