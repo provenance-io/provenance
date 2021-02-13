@@ -1,0 +1,122 @@
+syntax = "proto3";
+package provenance.metadata.v1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "google/api/annotations.proto";
+import "provenance/metadata/v1/metadata.proto";
+import "provenance/metadata/v1/scope.proto";
+
+option go_package = "github.com/provenance-io/provenance/x/metadata/types";
+
+option java_package        = "io.provenance.metadata.v1";
+option java_multiple_files = true;
+
+// Query defines the Metadata Query service.
+service Query {
+  // Params queries the parameters of x/metadata module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/params";
+  }
+
+  // Scope returns a specific scope by id
+  rpc Scope(ScopeRequest) returns (ScopeResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/scope/{scope_id}";
+  }
+
+  // GroupContext returns a specific group context within a scope (or all groups)
+  rpc GroupContext(GroupContextRequest) returns (GroupContextResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/scope/{scope_id}/group/{group_id}";
+  }
+
+  // Record returns a collection of the records in a scope or a specific one by name
+  rpc Record(RecordRequest) returns (RecordResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/scope/{scope_id}/records/{name}";
+  }
+
+  // Ownership returns a list of scope identifiers that list the given address as a data or value owner
+  rpc Ownership(OwnershipRequest) returns (OwnershipResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/ownership/{address}";
+  }
+
+  // ValueOwnership returns a list of scope identifiers that list the given address as the value owner
+  rpc ValueOwnership(ValueOwnershipRequest) returns (ValueOwnershipResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/valueownership/{address}";
+  }
+}
+
+// QueryParamsRequest is the request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is the response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params defines the parameters of the module.
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+// ScopeRequest is used for requesting a scope by id
+message ScopeRequest {
+  string scope_id = 1;
+}
+
+// ScopeResponse is the response to a scope request.
+message ScopeResponse {
+  Scope                scope         = 1;
+  repeated RecordGroup record_groups = 2;
+  repeated Record      records       = 3;
+}
+
+// OwnershipRequest looks for all scope level resources associated with the given addrss
+message OwnershipRequest {
+  string address = 1;
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// OwnershipResponse is the reponse to the ownership request and includes a list of scope identifiers
+message OwnershipResponse {
+  // A list of scope ids (uuid) associated with the given address.
+  repeated string scope_ids = 1;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// ValueOwnershipRequest looks for all scope level resources that have the address as the value owner
+message ValueOwnershipRequest {
+  string address = 1;
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// ValueOwnershipResponse is the reponse to the Valueownership request and includes a list of scope identifiers
+message ValueOwnershipResponse {
+  // A list of scope ids (uuid) associated with the given address.
+  repeated string scope_ids = 1;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// GroupContextRequest returns the record groups for a given scope identifer or optionally a specific record group
+message GroupContextRequest {
+  string scope_id = 1;
+  string group_id = 2;
+}
+
+// GroupContextResponse is the response to a GroupContextRequest
+message GroupContextResponse {
+  repeated RecordGroup groups = 1;
+}
+
+// RecordRequest is a request for all of the records in a specific scope or a specific record if a name is given.
+message RecordRequest {
+  string scope_id = 1;
+  string name     = 2;
+}
+
+// RecordResponse is the response to a RecordRequest
+message RecordResponse {
+  string          scope_id = 1;
+  repeated Record records  = 2;
+}

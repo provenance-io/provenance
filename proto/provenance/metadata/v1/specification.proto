@@ -1,0 +1,180 @@
+syntax = "proto3";
+package provenance.metadata.v1;
+
+import "gogoproto/gogo.proto";
+
+option go_package          = "github.com/provenance-io/provenance/x/metadata/types";
+option java_package        = "io.provenance.metadata.v1";
+option java_multiple_files = true;
+
+// Specifications are a heirarchy of references to existing on chain data as well as a list of requirements that
+// incoming requests to record data against a scope must meet.  Typical requirements included hashes that must be
+// supplied corosponding to process/executable that must be ran, required signatures and sources of accounts that
+// must sign requests, and allowed attributes/records that may be added to a scope.
+//
+// Scope Specifications
+// The top level specification for a scope indicates a set of allowed GroupSpecifications (contract specs) that
+// are allowed to be used against a given scope to perform updates.  Requests to record data that do not derive
+// from these groupspecifications are not allowed.
+//
+// Group Specifications
+// The primary function of group specifications is to denote the Contracts/Processes that will be used to manage
+// the data within a scope.  These specifications control what information may be recorded on chain.  The use of
+// definitions for inputs can build a chain of data references that must be in place in order for records to be
+// added to the chain.
+//
+// Record Specifications
+// The specifics of which records are allowed within a group (and by extension the scope overall) are outlined using
+// Consideration_Specs.  These considerations include required inputs, output format, and parties that must be
+// associated with any request to record.
+//
+// Example:
+//   A GroupSpecification may list an input_spec that requires a Definition of type "fact" (indicating a reference
+//   to a scope/record must exist on chain) in order for a specific Consideration (process/method) to be executed and
+//   have an output_spec ultimately result in a record added to the scope.
+
+// ScopeSpecification defines the required parties, resources, conditions, and consideration outputs for a contract
+message ScopeSpecification {
+  // unique identifier for this specification on chain
+  bytes specification_id = 1 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customtype) = "MetadataAddress",
+    (gogoproto.moretags)   = "yaml:\"specification_id\""
+  ];
+  // The definition references points to a an asset on or off chain that is associated with this metadata.  Example:
+  // A software program or library hash
+  Definition definition = 2;
+  // A list of parties that must be present on a scope (and their associated roles)
+  repeated PartyType parties_involved = 3;
+  // A list of allowed group specifications for this scope
+  repeated GroupSpecification group_specs = 4;
+}
+
+// GroupSpecification defines the required parties, resources, conditions, and consideration outputs for a contract
+message GroupSpecification {
+  // unique identifier for this specification on chain
+  bytes specification_id = 1 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customtype) = "MetadataAddress",
+    (gogoproto.moretags)   = "yaml:\"specification_id\""
+  ];
+  // The definition points to a resource that defines the instance of code that will process this group
+  Definition definition = 2;
+  // input specifications indicating proposed (off chain data values) and facts (on chain qualified references)
+  repeated Definition input_specs = 3;
+  // a list of parties that must sign a transaction using a given role
+  repeated PartyType parties_involved = 4;
+  // a colleciton of checks that must be satisfied against a scope prior to allowing a record to be added under this
+  // specification
+  repeated ConditionSpec condition_specs = 5;
+  // a colleciton of method/process specifications that when performed and documented by responsible parties listed
+  // above, result in adding a new record to the scope as defined in the output_spec
+  repeated ConsiderationSpec consideration_specs = 6;
+}
+
+// RecordSpecification defines the specification for a Record including allowed/required inputs/outputs
+message RecordSpecification {}
+
+// A Contract Specification (used to create a GroupSpecification for the Contract Execution Environment)
+message ContractSpec {
+  // The definition points to a resource that defines the instance of code that will process this group
+  Definition definition = 1;
+  // input specifications indicating proposed (off chain data values) and facts (on chain qualified references)
+  repeated Definition input_specs = 2;
+  // a list of parties that must sign a transaction using a given role
+  repeated PartyType parties_involved = 3;
+  // a colleciton of checks that must be satisfied against a scope prior to allowing a record to be added under this
+  // specification
+  repeated ConditionSpec condition_specs = 4;
+  // a colleciton of method/process specifications that when performed and documented by responsible parties listed
+  // above, result in adding a new record to the scope as defined in the output_spec
+  repeated ConsiderationSpec consideration_specs = 5;
+}
+
+// Definition encapsulates the information required to uniquely associate a resource with a type and location
+message Definition {
+  // a common name given to this definition.  The name is used to match up with references to this part of the spec
+  string name = 1;
+  // location of the resource on chain
+  Reference resource_location = 2;
+  // address of the account that created this definition
+  string creator_address = 3;
+  // The type of data definition (proposed, fact/recorded, list)
+  DefinitionType definition_type = 4;
+}
+
+// Reference is a multipart structure that defines a reference to a piece of data recorded within a scope
+message Reference {
+
+  // TODO this structure should probably be replaced with a MetadataAddress
+
+  // unique identifer for the scope being referenced
+  string scope_id = 1;
+  // require record to be within a specific group (optional)
+  string group_id = 3;
+  // specify a specific record inside a scope (and group) by result-hash (optional)
+  string hash = 4;
+  // specify a result-name of a record within a scope (optional)
+  string name = 5;
+  // type/classname of the target data (optional)
+  string type_name = 6;
+}
+
+// ConditionSpec defines a collection of outputs and process information listed as preconditions that must be met
+// before a contract execution is valid
+message ConditionSpec {
+  // common name for this condition
+  string              name        = 1;
+  repeated Definition input_specs = 2;
+  Definition          output_spec = 3;
+}
+
+// ConsiderationSpec defines a unit of process execution that should be performed by responsible parties in order
+// to record a set of outputs within a scope
+message ConsiderationSpec {
+  // common name for this consideration
+  string name = 1;
+
+  // Invoking party must be functioning in this role
+  PartyType responsible_party = 2;
+  // A repeated set of input specifications that must be listed and matched correctly in order to add a record listed
+  // in output_spec to the scope
+  repeated Definition input_specs = 3;
+  // The specification for the record that will be added to a scope if this consideration is satisfied
+  Definition output_spec = 4;
+}
+
+// DefinitionType indicates the required definition type for this value
+enum DefinitionType {
+  // DEFINITION_TYPE_UNSPECIFIED indicates an unknown/invalid value
+  DEFINITION_TYPE_UNSPECIFIED = 0;
+  // DEFINITION_TYPE_PROPOSED indicates a proposed value is used here (a record that is not on-chain)
+  DEFINITION_TYPE_PROPOSED = 1;
+  // DEFINITION_TYPE_FACT indicates the value must be a reference to a record on chain
+  DEFINITION_TYPE_FACT = 2;
+  // DEFINITION_TYPE_FACT_LIST indicates the value maybe a reference to a colleciton of values on chain having
+  // the same name
+  DEFINITION_TYPE_FACT_LIST = 3;
+}
+
+// PartyType are the different roles parties on a contract may use
+enum PartyType {
+  // PARTY_TYPE_UNSPECIFIED is an error condition
+  PARTY_TYPE_UNSPECIFIED = 0;
+  // PARTY_TYPE_ORIGINATOR is an asset originator
+  PARTY_TYPE_ORIGINATOR = 1;
+  // PARTY_TYPE_SERVICER provides debt servicing functions
+  PARTY_TYPE_SERVICER = 2;
+  // PARTY_TYPE_INVESTOR is a generic investor
+  PARTY_TYPE_INVESTOR = 3;
+  // PARTY_TYPE_CUSTODIAN is an entity that provides custodian services for assets
+  PARTY_TYPE_CUSTODIAN = 4;
+  // PARTY_TYPE_OWNER indicates this party is an owner of the item
+  PARTY_TYPE_OWNER = 5;
+  // PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
+  PARTY_TYPE_AFFILIATE = 6;
+  // PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
+  PARTY_TYPE_OMNIBUS = 7;
+  // PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+  PARTY_TYPE_PROVENANCE = 8;
+}

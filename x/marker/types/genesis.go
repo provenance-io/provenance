@@ -26,7 +26,7 @@ func (state GenesisState) Validate() error {
 
 // DefaultGenesisState returns the initial module genesis state.
 func DefaultGenesisState() *GenesisState {
-	return &GenesisState{}
+	return NewGenesisState(DefaultParams(), []MarkerAccount{})
 }
 
 // GetGenesisStateFromAppState returns x/auth GenesisState given raw application

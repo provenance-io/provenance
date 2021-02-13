@@ -39,3 +39,6 @@ profile.iws
 tools-stamp
 tmp-swagger-gen
 proto-tools-stamp
+
+#emacs tmp files
+.#*

@@ -1,0 +1,235 @@
+syntax = "proto3";
+package provenance.metadata.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/metadata/types";
+
+option java_package        = "io.provenance.metadata.v1";
+option java_multiple_files = true;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/descriptor.proto";
+import "provenance/metadata/v1/specification.proto";
+
+/**
+
+Overview
+
+The structures in this file are used to efficiently store the data for the metadata module.  The structure the core
+concept of the  Metadata module is a Scope that contains a list of Records/Facts.  Updates to scopes are performed
+in a session with details persisted in a RecordGroup.  Each record group contains a specification that details
+constraints on parties that must sign, inputs, and outputs that can be recorded.  Each Scope may contain a list of
+allowed specifications that may be used.
+
+
+Data Structures
+
+  Metadata Scope
+
+  A metadata scope contains a collection of records of data, each made up of a hash, data type, and ownership
+  information that establishes provenance.
+
+  Record Groups
+
+  Typically multiple records will be established within a scope at the same time (see: Contract Memorialization).  A
+  Record Group contains context for the recording of these records linking a set of records into a common process/
+  execution associated with a specificaiton indicating allowed and required values.
+
+  Record
+
+  A single record collects information about a process that generated it, a collection of inputs, and one or more
+  outputs into a structure identified by a name that is unique within a scope.
+
+
+KVStore State Data
+
+Iterators
+- Get All Scopes (<scope prefix>) []Scope
+- Get All RecordGroups (<group prefix>:<scope_id>) []RecordGroup
+  * This method would be used to list all current session/transaction contexts with Records set on the scope
+- Get All Scope Records (<records prefix>:<scope_id>) : []Record
+
+
+Direct Access
+- Get Scope (<scope prefix>:<scope_id>) Scope
+- Get RecordGroup (<group prefix>:<scope_id>:<group_id>) : RecordGroup
+- Get Record (<record prefix>:<scope_id>:<record_name_hash>) : Record
+
+
+Indexes (special kvstore records for efficient cross reference/queries)
+- Get RecordGroup Records - use filtered iterator over all scope records
+- Get all scopes for a party/address?
+- Get all scopes of a specific type (scope spec)?
+- Get all record groups of a specific specification type?
+- Get all Records of a type?
+
+
+*/
+
+// Scope defines a root reference for a collection of records owned by one or more parties.
+message Scope {
+  option (gogoproto.goproto_stringer) = false;
+
+  // Unique ID for this scope.  Implements sdk.Address interface for use where addresses are required in Cosmos
+  bytes scope_id = 1 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customtype) = "MetadataAddress",
+    (gogoproto.moretags)   = "json:\"scope_id\" yaml:\"scope_id\""
+  ];
+  // the scope specification that contains the specifications for data elements allowed within this scope
+  bytes specification_id = 2 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customtype) = "MetadataAddress",
+    (gogoproto.moretags)   = "yaml:\"specification_id\""
+  ];
+  // These parties represent top level owners of the records within.  These parties must sign any requests that modify
+  // the data within the scope.  These addresses are in union with parties listed on the record groups.
+  repeated string owner_address = 3;
+  // Addessses in this list are authorized to recieve off-chain data associated with this scope.
+  repeated string data_access = 4;
+  // An address that controls the value associated with this scope.  Standard blockchain accounts and marker accounts
+  // are supported for this value.  This attribute may only be changed by the entity indicated once it is set.
+  string value_owner_address = 5;
+}
+
+/*
+A RecordGroup is created for an execution context against a specific specification instance
+
+The context will have a specification and set of parties involved.  The RecordGroup may be updated several
+times so long as the parties listed are signers on the transaction.  NOTE: When there are no Records within a Scope
+that reference a RecordGroup it is removed.
+*/
+message RecordGroup {
+  option (gogoproto.goproto_stringer) = false;
+
+  bytes group_id = 1 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customtype) = "MetadataAddress",
+    (gogoproto.moretags)   = "json:\"group_id\" yaml:\"group_id\""
+  ];
+  // unique id of the record groupd specification instance that was used to create this group.
+  bytes specification_id = 2 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customtype) = "MetadataAddress",
+    (gogoproto.moretags)   = "yaml:\"specification_id\""
+  ];
+  // Set of identities that signed this contract
+  repeated Party parties = 3 [(gogoproto.nullable) = false];
+  // name to associate with this recordgroup execution context, typically classname
+  string name = 4 [(gogoproto.jsontag) = "type", (gogoproto.moretags) = "yaml:\"type\""];
+  // Created by, updated by, timestamps, version number, and related info.
+  AuditFields audit = 99 [(gogoproto.nullable) = false];
+}
+
+// A record (of fact) is attached to a group or each consideration output from a contract
+message Record {
+  option (gogoproto.goproto_stringer) = false;
+
+  // name/identifier for this record.  Value must be unique within the scope.  Also known as a Fact name
+  string name = 1 [(gogoproto.jsontag) = "id", (gogoproto.moretags) = "yaml:\"id\""];
+  // id of the group context that was used to create this record (use with filtered kvprefix iterator)
+  bytes group_id = 2 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customtype) = "MetadataAddress",
+    (gogoproto.moretags)   = "json:\"group_id\" yaml:\"group_id\""
+  ];
+  // process contain information used to uniquely identify an execution on or off chain that generated this record
+  Process process = 3 [(gogoproto.nullable) = false];
+  // inputs used with the process to acheieve the output on this record
+  repeated RecordInput inputs = 4 [(gogoproto.nullable) = false];
+  // output(s) is the results of executing the process on the given process indicated in this record
+  repeated RecordOutput output = 5 [(gogoproto.nullable) = false];
+}
+
+// Process contains information used to uniquely identify what was used to generate this record
+message Process {
+  // unique identifier for this process
+  oneof process_id {
+    // the address of a smart contract used for this process
+    string address = 1;
+    // the hash of an off-chain process used
+    string hash = 2;
+  }
+  // a name assocaited with the process (type_name, classname or smart contract common name)
+  string name = 3;
+  // method is a name or reference to a specific operation (method) within a class/contract that was invoked
+  string method = 4;
+}
+
+// Tracks the inputs used to establish this record
+message RecordInput {
+  option (gogoproto.goproto_stringer) = false;
+
+  // Name value included to link back to the definition spec.
+  string name = 1;
+  // data source
+  oneof source {
+    // the address of a record on chain (For Established Records)
+    bytes record_id = 2
+        [(gogoproto.customtype) = "MetadataAddress", (gogoproto.moretags) = "json:\"record_id\" yaml:\"record_id\""];
+    // the hash of an off-chain piece of information (For Proposed Records)
+    string hash = 3;
+  }
+  // from proposed fact structure to unmarshal
+  string type_name = 4 [(gogoproto.moretags) = "yaml:\"type_name\""];
+  // Indicates if this input was a recorded fact on chain or just a given hashed input
+  RecordInputStatus status = 5;
+}
+
+// A set of types for inputs on a record (of fact)
+enum RecordInputStatus {
+  // RECORD_INPUT_STATUS_UNSPECIFIED indicates an invalid/unknown input type
+  RECORD_INPUT_STATUS_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "Unknown"];
+  // RECORD_INPUT_STATUS_PROPOSED indicates this input was an arbitrary piece of data that was hashed
+  RECORD_INPUT_STATUS_PROPOSED = 1 [(gogoproto.enumvalue_customname) = "Proposed"];
+  // RECORD_INPUT_STATUS_RECORD indicates this input is a reference to a previously recorded fact on blockchain
+  RECORD_INPUT_STATUS_RECORD = 2 [(gogoproto.enumvalue_customname) = "Record"];
+}
+
+// RecordOutput encapsulates the output of a process recorded on chain
+message RecordOutput {
+  // Hash of the data output that was output/generated for this record
+  string hash = 1;
+  // Status of the process execution associated with this output indicating success,failure, or pending
+  ResultStatus status = 2;
+}
+
+// ResultStatus indicates the various states of execution of a record
+enum ResultStatus {
+  // RESULT_STATUS_UNSPECIFIED indicates an unset condition
+  RESULT_STATUS_UNSPECIFIED = 0;
+  // RESULT_STATUS_PASS indicates the execution was successfult
+  RESULT_STATUS_PASS = 1;
+  // RESULT_STATUS_SKIP indicates condition/consideration was skipped due to missing inputs or delayed execution
+  RESULT_STATUS_SKIP = 2;
+  // RESULT_STATUS_FAIL indicates the execution of the condition/consideration failed.
+  RESULT_STATUS_FAIL = 3;
+}
+
+// A Party is an address with/in a given role associated with a contract
+message Party {
+  option (gogoproto.goproto_stringer) = false;
+
+  // address of the account (on chain)
+  string address = 1;
+  // a role for this account within the context of the processes used
+  PartyType role = 2;
+}
+
+// AuditFields capture information about the last account to make modifications and when they were made
+message AuditFields {
+  // the date/time when this entry was created
+  google.protobuf.Timestamp created_date = 1
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"created_date\""];
+  // the address of the account that created this record
+  string created_by = 2 [(gogoproto.moretags) = "yaml:\"created_by\""];
+  // the date/time when this entry was last updated
+  google.protobuf.Timestamp updated_date = 3
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"updated_date\""];
+  // the address of the account that modified this record
+  string updated_by = 4 [(gogoproto.moretags) = "yaml:\"updated_by\""];
+  // an optional version number that is incremented with each update
+  uint32 version = 5;
+  // an optional message associated with the creation/update event
+  string message = 6;
+}

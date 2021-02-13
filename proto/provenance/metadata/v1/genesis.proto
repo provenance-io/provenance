@@ -1,0 +1,29 @@
+syntax = "proto3";
+package provenance.metadata.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/metadata/types";
+
+option java_package        = "io.provenance.metadata.v1";
+option java_multiple_files = true;
+
+import "gogoproto/gogo.proto";
+import "provenance/metadata/v1/metadata.proto";
+import "provenance/metadata/v1/scope.proto";
+import "provenance/metadata/v1/specification.proto";
+
+// GenesisState defines the account module's genesis state.
+message GenesisState {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // params defines all the parameters of the module.
+  Params params = 1 [(gogoproto.nullable) = false];
+
+  // A collection of metadata scopes and specs to create on start
+  repeated Scope       scopes  = 2 [(gogoproto.nullable) = false];
+  repeated RecordGroup groups  = 3 [(gogoproto.nullable) = false];
+  repeated Record      records = 4 [(gogoproto.nullable) = false];
+
+  repeated ScopeSpecification scope_specifications = 5 [(gogoproto.nullable) = false];
+  repeated GroupSpecification group_specifications = 6 [(gogoproto.nullable) = false];
+}

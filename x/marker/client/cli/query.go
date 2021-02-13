@@ -120,7 +120,7 @@ func AllHoldersCmd() *cobra.Command {
 // MarkerCmd is the CLI command for querying marker module registrations.
 func MarkerCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   " [address|denom]",
+		Use:   "get [address|denom]",
 		Short: "Get marker details",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
