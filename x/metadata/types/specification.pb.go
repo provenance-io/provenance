@@ -122,11 +122,11 @@ type ScopeSpecification struct {
 	SpecificationId MetadataAddress `protobuf:"bytes,1,opt,name=specification_id,json=specificationId,proto3,customtype=MetadataAddress" json:"specification_id" yaml:"specification_id"`
 	// General information about this scope specification.
 	Info *Info `protobuf:"bytes,2,opt,name=info,proto3" json:"info,omitempty"`
-	// Addresses of the owners of this scope.
+	// Addresses of the owners of this scope specification.
 	OwnerAddresses []string `protobuf:"bytes,3,rep,name=owner_addresses,json=ownerAddresses,proto3" json:"owner_addresses,omitempty" yaml:"owner_address"`
 	// A list of parties that must be present on a scope (and their associated roles)
 	PartiesInvolved []PartyType `protobuf:"varint,4,rep,packed,name=parties_involved,json=partiesInvolved,proto3,enum=provenance.metadata.v1.PartyType" json:"parties_involved,omitempty" yaml:"parties_involved"`
-	// A list of group specification ids allowed for this scope
+	// A list of group specification ids allowed for a scope based on this specification.
 	GroupSpecIds []MetadataAddress `protobuf:"bytes,5,rep,name=group_spec_ids,json=groupSpecIds,proto3,customtype=MetadataAddress" json:"group_spec_ids" yaml:"group_spec_ids"`
 }
 

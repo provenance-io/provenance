@@ -43,7 +43,7 @@ message ScopeSpecification {
   ];
   // General information about this scope specification.
   Info info = 2;
-  // Addresses of the owners of this scope.
+  // Addresses of the owners of this scope specification.
   repeated string owner_addresses = 3 [
     (gogoproto.moretags)   = "yaml:\"owner_address\""
   ];
@@ -51,7 +51,7 @@ message ScopeSpecification {
   repeated PartyType parties_involved = 4 [
     (gogoproto.moretags)   = "yaml:\"parties_involved\""
   ];
-  // A list of group specification ids allowed for this scope
+  // A list of group specification ids allowed for a scope based on this specification.
   repeated bytes group_spec_ids = 5 [
     (gogoproto.nullable)   = false,
     (gogoproto.customtype) = "MetadataAddress",
