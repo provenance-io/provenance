@@ -1,0 +1,196 @@
+package types
+
+import (
+	"encoding/hex"
+	"fmt"
+	"strings"
+	"testing"
+
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+var (
+	specTestHexString = "85EA54E8598B27EC37EAEEEEA44F1E78A9B5E671"
+	specTestPubHex, _ = hex.DecodeString(specTestHexString)
+	specTestAddr      = sdk.AccAddress(specTestPubHex)
+	specTestBech32    = specTestAddr.String() // cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck
+)
+
+type specificationTestSuite struct {
+	suite.Suite
+}
+
+func TestSpecificationTestSuite(t *testing.T) {
+	suite.Run(t, new(specificationTestSuite))
+}
+
+func (s *specificationTestSuite) SetupSuite() {
+	s.T().Parallel()
+}
+
+func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
+	tests := []struct {
+		name     string
+		spec     *ScopeSpecification
+		want     string
+		wantErr  bool
+	}{
+		// SpecificationId tests.
+		{
+			"invalid scope specification id - wrong address type",
+			NewScopeSpecification(
+				MetadataAddress(specTestAddr),
+				nil, []string{}, []PartyType{}, []MetadataAddress{},
+			),
+			"invalid scope specification id: invalid metadata address type (must be 0-4, actual: 133)",
+			true,
+		},
+		{
+			"invalid scope specification id - identifier",
+			NewScopeSpecification(
+				ScopeMetadataAddress(uuid.New()),
+				nil, []string{}, []PartyType{}, []MetadataAddress{},
+			),
+			"invalid scope specification id prefix (expected: scopespec, got scope)",
+			true,
+		},
+		// Info test to make sure Info.ValidateBasic is being used.
+		{
+			"invalid info name - too long",
+			NewScopeSpecification(
+				ScopeSpecMetadataAddress(uuid.New()),
+				NewInfo(strings.Repeat("x", maxInfoNameLength + 1), "", "", ""),
+				[]string{}, []PartyType{}, []MetadataAddress{},
+			),
+			fmt.Sprintf("info (ScopeSpecification.Info) Name exceeds maximum length (expected <= %d got: %d)", maxInfoNameLength, maxInfoNameLength + 1),
+			true,
+		},
+		// OwnerAddresses tests
+		{
+			"owner addresses - cannot be empty",
+			NewScopeSpecification(
+				ScopeSpecMetadataAddress(uuid.New()),
+				nil,
+				[]string{},
+				[]PartyType{}, []MetadataAddress{},
+			),
+			"ScopeSpecification must have at least one owner",
+			true,
+		},
+		{
+			"owner addresses - invalid address at index 0",
+			NewScopeSpecification(
+				ScopeSpecMetadataAddress(uuid.New()),
+				nil,
+				[]string{":invalid", specTestBech32},
+				[]PartyType{}, []MetadataAddress{},
+			),
+			"invalid owner address at index 0 on ScopeSpecification: decoding bech32 failed: invalid index of 1",
+			true,
+		},
+		{
+			"owner addresses - invalid address at index 3",
+			NewScopeSpecification(
+				ScopeSpecMetadataAddress(uuid.New()),
+				nil,
+				[]string{specTestBech32, specTestBech32, specTestBech32, ":invalid"},
+				[]PartyType{}, []MetadataAddress{},
+			),
+			"invalid owner address at index 3 on ScopeSpecification: decoding bech32 failed: invalid index of 1",
+			true,
+		},
+		// parties involved - cannot be empty
+		{
+			"parties involved - cannot be empty",
+			NewScopeSpecification(
+				ScopeSpecMetadataAddress(uuid.New()),
+				nil,
+				[]string{specTestBech32},
+				[]PartyType{},
+				[]MetadataAddress{},
+			),
+			"ScopeSpecification must have at least one party involved",
+			true,
+		},
+		// group spec ids - must all pass same tests as scope spec id (groupspec prefix)
+		{
+			"group spec ids - wrong address type at index 0",
+			NewScopeSpecification(
+				ScopeSpecMetadataAddress(uuid.New()),
+				nil,
+				[]string{specTestBech32},
+				[]PartyType{PartyType_PARTY_TYPE_OWNER},
+				[]MetadataAddress{MetadataAddress(specTestAddr)},
+			),
+			"invalid group specification id at index 0: invalid metadata address type (must be 0-4, actual: 133)",
+			true,
+		},
+		{
+			"group spec ids - wrong prefix at index 0",
+			NewScopeSpecification(
+				ScopeSpecMetadataAddress(uuid.New()),
+				nil,
+				[]string{specTestBech32},
+				[]PartyType{PartyType_PARTY_TYPE_OWNER},
+				[]MetadataAddress{ScopeMetadataAddress(uuid.New())},
+			),
+			"invalid group specification id prefix at index 0 (expected: groupspec, got scope)",
+			true,
+		},
+		{
+			"group spec ids - wrong address type at index 2",
+			NewScopeSpecification(
+				ScopeSpecMetadataAddress(uuid.New()),
+				nil,
+				[]string{specTestBech32},
+				[]PartyType{PartyType_PARTY_TYPE_OWNER},
+				[]MetadataAddress{GroupSpecMetadataAddress(uuid.New()), GroupSpecMetadataAddress(uuid.New()), MetadataAddress(specTestAddr)},
+			),
+			"invalid group specification id at index 2: invalid metadata address type (must be 0-4, actual: 133)",
+			true,
+		},
+		{
+			"group spec ids - wrong prefix at index 2",
+			NewScopeSpecification(
+				ScopeSpecMetadataAddress(uuid.New()),
+				nil,
+				[]string{specTestBech32},
+				[]PartyType{PartyType_PARTY_TYPE_OWNER},
+				[]MetadataAddress{GroupSpecMetadataAddress(uuid.New()), GroupSpecMetadataAddress(uuid.New()), ScopeMetadataAddress(uuid.New())},
+			),
+			"invalid group specification id prefix at index 2 (expected: groupspec, got scope)",
+			true,
+		},
+		// Simple valid case
+		{
+			"simple valid case",
+			NewScopeSpecification(
+				ScopeSpecMetadataAddress(uuid.New()),
+				nil,
+				[]string{specTestBech32},
+				[]PartyType{PartyType_PARTY_TYPE_OWNER},
+				[]MetadataAddress{GroupSpecMetadataAddress(uuid.New())},
+			),
+			"",
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		s.T().Run(tt.name, func(t *testing.T) {
+			err := tt.spec.ValidateBasic()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Scope ValidateBasic error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if tt.wantErr {
+				require.Equal(t, tt.want, err.Error())
+			}
+		})
+	}
+}
