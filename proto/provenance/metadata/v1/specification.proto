@@ -44,15 +44,15 @@ message ScopeSpecification {
   // General information about this scope specification.
   Info info = 2;
   // Addresses of the owners of this scope.
-  repeated string owner_addresses = 2 [
+  repeated string owner_addresses = 3 [
     (gogoproto.moretags)   = "yaml:\"owner_address\""
   ];
   // A list of parties that must be present on a scope (and their associated roles)
-  repeated PartyType parties_involved = 3 [
+  repeated PartyType parties_involved = 4 [
     (gogoproto.moretags)   = "yaml:\"parties_involved\""
   ];
   // A list of group specification ids allowed for this scope
-  repeated bytes group_spec_ids = 4 [
+  repeated bytes group_spec_ids = 5 [
     (gogoproto.nullable)   = false,
     (gogoproto.customtype) = "MetadataAddress",
     (gogoproto.moretags)   = "yaml:\"group_spec_ids\""
