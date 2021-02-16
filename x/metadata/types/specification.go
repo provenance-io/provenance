@@ -21,12 +21,14 @@ const (
 func NewScopeSpecification(
 	specificationId MetadataAddress,
 	info *Info,
+	ownerAddresses []string,
 	partiesInvolved []PartyType,
 	groupSpecIds []MetadataAddress,
 ) *ScopeSpecification {
 	return &ScopeSpecification{
 		SpecificationId: specificationId,
 		Info:            info,
+		OwnerAddresses:  ownerAddresses,
 		PartiesInvolved: partiesInvolved,
 		GroupSpecIds:    groupSpecIds,
 	}
@@ -36,10 +38,10 @@ func NewScopeSpecification(
 func (scopeSpec *ScopeSpecification) ValidateBasic() error {
 	prefix, err := VerifyMetadataAddressFormat(scopeSpec.SpecificationId)
 	if err != nil {
-		return err
+		return fmt.Errorf("invalid scope specification id: {#err}")
 	}
 	if prefix != PrefixScopeSpecification {
-		return fmt.Errorf("invalid scope specification identifier (expected: %s, got %s)", PrefixScopeSpecification, prefix)
+		return fmt.Errorf("invalid scope specification id prefix (expected: %s, got %s)", PrefixScopeSpecification, prefix)
 	}
 	if scopeSpec.Info != nil {
 		err = scopeSpec.Info.ValidateBasic("ScopeSpecification.Info")
@@ -48,21 +50,24 @@ func (scopeSpec *ScopeSpecification) ValidateBasic() error {
 		}
 	}
 	if len(scopeSpec.OwnerAddresses) < 1 {
-		return errors.New("ScopeSpecification must have at least one owner.")
+		return errors.New("ScopeSpecification must have at least one owner")
 	}
-	for _, owner := range scopeSpec.OwnerAddresses {
+	for i, owner := range scopeSpec.OwnerAddresses {
 		if _, err = sdk.AccAddressFromBech32(owner); err != nil {
-			return fmt.Errorf("invalid owner on ScopeSpecification: #{err}")
+			return fmt.Errorf("invalid owner[%d] on ScopeSpecification: #{err}", i)
 		}
 	}
-	for _, groupSpecId := range scopeSpec.GroupSpecIds {
+	if len(scopeSpec.PartiesInvolved) == 0 {
+		return errors.New("ScopeSpecification must have at least one party involved")
+	}
+	for i, groupSpecId := range scopeSpec.GroupSpecIds {
 		prefix, err = VerifyMetadataAddressFormat(groupSpecId)
 		if err != nil {
-			return err
+			return fmt.Errorf("invalid group specification id at index %d: #{err}", i)
 		}
 		if prefix != PrefixGroupSpecification {
-			return fmt.Errorf("invalid group specification identifier provided in scope specification (expected: %s, got %s)",
-				PrefixGroupSpecification, prefix)
+			return fmt.Errorf("invalid group specification id prefix at index %d (expected: %s, got %s)",
+				i, PrefixGroupSpecification, prefix)
 		}
 	}
 	return nil
@@ -88,11 +93,11 @@ func (info *Info) ValidateBasic(path string) error {
 		return fmt.Errorf("info %s cannot be empty", makeFieldString(path, "Name"))
 	}
 	if len(info.Name) > maxInfoNameLength {
-		return fmt.Errorf("info %s exceeds maximum length (expected <= %d got: %d",
+		return fmt.Errorf("info %s exceeds maximum length (expected <= %d got: %d)",
 			makeFieldString(path, "Name"), maxInfoNameLength, len(info.Name))
 	}
 	if len(info.Description) > maxInfoDescriptionLength {
-		return fmt.Errorf("info %s exceeds maximum length (expected <= %d got: %d",
+		return fmt.Errorf("info %s exceeds maximum length (expected <= %d got: %d)",
 			makeFieldString(path, "Description"), maxInfoDescriptionLength, len(info.Description))
 	}
 	err := validateUrlBasic(info.WebsiteUrl, false, path, "WebsiteUrl")
@@ -119,7 +124,7 @@ func validateUrlBasic(url string, required bool, path string, fieldName string) 
 		return fmt.Errorf("url %s must begin with either http:// or https://", makeFieldString(path, fieldName))
 	}
 	if len(url) > maxUrlLength {
-		return fmt.Errorf("url %s exceeds maximum length (expected <= %d got: %d",
+		return fmt.Errorf("url %s exceeds maximum length (expected <= %d got: %d)",
 			makeFieldString(path, fieldName), maxUrlLength, len(url))
 	}
 	return nil
