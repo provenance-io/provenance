@@ -38,7 +38,7 @@ func NewScopeSpecification(
 func (scopeSpec *ScopeSpecification) ValidateBasic() error {
 	prefix, err := VerifyMetadataAddressFormat(scopeSpec.SpecificationId)
 	if err != nil {
-		return fmt.Errorf("invalid scope specification id: {#err}")
+		return fmt.Errorf("invalid scope specification id: %w", err)
 	}
 	if prefix != PrefixScopeSpecification {
 		return fmt.Errorf("invalid scope specification id prefix (expected: %s, got %s)", PrefixScopeSpecification, prefix)
@@ -54,7 +54,7 @@ func (scopeSpec *ScopeSpecification) ValidateBasic() error {
 	}
 	for i, owner := range scopeSpec.OwnerAddresses {
 		if _, err = sdk.AccAddressFromBech32(owner); err != nil {
-			return fmt.Errorf("invalid owner[%d] on ScopeSpecification: #{err}", i)
+			return fmt.Errorf("invalid owner address at index %d on ScopeSpecification: %w", i, err)
 		}
 	}
 	if len(scopeSpec.PartiesInvolved) == 0 {
@@ -63,7 +63,7 @@ func (scopeSpec *ScopeSpecification) ValidateBasic() error {
 	for i, groupSpecId := range scopeSpec.GroupSpecIds {
 		prefix, err = VerifyMetadataAddressFormat(groupSpecId)
 		if err != nil {
-			return fmt.Errorf("invalid group specification id at index %d: #{err}", i)
+			return fmt.Errorf("invalid group specification id at index %d: %w", i, err)
 		}
 		if prefix != PrefixGroupSpecification {
 			return fmt.Errorf("invalid group specification id prefix at index %d (expected: %s, got %s)",
