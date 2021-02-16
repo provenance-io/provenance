@@ -21,7 +21,9 @@ import (
 
 	// "github.com/provenance-io/provenance/x/metadata/client/cli"
 	// "github.com/provenance-io/provenance/x/metadata/client/rest"
+	"github.com/provenance-io/provenance/x/metadata/client/cli"
 	"github.com/provenance-io/provenance/x/metadata/keeper"
+
 	// "github.com/provenance-io/provenance/x/metadata/simulation"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
@@ -83,14 +85,12 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *r
 
 // GetTxCmd returns the root tx command for the distribution module.
 func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	// return cli.NewTxCmd()
-	return nil
+	return cli.NewTxCmd()
 }
 
 // GetQueryCmd returns the root query command for the distribution module.
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	// return cli.GetQueryCmd()
-	return nil
+	return cli.GetQueryCmd()
 }
 
 // RegisterInterfaces implements InterfaceModule
