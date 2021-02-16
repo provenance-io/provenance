@@ -567,8 +567,8 @@ func New(
 	// A data structure for setting upgrade plans that need to actually do something.
 	// WARNING: Once deployed to a network, NEVER change or remove these handlers.
 	explicitUpgradePlans := map[string]upgradetypes.UpgradeHandler{
-		"v0.6.9": func(ctx sdk.Context, plan upgradetypes.Plan) {
-			// Also a no-op, but here's where developers can do something specific for a release.
+		"v0.10.0": func(ctx sdk.Context, plan upgradetypes.Plan) {
+			// A no-op, but here's where developers can do something for a specific release.
 		},
 	}
 
@@ -576,12 +576,12 @@ func New(
 	// TODO: Expand version range and make dynamic (build tags would be ideal).
 	majorVersion, maxMinorVersion, maxPatchVersion := 0, 10, 100
 
-	// For testnet release v0.1.1 through v0.10.100, set a no-op handler unless explicitly set above.
-	// This is here so developers don't need to do anything for frequent testnet releases and, in theory,
-	// cosmovisor upgrades should just work.
-	for i := 1; i <= maxMinorVersion; i++ {
-		for j := 1; j <= maxPatchVersion; j++ {
-			name := fmt.Sprintf("v%d.%d.%d", majorVersion, i, j)
+	// For release v0.1.0 through v0.10.100, set a no-op handler unless explicitly defined above.
+	// This is here so developers don't need to add handlers for every release and cosmovisor
+	// upgrades should just work.
+	for minor := 1; minor <= maxMinorVersion; minor++ {
+		for patch := 0; patch <= maxPatchVersion; patch++ {
+			name := fmt.Sprintf("v%d.%d.%d", majorVersion, minor, patch)
 			if handler, ok := explicitUpgradePlans[name]; ok {
 				logger.Info("Setting explicit upgrade handler", "name", name)
 				app.UpgradeKeeper.SetUpgradeHandler(name, handler)
