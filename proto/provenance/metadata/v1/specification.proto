@@ -110,7 +110,7 @@ message Info {
   string website_url = 4 [
     (gogoproto.moretags)   = "yaml:\"website_url\""
   ];
-  // URL of an icon for this. thing.
+  // URL of an icon.
   string icon_url = 5 [
     (gogoproto.moretags)   = "yaml:\"icon_url\""
   ];

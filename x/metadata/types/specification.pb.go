@@ -399,7 +399,7 @@ type Info struct {
 	Description string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
 	// URL to find even more info.
 	WebsiteUrl string `protobuf:"bytes,4,opt,name=website_url,json=websiteUrl,proto3" json:"website_url,omitempty" yaml:"website_url"`
-	// URL of an icon for this. thing.
+	// URL of an icon.
 	IconUrl string `protobuf:"bytes,5,opt,name=icon_url,json=iconUrl,proto3" json:"icon_url,omitempty" yaml:"icon_url"`
 }
 
