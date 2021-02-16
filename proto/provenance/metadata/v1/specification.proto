@@ -43,6 +43,10 @@ message ScopeSpecification {
   ];
   // General information about this scope specification.
   Info info = 2;
+  // Addresses of the owners of this scope.
+  repeated string owner_addresses = 2 [
+    (gogoproto.moretags)   = "yaml:\"owner_address\""
+  ];
   // A list of parties that must be present on a scope (and their associated roles)
   repeated PartyType parties_involved = 3 [
     (gogoproto.moretags)   = "yaml:\"parties_involved\""
@@ -98,17 +102,17 @@ message ContractSpec {
 
 // Info holds general information that is handy to associate with a structure.
 message Info {
-  // A Name for this thing (not the name of the owner)
+  // A Name for this thing.
   string name = 1;
-  // address of the owner
-  string owner_address = 2 [
-    (gogoproto.moretags)   = "yaml:\"owner_address\""
-  ];
-  // A description
+  // A description of this thing.
   string description = 3;
-  // URL to find even more info
+  // URL to find even more info.
   string website_url = 4 [
     (gogoproto.moretags)   = "yaml:\"website_url\""
+  ];
+  // URL of an icon for this. thing.
+  string icon_url = 5 [
+    (gogoproto.moretags)   = "yaml:\"icon_url\""
   ];
 }
 
