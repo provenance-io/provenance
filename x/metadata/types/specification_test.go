@@ -194,3 +194,254 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 		})
 	}
 }
+
+func (s *specificationTestSuite) TestInfoValidateBasic() {
+	tests := []struct {
+		name     string
+		info     *Info
+		want     string
+		wantErr  bool
+	}{
+		// Name tests
+		{
+			"invalid name - empty",
+			NewInfo(
+				"",
+				"",
+				"",
+				"",
+			),
+			fmt.Sprintf("info Name cannot be empty"),
+			true,
+		},
+		{
+			"invalid name - too long",
+			NewInfo(
+				strings.Repeat("x", maxInfoNameLength + 1),
+				"",
+				"",
+				"",
+			),
+			fmt.Sprintf("info Name exceeds maximum length (expected <= %d got: %d)", maxInfoNameLength, maxInfoNameLength + 1),
+			true,
+		},
+		{
+			"valid name - 1 char",
+			NewInfo(
+				"x",
+				"",
+				"",
+				"",
+			),
+			"",
+			false,
+		},
+		{
+			"valid name - exactly max length",
+			NewInfo(
+				strings.Repeat("y", maxInfoNameLength),
+				"",
+				"",
+				"",
+			),
+			"",
+			false,
+		},
+
+		// Description tests
+		{
+			"invalid description - too long",
+			NewInfo(
+				"Unit Tests",
+				strings.Repeat("z", maxInfoDescriptionLength + 1),
+				"",
+				"",
+			),
+			fmt.Sprintf("info Description exceeds maximum length (expected <= %d got: %d)", maxInfoDescriptionLength, maxInfoDescriptionLength + 1),
+			true,
+		},
+		{
+			"valid description - empty",
+			NewInfo(
+				"Unit Tests",
+				"",
+				"",
+				"",
+			),
+			"",
+			false,
+		},
+		{
+			"valid description - 1 char",
+			NewInfo(
+				"Unit Tests",
+				"z",
+				"",
+				"",
+			),
+			"",
+			false,
+		},
+		{
+			"valid description - exactly max length",
+			NewInfo(
+				"Unit Tests",
+				strings.Repeat("z", maxInfoDescriptionLength),
+				"",
+				"",
+			),
+			"",
+			false,
+		},
+
+		// Website url tests
+		{
+			"invalid website url - too long",
+			NewInfo(
+				"Unit Tests",
+				"",
+				strings.Repeat("h", maxUrlLength + 1),
+				"",
+			),
+			fmt.Sprintf("url WebsiteUrl exceeds maximum length (expected <= %d got: %d)", maxUrlLength, maxUrlLength + 1),
+			true,
+		},
+		{
+			"invalid website url - no protocol",
+			NewInfo(
+				"Unit Tests",
+				"",
+				"www.test.com",
+				"",
+			),
+			fmt.Sprintf("url WebsiteUrl must begin with either http:// or https://"),
+			true,
+		},
+		{
+			"valid website url - http",
+			NewInfo(
+				"Unit Tests",
+				"",
+				"http://www.test.com",
+				"",
+			),
+			"",
+			false,
+		},
+		{
+			"valid website url - http at max length",
+			NewInfo(
+				"Unit Tests",
+				"",
+				"http://" + strings.Repeat("f", maxUrlLength - 7),
+				"",
+			),
+			"",
+			false,
+		},
+		{
+			"valid website url - https",
+			NewInfo(
+				"Unit Tests",
+				"",
+				"https://www.test.com",
+				"",
+			),
+			"",
+			false,
+		},
+		{
+			"valid website url - https at max length",
+			NewInfo(
+				"Unit Tests",
+				"",
+				"https://" + strings.Repeat("s", maxUrlLength - 8),
+				"",
+			),
+			"",
+			false,
+		},
+
+		// Icon url tests
+		{
+			"invalid icon url - too long",
+			NewInfo(
+				"Unit Tests",
+				"",
+				"",
+				strings.Repeat("h", maxUrlLength + 1),
+			),
+			fmt.Sprintf("url IconUrl exceeds maximum length (expected <= %d got: %d)", maxUrlLength, maxUrlLength + 1),
+			true,
+		},
+		{
+			"invalid icon url - no protocol",
+			NewInfo(
+				"Unit Tests",
+				"",
+				"",
+				"www.test.com",
+			),
+			fmt.Sprintf("url IconUrl must begin with either http:// or https://"),
+			true,
+		},
+		{
+			"valid icon url - http",
+			NewInfo(
+				"Unit Tests",
+				"",
+				"",
+				"http://www.test.com",
+			),
+			"",
+			false,
+		},
+		{
+			"valid icon url - http at max length",
+			NewInfo(
+				"Unit Tests",
+				"",
+				"",
+				"http://" + strings.Repeat("f", maxUrlLength - 7),
+			),
+			"",
+			false,
+		},
+		{
+			"valid icon url - https",
+			NewInfo(
+				"Unit Tests",
+				"",
+				"",
+				"https://www.test.com",
+			),
+			"",
+			false,
+		},
+		{
+			"valid icon url - https at max length",
+			NewInfo(
+				"Unit Tests",
+				"",
+				"",
+				"https://" + strings.Repeat("s", maxUrlLength - 8),
+			),
+			"",
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		s.T().Run(tt.name, func(t *testing.T) {
+			err := tt.info.ValidateBasic("")
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Scope ValidateBasic error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if tt.wantErr {
+				require.Equal(t, tt.want, err.Error())
+			}
+		})
+	}
+}
