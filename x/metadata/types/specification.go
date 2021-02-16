@@ -23,14 +23,14 @@ func NewScopeSpecification(
 	info *Info,
 	ownerAddresses []string,
 	partiesInvolved []PartyType,
-	groupSpecIds []MetadataAddress,
+	sessionSpecIds []MetadataAddress,
 ) *ScopeSpecification {
 	return &ScopeSpecification{
 		SpecificationId: specificationId,
 		Info:            info,
 		OwnerAddresses:  ownerAddresses,
 		PartiesInvolved: partiesInvolved,
-		GroupSpecIds:    groupSpecIds,
+		SessionSpecIds:  sessionSpecIds,
 	}
 }
 
@@ -60,7 +60,7 @@ func (scopeSpec *ScopeSpecification) ValidateBasic() error {
 	if len(scopeSpec.PartiesInvolved) == 0 {
 		return errors.New("ScopeSpecification must have at least one party involved")
 	}
-	for i, groupSpecId := range scopeSpec.GroupSpecIds {
+	for i, groupSpecId := range scopeSpec.SessionSpecIds {
 		prefix, err = VerifyMetadataAddressFormat(groupSpecId)
 		if err != nil {
 			return fmt.Errorf("invalid group specification id at index %d: %w", i, err)
@@ -120,12 +120,12 @@ func validateUrlBasic(url string, required bool, path string, fieldName string) 
 		}
 		return nil
 	}
-	if strings.ToLower(url[0:8]) != "https://" && strings.ToLower(url[0:7]) != "http://" {
-		return fmt.Errorf("url %s must begin with either http:// or https://", makeFieldString(path, fieldName))
-	}
 	if len(url) > maxUrlLength {
 		return fmt.Errorf("url %s exceeds maximum length (expected <= %d got: %d)",
 			makeFieldString(path, fieldName), maxUrlLength, len(url))
+	}
+	if strings.ToLower(url[0:8]) != "https://" && strings.ToLower(url[0:7]) != "http://" {
+		return fmt.Errorf("url %s must begin with either http:// or https://", makeFieldString(path, fieldName))
 	}
 	return nil
 }
