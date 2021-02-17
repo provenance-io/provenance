@@ -42,7 +42,7 @@ message ScopeSpecification {
     (gogoproto.moretags)   = "yaml:\"specification_id\""
   ];
   // General information about this scope specification.
-  Info info = 2;
+  Description description = 2;
   // Addresses of the owners of this scope specification.
   repeated string owner_addresses = 3 [
     (gogoproto.moretags)   = "yaml:\"owner_address\""
@@ -100,8 +100,8 @@ message ContractSpec {
   repeated ConsiderationSpec consideration_specs = 5;
 }
 
-// Info holds general information that is handy to associate with a structure.
-message Info {
+// Description holds general information that is handy to associate with a structure.
+message Description {
   // A Name for this thing.
   string name = 1;
   // A description of this thing.
