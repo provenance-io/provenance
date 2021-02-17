@@ -9,11 +9,12 @@ import (
 )
 
 const (
-	// Max length for info.name
+	// TODO: Move these to params.
+	// Default max length for info.name
 	maxDescriptionNameLength = 200
-	// Max length for info.description
+	// Default max length for info.description
 	maxDescriptionDescriptionLength = 5000
-	// Max url length
+	// Default max url length
 	maxUrlLength = 2048
 )
 
