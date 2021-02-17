@@ -58,15 +58,15 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 			"invalid scope specification id prefix (expected: scopespec, got scope)",
 			true,
 		},
-		// Info test to make sure Info.ValidateBasic is being used.
+		// Description test to make sure Description.ValidateBasic is being used.
 		{
 			"invalid info name - too long",
 			NewScopeSpecification(
 				ScopeSpecMetadataAddress(uuid.New()),
-				NewInfo(strings.Repeat("x", maxInfoNameLength + 1), "", "", ""),
+				NewDescription(strings.Repeat("x", maxDescriptionNameLength + 1), "", "", ""),
 				[]string{}, []PartyType{}, []MetadataAddress{},
 			),
-			fmt.Sprintf("info (ScopeSpecification.Info) Name exceeds maximum length (expected <= %d got: %d)", maxInfoNameLength, maxInfoNameLength + 1),
+			fmt.Sprintf("info (ScopeSpecification.Description) Name exceeds maximum length (expected <= %d got: %d)", maxDescriptionNameLength, maxDescriptionNameLength + 1),
 			true,
 		},
 		// OwnerAddresses tests
@@ -195,17 +195,17 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 	}
 }
 
-func (s *specificationTestSuite) TestInfoValidateBasic() {
+func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 	tests := []struct {
 		name     string
-		info     *Info
+		desc     *Description
 		want     string
 		wantErr  bool
 	}{
 		// Name tests
 		{
 			"invalid name - empty",
-			NewInfo(
+			NewDescription(
 				"",
 				"",
 				"",
@@ -216,18 +216,18 @@ func (s *specificationTestSuite) TestInfoValidateBasic() {
 		},
 		{
 			"invalid name - too long",
-			NewInfo(
-				strings.Repeat("x", maxInfoNameLength + 1),
+			NewDescription(
+				strings.Repeat("x", maxDescriptionNameLength + 1),
 				"",
 				"",
 				"",
 			),
-			fmt.Sprintf("info Name exceeds maximum length (expected <= %d got: %d)", maxInfoNameLength, maxInfoNameLength + 1),
+			fmt.Sprintf("info Name exceeds maximum length (expected <= %d got: %d)", maxDescriptionNameLength, maxDescriptionNameLength + 1),
 			true,
 		},
 		{
 			"valid name - 1 char",
-			NewInfo(
+			NewDescription(
 				"x",
 				"",
 				"",
@@ -238,8 +238,8 @@ func (s *specificationTestSuite) TestInfoValidateBasic() {
 		},
 		{
 			"valid name - exactly max length",
-			NewInfo(
-				strings.Repeat("y", maxInfoNameLength),
+			NewDescription(
+				strings.Repeat("y", maxDescriptionNameLength),
 				"",
 				"",
 				"",
@@ -251,18 +251,18 @@ func (s *specificationTestSuite) TestInfoValidateBasic() {
 		// Description tests
 		{
 			"invalid description - too long",
-			NewInfo(
+			NewDescription(
 				"Unit Tests",
-				strings.Repeat("z", maxInfoDescriptionLength + 1),
+				strings.Repeat("z", maxDescriptionDescriptionLength + 1),
 				"",
 				"",
 			),
-			fmt.Sprintf("info Description exceeds maximum length (expected <= %d got: %d)", maxInfoDescriptionLength, maxInfoDescriptionLength + 1),
+			fmt.Sprintf("info Description exceeds maximum length (expected <= %d got: %d)", maxDescriptionDescriptionLength, maxDescriptionDescriptionLength + 1),
 			true,
 		},
 		{
 			"valid description - empty",
-			NewInfo(
+			NewDescription(
 				"Unit Tests",
 				"",
 				"",
@@ -273,7 +273,7 @@ func (s *specificationTestSuite) TestInfoValidateBasic() {
 		},
 		{
 			"valid description - 1 char",
-			NewInfo(
+			NewDescription(
 				"Unit Tests",
 				"z",
 				"",
@@ -284,9 +284,9 @@ func (s *specificationTestSuite) TestInfoValidateBasic() {
 		},
 		{
 			"valid description - exactly max length",
-			NewInfo(
+			NewDescription(
 				"Unit Tests",
-				strings.Repeat("z", maxInfoDescriptionLength),
+				strings.Repeat("z", maxDescriptionDescriptionLength),
 				"",
 				"",
 			),
@@ -297,7 +297,7 @@ func (s *specificationTestSuite) TestInfoValidateBasic() {
 		// Website url tests
 		{
 			"invalid website url - too long",
-			NewInfo(
+			NewDescription(
 				"Unit Tests",
 				"",
 				strings.Repeat("h", maxUrlLength + 1),
@@ -308,7 +308,7 @@ func (s *specificationTestSuite) TestInfoValidateBasic() {
 		},
 		{
 			"invalid website url - no protocol",
-			NewInfo(
+			NewDescription(
 				"Unit Tests",
 				"",
 				"www.test.com",
@@ -319,7 +319,7 @@ func (s *specificationTestSuite) TestInfoValidateBasic() {
 		},
 		{
 			"valid website url - http",
-			NewInfo(
+			NewDescription(
 				"Unit Tests",
 				"",
 				"http://www.test.com",
@@ -330,7 +330,7 @@ func (s *specificationTestSuite) TestInfoValidateBasic() {
 		},
 		{
 			"valid website url - http at max length",
-			NewInfo(
+			NewDescription(
 				"Unit Tests",
 				"",
 				"http://" + strings.Repeat("f", maxUrlLength - 7),
@@ -341,7 +341,7 @@ func (s *specificationTestSuite) TestInfoValidateBasic() {
 		},
 		{
 			"valid website url - https",
-			NewInfo(
+			NewDescription(
 				"Unit Tests",
 				"",
 				"https://www.test.com",
@@ -352,7 +352,7 @@ func (s *specificationTestSuite) TestInfoValidateBasic() {
 		},
 		{
 			"valid website url - https at max length",
-			NewInfo(
+			NewDescription(
 				"Unit Tests",
 				"",
 				"https://" + strings.Repeat("s", maxUrlLength - 8),
@@ -365,7 +365,7 @@ func (s *specificationTestSuite) TestInfoValidateBasic() {
 		// Icon url tests
 		{
 			"invalid icon url - too long",
-			NewInfo(
+			NewDescription(
 				"Unit Tests",
 				"",
 				"",
@@ -376,7 +376,7 @@ func (s *specificationTestSuite) TestInfoValidateBasic() {
 		},
 		{
 			"invalid icon url - no protocol",
-			NewInfo(
+			NewDescription(
 				"Unit Tests",
 				"",
 				"",
@@ -387,7 +387,7 @@ func (s *specificationTestSuite) TestInfoValidateBasic() {
 		},
 		{
 			"valid icon url - http",
-			NewInfo(
+			NewDescription(
 				"Unit Tests",
 				"",
 				"",
@@ -398,7 +398,7 @@ func (s *specificationTestSuite) TestInfoValidateBasic() {
 		},
 		{
 			"valid icon url - http at max length",
-			NewInfo(
+			NewDescription(
 				"Unit Tests",
 				"",
 				"",
@@ -409,7 +409,7 @@ func (s *specificationTestSuite) TestInfoValidateBasic() {
 		},
 		{
 			"valid icon url - https",
-			NewInfo(
+			NewDescription(
 				"Unit Tests",
 				"",
 				"",
@@ -420,7 +420,7 @@ func (s *specificationTestSuite) TestInfoValidateBasic() {
 		},
 		{
 			"valid icon url - https at max length",
-			NewInfo(
+			NewDescription(
 				"Unit Tests",
 				"",
 				"",
@@ -434,7 +434,7 @@ func (s *specificationTestSuite) TestInfoValidateBasic() {
 	for _, tt := range tests {
 		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
-			err := tt.info.ValidateBasic("")
+			err := tt.desc.ValidateBasic("")
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Scope ValidateBasic error = %v, wantErr %v", err, tt.wantErr)
 				return

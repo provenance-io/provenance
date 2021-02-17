@@ -10,9 +10,9 @@ import (
 
 const (
 	// Max length for info.name
-	maxInfoNameLength = 200
+	maxDescriptionNameLength = 200
 	// Max length for info.description
-	maxInfoDescriptionLength = 5000
+	maxDescriptionDescriptionLength = 5000
 	// Max url length
 	maxUrlLength = 2048
 )
@@ -20,14 +20,14 @@ const (
 // NewScopeSpecification creates a new ScopeSpecification instance.
 func NewScopeSpecification(
 	specificationId MetadataAddress,
-	info *Info,
+	description *Description,
 	ownerAddresses []string,
 	partiesInvolved []PartyType,
 	sessionSpecIds []MetadataAddress,
 ) *ScopeSpecification {
 	return &ScopeSpecification{
 		SpecificationId: specificationId,
-		Info:            info,
+		Description:     description,
 		OwnerAddresses:  ownerAddresses,
 		PartiesInvolved: partiesInvolved,
 		SessionSpecIds:  sessionSpecIds,
@@ -43,8 +43,8 @@ func (scopeSpec *ScopeSpecification) ValidateBasic() error {
 	if prefix != PrefixScopeSpecification {
 		return fmt.Errorf("invalid scope specification id prefix (expected: %s, got %s)", PrefixScopeSpecification, prefix)
 	}
-	if scopeSpec.Info != nil {
-		err = scopeSpec.Info.ValidateBasic("ScopeSpecification.Info")
+	if scopeSpec.Description != nil {
+		err = scopeSpec.Description.ValidateBasic("ScopeSpecification.Description")
 		if err != nil {
 			return err
 		}
@@ -73,9 +73,9 @@ func (scopeSpec *ScopeSpecification) ValidateBasic() error {
 	return nil
 }
 
-// NewInfo creates a new Info instance.
-func NewInfo(name, description, websiteUrl, iconUrl string) *Info {
-	return &Info{
+// NewDescription creates a new Description instance.
+func NewDescription(name, description, websiteUrl, iconUrl string) *Description {
+	return &Description{
 		Name:        name,
 		Description: description,
 		WebsiteUrl:  websiteUrl,
@@ -83,22 +83,22 @@ func NewInfo(name, description, websiteUrl, iconUrl string) *Info {
 	}
 }
 
-// ValidateBasic performs basic format checking of data in an Info.
+// ValidateBasic performs basic format checking of data in an Description.
 // The path parameter is used to provide extra context to any error messages.
-// e.g. If the name field is invalid in this info, and the path provided is "ScopeSpecification.Info",
-// the error message will contain "ScopeSpecification.Info.Name" and the problem.
+// e.g. If the name field is invalid in this info, and the path provided is "ScopeSpecification.Description",
+// the error message will contain "ScopeSpecification.Description.Name" and the problem.
 // Provide "" if there is no context you wish to provide.
-func (info *Info) ValidateBasic(path string) error {
+func (info *Description) ValidateBasic(path string) error {
 	if len(info.Name) == 0 {
 		return fmt.Errorf("info %s cannot be empty", makeFieldString(path, "Name"))
 	}
-	if len(info.Name) > maxInfoNameLength {
+	if len(info.Name) > maxDescriptionNameLength {
 		return fmt.Errorf("info %s exceeds maximum length (expected <= %d got: %d)",
-			makeFieldString(path, "Name"), maxInfoNameLength, len(info.Name))
+			makeFieldString(path, "Name"), maxDescriptionNameLength, len(info.Name))
 	}
-	if len(info.Description) > maxInfoDescriptionLength {
+	if len(info.Description) > maxDescriptionDescriptionLength {
 		return fmt.Errorf("info %s exceeds maximum length (expected <= %d got: %d)",
-			makeFieldString(path, "Description"), maxInfoDescriptionLength, len(info.Description))
+			makeFieldString(path, "Description"), maxDescriptionDescriptionLength, len(info.Description))
 	}
 	err := validateUrlBasic(info.WebsiteUrl, false, path, "WebsiteUrl")
 	if err != nil {
