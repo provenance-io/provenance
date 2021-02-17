@@ -19,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
-	// "github.com/provenance-io/provenance/x/metadata/client/cli"
 	// "github.com/provenance-io/provenance/x/metadata/client/rest"
 	"github.com/provenance-io/provenance/x/metadata/client/cli"
 	"github.com/provenance-io/provenance/x/metadata/keeper"
@@ -51,7 +50,7 @@ type AppModuleBasic struct {
 // Name returns the module name.
 func (AppModuleBasic) Name() string { return types.ModuleName }
 
-// RegisterLegacyAminoCodec registers the account module's types for the given codec.
+// RegisterLegacyAminoCodec registers the metadata module's types for the given codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	types.RegisterLegacyAminoCodec(cdc)
 }
@@ -61,7 +60,7 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
 	return cdc.MustMarshalJSON(types.DefaultGenesisState())
 }
 
-// ValidateGenesis performs genesis state validation for the marker module.
+// ValidateGenesis performs genesis state validation for the metadata module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxEncodingConfig, bz json.RawMessage) error {
 	var data types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
@@ -76,19 +75,19 @@ func (AppModuleBasic) RegisterRESTRoutes(ctx client.Context, rtr *mux.Router) {
 	// rest.RegisterRoutes(ctx, rtr)
 }
 
-// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the account module.
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the metadata module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
 }
 
-// GetTxCmd returns the root tx command for the distribution module.
+// GetTxCmd returns the root tx command for the metadata module.
 func (AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.NewTxCmd()
 }
 
-// GetQueryCmd returns the root query command for the distribution module.
+// GetQueryCmd returns the root query command for the metadata module.
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd()
 }
@@ -120,7 +119,7 @@ func (AppModule) Name() string {
 	return types.ModuleName
 }
 
-// Route returns the message routing key for the marker module.
+// Route returns the message routing key for the metadata module.
 func (am AppModule) Route() sdk.Route {
 	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
 }
@@ -145,7 +144,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 }
 
-// InitGenesis performs genesis initialization for the account module. It returns no validator updates.
+// InitGenesis performs genesis initialization for the metadata module. It returns no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
@@ -153,16 +152,16 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data j
 	return []abci.ValidatorUpdate{}
 }
 
-// ExportGenesis returns the exported genesis state as raw bytes for the account module.
+// ExportGenesis returns the exported genesis state as raw bytes for the metadata module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json.RawMessage {
 	gs := am.keeper.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(gs)
 }
 
-// BeginBlock returns the begin blocker for the account module.
+// BeginBlock returns the begin blocker for the metadata module.
 func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {}
 
-// EndBlock returns the end blocker for the account module. It returns no validator
+// EndBlock returns the end blocker for the metadata module. It returns no validator
 // updates.
 func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
