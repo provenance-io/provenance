@@ -60,7 +60,7 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 		},
 		// Description test to make sure Description.ValidateBasic is being used.
 		{
-			"invalid info name - too long",
+			"invalid description name - too long",
 			NewScopeSpecification(
 				ScopeSpecMetadataAddress(uuid.New()),
 				NewDescription(strings.Repeat("x", maxDescriptionNameLength + 1), "", "", ""),
@@ -211,7 +211,7 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"",
 				"",
 			),
-			fmt.Sprintf("info Name cannot be empty"),
+			fmt.Sprintf("description Name cannot be empty"),
 			true,
 		},
 		{
@@ -222,7 +222,7 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"",
 				"",
 			),
-			fmt.Sprintf("info Name exceeds maximum length (expected <= %d got: %d)", maxDescriptionNameLength, maxDescriptionNameLength + 1),
+			fmt.Sprintf("description Name exceeds maximum length (expected <= %d got: %d)", maxDescriptionNameLength, maxDescriptionNameLength + 1),
 			true,
 		},
 		{
@@ -257,7 +257,7 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"",
 				"",
 			),
-			fmt.Sprintf("info Description exceeds maximum length (expected <= %d got: %d)", maxDescriptionDescriptionLength, maxDescriptionDescriptionLength + 1),
+			fmt.Sprintf("description Description exceeds maximum length (expected <= %d got: %d)", maxDescriptionDescriptionLength, maxDescriptionDescriptionLength + 1),
 			true,
 		},
 		{
@@ -475,9 +475,6 @@ func (s *specificationTestSuite) TestScopeSpecString() {
 		            "session_spec_ids:\n" +
 		            "- groupspec1qd2qmt038k7yc0azq46htdlhgwzquwslkg\n"
 		actual := scopeSpec.String()
-		fmt.Printf("scopeSpecUuid: [%s]\n", scopeSpecUuid)
-		fmt.Printf("groupSpecUuid: [%s]\n", groupSpecUuid)
-		fmt.Println(actual)
 		require.Equal(t, expected, actual)
 	})
 }
