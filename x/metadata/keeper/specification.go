@@ -46,6 +46,28 @@ func (k Keeper) SetScopeSpecification(ctx sdk.Context, spec types.ScopeSpecifica
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryBare(&spec)
 	store.Set(spec.SpecificationId, b)
+
+	eventType := types.EventTypeScopeSpecificationCreated
+	if store.Has(spec.SpecificationId) {
+		if oldBytes := store.Get(spec.SpecificationId); oldBytes != nil {
+			var oldSpec types.ScopeSpecification
+			if err := k.cdc.UnmarshalBinaryBare(oldBytes, &oldSpec); err == nil {
+				eventType = types.EventTypeScopeUpdated
+				k.clearScopeSpecificationIndex(ctx, oldSpec)
+			}
+		}
+	}
+
+	store.Set(spec.SpecificationId, b)
+	k.indexScopeSpecification(ctx, spec)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			eventType,
+			sdk.NewAttribute(types.AttributeKeyScopeSpecID, spec.SpecificationId.String()),
+			sdk.NewAttribute(types.AttributeKeyScopeSpec, spec.String()),
+		),
+	)
 }
 
 func (k Keeper) indexScopeSpecification(ctx sdk.Context, scopeSpec types.ScopeSpecification) {

@@ -45,6 +45,10 @@ const (
 	AttributeKeyModuleName string = "module"
 	// AttributeKeyTxHash is the attribute for the transaction hash.
 	AttributeKeyTxHash = "tx_hash"
+	// AttributeKeyScopeID is the attribute key for a scope ID attribute JSON value.
+	AttributeKeyScopeSpecID string = "scope_spec_id"
+	// AttributeKeyScope is the attribute key for a scope attribute JSON value.
+	AttributeKeyScopeSpec string = "scope_spec"
 
 	// AttributeValueCategory indicates the category for this value
 	AttributeValueCategory = ModuleName
