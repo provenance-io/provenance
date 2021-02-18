@@ -167,7 +167,7 @@ func (k msgServer) RemoveScope(
 
 	existing, _ := k.GetScope(ctx, msg.ScopeId)
 	// validate that all fields can be unset with the given list of signers
-	if err := k.ValidateScopeUpdate(ctx, existing, types.Scope{ScopeId: msg.ScopeId}, msg.Signers); err != nil {
+	if err := k.ValidateScopeRemove(ctx, existing, types.Scope{ScopeId: msg.ScopeId}, msg.Signers); err != nil {
 		return nil, err
 	}
 
@@ -175,11 +175,10 @@ func (k msgServer) RemoveScope(
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, ""),
+			types.EventTypeScopeRemoved,
+			sdk.NewAttribute(types.AttributeKeyScopeID, string(msg.ScopeId)),
 		),
 	)
 
-	return nil, fmt.Errorf("not implemented")
+	return &types.MsgRemoveScopeResponse{}, nil
 }
