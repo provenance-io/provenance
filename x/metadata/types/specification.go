@@ -11,9 +11,9 @@ import (
 
 const (
 	// TODO: Move these to params.
-	// Default max length for info.name
+	// Default max length for description.name
 	maxDescriptionNameLength = 200
-	// Default max length for info.description
+	// Default max length for description.description
 	maxDescriptionDescriptionLength = 5000
 	// Default max url length
 	maxURLLength = 2048
@@ -93,7 +93,7 @@ func NewDescription(name, description, websiteURL, iconURL string) *Description 
 
 // ValidateBasic performs basic format checking of data in an Description.
 // The path parameter is used to provide extra context to any error messages.
-// e.g. If the name field is invalid in this info, and the path provided is "ScopeSpecification.Description",
+// e.g. If the name field is invalid in this description, and the path provided is "ScopeSpecification.Description",
 // the error message will contain "ScopeSpecification.Description.Name" and the problem.
 // Provide "" if there is no context you wish to provide.
 func (description *Description) ValidateBasic(path string) error {
