@@ -47,3 +47,41 @@ func (k Keeper) SetScopeSpecification(ctx sdk.Context, spec types.ScopeSpecifica
 	b := k.cdc.MustMarshalBinaryBare(&spec)
 	store.Set(spec.SpecificationId, b)
 }
+
+func (k Keeper) indexScopeSpecification(ctx sdk.Context, scopeSpec types.ScopeSpecification) {
+	// TODO: Clean this up
+	/*
+	store := ctx.KVStore(k.storeKey)
+
+	// Index all the scope spec owner addresses
+	for _, a := range scopeSpec.OwnerAddresses {
+		addr, err := sdk.AccAddressFromBech32(a)
+		if err == nil {
+			store.Set(types.GetAddressCacheKey(addr, scopeSpec.SpecificationId), []byte{0x01})
+		}
+	}
+
+	// Index all the session spec ids
+	for _, groupSpecId := range scopeSpec.GroupSpecIds {
+		store.Set(types.GetScopeSpecCacheKey(scopeSpec.SpecificationId, groupSpecId), []byte{0x01})
+	}
+	 */
+}
+
+func (k Keeper) clearScopeSpecificationIndex(ctx sdk.Context, scopeSpec types.ScopeSpecification) {
+	// TODO: finish this up
+	/*
+	store := ctx.KVStore(k.storeKey)
+
+	// Delete all scope spec owner address entries
+	 */
+}
+
+func (k Keeper) isScopeSpecUsed(ctx sdk.Context, id types.MetadataAddress) bool {
+	scopeSpecReferenceFound := false
+	k.IterateScopesForScopeSpec(ctx, id, func(scopeID types.MetadataAddress) (stop bool) {
+		scopeSpecReferenceFound = true
+		return true
+	})
+	return scopeSpecReferenceFound
+}
