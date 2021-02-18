@@ -16,23 +16,23 @@ const (
 	// Default max length for info.description
 	maxDescriptionDescriptionLength = 5000
 	// Default max url length
-	maxUrlLength = 2048
+	maxURLLength = 2048
 )
 
 // NewScopeSpecification creates a new ScopeSpecification instance.
 func NewScopeSpecification(
-	specificationId MetadataAddress,
+	specificationID MetadataAddress,
 	description *Description,
 	ownerAddresses []string,
 	partiesInvolved []PartyType,
-	sessionSpecIds []MetadataAddress,
+	sessionSpecIDs []MetadataAddress,
 ) *ScopeSpecification {
 	return &ScopeSpecification{
-		SpecificationId: specificationId,
+		SpecificationId: specificationID,
 		Description:     description,
 		OwnerAddresses:  ownerAddresses,
 		PartiesInvolved: partiesInvolved,
-		SessionSpecIds:  sessionSpecIds,
+		SessionSpecIds:  sessionSpecIDs,
 	}
 }
 
@@ -52,7 +52,7 @@ func (scopeSpec *ScopeSpecification) ValidateBasic() error {
 		}
 	}
 	if len(scopeSpec.OwnerAddresses) < 1 {
-		return errors.New("ScopeSpecification must have at least one owner")
+		return errors.New("the ScopeSpecification must have at least one owner")
 	}
 	for i, owner := range scopeSpec.OwnerAddresses {
 		if _, err = sdk.AccAddressFromBech32(owner); err != nil {
@@ -60,10 +60,10 @@ func (scopeSpec *ScopeSpecification) ValidateBasic() error {
 		}
 	}
 	if len(scopeSpec.PartiesInvolved) == 0 {
-		return errors.New("ScopeSpecification must have at least one party involved")
+		return errors.New("the ScopeSpecification must have at least one party involved")
 	}
-	for i, groupSpecId := range scopeSpec.SessionSpecIds {
-		prefix, err = VerifyMetadataAddressFormat(groupSpecId)
+	for i, groupSpecID := range scopeSpec.SessionSpecIds {
+		prefix, err = VerifyMetadataAddressFormat(groupSpecID)
 		if err != nil {
 			return fmt.Errorf("invalid group specification id at index %d: %w", i, err)
 		}
@@ -82,12 +82,12 @@ func (scopeSpec ScopeSpecification) String() string {
 }
 
 // NewDescription creates a new Description instance.
-func NewDescription(name, description, websiteUrl, iconUrl string) *Description {
+func NewDescription(name, description, websiteURL, iconURL string) *Description {
 	return &Description{
 		Name:        name,
 		Description: description,
-		WebsiteUrl:  websiteUrl,
-		IconUrl:     iconUrl,
+		WebsiteUrl:  websiteURL,
+		IconUrl:     iconURL,
 	}
 }
 
@@ -96,23 +96,23 @@ func NewDescription(name, description, websiteUrl, iconUrl string) *Description 
 // e.g. If the name field is invalid in this info, and the path provided is "ScopeSpecification.Description",
 // the error message will contain "ScopeSpecification.Description.Name" and the problem.
 // Provide "" if there is no context you wish to provide.
-func (info *Description) ValidateBasic(path string) error {
-	if len(info.Name) == 0 {
-		return fmt.Errorf("info %s cannot be empty", makeFieldString(path, "Name"))
+func (description *Description) ValidateBasic(path string) error {
+	if len(description.Name) == 0 {
+		return fmt.Errorf("description %s cannot be empty", makeFieldString(path, "Name"))
 	}
-	if len(info.Name) > maxDescriptionNameLength {
-		return fmt.Errorf("info %s exceeds maximum length (expected <= %d got: %d)",
-			makeFieldString(path, "Name"), maxDescriptionNameLength, len(info.Name))
+	if len(description.Name) > maxDescriptionNameLength {
+		return fmt.Errorf("description %s exceeds maximum length (expected <= %d got: %d)",
+			makeFieldString(path, "Name"), maxDescriptionNameLength, len(description.Name))
 	}
-	if len(info.Description) > maxDescriptionDescriptionLength {
-		return fmt.Errorf("info %s exceeds maximum length (expected <= %d got: %d)",
-			makeFieldString(path, "Description"), maxDescriptionDescriptionLength, len(info.Description))
+	if len(description.Description) > maxDescriptionDescriptionLength {
+		return fmt.Errorf("description %s exceeds maximum length (expected <= %d got: %d)",
+			makeFieldString(path, "Description"), maxDescriptionDescriptionLength, len(description.Description))
 	}
-	err := validateUrlBasic(info.WebsiteUrl, false, path, "WebsiteUrl")
+	err := validateURLBasic(description.WebsiteUrl, false, path, "WebsiteUrl")
 	if err != nil {
 		return err
 	}
-	err = validateUrlBasic(info.IconUrl, false, path, "IconUrl")
+	err = validateURLBasic(description.IconUrl, false, path, "IconUrl")
 	if err != nil {
 		return err
 	}
@@ -125,18 +125,18 @@ func (description Description) String() string {
 	return string(out)
 }
 
-// validateUrlBasic - Helper function to check if a url string is superficially valid.
+// validateURLBasic - Helper function to check if a url string is superficially valid.
 // The path and fieldName parameters are combined using makeFieldString for error messages.
-func validateUrlBasic(url string, required bool, path string, fieldName string) error {
+func validateURLBasic(url string, required bool, path string, fieldName string) error {
 	if len(url) == 0 {
 		if required {
 			return fmt.Errorf("url %s cannot be empty", makeFieldString(path, fieldName))
 		}
 		return nil
 	}
-	if len(url) > maxUrlLength {
+	if len(url) > maxURLLength {
 		return fmt.Errorf("url %s exceeds maximum length (expected <= %d got: %d)",
-			makeFieldString(path, fieldName), maxUrlLength, len(url))
+			makeFieldString(path, fieldName), maxURLLength, len(url))
 	}
 	if strings.ToLower(url[0:8]) != "https://" && strings.ToLower(url[0:7]) != "http://" {
 		return fmt.Errorf("url %s must begin with either http:// or https://", makeFieldString(path, fieldName))
