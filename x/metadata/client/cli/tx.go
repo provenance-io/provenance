@@ -52,13 +52,13 @@ func AddMetadataScopeCmd() *cobra.Command {
 				fmt.Printf("Invalid uuid for scope id: %s", args[0])
 				return err
 			}
-			specIdUUID, err := uuid.Parse(args[1])
+			specUUID, err := uuid.Parse(args[1])
 			if err != nil {
 				fmt.Printf("Invalid uuid for specification id: %s", args[0])
 				return err
 			}
 
-			specID := types.ScopeSpecMetadataAddress(specIdUUID)
+			specID := types.ScopeSpecMetadataAddress(specUUID)
 
 			ownerAddresses := strings.Split(args[2], ",")
 			dataAccess := strings.Split(args[3], ",")
@@ -104,7 +104,6 @@ func RemoveMetadataScopeCmd() *cobra.Command {
 		Short: "Remove a metadata scope to the provenance blockchain",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
