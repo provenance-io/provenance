@@ -66,7 +66,7 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				NewDescription(strings.Repeat("x", maxDescriptionNameLength + 1), "", "", ""),
 				[]string{}, []PartyType{}, []MetadataAddress{},
 			),
-			fmt.Sprintf("info (ScopeSpecification.Description) Name exceeds maximum length (expected <= %d got: %d)", maxDescriptionNameLength, maxDescriptionNameLength + 1),
+			fmt.Sprintf("description (ScopeSpecification.Description) Name exceeds maximum length (expected <= %d got: %d)", maxDescriptionNameLength, maxDescriptionNameLength + 1),
 			true,
 		},
 		// OwnerAddresses tests
@@ -78,7 +78,7 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				[]string{},
 				[]PartyType{}, []MetadataAddress{},
 			),
-			"ScopeSpecification must have at least one owner",
+			"the ScopeSpecification must have at least one owner",
 			true,
 		},
 		{
@@ -113,7 +113,7 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				[]PartyType{},
 				[]MetadataAddress{},
 			),
-			"ScopeSpecification must have at least one party involved",
+			"the ScopeSpecification must have at least one party involved",
 			true,
 		},
 		// group spec ids - must all pass same tests as scope spec id (groupspec prefix)
