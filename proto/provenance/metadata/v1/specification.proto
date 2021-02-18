@@ -35,6 +35,8 @@ option java_multiple_files = true;
 
 // ScopeSpecification defines the required parties, resources, conditions, and consideration outputs for a contract
 message ScopeSpecification {
+  option (gogoproto.goproto_stringer) = false;
+
   // unique identifier for this specification on chain
   bytes specification_id = 1 [
     (gogoproto.nullable)   = false,
@@ -102,6 +104,8 @@ message ContractSpec {
 
 // Description holds general information that is handy to associate with a structure.
 message Description {
+  option (gogoproto.goproto_stringer) = false;
+
   // A Name for this thing.
   string name = 1;
   // A description of this thing.

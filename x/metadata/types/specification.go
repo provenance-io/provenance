@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -74,6 +75,12 @@ func (scopeSpec *ScopeSpecification) ValidateBasic() error {
 	return nil
 }
 
+// String implements stringer interface
+func (scopeSpec ScopeSpecification) String() string {
+	out, _ := yaml.Marshal(scopeSpec)
+	return string(out)
+}
+
 // NewDescription creates a new Description instance.
 func NewDescription(name, description, websiteUrl, iconUrl string) *Description {
 	return &Description{
@@ -110,6 +117,12 @@ func (info *Description) ValidateBasic(path string) error {
 		return err
 	}
 	return nil
+}
+
+// String implements stringer interface
+func (description Description) String() string {
+	out, _ := yaml.Marshal(description)
+	return string(out)
 }
 
 // validateUrlBasic - Helper function to check if a url string is superficially valid.
