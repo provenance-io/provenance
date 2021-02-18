@@ -28,6 +28,7 @@ var (
 	_ sdk.Msg = &MsgAddRecordRequest{}
 	_ sdk.Msg = &MsgAddScopeSpecificationRequest{}
 	_ sdk.Msg = &MsgAddGroupSpecificationRequest{}
+	_ sdk.Msg = &MsgRemoveScopeRequest{}
 )
 
 // ----------------------------------------------------------------------
