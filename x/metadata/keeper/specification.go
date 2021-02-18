@@ -79,13 +79,13 @@ func (k Keeper) indexScopeSpecification(ctx sdk.Context, scopeSpec types.ScopeSp
 	for _, a := range scopeSpec.OwnerAddresses {
 		addr, err := sdk.AccAddressFromBech32(a)
 		if err == nil {
-			store.Set(types.GetAddressCacheKey(addr, scopeSpec.SpecificationId), []byte{0x01})
+			store.Set(types.GetAddressScopeCacheKey(addr, scopeSpec.SpecificationId), []byte{0x01})
 		}
 	}
 
 	// Index all the session spec ids
 	for _, groupSpecId := range scopeSpec.GroupSpecIds {
-		store.Set(types.GetScopeSpecCacheKey(scopeSpec.SpecificationId, groupSpecId), []byte{0x01})
+		store.Set(types.GetScopeSpecScopeCacheKey(scopeSpec.SpecificationId, groupSpecId), []byte{0x01})
 	}
 	 */
 }

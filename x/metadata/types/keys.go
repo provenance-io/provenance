@@ -37,7 +37,11 @@ const (
 //
 // - 0x04<scope_specification_id_bytes>: ScopeSpecification
 //
-// - 0x10<party_address><scope_key_bytes>: Role
+// - 0x10<party_address><scope_key_bytes>: 0x01
+//
+// - 0x11<scope_spec_id><scope_id>: 0x01
+//
+// - 0x12<value_owner_address><scope_id>: 0x01
 var (
 	// ScopeKeyPrefix is the key for scope records in metadata store
 	ScopeKeyPrefix = []byte{0x00}
@@ -50,40 +54,40 @@ var (
 	// ScopeSpecificationPrefix is the key for scope specifications in metadata store
 	ScopeSpecificationPrefix = []byte{0x04}
 
-	// AddressCacheKeyPrefix for scope to address cache lookup
-	AddressCacheKeyPrefix = []byte{0x10}
-	// ScopeSpecCacheKeyPrefix for scope to scope specification cache lookup
-	ScopeSpecCacheKeyPrefix = []byte{0x11}
-	// ValueOwnerCacheKeyPrefix for scope to value owner address cache lookup
-	ValueOwnerCacheKeyPrefix = []byte{0x12}
+	// AddressScopeCacheKeyPrefix for scope to address cache lookup
+	AddressScopeCacheKeyPrefix = []byte{0x10}
+	// ScopeSpecScopeCacheKeyPrefix for scope to scope specification cache lookup
+	ScopeSpecScopeCacheKeyPrefix = []byte{0x11}
+	// ValueOwnerScopeCacheKeyPrefix for scope to value owner address cache lookup
+	ValueOwnerScopeCacheKeyPrefix = []byte{0x12}
 )
 
-// GetAddressCacheIteratorPrefix returns an iterator prefix for all scope cache entries assigned to a given address
-func GetAddressCacheIteratorPrefix(addr sdk.AccAddress) []byte {
-	return append(AddressCacheKeyPrefix, addr.Bytes()...)
+// GetAddressScopeCacheIteratorPrefix returns an iterator prefix for all scope cache entries assigned to a given address
+func GetAddressScopeCacheIteratorPrefix(addr sdk.AccAddress) []byte {
+	return append(AddressScopeCacheKeyPrefix, addr.Bytes()...)
 }
 
-// GetAddressCacheKey returns the store key for an address cache entry
-func GetAddressCacheKey(addr sdk.AccAddress, scopeID MetadataAddress) []byte {
-	return append(GetAddressCacheIteratorPrefix(addr), scopeID.Bytes()...)
+// GetAddressScopeCacheKey returns the store key for an address cache entry
+func GetAddressScopeCacheKey(addr sdk.AccAddress, scopeID MetadataAddress) []byte {
+	return append(GetAddressScopeCacheIteratorPrefix(addr), scopeID.Bytes()...)
 }
 
-// GetScopeSpecCacheIteratorPrefix returns an iterator prefix for all scope cache entries assigned to a given address
-func GetScopeSpecCacheIteratorPrefix(scopeSpecID MetadataAddress) []byte {
-	return append(ScopeSpecCacheKeyPrefix, scopeSpecID.Bytes()...)
+// GetScopeSpecScopeCacheIteratorPrefix returns an iterator prefix for all scope cache entries assigned to a given address
+func GetScopeSpecScopeCacheIteratorPrefix(scopeSpecID MetadataAddress) []byte {
+	return append(ScopeSpecScopeCacheKeyPrefix, scopeSpecID.Bytes()...)
 }
 
-// GetScopeSpecCacheKey returns the store key for an address cache entry
-func GetScopeSpecCacheKey(scopeSpecID MetadataAddress, scopeID MetadataAddress) []byte {
-	return append(GetScopeSpecCacheIteratorPrefix(scopeSpecID), scopeID.Bytes()...)
+// GetScopeSpecScopeCacheKey returns the store key for an address cache entry
+func GetScopeSpecScopeCacheKey(scopeSpecID MetadataAddress, scopeID MetadataAddress) []byte {
+	return append(GetScopeSpecScopeCacheIteratorPrefix(scopeSpecID), scopeID.Bytes()...)
 }
 
-// GetValueOwnerCacheIteratorPrefix returns an iterator prefix for all scope cache entries assigned to a given address
-func GetValueOwnerCacheIteratorPrefix(addr sdk.AccAddress) []byte {
-	return append(ValueOwnerCacheKeyPrefix, addr.Bytes()...)
+// GetValueOwnerScopeCacheIteratorPrefix returns an iterator prefix for all scope cache entries assigned to a given address
+func GetValueOwnerScopeCacheIteratorPrefix(addr sdk.AccAddress) []byte {
+	return append(ValueOwnerScopeCacheKeyPrefix, addr.Bytes()...)
 }
 
-// GetValueOwnerCacheKey returns the store key for an address cache entry
-func GetValueOwnerCacheKey(addr sdk.AccAddress, scopeID MetadataAddress) []byte {
-	return append(GetValueOwnerCacheIteratorPrefix(addr), scopeID.Bytes()...)
+// GetValueOwnerScopeCacheKey returns the store key for an address cache entry
+func GetValueOwnerScopeCacheKey(addr sdk.AccAddress, scopeID MetadataAddress) []byte {
+	return append(GetValueOwnerScopeCacheIteratorPrefix(addr), scopeID.Bytes()...)
 }

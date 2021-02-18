@@ -96,7 +96,7 @@ func (k Keeper) Ownership(c context.Context, req *types.OwnershipRequest) (*type
 
 	ctx := sdk.UnwrapSDKContext(c)
 	store := ctx.KVStore(k.storeKey)
-	scopeStore := prefix.NewStore(store, types.GetAddressCacheIteratorPrefix(addr))
+	scopeStore := prefix.NewStore(store, types.GetAddressScopeCacheIteratorPrefix(addr))
 
 	scopes := make([]string, req.Pagination.Size())
 	pageRes, err := query.Paginate(scopeStore, req.Pagination, func(key, _ []byte) error {
@@ -134,7 +134,7 @@ func (k Keeper) ValueOwnership(c context.Context, req *types.ValueOwnershipReque
 
 	ctx := sdk.UnwrapSDKContext(c)
 	store := ctx.KVStore(k.storeKey)
-	scopeStore := prefix.NewStore(store, types.GetValueOwnerCacheIteratorPrefix(addr))
+	scopeStore := prefix.NewStore(store, types.GetValueOwnerScopeCacheIteratorPrefix(addr))
 
 	scopes := []string{}
 	pageRes, err := query.Paginate(scopeStore, req.Pagination, func(key, _ []byte) error {
