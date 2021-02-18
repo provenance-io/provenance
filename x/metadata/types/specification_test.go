@@ -472,7 +472,7 @@ func (s *specificationTestSuite) TestScopeSpecString() {
 		            "- cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck\n" +
 		            "parties_involved:\n" +
 		            "- 5\n" +
-		            "session_spec_ids:\n" +
+		            "group_spec_ids:\n" +
 		            "- groupspec1qd2qmt038k7yc0azq46htdlhgwzquwslkg\n"
 		actual := scopeSpec.String()
 		require.Equal(t, expected, actual)

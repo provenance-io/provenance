@@ -25,14 +25,14 @@ func NewScopeSpecification(
 	description *Description,
 	ownerAddresses []string,
 	partiesInvolved []PartyType,
-	sessionSpecIDs []MetadataAddress,
+	groupSpecIds []MetadataAddress,
 ) *ScopeSpecification {
 	return &ScopeSpecification{
 		SpecificationId: specificationID,
 		Description:     description,
 		OwnerAddresses:  ownerAddresses,
 		PartiesInvolved: partiesInvolved,
-		SessionSpecIds:  sessionSpecIDs,
+		GroupSpecIds:  groupSpecIds,
 	}
 }
 
@@ -62,7 +62,7 @@ func (scopeSpec *ScopeSpecification) ValidateBasic() error {
 	if len(scopeSpec.PartiesInvolved) == 0 {
 		return errors.New("the ScopeSpecification must have at least one party involved")
 	}
-	for i, groupSpecID := range scopeSpec.SessionSpecIds {
+	for i, groupSpecID := range scopeSpec.GroupSpecIds {
 		prefix, err = VerifyMetadataAddressFormat(groupSpecID)
 		if err != nil {
 			return fmt.Errorf("invalid group specification id at index %d: %w", i, err)
