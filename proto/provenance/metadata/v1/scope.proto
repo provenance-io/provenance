@@ -33,7 +33,7 @@ Data Structures
 
   Typically multiple records will be established within a scope at the same time (see: Contract Memorialization).  A
   Record Group contains context for the recording of these records linking a set of records into a common process/
-  execution associated with a specificaiton indicating allowed and required values.
+  execution associated with a specification indicating allowed and required values.
 
   Record
 
