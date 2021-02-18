@@ -42,6 +42,10 @@ const (
 // - 0x11<scope_spec_id><scope_id>: 0x01
 //
 // - 0x12<value_owner_address><scope_id>: 0x01
+//
+// - 0x13<owner_address><scope_spec_id>: 0x01
+//
+// - 0x14<group_spec_id><scope_spec_id>: 0x01
 var (
 	// ScopeKeyPrefix is the key for scope records in metadata store
 	ScopeKeyPrefix = []byte{0x00}
@@ -60,6 +64,11 @@ var (
 	ScopeSpecScopeCacheKeyPrefix = []byte{0x11}
 	// ValueOwnerScopeCacheKeyPrefix for scope to value owner address cache lookup
 	ValueOwnerScopeCacheKeyPrefix = []byte{0x12}
+
+	// AddressScopeSpecCacheKeyPrefix for scope spec lookup by address
+	AddressScopeSpecCacheKeyPrefix = []byte{0x13}
+	// GroupSpecScopeSpecCacheKeyPrefix for scope spec lookup by group spec
+	GroupSpecScopeSpecCacheKeyPrefix = []byte{0x14}
 )
 
 // GetAddressScopeCacheIteratorPrefix returns an iterator prefix for all scope cache entries assigned to a given address
@@ -90,4 +99,24 @@ func GetValueOwnerScopeCacheIteratorPrefix(addr sdk.AccAddress) []byte {
 // GetValueOwnerScopeCacheKey returns the store key for an address cache entry
 func GetValueOwnerScopeCacheKey(addr sdk.AccAddress, scopeID MetadataAddress) []byte {
 	return append(GetValueOwnerScopeCacheIteratorPrefix(addr), scopeID.Bytes()...)
+}
+
+// GetAddressScopeSpecCacheIteratorPrefix returns an iterator prefix for all scope spec cache entries assigned to a given address
+func GetAddressScopeSpecCacheIteratorPrefix(addr sdk.AccAddress) []byte {
+	return append(AddressScopeSpecCacheKeyPrefix, addr.Bytes()...)
+}
+
+// GetAddressScopeSpecCacheKey returns the store key for an address + scope spec cache entry
+func GetAddressScopeSpecCacheKey(addr sdk.AccAddress, scopeSpecID MetadataAddress) []byte {
+	return append(GetAddressScopeSpecCacheIteratorPrefix(addr), scopeSpecID.Bytes()...)
+}
+
+// GetGroupSpecScopeSpecCacheIteratorPrefix returns an iterator prefix for all scope spec cache entries assigned to a given group spec
+func GetGroupSpecScopeSpecCacheIteratorPrefix(groupSpecId MetadataAddress) []byte {
+	return append(GroupSpecScopeSpecCacheKeyPrefix, groupSpecId.Bytes()...)
+}
+
+// GetGroupSpecScopeSpecCacheKey returns the store key for a group spec + scope spec cache entry
+func GetGroupSpecScopeSpecCacheKey(groupSpecId MetadataAddress, scopeSpecID MetadataAddress) []byte {
+	return append(GetGroupSpecScopeSpecCacheIteratorPrefix(groupSpecId), scopeSpecID.Bytes()...)
 }
