@@ -445,3 +445,56 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 		})
 	}
 }
+
+func (s *specificationTestSuite) TestScopeSpecString() {
+	s.T().Run("scope specification string", func(t *testing.T) {
+		scopeSpecUuid := uuid.MustParse("c2074a03-6f6d-4029-bfe2-c3a5eb7e68b1")
+		groupSpecUuid := uuid.MustParse("540dadf1-3dbc-4c3f-a205-7575b7f74384")
+		scopeSpec := NewScopeSpecification(
+			ScopeSpecMetadataAddress(scopeSpecUuid),
+			NewDescription(
+				"TestScopeSpecString Description",
+				"This is a description of a description used in a unit test.",
+				"https://figure.com/",
+				"https://figure.com/favicon.png",
+			),
+			[]string{specTestBech32},
+			[]PartyType{PartyType_PARTY_TYPE_OWNER},
+			[]MetadataAddress{GroupSpecMetadataAddress(groupSpecUuid)},
+		)
+		expected := "specification_id: scopespec1qnpqwjsrdak5q2dlutp6t6m7dzcscd7ff6\n" +
+		            "description:\n" +
+		            "  name: TestScopeSpecString Description\n" +
+		            "  description: This is a description of a description used in a unit test.\n" +
+		            "  website_url: https://figure.com/\n" +
+		            "  icon_url: https://figure.com/favicon.png\n" +
+		            "owner_addresses:\n" +
+		            "- cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck\n" +
+		            "parties_involved:\n" +
+		            "- 5\n" +
+		            "session_spec_ids:\n" +
+		            "- groupspec1qd2qmt038k7yc0azq46htdlhgwzquwslkg\n"
+		actual := scopeSpec.String()
+		fmt.Printf("scopeSpecUuid: [%s]\n", scopeSpecUuid)
+		fmt.Printf("groupSpecUuid: [%s]\n", groupSpecUuid)
+		fmt.Println(actual)
+		require.Equal(t, expected, actual)
+	})
+}
+
+func (s *specificationTestSuite) TestDescriptionString() {
+	s.T().Run("description string", func(t *testing.T) {
+		description := NewDescription(
+			"TestDescriptionString",
+			"This is a description of a description used in a unit test.",
+			"https://homestarrunner.com/",
+			"https://homestarrunner.com/assets/sbemails/sbemail_hsrlogo_color.png",
+		)
+		expected := "name: TestDescriptionString\n" +
+		            "description: This is a description of a description used in a unit test.\n" +
+		            "website_url: https://homestarrunner.com/\n" +
+		            "icon_url: https://homestarrunner.com/assets/sbemails/sbemail_hsrlogo_color.png\n"
+		actual := description.String()
+		require.Equal(t, expected, actual)
+	})
+}
