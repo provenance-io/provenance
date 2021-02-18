@@ -71,32 +71,37 @@ func (k Keeper) SetScopeSpecification(ctx sdk.Context, spec types.ScopeSpecifica
 }
 
 func (k Keeper) indexScopeSpecification(ctx sdk.Context, scopeSpec types.ScopeSpecification) {
-	// TODO: Clean this up
-	/*
 	store := ctx.KVStore(k.storeKey)
 
 	// Index all the scope spec owner addresses
 	for _, a := range scopeSpec.OwnerAddresses {
 		addr, err := sdk.AccAddressFromBech32(a)
 		if err == nil {
-			store.Set(types.GetAddressScopeCacheKey(addr, scopeSpec.SpecificationId), []byte{0x01})
+			store.Set(types.GetAddressScopeSpecCacheKey(addr, scopeSpec.SpecificationId), []byte{0x01})
 		}
 	}
 
 	// Index all the session spec ids
 	for _, groupSpecId := range scopeSpec.GroupSpecIds {
-		store.Set(types.GetScopeSpecScopeCacheKey(scopeSpec.SpecificationId, groupSpecId), []byte{0x01})
+		store.Set(types.GetGroupSpecScopeSpecCacheKey(groupSpecId, scopeSpec.SpecificationId), []byte{0x01})
 	}
-	 */
 }
 
 func (k Keeper) clearScopeSpecificationIndex(ctx sdk.Context, scopeSpec types.ScopeSpecification) {
-	// TODO: finish this up
-	/*
 	store := ctx.KVStore(k.storeKey)
 
-	// Delete all scope spec owner address entries
-	 */
+	// Delete all owner address + scope spec entries
+	for _, a := range scopeSpec.OwnerAddresses {
+		addr, err := sdk.AccAddressFromBech32(a)
+		if err == nil {
+			store.Delete(types.GetAddressScopeSpecCacheKey(addr, scopeSpec.SpecificationId))
+		}
+	}
+
+	// Delete all group spec + scope spec entries
+	for _, groupSpecId := range scopeSpec.GroupSpecIds {
+		store.Delete(types.GetGroupSpecScopeSpecCacheKey(groupSpecId, scopeSpec.SpecificationId))
+	}
 }
 
 func (k Keeper) isScopeSpecUsed(ctx sdk.Context, id types.MetadataAddress) bool {
