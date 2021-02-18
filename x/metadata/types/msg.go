@@ -9,14 +9,14 @@ import (
 )
 
 const (
-	TypeMsgMemorializeContractRequest   = "memorialize_contract_request"
-	TypeMsgChangeOwnershipRequest       = "change_ownershipr_equest"
-	TypeMsgAddScopeRequest              = "add_scope_request"
-	TypeMsgRemoveScopeRequest           = "remove_scope_request"
-	TypeMsgAddRecordGroupRequest        = "add_recordgroup_request"
-	TypeMsgAddRecordRequest             = "add_record_request"
-	TypeMsgAddScopeSpecificationRequest = "add_scope_specification_request"
-	TypeMsgAddGroupSpecificationRequest = "add_group_specification_request"
+	TypeMsgMemorializeContractRequest      = "memorialize_contract_request"
+	TypeMsgChangeOwnershipRequest          = "change_ownershipr_equest"
+	TypeMsgAddScopeRequest                 = "add_scope_request"
+	TypeMsgRemoveScopeRequest              = "remove_scope_request"
+	TypeMsgAddRecordGroupRequest           = "add_recordgroup_request"
+	TypeMsgAddRecordRequest                = "add_record_request"
+	TypeMsgAddScopeSpecificationRequest    = "add_scope_specification_request"
+	TypeMsgAddContractSpecificationRequest = "add_group_specification_request"
 )
 
 // Compile time interface checks.
@@ -24,11 +24,11 @@ var (
 	_ sdk.Msg = &MsgMemorializeContractRequest{}
 	_ sdk.Msg = &MsgChangeOwnershipRequest{}
 	_ sdk.Msg = &MsgAddScopeRequest{}
+	_ sdk.Msg = &MsgRemoveScopeRequest{}
 	_ sdk.Msg = &MsgAddRecordGroupRequest{}
 	_ sdk.Msg = &MsgAddRecordRequest{}
 	_ sdk.Msg = &MsgAddScopeSpecificationRequest{}
-	_ sdk.Msg = &MsgAddGroupSpecificationRequest{}
-	_ sdk.Msg = &MsgRemoveScopeRequest{}
+	_ sdk.Msg = &MsgAddContractSpecificationRequest{}
 )
 
 // ----------------------------------------------------------------------
@@ -356,24 +356,26 @@ func (msg MsgAddScopeSpecificationRequest) ValidateBasic() error {
 
 // ----------------------------------------------------------------------
 
-// NewMsgAddGroupSpecificationRequest creates a new msg instance
-func NewMsgAddGroupSpecificationRequest() *MsgAddGroupSpecificationRequest {
-	return &MsgAddGroupSpecificationRequest{}
+// NewMsgAddContractSpecificationRequest creates a new msg instance
+func NewMsgAddContractSpecificationRequest() *MsgAddContractSpecificationRequest {
+	return &MsgAddContractSpecificationRequest{}
 }
 
-func (msg MsgAddGroupSpecificationRequest) String() string {
+func (msg MsgAddContractSpecificationRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
 // Route returns the module route
-func (msg MsgAddGroupSpecificationRequest) Route() string { return ModuleName }
+func (msg MsgAddContractSpecificationRequest) Route() string { return ModuleName }
 
 // Type returns the type name for this msg
-func (msg MsgAddGroupSpecificationRequest) Type() string { return TypeMsgAddGroupSpecificationRequest }
+func (msg MsgAddContractSpecificationRequest) Type() string {
+	return TypeMsgAddContractSpecificationRequest
+}
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
-func (msg MsgAddGroupSpecificationRequest) GetSigners() []sdk.AccAddress {
+func (msg MsgAddContractSpecificationRequest) GetSigners() []sdk.AccAddress {
 	delAddr, err := sdk.AccAddressFromBech32(msg.Notary)
 	if err != nil {
 		panic(err)
@@ -382,11 +384,11 @@ func (msg MsgAddGroupSpecificationRequest) GetSigners() []sdk.AccAddress {
 }
 
 // GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgAddGroupSpecificationRequest) GetSignBytes() []byte {
+func (msg MsgAddContractSpecificationRequest) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
-func (msg MsgAddGroupSpecificationRequest) ValidateBasic() error {
+func (msg MsgAddContractSpecificationRequest) ValidateBasic() error {
 	return nil
 }

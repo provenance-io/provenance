@@ -32,8 +32,8 @@ service Msg {
 
   // AddScopeSpecification adds a set of records in a record group within a scope
   rpc AddScopeSpecification(MsgAddScopeSpecificationRequest) returns (MsgAddScopeSpecificationResponse);
-  // AddGroupSpecification adds a set of records in a record group within a scope
-  rpc AddGroupSpecification(MsgAddGroupSpecificationRequest) returns (MsgAddGroupSpecificationResponse);
+  // AddContractSpecification adds a set of records in a record group within a scope
+  rpc AddContractSpecification(MsgAddContractSpecificationRequest) returns (MsgAddContractSpecificationResponse);
 }
 
 // MsgMemorializeContractRequest is a request from a P8e execution environment to record results of a contract
@@ -163,16 +163,16 @@ message MsgAddScopeSpecificationRequest {
 // MsgAddScopeSpecificationResponse from an add records request
 message MsgAddScopeSpecificationResponse {}
 
-// MsgAddGroupSpecificationRequest is a request to add a group of records to a scope
-message MsgAddGroupSpecificationRequest {
+// MsgAddContractSpecificationRequest is a request to add a group of records to a scope
+message MsgAddContractSpecificationRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-  GroupSpecification specification = 1;
-  string             notary        = 2;
+  ContractSpecification specification = 1;
+  string                notary        = 2;
 }
 
-// MsgAddGroupSpecificationResponse from an add records request
-message MsgAddGroupSpecificationResponse {}
+// AddContractSpecificationResponse from an add records request
+message MsgAddContractSpecificationResponse {}

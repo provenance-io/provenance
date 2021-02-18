@@ -25,8 +25,8 @@ const (
 	PrefixRecord = "record"
 	// PrefixScopeSpecification is the address human readable prefix used with bech32 encoding of ScopeSpecification IDs
 	PrefixScopeSpecification = "scopespec"
-	// PrefixGroupSpecification is the address human readable prefix used with bech32 encoding of GroupSpecification IDs
-	PrefixGroupSpecification = "groupspec"
+	// PrefixContractSpecification is the address human readable prefix used with bech32 encoding of ContractSpecification IDs
+	PrefixContractSpecification = "contractspec"
 )
 
 var (
@@ -59,8 +59,8 @@ func VerifyMetadataAddressFormat(bz []byte) (string, error) {
 	case ScopeSpecificationPrefix[0]:
 		hrp = PrefixScopeSpecification
 		requiredLength = 1 + 16 // type byte plus size of one uuid
-	case GroupSpecificationPrefix[0]:
-		hrp = PrefixGroupSpecification
+	case ContractSpecificationPrefix[0]:
+		hrp = PrefixContractSpecification
 		requiredLength = 1 + 16 // type byte plus size of one uuid
 
 	default:
@@ -177,7 +177,7 @@ func GroupSpecMetadataAddress(specUUID uuid.UUID) MetadataAddress {
 	if err != nil {
 		panic(err)
 	}
-	return append(GroupSpecificationPrefix, bz...)
+	return append(ContractSpecificationPrefix, bz...)
 }
 
 // Equals determines if the current MetadataAddress is equal to another sdk.Address
@@ -431,8 +431,8 @@ func (ma MetadataAddress) IsScopeSpecificationAddress() bool {
 	return (err == nil && hrp == PrefixScopeSpecification)
 }
 
-// IsGroupSpecificationAddress returns true is the address is valid and matches this type
-func (ma MetadataAddress) IsGroupSpecificationAddress() bool {
+// IsContractSpecificationAddress returns true is the address is valid and matches this type
+func (ma MetadataAddress) IsContractSpecificationAddress() bool {
 	hrp, err := VerifyMetadataAddressFormat(ma)
-	return (err == nil && hrp == PrefixGroupSpecification)
+	return (err == nil && hrp == PrefixContractSpecification)
 }

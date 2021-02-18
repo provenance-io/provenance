@@ -33,7 +33,7 @@ const (
 //
 // - 0x02<scope_key_bytes><record_name_bytes>: Record
 //
-// - 0x03<group_specification_hash>: GroupSpecification
+// - 0x03<group_specification_hash>: ContractSpecification
 //
 // - 0x04<scope_specification_id_bytes>: ScopeSpecification
 //
@@ -45,8 +45,8 @@ var (
 	GroupKeyPrefix = []byte{0x01}
 	// RecordKeyPrefix is the key for records within scopes in metadata store
 	RecordKeyPrefix = []byte{0x02}
-	// GroupSpecificationPrefix is the key for group specification instances in metadata store
-	GroupSpecificationPrefix = []byte{0x03}
+	// ContractSpecificationPrefix is the key for group specification instances in metadata store
+	ContractSpecificationPrefix = []byte{0x03}
 	// ScopeSpecificationPrefix is the key for scope specifications in metadata store
 	ScopeSpecificationPrefix = []byte{0x04}
 

@@ -12,15 +12,15 @@ func NewGenesisState(
 	groups []RecordGroup,
 	records []Record,
 	scopeSpecs []ScopeSpecification,
-	groupSpecs []GroupSpecification,
+	contracSpecs []ContractSpecification,
 ) *GenesisState {
 	return &GenesisState{
-		Params:              params,
-		Scopes:              scopes,
-		Groups:              groups,
-		Records:             records,
-		ScopeSpecifications: scopeSpecs,
-		GroupSpecifications: groupSpecs,
+		Params:                 params,
+		Scopes:                 scopes,
+		Groups:                 groups,
+		Records:                records,
+		ScopeSpecifications:    scopeSpecs,
+		ContractSpecifications: contracSpecs,
 	}
 }
 

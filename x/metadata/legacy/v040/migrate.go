@@ -20,7 +20,7 @@ func Migrate(oldGenState v039metadata.GenesisState) *v040metadata.GenesisState {
 	var scopes = make([]v040metadata.Scope, 0, len(oldGenState.ScopeRecords))
 	var groups = make([]v040metadata.RecordGroup, 0)
 	var records = make([]v040metadata.Record, 0)
-	var groupSpecs = make([]v040metadata.GroupSpecification, 0)
+	var groupSpecs = make([]v040metadata.ContractSpecification, 0)
 
 	for i := range oldGenState.ScopeRecords {
 		s, g, r := convertScope(&oldGenState.ScopeRecords[i])
@@ -37,10 +37,10 @@ func Migrate(oldGenState v039metadata.GenesisState) *v040metadata.GenesisState {
 	return &v040metadata.GenesisState{
 		Params: v040metadata.DefaultGenesisState().Params,
 
-		Scopes:              scopes,
-		Groups:              groups,
-		Records:             records,
-		GroupSpecifications: groupSpecs,
+		Scopes:                 scopes,
+		Groups:                 groups,
+		Records:                records,
+		ContractSpecifications: groupSpecs,
 	}
 }
 
@@ -252,7 +252,7 @@ func BackportScope(
 		}
 
 		specHash := ""
-		spec, found := k.GetGroupSpecification(ctx, t.SpecificationId)
+		spec, found := k.GetContractSpecification(ctx, t.SpecificationId)
 		if found {
 			specHash = spec.Definition.ResourceLocation.Hash
 		}

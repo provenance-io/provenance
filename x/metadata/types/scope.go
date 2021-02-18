@@ -76,10 +76,10 @@ func (s Scope) String() string {
 }
 
 // NewRecordGroup creates a new instance
-func NewRecordGroup(name string, groupID, groupSpecification MetadataAddress, parties []Party) *RecordGroup {
+func NewRecordGroup(name string, groupID, contractSpecification MetadataAddress, parties []Party) *RecordGroup {
 	return &RecordGroup{
 		GroupId:         groupID,
-		SpecificationId: groupSpecification,
+		SpecificationId: contractSpecification,
 		Parties:         parties,
 		Name:            name,
 		Audit:           AuditFields{},
@@ -107,8 +107,8 @@ func (rg *RecordGroup) ValidateBasic() error {
 	if err != nil {
 		return err
 	}
-	if prefix != PrefixGroupSpecification {
-		return fmt.Errorf("invalid group specification identifier (expected: %s, got %s)", PrefixGroupSpecification, prefix)
+	if prefix != PrefixContractSpecification {
+		return fmt.Errorf("invalid contract specification identifier (expected: %s, got %s)", PrefixContractSpecification, prefix)
 	}
 	if len(rg.Name) == 0 {
 		return errors.New("record group name can not be empty")

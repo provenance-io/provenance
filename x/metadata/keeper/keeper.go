@@ -43,10 +43,10 @@ type MetadataKeeperI interface {
 	// IterateRecords processes all stored record for a scope with the given handler.
 	IterateRecords(sdk.Context, types.MetadataAddress, func(types.Record) bool) error
 
-	// GetGroupSpecification returns the record with the given address.
-	GetGroupSpecification(sdk.Context, types.MetadataAddress) (types.GroupSpecification, bool)
-	// SetGroupSpecification persists the provided group specification
-	SetGroupSpecification(sdk.Context, types.GroupSpecification)
+	// GetContractSpecification returns the record with the given address.
+	GetContractSpecification(sdk.Context, types.MetadataAddress) (types.ContractSpecification, bool)
+	// SetContractSpecification persists the provided group specification
+	SetContractSpecification(sdk.Context, types.ContractSpecification)
 
 	// GetScopeSpecification returns the record with the given address.
 	GetScopeSpecification(sdk.Context, types.MetadataAddress) (types.ScopeSpecification, bool)

@@ -173,7 +173,7 @@ func (m *Scope) GetValueOwnerAddress() string {
 //that reference a RecordGroup it is removed.
 type RecordGroup struct {
 	GroupId MetadataAddress `protobuf:"bytes,1,opt,name=group_id,json=groupId,proto3,customtype=MetadataAddress" json:"group_id" json:"group_id" yaml:"group_id"`
-	// unique id of the record groupd specification instance that was used to create this group.
+	// unique id of the contract specification associated with this session
 	SpecificationId MetadataAddress `protobuf:"bytes,2,opt,name=specification_id,json=specificationId,proto3,customtype=MetadataAddress" json:"specification_id" yaml:"specification_id"`
 	// Set of identities that signed this contract
 	Parties []Party `protobuf:"bytes,3,rep,name=parties,proto3" json:"parties"`

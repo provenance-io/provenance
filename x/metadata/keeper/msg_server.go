@@ -78,10 +78,10 @@ func (k msgServer) AddScopeSpecification(
 	return nil, fmt.Errorf("not implemented")
 }
 
-func (k msgServer) AddGroupSpecification(
+func (k msgServer) AddContractSpecification(
 	goCtx context.Context,
-	msg *types.MsgAddGroupSpecificationRequest,
-) (*types.MsgAddGroupSpecificationResponse, error) {
+	msg *types.MsgAddContractSpecificationRequest,
+) (*types.MsgAddContractSpecificationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// TODO (contract keeper class  methods to process request, keeper methods to record it)
