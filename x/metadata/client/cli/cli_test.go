@@ -90,23 +90,32 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	metadataData.Scopes = append(metadataData.Scopes, s.scope)
 	metadataDataBz, err := cfg.Codec.MarshalJSON(&metadataData)
 	s.Require().NoError(err)
+	genesisState[metadatatypes.ModuleName] = metadataDataBz
 
+	// adding to auth genesis does not work due to cosmos sdk overwritting it
 	var authData authtypes.GenesisState
 	s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[authtypes.ModuleName], &authData))
-	genAccount, err := codectypes.NewAnyWithValue(&authtypes.BaseAccount{
-		Address:       s.accountAddr.String(),
-		AccountNumber: 1,
-		Sequence:      0,
-	})
+	genAccount, err := codectypes.NewAnyWithValue(authtypes.NewBaseAccount(s.accountAddr, s.accountKey.PubKey(), 1, 1))
 	s.Require().NoError(err)
 	authData.Accounts = append(authData.Accounts, genAccount)
 
-	genesisState[metadatatypes.ModuleName] = metadataDataBz
+	user1Account, err := codectypes.NewAnyWithValue(authtypes.NewBaseAccount(s.user1Addr, s.pubkey1, 2, 2))
+	s.Require().NoError(err)
+	authData.Accounts = append(authData.Accounts, user1Account)
+
+	user2Account, err := codectypes.NewAnyWithValue(authtypes.NewBaseAccount(s.user2Addr, s.pubkey2, 3, 3))
+	s.Require().NoError(err)
+	authData.Accounts = append(authData.Accounts, user2Account)
+
+	authDataBz, err := cfg.Codec.MarshalJSON(&authData)
+	s.Require().NoError(err)
+	genesisState[authtypes.ModuleName] = authDataBz
 
 	cfg.GenesisState = genesisState
 
 	s.cfg = cfg
 
+	// TODO: This is overwritting some of our genesis states https://github.com/provenance-io/provenance/issues/81
 	s.testnet = testnet.New(s.T(), cfg)
 
 	_, err = s.testnet.WaitForHeight(1)
@@ -200,6 +209,9 @@ value_owner_address: %s`,
 }
 
 func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
+
+	scopeUUID := uuid.New().String()
+
 	testCases := []struct {
 		name         string
 		cmd          *cobra.Command
@@ -212,7 +224,7 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 			"Should successfully add metadata scope",
 			cli.AddMetadataScopeCmd(),
 			[]string{
-				uuid.New().String(),
+				scopeUUID,
 				uuid.New().String(),
 				s.user1,
 				s.user1,
@@ -226,15 +238,190 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 			false, &sdk.TxResponse{}, 0,
 		},
 		{
-			"Should fail to add metadata scope, incorrect user",
+			"Should fail to add metadata scope, incorrect scope uuid",
+			cli.AddMetadataScopeCmd(),
+			[]string{
+				"not-a-uuid",
+				uuid.New().String(),
+				s.user1,
+				s.user1,
+				s.user1,
+				s.testnet.Validators[0].Address.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, &sdk.TxResponse{}, 0,
+		},
+		{
+			"Should fail to add metadata scope, incorrect scope spec uuid",
+			cli.AddMetadataScopeCmd(),
+			[]string{
+				uuid.New().String(),
+				"not-a-uuid",
+				s.user1,
+				s.user1,
+				s.user1,
+				s.testnet.Validators[0].Address.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, &sdk.TxResponse{}, 0,
+		},
+		{
+			"Should fail to add metadata scope, incorrect scope spec uuid",
+			cli.AddMetadataScopeCmd(),
+			[]string{
+				uuid.New().String(),
+				"not-a-uuid",
+				s.user1,
+				s.user1,
+				s.user1,
+				s.testnet.Validators[0].Address.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, &sdk.TxResponse{}, 0,
+		},
+		{
+			"Should fail to add metadata scope, incorrect owner address format",
+			cli.AddMetadataScopeCmd(),
+			[]string{
+				uuid.New().String(),
+				uuid.New().String(),
+				"incorrect,incorrect",
+				s.user1,
+				s.user1,
+				s.testnet.Validators[0].Address.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, &sdk.TxResponse{}, 0,
+		},
+		{
+			"Should fail to add metadata scope, incorrect data access format",
 			cli.AddMetadataScopeCmd(),
 			[]string{
 				uuid.New().String(),
 				uuid.New().String(),
 				s.user1,
-				s.user2,
-				s.user2,
+				"incorrect,incorrect",
+				s.user1,
 				s.testnet.Validators[0].Address.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.user1),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, &sdk.TxResponse{}, 0,
+		},
+		{
+			"Should fail to add metadata scope, incorrect value owner address",
+			cli.AddMetadataScopeCmd(),
+			[]string{
+				uuid.New().String(),
+				uuid.New().String(),
+				s.user1,
+				s.user1,
+				"incorrect",
+				s.testnet.Validators[0].Address.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.user1),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, &sdk.TxResponse{}, 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
+
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestRemoveMetadataScopeCmd() {
+
+	userId := s.testnet.Validators[0].Address.String()
+	scopeUUID := uuid.New().String()
+
+	testCases := []struct {
+		name         string
+		cmd          *cobra.Command
+		args         []string
+		expectErr    bool
+		respType     proto.Message
+		expectedCode uint32
+	}{
+		{
+			"Should successfully add metadata scope for testing scope removal",
+			cli.AddMetadataScopeCmd(),
+			[]string{
+				scopeUUID,
+				uuid.New().String(),
+				userId,
+				userId,
+				userId,
+				userId,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"Should fail to remove metadata scope, invalid scopeid",
+			cli.RemoveMetadataScopeCmd(),
+			[]string{
+				"not-valid",
+				userId,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, &sdk.TxResponse{}, 0,
+		},
+		{
+			"Should fail to remove metadata scope, invalid userid",
+			cli.RemoveMetadataScopeCmd(),
+			[]string{
+				scopeUUID,
+				"not-valid",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, &sdk.TxResponse{}, 0,
+		},
+		{
+			"Should remove metadata scope",
+			cli.RemoveMetadataScopeCmd(),
+			[]string{
+				scopeUUID,
+				userId,
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -257,7 +444,6 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				fmt.Printf("Response: %s", txResp.String())
 				s.Require().Equal(tc.expectedCode, txResp.Code)
 			}
 		})
