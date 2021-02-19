@@ -208,17 +208,8 @@ func (k Keeper) ValidateScopeSpecUpdate(ctx sdk.Context, existing, proposed type
 	}
 
 	// Signatures required of all existing data owners.
-	for _, owner := range existing.OwnerAddresses {
-		found := false
-		for _, signer := range signers {
-			if owner == signer {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return fmt.Errorf("missing signature from existing owner %s; required for update", owner)
-		}
+	if err := k.ValidateScopeSpecAllOwnersAreSigners(existing, signers); err != nil {
+		return err
 	}
 
 	// Validate the proposed contract spec ids.
@@ -244,5 +235,22 @@ func (k Keeper) ValidateScopeSpecUpdate(ctx sdk.Context, existing, proposed type
 		}
 	}
 
+	return nil
+}
+
+// ValidateScopeSpecAllOwnersAreSigners validates that all entries in the scopeSpec.OwnerAddresses list are contained in the provided signers list.
+func (k Keeper) ValidateScopeSpecAllOwnersAreSigners(scopeSpec types.ScopeSpecification, signers []string) error {
+	for _, owner := range scopeSpec.OwnerAddresses {
+		found := false
+		for _, signer := range signers {
+			if owner == signer {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("missing signature from existing owner %s; required for update", owner)
+		}
+	}
 	return nil
 }
