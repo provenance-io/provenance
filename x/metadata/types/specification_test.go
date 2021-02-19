@@ -32,9 +32,6 @@ func (s *specificationTestSuite) SetupSuite() {
 	s.T().Parallel()
 }
 
-// TODO: Update references to 'groupspec' when merging other groupSpec -> contractSpec changes.
-// TODO: Update references to GroupSpecMetadataAddress when merging other groupSpec -> contractSpec changes.
-
 func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 	tests := []struct {
 		name     string

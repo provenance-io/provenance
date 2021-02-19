@@ -67,7 +67,6 @@ func (scopeSpec *ScopeSpecification) ValidateBasic() error {
 		if err != nil {
 			return fmt.Errorf("invalid contract specification id at index %d: %w", i, err)
 		}
-		// TODO: Change usage of PrefixGroupSpecification when merging other groupSpec -> contractSpec changes.
 		if prefix != PrefixGroupSpecification {
 			return fmt.Errorf("invalid contract specification id prefix at index %d (expected: %s, got %s)",
 				i, PrefixGroupSpecification, prefix)

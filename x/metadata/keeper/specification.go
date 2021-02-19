@@ -222,7 +222,6 @@ func (k Keeper) ValidateScopeSpecUpdate(ctx sdk.Context, existing, proposed type
 
 	// Validate the proposed contract spec ids.
 	for _, contractSpecID := range proposed.ContractSpecIds {
-		// TODO: Change usage of GetGroupSpecification when merging other groupSpec -> contractSpec changes.
 		contractSpec, found := k.GetGroupSpecification(ctx, contractSpecID)
 		// Make sure that all contract spec ids are valid and exist
 		if !found {
