@@ -1,9 +1,10 @@
 package keeper
 
 import (
-	"github.com/provenance-io/provenance/x/metadata/types"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
 // GetGroupSpecification returns the record with the given id.
@@ -25,6 +26,57 @@ func (k Keeper) SetGroupSpecification(ctx sdk.Context, spec types.GroupSpecifica
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryBare(&spec)
 	store.Set(spec.SpecificationId, b)
+}
+
+// IterateScopeSpecs processes all scope specs using a given handler.
+func (k Keeper) IterateScopeSpecs(ctx sdk.Context, handler func(specification types.ScopeSpecification) (stop bool)) error {
+	store := ctx.KVStore(k.storeKey)
+	it := sdk.KVStorePrefixIterator(store, types.ScopeSpecificationPrefix)
+	defer it.Close()
+	for ; it.Valid(); it.Next() {
+		var scopeSpec types.ScopeSpecification
+		k.cdc.MustUnmarshalBinaryBare(it.Value(), &scopeSpec)
+		if (handler(scopeSpec)) {
+			break
+		}
+	}
+	return nil
+}
+
+// IterateScopeSpecsForAddress processes all scope specs associated with an address using a given handler.
+func (k Keeper) IterateScopeSpecsForAddress(ctx sdk.Context, address sdk.AccAddress, handler func(scopeSpecID types.MetadataAddress) (stop bool)) error {
+	store := ctx.KVStore(k.storeKey)
+	prefix := types.GetAddressScopeSpecCacheIteratorPrefix(address)
+	it := sdk.KVStorePrefixIterator(store, prefix)
+	defer it.Close()
+	for ; it.Valid(); it.Next() {
+		var scopeSpecID types.MetadataAddress
+		if err := scopeSpecID.Unmarshal(it.Key()[len(prefix):]); err != nil {
+			return err
+		}
+		if (handler(scopeSpecID)) {
+			break
+		}
+	}
+	return nil
+}
+
+// IterateScopeSpecsForGroupSpec processes all scope specs associated with a group spec id using a given handler.
+func (k Keeper) IterateScopeSpecsForGroupSpec(ctx sdk.Context, groupSpecID types.MetadataAddress, handler func(scopeSpecID types.MetadataAddress) (stop bool)) error {
+	store := ctx.KVStore(k.storeKey)
+	prefix := types.GetGroupSpecScopeSpecCacheIteratorPrefix(groupSpecID)
+	it := sdk.KVStorePrefixIterator(store, prefix)
+	defer it.Close()
+	for ; it.Valid(); it.Next() {
+		var scopeSpecID types.MetadataAddress
+		if err := scopeSpecID.Unmarshal(it.Key()[len(prefix):]); err != nil {
+			return err
+		}
+		if (handler(scopeSpecID)) {
+			break
+		}
+	}
+	return nil
 }
 
 // GetScopeSpecification returns the record with the given id.
@@ -70,6 +122,29 @@ func (k Keeper) SetScopeSpecification(ctx sdk.Context, spec types.ScopeSpecifica
 	)
 }
 
+// DeleteScopeSpec deletes a scope specification from the module kv store.
+func (k Keeper) DeleteScopeSpec(ctx sdk.Context, id types.MetadataAddress) {
+	store := ctx.KVStore(k.storeKey)
+
+	scopeSpec, found := k.GetScopeSpecification(ctx, id)
+	if !found || k.isScopeSpecUsed(ctx, id) {
+		return
+	}
+
+	k.clearScopeSpecificationIndex(ctx, scopeSpec)
+
+	store.Delete(id)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeScopeSpecificationRemoved,
+			sdk.NewAttribute(types.AttributeKeyScopeSpecID, scopeSpec.SpecificationId.String()),
+			sdk.NewAttribute(types.AttributeKeyScopeSpec, scopeSpec.String()),
+		),
+	)
+}
+
+// indexScopeSpecification adds all desired indexes for a scope specification.
 func (k Keeper) indexScopeSpecification(ctx sdk.Context, scopeSpec types.ScopeSpecification) {
 	store := ctx.KVStore(k.storeKey)
 
@@ -87,6 +162,8 @@ func (k Keeper) indexScopeSpecification(ctx sdk.Context, scopeSpec types.ScopeSp
 	}
 }
 
+// clearScopeSpecificationIndex removes all indexes for the given scope spec.
+// The provided scope spec must be one that is already stored (as opposed to a new one or updated version of one).
 func (k Keeper) clearScopeSpecificationIndex(ctx sdk.Context, scopeSpec types.ScopeSpecification) {
 	store := ctx.KVStore(k.storeKey)
 
@@ -104,6 +181,7 @@ func (k Keeper) clearScopeSpecificationIndex(ctx sdk.Context, scopeSpec types.Sc
 	}
 }
 
+// isScopeSpecUsed checks to see if a scope exists that is defined by this scope spec.
 func (k Keeper) isScopeSpecUsed(ctx sdk.Context, id types.MetadataAddress) bool {
 	scopeSpecReferenceFound := false
 	k.IterateScopesForScopeSpec(ctx, id, func(scopeID types.MetadataAddress) (stop bool) {
@@ -111,4 +189,59 @@ func (k Keeper) isScopeSpecUsed(ctx sdk.Context, id types.MetadataAddress) bool 
 		return true
 	})
 	return scopeSpecReferenceFound
+}
+
+// ValidateScopeSpecUpdate - full validation of a scope specification.
+func (k Keeper) ValidateScopeSpecUpdate(ctx sdk.Context, existing, proposed types.ScopeSpecification, signers []string) error {
+	// IDS must match
+	if len(existing.SpecificationId) > 0 {
+		if !proposed.SpecificationId.Equals(existing.SpecificationId) {
+			return fmt.Errorf("cannot update scope spec identifier. expected %s, got %s",
+				existing.SpecificationId, proposed.SpecificationId)
+		}
+	}
+
+	// Must pass basic validation.
+	if err := proposed.ValidateBasic(); err != nil {
+		return err
+	}
+
+	// Signatures required of all existing data owners.
+	for _, owner := range existing.OwnerAddresses {
+		found := false
+		for _, signer := range signers {
+			if owner == signer {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("missing signature from existing owner %s; required for update", owner)
+		}
+	}
+
+	// Validate the proposed group spec ids.
+	for _, groupSpecID := range proposed.GroupSpecIds {
+		groupSpec, found := k.GetGroupSpecification(ctx, groupSpecID)
+		// Make sure that all group spec ids are valid and exist
+		if !found {
+			return fmt.Errorf("no group spec exists with id %s", groupSpecID)
+		}
+		// Also make sure that the parties in each group spec are also in the scope spec.
+		for _, groupSpecParty := range groupSpec.PartiesInvolved {
+			found := false
+			for _, scopeSpecParty := range proposed.PartiesInvolved {
+				if groupSpecParty == scopeSpecParty {
+					found = true
+					break
+				}
+			}
+			if !found {
+				fmt.Errorf("group specification party involved missing from from scope specification parties involved: (%d) %s",
+					groupSpecParty, groupSpecParty.String())
+			}
+		}
+	}
+
+	return nil
 }
