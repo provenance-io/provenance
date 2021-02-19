@@ -32,6 +32,9 @@ func (s *specificationTestSuite) SetupSuite() {
 	s.T().Parallel()
 }
 
+// TODO: Update references to 'groupspec' when merging other groupSpec -> contractSpec changes.
+// TODO: Update references to GroupSpecMetadataAddress when merging other groupSpec -> contractSpec changes.
+
 func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 	tests := []struct {
 		name     string
@@ -116,9 +119,9 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 			"the ScopeSpecification must have at least one party involved",
 			true,
 		},
-		// group spec ids - must all pass same tests as scope spec id (groupspec prefix)
+		// contract spec ids - must all pass same tests as scope spec id (groupspec prefix)
 		{
-			"group spec ids - wrong address type at index 0",
+			"contract spec ids - wrong address type at index 0",
 			NewScopeSpecification(
 				ScopeSpecMetadataAddress(uuid.New()),
 				nil,
@@ -126,11 +129,11 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				[]MetadataAddress{MetadataAddress(specTestAddr)},
 			),
-			"invalid group specification id at index 0: invalid metadata address type (must be 0-4, actual: 133)",
+			"invalid contract specification id at index 0: invalid metadata address type (must be 0-4, actual: 133)",
 			true,
 		},
 		{
-			"group spec ids - wrong prefix at index 0",
+			"contract spec ids - wrong prefix at index 0",
 			NewScopeSpecification(
 				ScopeSpecMetadataAddress(uuid.New()),
 				nil,
@@ -138,11 +141,11 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				[]MetadataAddress{ScopeMetadataAddress(uuid.New())},
 			),
-			"invalid group specification id prefix at index 0 (expected: groupspec, got scope)",
+			"invalid contract specification id prefix at index 0 (expected: groupspec, got scope)",
 			true,
 		},
 		{
-			"group spec ids - wrong address type at index 2",
+			"contract spec ids - wrong address type at index 2",
 			NewScopeSpecification(
 				ScopeSpecMetadataAddress(uuid.New()),
 				nil,
@@ -150,11 +153,11 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				[]MetadataAddress{GroupSpecMetadataAddress(uuid.New()), GroupSpecMetadataAddress(uuid.New()), MetadataAddress(specTestAddr)},
 			),
-			"invalid group specification id at index 2: invalid metadata address type (must be 0-4, actual: 133)",
+			"invalid contract specification id at index 2: invalid metadata address type (must be 0-4, actual: 133)",
 			true,
 		},
 		{
-			"group spec ids - wrong prefix at index 2",
+			"contract spec ids - wrong prefix at index 2",
 			NewScopeSpecification(
 				ScopeSpecMetadataAddress(uuid.New()),
 				nil,
@@ -162,7 +165,7 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				[]MetadataAddress{GroupSpecMetadataAddress(uuid.New()), GroupSpecMetadataAddress(uuid.New()), ScopeMetadataAddress(uuid.New())},
 			),
-			"invalid group specification id prefix at index 2 (expected: groupspec, got scope)",
+			"invalid contract specification id prefix at index 2 (expected: groupspec, got scope)",
 			true,
 		},
 		// Simple valid case
@@ -449,7 +452,7 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 func (s *specificationTestSuite) TestScopeSpecString() {
 	s.T().Run("scope specification string", func(t *testing.T) {
 		scopeSpecUuid := uuid.MustParse("c2074a03-6f6d-4029-bfe2-c3a5eb7e68b1")
-		groupSpecUuid := uuid.MustParse("540dadf1-3dbc-4c3f-a205-7575b7f74384")
+		contractSpecUuid := uuid.MustParse("540dadf1-3dbc-4c3f-a205-7575b7f74384")
 		scopeSpec := NewScopeSpecification(
 			ScopeSpecMetadataAddress(scopeSpecUuid),
 			NewDescription(
@@ -460,7 +463,7 @@ func (s *specificationTestSuite) TestScopeSpecString() {
 			),
 			[]string{specTestBech32},
 			[]PartyType{PartyType_PARTY_TYPE_OWNER},
-			[]MetadataAddress{GroupSpecMetadataAddress(groupSpecUuid)},
+			[]MetadataAddress{GroupSpecMetadataAddress(contractSpecUuid)},
 		)
 		expected := "specification_id: scopespec1qnpqwjsrdak5q2dlutp6t6m7dzcscd7ff6\n" +
 		            "description:\n" +
@@ -472,7 +475,7 @@ func (s *specificationTestSuite) TestScopeSpecString() {
 		            "- cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck\n" +
 		            "parties_involved:\n" +
 		            "- 5\n" +
-		            "group_spec_ids:\n" +
+		            "contract_spec_ids:\n" +
 		            "- groupspec1qd2qmt038k7yc0azq46htdlhgwzquwslkg\n"
 		actual := scopeSpec.String()
 		require.Equal(t, expected, actual)

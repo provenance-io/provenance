@@ -45,7 +45,7 @@ const (
 //
 // - 0x13<owner_address><scope_spec_id>: 0x01
 //
-// - 0x14<group_spec_id><scope_spec_id>: 0x01
+// - 0x14<contract_spec_id><scope_spec_id>: 0x01
 var (
 	// ScopeKeyPrefix is the key for scope records in metadata store
 	ScopeKeyPrefix = []byte{0x00}
@@ -67,8 +67,8 @@ var (
 
 	// AddressScopeSpecCacheKeyPrefix for scope spec lookup by address
 	AddressScopeSpecCacheKeyPrefix = []byte{0x13}
-	// GroupSpecScopeSpecCacheKeyPrefix for scope spec lookup by group spec
-	GroupSpecScopeSpecCacheKeyPrefix = []byte{0x14}
+	// ContractSpecScopeSpecCacheKeyPrefix for scope spec lookup by contract spec
+	ContractSpecScopeSpecCacheKeyPrefix = []byte{0x14}
 )
 
 // GetAddressScopeCacheIteratorPrefix returns an iterator prefix for all scope cache entries assigned to a given address
@@ -111,12 +111,12 @@ func GetAddressScopeSpecCacheKey(addr sdk.AccAddress, scopeSpecID MetadataAddres
 	return append(GetAddressScopeSpecCacheIteratorPrefix(addr), scopeSpecID.Bytes()...)
 }
 
-// GetGroupSpecScopeSpecCacheIteratorPrefix returns an iterator prefix for all scope spec cache entries assigned to a given group spec
-func GetGroupSpecScopeSpecCacheIteratorPrefix(groupSpecId MetadataAddress) []byte {
-	return append(GroupSpecScopeSpecCacheKeyPrefix, groupSpecId.Bytes()...)
+// GetContractSpecScopeSpecCacheIteratorPrefix returns an iterator prefix for all scope spec cache entries assigned to a given contract spec
+func GetContractSpecScopeSpecCacheIteratorPrefix(contractSpecId MetadataAddress) []byte {
+	return append(ContractSpecScopeSpecCacheKeyPrefix, contractSpecId.Bytes()...)
 }
 
-// GetGroupSpecScopeSpecCacheKey returns the store key for a group spec + scope spec cache entry
-func GetGroupSpecScopeSpecCacheKey(groupSpecId MetadataAddress, scopeSpecID MetadataAddress) []byte {
-	return append(GetGroupSpecScopeSpecCacheIteratorPrefix(groupSpecId), scopeSpecID.Bytes()...)
+// GetContractSpecScopeSpecCacheKey returns the store key for a contract spec + scope spec cache entry
+func GetContractSpecScopeSpecCacheKey(contractSpecId MetadataAddress, scopeSpecID MetadataAddress) []byte {
+	return append(GetContractSpecScopeSpecCacheIteratorPrefix(contractSpecId), scopeSpecID.Bytes()...)
 }

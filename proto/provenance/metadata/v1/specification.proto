@@ -53,11 +53,11 @@ message ScopeSpecification {
   repeated PartyType parties_involved = 4 [
     (gogoproto.moretags)   = "yaml:\"parties_involved\""
   ];
-  // A list of group specification ids allowed for a scope based on this specification.
-  repeated bytes group_spec_ids = 5 [
+  // A list of contract specification ids allowed for a scope based on this specification.
+  repeated bytes contract_spec_ids = 5 [
     (gogoproto.nullable)   = false,
     (gogoproto.customtype) = "MetadataAddress",
-    (gogoproto.moretags)   = "yaml:\"group_spec_ids\""
+    (gogoproto.moretags)   = "yaml:\"contract_spec_ids\""
   ];
 }
 

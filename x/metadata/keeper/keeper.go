@@ -52,6 +52,16 @@ type MetadataKeeperI interface {
 	GetScopeSpecification(sdk.Context, types.MetadataAddress) (types.ScopeSpecification, bool)
 	// SetScopeSpecification persists the provided scope specification
 	SetScopeSpecification(sdk.Context, types.ScopeSpecification)
+	// DeleteScopeSpecification deletes a scope specification from the module kv store.
+	DeleteScopeSpecification(ctx sdk.Context, id types.MetadataAddress)
+
+	// IterateScopeSpecs processes all scope specs using a given handler.
+	IterateScopeSpecs(ctx sdk.Context, handler func(specification types.ScopeSpecification) (stop bool)) error
+	// IterateScopeSpecsForAddress processes all scope specs associated with an address using a given handler.
+	IterateScopeSpecsForAddress(ctx sdk.Context, address sdk.AccAddress, handler func(scopeSpecID types.MetadataAddress) (stop bool)) error
+	// IterateScopeSpecsForContractSpec processes all scope specs associated with a contract spec id using a given handler.
+	IterateScopeSpecsForContractSpec(ctx sdk.Context, contractSpecID types.MetadataAddress, handler func(scopeSpecID types.MetadataAddress) (stop bool)) error
+
 }
 
 // Keeper is the concrete state-based API for the metadata module.

@@ -25,14 +25,14 @@ func NewScopeSpecification(
 	description *Description,
 	ownerAddresses []string,
 	partiesInvolved []PartyType,
-	groupSpecIds []MetadataAddress,
+	contractSpecIds []MetadataAddress,
 ) *ScopeSpecification {
 	return &ScopeSpecification{
 		SpecificationId: specificationID,
 		Description:     description,
 		OwnerAddresses:  ownerAddresses,
 		PartiesInvolved: partiesInvolved,
-		GroupSpecIds:  groupSpecIds,
+		ContractSpecIds:  contractSpecIds,
 	}
 }
 
@@ -62,13 +62,14 @@ func (scopeSpec *ScopeSpecification) ValidateBasic() error {
 	if len(scopeSpec.PartiesInvolved) == 0 {
 		return errors.New("the ScopeSpecification must have at least one party involved")
 	}
-	for i, groupSpecID := range scopeSpec.GroupSpecIds {
-		prefix, err = VerifyMetadataAddressFormat(groupSpecID)
+	for i, contractSpecID := range scopeSpec.ContractSpecIds {
+		prefix, err = VerifyMetadataAddressFormat(contractSpecID)
 		if err != nil {
-			return fmt.Errorf("invalid group specification id at index %d: %w", i, err)
+			return fmt.Errorf("invalid contract specification id at index %d: %w", i, err)
 		}
+		// TODO: Change usage of PrefixGroupSpecification when merging other groupSpec -> contractSpec changes.
 		if prefix != PrefixGroupSpecification {
-			return fmt.Errorf("invalid group specification id prefix at index %d (expected: %s, got %s)",
+			return fmt.Errorf("invalid contract specification id prefix at index %d (expected: %s, got %s)",
 				i, PrefixGroupSpecification, prefix)
 		}
 	}

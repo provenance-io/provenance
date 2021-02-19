@@ -61,10 +61,10 @@ func (k Keeper) IterateScopeSpecsForAddress(ctx sdk.Context, address sdk.AccAddr
 	return nil
 }
 
-// IterateScopeSpecsForGroupSpec processes all scope specs associated with a group spec id using a given handler.
-func (k Keeper) IterateScopeSpecsForGroupSpec(ctx sdk.Context, groupSpecID types.MetadataAddress, handler func(scopeSpecID types.MetadataAddress) (stop bool)) error {
+// IterateScopeSpecsForContractSpec processes all scope specs associated with a contract spec id using a given handler.
+func (k Keeper) IterateScopeSpecsForContractSpec(ctx sdk.Context, contractSpecID types.MetadataAddress, handler func(scopeSpecID types.MetadataAddress) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	prefix := types.GetGroupSpecScopeSpecCacheIteratorPrefix(groupSpecID)
+	prefix := types.GetContractSpecScopeSpecCacheIteratorPrefix(contractSpecID)
 	it := sdk.KVStorePrefixIterator(store, prefix)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
@@ -93,7 +93,7 @@ func (k Keeper) GetScopeSpecification(ctx sdk.Context, id types.MetadataAddress)
 	return spec, true
 }
 
-// SetScopeSpecification stores a group specification in the module kv store.
+// SetScopeSpecification stores a scope specification in the module kv store.
 func (k Keeper) SetScopeSpecification(ctx sdk.Context, spec types.ScopeSpecification) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryBare(&spec)
@@ -122,8 +122,8 @@ func (k Keeper) SetScopeSpecification(ctx sdk.Context, spec types.ScopeSpecifica
 	)
 }
 
-// DeleteScopeSpec deletes a scope specification from the module kv store.
-func (k Keeper) DeleteScopeSpec(ctx sdk.Context, id types.MetadataAddress) {
+// DeleteScopeSpecification deletes a scope specification from the module kv store.
+func (k Keeper) DeleteScopeSpecification(ctx sdk.Context, id types.MetadataAddress) {
 	store := ctx.KVStore(k.storeKey)
 
 	scopeSpec, found := k.GetScopeSpecification(ctx, id)
@@ -157,8 +157,8 @@ func (k Keeper) indexScopeSpecification(ctx sdk.Context, scopeSpec types.ScopeSp
 	}
 
 	// Index all the session spec ids
-	for _, groupSpecId := range scopeSpec.GroupSpecIds {
-		store.Set(types.GetGroupSpecScopeSpecCacheKey(groupSpecId, scopeSpec.SpecificationId), []byte{0x01})
+	for _, contractSpecId := range scopeSpec.ContractSpecIds {
+		store.Set(types.GetContractSpecScopeSpecCacheKey(contractSpecId, scopeSpec.SpecificationId), []byte{0x01})
 	}
 }
 
@@ -175,9 +175,9 @@ func (k Keeper) clearScopeSpecificationIndex(ctx sdk.Context, scopeSpec types.Sc
 		}
 	}
 
-	// Delete all group spec + scope spec entries
-	for _, groupSpecId := range scopeSpec.GroupSpecIds {
-		store.Delete(types.GetGroupSpecScopeSpecCacheKey(groupSpecId, scopeSpec.SpecificationId))
+	// Delete all contract spec + scope spec entries
+	for _, contractSpecId := range scopeSpec.ContractSpecIds {
+		store.Delete(types.GetContractSpecScopeSpecCacheKey(contractSpecId, scopeSpec.SpecificationId))
 	}
 }
 
@@ -220,25 +220,26 @@ func (k Keeper) ValidateScopeSpecUpdate(ctx sdk.Context, existing, proposed type
 		}
 	}
 
-	// Validate the proposed group spec ids.
-	for _, groupSpecID := range proposed.GroupSpecIds {
-		groupSpec, found := k.GetGroupSpecification(ctx, groupSpecID)
-		// Make sure that all group spec ids are valid and exist
+	// Validate the proposed contract spec ids.
+	for _, contractSpecID := range proposed.ContractSpecIds {
+		// TODO: Change usage of GetGroupSpecification when merging other groupSpec -> contractSpec changes.
+		contractSpec, found := k.GetGroupSpecification(ctx, contractSpecID)
+		// Make sure that all contract spec ids are valid and exist
 		if !found {
-			return fmt.Errorf("no group spec exists with id %s", groupSpecID)
+			return fmt.Errorf("no contract spec exists with id %s", contractSpecID)
 		}
-		// Also make sure that the parties in each group spec are also in the scope spec.
-		for _, groupSpecParty := range groupSpec.PartiesInvolved {
+		// Also make sure that the parties in each contract spec are also in the scope spec.
+		for _, contractSpecParty := range contractSpec.PartiesInvolved {
 			found := false
 			for _, scopeSpecParty := range proposed.PartiesInvolved {
-				if groupSpecParty == scopeSpecParty {
+				if contractSpecParty == scopeSpecParty {
 					found = true
 					break
 				}
 			}
 			if !found {
-				fmt.Errorf("group specification party involved missing from from scope specification parties involved: (%d) %s",
-					groupSpecParty, groupSpecParty.String())
+				fmt.Errorf("contract specification party involved missing from from scope specification parties involved: (%d) %s",
+					contractSpecParty, contractSpecParty.String())
 			}
 		}
 	}
