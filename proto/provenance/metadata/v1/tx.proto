@@ -16,24 +16,24 @@ option java_multiple_files = true;
 // Msg defines the Metadata Msg service.
 service Msg {
   // MemorializeContract records the results of a P8e contract execution as a record group and set of records in a scope
-  rpc MemorializeContract(MsgMemorializeContractRequest) returns (MemorializeContractResponse);
+  rpc MemorializeContract(MsgMemorializeContractRequest) returns (MsgMemorializeContractResponse);
   // ChangeOwnership allows P8e contracts to record a new set of owners on a scope
-  rpc ChangeOwnership(MsgChangeOwnershipRequest) returns (ChangeOwnershipResponse);
+  rpc ChangeOwnership(MsgChangeOwnershipRequest) returns (MsgChangeOwnershipResponse);
 
   // AddScope adds a new scope
-  rpc AddScope(MsgAddScopeRequest) returns (AddScopeResponse);
+  rpc AddScope(MsgAddScopeRequest) returns (MsgAddScopeResponse);
   // Removes a scope and all associated Records, RecordGroups
-  rpc RemoveScope(MsgRemoveScopeRequest) returns (RemoveScopeResponse);
+  rpc RemoveScope(MsgRemoveScopeRequest) returns (MsgRemoveScopeResponse);
 
   // AddRecordGroup adds a new record group context to a scope
-  rpc AddRecordGroup(MsgAddRecordGroupRequest) returns (AddRecordGroupResponse);
+  rpc AddRecordGroup(MsgAddRecordGroupRequest) returns (MsgAddRecordGroupResponse);
   // AddRecord adds a set of records in a record group within a scope
-  rpc AddRecord(MsgAddRecordRequest) returns (AddRecordResponse);
+  rpc AddRecord(MsgAddRecordRequest) returns (MsgAddRecordResponse);
 
   // AddScopeSpecification adds a set of records in a record group within a scope
-  rpc AddScopeSpecification(MsgAddScopeSpecificationRequest) returns (AddScopeSpecificationResponse);
+  rpc AddScopeSpecification(MsgAddScopeSpecificationRequest) returns (MsgAddScopeSpecificationResponse);
   // AddGroupSpecification adds a set of records in a record group within a scope
-  rpc AddGroupSpecification(MsgAddGroupSpecificationRequest) returns (AddGroupSpecificationResponse);
+  rpc AddGroupSpecification(MsgAddGroupSpecificationRequest) returns (MsgAddGroupSpecificationResponse);
 }
 
 // MsgMemorializeContractRequest is a request from a P8e execution environment to record results of a contract
@@ -57,8 +57,8 @@ message MsgMemorializeContractRequest {
   string notary = 6;
 }
 
-// MemorializeContractResponse from a contract execution memorialization request
-message MemorializeContractResponse {}
+// MsgMemorializeContractResponse from a contract execution memorialization request
+message MsgMemorializeContractResponse {}
 
 // MsgChangeOwnershipRequest records the result of a change ownership p8e contract execution
 message MsgChangeOwnershipRequest {
@@ -83,8 +83,8 @@ message MsgChangeOwnershipRequest {
   string notary = 7;
 }
 
-// ChangeOwnershipResponse from a contract execution ownership change request
-message ChangeOwnershipResponse {}
+// MsgChangeOwnershipResponse from a contract execution ownership change request
+message MsgChangeOwnershipResponse {}
 
 // MsgAddScopeRequest adds a new scope
 message MsgAddScopeRequest {
@@ -96,8 +96,8 @@ message MsgAddScopeRequest {
   Scope           scope   = 1 [(gogoproto.nullable) = false];
   repeated string signers = 2;
 }
-// AddScopeResponse from an add scope request
-message AddScopeResponse {}
+// MsgAddScopeResponse from an add scope request
+message MsgAddScopeResponse {}
 
 // MsgRemoveScopeRequest removes a scope
 message MsgRemoveScopeRequest {
@@ -114,8 +114,8 @@ message MsgRemoveScopeRequest {
   ];
   repeated string signers = 2;
 }
-// RemoveScopeResponse from a remove scope request
-message RemoveScopeResponse {}
+// MsgRemoveScopeResponse from a remove scope request
+message MsgRemoveScopeResponse {}
 
 // MsgAddRecordGroupRequest adds a new scope
 message MsgAddRecordGroupRequest {
@@ -127,8 +127,8 @@ message MsgAddRecordGroupRequest {
   RecordGroup group  = 1;
   string      notary = 2;
 }
-// AddRecordGroupResponse from an add records request
-message AddRecordGroupResponse {}
+// MsgAddRecordGroupResponse from an add records request
+message MsgAddRecordGroupResponse {}
 
 // MsgAddRecordRequest is a request to add a group of records to a scope
 message MsgAddRecordRequest {
@@ -146,8 +146,8 @@ message MsgAddRecordRequest {
   Record record = 2;
   string notary = 3;
 }
-// AddRecordResponse from an add records request
-message AddRecordResponse {}
+// MsgAddRecordResponse from an add records request
+message MsgAddRecordResponse {}
 
 // MsgAddScopeSpecificationRequest is a request to add a group of records to a scope
 message MsgAddScopeSpecificationRequest {
@@ -160,8 +160,8 @@ message MsgAddScopeSpecificationRequest {
   string             notary        = 2;
 }
 
-// AddScopeSpecificationResponse from an add records request
-message AddScopeSpecificationResponse {}
+// MsgAddScopeSpecificationResponse from an add records request
+message MsgAddScopeSpecificationResponse {}
 
 // MsgAddGroupSpecificationRequest is a request to add a group of records to a scope
 message MsgAddGroupSpecificationRequest {
@@ -174,5 +174,5 @@ message MsgAddGroupSpecificationRequest {
   string             notary        = 2;
 }
 
-// AddGroupSpecificationResponse from an add records request
-message AddGroupSpecificationResponse {}
+// MsgAddGroupSpecificationResponse from an add records request
+message MsgAddGroupSpecificationResponse {}

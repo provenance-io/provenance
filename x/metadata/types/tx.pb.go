@@ -77,22 +77,22 @@ func (m *MsgMemorializeContractRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgMemorializeContractRequest proto.InternalMessageInfo
 
-// MemorializeContractResponse from a contract execution memorialization request
-type MemorializeContractResponse struct {
+// MsgMemorializeContractResponse from a contract execution memorialization request
+type MsgMemorializeContractResponse struct {
 }
 
-func (m *MemorializeContractResponse) Reset()         { *m = MemorializeContractResponse{} }
-func (m *MemorializeContractResponse) String() string { return proto.CompactTextString(m) }
-func (*MemorializeContractResponse) ProtoMessage()    {}
-func (*MemorializeContractResponse) Descriptor() ([]byte, []int) {
+func (m *MsgMemorializeContractResponse) Reset()         { *m = MsgMemorializeContractResponse{} }
+func (m *MsgMemorializeContractResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgMemorializeContractResponse) ProtoMessage()    {}
+func (*MsgMemorializeContractResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3a3a0892f91e3036, []int{1}
 }
-func (m *MemorializeContractResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgMemorializeContractResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MemorializeContractResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgMemorializeContractResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MemorializeContractResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgMemorializeContractResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -102,17 +102,17 @@ func (m *MemorializeContractResponse) XXX_Marshal(b []byte, deterministic bool) 
 		return b[:n], nil
 	}
 }
-func (m *MemorializeContractResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MemorializeContractResponse.Merge(m, src)
+func (m *MsgMemorializeContractResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgMemorializeContractResponse.Merge(m, src)
 }
-func (m *MemorializeContractResponse) XXX_Size() int {
+func (m *MsgMemorializeContractResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MemorializeContractResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MemorializeContractResponse.DiscardUnknown(m)
+func (m *MsgMemorializeContractResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgMemorializeContractResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MemorializeContractResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgMemorializeContractResponse proto.InternalMessageInfo
 
 // MsgChangeOwnershipRequest records the result of a change ownership p8e contract execution
 type MsgChangeOwnershipRequest struct {
@@ -164,22 +164,22 @@ func (m *MsgChangeOwnershipRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgChangeOwnershipRequest proto.InternalMessageInfo
 
-// ChangeOwnershipResponse from a contract execution ownership change request
-type ChangeOwnershipResponse struct {
+// MsgChangeOwnershipResponse from a contract execution ownership change request
+type MsgChangeOwnershipResponse struct {
 }
 
-func (m *ChangeOwnershipResponse) Reset()         { *m = ChangeOwnershipResponse{} }
-func (m *ChangeOwnershipResponse) String() string { return proto.CompactTextString(m) }
-func (*ChangeOwnershipResponse) ProtoMessage()    {}
-func (*ChangeOwnershipResponse) Descriptor() ([]byte, []int) {
+func (m *MsgChangeOwnershipResponse) Reset()         { *m = MsgChangeOwnershipResponse{} }
+func (m *MsgChangeOwnershipResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgChangeOwnershipResponse) ProtoMessage()    {}
+func (*MsgChangeOwnershipResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3a3a0892f91e3036, []int{3}
 }
-func (m *ChangeOwnershipResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgChangeOwnershipResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *ChangeOwnershipResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgChangeOwnershipResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_ChangeOwnershipResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgChangeOwnershipResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -189,17 +189,17 @@ func (m *ChangeOwnershipResponse) XXX_Marshal(b []byte, deterministic bool) ([]b
 		return b[:n], nil
 	}
 }
-func (m *ChangeOwnershipResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ChangeOwnershipResponse.Merge(m, src)
+func (m *MsgChangeOwnershipResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgChangeOwnershipResponse.Merge(m, src)
 }
-func (m *ChangeOwnershipResponse) XXX_Size() int {
+func (m *MsgChangeOwnershipResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *ChangeOwnershipResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_ChangeOwnershipResponse.DiscardUnknown(m)
+func (m *MsgChangeOwnershipResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgChangeOwnershipResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_ChangeOwnershipResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgChangeOwnershipResponse proto.InternalMessageInfo
 
 // MsgAddScopeRequest adds a new scope
 type MsgAddScopeRequest struct {
@@ -239,22 +239,22 @@ func (m *MsgAddScopeRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgAddScopeRequest proto.InternalMessageInfo
 
-// AddScopeResponse from an add scope request
-type AddScopeResponse struct {
+// MsgAddScopeResponse from an add scope request
+type MsgAddScopeResponse struct {
 }
 
-func (m *AddScopeResponse) Reset()         { *m = AddScopeResponse{} }
-func (m *AddScopeResponse) String() string { return proto.CompactTextString(m) }
-func (*AddScopeResponse) ProtoMessage()    {}
-func (*AddScopeResponse) Descriptor() ([]byte, []int) {
+func (m *MsgAddScopeResponse) Reset()         { *m = MsgAddScopeResponse{} }
+func (m *MsgAddScopeResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgAddScopeResponse) ProtoMessage()    {}
+func (*MsgAddScopeResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3a3a0892f91e3036, []int{5}
 }
-func (m *AddScopeResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgAddScopeResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *AddScopeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgAddScopeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_AddScopeResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgAddScopeResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -264,17 +264,17 @@ func (m *AddScopeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, er
 		return b[:n], nil
 	}
 }
-func (m *AddScopeResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AddScopeResponse.Merge(m, src)
+func (m *MsgAddScopeResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAddScopeResponse.Merge(m, src)
 }
-func (m *AddScopeResponse) XXX_Size() int {
+func (m *MsgAddScopeResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *AddScopeResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_AddScopeResponse.DiscardUnknown(m)
+func (m *MsgAddScopeResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAddScopeResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_AddScopeResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgAddScopeResponse proto.InternalMessageInfo
 
 // MsgRemoveScopeRequest removes a scope
 type MsgRemoveScopeRequest struct {
@@ -315,22 +315,22 @@ func (m *MsgRemoveScopeRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgRemoveScopeRequest proto.InternalMessageInfo
 
-// RemoveScopeResponse from a remove scope request
-type RemoveScopeResponse struct {
+// MsgRemoveScopeResponse from a remove scope request
+type MsgRemoveScopeResponse struct {
 }
 
-func (m *RemoveScopeResponse) Reset()         { *m = RemoveScopeResponse{} }
-func (m *RemoveScopeResponse) String() string { return proto.CompactTextString(m) }
-func (*RemoveScopeResponse) ProtoMessage()    {}
-func (*RemoveScopeResponse) Descriptor() ([]byte, []int) {
+func (m *MsgRemoveScopeResponse) Reset()         { *m = MsgRemoveScopeResponse{} }
+func (m *MsgRemoveScopeResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgRemoveScopeResponse) ProtoMessage()    {}
+func (*MsgRemoveScopeResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3a3a0892f91e3036, []int{7}
 }
-func (m *RemoveScopeResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgRemoveScopeResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *RemoveScopeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgRemoveScopeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_RemoveScopeResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgRemoveScopeResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -340,17 +340,17 @@ func (m *RemoveScopeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte,
 		return b[:n], nil
 	}
 }
-func (m *RemoveScopeResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_RemoveScopeResponse.Merge(m, src)
+func (m *MsgRemoveScopeResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRemoveScopeResponse.Merge(m, src)
 }
-func (m *RemoveScopeResponse) XXX_Size() int {
+func (m *MsgRemoveScopeResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *RemoveScopeResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_RemoveScopeResponse.DiscardUnknown(m)
+func (m *MsgRemoveScopeResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRemoveScopeResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_RemoveScopeResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgRemoveScopeResponse proto.InternalMessageInfo
 
 // MsgAddRecordGroupRequest adds a new scope
 type MsgAddRecordGroupRequest struct {
@@ -390,22 +390,22 @@ func (m *MsgAddRecordGroupRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgAddRecordGroupRequest proto.InternalMessageInfo
 
-// AddRecordGroupResponse from an add records request
-type AddRecordGroupResponse struct {
+// MsgAddRecordGroupResponse from an add records request
+type MsgAddRecordGroupResponse struct {
 }
 
-func (m *AddRecordGroupResponse) Reset()         { *m = AddRecordGroupResponse{} }
-func (m *AddRecordGroupResponse) String() string { return proto.CompactTextString(m) }
-func (*AddRecordGroupResponse) ProtoMessage()    {}
-func (*AddRecordGroupResponse) Descriptor() ([]byte, []int) {
+func (m *MsgAddRecordGroupResponse) Reset()         { *m = MsgAddRecordGroupResponse{} }
+func (m *MsgAddRecordGroupResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgAddRecordGroupResponse) ProtoMessage()    {}
+func (*MsgAddRecordGroupResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3a3a0892f91e3036, []int{9}
 }
-func (m *AddRecordGroupResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgAddRecordGroupResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *AddRecordGroupResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgAddRecordGroupResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_AddRecordGroupResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgAddRecordGroupResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -415,17 +415,17 @@ func (m *AddRecordGroupResponse) XXX_Marshal(b []byte, deterministic bool) ([]by
 		return b[:n], nil
 	}
 }
-func (m *AddRecordGroupResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AddRecordGroupResponse.Merge(m, src)
+func (m *MsgAddRecordGroupResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAddRecordGroupResponse.Merge(m, src)
 }
-func (m *AddRecordGroupResponse) XXX_Size() int {
+func (m *MsgAddRecordGroupResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *AddRecordGroupResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_AddRecordGroupResponse.DiscardUnknown(m)
+func (m *MsgAddRecordGroupResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAddRecordGroupResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_AddRecordGroupResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgAddRecordGroupResponse proto.InternalMessageInfo
 
 // MsgAddRecordRequest is a request to add a group of records to a scope
 type MsgAddRecordRequest struct {
@@ -466,22 +466,22 @@ func (m *MsgAddRecordRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgAddRecordRequest proto.InternalMessageInfo
 
-// AddRecordResponse from an add records request
-type AddRecordResponse struct {
+// MsgAddRecordResponse from an add records request
+type MsgAddRecordResponse struct {
 }
 
-func (m *AddRecordResponse) Reset()         { *m = AddRecordResponse{} }
-func (m *AddRecordResponse) String() string { return proto.CompactTextString(m) }
-func (*AddRecordResponse) ProtoMessage()    {}
-func (*AddRecordResponse) Descriptor() ([]byte, []int) {
+func (m *MsgAddRecordResponse) Reset()         { *m = MsgAddRecordResponse{} }
+func (m *MsgAddRecordResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgAddRecordResponse) ProtoMessage()    {}
+func (*MsgAddRecordResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3a3a0892f91e3036, []int{11}
 }
-func (m *AddRecordResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgAddRecordResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *AddRecordResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgAddRecordResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_AddRecordResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgAddRecordResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -491,17 +491,17 @@ func (m *AddRecordResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, e
 		return b[:n], nil
 	}
 }
-func (m *AddRecordResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AddRecordResponse.Merge(m, src)
+func (m *MsgAddRecordResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAddRecordResponse.Merge(m, src)
 }
-func (m *AddRecordResponse) XXX_Size() int {
+func (m *MsgAddRecordResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *AddRecordResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_AddRecordResponse.DiscardUnknown(m)
+func (m *MsgAddRecordResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAddRecordResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_AddRecordResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgAddRecordResponse proto.InternalMessageInfo
 
 // MsgAddScopeSpecificationRequest is a request to add a group of records to a scope
 type MsgAddScopeSpecificationRequest struct {
@@ -541,22 +541,22 @@ func (m *MsgAddScopeSpecificationRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgAddScopeSpecificationRequest proto.InternalMessageInfo
 
-// AddScopeSpecificationResponse from an add records request
-type AddScopeSpecificationResponse struct {
+// MsgAddScopeSpecificationResponse from an add records request
+type MsgAddScopeSpecificationResponse struct {
 }
 
-func (m *AddScopeSpecificationResponse) Reset()         { *m = AddScopeSpecificationResponse{} }
-func (m *AddScopeSpecificationResponse) String() string { return proto.CompactTextString(m) }
-func (*AddScopeSpecificationResponse) ProtoMessage()    {}
-func (*AddScopeSpecificationResponse) Descriptor() ([]byte, []int) {
+func (m *MsgAddScopeSpecificationResponse) Reset()         { *m = MsgAddScopeSpecificationResponse{} }
+func (m *MsgAddScopeSpecificationResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgAddScopeSpecificationResponse) ProtoMessage()    {}
+func (*MsgAddScopeSpecificationResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3a3a0892f91e3036, []int{13}
 }
-func (m *AddScopeSpecificationResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgAddScopeSpecificationResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *AddScopeSpecificationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgAddScopeSpecificationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_AddScopeSpecificationResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgAddScopeSpecificationResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -566,17 +566,17 @@ func (m *AddScopeSpecificationResponse) XXX_Marshal(b []byte, deterministic bool
 		return b[:n], nil
 	}
 }
-func (m *AddScopeSpecificationResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AddScopeSpecificationResponse.Merge(m, src)
+func (m *MsgAddScopeSpecificationResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAddScopeSpecificationResponse.Merge(m, src)
 }
-func (m *AddScopeSpecificationResponse) XXX_Size() int {
+func (m *MsgAddScopeSpecificationResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *AddScopeSpecificationResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_AddScopeSpecificationResponse.DiscardUnknown(m)
+func (m *MsgAddScopeSpecificationResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAddScopeSpecificationResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_AddScopeSpecificationResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgAddScopeSpecificationResponse proto.InternalMessageInfo
 
 // MsgAddGroupSpecificationRequest is a request to add a group of records to a scope
 type MsgAddGroupSpecificationRequest struct {
@@ -616,22 +616,22 @@ func (m *MsgAddGroupSpecificationRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgAddGroupSpecificationRequest proto.InternalMessageInfo
 
-// AddGroupSpecificationResponse from an add records request
-type AddGroupSpecificationResponse struct {
+// MsgAddGroupSpecificationResponse from an add records request
+type MsgAddGroupSpecificationResponse struct {
 }
 
-func (m *AddGroupSpecificationResponse) Reset()         { *m = AddGroupSpecificationResponse{} }
-func (m *AddGroupSpecificationResponse) String() string { return proto.CompactTextString(m) }
-func (*AddGroupSpecificationResponse) ProtoMessage()    {}
-func (*AddGroupSpecificationResponse) Descriptor() ([]byte, []int) {
+func (m *MsgAddGroupSpecificationResponse) Reset()         { *m = MsgAddGroupSpecificationResponse{} }
+func (m *MsgAddGroupSpecificationResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgAddGroupSpecificationResponse) ProtoMessage()    {}
+func (*MsgAddGroupSpecificationResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3a3a0892f91e3036, []int{15}
 }
-func (m *AddGroupSpecificationResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgAddGroupSpecificationResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *AddGroupSpecificationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgAddGroupSpecificationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_AddGroupSpecificationResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgAddGroupSpecificationResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -641,98 +641,98 @@ func (m *AddGroupSpecificationResponse) XXX_Marshal(b []byte, deterministic bool
 		return b[:n], nil
 	}
 }
-func (m *AddGroupSpecificationResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AddGroupSpecificationResponse.Merge(m, src)
+func (m *MsgAddGroupSpecificationResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAddGroupSpecificationResponse.Merge(m, src)
 }
-func (m *AddGroupSpecificationResponse) XXX_Size() int {
+func (m *MsgAddGroupSpecificationResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *AddGroupSpecificationResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_AddGroupSpecificationResponse.DiscardUnknown(m)
+func (m *MsgAddGroupSpecificationResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAddGroupSpecificationResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_AddGroupSpecificationResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgAddGroupSpecificationResponse proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*MsgMemorializeContractRequest)(nil), "provenance.metadata.v1.MsgMemorializeContractRequest")
-	proto.RegisterType((*MemorializeContractResponse)(nil), "provenance.metadata.v1.MemorializeContractResponse")
+	proto.RegisterType((*MsgMemorializeContractResponse)(nil), "provenance.metadata.v1.MsgMemorializeContractResponse")
 	proto.RegisterType((*MsgChangeOwnershipRequest)(nil), "provenance.metadata.v1.MsgChangeOwnershipRequest")
-	proto.RegisterType((*ChangeOwnershipResponse)(nil), "provenance.metadata.v1.ChangeOwnershipResponse")
+	proto.RegisterType((*MsgChangeOwnershipResponse)(nil), "provenance.metadata.v1.MsgChangeOwnershipResponse")
 	proto.RegisterType((*MsgAddScopeRequest)(nil), "provenance.metadata.v1.MsgAddScopeRequest")
-	proto.RegisterType((*AddScopeResponse)(nil), "provenance.metadata.v1.AddScopeResponse")
+	proto.RegisterType((*MsgAddScopeResponse)(nil), "provenance.metadata.v1.MsgAddScopeResponse")
 	proto.RegisterType((*MsgRemoveScopeRequest)(nil), "provenance.metadata.v1.MsgRemoveScopeRequest")
-	proto.RegisterType((*RemoveScopeResponse)(nil), "provenance.metadata.v1.RemoveScopeResponse")
+	proto.RegisterType((*MsgRemoveScopeResponse)(nil), "provenance.metadata.v1.MsgRemoveScopeResponse")
 	proto.RegisterType((*MsgAddRecordGroupRequest)(nil), "provenance.metadata.v1.MsgAddRecordGroupRequest")
-	proto.RegisterType((*AddRecordGroupResponse)(nil), "provenance.metadata.v1.AddRecordGroupResponse")
+	proto.RegisterType((*MsgAddRecordGroupResponse)(nil), "provenance.metadata.v1.MsgAddRecordGroupResponse")
 	proto.RegisterType((*MsgAddRecordRequest)(nil), "provenance.metadata.v1.MsgAddRecordRequest")
-	proto.RegisterType((*AddRecordResponse)(nil), "provenance.metadata.v1.AddRecordResponse")
+	proto.RegisterType((*MsgAddRecordResponse)(nil), "provenance.metadata.v1.MsgAddRecordResponse")
 	proto.RegisterType((*MsgAddScopeSpecificationRequest)(nil), "provenance.metadata.v1.MsgAddScopeSpecificationRequest")
-	proto.RegisterType((*AddScopeSpecificationResponse)(nil), "provenance.metadata.v1.AddScopeSpecificationResponse")
+	proto.RegisterType((*MsgAddScopeSpecificationResponse)(nil), "provenance.metadata.v1.MsgAddScopeSpecificationResponse")
 	proto.RegisterType((*MsgAddGroupSpecificationRequest)(nil), "provenance.metadata.v1.MsgAddGroupSpecificationRequest")
-	proto.RegisterType((*AddGroupSpecificationResponse)(nil), "provenance.metadata.v1.AddGroupSpecificationResponse")
+	proto.RegisterType((*MsgAddGroupSpecificationResponse)(nil), "provenance.metadata.v1.MsgAddGroupSpecificationResponse")
 }
 
 func init() { proto.RegisterFile("provenance/metadata/v1/tx.proto", fileDescriptor_3a3a0892f91e3036) }
 
 var fileDescriptor_3a3a0892f91e3036 = []byte{
-	// 912 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x56, 0xcf, 0x6f, 0xe3, 0x44,
-	0x14, 0xb6, 0xd3, 0x6d, 0xda, 0x7d, 0x59, 0xd8, 0x65, 0x4a, 0x8b, 0x6b, 0xd4, 0x38, 0x04, 0x21,
-	0x4a, 0x57, 0x6b, 0x93, 0x2c, 0x0b, 0xa2, 0xe2, 0xb2, 0x59, 0x24, 0xd4, 0x43, 0xc4, 0xca, 0xd5,
-	0x5e, 0xb8, 0x80, 0x6b, 0x0f, 0xae, 0xa1, 0xf1, 0x98, 0x99, 0x49, 0x48, 0xe1, 0x00, 0x9c, 0xe0,
-	0xc8, 0x11, 0x21, 0x21, 0xf5, 0xef, 0x40, 0xe2, 0xbe, 0x27, 0xb4, 0x47, 0x84, 0x50, 0x85, 0xda,
-	0x0b, 0x57, 0xf8, 0x0b, 0x90, 0xc7, 0x63, 0xc7, 0x49, 0x6c, 0x27, 0x2b, 0xca, 0xad, 0xaf, 0xf3,
-	0x7e, 0x7c, 0xdf, 0xfb, 0xde, 0x7b, 0x0e, 0x18, 0x11, 0x25, 0x23, 0x1c, 0x3a, 0xa1, 0x8b, 0xad,
-	0x01, 0xe6, 0x8e, 0xe7, 0x70, 0xc7, 0x1a, 0x75, 0x2c, 0x3e, 0x36, 0x23, 0x4a, 0x38, 0x41, 0x5b,
-	0x13, 0x07, 0x33, 0x75, 0x30, 0x47, 0x1d, 0xfd, 0x79, 0x9f, 0xf8, 0x44, 0xb8, 0x58, 0xf1, 0x5f,
-	0x89, 0xb7, 0xde, 0x2e, 0x49, 0xc7, 0x5c, 0x12, 0x61, 0xe9, 0xf3, 0x4a, 0x89, 0x8f, 0x4b, 0x42,
-	0x4e, 0x1d, 0x97, 0x4b, 0xb7, 0xbd, 0xb2, 0x54, 0x11, 0x76, 0x83, 0x8f, 0x03, 0xd7, 0xe1, 0x01,
-	0x09, 0xa5, 0xef, 0xab, 0x2e, 0x61, 0x03, 0xc2, 0x2c, 0x3e, 0xb6, 0x58, 0xe0, 0x87, 0x41, 0xe8,
-	0x5b, 0xa3, 0xce, 0x11, 0xe6, 0x4e, 0x27, 0xb5, 0x13, 0xc7, 0xf6, 0x2f, 0x35, 0xd8, 0xe9, 0x33,
-	0xbf, 0x8f, 0x07, 0x84, 0x06, 0xce, 0x49, 0xf0, 0x05, 0x7e, 0x20, 0xab, 0xda, 0xf8, 0xb3, 0x21,
-	0x66, 0x1c, 0x6d, 0xc3, 0xba, 0x00, 0xfb, 0x61, 0xe0, 0x69, 0x6a, 0x4b, 0xdd, 0xbd, 0x6e, 0xaf,
-	0x09, 0xfb, 0xc0, 0x8b, 0x9f, 0x7c, 0x4a, 0x86, 0x51, 0xfc, 0x54, 0x4b, 0x9e, 0x84, 0x7d, 0xe0,
-	0xa1, 0x97, 0xe0, 0x06, 0x1e, 0x63, 0x77, 0x18, 0x63, 0x8a, 0x9f, 0x57, 0xc4, 0x73, 0x23, 0xfb,
-	0xdf, 0x81, 0x87, 0x7a, 0xb0, 0x9e, 0x32, 0xd4, 0xae, 0xb5, 0xd4, 0xdd, 0x46, 0xb7, 0x65, 0x16,
-	0xf7, 0xd6, 0x4c, 0x31, 0xf5, 0xae, 0x3d, 0x3e, 0x37, 0x14, 0x3b, 0x8b, 0x43, 0x8f, 0x00, 0x62,
-	0x3e, 0x0e, 0x1f, 0x52, 0xcc, 0xb4, 0x55, 0x91, 0xc5, 0x32, 0x13, 0xf2, 0x26, 0x1f, 0x9b, 0x29,
-	0x59, 0x49, 0xde, 0x3c, 0x4c, 0x9d, 0xdf, 0xc5, 0xcc, 0xa5, 0x41, 0xc4, 0x09, 0x65, 0x32, 0x69,
-	0x2e, 0x11, 0xda, 0x82, 0x7a, 0x48, 0xb8, 0x43, 0x4f, 0xb5, 0xba, 0xc0, 0x2d, 0xad, 0xfd, 0x5b,
-	0xdf, 0x9d, 0x19, 0xca, 0x0f, 0x67, 0x86, 0xf2, 0xd7, 0x99, 0xa1, 0x7c, 0xfd, 0x47, 0x4b, 0x69,
-	0xef, 0xc0, 0x8b, 0x85, 0xbd, 0x63, 0x11, 0x09, 0x19, 0x6e, 0xff, 0x5d, 0x83, 0xed, 0x3e, 0xf3,
-	0x1f, 0x1c, 0x3b, 0xa1, 0x8f, 0xdf, 0xff, 0x3c, 0xc4, 0x94, 0x1d, 0x07, 0xd1, 0xff, 0xde, 0xda,
-	0x77, 0x60, 0x9d, 0x62, 0x37, 0xe0, 0xce, 0x09, 0x5b, 0xd4, 0x5a, 0x5b, 0xfa, 0xd9, 0x59, 0x44,
-	0x1c, 0x9d, 0x09, 0xb3, 0xba, 0x9c, 0x30, 0xa5, 0x92, 0xd4, 0xaf, 0x5e, 0x92, 0xb5, 0x05, 0x92,
-	0x6c, 0xc3, 0x0b, 0x73, 0xfd, 0x96, 0x72, 0x7c, 0x09, 0xa8, 0xcf, 0xfc, 0xfb, 0x9e, 0x77, 0x18,
-	0xb7, 0x39, 0x95, 0xe1, 0x6d, 0x58, 0x15, 0x6d, 0x17, 0x1a, 0x34, 0xba, 0x3b, 0x65, 0x64, 0x45,
-	0x90, 0x84, 0x96, 0x44, 0x20, 0x0d, 0xd6, 0x62, 0x8c, 0x98, 0x32, 0xad, 0xd6, 0x5a, 0x11, 0x02,
-	0x26, 0x66, 0x01, 0x2e, 0x04, 0xb7, 0x26, 0x95, 0x25, 0xa0, 0x1f, 0x55, 0xd8, 0xec, 0x33, 0xdf,
-	0xc6, 0x03, 0x32, 0xc2, 0x53, 0xa0, 0x1e, 0xcd, 0xcc, 0xc6, 0x8d, 0xde, 0x7e, 0x5c, 0xf8, 0xf7,
-	0x73, 0xe3, 0x66, 0x5f, 0x62, 0xba, 0xef, 0x79, 0x14, 0x33, 0xf6, 0xcf, 0xb9, 0x61, 0x7c, 0xc2,
-	0x48, 0xb8, 0xdf, 0x4e, 0x03, 0xda, 0xad, 0x53, 0x67, 0x70, 0x92, 0xb3, 0x27, 0x73, 0xf5, 0x34,
-	0x80, 0x37, 0x61, 0x63, 0x0a, 0x98, 0xc4, 0xfc, 0x15, 0x68, 0x49, 0x13, 0x6d, 0xec, 0x12, 0xea,
-	0xbd, 0x17, 0x8f, 0x65, 0xae, 0x95, 0x62, 0x4c, 0x65, 0x2b, 0x5f, 0xae, 0x98, 0xba, 0x2c, 0x34,
-	0x89, 0xc8, 0x09, 0x5c, 0x5b, 0x20, 0xb0, 0x06, 0x5b, 0xb3, 0xd5, 0x25, 0xb4, 0x5f, 0x55, 0xd8,
-	0xc8, 0x63, 0xcb, 0x35, 0x33, 0xdb, 0xa6, 0x65, 0x9b, 0x99, 0x06, 0xa4, 0xcd, 0xcc, 0xec, 0xc9,
-	0x26, 0xbe, 0x09, 0x75, 0x2a, 0xea, 0x08, 0xc8, 0x8d, 0x6e, 0xb3, 0x9a, 0xae, 0x2d, 0xbd, 0x73,
-	0x54, 0x57, 0x16, 0x50, 0xdd, 0x80, 0xe7, 0x72, 0x64, 0x24, 0xcb, 0x9f, 0x54, 0x30, 0x72, 0x63,
-	0x7c, 0x98, 0xbf, 0xff, 0x29, 0xe3, 0x87, 0xf0, 0xcc, 0xd4, 0x77, 0x41, 0x0a, 0xb2, 0x57, 0x39,
-	0xdb, 0xd3, 0x99, 0xa6, 0x13, 0x3c, 0x85, 0x3e, 0x06, 0xec, 0x94, 0x60, 0x9b, 0x23, 0x20, 0xe4,
-	0xbb, 0x12, 0x02, 0x05, 0x99, 0xfe, 0x23, 0x81, 0x22, 0x6c, 0x09, 0x81, 0xee, 0xcf, 0x6b, 0xb0,
-	0xd2, 0x67, 0x3e, 0xfa, 0x26, 0x9e, 0xb7, 0xf9, 0xf3, 0x8f, 0xee, 0x95, 0xa1, 0xac, 0xfc, 0xd4,
-	0xea, 0x77, 0x4b, 0xc3, 0xca, 0x3f, 0x31, 0x68, 0x08, 0x37, 0x67, 0xce, 0x1d, 0xea, 0x54, 0x94,
-	0x2f, 0xfe, 0x14, 0xe9, 0x56, 0xe9, 0x85, 0x2f, 0x3e, 0xa5, 0xe8, 0x23, 0x58, 0x4f, 0x45, 0x46,
-	0x7b, 0x15, 0xf5, 0x66, 0x8e, 0xad, 0xbe, 0x5b, 0xe6, 0x3b, 0x7b, 0x1b, 0x51, 0x00, 0x8d, 0xdc,
-	0xf9, 0x41, 0x77, 0x2a, 0x8a, 0xcc, 0xdf, 0x4f, 0xfd, 0x76, 0xf9, 0x2e, 0xce, 0x9d, 0x34, 0x44,
-	0xe1, 0xd9, 0xe9, 0x8b, 0x82, 0x5e, 0xaf, 0xa6, 0x34, 0x7f, 0xfa, 0x74, 0xb3, 0x82, 0x58, 0xc1,
-	0xad, 0x42, 0x2e, 0x5c, 0xcf, 0x5e, 0xd0, 0xed, 0x65, 0xca, 0xa5, 0x95, 0x5e, 0x5b, 0x58, 0x29,
-	0x2b, 0xf2, 0xad, 0x0a, 0x9b, 0x85, 0xbb, 0x88, 0xde, 0x5a, 0x42, 0xb3, 0xa2, 0xc5, 0xd4, 0xef,
-	0x2d, 0x12, 0xb0, 0x70, 0x65, 0x52, 0x24, 0xf3, 0x4b, 0xb5, 0x08, 0x49, 0xe9, 0x89, 0xa8, 0x44,
-	0x52, 0xbe, 0xbc, 0xbd, 0x4f, 0x1f, 0x5f, 0x34, 0xd5, 0x27, 0x17, 0x4d, 0xf5, 0xcf, 0x8b, 0xa6,
-	0xfa, 0xfd, 0x65, 0x53, 0x79, 0x72, 0xd9, 0x54, 0x7e, 0xbb, 0x6c, 0x2a, 0xb0, 0x1d, 0x90, 0x92,
-	0x94, 0x0f, 0xd5, 0x0f, 0xde, 0xf0, 0x03, 0x7e, 0x3c, 0x3c, 0x32, 0x5d, 0x32, 0xb0, 0x26, 0x4e,
-	0x77, 0x02, 0x92, 0xb3, 0xac, 0xf1, 0xe4, 0x97, 0x39, 0x3f, 0x8d, 0x30, 0x3b, 0xaa, 0x8b, 0x9f,
-	0xd9, 0x77, 0xff, 0x0d, 0x00, 0x00, 0xff, 0xff, 0x53, 0x9e, 0x2d, 0xc6, 0x57, 0x0c, 0x00, 0x00,
+	// 905 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x56, 0x41, 0x6f, 0xe3, 0x44,
+	0x14, 0xb6, 0xd3, 0x6d, 0xda, 0x7d, 0x59, 0x58, 0x34, 0x6c, 0x2b, 0xd7, 0xb0, 0xb6, 0x09, 0x42,
+	0xac, 0xba, 0xac, 0x4d, 0x02, 0x2c, 0x50, 0x71, 0xd9, 0x2e, 0x12, 0xea, 0x21, 0x62, 0xe5, 0x6a,
+	0x2f, 0x5c, 0x90, 0x6b, 0xcf, 0xba, 0x86, 0xc6, 0x63, 0x3c, 0x93, 0x90, 0xc2, 0x01, 0x0e, 0x1c,
+	0x10, 0x27, 0x8e, 0x08, 0x09, 0xa9, 0x7f, 0x84, 0xfb, 0x9e, 0xd0, 0x8a, 0x13, 0x42, 0xa8, 0x42,
+	0xed, 0x85, 0x2b, 0xfc, 0x02, 0xe4, 0xf1, 0xd8, 0xb1, 0x13, 0xdb, 0x49, 0xc4, 0x72, 0xcb, 0x64,
+	0xde, 0xf7, 0xde, 0xf7, 0xbd, 0xef, 0xcd, 0x8c, 0x41, 0x8f, 0x62, 0x32, 0xc6, 0xa1, 0x13, 0xba,
+	0xd8, 0x1a, 0x62, 0xe6, 0x78, 0x0e, 0x73, 0xac, 0x71, 0xcf, 0x62, 0x13, 0x33, 0x8a, 0x09, 0x23,
+	0x68, 0x7b, 0x1a, 0x60, 0x66, 0x01, 0xe6, 0xb8, 0xa7, 0xde, 0xf0, 0x89, 0x4f, 0x78, 0x88, 0x95,
+	0xfc, 0x4a, 0xa3, 0xd5, 0x6e, 0x4d, 0x3a, 0xea, 0x92, 0x08, 0x8b, 0x98, 0x57, 0x6a, 0x62, 0x5c,
+	0x12, 0xb2, 0xd8, 0x71, 0x99, 0x08, 0xdb, 0xad, 0x4b, 0x15, 0x61, 0x37, 0x78, 0x14, 0xb8, 0x0e,
+	0x0b, 0x48, 0x28, 0x62, 0x5f, 0x75, 0x09, 0x1d, 0x12, 0x6a, 0xb1, 0x89, 0x45, 0x03, 0x3f, 0x0c,
+	0x42, 0xdf, 0x1a, 0xf7, 0x8e, 0x30, 0x73, 0x7a, 0xd9, 0x3a, 0x0d, 0xec, 0xfe, 0xdc, 0x82, 0x9b,
+	0x03, 0xea, 0x0f, 0xf0, 0x90, 0xc4, 0x81, 0x73, 0x12, 0x7c, 0x81, 0xef, 0x8b, 0xaa, 0x36, 0xfe,
+	0x6c, 0x84, 0x29, 0x43, 0x3b, 0xb0, 0xc9, 0xc9, 0x7e, 0x1c, 0x78, 0x8a, 0x6c, 0xc8, 0xb7, 0xae,
+	0xda, 0x1b, 0x7c, 0x7d, 0xe0, 0x25, 0x5b, 0x7e, 0x4c, 0x46, 0x51, 0xb2, 0xd5, 0x4a, 0xb7, 0xf8,
+	0xfa, 0xc0, 0x43, 0x2f, 0xc1, 0x35, 0x3c, 0xc1, 0xee, 0x28, 0xe1, 0x94, 0x6c, 0xaf, 0xf1, 0xed,
+	0x4e, 0xfe, 0xdf, 0x81, 0x87, 0xf6, 0x61, 0x33, 0x53, 0xa8, 0x5c, 0x31, 0xe4, 0x5b, 0x9d, 0xbe,
+	0x61, 0x56, 0xf7, 0xd6, 0xcc, 0x38, 0xed, 0x5f, 0x79, 0x7c, 0xae, 0x4b, 0x76, 0x8e, 0x43, 0x0f,
+	0x01, 0x12, 0x3d, 0x0e, 0x1b, 0xc5, 0x98, 0x2a, 0xeb, 0x3c, 0x8b, 0x65, 0xa6, 0xe2, 0x4d, 0x36,
+	0x31, 0x33, 0xb1, 0x42, 0xbc, 0x79, 0x98, 0x05, 0xbf, 0x8f, 0xa9, 0x1b, 0x07, 0x11, 0x23, 0x31,
+	0x15, 0x49, 0x0b, 0x89, 0xd0, 0x36, 0xb4, 0x43, 0xc2, 0x9c, 0xf8, 0x54, 0x69, 0x73, 0xde, 0x62,
+	0xb5, 0xf7, 0xdc, 0xb7, 0x67, 0xba, 0xf4, 0xc3, 0x99, 0x2e, 0xfd, 0x75, 0xa6, 0x4b, 0x5f, 0xff,
+	0x61, 0x48, 0x5d, 0x03, 0xb4, 0xba, 0xf6, 0xd1, 0x88, 0x84, 0x14, 0x77, 0xff, 0x6e, 0xc1, 0xce,
+	0x80, 0xfa, 0xf7, 0x8f, 0x9d, 0xd0, 0xc7, 0x1f, 0x7e, 0x1e, 0xe2, 0x98, 0x1e, 0x07, 0xd1, 0xff,
+	0xde, 0xdd, 0xf7, 0x60, 0x33, 0xc6, 0x6e, 0xc0, 0x9c, 0x13, 0xba, 0xa8, 0xbb, 0xb6, 0x88, 0xb3,
+	0x73, 0x44, 0x82, 0xce, 0xbd, 0x59, 0x5f, 0xce, 0x9b, 0x5a, 0x57, 0xda, 0x4f, 0xdf, 0x95, 0x8d,
+	0x05, 0xae, 0xbc, 0x08, 0x6a, 0x55, 0xcb, 0x85, 0x23, 0x5f, 0x02, 0x1a, 0x50, 0xff, 0x9e, 0xe7,
+	0x1d, 0x26, 0x9d, 0xce, 0x9c, 0x78, 0x17, 0xd6, 0x79, 0xe7, 0xb9, 0x0d, 0x9d, 0xfe, 0xcd, 0x3a,
+	0xbd, 0x1c, 0x24, 0xd8, 0xa5, 0x08, 0xa4, 0xc0, 0x46, 0x42, 0x13, 0xc7, 0x54, 0x69, 0x19, 0x6b,
+	0xdc, 0xc3, 0x74, 0x59, 0x41, 0x6d, 0x0b, 0x9e, 0x2f, 0x15, 0x17, 0x9c, 0x7e, 0x94, 0x61, 0x6b,
+	0x40, 0x7d, 0x1b, 0x0f, 0xc9, 0x18, 0x97, 0x78, 0x3d, 0x9c, 0x99, 0x90, 0x6b, 0xfb, 0x7b, 0x49,
+	0xed, 0xdf, 0xcf, 0xf5, 0xeb, 0x03, 0x41, 0xeb, 0x9e, 0xe7, 0xc5, 0x98, 0xd2, 0x7f, 0xce, 0x75,
+	0xfd, 0x13, 0x4a, 0xc2, 0xbd, 0x6e, 0x06, 0xe8, 0x1a, 0xa7, 0xce, 0xf0, 0xa4, 0xb0, 0x9e, 0x4e,
+	0xd7, 0x2a, 0x9c, 0x15, 0xd8, 0x9e, 0xe5, 0x26, 0x68, 0x7f, 0x05, 0x4a, 0xaa, 0xc6, 0xc6, 0x2e,
+	0x89, 0xbd, 0x0f, 0x92, 0xf9, 0x2c, 0x34, 0x94, 0xcf, 0xab, 0x68, 0xe8, 0xcb, 0x0d, 0xe3, 0x97,
+	0x43, 0x53, 0x44, 0xc1, 0xe9, 0xd6, 0x02, 0xa7, 0x5f, 0xe0, 0x87, 0x6b, 0x96, 0x80, 0x60, 0xf7,
+	0x8b, 0x9c, 0x35, 0x3b, 0xdd, 0x2d, 0xb4, 0x34, 0x3f, 0x59, 0xcb, 0xb6, 0x34, 0x03, 0x64, 0x2d,
+	0xcd, 0xd7, 0xd3, 0x53, 0x79, 0x17, 0xda, 0x31, 0xaf, 0xc3, 0x59, 0x77, 0xfa, 0x5a, 0xb3, 0x62,
+	0x5b, 0x44, 0x17, 0xd4, 0xae, 0x2d, 0x50, 0xbb, 0x0d, 0x37, 0xca, 0x7a, 0x84, 0xd0, 0x9f, 0x64,
+	0xd0, 0x0b, 0x53, 0x75, 0x58, 0x7c, 0x11, 0x32, 0xd1, 0x0f, 0xe0, 0x99, 0xd2, 0x4b, 0x21, 0x6c,
+	0xd9, 0x6d, 0x9c, 0xf3, 0x72, 0xa6, 0x72, 0x82, 0x15, 0x5c, 0xea, 0x82, 0x51, 0x4f, 0x6f, 0x4e,
+	0x03, 0x37, 0xf1, 0xa9, 0x68, 0xa8, 0xc8, 0xf4, 0xdf, 0x35, 0x54, 0xd1, 0x4b, 0x35, 0xf4, 0x7f,
+	0xdd, 0x80, 0xb5, 0x01, 0xf5, 0xd1, 0x37, 0xc9, 0xe0, 0xcd, 0xbf, 0x09, 0xe8, 0xad, 0x3a, 0xa2,
+	0x8d, 0x4f, 0xb0, 0x7a, 0x77, 0x55, 0x58, 0x4a, 0x07, 0x4d, 0xe0, 0xfa, 0xcc, 0x1d, 0x88, 0x7a,
+	0x0d, 0xa9, 0xaa, 0x9f, 0x28, 0xb5, 0xbf, 0x0a, 0x44, 0x54, 0x76, 0x61, 0x33, 0x73, 0x1b, 0xed,
+	0x36, 0xe0, 0x67, 0x2e, 0x61, 0xf5, 0xf6, 0x52, 0xb1, 0xa2, 0xc8, 0x09, 0x74, 0x0a, 0x77, 0x12,
+	0xba, 0xd3, 0x80, 0x9d, 0xbf, 0x57, 0x55, 0x73, 0xd9, 0x70, 0x51, 0x6d, 0x04, 0xcf, 0x96, 0xaf,
+	0x19, 0xf4, 0x7a, 0x33, 0xd9, 0xf9, 0x2b, 0x51, 0xed, 0xad, 0x80, 0x10, 0x65, 0x1f, 0xc1, 0xd5,
+	0x7c, 0x07, 0xdd, 0x5e, 0x06, 0x9f, 0x15, 0x7b, 0x6d, 0xb9, 0x60, 0x51, 0xe7, 0x3b, 0x19, 0xb6,
+	0x2a, 0x0f, 0x28, 0x7a, 0x7b, 0x09, 0x4f, 0xaa, 0x4e, 0xab, 0xfa, 0xce, 0xea, 0xc0, 0x32, 0x99,
+	0xf9, 0x93, 0xb6, 0x88, 0x4c, 0xed, 0xd5, 0xb1, 0x88, 0x4c, 0xfd, 0xa1, 0xde, 0xff, 0xf4, 0xf1,
+	0x85, 0x26, 0x3f, 0xb9, 0xd0, 0xe4, 0x3f, 0x2f, 0x34, 0xf9, 0xfb, 0x4b, 0x4d, 0x7a, 0x72, 0xa9,
+	0x49, 0xbf, 0x5d, 0x6a, 0x12, 0xec, 0x04, 0xa4, 0x26, 0xeb, 0x03, 0xf9, 0xa3, 0x37, 0xfd, 0x80,
+	0x1d, 0x8f, 0x8e, 0x4c, 0x97, 0x0c, 0xad, 0x69, 0xd0, 0x9d, 0x80, 0x14, 0x56, 0xd6, 0x64, 0xfa,
+	0x25, 0xcf, 0x4e, 0x23, 0x4c, 0x8f, 0xda, 0xfc, 0xb3, 0xfc, 0x8d, 0x7f, 0x03, 0x00, 0x00, 0xff,
+	0xff, 0x0a, 0xfc, 0x29, 0x69, 0x87, 0x0c, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -748,21 +748,21 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
 	// MemorializeContract records the results of a P8e contract execution as a record group and set of records in a scope
-	MemorializeContract(ctx context.Context, in *MsgMemorializeContractRequest, opts ...grpc.CallOption) (*MemorializeContractResponse, error)
+	MemorializeContract(ctx context.Context, in *MsgMemorializeContractRequest, opts ...grpc.CallOption) (*MsgMemorializeContractResponse, error)
 	// ChangeOwnership allows P8e contracts to record a new set of owners on a scope
-	ChangeOwnership(ctx context.Context, in *MsgChangeOwnershipRequest, opts ...grpc.CallOption) (*ChangeOwnershipResponse, error)
+	ChangeOwnership(ctx context.Context, in *MsgChangeOwnershipRequest, opts ...grpc.CallOption) (*MsgChangeOwnershipResponse, error)
 	// AddScope adds a new scope
-	AddScope(ctx context.Context, in *MsgAddScopeRequest, opts ...grpc.CallOption) (*AddScopeResponse, error)
+	AddScope(ctx context.Context, in *MsgAddScopeRequest, opts ...grpc.CallOption) (*MsgAddScopeResponse, error)
 	// Removes a scope and all associated Records, RecordGroups
-	RemoveScope(ctx context.Context, in *MsgRemoveScopeRequest, opts ...grpc.CallOption) (*RemoveScopeResponse, error)
+	RemoveScope(ctx context.Context, in *MsgRemoveScopeRequest, opts ...grpc.CallOption) (*MsgRemoveScopeResponse, error)
 	// AddRecordGroup adds a new record group context to a scope
-	AddRecordGroup(ctx context.Context, in *MsgAddRecordGroupRequest, opts ...grpc.CallOption) (*AddRecordGroupResponse, error)
+	AddRecordGroup(ctx context.Context, in *MsgAddRecordGroupRequest, opts ...grpc.CallOption) (*MsgAddRecordGroupResponse, error)
 	// AddRecord adds a set of records in a record group within a scope
-	AddRecord(ctx context.Context, in *MsgAddRecordRequest, opts ...grpc.CallOption) (*AddRecordResponse, error)
+	AddRecord(ctx context.Context, in *MsgAddRecordRequest, opts ...grpc.CallOption) (*MsgAddRecordResponse, error)
 	// AddScopeSpecification adds a set of records in a record group within a scope
-	AddScopeSpecification(ctx context.Context, in *MsgAddScopeSpecificationRequest, opts ...grpc.CallOption) (*AddScopeSpecificationResponse, error)
+	AddScopeSpecification(ctx context.Context, in *MsgAddScopeSpecificationRequest, opts ...grpc.CallOption) (*MsgAddScopeSpecificationResponse, error)
 	// AddGroupSpecification adds a set of records in a record group within a scope
-	AddGroupSpecification(ctx context.Context, in *MsgAddGroupSpecificationRequest, opts ...grpc.CallOption) (*AddGroupSpecificationResponse, error)
+	AddGroupSpecification(ctx context.Context, in *MsgAddGroupSpecificationRequest, opts ...grpc.CallOption) (*MsgAddGroupSpecificationResponse, error)
 }
 
 type msgClient struct {
@@ -773,8 +773,8 @@ func NewMsgClient(cc grpc1.ClientConn) MsgClient {
 	return &msgClient{cc}
 }
 
-func (c *msgClient) MemorializeContract(ctx context.Context, in *MsgMemorializeContractRequest, opts ...grpc.CallOption) (*MemorializeContractResponse, error) {
-	out := new(MemorializeContractResponse)
+func (c *msgClient) MemorializeContract(ctx context.Context, in *MsgMemorializeContractRequest, opts ...grpc.CallOption) (*MsgMemorializeContractResponse, error) {
+	out := new(MsgMemorializeContractResponse)
 	err := c.cc.Invoke(ctx, "/provenance.metadata.v1.Msg/MemorializeContract", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -782,8 +782,8 @@ func (c *msgClient) MemorializeContract(ctx context.Context, in *MsgMemorializeC
 	return out, nil
 }
 
-func (c *msgClient) ChangeOwnership(ctx context.Context, in *MsgChangeOwnershipRequest, opts ...grpc.CallOption) (*ChangeOwnershipResponse, error) {
-	out := new(ChangeOwnershipResponse)
+func (c *msgClient) ChangeOwnership(ctx context.Context, in *MsgChangeOwnershipRequest, opts ...grpc.CallOption) (*MsgChangeOwnershipResponse, error) {
+	out := new(MsgChangeOwnershipResponse)
 	err := c.cc.Invoke(ctx, "/provenance.metadata.v1.Msg/ChangeOwnership", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -791,8 +791,8 @@ func (c *msgClient) ChangeOwnership(ctx context.Context, in *MsgChangeOwnershipR
 	return out, nil
 }
 
-func (c *msgClient) AddScope(ctx context.Context, in *MsgAddScopeRequest, opts ...grpc.CallOption) (*AddScopeResponse, error) {
-	out := new(AddScopeResponse)
+func (c *msgClient) AddScope(ctx context.Context, in *MsgAddScopeRequest, opts ...grpc.CallOption) (*MsgAddScopeResponse, error) {
+	out := new(MsgAddScopeResponse)
 	err := c.cc.Invoke(ctx, "/provenance.metadata.v1.Msg/AddScope", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -800,8 +800,8 @@ func (c *msgClient) AddScope(ctx context.Context, in *MsgAddScopeRequest, opts .
 	return out, nil
 }
 
-func (c *msgClient) RemoveScope(ctx context.Context, in *MsgRemoveScopeRequest, opts ...grpc.CallOption) (*RemoveScopeResponse, error) {
-	out := new(RemoveScopeResponse)
+func (c *msgClient) RemoveScope(ctx context.Context, in *MsgRemoveScopeRequest, opts ...grpc.CallOption) (*MsgRemoveScopeResponse, error) {
+	out := new(MsgRemoveScopeResponse)
 	err := c.cc.Invoke(ctx, "/provenance.metadata.v1.Msg/RemoveScope", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -809,8 +809,8 @@ func (c *msgClient) RemoveScope(ctx context.Context, in *MsgRemoveScopeRequest, 
 	return out, nil
 }
 
-func (c *msgClient) AddRecordGroup(ctx context.Context, in *MsgAddRecordGroupRequest, opts ...grpc.CallOption) (*AddRecordGroupResponse, error) {
-	out := new(AddRecordGroupResponse)
+func (c *msgClient) AddRecordGroup(ctx context.Context, in *MsgAddRecordGroupRequest, opts ...grpc.CallOption) (*MsgAddRecordGroupResponse, error) {
+	out := new(MsgAddRecordGroupResponse)
 	err := c.cc.Invoke(ctx, "/provenance.metadata.v1.Msg/AddRecordGroup", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -818,8 +818,8 @@ func (c *msgClient) AddRecordGroup(ctx context.Context, in *MsgAddRecordGroupReq
 	return out, nil
 }
 
-func (c *msgClient) AddRecord(ctx context.Context, in *MsgAddRecordRequest, opts ...grpc.CallOption) (*AddRecordResponse, error) {
-	out := new(AddRecordResponse)
+func (c *msgClient) AddRecord(ctx context.Context, in *MsgAddRecordRequest, opts ...grpc.CallOption) (*MsgAddRecordResponse, error) {
+	out := new(MsgAddRecordResponse)
 	err := c.cc.Invoke(ctx, "/provenance.metadata.v1.Msg/AddRecord", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -827,8 +827,8 @@ func (c *msgClient) AddRecord(ctx context.Context, in *MsgAddRecordRequest, opts
 	return out, nil
 }
 
-func (c *msgClient) AddScopeSpecification(ctx context.Context, in *MsgAddScopeSpecificationRequest, opts ...grpc.CallOption) (*AddScopeSpecificationResponse, error) {
-	out := new(AddScopeSpecificationResponse)
+func (c *msgClient) AddScopeSpecification(ctx context.Context, in *MsgAddScopeSpecificationRequest, opts ...grpc.CallOption) (*MsgAddScopeSpecificationResponse, error) {
+	out := new(MsgAddScopeSpecificationResponse)
 	err := c.cc.Invoke(ctx, "/provenance.metadata.v1.Msg/AddScopeSpecification", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -836,8 +836,8 @@ func (c *msgClient) AddScopeSpecification(ctx context.Context, in *MsgAddScopeSp
 	return out, nil
 }
 
-func (c *msgClient) AddGroupSpecification(ctx context.Context, in *MsgAddGroupSpecificationRequest, opts ...grpc.CallOption) (*AddGroupSpecificationResponse, error) {
-	out := new(AddGroupSpecificationResponse)
+func (c *msgClient) AddGroupSpecification(ctx context.Context, in *MsgAddGroupSpecificationRequest, opts ...grpc.CallOption) (*MsgAddGroupSpecificationResponse, error) {
+	out := new(MsgAddGroupSpecificationResponse)
 	err := c.cc.Invoke(ctx, "/provenance.metadata.v1.Msg/AddGroupSpecification", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -848,49 +848,49 @@ func (c *msgClient) AddGroupSpecification(ctx context.Context, in *MsgAddGroupSp
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// MemorializeContract records the results of a P8e contract execution as a record group and set of records in a scope
-	MemorializeContract(context.Context, *MsgMemorializeContractRequest) (*MemorializeContractResponse, error)
+	MemorializeContract(context.Context, *MsgMemorializeContractRequest) (*MsgMemorializeContractResponse, error)
 	// ChangeOwnership allows P8e contracts to record a new set of owners on a scope
-	ChangeOwnership(context.Context, *MsgChangeOwnershipRequest) (*ChangeOwnershipResponse, error)
+	ChangeOwnership(context.Context, *MsgChangeOwnershipRequest) (*MsgChangeOwnershipResponse, error)
 	// AddScope adds a new scope
-	AddScope(context.Context, *MsgAddScopeRequest) (*AddScopeResponse, error)
+	AddScope(context.Context, *MsgAddScopeRequest) (*MsgAddScopeResponse, error)
 	// Removes a scope and all associated Records, RecordGroups
-	RemoveScope(context.Context, *MsgRemoveScopeRequest) (*RemoveScopeResponse, error)
+	RemoveScope(context.Context, *MsgRemoveScopeRequest) (*MsgRemoveScopeResponse, error)
 	// AddRecordGroup adds a new record group context to a scope
-	AddRecordGroup(context.Context, *MsgAddRecordGroupRequest) (*AddRecordGroupResponse, error)
+	AddRecordGroup(context.Context, *MsgAddRecordGroupRequest) (*MsgAddRecordGroupResponse, error)
 	// AddRecord adds a set of records in a record group within a scope
-	AddRecord(context.Context, *MsgAddRecordRequest) (*AddRecordResponse, error)
+	AddRecord(context.Context, *MsgAddRecordRequest) (*MsgAddRecordResponse, error)
 	// AddScopeSpecification adds a set of records in a record group within a scope
-	AddScopeSpecification(context.Context, *MsgAddScopeSpecificationRequest) (*AddScopeSpecificationResponse, error)
+	AddScopeSpecification(context.Context, *MsgAddScopeSpecificationRequest) (*MsgAddScopeSpecificationResponse, error)
 	// AddGroupSpecification adds a set of records in a record group within a scope
-	AddGroupSpecification(context.Context, *MsgAddGroupSpecificationRequest) (*AddGroupSpecificationResponse, error)
+	AddGroupSpecification(context.Context, *MsgAddGroupSpecificationRequest) (*MsgAddGroupSpecificationResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
 type UnimplementedMsgServer struct {
 }
 
-func (*UnimplementedMsgServer) MemorializeContract(ctx context.Context, req *MsgMemorializeContractRequest) (*MemorializeContractResponse, error) {
+func (*UnimplementedMsgServer) MemorializeContract(ctx context.Context, req *MsgMemorializeContractRequest) (*MsgMemorializeContractResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MemorializeContract not implemented")
 }
-func (*UnimplementedMsgServer) ChangeOwnership(ctx context.Context, req *MsgChangeOwnershipRequest) (*ChangeOwnershipResponse, error) {
+func (*UnimplementedMsgServer) ChangeOwnership(ctx context.Context, req *MsgChangeOwnershipRequest) (*MsgChangeOwnershipResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ChangeOwnership not implemented")
 }
-func (*UnimplementedMsgServer) AddScope(ctx context.Context, req *MsgAddScopeRequest) (*AddScopeResponse, error) {
+func (*UnimplementedMsgServer) AddScope(ctx context.Context, req *MsgAddScopeRequest) (*MsgAddScopeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddScope not implemented")
 }
-func (*UnimplementedMsgServer) RemoveScope(ctx context.Context, req *MsgRemoveScopeRequest) (*RemoveScopeResponse, error) {
+func (*UnimplementedMsgServer) RemoveScope(ctx context.Context, req *MsgRemoveScopeRequest) (*MsgRemoveScopeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveScope not implemented")
 }
-func (*UnimplementedMsgServer) AddRecordGroup(ctx context.Context, req *MsgAddRecordGroupRequest) (*AddRecordGroupResponse, error) {
+func (*UnimplementedMsgServer) AddRecordGroup(ctx context.Context, req *MsgAddRecordGroupRequest) (*MsgAddRecordGroupResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddRecordGroup not implemented")
 }
-func (*UnimplementedMsgServer) AddRecord(ctx context.Context, req *MsgAddRecordRequest) (*AddRecordResponse, error) {
+func (*UnimplementedMsgServer) AddRecord(ctx context.Context, req *MsgAddRecordRequest) (*MsgAddRecordResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddRecord not implemented")
 }
-func (*UnimplementedMsgServer) AddScopeSpecification(ctx context.Context, req *MsgAddScopeSpecificationRequest) (*AddScopeSpecificationResponse, error) {
+func (*UnimplementedMsgServer) AddScopeSpecification(ctx context.Context, req *MsgAddScopeSpecificationRequest) (*MsgAddScopeSpecificationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddScopeSpecification not implemented")
 }
-func (*UnimplementedMsgServer) AddGroupSpecification(ctx context.Context, req *MsgAddGroupSpecificationRequest) (*AddGroupSpecificationResponse, error) {
+func (*UnimplementedMsgServer) AddGroupSpecification(ctx context.Context, req *MsgAddGroupSpecificationRequest) (*MsgAddGroupSpecificationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddGroupSpecification not implemented")
 }
 
@@ -1154,7 +1154,7 @@ func (m *MsgMemorializeContractRequest) MarshalToSizedBuffer(dAtA []byte) (int, 
 	return len(dAtA) - i, nil
 }
 
-func (m *MemorializeContractResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgMemorializeContractResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1164,12 +1164,12 @@ func (m *MemorializeContractResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MemorializeContractResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgMemorializeContractResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MemorializeContractResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgMemorializeContractResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1262,7 +1262,7 @@ func (m *MsgChangeOwnershipRequest) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
-func (m *ChangeOwnershipResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgChangeOwnershipResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1272,12 +1272,12 @@ func (m *ChangeOwnershipResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *ChangeOwnershipResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgChangeOwnershipResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *ChangeOwnershipResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgChangeOwnershipResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1327,7 +1327,7 @@ func (m *MsgAddScopeRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *AddScopeResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgAddScopeResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1337,12 +1337,12 @@ func (m *AddScopeResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *AddScopeResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgAddScopeResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *AddScopeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgAddScopeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1392,7 +1392,7 @@ func (m *MsgRemoveScopeRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *RemoveScopeResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgRemoveScopeResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1402,12 +1402,12 @@ func (m *RemoveScopeResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *RemoveScopeResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgRemoveScopeResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *RemoveScopeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgRemoveScopeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1457,7 +1457,7 @@ func (m *MsgAddRecordGroupRequest) MarshalToSizedBuffer(dAtA []byte) (int, error
 	return len(dAtA) - i, nil
 }
 
-func (m *AddRecordGroupResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgAddRecordGroupResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1467,12 +1467,12 @@ func (m *AddRecordGroupResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *AddRecordGroupResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgAddRecordGroupResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *AddRecordGroupResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgAddRecordGroupResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1532,7 +1532,7 @@ func (m *MsgAddRecordRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *AddRecordResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgAddRecordResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1542,12 +1542,12 @@ func (m *AddRecordResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *AddRecordResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgAddRecordResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *AddRecordResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgAddRecordResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1597,7 +1597,7 @@ func (m *MsgAddScopeSpecificationRequest) MarshalToSizedBuffer(dAtA []byte) (int
 	return len(dAtA) - i, nil
 }
 
-func (m *AddScopeSpecificationResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgAddScopeSpecificationResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1607,12 +1607,12 @@ func (m *AddScopeSpecificationResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *AddScopeSpecificationResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgAddScopeSpecificationResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *AddScopeSpecificationResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgAddScopeSpecificationResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1662,7 +1662,7 @@ func (m *MsgAddGroupSpecificationRequest) MarshalToSizedBuffer(dAtA []byte) (int
 	return len(dAtA) - i, nil
 }
 
-func (m *AddGroupSpecificationResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgAddGroupSpecificationResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1672,12 +1672,12 @@ func (m *AddGroupSpecificationResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *AddGroupSpecificationResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgAddGroupSpecificationResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *AddGroupSpecificationResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgAddGroupSpecificationResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1725,7 +1725,7 @@ func (m *MsgMemorializeContractRequest) Size() (n int) {
 	return n
 }
 
-func (m *MemorializeContractResponse) Size() (n int) {
+func (m *MsgMemorializeContractResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1769,7 +1769,7 @@ func (m *MsgChangeOwnershipRequest) Size() (n int) {
 	return n
 }
 
-func (m *ChangeOwnershipResponse) Size() (n int) {
+func (m *MsgChangeOwnershipResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1795,7 +1795,7 @@ func (m *MsgAddScopeRequest) Size() (n int) {
 	return n
 }
 
-func (m *AddScopeResponse) Size() (n int) {
+func (m *MsgAddScopeResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1821,7 +1821,7 @@ func (m *MsgRemoveScopeRequest) Size() (n int) {
 	return n
 }
 
-func (m *RemoveScopeResponse) Size() (n int) {
+func (m *MsgRemoveScopeResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1847,7 +1847,7 @@ func (m *MsgAddRecordGroupRequest) Size() (n int) {
 	return n
 }
 
-func (m *AddRecordGroupResponse) Size() (n int) {
+func (m *MsgAddRecordGroupResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1875,7 +1875,7 @@ func (m *MsgAddRecordRequest) Size() (n int) {
 	return n
 }
 
-func (m *AddRecordResponse) Size() (n int) {
+func (m *MsgAddRecordResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1901,7 +1901,7 @@ func (m *MsgAddScopeSpecificationRequest) Size() (n int) {
 	return n
 }
 
-func (m *AddScopeSpecificationResponse) Size() (n int) {
+func (m *MsgAddScopeSpecificationResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1927,7 +1927,7 @@ func (m *MsgAddGroupSpecificationRequest) Size() (n int) {
 	return n
 }
 
-func (m *AddGroupSpecificationResponse) Size() (n int) {
+func (m *MsgAddGroupSpecificationResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2186,7 +2186,7 @@ func (m *MsgMemorializeContractRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MemorializeContractResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgMemorializeContractResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2209,10 +2209,10 @@ func (m *MemorializeContractResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MemorializeContractResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgMemorializeContractResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MemorializeContractResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgMemorializeContractResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -2519,7 +2519,7 @@ func (m *MsgChangeOwnershipRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *ChangeOwnershipResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgChangeOwnershipResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2542,10 +2542,10 @@ func (m *ChangeOwnershipResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: ChangeOwnershipResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgChangeOwnershipResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ChangeOwnershipResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgChangeOwnershipResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -2684,7 +2684,7 @@ func (m *MsgAddScopeRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *AddScopeResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgAddScopeResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2707,10 +2707,10 @@ func (m *AddScopeResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: AddScopeResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgAddScopeResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AddScopeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgAddScopeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -2849,7 +2849,7 @@ func (m *MsgRemoveScopeRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *RemoveScopeResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgRemoveScopeResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2872,10 +2872,10 @@ func (m *RemoveScopeResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: RemoveScopeResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgRemoveScopeResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: RemoveScopeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgRemoveScopeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -3017,7 +3017,7 @@ func (m *MsgAddRecordGroupRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *AddRecordGroupResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgAddRecordGroupResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3040,10 +3040,10 @@ func (m *AddRecordGroupResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: AddRecordGroupResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgAddRecordGroupResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AddRecordGroupResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgAddRecordGroupResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -3218,7 +3218,7 @@ func (m *MsgAddRecordRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *AddRecordResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgAddRecordResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3241,10 +3241,10 @@ func (m *AddRecordResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: AddRecordResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgAddRecordResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AddRecordResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgAddRecordResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -3386,7 +3386,7 @@ func (m *MsgAddScopeSpecificationRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *AddScopeSpecificationResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgAddScopeSpecificationResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3409,10 +3409,10 @@ func (m *AddScopeSpecificationResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: AddScopeSpecificationResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgAddScopeSpecificationResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AddScopeSpecificationResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgAddScopeSpecificationResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -3554,7 +3554,7 @@ func (m *MsgAddGroupSpecificationRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *AddGroupSpecificationResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgAddGroupSpecificationResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3577,10 +3577,10 @@ func (m *AddGroupSpecificationResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: AddGroupSpecificationResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgAddGroupSpecificationResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AddGroupSpecificationResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgAddGroupSpecificationResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
