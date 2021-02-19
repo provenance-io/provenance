@@ -135,10 +135,10 @@ message Record {
   ];
   // process contain information used to uniquely identify an execution on or off chain that generated this record
   Process process = 3 [(gogoproto.nullable) = false];
-  // inputs used with the process to acheieve the output on this record
+  // inputs used with the process to achieve the output on this record
   repeated RecordInput inputs = 4 [(gogoproto.nullable) = false];
   // output(s) is the results of executing the process on the given process indicated in this record
-  repeated RecordOutput output = 5 [(gogoproto.nullable) = false];
+  repeated RecordOutput outputs = 5 [(gogoproto.nullable) = false];
 }
 
 // Process contains information used to uniquely identify what was used to generate this record
