@@ -76,8 +76,8 @@ func (scopeSpec *ScopeSpecification) ValidateBasic() error {
 }
 
 // String implements stringer interface
-func (scopeSpec ScopeSpecification) String() string {
-	out, _ := yaml.Marshal(scopeSpec)
+func (s ScopeSpecification) String() string {
+	out, _ := yaml.Marshal(s)
 	return string(out)
 }
 
@@ -96,23 +96,23 @@ func NewDescription(name, description, websiteURL, iconURL string) *Description 
 // e.g. If the name field is invalid in this description, and the path provided is "ScopeSpecification.Description",
 // the error message will contain "ScopeSpecification.Description.Name" and the problem.
 // Provide "" if there is no context you wish to provide.
-func (description *Description) ValidateBasic(path string) error {
-	if len(description.Name) == 0 {
+func (d *Description) ValidateBasic(path string) error {
+	if len(d.Name) == 0 {
 		return fmt.Errorf("description %s cannot be empty", makeFieldString(path, "Name"))
 	}
-	if len(description.Name) > maxDescriptionNameLength {
+	if len(d.Name) > maxDescriptionNameLength {
 		return fmt.Errorf("description %s exceeds maximum length (expected <= %d got: %d)",
-			makeFieldString(path, "Name"), maxDescriptionNameLength, len(description.Name))
+			makeFieldString(path, "Name"), maxDescriptionNameLength, len(d.Name))
 	}
-	if len(description.Description) > maxDescriptionDescriptionLength {
+	if len(d.Description) > maxDescriptionDescriptionLength {
 		return fmt.Errorf("description %s exceeds maximum length (expected <= %d got: %d)",
-			makeFieldString(path, "Description"), maxDescriptionDescriptionLength, len(description.Description))
+			makeFieldString(path, "Description"), maxDescriptionDescriptionLength, len(d.Description))
 	}
-	err := validateURLBasic(description.WebsiteUrl, false, path, "WebsiteUrl")
+	err := validateURLBasic(d.WebsiteUrl, false, path, "WebsiteUrl")
 	if err != nil {
 		return err
 	}
-	err = validateURLBasic(description.IconUrl, false, path, "IconUrl")
+	err = validateURLBasic(d.IconUrl, false, path, "IconUrl")
 	if err != nil {
 		return err
 	}
@@ -120,8 +120,8 @@ func (description *Description) ValidateBasic(path string) error {
 }
 
 // String implements stringer interface
-func (description Description) String() string {
-	out, _ := yaml.Marshal(description)
+func (d Description) String() string {
+	out, _ := yaml.Marshal(d)
 	return string(out)
 }
 
