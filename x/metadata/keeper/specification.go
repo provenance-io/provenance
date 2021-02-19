@@ -36,7 +36,7 @@ func (k Keeper) IterateScopeSpecs(ctx sdk.Context, handler func(specification ty
 	for ; it.Valid(); it.Next() {
 		var scopeSpec types.ScopeSpecification
 		k.cdc.MustUnmarshalBinaryBare(it.Value(), &scopeSpec)
-		if (handler(scopeSpec)) {
+		if handler(scopeSpec) {
 			break
 		}
 	}
@@ -54,7 +54,7 @@ func (k Keeper) IterateScopeSpecsForAddress(ctx sdk.Context, address sdk.AccAddr
 		if err := scopeSpecID.Unmarshal(it.Key()[len(prefix):]); err != nil {
 			return err
 		}
-		if (handler(scopeSpecID)) {
+		if handler(scopeSpecID) {
 			break
 		}
 	}
@@ -72,7 +72,7 @@ func (k Keeper) IterateScopeSpecsForContractSpec(ctx sdk.Context, contractSpecID
 		if err := scopeSpecID.Unmarshal(it.Key()[len(prefix):]); err != nil {
 			return err
 		}
-		if (handler(scopeSpecID)) {
+		if handler(scopeSpecID) {
 			break
 		}
 	}
@@ -157,8 +157,8 @@ func (k Keeper) indexScopeSpecification(ctx sdk.Context, scopeSpec types.ScopeSp
 	}
 
 	// Index all the session spec ids
-	for _, contractSpecId := range scopeSpec.ContractSpecIds {
-		store.Set(types.GetContractSpecScopeSpecCacheKey(contractSpecId, scopeSpec.SpecificationId), []byte{0x01})
+	for _, contractSpecID := range scopeSpec.ContractSpecIds {
+		store.Set(types.GetContractSpecScopeSpecCacheKey(contractSpecID, scopeSpec.SpecificationId), []byte{0x01})
 	}
 }
 
@@ -176,19 +176,20 @@ func (k Keeper) clearScopeSpecificationIndex(ctx sdk.Context, scopeSpec types.Sc
 	}
 
 	// Delete all contract spec + scope spec entries
-	for _, contractSpecId := range scopeSpec.ContractSpecIds {
-		store.Delete(types.GetContractSpecScopeSpecCacheKey(contractSpecId, scopeSpec.SpecificationId))
+	for _, contractSpecID := range scopeSpec.ContractSpecIds {
+		store.Delete(types.GetContractSpecScopeSpecCacheKey(contractSpecID, scopeSpec.SpecificationId))
 	}
 }
 
 // isScopeSpecUsed checks to see if a scope exists that is defined by this scope spec.
 func (k Keeper) isScopeSpecUsed(ctx sdk.Context, id types.MetadataAddress) bool {
 	scopeSpecReferenceFound := false
-	k.IterateScopesForScopeSpec(ctx, id, func(scopeID types.MetadataAddress) (stop bool) {
+	err := k.IterateScopesForScopeSpec(ctx, id, func(scopeID types.MetadataAddress) (stop bool) {
 		scopeSpecReferenceFound = true
 		return true
 	})
-	return scopeSpecReferenceFound
+	// If there was an error, that means there was an entry, so return true.
+	return err != nil || scopeSpecReferenceFound
 }
 
 // ValidateScopeSpecUpdate - full validation of a scope specification.
@@ -237,7 +238,7 @@ func (k Keeper) ValidateScopeSpecUpdate(ctx sdk.Context, existing, proposed type
 				}
 			}
 			if !found {
-				fmt.Errorf("contract specification party involved missing from from scope specification parties involved: (%d) %s",
+				return fmt.Errorf("contract specification party involved missing from from scope specification parties involved: (%d) %s",
 					contractSpecParty, contractSpecParty.String())
 			}
 		}

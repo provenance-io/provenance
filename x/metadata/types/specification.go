@@ -25,44 +25,44 @@ func NewScopeSpecification(
 	description *Description,
 	ownerAddresses []string,
 	partiesInvolved []PartyType,
-	contractSpecIds []MetadataAddress,
+	contractSpecIDs []MetadataAddress,
 ) *ScopeSpecification {
 	return &ScopeSpecification{
 		SpecificationId: specificationID,
 		Description:     description,
 		OwnerAddresses:  ownerAddresses,
 		PartiesInvolved: partiesInvolved,
-		ContractSpecIds:  contractSpecIds,
+		ContractSpecIds: contractSpecIDs,
 	}
 }
 
 // ValidateBasic performs basic format checking of data in a ScopeSpecification
-func (scopeSpec *ScopeSpecification) ValidateBasic() error {
-	prefix, err := VerifyMetadataAddressFormat(scopeSpec.SpecificationId)
+func (s *ScopeSpecification) ValidateBasic() error {
+	prefix, err := VerifyMetadataAddressFormat(s.SpecificationId)
 	if err != nil {
 		return fmt.Errorf("invalid scope specification id: %w", err)
 	}
 	if prefix != PrefixScopeSpecification {
 		return fmt.Errorf("invalid scope specification id prefix (expected: %s, got %s)", PrefixScopeSpecification, prefix)
 	}
-	if scopeSpec.Description != nil {
-		err = scopeSpec.Description.ValidateBasic("ScopeSpecification.Description")
+	if s.Description != nil {
+		err = s.Description.ValidateBasic("ScopeSpecification.Description")
 		if err != nil {
 			return err
 		}
 	}
-	if len(scopeSpec.OwnerAddresses) < 1 {
+	if len(s.OwnerAddresses) < 1 {
 		return errors.New("the ScopeSpecification must have at least one owner")
 	}
-	for i, owner := range scopeSpec.OwnerAddresses {
+	for i, owner := range s.OwnerAddresses {
 		if _, err = sdk.AccAddressFromBech32(owner); err != nil {
 			return fmt.Errorf("invalid owner address at index %d on ScopeSpecification: %w", i, err)
 		}
 	}
-	if len(scopeSpec.PartiesInvolved) == 0 {
+	if len(s.PartiesInvolved) == 0 {
 		return errors.New("the ScopeSpecification must have at least one party involved")
 	}
-	for i, contractSpecID := range scopeSpec.ContractSpecIds {
+	for i, contractSpecID := range s.ContractSpecIds {
 		prefix, err = VerifyMetadataAddressFormat(contractSpecID)
 		if err != nil {
 			return fmt.Errorf("invalid contract specification id at index %d: %w", i, err)

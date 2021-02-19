@@ -112,11 +112,11 @@ func GetAddressScopeSpecCacheKey(addr sdk.AccAddress, scopeSpecID MetadataAddres
 }
 
 // GetContractSpecScopeSpecCacheIteratorPrefix returns an iterator prefix for all scope spec cache entries assigned to a given contract spec
-func GetContractSpecScopeSpecCacheIteratorPrefix(contractSpecId MetadataAddress) []byte {
-	return append(ContractSpecScopeSpecCacheKeyPrefix, contractSpecId.Bytes()...)
+func GetContractSpecScopeSpecCacheIteratorPrefix(contractSpecID MetadataAddress) []byte {
+	return append(ContractSpecScopeSpecCacheKeyPrefix, contractSpecID.Bytes()...)
 }
 
 // GetContractSpecScopeSpecCacheKey returns the store key for a contract spec + scope spec cache entry
-func GetContractSpecScopeSpecCacheKey(contractSpecId MetadataAddress, scopeSpecID MetadataAddress) []byte {
-	return append(GetContractSpecScopeSpecCacheIteratorPrefix(contractSpecId), scopeSpecID.Bytes()...)
+func GetContractSpecScopeSpecCacheKey(contractSpecID MetadataAddress, scopeSpecID MetadataAddress) []byte {
+	return append(GetContractSpecScopeSpecCacheIteratorPrefix(contractSpecID), scopeSpecID.Bytes()...)
 }
