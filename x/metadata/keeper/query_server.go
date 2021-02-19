@@ -154,3 +154,28 @@ func (k Keeper) ValueOwnership(c context.Context, req *types.ValueOwnershipReque
 	}
 	return &types.ValueOwnershipResponse{ScopeIds: scopes, Pagination: pageRes}, nil
 }
+
+// Scope returns a specific scope by id
+func (k Keeper) ScopeSpecification(c context.Context, req *types.ScopeSpecificationRequest) (*types.ScopeSpecificationResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if req.SpecificationId == "" {
+		return nil, status.Error(codes.InvalidArgument, "speccification id cannot be empty")
+	}
+
+	id, err := uuid.Parse(req.SpecificationId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid specification id: %s", err.Error())
+	}
+	addr := types.ScopeSpecMetadataAddress(id)
+	ctx := sdk.UnwrapSDKContext(c)
+
+	spec, found := k.GetScopeSpecification(ctx, addr)
+	if !found {
+		return nil, status.Errorf(codes.NotFound, "scope specification %s not found", req.SpecificationId)
+	}
+
+	return &types.ScopeSpecificationResponse{ScopeSpecification: &spec}, nil
+}
