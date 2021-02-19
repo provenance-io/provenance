@@ -13,6 +13,7 @@ const (
 	QueryScope     = "account"
 	QueryOwnership = "ownership"
 	QueryParams    = "params"
+	QueryScopeSpec = "scopespec"
 )
 
 // QueryMetadataParams defines the params for queries that support paging (get by scope)
@@ -60,4 +61,21 @@ type QueryResOwnership struct {
 // String representation of the query for address ownership scope IDs.
 func (qor QueryResOwnership) String() string {
 	return fmt.Sprintf("%s - %s", qor.Address.String(), strings.Join(qor.ScopeID, ", "))
+}
+
+// QueryResScopeSpec is the result of a query for a scope specification.
+type QueryResScopeSpec struct {
+	SpecificationID string `json:"specification_id" yaml:"specification_id"`
+	ScopeSpecification ScopeSpecification `json:"scope_specification" yaml:"scope_specification"`
+}
+
+// NewQueryResScopeSpec creates a new QueryResScopeSpec object.
+func NewQueryResScopeSpec(
+	specificationID string,
+	scopeSpecification ScopeSpecification,
+) *QueryResScopeSpec {
+	return &QueryResScopeSpec{
+		SpecificationID: specificationID,
+		ScopeSpecification: scopeSpecification,
+	}
 }

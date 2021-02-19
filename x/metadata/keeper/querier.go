@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
@@ -24,6 +25,8 @@ func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 			return queryAddressScopes(ctx, path, req, k, legacyQuerierCdc)
 		case types.QueryParams:
 			return queryParams(ctx, k, legacyQuerierCdc)
+		case types.QueryScopeSpec:
+			return queryScopeSpecification(ctx, path, k, legacyQuerierCdc)
 
 		default:
 			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown query endpoint")
@@ -106,5 +109,24 @@ func queryParams(ctx sdk.Context, k Keeper, legacyQuerierCdc *codec.LegacyAmino)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
 
+	return res, nil
+}
+
+// query for a scope specification by specification id
+func queryScopeSpecification(ctx sdk.Context, path []string, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+	specificationID, err := uuid.Parse(strings.TrimSpace(path[1]))
+	if err != nil {
+		ctx.Logger().Error(err.Error())
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+	scopeSpec, found := k.GetScopeSpecification(ctx, types.ScopeMetadataAddress(specificationID))
+	if !found {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, fmt.Sprintf("scope specification [%s] does not exist", specificationID))
+	}
+	res, err := legacyQuerierCdc.MarshalJSON(types.NewQueryResScopeSpec(specificationID.String(), scopeSpec))
+	if err != nil {
+		ctx.Logger().Error("unable to marshal scope spec to JSON", "specificationID", specificationID, "err", err)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+	}
 	return res, nil
 }
