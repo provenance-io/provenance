@@ -49,6 +49,8 @@ var (
 	ContractSpecificationPrefix = []byte{0x03}
 	// ScopeSpecificationPrefix is the key for scope specifications in metadata store
 	ScopeSpecificationPrefix = []byte{0x04}
+	// RecordSpecificationPrefix is the key for record specifications in metadata store
+	RecordSpecificationPrefix = []byte{0x05}
 
 	// AddressCacheKeyPrefix for scope to address cache lookup
 	AddressCacheKeyPrefix = []byte{0x10}

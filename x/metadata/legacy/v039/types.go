@@ -8,7 +8,7 @@ import (
 // GenesisState is the head state of all scopes with history.
 type GenesisState struct {
 	ScopeRecords []Scope `json:"scope_records,omitempty"`
-	// NOTE: this is not currently exported but it needs to be
+	// NOTE: this comes from the v39 spec module that was merged in.  The migrate step should copy this over
 	Specifications []ContractSpec `json:"specifications,omitempty"`
 }
 

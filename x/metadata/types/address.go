@@ -23,10 +23,13 @@ const (
 	PrefixGroup = "group"
 	// PrefixRecord is the address human readable prefix used with bech32 encoding of Record IDs
 	PrefixRecord = "record"
+
 	// PrefixScopeSpecification is the address human readable prefix used with bech32 encoding of ScopeSpecification IDs
 	PrefixScopeSpecification = "scopespec"
 	// PrefixContractSpecification is the address human readable prefix used with bech32 encoding of ContractSpecification IDs
 	PrefixContractSpecification = "contractspec"
+	// PrefixRecordSpecification is the address human readable prefix used with bech32 encoding of RecordSpecification IDs
+	PrefixRecordSpecification = "recspec"
 )
 
 var (
@@ -56,15 +59,18 @@ func VerifyMetadataAddressFormat(bz []byte) (string, error) {
 	case RecordKeyPrefix[0]:
 		hrp = PrefixRecord
 		requiredLength = 1 + 16 + 32 // type byte plus size of one uuid and one sha256 hash
+
 	case ScopeSpecificationPrefix[0]:
 		hrp = PrefixScopeSpecification
 		requiredLength = 1 + 16 // type byte plus size of one uuid
 	case ContractSpecificationPrefix[0]:
 		hrp = PrefixContractSpecification
 		requiredLength = 1 + 16 // type byte plus size of one uuid
-
+	case RecordSpecificationPrefix[0]:
+		hrp = PrefixRecordSpecification
+		requiredLength = 1 + 16 + 32 // type byte plus size of one uuid and one sha256 hash
 	default:
-		return hrp, fmt.Errorf("invalid metadata address type (must be 0-4, actual: %d)", bz[0])
+		return hrp, fmt.Errorf("invalid metadata address type (must be 0-5, actual: %d)", bz[0])
 	}
 	if len(bz) != requiredLength {
 		return hrp, fmt.Errorf("incorrect address length (expected: %d, actual: %d)", requiredLength, len(bz))
@@ -158,6 +164,9 @@ func RecordMetadataAddress(scopeUUID uuid.UUID, name string) MetadataAddress {
 	}
 	addr := append(RecordKeyPrefix, bz...)
 	name = strings.ToLower(strings.TrimSpace(name))
+	if len(name) < 1 {
+		panic("missing name value for record metadata address")
+	}
 	nameBytes := sha256.Sum256([]byte(name))
 	return append(addr, nameBytes[:]...)
 }
@@ -171,8 +180,8 @@ func ScopeSpecMetadataAddress(specUUID uuid.UUID) MetadataAddress {
 	return append(ScopeSpecificationPrefix, bz...)
 }
 
-// GroupSpecMetadataAddress creates a MetadataAddress instance for a group specification
-func GroupSpecMetadataAddress(specUUID uuid.UUID) MetadataAddress {
+// ContractSpecMetadataAddress creates a MetadataAddress instance for a group specification
+func ContractSpecMetadataAddress(specUUID uuid.UUID) MetadataAddress {
 	bz, err := specUUID.MarshalBinary()
 	if err != nil {
 		panic(err)
@@ -435,4 +444,10 @@ func (ma MetadataAddress) IsScopeSpecificationAddress() bool {
 func (ma MetadataAddress) IsContractSpecificationAddress() bool {
 	hrp, err := VerifyMetadataAddressFormat(ma)
 	return (err == nil && hrp == PrefixContractSpecification)
+}
+
+// IsRecordSpecificationAddress returns true is the address is valid and matches this type
+func (ma MetadataAddress) IsRecordSpecificationAddress() bool {
+	hrp, err := VerifyMetadataAddressFormat(ma)
+	return (err == nil && hrp == PrefixRecordSpecification)
 }
