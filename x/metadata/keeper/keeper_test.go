@@ -321,6 +321,11 @@ func (s *KeeperTestSuite) TestScopeQuery() {
 	s.Len(ownerResponse.ScopeIds, 1)
 }
 
+// TODO: Untested functions:
+//       IterateScopeSpecs, IterateScopeSpecsForAddress, IterateScopeSpecsForContractSpec,
+//       GetScopeSpecification, SetScopeSpecification, DeleteScopeSpecification,
+//       ValidateScopeSpecUpdate
+
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
