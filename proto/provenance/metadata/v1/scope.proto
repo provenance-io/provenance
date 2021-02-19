@@ -33,7 +33,7 @@ Data Structures
 
   Typically multiple records will be established within a scope at the same time (see: Contract Memorialization).  A
   Record Group contains context for the recording of these records linking a set of records into a common process/
-  execution associated with a specificaiton indicating allowed and required values.
+  execution associated with a specification indicating allowed and required values.
 
   Record
 
@@ -85,7 +85,7 @@ message Scope {
   // These parties represent top level owners of the records within.  These parties must sign any requests that modify
   // the data within the scope.  These addresses are in union with parties listed on the record groups.
   repeated string owner_address = 3;
-  // Addessses in this list are authorized to recieve off-chain data associated with this scope.
+  // Addresses in this list are authorized to receive off-chain data associated with this scope.
   repeated string data_access = 4;
   // An address that controls the value associated with this scope.  Standard blockchain accounts and marker accounts
   // are supported for this value.  This attribute may only be changed by the entity indicated once it is set.
@@ -107,7 +107,7 @@ message RecordGroup {
     (gogoproto.customtype) = "MetadataAddress",
     (gogoproto.moretags)   = "json:\"group_id\" yaml:\"group_id\""
   ];
-  // unique id of the record groupd specification instance that was used to create this group.
+  // unique id of the record group specification instance that was used to create this group.
   bytes specification_id = 2 [
     (gogoproto.nullable)   = false,
     (gogoproto.customtype) = "MetadataAddress",
@@ -115,7 +115,7 @@ message RecordGroup {
   ];
   // Set of identities that signed this contract
   repeated Party parties = 3 [(gogoproto.nullable) = false];
-  // name to associate with this recordgroup execution context, typically classname
+  // name to associate with this record group execution context, typically classname
   string name = 4 [(gogoproto.jsontag) = "type", (gogoproto.moretags) = "yaml:\"type\""];
   // Created by, updated by, timestamps, version number, and related info.
   AuditFields audit = 99 [(gogoproto.nullable) = false];
@@ -150,7 +150,7 @@ message Process {
     // the hash of an off-chain process used
     string hash = 2;
   }
-  // a name assocaited with the process (type_name, classname or smart contract common name)
+  // a name associated with the process (type_name, classname or smart contract common name)
   string name = 3;
   // method is a name or reference to a specific operation (method) within a class/contract that was invoked
   string method = 4;
@@ -197,13 +197,13 @@ message RecordOutput {
 // ResultStatus indicates the various states of execution of a record
 enum ResultStatus {
   // RESULT_STATUS_UNSPECIFIED indicates an unset condition
-  RESULT_STATUS_UNSPECIFIED = 0;
-  // RESULT_STATUS_PASS indicates the execution was successfult
-  RESULT_STATUS_PASS = 1;
+  RESULT_STATUS_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "Unspecified"];;
+  // RESULT_STATUS_PASS indicates the execution was successful
+  RESULT_STATUS_PASS = 1 [(gogoproto.enumvalue_customname) = "Pass"];;
   // RESULT_STATUS_SKIP indicates condition/consideration was skipped due to missing inputs or delayed execution
-  RESULT_STATUS_SKIP = 2;
+  RESULT_STATUS_SKIP = 2 [(gogoproto.enumvalue_customname) = "Skip"];;
   // RESULT_STATUS_FAIL indicates the execution of the condition/consideration failed.
-  RESULT_STATUS_FAIL = 3;
+  RESULT_STATUS_FAIL = 3 [(gogoproto.enumvalue_customname) = "Fail"];;
 }
 
 // A Party is an address with/in a given role associated with a contract
