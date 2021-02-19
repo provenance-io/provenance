@@ -123,7 +123,7 @@ func queryScopeSpecification(ctx sdk.Context, path []string, k Keeper, legacyQue
 	if !found {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, fmt.Sprintf("scope specification [%s] does not exist", specificationID))
 	}
-	res, err := legacyQuerierCdc.MarshalJSON(types.NewQueryResScopeSpec(specificationID.String(), scopeSpec))
+	res, err := legacyQuerierCdc.MarshalJSON(types.NewQueryResScopeSpec(scopeSpec))
 	if err != nil {
 		ctx.Logger().Error("unable to marshal scope spec to JSON", "specificationID", specificationID, "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())

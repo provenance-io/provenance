@@ -65,17 +65,14 @@ func (qor QueryResOwnership) String() string {
 
 // QueryResScopeSpec is the result of a query for a scope specification.
 type QueryResScopeSpec struct {
-	SpecificationID string `json:"specification_id" yaml:"specification_id"`
 	ScopeSpecification ScopeSpecification `json:"scope_specification" yaml:"scope_specification"`
 }
 
 // NewQueryResScopeSpec creates a new QueryResScopeSpec object.
 func NewQueryResScopeSpec(
-	specificationID string,
 	scopeSpecification ScopeSpecification,
 ) *QueryResScopeSpec {
 	return &QueryResScopeSpec{
-		SpecificationID: specificationID,
 		ScopeSpecification: scopeSpecification,
 	}
 }
