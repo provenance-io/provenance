@@ -10,7 +10,7 @@ import (
 
 // query endpoints supported by the auth Querier
 const (
-	QueryScope     = "account"
+	QueryScope     = "scope"
 	QueryOwnership = "ownership"
 	QueryParams    = "params"
 	QueryScopeSpec = "scopespec"
