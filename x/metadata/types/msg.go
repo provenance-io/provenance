@@ -9,14 +9,15 @@ import (
 )
 
 const (
-	TypeMsgMemorializeContractRequest   = "memorialize_contract_request"
-	TypeMsgChangeOwnershipRequest       = "change_ownershipr_equest"
-	TypeMsgAddScopeRequest              = "add_scope_request"
-	TypeMsgRemoveScopeRequest           = "remove_scope_request"
-	TypeMsgAddRecordGroupRequest        = "add_recordgroup_request"
-	TypeMsgAddRecordRequest             = "add_record_request"
-	TypeMsgAddScopeSpecificationRequest = "add_scope_specification_request"
-	TypeMsgAddGroupSpecificationRequest = "add_group_specification_request"
+	TypeMsgMemorializeContractRequest      = "memorialize_contract_request"
+	TypeMsgChangeOwnershipRequest          = "change_ownershipr_equest"
+	TypeMsgAddScopeRequest                 = "add_scope_request"
+	TypeMsgRemoveScopeRequest              = "remove_scope_request"
+	TypeMsgAddRecordGroupRequest           = "add_recordgroup_request"
+	TypeMsgAddRecordRequest                = "add_record_request"
+	TypeMsgAddScopeSpecificationRequest    = "add_scope_specification_request"
+	TypeMsgRemoveScopeSpecificationRequest = "remove_scope_specification_request"
+	TypeMsgAddGroupSpecificationRequest    = "add_group_specification_request"
 )
 
 // Compile time interface checks.
@@ -29,6 +30,21 @@ var (
 	_ sdk.Msg = &MsgAddScopeSpecificationRequest{}
 	_ sdk.Msg = &MsgAddGroupSpecificationRequest{}
 )
+
+// private method to convert an array of strings into an array of Acc Addresses.
+func stringsToAccAddresses(strings []string) []sdk.AccAddress {
+	retval := make([]sdk.AccAddress, len(strings))
+
+	for i, str := range strings {
+		accAddress, err := sdk.AccAddressFromBech32(str)
+		if err != nil {
+			panic(err)
+		}
+		retval[i] = accAddress
+	}
+
+	return retval
+}
 
 // ----------------------------------------------------------------------
 
@@ -213,17 +229,7 @@ func (msg MsgRemoveScopeRequest) Type() string { return TypeMsgRemoveScopeReques
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgRemoveScopeRequest) GetSigners() []sdk.AccAddress {
-	signers := make([]sdk.AccAddress, len(msg.Signers))
-
-	for i, signerAddress := range msg.Signers {
-		signAddr, err := sdk.AccAddressFromBech32(signerAddress)
-		if err != nil {
-			panic(err)
-		}
-		signers[i] = signAddr
-	}
-
-	return signers
+	return stringsToAccAddresses(msg.Signers)
 }
 
 // GetSignBytes gets the bytes for the message signer to sign on
@@ -336,11 +342,7 @@ func (msg MsgAddScopeSpecificationRequest) Type() string { return TypeMsgAddScop
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgAddScopeSpecificationRequest) GetSigners() []sdk.AccAddress {
-	delAddr, err := sdk.AccAddressFromBech32(msg.Notary)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{delAddr}
+	return stringsToAccAddresses(msg.Signers)
 }
 
 // GetSignBytes gets the bytes for the message signer to sign on
@@ -350,7 +352,46 @@ func (msg MsgAddScopeSpecificationRequest) GetSignBytes() []byte {
 
 // ValidateBasic performs a quick validity check
 func (msg MsgAddScopeSpecificationRequest) ValidateBasic() error {
+	if len(msg.Signers) < 1 {
+		return fmt.Errorf("at least one signer is required")
+	}
 	return msg.Specification.ValidateBasic()
+}
+
+// ----------------------------------------------------------------------
+
+// NewMsgRemoveScopeSpecificationRequest creates a new msg instance
+func NewMsgRemoveScopeSpecificationRequest() *MsgRemoveScopeSpecificationRequest {
+	return &MsgRemoveScopeSpecificationRequest{}
+}
+
+func (msg MsgRemoveScopeSpecificationRequest) String() string {
+	out, _ := yaml.Marshal(msg)
+	return string(out)
+}
+
+// Route returns the module route
+func (msg MsgRemoveScopeSpecificationRequest) Route() string { return ModuleName }
+
+// Type returns the type name for this msg
+func (msg MsgRemoveScopeSpecificationRequest) Type() string { return TypeMsgRemoveScopeSpecificationRequest }
+
+// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
+func (msg MsgRemoveScopeSpecificationRequest) GetSigners() []sdk.AccAddress {
+	return stringsToAccAddresses(msg.Signers)
+}
+
+// GetSignBytes gets the bytes for the message signer to sign on
+func (msg MsgRemoveScopeSpecificationRequest) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// ValidateBasic performs a quick validity check
+func (msg MsgRemoveScopeSpecificationRequest) ValidateBasic() error {
+	if len(msg.Signers) < 1 {
+		return fmt.Errorf("at least one signer is required")
+	}
+	return nil
 }
 
 // ----------------------------------------------------------------------

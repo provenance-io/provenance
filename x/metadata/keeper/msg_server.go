@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -66,7 +67,7 @@ func (k msgServer) AddScopeSpecification(
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	existing, _ := k.GetScopeSpecification(ctx, msg.Specification.SpecificationId)
-	if err := k.ValidateScopeSpecUpdate(ctx, existing, *msg.Specification, []string{msg.Notary}); err != nil {
+	if err := k.ValidateScopeSpecUpdate(ctx, existing, *msg.Specification, msg.Signers); err != nil {
 		return nil, err
 	}
 
@@ -76,11 +77,38 @@ func (k msgServer) AddScopeSpecification(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Notary),
+			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
 		),
 	)
 
 	return &types.AddScopeSpecificationResponse{}, nil
+}
+
+func (k msgServer) RemoveScopeSpecification(
+	goCtx context.Context,
+	msg *types.MsgRemoveScopeSpecificationRequest,
+) (*types.RemoveScopeSpecificationResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	existing, found := k.GetScopeSpecification(ctx, msg.SpecificationId)
+	if !found {
+		return nil, fmt.Errorf("scope specification not found with id %s", msg.SpecificationId)
+	}
+	if err := k.ValidateScopeSpecAllOwnersAreSigners(existing, msg.Signers); err != nil {
+		return nil, err
+	}
+
+	k.DeleteScopeSpecification(ctx, msg.SpecificationId)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
+		),
+	)
+
+	return &types.RemoveScopeSpecificationResponse{}, nil
 }
 
 func (k msgServer) AddGroupSpecification(
