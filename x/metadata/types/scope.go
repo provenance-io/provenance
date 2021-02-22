@@ -272,6 +272,11 @@ func (ro RecordOutput) ValidateBasic() error {
 	return nil
 }
 
+// String implements stringer interface
+func (ro RecordOutput) String() string {
+	return fmt.Sprintf("%s - %s", ro.Hash, ro.Status)
+}
+
 // NewProcess creates a new instance of Process
 func (ps Process) NewProcess(name string, processId isProcess_ProcessId, method string) *Process {
 	return &Process{
