@@ -156,7 +156,7 @@ func (k Keeper) indexScopeSpecification(ctx sdk.Context, scopeSpec types.ScopeSp
 		}
 	}
 
-	// Index all the session spec ids
+	// Index all the contract spec ids
 	for _, contractSpecID := range scopeSpec.ContractSpecIds {
 		store.Set(types.GetContractSpecScopeSpecCacheKey(contractSpecID, scopeSpec.SpecificationId), []byte{0x01})
 	}
