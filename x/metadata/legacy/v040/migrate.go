@@ -56,7 +56,7 @@ func convertScope(
 	newScope = &v040metadata.Scope{
 		ScopeId:         v040metadata.ScopeMetadataAddress(oldScopeUUID),
 		SpecificationId: v040metadata.MetadataAddress{},
-		OwnerAddress:    partyAddresses(convertParties(old.Parties)),
+		Parties:         convertParties(old.Parties),
 		DataAccess:      partyAddresses(convertParties(old.Parties)),
 	}
 	newGroups, newRecords = convertGroups(oldScopeUUID, old.RecordGroup)
@@ -287,7 +287,7 @@ func BackportScope(
 		return
 	}
 
-	oldParties, err := backportAddressToParties(newScope.OwnerAddress, v040metadata.PartyType_PARTY_TYPE_OWNER)
+	oldParties, err := backportParties(newScope.Parties)
 	if err != nil {
 		return
 	}

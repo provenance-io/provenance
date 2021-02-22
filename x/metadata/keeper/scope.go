@@ -137,8 +137,11 @@ func (k Keeper) DeleteScope(ctx sdk.Context, id types.MetadataAddress) {
 func (k Keeper) clearScopeIndex(ctx sdk.Context, scope types.Scope) {
 	store := ctx.KVStore(k.storeKey)
 
-	// add all owner addresses to the list of cache records to remove
-	addresses := scope.OwnerAddress
+	// add all party addresses to the list of cache records to remove
+	addresses := []string{}
+	for _, p := range scope.Parties {
+		addresses = append(addresses, p.Address)
+	}
 	addresses = append(addresses, scope.DataAccess...)
 	if len(scope.ValueOwnerAddress) > 0 {
 		// Add to list of general addresses to clear the cache of
@@ -162,8 +165,11 @@ func (k Keeper) clearScopeIndex(ctx sdk.Context, scope types.Scope) {
 func (k Keeper) indexScope(ctx sdk.Context, scope types.Scope) {
 	store := ctx.KVStore(k.storeKey)
 
-	// Index all data owner addresses on the scope
-	addresses := scope.OwnerAddress
+	// Index all party addresses on the scope
+	addresses := []string{}
+	for _, p := range scope.Parties {
+		addresses = append(addresses, p.Address)
+	}
 	addresses = append(addresses, scope.DataAccess...)
 	if len(scope.ValueOwnerAddress) > 0 {
 		addresses = append(addresses, scope.ValueOwnerAddress)
@@ -199,7 +205,10 @@ func (k Keeper) ValidateScopeUpdate(ctx sdk.Context, existing, proposed types.Sc
 	}
 
 	// Validate any changes to the ValueOwner property.
-	requiredSignatures := append([]string{}, existing.OwnerAddress...)
+	requiredSignatures := []string{}
+	for _, p := range existing.Parties {
+		requiredSignatures = append(requiredSignatures, p.Address)
+	}
 	if existing.ValueOwnerAddress != proposed.ValueOwnerAddress {
 		// existing value is being changed,
 		if len(existing.ValueOwnerAddress) > 0 {
@@ -250,20 +259,17 @@ func (k Keeper) ValidateScopeRemove(ctx sdk.Context, existing, proposed types.Sc
 		}
 	}
 
-	// Validate any changes to the ValueOwner property.
-	requiredSignatures := append([]string{}, existing.OwnerAddress...)
-
 	// Signatures required of all existing data owners.
-	for _, owner := range requiredSignatures {
+	for _, party := range existing.Parties {
 		found := false
 		for _, signer := range signers {
-			if owner == signer {
+			if party.Address == signer {
 				found = true
 				break
 			}
 		}
 		if !found {
-			return fmt.Errorf("missing signature from existing owner %s; required for update", owner)
+			return fmt.Errorf("missing signature from existing party %v; required for update", party)
 		}
 	}
 

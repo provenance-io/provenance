@@ -18,13 +18,14 @@ const (
 // NewScope creates a new instance.
 func NewScope(
 	scopeID, scopeSpecification MetadataAddress,
-	owners, dataAccess []string,
+	parties []Party,
+	dataAccess []string,
 	valueOwner string,
 ) *Scope {
 	return &Scope{
 		ScopeId:           scopeID,
 		SpecificationId:   scopeSpecification,
-		OwnerAddress:      owners,
+		Parties:           parties,
 		DataAccess:        dataAccess,
 		ValueOwnerAddress: valueOwner,
 	}
@@ -48,12 +49,12 @@ func (s *Scope) ValidateBasic() error {
 			return fmt.Errorf("invalid scope specification identifier (expected: %s, got %s)", PrefixScopeSpecification, prefix)
 		}
 	}
-	if len(s.OwnerAddress) < 1 {
-		return errors.New("scope must have at least one owner")
+	if len(s.Parties) < 1 {
+		return errors.New("scope must have at least one party")
 	}
-	for _, o := range s.OwnerAddress {
-		if _, err = sdk.AccAddressFromBech32(o); err != nil {
-			return fmt.Errorf("invalid owner on scope: %w", err)
+	for _, o := range s.Parties {
+		if _, err = sdk.AccAddressFromBech32(o.Address); err != nil {
+			return fmt.Errorf("invalid party on scope: %w", err)
 		}
 	}
 	for _, d := range s.DataAccess {
