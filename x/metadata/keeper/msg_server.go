@@ -65,17 +65,22 @@ func (k msgServer) AddScopeSpecification(
 ) (*types.AddScopeSpecificationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// TODO (contract keeper class  methods to process request, keeper methods to record it)
+	existing, _ := k.GetScopeSpecification(ctx, msg.Specification.SpecificationId)
+	if err := k.ValidateScopeSpecUpdate(ctx, existing, *msg.Specification, []string{msg.Notary}); err != nil {
+		return nil, err
+	}
+
+	k.SetScopeSpecification(ctx, *msg.Specification)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, ""),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Notary),
 		),
 	)
 
-	return nil, fmt.Errorf("not implemented")
+	return &types.AddScopeSpecificationResponse{}, nil
 }
 
 func (k msgServer) AddGroupSpecification(
