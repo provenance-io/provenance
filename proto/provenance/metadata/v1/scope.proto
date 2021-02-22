@@ -86,10 +86,10 @@ message Scope {
   // the data within the scope.  These addresses are in union with parties listed on the record groups.
   repeated Party parties = 3 [(gogoproto.nullable) = false];
   // Addessses in this list are authorized to recieve off-chain data associated with this scope.
-  repeated string data_access = 4;
+  repeated string data_access = 4 [(gogoproto.moretags)   = "yaml:\"data_access\""];
   // An address that controls the value associated with this scope.  Standard blockchain accounts and marker accounts
   // are supported for this value.  This attribute may only be changed by the entity indicated once it is set.
-  string value_owner_address = 5;
+  string value_owner_address = 5 [(gogoproto.moretags)   = "yaml:\"value_owner_address\""];
 }
 
 /*
