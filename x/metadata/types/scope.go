@@ -147,6 +147,7 @@ func (rg RecordGroup) String() string {
 	return out
 }
 
+// NewRecord creates new instance of Record
 func (r Record) NewRecord(name string, groupId MetadataAddress, process Process, inputs []RecordInput, outputs []RecordOutput) *Record {
 	return &Record{
 		Name:    name,
@@ -168,11 +169,19 @@ func (r Record) ValidateBasic() error {
 			return fmt.Errorf("invalid record input: %w", err)
 		}
 	}
+	for _, o := range r.Outputs {
+		if err = o.ValidateBasic(); err != nil {
+			return fmt.Errorf("invalid record output: %w", err)
+		}
+	}
 	if prefix != PrefixGroup {
 		return fmt.Errorf("invalid group identifier (expected: %s, got %s)", PrefixGroup, prefix)
 	}
 	if len(r.Name) < 1 {
 		return fmt.Errorf("invalid/missing name for record")
+	}
+	if err = r.Process.ValidateBasic(); err != nil {
+		return fmt.Errorf("invalid record process %w", err)
 	}
 	return nil
 }
@@ -186,6 +195,16 @@ func (r Record) String() string {
 	out = strings.TrimRight(out, ", ")
 	out += fmt.Sprintf("] (%s/%s)", r.Process.Name, r.Process.Method)
 	return out
+}
+
+// NewRecordInput creates new instance of RecordInput
+func (ri RecordInput) NewRecordInput(name string, source isRecordInput_Source, typeName string, status RecordInputStatus) *RecordInput {
+	return &RecordInput{
+		Name:     name,
+		Source:   source,
+		TypeName: typeName,
+		Status:   status,
+	}
 }
 
 // ValidateBasic performs a static check over the record input format
@@ -234,6 +253,14 @@ func (ri RecordInput) String() string {
 	return out
 }
 
+// NewRecordOutput creates a new instance of RecordOutput
+func (ro RecordOutput) NewRecordOutput(hash string, status ResultStatus) *RecordOutput {
+	return &RecordOutput{
+		Hash:   hash,
+		Status: status,
+	}
+}
+
 // ValidateBasic performs a static check over the record output format
 func (ro RecordOutput) ValidateBasic() error {
 	if len(ro.Hash) < 1 {
@@ -243,6 +270,34 @@ func (ro RecordOutput) ValidateBasic() error {
 		return fmt.Errorf("invalid record output status, status unspecified")
 	}
 	return nil
+}
+
+// NewProcess creates a new instance of Process
+func (ps Process) NewProcess(name string, processId isProcess_ProcessId, method string) *Process {
+	return &Process{
+		Name:      name,
+		ProcessId: processId,
+		Method:    method,
+	}
+}
+
+// ValidateBasic performs a static check over the process format
+func (ps Process) ValidateBasic() error {
+	if len(ps.Method) < 1 {
+		return fmt.Errorf("missing required method")
+	}
+	if len(ps.Name) < 1 {
+		return fmt.Errorf("missing required name")
+	}
+	if ps.ProcessId == nil {
+		return fmt.Errorf("missing required process id")
+	}
+	return nil
+}
+
+// String implements stringer interface
+func (ps Process) String() string {
+	return fmt.Sprintf("%s - %s - %s", ps.Name, ps.Method, ps.ProcessId)
 }
 
 // ValidateBasic performs static checking of Party format
