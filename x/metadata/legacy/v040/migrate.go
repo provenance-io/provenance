@@ -320,22 +320,6 @@ func backportInputs(new []v040metadata.RecordInput) (old []*v039metadata.RecordI
 	return
 }
 
-func backportAddressToParties(new []string, role v040metadata.PartyType) (old []*v039metadata.Recital, err error) {
-	old = make([]*v039metadata.Recital, 0, len(new))
-	for i, n := range new {
-		addr, err := sdk.AccAddressFromBech32(n)
-		if err != nil {
-			return nil, err
-		}
-		old[i].Address = addr
-		old[i].SignerRole = v039metadata.PartyType(int32(role))
-
-		// TODO consider including a context here to bring in the public keys by query of AccountKeeper
-		// old[i].Signer.SigningPublicKey
-	}
-	return
-}
-
 func backportParties(new []v040metadata.Party) (old []*v039metadata.Recital, err error) {
 	old = make([]*v039metadata.Recital, 0, len(new))
 	for i, n := range new {
