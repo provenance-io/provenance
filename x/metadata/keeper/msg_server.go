@@ -81,13 +81,13 @@ func (k msgServer) AddScopeSpecification(
 		),
 	)
 
-	return &types.AddScopeSpecificationResponse{}, nil
+	return &types.MsgAddScopeSpecificationResponse{}, nil
 }
 
 func (k msgServer) RemoveScopeSpecification(
 	goCtx context.Context,
 	msg *types.MsgRemoveScopeSpecificationRequest,
-) (*types.RemoveScopeSpecificationResponse, error) {
+) (*types.MsgRemoveScopeSpecificationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	existing, found := k.GetScopeSpecification(ctx, msg.SpecificationId)
@@ -108,7 +108,7 @@ func (k msgServer) RemoveScopeSpecification(
 		),
 	)
 
-	return &types.RemoveScopeSpecificationResponse{}, nil
+	return &types.MsgRemoveScopeSpecificationResponse{}, nil
 }
 
 func (k msgServer) AddGroupSpecification(

@@ -178,8 +178,8 @@ message MsgRemoveScopeSpecificationRequest {
   ];
   repeated string signers = 2;
 }
-// RemoveScopeSpecificationResponse from a remove scope specification request
-message RemoveScopeSpecificationResponse {}
+// MsgRemoveScopeSpecificationResponse from a remove scope specification request
+message MsgRemoveScopeSpecificationResponse {}
 
 // MsgAddGroupSpecificationRequest is a request to add a group of records to a scope
 message MsgAddGroupSpecificationRequest {
