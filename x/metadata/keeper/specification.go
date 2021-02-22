@@ -104,7 +104,7 @@ func (k Keeper) SetScopeSpecification(ctx sdk.Context, spec types.ScopeSpecifica
 		if oldBytes := store.Get(spec.SpecificationId); oldBytes != nil {
 			var oldSpec types.ScopeSpecification
 			if err := k.cdc.UnmarshalBinaryBare(oldBytes, &oldSpec); err == nil {
-				eventType = types.EventTypeScopeUpdated
+				eventType = types.EventTypeScopeSpecificationUpdated
 				k.clearScopeSpecificationIndex(ctx, oldSpec)
 			}
 		}
