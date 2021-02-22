@@ -375,7 +375,9 @@ func (msg MsgRemoveScopeSpecificationRequest) String() string {
 func (msg MsgRemoveScopeSpecificationRequest) Route() string { return ModuleName }
 
 // Type returns the type name for this msg
-func (msg MsgRemoveScopeSpecificationRequest) Type() string { return TypeMsgRemoveScopeSpecificationRequest }
+func (msg MsgRemoveScopeSpecificationRequest) Type() string {
+	return TypeMsgRemoveScopeSpecificationRequest
+}
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgRemoveScopeSpecificationRequest) GetSigners() []sdk.AccAddress {
