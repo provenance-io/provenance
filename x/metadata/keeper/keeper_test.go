@@ -321,11 +321,6 @@ func (s *KeeperTestSuite) TestScopeQuery() {
 	s.Len(ownerResponse.ScopeIds, 1)
 }
 
-// TODO: Untested scope spec functions (probably best in a new specification_test.go suite):
-//       IterateScopeSpecs, IterateScopeSpecsForAddress, IterateScopeSpecsForContractSpec,
-//       GetScopeSpecification, SetScopeSpecification, DeleteScopeSpecification,
-//       ValidateScopeSpecUpdate, ValidateScopeSpecAllOwnersAreSigners
-
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
