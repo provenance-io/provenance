@@ -9,17 +9,17 @@ import (
 )
 
 // GetRecord returns the record with the given id.
-func (k Keeper) GetRecord(ctx sdk.Context, id types.MetadataAddress) (group types.Record, found bool) {
+func (k Keeper) GetRecord(ctx sdk.Context, id types.MetadataAddress) (record types.Record, found bool) {
 	if !id.IsRecordAddress() {
-		return group, false
+		return record, false
 	}
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(id)
 	if b == nil {
 		return types.Record{}, false
 	}
-	k.cdc.MustUnmarshalBinaryBare(b, &group)
-	return group, true
+	k.cdc.MustUnmarshalBinaryBare(b, &record)
+	return record, true
 }
 
 // SetRecord stores a group in the module kv store.
