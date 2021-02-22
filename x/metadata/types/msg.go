@@ -350,7 +350,7 @@ func (msg MsgAddScopeSpecificationRequest) GetSignBytes() []byte {
 
 // ValidateBasic performs a quick validity check
 func (msg MsgAddScopeSpecificationRequest) ValidateBasic() error {
-	return nil
+	return msg.Specification.ValidateBasic()
 }
 
 // ----------------------------------------------------------------------
