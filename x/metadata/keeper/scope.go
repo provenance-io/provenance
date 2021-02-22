@@ -244,3 +244,33 @@ func (k Keeper) ValidateScopeUpdate(ctx sdk.Context, existing, proposed types.Sc
 
 	return nil
 }
+
+// ValidateScopeRemove checks the current scope and the proposed removal scope to determine if the the proposed remove is valid
+// based on the existing state
+func (k Keeper) ValidateScopeRemove(ctx sdk.Context, existing, proposed types.Scope, signers []string) error {
+	// IDs must match
+	if len(existing.ScopeId) > 0 {
+		if !proposed.ScopeId.Equals(existing.ScopeId) {
+			return fmt.Errorf("cannot update scope identifier. expected %s, got %s", existing.ScopeId, proposed.ScopeId)
+		}
+	}
+
+	// Validate any changes to the ValueOwner property.
+	requiredSignatures := append([]string{}, existing.OwnerAddress...)
+
+	// Signatures required of all existing data owners.
+	for _, owner := range requiredSignatures {
+		found := false
+		for _, signer := range signers {
+			if owner == signer {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("missing signature from existing owner %s; required for update", owner)
+		}
+	}
+
+	return nil
+}

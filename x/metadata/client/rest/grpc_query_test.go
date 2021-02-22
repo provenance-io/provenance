@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
+	"google.golang.org/genproto/googleapis/rpc/status"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,6 +18,7 @@ import (
 
 	"github.com/provenance-io/provenance/testutil"
 
+	"github.com/provenance-io/provenance/x/metadata/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 
 	"github.com/gogo/protobuf/proto"
@@ -30,14 +34,29 @@ type IntegrationTestSuite struct {
 
 	accountAddr sdk.AccAddress
 	accountKey  *secp256k1.PrivKey
+
+	pubkey1   cryptotypes.PubKey
+	user1     string
+	user1Addr sdk.AccAddress
+
+	pubkey2   cryptotypes.PubKey
+	user2     string
+	user2Addr sdk.AccAddress
+
+	scope     metadatatypes.Scope
+	scopeUUID uuid.UUID
+	scopeID   types.MetadataAddress
+
+	specUUID uuid.UUID
+	specID   types.MetadataAddress
 }
 
-func (s *IntegrationTestSuite) SetupSuite() {
-	s.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
-	addr, err := sdk.AccAddressFromHex(s.accountKey.PubKey().Address().String())
-	s.Require().NoError(err)
-	s.accountAddr = addr
-	s.T().Log("setting up integration test suite")
+func (suite *IntegrationTestSuite) SetupSuite() {
+	suite.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
+	addr, err := sdk.AccAddressFromHex(suite.accountKey.PubKey().Address().String())
+	suite.Require().NoError(err)
+	suite.accountAddr = addr
+	suite.T().Log("setting up integration test suite")
 
 	cfg := testutil.DefaultTestNetworkConfig()
 
@@ -45,47 +64,61 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	cfg.NumValidators = 1
 
 	var authData authtypes.GenesisState
-	s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[authtypes.ModuleName], &authData))
+	suite.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[authtypes.ModuleName], &authData))
 	genAccount, err := codectypes.NewAnyWithValue(&authtypes.BaseAccount{
-		Address:       s.accountAddr.String(),
+		Address:       suite.accountAddr.String(),
 		AccountNumber: 1,
 		Sequence:      0,
 	})
-	s.Require().NoError(err)
+	suite.Require().NoError(err)
 	authData.Accounts = append(authData.Accounts, genAccount)
 
+	suite.pubkey1 = secp256k1.GenPrivKey().PubKey()
+	suite.user1Addr = sdk.AccAddress(suite.pubkey1.Address())
+	suite.user1 = suite.user1Addr.String()
+
+	suite.pubkey2 = secp256k1.GenPrivKey().PubKey()
+	suite.user2Addr = sdk.AccAddress(suite.pubkey2.Address())
+	suite.user2 = suite.user2Addr.String()
+
+	suite.scopeUUID = uuid.New()
+	suite.scopeID = types.ScopeMetadataAddress(suite.scopeUUID)
+
+	suite.specUUID = uuid.New()
+	suite.specID = types.ScopeSpecMetadataAddress(suite.specUUID)
+
+	suite.scope = *metadatatypes.NewScope(suite.scopeID, suite.specID, []string{suite.user1}, []string{suite.user1}, suite.user1)
 	// Configure Genesis data for metadata module
 
 	var metadataData metadatatypes.GenesisState
 	metadataData.Params = metadatatypes.DefaultParams()
-
+	metadataData.Scopes = append(metadataData.Scopes, suite.scope)
 	metadataDataBz, err := cfg.Codec.MarshalJSON(&metadataData)
-	s.Require().NoError(err)
+	suite.Require().NoError(err)
 
 	genesisState[metadatatypes.ModuleName] = metadataDataBz
 
 	cfg.GenesisState = genesisState
 
-	s.cfg = cfg
+	suite.cfg = cfg
 
-	s.testnet = testnet.New(s.T(), cfg)
+	suite.testnet = testnet.New(suite.T(), cfg)
 
-	_, err = s.testnet.WaitForHeight(1)
-	s.Require().NoError(err)
+	_, err = suite.testnet.WaitForHeight(1)
+	suite.Require().NoError(err)
 }
 
-func (s *IntegrationTestSuite) TearDownSuite() {
-	s.testnet.WaitForNextBlock()
-	s.T().Log("tearing down integration test suite")
-	s.testnet.Cleanup()
+func (suite *IntegrationTestSuite) TearDownSuite() {
+	suite.testnet.WaitForNextBlock()
+	suite.T().Log("tearing down integration test suite")
+	suite.testnet.Cleanup()
 }
-
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
 }
 
-func (s *IntegrationTestSuite) TestGRPCQueories() {
-	val := s.testnet.Validators[0]
+func (suite *IntegrationTestSuite) TestGRPCQueries() {
+	val := suite.testnet.Validators[0]
 	baseURL := val.APIAddress
 
 	testCases := []struct {
@@ -97,7 +130,7 @@ func (s *IntegrationTestSuite) TestGRPCQueories() {
 		expected proto.Message
 	}{
 		{
-			"get metadata params",
+			"Get metadata params",
 			fmt.Sprintf("%s/provenance/metadata/v1/params", baseURL),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
@@ -106,21 +139,40 @@ func (s *IntegrationTestSuite) TestGRPCQueories() {
 			&metadatatypes.QueryParamsResponse{},
 			&metadatatypes.QueryParamsResponse{Params: metadatatypes.DefaultParams()},
 		},
+		{
+			"Get metadata scope by id",
+			fmt.Sprintf("%s/provenance/metadata/v1/scope/%s", baseURL, suite.scopeUUID),
+			map[string]string{
+				grpctypes.GRPCBlockHeightHeader: "1",
+			},
+			false,
+			&metadatatypes.ScopeResponse{},
+			&metadatatypes.ScopeResponse{Scope: &suite.scope},
+		},
+		{
+			"Unknown metadata scope id",
+			fmt.Sprintf("%s/provenance/metadata/v1/scope/%s", baseURL, uuid.New()),
+			map[string]string{
+				grpctypes.GRPCBlockHeightHeader: "1",
+			},
+			true,
+			&status.Status{},
+			&status.Status{},
+		},
 	}
 
 	for _, tc := range testCases {
 		tc := tc
 
-		s.Run(tc.name, func() {
+		suite.Run(tc.name, func() {
 			resp, err := sdktestutil.GetRequestWithHeaders(tc.url, tc.headers)
-			s.Require().NoError(err)
+			suite.Require().NoError(err)
 			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType)
-
 			if tc.expErr {
-				s.Require().Error(err)
+				suite.Require().Error(err)
 			} else {
-				s.Require().NoError(err)
-				s.Require().Equal(tc.expected.String(), tc.respType.String())
+				suite.Require().NoError(err)
+				suite.Require().Equal(tc.expected.String(), tc.respType.String())
 			}
 		})
 	}

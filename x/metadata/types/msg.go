@@ -29,6 +29,7 @@ var (
 	_ sdk.Msg = &MsgAddRecordRequest{}
 	_ sdk.Msg = &MsgAddScopeSpecificationRequest{}
 	_ sdk.Msg = &MsgAddGroupSpecificationRequest{}
+	_ sdk.Msg = &MsgRemoveScopeRequest{}
 )
 
 // private method to convert an array of strings into an array of Acc Addresses.
