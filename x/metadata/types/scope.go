@@ -147,6 +147,16 @@ func (rg RecordGroup) String() string {
 	return out
 }
 
+func (r Record) NewRecord(name string, groupId MetadataAddress, process Process, inputs []RecordInput, outputs []RecordOutput) *Record {
+	return &Record{
+		Name:    name,
+		GroupId: groupId,
+		Process: process,
+		Inputs:  inputs,
+		Outputs: outputs,
+	}
+}
+
 // ValidateBasic performs static checking of Record format
 func (r Record) ValidateBasic() error {
 	prefix, err := VerifyMetadataAddressFormat(r.GroupId)
@@ -170,7 +180,7 @@ func (r Record) ValidateBasic() error {
 // String implements stringer interface
 func (r Record) String() string {
 	out := fmt.Sprintf("%s (%s) Results [", r.Name, r.GroupId)
-	for _, o := range r.Output {
+	for _, o := range r.Outputs {
 		out += fmt.Sprintf("%s - %s, ", o.Status, o.Hash)
 	}
 	out = strings.TrimRight(out, ", ")
@@ -222,6 +232,17 @@ func (ri RecordInput) String() string {
 		out += source.RecordId.String()
 	}
 	return out
+}
+
+// ValidateBasic performs a static check over the record output format
+func (ro RecordOutput) ValidateBasic() error {
+	if len(ro.Hash) < 1 {
+		return fmt.Errorf("missing required hash")
+	}
+	if ro.Status == ResultStatus_Unspecified {
+		return fmt.Errorf("invalid record output status, status unspecified")
+	}
+	return nil
 }
 
 // ValidateBasic performs static checking of Party format
