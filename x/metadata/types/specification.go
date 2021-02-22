@@ -3,7 +3,7 @@ package types
 import (
 	"errors"
 	"fmt"
-	"strings"
+	"regexp"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"gopkg.in/yaml.v2"
@@ -17,6 +17,14 @@ const (
 	maxDescriptionDescriptionLength = 5000
 	// Default max url length
 	maxURLLength = 2048
+)
+
+var (
+	urlProtocolsAllowedRegexps = []*regexp.Regexp{
+		regexp.MustCompile("https?://"),
+		regexp.MustCompile("data:.*,"),
+		// If you alter this, make sure to alter the associated error message.
+	}
 )
 
 // NewScopeSpecification creates a new ScopeSpecification instance.
@@ -138,8 +146,15 @@ func validateURLBasic(url string, required bool, path string, fieldName string) 
 		return fmt.Errorf("url %s exceeds maximum length (expected <= %d got: %d)",
 			makeFieldString(path, fieldName), maxURLLength, len(url))
 	}
-	if strings.ToLower(url[0:8]) != "https://" && strings.ToLower(url[0:7]) != "http://" {
-		return fmt.Errorf("url %s must begin with either http:// or https://", makeFieldString(path, fieldName))
+	isAllowedProtocol := false
+	for _, r := range urlProtocolsAllowedRegexps {
+		if r.MatchString(url) {
+			isAllowedProtocol = true
+			break
+		}
+	}
+	if !isAllowedProtocol {
+		return fmt.Errorf("url %s must use the http, https, or data protocol", makeFieldString(path, fieldName))
 	}
 	return nil
 }

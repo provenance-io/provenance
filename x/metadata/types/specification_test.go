@@ -314,7 +314,7 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"www.test.com",
 				"",
 			),
-			fmt.Sprintf("url WebsiteUrl must begin with either http:// or https://"),
+			fmt.Sprintf("url WebsiteUrl must use the http, https, or data protocol"),
 			true,
 		},
 		{
@@ -361,6 +361,39 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 			"",
 			false,
 		},
+		{
+			"valid website url - data",
+			NewDescription(
+				"Unit Tests",
+				"",
+				"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==",
+				"",
+			),
+			"",
+			false,
+		},
+		{
+			"valid website url - data minimal",
+			NewDescription(
+				"Unit Tests",
+				"",
+				"data:,",
+				"",
+			),
+			"",
+			false,
+		},
+		{
+			"valid website url - data at max length",
+			NewDescription(
+				"Unit Tests",
+				"",
+				"data:image/png;base64," + strings.Repeat("d", maxURLLength - 22),
+				"",
+			),
+			"",
+			false,
+		},
 
 		// Icon url tests
 		{
@@ -382,7 +415,7 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"",
 				"www.test.com",
 			),
-			fmt.Sprintf("url IconUrl must begin with either http:// or https://"),
+			fmt.Sprintf("url IconUrl must use the http, https, or data protocol"),
 			true,
 		},
 		{
@@ -425,6 +458,39 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"",
 				"",
 				"https://" + strings.Repeat("s", maxURLLength - 8),
+			),
+			"",
+			false,
+		},
+		{
+			"valid website url - data",
+			NewDescription(
+				"Unit Tests",
+				"",
+				"",
+				"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==",
+			),
+			"",
+			false,
+		},
+		{
+			"valid website url - data minimal",
+			NewDescription(
+				"Unit Tests",
+				"",
+				"",
+				"data:,",
+			),
+			"",
+			false,
+		},
+		{
+			"valid website url - data at max length",
+			NewDescription(
+				"Unit Tests",
+				"",
+				"",
+				"data:image/png;base64," + strings.Repeat("d", maxURLLength - 22),
 			),
 			"",
 			false,
