@@ -528,19 +528,21 @@ func (s *specificationTestSuite) TestScopeSpecString() {
 			[]PartyType{PartyType_PARTY_TYPE_OWNER},
 			[]MetadataAddress{GroupSpecMetadataAddress(contractSpecUuid)},
 		)
-		expected := "specification_id: scopespec1qnpqwjsrdak5q2dlutp6t6m7dzcscd7ff6\n" +
-		            "description:\n" +
-		            "  name: TestScopeSpecString Description\n" +
-		            "  description: This is a description of a description used in a unit test.\n" +
-		            "  website_url: https://figure.com/\n" +
-		            "  icon_url: https://figure.com/favicon.png\n" +
-		            "owner_addresses:\n" +
-		            "- cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck\n" +
-		            "parties_involved:\n" +
-		            "- 5\n" +
-		            "contract_spec_ids:\n" +
-		            "- groupspec1qd2qmt038k7yc0azq46htdlhgwzquwslkg\n"
+		expected := `specification_id: scopespec1qnpqwjsrdak5q2dlutp6t6m7dzcscd7ff6
+description:
+  name: TestScopeSpecString Description
+  description: This is a description of a description used in a unit test.
+  website_url: https://figure.com/
+  icon_url: https://figure.com/favicon.png
+owner_addresses:
+- cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck
+parties_involved:
+- 5
+contract_spec_ids:
+- groupspec1qd2qmt038k7yc0azq46htdlhgwzquwslkg
+`
 		actual := scopeSpec.String()
+		// fmt.Printf("Actual:\n%s\n-----\n", actual)
 		require.Equal(t, expected, actual)
 	})
 }
@@ -550,14 +552,16 @@ func (s *specificationTestSuite) TestDescriptionString() {
 		description := NewDescription(
 			"TestDescriptionString",
 			"This is a description of a description used in a unit test.",
-			"https://homestarrunner.com/",
-			"https://homestarrunner.com/assets/sbemails/sbemail_hsrlogo_color.png",
+			"https://provenance.io",
+			"https://provenance.io/ico.png",
 		)
-		expected := "name: TestDescriptionString\n" +
-		            "description: This is a description of a description used in a unit test.\n" +
-		            "website_url: https://homestarrunner.com/\n" +
-		            "icon_url: https://homestarrunner.com/assets/sbemails/sbemail_hsrlogo_color.png\n"
+		expected := `name: TestDescriptionString
+description: This is a description of a description used in a unit test.
+website_url: https://provenance.io
+icon_url: https://provenance.io/ico.png
+`
 		actual := description.String()
+		// fmt.Printf("Actual:\n%s\n-----\n", actual)
 		require.Equal(t, expected, actual)
 	})
 }
