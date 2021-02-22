@@ -212,26 +212,13 @@ func (k Keeper) ValidateScopeSpecUpdate(ctx sdk.Context, existing, proposed type
 		return err
 	}
 
+	store := ctx.KVStore(k.storeKey)
+
 	// Validate the proposed contract spec ids.
 	for _, contractSpecID := range proposed.ContractSpecIds {
-		contractSpec, found := k.GetGroupSpecification(ctx, contractSpecID)
-		// Make sure that all contract spec ids are valid and exist
-		if !found {
+		// Make sure that all contract spec ids exist
+		if !store.Has(contractSpecID) {
 			return fmt.Errorf("no contract spec exists with id %s", contractSpecID)
-		}
-		// Also make sure that the parties in each contract spec are also in the scope spec.
-		for _, contractSpecParty := range contractSpec.PartiesInvolved {
-			found := false
-			for _, scopeSpecParty := range proposed.PartiesInvolved {
-				if contractSpecParty == scopeSpecParty {
-					found = true
-					break
-				}
-			}
-			if !found {
-				return fmt.Errorf("contract specification party involved missing from from scope specification parties involved: (%d) %s",
-					contractSpecParty, contractSpecParty.String())
-			}
 		}
 	}
 
