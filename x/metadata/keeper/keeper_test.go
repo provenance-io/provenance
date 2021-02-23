@@ -340,7 +340,7 @@ func (suite *KeeperTestSuite) TestMetadataRecordGetSetRemove() {
 	suite.NotNil(r)
 	suite.False(found)
 
-	process := types.NewProcess("processname", &types.Process_Hash{"HASH"}, "process_method")
+	process := types.NewProcess("processname", &types.Process_Hash{Hash: "HASH"}, "process_method")
 	record := types.NewRecord(suite.recordName, suite.groupId, *process, []types.RecordInput{}, []types.RecordOutput{})
 
 	suite.NotNil(record)
@@ -354,6 +354,22 @@ func (suite *KeeperTestSuite) TestMetadataRecordGetSetRemove() {
 	r, found = suite.app.MetadataKeeper.GetRecord(suite.ctx, suite.recordId)
 	suite.False(found)
 	suite.NotNil(r)
+}
+
+func (suite *KeeperTestSuite) TestMetadataRecordIterator() {
+	for i := 1; i <= 10; i++ {
+		process := types.NewProcess("processname", &types.Process_Hash{Hash: "HASH"}, "process_method")
+		recordName := fmt.Sprintf("%s%v", suite.recordName, i)
+		record := types.NewRecord(recordName, suite.groupId, *process, []types.RecordInput{}, []types.RecordOutput{})
+		suite.app.MetadataKeeper.SetRecord(suite.ctx, *record)
+	}
+	count := 0
+	suite.app.MetadataKeeper.IterateRecords(suite.ctx, suite.scopeID, func(s types.Record) (stop bool) {
+		count++
+		return false
+	})
+	suite.Equal(10, count, "iterator should return a full list of records")
+
 }
 
 func TestKeeperTestSuite(t *testing.T) {

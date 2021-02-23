@@ -62,7 +62,7 @@ func (k Keeper) RemoveRecord(ctx sdk.Context, id types.MetadataAddress) {
 // IterateRecords processes all records in a scope with the given handler.
 func (k Keeper) IterateRecords(ctx sdk.Context, scopeID types.MetadataAddress, handler func(types.Record) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	prefix, err := scopeID.ScopeGroupIteratorPrefix()
+	prefix, err := scopeID.ScopeRecordIteratorPrefix()
 	if err != nil {
 		return err
 	}
