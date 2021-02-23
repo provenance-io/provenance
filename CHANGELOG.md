@@ -35,6 +35,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## Unreleased
 
 * Update `ScopeSpecification` proto and create `Description` proto #71.
+* Update `Scope` proto: change field `owner_address` to `parties` #89
 
 ## [v0.1.3](https://github.com/provenance-io/provenance/releases/tag/v0.1.3) - 2021-02-12
 
