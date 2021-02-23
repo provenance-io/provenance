@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/google/uuid"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -428,5 +429,129 @@ func (s *ScopeSpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
 }
 
 func (s *ScopeSpecKeeperTestSuite) TestValidateScopeSpecAllOwnersAreSigners() {
-	// TODO: implement
+	scopeSpecOwnedByUser1 := types.NewScopeSpecification(
+		types.ScopeSpecMetadataAddress(uuid.New()),
+		types.NewDescription(
+			"TestGetSetScopeSpecification[0]",
+			"A description for a unit test scope specification - owner: user1",
+			"http://test.net",
+			"http://test.net/ico.png",
+		),
+		[]string{s.user1Addr.String()},
+		[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+		[]types.MetadataAddress{s.contractSpecID1},
+	)
+	scopeSpecOwnedByBoth := types.NewScopeSpecification(
+		types.ScopeSpecMetadataAddress(uuid.New()),
+		types.NewDescription(
+			"TestGetSetScopeSpecification[4]",
+			"A description for a unit test scope specification - owners: user1, user2",
+			"http://test.net",
+			"http://test.net/ico.png",
+		),
+		[]string{s.user1Addr.String(), s.user2Addr.String()},
+		[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+		[]types.MetadataAddress{s.contractSpecID1, s.contractSpecID2},
+	)
+
+	tests := []struct {
+		name        string
+		scopeSpec   *types.ScopeSpecification
+		signers     []string
+		want        string
+		wantErr     bool
+	}{
+		{
+			"Scope Spec with 1 owner: no signers - error",
+			scopeSpecOwnedByUser1,
+			[]string{},
+			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1Addr.String()),
+			true,
+		},
+		{
+			"Scope Spec with 1 owner: not in signers list - error",
+			scopeSpecOwnedByUser1,
+			[]string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()},
+			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1Addr.String()),
+			true,
+		},
+		{
+			"Scope Spec with 1 owner: in signers list with non-owners - ok",
+			scopeSpecOwnedByUser1,
+			[]string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), s.user1Addr.String(), sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()},
+			"",
+			false,
+		},
+		{
+			"Scope Spec with 1 owner: only signer in list - ok",
+			scopeSpecOwnedByUser1,
+			[]string{s.user1Addr.String()},
+			"",
+			false,
+		},
+		{
+			"Scope Spec with 2 owners: no signers - error",
+			scopeSpecOwnedByBoth,
+			[]string{},
+			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1Addr.String()),
+			true,
+		},
+		{
+			"Scope Spec with 2 owners: neither in signers list - error",
+			scopeSpecOwnedByBoth,
+			[]string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()},
+			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1Addr.String()),
+			true,
+		},
+		{
+			"Scope Spec with 2 owners: one in signers list with non-owners - error",
+			scopeSpecOwnedByBoth,
+			[]string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), s.user1Addr.String(), sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()},
+			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user2Addr.String()),
+			true,
+		},
+		{
+			"Scope Spec with 2 owners: the other in signers list with non-owners - error",
+			scopeSpecOwnedByBoth,
+			[]string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), s.user2Addr.String(), sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()},
+			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1Addr.String()),
+			true,
+		},
+		{
+			"Scope Spec with 2 owners: both in signers list with non-owners - ok",
+			scopeSpecOwnedByBoth,
+			[]string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), s.user2Addr.String(), sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), s.user1Addr.String()},
+			"",
+			false,
+		},
+		{
+			"Scope Spec with 2 owners: only both in signers list - ok",
+			scopeSpecOwnedByBoth,
+			[]string{s.user1Addr.String(), s.user2Addr.String()},
+			"",
+			false,
+		},
+		{
+			"Scope Spec with 2 owners: only both in signers list, opposite order - ok",
+			scopeSpecOwnedByBoth,
+			[]string{s.user2Addr.String(), s.user1Addr.String()},
+			"",
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		s.T().Run(tt.name, func(t *testing.T) {
+			err := s.app.MetadataKeeper.ValidateScopeSpecAllOwnersAreSigners(*tt.scopeSpec, tt.signers)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ScopeSpec Keeper ValidateScopeSpecAllOwnersAreSigners error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if tt.wantErr {
+				require.Equal(t, tt.want, err.Error())
+			}
+
+		})
+	}
 }
