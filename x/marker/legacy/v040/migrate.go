@@ -6,7 +6,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	v039 "github.com/provenance-io/provenance/x/marker/legacy/v039"
 	v039marker "github.com/provenance-io/provenance/x/marker/legacy/v039"
 	v040marker "github.com/provenance-io/provenance/x/marker/types"
 )
@@ -47,12 +46,12 @@ func Migrate(oldGenState v039marker.GenesisState) *v040marker.GenesisState {
 	}
 }
 
-func migrateAccess(old []v039.AccessGrant) (new []v040marker.AccessGrant) {
+func migrateAccess(old []v039marker.AccessGrant) (new []v040marker.AccessGrant) {
 	new = make([]v040marker.AccessGrant, len(old))
 	for i, a := range old {
 		perms := strings.Join(a.Permissions, ",")
 		perms = strings.ToLower(perms)
-		perms = strings.Replace(perms, "grant", "admin", -1)
+		perms = strings.ReplaceAll(perms, "grant", "admin")
 		new[i] = v040marker.AccessGrant{
 			Address:     a.Address.String(),
 			Permissions: v040marker.AccessListByNames(perms),
