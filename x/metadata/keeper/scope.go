@@ -139,7 +139,7 @@ func (k Keeper) clearScopeIndex(ctx sdk.Context, scope types.Scope) {
 
 	// add all party addresses to the list of cache records to remove
 	addresses := []string{}
-	for _, p := range scope.Parties {
+	for _, p := range scope.Owners {
 		addresses = append(addresses, p.Address)
 	}
 	addresses = append(addresses, scope.DataAccess...)
@@ -167,7 +167,7 @@ func (k Keeper) indexScope(ctx sdk.Context, scope types.Scope) {
 
 	// Index all party addresses on the scope
 	addresses := []string{}
-	for _, p := range scope.Parties {
+	for _, p := range scope.Owners {
 		addresses = append(addresses, p.Address)
 	}
 	addresses = append(addresses, scope.DataAccess...)
@@ -206,7 +206,7 @@ func (k Keeper) ValidateScopeUpdate(ctx sdk.Context, existing, proposed types.Sc
 
 	// Validate any changes to the ValueOwner property.
 	requiredSignatures := []string{}
-	for _, p := range existing.Parties {
+	for _, p := range existing.Owners {
 		requiredSignatures = append(requiredSignatures, p.Address)
 	}
 	if existing.ValueOwnerAddress != proposed.ValueOwnerAddress {
@@ -260,7 +260,7 @@ func (k Keeper) ValidateScopeRemove(ctx sdk.Context, existing, proposed types.Sc
 	}
 
 	// Signatures required of all existing data owners.
-	for _, party := range existing.Parties {
+	for _, party := range existing.Owners {
 		found := false
 		for _, signer := range signers {
 			if party.Address == signer {
@@ -269,7 +269,7 @@ func (k Keeper) ValidateScopeRemove(ctx sdk.Context, existing, proposed types.Sc
 			}
 		}
 		if !found {
-			return fmt.Errorf("missing signature from existing party %v; required for update", party)
+			return fmt.Errorf("missing signature from existing owner %v; required for update", party)
 		}
 	}
 

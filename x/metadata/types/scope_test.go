@@ -38,27 +38,27 @@ func (s *scopeTestSuite) TestScopeValidateBasic() {
 		wantErr bool
 	}{
 		{
-			"valid scope one party",
+			"valid scope one owner",
 			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(addr.String()), []string{}, ""),
 			"",
 			false,
 		},
 		{
-			"valid scope one party, one data access",
+			"valid scope one owner, one data access",
 			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(addr.String()), []string{addr.String()}, ""),
 			"",
 			false,
 		},
 		{
-			"no parties",
+			"no owners",
 			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
-			"scope must have at least one party",
+			"scope must have at least one owner",
 			true,
 		},
 		{
-			"no parties, data access",
+			"no owners, data access",
 			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{addr.String()}, ""),
-			"scope must have at least one party",
+			"scope must have at least one owner",
 			true,
 		},
 		{
@@ -86,7 +86,7 @@ func (s *scopeTestSuite) TestScopeValidateBasic() {
 			true,
 		},
 		{
-			"invaid party on scope",
+			"invaid owner on scope",
 			NewScope(ScopeMetadataAddress(
 				uuid.New()),
 				ScopeSpecMetadataAddress(uuid.New()),
@@ -94,7 +94,7 @@ func (s *scopeTestSuite) TestScopeValidateBasic() {
 				[]string{},
 				"",
 			),
-			"invalid party on scope: decoding bech32 failed: invalid index of 1",
+			"invalid owner on scope: decoding bech32 failed: invalid index of 1",
 			true,
 		},
 	}
@@ -126,7 +126,7 @@ func (s *scopeTestSuite) TestScopeString() {
 			"")
 		require.Equal(t, `scope_id: scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp
 specification_id: scopespec1qnp9c775ccu5xeaggtmylf0uesvsqyrkq8
-parties:
+owners:
 - address: cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck
   role: 5
 data_access: []

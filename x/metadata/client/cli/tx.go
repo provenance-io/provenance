@@ -61,9 +61,9 @@ func AddMetadataScopeCmd() *cobra.Command {
 			specID := types.ScopeSpecMetadataAddress(specUUID)
 
 			ownerAddresses := strings.Split(args[2], ",")
-			parties := make([]types.Party, len(ownerAddresses))
+			owners := make([]types.Party, len(ownerAddresses))
 			for i, ownerAddr := range ownerAddresses {
-				parties[i] = types.Party{Address: ownerAddr, Role: types.PartyType_PARTY_TYPE_OWNER}
+				owners[i] = types.Party{Address: ownerAddr, Role: types.PartyType_PARTY_TYPE_OWNER}
 			}
 			dataAccess := strings.Split(args[3], ",")
 			valueOwnerAddress := args[4]
@@ -80,7 +80,7 @@ func AddMetadataScopeCmd() *cobra.Command {
 			scope := *types.NewScope(
 				types.ScopeMetadataAddress(scopeUUID),
 				specID,
-				parties,
+				owners,
 				dataAccess,
 				valueOwnerAddress)
 

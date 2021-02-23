@@ -261,7 +261,7 @@ func (suite *KeeperTestSuite) TestValidateScopeUpdate() {
 		},
 		"unsetting all fields on a scope should be successful": {
 			existing: *types.NewScope(suite.scopeID, types.ScopeSpecMetadataAddress(suite.scopeUUID), ownerPartyList(suite.user1), []string{}, suite.user1),
-			proposed: types.Scope{ScopeId: suite.scopeID, Parties: ownerPartyList(suite.user1)},
+			proposed: types.Scope{ScopeId: suite.scopeID, Owners: ownerPartyList(suite.user1)},
 			signers:  []string{suite.user1},
 			wantErr:  false,
 			errorMsg: "",

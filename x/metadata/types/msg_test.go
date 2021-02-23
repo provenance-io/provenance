@@ -32,7 +32,7 @@ func TestAddScopeRoute(t *testing.T) {
 	yaml := `scope:
   scope_id: scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp
   specification_id: scopespec1qs30c9axgrw5669ft0kffe6h9gysfe58v3
-  parties:
+  owners:
   - address: data_owner
     role: 5
   data_access:
@@ -41,7 +41,7 @@ func TestAddScopeRoute(t *testing.T) {
 signers: []
 `
 	require.Equal(t, yaml, msg.String())
-	require.Equal(t, "{\"type\":\"provenance/metadata/AddScopeRequest\",\"value\":{\"scope\":{\"data_access\":[\"data_accessor\"],\"parties\":[{\"address\":\"data_owner\",\"role\":5}],\"scope_id\":\"scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp\",\"specification_id\":\"scopespec1qs30c9axgrw5669ft0kffe6h9gysfe58v3\",\"value_owner_address\":\"value_owner\"}}}", string(msg.GetSignBytes()))
+	require.Equal(t, "{\"type\":\"provenance/metadata/AddScopeRequest\",\"value\":{\"scope\":{\"data_access\":[\"data_accessor\"],\"owners\":[{\"address\":\"data_owner\",\"role\":5}],\"scope_id\":\"scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp\",\"specification_id\":\"scopespec1qs30c9axgrw5669ft0kffe6h9gysfe58v3\",\"value_owner_address\":\"value_owner\"}}}", string(msg.GetSignBytes()))
 }
 
 func TestAddScopeValidation(t *testing.T) {
@@ -56,7 +56,7 @@ func TestAddScopeValidation(t *testing.T) {
 	err := msg.ValidateBasic()
 	require.Panics(t, func() { msg.GetSigners() }, "panics due to invalid addresses")
 	require.Error(t, err, "invalid addresses")
-	require.Equal(t, "invalid party on scope: decoding bech32 failed: invalid index of 1", err.Error())
+	require.Equal(t, "invalid owner on scope: decoding bech32 failed: invalid index of 1", err.Error())
 
 	msg.Scope = *NewScope(
 		ScopeMetadataAddress(uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")),
@@ -67,7 +67,7 @@ func TestAddScopeValidation(t *testing.T) {
 	)
 	err = msg.ValidateBasic()
 	require.Error(t, err, "no owners")
-	require.Equal(t, "scope must have at least one party", err.Error())
+	require.Equal(t, "scope must have at least one owner", err.Error())
 
 	msg.Scope = *NewScope(
 		ScopeMetadataAddress(uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")),

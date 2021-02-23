@@ -177,11 +177,11 @@ func (s *IntegrationTestSuite) TestGetMetadataScopeCmd() {
 		{
 			"get scope as json output",
 			[]string{s.scopeUUID.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			fmt.Sprintf("{\"scope_id\":\"%s\",\"specification_id\":\"%s\",\"parties\":[{\"address\":\"%s\",\"role\":\"%s\"}],\"data_access\":[\"%s\"],\"value_owner_address\":\"%s\"}",
+			fmt.Sprintf("{\"scope_id\":\"%s\",\"specification_id\":\"%s\",\"owners\":[{\"address\":\"%s\",\"role\":\"%s\"}],\"data_access\":[\"%s\"],\"value_owner_address\":\"%s\"}",
 				s.scope.ScopeId,
 				s.scope.SpecificationId.String(),
-				s.scope.Parties[0].Address,
-				s.scope.Parties[0].Role.String(),
+				s.scope.Owners[0].Address,
+				s.scope.Owners[0].Role.String(),
 				s.scope.DataAccess[0],
 				s.scope.ValueOwnerAddress),
 		},
@@ -190,15 +190,15 @@ func (s *IntegrationTestSuite) TestGetMetadataScopeCmd() {
 			[]string{s.scopeUUID.String(), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
 			fmt.Sprintf(`data_access:
 - %s
-parties:
+owners:
 - address: %s
   role: %s
 scope_id: %s
 specification_id: %s
 value_owner_address: %s`,
 				s.scope.DataAccess[0],
-				s.scope.Parties[0].Address,
-				s.scope.Parties[0].Role.String(),
+				s.scope.Owners[0].Address,
+				s.scope.Owners[0].Role.String(),
 				s.scope.ScopeId,
 				s.scope.SpecificationId.String(),
 				s.scope.ValueOwnerAddress),
