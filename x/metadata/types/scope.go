@@ -148,7 +148,7 @@ func (rg RecordGroup) String() string {
 }
 
 // NewRecord creates new instance of Record
-func (r Record) NewRecord(name string, groupId MetadataAddress, process Process, inputs []RecordInput, outputs []RecordOutput) *Record {
+func NewRecord(name string, groupId MetadataAddress, process Process, inputs []RecordInput, outputs []RecordOutput) *Record {
 	return &Record{
 		Name:    name,
 		GroupId: groupId,
@@ -181,7 +181,7 @@ func (r Record) ValidateBasic() error {
 		return fmt.Errorf("invalid/missing name for record")
 	}
 	if err = r.Process.ValidateBasic(); err != nil {
-		return fmt.Errorf("invalid record process %w", err)
+		return fmt.Errorf("invalid record process: %w", err)
 	}
 	return nil
 }
@@ -198,7 +198,7 @@ func (r Record) String() string {
 }
 
 // NewRecordInput creates new instance of RecordInput
-func (ri RecordInput) NewRecordInput(name string, source isRecordInput_Source, typeName string, status RecordInputStatus) *RecordInput {
+func NewRecordInput(name string, source isRecordInput_Source, typeName string, status RecordInputStatus) *RecordInput {
 	return &RecordInput{
 		Name:     name,
 		Source:   source,
@@ -214,6 +214,9 @@ func (ri RecordInput) ValidateBasic() error {
 	}
 	if ri.Status == RecordInputStatus_Unknown {
 		return fmt.Errorf("invalid record input status, status unknown or missing")
+	}
+	if ri.Source == nil {
+		return fmt.Errorf("missing required record input source")
 	}
 	switch source := ri.Source.(type) {
 	case *RecordInput_Hash:
@@ -254,7 +257,7 @@ func (ri RecordInput) String() string {
 }
 
 // NewRecordOutput creates a new instance of RecordOutput
-func (ro RecordOutput) NewRecordOutput(hash string, status ResultStatus) *RecordOutput {
+func NewRecordOutput(hash string, status ResultStatus) *RecordOutput {
 	return &RecordOutput{
 		Hash:   hash,
 		Status: status,
@@ -263,11 +266,14 @@ func (ro RecordOutput) NewRecordOutput(hash string, status ResultStatus) *Record
 
 // ValidateBasic performs a static check over the record output format
 func (ro RecordOutput) ValidateBasic() error {
-	if len(ro.Hash) < 1 {
-		return fmt.Errorf("missing required hash")
+	if ro.Status == ResultStatus_Skip {
+		return nil
 	}
 	if ro.Status == ResultStatus_Unspecified {
 		return fmt.Errorf("invalid record output status, status unspecified")
+	}
+	if len(ro.Hash) < 1 {
+		return fmt.Errorf("missing required hash")
 	}
 	return nil
 }
@@ -278,10 +284,10 @@ func (ro RecordOutput) String() string {
 }
 
 // NewProcess creates a new instance of Process
-func (ps Process) NewProcess(name string, processId isProcess_ProcessId, method string) *Process {
+func NewProcess(name string, processID isProcess_ProcessId, method string) *Process {
 	return &Process{
 		Name:      name,
-		ProcessId: processId,
+		ProcessId: processID,
 		Method:    method,
 	}
 }
