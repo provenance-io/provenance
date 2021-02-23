@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/legacy/v039"
@@ -23,6 +25,7 @@ const (
 	AllPermissions    = "mint,burn,deposit,withdraw,delete,grant"
 	SupplyPermissions = "mint,burn"
 	AssetPermissions  = "deposit,withdraw"
+	ModuleName        = "marker"
 )
 
 // GenesisState is the initial marker module state.
@@ -655,4 +658,12 @@ func MustGetMarkerAddress(denom string) sdk.AccAddress {
 		panic(err)
 	}
 	return addr
+}
+
+func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	cryptocodec.RegisterCrypto(cdc)
+	cdc.RegisterInterface((*AccessGrant)(nil), nil)
+	cdc.RegisterInterface((*MarkerAccount)(nil), nil)
+	cdc.RegisterConcrete(&MarkerAccount{}, "provenance/marker/Account", nil)
+	cdc.RegisterConcrete(&AccessGrant{}, "provenance/marker/AcccessGrant", nil)
 }
