@@ -44,6 +44,14 @@ type KeeperTestSuite struct {
 	specID   types.MetadataAddress
 }
 
+func ownerPartyList(addresses ...string) []types.Party {
+	retval := make([]types.Party, len(addresses))
+	for i, addr := range addresses {
+		retval[i] = types.Party{Address: addr, Role: types.PartyType_PARTY_TYPE_OWNER}
+	}
+	return retval
+}
+
 func (s *KeeperTestSuite) SetupTest() {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
@@ -78,7 +86,7 @@ func (s *KeeperTestSuite) TestMetadataScopeGetSet() {
 	s.NotNil(scope)
 	s.False(found)
 
-	ns := *types.NewScope(s.scopeID, s.specID, []string{s.user1}, []string{s.user1}, s.user1)
+	ns := *types.NewScope(s.scopeID, s.specID, ownerPartyList(s.user1), []string{s.user1}, s.user1)
 	s.NotNil(ns)
 	s.app.MetadataKeeper.SetScope(s.ctx, ns)
 
@@ -98,7 +106,7 @@ func (s *KeeperTestSuite) TestMetadataScopeIterator() {
 		if i == 5 {
 			valueOwner = s.user2
 		}
-		ns := types.NewScope(types.ScopeMetadataAddress(uuid.New()), nil, []string{s.user1}, []string{s.user1}, valueOwner)
+		ns := types.NewScope(types.ScopeMetadataAddress(uuid.New()), nil, ownerPartyList(s.user1), []string{s.user1}, valueOwner)
 		s.app.MetadataKeeper.SetScope(s.ctx, *ns)
 	}
 	count := 0
@@ -169,91 +177,91 @@ func (s *KeeperTestSuite) TestValidateScopeUpdate() {
 		},
 		"valid proposed with nil existing doesn't error": {
 			existing: types.Scope{},
-			proposed: *types.NewScope(s.scopeID, nil, []string{s.user1}, []string{}, ""),
+			proposed: *types.NewScope(s.scopeID, nil, ownerPartyList(s.user1), []string{}, ""),
 			signers:  []string{s.user1},
 			wantErr:  false,
 			errorMsg: "",
 		},
 		"can't change scope id in update": {
-			existing: *types.NewScope(s.scopeID, nil, []string{s.user1}, []string{}, ""),
-			proposed: *types.NewScope(changedID, nil, []string{s.user1}, []string{}, ""),
+			existing: *types.NewScope(s.scopeID, nil, ownerPartyList(s.user1), []string{}, ""),
+			proposed: *types.NewScope(changedID, nil, ownerPartyList(s.user1), []string{}, ""),
 			signers:  []string{s.user1},
 			wantErr:  true,
 			errorMsg: fmt.Sprintf("cannot update scope identifier. expected %s, got %s", s.scopeID.String(), changedID.String()),
 		},
 		"missing existing owner signer on update fails": {
-			existing: *types.NewScope(s.scopeID, nil, []string{s.user1}, []string{}, ""),
-			proposed: *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), []string{s.user1}, []string{}, ""),
+			existing: *types.NewScope(s.scopeID, nil, ownerPartyList(s.user1), []string{}, ""),
+			proposed: *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), ownerPartyList(s.user1), []string{}, ""),
 			signers:  []string{s.user2},
 			wantErr:  true,
 			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1),
 		},
 		"no error when update includes existing owner signer": {
-			existing: *types.NewScope(s.scopeID, nil, []string{s.user1}, []string{}, ""),
-			proposed: *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), []string{s.user1}, []string{}, ""),
+			existing: *types.NewScope(s.scopeID, nil, ownerPartyList(s.user1), []string{}, ""),
+			proposed: *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), ownerPartyList(s.user1), []string{}, ""),
 			signers:  []string{s.user1},
 			wantErr:  false,
 			errorMsg: "",
 		},
 		"setting value owner when unset does not error": {
-			existing: *types.NewScope(s.scopeID, nil, []string{s.user1}, []string{}, ""),
-			proposed: *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), []string{s.user1}, []string{}, s.user1),
+			existing: *types.NewScope(s.scopeID, nil, ownerPartyList(s.user1), []string{}, ""),
+			proposed: *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), ownerPartyList(s.user1), []string{}, s.user1),
 			signers:  []string{s.user1},
 			wantErr:  false,
 			errorMsg: "",
 		},
 		"setting value owner to user does not require their signature": {
-			existing: *types.NewScope(s.scopeID, nil, []string{s.user1}, []string{}, ""),
-			proposed: *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), []string{s.user1}, []string{}, s.user2),
+			existing: *types.NewScope(s.scopeID, nil, ownerPartyList(s.user1), []string{}, ""),
+			proposed: *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), ownerPartyList(s.user1), []string{}, s.user2),
 			signers:  []string{s.user1},
 			wantErr:  false,
 			errorMsg: "",
 		},
 		"setting value owner to new user does not require their signature": {
-			existing: *types.NewScope(s.scopeID, nil, []string{s.user1}, []string{}, s.user1),
-			proposed: *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), []string{s.user1}, []string{}, s.user2),
+			existing: *types.NewScope(s.scopeID, nil, ownerPartyList(s.user1), []string{}, s.user1),
+			proposed: *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), ownerPartyList(s.user1), []string{}, s.user2),
 			signers:  []string{s.user1},
 			wantErr:  false,
 			errorMsg: "",
 		},
 		"no change to value owner should not error": {
-			existing: *types.NewScope(s.scopeID, nil, []string{s.user1}, []string{}, s.user1),
-			proposed: *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), []string{s.user1}, []string{}, s.user1),
+			existing: *types.NewScope(s.scopeID, nil, ownerPartyList(s.user1), []string{}, s.user1),
+			proposed: *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), ownerPartyList(s.user1), []string{}, s.user1),
 			signers:  []string{s.user1},
 			wantErr:  false,
 			errorMsg: "",
 		},
 		"setting a new value owner should not error with withdraw permission": {
-			existing: *types.NewScope(s.scopeID, nil, []string{s.user1}, []string{}, markerAddr),
-			proposed: *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), []string{s.user1}, []string{}, s.user1),
+			existing: *types.NewScope(s.scopeID, nil, ownerPartyList(s.user1), []string{}, markerAddr),
+			proposed: *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), ownerPartyList(s.user1), []string{}, s.user1),
 			signers:  []string{s.user1},
 			wantErr:  false,
 			errorMsg: "",
 		},
 		"setting a new value owner fails if missing withdraw permission": {
-			existing: *types.NewScope(s.scopeID, nil, []string{s.user2}, []string{}, markerAddr),
-			proposed: *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), []string{s.user2}, []string{}, s.user2),
+			existing: *types.NewScope(s.scopeID, nil, ownerPartyList(s.user2), []string{}, markerAddr),
+			proposed: *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), ownerPartyList(s.user2), []string{}, s.user2),
 			signers:  []string{s.user2},
 			wantErr:  true,
 			errorMsg: fmt.Sprintf("missing signature for %s with authority to withdraw/remove existing value owner", markerAddr),
 		},
 		"setting a new value owner fails if missing deposit permission": {
-			existing: *types.NewScope(s.scopeID, nil, []string{s.user2}, []string{}, ""),
-			proposed: *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), []string{s.user2}, []string{}, markerAddr),
+			existing: *types.NewScope(s.scopeID, nil, ownerPartyList(s.user2), []string{}, ""),
+			proposed: *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), ownerPartyList(s.user2), []string{}, markerAddr),
 			signers:  []string{s.user2},
 			wantErr:  true,
 			errorMsg: fmt.Sprintf("no signatures present with authority to add scope to marker %s", markerAddr),
 		},
 		"setting a new value owner fails for scope owner when value owner signature is missing": {
-			existing: *types.NewScope(s.scopeID, nil, []string{s.user1}, []string{}, s.user2),
-			proposed: *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), []string{s.user1}, []string{}, s.user1),
+			existing: *types.NewScope(s.scopeID, nil, ownerPartyList(s.user1), []string{}, s.user2),
+			proposed: *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), ownerPartyList(s.user1), []string{}, s.user1),
 			signers:  []string{s.user1},
 			wantErr:  true,
 			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", s.user2),
 		},
 		"unsetting all fields on a scope should be successful": {
-			existing: *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), []string{s.user1}, []string{}, s.user1),
-			proposed: types.Scope{ScopeId: s.scopeID, OwnerAddress: []string{s.user1}},
+			existing: *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), ownerPartyList(s.user1), []string{}, s.user1),
+			proposed: types.Scope{ScopeId: s.scopeID, Owners: ownerPartyList(s.user1)},
 			signers:  []string{s.user1},
 			wantErr:  false,
 			errorMsg: "",
@@ -285,7 +293,7 @@ func (s *KeeperTestSuite) TestScopeQuery() {
 			valueOwner = user2
 		}
 		testIDs[i] = types.ScopeMetadataAddress(uuid.New())
-		ns := types.NewScope(testIDs[i], nil, []string{user1}, []string{user1}, valueOwner)
+		ns := types.NewScope(testIDs[i], nil, ownerPartyList(user1), []string{user1}, valueOwner)
 		app.MetadataKeeper.SetScope(ctx, *ns)
 	}
 	uuid, err := testIDs[0].ScopeUUID()
