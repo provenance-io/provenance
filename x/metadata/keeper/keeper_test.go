@@ -99,7 +99,7 @@ func (suite *KeeperTestSuite) TestMetadataScopeGetSet() {
 	suite.True(found)
 	suite.NotNil(s)
 
-	suite.app.MetadataKeeper.DeleteScope(suite.ctx, ns.ScopeId)
+	suite.app.MetadataKeeper.RemoveScope(suite.ctx, ns.ScopeId)
 	s, found = suite.app.MetadataKeeper.GetScope(suite.ctx, suite.scopeID)
 	suite.False(found)
 	suite.NotNil(s)

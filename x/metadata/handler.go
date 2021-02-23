@@ -18,7 +18,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			res, err := msgServer.AddScope(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 		case *types.MsgRemoveScopeRequest:
-			res, err := msgServer.RemoveScope(sdk.WrapSDKContext(ctx), msg)
+			res, err := msgServer.DeleteScope(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 		default:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown message type: %v", msg.Type())

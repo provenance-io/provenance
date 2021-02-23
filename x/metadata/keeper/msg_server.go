@@ -159,7 +159,7 @@ func (k msgServer) AddScope(
 	return &types.MsgAddScopeResponse{}, nil
 }
 
-func (k msgServer) RemoveScope(
+func (k msgServer) DeleteScope(
 	goCtx context.Context,
 	msg *types.MsgRemoveScopeRequest,
 ) (*types.MsgRemoveScopeResponse, error) {
@@ -171,7 +171,7 @@ func (k msgServer) RemoveScope(
 		return nil, err
 	}
 
-	k.DeleteScope(ctx, msg.ScopeId)
+	k.RemoveScope(ctx, msg.ScopeId)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(

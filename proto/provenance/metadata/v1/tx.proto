@@ -22,8 +22,8 @@ service Msg {
 
   // AddScope adds a new scope
   rpc AddScope(MsgAddScopeRequest) returns (MsgAddScopeResponse);
-  // Removes a scope and all associated Records, RecordGroups
-  rpc RemoveScope(MsgRemoveScopeRequest) returns (MsgRemoveScopeResponse);
+  // DeleteScope deletes a scope and all associated Records, RecordGroups
+  rpc DeleteScope(MsgRemoveScopeRequest) returns (MsgRemoveScopeResponse);
 
   // AddRecordGroup adds a new record group context to a scope
   rpc AddRecordGroup(MsgAddRecordGroupRequest) returns (MsgAddRecordGroupResponse);

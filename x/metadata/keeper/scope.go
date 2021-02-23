@@ -98,8 +98,8 @@ func (k Keeper) SetScope(ctx sdk.Context, scope types.Scope) {
 	)
 }
 
-// DeleteScope removes a scope from the module kv store.
-func (k Keeper) DeleteScope(ctx sdk.Context, id types.MetadataAddress) {
+// RemoveScope removes a scope from the module kv store.
+func (k Keeper) RemoveScope(ctx sdk.Context, id types.MetadataAddress) {
 	// iterate and remove all records, groups
 	store := ctx.KVStore(k.storeKey)
 
