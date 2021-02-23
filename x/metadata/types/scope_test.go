@@ -271,7 +271,6 @@ func (s *scopeTestSuite) TestRecordValidateBasic() {
 			"",
 			false,
 		},
-
 		{
 			"Invalid record, incorrect result status for record output",
 			NewRecord("name", groupId, *validPs,

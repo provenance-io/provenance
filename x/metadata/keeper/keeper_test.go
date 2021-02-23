@@ -42,6 +42,13 @@ type KeeperTestSuite struct {
 
 	specUUID uuid.UUID
 	specID   types.MetadataAddress
+
+	groupUUID uuid.UUID
+	groupId   types.MetadataAddress
+
+	record     types.Record
+	recordName string
+	recordId   types.MetadataAddress
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
@@ -64,6 +71,12 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	suite.app = app
 	suite.ctx = ctx
+
+	suite.groupUUID = uuid.New()
+	suite.groupId = types.GroupMetadataAddress(suite.scopeUUID, suite.groupUUID)
+
+	suite.recordName = "TestRecord"
+	suite.recordId = types.RecordMetadataAddress(suite.scopeUUID, suite.recordName)
 
 	suite.app.AccountKeeper.SetAccount(suite.ctx, suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, suite.user1Addr))
 
@@ -319,6 +332,28 @@ func (suite *KeeperTestSuite) TestScopeQuery() {
 	ownerResponse, err = queryClient.Ownership(gocontext.Background(), &types.OwnershipRequest{Address: user2})
 	suite.NoError(err)
 	suite.Len(ownerResponse.ScopeIds, 1)
+}
+
+func (suite *KeeperTestSuite) TestMetadataRecordGetSetRemove() {
+
+	r, found := suite.app.MetadataKeeper.GetRecord(suite.ctx, suite.recordId)
+	suite.NotNil(r)
+	suite.False(found)
+
+	process := types.NewProcess("processname", &types.Process_Hash{"HASH"}, "process_method")
+	record := types.NewRecord(suite.recordName, suite.groupId, *process, []types.RecordInput{}, []types.RecordOutput{})
+
+	suite.NotNil(record)
+	suite.app.MetadataKeeper.SetRecord(suite.ctx, *record)
+
+	r, found = suite.app.MetadataKeeper.GetRecord(suite.ctx, suite.recordId)
+	suite.True(found)
+	suite.NotNil(r)
+
+	suite.app.MetadataKeeper.RemoveRecord(suite.ctx, suite.recordId)
+	r, found = suite.app.MetadataKeeper.GetRecord(suite.ctx, suite.recordId)
+	suite.False(found)
+	suite.NotNil(r)
 }
 
 func TestKeeperTestSuite(t *testing.T) {

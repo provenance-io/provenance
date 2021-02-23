@@ -54,7 +54,7 @@ func (k Keeper) RemoveRecord(ctx sdk.Context, id types.MetadataAddress) {
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeRecordRemoved,
-			sdk.NewAttribute(types.AttributeKeyScopeID, id.String()),
+			sdk.NewAttribute(types.AttributeKeyRecordID, id.String()),
 		),
 	)
 }
