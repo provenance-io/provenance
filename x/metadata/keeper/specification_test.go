@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"github.com/google/uuid"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -425,7 +424,211 @@ func (s *ScopeSpecKeeperTestSuite) TestIterateScopeSpecsForContractSpec() {
 }
 
 func (s *ScopeSpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
-	// TODO: implement
+	// Trick the store into thinking that s.contractSpecID1 and s.contractSpecID2 exists.
+	metadataStoreKey := s.app.GetKey(types.StoreKey)
+	store := s.ctx.KVStore(metadataStoreKey)
+	store.Set(s.contractSpecID1, []byte{0x01})
+	store.Set(s.contractSpecID2, []byte{0x01})
+
+	otherScopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
+	otherContractSpecID := types.GroupSpecMetadataAddress(uuid.New())
+	tests := []struct {
+		name        string
+		existing    *types.ScopeSpecification
+		proposed    *types.ScopeSpecification
+		signers     []string
+		want        string
+	}{
+		{
+			"existing specificationID does not match proposed specificationID causes error",
+			types.NewScopeSpecification(
+				s.specID,
+				nil,
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				[]types.MetadataAddress{s.contractSpecID1},
+			),
+			types.NewScopeSpecification(
+				otherScopeSpecID,
+				nil,
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				[]types.MetadataAddress{s.contractSpecID1},
+			),
+			[]string{s.user1Addr.String()},
+			fmt.Sprintf("cannot update scope spec identifier. expected %s, got %s",
+				s.specID, otherScopeSpecID),
+		},
+		{
+			"proposed basic validation causes error",
+			types.NewScopeSpecification(
+				s.specID,
+				nil,
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				[]types.MetadataAddress{s.contractSpecID1},
+			),
+			types.NewScopeSpecification(
+				s.specID,
+				nil,
+				[]string{},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				[]types.MetadataAddress{s.contractSpecID1},
+			),
+			[]string{s.user1Addr.String()},
+			"the ScopeSpecification must have at least one owner",
+		},
+		{
+			"basic validation not done on existing",
+			types.NewScopeSpecification(
+				s.specID,
+				nil,
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{},
+				[]types.MetadataAddress{s.contractSpecID1},
+			),
+			types.NewScopeSpecification(
+				s.specID,
+				nil,
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				[]types.MetadataAddress{s.contractSpecID1},
+			),
+			[]string{s.user1Addr.String()},
+			"",
+		},
+		{
+			"changing owner, only signed by new owner - error",
+			types.NewScopeSpecification(
+				s.specID,
+				nil,
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				[]types.MetadataAddress{s.contractSpecID1},
+			),
+			types.NewScopeSpecification(
+				s.specID,
+				nil,
+				[]string{s.user2Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				[]types.MetadataAddress{s.contractSpecID1},
+			),
+			[]string{s.user2Addr.String()},
+			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1Addr.String()),
+		},
+		{
+			"adding signer, only existing owner needs to sign",
+			types.NewScopeSpecification(
+				s.specID,
+				nil,
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				[]types.MetadataAddress{s.contractSpecID1},
+			),
+			types.NewScopeSpecification(
+				s.specID,
+				nil,
+				[]string{s.user1Addr.String(), s.user2Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				[]types.MetadataAddress{s.contractSpecID1},
+			),
+			[]string{s.user1Addr.String()},
+			"",
+		},
+		{
+			"adding signer, both signed - ok too",
+			types.NewScopeSpecification(
+				s.specID,
+				nil,
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				[]types.MetadataAddress{s.contractSpecID1},
+			),
+			types.NewScopeSpecification(
+				s.specID,
+				nil,
+				[]string{s.user1Addr.String(), s.user2Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				[]types.MetadataAddress{s.contractSpecID1},
+			),
+			[]string{s.user1Addr.String(), s.user2Addr.String()},
+			"",
+		},
+		{
+			"adding unknown contract spec - error",
+			types.NewScopeSpecification(
+				s.specID,
+				nil,
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				[]types.MetadataAddress{s.contractSpecID1},
+			),
+			types.NewScopeSpecification(
+				s.specID,
+				nil,
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				[]types.MetadataAddress{s.contractSpecID1, otherContractSpecID},
+			),
+			[]string{s.user1Addr.String()},
+			fmt.Sprintf("no contract spec exists with id %s", otherContractSpecID),
+		},
+		{
+			"adding known contract spec - ok",
+			types.NewScopeSpecification(
+				s.specID,
+				nil,
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				[]types.MetadataAddress{s.contractSpecID1},
+			),
+			types.NewScopeSpecification(
+				s.specID,
+				nil,
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				[]types.MetadataAddress{s.contractSpecID1, s.contractSpecID2},
+			),
+			[]string{s.user1Addr.String()},
+			"",
+		},
+		{
+			"changing to known contract spec - ok",
+			types.NewScopeSpecification(
+				s.specID,
+				nil,
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				[]types.MetadataAddress{s.contractSpecID1},
+			),
+			types.NewScopeSpecification(
+				s.specID,
+				nil,
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				[]types.MetadataAddress{s.contractSpecID2},
+			),
+			[]string{s.user1Addr.String()},
+			"",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		s.T().Run(tt.name, func(t *testing.T) {
+			err := s.app.MetadataKeeper.ValidateScopeSpecUpdate(s.ctx, *tt.existing, *tt.proposed, tt.signers)
+			if err != nil {
+				s.Equal(tt.want, err.Error(), "ScopeSpec Keeper ValidateScopeSpecUpdate error")
+			} else if len(tt.want) > 0 {
+				t.Errorf("ScopeSpec Keeper ValidateScopeSpecUpdate error = nil, expected: %s", tt.want)
+			}
+		})
+	}
+
+	// I'm not really sure what all gets shared between unit tests.
+	// So just to be on the safe side...
+	store.Delete(s.contractSpecID1)
+	store.Delete(s.contractSpecID2)
 }
 
 func (s *ScopeSpecKeeperTestSuite) TestValidateScopeSpecAllOwnersAreSigners() {
@@ -459,84 +662,72 @@ func (s *ScopeSpecKeeperTestSuite) TestValidateScopeSpecAllOwnersAreSigners() {
 		scopeSpec   *types.ScopeSpecification
 		signers     []string
 		want        string
-		wantErr     bool
 	}{
 		{
 			"Scope Spec with 1 owner: no signers - error",
 			scopeSpecOwnedByUser1,
 			[]string{},
 			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1Addr.String()),
-			true,
 		},
 		{
 			"Scope Spec with 1 owner: not in signers list - error",
 			scopeSpecOwnedByUser1,
 			[]string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()},
 			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1Addr.String()),
-			true,
 		},
 		{
 			"Scope Spec with 1 owner: in signers list with non-owners - ok",
 			scopeSpecOwnedByUser1,
 			[]string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), s.user1Addr.String(), sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()},
 			"",
-			false,
 		},
 		{
 			"Scope Spec with 1 owner: only signer in list - ok",
 			scopeSpecOwnedByUser1,
 			[]string{s.user1Addr.String()},
 			"",
-			false,
 		},
 		{
 			"Scope Spec with 2 owners: no signers - error",
 			scopeSpecOwnedByBoth,
 			[]string{},
 			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1Addr.String()),
-			true,
 		},
 		{
 			"Scope Spec with 2 owners: neither in signers list - error",
 			scopeSpecOwnedByBoth,
 			[]string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()},
 			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1Addr.String()),
-			true,
 		},
 		{
 			"Scope Spec with 2 owners: one in signers list with non-owners - error",
 			scopeSpecOwnedByBoth,
 			[]string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), s.user1Addr.String(), sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()},
 			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user2Addr.String()),
-			true,
 		},
 		{
 			"Scope Spec with 2 owners: the other in signers list with non-owners - error",
 			scopeSpecOwnedByBoth,
 			[]string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), s.user2Addr.String(), sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()},
 			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1Addr.String()),
-			true,
 		},
 		{
 			"Scope Spec with 2 owners: both in signers list with non-owners - ok",
 			scopeSpecOwnedByBoth,
 			[]string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), s.user2Addr.String(), sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), s.user1Addr.String()},
 			"",
-			false,
 		},
 		{
 			"Scope Spec with 2 owners: only both in signers list - ok",
 			scopeSpecOwnedByBoth,
 			[]string{s.user1Addr.String(), s.user2Addr.String()},
 			"",
-			false,
 		},
 		{
 			"Scope Spec with 2 owners: only both in signers list, opposite order - ok",
 			scopeSpecOwnedByBoth,
 			[]string{s.user2Addr.String(), s.user1Addr.String()},
 			"",
-			false,
 		},
 	}
 
@@ -544,14 +735,11 @@ func (s *ScopeSpecKeeperTestSuite) TestValidateScopeSpecAllOwnersAreSigners() {
 		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
 			err := s.app.MetadataKeeper.ValidateScopeSpecAllOwnersAreSigners(*tt.scopeSpec, tt.signers)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("ScopeSpec Keeper ValidateScopeSpecAllOwnersAreSigners error = %v, wantErr %v", err, tt.wantErr)
-				return
+			if err != nil {
+				s.Equal(tt.want, err.Error(), "ScopeSpec Keeper ValidateScopeSpecAllOwnersAreSigners error")
+			} else if len(tt.want) > 0 {
+				t.Errorf("ScopeSpec Keeper ValidateScopeSpecAllOwnersAreSigners error = nil, expected: %s", tt.want)
 			}
-			if tt.wantErr {
-				require.Equal(t, tt.want, err.Error())
-			}
-
 		})
 	}
 }
