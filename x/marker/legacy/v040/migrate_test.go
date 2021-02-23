@@ -41,7 +41,7 @@ func TestMigrate(t *testing.T) {
 				Denom:          "hotdog",
 				Supply:         sdk.OneInt(),
 				MarkerType:     "COIN",
-				AccessControls: []v039.AccessGrant{{Address: addr1, Permissions: []string{"mint", "burn"}}},
+				AccessControls: []v039.AccessGrant{{Address: addr1, Permissions: []string{"mint", "burn", "grant"}}},
 			},
 		},
 	}
@@ -50,7 +50,16 @@ func TestMigrate(t *testing.T) {
 	expected := fmt.Sprintf(`{
   "markers": [
     {
-      "access_control": [],
+      "access_control": [
+        {
+          "address": "%s",
+          "permissions": [
+            "ACCESS_MINT",
+            "ACCESS_BURN",
+            "ACCESS_ADMIN"
+          ]
+        }
+      ],
       "allow_governance_control": false,
       "base_account": {
         "account_number": "5",
@@ -70,7 +79,7 @@ func TestMigrate(t *testing.T) {
     "enable_governance": true,
     "max_total_supply": "100000000000"
   }
-}`, addr1.String(), addr1.String())
+}`, addr1.String(), addr1.String(), addr1.String())
 
 	bz, err := clientCtx.JSONMarshaler.MarshalJSON(migrated)
 	require.NoError(t, err)

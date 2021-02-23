@@ -6,6 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
+	v039 "github.com/provenance-io/provenance/x/marker/legacy/v039"
 	v039marker "github.com/provenance-io/provenance/x/marker/legacy/v039"
 	v040marker "github.com/provenance-io/provenance/x/marker/types"
 )
@@ -28,11 +29,11 @@ func Migrate(oldGenState v039marker.GenesisState) *v040marker.GenesisState {
 				AccountNumber: mark.AccountNumber,
 				Sequence:      mark.Sequence,
 			},
-			Manager: mark.Manager.String(),
-			Status:  v040marker.MustGetMarkerStatus(mark.GetStatus()),
-			Denom:   mark.Denom,
-			Supply:  mark.GetSupply().Amount,
-			// TODO PORT ACCESS LIST
+			Manager:       mark.Manager.String(),
+			Status:        v040marker.MustGetMarkerStatus(mark.GetStatus()),
+			Denom:         mark.Denom,
+			Supply:        mark.GetSupply().Amount,
+			AccessControl: migrateAccess(mark.AccessControls),
 			// v039 only supported COIN type
 			MarkerType: v040marker.MarkerType_Coin,
 		})
@@ -44,4 +45,18 @@ func Migrate(oldGenState v039marker.GenesisState) *v040marker.GenesisState {
 		},
 		Markers: markerAccounts,
 	}
+}
+
+func migrateAccess(old []v039.AccessGrant) (new []v040marker.AccessGrant) {
+	new = make([]v040marker.AccessGrant, len(old))
+	for i, a := range old {
+		perms := strings.Join(a.Permissions, ",")
+		perms = strings.ToLower(perms)
+		perms = strings.Replace(perms, "grant", "admin", -1)
+		new[i] = v040marker.AccessGrant{
+			Address:     a.Address.String(),
+			Permissions: v040marker.AccessListByNames(perms),
+		}
+	}
+	return
 }
