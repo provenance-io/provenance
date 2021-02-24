@@ -92,7 +92,7 @@ func convertGroups(oldScopeUUID uuid.UUID, old []*v039metadata.RecordGroup) (new
 		newGroup[i].GroupId = v040metadata.GroupMetadataAddress(oldScopeUUID, uuid.MustParse(g.GroupUuid.Value))
 		newGroup[i].Name = g.Classname
 		newGroup[i].Parties = convertParties(g.Parties)
-		specAddr, err := v040metadata.ConvertHashToAddress(v040metadata.GroupSpecificationPrefix, g.Specification)
+		specAddr, err := v040metadata.ConvertHashToAddress(v040metadata.ContractSpecificationPrefix, g.Specification)
 		if err != nil {
 			panic(err)
 		}
