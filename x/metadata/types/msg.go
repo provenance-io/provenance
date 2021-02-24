@@ -17,7 +17,7 @@ const (
 	TypeMsgAddRecordRequest                = "add_record_request"
 	TypeMsgAddScopeSpecificationRequest    = "add_scope_specification_request"
 	TypeMsgRemoveScopeSpecificationRequest = "remove_scope_specification_request"
-	TypeMsgAddGroupSpecificationRequest    = "add_group_specification_request"
+	TypeMsgAddContractSpecificationRequest = "add_contract_specification_request"
 )
 
 // Compile time interface checks.
