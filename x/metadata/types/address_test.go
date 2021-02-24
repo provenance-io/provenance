@@ -53,7 +53,7 @@ func TestMetadataAddressWithInvalidData(t *testing.T) {
 	var addr = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 
 	_, err := VerifyMetadataAddressFormat(addr)
-	require.EqualValues(t, fmt.Errorf("invalid metadata address type (must be 0-4, actual: %d)", addr[0]), err)
+	require.EqualValues(t, fmt.Errorf("invalid metadata address type (must be 0-5, actual: %d)", addr[0]), err)
 	_, err = VerifyMetadataAddressFormat(addr[0:12])
 	require.EqualValues(t, fmt.Errorf("incorrect address length (must be at least 17, actual: %d)", 12), err)
 

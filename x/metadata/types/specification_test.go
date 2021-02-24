@@ -46,7 +46,7 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				MetadataAddress(specTestAddr),
 				nil, []string{}, []PartyType{}, []MetadataAddress{},
 			),
-			"invalid scope specification id: invalid metadata address type (must be 0-4, actual: 133)",
+			"invalid scope specification id: invalid metadata address type (must be 0-5, actual: 133)",
 			true,
 		},
 		{
@@ -126,7 +126,7 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				[]MetadataAddress{MetadataAddress(specTestAddr)},
 			),
-			"invalid contract specification id at index 0: invalid metadata address type (must be 0-4, actual: 133)",
+			"invalid contract specification id at index 0: invalid metadata address type (must be 0-5, actual: 133)",
 			true,
 		},
 		{
@@ -150,7 +150,7 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				[]MetadataAddress{ContractSpecMetadataAddress(uuid.New()), ContractSpecMetadataAddress(uuid.New()), MetadataAddress(specTestAddr)},
 			),
-			"invalid contract specification id at index 2: invalid metadata address type (must be 0-4, actual: 133)",
+			"invalid contract specification id at index 2: invalid metadata address type (must be 0-5, actual: 133)",
 			true,
 		},
 		{
