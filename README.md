@@ -38,12 +38,27 @@ is the first and primary user of the Provenance Blockchain.
 [lint-badge]: https://github.com/provenance-io/provenance/workflows/Lint/badge.svg
 [provenance]: https://provenance.io/#overview
 
-The Public Provenance blockchain is under heavy development with an expected mainnet launch at the end of Q1 2021.  The 
-upcoming public blockchain is the evolution of the private Provenance network blockchain started in 2018.
-Current development is being supported by [Figure Technologies](https://figure.com).
+The Public Provenance blockchain is under active development.  While the modules in this blockchain are based on implementations
+from the private [Figure Technologies](https://figure.com) blockchain launched in 2018 there are still breaking API changes expected
+especially related to the transistion to Cosmos SDK v040 and GRPC.  
 
-## Upcoming Milestones
+WARNING: Versions prior to the launch of mainnet and the associated `1.0.0` version should be considered unstable and API changes expected.
 
-- **January 2021** - Launch of alpha testnet including three of the four core blockchain modules (attributes, name, and marker)
-- **February 2021** - General testnet launch
-- **Q1 2021** - Migration of private Provenance Blockchain to public mainnet.
+## Quick Start
+
+The Provenance Blockchain is based on Cosmos, the [sdk introduction](https://github.com/cosmos/cosmos-sdk/blob/master/docs/intro/overview.md)
+is a useful starting point.
+
+Developers can use a local checkout and the make targets `make run` and `make localnet-start` to run a local development network.
+
+Note: Requires [Go 1.15+](https://golang.org/dl/)
+
+
+## Testnet
+
+An alpha version of the Provenance network [testnet](https://github.com/provenance-io/testnet) with limited participation 
+was launch in January 2021.
+
+## Mainnet
+
+A public mainnet launch for the public Provenance blockchain is set for the end of Q2 2021.
