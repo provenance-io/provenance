@@ -74,7 +74,7 @@ message Scope {
   bytes scope_id = 1 [
     (gogoproto.nullable)   = false,
     (gogoproto.customtype) = "MetadataAddress",
-    (gogoproto.moretags)   = "json:\"scope_id\" yaml:\"scope_id\""
+    (gogoproto.moretags)   = "yaml:\"scope_id\""
   ];
   // the scope specification that contains the specifications for data elements allowed within this scope
   bytes specification_id = 2 [
@@ -84,12 +84,12 @@ message Scope {
   ];
   // These parties represent top level owners of the records within.  These parties must sign any requests that modify
   // the data within the scope.  These addresses are in union with parties listed on the record groups.
-  repeated string owner_address = 3;
-  // Addresses in this list are authorized to receive off-chain data associated with this scope.
-  repeated string data_access = 4;
+  repeated Party owners = 3 [(gogoproto.nullable) = false];
+  // Addessses in this list are authorized to recieve off-chain data associated with this scope.
+  repeated string data_access = 4 [(gogoproto.moretags) = "yaml:\"data_access\""];
   // An address that controls the value associated with this scope.  Standard blockchain accounts and marker accounts
   // are supported for this value.  This attribute may only be changed by the entity indicated once it is set.
-  string value_owner_address = 5;
+  string value_owner_address = 5 [(gogoproto.moretags) = "yaml:\"value_owner_address\""];
 }
 
 /*
@@ -144,7 +144,6 @@ message Record {
 // Process contains information used to uniquely identify what was used to generate this record
 message Process {
   option (gogoproto.goproto_stringer) = false;
-
   // unique identifier for this process
   oneof process_id {
     // the address of a smart contract used for this process
@@ -161,7 +160,6 @@ message Process {
 // Tracks the inputs used to establish this record
 message RecordInput {
   option (gogoproto.goproto_stringer) = false;
-
   // Name value included to link back to the definition spec.
   string name = 1;
   // data source
@@ -191,7 +189,7 @@ enum RecordInputStatus {
 // RecordOutput encapsulates the output of a process recorded on chain
 message RecordOutput {
   option (gogoproto.goproto_stringer) = false;
-
+  
   // Hash of the data output that was output/generated for this record
   string hash = 1;
   // Status of the process execution associated with this output indicating success,failure, or pending
@@ -201,13 +199,13 @@ message RecordOutput {
 // ResultStatus indicates the various states of execution of a record
 enum ResultStatus {
   // RESULT_STATUS_UNSPECIFIED indicates an unset condition
-  RESULT_STATUS_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "Unspecified"];;
-  // RESULT_STATUS_PASS indicates the execution was successful
-  RESULT_STATUS_PASS = 1 [(gogoproto.enumvalue_customname) = "Pass"];;
+  RESULT_STATUS_UNSPECIFIED = 0;
+  // RESULT_STATUS_PASS indicates the execution was successfult
+  RESULT_STATUS_PASS = 1;
   // RESULT_STATUS_SKIP indicates condition/consideration was skipped due to missing inputs or delayed execution
-  RESULT_STATUS_SKIP = 2 [(gogoproto.enumvalue_customname) = "Skip"];;
+  RESULT_STATUS_SKIP = 2;
   // RESULT_STATUS_FAIL indicates the execution of the condition/consideration failed.
-  RESULT_STATUS_FAIL = 3 [(gogoproto.enumvalue_customname) = "Fail"];;
+  RESULT_STATUS_FAIL = 3;
 }
 
 // A Party is an address with/in a given role associated with a contract

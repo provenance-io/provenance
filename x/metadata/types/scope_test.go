@@ -20,6 +20,8 @@ type scopeTestSuite struct {
 	suite.Suite
 }
 
+// func ownerPartyList is defined in msg_test.go
+
 func TestAddressTestSuite(t *testing.T) {
 	suite.Run(t, new(scopeTestSuite))
 }
@@ -37,49 +39,49 @@ func (s *scopeTestSuite) TestScopeValidateBasic() {
 	}{
 		{
 			"valid scope one owner",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []string{addr.String()}, []string{}, ""),
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(addr.String()), []string{}, ""),
 			"",
 			false,
 		},
 		{
 			"valid scope one owner, one data access",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []string{addr.String()}, []string{addr.String()}, ""),
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(addr.String()), []string{addr.String()}, ""),
 			"",
 			false,
 		},
 		{
 			"no owners",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []string{}, []string{}, ""),
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
 			"scope must have at least one owner",
 			true,
 		},
 		{
 			"no owners, data access",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []string{}, []string{addr.String()}, ""),
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{addr.String()}, ""),
 			"scope must have at least one owner",
 			true,
 		},
 		{
 			"invalid scope id",
-			NewScope(ScopeSpecMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []string{}, []string{}, ""),
+			NewScope(ScopeSpecMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
 			"invalid scope identifier (expected: scope, got scopespec)",
 			true,
 		},
 		{
 			"invalid scope id - wrong address type",
-			NewScope(MetadataAddress(addr), ScopeSpecMetadataAddress(uuid.New()), []string{}, []string{}, ""),
+			NewScope(MetadataAddress(addr), ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
 			"invalid metadata address type (must be 0-4, actual: 133)",
 			true,
 		},
 		{
 			"invalid spec id",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeMetadataAddress(uuid.New()), []string{}, []string{}, ""),
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
 			"invalid scope specification identifier (expected: scopespec, got scope)",
 			true,
 		},
 		{
 			"invalid spec id - wrong address type",
-			NewScope(ScopeMetadataAddress(uuid.New()), MetadataAddress(addr), []string{}, []string{}, ""),
+			NewScope(ScopeMetadataAddress(uuid.New()), MetadataAddress(addr), []Party{}, []string{}, ""),
 			"invalid metadata address type (must be 0-4, actual: 133)",
 			true,
 		},
@@ -88,7 +90,7 @@ func (s *scopeTestSuite) TestScopeValidateBasic() {
 			NewScope(ScopeMetadataAddress(
 				uuid.New()),
 				ScopeSpecMetadataAddress(uuid.New()),
-				[]string{":invalid"},
+				ownerPartyList(":invalid"),
 				[]string{},
 				"",
 			),
@@ -119,15 +121,16 @@ func (s *scopeTestSuite) TestScopeString() {
 		groupUUID := uuid.MustParse("c25c7bd4-c639-4367-a842-f64fa5fccc19")
 		scope := NewScope(ScopeMetadataAddress(
 			scopeUUID), ScopeSpecMetadataAddress(groupUUID),
-			[]string{addr.String()},
+			ownerPartyList(addr.String()),
 			[]string{},
 			"")
 		require.Equal(t, `scope_id: scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp
 specification_id: scopespec1qnp9c775ccu5xeaggtmylf0uesvsqyrkq8
-owneraddress:
-- cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck
-dataaccess: []
-valueowneraddress: ""
+owners:
+- address: cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck
+  role: 5
+data_access: []
+value_owner_address: ""
 `,
 			scope.String())
 	})
@@ -139,7 +142,7 @@ func (s *scopeTestSuite) TestRecordValidateBasic() {
 	groupId := GroupMetadataAddress(scopeUUID, groupUUID)
 	recordId := RecordMetadataAddress(scopeUUID, "test_record")
 	validRI := NewRecordInput("ri_name", &RecordInput_Hash{"hash"}, "ri_type", RecordInputStatus_Proposed)
-	validRO := NewRecordOutput("ro_hash", ResultStatus_Pass)
+	validRO := NewRecordOutput("ro_hash", ResultStatus_RESULT_STATUS_PASS)
 	validPs := NewProcess("process_name", &Process_Hash{"address"}, "method")
 	tests := []struct {
 		name    string
@@ -275,7 +278,7 @@ func (s *scopeTestSuite) TestRecordValidateBasic() {
 			"Invalid record, incorrect result status for record output",
 			NewRecord("name", groupId, *validPs,
 				[]RecordInput{*validRI},
-				[]RecordOutput{*NewRecordOutput("hash", ResultStatus_Unspecified)}),
+				[]RecordOutput{*NewRecordOutput("hash", ResultStatus_RESULT_STATUS_UNSPECIFIED)}),
 			"invalid record output: invalid record output status, status unspecified",
 			true,
 		},
@@ -283,7 +286,7 @@ func (s *scopeTestSuite) TestRecordValidateBasic() {
 			"Invalid record, missing hash for record output",
 			NewRecord("name", groupId, *validPs,
 				[]RecordInput{*validRI},
-				[]RecordOutput{*NewRecordOutput("", ResultStatus_Pass)}),
+				[]RecordOutput{*NewRecordOutput("", ResultStatus_RESULT_STATUS_PASS)}),
 			"invalid record output: missing required hash",
 			true,
 		},
@@ -291,7 +294,7 @@ func (s *scopeTestSuite) TestRecordValidateBasic() {
 			"Valid record, record output skip",
 			NewRecord("name", groupId, *validPs,
 				[]RecordInput{*validRI},
-				[]RecordOutput{*NewRecordOutput("", ResultStatus_Skip)}),
+				[]RecordOutput{*NewRecordOutput("", ResultStatus_RESULT_STATUS_SKIP)}),
 			"",
 			false,
 		},

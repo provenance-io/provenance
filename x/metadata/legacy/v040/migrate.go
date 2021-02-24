@@ -56,7 +56,7 @@ func convertScope(
 	newScope = &v040metadata.Scope{
 		ScopeId:         v040metadata.ScopeMetadataAddress(oldScopeUUID),
 		SpecificationId: v040metadata.MetadataAddress{},
-		OwnerAddress:    partyAddresses(convertParties(old.Parties)),
+		Owners:          convertParties(old.Parties),
 		DataAccess:      partyAddresses(convertParties(old.Parties)),
 	}
 	newGroups, newRecords = convertGroups(oldScopeUUID, old.RecordGroup)
@@ -106,7 +106,7 @@ func convertRecords(groupID v040metadata.MetadataAddress, old []*v039metadata.Re
 				},
 			},
 			Inputs: convertRecordInput(r.Inputs),
-			Output: []v040metadata.RecordOutput{
+			Outputs: []v040metadata.RecordOutput{
 				{
 					Hash:   r.ResultHash,
 					Status: v040metadata.ResultStatus(int32(r.Result)),
@@ -210,8 +210,8 @@ func BackportScope(
 				groupRecords = append(groupRecords, &v039metadata.Record{
 					Name: r.Process.Method,
 					//Hash: r.Process.ProcessId as hash
-					ResultHash: r.Output[0].Hash, // v039 only supports a single result hash, use first
-					Result:     v039metadata.ExecutionResultType(int32(r.Output[0].Status)),
+					ResultHash: r.Outputs[0].Hash, // v039 only supports a single result hash, use first
+					Result:     v039metadata.ExecutionResultType(int32(r.Outputs[0].Status)),
 					ResultName: r.Name,
 					Classname:  r.Process.Name,
 					Inputs:     backportInputs(r.Inputs),
@@ -287,7 +287,7 @@ func BackportScope(
 		return
 	}
 
-	oldParties, err := backportAddressToParties(newScope.OwnerAddress, v040metadata.PartyType_PARTY_TYPE_OWNER)
+	oldParties, err := backportParties(newScope.Owners)
 	if err != nil {
 		return
 	}
@@ -316,22 +316,6 @@ func backportInputs(new []v040metadata.RecordInput) (old []*v039metadata.RecordI
 			// Hash: ri.Source as Hash,
 			Type: v039metadata.RecordInputType(int32(ri.Status)),
 		}
-	}
-	return
-}
-
-func backportAddressToParties(new []string, role v040metadata.PartyType) (old []*v039metadata.Recital, err error) {
-	old = make([]*v039metadata.Recital, 0, len(new))
-	for i, n := range new {
-		addr, err := sdk.AccAddressFromBech32(n)
-		if err != nil {
-			return nil, err
-		}
-		old[i].Address = addr
-		old[i].SignerRole = v039metadata.PartyType(int32(role))
-
-		// TODO consider including a context here to bring in the public keys by query of AccountKeeper
-		// old[i].Signer.SigningPublicKey
 	}
 	return
 }

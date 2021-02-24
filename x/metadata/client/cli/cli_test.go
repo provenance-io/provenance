@@ -54,6 +54,14 @@ type IntegrationTestSuite struct {
 	specID   types.MetadataAddress
 }
 
+func ownerPartyList(addresses ...string) []types.Party {
+	retval := make([]types.Party, len(addresses))
+	for i, addr := range addresses {
+		retval[i] = types.Party{Address: addr, Role: types.PartyType_PARTY_TYPE_OWNER}
+	}
+	return retval
+}
+
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
 }
@@ -83,7 +91,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.specUUID = uuid.New()
 	s.specID = types.ScopeSpecMetadataAddress(s.specUUID)
 
-	s.scope = *metadatatypes.NewScope(s.scopeID, s.specID, []string{s.user1}, []string{s.user1}, s.user1)
+	s.scope = *metadatatypes.NewScope(s.scopeID, s.specID, ownerPartyList(s.user1), []string{s.user1}, s.user1)
 
 	var metadataData metadatatypes.GenesisState
 	metadataData.Params = metadatatypes.DefaultParams()
@@ -169,10 +177,11 @@ func (s *IntegrationTestSuite) TestGetMetadataScopeCmd() {
 		{
 			"get scope as json output",
 			[]string{s.scopeUUID.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			fmt.Sprintf("{\"scope_id\":\"%s\",\"specification_id\":\"%s\",\"owner_address\":[\"%s\"],\"data_access\":[\"%s\"],\"value_owner_address\":\"%s\"}",
+			fmt.Sprintf("{\"scope_id\":\"%s\",\"specification_id\":\"%s\",\"owners\":[{\"address\":\"%s\",\"role\":\"%s\"}],\"data_access\":[\"%s\"],\"value_owner_address\":\"%s\"}",
 				s.scope.ScopeId,
 				s.scope.SpecificationId.String(),
-				s.scope.OwnerAddress[0],
+				s.scope.Owners[0].Address,
+				s.scope.Owners[0].Role.String(),
 				s.scope.DataAccess[0],
 				s.scope.ValueOwnerAddress),
 		},
@@ -181,13 +190,15 @@ func (s *IntegrationTestSuite) TestGetMetadataScopeCmd() {
 			[]string{s.scopeUUID.String(), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
 			fmt.Sprintf(`data_access:
 - %s
-owner_address:
-- %s
+owners:
+- address: %s
+  role: %s
 scope_id: %s
 specification_id: %s
 value_owner_address: %s`,
 				s.scope.DataAccess[0],
-				s.scope.OwnerAddress[0],
+				s.scope.Owners[0].Address,
+				s.scope.Owners[0].Role.String(),
 				s.scope.ScopeId,
 				s.scope.SpecificationId.String(),
 				s.scope.ValueOwnerAddress),
