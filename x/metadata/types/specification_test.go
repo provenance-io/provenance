@@ -539,7 +539,7 @@ owner_addresses:
 parties_involved:
 - 5
 contract_spec_ids:
-- contractspec1qd2qmt038k7yc0azq46htdlhgwzquwslkg
+- contractspec1qd2qmt038k7yc0azq46htdlhgwzqg6cr9l
 `
 		actual := scopeSpec.String()
 		// fmt.Printf("Actual:\n%s\n-----\n", actual)
