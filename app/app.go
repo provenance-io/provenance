@@ -112,6 +112,7 @@ import (
 	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
 
 	"github.com/provenance-io/provenance/internal/provwasm"
+	provwasmbank "github.com/provenance-io/provenance/internal/provwasm/custom/bank"
 )
 
 const (
@@ -367,6 +368,7 @@ func New(
 	encoderRegistry.RegisterEncoder(nametypes.RouterKey, namewasm.Encoder)
 	encoderRegistry.RegisterEncoder(attributetypes.RouterKey, attributewasm.Encoder)
 	encoderRegistry.RegisterEncoder(markertypes.RouterKey, markerwasm.Encoder)
+	encoderRegistry.RegisterEncoder(provwasmbank.RouterKey, provwasmbank.Encoder)
 
 	// Init CosmWasm query integrations
 	querierRegistry := provwasm.NewQuerierRegistry()
