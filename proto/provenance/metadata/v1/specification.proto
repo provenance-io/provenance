@@ -71,8 +71,7 @@ message ContractSpecification {
   repeated string owner_addresses = 3 [(gogoproto.moretags) = "yaml:\"owner_addresses\""];
   // a list of party roles that must be fullfilled when signing a transaction for this contract specification
   repeated PartyType parties_involved = 4 [(gogoproto.moretags) = "yaml:\"parties_involved\""];
-  // Reference to a metadata record with a hash and type information for the instance of code that will process this
-  // group
+  // Reference to a metadata record with a hash and type information for the instance of code that will process this contract
   oneof source {
     // the address of a record on chain that represents this contract
     bytes resource_id = 5 [(gogoproto.customtype) = "MetadataAddress", (gogoproto.moretags) = "yaml:\"resource_id\""];
