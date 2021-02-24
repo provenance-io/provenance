@@ -6,9 +6,6 @@ option go_package          = "github.com/provenance-io/provenance/x/metadata/leg
 option java_package        = "io.provenance.metadata.v0";
 option java_multiple_files = true;
 
-import "gogoproto/gogo.proto";
-import "google/protobuf/timestamp.proto";
-
 // Wrapper for an ISO8601 date string. EX: "2020-05-22"
 message Date {
   string value = 1;
@@ -100,14 +97,16 @@ enum PartyType {
 
 // Audit
 message AuditFields {
-  google.protobuf.Timestamp created_date = 1
-      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"created_date\""];
-  ;
+  GogoTimeHack created_date = 1;
   string                    created_by   = 2;
-  google.protobuf.Timestamp updated_date = 3
-      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"updated_date\""];
-  ;
+  GogoTimeHack updated_date = 3;
   string updated_by = 4;
   int32  version    = 5;
   string message    = 6;
+}
+
+// proto 3 timestamp structure (hack to get around gogo issues with invalid dates)
+message GogoTimeHack {
+  int64 seconds = 1;
+  int32 nanos = 2;
 }

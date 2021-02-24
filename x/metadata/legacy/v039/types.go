@@ -12,6 +12,11 @@ type GenesisState struct {
 	Specifications []ContractSpec `json:"specifications,omitempty"`
 }
 
+// SpecGenesisState is a sequence of contract specs (from the deprecated spec module)
+type SpecGenesisState struct {
+	ContractSpecRecords []ContractSpec `json:"contract_spec_records"`
+}
+
 // Validate ensures the genesis state is valid.
 func (state GenesisState) Validate() error {
 	for _, s := range state.ScopeRecords {
