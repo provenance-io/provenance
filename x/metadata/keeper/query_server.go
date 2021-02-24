@@ -75,8 +75,31 @@ func (k Keeper) GroupContext(c context.Context, req *types.GroupContextRequest) 
 
 // Record returns a collection of the records in a scope or a specific one by name
 func (k Keeper) Record(c context.Context, req *types.RecordRequest) (*types.RecordResponse, error) {
-	// TODO
-	return &types.RecordResponse{}, nil
+	ctx := sdk.UnwrapSDKContext(c)
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if req.ScopeId == "" {
+		return nil, status.Error(codes.InvalidArgument, "scope id cannot be empty")
+	}
+
+	id, err := uuid.Parse(req.ScopeId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid scope id: %s", err.Error())
+	}
+
+	records := []*types.Record{}
+	k.IterateRecords(ctx, types.ScopeMetadataAddress(id), func(r types.Record) (stop bool) {
+		if req.Name == "" {
+			records = append(records, &r)
+		} else if req.Name == r.Name {
+			records = append(records, &r)
+		}
+		return false
+	})
+
+	return &types.RecordResponse{ScopeId: req.ScopeId, Records: records}, nil
 }
 
 // Ownership returns a list of scope identifiers that list the given address as a data or value owner
@@ -155,14 +178,14 @@ func (k Keeper) ValueOwnership(c context.Context, req *types.ValueOwnershipReque
 	return &types.ValueOwnershipResponse{ScopeIds: scopes, Pagination: pageRes}, nil
 }
 
-// Scope returns a specific scope by id
+// ScopeSpecification returns a specific scope by id
 func (k Keeper) ScopeSpecification(c context.Context, req *types.ScopeSpecificationRequest) (*types.ScopeSpecificationResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	if req.SpecificationId == "" {
-		return nil, status.Error(codes.InvalidArgument, "speccification id cannot be empty")
+		return nil, status.Error(codes.InvalidArgument, "specification id cannot be empty")
 	}
 
 	id, err := uuid.Parse(req.SpecificationId)
