@@ -27,7 +27,7 @@ func (k Keeper) IterateScopes(ctx sdk.Context, handler func(types.Scope) (stop b
 // IterateScopesForAddress processes scopes associated with the provided address with the given handler.
 func (k Keeper) IterateScopesForAddress(ctx sdk.Context, address sdk.AccAddress, handler func(scopeID types.MetadataAddress) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	prefix := types.GetAddressCacheIteratorPrefix(address)
+	prefix := types.GetAddressScopeCacheIteratorPrefix(address)
 	it := sdk.KVStorePrefixIterator(store, prefix)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
@@ -47,7 +47,7 @@ func (k Keeper) IterateScopesForScopeSpec(ctx sdk.Context, scopeSpecID types.Met
 	handler func(scopeID types.MetadataAddress) (stop bool),
 ) error {
 	store := ctx.KVStore(k.storeKey)
-	prefix := types.GetScopeSpecCacheIteratorPrefix(scopeSpecID)
+	prefix := types.GetScopeSpecScopeCacheIteratorPrefix(scopeSpecID)
 	it := sdk.KVStorePrefixIterator(store, prefix)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
@@ -83,8 +83,13 @@ func (k Keeper) SetScope(ctx sdk.Context, scope types.Scope) {
 
 	eventType := types.EventTypeScopeCreated
 	if store.Has(scope.ScopeId) {
-		eventType = types.EventTypeScopeUpdated
-		k.clearScopeIndex(ctx, scope)
+		if oldScopeBytes := store.Get(scope.ScopeId); oldScopeBytes != nil {
+			var oldScope types.Scope
+			if err := k.cdc.UnmarshalBinaryBare(oldScopeBytes, &oldScope); err == nil {
+				eventType = types.EventTypeScopeUpdated
+				k.clearScopeIndex(ctx, oldScope)
+			}
+		}
 	}
 
 	store.Set(scope.ScopeId, b)
@@ -150,16 +155,16 @@ func (k Keeper) clearScopeIndex(ctx sdk.Context, scope types.Scope) {
 		// Clear out the value owner cache
 		addr, err := sdk.AccAddressFromBech32(scope.ValueOwnerAddress)
 		if err == nil {
-			store.Delete(types.GetValueOwnerCacheKey(addr, scope.ScopeId))
+			store.Delete(types.GetValueOwnerScopeCacheKey(addr, scope.ScopeId))
 		}
 	}
 	for _, a := range addresses {
 		addr, err := sdk.AccAddressFromBech32(a)
 		if err == nil {
-			store.Delete(types.GetAddressCacheKey(addr, scope.ScopeId))
+			store.Delete(types.GetAddressScopeCacheKey(addr, scope.ScopeId))
 		}
 	}
-	store.Delete(types.GetScopeSpecCacheKey(scope.SpecificationId, scope.ScopeId))
+	store.Delete(types.GetScopeSpecScopeCacheKey(scope.SpecificationId, scope.ScopeId))
 }
 
 // indexScope create index records for the given scope
@@ -177,17 +182,17 @@ func (k Keeper) indexScope(ctx sdk.Context, scope types.Scope) {
 		// create a value owner cache entry as well.
 		addr, err := sdk.AccAddressFromBech32(scope.ValueOwnerAddress)
 		if err == nil {
-			store.Set(types.GetValueOwnerCacheKey(addr, scope.ScopeId), []byte{0x01})
+			store.Set(types.GetValueOwnerScopeCacheKey(addr, scope.ScopeId), []byte{0x01})
 		}
 	}
 	for _, a := range addresses {
 		addr, err := sdk.AccAddressFromBech32(a)
 		if err == nil {
-			store.Set(types.GetAddressCacheKey(addr, scope.ScopeId), []byte{0x01})
+			store.Set(types.GetAddressScopeCacheKey(addr, scope.ScopeId), []byte{0x01})
 		}
 	}
 	if len(scope.SpecificationId) > 0 {
-		store.Set(types.GetScopeSpecCacheKey(scope.SpecificationId, scope.ScopeId), []byte{0x01})
+		store.Set(types.GetScopeSpecScopeCacheKey(scope.SpecificationId, scope.ScopeId), []byte{0x01})
 	}
 }
 

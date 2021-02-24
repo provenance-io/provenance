@@ -35,6 +35,8 @@ option java_multiple_files = true;
 
 // ScopeSpecification defines the required parties, resources, conditions, and consideration outputs for a contract
 message ScopeSpecification {
+  option (gogoproto.goproto_stringer) = false;
+
   // unique identifier for this specification on chain
   bytes specification_id = 1 [
     (gogoproto.nullable)   = false,
@@ -45,17 +47,17 @@ message ScopeSpecification {
   Description description = 2;
   // Addresses of the owners of this scope specification.
   repeated string owner_addresses = 3 [
-    (gogoproto.moretags)   = "yaml:\"owner_address\""
+    (gogoproto.moretags)   = "yaml:\"owner_addresses\""
   ];
   // A list of parties that must be present on a scope (and their associated roles)
   repeated PartyType parties_involved = 4 [
     (gogoproto.moretags)   = "yaml:\"parties_involved\""
   ];
-  // A list of group specification ids allowed for a scope based on this specification.
-  repeated bytes group_spec_ids = 5 [
+  // A list of contract specification ids allowed for a scope based on this specification.
+  repeated bytes contract_spec_ids = 5 [
     (gogoproto.nullable)   = false,
     (gogoproto.customtype) = "MetadataAddress",
-    (gogoproto.moretags)   = "yaml:\"group_spec_ids\""
+    (gogoproto.moretags)   = "yaml:\"contract_spec_ids\""
   ];
 }
 
@@ -102,6 +104,8 @@ message ContractSpec {
 
 // Description holds general information that is handy to associate with a structure.
 message Description {
+  option (gogoproto.goproto_stringer) = false;
+
   // A Name for this thing.
   string name = 1;
   // A description of this thing.
