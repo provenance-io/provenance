@@ -2,6 +2,7 @@ package v040
 
 import (
 	"encoding/json"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	v038auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v038"

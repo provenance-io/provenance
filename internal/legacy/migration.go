@@ -1,9 +1,11 @@
 package legacy
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/genutil/types"
-	v040 "github.com/provenance-io/provenance/internal/legacy/v040"
 	"sort"
+
+	"github.com/cosmos/cosmos-sdk/x/genutil/types"
+
+	v040 "github.com/provenance-io/provenance/internal/legacy/v040"
 )
 
 var migrationMap = types.MigrationMap{
