@@ -513,22 +513,21 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 }
 
 func (s *specificationTestSuite) TestScopeSpecString() {
-	s.T().Run("scope specification string", func(t *testing.T) {
-		scopeSpecUuid := uuid.MustParse("c2074a03-6f6d-4029-bfe2-c3a5eb7e68b1")
-		contractSpecUuid := uuid.MustParse("540dadf1-3dbc-4c3f-a205-7575b7f74384")
-		scopeSpec := NewScopeSpecification(
-			ScopeSpecMetadataAddress(scopeSpecUuid),
-			NewDescription(
-				"TestScopeSpecString Description",
-				"This is a description of a description used in a unit test.",
-				"https://figure.com/",
-				"https://figure.com/favicon.png",
-			),
-			[]string{specTestBech32},
-			[]PartyType{PartyType_PARTY_TYPE_OWNER},
-			[]MetadataAddress{ContractSpecMetadataAddress(contractSpecUuid)},
-		)
-		expected := `specification_id: scopespec1qnpqwjsrdak5q2dlutp6t6m7dzcscd7ff6
+	scopeSpecUuid := uuid.MustParse("c2074a03-6f6d-4029-bfe2-c3a5eb7e68b1")
+	contractSpecUuid := uuid.MustParse("540dadf1-3dbc-4c3f-a205-7575b7f74384")
+	scopeSpec := NewScopeSpecification(
+		ScopeSpecMetadataAddress(scopeSpecUuid),
+		NewDescription(
+			"TestScopeSpecString Description",
+			"This is a description of a description used in a unit test.",
+			"https://figure.com/",
+			"https://figure.com/favicon.png",
+		),
+		[]string{specTestBech32},
+		[]PartyType{PartyType_PARTY_TYPE_OWNER},
+		[]MetadataAddress{ContractSpecMetadataAddress(contractSpecUuid)},
+	)
+	expected := `specification_id: scopespec1qnpqwjsrdak5q2dlutp6t6m7dzcscd7ff6
 description:
   name: TestScopeSpecString Description
   description: This is a description of a description used in a unit test.
@@ -541,27 +540,24 @@ parties_involved:
 contract_spec_ids:
 - contractspec1qd2qmt038k7yc0azq46htdlhgwzqg6cr9l
 `
-		actual := scopeSpec.String()
-		// fmt.Printf("Actual:\n%s\n-----\n", actual)
-		require.Equal(t, expected, actual)
-	})
+	actual := scopeSpec.String()
+	// fmt.Printf("Actual:\n%s\n-----\n", actual)
+	s.Equal(expected, actual)
 }
 
 func (s *specificationTestSuite) TestDescriptionString() {
-	s.T().Run("description string", func(t *testing.T) {
-		description := NewDescription(
-			"TestDescriptionString",
-			"This is a description of a description used in a unit test.",
-			"https://provenance.io",
-			"https://provenance.io/ico.png",
-		)
-		expected := `name: TestDescriptionString
+	description := NewDescription(
+		"TestDescriptionString",
+		"This is a description of a description used in a unit test.",
+		"https://provenance.io",
+		"https://provenance.io/ico.png",
+	)
+	expected := `name: TestDescriptionString
 description: This is a description of a description used in a unit test.
 website_url: https://provenance.io
 icon_url: https://provenance.io/ico.png
 `
-		actual := description.String()
-		// fmt.Printf("Actual:\n%s\n-----\n", actual)
-		require.Equal(t, expected, actual)
-	})
+	actual := description.String()
+	// fmt.Printf("Actual:\n%s\n-----\n", actual)
+	s.Equal(expected, actual)
 }
