@@ -157,11 +157,29 @@ message MsgAddScopeSpecificationRequest {
   option (gogoproto.goproto_getters)  = false;
 
   ScopeSpecification specification = 1;
-  string             notary        = 2;
+  repeated string    signers       = 2;
 }
 
 // MsgAddScopeSpecificationResponse from an add records request
 message MsgAddScopeSpecificationResponse {}
+
+// MsgRemoveScopeSpecificationRequest removes a scope specification
+message MsgRemoveScopeSpecificationRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  // Unique ID for the scope specification to remove.
+  bytes specification_id = 1 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customtype) = "MetadataAddress",
+    (gogoproto.moretags)   = "yaml:\"specification_id\""
+  ];
+  repeated string signers = 2;
+}
+// MsgRemoveScopeSpecificationResponse from a remove scope specification request
+message MsgRemoveScopeSpecificationResponse {}
 
 // MsgAddContractSpecificationRequest is a request to add a group of records to a scope
 message MsgAddContractSpecificationRequest {

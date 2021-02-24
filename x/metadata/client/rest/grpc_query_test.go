@@ -51,6 +51,14 @@ type IntegrationTestSuite struct {
 	specID   types.MetadataAddress
 }
 
+func ownerPartyList(addresses ...string) []types.Party {
+	retval := make([]types.Party, len(addresses))
+	for i, addr := range addresses {
+		retval[i] = types.Party{Address: addr, Role: types.PartyType_PARTY_TYPE_OWNER}
+	}
+	return retval
+}
+
 func (suite *IntegrationTestSuite) SetupSuite() {
 	suite.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
 	addr, err := sdk.AccAddressFromHex(suite.accountKey.PubKey().Address().String())
@@ -87,7 +95,7 @@ func (suite *IntegrationTestSuite) SetupSuite() {
 	suite.specUUID = uuid.New()
 	suite.specID = types.ScopeSpecMetadataAddress(suite.specUUID)
 
-	suite.scope = *metadatatypes.NewScope(suite.scopeID, suite.specID, []string{suite.user1}, []string{suite.user1}, suite.user1)
+	suite.scope = *metadatatypes.NewScope(suite.scopeID, suite.specID, ownerPartyList(suite.user1), []string{suite.user1}, suite.user1)
 	// Configure Genesis data for metadata module
 
 	var metadataData metadatatypes.GenesisState
