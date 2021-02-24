@@ -112,7 +112,7 @@ message InputSpecification {
   // name for this input
   string name = 1;
   // a type_name (typically a proto name or class_name)
-  string type_name = 2;
+  string type_name = 2 [(gogoproto.moretags) = "yaml:\"type_name\""];
   // source is either on chain (record_id) or off-chain (hash)
   oneof source {
     // the address of a record on chain (For Established Records)
