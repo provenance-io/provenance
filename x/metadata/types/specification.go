@@ -89,6 +89,39 @@ func (s ScopeSpecification) String() string {
 	return string(out)
 }
 
+// NewScopeSpecification creates a new ScopeSpecification instance.
+func NewContractSpecification(
+	specificationID MetadataAddress,
+	description *Description,
+	ownerAddresses []string,
+	partiesInvolved []PartyType,
+	source isContractSpecification_Source,
+	className string,
+	conditionSpecs []*RecordSpecification,
+) *ContractSpecification {
+	return &ContractSpecification{
+		SpecificationId: specificationID,
+		Description: description,
+		OwnerAddresses: ownerAddresses,
+		PartiesInvolved: partiesInvolved,
+		Source: source,
+		ClassName: className,
+		ConditionSpecs: conditionSpecs,
+	}
+}
+
+// ValidateBasic performs basic format checking of data in a ScopeSpecification
+func (s *ContractSpecification) ValidateBasic() error {
+	// TODO: complete this function.
+	return nil
+}
+
+// String implements stringer interface
+func (s ContractSpecification) String() string {
+	out, _ := yaml.Marshal(s)
+	return string(out)
+}
+
 // NewDescription creates a new Description instance.
 func NewDescription(name, description, websiteURL, iconURL string) *Description {
 	return &Description{
