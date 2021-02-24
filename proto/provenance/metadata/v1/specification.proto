@@ -29,7 +29,7 @@ option java_multiple_files = true;
 // added to the chain.
 //
 // Example:
-//   A ContractSpecification may list an input_spec that requires a Definition of type "fact" (indicating a reference
+//   A ContractSpecification may list a RecordSpecification that requires an input of type "Record" (indicating a reference
 //   to a scope/record must exist on chain) in order for a specific Consideration (process/method) to be executed and
 //   have an output_spec ultimately result in a record added to the scope.
 
