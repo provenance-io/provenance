@@ -116,7 +116,7 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 			"the ScopeSpecification must have at least one party involved",
 			true,
 		},
-		// contract spec ids - must all pass same tests as scope spec id (groupspec prefix)
+		// contract spec ids - must all pass same tests as scope spec id (contractspec prefix)
 		{
 			"contract spec ids - wrong address type at index 0",
 			NewScopeSpecification(
@@ -138,7 +138,7 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				[]MetadataAddress{ScopeMetadataAddress(uuid.New())},
 			),
-			"invalid contract specification id prefix at index 0 (expected: groupspec, got scope)",
+			"invalid contract specification id prefix at index 0 (expected: contractspec, got scope)",
 			true,
 		},
 		{
@@ -148,7 +148,7 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				nil,
 				[]string{specTestBech32},
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
-				[]MetadataAddress{GroupSpecMetadataAddress(uuid.New()), GroupSpecMetadataAddress(uuid.New()), MetadataAddress(specTestAddr)},
+				[]MetadataAddress{ContractSpecMetadataAddress(uuid.New()), ContractSpecMetadataAddress(uuid.New()), MetadataAddress(specTestAddr)},
 			),
 			"invalid contract specification id at index 2: invalid metadata address type (must be 0-4, actual: 133)",
 			true,
@@ -160,9 +160,9 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				nil,
 				[]string{specTestBech32},
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
-				[]MetadataAddress{GroupSpecMetadataAddress(uuid.New()), GroupSpecMetadataAddress(uuid.New()), ScopeMetadataAddress(uuid.New())},
+				[]MetadataAddress{ContractSpecMetadataAddress(uuid.New()), ContractSpecMetadataAddress(uuid.New()), ScopeMetadataAddress(uuid.New())},
 			),
-			"invalid contract specification id prefix at index 2 (expected: groupspec, got scope)",
+			"invalid contract specification id prefix at index 2 (expected: contractspec, got scope)",
 			true,
 		},
 		// Simple valid case
@@ -173,7 +173,7 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				nil,
 				[]string{specTestBech32},
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
-				[]MetadataAddress{GroupSpecMetadataAddress(uuid.New())},
+				[]MetadataAddress{ContractSpecMetadataAddress(uuid.New())},
 			),
 			"",
 			false,
@@ -526,7 +526,7 @@ func (s *specificationTestSuite) TestScopeSpecString() {
 			),
 			[]string{specTestBech32},
 			[]PartyType{PartyType_PARTY_TYPE_OWNER},
-			[]MetadataAddress{GroupSpecMetadataAddress(contractSpecUuid)},
+			[]MetadataAddress{ContractSpecMetadataAddress(contractSpecUuid)},
 		)
 		expected := `specification_id: scopespec1qnpqwjsrdak5q2dlutp6t6m7dzcscd7ff6
 description:
@@ -539,7 +539,7 @@ owner_addresses:
 parties_involved:
 - 5
 contract_spec_ids:
-- groupspec1qd2qmt038k7yc0azq46htdlhgwzquwslkg
+- contractspec1qd2qmt038k7yc0azq46htdlhgwzquwslkg
 `
 		actual := scopeSpec.String()
 		// fmt.Printf("Actual:\n%s\n-----\n", actual)

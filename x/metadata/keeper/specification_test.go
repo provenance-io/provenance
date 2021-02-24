@@ -60,8 +60,8 @@ func (s *ScopeSpecKeeperTestSuite) SetupTest() {
 	s.specUUID = uuid.New()
 	s.specID = types.ScopeSpecMetadataAddress(s.specUUID)
 
-	s.contractSpecID1 = types.GroupSpecMetadataAddress(uuid.New())
-	s.contractSpecID2 = types.GroupSpecMetadataAddress(uuid.New())
+	s.contractSpecID1 = types.ContractSpecMetadataAddress(uuid.New())
+	s.contractSpecID2 = types.ContractSpecMetadataAddress(uuid.New())
 
 	s.app = testApp
 	s.ctx = ctx
@@ -401,7 +401,7 @@ func (s *ScopeSpecKeeperTestSuite) TestIterateScopeSpecsForContractSpec() {
 		contractSpec2ScopeSpecIDs, contractSpec2ScopeSpecIDsIterated)
 
 	// Make sure an unknown contract spec results in zero iterations.
-	contractSpecID3 := types.GroupSpecMetadataAddress(uuid.New())
+	contractSpecID3 := types.ContractSpecMetadataAddress(uuid.New())
 	contractSpec3Count := 0
 	errContractSpec3 := s.app.MetadataKeeper.IterateScopeSpecsForContractSpec(s.ctx, contractSpecID3, func(specID types.MetadataAddress) (stop bool) {
 		contractSpec3Count++
@@ -431,7 +431,7 @@ func (s *ScopeSpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
 	store.Set(s.contractSpecID2, []byte{0x01})
 
 	otherScopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
-	otherContractSpecID := types.GroupSpecMetadataAddress(uuid.New())
+	otherContractSpecID := types.ContractSpecMetadataAddress(uuid.New())
 	tests := []struct {
 		name        string
 		existing    *types.ScopeSpecification

@@ -21,7 +21,7 @@ func (k Keeper) GetContractSpecification(ctx sdk.Context, id types.MetadataAddre
 	return spec, true
 }
 
-// SetContractSpecification stores a group specification in the module kv store.
+// SetContractSpecification stores a contract specification in the module kv store.
 func (k Keeper) SetContractSpecification(ctx sdk.Context, spec types.ContractSpecification) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryBare(&spec)

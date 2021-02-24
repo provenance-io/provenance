@@ -75,9 +75,9 @@ func (s *ScopeSpecification) ValidateBasic() error {
 		if err != nil {
 			return fmt.Errorf("invalid contract specification id at index %d: %w", i, err)
 		}
-		if prefix != PrefixGroupSpecification {
+		if prefix != PrefixContractSpecification {
 			return fmt.Errorf("invalid contract specification id prefix at index %d (expected: %s, got %s)",
-				i, PrefixGroupSpecification, prefix)
+				i, PrefixContractSpecification, prefix)
 		}
 	}
 	return nil
