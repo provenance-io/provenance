@@ -6,9 +6,10 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	//cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	v038auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v038"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/legacy/v039"
 	"github.com/tendermint/tendermint/crypto"
 	"gopkg.in/yaml.v2"
@@ -27,6 +28,44 @@ const (
 	AssetPermissions  = "deposit,withdraw"
 	ModuleName        = "marker"
 )
+
+// MarkerAccount defines a marker account interface for modules that interact with markers
+type MarkerAccountI interface {
+	v038auth.Account
+
+	Validate() error
+
+	GetDenom() string
+	GetManager() sdk.AccAddress
+	GetMarkerType() string
+
+	GetStatus() string
+	SetStatus(string) error
+
+	GetSupply() sdk.Coin
+	SetSupply(sdk.Coin) error
+
+	GrantAccess(AccessGrant) error
+	RevokeAccess(sdk.AccAddress) error
+
+	AddressHasPermission(sdk.AccAddress, string) bool
+	AddressListForPermission(string) []sdk.AccAddress
+}
+
+// AccessGrant defines an interface for interacting with roles assigned to a given address.
+type AccessGrantI interface {
+	Validate() error
+	GetAddress() sdk.AccAddress
+
+	HasPermission(string) bool
+	GetPermissions() []string
+
+	AddPermission(string) error
+	RemovePermission(string) error
+
+	MergeAdd(AccessGrant) error
+	MergeRemove(AccessGrant) error
+}
 
 // GenesisState is the initial marker module state.
 type GenesisState struct {
@@ -661,9 +700,8 @@ func MustGetMarkerAddress(denom string) sdk.AccAddress {
 }
 
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cryptocodec.RegisterCrypto(cdc)
-	cdc.RegisterInterface((*AccessGrant)(nil), nil)
-	cdc.RegisterInterface((*MarkerAccount)(nil), nil)
+	cdc.RegisterInterface((*AccessGrantI)(nil), nil)
+	cdc.RegisterInterface((*MarkerAccountI)(nil), nil)
 	cdc.RegisterConcrete(&MarkerAccount{}, "provenance/marker/Account", nil)
 	cdc.RegisterConcrete(&AccessGrant{}, "provenance/marker/AcccessGrant", nil)
 }
