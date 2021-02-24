@@ -2,6 +2,7 @@ package v040
 
 import (
 	"fmt"
+	"time"
 
 	metadatakeeper "github.com/provenance-io/provenance/x/metadata/keeper"
 	v039metadata "github.com/provenance-io/provenance/x/metadata/legacy/v039"
@@ -17,7 +18,7 @@ import (
 // - Convert addresses from bytes to bech32 strings.
 // - Re-encode in v0.40 GenesisState.
 func Migrate(oldGenState v039metadata.GenesisState) *v040metadata.GenesisState {
-	var scopes = make([]v040metadata.Scope, 0, len(oldGenState.ScopeRecords))
+	var scopes = make([]v040metadata.Scope, len(oldGenState.ScopeRecords))
 	var groups = make([]v040metadata.RecordGroup, 0)
 	var records = make([]v040metadata.Record, 0)
 	var groupSpecs = make([]v040metadata.GroupSpecification, 0)
@@ -66,20 +67,25 @@ func convertScope(
 // convertGroup uses the old scope uuid to create a collection of updated v040 RecordGroup instances that derived from
 // the groups in the old format
 func convertGroups(oldScopeUUID uuid.UUID, old []*v039metadata.RecordGroup) (newGroup []v040metadata.RecordGroup, newRecords []v040metadata.Record) {
-	newGroup = make([]v040metadata.RecordGroup, 0, len(old))
+	newGroup = make([]v040metadata.RecordGroup, len(old))
 	newRecords = make([]v040metadata.Record, 0)
 	for i, g := range old {
-		newGroup[i].Audit.CreatedBy = g.Audit.CreatedBy
-		newGroup[i].Audit.CreatedDate = g.Audit.CreatedDate
-		newGroup[i].Audit.Message = g.Audit.Message
-		newGroup[i].Audit.UpdatedBy = g.Audit.UpdatedBy
-		newGroup[i].Audit.UpdatedDate = g.Audit.UpdatedDate
-		newGroup[i].Audit.Version = uint32(g.Audit.Version)
-
+		if g.Audit != nil {
+			newGroup[i].Audit.CreatedBy = g.Audit.CreatedBy
+			if g.Audit.CreatedDate != nil {
+				newGroup[i].Audit.CreatedDate = time.Unix(g.Audit.CreatedDate.Seconds, 0)
+			}
+			newGroup[i].Audit.Message = g.Audit.Message
+			newGroup[i].Audit.UpdatedBy = g.Audit.UpdatedBy
+			if g.Audit.UpdatedDate != nil {
+				newGroup[i].Audit.UpdatedDate = time.Unix(g.Audit.UpdatedDate.Seconds, 0)
+			}
+			newGroup[i].Audit.Version = uint32(g.Audit.Version)
+		}
 		newGroup[i].GroupId = v040metadata.GroupMetadataAddress(oldScopeUUID, uuid.MustParse(g.GroupUuid.Value))
 		newGroup[i].Name = g.Classname
 		newGroup[i].Parties = convertParties(g.Parties)
-		specAddr, err := v040metadata.ConvertHashToAddress(v040metadata.GroupKeyPrefix, g.Specification)
+		specAddr, err := v040metadata.ConvertHashToAddress(v040metadata.GroupSpecificationPrefix, g.Specification)
 		if err != nil {
 			panic(err)
 		}
@@ -93,7 +99,7 @@ func convertGroups(oldScopeUUID uuid.UUID, old []*v039metadata.RecordGroup) (new
 // convertRecords converts the v039 Records within a RecordGroup structure to the updated independent record assigning
 // each using the groupID provided.
 func convertRecords(groupID v040metadata.MetadataAddress, old []*v039metadata.Record) (new []v040metadata.Record) {
-	new = make([]v040metadata.Record, 0, len(old))
+	new = make([]v040metadata.Record, len(old))
 	for i, r := range old {
 		new[i] = v040metadata.Record{
 			Name:    r.ResultName,
@@ -120,7 +126,7 @@ func convertRecords(groupID v040metadata.MetadataAddress, old []*v039metadata.Re
 // convertRecordInput converts the v039 RecordInput structure to the v040 RecordInput by mapping the old enums directly
 // to the new ones (codes are preserved) and settings the source using the hash option (address was not supported)
 func convertRecordInput(old []*v039metadata.RecordInput) (new []v040metadata.RecordInput) {
-	new = make([]v040metadata.RecordInput, 0, len(old))
+	new = make([]v040metadata.RecordInput, len(old))
 	for i, input := range old {
 		new[i] = v040metadata.RecordInput{
 			Name:     input.Name,
@@ -147,7 +153,7 @@ func partyAddresses(parties []v040metadata.Party) (addresses []string) {
 // convertParties converts the v039 Recital structure into a v040 Party by calculating the address (as required) and
 // copying over the existing party role value into the new structure
 func convertParties(old []*v039metadata.Recital) (new []v040metadata.Party) {
-	new = make([]v040metadata.Party, 0, len(old))
+	new = make([]v040metadata.Party, len(old))
 	for i, r := range old {
 		if len(r.Address) > 0 {
 			new[i].Address = sdk.AccAddress(r.Address).String()
@@ -268,10 +274,10 @@ func BackportScope(
 			Specification: specHash,
 			Audit: &v039metadata.AuditFields{
 				CreatedBy:   t.Audit.CreatedBy,
-				CreatedDate: t.Audit.CreatedDate,
+				CreatedDate: &v039metadata.GogoTimeHack{Seconds: t.Audit.CreatedDate.Unix()},
 				Message:     t.Audit.Message,
 				UpdatedBy:   t.Audit.UpdatedBy,
-				UpdatedDate: t.Audit.UpdatedDate,
+				UpdatedDate: &v039metadata.GogoTimeHack{Seconds: t.Audit.UpdatedDate.Unix()},
 				Version:     int32(t.Audit.Version),
 			},
 		})
