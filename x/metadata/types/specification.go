@@ -103,12 +103,12 @@ func NewContractSpecification(
 ) *ContractSpecification {
 	return &ContractSpecification{
 		SpecificationId: specificationID,
-		Description: description,
-		OwnerAddresses: ownerAddresses,
+		Description:     description,
+		OwnerAddresses:  ownerAddresses,
 		PartiesInvolved: partiesInvolved,
-		Source: source,
-		ClassName: className,
-		ConditionSpecs: conditionSpecs,
+		Source:          source,
+		ClassName:       className,
+		ConditionSpecs:  conditionSpecs,
 	}
 }
 
