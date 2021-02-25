@@ -12,7 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	v039name "github.com/provenance-io/provenance/x/name/legacy/v039"
-	v040 "github.com/provenance-io/provenance/x/name/legacy/v040"
+	v040name "github.com/provenance-io/provenance/x/name/legacy/v040"
 )
 
 func TestMigrate(t *testing.T) {
@@ -25,7 +25,7 @@ func TestMigrate(t *testing.T) {
 
 	addr1, err := sdk.AccAddressFromBech32("cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv")
 	superBadAddr, err := sdk.AccAddressFromBech32("cosmos14n2lmufqep8qmn98yhtmy4uwsd7msmpfkr8vfd")
-	name := "mcvluvin"
+	name := "mcvluvin.io"
 	restricted := false
 	require.NoError(t, err)
 
@@ -40,7 +40,7 @@ func TestMigrate(t *testing.T) {
 		},
 	}
 
-	migrated := v040.Migrate(gs)
+	migrated := v040name.Migrate(gs)
 	expected := fmt.Sprintf(`{
   "bindings": [
     {
