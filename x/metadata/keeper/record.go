@@ -92,10 +92,10 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing, proposed types.R
 		return err
 	}
 
-	scopeId := types.ScopeMetadataAddress(scopeUUID)
+	scopeID := types.ScopeMetadataAddress(scopeUUID)
 
 	// get scope for existing record
-	scope, found := k.GetScope(ctx, scopeId)
+	scope, found := k.GetScope(ctx, scopeID)
 	if !found {
 		return fmt.Errorf("scope not found for scope uuid %s", scopeUUID)
 	}
@@ -120,7 +120,7 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing, proposed types.R
 		}
 	}
 
-	//TODO finish full validation of update once specs are complete
+	// TODO finish full validation of update once specs are complete
 
 	return nil
 }

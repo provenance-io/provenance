@@ -149,10 +149,10 @@ func (rg RecordGroup) String() string {
 }
 
 // NewRecord creates new instance of Record
-func NewRecord(name string, groupId MetadataAddress, process Process, inputs []RecordInput, outputs []RecordOutput) *Record {
+func NewRecord(name string, groupID MetadataAddress, process Process, inputs []RecordInput, outputs []RecordOutput) *Record {
 	return &Record{
 		Name:    name,
-		GroupId: groupId,
+		GroupId: groupID,
 		Process: process,
 		Inputs:  inputs,
 		Outputs: outputs,
