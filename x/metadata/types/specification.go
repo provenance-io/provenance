@@ -112,6 +112,16 @@ func NewContractSpecification(
 	}
 }
 
+// NewSourceResourceID creates a new source (for a ContractSpecification) with a resource id
+func NewSourceResourceID(resourceId MetadataAddress) *ContractSpecification_ResourceId {
+	return &ContractSpecification_ResourceId{ResourceId: resourceId}
+}
+
+// NewSourceHash creates a new source (for a ContractSpecification) with a hash
+func NewSourceHash(hash string) *ContractSpecification_Hash {
+	return &ContractSpecification_Hash{Hash: hash}
+}
+
 // ValidateBasic performs basic format checking of data in a ScopeSpecification
 func (s *ContractSpecification) ValidateBasic() error {
 	prefix, err := VerifyMetadataAddressFormat(s.SpecificationId)
