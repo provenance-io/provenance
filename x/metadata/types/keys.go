@@ -136,4 +136,3 @@ func GetAddressContractSpecCacheIteratorPrefix(addr sdk.AccAddress) []byte {
 func GetAddressContractSpecCacheKey(addr sdk.AccAddress, contractSpecID MetadataAddress) []byte {
 	return append(GetAddressContractSpecCacheIteratorPrefix(addr), contractSpecID.Bytes()...)
 }
-
