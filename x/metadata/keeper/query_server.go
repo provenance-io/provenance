@@ -90,7 +90,7 @@ func (k Keeper) Record(c context.Context, req *types.RecordRequest) (*types.Reco
 	}
 
 	records := []*types.Record{}
-	k.IterateRecords(ctx, types.ScopeMetadataAddress(id), func(r types.Record) (stop bool) {
+	err = k.IterateRecords(ctx, types.ScopeMetadataAddress(id), func(r types.Record) (stop bool) {
 		if req.Name == "" {
 			records = append(records, &r)
 		} else if req.Name == r.Name {
@@ -98,6 +98,9 @@ func (k Keeper) Record(c context.Context, req *types.RecordRequest) (*types.Reco
 		}
 		return false
 	})
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to iterate records: %s", err.Error())
+	}
 
 	return &types.RecordResponse{ScopeId: req.ScopeId, Records: records}, nil
 }
