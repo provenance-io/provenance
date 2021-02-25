@@ -1,7 +1,6 @@
 package v040
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -18,10 +17,6 @@ import (
 func Migrate(oldGenState v039marker.GenesisState) *v040marker.GenesisState {
 	var markerAccounts = make([]v040marker.MarkerAccount, 0, len(oldGenState.Markers))
 	for _, mark := range oldGenState.Markers {
-		markerType := v040marker.MarkerType_value["MARKER_TYPE_"+strings.ToUpper(mark.MarkerType)]
-		if markerType == int32(v040marker.MarkerType_Unknown) {
-			panic(fmt.Sprintf("unknown marker type %s", mark.MarkerType))
-		}
 		markerAccounts = append(markerAccounts, v040marker.MarkerAccount{
 			BaseAccount: &types.BaseAccount{
 				Address:       mark.Address.String(),
@@ -33,7 +28,7 @@ func Migrate(oldGenState v039marker.GenesisState) *v040marker.GenesisState {
 			Denom:         mark.Denom,
 			Supply:        mark.GetSupply().Amount,
 			AccessControl: migrateAccess(mark.AccessControls),
-			// v039 only supported COIN type
+			// v039 only supported COIN type (ignore previous values as untyped field held trash)
 			MarkerType: v040marker.MarkerType_Coin,
 		})
 	}

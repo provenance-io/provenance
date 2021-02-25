@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	ModuleName = "metadata"
+	ModuleName     = "metadata"
+	SpecModuleName = "spec"
 )
 
 // RegisterLegacyAminoCodec registers the necessary x/distribution interfaces and concrete types

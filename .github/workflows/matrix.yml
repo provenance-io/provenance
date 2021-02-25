@@ -1,0 +1,71 @@
+name: Provenance Matrix
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"     # Push events to matching v*, i.e. v1.0, v20.15.10
+      - "v[0-9]+.[0-9]+.[0-9]+-rc*" # Push events to matching v*, i.e. v1.0-rc1, v20.15.10-rc5
+
+jobs:
+  #  This action cleans up previously running instances of a workflow on the same branch. This accomplishes
+  #  the task of automatically cancelling CI runs on pushes to the same branch, which is a common feature in
+  #  most CI systems but currently not possible with GitHub actions.
+  cleanup-runs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: rokroskar/workflow-run-cleanup-action@master
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+    if: "!startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/main'"
+
+  build:
+    runs-on: ubuntu-latest
+    name: Build Linux
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install leveldb
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libleveldb-dev
+      - name: Setup go
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.15
+      - name: Vendor and Compile
+        run: make vendor build
+      - name: Create release ${{ github.ref }}
+        uses: actions/create-release@v1
+        id: create_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: true
+          prerelease: false
+          body_path: RELEASE_CHANGELOG.md
+      - name: Ensure exe
+        run: |
+          chmod +x build/provenanced
+      - name: Pull libwasmvm
+        run: |
+          cp vendor/github.com/CosmWasm/wasmvm/api/libwasmvm.so build/
+      - name: Checksum
+        run: |
+          cd build
+          shasum -a 256 provenanced libwasmvm.so > sha256sums.txt
+          cd ..
+      - name: Create zip
+        run: |
+          zip -j provenance-linux-amd64.zip build/provenanced build/libwasmvm.so build/sha256sums.txt
+      - name: Upload release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./provenance-linux-amd64.zip
+          asset_name: provenance-linux-amd64.zip
+          asset_content_type: application/octet-stream
