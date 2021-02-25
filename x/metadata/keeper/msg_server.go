@@ -94,7 +94,7 @@ func (k msgServer) RemoveScopeSpecification(
 	if !found {
 		return nil, fmt.Errorf("scope specification not found with id %s", msg.SpecificationId)
 	}
-	if err := k.ValidateScopeSpecAllOwnersAreSigners(existing, msg.Signers); err != nil {
+	if err := k.ValidateAllOwnersAreSigners(existing.OwnerAddresses, msg.Signers); err != nil {
 		return nil, err
 	}
 

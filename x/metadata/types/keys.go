@@ -46,6 +46,8 @@ const (
 // - 0x13<owner_address><scope_spec_id>: 0x01
 //
 // - 0x14<contract_spec_id><scope_spec_id>: 0x01
+//
+// - 0x15<owner_address><contract_spec_id>: 0x01
 var (
 	// ScopeKeyPrefix is the key for scope records in metadata store
 	ScopeKeyPrefix = []byte{0x00}
@@ -71,6 +73,8 @@ var (
 	AddressScopeSpecCacheKeyPrefix = []byte{0x13}
 	// ContractSpecScopeSpecCacheKeyPrefix for scope spec lookup by contract spec
 	ContractSpecScopeSpecCacheKeyPrefix = []byte{0x14}
+	// AddressContractSpecCacheKeyPrefix for contract spec lookup by address
+	AddressContractSpecCacheKeyPrefix = []byte{0x15}
 )
 
 // GetAddressScopeCacheIteratorPrefix returns an iterator prefix for all scope cache entries assigned to a given address
@@ -122,3 +126,14 @@ func GetContractSpecScopeSpecCacheIteratorPrefix(contractSpecID MetadataAddress)
 func GetContractSpecScopeSpecCacheKey(contractSpecID MetadataAddress, scopeSpecID MetadataAddress) []byte {
 	return append(GetContractSpecScopeSpecCacheIteratorPrefix(contractSpecID), scopeSpecID.Bytes()...)
 }
+
+// GetAddressContractSpecCacheIteratorPrefix returns an iterator prefix for all contract spec cache entries assigned to a given address
+func GetAddressContractSpecCacheIteratorPrefix(addr sdk.AccAddress) []byte {
+	return append(AddressContractSpecCacheKeyPrefix, addr.Bytes()...)
+}
+
+// GetAddressContractSpecCacheKey returns the store key for an address + contract spec cache entry
+func GetAddressContractSpecCacheKey(addr sdk.AccAddress, contractSpecID MetadataAddress) []byte {
+	return append(GetAddressContractSpecCacheIteratorPrefix(addr), contractSpecID.Bytes()...)
+}
+
