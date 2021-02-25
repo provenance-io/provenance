@@ -151,7 +151,7 @@ func (k Keeper) ValidateContractSpecUpdate(ctx sdk.Context, existing, proposed t
 	// IDS must match
 	if len(existing.SpecificationId) > 0 {
 		if !proposed.SpecificationId.Equals(existing.SpecificationId) {
-			return fmt.Errorf("cannot update scope spec identifier. expected %s, got %s",
+			return fmt.Errorf("cannot update contract spec identifier. expected %s, got %s",
 				existing.SpecificationId, proposed.SpecificationId)
 		}
 	}
