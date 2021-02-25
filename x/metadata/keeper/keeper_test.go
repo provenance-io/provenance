@@ -332,6 +332,60 @@ func (s *KeeperTestSuite) TestMetadataRecordIterator() {
 	s.Equal(10, count, "iterator should return a full list of records")
 
 }
+func (s *KeeperTestSuite) TestValidateRecordUpdate() {
+	scope := types.NewScope(s.scopeID, s.specID, ownerPartyList(s.user1), []string{s.user1}, s.user1)
+	s.app.MetadataKeeper.SetScope(s.ctx, *scope)
+
+	process := types.NewProcess("processname", &types.Process_Hash{Hash: "HASH"}, "process_method")
+	record := types.NewRecord(s.recordName, s.groupId, *process, []types.RecordInput{}, []types.RecordOutput{})
+
+	randomScopeUUID := uuid.New()
+	randomGroupId := types.GroupMetadataAddress(randomScopeUUID, uuid.New())
+
+	cases := map[string]struct {
+		existing types.Record
+		proposed types.Record
+		signers  []string
+		wantErr  bool
+		errorMsg string
+	}{
+		"Nil previous, proposed throws address error": {
+			existing: types.Record{},
+			proposed: types.Record{},
+			signers:  []string{s.user1},
+			wantErr:  true,
+			errorMsg: "incorrect address length (must be at least 17, actual: 0)",
+		},
+		"both valid records, scope not found": {
+			existing: *types.NewRecord(s.recordName, randomGroupId, *process, []types.RecordInput{}, []types.RecordOutput{}),
+			proposed: *record,
+			signers:  []string{s.user1},
+			wantErr:  true,
+			errorMsg: fmt.Sprintf("scope not found for scope uuid %s", randomScopeUUID),
+		},
+		"missing signature from existing owner ": {
+			existing: *record,
+			proposed: *record,
+			signers:  []string{},
+			wantErr:  true,
+			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1),
+		},
+	}
+
+	for n, tc := range cases {
+		tc := tc
+
+		s.Run(n, func() {
+			err := s.app.MetadataKeeper.ValidateRecordUpdate(s.ctx, tc.existing, tc.proposed, tc.signers)
+			if tc.wantErr {
+				s.Error(err)
+				s.Equal(tc.errorMsg, err.Error())
+			} else {
+				s.NoError(err)
+			}
+		})
+	}
+}
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))

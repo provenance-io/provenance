@@ -77,3 +77,50 @@ func (k Keeper) IterateRecords(ctx sdk.Context, scopeID types.MetadataAddress, h
 	}
 	return nil
 }
+
+// ValidateRecordUpdate checks the current record and the proposed record to determine if the the proposed changes are valid
+// based on the existing state
+func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing, proposed types.Record, signers []string) error {
+	// get scope, collect required signers, get session (if it exists, if it is a new one make sure the contract-spec is allowed if restricted via scope spec), collect signers from that contract spec… verify update is correctly signed… pull record specification, check against the record update (this is a name match lookup against record name)
+
+	if err := proposed.ValidateBasic(); err != nil {
+		return err
+	}
+
+	scopeUUID, err := existing.GroupId.ScopeUUID()
+	if err != nil {
+		return err
+	}
+
+	scopeId := types.ScopeMetadataAddress(scopeUUID)
+
+	// get scope for existing record
+	scope, found := k.GetScope(ctx, scopeId)
+	if !found {
+		return fmt.Errorf("scope not found for scope uuid %s", scopeUUID)
+	}
+
+	// Validate any changes to the ValueOwner property.
+	requiredSignatures := []string{}
+	for _, p := range scope.Owners {
+		requiredSignatures = append(requiredSignatures, p.Address)
+	}
+
+	// Signatures required of all existing data owners.
+	for _, owner := range requiredSignatures {
+		found := false
+		for _, signer := range signers {
+			if owner == signer {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("missing signature from existing owner %s; required for update", owner)
+		}
+	}
+
+	//TODO finish full validation of update once specs are complete
+
+	return nil
+}

@@ -142,11 +142,11 @@ func (k msgServer) AddRecord(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, ""),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Notary),
 		),
 	)
 
-	return nil, fmt.Errorf("not implemented")
+	return &types.MsgAddRecordResponse{}, nil
 }
 
 func (k msgServer) AddRecordGroup(
@@ -184,8 +184,8 @@ func (k msgServer) AddScope(
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeScopeCreated,
-			sdk.NewAttribute(types.AttributeKeyScopeID, string(msg.Scope.ScopeId)),
-			sdk.NewAttribute(types.AttributeKeyScope, string(msg.Scope.SpecificationId)),
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
 		),
 	)
 
