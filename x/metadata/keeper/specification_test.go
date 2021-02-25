@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
@@ -618,7 +619,7 @@ func (s *ScopeSpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
 		s.T().Run(tt.name, func(t *testing.T) {
 			err := s.app.MetadataKeeper.ValidateScopeSpecUpdate(s.ctx, *tt.existing, *tt.proposed, tt.signers)
 			if err != nil {
-				s.Equal(tt.want, err.Error(), "ScopeSpec Keeper ValidateScopeSpecUpdate error")
+				require.Equal(t, tt.want, err.Error(), "ScopeSpec Keeper ValidateScopeSpecUpdate error")
 			} else if len(tt.want) > 0 {
 				t.Errorf("ScopeSpec Keeper ValidateScopeSpecUpdate error = nil, expected: %s", tt.want)
 			}
@@ -736,7 +737,7 @@ func (s *ScopeSpecKeeperTestSuite) TestValidateScopeSpecAllOwnersAreSigners() {
 		s.T().Run(tt.name, func(t *testing.T) {
 			err := s.app.MetadataKeeper.ValidateScopeSpecAllOwnersAreSigners(*tt.scopeSpec, tt.signers)
 			if err != nil {
-				s.Equal(tt.want, err.Error(), "ScopeSpec Keeper ValidateScopeSpecAllOwnersAreSigners error")
+				require.Equal(t, tt.want, err.Error(), "ScopeSpec Keeper ValidateScopeSpecAllOwnersAreSigners error")
 			} else if len(tt.want) > 0 {
 				t.Errorf("ScopeSpec Keeper ValidateScopeSpecAllOwnersAreSigners error = nil, expected: %s", tt.want)
 			}
