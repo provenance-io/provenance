@@ -26,6 +26,9 @@ func (k Keeper) SetContractSpecification(ctx sdk.Context, spec types.ContractSpe
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryBare(&spec)
 	store.Set(spec.SpecificationId, b)
+	// TODO: add extra indexing
+	// TODO: publish event
+
 }
 
 // IterateScopeSpecs processes all scope specs using a given handler.
@@ -97,7 +100,6 @@ func (k Keeper) GetScopeSpecification(ctx sdk.Context, id types.MetadataAddress)
 func (k Keeper) SetScopeSpecification(ctx sdk.Context, spec types.ScopeSpecification) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryBare(&spec)
-	store.Set(spec.SpecificationId, b)
 
 	eventType := types.EventTypeScopeSpecificationCreated
 	if store.Has(spec.SpecificationId) {
