@@ -143,6 +143,9 @@ func (s *ContractSpecification) ValidateBasic() error {
 	if len(s.PartiesInvolved) == 0 {
 		return fmt.Errorf("invalid parties involved count (expected > 0 got: %d)", len(s.PartiesInvolved))
 	}
+	if s.Source == nil {
+		return errors.New("a source is required")
+	}
 	switch source := s.Source.(type) {
 	case *ContractSpecification_ResourceId:
 		_, err = VerifyMetadataAddressFormat(source.ResourceId)
