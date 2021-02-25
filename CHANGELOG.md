@@ -38,6 +38,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Update `Scope` proto: change field `owner_address` to `owners` #89
 * Add support for migrating Marker Accesslist from v39 to v40 #46.
 * Add support for creating, updating, removing, finding, and iterating over `ScopeSpecification`s #56
+* Add support for creating, updating, removing, finding, and iterating over `Record`s #54
 
 ## [v0.1.3](https://github.com/provenance-io/provenance/releases/tag/v0.1.3) - 2021-02-12
 
