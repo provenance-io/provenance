@@ -146,7 +146,10 @@ func (s *QueryServerTestSuite) TestRecordQuery() {
 		app.MetadataKeeper.SetRecord(ctx, *record)
 	}
 
-	_, err := queryClient.Record(gocontext.Background(), &types.RecordRequest{})
+	_, err := queryClient.Record(gocontext.Background(), nil)
+	s.EqualError(err, "rpc error: code = InvalidArgument desc = empty request")
+
+	_, err = queryClient.Record(gocontext.Background(), &types.RecordRequest{})
 	s.EqualError(err, "rpc error: code = InvalidArgument desc = scope id cannot be empty")
 
 	_, err = queryClient.Record(gocontext.Background(), &types.RecordRequest{ScopeId: "6332c1a4-foo1-bare-895b-invalid65cb6"})

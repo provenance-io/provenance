@@ -17,7 +17,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgAddScopeRequest:
 			res, err := msgServer.AddScope(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgRemoveScopeRequest:
+		case *types.MsgDeleteScopeRequest:
 			res, err := msgServer.DeleteScope(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 		case *types.MsgAddRecordRequest:

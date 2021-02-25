@@ -194,8 +194,8 @@ func (k msgServer) AddScope(
 
 func (k msgServer) DeleteScope(
 	goCtx context.Context,
-	msg *types.MsgRemoveScopeRequest,
-) (*types.MsgRemoveScopeResponse, error) {
+	msg *types.MsgDeleteScopeRequest,
+) (*types.MsgDeleteScopeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	existing, _ := k.GetScope(ctx, msg.ScopeId)
@@ -213,5 +213,5 @@ func (k msgServer) DeleteScope(
 		),
 	)
 
-	return &types.MsgRemoveScopeResponse{}, nil
+	return &types.MsgDeleteScopeResponse{}, nil
 }

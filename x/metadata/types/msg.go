@@ -12,7 +12,7 @@ const (
 	TypeMsgMemorializeContractRequest      = "memorialize_contract_request"
 	TypeMsgChangeOwnershipRequest          = "change_ownershipr_equest"
 	TypeMsgAddScopeRequest                 = "add_scope_request"
-	TypeMsgRemoveScopeRequest              = "remove_scope_request"
+	TypeMsgDeleteScopeRequest              = "remove_scope_request"
 	TypeMsgAddRecordGroupRequest           = "add_recordgroup_request"
 	TypeMsgAddRecordRequest                = "add_record_request"
 	TypeMsgAddScopeSpecificationRequest    = "add_scope_specification_request"
@@ -29,7 +29,7 @@ var (
 	_ sdk.Msg = &MsgAddRecordRequest{}
 	_ sdk.Msg = &MsgAddScopeSpecificationRequest{}
 	_ sdk.Msg = &MsgAddGroupSpecificationRequest{}
-	_ sdk.Msg = &MsgRemoveScopeRequest{}
+	_ sdk.Msg = &MsgDeleteScopeRequest{}
 )
 
 // private method to convert an array of strings into an array of Acc Addresses.
@@ -209,37 +209,37 @@ func (msg MsgAddScopeRequest) ValidateBasic() error {
 
 // ----------------------------------------------------------------------
 
-// NewMsgRemoveScopeRequest creates a new msg instance
-func NewMsgRemoveScopeRequest(scopeID MetadataAddress, signers []string) *MsgRemoveScopeRequest {
-	return &MsgRemoveScopeRequest{
+// NewMsgDeleteScopeRequest creates a new msg instance
+func NewMsgDeleteScopeRequest(scopeID MetadataAddress, signers []string) *MsgDeleteScopeRequest {
+	return &MsgDeleteScopeRequest{
 		ScopeId: scopeID,
 		Signers: signers,
 	}
 }
 
-func (msg MsgRemoveScopeRequest) String() string {
+func (msg MsgDeleteScopeRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
 // Route returns the module route
-func (msg MsgRemoveScopeRequest) Route() string { return ModuleName }
+func (msg MsgDeleteScopeRequest) Route() string { return ModuleName }
 
 // Type returns the type name for this msg
-func (msg MsgRemoveScopeRequest) Type() string { return TypeMsgRemoveScopeRequest }
+func (msg MsgDeleteScopeRequest) Type() string { return TypeMsgDeleteScopeRequest }
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
-func (msg MsgRemoveScopeRequest) GetSigners() []sdk.AccAddress {
+func (msg MsgDeleteScopeRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
 }
 
 // GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgRemoveScopeRequest) GetSignBytes() []byte {
+func (msg MsgDeleteScopeRequest) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
-func (msg MsgRemoveScopeRequest) ValidateBasic() error {
+func (msg MsgDeleteScopeRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}

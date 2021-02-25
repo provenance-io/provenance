@@ -130,7 +130,7 @@ func RemoveMetadataScopeCmd() *cobra.Command {
 				}
 			}
 
-			deleteScope := *types.NewMsgRemoveScopeRequest(scopeMetaAddress, signers)
+			deleteScope := *types.NewMsgDeleteScopeRequest(scopeMetaAddress, signers)
 			if err := deleteScope.ValidateBasic(); err != nil {
 				fmt.Printf("Failed to validate remove scope %s : %v", deleteScope.String(), err)
 				return err
