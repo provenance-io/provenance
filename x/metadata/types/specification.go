@@ -11,10 +11,12 @@ import (
 
 const (
 	// TODO: Move these to params.
-	// Default max length for description.name
+	// Default max length for Description.Name
 	maxDescriptionNameLength = 200
-	// Default max length for description.description
+	// Default max length for Description.Description
 	maxDescriptionDescriptionLength = 5000
+	// Default max length for a ContractSpecification.ClassName
+	maxContractSpecificationClassNameLength = 1000
 	// Default max url length
 	maxURLLength = 2048
 )
@@ -112,7 +114,63 @@ func NewContractSpecification(
 
 // ValidateBasic performs basic format checking of data in a ScopeSpecification
 func (s *ContractSpecification) ValidateBasic() error {
-	// TODO: complete this function.
+	prefix, err := VerifyMetadataAddressFormat(s.SpecificationId)
+	if err != nil {
+		return fmt.Errorf("invalid contract specification id: %w", err)
+	}
+	if prefix != PrefixContractSpecification {
+		return fmt.Errorf("invalid contract specification id prefix (expected: %s, got %s)", PrefixContractSpecification, prefix)
+	}
+	if s.Description != nil {
+		err = s.Description.ValidateBasic("ContractSpecification.Description")
+		if err != nil {
+			return err
+		}
+	}
+	if len(s.OwnerAddresses) == 0 {
+		return fmt.Errorf("invalid owner addresses count (expected > 0 got: %d)", len(s.OwnerAddresses))
+	}
+	for i, owner := range s.OwnerAddresses {
+		if _, err = sdk.AccAddressFromBech32(owner); err != nil {
+			return fmt.Errorf("invalid owner address at index %d: %w", i, err)
+		}
+	}
+	for i, owner := range s.OwnerAddresses {
+		if _, err = sdk.AccAddressFromBech32(owner); err != nil {
+			return fmt.Errorf("invalid owner address at index %d: %w", i, err)
+		}
+	}
+	if len(s.PartiesInvolved) == 0 {
+		return fmt.Errorf("invalid parties involved count (expected > 0 got: %d)", len(s.PartiesInvolved))
+	}
+	switch source := s.Source.(type) {
+	case *ContractSpecification_ResourceId:
+		_, err = VerifyMetadataAddressFormat(source.ResourceId)
+		if err != nil {
+			return fmt.Errorf("invalid source resource id: %w", err)
+		}
+	case *ContractSpecification_Hash:
+		if len(source.Hash) == 0 {
+			return errors.New("source hash cannot be empty")
+		}
+	default:
+		return errors.New("unknown source type")
+	}
+	if len(s.ClassName) == 0 {
+		return errors.New("class name cannot be empty")
+	}
+	if len(s.ClassName) > maxContractSpecificationClassNameLength {
+		return fmt.Errorf("class name exceeds maximum length (expected <= %d got: %d)",
+			maxContractSpecificationClassNameLength, len(s.ClassName))
+	}
+	if len(s.ConditionSpecs) == 0 {
+		return fmt.Errorf("invalid condition specs count (expected > 0 got: %d)", len(s.ConditionSpecs))
+	}
+	for i, c := range s.ConditionSpecs {
+		if err = c.ValidateBasic(); err != nil {
+			return fmt.Errorf("invalid condition spec at index %d: %w", i, err)
+		}
+	}
 	return nil
 }
 
@@ -120,6 +178,11 @@ func (s *ContractSpecification) ValidateBasic() error {
 func (s ContractSpecification) String() string {
 	out, _ := yaml.Marshal(s)
 	return string(out)
+}
+
+func (s *RecordSpecification) ValidateBasic() error {
+	// TODO: implement
+	return nil
 }
 
 // NewDescription creates a new Description instance.
