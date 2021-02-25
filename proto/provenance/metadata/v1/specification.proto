@@ -35,19 +35,30 @@ option java_multiple_files = true;
 
 // ScopeSpecification defines the required parties, resources, conditions, and consideration outputs for a contract
 message ScopeSpecification {
+  option (gogoproto.goproto_stringer) = false;
+
   // unique identifier for this specification on chain
   bytes specification_id = 1 [
     (gogoproto.nullable)   = false,
     (gogoproto.customtype) = "MetadataAddress",
     (gogoproto.moretags)   = "yaml:\"specification_id\""
   ];
-  // The definition references points to a an asset on or off chain that is associated with this metadata.  Example:
-  // A software program or library hash
-  Definition definition = 2;
+  // General information about this scope specification.
+  Description description = 2;
+  // Addresses of the owners of this scope specification.
+  repeated string owner_addresses = 3 [
+    (gogoproto.moretags)   = "yaml:\"owner_addresses\""
+  ];
   // A list of parties that must be present on a scope (and their associated roles)
-  repeated PartyType parties_involved = 3;
-  // A list of allowed group specifications for this scope
-  repeated GroupSpecification group_specs = 4;
+  repeated PartyType parties_involved = 4 [
+    (gogoproto.moretags)   = "yaml:\"parties_involved\""
+  ];
+  // A list of contract specification ids allowed for a scope based on this specification.
+  repeated bytes contract_spec_ids = 5 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customtype) = "MetadataAddress",
+    (gogoproto.moretags)   = "yaml:\"contract_spec_ids\""
+  ];
 }
 
 // GroupSpecification defines the required parties, resources, conditions, and consideration outputs for a contract
@@ -89,6 +100,24 @@ message ContractSpec {
   // a colleciton of method/process specifications that when performed and documented by responsible parties listed
   // above, result in adding a new record to the scope as defined in the output_spec
   repeated ConsiderationSpec consideration_specs = 5;
+}
+
+// Description holds general information that is handy to associate with a structure.
+message Description {
+  option (gogoproto.goproto_stringer) = false;
+
+  // A Name for this thing.
+  string name = 1;
+  // A description of this thing.
+  string description = 3;
+  // URL to find even more info.
+  string website_url = 4 [
+    (gogoproto.moretags)   = "yaml:\"website_url\""
+  ];
+  // URL of an icon.
+  string icon_url = 5 [
+    (gogoproto.moretags)   = "yaml:\"icon_url\""
+  ];
 }
 
 // Definition encapsulates the information required to uniquely associate a resource with a type and location

@@ -1,7 +1,6 @@
 package v040
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -18,22 +17,18 @@ import (
 func Migrate(oldGenState v039marker.GenesisState) *v040marker.GenesisState {
 	var markerAccounts = make([]v040marker.MarkerAccount, 0, len(oldGenState.Markers))
 	for _, mark := range oldGenState.Markers {
-		markerType := v040marker.MarkerType_value["MARKER_TYPE_"+strings.ToUpper(mark.MarkerType)]
-		if markerType == int32(v040marker.MarkerType_Unknown) {
-			panic(fmt.Sprintf("unknown marker type %s", mark.MarkerType))
-		}
 		markerAccounts = append(markerAccounts, v040marker.MarkerAccount{
 			BaseAccount: &types.BaseAccount{
 				Address:       mark.Address.String(),
 				AccountNumber: mark.AccountNumber,
 				Sequence:      mark.Sequence,
 			},
-			Manager: mark.Manager.String(),
-			Status:  v040marker.MustGetMarkerStatus(mark.GetStatus()),
-			Denom:   mark.Denom,
-			Supply:  mark.GetSupply().Amount,
-			// TODO PORT ACCESS LIST
-			// v039 only supported COIN type
+			Manager:       mark.Manager.String(),
+			Status:        v040marker.MustGetMarkerStatus(mark.GetStatus()),
+			Denom:         mark.Denom,
+			Supply:        mark.GetSupply().Amount,
+			AccessControl: migrateAccess(mark.AccessControls),
+			// v039 only supported COIN type (ignore previous values as untyped field held trash)
 			MarkerType: v040marker.MarkerType_Coin,
 		})
 	}
@@ -44,4 +39,18 @@ func Migrate(oldGenState v039marker.GenesisState) *v040marker.GenesisState {
 		},
 		Markers: markerAccounts,
 	}
+}
+
+func migrateAccess(old []v039marker.AccessGrant) (new []v040marker.AccessGrant) {
+	new = make([]v040marker.AccessGrant, len(old))
+	for i, a := range old {
+		perms := strings.Join(a.Permissions, ",")
+		perms = strings.ToLower(perms)
+		perms = strings.ReplaceAll(perms, "grant", "admin")
+		new[i] = v040marker.AccessGrant{
+			Address:     a.Address.String(),
+			Permissions: v040marker.AccessListByNames(perms),
+		}
+	}
+	return
 }

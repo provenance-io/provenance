@@ -34,6 +34,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+* Update `ScopeSpecification` proto and create `Description` proto #71
+* Update `Scope` proto: change field `owner_address` to `owners` #89
+* Add support for migrating Marker Accesslist from v39 to v40 #46.
+* Add migration command for previous version of Provenance blockchain #78
+* Add support for creating, updating, removing, finding, and iterating over `ScopeSpecification`s #56
+* Add support for github actions to build binary releases on tag #30.
 
 ## [v0.1.3](https://github.com/provenance-io/provenance/releases/tag/v0.1.3) - 2021-02-12
 
@@ -72,5 +78,5 @@ into new 0.40.x base.  Minimal unit test coverage and features in place to begin
 * Test tag prior to initial testnet release.
 
 The Provenance Blockchain was started by Figure Technologies in 2018 using a Hyperledger Fabric derived private network.
-A subsequent migration was made to a new internal private network based on the 0.38-0.39 series of Cosmos SDK and 
-Tendermint.  The Provence-IO/Provenance Cosmos SDK derived public network is the 
+A subsequent migration was made to a new internal private network based on the 0.38-0.39 series of Cosmos SDK and
+Tendermint.  The Provence-IO/Provenance Cosmos SDK derived public network is the

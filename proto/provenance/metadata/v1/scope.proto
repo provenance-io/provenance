@@ -33,7 +33,7 @@ Data Structures
 
   Typically multiple records will be established within a scope at the same time (see: Contract Memorialization).  A
   Record Group contains context for the recording of these records linking a set of records into a common process/
-  execution associated with a specificaiton indicating allowed and required values.
+  execution associated with a specification indicating allowed and required values.
 
   Record
 
@@ -74,7 +74,7 @@ message Scope {
   bytes scope_id = 1 [
     (gogoproto.nullable)   = false,
     (gogoproto.customtype) = "MetadataAddress",
-    (gogoproto.moretags)   = "json:\"scope_id\" yaml:\"scope_id\""
+    (gogoproto.moretags)   = "yaml:\"scope_id\""
   ];
   // the scope specification that contains the specifications for data elements allowed within this scope
   bytes specification_id = 2 [
@@ -84,12 +84,12 @@ message Scope {
   ];
   // These parties represent top level owners of the records within.  These parties must sign any requests that modify
   // the data within the scope.  These addresses are in union with parties listed on the record groups.
-  repeated string owner_address = 3;
+  repeated Party owners = 3 [(gogoproto.nullable) = false];
   // Addessses in this list are authorized to recieve off-chain data associated with this scope.
-  repeated string data_access = 4;
+  repeated string data_access = 4 [(gogoproto.moretags) = "yaml:\"data_access\""];
   // An address that controls the value associated with this scope.  Standard blockchain accounts and marker accounts
   // are supported for this value.  This attribute may only be changed by the entity indicated once it is set.
-  string value_owner_address = 5;
+  string value_owner_address = 5 [(gogoproto.moretags) = "yaml:\"value_owner_address\""];
 }
 
 /*

@@ -14,19 +14,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	captypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-	evtypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
-	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
-	ibcxfertypes "github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
-	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
-	ibccoretypes "github.com/cosmos/cosmos-sdk/x/ibc/core/types"
-	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmtypes "github.com/tendermint/tendermint/types"
+
+	legacy "github.com/provenance-io/provenance/internal/legacy"
 )
 
 const (
@@ -37,20 +31,26 @@ const (
 // MigrateGenesisCmd returns a command to execute genesis state migration.
 func MigrateGenesisCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "migrate [genesis-file]",
+		Use:   "migrate [target-version] [genesis-file]",
 		Short: "Migrate genesis to a specified target version",
 		Long: fmt.Sprintf(`Migrate the source genesis into the target version and print to STDOUT.
 
 Example:
-$ %s migrate /path/to/genesis.json --chain-id=provenance-2 --genesis-time=2020-01-1T00:00:00Z --initial-height=5000
+$ %s migrate v1.0.0 /path/to/genesis.json --chain-id=provenance-2 --genesis-time=2020-01-1T00:00:00Z --initial-height=5000
 `, version.AppName),
-		Args: cobra.ExactArgs(1),
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
 			var err error
 
-			importGenesis := args[0]
+			target := args[0]
+			importGenesis := args[1]
+
+			migrationFunc := legacy.GetMigrationCallback(target)
+			if migrationFunc == nil {
+				return fmt.Errorf("unknown migration function for version: %s", target)
+			}
 
 			jsonBlob, err := ioutil.ReadFile(importGenesis)
 
@@ -68,37 +68,7 @@ $ %s migrate /path/to/genesis.json --chain-id=provenance-2 --genesis-time=2020-0
 				return errors.Wrap(err, "failed to JSON unmarshal initial genesis state")
 			}
 
-			firstMigration := "v0.40"
-
-			migrationFunc := cli.GetMigrationCallback(firstMigration)
-			if migrationFunc == nil {
-				return fmt.Errorf("unknown migration function for version: %s", firstMigration)
-			}
-
-			// TODO: handler error from migrationFunc call
 			newGenState := migrationFunc(initialState, clientCtx)
-
-			var stakingGenesis staking.GenesisState
-
-			clientCtx.JSONMarshaler.MustUnmarshalJSON(newGenState[staking.ModuleName], &stakingGenesis)
-
-			ibcTransferGenesis := ibcxfertypes.DefaultGenesisState()
-			ibcCoreGenesis := ibccoretypes.DefaultGenesisState()
-			capGenesis := captypes.DefaultGenesis()
-			evGenesis := evtypes.DefaultGenesisState()
-
-			ibcTransferGenesis.Params.ReceiveEnabled = false
-			ibcTransferGenesis.Params.SendEnabled = false
-
-			ibcCoreGenesis.ClientGenesis.Params.AllowedClients = []string{exported.Tendermint}
-			stakingGenesis.Params.HistoricalEntries = 10000
-
-			newGenState[ibcxfertypes.ModuleName] = clientCtx.JSONMarshaler.MustMarshalJSON(ibcTransferGenesis)
-			newGenState[host.ModuleName] = clientCtx.JSONMarshaler.MustMarshalJSON(ibcCoreGenesis)
-			newGenState[captypes.ModuleName] = clientCtx.JSONMarshaler.MustMarshalJSON(capGenesis)
-			newGenState[evtypes.ModuleName] = clientCtx.JSONMarshaler.MustMarshalJSON(evGenesis)
-			newGenState[staking.ModuleName] = clientCtx.JSONMarshaler.MustMarshalJSON(&stakingGenesis)
-
 			genDoc.AppState, err = json.Marshal(newGenState)
 			if err != nil {
 				return errors.Wrap(err, "failed to JSON marshal migrated genesis state")

@@ -6,6 +6,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "google/api/annotations.proto";
 import "provenance/metadata/v1/metadata.proto";
 import "provenance/metadata/v1/scope.proto";
+import "provenance/metadata/v1/specification.proto";
 
 option go_package = "github.com/provenance-io/provenance/x/metadata/types";
 
@@ -42,6 +43,11 @@ service Query {
   // ValueOwnership returns a list of scope identifiers that list the given address as the value owner
   rpc ValueOwnership(ValueOwnershipRequest) returns (ValueOwnershipResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/valueownership/{address}";
+  }
+
+  // ScopeSpecification returns a scope specification for the given specification id
+  rpc ScopeSpecification(ScopeSpecificationRequest) returns (ScopeSpecificationResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/scopespec/{specification_id}";
   }
 }
 
@@ -119,4 +125,18 @@ message RecordRequest {
 message RecordResponse {
   string          scope_id = 1;
   repeated Record records  = 2;
+}
+
+// ScopeSpecificationRequest is used for requesting a scope specification by id
+message ScopeSpecificationRequest {
+  string specification_id = 1 [
+    (gogoproto.moretags)   = "yaml:\"specification_id\""
+  ];
+}
+
+// ScopeSpecification is the response to a scope specification request.
+message ScopeSpecificationResponse {
+  ScopeSpecification scope_specification = 1 [
+    (gogoproto.moretags)   = "yaml:\"scope_specification\""
+  ];
 }

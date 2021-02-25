@@ -9,11 +9,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func ownerPartyList(addresses ...string) []Party {
+	retval := make([]Party, len(addresses))
+	for i, addr := range addresses {
+		retval[i] = Party{Address: addr, Role: PartyType_PARTY_TYPE_OWNER}
+	}
+	return retval
+}
+
 func TestAddScopeRoute(t *testing.T) {
 	var scope = NewScope(
 		ScopeMetadataAddress(uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")),
 		ScopeSpecMetadataAddress(uuid.MustParse("22fc17a6-40dd-4d68-a95b-ec94e7572a09")),
-		[]string{"data_owner"},
+		ownerPartyList("data_owner"),
 		[]string{"data_accessor"},
 		"value_owner",
 	)
@@ -24,22 +32,23 @@ func TestAddScopeRoute(t *testing.T) {
 	yaml := `scope:
   scope_id: scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp
   specification_id: scopespec1qs30c9axgrw5669ft0kffe6h9gysfe58v3
-  owneraddress:
-  - data_owner
-  dataaccess:
+  owners:
+  - address: data_owner
+    role: 5
+  data_access:
   - data_accessor
-  valueowneraddress: value_owner
+  value_owner_address: value_owner
 signers: []
 `
 	require.Equal(t, yaml, msg.String())
-	require.Equal(t, "{\"type\":\"provenance/metadata/AddScopeRequest\",\"value\":{\"scope\":{\"data_access\":[\"data_accessor\"],\"owner_address\":[\"data_owner\"],\"scope_id\":\"scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp\",\"specification_id\":\"scopespec1qs30c9axgrw5669ft0kffe6h9gysfe58v3\",\"value_owner_address\":\"value_owner\"}}}", string(msg.GetSignBytes()))
+	require.Equal(t, "{\"type\":\"provenance/metadata/AddScopeRequest\",\"value\":{\"scope\":{\"data_access\":[\"data_accessor\"],\"owners\":[{\"address\":\"data_owner\",\"role\":5}],\"scope_id\":\"scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp\",\"specification_id\":\"scopespec1qs30c9axgrw5669ft0kffe6h9gysfe58v3\",\"value_owner_address\":\"value_owner\"}}}", string(msg.GetSignBytes()))
 }
 
 func TestAddScopeValidation(t *testing.T) {
 	var scope = NewScope(
 		ScopeMetadataAddress(uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")),
 		ScopeSpecMetadataAddress(uuid.MustParse("22fc17a6-40dd-4d68-a95b-ec94e7572a09")),
-		[]string{"data_owner"},
+		ownerPartyList("data_owner"),
 		[]string{"data_accessor"},
 		"value_owner",
 	)
@@ -52,7 +61,7 @@ func TestAddScopeValidation(t *testing.T) {
 	msg.Scope = *NewScope(
 		ScopeMetadataAddress(uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")),
 		ScopeSpecMetadataAddress(uuid.MustParse("22fc17a6-40dd-4d68-a95b-ec94e7572a09")),
-		[]string{},
+		[]Party{},
 		[]string{},
 		"",
 	)
@@ -63,7 +72,7 @@ func TestAddScopeValidation(t *testing.T) {
 	msg.Scope = *NewScope(
 		ScopeMetadataAddress(uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")),
 		ScopeSpecMetadataAddress(uuid.MustParse("22fc17a6-40dd-4d68-a95b-ec94e7572a09")),
-		[]string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"},
+		ownerPartyList("cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"),
 		[]string{},
 		"",
 	)
