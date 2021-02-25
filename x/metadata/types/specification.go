@@ -113,8 +113,8 @@ func NewContractSpecification(
 }
 
 // NewSourceResourceID creates a new source (for a ContractSpecification) with a resource id
-func NewSourceResourceID(resourceId MetadataAddress) *ContractSpecification_ResourceId {
-	return &ContractSpecification_ResourceId{ResourceId: resourceId}
+func NewSourceResourceID(resourceID MetadataAddress) *ContractSpecification_ResourceId {
+	return &ContractSpecification_ResourceId{ResourceId: resourceID}
 }
 
 // NewSourceHash creates a new source (for a ContractSpecification) with a hash
