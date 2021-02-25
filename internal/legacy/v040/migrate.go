@@ -33,8 +33,8 @@ import (
 
 	captypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 
-	// v039attribute "github.com/provenance-io/provenance/x/attribute/legacy/v039"
-	// v040attribute "github.com/provenance-io/provenance/x/attribute/legacy/v040"
+	v039attribute "github.com/provenance-io/provenance/x/attribute/legacy/v039"
+	v040attribute "github.com/provenance-io/provenance/x/attribute/legacy/v040"
 	v039marker "github.com/provenance-io/provenance/x/marker/legacy/v039"
 	v040marker "github.com/provenance-io/provenance/x/marker/legacy/v040"
 	v039metadata "github.com/provenance-io/provenance/x/metadata/legacy/v039"
@@ -251,6 +251,19 @@ func Migrate(appState v040gentypes.AppMap, clientCtx client.Context) v040gentype
 		appState[host.ModuleName] = v040Codec.MustMarshalJSON(ibcCoreGenesis)
 		appState[evtypes.ModuleName] = v040Codec.MustMarshalJSON(evGenesis)
 	*/
+
+	// Migrate x/account (attribute)
+	if appState[v039attribute.ModuleName] != nil {
+		var attributeGenState v039attribute.GenesisState
+		v039Codec.MustUnmarshalJSON(appState[v039attribute.ModuleName], &attributeGenState)
+
+		// delete deprecated x/account (attribute) genesis state
+		delete(appState, v039attribute.ModuleName)
+
+		// Migrate relative source genesis application state and marshal it into
+		// the respective key.
+		appState[v040attribute.ModuleName] = v040Codec.MustMarshalJSON(v040attribute.Migrate(attributeGenState))
+	}
 
 	// Migrate x/marker
 	if appState[v039marker.ModuleName] != nil {

@@ -34,6 +34,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+* Add migration support for v039 account into v040 attributes module #100
+
 ## [v0.1.4](https://github.com/provenance-io/provenance/releases/tag/v0.1.4) - 2021-02-24
 
 * Update `ScopeSpecification` proto and create `Description` proto #71
