@@ -47,7 +47,7 @@ func stringsToAccAddresses(strings []string) []sdk.AccAddress {
 	return retval
 }
 
-// ----------------------------------------------------------------------
+// ------------------  MsgMemorializeContractRequest  ------------------
 
 // NewMsgMemorializeContractRequest creates a new msg instance
 func NewMsgMemorializeContractRequest() *MsgMemorializeContractRequest {
@@ -60,10 +60,14 @@ func (msg MsgMemorializeContractRequest) String() string {
 }
 
 // Route returns the module route
-func (msg MsgMemorializeContractRequest) Route() string { return ModuleName }
+func (msg MsgMemorializeContractRequest) Route() string {
+	return ModuleName
+}
 
 // Type returns the type name for this msg
-func (msg MsgMemorializeContractRequest) Type() string { return TypeMsgMemorializeContractRequest }
+func (msg MsgMemorializeContractRequest) Type() string {
+	return TypeMsgMemorializeContractRequest
+}
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgMemorializeContractRequest) GetSigners() []sdk.AccAddress {
@@ -101,7 +105,7 @@ func (msg MsgMemorializeContractRequest) ValidateBasic() error {
 	return msg.Contract.ValidateBasic()
 }
 
-// ----------------------------------------------------------------------
+// ------------------  MsgChangeOwnershipRequest  ------------------
 
 // NewMsgChangeOwnershipRequest creates a new msg instance
 func NewMsgChangeOwnershipRequest() *MsgChangeOwnershipRequest {
@@ -114,10 +118,14 @@ func (msg MsgChangeOwnershipRequest) String() string {
 }
 
 // Route returns the module route
-func (msg MsgChangeOwnershipRequest) Route() string { return ModuleName }
+func (msg MsgChangeOwnershipRequest) Route() string {
+	return ModuleName
+}
 
 // Type returns the type name for this msg
-func (msg MsgChangeOwnershipRequest) Type() string { return TypeMsgChangeOwnershipRequest }
+func (msg MsgChangeOwnershipRequest) Type() string {
+	return TypeMsgChangeOwnershipRequest
+}
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgChangeOwnershipRequest) GetSigners() []sdk.AccAddress {
@@ -158,7 +166,7 @@ func (msg MsgChangeOwnershipRequest) ValidateBasic() error {
 	return msg.Contract.ValidateBasic()
 }
 
-// ----------------------------------------------------------------------
+// ------------------  MsgAddScopeRequest  ------------------
 
 // NewMsgAddScopeRequest creates a new msg instance
 func NewMsgAddScopeRequest(scope Scope, signers []string) *MsgAddScopeRequest {
@@ -174,10 +182,14 @@ func (msg MsgAddScopeRequest) String() string {
 }
 
 // Route returns the module route
-func (msg MsgAddScopeRequest) Route() string { return ModuleName }
+func (msg MsgAddScopeRequest) Route() string {
+	return ModuleName
+}
 
 // Type returns the type name for this msg
-func (msg MsgAddScopeRequest) Type() string { return TypeMsgAddScopeRequest }
+func (msg MsgAddScopeRequest) Type() string {
+	return TypeMsgAddScopeRequest
+}
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgAddScopeRequest) GetSigners() []sdk.AccAddress {
@@ -207,7 +219,7 @@ func (msg MsgAddScopeRequest) ValidateBasic() error {
 	return msg.Scope.ValidateBasic()
 }
 
-// ----------------------------------------------------------------------
+// ------------------  MsgRemoveScopeRequest  ------------------
 
 // NewMsgRemoveScopeRequest creates a new msg instance
 func NewMsgRemoveScopeRequest(scopeID MetadataAddress, signers []string) *MsgRemoveScopeRequest {
@@ -223,10 +235,14 @@ func (msg MsgRemoveScopeRequest) String() string {
 }
 
 // Route returns the module route
-func (msg MsgRemoveScopeRequest) Route() string { return ModuleName }
+func (msg MsgRemoveScopeRequest) Route() string {
+	return ModuleName
+}
 
 // Type returns the type name for this msg
-func (msg MsgRemoveScopeRequest) Type() string { return TypeMsgRemoveScopeRequest }
+func (msg MsgRemoveScopeRequest) Type() string {
+	return TypeMsgRemoveScopeRequest
+}
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgRemoveScopeRequest) GetSigners() []sdk.AccAddress {
@@ -249,7 +265,7 @@ func (msg MsgRemoveScopeRequest) ValidateBasic() error {
 	return nil
 }
 
-// ----------------------------------------------------------------------
+// ------------------  MsgAddRecordGroupRequest  ------------------
 
 // NewMsgAddRecordGroupRequest creates a new msg instance
 func NewMsgAddRecordGroupRequest() *MsgAddRecordGroupRequest {
@@ -262,10 +278,14 @@ func (msg MsgAddRecordGroupRequest) String() string {
 }
 
 // Route returns the module route
-func (msg MsgAddRecordGroupRequest) Route() string { return ModuleName }
+func (msg MsgAddRecordGroupRequest) Route() string {
+	return ModuleName
+}
 
 // Type returns the type name for this msg
-func (msg MsgAddRecordGroupRequest) Type() string { return TypeMsgAddRecordGroupRequest }
+func (msg MsgAddRecordGroupRequest) Type() string {
+	return TypeMsgAddRecordGroupRequest
+}
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgAddRecordGroupRequest) GetSigners() []sdk.AccAddress {
@@ -286,7 +306,7 @@ func (msg MsgAddRecordGroupRequest) ValidateBasic() error {
 	return nil
 }
 
-// ----------------------------------------------------------------------
+// ------------------  MsgAddRecordRequest  ------------------
 
 // NewMsgAddRecordRequest creates a new msg instance
 func NewMsgAddRecordRequest() *MsgAddRecordRequest {
@@ -299,10 +319,14 @@ func (msg MsgAddRecordRequest) String() string {
 }
 
 // Route returns the module route
-func (msg MsgAddRecordRequest) Route() string { return ModuleName }
+func (msg MsgAddRecordRequest) Route() string {
+	return ModuleName
+}
 
 // Type returns the type name for this msg
-func (msg MsgAddRecordRequest) Type() string { return TypeMsgAddRecordRequest }
+func (msg MsgAddRecordRequest) Type() string {
+	return TypeMsgAddRecordRequest
+}
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgAddRecordRequest) GetSigners() []sdk.AccAddress {
@@ -323,7 +347,7 @@ func (msg MsgAddRecordRequest) ValidateBasic() error {
 	return nil
 }
 
-// ----------------------------------------------------------------------
+// ------------------  MsgAddScopeSpecificationRequest  ------------------
 
 // NewMsgAddScopeSpecificationRequest creates a new msg instance
 func NewMsgAddScopeSpecificationRequest() *MsgAddScopeSpecificationRequest {
@@ -336,7 +360,9 @@ func (msg MsgAddScopeSpecificationRequest) String() string {
 }
 
 // Route returns the module route
-func (msg MsgAddScopeSpecificationRequest) Route() string { return ModuleName }
+func (msg MsgAddScopeSpecificationRequest) Route() string {
+	return ModuleName
+}
 
 // Type returns the type name for this msg
 func (msg MsgAddScopeSpecificationRequest) Type() string { return TypeMsgAddScopeSpecificationRequest }
@@ -359,7 +385,7 @@ func (msg MsgAddScopeSpecificationRequest) ValidateBasic() error {
 	return msg.Specification.ValidateBasic()
 }
 
-// ----------------------------------------------------------------------
+// ------------------  MsgRemoveScopeSpecificationRequest  ------------------
 
 // NewMsgRemoveScopeSpecificationRequest creates a new msg instance
 func NewMsgRemoveScopeSpecificationRequest() *MsgRemoveScopeSpecificationRequest {
@@ -372,7 +398,9 @@ func (msg MsgRemoveScopeSpecificationRequest) String() string {
 }
 
 // Route returns the module route
-func (msg MsgRemoveScopeSpecificationRequest) Route() string { return ModuleName }
+func (msg MsgRemoveScopeSpecificationRequest) Route() string {
+	return ModuleName
+}
 
 // Type returns the type name for this msg
 func (msg MsgRemoveScopeSpecificationRequest) Type() string {
@@ -397,7 +425,7 @@ func (msg MsgRemoveScopeSpecificationRequest) ValidateBasic() error {
 	return nil
 }
 
-// ----------------------------------------------------------------------
+// ------------------  MsgAddContractSpecificationRequest  ------------------
 
 // NewMsgAddContractSpecificationRequest creates a new msg instance
 func NewMsgAddContractSpecificationRequest() *MsgAddContractSpecificationRequest {
@@ -410,7 +438,9 @@ func (msg MsgAddContractSpecificationRequest) String() string {
 }
 
 // Route returns the module route
-func (msg MsgAddContractSpecificationRequest) Route() string { return ModuleName }
+func (msg MsgAddContractSpecificationRequest) Route() string {
+	return ModuleName
+}
 
 // Type returns the type name for this msg
 func (msg MsgAddContractSpecificationRequest) Type() string {
