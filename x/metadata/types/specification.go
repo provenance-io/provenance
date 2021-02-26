@@ -131,6 +131,10 @@ func (s *ContractSpecification) ValidateBasic() error {
 	if prefix != PrefixContractSpecification {
 		return fmt.Errorf("invalid contract specification id prefix (expected: %s, got %s)", PrefixContractSpecification, prefix)
 	}
+	contractSpecUUID, err := s.SpecificationId.ContractSpecUUID()
+	if err != nil {
+		return fmt.Errorf("invalid contract specification uuid: %w", err)
+	}
 	if s.Description != nil {
 		err = s.Description.ValidateBasic("ContractSpecification.Description")
 		if err != nil {
@@ -184,6 +188,14 @@ func (s *ContractSpecification) ValidateBasic() error {
 		if prefix != PrefixRecordSpecification {
 			return fmt.Errorf("invalid record specification id prefix at index %d (expected: %s, got %s)",
 				i, PrefixRecordSpecification, prefix)
+		}
+		recSpecContractSpecUUID, err := s.SpecificationId.ContractSpecUUID()
+		if err != nil {
+			return fmt.Errorf("invalid record specification id contract specification uuid at index %d: %w", err)
+		}
+		if recSpecContractSpecUUID != contractSpecUUID {
+			return fmt.Errorf("invalid record specification id contract specification uuid value at index %d (expected :%s, got %s)",
+				i, contractSpecUUID.String(), recSpecContractSpecUUID.String())
 		}
 	}
 	return nil
