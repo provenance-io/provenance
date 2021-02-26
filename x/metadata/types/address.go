@@ -68,7 +68,7 @@ func VerifyMetadataAddressFormat(bz []byte) (string, error) {
 		requiredLength = 1 + 16 // type byte plus size of one uuid
 	case RecordSpecificationPrefix[0]:
 		hrp = PrefixRecordSpecification
-		requiredLength = 1 + 16 + 32 // type byte plus size of one uuid and one sha256 hash
+		requiredLength = 1 + 16 // type byte plus size of one uuid
 	default:
 		return hrp, fmt.Errorf("invalid metadata address type (must be 0-5, actual: %d)", bz[0])
 	}
