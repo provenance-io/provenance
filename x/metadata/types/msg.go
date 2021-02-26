@@ -464,3 +464,43 @@ func (msg MsgAddContractSpecificationRequest) ValidateBasic() error {
 	}
 	return msg.Specification.ValidateBasic()
 }
+
+// ------------------  MsgRemoveContractSpecificationRequest  ------------------
+
+// NewMsgRemoveContractSpecificationRequest creates a new msg instance
+func NewMsgRemoveContractSpecificationRequest() *MsgRemoveContractSpecificationRequest {
+	return &MsgRemoveContractSpecificationRequest{}
+}
+
+func (msg MsgRemoveContractSpecificationRequest) String() string {
+	out, _ := yaml.Marshal(msg)
+	return string(out)
+}
+
+// Route returns the module route
+func (msg MsgRemoveContractSpecificationRequest) Route() string {
+	return ModuleName
+}
+
+// Type returns the type name for this msg
+func (msg MsgRemoveContractSpecificationRequest) Type() string {
+	return TypeMsgRemoveScopeSpecificationRequest
+}
+
+// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
+func (msg MsgRemoveContractSpecificationRequest) GetSigners() []sdk.AccAddress {
+	return stringsToAccAddresses(msg.Signers)
+}
+
+// GetSignBytes gets the bytes for the message signer to sign on
+func (msg MsgRemoveContractSpecificationRequest) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// ValidateBasic performs a quick validity check
+func (msg MsgRemoveContractSpecificationRequest) ValidateBasic() error {
+	if len(msg.Signers) < 1 {
+		return fmt.Errorf("at least one signer is required")
+	}
+	return nil
+}
