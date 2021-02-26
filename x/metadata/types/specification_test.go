@@ -915,10 +915,10 @@ parties_involved:
 source: null
 class_name: 'CS 201: Intro to Blockchain'
 record_spec_ids:
-- recspec1q5hhckhu7rz5c695xgz3p4zxkzcsgzysuy
+- recspec1q42qmt038k7yc0azq46htdlhgwzg5052mucgmerfku3gf5e7t3ej4ecag50yfxlsd8m2udlxzca6vhgch80wy
 `
 	actual := contractSpec.String()
-	fmt.Printf("Actual:\n%s\n-----\n", actual)
+	// fmt.Printf("Actual:\n%s\n-----\n", actual)
 	require.Equal(s.T(), expected, actual)
 }
 
