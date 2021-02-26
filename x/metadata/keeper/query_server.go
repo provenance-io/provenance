@@ -162,7 +162,7 @@ func (k Keeper) ScopeSpecification(c context.Context, req *types.ScopeSpecificat
 	}
 
 	if req.SpecificationId == "" {
-		return nil, status.Error(codes.InvalidArgument, "speccification id cannot be empty")
+		return nil, status.Error(codes.InvalidArgument, "specification id cannot be empty")
 	}
 
 	id, err := uuid.Parse(req.SpecificationId)
@@ -178,4 +178,29 @@ func (k Keeper) ScopeSpecification(c context.Context, req *types.ScopeSpecificat
 	}
 
 	return &types.ScopeSpecificationResponse{ScopeSpecification: &spec}, nil
+}
+
+// ContractSpecification returns a specific scope specification by id
+func (k Keeper) ContractSpecification(c context.Context, req *types.ContractSpecificationRequest) (*types.ContractSpecificationResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if req.SpecificationId == "" {
+		return nil, status.Error(codes.InvalidArgument, "specification id cannot be empty")
+	}
+
+	id, err := uuid.Parse(req.SpecificationId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid specification id: %s", err.Error())
+	}
+	addr := types.ContractSpecMetadataAddress(id)
+	ctx := sdk.UnwrapSDKContext(c)
+
+	spec, found := k.GetContractSpecification(ctx, addr)
+	if !found {
+		return nil, status.Errorf(codes.NotFound, "contract specification %s not found", req.SpecificationId)
+	}
+
+	return &types.ContractSpecificationResponse{ContractSpecification: &spec}, nil
 }
