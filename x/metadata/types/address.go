@@ -180,13 +180,22 @@ func ScopeSpecMetadataAddress(specUUID uuid.UUID) MetadataAddress {
 	return append(ScopeSpecificationPrefix, bz...)
 }
 
-// ContractSpecMetadataAddress creates a MetadataAddress instance for a group specification
+// ContractSpecMetadataAddress creates a MetadataAddress instance for a contract specification
 func ContractSpecMetadataAddress(specUUID uuid.UUID) MetadataAddress {
 	bz, err := specUUID.MarshalBinary()
 	if err != nil {
 		panic(err)
 	}
 	return append(ContractSpecificationPrefix, bz...)
+}
+
+// RecordSpecMetadataAddress creates a MetadataAddress instance for a record specification
+func RecordSpecMetadataAddress(specUUID uuid.UUID) MetadataAddress {
+	bz, err := specUUID.MarshalBinary()
+	if err != nil {
+		panic(err)
+	}
+	return append(RecordSpecificationPrefix, bz...)
 }
 
 // Equals determines if the current MetadataAddress is equal to another sdk.Address
