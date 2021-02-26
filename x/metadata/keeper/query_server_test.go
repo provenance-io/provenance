@@ -142,37 +142,53 @@ func (s *QueryServerTestSuite) TestScopeQuery() {
 }
 
 func (s *QueryServerTestSuite) TestRecordQuery() {
-	app, ctx, queryClient, scopeUUID, groupID, recordName := s.app, s.ctx, s.queryClient, s.scopeUUID, s.groupId, s.recordName
+	app, ctx, queryClient, scopeUUID, scopeID, groupID, recordName := s.app, s.ctx, s.queryClient, s.scopeUUID, s.scopeID, s.groupId, s.recordName
 
+	recordNames := make([]string, 10)
 	for i := 0; i < 10; i++ {
-		name := fmt.Sprintf("%s%v", recordName, i)
+		recordNames[i] = fmt.Sprintf("%s%v", recordName, i)
 		process := types.NewProcess("processname", &types.Process_Hash{Hash: "HASH"}, "process_method")
-		record := types.NewRecord(name, groupID, *process, []types.RecordInput{}, []types.RecordOutput{})
+		record := types.NewRecord(recordNames[i], groupID, *process, []types.RecordInput{}, []types.RecordOutput{})
 		app.MetadataKeeper.SetRecord(ctx, *record)
 	}
 
-	// _, err := queryClient.Record(gocontext.Background(), nil)
-	// s.EqualError(err, "rpc error: code = InvalidArgument desc = empty ")
-
-	_, err := queryClient.Record(gocontext.Background(), &types.RecordRequest{})
+	_, err := queryClient.RecordByScopeUUID(gocontext.Background(), &types.RecordByScopeUUIDRequest{})
 	s.EqualError(err, "rpc error: code = InvalidArgument desc = scope uuid cannot be empty")
 
-	_, err = queryClient.Record(gocontext.Background(), &types.RecordRequest{ScopeUuid: "6332c1a4-foo1-bare-895b-invalid65cb6"})
+	_, err = queryClient.RecordByScopeUUID(gocontext.Background(), &types.RecordByScopeUUIDRequest{ScopeUuid: "6332c1a4-foo1-bare-895b-invalid65cb6"})
 	s.EqualError(err, "rpc error: code = InvalidArgument desc = invalid scope uuid: invalid UUID format")
 
-	rs, err := queryClient.Record(gocontext.Background(), &types.RecordRequest{ScopeUuid: scopeUUID.String()})
+	rsUUID, err := queryClient.RecordByScopeUUID(gocontext.Background(), &types.RecordByScopeUUIDRequest{ScopeUuid: scopeUUID.String()})
 	s.NoError(err)
-	s.Equal(10, len(rs.Records), "should be 10 records in set for record query by scope uuid")
-	for i := 0; i < 10; i++ {
-		s.Equal(scopeUUID.String(), rs.ScopeUuid)
-	}
+	s.Equal(10, len(rsUUID.Records), "should be 10 records in set for record query by scope uuid")
+	s.Equal(scopeUUID.String(), rsUUID.ScopeUuid)
+	s.Equal(scopeID.String(), rsUUID.ScopeId)
 
-	name := fmt.Sprintf("%s%v", recordName, 0)
-	rs, err = queryClient.Record(gocontext.Background(), &types.RecordRequest{ScopeUuid: scopeUUID.String(), Name: name})
+	rsUUID, err = queryClient.RecordByScopeUUID(gocontext.Background(), &types.RecordByScopeUUIDRequest{ScopeUuid: scopeUUID.String(), Name: recordNames[0]})
 	s.NoError(err)
-	s.Equal(1, len(rs.Records), "should be 1 record in set for record query by scope uuid")
-	s.Equal(scopeUUID.String(), rs.ScopeUuid)
-	s.Equal(name, rs.Records[0].Name)
+	s.Equal(1, len(rsUUID.Records), "should be 1 record in set for record query by scope uuid")
+	s.Equal(scopeUUID.String(), rsUUID.ScopeUuid)
+	s.Equal(scopeID.String(), rsUUID.ScopeId)
+	s.Equal(recordNames[0], rsUUID.Records[0].Name)
+
+	_, err = queryClient.RecordByScopeID(gocontext.Background(), &types.RecordByScopeIDRequest{})
+	s.EqualError(err, "rpc error: code = InvalidArgument desc = scope id cannot be empty")
+
+	_, err = queryClient.RecordByScopeID(gocontext.Background(), &types.RecordByScopeIDRequest{ScopeId: "foo"})
+	s.EqualError(err, "rpc error: code = InvalidArgument desc = invalid scope id foo : decoding bech32 failed: invalid bech32 string length 3")
+
+	rsID, err := queryClient.RecordByScopeID(gocontext.Background(), &types.RecordByScopeIDRequest{ScopeId: scopeID.String()})
+	s.NoError(err)
+	s.Equal(10, len(rsID.Records), "should be 10 records in set for record query by scope id")
+	s.Equal(scopeUUID.String(), rsID.ScopeUuid)
+	s.Equal(scopeID.String(), rsID.ScopeId)
+
+	rsID, err = queryClient.RecordByScopeID(gocontext.Background(), &types.RecordByScopeIDRequest{ScopeId: scopeID.String(), Name: recordNames[0]})
+	s.NoError(err)
+	s.Equal(1, len(rsID.Records), "should be 1 record in set for record query by scope id")
+	s.Equal(scopeUUID.String(), rsID.ScopeUuid)
+	s.Equal(scopeID.String(), rsID.ScopeId)
+	s.Equal(recordNames[0], rsID.Records[0].Name)
 }
 
 func TestQuerierTestSuite(t *testing.T) {

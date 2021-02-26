@@ -535,24 +535,24 @@ func (m *GroupContextResponse) GetGroups() []*RecordGroup {
 	return nil
 }
 
-// RecordRequest is a request for all of the records in a specific scope or a specific record if a name is given.
-type RecordRequest struct {
+// RecordByScopeUUIDRequest is a request for all of the records in a specific scope by uuid or a specific record if a name is given.
+type RecordByScopeUUIDRequest struct {
 	ScopeUuid string `protobuf:"bytes,1,opt,name=scope_uuid,json=scopeUuid,proto3" json:"scope_uuid,omitempty"`
 	Name      string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 }
 
-func (m *RecordRequest) Reset()         { *m = RecordRequest{} }
-func (m *RecordRequest) String() string { return proto.CompactTextString(m) }
-func (*RecordRequest) ProtoMessage()    {}
-func (*RecordRequest) Descriptor() ([]byte, []int) {
+func (m *RecordByScopeUUIDRequest) Reset()         { *m = RecordByScopeUUIDRequest{} }
+func (m *RecordByScopeUUIDRequest) String() string { return proto.CompactTextString(m) }
+func (*RecordByScopeUUIDRequest) ProtoMessage()    {}
+func (*RecordByScopeUUIDRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a68790bc0b96eeb9, []int{10}
 }
-func (m *RecordRequest) XXX_Unmarshal(b []byte) error {
+func (m *RecordByScopeUUIDRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *RecordRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *RecordByScopeUUIDRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_RecordRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_RecordByScopeUUIDRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -562,50 +562,51 @@ func (m *RecordRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error
 		return b[:n], nil
 	}
 }
-func (m *RecordRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_RecordRequest.Merge(m, src)
+func (m *RecordByScopeUUIDRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RecordByScopeUUIDRequest.Merge(m, src)
 }
-func (m *RecordRequest) XXX_Size() int {
+func (m *RecordByScopeUUIDRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *RecordRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_RecordRequest.DiscardUnknown(m)
+func (m *RecordByScopeUUIDRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_RecordByScopeUUIDRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_RecordRequest proto.InternalMessageInfo
+var xxx_messageInfo_RecordByScopeUUIDRequest proto.InternalMessageInfo
 
-func (m *RecordRequest) GetScopeUuid() string {
+func (m *RecordByScopeUUIDRequest) GetScopeUuid() string {
 	if m != nil {
 		return m.ScopeUuid
 	}
 	return ""
 }
 
-func (m *RecordRequest) GetName() string {
+func (m *RecordByScopeUUIDRequest) GetName() string {
 	if m != nil {
 		return m.Name
 	}
 	return ""
 }
 
-// RecordResponse is the response to a RecordRequest
-type RecordResponse struct {
+// RecordByScopeUUIDResponse is the response to a RecordByScopeUUIDRequest
+type RecordByScopeUUIDResponse struct {
 	ScopeUuid string    `protobuf:"bytes,1,opt,name=scope_uuid,json=scopeUuid,proto3" json:"scope_uuid,omitempty"`
-	Records   []*Record `protobuf:"bytes,2,rep,name=records,proto3" json:"records,omitempty"`
+	ScopeId   string    `protobuf:"bytes,2,opt,name=scope_id,json=scopeId,proto3" json:"scope_id,omitempty"`
+	Records   []*Record `protobuf:"bytes,3,rep,name=records,proto3" json:"records,omitempty"`
 }
 
-func (m *RecordResponse) Reset()         { *m = RecordResponse{} }
-func (m *RecordResponse) String() string { return proto.CompactTextString(m) }
-func (*RecordResponse) ProtoMessage()    {}
-func (*RecordResponse) Descriptor() ([]byte, []int) {
+func (m *RecordByScopeUUIDResponse) Reset()         { *m = RecordByScopeUUIDResponse{} }
+func (m *RecordByScopeUUIDResponse) String() string { return proto.CompactTextString(m) }
+func (*RecordByScopeUUIDResponse) ProtoMessage()    {}
+func (*RecordByScopeUUIDResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a68790bc0b96eeb9, []int{11}
 }
-func (m *RecordResponse) XXX_Unmarshal(b []byte) error {
+func (m *RecordByScopeUUIDResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *RecordResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *RecordByScopeUUIDResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_RecordResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_RecordByScopeUUIDResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -615,26 +616,147 @@ func (m *RecordResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, erro
 		return b[:n], nil
 	}
 }
-func (m *RecordResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_RecordResponse.Merge(m, src)
+func (m *RecordByScopeUUIDResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RecordByScopeUUIDResponse.Merge(m, src)
 }
-func (m *RecordResponse) XXX_Size() int {
+func (m *RecordByScopeUUIDResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *RecordResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_RecordResponse.DiscardUnknown(m)
+func (m *RecordByScopeUUIDResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_RecordByScopeUUIDResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_RecordResponse proto.InternalMessageInfo
+var xxx_messageInfo_RecordByScopeUUIDResponse proto.InternalMessageInfo
 
-func (m *RecordResponse) GetScopeUuid() string {
+func (m *RecordByScopeUUIDResponse) GetScopeUuid() string {
 	if m != nil {
 		return m.ScopeUuid
 	}
 	return ""
 }
 
-func (m *RecordResponse) GetRecords() []*Record {
+func (m *RecordByScopeUUIDResponse) GetScopeId() string {
+	if m != nil {
+		return m.ScopeId
+	}
+	return ""
+}
+
+func (m *RecordByScopeUUIDResponse) GetRecords() []*Record {
+	if m != nil {
+		return m.Records
+	}
+	return nil
+}
+
+// RecordByScopeIDRequest is a request for all of the records in a specific scope by bech32 id or a specific record if a name is given.
+type RecordByScopeIDRequest struct {
+	ScopeId string `protobuf:"bytes,1,opt,name=scope_id,json=scopeId,proto3" json:"scope_id,omitempty"`
+	Name    string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+}
+
+func (m *RecordByScopeIDRequest) Reset()         { *m = RecordByScopeIDRequest{} }
+func (m *RecordByScopeIDRequest) String() string { return proto.CompactTextString(m) }
+func (*RecordByScopeIDRequest) ProtoMessage()    {}
+func (*RecordByScopeIDRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a68790bc0b96eeb9, []int{12}
+}
+func (m *RecordByScopeIDRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *RecordByScopeIDRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_RecordByScopeIDRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *RecordByScopeIDRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RecordByScopeIDRequest.Merge(m, src)
+}
+func (m *RecordByScopeIDRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *RecordByScopeIDRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_RecordByScopeIDRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RecordByScopeIDRequest proto.InternalMessageInfo
+
+func (m *RecordByScopeIDRequest) GetScopeId() string {
+	if m != nil {
+		return m.ScopeId
+	}
+	return ""
+}
+
+func (m *RecordByScopeIDRequest) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+// RecordByScopeIDResponse is the response to a RecordByScopeIDRequest
+type RecordByScopeIDResponse struct {
+	ScopeUuid string    `protobuf:"bytes,1,opt,name=scope_uuid,json=scopeUuid,proto3" json:"scope_uuid,omitempty"`
+	ScopeId   string    `protobuf:"bytes,2,opt,name=scope_id,json=scopeId,proto3" json:"scope_id,omitempty"`
+	Records   []*Record `protobuf:"bytes,3,rep,name=records,proto3" json:"records,omitempty"`
+}
+
+func (m *RecordByScopeIDResponse) Reset()         { *m = RecordByScopeIDResponse{} }
+func (m *RecordByScopeIDResponse) String() string { return proto.CompactTextString(m) }
+func (*RecordByScopeIDResponse) ProtoMessage()    {}
+func (*RecordByScopeIDResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a68790bc0b96eeb9, []int{13}
+}
+func (m *RecordByScopeIDResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *RecordByScopeIDResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_RecordByScopeIDResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *RecordByScopeIDResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RecordByScopeIDResponse.Merge(m, src)
+}
+func (m *RecordByScopeIDResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *RecordByScopeIDResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_RecordByScopeIDResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RecordByScopeIDResponse proto.InternalMessageInfo
+
+func (m *RecordByScopeIDResponse) GetScopeUuid() string {
+	if m != nil {
+		return m.ScopeUuid
+	}
+	return ""
+}
+
+func (m *RecordByScopeIDResponse) GetScopeId() string {
+	if m != nil {
+		return m.ScopeId
+	}
+	return ""
+}
+
+func (m *RecordByScopeIDResponse) GetRecords() []*Record {
 	if m != nil {
 		return m.Records
 	}
@@ -650,7 +772,7 @@ func (m *ScopeSpecificationRequest) Reset()         { *m = ScopeSpecificationReq
 func (m *ScopeSpecificationRequest) String() string { return proto.CompactTextString(m) }
 func (*ScopeSpecificationRequest) ProtoMessage()    {}
 func (*ScopeSpecificationRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{12}
+	return fileDescriptor_a68790bc0b96eeb9, []int{14}
 }
 func (m *ScopeSpecificationRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -695,7 +817,7 @@ func (m *ScopeSpecificationResponse) Reset()         { *m = ScopeSpecificationRe
 func (m *ScopeSpecificationResponse) String() string { return proto.CompactTextString(m) }
 func (*ScopeSpecificationResponse) ProtoMessage()    {}
 func (*ScopeSpecificationResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{13}
+	return fileDescriptor_a68790bc0b96eeb9, []int{15}
 }
 func (m *ScopeSpecificationResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -742,8 +864,10 @@ func init() {
 	proto.RegisterType((*ValueOwnershipResponse)(nil), "provenance.metadata.v1.ValueOwnershipResponse")
 	proto.RegisterType((*GroupContextRequest)(nil), "provenance.metadata.v1.GroupContextRequest")
 	proto.RegisterType((*GroupContextResponse)(nil), "provenance.metadata.v1.GroupContextResponse")
-	proto.RegisterType((*RecordRequest)(nil), "provenance.metadata.v1.RecordRequest")
-	proto.RegisterType((*RecordResponse)(nil), "provenance.metadata.v1.RecordResponse")
+	proto.RegisterType((*RecordByScopeUUIDRequest)(nil), "provenance.metadata.v1.RecordByScopeUUIDRequest")
+	proto.RegisterType((*RecordByScopeUUIDResponse)(nil), "provenance.metadata.v1.RecordByScopeUUIDResponse")
+	proto.RegisterType((*RecordByScopeIDRequest)(nil), "provenance.metadata.v1.RecordByScopeIDRequest")
+	proto.RegisterType((*RecordByScopeIDResponse)(nil), "provenance.metadata.v1.RecordByScopeIDResponse")
 	proto.RegisterType((*ScopeSpecificationRequest)(nil), "provenance.metadata.v1.ScopeSpecificationRequest")
 	proto.RegisterType((*ScopeSpecificationResponse)(nil), "provenance.metadata.v1.ScopeSpecificationResponse")
 }
@@ -753,64 +877,69 @@ func init() {
 }
 
 var fileDescriptor_a68790bc0b96eeb9 = []byte{
-	// 914 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x96, 0xcf, 0x6f, 0x1b, 0x45,
-	0x14, 0xc7, 0x33, 0x4e, 0xe3, 0x92, 0x97, 0xa4, 0xa2, 0x2f, 0xa1, 0x72, 0x2c, 0xb2, 0x89, 0x16,
-	0x12, 0x42, 0xda, 0xec, 0x60, 0x07, 0xa1, 0x40, 0xf9, 0x21, 0x8c, 0xa0, 0x1c, 0x90, 0x08, 0x6b,
-	0xc1, 0x81, 0x4b, 0x35, 0xb1, 0x07, 0x77, 0x45, 0xbc, 0xb3, 0xdd, 0x59, 0x9b, 0x5a, 0x96, 0x2f,
-	0x3d, 0xc1, 0x0d, 0x09, 0x71, 0x80, 0xff, 0x80, 0x1b, 0x77, 0xfe, 0x81, 0x1c, 0x2b, 0x71, 0xe1,
-	0x14, 0xa1, 0x84, 0x3f, 0x00, 0xf5, 0x2f, 0x40, 0x3b, 0x33, 0x1b, 0xaf, 0x6b, 0xaf, 0xbd, 0xb9,
-	0xd0, 0x9b, 0x77, 0xe7, 0xfb, 0xde, 0xf7, 0xf3, 0x46, 0xef, 0xbd, 0x35, 0xd8, 0x41, 0x28, 0xba,
-	0xdc, 0x67, 0x7e, 0x83, 0xd3, 0x36, 0x8f, 0x58, 0x93, 0x45, 0x8c, 0x76, 0x2b, 0xf4, 0x61, 0x87,
-	0x87, 0x3d, 0x27, 0x08, 0x45, 0x24, 0xf0, 0xd6, 0x50, 0xe3, 0x24, 0x1a, 0xa7, 0x5b, 0x29, 0xaf,
-	0xb5, 0x44, 0x4b, 0x28, 0x09, 0x8d, 0x7f, 0x69, 0x75, 0x79, 0xaf, 0x21, 0x64, 0x5b, 0x48, 0x7a,
-	0xcc, 0x24, 0xd7, 0x69, 0x68, 0xb7, 0x72, 0xcc, 0x23, 0x56, 0xa1, 0x01, 0x6b, 0x79, 0x3e, 0x8b,
-	0x3c, 0xe1, 0x1b, 0xed, 0xcb, 0x2d, 0x21, 0x5a, 0x27, 0x9c, 0xb2, 0xc0, 0xa3, 0xcc, 0xf7, 0x45,
-	0xa4, 0x0e, 0xa5, 0x39, 0xdd, 0xce, 0x60, 0xbb, 0x64, 0xd0, 0xb2, 0xac, 0x12, 0x64, 0x43, 0x04,
-	0x3c, 0x81, 0xca, 0xd2, 0x04, 0xbc, 0xe1, 0x7d, 0xe3, 0x35, 0x52, 0x50, 0xf6, 0x1a, 0xe0, 0x17,
-	0x31, 0xf6, 0x11, 0x0b, 0x59, 0x5b, 0xba, 0xfc, 0x61, 0x87, 0xcb, 0xc8, 0xae, 0xc3, 0xea, 0xc8,
-	0x5b, 0x19, 0x08, 0x5f, 0x72, 0x7c, 0x17, 0x8a, 0x81, 0x7a, 0x53, 0x22, 0x5b, 0x64, 0x77, 0xa9,
-	0x6a, 0x39, 0x93, 0x2f, 0xcb, 0xd1, 0x71, 0xb5, 0x6b, 0xa7, 0x67, 0x9b, 0x73, 0xae, 0x89, 0xb1,
-	0xf7, 0x61, 0xb9, 0x1e, 0x53, 0x1a, 0x13, 0xdc, 0x00, 0x50, 0xd4, 0xf7, 0x3b, 0x1d, 0xaf, 0xa9,
-	0x32, 0x2e, 0xba, 0x8b, 0xea, 0xcd, 0x97, 0x1d, 0xaf, 0x69, 0x9f, 0x12, 0x58, 0x31, 0x7a, 0x63,
-	0x7f, 0x00, 0x0b, 0xea, 0xd8, 0xb8, 0x6f, 0x64, 0xb9, 0xeb, 0x28, 0xad, 0xc5, 0x4f, 0x61, 0x25,
-	0xe4, 0x0d, 0x11, 0x36, 0xef, 0xb7, 0x42, 0xd1, 0x09, 0x64, 0xa9, 0xb0, 0x35, 0xbf, 0xbb, 0x54,
-	0x7d, 0x25, 0x2b, 0xd8, 0x55, 0xe2, 0x7b, 0xb1, 0xd6, 0x5d, 0x0e, 0x87, 0x0f, 0x12, 0x0f, 0xe1,
-	0xba, 0x7e, 0x96, 0xa5, 0x79, 0x95, 0xc3, 0x9a, 0x9e, 0xc3, 0x4d, 0xe4, 0x76, 0x04, 0x2f, 0x7e,
-	0xfe, 0x9d, 0xcf, 0x43, 0xf9, 0xc0, 0x0b, 0x92, 0xea, 0x4b, 0x70, 0x9d, 0x35, 0x9b, 0x21, 0x97,
-	0xd2, 0x94, 0x9e, 0x3c, 0xe2, 0x27, 0x00, 0xc3, 0xde, 0x29, 0x15, 0x54, 0xad, 0x3b, 0x8e, 0x6e,
-	0x34, 0x27, 0x6e, 0x34, 0x47, 0xf7, 0xab, 0x69, 0x34, 0xe7, 0x88, 0xb5, 0x92, 0x3b, 0x75, 0x53,
-	0x91, 0xf6, 0x00, 0x6e, 0xa6, 0x5c, 0xcd, 0x1d, 0x6e, 0xc2, 0xd2, 0xf0, 0xd2, 0x63, 0xeb, 0xf9,
-	0xdd, 0x45, 0x17, 0x2e, 0x6f, 0x5d, 0xe2, 0xbd, 0x09, 0xee, 0xaf, 0xcd, 0x74, 0xd7, 0xd9, 0x47,
-	0xec, 0x7b, 0xf0, 0xd2, 0x57, 0xec, 0xa4, 0xc3, 0x9f, 0x43, 0xe5, 0x8f, 0x09, 0xdc, 0x7a, 0xd6,
-	0xfb, 0x7f, 0xaf, 0xbf, 0x0e, 0xab, 0xaa, 0x71, 0x3e, 0x12, 0x7e, 0xc4, 0x1f, 0x45, 0xf9, 0xba,
-	0x3e, 0x3e, 0x56, 0x7d, 0xaa, 0x8f, 0x0b, 0xfa, 0x58, 0xbd, 0x51, 0x43, 0x51, 0x87, 0xb5, 0xd1,
-	0xa4, 0xa6, 0xac, 0xbb, 0x50, 0x34, 0xed, 0x4d, 0xf2, 0xb7, 0xb7, 0x09, 0xb1, 0x6b, 0xb0, 0x62,
-	0x3a, 0x36, 0x1f, 0x23, 0xc2, 0x35, 0x9f, 0xb5, 0xb9, 0xa1, 0x53, 0xbf, 0x6d, 0x0f, 0x6e, 0x24,
-	0x39, 0x0c, 0xd2, 0x8c, 0x24, 0xa9, 0x69, 0x2a, 0x5c, 0x6d, 0x9a, 0x3c, 0x58, 0x57, 0x13, 0x5e,
-	0x4f, 0xaf, 0xb3, 0x04, 0xfd, 0x33, 0xc0, 0x91, 0x35, 0x97, 0x72, 0xaf, 0x6d, 0x3c, 0x3d, 0xdb,
-	0x5c, 0xef, 0xb1, 0xf6, 0xc9, 0x3b, 0xf6, 0xb8, 0xc6, 0x76, 0x6f, 0x8e, 0xbc, 0x54, 0xd7, 0xfd,
-	0x0b, 0x81, 0xf2, 0x24, 0x2f, 0x53, 0x62, 0x1f, 0x56, 0x75, 0x89, 0x23, 0x91, 0x66, 0x3d, 0xed,
-	0x4d, 0x5d, 0x4f, 0x23, 0x09, 0x6b, 0xd6, 0xd3, 0xb3, 0xcd, 0xb2, 0x21, 0x1b, 0x4f, 0x68, 0xbb,
-	0x28, 0xc7, 0x62, 0xaa, 0xff, 0xbe, 0x00, 0x0b, 0x6a, 0x49, 0xe3, 0x0f, 0x04, 0x8a, 0x7a, 0xe3,
-	0x62, 0xa6, 0xe9, 0xf8, 0x92, 0x2f, 0xdf, 0xce, 0xa5, 0xd5, 0xa5, 0xda, 0x3b, 0x8f, 0xff, 0xfc,
-	0xe7, 0xa7, 0xc2, 0x16, 0x5a, 0x34, 0xe3, 0xe3, 0xa2, 0x97, 0x3c, 0x7e, 0x4f, 0x60, 0x41, 0x15,
-	0x88, 0xaf, 0x4e, 0x5f, 0xcf, 0x06, 0x62, 0x7b, 0x86, 0xca, 0xd8, 0x57, 0x95, 0xfd, 0x1d, 0xdc,
-	0xa3, 0xd3, 0xbe, 0x7f, 0xb4, 0x3f, 0xec, 0xb8, 0x01, 0xfe, 0x4e, 0x60, 0x39, 0x3d, 0x2c, 0x98,
-	0x59, 0xf0, 0x84, 0x39, 0x2d, 0xdf, 0xc9, 0x27, 0x36, 0x7c, 0x1f, 0x2b, 0xbe, 0x0f, 0xf0, 0xbd,
-	0xfc, 0x7c, 0x54, 0x4d, 0x1f, 0xed, 0x0f, 0xc7, 0x7d, 0x80, 0xbf, 0x12, 0x28, 0xea, 0x76, 0xc7,
-	0xed, 0x19, 0xe3, 0x60, 0x30, 0x77, 0x66, 0xc9, 0x0c, 0xe0, 0x87, 0x0a, 0xf0, 0x2e, 0xbe, 0x7d,
-	0x05, 0x40, 0x33, 0x70, 0xb4, 0x1f, 0x4f, 0xf8, 0x00, 0x7f, 0x26, 0xb0, 0x78, 0xb9, 0x50, 0x71,
-	0x37, 0xcb, 0xf8, 0xd9, 0x7d, 0x5f, 0x7e, 0x3d, 0x87, 0xd2, 0x50, 0x1e, 0x28, 0xca, 0x7d, 0xbc,
-	0x9d, 0x45, 0x29, 0x92, 0x10, 0xda, 0x37, 0x1f, 0x8d, 0x01, 0xfe, 0x46, 0xe0, 0xc6, 0xe8, 0xb6,
-	0xc7, 0xfd, 0x2c, 0xcb, 0x89, 0x5f, 0xa4, 0xb2, 0x93, 0x57, 0x6e, 0x30, 0x0f, 0x15, 0x66, 0x15,
-	0xdf, 0xc8, 0xc2, 0xec, 0xc6, 0x71, 0x93, 0x58, 0xff, 0x20, 0x80, 0xe3, 0xf3, 0x8f, 0x95, 0xfc,
-	0xbb, 0x22, 0x61, 0xae, 0x5e, 0x25, 0xc4, 0x70, 0xbf, 0xaf, 0xb8, 0x0f, 0xf1, 0xad, 0xa9, 0x4d,
-	0x10, 0xef, 0x1e, 0xda, 0x1f, 0xdf, 0x90, 0x83, 0xda, 0xb7, 0xa7, 0xe7, 0x16, 0x79, 0x72, 0x6e,
-	0x91, 0xbf, 0xcf, 0x2d, 0xf2, 0xe3, 0x85, 0x35, 0xf7, 0xe4, 0xc2, 0x9a, 0xfb, 0xeb, 0xc2, 0x9a,
-	0x83, 0x75, 0x4f, 0x64, 0xf0, 0x1c, 0x91, 0xaf, 0xdf, 0x6c, 0x79, 0xd1, 0x83, 0xce, 0xb1, 0xd3,
-	0x10, 0xed, 0x94, 0xf1, 0xbe, 0x27, 0xd2, 0x18, 0x8f, 0x86, 0x20, 0x51, 0x2f, 0xe0, 0xf2, 0xb8,
-	0xa8, 0xfe, 0xa0, 0x1e, 0xfc, 0x17, 0x00, 0x00, 0xff, 0xff, 0x89, 0xf7, 0xb9, 0x41, 0xb5, 0x0b,
+	// 994 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x97, 0xc1, 0x6f, 0xdc, 0xc4,
+	0x17, 0xc7, 0x33, 0x49, 0x93, 0xfc, 0xf2, 0x92, 0xfe, 0x20, 0x93, 0x10, 0x76, 0x2d, 0xe2, 0x44,
+	0x86, 0x96, 0x90, 0x36, 0x9e, 0xee, 0x06, 0xa1, 0xa8, 0x94, 0x82, 0x16, 0x68, 0xa8, 0x04, 0x22,
+	0x78, 0x15, 0x0e, 0x5c, 0x2a, 0x67, 0x77, 0xd8, 0x5a, 0x64, 0x3d, 0xae, 0xc7, 0xbb, 0x74, 0xb5,
+	0xda, 0x4b, 0x4f, 0x70, 0x40, 0x20, 0x21, 0x0e, 0xfc, 0x09, 0xdc, 0x38, 0x71, 0xe1, 0xc2, 0x31,
+	0x37, 0x2a, 0x71, 0xe1, 0x14, 0xa1, 0x84, 0xbf, 0xa0, 0x7f, 0x01, 0xf2, 0xcc, 0x38, 0xb6, 0x63,
+	0x7b, 0xe3, 0x0a, 0x89, 0xde, 0xd6, 0x33, 0xdf, 0xf7, 0xde, 0xe7, 0x6b, 0xbd, 0x79, 0xe3, 0x05,
+	0xc3, 0xf3, 0x59, 0x9f, 0xba, 0xb6, 0xdb, 0xa2, 0xa4, 0x4b, 0x03, 0xbb, 0x6d, 0x07, 0x36, 0xe9,
+	0xd7, 0xc8, 0x83, 0x1e, 0xf5, 0x07, 0xa6, 0xe7, 0xb3, 0x80, 0xe1, 0x95, 0x58, 0x63, 0x46, 0x1a,
+	0xb3, 0x5f, 0xd3, 0x96, 0x3b, 0xac, 0xc3, 0x84, 0x84, 0x84, 0xbf, 0xa4, 0x5a, 0xdb, 0x6c, 0x31,
+	0xde, 0x65, 0x9c, 0x1c, 0xd8, 0x9c, 0xca, 0x34, 0xa4, 0x5f, 0x3b, 0xa0, 0x81, 0x5d, 0x23, 0x9e,
+	0xdd, 0x71, 0x5c, 0x3b, 0x70, 0x98, 0xab, 0xb4, 0x2f, 0x75, 0x18, 0xeb, 0x1c, 0x52, 0x62, 0x7b,
+	0x0e, 0xb1, 0x5d, 0x97, 0x05, 0x62, 0x93, 0xab, 0xdd, 0x2b, 0x05, 0x6c, 0x67, 0x0c, 0x52, 0x56,
+	0x64, 0x81, 0xb7, 0x98, 0x47, 0x23, 0xa8, 0x22, 0x8d, 0x47, 0x5b, 0xce, 0xe7, 0x4e, 0x2b, 0x01,
+	0x65, 0x2c, 0x03, 0xfe, 0x24, 0xc4, 0xde, 0xb3, 0x7d, 0xbb, 0xcb, 0x2d, 0xfa, 0xa0, 0x47, 0x79,
+	0x60, 0x34, 0x61, 0x29, 0xb5, 0xca, 0x3d, 0xe6, 0x72, 0x8a, 0x6f, 0xc1, 0x8c, 0x27, 0x56, 0x2a,
+	0x68, 0x1d, 0x6d, 0xcc, 0xd7, 0x75, 0x33, 0xff, 0x65, 0x99, 0x32, 0xae, 0x71, 0xe9, 0xe8, 0x78,
+	0x6d, 0xc2, 0x52, 0x31, 0xc6, 0x16, 0x2c, 0x34, 0x43, 0x4a, 0x55, 0x04, 0xaf, 0x02, 0x08, 0xea,
+	0x7b, 0xbd, 0x9e, 0xd3, 0x16, 0x19, 0xe7, 0xac, 0x39, 0xb1, 0xb2, 0xdf, 0x73, 0xda, 0xc6, 0x11,
+	0x82, 0xcb, 0x4a, 0xaf, 0xca, 0x6f, 0xc3, 0xb4, 0xd8, 0x56, 0xd5, 0x57, 0x8b, 0xaa, 0xcb, 0x28,
+	0xa9, 0xc5, 0x1f, 0xc0, 0x65, 0x9f, 0xb6, 0x98, 0xdf, 0xbe, 0xd7, 0xf1, 0x59, 0xcf, 0xe3, 0x95,
+	0xc9, 0xf5, 0xa9, 0x8d, 0xf9, 0xfa, 0xcb, 0x45, 0xc1, 0x96, 0x10, 0xef, 0x86, 0x5a, 0x6b, 0xc1,
+	0x8f, 0x1f, 0x38, 0xde, 0x81, 0x59, 0xf9, 0xcc, 0x2b, 0x53, 0x22, 0x87, 0x3e, 0x3e, 0x87, 0x15,
+	0xc9, 0x8d, 0x00, 0x9e, 0xff, 0xf8, 0x4b, 0x97, 0xfa, 0xfc, 0xbe, 0xe3, 0x45, 0xee, 0x2b, 0x30,
+	0x6b, 0xb7, 0xdb, 0x3e, 0xe5, 0x5c, 0x59, 0x8f, 0x1e, 0xf1, 0x1d, 0x80, 0xb8, 0x77, 0x2a, 0x93,
+	0xc2, 0xeb, 0x55, 0x53, 0x36, 0x9a, 0x19, 0x36, 0x9a, 0x29, 0xfb, 0x55, 0x35, 0x9a, 0xb9, 0x67,
+	0x77, 0xa2, 0x77, 0x6a, 0x25, 0x22, 0x8d, 0x11, 0x2c, 0x26, 0xaa, 0xaa, 0x77, 0xb8, 0x06, 0xf3,
+	0xf1, 0x4b, 0x0f, 0x4b, 0x4f, 0x6d, 0xcc, 0x59, 0x70, 0xf6, 0xd6, 0x39, 0xde, 0xcd, 0xa9, 0xfe,
+	0xea, 0x85, 0xd5, 0x65, 0xf6, 0x54, 0xf9, 0x01, 0xbc, 0xf0, 0xa9, 0x7d, 0xd8, 0xa3, 0xcf, 0xc0,
+	0xf9, 0x23, 0x04, 0x2b, 0xe7, 0x6b, 0xff, 0xe7, 0xfe, 0x9b, 0xb0, 0x24, 0x1a, 0xe7, 0x5d, 0xe6,
+	0x06, 0xf4, 0x61, 0x50, 0xae, 0xeb, 0xc3, 0x6d, 0xd1, 0xa7, 0x72, 0x7b, 0x52, 0x6e, 0x8b, 0x15,
+	0x71, 0x28, 0x9a, 0xb0, 0x9c, 0x4e, 0xaa, 0x6c, 0xbd, 0x09, 0x33, 0xaa, 0xbd, 0x51, 0xf9, 0xf6,
+	0x56, 0x21, 0xc6, 0x47, 0x50, 0x91, 0xcb, 0x8d, 0x81, 0x38, 0x3a, 0xfb, 0xfb, 0x77, 0xdf, 0x2b,
+	0x89, 0x8b, 0xe1, 0x92, 0x6b, 0x77, 0xa9, 0x02, 0x15, 0xbf, 0x8d, 0x6f, 0x11, 0x54, 0x73, 0xf2,
+	0x29, 0xd2, 0x0b, 0x12, 0x56, 0xe1, 0x7f, 0x72, 0xfb, 0xcc, 0xfd, 0xac, 0x78, 0xbe, 0xdb, 0xfe,
+	0x17, 0xe7, 0x6f, 0x17, 0x56, 0x52, 0x40, 0xb1, 0xbd, 0x64, 0x39, 0x94, 0x2e, 0x97, 0x67, 0xed,
+	0x1b, 0x04, 0x2f, 0x66, 0x32, 0x3d, 0x43, 0x63, 0x0e, 0x54, 0x05, 0x46, 0x33, 0x39, 0xd9, 0x23,
+	0x6f, 0x1f, 0x02, 0x4e, 0x4d, 0xfc, 0x04, 0x58, 0x63, 0xf5, 0xc9, 0xf1, 0x5a, 0x75, 0x60, 0x77,
+	0x0f, 0x6f, 0x1a, 0x59, 0x8d, 0x61, 0x2d, 0xa6, 0x16, 0x45, 0xe7, 0xfd, 0x88, 0x40, 0xcb, 0xab,
+	0xa5, 0xdc, 0x0f, 0x61, 0x49, 0xda, 0x4b, 0x45, 0xaa, 0x49, 0xbd, 0x39, 0x76, 0x52, 0xa7, 0x12,
+	0x36, 0xf4, 0x27, 0xc7, 0x6b, 0x9a, 0x22, 0xcb, 0x26, 0x34, 0x2c, 0xcc, 0x33, 0x31, 0xf5, 0xdf,
+	0x01, 0xa6, 0xc5, 0x7d, 0x85, 0xbf, 0x46, 0x30, 0x23, 0x2f, 0x1f, 0x5c, 0x58, 0x34, 0x7b, 0xdf,
+	0x69, 0xd7, 0x4a, 0x69, 0xa5, 0x55, 0xe3, 0xea, 0xa3, 0x3f, 0xfe, 0xfe, 0x7e, 0x72, 0x1d, 0xeb,
+	0xa4, 0xe0, 0x9e, 0x95, 0xf7, 0x1d, 0xfe, 0x0a, 0xc1, 0xb4, 0x30, 0x88, 0x5f, 0x19, 0x7f, 0x53,
+	0x29, 0x88, 0x2b, 0x17, 0xa8, 0x54, 0xf9, 0xba, 0x28, 0x7f, 0x1d, 0x6f, 0x92, 0x71, 0x9f, 0x02,
+	0x64, 0x18, 0x37, 0xe3, 0x08, 0xff, 0x8c, 0x60, 0x21, 0x39, 0x37, 0x70, 0xa1, 0xe1, 0x9c, 0x91,
+	0xa5, 0x5d, 0x2f, 0x27, 0x56, 0x7c, 0xef, 0x0b, 0xbe, 0xb7, 0xf1, 0x5b, 0xe5, 0xf9, 0x88, 0x18,
+	0x44, 0x64, 0x18, 0x4f, 0xbe, 0x11, 0xfe, 0x0d, 0xc1, 0x62, 0x66, 0x8a, 0xe0, 0x1b, 0xe3, 0x4f,
+	0x46, 0x76, 0x80, 0x69, 0xb5, 0xa7, 0x88, 0x50, 0x0e, 0xee, 0x08, 0x07, 0xef, 0xe0, 0xdb, 0xe3,
+	0x1d, 0x84, 0x9c, 0x69, 0x1b, 0xea, 0x58, 0x92, 0x61, 0x38, 0x2c, 0x46, 0xf8, 0x17, 0x04, 0xcf,
+	0x9d, 0x9b, 0x16, 0xd8, 0x2c, 0x85, 0x13, 0xe3, 0x93, 0xd2, 0x7a, 0x05, 0xdf, 0x10, 0xf0, 0xb7,
+	0xf0, 0xcd, 0xf1, 0xf0, 0x31, 0x7a, 0x0e, 0xf8, 0x0f, 0x08, 0xe6, 0xce, 0xae, 0x4e, 0xbc, 0x51,
+	0x84, 0x70, 0xfe, 0x66, 0xd7, 0x5e, 0x2b, 0xa1, 0x54, 0x98, 0xdb, 0x02, 0x73, 0x0b, 0x5f, 0x2b,
+	0xc2, 0x64, 0x51, 0x08, 0x19, 0xaa, 0xcf, 0x83, 0x11, 0xfe, 0x09, 0xc1, 0xff, 0xd3, 0xf7, 0x3a,
+	0xde, 0x2a, 0x2a, 0x99, 0xfb, 0xed, 0xa1, 0x99, 0x65, 0xe5, 0x0a, 0x73, 0x47, 0x60, 0xd6, 0xf1,
+	0x8d, 0x22, 0xcc, 0x7e, 0x18, 0x97, 0xc7, 0xfa, 0x2b, 0x02, 0x9c, 0x1d, 0x6f, 0xb8, 0x56, 0x7e,
+	0x14, 0x46, 0xcc, 0xf5, 0xa7, 0x09, 0x51, 0xdc, 0xb7, 0x05, 0xf7, 0x0e, 0x7e, 0x63, 0x6c, 0x17,
+	0x84, 0xa3, 0x95, 0x0c, 0xb3, 0x17, 0xc0, 0xa8, 0xf1, 0xc5, 0xd1, 0x89, 0x8e, 0x1e, 0x9f, 0xe8,
+	0xe8, 0xaf, 0x13, 0x1d, 0x7d, 0x77, 0xaa, 0x4f, 0x3c, 0x3e, 0xd5, 0x27, 0xfe, 0x3c, 0xd5, 0x27,
+	0xa0, 0xea, 0xb0, 0x02, 0x9e, 0x3d, 0xf4, 0xd9, 0xeb, 0x1d, 0x27, 0xb8, 0xdf, 0x3b, 0x30, 0x5b,
+	0xac, 0x9b, 0x28, 0xbc, 0xe5, 0xb0, 0x24, 0xc6, 0xc3, 0x18, 0x24, 0x18, 0x78, 0x94, 0x1f, 0xcc,
+	0x88, 0xbf, 0x22, 0xdb, 0xff, 0x04, 0x00, 0x00, 0xff, 0xff, 0x8d, 0xe4, 0x82, 0xca, 0x9f, 0x0d,
 	0x00, 0x00,
 }
 
@@ -832,8 +961,10 @@ type QueryClient interface {
 	Scope(ctx context.Context, in *ScopeRequest, opts ...grpc.CallOption) (*ScopeResponse, error)
 	// GroupContext returns a specific group context within a scope (or all groups)
 	GroupContext(ctx context.Context, in *GroupContextRequest, opts ...grpc.CallOption) (*GroupContextResponse, error)
-	// Record returns a collection of the records in a scope or a specific one by name
-	Record(ctx context.Context, in *RecordRequest, opts ...grpc.CallOption) (*RecordResponse, error)
+	// RecordByScopeUUID returns a collection of the records in a scope by scope uuid or a specific one by name
+	RecordByScopeUUID(ctx context.Context, in *RecordByScopeUUIDRequest, opts ...grpc.CallOption) (*RecordByScopeUUIDResponse, error)
+	// RecordByScopeID returns a collection of the records in a scope by scope bech32 id or a specific one by name
+	RecordByScopeID(ctx context.Context, in *RecordByScopeIDRequest, opts ...grpc.CallOption) (*RecordByScopeIDResponse, error)
 	// Ownership returns a list of scope identifiers that list the given address as a data or value owner
 	Ownership(ctx context.Context, in *OwnershipRequest, opts ...grpc.CallOption) (*OwnershipResponse, error)
 	// ValueOwnership returns a list of scope identifiers that list the given address as the value owner
@@ -877,9 +1008,18 @@ func (c *queryClient) GroupContext(ctx context.Context, in *GroupContextRequest,
 	return out, nil
 }
 
-func (c *queryClient) Record(ctx context.Context, in *RecordRequest, opts ...grpc.CallOption) (*RecordResponse, error) {
-	out := new(RecordResponse)
-	err := c.cc.Invoke(ctx, "/provenance.metadata.v1.Query/Record", in, out, opts...)
+func (c *queryClient) RecordByScopeUUID(ctx context.Context, in *RecordByScopeUUIDRequest, opts ...grpc.CallOption) (*RecordByScopeUUIDResponse, error) {
+	out := new(RecordByScopeUUIDResponse)
+	err := c.cc.Invoke(ctx, "/provenance.metadata.v1.Query/RecordByScopeUUID", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) RecordByScopeID(ctx context.Context, in *RecordByScopeIDRequest, opts ...grpc.CallOption) (*RecordByScopeIDResponse, error) {
+	out := new(RecordByScopeIDResponse)
+	err := c.cc.Invoke(ctx, "/provenance.metadata.v1.Query/RecordByScopeID", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -921,8 +1061,10 @@ type QueryServer interface {
 	Scope(context.Context, *ScopeRequest) (*ScopeResponse, error)
 	// GroupContext returns a specific group context within a scope (or all groups)
 	GroupContext(context.Context, *GroupContextRequest) (*GroupContextResponse, error)
-	// Record returns a collection of the records in a scope or a specific one by name
-	Record(context.Context, *RecordRequest) (*RecordResponse, error)
+	// RecordByScopeUUID returns a collection of the records in a scope by scope uuid or a specific one by name
+	RecordByScopeUUID(context.Context, *RecordByScopeUUIDRequest) (*RecordByScopeUUIDResponse, error)
+	// RecordByScopeID returns a collection of the records in a scope by scope bech32 id or a specific one by name
+	RecordByScopeID(context.Context, *RecordByScopeIDRequest) (*RecordByScopeIDResponse, error)
 	// Ownership returns a list of scope identifiers that list the given address as a data or value owner
 	Ownership(context.Context, *OwnershipRequest) (*OwnershipResponse, error)
 	// ValueOwnership returns a list of scope identifiers that list the given address as the value owner
@@ -944,8 +1086,11 @@ func (*UnimplementedQueryServer) Scope(ctx context.Context, req *ScopeRequest) (
 func (*UnimplementedQueryServer) GroupContext(ctx context.Context, req *GroupContextRequest) (*GroupContextResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GroupContext not implemented")
 }
-func (*UnimplementedQueryServer) Record(ctx context.Context, req *RecordRequest) (*RecordResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Record not implemented")
+func (*UnimplementedQueryServer) RecordByScopeUUID(ctx context.Context, req *RecordByScopeUUIDRequest) (*RecordByScopeUUIDResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RecordByScopeUUID not implemented")
+}
+func (*UnimplementedQueryServer) RecordByScopeID(ctx context.Context, req *RecordByScopeIDRequest) (*RecordByScopeIDResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RecordByScopeID not implemented")
 }
 func (*UnimplementedQueryServer) Ownership(ctx context.Context, req *OwnershipRequest) (*OwnershipResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Ownership not implemented")
@@ -1015,20 +1160,38 @@ func _Query_GroupContext_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_Record_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RecordRequest)
+func _Query_RecordByScopeUUID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RecordByScopeUUIDRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).Record(ctx, in)
+		return srv.(QueryServer).RecordByScopeUUID(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.metadata.v1.Query/Record",
+		FullMethod: "/provenance.metadata.v1.Query/RecordByScopeUUID",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).Record(ctx, req.(*RecordRequest))
+		return srv.(QueryServer).RecordByScopeUUID(ctx, req.(*RecordByScopeUUIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_RecordByScopeID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RecordByScopeIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).RecordByScopeID(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.metadata.v1.Query/RecordByScopeID",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).RecordByScopeID(ctx, req.(*RecordByScopeIDRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1104,8 +1267,12 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_GroupContext_Handler,
 		},
 		{
-			MethodName: "Record",
-			Handler:    _Query_Record_Handler,
+			MethodName: "RecordByScopeUUID",
+			Handler:    _Query_RecordByScopeUUID_Handler,
+		},
+		{
+			MethodName: "RecordByScopeID",
+			Handler:    _Query_RecordByScopeID_Handler,
 		},
 		{
 			MethodName: "Ownership",
@@ -1519,7 +1686,7 @@ func (m *GroupContextResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *RecordRequest) Marshal() (dAtA []byte, err error) {
+func (m *RecordByScopeUUIDRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1529,12 +1696,12 @@ func (m *RecordRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *RecordRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *RecordByScopeUUIDRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *RecordRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *RecordByScopeUUIDRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1556,7 +1723,7 @@ func (m *RecordRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *RecordResponse) Marshal() (dAtA []byte, err error) {
+func (m *RecordByScopeUUIDResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1566,12 +1733,12 @@ func (m *RecordResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *RecordResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *RecordByScopeUUIDResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *RecordResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *RecordByScopeUUIDResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1587,8 +1754,103 @@ func (m *RecordResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 				i = encodeVarintQuery(dAtA, i, uint64(size))
 			}
 			i--
-			dAtA[i] = 0x12
+			dAtA[i] = 0x1a
 		}
+	}
+	if len(m.ScopeId) > 0 {
+		i -= len(m.ScopeId)
+		copy(dAtA[i:], m.ScopeId)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.ScopeId)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.ScopeUuid) > 0 {
+		i -= len(m.ScopeUuid)
+		copy(dAtA[i:], m.ScopeUuid)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.ScopeUuid)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *RecordByScopeIDRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RecordByScopeIDRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *RecordByScopeIDRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Name) > 0 {
+		i -= len(m.Name)
+		copy(dAtA[i:], m.Name)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Name)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.ScopeId) > 0 {
+		i -= len(m.ScopeId)
+		copy(dAtA[i:], m.ScopeId)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.ScopeId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *RecordByScopeIDResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RecordByScopeIDResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *RecordByScopeIDResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Records) > 0 {
+		for iNdEx := len(m.Records) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Records[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if len(m.ScopeId) > 0 {
+		i -= len(m.ScopeId)
+		copy(dAtA[i:], m.ScopeId)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.ScopeId)))
+		i--
+		dAtA[i] = 0x12
 	}
 	if len(m.ScopeUuid) > 0 {
 		i -= len(m.ScopeUuid)
@@ -1838,7 +2100,7 @@ func (m *GroupContextResponse) Size() (n int) {
 	return n
 }
 
-func (m *RecordRequest) Size() (n int) {
+func (m *RecordByScopeUUIDRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1855,13 +2117,57 @@ func (m *RecordRequest) Size() (n int) {
 	return n
 }
 
-func (m *RecordResponse) Size() (n int) {
+func (m *RecordByScopeUUIDResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
 	l = len(m.ScopeUuid)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = len(m.ScopeId)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if len(m.Records) > 0 {
+		for _, e := range m.Records {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *RecordByScopeIDRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ScopeId)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = len(m.Name)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *RecordByScopeIDResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ScopeUuid)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = len(m.ScopeId)
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
@@ -2945,7 +3251,7 @@ func (m *GroupContextResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *RecordRequest) Unmarshal(dAtA []byte) error {
+func (m *RecordByScopeUUIDRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2968,10 +3274,10 @@ func (m *RecordRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: RecordRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: RecordByScopeUUIDRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: RecordRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: RecordByScopeUUIDRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -3059,7 +3365,7 @@ func (m *RecordRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *RecordResponse) Unmarshal(dAtA []byte) error {
+func (m *RecordByScopeUUIDResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3082,10 +3388,10 @@ func (m *RecordResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: RecordResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: RecordByScopeUUIDResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: RecordResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: RecordByScopeUUIDResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -3121,6 +3427,300 @@ func (m *RecordResponse) Unmarshal(dAtA []byte) error {
 			m.ScopeUuid = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ScopeId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ScopeId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Records", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Records = append(m.Records, &Record{})
+			if err := m.Records[len(m.Records)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RecordByScopeIDRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RecordByScopeIDRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RecordByScopeIDRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ScopeId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ScopeId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Name = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RecordByScopeIDResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RecordByScopeIDResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RecordByScopeIDResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ScopeUuid", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ScopeUuid = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ScopeId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ScopeId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Records", wireType)
 			}

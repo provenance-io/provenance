@@ -30,9 +30,14 @@ service Query {
     option (google.api.http).get = "/provenance/metadata/v1/scope/{scope_uuid}/group/{group_uuid}";
   }
 
-  // Record returns a collection of the records in a scope or a specific one by name
-  rpc Record(RecordRequest) returns (RecordResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/scope/{scope_uuid}/records/{name}";
+  // RecordByScopeUUID returns a collection of the records in a scope by scope uuid or a specific one by name
+  rpc RecordByScopeUUID(RecordByScopeUUIDRequest) returns (RecordByScopeUUIDResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/scope/uuid/{scope_uuid}/records/{name}";
+  }
+
+  // RecordByScopeID returns a collection of the records in a scope by scope bech32 id or a specific one by name
+  rpc RecordByScopeID(RecordByScopeIDRequest) returns (RecordByScopeIDResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/scope/id/{scope_id}/records/{name}";
   }
 
   // Ownership returns a list of scope identifiers that list the given address as a data or value owner
@@ -115,16 +120,30 @@ message GroupContextResponse {
   repeated RecordGroup groups = 1;
 }
 
-// RecordRequest is a request for all of the records in a specific scope or a specific record if a name is given.
-message RecordRequest {
+// RecordByScopeUUIDRequest is a request for all of the records in a specific scope by uuid or a specific record if a name is given.
+message RecordByScopeUUIDRequest {
   string scope_uuid = 1;
   string name     = 2;
 }
 
-// RecordResponse is the response to a RecordRequest
-message RecordResponse {
+// RecordByScopeUUIDResponse is the response to a RecordByScopeUUIDRequest
+message RecordByScopeUUIDResponse {
   string          scope_uuid = 1;
-  repeated Record records  = 2;
+  string          scope_id = 2;
+  repeated Record records  = 3;
+}
+
+// RecordByScopeIDRequest is a request for all of the records in a specific scope by bech32 id or a specific record if a name is given.
+message RecordByScopeIDRequest {
+  string scope_id = 1;
+  string name     = 2;
+}
+
+// RecordByScopeIDResponse is the response to a RecordByScopeIDRequest
+message RecordByScopeIDResponse {
+  string          scope_uuid = 1;
+  string          scope_id = 2;
+  repeated Record records  = 3;
 }
 
 // ScopeSpecificationRequest is used for requesting a scope specification by uuid

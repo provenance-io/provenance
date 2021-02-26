@@ -73,27 +73,66 @@ func (k Keeper) GroupContext(c context.Context, req *types.GroupContextRequest) 
 	return &types.GroupContextResponse{}, nil
 }
 
-// Record returns a collection of the records in a scope or a specific one by name
-func (k Keeper) Record(c context.Context, req *types.RecordRequest) (*types.RecordResponse, error) {
-	ctx := sdk.UnwrapSDKContext(c)
+// RecordByScopeUUID returns a collection of the records in a scope or a specific one by name
+func (k Keeper) RecordByScopeUUID(c context.Context, req *types.RecordByScopeUUIDRequest) (*types.RecordByScopeUUIDResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.ScopeUuid == "" {
+	if req.GetScopeUuid() == "" {
 		return nil, status.Error(codes.InvalidArgument, "scope uuid cannot be empty")
 	}
 
-	id, err := uuid.Parse(req.ScopeUuid)
+	uuid, err := uuid.Parse(req.GetScopeUuid())
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid scope uuid: %s", err.Error())
 	}
 
+	scopeAddr := types.ScopeMetadataAddress(uuid)
+	records, err := k.record(c, &scopeAddr, req.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.RecordByScopeUUIDResponse{ScopeUuid: req.GetScopeUuid(), ScopeId: scopeAddr.String(), Records: records}, nil
+}
+
+// RecordByScopeID returns a collection of the records in a scope or a specific one by name
+func (k Keeper) RecordByScopeID(c context.Context, req *types.RecordByScopeIDRequest) (*types.RecordByScopeIDResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if req.GetScopeId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "scope id cannot be empty")
+	}
+
+	scopeAddr, err := types.MetadataAddressFromBech32(req.GetScopeId())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid scope id %s : %s", req.GetScopeId(), err)
+	}
+
+	scopeUUID, err := scopeAddr.ScopeUUID()
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "unable to extract uuid from scope metaaddress %s", err)
+	}
+
+	records, err := k.record(c, &scopeAddr, req.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.RecordByScopeIDResponse{ScopeUuid: scopeUUID.String(), ScopeId: req.GetScopeId(), Records: records}, nil
+}
+
+// record returns a collection of the records in a scope or a specific one by name
+func (k Keeper) record(c context.Context, scopeAddress *types.MetadataAddress, name string) ([]*types.Record, error) {
+	ctx := sdk.UnwrapSDKContext(c)
 	records := []*types.Record{}
-	err = k.IterateRecords(ctx, types.ScopeMetadataAddress(id), func(r types.Record) (stop bool) {
-		if req.Name == "" {
+	err := k.IterateRecords(ctx, *scopeAddress, func(r types.Record) (stop bool) {
+		if name == "" {
 			records = append(records, &r)
-		} else if req.Name == r.Name {
+		} else if name == r.Name {
 			records = append(records, &r)
 		}
 		return false
@@ -102,7 +141,7 @@ func (k Keeper) Record(c context.Context, req *types.RecordRequest) (*types.Reco
 		return nil, status.Errorf(codes.Internal, "failed to iterate records: %s", err.Error())
 	}
 
-	return &types.RecordResponse{ScopeUuid: req.ScopeUuid, Records: records}, nil
+	return records, nil
 }
 
 // Ownership returns a list of scope identifiers that list the given address as a data or value owner
