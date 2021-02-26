@@ -30,10 +30,15 @@ service Msg {
   // AddRecord adds a set of records in a record group within a scope
   rpc AddRecord(MsgAddRecordRequest) returns (MsgAddRecordResponse);
 
-  // AddScopeSpecification adds a set of records in a record group within a scope
+  // AddScopeSpecification adds a scope specification
   rpc AddScopeSpecification(MsgAddScopeSpecificationRequest) returns (MsgAddScopeSpecificationResponse);
-  // AddContractSpecification adds a set of records in a record group within a scope
+  // RemoveScopeSpecification removes a scope specification
+  rpc RemoveScopeSpecification(MsgRemoveScopeSpecificationRequest) returns (MsgRemoveScopeSpecificationResponse);
+
+  // AddContractSpecification adds a contract specification
   rpc AddContractSpecification(MsgAddContractSpecificationRequest) returns (MsgAddContractSpecificationResponse);
+  // RemoveContractSpecification removes a contract specification
+  rpc RemoveContractSpecification(MsgRemoveContractSpecificationRequest) returns (MsgRemoveContractSpecificationResponse);
 }
 
 // MsgMemorializeContractRequest is a request from a P8e execution environment to record results of a contract
@@ -68,11 +73,11 @@ message MsgChangeOwnershipRequest {
   option (gogoproto.goproto_getters)  = false;
 
   // The scope of the object being modified on blockchain.
-  string scope_id = 1;
+  string scope_id = 1 [(gogoproto.moretags) = "yaml:\"scope_id\""];
   // The uuid of the contract execution.
-  string group_id = 2;
+  string group_id = 2 [(gogoproto.moretags) = "yaml:\"group_id\""];
   // Unique identifier for determining contract/group execution instance
-  string execution_id = 3;
+  string execution_id = 3 [(gogoproto.moretags) = "yaml:\"execution_id\""];
   // The recitals to use for the scope parties
   Recitals recitals = 4;
   // The executed contract.
@@ -96,6 +101,7 @@ message MsgAddScopeRequest {
   Scope           scope   = 1 [(gogoproto.nullable) = false];
   repeated string signers = 2;
 }
+
 // MsgAddScopeResponse from an add scope request
 message MsgAddScopeResponse {}
 
@@ -110,10 +116,11 @@ message MsgRemoveScopeRequest {
   bytes scope_id = 1 [
     (gogoproto.nullable)   = false,
     (gogoproto.customtype) = "MetadataAddress",
-    (gogoproto.moretags)   = "json:\"scope_id\" yaml:\"scope_id\""
+    (gogoproto.moretags)   = "yaml:\"scope_id\""
   ];
   repeated string signers = 2;
 }
+
 // MsgRemoveScopeResponse from a remove scope request
 message MsgRemoveScopeResponse {}
 
@@ -127,6 +134,7 @@ message MsgAddRecordGroupRequest {
   RecordGroup group  = 1;
   string      notary = 2;
 }
+
 // MsgAddRecordGroupResponse from an add records request
 message MsgAddRecordGroupResponse {}
 
@@ -140,16 +148,17 @@ message MsgAddRecordRequest {
   bytes group_id = 1 [
     (gogoproto.nullable)   = false,
     (gogoproto.customtype) = "MetadataAddress",
-    (gogoproto.moretags)   = "json:\"group_id\" yaml:\"group_id\""
+    (gogoproto.moretags)   = "yaml:\"group_id\""
   ];
 
   Record record = 2;
   string notary = 3;
 }
+
 // MsgAddRecordResponse from an add records request
 message MsgAddRecordResponse {}
 
-// MsgAddScopeSpecificationRequest is a request to add a group of records to a scope
+// MsgAddScopeSpecificationRequest is a request to add a scope specification
 message MsgAddScopeSpecificationRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
@@ -160,7 +169,7 @@ message MsgAddScopeSpecificationRequest {
   repeated string    signers       = 2;
 }
 
-// MsgAddScopeSpecificationResponse from an add records request
+// MsgAddScopeSpecificationResponse from an add scope specification request
 message MsgAddScopeSpecificationResponse {}
 
 // MsgRemoveScopeSpecificationRequest removes a scope specification
@@ -178,10 +187,11 @@ message MsgRemoveScopeSpecificationRequest {
   ];
   repeated string signers = 2;
 }
+
 // MsgRemoveScopeSpecificationResponse from a remove scope specification request
 message MsgRemoveScopeSpecificationResponse {}
 
-// MsgAddContractSpecificationRequest is a request to add a group of records to a scope
+// MsgAddContractSpecificationRequest is a request to add a contract specification
 message MsgAddContractSpecificationRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
@@ -192,5 +202,24 @@ message MsgAddContractSpecificationRequest {
   string                notary        = 2;
 }
 
-// AddContractSpecificationResponse from an add records request
+// AddContractSpecificationResponse from an add contract specification request
 message MsgAddContractSpecificationResponse {}
+
+// MsgRemoveContractSpecificationRequest removes a contract specification
+message MsgRemoveContractSpecificationRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  // Unique ID for the scope specification to remove.
+  bytes specification_id = 1 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customtype) = "MetadataAddress",
+    (gogoproto.moretags)   = "yaml:\"specification_id\""
+  ];
+  repeated string signers = 2;
+}
+
+// MsgRemoveContractSpecificationResponse from a remove contract specification request
+message MsgRemoveContractSpecificationResponse {}
