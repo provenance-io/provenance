@@ -99,7 +99,7 @@ func NewContractSpecification(
 	partiesInvolved []PartyType,
 	source isContractSpecification_Source,
 	className string,
-	conditionSpecs []*RecordSpecification,
+	recordSpecIDs []MetadataAddress,
 ) *ContractSpecification {
 	return &ContractSpecification{
 		SpecificationId: specificationID,
@@ -108,7 +108,7 @@ func NewContractSpecification(
 		PartiesInvolved: partiesInvolved,
 		Source:          source,
 		ClassName:       className,
-		ConditionSpecs:  conditionSpecs,
+		RecordSpecIds:   recordSpecIDs,
 	}
 }
 
@@ -176,12 +176,14 @@ func (s *ContractSpecification) ValidateBasic() error {
 		return fmt.Errorf("class name exceeds maximum length (expected <= %d got: %d)",
 			maxContractSpecificationClassNameLength, len(s.ClassName))
 	}
-	if len(s.ConditionSpecs) == 0 {
-		return fmt.Errorf("invalid condition specs count (expected > 0 got: %d)", len(s.ConditionSpecs))
-	}
-	for i, c := range s.ConditionSpecs {
-		if err = c.ValidateBasic(); err != nil {
-			return fmt.Errorf("invalid condition spec at index %d: %w", i, err)
+	for i, recordSpecID := range s.RecordSpecIds {
+		prefix, err = VerifyMetadataAddressFormat(recordSpecID)
+		if err != nil {
+			return fmt.Errorf("invalid record specification id at index %d: %w", i, err)
+		}
+		if prefix != PrefixRecordSpecification {
+			return fmt.Errorf("invalid record specification id prefix at index %d (expected: %s, got %s)",
+				i, PrefixRecordSpecification, prefix)
 		}
 	}
 	return nil

@@ -255,7 +255,7 @@ func (s *specificationTestSuite) TestContractSpecValidateBasic() {
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				NewSourceHash("somehash"),
 				"someclass",
-				[]*RecordSpecification{{}},
+				[]MetadataAddress{},
 			),
 			"invalid contract specification id: invalid metadata address type (must be 0-5, actual: 133)",
 		},
@@ -268,7 +268,7 @@ func (s *specificationTestSuite) TestContractSpecValidateBasic() {
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				NewSourceHash("somehash"),
 				"someclass",
-				[]*RecordSpecification{{}},
+				[]MetadataAddress{},
 			),
 			"invalid contract specification id prefix (expected: contractspec, got scopespec)",
 		},
@@ -283,7 +283,7 @@ func (s *specificationTestSuite) TestContractSpecValidateBasic() {
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				NewSourceHash("somehash"),
 				"someclass",
-				[]*RecordSpecification{{}},
+				[]MetadataAddress{},
 			),
 			fmt.Sprintf("description (ContractSpecification.Description) Name exceeds maximum length (expected <= %d got: %d)", maxDescriptionNameLength, maxDescriptionNameLength + 1),
 		},
@@ -298,7 +298,7 @@ func (s *specificationTestSuite) TestContractSpecValidateBasic() {
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				NewSourceHash("somehash"),
 				"someclass",
-				[]*RecordSpecification{{}},
+				[]MetadataAddress{},
 			),
 			"invalid owner addresses count (expected > 0 got: 0)",
 		},
@@ -311,7 +311,7 @@ func (s *specificationTestSuite) TestContractSpecValidateBasic() {
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				NewSourceHash("somehash"),
 				"someclass",
-				[]*RecordSpecification{{}},
+				[]MetadataAddress{},
 			),
 			fmt.Sprintf("invalid owner address at index %d: %s",
 				0, "decoding bech32 failed: invalid index of 1"),
@@ -325,7 +325,7 @@ func (s *specificationTestSuite) TestContractSpecValidateBasic() {
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				NewSourceHash("somehash"),
 				"someclass",
-				[]*RecordSpecification{{}},
+				[]MetadataAddress{},
 			),
 			fmt.Sprintf("invalid owner address at index %d: %s",
 				2, "decoding bech32 failed: invalid index of 1"),
@@ -341,7 +341,7 @@ func (s *specificationTestSuite) TestContractSpecValidateBasic() {
 				[]PartyType{},
 				NewSourceHash("somehash"),
 				"someclass",
-				[]*RecordSpecification{{}},
+				[]MetadataAddress{},
 			),
 			"invalid parties involved count (expected > 0 got: 0)",
 		},
@@ -356,7 +356,7 @@ func (s *specificationTestSuite) TestContractSpecValidateBasic() {
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				nil,
 				"someclass",
-				[]*RecordSpecification{{}},
+				[]MetadataAddress{},
 			),
 			"a source is required",
 		},
@@ -369,7 +369,7 @@ func (s *specificationTestSuite) TestContractSpecValidateBasic() {
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				NewSourceResourceID(MetadataAddress(specTestAddr)),
 				"someclass",
-				[]*RecordSpecification{{}},
+				[]MetadataAddress{},
 			),
 			fmt.Sprintf("invalid source resource id: %s", "invalid metadata address type (must be 0-5, actual: 133)"),
 		},
@@ -382,7 +382,7 @@ func (s *specificationTestSuite) TestContractSpecValidateBasic() {
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				NewSourceHash(""),
 				"someclass",
-				[]*RecordSpecification{{}},
+				[]MetadataAddress{},
 			),
 			"source hash cannot be empty",
 		},
@@ -395,7 +395,7 @@ func (s *specificationTestSuite) TestContractSpecValidateBasic() {
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				NewWeirdSource(3),
 				"someclass",
-				[]*RecordSpecification{{}},
+				[]MetadataAddress{},
 			),
 			"unknown source type",
 		},
@@ -410,7 +410,7 @@ func (s *specificationTestSuite) TestContractSpecValidateBasic() {
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				NewSourceHash("somehash"),
 				"",
-				[]*RecordSpecification{{}},
+				[]MetadataAddress{},
 			),
 			"class name cannot be empty",
 		},
@@ -423,7 +423,7 @@ func (s *specificationTestSuite) TestContractSpecValidateBasic() {
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				NewSourceHash("somehash"),
 				strings.Repeat("l", maxContractSpecificationClassNameLength + 1),
-				[]*RecordSpecification{{}},
+				[]MetadataAddress{},
 			),
 			fmt.Sprintf("class name exceeds maximum length (expected <= %d got: %d)",
 				maxContractSpecificationClassNameLength, maxContractSpecificationClassNameLength + 1),
@@ -437,14 +437,14 @@ func (s *specificationTestSuite) TestContractSpecValidateBasic() {
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				NewSourceHash("somehash"),
 				strings.Repeat("m", maxContractSpecificationClassNameLength),
-				[]*RecordSpecification{{}},
+				[]MetadataAddress{},
 			),
 			"",
 		},
 
-		// ConditionSpecs tests
+		// RecordSpecIDs tests
 		{
-			"ClassName - at max length",
+			"RecordSpecIDs - invalid address at index 0",
 			NewContractSpecification(
 				ContractSpecMetadataAddress(uuid.New()),
 				nil,
@@ -452,12 +452,52 @@ func (s *specificationTestSuite) TestContractSpecValidateBasic() {
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				NewSourceHash("somehash"),
 				"someclass",
-				[]*RecordSpecification{},
+				[]MetadataAddress{MetadataAddress(specTestAddr)},
 			),
-			"invalid condition specs count (expected > 0 got: 0)",
+			fmt.Sprintf("invalid record specification id at index %d: %s",
+				0, "invalid metadata address type (must be 0-5, actual: 133)"),
 		},
-		// TODO: condition specs - invalid spec at index 0
-		// TODO: condition specs - invalid spec at index 2
+		{
+			"RecordSpecIDs - invalid address prefix at index 0",
+			NewContractSpecification(
+				ContractSpecMetadataAddress(uuid.New()),
+				nil,
+				[]string{specTestBech32},
+				[]PartyType{PartyType_PARTY_TYPE_OWNER},
+				NewSourceHash("somehash"),
+				"someclass",
+				[]MetadataAddress{ContractSpecMetadataAddress(uuid.New())},
+			),
+			"invalid record specification id prefix at index 0 (expected: recspec, got contractspec)",
+		},
+		{
+			"RecordSpecIDs - invalid address at index 2",
+			NewContractSpecification(
+				ContractSpecMetadataAddress(uuid.New()),
+				nil,
+				[]string{specTestBech32},
+				[]PartyType{PartyType_PARTY_TYPE_OWNER},
+				NewSourceHash("somehash"),
+				"someclass",
+				[]MetadataAddress{RecordSpecMetadataAddress(uuid.New()), RecordSpecMetadataAddress(uuid.New()), MetadataAddress(specTestAddr)},
+			),
+			fmt.Sprintf("invalid record specification id at index %d: %s",
+				2, "invalid metadata address type (must be 0-5, actual: 133)"),
+		},
+		{
+			"RecordSpecIDs - invalid address prefix at index 2",
+			NewContractSpecification(
+				ContractSpecMetadataAddress(uuid.New()),
+				nil,
+				[]string{specTestBech32},
+				[]PartyType{PartyType_PARTY_TYPE_OWNER},
+				NewSourceHash("somehash"),
+				"someclass",
+				[]MetadataAddress{RecordSpecMetadataAddress(uuid.New()), RecordSpecMetadataAddress(uuid.New()), ContractSpecMetadataAddress(uuid.New())},
+			),
+			"invalid record specification id prefix at index 2 (expected: recspec, got contractspec)",
+		},
+
 		// A simple valid ContractSpecification
 		{
 			"simple valid test case",
@@ -468,7 +508,7 @@ func (s *specificationTestSuite) TestContractSpecValidateBasic() {
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				NewSourceHash("somehash"),
 				"someclass",
-				[]*RecordSpecification{{}},
+				[]MetadataAddress{RecordSpecMetadataAddress(uuid.New())},
 			),
 			"",
 		},
@@ -839,6 +879,7 @@ contract_spec_ids:
 
 func (s *specificationTestSuite) TestContractSpecString() {
 	contractSpecUuid := uuid.MustParse("540dadf1-3dbc-4c3f-a205-7575b7f74384")
+	recordSpecUuid := uuid.MustParse("2F7C5AFC-F0C5-4C68-B432-0510D446B0B1")
 	contractSpec := NewContractSpecification(
 		ContractSpecMetadataAddress(contractSpecUuid),
 		NewDescription(
@@ -851,7 +892,7 @@ func (s *specificationTestSuite) TestContractSpecString() {
 		[]PartyType{PartyType_PARTY_TYPE_OWNER},
 		nil,
 		"CS 201: Intro to Blockchain",
-		[]*RecordSpecification{{}},
+		[]MetadataAddress{RecordSpecMetadataAddress(recordSpecUuid)},
 	)
 	expected := `specification_id: contractspec1qd2qmt038k7yc0azq46htdlhgwzqg6cr9l
 description:
@@ -865,13 +906,8 @@ parties_involved:
 - 5
 source: null
 class_name: 'CS 201: Intro to Blockchain'
-condition_specs:
-- specification_id: ""
-  name: ""
-  inputs: []
-  type_name: ""
-  result_type: 0
-  responsible_party: 0
+record_spec_ids:
+- recspec1q5hhckhu7rz5c695xgz3p4zxkzcsgzysuy
 `
 	actual := contractSpec.String()
 	fmt.Printf("Actual:\n%s\n-----\n", actual)
