@@ -49,6 +49,11 @@ service Query {
   rpc ScopeSpecification(ScopeSpecificationRequest) returns (ScopeSpecificationResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/scopespec/{specification_id}";
   }
+
+  // ContractSpecification returns a contract specification for the given specification id
+  rpc ContractSpecification(ContractSpecificationRequest) returns (ContractSpecificationResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/contractspec/{specification_id}";
+  }
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -138,5 +143,19 @@ message ScopeSpecificationRequest {
 message ScopeSpecificationResponse {
   ScopeSpecification scope_specification = 1 [
     (gogoproto.moretags)   = "yaml:\"scope_specification\""
+  ];
+}
+
+// ContractSpecificationRequest is used for requesting a contract specification by id
+message ContractSpecificationRequest {
+  string specification_id = 1 [
+    (gogoproto.moretags)   = "yaml:\"specification_id\""
+  ];
+}
+
+// ContractSpecificationResponse is the response to a contract specification request.
+message ContractSpecificationResponse {
+  ContractSpecification contract_specification = 1 [
+    (gogoproto.moretags)   = "yaml:\"contract_specification\""
   ];
 }
