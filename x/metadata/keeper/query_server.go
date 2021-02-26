@@ -155,7 +155,7 @@ func (k Keeper) ValueOwnership(c context.Context, req *types.ValueOwnershipReque
 	return &types.ValueOwnershipResponse{ScopeIds: scopes, Pagination: pageRes}, nil
 }
 
-// Scope returns a specific scope by id
+// ScopeSpecification returns a specific scope specification by id
 func (k Keeper) ScopeSpecification(c context.Context, req *types.ScopeSpecificationRequest) (*types.ScopeSpecificationResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
