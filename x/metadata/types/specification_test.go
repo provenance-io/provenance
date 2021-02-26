@@ -240,6 +240,7 @@ func (m *WeirdSource) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 }
 
 func (s *specificationTestSuite) TestContractSpecValidateBasic() {
+	contractSpecUuid := uuid.New()
 	tests := []struct {
 		name     string
 		spec     *ContractSpecification
@@ -473,13 +474,17 @@ func (s *specificationTestSuite) TestContractSpecValidateBasic() {
 		{
 			"RecordSpecIDs - invalid address at index 2",
 			NewContractSpecification(
-				ContractSpecMetadataAddress(uuid.New()),
+				ContractSpecMetadataAddress(contractSpecUuid),
 				nil,
 				[]string{specTestBech32},
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				NewSourceHash("somehash"),
 				"someclass",
-				[]MetadataAddress{RecordSpecMetadataAddress(uuid.New()), RecordSpecMetadataAddress(uuid.New()), MetadataAddress(specTestAddr)},
+				[]MetadataAddress{
+					RecordSpecMetadataAddress(contractSpecUuid, "name1"),
+					RecordSpecMetadataAddress(contractSpecUuid, "name2"),
+					MetadataAddress(specTestAddr),
+				},
 			),
 			fmt.Sprintf("invalid record specification id at index %d: %s",
 				2, "invalid metadata address type (must be 0-5, actual: 133)"),
@@ -487,13 +492,17 @@ func (s *specificationTestSuite) TestContractSpecValidateBasic() {
 		{
 			"RecordSpecIDs - invalid address prefix at index 2",
 			NewContractSpecification(
-				ContractSpecMetadataAddress(uuid.New()),
+				ContractSpecMetadataAddress(contractSpecUuid),
 				nil,
 				[]string{specTestBech32},
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				NewSourceHash("somehash"),
 				"someclass",
-				[]MetadataAddress{RecordSpecMetadataAddress(uuid.New()), RecordSpecMetadataAddress(uuid.New()), ContractSpecMetadataAddress(uuid.New())},
+				[]MetadataAddress{
+					RecordSpecMetadataAddress(contractSpecUuid, "name1"),
+					RecordSpecMetadataAddress(contractSpecUuid, "name2"),
+					ContractSpecMetadataAddress(contractSpecUuid),
+				},
 			),
 			"invalid record specification id prefix at index 2 (expected: recspec, got contractspec)",
 		},
@@ -502,13 +511,13 @@ func (s *specificationTestSuite) TestContractSpecValidateBasic() {
 		{
 			"simple valid test case",
 			NewContractSpecification(
-				ContractSpecMetadataAddress(uuid.New()),
+				ContractSpecMetadataAddress(contractSpecUuid),
 				nil,
 				[]string{specTestBech32},
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				NewSourceHash("somehash"),
 				"someclass",
-				[]MetadataAddress{RecordSpecMetadataAddress(uuid.New())},
+				[]MetadataAddress{RecordSpecMetadataAddress(contractSpecUuid,"recspecname")},
 			),
 			"",
 		},
@@ -879,7 +888,6 @@ contract_spec_ids:
 
 func (s *specificationTestSuite) TestContractSpecString() {
 	contractSpecUuid := uuid.MustParse("540dadf1-3dbc-4c3f-a205-7575b7f74384")
-	recordSpecUuid := uuid.MustParse("2F7C5AFC-F0C5-4C68-B432-0510D446B0B1")
 	contractSpec := NewContractSpecification(
 		ContractSpecMetadataAddress(contractSpecUuid),
 		NewDescription(
@@ -892,7 +900,7 @@ func (s *specificationTestSuite) TestContractSpecString() {
 		[]PartyType{PartyType_PARTY_TYPE_OWNER},
 		nil,
 		"CS 201: Intro to Blockchain",
-		[]MetadataAddress{RecordSpecMetadataAddress(recordSpecUuid)},
+		[]MetadataAddress{RecordSpecMetadataAddress(contractSpecUuid, "somename")},
 	)
 	expected := `specification_id: contractspec1qd2qmt038k7yc0azq46htdlhgwzqg6cr9l
 description:
