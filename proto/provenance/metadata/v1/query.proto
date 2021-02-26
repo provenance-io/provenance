@@ -67,13 +67,13 @@ message QueryParamsResponse {
 
 // ScopeRequest is used for requesting a scope by id
 message ScopeRequest {
-  string scope_id = 1;
+  string scope_id = 1 [(gogoproto.moretags) = "yaml:\"scope_id\""];
 }
 
 // ScopeResponse is the response to a scope request.
 message ScopeResponse {
   Scope                scope         = 1;
-  repeated RecordGroup record_groups = 2;
+  repeated RecordGroup record_groups = 2 [(gogoproto.moretags) = "yaml:\"record_groups\""];
   repeated Record      records       = 3;
 }
 
@@ -87,7 +87,7 @@ message OwnershipRequest {
 // OwnershipResponse is the reponse to the ownership request and includes a list of scope identifiers
 message OwnershipResponse {
   // A list of scope ids (uuid) associated with the given address.
-  repeated string scope_ids = 1;
+  repeated string scope_ids = 1 [(gogoproto.moretags) = "yaml:\"scope_ids\""];
 
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -103,7 +103,7 @@ message ValueOwnershipRequest {
 // ValueOwnershipResponse is the reponse to the Valueownership request and includes a list of scope identifiers
 message ValueOwnershipResponse {
   // A list of scope ids (uuid) associated with the given address.
-  repeated string scope_ids = 1;
+  repeated string scope_ids = 1 [(gogoproto.moretags) = "yaml:\"scope_ids\""];
 
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -111,8 +111,8 @@ message ValueOwnershipResponse {
 
 // GroupContextRequest returns the record groups for a given scope identifer or optionally a specific record group
 message GroupContextRequest {
-  string scope_id = 1;
-  string group_id = 2;
+  string scope_id = 1 [(gogoproto.moretags) = "yaml:\"scope_id\""];
+  string group_id = 2 [(gogoproto.moretags) = "yaml:\"group_id\""];
 }
 
 // GroupContextResponse is the response to a GroupContextRequest
@@ -122,40 +122,32 @@ message GroupContextResponse {
 
 // RecordRequest is a request for all of the records in a specific scope or a specific record if a name is given.
 message RecordRequest {
-  string scope_id = 1;
+  string scope_id = 1 [(gogoproto.moretags) = "yaml:\"scope_id\""];
   string name     = 2;
 }
 
 // RecordResponse is the response to a RecordRequest
 message RecordResponse {
-  string          scope_id = 1;
+  string          scope_id = 1 [(gogoproto.moretags) = "yaml:\"scope_id\""];
   repeated Record records  = 2;
 }
 
 // ScopeSpecificationRequest is used for requesting a scope specification by id
 message ScopeSpecificationRequest {
-  string specification_id = 1 [
-    (gogoproto.moretags)   = "yaml:\"specification_id\""
-  ];
+  string specification_id = 1 [(gogoproto.moretags) = "yaml:\"specification_id\""];
 }
 
 // ScopeSpecification is the response to a scope specification request.
 message ScopeSpecificationResponse {
-  ScopeSpecification scope_specification = 1 [
-    (gogoproto.moretags)   = "yaml:\"scope_specification\""
-  ];
+  ScopeSpecification scope_specification = 1 [(gogoproto.moretags) = "yaml:\"scope_specification\""];
 }
 
 // ContractSpecificationRequest is used for requesting a contract specification by id
 message ContractSpecificationRequest {
-  string specification_id = 1 [
-    (gogoproto.moretags)   = "yaml:\"specification_id\""
-  ];
+  string specification_id = 1 [(gogoproto.moretags) = "yaml:\"specification_id\""];
 }
 
 // ContractSpecificationResponse is the response to a contract specification request.
 message ContractSpecificationResponse {
-  ContractSpecification contract_specification = 1 [
-    (gogoproto.moretags)   = "yaml:\"contract_specification\""
-  ];
+  ContractSpecification contract_specification = 1 [(gogoproto.moretags) = "yaml:\"contract_specification\""];
 }
