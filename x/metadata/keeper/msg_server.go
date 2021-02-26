@@ -203,15 +203,47 @@ func (k msgServer) AddContractSpecification(
 ) (*types.MsgAddContractSpecificationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// TODO (contract keeper class  methods to process request, keeper methods to record it)
+	existing, _ := k.GetContractSpecification(ctx, msg.Specification.SpecificationId)
+	if err := k.ValidateContractSpecUpdate(ctx, existing, *msg.Specification, msg.Signers); err != nil {
+		return nil, err
+	}
+
+	k.SetContractSpecification(ctx, *msg.Specification)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, ""),
+			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
 		),
 	)
 
-	return nil, fmt.Errorf("not implemented")
+	return &types.MsgAddContractSpecificationResponse{}, nil
+}
+
+func (k msgServer) RemoveContractSpecification(
+	goCtx context.Context,
+	msg *types.MsgRemoveContractSpecificationRequest,
+) (*types.MsgRemoveContractSpecificationResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	existing, found := k.GetContractSpecification(ctx, msg.SpecificationId)
+	if !found {
+		return nil, fmt.Errorf("contract specification not found with id %s", msg.SpecificationId)
+	}
+	if err := k.ValidateAllOwnersAreSigners(existing.OwnerAddresses, msg.Signers); err != nil {
+		return nil, err
+	}
+
+	k.DeleteContractSpecification(ctx, msg.SpecificationId)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
+		),
+	)
+
+	return &types.MsgRemoveContractSpecificationResponse{}, nil
 }
