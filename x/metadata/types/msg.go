@@ -449,11 +449,7 @@ func (msg MsgAddContractSpecificationRequest) Type() string {
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgAddContractSpecificationRequest) GetSigners() []sdk.AccAddress {
-	delAddr, err := sdk.AccAddressFromBech32(msg.Notary)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{delAddr}
+	return stringsToAccAddresses(msg.Signers)
 }
 
 // GetSignBytes gets the bytes for the message signer to sign on
@@ -463,5 +459,8 @@ func (msg MsgAddContractSpecificationRequest) GetSignBytes() []byte {
 
 // ValidateBasic performs a quick validity check
 func (msg MsgAddContractSpecificationRequest) ValidateBasic() error {
-	return nil
+	if len(msg.Signers) < 1 {
+		return fmt.Errorf("at least one signer is required")
+	}
+	return msg.Specification.ValidateBasic()
 }
