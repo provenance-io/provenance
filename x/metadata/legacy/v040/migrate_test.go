@@ -156,7 +156,6 @@ func TestMigrate(t *testing.T) {
   "contract_specifications": [
     {
       "class_name": "io.provenance.contracts.ExampleContract",
-      "condition_specs": [],
       "description": {
         "description": "io.provenance.contracts.ExampleContract",
         "icon_url": "",
@@ -168,6 +167,7 @@ func TestMigrate(t *testing.T) {
       "parties_involved": [
         "PARTY_TYPE_ORIGINATOR"
       ],
+      "record_spec_ids": [],
       "specification_id": "contractspec1qvfha8nex5j0qeshr9uvsmv5um3q7sghss"
     }
   ],
