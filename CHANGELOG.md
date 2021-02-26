@@ -39,6 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add support for migrating Marker Accesslist from v39 to v40 #46.
 * Add migration command for previous version of Provenance blockchain #78
 * Add support for creating, updating, removing, finding, and iterating over `ScopeSpecification`s #56
+* Implemented v39 to v40 migration for name module.
 
 ## [v0.1.3](https://github.com/provenance-io/provenance/releases/tag/v0.1.3) - 2021-02-12
 
