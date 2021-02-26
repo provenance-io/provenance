@@ -166,7 +166,15 @@ func (k Keeper) ValidateContractSpecUpdate(ctx sdk.Context, existing, proposed t
 		return err
 	}
 
-	// TODO: Any stateful validation needed on the RecordSpecs?
+	store := ctx.KVStore(k.storeKey)
+
+	// Validate the proposed record spec ids.
+	for _, recordSpecID := range proposed.RecordSpecIds {
+		// Make sure that all record spec ids exist
+		if !store.Has(recordSpecID) {
+			return fmt.Errorf("no record spec exists with id %s", recordSpecID)
+		}
+	}
 
 	return nil
 }
