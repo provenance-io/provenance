@@ -458,7 +458,7 @@ func (s *specificationTestSuite) TestContractSpecValidateBasic() {
 		},
 		// TODO: condition specs - invalid spec at index 0
 		// TODO: condition specs - invalid spec at index 2
-		// A simple valid ContractSpec
+		// A simple valid ContractSpecification
 		{
 			"simple valid test case",
 			NewContractSpecification(
@@ -479,9 +479,9 @@ func (s *specificationTestSuite) TestContractSpecValidateBasic() {
 		s.T().Run(tt.name, func(t *testing.T) {
 			err := tt.spec.ValidateBasic()
 			if err != nil {
-				require.Equal(t, tt.want, err.Error(), "ContractSpec ValidateBasic error")
+				require.Equal(t, tt.want, err.Error(), "ContractSpecification ValidateBasic error")
 			} else if len(tt.want) > 0 {
-				t.Errorf("ContractSpec ValidateBasic error = nil, expected: %s", tt.want)
+				t.Errorf("ContractSpecification ValidateBasic error = nil, expected: %s", tt.want)
 			}
 		})
 	}
