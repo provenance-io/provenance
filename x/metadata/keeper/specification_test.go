@@ -112,7 +112,7 @@ func (s *SpecKeeperTestSuite) TestGetSetDeleteContractSpecification() {
 		[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 		types.NewSourceHash("somehash"),
 		"someclass",
-		[]*types.RecordSpecification{{}},
+		[]types.MetadataAddress{},
 	)
 	require.NotNil(s.T(), newSpec, "test setup failure: NewContractSpecification should not return nil")
 
@@ -154,7 +154,7 @@ func (s *SpecKeeperTestSuite) TestIterateContractSpecs() {
 			[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 			types.NewSourceHash(fmt.Sprintf("somehash%d", i)),
 			fmt.Sprintf("someclass_%d", i),
-			[]*types.RecordSpecification{{}},
+			[]types.MetadataAddress{},
 		)
 		s.app.MetadataKeeper.SetContractSpecification(s.ctx, *specs[i])
 	}
@@ -201,7 +201,7 @@ func (s *SpecKeeperTestSuite) TestIterateContractSpecsForAddress() {
 		[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 		types.NewSourceHash("somehash0"),
 		"someclass_0",
-		[]*types.RecordSpecification{{}},
+		[]types.MetadataAddress{},
 	)
 	user1SpecIDs[0] = specs[0].SpecificationId
 	specs[1] = types.NewContractSpecification(
@@ -216,7 +216,7 @@ func (s *SpecKeeperTestSuite) TestIterateContractSpecsForAddress() {
 		[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 		types.NewSourceHash("somehash1"),
 		"someclass_1",
-		[]*types.RecordSpecification{{}},
+		[]types.MetadataAddress{},
 	)
 	user2SpecIDs[0] = specs[1].SpecificationId
 	specs[2] = types.NewContractSpecification(
@@ -231,7 +231,7 @@ func (s *SpecKeeperTestSuite) TestIterateContractSpecsForAddress() {
 		[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 		types.NewSourceHash("somehash2"),
 		"someclass_2",
-		[]*types.RecordSpecification{{}},
+		[]types.MetadataAddress{},
 	)
 	user1SpecIDs[1] = specs[2].SpecificationId
 	specs[3] = types.NewContractSpecification(
@@ -246,7 +246,7 @@ func (s *SpecKeeperTestSuite) TestIterateContractSpecsForAddress() {
 		[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 		types.NewSourceHash("somehash3"),
 		"someclass_3",
-		[]*types.RecordSpecification{{}},
+		[]types.MetadataAddress{},
 	)
 	user2SpecIDs[1] = specs[3].SpecificationId
 	specs[4] = types.NewContractSpecification(
@@ -261,7 +261,7 @@ func (s *SpecKeeperTestSuite) TestIterateContractSpecsForAddress() {
 		[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 		types.NewSourceHash("somehash4"),
 		"someclass_4",
-		[]*types.RecordSpecification{{}},
+		[]types.MetadataAddress{},
 	)
 	user1SpecIDs[2] = specs[4].SpecificationId
 	user2SpecIDs[2] = specs[4].SpecificationId
@@ -340,7 +340,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				types.NewSourceHash("somehash"),
 				"someclass",
-				[]*types.RecordSpecification{{}},
+				[]types.MetadataAddress{},
 			),
 			types.NewContractSpecification(
 				otherContractSpecID,
@@ -354,7 +354,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				types.NewSourceHash("somehash"),
 				"someclass",
-				[]*types.RecordSpecification{{}},
+				[]types.MetadataAddress{},
 			),
 			[]string{s.user1Addr.String()},
 			fmt.Sprintf("cannot update contract spec identifier. expected %s, got %s",
@@ -374,7 +374,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				types.NewSourceHash("somehash"),
 				"someclass",
-				[]*types.RecordSpecification{{}},
+				[]types.MetadataAddress{},
 			),
 			types.NewContractSpecification(
 				s.contractSpecID1,
@@ -388,7 +388,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				types.NewSourceHash("somehash"),
 				"someclass",
-				[]*types.RecordSpecification{{}},
+				[]types.MetadataAddress{},
 			),
 			[]string{s.user1Addr.String()},
 			"invalid owner addresses count (expected > 0 got: 0)",
@@ -407,7 +407,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				types.NewSourceHash("somehash"),
 				"someclass",
-				[]*types.RecordSpecification{{}},
+				[]types.MetadataAddress{},
 			),
 			types.NewContractSpecification(
 				s.contractSpecID1,
@@ -421,7 +421,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				types.NewSourceHash("somehash"),
 				"someclass",
-				[]*types.RecordSpecification{{}},
+				[]types.MetadataAddress{},
 			),
 			[]string{s.user1Addr.String()},
 			"",
@@ -440,7 +440,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				types.NewSourceHash("somehash"),
 				"someclass",
-				[]*types.RecordSpecification{{}},
+				[]types.MetadataAddress{},
 			),
 			types.NewContractSpecification(
 				s.contractSpecID1,
@@ -454,7 +454,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				types.NewSourceHash("somehash"),
 				"someclass",
-				[]*types.RecordSpecification{{}},
+				[]types.MetadataAddress{},
 			),
 			[]string{s.user2Addr.String()},
 			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1Addr.String()),
@@ -473,7 +473,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				types.NewSourceHash("somehash"),
 				"someclass",
-				[]*types.RecordSpecification{{}},
+				[]types.MetadataAddress{},
 			),
 			types.NewContractSpecification(
 				s.contractSpecID1,
@@ -487,7 +487,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				types.NewSourceHash("somehash"),
 				"someclass",
-				[]*types.RecordSpecification{{}},
+				[]types.MetadataAddress{},
 			),
 			[]string{s.user1Addr.String()},
 			"",
@@ -506,7 +506,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				types.NewSourceHash("somehash"),
 				"someclass",
-				[]*types.RecordSpecification{{}},
+				[]types.MetadataAddress{},
 			),
 			types.NewContractSpecification(
 				s.contractSpecID1,
@@ -520,7 +520,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				types.NewSourceHash("somehash"),
 				"someclass",
-				[]*types.RecordSpecification{{}},
+				[]types.MetadataAddress{},
 			),
 			[]string{s.user1Addr.String(), s.user2Addr.String()},
 			"",
