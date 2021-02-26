@@ -199,7 +199,7 @@ message MsgAddContractSpecificationRequest {
   option (gogoproto.goproto_getters)  = false;
 
   ContractSpecification specification = 1;
-  string                notary        = 2;
+  repeated string       signers       = 2;
 }
 
 // AddContractSpecificationResponse from an add contract specification request
