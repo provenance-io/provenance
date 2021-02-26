@@ -240,7 +240,8 @@ func (m *WeirdSource) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 }
 
 func (s *specificationTestSuite) TestContractSpecValidateBasic() {
-	contractSpecUuid := uuid.New()
+	contractSpecUuid1 := uuid.New()
+	contractSpecUuid2 := uuid.New()
 	tests := []struct {
 		name     string
 		spec     *ContractSpecification
@@ -261,7 +262,7 @@ func (s *specificationTestSuite) TestContractSpecValidateBasic() {
 			"invalid contract specification id: invalid metadata address type (must be 0-5, actual: 133)",
 		},
 		{
-			"SpecificationID - invalid format",
+			"SpecificationID - invalid prefix",
 			NewContractSpecification(
 				ScopeSpecMetadataAddress(uuid.New()),
 				nil,
@@ -472,17 +473,31 @@ func (s *specificationTestSuite) TestContractSpecValidateBasic() {
 			"invalid record specification id prefix at index 0 (expected: recspec, got contractspec)",
 		},
 		{
+			"RecordSpecIDs - wrong contract spec uuid at index 0",
+			NewContractSpecification(
+				ContractSpecMetadataAddress(contractSpecUuid1),
+				nil,
+				[]string{specTestBech32},
+				[]PartyType{PartyType_PARTY_TYPE_OWNER},
+				NewSourceHash("somehash"),
+				"someclass",
+				[]MetadataAddress{RecordSpecMetadataAddress(contractSpecUuid2, "cs2")},
+			),
+			fmt.Sprintf("invalid record specification id contract specification uuid value at index %d (expected :%s, got %s)",
+				0, contractSpecUuid1.String(), contractSpecUuid2.String()),
+		},
+		{
 			"RecordSpecIDs - invalid address at index 2",
 			NewContractSpecification(
-				ContractSpecMetadataAddress(contractSpecUuid),
+				ContractSpecMetadataAddress(contractSpecUuid1),
 				nil,
 				[]string{specTestBech32},
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				NewSourceHash("somehash"),
 				"someclass",
 				[]MetadataAddress{
-					RecordSpecMetadataAddress(contractSpecUuid, "name1"),
-					RecordSpecMetadataAddress(contractSpecUuid, "name2"),
+					RecordSpecMetadataAddress(contractSpecUuid1, "name1"),
+					RecordSpecMetadataAddress(contractSpecUuid1, "name2"),
 					MetadataAddress(specTestAddr),
 				},
 			),
@@ -492,32 +507,50 @@ func (s *specificationTestSuite) TestContractSpecValidateBasic() {
 		{
 			"RecordSpecIDs - invalid address prefix at index 2",
 			NewContractSpecification(
-				ContractSpecMetadataAddress(contractSpecUuid),
+				ContractSpecMetadataAddress(contractSpecUuid1),
 				nil,
 				[]string{specTestBech32},
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				NewSourceHash("somehash"),
 				"someclass",
 				[]MetadataAddress{
-					RecordSpecMetadataAddress(contractSpecUuid, "name1"),
-					RecordSpecMetadataAddress(contractSpecUuid, "name2"),
-					ContractSpecMetadataAddress(contractSpecUuid),
+					RecordSpecMetadataAddress(contractSpecUuid1, "name1"),
+					RecordSpecMetadataAddress(contractSpecUuid1, "name2"),
+					ContractSpecMetadataAddress(contractSpecUuid1),
 				},
 			),
 			"invalid record specification id prefix at index 2 (expected: recspec, got contractspec)",
+		},
+		{
+			"RecordSpecIDs - wrong contract spec uuid at index 0",
+			NewContractSpecification(
+				ContractSpecMetadataAddress(contractSpecUuid1),
+				nil,
+				[]string{specTestBech32},
+				[]PartyType{PartyType_PARTY_TYPE_OWNER},
+				NewSourceHash("somehash"),
+				"someclass",
+				[]MetadataAddress{
+					RecordSpecMetadataAddress(contractSpecUuid1, "name1"),
+					RecordSpecMetadataAddress(contractSpecUuid1, "name2"),
+					RecordSpecMetadataAddress(contractSpecUuid2, "name3"),
+				},
+			),
+			fmt.Sprintf("invalid record specification id contract specification uuid value at index %d (expected :%s, got %s)",
+				2, contractSpecUuid1.String(), contractSpecUuid2.String()),
 		},
 
 		// A simple valid ContractSpecification
 		{
 			"simple valid test case",
 			NewContractSpecification(
-				ContractSpecMetadataAddress(contractSpecUuid),
+				ContractSpecMetadataAddress(contractSpecUuid1),
 				nil,
 				[]string{specTestBech32},
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				NewSourceHash("somehash"),
 				"someclass",
-				[]MetadataAddress{RecordSpecMetadataAddress(contractSpecUuid,"recspecname")},
+				[]MetadataAddress{RecordSpecMetadataAddress(contractSpecUuid1,"recspecname")},
 			),
 			"",
 		},
