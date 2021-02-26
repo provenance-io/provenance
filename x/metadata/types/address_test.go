@@ -27,7 +27,7 @@ var (
 func TestLegacySha512HashToAddress(t *testing.T) {
 	testHash := sha512.Sum512([]byte("test"))
 	hash := base64.StdEncoding.EncodeToString(testHash[:])
-	specAddress, err := ConvertHashToAddress(ScopeSpecificationPrefix, hash)
+	specAddress, err := ConvertHashToAddress(ScopeSpecificationKeyPrefix, hash)
 	require.NoError(t, err)
 	require.NoError(t, specAddress.Validate())
 	require.True(t, specAddress.IsScopeSpecificationAddress())

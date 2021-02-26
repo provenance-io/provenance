@@ -10,7 +10,7 @@ import (
 // IterateContractSpecs processes all contract specs using a given handler.
 func (k Keeper) IterateContractSpecs(ctx sdk.Context, handler func(specification types.ContractSpecification) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	it := sdk.KVStorePrefixIterator(store, types.ScopeSpecificationPrefix)
+	it := sdk.KVStorePrefixIterator(store, types.ScopeSpecificationKeyPrefix)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var contractSpec types.ContractSpecification
@@ -174,7 +174,7 @@ func (k Keeper) ValidateContractSpecUpdate(ctx sdk.Context, existing, proposed t
 // IterateScopeSpecs processes all scope specs using a given handler.
 func (k Keeper) IterateScopeSpecs(ctx sdk.Context, handler func(specification types.ScopeSpecification) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	it := sdk.KVStorePrefixIterator(store, types.ScopeSpecificationPrefix)
+	it := sdk.KVStorePrefixIterator(store, types.ScopeSpecificationKeyPrefix)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var scopeSpec types.ScopeSpecification

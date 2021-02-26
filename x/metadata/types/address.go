@@ -36,7 +36,7 @@ var (
 	// Ensure MetadataAddress implements the sdk.Address interface
 	_ sdk.Address = MetadataAddress{}
 	// The maximum value of the initial byte (indicating the address type)
-	maxType = RecordSpecificationPrefix[0]
+	maxType = RecordSpecificationKeyPrefix[0]
 )
 
 // MetadataAddress is a blockchain compliant address based on UUIDs
@@ -62,13 +62,13 @@ func VerifyMetadataAddressFormat(bz []byte) (string, error) {
 		hrp = PrefixRecord
 		requiredLength = 1 + 16 + 32 // type byte plus size of one uuid and one sha256 hash
 
-	case ScopeSpecificationPrefix[0]:
+	case ScopeSpecificationKeyPrefix[0]:
 		hrp = PrefixScopeSpecification
 		requiredLength = 1 + 16 // type byte plus size of one uuid
-	case ContractSpecificationPrefix[0]:
+	case ContractSpecificationKeyPrefix[0]:
 		hrp = PrefixContractSpecification
 		requiredLength = 1 + 16 // type byte plus size of one uuid
-	case RecordSpecificationPrefix[0]:
+	case RecordSpecificationKeyPrefix[0]:
 		hrp = PrefixRecordSpecification
 		requiredLength = 1 + 16 + 32 // type byte plus size of one uuid
 	default:
@@ -179,7 +179,7 @@ func ScopeSpecMetadataAddress(specUUID uuid.UUID) MetadataAddress {
 	if err != nil {
 		panic(err)
 	}
-	return append(ScopeSpecificationPrefix, bz...)
+	return append(ScopeSpecificationKeyPrefix, bz...)
 }
 
 // ContractSpecMetadataAddress creates a MetadataAddress instance for a contract specification
@@ -188,7 +188,7 @@ func ContractSpecMetadataAddress(specUUID uuid.UUID) MetadataAddress {
 	if err != nil {
 		panic(err)
 	}
-	return append(ContractSpecificationPrefix, bz...)
+	return append(ContractSpecificationKeyPrefix, bz...)
 }
 
 // RecordSpecMetadataAddress creates a MetadataAddress instance for a record specification
@@ -197,7 +197,7 @@ func RecordSpecMetadataAddress(contractSpecUUID uuid.UUID, name string) Metadata
 	if err != nil {
 		panic(err)
 	}
-	addr := append(RecordSpecificationPrefix, bz...)
+	addr := append(RecordSpecificationKeyPrefix, bz...)
 	name = strings.ToLower(strings.TrimSpace(name))
 	if len(name) < 1 {
 		panic("missing name value for record spec metadata address")
@@ -359,7 +359,7 @@ func (ma MetadataAddress) GroupUUID() (uuid.UUID, error) {
 }
 
 func (ma MetadataAddress) ContractSpecUUID() (uuid.UUID, error) {
-	if !ma.isTypeOneOf(ContractSpecificationPrefix, RecordSpecificationPrefix) {
+	if !ma.isTypeOneOf(ContractSpecificationKeyPrefix, RecordSpecificationKeyPrefix) {
 		return uuid.UUID{}, fmt.Errorf("this metadata address does not contain a contract specification uuid")
 	}
 	return ma.PrimaryUUID()
@@ -407,7 +407,7 @@ func (ma MetadataAddress) NameHash() ([]byte, error) {
 	if len(ma) < 1 {
 		return namehash, fmt.Errorf("address empty")
 	}
-	if !ma.isTypeOneOf(RecordKeyPrefix, RecordSpecificationPrefix) {
+	if !ma.isTypeOneOf(RecordKeyPrefix, RecordSpecificationKeyPrefix) {
 		return namehash, fmt.Errorf("invalid address type out of valid range (got: %d)", ma[0])
 	}
 	if len(ma) < 49 {
@@ -466,13 +466,13 @@ func (ma MetadataAddress) ScopeRecordIteratorPrefix() ([]byte, error) {
 // if the current address is empty the returns a prefix to iterate through all record specifications
 func (ma MetadataAddress) ContractSpecRecordSpecIteratorPrefix() ([]byte, error) {
 	if len(ma) < 1 {
-		return RecordSpecificationPrefix, nil
+		return RecordSpecificationKeyPrefix, nil
 	}
 	// if we don't know this type
-	if !ma.isTypeOneOf(ContractSpecificationPrefix, RecordSpecificationPrefix) {
+	if !ma.isTypeOneOf(ContractSpecificationKeyPrefix, RecordSpecificationKeyPrefix) {
 		return []byte{}, fmt.Errorf("this metadata address does not contain a contract spec uuid")
 	}
-	return append(RecordSpecificationPrefix, ma[1:17]...), nil
+	return append(RecordSpecificationKeyPrefix, ma[1:17]...), nil
 }
 
 // Format implements fmt.Format interface

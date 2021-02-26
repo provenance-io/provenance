@@ -55,12 +55,12 @@ var (
 	GroupKeyPrefix = []byte{0x01}
 	// RecordKeyPrefix is the key for records within scopes in metadata store
 	RecordKeyPrefix = []byte{0x02}
-	// ContractSpecificationPrefix is the key for group specification instances in metadata store
-	ContractSpecificationPrefix = []byte{0x03}
-	// ScopeSpecificationPrefix is the key for scope specifications in metadata store
-	ScopeSpecificationPrefix = []byte{0x04}
-	// RecordSpecificationPrefix is the key for record specifications in metadata store
-	RecordSpecificationPrefix = []byte{0x05}
+	// ContractSpecificationKeyPrefix is the key for group specification instances in metadata store
+	ContractSpecificationKeyPrefix = []byte{0x03}
+	// ScopeSpecificationKeyPrefix is the key for scope specifications in metadata store
+	ScopeSpecificationKeyPrefix = []byte{0x04}
+	// RecordSpecificationKeyPrefix is the key for record specifications in metadata store
+	RecordSpecificationKeyPrefix = []byte{0x05}
 
 	// AddressScopeCacheKeyPrefix for scope to address cache lookup
 	AddressScopeCacheKeyPrefix = []byte{0x10}
