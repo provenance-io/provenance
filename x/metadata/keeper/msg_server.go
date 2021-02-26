@@ -136,13 +136,25 @@ func (k msgServer) AddRecord(
 ) (*types.MsgAddRecordResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// TODO (contract keeper class  methods to process request, keeper methods to record it)
+	scopeUUID, err := msg.Record.GroupId.ScopeUUID()
+	if err != nil {
+		return nil, err
+	}
+
+	recordID := types.RecordMetadataAddress(scopeUUID, msg.Record.Name)
+
+	existing, _ := k.GetRecord(ctx, recordID)
+	if err := k.ValidateRecordUpdate(ctx, existing, *msg.Record, msg.Signers); err != nil {
+		return nil, err
+	}
+
+	k.SetRecord(ctx, *msg.Record)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Notary),
+			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
 		),
 	)
 

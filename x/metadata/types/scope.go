@@ -17,7 +17,8 @@ const (
 
 // NewScope creates a new instance.
 func NewScope(
-	scopeID, scopeSpecification MetadataAddress,
+	scopeID,
+	scopeSpecification MetadataAddress,
 	owners []Party,
 	dataAccess []string,
 	valueOwner string,

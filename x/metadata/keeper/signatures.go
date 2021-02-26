@@ -13,6 +13,7 @@ import (
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
+// AccountIsMarker determines if account is marker
 func (k Keeper) AccountIsMarker(ctx sdk.Context, address string) bool {
 	addr, err := sdk.AccAddressFromBech32(address)
 	// if the value owner is invalid then it is not possible to have any authority for it. e.g. value owner is empty.

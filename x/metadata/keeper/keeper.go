@@ -20,7 +20,7 @@ type MetadataKeeperI interface {
 	GetScope(sdk.Context, types.MetadataAddress) (types.Scope, bool)
 	// SetScope persists the provided scope
 	SetScope(sdk.Context, types.Scope)
-	// RemoveScope persists the provided scope
+	// RemoveScope removes the provided scope
 	RemoveScope(sdk.Context, types.MetadataAddress)
 
 	// IterateScopes processes all stored scopes with the given handler.

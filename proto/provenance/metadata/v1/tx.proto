@@ -143,8 +143,8 @@ message MsgAddRecordRequest {
     (gogoproto.moretags)   = "json:\"group_id\" yaml:\"group_id\""
   ];
 
-  Record record = 2;
-  string notary = 3;
+  Record record           = 2;
+  repeated string signers = 3;
 }
 // MsgAddRecordResponse from an add records request
 message MsgAddRecordResponse {}

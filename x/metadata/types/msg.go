@@ -306,11 +306,17 @@ func (msg MsgAddRecordRequest) Type() string { return TypeMsgAddRecordRequest }
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgAddRecordRequest) GetSigners() []sdk.AccAddress {
-	delAddr, err := sdk.AccAddressFromBech32(msg.Notary)
-	if err != nil {
-		panic(err)
+	signers := make([]sdk.AccAddress, len(msg.Signers))
+
+	for i, signerAddress := range msg.Signers {
+		signAddr, err := sdk.AccAddressFromBech32(signerAddress)
+		if err != nil {
+			panic(err)
+		}
+		signers[i] = signAddr
 	}
-	return []sdk.AccAddress{delAddr}
+
+	return signers
 }
 
 // GetSignBytes gets the bytes for the message signer to sign on

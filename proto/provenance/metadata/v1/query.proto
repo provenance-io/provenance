@@ -22,17 +22,17 @@ service Query {
 
   // Scope returns a specific scope by id
   rpc Scope(ScopeRequest) returns (ScopeResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/scope/{scope_id}";
+    option (google.api.http).get = "/provenance/metadata/v1/scope/{scope_uuid}";
   }
 
   // GroupContext returns a specific group context within a scope (or all groups)
   rpc GroupContext(GroupContextRequest) returns (GroupContextResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/scope/{scope_id}/group/{group_id}";
+    option (google.api.http).get = "/provenance/metadata/v1/scope/{scope_uuid}/group/{group_uuid}";
   }
 
   // Record returns a collection of the records in a scope or a specific one by name
   rpc Record(RecordRequest) returns (RecordResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/scope/{scope_id}/records/{name}";
+    option (google.api.http).get = "/provenance/metadata/v1/scope/{scope_uuid}/records/{name}";
   }
 
   // Ownership returns a list of scope identifiers that list the given address as a data or value owner
@@ -47,7 +47,7 @@ service Query {
 
   // ScopeSpecification returns a scope specification for the given specification id
   rpc ScopeSpecification(ScopeSpecificationRequest) returns (ScopeSpecificationResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/scopespec/{specification_id}";
+    option (google.api.http).get = "/provenance/metadata/v1/scopespec/{specification_uuid}";
   }
 }
 
@@ -62,7 +62,7 @@ message QueryParamsResponse {
 
 // ScopeRequest is used for requesting a scope by id
 message ScopeRequest {
-  string scope_id = 1;
+  string scope_uuid = 1;
 }
 
 // ScopeResponse is the response to a scope request.
@@ -82,7 +82,7 @@ message OwnershipRequest {
 // OwnershipResponse is the reponse to the ownership request and includes a list of scope identifiers
 message OwnershipResponse {
   // A list of scope ids (uuid) associated with the given address.
-  repeated string scope_ids = 1;
+  repeated string scope_uuids = 1;
 
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -98,7 +98,7 @@ message ValueOwnershipRequest {
 // ValueOwnershipResponse is the reponse to the Valueownership request and includes a list of scope identifiers
 message ValueOwnershipResponse {
   // A list of scope ids (uuid) associated with the given address.
-  repeated string scope_ids = 1;
+  repeated string scope_uuids = 1;
 
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -106,8 +106,8 @@ message ValueOwnershipResponse {
 
 // GroupContextRequest returns the record groups for a given scope identifer or optionally a specific record group
 message GroupContextRequest {
-  string scope_id = 1;
-  string group_id = 2;
+  string scope_uuid = 1;
+  string group_uuid = 2;
 }
 
 // GroupContextResponse is the response to a GroupContextRequest
@@ -117,20 +117,20 @@ message GroupContextResponse {
 
 // RecordRequest is a request for all of the records in a specific scope or a specific record if a name is given.
 message RecordRequest {
-  string scope_id = 1;
+  string scope_uuid = 1;
   string name     = 2;
 }
 
 // RecordResponse is the response to a RecordRequest
 message RecordResponse {
-  string          scope_id = 1;
+  string          scope_uuid = 1;
   repeated Record records  = 2;
 }
 
-// ScopeSpecificationRequest is used for requesting a scope specification by id
+// ScopeSpecificationRequest is used for requesting a scope specification by uuid
 message ScopeSpecificationRequest {
-  string specification_id = 1 [
-    (gogoproto.moretags)   = "yaml:\"specification_id\""
+  string specification_uuid = 1 [
+    (gogoproto.moretags)   = "yaml:\"specification_uuid\""
   ];
 }
 

@@ -62,15 +62,15 @@ func request_Query_Scope_0(ctx context.Context, marshaler runtime.Marshaler, cli
 		_   = err
 	)
 
-	val, ok = pathParams["scope_id"]
+	val, ok = pathParams["scope_uuid"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "scope_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "scope_uuid")
 	}
 
-	protoReq.ScopeId, err = runtime.String(val)
+	protoReq.ScopeUuid, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "scope_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "scope_uuid", err)
 	}
 
 	msg, err := client.Scope(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -89,15 +89,15 @@ func local_request_Query_Scope_0(ctx context.Context, marshaler runtime.Marshale
 		_   = err
 	)
 
-	val, ok = pathParams["scope_id"]
+	val, ok = pathParams["scope_uuid"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "scope_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "scope_uuid")
 	}
 
-	protoReq.ScopeId, err = runtime.String(val)
+	protoReq.ScopeUuid, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "scope_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "scope_uuid", err)
 	}
 
 	msg, err := server.Scope(ctx, &protoReq)
@@ -116,26 +116,26 @@ func request_Query_GroupContext_0(ctx context.Context, marshaler runtime.Marshal
 		_   = err
 	)
 
-	val, ok = pathParams["scope_id"]
+	val, ok = pathParams["scope_uuid"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "scope_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "scope_uuid")
 	}
 
-	protoReq.ScopeId, err = runtime.String(val)
+	protoReq.ScopeUuid, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "scope_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "scope_uuid", err)
 	}
 
-	val, ok = pathParams["group_id"]
+	val, ok = pathParams["group_uuid"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "group_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "group_uuid")
 	}
 
-	protoReq.GroupId, err = runtime.String(val)
+	protoReq.GroupUuid, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "group_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "group_uuid", err)
 	}
 
 	msg, err := client.GroupContext(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -154,26 +154,26 @@ func local_request_Query_GroupContext_0(ctx context.Context, marshaler runtime.M
 		_   = err
 	)
 
-	val, ok = pathParams["scope_id"]
+	val, ok = pathParams["scope_uuid"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "scope_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "scope_uuid")
 	}
 
-	protoReq.ScopeId, err = runtime.String(val)
+	protoReq.ScopeUuid, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "scope_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "scope_uuid", err)
 	}
 
-	val, ok = pathParams["group_id"]
+	val, ok = pathParams["group_uuid"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "group_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "group_uuid")
 	}
 
-	protoReq.GroupId, err = runtime.String(val)
+	protoReq.GroupUuid, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "group_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "group_uuid", err)
 	}
 
 	msg, err := server.GroupContext(ctx, &protoReq)
@@ -192,15 +192,15 @@ func request_Query_Record_0(ctx context.Context, marshaler runtime.Marshaler, cl
 		_   = err
 	)
 
-	val, ok = pathParams["scope_id"]
+	val, ok = pathParams["scope_uuid"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "scope_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "scope_uuid")
 	}
 
-	protoReq.ScopeId, err = runtime.String(val)
+	protoReq.ScopeUuid, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "scope_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "scope_uuid", err)
 	}
 
 	val, ok = pathParams["name"]
@@ -230,15 +230,15 @@ func local_request_Query_Record_0(ctx context.Context, marshaler runtime.Marshal
 		_   = err
 	)
 
-	val, ok = pathParams["scope_id"]
+	val, ok = pathParams["scope_uuid"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "scope_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "scope_uuid")
 	}
 
-	protoReq.ScopeId, err = runtime.String(val)
+	protoReq.ScopeUuid, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "scope_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "scope_uuid", err)
 	}
 
 	val, ok = pathParams["name"]
@@ -412,15 +412,15 @@ func request_Query_ScopeSpecification_0(ctx context.Context, marshaler runtime.M
 		_   = err
 	)
 
-	val, ok = pathParams["specification_id"]
+	val, ok = pathParams["specification_uuid"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "specification_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "specification_uuid")
 	}
 
-	protoReq.SpecificationId, err = runtime.String(val)
+	protoReq.SpecificationUuid, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "specification_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "specification_uuid", err)
 	}
 
 	msg, err := client.ScopeSpecification(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -439,15 +439,15 @@ func local_request_Query_ScopeSpecification_0(ctx context.Context, marshaler run
 		_   = err
 	)
 
-	val, ok = pathParams["specification_id"]
+	val, ok = pathParams["specification_uuid"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "specification_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "specification_uuid")
 	}
 
-	protoReq.SpecificationId, err = runtime.String(val)
+	protoReq.SpecificationUuid, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "specification_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "specification_uuid", err)
 	}
 
 	msg, err := server.ScopeSpecification(ctx, &protoReq)
@@ -809,17 +809,17 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 var (
 	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"provenance", "metadata", "v1", "params"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_Scope_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"provenance", "metadata", "v1", "scope", "scope_id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Scope_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"provenance", "metadata", "v1", "scope", "scope_uuid"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_GroupContext_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"provenance", "metadata", "v1", "scope", "scope_id", "group", "group_id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_GroupContext_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"provenance", "metadata", "v1", "scope", "scope_uuid", "group", "group_uuid"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_Record_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"provenance", "metadata", "v1", "scope", "scope_id", "records", "name"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Record_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"provenance", "metadata", "v1", "scope", "scope_uuid", "records", "name"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Query_Ownership_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"provenance", "metadata", "v1", "ownership", "address"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Query_ValueOwnership_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"provenance", "metadata", "v1", "valueownership", "address"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_ScopeSpecification_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"provenance", "metadata", "v1", "scopespec", "specification_id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ScopeSpecification_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"provenance", "metadata", "v1", "scopespec", "specification_uuid"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
