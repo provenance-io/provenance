@@ -80,7 +80,7 @@ func (k Keeper) IterateRecords(ctx sdk.Context, scopeID types.MetadataAddress, h
 
 // ValidateRecordUpdate checks the current record and the proposed record to determine if the the proposed changes are valid
 // based on the existing state
-func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, proposed types.Record, signers []string) error {
+func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing, proposed types.Record, signers []string) error {
 	// get scope, collect required signers, get session (if it exists, if it is a new one make sure the contract-spec is allowed if restricted via scope spec), collect signers from that contract spec… verify update is correctly signed… pull record specification, check against the record update (this is a name match lookup against record name)
 
 	if err := proposed.ValidateBasic(); err != nil {
