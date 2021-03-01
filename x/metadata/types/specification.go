@@ -146,11 +146,6 @@ func (s *ContractSpecification) ValidateBasic() error {
 			return fmt.Errorf("invalid owner address at index %d: %w", i, err)
 		}
 	}
-	for i, owner := range s.OwnerAddresses {
-		if _, err = sdk.AccAddressFromBech32(owner); err != nil {
-			return fmt.Errorf("invalid owner address at index %d: %w", i, err)
-		}
-	}
 	if len(s.PartiesInvolved) == 0 {
 		return fmt.Errorf("invalid parties involved count (expected > 0 got: %d)", len(s.PartiesInvolved))
 	}
