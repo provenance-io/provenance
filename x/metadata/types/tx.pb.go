@@ -579,23 +579,23 @@ func (m *MsgAddScopeSpecificationResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgAddScopeSpecificationResponse proto.InternalMessageInfo
 
 // MsgRemoveScopeSpecificationRequest removes a scope specification
-type MsgRemoveScopeSpecificationRequest struct {
+type MsgDeleteScopeSpecificationRequest struct {
 	// Unique ID for the scope specification to remove.
 	SpecificationId MetadataAddress `protobuf:"bytes,1,opt,name=specification_id,json=specificationId,proto3,customtype=MetadataAddress" json:"specification_id" yaml:"specification_id"`
 	Signers         []string        `protobuf:"bytes,2,rep,name=signers,proto3" json:"signers,omitempty"`
 }
 
-func (m *MsgRemoveScopeSpecificationRequest) Reset()      { *m = MsgRemoveScopeSpecificationRequest{} }
-func (*MsgRemoveScopeSpecificationRequest) ProtoMessage() {}
-func (*MsgRemoveScopeSpecificationRequest) Descriptor() ([]byte, []int) {
+func (m *MsgDeleteScopeSpecificationRequest) Reset()      { *m = MsgDeleteScopeSpecificationRequest{} }
+func (*MsgDeleteScopeSpecificationRequest) ProtoMessage() {}
+func (*MsgDeleteScopeSpecificationRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3a3a0892f91e3036, []int{14}
 }
-func (m *MsgRemoveScopeSpecificationRequest) XXX_Unmarshal(b []byte) error {
+func (m *MsgDeleteScopeSpecificationRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgRemoveScopeSpecificationRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgDeleteScopeSpecificationRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgRemoveScopeSpecificationRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgDeleteScopeSpecificationRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -605,34 +605,34 @@ func (m *MsgRemoveScopeSpecificationRequest) XXX_Marshal(b []byte, deterministic
 		return b[:n], nil
 	}
 }
-func (m *MsgRemoveScopeSpecificationRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgRemoveScopeSpecificationRequest.Merge(m, src)
+func (m *MsgDeleteScopeSpecificationRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgDeleteScopeSpecificationRequest.Merge(m, src)
 }
-func (m *MsgRemoveScopeSpecificationRequest) XXX_Size() int {
+func (m *MsgDeleteScopeSpecificationRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgRemoveScopeSpecificationRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgRemoveScopeSpecificationRequest.DiscardUnknown(m)
+func (m *MsgDeleteScopeSpecificationRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgDeleteScopeSpecificationRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgRemoveScopeSpecificationRequest proto.InternalMessageInfo
+var xxx_messageInfo_MsgDeleteScopeSpecificationRequest proto.InternalMessageInfo
 
 // MsgRemoveScopeSpecificationResponse from a remove scope specification request
-type MsgRemoveScopeSpecificationResponse struct {
+type MsgDeleteScopeSpecificationResponse struct {
 }
 
-func (m *MsgRemoveScopeSpecificationResponse) Reset()         { *m = MsgRemoveScopeSpecificationResponse{} }
-func (m *MsgRemoveScopeSpecificationResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgRemoveScopeSpecificationResponse) ProtoMessage()    {}
-func (*MsgRemoveScopeSpecificationResponse) Descriptor() ([]byte, []int) {
+func (m *MsgDeleteScopeSpecificationResponse) Reset()         { *m = MsgDeleteScopeSpecificationResponse{} }
+func (m *MsgDeleteScopeSpecificationResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgDeleteScopeSpecificationResponse) ProtoMessage()    {}
+func (*MsgDeleteScopeSpecificationResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3a3a0892f91e3036, []int{15}
 }
-func (m *MsgRemoveScopeSpecificationResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgDeleteScopeSpecificationResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgRemoveScopeSpecificationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgDeleteScopeSpecificationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgRemoveScopeSpecificationResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgDeleteScopeSpecificationResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -642,17 +642,17 @@ func (m *MsgRemoveScopeSpecificationResponse) XXX_Marshal(b []byte, deterministi
 		return b[:n], nil
 	}
 }
-func (m *MsgRemoveScopeSpecificationResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgRemoveScopeSpecificationResponse.Merge(m, src)
+func (m *MsgDeleteScopeSpecificationResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgDeleteScopeSpecificationResponse.Merge(m, src)
 }
-func (m *MsgRemoveScopeSpecificationResponse) XXX_Size() int {
+func (m *MsgDeleteScopeSpecificationResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgRemoveScopeSpecificationResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgRemoveScopeSpecificationResponse.DiscardUnknown(m)
+func (m *MsgDeleteScopeSpecificationResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgDeleteScopeSpecificationResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgRemoveScopeSpecificationResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgDeleteScopeSpecificationResponse proto.InternalMessageInfo
 
 // MsgAddContractSpecificationRequest is a request to add a contract specification
 type MsgAddContractSpecificationRequest struct {
@@ -730,23 +730,23 @@ func (m *MsgAddContractSpecificationResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgAddContractSpecificationResponse proto.InternalMessageInfo
 
 // MsgRemoveContractSpecificationRequest removes a contract specification
-type MsgRemoveContractSpecificationRequest struct {
+type MsgDeleteContractSpecificationRequest struct {
 	// Unique ID for the scope specification to remove.
 	SpecificationId MetadataAddress `protobuf:"bytes,1,opt,name=specification_id,json=specificationId,proto3,customtype=MetadataAddress" json:"specification_id" yaml:"specification_id"`
 	Signers         []string        `protobuf:"bytes,2,rep,name=signers,proto3" json:"signers,omitempty"`
 }
 
-func (m *MsgRemoveContractSpecificationRequest) Reset()      { *m = MsgRemoveContractSpecificationRequest{} }
-func (*MsgRemoveContractSpecificationRequest) ProtoMessage() {}
-func (*MsgRemoveContractSpecificationRequest) Descriptor() ([]byte, []int) {
+func (m *MsgDeleteContractSpecificationRequest) Reset()      { *m = MsgDeleteContractSpecificationRequest{} }
+func (*MsgDeleteContractSpecificationRequest) ProtoMessage() {}
+func (*MsgDeleteContractSpecificationRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3a3a0892f91e3036, []int{18}
 }
-func (m *MsgRemoveContractSpecificationRequest) XXX_Unmarshal(b []byte) error {
+func (m *MsgDeleteContractSpecificationRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgRemoveContractSpecificationRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgDeleteContractSpecificationRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgRemoveContractSpecificationRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgDeleteContractSpecificationRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -756,36 +756,36 @@ func (m *MsgRemoveContractSpecificationRequest) XXX_Marshal(b []byte, determinis
 		return b[:n], nil
 	}
 }
-func (m *MsgRemoveContractSpecificationRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgRemoveContractSpecificationRequest.Merge(m, src)
+func (m *MsgDeleteContractSpecificationRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgDeleteContractSpecificationRequest.Merge(m, src)
 }
-func (m *MsgRemoveContractSpecificationRequest) XXX_Size() int {
+func (m *MsgDeleteContractSpecificationRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgRemoveContractSpecificationRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgRemoveContractSpecificationRequest.DiscardUnknown(m)
+func (m *MsgDeleteContractSpecificationRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgDeleteContractSpecificationRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgRemoveContractSpecificationRequest proto.InternalMessageInfo
+var xxx_messageInfo_MsgDeleteContractSpecificationRequest proto.InternalMessageInfo
 
 // MsgRemoveContractSpecificationResponse from a remove contract specification request
-type MsgRemoveContractSpecificationResponse struct {
+type MsgDeleteContractSpecificationResponse struct {
 }
 
-func (m *MsgRemoveContractSpecificationResponse) Reset() {
-	*m = MsgRemoveContractSpecificationResponse{}
+func (m *MsgDeleteContractSpecificationResponse) Reset() {
+	*m = MsgDeleteContractSpecificationResponse{}
 }
-func (m *MsgRemoveContractSpecificationResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgRemoveContractSpecificationResponse) ProtoMessage()    {}
-func (*MsgRemoveContractSpecificationResponse) Descriptor() ([]byte, []int) {
+func (m *MsgDeleteContractSpecificationResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgDeleteContractSpecificationResponse) ProtoMessage()    {}
+func (*MsgDeleteContractSpecificationResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3a3a0892f91e3036, []int{19}
 }
-func (m *MsgRemoveContractSpecificationResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgDeleteContractSpecificationResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgRemoveContractSpecificationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgDeleteContractSpecificationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgRemoveContractSpecificationResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgDeleteContractSpecificationResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -795,17 +795,17 @@ func (m *MsgRemoveContractSpecificationResponse) XXX_Marshal(b []byte, determini
 		return b[:n], nil
 	}
 }
-func (m *MsgRemoveContractSpecificationResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgRemoveContractSpecificationResponse.Merge(m, src)
+func (m *MsgDeleteContractSpecificationResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgDeleteContractSpecificationResponse.Merge(m, src)
 }
-func (m *MsgRemoveContractSpecificationResponse) XXX_Size() int {
+func (m *MsgDeleteContractSpecificationResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgRemoveContractSpecificationResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgRemoveContractSpecificationResponse.DiscardUnknown(m)
+func (m *MsgDeleteContractSpecificationResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgDeleteContractSpecificationResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgRemoveContractSpecificationResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgDeleteContractSpecificationResponse proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*MsgMemorializeContractRequest)(nil), "provenance.metadata.v1.MsgMemorializeContractRequest")
@@ -822,83 +822,84 @@ func init() {
 	proto.RegisterType((*MsgAddRecordResponse)(nil), "provenance.metadata.v1.MsgAddRecordResponse")
 	proto.RegisterType((*MsgAddScopeSpecificationRequest)(nil), "provenance.metadata.v1.MsgAddScopeSpecificationRequest")
 	proto.RegisterType((*MsgAddScopeSpecificationResponse)(nil), "provenance.metadata.v1.MsgAddScopeSpecificationResponse")
-	proto.RegisterType((*MsgRemoveScopeSpecificationRequest)(nil), "provenance.metadata.v1.MsgRemoveScopeSpecificationRequest")
-	proto.RegisterType((*MsgRemoveScopeSpecificationResponse)(nil), "provenance.metadata.v1.MsgRemoveScopeSpecificationResponse")
+	proto.RegisterType((*MsgDeleteScopeSpecificationRequest)(nil), "provenance.metadata.v1.MsgDeleteScopeSpecificationRequest")
+	proto.RegisterType((*MsgDeleteScopeSpecificationResponse)(nil), "provenance.metadata.v1.MsgDeleteScopeSpecificationResponse")
 	proto.RegisterType((*MsgAddContractSpecificationRequest)(nil), "provenance.metadata.v1.MsgAddContractSpecificationRequest")
 	proto.RegisterType((*MsgAddContractSpecificationResponse)(nil), "provenance.metadata.v1.MsgAddContractSpecificationResponse")
-	proto.RegisterType((*MsgRemoveContractSpecificationRequest)(nil), "provenance.metadata.v1.MsgRemoveContractSpecificationRequest")
-	proto.RegisterType((*MsgRemoveContractSpecificationResponse)(nil), "provenance.metadata.v1.MsgRemoveContractSpecificationResponse")
+	proto.RegisterType((*MsgDeleteContractSpecificationRequest)(nil), "provenance.metadata.v1.MsgDeleteContractSpecificationRequest")
+	proto.RegisterType((*MsgDeleteContractSpecificationResponse)(nil), "provenance.metadata.v1.MsgDeleteContractSpecificationResponse")
 }
 
 func init() { proto.RegisterFile("provenance/metadata/v1/tx.proto", fileDescriptor_3a3a0892f91e3036) }
 
 var fileDescriptor_3a3a0892f91e3036 = []byte{
-	// 1037 bytes of a gzipped FileDescriptorProto
+	// 1043 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x57, 0xcf, 0x6f, 0xdc, 0x44,
 	0x14, 0x5e, 0x67, 0x9b, 0x4d, 0xfa, 0xb6, 0x90, 0x6a, 0xd2, 0xa6, 0x8e, 0x4b, 0xd7, 0x8b, 0xab,
-	0x40, 0x94, 0x12, 0x9b, 0x5d, 0xa0, 0x40, 0xf8, 0x21, 0x65, 0x0b, 0x42, 0x39, 0xac, 0xa8, 0x1c,
-	0x71, 0x41, 0x42, 0xc8, 0xb1, 0xa7, 0x8e, 0x45, 0xd6, 0x63, 0x3c, 0xb3, 0xcb, 0x06, 0x0e, 0x70,
-	0xe0, 0x80, 0x38, 0x55, 0xe2, 0xc2, 0x01, 0x89, 0x5c, 0x38, 0x23, 0x21, 0xae, 0x70, 0xee, 0xb1,
-	0x47, 0x84, 0xd0, 0x0a, 0x25, 0x17, 0xce, 0xfd, 0x0b, 0x90, 0xed, 0xf1, 0xae, 0xbd, 0xf1, 0x8f,
-	0xdd, 0xaa, 0x87, 0xde, 0x32, 0x79, 0xef, 0x7b, 0xf3, 0x7d, 0xef, 0x7b, 0x33, 0xe3, 0x05, 0xd9,
-	0xf3, 0xc9, 0x00, 0xbb, 0x86, 0x6b, 0x62, 0xad, 0x87, 0x99, 0x61, 0x19, 0xcc, 0xd0, 0x06, 0x2d,
-	0x8d, 0x0d, 0x55, 0xcf, 0x27, 0x8c, 0xa0, 0xb5, 0x49, 0x82, 0x1a, 0x27, 0xa8, 0x83, 0x96, 0x74,
+	0x40, 0x94, 0x12, 0x9b, 0x5d, 0xa0, 0x40, 0xf8, 0x21, 0x65, 0x5b, 0x84, 0x72, 0x58, 0x51, 0x39,
+	0xe2, 0x82, 0x84, 0x90, 0x63, 0x4f, 0x1d, 0x8b, 0x5d, 0x8f, 0xf1, 0xcc, 0x2e, 0x1b, 0x38, 0xc0,
+	0x81, 0x03, 0xe2, 0x54, 0x89, 0x0b, 0x07, 0x24, 0x72, 0xe1, 0x8c, 0x84, 0xb8, 0xc2, 0xb9, 0xc7,
+	0x1e, 0x11, 0x42, 0x11, 0x4a, 0x2e, 0x9c, 0xfb, 0x17, 0x20, 0xdb, 0xe3, 0x5d, 0x7b, 0xe3, 0x1f,
+	0xbb, 0x55, 0x0f, 0xdc, 0x32, 0x79, 0xef, 0x7b, 0xf3, 0x7d, 0xef, 0x9b, 0x99, 0xe7, 0x05, 0xd9,
+	0xf3, 0xc9, 0x10, 0xbb, 0x86, 0x6b, 0x62, 0xad, 0x8f, 0x99, 0x61, 0x19, 0xcc, 0xd0, 0x86, 0x2d,
+	0x8d, 0x8d, 0x54, 0xcf, 0x27, 0x8c, 0xa0, 0xb5, 0x49, 0x82, 0x1a, 0x27, 0xa8, 0xc3, 0x96, 0x74,
 	0xc5, 0x26, 0x36, 0x09, 0x53, 0xb4, 0xe0, 0xaf, 0x28, 0x5b, 0x52, 0x72, 0xca, 0x51, 0x93, 0x78,
 	0x98, 0xe7, 0x6c, 0xe4, 0xe4, 0x98, 0xc4, 0x65, 0xbe, 0x61, 0x32, 0x9e, 0xb6, 0x95, 0x57, 0xca,
-	0xc3, 0xa6, 0x73, 0xcf, 0x31, 0x0d, 0xe6, 0x10, 0x97, 0xe7, 0xbe, 0x68, 0x12, 0xda, 0x23, 0x54,
-	0x63, 0x43, 0x8d, 0x3a, 0xb6, 0xeb, 0xb8, 0xb6, 0x36, 0x68, 0x1d, 0x60, 0x66, 0xb4, 0xe2, 0x75,
-	0x94, 0xa8, 0xfc, 0xb1, 0x00, 0x37, 0xba, 0xd4, 0xee, 0xe2, 0x1e, 0xf1, 0x1d, 0xe3, 0xc8, 0xf9,
-	0x12, 0xdf, 0xe1, 0xbb, 0xea, 0xf8, 0xf3, 0x3e, 0xa6, 0x0c, 0xad, 0xc3, 0x72, 0x48, 0xf6, 0x53,
-	0xc7, 0x12, 0x85, 0xa6, 0xb0, 0x79, 0x51, 0x5f, 0x0a, 0xd7, 0x7b, 0x56, 0x10, 0xb2, 0x7d, 0xd2,
-	0xf7, 0x82, 0xd0, 0x42, 0x14, 0x0a, 0xd7, 0x7b, 0x16, 0x7a, 0x1e, 0x2e, 0xe1, 0x21, 0x36, 0xfb,
-	0x01, 0xa7, 0x20, 0x5c, 0x0d, 0xc3, 0xf5, 0xf1, 0xff, 0xf6, 0x2c, 0xd4, 0x81, 0xe5, 0x58, 0xa1,
-	0x78, 0xa1, 0x29, 0x6c, 0xd6, 0xdb, 0x4d, 0x35, 0xbb, 0xb7, 0x6a, 0xcc, 0xa9, 0x73, 0xe1, 0xc1,
-	0x48, 0xae, 0xe8, 0x63, 0x1c, 0xfa, 0x08, 0x20, 0xd0, 0x63, 0xb0, 0xbe, 0x8f, 0xa9, 0xb8, 0x18,
-	0x56, 0xd1, 0xd4, 0x48, 0xbc, 0xca, 0x86, 0x6a, 0x2c, 0x96, 0x8b, 0x57, 0xf7, 0xe3, 0xe4, 0xf7,
-	0x30, 0x35, 0x7d, 0xc7, 0x63, 0xc4, 0xa7, 0xbc, 0x68, 0xa2, 0x10, 0x5a, 0x83, 0x9a, 0x4b, 0x98,
-	0xe1, 0x1f, 0x8b, 0xb5, 0x90, 0x37, 0x5f, 0xed, 0x5c, 0xfe, 0xee, 0x44, 0xae, 0xfc, 0x78, 0x22,
-	0x57, 0xfe, 0x3b, 0x91, 0x2b, 0xdf, 0xfc, 0xd3, 0xac, 0x28, 0x4d, 0x68, 0xe4, 0xb5, 0x8f, 0x7a,
-	0xc4, 0xa5, 0x58, 0xf9, 0xbd, 0x0a, 0xeb, 0x5d, 0x6a, 0xdf, 0x39, 0x34, 0x5c, 0x1b, 0x7f, 0xf8,
-	0x85, 0x8b, 0x7d, 0x7a, 0xe8, 0x78, 0x71, 0x77, 0xd5, 0xe9, 0xee, 0x76, 0x56, 0x1f, 0x8d, 0xe4,
-	0x95, 0x63, 0xa3, 0x77, 0xb4, 0xa3, 0xc4, 0x11, 0x65, 0xd2, 0x72, 0x75, 0xba, 0xe5, 0xc9, 0xfc,
-	0x38, 0xa2, 0x4c, 0x7c, 0xd8, 0xc9, 0xf2, 0xa1, 0x73, 0xed, 0xd1, 0x48, 0x5e, 0x8d, 0x30, 0xc9,
-	0xa8, 0x92, 0x36, 0xe8, 0x6d, 0x58, 0xf6, 0xb1, 0xe9, 0x30, 0xe3, 0x88, 0x96, 0x19, 0xa4, 0xf3,
-	0x3c, 0x7d, 0x8c, 0x08, 0xd0, 0x63, 0x7b, 0x17, 0x67, 0xb3, 0x37, 0xd7, 0xd8, 0xda, 0x93, 0x37,
-	0x76, 0xa9, 0xc4, 0xd8, 0xe7, 0x40, 0xca, 0x72, 0x8d, 0x9b, 0xfa, 0x15, 0xa0, 0x2e, 0xb5, 0x77,
-	0x2d, 0x6b, 0x3f, 0xf0, 0x25, 0x36, 0xf3, 0x4d, 0x58, 0x0c, 0x7d, 0x0a, 0x9d, 0xac, 0xb7, 0x6f,
-	0xe4, 0xe9, 0x0d, 0x41, 0x9c, 0x5d, 0x84, 0x40, 0x22, 0x2c, 0x05, 0x34, 0xb1, 0x4f, 0xc5, 0x85,
-	0x66, 0x35, 0x3c, 0x64, 0xd1, 0x32, 0x83, 0xda, 0x55, 0x58, 0x4d, 0x6d, 0xce, 0x39, 0x7d, 0x2f,
-	0xc0, 0xd5, 0x2e, 0xb5, 0x75, 0xdc, 0x23, 0x03, 0x9c, 0xe2, 0xf5, 0xfe, 0xd4, 0x90, 0x5d, 0xea,
-	0x6c, 0x05, 0x7b, 0xff, 0x3d, 0x92, 0x57, 0xba, 0x9c, 0xd6, 0xae, 0x65, 0xf9, 0x98, 0xd2, 0xc2,
-	0xd9, 0x9b, 0x87, 0xa3, 0x08, 0x6b, 0xd3, 0x5c, 0x38, 0xcd, 0xaf, 0x41, 0x8c, 0xd8, 0xeb, 0xd8,
-	0x24, 0xbe, 0xf5, 0x41, 0x30, 0xa8, 0x89, 0x06, 0x86, 0x83, 0xcb, 0x1b, 0x78, 0xb3, 0x60, 0xdc,
-	0xc6, 0xd0, 0x08, 0x91, 0x70, 0x76, 0xa1, 0xc4, 0xd9, 0xeb, 0xe1, 0x79, 0x9c, 0x26, 0xc0, 0xd9,
-	0xfd, 0x29, 0xc4, 0xcd, 0x8d, 0xa2, 0x89, 0x16, 0x8e, 0xcf, 0xdd, 0xac, 0x2d, 0xcc, 0x38, 0x8e,
-	0xb7, 0xa1, 0xe6, 0x87, 0x75, 0x43, 0x96, 0xf5, 0x76, 0xa3, 0x58, 0xa1, 0xce, 0xb3, 0x13, 0xea,
-	0xaa, 0x25, 0xea, 0xd6, 0xe0, 0x4a, 0x9a, 0x3f, 0x17, 0xf6, 0xb3, 0x00, 0x72, 0x62, 0x6a, 0xf6,
-	0x93, 0x8f, 0x46, 0x2c, 0xf2, 0x2e, 0x3c, 0x93, 0x7a, 0x4c, 0xb8, 0x0d, 0x5b, 0x85, 0x73, 0x9c,
-	0xae, 0x94, 0x2e, 0x30, 0xd7, 0xc8, 0x28, 0xd0, 0xcc, 0x27, 0xc8, 0x55, 0xfc, 0x2a, 0x80, 0x92,
-	0x9e, 0xab, 0x4c, 0x21, 0x9f, 0xc0, 0xe5, 0x14, 0x8f, 0x89, 0x6b, 0xed, 0x7c, 0xd7, 0xae, 0xf1,
-	0xc1, 0x9f, 0x02, 0x2a, 0xfa, 0x4a, 0xea, 0x5f, 0x73, 0x1e, 0x84, 0x0d, 0xb8, 0x59, 0x48, 0x98,
-	0x0b, 0xfb, 0x25, 0x12, 0xb6, 0x6b, 0x59, 0xf1, 0x65, 0x98, 0x29, 0x6c, 0x3f, 0xdb, 0xa1, 0xed,
-	0xb2, 0x9b, 0xf5, 0x89, 0x99, 0x14, 0xc9, 0xc9, 0xa7, 0xc9, 0xe5, 0xfc, 0x26, 0xc0, 0xc6, 0x58,
-	0x76, 0xa1, 0xa2, 0xa7, 0xc8, 0xaa, 0x4d, 0x78, 0xa1, 0x8c, 0x73, 0x24, 0xaf, 0x7d, 0x1f, 0xa0,
-	0xda, 0xa5, 0x36, 0xfa, 0x36, 0xb8, 0x2d, 0xce, 0xbf, 0xfd, 0xe8, 0xb5, 0x3c, 0x3f, 0x0a, 0x3f,
-	0xb5, 0xa4, 0xdb, 0xf3, 0xc2, 0x22, 0x3a, 0x68, 0x08, 0x2b, 0x53, 0x0f, 0x15, 0x6a, 0x15, 0x94,
-	0xca, 0xfe, 0x14, 0x91, 0xda, 0xf3, 0x40, 0xf8, 0xce, 0x26, 0x2c, 0xc7, 0x07, 0x16, 0x6d, 0x15,
-	0xe0, 0xa7, 0x5e, 0x4a, 0xe9, 0xd6, 0x4c, 0xb9, 0x7c, 0x93, 0x23, 0xa8, 0x27, 0xce, 0x0f, 0xda,
-	0x2e, 0xc0, 0x9e, 0x7f, 0xfc, 0x24, 0x75, 0xd6, 0x74, 0xbe, 0x5b, 0x1f, 0x9e, 0x4d, 0xbf, 0x0d,
-	0xe8, 0xe5, 0x62, 0xb2, 0xe7, 0xdf, 0x31, 0xa9, 0x35, 0x07, 0x82, 0x6f, 0x7b, 0x0f, 0x2e, 0x8e,
-	0x23, 0xe8, 0xd6, 0x2c, 0xf8, 0x78, 0xb3, 0x97, 0x66, 0x4b, 0xe6, 0xfb, 0x04, 0x5f, 0x09, 0x99,
-	0x77, 0x2c, 0x7a, 0x7d, 0x06, 0x4f, 0xb2, 0x8e, 0xb0, 0xf4, 0xc6, 0xfc, 0x40, 0x4e, 0xe6, 0x07,
-	0x01, 0xc4, 0xbc, 0xab, 0x11, 0xed, 0xcc, 0x66, 0x5c, 0x26, 0xa5, 0xb7, 0x1e, 0x0b, 0x9b, 0x60,
-	0x95, 0x77, 0xc3, 0x15, 0xb2, 0x2a, 0xb9, 0xbd, 0x0b, 0x59, 0x95, 0x5d, 0xa9, 0xe8, 0x27, 0x01,
-	0xae, 0x17, 0xdc, 0x4d, 0xe8, 0x9d, 0x52, 0xc9, 0x85, 0xdc, 0xde, 0x7d, 0x5c, 0x78, 0x44, 0xaf,
-	0xf3, 0xd9, 0x83, 0xd3, 0x86, 0xf0, 0xf0, 0xb4, 0x21, 0xfc, 0x7b, 0xda, 0x10, 0xee, 0x9f, 0x35,
-	0x2a, 0x0f, 0xcf, 0x1a, 0x95, 0xbf, 0xce, 0x1a, 0x15, 0x58, 0x77, 0x48, 0x4e, 0xed, 0xbb, 0xc2,
-	0xc7, 0xaf, 0xda, 0x0e, 0x3b, 0xec, 0x1f, 0xa8, 0x26, 0xe9, 0x69, 0x93, 0xa4, 0x6d, 0x87, 0x24,
-	0x56, 0xda, 0x70, 0xf2, 0x7b, 0x97, 0x1d, 0x7b, 0x98, 0x1e, 0xd4, 0xc2, 0x1f, 0xaf, 0xaf, 0xfc,
-	0x1f, 0x00, 0x00, 0xff, 0xff, 0xc8, 0xa4, 0x04, 0x98, 0xad, 0x0f, 0x00, 0x00,
+	0xc3, 0xa6, 0x73, 0xdf, 0x31, 0x0d, 0xe6, 0x10, 0x97, 0xe7, 0xbe, 0x68, 0x12, 0xda, 0x27, 0x54,
+	0x63, 0x23, 0x8d, 0x3a, 0xb6, 0xeb, 0xb8, 0xb6, 0x36, 0x6c, 0x1d, 0x60, 0x66, 0xb4, 0xe2, 0x75,
+	0x94, 0xa8, 0xfc, 0xbe, 0x00, 0x37, 0xba, 0xd4, 0xee, 0xe2, 0x3e, 0xf1, 0x1d, 0xa3, 0xe7, 0x7c,
+	0x81, 0xef, 0xf0, 0x5d, 0x75, 0xfc, 0xd9, 0x00, 0x53, 0x86, 0xd6, 0x61, 0x39, 0x24, 0xfb, 0x89,
+	0x63, 0x89, 0x42, 0x53, 0xd8, 0xbc, 0xa8, 0x2f, 0x85, 0xeb, 0x3d, 0x2b, 0x08, 0xd9, 0x3e, 0x19,
+	0x78, 0x41, 0x68, 0x21, 0x0a, 0x85, 0xeb, 0x3d, 0x0b, 0x3d, 0x0f, 0x97, 0xf0, 0x08, 0x9b, 0x83,
+	0x80, 0x53, 0x10, 0xae, 0x86, 0xe1, 0xfa, 0xf8, 0x7f, 0x7b, 0x16, 0xea, 0xc0, 0x72, 0xac, 0x50,
+	0xbc, 0xd0, 0x14, 0x36, 0xeb, 0xed, 0xa6, 0x9a, 0xdd, 0x5b, 0x35, 0xe6, 0xd4, 0xb9, 0xf0, 0xf0,
+	0x44, 0xae, 0xe8, 0x63, 0x1c, 0xfa, 0x10, 0x20, 0xd0, 0x63, 0xb0, 0x81, 0x8f, 0xa9, 0xb8, 0x18,
+	0x56, 0xd1, 0xd4, 0x48, 0xbc, 0xca, 0x46, 0x6a, 0x2c, 0x96, 0x8b, 0x57, 0xf7, 0xe3, 0xe4, 0xbb,
+	0x98, 0x9a, 0xbe, 0xe3, 0x31, 0xe2, 0x53, 0x5e, 0x34, 0x51, 0x08, 0xad, 0x41, 0xcd, 0x25, 0xcc,
+	0xf0, 0x8f, 0xc4, 0x5a, 0xc8, 0x9b, 0xaf, 0x76, 0x2e, 0x7f, 0x7b, 0x2c, 0x57, 0x7e, 0x38, 0x96,
+	0x2b, 0xff, 0x1e, 0xcb, 0x95, 0xaf, 0xff, 0x6e, 0x56, 0x94, 0x26, 0x34, 0xf2, 0xda, 0x47, 0x3d,
+	0xe2, 0x52, 0xac, 0xfc, 0x56, 0x85, 0xf5, 0x2e, 0xb5, 0xef, 0x1c, 0x1a, 0xae, 0x8d, 0x3f, 0xf8,
+	0xdc, 0xc5, 0x3e, 0x3d, 0x74, 0xbc, 0xb8, 0xbb, 0xea, 0x74, 0x77, 0x3b, 0xab, 0x8f, 0x4f, 0xe4,
+	0x95, 0x23, 0xa3, 0xdf, 0xdb, 0x51, 0xe2, 0x88, 0x32, 0x69, 0xb9, 0x3a, 0xdd, 0xf2, 0x64, 0x7e,
+	0x1c, 0x51, 0x26, 0x3e, 0xec, 0x64, 0xf9, 0xd0, 0xb9, 0xf6, 0xf8, 0x44, 0x5e, 0x8d, 0x30, 0xc9,
+	0xa8, 0x92, 0x36, 0xe8, 0x6d, 0x58, 0xf6, 0xb1, 0xe9, 0x30, 0xa3, 0x47, 0xcb, 0x0c, 0xd2, 0x79,
+	0x9e, 0x3e, 0x46, 0x04, 0xe8, 0xb1, 0xbd, 0x8b, 0xb3, 0xd9, 0x9b, 0x6b, 0x6c, 0xed, 0xe9, 0x1b,
+	0xbb, 0x54, 0x62, 0xec, 0x73, 0x20, 0x65, 0xb9, 0xc6, 0x4d, 0xfd, 0x12, 0x50, 0x97, 0xda, 0xbb,
+	0x96, 0xb5, 0x1f, 0xf8, 0x12, 0x9b, 0xf9, 0x26, 0x2c, 0x86, 0x3e, 0x85, 0x4e, 0xd6, 0xdb, 0x37,
+	0xf2, 0xf4, 0x86, 0x20, 0xce, 0x2e, 0x42, 0x20, 0x11, 0x96, 0x02, 0x9a, 0xd8, 0xa7, 0xe2, 0x42,
+	0xb3, 0x1a, 0x5e, 0xb2, 0x68, 0x99, 0x41, 0xed, 0x2a, 0xac, 0xa6, 0x36, 0xe7, 0x9c, 0xbe, 0x13,
+	0xe0, 0x6a, 0x97, 0xda, 0x3a, 0xee, 0x93, 0x21, 0x4e, 0xf1, 0x7a, 0x6f, 0xea, 0x90, 0x5d, 0xea,
+	0x6c, 0x05, 0x7b, 0xff, 0x75, 0x22, 0xaf, 0x74, 0x39, 0xad, 0x5d, 0xcb, 0xf2, 0x31, 0xa5, 0x85,
+	0x67, 0x6f, 0x1e, 0x8e, 0x22, 0xac, 0x4d, 0x73, 0xe1, 0x34, 0xbf, 0x02, 0x31, 0x62, 0xaf, 0x63,
+	0x93, 0xf8, 0xd6, 0xfb, 0xc1, 0x41, 0x4d, 0x34, 0x30, 0x3c, 0xb8, 0xbc, 0x81, 0x37, 0x0b, 0x8e,
+	0xdb, 0x18, 0x1a, 0x21, 0x12, 0xce, 0x2e, 0x94, 0x38, 0x7b, 0x3d, 0xbc, 0x8f, 0xd3, 0x04, 0x38,
+	0xbb, 0x3f, 0x84, 0xb8, 0xb9, 0x51, 0x34, 0xd1, 0xc2, 0xf1, 0xbd, 0x9b, 0xb5, 0x85, 0x19, 0xd7,
+	0xf1, 0x36, 0xd4, 0xfc, 0xb0, 0x6e, 0xc8, 0xb2, 0xde, 0x6e, 0x14, 0x2b, 0xd4, 0x79, 0x76, 0x42,
+	0x5d, 0xb5, 0x44, 0xdd, 0x1a, 0x5c, 0x49, 0xf3, 0xe7, 0xc2, 0x7e, 0x12, 0x40, 0x4e, 0x9c, 0x9a,
+	0xfd, 0xe4, 0xd0, 0x88, 0x45, 0xde, 0x83, 0x67, 0x52, 0xc3, 0x84, 0xdb, 0xb0, 0x55, 0x78, 0x8e,
+	0xd3, 0x95, 0xd2, 0x05, 0xe6, 0x3a, 0x32, 0x0a, 0x34, 0xf3, 0x09, 0x72, 0x15, 0xbf, 0x08, 0xa0,
+	0x74, 0xa9, 0x7d, 0x17, 0xf7, 0x30, 0xc3, 0xf9, 0x42, 0x3e, 0x86, 0xcb, 0x29, 0x1e, 0x13, 0xd7,
+	0xda, 0xf9, 0xae, 0x5d, 0xe3, 0x07, 0x7f, 0x0a, 0xa8, 0xe8, 0x2b, 0xa9, 0x7f, 0xcd, 0x79, 0x11,
+	0x36, 0xe0, 0x66, 0x21, 0x61, 0x2e, 0xec, 0xe7, 0x48, 0xd8, 0xae, 0x65, 0xc5, 0x8f, 0x61, 0xa6,
+	0xb0, 0xfd, 0x6c, 0x87, 0xb6, 0xcb, 0x5e, 0xd6, 0xa7, 0x66, 0x52, 0x24, 0x27, 0x9f, 0x26, 0x97,
+	0xf3, 0xab, 0x00, 0x1b, 0x63, 0xd9, 0x85, 0x8a, 0xfe, 0x47, 0x56, 0x6d, 0xc2, 0x0b, 0x65, 0x9c,
+	0x23, 0x79, 0xed, 0x07, 0x00, 0xd5, 0x2e, 0xb5, 0xd1, 0x37, 0xc1, 0x6b, 0x71, 0x7e, 0xf6, 0xa3,
+	0xd7, 0xf2, 0xfc, 0x28, 0xfc, 0xd4, 0x92, 0x6e, 0xcf, 0x0b, 0x8b, 0xe8, 0xa0, 0x11, 0xac, 0x4c,
+	0x0d, 0x2a, 0xd4, 0x2a, 0x28, 0x95, 0xfd, 0x29, 0x22, 0xb5, 0xe7, 0x81, 0xf0, 0x9d, 0x4d, 0x58,
+	0x8e, 0x2f, 0x2c, 0xda, 0x2a, 0xc0, 0x4f, 0x4d, 0x4a, 0xe9, 0xd6, 0x4c, 0xb9, 0x7c, 0x93, 0x1e,
+	0xd4, 0x13, 0x83, 0x04, 0x6d, 0x17, 0x60, 0xcf, 0x0f, 0x3f, 0x49, 0x9d, 0x35, 0x9d, 0xef, 0x36,
+	0x80, 0x67, 0xd3, 0xb3, 0x01, 0xbd, 0x5c, 0x4c, 0xf6, 0xfc, 0x1c, 0x93, 0x5a, 0x73, 0x20, 0xf8,
+	0xb6, 0xf7, 0xe1, 0xe2, 0x38, 0x82, 0x6e, 0xcd, 0x82, 0x8f, 0x37, 0x7b, 0x69, 0xb6, 0x64, 0xbe,
+	0x4f, 0xf0, 0x95, 0x90, 0xf9, 0xc6, 0xa2, 0xd7, 0x67, 0xf0, 0x24, 0xeb, 0x0a, 0x4b, 0x6f, 0xcc,
+	0x0f, 0xe4, 0x64, 0xbe, 0x17, 0x40, 0xcc, 0x7b, 0x1a, 0xd1, 0x4e, 0x41, 0xd9, 0x92, 0x01, 0x20,
+	0xbd, 0xf5, 0x44, 0xd8, 0x04, 0xab, 0xbc, 0x17, 0xae, 0x90, 0x55, 0xc9, 0xeb, 0x5d, 0xc8, 0xaa,
+	0xec, 0x49, 0x45, 0x3f, 0x0a, 0x70, 0xbd, 0xe0, 0x6d, 0x42, 0xef, 0x94, 0x4a, 0x2e, 0xe4, 0xf6,
+	0xee, 0x93, 0xc2, 0x23, 0x7a, 0x9d, 0x4f, 0x1f, 0x9e, 0x36, 0x84, 0x47, 0xa7, 0x0d, 0xe1, 0x9f,
+	0xd3, 0x86, 0xf0, 0xe0, 0xac, 0x51, 0x79, 0x74, 0xd6, 0xa8, 0xfc, 0x79, 0xd6, 0xa8, 0xc0, 0xba,
+	0x43, 0x72, 0x6a, 0xdf, 0x13, 0x3e, 0x7a, 0xd5, 0x76, 0xd8, 0xe1, 0xe0, 0x40, 0x35, 0x49, 0x5f,
+	0x9b, 0x24, 0x6d, 0x3b, 0x24, 0xb1, 0xd2, 0x46, 0x93, 0xdf, 0xbb, 0xec, 0xc8, 0xc3, 0xf4, 0xa0,
+	0x16, 0xfe, 0x78, 0x7d, 0xe5, 0xbf, 0x00, 0x00, 0x00, 0xff, 0xff, 0x23, 0x46, 0xec, 0x40, 0xad,
+	0x0f, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -927,12 +928,12 @@ type MsgClient interface {
 	AddRecord(ctx context.Context, in *MsgAddRecordRequest, opts ...grpc.CallOption) (*MsgAddRecordResponse, error)
 	// AddScopeSpecification adds a scope specification
 	AddScopeSpecification(ctx context.Context, in *MsgAddScopeSpecificationRequest, opts ...grpc.CallOption) (*MsgAddScopeSpecificationResponse, error)
-	// RemoveScopeSpecification removes a scope specification
-	RemoveScopeSpecification(ctx context.Context, in *MsgRemoveScopeSpecificationRequest, opts ...grpc.CallOption) (*MsgRemoveScopeSpecificationResponse, error)
+	// DeleteScopeSpecification deletes a scope specification
+	DeleteScopeSpecification(ctx context.Context, in *MsgDeleteScopeSpecificationRequest, opts ...grpc.CallOption) (*MsgDeleteScopeSpecificationResponse, error)
 	// AddContractSpecification adds a contract specification
 	AddContractSpecification(ctx context.Context, in *MsgAddContractSpecificationRequest, opts ...grpc.CallOption) (*MsgAddContractSpecificationResponse, error)
-	// RemoveContractSpecification removes a contract specification
-	RemoveContractSpecification(ctx context.Context, in *MsgRemoveContractSpecificationRequest, opts ...grpc.CallOption) (*MsgRemoveContractSpecificationResponse, error)
+	// DeleteContractSpecification deletes a contract specification
+	DeleteContractSpecification(ctx context.Context, in *MsgDeleteContractSpecificationRequest, opts ...grpc.CallOption) (*MsgDeleteContractSpecificationResponse, error)
 }
 
 type msgClient struct {
@@ -1006,9 +1007,9 @@ func (c *msgClient) AddScopeSpecification(ctx context.Context, in *MsgAddScopeSp
 	return out, nil
 }
 
-func (c *msgClient) RemoveScopeSpecification(ctx context.Context, in *MsgRemoveScopeSpecificationRequest, opts ...grpc.CallOption) (*MsgRemoveScopeSpecificationResponse, error) {
-	out := new(MsgRemoveScopeSpecificationResponse)
-	err := c.cc.Invoke(ctx, "/provenance.metadata.v1.Msg/RemoveScopeSpecification", in, out, opts...)
+func (c *msgClient) DeleteScopeSpecification(ctx context.Context, in *MsgDeleteScopeSpecificationRequest, opts ...grpc.CallOption) (*MsgDeleteScopeSpecificationResponse, error) {
+	out := new(MsgDeleteScopeSpecificationResponse)
+	err := c.cc.Invoke(ctx, "/provenance.metadata.v1.Msg/DeleteScopeSpecification", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1024,9 +1025,9 @@ func (c *msgClient) AddContractSpecification(ctx context.Context, in *MsgAddCont
 	return out, nil
 }
 
-func (c *msgClient) RemoveContractSpecification(ctx context.Context, in *MsgRemoveContractSpecificationRequest, opts ...grpc.CallOption) (*MsgRemoveContractSpecificationResponse, error) {
-	out := new(MsgRemoveContractSpecificationResponse)
-	err := c.cc.Invoke(ctx, "/provenance.metadata.v1.Msg/RemoveContractSpecification", in, out, opts...)
+func (c *msgClient) DeleteContractSpecification(ctx context.Context, in *MsgDeleteContractSpecificationRequest, opts ...grpc.CallOption) (*MsgDeleteContractSpecificationResponse, error) {
+	out := new(MsgDeleteContractSpecificationResponse)
+	err := c.cc.Invoke(ctx, "/provenance.metadata.v1.Msg/DeleteContractSpecification", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1049,12 +1050,12 @@ type MsgServer interface {
 	AddRecord(context.Context, *MsgAddRecordRequest) (*MsgAddRecordResponse, error)
 	// AddScopeSpecification adds a scope specification
 	AddScopeSpecification(context.Context, *MsgAddScopeSpecificationRequest) (*MsgAddScopeSpecificationResponse, error)
-	// RemoveScopeSpecification removes a scope specification
-	RemoveScopeSpecification(context.Context, *MsgRemoveScopeSpecificationRequest) (*MsgRemoveScopeSpecificationResponse, error)
+	// DeleteScopeSpecification deletes a scope specification
+	DeleteScopeSpecification(context.Context, *MsgDeleteScopeSpecificationRequest) (*MsgDeleteScopeSpecificationResponse, error)
 	// AddContractSpecification adds a contract specification
 	AddContractSpecification(context.Context, *MsgAddContractSpecificationRequest) (*MsgAddContractSpecificationResponse, error)
-	// RemoveContractSpecification removes a contract specification
-	RemoveContractSpecification(context.Context, *MsgRemoveContractSpecificationRequest) (*MsgRemoveContractSpecificationResponse, error)
+	// DeleteContractSpecification deletes a contract specification
+	DeleteContractSpecification(context.Context, *MsgDeleteContractSpecificationRequest) (*MsgDeleteContractSpecificationResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -1082,14 +1083,14 @@ func (*UnimplementedMsgServer) AddRecord(ctx context.Context, req *MsgAddRecordR
 func (*UnimplementedMsgServer) AddScopeSpecification(ctx context.Context, req *MsgAddScopeSpecificationRequest) (*MsgAddScopeSpecificationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddScopeSpecification not implemented")
 }
-func (*UnimplementedMsgServer) RemoveScopeSpecification(ctx context.Context, req *MsgRemoveScopeSpecificationRequest) (*MsgRemoveScopeSpecificationResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RemoveScopeSpecification not implemented")
+func (*UnimplementedMsgServer) DeleteScopeSpecification(ctx context.Context, req *MsgDeleteScopeSpecificationRequest) (*MsgDeleteScopeSpecificationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteScopeSpecification not implemented")
 }
 func (*UnimplementedMsgServer) AddContractSpecification(ctx context.Context, req *MsgAddContractSpecificationRequest) (*MsgAddContractSpecificationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddContractSpecification not implemented")
 }
-func (*UnimplementedMsgServer) RemoveContractSpecification(ctx context.Context, req *MsgRemoveContractSpecificationRequest) (*MsgRemoveContractSpecificationResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RemoveContractSpecification not implemented")
+func (*UnimplementedMsgServer) DeleteContractSpecification(ctx context.Context, req *MsgDeleteContractSpecificationRequest) (*MsgDeleteContractSpecificationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteContractSpecification not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -1222,20 +1223,20 @@ func _Msg_AddScopeSpecification_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_RemoveScopeSpecification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgRemoveScopeSpecificationRequest)
+func _Msg_DeleteScopeSpecification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgDeleteScopeSpecificationRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).RemoveScopeSpecification(ctx, in)
+		return srv.(MsgServer).DeleteScopeSpecification(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.metadata.v1.Msg/RemoveScopeSpecification",
+		FullMethod: "/provenance.metadata.v1.Msg/DeleteScopeSpecification",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).RemoveScopeSpecification(ctx, req.(*MsgRemoveScopeSpecificationRequest))
+		return srv.(MsgServer).DeleteScopeSpecification(ctx, req.(*MsgDeleteScopeSpecificationRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1258,20 +1259,20 @@ func _Msg_AddContractSpecification_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_RemoveContractSpecification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgRemoveContractSpecificationRequest)
+func _Msg_DeleteContractSpecification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgDeleteContractSpecificationRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).RemoveContractSpecification(ctx, in)
+		return srv.(MsgServer).DeleteContractSpecification(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.metadata.v1.Msg/RemoveContractSpecification",
+		FullMethod: "/provenance.metadata.v1.Msg/DeleteContractSpecification",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).RemoveContractSpecification(ctx, req.(*MsgRemoveContractSpecificationRequest))
+		return srv.(MsgServer).DeleteContractSpecification(ctx, req.(*MsgDeleteContractSpecificationRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1309,16 +1310,16 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_AddScopeSpecification_Handler,
 		},
 		{
-			MethodName: "RemoveScopeSpecification",
-			Handler:    _Msg_RemoveScopeSpecification_Handler,
+			MethodName: "DeleteScopeSpecification",
+			Handler:    _Msg_DeleteScopeSpecification_Handler,
 		},
 		{
 			MethodName: "AddContractSpecification",
 			Handler:    _Msg_AddContractSpecification_Handler,
 		},
 		{
-			MethodName: "RemoveContractSpecification",
-			Handler:    _Msg_RemoveContractSpecification_Handler,
+			MethodName: "DeleteContractSpecification",
+			Handler:    _Msg_DeleteContractSpecification_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1864,7 +1865,7 @@ func (m *MsgAddScopeSpecificationResponse) MarshalToSizedBuffer(dAtA []byte) (in
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgRemoveScopeSpecificationRequest) Marshal() (dAtA []byte, err error) {
+func (m *MsgDeleteScopeSpecificationRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1874,12 +1875,12 @@ func (m *MsgRemoveScopeSpecificationRequest) Marshal() (dAtA []byte, err error) 
 	return dAtA[:n], nil
 }
 
-func (m *MsgRemoveScopeSpecificationRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgDeleteScopeSpecificationRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgRemoveScopeSpecificationRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgDeleteScopeSpecificationRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1906,7 +1907,7 @@ func (m *MsgRemoveScopeSpecificationRequest) MarshalToSizedBuffer(dAtA []byte) (
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgRemoveScopeSpecificationResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgDeleteScopeSpecificationResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1916,12 +1917,12 @@ func (m *MsgRemoveScopeSpecificationResponse) Marshal() (dAtA []byte, err error)
 	return dAtA[:n], nil
 }
 
-func (m *MsgRemoveScopeSpecificationResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgDeleteScopeSpecificationResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgRemoveScopeSpecificationResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgDeleteScopeSpecificationResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1996,7 +1997,7 @@ func (m *MsgAddContractSpecificationResponse) MarshalToSizedBuffer(dAtA []byte) 
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgRemoveContractSpecificationRequest) Marshal() (dAtA []byte, err error) {
+func (m *MsgDeleteContractSpecificationRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2006,12 +2007,12 @@ func (m *MsgRemoveContractSpecificationRequest) Marshal() (dAtA []byte, err erro
 	return dAtA[:n], nil
 }
 
-func (m *MsgRemoveContractSpecificationRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgDeleteContractSpecificationRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgRemoveContractSpecificationRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgDeleteContractSpecificationRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2038,7 +2039,7 @@ func (m *MsgRemoveContractSpecificationRequest) MarshalToSizedBuffer(dAtA []byte
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgRemoveContractSpecificationResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgDeleteContractSpecificationResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2048,12 +2049,12 @@ func (m *MsgRemoveContractSpecificationResponse) Marshal() (dAtA []byte, err err
 	return dAtA[:n], nil
 }
 
-func (m *MsgRemoveContractSpecificationResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgDeleteContractSpecificationResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgRemoveContractSpecificationResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgDeleteContractSpecificationResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2288,7 +2289,7 @@ func (m *MsgAddScopeSpecificationResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgRemoveScopeSpecificationRequest) Size() (n int) {
+func (m *MsgDeleteScopeSpecificationRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2305,7 +2306,7 @@ func (m *MsgRemoveScopeSpecificationRequest) Size() (n int) {
 	return n
 }
 
-func (m *MsgRemoveScopeSpecificationResponse) Size() (n int) {
+func (m *MsgDeleteScopeSpecificationResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2342,7 +2343,7 @@ func (m *MsgAddContractSpecificationResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgRemoveContractSpecificationRequest) Size() (n int) {
+func (m *MsgDeleteContractSpecificationRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2359,7 +2360,7 @@ func (m *MsgRemoveContractSpecificationRequest) Size() (n int) {
 	return n
 }
 
-func (m *MsgRemoveContractSpecificationResponse) Size() (n int) {
+func (m *MsgDeleteContractSpecificationResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3868,7 +3869,7 @@ func (m *MsgAddScopeSpecificationResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgRemoveScopeSpecificationRequest) Unmarshal(dAtA []byte) error {
+func (m *MsgDeleteScopeSpecificationRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3891,10 +3892,10 @@ func (m *MsgRemoveScopeSpecificationRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgRemoveScopeSpecificationRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgDeleteScopeSpecificationRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgRemoveScopeSpecificationRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgDeleteScopeSpecificationRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -3983,7 +3984,7 @@ func (m *MsgRemoveScopeSpecificationRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgRemoveScopeSpecificationResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgDeleteScopeSpecificationResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4006,10 +4007,10 @@ func (m *MsgRemoveScopeSpecificationResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgRemoveScopeSpecificationResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgDeleteScopeSpecificationResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgRemoveScopeSpecificationResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgDeleteScopeSpecificationResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -4201,7 +4202,7 @@ func (m *MsgAddContractSpecificationResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgRemoveContractSpecificationRequest) Unmarshal(dAtA []byte) error {
+func (m *MsgDeleteContractSpecificationRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4224,10 +4225,10 @@ func (m *MsgRemoveContractSpecificationRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgRemoveContractSpecificationRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgDeleteContractSpecificationRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgRemoveContractSpecificationRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgDeleteContractSpecificationRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -4316,7 +4317,7 @@ func (m *MsgRemoveContractSpecificationRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgRemoveContractSpecificationResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgDeleteContractSpecificationResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4339,10 +4340,10 @@ func (m *MsgRemoveContractSpecificationResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgRemoveContractSpecificationResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgDeleteContractSpecificationResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgRemoveContractSpecificationResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgDeleteContractSpecificationResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

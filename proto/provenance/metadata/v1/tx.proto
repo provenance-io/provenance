@@ -32,13 +32,13 @@ service Msg {
 
   // AddScopeSpecification adds a scope specification
   rpc AddScopeSpecification(MsgAddScopeSpecificationRequest) returns (MsgAddScopeSpecificationResponse);
-  // RemoveScopeSpecification removes a scope specification
-  rpc RemoveScopeSpecification(MsgRemoveScopeSpecificationRequest) returns (MsgRemoveScopeSpecificationResponse);
+  // DeleteScopeSpecification deletes a scope specification
+  rpc DeleteScopeSpecification(MsgDeleteScopeSpecificationRequest) returns (MsgDeleteScopeSpecificationResponse);
 
   // AddContractSpecification adds a contract specification
   rpc AddContractSpecification(MsgAddContractSpecificationRequest) returns (MsgAddContractSpecificationResponse);
-  // RemoveContractSpecification removes a contract specification
-  rpc RemoveContractSpecification(MsgRemoveContractSpecificationRequest) returns (MsgRemoveContractSpecificationResponse);
+  // DeleteContractSpecification deletes a contract specification
+  rpc DeleteContractSpecification(MsgDeleteContractSpecificationRequest) returns (MsgDeleteContractSpecificationResponse);
 }
 
 // MsgMemorializeContractRequest is a request from a P8e execution environment to record results of a contract
@@ -173,7 +173,7 @@ message MsgAddScopeSpecificationRequest {
 message MsgAddScopeSpecificationResponse {}
 
 // MsgRemoveScopeSpecificationRequest removes a scope specification
-message MsgRemoveScopeSpecificationRequest {
+message MsgDeleteScopeSpecificationRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
@@ -189,7 +189,7 @@ message MsgRemoveScopeSpecificationRequest {
 }
 
 // MsgRemoveScopeSpecificationResponse from a remove scope specification request
-message MsgRemoveScopeSpecificationResponse {}
+message MsgDeleteScopeSpecificationResponse {}
 
 // MsgAddContractSpecificationRequest is a request to add a contract specification
 message MsgAddContractSpecificationRequest {
@@ -206,7 +206,7 @@ message MsgAddContractSpecificationRequest {
 message MsgAddContractSpecificationResponse {}
 
 // MsgRemoveContractSpecificationRequest removes a contract specification
-message MsgRemoveContractSpecificationRequest {
+message MsgDeleteContractSpecificationRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
@@ -222,4 +222,4 @@ message MsgRemoveContractSpecificationRequest {
 }
 
 // MsgRemoveContractSpecificationResponse from a remove contract specification request
-message MsgRemoveContractSpecificationResponse {}
+message MsgDeleteContractSpecificationResponse {}

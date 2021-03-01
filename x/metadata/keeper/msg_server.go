@@ -170,10 +170,10 @@ func (k msgServer) AddScopeSpecification(
 	return &types.MsgAddScopeSpecificationResponse{}, nil
 }
 
-func (k msgServer) RemoveScopeSpecification(
+func (k msgServer) DeleteScopeSpecification(
 	goCtx context.Context,
-	msg *types.MsgRemoveScopeSpecificationRequest,
-) (*types.MsgRemoveScopeSpecificationResponse, error) {
+	msg *types.MsgDeleteScopeSpecificationRequest,
+) (*types.MsgDeleteScopeSpecificationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	existing, found := k.GetScopeSpecification(ctx, msg.SpecificationId)
@@ -194,7 +194,7 @@ func (k msgServer) RemoveScopeSpecification(
 		),
 	)
 
-	return &types.MsgRemoveScopeSpecificationResponse{}, nil
+	return &types.MsgDeleteScopeSpecificationResponse{}, nil
 }
 
 func (k msgServer) AddContractSpecification(
@@ -221,10 +221,10 @@ func (k msgServer) AddContractSpecification(
 	return &types.MsgAddContractSpecificationResponse{}, nil
 }
 
-func (k msgServer) RemoveContractSpecification(
+func (k msgServer) DeleteContractSpecification(
 	goCtx context.Context,
-	msg *types.MsgRemoveContractSpecificationRequest,
-) (*types.MsgRemoveContractSpecificationResponse, error) {
+	msg *types.MsgDeleteContractSpecificationRequest,
+) (*types.MsgDeleteContractSpecificationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	existing, found := k.GetContractSpecification(ctx, msg.SpecificationId)
@@ -235,7 +235,7 @@ func (k msgServer) RemoveContractSpecification(
 		return nil, err
 	}
 
-	k.DeleteContractSpecification(ctx, msg.SpecificationId)
+	k.XXXXXXXXScopeSpecification(ctx, msg.SpecificationId)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -245,5 +245,5 @@ func (k msgServer) RemoveContractSpecification(
 		),
 	)
 
-	return &types.MsgRemoveContractSpecificationResponse{}, nil
+	return &types.MsgDeleteContractSpecificationResponse{}, nil
 }

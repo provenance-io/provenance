@@ -385,40 +385,40 @@ func (msg MsgAddScopeSpecificationRequest) ValidateBasic() error {
 	return msg.Specification.ValidateBasic()
 }
 
-// ------------------  MsgRemoveScopeSpecificationRequest  ------------------
+// ------------------  MsgDeleteScopeSpecificationRequest  ------------------
 
 // NewMsgRemoveScopeSpecificationRequest creates a new msg instance
-func NewMsgRemoveScopeSpecificationRequest() *MsgRemoveScopeSpecificationRequest {
-	return &MsgRemoveScopeSpecificationRequest{}
+func NewMsgRemoveScopeSpecificationRequest() *MsgDeleteScopeSpecificationRequest {
+	return &MsgDeleteScopeSpecificationRequest{}
 }
 
-func (msg MsgRemoveScopeSpecificationRequest) String() string {
+func (msg MsgDeleteScopeSpecificationRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
 // Route returns the module route
-func (msg MsgRemoveScopeSpecificationRequest) Route() string {
+func (msg MsgDeleteScopeSpecificationRequest) Route() string {
 	return ModuleName
 }
 
 // Type returns the type name for this msg
-func (msg MsgRemoveScopeSpecificationRequest) Type() string {
+func (msg MsgDeleteScopeSpecificationRequest) Type() string {
 	return TypeMsgRemoveScopeSpecificationRequest
 }
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
-func (msg MsgRemoveScopeSpecificationRequest) GetSigners() []sdk.AccAddress {
+func (msg MsgDeleteScopeSpecificationRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
 }
 
 // GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgRemoveScopeSpecificationRequest) GetSignBytes() []byte {
+func (msg MsgDeleteScopeSpecificationRequest) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
-func (msg MsgRemoveScopeSpecificationRequest) ValidateBasic() error {
+func (msg MsgDeleteScopeSpecificationRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
@@ -465,40 +465,40 @@ func (msg MsgAddContractSpecificationRequest) ValidateBasic() error {
 	return msg.Specification.ValidateBasic()
 }
 
-// ------------------  MsgRemoveContractSpecificationRequest  ------------------
+// ------------------  MsgDeleteContractSpecificationRequest  ------------------
 
 // NewMsgRemoveContractSpecificationRequest creates a new msg instance
-func NewMsgRemoveContractSpecificationRequest() *MsgRemoveContractSpecificationRequest {
-	return &MsgRemoveContractSpecificationRequest{}
+func NewMsgRemoveContractSpecificationRequest() *MsgDeleteContractSpecificationRequest {
+	return &MsgDeleteContractSpecificationRequest{}
 }
 
-func (msg MsgRemoveContractSpecificationRequest) String() string {
+func (msg MsgDeleteContractSpecificationRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
 // Route returns the module route
-func (msg MsgRemoveContractSpecificationRequest) Route() string {
+func (msg MsgDeleteContractSpecificationRequest) Route() string {
 	return ModuleName
 }
 
 // Type returns the type name for this msg
-func (msg MsgRemoveContractSpecificationRequest) Type() string {
+func (msg MsgDeleteContractSpecificationRequest) Type() string {
 	return TypeMsgRemoveScopeSpecificationRequest
 }
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
-func (msg MsgRemoveContractSpecificationRequest) GetSigners() []sdk.AccAddress {
+func (msg MsgDeleteContractSpecificationRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
 }
 
 // GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgRemoveContractSpecificationRequest) GetSignBytes() []byte {
+func (msg MsgDeleteContractSpecificationRequest) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
-func (msg MsgRemoveContractSpecificationRequest) ValidateBasic() error {
+func (msg MsgDeleteContractSpecificationRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
