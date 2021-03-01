@@ -714,7 +714,7 @@ func (s *SpecKeeperTestSuite) TestGetSetDeleteScopeSpecification() {
 	s.False(found3, "3: get scope spec should return false for an unknown address")
 	s.NotNil(spec3, "3: get scope spec should always return a non-nil scope spec")
 
-	s.app.MetadataKeeper.DeleteScopeSpecification(s.ctx, newSpec.SpecificationId)
+	s.app.MetadataKeeper.XXXXXXXXScopeSpecification(s.ctx, newSpec.SpecificationId)
 
 	spec4, found4 := s.app.MetadataKeeper.GetScopeSpecification(s.ctx, s.scopeSpecID)
 	s.False(found4, "4: get scope spec should return false after it has been deleted")

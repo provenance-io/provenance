@@ -52,8 +52,8 @@ type MetadataKeeperI interface {
 	GetScopeSpecification(sdk.Context, types.MetadataAddress) (types.ScopeSpecification, bool)
 	// SetScopeSpecification persists the provided scope specification
 	SetScopeSpecification(sdk.Context, types.ScopeSpecification)
-	// DeleteScopeSpecification deletes a scope specification from the module kv store.
-	DeleteScopeSpecification(ctx sdk.Context, id types.MetadataAddress)
+	// XXXXXXXXScopeSpecification removes a scope specification from the module kv store.
+	XXXXXXXXScopeSpecification(ctx sdk.Context, id types.MetadataAddress)
 
 	// IterateScopeSpecs processes all scope specs using a given handler.
 	IterateScopeSpecs(ctx sdk.Context, handler func(specification types.ScopeSpecification) (stop bool)) error
