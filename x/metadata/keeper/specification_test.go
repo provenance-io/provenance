@@ -184,7 +184,7 @@ func (s *SpecKeeperTestSuite) TestIterateContractSpecs() {
 	s.Equal(5, shortCount, "function IterateContractSpecs ignored (stop bool) return value")
 }
 
-func (s *SpecKeeperTestSuite) TestIterateContractSpecsForAddress() {
+func (s *SpecKeeperTestSuite) TestIterateContractSpecsForOwner() {
 	// Create 5 contract specs. Two owned by user1, Two owned by user2, and One owned by both user1 and user2.
 	specs := make([]*types.ContractSpecification, 5)
 	user1SpecIDs := make([]types.MetadataAddress, 3)
@@ -192,7 +192,7 @@ func (s *SpecKeeperTestSuite) TestIterateContractSpecsForAddress() {
 	specs[0] = types.NewContractSpecification(
 		types.ContractSpecMetadataAddress(uuid.New()),
 		types.NewDescription(
-			"TestIterateContractSpecsForAddress[0]",
+			"TestIterateContractSpecsForOwner[0]",
 			"A description for a unit test contract specification - owner: user1",
 			"http://test.net",
 			"http://test.net/ico.png",
@@ -207,7 +207,7 @@ func (s *SpecKeeperTestSuite) TestIterateContractSpecsForAddress() {
 	specs[1] = types.NewContractSpecification(
 		types.ContractSpecMetadataAddress(uuid.New()),
 		types.NewDescription(
-			"TestIterateContractSpecsForAddress[1]",
+			"TestIterateContractSpecsForOwner[1]",
 			"A description for a unit test contract specification - owner: user2",
 			"http://test.net",
 			"http://test.net/ico.png",
@@ -222,7 +222,7 @@ func (s *SpecKeeperTestSuite) TestIterateContractSpecsForAddress() {
 	specs[2] = types.NewContractSpecification(
 		types.ContractSpecMetadataAddress(uuid.New()),
 		types.NewDescription(
-			"TestIterateContractSpecsForAddress[2]",
+			"TestIterateContractSpecsForOwner[2]",
 			"A description for a unit test contract specification - owner: user1",
 			"http://test.net",
 			"http://test.net/ico.png",
@@ -237,7 +237,7 @@ func (s *SpecKeeperTestSuite) TestIterateContractSpecsForAddress() {
 	specs[3] = types.NewContractSpecification(
 		types.ContractSpecMetadataAddress(uuid.New()),
 		types.NewDescription(
-			"TestIterateContractSpecsForAddress[3]",
+			"TestIterateContractSpecsForOwner[3]",
 			"A description for a unit test contract specification - owner: user2",
 			"http://test.net",
 			"http://test.net/ico.png",
@@ -252,7 +252,7 @@ func (s *SpecKeeperTestSuite) TestIterateContractSpecsForAddress() {
 	specs[4] = types.NewContractSpecification(
 		types.ContractSpecMetadataAddress(uuid.New()),
 		types.NewDescription(
-			"TestIterateContractSpecsForAddress[4]",
+			"TestIterateContractSpecsForOwner[4]",
 			"A description for a unit test contract specification - owners: user1, user2",
 			"http://test.net",
 			"http://test.net/ico.png",
@@ -272,7 +272,7 @@ func (s *SpecKeeperTestSuite) TestIterateContractSpecsForAddress() {
 
 	// Make sure all user1 scope specs are iterated over
 	user1SpecIDsIterated := []types.MetadataAddress{}
-	errUser1 := s.app.MetadataKeeper.IterateContractSpecsForAddress(s.ctx, s.user1Addr, func(specID types.MetadataAddress) (stop bool) {
+	errUser1 := s.app.MetadataKeeper.IterateContractSpecsForOwner(s.ctx, s.user1Addr, func(specID types.MetadataAddress) (stop bool) {
 		user1SpecIDsIterated = append(user1SpecIDsIterated, specID)
 		return false
 	})
@@ -284,7 +284,7 @@ func (s *SpecKeeperTestSuite) TestIterateContractSpecsForAddress() {
 
 	// Make sure all user2 scope specs are iterated over
 	user2SpecIDsIterated := []types.MetadataAddress{}
-	errUser2 := s.app.MetadataKeeper.IterateContractSpecsForAddress(s.ctx, s.user2Addr, func(specID types.MetadataAddress) (stop bool) {
+	errUser2 := s.app.MetadataKeeper.IterateContractSpecsForOwner(s.ctx, s.user2Addr, func(specID types.MetadataAddress) (stop bool) {
 		user2SpecIDsIterated = append(user2SpecIDsIterated, specID)
 		return false
 	})
@@ -297,7 +297,7 @@ func (s *SpecKeeperTestSuite) TestIterateContractSpecsForAddress() {
 	// Make sure an unknown user address results in zero iterations.
 	user3Addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	user3Count := 0
-	errUser3 := s.app.MetadataKeeper.IterateContractSpecsForAddress(s.ctx, user3Addr, func(specID types.MetadataAddress) (stop bool) {
+	errUser3 := s.app.MetadataKeeper.IterateContractSpecsForOwner(s.ctx, user3Addr, func(specID types.MetadataAddress) (stop bool) {
 		user3Count++
 		return false
 	})
@@ -306,7 +306,7 @@ func (s *SpecKeeperTestSuite) TestIterateContractSpecsForAddress() {
 
 	// Make sure the stop bool is being recognized.
 	countStop := 0
-	errStop := s.app.MetadataKeeper.IterateContractSpecsForAddress(s.ctx, s.user1Addr, func(specID types.MetadataAddress) (stop bool) {
+	errStop := s.app.MetadataKeeper.IterateContractSpecsForOwner(s.ctx, s.user1Addr, func(specID types.MetadataAddress) (stop bool) {
 		countStop++
 		if countStop == 2 {
 			return true
@@ -785,7 +785,7 @@ func (s *SpecKeeperTestSuite) TestIterateScopeSpecs() {
 	s.Equal(5, shortCount, "function IterateScopeSpecs ignored (stop bool) return value")
 }
 
-func (s *SpecKeeperTestSuite) TestIterateScopeSpecsForAddress() {
+func (s *SpecKeeperTestSuite) TestIterateScopeSpecsForOwner() {
 	// Create 5 scope specs. Two owned by user1, Two owned by user2, and One owned by both user1 and user2.
 	scopeSpecs := make([]*types.ScopeSpecification, 5)
 	user1ScopeSpecIDs := make([]types.MetadataAddress, 3)
@@ -793,7 +793,7 @@ func (s *SpecKeeperTestSuite) TestIterateScopeSpecsForAddress() {
 	scopeSpecs[0] = types.NewScopeSpecification(
 		types.ScopeSpecMetadataAddress(uuid.New()),
 		types.NewDescription(
-			"TestGetSetScopeSpecification[0]",
+			"TestIterateScopeSpecsForOwner[0]",
 			"A description for a unit test scope specification - owner: user1",
 			"http://test.net",
 			"http://test.net/ico.png",
@@ -806,7 +806,7 @@ func (s *SpecKeeperTestSuite) TestIterateScopeSpecsForAddress() {
 	scopeSpecs[1] = types.NewScopeSpecification(
 		types.ScopeSpecMetadataAddress(uuid.New()),
 		types.NewDescription(
-			"TestGetSetScopeSpecification[1]",
+			"TestIterateScopeSpecsForOwner[1]",
 			"A description for a unit test scope specification - owner: user2",
 			"http://test.net",
 			"http://test.net/ico.png",
@@ -819,7 +819,7 @@ func (s *SpecKeeperTestSuite) TestIterateScopeSpecsForAddress() {
 	scopeSpecs[2] = types.NewScopeSpecification(
 		types.ScopeSpecMetadataAddress(uuid.New()),
 		types.NewDescription(
-			"TestGetSetScopeSpecification[2]",
+			"TestIterateScopeSpecsForOwner[2]",
 			"A description for a unit test scope specification - owner: user1",
 			"http://test.net",
 			"http://test.net/ico.png",
@@ -832,7 +832,7 @@ func (s *SpecKeeperTestSuite) TestIterateScopeSpecsForAddress() {
 	scopeSpecs[3] = types.NewScopeSpecification(
 		types.ScopeSpecMetadataAddress(uuid.New()),
 		types.NewDescription(
-			"TestGetSetScopeSpecification[3]",
+			"TestIterateScopeSpecsForOwner[3]",
 			"A description for a unit test scope specification - owner: user2",
 			"http://test.net",
 			"http://test.net/ico.png",
@@ -845,7 +845,7 @@ func (s *SpecKeeperTestSuite) TestIterateScopeSpecsForAddress() {
 	scopeSpecs[4] = types.NewScopeSpecification(
 		types.ScopeSpecMetadataAddress(uuid.New()),
 		types.NewDescription(
-			"TestGetSetScopeSpecification[4]",
+			"TestIterateScopeSpecsForOwner[4]",
 			"A description for a unit test scope specification - owners: user1, user2",
 			"http://test.net",
 			"http://test.net/ico.png",
@@ -863,7 +863,7 @@ func (s *SpecKeeperTestSuite) TestIterateScopeSpecsForAddress() {
 
 	// Make sure all user1 scope specs are iterated over
 	user1ScopeSpecIDsIterated := []types.MetadataAddress{}
-	errUser1 := s.app.MetadataKeeper.IterateScopeSpecsForAddress(s.ctx, s.user1Addr, func(specID types.MetadataAddress) (stop bool) {
+	errUser1 := s.app.MetadataKeeper.IterateScopeSpecsForOwner(s.ctx, s.user1Addr, func(specID types.MetadataAddress) (stop bool) {
 		user1ScopeSpecIDsIterated = append(user1ScopeSpecIDsIterated, specID)
 		return false
 	})
@@ -875,7 +875,7 @@ func (s *SpecKeeperTestSuite) TestIterateScopeSpecsForAddress() {
 
 	// Make sure all user2 scope specs are iterated over
 	user2ScopeSpecIDsIterated := []types.MetadataAddress{}
-	errUser2 := s.app.MetadataKeeper.IterateScopeSpecsForAddress(s.ctx, s.user2Addr, func(specID types.MetadataAddress) (stop bool) {
+	errUser2 := s.app.MetadataKeeper.IterateScopeSpecsForOwner(s.ctx, s.user2Addr, func(specID types.MetadataAddress) (stop bool) {
 		user2ScopeSpecIDsIterated = append(user2ScopeSpecIDsIterated, specID)
 		return false
 	})
@@ -888,7 +888,7 @@ func (s *SpecKeeperTestSuite) TestIterateScopeSpecsForAddress() {
 	// Make sure an unknown user address results in zero iterations.
 	user3Addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	user3Count := 0
-	errUser3 := s.app.MetadataKeeper.IterateScopeSpecsForAddress(s.ctx, user3Addr, func(specID types.MetadataAddress) (stop bool) {
+	errUser3 := s.app.MetadataKeeper.IterateScopeSpecsForOwner(s.ctx, user3Addr, func(specID types.MetadataAddress) (stop bool) {
 		user3Count++
 		return false
 	})
@@ -897,7 +897,7 @@ func (s *SpecKeeperTestSuite) TestIterateScopeSpecsForAddress() {
 
 	// Make sure the stop bool is being recognized.
 	countStop := 0
-	errStop := s.app.MetadataKeeper.IterateScopeSpecsForAddress(s.ctx, s.user1Addr, func(specID types.MetadataAddress) (stop bool) {
+	errStop := s.app.MetadataKeeper.IterateScopeSpecsForOwner(s.ctx, s.user1Addr, func(specID types.MetadataAddress) (stop bool) {
 		countStop++
 		if countStop == 2 {
 			return true

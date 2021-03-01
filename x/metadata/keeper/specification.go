@@ -22,10 +22,10 @@ func (k Keeper) IterateContractSpecs(ctx sdk.Context, handler func(specification
 	return nil
 }
 
-// IterateContractSpecsForAddress processes all contract specs associated with an address using a given handler.
-func (k Keeper) IterateContractSpecsForAddress(ctx sdk.Context, address sdk.AccAddress, handler func(contractSpecID types.MetadataAddress) (stop bool)) error {
+// IterateContractSpecsForOwner processes all contract specs owned by an address using a given handler.
+func (k Keeper) IterateContractSpecsForOwner(ctx sdk.Context, ownerAddress sdk.AccAddress, handler func(contractSpecID types.MetadataAddress) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	prefix := types.GetAddressContractSpecCacheIteratorPrefix(address)
+	prefix := types.GetAddressContractSpecCacheIteratorPrefix(ownerAddress)
 	it := sdk.KVStorePrefixIterator(store, prefix)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
@@ -195,10 +195,10 @@ func (k Keeper) IterateScopeSpecs(ctx sdk.Context, handler func(specification ty
 	return nil
 }
 
-// IterateScopeSpecsForAddress processes all scope specs associated with an address using a given handler.
-func (k Keeper) IterateScopeSpecsForAddress(ctx sdk.Context, address sdk.AccAddress, handler func(scopeSpecID types.MetadataAddress) (stop bool)) error {
+// IterateScopeSpecsForOwner processes all scope specs owned by an address using a given handler.
+func (k Keeper) IterateScopeSpecsForOwner(ctx sdk.Context, ownerAddress sdk.AccAddress, handler func(scopeSpecID types.MetadataAddress) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	prefix := types.GetAddressScopeSpecCacheIteratorPrefix(address)
+	prefix := types.GetAddressScopeSpecCacheIteratorPrefix(ownerAddress)
 	it := sdk.KVStorePrefixIterator(store, prefix)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {

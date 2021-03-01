@@ -52,8 +52,8 @@ type MetadataKeeperI interface {
 
 	// IterateScopeSpecs processes all scope specs using a given handler.
 	IterateScopeSpecs(ctx sdk.Context, handler func(specification types.ScopeSpecification) (stop bool)) error
-	// IterateScopeSpecsForAddress processes all scope specs associated with an address using a given handler.
-	IterateScopeSpecsForAddress(ctx sdk.Context, address sdk.AccAddress, handler func(scopeSpecID types.MetadataAddress) (stop bool)) error
+	// IterateScopeSpecsForOwner processes all scope specs owned by an address using a given handler.
+	IterateScopeSpecsForOwner(ctx sdk.Context, ownerAddress sdk.AccAddress, handler func(scopeSpecID types.MetadataAddress) (stop bool)) error
 	// IterateScopeSpecsForContractSpec processes all scope specs associated with a contract spec id using a given handler.
 	IterateScopeSpecsForContractSpec(ctx sdk.Context, contractSpecID types.MetadataAddress, handler func(scopeSpecID types.MetadataAddress) (stop bool)) error
 
@@ -66,8 +66,8 @@ type MetadataKeeperI interface {
 
 	// IterateContractSpecs processes all contract specs using the given handler.
 	IterateContractSpecs(ctx sdk.Context, handler func(specification types.ContractSpecification) (stop bool)) error
-	// IterateContractSpecsForAddress processes all contract specs associated with an address using a given handler.
-	IterateContractSpecsForAddress(ctx sdk.Context, address sdk.AccAddress, handler func(contractSpecID types.MetadataAddress) (stop bool)) error
+	// IterateContractSpecsForOwner processes all contract specs owned by an address using a given handler.
+	IterateContractSpecsForOwner(ctx sdk.Context, ownerAddress sdk.AccAddress, handler func(contractSpecID types.MetadataAddress) (stop bool)) error
 }
 
 // Keeper is the concrete state-based API for the metadata module.
