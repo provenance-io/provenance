@@ -9,15 +9,16 @@ import (
 )
 
 const (
-	TypeMsgMemorializeContractRequest      = "memorialize_contract_request"
-	TypeMsgChangeOwnershipRequest          = "change_ownership_request"
-	TypeMsgAddScopeRequest                 = "add_scope_request"
-	TypeMsgDeleteScopeRequest              = "remove_scope_request"
-	TypeMsgAddRecordGroupRequest           = "add_recordgroup_request"
-	TypeMsgAddRecordRequest                = "add_record_request"
-	TypeMsgAddScopeSpecificationRequest    = "add_scope_specification_request"
-	TypeMsgRemoveScopeSpecificationRequest = "remove_scope_specification_request"
-	TypeMsgAddContractSpecificationRequest = "add_contract_specification_request"
+	TypeMsgMemorializeContractRequest         = "memorialize_contract_request"
+	TypeMsgChangeOwnershipRequest             = "change_ownership_request"
+	TypeMsgAddScopeRequest                    = "add_scope_request"
+	TypeMsgDeleteScopeRequest                 = "delete_scope_request"
+	TypeMsgAddRecordGroupRequest              = "add_recordgroup_request"
+	TypeMsgAddRecordRequest                   = "add_record_request"
+	TypeMsgAddScopeSpecificationRequest       = "add_scope_specification_request"
+	TypeMsgDeleteScopeSpecificationRequest    = "delete_scope_specification_request"
+	TypeMsgAddContractSpecificationRequest    = "add_contract_specification_request"
+	TypeMsgDeleteContractSpecificationRequest = "delete_contract_specification_request"
 )
 
 // Compile time interface checks.
@@ -83,7 +84,6 @@ func (msg MsgMemorializeContractRequest) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
-//
 // ValidateBasic quick validity check
 func (msg MsgMemorializeContractRequest) ValidateBasic() error {
 	if strings.TrimSpace(msg.ScopeId) == "" {
@@ -209,7 +209,7 @@ func (msg MsgAddScopeRequest) ValidateBasic() error {
 	return msg.Scope.ValidateBasic()
 }
 
-// ------------------  MsgRemoveScopeRequest  ------------------
+// ------------------  NewMsgDeleteScopeRequest  ------------------
 
 // NewMsgDeleteScopeRequest creates a new msg instance
 func NewMsgDeleteScopeRequest(scopeID MetadataAddress, signers []string) *MsgDeleteScopeRequest {
@@ -351,7 +351,9 @@ func (msg MsgAddScopeSpecificationRequest) Route() string {
 }
 
 // Type returns the type name for this msg
-func (msg MsgAddScopeSpecificationRequest) Type() string { return TypeMsgAddScopeSpecificationRequest }
+func (msg MsgAddScopeSpecificationRequest) Type() string {
+	return TypeMsgAddScopeSpecificationRequest
+}
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgAddScopeSpecificationRequest) GetSigners() []sdk.AccAddress {
@@ -373,8 +375,8 @@ func (msg MsgAddScopeSpecificationRequest) ValidateBasic() error {
 
 // ------------------  MsgDeleteScopeSpecificationRequest  ------------------
 
-// NewMsgRemoveScopeSpecificationRequest creates a new msg instance
-func NewMsgRemoveScopeSpecificationRequest() *MsgDeleteScopeSpecificationRequest {
+// NewMsgDeleteScopeSpecificationRequest creates a new msg instance
+func NewMsgDeleteScopeSpecificationRequest() *MsgDeleteScopeSpecificationRequest {
 	return &MsgDeleteScopeSpecificationRequest{}
 }
 
@@ -390,7 +392,7 @@ func (msg MsgDeleteScopeSpecificationRequest) Route() string {
 
 // Type returns the type name for this msg
 func (msg MsgDeleteScopeSpecificationRequest) Type() string {
-	return TypeMsgRemoveScopeSpecificationRequest
+	return TypeMsgDeleteScopeSpecificationRequest
 }
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
@@ -453,8 +455,8 @@ func (msg MsgAddContractSpecificationRequest) ValidateBasic() error {
 
 // ------------------  MsgDeleteContractSpecificationRequest  ------------------
 
-// NewMsgRemoveContractSpecificationRequest creates a new msg instance
-func NewMsgRemoveContractSpecificationRequest() *MsgDeleteContractSpecificationRequest {
+// NewMsgDeleteContractSpecificationRequest creates a new msg instance
+func NewMsgDeleteContractSpecificationRequest() *MsgDeleteContractSpecificationRequest {
 	return &MsgDeleteContractSpecificationRequest{}
 }
 
@@ -470,7 +472,7 @@ func (msg MsgDeleteContractSpecificationRequest) Route() string {
 
 // Type returns the type name for this msg
 func (msg MsgDeleteContractSpecificationRequest) Type() string {
-	return TypeMsgRemoveScopeSpecificationRequest
+	return TypeMsgDeleteContractSpecificationRequest
 }
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
