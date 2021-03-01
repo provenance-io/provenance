@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -564,34 +563,14 @@ func New(
 	)
 	app.SetEndBlocker(app.EndBlocker)
 
-	// A data structure for setting upgrade plans that need to actually do something.
-	// WARNING: Once deployed to a network, NEVER change or remove these handlers.
-	explicitUpgradePlans := map[string]upgradetypes.UpgradeHandler{
-		"v0.10.0": func(ctx sdk.Context, plan upgradetypes.Plan) {
-			// A no-op, but here's where developers can do something for a specific release.
+	// -- TODO: Add upgrade plans for each release here
+	//    NOTE: Do not remove any handlers once deployed
+	app.UpgradeKeeper.SetUpgradeHandler("v0.1.5",
+		func(ctx sdk.Context, plan upgradetypes.Plan) {
+			ctx.Logger().Info("Applying no-op upgrade plan for release v0.1.5")
 		},
-	}
-
-	// The max major/minor/patch release versions
-	// TODO: Expand version range and make dynamic (build tags would be ideal).
-	majorVersion, maxMinorVersion, maxPatchVersion := 0, 10, 100
-
-	// For release v0.1.0 through v0.10.100, set a no-op handler unless explicitly defined above.
-	// This is here so developers don't need to add handlers for every release and cosmovisor
-	// upgrades should just work.
-	for minor := 1; minor <= maxMinorVersion; minor++ {
-		for patch := 0; patch <= maxPatchVersion; patch++ {
-			name := fmt.Sprintf("v%d.%d.%d", majorVersion, minor, patch)
-			if handler, ok := explicitUpgradePlans[name]; ok {
-				logger.Info("Setting explicit upgrade handler", "name", name)
-				app.UpgradeKeeper.SetUpgradeHandler(name, handler)
-			} else {
-				app.UpgradeKeeper.SetUpgradeHandler(name, func(ctx sdk.Context, plan upgradetypes.Plan) {
-					logger.Info("Executing no-op update plan", "name", name)
-				})
-			}
-		}
-	}
+	)
+	// --
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
