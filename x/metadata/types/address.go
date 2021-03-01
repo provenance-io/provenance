@@ -35,8 +35,11 @@ const (
 var (
 	// Ensure MetadataAddress implements the sdk.Address interface
 	_ sdk.Address = MetadataAddress{}
-	// The maximum value of the initial byte (indicating the address type)
-	maxType = RecordSpecificationKeyPrefix[0]
+	// All valid Metadata Address type prefixes.
+	allowedTypes = [][]byte{
+		ScopeKeyPrefix, GroupKeyPrefix, RecordKeyPrefix,
+		ContractSpecificationKeyPrefix, ScopeSpecificationKeyPrefix, RecordSpecificationKeyPrefix,
+	}
 )
 
 // MetadataAddress is a blockchain compliant address based on UUIDs
@@ -50,6 +53,8 @@ func VerifyMetadataAddressFormat(bz []byte) (string, error) {
 	if len(bz) < requiredLength {
 		return hrp, fmt.Errorf("incorrect address length (must be at least 17, actual: %d)", len(bz))
 	}
+	checkSecondaryUUID := false
+	// If you add or remove a case in this switch, make sure to also update the allowedTypes values.
 	switch bz[0] {
 	case ScopeKeyPrefix[0]:
 		hrp = PrefixScope
@@ -57,7 +62,7 @@ func VerifyMetadataAddressFormat(bz []byte) (string, error) {
 	case GroupKeyPrefix[0]:
 		hrp = PrefixGroup
 		requiredLength = 1 + 16 + 16 // type byte plus size of two uuids
-		// TODO -- check the format of the second uuid in this type here
+		checkSecondaryUUID = true
 	case RecordKeyPrefix[0]:
 		hrp = PrefixRecord
 		requiredLength = 1 + 16 + 32 // type byte plus size of one uuid and one sha256 hash
@@ -70,16 +75,22 @@ func VerifyMetadataAddressFormat(bz []byte) (string, error) {
 		requiredLength = 1 + 16 // type byte plus size of one uuid
 	case RecordSpecificationKeyPrefix[0]:
 		hrp = PrefixRecordSpecification
-		requiredLength = 1 + 16 + 32 // type byte plus size of one uuid
+		requiredLength = 1 + 16 + 32 // type byte plus size of one uuid plus one sha256 hash
+
 	default:
-		return hrp, fmt.Errorf("invalid metadata address type (must be 0-%d, actual: %d)", maxType, bz[0])
+		return hrp, fmt.Errorf("invalid metadata address type: %d", bz[0])
 	}
 	if len(bz) != requiredLength {
 		return hrp, fmt.Errorf("incorrect address length (expected: %d, actual: %d)", requiredLength, len(bz))
 	}
 	// all valid metdata address have at least one uuid
-	if _, err := uuid.FromBytes(bz[1:17]); err != nil {
-		return hrp, fmt.Errorf("invalid address bytes, expected uuid compliant: %w", err)
+	if _, err :=  uuid.FromBytes(bz[1:17]); err != nil {
+		return hrp, fmt.Errorf("invalid address bytes of uuid, expected uuid compliant: %w", err)
+	}
+	if checkSecondaryUUID {
+		if _, err :=  uuid.FromBytes(bz[17:33]); err != nil {
+			return hrp, fmt.Errorf("invalid address bytes of secondary uuid, expected uuid compliant: %w", err)
+		}
 	}
 	return hrp, nil
 }
@@ -375,7 +386,7 @@ func (ma MetadataAddress) PrimaryUUID() (uuid.UUID, error) {
 		return uuid.UUID{}, fmt.Errorf("address empty")
 	}
 	// if we don't know this type
-	if ma[0] > maxType {
+	if !ma.isTypeOneOf(allowedTypes...) {
 		return uuid.UUID{}, fmt.Errorf("invalid address type out of valid range (got: %d)", ma[0])
 	}
 	if len(ma) < 17 {
@@ -391,7 +402,7 @@ func (ma MetadataAddress) SecondaryUUID() (uuid.UUID, error) {
 		return uuid.UUID{}, fmt.Errorf("address empty")
 	}
 	// if we don't know this type
-	if ma[0] > maxType {
+	if !ma.isTypeOneOf(allowedTypes...) {
 		return uuid.UUID{}, fmt.Errorf("invalid address type out of valid range (got: %d)", ma[0])
 	}
 	if len(ma) < 33 {

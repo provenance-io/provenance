@@ -47,7 +47,7 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				MetadataAddress(specTestAddr),
 				nil, []string{}, []PartyType{}, []MetadataAddress{},
 			),
-			"invalid scope specification id: invalid metadata address type (must be 0-5, actual: 133)",
+			"invalid scope specification id: invalid metadata address type: 133",
 			true,
 		},
 		{
@@ -127,7 +127,7 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				[]MetadataAddress{MetadataAddress(specTestAddr)},
 			),
-			"invalid contract specification id at index 0: invalid metadata address type (must be 0-5, actual: 133)",
+			"invalid contract specification id at index 0: invalid metadata address type: 133",
 			true,
 		},
 		{
@@ -151,7 +151,7 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				[]MetadataAddress{ContractSpecMetadataAddress(uuid.New()), ContractSpecMetadataAddress(uuid.New()), MetadataAddress(specTestAddr)},
 			),
-			"invalid contract specification id at index 2: invalid metadata address type (must be 0-5, actual: 133)",
+			"invalid contract specification id at index 2: invalid metadata address type: 133",
 			true,
 		},
 		{
@@ -259,7 +259,7 @@ func (s *specificationTestSuite) TestContractSpecValidateBasic() {
 				"someclass",
 				[]MetadataAddress{},
 			),
-			"invalid contract specification id: invalid metadata address type (must be 0-5, actual: 133)",
+			"invalid contract specification id: invalid metadata address type: 133",
 		},
 		{
 			"SpecificationID - invalid prefix",
@@ -373,7 +373,7 @@ func (s *specificationTestSuite) TestContractSpecValidateBasic() {
 				"someclass",
 				[]MetadataAddress{},
 			),
-			fmt.Sprintf("invalid source resource id: %s", "invalid metadata address type (must be 0-5, actual: 133)"),
+			fmt.Sprintf("invalid source resource id: %s", "invalid metadata address type: 133"),
 		},
 		{
 			"Source - Hash - empty",
@@ -457,7 +457,7 @@ func (s *specificationTestSuite) TestContractSpecValidateBasic() {
 				[]MetadataAddress{MetadataAddress(specTestAddr)},
 			),
 			fmt.Sprintf("invalid record specification id at index %d: %s",
-				0, "invalid metadata address type (must be 0-5, actual: 133)"),
+				0, "invalid metadata address type: 133"),
 		},
 		{
 			"RecordSpecIDs - invalid address prefix at index 0",
@@ -502,7 +502,7 @@ func (s *specificationTestSuite) TestContractSpecValidateBasic() {
 				},
 			),
 			fmt.Sprintf("invalid record specification id at index %d: %s",
-				2, "invalid metadata address type (must be 0-5, actual: 133)"),
+				2, "invalid metadata address type: 133"),
 		},
 		{
 			"RecordSpecIDs - invalid address prefix at index 2",
