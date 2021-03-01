@@ -234,11 +234,11 @@ func (k Keeper) ContractSpecification(c context.Context, req *types.ContractSpec
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.SpecificationId == "" {
+	if req.SpecificationUuid == "" {
 		return nil, status.Error(codes.InvalidArgument, "specification id cannot be empty")
 	}
 
-	id, err := uuid.Parse(req.SpecificationId)
+	id, err := uuid.Parse(req.SpecificationUuid)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid specification id: %s", err.Error())
 	}
@@ -247,7 +247,7 @@ func (k Keeper) ContractSpecification(c context.Context, req *types.ContractSpec
 
 	spec, found := k.GetContractSpecification(ctx, addr)
 	if !found {
-		return nil, status.Errorf(codes.NotFound, "contract specification %s not found", req.SpecificationId)
+		return nil, status.Errorf(codes.NotFound, "contract specification %s not found", req.SpecificationUuid)
 	}
 
 	return &types.ContractSpecificationResponse{ContractSpecification: &spec}, nil

@@ -542,15 +542,15 @@ func request_Query_ContractSpecification_0(ctx context.Context, marshaler runtim
 		_   = err
 	)
 
-	val, ok = pathParams["specification_id"]
+	val, ok = pathParams["specification_uuid"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "specification_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "specification_uuid")
 	}
 
-	protoReq.SpecificationId, err = runtime.String(val)
+	protoReq.SpecificationUuid, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "specification_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "specification_uuid", err)
 	}
 
 	msg, err := client.ContractSpecification(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -569,15 +569,15 @@ func local_request_Query_ContractSpecification_0(ctx context.Context, marshaler 
 		_   = err
 	)
 
-	val, ok = pathParams["specification_id"]
+	val, ok = pathParams["specification_uuid"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "specification_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "specification_uuid")
 	}
 
-	protoReq.SpecificationId, err = runtime.String(val)
+	protoReq.SpecificationUuid, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "specification_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "specification_uuid", err)
 	}
 
 	msg, err := server.ContractSpecification(ctx, &protoReq)
@@ -1039,7 +1039,7 @@ var (
 
 	pattern_Query_ScopeSpecification_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"provenance", "metadata", "v1", "scopespec", "specification_uuid"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_ContractSpecification_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"provenance", "metadata", "v1", "contractspec", "specification_id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ContractSpecification_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"provenance", "metadata", "v1", "contractspec", "specification_uuid"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (

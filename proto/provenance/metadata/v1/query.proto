@@ -57,7 +57,7 @@ service Query {
 
   // ContractSpecification returns a contract specification for the given specification id
   rpc ContractSpecification(ContractSpecificationRequest) returns (ContractSpecificationResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/contractspec/{specification_id}";
+    option (google.api.http).get = "/provenance/metadata/v1/contractspec/{specification_uuid}";
   }
 }
 
@@ -161,9 +161,9 @@ message ScopeSpecificationResponse {
   ScopeSpecification scope_specification = 1 [(gogoproto.moretags) = "yaml:\"scope_specification\""];
 }
 
-// ContractSpecificationRequest is used for requesting a contract specification by id
+// ContractSpecificationRequest is used for requesting a contract specification by uuid
 message ContractSpecificationRequest {
-  string specification_id = 1 [(gogoproto.moretags) = "yaml:\"specification_id\""];
+  string specification_uuid = 1 [(gogoproto.moretags) = "yaml:\"specification_uuid\""];
 }
 
 // ContractSpecificationResponse is the response to a contract specification request.
