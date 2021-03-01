@@ -332,6 +332,7 @@ func (s *KeeperTestSuite) TestMetadataRecordIterator() {
 	s.Equal(10, count, "iterator should return a full list of records")
 
 }
+
 func (s *KeeperTestSuite) TestValidateRecordUpdate() {
 	scope := types.NewScope(s.scopeID, s.specID, ownerPartyList(s.user1), []string{s.user1}, s.user1)
 	s.app.MetadataKeeper.SetScope(s.ctx, *scope)

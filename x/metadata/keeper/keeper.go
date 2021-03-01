@@ -35,6 +35,8 @@ type MetadataKeeperI interface {
 
 	// GetRecord returns the record with the given address.
 	GetRecord(sdk.Context, types.MetadataAddress) (types.Record, bool)
+	// GetRecords returns records with giving scope and/or name
+	GetRecords(sdk.Context, types.MetadataAddress, string) ([]*types.Record, error)
 	// SetRecord persists the provided record
 	SetRecord(sdk.Context, types.Record)
 	// RemoveRecord persists the provided scope

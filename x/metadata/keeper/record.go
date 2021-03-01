@@ -22,6 +22,23 @@ func (k Keeper) GetRecord(ctx sdk.Context, id types.MetadataAddress) (record typ
 	return record, true
 }
 
+// GetRecords returns records with scopeAddress and name
+func (k Keeper) GetRecords(ctx sdk.Context, scopeAddress types.MetadataAddress, name string) ([]*types.Record, error) {
+	records := []*types.Record{}
+	err := k.IterateRecords(ctx, scopeAddress, func(r types.Record) (stop bool) {
+		if name == "" {
+			records = append(records, &r)
+		} else if name == r.Name {
+			records = append(records, &r)
+		}
+		return false
+	})
+	if err != nil {
+		return nil, err
+	}
+	return records, nil
+}
+
 // SetRecord stores a record in the module kv store.
 func (k Keeper) SetRecord(ctx sdk.Context, record types.Record) {
 	store := ctx.KVStore(k.storeKey)

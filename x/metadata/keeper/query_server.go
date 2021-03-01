@@ -89,9 +89,10 @@ func (k Keeper) RecordsByScopeUUID(c context.Context, req *types.RecordsByScopeU
 	}
 
 	scopeAddr := types.ScopeMetadataAddress(scopeUUID)
-	records, err := k.record(c, &scopeAddr, req.Name)
+	ctx := sdk.UnwrapSDKContext(c)
+	records, err := k.GetRecords(ctx, scopeAddr, req.Name)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "unable to get records: %s", err.Error())
 	}
 
 	return &types.RecordsByScopeUUIDResponse{ScopeUuid: scopeUUID.String(), ScopeId: scopeAddr.String(), Records: records}, nil
@@ -117,31 +118,13 @@ func (k Keeper) RecordsByScopeID(c context.Context, req *types.RecordsByScopeIDR
 		return nil, status.Errorf(codes.Internal, "unable to extract uuid from scope metaaddress %s", err)
 	}
 
-	records, err := k.record(c, &scopeAddr, req.Name)
+	ctx := sdk.UnwrapSDKContext(c)
+	records, err := k.GetRecords(ctx, scopeAddr, req.Name)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "unable to get records: %s", err.Error())
 	}
 
 	return &types.RecordsByScopeIDResponse{ScopeUuid: scopeUUID.String(), ScopeId: req.GetScopeId(), Records: records}, nil
-}
-
-// record returns a collection of the records in a scope or a specific one by name
-func (k Keeper) record(c context.Context, scopeAddress *types.MetadataAddress, name string) ([]*types.Record, error) {
-	ctx := sdk.UnwrapSDKContext(c)
-	records := []*types.Record{}
-	err := k.IterateRecords(ctx, *scopeAddress, func(r types.Record) (stop bool) {
-		if name == "" {
-			records = append(records, &r)
-		} else if name == r.Name {
-			records = append(records, &r)
-		}
-		return false
-	})
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to iterate records: %s", err.Error())
-	}
-
-	return records, nil
 }
 
 // Ownership returns a list of scope identifiers that list the given address as a data or value owner
