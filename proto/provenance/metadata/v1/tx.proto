@@ -22,8 +22,8 @@ service Msg {
 
   // AddScope adds a new scope
   rpc AddScope(MsgAddScopeRequest) returns (MsgAddScopeResponse);
-  // Removes a scope and all associated Records, RecordGroups
-  rpc RemoveScope(MsgRemoveScopeRequest) returns (MsgRemoveScopeResponse);
+  // DeleteScope deletes a scope and all associated Records, RecordGroups
+  rpc DeleteScope(MsgDeleteScopeRequest) returns (MsgDeleteScopeResponse);
 
   // AddRecordGroup adds a new record group context to a scope
   rpc AddRecordGroup(MsgAddRecordGroupRequest) returns (MsgAddRecordGroupResponse);
@@ -99,8 +99,8 @@ message MsgAddScopeRequest {
 // MsgAddScopeResponse from an add scope request
 message MsgAddScopeResponse {}
 
-// MsgRemoveScopeRequest removes a scope
-message MsgRemoveScopeRequest {
+// MsgDeleteScopeRequest removes a scope
+message MsgDeleteScopeRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
@@ -114,8 +114,8 @@ message MsgRemoveScopeRequest {
   ];
   repeated string signers = 2;
 }
-// MsgRemoveScopeResponse from a remove scope request
-message MsgRemoveScopeResponse {}
+// MsgDeleteScopeResponse from a remove scope request
+message MsgDeleteScopeResponse {}
 
 // MsgAddRecordGroupRequest adds a new scope
 message MsgAddRecordGroupRequest {
@@ -143,8 +143,8 @@ message MsgAddRecordRequest {
     (gogoproto.moretags)   = "json:\"group_id\" yaml:\"group_id\""
   ];
 
-  Record record = 2;
-  string notary = 3;
+  Record record           = 2;
+  repeated string signers = 3;
 }
 // MsgAddRecordResponse from an add records request
 message MsgAddRecordResponse {}

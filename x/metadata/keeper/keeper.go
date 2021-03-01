@@ -20,8 +20,8 @@ type MetadataKeeperI interface {
 	GetScope(sdk.Context, types.MetadataAddress) (types.Scope, bool)
 	// SetScope persists the provided scope
 	SetScope(sdk.Context, types.Scope)
-	// RemoveScope persists the provided scope
-	DeleteScope(sdk.Context, types.MetadataAddress)
+	// RemoveScope removes the provided scope
+	RemoveScope(sdk.Context, types.MetadataAddress)
 
 	// IterateScopes processes all stored scopes with the given handler.
 	IterateScopes(sdk.Context, func(types.Scope) bool) error
@@ -35,6 +35,8 @@ type MetadataKeeperI interface {
 
 	// GetRecord returns the record with the given address.
 	GetRecord(sdk.Context, types.MetadataAddress) (types.Record, bool)
+	// GetRecords returns records with giving scope and/or name
+	GetRecords(sdk.Context, types.MetadataAddress, string) ([]*types.Record, error)
 	// SetRecord persists the provided record
 	SetRecord(sdk.Context, types.Record)
 	// RemoveRecord persists the provided scope

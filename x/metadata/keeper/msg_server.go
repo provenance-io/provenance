@@ -136,17 +136,29 @@ func (k msgServer) AddRecord(
 ) (*types.MsgAddRecordResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// TODO (contract keeper class  methods to process request, keeper methods to record it)
+	scopeUUID, err := msg.Record.GroupId.ScopeUUID()
+	if err != nil {
+		return nil, err
+	}
+
+	recordID := types.RecordMetadataAddress(scopeUUID, msg.Record.Name)
+
+	existing, _ := k.GetRecord(ctx, recordID)
+	if err := k.ValidateRecordUpdate(ctx, existing, *msg.Record, msg.Signers); err != nil {
+		return nil, err
+	}
+
+	k.SetRecord(ctx, *msg.Record)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, ""),
+			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
 		),
 	)
 
-	return nil, fmt.Errorf("not implemented")
+	return &types.MsgAddRecordResponse{}, nil
 }
 
 func (k msgServer) AddRecordGroup(
@@ -184,18 +196,18 @@ func (k msgServer) AddScope(
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeScopeCreated,
-			sdk.NewAttribute(types.AttributeKeyScopeID, string(msg.Scope.ScopeId)),
-			sdk.NewAttribute(types.AttributeKeyScope, string(msg.Scope.SpecificationId)),
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
 		),
 	)
 
 	return &types.MsgAddScopeResponse{}, nil
 }
 
-func (k msgServer) RemoveScope(
+func (k msgServer) DeleteScope(
 	goCtx context.Context,
-	msg *types.MsgRemoveScopeRequest,
-) (*types.MsgRemoveScopeResponse, error) {
+	msg *types.MsgDeleteScopeRequest,
+) (*types.MsgDeleteScopeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	existing, _ := k.GetScope(ctx, msg.ScopeId)
@@ -204,7 +216,7 @@ func (k msgServer) RemoveScope(
 		return nil, err
 	}
 
-	k.DeleteScope(ctx, msg.ScopeId)
+	k.RemoveScope(ctx, msg.ScopeId)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -213,5 +225,5 @@ func (k msgServer) RemoveScope(
 		),
 	)
 
-	return &types.MsgRemoveScopeResponse{}, nil
+	return &types.MsgDeleteScopeResponse{}, nil
 }

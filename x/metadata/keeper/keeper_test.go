@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	gocontext "context"
 	"fmt"
 	"testing"
 
@@ -42,6 +41,13 @@ type KeeperTestSuite struct {
 
 	specUUID uuid.UUID
 	specID   types.MetadataAddress
+
+	groupUUID uuid.UUID
+	groupId   types.MetadataAddress
+
+	record     types.Record
+	recordName string
+	recordId   types.MetadataAddress
 }
 
 func ownerPartyList(addresses ...string) []types.Party {
@@ -73,6 +79,12 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.app = app
 	s.ctx = ctx
 
+	s.groupUUID = uuid.New()
+	s.groupId = types.GroupMetadataAddress(s.scopeUUID, s.groupUUID)
+
+	s.recordName = "TestRecord"
+	s.recordId = types.RecordMetadataAddress(s.scopeUUID, s.recordName)
+
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
@@ -94,7 +106,7 @@ func (s *KeeperTestSuite) TestMetadataScopeGetSet() {
 	s.True(found)
 	s.NotNil(scope)
 
-	s.app.MetadataKeeper.DeleteScope(s.ctx, ns.ScopeId)
+	s.app.MetadataKeeper.RemoveScope(s.ctx, ns.ScopeId)
 	scope, found = s.app.MetadataKeeper.GetScope(s.ctx, s.scopeID)
 	s.False(found)
 	s.NotNil(scope)
@@ -283,50 +295,97 @@ func (s *KeeperTestSuite) TestValidateScopeUpdate() {
 	}
 }
 
-func (s *KeeperTestSuite) TestScopeQuery() {
-	app, ctx, queryClient, user1, user2 := s.app, s.ctx, s.queryClient, s.user1, s.user2
+func (suite *KeeperTestSuite) TestMetadataRecordGetSetRemove() {
 
-	testIDs := make([]types.MetadataAddress, 10)
-	for i := 0; i < 10; i++ {
-		valueOwner := ""
-		if i == 5 {
-			valueOwner = user2
-		}
-		testIDs[i] = types.ScopeMetadataAddress(uuid.New())
-		ns := types.NewScope(testIDs[i], nil, ownerPartyList(user1), []string{user1}, valueOwner)
-		app.MetadataKeeper.SetScope(ctx, *ns)
+	r, found := suite.app.MetadataKeeper.GetRecord(suite.ctx, suite.recordId)
+	suite.NotNil(r)
+	suite.False(found)
+
+	process := types.NewProcess("processname", &types.Process_Hash{Hash: "HASH"}, "process_method")
+	record := types.NewRecord(suite.recordName, suite.groupId, *process, []types.RecordInput{}, []types.RecordOutput{})
+
+	suite.NotNil(record)
+	suite.app.MetadataKeeper.SetRecord(suite.ctx, *record)
+
+	r, found = suite.app.MetadataKeeper.GetRecord(suite.ctx, suite.recordId)
+	suite.True(found)
+	suite.NotNil(r)
+
+	suite.app.MetadataKeeper.RemoveRecord(suite.ctx, suite.recordId)
+	r, found = suite.app.MetadataKeeper.GetRecord(suite.ctx, suite.recordId)
+	suite.False(found)
+	suite.NotNil(r)
+}
+
+func (s *KeeperTestSuite) TestMetadataRecordIterator() {
+	for i := 1; i <= 10; i++ {
+		process := types.NewProcess("processname", &types.Process_Hash{Hash: "HASH"}, "process_method")
+		recordName := fmt.Sprintf("%s%v", s.recordName, i)
+		record := types.NewRecord(recordName, s.groupId, *process, []types.RecordInput{}, []types.RecordOutput{})
+		s.app.MetadataKeeper.SetRecord(s.ctx, *record)
 	}
-	uuid, err := testIDs[0].ScopeUUID()
-	s.NoError(err)
+	count := 0
+	s.app.MetadataKeeper.IterateRecords(s.ctx, s.scopeID, func(s types.Record) (stop bool) {
+		count++
+		return false
+	})
+	s.Equal(10, count, "iterator should return a full list of records")
 
-	_, err = queryClient.Scope(gocontext.Background(), &types.ScopeRequest{})
-	s.EqualError(err, "rpc error: code = InvalidArgument desc = scope id cannot be empty")
+}
 
-	_, err = queryClient.Scope(gocontext.Background(), &types.ScopeRequest{ScopeId: "6332c1a4-foo1-bare-895b-invalid65cb6"})
-	s.EqualError(err, "rpc error: code = InvalidArgument desc = invalid scope id: invalid UUID format")
+func (s *KeeperTestSuite) TestValidateRecordUpdate() {
+	scope := types.NewScope(s.scopeID, s.specID, ownerPartyList(s.user1), []string{s.user1}, s.user1)
+	s.app.MetadataKeeper.SetScope(s.ctx, *scope)
 
-	scopeResponse, err := queryClient.Scope(gocontext.Background(), &types.ScopeRequest{ScopeId: uuid.String()})
-	s.NoError(err)
-	s.NotNil(scopeResponse.Scope)
-	s.Equal(testIDs[0], scopeResponse.Scope.ScopeId)
+	process := types.NewProcess("processname", &types.Process_Hash{Hash: "HASH"}, "process_method")
+	record := types.NewRecord(s.recordName, s.groupId, *process, []types.RecordInput{}, []types.RecordOutput{})
 
-	// TODO assert records when available
-	// TODO assert record groups when available
+	randomScopeUUID := uuid.New()
+	randomGroupId := types.GroupMetadataAddress(randomScopeUUID, uuid.New())
 
-	// only one scope has value owner set (user2)
-	valueResponse, err := queryClient.ValueOwnership(gocontext.Background(), &types.ValueOwnershipRequest{Address: user2})
-	s.NoError(err)
-	s.Len(valueResponse.ScopeIds, 1)
+	cases := map[string]struct {
+		existing types.Record
+		proposed types.Record
+		signers  []string
+		wantErr  bool
+		errorMsg string
+	}{
+		"Nil previous, proposed throws address error": {
+			existing: types.Record{},
+			proposed: types.Record{},
+			signers:  []string{s.user1},
+			wantErr:  true,
+			errorMsg: "incorrect address length (must be at least 17, actual: 0)",
+		},
+		"both valid records, scope not found": {
+			existing: *types.NewRecord(s.recordName, randomGroupId, *process, []types.RecordInput{}, []types.RecordOutput{}),
+			proposed: *record,
+			signers:  []string{s.user1},
+			wantErr:  true,
+			errorMsg: fmt.Sprintf("scope not found for scope uuid %s", randomScopeUUID),
+		},
+		"missing signature from existing owner ": {
+			existing: *record,
+			proposed: *record,
+			signers:  []string{},
+			wantErr:  true,
+			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1),
+		},
+	}
 
-	// 10 entries as all scopes have user1 as data_owner
-	ownerResponse, err := queryClient.Ownership(gocontext.Background(), &types.OwnershipRequest{Address: user1})
-	s.NoError(err)
-	s.Len(ownerResponse.ScopeIds, 10)
+	for n, tc := range cases {
+		tc := tc
 
-	// one entry for user2 (as value owner)
-	ownerResponse, err = queryClient.Ownership(gocontext.Background(), &types.OwnershipRequest{Address: user2})
-	s.NoError(err)
-	s.Len(ownerResponse.ScopeIds, 1)
+		s.Run(n, func() {
+			err := s.app.MetadataKeeper.ValidateRecordUpdate(s.ctx, tc.existing, tc.proposed, tc.signers)
+			if tc.wantErr {
+				s.Error(err)
+				s.Equal(tc.errorMsg, err.Error())
+			} else {
+				s.NoError(err)
+			}
+		})
+	}
 }
 
 func TestKeeperTestSuite(t *testing.T) {

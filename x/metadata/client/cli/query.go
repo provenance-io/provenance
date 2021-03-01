@@ -86,7 +86,7 @@ $ %s query metadata scope 123e4567-e89b-12d3-a456-426614174000
 			scopeUUID := strings.ToLower(strings.TrimSpace(args[0]))
 
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.Scope(context.Background(), &types.ScopeRequest{ScopeId: scopeUUID})
+			res, err := queryClient.Scope(context.Background(), &types.ScopeRequest{ScopeUuid: scopeUUID})
 			if err != nil {
 				return err
 			}
