@@ -31,20 +31,20 @@ func (k Keeper) Scope(c context.Context, req *types.ScopeRequest) (*types.ScopeR
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.ScopeId == "" {
-		return nil, status.Error(codes.InvalidArgument, "scope id cannot be empty")
+	if req.ScopeUuid == "" {
+		return nil, status.Error(codes.InvalidArgument, "scope uuid cannot be empty")
 	}
 
-	id, err := uuid.Parse(req.ScopeId)
+	id, err := uuid.Parse(req.ScopeUuid)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid scope id: %s", err.Error())
+		return nil, status.Errorf(codes.InvalidArgument, "invalid scope uuid: %s", err.Error())
 	}
 	scopeAddress := types.ScopeMetadataAddress(id)
 	ctx := sdk.UnwrapSDKContext(c)
 
 	s, found := k.GetScope(ctx, scopeAddress)
 	if !found {
-		return nil, status.Errorf(codes.NotFound, "scope %s not found", req.ScopeId)
+		return nil, status.Errorf(codes.NotFound, "scope uuid %s not found", req.ScopeUuid)
 	}
 
 	records := []*types.Record{}
@@ -73,10 +73,58 @@ func (k Keeper) GroupContext(c context.Context, req *types.GroupContextRequest) 
 	return &types.GroupContextResponse{}, nil
 }
 
-// Record returns a collection of the records in a scope or a specific one by name
-func (k Keeper) Record(c context.Context, req *types.RecordRequest) (*types.RecordResponse, error) {
-	// TODO
-	return &types.RecordResponse{}, nil
+// RecordsByScopeUUID returns a collection of the records in a scope or a specific one by name
+func (k Keeper) RecordsByScopeUUID(c context.Context, req *types.RecordsByScopeUUIDRequest) (*types.RecordsByScopeUUIDResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if req.GetScopeUuid() == "" {
+		return nil, status.Error(codes.InvalidArgument, "scope uuid cannot be empty")
+	}
+
+	scopeUUID, err := uuid.Parse(req.GetScopeUuid())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid scope uuid: %s", err.Error())
+	}
+
+	scopeAddr := types.ScopeMetadataAddress(scopeUUID)
+	ctx := sdk.UnwrapSDKContext(c)
+	records, err := k.GetRecords(ctx, scopeAddr, req.Name)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "unable to get records: %s", err.Error())
+	}
+
+	return &types.RecordsByScopeUUIDResponse{ScopeUuid: scopeUUID.String(), ScopeId: scopeAddr.String(), Records: records}, nil
+}
+
+// RecordsByScopeID returns a collection of the records in a scope or a specific one by name
+func (k Keeper) RecordsByScopeID(c context.Context, req *types.RecordsByScopeIDRequest) (*types.RecordsByScopeIDResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if req.GetScopeId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "scope id cannot be empty")
+	}
+
+	scopeAddr, err := types.MetadataAddressFromBech32(req.GetScopeId())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid scope id %s : %s", req.GetScopeId(), err)
+	}
+
+	scopeUUID, err := scopeAddr.ScopeUUID()
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "unable to extract uuid from scope metaaddress %s", err)
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	records, err := k.GetRecords(ctx, scopeAddr, req.Name)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "unable to get records: %s", err.Error())
+	}
+
+	return &types.RecordsByScopeIDResponse{ScopeUuid: scopeUUID.String(), ScopeId: req.GetScopeId(), Records: records}, nil
 }
 
 // Ownership returns a list of scope identifiers that list the given address as a data or value owner
@@ -98,23 +146,23 @@ func (k Keeper) Ownership(c context.Context, req *types.OwnershipRequest) (*type
 	store := ctx.KVStore(k.storeKey)
 	scopeStore := prefix.NewStore(store, types.GetAddressScopeCacheIteratorPrefix(addr))
 
-	scopes := make([]string, req.Pagination.Size())
+	scopeUUIDs := make([]string, req.Pagination.Size())
 	pageRes, err := query.Paginate(scopeStore, req.Pagination, func(key, _ []byte) error {
 		var ma types.MetadataAddress
 		if mErr := ma.Unmarshal(key); mErr != nil {
 			return mErr
 		}
-		scopeID, sErr := ma.ScopeUUID()
+		scopeUUID, sErr := ma.ScopeUUID()
 		if sErr != nil {
 			return sErr
 		}
-		scopes = append(scopes, scopeID.String())
+		scopeUUIDs = append(scopeUUIDs, scopeUUID.String())
 		return nil
 	})
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
 	}
-	return &types.OwnershipResponse{ScopeIds: scopes, Pagination: pageRes}, nil
+	return &types.OwnershipResponse{ScopeUuids: scopeUUIDs, Pagination: pageRes}, nil
 }
 
 // ValueOwnership returns a list of scope identifiers that list the given address as a value owner
@@ -152,7 +200,7 @@ func (k Keeper) ValueOwnership(c context.Context, req *types.ValueOwnershipReque
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
 	}
-	return &types.ValueOwnershipResponse{ScopeIds: scopes, Pagination: pageRes}, nil
+	return &types.ValueOwnershipResponse{ScopeUuids: scopes, Pagination: pageRes}, nil
 }
 
 // ScopeSpecification returns a specific scope specification by id
@@ -161,20 +209,20 @@ func (k Keeper) ScopeSpecification(c context.Context, req *types.ScopeSpecificat
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.SpecificationId == "" {
-		return nil, status.Error(codes.InvalidArgument, "specification id cannot be empty")
+	if req.SpecificationUuid == "" {
+		return nil, status.Error(codes.InvalidArgument, "specification uuid cannot be empty")
 	}
 
-	id, err := uuid.Parse(req.SpecificationId)
+	id, err := uuid.Parse(req.SpecificationUuid)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid specification id: %s", err.Error())
+		return nil, status.Errorf(codes.InvalidArgument, "invalid specification uuid: %s", err.Error())
 	}
 	addr := types.ScopeSpecMetadataAddress(id)
 	ctx := sdk.UnwrapSDKContext(c)
 
 	spec, found := k.GetScopeSpecification(ctx, addr)
 	if !found {
-		return nil, status.Errorf(codes.NotFound, "scope specification %s not found", req.SpecificationId)
+		return nil, status.Errorf(codes.NotFound, "scope specification uuid %s not found", req.SpecificationUuid)
 	}
 
 	return &types.ScopeSpecificationResponse{ScopeSpecification: &spec}, nil

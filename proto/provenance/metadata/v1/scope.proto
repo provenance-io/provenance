@@ -107,7 +107,7 @@ message RecordGroup {
     (gogoproto.customtype) = "MetadataAddress",
     (gogoproto.moretags)   = "json:\"group_id\" yaml:\"group_id\""
   ];
-  // unique id of the contract specification associated with this session
+  // unique id of the contract specification that was used to create this group.
   bytes specification_id = 2 [
     (gogoproto.nullable)   = false,
     (gogoproto.customtype) = "MetadataAddress",
@@ -115,7 +115,7 @@ message RecordGroup {
   ];
   // Set of identities that signed this contract
   repeated Party parties = 3 [(gogoproto.nullable) = false];
-  // name to associate with this recordgroup execution context, typically classname
+  // name to associate with this record group execution context, typically classname
   string name = 4 [(gogoproto.jsontag) = "type", (gogoproto.moretags) = "yaml:\"type\""];
   // Created by, updated by, timestamps, version number, and related info.
   AuditFields audit = 99 [(gogoproto.nullable) = false];
@@ -135,14 +135,15 @@ message Record {
   ];
   // process contain information used to uniquely identify an execution on or off chain that generated this record
   Process process = 3 [(gogoproto.nullable) = false];
-  // inputs used with the process to acheieve the output on this record
+  // inputs used with the process to achieve the output on this record
   repeated RecordInput inputs = 4 [(gogoproto.nullable) = false];
   // output(s) is the results of executing the process on the given process indicated in this record
-  repeated RecordOutput output = 5 [(gogoproto.nullable) = false];
+  repeated RecordOutput outputs = 5 [(gogoproto.nullable) = false];
 }
 
 // Process contains information used to uniquely identify what was used to generate this record
 message Process {
+  option (gogoproto.goproto_stringer) = false;
   // unique identifier for this process
   oneof process_id {
     // the address of a smart contract used for this process
@@ -150,7 +151,7 @@ message Process {
     // the hash of an off-chain process used
     string hash = 2;
   }
-  // a name assocaited with the process (type_name, classname or smart contract common name)
+  // a name associated with the process (type_name, classname or smart contract common name)
   string name = 3;
   // method is a name or reference to a specific operation (method) within a class/contract that was invoked
   string method = 4;
@@ -159,7 +160,6 @@ message Process {
 // Tracks the inputs used to establish this record
 message RecordInput {
   option (gogoproto.goproto_stringer) = false;
-
   // Name value included to link back to the definition spec.
   string name = 1;
   // data source
@@ -188,6 +188,8 @@ enum RecordInputStatus {
 
 // RecordOutput encapsulates the output of a process recorded on chain
 message RecordOutput {
+  option (gogoproto.goproto_stringer) = false;
+  
   // Hash of the data output that was output/generated for this record
   string hash = 1;
   // Status of the process execution associated with this output indicating success,failure, or pending

@@ -34,6 +34,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+* Add support for creating, updating, removing, finding, and iterating over `Record`s #54
 * Add migration support for v039 account into v040 attributes module #100
 * Implemented v39 to v40 migration for name module.
 * Remove setting default no-op upgrade handlers.

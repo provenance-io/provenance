@@ -22,8 +22,8 @@ service Msg {
 
   // AddScope adds a new scope
   rpc AddScope(MsgAddScopeRequest) returns (MsgAddScopeResponse);
-  // Removes a scope and all associated Records, RecordGroups
-  rpc RemoveScope(MsgRemoveScopeRequest) returns (MsgRemoveScopeResponse);
+  // DeleteScope deletes a scope and all associated Records, RecordGroups
+  rpc DeleteScope(MsgDeleteScopeRequest) returns (MsgDeleteScopeResponse);
 
   // AddRecordGroup adds a new record group context to a scope
   rpc AddRecordGroup(MsgAddRecordGroupRequest) returns (MsgAddRecordGroupResponse);
@@ -105,14 +105,14 @@ message MsgAddScopeRequest {
 // MsgAddScopeResponse from an add scope request
 message MsgAddScopeResponse {}
 
-// MsgRemoveScopeRequest removes a scope
-message MsgRemoveScopeRequest {
+// MsgDeleteScopeRequest deletes a scope
+message MsgDeleteScopeRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-  // Unique ID for the scope to remove.s
+  // Unique ID for the scope to delete
   bytes scope_id = 1 [
     (gogoproto.nullable)   = false,
     (gogoproto.customtype) = "MetadataAddress",
@@ -121,8 +121,8 @@ message MsgRemoveScopeRequest {
   repeated string signers = 2;
 }
 
-// MsgRemoveScopeResponse from a remove scope request
-message MsgRemoveScopeResponse {}
+// MsgDeleteScopeResponse from a delete scope request
+message MsgDeleteScopeResponse {}
 
 // MsgAddRecordGroupRequest adds a new scope
 message MsgAddRecordGroupRequest {
@@ -151,8 +151,8 @@ message MsgAddRecordRequest {
     (gogoproto.moretags)   = "yaml:\"group_id\""
   ];
 
-  Record record = 2;
-  string notary = 3;
+  Record record           = 2;
+  repeated string signers = 3;
 }
 
 // MsgAddRecordResponse from an add records request
@@ -172,14 +172,14 @@ message MsgAddScopeSpecificationRequest {
 // MsgAddScopeSpecificationResponse from an add scope specification request
 message MsgAddScopeSpecificationResponse {}
 
-// MsgRemoveScopeSpecificationRequest removes a scope specification
+// MsgDeleteScopeSpecificationRequest deletes a scope specification
 message MsgDeleteScopeSpecificationRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-  // Unique ID for the scope specification to remove.
+  // Unique ID for the scope specification to delete.
   bytes specification_id = 1 [
     (gogoproto.nullable)   = false,
     (gogoproto.customtype) = "MetadataAddress",
@@ -188,7 +188,7 @@ message MsgDeleteScopeSpecificationRequest {
   repeated string signers = 2;
 }
 
-// MsgRemoveScopeSpecificationResponse from a remove scope specification request
+// MsgDeleteScopeSpecificationResponse from a delete scope specification request
 message MsgDeleteScopeSpecificationResponse {}
 
 // MsgAddContractSpecificationRequest is a request to add a contract specification
@@ -205,14 +205,14 @@ message MsgAddContractSpecificationRequest {
 // AddContractSpecificationResponse from an add contract specification request
 message MsgAddContractSpecificationResponse {}
 
-// MsgRemoveContractSpecificationRequest removes a contract specification
+// MsgDeleteContractSpecificationRequest deletes a contract specification
 message MsgDeleteContractSpecificationRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-  // Unique ID for the scope specification to remove.
+  // Unique ID for the scope specification to delete.
   bytes specification_id = 1 [
     (gogoproto.nullable)   = false,
     (gogoproto.customtype) = "MetadataAddress",
@@ -221,5 +221,5 @@ message MsgDeleteContractSpecificationRequest {
   repeated string signers = 2;
 }
 
-// MsgRemoveContractSpecificationResponse from a remove contract specification request
+// MsgDeleteContractSpecificationResponse from a delete contract specification request
 message MsgDeleteContractSpecificationResponse {}

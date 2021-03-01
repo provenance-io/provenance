@@ -119,7 +119,7 @@ func convertRecords(groupID v040metadata.MetadataAddress, old []*v039metadata.Re
 				},
 			},
 			Inputs: convertRecordInput(r.Inputs),
-			Output: []v040metadata.RecordOutput{
+			Outputs: []v040metadata.RecordOutput{
 				{
 					Hash:   r.ResultHash,
 					Status: v040metadata.ResultStatus(int32(r.Result)),
@@ -223,8 +223,8 @@ func BackportScope(
 				groupRecords = append(groupRecords, &v039metadata.Record{
 					Name: r.Process.Method,
 					//Hash: r.Process.ProcessId as hash
-					ResultHash: r.Output[0].Hash, // v039 only supports a single result hash, use first
-					Result:     v039metadata.ExecutionResultType(int32(r.Output[0].Status)),
+					ResultHash: r.Outputs[0].Hash, // v039 only supports a single result hash, use first
+					Result:     v039metadata.ExecutionResultType(int32(r.Outputs[0].Status)),
 					ResultName: r.Name,
 					Classname:  r.Process.Name,
 					Inputs:     backportInputs(r.Inputs),
