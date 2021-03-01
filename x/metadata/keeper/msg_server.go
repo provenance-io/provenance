@@ -203,12 +203,15 @@ func (k msgServer) AddContractSpecification(
 ) (*types.MsgAddContractSpecificationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	existing, _ := k.GetContractSpecification(ctx, msg.Specification.SpecificationId)
-	if err := k.ValidateContractSpecUpdate(ctx, existing, *msg.Specification, msg.Signers); err != nil {
+	var existing *types.ContractSpecification = nil
+	if e, found := k.GetContractSpecification(ctx, msg.Specification.SpecificationId); found {
+		existing = &e
+	}
+	if err := k.ValidateContractSpecUpdate(ctx, existing, msg.Specification, msg.Signers); err != nil {
 		return nil, err
 	}
 
-	k.SetContractSpecification(ctx, *msg.Specification)
+	k.SetContractSpecification(ctx, msg.Specification)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(

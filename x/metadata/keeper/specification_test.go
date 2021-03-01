@@ -468,7 +468,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1Addr.String()),
 		},
 		{
-			"adding signer, only existing owner needs to sign",
+			"adding owner, only existing owner needs to sign",
 			types.NewContractSpecification(
 				s.contractSpecID1,
 				types.NewDescription(
@@ -501,7 +501,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 			"",
 		},
 		{
-			"adding signer, both signed - ok too",
+			"adding owner, both signed - ok too",
 			types.NewContractSpecification(
 				s.contractSpecID1,
 				types.NewDescription(
@@ -531,6 +531,26 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 				[]types.MetadataAddress{},
 			),
 			[]string{s.user1Addr.String(), s.user2Addr.String()},
+			"",
+		},
+		{
+			"new entry, no signers required",
+			nil,
+			types.NewContractSpecification(
+				s.contractSpecID1,
+				types.NewDescription(
+					"TestValidateContractSpecUpdate",
+					"A description for a unit test contract specification",
+					"http://test.net",
+					"http://test.net/ico.png",
+				),
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				types.NewSourceHash("somehash"),
+				"someclass",
+				[]types.MetadataAddress{},
+			),
+			[]string{},
 			"",
 		},
 		{
@@ -670,7 +690,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 	for _, tt := range tests {
 		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidateContractSpecUpdate(s.ctx, *tt.existing, *tt.proposed, tt.signers)
+			err := s.app.MetadataKeeper.ValidateContractSpecUpdate(s.ctx, tt.existing, *tt.proposed, tt.signers)
 			if err != nil {
 				require.Equal(t, tt.want, err.Error(), "ScopeSpec Keeper ValidateContractSpecUpdate error")
 			} else if len(tt.want) > 0 {

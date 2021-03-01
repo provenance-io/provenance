@@ -147,13 +147,12 @@ func (k Keeper) isContractSpecUsed(ctx sdk.Context, contractSpecID types.Metadat
 	return false
 }
 
-func (k Keeper) ValidateContractSpecUpdate(ctx sdk.Context, existing, proposed types.ContractSpecification, signers []string) error {
-	// IDS must match
-	if len(existing.SpecificationId) > 0 {
-		if !proposed.SpecificationId.Equals(existing.SpecificationId) {
-			return fmt.Errorf("cannot update contract spec identifier. expected %s, got %s",
-				existing.SpecificationId, proposed.SpecificationId)
-		}
+// ValidateContractSpecUpdate full validation of a proposed contract spec possibly against an existing one.
+func (k Keeper) ValidateContractSpecUpdate(ctx sdk.Context, existing *types.ContractSpecification, proposed types.ContractSpecification, signers []string) error {
+	// IDS must match if there's an existing entry
+	if existing != nil && !proposed.SpecificationId.Equals(existing.SpecificationId) {
+		return fmt.Errorf("cannot update contract spec identifier. expected %s, got %s",
+			existing.SpecificationId, proposed.SpecificationId)
 	}
 
 	// Must pass basic validation.
@@ -161,9 +160,11 @@ func (k Keeper) ValidateContractSpecUpdate(ctx sdk.Context, existing, proposed t
 		return err
 	}
 
-	// Signatures required of all existing data owners.
-	if err := k.ValidateAllOwnersAreSigners(existing.OwnerAddresses, signers); err != nil {
-		return err
+	// Make sure the needed signers have signed.
+	if existing != nil {
+		if err := k.ValidateAllOwnersAreSigners(existing.OwnerAddresses, signers); err != nil {
+			return err
+		}
 	}
 
 	store := ctx.KVStore(k.storeKey)

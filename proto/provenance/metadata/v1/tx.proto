@@ -198,7 +198,7 @@ message MsgAddContractSpecificationRequest {
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-  ContractSpecification specification = 1;
+  ContractSpecification specification = 1 [(gogoproto.nullable) = false];
   repeated string       signers       = 2;
 }
 
