@@ -383,10 +383,12 @@ func convertContractSpec(old *v039metadata.ContractSpec) (
 			Hash: old.Definition.ResourceLocation.Ref.Hash,
 		},
 		ClassName: old.Definition.ResourceLocation.Classname,
+		RecordSpecIds: make([]v040metadata.MetadataAddress, len(old.ConsiderationSpecs)),
 	}
 
 	newRecords = make([]v040metadata.RecordSpecification, len(old.ConsiderationSpecs))
 	for i := range old.ConsiderationSpecs {
+		newSpec.RecordSpecIds[i] = newSpec.SpecificationId.GetRecordSpecAddress(old.ConsiderationSpecs[i].OutputSpec.Spec.Name)
 		recordInputs, err := convertInputSpecs(old.ConsiderationSpecs[i].InputSpecs)
 		if err != nil {
 			return newSpec, nil, err
