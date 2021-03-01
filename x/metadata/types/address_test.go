@@ -1,6 +1,7 @@
 package types
 
 import (
+	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/base64"
 	"encoding/hex"
@@ -228,4 +229,30 @@ func TestRecordMetadataAddress(t *testing.T) {
 	require.Equal(t, recordID, RecordMetadataAddress(scopeUUID, "TEST"))
 	require.Equal(t, recordID, RecordMetadataAddress(scopeUUID, "   test   "))
 	require.Equal(t, recordID, scopeID.GetRecordAddress("test"))
+}
+
+func TestRecordSpecMetadataAddress(t *testing.T) {
+	contractSpecUUID := uuid.New()
+	contractSpecID := ContractSpecMetadataAddress(contractSpecUUID)
+	recordSpecID := RecordSpecMetadataAddress(contractSpecUUID, "myname")
+	nameHash := sha256.Sum256([]byte("myname"))
+
+	require.True(t, recordSpecID.IsRecordSpecificationAddress(), "IsRecordAddress")
+	require.Equal(t, RecordSpecificationKeyPrefix, recordSpecID[0:1].Bytes(), "bytes[0]: the type bit")
+	require.Equal(t, contractSpecID[1:17], recordSpecID[1:17], "bytes[1:17]: the contract spec id bytes")
+	require.Equal(t, nameHash[:], recordSpecID[17:49].Bytes(), "bytes[17:49]: the hashed name")
+
+	recordSpecBech32 := recordSpecID.String()
+	recordSpecIDFromBeck32, errBeck32 := MetadataAddressFromBech32(recordSpecBech32)
+	require.NoError(t, errBeck32, "error from MetadataAddressFromBech32")
+	require.Equal(t, recordSpecID, recordSpecIDFromBeck32, "value from recordSpecIDFromBeck32")
+
+	require.Equal(t, recordSpecID, RecordSpecMetadataAddress(contractSpecUUID, "MyName"), "camel case")
+	require.Equal(t, recordSpecID, RecordSpecMetadataAddress(contractSpecUUID, "MYNAME"), "all caps")
+	require.Equal(t, recordSpecID, RecordSpecMetadataAddress(contractSpecUUID, "   myname   "), "padded with spaces")
+	require.Equal(t, recordSpecID, contractSpecID.GetRecordSpecAddress("myname"), "from contract spec id")
+
+	contractSpecUUIDFromRecordSpecId, errContractSpecUUID := recordSpecID.ContractSpecUUID()
+	require.NoError(t, errContractSpecUUID, "error from ContractSpecUUID")
+	require.Equal(t, contractSpecUUID, contractSpecUUIDFromRecordSpecId, "value from ContractSpecUUID")
 }
