@@ -184,7 +184,7 @@ func (k msgServer) DeleteScopeSpecification(
 		return nil, err
 	}
 
-	k.XXXXXXXXScopeSpecification(ctx, msg.SpecificationId)
+	k.RemoveScopeSpecification(ctx, msg.SpecificationId)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -235,7 +235,7 @@ func (k msgServer) DeleteContractSpecification(
 		return nil, err
 	}
 
-	k.XXXXXXXXScopeSpecification(ctx, msg.SpecificationId)
+	k.RemoveScopeSpecification(ctx, msg.SpecificationId)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(

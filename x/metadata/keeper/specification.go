@@ -272,8 +272,8 @@ func (k Keeper) SetScopeSpecification(ctx sdk.Context, spec types.ScopeSpecifica
 	)
 }
 
-// XXXXXXXXScopeSpecification removes a scope specification from the module kv store.
-func (k Keeper) XXXXXXXXScopeSpecification(ctx sdk.Context, scopeSpecID types.MetadataAddress) {
+// RemoveScopeSpecification removes a scope specification from the module kv store.
+func (k Keeper) RemoveScopeSpecification(ctx sdk.Context, scopeSpecID types.MetadataAddress) {
 	store := ctx.KVStore(k.storeKey)
 
 	scopeSpec, found := k.GetScopeSpecification(ctx, scopeSpecID)
