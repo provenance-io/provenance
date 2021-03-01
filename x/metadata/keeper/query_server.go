@@ -73,8 +73,8 @@ func (k Keeper) GroupContext(c context.Context, req *types.GroupContextRequest) 
 	return &types.GroupContextResponse{}, nil
 }
 
-// RecordByScopeUUID returns a collection of the records in a scope or a specific one by name
-func (k Keeper) RecordByScopeUUID(c context.Context, req *types.RecordByScopeUUIDRequest) (*types.RecordByScopeUUIDResponse, error) {
+// RecordsByScopeUUID returns a collection of the records in a scope or a specific one by name
+func (k Keeper) RecordsByScopeUUID(c context.Context, req *types.RecordsByScopeUUIDRequest) (*types.RecordsByScopeUUIDResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -83,22 +83,22 @@ func (k Keeper) RecordByScopeUUID(c context.Context, req *types.RecordByScopeUUI
 		return nil, status.Error(codes.InvalidArgument, "scope uuid cannot be empty")
 	}
 
-	uuid, err := uuid.Parse(req.GetScopeUuid())
+	scopeUUID, err := uuid.Parse(req.GetScopeUuid())
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid scope uuid: %s", err.Error())
 	}
 
-	scopeAddr := types.ScopeMetadataAddress(uuid)
+	scopeAddr := types.ScopeMetadataAddress(scopeUUID)
 	records, err := k.record(c, &scopeAddr, req.Name)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.RecordByScopeUUIDResponse{ScopeUuid: req.GetScopeUuid(), ScopeId: scopeAddr.String(), Records: records}, nil
+	return &types.RecordsByScopeUUIDResponse{ScopeUuid: scopeUUID.String(), ScopeId: scopeAddr.String(), Records: records}, nil
 }
 
-// RecordByScopeID returns a collection of the records in a scope or a specific one by name
-func (k Keeper) RecordByScopeID(c context.Context, req *types.RecordByScopeIDRequest) (*types.RecordByScopeIDResponse, error) {
+// RecordsByScopeID returns a collection of the records in a scope or a specific one by name
+func (k Keeper) RecordsByScopeID(c context.Context, req *types.RecordsByScopeIDRequest) (*types.RecordsByScopeIDResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -122,7 +122,7 @@ func (k Keeper) RecordByScopeID(c context.Context, req *types.RecordByScopeIDReq
 		return nil, err
 	}
 
-	return &types.RecordByScopeIDResponse{ScopeUuid: scopeUUID.String(), ScopeId: req.GetScopeId(), Records: records}, nil
+	return &types.RecordsByScopeIDResponse{ScopeUuid: scopeUUID.String(), ScopeId: req.GetScopeId(), Records: records}, nil
 }
 
 // record returns a collection of the records in a scope or a specific one by name

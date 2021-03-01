@@ -152,38 +152,38 @@ func (s *QueryServerTestSuite) TestRecordQuery() {
 		app.MetadataKeeper.SetRecord(ctx, *record)
 	}
 
-	_, err := queryClient.RecordByScopeUUID(gocontext.Background(), &types.RecordByScopeUUIDRequest{})
+	_, err := queryClient.RecordsByScopeUUID(gocontext.Background(), &types.RecordsByScopeUUIDRequest{})
 	s.EqualError(err, "rpc error: code = InvalidArgument desc = scope uuid cannot be empty")
 
-	_, err = queryClient.RecordByScopeUUID(gocontext.Background(), &types.RecordByScopeUUIDRequest{ScopeUuid: "6332c1a4-foo1-bare-895b-invalid65cb6"})
+	_, err = queryClient.RecordsByScopeUUID(gocontext.Background(), &types.RecordsByScopeUUIDRequest{ScopeUuid: "6332c1a4-foo1-bare-895b-invalid65cb6"})
 	s.EqualError(err, "rpc error: code = InvalidArgument desc = invalid scope uuid: invalid UUID format")
 
-	rsUUID, err := queryClient.RecordByScopeUUID(gocontext.Background(), &types.RecordByScopeUUIDRequest{ScopeUuid: scopeUUID.String()})
+	rsUUID, err := queryClient.RecordsByScopeUUID(gocontext.Background(), &types.RecordsByScopeUUIDRequest{ScopeUuid: scopeUUID.String()})
 	s.NoError(err)
 	s.Equal(10, len(rsUUID.Records), "should be 10 records in set for record query by scope uuid")
 	s.Equal(scopeUUID.String(), rsUUID.ScopeUuid)
 	s.Equal(scopeID.String(), rsUUID.ScopeId)
 
-	rsUUID, err = queryClient.RecordByScopeUUID(gocontext.Background(), &types.RecordByScopeUUIDRequest{ScopeUuid: scopeUUID.String(), Name: recordNames[0]})
+	rsUUID, err = queryClient.RecordsByScopeUUID(gocontext.Background(), &types.RecordsByScopeUUIDRequest{ScopeUuid: scopeUUID.String(), Name: recordNames[0]})
 	s.NoError(err)
 	s.Equal(1, len(rsUUID.Records), "should be 1 record in set for record query by scope uuid")
 	s.Equal(scopeUUID.String(), rsUUID.ScopeUuid)
 	s.Equal(scopeID.String(), rsUUID.ScopeId)
 	s.Equal(recordNames[0], rsUUID.Records[0].Name)
 
-	_, err = queryClient.RecordByScopeID(gocontext.Background(), &types.RecordByScopeIDRequest{})
+	_, err = queryClient.RecordsByScopeID(gocontext.Background(), &types.RecordsByScopeIDRequest{})
 	s.EqualError(err, "rpc error: code = InvalidArgument desc = scope id cannot be empty")
 
-	_, err = queryClient.RecordByScopeID(gocontext.Background(), &types.RecordByScopeIDRequest{ScopeId: "foo"})
+	_, err = queryClient.RecordsByScopeID(gocontext.Background(), &types.RecordsByScopeIDRequest{ScopeId: "foo"})
 	s.EqualError(err, "rpc error: code = InvalidArgument desc = invalid scope id foo : decoding bech32 failed: invalid bech32 string length 3")
 
-	rsID, err := queryClient.RecordByScopeID(gocontext.Background(), &types.RecordByScopeIDRequest{ScopeId: scopeID.String()})
+	rsID, err := queryClient.RecordsByScopeID(gocontext.Background(), &types.RecordsByScopeIDRequest{ScopeId: scopeID.String()})
 	s.NoError(err)
 	s.Equal(10, len(rsID.Records), "should be 10 records in set for record query by scope id")
 	s.Equal(scopeUUID.String(), rsID.ScopeUuid)
 	s.Equal(scopeID.String(), rsID.ScopeId)
 
-	rsID, err = queryClient.RecordByScopeID(gocontext.Background(), &types.RecordByScopeIDRequest{ScopeId: scopeID.String(), Name: recordNames[0]})
+	rsID, err = queryClient.RecordsByScopeID(gocontext.Background(), &types.RecordsByScopeIDRequest{ScopeId: scopeID.String(), Name: recordNames[0]})
 	s.NoError(err)
 	s.Equal(1, len(rsID.Records), "should be 1 record in set for record query by scope id")
 	s.Equal(scopeUUID.String(), rsID.ScopeUuid)

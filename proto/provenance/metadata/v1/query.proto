@@ -30,13 +30,13 @@ service Query {
     option (google.api.http).get = "/provenance/metadata/v1/scope/{scope_uuid}/group/{group_uuid}";
   }
 
-  // RecordByScopeUUID returns a collection of the records in a scope by scope uuid or a specific one by name
-  rpc RecordByScopeUUID(RecordByScopeUUIDRequest) returns (RecordByScopeUUIDResponse) {
+  // RecordsByScopeUUID returns a collection of the records in a scope by scope uuid or a specific one by name
+  rpc RecordsByScopeUUID(RecordsByScopeUUIDRequest) returns (RecordsByScopeUUIDResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/scope/uuid/{scope_uuid}/records/{name}";
   }
 
-  // RecordByScopeID returns a collection of the records in a scope by scope bech32 id or a specific one by name
-  rpc RecordByScopeID(RecordByScopeIDRequest) returns (RecordByScopeIDResponse) {
+  // RecordsByScopeID returns a collection of the records in a scope by scope bech32 id or a specific one by name
+  rpc RecordsByScopeID(RecordsByScopeIDRequest) returns (RecordsByScopeIDResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/scope/id/{scope_id}/records/{name}";
   }
 
@@ -120,27 +120,27 @@ message GroupContextResponse {
   repeated RecordGroup groups = 1;
 }
 
-// RecordByScopeUUIDRequest is a request for all of the records in a specific scope by uuid or a specific record if a name is given.
-message RecordByScopeUUIDRequest {
+// RecordsByScopeUUIDRequest is a request for all of the records in a specific scope by uuid or a specific record if a name is given.
+message RecordsByScopeUUIDRequest {
   string scope_uuid = 1;
   string name     = 2;
 }
 
-// RecordByScopeUUIDResponse is the response to a RecordByScopeUUIDRequest
-message RecordByScopeUUIDResponse {
+// RecordsByScopeUUIDResponse is the response to a RecordsByScopeUUIDRequest
+message RecordsByScopeUUIDResponse {
   string          scope_uuid = 1;
   string          scope_id = 2;
   repeated Record records  = 3;
 }
 
-// RecordByScopeIDRequest is a request for all of the records in a specific scope by bech32 id or a specific record if a name is given.
-message RecordByScopeIDRequest {
+// RecordsByScopeIDRequest is a request for all of the records in a specific scope by bech32 id or a specific record if a name is given.
+message RecordsByScopeIDRequest {
   string scope_id = 1;
   string name     = 2;
 }
 
-// RecordByScopeIDResponse is the response to a RecordByScopeIDRequest
-message RecordByScopeIDResponse {
+// RecordsByScopeIDResponse is the response to a RecordsByScopeIDRequest
+message RecordsByScopeIDResponse {
   string          scope_uuid = 1;
   string          scope_id = 2;
   repeated Record records  = 3;
