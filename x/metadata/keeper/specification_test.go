@@ -318,6 +318,14 @@ func (s *SpecKeeperTestSuite) TestIterateContractSpecsForAddress() {
 }
 
 func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
+	recordSpecIDe := s.contractSpecID1.GetRecordSpecAddress("exists")
+	recordSpecIDm := s.contractSpecID1.GetRecordSpecAddress("missing")
+
+	// Trick the store into thinking that recordSpecIDe exists.
+	metadataStoreKey := s.app.GetKey(types.StoreKey)
+	store := s.ctx.KVStore(metadataStoreKey)
+	store.Set(recordSpecIDe, []byte{0x01})
+
 	otherContractSpecID := types.ContractSpecMetadataAddress(uuid.New())
 	tests := []struct {
 		name        string
@@ -525,7 +533,138 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 			[]string{s.user1Addr.String(), s.user2Addr.String()},
 			"",
 		},
-		// TODO: test cases related to RecordSpecs.
+		{
+			"RecordSpecIds - proposed index 0 does not exist - fail",
+			types.NewContractSpecification(
+				s.contractSpecID1,
+				types.NewDescription(
+					"TestGetSetDeleteContractSpecification",
+					"A description for a unit test contract specification",
+					"http://test.net",
+					"http://test.net/ico.png",
+				),
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				types.NewSourceHash("somehash"),
+				"someclass",
+				[]types.MetadataAddress{},
+			),
+			types.NewContractSpecification(
+				s.contractSpecID1,
+				types.NewDescription(
+					"TestGetSetDeleteContractSpecification",
+					"A description for a unit test contract specification",
+					"http://test.net",
+					"http://test.net/ico.png",
+				),
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				types.NewSourceHash("somehash"),
+				"someclass",
+				[]types.MetadataAddress{recordSpecIDm},
+			),
+			[]string{s.user1Addr.String()},
+			fmt.Sprintf("no record spec exists with id %s", recordSpecIDm),
+		},
+		{
+			"RecordSpecIds - existing index 0 does not exist - ok",
+			types.NewContractSpecification(
+				s.contractSpecID1,
+				types.NewDescription(
+					"TestGetSetDeleteContractSpecification",
+					"A description for a unit test contract specification",
+					"http://test.net",
+					"http://test.net/ico.png",
+				),
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				types.NewSourceHash("somehash"),
+				"someclass",
+				[]types.MetadataAddress{recordSpecIDm},
+			),
+			types.NewContractSpecification(
+				s.contractSpecID1,
+				types.NewDescription(
+					"TestGetSetDeleteContractSpecification",
+					"A description for a unit test contract specification",
+					"http://test.net",
+					"http://test.net/ico.png",
+				),
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				types.NewSourceHash("somehash"),
+				"someclass",
+				[]types.MetadataAddress{},
+			),
+			[]string{s.user1Addr.String()},
+			"",
+		},
+		{
+			"RecordSpecIds - proposed index 0 does not exist - fail",
+			types.NewContractSpecification(
+				s.contractSpecID1,
+				types.NewDescription(
+					"TestGetSetDeleteContractSpecification",
+					"A description for a unit test contract specification",
+					"http://test.net",
+					"http://test.net/ico.png",
+				),
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				types.NewSourceHash("somehash"),
+				"someclass",
+				[]types.MetadataAddress{recordSpecIDe, recordSpecIDe},
+			),
+			types.NewContractSpecification(
+				s.contractSpecID1,
+				types.NewDescription(
+					"TestGetSetDeleteContractSpecification",
+					"A description for a unit test contract specification",
+					"http://test.net",
+					"http://test.net/ico.png",
+				),
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				types.NewSourceHash("somehash"),
+				"someclass",
+				[]types.MetadataAddress{recordSpecIDe, recordSpecIDe, recordSpecIDm},
+			),
+			[]string{s.user1Addr.String()},
+			fmt.Sprintf("no record spec exists with id %s", recordSpecIDm),
+		},
+		{
+			"RecordSpecIds - existing index 2 does not exist - ok",
+			types.NewContractSpecification(
+				s.contractSpecID1,
+				types.NewDescription(
+					"TestGetSetDeleteContractSpecification",
+					"A description for a unit test contract specification",
+					"http://test.net",
+					"http://test.net/ico.png",
+				),
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				types.NewSourceHash("somehash"),
+				"someclass",
+				[]types.MetadataAddress{recordSpecIDe, recordSpecIDe, recordSpecIDm},
+			),
+			types.NewContractSpecification(
+				s.contractSpecID1,
+				types.NewDescription(
+					"TestGetSetDeleteContractSpecification",
+					"A description for a unit test contract specification",
+					"http://test.net",
+					"http://test.net/ico.png",
+				),
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				types.NewSourceHash("somehash"),
+				"someclass",
+				[]types.MetadataAddress{recordSpecIDe, recordSpecIDe},
+			),
+			[]string{s.user1Addr.String()},
+			"",
+		},
 	}
 
 	for _, tt := range tests {
@@ -539,6 +678,10 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 			}
 		})
 	}
+
+	// I'm not really sure what all gets shared between unit tests.
+	// So just to be on the safe side...
+	store.Delete(recordSpecIDe)
 }
 
 func (s *SpecKeeperTestSuite) TestGetSetDeleteScopeSpecification() {
