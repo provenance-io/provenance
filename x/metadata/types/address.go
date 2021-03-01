@@ -84,11 +84,11 @@ func VerifyMetadataAddressFormat(bz []byte) (string, error) {
 		return hrp, fmt.Errorf("incorrect address length (expected: %d, actual: %d)", requiredLength, len(bz))
 	}
 	// all valid metdata address have at least one uuid
-	if _, err :=  uuid.FromBytes(bz[1:17]); err != nil {
+	if _, err := uuid.FromBytes(bz[1:17]); err != nil {
 		return hrp, fmt.Errorf("invalid address bytes of uuid, expected uuid compliant: %w", err)
 	}
 	if checkSecondaryUUID {
-		if _, err :=  uuid.FromBytes(bz[17:33]); err != nil {
+		if _, err := uuid.FromBytes(bz[17:33]); err != nil {
 			return hrp, fmt.Errorf("invalid address bytes of secondary uuid, expected uuid compliant: %w", err)
 		}
 	}
