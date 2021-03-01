@@ -31,25 +31,25 @@ const (
 	DefinitionType_DEFINITION_TYPE_UNSPECIFIED DefinitionType = 0
 	// DEFINITION_TYPE_PROPOSED indicates a proposed value is used here (a record that is not on-chain)
 	DefinitionType_DEFINITION_TYPE_PROPOSED DefinitionType = 1
-	// DEFINITION_TYPE_FACT indicates the value must be a reference to a record on chain
-	DefinitionType_DEFINITION_TYPE_FACT DefinitionType = 2
-	// DEFINITION_TYPE_FACT_LIST indicates the value maybe a reference to a colleciton of values on chain having
+	// DEFINITION_TYPE_RECORD indicates the value must be a reference to a record on chain
+	DefinitionType_DEFINITION_TYPE_RECORD DefinitionType = 2
+	// DEFINITION_TYPE_RECORD_LIST indicates the value maybe a reference to a collection of values on chain having
 	// the same name
-	DefinitionType_DEFINITION_TYPE_FACT_LIST DefinitionType = 3
+	DefinitionType_DEFINITION_TYPE_RECORD_LIST DefinitionType = 3
 )
 
 var DefinitionType_name = map[int32]string{
 	0: "DEFINITION_TYPE_UNSPECIFIED",
 	1: "DEFINITION_TYPE_PROPOSED",
-	2: "DEFINITION_TYPE_FACT",
-	3: "DEFINITION_TYPE_FACT_LIST",
+	2: "DEFINITION_TYPE_RECORD",
+	3: "DEFINITION_TYPE_RECORD_LIST",
 }
 
 var DefinitionType_value = map[string]int32{
 	"DEFINITION_TYPE_UNSPECIFIED": 0,
 	"DEFINITION_TYPE_PROPOSED":    1,
-	"DEFINITION_TYPE_FACT":        2,
-	"DEFINITION_TYPE_FACT_LIST":   3,
+	"DEFINITION_TYPE_RECORD":      2,
+	"DEFINITION_TYPE_RECORD_LIST": 3,
 }
 
 func (x DefinitionType) String() string {
@@ -183,36 +183,40 @@ func (m *ScopeSpecification) GetPartiesInvolved() []PartyType {
 	return nil
 }
 
-// GroupSpecification defines the required parties, resources, conditions, and consideration outputs for a contract
-type GroupSpecification struct {
+// ContractSpecification defines the required parties, resources, conditions, and consideration outputs for a contract
+type ContractSpecification struct {
 	// unique identifier for this specification on chain
 	SpecificationId MetadataAddress `protobuf:"bytes,1,opt,name=specification_id,json=specificationId,proto3,customtype=MetadataAddress" json:"specification_id" yaml:"specification_id"`
-	// The definition points to a resource that defines the instance of code that will process this group
-	Definition *Definition `protobuf:"bytes,2,opt,name=definition,proto3" json:"definition,omitempty"`
-	// input specifications indicating proposed (off chain data values) and facts (on chain qualified references)
-	InputSpecs []*Definition `protobuf:"bytes,3,rep,name=input_specs,json=inputSpecs,proto3" json:"input_specs,omitempty"`
-	// a list of parties that must sign a transaction using a given role
-	PartiesInvolved []PartyType `protobuf:"varint,4,rep,packed,name=parties_involved,json=partiesInvolved,proto3,enum=provenance.metadata.v1.PartyType" json:"parties_involved,omitempty"`
-	// a colleciton of checks that must be satisfied against a scope prior to allowing a record to be added under this
-	// specification
-	ConditionSpecs []*ConditionSpec `protobuf:"bytes,5,rep,name=condition_specs,json=conditionSpecs,proto3" json:"condition_specs,omitempty"`
-	// a colleciton of method/process specifications that when performed and documented by responsible parties listed
-	// above, result in adding a new record to the scope as defined in the output_spec
-	ConsiderationSpecs []*ConsiderationSpec `protobuf:"bytes,6,rep,name=consideration_specs,json=considerationSpecs,proto3" json:"consideration_specs,omitempty"`
+	// Description information for this contract specification
+	Description *Description `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	// Address of the account that owns this specificaiton
+	OwnerAddresses []string `protobuf:"bytes,3,rep,name=owner_addresses,json=ownerAddresses,proto3" json:"owner_addresses,omitempty" yaml:"owner_addresses"`
+	// a list of party roles that must be fullfilled when signing a transaction for this contract specification
+	PartiesInvolved []PartyType `protobuf:"varint,4,rep,packed,name=parties_involved,json=partiesInvolved,proto3,enum=provenance.metadata.v1.PartyType" json:"parties_involved,omitempty" yaml:"parties_involved"`
+	// Reference to a metadata record with a hash and type information for the instance of code that will process this contract
+	//
+	// Types that are valid to be assigned to Source:
+	//	*ContractSpecification_ResourceId
+	//	*ContractSpecification_Hash
+	Source isContractSpecification_Source `protobuf_oneof:"source"`
+	// name of the class/type of this contract executable
+	ClassName string `protobuf:"bytes,7,opt,name=class_name,json=className,proto3" json:"class_name,omitempty" yaml:"class_name"`
+	// a collection of ids of checks (RecordSpecifications) that must be satisfied against a scope prior to
+	// allowing a record to be added under this specification
+	RecordSpecIds []MetadataAddress `protobuf:"bytes,8,rep,name=record_spec_ids,json=recordSpecIds,proto3,customtype=MetadataAddress" json:"record_spec_ids" yaml:"record_spec_ids"`
 }
 
-func (m *GroupSpecification) Reset()         { *m = GroupSpecification{} }
-func (m *GroupSpecification) String() string { return proto.CompactTextString(m) }
-func (*GroupSpecification) ProtoMessage()    {}
-func (*GroupSpecification) Descriptor() ([]byte, []int) {
+func (m *ContractSpecification) Reset()      { *m = ContractSpecification{} }
+func (*ContractSpecification) ProtoMessage() {}
+func (*ContractSpecification) Descriptor() ([]byte, []int) {
 	return fileDescriptor_1e2d1042057ea889, []int{1}
 }
-func (m *GroupSpecification) XXX_Unmarshal(b []byte) error {
+func (m *ContractSpecification) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *GroupSpecification) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *ContractSpecification) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_GroupSpecification.Marshal(b, m, deterministic)
+		return xxx_messageInfo_ContractSpecification.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -222,55 +226,98 @@ func (m *GroupSpecification) XXX_Marshal(b []byte, deterministic bool) ([]byte, 
 		return b[:n], nil
 	}
 }
-func (m *GroupSpecification) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GroupSpecification.Merge(m, src)
+func (m *ContractSpecification) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ContractSpecification.Merge(m, src)
 }
-func (m *GroupSpecification) XXX_Size() int {
+func (m *ContractSpecification) XXX_Size() int {
 	return m.Size()
 }
-func (m *GroupSpecification) XXX_DiscardUnknown() {
-	xxx_messageInfo_GroupSpecification.DiscardUnknown(m)
+func (m *ContractSpecification) XXX_DiscardUnknown() {
+	xxx_messageInfo_ContractSpecification.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_GroupSpecification proto.InternalMessageInfo
+var xxx_messageInfo_ContractSpecification proto.InternalMessageInfo
 
-func (m *GroupSpecification) GetDefinition() *Definition {
+type isContractSpecification_Source interface {
+	isContractSpecification_Source()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type ContractSpecification_ResourceId struct {
+	ResourceId MetadataAddress `protobuf:"bytes,5,opt,name=resource_id,json=resourceId,proto3,oneof,customtype=MetadataAddress" json:"resource_id,omitempty" yaml:"resource_id"`
+}
+type ContractSpecification_Hash struct {
+	Hash string `protobuf:"bytes,6,opt,name=hash,proto3,oneof" json:"hash,omitempty"`
+}
+
+func (*ContractSpecification_ResourceId) isContractSpecification_Source() {}
+func (*ContractSpecification_Hash) isContractSpecification_Source()       {}
+
+func (m *ContractSpecification) GetSource() isContractSpecification_Source {
 	if m != nil {
-		return m.Definition
+		return m.Source
 	}
 	return nil
 }
 
-func (m *GroupSpecification) GetInputSpecs() []*Definition {
+func (m *ContractSpecification) GetDescription() *Description {
 	if m != nil {
-		return m.InputSpecs
+		return m.Description
 	}
 	return nil
 }
 
-func (m *GroupSpecification) GetPartiesInvolved() []PartyType {
+func (m *ContractSpecification) GetOwnerAddresses() []string {
+	if m != nil {
+		return m.OwnerAddresses
+	}
+	return nil
+}
+
+func (m *ContractSpecification) GetPartiesInvolved() []PartyType {
 	if m != nil {
 		return m.PartiesInvolved
 	}
 	return nil
 }
 
-func (m *GroupSpecification) GetConditionSpecs() []*ConditionSpec {
-	if m != nil {
-		return m.ConditionSpecs
+func (m *ContractSpecification) GetHash() string {
+	if x, ok := m.GetSource().(*ContractSpecification_Hash); ok {
+		return x.Hash
 	}
-	return nil
+	return ""
 }
 
-func (m *GroupSpecification) GetConsiderationSpecs() []*ConsiderationSpec {
+func (m *ContractSpecification) GetClassName() string {
 	if m != nil {
-		return m.ConsiderationSpecs
+		return m.ClassName
 	}
-	return nil
+	return ""
+}
+
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*ContractSpecification) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
+		(*ContractSpecification_ResourceId)(nil),
+		(*ContractSpecification_Hash)(nil),
+	}
 }
 
 // RecordSpecification defines the specification for a Record including allowed/required inputs/outputs
 type RecordSpecification struct {
+	// unique identifier for this specification on chain
+	SpecificationId MetadataAddress `protobuf:"bytes,1,opt,name=specification_id,json=specificationId,proto3,customtype=MetadataAddress" json:"specification_id" yaml:"specification_id"`
+	// Name of Record that will be created when this specification is used
+	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	// A set of inputs that must be satisified to apply this RecordSpecification and create a Record
+	Inputs []*InputSpecification `protobuf:"bytes,3,rep,name=inputs,proto3" json:"inputs,omitempty"`
+	// A type name for data associated with this record (typically a class or proto name)
+	TypeName string `protobuf:"bytes,4,opt,name=type_name,json=typeName,proto3" json:"type_name,omitempty" yaml:"type_name"`
+	// Type of result for this record specification (must be RECORD or RECORD_LIST)
+	ResultType DefinitionType `protobuf:"varint,5,opt,name=result_type,json=resultType,proto3,enum=provenance.metadata.v1.DefinitionType" json:"result_type,omitempty" yaml:"result_type"`
+	// Type of party responsible for this record
+	ResponsibleParty PartyType `protobuf:"varint,6,opt,name=responsible_party,json=responsibleParty,proto3,enum=provenance.metadata.v1.PartyType" json:"responsible_party,omitempty" yaml:"responsible_party"`
 }
 
 func (m *RecordSpecification) Reset()         { *m = RecordSpecification{} }
@@ -306,34 +353,68 @@ func (m *RecordSpecification) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_RecordSpecification proto.InternalMessageInfo
 
-// A Contract Specification (used to create a GroupSpecification for the Contract Execution Environment)
-type ContractSpec struct {
-	// The definition points to a resource that defines the instance of code that will process this group
-	Definition *Definition `protobuf:"bytes,1,opt,name=definition,proto3" json:"definition,omitempty"`
-	// input specifications indicating proposed (off chain data values) and facts (on chain qualified references)
-	InputSpecs []*Definition `protobuf:"bytes,2,rep,name=input_specs,json=inputSpecs,proto3" json:"input_specs,omitempty"`
-	// a list of parties that must sign a transaction using a given role
-	PartiesInvolved []PartyType `protobuf:"varint,3,rep,packed,name=parties_involved,json=partiesInvolved,proto3,enum=provenance.metadata.v1.PartyType" json:"parties_involved,omitempty"`
-	// a colleciton of checks that must be satisfied against a scope prior to allowing a record to be added under this
-	// specification
-	ConditionSpecs []*ConditionSpec `protobuf:"bytes,4,rep,name=condition_specs,json=conditionSpecs,proto3" json:"condition_specs,omitempty"`
-	// a colleciton of method/process specifications that when performed and documented by responsible parties listed
-	// above, result in adding a new record to the scope as defined in the output_spec
-	ConsiderationSpecs []*ConsiderationSpec `protobuf:"bytes,5,rep,name=consideration_specs,json=considerationSpecs,proto3" json:"consideration_specs,omitempty"`
+func (m *RecordSpecification) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
 }
 
-func (m *ContractSpec) Reset()         { *m = ContractSpec{} }
-func (m *ContractSpec) String() string { return proto.CompactTextString(m) }
-func (*ContractSpec) ProtoMessage()    {}
-func (*ContractSpec) Descriptor() ([]byte, []int) {
+func (m *RecordSpecification) GetInputs() []*InputSpecification {
+	if m != nil {
+		return m.Inputs
+	}
+	return nil
+}
+
+func (m *RecordSpecification) GetTypeName() string {
+	if m != nil {
+		return m.TypeName
+	}
+	return ""
+}
+
+func (m *RecordSpecification) GetResultType() DefinitionType {
+	if m != nil {
+		return m.ResultType
+	}
+	return DefinitionType_DEFINITION_TYPE_UNSPECIFIED
+}
+
+func (m *RecordSpecification) GetResponsibleParty() PartyType {
+	if m != nil {
+		return m.ResponsibleParty
+	}
+	return PartyType_PARTY_TYPE_UNSPECIFIED
+}
+
+// InputSpecification defines a name, type_name, and source reference (either on or off chain) to define an input
+// parameter
+type InputSpecification struct {
+	// name for this input
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// a type_name (typically a proto name or class_name)
+	TypeName string `protobuf:"bytes,2,opt,name=type_name,json=typeName,proto3" json:"type_name,omitempty" yaml:"type_name"`
+	// source is either on chain (record_id) or off-chain (hash)
+	//
+	// Types that are valid to be assigned to Source:
+	//	*InputSpecification_RecordId
+	//	*InputSpecification_Hash
+	Source isInputSpecification_Source `protobuf_oneof:"source"`
+}
+
+func (m *InputSpecification) Reset()         { *m = InputSpecification{} }
+func (m *InputSpecification) String() string { return proto.CompactTextString(m) }
+func (*InputSpecification) ProtoMessage()    {}
+func (*InputSpecification) Descriptor() ([]byte, []int) {
 	return fileDescriptor_1e2d1042057ea889, []int{3}
 }
-func (m *ContractSpec) XXX_Unmarshal(b []byte) error {
+func (m *InputSpecification) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *ContractSpec) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *InputSpecification) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_ContractSpec.Marshal(b, m, deterministic)
+		return xxx_messageInfo_InputSpecification.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -343,51 +424,68 @@ func (m *ContractSpec) XXX_Marshal(b []byte, deterministic bool) ([]byte, error)
 		return b[:n], nil
 	}
 }
-func (m *ContractSpec) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ContractSpec.Merge(m, src)
+func (m *InputSpecification) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_InputSpecification.Merge(m, src)
 }
-func (m *ContractSpec) XXX_Size() int {
+func (m *InputSpecification) XXX_Size() int {
 	return m.Size()
 }
-func (m *ContractSpec) XXX_DiscardUnknown() {
-	xxx_messageInfo_ContractSpec.DiscardUnknown(m)
+func (m *InputSpecification) XXX_DiscardUnknown() {
+	xxx_messageInfo_InputSpecification.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_ContractSpec proto.InternalMessageInfo
+var xxx_messageInfo_InputSpecification proto.InternalMessageInfo
 
-func (m *ContractSpec) GetDefinition() *Definition {
+type isInputSpecification_Source interface {
+	isInputSpecification_Source()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type InputSpecification_RecordId struct {
+	RecordId MetadataAddress `protobuf:"bytes,3,opt,name=record_id,json=recordId,proto3,oneof,customtype=MetadataAddress" json:"record_id,omitempty" yaml:"record_id"`
+}
+type InputSpecification_Hash struct {
+	Hash string `protobuf:"bytes,4,opt,name=hash,proto3,oneof" json:"hash,omitempty"`
+}
+
+func (*InputSpecification_RecordId) isInputSpecification_Source() {}
+func (*InputSpecification_Hash) isInputSpecification_Source()     {}
+
+func (m *InputSpecification) GetSource() isInputSpecification_Source {
 	if m != nil {
-		return m.Definition
+		return m.Source
 	}
 	return nil
 }
 
-func (m *ContractSpec) GetInputSpecs() []*Definition {
+func (m *InputSpecification) GetName() string {
 	if m != nil {
-		return m.InputSpecs
+		return m.Name
 	}
-	return nil
+	return ""
 }
 
-func (m *ContractSpec) GetPartiesInvolved() []PartyType {
+func (m *InputSpecification) GetTypeName() string {
 	if m != nil {
-		return m.PartiesInvolved
+		return m.TypeName
 	}
-	return nil
+	return ""
 }
 
-func (m *ContractSpec) GetConditionSpecs() []*ConditionSpec {
-	if m != nil {
-		return m.ConditionSpecs
+func (m *InputSpecification) GetHash() string {
+	if x, ok := m.GetSource().(*InputSpecification_Hash); ok {
+		return x.Hash
 	}
-	return nil
+	return ""
 }
 
-func (m *ContractSpec) GetConsiderationSpecs() []*ConsiderationSpec {
-	if m != nil {
-		return m.ConsiderationSpecs
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*InputSpecification) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
+		(*InputSpecification_RecordId)(nil),
+		(*InputSpecification_Hash)(nil),
 	}
-	return nil
 }
 
 // Description holds general information that is handy to associate with a structure.
@@ -462,311 +560,14 @@ func (m *Description) GetIconUrl() string {
 	return ""
 }
 
-// Definition encapsulates the information required to uniquely associate a resource with a type and location
-type Definition struct {
-	// a common name given to this definition.  The name is used to match up with references to this part of the spec
-	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	// location of the resource on chain
-	ResourceLocation *Reference `protobuf:"bytes,2,opt,name=resource_location,json=resourceLocation,proto3" json:"resource_location,omitempty"`
-	// address of the account that created this definition
-	CreatorAddress string `protobuf:"bytes,3,opt,name=creator_address,json=creatorAddress,proto3" json:"creator_address,omitempty"`
-	// The type of data definition (proposed, fact/recorded, list)
-	DefinitionType DefinitionType `protobuf:"varint,4,opt,name=definition_type,json=definitionType,proto3,enum=provenance.metadata.v1.DefinitionType" json:"definition_type,omitempty"`
-}
-
-func (m *Definition) Reset()         { *m = Definition{} }
-func (m *Definition) String() string { return proto.CompactTextString(m) }
-func (*Definition) ProtoMessage()    {}
-func (*Definition) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1e2d1042057ea889, []int{5}
-}
-func (m *Definition) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *Definition) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_Definition.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *Definition) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Definition.Merge(m, src)
-}
-func (m *Definition) XXX_Size() int {
-	return m.Size()
-}
-func (m *Definition) XXX_DiscardUnknown() {
-	xxx_messageInfo_Definition.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_Definition proto.InternalMessageInfo
-
-func (m *Definition) GetName() string {
-	if m != nil {
-		return m.Name
-	}
-	return ""
-}
-
-func (m *Definition) GetResourceLocation() *Reference {
-	if m != nil {
-		return m.ResourceLocation
-	}
-	return nil
-}
-
-func (m *Definition) GetCreatorAddress() string {
-	if m != nil {
-		return m.CreatorAddress
-	}
-	return ""
-}
-
-func (m *Definition) GetDefinitionType() DefinitionType {
-	if m != nil {
-		return m.DefinitionType
-	}
-	return DefinitionType_DEFINITION_TYPE_UNSPECIFIED
-}
-
-// Reference is a multipart structure that defines a reference to a piece of data recorded within a scope
-type Reference struct {
-	// unique identifer for the scope being referenced
-	ScopeId string `protobuf:"bytes,1,opt,name=scope_id,json=scopeId,proto3" json:"scope_id,omitempty"`
-	// require record to be within a specific group (optional)
-	GroupId string `protobuf:"bytes,3,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
-	// specify a specific record inside a scope (and group) by result-hash (optional)
-	Hash string `protobuf:"bytes,4,opt,name=hash,proto3" json:"hash,omitempty"`
-	// specify a result-name of a record within a scope (optional)
-	Name string `protobuf:"bytes,5,opt,name=name,proto3" json:"name,omitempty"`
-	// type/classname of the target data (optional)
-	TypeName string `protobuf:"bytes,6,opt,name=type_name,json=typeName,proto3" json:"type_name,omitempty"`
-}
-
-func (m *Reference) Reset()         { *m = Reference{} }
-func (m *Reference) String() string { return proto.CompactTextString(m) }
-func (*Reference) ProtoMessage()    {}
-func (*Reference) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1e2d1042057ea889, []int{6}
-}
-func (m *Reference) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *Reference) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_Reference.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *Reference) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Reference.Merge(m, src)
-}
-func (m *Reference) XXX_Size() int {
-	return m.Size()
-}
-func (m *Reference) XXX_DiscardUnknown() {
-	xxx_messageInfo_Reference.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_Reference proto.InternalMessageInfo
-
-func (m *Reference) GetScopeId() string {
-	if m != nil {
-		return m.ScopeId
-	}
-	return ""
-}
-
-func (m *Reference) GetGroupId() string {
-	if m != nil {
-		return m.GroupId
-	}
-	return ""
-}
-
-func (m *Reference) GetHash() string {
-	if m != nil {
-		return m.Hash
-	}
-	return ""
-}
-
-func (m *Reference) GetName() string {
-	if m != nil {
-		return m.Name
-	}
-	return ""
-}
-
-func (m *Reference) GetTypeName() string {
-	if m != nil {
-		return m.TypeName
-	}
-	return ""
-}
-
-// ConditionSpec defines a collection of outputs and process information listed as preconditions that must be met
-// before a contract execution is valid
-type ConditionSpec struct {
-	// common name for this condition
-	Name       string        `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	InputSpecs []*Definition `protobuf:"bytes,2,rep,name=input_specs,json=inputSpecs,proto3" json:"input_specs,omitempty"`
-	OutputSpec *Definition   `protobuf:"bytes,3,opt,name=output_spec,json=outputSpec,proto3" json:"output_spec,omitempty"`
-}
-
-func (m *ConditionSpec) Reset()         { *m = ConditionSpec{} }
-func (m *ConditionSpec) String() string { return proto.CompactTextString(m) }
-func (*ConditionSpec) ProtoMessage()    {}
-func (*ConditionSpec) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1e2d1042057ea889, []int{7}
-}
-func (m *ConditionSpec) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *ConditionSpec) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_ConditionSpec.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *ConditionSpec) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ConditionSpec.Merge(m, src)
-}
-func (m *ConditionSpec) XXX_Size() int {
-	return m.Size()
-}
-func (m *ConditionSpec) XXX_DiscardUnknown() {
-	xxx_messageInfo_ConditionSpec.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ConditionSpec proto.InternalMessageInfo
-
-func (m *ConditionSpec) GetName() string {
-	if m != nil {
-		return m.Name
-	}
-	return ""
-}
-
-func (m *ConditionSpec) GetInputSpecs() []*Definition {
-	if m != nil {
-		return m.InputSpecs
-	}
-	return nil
-}
-
-func (m *ConditionSpec) GetOutputSpec() *Definition {
-	if m != nil {
-		return m.OutputSpec
-	}
-	return nil
-}
-
-// ConsiderationSpec defines a unit of process execution that should be performed by responsible parties in order
-// to record a set of outputs within a scope
-type ConsiderationSpec struct {
-	// common name for this consideration
-	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	// Invoking party must be functioning in this role
-	ResponsibleParty PartyType `protobuf:"varint,2,opt,name=responsible_party,json=responsibleParty,proto3,enum=provenance.metadata.v1.PartyType" json:"responsible_party,omitempty"`
-	// A repeated set of input specifications that must be listed and matched correctly in order to add a record listed
-	// in output_spec to the scope
-	InputSpecs []*Definition `protobuf:"bytes,3,rep,name=input_specs,json=inputSpecs,proto3" json:"input_specs,omitempty"`
-	// The specification for the record that will be added to a scope if this consideration is satisfied
-	OutputSpec *Definition `protobuf:"bytes,4,opt,name=output_spec,json=outputSpec,proto3" json:"output_spec,omitempty"`
-}
-
-func (m *ConsiderationSpec) Reset()         { *m = ConsiderationSpec{} }
-func (m *ConsiderationSpec) String() string { return proto.CompactTextString(m) }
-func (*ConsiderationSpec) ProtoMessage()    {}
-func (*ConsiderationSpec) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1e2d1042057ea889, []int{8}
-}
-func (m *ConsiderationSpec) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *ConsiderationSpec) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_ConsiderationSpec.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *ConsiderationSpec) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ConsiderationSpec.Merge(m, src)
-}
-func (m *ConsiderationSpec) XXX_Size() int {
-	return m.Size()
-}
-func (m *ConsiderationSpec) XXX_DiscardUnknown() {
-	xxx_messageInfo_ConsiderationSpec.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ConsiderationSpec proto.InternalMessageInfo
-
-func (m *ConsiderationSpec) GetName() string {
-	if m != nil {
-		return m.Name
-	}
-	return ""
-}
-
-func (m *ConsiderationSpec) GetResponsibleParty() PartyType {
-	if m != nil {
-		return m.ResponsibleParty
-	}
-	return PartyType_PARTY_TYPE_UNSPECIFIED
-}
-
-func (m *ConsiderationSpec) GetInputSpecs() []*Definition {
-	if m != nil {
-		return m.InputSpecs
-	}
-	return nil
-}
-
-func (m *ConsiderationSpec) GetOutputSpec() *Definition {
-	if m != nil {
-		return m.OutputSpec
-	}
-	return nil
-}
-
 func init() {
 	proto.RegisterEnum("provenance.metadata.v1.DefinitionType", DefinitionType_name, DefinitionType_value)
 	proto.RegisterEnum("provenance.metadata.v1.PartyType", PartyType_name, PartyType_value)
 	proto.RegisterType((*ScopeSpecification)(nil), "provenance.metadata.v1.ScopeSpecification")
-	proto.RegisterType((*GroupSpecification)(nil), "provenance.metadata.v1.GroupSpecification")
+	proto.RegisterType((*ContractSpecification)(nil), "provenance.metadata.v1.ContractSpecification")
 	proto.RegisterType((*RecordSpecification)(nil), "provenance.metadata.v1.RecordSpecification")
-	proto.RegisterType((*ContractSpec)(nil), "provenance.metadata.v1.ContractSpec")
+	proto.RegisterType((*InputSpecification)(nil), "provenance.metadata.v1.InputSpecification")
 	proto.RegisterType((*Description)(nil), "provenance.metadata.v1.Description")
-	proto.RegisterType((*Definition)(nil), "provenance.metadata.v1.Definition")
-	proto.RegisterType((*Reference)(nil), "provenance.metadata.v1.Reference")
-	proto.RegisterType((*ConditionSpec)(nil), "provenance.metadata.v1.ConditionSpec")
-	proto.RegisterType((*ConsiderationSpec)(nil), "provenance.metadata.v1.ConsiderationSpec")
 }
 
 func init() {
@@ -774,73 +575,68 @@ func init() {
 }
 
 var fileDescriptor_1e2d1042057ea889 = []byte{
-	// 1041 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x56, 0x41, 0x6f, 0xe3, 0x44,
-	0x14, 0x8e, 0xeb, 0xa4, 0x6d, 0x5e, 0x4a, 0xe2, 0x4e, 0xbb, 0xdd, 0xb4, 0x85, 0x24, 0x18, 0x01,
-	0xa5, 0x12, 0x89, 0xb6, 0x8b, 0x84, 0xb4, 0xb7, 0xc4, 0x75, 0x57, 0x96, 0xba, 0x4e, 0x34, 0x49,
-	0x8b, 0x76, 0x25, 0x64, 0xb9, 0xf6, 0xb4, 0xb5, 0x48, 0x3d, 0x96, 0xed, 0x74, 0xe9, 0x91, 0x0b,
-	0xe2, 0x08, 0x37, 0x8e, 0xfc, 0x01, 0x2e, 0xfc, 0x8a, 0x3d, 0x2e, 0x37, 0xc4, 0x21, 0x42, 0xed,
-	0x8d, 0x1b, 0x3d, 0x70, 0x46, 0x33, 0x76, 0x1a, 0xc7, 0x6d, 0x96, 0x0a, 0x02, 0x37, 0xcf, 0x7b,
-	0xef, 0xfb, 0xf2, 0xf9, 0x7d, 0x6f, 0x5e, 0x0c, 0xdb, 0x9e, 0x4f, 0xcf, 0x89, 0x6b, 0xba, 0x16,
-	0x69, 0x9c, 0x91, 0xd0, 0xb4, 0xcd, 0xd0, 0x6c, 0x9c, 0x3f, 0x6a, 0x04, 0x1e, 0xb1, 0x9c, 0x63,
-	0xc7, 0x32, 0x43, 0x87, 0xba, 0x75, 0xcf, 0xa7, 0x21, 0x45, 0x6b, 0xe3, 0xda, 0xfa, 0xa8, 0xb6,
-	0x7e, 0xfe, 0x68, 0x63, 0xf5, 0x84, 0x9e, 0x50, 0x5e, 0xd2, 0x60, 0x4f, 0x51, 0xb5, 0xfc, 0xb3,
-	0x08, 0xa8, 0x6b, 0x51, 0x8f, 0x74, 0x93, 0x54, 0xe8, 0x73, 0x90, 0x26, 0xb8, 0x0d, 0xc7, 0x2e,
-	0x0b, 0x35, 0x61, 0x6b, 0xa9, 0xb5, 0xf3, 0x6a, 0x58, 0xcd, 0xfc, 0x3a, 0xac, 0x96, 0x9e, 0xc5,
-	0xdc, 0x4d, 0xdb, 0xf6, 0x49, 0x10, 0x5c, 0x0f, 0xab, 0x0f, 0x2f, 0xcc, 0xb3, 0xfe, 0x13, 0x39,
-	0x0d, 0x94, 0x71, 0x69, 0x22, 0xa4, 0xd9, 0x48, 0x85, 0x82, 0x4d, 0x02, 0xcb, 0x77, 0x3c, 0x16,
-	0x28, 0xcf, 0xd5, 0x84, 0xad, 0xc2, 0xce, 0x7b, 0xf5, 0xbb, 0x95, 0xd7, 0x77, 0xc7, 0xa5, 0x38,
-	0x89, 0x43, 0x0a, 0x94, 0xe8, 0x4b, 0x97, 0xf8, 0x86, 0x19, 0x69, 0x20, 0x41, 0x59, 0xac, 0x89,
-	0x5b, 0xf9, 0xd6, 0xc6, 0xf5, 0xb0, 0xba, 0x16, 0xa9, 0x49, 0x15, 0xc8, 0xb8, 0xc8, 0x23, 0xcd,
-	0x51, 0x00, 0x39, 0x20, 0x79, 0xa6, 0x1f, 0x3a, 0x24, 0x30, 0x1c, 0xf7, 0x9c, 0xf6, 0xcf, 0x89,
-	0x5d, 0xce, 0xd6, 0xc4, 0xad, 0xe2, 0xce, 0xbb, 0xd3, 0x04, 0x75, 0x4c, 0x3f, 0xbc, 0xe8, 0x5d,
-	0x78, 0xa4, 0xb5, 0x39, 0x7e, 0xed, 0x34, 0x89, 0x8c, 0x4b, 0x71, 0x48, 0x8b, 0x23, 0xc8, 0x80,
-	0x65, 0x8b, 0xba, 0xa1, 0x6f, 0x5a, 0xa1, 0xc1, 0x5a, 0x62, 0x38, 0x76, 0x50, 0xce, 0xd5, 0xc4,
-	0xad, 0xa5, 0xd6, 0xe3, 0xe9, 0x6d, 0x2d, 0x47, 0xfc, 0xb7, 0x90, 0x32, 0x2e, 0x8d, 0x62, 0xcc,
-	0x3c, 0xcd, 0x0e, 0x9e, 0x64, 0xbf, 0xff, 0xa1, 0x9a, 0x91, 0xff, 0x14, 0x01, 0x3d, 0xf5, 0xe9,
-	0xc0, 0xfb, 0x5f, 0x3d, 0x6d, 0x01, 0xd8, 0xe4, 0xd8, 0x71, 0x9d, 0x84, 0xa5, 0xf2, 0x74, 0x4b,
-	0x47, 0x95, 0x38, 0x81, 0x42, 0x0a, 0x14, 0x1c, 0xd7, 0x1b, 0x44, 0xef, 0x18, 0x99, 0x79, 0x4f,
-	0x12, 0x0e, 0x63, 0xef, 0x1b, 0xa0, 0xfd, 0x7f, 0x61, 0xe8, 0x6d, 0xcf, 0x74, 0x60, 0x5d, 0xb6,
-	0xf9, 0xcf, 0xc4, 0xb2, 0x72, 0x5c, 0xd6, 0xfb, 0xd3, 0xc8, 0x94, 0x51, 0x39, 0x93, 0x83, 0x8b,
-	0x56, 0xf2, 0x18, 0xa0, 0x17, 0xb0, 0x62, 0x51, 0x37, 0x70, 0x6c, 0xe2, 0x9b, 0x09, 0xce, 0x79,
-	0xce, 0xf9, 0xd1, 0x1b, 0x38, 0xc7, 0x10, 0xce, 0x8b, 0xac, 0x74, 0x28, 0x90, 0x1f, 0xc0, 0x0a,
-	0x26, 0x16, 0xf5, 0xed, 0x09, 0xe3, 0xe5, 0xef, 0x44, 0x58, 0x52, 0x12, 0x93, 0x92, 0xb2, 0x4a,
-	0x98, 0x85, 0x55, 0x73, 0x33, 0xb3, 0x4a, 0x9c, 0xa5, 0x55, 0xd9, 0xff, 0xc0, 0xaa, 0xdc, 0x2c,
-	0xac, 0xfa, 0x49, 0x80, 0x42, 0x62, 0xaf, 0x21, 0x04, 0x59, 0xd7, 0x3c, 0x23, 0xdc, 0x8c, 0x3c,
-	0xe6, 0xcf, 0xa8, 0x36, 0xb9, 0x25, 0x45, 0x9e, 0x9a, 0x58, 0x80, 0x9f, 0x42, 0xe1, 0x25, 0x39,
-	0x0a, 0x9c, 0x90, 0x18, 0x03, 0xbf, 0x5f, 0xce, 0xb2, 0x8a, 0xd6, 0xda, 0xf5, 0xb0, 0x8a, 0xa2,
-	0x6b, 0x9b, 0x48, 0xca, 0x18, 0xe2, 0xd3, 0x81, 0xdf, 0x47, 0x75, 0x58, 0x74, 0x2c, 0xea, 0x72,
-	0x54, 0x8e, 0xa3, 0x56, 0xae, 0x87, 0xd5, 0x52, 0x84, 0x1a, 0x65, 0x64, 0xbc, 0xc0, 0x1e, 0x0f,
-	0xfc, 0x7e, 0xbc, 0x58, 0x7e, 0x17, 0x00, 0xc6, 0x4e, 0xde, 0xa9, 0x59, 0x87, 0x65, 0x9f, 0x04,
-	0x74, 0xe0, 0x5b, 0xc4, 0xe8, 0xd3, 0x68, 0x00, 0xe3, 0x65, 0x30, 0xd5, 0x52, 0x4c, 0x8e, 0x89,
-	0x4f, 0x5c, 0x8b, 0x60, 0x69, 0x84, 0xdd, 0x8f, 0xa1, 0xe8, 0x43, 0x28, 0x59, 0x3e, 0x31, 0x43,
-	0x7a, 0xb3, 0xc3, 0xe3, 0x3e, 0x14, 0xe3, 0x70, 0xbc, 0xaa, 0x50, 0x1b, 0x4a, 0xe3, 0xe9, 0x34,
-	0xc2, 0x0b, 0x8f, 0xf0, 0x76, 0x14, 0x77, 0x3e, 0xf8, 0xfb, 0x99, 0xe4, 0xe3, 0x54, 0xb4, 0x27,
-	0xce, 0xf2, 0xd7, 0x02, 0xe4, 0x6f, 0x94, 0xa1, 0x75, 0x58, 0x0c, 0xd8, 0xdf, 0xe4, 0x68, 0x69,
-	0xe6, 0xf1, 0x02, 0x3f, 0x6b, 0x36, 0x4b, 0x9d, 0xb0, 0x6d, 0xcb, 0x52, 0x91, 0xb6, 0x05, 0x7e,
-	0xd6, 0x6c, 0xd6, 0xa1, 0x53, 0x33, 0x38, 0x8d, 0x8c, 0xc1, 0xfc, 0xf9, 0xa6, 0x6b, 0xb9, 0x44,
-	0xd7, 0x36, 0x21, 0xcf, 0x14, 0x1b, 0x3c, 0x31, 0xcf, 0x13, 0x8b, 0x2c, 0xa0, 0x9b, 0x67, 0x44,
-	0xfe, 0x51, 0x80, 0xb7, 0x26, 0x06, 0xf5, 0xce, 0xc6, 0xcf, 0xe4, 0x3e, 0x2a, 0x50, 0xa0, 0x83,
-	0x70, 0xc4, 0xc2, 0xdf, 0xe6, 0x9e, 0x24, 0x11, 0x8c, 0xb1, 0xc8, 0x5f, 0xcd, 0xc1, 0xf2, 0xad,
-	0x4b, 0xf0, 0x86, 0x61, 0xf1, 0x58, 0xed, 0x51, 0x9f, 0x18, 0xec, 0x3e, 0x5f, 0xf0, 0x61, 0xb9,
-	0xd7, 0xfd, 0x97, 0x12, 0x58, 0x1e, 0x9d, 0xcd, 0xdf, 0x47, 0xaa, 0x07, 0xd9, 0x7f, 0xd2, 0x83,
-	0xed, 0x6f, 0x04, 0x28, 0x4e, 0xce, 0x17, 0xaa, 0xc2, 0xe6, 0xae, 0xba, 0xa7, 0xe9, 0x5a, 0x4f,
-	0x6b, 0xeb, 0x46, 0xef, 0x79, 0x47, 0x35, 0x0e, 0xf4, 0x6e, 0x47, 0x55, 0xb4, 0x3d, 0x4d, 0xdd,
-	0x95, 0x32, 0xe8, 0x6d, 0x28, 0xa7, 0x0b, 0x3a, 0xb8, 0xdd, 0x69, 0x77, 0xd5, 0x5d, 0x49, 0x40,
-	0x65, 0x58, 0x4d, 0x67, 0xf7, 0x9a, 0x4a, 0x4f, 0x9a, 0x43, 0xef, 0xc0, 0xfa, 0x5d, 0x19, 0x63,
-	0x5f, 0xeb, 0xf6, 0x24, 0x71, 0xfb, 0x0f, 0x01, 0xf2, 0x37, 0x4d, 0x43, 0x1b, 0xb0, 0xd6, 0x69,
-	0xe2, 0xde, 0xf3, 0xbb, 0x04, 0xac, 0xc3, 0x83, 0x44, 0xae, 0x8d, 0xb5, 0xa7, 0x9a, 0xde, 0xec,
-	0xb5, 0xb1, 0x24, 0xa0, 0x87, 0xb0, 0x92, 0x48, 0x75, 0x55, 0x7c, 0xa8, 0x29, 0x2a, 0x96, 0xe6,
-	0x52, 0x09, 0x4d, 0x3f, 0x54, 0xbb, 0x0c, 0x21, 0x32, 0xbd, 0x89, 0x84, 0x72, 0xd0, 0xed, 0xb5,
-	0x77, 0xb5, 0xa6, 0x2e, 0x65, 0xd1, 0x2a, 0x48, 0xc9, 0x9f, 0xf9, 0x4c, 0x57, 0xb1, 0x94, 0x4b,
-	0xd5, 0x37, 0xf7, 0xf6, 0xb4, 0x7d, 0xad, 0xd9, 0x53, 0xa5, 0x79, 0xb4, 0x06, 0x28, 0x59, 0xff,
-	0x4c, 0xd7, 0x5a, 0x07, 0x5d, 0x69, 0x21, 0x25, 0xb7, 0x83, 0xdb, 0x87, 0xaa, 0xde, 0xd4, 0x15,
-	0x55, 0x5a, 0x6c, 0x7d, 0xf1, 0xea, 0xb2, 0x22, 0xbc, 0xbe, 0xac, 0x08, 0xbf, 0x5d, 0x56, 0x84,
-	0x6f, 0xaf, 0x2a, 0x99, 0xd7, 0x57, 0x95, 0xcc, 0x2f, 0x57, 0x95, 0x0c, 0xac, 0x3b, 0x74, 0x8a,
-	0x95, 0x1d, 0xe1, 0xc5, 0x27, 0x27, 0x4e, 0x78, 0x3a, 0x38, 0xaa, 0x5b, 0xf4, 0xac, 0x31, 0x2e,
-	0xfa, 0xd8, 0xa1, 0x89, 0x53, 0xe3, 0xcb, 0xf1, 0x17, 0x38, 0xbb, 0xa2, 0xc1, 0xd1, 0x3c, 0xff,
-	0x92, 0x7e, 0xfc, 0x57, 0x00, 0x00, 0x00, 0xff, 0xff, 0x53, 0x5a, 0xd9, 0x03, 0xa5, 0x0b, 0x00,
-	0x00,
+	// 976 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x56, 0xcd, 0x6e, 0xe2, 0x56,
+	0x14, 0xc6, 0x31, 0x21, 0x70, 0x99, 0x06, 0xe7, 0x86, 0x30, 0x9e, 0xcc, 0x08, 0xa8, 0x2b, 0xb5,
+	0x34, 0x52, 0x41, 0x61, 0x46, 0xaa, 0x34, 0x3b, 0x7e, 0x4c, 0xe7, 0x4a, 0x19, 0x83, 0x2e, 0x90,
+	0x2a, 0x95, 0x2a, 0xcb, 0xb1, 0xef, 0x24, 0x57, 0x35, 0xb6, 0x65, 0x1b, 0xa6, 0xbc, 0x43, 0x17,
+	0x5d, 0x76, 0xd9, 0x67, 0xe8, 0x2b, 0x74, 0x33, 0xab, 0x6a, 0xba, 0xab, 0xba, 0x40, 0x55, 0xf2,
+	0x04, 0xe5, 0x09, 0x2a, 0x5f, 0xf3, 0x63, 0x13, 0x90, 0x66, 0xd3, 0xae, 0xba, 0xbb, 0xf7, 0x7c,
+	0xdf, 0x39, 0x1c, 0xbe, 0xf3, 0x9d, 0x2b, 0x83, 0x33, 0xc7, 0xb5, 0x27, 0xc4, 0xd2, 0x2c, 0x9d,
+	0xd4, 0x46, 0xc4, 0xd7, 0x0c, 0xcd, 0xd7, 0x6a, 0x93, 0xf3, 0x9a, 0xe7, 0x10, 0x9d, 0xbe, 0xa1,
+	0xba, 0xe6, 0x53, 0xdb, 0xaa, 0x3a, 0xae, 0xed, 0xdb, 0xb0, 0xb0, 0xe6, 0x56, 0x97, 0xdc, 0xea,
+	0xe4, 0xfc, 0x34, 0x7f, 0x63, 0xdf, 0xd8, 0x8c, 0x52, 0x0b, 0x4e, 0x21, 0x5b, 0xfa, 0x9d, 0x07,
+	0xb0, 0xaf, 0xdb, 0x0e, 0xe9, 0x47, 0x4b, 0xc1, 0x6f, 0x81, 0x10, 0xab, 0xad, 0x52, 0x43, 0xe4,
+	0xca, 0x5c, 0xe5, 0x51, 0xb3, 0xfe, 0x6e, 0x56, 0x4a, 0xfc, 0x39, 0x2b, 0xe5, 0x5e, 0x2f, 0x6a,
+	0x37, 0x0c, 0xc3, 0x25, 0x9e, 0x37, 0x9f, 0x95, 0x1e, 0x4f, 0xb5, 0x91, 0xf9, 0x52, 0xda, 0x4c,
+	0x94, 0x70, 0x2e, 0x16, 0x42, 0x06, 0x94, 0x41, 0xd6, 0x20, 0x9e, 0xee, 0x52, 0x27, 0x08, 0x88,
+	0x7b, 0x65, 0xae, 0x92, 0xad, 0x7f, 0x52, 0xdd, 0xde, 0x79, 0xb5, 0xbd, 0xa6, 0xe2, 0x68, 0x1e,
+	0x6c, 0x81, 0x9c, 0xfd, 0xd6, 0x22, 0xae, 0xaa, 0x85, 0x3d, 0x10, 0x4f, 0xe4, 0xcb, 0x7c, 0x25,
+	0xd3, 0x3c, 0x9d, 0xcf, 0x4a, 0x85, 0xb0, 0x9b, 0x0d, 0x82, 0x84, 0x0f, 0x59, 0xa4, 0xb1, 0x0c,
+	0x40, 0x0a, 0x04, 0x47, 0x73, 0x7d, 0x4a, 0x3c, 0x95, 0x5a, 0x13, 0xdb, 0x9c, 0x10, 0x43, 0x4c,
+	0x96, 0xf9, 0xca, 0x61, 0xfd, 0xe3, 0x5d, 0x0d, 0xf5, 0x34, 0xd7, 0x9f, 0x0e, 0xa6, 0x0e, 0x69,
+	0x3e, 0x5d, 0xff, 0xed, 0xcd, 0x22, 0x12, 0xce, 0x2d, 0x42, 0x68, 0x11, 0x81, 0x2a, 0x38, 0xd2,
+	0x6d, 0xcb, 0x77, 0x35, 0xdd, 0x57, 0x03, 0x49, 0x54, 0x6a, 0x78, 0xe2, 0x7e, 0x99, 0xaf, 0x3c,
+	0x6a, 0x3e, 0xdf, 0x2d, 0xab, 0x18, 0xd6, 0x7f, 0x90, 0x29, 0xe1, 0xdc, 0x32, 0x16, 0x0c, 0x0f,
+	0x19, 0xde, 0xcb, 0xe4, 0x4f, 0x3f, 0x97, 0x12, 0xd2, 0x3c, 0x09, 0x4e, 0x5a, 0x11, 0xe4, 0xff,
+	0xb1, 0xfe, 0xbb, 0x63, 0xbd, 0x00, 0x59, 0x97, 0x78, 0xf6, 0xd8, 0xd5, 0x49, 0x20, 0xe8, 0x3e,
+	0x13, 0xf4, 0xf3, 0xed, 0x62, 0xc2, 0xb0, 0x6a, 0x84, 0x2f, 0xbd, 0x4a, 0x60, 0xb0, 0xbc, 0x23,
+	0x03, 0xe6, 0x41, 0xf2, 0x56, 0xf3, 0x6e, 0xc5, 0x54, 0x99, 0xab, 0x64, 0x5e, 0x25, 0x30, 0xbb,
+	0xc1, 0x17, 0x00, 0xe8, 0xa6, 0xe6, 0x79, 0xaa, 0xa5, 0x8d, 0x88, 0x78, 0x10, 0x60, 0xcd, 0x93,
+	0xf9, 0xac, 0x74, 0xb4, 0x30, 0xc7, 0x0a, 0x93, 0x70, 0x86, 0x5d, 0x14, 0x6d, 0x44, 0xe0, 0x15,
+	0xc8, 0xb9, 0x44, 0xb7, 0x5d, 0x63, 0x6d, 0xb7, 0x34, 0xb3, 0xdb, 0xf9, 0xee, 0x71, 0x17, 0x96,
+	0x1d, 0xc6, 0xf2, 0x24, 0xfc, 0x51, 0x18, 0x89, 0x59, 0xad, 0x99, 0x06, 0xa9, 0xb0, 0x71, 0xe9,
+	0x37, 0x1e, 0x1c, 0xe3, 0x15, 0xe3, 0x3f, 0xb3, 0x1c, 0x04, 0x49, 0xa6, 0x48, 0xe0, 0xb5, 0x0c,
+	0x66, 0x67, 0xd8, 0x04, 0x29, 0x6a, 0x39, 0x63, 0x3f, 0xb4, 0x4d, 0xb6, 0x7e, 0xb6, 0x6b, 0xe0,
+	0x28, 0x60, 0xc5, 0xda, 0xc5, 0x8b, 0x4c, 0x78, 0x0e, 0x32, 0xfe, 0xd4, 0x21, 0xa1, 0xdc, 0x49,
+	0x26, 0x77, 0x7e, 0x3e, 0x2b, 0x09, 0x61, 0x63, 0x2b, 0x48, 0xc2, 0xe9, 0xe0, 0xcc, 0xc4, 0x56,
+	0x99, 0x0d, 0xc6, 0xa6, 0xaf, 0x06, 0x21, 0x66, 0x83, 0xc3, 0xfa, 0xa7, 0xbb, 0xdd, 0xff, 0x86,
+	0x5a, 0x34, 0xf8, 0x4d, 0xe6, 0xb8, 0x42, 0xcc, 0x1b, 0xcb, 0x22, 0x12, 0x73, 0xc6, 0xd8, 0xf4,
+	0x03, 0x0e, 0x34, 0xc1, 0x91, 0x4b, 0x3c, 0xc7, 0xb6, 0x3c, 0x7a, 0x6d, 0x12, 0x35, 0xb0, 0xe1,
+	0x94, 0xd9, 0xe4, 0x83, 0x3c, 0xfd, 0x6c, 0xfd, 0x94, 0x3c, 0xa8, 0x22, 0x61, 0x21, 0x12, 0x63,
+	0x39, 0xd2, 0xaf, 0x1c, 0x80, 0x0f, 0x05, 0x5a, 0x09, 0xce, 0x45, 0x04, 0x8f, 0x89, 0xb5, 0xf7,
+	0x41, 0x62, 0x75, 0x40, 0x66, 0xe1, 0x30, 0x6a, 0x88, 0x3c, 0xf3, 0xc3, 0x67, 0xdb, 0xbd, 0x20,
+	0xc4, 0xfc, 0x18, 0xee, 0x4b, 0x3a, 0xbc, 0x45, 0xb6, 0x25, 0x19, 0xdd, 0x96, 0x88, 0x2d, 0x7f,
+	0xe1, 0x40, 0x36, 0xf2, 0xd0, 0x6c, 0x6d, 0xbf, 0x1c, 0x7f, 0xb6, 0x78, 0x06, 0xc5, 0x5e, 0xa4,
+	0x2f, 0x41, 0xf6, 0x2d, 0xb9, 0xf6, 0xa8, 0x4f, 0xd4, 0xb1, 0x6b, 0x2e, 0xfc, 0x10, 0x19, 0x59,
+	0x04, 0x94, 0x30, 0x58, 0xdc, 0x86, 0xae, 0x09, 0xab, 0x20, 0x4d, 0x75, 0xdb, 0x62, 0x59, 0xfb,
+	0x2c, 0xeb, 0x78, 0x3e, 0x2b, 0xe5, 0xc2, 0xac, 0x25, 0x22, 0xe1, 0x83, 0xe0, 0x38, 0x74, 0xcd,
+	0x70, 0xab, 0xce, 0x7e, 0xe0, 0xc0, 0x61, 0xdc, 0x1f, 0xb0, 0x04, 0x9e, 0xb6, 0xe5, 0x0e, 0x52,
+	0xd0, 0x00, 0x75, 0x15, 0x75, 0x70, 0xd5, 0x93, 0xd5, 0xa1, 0xd2, 0xef, 0xc9, 0x2d, 0xd4, 0x41,
+	0x72, 0x5b, 0x48, 0xc0, 0x67, 0x40, 0xdc, 0x24, 0xf4, 0x70, 0xb7, 0xd7, 0xed, 0xcb, 0x6d, 0x81,
+	0x83, 0xa7, 0xa0, 0xb0, 0x89, 0x62, 0xb9, 0xd5, 0xc5, 0x6d, 0x61, 0x6f, 0x5b, 0xe9, 0x10, 0x53,
+	0x2f, 0x50, 0x7f, 0x20, 0xf0, 0x67, 0x7f, 0x73, 0x20, 0xb3, 0xf2, 0x51, 0x50, 0xaa, 0xd7, 0xc0,
+	0x83, 0xab, 0x6d, 0x4d, 0x3c, 0x01, 0x27, 0x11, 0xac, 0x8b, 0xd1, 0x57, 0x48, 0x69, 0x0c, 0xba,
+	0x58, 0xe0, 0xe0, 0x63, 0x70, 0x1c, 0x81, 0xfa, 0x32, 0xbe, 0x44, 0x2d, 0x19, 0x0b, 0x7b, 0x1b,
+	0x00, 0x52, 0x2e, 0xe5, 0x7e, 0x90, 0xc1, 0x43, 0x11, 0xe4, 0x23, 0x40, 0x6b, 0xd8, 0x1f, 0x74,
+	0xdb, 0xa8, 0xa1, 0x08, 0x49, 0x98, 0x07, 0x42, 0xf4, 0x67, 0xbe, 0x56, 0x64, 0x2c, 0xec, 0x6f,
+	0xf0, 0x1b, 0x9d, 0x0e, 0xba, 0x40, 0x8d, 0x81, 0x2c, 0xa4, 0x60, 0x01, 0xc0, 0x28, 0xff, 0xb5,
+	0x82, 0x9a, 0xc3, 0xbe, 0x70, 0xb0, 0xd1, 0x6e, 0x0f, 0x77, 0x2f, 0x65, 0xa5, 0xa1, 0xb4, 0x64,
+	0x21, 0xdd, 0xfc, 0xee, 0xdd, 0x5d, 0x91, 0x7b, 0x7f, 0x57, 0xe4, 0xfe, 0xba, 0x2b, 0x72, 0x3f,
+	0xde, 0x17, 0x13, 0xef, 0xef, 0x8b, 0x89, 0x3f, 0xee, 0x8b, 0x09, 0xf0, 0x84, 0xda, 0x3b, 0x96,
+	0xad, 0xc7, 0x7d, 0xf3, 0xe2, 0x86, 0xfa, 0xb7, 0xe3, 0xeb, 0xaa, 0x6e, 0x8f, 0x6a, 0x6b, 0xd2,
+	0x17, 0xd4, 0x8e, 0xdc, 0x6a, 0xdf, 0xaf, 0xbf, 0xe1, 0x82, 0x7d, 0xf0, 0xae, 0x53, 0xec, 0x5b,
+	0xec, 0xf9, 0x3f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x30, 0xc6, 0x53, 0x1d, 0xe7, 0x09, 0x00, 0x00,
 }
 
 func (m *ScopeSpecification) Marshal() (dAtA []byte, err error) {
@@ -929,7 +725,7 @@ func (m *ScopeSpecification) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *GroupSpecification) Marshal() (dAtA []byte, err error) {
+func (m *ContractSpecification) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -939,42 +735,44 @@ func (m *GroupSpecification) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *GroupSpecification) MarshalTo(dAtA []byte) (int, error) {
+func (m *ContractSpecification) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *GroupSpecification) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *ContractSpecification) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.ConsiderationSpecs) > 0 {
-		for iNdEx := len(m.ConsiderationSpecs) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.RecordSpecIds) > 0 {
+		for iNdEx := len(m.RecordSpecIds) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.ConsiderationSpecs[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
+				size := m.RecordSpecIds[iNdEx].Size()
+				i -= size
+				if _, err := m.RecordSpecIds[iNdEx].MarshalTo(dAtA[i:]); err != nil {
 					return 0, err
 				}
-				i -= size
 				i = encodeVarintSpecification(dAtA, i, uint64(size))
 			}
 			i--
-			dAtA[i] = 0x32
+			dAtA[i] = 0x42
 		}
 	}
-	if len(m.ConditionSpecs) > 0 {
-		for iNdEx := len(m.ConditionSpecs) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.ConditionSpecs[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintSpecification(dAtA, i, uint64(size))
+	if len(m.ClassName) > 0 {
+		i -= len(m.ClassName)
+		copy(dAtA[i:], m.ClassName)
+		i = encodeVarintSpecification(dAtA, i, uint64(len(m.ClassName)))
+		i--
+		dAtA[i] = 0x3a
+	}
+	if m.Source != nil {
+		{
+			size := m.Source.Size()
+			i -= size
+			if _, err := m.Source.MarshalTo(dAtA[i:]); err != nil {
+				return 0, err
 			}
-			i--
-			dAtA[i] = 0x2a
 		}
 	}
 	if len(m.PartiesInvolved) > 0 {
@@ -995,23 +793,18 @@ func (m *GroupSpecification) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x22
 	}
-	if len(m.InputSpecs) > 0 {
-		for iNdEx := len(m.InputSpecs) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.InputSpecs[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintSpecification(dAtA, i, uint64(size))
-			}
+	if len(m.OwnerAddresses) > 0 {
+		for iNdEx := len(m.OwnerAddresses) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.OwnerAddresses[iNdEx])
+			copy(dAtA[i:], m.OwnerAddresses[iNdEx])
+			i = encodeVarintSpecification(dAtA, i, uint64(len(m.OwnerAddresses[iNdEx])))
 			i--
 			dAtA[i] = 0x1a
 		}
 	}
-	if m.Definition != nil {
+	if m.Description != nil {
 		{
-			size, err := m.Definition.MarshalToSizedBuffer(dAtA[:i])
+			size, err := m.Description.MarshalToSizedBuffer(dAtA[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -1034,6 +827,39 @@ func (m *GroupSpecification) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *ContractSpecification_ResourceId) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ContractSpecification_ResourceId) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	{
+		size := m.ResourceId.Size()
+		i -= size
+		if _, err := m.ResourceId.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintSpecification(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x2a
+	return len(dAtA) - i, nil
+}
+func (m *ContractSpecification_Hash) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ContractSpecification_Hash) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	i -= len(m.Hash)
+	copy(dAtA[i:], m.Hash)
+	i = encodeVarintSpecification(dAtA, i, uint64(len(m.Hash)))
+	i--
+	dAtA[i] = 0x32
+	return len(dAtA) - i, nil
+}
 func (m *RecordSpecification) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1054,10 +880,58 @@ func (m *RecordSpecification) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.ResponsibleParty != 0 {
+		i = encodeVarintSpecification(dAtA, i, uint64(m.ResponsibleParty))
+		i--
+		dAtA[i] = 0x30
+	}
+	if m.ResultType != 0 {
+		i = encodeVarintSpecification(dAtA, i, uint64(m.ResultType))
+		i--
+		dAtA[i] = 0x28
+	}
+	if len(m.TypeName) > 0 {
+		i -= len(m.TypeName)
+		copy(dAtA[i:], m.TypeName)
+		i = encodeVarintSpecification(dAtA, i, uint64(len(m.TypeName)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.Inputs) > 0 {
+		for iNdEx := len(m.Inputs) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Inputs[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintSpecification(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if len(m.Name) > 0 {
+		i -= len(m.Name)
+		copy(dAtA[i:], m.Name)
+		i = encodeVarintSpecification(dAtA, i, uint64(len(m.Name)))
+		i--
+		dAtA[i] = 0x12
+	}
+	{
+		size := m.SpecificationId.Size()
+		i -= size
+		if _, err := m.SpecificationId.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintSpecification(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
-func (m *ContractSpec) Marshal() (dAtA []byte, err error) {
+func (m *InputSpecification) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1067,91 +941,75 @@ func (m *ContractSpec) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *ContractSpec) MarshalTo(dAtA []byte) (int, error) {
+func (m *InputSpecification) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *ContractSpec) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *InputSpecification) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.ConsiderationSpecs) > 0 {
-		for iNdEx := len(m.ConsiderationSpecs) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.ConsiderationSpecs[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintSpecification(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0x2a
-		}
-	}
-	if len(m.ConditionSpecs) > 0 {
-		for iNdEx := len(m.ConditionSpecs) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.ConditionSpecs[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintSpecification(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0x22
-		}
-	}
-	if len(m.PartiesInvolved) > 0 {
-		dAtA8 := make([]byte, len(m.PartiesInvolved)*10)
-		var j7 int
-		for _, num := range m.PartiesInvolved {
-			for num >= 1<<7 {
-				dAtA8[j7] = uint8(uint64(num)&0x7f | 0x80)
-				num >>= 7
-				j7++
-			}
-			dAtA8[j7] = uint8(num)
-			j7++
-		}
-		i -= j7
-		copy(dAtA[i:], dAtA8[:j7])
-		i = encodeVarintSpecification(dAtA, i, uint64(j7))
-		i--
-		dAtA[i] = 0x1a
-	}
-	if len(m.InputSpecs) > 0 {
-		for iNdEx := len(m.InputSpecs) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.InputSpecs[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintSpecification(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0x12
-		}
-	}
-	if m.Definition != nil {
+	if m.Source != nil {
 		{
-			size, err := m.Definition.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
+			size := m.Source.Size()
+			i -= size
+			if _, err := m.Source.MarshalTo(dAtA[i:]); err != nil {
 				return 0, err
 			}
-			i -= size
-			i = encodeVarintSpecification(dAtA, i, uint64(size))
 		}
+	}
+	if len(m.TypeName) > 0 {
+		i -= len(m.TypeName)
+		copy(dAtA[i:], m.TypeName)
+		i = encodeVarintSpecification(dAtA, i, uint64(len(m.TypeName)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Name) > 0 {
+		i -= len(m.Name)
+		copy(dAtA[i:], m.Name)
+		i = encodeVarintSpecification(dAtA, i, uint64(len(m.Name)))
 		i--
 		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
 
+func (m *InputSpecification_RecordId) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *InputSpecification_RecordId) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	{
+		size := m.RecordId.Size()
+		i -= size
+		if _, err := m.RecordId.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintSpecification(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	return len(dAtA) - i, nil
+}
+func (m *InputSpecification_Hash) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *InputSpecification_Hash) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	i -= len(m.Hash)
+	copy(dAtA[i:], m.Hash)
+	i = encodeVarintSpecification(dAtA, i, uint64(len(m.Hash)))
+	i--
+	dAtA[i] = 0x22
+	return len(dAtA) - i, nil
+}
 func (m *Description) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1192,235 +1050,6 @@ func (m *Description) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i = encodeVarintSpecification(dAtA, i, uint64(len(m.Description)))
 		i--
 		dAtA[i] = 0x1a
-	}
-	if len(m.Name) > 0 {
-		i -= len(m.Name)
-		copy(dAtA[i:], m.Name)
-		i = encodeVarintSpecification(dAtA, i, uint64(len(m.Name)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *Definition) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *Definition) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *Definition) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.DefinitionType != 0 {
-		i = encodeVarintSpecification(dAtA, i, uint64(m.DefinitionType))
-		i--
-		dAtA[i] = 0x20
-	}
-	if len(m.CreatorAddress) > 0 {
-		i -= len(m.CreatorAddress)
-		copy(dAtA[i:], m.CreatorAddress)
-		i = encodeVarintSpecification(dAtA, i, uint64(len(m.CreatorAddress)))
-		i--
-		dAtA[i] = 0x1a
-	}
-	if m.ResourceLocation != nil {
-		{
-			size, err := m.ResourceLocation.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintSpecification(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.Name) > 0 {
-		i -= len(m.Name)
-		copy(dAtA[i:], m.Name)
-		i = encodeVarintSpecification(dAtA, i, uint64(len(m.Name)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *Reference) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *Reference) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *Reference) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.TypeName) > 0 {
-		i -= len(m.TypeName)
-		copy(dAtA[i:], m.TypeName)
-		i = encodeVarintSpecification(dAtA, i, uint64(len(m.TypeName)))
-		i--
-		dAtA[i] = 0x32
-	}
-	if len(m.Name) > 0 {
-		i -= len(m.Name)
-		copy(dAtA[i:], m.Name)
-		i = encodeVarintSpecification(dAtA, i, uint64(len(m.Name)))
-		i--
-		dAtA[i] = 0x2a
-	}
-	if len(m.Hash) > 0 {
-		i -= len(m.Hash)
-		copy(dAtA[i:], m.Hash)
-		i = encodeVarintSpecification(dAtA, i, uint64(len(m.Hash)))
-		i--
-		dAtA[i] = 0x22
-	}
-	if len(m.GroupId) > 0 {
-		i -= len(m.GroupId)
-		copy(dAtA[i:], m.GroupId)
-		i = encodeVarintSpecification(dAtA, i, uint64(len(m.GroupId)))
-		i--
-		dAtA[i] = 0x1a
-	}
-	if len(m.ScopeId) > 0 {
-		i -= len(m.ScopeId)
-		copy(dAtA[i:], m.ScopeId)
-		i = encodeVarintSpecification(dAtA, i, uint64(len(m.ScopeId)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *ConditionSpec) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *ConditionSpec) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *ConditionSpec) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.OutputSpec != nil {
-		{
-			size, err := m.OutputSpec.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintSpecification(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x1a
-	}
-	if len(m.InputSpecs) > 0 {
-		for iNdEx := len(m.InputSpecs) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.InputSpecs[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintSpecification(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0x12
-		}
-	}
-	if len(m.Name) > 0 {
-		i -= len(m.Name)
-		copy(dAtA[i:], m.Name)
-		i = encodeVarintSpecification(dAtA, i, uint64(len(m.Name)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *ConsiderationSpec) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *ConsiderationSpec) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *ConsiderationSpec) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.OutputSpec != nil {
-		{
-			size, err := m.OutputSpec.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintSpecification(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x22
-	}
-	if len(m.InputSpecs) > 0 {
-		for iNdEx := len(m.InputSpecs) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.InputSpecs[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintSpecification(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0x1a
-		}
-	}
-	if m.ResponsibleParty != 0 {
-		i = encodeVarintSpecification(dAtA, i, uint64(m.ResponsibleParty))
-		i--
-		dAtA[i] = 0x10
 	}
 	if len(m.Name) > 0 {
 		i -= len(m.Name)
@@ -1477,7 +1106,7 @@ func (m *ScopeSpecification) Size() (n int) {
 	return n
 }
 
-func (m *GroupSpecification) Size() (n int) {
+func (m *ContractSpecification) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1485,13 +1114,13 @@ func (m *GroupSpecification) Size() (n int) {
 	_ = l
 	l = m.SpecificationId.Size()
 	n += 1 + l + sovSpecification(uint64(l))
-	if m.Definition != nil {
-		l = m.Definition.Size()
+	if m.Description != nil {
+		l = m.Description.Size()
 		n += 1 + l + sovSpecification(uint64(l))
 	}
-	if len(m.InputSpecs) > 0 {
-		for _, e := range m.InputSpecs {
-			l = e.Size()
+	if len(m.OwnerAddresses) > 0 {
+		for _, s := range m.OwnerAddresses {
+			l = len(s)
 			n += 1 + l + sovSpecification(uint64(l))
 		}
 	}
@@ -1502,14 +1131,15 @@ func (m *GroupSpecification) Size() (n int) {
 		}
 		n += 1 + sovSpecification(uint64(l)) + l
 	}
-	if len(m.ConditionSpecs) > 0 {
-		for _, e := range m.ConditionSpecs {
-			l = e.Size()
-			n += 1 + l + sovSpecification(uint64(l))
-		}
+	if m.Source != nil {
+		n += m.Source.Size()
 	}
-	if len(m.ConsiderationSpecs) > 0 {
-		for _, e := range m.ConsiderationSpecs {
+	l = len(m.ClassName)
+	if l > 0 {
+		n += 1 + l + sovSpecification(uint64(l))
+	}
+	if len(m.RecordSpecIds) > 0 {
+		for _, e := range m.RecordSpecIds {
 			l = e.Size()
 			n += 1 + l + sovSpecification(uint64(l))
 		}
@@ -1517,53 +1147,97 @@ func (m *GroupSpecification) Size() (n int) {
 	return n
 }
 
+func (m *ContractSpecification_ResourceId) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.ResourceId.Size()
+	n += 1 + l + sovSpecification(uint64(l))
+	return n
+}
+func (m *ContractSpecification_Hash) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Hash)
+	n += 1 + l + sovSpecification(uint64(l))
+	return n
+}
 func (m *RecordSpecification) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
+	l = m.SpecificationId.Size()
+	n += 1 + l + sovSpecification(uint64(l))
+	l = len(m.Name)
+	if l > 0 {
+		n += 1 + l + sovSpecification(uint64(l))
+	}
+	if len(m.Inputs) > 0 {
+		for _, e := range m.Inputs {
+			l = e.Size()
+			n += 1 + l + sovSpecification(uint64(l))
+		}
+	}
+	l = len(m.TypeName)
+	if l > 0 {
+		n += 1 + l + sovSpecification(uint64(l))
+	}
+	if m.ResultType != 0 {
+		n += 1 + sovSpecification(uint64(m.ResultType))
+	}
+	if m.ResponsibleParty != 0 {
+		n += 1 + sovSpecification(uint64(m.ResponsibleParty))
+	}
 	return n
 }
 
-func (m *ContractSpec) Size() (n int) {
+func (m *InputSpecification) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.Definition != nil {
-		l = m.Definition.Size()
+	l = len(m.Name)
+	if l > 0 {
 		n += 1 + l + sovSpecification(uint64(l))
 	}
-	if len(m.InputSpecs) > 0 {
-		for _, e := range m.InputSpecs {
-			l = e.Size()
-			n += 1 + l + sovSpecification(uint64(l))
-		}
+	l = len(m.TypeName)
+	if l > 0 {
+		n += 1 + l + sovSpecification(uint64(l))
 	}
-	if len(m.PartiesInvolved) > 0 {
-		l = 0
-		for _, e := range m.PartiesInvolved {
-			l += sovSpecification(uint64(e))
-		}
-		n += 1 + sovSpecification(uint64(l)) + l
-	}
-	if len(m.ConditionSpecs) > 0 {
-		for _, e := range m.ConditionSpecs {
-			l = e.Size()
-			n += 1 + l + sovSpecification(uint64(l))
-		}
-	}
-	if len(m.ConsiderationSpecs) > 0 {
-		for _, e := range m.ConsiderationSpecs {
-			l = e.Size()
-			n += 1 + l + sovSpecification(uint64(l))
-		}
+	if m.Source != nil {
+		n += m.Source.Size()
 	}
 	return n
 }
 
+func (m *InputSpecification_RecordId) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.RecordId.Size()
+	n += 1 + l + sovSpecification(uint64(l))
+	return n
+}
+func (m *InputSpecification_Hash) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Hash)
+	n += 1 + l + sovSpecification(uint64(l))
+	return n
+}
 func (m *Description) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1584,108 +1258,6 @@ func (m *Description) Size() (n int) {
 	}
 	l = len(m.IconUrl)
 	if l > 0 {
-		n += 1 + l + sovSpecification(uint64(l))
-	}
-	return n
-}
-
-func (m *Definition) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Name)
-	if l > 0 {
-		n += 1 + l + sovSpecification(uint64(l))
-	}
-	if m.ResourceLocation != nil {
-		l = m.ResourceLocation.Size()
-		n += 1 + l + sovSpecification(uint64(l))
-	}
-	l = len(m.CreatorAddress)
-	if l > 0 {
-		n += 1 + l + sovSpecification(uint64(l))
-	}
-	if m.DefinitionType != 0 {
-		n += 1 + sovSpecification(uint64(m.DefinitionType))
-	}
-	return n
-}
-
-func (m *Reference) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.ScopeId)
-	if l > 0 {
-		n += 1 + l + sovSpecification(uint64(l))
-	}
-	l = len(m.GroupId)
-	if l > 0 {
-		n += 1 + l + sovSpecification(uint64(l))
-	}
-	l = len(m.Hash)
-	if l > 0 {
-		n += 1 + l + sovSpecification(uint64(l))
-	}
-	l = len(m.Name)
-	if l > 0 {
-		n += 1 + l + sovSpecification(uint64(l))
-	}
-	l = len(m.TypeName)
-	if l > 0 {
-		n += 1 + l + sovSpecification(uint64(l))
-	}
-	return n
-}
-
-func (m *ConditionSpec) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Name)
-	if l > 0 {
-		n += 1 + l + sovSpecification(uint64(l))
-	}
-	if len(m.InputSpecs) > 0 {
-		for _, e := range m.InputSpecs {
-			l = e.Size()
-			n += 1 + l + sovSpecification(uint64(l))
-		}
-	}
-	if m.OutputSpec != nil {
-		l = m.OutputSpec.Size()
-		n += 1 + l + sovSpecification(uint64(l))
-	}
-	return n
-}
-
-func (m *ConsiderationSpec) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Name)
-	if l > 0 {
-		n += 1 + l + sovSpecification(uint64(l))
-	}
-	if m.ResponsibleParty != 0 {
-		n += 1 + sovSpecification(uint64(m.ResponsibleParty))
-	}
-	if len(m.InputSpecs) > 0 {
-		for _, e := range m.InputSpecs {
-			l = e.Size()
-			n += 1 + l + sovSpecification(uint64(l))
-		}
-	}
-	if m.OutputSpec != nil {
-		l = m.OutputSpec.Size()
 		n += 1 + l + sovSpecification(uint64(l))
 	}
 	return n
@@ -1952,7 +1524,7 @@ func (m *ScopeSpecification) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *GroupSpecification) Unmarshal(dAtA []byte) error {
+func (m *ContractSpecification) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1975,10 +1547,10 @@ func (m *GroupSpecification) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: GroupSpecification: wiretype end group for non-group")
+			return fmt.Errorf("proto: ContractSpecification: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: GroupSpecification: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: ContractSpecification: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2016,7 +1588,7 @@ func (m *GroupSpecification) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Definition", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Description", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -2043,18 +1615,18 @@ func (m *GroupSpecification) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Definition == nil {
-				m.Definition = &Definition{}
+			if m.Description == nil {
+				m.Description = &Description{}
 			}
-			if err := m.Definition.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.Description.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field InputSpecs", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field OwnerAddresses", wireType)
 			}
-			var msglen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowSpecification
@@ -2064,25 +1636,23 @@ func (m *GroupSpecification) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthSpecification
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthSpecification
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.InputSpecs = append(m.InputSpecs, &Definition{})
-			if err := m.InputSpecs[len(m.InputSpecs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.OwnerAddresses = append(m.OwnerAddresses, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
 		case 4:
 			if wireType == 0 {
@@ -2155,9 +1725,9 @@ func (m *GroupSpecification) Unmarshal(dAtA []byte) error {
 			}
 		case 5:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ConditionSpecs", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ResourceId", wireType)
 			}
-			var msglen int
+			var byteLen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowSpecification
@@ -2167,31 +1737,33 @@ func (m *GroupSpecification) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				byteLen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			if byteLen < 0 {
 				return ErrInvalidLengthSpecification
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + byteLen
 			if postIndex < 0 {
 				return ErrInvalidLengthSpecification
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ConditionSpecs = append(m.ConditionSpecs, &ConditionSpec{})
-			if err := m.ConditionSpecs[len(m.ConditionSpecs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			var vv MetadataAddress
+			v := &vv
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			m.Source = &ContractSpecification_ResourceId{*v}
 			iNdEx = postIndex
 		case 6:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ConsiderationSpecs", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Hash", wireType)
 			}
-			var msglen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowSpecification
@@ -2201,23 +1773,88 @@ func (m *GroupSpecification) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthSpecification
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthSpecification
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ConsiderationSpecs = append(m.ConsiderationSpecs, &ConsiderationSpec{})
-			if err := m.ConsiderationSpecs[len(m.ConsiderationSpecs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.Source = &ContractSpecification_Hash{string(dAtA[iNdEx:postIndex])}
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClassName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSpecification
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSpecification
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthSpecification
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ClassName = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RecordSpecIds", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSpecification
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthSpecification
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthSpecification
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			var v MetadataAddress
+			m.RecordSpecIds = append(m.RecordSpecIds, v)
+			if err := m.RecordSpecIds[len(m.RecordSpecIds)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2271,6 +1908,175 @@ func (m *RecordSpecification) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: RecordSpecification: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SpecificationId", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSpecification
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthSpecification
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthSpecification
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.SpecificationId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSpecification
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSpecification
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthSpecification
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Name = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Inputs", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSpecification
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSpecification
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthSpecification
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Inputs = append(m.Inputs, &InputSpecification{})
+			if err := m.Inputs[len(m.Inputs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSpecification
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSpecification
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthSpecification
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TypeName = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ResultType", wireType)
+			}
+			m.ResultType = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSpecification
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ResultType |= DefinitionType(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ResponsibleParty", wireType)
+			}
+			m.ResponsibleParty = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSpecification
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ResponsibleParty |= PartyType(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipSpecification(dAtA[iNdEx:])
@@ -2292,7 +2098,7 @@ func (m *RecordSpecification) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *ContractSpec) Unmarshal(dAtA []byte) error {
+func (m *InputSpecification) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2315,17 +2121,17 @@ func (m *ContractSpec) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: ContractSpec: wiretype end group for non-group")
+			return fmt.Errorf("proto: InputSpecification: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ContractSpec: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: InputSpecification: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Definition", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
 			}
-			var msglen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowSpecification
@@ -2335,33 +2141,29 @@ func (m *ContractSpec) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthSpecification
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthSpecification
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Definition == nil {
-				m.Definition = &Definition{}
-			}
-			if err := m.Definition.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.Name = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field InputSpecs", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeName", wireType)
 			}
-			var msglen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowSpecification
@@ -2371,100 +2173,65 @@ func (m *ContractSpec) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthSpecification
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthSpecification
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.InputSpecs = append(m.InputSpecs, &Definition{})
-			if err := m.InputSpecs[len(m.InputSpecs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.TypeName = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
-			if wireType == 0 {
-				var v PartyType
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowSpecification
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					v |= PartyType(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RecordId", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSpecification
 				}
-				m.PartiesInvolved = append(m.PartiesInvolved, v)
-			} else if wireType == 2 {
-				var packedLen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowSpecification
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					packedLen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if packedLen < 0 {
-					return ErrInvalidLengthSpecification
-				}
-				postIndex := iNdEx + packedLen
-				if postIndex < 0 {
-					return ErrInvalidLengthSpecification
-				}
-				if postIndex > l {
+				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
-				var elementCount int
-				if elementCount != 0 && len(m.PartiesInvolved) == 0 {
-					m.PartiesInvolved = make([]PartyType, 0, elementCount)
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
 				}
-				for iNdEx < postIndex {
-					var v PartyType
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowSpecification
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						v |= PartyType(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					m.PartiesInvolved = append(m.PartiesInvolved, v)
-				}
-			} else {
-				return fmt.Errorf("proto: wrong wireType = %d for field PartiesInvolved", wireType)
 			}
+			if byteLen < 0 {
+				return ErrInvalidLengthSpecification
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthSpecification
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			var vv MetadataAddress
+			v := &vv
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Source = &InputSpecification_RecordId{*v}
+			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ConditionSpecs", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Hash", wireType)
 			}
-			var msglen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowSpecification
@@ -2474,59 +2241,23 @@ func (m *ContractSpec) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthSpecification
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthSpecification
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ConditionSpecs = append(m.ConditionSpecs, &ConditionSpec{})
-			if err := m.ConditionSpecs[len(m.ConditionSpecs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 5:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ConsiderationSpecs", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSpecification
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthSpecification
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthSpecification
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ConsiderationSpecs = append(m.ConsiderationSpecs, &ConsiderationSpec{})
-			if err := m.ConsiderationSpecs[len(m.ConsiderationSpecs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.Source = &InputSpecification_Hash{string(dAtA[iNdEx:postIndex])}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -2705,708 +2436,6 @@ func (m *Description) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.IconUrl = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipSpecification(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthSpecification
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *Definition) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowSpecification
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: Definition: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Definition: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSpecification
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSpecification
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthSpecification
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Name = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ResourceLocation", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSpecification
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthSpecification
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthSpecification
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.ResourceLocation == nil {
-				m.ResourceLocation = &Reference{}
-			}
-			if err := m.ResourceLocation.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CreatorAddress", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSpecification
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSpecification
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthSpecification
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.CreatorAddress = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field DefinitionType", wireType)
-			}
-			m.DefinitionType = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSpecification
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.DefinitionType |= DefinitionType(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipSpecification(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthSpecification
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *Reference) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowSpecification
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: Reference: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Reference: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ScopeId", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSpecification
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSpecification
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthSpecification
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ScopeId = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field GroupId", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSpecification
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSpecification
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthSpecification
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.GroupId = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Hash", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSpecification
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSpecification
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthSpecification
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Hash = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 5:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSpecification
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSpecification
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthSpecification
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Name = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 6:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TypeName", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSpecification
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSpecification
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthSpecification
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.TypeName = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipSpecification(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthSpecification
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *ConditionSpec) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowSpecification
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: ConditionSpec: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ConditionSpec: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSpecification
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSpecification
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthSpecification
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Name = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field InputSpecs", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSpecification
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthSpecification
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthSpecification
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.InputSpecs = append(m.InputSpecs, &Definition{})
-			if err := m.InputSpecs[len(m.InputSpecs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field OutputSpec", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSpecification
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthSpecification
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthSpecification
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.OutputSpec == nil {
-				m.OutputSpec = &Definition{}
-			}
-			if err := m.OutputSpec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipSpecification(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthSpecification
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *ConsiderationSpec) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowSpecification
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: ConsiderationSpec: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ConsiderationSpec: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSpecification
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSpecification
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthSpecification
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Name = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ResponsibleParty", wireType)
-			}
-			m.ResponsibleParty = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSpecification
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.ResponsibleParty |= PartyType(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field InputSpecs", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSpecification
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthSpecification
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthSpecification
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.InputSpecs = append(m.InputSpecs, &Definition{})
-			if err := m.InputSpecs[len(m.InputSpecs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field OutputSpec", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSpecification
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthSpecification
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthSpecification
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.OutputSpec == nil {
-				m.OutputSpec = &Definition{}
-			}
-			if err := m.OutputSpec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

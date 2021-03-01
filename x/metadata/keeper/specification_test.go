@@ -14,12 +14,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
-type ScopeSpecKeeperTestSuite struct {
+type SpecKeeperTestSuite struct {
 	suite.Suite
 
 	app         *app.App
@@ -34,18 +35,19 @@ type ScopeSpecKeeperTestSuite struct {
 	user2     string
 	user2Addr sdk.AccAddress
 
-	specUUID uuid.UUID
-	specID   types.MetadataAddress
+	scopeSpecUUID uuid.UUID
+	scopeSpecID   types.MetadataAddress
 
-	contractSpecID1 types.MetadataAddress
-	contractSpecID2 types.MetadataAddress
+	contractSpecUUID1 uuid.UUID
+	contractSpecID1   types.MetadataAddress
+	contractSpecID2   types.MetadataAddress
 }
 
-func TestScopeSpecKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(ScopeSpecKeeperTestSuite))
+func TestSpecKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(SpecKeeperTestSuite))
 }
 
-func (s *ScopeSpecKeeperTestSuite) SetupTest() {
+func (s *SpecKeeperTestSuite) SetupTest() {
 	testApp := simapp.Setup(false)
 	ctx := testApp.BaseApp.NewContext(false, tmproto.Header{})
 
@@ -57,11 +59,12 @@ func (s *ScopeSpecKeeperTestSuite) SetupTest() {
 	s.user2Addr = sdk.AccAddress(s.pubkey2.Address())
 	s.user2 = s.user2Addr.String()
 
-	s.specUUID = uuid.New()
-	s.specID = types.ScopeSpecMetadataAddress(s.specUUID)
+	s.scopeSpecUUID = uuid.New()
+	s.scopeSpecID = types.ScopeSpecMetadataAddress(s.scopeSpecUUID)
 
-	s.contractSpecID1 = types.GroupSpecMetadataAddress(uuid.New())
-	s.contractSpecID2 = types.GroupSpecMetadataAddress(uuid.New())
+	s.contractSpecUUID1 = uuid.New()
+	s.contractSpecID1 = types.ContractSpecMetadataAddress(s.contractSpecUUID1)
+	s.contractSpecID2 = types.ContractSpecMetadataAddress(uuid.New())
 
 	s.app = testApp
 	s.ctx = ctx
@@ -96,9 +99,614 @@ func areEquivalentSetsOfMetaAddresses(arr1 []types.MetadataAddress, arr2 []types
 	return true
 }
 
-func (s *ScopeSpecKeeperTestSuite) TestGetSetDeleteScopeSpecification() {
+func (s *SpecKeeperTestSuite) TestGetSetDeleteContractSpecification() {
+	newSpec := types.NewContractSpecification(
+		s.contractSpecID1,
+		types.NewDescription(
+			"TestGetSetDeleteContractSpecification",
+			"A description for a unit test contract specification",
+			"http://test.net",
+			"http://test.net/ico.png",
+		),
+		[]string{s.user1Addr.String()},
+		[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+		types.NewSourceHash("somehash"),
+		"someclass",
+		[]types.MetadataAddress{},
+	)
+	require.NotNil(s.T(), newSpec, "test setup failure: NewContractSpecification should not return nil")
+
+	spec1, found1 := s.app.MetadataKeeper.GetContractSpecification(s.ctx, s.contractSpecID1)
+	s.False(found1, "1: get contract spec should return false before it has been saved")
+	s.NotNil(spec1, "1: get contract spec should always return a non-nil scope spec")
+
+	s.app.MetadataKeeper.SetContractSpecification(s.ctx, *newSpec)
+
+	spec2, found2 := s.app.MetadataKeeper.GetContractSpecification(s.ctx, s.contractSpecID1)
+	s.True(found2, "get contract spec should return true after it has been saved")
+	s.NotNil(spec2, "get contract spec should always return a non-nil scope spec")
+	s.Equal(s.contractSpecID1, spec2.SpecificationId, "2: get contract spec should return a spec containing id provided")
+
+	spec3, found3 := s.app.MetadataKeeper.GetContractSpecification(s.ctx, types.ContractSpecMetadataAddress(uuid.New()))
+	s.False(found3, "3: get contract spec should return false for an unknown address")
+	s.NotNil(spec3, "3: get contract spec should always return a non-nil scope spec")
+
+	s.app.MetadataKeeper.RemoveContractSpecification(s.ctx, newSpec.SpecificationId)
+
+	spec4, found4 := s.app.MetadataKeeper.GetContractSpecification(s.ctx, s.contractSpecID1)
+	s.False(found4, "4: get contract spec should return false after it has been deleted")
+	s.NotNil(spec4, "4: get contract spec should always return a non-nil scope spec")
+}
+
+func (s *SpecKeeperTestSuite) TestIterateContractSpecs() {
+	size := 10
+	specs := make([]*types.ContractSpecification, size)
+	for i := 0; i < size; i++ {
+		specs[i] = types.NewContractSpecification(
+			types.ScopeSpecMetadataAddress(uuid.New()),
+			types.NewDescription(
+				fmt.Sprintf("TestIterateContractSpecs[%d]", i),
+				fmt.Sprintf("The description for entry [%d] in a unit test contract specification", i),
+				fmt.Sprintf("http://%d.test.net", i),
+				fmt.Sprintf("http://%d.test.net/ico.png", i),
+			),
+			[]string{s.user1Addr.String()},
+			[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+			types.NewSourceHash(fmt.Sprintf("somehash%d", i)),
+			fmt.Sprintf("someclass_%d", i),
+			[]types.MetadataAddress{},
+		)
+		s.app.MetadataKeeper.SetContractSpecification(s.ctx, *specs[i])
+	}
+
+	visitedContractSpecIDs := make([]types.MetadataAddress, size)
+	count := 0
+	err1 := s.app.MetadataKeeper.IterateContractSpecs(s.ctx, func(spec types.ContractSpecification) (stop bool) {
+		if containsMetadataAddress(visitedContractSpecIDs, spec.SpecificationId) {
+			s.Fail("function IterateContractSpecs visited the same scope specification twice: %s", spec.SpecificationId.String())
+		}
+		visitedContractSpecIDs[count] = spec.SpecificationId
+		count++
+		return false
+	})
+	s.Nil(err1, "1: function IterateContractSpecs should not have returned an error")
+	s.Equal(size, count, "number of contract specs iterated through")
+
+	shortCount := 0
+	err2 := s.app.MetadataKeeper.IterateContractSpecs(s.ctx, func(spec types.ContractSpecification) (stop bool) {
+		shortCount++
+		if shortCount == 5 {
+			return true
+		}
+		return false
+	})
+	s.Nil(err2, "2: function IterateContractSpecs should not have returned an error")
+	s.Equal(5, shortCount, "function IterateContractSpecs ignored (stop bool) return value")
+}
+
+func (s *SpecKeeperTestSuite) TestIterateContractSpecsForOwner() {
+	// Create 5 contract specs. Two owned by user1, Two owned by user2, and One owned by both user1 and user2.
+	specs := make([]*types.ContractSpecification, 5)
+	user1SpecIDs := make([]types.MetadataAddress, 3)
+	user2SpecIDs := make([]types.MetadataAddress, 3)
+	specs[0] = types.NewContractSpecification(
+		types.ContractSpecMetadataAddress(uuid.New()),
+		types.NewDescription(
+			"TestIterateContractSpecsForOwner[0]",
+			"A description for a unit test contract specification - owner: user1",
+			"http://test.net",
+			"http://test.net/ico.png",
+		),
+		[]string{s.user1Addr.String()},
+		[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+		types.NewSourceHash("somehash0"),
+		"someclass_0",
+		[]types.MetadataAddress{},
+	)
+	user1SpecIDs[0] = specs[0].SpecificationId
+	specs[1] = types.NewContractSpecification(
+		types.ContractSpecMetadataAddress(uuid.New()),
+		types.NewDescription(
+			"TestIterateContractSpecsForOwner[1]",
+			"A description for a unit test contract specification - owner: user2",
+			"http://test.net",
+			"http://test.net/ico.png",
+		),
+		[]string{s.user2Addr.String()},
+		[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+		types.NewSourceHash("somehash1"),
+		"someclass_1",
+		[]types.MetadataAddress{},
+	)
+	user2SpecIDs[0] = specs[1].SpecificationId
+	specs[2] = types.NewContractSpecification(
+		types.ContractSpecMetadataAddress(uuid.New()),
+		types.NewDescription(
+			"TestIterateContractSpecsForOwner[2]",
+			"A description for a unit test contract specification - owner: user1",
+			"http://test.net",
+			"http://test.net/ico.png",
+		),
+		[]string{s.user1Addr.String()},
+		[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+		types.NewSourceHash("somehash2"),
+		"someclass_2",
+		[]types.MetadataAddress{},
+	)
+	user1SpecIDs[1] = specs[2].SpecificationId
+	specs[3] = types.NewContractSpecification(
+		types.ContractSpecMetadataAddress(uuid.New()),
+		types.NewDescription(
+			"TestIterateContractSpecsForOwner[3]",
+			"A description for a unit test contract specification - owner: user2",
+			"http://test.net",
+			"http://test.net/ico.png",
+		),
+		[]string{s.user2Addr.String()},
+		[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+		types.NewSourceHash("somehash3"),
+		"someclass_3",
+		[]types.MetadataAddress{},
+	)
+	user2SpecIDs[1] = specs[3].SpecificationId
+	specs[4] = types.NewContractSpecification(
+		types.ContractSpecMetadataAddress(uuid.New()),
+		types.NewDescription(
+			"TestIterateContractSpecsForOwner[4]",
+			"A description for a unit test contract specification - owners: user1, user2",
+			"http://test.net",
+			"http://test.net/ico.png",
+		),
+		[]string{s.user1Addr.String(), s.user2Addr.String()},
+		[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+		types.NewSourceHash("somehash4"),
+		"someclass_4",
+		[]types.MetadataAddress{},
+	)
+	user1SpecIDs[2] = specs[4].SpecificationId
+	user2SpecIDs[2] = specs[4].SpecificationId
+
+	for _, spec := range specs {
+		s.app.MetadataKeeper.SetContractSpecification(s.ctx, *spec)
+	}
+
+	// Make sure all user1 scope specs are iterated over
+	user1SpecIDsIterated := []types.MetadataAddress{}
+	errUser1 := s.app.MetadataKeeper.IterateContractSpecsForOwner(s.ctx, s.user1Addr, func(specID types.MetadataAddress) (stop bool) {
+		user1SpecIDsIterated = append(user1SpecIDsIterated, specID)
+		return false
+	})
+	s.Nil(errUser1, "user1: should not have returned an error")
+	s.Equal(3, len(user1SpecIDsIterated), "user1: iteration count")
+	s.True(areEquivalentSetsOfMetaAddresses(user1SpecIDs, user1SpecIDsIterated),
+		"user1: iterated over unexpected contract specs:\n  expected: %v\n    actual: %v\n",
+		user1SpecIDs, user1SpecIDsIterated)
+
+	// Make sure all user2 scope specs are iterated over
+	user2SpecIDsIterated := []types.MetadataAddress{}
+	errUser2 := s.app.MetadataKeeper.IterateContractSpecsForOwner(s.ctx, s.user2Addr, func(specID types.MetadataAddress) (stop bool) {
+		user2SpecIDsIterated = append(user2SpecIDsIterated, specID)
+		return false
+	})
+	s.Nil(errUser2, "user2: should not have returned an error")
+	s.Equal(3, len(user2SpecIDsIterated), "user2: iteration count")
+	s.True(areEquivalentSetsOfMetaAddresses(user2SpecIDs, user2SpecIDsIterated),
+		"user2: iterated over unexpected contract specs:\n  expected: %v\n    actual: %v\n",
+		user2SpecIDs, user2SpecIDsIterated)
+
+	// Make sure an unknown user address results in zero iterations.
+	user3Addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	user3Count := 0
+	errUser3 := s.app.MetadataKeeper.IterateContractSpecsForOwner(s.ctx, user3Addr, func(specID types.MetadataAddress) (stop bool) {
+		user3Count++
+		return false
+	})
+	s.Nil(errUser3, "user3: should not have returned an error")
+	s.Equal(0, user3Count, "user3: iteration count")
+
+	// Make sure the stop bool is being recognized.
+	countStop := 0
+	errStop := s.app.MetadataKeeper.IterateContractSpecsForOwner(s.ctx, s.user1Addr, func(specID types.MetadataAddress) (stop bool) {
+		countStop++
+		if countStop == 2 {
+			return true
+		}
+		return false
+	})
+	s.Nil(errStop, "stop bool: should not have returned an error")
+	s.Equal(2, countStop, "stop bool: iteration count")
+}
+
+func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
+	recordSpecIDe := s.contractSpecID1.GetRecordSpecAddress("exists")
+	recordSpecIDm := s.contractSpecID1.GetRecordSpecAddress("missing")
+
+	// Trick the store into thinking that recordSpecIDe exists.
+	metadataStoreKey := s.app.GetKey(types.StoreKey)
+	store := s.ctx.KVStore(metadataStoreKey)
+	store.Set(recordSpecIDe, []byte{0x01})
+
+	otherContractSpecID := types.ContractSpecMetadataAddress(uuid.New())
+	tests := []struct {
+		name        string
+		existing    *types.ContractSpecification
+		proposed    *types.ContractSpecification
+		signers     []string
+		want        string
+	}{
+		{
+			"existing specificationID does not match proposed specificationID causes error",
+			types.NewContractSpecification(
+				s.contractSpecID1,
+				types.NewDescription(
+					"TestValidateContractSpecUpdate",
+					"A description for a unit test contract specification",
+					"http://test.net",
+					"http://test.net/ico.png",
+				),
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				types.NewSourceHash("somehash"),
+				"someclass",
+				[]types.MetadataAddress{},
+			),
+			types.NewContractSpecification(
+				otherContractSpecID,
+				types.NewDescription(
+					"TestValidateContractSpecUpdate",
+					"A description for a unit test contract specification",
+					"http://test.net",
+					"http://test.net/ico.png",
+				),
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				types.NewSourceHash("somehash"),
+				"someclass",
+				[]types.MetadataAddress{},
+			),
+			[]string{s.user1Addr.String()},
+			fmt.Sprintf("cannot update contract spec identifier. expected %s, got %s",
+				s.contractSpecID1, otherContractSpecID),
+		},
+		{
+			"proposed basic validation causes error",
+			types.NewContractSpecification(
+				s.contractSpecID1,
+				types.NewDescription(
+					"TestValidateContractSpecUpdate",
+					"A description for a unit test contract specification",
+					"http://test.net",
+					"http://test.net/ico.png",
+				),
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				types.NewSourceHash("somehash"),
+				"someclass",
+				[]types.MetadataAddress{},
+			),
+			types.NewContractSpecification(
+				s.contractSpecID1,
+				types.NewDescription(
+					"TestValidateContractSpecUpdate",
+					"A description for a unit test contract specification",
+					"http://test.net",
+					"http://test.net/ico.png",
+				),
+				[]string{},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				types.NewSourceHash("somehash"),
+				"someclass",
+				[]types.MetadataAddress{},
+			),
+			[]string{s.user1Addr.String()},
+			"invalid owner addresses count (expected > 0 got: 0)",
+		},
+		{
+			"basic validation not done on existing",
+			types.NewContractSpecification(
+				s.contractSpecID1,
+				types.NewDescription(
+					"TestValidateContractSpecUpdate",
+					"A description for a unit test contract specification",
+					"http://test.net",
+					"http://test.net/ico.png",
+				),
+				[]string{},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				types.NewSourceHash("somehash"),
+				"someclass",
+				[]types.MetadataAddress{},
+			),
+			types.NewContractSpecification(
+				s.contractSpecID1,
+				types.NewDescription(
+					"TestValidateContractSpecUpdate",
+					"A description for a unit test contract specification",
+					"http://test.net",
+					"http://test.net/ico.png",
+				),
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				types.NewSourceHash("somehash"),
+				"someclass",
+				[]types.MetadataAddress{},
+			),
+			[]string{s.user1Addr.String()},
+			"",
+		},
+		{
+			"changing owner, only signed by new owner - error",
+			types.NewContractSpecification(
+				s.contractSpecID1,
+				types.NewDescription(
+					"TestValidateContractSpecUpdate",
+					"A description for a unit test contract specification",
+					"http://test.net",
+					"http://test.net/ico.png",
+				),
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				types.NewSourceHash("somehash"),
+				"someclass",
+				[]types.MetadataAddress{},
+			),
+			types.NewContractSpecification(
+				s.contractSpecID1,
+				types.NewDescription(
+					"TestValidateContractSpecUpdate",
+					"A description for a unit test contract specification",
+					"http://test.net",
+					"http://test.net/ico.png",
+				),
+				[]string{s.user2Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				types.NewSourceHash("somehash"),
+				"someclass",
+				[]types.MetadataAddress{},
+			),
+			[]string{s.user2Addr.String()},
+			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1Addr.String()),
+		},
+		{
+			"adding owner, only existing owner needs to sign",
+			types.NewContractSpecification(
+				s.contractSpecID1,
+				types.NewDescription(
+					"TestValidateContractSpecUpdate",
+					"A description for a unit test contract specification",
+					"http://test.net",
+					"http://test.net/ico.png",
+				),
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				types.NewSourceHash("somehash"),
+				"someclass",
+				[]types.MetadataAddress{},
+			),
+			types.NewContractSpecification(
+				s.contractSpecID1,
+				types.NewDescription(
+					"TestValidateContractSpecUpdate",
+					"A description for a unit test contract specification",
+					"http://test.net",
+					"http://test.net/ico.png",
+				),
+				[]string{s.user1Addr.String(), s.user2Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				types.NewSourceHash("somehash"),
+				"someclass",
+				[]types.MetadataAddress{},
+			),
+			[]string{s.user1Addr.String()},
+			"",
+		},
+		{
+			"adding owner, both signed - ok too",
+			types.NewContractSpecification(
+				s.contractSpecID1,
+				types.NewDescription(
+					"TestValidateContractSpecUpdate",
+					"A description for a unit test contract specification",
+					"http://test.net",
+					"http://test.net/ico.png",
+				),
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				types.NewSourceHash("somehash"),
+				"someclass",
+				[]types.MetadataAddress{},
+			),
+			types.NewContractSpecification(
+				s.contractSpecID1,
+				types.NewDescription(
+					"TestValidateContractSpecUpdate",
+					"A description for a unit test contract specification",
+					"http://test.net",
+					"http://test.net/ico.png",
+				),
+				[]string{s.user1Addr.String(), s.user2Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				types.NewSourceHash("somehash"),
+				"someclass",
+				[]types.MetadataAddress{},
+			),
+			[]string{s.user1Addr.String(), s.user2Addr.String()},
+			"",
+		},
+		{
+			"new entry, no signers required",
+			nil,
+			types.NewContractSpecification(
+				s.contractSpecID1,
+				types.NewDescription(
+					"TestValidateContractSpecUpdate",
+					"A description for a unit test contract specification",
+					"http://test.net",
+					"http://test.net/ico.png",
+				),
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				types.NewSourceHash("somehash"),
+				"someclass",
+				[]types.MetadataAddress{},
+			),
+			[]string{},
+			"",
+		},
+		{
+			"RecordSpecIds - proposed index 0 does not exist - fail",
+			types.NewContractSpecification(
+				s.contractSpecID1,
+				types.NewDescription(
+					"TestValidateContractSpecUpdate",
+					"A description for a unit test contract specification",
+					"http://test.net",
+					"http://test.net/ico.png",
+				),
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				types.NewSourceHash("somehash"),
+				"someclass",
+				[]types.MetadataAddress{},
+			),
+			types.NewContractSpecification(
+				s.contractSpecID1,
+				types.NewDescription(
+					"TestValidateContractSpecUpdate",
+					"A description for a unit test contract specification",
+					"http://test.net",
+					"http://test.net/ico.png",
+				),
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				types.NewSourceHash("somehash"),
+				"someclass",
+				[]types.MetadataAddress{recordSpecIDm},
+			),
+			[]string{s.user1Addr.String()},
+			fmt.Sprintf("no record spec exists with id %s", recordSpecIDm),
+		},
+		{
+			"RecordSpecIds - existing index 0 does not exist - ok",
+			types.NewContractSpecification(
+				s.contractSpecID1,
+				types.NewDescription(
+					"TestValidateContractSpecUpdate",
+					"A description for a unit test contract specification",
+					"http://test.net",
+					"http://test.net/ico.png",
+				),
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				types.NewSourceHash("somehash"),
+				"someclass",
+				[]types.MetadataAddress{recordSpecIDm},
+			),
+			types.NewContractSpecification(
+				s.contractSpecID1,
+				types.NewDescription(
+					"TestValidateContractSpecUpdate",
+					"A description for a unit test contract specification",
+					"http://test.net",
+					"http://test.net/ico.png",
+				),
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				types.NewSourceHash("somehash"),
+				"someclass",
+				[]types.MetadataAddress{},
+			),
+			[]string{s.user1Addr.String()},
+			"",
+		},
+		{
+			"RecordSpecIds - proposed index 0 does not exist - fail",
+			types.NewContractSpecification(
+				s.contractSpecID1,
+				types.NewDescription(
+					"TestValidateContractSpecUpdate",
+					"A description for a unit test contract specification",
+					"http://test.net",
+					"http://test.net/ico.png",
+				),
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				types.NewSourceHash("somehash"),
+				"someclass",
+				[]types.MetadataAddress{recordSpecIDe, recordSpecIDe},
+			),
+			types.NewContractSpecification(
+				s.contractSpecID1,
+				types.NewDescription(
+					"TestValidateContractSpecUpdate",
+					"A description for a unit test contract specification",
+					"http://test.net",
+					"http://test.net/ico.png",
+				),
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				types.NewSourceHash("somehash"),
+				"someclass",
+				[]types.MetadataAddress{recordSpecIDe, recordSpecIDe, recordSpecIDm},
+			),
+			[]string{s.user1Addr.String()},
+			fmt.Sprintf("no record spec exists with id %s", recordSpecIDm),
+		},
+		{
+			"RecordSpecIds - existing index 2 does not exist - ok",
+			types.NewContractSpecification(
+				s.contractSpecID1,
+				types.NewDescription(
+					"TestValidateContractSpecUpdate",
+					"A description for a unit test contract specification",
+					"http://test.net",
+					"http://test.net/ico.png",
+				),
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				types.NewSourceHash("somehash"),
+				"someclass",
+				[]types.MetadataAddress{recordSpecIDe, recordSpecIDe, recordSpecIDm},
+			),
+			types.NewContractSpecification(
+				s.contractSpecID1,
+				types.NewDescription(
+					"TestValidateContractSpecUpdate",
+					"A description for a unit test contract specification",
+					"http://test.net",
+					"http://test.net/ico.png",
+				),
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				types.NewSourceHash("somehash"),
+				"someclass",
+				[]types.MetadataAddress{recordSpecIDe, recordSpecIDe},
+			),
+			[]string{s.user1Addr.String()},
+			"",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		s.T().Run(tt.name, func(t *testing.T) {
+			err := s.app.MetadataKeeper.ValidateContractSpecUpdate(s.ctx, tt.existing, *tt.proposed, tt.signers)
+			if err != nil {
+				require.Equal(t, tt.want, err.Error(), "ScopeSpec Keeper ValidateContractSpecUpdate error")
+			} else if len(tt.want) > 0 {
+				t.Errorf("ScopeSpec Keeper ValidateContractSpecUpdate error = nil, expected: %s", tt.want)
+			}
+		})
+	}
+
+	// I'm not really sure what all gets shared between unit tests.
+	// So just to be on the safe side...
+	store.Delete(recordSpecIDe)
+}
+
+func (s *SpecKeeperTestSuite) TestGetSetDeleteScopeSpecification() {
 	newSpec := types.NewScopeSpecification(
-		s.specID,
+		s.scopeSpecID,
 		types.NewDescription(
 			"TestGetSetScopeSpecification",
 			"A description for a unit test scope specification",
@@ -109,31 +717,31 @@ func (s *ScopeSpecKeeperTestSuite) TestGetSetDeleteScopeSpecification() {
 		[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 		[]types.MetadataAddress{s.contractSpecID1},
 	)
-	s.NotNil(newSpec, "test setup failure: NewScopeSpecification should not return nil")
+	require.NotNil(s.T(), newSpec, "test setup failure: NewScopeSpecification should not return nil")
 
-	spec1, found1 := s.app.MetadataKeeper.GetScopeSpecification(s.ctx, s.specID)
+	spec1, found1 := s.app.MetadataKeeper.GetScopeSpecification(s.ctx, s.scopeSpecID)
 	s.False(found1, "1: get scope spec should return false before it has been saved")
 	s.NotNil(spec1, "1: get scope spec should always return a non-nil scope spec")
 
 	s.app.MetadataKeeper.SetScopeSpecification(s.ctx, *newSpec)
 
-	spec2, found2 := s.app.MetadataKeeper.GetScopeSpecification(s.ctx, s.specID)
+	spec2, found2 := s.app.MetadataKeeper.GetScopeSpecification(s.ctx, s.scopeSpecID)
 	s.True(found2, "get scope spec should return true after it has been saved")
 	s.NotNil(spec2, "get scope spec should always return a non-nil scope spec")
-	s.Equal(s.specID, spec2.SpecificationId, "2: get scope spec should return a spec containing id provided")
+	s.Equal(s.scopeSpecID, spec2.SpecificationId, "2: get scope spec should return a spec containing id provided")
 
 	spec3, found3 := s.app.MetadataKeeper.GetScopeSpecification(s.ctx, types.ScopeSpecMetadataAddress(uuid.New()))
 	s.False(found3, "3: get scope spec should return false for an unknown address")
 	s.NotNil(spec3, "3: get scope spec should always return a non-nil scope spec")
 
-	s.app.MetadataKeeper.DeleteScopeSpecification(s.ctx, newSpec.SpecificationId)
+	s.app.MetadataKeeper.RemoveScopeSpecification(s.ctx, newSpec.SpecificationId)
 
-	spec4, found4 := s.app.MetadataKeeper.GetScopeSpecification(s.ctx, s.specID)
+	spec4, found4 := s.app.MetadataKeeper.GetScopeSpecification(s.ctx, s.scopeSpecID)
 	s.False(found4, "4: get scope spec should return false after it has been deleted")
 	s.NotNil(spec4, "4: get scope spec should always return a non-nil scope spec")
 }
 
-func (s *ScopeSpecKeeperTestSuite) TestIterateScopeSpecs() {
+func (s *SpecKeeperTestSuite) TestIterateScopeSpecs() {
 	size := 10
 	scopeSpecs := make([]*types.ScopeSpecification, size)
 	for i := 0; i < size; i++ {
@@ -177,7 +785,7 @@ func (s *ScopeSpecKeeperTestSuite) TestIterateScopeSpecs() {
 	s.Equal(5, shortCount, "function IterateScopeSpecs ignored (stop bool) return value")
 }
 
-func (s *ScopeSpecKeeperTestSuite) TestIterateScopeSpecsForAddress() {
+func (s *SpecKeeperTestSuite) TestIterateScopeSpecsForOwner() {
 	// Create 5 scope specs. Two owned by user1, Two owned by user2, and One owned by both user1 and user2.
 	scopeSpecs := make([]*types.ScopeSpecification, 5)
 	user1ScopeSpecIDs := make([]types.MetadataAddress, 3)
@@ -185,7 +793,7 @@ func (s *ScopeSpecKeeperTestSuite) TestIterateScopeSpecsForAddress() {
 	scopeSpecs[0] = types.NewScopeSpecification(
 		types.ScopeSpecMetadataAddress(uuid.New()),
 		types.NewDescription(
-			"TestGetSetScopeSpecification[0]",
+			"TestIterateScopeSpecsForOwner[0]",
 			"A description for a unit test scope specification - owner: user1",
 			"http://test.net",
 			"http://test.net/ico.png",
@@ -198,7 +806,7 @@ func (s *ScopeSpecKeeperTestSuite) TestIterateScopeSpecsForAddress() {
 	scopeSpecs[1] = types.NewScopeSpecification(
 		types.ScopeSpecMetadataAddress(uuid.New()),
 		types.NewDescription(
-			"TestGetSetScopeSpecification[1]",
+			"TestIterateScopeSpecsForOwner[1]",
 			"A description for a unit test scope specification - owner: user2",
 			"http://test.net",
 			"http://test.net/ico.png",
@@ -211,7 +819,7 @@ func (s *ScopeSpecKeeperTestSuite) TestIterateScopeSpecsForAddress() {
 	scopeSpecs[2] = types.NewScopeSpecification(
 		types.ScopeSpecMetadataAddress(uuid.New()),
 		types.NewDescription(
-			"TestGetSetScopeSpecification[2]",
+			"TestIterateScopeSpecsForOwner[2]",
 			"A description for a unit test scope specification - owner: user1",
 			"http://test.net",
 			"http://test.net/ico.png",
@@ -224,7 +832,7 @@ func (s *ScopeSpecKeeperTestSuite) TestIterateScopeSpecsForAddress() {
 	scopeSpecs[3] = types.NewScopeSpecification(
 		types.ScopeSpecMetadataAddress(uuid.New()),
 		types.NewDescription(
-			"TestGetSetScopeSpecification[3]",
+			"TestIterateScopeSpecsForOwner[3]",
 			"A description for a unit test scope specification - owner: user2",
 			"http://test.net",
 			"http://test.net/ico.png",
@@ -237,7 +845,7 @@ func (s *ScopeSpecKeeperTestSuite) TestIterateScopeSpecsForAddress() {
 	scopeSpecs[4] = types.NewScopeSpecification(
 		types.ScopeSpecMetadataAddress(uuid.New()),
 		types.NewDescription(
-			"TestGetSetScopeSpecification[4]",
+			"TestIterateScopeSpecsForOwner[4]",
 			"A description for a unit test scope specification - owners: user1, user2",
 			"http://test.net",
 			"http://test.net/ico.png",
@@ -255,7 +863,7 @@ func (s *ScopeSpecKeeperTestSuite) TestIterateScopeSpecsForAddress() {
 
 	// Make sure all user1 scope specs are iterated over
 	user1ScopeSpecIDsIterated := []types.MetadataAddress{}
-	errUser1 := s.app.MetadataKeeper.IterateScopeSpecsForAddress(s.ctx, s.user1Addr, func(specID types.MetadataAddress) (stop bool) {
+	errUser1 := s.app.MetadataKeeper.IterateScopeSpecsForOwner(s.ctx, s.user1Addr, func(specID types.MetadataAddress) (stop bool) {
 		user1ScopeSpecIDsIterated = append(user1ScopeSpecIDsIterated, specID)
 		return false
 	})
@@ -267,7 +875,7 @@ func (s *ScopeSpecKeeperTestSuite) TestIterateScopeSpecsForAddress() {
 
 	// Make sure all user2 scope specs are iterated over
 	user2ScopeSpecIDsIterated := []types.MetadataAddress{}
-	errUser2 := s.app.MetadataKeeper.IterateScopeSpecsForAddress(s.ctx, s.user2Addr, func(specID types.MetadataAddress) (stop bool) {
+	errUser2 := s.app.MetadataKeeper.IterateScopeSpecsForOwner(s.ctx, s.user2Addr, func(specID types.MetadataAddress) (stop bool) {
 		user2ScopeSpecIDsIterated = append(user2ScopeSpecIDsIterated, specID)
 		return false
 	})
@@ -280,7 +888,7 @@ func (s *ScopeSpecKeeperTestSuite) TestIterateScopeSpecsForAddress() {
 	// Make sure an unknown user address results in zero iterations.
 	user3Addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	user3Count := 0
-	errUser3 := s.app.MetadataKeeper.IterateScopeSpecsForAddress(s.ctx, user3Addr, func(specID types.MetadataAddress) (stop bool) {
+	errUser3 := s.app.MetadataKeeper.IterateScopeSpecsForOwner(s.ctx, user3Addr, func(specID types.MetadataAddress) (stop bool) {
 		user3Count++
 		return false
 	})
@@ -289,7 +897,7 @@ func (s *ScopeSpecKeeperTestSuite) TestIterateScopeSpecsForAddress() {
 
 	// Make sure the stop bool is being recognized.
 	countStop := 0
-	errStop := s.app.MetadataKeeper.IterateScopeSpecsForAddress(s.ctx, s.user1Addr, func(specID types.MetadataAddress) (stop bool) {
+	errStop := s.app.MetadataKeeper.IterateScopeSpecsForOwner(s.ctx, s.user1Addr, func(specID types.MetadataAddress) (stop bool) {
 		countStop++
 		if countStop == 2 {
 			return true
@@ -300,7 +908,7 @@ func (s *ScopeSpecKeeperTestSuite) TestIterateScopeSpecsForAddress() {
 	s.Equal(2, countStop, "stop bool: iteration count")
 }
 
-func (s *ScopeSpecKeeperTestSuite) TestIterateScopeSpecsForContractSpec() {
+func (s *SpecKeeperTestSuite) TestIterateScopeSpecsForContractSpec() {
 	// Create 5 scope specs. Two with just contract spec 1, two with just contract spec 2, and one with both contract specs 1 and 2.
 	scopeSpecs := make([]*types.ScopeSpecification, 5)
 	contractSpec1ScopeSpecIDs := make([]types.MetadataAddress, 3)
@@ -401,7 +1009,7 @@ func (s *ScopeSpecKeeperTestSuite) TestIterateScopeSpecsForContractSpec() {
 		contractSpec2ScopeSpecIDs, contractSpec2ScopeSpecIDsIterated)
 
 	// Make sure an unknown contract spec results in zero iterations.
-	contractSpecID3 := types.GroupSpecMetadataAddress(uuid.New())
+	contractSpecID3 := types.ContractSpecMetadataAddress(uuid.New())
 	contractSpec3Count := 0
 	errContractSpec3 := s.app.MetadataKeeper.IterateScopeSpecsForContractSpec(s.ctx, contractSpecID3, func(specID types.MetadataAddress) (stop bool) {
 		contractSpec3Count++
@@ -423,7 +1031,7 @@ func (s *ScopeSpecKeeperTestSuite) TestIterateScopeSpecsForContractSpec() {
 	s.Equal(2, countStop, "stop bool: iteration count")
 }
 
-func (s *ScopeSpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
+func (s *SpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
 	// Trick the store into thinking that s.contractSpecID1 and s.contractSpecID2 exists.
 	metadataStoreKey := s.app.GetKey(types.StoreKey)
 	store := s.ctx.KVStore(metadataStoreKey)
@@ -431,7 +1039,7 @@ func (s *ScopeSpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
 	store.Set(s.contractSpecID2, []byte{0x01})
 
 	otherScopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
-	otherContractSpecID := types.GroupSpecMetadataAddress(uuid.New())
+	otherContractSpecID := types.ContractSpecMetadataAddress(uuid.New())
 	tests := []struct {
 		name        string
 		existing    *types.ScopeSpecification
@@ -442,7 +1050,7 @@ func (s *ScopeSpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
 		{
 			"existing specificationID does not match proposed specificationID causes error",
 			types.NewScopeSpecification(
-				s.specID,
+				s.scopeSpecID,
 				nil,
 				[]string{s.user1Addr.String()},
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
@@ -457,19 +1065,19 @@ func (s *ScopeSpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
 			),
 			[]string{s.user1Addr.String()},
 			fmt.Sprintf("cannot update scope spec identifier. expected %s, got %s",
-				s.specID, otherScopeSpecID),
+				s.scopeSpecID, otherScopeSpecID),
 		},
 		{
 			"proposed basic validation causes error",
 			types.NewScopeSpecification(
-				s.specID,
+				s.scopeSpecID,
 				nil,
 				[]string{s.user1Addr.String()},
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				[]types.MetadataAddress{s.contractSpecID1},
 			),
 			types.NewScopeSpecification(
-				s.specID,
+				s.scopeSpecID,
 				nil,
 				[]string{},
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
@@ -481,14 +1089,14 @@ func (s *ScopeSpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
 		{
 			"basic validation not done on existing",
 			types.NewScopeSpecification(
-				s.specID,
+				s.scopeSpecID,
 				nil,
 				[]string{s.user1Addr.String()},
 				[]types.PartyType{},
 				[]types.MetadataAddress{s.contractSpecID1},
 			),
 			types.NewScopeSpecification(
-				s.specID,
+				s.scopeSpecID,
 				nil,
 				[]string{s.user1Addr.String()},
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
@@ -500,14 +1108,14 @@ func (s *ScopeSpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
 		{
 			"changing owner, only signed by new owner - error",
 			types.NewScopeSpecification(
-				s.specID,
+				s.scopeSpecID,
 				nil,
 				[]string{s.user1Addr.String()},
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				[]types.MetadataAddress{s.contractSpecID1},
 			),
 			types.NewScopeSpecification(
-				s.specID,
+				s.scopeSpecID,
 				nil,
 				[]string{s.user2Addr.String()},
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
@@ -519,14 +1127,14 @@ func (s *ScopeSpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
 		{
 			"adding signer, only existing owner needs to sign",
 			types.NewScopeSpecification(
-				s.specID,
+				s.scopeSpecID,
 				nil,
 				[]string{s.user1Addr.String()},
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				[]types.MetadataAddress{s.contractSpecID1},
 			),
 			types.NewScopeSpecification(
-				s.specID,
+				s.scopeSpecID,
 				nil,
 				[]string{s.user1Addr.String(), s.user2Addr.String()},
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
@@ -538,14 +1146,14 @@ func (s *ScopeSpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
 		{
 			"adding signer, both signed - ok too",
 			types.NewScopeSpecification(
-				s.specID,
+				s.scopeSpecID,
 				nil,
 				[]string{s.user1Addr.String()},
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				[]types.MetadataAddress{s.contractSpecID1},
 			),
 			types.NewScopeSpecification(
-				s.specID,
+				s.scopeSpecID,
 				nil,
 				[]string{s.user1Addr.String(), s.user2Addr.String()},
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
@@ -555,16 +1163,29 @@ func (s *ScopeSpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
 			"",
 		},
 		{
+			"new entry, no signers required",
+			nil,
+			types.NewScopeSpecification(
+				s.scopeSpecID,
+				nil,
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				[]types.MetadataAddress{s.contractSpecID1},
+			),
+			[]string{},
+			"",
+		},
+		{
 			"adding unknown contract spec - error",
 			types.NewScopeSpecification(
-				s.specID,
+				s.scopeSpecID,
 				nil,
 				[]string{s.user1Addr.String()},
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				[]types.MetadataAddress{s.contractSpecID1},
 			),
 			types.NewScopeSpecification(
-				s.specID,
+				s.scopeSpecID,
 				nil,
 				[]string{s.user1Addr.String()},
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
@@ -576,14 +1197,14 @@ func (s *ScopeSpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
 		{
 			"adding known contract spec - ok",
 			types.NewScopeSpecification(
-				s.specID,
+				s.scopeSpecID,
 				nil,
 				[]string{s.user1Addr.String()},
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				[]types.MetadataAddress{s.contractSpecID1},
 			),
 			types.NewScopeSpecification(
-				s.specID,
+				s.scopeSpecID,
 				nil,
 				[]string{s.user1Addr.String()},
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
@@ -595,14 +1216,14 @@ func (s *ScopeSpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
 		{
 			"changing to known contract spec - ok",
 			types.NewScopeSpecification(
-				s.specID,
+				s.scopeSpecID,
 				nil,
 				[]string{s.user1Addr.String()},
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				[]types.MetadataAddress{s.contractSpecID1},
 			),
 			types.NewScopeSpecification(
-				s.specID,
+				s.scopeSpecID,
 				nil,
 				[]string{s.user1Addr.String()},
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
@@ -616,9 +1237,9 @@ func (s *ScopeSpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
 	for _, tt := range tests {
 		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidateScopeSpecUpdate(s.ctx, *tt.existing, *tt.proposed, tt.signers)
+			err := s.app.MetadataKeeper.ValidateScopeSpecUpdate(s.ctx, tt.existing, *tt.proposed, tt.signers)
 			if err != nil {
-				s.Equal(tt.want, err.Error(), "ScopeSpec Keeper ValidateScopeSpecUpdate error")
+				require.Equal(t, tt.want, err.Error(), "ScopeSpec Keeper ValidateScopeSpecUpdate error")
 			} else if len(tt.want) > 0 {
 				t.Errorf("ScopeSpec Keeper ValidateScopeSpecUpdate error = nil, expected: %s", tt.want)
 			}
@@ -631,101 +1252,76 @@ func (s *ScopeSpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
 	store.Delete(s.contractSpecID2)
 }
 
-func (s *ScopeSpecKeeperTestSuite) TestValidateScopeSpecAllOwnersAreSigners() {
-	scopeSpecOwnedByUser1 := types.NewScopeSpecification(
-		types.ScopeSpecMetadataAddress(uuid.New()),
-		types.NewDescription(
-			"TestGetSetScopeSpecification[0]",
-			"A description for a unit test scope specification - owner: user1",
-			"http://test.net",
-			"http://test.net/ico.png",
-		),
-		[]string{s.user1Addr.String()},
-		[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
-		[]types.MetadataAddress{s.contractSpecID1},
-	)
-	scopeSpecOwnedByBoth := types.NewScopeSpecification(
-		types.ScopeSpecMetadataAddress(uuid.New()),
-		types.NewDescription(
-			"TestGetSetScopeSpecification[4]",
-			"A description for a unit test scope specification - owners: user1, user2",
-			"http://test.net",
-			"http://test.net/ico.png",
-		),
-		[]string{s.user1Addr.String(), s.user2Addr.String()},
-		[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
-		[]types.MetadataAddress{s.contractSpecID1, s.contractSpecID2},
-	)
-
+func (s *SpecKeeperTestSuite) TestValidateAllOwnersAreSigners() {
 	tests := []struct {
 		name        string
-		scopeSpec   *types.ScopeSpecification
+		owners      []string
 		signers     []string
 		want        string
 	}{
 		{
 			"Scope Spec with 1 owner: no signers - error",
-			scopeSpecOwnedByUser1,
+			[]string{s.user1Addr.String()},
 			[]string{},
 			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1Addr.String()),
 		},
 		{
 			"Scope Spec with 1 owner: not in signers list - error",
-			scopeSpecOwnedByUser1,
+			[]string{s.user1Addr.String()},
 			[]string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()},
 			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1Addr.String()),
 		},
 		{
 			"Scope Spec with 1 owner: in signers list with non-owners - ok",
-			scopeSpecOwnedByUser1,
+			[]string{s.user1Addr.String()},
 			[]string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), s.user1Addr.String(), sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()},
 			"",
 		},
 		{
 			"Scope Spec with 1 owner: only signer in list - ok",
-			scopeSpecOwnedByUser1,
+			[]string{s.user1Addr.String()},
 			[]string{s.user1Addr.String()},
 			"",
 		},
 		{
 			"Scope Spec with 2 owners: no signers - error",
-			scopeSpecOwnedByBoth,
+			[]string{s.user1Addr.String(), s.user2Addr.String()},
 			[]string{},
 			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1Addr.String()),
 		},
 		{
 			"Scope Spec with 2 owners: neither in signers list - error",
-			scopeSpecOwnedByBoth,
+			[]string{s.user1Addr.String(), s.user2Addr.String()},
 			[]string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()},
 			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1Addr.String()),
 		},
 		{
 			"Scope Spec with 2 owners: one in signers list with non-owners - error",
-			scopeSpecOwnedByBoth,
+			[]string{s.user1Addr.String(), s.user2Addr.String()},
 			[]string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), s.user1Addr.String(), sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()},
 			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user2Addr.String()),
 		},
 		{
 			"Scope Spec with 2 owners: the other in signers list with non-owners - error",
-			scopeSpecOwnedByBoth,
+			[]string{s.user1Addr.String(), s.user2Addr.String()},
 			[]string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), s.user2Addr.String(), sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()},
 			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1Addr.String()),
 		},
 		{
 			"Scope Spec with 2 owners: both in signers list with non-owners - ok",
-			scopeSpecOwnedByBoth,
+			[]string{s.user1Addr.String(), s.user2Addr.String()},
 			[]string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), s.user2Addr.String(), sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), s.user1Addr.String()},
 			"",
 		},
 		{
 			"Scope Spec with 2 owners: only both in signers list - ok",
-			scopeSpecOwnedByBoth,
+			[]string{s.user1Addr.String(), s.user2Addr.String()},
 			[]string{s.user1Addr.String(), s.user2Addr.String()},
 			"",
 		},
 		{
 			"Scope Spec with 2 owners: only both in signers list, opposite order - ok",
-			scopeSpecOwnedByBoth,
+			[]string{s.user1Addr.String(), s.user2Addr.String()},
 			[]string{s.user2Addr.String(), s.user1Addr.String()},
 			"",
 		},
@@ -734,11 +1330,11 @@ func (s *ScopeSpecKeeperTestSuite) TestValidateScopeSpecAllOwnersAreSigners() {
 	for _, tt := range tests {
 		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidateScopeSpecAllOwnersAreSigners(*tt.scopeSpec, tt.signers)
+			err := s.app.MetadataKeeper.ValidateAllOwnersAreSigners(tt.owners, tt.signers)
 			if err != nil {
-				s.Equal(tt.want, err.Error(), "ScopeSpec Keeper ValidateScopeSpecAllOwnersAreSigners error")
+				require.Equal(t, tt.want, err.Error(), "ScopeSpec Keeper ValidateScopeSpecAllOwnersAreSigners error")
 			} else if len(tt.want) > 0 {
-				t.Errorf("ScopeSpec Keeper ValidateScopeSpecAllOwnersAreSigners error = nil, expected: %s", tt.want)
+				t.Errorf("ScopeSpec Keeper ValidateAllOwnersAreSigners error = nil, expected: %s", tt.want)
 			}
 		})
 	}

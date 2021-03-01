@@ -1,6 +1,7 @@
 package v040
 
 import (
+	"encoding/base64"
 	"fmt"
 	"time"
 
@@ -21,7 +22,8 @@ func Migrate(oldGenState v039metadata.GenesisState) *v040metadata.GenesisState {
 	var scopes = make([]v040metadata.Scope, len(oldGenState.ScopeRecords))
 	var groups = make([]v040metadata.RecordGroup, 0)
 	var records = make([]v040metadata.Record, 0)
-	var groupSpecs = make([]v040metadata.GroupSpecification, 0)
+	var contractSpecs = make([]v040metadata.ContractSpecification, 0)
+	var recordSpecs = make([]v040metadata.RecordSpecification, 0)
 
 	for i := range oldGenState.ScopeRecords {
 		s, g, r := convertScope(&oldGenState.ScopeRecords[i])
@@ -30,18 +32,23 @@ func Migrate(oldGenState v039metadata.GenesisState) *v040metadata.GenesisState {
 		records = append(records, r...)
 	}
 
-	// for i, spec := range oldGenState.Specifications {
-	// groupSpecs = append(groupSpecs, )
-	// todo convert spec v39 to v40
-	// }
+	for i := range oldGenState.Specifications {
+		c, r, e := convertContractSpec(&oldGenState.Specifications[i])
+		if e != nil {
+			panic(e)
+		}
+		contractSpecs = append(contractSpecs, c)
+		recordSpecs = append(recordSpecs, r...)
+	}
 
 	return &v040metadata.GenesisState{
 		Params: v040metadata.DefaultGenesisState().Params,
 
-		Scopes:              scopes,
-		Groups:              groups,
-		Records:             records,
-		GroupSpecifications: groupSpecs,
+		Scopes:                 scopes,
+		Groups:                 groups,
+		Records:                records,
+		ContractSpecifications: contractSpecs,
+		RecordSpecifications:   recordSpecs,
 	}
 }
 
@@ -85,7 +92,7 @@ func convertGroups(oldScopeUUID uuid.UUID, old []*v039metadata.RecordGroup) (new
 		newGroup[i].GroupId = v040metadata.GroupMetadataAddress(oldScopeUUID, uuid.MustParse(g.GroupUuid.Value))
 		newGroup[i].Name = g.Classname
 		newGroup[i].Parties = convertParties(g.Parties)
-		specAddr, err := v040metadata.ConvertHashToAddress(v040metadata.GroupSpecificationPrefix, g.Specification)
+		specAddr, err := v040metadata.ConvertHashToAddress(v040metadata.ContractSpecificationKeyPrefix, g.Specification)
 		if err != nil {
 			panic(err)
 		}
@@ -258,9 +265,11 @@ func BackportScope(
 		}
 
 		specHash := ""
-		spec, found := k.GetGroupSpecification(ctx, t.SpecificationId)
+		spec, found := k.GetContractSpecification(ctx, t.SpecificationId)
 		if found {
-			specHash = spec.Definition.ResourceLocation.Hash
+			// NOTE: this is not the expected value but we no longer have a definitive hash for a contract spec
+			// because it is mutable on chain now.
+			specHash = spec.GetHash()
 		}
 
 		oldGroups = append(oldGroups, &v039metadata.RecordGroup{
@@ -338,6 +347,94 @@ func backportParties(new []v040metadata.Party) (old []*v039metadata.Recital, err
 
 		// TODO consider including a context here to bring in the public keys by query of AccountKeeper
 		// old[i].Signer.SigningPublicKey
+	}
+	return
+}
+
+func convertContractSpec(old *v039metadata.ContractSpec) (
+	newSpec v040metadata.ContractSpecification,
+	newRecords []v040metadata.RecordSpecification,
+	err error,
+) {
+	raw, err := base64.StdEncoding.DecodeString(old.Definition.ResourceLocation.Ref.Hash)
+	if err != nil {
+		return newSpec, nil, err
+	}
+	specUUID, err := uuid.FromBytes(raw[0:16])
+	if err != nil {
+		return newSpec, nil, err
+	}
+	id := v040metadata.ContractSpecMetadataAddress(specUUID)
+
+	parties := make([]v040metadata.PartyType, len(old.PartiesInvolved))
+	for i := range old.PartiesInvolved {
+		parties[i] = v040metadata.PartyType(int32(old.PartiesInvolved[i]))
+	}
+
+	newSpec = v040metadata.ContractSpecification{
+		SpecificationId: id,
+		Description: &v040metadata.Description{
+			Name:        old.Definition.Name,
+			Description: old.Definition.ResourceLocation.Classname,
+		},
+		PartiesInvolved: parties,
+		// OwnerAddresses: -- TODO: there were no owners set on the v39 chain, maybe trace one from a group that used this spec?
+		Source: &v040metadata.ContractSpecification_Hash{
+			Hash: old.Definition.ResourceLocation.Ref.Hash,
+		},
+		ClassName:     old.Definition.ResourceLocation.Classname,
+		RecordSpecIds: make([]v040metadata.MetadataAddress, len(old.ConsiderationSpecs)),
+	}
+
+	newRecords = make([]v040metadata.RecordSpecification, len(old.ConsiderationSpecs))
+	for i := range old.ConsiderationSpecs {
+		newSpec.RecordSpecIds[i] = newSpec.SpecificationId.GetRecordSpecAddress(old.ConsiderationSpecs[i].OutputSpec.Spec.Name)
+		recordInputs, err := convertInputSpecs(old.ConsiderationSpecs[i].InputSpecs)
+		if err != nil {
+			return newSpec, nil, err
+		}
+		newRecords[i] = v040metadata.RecordSpecification{
+			SpecificationId:  newSpec.SpecificationId,
+			Name:             old.ConsiderationSpecs[i].OutputSpec.Spec.Name,
+			TypeName:         old.ConsiderationSpecs[i].OutputSpec.Spec.ResourceLocation.Classname,
+			ResultType:       v040metadata.DefinitionType(old.ConsiderationSpecs[i].OutputSpec.Spec.Type),
+			Inputs:           recordInputs,
+			ResponsibleParty: v040metadata.PartyType(old.ConsiderationSpecs[i].ResponsibleParty),
+		}
+	}
+
+	return newSpec, newRecords, nil
+}
+
+// converts a v39 DefinitionSpec used for inputs into a v40 input specification.
+func convertInputSpecs(old []*v039metadata.DefinitionSpec) (inputs []*v040metadata.InputSpecification, err error) {
+	inputs = make([]*v040metadata.InputSpecification, len(old))
+	for i, oldInput := range old {
+		if oldInput.ResourceLocation.Ref.ScopeUuid != nil &&
+			len(oldInput.ResourceLocation.Ref.ScopeUuid.Value) > 0 {
+			scopeUUID, err := uuid.Parse(oldInput.ResourceLocation.Ref.ScopeUuid.Value)
+			if err != nil {
+				return nil, err
+			}
+			if len(oldInput.ResourceLocation.Ref.Name) < 1 {
+				return nil, fmt.Errorf("must have a value for record name")
+			}
+			inputs[i] = &v040metadata.InputSpecification{
+				Name:     oldInput.Name,
+				TypeName: oldInput.ResourceLocation.Classname,
+				Source: &v040metadata.InputSpecification_RecordId{
+					RecordId: v040metadata.RecordMetadataAddress(scopeUUID, oldInput.ResourceLocation.Ref.Name),
+				},
+			}
+		} else {
+			inputs[i] = &v040metadata.InputSpecification{
+				Name:     oldInput.Name,
+				TypeName: oldInput.ResourceLocation.Classname,
+				Source: &v040metadata.InputSpecification_Hash{
+					Hash: oldInput.ResourceLocation.Ref.Hash,
+				},
+			}
+		}
 	}
 	return
 }

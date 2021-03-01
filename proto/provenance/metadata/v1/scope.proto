@@ -107,7 +107,7 @@ message RecordGroup {
     (gogoproto.customtype) = "MetadataAddress",
     (gogoproto.moretags)   = "json:\"group_id\" yaml:\"group_id\""
   ];
-  // unique id of the record group specification instance that was used to create this group.
+  // unique id of the contract specification that was used to create this group.
   bytes specification_id = 2 [
     (gogoproto.nullable)   = false,
     (gogoproto.customtype) = "MetadataAddress",

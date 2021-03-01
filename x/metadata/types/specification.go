@@ -11,10 +11,12 @@ import (
 
 const (
 	// TODO: Move these to params.
-	// Default max length for description.name
+	// Default max length for Description.Name
 	maxDescriptionNameLength = 200
-	// Default max length for description.description
+	// Default max length for Description.Description
 	maxDescriptionDescriptionLength = 5000
+	// Default max length for a ContractSpecification.ClassName
+	maxContractSpecificationClassNameLength = 1000
 	// Default max url length
 	maxURLLength = 2048
 )
@@ -75,9 +77,9 @@ func (s *ScopeSpecification) ValidateBasic() error {
 		if err != nil {
 			return fmt.Errorf("invalid contract specification id at index %d: %w", i, err)
 		}
-		if prefix != PrefixGroupSpecification {
+		if prefix != PrefixContractSpecification {
 			return fmt.Errorf("invalid contract specification id prefix at index %d (expected: %s, got %s)",
-				i, PrefixGroupSpecification, prefix)
+				i, PrefixContractSpecification, prefix)
 		}
 	}
 	return nil
@@ -87,6 +89,116 @@ func (s *ScopeSpecification) ValidateBasic() error {
 func (s ScopeSpecification) String() string {
 	out, _ := yaml.Marshal(s)
 	return string(out)
+}
+
+// NewScopeSpecification creates a new ScopeSpecification instance.
+func NewContractSpecification(
+	specificationID MetadataAddress,
+	description *Description,
+	ownerAddresses []string,
+	partiesInvolved []PartyType,
+	source isContractSpecification_Source,
+	className string,
+	recordSpecIDs []MetadataAddress,
+) *ContractSpecification {
+	return &ContractSpecification{
+		SpecificationId: specificationID,
+		Description:     description,
+		OwnerAddresses:  ownerAddresses,
+		PartiesInvolved: partiesInvolved,
+		Source:          source,
+		ClassName:       className,
+		RecordSpecIds:   recordSpecIDs,
+	}
+}
+
+// NewSourceResourceID creates a new source (for a ContractSpecification) with a resource id
+func NewSourceResourceID(resourceID MetadataAddress) *ContractSpecification_ResourceId {
+	return &ContractSpecification_ResourceId{ResourceId: resourceID}
+}
+
+// NewSourceHash creates a new source (for a ContractSpecification) with a hash
+func NewSourceHash(hash string) *ContractSpecification_Hash {
+	return &ContractSpecification_Hash{Hash: hash}
+}
+
+// ValidateBasic performs basic format checking of data in a ScopeSpecification
+func (s *ContractSpecification) ValidateBasic() error {
+	prefix, err := VerifyMetadataAddressFormat(s.SpecificationId)
+	if err != nil {
+		return fmt.Errorf("invalid contract specification id: %w", err)
+	}
+	if prefix != PrefixContractSpecification {
+		return fmt.Errorf("invalid contract specification id prefix (expected: %s, got %s)", PrefixContractSpecification, prefix)
+	}
+	contractSpecUUID, _ := s.SpecificationId.ContractSpecUUID()
+	if s.Description != nil {
+		err = s.Description.ValidateBasic("ContractSpecification.Description")
+		if err != nil {
+			return err
+		}
+	}
+	if len(s.OwnerAddresses) == 0 {
+		return fmt.Errorf("invalid owner addresses count (expected > 0 got: %d)", len(s.OwnerAddresses))
+	}
+	for i, owner := range s.OwnerAddresses {
+		if _, err = sdk.AccAddressFromBech32(owner); err != nil {
+			return fmt.Errorf("invalid owner address at index %d: %w", i, err)
+		}
+	}
+	if len(s.PartiesInvolved) == 0 {
+		return fmt.Errorf("invalid parties involved count (expected > 0 got: %d)", len(s.PartiesInvolved))
+	}
+	if s.Source == nil {
+		return errors.New("a source is required")
+	}
+	switch source := s.Source.(type) {
+	case *ContractSpecification_ResourceId:
+		_, err = VerifyMetadataAddressFormat(source.ResourceId)
+		if err != nil {
+			return fmt.Errorf("invalid source resource id: %w", err)
+		}
+	case *ContractSpecification_Hash:
+		if len(source.Hash) == 0 {
+			return errors.New("source hash cannot be empty")
+		}
+	default:
+		return errors.New("unknown source type")
+	}
+	if len(s.ClassName) == 0 {
+		return errors.New("class name cannot be empty")
+	}
+	if len(s.ClassName) > maxContractSpecificationClassNameLength {
+		return fmt.Errorf("class name exceeds maximum length (expected <= %d got: %d)",
+			maxContractSpecificationClassNameLength, len(s.ClassName))
+	}
+	for i, recordSpecID := range s.RecordSpecIds {
+		prefix, err = VerifyMetadataAddressFormat(recordSpecID)
+		if err != nil {
+			return fmt.Errorf("invalid record specification id at index %d: %w", i, err)
+		}
+		if prefix != PrefixRecordSpecification {
+			return fmt.Errorf("invalid record specification id prefix at index %d (expected: %s, got %s)",
+				i, PrefixRecordSpecification, prefix)
+		}
+		recSpecContractSpecUUID, _ := recordSpecID.ContractSpecUUID()
+		if recSpecContractSpecUUID != contractSpecUUID {
+			return fmt.Errorf("invalid record specification id contract specification uuid value at index %d (expected :%s, got %s)",
+				i, contractSpecUUID.String(), recSpecContractSpecUUID.String())
+		}
+	}
+	return nil
+}
+
+// String implements stringer interface
+func (s ContractSpecification) String() string {
+	out, _ := yaml.Marshal(s)
+	return string(out)
+}
+
+func (s *RecordSpecification) ValidateBasic() error {
+	// TODO: implement
+	return nil
 }
 
 // NewDescription creates a new Description instance.

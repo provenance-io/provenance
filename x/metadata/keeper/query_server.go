@@ -203,7 +203,7 @@ func (k Keeper) ValueOwnership(c context.Context, req *types.ValueOwnershipReque
 	return &types.ValueOwnershipResponse{ScopeUuids: scopes, Pagination: pageRes}, nil
 }
 
-// ScopeSpecification returns a specific scope by id
+// ScopeSpecification returns a specific scope specification by id
 func (k Keeper) ScopeSpecification(c context.Context, req *types.ScopeSpecificationRequest) (*types.ScopeSpecificationResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -226,4 +226,29 @@ func (k Keeper) ScopeSpecification(c context.Context, req *types.ScopeSpecificat
 	}
 
 	return &types.ScopeSpecificationResponse{ScopeSpecification: &spec}, nil
+}
+
+// ContractSpecification returns a specific scope specification by id
+func (k Keeper) ContractSpecification(c context.Context, req *types.ContractSpecificationRequest) (*types.ContractSpecificationResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if req.SpecificationUuid == "" {
+		return nil, status.Error(codes.InvalidArgument, "specification id cannot be empty")
+	}
+
+	id, err := uuid.Parse(req.SpecificationUuid)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid specification id: %s", err.Error())
+	}
+	addr := types.ContractSpecMetadataAddress(id)
+	ctx := sdk.UnwrapSDKContext(c)
+
+	spec, found := k.GetContractSpecification(ctx, addr)
+	if !found {
+		return nil, status.Errorf(codes.NotFound, "contract specification %s not found", req.SpecificationUuid)
+	}
+
+	return &types.ContractSpecificationResponse{ContractSpecification: &spec}, nil
 }

@@ -45,24 +45,31 @@ type MetadataKeeperI interface {
 	// IterateRecords processes all stored record for a scope with the given handler.
 	IterateRecords(sdk.Context, types.MetadataAddress, func(types.Record) bool) error
 
-	// GetGroupSpecification returns the record with the given address.
-	GetGroupSpecification(sdk.Context, types.MetadataAddress) (types.GroupSpecification, bool)
-	// SetGroupSpecification persists the provided group specification
-	SetGroupSpecification(sdk.Context, types.GroupSpecification)
-
 	// GetScopeSpecification returns the record with the given address.
 	GetScopeSpecification(sdk.Context, types.MetadataAddress) (types.ScopeSpecification, bool)
 	// SetScopeSpecification persists the provided scope specification
 	SetScopeSpecification(sdk.Context, types.ScopeSpecification)
-	// DeleteScopeSpecification deletes a scope specification from the module kv store.
-	DeleteScopeSpecification(ctx sdk.Context, id types.MetadataAddress)
+	// RemoveScopeSpecification removes a scope specification from the module kv store.
+	RemoveScopeSpecification(sdk.Context, types.MetadataAddress)
 
 	// IterateScopeSpecs processes all scope specs using a given handler.
 	IterateScopeSpecs(ctx sdk.Context, handler func(specification types.ScopeSpecification) (stop bool)) error
-	// IterateScopeSpecsForAddress processes all scope specs associated with an address using a given handler.
-	IterateScopeSpecsForAddress(ctx sdk.Context, address sdk.AccAddress, handler func(scopeSpecID types.MetadataAddress) (stop bool)) error
+	// IterateScopeSpecsForOwner processes all scope specs owned by an address using a given handler.
+	IterateScopeSpecsForOwner(ctx sdk.Context, ownerAddress sdk.AccAddress, handler func(scopeSpecID types.MetadataAddress) (stop bool)) error
 	// IterateScopeSpecsForContractSpec processes all scope specs associated with a contract spec id using a given handler.
 	IterateScopeSpecsForContractSpec(ctx sdk.Context, contractSpecID types.MetadataAddress, handler func(scopeSpecID types.MetadataAddress) (stop bool)) error
+
+	// GetContractSpecification returns the contract specification with the given address.
+	GetContractSpecification(sdk.Context, types.MetadataAddress) (types.ContractSpecification, bool)
+	// SetContractSpecification persists the provided contract specification
+	SetContractSpecification(sdk.Context, types.ContractSpecification)
+	// RemoveContractSpecification removes a contract specification from the module kv store.
+	RemoveContractSpecification(sdk.Context, types.MetadataAddress)
+
+	// IterateContractSpecs processes all contract specs using the given handler.
+	IterateContractSpecs(ctx sdk.Context, handler func(specification types.ContractSpecification) (stop bool)) error
+	// IterateContractSpecsForOwner processes all contract specs owned by an address using a given handler.
+	IterateContractSpecsForOwner(ctx sdk.Context, ownerAddress sdk.AccAddress, handler func(contractSpecID types.MetadataAddress) (stop bool)) error
 }
 
 // Keeper is the concrete state-based API for the metadata module.

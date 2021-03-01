@@ -70,7 +70,7 @@ func (s *scopeTestSuite) TestScopeValidateBasic() {
 		{
 			"invalid scope id - wrong address type",
 			NewScope(MetadataAddress(addr), ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
-			"invalid metadata address type (must be 0-4, actual: 133)",
+			"invalid metadata address type: 133",
 			true,
 		},
 		{
@@ -82,7 +82,7 @@ func (s *scopeTestSuite) TestScopeValidateBasic() {
 		{
 			"invalid spec id - wrong address type",
 			NewScope(ScopeMetadataAddress(uuid.New()), MetadataAddress(addr), []Party{}, []string{}, ""),
-			"invalid metadata address type (must be 0-4, actual: 133)",
+			"invalid metadata address type: 133",
 			true,
 		},
 		{
