@@ -145,8 +145,8 @@ func (s *SpecKeeperTestSuite) TestIterateContractSpecs() {
 		specs[i] = types.NewContractSpecification(
 			types.ScopeSpecMetadataAddress(uuid.New()),
 			types.NewDescription(
-				fmt.Sprintf("TestIterateScopeSpecs[%d]", i),
-				fmt.Sprintf("The description for entry [%d] in a unit test scope specification", i),
+				fmt.Sprintf("TestIterateContractSpecs[%d]", i),
+				fmt.Sprintf("The description for entry [%d] in a unit test contract specification", i),
 				fmt.Sprintf("http://%d.test.net", i),
 				fmt.Sprintf("http://%d.test.net/ico.png", i),
 			),
@@ -192,8 +192,8 @@ func (s *SpecKeeperTestSuite) TestIterateContractSpecsForAddress() {
 	specs[0] = types.NewContractSpecification(
 		types.ContractSpecMetadataAddress(uuid.New()),
 		types.NewDescription(
-			"TestGetSetScopeSpecification[0]",
-			"A description for a unit test scope specification - owner: user1",
+			"TestIterateContractSpecsForAddress[0]",
+			"A description for a unit test contract specification - owner: user1",
 			"http://test.net",
 			"http://test.net/ico.png",
 		),
@@ -207,8 +207,8 @@ func (s *SpecKeeperTestSuite) TestIterateContractSpecsForAddress() {
 	specs[1] = types.NewContractSpecification(
 		types.ContractSpecMetadataAddress(uuid.New()),
 		types.NewDescription(
-			"TestGetSetScopeSpecification[1]",
-			"A description for a unit test scope specification - owner: user2",
+			"TestIterateContractSpecsForAddress[1]",
+			"A description for a unit test contract specification - owner: user2",
 			"http://test.net",
 			"http://test.net/ico.png",
 		),
@@ -222,8 +222,8 @@ func (s *SpecKeeperTestSuite) TestIterateContractSpecsForAddress() {
 	specs[2] = types.NewContractSpecification(
 		types.ContractSpecMetadataAddress(uuid.New()),
 		types.NewDescription(
-			"TestGetSetScopeSpecification[2]",
-			"A description for a unit test scope specification - owner: user1",
+			"TestIterateContractSpecsForAddress[2]",
+			"A description for a unit test contract specification - owner: user1",
 			"http://test.net",
 			"http://test.net/ico.png",
 		),
@@ -237,8 +237,8 @@ func (s *SpecKeeperTestSuite) TestIterateContractSpecsForAddress() {
 	specs[3] = types.NewContractSpecification(
 		types.ContractSpecMetadataAddress(uuid.New()),
 		types.NewDescription(
-			"TestGetSetScopeSpecification[3]",
-			"A description for a unit test scope specification - owner: user2",
+			"TestIterateContractSpecsForAddress[3]",
+			"A description for a unit test contract specification - owner: user2",
 			"http://test.net",
 			"http://test.net/ico.png",
 		),
@@ -252,8 +252,8 @@ func (s *SpecKeeperTestSuite) TestIterateContractSpecsForAddress() {
 	specs[4] = types.NewContractSpecification(
 		types.ContractSpecMetadataAddress(uuid.New()),
 		types.NewDescription(
-			"TestGetSetScopeSpecification[4]",
-			"A description for a unit test scope specification - owners: user1, user2",
+			"TestIterateContractSpecsForAddress[4]",
+			"A description for a unit test contract specification - owners: user1, user2",
 			"http://test.net",
 			"http://test.net/ico.png",
 		),
@@ -339,7 +339,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 			types.NewContractSpecification(
 				s.contractSpecID1,
 				types.NewDescription(
-					"TestGetSetDeleteContractSpecification",
+					"TestValidateContractSpecUpdate",
 					"A description for a unit test contract specification",
 					"http://test.net",
 					"http://test.net/ico.png",
@@ -353,7 +353,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 			types.NewContractSpecification(
 				otherContractSpecID,
 				types.NewDescription(
-					"TestGetSetDeleteContractSpecification",
+					"TestValidateContractSpecUpdate",
 					"A description for a unit test contract specification",
 					"http://test.net",
 					"http://test.net/ico.png",
@@ -373,7 +373,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 			types.NewContractSpecification(
 				s.contractSpecID1,
 				types.NewDescription(
-					"TestGetSetDeleteContractSpecification",
+					"TestValidateContractSpecUpdate",
 					"A description for a unit test contract specification",
 					"http://test.net",
 					"http://test.net/ico.png",
@@ -387,7 +387,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 			types.NewContractSpecification(
 				s.contractSpecID1,
 				types.NewDescription(
-					"TestGetSetDeleteContractSpecification",
+					"TestValidateContractSpecUpdate",
 					"A description for a unit test contract specification",
 					"http://test.net",
 					"http://test.net/ico.png",
@@ -406,7 +406,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 			types.NewContractSpecification(
 				s.contractSpecID1,
 				types.NewDescription(
-					"TestGetSetDeleteContractSpecification",
+					"TestValidateContractSpecUpdate",
 					"A description for a unit test contract specification",
 					"http://test.net",
 					"http://test.net/ico.png",
@@ -420,7 +420,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 			types.NewContractSpecification(
 				s.contractSpecID1,
 				types.NewDescription(
-					"TestGetSetDeleteContractSpecification",
+					"TestValidateContractSpecUpdate",
 					"A description for a unit test contract specification",
 					"http://test.net",
 					"http://test.net/ico.png",
@@ -439,7 +439,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 			types.NewContractSpecification(
 				s.contractSpecID1,
 				types.NewDescription(
-					"TestGetSetDeleteContractSpecification",
+					"TestValidateContractSpecUpdate",
 					"A description for a unit test contract specification",
 					"http://test.net",
 					"http://test.net/ico.png",
@@ -453,7 +453,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 			types.NewContractSpecification(
 				s.contractSpecID1,
 				types.NewDescription(
-					"TestGetSetDeleteContractSpecification",
+					"TestValidateContractSpecUpdate",
 					"A description for a unit test contract specification",
 					"http://test.net",
 					"http://test.net/ico.png",
@@ -472,7 +472,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 			types.NewContractSpecification(
 				s.contractSpecID1,
 				types.NewDescription(
-					"TestGetSetDeleteContractSpecification",
+					"TestValidateContractSpecUpdate",
 					"A description for a unit test contract specification",
 					"http://test.net",
 					"http://test.net/ico.png",
@@ -486,7 +486,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 			types.NewContractSpecification(
 				s.contractSpecID1,
 				types.NewDescription(
-					"TestGetSetDeleteContractSpecification",
+					"TestValidateContractSpecUpdate",
 					"A description for a unit test contract specification",
 					"http://test.net",
 					"http://test.net/ico.png",
@@ -505,7 +505,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 			types.NewContractSpecification(
 				s.contractSpecID1,
 				types.NewDescription(
-					"TestGetSetDeleteContractSpecification",
+					"TestValidateContractSpecUpdate",
 					"A description for a unit test contract specification",
 					"http://test.net",
 					"http://test.net/ico.png",
@@ -519,7 +519,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 			types.NewContractSpecification(
 				s.contractSpecID1,
 				types.NewDescription(
-					"TestGetSetDeleteContractSpecification",
+					"TestValidateContractSpecUpdate",
 					"A description for a unit test contract specification",
 					"http://test.net",
 					"http://test.net/ico.png",
@@ -538,7 +538,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 			types.NewContractSpecification(
 				s.contractSpecID1,
 				types.NewDescription(
-					"TestGetSetDeleteContractSpecification",
+					"TestValidateContractSpecUpdate",
 					"A description for a unit test contract specification",
 					"http://test.net",
 					"http://test.net/ico.png",
@@ -552,7 +552,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 			types.NewContractSpecification(
 				s.contractSpecID1,
 				types.NewDescription(
-					"TestGetSetDeleteContractSpecification",
+					"TestValidateContractSpecUpdate",
 					"A description for a unit test contract specification",
 					"http://test.net",
 					"http://test.net/ico.png",
@@ -571,7 +571,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 			types.NewContractSpecification(
 				s.contractSpecID1,
 				types.NewDescription(
-					"TestGetSetDeleteContractSpecification",
+					"TestValidateContractSpecUpdate",
 					"A description for a unit test contract specification",
 					"http://test.net",
 					"http://test.net/ico.png",
@@ -585,7 +585,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 			types.NewContractSpecification(
 				s.contractSpecID1,
 				types.NewDescription(
-					"TestGetSetDeleteContractSpecification",
+					"TestValidateContractSpecUpdate",
 					"A description for a unit test contract specification",
 					"http://test.net",
 					"http://test.net/ico.png",
@@ -604,7 +604,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 			types.NewContractSpecification(
 				s.contractSpecID1,
 				types.NewDescription(
-					"TestGetSetDeleteContractSpecification",
+					"TestValidateContractSpecUpdate",
 					"A description for a unit test contract specification",
 					"http://test.net",
 					"http://test.net/ico.png",
@@ -618,7 +618,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 			types.NewContractSpecification(
 				s.contractSpecID1,
 				types.NewDescription(
-					"TestGetSetDeleteContractSpecification",
+					"TestValidateContractSpecUpdate",
 					"A description for a unit test contract specification",
 					"http://test.net",
 					"http://test.net/ico.png",
@@ -637,7 +637,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 			types.NewContractSpecification(
 				s.contractSpecID1,
 				types.NewDescription(
-					"TestGetSetDeleteContractSpecification",
+					"TestValidateContractSpecUpdate",
 					"A description for a unit test contract specification",
 					"http://test.net",
 					"http://test.net/ico.png",
@@ -651,7 +651,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 			types.NewContractSpecification(
 				s.contractSpecID1,
 				types.NewDescription(
-					"TestGetSetDeleteContractSpecification",
+					"TestValidateContractSpecUpdate",
 					"A description for a unit test contract specification",
 					"http://test.net",
 					"http://test.net/ico.png",
