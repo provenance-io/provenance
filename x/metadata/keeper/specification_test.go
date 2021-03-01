@@ -1163,6 +1163,19 @@ func (s *SpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
 			"",
 		},
 		{
+			"new entry, no signers required",
+			nil,
+			types.NewScopeSpecification(
+				s.scopeSpecID,
+				nil,
+				[]string{s.user1Addr.String()},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				[]types.MetadataAddress{s.contractSpecID1},
+			),
+			[]string{},
+			"",
+		},
+		{
 			"adding unknown contract spec - error",
 			types.NewScopeSpecification(
 				s.scopeSpecID,
@@ -1224,7 +1237,7 @@ func (s *SpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
 	for _, tt := range tests {
 		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidateScopeSpecUpdate(s.ctx, *tt.existing, *tt.proposed, tt.signers)
+			err := s.app.MetadataKeeper.ValidateScopeSpecUpdate(s.ctx, tt.existing, *tt.proposed, tt.signers)
 			if err != nil {
 				require.Equal(t, tt.want, err.Error(), "ScopeSpec Keeper ValidateScopeSpecUpdate error")
 			} else if len(tt.want) > 0 {

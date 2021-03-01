@@ -152,12 +152,15 @@ func (k msgServer) AddScopeSpecification(
 ) (*types.MsgAddScopeSpecificationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	existing, _ := k.GetScopeSpecification(ctx, msg.Specification.SpecificationId)
-	if err := k.ValidateScopeSpecUpdate(ctx, existing, *msg.Specification, msg.Signers); err != nil {
+	var existing *types.ScopeSpecification = nil
+	if e, found := k.GetScopeSpecification(ctx, msg.Specification.SpecificationId); found {
+		existing = &e
+	}
+	if err := k.ValidateScopeSpecUpdate(ctx, existing, msg.Specification, msg.Signers); err != nil {
 		return nil, err
 	}
 
-	k.SetScopeSpecification(ctx, *msg.Specification)
+	k.SetScopeSpecification(ctx, msg.Specification)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(

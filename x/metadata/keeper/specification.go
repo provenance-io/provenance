@@ -345,13 +345,11 @@ func (k Keeper) isScopeSpecUsed(ctx sdk.Context, scopeSpecID types.MetadataAddre
 }
 
 // ValidateScopeSpecUpdate - full validation of a scope specification.
-func (k Keeper) ValidateScopeSpecUpdate(ctx sdk.Context, existing, proposed types.ScopeSpecification, signers []string) error {
-	// IDS must match
-	if len(existing.SpecificationId) > 0 {
-		if !proposed.SpecificationId.Equals(existing.SpecificationId) {
-			return fmt.Errorf("cannot update scope spec identifier. expected %s, got %s",
-				existing.SpecificationId, proposed.SpecificationId)
-		}
+func (k Keeper) ValidateScopeSpecUpdate(ctx sdk.Context, existing *types.ScopeSpecification, proposed types.ScopeSpecification, signers []string) error {
+	// IDS must match if there's an existing entry
+	if existing != nil && !proposed.SpecificationId.Equals(existing.SpecificationId) {
+		return fmt.Errorf("cannot update scope spec identifier. expected %s, got %s",
+			existing.SpecificationId, proposed.SpecificationId)
 	}
 
 	// Must pass basic validation.
@@ -360,8 +358,10 @@ func (k Keeper) ValidateScopeSpecUpdate(ctx sdk.Context, existing, proposed type
 	}
 
 	// Signatures required of all existing data owners.
-	if err := k.ValidateAllOwnersAreSigners(existing.OwnerAddresses, signers); err != nil {
-		return err
+	if existing != nil {
+		if err := k.ValidateAllOwnersAreSigners(existing.OwnerAddresses, signers); err != nil {
+			return err
+		}
 	}
 
 	store := ctx.KVStore(k.storeKey)

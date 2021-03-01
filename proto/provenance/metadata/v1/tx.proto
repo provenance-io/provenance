@@ -165,7 +165,7 @@ message MsgAddScopeSpecificationRequest {
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-  ScopeSpecification specification = 1;
+  ScopeSpecification specification = 1 [(gogoproto.nullable) = false];
   repeated string    signers       = 2;
 }
 
