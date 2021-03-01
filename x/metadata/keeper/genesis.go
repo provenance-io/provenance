@@ -36,6 +36,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 			k.SetContractSpecification(ctx, s)
 		}
 	}
+	// TODO: data.RecordSpecifications
 }
 
 // ExportGenesis exports the current keeper state of the metadata module.ExportGenesis
