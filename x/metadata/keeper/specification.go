@@ -82,8 +82,8 @@ func (k Keeper) SetContractSpecification(ctx sdk.Context, spec types.ContractSpe
 	)
 }
 
-// DeleteContractSpecification deletes a contract specification from the module kv store.
-func (k Keeper) DeleteContractSpecification(ctx sdk.Context, contractSpecID types.MetadataAddress) {
+// RemoveContractSpecification removes a contract specification from the module kv store.
+func (k Keeper) RemoveContractSpecification(ctx sdk.Context, contractSpecID types.MetadataAddress) {
 	store := ctx.KVStore(k.storeKey)
 
 	contractSpec, found := k.GetContractSpecification(ctx, contractSpecID)
