@@ -260,6 +260,9 @@ func (s *RecordSpecification) ValidateBasic() error {
 		return fmt.Errorf("record specification type name exceeds maximum length (expected <= %d got: %d)",
 			maxRecordSpecificationTypeNameLength, len(s.TypeName))
 	}
+	if len(s.ResponsibleParties) == 0 {
+		return fmt.Errorf("invalid responsible parties count (expected > 0 got: %d)", len(s.ResponsibleParties))
+	}
 	return nil
 }
 
