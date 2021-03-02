@@ -11,12 +11,21 @@ import (
 
 const (
 	// TODO: Move these to params.
+
 	// Default max length for Description.Name
 	maxDescriptionNameLength = 200
 	// Default max length for Description.Description
 	maxDescriptionDescriptionLength = 5000
 	// Default max length for a ContractSpecification.ClassName
 	maxContractSpecificationClassNameLength = 1000
+	// Default max length for RecordSpecification.Name
+	maxRecordSpecificationNameLength = 200
+	// Default max length for a RecordSpecification.TypeName
+	maxRecordSpecificationTypeNameLength = 1000
+	// Default max length for InputSpecification.Name
+	maxInputSpecificationNameLength = 200
+	// Default max length for a InputSpecification.TypeName
+	maxInputSpecificationTypeNameLength = 1000
 	// Default max url length
 	maxURLLength = 2048
 )
@@ -206,18 +215,51 @@ func NewRecordSpecification(
 	responsibleParty PartyType,
 ) *RecordSpecification {
 	return &RecordSpecification{
-		SpecificationId: specificationID,
-		Name: name,
-		Inputs: inputs,
-		TypeName: typeName,
-		ResultType: resultType,
+		SpecificationId:  specificationID,
+		Name:             name,
+		Inputs:           inputs,
+		TypeName:         typeName,
+		ResultType:       resultType,
 		ResponsibleParty: responsibleParty,
 	}
 }
 
 // ValidateBasic performs basic format checking of data in a RecordSpecification
 func (s *RecordSpecification) ValidateBasic() error {
-	// TODO: implement
+	prefix, err := VerifyMetadataAddressFormat(s.SpecificationId)
+	if err != nil {
+		return fmt.Errorf("invalid record specification id: %w", err)
+	}
+	if prefix != PrefixRecordSpecification {
+		return fmt.Errorf("invalid record specification id prefix (expected: %s, got %s)",
+			PrefixRecordSpecification, prefix)
+	}
+	if len(s.Name) == 0 {
+		return errors.New("record specification name cannot be empty")
+	}
+	if len(s.Name) > maxRecordSpecificationNameLength {
+		return fmt.Errorf("record specification name exceeds maximum length (expected <= %d got: %d)",
+			maxRecordSpecificationNameLength, len(s.Name))
+	}
+	// Make sure the provided specification id is correct.
+	contractSpecUUID, _ := s.SpecificationId.ContractSpecUUID()
+	expectedID := RecordSpecMetadataAddress(contractSpecUUID, s.Name)
+	if !s.SpecificationId.Equals(expectedID) {
+		return fmt.Errorf("invalid record specification id value (expected: %s, got %s)",
+			expectedID, s.SpecificationId)
+	}
+	for i, inputSpec := range s.Inputs {
+		if err := inputSpec.ValidateBasic(); err != nil {
+			return fmt.Errorf("invalid input specification at index %d: %w", i, err)
+		}
+	}
+	if len(s.TypeName) == 0 {
+		return errors.New("record specification type name cannot be empty")
+	}
+	if len(s.TypeName) > maxRecordSpecificationTypeNameLength {
+		return fmt.Errorf("record specification type name exceeds maximum length (expected <= %d got: %d)",
+			maxRecordSpecificationTypeNameLength, len(s.TypeName))
+	}
 	return nil
 }
 
@@ -234,9 +276,9 @@ func NewInputSpecification(
 	source isInputSpecification_Source,
 ) *InputSpecification {
 	return &InputSpecification{
-		Name: name,
-		TypeName: name,
-		Source: source,
+		Name:     name,
+		TypeName: typeName,
+		Source:   source,
 	}
 }
 
@@ -252,7 +294,35 @@ func NewInputSpecificationSourceHash(hash string) *InputSpecification_Hash {
 
 // ValidateBasic performs basic format checking of data in a InputSpecification
 func (s *InputSpecification) ValidateBasic() error {
-	// TODO: implement
+	if len(s.Name) == 0 {
+		return errors.New("input specification name cannot be empty")
+	}
+	if len(s.Name) > maxInputSpecificationNameLength {
+		return fmt.Errorf("input specification name exceeds maximum length (expected <= %d got: %d)",
+			maxInputSpecificationNameLength, len(s.Name))
+	}
+	if len(s.TypeName) == 0 {
+		return errors.New("input specification type name cannot be empty")
+	}
+	if len(s.TypeName) > maxInputSpecificationTypeNameLength {
+		return fmt.Errorf("input specification type name exceeds maximum length (expected <= %d got: %d)",
+			maxInputSpecificationTypeNameLength, len(s.TypeName))
+	}
+	if s.Source == nil {
+		return errors.New("input specification source is required")
+	}
+	switch source := s.Source.(type) {
+	case *InputSpecification_RecordId:
+		if _, err := VerifyMetadataAddressFormat(source.RecordId); err != nil {
+			return fmt.Errorf("invalid input specification source record id: %w", err)
+		}
+	case *InputSpecification_Hash:
+		if len(source.Hash) == 0 {
+			return errors.New("input specification source hash cannot be empty")
+		}
+	default:
+		return errors.New("unknown input specification source type")
+	}
 	return nil
 }
 
