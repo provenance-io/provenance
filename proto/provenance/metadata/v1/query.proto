@@ -50,14 +50,24 @@ service Query {
     option (google.api.http).get = "/provenance/metadata/v1/valueownership/{address}";
   }
 
-  // ScopeSpecification returns a scope specification for the given specification id
+  // ScopeSpecification returns a scope specification for the given specification uuid
   rpc ScopeSpecification(ScopeSpecificationRequest) returns (ScopeSpecificationResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/scopespec/{specification_uuid}";
   }
 
-  // ContractSpecification returns a contract specification for the given specification id
+  // ContractSpecification returns a contract specification for the given specification uuid
   rpc ContractSpecification(ContractSpecificationRequest) returns (ContractSpecificationResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/contractspec/{specification_uuid}";
+  }
+
+  // RecordSpecificationsForContractSpecification returns the record specifications for the given contract specification uuid
+  rpc RecordSpecificationsForContractSpecification(RecordSpecificationsForContractSpecificationRequest) returns (RecordSpecificationsForContractSpecificationResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/contractspec/{contract_specification_uuid}/recordspecs";
+  }
+
+  // RecordSpecification returns a record specification for the given specification uuid
+  rpc RecordSpecification(RecordSpecificationRequest) returns (RecordSpecificationResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/recordspec/{specification_uuid}";
   }
 }
 
@@ -169,4 +179,24 @@ message ContractSpecificationRequest {
 // ContractSpecificationResponse is the response to a contract specification request.
 message ContractSpecificationResponse {
   ContractSpecification contract_specification = 1 [(gogoproto.moretags) = "yaml:\"contract_specification\""];
+}
+
+// RecordSpecificationsForContractSpecificationRequest is used for requesting record specifications by contract specification uuid
+message RecordSpecificationsForContractSpecificationRequest {
+  string contract_specification_uuid = 1 [(gogoproto.moretags) = "yaml:\"contract_specification_uuid\""];
+}
+
+// RecordSpecificationResponseResponse is the response to a record specification for contract specification request.
+message RecordSpecificationsForContractSpecificationResponse {
+  repeated RecordSpecification record_specifications = 1 [(gogoproto.moretags) = "yaml:\"record_specifications\""];
+}
+
+// RecordSpecificationRequest is used for requesting a record specification by uuid
+message RecordSpecificationRequest {
+  string specification_uuid = 1 [(gogoproto.moretags) = "yaml:\"specification_uuid\""];
+}
+
+// RecordSpecificationResponse is the response to a record specification request.
+message RecordSpecificationResponse {
+  RecordSpecification record_specification = 1 [(gogoproto.moretags) = "yaml:\"record_specification\""];
 }

@@ -39,6 +39,11 @@ service Msg {
   rpc AddContractSpecification(MsgAddContractSpecificationRequest) returns (MsgAddContractSpecificationResponse);
   // DeleteContractSpecification deletes a contract specification
   rpc DeleteContractSpecification(MsgDeleteContractSpecificationRequest) returns (MsgDeleteContractSpecificationResponse);
+
+  // AddRecordSpecification adds a record specification
+  rpc AddRecordSpecification(MsgAddRecordSpecificationRequest) returns (MsgAddRecordSpecificationResponse);
+  // DeleteRecordSpecification deletes a record specification
+  rpc DeleteRecordSpecification(MsgDeleteRecordSpecificationRequest) returns (MsgDeleteRecordSpecificationResponse);
 }
 
 // MsgMemorializeContractRequest is a request from a P8e execution environment to record results of a contract
@@ -179,7 +184,7 @@ message MsgDeleteScopeSpecificationRequest {
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-  // Unique ID for the scope specification to delete.
+  // MetadataAddress for the scope specification to delete.
   bytes specification_id = 1 [
     (gogoproto.nullable)   = false,
     (gogoproto.customtype) = "MetadataAddress",
@@ -212,7 +217,7 @@ message MsgDeleteContractSpecificationRequest {
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-  // Unique ID for the scope specification to delete.
+  // MetadataAddress for the contract specification to delete.
   bytes specification_id = 1 [
     (gogoproto.nullable)   = false,
     (gogoproto.customtype) = "MetadataAddress",
@@ -223,3 +228,36 @@ message MsgDeleteContractSpecificationRequest {
 
 // MsgDeleteContractSpecificationResponse from a delete contract specification request
 message MsgDeleteContractSpecificationResponse {}
+
+// MsgAddRecordSpecificationRequest is a request to add a record specification
+message MsgAddRecordSpecificationRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  RecordSpecification specification = 1 [(gogoproto.nullable) = false];
+  repeated string     signers       = 2;
+}
+
+// MsgAddRecordSpecificationResponse from an add record specification request
+message MsgAddRecordSpecificationResponse {}
+
+// MsgDeleteRecordSpecificationRequest deletes a record specification
+message MsgDeleteRecordSpecificationRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  // MetadataAddress for the record specification to delete.
+  bytes specification_id = 1 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customtype) = "MetadataAddress",
+    (gogoproto.moretags)   = "yaml:\"specification_id\""
+  ];
+  repeated string signers = 2;
+}
+
+// MsgDeleteRecordSpecificationResponse from a delete record specification request
+message MsgDeleteRecordSpecificationResponse {}
