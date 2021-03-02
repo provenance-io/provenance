@@ -29,11 +29,11 @@ const (
 //
 // - 0x00<scope_key_bytes>: Scope
 //
-// - 0x01<scope_key_bytes><group_id_bytes>: RecordGroup
+// - 0x01<scope_key_bytes><session_id_bytes>: Session
 //
 // - 0x02<scope_key_bytes><record_name_bytes>: Record
 //
-// - 0x03<group_specification_hash>: ContractSpecification
+// - 0x03<session_specification_hash>: ContractSpecification
 //
 // - 0x04<scope_specification_id_bytes>: ScopeSpecification
 //
@@ -51,11 +51,11 @@ const (
 var (
 	// ScopeKeyPrefix is the key for scope records in metadata store
 	ScopeKeyPrefix = []byte{0x00}
-	// GroupKeyPrefix is the key for group records in metadata store
-	GroupKeyPrefix = []byte{0x01}
+	// SessionKeyPrefix is the key for session records in metadata store
+	SessionKeyPrefix = []byte{0x01}
 	// RecordKeyPrefix is the key for records within scopes in metadata store
 	RecordKeyPrefix = []byte{0x02}
-	// ContractSpecificationKeyPrefix is the key for group specification instances in metadata store
+	// ContractSpecificationKeyPrefix is the key for session specification instances in metadata store
 	ContractSpecificationKeyPrefix = []byte{0x03}
 	// ScopeSpecificationKeyPrefix is the key for scope specifications in metadata store
 	ScopeSpecificationKeyPrefix = []byte{0x04}

@@ -45,7 +45,7 @@ func (k Keeper) SetRecord(ctx sdk.Context, record types.Record) {
 	b := k.cdc.MustMarshalBinaryBare(&record)
 	eventType := types.EventTypeRecordCreated
 
-	recordID := record.GroupId.GetRecordAddress(record.Name)
+	recordID := record.SessionId.GetRecordAddress(record.Name)
 	if store.Has(recordID) {
 		eventType = types.EventTypeRecordUpdated
 	}
@@ -104,7 +104,7 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing, proposed types.R
 		return err
 	}
 
-	scopeUUID, err := existing.GroupId.ScopeUUID()
+	scopeUUID, err := existing.SessionId.ScopeUUID()
 	if err != nil {
 		return err
 	}

@@ -77,10 +77,10 @@ func (s Scope) String() string {
 	return string(out)
 }
 
-// NewRecordGroup creates a new instance
-func NewRecordGroup(name string, groupID, contractSpecification MetadataAddress, parties []Party) *RecordGroup {
-	return &RecordGroup{
-		GroupId:         groupID,
+// NewSession creates a new instance
+func NewSession(name string, sessionID, contractSpecification MetadataAddress, parties []Party) *Session {
+	return &Session{
+		SessionId:       sessionID,
 		SpecificationId: contractSpecification,
 		Parties:         parties,
 		Name:            name,
@@ -89,20 +89,20 @@ func NewRecordGroup(name string, groupID, contractSpecification MetadataAddress,
 }
 
 // ValidateBasic performs basic format checking of data within a scope
-func (rg *RecordGroup) ValidateBasic() error {
-	prefix, err := VerifyMetadataAddressFormat(rg.GroupId)
+func (rg *Session) ValidateBasic() error {
+	prefix, err := VerifyMetadataAddressFormat(rg.SessionId)
 	if err != nil {
 		return err
 	}
-	if prefix != PrefixGroup {
-		return fmt.Errorf("invalid group identifier (expected: %s, got %s)", PrefixGroup, prefix)
+	if prefix != PrefixSession {
+		return fmt.Errorf("invalid session identifier (expected: %s, got %s)", PrefixSession, prefix)
 	}
 	if len(rg.Parties) < 1 {
-		return errors.New("record group must have at least one party")
+		return errors.New("session must have at least one party")
 	}
 	for _, p := range rg.Parties {
 		if err = p.ValidateBasic(); err != nil {
-			return fmt.Errorf("invalid party on record group: %w", err)
+			return fmt.Errorf("invalid party on session: %w", err)
 		}
 	}
 	prefix, err = VerifyMetadataAddressFormat(rg.SpecificationId)
@@ -113,34 +113,34 @@ func (rg *RecordGroup) ValidateBasic() error {
 		return fmt.Errorf("invalid contract specification identifier (expected: %s, got %s)", PrefixContractSpecification, prefix)
 	}
 	if len(rg.Name) == 0 {
-		return errors.New("record group name can not be empty")
+		return errors.New("session name can not be empty")
 	}
 	if len(rg.Audit.CreatedBy) > 0 {
 		if _, err := sdk.AccAddressFromBech32(rg.Audit.CreatedBy); err != nil {
-			return fmt.Errorf("invalid record group audit:createdby %w", err)
+			return fmt.Errorf("invalid session audit:createdby %w", err)
 		}
 		if rg.Audit.CreatedDate.IsZero() {
-			return fmt.Errorf("invalid/null record group audit created date")
+			return fmt.Errorf("invalid/null session audit created date")
 		}
 	}
 	if len(rg.Audit.UpdatedBy) > 0 {
 		if _, err := sdk.AccAddressFromBech32(rg.Audit.UpdatedBy); err != nil {
-			return fmt.Errorf("invalid record group audit:updatedby %w", err)
+			return fmt.Errorf("invalid session audit:updatedby %w", err)
 		}
 		if rg.Audit.UpdatedDate.IsZero() {
-			return fmt.Errorf("invalid/null record group audit updated date")
+			return fmt.Errorf("invalid/null session audit updated date")
 		}
 	}
 	if len(rg.Audit.Message) > maxAuditMessageLength {
-		return fmt.Errorf("record group audit message exceeds maximum length (expected < %d got: %d",
+		return fmt.Errorf("session audit message exceeds maximum length (expected < %d got: %d",
 			maxAuditMessageLength, len(rg.Audit.Message))
 	}
 	return nil
 }
 
 // String implements stringer interface
-func (rg RecordGroup) String() string {
-	out := fmt.Sprintf("%s (%s) [", rg.Name, rg.GroupId)
+func (rg Session) String() string {
+	out := fmt.Sprintf("%s (%s) [", rg.Name, rg.SessionId)
 	for _, p := range rg.Parties {
 		out += fmt.Sprintf("%s - %s, ", p.Address, p.Role)
 	}
@@ -150,19 +150,19 @@ func (rg RecordGroup) String() string {
 }
 
 // NewRecord creates new instance of Record
-func NewRecord(name string, groupID MetadataAddress, process Process, inputs []RecordInput, outputs []RecordOutput) *Record {
+func NewRecord(name string, sessionID MetadataAddress, process Process, inputs []RecordInput, outputs []RecordOutput) *Record {
 	return &Record{
-		Name:    name,
-		GroupId: groupID,
-		Process: process,
-		Inputs:  inputs,
-		Outputs: outputs,
+		Name:      name,
+		SessionId: sessionID,
+		Process:   process,
+		Inputs:    inputs,
+		Outputs:   outputs,
 	}
 }
 
 // ValidateBasic performs static checking of Record format
 func (r Record) ValidateBasic() error {
-	prefix, err := VerifyMetadataAddressFormat(r.GroupId)
+	prefix, err := VerifyMetadataAddressFormat(r.SessionId)
 	if err != nil {
 		return err
 	}
@@ -176,8 +176,8 @@ func (r Record) ValidateBasic() error {
 			return fmt.Errorf("invalid record output: %w", err)
 		}
 	}
-	if prefix != PrefixGroup {
-		return fmt.Errorf("invalid group identifier (expected: %s, got %s)", PrefixGroup, prefix)
+	if prefix != PrefixSession {
+		return fmt.Errorf("invalid session identifier (expected: %s, got %s)", PrefixSession, prefix)
 	}
 	if len(r.Name) < 1 {
 		return fmt.Errorf("invalid/missing name for record")
@@ -190,7 +190,7 @@ func (r Record) ValidateBasic() error {
 
 // String implements stringer interface
 func (r Record) String() string {
-	out := fmt.Sprintf("%s (%s) Results [", r.Name, r.GroupId)
+	out := fmt.Sprintf("%s (%s) Results [", r.Name, r.SessionId)
 	for _, o := range r.Outputs {
 		out += fmt.Sprintf("%s - %s, ", o.Status, o.Hash)
 	}

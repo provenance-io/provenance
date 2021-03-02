@@ -21,7 +21,7 @@ message GenesisState {
 
   // A collection of metadata scopes and specs to create on start
   repeated Scope       scopes  = 2 [(gogoproto.nullable) = false];
-  repeated RecordGroup groups  = 3 [(gogoproto.nullable) = false];
+  repeated Session sessions  = 3 [(gogoproto.nullable) = false];
   repeated Record      records = 4 [(gogoproto.nullable) = false];
 
   repeated ScopeSpecification    scope_specifications    = 5 [(gogoproto.nullable) = false];

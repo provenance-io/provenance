@@ -26,12 +26,12 @@ type MetadataKeeperI interface {
 	// IterateScopes processes all stored scopes with the given handler.
 	IterateScopes(sdk.Context, func(types.Scope) bool) error
 
-	// GetRecordGroup returns the scope with the given address.
-	GetRecordGroup(sdk.Context, types.MetadataAddress) (types.RecordGroup, bool)
-	// SetRecordGroup persists the provided scope
-	SetRecordGroup(sdk.Context, types.RecordGroup)
-	// RemoveRecordGroup persists the provided scope
-	RemoveRecordGroup(sdk.Context, types.MetadataAddress)
+	// GetSession returns the scope with the given address.
+	GetSession(sdk.Context, types.MetadataAddress) (types.Session, bool)
+	// SetSession persists the provided scope
+	SetSession(sdk.Context, types.Session)
+	// RemoveSession persists the provided scope
+	RemoveSession(sdk.Context, types.MetadataAddress)
 
 	// GetRecord returns the record with the given address.
 	GetRecord(sdk.Context, types.MetadataAddress) (types.Record, bool)

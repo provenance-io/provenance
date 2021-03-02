@@ -118,9 +118,9 @@ func (s *scopeTestSuite) TestScopeValidateBasic() {
 func (s *scopeTestSuite) TestScopeString() {
 	s.T().Run("scope string", func(t *testing.T) {
 		scopeUUID := uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")
-		groupUUID := uuid.MustParse("c25c7bd4-c639-4367-a842-f64fa5fccc19")
+		sessionUUID := uuid.MustParse("c25c7bd4-c639-4367-a842-f64fa5fccc19")
 		scope := NewScope(ScopeMetadataAddress(
-			scopeUUID), ScopeSpecMetadataAddress(groupUUID),
+			scopeUUID), ScopeSpecMetadataAddress(sessionUUID),
 			ownerPartyList(addr.String()),
 			[]string{},
 			"")
@@ -138,9 +138,9 @@ value_owner_address: ""
 
 func (s *scopeTestSuite) TestRecordValidateBasic() {
 	scopeUUID := uuid.New()
-	groupUUID := uuid.New()
-	groupId := GroupMetadataAddress(scopeUUID, groupUUID)
-	recordId := RecordMetadataAddress(scopeUUID, "test_record")
+	sessionUUID := uuid.New()
+	sessionID := SessionMetadataAddress(scopeUUID, sessionUUID)
+	recordID := RecordMetadataAddress(scopeUUID, "test_record")
 	validRI := NewRecordInput("ri_name", &RecordInput_Hash{"hash"}, "ri_type", RecordInputStatus_Proposed)
 	validRO := NewRecordOutput("ro_hash", ResultStatus_RESULT_STATUS_PASS)
 	validPs := NewProcess("process_name", &Process_Hash{"address"}, "method")
@@ -152,43 +152,43 @@ func (s *scopeTestSuite) TestRecordValidateBasic() {
 	}{
 		{
 			"valid record",
-			NewRecord("name", groupId, *validPs, []RecordInput{*validRI}, []RecordOutput{*validRO}),
+			NewRecord("name", sessionID, *validPs, []RecordInput{*validRI}, []RecordOutput{*validRO}),
 			"",
 			false,
 		},
 		{
 			"invalid record, invalid/missing name for record",
-			NewRecord("", groupId, *validPs, []RecordInput{*validRI}, []RecordOutput{*validRO}),
+			NewRecord("", sessionID, *validPs, []RecordInput{*validRI}, []RecordOutput{*validRO}),
 			"invalid/missing name for record",
 			true,
 		},
 		{
-			"invalid record, missing groupid",
+			"invalid record, missing sessionid",
 			NewRecord("name", nil, *validPs, []RecordInput{*validRI}, []RecordOutput{*validRO}),
 			"incorrect address length (must be at least 17, actual: 0)",
 			true,
 		},
 		{
 			"invalid record, missing process name",
-			NewRecord("name", groupId, *NewProcess("", &Process_Address{"address"}, "method"), []RecordInput{*validRI}, []RecordOutput{*validRO}),
+			NewRecord("name", sessionID, *NewProcess("", &Process_Address{"address"}, "method"), []RecordInput{*validRI}, []RecordOutput{*validRO}),
 			"invalid record process: missing required name",
 			true,
 		},
 		{
 			"invalid record, missing process process id",
-			NewRecord("name", groupId, *NewProcess("process_name", nil, "method"), []RecordInput{*validRI}, []RecordOutput{*validRO}),
+			NewRecord("name", sessionID, *NewProcess("process_name", nil, "method"), []RecordInput{*validRI}, []RecordOutput{*validRO}),
 			"invalid record process: missing required process id",
 			true,
 		},
 		{
 			"invalid record, missing process method",
-			NewRecord("name", groupId, *NewProcess("process_name", &Process_Address{"address"}, ""), []RecordInput{*validRI}, []RecordOutput{*validRO}),
+			NewRecord("name", sessionID, *NewProcess("process_name", &Process_Address{"address"}, ""), []RecordInput{*validRI}, []RecordOutput{*validRO}),
 			"invalid record process: missing required method",
 			true,
 		},
 		{
 			"invalid record, missing record input name",
-			NewRecord("name", groupId, *validPs,
+			NewRecord("name", sessionID, *validPs,
 				[]RecordInput{*NewRecordInput("", &RecordInput_Hash{"hash"}, "type_name", RecordInputStatus_Proposed)},
 				[]RecordOutput{*validRO}),
 			"invalid record input: missing required name",
@@ -196,7 +196,7 @@ func (s *scopeTestSuite) TestRecordValidateBasic() {
 		},
 		{
 			"invalid record, missing record input source",
-			NewRecord("name", groupId, *validPs,
+			NewRecord("name", sessionID, *validPs,
 				[]RecordInput{*NewRecordInput("ri_name", nil, "type_name", RecordInputStatus_Proposed)},
 				[]RecordOutput{*validRO}),
 			"invalid record input: missing required record input source",
@@ -204,7 +204,7 @@ func (s *scopeTestSuite) TestRecordValidateBasic() {
 		},
 		{
 			"invalid record, missing record input type name",
-			NewRecord("name", groupId, *validPs,
+			NewRecord("name", sessionID, *validPs,
 				[]RecordInput{*NewRecordInput("ri_name", &RecordInput_Hash{"hash"}, "", RecordInputStatus_Proposed)},
 				[]RecordOutput{*validRO}),
 			"invalid record input: missing type name",
@@ -212,7 +212,7 @@ func (s *scopeTestSuite) TestRecordValidateBasic() {
 		},
 		{
 			"Invalid record, unknown record input status",
-			NewRecord("name", groupId, *validPs,
+			NewRecord("name", sessionID, *validPs,
 				[]RecordInput{*NewRecordInput("ri_name", &RecordInput_Hash{"hash"}, "type_name", RecordInputStatus_Unknown)},
 				[]RecordOutput{*validRO}),
 			"invalid record input: invalid record input status, status unknown or missing",
@@ -220,7 +220,7 @@ func (s *scopeTestSuite) TestRecordValidateBasic() {
 		},
 		{
 			"Invalid record, missing record input hash",
-			NewRecord("name", groupId, *validPs,
+			NewRecord("name", sessionID, *validPs,
 				[]RecordInput{*NewRecordInput("ri_name", &RecordInput_Hash{""}, "type_name", RecordInputStatus_Proposed)},
 				[]RecordOutput{*validRO}),
 			"invalid record input: missing required hash for proposed value",
@@ -228,7 +228,7 @@ func (s *scopeTestSuite) TestRecordValidateBasic() {
 		},
 		{
 			"Invalid record, incorrect status of record for record input source hash",
-			NewRecord("name", groupId, *validPs,
+			NewRecord("name", sessionID, *validPs,
 				[]RecordInput{*NewRecordInput("ri_name", &RecordInput_Hash{"hash"}, "type_name", RecordInputStatus_Record)},
 				[]RecordOutput{*validRO}),
 			"invalid record input: hash specifier only applies to proposed inputs",
@@ -236,23 +236,23 @@ func (s *scopeTestSuite) TestRecordValidateBasic() {
 		},
 		{
 			"Invalid record, incorrect status of proposed for record input source record id",
-			NewRecord("name", groupId, *validPs,
-				[]RecordInput{*NewRecordInput("name", &RecordInput_RecordId{recordId}, "type_name", RecordInputStatus_Proposed)},
+			NewRecord("name", sessionID, *validPs,
+				[]RecordInput{*NewRecordInput("name", &RecordInput_RecordId{recordID}, "type_name", RecordInputStatus_Proposed)},
 				[]RecordOutput{*validRO}),
 			"invalid record input: record id must be used with Record type inputs",
 			true,
 		},
 		{
 			"Invalid record, incorrect status of unknown for record input source record id",
-			NewRecord("name", groupId, *validPs,
-				[]RecordInput{*NewRecordInput("name", &RecordInput_RecordId{recordId}, "type_name", RecordInputStatus_Unknown)},
+			NewRecord("name", sessionID, *validPs,
+				[]RecordInput{*NewRecordInput("name", &RecordInput_RecordId{recordID}, "type_name", RecordInputStatus_Unknown)},
 				[]RecordOutput{*validRO}),
 			"invalid record input: invalid record input status, status unknown or missing",
 			true,
 		},
 		{
 			"Invalid record, incorrect record id format of length 0 for record input",
-			NewRecord("name", groupId, *validPs,
+			NewRecord("name", sessionID, *validPs,
 				[]RecordInput{*NewRecordInput("name", &RecordInput_RecordId{}, "type_name", RecordInputStatus_Record)},
 				[]RecordOutput{*validRO}),
 			"invalid record input: invalid record input recordid incorrect address length (must be at least 17, actual: 0)",
@@ -260,23 +260,23 @@ func (s *scopeTestSuite) TestRecordValidateBasic() {
 		},
 		{
 			"Invalid record, incorrect record id prefix for record input",
-			NewRecord("name", groupId, *validPs,
-				[]RecordInput{*NewRecordInput("name", &RecordInput_RecordId{groupId}, "type_name", RecordInputStatus_Record)},
+			NewRecord("name", sessionID, *validPs,
+				[]RecordInput{*NewRecordInput("name", &RecordInput_RecordId{sessionID}, "type_name", RecordInputStatus_Record)},
 				[]RecordOutput{*validRO}),
-			"invalid record input: invalid record id address (found group, expected record)",
+			"invalid record input: invalid record id address (found session, expected record)",
 			true,
 		},
 		{
 			"Valid record, record input record id with proper prefix",
-			NewRecord("name", groupId, *validPs,
-				[]RecordInput{*NewRecordInput("name", &RecordInput_RecordId{recordId}, "type_name", RecordInputStatus_Record)},
+			NewRecord("name", sessionID, *validPs,
+				[]RecordInput{*NewRecordInput("name", &RecordInput_RecordId{recordID}, "type_name", RecordInputStatus_Record)},
 				[]RecordOutput{*validRO}),
 			"",
 			false,
 		},
 		{
 			"Invalid record, incorrect result status for record output",
-			NewRecord("name", groupId, *validPs,
+			NewRecord("name", sessionID, *validPs,
 				[]RecordInput{*validRI},
 				[]RecordOutput{*NewRecordOutput("hash", ResultStatus_RESULT_STATUS_UNSPECIFIED)}),
 			"invalid record output: invalid record output status, status unspecified",
@@ -284,7 +284,7 @@ func (s *scopeTestSuite) TestRecordValidateBasic() {
 		},
 		{
 			"Invalid record, missing hash for record output",
-			NewRecord("name", groupId, *validPs,
+			NewRecord("name", sessionID, *validPs,
 				[]RecordInput{*validRI},
 				[]RecordOutput{*NewRecordOutput("", ResultStatus_RESULT_STATUS_PASS)}),
 			"invalid record output: missing required hash",
@@ -292,7 +292,7 @@ func (s *scopeTestSuite) TestRecordValidateBasic() {
 		},
 		{
 			"Valid record, record output skip",
-			NewRecord("name", groupId, *validPs,
+			NewRecord("name", sessionID, *validPs,
 				[]RecordInput{*validRI},
 				[]RecordOutput{*NewRecordOutput("", ResultStatus_RESULT_STATUS_SKIP)}),
 			"",

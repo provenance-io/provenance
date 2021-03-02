@@ -70,7 +70,7 @@ func (s *QueryServerTestSuite) SetupTest() {
 	s.ctx = ctx
 
 	s.groupUUID = uuid.New()
-	s.groupId = types.GroupMetadataAddress(s.scopeUUID, s.groupUUID)
+	s.groupId = types.SessionMetadataAddress(s.scopeUUID, s.groupUUID)
 
 	s.recordName = "TestRecord"
 	s.recordId = types.RecordMetadataAddress(s.scopeUUID, s.recordName)
@@ -96,7 +96,7 @@ func (s *QueryServerTestSuite) TestScopeQuery() {
 		sUUID := uuid.New()
 		name := fmt.Sprintf("%s%v", recordName, i)
 		gUUID := uuid.New()
-		gId := types.GroupMetadataAddress(sUUID, gUUID)
+		gId := types.SessionMetadataAddress(sUUID, gUUID)
 
 		testIDs[i] = types.ScopeMetadataAddress(sUUID)
 		ns := types.NewScope(testIDs[i], nil, ownerPartyList(user1), []string{user1}, valueOwner)

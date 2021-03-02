@@ -56,21 +56,21 @@ func (k Keeper) Scope(c context.Context, req *types.ScopeRequest) (*types.ScopeR
 		return nil, status.Errorf(codes.Internal, "can't iterate scope records %v", err)
 	}
 
-	groups := []*types.RecordGroup{}
-	err = k.IterateGroups(ctx, scopeAddress, func(rg types.RecordGroup) (stop bool) {
-		groups = append(groups, &rg)
+	sessions := []*types.Session{}
+	err = k.IterateSessions(ctx, scopeAddress, func(rg types.Session) (stop bool) {
+		sessions = append(sessions, &rg)
 		return false
 	})
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "can't iterate scope groups %v", err)
+		return nil, status.Errorf(codes.Internal, "can't iterate scope sessions %v", err)
 	}
-	return &types.ScopeResponse{Scope: &s, Records: records, RecordGroups: groups}, nil
+	return &types.ScopeResponse{Scope: &s, Records: records, Sessions: sessions}, nil
 }
 
-// GroupContext returns a specific group context within a scope (or all groups)
-func (k Keeper) GroupContext(c context.Context, req *types.GroupContextRequest) (*types.GroupContextResponse, error) {
+// SessionContext returns a specific group context within a scope (or all groups)
+func (k Keeper) SessionContext(c context.Context, req *types.SessionContextRequest) (*types.SessionContextResponse, error) {
 	// TODO
-	return &types.GroupContextResponse{}, nil
+	return &types.SessionContextResponse{}, nil
 }
 
 // RecordsByScopeUUID returns a collection of the records in a scope or a specific one by name

@@ -108,10 +108,10 @@ func (k msgServer) DeleteScope(
 	return &types.MsgDeleteScopeResponse{}, nil
 }
 
-func (k msgServer) AddRecordGroup(
+func (k msgServer) AddSession(
 	goCtx context.Context,
-	msg *types.MsgAddRecordGroupRequest,
-) (*types.MsgAddRecordGroupResponse, error) {
+	msg *types.MsgAddSessionRequest,
+) (*types.MsgAddSessionResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// TODO (contract keeper class  methods to process request, keeper methods to record it)
@@ -133,7 +133,7 @@ func (k msgServer) AddRecord(
 ) (*types.MsgAddRecordResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	scopeUUID, err := msg.Record.GroupId.ScopeUUID()
+	scopeUUID, err := msg.Record.SessionId.ScopeUUID()
 	if err != nil {
 		return nil, err
 	}

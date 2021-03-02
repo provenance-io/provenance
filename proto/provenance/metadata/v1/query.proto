@@ -25,9 +25,9 @@ service Query {
     option (google.api.http).get = "/provenance/metadata/v1/scope/{scope_uuid}";
   }
 
-  // GroupContext returns a specific group context within a scope (or all groups)
-  rpc GroupContext(GroupContextRequest) returns (GroupContextResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/scope/{scope_uuid}/group/{group_uuid}";
+  // SessionContext returns a specific session context within a scope (or all sessions)
+  rpc SessionContext(SessionContextRequest) returns (SessionContextResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/scope/{scope_uuid}/session/{session_uuid}";
   }
 
   // RecordsByScopeUUID returns a collection of the records in a scope by scope uuid or a specific one by name
@@ -78,7 +78,7 @@ message ScopeRequest {
 // ScopeResponse is the response to a scope request.
 message ScopeResponse {
   Scope                scope         = 1;
-  repeated RecordGroup record_groups = 2 [(gogoproto.moretags) = "yaml:\"record_groups\""];
+  repeated Session sessions = 2 [(gogoproto.moretags) = "yaml:\"sessions\""];
   repeated Record      records       = 3;
 }
 
@@ -114,15 +114,15 @@ message ValueOwnershipResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// GroupContextRequest returns the record groups for a given scope identifer or optionally a specific record group
-message GroupContextRequest {
+// SessionContextRequest returns the record sessions for a given scope identifer or optionally a specific record session
+message SessionContextRequest {
   string scope_uuid = 1 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
-  string group_uuid = 2 [(gogoproto.moretags) = "yaml:\"group_uuid\""];
+  string session_uuid = 2 [(gogoproto.moretags) = "yaml:\"session_uuid\""];
 }
 
-// GroupContextResponse is the response to a GroupContextRequest
-message GroupContextResponse {
-  repeated RecordGroup groups = 1;
+// SessionContextResponse is the response to a SessionContextRequest
+message SessionContextResponse {
+  repeated Session sessions = 1;
 }
 
 // RecordsByScopeUUIDRequest is a request for all of the records in a specific scope by uuid or a specific record if a name is given.
