@@ -173,9 +173,9 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 		s.T().Run(tt.name, func(t *testing.T) {
 			err := tt.spec.ValidateBasic()
 			if err != nil {
-				require.Equal(t, tt.want, err.Error(), "ScopeSpec ValidateBasic error")
+				require.Equal(t, tt.want, err.Error(), "ScopeSpecification ValidateBasic error")
 			} else if len(tt.want) > 0 {
-				t.Errorf("ScopeSpec ValidateBasic error = nil, expected: %s", tt.want)
+				t.Errorf("ScopeSpecification ValidateBasic error = nil, expected: %s", tt.want)
 			}
 		})
 	}
@@ -196,8 +196,10 @@ func encodeVarintSpecTests(dAtA []byte, offset int, v uint64) int {
 	return base
 }
 
-// WeirdSoure is a thing that satisfies all needed pieces of the isContractSpecification_Source interface
-// but isn't a valid thing to use as a Source according to the ContractSpecification.ValidateBasic() method.
+// WeirdSource is a thing that satisfies all needed pieces of the
+// isContractSpecification_Source and isRecordSpecification_Source interfaces.
+// But it isn't a valid thing to use as a Source according to the
+// ContractSpecification.ValidateBasic() and RecordSpecification.ValidateBasic() methods.
 type WeirdSource struct {
 	Value uint32
 }
@@ -550,6 +552,48 @@ func (s *specificationTestSuite) TestContractSpecValidateBasic() {
 				require.Equal(t, tt.want, err.Error(), "ContractSpecification ValidateBasic error")
 			} else if len(tt.want) > 0 {
 				t.Errorf("ContractSpecification ValidateBasic error = nil, expected: %s", tt.want)
+			}
+		})
+	}
+}
+
+func (s *specificationTestSuite) TestRecordSpecValidateBasic() {
+	tests := []struct {
+		name string
+		spec *RecordSpecification
+		want string
+	}{
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		s.T().Run(tt.name, func(t *testing.T) {
+			err := tt.spec.ValidateBasic()
+			if err != nil {
+				require.Equal(t, tt.want, err.Error(), "RecordSpecification ValidateBasic error")
+			} else if len(tt.want) > 0 {
+				t.Errorf("RecordSpecification ValidateBasic error = nil, expected: %s", tt.want)
+			}
+		})
+	}
+}
+
+func (s *specificationTestSuite) TestInputSpecValidateBasic() {
+	tests := []struct {
+		name string
+		spec *InputSpecification
+		want string
+	}{
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		s.T().Run(tt.name, func(t *testing.T) {
+			err := tt.spec.ValidateBasic()
+			if err != nil {
+				require.Equal(t, tt.want, err.Error(), "InputSpecification ValidateBasic error")
+			} else if len(tt.want) > 0 {
+				t.Errorf("InputSpecification ValidateBasic error = nil, expected: %s", tt.want)
 			}
 		})
 	}
@@ -910,6 +954,105 @@ record_spec_ids:
 	actual := contractSpec.String()
 	// fmt.Printf("Actual:\n%s\n-----\n", actual)
 	require.Equal(s.T(), expected, actual)
+}
+
+func (s *specificationTestSuite) TestRecordSpecString() {
+	contractSpecUuid := uuid.MustParse("540dadf1-3dbc-4c3f-a205-7575b7f74384")
+	recordName := "somename"
+	recordSpec := NewRecordSpecification(
+		RecordSpecMetadataAddress(contractSpecUuid, recordName),
+		recordName,
+		[]*InputSpecification{
+			{
+				"inputSpecName1",
+				"inputSpecTypeName1",
+				NewInputSpecificationSourceHash("inputSpecSourceHash1"),
+			},
+			{
+				"inputSpecName2",
+				"inputSpecTypeName2",
+				NewInputSpecificationSourceRecordID(RecordMetadataAddress(
+					uuid.MustParse("1784AE79-77F1-421C-AAF9-ECA4DD79E571"),
+					"inputSpecRecordIdSource",
+				)),
+			},
+		},
+		"sometype",
+		DefinitionType_DEFINITION_TYPE_RECORD,
+		[]PartyType{PartyType_PARTY_TYPE_CUSTODIAN, PartyType_PARTY_TYPE_INVESTOR},
+	)
+	expected := `specification_id: recspec1q42qmt038k7yc0azq46htdlhgwzg5052mucgmerfku3gf5e7t3ej4ecag50yfxlsd8m2udlxzca6vhgch80wy
+name: somename
+inputs:
+- name: inputSpecName1
+  type_name: inputSpecTypeName1
+  source:
+    hash: inputSpecSourceHash1
+- name: inputSpecName2
+  type_name: inputSpecTypeName2
+  source:
+    record_id: record1qgtcftnewlc5y892l8k2fhteu4ceth857yw3fprr4lvhfptn5gg4e6d8me3qkc45f4c9rs35yycg4vq0ykahz
+type_name: sometype
+result_type: 2
+responsible_parties:
+- 4
+- 3
+`
+	actual := recordSpec.String()
+	fmt.Printf("Actual:\n%s\n-----\n", actual)
+	require.Equal(s.T(), expected, actual)
+}
+
+func (s *specificationTestSuite) TestInputSpecString() {
+	tests := []struct {
+		name         string
+		outputActual bool
+		spec         *InputSpecification
+		expected     string
+	}{
+		{
+			"source is record id",
+			true,
+			NewInputSpecification(
+				"inputSpecRecordIdSource",
+				"inputSpecRecordIdSourceTypeName",
+				NewInputSpecificationSourceRecordID(RecordMetadataAddress(
+					uuid.MustParse("1784AE79-77F1-421C-AAF9-ECA4DD79E571"),
+					"inputSpecRecordIdSource",
+				)),
+			),
+			`name: inputSpecRecordIdSource
+type_name: inputSpecRecordIdSourceTypeName
+source:
+  record_id: record1qgtcftnewlc5y892l8k2fhteu4ceth857yw3fprr4lvhfptn5gg4e6d8me3qkc45f4c9rs35yycg4vq0ykahz
+`,
+		},
+		{
+			"source is hash",
+			false,
+			NewInputSpecification(
+				"inputSpecHashSource",
+				"inputSpecHashSourceTypeName",
+				NewInputSpecificationSourceHash("somehash"),
+			),
+			`name: inputSpecHashSource
+type_name: inputSpecHashSourceTypeName
+source:
+  hash: somehash
+`,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		s.T().Run(tt.name, func(t *testing.T) {
+			actual := tt.spec.String()
+			if (tt.outputActual) {
+				fmt.Printf("Actual [%s]:\n%s\n-----\n", tt.name, actual)
+			}
+			require.Equal(t, tt.expected, actual)
+		})
+	}
 }
 
 func (s *specificationTestSuite) TestDescriptionString() {
