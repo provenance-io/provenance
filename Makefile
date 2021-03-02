@@ -121,6 +121,50 @@ run: check-built run-config;
 
 .PHONY: install build build-linux run
 
+##############################
+# Release artifacts and plan #
+##############################
+
+RELEASE_TAG=SNAPSHOT
+RELEASE_BIN=$(BUILDDIR)/bin
+RELEASE_PLAN=$(BUILDDIR)/plan-$(RELEASE_TAG).json
+RELEASE_CHECKSUM_NAME=sha256sum.txt
+RELEASE_CHECKSUM=$(BUILDDIR)/$(RELEASE_CHECKSUM_NAME)
+RELEASE_ZIP_NAME=provenance-linux-amd64-$(RELEASE_TAG).zip
+RELEASE_ZIP=$(BUILDDIR)/$(RELEASE_ZIP_NAME)
+
+.PHONY: build-release-clean
+build-release-clean:
+	rm -rf $(RELEASE_BIN) $(RELEASE_PLAN) $(RELEASE_CHECKSUM) $(RELEASE_ZIP)
+
+.PHONY: build-release-checksum
+build-release-checksum: build-release-zip
+	pushd $(BUILDDIR) && \
+	  shasum -a 256 $(RELEASE_ZIP_NAME) > $(RELEASE_CHECKSUM) && \
+	popd
+
+.PHONY: build-release-plan
+build-release-plan: build-release-zip build-release-checksum
+	pushd $(BUILDDIR) && \
+	  sum="$(shell cat $(RELEASE_CHECKSUM_NAME) | cut -d' ' -f1)" && \
+	  echo "{\"binaries\":{\"linux/amd64\":\"https://github.com/provenance-io/provenance/releases/download/$(RELEASE_TAG)/$(RELEASE_ZIP_NAME)?checksum=sha256:$$sum\"}}" > $(RELEASE_PLAN) && \
+	popd
+
+.PHONY: build-release-bin
+build-release-bin: vendor build
+	mkdir -p $(RELEASE_BIN) && \
+	cp $(BUILDDIR)/provenanced $(RELEASE_BIN) && \
+	cp vendor/github.com/CosmWasm/wasmvm/api/libwasmvm.so $(RELEASE_BIN) && \
+	chmod +x $(RELEASE_BIN)/provenanced
+
+.PHONY: build-release-zip
+build-release-zip: build-release-bin
+	pushd $(BUILDDIR) && \
+	  zip -r $(RELEASE_ZIP_NAME) bin/ && \
+	popd
+
+.PHONY: build-release
+build-release: build-release-zip build-release-plan
 
 ##############################
 # Tools / Dependencies
