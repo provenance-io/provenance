@@ -45,7 +45,7 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
-          draft: true
+          draft: false
           prerelease: false
           body_path: RELEASE_CHANGELOG.md
       - name: Build release and plan
