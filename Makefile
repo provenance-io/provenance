@@ -152,7 +152,8 @@ build-release-plan: build-release-zip build-release-checksum
 	cd ..
 
 .PHONY: build-release-bin
-build-release-bin: vendor build
+build-release-bin: build
+	go mod vendor && \
 	mkdir -p $(RELEASE_BIN) && \
 	cp $(BUILDDIR)/provenanced $(RELEASE_BIN) && \
 	cp vendor/github.com/CosmWasm/wasmvm/api/libwasmvm.so $(RELEASE_BIN) && \
