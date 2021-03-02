@@ -146,7 +146,7 @@ build-release-checksum: build-release-zip
 .PHONY: build-release-plan
 build-release-plan: build-release-zip build-release-checksum
 	cd $(BUILDDIR) && \
-	  sum="$(firstword $(shell cat $(RELEASE_CHECKSUM_NAME)))" && \
+	  sum="$(firstword $(shell cat $(RELEASE_CHECKSUM)))" && \
 	  echo "sum=$$sum" && \
 	  echo "{\"binaries\":{\"linux/amd64\":\"https://github.com/provenance-io/provenance/releases/download/$(RELEASE_TAG)/$(RELEASE_ZIP_NAME)?checksum=sha256:$$sum\"}}" > $(RELEASE_PLAN) && \
 	cd ..
