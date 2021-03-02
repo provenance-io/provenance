@@ -209,7 +209,7 @@ func NewWeirdSource(value uint32) *WeirdSource {
 	}
 }
 func (*WeirdSource) isContractSpecification_Source() {}
-func (*WeirdSource) isRecordSpecification_Source() {}
+func (*WeirdSource) isInputSpecification_Source() {}
 func (m *WeirdSource) Size() (n int) {
 	return 1 + sovSpecTests(uint64(n))
 }
@@ -584,6 +584,124 @@ func (s *specificationTestSuite) TestInputSpecValidateBasic() {
 		spec *InputSpecification
 		want string
 	}{
+		// Name tests
+		{
+			"Name - empty",
+			&InputSpecification{
+				Name: "",
+				TypeName: "typename",
+				Source: NewInputSpecificationSourceHash("inputspecsourcehash"),
+			},
+			"input specification name cannot be empty",
+		},
+		{
+			"Name - too long",
+			&InputSpecification{
+				Name: strings.Repeat("i", maxInputSpecificationNameLength + 1),
+				TypeName: "typename",
+				Source: NewInputSpecificationSourceHash("inputspecsourcehash"),
+			},
+			fmt.Sprintf("input specification name exceeds maximum length (expected <= %d got: %d)",
+				maxInputSpecificationNameLength, maxInputSpecificationNameLength + 1),
+		},
+		{
+			"Name - at max length - okay",
+			&InputSpecification{
+				Name: strings.Repeat("i", maxInputSpecificationNameLength),
+				TypeName: "typename",
+				Source: NewInputSpecificationSourceHash("inputspecsourcehash"),
+			},
+			"",
+		},
+
+		// TypeName tests
+		{
+			"TypeName - empty",
+			&InputSpecification{
+				Name: "name",
+				TypeName: "",
+				Source: NewInputSpecificationSourceHash("inputspecsourcehash"),
+			},
+			"input specification type name cannot be empty",
+		},
+		{
+			"TypeName - too long",
+			&InputSpecification{
+				Name: "name",
+				TypeName: strings.Repeat("i", maxInputSpecificationTypeNameLength + 1),
+				Source: NewInputSpecificationSourceHash("inputspecsourcehash"),
+			},
+			fmt.Sprintf("input specification type name exceeds maximum length (expected <= %d got: %d)",
+				maxInputSpecificationTypeNameLength, maxInputSpecificationTypeNameLength + 1),
+		},
+		{
+			"TypeName - at max length - okay",
+			&InputSpecification{
+				Name: "name",
+				TypeName: strings.Repeat("i", maxInputSpecificationTypeNameLength),
+				Source: NewInputSpecificationSourceHash("inputspecsourcehash"),
+			},
+			"",
+		},
+
+		// Source tests
+		{
+			"Source - nil",
+			&InputSpecification{
+				Name: "name",
+				TypeName: "typename",
+				Source: nil,
+			},
+			"input specification source is required",
+		},
+		{
+			"Source - RecordId - not a metadata address",
+			&InputSpecification{
+				Name: "name",
+				TypeName: "typename",
+				Source: NewInputSpecificationSourceRecordID(MetadataAddress(specTestAddr)),
+			},
+			"invalid input specification source record id: invalid metadata address type: 133",
+		},
+		{
+			"Source - RecordId - wrong prefix",
+			&InputSpecification{
+				Name: "name",
+				TypeName: "typename",
+				Source: NewInputSpecificationSourceRecordID(ContractSpecMetadataAddress(uuid.New())),
+			},
+			fmt.Sprintf("invalid input specification source record id prefix (expected: %s, got: %s)",
+				PrefixRecord, PrefixContractSpecification),
+		},
+		{
+			"Source - Hash - empty",
+			&InputSpecification{
+				Name: "name",
+				TypeName: "typename",
+				Source: NewInputSpecificationSourceHash(""),
+			},
+			"input specification source hash cannot be empty",
+		},
+		{
+			"Source - Weird",
+			&InputSpecification{
+				Name: "name",
+				TypeName: "typename",
+				Source: NewWeirdSource(8),
+			},
+			"unknown input specification source type",
+		},
+
+		// A simple valid InputSpecification
+		{
+			"TypeName - at max length - okay",
+			&InputSpecification{
+				Name: "name",
+				TypeName: "typename",
+				Source: NewInputSpecificationSourceHash("inputspecsourcehash"),
+			},
+			"",
+		},
 	}
 
 	for _, tt := range tests {
