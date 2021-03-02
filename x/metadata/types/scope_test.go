@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/hex"
+	"fmt"
 	"testing"
 
 	"github.com/google/uuid"
@@ -443,5 +444,37 @@ func (s *scopeTestSuite) TestSessionValidateBasic() {
 
 		})
 	}
+}
 
+func (s *scopeTestSuite) TestSessionString() {
+
+	scopeUUID := uuid.New()
+	sessionUUID := uuid.New()
+	sessionID := SessionMetadataAddress(scopeUUID, sessionUUID)
+	contractSpec := ContractSpecMetadataAddress(uuid.New())
+	session := NewSession("name", sessionID, contractSpec, []Party{
+		{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_AFFILIATE}},
+		AuditFields{CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck",
+			UpdatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck",
+			Message:   "message",
+		})
+
+	println(session.String())
+	s.T().Run("session string", func(t *testing.T) {
+		require.Equal(t, fmt.Sprintf(`session_id: %s
+specification_id: %s
+parties:
+- address: cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck
+  role: 6
+type: name
+audit:
+  created_date: 0001-01-01T00:00:00Z
+  created_by: cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck
+  updated_date: 0001-01-01T00:00:00Z
+  updated_by: cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck
+  version: 0
+  message: message
+`, session.SessionId.String(), session.SpecificationId.String()),
+			session.String())
+	})
 }

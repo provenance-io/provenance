@@ -140,13 +140,8 @@ func (s *Session) ValidateBasic() error {
 
 // String implements stringer interface
 func (s Session) String() string {
-	out := fmt.Sprintf("%s (%s) [", s.Name, s.SessionId)
-	for _, p := range s.Parties {
-		out += fmt.Sprintf("%s - %s, ", p.Address, p.Role)
-	}
-	out = strings.TrimRight(out, ", ")
-	out += fmt.Sprintf("] (%s)", s.SpecificationId)
-	return out
+	out, _ := yaml.Marshal(s)
+	return string(out)
 }
 
 // NewRecord creates new instance of Record
