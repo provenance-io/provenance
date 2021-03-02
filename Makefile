@@ -139,16 +139,16 @@ build-release-clean:
 
 .PHONY: build-release-checksum
 build-release-checksum: build-release-zip
-	pushd $(BUILDDIR) && \
+	cd $(BUILDDIR) && \
 	  shasum -a 256 $(RELEASE_ZIP_NAME) > $(RELEASE_CHECKSUM) && \
-	popd
+	cd ..
 
 .PHONY: build-release-plan
 build-release-plan: build-release-zip build-release-checksum
-	pushd $(BUILDDIR) && \
+	cd $(BUILDDIR) && \
 	  sum="$(shell cat $(RELEASE_CHECKSUM_NAME) | cut -d' ' -f1)" && \
 	  echo "{\"binaries\":{\"linux/amd64\":\"https://github.com/provenance-io/provenance/releases/download/$(RELEASE_TAG)/$(RELEASE_ZIP_NAME)?checksum=sha256:$$sum\"}}" > $(RELEASE_PLAN) && \
-	popd
+	cd ..
 
 .PHONY: build-release-bin
 build-release-bin: vendor build
@@ -159,9 +159,9 @@ build-release-bin: vendor build
 
 .PHONY: build-release-zip
 build-release-zip: build-release-bin
-	pushd $(BUILDDIR) && \
+	cd $(BUILDDIR) && \
 	  zip -r $(RELEASE_ZIP_NAME) bin/ && \
-	popd
+	cd ..
 
 .PHONY: build-release
 build-release: build-release-zip build-release-plan
