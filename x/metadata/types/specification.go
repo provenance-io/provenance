@@ -316,8 +316,13 @@ func (s *InputSpecification) ValidateBasic() error {
 	}
 	switch source := s.Source.(type) {
 	case *InputSpecification_RecordId:
-		if _, err := VerifyMetadataAddressFormat(source.RecordId); err != nil {
+		prefix, err := VerifyMetadataAddressFormat(source.RecordId)
+		if err != nil {
 			return fmt.Errorf("invalid input specification source record id: %w", err)
+		}
+		if prefix != PrefixRecord {
+			return fmt.Errorf("invalid input specification source record id prefix (expected: %s, got: %s)",
+				PrefixRecord, prefix)
 		}
 	case *InputSpecification_Hash:
 		if len(source.Hash) == 0 {
