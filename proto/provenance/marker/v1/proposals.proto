@@ -11,6 +11,24 @@ option go_package = "github.com/provenance-io/provenance/x/marker/types";
 option java_package        = "io.provenance.marker.v1";
 option java_multiple_files = true;
 
+// AddMarkerProposal defines defines a governance proposal to create a new marker
+message AddMarkerProposal {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  string title       = 1;
+  string description = 2;
+
+  cosmos.base.v1beta1.Coin amount = 3
+      [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
+  string               manager                  = 4;
+  MarkerStatus         status                   = 5;
+  MarkerType           marker_type              = 6;
+  repeated AccessGrant access_list              = 7 [(gogoproto.nullable) = false];
+  bool                 supply_fixed             = 8;
+  bool                 allow_governance_control = 9;
+}
+
 // SupplyIncreaseProposal defines a governance proposal to administer a marker and increase total supply of the marker
 // through minting coin and placing it within the marker or assigning it directly to an account
 message SupplyIncreaseProposal {
