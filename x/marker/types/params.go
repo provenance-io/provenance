@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"regexp"
 
 	yaml "gopkg.in/yaml.v2"
 
@@ -9,8 +10,12 @@ import (
 )
 
 const (
+	// DefaultEnableGovernance (true) indicates that governance proposals are allowed for managing markers
 	DefaultEnableGovernance = true
-	DefaultMaxTotalSupply   = 100000000000 // 100 billion
+	// DefaultMaxTotalSupply is the upper bound to enforce on supply for markers.
+	DefaultMaxTotalSupply = 100000000000
+	// DefaultUnrestrictedDenomRegex is a regex that denoms created by normal requests must pass.
+	DefaultUnrestrictedDenomRegex = `[a-zA-Z][a-zA-Z0-9/]{2,64}`
 )
 
 var (
@@ -18,6 +23,8 @@ var (
 	ParamStoreKeyEnableGovernance = []byte("EnableGovernance")
 	// ParamStoreKeyMaxTotalSupply is maximum supply to allow a marker to create
 	ParamStoreKeyMaxTotalSupply = []byte("MaxTotalSupply")
+	// ParamStoreKeyUnrestrictedDenomRegex is the validation regex for validating denoms supplied by users.
+	ParamStoreKeyUnrestrictedDenomRegex = []byte("UnrestrictedDenomRegex")
 )
 
 // ParamKeyTable for slashing module
@@ -29,10 +36,12 @@ func ParamKeyTable() paramtypes.KeyTable {
 func NewParams(
 	maxTotalSupply uint64,
 	enableGovernance bool,
+	unrestrictedDenomRegex string,
 ) Params {
 	return Params{
-		EnableGovernance: enableGovernance,
-		MaxTotalSupply:   maxTotalSupply,
+		EnableGovernance:       enableGovernance,
+		MaxTotalSupply:         maxTotalSupply,
+		UnrestrictedDenomRegex: unrestrictedDenomRegex,
 	}
 }
 
@@ -41,6 +50,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(ParamStoreKeyEnableGovernance, &p.EnableGovernance, validateEnableGovernance),
 		paramtypes.NewParamSetPair(ParamStoreKeyMaxTotalSupply, &p.MaxTotalSupply, validateIntParam),
+		paramtypes.NewParamSetPair(ParamStoreKeyUnrestrictedDenomRegex, &p.UnrestrictedDenomRegex, validateRegexParam),
 	}
 }
 
@@ -49,6 +59,7 @@ func DefaultParams() Params {
 	return NewParams(
 		DefaultMaxTotalSupply,
 		DefaultEnableGovernance,
+		DefaultUnrestrictedDenomRegex,
 	)
 }
 
@@ -83,6 +94,9 @@ func (p *Params) Equal(that interface{}) bool {
 	if p.EnableGovernance != that1.EnableGovernance {
 		return false
 	}
+	if p.UnrestrictedDenomRegex != that1.UnrestrictedDenomRegex {
+		return false
+	}
 	return true
 }
 
@@ -105,4 +119,14 @@ func validateEnableGovernance(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	return nil
+}
+
+func validateRegexParam(i interface{}) error {
+	exp, ok := i.(string)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	_, err := regexp.Compile(exp)
+
+	return err
 }
