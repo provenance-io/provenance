@@ -112,17 +112,17 @@ func NewContractSpecification(
 	}
 }
 
-// NewSourceResourceID creates a new source (for a ContractSpecification) with a resource id
-func NewSourceResourceID(resourceID MetadataAddress) *ContractSpecification_ResourceId {
+// NewContractSpecificationSourceResourceID creates a new source (for a ContractSpecification) with a resource id
+func NewContractSpecificationSourceResourceID(resourceID MetadataAddress) *ContractSpecification_ResourceId {
 	return &ContractSpecification_ResourceId{ResourceId: resourceID}
 }
 
-// NewSourceHash creates a new source (for a ContractSpecification) with a hash
-func NewSourceHash(hash string) *ContractSpecification_Hash {
+// NewContractSpecificationSourceHash creates a new source (for a ContractSpecification) with a hash
+func NewContractSpecificationSourceHash(hash string) *ContractSpecification_Hash {
 	return &ContractSpecification_Hash{Hash: hash}
 }
 
-// ValidateBasic performs basic format checking of data in a ScopeSpecification
+// ValidateBasic performs basic format checking of data in a ContractSpecification
 func (s *ContractSpecification) ValidateBasic() error {
 	prefix, err := VerifyMetadataAddressFormat(s.SpecificationId)
 	if err != nil {
@@ -196,9 +196,70 @@ func (s ContractSpecification) String() string {
 	return string(out)
 }
 
+// NewRecordSpecification creates a new RecordSpecification instance
+func NewRecordSpecification(
+	specificationID MetadataAddress,
+	name string,
+	inputs []*InputSpecification,
+	typeName string,
+	resultType DefinitionType,
+	responsibleParty PartyType,
+) *RecordSpecification {
+	return &RecordSpecification{
+		SpecificationId: specificationID,
+		Name: name,
+		Inputs: inputs,
+		TypeName: typeName,
+		ResultType: resultType,
+		ResponsibleParty: responsibleParty,
+	}
+}
+
+// ValidateBasic performs basic format checking of data in a RecordSpecification
 func (s *RecordSpecification) ValidateBasic() error {
 	// TODO: implement
 	return nil
+}
+
+// String implements stringer interface
+func (s RecordSpecification) String() string {
+	out, _ := yaml.Marshal(s)
+	return string(out)
+}
+
+// NewInputSpecification creates a new InputSpecification instance
+func NewInputSpecification(
+	name string,
+	typeName string,
+	source isInputSpecification_Source,
+) *InputSpecification {
+	return &InputSpecification{
+		Name: name,
+		TypeName: name,
+		Source: source,
+	}
+}
+
+// NewInputSpecificationSourceRecordID creates a new source (for an InputSpecification) with a resource id
+func NewInputSpecificationSourceRecordID(recordID MetadataAddress) *InputSpecification_RecordId {
+	return &InputSpecification_RecordId{RecordId: recordID}
+}
+
+// NewContractSpecificationSourceHash creates a new source (for a InputSpecification) with a hash
+func NewInputSpecificationSourceHash(hash string) *InputSpecification_Hash {
+	return &InputSpecification_Hash{Hash: hash}
+}
+
+// ValidateBasic performs basic format checking of data in a InputSpecification
+func (s *InputSpecification) ValidateBasic() error {
+	// TODO: implement
+	return nil
+}
+
+// String implements stringer interface
+func (s InputSpecification) String() string {
+	out, _ := yaml.Marshal(s)
+	return string(out)
 }
 
 // NewDescription creates a new Description instance.

@@ -93,6 +93,8 @@ message ContractSpecification {
 
 // RecordSpecification defines the specification for a Record including allowed/required inputs/outputs
 message RecordSpecification {
+  option (gogoproto.goproto_stringer) = false;
+
   // unique identifier for this specification on chain
   bytes specification_id = 1 [
     (gogoproto.nullable)   = false,
@@ -114,6 +116,8 @@ message RecordSpecification {
 // InputSpecification defines a name, type_name, and source reference (either on or off chain) to define an input
 // parameter
 message InputSpecification {
+  option (gogoproto.goproto_stringer) = false;
+
   // name for this input
   string name = 1;
   // a type_name (typically a proto name or class_name)
