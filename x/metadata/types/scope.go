@@ -78,74 +78,74 @@ func (s Scope) String() string {
 }
 
 // NewSession creates a new instance
-func NewSession(name string, sessionID, contractSpecification MetadataAddress, parties []Party) *Session {
+func NewSession(name string, sessionID, contractSpecification MetadataAddress, parties []Party, auditFields AuditFields) *Session {
 	return &Session{
 		SessionId:       sessionID,
 		SpecificationId: contractSpecification,
 		Parties:         parties,
 		Name:            name,
-		Audit:           AuditFields{},
+		Audit:           auditFields,
 	}
 }
 
 // ValidateBasic performs basic format checking of data within a scope
-func (rg *Session) ValidateBasic() error {
-	prefix, err := VerifyMetadataAddressFormat(rg.SessionId)
+func (s *Session) ValidateBasic() error {
+	prefix, err := VerifyMetadataAddressFormat(s.SessionId)
 	if err != nil {
 		return err
 	}
 	if prefix != PrefixSession {
 		return fmt.Errorf("invalid session identifier (expected: %s, got %s)", PrefixSession, prefix)
 	}
-	if len(rg.Parties) < 1 {
+	if len(s.Parties) < 1 {
 		return errors.New("session must have at least one party")
 	}
-	for _, p := range rg.Parties {
+	for _, p := range s.Parties {
 		if err = p.ValidateBasic(); err != nil {
 			return fmt.Errorf("invalid party on session: %w", err)
 		}
 	}
-	prefix, err = VerifyMetadataAddressFormat(rg.SpecificationId)
+	prefix, err = VerifyMetadataAddressFormat(s.SpecificationId)
 	if err != nil {
 		return err
 	}
 	if prefix != PrefixContractSpecification {
 		return fmt.Errorf("invalid contract specification identifier (expected: %s, got %s)", PrefixContractSpecification, prefix)
 	}
-	if len(rg.Name) == 0 {
+	if len(s.Name) == 0 {
 		return errors.New("session name can not be empty")
 	}
-	if len(rg.Audit.CreatedBy) > 0 {
-		if _, err := sdk.AccAddressFromBech32(rg.Audit.CreatedBy); err != nil {
+	if len(s.Audit.CreatedBy) > 0 {
+		if _, err := sdk.AccAddressFromBech32(s.Audit.CreatedBy); err != nil {
 			return fmt.Errorf("invalid session audit:createdby %w", err)
 		}
-		if rg.Audit.CreatedDate.IsZero() {
+		if s.Audit.CreatedDate.IsZero() {
 			return fmt.Errorf("invalid/null session audit created date")
 		}
 	}
-	if len(rg.Audit.UpdatedBy) > 0 {
-		if _, err := sdk.AccAddressFromBech32(rg.Audit.UpdatedBy); err != nil {
+	if len(s.Audit.UpdatedBy) > 0 {
+		if _, err := sdk.AccAddressFromBech32(s.Audit.UpdatedBy); err != nil {
 			return fmt.Errorf("invalid session audit:updatedby %w", err)
 		}
-		if rg.Audit.UpdatedDate.IsZero() {
+		if s.Audit.UpdatedDate.IsZero() {
 			return fmt.Errorf("invalid/null session audit updated date")
 		}
 	}
-	if len(rg.Audit.Message) > maxAuditMessageLength {
-		return fmt.Errorf("session audit message exceeds maximum length (expected < %d got: %d",
-			maxAuditMessageLength, len(rg.Audit.Message))
+	if len(s.Audit.Message) > maxAuditMessageLength {
+		return fmt.Errorf("session audit message exceeds maximum length (expected < %d got: %d)",
+			maxAuditMessageLength, len(s.Audit.Message))
 	}
 	return nil
 }
 
 // String implements stringer interface
-func (rg Session) String() string {
-	out := fmt.Sprintf("%s (%s) [", rg.Name, rg.SessionId)
-	for _, p := range rg.Parties {
+func (s Session) String() string {
+	out := fmt.Sprintf("%s (%s) [", s.Name, s.SessionId)
+	for _, p := range s.Parties {
 		out += fmt.Sprintf("%s - %s, ", p.Address, p.Role)
 	}
 	out = strings.TrimRight(out, ", ")
-	out += fmt.Sprintf("] (%s)", rg.SpecificationId)
+	out += fmt.Sprintf("] (%s)", s.SpecificationId)
 	return out
 }
 
