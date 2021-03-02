@@ -38,7 +38,6 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 		name     string
 		spec     *ScopeSpecification
 		want     string
-		wantErr  bool
 	}{
 		// SpecificationId tests.
 		{
@@ -48,7 +47,6 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				nil, []string{}, []PartyType{}, []MetadataAddress{},
 			),
 			"invalid scope specification id: invalid metadata address type: 133",
-			true,
 		},
 		{
 			"invalid scope specification id - identifier",
@@ -57,7 +55,6 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				nil, []string{}, []PartyType{}, []MetadataAddress{},
 			),
 			"invalid scope specification id prefix (expected: scopespec, got scope)",
-			true,
 		},
 		// Description test to make sure Description.ValidateBasic is being used.
 		{
@@ -68,7 +65,6 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				[]string{}, []PartyType{}, []MetadataAddress{},
 			),
 			fmt.Sprintf("description (ScopeSpecification.Description) Name exceeds maximum length (expected <= %d got: %d)", maxDescriptionNameLength, maxDescriptionNameLength + 1),
-			true,
 		},
 		// OwnerAddresses tests
 		{
@@ -80,7 +76,6 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				[]PartyType{}, []MetadataAddress{},
 			),
 			"the ScopeSpecification must have at least one owner",
-			true,
 		},
 		{
 			"owner addresses - invalid address at index 0",
@@ -91,7 +86,6 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				[]PartyType{}, []MetadataAddress{},
 			),
 			"invalid owner address at index 0 on ScopeSpecification: decoding bech32 failed: invalid index of 1",
-			true,
 		},
 		{
 			"owner addresses - invalid address at index 3",
@@ -102,7 +96,6 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				[]PartyType{}, []MetadataAddress{},
 			),
 			"invalid owner address at index 3 on ScopeSpecification: decoding bech32 failed: invalid index of 1",
-			true,
 		},
 		// parties involved - cannot be empty
 		{
@@ -115,7 +108,6 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				[]MetadataAddress{},
 			),
 			"the ScopeSpecification must have at least one party involved",
-			true,
 		},
 		// contract spec ids - must all pass same tests as scope spec id (contractspec prefix)
 		{
@@ -128,7 +120,6 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				[]MetadataAddress{MetadataAddress(specTestAddr)},
 			),
 			"invalid contract specification id at index 0: invalid metadata address type: 133",
-			true,
 		},
 		{
 			"contract spec ids - wrong prefix at index 0",
@@ -140,7 +131,6 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				[]MetadataAddress{ScopeMetadataAddress(uuid.New())},
 			),
 			"invalid contract specification id prefix at index 0 (expected: contractspec, got scope)",
-			true,
 		},
 		{
 			"contract spec ids - wrong address type at index 2",
@@ -152,7 +142,6 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				[]MetadataAddress{ContractSpecMetadataAddress(uuid.New()), ContractSpecMetadataAddress(uuid.New()), MetadataAddress(specTestAddr)},
 			),
 			"invalid contract specification id at index 2: invalid metadata address type: 133",
-			true,
 		},
 		{
 			"contract spec ids - wrong prefix at index 2",
@@ -164,7 +153,6 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				[]MetadataAddress{ContractSpecMetadataAddress(uuid.New()), ContractSpecMetadataAddress(uuid.New()), ScopeMetadataAddress(uuid.New())},
 			),
 			"invalid contract specification id prefix at index 2 (expected: contractspec, got scope)",
-			true,
 		},
 		// Simple valid case
 		{
@@ -177,7 +165,6 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				[]MetadataAddress{ContractSpecMetadataAddress(uuid.New())},
 			),
 			"",
-			false,
 		},
 	}
 
@@ -185,12 +172,10 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
 			err := tt.spec.ValidateBasic()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("ScopeSpec ValidateBasic error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if tt.wantErr {
-				require.Equal(t, tt.want, err.Error())
+			if err != nil {
+				require.Equal(t, tt.want, err.Error(), "ScopeSpec ValidateBasic error")
+			} else if len(tt.want) > 0 {
+				t.Errorf("ScopeSpec ValidateBasic error = nil, expected: %s", tt.want)
 			}
 		})
 	}
@@ -222,6 +207,7 @@ func NewWeirdSource(value uint32) *WeirdSource {
 	}
 }
 func (*WeirdSource) isContractSpecification_Source() {}
+func (*WeirdSource) isRecordSpecification_Source() {}
 func (m *WeirdSource) Size() (n int) {
 	return 1 + sovSpecTests(uint64(n))
 }
@@ -574,7 +560,6 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 		name     string
 		desc     *Description
 		want     string
-		wantErr  bool
 	}{
 		// Name tests
 		{
@@ -586,7 +571,6 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"",
 			),
 			fmt.Sprintf("description Name cannot be empty"),
-			true,
 		},
 		{
 			"invalid name - too long",
@@ -597,7 +581,6 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"",
 			),
 			fmt.Sprintf("description Name exceeds maximum length (expected <= %d got: %d)", maxDescriptionNameLength, maxDescriptionNameLength + 1),
-			true,
 		},
 		{
 			"valid name - 1 char",
@@ -608,7 +591,6 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"",
 			),
 			"",
-			false,
 		},
 		{
 			"valid name - exactly max length",
@@ -619,7 +601,6 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"",
 			),
 			"",
-			false,
 		},
 
 		// Description tests
@@ -632,7 +613,6 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"",
 			),
 			fmt.Sprintf("description Description exceeds maximum length (expected <= %d got: %d)", maxDescriptionDescriptionLength, maxDescriptionDescriptionLength + 1),
-			true,
 		},
 		{
 			"valid description - empty",
@@ -643,7 +623,6 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"",
 			),
 			"",
-			false,
 		},
 		{
 			"valid description - 1 char",
@@ -654,7 +633,6 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"",
 			),
 			"",
-			false,
 		},
 		{
 			"valid description - exactly max length",
@@ -665,7 +643,6 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"",
 			),
 			"",
-			false,
 		},
 
 		// Website url tests
@@ -678,7 +655,6 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"",
 			),
 			fmt.Sprintf("url WebsiteUrl exceeds maximum length (expected <= %d got: %d)", maxURLLength, maxURLLength + 1),
-			true,
 		},
 		{
 			"invalid website url - no protocol",
@@ -689,7 +665,6 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"",
 			),
 			fmt.Sprintf("url WebsiteUrl must use the http, https, or data protocol"),
-			true,
 		},
 		{
 			"valid website url - http",
@@ -700,7 +675,6 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"",
 			),
 			"",
-			false,
 		},
 		{
 			"valid website url - http at max length",
@@ -711,7 +685,6 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"",
 			),
 			"",
-			false,
 		},
 		{
 			"valid website url - https",
@@ -722,7 +695,6 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"",
 			),
 			"",
-			false,
 		},
 		{
 			"valid website url - https at max length",
@@ -733,7 +705,6 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"",
 			),
 			"",
-			false,
 		},
 		{
 			"valid website url - data",
@@ -744,7 +715,6 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"",
 			),
 			"",
-			false,
 		},
 		{
 			"valid website url - data minimal",
@@ -755,7 +725,6 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"",
 			),
 			"",
-			false,
 		},
 		{
 			"valid website url - data at max length",
@@ -766,7 +735,6 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"",
 			),
 			"",
-			false,
 		},
 
 		// Icon url tests
@@ -779,7 +747,6 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				strings.Repeat("h", maxURLLength + 1),
 			),
 			fmt.Sprintf("url IconUrl exceeds maximum length (expected <= %d got: %d)", maxURLLength, maxURLLength + 1),
-			true,
 		},
 		{
 			"invalid icon url - no protocol",
@@ -790,7 +757,6 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"www.test.com",
 			),
 			fmt.Sprintf("url IconUrl must use the http, https, or data protocol"),
-			true,
 		},
 		{
 			"valid icon url - http",
@@ -801,7 +767,6 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"http://www.test.com",
 			),
 			"",
-			false,
 		},
 		{
 			"valid icon url - http at max length",
@@ -812,7 +777,6 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"http://" + strings.Repeat("f", maxURLLength - 7),
 			),
 			"",
-			false,
 		},
 		{
 			"valid icon url - https",
@@ -823,7 +787,6 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"https://www.test.com",
 			),
 			"",
-			false,
 		},
 		{
 			"valid icon url - https at max length",
@@ -834,7 +797,6 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"https://" + strings.Repeat("s", maxURLLength - 8),
 			),
 			"",
-			false,
 		},
 		{
 			"valid website url - data",
@@ -845,7 +807,6 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==",
 			),
 			"",
-			false,
 		},
 		{
 			"valid website url - data minimal",
@@ -856,7 +817,6 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"data:,",
 			),
 			"",
-			false,
 		},
 		{
 			"valid website url - data at max length",
@@ -867,7 +827,6 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"data:image/png;base64," + strings.Repeat("d", maxURLLength - 22),
 			),
 			"",
-			false,
 		},
 	}
 
@@ -875,12 +834,10 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
 			err := tt.desc.ValidateBasic("")
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Scope ValidateBasic error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if tt.wantErr {
-				require.Equal(t, tt.want, err.Error())
+			if err != nil {
+				require.Equal(t, tt.want, err.Error(), "Description ValidateBasic error")
+			} else if len(tt.want) > 0 {
+				t.Errorf("Description ValidateBasic error = nil, expected: %s", tt.want)
 			}
 		})
 	}
