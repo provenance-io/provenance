@@ -36,11 +36,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Add support for creating, updating, removing, finding, and iterating over `Record`s #54
 * Add migration support for v039 account into v040 attributes module #100
-* Implemented v39 to v40 migration for name module.
 * Remove setting default no-op upgrade handlers.
 * Add an explicit no-op upgrade handler for release v0.1.5.
 * Add support for creating, updating, removing, finding, and iterating over `ContractSpecification`s #57
 * Add support for record specification metadata addresses #58
+* Enhance build process to release cosmovisor compatible zip and plan #119
 
 ## [v0.1.4](https://github.com/provenance-io/provenance/releases/tag/v0.1.4) - 2021-02-24
 

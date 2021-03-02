@@ -33,9 +33,11 @@ jobs:
         uses: actions/setup-go@v1
         with:
           go-version: 1.15
-      - name: Vendor and Compile
-        run: make vendor build
-      - name: Create release ${{ github.ref }}
+      - name: Set tag version
+        id: get_ver
+        run: |
+          echo "::set-output name=release_tag::${GITHUB_REF##*/}"
+      - name: Create release ${{ steps.get_ver.outputs.release_tag }}
         uses: actions/create-release@v1
         id: create_release
         env:
@@ -43,29 +45,36 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
-          draft: true
+          draft: false
           prerelease: false
           body_path: RELEASE_CHANGELOG.md
-      - name: Ensure exe
+      - name: Build release and plan
         run: |
-          chmod +x build/provenanced
-      - name: Pull libwasmvm
-        run: |
-          cp vendor/github.com/CosmWasm/wasmvm/api/libwasmvm.so build/
-      - name: Checksum
-        run: |
-          cd build
-          shasum -a 256 provenanced libwasmvm.so > sha256sums.txt
-          cd ..
-      - name: Create zip
-        run: |
-          zip -j provenance-linux-amd64.zip build/provenanced build/libwasmvm.so build/sha256sums.txt
-      - name: Upload release
+          make RELEASE_TAG=${{ steps.get_ver.outputs.release_tag }} build-release
+      - name: Upload release zip
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./provenance-linux-amd64.zip
-          asset_name: provenance-linux-amd64.zip
+          asset_path: ./build/provenance-linux-amd64-${{ steps.get_ver.outputs.release_tag }}.zip
+          asset_name: provenance-linux-amd64-${{ steps.get_ver.outputs.release_tag }}.zip
+          asset_content_type: application/octet-stream
+      - name: Upload release checksum
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: build/sha256sum.txt
+          asset_name: sha256sum.txt
+          asset_content_type: application/octet-stream
+      - name: Upload release plan
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: build/plan-${{ steps.get_ver.outputs.release_tag }}.json
+          asset_name: plan-${{ steps.get_ver.outputs.release_tag }}.json
           asset_content_type: application/octet-stream
