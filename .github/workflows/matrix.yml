@@ -33,9 +33,11 @@ jobs:
         uses: actions/setup-go@v1
         with:
           go-version: 1.15
-      - name: Vendor and Compile
-        run: make vendor build
-      - name: Create release ${{ github.ref }}
+      - name: Set tag version
+        id: get_ver
+        run: |
+          echo "::set-output name=release_tag::${GITHUB_REF##*/}"
+      - name: Create release ${{ steps.get_ver.outputs.release_tag }}
         uses: actions/create-release@v1
         id: create_release
         env:
@@ -48,15 +50,15 @@ jobs:
           body_path: RELEASE_CHANGELOG.md
       - name: Build release and plan
         run: |
-          make RELEASE_TAG=${{ github.ref }} build-release
+          make RELEASE_TAG=${{ steps.get_ver.outputs.release_tag }} build-release
       - name: Upload release zip
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./build/provenance-linux-amd64-${{ github.ref }}.zip
-          asset_name: provenance-linux-amd64-${{ github.ref }}.zip
+          asset_path: ./build/provenance-linux-amd64-${{ steps.get_ver.outputs.release_tag }}.zip
+          asset_name: provenance-linux-amd64-${{ steps.get_ver.outputs.release_tag }}.zip
           asset_content_type: application/octet-stream
       - name: Upload release checksum
         uses: actions/upload-release-asset@v1
@@ -73,6 +75,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: build/plan-${{ github.ref }}.json
-          asset_name: plan-${{ github.ref }}.json
+          asset_path: build/plan-${{ steps.get_ver.outputs.release_tag }}.json
+          asset_name: plan-${{ steps.get_ver.outputs.release_tag }}.json
           asset_content_type: application/octet-stream
