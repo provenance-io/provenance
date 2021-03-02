@@ -110,7 +110,7 @@ message RecordSpecification {
   // Type of result for this record specification (must be RECORD or RECORD_LIST)
   DefinitionType result_type = 5 [(gogoproto.moretags) = "yaml:\"result_type\""];
   // Type of party responsible for this record
-  PartyType responsible_party = 6 [(gogoproto.moretags) = "yaml:\"responsible_party\""];
+  repeated PartyType responsible_parties = 6 [(gogoproto.moretags) = "yaml:\"responsible_parties\""];
 }
 
 // InputSpecification defines a name, type_name, and source reference (either on or off chain) to define an input

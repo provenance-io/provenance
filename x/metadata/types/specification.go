@@ -212,15 +212,15 @@ func NewRecordSpecification(
 	inputs []*InputSpecification,
 	typeName string,
 	resultType DefinitionType,
-	responsibleParty PartyType,
+	responsibleParties []PartyType,
 ) *RecordSpecification {
 	return &RecordSpecification{
-		SpecificationId:  specificationID,
-		Name:             name,
-		Inputs:           inputs,
-		TypeName:         typeName,
-		ResultType:       resultType,
-		ResponsibleParty: responsibleParty,
+		SpecificationId:    specificationID,
+		Name:               name,
+		Inputs:             inputs,
+		TypeName:           typeName,
+		ResultType:         resultType,
+		ResponsibleParties: responsibleParties,
 	}
 }
 

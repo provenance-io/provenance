@@ -394,12 +394,12 @@ func convertContractSpec(old *v039metadata.ContractSpec) (
 			return newSpec, nil, err
 		}
 		newRecords[i] = v040metadata.RecordSpecification{
-			SpecificationId:  newSpec.SpecificationId,
-			Name:             old.ConsiderationSpecs[i].OutputSpec.Spec.Name,
-			TypeName:         old.ConsiderationSpecs[i].OutputSpec.Spec.ResourceLocation.Classname,
-			ResultType:       v040metadata.DefinitionType(old.ConsiderationSpecs[i].OutputSpec.Spec.Type),
-			Inputs:           recordInputs,
-			ResponsibleParty: v040metadata.PartyType(old.ConsiderationSpecs[i].ResponsibleParty),
+			SpecificationId:    newSpec.SpecificationId,
+			Name:               old.ConsiderationSpecs[i].OutputSpec.Spec.Name,
+			TypeName:           old.ConsiderationSpecs[i].OutputSpec.Spec.ResourceLocation.Classname,
+			ResultType:         v040metadata.DefinitionType(old.ConsiderationSpecs[i].OutputSpec.Spec.Type),
+			Inputs:             recordInputs,
+			ResponsibleParties: []v040metadata.PartyType{v040metadata.PartyType(old.ConsiderationSpecs[i].ResponsibleParty)},
 		}
 	}
 
