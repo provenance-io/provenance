@@ -34,6 +34,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+## [v0.1.5](https://github.com/provenance-io/provenance/releases/tag/v0.1.5) - 2021-03-02
+
 * Add support for creating, updating, removing, finding, and iterating over `Record`s #54
 * Add migration support for v039 account into v040 attributes module #100
 * Remove setting default no-op upgrade handlers.
