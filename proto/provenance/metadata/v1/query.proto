@@ -77,9 +77,9 @@ message ScopeRequest {
 
 // ScopeResponse is the response to a scope request.
 message ScopeResponse {
-  Scope                scope         = 1;
+  Scope            scope    = 1;
   repeated Session sessions = 2 [(gogoproto.moretags) = "yaml:\"sessions\""];
-  repeated Record      records       = 3;
+  repeated Record  records  = 3;
 }
 
 // OwnershipRequest looks for all scope level resources associated with the given addrss
@@ -116,7 +116,7 @@ message ValueOwnershipResponse {
 
 // SessionContextRequest returns the record sessions for a given scope identifer or optionally a specific record session
 message SessionContextRequest {
-  string scope_uuid = 1 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
+  string scope_uuid   = 1 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
   string session_uuid = 2 [(gogoproto.moretags) = "yaml:\"session_uuid\""];
 }
 
@@ -125,20 +125,22 @@ message SessionContextResponse {
   repeated Session sessions = 1;
 }
 
-// RecordsByScopeUUIDRequest is a request for all of the records in a specific scope by uuid or a specific record if a name is given.
+// RecordsByScopeUUIDRequest is a request for all of the records in a specific scope by uuid or a specific record if a
+// name is given.
 message RecordsByScopeUUIDRequest {
   string scope_uuid = 1 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
-  string name     = 2;
+  string name       = 2;
 }
 
 // RecordsByScopeUUIDResponse is the response to a RecordsByScopeUUIDRequest
 message RecordsByScopeUUIDResponse {
   string          scope_uuid = 1 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
-  string          scope_id = 2 [(gogoproto.moretags) = "yaml:\"scope_id\""];
-  repeated Record records  = 3;
+  string          scope_id   = 2 [(gogoproto.moretags) = "yaml:\"scope_id\""];
+  repeated Record records    = 3;
 }
 
-// RecordsByScopeIDRequest is a request for all of the records in a specific scope by bech32 id or a specific record if a name is given.
+// RecordsByScopeIDRequest is a request for all of the records in a specific scope by bech32 id or a specific record if
+// a name is given.
 message RecordsByScopeIDRequest {
   string scope_id = 1 [(gogoproto.moretags) = "yaml:\"scope_id\""];
   string name     = 2;
@@ -147,8 +149,8 @@ message RecordsByScopeIDRequest {
 // RecordsByScopeIDResponse is the response to a RecordsByScopeIDRequest
 message RecordsByScopeIDResponse {
   string          scope_uuid = 1 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
-  string          scope_id = 2 [(gogoproto.moretags) = "yaml:\"scope_id\""];
-  repeated Record records  = 3;
+  string          scope_id   = 2 [(gogoproto.moretags) = "yaml:\"scope_id\""];
+  repeated Record records    = 3;
 }
 
 // ScopeSpecificationRequest is used for requesting a scope specification by uuid

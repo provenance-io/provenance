@@ -98,15 +98,15 @@ enum PartyType {
 // Audit
 message AuditFields {
   GogoTimeHack created_date = 1;
-  string                    created_by   = 2;
+  string       created_by   = 2;
   GogoTimeHack updated_date = 3;
-  string updated_by = 4;
-  int32  version    = 5;
-  string message    = 6;
+  string       updated_by   = 4;
+  int32        version      = 5;
+  string       message      = 6;
 }
 
 // proto 3 timestamp structure (hack to get around gogo issues with invalid dates)
 message GogoTimeHack {
   int64 seconds = 1;
-  int32 nanos = 2;
+  int32 nanos   = 2;
 }

@@ -20,9 +20,9 @@ message GenesisState {
   Params params = 1 [(gogoproto.nullable) = false];
 
   // A collection of metadata scopes and specs to create on start
-  repeated Scope       scopes  = 2 [(gogoproto.nullable) = false];
-  repeated Session sessions  = 3 [(gogoproto.nullable) = false];
-  repeated Record      records = 4 [(gogoproto.nullable) = false];
+  repeated Scope   scopes   = 2 [(gogoproto.nullable) = false];
+  repeated Session sessions = 3 [(gogoproto.nullable) = false];
+  repeated Record  records  = 4 [(gogoproto.nullable) = false];
 
   repeated ScopeSpecification    scope_specifications    = 5 [(gogoproto.nullable) = false];
   repeated ContractSpecification contract_specifications = 6 [(gogoproto.nullable) = false];

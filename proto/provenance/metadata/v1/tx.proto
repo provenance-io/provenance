@@ -38,7 +38,8 @@ service Msg {
   // AddContractSpecification adds a contract specification
   rpc AddContractSpecification(MsgAddContractSpecificationRequest) returns (MsgAddContractSpecificationResponse);
   // DeleteContractSpecification deletes a contract specification
-  rpc DeleteContractSpecification(MsgDeleteContractSpecificationRequest) returns (MsgDeleteContractSpecificationResponse);
+  rpc DeleteContractSpecification(MsgDeleteContractSpecificationRequest)
+      returns (MsgDeleteContractSpecificationResponse);
 }
 
 // MsgMemorializeContractRequest is a request from a P8e execution environment to record results of a contract
@@ -131,8 +132,8 @@ message MsgAddSessionRequest {
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-  Session session  = 1;
-  string      notary = 2;
+  Session session = 1;
+  string  notary  = 2;
 }
 
 // MsgAddSessionResponse from an add records request
@@ -151,7 +152,7 @@ message MsgAddRecordRequest {
     (gogoproto.moretags)   = "yaml:\"session_id\""
   ];
 
-  Record record           = 2;
+  Record          record  = 2;
   repeated string signers = 3;
 }
 

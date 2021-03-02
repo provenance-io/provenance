@@ -535,7 +535,8 @@ func (m *SessionContextResponse) GetSessions() []*Session {
 	return nil
 }
 
-// RecordsByScopeUUIDRequest is a request for all of the records in a specific scope by uuid or a specific record if a name is given.
+// RecordsByScopeUUIDRequest is a request for all of the records in a specific scope by uuid or a specific record if a
+// name is given.
 type RecordsByScopeUUIDRequest struct {
 	ScopeUuid string `protobuf:"bytes,1,opt,name=scope_uuid,json=scopeUuid,proto3" json:"scope_uuid,omitempty" yaml:"scope_uuid"`
 	Name      string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
@@ -649,7 +650,8 @@ func (m *RecordsByScopeUUIDResponse) GetRecords() []*Record {
 	return nil
 }
 
-// RecordsByScopeIDRequest is a request for all of the records in a specific scope by bech32 id or a specific record if a name is given.
+// RecordsByScopeIDRequest is a request for all of the records in a specific scope by bech32 id or a specific record if
+// a name is given.
 type RecordsByScopeIDRequest struct {
 	ScopeId string `protobuf:"bytes,1,opt,name=scope_id,json=scopeId,proto3" json:"scope_id,omitempty" yaml:"scope_id"`
 	Name    string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
