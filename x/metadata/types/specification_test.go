@@ -999,7 +999,7 @@ responsible_parties:
 - 3
 `
 	actual := recordSpec.String()
-	fmt.Printf("Actual:\n%s\n-----\n", actual)
+	// fmt.Printf("Actual:\n%s\n-----\n", actual)
 	require.Equal(s.T(), expected, actual)
 }
 
@@ -1012,7 +1012,7 @@ func (s *specificationTestSuite) TestInputSpecString() {
 	}{
 		{
 			"source is record id",
-			true,
+			false,
 			NewInputSpecification(
 				"inputSpecRecordIdSource",
 				"inputSpecRecordIdSourceTypeName",
