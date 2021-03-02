@@ -31,11 +31,12 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 			k.SetScopeSpecification(ctx, s)
 		}
 	}
-	if data.GroupSpecifications != nil {
-		for _, s := range data.GroupSpecifications {
-			k.SetGroupSpecification(ctx, s)
+	if data.ContractSpecifications != nil {
+		for _, s := range data.ContractSpecifications {
+			k.SetContractSpecification(ctx, s)
 		}
 	}
+	// TODO: data.RecordSpecifications
 }
 
 // ExportGenesis exports the current keeper state of the metadata module.ExportGenesis
@@ -71,5 +72,5 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 	}
 	// TODO iterate over existing scope, group specifications and collect here for export
 
-	return types.NewGenesisState(params, scopes, groups, records, []types.ScopeSpecification{}, []types.GroupSpecification{})
+	return types.NewGenesisState(params, scopes, groups, records, []types.ScopeSpecification{}, []types.ContractSpecification{})
 }

@@ -24,12 +24,19 @@ const (
 	// EventTypeRecordRemoved is the event type generated when a scope is removed
 	EventTypeRecordRemoved string = "record_removed"
 
-	// EventTypeScopeSpecificationCreated is the event type generated when new scope specification are created.
+	// EventTypeScopeSpecificationCreated is the event type generated when a new scope specification is created.
 	EventTypeScopeSpecificationCreated string = "scope_specification_created"
-	// EventTypeScopeSpecificationUpdated is the event type generated when existing scope specifications are updated.
+	// EventTypeScopeSpecificationUpdated is the event type generated when an existing scope specifications is updated.
 	EventTypeScopeSpecificationUpdated string = "scope_specification_updated"
 	// EventTypeScopeSpecificationRemoved is the event type generated when a scope specification is removed.
 	EventTypeScopeSpecificationRemoved string = "scope_specification_removed"
+
+	// EventTypeContractSpecificationCreated is the event type generated when a new contract specification is created.
+	EventTypeContractSpecificationCreated string = "contract_specification_created"
+	// EventTypeContractSpecificationUpdated is the event type generated when an existing contract specifications is updated.
+	EventTypeContractSpecificationUpdated string = "contract_specification_updated"
+	// EventTypeContractSpecificationRemoved is the event type generated when a contract specification is removed.
+	EventTypeContractSpecificationRemoved string = "contract_specification_removed"
 
 	// AttributeKeyScopeID is the attribute key for a scope ID attribute JSON value.
 	AttributeKeyScopeID string = "scope_id"

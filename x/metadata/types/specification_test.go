@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/hex"
 	"fmt"
+	math_bits "math/bits"
 	"strings"
 	"testing"
 
@@ -46,7 +47,7 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				MetadataAddress(specTestAddr),
 				nil, []string{}, []PartyType{}, []MetadataAddress{},
 			),
-			"invalid scope specification id: invalid metadata address type (must be 0-4, actual: 133)",
+			"invalid scope specification id: invalid metadata address type: 133",
 			true,
 		},
 		{
@@ -116,7 +117,7 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 			"the ScopeSpecification must have at least one party involved",
 			true,
 		},
-		// contract spec ids - must all pass same tests as scope spec id (groupspec prefix)
+		// contract spec ids - must all pass same tests as scope spec id (contractspec prefix)
 		{
 			"contract spec ids - wrong address type at index 0",
 			NewScopeSpecification(
@@ -126,7 +127,7 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				[]MetadataAddress{MetadataAddress(specTestAddr)},
 			),
-			"invalid contract specification id at index 0: invalid metadata address type (must be 0-4, actual: 133)",
+			"invalid contract specification id at index 0: invalid metadata address type: 133",
 			true,
 		},
 		{
@@ -138,7 +139,7 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				[]MetadataAddress{ScopeMetadataAddress(uuid.New())},
 			),
-			"invalid contract specification id prefix at index 0 (expected: groupspec, got scope)",
+			"invalid contract specification id prefix at index 0 (expected: contractspec, got scope)",
 			true,
 		},
 		{
@@ -148,9 +149,9 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				nil,
 				[]string{specTestBech32},
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
-				[]MetadataAddress{GroupSpecMetadataAddress(uuid.New()), GroupSpecMetadataAddress(uuid.New()), MetadataAddress(specTestAddr)},
+				[]MetadataAddress{ContractSpecMetadataAddress(uuid.New()), ContractSpecMetadataAddress(uuid.New()), MetadataAddress(specTestAddr)},
 			),
-			"invalid contract specification id at index 2: invalid metadata address type (must be 0-4, actual: 133)",
+			"invalid contract specification id at index 2: invalid metadata address type: 133",
 			true,
 		},
 		{
@@ -160,9 +161,9 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				nil,
 				[]string{specTestBech32},
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
-				[]MetadataAddress{GroupSpecMetadataAddress(uuid.New()), GroupSpecMetadataAddress(uuid.New()), ScopeMetadataAddress(uuid.New())},
+				[]MetadataAddress{ContractSpecMetadataAddress(uuid.New()), ContractSpecMetadataAddress(uuid.New()), ScopeMetadataAddress(uuid.New())},
 			),
-			"invalid contract specification id prefix at index 2 (expected: groupspec, got scope)",
+			"invalid contract specification id prefix at index 2 (expected: contractspec, got scope)",
 			true,
 		},
 		// Simple valid case
@@ -173,7 +174,7 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 				nil,
 				[]string{specTestBech32},
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
-				[]MetadataAddress{GroupSpecMetadataAddress(uuid.New())},
+				[]MetadataAddress{ContractSpecMetadataAddress(uuid.New())},
 			),
 			"",
 			false,
@@ -185,11 +186,384 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 		s.T().Run(tt.name, func(t *testing.T) {
 			err := tt.spec.ValidateBasic()
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Scope ValidateBasic error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ScopeSpec ValidateBasic error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if tt.wantErr {
 				require.Equal(t, tt.want, err.Error())
+			}
+		})
+	}
+}
+
+func sovSpecTests(x uint64) (n int) {
+	return (math_bits.Len64(x|1) + 6) / 7
+}
+func encodeVarintSpecTests(dAtA []byte, offset int, v uint64) int {
+	offset -= sovSpecTests(v)
+	base := offset
+	for v >= 1<<7 {
+		dAtA[offset] = uint8(v&0x7f | 0x80)
+		v >>= 7
+		offset++
+	}
+	dAtA[offset] = uint8(v)
+	return base
+}
+
+// WeirdSoure is a thing that satisfies all needed pieces of the isContractSpecification_Source interface
+// but isn't a valid thing to use as a Source according to the ContractSpecification.ValidateBasic() method.
+type WeirdSource struct {
+	Value uint32
+}
+func NewWeirdSource(value uint32) *WeirdSource {
+	return &WeirdSource{
+		Value: value,
+	}
+}
+func (*WeirdSource) isContractSpecification_Source() {}
+func (m *WeirdSource) Size() (n int) {
+	return 1 + sovSpecTests(uint64(n))
+}
+func (m *WeirdSource) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+func (m *WeirdSource) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.Value != 0 {
+		i = encodeVarintSpecTests(dAtA, i, uint64(m.Value))
+		i--
+		dAtA[i] = 0x2a
+	}
+	return len(dAtA) - i, nil
+}
+
+func (s *specificationTestSuite) TestContractSpecValidateBasic() {
+	contractSpecUuid1 := uuid.New()
+	contractSpecUuid2 := uuid.New()
+	tests := []struct {
+		name     string
+		spec     *ContractSpecification
+		want     string
+	}{
+		// SpecificationID tests
+		{
+			"SpecificationID - invalid format",
+			NewContractSpecification(
+				MetadataAddress(specTestAddr),
+				nil,
+				[]string{specTestBech32},
+				[]PartyType{PartyType_PARTY_TYPE_OWNER},
+				NewSourceHash("somehash"),
+				"someclass",
+				[]MetadataAddress{},
+			),
+			"invalid contract specification id: invalid metadata address type: 133",
+		},
+		{
+			"SpecificationID - invalid prefix",
+			NewContractSpecification(
+				ScopeSpecMetadataAddress(uuid.New()),
+				nil,
+				[]string{specTestBech32},
+				[]PartyType{PartyType_PARTY_TYPE_OWNER},
+				NewSourceHash("somehash"),
+				"someclass",
+				[]MetadataAddress{},
+			),
+			"invalid contract specification id prefix (expected: contractspec, got scopespec)",
+		},
+
+		// description - just make sure one of the Description.ValidateBasic pieces fails.
+		{
+			"Description - name too long",
+			NewContractSpecification(
+				ContractSpecMetadataAddress(uuid.New()),
+				NewDescription(strings.Repeat("x", maxDescriptionNameLength + 1), "", "", ""),
+				[]string{specTestBech32},
+				[]PartyType{PartyType_PARTY_TYPE_OWNER},
+				NewSourceHash("somehash"),
+				"someclass",
+				[]MetadataAddress{},
+			),
+			fmt.Sprintf("description (ContractSpecification.Description) Name exceeds maximum length (expected <= %d got: %d)", maxDescriptionNameLength, maxDescriptionNameLength + 1),
+		},
+
+		// OwnerAddresses tests
+		{
+			"OwnerAddresses - empty",
+			NewContractSpecification(
+				ContractSpecMetadataAddress(uuid.New()),
+				nil,
+				[]string{},
+				[]PartyType{PartyType_PARTY_TYPE_OWNER},
+				NewSourceHash("somehash"),
+				"someclass",
+				[]MetadataAddress{},
+			),
+			"invalid owner addresses count (expected > 0 got: 0)",
+		},
+		{
+			"OwnerAddresses - invalid address at index 0",
+			NewContractSpecification(
+				ContractSpecMetadataAddress(uuid.New()),
+				nil,
+				[]string{":invalid"},
+				[]PartyType{PartyType_PARTY_TYPE_OWNER},
+				NewSourceHash("somehash"),
+				"someclass",
+				[]MetadataAddress{},
+			),
+			fmt.Sprintf("invalid owner address at index %d: %s",
+				0, "decoding bech32 failed: invalid index of 1"),
+		},
+		{
+			"OwnerAddresses - invalid address at index 2",
+			NewContractSpecification(
+				ContractSpecMetadataAddress(uuid.New()),
+				nil,
+				[]string{specTestBech32, specTestBech32, ":invalid"},
+				[]PartyType{PartyType_PARTY_TYPE_OWNER},
+				NewSourceHash("somehash"),
+				"someclass",
+				[]MetadataAddress{},
+			),
+			fmt.Sprintf("invalid owner address at index %d: %s",
+				2, "decoding bech32 failed: invalid index of 1"),
+		},
+
+		// PartiesInvolved tests
+		{
+			"PartiesInvolved - empty",
+			NewContractSpecification(
+				ContractSpecMetadataAddress(uuid.New()),
+				nil,
+				[]string{specTestBech32},
+				[]PartyType{},
+				NewSourceHash("somehash"),
+				"someclass",
+				[]MetadataAddress{},
+			),
+			"invalid parties involved count (expected > 0 got: 0)",
+		},
+
+		// Source tests
+		{
+			"Source - nil",
+			NewContractSpecification(
+				ContractSpecMetadataAddress(uuid.New()),
+				nil,
+				[]string{specTestBech32},
+				[]PartyType{PartyType_PARTY_TYPE_OWNER},
+				nil,
+				"someclass",
+				[]MetadataAddress{},
+			),
+			"a source is required",
+		},
+		{
+			"Source - ResourceID - invalid",
+			NewContractSpecification(
+				ContractSpecMetadataAddress(uuid.New()),
+				nil,
+				[]string{specTestBech32},
+				[]PartyType{PartyType_PARTY_TYPE_OWNER},
+				NewSourceResourceID(MetadataAddress(specTestAddr)),
+				"someclass",
+				[]MetadataAddress{},
+			),
+			fmt.Sprintf("invalid source resource id: %s", "invalid metadata address type: 133"),
+		},
+		{
+			"Source - Hash - empty",
+			NewContractSpecification(
+				ContractSpecMetadataAddress(uuid.New()),
+				nil,
+				[]string{specTestBech32},
+				[]PartyType{PartyType_PARTY_TYPE_OWNER},
+				NewSourceHash(""),
+				"someclass",
+				[]MetadataAddress{},
+			),
+			"source hash cannot be empty",
+		},
+		{
+			"Source - unknown type",
+			NewContractSpecification(
+				ContractSpecMetadataAddress(uuid.New()),
+				nil,
+				[]string{specTestBech32},
+				[]PartyType{PartyType_PARTY_TYPE_OWNER},
+				NewWeirdSource(3),
+				"someclass",
+				[]MetadataAddress{},
+			),
+			"unknown source type",
+		},
+
+		// ClassName tests
+		{
+			"ClassName - empty",
+			NewContractSpecification(
+				ContractSpecMetadataAddress(uuid.New()),
+				nil,
+				[]string{specTestBech32},
+				[]PartyType{PartyType_PARTY_TYPE_OWNER},
+				NewSourceHash("somehash"),
+				"",
+				[]MetadataAddress{},
+			),
+			"class name cannot be empty",
+		},
+		{
+			"ClassName - just over max length",
+			NewContractSpecification(
+				ContractSpecMetadataAddress(uuid.New()),
+				nil,
+				[]string{specTestBech32},
+				[]PartyType{PartyType_PARTY_TYPE_OWNER},
+				NewSourceHash("somehash"),
+				strings.Repeat("l", maxContractSpecificationClassNameLength + 1),
+				[]MetadataAddress{},
+			),
+			fmt.Sprintf("class name exceeds maximum length (expected <= %d got: %d)",
+				maxContractSpecificationClassNameLength, maxContractSpecificationClassNameLength + 1),
+		},
+		{
+			"ClassName - at max length",
+			NewContractSpecification(
+				ContractSpecMetadataAddress(uuid.New()),
+				nil,
+				[]string{specTestBech32},
+				[]PartyType{PartyType_PARTY_TYPE_OWNER},
+				NewSourceHash("somehash"),
+				strings.Repeat("m", maxContractSpecificationClassNameLength),
+				[]MetadataAddress{},
+			),
+			"",
+		},
+
+		// RecordSpecIDs tests
+		{
+			"RecordSpecIDs - invalid address at index 0",
+			NewContractSpecification(
+				ContractSpecMetadataAddress(uuid.New()),
+				nil,
+				[]string{specTestBech32},
+				[]PartyType{PartyType_PARTY_TYPE_OWNER},
+				NewSourceHash("somehash"),
+				"someclass",
+				[]MetadataAddress{MetadataAddress(specTestAddr)},
+			),
+			fmt.Sprintf("invalid record specification id at index %d: %s",
+				0, "invalid metadata address type: 133"),
+		},
+		{
+			"RecordSpecIDs - invalid address prefix at index 0",
+			NewContractSpecification(
+				ContractSpecMetadataAddress(uuid.New()),
+				nil,
+				[]string{specTestBech32},
+				[]PartyType{PartyType_PARTY_TYPE_OWNER},
+				NewSourceHash("somehash"),
+				"someclass",
+				[]MetadataAddress{ContractSpecMetadataAddress(uuid.New())},
+			),
+			"invalid record specification id prefix at index 0 (expected: recspec, got contractspec)",
+		},
+		{
+			"RecordSpecIDs - wrong contract spec uuid at index 0",
+			NewContractSpecification(
+				ContractSpecMetadataAddress(contractSpecUuid1),
+				nil,
+				[]string{specTestBech32},
+				[]PartyType{PartyType_PARTY_TYPE_OWNER},
+				NewSourceHash("somehash"),
+				"someclass",
+				[]MetadataAddress{RecordSpecMetadataAddress(contractSpecUuid2, "cs2")},
+			),
+			fmt.Sprintf("invalid record specification id contract specification uuid value at index %d (expected :%s, got %s)",
+				0, contractSpecUuid1.String(), contractSpecUuid2.String()),
+		},
+		{
+			"RecordSpecIDs - invalid address at index 2",
+			NewContractSpecification(
+				ContractSpecMetadataAddress(contractSpecUuid1),
+				nil,
+				[]string{specTestBech32},
+				[]PartyType{PartyType_PARTY_TYPE_OWNER},
+				NewSourceHash("somehash"),
+				"someclass",
+				[]MetadataAddress{
+					RecordSpecMetadataAddress(contractSpecUuid1, "name1"),
+					RecordSpecMetadataAddress(contractSpecUuid1, "name2"),
+					MetadataAddress(specTestAddr),
+				},
+			),
+			fmt.Sprintf("invalid record specification id at index %d: %s",
+				2, "invalid metadata address type: 133"),
+		},
+		{
+			"RecordSpecIDs - invalid address prefix at index 2",
+			NewContractSpecification(
+				ContractSpecMetadataAddress(contractSpecUuid1),
+				nil,
+				[]string{specTestBech32},
+				[]PartyType{PartyType_PARTY_TYPE_OWNER},
+				NewSourceHash("somehash"),
+				"someclass",
+				[]MetadataAddress{
+					RecordSpecMetadataAddress(contractSpecUuid1, "name1"),
+					RecordSpecMetadataAddress(contractSpecUuid1, "name2"),
+					ContractSpecMetadataAddress(contractSpecUuid1),
+				},
+			),
+			"invalid record specification id prefix at index 2 (expected: recspec, got contractspec)",
+		},
+		{
+			"RecordSpecIDs - wrong contract spec uuid at index 0",
+			NewContractSpecification(
+				ContractSpecMetadataAddress(contractSpecUuid1),
+				nil,
+				[]string{specTestBech32},
+				[]PartyType{PartyType_PARTY_TYPE_OWNER},
+				NewSourceHash("somehash"),
+				"someclass",
+				[]MetadataAddress{
+					RecordSpecMetadataAddress(contractSpecUuid1, "name1"),
+					RecordSpecMetadataAddress(contractSpecUuid1, "name2"),
+					RecordSpecMetadataAddress(contractSpecUuid2, "name3"),
+				},
+			),
+			fmt.Sprintf("invalid record specification id contract specification uuid value at index %d (expected :%s, got %s)",
+				2, contractSpecUuid1.String(), contractSpecUuid2.String()),
+		},
+
+		// A simple valid ContractSpecification
+		{
+			"simple valid test case",
+			NewContractSpecification(
+				ContractSpecMetadataAddress(contractSpecUuid1),
+				nil,
+				[]string{specTestBech32},
+				[]PartyType{PartyType_PARTY_TYPE_OWNER},
+				NewSourceHash("somehash"),
+				"someclass",
+				[]MetadataAddress{RecordSpecMetadataAddress(contractSpecUuid1,"recspecname")},
+			),
+			"",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		s.T().Run(tt.name, func(t *testing.T) {
+			err := tt.spec.ValidateBasic()
+			if err != nil {
+				require.Equal(t, tt.want, err.Error(), "ContractSpecification ValidateBasic error")
+			} else if len(tt.want) > 0 {
+				t.Errorf("ContractSpecification ValidateBasic error = nil, expected: %s", tt.want)
 			}
 		})
 	}
@@ -513,22 +887,21 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 }
 
 func (s *specificationTestSuite) TestScopeSpecString() {
-	s.T().Run("scope specification string", func(t *testing.T) {
-		scopeSpecUuid := uuid.MustParse("c2074a03-6f6d-4029-bfe2-c3a5eb7e68b1")
-		contractSpecUuid := uuid.MustParse("540dadf1-3dbc-4c3f-a205-7575b7f74384")
-		scopeSpec := NewScopeSpecification(
-			ScopeSpecMetadataAddress(scopeSpecUuid),
-			NewDescription(
-				"TestScopeSpecString Description",
-				"This is a description of a description used in a unit test.",
-				"https://figure.com/",
-				"https://figure.com/favicon.png",
-			),
-			[]string{specTestBech32},
-			[]PartyType{PartyType_PARTY_TYPE_OWNER},
-			[]MetadataAddress{GroupSpecMetadataAddress(contractSpecUuid)},
-		)
-		expected := `specification_id: scopespec1qnpqwjsrdak5q2dlutp6t6m7dzcscd7ff6
+	scopeSpecUuid := uuid.MustParse("c2074a03-6f6d-4029-bfe2-c3a5eb7e68b1")
+	contractSpecUuid := uuid.MustParse("540dadf1-3dbc-4c3f-a205-7575b7f74384")
+	scopeSpec := NewScopeSpecification(
+		ScopeSpecMetadataAddress(scopeSpecUuid),
+		NewDescription(
+			"TestScopeSpecString Description",
+			"This is a description of a description used in a unit test.",
+			"https://figure.com/",
+			"https://figure.com/favicon.png",
+		),
+		[]string{specTestBech32},
+		[]PartyType{PartyType_PARTY_TYPE_OWNER},
+		[]MetadataAddress{ContractSpecMetadataAddress(contractSpecUuid)},
+	)
+	expected := `specification_id: scopespec1qnpqwjsrdak5q2dlutp6t6m7dzcscd7ff6
 description:
   name: TestScopeSpecString Description
   description: This is a description of a description used in a unit test.
@@ -539,29 +912,62 @@ owner_addresses:
 parties_involved:
 - 5
 contract_spec_ids:
-- groupspec1qd2qmt038k7yc0azq46htdlhgwzquwslkg
+- contractspec1qd2qmt038k7yc0azq46htdlhgwzqg6cr9l
 `
-		actual := scopeSpec.String()
-		// fmt.Printf("Actual:\n%s\n-----\n", actual)
-		require.Equal(t, expected, actual)
-	})
+	actual := scopeSpec.String()
+	// fmt.Printf("Actual:\n%s\n-----\n", actual)
+	require.Equal(s.T(), expected, actual)
+}
+
+func (s *specificationTestSuite) TestContractSpecString() {
+	contractSpecUuid := uuid.MustParse("540dadf1-3dbc-4c3f-a205-7575b7f74384")
+	contractSpec := NewContractSpecification(
+		ContractSpecMetadataAddress(contractSpecUuid),
+		NewDescription(
+			"TestContractSpecString Description",
+			"This is a description of a description used in a unit test.",
+			"https://figure.com/",
+			"https://figure.com/favicon.png",
+		),
+		[]string{specTestBech32},
+		[]PartyType{PartyType_PARTY_TYPE_OWNER},
+		nil,
+		"CS 201: Intro to Blockchain",
+		[]MetadataAddress{RecordSpecMetadataAddress(contractSpecUuid, "somename")},
+	)
+	expected := `specification_id: contractspec1qd2qmt038k7yc0azq46htdlhgwzqg6cr9l
+description:
+  name: TestContractSpecString Description
+  description: This is a description of a description used in a unit test.
+  website_url: https://figure.com/
+  icon_url: https://figure.com/favicon.png
+owner_addresses:
+- cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck
+parties_involved:
+- 5
+source: null
+class_name: 'CS 201: Intro to Blockchain'
+record_spec_ids:
+- recspec1q42qmt038k7yc0azq46htdlhgwzg5052mucgmerfku3gf5e7t3ej4ecag50yfxlsd8m2udlxzca6vhgch80wy
+`
+	actual := contractSpec.String()
+	// fmt.Printf("Actual:\n%s\n-----\n", actual)
+	require.Equal(s.T(), expected, actual)
 }
 
 func (s *specificationTestSuite) TestDescriptionString() {
-	s.T().Run("description string", func(t *testing.T) {
-		description := NewDescription(
-			"TestDescriptionString",
-			"This is a description of a description used in a unit test.",
-			"https://provenance.io",
-			"https://provenance.io/ico.png",
-		)
-		expected := `name: TestDescriptionString
+	description := NewDescription(
+		"TestDescriptionString",
+		"This is a description of a description used in a unit test.",
+		"https://provenance.io",
+		"https://provenance.io/ico.png",
+	)
+	expected := `name: TestDescriptionString
 description: This is a description of a description used in a unit test.
 website_url: https://provenance.io
 icon_url: https://provenance.io/ico.png
 `
-		actual := description.String()
-		// fmt.Printf("Actual:\n%s\n-----\n", actual)
-		require.Equal(t, expected, actual)
-	})
+	actual := description.String()
+	// fmt.Printf("Actual:\n%s\n-----\n", actual)
+	require.Equal(s.T(), expected, actual)
 }

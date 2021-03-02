@@ -24,6 +24,7 @@ message GenesisState {
   repeated RecordGroup groups  = 3 [(gogoproto.nullable) = false];
   repeated Record      records = 4 [(gogoproto.nullable) = false];
 
-  repeated ScopeSpecification scope_specifications = 5 [(gogoproto.nullable) = false];
-  repeated GroupSpecification group_specifications = 6 [(gogoproto.nullable) = false];
+  repeated ScopeSpecification    scope_specifications    = 5 [(gogoproto.nullable) = false];
+  repeated ContractSpecification contract_specifications = 6 [(gogoproto.nullable) = false];
+  repeated RecordSpecification   record_specifications   = 7 [(gogoproto.nullable) = false];
 }

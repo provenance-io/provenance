@@ -117,3 +117,32 @@ enum ResultType {
   // RESULT_TYPE_FAIL indicates the execution of the condition/consideration failed.
   RESULT_TYPE_FAIL = 3;
 }
+
+// Definition encapsulates the information required to uniquely associate a resource with a type and location
+message Definition {
+  // a common name given to this definition.  The name is used to match up with references to this part of the spec
+  string name = 1;
+  // location of the resource on chain
+  Reference resource_location = 2;
+  // address of the account that created this definition
+  string creator_address = 3;
+  // The type of data definition (proposed, fact/recorded, list)
+  DefinitionType definition_type = 4;
+}
+
+// Reference is a multipart structure that defines a reference to a piece of data recorded within a scope
+message Reference {
+
+  // TODO this structure should probably be replaced with a MetadataAddress
+
+  // unique identifer for the scope being referenced
+  string scope_id = 1;
+  // require record to be within a specific group (optional)
+  string group_id = 3;
+  // specify a specific record inside a scope (and group) by result-hash (optional)
+  string hash = 4;
+  // specify a result-name of a record within a scope (optional)
+  string name = 5;
+  // type/classname of the target data (optional)
+  string type_name = 6;
+}
