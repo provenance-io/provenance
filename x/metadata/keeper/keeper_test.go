@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -48,6 +49,12 @@ type KeeperTestSuite struct {
 	record     types.Record
 	recordName string
 	recordId   types.MetadataAddress
+
+	sessionUUID uuid.UUID
+	sessionId   types.MetadataAddress
+
+	cSpecUUID uuid.UUID
+	cSpecId   types.MetadataAddress
 }
 
 func ownerPartyList(addresses ...string) []types.Party {
@@ -86,6 +93,15 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.recordId = types.RecordMetadataAddress(s.scopeUUID, s.recordName)
 
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
+
+	s.sessionUUID = uuid.New()
+	s.sessionId = types.SessionMetadataAddress(s.scopeUUID, s.sessionUUID)
+
+	s.sessionUUID = uuid.New()
+	s.sessionId = types.SessionMetadataAddress(s.scopeUUID, s.sessionUUID)
+
+	s.cSpecUUID = uuid.New()
+	s.cSpecId = types.ContractSpecMetadataAddress(s.cSpecUUID)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.MetadataKeeper)
@@ -295,26 +311,26 @@ func (s *KeeperTestSuite) TestValidateScopeUpdate() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestMetadataRecordGetSetRemove() {
+func (s *KeeperTestSuite) TestMetadataRecordGetSetRemove() {
 
-	r, found := suite.app.MetadataKeeper.GetRecord(suite.ctx, suite.recordId)
-	suite.NotNil(r)
-	suite.False(found)
+	r, found := s.app.MetadataKeeper.GetRecord(s.ctx, s.recordId)
+	s.NotNil(r)
+	s.False(found)
 
 	process := types.NewProcess("processname", &types.Process_Hash{Hash: "HASH"}, "process_method")
-	record := types.NewRecord(suite.recordName, suite.groupId, *process, []types.RecordInput{}, []types.RecordOutput{})
+	record := types.NewRecord(s.recordName, s.groupId, *process, []types.RecordInput{}, []types.RecordOutput{})
 
-	suite.NotNil(record)
-	suite.app.MetadataKeeper.SetRecord(suite.ctx, *record)
+	s.NotNil(record)
+	s.app.MetadataKeeper.SetRecord(s.ctx, *record)
 
-	r, found = suite.app.MetadataKeeper.GetRecord(suite.ctx, suite.recordId)
-	suite.True(found)
-	suite.NotNil(r)
+	r, found = s.app.MetadataKeeper.GetRecord(s.ctx, s.recordId)
+	s.True(found)
+	s.NotNil(r)
 
-	suite.app.MetadataKeeper.RemoveRecord(suite.ctx, suite.recordId)
-	r, found = suite.app.MetadataKeeper.GetRecord(suite.ctx, suite.recordId)
-	suite.False(found)
-	suite.NotNil(r)
+	s.app.MetadataKeeper.RemoveRecord(s.ctx, s.recordId)
+	r, found = s.app.MetadataKeeper.GetRecord(s.ctx, s.recordId)
+	s.False(found)
+	s.NotNil(r)
 }
 
 func (s *KeeperTestSuite) TestMetadataRecordIterator() {
@@ -386,6 +402,52 @@ func (s *KeeperTestSuite) TestValidateRecordUpdate() {
 			}
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestMetadataSessionGetSetRemove() {
+
+	r, found := s.app.MetadataKeeper.GetSession(s.ctx, s.sessionId)
+	s.NotNil(r)
+	s.False(found)
+
+	session := types.NewSession("name", s.sessionId, s.cSpecId, []types.Party{
+		{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: types.PartyType_PARTY_TYPE_AFFILIATE}},
+		types.AuditFields{CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", CreatedDate: time.Now(),
+			UpdatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", UpdatedDate: time.Now(),
+			Message: "message",
+		})
+
+	s.NotNil(session)
+	s.app.MetadataKeeper.SetSession(s.ctx, *session)
+
+	sess, found := s.app.MetadataKeeper.GetSession(s.ctx, s.sessionId)
+	s.True(found)
+	s.NotNil(sess)
+
+	s.app.MetadataKeeper.RemoveSession(s.ctx, s.sessionId)
+	sess, found = s.app.MetadataKeeper.GetSession(s.ctx, s.sessionId)
+	s.False(found)
+	s.NotNil(sess)
+}
+
+func (s *KeeperTestSuite) TestMetadataSessionIterator() {
+	for i := 1; i <= 10; i++ {
+		sessionId := types.SessionMetadataAddress(s.scopeUUID, uuid.New())
+		session := types.NewSession("name", sessionId, s.cSpecId, []types.Party{
+			{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: types.PartyType_PARTY_TYPE_AFFILIATE}},
+			types.AuditFields{CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", CreatedDate: time.Now(),
+				UpdatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", UpdatedDate: time.Now(),
+				Message: "message",
+			})
+		s.app.MetadataKeeper.SetSession(s.ctx, *session)
+	}
+	count := 0
+	s.app.MetadataKeeper.IterateSessions(s.ctx, s.scopeID, func(s types.Session) (stop bool) {
+		count++
+		return false
+	})
+	s.Equal(10, count, "iterator should return a full list of sessions")
+
 }
 
 func TestKeeperTestSuite(t *testing.T) {
