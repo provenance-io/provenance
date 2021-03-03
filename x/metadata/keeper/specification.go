@@ -14,7 +14,10 @@ func (k Keeper) IterateRecordSpecs(ctx sdk.Context, handler func(specification t
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var recordSpec types.RecordSpecification
-		k.cdc.MustUnmarshalBinaryBare(it.Value(), &recordSpec)
+		err := k.cdc.UnmarshalBinaryBare(it.Value(), &recordSpec)
+		if err != nil {
+			return err
+		}
 		if handler(recordSpec) {
 			break
 		}
@@ -169,7 +172,10 @@ func (k Keeper) IterateContractSpecs(ctx sdk.Context, handler func(specification
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var contractSpec types.ContractSpecification
-		k.cdc.MustUnmarshalBinaryBare(it.Value(), &contractSpec)
+		err := k.cdc.UnmarshalBinaryBare(it.Value(), &contractSpec)
+		if err != nil {
+			return err
+		}
 		if handler(contractSpec) {
 			break
 		}
@@ -293,21 +299,26 @@ func (k Keeper) clearContractSpecificationIndex(ctx sdk.Context, spec types.Cont
 // isContractSpecUsed checks to see if a contract spec is referenced by anything else (e.g. scope spec or session)
 func (k Keeper) isContractSpecUsed(ctx sdk.Context, contractSpecID types.MetadataAddress) bool {
 	contractSpecReferenceFound := false
-	err := k.IterateScopeSpecsForContractSpec(ctx, contractSpecID, func(scopeID types.MetadataAddress) (stop bool) {
+	itScopeSpecErr := k.IterateScopeSpecsForContractSpec(ctx, contractSpecID, func(scopeID types.MetadataAddress) (stop bool) {
 		contractSpecReferenceFound = true
 		return true
 	})
 	// If there was an error, that indicates there was probably at least one entry to iterate over.
 	// So, to err on the side of caution, return true in that case.
-	if err != nil || contractSpecReferenceFound {
+	if itScopeSpecErr != nil || contractSpecReferenceFound {
 		return true
 	}
 
 	// TODO: Look for sessions used by this contractSpecID.
 
-	// TODO: Iterate over the record specs for this contract spec to see if any of them are used.
+	// Look for a used record spec that is part of this contract spec
+	hasUsedRecordSpec := false
+	itRecSpecErr := k.IterateRecordSpecsForContractSpec(ctx, contractSpecID, func(recordSpecID types.MetadataAddress) bool {
+		hasUsedRecordSpec = k.isRecordSpecUsed(ctx, recordSpecID)
+		return hasUsedRecordSpec
+	})
 
-	return false
+	return itRecSpecErr != nil || hasUsedRecordSpec
 }
 
 // ValidateContractSpecUpdate full validation of a proposed contract spec possibly against an existing one.
@@ -333,7 +344,10 @@ func (k Keeper) IterateScopeSpecs(ctx sdk.Context, handler func(specification ty
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var scopeSpec types.ScopeSpecification
-		k.cdc.MustUnmarshalBinaryBare(it.Value(), &scopeSpec)
+		err := k.cdc.UnmarshalBinaryBare(it.Value(), &scopeSpec)
+		if err != nil {
+			return err
+		}
 		if handler(scopeSpec) {
 			break
 		}
