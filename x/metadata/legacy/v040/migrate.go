@@ -382,7 +382,7 @@ func convertContractSpec(old *v039metadata.ContractSpec) (
 		Source: &v040metadata.ContractSpecification_Hash{
 			Hash: old.Definition.ResourceLocation.Ref.Hash,
 		},
-		ClassName:     old.Definition.ResourceLocation.Classname,
+		ClassName: old.Definition.ResourceLocation.Classname,
 	}
 
 	newRecords = make([]v040metadata.RecordSpecification, len(old.ConsiderationSpecs))
