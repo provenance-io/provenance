@@ -261,7 +261,31 @@ func (k msgServer) DeleteContractSpecification(
 		return nil, err
 	}
 
-	// TODO: Remove all record specifications associated with this contract specification.
+	// Remove all record specifications associated with this contract specification.
+	recSpecs, recSpecErr := k.GetRecordSpecificationsForContractSpecificationID(ctx, msg.SpecificationId)
+	if recSpecErr != nil {
+		return nil, fmt.Errorf("could not get record specifications to delete with contract specification with id %s: %w",
+			msg.SpecificationId, recSpecErr)
+	}
+	var delRecSpecErr error = nil
+	removedRecSpecs := []*types.RecordSpecification{}
+	for _, recSpec := range recSpecs {
+		if err := k.RemoveRecordSpecification(ctx, recSpec.SpecificationId); err != nil {
+			delRecSpecErr = fmt.Errorf("failed to delete record specification %s (name: %s) while trying to delete contract specification %d: %w",
+				recSpec.SpecificationId, recSpec.Name, msg.SpecificationId, err)
+			break
+		}
+		removedRecSpecs = append(removedRecSpecs, recSpec)
+	}
+	if delRecSpecErr != nil {
+		// Put the deleted record specifications back since not all of them could be deleted (and neither can this contract spec)
+		for _, recSpec := range removedRecSpecs {
+			k.SetRecordSpecification(ctx, *recSpec)
+		}
+		return nil, delRecSpecErr
+	}
+
+	// Remove the contract specification itself
 	if err := k.RemoveContractSpecification(ctx, msg.SpecificationId); err != nil {
 		return nil, fmt.Errorf("cannot delete contract specification with id %s: %w", msg.SpecificationId, err)
 	}
