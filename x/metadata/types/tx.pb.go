@@ -2347,7 +2347,10 @@ func (m *MsgMemorializeContractRequest) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -2397,7 +2400,10 @@ func (m *MsgMemorializeContractResponse) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -2680,7 +2686,10 @@ func (m *MsgChangeOwnershipRequest) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -2730,7 +2739,10 @@ func (m *MsgChangeOwnershipResponse) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -2845,7 +2857,10 @@ func (m *MsgAddScopeRequest) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -2895,7 +2910,10 @@ func (m *MsgAddScopeResponse) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -3010,7 +3028,10 @@ func (m *MsgRemoveScopeRequest) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -3060,7 +3081,10 @@ func (m *MsgRemoveScopeResponse) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -3178,7 +3202,10 @@ func (m *MsgAddRecordGroupRequest) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -3228,7 +3255,10 @@ func (m *MsgAddRecordGroupResponse) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -3379,7 +3409,10 @@ func (m *MsgAddRecordRequest) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -3429,7 +3462,10 @@ func (m *MsgAddRecordResponse) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -3547,7 +3583,10 @@ func (m *MsgAddScopeSpecificationRequest) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -3597,7 +3636,10 @@ func (m *MsgAddScopeSpecificationResponse) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -3712,7 +3754,10 @@ func (m *MsgRemoveScopeSpecificationRequest) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -3762,7 +3807,10 @@ func (m *MsgRemoveScopeSpecificationResponse) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -3880,7 +3928,10 @@ func (m *MsgAddGroupSpecificationRequest) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -3930,7 +3981,10 @@ func (m *MsgAddGroupSpecificationResponse) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {

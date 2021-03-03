@@ -1,0 +1,45 @@
+syntax = "proto3";
+package provenance.metadata.v1;
+
+import "gogoproto/gogo.proto";
+import "provenance/metadata/v1/objectstore.proto";
+
+option go_package = "github.com/provenance-io/provenance/x/metadata/types";
+
+option java_package        = "io.provenance.metadata.v1";
+option java_multiple_files = true;
+
+// Msg defines the objectstore locator Msg service.
+service MsgOS {
+    // BindName binds a name to an address under a root name.
+    rpc BindName(MsgBindOSLocatorRequest) returns (MsgBindOSLocatorResponse);
+
+    // DeleteName defines a method to verify a particular invariance.
+    rpc DeleteName(MsgDeleteOSLocatorRequest) returns (MsgDeleteOSLocatorResponse);
+}
+
+// MsgBindNameRequest defines an sdk.Msg type that is used to add an address/name binding under an optional parent name.
+// The record may optionally be restricted to prevent additional names from being added under this one without the
+// owner signing the request.
+message MsgBindOSLocatorRequest {
+    option (gogoproto.equal)           = false;
+    option (gogoproto.goproto_getters) = false;
+    // The object locator to bind the address to bind to the URI.
+    ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
+}
+
+// MsgBindObjectLocatorResponse defines the Msg/BindObjectLocator response type.
+message MsgBindOSLocatorResponse {}
+
+// MsgDeleteNameRequest defines an sdk.Msg type that is used to remove an existing address/name binding.  The binding
+// may not have any child names currently bound for this request to be successful.
+message MsgDeleteOSLocatorRequest {
+    option (gogoproto.equal)           = false;
+    option (gogoproto.goproto_getters) = false;
+
+    // The record being removed
+    ObjectStoreLocator record = 1 [(gogoproto.nullable) = false];
+}
+
+// MsgDeleteNameResponse defines the Msg/DeleteName response type.
+message MsgDeleteOSLocatorResponse {}

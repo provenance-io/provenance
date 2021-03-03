@@ -8,7 +8,7 @@ import (
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
-	_ "github.com/golang/protobuf/ptypes/timestamp"
+	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -1515,7 +1515,10 @@ func (m *Contract) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthContract
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthContract
 			}
 			if (iNdEx + skippy) > l {
@@ -1599,7 +1602,10 @@ func (m *Recitals) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthContract
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthContract
 			}
 			if (iNdEx + skippy) > l {
@@ -1714,7 +1720,10 @@ func (m *RecordReference) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthContract
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthContract
 			}
 			if (iNdEx + skippy) > l {
@@ -1829,7 +1838,10 @@ func (m *Condition) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthContract
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthContract
 			}
 			if (iNdEx + skippy) > l {
@@ -1978,7 +1990,10 @@ func (m *Consideration) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthContract
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthContract
 			}
 			if (iNdEx + skippy) > l {
@@ -2079,7 +2094,10 @@ func (m *Recital) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthContract
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthContract
 			}
 			if (iNdEx + skippy) > l {
@@ -2258,7 +2276,10 @@ func (m *ProposedRecord) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthContract
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthContract
 			}
 			if (iNdEx + skippy) > l {
@@ -2425,7 +2446,10 @@ func (m *ExecutionResult) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthContract
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthContract
 			}
 			if (iNdEx + skippy) > l {

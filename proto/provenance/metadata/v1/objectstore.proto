@@ -1,15 +1,17 @@
 syntax = "proto3";
 package provenance.metadata.v1;
 
-import "gogoproto/gogo.proto";
-
 option go_package = "github.com/provenance-io/provenance/x/metadata/types";
 
 option java_package        = "io.provenance.metadata.v1";
 option java_multiple_files = true;
 
-// Params defines the set of params for the metadata module.
-message Params {
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+import "gogoproto/gogo.proto";
+
+message ObjectStoreLocator {
+  option (gogoproto.equal) = false;
+  // account address the endpoint is owned by
+  string owner = 1;
+  // locator endpoint uri
+  string locator_uri = 2;
 }

@@ -6,8 +6,8 @@ import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/provenance-io/provenance/x/marker/types";
 
-option java_package        = "io.provenance.marker.v1";
-option java_multiple_files = true;
+option java_package         = "io.provenance.marker.v1";
+option java_multiple_files  = true;
 option java_outer_classname = "AccessGrantProto";
 
 // AccessGrant associates a colelction of permisssions with an address for delegated marker account control.

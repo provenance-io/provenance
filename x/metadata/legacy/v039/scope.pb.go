@@ -1245,7 +1245,10 @@ func (m *Event) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthScope
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthScope
 			}
 			if (iNdEx + skippy) > l {
@@ -1435,7 +1438,10 @@ func (m *Scope) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthScope
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthScope
 			}
 			if (iNdEx + skippy) > l {
@@ -1519,7 +1525,10 @@ func (m *ScopeCollection) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthScope
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthScope
 			}
 			if (iNdEx + skippy) > l {
@@ -1809,7 +1818,10 @@ func (m *RecordGroup) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthScope
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthScope
 			}
 			if (iNdEx + skippy) > l {
@@ -2072,7 +2084,10 @@ func (m *Record) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthScope
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthScope
 			}
 			if (iNdEx + skippy) > l {
@@ -2237,7 +2252,10 @@ func (m *RecordInput) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthScope
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthScope
 			}
 			if (iNdEx + skippy) > l {
