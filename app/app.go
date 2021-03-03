@@ -575,7 +575,10 @@ func New(
 		panic(err)
 	}
 
-	app.SetStoreLoader(upgrades.CustomUpgradeStoreLoader(app.UpgradeKeeper, upgradeInfo))
+	storeLoader := upgrades.CustomUpgradeStoreLoader(app.UpgradeKeeper, upgradeInfo)
+	if storeLoader != nil {
+		app.SetStoreLoader(storeLoader)
+	}
 	// --
 
 	if loadLatest {
