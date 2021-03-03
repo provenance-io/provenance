@@ -67,7 +67,7 @@ service Query {
 
   // RecordSpecification returns a record specification for the given specification uuid
   rpc RecordSpecification(RecordSpecificationRequest) returns (RecordSpecificationResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/recordspec/{specification_uuid}";
+    option (google.api.http).get = "/provenance/metadata/v1/recordspec/{contract_specification_uuid}/{name}";
   }
 }
 
@@ -193,7 +193,8 @@ message RecordSpecificationsForContractSpecificationResponse {
 
 // RecordSpecificationRequest is used for requesting a record specification by uuid
 message RecordSpecificationRequest {
-  string specification_uuid = 1 [(gogoproto.moretags) = "yaml:\"specification_uuid\""];
+  string contract_specification_uuid = 1 [(gogoproto.moretags) = "yaml:\"contract_specification_uuid\""];
+  string name = 2;
 }
 
 // RecordSpecificationResponse is the response to a record specification request.

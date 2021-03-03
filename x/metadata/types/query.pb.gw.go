@@ -650,15 +650,26 @@ func request_Query_RecordSpecification_0(ctx context.Context, marshaler runtime.
 		_   = err
 	)
 
-	val, ok = pathParams["specification_uuid"]
+	val, ok = pathParams["contract_specification_uuid"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "specification_uuid")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "contract_specification_uuid")
 	}
 
-	protoReq.SpecificationUuid, err = runtime.String(val)
+	protoReq.ContractSpecificationUuid, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "specification_uuid", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "contract_specification_uuid", err)
+	}
+
+	val, ok = pathParams["name"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
+	}
+
+	protoReq.Name, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
 	}
 
 	msg, err := client.RecordSpecification(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -677,15 +688,26 @@ func local_request_Query_RecordSpecification_0(ctx context.Context, marshaler ru
 		_   = err
 	)
 
-	val, ok = pathParams["specification_uuid"]
+	val, ok = pathParams["contract_specification_uuid"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "specification_uuid")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "contract_specification_uuid")
 	}
 
-	protoReq.SpecificationUuid, err = runtime.String(val)
+	protoReq.ContractSpecificationUuid, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "specification_uuid", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "contract_specification_uuid", err)
+	}
+
+	val, ok = pathParams["name"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
+	}
+
+	protoReq.Name, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
 	}
 
 	msg, err := server.RecordSpecification(ctx, &protoReq)
@@ -1237,7 +1259,7 @@ var (
 
 	pattern_Query_RecordSpecificationsForContractSpecification_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"provenance", "metadata", "v1", "contractspec", "contract_specification_uuid", "recordspecs"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_RecordSpecification_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"provenance", "metadata", "v1", "recordspec", "specification_uuid"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_RecordSpecification_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"provenance", "metadata", "v1", "recordspec", "contract_specification_uuid", "name"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
