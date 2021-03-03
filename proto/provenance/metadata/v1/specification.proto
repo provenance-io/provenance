@@ -29,9 +29,9 @@ option java_multiple_files = true;
 // added to the chain.
 //
 // Example:
-//   A ContractSpecification may list a RecordSpecification that requires an input of type "Record" (indicating a reference
-//   to a scope/record must exist on chain) in order for a specific Consideration (process/method) to be executed and
-//   have an output_spec ultimately result in a record added to the scope.
+//   A ContractSpecification may list a RecordSpecification that requires an input of type "Record" (indicating a
+//   reference to a scope/record must exist on chain) in order for a specific Consideration (process/method) to be
+//   executed and have an output_spec ultimately result in a record added to the scope.
 
 // ScopeSpecification defines the required parties, resources, conditions, and consideration outputs for a contract
 message ScopeSpecification {
@@ -73,7 +73,8 @@ message ContractSpecification {
   repeated string owner_addresses = 3 [(gogoproto.moretags) = "yaml:\"owner_addresses\""];
   // a list of party roles that must be fullfilled when signing a transaction for this contract specification
   repeated PartyType parties_involved = 4 [(gogoproto.moretags) = "yaml:\"parties_involved\""];
-  // Reference to a metadata record with a hash and type information for the instance of code that will process this contract
+  // Reference to a metadata record with a hash and type information for the instance of code that will process this
+  // contract
   oneof source {
     // the address of a record on chain that represents this contract
     bytes resource_id = 5 [(gogoproto.customtype) = "MetadataAddress", (gogoproto.moretags) = "yaml:\"resource_id\""];

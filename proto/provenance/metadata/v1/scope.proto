@@ -189,7 +189,7 @@ enum RecordInputStatus {
 // RecordOutput encapsulates the output of a process recorded on chain
 message RecordOutput {
   option (gogoproto.goproto_stringer) = false;
-  
+
   // Hash of the data output that was output/generated for this record
   string hash = 1;
   // Status of the process execution associated with this output indicating success,failure, or pending

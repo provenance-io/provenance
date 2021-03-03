@@ -535,7 +535,8 @@ func (m *GroupContextResponse) GetGroups() []*RecordGroup {
 	return nil
 }
 
-// RecordsByScopeUUIDRequest is a request for all of the records in a specific scope by uuid or a specific record if a name is given.
+// RecordsByScopeUUIDRequest is a request for all of the records in a specific scope by uuid or a specific record if a
+// name is given.
 type RecordsByScopeUUIDRequest struct {
 	ScopeUuid string `protobuf:"bytes,1,opt,name=scope_uuid,json=scopeUuid,proto3" json:"scope_uuid,omitempty" yaml:"scope_uuid"`
 	Name      string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
@@ -649,7 +650,8 @@ func (m *RecordsByScopeUUIDResponse) GetRecords() []*Record {
 	return nil
 }
 
-// RecordsByScopeIDRequest is a request for all of the records in a specific scope by bech32 id or a specific record if a name is given.
+// RecordsByScopeIDRequest is a request for all of the records in a specific scope by bech32 id or a specific record if
+// a name is given.
 type RecordsByScopeIDRequest struct {
 	ScopeId string `protobuf:"bytes,1,opt,name=scope_id,json=scopeId,proto3" json:"scope_id,omitempty" yaml:"scope_id"`
 	Name    string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
@@ -943,7 +945,8 @@ func (m *ContractSpecificationResponse) GetContractSpecification() *ContractSpec
 	return nil
 }
 
-// RecordSpecificationsForContractSpecificationRequest is used for requesting record specifications by contract specification uuid
+// RecordSpecificationsForContractSpecificationRequest is used for requesting record specifications by contract
+// specification uuid
 type RecordSpecificationsForContractSpecificationRequest struct {
 	ContractSpecificationUuid string `protobuf:"bytes,1,opt,name=contract_specification_uuid,json=contractSpecificationUuid,proto3" json:"contract_specification_uuid,omitempty" yaml:"contract_specification_uuid"`
 }
@@ -1285,7 +1288,8 @@ type QueryClient interface {
 	ScopeSpecification(ctx context.Context, in *ScopeSpecificationRequest, opts ...grpc.CallOption) (*ScopeSpecificationResponse, error)
 	// ContractSpecification returns a contract specification for the given specification uuid
 	ContractSpecification(ctx context.Context, in *ContractSpecificationRequest, opts ...grpc.CallOption) (*ContractSpecificationResponse, error)
-	// RecordSpecificationsForContractSpecification returns the record specifications for the given contract specification uuid
+	// RecordSpecificationsForContractSpecification returns the record specifications for the given contract specification
+	// uuid
 	RecordSpecificationsForContractSpecification(ctx context.Context, in *RecordSpecificationsForContractSpecificationRequest, opts ...grpc.CallOption) (*RecordSpecificationsForContractSpecificationResponse, error)
 	// RecordSpecification returns a record specification for the given specification uuid
 	RecordSpecification(ctx context.Context, in *RecordSpecificationRequest, opts ...grpc.CallOption) (*RecordSpecificationResponse, error)
@@ -1418,7 +1422,8 @@ type QueryServer interface {
 	ScopeSpecification(context.Context, *ScopeSpecificationRequest) (*ScopeSpecificationResponse, error)
 	// ContractSpecification returns a contract specification for the given specification uuid
 	ContractSpecification(context.Context, *ContractSpecificationRequest) (*ContractSpecificationResponse, error)
-	// RecordSpecificationsForContractSpecification returns the record specifications for the given contract specification uuid
+	// RecordSpecificationsForContractSpecification returns the record specifications for the given contract specification
+	// uuid
 	RecordSpecificationsForContractSpecification(context.Context, *RecordSpecificationsForContractSpecificationRequest) (*RecordSpecificationsForContractSpecificationResponse, error)
 	// RecordSpecification returns a record specification for the given specification uuid
 	RecordSpecification(context.Context, *RecordSpecificationRequest) (*RecordSpecificationResponse, error)

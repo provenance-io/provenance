@@ -60,8 +60,10 @@ service Query {
     option (google.api.http).get = "/provenance/metadata/v1/contractspec/{specification_uuid}";
   }
 
-  // RecordSpecificationsForContractSpecification returns the record specifications for the given contract specification uuid
-  rpc RecordSpecificationsForContractSpecification(RecordSpecificationsForContractSpecificationRequest) returns (RecordSpecificationsForContractSpecificationResponse) {
+  // RecordSpecificationsForContractSpecification returns the record specifications for the given contract specification
+  // uuid
+  rpc RecordSpecificationsForContractSpecification(RecordSpecificationsForContractSpecificationRequest)
+      returns (RecordSpecificationsForContractSpecificationResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/contractspec/{contract_specification_uuid}/recordspecs";
   }
 
@@ -135,20 +137,22 @@ message GroupContextResponse {
   repeated RecordGroup groups = 1;
 }
 
-// RecordsByScopeUUIDRequest is a request for all of the records in a specific scope by uuid or a specific record if a name is given.
+// RecordsByScopeUUIDRequest is a request for all of the records in a specific scope by uuid or a specific record if a
+// name is given.
 message RecordsByScopeUUIDRequest {
   string scope_uuid = 1 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
-  string name     = 2;
+  string name       = 2;
 }
 
 // RecordsByScopeUUIDResponse is the response to a RecordsByScopeUUIDRequest
 message RecordsByScopeUUIDResponse {
   string          scope_uuid = 1 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
-  string          scope_id = 2 [(gogoproto.moretags) = "yaml:\"scope_id\""];
-  repeated Record records  = 3;
+  string          scope_id   = 2 [(gogoproto.moretags) = "yaml:\"scope_id\""];
+  repeated Record records    = 3;
 }
 
-// RecordsByScopeIDRequest is a request for all of the records in a specific scope by bech32 id or a specific record if a name is given.
+// RecordsByScopeIDRequest is a request for all of the records in a specific scope by bech32 id or a specific record if
+// a name is given.
 message RecordsByScopeIDRequest {
   string scope_id = 1 [(gogoproto.moretags) = "yaml:\"scope_id\""];
   string name     = 2;
@@ -157,8 +161,8 @@ message RecordsByScopeIDRequest {
 // RecordsByScopeIDResponse is the response to a RecordsByScopeIDRequest
 message RecordsByScopeIDResponse {
   string          scope_uuid = 1 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
-  string          scope_id = 2 [(gogoproto.moretags) = "yaml:\"scope_id\""];
-  repeated Record records  = 3;
+  string          scope_id   = 2 [(gogoproto.moretags) = "yaml:\"scope_id\""];
+  repeated Record records    = 3;
 }
 
 // ScopeSpecificationRequest is used for requesting a scope specification by uuid
@@ -181,7 +185,8 @@ message ContractSpecificationResponse {
   ContractSpecification contract_specification = 1 [(gogoproto.moretags) = "yaml:\"contract_specification\""];
 }
 
-// RecordSpecificationsForContractSpecificationRequest is used for requesting record specifications by contract specification uuid
+// RecordSpecificationsForContractSpecificationRequest is used for requesting record specifications by contract
+// specification uuid
 message RecordSpecificationsForContractSpecificationRequest {
   string contract_specification_uuid = 1 [(gogoproto.moretags) = "yaml:\"contract_specification_uuid\""];
 }
@@ -194,7 +199,7 @@ message RecordSpecificationsForContractSpecificationResponse {
 // RecordSpecificationRequest is used for requesting a record specification by uuid
 message RecordSpecificationRequest {
   string contract_specification_uuid = 1 [(gogoproto.moretags) = "yaml:\"contract_specification_uuid\""];
-  string name = 2;
+  string name                        = 2;
 }
 
 // RecordSpecificationResponse is the response to a record specification request.

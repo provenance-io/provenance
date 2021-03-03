@@ -193,7 +193,8 @@ type ContractSpecification struct {
 	OwnerAddresses []string `protobuf:"bytes,3,rep,name=owner_addresses,json=ownerAddresses,proto3" json:"owner_addresses,omitempty" yaml:"owner_addresses"`
 	// a list of party roles that must be fullfilled when signing a transaction for this contract specification
 	PartiesInvolved []PartyType `protobuf:"varint,4,rep,packed,name=parties_involved,json=partiesInvolved,proto3,enum=provenance.metadata.v1.PartyType" json:"parties_involved,omitempty" yaml:"parties_involved"`
-	// Reference to a metadata record with a hash and type information for the instance of code that will process this contract
+	// Reference to a metadata record with a hash and type information for the instance of code that will process this
+	// contract
 	//
 	// Types that are valid to be assigned to Source:
 	//	*ContractSpecification_ResourceId
