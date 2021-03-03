@@ -107,6 +107,10 @@ func (k Keeper) SetRecordSpecification(ctx sdk.Context, spec types.RecordSpecifi
 
 // RemoveRecordSpecification removes a record specification from the module kv store.
 func (k Keeper) RemoveRecordSpecification(ctx sdk.Context, recordSpecID types.MetadataAddress) {
+	if k.isRecordSpecUsed(ctx, recordSpecID) {
+		return
+	}
+
 	store := ctx.KVStore(k.storeKey)
 
 	recordSpec, found := k.GetRecordSpecification(ctx, recordSpecID)
@@ -152,7 +156,7 @@ func (k Keeper) ValidateRecordSpecUpdate(
 	return nil
 }
 
-func (k Keeper) isRecordSpecUsed(ctx sdk.Context, contractSpecID types.MetadataAddress) bool {
+func (k Keeper) isRecordSpecUsed(ctx sdk.Context, recordSpecID types.MetadataAddress) bool {
 	// TODO: Check for records created from this spec.
 	return false
 }
@@ -234,10 +238,14 @@ func (k Keeper) SetContractSpecification(ctx sdk.Context, spec types.ContractSpe
 
 // RemoveContractSpecification removes a contract specification from the module kv store.
 func (k Keeper) RemoveContractSpecification(ctx sdk.Context, contractSpecID types.MetadataAddress) {
+	if k.isContractSpecUsed(ctx, contractSpecID) {
+		return
+	}
+
 	store := ctx.KVStore(k.storeKey)
 
 	contractSpec, found := k.GetContractSpecification(ctx, contractSpecID)
-	if !found || k.isContractSpecUsed(ctx, contractSpecID) {
+	if !found {
 		return
 	}
 
@@ -429,10 +437,14 @@ func (k Keeper) SetScopeSpecification(ctx sdk.Context, spec types.ScopeSpecifica
 
 // RemoveScopeSpecification removes a scope specification from the module kv store.
 func (k Keeper) RemoveScopeSpecification(ctx sdk.Context, scopeSpecID types.MetadataAddress) {
+	if k.isScopeSpecUsed(ctx, scopeSpecID) {
+		return
+	}
+
 	store := ctx.KVStore(k.storeKey)
 
 	scopeSpec, found := k.GetScopeSpecification(ctx, scopeSpecID)
-	if !found || k.isScopeSpecUsed(ctx, scopeSpecID) {
+	if !found {
 		return
 	}
 
