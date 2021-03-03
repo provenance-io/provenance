@@ -311,7 +311,7 @@ func (k Keeper) isContractSpecUsed(ctx sdk.Context, contractSpecID types.Metadat
 }
 
 // ValidateContractSpecUpdate full validation of a proposed contract spec possibly against an existing one.
-func (k Keeper) ValidateContractSpecUpdate(ctx sdk.Context, existing *types.ContractSpecification, proposed types.ContractSpecification, signers []string) error {
+func (k Keeper) ValidateContractSpecUpdate(ctx sdk.Context, existing *types.ContractSpecification, proposed types.ContractSpecification) error {
 	// IDS must match if there's an existing entry
 	if existing != nil && !proposed.SpecificationId.Equals(existing.SpecificationId) {
 		return fmt.Errorf("cannot update contract spec identifier. expected %s, got %s",
@@ -321,13 +321,6 @@ func (k Keeper) ValidateContractSpecUpdate(ctx sdk.Context, existing *types.Cont
 	// Must pass basic validation.
 	if err := proposed.ValidateBasic(); err != nil {
 		return err
-	}
-
-	// Make sure the needed signers have signed.
-	if existing != nil {
-		if err := k.ValidateAllOwnersAreSigners(existing.OwnerAddresses, signers); err != nil {
-			return err
-		}
 	}
 
 	return nil
@@ -502,7 +495,7 @@ func (k Keeper) isScopeSpecUsed(ctx sdk.Context, scopeSpecID types.MetadataAddre
 }
 
 // ValidateScopeSpecUpdate - full validation of a scope specification.
-func (k Keeper) ValidateScopeSpecUpdate(ctx sdk.Context, existing *types.ScopeSpecification, proposed types.ScopeSpecification, signers []string) error {
+func (k Keeper) ValidateScopeSpecUpdate(ctx sdk.Context, existing *types.ScopeSpecification, proposed types.ScopeSpecification) error {
 	// IDS must match if there's an existing entry
 	if existing != nil && !proposed.SpecificationId.Equals(existing.SpecificationId) {
 		return fmt.Errorf("cannot update scope spec identifier. expected %s, got %s",
@@ -512,13 +505,6 @@ func (k Keeper) ValidateScopeSpecUpdate(ctx sdk.Context, existing *types.ScopeSp
 	// Must pass basic validation.
 	if err := proposed.ValidateBasic(); err != nil {
 		return err
-	}
-
-	// Signatures required of all existing data owners.
-	if existing != nil {
-		if err := k.ValidateAllOwnersAreSigners(existing.OwnerAddresses, signers); err != nil {
-			return err
-		}
 	}
 
 	store := ctx.KVStore(k.storeKey)

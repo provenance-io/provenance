@@ -167,8 +167,11 @@ func (k msgServer) AddScopeSpecification(
 	var existing *types.ScopeSpecification = nil
 	if e, found := k.GetScopeSpecification(ctx, msg.Specification.SpecificationId); found {
 		existing = &e
+		if err := k.ValidateAllOwnersAreSigners(existing.OwnerAddresses, msg.Signers); err != nil {
+			return nil, err
+		}
 	}
-	if err := k.ValidateScopeSpecUpdate(ctx, existing, msg.Specification, msg.Signers); err != nil {
+	if err := k.ValidateScopeSpecUpdate(ctx, existing, msg.Specification); err != nil {
 		return nil, err
 	}
 
@@ -221,8 +224,11 @@ func (k msgServer) AddContractSpecification(
 	var existing *types.ContractSpecification = nil
 	if e, found := k.GetContractSpecification(ctx, msg.Specification.SpecificationId); found {
 		existing = &e
+		if err := k.ValidateAllOwnersAreSigners(existing.OwnerAddresses, msg.Signers); err != nil {
+			return nil, err
+		}
 	}
-	if err := k.ValidateContractSpecUpdate(ctx, existing, msg.Specification, msg.Signers); err != nil {
+	if err := k.ValidateContractSpecUpdate(ctx, existing, msg.Specification); err != nil {
 		return nil, err
 	}
 
@@ -276,8 +282,9 @@ func (k msgServer) AddRecordSpecification(
 	contractSpecID := msg.Specification.SpecificationId.GetContractSpecAddress()
 	contractSpec, contractSpecFound := k.GetContractSpecification(ctx, contractSpecID)
 	if !contractSpecFound {
-		return nil, fmt.Errorf("contract specification not found with id %s required for adding or updating record specification with id %s",
-			contractSpecID, msg.Specification.SpecificationId)
+		contractSpecUUID, _ := contractSpecID.ContractSpecUUID()
+		return nil, fmt.Errorf("contract specification not found with id %s (uuid %s) required for adding or updating record specification with id %s",
+			contractSpecID, contractSpecUUID, msg.Specification.SpecificationId)
 	}
 	if err := k.ValidateAllOwnersAreSigners(contractSpec.OwnerAddresses, msg.Signers); err != nil {
 		return nil, err
