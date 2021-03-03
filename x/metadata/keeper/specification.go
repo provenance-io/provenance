@@ -69,6 +69,19 @@ func (k Keeper) IterateRecordSpecsForContractSpec(ctx sdk.Context, contractSpecI
 	return nil
 }
 
+// GetRecordSpecificationsForContractSpecificationID returns all the record specifications associated with given contractSpecID
+func (k Keeper) GetRecordSpecificationsForContractSpecificationID(ctx sdk.Context, contractSpecID types.MetadataAddress) ([]*types.RecordSpecification, error) {
+	retval := []*types.RecordSpecification{}
+	err := k.IterateRecordSpecsForContractSpec(ctx, contractSpecID, func(recordSpecID types.MetadataAddress) bool {
+		recordSpec, found := k.GetRecordSpecification(ctx, recordSpecID)
+		if found {
+			retval = append(retval, &recordSpec)
+		}
+		return false
+	})
+	return retval, err
+}
+
 // GetRecordSpecification returns the record spec with the given id.
 func (k Keeper) GetRecordSpecification(ctx sdk.Context, recordSpecID types.MetadataAddress) (spec types.RecordSpecification, found bool) {
 	if !recordSpecID.IsRecordSpecificationAddress() {

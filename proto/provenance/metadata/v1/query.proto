@@ -60,6 +60,13 @@ service Query {
     option (google.api.http).get = "/provenance/metadata/v1/contractspec/{specification_uuid}";
   }
 
+  // ContractSpecification returns a contract specification and record specifications for the given contract
+  // specification uuid
+  rpc ContractSpecificationExtended(ContractSpecificationExtendedRequest)
+      returns (ContractSpecificationExtendedResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/contractspec/{specification_uuid}/extended";
+  }
+
   // RecordSpecificationsForContractSpecification returns the record specifications for the given contract specification
   // uuid
   rpc RecordSpecificationsForContractSpecification(RecordSpecificationsForContractSpecificationRequest)
@@ -183,6 +190,18 @@ message ContractSpecificationRequest {
 // ContractSpecificationResponse is the response to a contract specification request.
 message ContractSpecificationResponse {
   ContractSpecification contract_specification = 1 [(gogoproto.moretags) = "yaml:\"contract_specification\""];
+}
+
+// ContractSpecificationExtendedRequest is used for requesting a contract specification with extended data by contract
+// specification uuid
+message ContractSpecificationExtendedRequest {
+  string specification_uuid = 1 [(gogoproto.moretags) = "yaml:\"specification_uuid\""];
+}
+
+// ContractSpecificationExtendedResponse is the response to a contract specification extended request.
+message ContractSpecificationExtendedResponse {
+  ContractSpecification        contract_specification = 1 [(gogoproto.moretags) = "yaml:\"contract_specification\""];
+  repeated RecordSpecification record_specifications  = 2 [(gogoproto.moretags) = "yaml:\"record_specifications\""];
 }
 
 // RecordSpecificationsForContractSpecificationRequest is used for requesting record specifications by contract
