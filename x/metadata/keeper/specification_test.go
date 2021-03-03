@@ -130,11 +130,12 @@ func (s *SpecKeeperTestSuite) TestGetSetDeleteContractSpecification() {
 	s.False(found3, "3: get contract spec should return false for an unknown address")
 	s.NotNil(spec3, "3: get contract spec should always return a non-nil scope spec")
 
-	s.app.MetadataKeeper.RemoveContractSpecification(s.ctx, newSpec.SpecificationId)
+	remErr := s.app.MetadataKeeper.RemoveContractSpecification(s.ctx, newSpec.SpecificationId)
+	s.Nil(remErr, "4: delete should not return any error")
 
 	spec4, found4 := s.app.MetadataKeeper.GetContractSpecification(s.ctx, s.contractSpecID1)
-	s.False(found4, "4: get contract spec should return false after it has been deleted")
-	s.NotNil(spec4, "4: get contract spec should always return a non-nil scope spec")
+	s.False(found4, "5: get contract spec should return false after it has been deleted")
+	s.NotNil(spec4, "5: get contract spec should always return a non-nil scope spec")
 }
 
 func (s *SpecKeeperTestSuite) TestIterateContractSpecs() {
@@ -454,11 +455,12 @@ func (s *SpecKeeperTestSuite) TestGetSetDeleteScopeSpecification() {
 	s.False(found3, "3: get scope spec should return false for an unknown address")
 	s.NotNil(spec3, "3: get scope spec should always return a non-nil scope spec")
 
-	s.app.MetadataKeeper.RemoveScopeSpecification(s.ctx, newSpec.SpecificationId)
+	remErr := s.app.MetadataKeeper.RemoveScopeSpecification(s.ctx, newSpec.SpecificationId)
+	s.Nil(remErr, "4: delete should not return any error")
 
 	spec4, found4 := s.app.MetadataKeeper.GetScopeSpecification(s.ctx, s.scopeSpecID)
-	s.False(found4, "4: get scope spec should return false after it has been deleted")
-	s.NotNil(spec4, "4: get scope spec should always return a non-nil scope spec")
+	s.False(found4, "5: get scope spec should return false after it has been deleted")
+	s.NotNil(spec4, "5: get scope spec should always return a non-nil scope spec")
 }
 
 func (s *SpecKeeperTestSuite) TestIterateScopeSpecs() {

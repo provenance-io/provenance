@@ -125,16 +125,16 @@ func (k Keeper) SetRecordSpecification(ctx sdk.Context, spec types.RecordSpecifi
 }
 
 // RemoveRecordSpecification removes a record specification from the module kv store.
-func (k Keeper) RemoveRecordSpecification(ctx sdk.Context, recordSpecID types.MetadataAddress) {
+func (k Keeper) RemoveRecordSpecification(ctx sdk.Context, recordSpecID types.MetadataAddress) error {
 	if k.isRecordSpecUsed(ctx, recordSpecID) {
-		return
+		return fmt.Errorf("record specification with id %s still in use", recordSpecID)
 	}
 
 	store := ctx.KVStore(k.storeKey)
 
 	recordSpec, found := k.GetRecordSpecification(ctx, recordSpecID)
 	if !found {
-		return
+		return fmt.Errorf("record specification with id %s not found", recordSpecID)
 	}
 
 	store.Delete(recordSpecID)
@@ -146,6 +146,8 @@ func (k Keeper) RemoveRecordSpecification(ctx sdk.Context, recordSpecID types.Me
 			sdk.NewAttribute(types.AttributeKeyRecordSpec, recordSpec.String()),
 		),
 	)
+
+	return nil
 }
 
 // ValidateRecordSpecUpdate full validation of a proposed record spec possibly against an existing one.
@@ -259,19 +261,18 @@ func (k Keeper) SetContractSpecification(ctx sdk.Context, spec types.ContractSpe
 }
 
 // RemoveContractSpecification removes a contract specification from the module kv store.
-func (k Keeper) RemoveContractSpecification(ctx sdk.Context, contractSpecID types.MetadataAddress) {
+func (k Keeper) RemoveContractSpecification(ctx sdk.Context, contractSpecID types.MetadataAddress) error {
 	if k.isContractSpecUsed(ctx, contractSpecID) {
-		return
+		return fmt.Errorf("contract specification with id %s still in use", contractSpecID)
 	}
 
 	store := ctx.KVStore(k.storeKey)
 
 	contractSpec, found := k.GetContractSpecification(ctx, contractSpecID)
 	if !found {
-		return
+		return fmt.Errorf("contract specification with id %s not found", contractSpecID)
 	}
 
-	// TODO: Remove the record specs that are part of this contract spec.
 	k.clearContractSpecificationIndex(ctx, contractSpec)
 	store.Delete(contractSpecID)
 
@@ -282,6 +283,8 @@ func (k Keeper) RemoveContractSpecification(ctx sdk.Context, contractSpecID type
 			sdk.NewAttribute(types.AttributeKeyContractSpec, contractSpec.String()),
 		),
 	)
+
+	return nil
 }
 
 // indexContractSpecification adds all desired indexes for a contract specification.
@@ -449,20 +452,19 @@ func (k Keeper) SetScopeSpecification(ctx sdk.Context, spec types.ScopeSpecifica
 }
 
 // RemoveScopeSpecification removes a scope specification from the module kv store.
-func (k Keeper) RemoveScopeSpecification(ctx sdk.Context, scopeSpecID types.MetadataAddress) {
+func (k Keeper) RemoveScopeSpecification(ctx sdk.Context, scopeSpecID types.MetadataAddress) error {
 	if k.isScopeSpecUsed(ctx, scopeSpecID) {
-		return
+		return fmt.Errorf("scope specification with id %s still in use", scopeSpecID)
 	}
 
 	store := ctx.KVStore(k.storeKey)
 
 	scopeSpec, found := k.GetScopeSpecification(ctx, scopeSpecID)
 	if !found {
-		return
+		return fmt.Errorf("scope specification with id %s not found", scopeSpecID)
 	}
 
 	k.clearScopeSpecificationIndex(ctx, scopeSpec)
-
 	store.Delete(scopeSpecID)
 
 	ctx.EventManager().EmitEvent(
@@ -472,6 +474,8 @@ func (k Keeper) RemoveScopeSpecification(ctx sdk.Context, scopeSpecID types.Meta
 			sdk.NewAttribute(types.AttributeKeyScopeSpec, scopeSpec.String()),
 		),
 	)
+
+	return nil
 }
 
 // indexScopeSpecification adds all desired indexes for a scope specification.

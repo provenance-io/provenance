@@ -202,7 +202,9 @@ func (k msgServer) DeleteScopeSpecification(
 		return nil, err
 	}
 
-	k.RemoveScopeSpecification(ctx, msg.SpecificationId)
+	if err := k.RemoveScopeSpecification(ctx, msg.SpecificationId); err != nil {
+		return nil, fmt.Errorf("cannot delete scope specification with id %s: %w", msg.SpecificationId, err)
+	}
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -260,7 +262,9 @@ func (k msgServer) DeleteContractSpecification(
 	}
 
 	// TODO: Remove all record specifications associated with this contract specification.
-	k.RemoveContractSpecification(ctx, msg.SpecificationId)
+	if err := k.RemoveContractSpecification(ctx, msg.SpecificationId); err != nil {
+		return nil, fmt.Errorf("cannot delete contract specification with id %s: %w", msg.SpecificationId, err)
+	}
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -331,7 +335,9 @@ func (k msgServer) DeleteRecordSpecification(
 		return nil, err
 	}
 
-	k.RemoveRecordSpecification(ctx, msg.SpecificationId)
+	if err := k.RemoveRecordSpecification(ctx, msg.SpecificationId); err != nil {
+		return nil, fmt.Errorf("cannot delete record specification with id %s: %w", msg.SpecificationId, err)
+	}
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(

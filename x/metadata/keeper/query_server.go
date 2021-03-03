@@ -285,7 +285,7 @@ func (k Keeper) ContractSpecificationExtended(c context.Context, req *types.Cont
 
 	return &types.ContractSpecificationExtendedResponse{
 		ContractSpecification: &contractSpec,
-		RecordSpecifications: recSpecs,
+		RecordSpecifications:  recSpecs,
 	}, nil
 }
 
