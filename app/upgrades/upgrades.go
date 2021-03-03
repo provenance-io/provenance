@@ -8,10 +8,6 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-const (
-	V0_1_5 = "v0.1.5"
-)
-
 var (
 	noopHandler = func(ctx sdk.Context, plan upgradetypes.Plan) {
 		ctx.Logger().Info("Applying no-op upgrade plan for release " + plan.Name)
@@ -27,7 +23,7 @@ type appUpgrade struct {
 }
 
 var handlers = map[string]appUpgrade {
-	V0_1_5: {Added: []string{"metadata"}},
+	"v0.1.5": {Added: []string{"metadata"}},
 
 	// TODO - Add new upgrade definitions here.
 }
