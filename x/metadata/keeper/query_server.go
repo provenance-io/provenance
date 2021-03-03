@@ -263,14 +263,23 @@ func (k Keeper) RecordSpecificationsForContractSpecification(
 	if len(req.ContractSpecificationUuid) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "contract specification uuid cannot be empty")
 	}
-	// contractSpecUUID, err := uuid.Parse(req.ContractSpecificationUuid)
-	_, err := uuid.Parse(req.ContractSpecificationUuid)
+	contractSpecUUID, err := uuid.Parse(req.ContractSpecificationUuid)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid contract specification uuid: %s", err.Error())
 	}
+	contractSpecID := types.ContractSpecMetadataAddress(contractSpecUUID)
 
-	//TODO: Finish this using IterateRecordSpecsForContractSpec
-	return nil, status.Error(codes.Unimplemented, "Not implemented.")
+	ctx := sdk.UnwrapSDKContext(c)
+	retval := types.RecordSpecificationsForContractSpecificationResponse{}
+	err = k.IterateRecordSpecsForContractSpec(ctx, contractSpecID, func(recordSpecID types.MetadataAddress) bool {
+		recordSpec, found := k.GetRecordSpecification(ctx, recordSpecID)
+		if found {
+			retval.RecordSpecifications = append(retval.RecordSpecifications, &recordSpec)
+		}
+		return false
+	})
+
+	return &retval, err
 }
 
 // RecordSpecification returns a specific record specification by contract spec id and name
