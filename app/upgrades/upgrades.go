@@ -15,10 +15,9 @@ var (
 )
 
 type appUpgrade struct {
-	Added []string
+	Added   []string
 	Deleted []string
 	Renamed []storetypes.StoreRename
-
 	Handler upgradetypes.UpgradeHandler
 }
 
