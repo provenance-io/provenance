@@ -99,6 +99,13 @@ func areEquivalentSetsOfMetaAddresses(arr1 []types.MetadataAddress, arr2 []types
 	return true
 }
 
+// TODO: TestGetSetDeleteRecordSpecification
+// TODO: TestIterateRecordSpecs
+// TODO: TestIterateRecordSpecsForOwner
+// TODO: TestIterateRecordSpecsForContractSpec
+// TODO: TestGetRecordSpecificationsForContractSpecificationID
+// TODO: TestValidateRecordSpecUpdate
+
 func (s *SpecKeeperTestSuite) TestGetSetDeleteContractSpecification() {
 	newSpec := types.NewContractSpecification(
 		s.contractSpecID1,

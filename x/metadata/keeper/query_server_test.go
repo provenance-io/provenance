@@ -3,10 +3,9 @@ package keeper_test
 import (
 	gocontext "context"
 	"fmt"
-	"testing"
-
 	"github.com/google/uuid"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"testing"
 
 	"github.com/provenance-io/provenance/app"
 	simapp "github.com/provenance-io/provenance/app"
@@ -81,6 +80,10 @@ func (s *QueryServerTestSuite) SetupTest() {
 	types.RegisterQueryServer(queryHelper, app.MetadataKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 	s.queryClient = queryClient
+}
+
+func TestQuerierTestSuite(t *testing.T) {
+	suite.Run(t, new(QueryServerTestSuite))
 }
 
 func (s *QueryServerTestSuite) TestScopeQuery() {
@@ -191,6 +194,8 @@ func (s *QueryServerTestSuite) TestRecordQuery() {
 	s.Equal(recordNames[0], rsID.Records[0].Name)
 }
 
-func TestQuerierTestSuite(t *testing.T) {
-	suite.Run(t, new(QueryServerTestSuite))
-}
+// TODO: ScopeSpecification tests
+// TODO: ContractSpecification tests
+// TODO: ContractSpecificationExtended tests
+// TODO: RecordSpecificationsForContractSpecification test
+// TODO: RecordSpecification tests
