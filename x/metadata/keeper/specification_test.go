@@ -143,7 +143,7 @@ func (s *SpecKeeperTestSuite) TestIterateContractSpecs() {
 	specs := make([]*types.ContractSpecification, size)
 	for i := 0; i < size; i++ {
 		specs[i] = types.NewContractSpecification(
-			types.ScopeSpecMetadataAddress(uuid.New()),
+			types.ContractSpecMetadataAddress(uuid.New()),
 			types.NewDescription(
 				fmt.Sprintf("TestIterateContractSpecs[%d]", i),
 				fmt.Sprintf("The description for entry [%d] in a unit test contract specification", i),
