@@ -76,6 +76,8 @@ func (k Keeper) GetRecordSpecificationsForContractSpecificationID(ctx sdk.Contex
 		recordSpec, found := k.GetRecordSpecification(ctx, recordSpecID)
 		if found {
 			retval = append(retval, &recordSpec)
+		} else {
+			k.Logger(ctx).Error(fmt.Sprintf("iterator found record spec id %s but no record spec was found with that id", recordSpecID))
 		}
 		return false
 	})
