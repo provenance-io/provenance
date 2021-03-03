@@ -519,20 +519,3 @@ func (k Keeper) ValidateScopeSpecUpdate(ctx sdk.Context, existing *types.ScopeSp
 
 	return nil
 }
-
-// ValidateAllOwnersAreSigners makes sure that all entries in the existingOwners list are contained in the signers list.
-func (k Keeper) ValidateAllOwnersAreSigners(existingOwners []string, signers []string) error {
-	for _, owner := range existingOwners {
-		found := false
-		for _, signer := range signers {
-			if owner == signer {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return fmt.Errorf("missing signature from existing owner %s; required for update", owner)
-		}
-	}
-	return nil
-}
