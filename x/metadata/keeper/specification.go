@@ -151,11 +151,7 @@ func (k Keeper) RemoveRecordSpecification(ctx sdk.Context, recordSpecID types.Me
 }
 
 // ValidateRecordSpecUpdate full validation of a proposed record spec possibly against an existing one.
-func (k Keeper) ValidateRecordSpecUpdate(
-	ctx sdk.Context,
-	existing *types.RecordSpecification,
-	proposed types.RecordSpecification,
-) error {
+func (k Keeper) ValidateRecordSpecUpdate(ctx sdk.Context, existing *types.RecordSpecification, proposed types.RecordSpecification) error {
 	// Must pass basic validation.
 	if err := proposed.ValidateBasic(); err != nil {
 		return err

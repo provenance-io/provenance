@@ -254,7 +254,7 @@ func (k Keeper) ContractSpecification(c context.Context, req *types.ContractSpec
 	return &types.ContractSpecificationResponse{ContractSpecification: &spec}, nil
 }
 
-// ContractSpecification returns a specific contract specification by id
+// ContractSpecificationExtended returns a specific contract specification and record specifications by contract specification id
 func (k Keeper) ContractSpecificationExtended(c context.Context, req *types.ContractSpecificationExtendedRequest) (*types.ContractSpecificationExtendedResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
