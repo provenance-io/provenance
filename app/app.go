@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/provenance-io/provenance/app/upgrades"
 	"io"
 	"net/http"
 	"os"
@@ -565,11 +566,15 @@ func New(
 
 	// -- TODO: Add upgrade plans for each release here
 	//    NOTE: Do not remove any handlers once deployed
-	app.UpgradeKeeper.SetUpgradeHandler("v0.1.5",
-		func(ctx sdk.Context, plan upgradetypes.Plan) {
-			ctx.Logger().Info("Applying no-op upgrade plan for release v0.1.5")
-		},
-	)
+	//    NOTE: These have to be added before the baseapp seals via LoadLatestVersion() down below.
+	// * https://pkg.go.dev/github.com/cosmos/cosmos-sdk@v0.40.0-rc6/x/upgrade#hdr-Performing_Upgrades
+	// * https://github.com/cosmos/cosmos-sdk/issues/8265
+	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
+	if err != nil {
+		panic(err)
+	}
+
+	app.SetStoreLoader(upgrades.CustomUpgradeStoreLoader(app.UpgradeKeeper, upgradeInfo))
 	// --
 
 	if loadLatest {
