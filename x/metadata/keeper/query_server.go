@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -209,7 +208,7 @@ func (k Keeper) ScopeSpecification(c context.Context, req *types.ScopeSpecificat
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.SpecificationUuid == "" {
+	if len(req.SpecificationUuid) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "specification uuid cannot be empty")
 	}
 
@@ -228,19 +227,19 @@ func (k Keeper) ScopeSpecification(c context.Context, req *types.ScopeSpecificat
 	return &types.ScopeSpecificationResponse{ScopeSpecification: &spec}, nil
 }
 
-// ContractSpecification returns a specific scope specification by id
+// ContractSpecification returns a specific contract specification by id
 func (k Keeper) ContractSpecification(c context.Context, req *types.ContractSpecificationRequest) (*types.ContractSpecificationResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.SpecificationUuid == "" {
-		return nil, status.Error(codes.InvalidArgument, "specification id cannot be empty")
+	if len(req.SpecificationUuid) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "specification uuid cannot be empty")
 	}
 
 	id, err := uuid.Parse(req.SpecificationUuid)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid specification id: %s", err.Error())
+		return nil, status.Errorf(codes.InvalidArgument, "invalid specification uuid: %s", err.Error())
 	}
 	addr := types.ContractSpecMetadataAddress(id)
 	ctx := sdk.UnwrapSDKContext(c)
@@ -251,4 +250,55 @@ func (k Keeper) ContractSpecification(c context.Context, req *types.ContractSpec
 	}
 
 	return &types.ContractSpecificationResponse{ContractSpecification: &spec}, nil
+}
+
+func (k Keeper) RecordSpecificationsForContractSpecification(
+	c context.Context,
+	req *types.RecordSpecificationsForContractSpecificationRequest,
+) (*types.RecordSpecificationsForContractSpecificationResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if len(req.ContractSpecificationUuid) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "contract specification uuid cannot be empty")
+	}
+	// contractSpecUUID, err := uuid.Parse(req.ContractSpecificationUuid)
+	_, err := uuid.Parse(req.ContractSpecificationUuid)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid contract specification uuid: %s", err.Error())
+	}
+
+	//TODO: Finish this using IterateRecordSpecsForContractSpec
+	return nil, status.Error(codes.Unimplemented, "Not implemented.")
+}
+
+// RecordSpecification returns a specific record specification by contract spec id and name
+func (k Keeper) RecordSpecification(c context.Context, req *types.RecordSpecificationRequest) (*types.RecordSpecificationResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if len(req.ContractSpecificationUuid) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "contract specification uuid cannot be empty")
+	}
+	contractSpecUUID, err := uuid.Parse(req.ContractSpecificationUuid)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid contract specification uuid: %s", err.Error())
+	}
+
+	if len(req.Name) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "name cannot be empty")
+	}
+
+	specID := types.RecordSpecMetadataAddress(contractSpecUUID, req.Name)
+	ctx := sdk.UnwrapSDKContext(c)
+
+	spec, found := k.GetRecordSpecification(ctx, specID)
+	if !found {
+		return nil, status.Errorf(codes.NotFound, "record specification not found for contract spec uuid %s with name %s",
+			req.ContractSpecificationUuid, req.Name)
+	}
+
+	return &types.RecordSpecificationResponse{RecordSpecification: &spec}, nil
 }

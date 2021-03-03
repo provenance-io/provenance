@@ -2,10 +2,105 @@ package keeper
 
 import (
 	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
+
+// IterateRecordSpecs
+// IterateRecordSpecsForOwner
+// IterateRecordSpecsForContractSpec
+
+// GetRecordSpecification returns the record spec with the given id.
+func (k Keeper) GetRecordSpecification(ctx sdk.Context, recordSpecID types.MetadataAddress) (spec types.RecordSpecification, found bool) {
+	if !recordSpecID.IsRecordSpecificationAddress() {
+		return spec, false
+	}
+	store := ctx.KVStore(k.storeKey)
+	b := store.Get(recordSpecID)
+	if b == nil {
+		return types.RecordSpecification{}, false
+	}
+	k.cdc.MustUnmarshalBinaryBare(b, &spec)
+	return spec, true
+}
+
+// SetRecordSpecification stores a record specification in the module kv store.
+func (k Keeper) SetRecordSpecification(ctx sdk.Context, spec types.RecordSpecification) {
+	store := ctx.KVStore(k.storeKey)
+	b := k.cdc.MustMarshalBinaryBare(&spec)
+
+	eventType := types.EventTypeRecordSpecificationCreated
+	if store.Has(spec.SpecificationId) {
+		if oldBytes := store.Get(spec.SpecificationId); oldBytes != nil {
+			var oldSpec types.RecordSpecification
+			if err := k.cdc.UnmarshalBinaryBare(oldBytes, &oldSpec); err == nil {
+				eventType = types.EventTypeRecordSpecificationUpdated
+			}
+		}
+	}
+
+	store.Set(spec.SpecificationId, b)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			eventType,
+			sdk.NewAttribute(types.AttributeKeyRecordSpecID, spec.SpecificationId.String()),
+			sdk.NewAttribute(types.AttributeKeyRecordSpec, spec.String()),
+		),
+	)
+}
+
+// RemoveRecordSpecification removes a record specification from the module kv store.
+func (k Keeper) RemoveRecordSpecification(ctx sdk.Context, recordSpecID types.MetadataAddress) {
+	store := ctx.KVStore(k.storeKey)
+
+	recordSpec, found := k.GetRecordSpecification(ctx, recordSpecID)
+	if !found {
+		return
+	}
+
+	store.Delete(recordSpecID)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeRecordSpecificationRemoved,
+			sdk.NewAttribute(types.AttributeKeyRecordSpecID, recordSpec.SpecificationId.String()),
+			sdk.NewAttribute(types.AttributeKeyRecordSpec, recordSpec.String()),
+		),
+	)
+}
+
+// ValidateRecordSpecUpdate full validation of a proposed record spec possibly against an existing one.
+func (k Keeper) ValidateRecordSpecUpdate(
+	ctx sdk.Context,
+	existing *types.RecordSpecification,
+	proposed types.RecordSpecification,
+) error {
+	// Must pass basic validation.
+	if err := proposed.ValidateBasic(); err != nil {
+		return err
+	}
+
+	if existing != nil {
+		// IDs must match
+		if !proposed.SpecificationId.Equals(existing.SpecificationId) {
+			return fmt.Errorf("cannot update record spec identifier. expected %s, got %s",
+				existing.SpecificationId, proposed.SpecificationId)
+		}
+		// Names must match
+		if proposed.Name != existing.Name {
+			return fmt.Errorf("cannot update record spec name. expected %s, got %s",
+				existing.Name, proposed.Name)
+		}
+	}
+
+	return nil
+}
+
+func (k Keeper) isRecordSpecUsed(ctx sdk.Context, contractSpecID types.MetadataAddress) bool {
+	// TODO: Check for records created from this spec.
+	return false
+}
 
 // IterateContractSpecs processes all contract specs using a given handler.
 func (k Keeper) IterateContractSpecs(ctx sdk.Context, handler func(specification types.ContractSpecification) (stop bool)) error {
@@ -76,8 +171,8 @@ func (k Keeper) SetContractSpecification(ctx sdk.Context, spec types.ContractSpe
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			eventType,
-			sdk.NewAttribute(types.AttributeKeyScopeSpecID, spec.SpecificationId.String()),
-			sdk.NewAttribute(types.AttributeKeyScopeSpec, spec.String()),
+			sdk.NewAttribute(types.AttributeKeyContractSpecID, spec.SpecificationId.String()),
+			sdk.NewAttribute(types.AttributeKeyContractSpec, spec.String()),
 		),
 	)
 }
@@ -91,14 +186,15 @@ func (k Keeper) RemoveContractSpecification(ctx sdk.Context, contractSpecID type
 		return
 	}
 
+	// TODO: Remove the record specs that are part of this contract spec.
 	k.clearContractSpecificationIndex(ctx, contractSpec)
 	store.Delete(contractSpecID)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeContractSpecificationRemoved,
-			sdk.NewAttribute(types.AttributeKeyScopeSpecID, contractSpec.SpecificationId.String()),
-			sdk.NewAttribute(types.AttributeKeyScopeSpec, contractSpec.String()),
+			sdk.NewAttribute(types.AttributeKeyContractSpecID, contractSpec.SpecificationId.String()),
+			sdk.NewAttribute(types.AttributeKeyContractSpec, contractSpec.String()),
 		),
 	)
 }
@@ -143,7 +239,10 @@ func (k Keeper) isContractSpecUsed(ctx sdk.Context, contractSpecID types.Metadat
 		return true
 	}
 
-	// TODO: iterate over the sessions to look for one used by this contractSpecID.
+	// TODO: Look for sessions used by this contractSpecID.
+
+	// TODO: Iterate over the record specs for this contract spec to see if any of them are used.
+
 	return false
 }
 

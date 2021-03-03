@@ -38,6 +38,13 @@ const (
 	// EventTypeContractSpecificationRemoved is the event type generated when a contract specification is removed.
 	EventTypeContractSpecificationRemoved string = "contract_specification_removed"
 
+	// EventTypeRecordSpecificationCreated is the event type generated when a new record specification is created.
+	EventTypeRecordSpecificationCreated string = "record_specification_created"
+	// EventTypeRecordSpecificationUpdated is the event type generated when an existing record specifications is updated.
+	EventTypeRecordSpecificationUpdated string = "record_specification_updated"
+	// EventTypeRecordSpecificationRemoved is the event type generated when a record specification is removed.
+	EventTypeRecordSpecificationRemoved string = "record_specification_removed"
+
 	// AttributeKeyScopeID is the attribute key for a scope ID attribute JSON value.
 	AttributeKeyScopeID string = "scope_id"
 	// AttributeKeyScope is the attribute key for a scope attribute JSON value.
@@ -52,10 +59,18 @@ const (
 	AttributeKeyModuleName string = "module"
 	// AttributeKeyTxHash is the attribute for the transaction hash.
 	AttributeKeyTxHash = "tx_hash"
-	// AttributeKeyScopeID is the attribute key for a scope ID attribute JSON value.
+	// AttributeKeyScopeSpecID is the attribute key for a scope spec ID attribute JSON value.
 	AttributeKeyScopeSpecID string = "scope_spec_id"
-	// AttributeKeyScope is the attribute key for a scope attribute JSON value.
+	// AttributeKeyScopeSpec is the attribute key for a scope spec attribute JSON value.
 	AttributeKeyScopeSpec string = "scope_spec"
+	// AttributeKeyContractSpecID is the attribute key for a contract spec ID attribute JSON value.
+	AttributeKeyContractSpecID string = "contract_spec_id"
+	// AttributeKeyContractSpec is the attribute key for a contract spec attribute JSON value.
+	AttributeKeyContractSpec string = "contract_spec"
+	// AttributeKeyRecordSpecID is the attribute key for a record spec ID attribute JSON value.
+	AttributeKeyRecordSpecID string = "record_spec_id"
+	// AttributeKeyRecordSpec is the attribute key for a record spec attribute JSON value.
+	AttributeKeyRecordSpec string = "record_spec"
 
 	// AttributeValueCategory indicates the category for this value
 	AttributeValueCategory = ModuleName
