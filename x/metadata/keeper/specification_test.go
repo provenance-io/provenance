@@ -316,7 +316,6 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 		name        string
 		existing    *types.ContractSpecification
 		proposed    *types.ContractSpecification
-		signers     []string
 		want        string
 	}{
 		{
@@ -347,7 +346,6 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 				types.NewContractSpecificationSourceHash("somehash"),
 				"someclass",
 			),
-			[]string{s.user1Addr.String()},
 			fmt.Sprintf("cannot update contract spec identifier. expected %s, got %s",
 				s.contractSpecID1, otherContractSpecID),
 		},
@@ -379,7 +377,6 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 				types.NewContractSpecificationSourceHash("somehash"),
 				"someclass",
 			),
-			[]string{s.user1Addr.String()},
 			"invalid owner addresses count (expected > 0 got: 0)",
 		},
 		{
@@ -410,119 +407,6 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 				types.NewContractSpecificationSourceHash("somehash"),
 				"someclass",
 			),
-			[]string{s.user1Addr.String()},
-			"",
-		},
-		{
-			"changing owner, only signed by new owner - error",
-			types.NewContractSpecification(
-				s.contractSpecID1,
-				types.NewDescription(
-					"TestValidateContractSpecUpdate",
-					"A description for a unit test contract specification",
-					"http://test.net",
-					"http://test.net/ico.png",
-				),
-				[]string{s.user1Addr.String()},
-				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
-				types.NewContractSpecificationSourceHash("somehash"),
-				"someclass",
-			),
-			types.NewContractSpecification(
-				s.contractSpecID1,
-				types.NewDescription(
-					"TestValidateContractSpecUpdate",
-					"A description for a unit test contract specification",
-					"http://test.net",
-					"http://test.net/ico.png",
-				),
-				[]string{s.user2Addr.String()},
-				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
-				types.NewContractSpecificationSourceHash("somehash"),
-				"someclass",
-			),
-			[]string{s.user2Addr.String()},
-			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1Addr.String()),
-		},
-		{
-			"adding owner, only existing owner needs to sign",
-			types.NewContractSpecification(
-				s.contractSpecID1,
-				types.NewDescription(
-					"TestValidateContractSpecUpdate",
-					"A description for a unit test contract specification",
-					"http://test.net",
-					"http://test.net/ico.png",
-				),
-				[]string{s.user1Addr.String()},
-				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
-				types.NewContractSpecificationSourceHash("somehash"),
-				"someclass",
-			),
-			types.NewContractSpecification(
-				s.contractSpecID1,
-				types.NewDescription(
-					"TestValidateContractSpecUpdate",
-					"A description for a unit test contract specification",
-					"http://test.net",
-					"http://test.net/ico.png",
-				),
-				[]string{s.user1Addr.String(), s.user2Addr.String()},
-				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
-				types.NewContractSpecificationSourceHash("somehash"),
-				"someclass",
-			),
-			[]string{s.user1Addr.String()},
-			"",
-		},
-		{
-			"adding owner, both signed - ok too",
-			types.NewContractSpecification(
-				s.contractSpecID1,
-				types.NewDescription(
-					"TestValidateContractSpecUpdate",
-					"A description for a unit test contract specification",
-					"http://test.net",
-					"http://test.net/ico.png",
-				),
-				[]string{s.user1Addr.String()},
-				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
-				types.NewContractSpecificationSourceHash("somehash"),
-				"someclass",
-			),
-			types.NewContractSpecification(
-				s.contractSpecID1,
-				types.NewDescription(
-					"TestValidateContractSpecUpdate",
-					"A description for a unit test contract specification",
-					"http://test.net",
-					"http://test.net/ico.png",
-				),
-				[]string{s.user1Addr.String(), s.user2Addr.String()},
-				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
-				types.NewContractSpecificationSourceHash("somehash"),
-				"someclass",
-			),
-			[]string{s.user1Addr.String(), s.user2Addr.String()},
-			"",
-		},
-		{
-			"new entry, no signers required",
-			nil,
-			types.NewContractSpecification(
-				s.contractSpecID1,
-				types.NewDescription(
-					"TestValidateContractSpecUpdate",
-					"A description for a unit test contract specification",
-					"http://test.net",
-					"http://test.net/ico.png",
-				),
-				[]string{s.user1Addr.String()},
-				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
-				types.NewContractSpecificationSourceHash("somehash"),
-				"someclass",
-			),
-			[]string{},
 			"",
 		},
 	}
@@ -530,7 +414,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 	for _, tt := range tests {
 		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidateContractSpecUpdate(s.ctx, tt.existing, *tt.proposed, tt.signers)
+			err := s.app.MetadataKeeper.ValidateContractSpecUpdate(s.ctx, tt.existing, *tt.proposed)
 			if err != nil {
 				require.Equal(t, tt.want, err.Error(), "ScopeSpec Keeper ValidateContractSpecUpdate error")
 			} else if len(tt.want) > 0 {
@@ -880,7 +764,6 @@ func (s *SpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
 		name        string
 		existing    *types.ScopeSpecification
 		proposed    *types.ScopeSpecification
-		signers     []string
 		want        string
 	}{
 		{
@@ -899,7 +782,6 @@ func (s *SpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				[]types.MetadataAddress{s.contractSpecID1},
 			),
-			[]string{s.user1Addr.String()},
 			fmt.Sprintf("cannot update scope spec identifier. expected %s, got %s",
 				s.scopeSpecID, otherScopeSpecID),
 		},
@@ -919,7 +801,6 @@ func (s *SpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				[]types.MetadataAddress{s.contractSpecID1},
 			),
-			[]string{s.user1Addr.String()},
 			"the ScopeSpecification must have at least one owner",
 		},
 		{
@@ -938,77 +819,6 @@ func (s *SpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				[]types.MetadataAddress{s.contractSpecID1},
 			),
-			[]string{s.user1Addr.String()},
-			"",
-		},
-		{
-			"changing owner, only signed by new owner - error",
-			types.NewScopeSpecification(
-				s.scopeSpecID,
-				nil,
-				[]string{s.user1Addr.String()},
-				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
-				[]types.MetadataAddress{s.contractSpecID1},
-			),
-			types.NewScopeSpecification(
-				s.scopeSpecID,
-				nil,
-				[]string{s.user2Addr.String()},
-				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
-				[]types.MetadataAddress{s.contractSpecID1},
-			),
-			[]string{s.user2Addr.String()},
-			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1Addr.String()),
-		},
-		{
-			"adding signer, only existing owner needs to sign",
-			types.NewScopeSpecification(
-				s.scopeSpecID,
-				nil,
-				[]string{s.user1Addr.String()},
-				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
-				[]types.MetadataAddress{s.contractSpecID1},
-			),
-			types.NewScopeSpecification(
-				s.scopeSpecID,
-				nil,
-				[]string{s.user1Addr.String(), s.user2Addr.String()},
-				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
-				[]types.MetadataAddress{s.contractSpecID1},
-			),
-			[]string{s.user1Addr.String()},
-			"",
-		},
-		{
-			"adding signer, both signed - ok too",
-			types.NewScopeSpecification(
-				s.scopeSpecID,
-				nil,
-				[]string{s.user1Addr.String()},
-				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
-				[]types.MetadataAddress{s.contractSpecID1},
-			),
-			types.NewScopeSpecification(
-				s.scopeSpecID,
-				nil,
-				[]string{s.user1Addr.String(), s.user2Addr.String()},
-				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
-				[]types.MetadataAddress{s.contractSpecID1},
-			),
-			[]string{s.user1Addr.String(), s.user2Addr.String()},
-			"",
-		},
-		{
-			"new entry, no signers required",
-			nil,
-			types.NewScopeSpecification(
-				s.scopeSpecID,
-				nil,
-				[]string{s.user1Addr.String()},
-				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
-				[]types.MetadataAddress{s.contractSpecID1},
-			),
-			[]string{},
 			"",
 		},
 		{
@@ -1027,7 +837,6 @@ func (s *SpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				[]types.MetadataAddress{s.contractSpecID1, otherContractSpecID},
 			),
-			[]string{s.user1Addr.String()},
 			fmt.Sprintf("no contract spec exists with id %s", otherContractSpecID),
 		},
 		{
@@ -1046,7 +855,6 @@ func (s *SpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				[]types.MetadataAddress{s.contractSpecID1, s.contractSpecID2},
 			),
-			[]string{s.user1Addr.String()},
 			"",
 		},
 		{
@@ -1065,7 +873,6 @@ func (s *SpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				[]types.MetadataAddress{s.contractSpecID2},
 			),
-			[]string{s.user1Addr.String()},
 			"",
 		},
 	}
@@ -1073,7 +880,7 @@ func (s *SpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
 	for _, tt := range tests {
 		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidateScopeSpecUpdate(s.ctx, tt.existing, *tt.proposed, tt.signers)
+			err := s.app.MetadataKeeper.ValidateScopeSpecUpdate(s.ctx, tt.existing, *tt.proposed)
 			if err != nil {
 				require.Equal(t, tt.want, err.Error(), "ScopeSpec Keeper ValidateScopeSpecUpdate error")
 			} else if len(tt.want) > 0 {
