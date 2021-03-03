@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	V0_1_5 string = "v0.1.5"
+	V0_1_5 = "v0.1.5"
 )
 
 var (
@@ -27,19 +27,26 @@ type appUpgrade struct {
 }
 
 var handlers = map[string]appUpgrade {
-	V0_1_5: {
-		Added: []string{"metadata"},
-	},
+	V0_1_5: {Added: []string{"metadata"}},
 
 	// TODO - Add new upgrade definitions here.
 }
 
 func CustomUpgradeStoreLoader(keeper upgradekeeper.Keeper, info storetypes.UpgradeInfo) baseapp.StoreLoader {
 	// Register explicit appUpgrades
-	for plan, upgrade := range handlers {
-		keeper.SetUpgradeHandler(plan, upgrade.Handler)
+	for name, upgrade := range handlers {
+		// If the handler has been defined, add it here, otherwise, use no-op.
+		var handler upgradetypes.UpgradeHandler
+		if upgrade.Handler == nil {
+			handler = noopHandler
+		} else {
+			handler = upgrade.Handler
+		}
+		keeper.SetUpgradeHandler(name, handler)
 
-		if info.Name == plan && !keeper.IsSkipHeight(info.Height) {
+		// If the plan is executing this block, set the store locator to create any
+		// missing modules, delete unused modules, or rename any keys required in the plan.
+		if info.Name == name && !keeper.IsSkipHeight(info.Height) {
 			storeUpgrades := storetypes.StoreUpgrades{
 				Added: upgrade.Added,
 				Renamed: upgrade.Renamed,
