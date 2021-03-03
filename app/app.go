@@ -1,12 +1,13 @@
 package app
 
 import (
-	"github.com/provenance-io/provenance/app/upgrades"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/provenance-io/provenance/app/upgrades"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec/types"

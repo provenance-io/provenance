@@ -21,7 +21,7 @@ type appUpgrade struct {
 	Handler upgradetypes.UpgradeHandler
 }
 
-var handlers = map[string]appUpgrade {
+var handlers = map[string]appUpgrade{
 	"v0.1.5": {Added: []string{"metadata"}},
 
 	// TODO - Add new upgrade definitions here.
@@ -43,7 +43,7 @@ func CustomUpgradeStoreLoader(keeper upgradekeeper.Keeper, info storetypes.Upgra
 		// missing modules, delete unused modules, or rename any keys required in the plan.
 		if info.Name == name && !keeper.IsSkipHeight(info.Height) {
 			storeUpgrades := storetypes.StoreUpgrades{
-				Added: upgrade.Added,
+				Added:   upgrade.Added,
 				Renamed: upgrade.Renamed,
 				Deleted: upgrade.Deleted,
 			}
