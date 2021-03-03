@@ -6,9 +6,64 @@ import (
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
-// IterateRecordSpecs
-// IterateRecordSpecsForOwner
-// IterateRecordSpecsForContractSpec
+// IterateRecordSpecs processes all record specs using a given handler.
+func (k Keeper) IterateRecordSpecs(ctx sdk.Context, handler func(specification types.RecordSpecification) (stop bool)) error {
+	store := ctx.KVStore(k.storeKey)
+	it := sdk.KVStorePrefixIterator(store, types.RecordSpecificationKeyPrefix)
+	defer it.Close()
+	for ; it.Valid(); it.Next() {
+		var recordSpec types.RecordSpecification
+		k.cdc.MustUnmarshalBinaryBare(it.Value(), &recordSpec)
+		if handler(recordSpec) {
+			break
+		}
+	}
+	return nil
+}
+
+// IterateRecordSpecsForOwner processes all record specs owned by an address using a given handler.
+func (k Keeper) IterateRecordSpecsForOwner(ctx sdk.Context, ownerAddress sdk.AccAddress, handler func(recordSpecID types.MetadataAddress) (stop bool)) error {
+	var recordItErr error = nil
+	contractItErr := k.IterateContractSpecsForOwner(ctx, ownerAddress, func(contractSpecID types.MetadataAddress) bool {
+		needToStop := false
+		recordItErr = k.IterateRecordSpecsForContractSpec(ctx, contractSpecID, func(recordSpecID types.MetadataAddress) bool {
+			needToStop = handler(recordSpecID)
+			return needToStop
+		})
+		if recordItErr != nil {
+			return true
+		}
+		return needToStop
+	})
+	if recordItErr != nil {
+		return recordItErr
+	}
+	if contractItErr != nil {
+		return contractItErr
+	}
+	return nil
+}
+
+// IterateRecordSpecsForContractSpec processes all record specs for a contract spec using a given handler.
+func (k Keeper) IterateRecordSpecsForContractSpec(ctx sdk.Context, contractSpecID types.MetadataAddress, handler func(recordSpecID types.MetadataAddress) (stop bool)) error {
+	store := ctx.KVStore(k.storeKey)
+	prefix, err := contractSpecID.ContractSpecRecordSpecIteratorPrefix()
+	if err != nil {
+		return err
+	}
+	it := sdk.KVStorePrefixIterator(store, prefix)
+	defer it.Close()
+	for ; it.Valid(); it.Next() {
+		var recordSpecID types.MetadataAddress
+		if err := recordSpecID.Unmarshal(it.Key()); err != nil {
+			return err
+		}
+		if handler(recordSpecID) {
+			break
+		}
+	}
+	return nil
+}
 
 // GetRecordSpecification returns the record spec with the given id.
 func (k Keeper) GetRecordSpecification(ctx sdk.Context, recordSpecID types.MetadataAddress) (spec types.RecordSpecification, found bool) {
@@ -105,7 +160,7 @@ func (k Keeper) isRecordSpecUsed(ctx sdk.Context, contractSpecID types.MetadataA
 // IterateContractSpecs processes all contract specs using a given handler.
 func (k Keeper) IterateContractSpecs(ctx sdk.Context, handler func(specification types.ContractSpecification) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	it := sdk.KVStorePrefixIterator(store, types.ScopeSpecificationKeyPrefix)
+	it := sdk.KVStorePrefixIterator(store, types.ContractSpecificationKeyPrefix)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var contractSpec types.ContractSpecification
