@@ -121,6 +121,52 @@ run: check-built run-config;
 
 .PHONY: install build build-linux run
 
+##############################
+# Release artifacts and plan #
+##############################
+
+RELEASE_TAG=SNAPSHOT
+RELEASE_BIN=$(BUILDDIR)/bin
+RELEASE_PLAN=$(BUILDDIR)/plan-$(RELEASE_TAG).json
+RELEASE_CHECKSUM_NAME=sha256sum.txt
+RELEASE_CHECKSUM=$(BUILDDIR)/$(RELEASE_CHECKSUM_NAME)
+RELEASE_ZIP_NAME=provenance-linux-amd64-$(RELEASE_TAG).zip
+RELEASE_ZIP=$(BUILDDIR)/$(RELEASE_ZIP_NAME)
+
+.PHONY: build-release-clean
+build-release-clean:
+	rm -rf $(RELEASE_BIN) $(RELEASE_PLAN) $(RELEASE_CHECKSUM) $(RELEASE_ZIP)
+
+.PHONY: build-release-checksum
+build-release-checksum: build-release-zip
+	cd $(BUILDDIR) && \
+	  shasum -a 256 $(RELEASE_ZIP_NAME) > $(RELEASE_CHECKSUM) && \
+	cd ..
+
+.PHONY: build-release-plan
+build-release-plan: build-release-zip build-release-checksum
+	cd $(BUILDDIR) && \
+	  sum="$(firstword $(shell cat $(RELEASE_CHECKSUM)))" && \
+	  echo "sum=$$sum" && \
+	  echo "{\"binaries\":{\"linux/amd64\":\"https://github.com/provenance-io/provenance/releases/download/$(RELEASE_TAG)/$(RELEASE_ZIP_NAME)?checksum=sha256:$$sum\"}}" > $(RELEASE_PLAN) && \
+	cd ..
+
+.PHONY: build-release-bin
+build-release-bin: build
+	go mod vendor && \
+	mkdir -p $(RELEASE_BIN) && \
+	cp $(BUILDDIR)/provenanced $(RELEASE_BIN) && \
+	cp vendor/github.com/CosmWasm/wasmvm/api/libwasmvm.so $(RELEASE_BIN) && \
+	chmod +x $(RELEASE_BIN)/provenanced
+
+.PHONY: build-release-zip
+build-release-zip: build-release-bin
+	cd $(BUILDDIR) && \
+	  zip -r $(RELEASE_ZIP_NAME) bin/ && \
+	cd ..
+
+.PHONY: build-release
+build-release: build-release-zip build-release-plan
 
 ##############################
 # Tools / Dependencies
@@ -340,13 +386,13 @@ proto-update-deps:
 ## insert go, java package option into proofs.proto file
 ## Issue link: https://github.com/confio/ics23/issues/32 (instead of a simple sed we need 4 lines cause bsd sed -i is incompatible)
 	@head -n3 $(CONFIO_TYPES)/proofs.proto.orig > $(CONFIO_TYPES)/proofs.proto
-	@echo 'option go_package = "github.com/confio/ics23/go";' >> $(CONFIO_TYPES)/proofs.proto 
+	@echo 'option go_package = "github.com/confio/ics23/go";' >> $(CONFIO_TYPES)/proofs.proto
 	@echo 'option java_package = "tech.confio.ics23";' >> $(CONFIO_TYPES)/proofs.proto
 	@echo 'option java_multiple_files = true;' >> $(CONFIO_TYPES)/proofs.proto
-	@tail -n+4 $(CONFIO_TYPES)/proofs.proto.orig >> $(CONFIO_TYPES)/proofs.proto 
+	@tail -n+4 $(CONFIO_TYPES)/proofs.proto.orig >> $(CONFIO_TYPES)/proofs.proto
 	@rm $(CONFIO_TYPES)/proofs.proto.orig
 
-.PHONY: proto-all proto-gen proto-format proto-gen-any proto-swagger-gen proto-lint proto-check-breaking 
+.PHONY: proto-all proto-gen proto-format proto-gen-any proto-swagger-gen proto-lint proto-check-breaking
 .PHONY: proto-lint-docker proto-check-breaking-docker proto-update-deps
 
 
