@@ -67,10 +67,90 @@ func (k Keeper) Scope(c context.Context, req *types.ScopeRequest) (*types.ScopeR
 	return &types.ScopeResponse{Scope: &s, Records: records, Sessions: sessions}, nil
 }
 
-// SessionContext returns a specific group context within a scope (or all groups)
-func (k Keeper) SessionContext(c context.Context, req *types.SessionContextRequest) (*types.SessionContextResponse, error) {
-	// TODO
-	return &types.SessionContextResponse{}, nil
+// SessionContextByUUID returns a specific group context within a scope (or all groups)
+func (k Keeper) SessionContextByUUID(c context.Context, req *types.SessionContextByUUIDRequest) (*types.SessionContextByUUIDResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if req.GetScopeUuid() == "" {
+		return nil, status.Error(codes.InvalidArgument, "scope uuid cannot be empty")
+	}
+
+	scopeUUID, err := uuid.Parse(req.GetScopeUuid())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid scope uuid: %s", err.Error())
+	}
+
+	scopeID := types.ScopeMetadataAddress(scopeUUID)
+
+	ctx := sdk.UnwrapSDKContext(c)
+	sessions := []*types.Session{}
+	if req.GetSessionUuid() == "" {
+		err = k.IterateSessions(ctx, scopeID, func(s types.Session) (stop bool) {
+			sessions = append(sessions, &s)
+			return false
+		})
+		if err != nil {
+			return nil, err
+		}
+		return &types.SessionContextByUUIDResponse{ScopeId: scopeID.String(), Sessions: sessions}, nil
+	}
+
+	sessionUUID, err := uuid.Parse(req.GetSessionUuid())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid session uuid: %s", err.Error())
+	}
+
+	sessionID := types.SessionMetadataAddress(scopeUUID, sessionUUID)
+
+	session, found := k.GetSession(ctx, sessionID)
+	if !found {
+		return nil, status.Errorf(codes.NotFound, "session id %s not found", session.SessionId)
+	}
+	sessions = append(sessions, &session)
+	return &types.SessionContextByUUIDResponse{ScopeId: scopeID.String(), SessionId: sessionID.String(), Sessions: sessions}, nil
+}
+
+// SessionContextByID returns a specific session context within a scope (or all groups)
+func (k Keeper) SessionContextByID(c context.Context, req *types.SessionContextByIDRequest) (*types.SessionContextByIDResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if req.GetScopeId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "scope id cannot be empty")
+	}
+
+	scopeID, err := types.MetadataAddressFromBech32(req.GetScopeId())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "incorrect scope id: %s", err.Error())
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	sessions := []*types.Session{}
+	if req.GetSessionId() == "" {
+		err = k.IterateSessions(ctx, scopeID, func(s types.Session) (stop bool) {
+			sessions = append(sessions, &s)
+			return false
+		})
+		if err != nil {
+			return nil, err
+		}
+		return &types.SessionContextByIDResponse{ScopeId: scopeID.String(), Sessions: sessions}, nil
+	}
+
+	sessionID, err := types.MetadataAddressFromBech32(req.GetSessionId())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "incorrect scope id: %s", err.Error())
+	}
+
+	session, found := k.GetSession(ctx, sessionID)
+	if !found {
+		return nil, status.Errorf(codes.NotFound, "session id %s not found", session.SessionId)
+	}
+	sessions = append(sessions, &session)
+	return &types.SessionContextByIDResponse{ScopeId: scopeID.String(), SessionId: sessionID.String(), Sessions: sessions}, nil
 }
 
 // RecordsByScopeUUID returns a collection of the records in a scope or a specific one by name

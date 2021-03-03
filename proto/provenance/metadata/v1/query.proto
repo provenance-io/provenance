@@ -25,9 +25,14 @@ service Query {
     option (google.api.http).get = "/provenance/metadata/v1/scope/{scope_uuid}";
   }
 
-  // SessionContext returns a specific session context within a scope (or all sessions)
-  rpc SessionContext(SessionContextRequest) returns (SessionContextResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/scope/{scope_uuid}/session/{session_uuid}";
+  // SessionContextByUUID returns a specific session context within a scope (or all sessions)
+  rpc SessionContextByUUID(SessionContextByUUIDRequest) returns (SessionContextByUUIDResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/scope/uuid/{scope_uuid}/session/{session_uuid}";
+  }
+
+  // SessionContextByID returns a specific session context within a scope (or all sessions)
+  rpc SessionContextByID(SessionContextByIDRequest) returns (SessionContextByIDResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/scope/id/{scope_id}/session/{session_id}";
   }
 
   // RecordsByScopeUUID returns a collection of the records in a scope by scope uuid or a specific one by name
@@ -114,15 +119,33 @@ message ValueOwnershipResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// SessionContextRequest returns the record sessions for a given scope identifer or optionally a specific record session
-message SessionContextRequest {
+// SessionContextByUUIDRequest returns the record sessions for a given scope identifer or optionally a specific record
+// session
+message SessionContextByUUIDRequest {
   string scope_uuid   = 1 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
   string session_uuid = 2 [(gogoproto.moretags) = "yaml:\"session_uuid\""];
 }
 
-// SessionContextResponse is the response to a SessionContextRequest
-message SessionContextResponse {
-  repeated Session sessions = 1;
+// SessionContextByUUIDResponse is the response to a SessionContextByUUIDRequest
+message SessionContextByUUIDResponse {
+  string scope_id   = 1 [(gogoproto.moretags) = "yaml:\"scope_id\""];
+  string session_id = 2 [(gogoproto.moretags) = "yaml:\"session_id\""];
+
+  repeated Session sessions = 3;
+}
+
+// SessionContextByIDRequest returns the record sessions for a given scope identifer or optionally a specific record
+// session
+message SessionContextByIDRequest {
+  string scope_id   = 1 [(gogoproto.moretags) = "yaml:\"scope_id\""];
+  string session_id = 2 [(gogoproto.moretags) = "yaml:\"session_id\""];
+}
+
+// SessionContextByIDResponse is the response to a SessionContextByIDRequest
+message SessionContextByIDResponse {
+  string           scope_id   = 1 [(gogoproto.moretags) = "yaml:\"scope_id\""];
+  string           session_id = 2 [(gogoproto.moretags) = "yaml:\"session_id\""];
+  repeated Session sessions   = 3;
 }
 
 // RecordsByScopeUUIDRequest is a request for all of the records in a specific scope by uuid or a specific record if a
