@@ -167,10 +167,6 @@ func TestMigrate(t *testing.T) {
       "parties_involved": [
         "PARTY_TYPE_ORIGINATOR"
       ],
-      "record_spec_ids": [
-        "recspec1q5fha8nex5j0qeshr9uvsmv5um32y0aeyhnus90eqmv3xfwwugdwppahk0dnjmevgcsawa7a5z6p2gqtgnqwc",
-        "recspec1q5fha8nex5j0qeshr9uvsmv5um3fk945f58q5h9vf7tghmaskk67h2gnl8hnm7s4q8kh9zmw44e2x4cqp2d04"
-      ],
       "specification_id": "contractspec1qvfha8nex5j0qeshr9uvsmv5um3q7sghss"
     }
   ],

@@ -108,7 +108,6 @@ func NewContractSpecification(
 	partiesInvolved []PartyType,
 	source isContractSpecification_Source,
 	className string,
-	recordSpecIDs []MetadataAddress,
 ) *ContractSpecification {
 	return &ContractSpecification{
 		SpecificationId: specificationID,
@@ -117,7 +116,6 @@ func NewContractSpecification(
 		PartiesInvolved: partiesInvolved,
 		Source:          source,
 		ClassName:       className,
-		RecordSpecIds:   recordSpecIDs,
 	}
 }
 
@@ -140,7 +138,6 @@ func (s *ContractSpecification) ValidateBasic() error {
 	if prefix != PrefixContractSpecification {
 		return fmt.Errorf("invalid contract specification id prefix (expected: %s, got %s)", PrefixContractSpecification, prefix)
 	}
-	contractSpecUUID, _ := s.SpecificationId.ContractSpecUUID()
 	if s.Description != nil {
 		err = s.Description.ValidateBasic("ContractSpecification.Description")
 		if err != nil {
@@ -180,21 +177,6 @@ func (s *ContractSpecification) ValidateBasic() error {
 	if len(s.ClassName) > maxContractSpecificationClassNameLength {
 		return fmt.Errorf("class name exceeds maximum length (expected <= %d got: %d)",
 			maxContractSpecificationClassNameLength, len(s.ClassName))
-	}
-	for i, recordSpecID := range s.RecordSpecIds {
-		prefix, err = VerifyMetadataAddressFormat(recordSpecID)
-		if err != nil {
-			return fmt.Errorf("invalid record specification id at index %d: %w", i, err)
-		}
-		if prefix != PrefixRecordSpecification {
-			return fmt.Errorf("invalid record specification id prefix at index %d (expected: %s, got %s)",
-				i, PrefixRecordSpecification, prefix)
-		}
-		recSpecContractSpecUUID, _ := recordSpecID.ContractSpecUUID()
-		if recSpecContractSpecUUID != contractSpecUUID {
-			return fmt.Errorf("invalid record specification id contract specification uuid value at index %d (expected :%s, got %s)",
-				i, contractSpecUUID.String(), recSpecContractSpecUUID.String())
-		}
 	}
 	return nil
 }
