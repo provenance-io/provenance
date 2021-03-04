@@ -108,6 +108,7 @@ message MsgAddScopeRequest {
 // MsgAddScopeResponse from an add scope request
 message MsgAddScopeResponse {}
 
+// MsgDeleteScopeRequest deletes a scope
 message MsgDeleteScopeRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;

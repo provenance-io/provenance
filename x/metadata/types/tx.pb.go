@@ -276,6 +276,7 @@ func (m *MsgAddScopeResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgAddScopeResponse proto.InternalMessageInfo
 
+// MsgDeleteScopeRequest deletes a scope
 type MsgDeleteScopeRequest struct {
 	// Unique ID for the scope to delete
 	ScopeId MetadataAddress `protobuf:"bytes,1,opt,name=scope_id,json=scopeId,proto3,customtype=MetadataAddress" json:"scope_id" yaml:"scope_id"`
