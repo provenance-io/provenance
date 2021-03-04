@@ -50,8 +50,8 @@ type KeeperTestSuite struct {
 	sessionUUID uuid.UUID
 	sessionId   types.MetadataAddress
 
-	cSpecUUID uuid.UUID
-	cSpecId   types.MetadataAddress
+	contractSpecUUID uuid.UUID
+	contractSpecId   types.MetadataAddress
 }
 
 func ownerPartyList(addresses ...string) []types.Party {
@@ -94,8 +94,8 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.sessionUUID = uuid.New()
 	s.sessionId = types.SessionMetadataAddress(s.scopeUUID, s.sessionUUID)
 
-	s.cSpecUUID = uuid.New()
-	s.cSpecId = types.ContractSpecMetadataAddress(s.cSpecUUID)
+	s.contractSpecUUID = uuid.New()
+	s.contractSpecId = types.ContractSpecMetadataAddress(s.contractSpecUUID)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.MetadataKeeper)
@@ -474,7 +474,7 @@ func (s *KeeperTestSuite) TestMetadataSessionGetSetRemove() {
 	s.Empty(r)
 	s.False(found)
 
-	session := types.NewSession("name", s.sessionId, s.cSpecId, []types.Party{
+	session := types.NewSession("name", s.sessionId, s.contractSpecId, []types.Party{
 		{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: types.PartyType_PARTY_TYPE_AFFILIATE}},
 		types.AuditFields{CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", CreatedDate: time.Now(),
 			UpdatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", UpdatedDate: time.Now(),
@@ -512,7 +512,7 @@ func (s *KeeperTestSuite) TestMetadataSessionGetSetRemove() {
 func (s *KeeperTestSuite) TestMetadataSessionIterator() {
 	for i := 1; i <= 10; i++ {
 		sessionId := types.SessionMetadataAddress(s.scopeUUID, uuid.New())
-		session := types.NewSession("name", sessionId, s.cSpecId, []types.Party{
+		session := types.NewSession("name", sessionId, s.contractSpecId, []types.Party{
 			{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: types.PartyType_PARTY_TYPE_AFFILIATE}},
 			types.AuditFields{CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", CreatedDate: time.Now(),
 				UpdatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", UpdatedDate: time.Now(),
@@ -527,6 +527,103 @@ func (s *KeeperTestSuite) TestMetadataSessionIterator() {
 	})
 	s.Equal(10, count, "iterator should return a full list of sessions")
 
+}
+
+func (s *KeeperTestSuite) TestMetadataValidateSessionUpdate() {
+	scope := types.NewScope(s.scopeID, s.specID, ownerPartyList(s.user1), []string{s.user1}, s.user1)
+	s.app.MetadataKeeper.SetScope(s.ctx, *scope)
+
+	invalidScopeUUID := uuid.New()
+	parties := []types.Party{{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: types.PartyType_PARTY_TYPE_AFFILIATE}}
+	validSession := types.NewSession("processname", s.sessionId, s.contractSpecId, parties, types.AuditFields{})
+	invalidIdSession := types.NewSession("processname", types.SessionMetadataAddress(invalidScopeUUID, uuid.New()), s.contractSpecId, parties, types.AuditFields{})
+	invalidContractId := types.NewSession("processname", s.sessionId, types.ContractSpecMetadataAddress(uuid.New()), parties, types.AuditFields{})
+	invalidParties := []types.Party{{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: types.PartyType_PARTY_TYPE_CUSTODIAN}}
+	invalidPartiesSession := types.NewSession("processname", s.sessionId, s.contractSpecId, invalidParties, types.AuditFields{})
+	invalidNameSession := types.NewSession("invalid", s.sessionId, s.contractSpecId, parties, types.AuditFields{})
+
+	partiesInvolved := []types.PartyType{types.PartyType_PARTY_TYPE_AFFILIATE}
+	contractSpec := types.NewContractSpecification(s.contractSpecId, types.NewDescription("name", "desc", "url", "icon"), []string{s.user1}, partiesInvolved, &types.ContractSpecification_Hash{"hash"}, "processname", []types.MetadataAddress{})
+	s.app.MetadataKeeper.SetContractSpecification(s.ctx, *contractSpec)
+
+	cases := map[string]struct {
+		existing types.Session
+		proposed types.Session
+		signers  []string
+		wantErr  bool
+		errorMsg string
+	}{
+		"invalid session update, existing record does not have scope": {
+			existing: types.Session{},
+			proposed: types.Session{},
+			signers:  []string{s.user1},
+			wantErr:  true,
+			errorMsg: "incorrect address length (must be at least 17, actual: 0)",
+		},
+		"valid session update, existing and proposed satisfy validation": {
+			existing: *validSession,
+			proposed: *validSession,
+			signers:  []string{s.user1},
+			wantErr:  false,
+			errorMsg: "incorrect address length (must be at least 17, actual: 0)",
+		},
+		"invalid session update, existing id does not match proposed": {
+			existing: *validSession,
+			proposed: *invalidIdSession,
+			signers:  []string{s.user1},
+			wantErr:  true,
+			errorMsg: fmt.Sprintf("cannot update session identifier. expected %s, got %s", validSession.SessionId, invalidIdSession.SessionId),
+		},
+		"invalid session update, scope does not exist": {
+			existing: *invalidIdSession,
+			proposed: *invalidIdSession,
+			signers:  []string{s.user1},
+			wantErr:  true,
+			errorMsg: fmt.Sprintf("scope not found for scope id %s", types.ScopeMetadataAddress(invalidScopeUUID)),
+		},
+		"invalid session update, contract spec does not exist": {
+			existing: *validSession,
+			proposed: *invalidContractId,
+			signers:  []string{s.user1},
+			wantErr:  true,
+			errorMsg: fmt.Sprintf("cannot find contract specification %s", invalidContractId.SpecificationId),
+		},
+		"invalid session update, involved parties do not match": {
+			existing: *validSession,
+			proposed: *invalidPartiesSession,
+			signers:  []string{s.user1},
+			wantErr:  true,
+			errorMsg: "missing party type from required parties PARTY_TYPE_AFFILIATE",
+		},
+		"invalid session update, missing required signers": {
+			existing: *validSession,
+			proposed: *validSession,
+			signers:  []string{"unknown signer"},
+			wantErr:  true,
+			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1),
+		},
+		"invalid session update, proposed name does not match contract spec": {
+			existing: *validSession,
+			proposed: *invalidNameSession,
+			signers:  []string{s.user1},
+			wantErr:  true,
+			errorMsg: "proposed name does not match contract spec. expected invalid, got processname)",
+		},
+	}
+
+	for n, tc := range cases {
+		tc := tc
+
+		s.Run(n, func() {
+			err := s.app.MetadataKeeper.ValidateSessionUpdate(s.ctx, tc.existing, tc.proposed, tc.signers)
+			if tc.wantErr {
+				s.Error(err)
+				s.Equal(tc.errorMsg, err.Error())
+			} else {
+				s.NoError(err)
+			}
+		})
+	}
 }
 
 func (s *KeeperTestSuite) TestValidatePartiesInvolved() {

@@ -254,19 +254,8 @@ func (k Keeper) ValidateScopeRemove(ctx sdk.Context, existing, proposed types.Sc
 			return fmt.Errorf("cannot update scope identifier. expected %s, got %s", existing.ScopeId, proposed.ScopeId)
 		}
 	}
-
-	// Signatures required of all existing data owners.
-	for _, party := range existing.Owners {
-		found := false
-		for _, signer := range signers {
-			if party.Address == signer {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return fmt.Errorf("missing signature from existing owner %v; required for update", party)
-		}
+	if err := k.ValidateRequiredSignatures(existing.Owners, signers); err != nil {
+		return err
 	}
 
 	return nil

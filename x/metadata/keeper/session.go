@@ -111,21 +111,26 @@ func (k Keeper) IterateSessions(ctx sdk.Context, scopeID types.MetadataAddress, 
 // ValidateSessionUpdate checks the current session and the proposed session to determine if the the proposed changes are valid
 // based on the existing state
 func (k Keeper) ValidateSessionUpdate(ctx sdk.Context, existing, proposed types.Session, signers []string) error {
+	if len(existing.SessionId) > 0 {
+		if !proposed.SessionId.Equals(existing.SessionId) {
+			return fmt.Errorf("cannot update session identifier. expected %s, got %s", existing.SessionId, proposed.SessionId)
+		}
+	}
+
 	if err := proposed.ValidateBasic(); err != nil {
 		return err
 	}
 
-	scopeUUID, err := existing.SessionId.ScopeUUID()
+	scopeUUID, err := proposed.SessionId.ScopeUUID()
 	if err != nil {
 		return err
 	}
-
 	scopeID := types.ScopeMetadataAddress(scopeUUID)
 
 	// get scope for existing record
 	scope, found := k.GetScope(ctx, scopeID)
 	if !found {
-		return fmt.Errorf("scope not found for scope uuid %s", scopeUUID)
+		return fmt.Errorf("scope not found for scope id %s", scopeID)
 	}
 
 	contractSpec, found := k.GetContractSpecification(ctx, proposed.SpecificationId)
