@@ -25,7 +25,7 @@ type appUpgrade struct {
 var handlers = map[string]appUpgrade{
 	"v0.1.5": {},
 	"v0.1.9": {Added: []string{"metadata"}},
-
+	"v0.1.10": {},
 	// TODO - Add new upgrade definitions here.
 }
 
