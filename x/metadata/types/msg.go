@@ -32,7 +32,11 @@ var (
 	_ sdk.Msg = &MsgAddRecordGroupRequest{}
 	_ sdk.Msg = &MsgAddRecordRequest{}
 	_ sdk.Msg = &MsgAddScopeSpecificationRequest{}
+	_ sdk.Msg = &MsgDeleteScopeSpecificationRequest{}
 	_ sdk.Msg = &MsgAddContractSpecificationRequest{}
+	_ sdk.Msg = &MsgDeleteContractSpecificationRequest{}
+	_ sdk.Msg = &MsgAddRecordSpecificationRequest{}
+	_ sdk.Msg = &MsgDeleteRecordSpecificationRequest{}
 )
 
 // private method to convert an array of strings into an array of Acc Addresses.
