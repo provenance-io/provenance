@@ -575,7 +575,7 @@ func New(
 		panic(err)
 	}
 
-	storeLoader := upgrades.CustomUpgradeStoreLoader(app.UpgradeKeeper, upgradeInfo)
+	storeLoader := upgrades.CustomUpgradeStoreLoader(app.Logger(), app.UpgradeKeeper, upgradeInfo)
 	if storeLoader != nil {
 		app.SetStoreLoader(storeLoader)
 	}
