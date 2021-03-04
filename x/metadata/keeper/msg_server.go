@@ -114,17 +114,22 @@ func (k msgServer) AddSession(
 ) (*types.MsgAddSessionResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// TODO (contract keeper class  methods to process request, keeper methods to record it)
+	existing, _ := k.GetSession(ctx, msg.Session.SessionId)
+	if err := k.ValidateSessionUpdate(ctx, existing, *msg.Session, msg.Signers); err != nil {
+		return nil, err
+	}
+
+	k.SetSession(ctx, *msg.Session)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, ""),
+			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
 		),
 	)
 
-	return nil, fmt.Errorf("not implemented")
+	return &types.MsgAddSessionResponse{}, nil
 }
 
 func (k msgServer) AddRecord(
@@ -147,6 +152,10 @@ func (k msgServer) AddRecord(
 
 	k.SetRecord(ctx, *msg.Record)
 
+	if !existing.SessionId.Equals(msg.Record.SessionId) {
+		k.RemoveSession(ctx, existing.SessionId)
+	}
+
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -156,6 +165,30 @@ func (k msgServer) AddRecord(
 	)
 
 	return &types.MsgAddRecordResponse{}, nil
+}
+
+func (k msgServer) DeleteRecord(
+	goCtx context.Context,
+	msg *types.MsgDeleteRecordRequest,
+) (*types.MsgDeleteRecordResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	existing, _ := k.GetRecord(ctx, msg.RecordId)
+	if err := k.ValidateRecordRemove(ctx, existing, msg.RecordId, msg.Signers); err != nil {
+		return nil, err
+	}
+
+	k.RemoveRecord(ctx, msg.RecordId)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
+		),
+	)
+
+	return &types.MsgDeleteRecordResponse{}, nil
 }
 
 func (k msgServer) AddScopeSpecification(

@@ -238,18 +238,8 @@ func (k Keeper) ValidateScopeUpdate(ctx sdk.Context, existing, proposed types.Sc
 		}
 	}
 
-	// Signatures required of all existing data owners.
-	for _, owner := range requiredSignatures {
-		found := false
-		for _, signer := range signers {
-			if owner == signer {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return fmt.Errorf("missing signature from existing owner %s; required for update", owner)
-		}
+	if err := k.ValidateAllOwnersAreSigners(requiredSignatures, signers); err != nil {
+		return err
 	}
 
 	return nil
@@ -279,5 +269,36 @@ func (k Keeper) ValidateScopeRemove(ctx sdk.Context, existing, proposed types.Sc
 		}
 	}
 
+	return nil
+}
+
+// ValidateRequiredSignatures validate all owners are signers
+func (k Keeper) ValidateRequiredSignatures(owners []types.Party, signers []string) error {
+	// Validate any changes to the ValueOwner property.
+	requiredSignatures := []string{}
+	for _, p := range owners {
+		requiredSignatures = append(requiredSignatures, p.Address)
+	}
+
+	if err := k.ValidateAllOwnersAreSigners(requiredSignatures, signers); err != nil {
+		return err
+	}
+	return nil
+}
+
+// ValidatePartiesInvolved validate that all required parties are involved
+func (k Keeper) ValidatePartiesInvolved(parties []types.Party, requiredParties []types.PartyType) error {
+	for _, pi := range requiredParties {
+		found := false
+		for _, p := range parties {
+			if p.Role.String() == pi.String() {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("missing party type from required parties %s", pi.String())
+		}
+	}
 	return nil
 }

@@ -43,9 +43,6 @@ type KeeperTestSuite struct {
 	specUUID uuid.UUID
 	specID   types.MetadataAddress
 
-	groupUUID uuid.UUID
-	groupId   types.MetadataAddress
-
 	record     types.Record
 	recordName string
 	recordId   types.MetadataAddress
@@ -85,9 +82,6 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	s.app = app
 	s.ctx = ctx
-
-	s.groupUUID = uuid.New()
-	s.groupId = types.SessionMetadataAddress(s.scopeUUID, s.groupUUID)
 
 	s.recordName = "TestRecord"
 	s.recordId = types.RecordMetadataAddress(s.scopeUUID, s.recordName)
@@ -318,7 +312,7 @@ func (s *KeeperTestSuite) TestMetadataRecordGetSetRemove() {
 	s.False(found)
 
 	process := types.NewProcess("processname", &types.Process_Hash{Hash: "HASH"}, "process_method")
-	record := types.NewRecord(s.recordName, s.groupId, *process, []types.RecordInput{}, []types.RecordOutput{})
+	record := types.NewRecord(s.recordName, s.sessionId, *process, []types.RecordInput{}, []types.RecordOutput{})
 
 	s.NotNil(record)
 	s.app.MetadataKeeper.SetRecord(s.ctx, *record)
@@ -337,7 +331,7 @@ func (s *KeeperTestSuite) TestMetadataRecordIterator() {
 	for i := 1; i <= 10; i++ {
 		process := types.NewProcess("processname", &types.Process_Hash{Hash: "HASH"}, "process_method")
 		recordName := fmt.Sprintf("%s%v", s.recordName, i)
-		record := types.NewRecord(recordName, s.groupId, *process, []types.RecordInput{}, []types.RecordOutput{})
+		record := types.NewRecord(recordName, s.sessionId, *process, []types.RecordInput{}, []types.RecordOutput{})
 		s.app.MetadataKeeper.SetRecord(s.ctx, *record)
 	}
 	count := 0
@@ -349,12 +343,82 @@ func (s *KeeperTestSuite) TestMetadataRecordIterator() {
 
 }
 
+func (s *KeeperTestSuite) TestValidateRecordRemove() {
+	scope := types.NewScope(s.scopeID, s.specID, ownerPartyList(s.user1), []string{s.user1}, s.user1)
+	s.app.MetadataKeeper.SetScope(s.ctx, *scope)
+
+	process := types.NewProcess("processname", &types.Process_Hash{Hash: "HASH"}, "process_method")
+	record := types.NewRecord(s.recordName, s.sessionId, *process, []types.RecordInput{}, []types.RecordOutput{})
+	recordID := types.RecordMetadataAddress(s.scopeUUID, s.recordName)
+	s.app.MetadataKeeper.SetRecord(s.ctx, *record)
+
+	dneRecordID := types.RecordMetadataAddress(s.scopeUUID, "does-not-exist")
+
+	cases := map[string]struct {
+		existing types.Record
+		proposed types.MetadataAddress
+		signers  []string
+		wantErr  bool
+		errorMsg string
+	}{
+		"invalid, existing record doesn't have scope": {
+			existing: types.Record{},
+			proposed: types.MetadataAddress{},
+			signers:  []string{s.user1},
+			wantErr:  true,
+			errorMsg: "cannot get scope uuid: this metadata address does not contain a scope uuid",
+		},
+		"invalid, unable to find scope": {
+			existing: *record,
+			proposed: types.MetadataAddress{},
+			signers:  []string{s.user1},
+			wantErr:  true,
+			errorMsg: fmt.Sprintf("cannot remove record. expected %s, got ", recordID),
+		},
+		"invalid, record ids do not match": {
+			existing: *record,
+			proposed: dneRecordID,
+			signers:  []string{s.user1},
+			wantErr:  true,
+			errorMsg: fmt.Sprintf("cannot remove record. expected %s, got %s", recordID, dneRecordID),
+		},
+		"Invalid, missing signature record ids do not match": {
+			existing: *record,
+			proposed: recordID,
+			signers:  []string{"no-matchin"},
+			wantErr:  true,
+			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1),
+		},
+		"valid, passed all validation": {
+			existing: *record,
+			proposed: recordID,
+			signers:  []string{s.user1},
+			wantErr:  false,
+			errorMsg: "",
+		},
+	}
+
+	for n, tc := range cases {
+		tc := tc
+
+		s.Run(n, func() {
+			err := s.app.MetadataKeeper.ValidateRecordRemove(s.ctx, tc.existing, tc.proposed, tc.signers)
+			if tc.wantErr {
+				s.Error(err)
+				s.Equal(tc.errorMsg, err.Error())
+			} else {
+				s.NoError(err)
+			}
+		})
+	}
+}
+
 func (s *KeeperTestSuite) TestValidateRecordUpdate() {
 	scope := types.NewScope(s.scopeID, s.specID, ownerPartyList(s.user1), []string{s.user1}, s.user1)
 	s.app.MetadataKeeper.SetScope(s.ctx, *scope)
 
 	process := types.NewProcess("processname", &types.Process_Hash{Hash: "HASH"}, "process_method")
-	record := types.NewRecord(s.recordName, s.groupId, *process, []types.RecordInput{}, []types.RecordOutput{})
+	record := types.NewRecord(s.recordName, s.sessionId, *process, []types.RecordInput{}, []types.RecordOutput{})
 
 	randomScopeUUID := uuid.New()
 	randomSessionId := types.SessionMetadataAddress(randomScopeUUID, uuid.New())
@@ -366,7 +430,7 @@ func (s *KeeperTestSuite) TestValidateRecordUpdate() {
 		wantErr  bool
 		errorMsg string
 	}{
-		"Nil previous, proposed throws address error": {
+		"nil previous, proposed throws address error": {
 			existing: types.Record{},
 			proposed: types.Record{},
 			signers:  []string{s.user1},
@@ -407,7 +471,7 @@ func (s *KeeperTestSuite) TestValidateRecordUpdate() {
 func (s *KeeperTestSuite) TestMetadataSessionGetSetRemove() {
 
 	r, found := s.app.MetadataKeeper.GetSession(s.ctx, s.sessionId)
-	s.NotNil(r)
+	s.Empty(r)
 	s.False(found)
 
 	session := types.NewSession("name", s.sessionId, s.cSpecId, []types.Party{
@@ -422,12 +486,27 @@ func (s *KeeperTestSuite) TestMetadataSessionGetSetRemove() {
 
 	sess, found := s.app.MetadataKeeper.GetSession(s.ctx, s.sessionId)
 	s.True(found)
-	s.NotNil(sess)
+	s.NotEmpty(sess)
 
 	s.app.MetadataKeeper.RemoveSession(s.ctx, s.sessionId)
 	sess, found = s.app.MetadataKeeper.GetSession(s.ctx, s.sessionId)
 	s.False(found)
-	s.NotNil(sess)
+	s.Empty(sess)
+
+	process := types.NewProcess("processname", &types.Process_Hash{Hash: "HASH"}, "process_method")
+	record := types.NewRecord(s.recordName, s.sessionId, *process, []types.RecordInput{}, []types.RecordOutput{})
+	s.app.MetadataKeeper.SetRecord(s.ctx, *record)
+	s.app.MetadataKeeper.SetSession(s.ctx, *session)
+
+	sess, found = s.app.MetadataKeeper.GetSession(s.ctx, s.sessionId)
+	s.True(found)
+	s.NotEmpty(sess)
+
+	s.app.MetadataKeeper.RemoveSession(s.ctx, s.sessionId)
+	sess, found = s.app.MetadataKeeper.GetSession(s.ctx, s.sessionId)
+	s.True(found)
+	s.NotEmpty(sess)
+
 }
 
 func (s *KeeperTestSuite) TestMetadataSessionIterator() {
@@ -447,6 +526,106 @@ func (s *KeeperTestSuite) TestMetadataSessionIterator() {
 		return false
 	})
 	s.Equal(10, count, "iterator should return a full list of sessions")
+
+}
+
+func (s *KeeperTestSuite) TestValidatePartiesInvolved() {
+
+	cases := map[string]struct {
+		parties         []types.Party
+		requiredParties []types.PartyType
+		wantErr         bool
+		errorMsg        string
+	}{
+		"valid, matching no parties involved": {
+			parties:         []types.Party{},
+			requiredParties: []types.PartyType{},
+			wantErr:         false,
+			errorMsg:        "",
+		},
+		"invalid, parties contain no required parties": {
+			parties:         []types.Party{},
+			requiredParties: []types.PartyType{types.PartyType_PARTY_TYPE_AFFILIATE},
+			wantErr:         true,
+			errorMsg:        "missing party type from required parties PARTY_TYPE_AFFILIATE",
+		},
+		"invalid, missing required parties": {
+			parties:         []types.Party{{Address: "address", Role: types.PartyType_PARTY_TYPE_CUSTODIAN}},
+			requiredParties: []types.PartyType{types.PartyType_PARTY_TYPE_AFFILIATE},
+			wantErr:         true,
+			errorMsg:        "missing party type from required parties PARTY_TYPE_AFFILIATE",
+		},
+		"valid, required parties fulfilled": {
+			parties:         []types.Party{{Address: "address", Role: types.PartyType_PARTY_TYPE_CUSTODIAN}},
+			requiredParties: []types.PartyType{types.PartyType_PARTY_TYPE_CUSTODIAN},
+			wantErr:         false,
+			errorMsg:        "",
+		},
+	}
+
+	for n, tc := range cases {
+		tc := tc
+
+		s.Run(n, func() {
+			err := s.app.MetadataKeeper.ValidatePartiesInvolved(tc.parties, tc.requiredParties)
+			if tc.wantErr {
+				s.Error(err)
+				s.Equal(tc.errorMsg, err.Error())
+			} else {
+				s.NoError(err)
+			}
+		})
+	}
+
+}
+
+func (s *KeeperTestSuite) TestValidateRequiredSignatures() {
+
+	cases := map[string]struct {
+		owners   []types.Party
+		signers  []string
+		wantErr  bool
+		errorMsg string
+	}{
+		"valid, no signatures": {
+			owners:   []types.Party{},
+			signers:  []string{},
+			wantErr:  false,
+			errorMsg: "",
+		},
+		"valid, signatures match": {
+			owners:   []types.Party{{Address: "signer1"}},
+			signers:  []string{"signer1"},
+			wantErr:  false,
+			errorMsg: "",
+		},
+		"valid, all owner signatures satisfied": {
+			owners:   []types.Party{{Address: "signer1"}},
+			signers:  []string{"signer1", "signer2"},
+			wantErr:  false,
+			errorMsg: "",
+		},
+		"invalid, missing owner signature": {
+			owners:   []types.Party{{Address: "missingowner"}},
+			signers:  []string{"signer1", "signer2"},
+			wantErr:  true,
+			errorMsg: "missing signature from existing owner missingowner; required for update",
+		},
+	}
+
+	for n, tc := range cases {
+		tc := tc
+
+		s.Run(n, func() {
+			err := s.app.MetadataKeeper.ValidateRequiredSignatures(tc.owners, tc.signers)
+			if tc.wantErr {
+				s.Error(err)
+				s.Equal(tc.errorMsg, err.Error())
+			} else {
+				s.NoError(err)
+			}
+		})
+	}
 
 }
 

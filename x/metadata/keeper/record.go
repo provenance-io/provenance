@@ -68,6 +68,11 @@ func (k Keeper) RemoveRecord(ctx sdk.Context, id types.MetadataAddress) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(id)
 
+	sessionUUID, _ := id.SessionUUID()
+	scopeUUID, _ := id.ScopeUUID()
+	sessionID := types.SessionMetadataAddress(scopeUUID, sessionUUID)
+	k.RemoveSession(ctx, sessionID)
+
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeRecordRemoved,
@@ -118,26 +123,35 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing, proposed types.R
 	}
 
 	// Validate any changes to the ValueOwner property.
-	requiredSignatures := []string{}
-	for _, p := range scope.Owners {
-		requiredSignatures = append(requiredSignatures, p.Address)
-	}
-
-	// Signatures required of all existing data owners.
-	for _, owner := range requiredSignatures {
-		found := false
-		for _, signer := range signers {
-			if owner == signer {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return fmt.Errorf("missing signature from existing owner %s; required for update", owner)
-		}
+	if err := k.ValidateRequiredSignatures(scope.Owners, signers); err != nil {
+		return err
 	}
 
 	// TODO finish full validation of update once specs are complete
+
+	return nil
+}
+
+// ValidateRecordRemove checks the current record and the proposed removal scope to determine if the the proposed remove is valid
+// based on the existing state
+func (k Keeper) ValidateRecordRemove(ctx sdk.Context, existing types.Record, proposedID types.MetadataAddress, signers []string) error {
+	scopeUUID, err := existing.SessionId.ScopeUUID()
+	if err != nil {
+		return fmt.Errorf("cannot get scope uuid: %s", err)
+	}
+	scopeID := types.ScopeMetadataAddress(scopeUUID)
+	scope, found := k.GetScope(ctx, scopeID)
+	if !found {
+		return fmt.Errorf("unable to find scope %s", scope.ScopeId)
+	}
+	recordID := types.RecordMetadataAddress(scopeUUID, existing.Name)
+	if !recordID.Equals(proposedID) {
+		return fmt.Errorf("cannot remove record. expected %s, got %s", recordID, proposedID)
+	}
+
+	if err := k.ValidateRequiredSignatures(scope.Owners, signers); err != nil {
+		return err
+	}
 
 	return nil
 }

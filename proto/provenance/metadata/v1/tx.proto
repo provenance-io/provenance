@@ -29,6 +29,8 @@ service Msg {
   rpc AddSession(MsgAddSessionRequest) returns (MsgAddSessionResponse);
   // AddRecord adds a set of records in a session within a scope
   rpc AddRecord(MsgAddRecordRequest) returns (MsgAddRecordResponse);
+  // DeleteRecord deletes a record in a session
+  rpc DeleteRecord(MsgDeleteRecordRequest) returns (MsgDeleteRecordResponse);
 
   // AddScopeSpecification adds a scope specification
   rpc AddScopeSpecification(MsgAddScopeSpecificationRequest) returns (MsgAddScopeSpecificationResponse);
@@ -106,7 +108,6 @@ message MsgAddScopeRequest {
 // MsgAddScopeResponse from an add scope request
 message MsgAddScopeResponse {}
 
-// MsgDeleteScopeRequest deletes a scope
 message MsgDeleteScopeRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
@@ -125,18 +126,18 @@ message MsgDeleteScopeRequest {
 // MsgDeleteScopeResponse from a delete scope request
 message MsgDeleteScopeResponse {}
 
-// MsgAddSessionRequest adds a new scope
+// MsgAddSessionRequest adds a new session
 message MsgAddSessionRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-  Session session = 1;
-  string  notary  = 2;
+  Session         session = 1;
+  repeated string signers = 2;
 }
 
-// MsgAddSessionResponse from an add records request
+// MsgAddSessionResponse from an add session request
 message MsgAddSessionResponse {}
 
 // MsgAddRecordRequest is a request to add a session of records to a scope
@@ -158,6 +159,25 @@ message MsgAddRecordRequest {
 
 // MsgAddRecordResponse from an add records request
 message MsgAddRecordResponse {}
+
+// MsgDeleteRecordRequest is a request to add a session of records to a scope
+message MsgDeleteRecordRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  bytes record_id = 1 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customtype) = "MetadataAddress",
+    (gogoproto.moretags)   = "yaml:\"record_id\""
+  ];
+
+  repeated string signers = 2;
+}
+
+// MsgDeleteRecordResponse from a delete record request
+message MsgDeleteRecordResponse {}
 
 // MsgAddScopeSpecificationRequest is a request to add a scope specification
 message MsgAddScopeSpecificationRequest {
