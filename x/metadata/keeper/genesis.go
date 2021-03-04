@@ -72,5 +72,5 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 	}
 	// TODO iterate over existing scope, group specifications and collect here for export
 
-	return types.NewGenesisState(params, scopes, groups, records, []types.ScopeSpecification{}, []types.ContractSpecification{})
+	return types.NewGenesisState(params, scopes, groups, records, []types.ScopeSpecification{}, []types.ContractSpecification{}, []types.RecordSpecification{})
 }
