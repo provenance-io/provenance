@@ -39,6 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug fixes
 
 * Ensure all upgrade handlers apply always before storeLoader is created.
+* Add upgrade handler for v0.1.10
 
 ## [v0.1.9](https://github.com/provenance-io/provenance/releases/tag/v0.1.9) - 2021-03-03
 
