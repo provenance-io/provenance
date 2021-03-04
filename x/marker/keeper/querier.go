@@ -41,7 +41,6 @@ func queryMarker(ctx sdk.Context, path []string, _ abci.RequestQuery, keeper Kee
 		return nil, err
 	}
 
-	// TODO : insufficient as it will not return a list of the assets within the acccount without a separate query.
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, account)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())

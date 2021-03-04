@@ -529,7 +529,6 @@ func (k Keeper) DeleteMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 	if err != nil {
 		return fmt.Errorf("could not decrease marker supply %s: %s", denom, err)
 	}
-	// TODO: check metadata module for scopes with this marker assigned, if found this delete call fails
 
 	// get the updated state of the marker afer supply burn...
 	m, err = k.GetMarkerByDenom(ctx, denom)
