@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 var (
@@ -27,8 +28,8 @@ var handlers = map[string]appUpgrade{
 	// TODO - Add new upgrade definitions here.
 }
 
-func CustomUpgradeStoreLoader(keeper upgradekeeper.Keeper, info storetypes.UpgradeInfo) baseapp.StoreLoader {
-	// Register explicit appUpgrades
+func CustomUpgradeStoreLoader(logger log.Logger, keeper upgradekeeper.Keeper, info storetypes.UpgradeInfo) baseapp.StoreLoader {
+	// Register all explicit appUpgrades
 	for name, upgrade := range handlers {
 		// If the handler has been defined, add it here, otherwise, use no-op.
 		var handler upgradetypes.UpgradeHandler
@@ -38,7 +39,9 @@ func CustomUpgradeStoreLoader(keeper upgradekeeper.Keeper, info storetypes.Upgra
 			handler = upgrade.Handler
 		}
 		keeper.SetUpgradeHandler(name, handler)
+	}
 
+	for name, upgrade := range handlers {
 		// If the plan is executing this block, set the store locator to create any
 		// missing modules, delete unused modules, or rename any keys required in the plan.
 		if info.Name == name && !keeper.IsSkipHeight(info.Height) {
@@ -47,7 +50,7 @@ func CustomUpgradeStoreLoader(keeper upgradekeeper.Keeper, info storetypes.Upgra
 				Renamed: upgrade.Renamed,
 				Deleted: upgrade.Deleted,
 			}
-
+			logger.Info("Store upgrades", "plan", name, "height", info.Height, "upgrade", upgrade)
 			return upgradetypes.UpgradeStoreLoader(info.Height, &storeUpgrades)
 		}
 	}
