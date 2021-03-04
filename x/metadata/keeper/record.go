@@ -109,7 +109,7 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing, proposed types.R
 		return err
 	}
 
-	scopeUUID, err := existing.SessionId.ScopeUUID()
+	scopeUUID, err := proposed.SessionId.ScopeUUID()
 	if err != nil {
 		return err
 	}
