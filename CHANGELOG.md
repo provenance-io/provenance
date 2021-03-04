@@ -43,7 +43,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add support for record specification metadata addresses #58
 * Add support for creating, updating, removing, finding, and iterating over `Session`s #55
 
-
 ## [v0.1.4](https://github.com/provenance-io/provenance/releases/tag/v0.1.4) - 2021-02-24
 
 * Update `ScopeSpecification` proto and create `Description` proto #71

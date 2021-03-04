@@ -145,17 +145,12 @@ func (k msgServer) AddRecord(
 
 	recordID := types.RecordMetadataAddress(scopeUUID, msg.Record.Name)
 
-	existing, found := k.GetRecord(ctx, recordID)
+	existing, _ := k.GetRecord(ctx, recordID)
 	if err := k.ValidateRecordUpdate(ctx, existing, *msg.Record, msg.Signers); err != nil {
 		return nil, err
 	}
 
 	k.SetRecord(ctx, *msg.Record)
-
-	if found && !existing.SessionId.Equals(msg.Record.SessionId) {
-		// only removes session if orphaned
-		k.RemoveSession(ctx, existing.SessionId)
-	}
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
