@@ -765,7 +765,86 @@ func (s *SpecKeeperTestSuite) TestGetRecordSpecificationsForContractSpecificatio
 	s.Equal(0, len(unknownContractSpecIDActual), "unknown contract spec id: count")
 }
 
-// TODO: TestValidateRecordSpecUpdate
+func (s *SpecKeeperTestSuite) TestValidateRecordSpecUpdate() {
+	contractSpecUUIDOther := uuid.New()
+	tests := []struct {
+		name     string
+		existing *types.RecordSpecification
+		proposed *types.RecordSpecification
+		want     string
+	}{
+		{
+			"validate basic called on proposed",
+			nil,
+			types.NewRecordSpecification(
+				types.RecordSpecMetadataAddress(s.contractSpecUUID1, "name"),
+				"name",
+				[]*types.InputSpecification{},
+				"",
+				types.DefinitionType_DEFINITION_TYPE_RECORD,
+				[]types.PartyType{types.PartyType_PARTY_TYPE_SERVICER},
+			),
+			"record specification type name cannot be empty",
+		},
+		{
+			"validate basic not called on existing",
+			types.NewRecordSpecification(
+				types.RecordSpecMetadataAddress(s.contractSpecUUID1, "name"),
+				"name",
+				[]*types.InputSpecification{},
+				"",   // should cause error if ValidateBasic called on it
+				types.DefinitionType_DEFINITION_TYPE_RECORD,
+				[]types.PartyType{types.PartyType_PARTY_TYPE_SERVICER},
+			),
+			types.NewRecordSpecification(
+				types.RecordSpecMetadataAddress(s.contractSpecUUID1, "name"),
+				"name",
+				[]*types.InputSpecification{},
+				"typename",
+				types.DefinitionType_DEFINITION_TYPE_RECORD,
+				[]types.PartyType{types.PartyType_PARTY_TYPE_SERVICER},
+			),
+			"",
+		},
+		{
+			"SpecificationIDs must match",
+			types.NewRecordSpecification(
+				types.RecordSpecMetadataAddress(s.contractSpecUUID1, "foo"),
+				"foo",
+				[]*types.InputSpecification{},
+				"",   // should cause error if ValidateBasic called on it
+				types.DefinitionType_DEFINITION_TYPE_RECORD,
+				[]types.PartyType{types.PartyType_PARTY_TYPE_SERVICER},
+			),
+			types.NewRecordSpecification(
+				types.RecordSpecMetadataAddress(contractSpecUUIDOther, "foo"),
+				"foo",
+				[]*types.InputSpecification{},
+				"typename",
+				types.DefinitionType_DEFINITION_TYPE_RECORD,
+				[]types.PartyType{types.PartyType_PARTY_TYPE_SERVICER},
+			),
+			fmt.Sprintf("cannot update record spec identifier. expected %s, got %s",
+				types.RecordSpecMetadataAddress(s.contractSpecUUID1, "foo"),
+				types.RecordSpecMetadataAddress(contractSpecUUIDOther, "foo")),
+		},
+		// Names must match - cannot be tested. A changed name will change the spec id.
+		// So either ValidateBasic will catch that the hashed name doesn't match its part in the ID,
+		// or the ValidateRecordSpecUpdate will catch the changing specification id.
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		s.T().Run(tt.name, func(t *testing.T) {
+			err := s.app.MetadataKeeper.ValidateRecordSpecUpdate(s.ctx, tt.existing, *tt.proposed)
+			if err != nil {
+				require.Equal(t, tt.want, err.Error(), "RecordSpec Keeper ValidateRecordSpecUpdate error")
+			} else if len(tt.want) > 0 {
+				t.Errorf("RecordSpec Keeper ValidateRecordSpecUpdate error = nil, expected: %s", tt.want)
+			}
+		})
+	}
+}
 
 func (s *SpecKeeperTestSuite) TestGetSetRemoveContractSpecification() {
 	newSpec := types.NewContractSpecification(
