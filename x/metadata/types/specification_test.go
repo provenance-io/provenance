@@ -35,9 +35,9 @@ func (s *specificationTestSuite) SetupSuite() {
 
 func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 	tests := []struct {
-		name     string
-		spec     *ScopeSpecification
-		want     string
+		name    string
+		spec    *ScopeSpecification
+		want    string
 	}{
 		// SpecificationId tests.
 		{
@@ -61,7 +61,7 @@ func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
 			"invalid description name - too long",
 			NewScopeSpecification(
 				ScopeSpecMetadataAddress(uuid.New()),
-				NewDescription(strings.Repeat("x", maxDescriptionNameLength + 1), "", "", ""),
+				NewDescription(strings.Repeat("x", maxDescriptionNameLength+1), "", "", ""),
 				[]string{}, []PartyType{}, []MetadataAddress{},
 			),
 			fmt.Sprintf("description (ScopeSpecification.Description) Name exceeds maximum length (expected <= %d got: %d)", maxDescriptionNameLength, maxDescriptionNameLength + 1),
@@ -203,6 +203,7 @@ func encodeVarintSpecTests(dAtA []byte, offset int, v uint64) int {
 type WeirdSource struct {
 	Value uint32
 }
+
 func NewWeirdSource(value uint32) *WeirdSource {
 	return &WeirdSource{
 		Value: value,
@@ -230,9 +231,9 @@ func (m *WeirdSource) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 func (s *specificationTestSuite) TestContractSpecValidateBasic() {
 	contractSpecUuid1 := uuid.New()
 	tests := []struct {
-		name     string
-		spec     *ContractSpecification
-		want     string
+		name string
+		spec *ContractSpecification
+		want string
 	}{
 		// SpecificationID tests
 		{
@@ -265,13 +266,13 @@ func (s *specificationTestSuite) TestContractSpecValidateBasic() {
 			"Description - name too long",
 			NewContractSpecification(
 				ContractSpecMetadataAddress(uuid.New()),
-				NewDescription(strings.Repeat("x", maxDescriptionNameLength + 1), "", "", ""),
+				NewDescription(strings.Repeat("x", maxDescriptionNameLength+1), "", "", ""),
 				[]string{specTestBech32},
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				NewContractSpecificationSourceHash("somehash"),
 				"someclass",
 			),
-			fmt.Sprintf("description (ContractSpecification.Description) Name exceeds maximum length (expected <= %d got: %d)", maxDescriptionNameLength, maxDescriptionNameLength + 1),
+			fmt.Sprintf("description (ContractSpecification.Description) Name exceeds maximum length (expected <= %d got: %d)", maxDescriptionNameLength, maxDescriptionNameLength+1),
 		},
 
 		// OwnerAddresses tests
@@ -402,7 +403,7 @@ func (s *specificationTestSuite) TestContractSpecValidateBasic() {
 				strings.Repeat("l", maxContractSpecificationClassNameLength + 1),
 			),
 			fmt.Sprintf("class name exceeds maximum length (expected <= %d got: %d)",
-				maxContractSpecificationClassNameLength, maxContractSpecificationClassNameLength + 1),
+				maxContractSpecificationClassNameLength, maxContractSpecificationClassNameLength+1),
 		},
 		{
 			"ClassName - at max length",
@@ -827,9 +828,9 @@ func (s *specificationTestSuite) TestInputSpecValidateBasic() {
 
 func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 	tests := []struct {
-		name     string
-		desc     *Description
-		want     string
+		name    string
+		desc    *Description
+		want    string
 	}{
 		// Name tests
 		{
@@ -845,7 +846,7 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 		{
 			"invalid name - too long",
 			NewDescription(
-				strings.Repeat("x", maxDescriptionNameLength + 1),
+				strings.Repeat("x", maxDescriptionNameLength+1),
 				"",
 				"",
 				"",
@@ -878,7 +879,7 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 			"invalid description - too long",
 			NewDescription(
 				"Unit Tests",
-				strings.Repeat("z", maxDescriptionDescriptionLength + 1),
+				strings.Repeat("z", maxDescriptionDescriptionLength+1),
 				"",
 				"",
 			),
@@ -921,7 +922,7 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 			NewDescription(
 				"Unit Tests",
 				"",
-				strings.Repeat("h", maxURLLength + 1),
+				strings.Repeat("h", maxURLLength+1),
 				"",
 			),
 			fmt.Sprintf("url WebsiteUrl exceeds maximum length (expected <= %d got: %d)", maxURLLength, maxURLLength + 1),
@@ -951,7 +952,7 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 			NewDescription(
 				"Unit Tests",
 				"",
-				"http://" + strings.Repeat("f", maxURLLength - 7),
+				"http://"+strings.Repeat("f", maxURLLength-7),
 				"",
 			),
 			"",
@@ -971,7 +972,7 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 			NewDescription(
 				"Unit Tests",
 				"",
-				"https://" + strings.Repeat("s", maxURLLength - 8),
+				"https://"+strings.Repeat("s", maxURLLength-8),
 				"",
 			),
 			"",
@@ -1001,7 +1002,7 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 			NewDescription(
 				"Unit Tests",
 				"",
-				"data:image/png;base64," + strings.Repeat("d", maxURLLength - 22),
+				"data:image/png;base64,"+strings.Repeat("d", maxURLLength-22),
 				"",
 			),
 			"",
@@ -1014,7 +1015,7 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"Unit Tests",
 				"",
 				"",
-				strings.Repeat("h", maxURLLength + 1),
+				strings.Repeat("h", maxURLLength+1),
 			),
 			fmt.Sprintf("url IconUrl exceeds maximum length (expected <= %d got: %d)", maxURLLength, maxURLLength + 1),
 		},
@@ -1044,7 +1045,7 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"Unit Tests",
 				"",
 				"",
-				"http://" + strings.Repeat("f", maxURLLength - 7),
+				"http://"+strings.Repeat("f", maxURLLength-7),
 			),
 			"",
 		},
@@ -1064,7 +1065,7 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"Unit Tests",
 				"",
 				"",
-				"https://" + strings.Repeat("s", maxURLLength - 8),
+				"https://"+strings.Repeat("s", maxURLLength-8),
 			),
 			"",
 		},
@@ -1094,7 +1095,7 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 				"Unit Tests",
 				"",
 				"",
-				"data:image/png;base64," + strings.Repeat("d", maxURLLength - 22),
+				"data:image/png;base64,"+strings.Repeat("d", maxURLLength-22),
 			),
 			"",
 		},
@@ -1204,7 +1205,7 @@ func (s *specificationTestSuite) TestRecordSpecString() {
 		DefinitionType_DEFINITION_TYPE_RECORD,
 		[]PartyType{PartyType_PARTY_TYPE_CUSTODIAN, PartyType_PARTY_TYPE_INVESTOR},
 	)
-	expected := `specification_id: recspec1q42qmt038k7yc0azq46htdlhgwzg5052mucgmerfku3gf5e7t3ej4ecag50yfxlsd8m2udlxzca6vhgch80wy
+	expected := `specification_id: recspec1q42qmt038k7yc0azq46htdlhgwzg5052mucgmerfku3gf5e7t3ej5fjh7rr
 name: somename
 inputs:
 - name: inputSpecName1
@@ -1214,7 +1215,7 @@ inputs:
 - name: inputSpecName2
   type_name: inputSpecTypeName2
   source:
-    record_id: record1qgtcftnewlc5y892l8k2fhteu4ceth857yw3fprr4lvhfptn5gg4e6d8me3qkc45f4c9rs35yycg4vq0ykahz
+    record_id: record1qgtcftnewlc5y892l8k2fhteu4ceth857yw3fprr4lvhfptn5gg4cv4ure3
 type_name: sometype
 result_type: 2
 responsible_parties:
@@ -1247,7 +1248,7 @@ func (s *specificationTestSuite) TestInputSpecString() {
 			`name: inputSpecRecordIdSource
 type_name: inputSpecRecordIdSourceTypeName
 source:
-  record_id: record1qgtcftnewlc5y892l8k2fhteu4ceth857yw3fprr4lvhfptn5gg4e6d8me3qkc45f4c9rs35yycg4vq0ykahz
+  record_id: record1qgtcftnewlc5y892l8k2fhteu4ceth857yw3fprr4lvhfptn5gg4cv4ure3
 `,
 		},
 		{

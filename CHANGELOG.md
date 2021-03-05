@@ -34,6 +34,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+* Truncate hashes used in metadata addresses for Record, Record Specification #132
+* Add support for creating, updating, removing, finding, and iterating over `Session`s #55
 * Add support for creating, updating, removing, finding, and iterating over `RecordSpecification`s #59
 
 ## [v0.1.5](https://github.com/provenance-io/provenance/releases/tag/v0.1.5) - 2021-03-02
@@ -44,7 +46,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add an explicit no-op upgrade handler for release v0.1.5.
 * Add support for creating, updating, removing, finding, and iterating over `ContractSpecification`s #57
 * Add support for record specification metadata addresses #58
-* Add support for creating, updating, removing, finding, and iterating over `Session`s #55
 * Enhance build process to release cosmovisor compatible zip and plan #119
 
 ## [v0.1.4](https://github.com/provenance-io/provenance/releases/tag/v0.1.4) - 2021-02-24
