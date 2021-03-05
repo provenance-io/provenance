@@ -403,7 +403,193 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForOwner() {
 	s.Equal(2, countStop, "stop bool: iteration count")
 }
 
-// TODO: TestIterateRecordSpecsForContractSpec
+func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForContractSpec() {
+	// Create 3 contract specs.
+	contractSpecs := []*types.ContractSpecification{
+		types.NewContractSpecification(
+			types.ContractSpecMetadataAddress(uuid.New()),
+			types.NewDescription(
+				"TestIterateContractSpecsForOwner[0]",
+				"A description for a unit test contract specification - owner: user1",
+				"http://test.net",
+				"http://test.net/ico.png",
+			),
+			[]string{s.user1Addr.String()},
+			[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+			types.NewContractSpecificationSourceHash("somehash0"),
+			"someclass_0",
+		),
+		types.NewContractSpecification(
+			types.ContractSpecMetadataAddress(uuid.New()),
+			types.NewDescription(
+				"TestIterateContractSpecsForOwner[1]",
+				"A description for a unit test contract specification - owner: user2",
+				"http://test.net",
+				"http://test.net/ico.png",
+			),
+			[]string{s.user2Addr.String()},
+			[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+			types.NewContractSpecificationSourceHash("somehash1"),
+			"someclass_1",
+		),
+		types.NewContractSpecification(
+			types.ContractSpecMetadataAddress(uuid.New()),
+			types.NewDescription(
+				"TestIterateContractSpecsForOwner[2]",
+				"A description for a unit test contract specification - owner: user1, user2",
+				"http://test.net",
+				"http://test.net/ico.png",
+			),
+			[]string{s.user1Addr.String(), s.user2Addr.String()},
+			[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+			types.NewContractSpecificationSourceHash("somehash2"),
+			"someclass_2",
+		),
+	}
+	for _, spec := range contractSpecs {
+		s.app.MetadataKeeper.SetContractSpecification(s.ctx, *spec)
+	}
+
+	// Create 3 record specs for the 1st contract spec, 2 for the 2nd, and none for the 3rd.
+	recordSpecs := []*types.RecordSpecification{
+		types.NewRecordSpecification(
+			contractSpecs[0].SpecificationId.GetRecordSpecAddress("contractspec0recspec0"),
+			"contractspec0recspec0",
+			[]*types.InputSpecification{
+				types.NewInputSpecification(
+					"inputspec0", "inputspectypename0",
+					types.NewInputSpecificationSourceHash("sourcehash0"),
+				),
+			},
+			"typename0",
+			types.DefinitionType_DEFINITION_TYPE_RECORD,
+			[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+		),
+		types.NewRecordSpecification(
+			contractSpecs[0].SpecificationId.GetRecordSpecAddress("contractspec0recspec1"),
+			"contractspec0recspec1",
+			[]*types.InputSpecification{
+				types.NewInputSpecification(
+					"inputspec1", "inputspectypename1",
+					types.NewInputSpecificationSourceHash("sourcehash1"),
+				),
+			},
+			"typename1",
+			types.DefinitionType_DEFINITION_TYPE_RECORD,
+			[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+		),
+		types.NewRecordSpecification(
+			contractSpecs[0].SpecificationId.GetRecordSpecAddress("contractspec1recspec2"),
+			"contractspec0recspec2",
+			[]*types.InputSpecification{
+				types.NewInputSpecification(
+					"inputspec2", "inputspectypename2",
+					types.NewInputSpecificationSourceHash("sourcehash2"),
+				),
+			},
+			"typename2",
+			types.DefinitionType_DEFINITION_TYPE_RECORD,
+			[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+		),
+
+		types.NewRecordSpecification(
+			contractSpecs[1].SpecificationId.GetRecordSpecAddress("contractspec1recspec3"),
+			"contractspec1recspec3",
+			[]*types.InputSpecification{
+				types.NewInputSpecification(
+					"inputspec3", "inputspectypename3",
+					types.NewInputSpecificationSourceHash("sourcehash3"),
+				),
+			},
+			"typename3",
+			types.DefinitionType_DEFINITION_TYPE_RECORD,
+			[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+		),
+		types.NewRecordSpecification(
+			contractSpecs[1].SpecificationId.GetRecordSpecAddress("contractspec1recspec4"),
+			"contractspec1recspec4",
+			[]*types.InputSpecification{
+				types.NewInputSpecification(
+					"inputspec4", "inputspectypename4",
+					types.NewInputSpecificationSourceHash("sourcehash4"),
+				),
+			},
+			"typename4",
+			types.DefinitionType_DEFINITION_TYPE_RECORD,
+			[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+		),
+	}
+	for _, spec := range recordSpecs {
+		s.app.MetadataKeeper.SetRecordSpecification(s.ctx, *spec)
+	}
+
+	contractSpec0RecSpecIDs := []types.MetadataAddress{
+		recordSpecs[0].SpecificationId, recordSpecs[1].SpecificationId, recordSpecs[2].SpecificationId,
+	}
+	contractSpec1RecSpecIDs := []types.MetadataAddress{
+		recordSpecs[3].SpecificationId, recordSpecs[4].SpecificationId,
+	}
+	contractSpec2RecSpecIDs := []types.MetadataAddress{}
+
+	// Make sure all contract spec 0 record specs are iterated over
+	contractSpec0SpecIDsIterated := []types.MetadataAddress{}
+	errContractSpec0 := s.app.MetadataKeeper.IterateRecordSpecsForContractSpec(s.ctx, contractSpecs[0].SpecificationId, func(specID types.MetadataAddress) (stop bool) {
+		contractSpec0SpecIDsIterated = append(contractSpec0SpecIDsIterated, specID)
+		return false
+	})
+	s.Nil(errContractSpec0, "contract spec 0: should not have returned an error")
+	s.Equal(3, len(contractSpec0SpecIDsIterated), "contract spec 0: iteration count")
+	s.True(areEquivalentSetsOfMetaAddresses(contractSpec0RecSpecIDs, contractSpec0SpecIDsIterated),
+		"contract spec 0: iterated over unexpected record specs:\n  expected: %v\n    actual: %v\n",
+		contractSpec0RecSpecIDs, contractSpec0SpecIDsIterated)
+
+	// Make sure all contract spec 1 record specs are iterated over
+	contractSpec1SpecIDsIterated := []types.MetadataAddress{}
+	errContractSpec1 := s.app.MetadataKeeper.IterateRecordSpecsForContractSpec(s.ctx, contractSpecs[1].SpecificationId, func(specID types.MetadataAddress) (stop bool) {
+		contractSpec1SpecIDsIterated = append(contractSpec1SpecIDsIterated, specID)
+		return false
+	})
+	s.Nil(errContractSpec1, "contract spec 1: should not have returned an error")
+	s.Equal(2, len(contractSpec1SpecIDsIterated), "contract spec 1: iteration count")
+	s.True(areEquivalentSetsOfMetaAddresses(contractSpec1RecSpecIDs, contractSpec1SpecIDsIterated),
+		"contract spec 1: iterated over unexpected record specs:\n  expected: %v\n    actual: %v\n",
+		contractSpec1RecSpecIDs, contractSpec1SpecIDsIterated)
+
+	// Make sure no contract spec 2 record specs are iterated over
+	contractSpec2SpecIDsIterated := []types.MetadataAddress{}
+	errContractSpec2 := s.app.MetadataKeeper.IterateRecordSpecsForContractSpec(s.ctx, contractSpecs[2].SpecificationId, func(specID types.MetadataAddress) (stop bool) {
+		contractSpec2SpecIDsIterated = append(contractSpec2SpecIDsIterated, specID)
+		return false
+	})
+	s.Nil(errContractSpec2, "contract spec 2: should not have returned an error")
+	s.Equal(0, len(contractSpec2SpecIDsIterated), "contract spec 2: iteration count")
+	s.True(areEquivalentSetsOfMetaAddresses(contractSpec2RecSpecIDs, contractSpec2SpecIDsIterated),
+		"contract spec 2: iterated over unexpected record specs:\n  expected: %v\n    actual: %v\n",
+		contractSpec2RecSpecIDs, contractSpec2SpecIDsIterated)
+
+	// Make sure an unknown contract spec results in zero iterations.
+	unknownContractSpecID := types.ContractSpecMetadataAddress(uuid.New())
+	unknownContractSpecIDCount := 0
+	errUser3 := s.app.MetadataKeeper.IterateRecordSpecsForContractSpec(s.ctx, unknownContractSpecID, func(specID types.MetadataAddress) (stop bool) {
+		unknownContractSpecIDCount++
+		return false
+	})
+	s.Nil(errUser3, "unknown contract spec id: should not have returned an error")
+	s.Equal(0, unknownContractSpecIDCount, "unknown contract spec id: iteration count")
+
+	// Make sure the stop bool is being recognized.
+	countStop := 0
+	errStop := s.app.MetadataKeeper.IterateRecordSpecsForContractSpec(s.ctx, contractSpecs[0].SpecificationId, func(specID types.MetadataAddress) (stop bool) {
+		countStop++
+		if countStop == 2 {
+			return true
+		}
+		return false
+	})
+	s.Nil(errStop, "stop bool: should not have returned an error")
+	s.Equal(2, countStop, "stop bool: iteration count")
+}
+
 // TODO: TestGetRecordSpecificationsForContractSpecificationID
 // TODO: TestValidateRecordSpecUpdate
 
