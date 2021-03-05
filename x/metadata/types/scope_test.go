@@ -459,7 +459,7 @@ func (s *scopeTestSuite) TestSessionString() {
 			Message:   "message",
 		})
 
-	println(session.String())
+	// println(session.String())
 	s.T().Run("session string", func(t *testing.T) {
 		require.Equal(t, fmt.Sprintf(`session_id: %s
 specification_id: %s
