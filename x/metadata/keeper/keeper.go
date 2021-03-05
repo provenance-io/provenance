@@ -182,4 +182,3 @@ func (k Keeper) ValidatePartiesInvolved(parties []types.Party, requiredParties [
 	}
 	return nil
 }
-
