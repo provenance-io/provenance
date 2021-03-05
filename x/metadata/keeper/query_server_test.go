@@ -3,9 +3,11 @@ package keeper_test
 import (
 	gocontext "context"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/google/uuid"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"testing"
 
 	"github.com/provenance-io/provenance/app"
 	simapp "github.com/provenance-io/provenance/app"
@@ -46,6 +48,12 @@ type QueryServerTestSuite struct {
 	record     types.Record
 	recordName string
 	recordId   types.MetadataAddress
+
+	sessionUUID uuid.UUID
+	sessionId   types.MetadataAddress
+
+	cSpecUUID uuid.UUID
+	cSpecId   types.MetadataAddress
 }
 
 func (s *QueryServerTestSuite) SetupTest() {
@@ -69,10 +77,16 @@ func (s *QueryServerTestSuite) SetupTest() {
 	s.ctx = ctx
 
 	s.groupUUID = uuid.New()
-	s.groupId = types.GroupMetadataAddress(s.scopeUUID, s.groupUUID)
+	s.groupId = types.SessionMetadataAddress(s.scopeUUID, s.groupUUID)
 
 	s.recordName = "TestRecord"
 	s.recordId = types.RecordMetadataAddress(s.scopeUUID, s.recordName)
+
+	s.sessionUUID = uuid.New()
+	s.sessionId = types.SessionMetadataAddress(s.scopeUUID, s.sessionUUID)
+
+	s.cSpecUUID = uuid.New()
+	s.cSpecId = types.ContractSpecMetadataAddress(s.cSpecUUID)
 
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
 
@@ -99,7 +113,7 @@ func (s *QueryServerTestSuite) TestScopeQuery() {
 		sUUID := uuid.New()
 		name := fmt.Sprintf("%s%v", recordName, i)
 		gUUID := uuid.New()
-		gId := types.GroupMetadataAddress(sUUID, gUUID)
+		gId := types.SessionMetadataAddress(sUUID, gUUID)
 
 		testIDs[i] = types.ScopeMetadataAddress(sUUID)
 		ns := types.NewScope(testIDs[i], nil, ownerPartyList(user1), []string{user1}, valueOwner)
@@ -194,8 +208,72 @@ func (s *QueryServerTestSuite) TestRecordQuery() {
 	s.Equal(recordNames[0], rsID.Records[0].Name)
 }
 
+func (s *QueryServerTestSuite) TestSessionQuery() {
+	app, ctx, queryClient, scopeID, scopeUUID, sessionID, sessionUUID, cSpecID := s.app, s.ctx, s.queryClient, s.scopeID, s.scopeUUID, s.sessionId, s.sessionUUID, s.cSpecId
+
+	session := types.NewSession("name", sessionID, cSpecID, []types.Party{
+		{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: types.PartyType_PARTY_TYPE_AFFILIATE}},
+		types.AuditFields{CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", CreatedDate: time.Now(),
+			UpdatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", UpdatedDate: time.Now(),
+			Message: "message",
+		})
+	app.MetadataKeeper.SetSession(ctx, *session)
+	for i := 0; i < 9; i++ {
+		sID := types.SessionMetadataAddress(scopeUUID, uuid.New())
+		session := types.NewSession("name", sID, cSpecID, []types.Party{
+			{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: types.PartyType_PARTY_TYPE_AFFILIATE}},
+			types.AuditFields{CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", CreatedDate: time.Now(),
+				UpdatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", UpdatedDate: time.Now(),
+				Message: "message",
+			})
+		app.MetadataKeeper.SetSession(ctx, *session)
+
+	}
+
+	_, err := queryClient.SessionContextByUUID(gocontext.Background(), &types.SessionContextByUUIDRequest{})
+	s.EqualError(err, "rpc error: code = InvalidArgument desc = scope uuid cannot be empty")
+
+	_, err = queryClient.SessionContextByUUID(gocontext.Background(), &types.SessionContextByUUIDRequest{ScopeUuid: "6332c1a4-foo1-bare-895b-invalid65cb6"})
+	s.EqualError(err, "rpc error: code = InvalidArgument desc = invalid scope uuid: invalid UUID format")
+
+	sc, err := queryClient.SessionContextByUUID(gocontext.Background(), &types.SessionContextByUUIDRequest{ScopeUuid: scopeUUID.String()})
+	s.NoError(err)
+	s.Equal(10, len(sc.Sessions), "should be 10 sessions in set for session context query by scope uuid")
+	s.Equal(scopeID.String(), sc.ScopeId)
+	s.Equal("", sc.SessionId)
+
+	_, err = queryClient.SessionContextByUUID(gocontext.Background(), &types.SessionContextByUUIDRequest{ScopeUuid: scopeUUID.String(), SessionUuid: "6332c1a4-foo1-bare-895b-invalid65cb6"})
+	s.EqualError(err, "rpc error: code = InvalidArgument desc = invalid session uuid: invalid UUID format")
+
+	sc, err = queryClient.SessionContextByUUID(gocontext.Background(), &types.SessionContextByUUIDRequest{ScopeUuid: scopeUUID.String(), SessionUuid: sessionUUID.String()})
+	s.NoError(err)
+	s.Equal(1, len(sc.Sessions), "should be 1 session in set for session context query by scope uuid and session uuid")
+	s.Equal(scopeID.String(), sc.ScopeId)
+	s.Equal(sessionID.String(), sc.SessionId)
+
+	_, err = queryClient.SessionContextByID(gocontext.Background(), &types.SessionContextByIDRequest{})
+	s.EqualError(err, "rpc error: code = InvalidArgument desc = scope id cannot be empty")
+
+	_, err = queryClient.SessionContextByID(gocontext.Background(), &types.SessionContextByIDRequest{ScopeId: "invalidbech32"})
+	s.EqualError(err, "rpc error: code = InvalidArgument desc = incorrect scope id: decoding bech32 failed: invalid index of 1")
+
+	scrs, err := queryClient.SessionContextByID(gocontext.Background(), &types.SessionContextByIDRequest{ScopeId: scopeID.String()})
+	s.Equal(10, len(scrs.Sessions), "should be 10 sessions in set for session context query by scope uuid")
+	s.Equal(scopeID.String(), scrs.ScopeId)
+	s.Equal("", scrs.SessionId)
+
+	_, err = queryClient.SessionContextByID(gocontext.Background(), &types.SessionContextByIDRequest{ScopeId: scopeID.String(), SessionId: "invalidbech32"})
+	s.EqualError(err, "rpc error: code = InvalidArgument desc = incorrect scope id: decoding bech32 failed: invalid index of 1")
+
+	scrs, err = queryClient.SessionContextByID(gocontext.Background(), &types.SessionContextByIDRequest{ScopeId: scopeID.String(), SessionId: sessionID.String()})
+	s.Equal(1, len(scrs.Sessions), "should be 1 sessions in set for session context query by scope id and session id")
+	s.Equal(scopeID.String(), scrs.ScopeId)
+	s.Equal(sessionID.String(), scrs.SessionId)
+}
+
 // TODO: ScopeSpecification tests
 // TODO: ContractSpecification tests
 // TODO: ContractSpecificationExtended tests
 // TODO: RecordSpecificationsForContractSpecification test
 // TODO: RecordSpecification tests
+

@@ -108,23 +108,28 @@ func (k msgServer) DeleteScope(
 	return &types.MsgDeleteScopeResponse{}, nil
 }
 
-func (k msgServer) AddRecordGroup(
+func (k msgServer) AddSession(
 	goCtx context.Context,
-	msg *types.MsgAddRecordGroupRequest,
-) (*types.MsgAddRecordGroupResponse, error) {
+	msg *types.MsgAddSessionRequest,
+) (*types.MsgAddSessionResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// TODO (contract keeper class  methods to process request, keeper methods to record it)
+	existing, _ := k.GetSession(ctx, msg.Session.SessionId)
+	if err := k.ValidateSessionUpdate(ctx, existing, *msg.Session, msg.Signers); err != nil {
+		return nil, err
+	}
+
+	k.SetSession(ctx, *msg.Session)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, ""),
+			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
 		),
 	)
 
-	return nil, fmt.Errorf("not implemented")
+	return &types.MsgAddSessionResponse{}, nil
 }
 
 func (k msgServer) AddRecord(
@@ -133,7 +138,7 @@ func (k msgServer) AddRecord(
 ) (*types.MsgAddRecordResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	scopeUUID, err := msg.Record.GroupId.ScopeUUID()
+	scopeUUID, err := msg.Record.SessionId.ScopeUUID()
 	if err != nil {
 		return nil, err
 	}
@@ -156,6 +161,30 @@ func (k msgServer) AddRecord(
 	)
 
 	return &types.MsgAddRecordResponse{}, nil
+}
+
+func (k msgServer) DeleteRecord(
+	goCtx context.Context,
+	msg *types.MsgDeleteRecordRequest,
+) (*types.MsgDeleteRecordResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	existing, _ := k.GetRecord(ctx, msg.RecordId)
+	if err := k.ValidateRecordRemove(ctx, existing, msg.RecordId, msg.Signers); err != nil {
+		return nil, err
+	}
+
+	k.RemoveRecord(ctx, msg.RecordId)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
+		),
+	)
+
+	return &types.MsgDeleteRecordResponse{}, nil
 }
 
 func (k msgServer) AddScopeSpecification(

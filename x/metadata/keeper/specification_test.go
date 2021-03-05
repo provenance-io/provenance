@@ -92,7 +92,7 @@ func areEquivalentSetsOfMetaAddresses(arr1 []types.MetadataAddress, arr2 []types
 		return false
 	}
 	for _, v2 := range arr2 {
-		if ! containsMetadataAddress(arr1, v2) {
+		if !containsMetadataAddress(arr1, v2) {
 			return false
 		}
 	}
@@ -629,10 +629,10 @@ func (s *SpecKeeperTestSuite) TestIterateContractSpecsForOwner() {
 func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 	otherContractSpecID := types.ContractSpecMetadataAddress(uuid.New())
 	tests := []struct {
-		name        string
-		existing    *types.ContractSpecification
-		proposed    *types.ContractSpecification
-		want        string
+		name     string
+		existing *types.ContractSpecification
+		proposed *types.ContractSpecification
+		want     string
 	}{
 		{
 			"existing specificationID does not match proposed specificationID causes error",
@@ -1085,10 +1085,10 @@ func (s *SpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
 	otherScopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
 	otherContractSpecID := types.ContractSpecMetadataAddress(uuid.New())
 	tests := []struct {
-		name        string
-		existing    *types.ScopeSpecification
-		proposed    *types.ScopeSpecification
-		want        string
+		name     string
+		existing *types.ScopeSpecification
+		proposed *types.ScopeSpecification
+		want     string
 	}{
 		{
 			"existing specificationID does not match proposed specificationID causes error",

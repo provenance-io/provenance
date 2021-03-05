@@ -9,7 +9,7 @@ func (state GenesisState) Validate() error {
 func NewGenesisState(
 	params Params,
 	scopes []Scope,
-	groups []RecordGroup,
+	sessions []Session,
 	records []Record,
 	scopeSpecs []ScopeSpecification,
 	contracSpecs []ContractSpecification,
@@ -18,7 +18,7 @@ func NewGenesisState(
 	return &GenesisState{
 		Params:                 params,
 		Scopes:                 scopes,
-		Groups:                 groups,
+		Sessions:               sessions,
 		Records:                records,
 		ScopeSpecifications:    scopeSpecs,
 		ContractSpecifications: contracSpecs,

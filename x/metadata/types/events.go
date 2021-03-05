@@ -10,16 +10,16 @@ const (
 	// EventTypeScopeRemoved is the event type generated when a scope is removed
 	EventTypeScopeRemoved string = "scope_removed"
 
-	// EventTypeGroupCreated is the event type generated when new record groups are created.
-	EventTypeGroupCreated string = "group_created"
-	// EventTypeGroupUpdated is the event type generated when existing record groups are updated.
-	EventTypeGroupUpdated string = "group_updated"
-	// EventTypeGroupRemoved is the event type generated when a scope is removed
-	EventTypeGroupRemoved string = "group_removed"
+	// EventTypeSessionCreated is the event type generated when new record sessions are created.
+	EventTypeSessionCreated string = "session_created"
+	// EventTypeSessionUpdated is the event type generated when existing record sessions are updated.
+	EventTypeSessionUpdated string = "session_updated"
+	// EventTypeSessionRemoved is the event type generated when a scope is removed
+	EventTypeSessionRemoved string = "session_removed"
 
-	// EventTypeRecordCreated is the event type generated when new record groups are created.
+	// EventTypeRecordCreated is the event type generated when new record sessions are created.
 	EventTypeRecordCreated string = "record_created"
-	// EventTypeRecordUpdated is the event type generated when existing record groups are updated.
+	// EventTypeRecordUpdated is the event type generated when existing record sessions are updated.
 	EventTypeRecordUpdated string = "record_updated"
 	// EventTypeRecordRemoved is the event type generated when a scope is removed
 	EventTypeRecordRemoved string = "record_removed"
@@ -49,8 +49,8 @@ const (
 	AttributeKeyScopeID string = "scope_id"
 	// AttributeKeyScope is the attribute key for a scope attribute JSON value.
 	AttributeKeyScope string = "scope"
-	// AttributeKeyGroupID is the attribute key for a scope ID attribute JSON value.
-	AttributeKeyGroupID string = "group_id"
+	// AttributeKeySessionID is the attribute key for a scope ID attribute JSON value.
+	AttributeKeySessionID string = "session_id"
 	// AttributeKeyRecordID is the attribute key for a record ID attribute JSON value.
 	AttributeKeyRecordID string = "record_id"
 	// AttributeKeyExecutionID is the attribute key for a scope ID attribute JSON value.

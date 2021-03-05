@@ -170,7 +170,6 @@ func TestMigrate(t *testing.T) {
       "specification_id": "contractspec1qvfha8nex5j0qeshr9uvsmv5um3q7sghss"
     }
   ],
-  "groups": [],
   "params": {},
   "record_specifications": [
     {
@@ -218,7 +217,8 @@ func TestMigrate(t *testing.T) {
   ],
   "records": [],
   "scope_specifications": [],
-  "scopes": []
+  "scopes": [],
+  "sessions": []
 }`
 	bz, err := clientCtx.JSONMarshaler.MarshalJSON(migrated)
 	require.NoError(t, err)
