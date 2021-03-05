@@ -160,9 +160,9 @@ func (m *ScopeRequest) GetScopeUuid() string {
 
 // ScopeResponse is the response to a scope request.
 type ScopeResponse struct {
-	Scope        *Scope         `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
-	RecordGroups []*RecordGroup `protobuf:"bytes,2,rep,name=record_groups,json=recordGroups,proto3" json:"record_groups,omitempty" yaml:"record_groups"`
-	Records      []*Record      `protobuf:"bytes,3,rep,name=records,proto3" json:"records,omitempty"`
+	Scope    *Scope     `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
+	Sessions []*Session `protobuf:"bytes,2,rep,name=sessions,proto3" json:"sessions,omitempty" yaml:"sessions"`
+	Records  []*Record  `protobuf:"bytes,3,rep,name=records,proto3" json:"records,omitempty"`
 }
 
 func (m *ScopeResponse) Reset()         { *m = ScopeResponse{} }
@@ -205,9 +205,9 @@ func (m *ScopeResponse) GetScope() *Scope {
 	return nil
 }
 
-func (m *ScopeResponse) GetRecordGroups() []*RecordGroup {
+func (m *ScopeResponse) GetSessions() []*Session {
 	if m != nil {
-		return m.RecordGroups
+		return m.Sessions
 	}
 	return nil
 }
@@ -437,24 +437,25 @@ func (m *ValueOwnershipResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// GroupContextRequest returns the record groups for a given scope identifer or optionally a specific record group
-type GroupContextRequest struct {
-	ScopeUuid string `protobuf:"bytes,1,opt,name=scope_uuid,json=scopeUuid,proto3" json:"scope_uuid,omitempty" yaml:"scope_uuid"`
-	GroupUuid string `protobuf:"bytes,2,opt,name=group_uuid,json=groupUuid,proto3" json:"group_uuid,omitempty" yaml:"group_uuid"`
+// SessionContextByUUIDRequest returns the record sessions for a given scope identifer or optionally a specific record
+// session
+type SessionContextByUUIDRequest struct {
+	ScopeUuid   string `protobuf:"bytes,1,opt,name=scope_uuid,json=scopeUuid,proto3" json:"scope_uuid,omitempty" yaml:"scope_uuid"`
+	SessionUuid string `protobuf:"bytes,2,opt,name=session_uuid,json=sessionUuid,proto3" json:"session_uuid,omitempty" yaml:"session_uuid"`
 }
 
-func (m *GroupContextRequest) Reset()         { *m = GroupContextRequest{} }
-func (m *GroupContextRequest) String() string { return proto.CompactTextString(m) }
-func (*GroupContextRequest) ProtoMessage()    {}
-func (*GroupContextRequest) Descriptor() ([]byte, []int) {
+func (m *SessionContextByUUIDRequest) Reset()         { *m = SessionContextByUUIDRequest{} }
+func (m *SessionContextByUUIDRequest) String() string { return proto.CompactTextString(m) }
+func (*SessionContextByUUIDRequest) ProtoMessage()    {}
+func (*SessionContextByUUIDRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a68790bc0b96eeb9, []int{8}
 }
-func (m *GroupContextRequest) XXX_Unmarshal(b []byte) error {
+func (m *SessionContextByUUIDRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *GroupContextRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *SessionContextByUUIDRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_GroupContextRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_SessionContextByUUIDRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -464,49 +465,51 @@ func (m *GroupContextRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte,
 		return b[:n], nil
 	}
 }
-func (m *GroupContextRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GroupContextRequest.Merge(m, src)
+func (m *SessionContextByUUIDRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SessionContextByUUIDRequest.Merge(m, src)
 }
-func (m *GroupContextRequest) XXX_Size() int {
+func (m *SessionContextByUUIDRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *GroupContextRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_GroupContextRequest.DiscardUnknown(m)
+func (m *SessionContextByUUIDRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_SessionContextByUUIDRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_GroupContextRequest proto.InternalMessageInfo
+var xxx_messageInfo_SessionContextByUUIDRequest proto.InternalMessageInfo
 
-func (m *GroupContextRequest) GetScopeUuid() string {
+func (m *SessionContextByUUIDRequest) GetScopeUuid() string {
 	if m != nil {
 		return m.ScopeUuid
 	}
 	return ""
 }
 
-func (m *GroupContextRequest) GetGroupUuid() string {
+func (m *SessionContextByUUIDRequest) GetSessionUuid() string {
 	if m != nil {
-		return m.GroupUuid
+		return m.SessionUuid
 	}
 	return ""
 }
 
-// GroupContextResponse is the response to a GroupContextRequest
-type GroupContextResponse struct {
-	Groups []*RecordGroup `protobuf:"bytes,1,rep,name=groups,proto3" json:"groups,omitempty"`
+// SessionContextByUUIDResponse is the response to a SessionContextByUUIDRequest
+type SessionContextByUUIDResponse struct {
+	ScopeId   string     `protobuf:"bytes,1,opt,name=scope_id,json=scopeId,proto3" json:"scope_id,omitempty" yaml:"scope_id"`
+	SessionId string     `protobuf:"bytes,2,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty" yaml:"session_id"`
+	Sessions  []*Session `protobuf:"bytes,3,rep,name=sessions,proto3" json:"sessions,omitempty"`
 }
 
-func (m *GroupContextResponse) Reset()         { *m = GroupContextResponse{} }
-func (m *GroupContextResponse) String() string { return proto.CompactTextString(m) }
-func (*GroupContextResponse) ProtoMessage()    {}
-func (*GroupContextResponse) Descriptor() ([]byte, []int) {
+func (m *SessionContextByUUIDResponse) Reset()         { *m = SessionContextByUUIDResponse{} }
+func (m *SessionContextByUUIDResponse) String() string { return proto.CompactTextString(m) }
+func (*SessionContextByUUIDResponse) ProtoMessage()    {}
+func (*SessionContextByUUIDResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a68790bc0b96eeb9, []int{9}
 }
-func (m *GroupContextResponse) XXX_Unmarshal(b []byte) error {
+func (m *SessionContextByUUIDResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *GroupContextResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *SessionContextByUUIDResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_GroupContextResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_SessionContextByUUIDResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -516,26 +519,156 @@ func (m *GroupContextResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte
 		return b[:n], nil
 	}
 }
-func (m *GroupContextResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GroupContextResponse.Merge(m, src)
+func (m *SessionContextByUUIDResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SessionContextByUUIDResponse.Merge(m, src)
 }
-func (m *GroupContextResponse) XXX_Size() int {
+func (m *SessionContextByUUIDResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *GroupContextResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_GroupContextResponse.DiscardUnknown(m)
+func (m *SessionContextByUUIDResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_SessionContextByUUIDResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_GroupContextResponse proto.InternalMessageInfo
+var xxx_messageInfo_SessionContextByUUIDResponse proto.InternalMessageInfo
 
-func (m *GroupContextResponse) GetGroups() []*RecordGroup {
+func (m *SessionContextByUUIDResponse) GetScopeId() string {
 	if m != nil {
-		return m.Groups
+		return m.ScopeId
+	}
+	return ""
+}
+
+func (m *SessionContextByUUIDResponse) GetSessionId() string {
+	if m != nil {
+		return m.SessionId
+	}
+	return ""
+}
+
+func (m *SessionContextByUUIDResponse) GetSessions() []*Session {
+	if m != nil {
+		return m.Sessions
 	}
 	return nil
 }
 
-// RecordsByScopeUUIDRequest is a request for all of the records in a specific scope by uuid or a specific record if a name is given.
+// SessionContextByIDRequest returns the record sessions for a given scope identifer or optionally a specific record
+// session
+type SessionContextByIDRequest struct {
+	ScopeId   string `protobuf:"bytes,1,opt,name=scope_id,json=scopeId,proto3" json:"scope_id,omitempty" yaml:"scope_id"`
+	SessionId string `protobuf:"bytes,2,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty" yaml:"session_id"`
+}
+
+func (m *SessionContextByIDRequest) Reset()         { *m = SessionContextByIDRequest{} }
+func (m *SessionContextByIDRequest) String() string { return proto.CompactTextString(m) }
+func (*SessionContextByIDRequest) ProtoMessage()    {}
+func (*SessionContextByIDRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a68790bc0b96eeb9, []int{10}
+}
+func (m *SessionContextByIDRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *SessionContextByIDRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_SessionContextByIDRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *SessionContextByIDRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SessionContextByIDRequest.Merge(m, src)
+}
+func (m *SessionContextByIDRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *SessionContextByIDRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_SessionContextByIDRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SessionContextByIDRequest proto.InternalMessageInfo
+
+func (m *SessionContextByIDRequest) GetScopeId() string {
+	if m != nil {
+		return m.ScopeId
+	}
+	return ""
+}
+
+func (m *SessionContextByIDRequest) GetSessionId() string {
+	if m != nil {
+		return m.SessionId
+	}
+	return ""
+}
+
+// SessionContextByIDResponse is the response to a SessionContextByIDRequest
+type SessionContextByIDResponse struct {
+	ScopeId   string     `protobuf:"bytes,1,opt,name=scope_id,json=scopeId,proto3" json:"scope_id,omitempty" yaml:"scope_id"`
+	SessionId string     `protobuf:"bytes,2,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty" yaml:"session_id"`
+	Sessions  []*Session `protobuf:"bytes,3,rep,name=sessions,proto3" json:"sessions,omitempty"`
+}
+
+func (m *SessionContextByIDResponse) Reset()         { *m = SessionContextByIDResponse{} }
+func (m *SessionContextByIDResponse) String() string { return proto.CompactTextString(m) }
+func (*SessionContextByIDResponse) ProtoMessage()    {}
+func (*SessionContextByIDResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a68790bc0b96eeb9, []int{11}
+}
+func (m *SessionContextByIDResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *SessionContextByIDResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_SessionContextByIDResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *SessionContextByIDResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SessionContextByIDResponse.Merge(m, src)
+}
+func (m *SessionContextByIDResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *SessionContextByIDResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_SessionContextByIDResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SessionContextByIDResponse proto.InternalMessageInfo
+
+func (m *SessionContextByIDResponse) GetScopeId() string {
+	if m != nil {
+		return m.ScopeId
+	}
+	return ""
+}
+
+func (m *SessionContextByIDResponse) GetSessionId() string {
+	if m != nil {
+		return m.SessionId
+	}
+	return ""
+}
+
+func (m *SessionContextByIDResponse) GetSessions() []*Session {
+	if m != nil {
+		return m.Sessions
+	}
+	return nil
+}
+
+// RecordsByScopeUUIDRequest is a request for all of the records in a specific scope by uuid or a specific record if a
+// name is given.
 type RecordsByScopeUUIDRequest struct {
 	ScopeUuid string `protobuf:"bytes,1,opt,name=scope_uuid,json=scopeUuid,proto3" json:"scope_uuid,omitempty" yaml:"scope_uuid"`
 	Name      string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
@@ -545,7 +678,7 @@ func (m *RecordsByScopeUUIDRequest) Reset()         { *m = RecordsByScopeUUIDReq
 func (m *RecordsByScopeUUIDRequest) String() string { return proto.CompactTextString(m) }
 func (*RecordsByScopeUUIDRequest) ProtoMessage()    {}
 func (*RecordsByScopeUUIDRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{10}
+	return fileDescriptor_a68790bc0b96eeb9, []int{12}
 }
 func (m *RecordsByScopeUUIDRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -599,7 +732,7 @@ func (m *RecordsByScopeUUIDResponse) Reset()         { *m = RecordsByScopeUUIDRe
 func (m *RecordsByScopeUUIDResponse) String() string { return proto.CompactTextString(m) }
 func (*RecordsByScopeUUIDResponse) ProtoMessage()    {}
 func (*RecordsByScopeUUIDResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{11}
+	return fileDescriptor_a68790bc0b96eeb9, []int{13}
 }
 func (m *RecordsByScopeUUIDResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -649,7 +782,8 @@ func (m *RecordsByScopeUUIDResponse) GetRecords() []*Record {
 	return nil
 }
 
-// RecordsByScopeIDRequest is a request for all of the records in a specific scope by bech32 id or a specific record if a name is given.
+// RecordsByScopeIDRequest is a request for all of the records in a specific scope by bech32 id or a specific record if
+// a name is given.
 type RecordsByScopeIDRequest struct {
 	ScopeId string `protobuf:"bytes,1,opt,name=scope_id,json=scopeId,proto3" json:"scope_id,omitempty" yaml:"scope_id"`
 	Name    string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
@@ -659,7 +793,7 @@ func (m *RecordsByScopeIDRequest) Reset()         { *m = RecordsByScopeIDRequest
 func (m *RecordsByScopeIDRequest) String() string { return proto.CompactTextString(m) }
 func (*RecordsByScopeIDRequest) ProtoMessage()    {}
 func (*RecordsByScopeIDRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{12}
+	return fileDescriptor_a68790bc0b96eeb9, []int{14}
 }
 func (m *RecordsByScopeIDRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -713,7 +847,7 @@ func (m *RecordsByScopeIDResponse) Reset()         { *m = RecordsByScopeIDRespon
 func (m *RecordsByScopeIDResponse) String() string { return proto.CompactTextString(m) }
 func (*RecordsByScopeIDResponse) ProtoMessage()    {}
 func (*RecordsByScopeIDResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{13}
+	return fileDescriptor_a68790bc0b96eeb9, []int{15}
 }
 func (m *RecordsByScopeIDResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -772,7 +906,7 @@ func (m *ScopeSpecificationRequest) Reset()         { *m = ScopeSpecificationReq
 func (m *ScopeSpecificationRequest) String() string { return proto.CompactTextString(m) }
 func (*ScopeSpecificationRequest) ProtoMessage()    {}
 func (*ScopeSpecificationRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{14}
+	return fileDescriptor_a68790bc0b96eeb9, []int{16}
 }
 func (m *ScopeSpecificationRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -817,7 +951,7 @@ func (m *ScopeSpecificationResponse) Reset()         { *m = ScopeSpecificationRe
 func (m *ScopeSpecificationResponse) String() string { return proto.CompactTextString(m) }
 func (*ScopeSpecificationResponse) ProtoMessage()    {}
 func (*ScopeSpecificationResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{15}
+	return fileDescriptor_a68790bc0b96eeb9, []int{17}
 }
 func (m *ScopeSpecificationResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -862,7 +996,7 @@ func (m *ContractSpecificationRequest) Reset()         { *m = ContractSpecificat
 func (m *ContractSpecificationRequest) String() string { return proto.CompactTextString(m) }
 func (*ContractSpecificationRequest) ProtoMessage()    {}
 func (*ContractSpecificationRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{16}
+	return fileDescriptor_a68790bc0b96eeb9, []int{18}
 }
 func (m *ContractSpecificationRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -907,7 +1041,7 @@ func (m *ContractSpecificationResponse) Reset()         { *m = ContractSpecifica
 func (m *ContractSpecificationResponse) String() string { return proto.CompactTextString(m) }
 func (*ContractSpecificationResponse) ProtoMessage()    {}
 func (*ContractSpecificationResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{17}
+	return fileDescriptor_a68790bc0b96eeb9, []int{19}
 }
 func (m *ContractSpecificationResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -952,8 +1086,10 @@ func init() {
 	proto.RegisterType((*OwnershipResponse)(nil), "provenance.metadata.v1.OwnershipResponse")
 	proto.RegisterType((*ValueOwnershipRequest)(nil), "provenance.metadata.v1.ValueOwnershipRequest")
 	proto.RegisterType((*ValueOwnershipResponse)(nil), "provenance.metadata.v1.ValueOwnershipResponse")
-	proto.RegisterType((*GroupContextRequest)(nil), "provenance.metadata.v1.GroupContextRequest")
-	proto.RegisterType((*GroupContextResponse)(nil), "provenance.metadata.v1.GroupContextResponse")
+	proto.RegisterType((*SessionContextByUUIDRequest)(nil), "provenance.metadata.v1.SessionContextByUUIDRequest")
+	proto.RegisterType((*SessionContextByUUIDResponse)(nil), "provenance.metadata.v1.SessionContextByUUIDResponse")
+	proto.RegisterType((*SessionContextByIDRequest)(nil), "provenance.metadata.v1.SessionContextByIDRequest")
+	proto.RegisterType((*SessionContextByIDResponse)(nil), "provenance.metadata.v1.SessionContextByIDResponse")
 	proto.RegisterType((*RecordsByScopeUUIDRequest)(nil), "provenance.metadata.v1.RecordsByScopeUUIDRequest")
 	proto.RegisterType((*RecordsByScopeUUIDResponse)(nil), "provenance.metadata.v1.RecordsByScopeUUIDResponse")
 	proto.RegisterType((*RecordsByScopeIDRequest)(nil), "provenance.metadata.v1.RecordsByScopeIDRequest")
@@ -969,78 +1105,82 @@ func init() {
 }
 
 var fileDescriptor_a68790bc0b96eeb9 = []byte{
-	// 1128 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x97, 0xcd, 0x6f, 0xdc, 0x44,
-	0x14, 0xc0, 0x33, 0x49, 0x93, 0xb0, 0x2f, 0x29, 0x34, 0x93, 0x0f, 0x36, 0x56, 0xe3, 0x0d, 0x86,
-	0x96, 0x90, 0x36, 0x76, 0xb3, 0x09, 0x10, 0xda, 0x52, 0x60, 0x29, 0xad, 0x2a, 0x21, 0x11, 0x1c,
-	0x85, 0x03, 0x12, 0xaa, 0x1c, 0xef, 0xb0, 0xb5, 0xc8, 0x7a, 0x5c, 0xdb, 0x1b, 0x1a, 0xad, 0xf6,
-	0x00, 0x17, 0xe0, 0x86, 0x84, 0x7a, 0x80, 0x0b, 0xe7, 0xde, 0xb8, 0xf2, 0x71, 0xe3, 0x40, 0x8f,
-	0x95, 0xb8, 0x70, 0x5a, 0xa1, 0x84, 0xbf, 0x60, 0xff, 0x02, 0xe4, 0x99, 0x71, 0x6c, 0xef, 0x7a,
-	0xb6, 0x1b, 0x22, 0x01, 0xbd, 0xd9, 0x9e, 0xf7, 0xf1, 0x7b, 0x6f, 0x66, 0xde, 0x7b, 0x06, 0xcd,
-	0xf3, 0xe9, 0x1e, 0x71, 0x2d, 0xd7, 0x26, 0x46, 0x9d, 0x84, 0x56, 0xd5, 0x0a, 0x2d, 0x63, 0x6f,
-	0xd5, 0xb8, 0xdb, 0x20, 0xfe, 0xbe, 0xee, 0xf9, 0x34, 0xa4, 0x78, 0x2e, 0x91, 0xd1, 0x63, 0x19,
-	0x7d, 0x6f, 0x55, 0x99, 0xa9, 0xd1, 0x1a, 0x65, 0x22, 0x46, 0xf4, 0xc4, 0xa5, 0x95, 0x65, 0x9b,
-	0x06, 0x75, 0x1a, 0x18, 0x3b, 0x56, 0x40, 0xb8, 0x19, 0x63, 0x6f, 0x75, 0x87, 0x84, 0xd6, 0xaa,
-	0xe1, 0x59, 0x35, 0xc7, 0xb5, 0x42, 0x87, 0xba, 0x42, 0xf6, 0x6c, 0x8d, 0xd2, 0xda, 0x2e, 0x31,
-	0x2c, 0xcf, 0x31, 0x2c, 0xd7, 0xa5, 0x21, 0x5b, 0x0c, 0xc4, 0xea, 0x39, 0x09, 0xdb, 0x11, 0x03,
-	0x17, 0x93, 0x85, 0x10, 0xd8, 0xd4, 0x23, 0x31, 0x94, 0x4c, 0xc6, 0x23, 0xb6, 0xf3, 0xb1, 0x63,
-	0xa7, 0xa0, 0xb4, 0x19, 0xc0, 0xef, 0x47, 0xd8, 0x9b, 0x96, 0x6f, 0xd5, 0x03, 0x93, 0xdc, 0x6d,
-	0x90, 0x20, 0xd4, 0xb6, 0x60, 0x3a, 0xf3, 0x35, 0xf0, 0xa8, 0x1b, 0x10, 0x7c, 0x15, 0xc6, 0x3c,
-	0xf6, 0xa5, 0x88, 0x16, 0xd1, 0xd2, 0x44, 0x59, 0xd5, 0xf3, 0x93, 0xa5, 0x73, 0xbd, 0xca, 0xa9,
-	0x87, 0xed, 0xd2, 0x90, 0x29, 0x74, 0xb4, 0xeb, 0x30, 0xb9, 0x15, 0x51, 0x0a, 0x27, 0x78, 0x1d,
-	0x80, 0x51, 0xdf, 0x6e, 0x34, 0x9c, 0x2a, 0xb3, 0x58, 0xa8, 0xcc, 0x76, 0xda, 0xa5, 0xa9, 0x7d,
-	0xab, 0xbe, 0x7b, 0x59, 0x4b, 0xd6, 0x34, 0xb3, 0xc0, 0x5e, 0xb6, 0xa3, 0xe7, 0x03, 0x04, 0xa7,
-	0x85, 0x19, 0x41, 0xb5, 0x06, 0xa3, 0x6c, 0x59, 0x40, 0x2d, 0xc8, 0xa0, 0xb8, 0x16, 0x97, 0xc5,
-	0x3b, 0x70, 0xda, 0x27, 0x36, 0xf5, 0xab, 0xb7, 0x6b, 0x3e, 0x6d, 0x78, 0x41, 0x71, 0x78, 0x71,
-	0x64, 0x69, 0xa2, 0xfc, 0xbc, 0x4c, 0xd9, 0x64, 0xc2, 0x37, 0x23, 0xd9, 0x4a, 0xb1, 0xd3, 0x2e,
-	0xcd, 0x70, 0xc8, 0x8c, 0x0d, 0xcd, 0x9c, 0xf4, 0x13, 0xb1, 0x00, 0x6f, 0xc0, 0x38, 0x7f, 0x0f,
-	0x8a, 0x23, 0xcc, 0xba, 0xda, 0xdf, 0xba, 0x19, 0x8b, 0x6b, 0x21, 0x9c, 0x79, 0xef, 0x53, 0x97,
-	0xf8, 0xc1, 0x1d, 0xc7, 0x8b, 0xd3, 0x55, 0x84, 0x71, 0xab, 0x5a, 0xf5, 0x49, 0xc0, 0xb3, 0x5f,
-	0x30, 0xe3, 0x57, 0x7c, 0x03, 0x20, 0x39, 0x6c, 0xc5, 0x61, 0x96, 0x85, 0xf3, 0x3a, 0x3f, 0x99,
-	0x7a, 0x74, 0x32, 0x75, 0x7e, 0xc0, 0xc5, 0xc9, 0xd4, 0x37, 0xad, 0x5a, 0xbc, 0x09, 0x66, 0x4a,
-	0x53, 0xbb, 0x8f, 0x60, 0x2a, 0xe5, 0x56, 0xa4, 0xf7, 0x55, 0x98, 0x48, 0xb6, 0x22, 0xf2, 0x3d,
-	0xb2, 0x54, 0xa8, 0xcc, 0x75, 0xda, 0x25, 0xdc, 0xbd, 0x4f, 0x81, 0x66, 0xc2, 0xd1, 0x46, 0x05,
-	0xf8, 0x66, 0x0e, 0xd6, 0x8b, 0x8f, 0xc5, 0xe2, 0x5e, 0x33, 0x5c, 0xfb, 0x30, 0xfb, 0x81, 0xb5,
-	0xdb, 0x20, 0xff, 0x41, 0x4a, 0xbe, 0x43, 0x30, 0xd7, 0xed, 0xfb, 0x7f, 0x93, 0x97, 0xcf, 0x10,
-	0x4c, 0xb3, 0xa3, 0xf6, 0x36, 0x75, 0x43, 0x72, 0x2f, 0x3c, 0xd1, 0xc5, 0x8a, 0xb4, 0xd8, 0x31,
-	0xe6, 0x5a, 0xc3, 0xdd, 0x5a, 0xc9, 0x9a, 0x66, 0x16, 0xd8, 0x0b, 0xbb, 0x8e, 0x5b, 0x30, 0x93,
-	0x45, 0x10, 0xd9, 0xb9, 0x02, 0x63, 0xe2, 0x62, 0xa1, 0x81, 0x2f, 0x96, 0x29, 0x54, 0x34, 0x02,
-	0xf3, 0xfc, 0x73, 0x50, 0xd9, 0x67, 0xb7, 0x76, 0x7b, 0xfb, 0xd6, 0xf5, 0x93, 0x45, 0x87, 0xe1,
-	0x94, 0x6b, 0xd5, 0x09, 0x8f, 0xcb, 0x64, 0xcf, 0xda, 0x2f, 0x08, 0x94, 0x3c, 0x3f, 0x22, 0x84,
-	0x7f, 0xe6, 0x48, 0x87, 0xa7, 0xf8, 0xca, 0x51, 0x12, 0xa7, 0x3b, 0xed, 0xd2, 0x33, 0x69, 0x9d,
-	0x48, 0x63, 0x9c, 0x3d, 0xde, 0xaa, 0x9e, 0xa0, 0x48, 0x7c, 0x04, 0xcf, 0x66, 0xe9, 0x93, 0x1c,
-	0xa5, 0x21, 0xd0, 0x00, 0x10, 0x79, 0xd9, 0xf9, 0x09, 0x41, 0xb1, 0xd7, 0xfe, 0x13, 0x92, 0x1b,
-	0x07, 0xe6, 0x19, 0xf2, 0x56, 0xba, 0xe5, 0xc5, 0xd9, 0x79, 0x17, 0x70, 0xa6, 0x15, 0xa6, 0x83,
-	0x58, 0xe8, 0xb4, 0x4b, 0xf3, 0x02, 0xa8, 0x47, 0x46, 0x33, 0xa7, 0x32, 0x1f, 0xd9, 0x0d, 0xf8,
-	0x16, 0x81, 0x92, 0xe7, 0x4b, 0x64, 0xaa, 0x09, 0xd3, 0x3c, 0xb2, 0x8c, 0xa6, 0xe8, 0x55, 0xcb,
-	0x7d, 0x7b, 0x55, 0xc6, 0x60, 0x45, 0xed, 0xb4, 0x4b, 0x4a, 0x3a, 0x55, 0x19, 0x83, 0x9a, 0x89,
-	0x83, 0x1e, 0x1d, 0x6d, 0x17, 0xce, 0x46, 0x17, 0xd3, 0xb7, 0xec, 0xf0, 0x5f, 0xc8, 0xc4, 0x03,
-	0x04, 0x0b, 0x12, 0x77, 0x22, 0x19, 0x5f, 0x20, 0x98, 0xb3, 0x85, 0x44, 0x6e, 0x42, 0x56, 0x64,
-	0x09, 0xc9, 0xb5, 0x5b, 0x79, 0xae, 0xd3, 0x2e, 0x2d, 0x70, 0xc6, 0x7c, 0xb3, 0x9a, 0x39, 0x6b,
-	0xe7, 0x69, 0x96, 0xbf, 0x9f, 0x84, 0x51, 0x36, 0xe2, 0xe0, 0xaf, 0x10, 0x8c, 0xf1, 0x79, 0x05,
-	0x4b, 0xb7, 0xa3, 0x77, 0x44, 0x52, 0x2e, 0x0c, 0x24, 0xcb, 0xe3, 0xd6, 0xce, 0x7f, 0xfe, 0xfb,
-	0x5f, 0xdf, 0x0c, 0x2f, 0x62, 0xd5, 0x90, 0x8c, 0x66, 0x7c, 0x44, 0xc2, 0x5f, 0x22, 0x18, 0x65,
-	0x5b, 0x8f, 0x5f, 0xe8, 0x3f, 0xc5, 0x08, 0x88, 0x73, 0x8f, 0x91, 0x12, 0xee, 0xcb, 0xcc, 0xfd,
-	0x45, 0xbc, 0x6c, 0xf4, 0x9b, 0x1e, 0x8d, 0x66, 0x72, 0x6d, 0x5b, 0xf8, 0x07, 0x04, 0x93, 0xe9,
-	0xca, 0x8e, 0xa5, 0x01, 0xe7, 0xb4, 0x20, 0xe5, 0xe2, 0x60, 0xc2, 0x82, 0xef, 0x1d, 0xc6, 0xf7,
-	0x06, 0x7e, 0x7d, 0x70, 0x3e, 0x83, 0xb5, 0x0a, 0xa3, 0x99, 0xb4, 0xa5, 0x16, 0xfe, 0x15, 0x01,
-	0xee, 0xad, 0xe7, 0x78, 0xb5, 0x7f, 0xd1, 0xc8, 0xe9, 0x31, 0x4a, 0xf9, 0x38, 0x2a, 0x22, 0x88,
-	0x1b, 0x2c, 0x88, 0x37, 0xf1, 0xb5, 0xfe, 0x41, 0x44, 0xa8, 0xd9, 0x48, 0x44, 0xcd, 0x32, 0x9a,
-	0x51, 0xd9, 0x6d, 0xe1, 0x1f, 0x11, 0x9c, 0xe9, 0xae, 0xbb, 0xd8, 0x18, 0x0c, 0x28, 0x89, 0xe0,
-	0xd2, 0xe0, 0x0a, 0x82, 0xbf, 0xc2, 0xf8, 0xaf, 0xe2, 0xcb, 0xfd, 0xf9, 0x13, 0xfa, 0x1c, 0xf6,
-	0xfb, 0x08, 0x0a, 0x47, 0x93, 0x12, 0x5e, 0x92, 0x31, 0x74, 0x0f, 0x72, 0xca, 0x4b, 0x03, 0x48,
-	0x0a, 0xcc, 0x35, 0x86, 0xb9, 0x82, 0x2f, 0xc8, 0x30, 0x69, 0xac, 0x62, 0x34, 0xc5, 0x34, 0xd8,
-	0xc2, 0x0f, 0x10, 0x3c, 0x9d, 0x1d, 0xe3, 0xb0, 0xb4, 0xd2, 0xe4, 0x8e, 0x9a, 0x8a, 0x3e, 0xa8,
-	0xb8, 0xc0, 0xdc, 0x60, 0x98, 0x65, 0x7c, 0x49, 0x86, 0xb9, 0x17, 0xe9, 0xe5, 0xb1, 0xfe, 0x8c,
-	0x00, 0xf7, 0x96, 0x7f, 0xf9, 0x29, 0x96, 0xf6, 0x39, 0xf9, 0x29, 0x96, 0xb7, 0x2b, 0xed, 0x1a,
-	0xe3, 0xde, 0xc0, 0xaf, 0xf4, 0x3d, 0x05, 0x51, 0x8d, 0x35, 0x9a, 0xbd, 0x6d, 0xa1, 0x85, 0x7f,
-	0x43, 0x30, 0x9b, 0x5b, 0xab, 0xf1, 0xfa, 0xb1, 0x4a, 0x7b, 0x1c, 0xc3, 0xcb, 0xc7, 0xd4, 0x12,
-	0x61, 0xbc, 0xc5, 0xc2, 0xb8, 0x82, 0x5f, 0x93, 0x85, 0x11, 0x77, 0x05, 0x69, 0x24, 0x95, 0x4f,
-	0x1e, 0x1e, 0xa8, 0xe8, 0xd1, 0x81, 0x8a, 0xfe, 0x3c, 0x50, 0xd1, 0xd7, 0x87, 0xea, 0xd0, 0xa3,
-	0x43, 0x75, 0xe8, 0x8f, 0x43, 0x75, 0x08, 0xe6, 0x1d, 0x2a, 0xa1, 0xda, 0x44, 0x1f, 0xae, 0xd7,
-	0x9c, 0xf0, 0x4e, 0x63, 0x47, 0xb7, 0x69, 0x3d, 0xe5, 0x7b, 0xc5, 0xa1, 0x69, 0x92, 0x7b, 0x09,
-	0x4b, 0xb8, 0xef, 0x91, 0x60, 0x67, 0x8c, 0xfd, 0x8d, 0xaf, 0xfd, 0x1d, 0x00, 0x00, 0xff, 0xff,
-	0x59, 0x30, 0x1d, 0x2d, 0xa2, 0x10, 0x00, 0x00,
+	// 1199 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x98, 0xdd, 0x6e, 0x1b, 0x45,
+	0x14, 0xc7, 0x33, 0x49, 0xdb, 0x34, 0x27, 0xa5, 0x34, 0x27, 0x1f, 0x75, 0x4c, 0x62, 0x87, 0x11,
+	0x2d, 0x21, 0x25, 0xbb, 0x8d, 0x13, 0x20, 0xa4, 0x55, 0x55, 0x96, 0x2a, 0x34, 0x12, 0x82, 0xb0,
+	0x51, 0xb8, 0x40, 0x42, 0x68, 0x63, 0x0f, 0xee, 0x8a, 0xd8, 0xeb, 0x7a, 0xd7, 0xa1, 0x96, 0x95,
+	0x0b, 0xb8, 0xa1, 0x5c, 0x81, 0x84, 0x7a, 0x01, 0x6f, 0xd0, 0x47, 0xe0, 0x43, 0x42, 0x08, 0x21,
+	0x7a, 0x19, 0xc4, 0x0d, 0x57, 0x16, 0x4a, 0x78, 0x02, 0x3f, 0x01, 0xda, 0x99, 0xb1, 0x77, 0xd7,
+	0xde, 0x71, 0xec, 0x54, 0x2a, 0xf4, 0x6e, 0xd7, 0x73, 0xce, 0x9c, 0xdf, 0xff, 0xcc, 0xc7, 0x39,
+	0x6b, 0xa0, 0xa5, 0xb2, 0xb3, 0xc7, 0x8a, 0x56, 0x31, 0xcb, 0xf4, 0x02, 0xf3, 0xac, 0x9c, 0xe5,
+	0x59, 0xfa, 0xde, 0x92, 0x7e, 0xb7, 0xc2, 0xca, 0x55, 0xad, 0x54, 0x76, 0x3c, 0x07, 0xa7, 0x02,
+	0x1b, 0xad, 0x69, 0xa3, 0xed, 0x2d, 0x25, 0x27, 0xf2, 0x4e, 0xde, 0xe1, 0x26, 0xba, 0xff, 0x24,
+	0xac, 0x93, 0x0b, 0x59, 0xc7, 0x2d, 0x38, 0xae, 0xbe, 0x63, 0xb9, 0x4c, 0x4c, 0xa3, 0xef, 0x2d,
+	0xed, 0x30, 0xcf, 0x5a, 0xd2, 0x4b, 0x56, 0xde, 0x2e, 0x5a, 0x9e, 0xed, 0x14, 0xa5, 0xed, 0x4c,
+	0xde, 0x71, 0xf2, 0xbb, 0x4c, 0xb7, 0x4a, 0xb6, 0x6e, 0x15, 0x8b, 0x8e, 0xc7, 0x07, 0x5d, 0x39,
+	0x7a, 0x49, 0xc1, 0xd6, 0x62, 0x10, 0x66, 0x2a, 0x09, 0x6e, 0xd6, 0x29, 0xb1, 0x26, 0x94, 0xca,
+	0xa6, 0xc4, 0xb2, 0xf6, 0xc7, 0x76, 0x36, 0x04, 0x45, 0x27, 0x00, 0xdf, 0xf3, 0xb1, 0x37, 0xad,
+	0xb2, 0x55, 0x70, 0x4d, 0x76, 0xb7, 0xc2, 0x5c, 0x8f, 0x6e, 0xc1, 0x78, 0xe4, 0x57, 0xb7, 0xe4,
+	0x14, 0x5d, 0x86, 0xd7, 0xe1, 0x4c, 0x89, 0xff, 0x92, 0x20, 0x73, 0x64, 0x7e, 0x34, 0x93, 0xd2,
+	0xe2, 0x93, 0xa5, 0x09, 0x3f, 0xe3, 0xd4, 0xa3, 0x7a, 0x7a, 0xc0, 0x94, 0x3e, 0xf4, 0x16, 0x9c,
+	0xdb, 0xf2, 0x29, 0x65, 0x10, 0x5c, 0x01, 0xe0, 0xd4, 0x1f, 0x55, 0x2a, 0x76, 0x8e, 0xcf, 0x38,
+	0x62, 0x4c, 0x36, 0xea, 0xe9, 0xb1, 0xaa, 0x55, 0xd8, 0x5d, 0xa3, 0xc1, 0x18, 0x35, 0x47, 0xf8,
+	0xcb, 0xb6, 0xff, 0x7c, 0x40, 0xe0, 0x19, 0x39, 0x8d, 0xa4, 0x5a, 0x86, 0xd3, 0x7c, 0x58, 0x42,
+	0xcd, 0xaa, 0xa0, 0x84, 0x97, 0xb0, 0xc5, 0x4d, 0x38, 0xeb, 0x32, 0xd7, 0xf5, 0x17, 0x20, 0x31,
+	0x38, 0x37, 0x34, 0x3f, 0x9a, 0x49, 0x2b, 0xfd, 0x84, 0x9d, 0x31, 0xde, 0xa8, 0xa7, 0x9f, 0x95,
+	0x6c, 0xd2, 0x95, 0x9a, 0xad, 0x59, 0x70, 0x15, 0x86, 0xcb, 0x2c, 0xeb, 0x94, 0x73, 0x6e, 0x62,
+	0x88, 0x4f, 0xa8, 0xcc, 0x8e, 0xc9, 0xcd, 0xcc, 0xa6, 0x39, 0xf5, 0xe0, 0xc2, 0xbb, 0x9f, 0x16,
+	0x59, 0xd9, 0xbd, 0x63, 0x97, 0x9a, 0xc9, 0x49, 0xc0, 0xb0, 0x95, 0xcb, 0x95, 0x99, 0x2b, 0x72,
+	0x3d, 0x62, 0x36, 0x5f, 0x71, 0x1d, 0x20, 0xd8, 0x5a, 0x89, 0x41, 0xae, 0xf9, 0xb2, 0x26, 0xf6,
+	0xa1, 0xe6, 0xef, 0x43, 0x4d, 0x6c, 0x67, 0xb9, 0x0f, 0xb5, 0x4d, 0x2b, 0xdf, 0x4c, 0xb9, 0x19,
+	0xf2, 0xa4, 0x0f, 0x08, 0x8c, 0x85, 0xc2, 0xca, 0x64, 0xbe, 0x06, 0xa3, 0x41, 0xe2, 0xfd, 0xd8,
+	0x43, 0xf3, 0x23, 0xc6, 0x54, 0xa3, 0x9e, 0xc6, 0xf6, 0x55, 0x71, 0xa9, 0x09, 0xad, 0x65, 0x71,
+	0xf1, 0xad, 0x18, 0xac, 0x17, 0x8f, 0xc5, 0x12, 0x51, 0x23, 0x5c, 0x55, 0x98, 0x7c, 0xdf, 0xda,
+	0xad, 0xb0, 0xff, 0x20, 0x25, 0xdf, 0x11, 0x98, 0x6a, 0x8f, 0xfd, 0xbf, 0xc9, 0xcb, 0x57, 0x04,
+	0x9e, 0x93, 0x5b, 0xf1, 0x4d, 0xa7, 0xe8, 0xb1, 0x7b, 0x9e, 0x51, 0xdd, 0xde, 0xde, 0xb8, 0xf5,
+	0x58, 0xc7, 0x09, 0xd7, 0xe0, 0x9c, 0xdc, 0xc1, 0xc2, 0x6f, 0x90, 0xfb, 0x5d, 0x6c, 0xd4, 0xd3,
+	0xe3, 0x91, 0xad, 0x2e, 0x3d, 0x47, 0xe5, 0x2b, 0x3f, 0x8a, 0xbf, 0x10, 0x98, 0x89, 0x27, 0x92,
+	0x49, 0xd3, 0xe0, 0xac, 0x08, 0xdb, 0x02, 0x0a, 0x9f, 0x21, 0x39, 0x42, 0xcd, 0x61, 0xfe, 0xb8,
+	0x91, 0xe3, 0x12, 0x64, 0xb8, 0x16, 0x4a, 0x58, 0x42, 0x6b, 0xcc, 0x97, 0x20, 0x5e, 0x36, 0x72,
+	0x78, 0x2d, 0x74, 0x94, 0x87, 0x7a, 0x3a, 0xca, 0xc1, 0xa9, 0xa5, 0x9f, 0x11, 0x98, 0x6e, 0xd7,
+	0x10, 0xe4, 0xf4, 0x89, 0x08, 0xa0, 0x3f, 0x13, 0x48, 0xc6, 0x31, 0x3c, 0x3d, 0x59, 0x64, 0x30,
+	0x2d, 0x2e, 0x35, 0xd7, 0xa8, 0xf2, 0x6b, 0xf6, 0xf1, 0x37, 0x26, 0xc2, 0xa9, 0xa2, 0x55, 0x60,
+	0x82, 0xdf, 0xe4, 0xcf, 0xf4, 0x27, 0x02, 0xc9, 0xb8, 0x38, 0x32, 0x51, 0x27, 0x0b, 0x14, 0x4e,
+	0xef, 0x60, 0x0f, 0xe9, 0x3d, 0xf9, 0x3d, 0xff, 0x21, 0x5c, 0x8c, 0xd2, 0x9f, 0x7c, 0xa3, 0xc5,
+	0x65, 0xe7, 0x07, 0x02, 0x89, 0xce, 0xf9, 0x9f, 0x92, 0xdc, 0xd8, 0x30, 0xcd, 0x91, 0xb7, 0xc2,
+	0x3d, 0x4a, 0x33, 0x3b, 0x6f, 0x03, 0x46, 0x7a, 0x97, 0xb0, 0x88, 0xd9, 0x46, 0x3d, 0x3d, 0x2d,
+	0x81, 0x3a, 0x6c, 0xa8, 0x39, 0x16, 0xf9, 0x91, 0x5f, 0x5b, 0xdf, 0xfa, 0xc7, 0x2d, 0x26, 0x96,
+	0xcc, 0x54, 0x0d, 0xc6, 0x85, 0xb2, 0x88, 0xa7, 0x6c, 0x2e, 0x16, 0xba, 0x36, 0x17, 0x91, 0x09,
+	0x8d, 0x54, 0xa3, 0x9e, 0x4e, 0x86, 0x53, 0x15, 0x99, 0x90, 0x9a, 0xe8, 0x76, 0xf8, 0xd0, 0x5d,
+	0x98, 0xf1, 0xaf, 0x80, 0xb2, 0x95, 0xf5, 0x9e, 0x40, 0x26, 0x1e, 0x12, 0x98, 0x55, 0x84, 0x93,
+	0xc9, 0xf8, 0x82, 0xc0, 0x54, 0x56, 0x5a, 0xc4, 0x26, 0x64, 0x51, 0x95, 0x90, 0xd8, 0x79, 0x8d,
+	0xe7, 0x1b, 0xf5, 0xf4, 0xac, 0x60, 0x8c, 0x9f, 0x96, 0x9a, 0x93, 0xd9, 0x38, 0xcf, 0xcc, 0xfd,
+	0xf3, 0x70, 0x9a, 0xf7, 0xa4, 0xf8, 0x25, 0x81, 0x33, 0xa2, 0xc1, 0x44, 0xe5, 0x72, 0x74, 0xf6,
+	0xb4, 0xc9, 0x2b, 0x3d, 0xd9, 0x0a, 0xdd, 0xf4, 0xf2, 0xe7, 0x7f, 0xfe, 0xf3, 0xcd, 0xe0, 0x1c,
+	0xa6, 0x74, 0x45, 0x2f, 0x2d, 0x7a, 0x5a, 0xbc, 0x4f, 0xe0, 0x34, 0x5f, 0x7a, 0x7c, 0xa1, 0x7b,
+	0xdb, 0x29, 0x21, 0x2e, 0x1d, 0x63, 0x25, 0xc3, 0x67, 0x78, 0xf8, 0x97, 0x71, 0x41, 0xef, 0xd6,
+	0xee, 0xeb, 0xb5, 0xe0, 0xd8, 0xee, 0xe3, 0x1f, 0x04, 0x26, 0xe2, 0xaa, 0x31, 0x2e, 0x1f, 0x73,
+	0x8f, 0xc7, 0x75, 0x13, 0xc9, 0x95, 0xfe, 0x9c, 0x24, 0xf7, 0x3b, 0x9c, 0xfb, 0x36, 0xae, 0x77,
+	0xe7, 0xf6, 0x81, 0x23, 0xf0, 0xba, 0xac, 0x24, 0x7a, 0x2d, 0xdc, 0x6e, 0xec, 0xe3, 0x6f, 0x04,
+	0xb0, 0xb3, 0x32, 0xe2, 0x52, 0xaf, 0x70, 0x81, 0x9e, 0x4c, 0x3f, 0x2e, 0x52, 0xcd, 0x6d, 0xae,
+	0xc6, 0xc0, 0x9b, 0xdd, 0xd5, 0x04, 0x5a, 0x62, 0x95, 0xf8, 0x3a, 0x7e, 0x25, 0x80, 0x9d, 0x85,
+	0x4b, 0xad, 0x43, 0x59, 0x4c, 0xd5, 0x3a, 0xd4, 0x75, 0x91, 0xae, 0x73, 0x1d, 0x37, 0xf1, 0x46,
+	0xbf, 0xab, 0x22, 0x2f, 0x67, 0xbd, 0xe6, 0xd7, 0x97, 0x7d, 0xfc, 0x9e, 0xc0, 0x85, 0xf6, 0x02,
+	0x83, 0x7a, 0x6f, 0x40, 0x81, 0x82, 0xab, 0xbd, 0x3b, 0x48, 0x7e, 0x83, 0xf3, 0x5f, 0xc7, 0xb5,
+	0x7e, 0xd6, 0xa1, 0x8d, 0xfd, 0x01, 0x81, 0x91, 0x56, 0x57, 0x8f, 0xf3, 0x2a, 0x86, 0xf6, 0x8f,
+	0x8e, 0xe4, 0x4b, 0x3d, 0x58, 0x4a, 0xcc, 0x65, 0x8e, 0xb9, 0x88, 0x57, 0x54, 0x98, 0x4e, 0xd3,
+	0x45, 0xaf, 0xc9, 0x2f, 0x97, 0x7d, 0x7c, 0x48, 0xe0, 0x7c, 0xf4, 0x93, 0x03, 0x95, 0x57, 0x6a,
+	0xec, 0x67, 0x51, 0x52, 0xeb, 0xd5, 0x5c, 0x62, 0xae, 0x72, 0xcc, 0x0c, 0x5e, 0x55, 0x61, 0xee,
+	0xf9, 0x7e, 0x71, 0xac, 0x3f, 0xfa, 0xa7, 0xb1, 0xa3, 0x66, 0x75, 0x39, 0x8d, 0xaa, 0x82, 0xde,
+	0xe5, 0x34, 0x2a, 0xeb, 0x32, 0xbd, 0xc1, 0xb9, 0x57, 0xf1, 0xd5, 0xae, 0xbb, 0xc0, 0x2f, 0x26,
+	0x7a, 0xad, 0xb3, 0xfe, 0xed, 0xe3, 0xef, 0x04, 0x26, 0x63, 0x8b, 0x12, 0xae, 0xf4, 0x55, 0xc3,
+	0x9a, 0x1a, 0x5e, 0xe9, 0xd3, 0x4b, 0xca, 0x78, 0x83, 0xcb, 0xb8, 0x86, 0xaf, 0xab, 0x64, 0x34,
+	0xcb, 0x9f, 0x52, 0x89, 0xf1, 0xc9, 0xa3, 0xc3, 0x14, 0x39, 0x38, 0x4c, 0x91, 0xbf, 0x0f, 0x53,
+	0xe4, 0xeb, 0xa3, 0xd4, 0xc0, 0xc1, 0x51, 0x6a, 0xe0, 0xaf, 0xa3, 0xd4, 0x00, 0x4c, 0xdb, 0x8e,
+	0x82, 0x6a, 0x93, 0x7c, 0xb0, 0x92, 0xb7, 0xbd, 0x3b, 0x95, 0x1d, 0x2d, 0xeb, 0x14, 0x42, 0xb1,
+	0x17, 0x6d, 0x27, 0x4c, 0x72, 0x2f, 0x60, 0xf1, 0xaa, 0x25, 0xe6, 0xee, 0x9c, 0xe1, 0xff, 0x13,
+	0x2d, 0xff, 0x1b, 0x00, 0x00, 0xff, 0xff, 0xd1, 0x4c, 0x2e, 0x36, 0x3c, 0x13, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1059,8 +1199,10 @@ type QueryClient interface {
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// Scope returns a specific scope by id
 	Scope(ctx context.Context, in *ScopeRequest, opts ...grpc.CallOption) (*ScopeResponse, error)
-	// GroupContext returns a specific group context within a scope (or all groups)
-	GroupContext(ctx context.Context, in *GroupContextRequest, opts ...grpc.CallOption) (*GroupContextResponse, error)
+	// SessionContextByUUID returns a specific session context within a scope (or all sessions)
+	SessionContextByUUID(ctx context.Context, in *SessionContextByUUIDRequest, opts ...grpc.CallOption) (*SessionContextByUUIDResponse, error)
+	// SessionContextByID returns a specific session context within a scope (or all sessions)
+	SessionContextByID(ctx context.Context, in *SessionContextByIDRequest, opts ...grpc.CallOption) (*SessionContextByIDResponse, error)
 	// RecordsByScopeUUID returns a collection of the records in a scope by scope uuid or a specific one by name
 	RecordsByScopeUUID(ctx context.Context, in *RecordsByScopeUUIDRequest, opts ...grpc.CallOption) (*RecordsByScopeUUIDResponse, error)
 	// RecordsByScopeID returns a collection of the records in a scope by scope bech32 id or a specific one by name
@@ -1101,9 +1243,18 @@ func (c *queryClient) Scope(ctx context.Context, in *ScopeRequest, opts ...grpc.
 	return out, nil
 }
 
-func (c *queryClient) GroupContext(ctx context.Context, in *GroupContextRequest, opts ...grpc.CallOption) (*GroupContextResponse, error) {
-	out := new(GroupContextResponse)
-	err := c.cc.Invoke(ctx, "/provenance.metadata.v1.Query/GroupContext", in, out, opts...)
+func (c *queryClient) SessionContextByUUID(ctx context.Context, in *SessionContextByUUIDRequest, opts ...grpc.CallOption) (*SessionContextByUUIDResponse, error) {
+	out := new(SessionContextByUUIDResponse)
+	err := c.cc.Invoke(ctx, "/provenance.metadata.v1.Query/SessionContextByUUID", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) SessionContextByID(ctx context.Context, in *SessionContextByIDRequest, opts ...grpc.CallOption) (*SessionContextByIDResponse, error) {
+	out := new(SessionContextByIDResponse)
+	err := c.cc.Invoke(ctx, "/provenance.metadata.v1.Query/SessionContextByID", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1170,8 +1321,10 @@ type QueryServer interface {
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// Scope returns a specific scope by id
 	Scope(context.Context, *ScopeRequest) (*ScopeResponse, error)
-	// GroupContext returns a specific group context within a scope (or all groups)
-	GroupContext(context.Context, *GroupContextRequest) (*GroupContextResponse, error)
+	// SessionContextByUUID returns a specific session context within a scope (or all sessions)
+	SessionContextByUUID(context.Context, *SessionContextByUUIDRequest) (*SessionContextByUUIDResponse, error)
+	// SessionContextByID returns a specific session context within a scope (or all sessions)
+	SessionContextByID(context.Context, *SessionContextByIDRequest) (*SessionContextByIDResponse, error)
 	// RecordsByScopeUUID returns a collection of the records in a scope by scope uuid or a specific one by name
 	RecordsByScopeUUID(context.Context, *RecordsByScopeUUIDRequest) (*RecordsByScopeUUIDResponse, error)
 	// RecordsByScopeID returns a collection of the records in a scope by scope bech32 id or a specific one by name
@@ -1196,8 +1349,11 @@ func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsReq
 func (*UnimplementedQueryServer) Scope(ctx context.Context, req *ScopeRequest) (*ScopeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Scope not implemented")
 }
-func (*UnimplementedQueryServer) GroupContext(ctx context.Context, req *GroupContextRequest) (*GroupContextResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GroupContext not implemented")
+func (*UnimplementedQueryServer) SessionContextByUUID(ctx context.Context, req *SessionContextByUUIDRequest) (*SessionContextByUUIDResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SessionContextByUUID not implemented")
+}
+func (*UnimplementedQueryServer) SessionContextByID(ctx context.Context, req *SessionContextByIDRequest) (*SessionContextByIDResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SessionContextByID not implemented")
 }
 func (*UnimplementedQueryServer) RecordsByScopeUUID(ctx context.Context, req *RecordsByScopeUUIDRequest) (*RecordsByScopeUUIDResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RecordsByScopeUUID not implemented")
@@ -1258,20 +1414,38 @@ func _Query_Scope_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_GroupContext_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GroupContextRequest)
+func _Query_SessionContextByUUID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SessionContextByUUIDRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).GroupContext(ctx, in)
+		return srv.(QueryServer).SessionContextByUUID(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.metadata.v1.Query/GroupContext",
+		FullMethod: "/provenance.metadata.v1.Query/SessionContextByUUID",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).GroupContext(ctx, req.(*GroupContextRequest))
+		return srv.(QueryServer).SessionContextByUUID(ctx, req.(*SessionContextByUUIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_SessionContextByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SessionContextByIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).SessionContextByID(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.metadata.v1.Query/SessionContextByID",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).SessionContextByID(ctx, req.(*SessionContextByIDRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1397,8 +1571,12 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_Scope_Handler,
 		},
 		{
-			MethodName: "GroupContext",
-			Handler:    _Query_GroupContext_Handler,
+			MethodName: "SessionContextByUUID",
+			Handler:    _Query_SessionContextByUUID_Handler,
+		},
+		{
+			MethodName: "SessionContextByID",
+			Handler:    _Query_SessionContextByID_Handler,
 		},
 		{
 			MethodName: "RecordsByScopeUUID",
@@ -1549,10 +1727,10 @@ func (m *ScopeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			dAtA[i] = 0x1a
 		}
 	}
-	if len(m.RecordGroups) > 0 {
-		for iNdEx := len(m.RecordGroups) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.Sessions) > 0 {
+		for iNdEx := len(m.Sessions) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.RecordGroups[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.Sessions[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -1750,7 +1928,7 @@ func (m *ValueOwnershipResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	return len(dAtA) - i, nil
 }
 
-func (m *GroupContextRequest) Marshal() (dAtA []byte, err error) {
+func (m *SessionContextByUUIDRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1760,20 +1938,20 @@ func (m *GroupContextRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *GroupContextRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *SessionContextByUUIDRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *GroupContextRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *SessionContextByUUIDRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.GroupUuid) > 0 {
-		i -= len(m.GroupUuid)
-		copy(dAtA[i:], m.GroupUuid)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.GroupUuid)))
+	if len(m.SessionUuid) > 0 {
+		i -= len(m.SessionUuid)
+		copy(dAtA[i:], m.SessionUuid)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.SessionUuid)))
 		i--
 		dAtA[i] = 0x12
 	}
@@ -1787,7 +1965,7 @@ func (m *GroupContextRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *GroupContextResponse) Marshal() (dAtA []byte, err error) {
+func (m *SessionContextByUUIDResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1797,20 +1975,20 @@ func (m *GroupContextResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *GroupContextResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *SessionContextByUUIDResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *GroupContextResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *SessionContextByUUIDResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Groups) > 0 {
-		for iNdEx := len(m.Groups) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.Sessions) > 0 {
+		for iNdEx := len(m.Sessions) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.Groups[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.Sessions[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -1818,8 +1996,110 @@ func (m *GroupContextResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 				i = encodeVarintQuery(dAtA, i, uint64(size))
 			}
 			i--
-			dAtA[i] = 0xa
+			dAtA[i] = 0x1a
 		}
+	}
+	if len(m.SessionId) > 0 {
+		i -= len(m.SessionId)
+		copy(dAtA[i:], m.SessionId)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.SessionId)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.ScopeId) > 0 {
+		i -= len(m.ScopeId)
+		copy(dAtA[i:], m.ScopeId)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.ScopeId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *SessionContextByIDRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SessionContextByIDRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *SessionContextByIDRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.SessionId) > 0 {
+		i -= len(m.SessionId)
+		copy(dAtA[i:], m.SessionId)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.SessionId)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.ScopeId) > 0 {
+		i -= len(m.ScopeId)
+		copy(dAtA[i:], m.ScopeId)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.ScopeId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *SessionContextByIDResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SessionContextByIDResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *SessionContextByIDResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Sessions) > 0 {
+		for iNdEx := len(m.Sessions) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Sessions[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if len(m.SessionId) > 0 {
+		i -= len(m.SessionId)
+		copy(dAtA[i:], m.SessionId)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.SessionId)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.ScopeId) > 0 {
+		i -= len(m.ScopeId)
+		copy(dAtA[i:], m.ScopeId)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.ScopeId)))
+		i--
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -2184,8 +2464,8 @@ func (m *ScopeResponse) Size() (n int) {
 		l = m.Scope.Size()
 		n += 1 + l + sovQuery(uint64(l))
 	}
-	if len(m.RecordGroups) > 0 {
-		for _, e := range m.RecordGroups {
+	if len(m.Sessions) > 0 {
+		for _, e := range m.Sessions {
 			l = e.Size()
 			n += 1 + l + sovQuery(uint64(l))
 		}
@@ -2271,7 +2551,7 @@ func (m *ValueOwnershipResponse) Size() (n int) {
 	return n
 }
 
-func (m *GroupContextRequest) Size() (n int) {
+func (m *SessionContextByUUIDRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2281,21 +2561,69 @@ func (m *GroupContextRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
-	l = len(m.GroupUuid)
+	l = len(m.SessionUuid)
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
 }
 
-func (m *GroupContextResponse) Size() (n int) {
+func (m *SessionContextByUUIDResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if len(m.Groups) > 0 {
-		for _, e := range m.Groups {
+	l = len(m.ScopeId)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = len(m.SessionId)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if len(m.Sessions) > 0 {
+		for _, e := range m.Sessions {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *SessionContextByIDRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ScopeId)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = len(m.SessionId)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *SessionContextByIDResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ScopeId)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = len(m.SessionId)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if len(m.Sessions) > 0 {
+		for _, e := range m.Sessions {
 			l = e.Size()
 			n += 1 + l + sovQuery(uint64(l))
 		}
@@ -2723,7 +3051,7 @@ func (m *ScopeResponse) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RecordGroups", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Sessions", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -2750,8 +3078,8 @@ func (m *ScopeResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.RecordGroups = append(m.RecordGroups, &RecordGroup{})
-			if err := m.RecordGroups[len(m.RecordGroups)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.Sessions = append(m.Sessions, &Session{})
+			if err := m.Sessions[len(m.Sessions)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -3282,7 +3610,7 @@ func (m *ValueOwnershipResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *GroupContextRequest) Unmarshal(dAtA []byte) error {
+func (m *SessionContextByUUIDRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3305,10 +3633,10 @@ func (m *GroupContextRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: GroupContextRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: SessionContextByUUIDRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: GroupContextRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: SessionContextByUUIDRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -3345,7 +3673,7 @@ func (m *GroupContextRequest) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field GroupUuid", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field SessionUuid", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -3373,7 +3701,7 @@ func (m *GroupContextRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.GroupUuid = string(dAtA[iNdEx:postIndex])
+			m.SessionUuid = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -3396,7 +3724,7 @@ func (m *GroupContextRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *GroupContextResponse) Unmarshal(dAtA []byte) error {
+func (m *SessionContextByUUIDResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3419,15 +3747,79 @@ func (m *GroupContextResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: GroupContextResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: SessionContextByUUIDResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: GroupContextResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: SessionContextByUUIDResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Groups", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ScopeId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ScopeId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SessionId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SessionId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Sessions", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -3454,8 +3846,270 @@ func (m *GroupContextResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Groups = append(m.Groups, &RecordGroup{})
-			if err := m.Groups[len(m.Groups)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.Sessions = append(m.Sessions, &Session{})
+			if err := m.Sessions[len(m.Sessions)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SessionContextByIDRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SessionContextByIDRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SessionContextByIDRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ScopeId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ScopeId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SessionId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SessionId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SessionContextByIDResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SessionContextByIDResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SessionContextByIDResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ScopeId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ScopeId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SessionId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SessionId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Sessions", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Sessions = append(m.Sessions, &Session{})
+			if err := m.Sessions[len(m.Sessions)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

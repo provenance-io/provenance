@@ -23,6 +23,12 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgAddRecordRequest:
 			res, err := msgServer.AddRecord(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
+		case *types.MsgDeleteRecordRequest:
+			res, err := msgServer.DeleteRecord(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+		case *types.MsgAddSessionRequest:
+			res, err := msgServer.AddSession(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 		default:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown message type: %v", msg.Type())
 		}

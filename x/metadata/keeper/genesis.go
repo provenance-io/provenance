@@ -16,9 +16,9 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 			k.SetScope(ctx, s)
 		}
 	}
-	if data.Groups != nil {
-		for _, r := range data.Groups {
-			k.SetRecordGroup(ctx, r)
+	if data.Sessions != nil {
+		for _, r := range data.Sessions {
+			k.SetSession(ctx, r)
 		}
 	}
 	if data.Records != nil {
@@ -43,7 +43,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 	params := k.GetParams(ctx)
 	scopes := make([]types.Scope, 0)
-	groups := make([]types.RecordGroup, 0)
+	sessions := make([]types.Session, 0)
 	records := make([]types.Record, 0)
 
 	appendToScopes := func(scope types.Scope) bool {
@@ -51,8 +51,8 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 		return false
 	}
 
-	appendToGroups := func(group types.RecordGroup) bool {
-		groups = append(groups, group)
+	appendToSessions := func(session types.Session) bool {
+		sessions = append(sessions, session)
 		return false
 	}
 
@@ -64,7 +64,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 	if err := k.IterateScopes(ctx, appendToScopes); err != nil {
 		panic(err)
 	}
-	if err := k.IterateGroups(ctx, types.MetadataAddress{}, appendToGroups); err != nil {
+	if err := k.IterateSessions(ctx, types.MetadataAddress{}, appendToSessions); err != nil {
 		panic(err)
 	}
 	if err := k.IterateRecords(ctx, types.MetadataAddress{}, appendToRecords); err != nil {
@@ -72,5 +72,5 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 	}
 	// TODO iterate over existing scope, group specifications and collect here for export
 
-	return types.NewGenesisState(params, scopes, groups, records, []types.ScopeSpecification{}, []types.ContractSpecification{})
+	return types.NewGenesisState(params, scopes, sessions, records, []types.ScopeSpecification{}, []types.ContractSpecification{})
 }

@@ -16,13 +16,13 @@ import (
 )
 
 var (
-	scopeUUID = uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")
-	groupUUID = uuid.MustParse("c25c7bd4-c639-4367-a842-f64fa5fccc19")
+	scopeUUID   = uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")
+	sessionUUID = uuid.MustParse("c25c7bd4-c639-4367-a842-f64fa5fccc19")
 
-	scopeHex     = "008D80B25AC0894446956E5D08CFE3E1A5"
-	scopeBech32  = "scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp"
-	groupBech32  = "group1qxxcpvj6czy5g354dews3nlruxjuyhrm6nrrjsm84pp0vna9lnxpjwrypnl"
-	recordBech32 = "record1q2xcpvj6czy5g354dews3nlruxjelpkssxyyclt9ngh74gx9ttgptgalfudjkzuz9ng46mq4krcq5zqsttnk0"
+	scopeHex      = "008D80B25AC0894446956E5D08CFE3E1A5"
+	scopeBech32   = "scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp"
+	sessionBech32 = "session1qxxcpvj6czy5g354dews3nlruxjuyhrm6nrrjsm84pp0vna9lnxpjewp6kf"
+	recordBech32  = "record1q2xcpvj6czy5g354dews3nlruxjelpkssxyyclt9ngh74gx9ttgp27gt8kl"
 )
 
 func TestLegacySha512HashToAddress(t *testing.T) {
@@ -112,9 +112,9 @@ func TestMetadataAddressMarshal(t *testing.T) {
 
 func TestMetadataAddressIteratorPrefix(t *testing.T) {
 	var scopeID MetadataAddress
-	bz, err := scopeID.ScopeGroupIteratorPrefix()
+	bz, err := scopeID.ScopeSessionIteratorPrefix()
 	require.NoError(t, err, "empty address must return the root iterator prefix ")
-	require.Equal(t, GroupKeyPrefix, bz)
+	require.Equal(t, SessionKeyPrefix, bz)
 	bz, err = scopeID.ScopeRecordIteratorPrefix()
 	require.NoError(t, err, "empty address must return the root iterator prefix")
 	require.Equal(t, RecordKeyPrefix, bz)
@@ -127,15 +127,15 @@ func TestMetadataAddressIteratorPrefix(t *testing.T) {
 
 	scopeID = ScopeMetadataAddress(scopeUUID)
 
-	bz, err = scopeID.ScopeGroupIteratorPrefix()
+	bz, err = scopeID.ScopeSessionIteratorPrefix()
 	require.NoError(t, err)
 	require.Equal(t, 17, len(bz), "length of iterator prefix is code plus scope uuid")
-	require.Equal(t, GroupKeyPrefix[0], bz[0], "iterator prefix should start with group key id")
+	require.Equal(t, SessionKeyPrefix[0], bz[0], "iterator prefix should start with session key id")
 
 	bz, err = scopeID.ScopeRecordIteratorPrefix()
 	require.NoError(t, err)
 	require.Equal(t, 17, len(bz), "length of iterator prefix is code plus scope uuid")
-	require.Equal(t, RecordKeyPrefix[0], bz[0], "iterator prefix should start with group key id")
+	require.Equal(t, RecordKeyPrefix[0], bz[0], "iterator prefix should start with session key id")
 }
 
 func TestScopeMetadataAddress(t *testing.T) {
@@ -151,8 +151,8 @@ func TestScopeMetadataAddress(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "8d80b25a-c089-4446-956e-5d08cfe3e1a5", scopeAddrUUID.String())
 
-	_, err = scopeID.GroupUUID()
-	require.Error(t, fmt.Errorf("this metadata addresss does not contain a group uuid"), err)
+	_, err = scopeID.SessionUUID()
+	require.Error(t, fmt.Errorf("this metadata addresss does not contain a session uuid"), err)
 
 	// Check the string formatter for the scopeID
 	require.Equal(t, scopeBech32, fmt.Sprintf("%s", scopeID))
@@ -161,7 +161,7 @@ func TestScopeMetadataAddress(t *testing.T) {
 	// Ensure a second instance is equal to the first
 	scopeID2 := ScopeMetadataAddress(scopeUUID)
 	require.True(t, scopeID.Equals(scopeID2))
-	require.False(t, scopeID.Equals(ScopeMetadataAddress(groupUUID)))
+	require.False(t, scopeID.Equals(ScopeMetadataAddress(sessionUUID)))
 
 	json, err := scopeID.MarshalJSON()
 	require.NoError(t, err)
@@ -180,39 +180,39 @@ func TestScopeMetadataAddress(t *testing.T) {
 	require.EqualValues(t, scopeID, jsonAddress)
 }
 
-func TestGroupMetadataAddress(t *testing.T) {
-	// Construct a composite key for a group within a scope
-	groupAddress := GroupMetadataAddress(scopeUUID, groupUUID)
-	require.NoError(t, groupAddress.Validate(), "expect a valid MetadataAddress for a group")
-	require.True(t, groupAddress.IsGroupAddress())
+func TestSessionMetadataAddress(t *testing.T) {
+	// Construct a composite key for a session within a scope
+	sessionAddress := SessionMetadataAddress(scopeUUID, sessionUUID)
+	require.NoError(t, sessionAddress.Validate(), "expect a valid MetadataAddress for a session")
+	require.True(t, sessionAddress.IsSessionAddress())
 
-	scopeUUID, err := groupAddress.ScopeUUID()
-	require.NoError(t, err, "there should be no errors getting a scope uuid from the group address")
+	scopeUUID, err := sessionAddress.ScopeUUID()
+	require.NoError(t, err, "there should be no errors getting a scope uuid from the session address")
 	require.Equal(t, "8d80b25a-c089-4446-956e-5d08cfe3e1a5", scopeUUID.String())
 
-	groupUUID, err := groupAddress.GroupUUID()
-	require.NoError(t, err, "there should be no error getting the group uuid from the group address")
-	require.Equal(t, "c25c7bd4-c639-4367-a842-f64fa5fccc19", groupUUID.String(), "the group uuid should be recoverable")
+	sessionUUID, err := sessionAddress.SessionUUID()
+	require.NoError(t, err, "there should be no error getting the session uuid from the session address")
+	require.Equal(t, "c25c7bd4-c639-4367-a842-f64fa5fccc19", sessionUUID.String(), "the session uuid should be recoverable")
 
-	require.Equal(t, groupBech32, groupAddress.String())
+	require.Equal(t, sessionBech32, sessionAddress.String())
 
-	json, err := groupAddress.MarshalJSON()
+	json, err := sessionAddress.MarshalJSON()
 	require.NoError(t, err)
-	require.Equal(t, fmt.Sprintf("\"%s\"", groupBech32), string(json))
+	require.Equal(t, fmt.Sprintf("\"%s\"", sessionBech32), string(json))
 
-	yaml, err := groupAddress.MarshalYAML()
+	yaml, err := sessionAddress.MarshalYAML()
 	require.NoError(t, err)
-	require.Equal(t, groupBech32, yaml)
+	require.Equal(t, sessionBech32, yaml)
 
 	var yamlAddress MetadataAddress
 	require.True(t, yamlAddress.Empty())
 	yamlAddress.UnmarshalYAML([]byte(yaml.(string)))
-	require.EqualValues(t, groupAddress, yamlAddress)
+	require.EqualValues(t, sessionAddress, yamlAddress)
 
 	var jsonAddress MetadataAddress
 	require.True(t, jsonAddress.Empty())
 	jsonAddress.UnmarshalJSON(json)
-	require.EqualValues(t, groupAddress, jsonAddress)
+	require.EqualValues(t, sessionAddress, jsonAddress)
 }
 
 func TestRecordMetadataAddress(t *testing.T) {
@@ -240,7 +240,7 @@ func TestRecordSpecMetadataAddress(t *testing.T) {
 	require.True(t, recordSpecID.IsRecordSpecificationAddress(), "IsRecordAddress")
 	require.Equal(t, RecordSpecificationKeyPrefix, recordSpecID[0:1].Bytes(), "bytes[0]: the type bit")
 	require.Equal(t, contractSpecID[1:17], recordSpecID[1:17], "bytes[1:17]: the contract spec id bytes")
-	require.Equal(t, nameHash[:], recordSpecID[17:49].Bytes(), "bytes[17:49]: the hashed name")
+	require.Equal(t, nameHash[0:16], recordSpecID[17:33].Bytes(), "bytes[17:33]: the hashed name")
 
 	recordSpecBech32 := recordSpecID.String()
 	recordSpecIDFromBeck32, errBeck32 := MetadataAddressFromBech32(recordSpecBech32)

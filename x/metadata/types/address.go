@@ -19,8 +19,8 @@ import (
 const (
 	// PrefixScope is the address human readable prefix used with bech32 encoding of Scope IDs
 	PrefixScope = "scope"
-	// PrefixGroup is the address human readable prefix used with bech32 encoding of Group IDs
-	PrefixGroup = "group"
+	// PrefixSession is the address human readable prefix used with bech32 encoding of Session IDs
+	PrefixSession = "session"
 	// PrefixRecord is the address human readable prefix used with bech32 encoding of Record IDs
 	PrefixRecord = "record"
 
@@ -37,7 +37,7 @@ var (
 	_ sdk.Address = MetadataAddress{}
 	// All valid Metadata Address type prefixes.
 	allowedTypes = [][]byte{
-		ScopeKeyPrefix, GroupKeyPrefix, RecordKeyPrefix,
+		ScopeKeyPrefix, SessionKeyPrefix, RecordKeyPrefix,
 		ContractSpecificationKeyPrefix, ScopeSpecificationKeyPrefix, RecordSpecificationKeyPrefix,
 	}
 )
@@ -59,13 +59,13 @@ func VerifyMetadataAddressFormat(bz []byte) (string, error) {
 	case ScopeKeyPrefix[0]:
 		hrp = PrefixScope
 		requiredLength = 1 + 16 // type byte plus size of one uuid
-	case GroupKeyPrefix[0]:
-		hrp = PrefixGroup
+	case SessionKeyPrefix[0]:
+		hrp = PrefixSession
 		requiredLength = 1 + 16 + 16 // type byte plus size of two uuids
 		checkSecondaryUUID = true
 	case RecordKeyPrefix[0]:
 		hrp = PrefixRecord
-		requiredLength = 1 + 16 + 32 // type byte plus size of one uuid and one sha256 hash
+		requiredLength = 1 + 16 + 16 // type byte plus size of one uuid and one half sha256 hash
 
 	case ScopeSpecificationKeyPrefix[0]:
 		hrp = PrefixScopeSpecification
@@ -75,7 +75,7 @@ func VerifyMetadataAddressFormat(bz []byte) (string, error) {
 		requiredLength = 1 + 16 // type byte plus size of one uuid
 	case RecordSpecificationKeyPrefix[0]:
 		hrp = PrefixRecordSpecification
-		requiredLength = 1 + 16 + 32 // type byte plus size of one uuid plus one sha256 hash
+		requiredLength = 1 + 16 + 16 // type byte plus size of one uuid plus one-half sha256 hash
 
 	default:
 		return hrp, fmt.Errorf("invalid metadata address type: %d", bz[0])
@@ -155,14 +155,14 @@ func ScopeMetadataAddress(scopeUUID uuid.UUID) MetadataAddress {
 	return append(ScopeKeyPrefix, bz...)
 }
 
-// GroupMetadataAddress creates a MetadataAddress instance for a group within a scope by uuids
-func GroupMetadataAddress(scopeUUID uuid.UUID, groupUUID uuid.UUID) MetadataAddress {
+// SessionMetadataAddress creates a MetadataAddress instance for a session within a scope by uuids
+func SessionMetadataAddress(scopeUUID uuid.UUID, sessionUUID uuid.UUID) MetadataAddress {
 	bz, err := scopeUUID.MarshalBinary()
 	if err != nil {
 		panic(err)
 	}
-	addr := append(GroupKeyPrefix, bz...)
-	bz, err = groupUUID.MarshalBinary()
+	addr := append(SessionKeyPrefix, bz...)
+	bz, err = sessionUUID.MarshalBinary()
 	if err != nil {
 		panic(err)
 	}
@@ -181,7 +181,7 @@ func RecordMetadataAddress(scopeUUID uuid.UUID, name string) MetadataAddress {
 		panic("missing name value for record metadata address")
 	}
 	nameBytes := sha256.Sum256([]byte(name))
-	return append(addr, nameBytes[:]...)
+	return append(addr, nameBytes[0:16]...)
 }
 
 // ScopeSpecMetadataAddress creates a MetadataAddress instance for a scope specification
@@ -214,7 +214,7 @@ func RecordSpecMetadataAddress(contractSpecUUID uuid.UUID, name string) Metadata
 		panic("missing name value for record spec metadata address")
 	}
 	nameBytes := sha256.Sum256([]byte(name))
-	return append(addr, nameBytes[:]...)
+	return append(addr, nameBytes[0:16]...)
 }
 
 // Equals determines if the current MetadataAddress is equal to another sdk.Address
@@ -355,16 +355,16 @@ func (ma MetadataAddress) Compare(other MetadataAddress) int {
 
 // ScopeUUID returns the scope uuid component of a MetadataAddress (if appropriate)
 func (ma MetadataAddress) ScopeUUID() (uuid.UUID, error) {
-	if !ma.isTypeOneOf(ScopeKeyPrefix, GroupKeyPrefix, RecordKeyPrefix) {
+	if !ma.isTypeOneOf(ScopeKeyPrefix, SessionKeyPrefix, RecordKeyPrefix) {
 		return uuid.UUID{}, fmt.Errorf("this metadata address does not contain a scope uuid")
 	}
 	return ma.PrimaryUUID()
 }
 
-// GroupUUID returns the group uuid component of a MetadataAddress (if appropriate)
-func (ma MetadataAddress) GroupUUID() (uuid.UUID, error) {
-	if len(ma) > 0 && ma[0] != GroupKeyPrefix[0] {
-		return uuid.UUID{}, fmt.Errorf("this metadata address does not contain a group uuid")
+// SessionUUID returns the session uuid component of a MetadataAddress (if appropriate)
+func (ma MetadataAddress) SessionUUID() (uuid.UUID, error) {
+	if len(ma) > 0 && ma[0] != SessionKeyPrefix[0] {
+		return uuid.UUID{}, fmt.Errorf("this metadata address does not contain a session uuid")
 	}
 	return ma.SecondaryUUID()
 }
@@ -402,7 +402,7 @@ func (ma MetadataAddress) SecondaryUUID() (uuid.UUID, error) {
 		return uuid.UUID{}, fmt.Errorf("address empty")
 	}
 	// if we don't know this type
-	if !ma.isTypeOneOf(GroupKeyPrefix) {
+	if !ma.isTypeOneOf(SessionKeyPrefix) {
 		return uuid.UUID{}, fmt.Errorf("invalid address type out of valid range (got: %d)", ma[0])
 	}
 	if len(ma) < 33 {
@@ -447,17 +447,17 @@ func (ma MetadataAddress) GetRecordSpecAddress(name string) MetadataAddress {
 	return RecordSpecMetadataAddress(contractSpecUUID, name)
 }
 
-// ScopeGroupIteratorPrefix returns an iterator prefix that finds all Groups assigned to the metadata address scope
-// if the current address is empty then returns a prefix to iterate through all groups
-func (ma MetadataAddress) ScopeGroupIteratorPrefix() ([]byte, error) {
+// ScopeSessionIteratorPrefix returns an iterator prefix that finds all Sessions assigned to the metadata address scope
+// if the current address is empty then returns a prefix to iterate through all sessions
+func (ma MetadataAddress) ScopeSessionIteratorPrefix() ([]byte, error) {
 	if len(ma) < 1 {
-		return GroupKeyPrefix, nil
+		return SessionKeyPrefix, nil
 	}
 	// if we don't know this type
-	if !ma.isTypeOneOf(ScopeKeyPrefix, GroupKeyPrefix, RecordKeyPrefix) {
+	if !ma.isTypeOneOf(ScopeKeyPrefix, SessionKeyPrefix, RecordKeyPrefix) {
 		return []byte{}, fmt.Errorf("this metadata address does not contain a scope uuid")
 	}
-	return append(GroupKeyPrefix, ma[1:17]...), nil
+	return append(SessionKeyPrefix, ma[1:17]...), nil
 }
 
 // ScopeRecordIteratorPrefix returns an iterator prefix that finds all Records assigned to the metadata address scope
@@ -467,7 +467,7 @@ func (ma MetadataAddress) ScopeRecordIteratorPrefix() ([]byte, error) {
 		return RecordKeyPrefix, nil
 	}
 	// if we don't know this type
-	if !ma.isTypeOneOf(ScopeKeyPrefix, GroupKeyPrefix, RecordKeyPrefix) {
+	if !ma.isTypeOneOf(ScopeKeyPrefix, SessionKeyPrefix, RecordKeyPrefix) {
 		return []byte{}, fmt.Errorf("this metadata address does not contain a scope uuid")
 	}
 	return append(RecordKeyPrefix, ma[1:17]...), nil
@@ -504,10 +504,10 @@ func (ma MetadataAddress) IsScopeAddress() bool {
 	return (err == nil && hrp == PrefixScope)
 }
 
-// IsGroupAddress returns true is the address is valid and matches this type
-func (ma MetadataAddress) IsGroupAddress() bool {
+// IsSessionAddress returns true is the address is valid and matches this type
+func (ma MetadataAddress) IsSessionAddress() bool {
 	hrp, err := VerifyMetadataAddressFormat(ma)
-	return (err == nil && hrp == PrefixGroup)
+	return (err == nil && hrp == PrefixSession)
 }
 
 // IsRecordAddress returns true is the address is valid and matches this type

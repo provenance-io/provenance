@@ -34,6 +34,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+* Truncate hashes used in metadata addresses for Record, Record Specification #132
+* Add support for creating, updating, removing, finding, and iterating over `Session`s #55
+
 ## [v0.1.10](https://github.com/provenance-io/provenance/releases/tag/v0.1.10) - 2021-03-04
 
 ### Bug fixes
@@ -64,7 +67,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * Add metadata module to the IAVL store during upgrade
-
 
 ## [v0.1.5](https://github.com/provenance-io/provenance/releases/tag/v0.1.5) - 2021-03-02
 

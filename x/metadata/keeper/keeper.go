@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -26,12 +28,12 @@ type MetadataKeeperI interface {
 	// IterateScopes processes all stored scopes with the given handler.
 	IterateScopes(sdk.Context, func(types.Scope) bool) error
 
-	// GetRecordGroup returns the scope with the given address.
-	GetRecordGroup(sdk.Context, types.MetadataAddress) (types.RecordGroup, bool)
-	// SetRecordGroup persists the provided scope
-	SetRecordGroup(sdk.Context, types.RecordGroup)
-	// RemoveRecordGroup persists the provided scope
-	RemoveRecordGroup(sdk.Context, types.MetadataAddress)
+	// GetSession returns the scope with the given address.
+	GetSession(sdk.Context, types.MetadataAddress) (types.Session, bool)
+	// SetSession persists the provided scope
+	SetSession(sdk.Context, types.Session)
+	// RemoveSession persists the provided scope
+	RemoveSession(sdk.Context, types.MetadataAddress)
 
 	// GetRecord returns the record with the given address.
 	GetRecord(sdk.Context, types.MetadataAddress) (types.Record, bool)
@@ -117,5 +119,53 @@ func (k Keeper) CreateAccountForKey(ctx sdk.Context, addr sdk.AccAddress, pubKey
 		}
 	}
 	k.authKeeper.SetAccount(ctx, account)
+	return nil
+}
+
+// ValidateAllOwnersAreSigners makes sure that all entries in the existingOwners list are contained in the signers list.
+func (k Keeper) ValidateAllOwnersAreSigners(existingOwners []string, signers []string) error {
+	for _, owner := range existingOwners {
+		found := false
+		for _, signer := range signers {
+			if owner == signer {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("missing signature from existing owner %s; required for update", owner)
+		}
+	}
+	return nil
+}
+
+// ValidateRequiredSignatures validate all owners are signers
+func (k Keeper) ValidateRequiredSignatures(owners []types.Party, signers []string) error {
+	// Validate any changes to the ValueOwner property.
+	requiredSignatures := []string{}
+	for _, p := range owners {
+		requiredSignatures = append(requiredSignatures, p.Address)
+	}
+
+	if err := k.ValidateAllOwnersAreSigners(requiredSignatures, signers); err != nil {
+		return err
+	}
+	return nil
+}
+
+// ValidatePartiesInvolved validate that all required parties are involved
+func (k Keeper) ValidatePartiesInvolved(parties []types.Party, requiredParties []types.PartyType) error {
+	for _, pi := range requiredParties {
+		found := false
+		for _, p := range parties {
+			if p.Role.String() == pi.String() {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("missing party type from required parties %s", pi.String())
+		}
+	}
 	return nil
 }
