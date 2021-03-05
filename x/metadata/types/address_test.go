@@ -22,7 +22,7 @@ var (
 	scopeHex      = "008D80B25AC0894446956E5D08CFE3E1A5"
 	scopeBech32   = "scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp"
 	sessionBech32 = "session1qxxcpvj6czy5g354dews3nlruxjuyhrm6nrrjsm84pp0vna9lnxpjewp6kf"
-	recordBech32  = "record1q2xcpvj6czy5g354dews3nlruxjelpkssxyyclt9ngh74gx9ttgptgalfudjkzuz9ng46mq4krcq5zqsttnk0"
+	recordBech32  = "record1q2xcpvj6czy5g354dews3nlruxjelpkssxyyclt9ngh74gx9ttgp27gt8kl"
 )
 
 func TestLegacySha512HashToAddress(t *testing.T) {
@@ -240,7 +240,7 @@ func TestRecordSpecMetadataAddress(t *testing.T) {
 	require.True(t, recordSpecID.IsRecordSpecificationAddress(), "IsRecordAddress")
 	require.Equal(t, RecordSpecificationKeyPrefix, recordSpecID[0:1].Bytes(), "bytes[0]: the type bit")
 	require.Equal(t, contractSpecID[1:17], recordSpecID[1:17], "bytes[1:17]: the contract spec id bytes")
-	require.Equal(t, nameHash[:], recordSpecID[17:49].Bytes(), "bytes[17:49]: the hashed name")
+	require.Equal(t, nameHash[0:16], recordSpecID[17:33].Bytes(), "bytes[17:33]: the hashed name")
 
 	recordSpecBech32 := recordSpecID.String()
 	recordSpecIDFromBeck32, errBeck32 := MetadataAddressFromBech32(recordSpecBech32)
