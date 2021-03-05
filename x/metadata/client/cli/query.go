@@ -104,8 +104,8 @@ $ %s query metadata scope 123e4567-e89b-12d3-a456-426614174000
 // GetMetadataScopeCmd returns the command handler for metadata scope querying.
 func GetOSLocatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "locator [name]",
-		Short: "Query the OS locator for the given name",
+		Use:   "locator [owner]",
+		Short: "Query the OS locator uri for the given owner",
 		Args:  cobra.ExactArgs(1),
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query the OS locator records for the name provided:
@@ -120,15 +120,15 @@ $ %s query metadata locator foocorp
 				return err
 			}
 
-			scopeUUID := strings.ToLower(strings.TrimSpace(args[0]))
+			owner := strings.ToLower(strings.TrimSpace(args[0]))
 
-			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.Scope(context.Background(), &types.ScopeRequest{ScopeId: scopeUUID})
+			queryClient := types.NewQueryOSClient(clientCtx)
+			res, err := queryClient.OSLocation(context.Background(), &types.OSLocatorRequest{Owner : owner})
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintProto(res.Scope)
+			return clientCtx.PrintProto(res.Locator)
 		},
 	}
 

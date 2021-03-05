@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"github.com/tendermint/tendermint/crypto"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -131,6 +132,43 @@ func RemoveMetadataScopeCmd() *cobra.Command {
 			}
 
 			deleteScope := *types.NewMsgRemoveScopeRequest(scopeMetaAddress, signers)
+			if err := deleteScope.ValidateBasic(); err != nil {
+				fmt.Printf("Failed to validate remove scope %s : %v", deleteScope.String(), err)
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &deleteScope)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+
+// RemoveMetadataScopeCmd creates a command for removing a scope.
+func AddOsLocatorCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "add-locator [owner] [uri]",
+		Short: "Add a uri to an owner address on the provenance blockchain",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			if address, err := sdk.AccAddressFromBech32(args[0]); err != nil {
+				fmt.Printf("failed to add locator for a given owner address, invalid address: %s\n", args[0])
+				return fmt.Errorf("invalid address: %w", err)
+			}
+			if err != nil {
+				fmt.Printf("Invalid uuid for scope id: %s", args[0])
+				return err
+			}
+
+			deleteScope := *types.NewLo(scopeMetaAddress, signers)
 			if err := deleteScope.ValidateBasic(); err != nil {
 				fmt.Printf("Failed to validate remove scope %s : %v", deleteScope.String(), err)
 				return err

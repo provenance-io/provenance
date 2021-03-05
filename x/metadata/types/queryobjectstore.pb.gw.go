@@ -62,15 +62,15 @@ func request_QueryOS_OSLocation_0(ctx context.Context, marshaler runtime.Marshal
 		_   = err
 	)
 
-	val, ok = pathParams["name"]
+	val, ok = pathParams["owner"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "owner")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Owner, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "owner", err)
 	}
 
 	msg, err := client.OSLocation(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -89,15 +89,15 @@ func local_request_QueryOS_OSLocation_0(ctx context.Context, marshaler runtime.M
 		_   = err
 	)
 
-	val, ok = pathParams["name"]
+	val, ok = pathParams["owner"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "owner")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Owner, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "owner", err)
 	}
 
 	msg, err := server.OSLocation(ctx, &protoReq)
@@ -244,7 +244,7 @@ func RegisterQueryOSHandlerClient(ctx context.Context, mux *runtime.ServeMux, cl
 var (
 	pattern_QueryOS_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"provenance", "metadata", "v1", "locator", "params"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_QueryOS_OSLocation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"provenance", "metadata", "v1", "locator", "name"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_QueryOS_OSLocation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"provenance", "metadata", "v1", "locator", "owner"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
