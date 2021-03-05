@@ -27,6 +27,8 @@ func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 			return queryParams(ctx, k, legacyQuerierCdc)
 		case types.QueryScopeSpec:
 			return queryScopeSpecification(ctx, path, k, legacyQuerierCdc)
+		// TODO: add contract spec stuff
+		// TODO: add record spec stuff
 
 		default:
 			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown query endpoint")
@@ -36,12 +38,12 @@ func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 
 // Query for a scope by UUID.
 func queryScope(ctx sdk.Context, path []string, _ abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
-	scopeID, err := uuid.Parse(strings.TrimSpace(path[1]))
+	scopeUUID, err := uuid.Parse(strings.TrimSpace(path[1]))
 	if err != nil {
 		ctx.Logger().Error(err.Error())
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
-	scope, found := k.GetScope(ctx, types.ScopeMetadataAddress(scopeID))
+	scope, found := k.GetScope(ctx, types.ScopeMetadataAddress(scopeUUID))
 	if !found {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, "scope does not exist")
 	}
@@ -114,18 +116,18 @@ func queryParams(ctx sdk.Context, k Keeper, legacyQuerierCdc *codec.LegacyAmino)
 
 // query for a scope specification by specification id
 func queryScopeSpecification(ctx sdk.Context, path []string, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
-	specificationID, err := uuid.Parse(strings.TrimSpace(path[1]))
+	specificationUUID, err := uuid.Parse(strings.TrimSpace(path[1]))
 	if err != nil {
 		ctx.Logger().Error(err.Error())
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
-	scopeSpec, found := k.GetScopeSpecification(ctx, types.ScopeMetadataAddress(specificationID))
+	scopeSpec, found := k.GetScopeSpecification(ctx, types.ScopeMetadataAddress(specificationUUID))
 	if !found {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, fmt.Sprintf("scope specification [%s] does not exist", specificationID))
+		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, fmt.Sprintf("scope specification uuid [%s] does not exist", specificationUUID))
 	}
 	res, err := legacyQuerierCdc.MarshalJSON(types.NewQueryResScopeSpec(scopeSpec))
 	if err != nil {
-		ctx.Logger().Error("unable to marshal scope spec to JSON", "specificationID", specificationID, "err", err)
+		ctx.Logger().Error("unable to marshal scope spec to JSON", "specificationUUID", specificationUUID, "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
 	return res, nil

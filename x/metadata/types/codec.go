@@ -13,11 +13,15 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgMemorializeContractRequest{}, "provenance/metadata/MemorializeContractRequest", nil)
 	cdc.RegisterConcrete(&MsgChangeOwnershipRequest{}, "provenance/metadata/ChangeOwnershipRequest", nil)
 	cdc.RegisterConcrete(&MsgAddScopeRequest{}, "provenance/metadata/AddScopeRequest", nil)
-	cdc.RegisterConcrete(&MsgAddRecordGroupRequest{}, "provenance/metadata/AddRecordGroupRequest", nil)
+	cdc.RegisterConcrete(&MsgDeleteScopeRequest{}, "provenance/metadata/DeleteScopeRequest", nil)
+	cdc.RegisterConcrete(&MsgAddSessionRequest{}, "provenance/metadata/AddSessionRequest", nil)
 	cdc.RegisterConcrete(&MsgAddRecordRequest{}, "provenance/metadata/AddRecordRequest", nil)
 	cdc.RegisterConcrete(&MsgAddScopeSpecificationRequest{}, "provenance/metadata/AddScopeSpecificationRequest", nil)
-	cdc.RegisterConcrete(&MsgAddGroupSpecificationRequest{}, "provenance/metadata/AddGroupSpecificationRequest", nil)
-	cdc.RegisterConcrete(&MsgRemoveScopeRequest{}, "provenance/metadata/RemoveScopeRequest", nil)
+	cdc.RegisterConcrete(&MsgDeleteScopeSpecificationRequest{}, "provenance/metadata/DeleteScopeSpecificationRequest", nil)
+	cdc.RegisterConcrete(&MsgAddContractSpecificationRequest{}, "provenance/metadata/AddContractSpecificationRequest", nil)
+	cdc.RegisterConcrete(&MsgDeleteContractSpecificationRequest{}, "provenance/metadata/DeleteContractSpecificationRequest", nil)
+	cdc.RegisterConcrete(&MsgAddRecordSpecificationRequest{}, "provenance/metadata/AddRecordSpecificationRequest", nil)
+	cdc.RegisterConcrete(&MsgDeleteRecordSpecificationRequest{}, "provenance/metadata/DeleteRecordSpecificationRequest", nil)
 }
 
 // RegisterInterfaces registers implementations for the tx messages
@@ -26,11 +30,15 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgMemorializeContractRequest{},
 		&MsgChangeOwnershipRequest{},
 		&MsgAddScopeRequest{},
-		&MsgAddRecordGroupRequest{},
+		&MsgDeleteScopeRequest{},
+		&MsgAddSessionRequest{},
 		&MsgAddRecordRequest{},
 		&MsgAddScopeSpecificationRequest{},
-		&MsgAddGroupSpecificationRequest{},
-		&MsgRemoveScopeRequest{},
+		&MsgDeleteScopeSpecificationRequest{},
+		&MsgAddContractSpecificationRequest{},
+		&MsgDeleteContractSpecificationRequest{},
+		&MsgAddRecordSpecificationRequest{},
+		&MsgDeleteRecordSpecificationRequest{},
 	)
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }

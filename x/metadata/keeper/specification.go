@@ -7,35 +7,361 @@ import (
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
-// GetGroupSpecification returns the record with the given id.
-func (k Keeper) GetGroupSpecification(ctx sdk.Context, id types.MetadataAddress) (spec types.GroupSpecification, found bool) {
-	if !id.IsGroupSpecificationAddress() {
+// IterateRecordSpecs processes all record specs using a given handler.
+func (k Keeper) IterateRecordSpecs(ctx sdk.Context, handler func(specification types.RecordSpecification) (stop bool)) error {
+	store := ctx.KVStore(k.storeKey)
+	it := sdk.KVStorePrefixIterator(store, types.RecordSpecificationKeyPrefix)
+	defer it.Close()
+	for ; it.Valid(); it.Next() {
+		var recordSpec types.RecordSpecification
+		err := k.cdc.UnmarshalBinaryBare(it.Value(), &recordSpec)
+		if err != nil {
+			return err
+		}
+		if handler(recordSpec) {
+			break
+		}
+	}
+	return nil
+}
+
+// IterateRecordSpecsForOwner processes all record specs owned by an address using a given handler.
+func (k Keeper) IterateRecordSpecsForOwner(ctx sdk.Context, ownerAddress sdk.AccAddress, handler func(recordSpecID types.MetadataAddress) (stop bool)) error {
+	var recordItErr error = nil
+	contractItErr := k.IterateContractSpecsForOwner(ctx, ownerAddress, func(contractSpecID types.MetadataAddress) bool {
+		needToStop := false
+		recordItErr = k.IterateRecordSpecsForContractSpec(ctx, contractSpecID, func(recordSpecID types.MetadataAddress) bool {
+			needToStop = handler(recordSpecID)
+			return needToStop
+		})
+		if recordItErr != nil {
+			return true
+		}
+		return needToStop
+	})
+	if recordItErr != nil {
+		return recordItErr
+	}
+	if contractItErr != nil {
+		return contractItErr
+	}
+	return nil
+}
+
+// IterateRecordSpecsForContractSpec processes all record specs for a contract spec using a given handler.
+func (k Keeper) IterateRecordSpecsForContractSpec(ctx sdk.Context, contractSpecID types.MetadataAddress, handler func(recordSpecID types.MetadataAddress) (stop bool)) error {
+	store := ctx.KVStore(k.storeKey)
+	prefix, err := contractSpecID.ContractSpecRecordSpecIteratorPrefix()
+	if err != nil {
+		return err
+	}
+	it := sdk.KVStorePrefixIterator(store, prefix)
+	defer it.Close()
+	for ; it.Valid(); it.Next() {
+		var recordSpecID types.MetadataAddress
+		if err := recordSpecID.Unmarshal(it.Key()); err != nil {
+			return err
+		}
+		if handler(recordSpecID) {
+			break
+		}
+	}
+	return nil
+}
+
+// GetRecordSpecificationsForContractSpecificationID returns all the record specifications associated with given contractSpecID
+func (k Keeper) GetRecordSpecificationsForContractSpecificationID(ctx sdk.Context, contractSpecID types.MetadataAddress) ([]*types.RecordSpecification, error) {
+	retval := []*types.RecordSpecification{}
+	err := k.IterateRecordSpecsForContractSpec(ctx, contractSpecID, func(recordSpecID types.MetadataAddress) bool {
+		recordSpec, found := k.GetRecordSpecification(ctx, recordSpecID)
+		if found {
+			retval = append(retval, &recordSpec)
+		} else {
+			k.Logger(ctx).Error(fmt.Sprintf("iterator found record spec id %s but no record spec was found with that id", recordSpecID))
+		}
+		return false
+	})
+	return retval, err
+}
+
+// GetRecordSpecification returns the record spec with the given id.
+func (k Keeper) GetRecordSpecification(ctx sdk.Context, recordSpecID types.MetadataAddress) (spec types.RecordSpecification, found bool) {
+	if !recordSpecID.IsRecordSpecificationAddress() {
 		return spec, false
 	}
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(id)
+	b := store.Get(recordSpecID)
 	if b == nil {
-		return types.GroupSpecification{}, false
+		return types.RecordSpecification{}, false
 	}
 	k.cdc.MustUnmarshalBinaryBare(b, &spec)
 	return spec, true
 }
 
-// SetGroupSpecification stores a group specification in the module kv store.
-func (k Keeper) SetGroupSpecification(ctx sdk.Context, spec types.GroupSpecification) {
+// SetRecordSpecification stores a record specification in the module kv store.
+func (k Keeper) SetRecordSpecification(ctx sdk.Context, spec types.RecordSpecification) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryBare(&spec)
+
+	eventType := types.EventTypeRecordSpecificationCreated
+	if store.Has(spec.SpecificationId) {
+		if oldBytes := store.Get(spec.SpecificationId); oldBytes != nil {
+			var oldSpec types.RecordSpecification
+			if err := k.cdc.UnmarshalBinaryBare(oldBytes, &oldSpec); err == nil {
+				eventType = types.EventTypeRecordSpecificationUpdated
+			}
+		}
+	}
+
 	store.Set(spec.SpecificationId, b)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			eventType,
+			sdk.NewAttribute(types.AttributeKeyRecordSpecID, spec.SpecificationId.String()),
+			sdk.NewAttribute(types.AttributeKeyRecordSpec, spec.String()),
+		),
+	)
+}
+
+// RemoveRecordSpecification removes a record specification from the module kv store.
+func (k Keeper) RemoveRecordSpecification(ctx sdk.Context, recordSpecID types.MetadataAddress) error {
+	if k.isRecordSpecUsed(ctx, recordSpecID) {
+		return fmt.Errorf("record specification with id %s still in use", recordSpecID)
+	}
+
+	store := ctx.KVStore(k.storeKey)
+
+	recordSpec, found := k.GetRecordSpecification(ctx, recordSpecID)
+	if !found {
+		return fmt.Errorf("record specification with id %s not found", recordSpecID)
+	}
+
+	store.Delete(recordSpecID)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeRecordSpecificationRemoved,
+			sdk.NewAttribute(types.AttributeKeyRecordSpecID, recordSpec.SpecificationId.String()),
+			sdk.NewAttribute(types.AttributeKeyRecordSpec, recordSpec.String()),
+		),
+	)
+
+	return nil
+}
+
+// ValidateRecordSpecUpdate full validation of a proposed record spec possibly against an existing one.
+func (k Keeper) ValidateRecordSpecUpdate(ctx sdk.Context, existing *types.RecordSpecification, proposed types.RecordSpecification) error {
+	// Must pass basic validation.
+	if err := proposed.ValidateBasic(); err != nil {
+		return err
+	}
+
+	if existing != nil {
+		// IDs must match
+		if !proposed.SpecificationId.Equals(existing.SpecificationId) {
+			return fmt.Errorf("cannot update record spec identifier. expected %s, got %s",
+				existing.SpecificationId, proposed.SpecificationId)
+		}
+		// Names must match
+		if proposed.Name != existing.Name {
+			return fmt.Errorf("cannot update record spec name. expected %s, got %s",
+				existing.Name, proposed.Name)
+		}
+	}
+
+	return nil
+}
+
+func (k Keeper) isRecordSpecUsed(ctx sdk.Context, recordSpecID types.MetadataAddress) bool {
+	// TODO: Check for records created from this spec.
+	return false
+}
+
+// IterateContractSpecs processes all contract specs using a given handler.
+func (k Keeper) IterateContractSpecs(ctx sdk.Context, handler func(specification types.ContractSpecification) (stop bool)) error {
+	store := ctx.KVStore(k.storeKey)
+	it := sdk.KVStorePrefixIterator(store, types.ContractSpecificationKeyPrefix)
+	defer it.Close()
+	for ; it.Valid(); it.Next() {
+		var contractSpec types.ContractSpecification
+		err := k.cdc.UnmarshalBinaryBare(it.Value(), &contractSpec)
+		if err != nil {
+			return err
+		}
+		if handler(contractSpec) {
+			break
+		}
+	}
+	return nil
+}
+
+// IterateContractSpecsForOwner processes all contract specs owned by an address using a given handler.
+func (k Keeper) IterateContractSpecsForOwner(ctx sdk.Context, ownerAddress sdk.AccAddress, handler func(contractSpecID types.MetadataAddress) (stop bool)) error {
+	store := ctx.KVStore(k.storeKey)
+	prefix := types.GetAddressContractSpecCacheIteratorPrefix(ownerAddress)
+	it := sdk.KVStorePrefixIterator(store, prefix)
+	defer it.Close()
+	for ; it.Valid(); it.Next() {
+		var contractSpecID types.MetadataAddress
+		if err := contractSpecID.Unmarshal(it.Key()[len(prefix):]); err != nil {
+			return err
+		}
+		if handler(contractSpecID) {
+			break
+		}
+	}
+	return nil
+}
+
+// GetContractSpecification returns the contract spec with the given id.
+func (k Keeper) GetContractSpecification(ctx sdk.Context, contractSpecID types.MetadataAddress) (spec types.ContractSpecification, found bool) {
+	if !contractSpecID.IsContractSpecificationAddress() {
+		return spec, false
+	}
+	store := ctx.KVStore(k.storeKey)
+	b := store.Get(contractSpecID)
+	if b == nil {
+		return types.ContractSpecification{}, false
+	}
+	k.cdc.MustUnmarshalBinaryBare(b, &spec)
+	return spec, true
+}
+
+// SetContractSpecification stores a contract specification in the module kv store.
+func (k Keeper) SetContractSpecification(ctx sdk.Context, spec types.ContractSpecification) {
+	store := ctx.KVStore(k.storeKey)
+	b := k.cdc.MustMarshalBinaryBare(&spec)
+
+	eventType := types.EventTypeContractSpecificationCreated
+	if store.Has(spec.SpecificationId) {
+		if oldBytes := store.Get(spec.SpecificationId); oldBytes != nil {
+			var oldSpec types.ContractSpecification
+			if err := k.cdc.UnmarshalBinaryBare(oldBytes, &oldSpec); err == nil {
+				eventType = types.EventTypeContractSpecificationUpdated
+				k.clearContractSpecificationIndex(ctx, oldSpec)
+			}
+		}
+	}
+
+	store.Set(spec.SpecificationId, b)
+	k.indexContractSpecification(ctx, spec)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			eventType,
+			sdk.NewAttribute(types.AttributeKeyContractSpecID, spec.SpecificationId.String()),
+			sdk.NewAttribute(types.AttributeKeyContractSpec, spec.String()),
+		),
+	)
+}
+
+// RemoveContractSpecification removes a contract specification from the module kv store.
+func (k Keeper) RemoveContractSpecification(ctx sdk.Context, contractSpecID types.MetadataAddress) error {
+	if k.isContractSpecUsed(ctx, contractSpecID) {
+		return fmt.Errorf("contract specification with id %s still in use", contractSpecID)
+	}
+
+	store := ctx.KVStore(k.storeKey)
+
+	contractSpec, found := k.GetContractSpecification(ctx, contractSpecID)
+	if !found {
+		return fmt.Errorf("contract specification with id %s not found", contractSpecID)
+	}
+
+	k.clearContractSpecificationIndex(ctx, contractSpec)
+	store.Delete(contractSpecID)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeContractSpecificationRemoved,
+			sdk.NewAttribute(types.AttributeKeyContractSpecID, contractSpec.SpecificationId.String()),
+			sdk.NewAttribute(types.AttributeKeyContractSpec, contractSpec.String()),
+		),
+	)
+
+	return nil
+}
+
+// indexContractSpecification adds all desired indexes for a contract specification.
+func (k Keeper) indexContractSpecification(ctx sdk.Context, spec types.ContractSpecification) {
+	store := ctx.KVStore(k.storeKey)
+
+	// Index all the contract spec owner addresses
+	for _, a := range spec.OwnerAddresses {
+		addr, err := sdk.AccAddressFromBech32(a)
+		if err == nil {
+			store.Set(types.GetAddressContractSpecCacheKey(addr, spec.SpecificationId), []byte{0x01})
+		}
+	}
+}
+
+// clearContractSpecificationIndex removes all indexes for the given contract spec.
+// The provided contract spec must be one that is already stored (as opposed to a new one or updated version of one).
+func (k Keeper) clearContractSpecificationIndex(ctx sdk.Context, spec types.ContractSpecification) {
+	store := ctx.KVStore(k.storeKey)
+
+	// Delete all owner address + contract spec entries
+	for _, a := range spec.OwnerAddresses {
+		addr, err := sdk.AccAddressFromBech32(a)
+		if err == nil {
+			store.Delete(types.GetAddressContractSpecCacheKey(addr, spec.SpecificationId))
+		}
+	}
+}
+
+// isContractSpecUsed checks to see if a contract spec is referenced by anything else (e.g. scope spec or session)
+func (k Keeper) isContractSpecUsed(ctx sdk.Context, contractSpecID types.MetadataAddress) bool {
+	contractSpecReferenceFound := false
+	itScopeSpecErr := k.IterateScopeSpecsForContractSpec(ctx, contractSpecID, func(scopeID types.MetadataAddress) (stop bool) {
+		contractSpecReferenceFound = true
+		return true
+	})
+	// If there was an error, that indicates there was probably at least one entry to iterate over.
+	// So, to err on the side of caution, return true in that case.
+	if itScopeSpecErr != nil || contractSpecReferenceFound {
+		return true
+	}
+
+	// TODO: Look for sessions used by this contractSpecID.
+
+	// Look for a used record spec that is part of this contract spec
+	hasUsedRecordSpec := false
+	itRecSpecErr := k.IterateRecordSpecsForContractSpec(ctx, contractSpecID, func(recordSpecID types.MetadataAddress) bool {
+		hasUsedRecordSpec = k.isRecordSpecUsed(ctx, recordSpecID)
+		return hasUsedRecordSpec
+	})
+
+	return itRecSpecErr != nil || hasUsedRecordSpec
+}
+
+// ValidateContractSpecUpdate full validation of a proposed contract spec possibly against an existing one.
+func (k Keeper) ValidateContractSpecUpdate(ctx sdk.Context, existing *types.ContractSpecification, proposed types.ContractSpecification) error {
+	// IDS must match if there's an existing entry
+	if existing != nil && !proposed.SpecificationId.Equals(existing.SpecificationId) {
+		return fmt.Errorf("cannot update contract spec identifier. expected %s, got %s",
+			existing.SpecificationId, proposed.SpecificationId)
+	}
+
+	// Must pass basic validation.
+	if err := proposed.ValidateBasic(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // IterateScopeSpecs processes all scope specs using a given handler.
 func (k Keeper) IterateScopeSpecs(ctx sdk.Context, handler func(specification types.ScopeSpecification) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	it := sdk.KVStorePrefixIterator(store, types.ScopeSpecificationPrefix)
+	it := sdk.KVStorePrefixIterator(store, types.ScopeSpecificationKeyPrefix)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var scopeSpec types.ScopeSpecification
-		k.cdc.MustUnmarshalBinaryBare(it.Value(), &scopeSpec)
+		err := k.cdc.UnmarshalBinaryBare(it.Value(), &scopeSpec)
+		if err != nil {
+			return err
+		}
 		if handler(scopeSpec) {
 			break
 		}
@@ -43,10 +369,10 @@ func (k Keeper) IterateScopeSpecs(ctx sdk.Context, handler func(specification ty
 	return nil
 }
 
-// IterateScopeSpecsForAddress processes all scope specs associated with an address using a given handler.
-func (k Keeper) IterateScopeSpecsForAddress(ctx sdk.Context, address sdk.AccAddress, handler func(scopeSpecID types.MetadataAddress) (stop bool)) error {
+// IterateScopeSpecsForOwner processes all scope specs owned by an address using a given handler.
+func (k Keeper) IterateScopeSpecsForOwner(ctx sdk.Context, ownerAddress sdk.AccAddress, handler func(scopeSpecID types.MetadataAddress) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	prefix := types.GetAddressScopeSpecCacheIteratorPrefix(address)
+	prefix := types.GetAddressScopeSpecCacheIteratorPrefix(ownerAddress)
 	it := sdk.KVStorePrefixIterator(store, prefix)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
@@ -80,12 +406,12 @@ func (k Keeper) IterateScopeSpecsForContractSpec(ctx sdk.Context, contractSpecID
 }
 
 // GetScopeSpecification returns the record with the given id.
-func (k Keeper) GetScopeSpecification(ctx sdk.Context, id types.MetadataAddress) (spec types.ScopeSpecification, found bool) {
-	if !id.IsScopeSpecificationAddress() {
+func (k Keeper) GetScopeSpecification(ctx sdk.Context, scopeSpecID types.MetadataAddress) (spec types.ScopeSpecification, found bool) {
+	if !scopeSpecID.IsScopeSpecificationAddress() {
 		return spec, false
 	}
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(id)
+	b := store.Get(scopeSpecID)
 	if b == nil {
 		return types.ScopeSpecification{}, false
 	}
@@ -97,7 +423,6 @@ func (k Keeper) GetScopeSpecification(ctx sdk.Context, id types.MetadataAddress)
 func (k Keeper) SetScopeSpecification(ctx sdk.Context, spec types.ScopeSpecification) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryBare(&spec)
-	store.Set(spec.SpecificationId, b)
 
 	eventType := types.EventTypeScopeSpecificationCreated
 	if store.Has(spec.SpecificationId) {
@@ -122,18 +447,21 @@ func (k Keeper) SetScopeSpecification(ctx sdk.Context, spec types.ScopeSpecifica
 	)
 }
 
-// DeleteScopeSpecification deletes a scope specification from the module kv store.
-func (k Keeper) DeleteScopeSpecification(ctx sdk.Context, id types.MetadataAddress) {
+// RemoveScopeSpecification removes a scope specification from the module kv store.
+func (k Keeper) RemoveScopeSpecification(ctx sdk.Context, scopeSpecID types.MetadataAddress) error {
+	if k.isScopeSpecUsed(ctx, scopeSpecID) {
+		return fmt.Errorf("scope specification with id %s still in use", scopeSpecID)
+	}
+
 	store := ctx.KVStore(k.storeKey)
 
-	scopeSpec, found := k.GetScopeSpecification(ctx, id)
-	if !found || k.isScopeSpecUsed(ctx, id) {
-		return
+	scopeSpec, found := k.GetScopeSpecification(ctx, scopeSpecID)
+	if !found {
+		return fmt.Errorf("scope specification with id %s not found", scopeSpecID)
 	}
 
 	k.clearScopeSpecificationIndex(ctx, scopeSpec)
-
-	store.Delete(id)
+	store.Delete(scopeSpecID)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -142,73 +470,69 @@ func (k Keeper) DeleteScopeSpecification(ctx sdk.Context, id types.MetadataAddre
 			sdk.NewAttribute(types.AttributeKeyScopeSpec, scopeSpec.String()),
 		),
 	)
+
+	return nil
 }
 
 // indexScopeSpecification adds all desired indexes for a scope specification.
-func (k Keeper) indexScopeSpecification(ctx sdk.Context, scopeSpec types.ScopeSpecification) {
+func (k Keeper) indexScopeSpecification(ctx sdk.Context, spec types.ScopeSpecification) {
 	store := ctx.KVStore(k.storeKey)
 
 	// Index all the scope spec owner addresses
-	for _, a := range scopeSpec.OwnerAddresses {
+	for _, a := range spec.OwnerAddresses {
 		addr, err := sdk.AccAddressFromBech32(a)
 		if err == nil {
-			store.Set(types.GetAddressScopeSpecCacheKey(addr, scopeSpec.SpecificationId), []byte{0x01})
+			store.Set(types.GetAddressScopeSpecCacheKey(addr, spec.SpecificationId), []byte{0x01})
 		}
 	}
 
 	// Index all the contract spec ids
-	for _, contractSpecID := range scopeSpec.ContractSpecIds {
-		store.Set(types.GetContractSpecScopeSpecCacheKey(contractSpecID, scopeSpec.SpecificationId), []byte{0x01})
+	for _, contractSpecID := range spec.ContractSpecIds {
+		store.Set(types.GetContractSpecScopeSpecCacheKey(contractSpecID, spec.SpecificationId), []byte{0x01})
 	}
 }
 
 // clearScopeSpecificationIndex removes all indexes for the given scope spec.
 // The provided scope spec must be one that is already stored (as opposed to a new one or updated version of one).
-func (k Keeper) clearScopeSpecificationIndex(ctx sdk.Context, scopeSpec types.ScopeSpecification) {
+func (k Keeper) clearScopeSpecificationIndex(ctx sdk.Context, spec types.ScopeSpecification) {
 	store := ctx.KVStore(k.storeKey)
 
 	// Delete all owner address + scope spec entries
-	for _, a := range scopeSpec.OwnerAddresses {
+	for _, a := range spec.OwnerAddresses {
 		addr, err := sdk.AccAddressFromBech32(a)
 		if err == nil {
-			store.Delete(types.GetAddressScopeSpecCacheKey(addr, scopeSpec.SpecificationId))
+			store.Delete(types.GetAddressScopeSpecCacheKey(addr, spec.SpecificationId))
 		}
 	}
 
 	// Delete all contract spec + scope spec entries
-	for _, contractSpecID := range scopeSpec.ContractSpecIds {
-		store.Delete(types.GetContractSpecScopeSpecCacheKey(contractSpecID, scopeSpec.SpecificationId))
+	for _, contractSpecID := range spec.ContractSpecIds {
+		store.Delete(types.GetContractSpecScopeSpecCacheKey(contractSpecID, spec.SpecificationId))
 	}
 }
 
 // isScopeSpecUsed checks to see if a scope exists that is defined by this scope spec.
-func (k Keeper) isScopeSpecUsed(ctx sdk.Context, id types.MetadataAddress) bool {
+func (k Keeper) isScopeSpecUsed(ctx sdk.Context, scopeSpecID types.MetadataAddress) bool {
 	scopeSpecReferenceFound := false
-	err := k.IterateScopesForScopeSpec(ctx, id, func(scopeID types.MetadataAddress) (stop bool) {
+	err := k.IterateScopesForScopeSpec(ctx, scopeSpecID, func(scopeID types.MetadataAddress) (stop bool) {
 		scopeSpecReferenceFound = true
 		return true
 	})
-	// If there was an error, that means there was an entry, so return true.
+	// If there was an error, that indicates there was probably at least one entry to iterate over.
+	// So, to err on the side of caution, return true in that case.
 	return err != nil || scopeSpecReferenceFound
 }
 
 // ValidateScopeSpecUpdate - full validation of a scope specification.
-func (k Keeper) ValidateScopeSpecUpdate(ctx sdk.Context, existing, proposed types.ScopeSpecification, signers []string) error {
-	// IDS must match
-	if len(existing.SpecificationId) > 0 {
-		if !proposed.SpecificationId.Equals(existing.SpecificationId) {
-			return fmt.Errorf("cannot update scope spec identifier. expected %s, got %s",
-				existing.SpecificationId, proposed.SpecificationId)
-		}
+func (k Keeper) ValidateScopeSpecUpdate(ctx sdk.Context, existing *types.ScopeSpecification, proposed types.ScopeSpecification) error {
+	// IDS must match if there's an existing entry
+	if existing != nil && !proposed.SpecificationId.Equals(existing.SpecificationId) {
+		return fmt.Errorf("cannot update scope spec identifier. expected %s, got %s",
+			existing.SpecificationId, proposed.SpecificationId)
 	}
 
 	// Must pass basic validation.
 	if err := proposed.ValidateBasic(); err != nil {
-		return err
-	}
-
-	// Signatures required of all existing data owners.
-	if err := k.ValidateScopeSpecAllOwnersAreSigners(existing, signers); err != nil {
 		return err
 	}
 
@@ -222,22 +546,5 @@ func (k Keeper) ValidateScopeSpecUpdate(ctx sdk.Context, existing, proposed type
 		}
 	}
 
-	return nil
-}
-
-// ValidateScopeSpecAllOwnersAreSigners validates that all entries in the scopeSpec.OwnerAddresses list are contained in the provided signers list.
-func (k Keeper) ValidateScopeSpecAllOwnersAreSigners(scopeSpec types.ScopeSpecification, signers []string) error {
-	for _, owner := range scopeSpec.OwnerAddresses {
-		found := false
-		for _, signer := range signers {
-			if owner == signer {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return fmt.Errorf("missing signature from existing owner %s; required for update", owner)
-		}
-	}
 	return nil
 }

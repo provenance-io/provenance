@@ -50,12 +50,12 @@ func AddMetadataScopeCmd() *cobra.Command {
 
 			scopeUUID, err := uuid.Parse(args[0])
 			if err != nil {
-				fmt.Printf("Invalid uuid for scope id: %s", args[0])
+				fmt.Printf("Invalid uuid for scope uuid: %s", args[0])
 				return err
 			}
 			specUUID, err := uuid.Parse(args[1])
 			if err != nil {
-				fmt.Printf("Invalid uuid for specification id: %s", args[0])
+				fmt.Printf("Invalid uuid for specification uuid: %s", args[0])
 				return err
 			}
 
@@ -131,7 +131,7 @@ func RemoveMetadataScopeCmd() *cobra.Command {
 				}
 			}
 
-			deleteScope := *types.NewMsgRemoveScopeRequest(scopeMetaAddress, signers)
+			deleteScope := *types.NewMsgDeleteScopeRequest(scopeMetaAddress, signers)
 			if err := deleteScope.ValidateBasic(); err != nil {
 				fmt.Printf("Failed to validate remove scope %s : %v", deleteScope.String(), err)
 				return err

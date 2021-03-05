@@ -7,14 +7,14 @@ import (
 )
 
 func TestScopeKey(t *testing.T) {
-	var scopeKey, groupKey MetadataAddress
+	var scopeKey, sessionKey MetadataAddress
 	scopeKey = ScopeMetadataAddress(scopeUUID)
 
 	// A scope metadata address should have a matching key prefix
 	require.EqualValues(t, ScopeKeyPrefix, scopeKey[0:1])
 
-	groupKey = GroupMetadataAddress(scopeUUID, groupUUID)
+	sessionKey = SessionMetadataAddress(scopeUUID, sessionUUID)
 
-	// A group metadata address should have a matching key prefix
-	require.EqualValues(t, GroupKeyPrefix, groupKey[0:1])
+	// A session metadata address should have a matching key prefix
+	require.EqualValues(t, SessionKeyPrefix, sessionKey[0:1])
 }

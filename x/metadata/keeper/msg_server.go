@@ -60,114 +60,6 @@ func (k msgServer) ChangeOwnership(
 	return nil, fmt.Errorf("not implemented")
 }
 
-func (k msgServer) AddScopeSpecification(
-	goCtx context.Context,
-	msg *types.MsgAddScopeSpecificationRequest,
-) (*types.MsgAddScopeSpecificationResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	existing, _ := k.GetScopeSpecification(ctx, msg.Specification.SpecificationId)
-	if err := k.ValidateScopeSpecUpdate(ctx, existing, *msg.Specification, msg.Signers); err != nil {
-		return nil, err
-	}
-
-	k.SetScopeSpecification(ctx, *msg.Specification)
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
-		),
-	)
-
-	return &types.MsgAddScopeSpecificationResponse{}, nil
-}
-
-func (k msgServer) RemoveScopeSpecification(
-	goCtx context.Context,
-	msg *types.MsgRemoveScopeSpecificationRequest,
-) (*types.MsgRemoveScopeSpecificationResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	existing, found := k.GetScopeSpecification(ctx, msg.SpecificationId)
-	if !found {
-		return nil, fmt.Errorf("scope specification not found with id %s", msg.SpecificationId)
-	}
-	if err := k.ValidateScopeSpecAllOwnersAreSigners(existing, msg.Signers); err != nil {
-		return nil, err
-	}
-
-	k.DeleteScopeSpecification(ctx, msg.SpecificationId)
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
-		),
-	)
-
-	return &types.MsgRemoveScopeSpecificationResponse{}, nil
-}
-
-func (k msgServer) AddGroupSpecification(
-	goCtx context.Context,
-	msg *types.MsgAddGroupSpecificationRequest,
-) (*types.MsgAddGroupSpecificationResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	// TODO (contract keeper class  methods to process request, keeper methods to record it)
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, ""),
-		),
-	)
-
-	return nil, fmt.Errorf("not implemented")
-}
-
-func (k msgServer) AddRecord(
-	goCtx context.Context,
-	msg *types.MsgAddRecordRequest,
-) (*types.MsgAddRecordResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	// TODO (contract keeper class  methods to process request, keeper methods to record it)
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, ""),
-		),
-	)
-
-	return nil, fmt.Errorf("not implemented")
-}
-
-func (k msgServer) AddRecordGroup(
-	goCtx context.Context,
-	msg *types.MsgAddRecordGroupRequest,
-) (*types.MsgAddRecordGroupResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	// TODO (contract keeper class  methods to process request, keeper methods to record it)
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, ""),
-		),
-	)
-
-	return nil, fmt.Errorf("not implemented")
-}
-
 func (k msgServer) AddScope(
 	goCtx context.Context,
 	msg *types.MsgAddScopeRequest,
@@ -183,19 +75,19 @@ func (k msgServer) AddScope(
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			types.EventTypeScopeCreated,
-			sdk.NewAttribute(types.AttributeKeyScopeID, string(msg.Scope.ScopeId)),
-			sdk.NewAttribute(types.AttributeKeyScope, string(msg.Scope.SpecificationId)),
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
 		),
 	)
 
 	return &types.MsgAddScopeResponse{}, nil
 }
 
-func (k msgServer) RemoveScope(
+func (k msgServer) DeleteScope(
 	goCtx context.Context,
-	msg *types.MsgRemoveScopeRequest,
-) (*types.MsgRemoveScopeResponse, error) {
+	msg *types.MsgDeleteScopeRequest,
+) (*types.MsgDeleteScopeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	existing, _ := k.GetScope(ctx, msg.ScopeId)
@@ -204,14 +96,309 @@ func (k msgServer) RemoveScope(
 		return nil, err
 	}
 
-	k.DeleteScope(ctx, msg.ScopeId)
+	k.RemoveScope(ctx, msg.ScopeId)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			types.EventTypeScopeRemoved,
+			sdk.EventTypeMessage,
 			sdk.NewAttribute(types.AttributeKeyScopeID, string(msg.ScopeId)),
 		),
 	)
 
-	return &types.MsgRemoveScopeResponse{}, nil
+	return &types.MsgDeleteScopeResponse{}, nil
+}
+
+func (k msgServer) AddSession(
+	goCtx context.Context,
+	msg *types.MsgAddSessionRequest,
+) (*types.MsgAddSessionResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	existing, _ := k.GetSession(ctx, msg.Session.SessionId)
+	if err := k.ValidateSessionUpdate(ctx, existing, *msg.Session, msg.Signers); err != nil {
+		return nil, err
+	}
+
+	k.SetSession(ctx, *msg.Session)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
+		),
+	)
+
+	return &types.MsgAddSessionResponse{}, nil
+}
+
+func (k msgServer) AddRecord(
+	goCtx context.Context,
+	msg *types.MsgAddRecordRequest,
+) (*types.MsgAddRecordResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	scopeUUID, err := msg.Record.SessionId.ScopeUUID()
+	if err != nil {
+		return nil, err
+	}
+
+	recordID := types.RecordMetadataAddress(scopeUUID, msg.Record.Name)
+
+	existing, _ := k.GetRecord(ctx, recordID)
+	if err := k.ValidateRecordUpdate(ctx, existing, *msg.Record, msg.Signers); err != nil {
+		return nil, err
+	}
+
+	k.SetRecord(ctx, *msg.Record)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
+		),
+	)
+
+	return &types.MsgAddRecordResponse{}, nil
+}
+
+func (k msgServer) DeleteRecord(
+	goCtx context.Context,
+	msg *types.MsgDeleteRecordRequest,
+) (*types.MsgDeleteRecordResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	existing, _ := k.GetRecord(ctx, msg.RecordId)
+	if err := k.ValidateRecordRemove(ctx, existing, msg.RecordId, msg.Signers); err != nil {
+		return nil, err
+	}
+
+	k.RemoveRecord(ctx, msg.RecordId)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
+		),
+	)
+
+	return &types.MsgDeleteRecordResponse{}, nil
+}
+
+func (k msgServer) AddScopeSpecification(
+	goCtx context.Context,
+	msg *types.MsgAddScopeSpecificationRequest,
+) (*types.MsgAddScopeSpecificationResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	var existing *types.ScopeSpecification = nil
+	if e, found := k.GetScopeSpecification(ctx, msg.Specification.SpecificationId); found {
+		existing = &e
+		if err := k.ValidateAllOwnersAreSigners(existing.OwnerAddresses, msg.Signers); err != nil {
+			return nil, err
+		}
+	}
+	if err := k.ValidateScopeSpecUpdate(ctx, existing, msg.Specification); err != nil {
+		return nil, err
+	}
+
+	k.SetScopeSpecification(ctx, msg.Specification)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
+		),
+	)
+
+	return &types.MsgAddScopeSpecificationResponse{}, nil
+}
+
+func (k msgServer) DeleteScopeSpecification(
+	goCtx context.Context,
+	msg *types.MsgDeleteScopeSpecificationRequest,
+) (*types.MsgDeleteScopeSpecificationResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	existing, found := k.GetScopeSpecification(ctx, msg.SpecificationId)
+	if !found {
+		return nil, fmt.Errorf("scope specification not found with id %s", msg.SpecificationId)
+	}
+	if err := k.ValidateAllOwnersAreSigners(existing.OwnerAddresses, msg.Signers); err != nil {
+		return nil, err
+	}
+
+	if err := k.RemoveScopeSpecification(ctx, msg.SpecificationId); err != nil {
+		return nil, fmt.Errorf("cannot delete scope specification with id %s: %w", msg.SpecificationId, err)
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
+		),
+	)
+
+	return &types.MsgDeleteScopeSpecificationResponse{}, nil
+}
+
+func (k msgServer) AddContractSpecification(
+	goCtx context.Context,
+	msg *types.MsgAddContractSpecificationRequest,
+) (*types.MsgAddContractSpecificationResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	var existing *types.ContractSpecification = nil
+	if e, found := k.GetContractSpecification(ctx, msg.Specification.SpecificationId); found {
+		existing = &e
+		if err := k.ValidateAllOwnersAreSigners(existing.OwnerAddresses, msg.Signers); err != nil {
+			return nil, err
+		}
+	}
+	if err := k.ValidateContractSpecUpdate(ctx, existing, msg.Specification); err != nil {
+		return nil, err
+	}
+
+	k.SetContractSpecification(ctx, msg.Specification)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
+		),
+	)
+
+	return &types.MsgAddContractSpecificationResponse{}, nil
+}
+
+func (k msgServer) DeleteContractSpecification(
+	goCtx context.Context,
+	msg *types.MsgDeleteContractSpecificationRequest,
+) (*types.MsgDeleteContractSpecificationResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	existing, found := k.GetContractSpecification(ctx, msg.SpecificationId)
+	if !found {
+		return nil, fmt.Errorf("contract specification not found with id %s", msg.SpecificationId)
+	}
+	if err := k.ValidateAllOwnersAreSigners(existing.OwnerAddresses, msg.Signers); err != nil {
+		return nil, err
+	}
+
+	// Remove all record specifications associated with this contract specification.
+	recSpecs, recSpecErr := k.GetRecordSpecificationsForContractSpecificationID(ctx, msg.SpecificationId)
+	if recSpecErr != nil {
+		return nil, fmt.Errorf("could not get record specifications to delete with contract specification with id %s: %w",
+			msg.SpecificationId, recSpecErr)
+	}
+	var delRecSpecErr error = nil
+	removedRecSpecs := []*types.RecordSpecification{}
+	for _, recSpec := range recSpecs {
+		if err := k.RemoveRecordSpecification(ctx, recSpec.SpecificationId); err != nil {
+			delRecSpecErr = fmt.Errorf("failed to delete record specification %s (name: %s) while trying to delete contract specification %d: %w",
+				recSpec.SpecificationId, recSpec.Name, msg.SpecificationId, err)
+			break
+		}
+		removedRecSpecs = append(removedRecSpecs, recSpec)
+	}
+	if delRecSpecErr != nil {
+		// Put the deleted record specifications back since not all of them could be deleted (and neither can this contract spec)
+		for _, recSpec := range removedRecSpecs {
+			k.SetRecordSpecification(ctx, *recSpec)
+		}
+		return nil, delRecSpecErr
+	}
+
+	// Remove the contract specification itself
+	if err := k.RemoveContractSpecification(ctx, msg.SpecificationId); err != nil {
+		return nil, fmt.Errorf("cannot delete contract specification with id %s: %w", msg.SpecificationId, err)
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
+		),
+	)
+
+	return &types.MsgDeleteContractSpecificationResponse{}, nil
+}
+
+func (k msgServer) AddRecordSpecification(
+	goCtx context.Context,
+	msg *types.MsgAddRecordSpecificationRequest,
+) (*types.MsgAddRecordSpecificationResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	contractSpecID := msg.Specification.SpecificationId.GetContractSpecAddress()
+	contractSpec, contractSpecFound := k.GetContractSpecification(ctx, contractSpecID)
+	if !contractSpecFound {
+		contractSpecUUID, _ := contractSpecID.ContractSpecUUID()
+		return nil, fmt.Errorf("contract specification not found with id %s (uuid %s) required for adding or updating record specification with id %s",
+			contractSpecID, contractSpecUUID, msg.Specification.SpecificationId)
+	}
+	if err := k.ValidateAllOwnersAreSigners(contractSpec.OwnerAddresses, msg.Signers); err != nil {
+		return nil, err
+	}
+
+	var existing *types.RecordSpecification = nil
+	if e, found := k.GetRecordSpecification(ctx, msg.Specification.SpecificationId); found {
+		existing = &e
+	}
+	if err := k.ValidateRecordSpecUpdate(ctx, existing, msg.Specification); err != nil {
+		return nil, err
+	}
+
+	k.SetRecordSpecification(ctx, msg.Specification)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
+		),
+	)
+
+	return &types.MsgAddRecordSpecificationResponse{}, nil
+}
+
+func (k msgServer) DeleteRecordSpecification(
+	goCtx context.Context,
+	msg *types.MsgDeleteRecordSpecificationRequest,
+) (*types.MsgDeleteRecordSpecificationResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	_, found := k.GetRecordSpecification(ctx, msg.SpecificationId)
+	if !found {
+		return nil, fmt.Errorf("record specification not found with id %s", msg.SpecificationId)
+	}
+	contractSpecID := msg.SpecificationId.GetContractSpecAddress()
+	contractSpec, contractSpecFound := k.GetContractSpecification(ctx, contractSpecID)
+	if !contractSpecFound {
+		return nil, fmt.Errorf("contract specification not found with id %s required for deleting record specification with id %s",
+			contractSpecID, msg.SpecificationId)
+	}
+	if err := k.ValidateAllOwnersAreSigners(contractSpec.OwnerAddresses, msg.Signers); err != nil {
+		return nil, err
+	}
+
+	if err := k.RemoveRecordSpecification(ctx, msg.SpecificationId); err != nil {
+		return nil, fmt.Errorf("cannot delete record specification with id %s: %w", msg.SpecificationId, err)
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
+		),
+	)
+
+	return &types.MsgDeleteRecordSpecificationResponse{}, nil
 }

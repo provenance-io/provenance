@@ -17,7 +17,7 @@ Overview
 
 The structures in this file are used to efficiently store the data for the metadata module.  The structure the core
 concept of the  Metadata module is a Scope that contains a list of Records/Facts.  Updates to scopes are performed
-in a session with details persisted in a RecordGroup.  Each record group contains a specification that details
+in a session with details persisted in a Session.  Each session contains a specification that details
 constraints on parties that must sign, inputs, and outputs that can be recorded.  Each Scope may contain a list of
 allowed specifications that may be used.
 
@@ -29,10 +29,10 @@ Data Structures
   A metadata scope contains a collection of records of data, each made up of a hash, data type, and ownership
   information that establishes provenance.
 
-  Record Groups
+  Sessions
 
   Typically multiple records will be established within a scope at the same time (see: Contract Memorialization).  A
-  Record Group contains context for the recording of these records linking a set of records into a common process/
+  Session contains context for the recording of these records linking a set of records into a common process/
   execution associated with a specification indicating allowed and required values.
 
   Record
@@ -45,22 +45,22 @@ KVStore State Data
 
 Iterators
 - Get All Scopes (<scope prefix>) []Scope
-- Get All RecordGroups (<group prefix>:<scope_id>) []RecordGroup
+- Get All Sessions (<session prefix>:<scope_id>) []Session
   * This method would be used to list all current session/transaction contexts with Records set on the scope
 - Get All Scope Records (<records prefix>:<scope_id>) : []Record
 
 
 Direct Access
 - Get Scope (<scope prefix>:<scope_id>) Scope
-- Get RecordGroup (<group prefix>:<scope_id>:<group_id>) : RecordGroup
+- Get Session (<session prefix>:<scope_id>:<session_id>) : Session
 - Get Record (<record prefix>:<scope_id>:<record_name_hash>) : Record
 
 
 Indexes (special kvstore records for efficient cross reference/queries)
-- Get RecordGroup Records - use filtered iterator over all scope records
+- Get Session Records - use filtered iterator over all scope records
 - Get all scopes for a party/address?
 - Get all scopes of a specific type (scope spec)?
-- Get all record groups of a specific specification type?
+- Get all sessions of a specific specification type?
 - Get all Records of a type?
 
 
@@ -83,7 +83,7 @@ message Scope {
     (gogoproto.moretags)   = "yaml:\"specification_id\""
   ];
   // These parties represent top level owners of the records within.  These parties must sign any requests that modify
-  // the data within the scope.  These addresses are in union with parties listed on the record groups.
+  // the data within the scope.  These addresses are in union with parties listed on the sessions.
   repeated Party owners = 3 [(gogoproto.nullable) = false];
   // Addessses in this list are authorized to recieve off-chain data associated with this scope.
   repeated string data_access = 4 [(gogoproto.moretags) = "yaml:\"data_access\""];
@@ -93,21 +93,21 @@ message Scope {
 }
 
 /*
-A RecordGroup is created for an execution context against a specific specification instance
+A Session is created for an execution context against a specific specification instance
 
-The context will have a specification and set of parties involved.  The RecordGroup may be updated several
+The context will have a specification and set of parties involved.  The Session may be updated several
 times so long as the parties listed are signers on the transaction.  NOTE: When there are no Records within a Scope
-that reference a RecordGroup it is removed.
+that reference a Session it is removed.
 */
-message RecordGroup {
+message Session {
   option (gogoproto.goproto_stringer) = false;
 
-  bytes group_id = 1 [
+  bytes session_id = 1 [
     (gogoproto.nullable)   = false,
     (gogoproto.customtype) = "MetadataAddress",
-    (gogoproto.moretags)   = "json:\"group_id\" yaml:\"group_id\""
+    (gogoproto.moretags)   = "json:\"session_id\" yaml:\"session_id\""
   ];
-  // unique id of the record groupd specification instance that was used to create this group.
+  // unique id of the contract specification that was used to create this session.
   bytes specification_id = 2 [
     (gogoproto.nullable)   = false,
     (gogoproto.customtype) = "MetadataAddress",
@@ -115,34 +115,35 @@ message RecordGroup {
   ];
   // Set of identities that signed this contract
   repeated Party parties = 3 [(gogoproto.nullable) = false];
-  // name to associate with this recordgroup execution context, typically classname
+  // name to associate with this session execution context, typically classname
   string name = 4 [(gogoproto.jsontag) = "type", (gogoproto.moretags) = "yaml:\"type\""];
   // Created by, updated by, timestamps, version number, and related info.
   AuditFields audit = 99 [(gogoproto.nullable) = false];
 }
 
-// A record (of fact) is attached to a group or each consideration output from a contract
+// A record (of fact) is attached to a session or each consideration output from a contract
 message Record {
   option (gogoproto.goproto_stringer) = false;
 
   // name/identifier for this record.  Value must be unique within the scope.  Also known as a Fact name
   string name = 1 [(gogoproto.jsontag) = "id", (gogoproto.moretags) = "yaml:\"id\""];
-  // id of the group context that was used to create this record (use with filtered kvprefix iterator)
-  bytes group_id = 2 [
+  // id of the session context that was used to create this record (use with filtered kvprefix iterator)
+  bytes session_id = 2 [
     (gogoproto.nullable)   = false,
     (gogoproto.customtype) = "MetadataAddress",
-    (gogoproto.moretags)   = "json:\"group_id\" yaml:\"group_id\""
+    (gogoproto.moretags)   = "json:\"session_id\" yaml:\"session_id\""
   ];
   // process contain information used to uniquely identify an execution on or off chain that generated this record
   Process process = 3 [(gogoproto.nullable) = false];
-  // inputs used with the process to acheieve the output on this record
+  // inputs used with the process to achieve the output on this record
   repeated RecordInput inputs = 4 [(gogoproto.nullable) = false];
   // output(s) is the results of executing the process on the given process indicated in this record
-  repeated RecordOutput output = 5 [(gogoproto.nullable) = false];
+  repeated RecordOutput outputs = 5 [(gogoproto.nullable) = false];
 }
 
 // Process contains information used to uniquely identify what was used to generate this record
 message Process {
+  option (gogoproto.goproto_stringer) = false;
   // unique identifier for this process
   oneof process_id {
     // the address of a smart contract used for this process
@@ -150,7 +151,7 @@ message Process {
     // the hash of an off-chain process used
     string hash = 2;
   }
-  // a name assocaited with the process (type_name, classname or smart contract common name)
+  // a name associated with the process (type_name, classname or smart contract common name)
   string name = 3;
   // method is a name or reference to a specific operation (method) within a class/contract that was invoked
   string method = 4;
@@ -159,7 +160,6 @@ message Process {
 // Tracks the inputs used to establish this record
 message RecordInput {
   option (gogoproto.goproto_stringer) = false;
-
   // Name value included to link back to the definition spec.
   string name = 1;
   // data source
@@ -188,6 +188,8 @@ enum RecordInputStatus {
 
 // RecordOutput encapsulates the output of a process recorded on chain
 message RecordOutput {
+  option (gogoproto.goproto_stringer) = false;
+
   // Hash of the data output that was output/generated for this record
   string hash = 1;
   // Status of the process execution associated with this output indicating success,failure, or pending

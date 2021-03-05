@@ -9,18 +9,20 @@ func (state GenesisState) Validate() error {
 func NewGenesisState(
 	params Params,
 	scopes []Scope,
-	groups []RecordGroup,
+	sessions []Session,
 	records []Record,
 	scopeSpecs []ScopeSpecification,
-	groupSpecs []GroupSpecification,
+	contracSpecs []ContractSpecification,
+	recordSpecs []RecordSpecification,
 ) *GenesisState {
 	return &GenesisState{
-		Params:              params,
-		Scopes:              scopes,
-		Groups:              groups,
-		Records:             records,
-		ScopeSpecifications: scopeSpecs,
-		GroupSpecifications: groupSpecs,
+		Params:                 params,
+		Scopes:                 scopes,
+		Sessions:               sessions,
+		Records:                records,
+		ScopeSpecifications:    scopeSpecs,
+		ContractSpecifications: contracSpecs,
+		RecordSpecifications:   recordSpecs,
 	}
 }
 

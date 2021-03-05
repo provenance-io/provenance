@@ -16,9 +16,9 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 			k.SetScope(ctx, s)
 		}
 	}
-	if data.Groups != nil {
-		for _, r := range data.Groups {
-			k.SetRecordGroup(ctx, r)
+	if data.Sessions != nil {
+		for _, r := range data.Sessions {
+			k.SetSession(ctx, r)
 		}
 	}
 	if data.Records != nil {
@@ -31,9 +31,14 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 			k.SetScopeSpecification(ctx, s)
 		}
 	}
-	if data.GroupSpecifications != nil {
-		for _, s := range data.GroupSpecifications {
-			k.SetGroupSpecification(ctx, s)
+	if data.ContractSpecifications != nil {
+		for _, s := range data.ContractSpecifications {
+			k.SetContractSpecification(ctx, s)
+		}
+	}
+	if data.RecordSpecifications != nil {
+		for _, s := range data.RecordSpecifications {
+			k.SetRecordSpecification(ctx, s)
 		}
 	}
 }
@@ -42,16 +47,19 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 	params := k.GetParams(ctx)
 	scopes := make([]types.Scope, 0)
-	groups := make([]types.RecordGroup, 0)
+	sessions := make([]types.Session, 0)
 	records := make([]types.Record, 0)
+	scopeSpecs := make([]types.ScopeSpecification, 0)
+	contractSpecs := make([]types.ContractSpecification, 0)
+	recordSpecs := make([]types.RecordSpecification, 0)
 
 	appendToScopes := func(scope types.Scope) bool {
 		scopes = append(scopes, scope)
 		return false
 	}
 
-	appendToGroups := func(group types.RecordGroup) bool {
-		groups = append(groups, group)
+	appendToSessions := func(session types.Session) bool {
+		sessions = append(sessions, session)
 		return false
 	}
 
@@ -60,16 +68,39 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 		return false
 	}
 
+	appendToScopeSpecs := func(scopeSpec types.ScopeSpecification) bool {
+		scopeSpecs = append(scopeSpecs, scopeSpec)
+		return false
+	}
+
+	appendToContractSpecs := func(contractSpec types.ContractSpecification) bool {
+		contractSpecs = append(contractSpecs, contractSpec)
+		return false
+	}
+
+	appendToRecordSpecs := func(recordSpec types.RecordSpecification) bool {
+		recordSpecs = append(recordSpecs, recordSpec)
+		return false
+	}
+
 	if err := k.IterateScopes(ctx, appendToScopes); err != nil {
 		panic(err)
 	}
-	if err := k.IterateGroups(ctx, types.MetadataAddress{}, appendToGroups); err != nil {
+	if err := k.IterateSessions(ctx, types.MetadataAddress{}, appendToSessions); err != nil {
 		panic(err)
 	}
 	if err := k.IterateRecords(ctx, types.MetadataAddress{}, appendToRecords); err != nil {
 		panic(err)
 	}
-	// TODO iterate over existing scope, group specifications and collect here for export
+	if err := k.IterateScopeSpecs(ctx, appendToScopeSpecs); err != nil {
+		panic(err)
+	}
+	if err := k.IterateContractSpecs(ctx, appendToContractSpecs); err != nil {
+		panic(err)
+	}
+	if err := k.IterateRecordSpecs(ctx, appendToRecordSpecs); err != nil {
+		panic(err)
+	}
 
-	return types.NewGenesisState(params, scopes, groups, records, []types.ScopeSpecification{}, []types.GroupSpecification{})
+	return types.NewGenesisState(params, scopes, sessions, records, scopeSpecs, contractSpecs, recordSpecs)
 }

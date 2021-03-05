@@ -22,17 +22,27 @@ service Query {
 
   // Scope returns a specific scope by id
   rpc Scope(ScopeRequest) returns (ScopeResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/scope/{scope_id}";
+    option (google.api.http).get = "/provenance/metadata/v1/scope/{scope_uuid}";
   }
 
-  // GroupContext returns a specific group context within a scope (or all groups)
-  rpc GroupContext(GroupContextRequest) returns (GroupContextResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/scope/{scope_id}/group/{group_id}";
+  // SessionContextByUUID returns a specific session context within a scope (or all sessions)
+  rpc SessionContextByUUID(SessionContextByUUIDRequest) returns (SessionContextByUUIDResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/scope/uuid/{scope_uuid}/session/{session_uuid}";
   }
 
-  // Record returns a collection of the records in a scope or a specific one by name
-  rpc Record(RecordRequest) returns (RecordResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/scope/{scope_id}/records/{name}";
+  // SessionContextByID returns a specific session context within a scope (or all sessions)
+  rpc SessionContextByID(SessionContextByIDRequest) returns (SessionContextByIDResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/scope/id/{scope_id}/session/{session_id}";
+  }
+
+  // RecordsByScopeUUID returns a collection of the records in a scope by scope uuid or a specific one by name
+  rpc RecordsByScopeUUID(RecordsByScopeUUIDRequest) returns (RecordsByScopeUUIDResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/scope/uuid/{scope_uuid}/records/{name}";
+  }
+
+  // RecordsByScopeID returns a collection of the records in a scope by scope bech32 id or a specific one by name
+  rpc RecordsByScopeID(RecordsByScopeIDRequest) returns (RecordsByScopeIDResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/scope/id/{scope_id}/records/{name}";
   }
 
   // Ownership returns a list of scope identifiers that list the given address as a data or value owner
@@ -45,9 +55,33 @@ service Query {
     option (google.api.http).get = "/provenance/metadata/v1/valueownership/{address}";
   }
 
-  // ScopeSpecification returns a scope specification for the given specification id
+  // ScopeSpecification returns a scope specification for the given specification uuid
   rpc ScopeSpecification(ScopeSpecificationRequest) returns (ScopeSpecificationResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/scopespec/{specification_id}";
+    option (google.api.http).get = "/provenance/metadata/v1/scopespec/{specification_uuid}";
+  }
+
+  // ContractSpecification returns a contract specification for the given specification uuid
+  rpc ContractSpecification(ContractSpecificationRequest) returns (ContractSpecificationResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/contractspec/{specification_uuid}";
+  }
+
+  // ContractSpecification returns a contract specification and record specifications for the given contract
+  // specification uuid
+  rpc ContractSpecificationExtended(ContractSpecificationExtendedRequest)
+      returns (ContractSpecificationExtendedResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/contractspec/{specification_uuid}/extended";
+  }
+
+  // RecordSpecificationsForContractSpecification returns the record specifications for the given contract specification
+  // uuid
+  rpc RecordSpecificationsForContractSpecification(RecordSpecificationsForContractSpecificationRequest)
+      returns (RecordSpecificationsForContractSpecificationResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/contractspec/{contract_specification_uuid}/recordspecs";
+  }
+
+  // RecordSpecification returns a record specification for the given specification uuid
+  rpc RecordSpecification(RecordSpecificationRequest) returns (RecordSpecificationResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/recordspec/{contract_specification_uuid}/{name}";
   }
 }
 
@@ -62,14 +96,14 @@ message QueryParamsResponse {
 
 // ScopeRequest is used for requesting a scope by id
 message ScopeRequest {
-  string scope_id = 1;
+  string scope_uuid = 1 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
 }
 
 // ScopeResponse is the response to a scope request.
 message ScopeResponse {
-  Scope                scope         = 1;
-  repeated RecordGroup record_groups = 2;
-  repeated Record      records       = 3;
+  Scope            scope    = 1;
+  repeated Session sessions = 2 [(gogoproto.moretags) = "yaml:\"sessions\""];
+  repeated Record  records  = 3;
 }
 
 // OwnershipRequest looks for all scope level resources associated with the given addrss
@@ -82,7 +116,7 @@ message OwnershipRequest {
 // OwnershipResponse is the reponse to the ownership request and includes a list of scope identifiers
 message OwnershipResponse {
   // A list of scope ids (uuid) associated with the given address.
-  repeated string scope_ids = 1;
+  repeated string scope_uuids = 1 [(gogoproto.moretags) = "yaml:\"scope_uuids\""];
 
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -98,45 +132,119 @@ message ValueOwnershipRequest {
 // ValueOwnershipResponse is the reponse to the Valueownership request and includes a list of scope identifiers
 message ValueOwnershipResponse {
   // A list of scope ids (uuid) associated with the given address.
-  repeated string scope_ids = 1;
+  repeated string scope_uuids = 1 [(gogoproto.moretags) = "yaml:\"scope_uuids\""];
 
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// GroupContextRequest returns the record groups for a given scope identifer or optionally a specific record group
-message GroupContextRequest {
-  string scope_id = 1;
-  string group_id = 2;
+// SessionContextByUUIDRequest returns the record sessions for a given scope identifer or optionally a specific record
+// session
+message SessionContextByUUIDRequest {
+  string scope_uuid   = 1 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
+  string session_uuid = 2 [(gogoproto.moretags) = "yaml:\"session_uuid\""];
 }
 
-// GroupContextResponse is the response to a GroupContextRequest
-message GroupContextResponse {
-  repeated RecordGroup groups = 1;
+// SessionContextByUUIDResponse is the response to a SessionContextByUUIDRequest
+message SessionContextByUUIDResponse {
+  string scope_id   = 1 [(gogoproto.moretags) = "yaml:\"scope_id\""];
+  string session_id = 2 [(gogoproto.moretags) = "yaml:\"session_id\""];
+
+  repeated Session sessions = 3;
 }
 
-// RecordRequest is a request for all of the records in a specific scope or a specific record if a name is given.
-message RecordRequest {
-  string scope_id = 1;
+// SessionContextByIDRequest returns the record sessions for a given scope identifer or optionally a specific record
+// session
+message SessionContextByIDRequest {
+  string scope_id   = 1 [(gogoproto.moretags) = "yaml:\"scope_id\""];
+  string session_id = 2 [(gogoproto.moretags) = "yaml:\"session_id\""];
+}
+
+// SessionContextByIDResponse is the response to a SessionContextByIDRequest
+message SessionContextByIDResponse {
+  string           scope_id   = 1 [(gogoproto.moretags) = "yaml:\"scope_id\""];
+  string           session_id = 2 [(gogoproto.moretags) = "yaml:\"session_id\""];
+  repeated Session sessions   = 3;
+}
+
+// RecordsByScopeUUIDRequest is a request for all of the records in a specific scope by uuid or a specific record if a
+// name is given.
+message RecordsByScopeUUIDRequest {
+  string scope_uuid = 1 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
+  string name       = 2;
+}
+
+// RecordsByScopeUUIDResponse is the response to a RecordsByScopeUUIDRequest
+message RecordsByScopeUUIDResponse {
+  string          scope_uuid = 1 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
+  string          scope_id   = 2 [(gogoproto.moretags) = "yaml:\"scope_id\""];
+  repeated Record records    = 3;
+}
+
+// RecordsByScopeIDRequest is a request for all of the records in a specific scope by bech32 id or a specific record if
+// a name is given.
+message RecordsByScopeIDRequest {
+  string scope_id = 1 [(gogoproto.moretags) = "yaml:\"scope_id\""];
   string name     = 2;
 }
 
-// RecordResponse is the response to a RecordRequest
-message RecordResponse {
-  string          scope_id = 1;
-  repeated Record records  = 2;
+// RecordsByScopeIDResponse is the response to a RecordsByScopeIDRequest
+message RecordsByScopeIDResponse {
+  string          scope_uuid = 1 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
+  string          scope_id   = 2 [(gogoproto.moretags) = "yaml:\"scope_id\""];
+  repeated Record records    = 3;
 }
 
-// ScopeSpecificationRequest is used for requesting a scope specification by id
+// ScopeSpecificationRequest is used for requesting a scope specification by uuid
 message ScopeSpecificationRequest {
-  string specification_id = 1 [
-    (gogoproto.moretags)   = "yaml:\"specification_id\""
-  ];
+  string specification_uuid = 1 [(gogoproto.moretags) = "yaml:\"specification_uuid\""];
 }
 
 // ScopeSpecification is the response to a scope specification request.
 message ScopeSpecificationResponse {
-  ScopeSpecification scope_specification = 1 [
-    (gogoproto.moretags)   = "yaml:\"scope_specification\""
-  ];
+  ScopeSpecification scope_specification = 1 [(gogoproto.moretags) = "yaml:\"scope_specification\""];
+}
+
+// ContractSpecificationRequest is used for requesting a contract specification by uuid
+message ContractSpecificationRequest {
+  string specification_uuid = 1 [(gogoproto.moretags) = "yaml:\"specification_uuid\""];
+}
+
+// ContractSpecificationResponse is the response to a contract specification request.
+message ContractSpecificationResponse {
+  ContractSpecification contract_specification = 1 [(gogoproto.moretags) = "yaml:\"contract_specification\""];
+}
+
+// ContractSpecificationExtendedRequest is used for requesting a contract specification with extended data by contract
+// specification uuid
+message ContractSpecificationExtendedRequest {
+  string specification_uuid = 1 [(gogoproto.moretags) = "yaml:\"specification_uuid\""];
+}
+
+// ContractSpecificationExtendedResponse is the response to a contract specification extended request.
+message ContractSpecificationExtendedResponse {
+  ContractSpecification        contract_specification = 1 [(gogoproto.moretags) = "yaml:\"contract_specification\""];
+  repeated RecordSpecification record_specifications  = 2 [(gogoproto.moretags) = "yaml:\"record_specifications\""];
+}
+
+// RecordSpecificationsForContractSpecificationRequest is used for requesting record specifications by contract
+// specification uuid
+message RecordSpecificationsForContractSpecificationRequest {
+  string contract_specification_uuid = 1 [(gogoproto.moretags) = "yaml:\"contract_specification_uuid\""];
+}
+
+// RecordSpecificationResponseResponse is the response to a record specification for contract specification request.
+message RecordSpecificationsForContractSpecificationResponse {
+  repeated RecordSpecification record_specifications = 1 [(gogoproto.moretags) = "yaml:\"record_specifications\""];
+}
+
+// RecordSpecificationRequest is used for requesting a record specification by uuid
+message RecordSpecificationRequest {
+  string contract_specification_uuid = 1 [(gogoproto.moretags) = "yaml:\"contract_specification_uuid\""];
+  string name                        = 2;
+}
+
+// RecordSpecificationResponse is the response to a record specification request.
+message RecordSpecificationResponse {
+  RecordSpecification record_specification = 1 [(gogoproto.moretags) = "yaml:\"record_specification\""];
 }

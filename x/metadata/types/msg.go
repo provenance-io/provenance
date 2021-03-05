@@ -9,15 +9,19 @@ import (
 )
 
 const (
-	TypeMsgMemorializeContractRequest      = "memorialize_contract_request"
-	TypeMsgChangeOwnershipRequest          = "change_ownershipr_equest"
-	TypeMsgAddScopeRequest                 = "add_scope_request"
-	TypeMsgRemoveScopeRequest              = "remove_scope_request"
-	TypeMsgAddRecordGroupRequest           = "add_recordgroup_request"
-	TypeMsgAddRecordRequest                = "add_record_request"
-	TypeMsgAddScopeSpecificationRequest    = "add_scope_specification_request"
-	TypeMsgRemoveScopeSpecificationRequest = "remove_scope_specification_request"
-	TypeMsgAddGroupSpecificationRequest    = "add_group_specification_request"
+	TypeMsgMemorializeContractRequest         = "memorialize_contract_request"
+	TypeMsgChangeOwnershipRequest             = "change_ownership_request"
+	TypeMsgAddScopeRequest                    = "add_scope_request"
+	TypeMsgDeleteScopeRequest                 = "delete_scope_request"
+	TypeMsgAddSessionRequest                  = "add_session_request"
+	TypeMsgAddRecordRequest                   = "add_record_request"
+	TypeMsgDeleteRecordRequest                = "delete_record_request"
+	TypeMsgAddScopeSpecificationRequest       = "add_scope_specification_request"
+	TypeMsgDeleteScopeSpecificationRequest    = "delete_scope_specification_request"
+	TypeMsgAddContractSpecificationRequest    = "add_contract_specification_request"
+	TypeMsgDeleteContractSpecificationRequest = "delete_contract_specification_request"
+	TypeMsgAddRecordSpecificationRequest      = "add_record_specification_request"
+	TypeMsgDeleteRecordSpecificationRequest   = "delete_record_specification_request"
 )
 
 // Compile time interface checks.
@@ -25,11 +29,16 @@ var (
 	_ sdk.Msg = &MsgMemorializeContractRequest{}
 	_ sdk.Msg = &MsgChangeOwnershipRequest{}
 	_ sdk.Msg = &MsgAddScopeRequest{}
-	_ sdk.Msg = &MsgAddRecordGroupRequest{}
+	_ sdk.Msg = &MsgDeleteScopeRequest{}
+	_ sdk.Msg = &MsgAddSessionRequest{}
 	_ sdk.Msg = &MsgAddRecordRequest{}
+	_ sdk.Msg = &MsgDeleteRecordRequest{}
 	_ sdk.Msg = &MsgAddScopeSpecificationRequest{}
-	_ sdk.Msg = &MsgAddGroupSpecificationRequest{}
-	_ sdk.Msg = &MsgRemoveScopeRequest{}
+	_ sdk.Msg = &MsgDeleteScopeSpecificationRequest{}
+	_ sdk.Msg = &MsgAddContractSpecificationRequest{}
+	_ sdk.Msg = &MsgDeleteContractSpecificationRequest{}
+	_ sdk.Msg = &MsgAddRecordSpecificationRequest{}
+	_ sdk.Msg = &MsgDeleteRecordSpecificationRequest{}
 )
 
 // private method to convert an array of strings into an array of Acc Addresses.
@@ -47,7 +56,7 @@ func stringsToAccAddresses(strings []string) []sdk.AccAddress {
 	return retval
 }
 
-// ----------------------------------------------------------------------
+// ------------------  MsgMemorializeContractRequest  ------------------
 
 // NewMsgMemorializeContractRequest creates a new msg instance
 func NewMsgMemorializeContractRequest() *MsgMemorializeContractRequest {
@@ -60,10 +69,14 @@ func (msg MsgMemorializeContractRequest) String() string {
 }
 
 // Route returns the module route
-func (msg MsgMemorializeContractRequest) Route() string { return ModuleName }
+func (msg MsgMemorializeContractRequest) Route() string {
+	return ModuleName
+}
 
 // Type returns the type name for this msg
-func (msg MsgMemorializeContractRequest) Type() string { return TypeMsgMemorializeContractRequest }
+func (msg MsgMemorializeContractRequest) Type() string {
+	return TypeMsgMemorializeContractRequest
+}
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgMemorializeContractRequest) GetSigners() []sdk.AccAddress {
@@ -79,14 +92,13 @@ func (msg MsgMemorializeContractRequest) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
-//
 // ValidateBasic quick validity check
 func (msg MsgMemorializeContractRequest) ValidateBasic() error {
 	if strings.TrimSpace(msg.ScopeId) == "" {
 		return fmt.Errorf("scope ID is empty")
 	}
-	if strings.TrimSpace(msg.GroupId) == "" {
-		return fmt.Errorf("group ID is empty")
+	if strings.TrimSpace(msg.SessionId) == "" {
+		return fmt.Errorf("session ID is empty")
 	}
 	if strings.TrimSpace(msg.ExecutionId) == "" {
 		return fmt.Errorf("execution ID is empty")
@@ -101,7 +113,7 @@ func (msg MsgMemorializeContractRequest) ValidateBasic() error {
 	return msg.Contract.ValidateBasic()
 }
 
-// ----------------------------------------------------------------------
+// ------------------  MsgChangeOwnershipRequest  ------------------
 
 // NewMsgChangeOwnershipRequest creates a new msg instance
 func NewMsgChangeOwnershipRequest() *MsgChangeOwnershipRequest {
@@ -114,10 +126,14 @@ func (msg MsgChangeOwnershipRequest) String() string {
 }
 
 // Route returns the module route
-func (msg MsgChangeOwnershipRequest) Route() string { return ModuleName }
+func (msg MsgChangeOwnershipRequest) Route() string {
+	return ModuleName
+}
 
 // Type returns the type name for this msg
-func (msg MsgChangeOwnershipRequest) Type() string { return TypeMsgChangeOwnershipRequest }
+func (msg MsgChangeOwnershipRequest) Type() string {
+	return TypeMsgChangeOwnershipRequest
+}
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgChangeOwnershipRequest) GetSigners() []sdk.AccAddress {
@@ -138,8 +154,8 @@ func (msg MsgChangeOwnershipRequest) ValidateBasic() error {
 	if strings.TrimSpace(msg.ScopeId) == "" {
 		return fmt.Errorf("scope ID is empty")
 	}
-	if strings.TrimSpace(msg.GroupId) == "" {
-		return fmt.Errorf("group ID is empty")
+	if strings.TrimSpace(msg.SessionId) == "" {
+		return fmt.Errorf("session ID is empty")
 	}
 	if strings.TrimSpace(msg.ExecutionId) == "" {
 		return fmt.Errorf("execution ID is empty")
@@ -158,7 +174,7 @@ func (msg MsgChangeOwnershipRequest) ValidateBasic() error {
 	return msg.Contract.ValidateBasic()
 }
 
-// ----------------------------------------------------------------------
+// ------------------  MsgAddScopeRequest  ------------------
 
 // NewMsgAddScopeRequest creates a new msg instance
 func NewMsgAddScopeRequest(scope Scope, signers []string) *MsgAddScopeRequest {
@@ -174,24 +190,18 @@ func (msg MsgAddScopeRequest) String() string {
 }
 
 // Route returns the module route
-func (msg MsgAddScopeRequest) Route() string { return ModuleName }
+func (msg MsgAddScopeRequest) Route() string {
+	return ModuleName
+}
 
 // Type returns the type name for this msg
-func (msg MsgAddScopeRequest) Type() string { return TypeMsgAddScopeRequest }
+func (msg MsgAddScopeRequest) Type() string {
+	return TypeMsgAddScopeRequest
+}
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgAddScopeRequest) GetSigners() []sdk.AccAddress {
-	signers := make([]sdk.AccAddress, len(msg.Signers))
-
-	for i, signerAddress := range msg.Signers {
-		signAddr, err := sdk.AccAddressFromBech32(signerAddress)
-		if err != nil {
-			panic(err)
-		}
-		signers[i] = signAddr
-	}
-
-	return signers
+	return stringsToAccAddresses(msg.Signers)
 }
 
 // GetSignBytes gets the bytes for the message signer to sign on
@@ -207,39 +217,43 @@ func (msg MsgAddScopeRequest) ValidateBasic() error {
 	return msg.Scope.ValidateBasic()
 }
 
-// ----------------------------------------------------------------------
+// ------------------  NewMsgDeleteScopeRequest  ------------------
 
-// NewMsgRemoveScopeRequest creates a new msg instance
-func NewMsgRemoveScopeRequest(scopeID MetadataAddress, signers []string) *MsgRemoveScopeRequest {
-	return &MsgRemoveScopeRequest{
+// NewMsgDeleteScopeRequest creates a new msg instance
+func NewMsgDeleteScopeRequest(scopeID MetadataAddress, signers []string) *MsgDeleteScopeRequest {
+	return &MsgDeleteScopeRequest{
 		ScopeId: scopeID,
 		Signers: signers,
 	}
 }
 
-func (msg MsgRemoveScopeRequest) String() string {
+func (msg MsgDeleteScopeRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
 // Route returns the module route
-func (msg MsgRemoveScopeRequest) Route() string { return ModuleName }
+func (msg MsgDeleteScopeRequest) Route() string {
+	return ModuleName
+}
 
 // Type returns the type name for this msg
-func (msg MsgRemoveScopeRequest) Type() string { return TypeMsgRemoveScopeRequest }
+func (msg MsgDeleteScopeRequest) Type() string {
+	return TypeMsgDeleteScopeRequest
+}
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
-func (msg MsgRemoveScopeRequest) GetSigners() []sdk.AccAddress {
+func (msg MsgDeleteScopeRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
 }
 
 // GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgRemoveScopeRequest) GetSignBytes() []byte {
+func (msg MsgDeleteScopeRequest) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
-func (msg MsgRemoveScopeRequest) ValidateBasic() error {
+func (msg MsgDeleteScopeRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
@@ -249,44 +263,47 @@ func (msg MsgRemoveScopeRequest) ValidateBasic() error {
 	return nil
 }
 
-// ----------------------------------------------------------------------
+// ------------------  MsgAddSessionRequest  ------------------
 
-// NewMsgAddRecordGroupRequest creates a new msg instance
-func NewMsgAddRecordGroupRequest() *MsgAddRecordGroupRequest {
-	return &MsgAddRecordGroupRequest{}
+// NewMsgAddSessionRequest creates a new msg instance
+func NewMsgAddSessionRequest() *MsgAddSessionRequest {
+	return &MsgAddSessionRequest{}
 }
 
-func (msg MsgAddRecordGroupRequest) String() string {
+func (msg MsgAddSessionRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
 // Route returns the module route
-func (msg MsgAddRecordGroupRequest) Route() string { return ModuleName }
+func (msg MsgAddSessionRequest) Route() string {
+	return ModuleName
+}
 
 // Type returns the type name for this msg
-func (msg MsgAddRecordGroupRequest) Type() string { return TypeMsgAddRecordGroupRequest }
+func (msg MsgAddSessionRequest) Type() string {
+	return TypeMsgAddSessionRequest
+}
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
-func (msg MsgAddRecordGroupRequest) GetSigners() []sdk.AccAddress {
-	delAddr, err := sdk.AccAddressFromBech32(msg.Notary)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{delAddr}
+func (msg MsgAddSessionRequest) GetSigners() []sdk.AccAddress {
+	return stringsToAccAddresses(msg.Signers)
 }
 
 // GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgAddRecordGroupRequest) GetSignBytes() []byte {
+func (msg MsgAddSessionRequest) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
-func (msg MsgAddRecordGroupRequest) ValidateBasic() error {
-	return nil
+func (msg MsgAddSessionRequest) ValidateBasic() error {
+	if len(msg.Signers) < 1 {
+		return fmt.Errorf("at least one signer is required")
+	}
+	return msg.Session.ValidateBasic()
 }
 
-// ----------------------------------------------------------------------
+// ------------------  MsgAddRecordRequest  ------------------
 
 // NewMsgAddRecordRequest creates a new msg instance
 func NewMsgAddRecordRequest() *MsgAddRecordRequest {
@@ -299,18 +316,18 @@ func (msg MsgAddRecordRequest) String() string {
 }
 
 // Route returns the module route
-func (msg MsgAddRecordRequest) Route() string { return ModuleName }
+func (msg MsgAddRecordRequest) Route() string {
+	return ModuleName
+}
 
 // Type returns the type name for this msg
-func (msg MsgAddRecordRequest) Type() string { return TypeMsgAddRecordRequest }
+func (msg MsgAddRecordRequest) Type() string {
+	return TypeMsgAddRecordRequest
+}
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgAddRecordRequest) GetSigners() []sdk.AccAddress {
-	delAddr, err := sdk.AccAddressFromBech32(msg.Notary)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{delAddr}
+	return stringsToAccAddresses(msg.Signers)
 }
 
 // GetSignBytes gets the bytes for the message signer to sign on
@@ -320,10 +337,53 @@ func (msg MsgAddRecordRequest) GetSignBytes() []byte {
 
 // ValidateBasic performs a quick validity check
 func (msg MsgAddRecordRequest) ValidateBasic() error {
+	if len(msg.Signers) < 1 {
+		return fmt.Errorf("at least one signer is required")
+	}
+	return msg.Record.ValidateBasic()
+}
+
+// ------------------  MsgDeleteRecordRequest  ------------------
+
+// NewMsgDeleteScopeSpecificationRequest creates a new msg instance
+func NewMsgDeleteRecordRequest() *MsgDeleteRecordRequest {
+	return &MsgDeleteRecordRequest{}
+}
+
+func (msg MsgDeleteRecordRequest) String() string {
+	out, _ := yaml.Marshal(msg)
+	return string(out)
+}
+
+// Route returns the module route
+func (msg MsgDeleteRecordRequest) Route() string {
+	return ModuleName
+}
+
+// Type returns the type name for this msg
+func (msg MsgDeleteRecordRequest) Type() string {
+	return TypeMsgDeleteRecordRequest
+}
+
+// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
+func (msg MsgDeleteRecordRequest) GetSigners() []sdk.AccAddress {
+	return stringsToAccAddresses(msg.Signers)
+}
+
+// GetSignBytes gets the bytes for the message signer to sign on
+func (msg MsgDeleteRecordRequest) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// ValidateBasic performs a quick validity check
+func (msg MsgDeleteRecordRequest) ValidateBasic() error {
+	if len(msg.Signers) < 1 {
+		return fmt.Errorf("at least one signer is required")
+	}
 	return nil
 }
 
-// ----------------------------------------------------------------------
+// ------------------  MsgAddScopeSpecificationRequest  ------------------
 
 // NewMsgAddScopeSpecificationRequest creates a new msg instance
 func NewMsgAddScopeSpecificationRequest() *MsgAddScopeSpecificationRequest {
@@ -336,10 +396,14 @@ func (msg MsgAddScopeSpecificationRequest) String() string {
 }
 
 // Route returns the module route
-func (msg MsgAddScopeSpecificationRequest) Route() string { return ModuleName }
+func (msg MsgAddScopeSpecificationRequest) Route() string {
+	return ModuleName
+}
 
 // Type returns the type name for this msg
-func (msg MsgAddScopeSpecificationRequest) Type() string { return TypeMsgAddScopeSpecificationRequest }
+func (msg MsgAddScopeSpecificationRequest) Type() string {
+	return TypeMsgAddScopeSpecificationRequest
+}
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgAddScopeSpecificationRequest) GetSigners() []sdk.AccAddress {
@@ -359,77 +423,202 @@ func (msg MsgAddScopeSpecificationRequest) ValidateBasic() error {
 	return msg.Specification.ValidateBasic()
 }
 
-// ----------------------------------------------------------------------
+// ------------------  MsgDeleteScopeSpecificationRequest  ------------------
 
-// NewMsgRemoveScopeSpecificationRequest creates a new msg instance
-func NewMsgRemoveScopeSpecificationRequest() *MsgRemoveScopeSpecificationRequest {
-	return &MsgRemoveScopeSpecificationRequest{}
+// NewMsgDeleteScopeSpecificationRequest creates a new msg instance
+func NewMsgDeleteScopeSpecificationRequest() *MsgDeleteScopeSpecificationRequest {
+	return &MsgDeleteScopeSpecificationRequest{}
 }
 
-func (msg MsgRemoveScopeSpecificationRequest) String() string {
+func (msg MsgDeleteScopeSpecificationRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
 // Route returns the module route
-func (msg MsgRemoveScopeSpecificationRequest) Route() string { return ModuleName }
+func (msg MsgDeleteScopeSpecificationRequest) Route() string {
+	return ModuleName
+}
 
 // Type returns the type name for this msg
-func (msg MsgRemoveScopeSpecificationRequest) Type() string {
-	return TypeMsgRemoveScopeSpecificationRequest
+func (msg MsgDeleteScopeSpecificationRequest) Type() string {
+	return TypeMsgDeleteScopeSpecificationRequest
 }
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
-func (msg MsgRemoveScopeSpecificationRequest) GetSigners() []sdk.AccAddress {
+func (msg MsgDeleteScopeSpecificationRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
 }
 
 // GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgRemoveScopeSpecificationRequest) GetSignBytes() []byte {
+func (msg MsgDeleteScopeSpecificationRequest) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
-func (msg MsgRemoveScopeSpecificationRequest) ValidateBasic() error {
+func (msg MsgDeleteScopeSpecificationRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
 	return nil
 }
 
-// ----------------------------------------------------------------------
+// ------------------  MsgAddContractSpecificationRequest  ------------------
 
-// NewMsgAddGroupSpecificationRequest creates a new msg instance
-func NewMsgAddGroupSpecificationRequest() *MsgAddGroupSpecificationRequest {
-	return &MsgAddGroupSpecificationRequest{}
+// NewMsgAddContractSpecificationRequest creates a new msg instance
+func NewMsgAddContractSpecificationRequest() *MsgAddContractSpecificationRequest {
+	return &MsgAddContractSpecificationRequest{}
 }
 
-func (msg MsgAddGroupSpecificationRequest) String() string {
+func (msg MsgAddContractSpecificationRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
 // Route returns the module route
-func (msg MsgAddGroupSpecificationRequest) Route() string { return ModuleName }
+func (msg MsgAddContractSpecificationRequest) Route() string {
+	return ModuleName
+}
 
 // Type returns the type name for this msg
-func (msg MsgAddGroupSpecificationRequest) Type() string { return TypeMsgAddGroupSpecificationRequest }
+func (msg MsgAddContractSpecificationRequest) Type() string {
+	return TypeMsgAddContractSpecificationRequest
+}
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
-func (msg MsgAddGroupSpecificationRequest) GetSigners() []sdk.AccAddress {
-	delAddr, err := sdk.AccAddressFromBech32(msg.Notary)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{delAddr}
+func (msg MsgAddContractSpecificationRequest) GetSigners() []sdk.AccAddress {
+	return stringsToAccAddresses(msg.Signers)
 }
 
 // GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgAddGroupSpecificationRequest) GetSignBytes() []byte {
+func (msg MsgAddContractSpecificationRequest) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
-func (msg MsgAddGroupSpecificationRequest) ValidateBasic() error {
+func (msg MsgAddContractSpecificationRequest) ValidateBasic() error {
+	if len(msg.Signers) < 1 {
+		return fmt.Errorf("at least one signer is required")
+	}
+	return msg.Specification.ValidateBasic()
+}
+
+// ------------------  MsgDeleteContractSpecificationRequest  ------------------
+
+// NewMsgDeleteContractSpecificationRequest creates a new msg instance
+func NewMsgDeleteContractSpecificationRequest() *MsgDeleteContractSpecificationRequest {
+	return &MsgDeleteContractSpecificationRequest{}
+}
+
+func (msg MsgDeleteContractSpecificationRequest) String() string {
+	out, _ := yaml.Marshal(msg)
+	return string(out)
+}
+
+// Route returns the module route
+func (msg MsgDeleteContractSpecificationRequest) Route() string {
+	return ModuleName
+}
+
+// Type returns the type name for this msg
+func (msg MsgDeleteContractSpecificationRequest) Type() string {
+	return TypeMsgDeleteContractSpecificationRequest
+}
+
+// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
+func (msg MsgDeleteContractSpecificationRequest) GetSigners() []sdk.AccAddress {
+	return stringsToAccAddresses(msg.Signers)
+}
+
+// GetSignBytes gets the bytes for the message signer to sign on
+func (msg MsgDeleteContractSpecificationRequest) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// ValidateBasic performs a quick validity check
+func (msg MsgDeleteContractSpecificationRequest) ValidateBasic() error {
+	if len(msg.Signers) < 1 {
+		return fmt.Errorf("at least one signer is required")
+	}
+	return nil
+}
+
+// ------------------  MsgAddRecordSpecificationRequest  ------------------
+
+// NewMsgAddRecordSpecificationRequest creates a new msg instance
+func NewMsgAddRecordSpecificationRequest() *MsgAddRecordSpecificationRequest {
+	return &MsgAddRecordSpecificationRequest{}
+}
+
+func (msg MsgAddRecordSpecificationRequest) String() string {
+	out, _ := yaml.Marshal(msg)
+	return string(out)
+}
+
+// Route returns the module route
+func (msg MsgAddRecordSpecificationRequest) Route() string {
+	return ModuleName
+}
+
+// Type returns the type name for this msg
+func (msg MsgAddRecordSpecificationRequest) Type() string {
+	return TypeMsgAddRecordSpecificationRequest
+}
+
+// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
+func (msg MsgAddRecordSpecificationRequest) GetSigners() []sdk.AccAddress {
+	return stringsToAccAddresses(msg.Signers)
+}
+
+// GetSignBytes gets the bytes for the message signer to sign on
+func (msg MsgAddRecordSpecificationRequest) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// ValidateBasic performs a quick validity check
+func (msg MsgAddRecordSpecificationRequest) ValidateBasic() error {
+	if len(msg.Signers) < 1 {
+		return fmt.Errorf("at least one signer is required")
+	}
+	return nil
+}
+
+// ------------------  MsgDeleteRecordSpecificationRequest  ------------------
+
+// NewMsgDeleteRecordSpecificationRequest creates a new msg instance
+func NewMsgDeleteRecordSpecificationRequest() *MsgDeleteRecordSpecificationRequest {
+	return &MsgDeleteRecordSpecificationRequest{}
+}
+
+func (msg MsgDeleteRecordSpecificationRequest) String() string {
+	out, _ := yaml.Marshal(msg)
+	return string(out)
+}
+
+// Route returns the module route
+func (msg MsgDeleteRecordSpecificationRequest) Route() string {
+	return ModuleName
+}
+
+// Type returns the type name for this msg
+func (msg MsgDeleteRecordSpecificationRequest) Type() string {
+	return TypeMsgDeleteRecordSpecificationRequest
+}
+
+// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
+func (msg MsgDeleteRecordSpecificationRequest) GetSigners() []sdk.AccAddress {
+	return stringsToAccAddresses(msg.Signers)
+}
+
+// GetSignBytes gets the bytes for the message signer to sign on
+func (msg MsgDeleteRecordSpecificationRequest) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// ValidateBasic performs a quick validity check
+func (msg MsgDeleteRecordSpecificationRequest) ValidateBasic() error {
+	if len(msg.Signers) < 1 {
+		return fmt.Errorf("at least one signer is required")
+	}
 	return nil
 }

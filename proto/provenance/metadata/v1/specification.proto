@@ -12,26 +12,26 @@ option java_multiple_files = true;
 // supplied corosponding to process/executable that must be ran, required signatures and sources of accounts that
 // must sign requests, and allowed attributes/records that may be added to a scope.
 //
-// Scope Specifications
-// The top level specification for a scope indicates a set of allowed GroupSpecifications (contract specs) that
-// are allowed to be used against a given scope to perform updates.  Requests to record data that do not derive
-// from these groupspecifications are not allowed.
+// Scope Specification
+// The top level specification for a scope indicates a set of allowed ContractSpecifications (see add contract spec)
+// that are allowed to be used against a given scope to perform updates.  Requests to record data that do not derive
+// from these contractspecifications are not allowed.
 //
-// Group Specifications
-// The primary function of group specifications is to denote the Contracts/Processes that will be used to manage
-// the data within a scope.  These specifications control what information may be recorded on chain.  The use of
-// definitions for inputs can build a chain of data references that must be in place in order for records to be
-// added to the chain.
-//
-// Record Specifications
+// Record Specification
 // The specifics of which records are allowed within a group (and by extension the scope overall) are outlined using
 // Consideration_Specs.  These considerations include required inputs, output format, and parties that must be
 // associated with any request to record.
 //
+// Contract Specification
+// The primary function of contract specifications is to denote the Contracts/Processes that will be used to manage
+// the data within a scope.  These specifications control what information may be recorded on chain.  The use of
+// definitions for inputs can build a chain of data references that must be in place in order for records to be
+// added to the chain.
+//
 // Example:
-//   A GroupSpecification may list an input_spec that requires a Definition of type "fact" (indicating a reference
-//   to a scope/record must exist on chain) in order for a specific Consideration (process/method) to be executed and
-//   have an output_spec ultimately result in a record added to the scope.
+//   A ContractSpecification may list a RecordSpecification that requires an input of type "Record" (indicating a
+//   reference to a scope/record must exist on chain) in order for a specific Consideration (process/method) to be
+//   executed and have an output_spec ultimately result in a record added to the scope.
 
 // ScopeSpecification defines the required parties, resources, conditions, and consideration outputs for a contract
 message ScopeSpecification {
@@ -46,13 +46,9 @@ message ScopeSpecification {
   // General information about this scope specification.
   Description description = 2;
   // Addresses of the owners of this scope specification.
-  repeated string owner_addresses = 3 [
-    (gogoproto.moretags)   = "yaml:\"owner_addresses\""
-  ];
+  repeated string owner_addresses = 3 [(gogoproto.moretags) = "yaml:\"owner_addresses\""];
   // A list of parties that must be present on a scope (and their associated roles)
-  repeated PartyType parties_involved = 4 [
-    (gogoproto.moretags)   = "yaml:\"parties_involved\""
-  ];
+  repeated PartyType parties_involved = 4 [(gogoproto.moretags) = "yaml:\"parties_involved\""];
   // A list of contract specification ids allowed for a scope based on this specification.
   repeated bytes contract_spec_ids = 5 [
     (gogoproto.nullable)   = false,
@@ -61,45 +57,72 @@ message ScopeSpecification {
   ];
 }
 
-// GroupSpecification defines the required parties, resources, conditions, and consideration outputs for a contract
-message GroupSpecification {
+// ContractSpecification defines the required parties, resources, conditions, and consideration outputs for a contract
+message ContractSpecification {
+  option (gogoproto.goproto_stringer) = false;
+
   // unique identifier for this specification on chain
   bytes specification_id = 1 [
     (gogoproto.nullable)   = false,
     (gogoproto.customtype) = "MetadataAddress",
     (gogoproto.moretags)   = "yaml:\"specification_id\""
   ];
-  // The definition points to a resource that defines the instance of code that will process this group
-  Definition definition = 2;
-  // input specifications indicating proposed (off chain data values) and facts (on chain qualified references)
-  repeated Definition input_specs = 3;
-  // a list of parties that must sign a transaction using a given role
-  repeated PartyType parties_involved = 4;
-  // a colleciton of checks that must be satisfied against a scope prior to allowing a record to be added under this
-  // specification
-  repeated ConditionSpec condition_specs = 5;
-  // a colleciton of method/process specifications that when performed and documented by responsible parties listed
-  // above, result in adding a new record to the scope as defined in the output_spec
-  repeated ConsiderationSpec consideration_specs = 6;
+  // Description information for this contract specification
+  Description description = 2;
+  // Address of the account that owns this specificaiton
+  repeated string owner_addresses = 3 [(gogoproto.moretags) = "yaml:\"owner_addresses\""];
+  // a list of party roles that must be fullfilled when signing a transaction for this contract specification
+  repeated PartyType parties_involved = 4 [(gogoproto.moretags) = "yaml:\"parties_involved\""];
+  // Reference to a metadata record with a hash and type information for the instance of code that will process this
+  // contract
+  oneof source {
+    // the address of a record on chain that represents this contract
+    bytes resource_id = 5 [(gogoproto.customtype) = "MetadataAddress", (gogoproto.moretags) = "yaml:\"resource_id\""];
+    // the hash of contract binary (off-chain instance)
+    string hash = 6;
+  }
+  // name of the class/type of this contract executable
+  string class_name = 7 [(gogoproto.moretags) = "yaml:\"class_name\""];
 }
 
 // RecordSpecification defines the specification for a Record including allowed/required inputs/outputs
-message RecordSpecification {}
+message RecordSpecification {
+  option (gogoproto.goproto_stringer) = false;
 
-// A Contract Specification (used to create a GroupSpecification for the Contract Execution Environment)
-message ContractSpec {
-  // The definition points to a resource that defines the instance of code that will process this group
-  Definition definition = 1;
-  // input specifications indicating proposed (off chain data values) and facts (on chain qualified references)
-  repeated Definition input_specs = 2;
-  // a list of parties that must sign a transaction using a given role
-  repeated PartyType parties_involved = 3;
-  // a colleciton of checks that must be satisfied against a scope prior to allowing a record to be added under this
-  // specification
-  repeated ConditionSpec condition_specs = 4;
-  // a colleciton of method/process specifications that when performed and documented by responsible parties listed
-  // above, result in adding a new record to the scope as defined in the output_spec
-  repeated ConsiderationSpec consideration_specs = 5;
+  // unique identifier for this specification on chain
+  bytes specification_id = 1 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customtype) = "MetadataAddress",
+    (gogoproto.moretags)   = "yaml:\"specification_id\""
+  ];
+  // Name of Record that will be created when this specification is used
+  string name = 2;
+  // A set of inputs that must be satisified to apply this RecordSpecification and create a Record
+  repeated InputSpecification inputs = 3;
+  // A type name for data associated with this record (typically a class or proto name)
+  string type_name = 4 [(gogoproto.moretags) = "yaml:\"type_name\""];
+  // Type of result for this record specification (must be RECORD or RECORD_LIST)
+  DefinitionType result_type = 5 [(gogoproto.moretags) = "yaml:\"result_type\""];
+  // Type of party responsible for this record
+  repeated PartyType responsible_parties = 6 [(gogoproto.moretags) = "yaml:\"responsible_parties\""];
+}
+
+// InputSpecification defines a name, type_name, and source reference (either on or off chain) to define an input
+// parameter
+message InputSpecification {
+  option (gogoproto.goproto_stringer) = false;
+
+  // name for this input
+  string name = 1;
+  // a type_name (typically a proto name or class_name)
+  string type_name = 2 [(gogoproto.moretags) = "yaml:\"type_name\""];
+  // source is either on chain (record_id) or off-chain (hash)
+  oneof source {
+    // the address of a record on chain (For Established Records)
+    bytes record_id = 3 [(gogoproto.customtype) = "MetadataAddress", (gogoproto.moretags) = "yaml:\"record_id\""];
+    // the hash of an off-chain piece of information (For Proposed Records)
+    string hash = 4;
+  }
 }
 
 // Description holds general information that is handy to associate with a structure.
@@ -111,66 +134,9 @@ message Description {
   // A description of this thing.
   string description = 3;
   // URL to find even more info.
-  string website_url = 4 [
-    (gogoproto.moretags)   = "yaml:\"website_url\""
-  ];
+  string website_url = 4 [(gogoproto.moretags) = "yaml:\"website_url\""];
   // URL of an icon.
-  string icon_url = 5 [
-    (gogoproto.moretags)   = "yaml:\"icon_url\""
-  ];
-}
-
-// Definition encapsulates the information required to uniquely associate a resource with a type and location
-message Definition {
-  // a common name given to this definition.  The name is used to match up with references to this part of the spec
-  string name = 1;
-  // location of the resource on chain
-  Reference resource_location = 2;
-  // address of the account that created this definition
-  string creator_address = 3;
-  // The type of data definition (proposed, fact/recorded, list)
-  DefinitionType definition_type = 4;
-}
-
-// Reference is a multipart structure that defines a reference to a piece of data recorded within a scope
-message Reference {
-
-  // TODO this structure should probably be replaced with a MetadataAddress
-
-  // unique identifer for the scope being referenced
-  string scope_id = 1;
-  // require record to be within a specific group (optional)
-  string group_id = 3;
-  // specify a specific record inside a scope (and group) by result-hash (optional)
-  string hash = 4;
-  // specify a result-name of a record within a scope (optional)
-  string name = 5;
-  // type/classname of the target data (optional)
-  string type_name = 6;
-}
-
-// ConditionSpec defines a collection of outputs and process information listed as preconditions that must be met
-// before a contract execution is valid
-message ConditionSpec {
-  // common name for this condition
-  string              name        = 1;
-  repeated Definition input_specs = 2;
-  Definition          output_spec = 3;
-}
-
-// ConsiderationSpec defines a unit of process execution that should be performed by responsible parties in order
-// to record a set of outputs within a scope
-message ConsiderationSpec {
-  // common name for this consideration
-  string name = 1;
-
-  // Invoking party must be functioning in this role
-  PartyType responsible_party = 2;
-  // A repeated set of input specifications that must be listed and matched correctly in order to add a record listed
-  // in output_spec to the scope
-  repeated Definition input_specs = 3;
-  // The specification for the record that will be added to a scope if this consideration is satisfied
-  Definition output_spec = 4;
+  string icon_url = 5 [(gogoproto.moretags) = "yaml:\"icon_url\""];
 }
 
 // DefinitionType indicates the required definition type for this value
@@ -179,11 +145,11 @@ enum DefinitionType {
   DEFINITION_TYPE_UNSPECIFIED = 0;
   // DEFINITION_TYPE_PROPOSED indicates a proposed value is used here (a record that is not on-chain)
   DEFINITION_TYPE_PROPOSED = 1;
-  // DEFINITION_TYPE_FACT indicates the value must be a reference to a record on chain
-  DEFINITION_TYPE_FACT = 2;
-  // DEFINITION_TYPE_FACT_LIST indicates the value maybe a reference to a colleciton of values on chain having
+  // DEFINITION_TYPE_RECORD indicates the value must be a reference to a record on chain
+  DEFINITION_TYPE_RECORD = 2;
+  // DEFINITION_TYPE_RECORD_LIST indicates the value maybe a reference to a collection of values on chain having
   // the same name
-  DEFINITION_TYPE_FACT_LIST = 3;
+  DEFINITION_TYPE_RECORD_LIST = 3;
 }
 
 // PartyType are the different roles parties on a contract may use

@@ -1,6 +1,7 @@
 package v040
 
 import (
+	"encoding/base64"
 	"fmt"
 	"time"
 
@@ -19,29 +20,35 @@ import (
 // - Re-encode in v0.40 GenesisState.
 func Migrate(oldGenState v039metadata.GenesisState) *v040metadata.GenesisState {
 	var scopes = make([]v040metadata.Scope, len(oldGenState.ScopeRecords))
-	var groups = make([]v040metadata.RecordGroup, 0)
+	var sessions = make([]v040metadata.Session, 0)
 	var records = make([]v040metadata.Record, 0)
-	var groupSpecs = make([]v040metadata.GroupSpecification, 0)
+	var contractSpecs = make([]v040metadata.ContractSpecification, 0)
+	var recordSpecs = make([]v040metadata.RecordSpecification, 0)
 
 	for i := range oldGenState.ScopeRecords {
 		s, g, r := convertScope(&oldGenState.ScopeRecords[i])
 		scopes[i] = *s
-		groups = append(groups, g...)
+		sessions = append(sessions, g...)
 		records = append(records, r...)
 	}
 
-	// for i, spec := range oldGenState.Specifications {
-	// groupSpecs = append(groupSpecs, )
-	// todo convert spec v39 to v40
-	// }
+	for i := range oldGenState.Specifications {
+		c, r, e := convertContractSpec(&oldGenState.Specifications[i])
+		if e != nil {
+			panic(e)
+		}
+		contractSpecs = append(contractSpecs, c)
+		recordSpecs = append(recordSpecs, r...)
+	}
 
 	return &v040metadata.GenesisState{
 		Params: v040metadata.DefaultGenesisState().Params,
 
-		Scopes:              scopes,
-		Groups:              groups,
-		Records:             records,
-		GroupSpecifications: groupSpecs,
+		Scopes:                 scopes,
+		Sessions:               sessions,
+		Records:                records,
+		ContractSpecifications: contractSpecs,
+		RecordSpecifications:   recordSpecs,
 	}
 }
 
@@ -50,7 +57,7 @@ func convertScope(
 	old *v039metadata.Scope,
 ) (
 	newScope *v040metadata.Scope,
-	newGroups []v040metadata.RecordGroup,
+	newSessions []v040metadata.Session,
 	newRecords []v040metadata.Record,
 ) {
 	oldScopeUUID := uuid.MustParse(old.Uuid.Value)
@@ -60,50 +67,50 @@ func convertScope(
 		Owners:          convertParties(old.Parties),
 		DataAccess:      partyAddresses(convertParties(old.Parties)),
 	}
-	newGroups, newRecords = convertGroups(oldScopeUUID, old.RecordGroup)
+	newSessions, newRecords = convertGroups(oldScopeUUID, old.RecordGroup)
 	return
 }
 
 // convertGroup uses the old scope uuid to create a collection of updated v040 RecordGroup instances that derived from
 // the groups in the old format
-func convertGroups(oldScopeUUID uuid.UUID, old []*v039metadata.RecordGroup) (newGroup []v040metadata.RecordGroup, newRecords []v040metadata.Record) {
-	newGroup = make([]v040metadata.RecordGroup, len(old))
+func convertGroups(oldScopeUUID uuid.UUID, old []*v039metadata.RecordGroup) (newSession []v040metadata.Session, newRecords []v040metadata.Record) {
+	newSession = make([]v040metadata.Session, len(old))
 	newRecords = make([]v040metadata.Record, 0)
 	for i, g := range old {
 		if g.Audit != nil {
-			newGroup[i].Audit.CreatedBy = g.Audit.CreatedBy
+			newSession[i].Audit.CreatedBy = g.Audit.CreatedBy
 			if g.Audit.CreatedDate != nil {
-				newGroup[i].Audit.CreatedDate = time.Unix(g.Audit.CreatedDate.Seconds, 0)
+				newSession[i].Audit.CreatedDate = time.Unix(g.Audit.CreatedDate.Seconds, 0)
 			}
-			newGroup[i].Audit.Message = g.Audit.Message
-			newGroup[i].Audit.UpdatedBy = g.Audit.UpdatedBy
+			newSession[i].Audit.Message = g.Audit.Message
+			newSession[i].Audit.UpdatedBy = g.Audit.UpdatedBy
 			if g.Audit.UpdatedDate != nil {
-				newGroup[i].Audit.UpdatedDate = time.Unix(g.Audit.UpdatedDate.Seconds, 0)
+				newSession[i].Audit.UpdatedDate = time.Unix(g.Audit.UpdatedDate.Seconds, 0)
 			}
-			newGroup[i].Audit.Version = uint32(g.Audit.Version)
+			newSession[i].Audit.Version = uint32(g.Audit.Version)
 		}
-		newGroup[i].GroupId = v040metadata.GroupMetadataAddress(oldScopeUUID, uuid.MustParse(g.GroupUuid.Value))
-		newGroup[i].Name = g.Classname
-		newGroup[i].Parties = convertParties(g.Parties)
-		specAddr, err := v040metadata.ConvertHashToAddress(v040metadata.GroupSpecificationPrefix, g.Specification)
+		newSession[i].SessionId = v040metadata.SessionMetadataAddress(oldScopeUUID, uuid.MustParse(g.GroupUuid.Value))
+		newSession[i].Name = g.Classname
+		newSession[i].Parties = convertParties(g.Parties)
+		specAddr, err := v040metadata.ConvertHashToAddress(v040metadata.ContractSpecificationKeyPrefix, g.Specification)
 		if err != nil {
 			panic(err)
 		}
-		newGroup[i].SpecificationId = specAddr
+		newSession[i].SpecificationId = specAddr
 
-		newRecords = append(newRecords, convertRecords(newGroup[i].GroupId, g.Records)...)
+		newRecords = append(newRecords, convertRecords(newSession[i].SessionId, g.Records)...)
 	}
 	return
 }
 
 // convertRecords converts the v039 Records within a RecordGroup structure to the updated independent record assigning
 // each using the groupID provided.
-func convertRecords(groupID v040metadata.MetadataAddress, old []*v039metadata.Record) (new []v040metadata.Record) {
+func convertRecords(sessionID v040metadata.MetadataAddress, old []*v039metadata.Record) (new []v040metadata.Record) {
 	new = make([]v040metadata.Record, len(old))
 	for i, r := range old {
 		new[i] = v040metadata.Record{
-			Name:    r.ResultName,
-			GroupId: groupID,
+			Name:      r.ResultName,
+			SessionId: sessionID,
 			Process: v040metadata.Process{
 				Name:   r.Classname,
 				Method: r.Name,
@@ -112,7 +119,7 @@ func convertRecords(groupID v040metadata.MetadataAddress, old []*v039metadata.Re
 				},
 			},
 			Inputs: convertRecordInput(r.Inputs),
-			Output: []v040metadata.RecordOutput{
+			Outputs: []v040metadata.RecordOutput{
 				{
 					Hash:   r.ResultHash,
 					Status: v040metadata.ResultStatus(int32(r.Result)),
@@ -182,26 +189,26 @@ func BackportScope(
 	k metadatakeeper.Keeper,
 	newScope v040metadata.Scope,
 ) (old v039metadata.Scope, err error) {
-	prefix, err := newScope.ScopeId.ScopeGroupIteratorPrefix()
+	prefix, err := newScope.ScopeId.ScopeSessionIteratorPrefix()
 	if err != nil {
 		return
 	}
-	newestGroup := ""
-	newestGroupAge := int64(0)
+	newestSession := ""
+	newestSessionAge := int64(0)
 	oldGroups := make([]*v039metadata.RecordGroup, 0)
-	err = k.IterateGroups(ctx, prefix, func(t v040metadata.RecordGroup) (stop bool) {
-		var groupUUID uuid.UUID
-		groupUUID, err = t.GroupId.GroupUUID()
+	err = k.IterateSessions(ctx, prefix, func(t v040metadata.Session) (stop bool) {
+		var sessionUUID uuid.UUID
+		sessionUUID, err = t.SessionId.SessionUUID()
 		if err != nil {
 			return
 		}
-		if t.Audit.CreatedDate.UnixNano() > newestGroupAge {
-			newestGroupAge = t.Audit.CreatedDate.UnixNano()
-			newestGroup = groupUUID.String()
+		if t.Audit.CreatedDate.UnixNano() > newestSessionAge {
+			newestSessionAge = t.Audit.CreatedDate.UnixNano()
+			newestSession = sessionUUID.String()
 		}
-		if t.Audit.UpdatedDate.UnixNano() > newestGroupAge {
-			newestGroupAge = t.Audit.UpdatedDate.UnixNano()
-			newestGroup = groupUUID.String()
+		if t.Audit.UpdatedDate.UnixNano() > newestSessionAge {
+			newestSessionAge = t.Audit.UpdatedDate.UnixNano()
+			newestSession = sessionUUID.String()
 		}
 
 		var parties []*v039metadata.Recital
@@ -212,12 +219,12 @@ func BackportScope(
 
 		groupRecords := make([]*v039metadata.Record, 0)
 		err = k.IterateRecords(ctx, newScope.ScopeId, func(r v040metadata.Record) (stop bool) {
-			if r.GroupId.Equals(t.GroupId) {
+			if r.SessionId.Equals(t.SessionId) {
 				groupRecords = append(groupRecords, &v039metadata.Record{
 					Name: r.Process.Method,
 					//Hash: r.Process.ProcessId as hash
-					ResultHash: r.Output[0].Hash, // v039 only supports a single result hash, use first
-					Result:     v039metadata.ExecutionResultType(int32(r.Output[0].Status)),
+					ResultHash: r.Outputs[0].Hash, // v039 only supports a single result hash, use first
+					Result:     v039metadata.ExecutionResultType(int32(r.Outputs[0].Status)),
 					ResultName: r.Name,
 					Classname:  r.Process.Name,
 					Inputs:     backportInputs(r.Inputs),
@@ -258,15 +265,17 @@ func BackportScope(
 		}
 
 		specHash := ""
-		spec, found := k.GetGroupSpecification(ctx, t.SpecificationId)
+		spec, found := k.GetContractSpecification(ctx, t.SpecificationId)
 		if found {
-			specHash = spec.Definition.ResourceLocation.Hash
+			// NOTE: this is not the expected value but we no longer have a definitive hash for a contract spec
+			// because it is mutable on chain now.
+			specHash = spec.GetHash()
 		}
 
 		oldGroups = append(oldGroups, &v039metadata.RecordGroup{
 			Classname: t.Name,
 			GroupUuid: &v039metadata.UUID{
-				Value: groupUUID.String(),
+				Value: sessionUUID.String(),
 			},
 			Parties:       parties,
 			Executor:      &executor,
@@ -304,7 +313,7 @@ func BackportScope(
 		RecordGroup: oldGroups,
 		LastEvent: &v039metadata.Event{
 			GroupUuid: &v039metadata.UUID{
-				Value: newestGroup,
+				Value: newestSession,
 			},
 			// NOTE: there is no concept of execution uuid, this should be the group uuid
 		},
@@ -338,6 +347,92 @@ func backportParties(new []v040metadata.Party) (old []*v039metadata.Recital, err
 
 		// TODO consider including a context here to bring in the public keys by query of AccountKeeper
 		// old[i].Signer.SigningPublicKey
+	}
+	return
+}
+
+func convertContractSpec(old *v039metadata.ContractSpec) (
+	newSpec v040metadata.ContractSpecification,
+	newRecords []v040metadata.RecordSpecification,
+	err error,
+) {
+	raw, err := base64.StdEncoding.DecodeString(old.Definition.ResourceLocation.Ref.Hash)
+	if err != nil {
+		return newSpec, nil, err
+	}
+	specUUID, err := uuid.FromBytes(raw[0:16])
+	if err != nil {
+		return newSpec, nil, err
+	}
+	id := v040metadata.ContractSpecMetadataAddress(specUUID)
+
+	parties := make([]v040metadata.PartyType, len(old.PartiesInvolved))
+	for i := range old.PartiesInvolved {
+		parties[i] = v040metadata.PartyType(int32(old.PartiesInvolved[i]))
+	}
+
+	newSpec = v040metadata.ContractSpecification{
+		SpecificationId: id,
+		Description: &v040metadata.Description{
+			Name:        old.Definition.Name,
+			Description: old.Definition.ResourceLocation.Classname,
+		},
+		PartiesInvolved: parties,
+		// OwnerAddresses: -- TODO: there were no owners set on the v39 chain, maybe trace one from a group that used this spec?
+		Source: &v040metadata.ContractSpecification_Hash{
+			Hash: old.Definition.ResourceLocation.Ref.Hash,
+		},
+		ClassName: old.Definition.ResourceLocation.Classname,
+	}
+
+	newRecords = make([]v040metadata.RecordSpecification, len(old.ConsiderationSpecs))
+	for i := range old.ConsiderationSpecs {
+		recordInputs, err := convertInputSpecs(old.ConsiderationSpecs[i].InputSpecs)
+		if err != nil {
+			return newSpec, nil, err
+		}
+		newRecords[i] = v040metadata.RecordSpecification{
+			SpecificationId:    newSpec.SpecificationId,
+			Name:               old.ConsiderationSpecs[i].OutputSpec.Spec.Name,
+			TypeName:           old.ConsiderationSpecs[i].OutputSpec.Spec.ResourceLocation.Classname,
+			ResultType:         v040metadata.DefinitionType(old.ConsiderationSpecs[i].OutputSpec.Spec.Type),
+			Inputs:             recordInputs,
+			ResponsibleParties: []v040metadata.PartyType{v040metadata.PartyType(old.ConsiderationSpecs[i].ResponsibleParty)},
+		}
+	}
+
+	return newSpec, newRecords, nil
+}
+
+// converts a v39 DefinitionSpec used for inputs into a v40 input specification.
+func convertInputSpecs(old []*v039metadata.DefinitionSpec) (inputs []*v040metadata.InputSpecification, err error) {
+	inputs = make([]*v040metadata.InputSpecification, len(old))
+	for i, oldInput := range old {
+		if oldInput.ResourceLocation.Ref.ScopeUuid != nil &&
+			len(oldInput.ResourceLocation.Ref.ScopeUuid.Value) > 0 {
+			scopeUUID, err := uuid.Parse(oldInput.ResourceLocation.Ref.ScopeUuid.Value)
+			if err != nil {
+				return nil, err
+			}
+			if len(oldInput.ResourceLocation.Ref.Name) < 1 {
+				return nil, fmt.Errorf("must have a value for record name")
+			}
+			inputs[i] = &v040metadata.InputSpecification{
+				Name:     oldInput.Name,
+				TypeName: oldInput.ResourceLocation.Classname,
+				Source: &v040metadata.InputSpecification_RecordId{
+					RecordId: v040metadata.RecordMetadataAddress(scopeUUID, oldInput.ResourceLocation.Ref.Name),
+				},
+			}
+		} else {
+			inputs[i] = &v040metadata.InputSpecification{
+				Name:     oldInput.Name,
+				TypeName: oldInput.ResourceLocation.Classname,
+				Source: &v040metadata.InputSpecification_Hash{
+					Hash: oldInput.ResourceLocation.Ref.Hash,
+				},
+			}
+		}
 	}
 	return
 }
