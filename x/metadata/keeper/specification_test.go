@@ -99,6 +99,29 @@ func areEquivalentSetsOfMetaAddresses(arr1 []types.MetadataAddress, arr2 []types
 	return true
 }
 
+func containsRecSpec(arr []*types.RecordSpecification, newVal *types.RecordSpecification) bool {
+	found := false
+	for _, v := range arr {
+		if v.SpecificationId.Equals(newVal.SpecificationId) {
+			found = true
+			break
+		}
+	}
+	return found
+}
+
+func areEquivalentSetsOfRecSpecs(arr1 []*types.RecordSpecification, arr2 []*types.RecordSpecification) bool {
+	if len(arr1) != len(arr2) {
+		return false
+	}
+	for _, v2 := range arr2 {
+		if !containsRecSpec(arr1, v2) {
+			return false
+		}
+	}
+	return true
+}
+
 func (s *SpecKeeperTestSuite) TestGetSetRemoveRecordSpecification() {
 	recordName := "record name"
 	recSpecID := types.RecordSpecMetadataAddress(s.contractSpecUUID1, recordName)
@@ -570,11 +593,11 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForContractSpec() {
 	// Make sure an unknown contract spec results in zero iterations.
 	unknownContractSpecID := types.ContractSpecMetadataAddress(uuid.New())
 	unknownContractSpecIDCount := 0
-	errUser3 := s.app.MetadataKeeper.IterateRecordSpecsForContractSpec(s.ctx, unknownContractSpecID, func(specID types.MetadataAddress) (stop bool) {
+	errUnknownContractSpecID := s.app.MetadataKeeper.IterateRecordSpecsForContractSpec(s.ctx, unknownContractSpecID, func(specID types.MetadataAddress) (stop bool) {
 		unknownContractSpecIDCount++
 		return false
 	})
-	s.Nil(errUser3, "unknown contract spec id: should not have returned an error")
+	s.Nil(errUnknownContractSpecID, "unknown contract spec id: should not have returned an error")
 	s.Equal(0, unknownContractSpecIDCount, "unknown contract spec id: iteration count")
 
 	// Make sure the stop bool is being recognized.
@@ -590,7 +613,158 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForContractSpec() {
 	s.Equal(2, countStop, "stop bool: iteration count")
 }
 
-// TODO: TestGetRecordSpecificationsForContractSpecificationID
+func (s *SpecKeeperTestSuite) TestGetRecordSpecificationsForContractSpecificationID() {
+	// Create 3 contract specs.
+	contractSpecs := []*types.ContractSpecification{
+		types.NewContractSpecification(
+			types.ContractSpecMetadataAddress(uuid.New()),
+			types.NewDescription(
+				"TestIterateContractSpecsForOwner[0]",
+				"A description for a unit test contract specification - owner: user1",
+				"http://test.net",
+				"http://test.net/ico.png",
+			),
+			[]string{s.user1Addr.String()},
+			[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+			types.NewContractSpecificationSourceHash("somehash0"),
+			"someclass_0",
+		),
+		types.NewContractSpecification(
+			types.ContractSpecMetadataAddress(uuid.New()),
+			types.NewDescription(
+				"TestIterateContractSpecsForOwner[1]",
+				"A description for a unit test contract specification - owner: user2",
+				"http://test.net",
+				"http://test.net/ico.png",
+			),
+			[]string{s.user2Addr.String()},
+			[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+			types.NewContractSpecificationSourceHash("somehash1"),
+			"someclass_1",
+		),
+		types.NewContractSpecification(
+			types.ContractSpecMetadataAddress(uuid.New()),
+			types.NewDescription(
+				"TestIterateContractSpecsForOwner[2]",
+				"A description for a unit test contract specification - owner: user1, user2",
+				"http://test.net",
+				"http://test.net/ico.png",
+			),
+			[]string{s.user1Addr.String(), s.user2Addr.String()},
+			[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+			types.NewContractSpecificationSourceHash("somehash2"),
+			"someclass_2",
+		),
+	}
+	for _, spec := range contractSpecs {
+		s.app.MetadataKeeper.SetContractSpecification(s.ctx, *spec)
+	}
+
+	// Create 3 record specs for the 1st contract spec, 2 for the 2nd, and none for the 3rd.
+	recordSpecs := []*types.RecordSpecification{
+		types.NewRecordSpecification(
+			contractSpecs[0].SpecificationId.GetRecordSpecAddress("contractspec0recspec0"),
+			"contractspec0recspec0",
+			[]*types.InputSpecification{
+				types.NewInputSpecification(
+					"inputspec0", "inputspectypename0",
+					types.NewInputSpecificationSourceHash("sourcehash0"),
+				),
+			},
+			"typename0",
+			types.DefinitionType_DEFINITION_TYPE_RECORD,
+			[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+		),
+		types.NewRecordSpecification(
+			contractSpecs[0].SpecificationId.GetRecordSpecAddress("contractspec0recspec1"),
+			"contractspec0recspec1",
+			[]*types.InputSpecification{
+				types.NewInputSpecification(
+					"inputspec1", "inputspectypename1",
+					types.NewInputSpecificationSourceHash("sourcehash1"),
+				),
+			},
+			"typename1",
+			types.DefinitionType_DEFINITION_TYPE_RECORD,
+			[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+		),
+		types.NewRecordSpecification(
+			contractSpecs[0].SpecificationId.GetRecordSpecAddress("contractspec1recspec2"),
+			"contractspec0recspec2",
+			[]*types.InputSpecification{
+				types.NewInputSpecification(
+					"inputspec2", "inputspectypename2",
+					types.NewInputSpecificationSourceHash("sourcehash2"),
+				),
+			},
+			"typename2",
+			types.DefinitionType_DEFINITION_TYPE_RECORD,
+			[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+		),
+
+		types.NewRecordSpecification(
+			contractSpecs[1].SpecificationId.GetRecordSpecAddress("contractspec1recspec3"),
+			"contractspec1recspec3",
+			[]*types.InputSpecification{
+				types.NewInputSpecification(
+					"inputspec3", "inputspectypename3",
+					types.NewInputSpecificationSourceHash("sourcehash3"),
+				),
+			},
+			"typename3",
+			types.DefinitionType_DEFINITION_TYPE_RECORD,
+			[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+		),
+		types.NewRecordSpecification(
+			contractSpecs[1].SpecificationId.GetRecordSpecAddress("contractspec1recspec4"),
+			"contractspec1recspec4",
+			[]*types.InputSpecification{
+				types.NewInputSpecification(
+					"inputspec4", "inputspectypename4",
+					types.NewInputSpecificationSourceHash("sourcehash4"),
+				),
+			},
+			"typename4",
+			types.DefinitionType_DEFINITION_TYPE_RECORD,
+			[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+		),
+	}
+	for _, spec := range recordSpecs {
+		s.app.MetadataKeeper.SetRecordSpecification(s.ctx, *spec)
+	}
+
+	contractSpec0Expected := recordSpecs[0:3]
+	contractSpec1Expected := recordSpecs[3:5]
+	contractSpec2Expected := []*types.RecordSpecification{}
+
+	// Make sure all contract spec 0 record specs are returned
+	contractSpecs0Actual, contractSpecs0ActualErr := s.app.MetadataKeeper.GetRecordSpecificationsForContractSpecificationID(s.ctx, contractSpecs[0].SpecificationId)
+	s.Nil(contractSpecs0ActualErr, "contract spec 0: should not have returned an error")
+	s.True(areEquivalentSetsOfRecSpecs(contractSpec0Expected, contractSpecs0Actual),
+		"contract spec 0: unexpected record specs:\n  expected: %v\n    actual: %v\n",
+		contractSpec0Expected, contractSpecs0Actual)
+
+	// Make sure all contract spec 1 record specs are returned
+	contractSpecs1Actual, contractSpecs1ActualErr := s.app.MetadataKeeper.GetRecordSpecificationsForContractSpecificationID(s.ctx, contractSpecs[1].SpecificationId)
+	s.Nil(contractSpecs1ActualErr, "contract spec 1: should not have returned an error")
+	s.True(areEquivalentSetsOfRecSpecs(contractSpec1Expected, contractSpecs1Actual),
+		"contract spec 1: unexpected record specs:\n  expected: %v\n    actual: %v\n",
+		contractSpec1Expected, contractSpecs1Actual)
+
+	// Make sure all contract spec 2 record specs are returned (none)
+	contractSpecs2Actual, contractSpecs2ActualErr := s.app.MetadataKeeper.GetRecordSpecificationsForContractSpecificationID(s.ctx, contractSpecs[2].SpecificationId)
+	s.Nil(contractSpecs2ActualErr, "contract spec 2: should not have returned an error")
+	s.True(areEquivalentSetsOfRecSpecs(contractSpec2Expected, contractSpecs2Actual),
+		"contract spec 2: unexpected record specs:\n  expected: %v\n    actual: %v\n",
+		contractSpec2Expected, contractSpecs2Actual)
+
+	// Make sure an unknown contract spec returns empty.
+	unknownContractSpecID := types.ContractSpecMetadataAddress(uuid.New())
+	unknownContractSpecIDActual, unknownContractSpecIDActualErr := s.app.MetadataKeeper.GetRecordSpecificationsForContractSpecificationID(s.ctx, unknownContractSpecID)
+	s.Nil(unknownContractSpecIDActualErr, "unknown contract spec id: should not have returned an error")
+	s.Equal(0, len(unknownContractSpecIDActual), "unknown contract spec id: count")
+}
+
 // TODO: TestValidateRecordSpecUpdate
 
 func (s *SpecKeeperTestSuite) TestGetSetRemoveContractSpecification() {
