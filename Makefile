@@ -15,7 +15,12 @@ BUILDDIR ?= $(CURDIR)/build
 LEDGER_ENABLED ?= true
 WITH_CLEVELDB ?= yes
 
+BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+TM_VERSION := $(shell go list -m github.com/tendermint/tendermint | sed 's:.* ::') # grab everything after the space in "github.com/tendermint/tendermint v0.34.7"
 VERSION := $(shell ( git describe --tags 2>/dev/null || echo "v0.0.0" ) | sed 's/^v//')
+ifeq (, $(findstring release/,$(BRANCH)))
+   VERSION = $(BRANCH)-$(COMMIT)
+ endif
 COMMIT := $(shell git log -1 --format='%H')
 
 GO := go
@@ -72,7 +77,8 @@ ldflags = -w -s \
 	-X github.com/cosmos/cosmos-sdk/version.AppName=provenanced \
 	-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
-	-X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)"
+	-X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" \
+	-X github.com/tendermint/tendermint/version.TMCoreSemVer=$(TM_VERSION)
 
 ifeq ($(WITH_CLEVELDB),yes)
 	ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=cleveldb
