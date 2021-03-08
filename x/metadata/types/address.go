@@ -385,7 +385,7 @@ func (ma MetadataAddress) PrimaryUUID() (uuid.UUID, error) {
 		return uuid.UUID{}, fmt.Errorf("address empty")
 	}
 	// if we don't know this type
-	if !ma.isTypeOneOf(ScopeKeyPrefix, SessionKeyPrefix, RecordKeyPrefix, ContractSpecificationKeyPrefix, ScopeSpecificationKeyPrefix, RecordSpecificationKeyPrefix) {
+	if !ma.isTypeOneOf(ScopeKeyPrefix, SessionKeyPrefix, RecordKeyPrefix, ScopeSpecificationKeyPrefix, ContractSpecificationKeyPrefix, RecordSpecificationKeyPrefix) {
 		return uuid.UUID{}, fmt.Errorf("invalid address type out of valid range (got: %d)", ma[0])
 	}
 	if len(ma) < 17 {
