@@ -35,11 +35,6 @@ const (
 var (
 	// Ensure MetadataAddress implements the sdk.Address interface
 	_ sdk.Address = MetadataAddress{}
-	// All valid Metadata Address type prefixes.
-	allowedTypes = [][]byte{
-		ScopeKeyPrefix, SessionKeyPrefix, RecordKeyPrefix,
-		ContractSpecificationKeyPrefix, ScopeSpecificationKeyPrefix, RecordSpecificationKeyPrefix,
-	}
 )
 
 // MetadataAddress is a blockchain compliant address based on UUIDs
@@ -54,7 +49,7 @@ func VerifyMetadataAddressFormat(bz []byte) (string, error) {
 		return hrp, fmt.Errorf("incorrect address length (must be at least 17, actual: %d)", len(bz))
 	}
 	checkSecondaryUUID := false
-	// If you add or remove a case in this switch, make sure to also update the allowedTypes values.
+	// entries in this switch should be kept in sync with the switch in the Prefix func
 	switch bz[0] {
 	case ScopeKeyPrefix[0]:
 		hrp = PrefixScope
@@ -376,6 +371,27 @@ func (ma MetadataAddress) ContractSpecUUID() (uuid.UUID, error) {
 	return ma.PrimaryUUID()
 }
 
+// Prefix returns the human readable part (prefix) of this MetadataAddress, e.g. "scope" or "contractspec"
+func (ma MetadataAddress) Prefix() (string, error) {
+	// entries in this switch should be kept in sync with the switch in the VerifyMetadataAddressFormat func
+	switch ma[0] {
+	case ScopeKeyPrefix[0]:
+		return PrefixScope, nil
+	case SessionKeyPrefix[0]:
+		return PrefixSession, nil
+	case RecordKeyPrefix[0]:
+		return PrefixRecord, nil
+
+	case ScopeSpecificationKeyPrefix[0]:
+		return PrefixScopeSpecification, nil
+	case ContractSpecificationKeyPrefix[0]:
+		return PrefixContractSpecification, nil
+	case RecordSpecificationKeyPrefix[0]:
+		return PrefixRecordSpecification, nil
+	}
+	return "", fmt.Errorf("invalid metadata address type: %d", ma[0])
+}
+
 // PrimaryUUID returns the primary UUID from this MetadataAddress (if applicable).
 // More accurately, this converts bytes 2 to 17 to a UUID.
 // For example, if this MetadataAddress is for a scope specification, this will return the scope specification uuid.
@@ -386,7 +402,7 @@ func (ma MetadataAddress) PrimaryUUID() (uuid.UUID, error) {
 		return uuid.UUID{}, fmt.Errorf("address empty")
 	}
 	// if we don't know this type
-	if !ma.isTypeOneOf(allowedTypes...) {
+	if !ma.isTypeOneOf(ScopeKeyPrefix, SessionKeyPrefix, RecordKeyPrefix, ContractSpecificationKeyPrefix, ScopeSpecificationKeyPrefix, RecordSpecificationKeyPrefix) {
 		return uuid.UUID{}, fmt.Errorf("invalid address type out of valid range (got: %d)", ma[0])
 	}
 	if len(ma) < 17 {
