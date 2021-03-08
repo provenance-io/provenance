@@ -26,18 +26,53 @@ func GetQueryCmd() *cobra.Command {
 	}
 	queryCmd.AddCommand(
 		GetMetadataParamsCmd(),
+		GetMetadataByIDCmd(),
 		GetMetadataScopeCmd(),
 	)
 	return queryCmd
 }
 
-// GetMetadataEntryCmd returns the command handler for querying metadata for anything from an id.
-func GetMetadataEntryCmd() *cobra.Command {
+// GetMetadataParamsCmd returns the command handler for metadata parameter querying.
+func GetMetadataParamsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "params",
+		Short: "Query the current metadata parameters",
+		Args:  cobra.NoArgs,
+		Long:  strings.TrimSpace(
+			fmt.Sprintf(`Query the current metadata module parameters:
+Example:
+$ %s query metadata params
+`,
+				version.AppName,
+			)),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.Params(context.Background(), &types.QueryParamsRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(&res.Params)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetMetadataByIDCmd returns the command handler for querying metadata for anything from an id.
+func GetMetadataByIDCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get [id]",
 		Short: "Query the current metadata by id",
 		Args:  cobra.ExactArgs(1),
-		Long: strings.TrimSpace(
+		Long:  strings.TrimSpace(
 			fmt.Sprintf(`Query the current metadata module by id:
 Example:
 $ %s query metadata get scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp
@@ -66,45 +101,11 @@ Any metadata address type is allowed and the appropriate entry will be returned.
 			case types.PrefixScopeSpecification:
 				return scopeSpecByID(cmd, id)
 			case types.PrefixContractSpecification:
-				// TODO: Contract spec lookup
+				return contractSpecByID(cmd, id)
 			case types.PrefixRecordSpecification:
-				// TODO: Record spec lookup
+				return recordSpecByID(cmd, id)
 			}
 			return fmt.Errorf("unexpected address type %s", addressType)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
-}
-
-// GetMetadataParamsCmd returns the command handler for metadata parameter querying.
-func GetMetadataParamsCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "params",
-		Short: "Query the current metadata parameters",
-		Args:  cobra.NoArgs,
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query the current metadata module parameters:
-Example:
-$ %s query metadata params
-`,
-				version.AppName,
-			)),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.Params(context.Background(), &types.QueryParamsRequest{})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(&res.Params)
 		},
 	}
 
@@ -116,10 +117,10 @@ $ %s query metadata params
 // GetMetadataScopeCmd returns the command handler for metadata scope querying.
 func GetMetadataScopeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "scope [id]",
+		Use:   "scope [uuid]",
 		Short: "Query the current metadata for scope",
 		Args:  cobra.ExactArgs(1),
-		Long: strings.TrimSpace(
+		Long:  strings.TrimSpace(
 			fmt.Sprintf(`Query the current metadata module parameters:
 Example:
 $ %s query metadata scope 123e4567-e89b-12d3-a456-426614174000
@@ -237,7 +238,7 @@ func recordByScopeUUIDAndName(cmd *cobra.Command, scopeUUID string, name string)
 
 // scopeSpecByID outputs a scope specification looked up by a scope specification MetadataAddress.
 func scopeSpecByID(cmd *cobra.Command, scopeSpecID types.MetadataAddress) error {
-	scopeSpecUUID, err := scopeSpecID.PrimaryUUID()
+	scopeSpecUUID, err := scopeSpecID.ScopeSpecUUID()
 	if err != nil {
 		return err
 	}
@@ -259,4 +260,70 @@ func scopeSpecByUUID(cmd *cobra.Command, scopeSpecUUID string) error {
 		return fmt.Errorf("no scope specification found with uuid %s", scopeSpecUUID)
 	}
 	return clientCtx.PrintProto(res.ScopeSpecification)
+}
+
+// contractSpecByID outputs a contract specification looked up by a contract specification MetadataAddress.
+func contractSpecByID(cmd *cobra.Command, contractSpecID types.MetadataAddress) error {
+	contractSpecUUID, err := contractSpecID.ContractSpecUUID()
+	if err != nil {
+		return err
+	}
+	return contractSpecByUUID(cmd, contractSpecUUID.String())
+}
+
+// contractSpecByUUID outputs a contract specification looked up by specification UUID.
+func contractSpecByUUID(cmd *cobra.Command, contractSpecUUID string) error {
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return err
+	}
+	queryClient := types.NewQueryClient(clientCtx)
+	res, err := queryClient.ContractSpecification(context.Background(), &types.ContractSpecificationRequest{SpecificationUuid: contractSpecUUID})
+	if err != nil {
+		return err
+	}
+	if res.ContractSpecification == nil {
+		return fmt.Errorf("no contract specification found with uuid %s", contractSpecUUID)
+	}
+	return clientCtx.PrintProto(res.ContractSpecification)
+}
+
+// recordSpecByID outputs a record specification looked up by a record specification MetadataAddress.
+func recordSpecByID(cmd *cobra.Command, recordSpecID types.MetadataAddress) error {
+	contractSpecUUID, err := recordSpecID.ContractSpecUUID()
+	if err != nil {
+		return err
+	}
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return err
+	}
+	queryClient := types.NewQueryClient(clientCtx)
+	res, err := queryClient.RecordSpecificationsForContractSpecification(
+		context.Background(),
+		&types.RecordSpecificationsForContractSpecificationRequest{ContractSpecificationUuid: contractSpecUUID.String()},
+	)
+	if err != nil {
+		return err
+	}
+	var recSpec *types.RecordSpecification = nil
+	for _, rs := range res.RecordSpecifications {
+		if recordSpecID.Equals(rs.SpecificationId) {
+			recSpec = rs
+			break
+		}
+	}
+	if recSpec == nil {
+		return fmt.Errorf("no record specification found with id %s in contract specification uuid %s", recordSpecID, contractSpecUUID)
+	}
+	return clientCtx.PrintProto(recSpec)
+}
+
+// recordSpecByContractSpecUUIDAndName outputs a record specification looked up by contract specification UUID and record specification name.
+func recordSpecByContractSpecUUIDAndName(cmd *cobra.Command, contractSpecUUID string, name string) error {
+	primaryUUID, err := uuid.Parse(contractSpecUUID)
+	if err != nil {
+		return err
+	}
+	return recordSpecByID(cmd, types.RecordSpecMetadataAddress(primaryUUID, name))
 }
