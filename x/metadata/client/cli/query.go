@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -57,17 +58,13 @@ Any metadata address type is allowed and the appropriate entry will be returned.
 
 			switch addressType {
 			case types.PrefixScope:
-				scopeUUID, err := id.ScopeUUID()
-				if err != nil {
-					return err
-				}
-				return scopeByUUID(cmd, scopeUUID.String())
+				return scopeByID(cmd, id)
 			case types.PrefixSession:
-				// TODO: Session lookup
+				return sessionByID(cmd, id)
 			case types.PrefixRecord:
-				// TODO: Record lookup
+				return recordByID(cmd, id)
 			case types.PrefixScopeSpecification:
-				// TODO: Scope spec lookup
+				return scopeSpecByID(cmd, id)
 			case types.PrefixContractSpecification:
 				// TODO: Contract spec lookup
 			case types.PrefixRecordSpecification:
@@ -139,6 +136,16 @@ $ %s query metadata scope 123e4567-e89b-12d3-a456-426614174000
 	return cmd
 }
 
+// scopeByID outputs a scope looked up by a scope MetadataAddress.
+func scopeByID(cmd *cobra.Command, scopeID types.MetadataAddress) error {
+	scopeUUID, err := scopeID.ScopeUUID()
+	if err != nil {
+		return err
+	}
+	return scopeByUUID(cmd, scopeUUID.String())
+}
+
+// scopeByUUID outputs a scope looked up by scope UUID.
 func scopeByUUID(cmd *cobra.Command, scopeUUID string) error {
 	clientCtx, err := client.GetClientQueryContext(cmd)
 	if err != nil {
@@ -150,6 +157,106 @@ func scopeByUUID(cmd *cobra.Command, scopeUUID string) error {
 	if err != nil {
 		return err
 	}
+	if res.Scope == nil {
+		return fmt.Errorf("no scope found with uuid %s", scopeUUID)
+	}
 
 	return clientCtx.PrintProto(res.Scope)
+}
+
+// sessionByID outputs a session looked up by a session MetadataAddress.
+func sessionByID(cmd *cobra.Command, sessionID types.MetadataAddress) error {
+	scopeUUID, err := sessionID.ScopeUUID()
+	if err != nil {
+		return err
+	}
+	sessionUUID, err := sessionID.SessionUUID()
+	if err != nil {
+		return err
+	}
+	return sessionByUUIDs(cmd, scopeUUID.String(), sessionUUID.String())
+}
+
+// sessionByUUIDs outputs a session looked up by scope UUID and session UUID.
+func sessionByUUIDs(cmd *cobra.Command, scopeUUID string, sessionUUID string) error {
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return err
+	}
+
+	queryClient := types.NewQueryClient(clientCtx)
+	res, err := queryClient.SessionContextByUUID(context.Background(), &types.SessionContextByUUIDRequest{ScopeUuid: scopeUUID, SessionUuid: sessionUUID})
+	if err != nil {
+		return err
+	}
+	if res.Sessions == nil || len(res.Sessions) == 0 {
+		return fmt.Errorf("no session found with scope uuid %s and session uuid %s", scopeUUID, sessionUUID)
+	}
+	if len(res.Sessions) == 1 {
+		return clientCtx.PrintProto(res.Sessions[0])
+	}
+	return clientCtx.PrintProto(res)
+}
+
+// recordByID outputs a record looked up by a record MetadataAddress.
+func recordByID(cmd *cobra.Command, recordID types.MetadataAddress) error {
+	scopeUUID, err := recordID.ScopeUUID()
+	if err != nil {
+		return err
+	}
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return err
+	}
+	queryClient := types.NewQueryClient(clientCtx)
+	res, err := queryClient.Scope(context.Background(), &types.ScopeRequest{ScopeUuid: scopeUUID.String()})
+	if err != nil {
+		return err
+	}
+	var record *types.Record = nil
+	for _, r := range res.Records {
+		if recordID.Equals(types.RecordMetadataAddress(scopeUUID, r.Name)) {
+			record = r
+			break
+		}
+	}
+	if record == nil {
+		return fmt.Errorf("no records with id %s found in scope with uuid %s", recordID, scopeUUID)
+	}
+	return clientCtx.PrintProto(record)
+}
+
+// recordByScopeUUIDAndName outputs a record looked up by scope UUID ane record name.
+func recordByScopeUUIDAndName(cmd *cobra.Command, scopeUUID string, name string) error {
+	primaryUUID, err := uuid.Parse(scopeUUID)
+	if err != nil {
+		return err
+	}
+	return recordByID(cmd, types.RecordMetadataAddress(primaryUUID, name))
+}
+
+// scopeSpecByID outputs a scope specification looked up by a scope specification MetadataAddress.
+func scopeSpecByID(cmd *cobra.Command, scopeSpecID types.MetadataAddress) error {
+	scopeSpecUUID, err := scopeSpecID.PrimaryUUID()
+	if err != nil {
+		return err
+	}
+	return scopeSpecByUUID(cmd, scopeSpecUUID.String())
+}
+
+// scopeSpecByUUID outputs a scope specification looked up by specification UUID.
+func scopeSpecByUUID(cmd *cobra.Command, scopeSpecUUID string) error {
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return err
+	}
+	queryClient := types.NewQueryClient(clientCtx)
+	res, err := queryClient.ScopeSpecification(context.Background(), &types.ScopeSpecificationRequest{SpecificationUuid: scopeSpecUUID})
+	if err != nil {
+		return err
+	}
+	if res.ScopeSpecification == nil {
+		return fmt.Errorf("no scope specification found with uuid %s", scopeSpecUUID)
+	}
+	return clientCtx.PrintProto(res.ScopeSpecification)
 }
