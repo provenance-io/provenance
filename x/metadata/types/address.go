@@ -363,6 +363,14 @@ func (ma MetadataAddress) SessionUUID() (uuid.UUID, error) {
 	return ma.SecondaryUUID()
 }
 
+// ScopeSpecUUID returns the scope specification uuid component of a MetadataAddress (if appropriate)
+func (ma MetadataAddress) ScopeSpecUUID() (uuid.UUID, error) {
+	if len(ma) > 0 && ma[0] != ScopeSpecificationKeyPrefix[0] {
+		return uuid.UUID{}, fmt.Errorf("this metadata address does not contain a scope specification uuid")
+	}
+	return ma.PrimaryUUID()
+}
+
 func (ma MetadataAddress) ContractSpecUUID() (uuid.UUID, error) {
 	if !ma.isTypeOneOf(ContractSpecificationKeyPrefix, RecordSpecificationKeyPrefix) {
 		return uuid.UUID{}, fmt.Errorf("this metadata address does not contain a contract specification uuid")
