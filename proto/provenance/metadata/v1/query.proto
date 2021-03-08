@@ -7,6 +7,7 @@ import "google/api/annotations.proto";
 import "provenance/metadata/v1/metadata.proto";
 import "provenance/metadata/v1/scope.proto";
 import "provenance/metadata/v1/specification.proto";
+import "provenance/metadata/v1/objectstore.proto";
 
 option go_package = "github.com/provenance-io/provenance/x/metadata/types";
 
@@ -82,6 +83,22 @@ service Query {
   // RecordSpecification returns a record specification for the given specification uuid
   rpc RecordSpecification(RecordSpecificationRequest) returns (RecordSpecificationResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/recordspec/{contract_specification_uuid}/{name}";
+  }
+
+  // ---- OS locator methods -----
+  // Params queries all parameters.
+  rpc OSParams(OSLocatorQueryParamsRequest) returns (OSLocatorQueryParamsResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/locator/params";
+  }
+
+  // Scope returns a specific scope by id
+  rpc OSLocation(OSLocatorRequest) returns (OSLocatorResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/locator/{owner}";
+  }
+
+  // Scope returns a specific scope by id
+  rpc OSLocatorByURI(OSLocatorByURIRequest) returns (OSLocatorResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/locator/{uri}";
   }
 }
 
@@ -248,3 +265,37 @@ message RecordSpecificationRequest {
 message RecordSpecificationResponse {
   RecordSpecification record_specification = 1 [(gogoproto.moretags) = "yaml:\"record_specification\""];
 }
+
+// OSLocationRequest is used for requesting a Objectstore location by name
+message OSLocatorRequest {
+  string owner = 1;
+}
+
+message OSLocatorByURIRequest {
+  string uri = 1;
+}
+
+// OSLocatorResponse is the response to a os locator request.
+message OSLocatorResponse {
+  ObjectStoreLocator   locator = 1;
+}
+
+message OSLocatorByURIResponse {
+  //assumes that an URI can be associated with multiple address's
+  repeated ObjectStoreLocator   locator = 1;
+}
+
+// OSLocatorQueryParamsRequest is the request type for the Query/Params RPC method.
+message OSLocatorQueryParamsRequest {}
+
+// OSLocatorQueryParamsResponse is the response type for the Query/Params RPC method.
+message OSLocatorQueryParamsResponse {
+  // params defines the parameters of the module.
+  OSLocatorParams params = 1 [(gogoproto.nullable) = false];
+}
+
+// Params defines the parameters for the metadata-locator module methods.
+message OSLocatorParams {
+  uint64 max_uri_characters     = 1 [(gogoproto.customtype) = "uint64", (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"max_uri_characters\""];
+}
+
