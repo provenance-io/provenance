@@ -3,7 +3,6 @@ package cli
 import (
 	"context"
 	"fmt"
-	"github.com/google/uuid"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -11,6 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
+
+	"github.com/google/uuid"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
@@ -28,6 +29,11 @@ func GetQueryCmd() *cobra.Command {
 		GetMetadataParamsCmd(),
 		GetMetadataByIDCmd(),
 		GetMetadataScopeCmd(),
+		GetMetadataSessionCmd(),
+		GetMetadataRecordCmd(),
+		GetMetadataScopeSpecCmd(),
+		GetMetadataContractSpecCmd(),
+		GetMetadataRecordSpecCmd(),
 	)
 	return queryCmd
 }
@@ -38,7 +44,7 @@ func GetMetadataParamsCmd() *cobra.Command {
 		Use:   "params",
 		Short: "Query the current metadata parameters",
 		Args:  cobra.NoArgs,
-		Long:  strings.TrimSpace(
+		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query the current metadata module parameters:
 Example:
 $ %s query metadata params
@@ -69,20 +75,12 @@ $ %s query metadata params
 // GetMetadataByIDCmd returns the command handler for querying metadata for anything from an id.
 func GetMetadataByIDCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get [id]",
-		Short: "Query the current metadata by id",
-		Args:  cobra.ExactArgs(1),
-		Long:  strings.TrimSpace(
-			fmt.Sprintf(`Query the current metadata module by id:
-Example:
-$ %s query metadata get scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp
-
-Any metadata address type is allowed and the appropriate entry will be returned.
-`,
-				version.AppName,
-			)),
+		Use:     "get id",
+		Short:   "Query the current metadata by id",
+		Args:    cobra.ExactArgs(1),
+		Example: fmt.Sprintf("%s query metadata get scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp", version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			id, err := types.MetadataAddressFromBech32(strings.ToLower(strings.TrimSpace(args[0])))
+			id, err := types.MetadataAddressFromBech32(strings.TrimSpace(args[0]))
 			if err != nil {
 				return err
 			}
@@ -117,18 +115,101 @@ Any metadata address type is allowed and the appropriate entry will be returned.
 // GetMetadataScopeCmd returns the command handler for metadata scope querying.
 func GetMetadataScopeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "scope [uuid]",
-		Short: "Query the current metadata for scope",
-		Args:  cobra.ExactArgs(1),
-		Long:  strings.TrimSpace(
-			fmt.Sprintf(`Query the current metadata module parameters:
-Example:
-$ %s query metadata scope 123e4567-e89b-12d3-a456-426614174000
-`,
-				version.AppName,
-			)),
+		Use:     "scope uuid",
+		Short:   "Query the current metadata for a scope",
+		Args:    cobra.ExactArgs(1),
+		Example: fmt.Sprintf("%s query metadata scope 123e4567-e89b-12d3-a456-426614174000", version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return scopeByUUID(cmd, strings.ToLower(strings.TrimSpace(args[0])))
+			return scopeByUUID(cmd, strings.TrimSpace(args[0]))
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetMetadataSessionCmd returns the command handler for metadata session querying.
+func GetMetadataSessionCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "session scope_uuid session_uuid",
+		Short:   "Query the current metadata for a session",
+		Args:    cobra.ExactArgs(2),
+		Example: fmt.Sprintf("%s query metadata session 123e4567-e89b-12d3-a456-426614174000 123e4567-e89b-12d3-a456-426614174001", version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return sessionByUUIDs(cmd, strings.TrimSpace(args[0]), strings.TrimSpace(args[1]))
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetMetadataRecordCmd returns the command handler for metadata record querying.
+func GetMetadataRecordCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "record scope_uuid record_name",
+		Aliases: []string{"r"},
+		Short:   "Query the current metadata for a record",
+		Args:    cobra.ExactArgs(2),
+		Example: fmt.Sprintf("%s query metadata record 123e4567-e89b-12d3-a456-426614174000 myrecord", version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return recordByScopeUUIDAndName(cmd, strings.TrimSpace(args[0]), strings.TrimSpace(args[1]))
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetMetadataScopeSpecCmd returns the command handler for metadata scope specification querying.
+func GetMetadataScopeSpecCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "scopespec uuid",
+		Aliases: []string{"ss"},
+		Short:   "Query the current metadata for a scope specification",
+		Args:    cobra.ExactArgs(1),
+		Example: fmt.Sprintf("%s query metadata scopespec 123e4567-e89b-12d3-a456-426614174000", version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return scopeSpecByUUID(cmd, strings.TrimSpace(args[0]))
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetMetadataContractSpecCmd returns the command handler for metadata contract specification querying.
+func GetMetadataContractSpecCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "contractspec uuid",
+		Aliases: []string{"cs"},
+		Short:   "Query the current metadata for a contract specification",
+		Args:    cobra.ExactArgs(1),
+		Example: fmt.Sprintf("%s query metadata contractspec 123e4567-e89b-12d3-a456-426614174000", version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return contractSpecByUUID(cmd, strings.TrimSpace(args[0]))
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetMetadataRecordSpecCmd returns the command handler for metadata record specification querying.
+func GetMetadataRecordSpecCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "recordspec contract_spec_uuid record_name",
+		Aliases: []string{"rs"},
+		Short:   "Query the current metadata for a record specification",
+		Args:    cobra.ExactArgs(1),
+		Example: fmt.Sprintf("%s query metadata recordspec 123e4567-e89b-12d3-a456-426614174000 myrecord", version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return recordSpecByContractSpecUUIDAndName(cmd, strings.TrimSpace(args[0]), strings.TrimSpace(args[1]))
 		},
 	}
 
@@ -186,7 +267,13 @@ func sessionByUUIDs(cmd *cobra.Command, scopeUUID string, sessionUUID string) er
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.SessionContextByUUID(context.Background(), &types.SessionContextByUUIDRequest{ScopeUuid: scopeUUID, SessionUuid: sessionUUID})
+	res, err := queryClient.SessionContextByUUID(
+		context.Background(),
+		&types.SessionContextByUUIDRequest{
+			ScopeUuid:   scopeUUID,
+			SessionUuid: sessionUUID,
+		},
+	)
 	if err != nil {
 		return err
 	}
