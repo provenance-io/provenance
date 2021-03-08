@@ -845,7 +845,7 @@ func local_request_Query_RecordSpecification_0(ctx context.Context, marshaler ru
 
 }
 
-func request_Query_OSParams_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_QueryOSLocator_OSParams_0(ctx context.Context, marshaler runtime.Marshaler, client QueryOSLocatorClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq OSLocatorQueryParamsRequest
 	var metadata runtime.ServerMetadata
 
@@ -854,7 +854,7 @@ func request_Query_OSParams_0(ctx context.Context, marshaler runtime.Marshaler, 
 
 }
 
-func local_request_Query_OSParams_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_QueryOSLocator_OSParams_0(ctx context.Context, marshaler runtime.Marshaler, server QueryOSLocatorServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq OSLocatorQueryParamsRequest
 	var metadata runtime.ServerMetadata
 
@@ -863,7 +863,7 @@ func local_request_Query_OSParams_0(ctx context.Context, marshaler runtime.Marsh
 
 }
 
-func request_Query_OSLocation_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_QueryOSLocator_OSLocation_0(ctx context.Context, marshaler runtime.Marshaler, client QueryOSLocatorClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq OSLocatorRequest
 	var metadata runtime.ServerMetadata
 
@@ -890,7 +890,7 @@ func request_Query_OSLocation_0(ctx context.Context, marshaler runtime.Marshaler
 
 }
 
-func local_request_Query_OSLocation_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_QueryOSLocator_OSLocation_0(ctx context.Context, marshaler runtime.Marshaler, server QueryOSLocatorServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq OSLocatorRequest
 	var metadata runtime.ServerMetadata
 
@@ -917,7 +917,7 @@ func local_request_Query_OSLocation_0(ctx context.Context, marshaler runtime.Mar
 
 }
 
-func request_Query_OSLocatorByURI_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_QueryOSLocator_OSLocatorByURI_0(ctx context.Context, marshaler runtime.Marshaler, client QueryOSLocatorClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq OSLocatorByURIRequest
 	var metadata runtime.ServerMetadata
 
@@ -944,7 +944,7 @@ func request_Query_OSLocatorByURI_0(ctx context.Context, marshaler runtime.Marsh
 
 }
 
-func local_request_Query_OSLocatorByURI_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_QueryOSLocator_OSLocatorByURI_0(ctx context.Context, marshaler runtime.Marshaler, server QueryOSLocatorServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq OSLocatorByURIRequest
 	var metadata runtime.ServerMetadata
 
@@ -1276,7 +1276,16 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 
 	})
 
-	mux.Handle("GET", pattern_Query_OSParams_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	return nil
+}
+
+// RegisterQueryOSLocatorHandlerServer registers the http handlers for service QueryOSLocator to "mux".
+// UnaryRPC     :call QueryOSLocatorServer directly.
+// StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
+// Note that using this registration option will cause many gRPC library features to stop working. Consider using RegisterQueryOSLocatorHandlerFromEndpoint instead.
+func RegisterQueryOSLocatorHandlerServer(ctx context.Context, mux *runtime.ServeMux, server QueryOSLocatorServer) error {
+
+	mux.Handle("GET", pattern_QueryOSLocator_OSParams_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -1287,7 +1296,7 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Query_OSParams_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_QueryOSLocator_OSParams_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -1295,11 +1304,11 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 			return
 		}
 
-		forward_Query_OSParams_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_QueryOSLocator_OSParams_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Query_OSLocation_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_QueryOSLocator_OSLocation_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -1310,7 +1319,7 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Query_OSLocation_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_QueryOSLocator_OSLocation_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -1318,11 +1327,11 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 			return
 		}
 
-		forward_Query_OSLocation_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_QueryOSLocator_OSLocation_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Query_OSLocatorByURI_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_QueryOSLocator_OSLocatorByURI_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -1333,7 +1342,7 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Query_OSLocatorByURI_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_QueryOSLocator_OSLocatorByURI_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -1341,7 +1350,7 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 			return
 		}
 
-		forward_Query_OSLocatorByURI_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_QueryOSLocator_OSLocatorByURI_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1646,66 +1655,6 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 
 	})
 
-	mux.Handle("GET", pattern_Query_OSParams_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_Query_OSParams_0(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_Query_OSParams_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
-
-	mux.Handle("GET", pattern_Query_OSLocation_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_Query_OSLocation_0(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_Query_OSLocation_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
-
-	mux.Handle("GET", pattern_Query_OSLocatorByURI_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_Query_OSLocatorByURI_0(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_Query_OSLocatorByURI_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
-
 	return nil
 }
 
@@ -1735,12 +1684,6 @@ var (
 	pattern_Query_RecordSpecificationsForContractSpecification_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"provenance", "metadata", "v1", "contractspec", "contract_specification_uuid", "recordspecs"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Query_RecordSpecification_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"provenance", "metadata", "v1", "recordspec", "contract_specification_uuid", "name"}, "", runtime.AssumeColonVerbOpt(true)))
-
-	pattern_Query_OSParams_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"provenance", "metadata", "v1", "locator", "params"}, "", runtime.AssumeColonVerbOpt(true)))
-
-	pattern_Query_OSLocation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"provenance", "metadata", "v1", "locator", "owner"}, "", runtime.AssumeColonVerbOpt(true)))
-
-	pattern_Query_OSLocatorByURI_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"provenance", "metadata", "v1", "locator", "uri"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
@@ -1769,10 +1712,121 @@ var (
 	forward_Query_RecordSpecificationsForContractSpecification_0 = runtime.ForwardResponseMessage
 
 	forward_Query_RecordSpecification_0 = runtime.ForwardResponseMessage
+)
 
-	forward_Query_OSParams_0 = runtime.ForwardResponseMessage
+// RegisterQueryOSLocatorHandlerFromEndpoint is same as RegisterQueryOSLocatorHandler but
+// automatically dials to "endpoint" and closes the connection when "ctx" gets done.
+func RegisterQueryOSLocatorHandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
+	conn, err := grpc.Dial(endpoint, opts...)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			if cerr := conn.Close(); cerr != nil {
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
+			}
+			return
+		}
+		go func() {
+			<-ctx.Done()
+			if cerr := conn.Close(); cerr != nil {
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
+			}
+		}()
+	}()
 
-	forward_Query_OSLocation_0 = runtime.ForwardResponseMessage
+	return RegisterQueryOSLocatorHandler(ctx, mux, conn)
+}
 
-	forward_Query_OSLocatorByURI_0 = runtime.ForwardResponseMessage
+// RegisterQueryOSLocatorHandler registers the http handlers for service QueryOSLocator to "mux".
+// The handlers forward requests to the grpc endpoint over "conn".
+func RegisterQueryOSLocatorHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
+	return RegisterQueryOSLocatorHandlerClient(ctx, mux, NewQueryOSLocatorClient(conn))
+}
+
+// RegisterQueryOSLocatorHandlerClient registers the http handlers for service QueryOSLocator
+// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "QueryOSLocatorClient".
+// Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "QueryOSLocatorClient"
+// doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
+// "QueryOSLocatorClient" to call the correct interceptors.
+func RegisterQueryOSLocatorHandlerClient(ctx context.Context, mux *runtime.ServeMux, client QueryOSLocatorClient) error {
+
+	mux.Handle("GET", pattern_QueryOSLocator_OSParams_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_QueryOSLocator_OSParams_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_QueryOSLocator_OSParams_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_QueryOSLocator_OSLocation_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_QueryOSLocator_OSLocation_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_QueryOSLocator_OSLocation_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_QueryOSLocator_OSLocatorByURI_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_QueryOSLocator_OSLocatorByURI_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_QueryOSLocator_OSLocatorByURI_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	return nil
+}
+
+var (
+	pattern_QueryOSLocator_OSParams_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"provenance", "metadata", "v1", "locator", "params"}, "", runtime.AssumeColonVerbOpt(true)))
+
+	pattern_QueryOSLocator_OSLocation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"provenance", "metadata", "v1", "locator", "owner"}, "", runtime.AssumeColonVerbOpt(true)))
+
+	pattern_QueryOSLocator_OSLocatorByURI_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"provenance", "metadata", "v1", "locator", "uri"}, "", runtime.AssumeColonVerbOpt(true)))
+)
+
+var (
+	forward_QueryOSLocator_OSParams_0 = runtime.ForwardResponseMessage
+
+	forward_QueryOSLocator_OSLocation_0 = runtime.ForwardResponseMessage
+
+	forward_QueryOSLocator_OSLocatorByURI_0 = runtime.ForwardResponseMessage
 )

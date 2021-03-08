@@ -85,6 +85,10 @@ service Query {
     option (google.api.http).get = "/provenance/metadata/v1/recordspec/{contract_specification_uuid}/{name}";
   }
 
+}
+
+service QueryOSLocator {
+
   // ---- OS locator methods -----
   // Params queries all parameters.
   rpc OSParams(OSLocatorQueryParamsRequest) returns (OSLocatorQueryParamsResponse) {
@@ -101,7 +105,6 @@ service Query {
     option (google.api.http).get = "/provenance/metadata/v1/locator/{uri}";
   }
 }
-
 // QueryParamsRequest is the request type for the Query/Params RPC method.
 message QueryParamsRequest {}
 

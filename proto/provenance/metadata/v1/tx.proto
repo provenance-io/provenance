@@ -289,12 +289,12 @@ message MsgDeleteRecordSpecificationResponse {}
 // Object store Locator
 
 // Msg defines the objectstore locator Msg service.
-service MsgOS {
+service MsgOSLocator {
   // BindName binds a name to an address under a root name.
-  rpc BindName (MsgAddOSLocatorRequest) returns (MsgAddOSLocatorResponse);
+  rpc BindLocator (MsgAddOSLocatorRequest) returns (MsgAddOSLocatorResponse);
 
   // DeleteName defines a method to verify a particular invariance.
-  rpc DeleteName(MsgDeleteOSLocatorRequest) returns (MsgDeleteOSLocatorResponse);
+  rpc DeleteLocator (MsgDeleteOSLocatorRequest) returns (MsgDeleteOSLocatorResponse);
 }
 
 // MsgBindNameRequest defines an sdk.Msg type that is used to add an address/name binding under an optional parent name.
