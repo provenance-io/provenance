@@ -447,6 +447,15 @@ func (ma MetadataAddress) GetRecordSpecAddress(name string) MetadataAddress {
 	return RecordSpecMetadataAddress(contractSpecUUID, name)
 }
 
+// GetContractSpecAddress returns the MetadataAddress for a contract spec given the UUID in the current record spec context
+func (ma MetadataAddress) GetContractSpecAddress() MetadataAddress {
+	contractSpecUUID, err := ma.ContractSpecUUID()
+	if err != nil {
+		panic(err)
+	}
+	return ContractSpecMetadataAddress(contractSpecUUID)
+}
+
 // ScopeSessionIteratorPrefix returns an iterator prefix that finds all Sessions assigned to the metadata address scope
 // if the current address is empty then returns a prefix to iterate through all sessions
 func (ma MetadataAddress) ScopeSessionIteratorPrefix() ([]byte, error) {

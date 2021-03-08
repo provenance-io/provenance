@@ -382,24 +382,22 @@ func convertContractSpec(old *v039metadata.ContractSpec) (
 		Source: &v040metadata.ContractSpecification_Hash{
 			Hash: old.Definition.ResourceLocation.Ref.Hash,
 		},
-		ClassName:     old.Definition.ResourceLocation.Classname,
-		RecordSpecIds: make([]v040metadata.MetadataAddress, len(old.ConsiderationSpecs)),
+		ClassName: old.Definition.ResourceLocation.Classname,
 	}
 
 	newRecords = make([]v040metadata.RecordSpecification, len(old.ConsiderationSpecs))
 	for i := range old.ConsiderationSpecs {
-		newSpec.RecordSpecIds[i] = newSpec.SpecificationId.GetRecordSpecAddress(old.ConsiderationSpecs[i].OutputSpec.Spec.Name)
 		recordInputs, err := convertInputSpecs(old.ConsiderationSpecs[i].InputSpecs)
 		if err != nil {
 			return newSpec, nil, err
 		}
 		newRecords[i] = v040metadata.RecordSpecification{
-			SpecificationId:  newSpec.SpecificationId,
-			Name:             old.ConsiderationSpecs[i].OutputSpec.Spec.Name,
-			TypeName:         old.ConsiderationSpecs[i].OutputSpec.Spec.ResourceLocation.Classname,
-			ResultType:       v040metadata.DefinitionType(old.ConsiderationSpecs[i].OutputSpec.Spec.Type),
-			Inputs:           recordInputs,
-			ResponsibleParty: v040metadata.PartyType(old.ConsiderationSpecs[i].ResponsibleParty),
+			SpecificationId:    newSpec.SpecificationId,
+			Name:               old.ConsiderationSpecs[i].OutputSpec.Spec.Name,
+			TypeName:           old.ConsiderationSpecs[i].OutputSpec.Spec.ResourceLocation.Classname,
+			ResultType:         v040metadata.DefinitionType(old.ConsiderationSpecs[i].OutputSpec.Spec.Type),
+			Inputs:             recordInputs,
+			ResponsibleParties: []v040metadata.PartyType{v040metadata.PartyType(old.ConsiderationSpecs[i].ResponsibleParty)},
 		}
 	}
 

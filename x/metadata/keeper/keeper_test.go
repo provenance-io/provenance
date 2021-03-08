@@ -104,6 +104,10 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.queryClient = queryClient
 }
 
+func TestKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
+}
+
 func (s *KeeperTestSuite) TestMetadataScopeGetSet() {
 	scope, found := s.app.MetadataKeeper.GetScope(s.ctx, s.scopeID)
 	s.NotNil(scope)
@@ -558,7 +562,7 @@ func (s *KeeperTestSuite) TestMetadataValidateSessionUpdate() {
 	invalidNameSession := types.NewSession("invalid", s.sessionId, s.contractSpecId, parties, types.AuditFields{})
 
 	partiesInvolved := []types.PartyType{types.PartyType_PARTY_TYPE_AFFILIATE}
-	contractSpec := types.NewContractSpecification(s.contractSpecId, types.NewDescription("name", "desc", "url", "icon"), []string{s.user1}, partiesInvolved, &types.ContractSpecification_Hash{"hash"}, "processname", []types.MetadataAddress{})
+	contractSpec := types.NewContractSpecification(s.contractSpecId, types.NewDescription("name", "desc", "url", "icon"), []string{s.user1}, partiesInvolved, &types.ContractSpecification_Hash{"hash"}, "processname")
 	s.app.MetadataKeeper.SetContractSpecification(s.ctx, *contractSpec)
 
 	cases := map[string]struct {
@@ -827,8 +831,4 @@ func (s *KeeperTestSuite) TestValidateAllOwnersAreSigners() {
 			}
 		})
 	}
-}
-
-func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
 }

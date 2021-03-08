@@ -96,6 +96,10 @@ func (s *QueryServerTestSuite) SetupTest() {
 	s.queryClient = queryClient
 }
 
+func TestQuerierTestSuite(t *testing.T) {
+	suite.Run(t, new(QueryServerTestSuite))
+}
+
 func (s *QueryServerTestSuite) TestScopeQuery() {
 	app, ctx, queryClient, user1, user2, recordName := s.app, s.ctx, s.queryClient, s.user1, s.user2, s.recordName
 
@@ -265,9 +269,11 @@ func (s *QueryServerTestSuite) TestSessionQuery() {
 	s.Equal(1, len(scrs.Sessions), "should be 1 sessions in set for session context query by scope id and session id")
 	s.Equal(scopeID.String(), scrs.ScopeId)
 	s.Equal(sessionID.String(), scrs.SessionId)
-
 }
 
-func TestQuerierTestSuite(t *testing.T) {
-	suite.Run(t, new(QueryServerTestSuite))
-}
+// TODO: ScopeSpecification tests
+// TODO: ContractSpecification tests
+// TODO: ContractSpecificationExtended tests
+// TODO: RecordSpecificationsForContractSpecification test
+// TODO: RecordSpecification tests
+
