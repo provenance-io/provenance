@@ -49,7 +49,6 @@ func VerifyMetadataAddressFormat(bz []byte) (string, error) {
 		return hrp, fmt.Errorf("incorrect address length (must be at least 17, actual: %d)", len(bz))
 	}
 	checkSecondaryUUID := false
-	// entries in this switch should be kept in sync with the switch in the Prefix func
 	switch bz[0] {
 	case ScopeKeyPrefix[0]:
 		hrp = PrefixScope
@@ -373,23 +372,7 @@ func (ma MetadataAddress) ContractSpecUUID() (uuid.UUID, error) {
 
 // Prefix returns the human readable part (prefix) of this MetadataAddress, e.g. "scope" or "contractspec"
 func (ma MetadataAddress) Prefix() (string, error) {
-	// entries in this switch should be kept in sync with the switch in the VerifyMetadataAddressFormat func
-	switch ma[0] {
-	case ScopeKeyPrefix[0]:
-		return PrefixScope, nil
-	case SessionKeyPrefix[0]:
-		return PrefixSession, nil
-	case RecordKeyPrefix[0]:
-		return PrefixRecord, nil
-
-	case ScopeSpecificationKeyPrefix[0]:
-		return PrefixScopeSpecification, nil
-	case ContractSpecificationKeyPrefix[0]:
-		return PrefixContractSpecification, nil
-	case RecordSpecificationKeyPrefix[0]:
-		return PrefixRecordSpecification, nil
-	}
-	return "", fmt.Errorf("invalid metadata address type: %d", ma[0])
+	return VerifyMetadataAddressFormat(ma)
 }
 
 // PrimaryUUID returns the primary UUID from this MetadataAddress (if applicable).
