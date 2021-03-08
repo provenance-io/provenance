@@ -1501,7 +1501,10 @@ func (m *ScopeSpecification) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthSpecification
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthSpecification
 			}
 			if (iNdEx + skippy) > l {
@@ -1821,7 +1824,10 @@ func (m *ContractSpecification) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthSpecification
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthSpecification
 			}
 			if (iNdEx + skippy) > l {
@@ -2090,7 +2096,10 @@ func (m *RecordSpecification) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthSpecification
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthSpecification
 			}
 			if (iNdEx + skippy) > l {
@@ -2272,7 +2281,10 @@ func (m *InputSpecification) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthSpecification
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthSpecification
 			}
 			if (iNdEx + skippy) > l {
@@ -2450,7 +2462,10 @@ func (m *Description) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthSpecification
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthSpecification
 			}
 			if (iNdEx + skippy) > l {

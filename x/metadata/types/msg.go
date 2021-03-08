@@ -22,6 +22,9 @@ const (
 	TypeMsgDeleteContractSpecificationRequest = "delete_contract_specification_request"
 	TypeMsgAddRecordSpecificationRequest      = "add_record_specification_request"
 	TypeMsgDeleteRecordSpecificationRequest   = "delete_record_specification_request"
+	TypeMsgAddOsLocatorRequest   			  = "add_os_locator_request"
+	TypeMsgDeleteOsLocatorRequest   		  = "delete_os_locator_request"
+	TypeMsgModifyOsLocatorRequest   		  = "modify_os_locator_request"
 )
 
 // Compile time interface checks.
@@ -39,6 +42,7 @@ var (
 	_ sdk.Msg = &MsgDeleteContractSpecificationRequest{}
 	_ sdk.Msg = &MsgAddRecordSpecificationRequest{}
 	_ sdk.Msg = &MsgDeleteRecordSpecificationRequest{}
+	_ sdk.Msg = &MsgAddOSLocatorRequest{}
 )
 
 // private method to convert an array of strings into an array of Acc Addresses.
