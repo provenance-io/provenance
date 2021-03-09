@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -127,7 +128,11 @@ func GetMetadataScopeCmd() *cobra.Command {
 			if idErr == nil {
 				return scopeByID(cmd, id)
 			}
-			return scopeByUUID(cmd, arg0)
+			_, uuidErr := uuid.Parse(arg0)
+			if uuidErr == nil {
+				return scopeByUUID(cmd, arg0)
+			}
+			return fmt.Errorf("argument %s is neither a metadata address (%s) nor uuid (%s)", arg0, idErr.Error(), uuidErr.Error())
 		},
 	}
 
@@ -154,7 +159,16 @@ func GetMetadataSessionCmd() *cobra.Command {
 				}
 				return sessionByID(cmd, id)
 			}
-			return sessionByUUIDs(cmd, arg0, strings.TrimSpace(args[1]))
+			_, uuidErr := uuid.Parse(arg0)
+			if uuidErr != nil {
+				return uuidErr
+			}
+			arg1 := strings.TrimSpace(args[1])
+			_, uuidErr = uuid.Parse(arg1)
+			if uuidErr != nil {
+				return uuidErr
+			}
+			return sessionByUUIDs(cmd, arg0, arg1)
 		},
 	}
 
@@ -182,7 +196,14 @@ func GetMetadataRecordCmd() *cobra.Command {
 				}
 				return recordByID(cmd, id)
 			}
+			_, uuidErr := uuid.Parse(arg0)
+			if uuidErr != nil {
+				return uuidErr
+			}
 			arg1 := trimSpaceAndJoin(args[1:], " ")
+			if len(arg1) == 0 {
+				return errors.New("a record name is required when providing a uuid")
+			}
 			return recordByScopeUUIDAndName(cmd, arg0, arg1)
 		},
 	}
@@ -208,7 +229,11 @@ func GetMetadataScopeSpecCmd() *cobra.Command {
 			if idErr == nil {
 				return scopeSpecByID(cmd, id)
 			}
-			return scopeSpecByUUID(cmd, arg0)
+			_, uuidErr := uuid.Parse(arg0)
+			if uuidErr == nil {
+				return scopeSpecByUUID(cmd, arg0)
+			}
+			return fmt.Errorf("argument %s is neither a metadata address (%s) nor uuid (%s)", arg0, idErr.Error(), uuidErr.Error())
 		},
 	}
 
@@ -233,7 +258,11 @@ func GetMetadataContractSpecCmd() *cobra.Command {
 			if idErr == nil {
 				return contractSpecByID(cmd, id)
 			}
-			return contractSpecByUUID(cmd, arg0)
+			_, uuidErr := uuid.Parse(arg0)
+			if uuidErr == nil {
+				return contractSpecByUUID(cmd, arg0)
+			}
+			return fmt.Errorf("argument %s is neither a metadata address (%s) nor uuid (%s)", arg0, idErr.Error(), uuidErr.Error())
 		},
 	}
 
@@ -261,7 +290,14 @@ func GetMetadataRecordSpecCmd() *cobra.Command {
 				}
 				return recordSpecByID(cmd, id)
 			}
+			_, uuidErr := uuid.Parse(arg0)
+			if uuidErr != nil {
+				return uuidErr
+			}
 			arg1 := trimSpaceAndJoin(args[1:], " ")
+			if len(arg1) == 0 {
+				return errors.New("a record name is required when providing a uuid")
+			}
 			return recordSpecByContractSpecUUIDAndName(cmd, arg0, arg1)
 		},
 	}
@@ -276,7 +312,7 @@ func trimSpaceAndJoin(args []string, sep string) string {
 	for i, arg := range args {
 		trimmedArgs[i] = strings.TrimSpace(arg)
 	}
-	return strings.Join(trimmedArgs, sep)
+	return strings.TrimSpace(strings.Join(trimmedArgs, sep))
 }
 
 // scopeByID outputs a scope looked up by a scope MetadataAddress.
