@@ -36,6 +36,9 @@ type IntegrationTestSuite struct {
 	cfg     testnet.Config
 	testnet *testnet.Network
 
+	asJson string
+	asText string
+
 	accountAddr sdk.AccAddress
 	accountKey  *secp256k1.PrivKey
 
@@ -91,6 +94,9 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	cfg := testutil.DefaultTestNetworkConfig()
+
+	s.asJson = fmt.Sprintf("--%s=json", tmcli.OutputFlag)
+	s.asText = fmt.Sprintf("--%s=text", tmcli.OutputFlag)
 
 	genesisState := cfg.GenesisState
 	cfg.NumValidators = 1
@@ -195,16 +201,15 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		[]metadatatypes.PartyType{metadatatypes.PartyType_PARTY_TYPE_OWNER},
 	)
 
-	metadataData := metadatatypes.NewGenesisState(
-		metadatatypes.DefaultParams(),
-		[]metadatatypes.Scope{s.scope},
-		[]metadatatypes.Session{s.session},
-		[]metadatatypes.Record{s.record},
-		[]metadatatypes.ScopeSpecification{s.scopeSpec},
-		[]metadatatypes.ContractSpecification{s.contractSpec},
-		[]metadatatypes.RecordSpecification{s.recordSpec},
-	)
-	metadataDataBz, err := cfg.Codec.MarshalJSON(metadataData)
+	var metadataData metadatatypes.GenesisState
+	s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[metadatatypes.ModuleName], &metadataData))
+	metadataData.Scopes = append(metadataData.Scopes, s.scope)
+	metadataData.Sessions = append(metadataData.Sessions, s.session)
+	metadataData.Records = append(metadataData.Records, s.record)
+	metadataData.ScopeSpecifications = append(metadataData.ScopeSpecifications, s.scopeSpec)
+	metadataData.ContractSpecifications = append(metadataData.ContractSpecifications, s.contractSpec)
+	metadataData.RecordSpecifications = append(metadataData.RecordSpecifications, s.recordSpec)
+	metadataDataBz, err := cfg.Codec.MarshalJSON(&metadataData)
 	s.Require().NoError(err)
 	genesisState[metadatatypes.ModuleName] = metadataDataBz
 
@@ -311,24 +316,15 @@ func (s *IntegrationTestSuite) TestGetMetadataParamsCmd() {
 
 func (s *IntegrationTestSuite) TestGetMetadataScopeCmd() {
 	cmd := cli.GetMetadataScopeCmd()
-	testCases := []queryCmdTestCase{
-		{
-			"get scope as json output",
-			[]string{s.scopeUUID.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			"",
-			fmt.Sprintf("{\"scope_id\":\"%s\",\"specification_id\":\"%s\",\"owners\":[{\"address\":\"%s\",\"role\":\"%s\"}],\"data_access\":[\"%s\"],\"value_owner_address\":\"%s\"}",
-				s.scope.ScopeId,
-				s.scope.SpecificationId.String(),
-				s.scope.Owners[0].Address,
-				s.scope.Owners[0].Role.String(),
-				s.scope.DataAccess[0],
-				s.scope.ValueOwnerAddress),
-		},
-		{
-			"get scope as text output",
-			[]string{s.scopeUUID.String(), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
-			"",
-			fmt.Sprintf(`data_access:
+	scopeAsJson := fmt.Sprintf("{\"scope_id\":\"%s\",\"specification_id\":\"%s\",\"owners\":[{\"address\":\"%s\",\"role\":\"%s\"}],\"data_access\":[\"%s\"],\"value_owner_address\":\"%s\"}",
+		s.scope.ScopeId,
+		s.scope.SpecificationId.String(),
+		s.scope.Owners[0].Address,
+		s.scope.Owners[0].Role.String(),
+		s.scope.DataAccess[0],
+		s.scope.ValueOwnerAddress,
+	)
+	scopeAsText := fmt.Sprintf(`data_access:
 - %s
 owners:
 - address: %s
@@ -336,12 +332,55 @@ owners:
 scope_id: %s
 specification_id: %s
 value_owner_address: %s`,
-				s.scope.DataAccess[0],
-				s.scope.Owners[0].Address,
-				s.scope.Owners[0].Role.String(),
-				s.scope.ScopeId,
-				s.scope.SpecificationId.String(),
-				s.scope.ValueOwnerAddress),
+		s.scope.DataAccess[0],
+		s.scope.Owners[0].Address,
+		s.scope.Owners[0].Role.String(),
+		s.scope.ScopeId,
+		s.scope.SpecificationId.String(),
+		s.scope.ValueOwnerAddress,
+	)
+	testCases := []queryCmdTestCase{
+		{
+			"get scope by uuid as json output",
+			[]string{s.scopeUUID.String(), s.asJson},
+			"",
+			scopeAsJson,
+		},
+		{
+			"get scope by metadata id as json output",
+			[]string{s.scopeID.String(), s.asJson},
+			"",
+			scopeAsJson,
+		},
+		{
+			"get scope by uuid as text output",
+			[]string{s.scopeUUID.String(), s.asText},
+			"",
+			scopeAsText,
+		},
+		{
+			"get scope by metadata id as text output",
+			[]string{s.scopeID.String(), s.asText},
+			"",
+			scopeAsText,
+		},
+		{
+			"get scope by metadata id - does not exist",
+			[]string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel", s.asText},
+			"rpc error: code = NotFound desc = scope uuid 91978ba2-5f35-459a-86a7-feca1b0512e0 not found: key not found",
+			"",
+		},
+		{
+			"get scope by uuid - does not exist",
+			[]string{"91978ba2-5f35-459a-86a7-feca1b0512e0", s.asText},
+			"rpc error: code = NotFound desc = scope uuid 91978ba2-5f35-459a-86a7-feca1b0512e0 not found: key not found",
+			"",
+		},
+		{
+			"get scope bad arg",
+			[]string{"not-a-valid-arg", s.asText},
+			"rpc error: code = InvalidArgument desc = invalid scope uuid: invalid UUID length: 15: invalid request",
+			"",
 		},
 	}
 
