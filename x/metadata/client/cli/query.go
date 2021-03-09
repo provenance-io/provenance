@@ -511,6 +511,7 @@ func recordsByScopeUUID(cmd *cobra.Command, scopeUUID string) error {
 	return printProtoList(clientCtx, protoList)
 }
 
+// recordsBySessionID outputs the records associated with a session id.
 func recordsBySessionID(cmd *cobra.Command, sessionID types.MetadataAddress) error {
 	scopeUUID, err := sessionID.ScopeUUID()
 	if err != nil {
@@ -795,6 +796,9 @@ func recordSpecsByContractSpecUUID(cmd *cobra.Command, contractSpecUUID string) 
 	return printProtoList(clientCtx, protoList)
 }
 
+// trimSpaceAndJoin trims leading and trailing whitespace from each arg,
+// then joins them using the provided sep string,
+// then lastly trims any left over leading and trailing whitespace from that result.
 func trimSpaceAndJoin(args []string, sep string) string {
 	trimmedArgs := make([]string, len(args))
 	for i, arg := range args {
