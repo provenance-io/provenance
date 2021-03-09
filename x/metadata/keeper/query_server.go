@@ -109,7 +109,7 @@ func (k Keeper) SessionContextByUUID(c context.Context, req *types.SessionContex
 
 	session, found := k.GetSession(ctx, sessionID)
 	if !found {
-		return nil, status.Errorf(codes.NotFound, "session id %s not found", session.SessionId)
+		return nil, status.Errorf(codes.NotFound, "session id %s not found", sessionID)
 	}
 	sessions = append(sessions, &session)
 	return &types.SessionContextByUUIDResponse{ScopeId: scopeID.String(), SessionId: sessionID.String(), Sessions: sessions}, nil
