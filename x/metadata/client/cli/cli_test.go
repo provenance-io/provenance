@@ -362,6 +362,18 @@ value_owner_address: %s`,
 
 	testCases := []queryCmdTestCase{
 		{
+			"get scope by metadata scope id as json output",
+			[]string{s.scopeID.String(), s.asJson},
+			"",
+			scopeAsJson,
+		},
+		{
+			"get scope by metadata scope id as text output",
+			[]string{s.scopeID.String(), s.asText},
+			"",
+			scopeAsText,
+		},
+		{
 			"get scope by uuid as json output",
 			[]string{s.scopeUUID.String(), s.asJson},
 			"",
@@ -374,25 +386,29 @@ value_owner_address: %s`,
 			scopeAsText,
 		},
 		{
-			"get scope by metadata scope id as json output",
-			[]string{s.scopeID.String(), s.asJson},
+			"get scope by metadata session id as json output",
+			[]string{s.sessionID.String(), s.asJson},
 			"",
 			scopeAsJson,
 		},
 		{
-			"get scope by metadata scope id as text output",
-			[]string{s.scopeID.String(), s.asText},
+			"get scope by metadata session id as text output",
+			[]string{s.sessionID.String(), s.asText},
 			"",
 			scopeAsText,
 		},
-		// TODO: session id - json
-		// TODO: session id - text
-		// TODO: session uuid - json
-		// TODO: session uuid - text
-		// TODO: record id - json
-		// TODO: record id - text
-		// TODO: record uuid - json
-		// TODO: record uuid - text
+		{
+			"get scope by metadata record id as json output",
+			[]string{s.recordID.String(), s.asJson},
+			"",
+			scopeAsJson,
+		},
+		{
+			"get scope by metadata record id as text output",
+			[]string{s.recordID.String(), s.asText},
+			"",
+			scopeAsText,
+		},
 		{
 			"get scope by metadata id - does not exist",
 			[]string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel", s.asText},
@@ -411,7 +427,12 @@ value_owner_address: %s`,
 			"argument not-a-valid-arg is neither a metadata address (decoding bech32 failed: invalid index of 1) nor uuid (invalid UUID length: 15)",
 			"",
 		},
-		// TODO: no args
+		{
+			"get scope no args",
+			[]string{},
+			"accepts 1 arg(s), received 0",
+			"",
+		},
 	}
 
 	runQueryCmdTestCases(s, cmd, testCases)
