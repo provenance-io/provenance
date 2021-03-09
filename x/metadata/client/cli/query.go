@@ -247,11 +247,21 @@ func GetMetadataSessionCmd() *cobra.Command {
 			arg0 := strings.TrimSpace(args[0])
 			if len(args) == 1 {
 				id, idErr := types.MetadataAddressFromBech32(arg0)
-				if idErr != nil {
-					return idErr
+				if idErr == nil {
+					if id.IsSessionAddress() {
+						return sessionByID(cmd, id)
+					} else if id.IsScopeAddress() {
+						return sessionsByScopeID(cmd, id)
+					} else {
+						return fmt.Errorf("invalid metadata address prefix on %s", id)
+					}
 				}
-				return sessionByID(cmd, id)
-			}
+				_, uuidErr := uuid.Parse(arg0)
+				if uuidErr == nil {
+					return sessionsByScopeUUID(cmd, arg0)
+				}
+				return fmt.Errorf("argument %s is neither a metadata address (%s) nor uuid (%s)", arg0, idErr.Error(), uuidErr.Error())
+			} // else there's 2 more arguments.
 			_, uuidErr := uuid.Parse(arg0)
 			if uuidErr != nil {
 				return uuidErr
@@ -284,11 +294,21 @@ func GetMetadataRecordCmd() *cobra.Command {
 			arg0 := strings.TrimSpace(args[0])
 			if len(args) == 1 {
 				id, idErr := types.MetadataAddressFromBech32(arg0)
-				if idErr != nil {
-					return idErr
+				if idErr == nil {
+					if id.IsRecordAddress() {
+						return recordByID(cmd, id)
+					} else if id.IsScopeAddress() {
+						return recordsByScopeID(cmd, id)
+					} else {
+						return fmt.Errorf("invalid metadata address prefix on %s", id)
+					}
 				}
-				return recordByID(cmd, id)
-			}
+				_, uuidErr := uuid.Parse(arg0)
+				if uuidErr == nil {
+					return recordsByScopeUUID(cmd, arg0)
+				}
+				return fmt.Errorf("argument %s is neither a metadata address (%s) nor uuid (%s)", arg0, idErr.Error(), uuidErr.Error())
+			} // else there's 2 more arguments.
 			_, uuidErr := uuid.Parse(arg0)
 			if uuidErr != nil {
 				return uuidErr
