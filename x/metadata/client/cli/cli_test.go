@@ -722,22 +722,94 @@ func (s *IntegrationTestSuite) TestGetMetadataScopeCmd() {
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
-// TODO: GetMetadataFullScopeCmd
 func (s *IntegrationTestSuite) TestGetMetadataFullScopeCmd() {
 	cmd := cli.GetMetadataFullScopeCmd()
 
 	testCases := []queryCmdTestCase{
-		// TODO: scope id
-		// TODO: scope uuid
-		// TODO: session id
-		// TODO: session uuid
-		// TODO: record id
-		// TODO: record uuid
-		// TODO: entry does not exist
-		// TODO: bad prefix
-		// TODO: bad arg
-		// TODO: two args
-		// TODO: no args
+		{
+			"from scope id as json",
+			[]string{s.scopeID.String(), s.asJson},
+			"",
+			s.fullScopeAsJson,
+		},
+		{
+			"from scope id as text",
+			[]string{s.scopeID.String(), s.asText},
+			"",
+			s.fullScopeAsText,
+		},
+		{
+			"from scope uuid as json",
+			[]string{s.scopeUUID.String(), s.asJson},
+			"",
+			s.fullScopeAsJson,
+		},
+		{
+			"from scope uuid as text",
+			[]string{s.scopeUUID.String(), s.asText},
+			"",
+			s.fullScopeAsText,
+		},
+		{
+			"from session id as json",
+			[]string{s.sessionID.String(), s.asJson},
+			"",
+			s.fullScopeAsJson,
+		},
+		{
+			"from session id as text",
+			[]string{s.sessionID.String(), s.asText},
+			"",
+			s.fullScopeAsText,
+		},
+		{
+			"from record id as json",
+			[]string{s.recordID.String(), s.asJson},
+			"",
+			s.fullScopeAsJson,
+		},
+		{
+			"from record id as text",
+			[]string{s.recordID.String(), s.asText},
+			"",
+			s.fullScopeAsText,
+		},
+		{
+			"scope id does not exist",
+			[]string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
+			"rpc error: code = NotFound desc = scope uuid 91978ba2-5f35-459a-86a7-feca1b0512e0 not found: key not found",
+			"",
+		},
+		{
+			"scope uuid does not exist",
+			[]string{"91978ba2-5f35-459a-86a7-feca1b0512e0"},
+			"rpc error: code = NotFound desc = scope uuid 91978ba2-5f35-459a-86a7-feca1b0512e0 not found: key not found",
+			"",
+		},
+		{
+			"bad prefix",
+			[]string{"foo1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
+			"argument foo1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel is neither a metadata address (decoding bech32 failed: checksum failed. Expected kzwk8c, got xlkwel.) nor uuid (invalid UUID format)",
+			"",
+		},
+		{
+			"bad arg",
+			[]string{"not-an-argument"},
+			"argument not-an-argument is neither a metadata address (decoding bech32 failed: invalid index of 1) nor uuid (invalid UUID length: 15)",
+			"",
+		},
+		{
+			"two args",
+			[]string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel", "record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3"},
+			"accepts 1 arg(s), received 2",
+			"",
+		},
+		{
+			"no args",
+			[]string{},
+			"accepts 1 arg(s), received 0",
+			"",
+		},
 	}
 
 	runQueryCmdTestCases(s, cmd, testCases)
