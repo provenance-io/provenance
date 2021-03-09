@@ -246,20 +246,47 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 // ---------- query cmd tests ----------
 
+type queryCmdTestCase struct {
+	name           string
+	args           []string
+	expectedError  string
+	expectedOutput string
+}
+
+func runQueryCmdTestCases(s *IntegrationTestSuite, cmd *cobra.Command, testCases []queryCmdTestCase) {
+	for _, tc := range testCases {
+		s.T().Run(tc.name, func(t *testing.T) {
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if len(tc.expectedError) > 0 {
+				actualError := ""
+				if err != nil {
+					actualError = err.Error()
+				}
+				require.Equal(t, tc.expectedError, actualError, "expected error")
+			} else {
+				require.Nil(t, err, "unexpected error")
+			}
+			if err == nil {
+				require.Equal(t, tc.expectedOutput, strings.TrimSpace(out.String()), "expected output")
+			}
+		})
+	}
+}
+
 func (s *IntegrationTestSuite) TestGetMetadataParamsCmd() {
-	testCases := []struct {
-		name           string
-		args           []string
-		expectedOutput string
-	}{
+	cmd := cli.GetMetadataParamsCmd()
+	testCases := []queryCmdTestCase{
 		{
 			"get params as json output",
 			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			"",
 			"{}",
 		},
 		{
 			"get params as text output",
 			[]string{fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			"",
 			"{}",
 		},
 	}
@@ -276,17 +303,15 @@ func (s *IntegrationTestSuite) TestGetMetadataParamsCmd() {
 			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
 		})
 	}
+
+	runQueryCmdTestCases(s, cmd, testCases)
 }
 
 // TODO: TestGetMetadataByIDCmd
 
 func (s *IntegrationTestSuite) TestGetMetadataScopeCmd() {
-	testCases := []struct {
-		name           string
-		args           []string
-		expectedError  string
-		expectedOutput string
-	}{
+	cmd := cli.GetMetadataScopeCmd()
+	testCases := []queryCmdTestCase{
 		{
 			"get scope as json output",
 			[]string{s.scopeUUID.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
@@ -320,28 +345,7 @@ value_owner_address: %s`,
 		},
 	}
 
-	for _, tc := range testCases {
-		tc := tc
-
-		s.T().Run(tc.name, func(t *testing.T) {
-			cmd := cli.GetMetadataScopeCmd()
-			clientCtx := s.testnet.Validators[0].ClientCtx
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if len(tc.expectedError) > 0 {
-				actualError := ""
-				if err != nil {
-					actualError = err.Error()
-				}
-				require.Equal(t, tc.expectedError, actualError, "expected error")
-			} else {
-				require.Nil(t, err, "unexpected error")
-			}
-			if err == nil {
-				require.Equal(t, tc.expectedOutput, strings.TrimSpace(out.String()), "expected output")
-			}
-		})
-	}
+	runQueryCmdTestCases(s, cmd, testCases)
 }
 
 // TODO: TestGetMetadataSessionCmd
