@@ -336,6 +336,8 @@ value_owner_address: %s`,
 				require.Equal(t, tc.expectedError, actualError, "expected error")
 			} else {
 				require.Nil(t, err, "unexpected error")
+			}
+			if err == nil {
 				require.Equal(t, tc.expectedOutput, strings.TrimSpace(out.String()), "expected output")
 			}
 		})
