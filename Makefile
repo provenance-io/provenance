@@ -127,6 +127,8 @@ run: check-built run-config;
 
 RELEASE_TAG=SNAPSHOT
 RELEASE_BIN=$(BUILDDIR)/bin
+RELEASE_PROTO_NAME=protos-$(RELEASE_TAG).zip
+RELEASE_PROTO=$(BUILDDIR)/$(RELEASE_PROTO_NAME)
 RELEASE_PLAN=$(BUILDDIR)/plan-$(RELEASE_TAG).json
 RELEASE_CHECKSUM_NAME=sha256sum.txt
 RELEASE_CHECKSUM=$(BUILDDIR)/$(RELEASE_CHECKSUM_NAME)
@@ -165,8 +167,12 @@ build-release-zip: build-release-bin
 	  zip -r $(RELEASE_ZIP_NAME) bin/ && \
 	cd ..
 
+.PHONY: bulid-release-proto
+build-release-proto:
+	scripts/protoball.sh $(RELEASE_PROTO)
+
 .PHONY: build-release
-build-release: build-release-zip build-release-plan
+build-release: build-release-zip build-release-plan build-release-proto
 
 ##############################
 # Tools / Dependencies
@@ -392,8 +398,11 @@ proto-update-deps:
 	@tail -n+4 $(CONFIO_TYPES)/proofs.proto.orig >> $(CONFIO_TYPES)/proofs.proto
 	@rm $(CONFIO_TYPES)/proofs.proto.orig
 
+proto-zip: proto-update-deps
+	scripts/protoball.sh
+
 .PHONY: proto-all proto-gen proto-format proto-gen-any proto-swagger-gen proto-lint proto-check-breaking
-.PHONY: proto-lint-docker proto-check-breaking-docker proto-update-deps
+.PHONY: proto-lint-docker proto-check-breaking-docker proto-update-deps proto-zip
 
 
 ##############################
