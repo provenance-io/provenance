@@ -371,7 +371,7 @@ func (s *KeeperTestSuite) TestValidateRecordRemove() {
 			proposed: types.MetadataAddress{},
 			signers:  []string{s.user1},
 			wantErr:  true,
-			errorMsg: "cannot get scope uuid: this metadata address does not contain a scope uuid",
+			errorMsg: "cannot get scope uuid: this metadata address () does not contain a scope uuid",
 		},
 		"invalid, unable to find scope": {
 			existing: *record,
