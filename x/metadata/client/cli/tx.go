@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"github.com/tendermint/tendermint/crypto"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -159,7 +158,7 @@ func AddOsLocatorCmd() *cobra.Command {
 				return err
 			}
 
-			if address, err := sdk.AccAddressFromBech32(args[0]); err != nil {
+			if _, err := sdk.AccAddressFromBech32(args[0]); err != nil {
 				fmt.Printf("failed to add locator for a given owner address, invalid address: %s\n", args[0])
 				return fmt.Errorf("invalid address: %w", err)
 			}
@@ -168,13 +167,12 @@ func AddOsLocatorCmd() *cobra.Command {
 				return err
 			}
 
-			deleteScope := *types.NewLo(scopeMetaAddress, signers)
-			if err := deleteScope.ValidateBasic(); err != nil {
-				fmt.Printf("Failed to validate remove scope %s : %v", deleteScope.String(), err)
-				return err
+			objectStoreLocator := types.ObjectStoreLocator{
+				LocatorUri: args[1],Owner: args[0],
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &deleteScope)
+			addOSLocator := *types.NewMsgAddOSLocatorRequest(objectStoreLocator)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &addOSLocator)
 		},
 	}
 

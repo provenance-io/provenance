@@ -122,8 +122,8 @@ $ %s query metadata locator foocorp
 
 			owner := strings.ToLower(strings.TrimSpace(args[0]))
 
-			queryClient := types.NewQueryOSClient(clientCtx)
-			res, err := queryClient.OSLocation(context.Background(), &types.OSLocatorRequest{Owner : owner})
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.OSLocator(context.Background(), &types.OSLocatorRequest{Owner : owner})
 			if err != nil {
 				return err
 			}

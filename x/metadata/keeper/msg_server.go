@@ -14,6 +14,7 @@ type msgServer struct {
 	Keeper
 }
 
+
 // NewMsgServerImpl returns an implementation of the distribution MsgServer interface
 // for the provided Keeper.
 func NewMsgServerImpl(keeper Keeper) types.MsgServer {
@@ -401,4 +402,12 @@ func (k msgServer) DeleteRecordSpecification(
 	)
 
 	return &types.MsgDeleteRecordSpecificationResponse{}, nil
+}
+
+func (k msgServer) BindOSLocator(ctx context.Context, request *types.MsgAddOSLocatorRequest) (*types.MsgAddOSLocatorResponse, error) {
+	panic("implement me")
+}
+
+func (k msgServer) DeleteOSLocator(ctx context.Context, request *types.MsgDeleteOSLocatorRequest) (*types.MsgDeleteOSLocatorResponse, error) {
+	panic("implement me")
 }

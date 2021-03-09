@@ -48,6 +48,13 @@ service Msg {
   rpc AddRecordSpecification(MsgAddRecordSpecificationRequest) returns (MsgAddRecordSpecificationResponse);
   // DeleteRecordSpecification deletes a record specification
   rpc DeleteRecordSpecification(MsgDeleteRecordSpecificationRequest) returns (MsgDeleteRecordSpecificationResponse);
+
+  //Os Locator
+  // BindOSLocator binds a owner address to a uri.
+  rpc BindOSLocator (MsgAddOSLocatorRequest) returns (MsgAddOSLocatorResponse);
+
+  // DeleteName defines a method to verify a particular invariance.
+  rpc DeleteOSLocator (MsgDeleteOSLocatorRequest) returns (MsgDeleteOSLocatorResponse);
 }
 
 // MsgMemorializeContractRequest is a request from a P8e execution environment to record results of a contract
@@ -286,17 +293,6 @@ message MsgDeleteRecordSpecificationRequest {
 message MsgDeleteRecordSpecificationResponse {}
 
 
-// Object store Locator
-
-// Msg defines the objectstore locator Msg service.
-service MsgOSLocator {
-  // BindName binds a name to an address under a root name.
-  rpc BindLocator (MsgAddOSLocatorRequest) returns (MsgAddOSLocatorResponse);
-
-  // DeleteName defines a method to verify a particular invariance.
-  rpc DeleteLocator (MsgDeleteOSLocatorRequest) returns (MsgDeleteOSLocatorResponse);
-}
-
 // MsgBindNameRequest defines an sdk.Msg type that is used to add an address/name binding under an optional parent name.
 // The record may optionally be restricted to prevent additional names from being added under this one without the
 // owner signing the request.
@@ -317,7 +313,7 @@ message MsgDeleteOSLocatorRequest {
   option (gogoproto.goproto_getters) = false;
 
   // The record being removed
-  ObjectStoreLocator record = 1 [(gogoproto.nullable) = false];
+  ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
 }
 
 // MsgDeleteNameResponse defines the Msg/DeleteName response type.

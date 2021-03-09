@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -22,9 +23,8 @@ const (
 	TypeMsgDeleteContractSpecificationRequest = "delete_contract_specification_request"
 	TypeMsgAddRecordSpecificationRequest      = "add_record_specification_request"
 	TypeMsgDeleteRecordSpecificationRequest   = "delete_record_specification_request"
-	TypeMsgAddOsLocatorRequest   			  = "add_os_locator_request"
-	TypeMsgDeleteOsLocatorRequest   		  = "delete_os_locator_request"
-	TypeMsgModifyOsLocatorRequest   		  = "modify_os_locator_request"
+	TypeMsgAddOSLocatorRequest   			  = "add_os_locator_request"
+	TypeMsgDeleteOSLocatorRequest   		  = "delete_os_locator_request"
 )
 
 // Compile time interface checks.
@@ -43,6 +43,7 @@ var (
 	_ sdk.Msg = &MsgAddRecordSpecificationRequest{}
 	_ sdk.Msg = &MsgDeleteRecordSpecificationRequest{}
 	_ sdk.Msg = &MsgAddOSLocatorRequest{}
+	_ sdk.Msg = &MsgDeleteOSLocatorRequest{}
 )
 
 // private method to convert an array of strings into an array of Acc Addresses.
@@ -625,4 +626,82 @@ func (msg MsgDeleteRecordSpecificationRequest) ValidateBasic() error {
 		return fmt.Errorf("at least one signer is required")
 	}
 	return nil
+}
+
+// --------------------------- AddOSLocatorRequest------------------------------------------
+
+// NewMsgDeleteScopeRequest creates a new msg instance
+func NewMsgAddOSLocatorRequest(obj ObjectStoreLocator) *MsgAddOSLocatorRequest {
+	return &MsgAddOSLocatorRequest{
+		Locator: obj,
+	}
+}
+
+func (m MsgAddOSLocatorRequest) Route() string {
+	return ModuleName
+}
+
+func (msg MsgAddOSLocatorRequest) Type() string {
+	return TypeMsgAddOSLocatorRequest
+}
+
+func (msg MsgAddOSLocatorRequest) ValidateBasic() error {
+	if strings.TrimSpace(msg.Locator.Owner) == "" {
+		return fmt.Errorf("owner address cannot be empty")
+	}
+
+	if _, err := sdk.AccAddressFromBech32(msg.Locator.Owner); err != nil {
+		fmt.Errorf("failed to add locator for a given owner address, invalid address: %s\n", msg.Locator.Owner)
+	}
+
+	if strings.TrimSpace(msg.Locator.LocatorUri) == "" {
+		return fmt.Errorf("uri cannot be empty")
+	}
+
+	if _, err := url.Parse(msg.Locator.LocatorUri); err != nil {
+		fmt.Errorf("failed to add locator for a given owner address, invalid uri: %s\n", msg.Locator.LocatorUri)
+	}
+
+	return nil
+
+}
+
+func (msg MsgAddOSLocatorRequest) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgAddOSLocatorRequest) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Locator.Owner)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
+}
+
+func (msg MsgDeleteOSLocatorRequest) Route() string {
+	return ModuleName
+}
+
+func (msg MsgDeleteOSLocatorRequest) Type() string {
+	panic("implement me")
+}
+
+func (msg MsgDeleteOSLocatorRequest) ValidateBasic() error {
+	panic("implement me")
+}
+
+func (msg MsgDeleteOSLocatorRequest) GetSignBytes() []byte {
+	panic("implement me")
+}
+// Signers returns the addrs of signers that must sign.
+// CONTRACT: All signatures must be present to be valid.
+// CONTRACT: Returns addrs in some deterministic order.
+// here we assume msg for delete request has the right address
+// should be verified later in the keeper?
+func (msg MsgDeleteOSLocatorRequest) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Locator.Owner)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
 }
