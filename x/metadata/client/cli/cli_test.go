@@ -387,10 +387,6 @@ value_owner_address: %s`,
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
-// TODO: GetMetadataSessionsByScopeCmd
-
-// TODO: GetMetadataRecordsByScopeCmd
-
 // TODO: GetMetadataFullScopeCmd
 
 // TODO: TestGetMetadataSessionCmd
