@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"strings"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -35,36 +36,38 @@ func (k Keeper) Scope(c context.Context, req *types.ScopeRequest) (*types.ScopeR
 		return nil, status.Error(codes.InvalidArgument, "scope uuid cannot be empty")
 	}
 
-	id, err := uuid.Parse(req.ScopeUuid)
+	scopeUUID, err := uuid.Parse(req.ScopeUuid)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid scope uuid: %s", err.Error())
 	}
-	scopeAddress := types.ScopeMetadataAddress(id)
+	scopeAddress := types.ScopeMetadataAddress(scopeUUID)
+
+	retval := types.ScopeResponse{ScopeUuid: scopeUUID.String()}
+
 	ctx := sdk.UnwrapSDKContext(c)
-
-	s, found := k.GetScope(ctx, scopeAddress)
+	scope, found := k.GetScope(ctx, scopeAddress)
 	if !found {
-		return nil, status.Errorf(codes.NotFound, "scope uuid %s not found", req.ScopeUuid)
+		return &retval, status.Errorf(codes.NotFound, "scope uuid %s not found", scopeUUID)
 	}
+	retval.Scope = &scope
 
-	records := []*types.Record{}
-	err = k.IterateRecords(ctx, scopeAddress, func(r types.Record) (stop bool) {
-		records = append(records, &r)
+	err = k.IterateRecords(ctx, scopeAddress, func(record types.Record) (stop bool) {
+		retval.Records = append(retval.Records, &record)
 		return false
 	})
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "can't iterate scope records %v", err)
+		return &retval, status.Errorf(codes.Internal, "error iterating scope records: %v", err)
 	}
 
-	sessions := []*types.Session{}
-	err = k.IterateSessions(ctx, scopeAddress, func(rg types.Session) (stop bool) {
-		sessions = append(sessions, &rg)
+	err = k.IterateSessions(ctx, scopeAddress, func(session types.Session) (stop bool) {
+		retval.Sessions = append(retval.Sessions, &session)
 		return false
 	})
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "can't iterate scope sessions %v", err)
+		return &retval, status.Errorf(codes.Internal, "error iterating scope sessions: %v", err)
 	}
-	return &types.ScopeResponse{Scope: &s, Records: records, Sessions: sessions}, nil
+
+	return &retval, nil
 }
 
 // SessionContextByUUID returns a specific group context within a scope (or all groups)
@@ -293,19 +296,22 @@ func (k Keeper) ScopeSpecification(c context.Context, req *types.ScopeSpecificat
 		return nil, status.Error(codes.InvalidArgument, "specification uuid cannot be empty")
 	}
 
-	id, err := uuid.Parse(req.SpecificationUuid)
+	specUUID, err := uuid.Parse(req.SpecificationUuid)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid specification uuid: %s", err.Error())
 	}
-	addr := types.ScopeSpecMetadataAddress(id)
+	specID := types.ScopeSpecMetadataAddress(specUUID)
+
+	retval := types.ScopeSpecificationResponse{SpecificationUuid: specUUID.String()}
+
 	ctx := sdk.UnwrapSDKContext(c)
-
-	spec, found := k.GetScopeSpecification(ctx, addr)
+	spec, found := k.GetScopeSpecification(ctx, specID)
 	if !found {
-		return nil, status.Errorf(codes.NotFound, "scope specification uuid %s not found", req.SpecificationUuid)
+		return &retval, status.Errorf(codes.NotFound, "scope specification uuid %s not found", req.SpecificationUuid)
 	}
+	retval.ScopeSpecification = &spec
 
-	return &types.ScopeSpecificationResponse{ScopeSpecification: &spec}, nil
+	return &retval, nil
 }
 
 // ContractSpecification returns a specific contract specification by id
@@ -323,15 +329,18 @@ func (k Keeper) ContractSpecification(c context.Context, req *types.ContractSpec
 		return nil, status.Errorf(codes.InvalidArgument, "invalid specification uuid: %s", err.Error())
 	}
 	specID := types.ContractSpecMetadataAddress(specUUID)
-	ctx := sdk.UnwrapSDKContext(c)
 
+	retval := types.ContractSpecificationResponse{ContractSpecificationUuid: specUUID.String()}
+
+	ctx := sdk.UnwrapSDKContext(c)
 	spec, found := k.GetContractSpecification(ctx, specID)
 	if !found {
-		return nil, status.Errorf(codes.NotFound, "contract specification with id %s (uuid %s) not found",
+		return &retval, status.Errorf(codes.NotFound, "contract specification with id %s (uuid %s) not found",
 			specID, req.SpecificationUuid)
 	}
+	retval.ContractSpecification = &spec
 
-	return &types.ContractSpecificationResponse{ContractSpecification: &spec}, nil
+	return &retval, nil
 }
 
 // ContractSpecificationExtended returns a specific contract specification and record specifications by contract specification id
@@ -349,24 +358,25 @@ func (k Keeper) ContractSpecificationExtended(c context.Context, req *types.Cont
 		return nil, status.Errorf(codes.InvalidArgument, "invalid specification uuid: %s", err.Error())
 	}
 	contractSpecID := types.ContractSpecMetadataAddress(contractSpecUUID)
-	ctx := sdk.UnwrapSDKContext(c)
 
+	retval := types.ContractSpecificationExtendedResponse{ContractSpecificationUuid: contractSpecUUID.String()}
+
+	ctx := sdk.UnwrapSDKContext(c)
 	contractSpec, found := k.GetContractSpecification(ctx, contractSpecID)
 	if !found {
-		return nil, status.Errorf(codes.NotFound, "contract specification with id %s (uuid %s) not found",
+		return &retval, status.Errorf(codes.NotFound, "contract specification with id %s (uuid %s) not found",
 			contractSpecID, req.SpecificationUuid)
 	}
+	retval.ContractSpecification = &contractSpec
 
 	recSpecs, err := k.GetRecordSpecificationsForContractSpecificationID(ctx, contractSpecID)
 	if err != nil {
-		return nil, status.Errorf(codes.Aborted, "error getting record specifications for contract spec uuid %s: %s",
+		return &retval, status.Errorf(codes.Aborted, "error getting record specifications for contract spec uuid %s: %s",
 			contractSpecUUID, err.Error())
 	}
+	retval.RecordSpecifications = recSpecs
 
-	return &types.ContractSpecificationExtendedResponse{
-		ContractSpecification: &contractSpec,
-		RecordSpecifications:  recSpecs,
-	}, nil
+	return &retval, nil
 }
 
 // RecordSpecificationsForContractSpecification returns the record specifications associated with a contract specification
@@ -387,22 +397,23 @@ func (k Keeper) RecordSpecificationsForContractSpecification(
 	}
 	contractSpecID := types.ContractSpecMetadataAddress(contractSpecUUID)
 
-	ctx := sdk.UnwrapSDKContext(c)
+	retval := types.RecordSpecificationsForContractSpecificationResponse{ContractSpecificationUuid: contractSpecUUID.String()}
 
+	ctx := sdk.UnwrapSDKContext(c)
 	recSpecs, err := k.GetRecordSpecificationsForContractSpecificationID(ctx, contractSpecID)
 	if err != nil {
-		return nil, status.Errorf(codes.Aborted, "error getting record specifications for contract spec uuid %s: %s",
+		return &retval, status.Errorf(codes.Aborted, "error getting record specifications for contract spec uuid %s: %s",
 			contractSpecUUID, err.Error())
 	}
-
 	if len(recSpecs) == 0 {
-		return nil, status.Errorf(codes.NotFound, "no record specifications found for contract spec uuid %s", contractSpecUUID)
+		return &retval, status.Errorf(codes.NotFound, "no record specifications found for contract spec uuid %s", contractSpecUUID)
 	}
+	retval.RecordSpecifications = recSpecs
 
-	return &types.RecordSpecificationsForContractSpecificationResponse{RecordSpecifications: recSpecs}, err
+	return &retval, err
 }
 
-// RecordSpecification returns a specific record specification by contract spec id and name
+// RecordSpecification returns a specific record specification by contract spec uuid and record name
 func (k Keeper) RecordSpecification(c context.Context, req *types.RecordSpecificationRequest) (*types.RecordSpecificationResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -416,18 +427,54 @@ func (k Keeper) RecordSpecification(c context.Context, req *types.RecordSpecific
 		return nil, status.Errorf(codes.InvalidArgument, "invalid contract specification uuid: %s", err.Error())
 	}
 
-	if len(req.Name) == 0 {
+	if len(strings.TrimSpace(req.Name)) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "name cannot be empty")
 	}
 
-	specID := types.RecordSpecMetadataAddress(contractSpecUUID, req.Name)
-	ctx := sdk.UnwrapSDKContext(c)
+	recSpecID := types.RecordSpecMetadataAddress(contractSpecUUID, req.Name)
 
-	spec, found := k.GetRecordSpecification(ctx, specID)
-	if !found {
-		return nil, status.Errorf(codes.NotFound, "record specification not found for id %s (contract spec uuid %s and name %s)",
-			specID, req.ContractSpecificationUuid, req.Name)
+	retval := types.RecordSpecificationResponse{
+		ContractSpecificationUuid: contractSpecUUID.String(),
+		Name:                      req.Name,
 	}
 
-	return &types.RecordSpecificationResponse{RecordSpecification: &spec}, nil
+	ctx := sdk.UnwrapSDKContext(c)
+	spec, found := k.GetRecordSpecification(ctx, recSpecID)
+	if !found {
+		return &retval, status.Errorf(codes.NotFound, "record specification not found for id %s (contract spec uuid %s and name %s)",
+			recSpecID, req.ContractSpecificationUuid, req.Name)
+	}
+	retval.RecordSpecification = &spec
+
+	return &retval, nil
+}
+
+// RecordSpecification returns a specific record specification by contract spec uuid and record name
+func (k Keeper) RecordSpecificationByID(c context.Context, req *types.RecordSpecificationByIDRequest) (*types.RecordSpecificationByIDResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if len(req.RecordSpecificationId) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "record specification id cannot be empty")
+	}
+
+	recSpecID, err := types.MetadataAddressFromBech32(req.RecordSpecificationId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid record specification id: %s", err.Error())
+	}
+	if !recSpecID.IsRecordSpecificationAddress() {
+		return nil, status.Errorf(codes.InvalidArgument, "metadata address %s is not a record specification id", recSpecID.String())
+	}
+
+	retval := types.RecordSpecificationByIDResponse{RecordSpecificationId: recSpecID.String()}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	spec, found := k.GetRecordSpecification(ctx, recSpecID)
+	if !found {
+		return &retval, status.Errorf(codes.NotFound, "record specification not found for id %s", recSpecID)
+	}
+	retval.RecordSpecification = &spec
+
+	return &retval, nil
 }
