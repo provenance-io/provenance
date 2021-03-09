@@ -56,8 +56,8 @@ func NewAddMarkerProposal(
 	description string,
 	denom string,
 	totalSupply sdk.Int,
-	fromAddress sdk.AccAddress,
 	manager sdk.AccAddress,
+	status MarkerStatus,
 	markerType MarkerType, // nolint:interfacer
 ) *AddMarkerProposal {
 	return &AddMarkerProposal{
@@ -65,7 +65,7 @@ func NewAddMarkerProposal(
 		Description: description,
 		Amount:      sdk.NewCoin(denom, totalSupply),
 		Manager:     manager.String(),
-		Status:      StatusProposed,
+		Status:      status,
 		MarkerType:  markerType,
 	}
 }
@@ -97,7 +97,7 @@ func (amp AddMarkerProposal) String() string {
   Marker:      %s
   Title:       %s
   Description: %s
-  Supply:      %d
+  Supply:      %s
   Status:      %s
   Type:        %s
 `, amp.Amount.Denom, amp.Title, amp.Description, amp.Amount.Amount, amp.Status, amp.MarkerType)
