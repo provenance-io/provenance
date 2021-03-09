@@ -284,29 +284,22 @@ func (s *IntegrationTestSuite) TestGetMetadataParamsCmd() {
 	testCases := []queryCmdTestCase{
 		{
 			"get params as json output",
-			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{s.asJson},
 			"",
 			"{}",
 		},
 		{
 			"get params as text output",
-			[]string{fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			[]string{s.asText},
 			"",
 			"{}",
 		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			cmd := cli.GetMetadataParamsCmd()
-			clientCtx := s.testnet.Validators[0].ClientCtx
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			s.Require().NoError(err)
-			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
-		})
+		{
+			"get params - invalid args",
+			[]string{"bad-arg"},
+			"unknown command \"bad-arg\" for \"params\"",
+			"{}",
+		},
 	}
 
 	runQueryCmdTestCases(s, cmd, testCases)
