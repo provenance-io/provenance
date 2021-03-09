@@ -54,24 +54,44 @@ type IntegrationTestSuite struct {
 	scopeUUID uuid.UUID
 	scopeID   metadatatypes.MetadataAddress
 
+	scopeAsJson     string
+	scopeAsText     string
+	fullScopeAsJson string
+	fullScopeAsText string
+
 	session     metadatatypes.Session
 	sessionUUID uuid.UUID
 	sessionID   metadatatypes.MetadataAddress
+
+	sessionAsJson string
+	sessionAsText string
 
 	record     metadatatypes.Record
 	recordName string
 	recordID   metadatatypes.MetadataAddress
 
+	recordAsJson string
+	recordAsText string
+
 	scopeSpec     metadatatypes.ScopeSpecification
 	scopeSpecUUID uuid.UUID
 	scopeSpecID   metadatatypes.MetadataAddress
+
+	scopeSpecAsJson string
+	scopeSpecAsText string
 
 	contractSpec     metadatatypes.ContractSpecification
 	contractSpecUUID uuid.UUID
 	contractSpecID   metadatatypes.MetadataAddress
 
+	contractSpecAsJson string
+	contractSpecAsText string
+
 	recordSpec   metadatatypes.RecordSpecification
 	recordSpecID metadatatypes.MetadataAddress
+
+	recordSpecAsJson string
+	recordSpecAsText string
 }
 
 func ownerPartyList(addresses ...string) []metadatatypes.Party {
@@ -201,6 +221,142 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		[]metadatatypes.PartyType{metadatatypes.PartyType_PARTY_TYPE_OWNER},
 	)
 
+	s.scopeAsJson = fmt.Sprintf("{\"scope_id\":\"%s\",\"specification_id\":\"%s\",\"owners\":[{\"address\":\"%s\",\"role\":\"PARTY_TYPE_OWNER\"}],\"data_access\":[\"%s\"],\"value_owner_address\":\"%s\"}",
+		s.scopeID,
+		s.scopeSpecID,
+		s.user1,
+		s.user1,
+		s.user1,
+	)
+	s.scopeAsText = fmt.Sprintf(`data_access:
+- %s
+owners:
+- address: %s
+  role: PARTY_TYPE_OWNER
+scope_id: %s
+specification_id: %s
+value_owner_address: %s`,
+		s.user1,
+		s.user1,
+		s.scopeID,
+		s.scopeSpecID,
+		s.user1,
+	)
+
+	s.sessionAsJson = fmt.Sprintf("{\"session_id\":\"%s\",\"specification_id\":\"%s\",\"parties\":[{\"address\":\"%s\",\"role\":\"PARTY_TYPE_OWNER\"}],\"name\":\"unit test session\",\"audit\":{\"created_date\":\"0001-01-01T00:00:00Z\",\"created_by\":\"%s\",\"updated_date\":\"0001-01-01T00:00:00Z\",\"updated_by\":\"\",\"version\":0,\"message\":\"unit testing\"}}",
+		s.sessionID,
+		s.contractSpecID,
+		s.user1,
+		s.user1,
+	)
+	s.sessionAsText = fmt.Sprintf(`audit:
+  created_by: %s
+  created_date: "0001-01-01T00:00:00Z"
+  message: unit testing
+  updated_by: ""
+  updated_date: "0001-01-01T00:00:00Z"
+  version: 0
+name: unit test session
+parties:
+- address: %s
+  role: PARTY_TYPE_OWNER
+session_id: %s
+specification_id: %s`,
+		s.user1,
+		s.user1,
+		s.sessionID,
+		s.contractSpecID,
+	)
+
+	s.recordAsJson = fmt.Sprintf("{\"name\":\"recordname\",\"session_id\":\"%s\",\"process\":{\"hash\":\"notarealprocesshash\",\"name\":\"record process\",\"method\":\"myMethod\"},\"inputs\":[{\"name\":\"inputname\",\"hash\":\"notarealrecordinputhash\",\"type_name\":\"inputtypename\",\"status\":\"RECORD_INPUT_STATUS_RECORD\"}],\"outputs\":[{\"hash\":\"notarealrecordoutputhash\",\"status\":\"RESULT_STATUS_PASS\"}]}",
+		s.sessionID,
+	)
+	s.recordAsText = fmt.Sprintf(`inputs:
+- hash: notarealrecordinputhash
+  name: inputname
+  status: RECORD_INPUT_STATUS_RECORD
+  type_name: inputtypename
+name: recordname
+outputs:
+- hash: notarealrecordoutputhash
+  status: RESULT_STATUS_PASS
+process:
+  hash: notarealprocesshash
+  method: myMethod
+  name: record process
+session_id: %s`,
+		s.sessionID,
+	)
+
+	s.fullScopeAsJson = fmt.Sprintf("{\"scope\":%s,\"sessions\":[%s],\"records\":[%s],\"scope_uuid\":\"%s\"}",
+		s.scopeAsJson,
+		s.sessionAsJson,
+		s.recordAsJson,
+		s.scopeUUID,
+	)
+	s.fullScopeAsText = fmt.Sprintf(`records:
+%s
+scope:
+%s
+scope_uuid: %s
+sessions:
+%s`,
+		yamlListEntry(s.recordAsText),
+		indent(s.scopeAsText),
+		s.scopeUUID,
+		yamlListEntry(s.sessionAsText),
+	)
+
+	s.scopeSpecAsJson = fmt.Sprintf("{\"specification_id\":\"%s\",\"description\":null,\"owner_addresses\":[\"%s\"],\"parties_involved\":[\"PARTY_TYPE_OWNER\"],\"contract_spec_ids\":[\"%s\"]}",
+		s.scopeSpecID,
+		s.user1,
+		s.contractSpecID,
+	)
+	s.scopeSpecAsText = fmt.Sprintf(`contract_spec_ids:
+- %s
+description: null
+owner_addresses:
+- %s
+parties_involved:
+- PARTY_TYPE_OWNER
+specification_id: %s`,
+		s.contractSpecID,
+		s.user1,
+		s.scopeSpecID,
+	)
+
+	s.contractSpecAsJson = fmt.Sprintf("{\"specification_id\":\"%s\",\"description\":null,\"owner_addresses\":[\"%s\"],\"parties_involved\":[\"PARTY_TYPE_OWNER\"],\"hash\":\"notreallyasourcehash\",\"class_name\":\"contractclassname\"}",
+		s.contractSpecID,
+		s.user1,
+	)
+	s.contractSpecAsText = fmt.Sprintf(`class_name: contractclassname
+description: null
+hash: notreallyasourcehash
+owner_addresses:
+- %s
+parties_involved:
+- PARTY_TYPE_OWNER
+specification_id: %s`,
+		s.user1,
+		s.contractSpecID,
+	)
+
+	s.recordSpecAsJson = fmt.Sprintf("{\"specification_id\":\"%s\",\"name\":\"recordname\",\"inputs\":[{\"name\":\"inputname\",\"type_name\":\"inputtypename\",\"hash\":\"alsonotreallyasourcehash\"}],\"type_name\":\"recordtypename\",\"result_type\":\"DEFINITION_TYPE_RECORD\",\"responsible_parties\":[\"PARTY_TYPE_OWNER\"]}",
+		s.recordSpecID,
+	)
+	s.recordSpecAsText = fmt.Sprintf(`inputs:
+- hash: alsonotreallyasourcehash
+  name: inputname
+  type_name: inputtypename
+name: recordname
+responsible_parties:
+- PARTY_TYPE_OWNER
+result_type: DEFINITION_TYPE_RECORD
+specification_id: %s
+type_name: recordtypename`,
+		s.recordSpecID,
+	)
+
 	var metadataData metadatatypes.GenesisState
 	s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[metadatatypes.ModuleName], &metadataData))
 	metadataData.Scopes = append(metadataData.Scopes, s.scope)
@@ -247,6 +403,38 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.testnet.WaitForNextBlock()
 	s.T().Log("tearing down integration test suite")
 	s.testnet.Cleanup()
+}
+
+func indent(str string) string {
+	var sb strings.Builder
+	lines := strings.Split(str, "\n")
+	maxI := len(lines) - 1
+	for i, l := range strings.Split(str, "\n") {
+		sb.WriteString("  ")
+		sb.WriteString(l)
+		if i != maxI {
+			sb.WriteString("\n")
+		}
+	}
+	return sb.String()
+}
+
+func yamlListEntry(str string) string {
+	var sb strings.Builder
+	lines := strings.Split(str, "\n")
+	maxI := len(lines) - 1
+	for i, l := range strings.Split(str, "\n") {
+		if i == 0 {
+			sb.WriteString("- ")
+		} else {
+			sb.WriteString("  ")
+		}
+		sb.WriteString(l)
+		if i != maxI {
+			sb.WriteString("\n")
+		}
+	}
+	return sb.String()
 }
 
 // ---------- query cmd tests ----------
@@ -306,180 +494,21 @@ func (s *IntegrationTestSuite) TestGetMetadataParamsCmd() {
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
-// TODO: GetMetadataByIDCmd
 func (s *IntegrationTestSuite) TestGetMetadataByIDCmd() {
 	cmd := cli.GetMetadataByIDCmd()
-
-	scopeAsJson := fmt.Sprintf("{\"scope_id\":\"%s\",\"specification_id\":\"%s\",\"owners\":[{\"address\":\"%s\",\"role\":\"%s\"}],\"data_access\":[\"%s\"],\"value_owner_address\":\"%s\"}",
-		s.scope.ScopeId,
-		s.scope.SpecificationId.String(),
-		s.scope.Owners[0].Address,
-		s.scope.Owners[0].Role.String(),
-		s.scope.DataAccess[0],
-		s.scope.ValueOwnerAddress,
-	)
-
-	sessionAsJson := fmt.Sprintf("{\"session_id\":\"%s\",\"specification_id\":\"%s\",\"parties\":[{\"address\":\"%s\",\"role\":\"PARTY_TYPE_OWNER\"}],\"name\":\"unit test session\",\"audit\":{\"created_date\":\"0001-01-01T00:00:00Z\",\"created_by\":\"%s\",\"updated_date\":\"0001-01-01T00:00:00Z\",\"updated_by\":\"\",\"version\":0,\"message\":\"unit testing\"}}",
-		s.sessionID,
-		s.contractSpecID,
-		s.user1,
-		s.user1,
-	)
-	sessionAsText := fmt.Sprintf(`audit:
-  created_by: %s
-  created_date: "0001-01-01T00:00:00Z"
-  message: unit testing
-  updated_by: ""
-  updated_date: "0001-01-01T00:00:00Z"
-  version: 0
-name: unit test session
-parties:
-- address: %s
-  role: PARTY_TYPE_OWNER
-session_id: %s
-specification_id: %s`,
-		s.user1,
-		s.user1,
-		s.sessionID,
-		s.contractSpecID,
-	)
-
-	recordAsJson := fmt.Sprintf("{\"name\":\"recordname\",\"session_id\":\"%s\",\"process\":{\"hash\":\"notarealprocesshash\",\"name\":\"record process\",\"method\":\"myMethod\"},\"inputs\":[{\"name\":\"inputname\",\"hash\":\"notarealrecordinputhash\",\"type_name\":\"inputtypename\",\"status\":\"RECORD_INPUT_STATUS_RECORD\"}],\"outputs\":[{\"hash\":\"notarealrecordoutputhash\",\"status\":\"RESULT_STATUS_PASS\"}]}",
-		s.sessionID,
-	)
-	recordAsText := fmt.Sprintf(`inputs:
-- hash: notarealrecordinputhash
-  name: inputname
-  status: RECORD_INPUT_STATUS_RECORD
-  type_name: inputtypename
-name: recordname
-outputs:
-- hash: notarealrecordoutputhash
-  status: RESULT_STATUS_PASS
-process:
-  hash: notarealprocesshash
-  method: myMethod
-  name: record process
-session_id: %s`,
-		s.sessionID,
-	)
-
-	fullScopeAsJson := fmt.Sprintf("{\"scope\":%s,\"sessions\":[%s],\"records\":[%s],\"scope_uuid\":\"%s\"}",
-		scopeAsJson, sessionAsJson, recordAsJson, s.scopeUUID)
-	fullScopeAsText := fmt.Sprintf(`records:
-- inputs:
-  - hash: notarealrecordinputhash
-    name: inputname
-    status: RECORD_INPUT_STATUS_RECORD
-    type_name: inputtypename
-  name: recordname
-  outputs:
-  - hash: notarealrecordoutputhash
-    status: RESULT_STATUS_PASS
-  process:
-    hash: notarealprocesshash
-    method: myMethod
-    name: record process
-  session_id: %s
-scope:
-  data_access:
-  - %s
-  owners:
-  - address: %s
-    role: PARTY_TYPE_OWNER
-  scope_id: %s
-  specification_id: %s
-  value_owner_address: %s
-scope_uuid: %s
-sessions:
-- audit:
-    created_by: %s
-    created_date: "0001-01-01T00:00:00Z"
-    message: unit testing
-    updated_by: ""
-    updated_date: "0001-01-01T00:00:00Z"
-    version: 0
-  name: unit test session
-  parties:
-  - address: %s
-    role: PARTY_TYPE_OWNER
-  session_id: %s
-  specification_id: %s`,
-		s.sessionID,
-		s.user1,
-		s.user1,
-		s.scopeID,
-		s.scopeSpecID,
-		s.user1,
-		s.scopeUUID,
-		s.user1,
-		s.user1,
-		s.sessionID,
-		s.contractSpecID,
-	)
-
-	scopeSpecAsJson := fmt.Sprintf("{\"specification_id\":\"%s\",\"description\":null,\"owner_addresses\":[\"%s\"],\"parties_involved\":[\"PARTY_TYPE_OWNER\"],\"contract_spec_ids\":[\"%s\"]}",
-		s.scopeSpecID,
-		s.user1,
-		s.contractSpecID,
-	)
-	scopeSpecAsText := fmt.Sprintf(`contract_spec_ids:
-- %s
-description: null
-owner_addresses:
-- %s
-parties_involved:
-- PARTY_TYPE_OWNER
-specification_id: %s`,
-		s.contractSpecID,
-		s.user1,
-		s.scopeSpecID,
-	)
-
-	contractSpecAsJson := fmt.Sprintf("{\"specification_id\":\"%s\",\"description\":null,\"owner_addresses\":[\"%s\"],\"parties_involved\":[\"PARTY_TYPE_OWNER\"],\"hash\":\"notreallyasourcehash\",\"class_name\":\"contractclassname\"}",
-		s.contractSpecID,
-		s.user1,
-	)
-	contractSpecAsText := fmt.Sprintf(`class_name: contractclassname
-description: null
-hash: notreallyasourcehash
-owner_addresses:
-- %s
-parties_involved:
-- PARTY_TYPE_OWNER
-specification_id: %s`,
-		s.user1,
-		s.contractSpecID,
-	)
-
-	recordSpecAsJson := fmt.Sprintf("{\"specification_id\":\"%s\",\"name\":\"recordname\",\"inputs\":[{\"name\":\"inputname\",\"type_name\":\"inputtypename\",\"hash\":\"alsonotreallyasourcehash\"}],\"type_name\":\"recordtypename\",\"result_type\":\"DEFINITION_TYPE_RECORD\",\"responsible_parties\":[\"PARTY_TYPE_OWNER\"]}",
-		s.recordSpecID,
-	)
-	recordSpecAsText := fmt.Sprintf(`inputs:
-- hash: alsonotreallyasourcehash
-  name: inputname
-  type_name: inputtypename
-name: recordname
-responsible_parties:
-- PARTY_TYPE_OWNER
-result_type: DEFINITION_TYPE_RECORD
-specification_id: %s
-type_name: recordtypename`,
-		s.recordSpecID,
-	)
 
 	testCases := []queryCmdTestCase{
 		{
 			"get metadata by id - scope id as json",
 			[]string{s.scopeID.String(), s.asJson},
 			"",
-			fullScopeAsJson,
+			s.fullScopeAsJson,
 		},
 		{
 			"get metadata by id - scope id as text",
 			[]string{s.scopeID.String(), s.asText},
 			"",
-			fullScopeAsText,
+			s.fullScopeAsText,
 		},
 		{
 			"get metadata by id - scope id does not exist",
@@ -491,13 +520,13 @@ type_name: recordtypename`,
 			"get metadata by id - session id as json",
 			[]string{s.sessionID.String(), s.asJson},
 			"",
-			sessionAsJson,
+			s.sessionAsJson,
 		},
 		{
 			"get metadata by id - session id as text",
 			[]string{s.sessionID.String(), s.asText},
 			"",
-			sessionAsText,
+			s.sessionAsText,
 		},
 		{
 			"get metadata by id - session id does not exist",
@@ -509,13 +538,13 @@ type_name: recordtypename`,
 			"get metadata by id - record id as json",
 			[]string{s.recordID.String(), s.asJson},
 			"",
-			recordAsJson,
+			s.recordAsJson,
 		},
 		{
 			"get metadata by id - record id as text",
 			[]string{s.recordID.String(), s.asText},
 			"",
-			recordAsText,
+			s.recordAsText,
 		},
 		{
 			"get metadata by id - record id does not exist",
@@ -527,13 +556,13 @@ type_name: recordtypename`,
 			"get metadata by id - scope spec id as json",
 			[]string{s.scopeSpecID.String(), s.asJson},
 			"",
-			scopeSpecAsJson,
+			s.scopeSpecAsJson,
 		},
 		{
 			"get metadata by id - scope spec id as text",
 			[]string{s.scopeSpecID.String(), s.asText},
 			"",
-			scopeSpecAsText,
+			s.scopeSpecAsText,
 		},
 		{
 			"get metadata by id - scope spec id does not exist",
@@ -545,13 +574,13 @@ type_name: recordtypename`,
 			"get metadata by id - contract spec id as json",
 			[]string{s.contractSpecID.String(), s.asJson},
 			"",
-			contractSpecAsJson,
+			s.contractSpecAsJson,
 		},
 		{
 			"get metadata by id - contract spec id as text",
 			[]string{s.contractSpecID.String(), s.asText},
 			"",
-			contractSpecAsText,
+			s.contractSpecAsText,
 		},
 		{
 			"get metadata by id - contract spec id does not exist",
@@ -563,13 +592,13 @@ type_name: recordtypename`,
 			"get metadata by id - record spec id as json",
 			[]string{s.recordSpecID.String(), s.asJson},
 			"",
-			recordSpecAsJson,
+			s.recordSpecAsJson,
 		},
 		{
 			"get metadata by id - record spec id as text",
 			[]string{s.recordSpecID.String(), s.asText},
 			"",
-			recordSpecAsText,
+			s.recordSpecAsText,
 		},
 		{
 			"get metadata by id - record spec id does not exist",
