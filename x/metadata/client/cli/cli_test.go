@@ -270,7 +270,7 @@ func runQueryCmdTestCases(s *IntegrationTestSuite, cmd *cobra.Command, testCases
 				}
 				require.Equal(t, tc.expectedError, actualError, "expected error")
 			} else {
-				require.Nil(t, err, "unexpected error")
+				require.NoError(t, err, "unexpected error")
 			}
 			if err == nil {
 				require.Equal(t, tc.expectedOutput, strings.TrimSpace(out.String()), "expected output")
@@ -310,24 +310,303 @@ func (s *IntegrationTestSuite) TestGetMetadataParamsCmd() {
 func (s *IntegrationTestSuite) TestGetMetadataByIDCmd() {
 	cmd := cli.GetMetadataByIDCmd()
 
+	scopeAsJson := fmt.Sprintf("{\"scope_id\":\"%s\",\"specification_id\":\"%s\",\"owners\":[{\"address\":\"%s\",\"role\":\"%s\"}],\"data_access\":[\"%s\"],\"value_owner_address\":\"%s\"}",
+		s.scope.ScopeId,
+		s.scope.SpecificationId.String(),
+		s.scope.Owners[0].Address,
+		s.scope.Owners[0].Role.String(),
+		s.scope.DataAccess[0],
+		s.scope.ValueOwnerAddress,
+	)
+
+	sessionAsJson := fmt.Sprintf("{\"session_id\":\"%s\",\"specification_id\":\"%s\",\"parties\":[{\"address\":\"%s\",\"role\":\"PARTY_TYPE_OWNER\"}],\"name\":\"unit test session\",\"audit\":{\"created_date\":\"0001-01-01T00:00:00Z\",\"created_by\":\"%s\",\"updated_date\":\"0001-01-01T00:00:00Z\",\"updated_by\":\"\",\"version\":0,\"message\":\"unit testing\"}}",
+		s.sessionID,
+		s.contractSpecID,
+		s.user1,
+		s.user1,
+	)
+	sessionAsText := fmt.Sprintf(`audit:
+  created_by: %s
+  created_date: "0001-01-01T00:00:00Z"
+  message: unit testing
+  updated_by: ""
+  updated_date: "0001-01-01T00:00:00Z"
+  version: 0
+name: unit test session
+parties:
+- address: %s
+  role: PARTY_TYPE_OWNER
+session_id: %s
+specification_id: %s`,
+		s.user1,
+		s.user1,
+		s.sessionID,
+		s.contractSpecID,
+	)
+
+	recordAsJson := fmt.Sprintf("{\"name\":\"recordname\",\"session_id\":\"%s\",\"process\":{\"hash\":\"notarealprocesshash\",\"name\":\"record process\",\"method\":\"myMethod\"},\"inputs\":[{\"name\":\"inputname\",\"hash\":\"notarealrecordinputhash\",\"type_name\":\"inputtypename\",\"status\":\"RECORD_INPUT_STATUS_RECORD\"}],\"outputs\":[{\"hash\":\"notarealrecordoutputhash\",\"status\":\"RESULT_STATUS_PASS\"}]}",
+		s.sessionID,
+	)
+	recordAsText := fmt.Sprintf(`inputs:
+- hash: notarealrecordinputhash
+  name: inputname
+  status: RECORD_INPUT_STATUS_RECORD
+  type_name: inputtypename
+name: recordname
+outputs:
+- hash: notarealrecordoutputhash
+  status: RESULT_STATUS_PASS
+process:
+  hash: notarealprocesshash
+  method: myMethod
+  name: record process
+session_id: %s`,
+		s.sessionID,
+	)
+
+	fullScopeAsJson := fmt.Sprintf("{\"scope\":%s,\"sessions\":[%s],\"records\":[%s],\"scope_uuid\":\"%s\"}",
+		scopeAsJson, sessionAsJson, recordAsJson, s.scopeUUID)
+	fullScopeAsText := fmt.Sprintf(`records:
+- inputs:
+  - hash: notarealrecordinputhash
+    name: inputname
+    status: RECORD_INPUT_STATUS_RECORD
+    type_name: inputtypename
+  name: recordname
+  outputs:
+  - hash: notarealrecordoutputhash
+    status: RESULT_STATUS_PASS
+  process:
+    hash: notarealprocesshash
+    method: myMethod
+    name: record process
+  session_id: %s
+scope:
+  data_access:
+  - %s
+  owners:
+  - address: %s
+    role: PARTY_TYPE_OWNER
+  scope_id: %s
+  specification_id: %s
+  value_owner_address: %s
+scope_uuid: %s
+sessions:
+- audit:
+    created_by: %s
+    created_date: "0001-01-01T00:00:00Z"
+    message: unit testing
+    updated_by: ""
+    updated_date: "0001-01-01T00:00:00Z"
+    version: 0
+  name: unit test session
+  parties:
+  - address: %s
+    role: PARTY_TYPE_OWNER
+  session_id: %s
+  specification_id: %s`,
+		s.sessionID,
+		s.user1,
+		s.user1,
+		s.scopeID,
+		s.scopeSpecID,
+		s.user1,
+		s.scopeUUID,
+		s.user1,
+		s.user1,
+		s.sessionID,
+		s.contractSpecID,
+	)
+
+	scopeSpecAsJson := fmt.Sprintf("{\"specification_id\":\"%s\",\"description\":null,\"owner_addresses\":[\"%s\"],\"parties_involved\":[\"PARTY_TYPE_OWNER\"],\"contract_spec_ids\":[\"%s\"]}",
+		s.scopeSpecID,
+		s.user1,
+		s.contractSpecID,
+	)
+	scopeSpecAsText := fmt.Sprintf(`contract_spec_ids:
+- %s
+description: null
+owner_addresses:
+- %s
+parties_involved:
+- PARTY_TYPE_OWNER
+specification_id: %s`,
+		s.contractSpecID,
+		s.user1,
+		s.scopeSpecID,
+	)
+
+	contractSpecAsJson := fmt.Sprintf("{\"specification_id\":\"%s\",\"description\":null,\"owner_addresses\":[\"%s\"],\"parties_involved\":[\"PARTY_TYPE_OWNER\"],\"hash\":\"notreallyasourcehash\",\"class_name\":\"contractclassname\"}",
+		s.contractSpecID,
+		s.user1,
+	)
+	contractSpecAsText := fmt.Sprintf(`class_name: contractclassname
+description: null
+hash: notreallyasourcehash
+owner_addresses:
+- %s
+parties_involved:
+- PARTY_TYPE_OWNER
+specification_id: %s`,
+		s.user1,
+		s.contractSpecID,
+	)
+
+	recordSpecAsJson := fmt.Sprintf("{\"specification_id\":\"%s\",\"name\":\"recordname\",\"inputs\":[{\"name\":\"inputname\",\"type_name\":\"inputtypename\",\"hash\":\"alsonotreallyasourcehash\"}],\"type_name\":\"recordtypename\",\"result_type\":\"DEFINITION_TYPE_RECORD\",\"responsible_parties\":[\"PARTY_TYPE_OWNER\"]}",
+		s.recordSpecID,
+	)
+	recordSpecAsText := fmt.Sprintf(`inputs:
+- hash: alsonotreallyasourcehash
+  name: inputname
+  type_name: inputtypename
+name: recordname
+responsible_parties:
+- PARTY_TYPE_OWNER
+result_type: DEFINITION_TYPE_RECORD
+specification_id: %s
+type_name: recordtypename`,
+		s.recordSpecID,
+	)
+
 	testCases := []queryCmdTestCase{
-		// TODO: scope id - json
-		// TODO: scope id - text
-		// TODO: session id - json
-		// TODO: session id - text
-		// TODO: record id - json
-		// TODO: record id - text
-		// TODO: scope spec id - json
-		// TODO: scope spec id - text
-		// TODO: contract spec id - json
-		// TODO: contract spec id - text
-		// TODO: record spec id - json
-		// TODO: record spec id - text
-		// TODO: entry does not exist
-		// TODO: bad prefix
-		// TODO: no arg
-		// TODO: uuid
-		// TODO: random arg
+		{
+			"get metadata by id - scope id as json",
+			[]string{s.scopeID.String(), s.asJson},
+			"",
+			fullScopeAsJson,
+		},
+		{
+			"get metadata by id - scope id as text",
+			[]string{s.scopeID.String(), s.asText},
+			"",
+			fullScopeAsText,
+		},
+		{
+			"get metadata by id - scope id does not exist",
+			[]string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
+			"rpc error: code = NotFound desc = scope uuid 91978ba2-5f35-459a-86a7-feca1b0512e0 not found: key not found",
+			"",
+		},
+		{
+			"get metadata by id - session id as json",
+			[]string{s.sessionID.String(), s.asJson},
+			"",
+			sessionAsJson,
+		},
+		{
+			"get metadata by id - session id as text",
+			[]string{s.sessionID.String(), s.asText},
+			"",
+			sessionAsText,
+		},
+		{
+			"get metadata by id - session id does not exist",
+			[]string{"session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr"},
+			"rpc error: code = NotFound desc = session id session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr not found: key not found",
+			"",
+		},
+		{
+			"get metadata by id - record id as json",
+			[]string{s.recordID.String(), s.asJson},
+			"",
+			recordAsJson,
+		},
+		{
+			"get metadata by id - record id as text",
+			[]string{s.recordID.String(), s.asText},
+			"",
+			recordAsText,
+		},
+		{
+			"get metadata by id - record id does not exist",
+			[]string{"record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3"},
+			"rpc error: code = NotFound desc = scope uuid 91978ba2-5f35-459a-86a7-feca1b0512e0 not found: key not found",
+			"",
+		},
+		{
+			"get metadata by id - scope spec id as json",
+			[]string{s.scopeSpecID.String(), s.asJson},
+			"",
+			scopeSpecAsJson,
+		},
+		{
+			"get metadata by id - scope spec id as text",
+			[]string{s.scopeSpecID.String(), s.asText},
+			"",
+			scopeSpecAsText,
+		},
+		{
+			"get metadata by id - scope spec id does not exist",
+			[]string{"scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"},
+			"rpc error: code = NotFound desc = scope specification uuid dc83ea70-eacd-40fe-9adf-1cf6148bf8a2 not found: key not found",
+			"",
+		},
+		{
+			"get metadata by id - contract spec id as json",
+			[]string{s.contractSpecID.String(), s.asJson},
+			"",
+			contractSpecAsJson,
+		},
+		{
+			"get metadata by id - contract spec id as text",
+			[]string{s.contractSpecID.String(), s.asText},
+			"",
+			contractSpecAsText,
+		},
+		{
+			"get metadata by id - contract spec id does not exist",
+			[]string{"contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn"},
+			"rpc error: code = NotFound desc = contract specification with id contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn (uuid def6bc0a-c9dd-4874-948f-5206e6060a84) not found: key not found",
+			"",
+		},
+		{
+			"get metadata by id - record spec id as json",
+			[]string{s.recordSpecID.String(), s.asJson},
+			"",
+			recordSpecAsJson,
+		},
+		{
+			"get metadata by id - record spec id as text",
+			[]string{s.recordSpecID.String(), s.asText},
+			"",
+			recordSpecAsText,
+		},
+		{
+			"get metadata by id - record spec id does not exist",
+			[]string{"recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44"},
+			"rpc error: code = NotFound desc = record specification not found for id recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44: key not found",
+			"",
+		},
+		{
+			"get metadata by id - bad prefix",
+			[]string{"foo1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
+			"decoding bech32 failed: checksum failed. Expected kzwk8c, got xlkwel.",
+			"",
+		},
+		{
+			"get metadata by id - no args",
+			[]string{},
+			"accepts 1 arg(s), received 0",
+			"",
+		},
+		{
+			"get metadata by id - two args",
+			[]string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel", "scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"},
+			"accepts 1 arg(s), received 2",
+			"",
+		},
+		{
+			"get metadata by id - uuid",
+			[]string{"91978ba2-5f35-459a-86a7-feca1b0512e0"},
+			"decoding bech32 failed: invalid index of 1",
+			"",
+		},
+		{
+			"get metadata by id - bad arg",
+			[]string{"not-an-id"},
+			"decoding bech32 failed: invalid index of 1",
+			"",
+		},
 	}
 
 	runQueryCmdTestCases(s, cmd, testCases)
