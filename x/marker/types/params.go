@@ -102,7 +102,7 @@ func (p *Params) Equal(that interface{}) bool {
 }
 
 func validateIntParam(i interface{}) error {
-	v, ok := i.(uint64)
+	_, ok := i.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
