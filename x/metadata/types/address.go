@@ -435,9 +435,19 @@ func (ma MetadataAddress) NameHash() ([]byte, error) {
 	return namehash, nil
 }
 
-// GetRecordAddress returns the MetadataAddress for a record with the given name within the current scope context
-// panics if the current context is not associated with a scope.
-func (ma MetadataAddress) GetRecordAddress(name string) MetadataAddress {
+// AsScopeAddress returns the MetadataAddress for a scope within the current context
+// panics if the current context is not associated with a scope uuid.
+func (ma MetadataAddress) AsScopeAddress() MetadataAddress {
+	scopeUUID, err := ma.ScopeUUID()
+	if err != nil {
+		panic(err)
+	}
+	return ScopeMetadataAddress(scopeUUID)
+}
+
+// AsRecordAddress returns the MetadataAddress for a record with the given name within the current context
+// panics if the current context is not associated with a scope uuid.
+func (ma MetadataAddress) AsRecordAddress(name string) MetadataAddress {
 	scopeUUID, err := ma.ScopeUUID()
 	if err != nil {
 		panic(err)
@@ -445,8 +455,9 @@ func (ma MetadataAddress) GetRecordAddress(name string) MetadataAddress {
 	return RecordMetadataAddress(scopeUUID, name)
 }
 
-// GetRecordSpecAddress returns the MetadataAddress for a record spec given the name within the current contract spec context
-func (ma MetadataAddress) GetRecordSpecAddress(name string) MetadataAddress {
+// AsRecordSpecAddress returns the MetadataAddress for a record spec given the name within the current context
+// panics if the current context is not associated with a contract spec uuid.
+func (ma MetadataAddress) AsRecordSpecAddress(name string) MetadataAddress {
 	contractSpecUUID, err := ma.ContractSpecUUID()
 	if err != nil {
 		panic(err)
@@ -454,8 +465,9 @@ func (ma MetadataAddress) GetRecordSpecAddress(name string) MetadataAddress {
 	return RecordSpecMetadataAddress(contractSpecUUID, name)
 }
 
-// GetContractSpecAddress returns the MetadataAddress for a contract spec given the UUID in the current record spec context
-func (ma MetadataAddress) GetContractSpecAddress() MetadataAddress {
+// AsContractSpecAddress returns the MetadataAddress for a contract spec given the UUID in the current context
+// panics if the current context is not associated with a contract spec uuid.
+func (ma MetadataAddress) AsContractSpecAddress() MetadataAddress {
 	contractSpecUUID, err := ma.ContractSpecUUID()
 	if err != nil {
 		panic(err)
