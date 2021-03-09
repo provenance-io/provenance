@@ -22,6 +22,8 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+var cmdStart = fmt.Sprintf("%s query metadata", version.AppName)
+
 // GetQueryCmd returns the top-level command for marker CLI queries.
 func GetQueryCmd() *cobra.Command {
 	queryCmd := &cobra.Command{
@@ -51,7 +53,7 @@ func GetMetadataParamsCmd() *cobra.Command {
 		Use:     "params",
 		Short:   "Query the current metadata parameters",
 		Args:    cobra.NoArgs,
-		Example: fmt.Sprintf("%s query metadata params", version.AppName),
+		Example: fmt.Sprintf("%s params", cmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -78,14 +80,19 @@ func GetMetadataByIDCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get id",
 		Short: "Query the current metadata by id",
-		Args:  cobra.ExactArgs(1),
-		Example: fmt.Sprintf(`%[1]s query metadata get scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel
-%[1]s query metadata get session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr
-%[1]s query metadata get record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3
-%[1]s query metadata get scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m
-%[1]s query metadata get contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn
-%[1]s query metadata get recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44
-`, version.AppName),
+		Long: fmt.Sprintf(`%[1]s get {scope_id} - gets the scope with the given scope id.
+%[1]s get {session_id} - gets the session with the given session id.
+%[1]s get {record_id} - gets the record with the given record id.
+%[1]s get {scope_spec_id} - gets the scope specification with the given scope specification id.
+%[1]s get {contract_spec_id} - gets the contract specification with the given contract specification id.
+%[1]s get {record_spec_id} - gets the record specification with the given record specification id.`, cmdStart),
+		Args: cobra.ExactArgs(1),
+		Example: fmt.Sprintf(`%[1]s get scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel
+%[1]s get session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr
+%[1]s get record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3
+%[1]s get scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m
+%[1]s get contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn
+%[1]s get recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44`, cmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id, err := types.MetadataAddressFromBech32(strings.TrimSpace(args[0]))
 			if err != nil {
@@ -122,12 +129,13 @@ func GetMetadataByIDCmd() *cobra.Command {
 // GetMetadataScopeCmd returns the command handler for metadata scope querying.
 func GetMetadataScopeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "scope {id|uuid}",
+		Use:   "scope {scope_id|scope_uuid}",
 		Short: "Query the current metadata for a scope",
-		Args:  cobra.ExactArgs(1),
-		Example: fmt.Sprintf(`%[1]s query metadata scope 91978ba2-5f35-459a-86a7-feca1b0512e0
-%[1]s query metadata scope scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel
-`, version.AppName),
+		Long: fmt.Sprintf(`%[1]s scope {scope_id} - gets the scope with the given id.
+%[1]s scope {scope_uuid} - gets the scope with the given uuid.`, cmdStart),
+		Args: cobra.ExactArgs(1),
+		Example: fmt.Sprintf(`%[1]s scope 91978ba2-5f35-459a-86a7-feca1b0512e0
+%[1]s scope scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel`, cmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			arg0 := strings.TrimSpace(args[0])
 			id, idErr := types.MetadataAddressFromBech32(arg0)
@@ -150,12 +158,13 @@ func GetMetadataScopeCmd() *cobra.Command {
 // GetMetadataFullScopeCmd returns the command handler for metadata full-scope querying.
 func GetMetadataFullScopeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "fullscope {id|uuid}",
+		Use:   "fullscope {scope_id|scope_uuid}",
 		Short: "Query the current metadata for a scope, its sessions, and its records",
-		Args:  cobra.ExactArgs(1),
-		Example: fmt.Sprintf(`%[1]s query metadata fullscope 91978ba2-5f35-459a-86a7-feca1b0512e0
-%[1]s query metadata fullscope scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel
-`, version.AppName),
+		Long: fmt.Sprintf(`%[1]s fullscope {scope_id} - gets a scope, sessions, and records with the given scope id.
+%[1]s fullscope {scope_uuid} - gets a scope, sessions, and records with the given scope uuid.`, cmdStart),
+		Args: cobra.ExactArgs(1),
+		Example: fmt.Sprintf(`%[1]s fullscope 91978ba2-5f35-459a-86a7-feca1b0512e0
+%[1]s fullscope scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel`, cmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			arg0 := strings.TrimSpace(args[0])
 			id, idErr := types.MetadataAddressFromBech32(arg0)
@@ -181,10 +190,13 @@ func GetMetadataSessionCmd() *cobra.Command {
 		Use:     "session {session_id|scope_id|scope_uuid [session_uuid]}",
 		Aliases: []string{"sessions"},
 		Short:   "Query the current metadata for sessions",
-		Args:    cobra.RangeArgs(1, 2),
-		Example: fmt.Sprintf(`%[1]s query metadata session 91978ba2-5f35-459a-86a7-feca1b0512e0 5803f8bc-6067-4eb5-951f-2121671c2ec0
-%[1]s query metadata session session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr
-`, version.AppName),
+		Long: fmt.Sprintf(`%[1]s session {session_id} - gets the session with the given id.
+%[1]s session {scope_id} - gets the list of sessions associated with a scope.
+%[1]s session {scope_uuid} - gets the list of sessions associated with a scope.
+%[1]s session {scope_uuid} {session_uuid} - gets a session with the given scope uuid and session uuid.`, cmdStart),
+		Args: cobra.RangeArgs(1, 2),
+		Example: fmt.Sprintf(`%[1]s session 91978ba2-5f35-459a-86a7-feca1b0512e0 5803f8bc-6067-4eb5-951f-2121671c2ec0
+%[1]s session session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr`, cmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			arg0 := strings.TrimSpace(args[0])
 			if len(args) == 1 {
@@ -228,10 +240,14 @@ func GetMetadataRecordCmd() *cobra.Command {
 		Use:     "record {record_id|session_id|scope_id|scope_uuid [record_name]}",
 		Aliases: []string{"r", "records"},
 		Short:   "Query the current metadata for records",
-		Args:    cobra.MinimumNArgs(1),
-		Example: fmt.Sprintf(`%[1]s query metadata record 91978ba2-5f35-459a-86a7-feca1b0512e0 recordname
-%[1]s query metadata record record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3
-`, version.AppName),
+		Long: fmt.Sprintf(`%[1]s record {record_id} - gets the record with the given id.
+%[1]s record {session_id} - gets the list of records associated with a session id.
+%[1]s record {scope_id} - gets the list of records associated with a scope id.
+%[1]s record {scope_uuid} - gets the list of records associated with a scope uuid.
+%[1]s record {scope_uuid} {record_name} - gets the record with the given name from the given scope.`, cmdStart),
+		Args: cobra.MinimumNArgs(1),
+		Example: fmt.Sprintf(`%[1]s record 91978ba2-5f35-459a-86a7-feca1b0512e0 recordname
+%[1]s record record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3`, cmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			arg0 := strings.TrimSpace(args[0])
 			if len(args) == 1 {
@@ -273,13 +289,14 @@ func GetMetadataRecordCmd() *cobra.Command {
 // GetMetadataScopeSpecCmd returns the command handler for metadata scope specification querying.
 func GetMetadataScopeSpecCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "scopespec {id|uuid}",
+		Use:     "scopespec {scope_spec_id|scope_spec_uuid}",
 		Aliases: []string{"ss", "scopespecification"},
 		Short:   "Query the current metadata for a scope specification",
-		Args:    cobra.ExactArgs(1),
-		Example: fmt.Sprintf(`%[1]s query metadata scopespec dc83ea70-eacd-40fe-9adf-1cf6148bf8a2
-%[1]s query metadata scopespec scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m
-`, version.AppName),
+		Long: fmt.Sprintf(`%[1]s scopespec {scope_spec_id} - gets the scope specification for that a given id.
+%[1]s scopespec {scope_spec_uuid} - gets the scope specification for a given uuid.`, cmdStart),
+		Args: cobra.ExactArgs(1),
+		Example: fmt.Sprintf(`%[1]s scopespec dc83ea70-eacd-40fe-9adf-1cf6148bf8a2
+%[1]s scopespec scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m`, cmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			arg0 := strings.TrimSpace(args[0])
 			id, idErr := types.MetadataAddressFromBech32(arg0)
@@ -302,18 +319,26 @@ func GetMetadataScopeSpecCmd() *cobra.Command {
 // GetMetadataContractSpecCmd returns the command handler for metadata contract specification querying.
 func GetMetadataContractSpecCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "contractspec {id|uuid}",
+		Use:     "contractspec {contract_spec_id|contract_spec_uuid|record_spec_id}",
 		Aliases: []string{"cs", "contractspecification"},
 		Short:   "Query the current metadata for a contract specification",
-		Args:    cobra.ExactArgs(1),
-		Example: fmt.Sprintf(`%[1]s query metadata contractspec def6bc0a-c9dd-4874-948f-5206e6060a84
-%[1]s query metadata contractspec contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn
-`, version.AppName),
+		Long: fmt.Sprintf(`%[1]s contractspec {contract_spec_id} - gets the contract specification for that a given id.
+%[1]s contractspec {contract_spec_uuid} - gets the contract specification for a given uuid.
+%[1]s contractspec {record_spec_id} - gets the contract specification associated with that record spec id.`, cmdStart),
+		Args: cobra.ExactArgs(1),
+		Example: fmt.Sprintf(`%[1]s contractspec def6bc0a-c9dd-4874-948f-5206e6060a84
+%[1]s contractspec contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn`, cmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			arg0 := strings.TrimSpace(args[0])
 			id, idErr := types.MetadataAddressFromBech32(arg0)
 			if idErr == nil {
-				return contractSpecByID(cmd, id)
+				switch {
+				case id.IsContractSpecificationAddress():
+					return contractSpecByID(cmd, id)
+				case id.IsRecordSpecificationAddress():
+					return contractSpecByID(cmd, id.GetContractSpecAddress())
+				}
+				return fmt.Errorf("unexpected metadata address prefix on %s", id)
 			}
 			_, uuidErr := uuid.Parse(arg0)
 			if uuidErr == nil {
@@ -334,10 +359,13 @@ func GetMetadataRecordSpecCmd() *cobra.Command {
 		Use:     "recordspec {rec_spec_id|contract_spec_id|contract_spec_uuid [record_name]}",
 		Aliases: []string{"rs", "recordspecs", "recspec", "recspecs", "recordspecification", "recordspecifications"},
 		Short:   "Query the current metadata for record specifications",
-		Args:    cobra.MinimumNArgs(1),
-		Example: fmt.Sprintf(`%[1]s query metadata recordspec def6bc0a-c9dd-4874-948f-5206e6060a84 recordname
-%[1]s query metadata recordspec recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44
-`, version.AppName),
+		Long: fmt.Sprintf(`%[1]s recordspec {rec_spec_id} - gets the record specification for a given id.
+%[1]s recordspec {contract_spec_id} - gets the list of record specifications for the given contract specification.
+%[1]s recordspec {contract_spec_uuid} - gets the list of record specifications for the given contract specification.
+%[1]s recordspec {contract_spec_uuid} {record_name} - gets the record specification for a given contract specification uuid and record name.`, cmdStart),
+		Args: cobra.MinimumNArgs(1),
+		Example: fmt.Sprintf(`%[1]s recordspec def6bc0a-c9dd-4874-948f-5206e6060a84 recordname
+%[1]s recordspec recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44`, cmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			arg0 := strings.TrimSpace(args[0])
 			if len(args) == 1 {
