@@ -127,6 +127,8 @@ run: check-built run-config;
 
 RELEASE_TAG=SNAPSHOT
 RELEASE_BIN=$(BUILDDIR)/bin
+RELEASE_PROTO_NAME=protos-$(RELEASE_TAG).zip
+RELEASE_PROTO=$(BUILDDIR)/$(RELEASE_PROTO_NAME)
 RELEASE_PLAN=$(BUILDDIR)/plan-$(RELEASE_TAG).json
 RELEASE_CHECKSUM_NAME=sha256sum.txt
 RELEASE_CHECKSUM=$(BUILDDIR)/$(RELEASE_CHECKSUM_NAME)
@@ -165,8 +167,12 @@ build-release-zip: build-release-bin
 	  zip -r $(RELEASE_ZIP_NAME) bin/ && \
 	cd ..
 
+.PHONY: bulid-release-proto
+build-release-proto:
+	scripts/protoball.sh $(RELEASE_PROTO)
+
 .PHONY: build-release
-build-release: build-release-zip build-release-plan
+build-release: build-release-zip build-release-plan build-release-proto
 
 ##############################
 # Tools / Dependencies

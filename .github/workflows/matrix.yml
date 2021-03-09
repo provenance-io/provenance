@@ -78,3 +78,12 @@ jobs:
           asset_path: build/plan-${{ steps.get_ver.outputs.release_tag }}.json
           asset_name: plan-${{ steps.get_ver.outputs.release_tag }}.json
           asset_content_type: application/octet-stream
+      - name: Upload release protos
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: build/protos-${{ steps.get_ver.outputs.release_tag }}.zip
+          asset_name: protos-${{ steps.get_ver.outputs.release_tag }}.zip
+          asset_content_type: application/octet-stream
