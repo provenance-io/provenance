@@ -248,13 +248,13 @@ func GetMetadataSessionCmd() *cobra.Command {
 			if len(args) == 1 {
 				id, idErr := types.MetadataAddressFromBech32(arg0)
 				if idErr == nil {
-					if id.IsSessionAddress() {
+					switch {
+					case id.IsSessionAddress():
 						return sessionByID(cmd, id)
-					} else if id.IsScopeAddress() {
+					case id.IsScopeAddress():
 						return sessionsByScopeID(cmd, id)
-					} else {
-						return fmt.Errorf("invalid metadata address prefix on %s", id)
 					}
+					return fmt.Errorf("invalid metadata address prefix on %s", id)
 				}
 				_, uuidErr := uuid.Parse(arg0)
 				if uuidErr == nil {
@@ -295,13 +295,13 @@ func GetMetadataRecordCmd() *cobra.Command {
 			if len(args) == 1 {
 				id, idErr := types.MetadataAddressFromBech32(arg0)
 				if idErr == nil {
-					if id.IsRecordAddress() {
+					switch {
+					case id.IsRecordAddress():
 						return recordByID(cmd, id)
-					} else if id.IsScopeAddress() {
+					case id.IsScopeAddress():
 						return recordsByScopeID(cmd, id)
-					} else {
-						return fmt.Errorf("invalid metadata address prefix on %s", id)
 					}
+					return fmt.Errorf("invalid metadata address prefix on %s", id)
 				}
 				_, uuidErr := uuid.Parse(arg0)
 				if uuidErr == nil {
