@@ -323,9 +323,11 @@ func (s *IntegrationTestSuite) TestGetMetadataByIDCmd() {
 		// TODO: contract spec id - text
 		// TODO: record spec id - json
 		// TODO: record spec id - text
+		// TODO: entry does not exist
 		// TODO: bad prefix
 		// TODO: no arg
 		// TODO: uuid
+		// TODO: random arg
 	}
 
 	runQueryCmdTestCases(s, cmd, testCases)
@@ -366,23 +368,31 @@ value_owner_address: %s`,
 			scopeAsJson,
 		},
 		{
-			"get scope by metadata id as json output",
-			[]string{s.scopeID.String(), s.asJson},
-			"",
-			scopeAsJson,
-		},
-		{
 			"get scope by uuid as text output",
 			[]string{s.scopeUUID.String(), s.asText},
 			"",
 			scopeAsText,
 		},
 		{
-			"get scope by metadata id as text output",
+			"get scope by metadata scope id as json output",
+			[]string{s.scopeID.String(), s.asJson},
+			"",
+			scopeAsJson,
+		},
+		{
+			"get scope by metadata scope id as text output",
 			[]string{s.scopeID.String(), s.asText},
 			"",
 			scopeAsText,
 		},
+		// TODO: session id - json
+		// TODO: session id - text
+		// TODO: session uuid - json
+		// TODO: session uuid - text
+		// TODO: record id - json
+		// TODO: record id - text
+		// TODO: record uuid - json
+		// TODO: record uuid - text
 		{
 			"get scope by metadata id - does not exist",
 			[]string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel", s.asText},
@@ -401,6 +411,7 @@ value_owner_address: %s`,
 			"argument not-a-valid-arg is neither a metadata address (decoding bech32 failed: invalid index of 1) nor uuid (invalid UUID length: 15)",
 			"",
 		},
+		// TODO: no args
 	}
 
 	runQueryCmdTestCases(s, cmd, testCases)
@@ -411,10 +422,17 @@ func (s *IntegrationTestSuite) TestGetMetadataFullScopeCmd() {
 	cmd := cli.GetMetadataFullScopeCmd()
 
 	testCases := []queryCmdTestCase{
-		// TODO: id
-		// TODO: uuid
+		// TODO: scope id
+		// TODO: scope uuid
+		// TODO: session id
+		// TODO: session uuid
+		// TODO: record id
+		// TODO: record uuid
+		// TODO: entry does not exist
+		// TODO: bad prefix
 		// TODO: bad arg
-		// TODO: no arg
+		// TODO: two args
+		// TODO: no args
 	}
 
 	runQueryCmdTestCases(s, cmd, testCases)
@@ -425,6 +443,15 @@ func (s *IntegrationTestSuite) TestGetMetadataSessionCmd() {
 	cmd := cli.GetMetadataSessionCmd()
 
 	testCases := []queryCmdTestCase{
+		// TODO: session id
+		// TODO: scope id
+		// TODO: scope uuid
+		// TODO: scope uuid, session uuid
+		// TODO: bad prefix
+		// TODO: bad arg 1
+		// TODO: uuid, bad arg 2
+		// TODO: 3 args
+		// TODO: no args
 	}
 
 	runQueryCmdTestCases(s, cmd, testCases)
@@ -435,6 +462,15 @@ func (s *IntegrationTestSuite) TestGetMetadataRecordCmd() {
 	cmd := cli.GetMetadataRecordCmd()
 
 	testCases := []queryCmdTestCase{
+		// TODO: record id
+		// TODO: session id
+		// TODO: scope id
+		// TODO: scope uuid
+		// TODO: scope uuid, record name
+		// TODO: bad prefix
+		// TODO: bad arg 1
+		// TODO: uuid, whitespace arg 2 and 3
+		// TODO: no args
 	}
 
 	runQueryCmdTestCases(s, cmd, testCases)
@@ -445,6 +481,12 @@ func (s *IntegrationTestSuite) TestGetMetadataScopeSpecCmd() {
 	cmd := cli.GetMetadataScopeSpecCmd()
 
 	testCases := []queryCmdTestCase{
+		// TODO: scope spec id
+		// TODO: scope spec uuid
+		// TODO: bad prefix
+		// TODO: bad arg
+		// TODO: two args
+		// TODO: no args
 	}
 
 	runQueryCmdTestCases(s, cmd, testCases)
@@ -455,6 +497,13 @@ func (s *IntegrationTestSuite) TestGetMetadataContractSpecCmd() {
 	cmd := cli.GetMetadataContractSpecCmd()
 
 	testCases := []queryCmdTestCase{
+		// TODO: contract spec id
+		// TODO: contract spec uuid
+		// TODO: record spec id
+		// TODO: bad prefix
+		// TODO: bad arg
+		// TODO: two args
+		// TODO: no args
 	}
 
 	runQueryCmdTestCases(s, cmd, testCases)
@@ -465,6 +514,14 @@ func (s *IntegrationTestSuite) TestGetMetadataRecordSpecCmd() {
 	cmd := cli.GetMetadataRecordSpecCmd()
 
 	testCases := []queryCmdTestCase{
+		// TODO: rec spec id
+		// TODO: contract spec id
+		// TODO: contract spec uuid
+		// TODO: contract spec uuid, name
+		// TODO: bad prefix
+		// TODO: bad arg 1
+		// TODO: uuid, whitespace args 2 and 3
+		// TODO: no args
 	}
 
 	runQueryCmdTestCases(s, cmd, testCases)
