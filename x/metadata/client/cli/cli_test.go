@@ -644,78 +644,54 @@ func (s *IntegrationTestSuite) TestGetMetadataByIDCmd() {
 func (s *IntegrationTestSuite) TestGetMetadataScopeCmd() {
 	cmd := cli.GetMetadataScopeCmd()
 
-	scopeAsJson := fmt.Sprintf("{\"scope_id\":\"%s\",\"specification_id\":\"%s\",\"owners\":[{\"address\":\"%s\",\"role\":\"%s\"}],\"data_access\":[\"%s\"],\"value_owner_address\":\"%s\"}",
-		s.scope.ScopeId,
-		s.scope.SpecificationId.String(),
-		s.scope.Owners[0].Address,
-		s.scope.Owners[0].Role.String(),
-		s.scope.DataAccess[0],
-		s.scope.ValueOwnerAddress,
-	)
-	scopeAsText := fmt.Sprintf(`data_access:
-- %s
-owners:
-- address: %s
-  role: %s
-scope_id: %s
-specification_id: %s
-value_owner_address: %s`,
-		s.scope.DataAccess[0],
-		s.scope.Owners[0].Address,
-		s.scope.Owners[0].Role.String(),
-		s.scope.ScopeId,
-		s.scope.SpecificationId.String(),
-		s.scope.ValueOwnerAddress,
-	)
-
 	testCases := []queryCmdTestCase{
 		{
 			"get scope by metadata scope id as json output",
 			[]string{s.scopeID.String(), s.asJson},
 			"",
-			scopeAsJson,
+			s.scopeAsJson,
 		},
 		{
 			"get scope by metadata scope id as text output",
 			[]string{s.scopeID.String(), s.asText},
 			"",
-			scopeAsText,
+			s.scopeAsText,
 		},
 		{
 			"get scope by uuid as json output",
 			[]string{s.scopeUUID.String(), s.asJson},
 			"",
-			scopeAsJson,
+			s.scopeAsJson,
 		},
 		{
 			"get scope by uuid as text output",
 			[]string{s.scopeUUID.String(), s.asText},
 			"",
-			scopeAsText,
+			s.scopeAsText,
 		},
 		{
 			"get scope by metadata session id as json output",
 			[]string{s.sessionID.String(), s.asJson},
 			"",
-			scopeAsJson,
+			s.scopeAsJson,
 		},
 		{
 			"get scope by metadata session id as text output",
 			[]string{s.sessionID.String(), s.asText},
 			"",
-			scopeAsText,
+			s.scopeAsText,
 		},
 		{
 			"get scope by metadata record id as json output",
 			[]string{s.recordID.String(), s.asJson},
 			"",
-			scopeAsJson,
+			s.scopeAsJson,
 		},
 		{
 			"get scope by metadata record id as text output",
 			[]string{s.recordID.String(), s.asText},
 			"",
-			scopeAsText,
+			s.scopeAsText,
 		},
 		{
 			"get scope by metadata id - does not exist",
