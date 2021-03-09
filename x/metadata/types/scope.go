@@ -77,8 +77,28 @@ func (s Scope) String() string {
 	return string(out)
 }
 
+// UpdateAudit computes a set of changes to the audit fields based on the existing message.
+func (a *AuditFields) UpdateAudit(ctx sdk.Context, signers, message string) *AuditFields {
+	if a == nil {
+		return &AuditFields{
+			Version:     1,
+			CreatedDate: ctx.BlockTime(),
+			CreatedBy:   signers,
+			Message:     message,
+		}
+	}
+	return &AuditFields{
+		Version:     a.Version + 1,
+		CreatedDate: a.CreatedDate,
+		CreatedBy:   a.CreatedBy,
+		UpdatedDate: ctx.BlockTime(),
+		UpdatedBy:   signers,
+		Message:     message,
+	}
+}
+
 // NewSession creates a new instance
-func NewSession(name string, sessionID, contractSpecification MetadataAddress, parties []Party, auditFields AuditFields) *Session {
+func NewSession(name string, sessionID, contractSpecification MetadataAddress, parties []Party, auditFields *AuditFields) *Session {
 	return &Session{
 		SessionId:       sessionID,
 		SpecificationId: contractSpecification,
@@ -115,23 +135,7 @@ func (s *Session) ValidateBasic() error {
 	if len(s.Name) == 0 {
 		return errors.New("session name can not be empty")
 	}
-	if len(s.Audit.CreatedBy) > 0 {
-		if _, err := sdk.AccAddressFromBech32(s.Audit.CreatedBy); err != nil {
-			return fmt.Errorf("invalid session audit:createdby %w", err)
-		}
-		if s.Audit.CreatedDate.IsZero() {
-			return fmt.Errorf("invalid/null session audit created date")
-		}
-	}
-	if len(s.Audit.UpdatedBy) > 0 {
-		if _, err := sdk.AccAddressFromBech32(s.Audit.UpdatedBy); err != nil {
-			return fmt.Errorf("invalid session audit:updatedby %w", err)
-		}
-		if s.Audit.UpdatedDate.IsZero() {
-			return fmt.Errorf("invalid/null session audit updated date")
-		}
-	}
-	if len(s.Audit.Message) > maxAuditMessageLength {
+	if s.Audit != nil && len(s.Audit.Message) > maxAuditMessageLength {
 		return fmt.Errorf("session audit message exceeds maximum length (expected < %d got: %d)",
 			maxAuditMessageLength, len(s.Audit.Message))
 	}

@@ -213,7 +213,7 @@ func (s *QueryServerTestSuite) TestSessionQuery() {
 
 	session := types.NewSession("name", sessionID, cSpecID, []types.Party{
 		{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: types.PartyType_PARTY_TYPE_AFFILIATE}},
-		types.AuditFields{CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", CreatedDate: time.Now(),
+		&types.AuditFields{CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", CreatedDate: time.Now(),
 			UpdatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", UpdatedDate: time.Now(),
 			Message: "message",
 		})
@@ -222,7 +222,7 @@ func (s *QueryServerTestSuite) TestSessionQuery() {
 		sID := types.SessionMetadataAddress(scopeUUID, uuid.New())
 		session := types.NewSession("name", sID, cSpecID, []types.Party{
 			{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: types.PartyType_PARTY_TYPE_AFFILIATE}},
-			types.AuditFields{CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", CreatedDate: time.Now(),
+			&types.AuditFields{CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", CreatedDate: time.Now(),
 				UpdatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", UpdatedDate: time.Now(),
 				Message: "message",
 			})
@@ -276,4 +276,3 @@ func (s *QueryServerTestSuite) TestSessionQuery() {
 // TODO: ContractSpecificationExtended tests
 // TODO: RecordSpecificationsForContractSpecification test
 // TODO: RecordSpecification tests
-

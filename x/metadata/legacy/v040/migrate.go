@@ -202,13 +202,15 @@ func BackportScope(
 		if err != nil {
 			return
 		}
-		if t.Audit.CreatedDate.UnixNano() > newestSessionAge {
-			newestSessionAge = t.Audit.CreatedDate.UnixNano()
-			newestSession = sessionUUID.String()
-		}
-		if t.Audit.UpdatedDate.UnixNano() > newestSessionAge {
-			newestSessionAge = t.Audit.UpdatedDate.UnixNano()
-			newestSession = sessionUUID.String()
+		if t.Audit != nil {
+			if t.Audit.CreatedDate.UnixNano() > newestSessionAge {
+				newestSessionAge = t.Audit.CreatedDate.UnixNano()
+				newestSession = sessionUUID.String()
+			}
+			if t.Audit.UpdatedDate.UnixNano() > newestSessionAge {
+				newestSessionAge = t.Audit.UpdatedDate.UnixNano()
+				newestSession = sessionUUID.String()
+			}
 		}
 
 		var parties []*v039metadata.Recital
@@ -239,10 +241,12 @@ func BackportScope(
 		executorBech32 := ""
 		var executor v039metadata.SigningAndEncryptionPublicKeys
 
-		if len(t.Audit.UpdatedBy) > 0 {
-			executorBech32 = t.Audit.UpdatedBy
-		} else if len(t.Audit.CreatedBy) > 0 {
-			executorBech32 = t.Audit.CreatedBy
+		if t.Audit != nil {
+			if len(t.Audit.UpdatedBy) > 0 {
+				executorBech32 = t.Audit.UpdatedBy
+			} else if len(t.Audit.CreatedBy) > 0 {
+				executorBech32 = t.Audit.CreatedBy
+			}
 		}
 
 		if executorBech32 != "" {
@@ -272,6 +276,18 @@ func BackportScope(
 			specHash = spec.GetHash()
 		}
 
+		var v39Audit *v039metadata.AuditFields
+		if t.Audit != nil {
+			v39Audit = &v039metadata.AuditFields{
+				CreatedBy:   t.Audit.CreatedBy,
+				CreatedDate: &v039metadata.GogoTimeHack{Seconds: t.Audit.CreatedDate.Unix()},
+				Message:     t.Audit.Message,
+				UpdatedBy:   t.Audit.UpdatedBy,
+				UpdatedDate: &v039metadata.GogoTimeHack{Seconds: t.Audit.UpdatedDate.Unix()},
+				Version:     int32(t.Audit.Version),
+			}
+		}
+
 		oldGroups = append(oldGroups, &v039metadata.RecordGroup{
 			Classname: t.Name,
 			GroupUuid: &v039metadata.UUID{
@@ -281,14 +297,7 @@ func BackportScope(
 			Executor:      &executor,
 			Records:       groupRecords,
 			Specification: specHash,
-			Audit: &v039metadata.AuditFields{
-				CreatedBy:   t.Audit.CreatedBy,
-				CreatedDate: &v039metadata.GogoTimeHack{Seconds: t.Audit.CreatedDate.Unix()},
-				Message:     t.Audit.Message,
-				UpdatedBy:   t.Audit.UpdatedBy,
-				UpdatedDate: &v039metadata.GogoTimeHack{Seconds: t.Audit.UpdatedDate.Unix()},
-				Version:     int32(t.Audit.Version),
-			},
+			Audit:         v39Audit,
 		})
 		return false
 	})

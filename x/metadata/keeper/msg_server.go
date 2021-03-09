@@ -119,6 +119,9 @@ func (k msgServer) AddSession(
 		return nil, err
 	}
 
+	audit := existing.Audit.UpdateAudit(ctx, strings.Join(msg.Signers, ", "), "")
+	*msg.Session.Audit = *audit
+
 	k.SetSession(ctx, *msg.Session)
 
 	ctx.EventManager().EmitEvent(
