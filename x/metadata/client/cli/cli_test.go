@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/google/uuid"
@@ -25,7 +26,6 @@ import (
 	"github.com/provenance-io/provenance/testutil"
 
 	"github.com/provenance-io/provenance/x/metadata/client/cli"
-	"github.com/provenance-io/provenance/x/metadata/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -48,16 +48,32 @@ type IntegrationTestSuite struct {
 
 	scope     metadatatypes.Scope
 	scopeUUID uuid.UUID
-	scopeID   types.MetadataAddress
+	scopeID   metadatatypes.MetadataAddress
 
-	specUUID uuid.UUID
-	specID   types.MetadataAddress
+	session     metadatatypes.Session
+	sessionUUID uuid.UUID
+	sessionID   metadatatypes.MetadataAddress
+
+	record     metadatatypes.Record
+	recordName string
+	recordID   metadatatypes.MetadataAddress
+
+	scopeSpec     metadatatypes.ScopeSpecification
+	scopeSpecUUID uuid.UUID
+	scopeSpecID   metadatatypes.MetadataAddress
+
+	contractSpec     metadatatypes.ContractSpecification
+	contractSpecUUID uuid.UUID
+	contractSpecID   metadatatypes.MetadataAddress
+
+	recordSpec   metadatatypes.RecordSpecification
+	recordSpecID metadatatypes.MetadataAddress
 }
 
-func ownerPartyList(addresses ...string) []types.Party {
-	retval := make([]types.Party, len(addresses))
+func ownerPartyList(addresses ...string) []metadatatypes.Party {
+	retval := make([]metadatatypes.Party, len(addresses))
 	for i, addr := range addresses {
-		retval[i] = types.Party{Address: addr, Role: types.PartyType_PARTY_TYPE_OWNER}
+		retval[i] = metadatatypes.Party{Address: addr, Role: metadatatypes.PartyType_PARTY_TYPE_OWNER}
 	}
 	return retval
 }
@@ -87,16 +103,107 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.user2 = s.user2Addr.String()
 
 	s.scopeUUID = uuid.New()
-	s.scopeID = types.ScopeMetadataAddress(s.scopeUUID)
-	s.specUUID = uuid.New()
-	s.specID = types.ScopeSpecMetadataAddress(s.specUUID)
+	s.sessionUUID = uuid.New()
+	s.recordName = "recordname"
+	s.scopeSpecUUID = uuid.New()
+	s.contractSpecUUID = uuid.New()
 
-	s.scope = *metadatatypes.NewScope(s.scopeID, s.specID, ownerPartyList(s.user1), []string{s.user1}, s.user1)
+	s.scopeID = metadatatypes.ScopeMetadataAddress(s.scopeUUID)
+	s.sessionID = metadatatypes.SessionMetadataAddress(s.scopeUUID, s.sessionUUID)
+	s.recordID = metadatatypes.RecordMetadataAddress(s.scopeUUID, s.recordName)
+	s.scopeSpecID = metadatatypes.ScopeSpecMetadataAddress(s.scopeSpecUUID)
+	s.contractSpecID = metadatatypes.ContractSpecMetadataAddress(s.contractSpecUUID)
+	s.recordSpecID = metadatatypes.RecordSpecMetadataAddress(s.contractSpecUUID, s.recordName)
 
-	var metadataData metadatatypes.GenesisState
-	metadataData.Params = metadatatypes.DefaultParams()
-	metadataData.Scopes = append(metadataData.Scopes, s.scope)
-	metadataDataBz, err := cfg.Codec.MarshalJSON(&metadataData)
+	s.scope = *metadatatypes.NewScope(
+		s.scopeID,
+		s.scopeSpecID,
+		ownerPartyList(s.user1),
+		[]string{s.user1},
+		s.user1,
+	)
+
+	s.session = *metadatatypes.NewSession(
+		"unit test session",
+		s.sessionID,
+		s.contractSpecID,
+		ownerPartyList(s.user1),
+		metadatatypes.AuditFields{
+			CreatedDate: time.Time{},
+			CreatedBy:   s.user1,
+			UpdatedDate: time.Time{},
+			UpdatedBy:   "",
+			Version:     0,
+			Message:     "unit testing",
+		},
+	)
+
+	s.record = *metadatatypes.NewRecord(
+		s.recordName,
+		s.sessionID,
+		*metadatatypes.NewProcess(
+			"record process",
+			&metadatatypes.Process_Hash{Hash: "notarealprocesshash"},
+			"myMethod",
+		),
+		[]metadatatypes.RecordInput{
+			*metadatatypes.NewRecordInput(
+				"inputname",
+				&metadatatypes.RecordInput_Hash{Hash: "notarealrecordinputhash"},
+				"inputtypename",
+				metadatatypes.RecordInputStatus_Record,
+			),
+		},
+		[]metadatatypes.RecordOutput{
+			*metadatatypes.NewRecordOutput(
+				"notarealrecordoutputhash",
+				metadatatypes.ResultStatus_RESULT_STATUS_PASS,
+			),
+		},
+	)
+
+	s.scopeSpec = *metadatatypes.NewScopeSpecification(
+		s.scopeSpecID,
+		nil,
+		[]string{s.user1},
+		[]metadatatypes.PartyType{metadatatypes.PartyType_PARTY_TYPE_OWNER},
+		[]metadatatypes.MetadataAddress{s.contractSpecID},
+	)
+
+	s.contractSpec = *metadatatypes.NewContractSpecification(
+		s.contractSpecID,
+		nil,
+		[]string{s.user1},
+		[]metadatatypes.PartyType{metadatatypes.PartyType_PARTY_TYPE_OWNER},
+		metadatatypes.NewContractSpecificationSourceHash("notreallyasourcehash"),
+		"contractclassname",
+	)
+
+	s.recordSpec = *metadatatypes.NewRecordSpecification(
+		s.recordSpecID,
+		s.recordName,
+		[]*metadatatypes.InputSpecification{
+			metadatatypes.NewInputSpecification(
+				"inputname",
+				"inputtypename",
+				metadatatypes.NewInputSpecificationSourceHash("alsonotreallyasourcehash"),
+			),
+		},
+		"recordtypename",
+		metadatatypes.DefinitionType_DEFINITION_TYPE_RECORD,
+		[]metadatatypes.PartyType{metadatatypes.PartyType_PARTY_TYPE_OWNER},
+	)
+
+	metadataData := metadatatypes.NewGenesisState(
+		metadatatypes.DefaultParams(),
+		[]metadatatypes.Scope{s.scope},
+		[]metadatatypes.Session{s.session},
+		[]metadatatypes.Record{s.record},
+		[]metadatatypes.ScopeSpecification{s.scopeSpec},
+		[]metadatatypes.ContractSpecification{s.contractSpec},
+		[]metadatatypes.RecordSpecification{s.recordSpec},
+	)
+	metadataDataBz, err := cfg.Codec.MarshalJSON(metadataData)
 	s.Require().NoError(err)
 	genesisState[metadatatypes.ModuleName] = metadataDataBz
 
