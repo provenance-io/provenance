@@ -27,7 +27,7 @@ var (
 	ParamStoreKeyUnrestrictedDenomRegex = []byte("UnrestrictedDenomRegex")
 )
 
-// ParamKeyTable for slashing module
+// ParamKeyTable for marker module
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
@@ -69,6 +69,7 @@ func (p Params) String() string {
 	return string(out)
 }
 
+// Equal returns true if the given value is equivalent to the current instance of params
 func (p *Params) Equal(that interface{}) bool {
 	if that == nil {
 		return p == nil
@@ -104,10 +105,6 @@ func validateIntParam(i interface{}) error {
 	v, ok := i.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	if v < 1 {
-		return fmt.Errorf("value must be greater than zero: %d", v)
 	}
 
 	return nil
