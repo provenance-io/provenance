@@ -281,6 +281,7 @@ func runQueryCmdTestCases(s *IntegrationTestSuite, cmd *cobra.Command, testCases
 
 func (s *IntegrationTestSuite) TestGetMetadataParamsCmd() {
 	cmd := cli.GetMetadataParamsCmd()
+
 	testCases := []queryCmdTestCase{
 		{
 			"get params as json output",
@@ -305,10 +306,34 @@ func (s *IntegrationTestSuite) TestGetMetadataParamsCmd() {
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
-// TODO: TestGetMetadataByIDCmd
+// TODO: GetMetadataByIDCmd
+func (s *IntegrationTestSuite) TestGetMetadataByIDCmd() {
+	cmd := cli.GetMetadataByIDCmd()
+
+	testCases := []queryCmdTestCase{
+		// TODO: scope id - json
+		// TODO: scope id - text
+		// TODO: session id - json
+		// TODO: session id - text
+		// TODO: record id - json
+		// TODO: record id - text
+		// TODO: scope spec id - json
+		// TODO: scope spec id - text
+		// TODO: contract spec id - json
+		// TODO: contract spec id - text
+		// TODO: record spec id - json
+		// TODO: record spec id - text
+		// TODO: bad prefix
+		// TODO: no arg
+		// TODO: uuid
+	}
+
+	runQueryCmdTestCases(s, cmd, testCases)
+}
 
 func (s *IntegrationTestSuite) TestGetMetadataScopeCmd() {
 	cmd := cli.GetMetadataScopeCmd()
+
 	scopeAsJson := fmt.Sprintf("{\"scope_id\":\"%s\",\"specification_id\":\"%s\",\"owners\":[{\"address\":\"%s\",\"role\":\"%s\"}],\"data_access\":[\"%s\"],\"value_owner_address\":\"%s\"}",
 		s.scope.ScopeId,
 		s.scope.SpecificationId.String(),
@@ -332,6 +357,7 @@ value_owner_address: %s`,
 		s.scope.SpecificationId.String(),
 		s.scope.ValueOwnerAddress,
 	)
+
 	testCases := []queryCmdTestCase{
 		{
 			"get scope by uuid as json output",
@@ -381,16 +407,68 @@ value_owner_address: %s`,
 }
 
 // TODO: GetMetadataFullScopeCmd
+func (s *IntegrationTestSuite) TestGetMetadataFullScopeCmd() {
+	cmd := cli.GetMetadataFullScopeCmd()
 
-// TODO: TestGetMetadataSessionCmd
+	testCases := []queryCmdTestCase{
+		// TODO: id
+		// TODO: uuid
+		// TODO: bad arg
+		// TODO: no arg
+	}
 
-// TODO: TestGetMetadataRecordCmd
+	runQueryCmdTestCases(s, cmd, testCases)
+}
 
-// TODO: TestGetMetadataScopeSpecCmd
+// TODO: GetMetadataSessionCmd
+func (s *IntegrationTestSuite) TestGetMetadataSessionCmd() {
+	cmd := cli.GetMetadataSessionCmd()
 
-// TODO: TestGetMetadataContractSpecCmd
+	testCases := []queryCmdTestCase{
+	}
 
-// TODO: TestGetMetadataRecordSpecCmd
+	runQueryCmdTestCases(s, cmd, testCases)
+}
+
+// TODO: GetMetadataRecordCmd
+func (s *IntegrationTestSuite) TestGetMetadataRecordCmd() {
+	cmd := cli.GetMetadataRecordCmd()
+
+	testCases := []queryCmdTestCase{
+	}
+
+	runQueryCmdTestCases(s, cmd, testCases)
+}
+
+// TODO: GetMetadataScopeSpecCmd
+func (s *IntegrationTestSuite) TestGetMetadataScopeSpecCmd() {
+	cmd := cli.GetMetadataScopeSpecCmd()
+
+	testCases := []queryCmdTestCase{
+	}
+
+	runQueryCmdTestCases(s, cmd, testCases)
+}
+
+// TODO: GetMetadataContractSpecCmd
+func (s *IntegrationTestSuite) TestGetMetadataContractSpecCmd() {
+	cmd := cli.GetMetadataContractSpecCmd()
+
+	testCases := []queryCmdTestCase{
+	}
+
+	runQueryCmdTestCases(s, cmd, testCases)
+}
+
+// TODO: GetMetadataRecordSpecCmd
+func (s *IntegrationTestSuite) TestGetMetadataRecordSpecCmd() {
+	cmd := cli.GetMetadataRecordSpecCmd()
+
+	testCases := []queryCmdTestCase{
+	}
+
+	runQueryCmdTestCases(s, cmd, testCases)
+}
 
 // ---------- tx cmd tests ----------
 
