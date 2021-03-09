@@ -73,7 +73,7 @@ func NewAddMarkerProposal(
 // Implements Proposal Interface
 
 func (amp AddMarkerProposal) ProposalRoute() string { return RouterKey }
-func (amp AddMarkerProposal) ProposalType() string  { return ProposalTypeIncreaseSupply }
+func (amp AddMarkerProposal) ProposalType() string  { return ProposalTypeAddMarker }
 func (amp AddMarkerProposal) ValidateBasic() error {
 	if amp.Status == StatusUndefined {
 		return ErrInvalidMarkerStatus

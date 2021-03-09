@@ -11,9 +11,16 @@ import (
 func TestProposalAddMarker_Format(t *testing.T) {
 	m := NewAddMarkerProposal("title", "description", "test", sdk.NewInt(100), sdk.AccAddress{}, StatusProposed, MarkerType_Coin)
 	require.NotNil(t, m)
+
+	require.Equal(t, RouterKey, m.ProposalRoute())
+	require.Equal(t, ProposalTypeAddMarker, m.ProposalType())
+
 	err := m.ValidateBasic()
 	require.Error(t, err)
 	require.EqualValues(t, fmt.Errorf("marker manage cannot be empty when creating a proposed marker"), err)
+
+	m.Status = StatusUndefined
+	require.Error(t, m.ValidateBasic())
 
 	m.Status = StatusActive
 	require.NoError(t, m.ValidateBasic())
