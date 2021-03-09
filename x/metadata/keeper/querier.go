@@ -27,6 +27,8 @@ func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 			return queryParams(ctx, k, legacyQuerierCdc)
 		case types.QueryScopeSpec:
 			return queryScopeSpecification(ctx, path, k, legacyQuerierCdc)
+		// TODO: add contract spec stuff
+		// TODO: add record spec stuff
 
 		default:
 			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown query endpoint")

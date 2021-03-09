@@ -13,6 +13,7 @@ func NewGenesisState(
 	records []Record,
 	scopeSpecs []ScopeSpecification,
 	contracSpecs []ContractSpecification,
+	recordSpecs []RecordSpecification,
 ) *GenesisState {
 	return &GenesisState{
 		Params:                 params,
@@ -21,6 +22,7 @@ func NewGenesisState(
 		Records:                records,
 		ScopeSpecifications:    scopeSpecs,
 		ContractSpecifications: contracSpecs,
+		RecordSpecifications:   recordSpecs,
 	}
 }
 

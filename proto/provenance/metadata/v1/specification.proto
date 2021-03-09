@@ -83,17 +83,12 @@ message ContractSpecification {
   }
   // name of the class/type of this contract executable
   string class_name = 7 [(gogoproto.moretags) = "yaml:\"class_name\""];
-  // a collection of ids of checks (RecordSpecifications) that must be satisfied against a scope prior to
-  // allowing a record to be added under this specification
-  repeated bytes record_spec_ids = 8 [
-    (gogoproto.nullable)   = false,
-    (gogoproto.customtype) = "MetadataAddress",
-    (gogoproto.moretags)   = "yaml:\"record_spec_ids\""
-  ];
 }
 
 // RecordSpecification defines the specification for a Record including allowed/required inputs/outputs
 message RecordSpecification {
+  option (gogoproto.goproto_stringer) = false;
+
   // unique identifier for this specification on chain
   bytes specification_id = 1 [
     (gogoproto.nullable)   = false,
@@ -109,12 +104,14 @@ message RecordSpecification {
   // Type of result for this record specification (must be RECORD or RECORD_LIST)
   DefinitionType result_type = 5 [(gogoproto.moretags) = "yaml:\"result_type\""];
   // Type of party responsible for this record
-  PartyType responsible_party = 6 [(gogoproto.moretags) = "yaml:\"responsible_party\""];
+  repeated PartyType responsible_parties = 6 [(gogoproto.moretags) = "yaml:\"responsible_parties\""];
 }
 
 // InputSpecification defines a name, type_name, and source reference (either on or off chain) to define an input
 // parameter
 message InputSpecification {
+  option (gogoproto.goproto_stringer) = false;
+
   // name for this input
   string name = 1;
   // a type_name (typically a proto name or class_name)

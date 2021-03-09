@@ -3,17 +3,14 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/tendermint/tendermint/libs/log"
-
 	"github.com/cosmos/cosmos-sdk/codec"
-
-	"github.com/provenance-io/provenance/x/metadata/types"
-
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/provenance-io/provenance/x/metadata/types"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 // MetadataKeeperI is the internal state api for the metadata module.
@@ -52,7 +49,7 @@ type MetadataKeeperI interface {
 	// SetScopeSpecification persists the provided scope specification
 	SetScopeSpecification(sdk.Context, types.ScopeSpecification)
 	// RemoveScopeSpecification removes a scope specification from the module kv store.
-	RemoveScopeSpecification(sdk.Context, types.MetadataAddress)
+	RemoveScopeSpecification(sdk.Context, types.MetadataAddress) error
 
 	// IterateScopeSpecs processes all scope specs using a given handler.
 	IterateScopeSpecs(ctx sdk.Context, handler func(specification types.ScopeSpecification) (stop bool)) error
@@ -66,12 +63,28 @@ type MetadataKeeperI interface {
 	// SetContractSpecification persists the provided contract specification
 	SetContractSpecification(sdk.Context, types.ContractSpecification)
 	// RemoveContractSpecification removes a contract specification from the module kv store.
-	RemoveContractSpecification(sdk.Context, types.MetadataAddress)
+	RemoveContractSpecification(sdk.Context, types.MetadataAddress) error
 
 	// IterateContractSpecs processes all contract specs using the given handler.
 	IterateContractSpecs(ctx sdk.Context, handler func(specification types.ContractSpecification) (stop bool)) error
 	// IterateContractSpecsForOwner processes all contract specs owned by an address using a given handler.
 	IterateContractSpecsForOwner(ctx sdk.Context, ownerAddress sdk.AccAddress, handler func(contractSpecID types.MetadataAddress) (stop bool)) error
+
+	// GetRecordSpecification returns the record specification with the given address.
+	GetRecordSpecification(sdk.Context, types.MetadataAddress) (types.RecordSpecification, bool)
+	// SetRecordSpecification persists the provided record specification
+	SetRecordSpecification(sdk.Context, types.RecordSpecification)
+	// RemoveRecordSpecification removes a record specification from the module kv store.
+	RemoveRecordSpecification(sdk.Context, types.MetadataAddress) error
+
+	// IterateRecordSpecs processes all record specs using a given handler.
+	IterateRecordSpecs(ctx sdk.Context, handler func(specification types.RecordSpecification) (stop bool)) error
+	// IterateRecordSpecsForOwner processes all record specs owned by an address using a given handler.
+	IterateRecordSpecsForOwner(ctx sdk.Context, ownerAddress sdk.AccAddress, handler func(recordSpecID types.MetadataAddress) (stop bool)) error
+	// IterateRecordSpecsForContractSpec processes all record specs for a contract spec using a given handler.
+	IterateRecordSpecsForContractSpec(ctx sdk.Context, contractSpecID types.MetadataAddress, handler func(recordSpecID types.MetadataAddress) (stop bool)) error
+	// GetRecordSpecificationsForContractSpecificationID returns all the record specifications associated with given contractSpecID
+	GetRecordSpecificationsForContractSpecificationID(ctx sdk.Context, contractSpecID types.MetadataAddress) ([]*types.RecordSpecification, error)
 }
 
 // Keeper is the concrete state-based API for the metadata module.

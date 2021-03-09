@@ -196,8 +196,11 @@ func (k msgServer) AddScopeSpecification(
 	var existing *types.ScopeSpecification = nil
 	if e, found := k.GetScopeSpecification(ctx, msg.Specification.SpecificationId); found {
 		existing = &e
+		if err := k.ValidateAllOwnersAreSigners(existing.OwnerAddresses, msg.Signers); err != nil {
+			return nil, err
+		}
 	}
-	if err := k.ValidateScopeSpecUpdate(ctx, existing, msg.Specification, msg.Signers); err != nil {
+	if err := k.ValidateScopeSpecUpdate(ctx, existing, msg.Specification); err != nil {
 		return nil, err
 	}
 
@@ -228,7 +231,9 @@ func (k msgServer) DeleteScopeSpecification(
 		return nil, err
 	}
 
-	k.RemoveScopeSpecification(ctx, msg.SpecificationId)
+	if err := k.RemoveScopeSpecification(ctx, msg.SpecificationId); err != nil {
+		return nil, fmt.Errorf("cannot delete scope specification with id %s: %w", msg.SpecificationId, err)
+	}
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -250,8 +255,11 @@ func (k msgServer) AddContractSpecification(
 	var existing *types.ContractSpecification = nil
 	if e, found := k.GetContractSpecification(ctx, msg.Specification.SpecificationId); found {
 		existing = &e
+		if err := k.ValidateAllOwnersAreSigners(existing.OwnerAddresses, msg.Signers); err != nil {
+			return nil, err
+		}
 	}
-	if err := k.ValidateContractSpecUpdate(ctx, existing, msg.Specification, msg.Signers); err != nil {
+	if err := k.ValidateContractSpecUpdate(ctx, existing, msg.Specification); err != nil {
 		return nil, err
 	}
 
@@ -282,7 +290,34 @@ func (k msgServer) DeleteContractSpecification(
 		return nil, err
 	}
 
-	k.RemoveContractSpecification(ctx, msg.SpecificationId)
+	// Remove all record specifications associated with this contract specification.
+	recSpecs, recSpecErr := k.GetRecordSpecificationsForContractSpecificationID(ctx, msg.SpecificationId)
+	if recSpecErr != nil {
+		return nil, fmt.Errorf("could not get record specifications to delete with contract specification with id %s: %w",
+			msg.SpecificationId, recSpecErr)
+	}
+	var delRecSpecErr error = nil
+	removedRecSpecs := []*types.RecordSpecification{}
+	for _, recSpec := range recSpecs {
+		if err := k.RemoveRecordSpecification(ctx, recSpec.SpecificationId); err != nil {
+			delRecSpecErr = fmt.Errorf("failed to delete record specification %s (name: %s) while trying to delete contract specification %d: %w",
+				recSpec.SpecificationId, recSpec.Name, msg.SpecificationId, err)
+			break
+		}
+		removedRecSpecs = append(removedRecSpecs, recSpec)
+	}
+	if delRecSpecErr != nil {
+		// Put the deleted record specifications back since not all of them could be deleted (and neither can this contract spec)
+		for _, recSpec := range removedRecSpecs {
+			k.SetRecordSpecification(ctx, *recSpec)
+		}
+		return nil, delRecSpecErr
+	}
+
+	// Remove the contract specification itself
+	if err := k.RemoveContractSpecification(ctx, msg.SpecificationId); err != nil {
+		return nil, fmt.Errorf("cannot delete contract specification with id %s: %w", msg.SpecificationId, err)
+	}
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -293,4 +328,77 @@ func (k msgServer) DeleteContractSpecification(
 	)
 
 	return &types.MsgDeleteContractSpecificationResponse{}, nil
+}
+
+func (k msgServer) AddRecordSpecification(
+	goCtx context.Context,
+	msg *types.MsgAddRecordSpecificationRequest,
+) (*types.MsgAddRecordSpecificationResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	contractSpecID := msg.Specification.SpecificationId.GetContractSpecAddress()
+	contractSpec, contractSpecFound := k.GetContractSpecification(ctx, contractSpecID)
+	if !contractSpecFound {
+		contractSpecUUID, _ := contractSpecID.ContractSpecUUID()
+		return nil, fmt.Errorf("contract specification not found with id %s (uuid %s) required for adding or updating record specification with id %s",
+			contractSpecID, contractSpecUUID, msg.Specification.SpecificationId)
+	}
+	if err := k.ValidateAllOwnersAreSigners(contractSpec.OwnerAddresses, msg.Signers); err != nil {
+		return nil, err
+	}
+
+	var existing *types.RecordSpecification = nil
+	if e, found := k.GetRecordSpecification(ctx, msg.Specification.SpecificationId); found {
+		existing = &e
+	}
+	if err := k.ValidateRecordSpecUpdate(ctx, existing, msg.Specification); err != nil {
+		return nil, err
+	}
+
+	k.SetRecordSpecification(ctx, msg.Specification)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
+		),
+	)
+
+	return &types.MsgAddRecordSpecificationResponse{}, nil
+}
+
+func (k msgServer) DeleteRecordSpecification(
+	goCtx context.Context,
+	msg *types.MsgDeleteRecordSpecificationRequest,
+) (*types.MsgDeleteRecordSpecificationResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	_, found := k.GetRecordSpecification(ctx, msg.SpecificationId)
+	if !found {
+		return nil, fmt.Errorf("record specification not found with id %s", msg.SpecificationId)
+	}
+	contractSpecID := msg.SpecificationId.GetContractSpecAddress()
+	contractSpec, contractSpecFound := k.GetContractSpecification(ctx, contractSpecID)
+	if !contractSpecFound {
+		return nil, fmt.Errorf("contract specification not found with id %s required for deleting record specification with id %s",
+			contractSpecID, msg.SpecificationId)
+	}
+	if err := k.ValidateAllOwnersAreSigners(contractSpec.OwnerAddresses, msg.Signers); err != nil {
+		return nil, err
+	}
+
+	if err := k.RemoveRecordSpecification(ctx, msg.SpecificationId); err != nil {
+		return nil, fmt.Errorf("cannot delete record specification with id %s: %w", msg.SpecificationId, err)
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
+		),
+	)
+
+	return &types.MsgDeleteRecordSpecificationResponse{}, nil
 }
