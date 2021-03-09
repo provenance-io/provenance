@@ -138,15 +138,18 @@ func GetMetadataScopeCmd() *cobra.Command {
 %[1]s scope scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel`, cmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			arg0 := strings.TrimSpace(args[0])
-			id, idErr := types.MetadataAddressFromBech32(arg0)
-			if idErr == nil {
-				return scopeByID(cmd, id)
+			scopeUUID, uuidErr := uuid.Parse(arg0)
+			if uuidErr != nil {
+				id, idErr := types.MetadataAddressFromBech32(arg0)
+				if idErr != nil {
+					return fmt.Errorf("argument %s is neither a metadata address (%s) nor uuid (%s)", arg0, idErr.Error(), uuidErr.Error())
+				}
+				scopeUUID, uuidErr = id.ScopeUUID()
+				if uuidErr != nil {
+					return uuidErr
+				}
 			}
-			_, uuidErr := uuid.Parse(arg0)
-			if uuidErr == nil {
-				return scopeByUUID(cmd, arg0)
-			}
-			return fmt.Errorf("argument %s is neither a metadata address (%s) nor uuid (%s)", arg0, idErr.Error(), uuidErr.Error())
+			return scopeByUUID(cmd, scopeUUID.String())
 		},
 	}
 
@@ -167,15 +170,18 @@ func GetMetadataFullScopeCmd() *cobra.Command {
 %[1]s fullscope scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel`, cmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			arg0 := strings.TrimSpace(args[0])
-			id, idErr := types.MetadataAddressFromBech32(arg0)
-			if idErr == nil {
-				return fullScopeByID(cmd, id)
+			scopeUUID, uuidErr := uuid.Parse(arg0)
+			if uuidErr != nil {
+				id, idErr := types.MetadataAddressFromBech32(arg0)
+				if idErr != nil {
+					return fmt.Errorf("argument %s is neither a metadata address (%s) nor uuid (%s)", arg0, idErr.Error(), uuidErr.Error())
+				}
+				scopeUUID, uuidErr = id.ScopeUUID()
+				if uuidErr != nil {
+					return uuidErr
+				}
 			}
-			_, uuidErr := uuid.Parse(arg0)
-			if uuidErr == nil {
-				return fullScopeByUUID(cmd, arg0)
-			}
-			return fmt.Errorf("argument %s is neither a metadata address (%s) nor uuid (%s)", arg0, idErr.Error(), uuidErr.Error())
+			return fullScopeByUUID(cmd, scopeUUID.String())
 		},
 	}
 
@@ -332,13 +338,11 @@ func GetMetadataContractSpecCmd() *cobra.Command {
 			arg0 := strings.TrimSpace(args[0])
 			id, idErr := types.MetadataAddressFromBech32(arg0)
 			if idErr == nil {
-				switch {
-				case id.IsContractSpecificationAddress():
-					return contractSpecByID(cmd, id)
-				case id.IsRecordSpecificationAddress():
-					return contractSpecByID(cmd, id.AsContractSpecAddressE())
+				contractSpecID, err := id.AsContractSpecAddress()
+				if err != nil {
+					return fmt.Errorf("unexpected metadata address prefix on %s: %w", id, err)
 				}
-				return fmt.Errorf("unexpected metadata address prefix on %s", id)
+				return contractSpecByID(cmd, contractSpecID)
 			}
 			_, uuidErr := uuid.Parse(arg0)
 			if uuidErr == nil {
@@ -402,18 +406,6 @@ func GetMetadataRecordSpecCmd() *cobra.Command {
 	return cmd
 }
 
-// scopeByID outputs a scope looked up by a scope MetadataAddress.
-func scopeByID(cmd *cobra.Command, scopeID types.MetadataAddress) error {
-	if !scopeID.IsScopeAddress() {
-		return fmt.Errorf("id %s is not a scope metadata address", scopeID)
-	}
-	scopeUUID, err := scopeID.ScopeUUID()
-	if err != nil {
-		return err
-	}
-	return scopeByUUID(cmd, scopeUUID.String())
-}
-
 // scopeByUUID outputs a scope looked up by scope UUID.
 func scopeByUUID(cmd *cobra.Command, scopeUUID string) error {
 	clientCtx, err := client.GetClientQueryContext(cmd)
@@ -433,12 +425,9 @@ func scopeByUUID(cmd *cobra.Command, scopeUUID string) error {
 	return clientCtx.PrintProto(res.Scope)
 }
 
-// sessionsByScopeID outputs the sessions for a scope looked up by a scope MetadataAddress.
-func sessionsByScopeID(cmd *cobra.Command, scopeID types.MetadataAddress) error {
-	if !scopeID.IsScopeAddress() {
-		return fmt.Errorf("id %s is not a scope metadata address", scopeID)
-	}
-	scopeUUID, err := scopeID.ScopeUUID()
+// sessionsByScopeID outputs the sessions for a scope looked up by a MetadataAddress containing a scope UUID.
+func sessionsByScopeID(cmd *cobra.Command, id types.MetadataAddress) error {
+	scopeUUID, err := id.ScopeUUID()
 	if err != nil {
 		return err
 	}
@@ -472,12 +461,9 @@ func sessionsByScopeUUID(cmd *cobra.Command, scopeUUID string) error {
 	return printProtoList(clientCtx, protoList)
 }
 
-// recordsByScopeID outputs the records for a scope looked up by a scope MetadataAddress.
-func recordsByScopeID(cmd *cobra.Command, scopeID types.MetadataAddress) error {
-	if !scopeID.IsScopeAddress() {
-		return fmt.Errorf("id %s is not a scope metadata address", scopeID)
-	}
-	scopeUUID, err := scopeID.ScopeUUID()
+// recordsByScopeID outputs the records for a scope looked up by a MetadataAddress containing a scope UUID.
+func recordsByScopeID(cmd *cobra.Command, id types.MetadataAddress) error {
+	scopeUUID, err := id.ScopeUUID()
 	if err != nil {
 		return err
 	}
@@ -540,12 +526,9 @@ func recordsBySessionID(cmd *cobra.Command, sessionID types.MetadataAddress) err
 	return printProtoList(clientCtx, protoList)
 }
 
-// fullScopeByID outputs a scope, its sessions, and its records, looked up by a scope MetadataAddress.
-func fullScopeByID(cmd *cobra.Command, scopeID types.MetadataAddress) error {
-	if !scopeID.IsScopeAddress() {
-		return fmt.Errorf("id %s is not a scope metadata address", scopeID)
-	}
-	scopeUUID, err := scopeID.ScopeUUID()
+// fullScopeByID outputs a scope, its sessions, and its records, looked up by a MetadataAddress containing a scope UUID.
+func fullScopeByID(cmd *cobra.Command, id types.MetadataAddress) error {
+	scopeUUID, err := id.ScopeUUID()
 	if err != nil {
 		return err
 	}
@@ -571,11 +554,8 @@ func fullScopeByUUID(cmd *cobra.Command, scopeUUID string) error {
 	return clientCtx.PrintProto(res)
 }
 
-// sessionByID outputs a session looked up by a session MetadataAddress.
+// sessionByID outputs a session looked up by a MetadataAddress containing both scope UUID and session UUID.
 func sessionByID(cmd *cobra.Command, sessionID types.MetadataAddress) error {
-	if !sessionID.IsSessionAddress() {
-		return fmt.Errorf("id %s is not a session metadata address", sessionID)
-	}
 	scopeUUID, err := sessionID.ScopeUUID()
 	if err != nil {
 		return err
@@ -683,12 +663,9 @@ func scopeSpecByUUID(cmd *cobra.Command, scopeSpecUUID string) error {
 	return clientCtx.PrintProto(res.ScopeSpecification)
 }
 
-// contractSpecByID outputs a contract specification looked up by a contract specification MetadataAddress.
-func contractSpecByID(cmd *cobra.Command, contractSpecID types.MetadataAddress) error {
-	if !contractSpecID.IsContractSpecificationAddress() {
-		return fmt.Errorf("id %s is not a contract specification metadata address", contractSpecID)
-	}
-	contractSpecUUID, err := contractSpecID.ContractSpecUUID()
+// contractSpecByID outputs a contract specification looked up by a MetadataAddress containing a contract specification UUID.
+func contractSpecByID(cmd *cobra.Command, id types.MetadataAddress) error {
+	contractSpecUUID, err := id.ContractSpecUUID()
 	if err != nil {
 		return err
 	}
@@ -714,6 +691,7 @@ func contractSpecByUUID(cmd *cobra.Command, contractSpecUUID string) error {
 
 // recordSpecByID outputs a record specification looked up by a record specification MetadataAddress.
 func recordSpecByID(cmd *cobra.Command, recordSpecID types.MetadataAddress) error {
+	// TODO: Refactor to use a new direct query.
 	if !recordSpecID.IsRecordSpecificationAddress() {
 		return fmt.Errorf("id %s is not a record specification metadata address", recordSpecID)
 	}
@@ -755,11 +733,8 @@ func recordSpecByContractSpecUUIDAndName(cmd *cobra.Command, contractSpecUUID st
 	return recordSpecByID(cmd, types.RecordSpecMetadataAddress(primaryUUID, name))
 }
 
-// recordSpecsByContractSpecID outputs the record specifications looked up by a contract specification MetadataAddress.
+// recordSpecsByContractSpecID outputs the record specifications looked up by a MetadataAddress containing a contract specification UUID.
 func recordSpecsByContractSpecID(cmd *cobra.Command, contractSpecID types.MetadataAddress) error {
-	if !contractSpecID.IsContractSpecificationAddress() {
-		return fmt.Errorf("id %s is not a contract specification metadata address", contractSpecID)
-	}
 	contractSpecUUID, err := contractSpecID.ContractSpecUUID()
 	if err != nil {
 		return err
