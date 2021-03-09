@@ -286,7 +286,7 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForOwner() {
 	// Create 2 record specifications for each contract specification
 	recordSpecs := []*types.RecordSpecification{
 		types.NewRecordSpecification(
-			contractSpecs[0].SpecificationId.AsRecordSpecAddress("contractspec0recspec0"),
+			contractSpecs[0].SpecificationId.AsRecordSpecAddressE("contractspec0recspec0"),
 			"contractspec0recspec0",
 			[]*types.InputSpecification{
 				types.NewInputSpecification(
@@ -299,7 +299,7 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForOwner() {
 			[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 		),
 		types.NewRecordSpecification(
-			contractSpecs[0].SpecificationId.AsRecordSpecAddress("contractspec0recspec1"),
+			contractSpecs[0].SpecificationId.AsRecordSpecAddressE("contractspec0recspec1"),
 			"contractspec0recspec1",
 			[]*types.InputSpecification{
 				types.NewInputSpecification(
@@ -313,7 +313,7 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForOwner() {
 		),
 
 		types.NewRecordSpecification(
-			contractSpecs[1].SpecificationId.AsRecordSpecAddress("contractspec1recspec2"),
+			contractSpecs[1].SpecificationId.AsRecordSpecAddressE("contractspec1recspec2"),
 			"contractspec1recspec2",
 			[]*types.InputSpecification{
 				types.NewInputSpecification(
@@ -326,7 +326,7 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForOwner() {
 			[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 		),
 		types.NewRecordSpecification(
-			contractSpecs[1].SpecificationId.AsRecordSpecAddress("contractspec1recspec3"),
+			contractSpecs[1].SpecificationId.AsRecordSpecAddressE("contractspec1recspec3"),
 			"contractspec1recspec3",
 			[]*types.InputSpecification{
 				types.NewInputSpecification(
@@ -340,7 +340,7 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForOwner() {
 		),
 
 		types.NewRecordSpecification(
-			contractSpecs[2].SpecificationId.AsRecordSpecAddress("contractspec2recspec4"),
+			contractSpecs[2].SpecificationId.AsRecordSpecAddressE("contractspec2recspec4"),
 			"contractspec2recspec4",
 			[]*types.InputSpecification{
 				types.NewInputSpecification(
@@ -353,7 +353,7 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForOwner() {
 			[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 		),
 		types.NewRecordSpecification(
-			contractSpecs[2].SpecificationId.AsRecordSpecAddress("contractspec2recspec5"),
+			contractSpecs[2].SpecificationId.AsRecordSpecAddressE("contractspec2recspec5"),
 			"contractspec2recspec5",
 			[]*types.InputSpecification{
 				types.NewInputSpecification(
@@ -476,7 +476,7 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForContractSpec() {
 	// Create 3 record specs for the 1st contract spec, 2 for the 2nd, and none for the 3rd.
 	recordSpecs := []*types.RecordSpecification{
 		types.NewRecordSpecification(
-			contractSpecs[0].SpecificationId.AsRecordSpecAddress("contractspec0recspec0"),
+			contractSpecs[0].SpecificationId.AsRecordSpecAddressE("contractspec0recspec0"),
 			"contractspec0recspec0",
 			[]*types.InputSpecification{
 				types.NewInputSpecification(
@@ -489,7 +489,7 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForContractSpec() {
 			[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 		),
 		types.NewRecordSpecification(
-			contractSpecs[0].SpecificationId.AsRecordSpecAddress("contractspec0recspec1"),
+			contractSpecs[0].SpecificationId.AsRecordSpecAddressE("contractspec0recspec1"),
 			"contractspec0recspec1",
 			[]*types.InputSpecification{
 				types.NewInputSpecification(
@@ -502,7 +502,7 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForContractSpec() {
 			[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 		),
 		types.NewRecordSpecification(
-			contractSpecs[0].SpecificationId.AsRecordSpecAddress("contractspec1recspec2"),
+			contractSpecs[0].SpecificationId.AsRecordSpecAddressE("contractspec1recspec2"),
 			"contractspec0recspec2",
 			[]*types.InputSpecification{
 				types.NewInputSpecification(
@@ -516,7 +516,7 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForContractSpec() {
 		),
 
 		types.NewRecordSpecification(
-			contractSpecs[1].SpecificationId.AsRecordSpecAddress("contractspec1recspec3"),
+			contractSpecs[1].SpecificationId.AsRecordSpecAddressE("contractspec1recspec3"),
 			"contractspec1recspec3",
 			[]*types.InputSpecification{
 				types.NewInputSpecification(
@@ -529,7 +529,7 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForContractSpec() {
 			[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 		),
 		types.NewRecordSpecification(
-			contractSpecs[1].SpecificationId.AsRecordSpecAddress("contractspec1recspec4"),
+			contractSpecs[1].SpecificationId.AsRecordSpecAddressE("contractspec1recspec4"),
 			"contractspec1recspec4",
 			[]*types.InputSpecification{
 				types.NewInputSpecification(
@@ -663,7 +663,7 @@ func (s *SpecKeeperTestSuite) TestGetRecordSpecificationsForContractSpecificatio
 	// Create 3 record specs for the 1st contract spec, 2 for the 2nd, and none for the 3rd.
 	recordSpecs := []*types.RecordSpecification{
 		types.NewRecordSpecification(
-			contractSpecs[0].SpecificationId.AsRecordSpecAddress("contractspec0recspec0"),
+			contractSpecs[0].SpecificationId.AsRecordSpecAddressE("contractspec0recspec0"),
 			"contractspec0recspec0",
 			[]*types.InputSpecification{
 				types.NewInputSpecification(
@@ -676,7 +676,7 @@ func (s *SpecKeeperTestSuite) TestGetRecordSpecificationsForContractSpecificatio
 			[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 		),
 		types.NewRecordSpecification(
-			contractSpecs[0].SpecificationId.AsRecordSpecAddress("contractspec0recspec1"),
+			contractSpecs[0].SpecificationId.AsRecordSpecAddressE("contractspec0recspec1"),
 			"contractspec0recspec1",
 			[]*types.InputSpecification{
 				types.NewInputSpecification(
@@ -689,7 +689,7 @@ func (s *SpecKeeperTestSuite) TestGetRecordSpecificationsForContractSpecificatio
 			[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 		),
 		types.NewRecordSpecification(
-			contractSpecs[0].SpecificationId.AsRecordSpecAddress("contractspec1recspec2"),
+			contractSpecs[0].SpecificationId.AsRecordSpecAddressE("contractspec1recspec2"),
 			"contractspec0recspec2",
 			[]*types.InputSpecification{
 				types.NewInputSpecification(
@@ -703,7 +703,7 @@ func (s *SpecKeeperTestSuite) TestGetRecordSpecificationsForContractSpecificatio
 		),
 
 		types.NewRecordSpecification(
-			contractSpecs[1].SpecificationId.AsRecordSpecAddress("contractspec1recspec3"),
+			contractSpecs[1].SpecificationId.AsRecordSpecAddressE("contractspec1recspec3"),
 			"contractspec1recspec3",
 			[]*types.InputSpecification{
 				types.NewInputSpecification(
@@ -716,7 +716,7 @@ func (s *SpecKeeperTestSuite) TestGetRecordSpecificationsForContractSpecificatio
 			[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 		),
 		types.NewRecordSpecification(
-			contractSpecs[1].SpecificationId.AsRecordSpecAddress("contractspec1recspec4"),
+			contractSpecs[1].SpecificationId.AsRecordSpecAddressE("contractspec1recspec4"),
 			"contractspec1recspec4",
 			[]*types.InputSpecification{
 				types.NewInputSpecification(

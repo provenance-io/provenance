@@ -336,7 +336,7 @@ func GetMetadataContractSpecCmd() *cobra.Command {
 				case id.IsContractSpecificationAddress():
 					return contractSpecByID(cmd, id)
 				case id.IsRecordSpecificationAddress():
-					return contractSpecByID(cmd, id.AsContractSpecAddress())
+					return contractSpecByID(cmd, id.AsContractSpecAddressE())
 				}
 				return fmt.Errorf("unexpected metadata address prefix on %s", id)
 			}

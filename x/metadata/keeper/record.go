@@ -45,7 +45,12 @@ func (k Keeper) SetRecord(ctx sdk.Context, record types.Record) {
 	b := k.cdc.MustMarshalBinaryBare(&record)
 	eventType := types.EventTypeRecordCreated
 
-	recordID := record.SessionId.AsRecordAddress(record.Name)
+	recordID, err := record.SessionId.AsRecordAddress(record.Name)
+	if err != nil {
+		ctx.Logger().Error("could not create record id",
+			"session id", record.SessionId, "name", record.Name, "error", err)
+		return
+	}
 	if store.Has(recordID) {
 		eventType = types.EventTypeRecordUpdated
 	}

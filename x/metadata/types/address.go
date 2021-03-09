@@ -435,44 +435,81 @@ func (ma MetadataAddress) NameHash() ([]byte, error) {
 	return namehash, nil
 }
 
-// AsScopeAddress returns the MetadataAddress for a scope within the current context
+// AsScopeAddressE returns the MetadataAddress for a scope within the current context
 // panics if the current context is not associated with a scope uuid.
-func (ma MetadataAddress) AsScopeAddress() MetadataAddress {
-	scopeUUID, err := ma.ScopeUUID()
+func (ma MetadataAddress) AsScopeAddressE() MetadataAddress {
+	id, err := ma.AsScopeAddress()
 	if err != nil {
 		panic(err)
 	}
-	return ScopeMetadataAddress(scopeUUID)
+	return id
+}
+
+// AsScopeAddress returns the MetadataAddress for a scope within the current context
+func (ma MetadataAddress) AsScopeAddress() (MetadataAddress, error) {
+	scopeUUID, err := ma.ScopeUUID()
+	if err != nil {
+		return MetadataAddress{}, err
+	}
+	return ScopeMetadataAddress(scopeUUID), nil
+}
+
+// AsRecordAddressE returns the MetadataAddress for a record with the given name within the current context
+// panics if the current context is not associated with a scope uuid.
+func (ma MetadataAddress) AsRecordAddressE(name string) MetadataAddress {
+	id, err := ma.AsRecordAddress(name)
+	if err != nil {
+		panic(err)
+	}
+	return id
 }
 
 // AsRecordAddress returns the MetadataAddress for a record with the given name within the current context
-// panics if the current context is not associated with a scope uuid.
-func (ma MetadataAddress) AsRecordAddress(name string) MetadataAddress {
+func (ma MetadataAddress) AsRecordAddress(name string) (MetadataAddress, error) {
 	scopeUUID, err := ma.ScopeUUID()
+	if err != nil {
+		return MetadataAddress{}, err
+	}
+	return RecordMetadataAddress(scopeUUID, name), nil
+}
+
+// AsRecordSpecAddressE returns the MetadataAddress for a record spec given the name within the current context
+// panics if the current context is not associated with a contract spec uuid.
+func (ma MetadataAddress) AsRecordSpecAddressE(name string) MetadataAddress {
+	id, err := ma.AsRecordSpecAddress(name)
 	if err != nil {
 		panic(err)
 	}
-	return RecordMetadataAddress(scopeUUID, name)
+	return id
 }
 
 // AsRecordSpecAddress returns the MetadataAddress for a record spec given the name within the current context
 // panics if the current context is not associated with a contract spec uuid.
-func (ma MetadataAddress) AsRecordSpecAddress(name string) MetadataAddress {
+func (ma MetadataAddress) AsRecordSpecAddress(name string) (MetadataAddress, error) {
 	contractSpecUUID, err := ma.ContractSpecUUID()
+	if err != nil {
+		return MetadataAddress{}, err
+	}
+	return RecordSpecMetadataAddress(contractSpecUUID, name), nil
+}
+
+// AsContractSpecAddressE returns the MetadataAddress for a contract spec given the UUID in the current context
+// panics if the current context is not associated with a contract spec uuid.
+func (ma MetadataAddress) AsContractSpecAddressE() MetadataAddress {
+	id, err := ma.AsContractSpecAddress()
 	if err != nil {
 		panic(err)
 	}
-	return RecordSpecMetadataAddress(contractSpecUUID, name)
+	return id
 }
 
 // AsContractSpecAddress returns the MetadataAddress for a contract spec given the UUID in the current context
-// panics if the current context is not associated with a contract spec uuid.
-func (ma MetadataAddress) AsContractSpecAddress() MetadataAddress {
+func (ma MetadataAddress) AsContractSpecAddress() (MetadataAddress, error) {
 	contractSpecUUID, err := ma.ContractSpecUUID()
 	if err != nil {
-		panic(err)
+		return MetadataAddress{}, err
 	}
-	return ContractSpecMetadataAddress(contractSpecUUID)
+	return ContractSpecMetadataAddress(contractSpecUUID), nil
 }
 
 // ScopeSessionIteratorPrefix returns an iterator prefix that finds all Sessions assigned to the metadata address scope

@@ -228,7 +228,7 @@ func TestRecordMetadataAddress(t *testing.T) {
 	require.Equal(t, recordID, RecordMetadataAddress(scopeUUID, "tEst"))
 	require.Equal(t, recordID, RecordMetadataAddress(scopeUUID, "TEST"))
 	require.Equal(t, recordID, RecordMetadataAddress(scopeUUID, "   test   "))
-	require.Equal(t, recordID, scopeID.AsRecordAddress("test"))
+	require.Equal(t, recordID, scopeID.AsRecordAddressE("test"))
 }
 
 func TestRecordSpecMetadataAddress(t *testing.T) {
@@ -250,7 +250,7 @@ func TestRecordSpecMetadataAddress(t *testing.T) {
 	require.Equal(t, recordSpecID, RecordSpecMetadataAddress(contractSpecUUID, "MyName"), "camel case")
 	require.Equal(t, recordSpecID, RecordSpecMetadataAddress(contractSpecUUID, "MYNAME"), "all caps")
 	require.Equal(t, recordSpecID, RecordSpecMetadataAddress(contractSpecUUID, "   myname   "), "padded with spaces")
-	require.Equal(t, recordSpecID, contractSpecID.AsRecordSpecAddress("myname"), "from contract spec id")
+	require.Equal(t, recordSpecID, contractSpecID.AsRecordSpecAddressE("myname"), "from contract spec id")
 
 	contractSpecUUIDFromRecordSpecId, errContractSpecUUID := recordSpecID.ContractSpecUUID()
 	require.NoError(t, errContractSpecUUID, "error from ContractSpecUUID")
