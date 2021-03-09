@@ -243,7 +243,9 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.testnet.Cleanup()
 }
 
-func (s *IntegrationTestSuite) TestGetAttributeParamsCmd() {
+// ---------- query cmd tests ----------
+
+func (s *IntegrationTestSuite) TestGetMetadataParamsCmd() {
 	testCases := []struct {
 		name           string
 		args           []string
@@ -274,6 +276,8 @@ func (s *IntegrationTestSuite) TestGetAttributeParamsCmd() {
 		})
 	}
 }
+
+// TODO: TestGetMetadataByIDCmd
 
 func (s *IntegrationTestSuite) TestGetMetadataScopeCmd() {
 	testCases := []struct {
@@ -325,6 +329,18 @@ value_owner_address: %s`,
 		})
 	}
 }
+
+// TODO: TestGetMetadataSessionCmd
+
+// TODO: TestGetMetadataRecordCmd
+
+// TODO: TestGetMetadataScopeSpecCmd
+
+// TODO: TestGetMetadataContractSpecCmd
+
+// TODO: TestGetMetadataRecordSpecCmd
+
+// ---------- tx cmd tests ----------
 
 func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 
