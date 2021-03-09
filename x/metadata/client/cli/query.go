@@ -37,6 +37,8 @@ func GetQueryCmd() *cobra.Command {
 		GetMetadataByIDCmd(),
 		GetMetadataScopeCmd(),
 		GetMetadataSessionsByScopeCmd(),
+		GetMetadataRecordsByScopeCmd(),
+		GetMetadataFullScopeCmd(),
 		GetMetadataSessionCmd(),
 		GetMetadataRecordCmd(),
 		GetMetadataScopeSpecCmd(),
@@ -92,14 +94,14 @@ func GetMetadataByIDCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			addressType, err := id.Prefix()
+			prefix, err := id.Prefix()
 			if err != nil {
 				return err
 			}
 
-			switch addressType {
+			switch prefix {
 			case types.PrefixScope:
-				return scopeByID(cmd, id)
+				return fullScopeByID(cmd, id)
 			case types.PrefixSession:
 				return sessionByID(cmd, id)
 			case types.PrefixRecord:
@@ -111,7 +113,7 @@ func GetMetadataByIDCmd() *cobra.Command {
 			case types.PrefixRecordSpecification:
 				return recordSpecByID(cmd, id)
 			}
-			return fmt.Errorf("unexpected address type %s", addressType)
+			return fmt.Errorf("unexpected address prefix %s", prefix)
 		},
 	}
 
@@ -166,6 +168,62 @@ func GetMetadataSessionsByScopeCmd() *cobra.Command {
 			_, uuidErr := uuid.Parse(arg0)
 			if uuidErr == nil {
 				return sessionsByScopeUUID(cmd, arg0)
+			}
+			return fmt.Errorf("argument %s is neither a metadata address (%s) nor uuid (%s)", arg0, idErr.Error(), uuidErr.Error())
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetMetadataRecordsByScopeCmd returns the command handler for metadata sessions querying by scope.
+func GetMetadataRecordsByScopeCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "records {scope_id|scope_uuid}",
+		Short: "Query the current metadata for records in a scope",
+		Args:  cobra.ExactArgs(1),
+		Example: fmt.Sprintf(`%[1]s query metadata records 91978ba2-5f35-459a-86a7-feca1b0512e0
+%[1]s query metadata records scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel
+`, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			arg0 := strings.TrimSpace(args[0])
+			id, idErr := types.MetadataAddressFromBech32(arg0)
+			if idErr == nil {
+				return recordsByScopeID(cmd, id)
+			}
+			_, uuidErr := uuid.Parse(arg0)
+			if uuidErr == nil {
+				return recordsByScopeUUID(cmd, arg0)
+			}
+			return fmt.Errorf("argument %s is neither a metadata address (%s) nor uuid (%s)", arg0, idErr.Error(), uuidErr.Error())
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetMetadataFullScopeCmd returns the command handler for metadata full-scope querying.
+func GetMetadataFullScopeCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "fullscope {id|uuid}",
+		Short: "Query the current metadata for a scope, its sessions, and its records",
+		Args:  cobra.ExactArgs(1),
+		Example: fmt.Sprintf(`%[1]s query metadata fullscope 91978ba2-5f35-459a-86a7-feca1b0512e0
+%[1]s query metadata fullscope scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel
+`, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			arg0 := strings.TrimSpace(args[0])
+			id, idErr := types.MetadataAddressFromBech32(arg0)
+			if idErr == nil {
+				return fullScopeByID(cmd, id)
+			}
+			_, uuidErr := uuid.Parse(arg0)
+			if uuidErr == nil {
+				return fullScopeByUUID(cmd, arg0)
 			}
 			return fmt.Errorf("argument %s is neither a metadata address (%s) nor uuid (%s)", arg0, idErr.Error(), uuidErr.Error())
 		},
@@ -374,14 +432,14 @@ func scopeByUUID(cmd *cobra.Command, scopeUUID string) error {
 	if err != nil {
 		return err
 	}
-	if res.Scope == nil {
+	if res == nil || res.Scope == nil {
 		return fmt.Errorf("no scope found with uuid %s", scopeUUID)
 	}
 
 	return clientCtx.PrintProto(res.Scope)
 }
 
-// sessionsByScopeID outputs the sessios for a scope looked up by a scope MetadataAddress.
+// sessionsByScopeID outputs the sessions for a scope looked up by a scope MetadataAddress.
 func sessionsByScopeID(cmd *cobra.Command, scopeID types.MetadataAddress) error {
 	if !scopeID.IsScopeAddress() {
 		return fmt.Errorf("id %s is not a scope metadata address", scopeID)
@@ -393,7 +451,7 @@ func sessionsByScopeID(cmd *cobra.Command, scopeID types.MetadataAddress) error 
 	return sessionsByScopeUUID(cmd, scopeUUID.String())
 }
 
-// scopeByUUID outputs a scope looked up by scope UUID.
+// sessionsByScopeUUID outputs the sessions for a scope looked up by scope UUID.
 func sessionsByScopeUUID(cmd *cobra.Command, scopeUUID string) error {
 	clientCtx, err := client.GetClientQueryContext(cmd)
 	if err != nil {
@@ -405,7 +463,7 @@ func sessionsByScopeUUID(cmd *cobra.Command, scopeUUID string) error {
 	if err != nil {
 		return err
 	}
-	if res.Sessions == nil || len(res.Sessions) == 0 {
+	if res == nil || res.Sessions == nil || len(res.Sessions) == 0 {
 		return fmt.Errorf("no sessions found for scope uuid %s", scopeUUID)
 	}
 
@@ -418,6 +476,76 @@ func sessionsByScopeUUID(cmd *cobra.Command, scopeUUID string) error {
 		}
 	}
 	return printProtoList(clientCtx, protoList)
+}
+
+// recordsByScopeID outputs the records for a scope looked up by a scope MetadataAddress.
+func recordsByScopeID(cmd *cobra.Command, scopeID types.MetadataAddress) error {
+	if !scopeID.IsScopeAddress() {
+		return fmt.Errorf("id %s is not a scope metadata address", scopeID)
+	}
+	scopeUUID, err := scopeID.ScopeUUID()
+	if err != nil {
+		return err
+	}
+	return recordsByScopeUUID(cmd, scopeUUID.String())
+}
+
+// recordsByScopeUUID outputs the records for a scope looked up by scope UUID.
+func recordsByScopeUUID(cmd *cobra.Command, scopeUUID string) error {
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return err
+	}
+
+	queryClient := types.NewQueryClient(clientCtx)
+	res, err := queryClient.Scope(context.Background(), &types.ScopeRequest{ScopeUuid: scopeUUID})
+	if err != nil {
+		return err
+	}
+	if res == nil || res.Records == nil || len(res.Records) == 0 {
+		return fmt.Errorf("no records found for scope uuid %s", scopeUUID)
+	}
+
+	protoList := make([]proto.Message, len(res.Records))
+	for i, record := range res.Records {
+		if record != nil {
+			protoList[i] = record
+		} else {
+			protoList[i] = &types.Record{}
+		}
+	}
+	return printProtoList(clientCtx, protoList)
+}
+
+// fullScopeByID outputs a scope, its sessions, and its records, looked up by a scope MetadataAddress.
+func fullScopeByID(cmd *cobra.Command, scopeID types.MetadataAddress) error {
+	if !scopeID.IsScopeAddress() {
+		return fmt.Errorf("id %s is not a scope metadata address", scopeID)
+	}
+	scopeUUID, err := scopeID.ScopeUUID()
+	if err != nil {
+		return err
+	}
+	return fullScopeByUUID(cmd, scopeUUID.String())
+}
+
+// fullScopeByUUID outputs a scope, its sessions, and its records, looked up by scope UUID.
+func fullScopeByUUID(cmd *cobra.Command, scopeUUID string) error {
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return err
+	}
+
+	queryClient := types.NewQueryClient(clientCtx)
+	res, err := queryClient.Scope(context.Background(), &types.ScopeRequest{ScopeUuid: scopeUUID})
+	if err != nil {
+		return err
+	}
+	if res == nil {
+		return fmt.Errorf("no scope found with uuid %s", scopeUUID)
+	}
+
+	return clientCtx.PrintProto(res)
 }
 
 // sessionByID outputs a session looked up by a session MetadataAddress.

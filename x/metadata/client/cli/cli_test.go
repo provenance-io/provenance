@@ -389,6 +389,10 @@ value_owner_address: %s`,
 
 // TODO: GetMetadataSessionsByScopeCmd
 
+// TODO: GetMetadataRecordsByScopeCmd
+
+// TODO: GetMetadataFullScopeCmd
+
 // TODO: TestGetMetadataSessionCmd
 
 // TODO: TestGetMetadataRecordCmd
