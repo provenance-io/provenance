@@ -691,37 +691,26 @@ func contractSpecByUUID(cmd *cobra.Command, contractSpecUUID string) error {
 
 // recordSpecByID outputs a record specification looked up by a record specification MetadataAddress.
 func recordSpecByID(cmd *cobra.Command, recordSpecID types.MetadataAddress) error {
-	// TODO: Refactor to use a new direct query.
 	if !recordSpecID.IsRecordSpecificationAddress() {
 		return fmt.Errorf("id %s is not a record specification metadata address", recordSpecID)
 	}
-	contractSpecUUID, err := recordSpecID.ContractSpecUUID()
-	if err != nil {
-		return err
-	}
+
 	clientCtx, err := client.GetClientQueryContext(cmd)
 	if err != nil {
 		return err
 	}
 	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.RecordSpecificationsForContractSpecification(
+	res, err := queryClient.RecordSpecificationByID(
 		context.Background(),
-		&types.RecordSpecificationsForContractSpecificationRequest{ContractSpecificationUuid: contractSpecUUID.String()},
+		&types.RecordSpecificationByIDRequest{RecordSpecificationId: recordSpecID.String()},
 	)
 	if err != nil {
 		return err
 	}
-	var recSpec *types.RecordSpecification = nil
-	for _, rs := range res.RecordSpecifications {
-		if recordSpecID.Equals(rs.SpecificationId) {
-			recSpec = rs
-			break
-		}
+	if res == nil || res.RecordSpecification == nil {
+		return fmt.Errorf("no record specification found with id %s", recordSpecID)
 	}
-	if recSpec == nil {
-		return fmt.Errorf("no record specification found with id %s in contract specification uuid %s", recordSpecID, contractSpecUUID)
-	}
-	return clientCtx.PrintProto(recSpec)
+	return clientCtx.PrintProto(res.RecordSpecification)
 }
 
 // recordSpecByContractSpecUUIDAndName outputs a record specification looked up by contract specification UUID and record specification name.
