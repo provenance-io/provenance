@@ -75,6 +75,9 @@ var (
 	ContractSpecScopeSpecCacheKeyPrefix = []byte{0x14}
 	// AddressContractSpecCacheKeyPrefix for contract spec lookup by address
 	AddressContractSpecCacheKeyPrefix = []byte{0x15}
+
+	// OSLocatorAddressKeyPrefix is the key for OSLocator Record by address
+	OSLocatorAddressKeyPrefix = []byte{0x16}
 )
 
 // GetAddressScopeCacheIteratorPrefix returns an iterator prefix for all scope cache entries assigned to a given address
@@ -135,4 +138,14 @@ func GetAddressContractSpecCacheIteratorPrefix(addr sdk.AccAddress) []byte {
 // GetAddressContractSpecCacheKey returns the store key for an address + contract spec cache entry
 func GetAddressContractSpecCacheKey(addr sdk.AccAddress, contractSpecID MetadataAddress) []byte {
 	return append(GetAddressContractSpecCacheIteratorPrefix(addr), contractSpecID.Bytes()...)
+}
+
+// GetAddressKeyPrefix returns a store key for a name record address
+func GetOsLocatorAddressKeyPrefix(address sdk.AccAddress) (key []byte, err error) {
+	err = sdk.VerifyAddressFormat(address.Bytes())
+	if err == nil {
+		key = OSLocatorAddressKeyPrefix
+		key = append(key, address.Bytes()...)
+	}
+	return
 }

@@ -72,6 +72,14 @@ const (
 	// AttributeKeyRecordSpec is the attribute key for a record spec attribute JSON value.
 	AttributeKeyRecordSpec string = "record_spec"
 
+	// EventTypeOsLocatorCreated is the event type generated when new os locator created.
+	EventTypeOsLocatorCreated string = "oslocator_created"
+	// KeyAttributeAddress is the key for an address.
+	AttributeKeyOSLocatorAddress string = "address"
+	AttributeKeyOSLocatorURI     string = "uri"
+	// EventTypeOsLocatorDeleted is the event type generated when a os locator deleted.
+	EventTypeOsLocatorDeleted string = "oslocator_deleted"
+
 	// AttributeValueCategory indicates the category for this value
 	AttributeValueCategory = ModuleName
 )

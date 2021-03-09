@@ -87,7 +87,10 @@ type MetadataKeeperI interface {
 	GetRecordSpecificationsForContractSpecificationID(ctx sdk.Context, contractSpecID types.MetadataAddress) ([]*types.RecordSpecification, error)
 
 	//GetOSLocator returns the OS locator records for a given name record.
-	GetOsLocatorRecord(sdk.Context, types.MetadataAddress)
+	GetOsLocatorRecord(ctx sdk.Context, ownerAddress sdk.AccAddress)(types.ObjectStoreLocator, bool)
+	OSLocatorExists(ctx sdk.Context, ownerAddr string) bool
+
+	SetOSLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, uri string) error
 }
 
 // Keeper is the concrete state-based API for the metadata module.
@@ -185,3 +188,5 @@ func (k Keeper) ValidatePartiesInvolved(parties []types.Party, requiredParties [
 	}
 	return nil
 }
+
+

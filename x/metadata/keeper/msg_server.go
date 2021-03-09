@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -404,8 +405,40 @@ func (k msgServer) DeleteRecordSpecification(
 	return &types.MsgDeleteRecordSpecificationResponse{}, nil
 }
 
-func (k msgServer) BindOSLocator(ctx context.Context, request *types.MsgAddOSLocatorRequest) (*types.MsgAddOSLocatorResponse, error) {
-	panic("implement me")
+func (k msgServer) BindOSLocator(goCtx context.Context, msg *types.MsgAddOSLocatorRequest) (*types.MsgAddOSLocatorResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	// Validate
+	if err := msg.ValidateBasic(); err != nil {
+		ctx.Logger().Error("unable to validate message", "err", err)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
+	if k.Keeper.OSLocatorExists(ctx, msg.Locator.Owner) {
+		ctx.Logger().Error("Address already bound to an URI", "name", msg.Locator.Owner)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, types.ErrOSLocatorAlreadyBound.Error())
+	}
+
+	// Bind name to address
+	address, err := sdk.AccAddressFromBech32(msg.Locator.Owner)
+	if err != nil {
+		ctx.Logger().Error("invalid address", "err", err)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
+	if err := k.Keeper.SetOSLocatorRecord(ctx,  address, msg.Locator.LocatorUri); err != nil {
+		ctx.Logger().Error("unable to bind name", "err", err)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+	// Emit event and return
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeOsLocatorCreated,
+			sdk.NewAttribute(types.AttributeKeyOSLocatorAddress, msg.Locator.Owner),
+			sdk.NewAttribute(types.AttributeKeyOSLocatorURI, msg.Locator.LocatorUri ),
+		),
+	)
+
+	return &types.MsgAddOSLocatorResponse{}, nil
 }
 
 func (k msgServer) DeleteOSLocator(ctx context.Context, request *types.MsgDeleteOSLocatorRequest) (*types.MsgDeleteOSLocatorResponse, error) {
