@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"gopkg.in/yaml.v2"
 
@@ -78,11 +79,11 @@ func (s Scope) String() string {
 }
 
 // UpdateAudit computes a set of changes to the audit fields based on the existing message.
-func (a *AuditFields) UpdateAudit(ctx sdk.Context, signers, message string) *AuditFields {
+func (a *AuditFields) UpdateAudit(blocktime time.Time, signers, message string) *AuditFields {
 	if a == nil {
 		return &AuditFields{
 			Version:     1,
-			CreatedDate: ctx.BlockTime(),
+			CreatedDate: blocktime,
 			CreatedBy:   signers,
 			Message:     message,
 		}
@@ -91,7 +92,7 @@ func (a *AuditFields) UpdateAudit(ctx sdk.Context, signers, message string) *Aud
 		Version:     a.Version + 1,
 		CreatedDate: a.CreatedDate,
 		CreatedBy:   a.CreatedBy,
-		UpdatedDate: ctx.BlockTime(),
+		UpdatedDate: blocktime,
 		UpdatedBy:   signers,
 		Message:     message,
 	}

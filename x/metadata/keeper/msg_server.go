@@ -119,7 +119,7 @@ func (k msgServer) AddSession(
 		return nil, err
 	}
 
-	audit := existing.Audit.UpdateAudit(ctx, strings.Join(msg.Signers, ", "), "")
+	audit := existing.Audit.UpdateAudit(ctx.BlockTime(), strings.Join(msg.Signers, ", "), "")
 	*msg.Session.Audit = *audit
 
 	k.SetSession(ctx, *msg.Session)

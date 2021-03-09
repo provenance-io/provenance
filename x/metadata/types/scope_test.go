@@ -4,11 +4,11 @@ import (
 	"encoding/hex"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/types/time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -447,4 +447,26 @@ audit:
 `, session.SessionId.String(), session.SpecificationId.String()),
 			session.String())
 	})
+}
+
+func (s *scopeTestSuite) TestMetadataAuditUpdate() {
+	blockTime := time.Now()
+	var initial *AuditFields
+	result := initial.UpdateAudit(blockTime, "creator", "initial")
+	s.Equal(uint32(1), result.Version)
+	s.Equal(blockTime, result.CreatedDate)
+	s.Equal("creator", result.CreatedBy)
+	s.Equal(time.Time{}, result.UpdatedDate)
+	s.Equal("", result.UpdatedBy)
+	s.Equal("initial", result.Message)
+
+	auditTime := time.Now()
+	initial = &AuditFields{CreatedDate: auditTime, CreatedBy: "creator", Version: 1}
+	result = initial.UpdateAudit(blockTime, "updater", "")
+	s.Equal(uint32(2), result.Version)
+	s.Equal(auditTime, result.CreatedDate)
+	s.Equal("creator", result.CreatedBy)
+	s.Equal(blockTime, result.UpdatedDate)
+	s.Equal("updater", result.UpdatedBy)
+	s.Equal("", result.Message)
 }

@@ -548,27 +548,6 @@ func (s *KeeperTestSuite) TestMetadataSessionIterator() {
 
 }
 
-func (s *KeeperTestSuite) TestMetadataAuditUpdate() {
-	auditTime := time.Now()
-	var initial *types.AuditFields
-	result := initial.UpdateAudit(s.ctx, "creator", "initial")
-	s.Equal(uint32(1), result.Version)
-	s.Equal(s.ctx.BlockTime(), result.CreatedDate)
-	s.Equal("creator", result.CreatedBy)
-	s.Equal(time.Time{}, result.UpdatedDate)
-	s.Equal("", result.UpdatedBy)
-	s.Equal("initial", result.Message)
-
-	initial = &types.AuditFields{CreatedDate: auditTime, CreatedBy: "creator", Version: 1}
-	result = initial.UpdateAudit(s.ctx, "updater", "")
-	s.Equal(uint32(2), result.Version)
-	s.Equal(auditTime, result.CreatedDate)
-	s.Equal("creator", result.CreatedBy)
-	s.Equal(s.ctx.BlockTime(), result.UpdatedDate)
-	s.Equal("updater", result.UpdatedBy)
-	s.Equal("", result.Message)
-}
-
 func (s *KeeperTestSuite) TestMetadataValidateSessionUpdate() {
 	scope := types.NewScope(s.scopeID, s.specID, ownerPartyList(s.user1), []string{s.user1}, s.user1)
 	s.app.MetadataKeeper.SetScope(s.ctx, *scope)
