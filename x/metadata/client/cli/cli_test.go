@@ -379,7 +379,7 @@ value_owner_address: %s`,
 		{
 			"get scope bad arg",
 			[]string{"not-a-valid-arg", s.asText},
-			"rpc error: code = InvalidArgument desc = invalid scope uuid: invalid UUID length: 15: invalid request",
+			"argument not-a-valid-arg is neither a metadata address (decoding bech32 failed: invalid index of 1) nor uuid (invalid UUID length: 15)",
 			"",
 		},
 	}
