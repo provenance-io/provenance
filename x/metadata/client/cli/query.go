@@ -196,7 +196,7 @@ func GetMetadataSessionCmd() *cobra.Command {
 					case id.IsScopeAddress():
 						return sessionsByScopeID(cmd, id)
 					}
-					return fmt.Errorf("unhandled metadata address prefix on %s", id)
+					return fmt.Errorf("unexpected metadata address prefix on %s", id)
 				}
 				_, uuidErr := uuid.Parse(arg0)
 				if uuidErr == nil {
@@ -245,7 +245,7 @@ func GetMetadataRecordCmd() *cobra.Command {
 					case id.IsScopeAddress():
 						return recordsByScopeID(cmd, id)
 					}
-					return fmt.Errorf("unhandled metadata address prefix on %s", id)
+					return fmt.Errorf("unexpected metadata address prefix on %s", id)
 				}
 				_, uuidErr := uuid.Parse(arg0)
 				if uuidErr == nil {
@@ -349,7 +349,7 @@ func GetMetadataRecordSpecCmd() *cobra.Command {
 					case id.IsContractSpecificationAddress():
 						return recordSpecsByContractSpecID(cmd, id)
 					}
-					return fmt.Errorf("unhandled metadata address prefix on %s", id)
+					return fmt.Errorf("unexpected metadata address prefix on %s", id)
 				}
 				_, uuidErr := uuid.Parse(arg0)
 				if uuidErr == nil {
