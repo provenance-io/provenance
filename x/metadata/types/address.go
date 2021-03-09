@@ -350,7 +350,7 @@ func (ma MetadataAddress) Compare(other MetadataAddress) int {
 // ScopeUUID returns the scope uuid component of a MetadataAddress (if appropriate)
 func (ma MetadataAddress) ScopeUUID() (uuid.UUID, error) {
 	if !ma.isTypeOneOf(ScopeKeyPrefix, SessionKeyPrefix, RecordKeyPrefix) {
-		return uuid.UUID{}, fmt.Errorf("this metadata address does not contain a scope uuid")
+		return uuid.UUID{}, fmt.Errorf("this metadata address (%s) does not contain a scope uuid", ma)
 	}
 	return ma.PrimaryUUID()
 }
@@ -358,7 +358,7 @@ func (ma MetadataAddress) ScopeUUID() (uuid.UUID, error) {
 // SessionUUID returns the session uuid component of a MetadataAddress (if appropriate)
 func (ma MetadataAddress) SessionUUID() (uuid.UUID, error) {
 	if len(ma) > 0 && ma[0] != SessionKeyPrefix[0] {
-		return uuid.UUID{}, fmt.Errorf("this metadata address does not contain a session uuid")
+		return uuid.UUID{}, fmt.Errorf("this metadata address (%s) does not contain a session uuid", ma)
 	}
 	return ma.SecondaryUUID()
 }
@@ -366,14 +366,15 @@ func (ma MetadataAddress) SessionUUID() (uuid.UUID, error) {
 // ScopeSpecUUID returns the scope specification uuid component of a MetadataAddress (if appropriate)
 func (ma MetadataAddress) ScopeSpecUUID() (uuid.UUID, error) {
 	if len(ma) > 0 && ma[0] != ScopeSpecificationKeyPrefix[0] {
-		return uuid.UUID{}, fmt.Errorf("this metadata address does not contain a scope specification uuid")
+		return uuid.UUID{}, fmt.Errorf("this metadata address (%s) does not contain a scope specification uuid", ma)
 	}
 	return ma.PrimaryUUID()
 }
 
+// ContractSpecUUID returns the contract specification uuid component of a MetadataAddress (if appropriate)
 func (ma MetadataAddress) ContractSpecUUID() (uuid.UUID, error) {
 	if !ma.isTypeOneOf(ContractSpecificationKeyPrefix, RecordSpecificationKeyPrefix) {
-		return uuid.UUID{}, fmt.Errorf("this metadata address does not contain a contract specification uuid")
+		return uuid.UUID{}, fmt.Errorf("this metadata address (%s) does not contain a contract specification uuid", ma)
 	}
 	return ma.PrimaryUUID()
 }
