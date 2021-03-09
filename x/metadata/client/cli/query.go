@@ -2,8 +2,10 @@ package cli
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -12,9 +14,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
 
+	"github.com/gogo/protobuf/proto"
+
 	"github.com/google/uuid"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
+
+	"gopkg.in/yaml.v2"
 )
 
 // GetQueryCmd returns the top-level command for marker CLI queries.
@@ -30,6 +36,7 @@ func GetQueryCmd() *cobra.Command {
 		GetMetadataParamsCmd(),
 		GetMetadataByIDCmd(),
 		GetMetadataScopeCmd(),
+		GetMetadataSessionsByScopeCmd(),
 		GetMetadataSessionCmd(),
 		GetMetadataRecordCmd(),
 		GetMetadataScopeSpecCmd(),
@@ -131,6 +138,34 @@ func GetMetadataScopeCmd() *cobra.Command {
 			_, uuidErr := uuid.Parse(arg0)
 			if uuidErr == nil {
 				return scopeByUUID(cmd, arg0)
+			}
+			return fmt.Errorf("argument %s is neither a metadata address (%s) nor uuid (%s)", arg0, idErr.Error(), uuidErr.Error())
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetMetadataSessionsByScopeCmd returns the command handler for metadata sessions querying by scope.
+func GetMetadataSessionsByScopeCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "sessions {scope_id|scope_uuid}",
+		Short: "Query the current metadata for sessions in a scope",
+		Args:  cobra.ExactArgs(1),
+		Example: fmt.Sprintf(`%[1]s query metadata sessions 91978ba2-5f35-459a-86a7-feca1b0512e0
+%[1]s query metadata sessions scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel
+`, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			arg0 := strings.TrimSpace(args[0])
+			id, idErr := types.MetadataAddressFromBech32(arg0)
+			if idErr == nil {
+				return sessionsByScopeID(cmd, id)
+			}
+			_, uuidErr := uuid.Parse(arg0)
+			if uuidErr == nil {
+				return sessionsByScopeUUID(cmd, arg0)
 			}
 			return fmt.Errorf("argument %s is neither a metadata address (%s) nor uuid (%s)", arg0, idErr.Error(), uuidErr.Error())
 		},
@@ -346,6 +381,45 @@ func scopeByUUID(cmd *cobra.Command, scopeUUID string) error {
 	return clientCtx.PrintProto(res.Scope)
 }
 
+// sessionsByScopeID outputs the sessios for a scope looked up by a scope MetadataAddress.
+func sessionsByScopeID(cmd *cobra.Command, scopeID types.MetadataAddress) error {
+	if !scopeID.IsScopeAddress() {
+		return fmt.Errorf("id %s is not a scope metadata address", scopeID)
+	}
+	scopeUUID, err := scopeID.ScopeUUID()
+	if err != nil {
+		return err
+	}
+	return sessionsByScopeUUID(cmd, scopeUUID.String())
+}
+
+// scopeByUUID outputs a scope looked up by scope UUID.
+func sessionsByScopeUUID(cmd *cobra.Command, scopeUUID string) error {
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return err
+	}
+
+	queryClient := types.NewQueryClient(clientCtx)
+	res, err := queryClient.Scope(context.Background(), &types.ScopeRequest{ScopeUuid: scopeUUID})
+	if err != nil {
+		return err
+	}
+	if res.Sessions == nil || len(res.Sessions) == 0 {
+		return fmt.Errorf("no sessions found for scope uuid %s", scopeUUID)
+	}
+
+	protoList := make([]proto.Message, len(res.Sessions))
+	for i, session := range res.Sessions {
+		if session != nil {
+			protoList[i] = session
+		} else {
+			protoList[i] = &types.Session{}
+		}
+	}
+	return printProtoList(clientCtx, protoList)
+}
+
 // sessionByID outputs a session looked up by a session MetadataAddress.
 func sessionByID(cmd *cobra.Command, sessionID types.MetadataAddress) error {
 	if !sessionID.IsSessionAddress() {
@@ -528,4 +602,61 @@ func recordSpecByContractSpecUUIDAndName(cmd *cobra.Command, contractSpecUUID st
 		return err
 	}
 	return recordSpecByID(cmd, types.RecordSpecMetadataAddress(primaryUUID, name))
+}
+
+// printProtoList outputs toPrint to the ctx.Output based on ctx.OutputFormat which is
+// either text or json. If text, toPrint will be YAML encoded. Otherwise, toPrint
+// will be JSON encoded using ctx.JSONMarshaler. An error is returned upon failure.
+// See also: client.Context.PrintProto
+func printProtoList(ctx client.Context, toPrint []proto.Message) error {
+	// always serialize JSON initially because proto json can't be directly YAML encoded
+	result := []byte{}
+	result = append(result, []byte("[")...)
+	maxI := len(toPrint) - 1
+	for i, p := range toPrint {
+		out, err := ctx.JSONMarshaler.MarshalJSON(p)
+		if err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+		result = append(result, out...)
+		if i < maxI {
+			result = append(result, []byte(",")...)
+		}
+	}
+	result = append(result, []byte("]")...)
+
+	if ctx.OutputFormat == "text" {
+		// handle text format by decoding and re-encoding JSON as YAML
+		var j interface{}
+
+		err := json.Unmarshal(result, &j)
+		if err != nil {
+			return err
+		}
+
+		result, err = yaml.Marshal(j)
+		if err != nil {
+			return err
+		}
+	}
+
+	writer := ctx.Output
+	if writer == nil {
+		writer = os.Stdout
+	}
+
+	_, err := writer.Write(result)
+	if err != nil {
+		return err
+	}
+
+	if ctx.OutputFormat != "text" {
+		// append new-line for formats besides YAML
+		_, err = writer.Write([]byte("\n"))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
