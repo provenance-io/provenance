@@ -398,11 +398,8 @@ proto-update-deps:
 	@tail -n+4 $(CONFIO_TYPES)/proofs.proto.orig >> $(CONFIO_TYPES)/proofs.proto
 	@rm $(CONFIO_TYPES)/proofs.proto.orig
 
-proto-zip: proto-update-deps
-	scripts/protoball.sh
-
 .PHONY: proto-all proto-gen proto-format proto-gen-any proto-swagger-gen proto-lint proto-check-breaking
-.PHONY: proto-lint-docker proto-check-breaking-docker proto-update-deps proto-zip
+.PHONY: proto-lint-docker proto-check-breaking-docker proto-update-deps
 
 
 ##############################
