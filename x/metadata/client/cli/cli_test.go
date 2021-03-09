@@ -9,6 +9,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	tmcli "github.com/tendermint/tendermint/libs/cli"
@@ -283,11 +284,13 @@ func (s *IntegrationTestSuite) TestGetMetadataScopeCmd() {
 	testCases := []struct {
 		name           string
 		args           []string
+		expectedError  string
 		expectedOutput string
 	}{
 		{
 			"get scope as json output",
 			[]string{s.scopeUUID.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			"",
 			fmt.Sprintf("{\"scope_id\":\"%s\",\"specification_id\":\"%s\",\"owners\":[{\"address\":\"%s\",\"role\":\"%s\"}],\"data_access\":[\"%s\"],\"value_owner_address\":\"%s\"}",
 				s.scope.ScopeId,
 				s.scope.SpecificationId.String(),
@@ -299,6 +302,7 @@ func (s *IntegrationTestSuite) TestGetMetadataScopeCmd() {
 		{
 			"get scope as text output",
 			[]string{s.scopeUUID.String(), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			"",
 			fmt.Sprintf(`data_access:
 - %s
 owners:
@@ -319,13 +323,21 @@ value_owner_address: %s`,
 	for _, tc := range testCases {
 		tc := tc
 
-		s.Run(tc.name, func() {
+		s.T().Run(tc.name, func(t *testing.T) {
 			cmd := cli.GetMetadataScopeCmd()
 			clientCtx := s.testnet.Validators[0].ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			s.Require().NoError(err)
-			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
+			if len(tc.expectedError) > 0 {
+				actualError := ""
+				if err != nil {
+					actualError = err.Error()
+				}
+				require.Equal(t, tc.expectedError, actualError, "expected error")
+			} else {
+				require.Nil(t, err, "unexpected error")
+				require.Equal(t, tc.expectedOutput, strings.TrimSpace(out.String()), "expected output")
+			}
 		})
 	}
 }
