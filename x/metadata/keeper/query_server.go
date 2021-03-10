@@ -15,6 +15,9 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
+// NameRecords within the GenesisState
+type ObjectStoreLocators []types.ObjectStoreLocator
+
 // Params queries params of metadata module
 func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
@@ -455,7 +458,23 @@ func (k Keeper) OSLocator(c context.Context, request *types.OSLocatorRequest) (*
 }
 
 func (k Keeper) OSLocatorByURI(ctx context.Context, request *types.OSLocatorByURIRequest) (*types.OSLocatorResponses, error) {
-	panic("implement me")
+	ctxSDK := sdk.UnwrapSDKContext(ctx)
+	// Return value data structure.
+	var records []*types.ObjectStoreLocator
+	// Handler that adds records if account address matches.
+	appendToRecords := func(record types.ObjectStoreLocator) error {
+		if record.LocatorUri == request.Uri {
+			records = append(records, &record)
+		}
+		return nil
+	}
+	// Calculate address prefix
+
+	// Collect and return all names that match.
+	if err := k.IterateLocatorsForURI(ctxSDK, appendToRecords); err != nil {
+		return &types.OSLocatorResponses{Locator: records}, err
+	}
+	return &types.OSLocatorResponses{Locator: records}, nil
 }
 
 

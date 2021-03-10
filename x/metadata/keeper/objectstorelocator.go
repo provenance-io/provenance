@@ -6,6 +6,9 @@ import (
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
+// Handler is a name record handler function for use with IterateRecords.
+type ObjectStoreHandler func(record types.ObjectStoreLocator) error
+
 func (keeper Keeper) GetOsLocatorRecord(ctx sdk.Context, ownerAddress sdk.AccAddress)(osLocator types.ObjectStoreLocator,found  bool) {
 	key, err := types.GetOsLocatorAddressKeyPrefix(ownerAddress)
 	if err != nil {
@@ -64,5 +67,26 @@ func (keeper Keeper) SetOSLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddres
 	}
 	indexKey := append(addrPrefix, key...) // [0x02] :: [addr-bytes]
 	store.Set(indexKey, bz)
+	return nil
+}
+
+
+// IterateLocatorsForURI gets address's associated with a given URI.
+func (k Keeper) IterateLocatorsForURI(ctx sdk.Context, handler ObjectStoreHandler) error {
+	store := ctx.KVStore(k.storeKey)
+	prefix := types.OSLocatorAddressKeyPrefix
+	it := sdk.KVStorePrefixIterator(store, prefix)
+
+	defer it.Close()
+
+	for ; it.Valid(); it.Next() {
+		record := types.ObjectStoreLocator{}
+		if err := types.ModuleCdc.UnmarshalBinaryBare(it.Value(), &record); err != nil {
+			return err
+		}
+		if err := handler(record); err != nil {
+			return err
+		}
+	}
 	return nil
 }
