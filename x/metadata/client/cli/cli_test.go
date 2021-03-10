@@ -931,20 +931,136 @@ func (s *IntegrationTestSuite) TestGetMetadataSessionCmd() {
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
-// TODO: GetMetadataRecordCmd
 func (s *IntegrationTestSuite) TestGetMetadataRecordCmd() {
 	cmd := cli.GetMetadataRecordCmd()
 
+	recordListAsJson := fmt.Sprintf("[%s]", s.recordAsJson)
+	recordListAsText := yamlListEntry(s.recordAsText)
+
 	testCases := []queryCmdTestCase{
-		// TODO: record id
-		// TODO: session id
-		// TODO: scope id
-		// TODO: scope uuid
-		// TODO: scope uuid, record name
-		// TODO: bad prefix
-		// TODO: bad arg 1
-		// TODO: uuid, whitespace arg 2 and 3
-		// TODO: no args
+		{
+			"record from record id as json",
+			[]string{s.recordID.String(), s.asJson},
+			"",
+			s.recordAsJson,
+		},
+		{
+			"record from record id as text",
+			[]string{s.recordID.String(), s.asText},
+			"",
+			s.recordAsText,
+		},
+		{
+			"record id does not exist",
+			[]string{"record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3"},
+			"rpc error: code = NotFound desc = scope uuid 91978ba2-5f35-459a-86a7-feca1b0512e0 not found: key not found",
+			"",
+		},
+		{
+			"records from session id as json",
+			[]string{s.sessionID.String(), s.asJson},
+			"",
+			recordListAsJson,
+		},
+		{
+			"records from session id as text",
+			[]string{s.sessionID.String(), s.asText},
+			"",
+			recordListAsText,
+		},
+		{
+			"session id does not exist",
+			[]string{"session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr"},
+			"rpc error: code = NotFound desc = scope uuid 91978ba2-5f35-459a-86a7-feca1b0512e0 not found: key not found",
+			"",
+		},
+		{
+			"records from scope id as json",
+			[]string{s.scopeID.String(), s.asJson},
+			"",
+			recordListAsJson,
+		},
+		{
+			"records from scope id as text",
+			[]string{s.scopeID.String(), s.asText},
+			"",
+			recordListAsText,
+		},
+		{
+			"scope id does not exist",
+			[]string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
+			"rpc error: code = NotFound desc = scope uuid 91978ba2-5f35-459a-86a7-feca1b0512e0 not found: key not found",
+			"",
+		},
+		{
+			"records from scope uuid as json",
+			[]string{s.scopeUUID.String(), s.asJson},
+			"",
+			recordListAsJson,
+		},
+		{
+			"records from scope uuid as text",
+			[]string{s.scopeUUID.String(), s.asText},
+			"",
+			recordListAsText,
+		},
+		{
+			"scope uuid does not exist",
+			[]string{"91978ba2-5f35-459a-86a7-feca1b0512e0"},
+			"rpc error: code = NotFound desc = scope uuid 91978ba2-5f35-459a-86a7-feca1b0512e0 not found: key not found",
+			"",
+		},
+		{
+			"record from scope uuid and record name as json",
+			[]string{s.scopeUUID.String(), s.recordName, s.asJson},
+			"",
+			s.recordAsJson,
+		},
+		{
+			"record from scope uuid and record name as text",
+			[]string{s.scopeUUID.String(), s.recordName, s.asText},
+			"",
+			s.recordAsText,
+		},
+		{
+			"scope uuid exists but record name does not",
+			[]string{s.scopeUUID.String(), "nope"},
+			fmt.Sprintf("no records with id %s found in scope with uuid %s",
+				metadatatypes.RecordMetadataAddress(s.scopeUUID, "nope"),
+				s.scopeUUID,
+			),
+			"",
+		},
+		{
+			"bad prefix",
+			[]string{"contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn"},
+			"unexpected metadata address prefix on contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn",
+			"",
+		},
+		{
+			"bad arg 1",
+			[]string{"badbad"},
+			"argument badbad is neither a metadata address (decoding bech32 failed: invalid bech32 string length 6) nor uuid (invalid UUID length: 6)",
+			"",
+		},
+		{
+			"uuid arg 1 and whitespace args 2 and 3 as json",
+			[]string{s.scopeUUID.String(), "  ", " ", s.asJson},
+			"",
+			recordListAsJson,
+		},
+		{
+			"uuid arg 1 and whitespace args 2 and 3 as text",
+			[]string{s.scopeUUID.String(), "  ", " ", s.asText},
+			"",
+			recordListAsText,
+		},
+		{
+			"no args",
+			[]string{},
+			"requires at least 1 arg(s), only received 0",
+			"",
+		},
 	}
 
 	runQueryCmdTestCases(s, cmd, testCases)
