@@ -422,15 +422,15 @@ func (ma MetadataAddress) SecondaryUUID() (uuid.UUID, error) {
 // NameHash returns the hashed name bytes from this MetadataAddress (if applicable).
 // More accurately, this returns a copy of bytes 18 through 49 (inclusive).
 func (ma MetadataAddress) NameHash() ([]byte, error) {
-	namehash := make([]byte, 32)
+	namehash := make([]byte, 16)
 	if len(ma) < 1 {
 		return namehash, fmt.Errorf("address empty")
 	}
 	if !ma.isTypeOneOf(RecordKeyPrefix, RecordSpecificationKeyPrefix) {
 		return namehash, fmt.Errorf("invalid address type out of valid range (got: %d)", ma[0])
 	}
-	if len(ma) < 49 {
-		return namehash, fmt.Errorf("incorrect address length (must be at least 49, actual: %d)", len(ma))
+	if len(ma) < 33 {
+		return namehash, fmt.Errorf("incorrect address length (must be at least 33, actual: %d)", len(ma))
 	}
 	copy(namehash, ma[17:])
 	return namehash, nil
