@@ -118,7 +118,7 @@ message Session {
   // name to associate with this session execution context, typically classname
   string name = 4 [(gogoproto.jsontag) = "type", (gogoproto.moretags) = "yaml:\"type\""];
   // Created by, updated by, timestamps, version number, and related info.
-  AuditFields audit = 99 [(gogoproto.nullable) = false];
+  AuditFields audit = 99 [(gogoproto.moretags) = "json:\"audit,omitempty\" yaml:\"audit,omitempty\""];
 }
 
 // A record (of fact) is attached to a session or each consideration output from a contract
@@ -226,12 +226,15 @@ message AuditFields {
   // the address of the account that created this record
   string created_by = 2 [(gogoproto.moretags) = "yaml:\"created_by\""];
   // the date/time when this entry was last updated
-  google.protobuf.Timestamp updated_date = 3
-      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"updated_date\""];
+  google.protobuf.Timestamp updated_date = 3 [
+    (gogoproto.stdtime)  = true,
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "json:\"updated_date,omitempty\" yaml:\"updated_date,omitempty\""
+  ];
   // the address of the account that modified this record
-  string updated_by = 4 [(gogoproto.moretags) = "yaml:\"updated_by\""];
+  string updated_by = 4 [(gogoproto.moretags) = "json:\"updated_by,omitempty\" yaml:\"updated_by,omitempty\""];
   // an optional version number that is incremented with each update
   uint32 version = 5;
   // an optional message associated with the creation/update event
-  string message = 6;
+  string message = 6 [(gogoproto.moretags) = "json:\"message,omitempty\" yaml:\"message,omitempty\""];
 }
