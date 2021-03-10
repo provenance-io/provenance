@@ -65,7 +65,7 @@ func VerifyMetadataAddressFormat(bz []byte) (string, error) {
 		checkSecondaryUUID = true
 	case RecordKeyPrefix[0]:
 		hrp = PrefixRecord
-		requiredLength = 1 + 16 + 32 // type byte plus size of one uuid and one sha256 hash
+		requiredLength = 1 + 16 + 16 // type byte plus size of one uuid and one half sha256 hash
 
 	case ScopeSpecificationKeyPrefix[0]:
 		hrp = PrefixScopeSpecification
@@ -75,7 +75,7 @@ func VerifyMetadataAddressFormat(bz []byte) (string, error) {
 		requiredLength = 1 + 16 // type byte plus size of one uuid
 	case RecordSpecificationKeyPrefix[0]:
 		hrp = PrefixRecordSpecification
-		requiredLength = 1 + 16 + 32 // type byte plus size of one uuid plus one sha256 hash
+		requiredLength = 1 + 16 + 16 // type byte plus size of one uuid plus one-half sha256 hash
 
 	default:
 		return hrp, fmt.Errorf("invalid metadata address type: %d", bz[0])
@@ -181,7 +181,7 @@ func RecordMetadataAddress(scopeUUID uuid.UUID, name string) MetadataAddress {
 		panic("missing name value for record metadata address")
 	}
 	nameBytes := sha256.Sum256([]byte(name))
-	return append(addr, nameBytes[:]...)
+	return append(addr, nameBytes[0:16]...)
 }
 
 // ScopeSpecMetadataAddress creates a MetadataAddress instance for a scope specification
@@ -214,7 +214,7 @@ func RecordSpecMetadataAddress(contractSpecUUID uuid.UUID, name string) Metadata
 		panic("missing name value for record spec metadata address")
 	}
 	nameBytes := sha256.Sum256([]byte(name))
-	return append(addr, nameBytes[:]...)
+	return append(addr, nameBytes[0:16]...)
 }
 
 // Equals determines if the current MetadataAddress is equal to another sdk.Address
@@ -445,6 +445,15 @@ func (ma MetadataAddress) GetRecordSpecAddress(name string) MetadataAddress {
 		panic(err)
 	}
 	return RecordSpecMetadataAddress(contractSpecUUID, name)
+}
+
+// GetContractSpecAddress returns the MetadataAddress for a contract spec given the UUID in the current record spec context
+func (ma MetadataAddress) GetContractSpecAddress() MetadataAddress {
+	contractSpecUUID, err := ma.ContractSpecUUID()
+	if err != nil {
+		panic(err)
+	}
+	return ContractSpecMetadataAddress(contractSpecUUID)
 }
 
 // ScopeSessionIteratorPrefix returns an iterator prefix that finds all Sessions assigned to the metadata address scope

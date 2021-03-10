@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -41,8 +42,12 @@ import (
 	"github.com/provenance-io/provenance/app"
 )
 
-// EnvTypeFlag is a flag for indicating a testnet
-const EnvTypeFlag = "testnet"
+const (
+	// EnvTypeFlag is a flag for indicating a testnet
+	EnvTypeFlag = "testnet"
+	// Flag used to indicate coin type.
+	CoinTypeFlag = "coin-type"
+)
 
 // ChainID is the id of the running chain
 var ChainID string
@@ -81,6 +86,8 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	overwriteFlagDefaults(rootCmd, map[string]string{
 		flags.FlagChainID:        ChainID,
 		flags.FlagKeyringBackend: "test",
+		// Override default value for coin-type to match our mainnet value.
+		CoinTypeFlag: fmt.Sprint(app.CoinTypeMainNet),
 	})
 
 	return rootCmd, encodingConfig
@@ -121,6 +128,8 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		tmcli.NewCompletionCmd(rootCmd, true),
 		testnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
+		AddMetaAddressParser(),
+		AddMetaAddressEncoder(),
 	)
 
 	server.AddCommands(rootCmd, app.DefaultNodeHome(appName), newApp, createSimappAndExport, addModuleInitFlags)

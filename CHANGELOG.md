@@ -34,6 +34,44 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+* Truncate hashes used in metadata addresses for Record, Record Specification #132
+* Add support for creating, updating, removing, finding, and iterating over `Session`s #55
+* Add support for creating, updating, removing, finding, and iterating over `RecordSpecification`s #59
+* Support for setting a marker denom validation expression #84
+* Add `MetaAddress` encoder and parser commands #147
+* Add build support for publishing protos used in this release #69
+
+## [v0.1.10](https://github.com/provenance-io/provenance/releases/tag/v0.1.10) - 2021-03-04
+
+### Bug fixes
+
+* Ensure all upgrade handlers apply always before storeLoader is created.
+* Add upgrade handler for v0.1.10
+
+## [v0.1.9](https://github.com/provenance-io/provenance/releases/tag/v0.1.9) - 2021-03-03
+
+### Bug fixes
+
+* Add module for metadata for v0.1.9
+
+## [v0.1.8](https://github.com/provenance-io/provenance/releases/tag/v0.1.8) - 2021-03-03
+
+### Bug fixes
+
+* Add handlers for v0.1.7, v0.1.8
+
+## [v0.1.7](https://github.com/provenance-io/provenance/releases/tag/v0.1.7) - 2021-03-03
+
+### Bug Fixes
+
+* Fix npe caused by always loading custom storeLoader.
+
+## [v0.1.6](https://github.com/provenance-io/provenance/releases/tag/v0.1.6) - 2021-03-02
+
+### Bug Fixes
+
+* Add metadata module to the IAVL store during upgrade
+
 ## [v0.1.5](https://github.com/provenance-io/provenance/releases/tag/v0.1.5) - 2021-03-02
 
 * Add support for creating, updating, removing, finding, and iterating over `Record`s #54
@@ -42,7 +80,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add an explicit no-op upgrade handler for release v0.1.5.
 * Add support for creating, updating, removing, finding, and iterating over `ContractSpecification`s #57
 * Add support for record specification metadata addresses #58
-* Add support for creating, updating, removing, finding, and iterating over `Session`s #55
 * Enhance build process to release cosmovisor compatible zip and plan #119
 
 ## [v0.1.4](https://github.com/provenance-io/provenance/releases/tag/v0.1.4) - 2021-02-24
