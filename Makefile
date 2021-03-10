@@ -17,6 +17,7 @@ WITH_CLEVELDB ?= yes
 
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 TM_VERSION := $(shell go list -m github.com/tendermint/tendermint | sed 's:.* ::') # grab everything after the space in "github.com/tendermint/tendermint v0.34.7"
+COMMIT := $(shell git log -1 --format='%h')
 # don't override user values
 ifeq (,$(VERSION))
   VERSION := $(shell git describe --exact-match 2>/dev/null)
@@ -25,7 +26,7 @@ ifeq (,$(VERSION))
     VERSION := $(BRANCH)-$(COMMIT)
   endif
 endif
-COMMIT := $(shell git log -1 --format='%H')
+
 
 GO := go
 
