@@ -81,9 +81,8 @@ func TestLegacySha512HashToAddress(t *testing.T) {
 }
 
 func TestMetadataAddressWithInvalidData(t *testing.T) {
-	// TODO - this must be made static because the random bytes sometimes move past first error check breaking
-	// the checks below.
-	var addr = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
+	addr, addrErr := sdk.AccAddressFromBech32("cosmos1zgp4n2yvrtxkj5zl6rzcf6phqg0gfzuf3v08r4")
+	require.NoError(t, addrErr, "address parsing error")
 
 	_, err := VerifyMetadataAddressFormat(addr)
 	require.EqualValues(t, fmt.Errorf("invalid metadata address type: %d", addr[0]), err)
