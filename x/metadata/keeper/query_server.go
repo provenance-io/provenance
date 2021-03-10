@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -440,8 +439,19 @@ func (k Keeper) OSParams(c context.Context, request *types.OSLocatorQueryParamsR
 	return &types.OSLocatorQueryParamsResponse{Params: params}, nil
 }
 
-func (k Keeper) OSLocator(ctx context.Context, request *types.OSLocatorRequest) (*types.OSLocatorResponse, error) {
-	panic("implement me")
+func (k Keeper) OSLocator(c context.Context, request *types.OSLocatorRequest) (*types.OSLocatorResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	accAddr, err := sdk.AccAddressFromBech32(request.Owner)
+	if err != nil {
+		return nil, types.ErrInvalidAddress
+	}
+
+	record, exists := k.GetOsLocatorRecord(ctx, accAddr)
+
+	if exists == false {
+		return nil, types.ErrAddressNotBound
+	}
+	return &types.OSLocatorResponse{Locator: &record}, nil
 }
 
 func (k Keeper) OSLocatorByURI(ctx context.Context, request *types.OSLocatorByURIRequest) (*types.OSLocatorResponses, error) {
