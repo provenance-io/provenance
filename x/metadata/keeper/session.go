@@ -150,5 +150,40 @@ func (k Keeper) ValidateSessionUpdate(ctx sdk.Context, existing, proposed types.
 		return err
 	}
 
+	if err = k.ValidateAuditUpdate(ctx, existing.Audit, proposed.Audit); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ValidateAuditUpdate ensure that a given reference to audit fields represents no changes to
+// existing audit field data.  NOTE: A nil proposed is considered "no update" and not attempt to unset.
+func (k Keeper) ValidateAuditUpdate(ctx sdk.Context, existing, proposed *types.AuditFields) error {
+	if proposed == nil {
+		return nil
+	}
+	if existing == nil {
+		return fmt.Errorf("attempt to modify audit fields, modification not allowed")
+	}
+	if existing.CreatedBy != proposed.CreatedBy {
+		return fmt.Errorf("attempt to modify created-by audit field, modification not allowed")
+	}
+	if existing.UpdatedBy != proposed.UpdatedBy {
+		return fmt.Errorf("attempt to modify updated-by audit field, modification not allowed")
+	}
+	if existing.CreatedDate != proposed.CreatedDate {
+		return fmt.Errorf("attempt to modify created-date audit field, modification not allowed")
+	}
+	if existing.UpdatedDate != proposed.UpdatedDate {
+		return fmt.Errorf("attempt to modify updated-date audit field, modification not allowed")
+	}
+	if existing.Version != proposed.Version {
+		return fmt.Errorf("attempt to modify version audit field, modification not allowed")
+	}
+	if existing.Message != proposed.Message {
+		return fmt.Errorf("attempt to modify message audit field, modification not allowed")
+	}
+
 	return nil
 }
