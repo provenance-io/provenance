@@ -142,7 +142,57 @@ func TestMetadataAddressMarshal(t *testing.T) {
 	require.EqualValues(t, scopeID, newInstance)
 }
 
-// TODO: Tests on the Compare func
+func TestCompare(t *testing.T) {
+	maEmpty := MetadataAddress{}
+	ma1 := MetadataAddress("1")
+	ma2 := MetadataAddress("2")
+	ma11 := MetadataAddress("11")
+	ma22 := MetadataAddress("22")
+
+	tests := []struct{
+		name string
+		base MetadataAddress
+		arg MetadataAddress
+		expected int
+	}{
+		{"maEmpty v maEmpty", maEmpty, maEmpty, 0},
+		{"maEmpty v ma1", maEmpty, ma1, -1},
+		{"maEmpty v ma2", maEmpty, ma2, -1},
+		{"maEmpty v ma11", maEmpty, ma11, -1},
+		{"maEmpty v ma22", maEmpty, ma22, -1},
+
+		{"ma1 v maEmpty", ma1, maEmpty, 1},
+		{"ma1 v ma1", ma1, ma1, 0},
+		{"ma1 v ma2", ma1, ma2, -1},
+		{"ma1 v ma11", ma1, ma11, -1},
+		{"ma1 v ma22", ma1, ma22, -1},
+
+		{"ma2 v maEmpty", ma2, maEmpty, 1},
+		{"ma2 v ma1", ma2, ma1, 1},
+		{"ma2 v ma2", ma2, ma2, 0},
+		{"ma2 v ma11", ma2, ma11, 1},
+		{"ma2 v ma22", ma2, ma22, -1},
+
+		{"ma11 v maEmpty", ma11, maEmpty, 1},
+		{"ma11 v ma1", ma11, ma1, 1},
+		{"ma11 v ma2", ma11, ma2, -1},
+		{"ma11 v ma11", ma11, ma11, 0},
+		{"ma11 v ma22", ma11, ma22, -1},
+
+		{"ma22 v maEmpty", ma22, maEmpty, 1},
+		{"ma22 v ma1", ma22, ma1, 1},
+		{"ma22 v ma2", ma22, ma2, 1},
+		{"ma22 v ma11", ma22, ma11, 1},
+		{"ma22 v ma22", ma22, ma22, 0},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(subtest *testing.T) {
+			actual := test.base.Compare(test.arg)
+			assert.Equal(subtest, test.expected, actual)
+		})
+	}
+}
 
 func TestMetadataAddressIteratorPrefix(t *testing.T) {
 	var scopeID MetadataAddress
