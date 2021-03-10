@@ -26,6 +26,37 @@ var (
 	recordBech32  = "record1q2xcpvj6czy5g354dews3nlruxjelpkssxyyclt9ngh74gx9ttgp27gt8kl"
 )
 
+func assertPanic(t *testing.T, testName string, expectedPanicMsg string, test func()) {
+	// Recover from the panic if there is one
+	defer func() {
+		if r := recover(); r != nil {
+			assert.Equal(t, expectedPanicMsg, fmt.Sprintf("%s", r), "%s panic message", testName)
+		}
+	}()
+	// Run the test that should cause a panic
+	test()
+	// If the function panicked, code execution doesn't get to this point.
+	// And the deferred function at the top will recover from the panic,
+	// allowing further testing to continue.
+	// But if it didn't panic, then we need to indicate that the test failed.
+	t.Errorf("%s: should have caused panic(\"%s\") but did not.", testName, expectedPanicMsg)
+}
+
+func assertDoesNotPanic(t *testing.T, testName string, test func()) {
+	// If there's a panic, fail the test and recover from it
+	defer func() {
+		if r := recover(); r != nil {
+			t.Errorf("%s: should not have caused panic but did: %v", testName, r)
+		}
+	}()
+	// Run the test that should cause a panic
+	test()
+	// If the function panicked, code execution doesn't get to this point.
+	// And the deferred function at the top will recover from the panic,
+	// allowing further testing to continue.
+
+}
+
 func TestLegacySha512HashToAddress(t *testing.T) {
 	testHash := sha512.Sum512([]byte("test"))
 	hash := base64.StdEncoding.EncodeToString(testHash[:])
@@ -611,7 +642,88 @@ func TestNameHash(t *testing.T) {
 	}
 }
 
-// TODO: AsScopeAddressE and AsScopeAddress tests
+func TestScopeAddressConverters(t *testing.T) {
+	randomUUID := uuid.New()
+	scopeID := ScopeMetadataAddress(randomUUID)
+	sessionID := SessionMetadataAddress(randomUUID, uuid.New())
+	recordID := RecordMetadataAddress(randomUUID, "year zero")
+	scopeSpecID := ScopeSpecMetadataAddress(randomUUID)
+	contractSpecID := ContractSpecMetadataAddress(randomUUID)
+	recordSpecID := RecordSpecMetadataAddress(randomUUID, "the downard spiral")
+
+	tests := []struct {
+		name string
+		baseID MetadataAddress
+		expectedID MetadataAddress
+		expectedError string
+	}{
+		{
+			"scope id",
+			scopeID,
+			scopeID,
+			"",
+		},
+		{
+			"session id",
+			sessionID,
+			scopeID,
+			"",
+		},
+		{
+			"record id",
+			recordID,
+			scopeID,
+			"",
+		},
+		{
+			"scope spec id",
+			scopeSpecID,
+			MetadataAddress{},
+			fmt.Sprintf("this metadata address (%s) does not contain a scope uuid",
+				scopeSpecID),
+		},
+		{
+			"contract spec id",
+			contractSpecID,
+			MetadataAddress{},
+			fmt.Sprintf("this metadata address (%s) does not contain a scope uuid",
+				contractSpecID),
+		},
+		{
+			"record spec id",
+			recordSpecID,
+			MetadataAddress{},
+			fmt.Sprintf("this metadata address (%s) does not contain a scope uuid",
+				recordSpecID),
+		},
+	}
+
+	for _, test := range tests {
+		// Test AsScopeAddress
+		actualID, err := test.baseID.AsScopeAddress()
+		if len(test.expectedError) == 0 {
+			assert.NoError(t, err, "%s AsScopeAddress err", test.name)
+			assert.Equal(t, test.expectedID, actualID, "%s AsScopeAddress value", test.name)
+		} else {
+			assert.EqualError(t, err, test.expectedError, "%s AsScopeAddress expected err", test.name)
+		}
+
+		// Test AsScopeAddressE
+		if len(test.expectedError) == 0 {
+			assertDoesNotPanic(t, fmt.Sprintf("%s AsScopeAddressE", test.name), func() {
+				id := test.baseID.AsScopeAddressE()
+				assert.Equal(t, test.expectedID, id, "%s AsScopeAddressE value", test.name)
+			})
+		} else {
+			assertPanic(t, fmt.Sprintf("%s AsScopeAddressE", test.name), test.expectedError, func() {
+				id := test.baseID.AsScopeAddressE()
+				t.Errorf("%s AsScopeAddressE returned %s instead of panicking with message %s",
+					test.name, id, test.expectedError)
+			})
+		}
+	}
+}
+
 // TODO: AsRecordAddressE and AsRecordAddress tests
 // TODO: AsRecordSpecAddressE and AsRecordSpecAddress tests
 // TODO: AsContractSpecAddressE and AsContractSpecAddress tests
