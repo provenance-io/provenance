@@ -434,8 +434,8 @@ func GetOwnershipCmd() *cobra.Command {
 		Use:     "owner {address}",
 		Aliases: []string{"o", "ownership"},
 		Short:   "Query the current metadata for entries owned by an address",
-		Long: fmt.Sprintf(`%[1]s owner {address} - gets a list of scope uuids owned by the provided address.`, cmdStart),
-		Args: cobra.ExactArgs(1),
+		Long:    fmt.Sprintf(`%[1]s owner {address} - gets a list of scope uuids owned by the provided address.`, cmdStart),
+		Args:    cobra.ExactArgs(1),
 		Example: fmt.Sprintf(`%[1]s owner cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck`, cmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			address := strings.TrimSpace(args[0])
@@ -457,8 +457,8 @@ func GetValueOwnershipCmd() *cobra.Command {
 		Use:     "valueowner {address}",
 		Aliases: []string{"vo", "valueownership"},
 		Short:   "Query the current metadata for scopes with the provided address as the value owner",
-		Long: fmt.Sprintf(`%[1]s valueowner {address} - gets a list of scope uuids value-owned by the provided address.`, cmdStart),
-		Args: cobra.ExactArgs(1),
+		Long:    fmt.Sprintf(`%[1]s valueowner {address} - gets a list of scope uuids value-owned by the provided address.`, cmdStart),
+		Args:    cobra.ExactArgs(1),
 		Example: fmt.Sprintf(`%[1]s valueowner cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck`, cmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			address := strings.TrimSpace(args[0])
