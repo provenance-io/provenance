@@ -110,6 +110,8 @@ func TestMetadataAddressMarshal(t *testing.T) {
 	require.EqualValues(t, scopeID, newInstance)
 }
 
+// TODO: Tests on the Compare func
+
 func TestMetadataAddressIteratorPrefix(t *testing.T) {
 	var scopeID MetadataAddress
 	bz, err := scopeID.ScopeSessionIteratorPrefix()
@@ -136,6 +138,8 @@ func TestMetadataAddressIteratorPrefix(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 17, len(bz), "length of iterator prefix is code plus scope uuid")
 	require.Equal(t, RecordKeyPrefix[0], bz[0], "iterator prefix should start with session key id")
+
+	// TODO: ContractSpecRecordSpecIteratorPrefix test
 }
 
 func TestScopeMetadataAddress(t *testing.T) {
@@ -231,6 +235,9 @@ func TestRecordMetadataAddress(t *testing.T) {
 	require.Equal(t, recordID, scopeID.AsRecordAddressE("test"))
 }
 
+// TODO: ScopeSpecMetadataAddress tests
+// TODO: ContractSpecMetadataAddress tests
+
 func TestRecordSpecMetadataAddress(t *testing.T) {
 	contractSpecUUID := uuid.New()
 	contractSpecID := ContractSpecMetadataAddress(contractSpecUUID)
@@ -256,3 +263,15 @@ func TestRecordSpecMetadataAddress(t *testing.T) {
 	require.NoError(t, errContractSpecUUID, "error from ContractSpecUUID")
 	require.Equal(t, contractSpecUUID, contractSpecUUIDFromRecordSpecId, "value from ContractSpecUUID")
 }
+
+// TODO: Prefix tests
+// TODO: PrimaryUUID tests
+// TODO: SecondaryUUID tets
+// TODO: NameHash tests
+
+// TODO: AsScopeAddressE and AsScopeAddress tests
+// TODO: AsRecordAddressE and AsRecordAddress tests
+// TODO: AsRecordSpecAddressE and AsRecordSpecAddress tests
+// TODO: AsContractSpecAddressE and AsContractSpecAddress tests
+
+// TODO: Format tests
