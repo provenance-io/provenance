@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -194,33 +193,40 @@ func TestCompare(t *testing.T) {
 }
 
 func TestMetadataAddressIteratorPrefix(t *testing.T) {
-	var scopeID MetadataAddress
-	bz, err := scopeID.ScopeSessionIteratorPrefix()
-	require.NoError(t, err, "empty address must return the root iterator prefix ")
-	require.Equal(t, SessionKeyPrefix, bz)
-	bz, err = scopeID.ScopeRecordIteratorPrefix()
-	require.NoError(t, err, "empty address must return the root iterator prefix")
-	require.Equal(t, RecordKeyPrefix, bz)
+	var emptyID MetadataAddress
+	bz, err := emptyID.ScopeSessionIteratorPrefix()
+	assert.NoError(t, err, "empty address ScopeSessionIteratorPrefix error")
+	assert.Equal(t, SessionKeyPrefix, bz, "empty address ScopeSessionIteratorPrefix value")
+	bz, err = emptyID.ScopeRecordIteratorPrefix()
+	assert.NoError(t, err, "empty address ScopeRecordIteratorPrefix error")
+	assert.Equal(t, RecordKeyPrefix, bz, "empty address ScopeRecordIteratorPrefix value")
+	bz, err = emptyID.ContractSpecRecordSpecIteratorPrefix()
+	assert.NoError(t, err, "empty address ContractSpecRecordSpecIteratorPrefix error")
+	assert.Equal(t, RecordSpecificationKeyPrefix, bz, "empty address ContractSpecRecordSpecIteratorPrefix value")
 
-	scopeID = ScopeSpecMetadataAddress(scopeUUID)
-	bz, err = scopeID.ScopeRecordIteratorPrefix()
-	require.Error(t, err, "not possible to iterate Records off a scope specification")
-	require.Equal(t, []byte{}, bz)
-	require.Equal(t, fmt.Errorf("this metadata address does not contain a scope uuid"), err)
+	scopeSpecID := ScopeSpecMetadataAddress(scopeUUID)
+	bz, err = scopeSpecID.ScopeSessionIteratorPrefix()
+	assert.EqualError(t, err,  "this metadata address does not contain a scope uuid", "scope spec id ScopeSessionIteratorPrefix error message")
+	assert.Equal(t, []byte{}, bz, "scope spec id ScopeSessionIteratorPrefix value")
+	bz, err = scopeSpecID.ScopeRecordIteratorPrefix()
+	assert.EqualError(t, err,  "this metadata address does not contain a scope uuid", "scope spec id ScopeRecordIteratorPrefix error message")
+	assert.Equal(t, []byte{}, bz, "scope spec id ScopeRecordIteratorPrefix value")
 
-	scopeID = ScopeMetadataAddress(scopeUUID)
-
+	scopeID := ScopeMetadataAddress(scopeUUID)
 	bz, err = scopeID.ScopeSessionIteratorPrefix()
-	require.NoError(t, err)
-	require.Equal(t, 17, len(bz), "length of iterator prefix is code plus scope uuid")
-	require.Equal(t, SessionKeyPrefix[0], bz[0], "iterator prefix should start with session key id")
-
+	require.NoError(t, err, "ScopeSessionIteratorPrefix error")
+	require.Equal(t, 17, len(bz), "ScopeSessionIteratorPrefix length")
+	require.Equal(t, SessionKeyPrefix[0], bz[0], "ScopeSessionIteratorPrefix first byte")
 	bz, err = scopeID.ScopeRecordIteratorPrefix()
-	require.NoError(t, err)
-	require.Equal(t, 17, len(bz), "length of iterator prefix is code plus scope uuid")
-	require.Equal(t, RecordKeyPrefix[0], bz[0], "iterator prefix should start with session key id")
+	require.NoError(t, err, "ScopeRecordIteratorPrefix err")
+	require.Equal(t, 17, len(bz), "ScopeRecordIteratorPrefix length")
+	require.Equal(t, RecordKeyPrefix[0], bz[0], "ScopeRecordIteratorPrefix first byte")
 
-	// TODO: ContractSpecRecordSpecIteratorPrefix test
+	contractSpecID := ContractSpecMetadataAddress(scopeUUID)
+	bz, err = contractSpecID.ContractSpecRecordSpecIteratorPrefix()
+	require.NoError(t, err, "ContractSpecRecordSpecIteratorPrefix error")
+	require.Equal(t, 17, len(bz), "ContractSpecRecordSpecIteratorPrefix length")
+	require.Equal(t, RecordSpecificationKeyPrefix[0], bz[0], "ContractSpecRecordSpecIteratorPrefix first byte")
 }
 
 func TestScopeMetadataAddress(t *testing.T) {
