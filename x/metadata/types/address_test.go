@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -253,7 +254,23 @@ func TestScopeSpecMetadataAddress(t *testing.T) {
 	require.Equal(t, scopeSpecUUID, scopeSpecUUIDFromScopeSpecId, "value from ScopeSpecUUID")
 }
 
-// TODO: ContractSpecMetadataAddress tests
+func TestContractSpecMetadataAddress(t *testing.T) {
+	contractSpecUUID := uuid.New()
+	contractSpecID := ContractSpecMetadataAddress(contractSpecUUID)
+
+	require.True(t, contractSpecID.IsContractSpecificationAddress(), "IsContractSpecificationAddress")
+	require.Equal(t, ContractSpecificationKeyPrefix, contractSpecID[0:1].Bytes(), "bytes[0]: the type bit")
+	require.Equal(t, contractSpecID[1:17].Bytes(), contractSpecUUID[:], "bytes[1:17]: the contract spec uuid bytes")
+
+	contractSpecBech32 := contractSpecID.String()
+	contractSpecIDFromBeck32, errBeck32 := MetadataAddressFromBech32(contractSpecBech32)
+	require.NoError(t, errBeck32, "error from MetadataAddressFromBech32")
+	require.Equal(t, contractSpecID, contractSpecIDFromBeck32, "value from contractSpecIDFromBeck32")
+
+	contractSpecUUIDFromContractSpecId, errContractSpecUUID := contractSpecID.ContractSpecUUID()
+	require.NoError(t, errContractSpecUUID, "error from ContractSpecUUID")
+	require.Equal(t, contractSpecUUID, contractSpecUUIDFromContractSpecId, "value from ContractSpecUUID")
+}
 
 func TestRecordSpecMetadataAddress(t *testing.T) {
 	contractSpecUUID := uuid.New()
@@ -279,6 +296,59 @@ func TestRecordSpecMetadataAddress(t *testing.T) {
 	contractSpecUUIDFromRecordSpecId, errContractSpecUUID := recordSpecID.ContractSpecUUID()
 	require.NoError(t, errContractSpecUUID, "error from ContractSpecUUID")
 	require.Equal(t, contractSpecUUID, contractSpecUUIDFromRecordSpecId, "value from ContractSpecUUID")
+}
+
+func TestMetadataAddressTypeTestFuncs(t *testing.T) {
+	tests := []struct {
+		name     string
+		id       MetadataAddress
+		expected [6]bool
+	}{
+		{
+			"scope",
+			ScopeMetadataAddress(uuid.New()),
+			[6]bool{true, false, false, false, false, false},
+		},
+		{
+			"session",
+			SessionMetadataAddress(uuid.New(), uuid.New()),
+			[6]bool{false, true, false, false, false, false},
+		},
+		{
+			"record",
+			RecordMetadataAddress(uuid.New(), "best ever"),
+			[6]bool{false, false, true, false, false, false},
+		},
+		{
+			"scope specification",
+			ScopeSpecMetadataAddress(uuid.New()),
+			[6]bool{false, false, false, true, false, false},
+		},
+		{
+			"contract speficiation",
+			ContractSpecMetadataAddress(uuid.New()),
+			[6]bool{false, false, false, false, true, false},
+		},
+		{
+			"record specification",
+			RecordSpecMetadataAddress(uuid.New(), "okayest dad"),
+			[6]bool{false, false, false, false, false, true},
+		},
+	}
+
+	allPass := true
+	for _, test := range tests {
+		allPass = assert.Equal(t, test.expected[0], test.id.IsScopeAddress(), fmt.Sprintf("%s: IsScopeAddress", test.name)) && allPass
+		allPass = assert.Equal(t, test.expected[1], test.id.IsSessionAddress(), fmt.Sprintf("%s: IsSessionAddress", test.name)) && allPass
+		allPass = assert.Equal(t, test.expected[2], test.id.IsRecordAddress(), fmt.Sprintf("%s: IsRecordAddress", test.name)) && allPass
+		allPass = assert.Equal(t, test.expected[3], test.id.IsScopeSpecificationAddress(), fmt.Sprintf("%s: IsScopeSpecificationAddress", test.name)) && allPass
+		allPass = assert.Equal(t, test.expected[4], test.id.IsContractSpecificationAddress(), fmt.Sprintf("%s: IsContractSpecificationAddress", test.name)) && allPass
+		allPass = assert.Equal(t, test.expected[5], test.id.IsRecordSpecificationAddress(), fmt.Sprintf("%s: IsRecordSpecificationAddress", test.name)) && allPass
+	}
+
+	if !allPass {
+		t.Fail()
+	}
 }
 
 // TODO: Prefix tests
