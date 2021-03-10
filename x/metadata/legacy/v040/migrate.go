@@ -78,7 +78,7 @@ func convertGroups(oldScopeUUID uuid.UUID, old []*v039metadata.RecordGroup) (new
 	newRecords = make([]v040metadata.Record, 0)
 	for i, g := range old {
 		if g.Audit != nil {
-			newSession[i].Audit.CreatedBy = g.Audit.CreatedBy
+			newSession[i].Audit = &v040metadata.AuditFields{CreatedBy: g.Audit.CreatedBy}
 			if g.Audit.CreatedDate != nil {
 				newSession[i].Audit.CreatedDate = time.Unix(g.Audit.CreatedDate.Seconds, 0)
 			}
