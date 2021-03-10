@@ -368,42 +368,58 @@ func TestMetadataAddressTypeTestFuncs(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		assert.Equal(t, test.expected[0], test.id.IsScopeAddress(), fmt.Sprintf("%s: IsScopeAddress", test.name))
-		assert.Equal(t, test.expected[1], test.id.IsSessionAddress(), fmt.Sprintf("%s: IsSessionAddress", test.name))
-		assert.Equal(t, test.expected[2], test.id.IsRecordAddress(), fmt.Sprintf("%s: IsRecordAddress", test.name))
-		assert.Equal(t, test.expected[3], test.id.IsScopeSpecificationAddress(), fmt.Sprintf("%s: IsScopeSpecificationAddress", test.name))
-		assert.Equal(t, test.expected[4], test.id.IsContractSpecificationAddress(), fmt.Sprintf("%s: IsContractSpecificationAddress", test.name))
-		assert.Equal(t, test.expected[5], test.id.IsRecordSpecificationAddress(), fmt.Sprintf("%s: IsRecordSpecificationAddress", test.name))
+		t.Run(test.name, func(subtest *testing.T) {
+			assert.Equal(subtest, test.expected[0], test.id.IsScopeAddress(), fmt.Sprintf("%s: IsScopeAddress", test.name))
+			assert.Equal(subtest, test.expected[1], test.id.IsSessionAddress(), fmt.Sprintf("%s: IsSessionAddress", test.name))
+			assert.Equal(subtest, test.expected[2], test.id.IsRecordAddress(), fmt.Sprintf("%s: IsRecordAddress", test.name))
+			assert.Equal(subtest, test.expected[3], test.id.IsScopeSpecificationAddress(), fmt.Sprintf("%s: IsScopeSpecificationAddress", test.name))
+			assert.Equal(subtest, test.expected[4], test.id.IsContractSpecificationAddress(), fmt.Sprintf("%s: IsContractSpecificationAddress", test.name))
+			assert.Equal(subtest, test.expected[5], test.id.IsRecordSpecificationAddress(), fmt.Sprintf("%s: IsRecordSpecificationAddress", test.name))
+		})
 	}
 }
 
 func TestPrefix(t *testing.T) {
-	actualScopePrefix, actualScopePrefixErr := ScopeMetadataAddress(uuid.New()).Prefix()
-	assert.NoError(t, actualScopePrefixErr, "actualScopePrefixErr")
-	assert.Equal(t, PrefixScope, actualScopePrefix, "actualScopePrefix")
+	t.Run("scope", func(subtest *testing.T) {
+		actualScopePrefix, actualScopePrefixErr := ScopeMetadataAddress(uuid.New()).Prefix()
+		assert.NoError(subtest, actualScopePrefixErr, "actualScopePrefixErr")
+		assert.Equal(subtest, PrefixScope, actualScopePrefix, "actualScopePrefix")
+	})
 
-	actualSessionPrefix, actualSessionPrefixErr := SessionMetadataAddress(uuid.New(), uuid.New()).Prefix()
-	assert.NoError(t, actualSessionPrefixErr, "actualSessionPrefixErr")
-	assert.Equal(t, PrefixSession, actualSessionPrefix, "actualSessionPrefix")
+	t.Run("session", func(subtest *testing.T) {
+		actualSessionPrefix, actualSessionPrefixErr := SessionMetadataAddress(uuid.New(), uuid.New()).Prefix()
+		assert.NoError(subtest, actualSessionPrefixErr, "actualSessionPrefixErr")
+		assert.Equal(subtest, PrefixSession, actualSessionPrefix, "actualSessionPrefix")
+	})
 
-	actualRecordPrefix, actualRecordPrefixErr := RecordMetadataAddress(uuid.New(), "ronald").Prefix()
-	assert.NoError(t, actualRecordPrefixErr, "actualRecordPrefixErr")
-	assert.Equal(t, PrefixRecord, actualRecordPrefix, "actualRecordPrefix")
+	t.Run("record", func(subtest *testing.T) {
+		actualRecordPrefix, actualRecordPrefixErr := RecordMetadataAddress(uuid.New(), "ronald").Prefix()
+		assert.NoError(subtest, actualRecordPrefixErr, "actualRecordPrefixErr")
+		assert.Equal(subtest, PrefixRecord, actualRecordPrefix, "actualRecordPrefix")
+	})
 
-	actualScopeSpecPrefix, actualScopeSpecPrefixErr := ScopeSpecMetadataAddress(uuid.New()).Prefix()
-	assert.NoError(t, actualScopeSpecPrefixErr, "actualScopeSpecPrefixErr")
-	assert.Equal(t, PrefixScopeSpecification, actualScopeSpecPrefix, "actualScopeSpecPrefix")
+	t.Run("scope spec", func(subtest *testing.T) {
+		actualScopeSpecPrefix, actualScopeSpecPrefixErr := ScopeSpecMetadataAddress(uuid.New()).Prefix()
+		assert.NoError(subtest, actualScopeSpecPrefixErr, "actualScopeSpecPrefixErr")
+		assert.Equal(subtest, PrefixScopeSpecification, actualScopeSpecPrefix, "actualScopeSpecPrefix")
+	})
 
-	actualContractSpecPrefix, actualContractSpecPrefixErr := ContractSpecMetadataAddress(uuid.New()).Prefix()
-	assert.NoError(t, actualContractSpecPrefixErr, "actualContractSpecPrefixErr")
-	assert.Equal(t, PrefixContractSpecification, actualContractSpecPrefix, "actualContractSpecPrefix")
+	t.Run("contract spec", func(subtest *testing.T) {
+		actualContractSpecPrefix, actualContractSpecPrefixErr := ContractSpecMetadataAddress(uuid.New()).Prefix()
+		assert.NoError(subtest, actualContractSpecPrefixErr, "actualContractSpecPrefixErr")
+		assert.Equal(subtest, PrefixContractSpecification, actualContractSpecPrefix, "actualContractSpecPrefix")
+	})
 
-	actualRecordSpecPrefix, actualRecordSpecPrefixErr := RecordSpecMetadataAddress(uuid.New(), "george").Prefix()
-	assert.NoError(t, actualRecordSpecPrefixErr, "actualRecordSpecPrefixErr")
-	assert.Equal(t, PrefixRecordSpecification, actualRecordSpecPrefix, "actualRecordSpecPrefix")
+	t.Run("record spec", func(subtest *testing.T) {
+		actualRecordSpecPrefix, actualRecordSpecPrefixErr := RecordSpecMetadataAddress(uuid.New(), "george").Prefix()
+		assert.NoError(subtest, actualRecordSpecPrefixErr, "actualRecordSpecPrefixErr")
+		assert.Equal(subtest, PrefixRecordSpecification, actualRecordSpecPrefix, "actualRecordSpecPrefix")
+	})
 
-	_, badPrefixErr := MetadataAddress("don't do this").Prefix()
-	assert.Error(t, badPrefixErr, "badPrefixErr")
+	t.Run("bad", func(subtest *testing.T) {
+		_, badPrefixErr := MetadataAddress("don't do this").Prefix()
+		assert.Error(subtest, badPrefixErr, "badPrefixErr")
+	})
 }
 
 func TestPrimaryUUID(t *testing.T) {
@@ -477,13 +493,15 @@ func TestPrimaryUUID(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		primaryUUID, err := test.id.PrimaryUUID()
-		if len(test.expectedError) == 0 {
-			assert.NoError(t, err, fmt.Sprintf("%s: err", test.name))
-			assert.Equal(t, test.expectedValue, primaryUUID, fmt.Sprintf("%s: value", test.name))
-		} else {
-			assert.EqualError(t, err, test.expectedError, fmt.Sprintf("%s: err", test.name))
-		}
+		t.Run(test.name, func(subtest *testing.T) {
+			primaryUUID, err := test.id.PrimaryUUID()
+			if len(test.expectedError) == 0 {
+				assert.NoError(t, err, fmt.Sprintf("%s: err", test.name))
+				assert.Equal(t, test.expectedValue, primaryUUID, fmt.Sprintf("%s: value", test.name))
+			} else {
+				assert.EqualError(t, err, test.expectedError, fmt.Sprintf("%s: err", test.name))
+			}
+		})
 	}
 }
 
@@ -553,13 +571,15 @@ func TestSecondaryUUID(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		secondaryUUID, err := test.id.SecondaryUUID()
-		if len(test.expectedError) == 0 {
-			assert.NoError(t, err, fmt.Sprintf("%s: err", test.name))
-			assert.Equal(t, test.expectedValue, secondaryUUID, fmt.Sprintf("%s: value", test.name))
-		} else {
-			assert.EqualError(t, err, test.expectedError, fmt.Sprintf("%s: err", test.name))
-		}
+		t.Run(test.name, func(subtest *testing.T) {
+			secondaryUUID, err := test.id.SecondaryUUID()
+			if len(test.expectedError) == 0 {
+				assert.NoError(t, err, fmt.Sprintf("%s: err", test.name))
+				assert.Equal(t, test.expectedValue, secondaryUUID, fmt.Sprintf("%s: value", test.name))
+			} else {
+				assert.EqualError(t, err, test.expectedError, fmt.Sprintf("%s: err", test.name))
+			}
+		})
 	}
 }
 
@@ -632,13 +652,15 @@ func TestNameHash(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		nameHash, err := test.id.NameHash()
-		if len(test.expectedError) == 0 {
-			assert.NoError(t, err, fmt.Sprintf("%s: err", test.name))
-			assert.Equal(t, test.expectedValue, nameHash, fmt.Sprintf("%s: value", test.name))
-		} else {
-			assert.EqualError(t, err, test.expectedError, fmt.Sprintf("%s: err", test.name))
-		}
+		t.Run(test.name, func(subtest *testing.T) {
+			nameHash, err := test.id.NameHash()
+			if len(test.expectedError) == 0 {
+				assert.NoError(t, err, fmt.Sprintf("%s: err", test.name))
+				assert.Equal(t, test.expectedValue, nameHash, fmt.Sprintf("%s: value", test.name))
+			} else {
+				assert.EqualError(t, err, test.expectedError, fmt.Sprintf("%s: err", test.name))
+			}
+		})
 	}
 }
 
@@ -700,27 +722,31 @@ func TestScopeAddressConverters(t *testing.T) {
 
 	for _, test := range tests {
 		// Test AsScopeAddress
-		actualID, err := test.baseID.AsScopeAddress()
-		if len(test.expectedError) == 0 {
-			assert.NoError(t, err, "%s AsScopeAddress err", test.name)
-			assert.Equal(t, test.expectedID, actualID, "%s AsScopeAddress value", test.name)
-		} else {
-			assert.EqualError(t, err, test.expectedError, "%s AsScopeAddress expected err", test.name)
-		}
+		t.Run(fmt.Sprintf("%s AsScopeAddress", test.name), func(subtest *testing.T) {
+			actualID, err := test.baseID.AsScopeAddress()
+			if len(test.expectedError) == 0 {
+				assert.NoError(t, err, "%s AsScopeAddress err", test.name)
+				assert.Equal(t, test.expectedID, actualID, "%s AsScopeAddress value", test.name)
+			} else {
+				assert.EqualError(t, err, test.expectedError, "%s AsScopeAddress expected err", test.name)
+			}
+		})
 
 		// Test AsScopeAddressE
-		if len(test.expectedError) == 0 {
-			assertDoesNotPanic(t, fmt.Sprintf("%s AsScopeAddressE", test.name), func() {
-				id := test.baseID.AsScopeAddressE()
-				assert.Equal(t, test.expectedID, id, "%s AsScopeAddressE value", test.name)
-			})
-		} else {
-			assertPanic(t, fmt.Sprintf("%s AsScopeAddressE", test.name), test.expectedError, func() {
-				id := test.baseID.AsScopeAddressE()
-				t.Errorf("%s AsScopeAddressE returned %s instead of panicking with message %s",
-					test.name, id, test.expectedError)
-			})
-		}
+		t.Run(fmt.Sprintf("%s AsScopeAddressE", test.name), func(subtest *testing.T) {
+			if len(test.expectedError) == 0 {
+				assertDoesNotPanic(t, fmt.Sprintf("%s AsScopeAddressE", test.name), func() {
+					id := test.baseID.AsScopeAddressE()
+					assert.Equal(t, test.expectedID, id, "%s AsScopeAddressE value", test.name)
+				})
+			} else {
+				assertPanic(t, fmt.Sprintf("%s AsScopeAddressE", test.name), test.expectedError, func() {
+					id := test.baseID.AsScopeAddressE()
+					t.Errorf("%s AsScopeAddressE returned %s instead of panicking with message %s",
+						test.name, id, test.expectedError)
+				})
+			}
+		})
 	}
 }
 
@@ -783,27 +809,31 @@ func TestRecordAddressConverters(t *testing.T) {
 
 	for _, test := range tests {
 		// Test AsRecordAddress
-		actualID, err := test.baseID.AsRecordAddress(recordName)
-		if len(test.expectedError) == 0 {
-			assert.NoError(t, err, "%s AsRecordAddress err", test.name)
-			assert.Equal(t, test.expectedID, actualID, "%s AsRecordAddress value", test.name)
-		} else {
-			assert.EqualError(t, err, test.expectedError, "%s AsRecordAddress expected err", test.name)
-		}
+		t.Run(fmt.Sprintf("%s AsRecordAddress", test.name), func(subtest *testing.T) {
+			actualID, err := test.baseID.AsRecordAddress(recordName)
+			if len(test.expectedError) == 0 {
+				assert.NoError(t, err, "%s AsRecordAddress err", test.name)
+				assert.Equal(t, test.expectedID, actualID, "%s AsRecordAddress value", test.name)
+			} else {
+				assert.EqualError(t, err, test.expectedError, "%s AsRecordAddress expected err", test.name)
+			}
+		})
 
 		// Test AsRecordAddressE
-		if len(test.expectedError) == 0 {
-			assertDoesNotPanic(t, fmt.Sprintf("%s AsRecordAddressE", test.name), func() {
-				id := test.baseID.AsRecordAddressE(recordName)
-				assert.Equal(t, test.expectedID, id, "%s AsRecordAddressE value", test.name)
-			})
-		} else {
-			assertPanic(t, fmt.Sprintf("%s AsRecordAddressE", test.name), test.expectedError, func() {
-				id := test.baseID.AsRecordAddressE(recordName)
-				t.Errorf("%s AsRecordAddressE returned %s instead of panicking with message %s",
-					test.name, id, test.expectedError)
-			})
-		}
+		t.Run(fmt.Sprintf("%s AsRecordAddressE", test.name), func(subtest *testing.T) {
+			if len(test.expectedError) == 0 {
+				assertDoesNotPanic(t, fmt.Sprintf("%s AsRecordAddressE", test.name), func() {
+					id := test.baseID.AsRecordAddressE(recordName)
+					assert.Equal(t, test.expectedID, id, "%s AsRecordAddressE value", test.name)
+				})
+			} else {
+				assertPanic(t, fmt.Sprintf("%s AsRecordAddressE", test.name), test.expectedError, func() {
+					id := test.baseID.AsRecordAddressE(recordName)
+					t.Errorf("%s AsRecordAddressE returned %s instead of panicking with message %s",
+						test.name, id, test.expectedError)
+				})
+			}
+		})
 	}
 }
 
@@ -867,27 +897,31 @@ func TestRecordSpecAddressConverters(t *testing.T) {
 
 	for _, test := range tests {
 		// Test AsRecordSpecAddress
-		actualID, err := test.baseID.AsRecordSpecAddress(recordName)
-		if len(test.expectedError) == 0 {
-			assert.NoError(t, err, "%s AsRecordSpecAddress err", test.name)
-			assert.Equal(t, test.expectedID, actualID, "%s AsRecordSpecAddress value", test.name)
-		} else {
-			assert.EqualError(t, err, test.expectedError, "%s AsRecordSpecAddress expected err", test.name)
-		}
+		t.Run(fmt.Sprintf("%s AsRecordSpecAddress", test.name), func(subtest *testing.T) {
+			actualID, err := test.baseID.AsRecordSpecAddress(recordName)
+			if len(test.expectedError) == 0 {
+				assert.NoError(t, err, "%s AsRecordSpecAddress err", test.name)
+				assert.Equal(t, test.expectedID, actualID, "%s AsRecordSpecAddress value", test.name)
+			} else {
+				assert.EqualError(t, err, test.expectedError, "%s AsRecordSpecAddress expected err", test.name)
+			}
+		})
 
 		// Test AsRecordSpecAddressE
-		if len(test.expectedError) == 0 {
-			assertDoesNotPanic(t, fmt.Sprintf("%s AsRecordSpecAddressE", test.name), func() {
-				id := test.baseID.AsRecordSpecAddressE(recordName)
-				assert.Equal(t, test.expectedID, id, "%s AsRecordSpecAddressE value", test.name)
-			})
-		} else {
-			assertPanic(t, fmt.Sprintf("%s AsRecordSpecAddressE", test.name), test.expectedError, func() {
-				id := test.baseID.AsRecordSpecAddressE(recordName)
-				t.Errorf("%s AsRecordSpecAddressE returned %s instead of panicking with message %s",
-					test.name, id, test.expectedError)
-			})
-		}
+		t.Run(fmt.Sprintf("%s AsRecordSpecAddressE", test.name), func(subtest *testing.T) {
+			if len(test.expectedError) == 0 {
+				assertDoesNotPanic(t, fmt.Sprintf("%s AsRecordSpecAddressE", test.name), func() {
+					id := test.baseID.AsRecordSpecAddressE(recordName)
+					assert.Equal(t, test.expectedID, id, "%s AsRecordSpecAddressE value", test.name)
+				})
+			} else {
+				assertPanic(t, fmt.Sprintf("%s AsRecordSpecAddressE", test.name), test.expectedError, func() {
+					id := test.baseID.AsRecordSpecAddressE(recordName)
+					t.Errorf("%s AsRecordSpecAddressE returned %s instead of panicking with message %s",
+						test.name, id, test.expectedError)
+				})
+			}
+		})
 	}
 }
 
@@ -950,27 +984,31 @@ func TestContractSpecAddressConverters(t *testing.T) {
 
 	for _, test := range tests {
 		// Test AsContractSpecAddress
-		actualID, err := test.baseID.AsContractSpecAddress()
-		if len(test.expectedError) == 0 {
-			assert.NoError(t, err, "%s AsContractSpecAddress err", test.name)
-			assert.Equal(t, test.expectedID, actualID, "%s AsContractSpecAddress value", test.name)
-		} else {
-			assert.EqualError(t, err, test.expectedError, "%s AsContractSpecAddress expected err", test.name)
-		}
+		t.Run(fmt.Sprintf("%s AsContractSpecAddress", test.name), func(subtest *testing.T) {
+			actualID, err := test.baseID.AsContractSpecAddress()
+			if len(test.expectedError) == 0 {
+				assert.NoError(t, err, "%s AsContractSpecAddress err", test.name)
+				assert.Equal(t, test.expectedID, actualID, "%s AsContractSpecAddress value", test.name)
+			} else {
+				assert.EqualError(t, err, test.expectedError, "%s AsContractSpecAddress expected err", test.name)
+			}
+		})
 
 		// Test AsContractSpecAddressE
-		if len(test.expectedError) == 0 {
-			assertDoesNotPanic(t, fmt.Sprintf("%s AsContractSpecAddressE", test.name), func() {
-				id := test.baseID.AsContractSpecAddressE()
-				assert.Equal(t, test.expectedID, id, "%s AsContractSpecAddressE value", test.name)
-			})
-		} else {
-			assertPanic(t, fmt.Sprintf("%s AsContractSpecAddressE", test.name), test.expectedError, func() {
-				id := test.baseID.AsContractSpecAddressE()
-				t.Errorf("%s AsContractSpecAddressE returned %s instead of panicking with message %s",
-					test.name, id, test.expectedError)
-			})
-		}
+		t.Run(fmt.Sprintf("%s AsContractSpecAddressE", test.name), func(subtest *testing.T) {
+			if len(test.expectedError) == 0 {
+				assertDoesNotPanic(t, fmt.Sprintf("%s AsContractSpecAddressE", test.name), func() {
+					id := test.baseID.AsContractSpecAddressE()
+					assert.Equal(t, test.expectedID, id, "%s AsContractSpecAddressE value", test.name)
+				})
+			} else {
+				assertPanic(t, fmt.Sprintf("%s AsContractSpecAddressE", test.name), test.expectedError, func() {
+					id := test.baseID.AsContractSpecAddressE()
+					t.Errorf("%s AsContractSpecAddressE returned %s instead of panicking with message %s",
+						test.name, id, test.expectedError)
+				})
+			}
+		})
 	}
 }
 
@@ -1043,7 +1081,9 @@ func TestFormat(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		actual := fmt.Sprintf(test.format, test.id)
-		assert.Equal(t, test.expected, actual, test.name)
+		t.Run(test.name, func(subtest *testing.T) {
+			actual := fmt.Sprintf(test.format, test.id)
+			assert.Equal(t, test.expected, actual, test.name)
+		})
 	}
 }
