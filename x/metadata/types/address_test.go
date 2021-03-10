@@ -782,7 +782,7 @@ func TestRecordAddressConverters(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		// Test AsScopeAddress
+		// Test AsRecordAddress
 		actualID, err := test.baseID.AsRecordAddress(recordName)
 		if len(test.expectedError) == 0 {
 			assert.NoError(t, err, "%s AsRecordAddress err", test.name)
@@ -791,7 +791,7 @@ func TestRecordAddressConverters(t *testing.T) {
 			assert.EqualError(t, err, test.expectedError, "%s AsRecordAddress expected err", test.name)
 		}
 
-		// Test AsScopeAddressE
+		// Test AsRecordAddressE
 		if len(test.expectedError) == 0 {
 			assertDoesNotPanic(t, fmt.Sprintf("%s AsRecordAddressE", test.name), func() {
 				id := test.baseID.AsRecordAddressE(recordName)
@@ -807,8 +807,172 @@ func TestRecordAddressConverters(t *testing.T) {
 	}
 }
 
-// TODO: AsRecordSpecAddressE and AsRecordSpecAddress tests
-// TODO: AsContractSpecAddressE and AsContractSpecAddress tests
+func TestRecordSpecAddressConverters(t *testing.T) {
+	randomUUID := uuid.New()
+	recordName := "bad witch"
+	scopeID := ScopeMetadataAddress(randomUUID)
+	sessionID := SessionMetadataAddress(randomUUID, uuid.New())
+	recordID := RecordMetadataAddress(randomUUID, recordName)
+	scopeSpecID := ScopeSpecMetadataAddress(randomUUID)
+	contractSpecID := ContractSpecMetadataAddress(randomUUID)
+	recordSpecID := RecordSpecMetadataAddress(randomUUID, recordName)
+
+	tests := []struct {
+		name string
+		baseID MetadataAddress
+		expectedID MetadataAddress
+		expectedError string
+	}{
+		{
+			"scope id",
+			scopeID,
+			MetadataAddress{},
+			fmt.Sprintf("this metadata address (%s) does not contain a contract specification uuid",
+				scopeID),
+		},
+		{
+			"session id",
+			sessionID,
+			MetadataAddress{},
+			fmt.Sprintf("this metadata address (%s) does not contain a contract specification uuid",
+				sessionID),
+		},
+		{
+			"record id",
+			recordID,
+			MetadataAddress{},
+			fmt.Sprintf("this metadata address (%s) does not contain a contract specification uuid",
+				recordID),
+		},
+		{
+			"scope spec id",
+			scopeSpecID,
+			MetadataAddress{},
+			fmt.Sprintf("this metadata address (%s) does not contain a contract specification uuid",
+				scopeSpecID),
+		},
+		{
+			"contract spec id",
+			contractSpecID,
+			recordSpecID,
+			"",
+		},
+		{
+			"record spec id",
+			recordSpecID,
+			recordSpecID,
+			"",
+		},
+	}
+
+	for _, test := range tests {
+		// Test AsRecordSpecAddress
+		actualID, err := test.baseID.AsRecordSpecAddress(recordName)
+		if len(test.expectedError) == 0 {
+			assert.NoError(t, err, "%s AsRecordSpecAddress err", test.name)
+			assert.Equal(t, test.expectedID, actualID, "%s AsRecordSpecAddress value", test.name)
+		} else {
+			assert.EqualError(t, err, test.expectedError, "%s AsRecordSpecAddress expected err", test.name)
+		}
+
+		// Test AsRecordSpecAddressE
+		if len(test.expectedError) == 0 {
+			assertDoesNotPanic(t, fmt.Sprintf("%s AsRecordSpecAddressE", test.name), func() {
+				id := test.baseID.AsRecordSpecAddressE(recordName)
+				assert.Equal(t, test.expectedID, id, "%s AsRecordSpecAddressE value", test.name)
+			})
+		} else {
+			assertPanic(t, fmt.Sprintf("%s AsRecordSpecAddressE", test.name), test.expectedError, func() {
+				id := test.baseID.AsRecordSpecAddressE(recordName)
+				t.Errorf("%s AsRecordSpecAddressE returned %s instead of panicking with message %s",
+					test.name, id, test.expectedError)
+			})
+		}
+	}
+}
+
+func TestContractSpecAddressConverters(t *testing.T) {
+	randomUUID := uuid.New()
+	scopeID := ScopeMetadataAddress(randomUUID)
+	sessionID := SessionMetadataAddress(randomUUID, uuid.New())
+	recordID := RecordMetadataAddress(randomUUID, "pretty hate machine")
+	scopeSpecID := ScopeSpecMetadataAddress(randomUUID)
+	contractSpecID := ContractSpecMetadataAddress(randomUUID)
+	recordSpecID := RecordSpecMetadataAddress(randomUUID, "with teeth")
+
+	tests := []struct {
+		name string
+		baseID MetadataAddress
+		expectedID MetadataAddress
+		expectedError string
+	}{
+		{
+			"scope id",
+			scopeID,
+			MetadataAddress{},
+			fmt.Sprintf("this metadata address (%s) does not contain a contract specification uuid",
+				scopeID),
+		},
+		{
+			"session id",
+			sessionID,
+			MetadataAddress{},
+			fmt.Sprintf("this metadata address (%s) does not contain a contract specification uuid",
+				sessionID),
+		},
+		{
+			"record id",
+			recordID,
+			MetadataAddress{},
+			fmt.Sprintf("this metadata address (%s) does not contain a contract specification uuid",
+				recordID),
+		},
+		{
+			"scope spec id",
+			scopeSpecID,
+			MetadataAddress{},
+			fmt.Sprintf("this metadata address (%s) does not contain a contract specification uuid",
+				scopeSpecID),
+		},
+		{
+			"contract spec id",
+			contractSpecID,
+			contractSpecID,
+			"",
+		},
+		{
+			"record spec id",
+			recordSpecID,
+			contractSpecID,
+			"",
+		},
+	}
+
+	for _, test := range tests {
+		// Test AsContractSpecAddress
+		actualID, err := test.baseID.AsContractSpecAddress()
+		if len(test.expectedError) == 0 {
+			assert.NoError(t, err, "%s AsContractSpecAddress err", test.name)
+			assert.Equal(t, test.expectedID, actualID, "%s AsContractSpecAddress value", test.name)
+		} else {
+			assert.EqualError(t, err, test.expectedError, "%s AsContractSpecAddress expected err", test.name)
+		}
+
+		// Test AsContractSpecAddressE
+		if len(test.expectedError) == 0 {
+			assertDoesNotPanic(t, fmt.Sprintf("%s AsContractSpecAddressE", test.name), func() {
+				id := test.baseID.AsContractSpecAddressE()
+				assert.Equal(t, test.expectedID, id, "%s AsContractSpecAddressE value", test.name)
+			})
+		} else {
+			assertPanic(t, fmt.Sprintf("%s AsContractSpecAddressE", test.name), test.expectedError, func() {
+				id := test.baseID.AsContractSpecAddressE()
+				t.Errorf("%s AsContractSpecAddressE returned %s instead of panicking with message %s",
+					test.name, id, test.expectedError)
+			})
+		}
+	}
+}
 
 func TestFormat(t *testing.T) {
 	scopeID := ScopeMetadataAddress(scopeUUID)
