@@ -147,7 +147,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.scopeSpecID,
 		ownerPartyList(s.user1),
 		[]string{s.user1},
-		s.user1,
+		s.user2,
 	)
 
 	s.session = *metadatatypes.NewSession(
@@ -226,7 +226,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.scopeSpecID,
 		s.user1,
 		s.user1,
-		s.user1,
+		s.user2,
 	)
 	s.scopeAsText = fmt.Sprintf(`data_access:
 - %s
@@ -240,7 +240,7 @@ value_owner_address: %s`,
 		s.user1,
 		s.scopeID,
 		s.scopeSpecID,
-		s.user1,
+		s.user2,
 	)
 
 	s.sessionAsJson = fmt.Sprintf("{\"session_id\":\"%s\",\"specification_id\":\"%s\",\"parties\":[{\"address\":\"%s\",\"role\":\"PARTY_TYPE_OWNER\"}],\"name\":\"unit test session\",\"audit\":{\"created_date\":\"0001-01-01T00:00:00Z\",\"created_by\":\"%s\",\"updated_date\":\"0001-01-01T00:00:00Z\",\"updated_by\":\"\",\"version\":0,\"message\":\"unit testing\"}}",
@@ -1332,11 +1332,123 @@ func (s *IntegrationTestSuite) TestGetMetadataRecordSpecCmd() {
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
+func (s *IntegrationTestSuite) TestGetOwnershipCmd() {
+	cmd := cli.GetOwnershipCmd()
+
+	newUser := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()
+
+	ownedScopesAsJson := fmt.Sprintf("{\"scope_uuids\":[\"%s\"],\"pagination\":{\"next_key\":null,\"total\":\"1\"}}",
+		s.scopeUUID,
+	)
+	ownedScopesAsText := fmt.Sprintf(`pagination:
+  next_key: null
+  total: "1"
+scope_uuids:
+- %s`,
+		s.scopeUUID,
+	)
+
+	testCases := []queryCmdTestCase{
+		{
+			"scopes as json",
+			[]string{s.user1, s.asJson},
+			"",
+			ownedScopesAsJson,
+		},
+		{
+			"scopes as text",
+			[]string{s.user1, s.asText},
+			"",
+			ownedScopesAsText,
+		},
+		{
+			"scope through value owner",
+			[]string{s.user2},
+			"",
+			ownedScopesAsText,
+		},
+		{
+			"no result",
+			[]string{newUser},
+			fmt.Sprintf("no scopes are owned by address %s", newUser),
+			"",
+		},
+		{
+			"two args",
+			[]string{s.user1, s.user2},
+			"accepts 1 arg(s), received 2",
+			"",
+		},
+		{
+			"no args",
+			[]string{},
+			"accepts 1 arg(s), received 0",
+			"",
+		},
+	}
+
+	runQueryCmdTestCases(s, cmd, testCases)
+}
+
+func (s *IntegrationTestSuite) TestGetValueOwnershipCmd() {
+	cmd := cli.GetValueOwnershipCmd()
+
+	ownedScopesAsJson := fmt.Sprintf("{\"scope_uuids\":[\"%s\"],\"pagination\":{\"next_key\":null,\"total\":\"1\"}}",
+		s.scopeUUID,
+	)
+	ownedScopesAsText := fmt.Sprintf(`pagination:
+  next_key: null
+  total: "1"
+scope_uuids:
+- %s`,
+		s.scopeUUID,
+	)
+
+	testCases := []queryCmdTestCase{
+		{
+			"as json",
+			[]string{s.user2, s.asJson},
+			"",
+			ownedScopesAsJson,
+		},
+		{
+			"as text",
+			[]string{s.user2, s.asText},
+			"",
+			ownedScopesAsText,
+		},
+		{
+			"no result",
+			[]string{s.user1},
+			fmt.Sprintf("address %s is not the value owner on any scopes",
+				s.user1),
+			"",
+		},
+		{
+			"two args",
+			[]string{s.user1, s.user2},
+			"accepts 1 arg(s), received 2",
+			"",
+		},
+		{
+			"no args",
+			[]string{},
+			"accepts 1 arg(s), received 0",
+			"",
+		},
+	}
+
+	runQueryCmdTestCases(s, cmd, testCases)
+}
+
 // ---------- tx cmd tests ----------
 
 func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 
 	scopeUUID := uuid.New().String()
+	pubkey := secp256k1.GenPrivKey().PubKey()
+	userAddr := sdk.AccAddress(pubkey.Address())
+	user := userAddr.String()
 
 	testCases := []struct {
 		name         string
@@ -1352,9 +1464,9 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 			[]string{
 				scopeUUID,
 				uuid.New().String(),
-				s.user1,
-				s.user1,
-				s.user1,
+				user,
+				user,
+				user,
 				s.testnet.Validators[0].Address.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -1369,9 +1481,9 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 			[]string{
 				"not-a-uuid",
 				uuid.New().String(),
-				s.user1,
-				s.user1,
-				s.user1,
+				user,
+				user,
+				user,
 				s.testnet.Validators[0].Address.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -1386,9 +1498,9 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 			[]string{
 				uuid.New().String(),
 				"not-a-uuid",
-				s.user1,
-				s.user1,
-				s.user1,
+				user,
+				user,
+				user,
 				s.testnet.Validators[0].Address.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -1403,9 +1515,9 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 			[]string{
 				uuid.New().String(),
 				"not-a-uuid",
-				s.user1,
-				s.user1,
-				s.user1,
+				user,
+				user,
+				user,
 				s.testnet.Validators[0].Address.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -1421,8 +1533,8 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 				uuid.New().String(),
 				uuid.New().String(),
 				"incorrect,incorrect",
-				s.user1,
-				s.user1,
+				user,
+				user,
 				s.testnet.Validators[0].Address.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -1437,11 +1549,11 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 			[]string{
 				uuid.New().String(),
 				uuid.New().String(),
-				s.user1,
+				user,
 				"incorrect,incorrect",
-				s.user1,
+				user,
 				s.testnet.Validators[0].Address.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.user1),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, user),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -1454,11 +1566,11 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 			[]string{
 				uuid.New().String(),
 				uuid.New().String(),
-				s.user1,
-				s.user1,
+				user,
+				user,
 				"incorrect",
 				s.testnet.Validators[0].Address.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.user1),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, user),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
