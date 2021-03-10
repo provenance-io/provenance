@@ -432,15 +432,19 @@ func (k Keeper) RecordSpecification(c context.Context, req *types.RecordSpecific
 	return &types.RecordSpecificationResponse{RecordSpecification: &spec}, nil
 }
 
-func (k Keeper) OSParams(ctx context.Context, request *types.OSLocatorQueryParamsRequest) (*types.OSLocatorQueryParamsResponse, error) {
-	panic("implement me")
+func (k Keeper) OSParams(c context.Context, request *types.OSLocatorQueryParamsRequest) (*types.OSLocatorQueryParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	var params types.OSLocatorParams
+	k.paramSpace.GetParamSet(ctx, &params)
+
+	return &types.OSLocatorQueryParamsResponse{Params: params}, nil
 }
 
 func (k Keeper) OSLocator(ctx context.Context, request *types.OSLocatorRequest) (*types.OSLocatorResponse, error) {
 	panic("implement me")
 }
 
-func (k Keeper) OSLocatorByURI(ctx context.Context, request *types.OSLocatorByURIRequest) (*types.OSLocatorResponse, error) {
+func (k Keeper) OSLocatorByURI(ctx context.Context, request *types.OSLocatorByURIRequest) (*types.OSLocatorResponses, error) {
 	panic("implement me")
 }
 

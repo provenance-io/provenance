@@ -23,8 +23,8 @@ const (
 	TypeMsgDeleteContractSpecificationRequest = "delete_contract_specification_request"
 	TypeMsgAddRecordSpecificationRequest      = "add_record_specification_request"
 	TypeMsgDeleteRecordSpecificationRequest   = "delete_record_specification_request"
-	TypeMsgAddOSLocatorRequest   			  = "add_os_locator_request"
-	TypeMsgDeleteOSLocatorRequest   		  = "delete_os_locator_request"
+	TypeMsgAddOSLocatorRequest                = "add_os_locator_request"
+	TypeMsgDeleteOSLocatorRequest             = "delete_os_locator_request"
 )
 
 // Compile time interface checks.
@@ -630,7 +630,7 @@ func (msg MsgDeleteRecordSpecificationRequest) ValidateBasic() error {
 
 // --------------------------- AddOSLocatorRequest------------------------------------------
 
-// NewMsgDeleteScopeRequest creates a new msg instance
+// NewMsgAddOSLocatorRequest creates a new msg instance
 func NewMsgAddOSLocatorRequest(obj ObjectStoreLocator) *MsgAddOSLocatorRequest {
 	return &MsgAddOSLocatorRequest{
 		Locator: obj,
@@ -646,22 +646,10 @@ func (msg MsgAddOSLocatorRequest) Type() string {
 }
 
 func (msg MsgAddOSLocatorRequest) ValidateBasic() error {
-	if strings.TrimSpace(msg.Locator.Owner) == "" {
-		return fmt.Errorf("owner address cannot be empty")
+	err := ValidateOSLocatorObj(msg.Locator.Owner, msg.Locator.LocatorUri)
+	if err != nil {
+		return err
 	}
-
-	if _, err := sdk.AccAddressFromBech32(msg.Locator.Owner); err != nil {
-		fmt.Errorf("failed to add locator for a given owner address, invalid address: %s\n", msg.Locator.Owner)
-	}
-
-	if strings.TrimSpace(msg.Locator.LocatorUri) == "" {
-		return fmt.Errorf("uri cannot be empty")
-	}
-
-	if _, err := url.Parse(msg.Locator.LocatorUri); err != nil {
-		fmt.Errorf("failed to add locator for a given owner address, invalid uri: %s\n", msg.Locator.LocatorUri)
-	}
-
 	return nil
 
 }
@@ -678,21 +666,34 @@ func (msg MsgAddOSLocatorRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
+// ---- Delete OS locator ------
+func NewMsgDeleteOSLocatorRequest(obj ObjectStoreLocator) *MsgDeleteOSLocatorRequest {
+	return &MsgDeleteOSLocatorRequest{
+		Locator: obj,
+	}
+}
 func (msg MsgDeleteOSLocatorRequest) Route() string {
 	return ModuleName
 }
 
 func (msg MsgDeleteOSLocatorRequest) Type() string {
-	panic("implement me")
+	return TypeMsgDeleteOSLocatorRequest
 }
 
 func (msg MsgDeleteOSLocatorRequest) ValidateBasic() error {
-	panic("implement me")
+	err := ValidateOSLocatorObj(msg.Locator.Owner, msg.Locator.LocatorUri)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
+
 func (msg MsgDeleteOSLocatorRequest) GetSignBytes() []byte {
-	panic("implement me")
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
+
 // Signers returns the addrs of signers that must sign.
 // CONTRACT: All signatures must be present to be valid.
 // CONTRACT: Returns addrs in some deterministic order.
@@ -704,4 +705,28 @@ func (msg MsgDeleteOSLocatorRequest) GetSigners() []sdk.AccAddress {
 		panic(err)
 	}
 	return []sdk.AccAddress{addr}
+}
+
+/**
+	Validates OSLocatorObj
+ */
+func ValidateOSLocatorObj(ownerAddr string, uri string) error {
+	if strings.TrimSpace(ownerAddr) == "" {
+		return fmt.Errorf("owner address cannot be empty")
+	}
+
+	if _, err := sdk.AccAddressFromBech32(ownerAddr); err != nil {
+		fmt.Errorf("failed to add locator for a given owner address,"+
+			" invalid address: %s\n", ownerAddr)
+	}
+
+	if strings.TrimSpace(uri) == "" {
+		return fmt.Errorf("uri cannot be empty")
+	}
+
+	if _, err := url.Parse(uri); err != nil {
+		fmt.Errorf("failed to add locator for a given"+
+			" owner address, invalid uri: %s\n", uri)
+	}
+	return nil
 }
