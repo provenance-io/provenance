@@ -101,6 +101,9 @@ service Query {
     option (google.api.http).get = "/provenance/metadata/v1/locator/{uri}";
   }
 
+  rpc OSLocatorByScopeUUID(ScopeRequest) returns (OSLocatorScopeResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/locator/{scope_uuid}";
+  }
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -303,4 +306,8 @@ message OSLocatorResponses {
 
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message OSLocatorScopeResponse {
+  repeated ObjectStoreLocator   locator = 1[(gogoproto.nullable) = false];
 }

@@ -182,7 +182,7 @@ func GetOSLocatorByURICmd() *cobra.Command {
 		Short: "Query the OS locator uri for the given owner",
 		Args:  cobra.ExactArgs(1),
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query the OS locator records for the name provided:
+			fmt.Sprintf(`Query the OS locator records for the uri provided:
 Example:
 $ %s query metadata locator foocorp
 `,
@@ -201,6 +201,45 @@ $ %s query metadata locator foocorp
 			var response *types.OSLocatorResponses
 
 			response, err = queryClient.OSLocatorByURI(context.Background(), &types.OSLocatorByURIRequest{Uri : uri, Pagination: pageReq})
+
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(response)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetOSLocatorByURICmd returns the command handler for querying oslocator by uri.
+func GetOSLocatorByScopeUUID() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "locator [scope_uuid]",
+		Short: "Query the OS locator uri for the given scope owners",
+		Args:  cobra.ExactArgs(1),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query the OS locator records for the scope uuid provided:
+Example:
+$ %s query metadata locator foocorp
+`,
+				version.AppName,
+			)),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			scopeUUID := strings.ToLower(strings.TrimSpace(args[0]))
+
+			queryClient := types.NewQueryClient(clientCtx)
+			var response *types.OSLocatorScopeResponse
+
+			response, err = queryClient.OSLocatorByScopeUUID(context.Background(), &types.ScopeRequest{ScopeUuid: scopeUUID })
 
 			if err != nil {
 				return err

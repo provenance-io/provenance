@@ -92,6 +92,8 @@ type MetadataKeeperI interface {
 	OSLocatorExists(ctx sdk.Context, ownerAddr string) bool
 	//add OSLocator instance
 	SetOSLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, uri string) error
+
+	GetOSLocatorByScopeUUID(ctx sdk.Context, scopeId string) (*types.OSLocatorScopeResponse, error)
 }
 
 // Keeper is the concrete state-based API for the metadata module.
@@ -104,6 +106,7 @@ type Keeper struct {
 	// To check if accounts exist and set public keys.
 	authKeeper authkeeper.AccountKeeper
 }
+
 
 // NewKeeper creates new instances of the metadata Keeper.
 func NewKeeper(

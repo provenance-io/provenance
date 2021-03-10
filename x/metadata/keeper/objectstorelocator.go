@@ -3,7 +3,10 @@ package keeper
 import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/google/uuid"
 	"github.com/provenance-io/provenance/x/metadata/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // Handler is a name record handler function for use with IterateRecords.
@@ -89,4 +92,38 @@ func (k Keeper) IterateLocatorsForURI(ctx sdk.Context, handler ObjectStoreHandle
 		}
 	}
 	return nil
+}
+
+func (k Keeper) GetOSLocatorByScopeUUID(ctx sdk.Context, scopeId string) (*types.OSLocatorScopeResponse, error) {
+	id, err := uuid.Parse(scopeId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid scope uuid: %s", err.Error())
+	}
+	scopeAddress := types.ScopeMetadataAddress(id)
+
+	s, found := k.GetScope(ctx, scopeAddress)
+
+	if found == false {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid scope uuid: %s", err.Error())
+	}
+
+	signers := make([]sdk.AccAddress, 0, len(s.Owners))
+
+	for i, p := range s.Owners {
+		addr, err := sdk.AccAddressFromBech32(p.Address)
+		if err != nil {
+			panic(err)
+		}
+		signers[i] = addr
+	}
+
+	locators := make([]types.ObjectStoreLocator, 0, len(signers))
+	for i,addr := range signers {
+		loc, found:=k.GetOsLocatorRecord(ctx, addr)
+		if found == false {
+			continue
+		}
+		locators[i] = loc
+	}
+	return &types.OSLocatorScopeResponse{Locator: locators}, nil
 }

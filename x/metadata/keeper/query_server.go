@@ -477,4 +477,16 @@ func (k Keeper) OSLocatorByURI(ctx context.Context, request *types.OSLocatorByUR
 	return &types.OSLocatorResponses{Locator: records}, nil
 }
 
+func (k Keeper) OSLocatorByScopeUUID(ctx context.Context, request *types.ScopeRequest) (*types.OSLocatorScopeResponse, error) {
+	ctxSDK := sdk.UnwrapSDKContext(ctx)
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if request.ScopeUuid == "" {
+		return nil, status.Error(codes.InvalidArgument, "scope uuid cannot be empty")
+	}
+
+	return k.GetOSLocatorByScopeUUID(ctxSDK,request.ScopeUuid)
+}
 
