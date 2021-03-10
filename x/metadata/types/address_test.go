@@ -724,7 +724,89 @@ func TestScopeAddressConverters(t *testing.T) {
 	}
 }
 
-// TODO: AsRecordAddressE and AsRecordAddress tests
+func TestRecordAddressConverters(t *testing.T) {
+	randomUUID := uuid.New()
+	recordName := "the fragile"
+	scopeID := ScopeMetadataAddress(randomUUID)
+	sessionID := SessionMetadataAddress(randomUUID, uuid.New())
+	recordID := RecordMetadataAddress(randomUUID, recordName)
+	scopeSpecID := ScopeSpecMetadataAddress(randomUUID)
+	contractSpecID := ContractSpecMetadataAddress(randomUUID)
+	recordSpecID := RecordSpecMetadataAddress(randomUUID, recordName)
+
+	tests := []struct {
+		name string
+		baseID MetadataAddress
+		expectedID MetadataAddress
+		expectedError string
+	}{
+		{
+			"scope id",
+			scopeID,
+			recordID,
+			"",
+		},
+		{
+			"session id",
+			sessionID,
+			recordID,
+			"",
+		},
+		{
+			"record id",
+			recordID,
+			recordID,
+			"",
+		},
+		{
+			"scope spec id",
+			scopeSpecID,
+			MetadataAddress{},
+			fmt.Sprintf("this metadata address (%s) does not contain a scope uuid",
+				scopeSpecID),
+		},
+		{
+			"contract spec id",
+			contractSpecID,
+			MetadataAddress{},
+			fmt.Sprintf("this metadata address (%s) does not contain a scope uuid",
+				contractSpecID),
+		},
+		{
+			"record spec id",
+			recordSpecID,
+			MetadataAddress{},
+			fmt.Sprintf("this metadata address (%s) does not contain a scope uuid",
+				recordSpecID),
+		},
+	}
+
+	for _, test := range tests {
+		// Test AsScopeAddress
+		actualID, err := test.baseID.AsRecordAddress(recordName)
+		if len(test.expectedError) == 0 {
+			assert.NoError(t, err, "%s AsRecordAddress err", test.name)
+			assert.Equal(t, test.expectedID, actualID, "%s AsRecordAddress value", test.name)
+		} else {
+			assert.EqualError(t, err, test.expectedError, "%s AsRecordAddress expected err", test.name)
+		}
+
+		// Test AsScopeAddressE
+		if len(test.expectedError) == 0 {
+			assertDoesNotPanic(t, fmt.Sprintf("%s AsRecordAddressE", test.name), func() {
+				id := test.baseID.AsRecordAddressE(recordName)
+				assert.Equal(t, test.expectedID, id, "%s AsRecordAddressE value", test.name)
+			})
+		} else {
+			assertPanic(t, fmt.Sprintf("%s AsRecordAddressE", test.name), test.expectedError, func() {
+				id := test.baseID.AsRecordAddressE(recordName)
+				t.Errorf("%s AsRecordAddressE returned %s instead of panicking with message %s",
+					test.name, id, test.expectedError)
+			})
+		}
+	}
+}
+
 // TODO: AsRecordSpecAddressE and AsRecordSpecAddress tests
 // TODO: AsContractSpecAddressE and AsContractSpecAddress tests
 
