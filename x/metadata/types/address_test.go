@@ -235,7 +235,24 @@ func TestRecordMetadataAddress(t *testing.T) {
 	require.Equal(t, recordID, scopeID.AsRecordAddressE("test"))
 }
 
-// TODO: ScopeSpecMetadataAddress tests
+func TestScopeSpecMetadataAddress(t *testing.T) {
+	scopeSpecUUID := uuid.New()
+	scopeSpecID := ScopeSpecMetadataAddress(scopeSpecUUID)
+
+	require.True(t, scopeSpecID.IsScopeSpecificationAddress(), "IsScopeSpecificationAddress")
+	require.Equal(t, ScopeSpecificationKeyPrefix, scopeSpecID[0:1].Bytes(), "bytes[0]: the type bit")
+	require.Equal(t, scopeSpecID[1:17].Bytes(), scopeSpecUUID[:], "bytes[1:17]: the scope spec uuid bytes")
+
+	scopeSpecBech32 := scopeSpecID.String()
+	scopeSpecIDFromBeck32, errBeck32 := MetadataAddressFromBech32(scopeSpecBech32)
+	require.NoError(t, errBeck32, "error from MetadataAddressFromBech32")
+	require.Equal(t, scopeSpecID, scopeSpecIDFromBeck32, "value from scopeSpecIDFromBeck32")
+
+	scopeSpecUUIDFromScopeSpecId, errScopeSpecUUID := scopeSpecID.ScopeSpecUUID()
+	require.NoError(t, errScopeSpecUUID, "error from ScopeSpecUUID")
+	require.Equal(t, scopeSpecUUID, scopeSpecUUIDFromScopeSpecId, "value from ScopeSpecUUID")
+}
+
 // TODO: ContractSpecMetadataAddress tests
 
 func TestRecordSpecMetadataAddress(t *testing.T) {
