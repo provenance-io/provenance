@@ -351,7 +351,40 @@ func TestMetadataAddressTypeTestFuncs(t *testing.T) {
 	}
 }
 
-// TODO: Prefix tests
+func TestPrefix(t *testing.T) {
+	allPass := true
+	actualScopePrefix, actualScopePrefixErr := ScopeMetadataAddress(uuid.New()).Prefix()
+	allPass = assert.NoError(t, actualScopePrefixErr, "actualScopePrefixErr") && allPass
+	allPass = assert.Equal(t, PrefixScope, actualScopePrefix, "actualScopePrefix") && allPass
+
+	actualSessionPrefix, actualSessionPrefixErr := SessionMetadataAddress(uuid.New(), uuid.New()).Prefix()
+	allPass = assert.NoError(t, actualSessionPrefixErr, "actualSessionPrefixErr") && allPass
+	allPass = assert.Equal(t, PrefixSession, actualSessionPrefix, "actualSessionPrefix") && allPass
+
+	actualRecordPrefix, actualRecordPrefixErr := RecordMetadataAddress(uuid.New(), "ronald").Prefix()
+	allPass = assert.NoError(t, actualRecordPrefixErr, "actualRecordPrefixErr") && allPass
+	allPass = assert.Equal(t, PrefixRecord, actualRecordPrefix, "actualRecordPrefix") && allPass
+
+	actualScopeSpecPrefix, actualScopeSpecPrefixErr := ScopeSpecMetadataAddress(uuid.New()).Prefix()
+	allPass = assert.NoError(t, actualScopeSpecPrefixErr, "actualScopeSpecPrefixErr") && allPass
+	allPass = assert.Equal(t, PrefixScopeSpecification, actualScopeSpecPrefix, "actualScopeSpecPrefix") && allPass
+
+	actualContractSpecPrefix, actualContractSpecPrefixErr := ContractSpecMetadataAddress(uuid.New()).Prefix()
+	allPass = assert.NoError(t, actualContractSpecPrefixErr, "actualContractSpecPrefixErr") && allPass
+	allPass = assert.Equal(t, PrefixContractSpecification, actualContractSpecPrefix, "actualContractSpecPrefix") && allPass
+
+	actualRecordSpecPrefix, actualRecordSpecPrefixErr := RecordSpecMetadataAddress(uuid.New(), "george").Prefix()
+	allPass = assert.NoError(t, actualRecordSpecPrefixErr, "actualRecordSpecPrefixErr") && allPass
+	allPass = assert.Equal(t, PrefixRecordSpecification, actualRecordSpecPrefix, "actualRecordSpecPrefix") && allPass
+
+	_, badPrefixErr := MetadataAddress("don't do this").Prefix()
+	allPass = assert.Error(t, badPrefixErr, "badPrefixErr")
+
+	if !allPass {
+		t.Fail()
+	}
+}
+
 // TODO: PrimaryUUID tests
 // TODO: SecondaryUUID tets
 // TODO: NameHash tests
