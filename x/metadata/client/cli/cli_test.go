@@ -155,7 +155,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.sessionID,
 		s.contractSpecID,
 		ownerPartyList(s.user1),
-		metadatatypes.AuditFields{
+		&metadatatypes.AuditFields{
 			CreatedDate: time.Time{},
 			CreatedBy:   s.user1,
 			UpdatedDate: time.Time{},
