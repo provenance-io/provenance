@@ -616,4 +616,76 @@ func TestNameHash(t *testing.T) {
 // TODO: AsRecordSpecAddressE and AsRecordSpecAddress tests
 // TODO: AsContractSpecAddressE and AsContractSpecAddress tests
 
-// TODO: Format tests
+func TestFormat(t *testing.T) {
+	scopeID := ScopeMetadataAddress(scopeUUID)
+	emptyID := MetadataAddress{}
+
+	tests := []struct {
+		name string
+		id MetadataAddress
+		format string
+		expected string
+	}{
+		{
+			"format using %s",
+			scopeID,
+			"%s",
+			scopeBech32,
+		},
+		{
+			// %p is for the address (in memory). Can't hard-code it.
+			"format using %p",
+			scopeID,
+			"%p",
+			fmt.Sprintf("%p", scopeID),
+		},
+		{
+			"format using %d - should use default %X",
+			scopeID,
+			"%d",
+			"008D80B25AC0894446956E5D08CFE3E1A5",
+		},
+		{
+			"format using %v - should use default %X",
+			scopeID,
+			"%v",
+			"008D80B25AC0894446956E5D08CFE3E1A5",
+		},
+		{
+			"format empty using %s",
+			emptyID,
+			"%s",
+			"",
+		},
+		{
+			// %p is for the address (in memory). Can't hard-code it.
+			"format using %p",
+			emptyID,
+			"%p",
+			fmt.Sprintf("%p", emptyID),
+		},
+		{
+			"format empty using %d - should use default %X",
+			emptyID,
+			"%d",
+			"",
+		},
+		{
+			"format empty using %v - should use default %X",
+			emptyID,
+			"%v",
+			"",
+		},
+		{
+			"format %s is equal to .String() which fails on bad addresses",
+			MetadataAddress("do not create MetadataAddresses this way"),
+			"%s",
+			"%!s(PANIC=Format method: invalid metadata address type: 100)",
+		},
+	}
+
+	for _, test := range tests {
+		actual := fmt.Sprintf(test.format, test.id)
+		assert.Equal(t, test.expected, actual, test.name)
+	}
+}
