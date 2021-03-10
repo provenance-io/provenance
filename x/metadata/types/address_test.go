@@ -191,9 +191,9 @@ func TestSessionMetadataAddress(t *testing.T) {
 	require.NoError(t, sessionAddress.Validate(), "expect a valid MetadataAddress for a session")
 	require.True(t, sessionAddress.IsSessionAddress())
 
-	scopeUUID, err := sessionAddress.ScopeUUID()
+	scopeUUIDFromSessionID, err := sessionAddress.ScopeUUID()
 	require.NoError(t, err, "there should be no errors getting a scope uuid from the session address")
-	require.Equal(t, "8d80b25a-c089-4446-956e-5d08cfe3e1a5", scopeUUID.String())
+	require.Equal(t, "8d80b25a-c089-4446-956e-5d08cfe3e1a5", scopeUUIDFromSessionID.String())
 
 	sessionUUID, err := sessionAddress.SessionUUID()
 	require.NoError(t, err, "there should be no error getting the session uuid from the session address")
@@ -336,58 +336,280 @@ func TestMetadataAddressTypeTestFuncs(t *testing.T) {
 		},
 	}
 
-	allPass := true
 	for _, test := range tests {
-		allPass = assert.Equal(t, test.expected[0], test.id.IsScopeAddress(), fmt.Sprintf("%s: IsScopeAddress", test.name)) && allPass
-		allPass = assert.Equal(t, test.expected[1], test.id.IsSessionAddress(), fmt.Sprintf("%s: IsSessionAddress", test.name)) && allPass
-		allPass = assert.Equal(t, test.expected[2], test.id.IsRecordAddress(), fmt.Sprintf("%s: IsRecordAddress", test.name)) && allPass
-		allPass = assert.Equal(t, test.expected[3], test.id.IsScopeSpecificationAddress(), fmt.Sprintf("%s: IsScopeSpecificationAddress", test.name)) && allPass
-		allPass = assert.Equal(t, test.expected[4], test.id.IsContractSpecificationAddress(), fmt.Sprintf("%s: IsContractSpecificationAddress", test.name)) && allPass
-		allPass = assert.Equal(t, test.expected[5], test.id.IsRecordSpecificationAddress(), fmt.Sprintf("%s: IsRecordSpecificationAddress", test.name)) && allPass
-	}
-
-	if !allPass {
-		t.Fail()
+		assert.Equal(t, test.expected[0], test.id.IsScopeAddress(), fmt.Sprintf("%s: IsScopeAddress", test.name))
+		assert.Equal(t, test.expected[1], test.id.IsSessionAddress(), fmt.Sprintf("%s: IsSessionAddress", test.name))
+		assert.Equal(t, test.expected[2], test.id.IsRecordAddress(), fmt.Sprintf("%s: IsRecordAddress", test.name))
+		assert.Equal(t, test.expected[3], test.id.IsScopeSpecificationAddress(), fmt.Sprintf("%s: IsScopeSpecificationAddress", test.name))
+		assert.Equal(t, test.expected[4], test.id.IsContractSpecificationAddress(), fmt.Sprintf("%s: IsContractSpecificationAddress", test.name))
+		assert.Equal(t, test.expected[5], test.id.IsRecordSpecificationAddress(), fmt.Sprintf("%s: IsRecordSpecificationAddress", test.name))
 	}
 }
 
 func TestPrefix(t *testing.T) {
-	allPass := true
 	actualScopePrefix, actualScopePrefixErr := ScopeMetadataAddress(uuid.New()).Prefix()
-	allPass = assert.NoError(t, actualScopePrefixErr, "actualScopePrefixErr") && allPass
-	allPass = assert.Equal(t, PrefixScope, actualScopePrefix, "actualScopePrefix") && allPass
+	assert.NoError(t, actualScopePrefixErr, "actualScopePrefixErr")
+	assert.Equal(t, PrefixScope, actualScopePrefix, "actualScopePrefix")
 
 	actualSessionPrefix, actualSessionPrefixErr := SessionMetadataAddress(uuid.New(), uuid.New()).Prefix()
-	allPass = assert.NoError(t, actualSessionPrefixErr, "actualSessionPrefixErr") && allPass
-	allPass = assert.Equal(t, PrefixSession, actualSessionPrefix, "actualSessionPrefix") && allPass
+	assert.NoError(t, actualSessionPrefixErr, "actualSessionPrefixErr")
+	assert.Equal(t, PrefixSession, actualSessionPrefix, "actualSessionPrefix")
 
 	actualRecordPrefix, actualRecordPrefixErr := RecordMetadataAddress(uuid.New(), "ronald").Prefix()
-	allPass = assert.NoError(t, actualRecordPrefixErr, "actualRecordPrefixErr") && allPass
-	allPass = assert.Equal(t, PrefixRecord, actualRecordPrefix, "actualRecordPrefix") && allPass
+	assert.NoError(t, actualRecordPrefixErr, "actualRecordPrefixErr")
+	assert.Equal(t, PrefixRecord, actualRecordPrefix, "actualRecordPrefix")
 
 	actualScopeSpecPrefix, actualScopeSpecPrefixErr := ScopeSpecMetadataAddress(uuid.New()).Prefix()
-	allPass = assert.NoError(t, actualScopeSpecPrefixErr, "actualScopeSpecPrefixErr") && allPass
-	allPass = assert.Equal(t, PrefixScopeSpecification, actualScopeSpecPrefix, "actualScopeSpecPrefix") && allPass
+	assert.NoError(t, actualScopeSpecPrefixErr, "actualScopeSpecPrefixErr")
+	assert.Equal(t, PrefixScopeSpecification, actualScopeSpecPrefix, "actualScopeSpecPrefix")
 
 	actualContractSpecPrefix, actualContractSpecPrefixErr := ContractSpecMetadataAddress(uuid.New()).Prefix()
-	allPass = assert.NoError(t, actualContractSpecPrefixErr, "actualContractSpecPrefixErr") && allPass
-	allPass = assert.Equal(t, PrefixContractSpecification, actualContractSpecPrefix, "actualContractSpecPrefix") && allPass
+	assert.NoError(t, actualContractSpecPrefixErr, "actualContractSpecPrefixErr")
+	assert.Equal(t, PrefixContractSpecification, actualContractSpecPrefix, "actualContractSpecPrefix")
 
 	actualRecordSpecPrefix, actualRecordSpecPrefixErr := RecordSpecMetadataAddress(uuid.New(), "george").Prefix()
-	allPass = assert.NoError(t, actualRecordSpecPrefixErr, "actualRecordSpecPrefixErr") && allPass
-	allPass = assert.Equal(t, PrefixRecordSpecification, actualRecordSpecPrefix, "actualRecordSpecPrefix") && allPass
+	assert.NoError(t, actualRecordSpecPrefixErr, "actualRecordSpecPrefixErr")
+	assert.Equal(t, PrefixRecordSpecification, actualRecordSpecPrefix, "actualRecordSpecPrefix")
 
 	_, badPrefixErr := MetadataAddress("don't do this").Prefix()
-	allPass = assert.Error(t, badPrefixErr, "badPrefixErr")
+	assert.Error(t, badPrefixErr, "badPrefixErr")
+}
 
-	if !allPass {
-		t.Fail()
+func TestPrimaryUUID(t *testing.T) {
+	scopePrimaryUUID := uuid.New()
+	sessionPrimaryUUID := uuid.New()
+	recordPrimaryUUID := uuid.New()
+	scopeSpecPrimaryUUID := uuid.New()
+	contractSpecPrimaryUUID := uuid.New()
+	recordSpecPrimaryUUID := uuid.New()
+
+	tests := []struct {
+		name string
+		id MetadataAddress
+		expectedValue uuid.UUID
+		expectedError string
+	} {
+		{
+			"scope",
+			ScopeMetadataAddress(scopePrimaryUUID),
+			scopePrimaryUUID,
+			"",
+		},
+		{
+			"session",
+			SessionMetadataAddress(sessionPrimaryUUID, uuid.New()),
+			sessionPrimaryUUID,
+			"",
+		},
+		{
+			"record",
+			RecordMetadataAddress(recordPrimaryUUID, "presence"),
+			recordPrimaryUUID,
+			"",
+		},
+		{
+			"scope spec",
+			ScopeSpecMetadataAddress(scopeSpecPrimaryUUID),
+			scopeSpecPrimaryUUID,
+			"",
+		},
+		{
+			"contract spec",
+			ContractSpecMetadataAddress(contractSpecPrimaryUUID),
+			contractSpecPrimaryUUID,
+			"",
+		},
+		{
+			"record spec",
+			RecordSpecMetadataAddress(recordSpecPrimaryUUID, "profiled"),
+			recordSpecPrimaryUUID,
+			"",
+		},
+		{
+			"empty",
+			MetadataAddress{},
+			uuid.UUID{},
+			"address empty",
+		},
+		{
+			"too short",
+			MetadataAddress(ScopeMetadataAddress(scopePrimaryUUID).Bytes()[0:16]),
+			uuid.UUID{},
+			"incorrect address length (must be at least 17, actual: 16)",
+		},
+		{
+			"unknown type",
+			MetadataAddress("This is not how this works."),
+			uuid.UUID{},
+			"invalid address type out of valid range (got: 84)",
+		},
+	}
+
+	for _, test := range tests {
+		primaryUUID, err := test.id.PrimaryUUID()
+		if len(test.expectedError) == 0 {
+			assert.NoError(t, err, fmt.Sprintf("%s: err", test.name))
+			assert.Equal(t, test.expectedValue, primaryUUID, fmt.Sprintf("%s: value", test.name))
+		} else {
+			assert.EqualError(t, err, test.expectedError, fmt.Sprintf("%s: err", test.name))
+		}
 	}
 }
 
-// TODO: PrimaryUUID tests
-// TODO: SecondaryUUID tets
-// TODO: NameHash tests
+func TestSecondaryUUID(t *testing.T) {
+	sessionSecondaryUUID := uuid.New()
+
+	tests := []struct {
+		name string
+		id MetadataAddress
+		expectedValue uuid.UUID
+		expectedError string
+	} {
+		{
+			"scope",
+			ScopeMetadataAddress(uuid.New()),
+			uuid.UUID{},
+			"invalid address type out of valid range (got: 0)",
+		},
+		{
+			"session",
+			SessionMetadataAddress(uuid.New(), sessionSecondaryUUID),
+			sessionSecondaryUUID,
+			"",
+		},
+		{
+			"record",
+			RecordMetadataAddress(uuid.New(), "presence"),
+			uuid.UUID{},
+			"invalid address type out of valid range (got: 2)",
+		},
+		{
+			"scope spec",
+			ScopeSpecMetadataAddress(uuid.New()),
+			uuid.UUID{},
+			"invalid address type out of valid range (got: 4)",
+		},
+		{
+			"contract spec",
+			ContractSpecMetadataAddress(uuid.New()),
+			uuid.UUID{},
+			"invalid address type out of valid range (got: 3)",
+		},
+		{
+			"record spec",
+			RecordSpecMetadataAddress(uuid.New(), "profiled"),
+			uuid.UUID{},
+			"invalid address type out of valid range (got: 5)",
+		},
+		{
+			"empty",
+			MetadataAddress{},
+			uuid.UUID{},
+			"address empty",
+		},
+		{
+			"too short",
+			MetadataAddress(SessionMetadataAddress(uuid.New(), sessionSecondaryUUID).Bytes()[0:32]),
+			uuid.UUID{},
+			"incorrect address length (must be at least 33, actual: 32)",
+		},
+		{
+			"unknown type",
+			MetadataAddress("This is not how this works."),
+			uuid.UUID{},
+			"invalid address type out of valid range (got: 84)",
+		},
+	}
+
+	for _, test := range tests {
+		secondaryUUID, err := test.id.SecondaryUUID()
+		if len(test.expectedError) == 0 {
+			assert.NoError(t, err, fmt.Sprintf("%s: err", test.name))
+			assert.Equal(t, test.expectedValue, secondaryUUID, fmt.Sprintf("%s: value", test.name))
+		} else {
+			assert.EqualError(t, err, test.expectedError, fmt.Sprintf("%s: err", test.name))
+		}
+	}
+}
+
+func TestNameHash(t *testing.T) {
+	recordName := "mothership"
+	recordNameHash := sha256.Sum256([]byte(recordName))
+	recordSpecName := "houses of the holy"
+	recordSpecNameHash := sha256.Sum256([]byte(recordSpecName))
+
+	tests := []struct {
+		name string
+		id MetadataAddress
+		expectedValue []byte
+		expectedError string
+	} {
+		{
+			"scope",
+			ScopeMetadataAddress(uuid.New()),
+			[]byte{},
+			"invalid address type out of valid range (got: 0)",
+		},
+		{
+			"session",
+			SessionMetadataAddress(uuid.New(), uuid.New()),
+			[]byte{},
+			"invalid address type out of valid range (got: 1)",
+		},
+		{
+			"record",
+			RecordMetadataAddress(uuid.New(), recordName),
+			recordNameHash[0:16],
+			"",
+		},
+		{
+			"scope spec",
+			ScopeSpecMetadataAddress(uuid.New()),
+			[]byte{},
+			"invalid address type out of valid range (got: 4)",
+		},
+		{
+			"contract spec",
+			ContractSpecMetadataAddress(uuid.New()),
+			[]byte{},
+			"invalid address type out of valid range (got: 3)",
+		},
+		{
+			"record spec",
+			RecordSpecMetadataAddress(uuid.New(), recordSpecName),
+			recordSpecNameHash[0:16],
+			"",
+		},
+		{
+			"empty",
+			MetadataAddress{},
+			[]byte{},
+			"address empty",
+		},
+		{
+			"too short",
+			MetadataAddress(RecordSpecMetadataAddress(uuid.New(), recordSpecName).Bytes()[0:32]),
+			[]byte{},
+			"incorrect address length (must be at least 33, actual: 32)",
+		},
+		{
+			"unknown type",
+			MetadataAddress("This is not how this works."),
+			[]byte{},
+			"invalid address type out of valid range (got: 84)",
+		},
+	}
+
+	for _, test := range tests {
+		nameHash, err := test.id.NameHash()
+		if len(test.expectedError) == 0 {
+			assert.NoError(t, err, fmt.Sprintf("%s: err", test.name))
+			assert.Equal(t, test.expectedValue, nameHash, fmt.Sprintf("%s: value", test.name))
+		} else {
+			assert.EqualError(t, err, test.expectedError, fmt.Sprintf("%s: err", test.name))
+		}
+	}
+}
 
 // TODO: AsScopeAddressE and AsScopeAddress tests
 // TODO: AsRecordAddressE and AsRecordAddress tests
