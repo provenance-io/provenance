@@ -86,17 +86,17 @@ service Query {
   }
 
   // ---- OS locator methods -----
-  // Params queries all parameters.
-  rpc OSParams(OSLocatorQueryParamsRequest) returns (OSLocatorQueryParamsResponse) {
+  // Params queries all parameters for os locator sub module.
+  rpc OSLocatorParams(OSLocatorQueryParamsRequest) returns (OSLocatorQueryParamsResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/locator/params";
   }
 
-  // Scope returns a specific scope by id
+  // for querying oslocator by address.
   rpc OSLocator(OSLocatorRequest) returns (OSLocatorResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/locator/{owner}";
   }
 
-  // Scope returns a specific scope by id
+  // for querying oslocator by uri.
   rpc OSLocatorByURI(OSLocatorByURIRequest) returns (OSLocatorResponses) {
     option (google.api.http).get = "/provenance/metadata/v1/locator/{uri}";
   }
@@ -274,6 +274,8 @@ message OSLocatorRequest {
 
 message OSLocatorByURIRequest {
   string uri = 1;
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 // OSLocatorResponse is the response to a os locator request.
@@ -297,5 +299,8 @@ message OSLocatorParams {
 }
 
 message OSLocatorResponses {
-  repeated ObjectStoreLocator   locator = 1;
+  repeated ObjectStoreLocator   locator = 1[(gogoproto.nullable) = false];
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

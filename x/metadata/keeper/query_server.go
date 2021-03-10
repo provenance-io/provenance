@@ -434,7 +434,7 @@ func (k Keeper) RecordSpecification(c context.Context, req *types.RecordSpecific
 	return &types.RecordSpecificationResponse{RecordSpecification: &spec}, nil
 }
 
-func (k Keeper) OSParams(c context.Context, request *types.OSLocatorQueryParamsRequest) (*types.OSLocatorQueryParamsResponse, error) {
+func (k Keeper) OSLocatorParams(c context.Context, request *types.OSLocatorQueryParamsRequest) (*types.OSLocatorQueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	var params types.OSLocatorParams
 	k.paramSpace.GetParamSet(ctx, &params)
@@ -460,11 +460,11 @@ func (k Keeper) OSLocator(c context.Context, request *types.OSLocatorRequest) (*
 func (k Keeper) OSLocatorByURI(ctx context.Context, request *types.OSLocatorByURIRequest) (*types.OSLocatorResponses, error) {
 	ctxSDK := sdk.UnwrapSDKContext(ctx)
 	// Return value data structure.
-	var records []*types.ObjectStoreLocator
+	var records []types.ObjectStoreLocator
 	// Handler that adds records if account address matches.
 	appendToRecords := func(record types.ObjectStoreLocator) error {
 		if record.LocatorUri == request.Uri {
-			records = append(records, &record)
+			records = append(records, record)
 		}
 		return nil
 	}

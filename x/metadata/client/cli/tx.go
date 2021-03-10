@@ -30,6 +30,7 @@ func NewTxCmd() *cobra.Command {
 
 	txCmd.AddCommand(
 		AddMetadataScopeCmd(),
+		AddOsLocatorCmd(),
 	)
 
 	return txCmd
