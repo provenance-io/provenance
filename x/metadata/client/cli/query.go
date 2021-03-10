@@ -43,6 +43,8 @@ func GetQueryCmd() *cobra.Command {
 		GetMetadataScopeSpecCmd(),
 		GetMetadataContractSpecCmd(),
 		GetMetadataRecordSpecCmd(),
+		GetOwnershipCmd(),
+		GetValueOwnershipCmd(),
 	)
 	return queryCmd
 }
@@ -423,6 +425,55 @@ func GetMetadataRecordSpecCmd() *cobra.Command {
 	return cmd
 }
 
+// GetOwnershipCmd returns the command handler for metadata entry querying by owner address
+func GetOwnershipCmd() *cobra.Command {
+	// Note: Once we get queries for ownership of things other than scopes,
+	// we can add a 2nd argument to this command to restrict the search to one specific type.
+	// E.g. Use: "owner {address} [scope|session|record|scopespec|contractspec|recordspec]"
+	cmd := &cobra.Command{
+		Use:     "owner {address}",
+		Aliases: []string{"o", "ownership"},
+		Short:   "Query the current metadata for entries owned by an address",
+		Long: fmt.Sprintf(`%[1]s owner {address} - gets a list of scope uuids owned by the provided address.`, cmdStart),
+		Args: cobra.ExactArgs(1),
+		Example: fmt.Sprintf(`%[1]s owner cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck`, cmdStart),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			address := strings.TrimSpace(args[0])
+			if len(address) == 0 {
+				return fmt.Errorf("empty address")
+			}
+			return scopesOwnedByAddress(cmd, address)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetValueOwnershipCmd returns the command handler for metadata scope querying by owner address
+func GetValueOwnershipCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "valueowner {address}",
+		Aliases: []string{"vo", "valueownership"},
+		Short:   "Query the current metadata for scopes with the provided address as the value owner",
+		Long: fmt.Sprintf(`%[1]s valueowner {address} - gets a list of scope uuids value-owned by the provided address.`, cmdStart),
+		Args: cobra.ExactArgs(1),
+		Example: fmt.Sprintf(`%[1]s valueowner cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck`, cmdStart),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			address := strings.TrimSpace(args[0])
+			if len(address) == 0 {
+				return fmt.Errorf("empty address")
+			}
+			return scopesValueOwnedByAddress(cmd, address)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
 // scopeByUUID outputs a scope looked up by scope UUID.
 func scopeByUUID(cmd *cobra.Command, scopeUUID string) error {
 	clientCtx, err := client.GetClientQueryContext(cmd)
@@ -775,6 +826,48 @@ func recordSpecsByContractSpecUUID(cmd *cobra.Command, contractSpecUUID string) 
 		}
 	}
 	return printProtoList(clientCtx, protoList)
+}
+
+// scopesOwnedByAddress outputs the scope uuids owned by the provided address.
+func scopesOwnedByAddress(cmd *cobra.Command, address string) error {
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return err
+	}
+	queryClient := types.NewQueryClient(clientCtx)
+	res, err := queryClient.Ownership(
+		context.Background(),
+		&types.OwnershipRequest{Address: address},
+	)
+	if err != nil {
+		return err
+	}
+	if res == nil || len(res.ScopeUuids) == 0 {
+		return fmt.Errorf("no scopes are owned by address %s", address)
+	}
+
+	return clientCtx.PrintProto(res)
+}
+
+// scopesValueOwnedByAddress outputs the scope uuids that the provided address is the value owner of.
+func scopesValueOwnedByAddress(cmd *cobra.Command, address string) error {
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return err
+	}
+	queryClient := types.NewQueryClient(clientCtx)
+	res, err := queryClient.ValueOwnership(
+		context.Background(),
+		&types.ValueOwnershipRequest{Address: address},
+	)
+	if err != nil {
+		return err
+	}
+	if res == nil || len(res.ScopeUuids) == 0 {
+		return fmt.Errorf("address %s is not the value owner on any scopes", address)
+	}
+
+	return clientCtx.PrintProto(res)
 }
 
 // trimSpaceAndJoin trims leading and trailing whitespace from each arg,
