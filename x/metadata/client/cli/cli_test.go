@@ -815,20 +815,117 @@ func (s *IntegrationTestSuite) TestGetMetadataFullScopeCmd() {
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
-// TODO: GetMetadataSessionCmd
 func (s *IntegrationTestSuite) TestGetMetadataSessionCmd() {
 	cmd := cli.GetMetadataSessionCmd()
 
+	sessionListAsJson := fmt.Sprintf("[%s]", s.sessionAsJson)
+	sessionListAsText := yamlListEntry(s.sessionAsText)
+
 	testCases := []queryCmdTestCase{
-		// TODO: session id
-		// TODO: scope id
-		// TODO: scope uuid
-		// TODO: scope uuid, session uuid
-		// TODO: bad prefix
-		// TODO: bad arg 1
-		// TODO: uuid, bad arg 2
-		// TODO: 3 args
-		// TODO: no args
+		{
+			"session from session id as json",
+			[]string{s.sessionID.String(), s.asJson},
+			"",
+			s.sessionAsJson,
+		},
+		{
+			"session from session id as text",
+			[]string{s.sessionID.String(), s.asText},
+			"",
+			s.sessionAsText,
+		},
+		{
+			"session id does not exist",
+			[]string{"session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr"},
+			"rpc error: code = NotFound desc = session id session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr not found: key not found",
+			"",
+		},
+		{
+			"sessions from scope id as json",
+			[]string{s.scopeID.String(), s.asJson},
+			"",
+			sessionListAsJson,
+		},
+		{
+			"sessions from scope id as text",
+			[]string{s.scopeID.String(), s.asText},
+			"",
+			sessionListAsText,
+		},
+		{
+			"scope id does not exist",
+			[]string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
+			"rpc error: code = NotFound desc = scope uuid 91978ba2-5f35-459a-86a7-feca1b0512e0 not found: key not found",
+			"",
+		},
+		{
+			"sessions from scope uuid as json",
+			[]string{s.scopeUUID.String(), s.asJson},
+			"",
+			sessionListAsJson,
+		},
+		{
+			"sessions from scope uuid as text",
+			[]string{s.scopeUUID.String(), s.asText},
+			"",
+			sessionListAsText,
+		},
+		{
+			"scope uuid does not exist",
+			[]string{"91978ba2-5f35-459a-86a7-feca1b0512e0"},
+			"rpc error: code = NotFound desc = scope uuid 91978ba2-5f35-459a-86a7-feca1b0512e0 not found: key not found",
+			"",
+		},
+		{
+			"session from scope uuid and session uuid as json",
+			[]string{s.scopeUUID.String(), s.sessionUUID.String(), s.asJson},
+			"",
+			s.sessionAsJson,
+		},
+		{
+			"session from scope uuid ad session uuid as text",
+			[]string{s.scopeUUID.String(), s.sessionUUID.String(), s.asText},
+			"",
+			s.sessionAsText,
+		},
+		{
+			"scope uuid exists but session uuid does not exist",
+			[]string{s.scopeUUID.String(), "5803f8bc-6067-4eb5-951f-2121671c2ec0"},
+			fmt.Sprintf("rpc error: code = NotFound desc = session id %s not found: key not found",
+				metadatatypes.SessionMetadataAddress(s.scopeUUID, uuid.MustParse("5803f8bc-6067-4eb5-951f-2121671c2ec0")),
+			),
+			"",
+		},
+		{
+			"bad prefix",
+			[]string{"scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"},
+			"unexpected metadata address prefix on scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m",
+			"",
+		},
+		{
+			"bad arg 1",
+			[]string{"bad"},
+			"argument bad is neither a metadata address (decoding bech32 failed: invalid bech32 string length 3) nor uuid (invalid UUID length: 3)",
+			"",
+		},
+		{
+			"good arg 1, bad arg 2",
+			[]string{s.scopeUUID.String(), "still-bad"},
+			"invalid UUID length: 9",
+			"",
+		},
+		{
+			"3 args",
+			[]string{s.scopeUUID.String(), s.sessionID.String(), s.recordName},
+			"accepts between 1 and 2 arg(s), received 3",
+			"",
+		},
+		{
+			"no args",
+			[]string{},
+			"accepts between 1 and 2 arg(s), received 0",
+			"",
+		},
 	}
 
 	runQueryCmdTestCases(s, cmd, testCases)
