@@ -29,6 +29,14 @@ func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 			return queryScopeSpecification(ctx, path, k, legacyQuerierCdc)
 		// TODO: add contract spec stuff
 		// TODO: add record spec stuff
+		case types.QueryOSParams:
+			return queryOSLocatorParams(ctx, path, req, k, legacyQuerierCdc)
+		case types.QueryOSGet:
+			return queryOSGet(ctx, path, req, k, legacyQuerierCdc)
+		case types.QueryOSGetByURI:
+			return queryOSGetByURI(ctx, path, req, k, legacyQuerierCdc)
+		case types.QueryOSGetByScope:
+			return queryOSGetByScope(ctx, path, req, k, legacyQuerierCdc)
 		default:
 			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown query endpoint")
 		}
@@ -130,4 +138,66 @@ func queryScopeSpecification(ctx sdk.Context, path []string, k Keeper, legacyQue
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
 	return res, nil
+}
+
+func queryOSLocatorParams(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+	params := keeper.GetOSLocatorParams(ctx)
+
+	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, params)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+	}
+
+	return res, nil
+}
+
+func queryOSGet(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+	accAddr, err := sdk.AccAddressFromBech32(path[1])
+	if err != nil {
+		return nil, types.ErrInvalidAddress
+	}
+	msgs, _ := keeper.GetOsLocatorRecord(ctx, accAddr)
+
+	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, msgs)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+	}
+
+	return bz, nil
+}
+
+func queryOSGetByURI(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+	// Return value data structure.
+	//TODO make this common code
+	var records []types.ObjectStoreLocator
+	appendToRecords := func(record types.ObjectStoreLocator) error {
+		if record.LocatorUri == path[1] {
+			records = append(records, record)
+		}
+		return nil
+	}
+	if err := keeper.IterateLocatorsForURI(ctx, appendToRecords); err != nil {
+		return nil, err
+	}
+
+	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, records)
+
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+	}
+
+	return bz, nil
+}
+
+func queryOSGetByScope(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+	// Return value data structure.
+
+	msgs, _ := keeper.GetOSLocatorByScopeUUID(ctx, path[1])
+
+	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, msgs)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+	}
+
+	return bz, nil
 }

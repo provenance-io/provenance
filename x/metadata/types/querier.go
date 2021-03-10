@@ -14,6 +14,11 @@ const (
 	QueryOwnership = "ownership"
 	QueryParams    = "params"
 	QueryScopeSpec = "scopespec"
+	//Query OS params
+	QueryOSParams = "os-params"
+	QueryOSGet = "get-os"
+	QueryOSGetByURI = "get-os-by-uri"
+	QueryOSGetByScope = "get-os-by-scope"
 )
 
 // QueryMetadataParams defines the params for queries that support paging (get by scope)

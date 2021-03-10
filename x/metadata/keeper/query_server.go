@@ -468,8 +468,6 @@ func (k Keeper) OSLocatorByURI(ctx context.Context, request *types.OSLocatorByUR
 		}
 		return nil
 	}
-	// Calculate address prefix
-
 	// Collect and return all names that match.
 	if err := k.IterateLocatorsForURI(ctxSDK, appendToRecords); err != nil {
 		return &types.OSLocatorResponses{Locator: records}, err
