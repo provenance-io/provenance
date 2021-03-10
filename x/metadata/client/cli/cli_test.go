@@ -1066,17 +1066,70 @@ func (s *IntegrationTestSuite) TestGetMetadataRecordCmd() {
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
-// TODO: GetMetadataScopeSpecCmd
 func (s *IntegrationTestSuite) TestGetMetadataScopeSpecCmd() {
 	cmd := cli.GetMetadataScopeSpecCmd()
 
 	testCases := []queryCmdTestCase{
-		// TODO: scope spec id
-		// TODO: scope spec uuid
-		// TODO: bad prefix
-		// TODO: bad arg
-		// TODO: two args
-		// TODO: no args
+		{
+			"scope spec from scope spec id as json",
+			[]string{s.scopeSpecID.String(), s.asJson},
+			"",
+			s.scopeSpecAsJson,
+		},
+		{
+			"scope spec from scope spec id as text",
+			[]string{s.scopeSpecID.String(), s.asText},
+			"",
+			s.scopeSpecAsText,
+		},
+		{
+			"scope spec id bad prefix",
+			[]string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
+			"id scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel is not a scope specification metadata address",
+			"",
+		},
+		{
+			"scope spec id does not exist",
+			[]string{"scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"},
+			"rpc error: code = NotFound desc = scope specification uuid dc83ea70-eacd-40fe-9adf-1cf6148bf8a2 not found: key not found",
+			"",
+		},
+		{
+			"scope spec from scope spec uuid as json",
+			[]string{s.scopeSpecUUID.String(), s.asJson},
+			"",
+			s.scopeSpecAsJson,
+		},
+		{
+			"scope spec from scope spec uuid as text",
+			[]string{s.scopeSpecUUID.String(), s.asText},
+			"",
+			s.scopeSpecAsText,
+		},
+		{
+			"scope spec uuid does not exist",
+			[]string{"dc83ea70-eacd-40fe-9adf-1cf6148bf8a2"},
+			"rpc error: code = NotFound desc = scope specification uuid dc83ea70-eacd-40fe-9adf-1cf6148bf8a2 not found: key not found",
+			"",
+		},
+		{
+			"bad arg",
+			[]string{"reallybad"},
+			"argument reallybad is neither a metadata address (decoding bech32 failed: invalid index of 1) nor uuid (invalid UUID length: 9)",
+			"",
+		},
+		{
+			"two args",
+			[]string{"arg1", "arg2"},
+			"accepts 1 arg(s), received 2",
+			"",
+		},
+		{
+			"no args",
+			[]string{},
+			"accepts 1 arg(s), received 0",
+			"",
+		},
 	}
 
 	runQueryCmdTestCases(s, cmd, testCases)
