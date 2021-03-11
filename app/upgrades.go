@@ -5,6 +5,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -26,7 +27,7 @@ type appUpgrade struct {
 var handlers = map[string]appUpgrade{
 	"v0.2.0": {},
 	"v0.2.1": {
-		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan){
+		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) {
 			existing := app.MarkerKeeper.GetParams(ctx)
 			existing.UnrestrictedDenomRegex = markertypes.DefaultUnrestrictedDenomRegex
 			app.MarkerKeeper.SetParams(ctx, existing)
@@ -36,16 +37,17 @@ var handlers = map[string]appUpgrade{
 	// TODO - Add new upgrade definitions here.
 }
 
+// CustomUpgradeStoreLoader provides upgrade handlers for store and application module upgrades at specified versions
 func CustomUpgradeStoreLoader(app *App, info storetypes.UpgradeInfo) baseapp.StoreLoader {
 	// Register all explicit appUpgrades
-	for name, upgrade := range handlers {
+	for name := range handlers {
 		// If the handler has been defined, add it here, otherwise, use no-op.
 		var handler upgradetypes.UpgradeHandler
-		if upgrade.Handler == nil {
+		if handlers[name].Handler == nil {
 			handler = noopHandler
 		} else {
 			handler = func(ctx sdk.Context, plan upgradetypes.Plan) {
-				upgrade.Handler(app, ctx, plan)
+				handlers[name].Handler(app, ctx, plan)
 			}
 		}
 		app.UpgradeKeeper.SetUpgradeHandler(name, handler)
