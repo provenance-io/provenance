@@ -16,6 +16,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -761,54 +762,73 @@ func (s *KeeperTestSuite) TestValidatePartiesInvolved() {
 
 }
 
-func (s *KeeperTestSuite) TestValidateRequiredSignatures() {
+func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSigners() {
 
 	cases := map[string]struct {
 		owners   []types.Party
 		signers  []string
-		wantErr  bool
 		errorMsg string
 	}{
-		"valid, no signatures": {
+		"no owners - no signers": {
 			owners:   []types.Party{},
 			signers:  []string{},
-			wantErr:  false,
 			errorMsg: "",
 		},
-		"valid, signatures match": {
-			owners:   []types.Party{{Address: "signer1"}},
+		"one owner - is signer": {
+			owners:   []types.Party{{Address: "signer1", Role: types.PartyType_PARTY_TYPE_OWNER}},
 			signers:  []string{"signer1"},
-			wantErr:  false,
 			errorMsg: "",
 		},
-		"valid, all owner signatures satisfied": {
-			owners:   []types.Party{{Address: "signer1"}},
+		"one owner - is one of two signers": {
+			owners:   []types.Party{{Address: "signer1", Role: types.PartyType_PARTY_TYPE_OWNER}},
 			signers:  []string{"signer1", "signer2"},
-			wantErr:  false,
 			errorMsg: "",
 		},
-		"invalid, missing owner signature": {
-			owners:   []types.Party{{Address: "missingowner"}},
+		"one owner - is not one of two signers": {
+			owners:   []types.Party{{Address: "missingowner", Role: types.PartyType_PARTY_TYPE_OWNER}},
 			signers:  []string{"signer1", "signer2"},
-			wantErr:  true,
 			errorMsg: "missing signature from existing owner missingowner; required for update",
+		},
+		"two owners - both are signers": {
+			owners:   []types.Party{
+				{Address: "owner1", Role: types.PartyType_PARTY_TYPE_OWNER},
+				{Address: "owner2", Role: types.PartyType_PARTY_TYPE_OWNER}},
+			signers:  []string{"owner2", "owner1"},
+			errorMsg: "",
+		},
+		"two owners - only one is signer": {
+			owners:   []types.Party{
+				{Address: "owner1", Role: types.PartyType_PARTY_TYPE_OWNER},
+				{Address: "missingowner", Role: types.PartyType_PARTY_TYPE_OWNER}},
+			signers:  []string{"owner2", "owner1"},
+			errorMsg: "missing signature from existing owner missingowner; required for update",
+		},
+		"two parties - one owner one other - only owner is signer": {
+			owners:   []types.Party{
+				{Address: "owner", Role: types.PartyType_PARTY_TYPE_OWNER},
+				{Address: "affiliate", Role: types.PartyType_PARTY_TYPE_AFFILIATE}},
+			signers:  []string{"owner"},
+			errorMsg: "",
+		},
+		"two parties - one owner one other - only other is signer": {
+			owners:   []types.Party{
+				{Address: "owner", Role: types.PartyType_PARTY_TYPE_OWNER},
+				{Address: "affiliate", Role: types.PartyType_PARTY_TYPE_AFFILIATE}},
+			signers:  []string{"affiliate"},
+			errorMsg: "missing signature from existing owner owner; required for update",
 		},
 	}
 
 	for n, tc := range cases {
-		tc := tc
-
-		s.Run(n, func() {
-			err := s.app.MetadataKeeper.ValidateRequiredSignatures(tc.owners, tc.signers)
-			if tc.wantErr {
-				s.Error(err)
-				s.Equal(tc.errorMsg, err.Error())
+		s.T().Run(n, func(t *testing.T) {
+			err := s.app.MetadataKeeper.ValidateAllOwnerPartiesAreSigners(tc.owners, tc.signers)
+			if len(tc.errorMsg) == 0 {
+				assert.NoError(t, err, "%s unexpected error", n)
 			} else {
-				s.NoError(err)
+				assert.EqualError(t, err, tc.errorMsg, "%s error", n)
 			}
 		})
 	}
-
 }
 
 func (s *KeeperTestSuite) TestValidateAllOwnersAreSigners() {

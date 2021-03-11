@@ -254,7 +254,7 @@ func (k Keeper) ValidateScopeRemove(ctx sdk.Context, existing, proposed types.Sc
 			return fmt.Errorf("cannot update scope identifier. expected %s, got %s", existing.ScopeId, proposed.ScopeId)
 		}
 	}
-	if err := k.ValidateRequiredSignatures(existing.Owners, signers); err != nil {
+	if err := k.ValidateAllOwnerPartiesAreSigners(existing.Owners, signers); err != nil {
 		return err
 	}
 

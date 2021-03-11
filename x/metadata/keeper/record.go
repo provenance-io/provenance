@@ -132,7 +132,7 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing, proposed types.R
 	}
 
 	// Validate any changes to the ValueOwner property.
-	if err := k.ValidateRequiredSignatures(scope.Owners, signers); err != nil {
+	if err := k.ValidateAllOwnerPartiesAreSigners(scope.Owners, signers); err != nil {
 		return err
 	}
 
@@ -158,7 +158,7 @@ func (k Keeper) ValidateRecordRemove(ctx sdk.Context, existing types.Record, pro
 		return fmt.Errorf("cannot remove record. expected %s, got %s", recordID, proposedID)
 	}
 
-	if err := k.ValidateRequiredSignatures(scope.Owners, signers); err != nil {
+	if err := k.ValidateAllOwnerPartiesAreSigners(scope.Owners, signers); err != nil {
 		return err
 	}
 

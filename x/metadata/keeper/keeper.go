@@ -152,12 +152,13 @@ func (k Keeper) ValidateAllOwnersAreSigners(existingOwners []string, signers []s
 	return nil
 }
 
-// ValidateRequiredSignatures validate all owners are signers
-func (k Keeper) ValidateRequiredSignatures(owners []types.Party, signers []string) error {
-	// Validate any changes to the ValueOwner property.
+// ValidateAllOwnerPartiesAreSigners validate all parties of type OWNER are signers
+func (k Keeper) ValidateAllOwnerPartiesAreSigners(parties []types.Party, signers []string) error {
 	requiredSignatures := []string{}
-	for _, p := range owners {
-		requiredSignatures = append(requiredSignatures, p.Address)
+	for _, p := range parties {
+		if p.Role == types.PartyType_PARTY_TYPE_OWNER {
+			requiredSignatures = append(requiredSignatures, p.Address)
+		}
 	}
 
 	if err := k.ValidateAllOwnersAreSigners(requiredSignatures, signers); err != nil {

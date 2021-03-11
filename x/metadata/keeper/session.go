@@ -146,7 +146,7 @@ func (k Keeper) ValidateSessionUpdate(ctx sdk.Context, existing, proposed types.
 		return err
 	}
 
-	if err = k.ValidateRequiredSignatures(scope.Owners, signers); err != nil {
+	if err = k.ValidateAllOwnerPartiesAreSigners(scope.Owners, signers); err != nil {
 		return err
 	}
 
