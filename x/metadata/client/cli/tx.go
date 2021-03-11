@@ -31,6 +31,8 @@ func NewTxCmd() *cobra.Command {
 	txCmd.AddCommand(
 		AddMetadataScopeCmd(),
 		AddOsLocatorCmd(),
+		RemoveOsLocatorCmd(),
+		ModifyOsLocatorCmd(),
 	)
 
 	return txCmd
@@ -146,7 +148,6 @@ func RemoveMetadataScopeCmd() *cobra.Command {
 	return cmd
 }
 
-
 // RemoveMetadataScopeCmd creates a command for removing a scope.
 func AddOsLocatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -169,11 +170,79 @@ func AddOsLocatorCmd() *cobra.Command {
 			}
 
 			objectStoreLocator := types.ObjectStoreLocator{
-				LocatorUri: args[1],Owner: args[0],
+				LocatorUri: args[1], Owner: args[0],
 			}
 
 			addOSLocator := *types.NewMsgAddOSLocatorRequest(objectStoreLocator)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &addOSLocator)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func RemoveOsLocatorCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "remove-locator [owner] [uri]",
+		Short: "Remove an os locator already associated owner address on the provenance blockchain",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			if _, err := sdk.AccAddressFromBech32(args[0]); err != nil {
+				fmt.Printf("failed to remove locator for a given owner address, invalid address: %s\n", args[0])
+				return fmt.Errorf("invalid address: %w", err)
+			}
+			if err != nil {
+				fmt.Printf("Invalid uuid for scope id: %s", args[0])
+				return err
+			}
+
+			objectStoreLocator := types.ObjectStoreLocator{
+				LocatorUri: args[1], Owner: args[0],
+			}
+
+			deleteOSLocator := *types.NewMsgDeleteOSLocatorRequest(objectStoreLocator)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &deleteOSLocator)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func ModifyOsLocatorCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "modify-locator [owner] [uri]",
+		Short: "Modify a uri already associated owner address on the provenance blockchain",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			if _, err := sdk.AccAddressFromBech32(args[0]); err != nil {
+				fmt.Printf("failed to add locator for a given owner address, invalid address: %s\n", args[0])
+				return fmt.Errorf("invalid address: %w", err)
+			}
+			if err != nil {
+				fmt.Printf("Invalid uuid for scope id: %s", args[0])
+				return err
+			}
+
+			objectStoreLocator := types.ObjectStoreLocator{
+				LocatorUri: args[1], Owner: args[0],
+			}
+
+			modifyOSLocator := *types.NewMsgModifyOSLocatorRequest(objectStoreLocator)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &modifyOSLocator)
 		},
 	}
 

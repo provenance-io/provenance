@@ -54,6 +54,9 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgDeleteOSLocatorRequest:
 			res, err := msgServer.DeleteOSLocator(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
+		case *types.MsgModifyOSLocatorRequest:
+			res, err := msgServer.ModifyOSLocator(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 		default:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown message type: %v", msg.Type())
 		}

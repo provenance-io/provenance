@@ -168,7 +168,7 @@ func queryOSGet(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 
 func queryOSGetByURI(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	// Return value data structure.
-	//TODO make this common code
+	// TODO make this common code
 	var records []types.ObjectStoreLocator
 	appendToRecords := func(record types.ObjectStoreLocator) error {
 		if record.LocatorUri == path[1] {

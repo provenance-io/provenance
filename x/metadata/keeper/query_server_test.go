@@ -276,4 +276,3 @@ func (s *QueryServerTestSuite) TestSessionQuery() {
 // TODO: ContractSpecificationExtended tests
 // TODO: RecordSpecificationsForContractSpecification test
 // TODO: RecordSpecification tests
-

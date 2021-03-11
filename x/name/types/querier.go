@@ -8,7 +8,6 @@ const (
 	QueryResolve = "resolve"
 	// The query base for reverse lookup.
 	QueryLookup = "lookup"
-
 )
 
 // QueryNameResult contains the address from a name query.

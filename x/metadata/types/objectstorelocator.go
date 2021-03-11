@@ -11,4 +11,3 @@ func NewOSLocatorRecord(ownerAddr sdk.AccAddress, uri string) ObjectStoreLocator
 		LocatorUri: uri,
 	}
 }
-

@@ -87,10 +87,10 @@ type MetadataKeeperI interface {
 	GetRecordSpecificationsForContractSpecificationID(ctx sdk.Context, contractSpecID types.MetadataAddress) ([]*types.RecordSpecification, error)
 
 	//GetOSLocator returns the OS locator records for a given name record.
-	GetOsLocatorRecord(ctx sdk.Context, ownerAddress sdk.AccAddress)(types.ObjectStoreLocator, bool)
-	//return if OSLocator exists for a given owner addr
+	GetOsLocatorRecord(ctx sdk.Context, ownerAddress sdk.AccAddress) (types.ObjectStoreLocator, bool)
+	// return if OSLocator exists for a given owner addr
 	OSLocatorExists(ctx sdk.Context, ownerAddr string) bool
-	//add OSLocator instance
+	// add OSLocator instance
 	SetOSLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, uri string) error
 
 	GetOSLocatorByScopeUUID(ctx sdk.Context, scopeId string) (*types.OSLocatorScopeResponse, error)
@@ -106,7 +106,6 @@ type Keeper struct {
 	// To check if accounts exist and set public keys.
 	authKeeper authkeeper.AccountKeeper
 }
-
 
 // NewKeeper creates new instances of the metadata Keeper.
 func NewKeeper(
@@ -193,4 +192,11 @@ func (k Keeper) ValidatePartiesInvolved(parties []types.Party, requiredParties [
 	return nil
 }
 
-
+// ResolvesTo to determines whether a name resolves to a given address.
+func (keeper Keeper) VerifyCorrectOwner(ctx sdk.Context, ownerAddr sdk.AccAddress) bool { // nolint:interfacer
+	stored, found := keeper.GetOsLocatorRecord(ctx, ownerAddr)
+	if found == false {
+		return false
+	}
+	return ownerAddr.String() == stored.Owner
+}

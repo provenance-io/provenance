@@ -29,7 +29,6 @@ func GetQueryCmd() *cobra.Command {
 		GetOSLocatorParamsCmd(),
 		GetOSLocatorCmd(),
 		GetOSLocatorByURICmd(),
-
 	)
 	return queryCmd
 }
@@ -104,7 +103,6 @@ $ %s query metadata scope 123e4567-e89b-12d3-a456-426614174000
 	return cmd
 }
 
-
 // GetOSLocatorParamsCmd returns the command handler for metadata locator parameter querying.
 func GetOSLocatorParamsCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -161,7 +159,7 @@ $ %s query metadata locator foocorp
 			owner := strings.ToLower(strings.TrimSpace(args[0]))
 
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.OSLocator(context.Background(), &types.OSLocatorRequest{Owner : owner})
+			res, err := queryClient.OSLocator(context.Background(), &types.OSLocatorRequest{Owner: owner})
 			if err != nil {
 				return err
 			}
@@ -200,7 +198,7 @@ $ %s query metadata locator foocorp
 			queryClient := types.NewQueryClient(clientCtx)
 			var response *types.OSLocatorResponses
 
-			response, err = queryClient.OSLocatorByURI(context.Background(), &types.OSLocatorByURIRequest{Uri : uri, Pagination: pageReq})
+			response, err = queryClient.OSLocatorByURI(context.Background(), &types.OSLocatorByURIRequest{Uri: uri, Pagination: pageReq})
 
 			if err != nil {
 				return err
@@ -239,7 +237,7 @@ $ %s query metadata locator foocorp
 			queryClient := types.NewQueryClient(clientCtx)
 			var response *types.OSLocatorScopeResponse
 
-			response, err = queryClient.OSLocatorByScopeUUID(context.Background(), &types.ScopeRequest{ScopeUuid: scopeUUID })
+			response, err = queryClient.OSLocatorByScopeUUID(context.Background(), &types.ScopeRequest{ScopeUuid: scopeUUID})
 
 			if err != nil {
 				return err

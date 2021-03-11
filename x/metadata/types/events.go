@@ -78,7 +78,8 @@ const (
 	AttributeKeyOSLocatorAddress string = "address"
 	AttributeKeyOSLocatorURI     string = "uri"
 	// EventTypeOsLocatorDeleted is the event type generated when a os locator deleted.
-	EventTypeOsLocatorDeleted string = "oslocator_deleted"
+	EventTypeOsLocatorDeleted  string = "oslocator_deleted"
+	EventTypeOsLocatorModified string = "oslocator_modified"
 
 	// AttributeValueCategory indicates the category for this value
 	AttributeValueCategory = ModuleName

@@ -16,7 +16,7 @@ var (
 )
 
 // NewParams creates a new parameter object
-func NewOSLocatorParams(maxUriCharacters uint64, ) OSLocatorParams {
+func NewOSLocatorParams(maxUriCharacters uint64) OSLocatorParams {
 	return OSLocatorParams{MaxUriCharacters: maxUriCharacters}
 }
 

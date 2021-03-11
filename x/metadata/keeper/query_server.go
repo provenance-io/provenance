@@ -485,6 +485,5 @@ func (k Keeper) OSLocatorByScopeUUID(ctx context.Context, request *types.ScopeRe
 		return nil, status.Error(codes.InvalidArgument, "scope uuid cannot be empty")
 	}
 
-	return k.GetOSLocatorByScopeUUID(ctxSDK,request.ScopeUuid)
+	return k.GetOSLocatorByScopeUUID(ctxSDK, request.ScopeUuid)
 }
-

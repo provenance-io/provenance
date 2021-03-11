@@ -25,6 +25,7 @@ const (
 	TypeMsgDeleteRecordSpecificationRequest   = "delete_record_specification_request"
 	TypeMsgAddOSLocatorRequest                = "add_os_locator_request"
 	TypeMsgDeleteOSLocatorRequest             = "delete_os_locator_request"
+	TypeMsgModifyOSLocatorRequest             = "modify_os_locator_request"
 )
 
 // Compile time interface checks.
@@ -44,6 +45,7 @@ var (
 	_ sdk.Msg = &MsgDeleteRecordSpecificationRequest{}
 	_ sdk.Msg = &MsgAddOSLocatorRequest{}
 	_ sdk.Msg = &MsgDeleteOSLocatorRequest{}
+	_ sdk.Msg = &MsgModifyOSLocatorRequest{}
 )
 
 // private method to convert an array of strings into an array of Acc Addresses.
@@ -651,7 +653,6 @@ func (msg MsgAddOSLocatorRequest) ValidateBasic() error {
 		return err
 	}
 	return nil
-
 }
 
 func (msg MsgAddOSLocatorRequest) GetSignBytes() []byte {
@@ -689,7 +690,6 @@ func (msg MsgDeleteOSLocatorRequest) ValidateBasic() error {
 	return nil
 }
 
-
 func (msg MsgDeleteOSLocatorRequest) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
@@ -708,8 +708,8 @@ func (msg MsgDeleteOSLocatorRequest) GetSigners() []sdk.AccAddress {
 }
 
 /**
-	Validates OSLocatorObj
- */
+Validates OSLocatorObj
+*/
 func ValidateOSLocatorObj(ownerAddr string, uri string) error {
 	if strings.TrimSpace(ownerAddr) == "" {
 		return fmt.Errorf("owner address cannot be empty")
@@ -729,4 +729,41 @@ func ValidateOSLocatorObj(ownerAddr string, uri string) error {
 			" owner address, invalid uri: %s\n", uri)
 	}
 	return nil
+}
+
+//----------Modify OS Locator -----------------
+
+func NewMsgModifyOSLocatorRequest(obj ObjectStoreLocator) *MsgModifyOSLocatorRequest {
+	return &MsgModifyOSLocatorRequest{
+		Locator: obj,
+	}
+}
+
+func (msg MsgModifyOSLocatorRequest) Route() string {
+	return ModuleName
+}
+
+func (msg MsgModifyOSLocatorRequest) Type() string {
+	return TypeMsgModifyOSLocatorRequest
+}
+
+func (msg MsgModifyOSLocatorRequest) ValidateBasic() error {
+	err := ValidateOSLocatorObj(msg.Locator.Owner, msg.Locator.LocatorUri)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (msg MsgModifyOSLocatorRequest) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgModifyOSLocatorRequest) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Locator.Owner)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
 }

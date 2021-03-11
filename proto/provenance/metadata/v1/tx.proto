@@ -55,6 +55,8 @@ service Msg {
 
   // DeleteName defines a method to verify a particular invariance.
   rpc DeleteOSLocator (MsgDeleteOSLocatorRequest) returns (MsgDeleteOSLocatorResponse);
+  //Modify existing OSLocator record.
+  rpc ModifyOSLocator(MsgModifyOSLocatorRequest) returns (MsgModifyOSLocatorResponse);
 }
 
 // MsgMemorializeContractRequest is a request from a P8e execution environment to record results of a contract
@@ -303,8 +305,22 @@ message MsgAddOSLocatorRequest {
   ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
 }
 
-// MsgBindObjectLocatorResponse defines the Msg/BindObjectLocator response type.
-message MsgAddOSLocatorResponse {}
+message MsgModifyOSLocatorRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+  // The object locator to bind the address to bind to the URI.
+  ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
+}
+
+
+// MsgAddOSLocatorResponse defines the Msg/BindObjectLocator response type.
+message MsgAddOSLocatorResponse {
+  ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
+}
+
+message MsgModifyOSLocatorResponse {
+  ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
+}
 
 // MsgDeleteNameRequest defines an sdk.Msg type that is used to remove an existing address/name binding.  The binding
 // may not have any child names currently bound for this request to be successful.
@@ -317,4 +333,6 @@ message MsgDeleteOSLocatorRequest {
 }
 
 // MsgDeleteNameResponse defines the Msg/DeleteName response type.
-message MsgDeleteOSLocatorResponse {}
+message MsgDeleteOSLocatorResponse {
+  ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
+}

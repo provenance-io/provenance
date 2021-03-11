@@ -14,10 +14,10 @@ const (
 	QueryOwnership = "ownership"
 	QueryParams    = "params"
 	QueryScopeSpec = "scopespec"
-	//Query OS params
-	QueryOSParams = "os-params"
-	QueryOSGet = "get-os"
-	QueryOSGetByURI = "get-os-by-uri"
+	// Query OS params
+	QueryOSParams     = "os-params"
+	QueryOSGet        = "get-os"
+	QueryOSGetByURI   = "get-os-by-uri"
 	QueryOSGetByScope = "get-os-by-scope"
 )
 
