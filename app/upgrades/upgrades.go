@@ -42,7 +42,6 @@ func CustomUpgradeStoreLoader(app *app.App, info storetypes.UpgradeInfo) baseapp
 			handler = noopHandler
 		} else {
 			handler = func(ctx sdk.Context, plan upgradetypes.Plan) {
-
 				upgrade.Handler(app, ctx, plan)
 			}
 		}
