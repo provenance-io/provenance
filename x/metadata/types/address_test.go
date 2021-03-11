@@ -25,37 +25,6 @@ var (
 	recordBech32  = "record1q2xcpvj6czy5g354dews3nlruxjelpkssxyyclt9ngh74gx9ttgp27gt8kl"
 )
 
-func assertPanic(t *testing.T, testName string, expectedPanicMsg string, test func()) {
-	// Recover from the panic if there is one
-	defer func() {
-		if r := recover(); r != nil {
-			assert.Equal(t, expectedPanicMsg, fmt.Sprintf("%s", r), "%s panic message", testName)
-		}
-	}()
-	// Run the test that should cause a panic
-	test()
-	// If the function panicked, code execution doesn't get to this point.
-	// And the deferred function at the top will recover from the panic,
-	// allowing further testing to continue.
-	// But if it didn't panic, then we need to indicate that the test failed.
-	t.Errorf("%s: should have caused panic(\"%s\") but did not.", testName, expectedPanicMsg)
-}
-
-func assertDoesNotPanic(t *testing.T, testName string, test func()) {
-	// If there's a panic, fail the test and recover from it
-	defer func() {
-		if r := recover(); r != nil {
-			t.Errorf("%s: should not have caused panic but did: %v", testName, r)
-		}
-	}()
-	// Run the test that should cause a panic
-	test()
-	// If the function panicked, code execution doesn't get to this point.
-	// And the deferred function at the top will recover from the panic,
-	// allowing further testing to continue.
-
-}
-
 func TestLegacySha512HashToAddress(t *testing.T) {
 	testHash := sha512.Sum512([]byte("test"))
 	hash := base64.StdEncoding.EncodeToString(testHash[:])
@@ -319,7 +288,10 @@ func TestRecordMetadataAddress(t *testing.T) {
 	require.Equal(t, recordID, RecordMetadataAddress(scopeUUID, "tEst"))
 	require.Equal(t, recordID, RecordMetadataAddress(scopeUUID, "TEST"))
 	require.Equal(t, recordID, RecordMetadataAddress(scopeUUID, "   test   "))
-	require.Equal(t, recordID, scopeID.AsRecordAddressE("test"))
+
+	recAddrFromScopeID, err := scopeID.AsRecordAddress("test")
+	require.NoError(t, err, "AsRecordAddress error")
+	require.Equal(t, recordID, recAddrFromScopeID, "AsRecordAddress value")
 }
 
 func TestScopeSpecMetadataAddress(t *testing.T) {
@@ -377,7 +349,10 @@ func TestRecordSpecMetadataAddress(t *testing.T) {
 	require.Equal(t, recordSpecID, RecordSpecMetadataAddress(contractSpecUUID, "MyName"), "camel case")
 	require.Equal(t, recordSpecID, RecordSpecMetadataAddress(contractSpecUUID, "MYNAME"), "all caps")
 	require.Equal(t, recordSpecID, RecordSpecMetadataAddress(contractSpecUUID, "   myname   "), "padded with spaces")
-	require.Equal(t, recordSpecID, contractSpecID.AsRecordSpecAddressE("myname"), "from contract spec id")
+
+	recSpecIDFromContractSpec, recSpecIDFromContractSpecErr := contractSpecID.AsRecordSpecAddress("myname")
+	require.NoError(t, recSpecIDFromContractSpecErr, "AsRecordSpecAddress error")
+	require.Equal(t, recordSpecID, recSpecIDFromContractSpec, "AsRecordSpecAddress value")
 
 	contractSpecUUIDFromRecordSpecId, errContractSpecUUID := recordSpecID.ContractSpecUUID()
 	require.NoError(t, errContractSpecUUID, "error from ContractSpecUUID")
@@ -776,7 +751,6 @@ func TestScopeAddressConverters(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		// Test AsScopeAddress
 		t.Run(fmt.Sprintf("%s AsScopeAddress", test.name), func(subtest *testing.T) {
 			actualID, err := test.baseID.AsScopeAddress()
 			if len(test.expectedError) == 0 {
@@ -784,22 +758,6 @@ func TestScopeAddressConverters(t *testing.T) {
 				assert.Equal(t, test.expectedID, actualID, "%s AsScopeAddress value", test.name)
 			} else {
 				assert.EqualError(t, err, test.expectedError, "%s AsScopeAddress expected err", test.name)
-			}
-		})
-
-		// Test AsScopeAddressE
-		t.Run(fmt.Sprintf("%s AsScopeAddressE", test.name), func(subtest *testing.T) {
-			if len(test.expectedError) == 0 {
-				assertDoesNotPanic(t, fmt.Sprintf("%s AsScopeAddressE", test.name), func() {
-					id := test.baseID.AsScopeAddressE()
-					assert.Equal(t, test.expectedID, id, "%s AsScopeAddressE value", test.name)
-				})
-			} else {
-				assertPanic(t, fmt.Sprintf("%s AsScopeAddressE", test.name), test.expectedError, func() {
-					id := test.baseID.AsScopeAddressE()
-					t.Errorf("%s AsScopeAddressE returned %s instead of panicking with message %s",
-						test.name, id, test.expectedError)
-				})
 			}
 		})
 	}
@@ -814,6 +772,13 @@ func TestRecordAddressConverters(t *testing.T) {
 	scopeSpecID := ScopeSpecMetadataAddress(randomUUID)
 	contractSpecID := ContractSpecMetadataAddress(randomUUID)
 	recordSpecID := RecordSpecMetadataAddress(randomUUID, recordName)
+
+	recordNameVersions := []string{
+		recordName,
+		"  " + recordName,
+		recordName + "  ",
+		"  " + recordName + "  ",
+	}
 
 	tests := []struct {
 		name string
@@ -863,32 +828,17 @@ func TestRecordAddressConverters(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		// Test AsRecordAddress
-		t.Run(fmt.Sprintf("%s AsRecordAddress", test.name), func(subtest *testing.T) {
-			actualID, err := test.baseID.AsRecordAddress(recordName)
-			if len(test.expectedError) == 0 {
-				assert.NoError(t, err, "%s AsRecordAddress err", test.name)
-				assert.Equal(t, test.expectedID, actualID, "%s AsRecordAddress value", test.name)
-			} else {
-				assert.EqualError(t, err, test.expectedError, "%s AsRecordAddress expected err", test.name)
-			}
-		})
-
-		// Test AsRecordAddressE
-		t.Run(fmt.Sprintf("%s AsRecordAddressE", test.name), func(subtest *testing.T) {
-			if len(test.expectedError) == 0 {
-				assertDoesNotPanic(t, fmt.Sprintf("%s AsRecordAddressE", test.name), func() {
-					id := test.baseID.AsRecordAddressE(recordName)
-					assert.Equal(t, test.expectedID, id, "%s AsRecordAddressE value", test.name)
-				})
-			} else {
-				assertPanic(t, fmt.Sprintf("%s AsRecordAddressE", test.name), test.expectedError, func() {
-					id := test.baseID.AsRecordAddressE(recordName)
-					t.Errorf("%s AsRecordAddressE returned %s instead of panicking with message %s",
-						test.name, id, test.expectedError)
-				})
-			}
-		})
+		for _, rName := range recordNameVersions {
+			t.Run(fmt.Sprintf("%s AsRecordAddress(\"%s\")", test.name, rName), func(subtest *testing.T) {
+				actualID, err := test.baseID.AsRecordAddress(rName)
+				if len(test.expectedError) == 0 {
+					assert.NoError(t, err, "%s AsRecordAddress err", test.name)
+					assert.Equal(t, test.expectedID, actualID, "%s AsRecordAddress value", test.name)
+				} else {
+					assert.EqualError(t, err, test.expectedError, "%s AsRecordAddress expected err", test.name)
+				}
+			})
+		}
 	}
 }
 
@@ -901,6 +851,13 @@ func TestRecordSpecAddressConverters(t *testing.T) {
 	scopeSpecID := ScopeSpecMetadataAddress(randomUUID)
 	contractSpecID := ContractSpecMetadataAddress(randomUUID)
 	recordSpecID := RecordSpecMetadataAddress(randomUUID, recordName)
+
+	recordNameVersions := []string{
+		recordName,
+		"  " + recordName,
+		recordName + "  ",
+		"  " + recordName + "  ",
+	}
 
 	tests := []struct {
 		name string
@@ -951,32 +908,17 @@ func TestRecordSpecAddressConverters(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		// Test AsRecordSpecAddress
-		t.Run(fmt.Sprintf("%s AsRecordSpecAddress", test.name), func(subtest *testing.T) {
-			actualID, err := test.baseID.AsRecordSpecAddress(recordName)
-			if len(test.expectedError) == 0 {
-				assert.NoError(t, err, "%s AsRecordSpecAddress err", test.name)
-				assert.Equal(t, test.expectedID, actualID, "%s AsRecordSpecAddress value", test.name)
-			} else {
-				assert.EqualError(t, err, test.expectedError, "%s AsRecordSpecAddress expected err", test.name)
-			}
-		})
-
-		// Test AsRecordSpecAddressE
-		t.Run(fmt.Sprintf("%s AsRecordSpecAddressE", test.name), func(subtest *testing.T) {
-			if len(test.expectedError) == 0 {
-				assertDoesNotPanic(t, fmt.Sprintf("%s AsRecordSpecAddressE", test.name), func() {
-					id := test.baseID.AsRecordSpecAddressE(recordName)
-					assert.Equal(t, test.expectedID, id, "%s AsRecordSpecAddressE value", test.name)
-				})
-			} else {
-				assertPanic(t, fmt.Sprintf("%s AsRecordSpecAddressE", test.name), test.expectedError, func() {
-					id := test.baseID.AsRecordSpecAddressE(recordName)
-					t.Errorf("%s AsRecordSpecAddressE returned %s instead of panicking with message %s",
-						test.name, id, test.expectedError)
-				})
-			}
-		})
+		for _, rName := range recordNameVersions {
+			t.Run(fmt.Sprintf("%s AsRecordSpecAddress(\"%s\")", test.name, rName), func(subtest *testing.T) {
+				actualID, err := test.baseID.AsRecordSpecAddress(rName)
+				if len(test.expectedError) == 0 {
+					assert.NoError(t, err, "%s AsRecordSpecAddress err", test.name)
+					assert.Equal(t, test.expectedID, actualID, "%s AsRecordSpecAddress value", test.name)
+				} else {
+					assert.EqualError(t, err, test.expectedError, "%s AsRecordSpecAddress expected err", test.name)
+				}
+			})
+		}
 	}
 }
 
@@ -1038,7 +980,6 @@ func TestContractSpecAddressConverters(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		// Test AsContractSpecAddress
 		t.Run(fmt.Sprintf("%s AsContractSpecAddress", test.name), func(subtest *testing.T) {
 			actualID, err := test.baseID.AsContractSpecAddress()
 			if len(test.expectedError) == 0 {
@@ -1046,22 +987,6 @@ func TestContractSpecAddressConverters(t *testing.T) {
 				assert.Equal(t, test.expectedID, actualID, "%s AsContractSpecAddress value", test.name)
 			} else {
 				assert.EqualError(t, err, test.expectedError, "%s AsContractSpecAddress expected err", test.name)
-			}
-		})
-
-		// Test AsContractSpecAddressE
-		t.Run(fmt.Sprintf("%s AsContractSpecAddressE", test.name), func(subtest *testing.T) {
-			if len(test.expectedError) == 0 {
-				assertDoesNotPanic(t, fmt.Sprintf("%s AsContractSpecAddressE", test.name), func() {
-					id := test.baseID.AsContractSpecAddressE()
-					assert.Equal(t, test.expectedID, id, "%s AsContractSpecAddressE value", test.name)
-				})
-			} else {
-				assertPanic(t, fmt.Sprintf("%s AsContractSpecAddressE", test.name), test.expectedError, func() {
-					id := test.baseID.AsContractSpecAddressE()
-					t.Errorf("%s AsContractSpecAddressE returned %s instead of panicking with message %s",
-						test.name, id, test.expectedError)
-				})
 			}
 		})
 	}
