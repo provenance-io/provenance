@@ -40,13 +40,13 @@ var handlers = map[string]appUpgrade{
 // CustomUpgradeStoreLoader provides upgrade handlers for store and application module upgrades at specified versions
 func CustomUpgradeStoreLoader(app *App, info storetypes.UpgradeInfo) baseapp.StoreLoader {
 	// Register all explicit appUpgrades
-	for name := range handlers {
+	for name, upgrade := range handlers {
 		// If the handler has been defined, add it here, otherwise, use no-op.
 		var handler upgradetypes.UpgradeHandler
-		if handlers[name].Handler == nil {
+		if upgrade.Handler == nil {
 			handler = noopHandler
 		} else {
-			ref := handlers[name]
+			ref := upgrade
 			handler = func(ctx sdk.Context, plan upgradetypes.Plan) {
 				ref.Handler(app, ctx, plan)
 			}
