@@ -18,7 +18,13 @@ jobs:
       - uses: actions/checkout@master
         with:
           fetch-depth: 0
-
+      - name: Setup go
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.15
+	  - name: Go mod vendor
+		run: |
+			go mod vendor
       - name: Prepare
         id: prep
         run: |
@@ -51,6 +57,7 @@ jobs:
       - name: Publish to Docker Hub
         uses: docker/build-push-action@v2
         with:
+		  context: .
           target: run
           file: docker/blockchain/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
