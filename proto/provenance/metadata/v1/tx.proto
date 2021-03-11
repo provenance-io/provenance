@@ -6,6 +6,8 @@ import "provenance/metadata/v1/scope.proto";
 import "provenance/metadata/v1/contract.proto";
 import "provenance/metadata/v1/specification.proto";
 
+import "provenance/metadata/v0/spec.proto";
+
 import "cosmos/tx/signing/v1beta1/signing.proto";
 
 option go_package = "github.com/provenance-io/provenance/x/metadata/types";
@@ -47,6 +49,11 @@ service Msg {
   rpc AddRecordSpecification(MsgAddRecordSpecificationRequest) returns (MsgAddRecordSpecificationResponse);
   // DeleteRecordSpecification deletes a record specification
   rpc DeleteRecordSpecification(MsgDeleteRecordSpecificationRequest) returns (MsgDeleteRecordSpecificationResponse);
+   // AddContractSpec adds a P8e v39 contract spec
+  rpc AddContractSpec(MsgAddContractSpecRequest) returns (MsgAddContractSpecResponse) {
+    option deprecated = true;
+  };
+
 }
 
 // MsgMemorializeContractRequest is a request from a P8e execution environment to record results of a contract
@@ -283,3 +290,16 @@ message MsgDeleteRecordSpecificationRequest {
 
 // MsgDeleteRecordSpecificationResponse from a delete record specification request
 message MsgDeleteRecordSpecificationResponse {}
+
+// MsgAddContractSpecRequest records the result of a change ownership p8e contract execution
+message MsgAddContractSpecRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  spec.ContractSpec contractspec = 1 [(gogoproto.nullable) = false];
+  repeated string signers = 2;
+}
+
+message MsgAddContractSpecResponse{}

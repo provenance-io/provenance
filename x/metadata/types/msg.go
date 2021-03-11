@@ -22,6 +22,7 @@ const (
 	TypeMsgDeleteContractSpecificationRequest = "delete_contract_specification_request"
 	TypeMsgAddRecordSpecificationRequest      = "add_record_specification_request"
 	TypeMsgDeleteRecordSpecificationRequest   = "delete_record_specification_request"
+	TypeMsgAddContractSpecRequest             = "add_contract_spec_request"
 )
 
 // Compile time interface checks.
@@ -39,6 +40,7 @@ var (
 	_ sdk.Msg = &MsgDeleteContractSpecificationRequest{}
 	_ sdk.Msg = &MsgAddRecordSpecificationRequest{}
 	_ sdk.Msg = &MsgDeleteRecordSpecificationRequest{}
+	_ sdk.Msg = &MsgAddContractSpecRequest{}
 )
 
 // private method to convert an array of strings into an array of Acc Addresses.
@@ -421,6 +423,46 @@ func (msg MsgAddScopeSpecificationRequest) ValidateBasic() error {
 		return fmt.Errorf("at least one signer is required")
 	}
 	return msg.Specification.ValidateBasic()
+}
+
+// ------------------  MsgAddContractSpecRequest  ------------------
+
+// NewMsgAddContractSpecRequest creates a new msg instance
+func NewMsgAddContractSpecRequest() *MsgAddContractSpecRequest {
+	return &MsgAddContractSpecRequest{}
+}
+
+func (msg MsgAddContractSpecRequest) String() string {
+	out, _ := yaml.Marshal(msg)
+	return string(out)
+}
+
+// Route returns the module route
+func (msg MsgAddContractSpecRequest) Route() string {
+	return ModuleName
+}
+
+// Type returns the type name for this msg
+func (msg MsgAddContractSpecRequest) Type() string {
+	return TypeMsgAddContractSpecRequest
+}
+
+// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
+func (msg MsgAddContractSpecRequest) GetSigners() []sdk.AccAddress {
+	return stringsToAccAddresses(msg.Signers)
+}
+
+// GetSignBytes gets the bytes for the message signer to sign on
+func (msg MsgAddContractSpecRequest) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// ValidateBasic performs a quick validity check
+func (msg MsgAddContractSpecRequest) ValidateBasic() error {
+	if len(msg.Signers) < 1 {
+		return fmt.Errorf("at least one signer is required")
+	}
+	return nil
 }
 
 // ------------------  MsgDeleteScopeSpecificationRequest  ------------------
