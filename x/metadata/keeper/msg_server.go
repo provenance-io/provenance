@@ -411,3 +411,54 @@ func (k msgServer) DeleteRecordSpecification(
 
 	return &types.MsgDeleteRecordSpecificationResponse{}, nil
 }
+
+func (k msgServer) AddContractSpec(
+	goCtx context.Context,
+	msg *types.MsgAddContractSpecRequest,
+) (*types.MsgAddContractSpecResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	newspec, newrecords, err := types.ConvertContractSpec(&msg.Contractspec)
+	for _, record := range newrecords {
+
+		contractSpecID, err := record.SpecificationId.AsContractSpecAddress()
+		if err != nil {
+			return nil, err
+		}
+		contractSpec, contractSpecFound := k.GetContractSpecification(ctx, contractSpecID)
+		if !contractSpecFound {
+			contractSpecUUID, _ := contractSpecID.ContractSpecUUID()
+			return nil, fmt.Errorf("contract specification not found with id %s (uuid %s) required for adding or updating record specification with id %s",
+				contractSpecID, contractSpecUUID, record.SpecificationId)
+		}
+		if err := k.ValidateAllOwnersAreSigners(contractSpec.OwnerAddresses, msg.Signers); err != nil {
+			return nil, err
+		}
+
+		var existing *types.RecordSpecification = nil
+		if e, found := k.GetRecordSpecification(ctx, record.SpecificationId); found {
+			existing = &e
+		}
+		if err := k.ValidateRecordSpecUpdate(ctx, existing, record); err != nil {
+			return nil, err
+		}
+
+		k.SetRecordSpecification(ctx, record)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	var existing *types.ContractSpecification = nil
+	if e, found := k.GetContractSpecification(ctx, newspec.SpecificationId); found {
+		existing = &e
+		if err := k.ValidateAllOwnersAreSigners(existing.OwnerAddresses, msg.Signers); err != nil {
+			return nil, err
+		}
+	}
+	if err := k.ValidateContractSpecUpdate(ctx, existing, newspec); err != nil {
+		return nil, err
+	}
+
+	k.SetContractSpecification(ctx, newspec)
+	return &types.MsgAddContractSpecResponse{}, nil
+}
