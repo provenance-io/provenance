@@ -3,10 +3,10 @@ module github.com/provenance-io/provenance
 go 1.15
 
 require (
-	github.com/CosmWasm/wasmd v0.15.1
+	github.com/CosmWasm/wasmd v0.16.0-alpha1
 	github.com/armon/go-metrics v0.3.6
 	github.com/btcsuite/btcd v0.21.0-beta
-	github.com/cosmos/cosmos-sdk v0.41.4
+	github.com/cosmos/cosmos-sdk v0.42.1
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.4.3
@@ -25,7 +25,7 @@ require (
 	github.com/tendermint/tendermint v0.34.8
 	github.com/tendermint/tm-db v0.6.4
 	google.golang.org/genproto v0.0.0-20210114201628-6edceaf6022f
-	google.golang.org/grpc v1.35.0
+	google.golang.org/grpc v1.36.0
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/yaml.v2 v2.4.0
 
