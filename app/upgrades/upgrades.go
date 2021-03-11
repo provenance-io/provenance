@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/x/marker/types"
 )
 
 var (
@@ -26,7 +27,10 @@ type appUpgrade struct {
 var handlers = map[string]appUpgrade{
 	"v0.2.0": {},
 	"v0.2.1": {
-		Handler: func(app *app.App, ctx sdk.Context, plan upgradetypes.Plan){
+		Handler: func(app *app.App, ctx sdk.Context, plan upgradetypes.Plan) {
+			existing := app.MarkerKeeper.GetParams(ctx)
+			existing.UnrestrictedDenomRegex = types.DefaultUnrestrictedDenomRegex
+			app.MarkerKeeper.SetParams(ctx, existing)
 		},
 	},
 
@@ -47,8 +51,6 @@ func CustomUpgradeStoreLoader(app *app.App, info storetypes.UpgradeInfo) baseapp
 		}
 		app.UpgradeKeeper.SetUpgradeHandler(name, handler)
 	}
-
-
 
 	for name, upgrade := range handlers {
 		// If the plan is executing this block, set the store locator to create any
