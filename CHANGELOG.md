@@ -34,6 +34,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+* Update to Cosmos SDK 0.42.1
 * Truncate hashes used in metadata addresses for Record, Record Specification #132
 * Add support for creating, updating, removing, finding, and iterating over `Session`s #55
 * Add support for creating, updating, removing, finding, and iterating over `RecordSpecification`s #59
