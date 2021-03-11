@@ -35,11 +35,6 @@ const (
 var (
 	// Ensure MetadataAddress implements the sdk.Address interface
 	_ sdk.Address = MetadataAddress{}
-	// All valid Metadata Address type prefixes.
-	allowedTypes = [][]byte{
-		ScopeKeyPrefix, SessionKeyPrefix, RecordKeyPrefix,
-		ContractSpecificationKeyPrefix, ScopeSpecificationKeyPrefix, RecordSpecificationKeyPrefix,
-	}
 )
 
 // MetadataAddress is a blockchain compliant address based on UUIDs
@@ -54,7 +49,6 @@ func VerifyMetadataAddressFormat(bz []byte) (string, error) {
 		return hrp, fmt.Errorf("incorrect address length (must be at least 17, actual: %d)", len(bz))
 	}
 	checkSecondaryUUID := false
-	// If you add or remove a case in this switch, make sure to also update the allowedTypes values.
 	switch bz[0] {
 	case ScopeKeyPrefix[0]:
 		hrp = PrefixScope
@@ -356,7 +350,7 @@ func (ma MetadataAddress) Compare(other MetadataAddress) int {
 // ScopeUUID returns the scope uuid component of a MetadataAddress (if appropriate)
 func (ma MetadataAddress) ScopeUUID() (uuid.UUID, error) {
 	if !ma.isTypeOneOf(ScopeKeyPrefix, SessionKeyPrefix, RecordKeyPrefix) {
-		return uuid.UUID{}, fmt.Errorf("this metadata address does not contain a scope uuid")
+		return uuid.UUID{}, fmt.Errorf("this metadata address (%s) does not contain a scope uuid", ma)
 	}
 	return ma.PrimaryUUID()
 }
@@ -364,16 +358,31 @@ func (ma MetadataAddress) ScopeUUID() (uuid.UUID, error) {
 // SessionUUID returns the session uuid component of a MetadataAddress (if appropriate)
 func (ma MetadataAddress) SessionUUID() (uuid.UUID, error) {
 	if len(ma) > 0 && ma[0] != SessionKeyPrefix[0] {
-		return uuid.UUID{}, fmt.Errorf("this metadata address does not contain a session uuid")
+		return uuid.UUID{}, fmt.Errorf("this metadata address (%s) does not contain a session uuid", ma)
 	}
 	return ma.SecondaryUUID()
 }
 
-func (ma MetadataAddress) ContractSpecUUID() (uuid.UUID, error) {
-	if !ma.isTypeOneOf(ContractSpecificationKeyPrefix, RecordSpecificationKeyPrefix) {
-		return uuid.UUID{}, fmt.Errorf("this metadata address does not contain a contract specification uuid")
+// ScopeSpecUUID returns the scope specification uuid component of a MetadataAddress (if appropriate)
+func (ma MetadataAddress) ScopeSpecUUID() (uuid.UUID, error) {
+	if len(ma) > 0 && ma[0] != ScopeSpecificationKeyPrefix[0] {
+		return uuid.UUID{}, fmt.Errorf("this metadata address (%s) does not contain a scope specification uuid", ma)
 	}
 	return ma.PrimaryUUID()
+}
+
+// ContractSpecUUID returns the contract specification uuid component of a MetadataAddress (if appropriate)
+func (ma MetadataAddress) ContractSpecUUID() (uuid.UUID, error) {
+	if !ma.isTypeOneOf(ContractSpecificationKeyPrefix, RecordSpecificationKeyPrefix) {
+		return uuid.UUID{}, fmt.Errorf("this metadata address (%s) does not contain a contract specification uuid", ma)
+	}
+	return ma.PrimaryUUID()
+}
+
+// Prefix returns the human readable part (prefix) of this MetadataAddress, e.g. "scope" or "contractspec"
+// More accurately, this converts the 1st byte into its human readable string value.
+func (ma MetadataAddress) Prefix() (string, error) {
+	return VerifyMetadataAddressFormat(ma)
 }
 
 // PrimaryUUID returns the primary UUID from this MetadataAddress (if applicable).
@@ -386,7 +395,7 @@ func (ma MetadataAddress) PrimaryUUID() (uuid.UUID, error) {
 		return uuid.UUID{}, fmt.Errorf("address empty")
 	}
 	// if we don't know this type
-	if !ma.isTypeOneOf(allowedTypes...) {
+	if !ma.isTypeOneOf(ScopeKeyPrefix, SessionKeyPrefix, RecordKeyPrefix, ScopeSpecificationKeyPrefix, ContractSpecificationKeyPrefix, RecordSpecificationKeyPrefix) {
 		return uuid.UUID{}, fmt.Errorf("invalid address type out of valid range (got: %d)", ma[0])
 	}
 	if len(ma) < 17 {
@@ -412,52 +421,63 @@ func (ma MetadataAddress) SecondaryUUID() (uuid.UUID, error) {
 }
 
 // NameHash returns the hashed name bytes from this MetadataAddress (if applicable).
-// More accurately, this returns a copy of bytes 18 through 49 (inclusive).
+// More accurately, this returns a copy of bytes 18 through 33 (inclusive).
 func (ma MetadataAddress) NameHash() ([]byte, error) {
-	namehash := make([]byte, 32)
+	namehash := make([]byte, 16)
 	if len(ma) < 1 {
 		return namehash, fmt.Errorf("address empty")
 	}
 	if !ma.isTypeOneOf(RecordKeyPrefix, RecordSpecificationKeyPrefix) {
 		return namehash, fmt.Errorf("invalid address type out of valid range (got: %d)", ma[0])
 	}
-	if len(ma) < 49 {
-		return namehash, fmt.Errorf("incorrect address length (must be at least 49, actual: %d)", len(ma))
+	if len(ma) < 33 {
+		return namehash, fmt.Errorf("incorrect address length (must be at least 33, actual: %d)", len(ma))
 	}
 	copy(namehash, ma[17:])
 	return namehash, nil
 }
 
-// GetRecordAddress returns the MetadataAddress for a record with the given name within the current scope context
-// panics if the current context is not associated with a scope.
-func (ma MetadataAddress) GetRecordAddress(name string) MetadataAddress {
+// AsScopeAddress returns the MetadataAddress for a scope using the scope UUID within the current context
+func (ma MetadataAddress) AsScopeAddress() (MetadataAddress, error) {
 	scopeUUID, err := ma.ScopeUUID()
 	if err != nil {
-		panic(err)
+		return MetadataAddress{}, err
 	}
-	return RecordMetadataAddress(scopeUUID, name)
+	return ScopeMetadataAddress(scopeUUID), nil
 }
 
-// GetRecordSpecAddress returns the MetadataAddress for a record spec given the name within the current contract spec context
-func (ma MetadataAddress) GetRecordSpecAddress(name string) MetadataAddress {
+// AsRecordAddress returns the MetadataAddress for a record using the scope UUID within the current context and the provided name
+func (ma MetadataAddress) AsRecordAddress(name string) (MetadataAddress, error) {
+	scopeUUID, err := ma.ScopeUUID()
+	if err != nil {
+		return MetadataAddress{}, err
+	}
+	return RecordMetadataAddress(scopeUUID, name), nil
+}
+
+// AsRecordSpecAddress returns the MetadataAddress for a record spec using the contract spec UUID within the current context and the provided name
+func (ma MetadataAddress) AsRecordSpecAddress(name string) (MetadataAddress, error) {
 	contractSpecUUID, err := ma.ContractSpecUUID()
 	if err != nil {
-		panic(err)
+		return MetadataAddress{}, err
 	}
-	return RecordSpecMetadataAddress(contractSpecUUID, name)
+	return RecordSpecMetadataAddress(contractSpecUUID, name), nil
 }
 
-// GetContractSpecAddress returns the MetadataAddress for a contract spec given the UUID in the current record spec context
-func (ma MetadataAddress) GetContractSpecAddress() MetadataAddress {
+// AsContractSpecAddress returns the MetadataAddress for a contract spec using the contract spec UUID within the current context
+func (ma MetadataAddress) AsContractSpecAddress() (MetadataAddress, error) {
 	contractSpecUUID, err := ma.ContractSpecUUID()
 	if err != nil {
-		panic(err)
+		return MetadataAddress{}, err
 	}
-	return ContractSpecMetadataAddress(contractSpecUUID)
+	return ContractSpecMetadataAddress(contractSpecUUID), nil
 }
 
-// ScopeSessionIteratorPrefix returns an iterator prefix that finds all Sessions assigned to the metadata address scope
-// if the current address is empty then returns a prefix to iterate through all sessions
+// ScopeSessionIteratorPrefix returns an iterator prefix that finds all Sessions assigned to the scope designated in this MetadataAddress.
+// If the current address is empty this returns a prefix to iterate through all sessions.
+// If the current address is a scope, this returns a prefix to iterate through all sessions in this scope.
+// If the current address is a session or record, this returns a prefix to iterate through all sessions in the scope that contains
+// this session or record.
 func (ma MetadataAddress) ScopeSessionIteratorPrefix() ([]byte, error) {
 	if len(ma) < 1 {
 		return SessionKeyPrefix, nil
@@ -469,8 +489,11 @@ func (ma MetadataAddress) ScopeSessionIteratorPrefix() ([]byte, error) {
 	return append(SessionKeyPrefix, ma[1:17]...), nil
 }
 
-// ScopeRecordIteratorPrefix returns an iterator prefix that finds all Records assigned to the metadata address scope
-// if the current address is empty the returns a prefix to iterate through all records
+// ScopeRecordIteratorPrefix returns an iterator prefix that finds all Records assigned to the scope designated in this MetadataAddress.
+// If the current address is empty this returns a prefix to iterate through all records.
+// If the current address is a scope, this returns a prefix to iterate through all records in this scope.
+// If the current address is a session or record, this returns a prefix to iterate through all records in the scope that contains
+// this session or record.
 func (ma MetadataAddress) ScopeRecordIteratorPrefix() ([]byte, error) {
 	if len(ma) < 1 {
 		return RecordKeyPrefix, nil
@@ -482,8 +505,14 @@ func (ma MetadataAddress) ScopeRecordIteratorPrefix() ([]byte, error) {
 	return append(RecordKeyPrefix, ma[1:17]...), nil
 }
 
-// ContractSpecRecordSpecIteratorPrefix returns an iterator prefix that finds all record specifications in the metadata address contract specification
-// if the current address is empty the returns a prefix to iterate through all record specifications
+// ContractSpecRecordSpecIteratorPrefix returns an iterator prefix that finds all record specifications
+// for the contract specification designated in this MetadataAddress.
+// If the current address is empty this returns a prefix to iterate through all record specifications
+// If the current address is a contract specification, this returns a prefix to iterate through all record specifications
+// associated with that contract specification.
+// If the current address is a record specification, this returns a prefix to iterate through all record specifications
+// associated with the contract specification that contains this record specification.
+// If the current address is some other type, an error is returned.
 func (ma MetadataAddress) ContractSpecRecordSpecIteratorPrefix() ([]byte, error) {
 	if len(ma) < 1 {
 		return RecordSpecificationKeyPrefix, nil
@@ -507,43 +536,43 @@ func (ma MetadataAddress) Format(s fmt.State, verb rune) {
 	}
 }
 
-// IsScopeAddress returns true is the address is valid and matches this type
+// IsScopeAddress returns true if this address is valid and has a scope type byte.
 func (ma MetadataAddress) IsScopeAddress() bool {
 	hrp, err := VerifyMetadataAddressFormat(ma)
 	return (err == nil && hrp == PrefixScope)
 }
 
-// IsSessionAddress returns true is the address is valid and matches this type
+// IsSessionAddress returns true if this address is valid and has a session type byte.
 func (ma MetadataAddress) IsSessionAddress() bool {
 	hrp, err := VerifyMetadataAddressFormat(ma)
 	return (err == nil && hrp == PrefixSession)
 }
 
-// IsRecordAddress returns true is the address is valid and matches this type
+// IsRecordAddress returns true if the address is valid and has a record type byte.
 func (ma MetadataAddress) IsRecordAddress() bool {
 	hrp, err := VerifyMetadataAddressFormat(ma)
 	return (err == nil && hrp == PrefixRecord)
 }
 
-// IsScopeSpecificationAddress returns true is the address is valid and matches this type
+// IsScopeSpecificationAddress returns true if this address is valid and has a scope specification type byte.
 func (ma MetadataAddress) IsScopeSpecificationAddress() bool {
 	hrp, err := VerifyMetadataAddressFormat(ma)
 	return (err == nil && hrp == PrefixScopeSpecification)
 }
 
-// IsContractSpecificationAddress returns true is the address is valid and matches this type
+// IsContractSpecificationAddress returns true if this address is valid and has a contract specification type byte.
 func (ma MetadataAddress) IsContractSpecificationAddress() bool {
 	hrp, err := VerifyMetadataAddressFormat(ma)
 	return (err == nil && hrp == PrefixContractSpecification)
 }
 
-// IsRecordSpecificationAddress returns true is the address is valid and matches this type
+// IsRecordSpecificationAddress returns true if this address is valid and has a record specification type byte.
 func (ma MetadataAddress) IsRecordSpecificationAddress() bool {
 	hrp, err := VerifyMetadataAddressFormat(ma)
 	return (err == nil && hrp == PrefixRecordSpecification)
 }
 
-// isTypeOneOf returns true if the first byte is equal to the first byte in any provided option.
+// isTypeOneOf returns true if the first byte is equal to the first byte in any provided options.
 func (ma MetadataAddress) isTypeOneOf(options ...[]byte) bool {
 	if len(ma) == 0 {
 		return false
