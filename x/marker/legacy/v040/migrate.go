@@ -33,10 +33,7 @@ func Migrate(oldGenState v039marker.GenesisState) *v040marker.GenesisState {
 		})
 	}
 	return &v040marker.GenesisState{
-		Params: v040marker.Params{
-			EnableGovernance: v040marker.DefaultEnableGovernance,
-			MaxTotalSupply:   v040marker.DefaultMaxTotalSupply,
-		},
+		Params:  v040marker.DefaultParams(),
 		Markers: markerAccounts,
 	}
 }

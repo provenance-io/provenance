@@ -25,6 +25,107 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// AddMarkerProposal defines defines a governance proposal to create a new marker
+type AddMarkerProposal struct {
+	Title                  string                                  `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Description            string                                  `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	Amount                 github_com_cosmos_cosmos_sdk_types.Coin `protobuf:"bytes,3,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Coin" json:"amount"`
+	Manager                string                                  `protobuf:"bytes,4,opt,name=manager,proto3" json:"manager,omitempty"`
+	Status                 MarkerStatus                            `protobuf:"varint,5,opt,name=status,proto3,enum=provenance.marker.v1.MarkerStatus" json:"status,omitempty"`
+	MarkerType             MarkerType                              `protobuf:"varint,6,opt,name=marker_type,json=markerType,proto3,enum=provenance.marker.v1.MarkerType" json:"marker_type,omitempty"`
+	AccessList             []AccessGrant                           `protobuf:"bytes,7,rep,name=access_list,json=accessList,proto3" json:"access_list"`
+	SupplyFixed            bool                                    `protobuf:"varint,8,opt,name=supply_fixed,json=supplyFixed,proto3" json:"supply_fixed,omitempty"`
+	AllowGovernanceControl bool                                    `protobuf:"varint,9,opt,name=allow_governance_control,json=allowGovernanceControl,proto3" json:"allow_governance_control,omitempty"`
+}
+
+func (m *AddMarkerProposal) Reset()      { *m = AddMarkerProposal{} }
+func (*AddMarkerProposal) ProtoMessage() {}
+func (*AddMarkerProposal) Descriptor() ([]byte, []int) {
+	return fileDescriptor_345320af87f4ec37, []int{0}
+}
+func (m *AddMarkerProposal) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AddMarkerProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AddMarkerProposal.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AddMarkerProposal) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AddMarkerProposal.Merge(m, src)
+}
+func (m *AddMarkerProposal) XXX_Size() int {
+	return m.Size()
+}
+func (m *AddMarkerProposal) XXX_DiscardUnknown() {
+	xxx_messageInfo_AddMarkerProposal.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AddMarkerProposal proto.InternalMessageInfo
+
+func (m *AddMarkerProposal) GetTitle() string {
+	if m != nil {
+		return m.Title
+	}
+	return ""
+}
+
+func (m *AddMarkerProposal) GetDescription() string {
+	if m != nil {
+		return m.Description
+	}
+	return ""
+}
+
+func (m *AddMarkerProposal) GetManager() string {
+	if m != nil {
+		return m.Manager
+	}
+	return ""
+}
+
+func (m *AddMarkerProposal) GetStatus() MarkerStatus {
+	if m != nil {
+		return m.Status
+	}
+	return StatusUndefined
+}
+
+func (m *AddMarkerProposal) GetMarkerType() MarkerType {
+	if m != nil {
+		return m.MarkerType
+	}
+	return MarkerType_Unknown
+}
+
+func (m *AddMarkerProposal) GetAccessList() []AccessGrant {
+	if m != nil {
+		return m.AccessList
+	}
+	return nil
+}
+
+func (m *AddMarkerProposal) GetSupplyFixed() bool {
+	if m != nil {
+		return m.SupplyFixed
+	}
+	return false
+}
+
+func (m *AddMarkerProposal) GetAllowGovernanceControl() bool {
+	if m != nil {
+		return m.AllowGovernanceControl
+	}
+	return false
+}
+
 // SupplyIncreaseProposal defines a governance proposal to administer a marker and increase total supply of the marker
 // through minting coin and placing it within the marker or assigning it directly to an account
 type SupplyIncreaseProposal struct {
@@ -37,7 +138,7 @@ type SupplyIncreaseProposal struct {
 func (m *SupplyIncreaseProposal) Reset()      { *m = SupplyIncreaseProposal{} }
 func (*SupplyIncreaseProposal) ProtoMessage() {}
 func (*SupplyIncreaseProposal) Descriptor() ([]byte, []int) {
-	return fileDescriptor_345320af87f4ec37, []int{0}
+	return fileDescriptor_345320af87f4ec37, []int{1}
 }
 func (m *SupplyIncreaseProposal) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -98,7 +199,7 @@ type SupplyDecreaseProposal struct {
 func (m *SupplyDecreaseProposal) Reset()      { *m = SupplyDecreaseProposal{} }
 func (*SupplyDecreaseProposal) ProtoMessage() {}
 func (*SupplyDecreaseProposal) Descriptor() ([]byte, []int) {
-	return fileDescriptor_345320af87f4ec37, []int{1}
+	return fileDescriptor_345320af87f4ec37, []int{2}
 }
 func (m *SupplyDecreaseProposal) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -153,7 +254,7 @@ type SetAdministratorProposal struct {
 func (m *SetAdministratorProposal) Reset()      { *m = SetAdministratorProposal{} }
 func (*SetAdministratorProposal) ProtoMessage() {}
 func (*SetAdministratorProposal) Descriptor() ([]byte, []int) {
-	return fileDescriptor_345320af87f4ec37, []int{2}
+	return fileDescriptor_345320af87f4ec37, []int{3}
 }
 func (m *SetAdministratorProposal) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -222,7 +323,7 @@ type RemoveAdministratorProposal struct {
 func (m *RemoveAdministratorProposal) Reset()      { *m = RemoveAdministratorProposal{} }
 func (*RemoveAdministratorProposal) ProtoMessage() {}
 func (*RemoveAdministratorProposal) Descriptor() ([]byte, []int) {
-	return fileDescriptor_345320af87f4ec37, []int{3}
+	return fileDescriptor_345320af87f4ec37, []int{4}
 }
 func (m *RemoveAdministratorProposal) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -290,7 +391,7 @@ type ChangeStatusProposal struct {
 func (m *ChangeStatusProposal) Reset()      { *m = ChangeStatusProposal{} }
 func (*ChangeStatusProposal) ProtoMessage() {}
 func (*ChangeStatusProposal) Descriptor() ([]byte, []int) {
-	return fileDescriptor_345320af87f4ec37, []int{4}
+	return fileDescriptor_345320af87f4ec37, []int{5}
 }
 func (m *ChangeStatusProposal) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -348,6 +449,7 @@ func (m *ChangeStatusProposal) GetNewStatus() MarkerStatus {
 }
 
 func init() {
+	proto.RegisterType((*AddMarkerProposal)(nil), "provenance.marker.v1.AddMarkerProposal")
 	proto.RegisterType((*SupplyIncreaseProposal)(nil), "provenance.marker.v1.SupplyIncreaseProposal")
 	proto.RegisterType((*SupplyDecreaseProposal)(nil), "provenance.marker.v1.SupplyDecreaseProposal")
 	proto.RegisterType((*SetAdministratorProposal)(nil), "provenance.marker.v1.SetAdministratorProposal")
@@ -360,41 +462,103 @@ func init() {
 }
 
 var fileDescriptor_345320af87f4ec37 = []byte{
-	// 510 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x94, 0x41, 0x6b, 0x13, 0x41,
-	0x14, 0xc7, 0x33, 0x36, 0x0d, 0x66, 0x02, 0x29, 0x2c, 0x41, 0xd7, 0x0a, 0x9b, 0x34, 0x88, 0xc9,
-	0xa5, 0x33, 0x24, 0xde, 0xbc, 0x48, 0x52, 0x41, 0x3c, 0x08, 0x65, 0x73, 0xf3, 0x52, 0x26, 0xbb,
-	0x8f, 0xed, 0xd0, 0xec, 0xcc, 0x32, 0x33, 0x49, 0xed, 0xb7, 0xf0, 0xe8, 0x49, 0xfa, 0x15, 0xc4,
-	0xbb, 0xe7, 0x1e, 0x7b, 0x14, 0x0f, 0x45, 0x92, 0x83, 0x7e, 0x0c, 0xd9, 0x99, 0xad, 0x59, 0x70,
-	0x6f, 0xa2, 0xd0, 0xd3, 0xce, 0xbc, 0xf9, 0xcf, 0x7b, 0xff, 0xdf, 0xf2, 0x67, 0xf0, 0x93, 0x4c,
-	0xc9, 0x15, 0x08, 0x26, 0x22, 0xa0, 0x29, 0x53, 0x67, 0xa0, 0xe8, 0x6a, 0x44, 0x33, 0x25, 0x33,
-	0xa9, 0xd9, 0x42, 0x93, 0x4c, 0x49, 0x23, 0xbd, 0xce, 0x56, 0x45, 0x9c, 0x8a, 0xac, 0x46, 0xfb,
-	0x9d, 0x44, 0x26, 0xd2, 0x0a, 0x68, 0xbe, 0x72, 0xda, 0xfd, 0x20, 0x92, 0x3a, 0x95, 0x9a, 0xce,
-	0x99, 0x06, 0xba, 0x1a, 0xcd, 0xc1, 0xb0, 0x11, 0x8d, 0x24, 0x17, 0xc5, 0xf9, 0x41, 0xe5, 0xc4,
-	0xa2, 0xab, 0x93, 0x3c, 0xad, 0x94, 0xb0, 0x28, 0x02, 0xad, 0x13, 0xc5, 0x84, 0x71, 0xba, 0xfe,
-	0x0f, 0x84, 0x1f, 0xcc, 0x96, 0x59, 0xb6, 0xb8, 0x78, 0x2d, 0x22, 0x05, 0x4c, 0xc3, 0x71, 0x61,
-	0xdc, 0xeb, 0xe0, 0x5d, 0xc3, 0xcd, 0x02, 0x7c, 0xd4, 0x43, 0xc3, 0x66, 0xe8, 0x36, 0x5e, 0x0f,
-	0xb7, 0x62, 0xd0, 0x91, 0xe2, 0x99, 0xe1, 0x52, 0xf8, 0xf7, 0xec, 0x59, 0xb9, 0xe4, 0xcd, 0x71,
-	0x83, 0xa5, 0x72, 0x29, 0x8c, 0xbf, 0xd3, 0x43, 0xc3, 0xd6, 0xf8, 0x11, 0x71, 0x38, 0x24, 0xc7,
-	0x21, 0x05, 0x0e, 0x39, 0x92, 0x5c, 0x4c, 0xe9, 0xd5, 0x4d, 0xb7, 0xf6, 0xed, 0xa6, 0x3b, 0x48,
-	0xb8, 0x39, 0x5d, 0xce, 0x49, 0x24, 0x53, 0x5a, 0xb0, 0xbb, 0xcf, 0xa1, 0x8e, 0xcf, 0xa8, 0xb9,
-	0xc8, 0x40, 0xdb, 0x0b, 0x61, 0xd1, 0xd9, 0x1b, 0xe0, 0x3d, 0xc3, 0x54, 0x02, 0xe6, 0x84, 0xc5,
-	0x71, 0xac, 0x40, 0x6b, 0xbf, 0x6e, 0x9d, 0xb4, 0x5d, 0x79, 0x52, 0x54, 0x9f, 0xdf, 0xff, 0x70,
-	0xd9, 0xad, 0xfd, 0xbc, 0xec, 0xa2, 0xfe, 0x97, 0xdf, 0xa4, 0x2f, 0xe1, 0xee, 0x90, 0x96, 0x00,
-	0x3e, 0x23, 0xec, 0xcf, 0x72, 0xb4, 0x94, 0x0b, 0xae, 0x8d, 0x62, 0x46, 0xaa, 0xbf, 0x46, 0xe8,
-	0xe0, 0xdd, 0x18, 0x84, 0x4c, 0x2d, 0x41, 0x33, 0x74, 0x1b, 0xef, 0x05, 0x6e, 0xb8, 0xa8, 0xf8,
-	0xf5, 0xde, 0xce, 0xb0, 0x35, 0x3e, 0x20, 0x55, 0xe9, 0x25, 0x13, 0xab, 0x79, 0x95, 0xc7, 0x69,
-	0x5a, 0xcf, 0x01, 0xc3, 0xe2, 0x5a, 0xc9, 0xf5, 0x47, 0x84, 0x1f, 0x87, 0x90, 0xca, 0x15, 0xfc,
-	0x0f, 0xe3, 0x03, 0xbc, 0xa7, 0xec, 0xb0, 0x38, 0x0f, 0x86, 0xba, 0x25, 0x68, 0x86, 0xed, 0xa2,
-	0x3c, 0xf9, 0x23, 0x17, 0x9f, 0x10, 0xee, 0x1c, 0x9d, 0x32, 0x91, 0xc0, 0xcc, 0x30, 0xb3, 0xd4,
-	0xff, 0xc8, 0xd9, 0x04, 0x63, 0x01, 0xe7, 0x27, 0xda, 0xce, 0xb0, 0x61, 0x6d, 0x8f, 0xfb, 0xd5,
-	0xbf, 0xf5, 0x8d, 0x5d, 0x39, 0x37, 0x61, 0x53, 0xc0, 0xb9, 0x5b, 0x6e, 0x3d, 0x4f, 0x93, 0xab,
-	0x75, 0x80, 0xae, 0xd7, 0x01, 0xfa, 0xbe, 0x0e, 0xd0, 0xfb, 0x4d, 0x50, 0xbb, 0xde, 0x04, 0xb5,
-	0xaf, 0x9b, 0xa0, 0x86, 0x1f, 0x72, 0x59, 0xd9, 0xf4, 0x18, 0xbd, 0x1d, 0x97, 0xa2, 0xb7, 0x95,
-	0x1c, 0x72, 0x59, 0xda, 0xd1, 0x77, 0xb7, 0xaf, 0x85, 0x8d, 0xe2, 0xbc, 0x61, 0x5f, 0x89, 0x67,
-	0xbf, 0x02, 0x00, 0x00, 0xff, 0xff, 0x94, 0x00, 0x2c, 0x2f, 0xe4, 0x04, 0x00, 0x00,
+	// 646 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x55, 0x41, 0x6b, 0x14, 0x31,
+	0x14, 0xde, 0xd8, 0xed, 0xb6, 0x9b, 0x95, 0x16, 0x87, 0xa5, 0xc6, 0x0a, 0xb3, 0xd3, 0x22, 0x76,
+	0x2f, 0x9d, 0x61, 0xd7, 0x8b, 0xf4, 0x22, 0xdb, 0x8a, 0x55, 0x50, 0x28, 0x53, 0x4f, 0x5e, 0x86,
+	0xec, 0x4c, 0x9c, 0x86, 0xce, 0x24, 0x43, 0x92, 0xdd, 0xb6, 0xff, 0xc2, 0xa3, 0x27, 0xe9, 0x5f,
+	0x10, 0xef, 0x9e, 0x7b, 0xec, 0x51, 0x3c, 0x14, 0x69, 0x0f, 0xfa, 0x17, 0xbc, 0xc9, 0x24, 0x69,
+	0x77, 0xc0, 0x45, 0x14, 0x51, 0xe8, 0x69, 0xf3, 0xde, 0xfb, 0xde, 0x97, 0xf7, 0x65, 0xbf, 0x49,
+	0xe0, 0xbd, 0x42, 0xf0, 0x31, 0x61, 0x98, 0xc5, 0x24, 0xc8, 0xb1, 0xd8, 0x27, 0x22, 0x18, 0xf7,
+	0x82, 0x42, 0xf0, 0x82, 0x4b, 0x9c, 0x49, 0xbf, 0x10, 0x5c, 0x71, 0xa7, 0x3d, 0x41, 0xf9, 0x06,
+	0xe5, 0x8f, 0x7b, 0xcb, 0xed, 0x94, 0xa7, 0x5c, 0x03, 0x82, 0x72, 0x65, 0xb0, 0xcb, 0x6e, 0xcc,
+	0x65, 0xce, 0x65, 0x30, 0xc4, 0x92, 0x04, 0xe3, 0xde, 0x90, 0x28, 0xdc, 0x0b, 0x62, 0x4e, 0x99,
+	0xad, 0xaf, 0x4c, 0xdd, 0xd1, 0xb2, 0x1a, 0xc8, 0xfd, 0xa9, 0x10, 0x1c, 0xc7, 0x44, 0xca, 0x54,
+	0x60, 0xa6, 0x0c, 0x6e, 0xf5, 0xfb, 0x0c, 0xbc, 0x35, 0x48, 0x92, 0x17, 0x1a, 0xb2, 0x63, 0x67,
+	0x76, 0xda, 0x70, 0x56, 0x51, 0x95, 0x11, 0x04, 0x3c, 0xd0, 0x6d, 0x86, 0x26, 0x70, 0x3c, 0xd8,
+	0x4a, 0x88, 0x8c, 0x05, 0x2d, 0x14, 0xe5, 0x0c, 0xdd, 0xd0, 0xb5, 0x6a, 0xca, 0x19, 0xc2, 0x06,
+	0xce, 0xf9, 0x88, 0x29, 0x34, 0xe3, 0x81, 0x6e, 0xab, 0x7f, 0xc7, 0x37, 0x4a, 0xfc, 0x52, 0x89,
+	0x6f, 0x95, 0xf8, 0x5b, 0x9c, 0xb2, 0xcd, 0xe0, 0xe4, 0xac, 0x53, 0xfb, 0x7c, 0xd6, 0x59, 0x4b,
+	0xa9, 0xda, 0x1b, 0x0d, 0xfd, 0x98, 0xe7, 0x81, 0x95, 0x6d, 0x7e, 0xd6, 0x65, 0xb2, 0x1f, 0xa8,
+	0xa3, 0x82, 0x48, 0xdd, 0x10, 0x5a, 0x66, 0x07, 0xc1, 0xb9, 0x1c, 0x33, 0x9c, 0x12, 0x81, 0xea,
+	0x7a, 0x82, 0xcb, 0xd0, 0xd9, 0x80, 0x0d, 0xa9, 0xb0, 0x1a, 0x49, 0x34, 0xeb, 0x81, 0xee, 0x42,
+	0x7f, 0xd5, 0x9f, 0x76, 0xe6, 0xbe, 0xd1, 0xba, 0xab, 0x91, 0xa1, 0xed, 0x70, 0x06, 0xb0, 0x65,
+	0x10, 0x51, 0xb9, 0x25, 0x6a, 0x68, 0x02, 0xef, 0x57, 0x04, 0x2f, 0x8f, 0x0a, 0x12, 0xc2, 0xfc,
+	0x6a, 0xed, 0x3c, 0x85, 0x2d, 0x73, 0xbe, 0x51, 0x46, 0xa5, 0x42, 0x73, 0xde, 0x4c, 0xb7, 0xd5,
+	0x5f, 0x99, 0x4e, 0x31, 0xd0, 0xc0, 0xed, 0xf2, 0x8f, 0xd8, 0xac, 0x97, 0x27, 0x11, 0x42, 0xd3,
+	0xfb, 0x9c, 0x4a, 0xe5, 0xac, 0xc0, 0x9b, 0x72, 0x54, 0x14, 0xd9, 0x51, 0xf4, 0x9a, 0x1e, 0x92,
+	0x04, 0xcd, 0x7b, 0xa0, 0x3b, 0x1f, 0xb6, 0x4c, 0xee, 0x49, 0x99, 0x72, 0x1e, 0x42, 0x84, 0xb3,
+	0x8c, 0x1f, 0x44, 0x29, 0x1f, 0x13, 0xa1, 0xe9, 0xa3, 0x98, 0x33, 0x25, 0x78, 0x86, 0x9a, 0x1a,
+	0xbe, 0xa4, 0xeb, 0xdb, 0x57, 0xe5, 0x2d, 0x53, 0xdd, 0x98, 0x7f, 0x7b, 0xdc, 0xa9, 0x7d, 0x3b,
+	0xee, 0x80, 0xd5, 0xaf, 0x00, 0x2e, 0xed, 0x6a, 0xce, 0x67, 0x2c, 0x16, 0x04, 0x4b, 0x72, 0x2d,
+	0x0c, 0xb0, 0x06, 0x17, 0x15, 0x16, 0x29, 0x51, 0x11, 0x4e, 0x92, 0x44, 0x10, 0x29, 0xad, 0x11,
+	0x16, 0x4c, 0x7a, 0x60, 0xb3, 0x15, 0xa5, 0x1f, 0xaf, 0x94, 0x3e, 0x26, 0xd7, 0x47, 0x69, 0x45,
+	0xc0, 0x07, 0x00, 0xd1, 0x6e, 0x29, 0x2d, 0xa7, 0x8c, 0x4a, 0x25, 0xb0, 0xe2, 0x7f, 0xff, 0xb5,
+	0xb6, 0xe1, 0x6c, 0x42, 0x18, 0xcf, 0xb5, 0x82, 0x66, 0x68, 0x02, 0xe7, 0x11, 0x6c, 0x18, 0x2b,
+	0xa2, 0xfa, 0x9f, 0x39, 0xd8, 0xb6, 0x55, 0xa6, 0x7e, 0x07, 0xe0, 0xdd, 0x90, 0xe4, 0x7c, 0x4c,
+	0xfe, 0xc7, 0xe0, 0x6b, 0x70, 0x51, 0xe8, 0xcd, 0x92, 0xd2, 0x18, 0xe2, 0x52, 0x41, 0x33, 0x5c,
+	0xb0, 0xe9, 0xc1, 0x4f, 0xbe, 0x78, 0x0f, 0x60, 0x7b, 0x6b, 0x0f, 0xb3, 0x94, 0x98, 0xeb, 0xe0,
+	0x1f, 0x4d, 0x36, 0x80, 0x90, 0x91, 0x83, 0xc8, 0x5e, 0x4e, 0xf5, 0xdf, 0xbe, 0x9c, 0x9a, 0x8c,
+	0x1c, 0x98, 0xe5, 0x64, 0xe6, 0xcd, 0xf4, 0xe4, 0xdc, 0x05, 0xa7, 0xe7, 0x2e, 0xf8, 0x72, 0xee,
+	0x82, 0x37, 0x17, 0x6e, 0xed, 0xf4, 0xc2, 0xad, 0x7d, 0xba, 0x70, 0x6b, 0xf0, 0x36, 0xe5, 0x53,
+	0x49, 0x77, 0xc0, 0xab, 0x7e, 0xc5, 0x7a, 0x13, 0xc8, 0x3a, 0xe5, 0x95, 0x28, 0x38, 0xbc, 0x7c,
+	0x29, 0xb4, 0x15, 0x87, 0x0d, 0xfd, 0x42, 0x3c, 0xf8, 0x11, 0x00, 0x00, 0xff, 0xff, 0x7f, 0x33,
+	0xa3, 0x07, 0xe0, 0x06, 0x00, 0x00,
 }
 
+func (this *AddMarkerProposal) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*AddMarkerProposal)
+	if !ok {
+		that2, ok := that.(AddMarkerProposal)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.Title != that1.Title {
+		return false
+	}
+	if this.Description != that1.Description {
+		return false
+	}
+	if !this.Amount.Equal(that1.Amount) {
+		return false
+	}
+	if this.Manager != that1.Manager {
+		return false
+	}
+	if this.Status != that1.Status {
+		return false
+	}
+	if this.MarkerType != that1.MarkerType {
+		return false
+	}
+	if len(this.AccessList) != len(that1.AccessList) {
+		return false
+	}
+	for i := range this.AccessList {
+		if !this.AccessList[i].Equal(&that1.AccessList[i]) {
+			return false
+		}
+	}
+	if this.SupplyFixed != that1.SupplyFixed {
+		return false
+	}
+	if this.AllowGovernanceControl != that1.AllowGovernanceControl {
+		return false
+	}
+	return true
+}
 func (this *SupplyIncreaseProposal) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
@@ -567,6 +731,104 @@ func (this *ChangeStatusProposal) Equal(that interface{}) bool {
 	}
 	return true
 }
+func (m *AddMarkerProposal) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AddMarkerProposal) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AddMarkerProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.AllowGovernanceControl {
+		i--
+		if m.AllowGovernanceControl {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x48
+	}
+	if m.SupplyFixed {
+		i--
+		if m.SupplyFixed {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x40
+	}
+	if len(m.AccessList) > 0 {
+		for iNdEx := len(m.AccessList) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.AccessList[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintProposals(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x3a
+		}
+	}
+	if m.MarkerType != 0 {
+		i = encodeVarintProposals(dAtA, i, uint64(m.MarkerType))
+		i--
+		dAtA[i] = 0x30
+	}
+	if m.Status != 0 {
+		i = encodeVarintProposals(dAtA, i, uint64(m.Status))
+		i--
+		dAtA[i] = 0x28
+	}
+	if len(m.Manager) > 0 {
+		i -= len(m.Manager)
+		copy(dAtA[i:], m.Manager)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.Manager)))
+		i--
+		dAtA[i] = 0x22
+	}
+	{
+		size := m.Amount.Size()
+		i -= size
+		if _, err := m.Amount.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintProposals(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	if len(m.Description) > 0 {
+		i -= len(m.Description)
+		copy(dAtA[i:], m.Description)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.Description)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Title) > 0 {
+		i -= len(m.Title)
+		copy(dAtA[i:], m.Title)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.Title)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *SupplyIncreaseProposal) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -839,6 +1101,47 @@ func encodeVarintProposals(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
+func (m *AddMarkerProposal) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Title)
+	if l > 0 {
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	l = len(m.Description)
+	if l > 0 {
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	l = m.Amount.Size()
+	n += 1 + l + sovProposals(uint64(l))
+	l = len(m.Manager)
+	if l > 0 {
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	if m.Status != 0 {
+		n += 1 + sovProposals(uint64(m.Status))
+	}
+	if m.MarkerType != 0 {
+		n += 1 + sovProposals(uint64(m.MarkerType))
+	}
+	if len(m.AccessList) > 0 {
+		for _, e := range m.AccessList {
+			l = e.Size()
+			n += 1 + l + sovProposals(uint64(l))
+		}
+	}
+	if m.SupplyFixed {
+		n += 2
+	}
+	if m.AllowGovernanceControl {
+		n += 2
+	}
+	return n
+}
+
 func (m *SupplyIncreaseProposal) Size() (n int) {
 	if m == nil {
 		return 0
@@ -964,6 +1267,297 @@ func sovProposals(x uint64) (n int) {
 }
 func sozProposals(x uint64) (n int) {
 	return sovProposals(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *AddMarkerProposal) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowProposals
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AddMarkerProposal: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AddMarkerProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Title = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Description", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Description = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Amount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Manager", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Manager = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			m.Status = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Status |= MarkerStatus(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MarkerType", wireType)
+			}
+			m.MarkerType = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MarkerType |= MarkerType(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AccessList", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AccessList = append(m.AccessList, AccessGrant{})
+			if err := m.AccessList[len(m.AccessList)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SupplyFixed", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.SupplyFixed = bool(v != 0)
+		case 9:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AllowGovernanceControl", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.AllowGovernanceControl = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipProposals(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
 }
 func (m *SupplyIncreaseProposal) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)

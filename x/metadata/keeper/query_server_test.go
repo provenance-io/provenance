@@ -42,18 +42,16 @@ type QueryServerTestSuite struct {
 	specUUID uuid.UUID
 	specID   types.MetadataAddress
 
-	groupUUID uuid.UUID
-	groupId   types.MetadataAddress
-
 	record     types.Record
 	recordName string
-	recordId   types.MetadataAddress
+	recordID   types.MetadataAddress
 
 	sessionUUID uuid.UUID
-	sessionId   types.MetadataAddress
+	sessionID   types.MetadataAddress
+	sessionName string
 
 	cSpecUUID uuid.UUID
-	cSpecId   types.MetadataAddress
+	cSpecID   types.MetadataAddress
 }
 
 func (s *QueryServerTestSuite) SetupTest() {
@@ -76,17 +74,15 @@ func (s *QueryServerTestSuite) SetupTest() {
 	s.app = app
 	s.ctx = ctx
 
-	s.groupUUID = uuid.New()
-	s.groupId = types.SessionMetadataAddress(s.scopeUUID, s.groupUUID)
-
 	s.recordName = "TestRecord"
-	s.recordId = types.RecordMetadataAddress(s.scopeUUID, s.recordName)
+	s.recordID = types.RecordMetadataAddress(s.scopeUUID, s.recordName)
 
 	s.sessionUUID = uuid.New()
-	s.sessionId = types.SessionMetadataAddress(s.scopeUUID, s.sessionUUID)
+	s.sessionID = types.SessionMetadataAddress(s.scopeUUID, s.sessionUUID)
+	s.sessionName = "TestSession"
 
 	s.cSpecUUID = uuid.New()
-	s.cSpecId = types.ContractSpecMetadataAddress(s.cSpecUUID)
+	s.cSpecID = types.ContractSpecMetadataAddress(s.cSpecUUID)
 
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
 
@@ -101,7 +97,7 @@ func TestQuerierTestSuite(t *testing.T) {
 }
 
 func (s *QueryServerTestSuite) TestScopeQuery() {
-	app, ctx, queryClient, user1, user2, recordName := s.app, s.ctx, s.queryClient, s.user1, s.user2, s.recordName
+	app, ctx, queryClient, user1, user2, recordName, sessionName := s.app, s.ctx, s.queryClient, s.user1, s.user2, s.recordName, s.sessionName
 
 	testIDs := make([]types.MetadataAddress, 10)
 	for i := 0; i < 10; i++ {
@@ -110,37 +106,43 @@ func (s *QueryServerTestSuite) TestScopeQuery() {
 			valueOwner = user2
 		}
 
-		sUUID := uuid.New()
-		name := fmt.Sprintf("%s%v", recordName, i)
-		gUUID := uuid.New()
-		gId := types.SessionMetadataAddress(sUUID, gUUID)
-
-		testIDs[i] = types.ScopeMetadataAddress(sUUID)
+		scopeUUID := uuid.New()
+		testIDs[i] = types.ScopeMetadataAddress(scopeUUID)
 		ns := types.NewScope(testIDs[i], nil, ownerPartyList(user1), []string{user1}, valueOwner)
 		app.MetadataKeeper.SetScope(ctx, *ns)
 
+		sessionUUID := uuid.New()
+		sessionID := types.SessionMetadataAddress(scopeUUID, sessionUUID)
+		sName := fmt.Sprintf("%s%d", sessionName, i)
+		session := types.NewSession(sName, sessionID, s.cSpecID, ownerPartyList(user1), nil)
+		app.MetadataKeeper.SetSession(ctx, *session)
+
+		rName := fmt.Sprintf("%s%d", recordName, i)
 		process := types.NewProcess("processname", &types.Process_Hash{Hash: "HASH"}, "process_method")
-		record := types.NewRecord(name, gId, *process, []types.RecordInput{}, []types.RecordOutput{})
+		record := types.NewRecord(rName, sessionID, *process, []types.RecordInput{}, []types.RecordOutput{})
 		app.MetadataKeeper.SetRecord(ctx, *record)
 	}
-	uuid, err := testIDs[0].ScopeUUID()
-	s.NoError(err)
+	scope0UUID, err := testIDs[0].ScopeUUID()
+	s.NoError(err, "ScopeUUID error")
 
 	_, err = queryClient.Scope(gocontext.Background(), &types.ScopeRequest{})
-	s.EqualError(err, "rpc error: code = InvalidArgument desc = scope uuid cannot be empty")
+	s.EqualError(err, "rpc error: code = InvalidArgument desc = scope uuid cannot be empty", "empty request error")
 
 	_, err = queryClient.Scope(gocontext.Background(), &types.ScopeRequest{ScopeUuid: "6332c1a4-foo1-bare-895b-invalid65cb6"})
-	s.EqualError(err, "rpc error: code = InvalidArgument desc = invalid scope uuid: invalid UUID format")
+	s.EqualError(err, "rpc error: code = InvalidArgument desc = invalid scope uuid: invalid UUID format", "invalid uuid in request error")
 
-	scopeResponse, err := queryClient.Scope(gocontext.Background(), &types.ScopeRequest{ScopeUuid: uuid.String()})
-	s.NoError(err)
-	s.NotNil(scopeResponse.Scope)
-	s.Equal(testIDs[0], scopeResponse.Scope.ScopeId)
+	scopeResponse, err := queryClient.Scope(gocontext.Background(), &types.ScopeRequest{ScopeUuid: scope0UUID.String()})
+	s.NoError(err, "valid request error")
+	s.NotNil(scopeResponse.Scope, "scope in scope response")
+	s.Equal(testIDs[0], scopeResponse.Scope.ScopeId, "scopeId")
 
-	name := fmt.Sprintf("%s%v", recordName, 0)
-	s.Equal(1, len(scopeResponse.Records))
-	s.Equal(name, scopeResponse.Records[0].Name)
-	// TODO assert record groups when available
+	record0Name := fmt.Sprintf("%s%v", recordName, 0)
+	s.Equal(1, len(scopeResponse.Records), "records count")
+	s.Equal(record0Name, scopeResponse.Records[0].Name, "record name")
+
+	session0Name := fmt.Sprintf("%s%v", sessionName, 0)
+	s.Equal(1, len(scopeResponse.Sessions), "session count")
+	s.Equal(session0Name, scopeResponse.Sessions[0].Name, "session name")
 
 	// only one scope has value owner set (user2)
 	valueResponse, err := queryClient.ValueOwnership(gocontext.Background(), &types.ValueOwnershipRequest{Address: user2})
@@ -159,13 +161,13 @@ func (s *QueryServerTestSuite) TestScopeQuery() {
 }
 
 func (s *QueryServerTestSuite) TestRecordQuery() {
-	app, ctx, queryClient, scopeUUID, scopeID, groupID, recordName := s.app, s.ctx, s.queryClient, s.scopeUUID, s.scopeID, s.groupId, s.recordName
+	app, ctx, queryClient, scopeUUID, scopeID, sessionID, recordName := s.app, s.ctx, s.queryClient, s.scopeUUID, s.scopeID, s.sessionID, s.recordName
 
 	recordNames := make([]string, 10)
 	for i := 0; i < 10; i++ {
 		recordNames[i] = fmt.Sprintf("%s%v", recordName, i)
 		process := types.NewProcess("processname", &types.Process_Hash{Hash: "HASH"}, "process_method")
-		record := types.NewRecord(recordNames[i], groupID, *process, []types.RecordInput{}, []types.RecordOutput{})
+		record := types.NewRecord(recordNames[i], sessionID, *process, []types.RecordInput{}, []types.RecordOutput{})
 		app.MetadataKeeper.SetRecord(ctx, *record)
 	}
 
@@ -209,11 +211,11 @@ func (s *QueryServerTestSuite) TestRecordQuery() {
 }
 
 func (s *QueryServerTestSuite) TestSessionQuery() {
-	app, ctx, queryClient, scopeID, scopeUUID, sessionID, sessionUUID, cSpecID := s.app, s.ctx, s.queryClient, s.scopeID, s.scopeUUID, s.sessionId, s.sessionUUID, s.cSpecId
+	app, ctx, queryClient, scopeID, scopeUUID, sessionID, sessionUUID, cSpecID := s.app, s.ctx, s.queryClient, s.scopeID, s.scopeUUID, s.sessionID, s.sessionUUID, s.cSpecID
 
 	session := types.NewSession("name", sessionID, cSpecID, []types.Party{
 		{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: types.PartyType_PARTY_TYPE_AFFILIATE}},
-		types.AuditFields{CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", CreatedDate: time.Now(),
+		&types.AuditFields{CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", CreatedDate: time.Now(),
 			UpdatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", UpdatedDate: time.Now(),
 			Message: "message",
 		})
@@ -222,7 +224,7 @@ func (s *QueryServerTestSuite) TestSessionQuery() {
 		sID := types.SessionMetadataAddress(scopeUUID, uuid.New())
 		session := types.NewSession("name", sID, cSpecID, []types.Party{
 			{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: types.PartyType_PARTY_TYPE_AFFILIATE}},
-			types.AuditFields{CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", CreatedDate: time.Now(),
+			&types.AuditFields{CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", CreatedDate: time.Now(),
 				UpdatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", UpdatedDate: time.Now(),
 				Message: "message",
 			})
@@ -276,3 +278,5 @@ func (s *QueryServerTestSuite) TestSessionQuery() {
 // TODO: ContractSpecificationExtended tests
 // TODO: RecordSpecificationsForContractSpecification test
 // TODO: RecordSpecification tests
+// TODO: RecordSpecificationByID tests
+

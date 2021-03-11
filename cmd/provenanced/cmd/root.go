@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -41,8 +42,12 @@ import (
 	"github.com/provenance-io/provenance/app"
 )
 
-// EnvTypeFlag is a flag for indicating a testnet
-const EnvTypeFlag = "testnet"
+const (
+	// EnvTypeFlag is a flag for indicating a testnet
+	EnvTypeFlag = "testnet"
+	// Flag used to indicate coin type.
+	CoinTypeFlag = "coin-type"
+)
 
 // ChainID is the id of the running chain
 var ChainID string
@@ -81,6 +86,8 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	overwriteFlagDefaults(rootCmd, map[string]string{
 		flags.FlagChainID:        ChainID,
 		flags.FlagKeyringBackend: "test",
+		// Override default value for coin-type to match our mainnet value.
+		CoinTypeFlag: fmt.Sprint(app.CoinTypeMainNet),
 	})
 
 	return rootCmd, encodingConfig
@@ -121,6 +128,8 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		tmcli.NewCompletionCmd(rootCmd, true),
 		testnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
+		AddMetaAddressParser(),
+		AddMetaAddressEncoder(),
 	)
 
 	server.AddCommands(rootCmd, app.DefaultNodeHome(appName), newApp, createSimappAndExport, addModuleInitFlags)
@@ -257,13 +266,13 @@ func createSimappAndExport(
 	encCfg.Marshaler = codec.NewProtoCodec(encCfg.InterfaceRegistry)
 	var a *app.App
 	if height != -1 {
-		a = app.New(appName, logger, db, traceStore, false, map[int64]bool{}, "", uint(1), encCfg, appOpts)
+		a = app.New(appName, logger, db, traceStore, false, map[int64]bool{}, "", cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)), encCfg, appOpts)
 
 		if err := a.LoadHeight(height); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		a = app.New(appName, logger, db, traceStore, true, map[int64]bool{}, "", uint(1), encCfg, appOpts)
+		a = app.New(appName, logger, db, traceStore, true, map[int64]bool{}, "", cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)), encCfg, appOpts)
 	}
 
 	return a.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)

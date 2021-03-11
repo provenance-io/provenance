@@ -15,8 +15,18 @@ BUILDDIR ?= $(CURDIR)/build
 LEDGER_ENABLED ?= true
 WITH_CLEVELDB ?= yes
 
-VERSION := $(shell ( git describe --tags 2>/dev/null || echo "v0.0.0" ) | sed 's/^v//')
-COMMIT := $(shell git log -1 --format='%H')
+BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+TM_VERSION := $(shell go list -m github.com/tendermint/tendermint | sed 's:.* ::') # grab everything after the space in "github.com/tendermint/tendermint v0.34.7"
+COMMIT := $(shell git log -1 --format='%h')
+# don't override user values
+ifeq (,$(VERSION))
+  VERSION := $(shell git describe --exact-match 2>/dev/null)
+  # if VERSION is empty, then populate it with branch's name and raw commit hash
+  ifeq (,$(VERSION))
+    VERSION := $(BRANCH)-$(COMMIT)
+  endif
+endif
+
 
 GO := go
 
@@ -72,7 +82,8 @@ ldflags = -w -s \
 	-X github.com/cosmos/cosmos-sdk/version.AppName=provenanced \
 	-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
-	-X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)"
+	-X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" \
+	-X github.com/tendermint/tendermint/version.TMCoreSemVer=$(TM_VERSION)
 
 ifeq ($(WITH_CLEVELDB),yes)
 	ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=cleveldb
@@ -127,6 +138,8 @@ run: check-built run-config;
 
 RELEASE_TAG=SNAPSHOT
 RELEASE_BIN=$(BUILDDIR)/bin
+RELEASE_PROTO_NAME=protos-$(RELEASE_TAG).zip
+RELEASE_PROTO=$(BUILDDIR)/$(RELEASE_PROTO_NAME)
 RELEASE_PLAN=$(BUILDDIR)/plan-$(RELEASE_TAG).json
 RELEASE_CHECKSUM_NAME=sha256sum.txt
 RELEASE_CHECKSUM=$(BUILDDIR)/$(RELEASE_CHECKSUM_NAME)
@@ -165,8 +178,12 @@ build-release-zip: build-release-bin
 	  zip -r $(RELEASE_ZIP_NAME) bin/ && \
 	cd ..
 
+.PHONY: bulid-release-proto
+build-release-proto:
+	scripts/protoball.sh $(RELEASE_PROTO)
+
 .PHONY: build-release
-build-release: build-release-zip build-release-plan
+build-release: build-release-zip build-release-plan build-release-proto
 
 ##############################
 # Tools / Dependencies
