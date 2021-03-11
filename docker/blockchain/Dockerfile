@@ -28,5 +28,5 @@ COPY --from=build /go/bin/provenanced /usr/bin/provenanced
 ENV PIO_HOME=/home/provenance
 WORKDIR /home/provenance
 
-EXPOSE 26656 26657
+EXPOSE 9090 26656 26657
 CMD ["/usr/bin/provenanced"]
