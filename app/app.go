@@ -298,6 +298,7 @@ func New(
 	// grant capabilities for the ibc and ibc-transfer modules
 	scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule(ibchost.ModuleName)
 	scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
+	scopedWasmKeeper := app.CapabilityKeeper.ScopeToModule(wasm.ModuleName)
 
 	// add keepers
 	app.AccountKeeper = authkeeper.NewAccountKeeper(
@@ -373,6 +374,11 @@ func New(
 	// Add the staking feature and indicate that provwasm contracts can be run on this chain.
 	supportedFeatures := "staking,provenance"
 
+	// Create IBC Keeper
+	app.IBCKeeper = ibckeeper.NewKeeper(
+		appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), app.StakingKeeper, scopedIBCKeeper,
+	)
+
 	// The last arguments contain custom message handlers, and custom query handlers,
 	// to allow smart contracts to use provenance modules.
 	app.WasmKeeper = wasm.NewKeeper(
@@ -383,17 +389,16 @@ func New(
 		app.BankKeeper,
 		app.StakingKeeper,
 		app.DistrKeeper,
+		app.IBCKeeper.ChannelKeeper,
+		&app.IBCKeeper.PortKeeper,
+		scopedWasmKeeper,
 		wasmRouter,
+		app.GRPCQueryRouter(),
 		wasmDir,
 		wasmConfig,
 		supportedFeatures,
 		provwasm.MessageEncoders(encoderRegistry, logger),
 		provwasm.QueryPlugins(querierRegistry),
-	)
-
-	// Create IBC Keeper
-	app.IBCKeeper = ibckeeper.NewKeeper(
-		appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), app.StakingKeeper, scopedIBCKeeper,
 	)
 
 	// register the proposal types
@@ -458,7 +463,7 @@ func New(
 		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper),
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper),
 		attribute.NewAppModule(app.AttributeKeeper),
-		wasm.NewAppModule(&app.WasmKeeper, app.StakingKeeper),
+		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper),
 
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
@@ -534,7 +539,7 @@ func New(
 		// marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper),
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper),
 		attribute.NewAppModule(app.AttributeKeeper),
-		wasm.NewAppModule(&app.WasmKeeper, app.StakingKeeper),
+		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper),
 
 		params.NewAppModule(app.ParamsKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
