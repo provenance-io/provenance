@@ -14,7 +14,7 @@ COPY vendor/ ./vendor/
 RUN go build -mod vendor -tags cleveldb -o /go/bin/ ./cmd/...
 
 ###
-FROM debian:buster-slim
+FROM debian:buster-slim as run
 
 RUN apt-get update && \
     apt-get upgrade -y && \
