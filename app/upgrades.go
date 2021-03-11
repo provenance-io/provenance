@@ -46,8 +46,9 @@ func CustomUpgradeStoreLoader(app *App, info storetypes.UpgradeInfo) baseapp.Sto
 		if handlers[name].Handler == nil {
 			handler = noopHandler
 		} else {
+			ref := handlers[name]
 			handler = func(ctx sdk.Context, plan upgradetypes.Plan) {
-				handlers[name].Handler(app, ctx, plan)
+				ref.Handler(app, ctx, plan)
 			}
 		}
 		app.UpgradeKeeper.SetUpgradeHandler(name, handler)
