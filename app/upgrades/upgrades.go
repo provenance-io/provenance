@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/provenance-io/provenance/app"
-	"github.com/provenance-io/provenance/x/marker/types"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 var (
@@ -29,7 +29,7 @@ var handlers = map[string]appUpgrade{
 	"v0.2.1": {
 		Handler: func(app *app.App, ctx sdk.Context, plan upgradetypes.Plan) {
 			existing := app.MarkerKeeper.GetParams(ctx)
-			existing.UnrestrictedDenomRegex = types.DefaultUnrestrictedDenomRegex
+			existing.UnrestrictedDenomRegex = markertypes.DefaultUnrestrictedDenomRegex
 			app.MarkerKeeper.SetParams(ctx, existing)
 		},
 	},
