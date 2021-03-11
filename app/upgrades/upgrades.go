@@ -23,6 +23,8 @@ type appUpgrade struct {
 }
 
 var handlers = map[string]appUpgrade{
+	"v0.2.0": {},
+
 	// TODO - Add new upgrade definitions here.
 }
 

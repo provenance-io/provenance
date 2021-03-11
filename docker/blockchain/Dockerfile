@@ -14,7 +14,7 @@ COPY vendor/ ./vendor/
 RUN go build -mod vendor -tags cleveldb -o /go/bin/ ./cmd/...
 
 ###
-FROM debian:buster-slim
+FROM debian:buster-slim as run
 
 RUN apt-get update && \
     apt-get upgrade -y && \
@@ -28,5 +28,5 @@ COPY --from=build /go/bin/provenanced /usr/bin/provenanced
 ENV PIO_HOME=/home/provenance
 WORKDIR /home/provenance
 
-EXPOSE 26656 26657
+EXPOSE 9090 26656 26657
 CMD ["/usr/bin/provenanced"]
