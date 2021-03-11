@@ -7,8 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/provenance-io/provenance/app/upgrades"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/gorilla/mux"
@@ -575,7 +573,7 @@ func New(
 		panic(err)
 	}
 
-	storeLoader := upgrades.CustomUpgradeStoreLoader(app, upgradeInfo)
+	storeLoader := CustomUpgradeStoreLoader(app, upgradeInfo)
 	if storeLoader != nil {
 		app.SetStoreLoader(storeLoader)
 	}

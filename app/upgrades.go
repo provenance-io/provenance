@@ -1,11 +1,10 @@
-package upgrades
+package app
 
 import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	"github.com/provenance-io/provenance/app"
 )
 
 var (
@@ -14,7 +13,7 @@ var (
 	}
 )
 
-type appUpgradeHandler = func(*app.App, sdk.Context, upgradetypes.Plan)
+type appUpgradeHandler = func(*App, sdk.Context, upgradetypes.Plan)
 
 type appUpgrade struct {
 	Added   []string
@@ -26,14 +25,14 @@ type appUpgrade struct {
 var handlers = map[string]appUpgrade{
 	"v0.2.0": {},
 	"v0.2.1": {
-		Handler: func(app *app.App, ctx sdk.Context, plan upgradetypes.Plan){
+		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan){
 		},
 	},
 
 	// TODO - Add new upgrade definitions here.
 }
 
-func CustomUpgradeStoreLoader(app *app.App, info storetypes.UpgradeInfo) baseapp.StoreLoader {
+func CustomUpgradeStoreLoader(app *App, info storetypes.UpgradeInfo) baseapp.StoreLoader {
 	// Register all explicit appUpgrades
 	for name, upgrade := range handlers {
 		// If the handler has been defined, add it here, otherwise, use no-op.
