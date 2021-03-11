@@ -7,9 +7,10 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/require"
+
 	"github.com/provenance-io/provenance/cmd/provenanced/cmd"
 	"github.com/provenance-io/provenance/x/metadata/types"
-	"github.com/stretchr/testify/require"
 )
 
 func TestAddMetaAddressParser(t *testing.T) {
