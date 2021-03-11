@@ -372,7 +372,7 @@ func New(
 	querierRegistry.RegisterQuerier(markertypes.RouterKey, markerwasm.Querier(app.MarkerKeeper))
 
 	// Add the staking feature and indicate that provwasm contracts can be run on this chain.
-	supportedFeatures := "staking,provenance"
+	supportedFeatures := "staking,provenance,stargate"
 
 	// Create IBC Keeper
 	app.IBCKeeper = ibckeeper.NewKeeper(
