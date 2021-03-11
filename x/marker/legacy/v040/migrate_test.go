@@ -77,7 +77,8 @@ func TestMigrate(t *testing.T) {
   ],
   "params": {
     "enable_governance": true,
-    "max_total_supply": "100000000000"
+    "max_total_supply": "100000000000",
+    "unrestricted_denom_regex": "[a-zA-Z][a-zA-Z0-9/]{2,64}"
   }
 }`, addr1.String(), addr1.String(), addr1.String())
 

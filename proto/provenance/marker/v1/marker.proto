@@ -19,6 +19,9 @@ message Params {
   uint64 max_total_supply = 1 [(gogoproto.customtype) = "uint64", (gogoproto.nullable) = false];
   // indicates if governance based controls of markers is allowed.
   bool enable_governance = 2;
+  // a regular expression used to validate marker denom values from normal create requests (governance
+  // requests are only subject to platform coin validation denom expression)
+  string unrestricted_denom_regex = 3;
 }
 
 // MarkerAccount holds the marker configuration information in addition to a base account structure.

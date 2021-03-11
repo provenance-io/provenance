@@ -39,6 +39,7 @@ func SetConfig(testnet bool) {
 	}
 
 	config := sdk.GetConfig()
+	config.SetCoinType(uint32(CoinType))
 	config.SetFullFundraiserPath(fmt.Sprintf("m/44'/%d'/0'/0/0", CoinType))
 	config.SetBech32PrefixForAccount(AccountAddressPrefix, AccountPubKeyPrefix)
 	config.SetBech32PrefixForValidator(ValidatorAddressPrefix, ValidatorPubKeyPrefix)

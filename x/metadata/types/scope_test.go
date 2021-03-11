@@ -4,11 +4,11 @@ import (
 	"encoding/hex"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/types/time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -335,7 +335,7 @@ func (s *scopeTestSuite) TestSessionValidateBasic() {
 			"valid session",
 			NewSession("name", sessionID, contractSpec, []Party{
 				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_AFFILIATE}},
-				AuditFields{CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", CreatedDate: time.Now(),
+				&AuditFields{CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", CreatedDate: time.Now(),
 					UpdatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", UpdatedDate: time.Now(),
 					Message: "message",
 				}),
@@ -343,85 +343,58 @@ func (s *scopeTestSuite) TestSessionValidateBasic() {
 			false,
 		},
 		{
+			"valid session - no audit",
+			NewSession("name", sessionID, contractSpec, []Party{
+				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_AFFILIATE}}, nil),
+			"",
+			false,
+		},
+		{
 			"invalid session, invalid prefix",
 			NewSession("my_perfect_session", recordID, contractSpec, []Party{
-				{Address: "invalidpartyaddress", Role: PartyType_PARTY_TYPE_CUSTODIAN}}, AuditFields{}),
+				{Address: "invalidpartyaddress", Role: PartyType_PARTY_TYPE_CUSTODIAN}}, nil),
 			"invalid session identifier (expected: session, got record)",
 			true,
 		},
 		{
 			"invalid session, invalid party address",
 			NewSession("my_perfect_session", sessionID, contractSpec, []Party{
-				{Address: "invalidpartyaddress", Role: PartyType_PARTY_TYPE_CUSTODIAN}}, AuditFields{}),
+				{Address: "invalidpartyaddress", Role: PartyType_PARTY_TYPE_CUSTODIAN}}, nil),
 			"invalid party on session: invalid address: decoding bech32 failed: invalid index of 1",
 			true,
 		},
 		{
 			"invalid session, invalid party type",
 			NewSession("my_perfect_session", sessionID, contractSpec, []Party{
-				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_UNSPECIFIED}}, AuditFields{}),
+				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_UNSPECIFIED}}, nil),
 			"invalid party on session: invalid party type;  party type not specified",
 			true,
 		},
 		{
 			"Invalid session, must have at least one party ",
-			NewSession("my_perfect_session", sessionID, contractSpec, []Party{}, AuditFields{}),
+			NewSession("my_perfect_session", sessionID, contractSpec, []Party{}, nil),
 			"session must have at least one party",
 			true,
 		},
 		{
 			"invalid session, invalid spec id",
 			NewSession("my_perfect_session", sessionID, recordID, []Party{
-				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_AFFILIATE}}, AuditFields{}),
+				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_AFFILIATE}}, nil),
 			"invalid contract specification identifier (expected: contractspec, got record)",
 			true,
 		},
 		{
 			"Invalid session, session name empty",
 			NewSession("", sessionID, contractSpec, []Party{
-				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_AFFILIATE}}, AuditFields{}),
+				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_AFFILIATE}}, nil),
 			"session name can not be empty",
-			true,
-		},
-		{
-			"Invalid session, invalid created by",
-			NewSession("name", sessionID, contractSpec, []Party{
-				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_AFFILIATE}},
-				AuditFields{CreatedBy: "a"}),
-			"invalid session audit:createdby decoding bech32 failed: invalid bech32 string length 1",
-			true,
-		},
-		{
-			"Invalid session, invalid created date",
-			NewSession("name", sessionID, contractSpec, []Party{
-				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_AFFILIATE}},
-				AuditFields{CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
-			"invalid/null session audit created date",
-			true,
-		},
-		{
-			"Invalid session, invalid updated by",
-			NewSession("name", sessionID, contractSpec, []Party{
-				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_AFFILIATE}},
-				AuditFields{CreatedBy: "a", CreatedDate: time.Now(),
-					UpdatedBy: ""}),
-			"invalid session audit:createdby decoding bech32 failed: invalid bech32 string length 1",
-			true,
-		},
-		{
-			"Invalid session, invalid update date",
-			NewSession("name", sessionID, contractSpec, []Party{
-				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_AFFILIATE}},
-				AuditFields{CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", CreatedDate: time.Now(),
-					UpdatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
-			"invalid/null session audit updated date",
 			true,
 		},
 		{
 			"Invalid session, max audit message length too long",
 			NewSession("name", sessionID, contractSpec, []Party{
 				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_AFFILIATE}},
-				AuditFields{CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", CreatedDate: time.Now(),
+				&AuditFields{CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", CreatedDate: time.Now(),
 					UpdatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", UpdatedDate: time.Now(),
 					Message: "messssssssssaaaaaaaaaage messssssssssaaaaaaaaaage messssssssssaaaaaaaaaage messssssssssaaaaaaaaaage messssssssssaaaaaaaaaage messssssssssaaaaaaaaaage messssssssssaaaaaaaaaage messssssssssaaaaaaaaaage  1",
 				}),
@@ -454,9 +427,8 @@ func (s *scopeTestSuite) TestSessionString() {
 	contractSpec := ContractSpecMetadataAddress(uuid.New())
 	session := NewSession("name", sessionID, contractSpec, []Party{
 		{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_AFFILIATE}},
-		AuditFields{CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck",
-			UpdatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck",
-			Message:   "message",
+		&AuditFields{CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck",
+			Message: "message",
 		})
 
 	// println(session.String())
@@ -470,11 +442,31 @@ type: name
 audit:
   created_date: 0001-01-01T00:00:00Z
   created_by: cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck
-  updated_date: 0001-01-01T00:00:00Z
-  updated_by: cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck
   version: 0
   message: message
 `, session.SessionId.String(), session.SpecificationId.String()),
 			session.String())
 	})
+}
+
+func (s *scopeTestSuite) TestMetadataAuditUpdate() {
+	blockTime := time.Now()
+	var initial *AuditFields
+	result := initial.UpdateAudit(blockTime, "creator", "initial")
+	s.Equal(uint32(1), result.Version)
+	s.Equal(blockTime, result.CreatedDate)
+	s.Equal("creator", result.CreatedBy)
+	s.Equal(time.Time{}, result.UpdatedDate)
+	s.Equal("", result.UpdatedBy)
+	s.Equal("initial", result.Message)
+
+	auditTime := time.Now()
+	initial = &AuditFields{CreatedDate: auditTime, CreatedBy: "creator", Version: 1}
+	result = initial.UpdateAudit(blockTime, "updater", "")
+	s.Equal(uint32(2), result.Version)
+	s.Equal(auditTime, result.CreatedDate)
+	s.Equal("creator", result.CreatedBy)
+	s.Equal(blockTime, result.UpdatedDate)
+	s.Equal("updater", result.UpdatedBy)
+	s.Equal("", result.Message)
 }

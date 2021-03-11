@@ -34,6 +34,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+* Update to Cosmos SDK 0.42.1
+* Add github action for docker publishing #156
+* Add `MetaAddress` encoder and parser commands #147
+* Add build support for publishing protos used in this release #69
+* Support for setting a marker denom validation expression #84
+
 ## [v0.2.0](https://github.com/provenance-io/provenance/releases/tag/v0.2.0) - 2021-03-05
 
 * Truncate hashes used in metadata addresses for Record, Record Specification #132
