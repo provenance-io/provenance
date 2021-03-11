@@ -4,8 +4,9 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/provenance-io/provenance/x/metadata/types"
 	"github.com/spf13/cobra"
+
+	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
 // AddMetaAddressParser returns metadata address parser cobra Command.
