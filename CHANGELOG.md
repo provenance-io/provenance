@@ -45,6 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Support for setting a marker denom validation expression #84
 * Add `MetaAddress` encoder and parser commands #147
 * Add build support for publishing protos used in this release #69
+* Expand cli metadata query functionality #142
 
 ## [v0.1.10](https://github.com/provenance-io/provenance/releases/tag/v0.1.10) - 2021-03-04
 

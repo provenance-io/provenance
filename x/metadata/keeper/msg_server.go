@@ -339,7 +339,10 @@ func (k msgServer) AddRecordSpecification(
 ) (*types.MsgAddRecordSpecificationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	contractSpecID := msg.Specification.SpecificationId.GetContractSpecAddress()
+	contractSpecID, err := msg.Specification.SpecificationId.AsContractSpecAddress()
+	if err != nil {
+		return nil, err
+	}
 	contractSpec, contractSpecFound := k.GetContractSpecification(ctx, contractSpecID)
 	if !contractSpecFound {
 		contractSpecUUID, _ := contractSpecID.ContractSpecUUID()
@@ -381,7 +384,10 @@ func (k msgServer) DeleteRecordSpecification(
 	if !found {
 		return nil, fmt.Errorf("record specification not found with id %s", msg.SpecificationId)
 	}
-	contractSpecID := msg.SpecificationId.GetContractSpecAddress()
+	contractSpecID, err := msg.SpecificationId.AsContractSpecAddress()
+	if err != nil {
+		return nil, err
+	}
 	contractSpec, contractSpecFound := k.GetContractSpecification(ctx, contractSpecID)
 	if !contractSpecFound {
 		return nil, fmt.Errorf("contract specification not found with id %s required for deleting record specification with id %s",
