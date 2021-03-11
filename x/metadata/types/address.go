@@ -436,7 +436,7 @@ func (ma MetadataAddress) NameHash() ([]byte, error) {
 	return namehash, nil
 }
 
-// AsScopeAddress returns the MetadataAddress for a scope within the current context
+// AsScopeAddress returns the MetadataAddress for a scope using the scope UUID within the current context
 func (ma MetadataAddress) AsScopeAddress() (MetadataAddress, error) {
 	scopeUUID, err := ma.ScopeUUID()
 	if err != nil {
@@ -445,7 +445,7 @@ func (ma MetadataAddress) AsScopeAddress() (MetadataAddress, error) {
 	return ScopeMetadataAddress(scopeUUID), nil
 }
 
-// AsRecordAddress returns the MetadataAddress for a record with the given name within the current context
+// AsRecordAddress returns the MetadataAddress for a record using the scope UUID within the current context and the provided name
 func (ma MetadataAddress) AsRecordAddress(name string) (MetadataAddress, error) {
 	scopeUUID, err := ma.ScopeUUID()
 	if err != nil {
@@ -454,8 +454,7 @@ func (ma MetadataAddress) AsRecordAddress(name string) (MetadataAddress, error) 
 	return RecordMetadataAddress(scopeUUID, name), nil
 }
 
-// AsRecordSpecAddress returns the MetadataAddress for a record spec given the name within the current context
-// panics if the current context is not associated with a contract spec uuid.
+// AsRecordSpecAddress returns the MetadataAddress for a record spec using the contract spec UUID within the current context and the provided name
 func (ma MetadataAddress) AsRecordSpecAddress(name string) (MetadataAddress, error) {
 	contractSpecUUID, err := ma.ContractSpecUUID()
 	if err != nil {
@@ -464,7 +463,7 @@ func (ma MetadataAddress) AsRecordSpecAddress(name string) (MetadataAddress, err
 	return RecordSpecMetadataAddress(contractSpecUUID, name), nil
 }
 
-// AsContractSpecAddress returns the MetadataAddress for a contract spec given the UUID in the current context
+// AsContractSpecAddress returns the MetadataAddress for a contract spec using the contract spec UUID within the current context
 func (ma MetadataAddress) AsContractSpecAddress() (MetadataAddress, error) {
 	contractSpecUUID, err := ma.ContractSpecUUID()
 	if err != nil {
