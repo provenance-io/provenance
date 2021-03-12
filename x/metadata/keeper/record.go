@@ -2,11 +2,13 @@ package keeper
 
 import (
 	"fmt"
-
 	"github.com/provenance-io/provenance/x/metadata/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+const sourceTypeHash = "hash"
+const sourceTypeRecord = "record"
 
 // GetRecord returns the record with the given id.
 func (k Keeper) GetRecord(ctx sdk.Context, id types.MetadataAddress) (record types.Record, found bool) {
@@ -107,15 +109,18 @@ func (k Keeper) IterateRecords(ctx sdk.Context, scopeID types.MetadataAddress, h
 
 // ValidateRecordUpdate checks the current record and the proposed record to determine if the the proposed changes are valid
 // based on the existing state
-func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing, proposed types.Record, signers []string) error {
-	if len(existing.SessionId) > 0 {
-		if !existing.SessionId.Equals(proposed.SessionId) || existing.Name != proposed.Name {
-			return fmt.Errorf("existing and proposed records do not match")
-		}
-	}
-
+func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, proposed types.Record, signers []string) error {
 	if err := proposed.ValidateBasic(); err != nil {
 		return err
+	}
+
+	if existing != nil {
+		if existing.Name != proposed.Name {
+			return fmt.Errorf("the Name field of records cannot be changed")
+		}
+		if !existing.SessionId.Equals(proposed.SessionId) || existing.Name != proposed.Name {
+			return fmt.Errorf("the SessionId field of records cannot be changed")
+		}
 	}
 
 	scopeUUID, err := proposed.SessionId.ScopeUUID()
@@ -131,12 +136,104 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing, proposed types.R
 		return fmt.Errorf("scope not found for scope uuid %s", scopeUUID)
 	}
 
-	// Validate any changes to the ValueOwner property.
+	// Make sure all the scope owners have signed.
 	if err := k.ValidateAllOwnerPartiesAreSigners(scope.Owners, signers); err != nil {
 		return err
 	}
 
-	// TODO finish full validation of update once specs are complete
+	// Get the session (and make sure it exists)
+	session, found := k.GetSession(ctx, proposed.SessionId)
+	if !found {
+		return fmt.Errorf("session not found for session id %s", proposed.SessionId)
+	}
+
+	// Get the record specification
+	contractSpecUUID, err := session.SpecificationId.ContractSpecUUID()
+	if err != nil {
+		return err
+	}
+	recSpecID := types.RecordSpecMetadataAddress(contractSpecUUID, proposed.Name)
+	recSpec, found := k.GetRecordSpecification(ctx, recSpecID)
+	if !found {
+		return fmt.Errorf("record specification not found for record specification id %s (contract spec uuid %s and record name %s)",
+			proposed.SessionId, contractSpecUUID, proposed.Name)
+	}
+
+	// Validate the inputs against the spec
+	for _, input := range proposed.Inputs {
+		// Make sure there's a spec for this input
+		var inputSpec *types.InputSpecification = nil
+		for _, is := range recSpec.Inputs {
+			if input.Name == is.Name {
+				inputSpec = is
+				break
+			}
+		}
+		if inputSpec == nil {
+			return fmt.Errorf("no input specification found with name %s in record specification %s",
+				input.Name, recSpecID)
+		}
+
+		// Make sure the input TypeName is correct.
+		if inputSpec.TypeName != input.TypeName {
+			return fmt.Errorf("input %s has TypeName %s but spec calls for %s",
+				input.Name, input.TypeName, inputSpec.TypeName)
+		}
+
+		// Get the input specification source type and value
+		inputSpecSourceType := ""
+		inputSpecSourceValue := ""
+		switch source := inputSpec.Source.(type) {
+		case *types.InputSpecification_RecordId:
+			inputSpecSourceType = sourceTypeRecord
+			inputSpecSourceValue = source.RecordId.String()
+		case *types.InputSpecification_Hash:
+			inputSpecSourceType = sourceTypeHash
+			inputSpecSourceValue = source.Hash
+		default:
+			return fmt.Errorf("input spec %s has an unknown source type", input.Name)
+		}
+
+		// Get the input source type and value
+		inputSourceType := ""
+		inputSourceValue := ""
+		switch source := input.Source.(type) {
+		case *types.RecordInput_RecordId:
+			inputSourceType = sourceTypeRecord
+			inputSourceValue = source.RecordId.String()
+		case *types.RecordInput_Hash:
+			inputSourceType = sourceTypeHash
+			inputSourceValue = source.Hash
+		default:
+			return fmt.Errorf("input %s has an unknown source type", input.Name)
+		}
+
+		// Make sure the input spec source type and value match the input source type and value
+		if inputSourceType != inputSpecSourceType {
+			return fmt.Errorf("input %s has %s source type but spec calls for %s",
+				input.Name, inputSourceType, inputSpecSourceType)
+		}
+		if inputSourceValue != inputSpecSourceValue {
+			return fmt.Errorf("input %s has source %s but spec calls for %s",
+				input.Name, inputSourceValue, inputSpecSourceValue)
+		}
+	}
+
+	// Validate the output count
+	switch recSpec.ResultType {
+	case types.DefinitionType_DEFINITION_TYPE_RECORD:
+		if len(proposed.Outputs) != 1 {
+			return fmt.Errorf("invalid output count (expected: 1, got: %s)", len(proposed.Outputs))
+		}
+	case types.DefinitionType_DEFINITION_TYPE_RECORD_LIST:
+		if len(proposed.Outputs) == 0 {
+			return fmt.Errorf("invalid output count (expected > 0, got: 0)")
+		}
+	// case types.DefinitionType_DEFINITION_TYPE_PROPOSED: ignored
+	// case types.DefinitionType_DEFINITION_TYPE_UNSPECIFIED: ignored
+	}
+
+	// TODO: recSpec.ResponsibleParties validation?
 
 	return nil
 }
