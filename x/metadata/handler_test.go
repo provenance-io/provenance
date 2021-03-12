@@ -71,124 +71,6 @@ func TestHandlerTestSuite(t *testing.T) {
 	suite.Run(t, new(HandlerTestSuite))
 }
 
-var (
-	exampleV39Spec = `{
-  "consideration_specs": [
-    {
-      "func_name": "additionalParties",
-      "input_specs": [
-        {
-          "name": "perform_input_checks",
-          "resource_location": {
-            "classname": "io.provenance.Common$BooleanResult",
-            "ref": {
-              "hash": "Adv+huolGTKofYCR0dw5GHm/R7sUWOwF32XR8r8r9kDy4il5U/LApxOWYHb05jhK4+eY4YzRMRiWcxU3Lx0+Mw=="
-            }
-          },
-          "type": 1
-        },
-        {
-          "name": "additional_parties",
-          "resource_location": {
-            "classname": "io.provenance.loan.LoanProtos$PartiesList",
-            "ref": {
-              "hash": "Adv+huolGTKofYCR0dw5GHm/R7sUWOwF32XR8r8r9kDy4il5U/LApxOWYHb05jhK4+eY4YzRMRiWcxU3Lx0+Mw=="
-            }
-          },
-          "type": 1
-        }
-      ],
-      "output_spec": {
-        "spec": {
-          "name": "additional_parties",
-          "resource_location": {
-            "classname": "io.provenance.loan.LoanProtos$PartiesList",
-            "ref": {
-              "hash": "Adv+huolGTKofYCR0dw5GHm/R7sUWOwF32XR8r8r9kDy4il5U/LApxOWYHb05jhK4+eY4YzRMRiWcxU3Lx0+Mw=="
-            }
-          },
-          "type": 1
-        }
-      },
-      "responsible_party": 1
-    },
-    {
-      "func_name": "documents",
-      "input_specs": [
-        {
-          "name": "perform_input_checks",
-          "resource_location": {
-            "classname": "io.provenance.Common$BooleanResult",
-            "ref": {
-              "hash": "Adv+huolGTKofYCR0dw5GHm/R7sUWOwF32XR8r8r9kDy4il5U/LApxOWYHb05jhK4+eY4YzRMRiWcxU3Lx0+Mw=="
-            }
-          },
-          "type": 1
-        },
-        {
-          "name": "documents",
-          "resource_location": {
-            "classname": "io.provenance.common.DocumentProtos$DocumentList",
-            "ref": {
-              "hash": "Adv+huolGTKofYCR0dw5GHm/R7sUWOwF32XR8r8r9kDy4il5U/LApxOWYHb05jhK4+eY4YzRMRiWcxU3Lx0+Mw=="
-            }
-          },
-          "type": 1
-        }
-      ],
-      "output_spec": {
-        "spec": {
-          "name": "documents",
-          "resource_location": {
-            "classname": "io.provenance.common.DocumentProtos$DocumentList",
-            "ref": {
-              "hash": "Adv+huolGTKofYCR0dw5GHm/R7sUWOwF32XR8r8r9kDy4il5U/LApxOWYHb05jhK4+eY4YzRMRiWcxU3Lx0+Mw=="
-            }
-          },
-          "type": 1
-        }
-      },
-      "responsible_party": 1
-    }
-  ],
-  "definition": {
-    "name": "ExampleContract",
-    "resource_location": {
-      "classname": "io.provenance.contracts.ExampleContract",
-      "ref": {
-        "hash": "E36eeTUk8GYXGXjIbZTm4s/Dw3G1e42SinH1195t4ekgcXXPhfIpfQaEJ21PTzKhdv6JjhzQJ2kAJXK+TRXmeQ=="
-      }
-    },
-    "type": 2
-  },
-  "input_specs": [
-    {
-      "name": "additional_parties",
-      "resource_location": {
-        "classname": "io.provenance.loan.LoanProtos$PartiesList",
-        "ref": {
-          "hash": "Adv+huolGTKofYCR0dw5GHm/R7sUWOwF32XR8r8r9kDy4il5U/LApxOWYHb05jhK4+eY4YzRMRiWcxU3Lx0+Mw=="
-        }
-      },
-      "type": 2
-    },
-    {
-      "name": "documents",
-      "resource_location": {
-        "classname": "io.provenance.common.DocumentProtos$DocumentList",
-        "ref": {
-          "hash": "Adv+huolGTKofYCR0dw5GHm/R7sUWOwF32XR8r8r9kDy4il5U/LApxOWYHb05jhK4+eY4YzRMRiWcxU3Lx0+Mw=="
-        }
-      },
-      "type": 2
-    }
-  ],
-  "parties_involved": [
-    1
-  ]
-}`
-)
-
 func (s HandlerTestSuite) TestAddContractSpecMsg() {
 	validInputSpec := v039metadata.DefinitionSpec{
 		Name: "perform_input_checks",
@@ -226,5 +108,6 @@ func (s HandlerTestSuite) TestAddContractSpecMsg() {
 		InputSpecs:      []*v039metadata.DefinitionSpec{&validInputSpec},
 		PartiesInvolved: []v039metadata.PartyType{v039metadata.PartyType_PARTY_TYPE_AFFILIATE},
 	}
-	s.handler(s.ctx, &types.MsgAddContractSpecRequest{Contractspec: validContractSpec})
+	_, err := s.handler(s.ctx, &types.MsgAddContractSpecRequest{Contractspec: validContractSpec, Signers: []string{s.user1Addr.String()}})
+	s.NoError(err)
 }
