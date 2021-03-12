@@ -148,7 +148,10 @@ func (k msgServer) AddRecord(
 
 	recordID := types.RecordMetadataAddress(scopeUUID, msg.Record.Name)
 
-	existing, _ := k.GetRecord(ctx, recordID)
+	var existing *types.Record = nil
+	if e, found := k.GetRecord(ctx, recordID); found {
+		existing = &e
+	}
 	if err := k.ValidateRecordUpdate(ctx, existing, *msg.Record, msg.Signers); err != nil {
 		return nil, err
 	}
