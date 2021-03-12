@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+
 	"github.com/provenance-io/provenance/x/metadata/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -137,8 +138,8 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, pr
 	}
 
 	// Make sure all the scope owners have signed.
-	if err := k.ValidateAllOwnerPartiesAreSigners(scope.Owners, signers); err != nil {
-		return err
+	if signErr := k.ValidateAllOwnerPartiesAreSigners(scope.Owners, signers); signErr != nil {
+		return signErr
 	}
 
 	// Get the session (and make sure it exists)
@@ -223,15 +224,15 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, pr
 	switch recSpec.ResultType {
 	case types.DefinitionType_DEFINITION_TYPE_RECORD:
 		if len(proposed.Outputs) != 1 {
-			return fmt.Errorf("invalid output count (expected: 1, got: %s)", len(proposed.Outputs))
+			return fmt.Errorf("invalid output count (expected: 1, got: %d)", len(proposed.Outputs))
 		}
 	case types.DefinitionType_DEFINITION_TYPE_RECORD_LIST:
 		if len(proposed.Outputs) == 0 {
 			return fmt.Errorf("invalid output count (expected > 0, got: 0)")
 		}
+	}
 	// case types.DefinitionType_DEFINITION_TYPE_PROPOSED: ignored
 	// case types.DefinitionType_DEFINITION_TYPE_UNSPECIFIED: ignored
-	}
 
 	// TODO: recSpec.ResponsibleParties validation?
 
