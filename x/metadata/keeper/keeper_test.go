@@ -430,42 +430,42 @@ func (s *KeeperTestSuite) TestValidateRecordUpdate() {
 	randomSessionId := types.SessionMetadataAddress(randomScopeUUID, uuid.New())
 
 	cases := map[string]struct {
-		existing types.Record
+		existing *types.Record
 		proposed types.Record
 		signers  []string
 		wantErr  bool
 		errorMsg string
 	}{
 		"nil previous, proposed throws address error": {
-			existing: types.Record{},
+			existing: nil,
 			proposed: types.Record{},
 			signers:  []string{s.user1},
 			wantErr:  true,
 			errorMsg: "incorrect address length (must be at least 17, actual: 0)",
 		},
 		"invalid names, existing and proposed names do not match": {
-			existing: *types.NewRecord("notamatch", s.sessionId, *process, []types.RecordInput{}, []types.RecordOutput{}),
+			existing: types.NewRecord("notamatch", s.sessionId, *process, []types.RecordInput{}, []types.RecordOutput{}),
 			proposed: *types.NewRecord("not-a-match", s.sessionId, *process, []types.RecordInput{}, []types.RecordOutput{}),
 			signers:  []string{s.user1},
 			wantErr:  true,
-			errorMsg: "existing and proposed records do not match",
+			errorMsg: "the Name field of records cannot be changed",
 		},
 		"invalid ids, existing and proposed ids do not match": {
-			existing: *types.NewRecord(s.recordName, s.sessionId, *process, []types.RecordInput{}, []types.RecordOutput{}),
+			existing: types.NewRecord(s.recordName, s.sessionId, *process, []types.RecordInput{}, []types.RecordOutput{}),
 			proposed: *types.NewRecord(s.recordName, randomSessionId, *process, []types.RecordInput{}, []types.RecordOutput{}),
 			signers:  []string{s.user1},
 			wantErr:  true,
-			errorMsg: "existing and proposed records do not match",
+			errorMsg: "the SessionId field of records cannot be changed",
 		},
 		"both valid records, scope not found": {
-			existing: *types.NewRecord(s.recordName, randomSessionId, *process, []types.RecordInput{}, []types.RecordOutput{}),
+			existing: types.NewRecord(s.recordName, randomSessionId, *process, []types.RecordInput{}, []types.RecordOutput{}),
 			proposed: *types.NewRecord(s.recordName, randomSessionId, *process, []types.RecordInput{}, []types.RecordOutput{}),
 			signers:  []string{s.user1},
 			wantErr:  true,
 			errorMsg: fmt.Sprintf("scope not found for scope uuid %s", randomScopeUUID),
 		},
 		"missing signature from existing owner ": {
-			existing: *record,
+			existing: record,
 			proposed: *record,
 			signers:  []string{},
 			wantErr:  true,
