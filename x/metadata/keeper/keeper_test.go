@@ -17,7 +17,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -388,12 +387,12 @@ func (s *KeeperTestSuite) TestValidateRecordRemove() {
 			wantErr:  true,
 			errorMsg: fmt.Sprintf("cannot remove record. expected %s, got %s", recordID, dneRecordID),
 		},
-		"Invalid, missing signature record ids do not match": {
+		"Invalid, missing signature": {
 			existing: *record,
 			proposed: recordID,
 			signers:  []string{"no-matchin"},
 			wantErr:  true,
-			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1),
+			errorMsg: fmt.Sprintf("missing signature from %s (PARTY_TYPE_OWNER)", s.user1),
 		},
 		"valid, passed all validation": {
 			existing: *record,
@@ -469,7 +468,7 @@ func (s *KeeperTestSuite) TestValidateRecordUpdate() {
 			proposed: *record,
 			signers:  []string{},
 			wantErr:  true,
-			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1),
+			errorMsg: fmt.Sprintf("missing signature from %s (PARTY_TYPE_OWNER)", s.user1),
 		},
 	}
 
@@ -637,14 +636,14 @@ func (s *KeeperTestSuite) TestMetadataValidateSessionUpdate() {
 			proposed: *invalidPartiesSession,
 			signers:  []string{s.user1},
 			wantErr:  true,
-			errorMsg: "missing party type from required parties PARTY_TYPE_AFFILIATE",
+			errorMsg: "missing required party type PARTY_TYPE_AFFILIATE from parties",
 		},
 		"invalid session update, missing required signers": {
 			existing: *validSession,
 			proposed: *validSession,
 			signers:  []string{"unknown signer"},
 			wantErr:  true,
-			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1),
+			errorMsg: fmt.Sprintf("missing signature from %s (PARTY_TYPE_OWNER)", s.user1),
 		},
 		"invalid session update, proposed name does not match contract spec": {
 			existing: *validSession,
@@ -730,13 +729,13 @@ func (s *KeeperTestSuite) TestValidatePartiesInvolved() {
 			parties:         []types.Party{},
 			requiredParties: []types.PartyType{types.PartyType_PARTY_TYPE_AFFILIATE},
 			wantErr:         true,
-			errorMsg:        "missing party type from required parties PARTY_TYPE_AFFILIATE",
+			errorMsg:        "missing required party type PARTY_TYPE_AFFILIATE from parties",
 		},
 		"invalid, missing required parties": {
 			parties:         []types.Party{{Address: "address", Role: types.PartyType_PARTY_TYPE_CUSTODIAN}},
 			requiredParties: []types.PartyType{types.PartyType_PARTY_TYPE_AFFILIATE},
 			wantErr:         true,
-			errorMsg:        "missing party type from required parties PARTY_TYPE_AFFILIATE",
+			errorMsg:        "missing required party type PARTY_TYPE_AFFILIATE from parties",
 		},
 		"valid, required parties fulfilled": {
 			parties:         []types.Party{{Address: "address", Role: types.PartyType_PARTY_TYPE_CUSTODIAN}},
@@ -749,17 +748,15 @@ func (s *KeeperTestSuite) TestValidatePartiesInvolved() {
 	for n, tc := range cases {
 		tc := tc
 
-		s.Run(n, func() {
+		s.T().Run(n, func(t *testing.T) {
 			err := s.app.MetadataKeeper.ValidatePartiesInvolved(tc.parties, tc.requiredParties)
 			if tc.wantErr {
-				s.Error(err)
-				s.Equal(tc.errorMsg, err.Error())
+				assert.EqualError(t, err, tc.errorMsg)
 			} else {
-				s.NoError(err)
+				assert.NoError(t, err)
 			}
 		})
 	}
-
 }
 
 func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSigners() {
@@ -832,88 +829,77 @@ func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSigners() {
 }
 
 func (s *KeeperTestSuite) TestValidateAllOwnersAreSigners() {
-	tests := []struct {
-		name    string
-		owners  []string
-		signers []string
-		want    string
+	tests := map[string]struct {
+		owners   []string
+		signers  []string
+		errorMsg string
 	}{
-		{
-			"Scope Spec with 1 owner: no signers - error",
+		"Scope Spec with 1 owner: no signers - error": {
 			[]string{s.user1Addr.String()},
 			[]string{},
 			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1Addr.String()),
 		},
-		{
-			"Scope Spec with 1 owner: not in signers list - error",
+		"Scope Spec with 1 owner: not in signers list - error": {
 			[]string{s.user1Addr.String()},
 			[]string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()},
 			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1Addr.String()),
 		},
-		{
-			"Scope Spec with 1 owner: in signers list with non-owners - ok",
+		"Scope Spec with 1 owner: in signers list with non-owners - ok": {
 			[]string{s.user1Addr.String()},
 			[]string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), s.user1Addr.String(), sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()},
 			"",
 		},
-		{
-			"Scope Spec with 1 owner: only signer in list - ok",
+		"Scope Spec with 1 owner: only signer in list - ok": {
 			[]string{s.user1Addr.String()},
 			[]string{s.user1Addr.String()},
 			"",
 		},
-		{
-			"Scope Spec with 2 owners: no signers - error",
+		"Scope Spec with 2 owners: no signers - error": {
 			[]string{s.user1Addr.String(), s.user2Addr.String()},
 			[]string{},
-			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1Addr.String()),
+			fmt.Sprintf("missing signatures from existing owners %v; required for update",
+				[]string{s.user1Addr.String(), s.user2Addr.String()}),
 		},
-		{
-			"Scope Spec with 2 owners: neither in signers list - error",
+		"Scope Spec with 2 owners: neither in signers list - error": {
 			[]string{s.user1Addr.String(), s.user2Addr.String()},
 			[]string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()},
-			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1Addr.String()),
+			fmt.Sprintf("missing signatures from existing owners %v; required for update",
+				[]string{s.user1Addr.String(), s.user2Addr.String()}),
 		},
-		{
-			"Scope Spec with 2 owners: one in signers list with non-owners - error",
+		"Scope Spec with 2 owners: one in signers list with non-owners - error": {
 			[]string{s.user1Addr.String(), s.user2Addr.String()},
 			[]string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), s.user1Addr.String(), sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()},
 			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user2Addr.String()),
 		},
-		{
-			"Scope Spec with 2 owners: the other in signers list with non-owners - error",
+		"Scope Spec with 2 owners: the other in signers list with non-owners - error": {
 			[]string{s.user1Addr.String(), s.user2Addr.String()},
 			[]string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), s.user2Addr.String(), sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()},
 			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1Addr.String()),
 		},
-		{
-			"Scope Spec with 2 owners: both in signers list with non-owners - ok",
+		"Scope Spec with 2 owners: both in signers list with non-owners - ok": {
 			[]string{s.user1Addr.String(), s.user2Addr.String()},
 			[]string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), s.user2Addr.String(), sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), s.user1Addr.String()},
 			"",
 		},
-		{
-			"Scope Spec with 2 owners: only both in signers list - ok",
+		"Scope Spec with 2 owners: only both in signers list - ok": {
 			[]string{s.user1Addr.String(), s.user2Addr.String()},
 			[]string{s.user1Addr.String(), s.user2Addr.String()},
 			"",
 		},
-		{
-			"Scope Spec with 2 owners: only both in signers list, opposite order - ok",
+		"Scope Spec with 2 owners: only both in signers list, opposite order - ok": {
 			[]string{s.user1Addr.String(), s.user2Addr.String()},
 			[]string{s.user2Addr.String(), s.user1Addr.String()},
 			"",
 		},
 	}
 
-	for _, tt := range tests {
-		tt := tt
-		s.T().Run(tt.name, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidateAllOwnersAreSigners(tt.owners, tt.signers)
-			if err != nil {
-				require.Equal(t, tt.want, err.Error(), "ScopeSpec Keeper ValidateScopeSpecAllOwnersAreSigners error")
-			} else if len(tt.want) > 0 {
-				t.Errorf("ScopeSpec Keeper ValidateAllOwnersAreSigners error = nil, expected: %s", tt.want)
+	for n, tc := range tests {
+		s.T().Run(n, func(t *testing.T) {
+			err := s.app.MetadataKeeper.ValidateAllOwnersAreSigners(tc.owners, tc.signers)
+			if len(tc.errorMsg) == 0 {
+				assert.NoError(t, err, "ValidateAllOwnersAreSigners unexpected error")
+			} else {
+				assert.EqualError(t, err, tc.errorMsg, "ValidateAllOwnersAreSigners error")
 			}
 		})
 	}
