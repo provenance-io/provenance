@@ -8,6 +8,7 @@ import (
 
 // InitGenesis creates the initial genesis state for the metadata module.
 func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
+	k.SetOSLocatorParams(ctx, data.OSLocatorParams)
 	if err := data.Validate(); err != nil {
 		panic(err)
 	}
@@ -46,6 +47,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 // ExportGenesis exports the current keeper state of the metadata module.ExportGenesis
 func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 	params := k.GetParams(ctx)
+	oslocatorparams := k.GetOSLocatorParams(ctx)
 	scopes := make([]types.Scope, 0)
 	sessions := make([]types.Session, 0)
 	records := make([]types.Record, 0)
@@ -102,5 +104,5 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 		panic(err)
 	}
 
-	return types.NewGenesisState(params, scopes, sessions, records, scopeSpecs, contractSpecs, recordSpecs)
+	return types.NewGenesisState(params, oslocatorparams, scopes, sessions, records, scopeSpecs, contractSpecs, recordSpecs)
 }

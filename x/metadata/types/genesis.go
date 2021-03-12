@@ -8,6 +8,7 @@ func (state GenesisState) Validate() error {
 // NewGenesisState returns a new instance of GenesisState
 func NewGenesisState(
 	params Params,
+	oslocatorparams OSLocatorParams,
 	scopes []Scope,
 	sessions []Session,
 	records []Record,
@@ -17,6 +18,7 @@ func NewGenesisState(
 ) *GenesisState {
 	return &GenesisState{
 		Params:                 params,
+		OSLocatorParams:        oslocatorparams,
 		Scopes:                 scopes,
 		Sessions:               sessions,
 		Records:                records,

@@ -100,6 +100,7 @@ func (suite *IntegrationTestSuite) SetupSuite() {
 
 	var metadataData metadatatypes.GenesisState
 	metadataData.Params = metadatatypes.DefaultParams()
+	metadataData.OSLocatorParams = metadatatypes.DefaultOSLocatorParams()
 	metadataData.Scopes = append(metadataData.Scopes, suite.scope)
 	metadataDataBz, err := cfg.Codec.MarshalJSON(&metadataData)
 	suite.Require().NoError(err)
@@ -166,6 +167,16 @@ func (suite *IntegrationTestSuite) TestGRPCQueries() {
 			true,
 			&status.Status{},
 			&status.Status{},
+		},
+		{
+			"Get metadata os locator params",
+			fmt.Sprintf("%s/provenance/metadata/v1/locator/params", baseURL),
+			map[string]string{
+				grpctypes.GRPCBlockHeightHeader: "1",
+			},
+			false,
+			&metadatatypes.OSLocatorQueryParamsResponse{},
+			&metadatatypes.OSLocatorQueryParamsResponse{Params: metadatatypes.DefaultOSLocatorParams()},
 		},
 	}
 

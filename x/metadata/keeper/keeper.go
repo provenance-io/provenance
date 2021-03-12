@@ -112,6 +112,10 @@ func NewKeeper(
 	cdc codec.BinaryMarshaler, key sdk.StoreKey, paramSpace paramtypes.Subspace,
 	authKeeper authkeeper.AccountKeeper,
 ) Keeper {
+	// set KeyTable if it has not already been set
+	if !paramSpace.HasKeyTable() {
+		paramSpace = paramSpace.WithKeyTable(types.OSParamKeyTable())
+	}
 	return Keeper{
 		storeKey:   key,
 		cdc:        cdc,

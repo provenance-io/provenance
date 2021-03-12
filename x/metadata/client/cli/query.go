@@ -978,7 +978,7 @@ $ %s query name params
 // GetOSLocatorCmd returns the command handler for querying oslocator by address .
 func GetOSLocatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "locator [owner]",
+		Use:   "locator-by-addr [owner]",
 		Short: "Query the OS locator uri for the given owner",
 		Args:  cobra.ExactArgs(1),
 		Long: strings.TrimSpace(
@@ -1014,7 +1014,7 @@ $ %s query metadata locator foocorp
 // GetOSLocatorByURICmd returns the command handler for querying oslocator by uri.
 func GetOSLocatorByURICmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "locator [uri]",
+		Use:   "locator-by-uri [uri]",
 		Short: "Query the OS locator uri for the given owner",
 		Args:  cobra.ExactArgs(1),
 		Long: strings.TrimSpace(
@@ -1054,7 +1054,7 @@ $ %s query metadata locator foocorp
 // GetOSLocatorByURICmd returns the command handler for querying oslocator by uri.
 func GetOSLocatorByScopeUUID() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "locator [scope_uuid]",
+		Use:   "locator-by-scope [scope_uuid]",
 		Short: "Query the OS locator uri for the given scope owners",
 		Args:  cobra.ExactArgs(1),
 		Long: strings.TrimSpace(

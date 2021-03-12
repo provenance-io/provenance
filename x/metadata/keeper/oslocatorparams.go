@@ -10,3 +10,8 @@ func (k Keeper) GetOSLocatorParams(ctx sdk.Context) (osLocatorParams types.OSLoc
 	k.paramSpace.GetParamSet(ctx, &osLocatorParams)
 	return osLocatorParams
 }
+
+// SetParams sets the distribution parameters to the param space.
+func (keeper Keeper) SetOSLocatorParams(ctx sdk.Context, params types.OSLocatorParams) {
+	keeper.paramSpace.SetParamSet(ctx, &params)
+}

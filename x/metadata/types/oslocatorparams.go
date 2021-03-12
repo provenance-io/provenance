@@ -10,21 +10,26 @@ const (
 	DefaultMaxURILength = 2048
 )
 
+// ParamKeyTable for metadata module
+func OSParamKeyTable() paramtypes.KeyTable {
+	return paramtypes.NewKeyTable().RegisterParamSet(&OSLocatorParams{})
+}
+
 // Parameter store keys
 var (
-	ParamStoreKeyMaxValueLength = []byte("MaxUriCharacters")
+	ParamStoreKeyMaxValueLength = []byte("MaxUriLength")
 )
 
 // NewParams creates a new parameter object
-func NewOSLocatorParams(maxUriCharacters uint64) OSLocatorParams {
-	return OSLocatorParams{MaxUriCharacters: maxUriCharacters}
+func NewOSLocatorParams(maxUriLength uint64) OSLocatorParams {
+	return OSLocatorParams{MaxUriLength: maxUriLength}
 }
 
 // ParamSetPairs implements the ParamSet interface and returns all the key/value pairs
 // pairs of auth module's parameters.
 func (p *OSLocatorParams) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(ParamStoreKeyMaxValueLength, &p.MaxUriCharacters, validateMaxURILength),
+		paramtypes.NewParamSetPair(ParamStoreKeyMaxValueLength, &p.MaxUriLength, validateMaxURILength),
 	}
 }
 
