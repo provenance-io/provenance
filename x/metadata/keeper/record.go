@@ -138,7 +138,7 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, pr
 	}
 
 	// Make sure all the scope owners have signed.
-	if signErr := k.ValidateAllOwnerPartiesAreSigners(scope.Owners, signers); signErr != nil {
+	if signErr := k.ValidateAllPartiesAreSigners(scope.Owners, signers); signErr != nil {
 		return signErr
 	}
 
@@ -256,7 +256,7 @@ func (k Keeper) ValidateRecordRemove(ctx sdk.Context, existing types.Record, pro
 		return fmt.Errorf("cannot remove record. expected %s, got %s", recordID, proposedID)
 	}
 
-	if err := k.ValidateAllOwnerPartiesAreSigners(scope.Owners, signers); err != nil {
+	if err := k.ValidateAllPartiesAreSigners(scope.Owners, signers); err != nil {
 		return err
 	}
 

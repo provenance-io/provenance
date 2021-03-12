@@ -152,17 +152,19 @@ func (k Keeper) ValidateAllOwnersAreSigners(existingOwners []string, signers []s
 	return nil
 }
 
-// ValidateAllOwnerPartiesAreSigners validate all parties of type OWNER are signers
-func (k Keeper) ValidateAllOwnerPartiesAreSigners(parties []types.Party, signers []string) error {
-	requiredSignatures := []string{}
-	for _, p := range parties {
-		if p.Role == types.PartyType_PARTY_TYPE_OWNER {
-			requiredSignatures = append(requiredSignatures, p.Address)
+// ValidateAllPartiesAreSigners validate all parties are signers
+func (k Keeper) ValidateAllPartiesAreSigners(parties []types.Party, signers []string) error {
+	for _, party := range parties {
+		found := false
+		for _, signer := range signers {
+			if party.Address == signer {
+				found = true
+				break
+			}
 		}
-	}
-
-	if err := k.ValidateAllOwnersAreSigners(requiredSignatures, signers); err != nil {
-		return err
+		if !found {
+			return fmt.Errorf("missing signature from %s (%s)", party.Address, party.Role.String())
+		}
 	}
 	return nil
 }
