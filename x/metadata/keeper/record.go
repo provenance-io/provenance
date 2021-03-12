@@ -160,20 +160,36 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, pr
 			proposed.SessionId, contractSpecUUID, proposed.Name)
 	}
 
-	// Validate the inputs against the spec
-	for _, input := range proposed.Inputs {
-		// Make sure there's a spec for this input
-		var inputSpec *types.InputSpecification = nil
-		for _, is := range recSpec.Inputs {
-			if input.Name == is.Name {
-				inputSpec = is
-				break
-			}
-		}
-		if inputSpec == nil {
-			return fmt.Errorf("no input specification found with name %s in record specification %s",
-				input.Name, recSpecID)
-		}
+	// Make sure all the responsible parties are involved.
+	err = k.ValidatePartiesInvolved(session.Parties, recSpec.ResponsibleParties)
+	if err != nil {
+		return err
+	}
+
+	// Make sure all input specs are present as inputs.
+	inputNames := make([]string, len(proposed.Inputs))
+	inputMap := make(map[string]types.RecordInput)
+	for i, input := range proposed.Inputs {
+		inputNames[i] = input.Name
+		inputMap[input.Name] = input
+	}
+	inputSpecNames := make([]string, len(recSpec.Inputs))
+	inputSpecMap := make(map[string]types.InputSpecification)
+	for i, inputSpec := range recSpec.Inputs {
+		inputSpecNames[i] = inputSpec.Name
+		inputSpecMap[inputSpec.Name] = *inputSpec
+	}
+	missingInputNames := findMissing(inputNames, inputSpecNames)
+	if len(missingInputNames) == 1 {
+		return fmt.Errorf("missing input %s", missingInputNames[0])
+	} else if len(missingInputNames) > 1 {
+		return fmt.Errorf("missing inputs %v", missingInputNames)
+	}
+
+	// Make sure all the inputs conform to their spec.
+	for _, name := range inputNames {
+		input := inputMap[name]
+		inputSpec := inputSpecMap[name]
 
 		// Make sure the input TypeName is correct.
 		if inputSpec.TypeName != input.TypeName {
@@ -192,7 +208,7 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, pr
 			inputSpecSourceType = sourceTypeHash
 			inputSpecSourceValue = source.Hash
 		default:
-			return fmt.Errorf("input spec %s has an unknown source type", input.Name)
+			return fmt.Errorf("input spec %s has an unknown source type", inputSpec.Name)
 		}
 
 		// Get the input source type and value
@@ -211,11 +227,11 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, pr
 
 		// Make sure the input spec source type and value match the input source type and value
 		if inputSourceType != inputSpecSourceType {
-			return fmt.Errorf("input %s has %s source type but spec calls for %s",
+			return fmt.Errorf("input %s has source type %s but spec calls for %s",
 				input.Name, inputSourceType, inputSpecSourceType)
 		}
 		if inputSourceValue != inputSpecSourceValue {
-			return fmt.Errorf("input %s has source %s but spec calls for %s",
+			return fmt.Errorf("input %s has source value %s but spec calls for %s",
 				input.Name, inputSourceValue, inputSpecSourceValue)
 		}
 	}
@@ -233,8 +249,6 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, pr
 	}
 	// case types.DefinitionType_DEFINITION_TYPE_PROPOSED: ignored
 	// case types.DefinitionType_DEFINITION_TYPE_UNSPECIFIED: ignored
-
-	// TODO: recSpec.ResponsibleParties validation?
 
 	return nil
 }
