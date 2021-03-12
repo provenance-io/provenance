@@ -179,7 +179,7 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, pr
 		inputSpecNames[i] = inputSpec.Name
 		inputSpecMap[inputSpec.Name] = *inputSpec
 	}
-	missingInputNames := findMissing(inputNames, inputSpecNames)
+	missingInputNames := FindMissing(inputNames, inputSpecNames)
 	if len(missingInputNames) == 1 {
 		return fmt.Errorf("missing input %s", missingInputNames[0])
 	} else if len(missingInputNames) > 1 {

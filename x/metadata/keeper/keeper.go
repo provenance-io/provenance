@@ -137,7 +137,7 @@ func (k Keeper) CreateAccountForKey(ctx sdk.Context, addr sdk.AccAddress, pubKey
 
 // ValidateAllOwnersAreSigners makes sure that all entries in the existingOwners list are contained in the signers list.
 func (k Keeper) ValidateAllOwnersAreSigners(existingOwners []string, signers []string) error {
-	missing := findMissing(existingOwners, signers)
+	missing := FindMissing(existingOwners, signers)
 	switch len(missing) {
 	case 0:
 		return nil
@@ -154,7 +154,7 @@ func (k Keeper) ValidateAllPartiesAreSigners(parties []types.Party, signers []st
 	for i, party := range parties {
 		addresses[i] = party.Address
 	}
-	missing := findMissing(addresses, signers)
+	missing := FindMissing(addresses, signers)
 	switch len(missing) {
 	case 0:
 		return nil
@@ -190,7 +190,7 @@ func (k Keeper) ValidatePartiesInvolved(parties []types.Party, requiredParties [
 	for i, req := range requiredParties {
 		reqRoles[i] = req.String()
 	}
-	missing := findMissing(reqRoles, partyRoles)
+	missing := FindMissing(reqRoles, partyRoles)
 	switch len(missing) {
 	case 0:
 		return nil
@@ -201,8 +201,9 @@ func (k Keeper) ValidatePartiesInvolved(parties []types.Party, requiredParties [
 	}
 }
 
-// findMissing returns all elements of the required list that are not found in the entries list
-func findMissing(required []string, entries []string) []string {
+// FindMissing returns all elements of the required list that are not found in the entries list
+// It is exported only so that it can be unit tested.
+func FindMissing(required []string, entries []string) []string {
 	retval := []string{}
 	for _, req := range required {
 		found := false
