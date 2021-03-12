@@ -44,7 +44,6 @@ type KeeperTestSuite struct {
 	specUUID uuid.UUID
 	specID   types.MetadataAddress
 
-	record     types.Record
 	recordName string
 	recordId   types.MetadataAddress
 
@@ -55,21 +54,17 @@ type KeeperTestSuite struct {
 	contractSpecId   types.MetadataAddress
 }
 
-func ownerPartyList(addresses ...string) []types.Party {
-	retval := make([]types.Party, len(addresses))
-	for i, addr := range addresses {
-		retval[i] = types.Party{Address: addr, Role: types.PartyType_PARTY_TYPE_OWNER}
-	}
-	return retval
-}
-
 func (s *KeeperTestSuite) SetupTest() {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	s.app = simapp.Setup(false)
+	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, s.app.MetadataKeeper)
+	s.queryClient = types.NewQueryClient(queryHelper)
 
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
 	s.user1 = s.user1Addr.String()
+	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
 
 	s.pubkey2 = secp256k1.GenPrivKey().PubKey()
 	s.user2Addr = sdk.AccAddress(s.pubkey2.Address())
@@ -81,13 +76,8 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.specUUID = uuid.New()
 	s.specID = types.ScopeSpecMetadataAddress(s.specUUID)
 
-	s.app = app
-	s.ctx = ctx
-
 	s.recordName = "TestRecord"
 	s.recordId = types.RecordMetadataAddress(s.scopeUUID, s.recordName)
-
-	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
 
 	s.sessionUUID = uuid.New()
 	s.sessionId = types.SessionMetadataAddress(s.scopeUUID, s.sessionUUID)
@@ -97,15 +87,18 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	s.contractSpecUUID = uuid.New()
 	s.contractSpecId = types.ContractSpecMetadataAddress(s.contractSpecUUID)
-
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, app.MetadataKeeper)
-	queryClient := types.NewQueryClient(queryHelper)
-	s.queryClient = queryClient
 }
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
+}
+
+func ownerPartyList(addresses ...string) []types.Party {
+	retval := make([]types.Party, len(addresses))
+	for i, addr := range addresses {
+		retval[i] = types.Party{Address: addr, Role: types.PartyType_PARTY_TYPE_OWNER}
+	}
+	return retval
 }
 
 func (s *KeeperTestSuite) TestMetadataScopeGetSet() {
