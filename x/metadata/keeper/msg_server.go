@@ -114,13 +114,17 @@ func (k msgServer) AddSession(
 ) (*types.MsgAddSessionResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	existing, _ := k.GetSession(ctx, msg.Session.SessionId)
+	var existing *types.Session = nil
+	var existingAudit *types.AuditFields = nil
+	if e, found := k.GetSession(ctx, msg.Session.SessionId); found {
+		existing = &e
+		existingAudit = existing.Audit
+	}
 	if err := k.ValidateSessionUpdate(ctx, existing, *msg.Session, msg.Signers); err != nil {
 		return nil, err
 	}
 
-	audit := existing.Audit.UpdateAudit(ctx.BlockTime(), strings.Join(msg.Signers, ", "), "")
-	*msg.Session.Audit = *audit
+	msg.Session.Audit = existingAudit.UpdateAudit(ctx.BlockTime(), strings.Join(msg.Signers, ", "), "")
 
 	k.SetSession(ctx, *msg.Session)
 
