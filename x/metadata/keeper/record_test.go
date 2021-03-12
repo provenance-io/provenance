@@ -216,46 +216,55 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 		wantErr  bool
 		errorMsg string
 	}{
-		"nil previous, proposed throws address error": {
+		"validate basic called on proposed": {
 			existing: nil,
 			proposed: types.Record{},
 			signers:  []string{s.user1},
 			wantErr:  true,
 			errorMsg: "incorrect address length (must be at least 17, actual: 0)",
 		},
-		"invalid names, existing and proposed names do not match": {
+		"existing and proposed names do not match": {
 			existing: types.NewRecord("notamatch", s.sessionId, *process, []types.RecordInput{}, []types.RecordOutput{}),
 			proposed: *types.NewRecord("not-a-match", s.sessionId, *process, []types.RecordInput{}, []types.RecordOutput{}),
 			signers:  []string{s.user1},
 			wantErr:  true,
 			errorMsg: "the Name field of records cannot be changed",
 		},
-		"invalid ids, existing and proposed ids do not match": {
+		"existing and proposed ids do not match": {
 			existing: types.NewRecord(s.recordName, s.sessionId, *process, []types.RecordInput{}, []types.RecordOutput{}),
 			proposed: *types.NewRecord(s.recordName, randomSessionId, *process, []types.RecordInput{}, []types.RecordOutput{}),
 			signers:  []string{s.user1},
 			wantErr:  true,
 			errorMsg: "the SessionId field of records cannot be changed",
 		},
-		"both valid records, scope not found": {
-			existing: types.NewRecord(s.recordName, randomSessionId, *process, []types.RecordInput{}, []types.RecordOutput{}),
+		"scope not found": {
+			existing: nil,
 			proposed: *types.NewRecord(s.recordName, randomSessionId, *process, []types.RecordInput{}, []types.RecordOutput{}),
 			signers:  []string{s.user1},
 			wantErr:  true,
 			errorMsg: fmt.Sprintf("scope not found for scope uuid %s", randomScopeUUID),
 		},
 		"missing signature from existing owner ": {
-			existing: record,
+			existing: nil,
 			proposed: *record,
 			signers:  []string{},
 			wantErr:  true,
 			errorMsg: fmt.Sprintf("missing signature from %s (PARTY_TYPE_OWNER)", s.user1),
 		},
+		// TODO: scope not found
+		// TODO: session not found
+		// TODO: record specification not found
+		// TODO: missing responsible party
+		// TODO: missing input
+		// TODO: extra input
+		// TODO: input type name wrong
+		// TODO: input source type wrong
+		// TODO: input source value wrong
+		// TODO: output count wrong - record
+		// TODO: output count wrong - record list
 	}
 
 	for n, tc := range cases {
-		tc := tc
-
 		s.Run(n, func() {
 			err := s.app.MetadataKeeper.ValidateRecordUpdate(s.ctx, tc.existing, tc.proposed, tc.signers)
 			if tc.wantErr {
