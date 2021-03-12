@@ -417,7 +417,7 @@ func (k msgServer) AddContractSpec(
 	msg *types.MsgAddContractSpecRequest,
 ) (*types.MsgAddContractSpecResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	newspec, newrecords, err := types.ConvertContractSpec(&msg.Contractspec)
+	newspec, newrecords, err := types.ConvertContractSpec(&msg.Contractspec, msg.Signers)
 
 	if err != nil {
 		return nil, err
@@ -446,6 +446,14 @@ func (k msgServer) AddContractSpec(
 
 		k.SetRecordSpecification(ctx, record)
 	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
+		),
+	)
 
 	return &types.MsgAddContractSpecResponse{}, nil
 }

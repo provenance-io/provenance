@@ -190,7 +190,7 @@ func (s ContractSpecification) String() string {
 	return string(out)
 }
 
-func ConvertContractSpec(old *v039metadata.ContractSpec) (
+func ConvertContractSpec(old *v039metadata.ContractSpec, owners []string) (
 	newSpec ContractSpecification,
 	newRecords []RecordSpecification,
 	err error,
@@ -217,7 +217,7 @@ func ConvertContractSpec(old *v039metadata.ContractSpec) (
 			Description: old.Definition.ResourceLocation.Classname,
 		},
 		PartiesInvolved: parties,
-		// OwnerAddresses: -- TODO: there were no owners set on the v39 chain, maybe trace one from a group that used this spec?
+		OwnerAddresses:  owners,
 		Source: &ContractSpecification_Hash{
 			Hash: old.Definition.ResourceLocation.Ref.Hash,
 		},
@@ -230,8 +230,13 @@ func ConvertContractSpec(old *v039metadata.ContractSpec) (
 		if err != nil {
 			return newSpec, nil, err
 		}
+		specUUID, err := newSpec.SpecificationId.ContractSpecUUID()
+		if err != nil {
+			return newSpec, nil, err
+		}
+		recordSpecID := RecordSpecMetadataAddress(specUUID, old.ConsiderationSpecs[i].OutputSpec.Spec.Name)
 		newRecords[i] = RecordSpecification{
-			SpecificationId:    newSpec.SpecificationId,
+			SpecificationId:    recordSpecID,
 			Name:               old.ConsiderationSpecs[i].OutputSpec.Spec.Name,
 			TypeName:           old.ConsiderationSpecs[i].OutputSpec.Spec.ResourceLocation.Classname,
 			ResultType:         DefinitionType(old.ConsiderationSpecs[i].OutputSpec.Spec.Type),
