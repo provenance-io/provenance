@@ -15,7 +15,7 @@ option java_multiple_files = true;
 
 // Msg defines the Metadata Msg service.
 service Msg {
-  // MemorializeContract records the results of a P8e contract execution as a session and set of records in a scope
+  // MemorializeContract records the results of a contract execution as a session and set of records in a scope
   rpc MemorializeContract(MsgMemorializeContractRequest) returns (MsgMemorializeContractResponse);
   // ChangeOwnership allows P8e contracts to record a new set of owners on a scope
   rpc ChangeOwnership(MsgChangeOwnershipRequest) returns (MsgChangeOwnershipResponse);
@@ -49,7 +49,7 @@ service Msg {
   rpc DeleteRecordSpecification(MsgDeleteRecordSpecificationRequest) returns (MsgDeleteRecordSpecificationResponse);
 }
 
-// MsgMemorializeContractRequest is a request from a P8e execution environment to record results of a contract
+// MsgMemorializeContractRequest is a request from an execution environment to record results of a contract
 message MsgMemorializeContractRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
@@ -73,7 +73,7 @@ message MsgMemorializeContractRequest {
 // MsgMemorializeContractResponse from a contract execution memorialization request
 message MsgMemorializeContractResponse {}
 
-// MsgChangeOwnershipRequest records the result of a change ownership p8e contract execution
+// MsgChangeOwnershipRequest records the result of a change ownership contract execution
 message MsgChangeOwnershipRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
