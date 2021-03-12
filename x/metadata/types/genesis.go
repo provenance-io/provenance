@@ -30,5 +30,6 @@ func NewGenesisState(
 
 // DefaultGenesisState returns a zero-value genesis state.
 func DefaultGenesisState() *GenesisState {
-	return &GenesisState{Params: DefaultParams()}
+	return &GenesisState{Params: DefaultParams(),
+		OSLocatorParams: DefaultOSLocatorParams()}
 }
