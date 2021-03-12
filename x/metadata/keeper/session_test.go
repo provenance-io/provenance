@@ -6,24 +6,23 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/provenance-io/provenance/app"
 	simapp "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/x/metadata/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/suite"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/provenance-io/provenance/x/metadata/types"
+	"github.com/stretchr/testify/suite"
 )
 
 type SessionKeeperTestSuite struct {
 	suite.Suite
 
-	app         *app.App
+	app         *simapp.App
 	ctx         sdk.Context
 	queryClient types.QueryClient
 
