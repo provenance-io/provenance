@@ -11,6 +11,6 @@ var (
 	// ErrInvalidAddress indicates the address given does not match an existing account.
 	ErrInvalidAddress = sdkerrors.Register(ModuleName, 3, "address does not match an existing account")
 
-	ErrAddressNotBound     = sdkerrors.Register(ModuleName, 4, "no locator bound to addres")
-	ErrOSLocatorURIToolong = sdkerrors.Register(ModuleName, 5, "uri lenght greater than allowed")
+	ErrAddressNotBound     = sdkerrors.Register(ModuleName, 4, "no locator bound to address")
+	ErrOSLocatorURIToolong = sdkerrors.Register(ModuleName, 5, "uri length greater than allowed")
 )

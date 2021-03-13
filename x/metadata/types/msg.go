@@ -639,7 +639,7 @@ func NewMsgAddOSLocatorRequest(obj ObjectStoreLocator) *MsgAddOSLocatorRequest {
 	}
 }
 
-func (m MsgAddOSLocatorRequest) Route() string {
+func (msg MsgAddOSLocatorRequest) Route() string {
 	return ModuleName
 }
 
