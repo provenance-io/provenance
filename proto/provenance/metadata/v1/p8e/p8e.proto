@@ -1,8 +1,6 @@
 syntax = "proto3";
 package provenance.metadata.v1.p8e;
 
-import "google/protobuf/timestamp.proto";
-
 option go_package = "github.com/provenance-io/provenance/x/metadata/types/p8e";
 
 option java_package        = "io.provenance.metadata.v1.p8e";
@@ -65,7 +63,7 @@ message Contract {
   int32 times_executed = 8;
 
   // This is only set once when the contract is initially executed
-  google.protobuf.Timestamp start_time = 9;
+  Timestamp start_time = 9;
 }
 
 message DefinitionSpec {
@@ -102,10 +100,10 @@ message ProposedFact {
 }
 
 message ExecutionResult {
-  ProposedFact              output        = 1;
-  ExecutionResultType       result        = 2;
-  google.protobuf.Timestamp recorded_at   = 3;
-  string                    error_message = 4;
+  ProposedFact        output        = 1;
+  ExecutionResultType result        = 2;
+  Timestamp           recorded_at   = 3;
+  string              error_message = 4;
 }
 
 message Recitals {
@@ -200,4 +198,16 @@ enum PartyType {
   PARTY_TYPE_OMNIBUS    = 7;
   PARTY_TYPE_PROVENANCE = 8;
   PARTY_TYPE_MARKER     = 9;
+}
+
+// Copied from google/protobuf/timestamp.proto into here because using that version results in generated code looking
+// for methods that don't exist: MarshalToSizedBuffer, Size, and Unmarshal.
+
+// A Timestamp represents a point in time using values relative to the epoch.
+message Timestamp {
+  // Represents seconds of UTC time since Unix epoch
+  int64 seconds = 1;
+
+  // Non-negative fractions of a second at nanosecond resolution.
+  int32 nanos = 2;
 }
