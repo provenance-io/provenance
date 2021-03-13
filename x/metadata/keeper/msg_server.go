@@ -421,6 +421,10 @@ func (k msgServer) BindOSLocator(goCtx context.Context, msg *types.MsgAddOSLocat
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
+	if int(k.Keeper.GetOSLocatorParams(ctx).MaxUriLength) > len(msg.Locator.LocatorUri) {
+		return nil, types.ErrOSLocatorURIToolong
+	}
+
 	if k.Keeper.OSLocatorExists(ctx, msg.Locator.Owner) {
 		ctx.Logger().Error("Address already bound to an URI", "owner", msg.Locator.Owner)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, types.ErrOSLocatorAlreadyBound.Error())
