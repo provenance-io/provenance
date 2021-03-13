@@ -179,9 +179,7 @@ enum PublicKeyCurve {
   P256      = 1;
 }
 
-enum PublicKeyType {
-  ELLIPTIC = 0;
-}
+enum PublicKeyType { ELLIPTIC = 0; }
 
 enum ExecutionResultType {
   RESULT_TYPE_UNKNOWN = 0;
