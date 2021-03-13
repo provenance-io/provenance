@@ -512,7 +512,7 @@ func (k msgServer) ModifyOSLocator(ctx context.Context, msg *types.MsgModifyOSLo
 	}
 
 	// Delete
-	if err := k.Keeper.modifyRecord(sdkCtx, ownerAddr,msg.Locator.LocatorUri); err != nil {
+	if err := k.Keeper.modifyRecord(sdkCtx, ownerAddr, msg.Locator.LocatorUri); err != nil {
 		sdkCtx.Logger().Error("error deleting name", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
