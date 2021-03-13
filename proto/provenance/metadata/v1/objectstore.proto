@@ -6,7 +6,6 @@ option go_package = "github.com/provenance-io/provenance/x/metadata/types";
 option java_package        = "io.provenance.metadata.v1";
 option java_multiple_files = true;
 
-
 message ObjectStoreLocator {
   // account address the endpoint is owned by
   string owner = 1;
@@ -16,5 +15,9 @@ message ObjectStoreLocator {
 
 // Params defines the parameters for the metadata-locator module methods.
 message OSLocatorParams {
-  uint32 max_uri_length     = 1 [(gogoproto.customtype) = "uint32", (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"max_uri_length\""];
+  uint32 max_uri_length = 1 [
+    (gogoproto.customtype) = "uint32",
+    (gogoproto.nullable)   = false,
+    (gogoproto.moretags)   = "yaml:\"max_uri_length\""
+  ];
 }

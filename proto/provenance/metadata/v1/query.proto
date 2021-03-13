@@ -306,9 +306,8 @@ message OSLocatorByURIRequest {
 
 // OSLocatorResponse is the response to a os locator request.
 message OSLocatorResponse {
-  ObjectStoreLocator   locator = 1;
+  ObjectStoreLocator locator = 1;
 }
-
 
 // OSLocatorQueryParamsRequest is the request type for the Query/Params RPC method.
 message OSLocatorQueryParamsRequest {}
@@ -319,14 +318,13 @@ message OSLocatorQueryParamsResponse {
   OSLocatorParams params = 1 [(gogoproto.nullable) = false];
 }
 
-
 message OSLocatorResponses {
-  repeated ObjectStoreLocator   locator = 1[(gogoproto.nullable) = false];
+  repeated ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
 
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message OSLocatorScopeResponse {
-  repeated ObjectStoreLocator   locator = 1[(gogoproto.nullable) = false];
+  repeated ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
 }
