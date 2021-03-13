@@ -29,7 +29,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// MsgMemorializeContractRequest is a request from a P8e execution environment to record results of a contract
+// MsgMemorializeContractRequest is a request from an execution environment to record results of a contract
 type MsgMemorializeContractRequest struct {
 	// The scope of the object being modified on blockchain.
 	ScopeId string `protobuf:"bytes,1,opt,name=scope_id,json=scopeId,proto3" json:"scope_id,omitempty"`
@@ -114,7 +114,7 @@ func (m *MsgMemorializeContractResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgMemorializeContractResponse proto.InternalMessageInfo
 
-// MsgChangeOwnershipRequest records the result of a change ownership p8e contract execution
+// MsgChangeOwnershipRequest records the result of a change ownership contract execution
 type MsgChangeOwnershipRequest struct {
 	// The scope of the object being modified on blockchain.
 	ScopeId string `protobuf:"bytes,1,opt,name=scope_id,json=scopeId,proto3" json:"scope_id,omitempty" yaml:"scope_id"`
@@ -1154,7 +1154,7 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
-	// MemorializeContract records the results of a P8e contract execution as a session and set of records in a scope
+	// MemorializeContract records the results of a contract execution as a session and set of records in a scope
 	MemorializeContract(ctx context.Context, in *MsgMemorializeContractRequest, opts ...grpc.CallOption) (*MsgMemorializeContractResponse, error)
 	// ChangeOwnership allows P8e contracts to record a new set of owners on a scope
 	ChangeOwnership(ctx context.Context, in *MsgChangeOwnershipRequest, opts ...grpc.CallOption) (*MsgChangeOwnershipResponse, error)
@@ -1309,7 +1309,7 @@ func (c *msgClient) DeleteRecordSpecification(ctx context.Context, in *MsgDelete
 
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
-	// MemorializeContract records the results of a P8e contract execution as a session and set of records in a scope
+	// MemorializeContract records the results of a contract execution as a session and set of records in a scope
 	MemorializeContract(context.Context, *MsgMemorializeContractRequest) (*MsgMemorializeContractResponse, error)
 	// ChangeOwnership allows P8e contracts to record a new set of owners on a scope
 	ChangeOwnership(context.Context, *MsgChangeOwnershipRequest) (*MsgChangeOwnershipResponse, error)
