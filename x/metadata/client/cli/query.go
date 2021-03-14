@@ -1032,7 +1032,9 @@ $ %s query metadata locator foocorp
 
 			uri := strings.ToLower(strings.TrimSpace(args[0]))
 			pageReq, err := client.ReadPageRequest(cmd.Flags())
-
+			if err != nil {
+				return err
+			}
 			queryClient := types.NewQueryClient(clientCtx)
 			var response *types.OSLocatorResponses
 

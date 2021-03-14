@@ -32,11 +32,11 @@ func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 		case types.QueryOSParams:
 			return queryOSLocatorParams(ctx, k, legacyQuerierCdc)
 		case types.QueryOSGet:
-			return queryOSGet(ctx, path, req, k, legacyQuerierCdc)
+			return queryOSGet(ctx, path, k, legacyQuerierCdc)
 		case types.QueryOSGetByURI:
-			return queryOSGetByURI(ctx, path, req, k, legacyQuerierCdc)
+			return queryOSGetByURI(ctx, path, k, legacyQuerierCdc)
 		case types.QueryOSGetByScope:
-			return queryOSGetByScope(ctx, path, req, k, legacyQuerierCdc)
+			return queryOSGetByScope(ctx, path, k, legacyQuerierCdc)
 		default:
 			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown query endpoint")
 		}
@@ -151,7 +151,7 @@ func queryOSLocatorParams(ctx sdk.Context, keeper Keeper, legacyQuerierCdc *code
 	return res, nil
 }
 
-func queryOSGet(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+func queryOSGet(ctx sdk.Context, path []string, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	accAddr, err := sdk.AccAddressFromBech32(path[1])
 	if err != nil {
 		return nil, types.ErrInvalidAddress
@@ -166,7 +166,7 @@ func queryOSGet(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 	return bz, nil
 }
 
-func queryOSGetByURI(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+func queryOSGetByURI(ctx sdk.Context, path []string, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	// Return value data structure.
 	// TODO make this common code
 	var records []types.ObjectStoreLocator
@@ -189,7 +189,7 @@ func queryOSGetByURI(ctx sdk.Context, path []string, req abci.RequestQuery, keep
 	return bz, nil
 }
 
-func queryOSGetByScope(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+func queryOSGetByScope(ctx sdk.Context, path []string, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	// Return value data structure.
 
 	msgs, _ := keeper.GetOSLocatorByScopeUUID(ctx, path[1])

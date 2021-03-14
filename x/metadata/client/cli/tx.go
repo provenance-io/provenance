@@ -160,13 +160,9 @@ func AddOsLocatorCmd() *cobra.Command {
 				return err
 			}
 
-			if _, err := sdk.AccAddressFromBech32(args[0]); err != nil {
+			if _, errAddr := sdk.AccAddressFromBech32(args[0]); errAddr != nil {
 				fmt.Printf("failed to add locator for a given owner address, invalid address: %s\n", args[0])
-				return fmt.Errorf("invalid address: %w", err)
-			}
-			if err != nil {
-				fmt.Printf("Invalid uuid for scope id: %s", args[0])
-				return err
+				return fmt.Errorf("invalid address: %w", errAddr)
 			}
 
 			objectStoreLocator := types.ObjectStoreLocator{
@@ -194,13 +190,9 @@ func RemoveOsLocatorCmd() *cobra.Command {
 				return err
 			}
 
-			if _, err := sdk.AccAddressFromBech32(args[0]); err != nil {
+			if _, errAddr := sdk.AccAddressFromBech32(args[0]); errAddr != nil {
 				fmt.Printf("failed to remove locator for a given owner address, invalid address: %s\n", args[0])
-				return fmt.Errorf("invalid address: %w", err)
-			}
-			if err != nil {
-				fmt.Printf("Invalid uuid for scope id: %s", args[0])
-				return err
+				return fmt.Errorf("invalid address: %w", errAddr)
 			}
 
 			objectStoreLocator := types.ObjectStoreLocator{
@@ -228,9 +220,9 @@ func ModifyOsLocatorCmd() *cobra.Command {
 				return err
 			}
 
-			if _, err := sdk.AccAddressFromBech32(args[0]); err != nil {
+			if _, errAddr := sdk.AccAddressFromBech32(args[0]); errAddr != nil {
 				fmt.Printf("failed to add locator for a given owner address, invalid address: %s\n", args[0])
-				return fmt.Errorf("invalid address: %w", err)
+				return fmt.Errorf("invalid address: %w", errAddr)
 			}
 			if err != nil {
 				fmt.Printf("Invalid uuid for scope id: %s", args[0])

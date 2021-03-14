@@ -22,14 +22,11 @@ func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 		case types.QueryLookup:
 			return queryLookupNames(ctx, path[1:], req, k, legacyQuerierCdc)
 
-
-
 		default:
 			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown query endpoint")
 		}
 	}
 }
-
 
 func queryParams(ctx sdk.Context, _ []string, _ abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	params := keeper.GetParams(ctx)
@@ -92,4 +89,3 @@ func queryLookupNames(ctx sdk.Context, path []string, _ abci.RequestQuery, keepe
 func queryResFromNameRecord(r types.NameRecord) types.QueryNameResult {
 	return types.QueryNameResult(r)
 }
-

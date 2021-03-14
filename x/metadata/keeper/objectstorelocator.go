@@ -103,7 +103,7 @@ func (k Keeper) GetOSLocatorByScopeUUID(ctx sdk.Context, scopeID string) (*types
 
 	s, found := k.GetScope(ctx, scopeAddress)
 
-	if found == false {
+	if !found {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid scope uuid: %s", err.Error())
 	}
 
@@ -120,7 +120,7 @@ func (k Keeper) GetOSLocatorByScopeUUID(ctx sdk.Context, scopeID string) (*types
 	locators := make([]types.ObjectStoreLocator, 0, len(signers))
 	for i, addr := range signers {
 		loc, found := k.GetOsLocatorRecord(ctx, addr)
-		if found == false {
+		if !found {
 			continue
 		}
 		locators[i] = loc
@@ -132,7 +132,7 @@ func (k Keeper) GetOSLocatorByScopeUUID(ctx sdk.Context, scopeID string) (*types
 func (k Keeper) deleteRecord(ctx sdk.Context, ownerAddr sdk.AccAddress) error {
 	// Need the record to clear the address index
 	_, found := k.GetOsLocatorRecord(ctx, ownerAddr)
-	if found == false {
+	if !found {
 		return types.ErrAddressNotBound
 	}
 
@@ -158,7 +158,7 @@ func (k Keeper) deleteRecord(ctx sdk.Context, ownerAddr sdk.AccAddress) error {
 func (k Keeper) modifyRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, uri string) error {
 	// Need the record to clear the address index
 	_, found := k.GetOsLocatorRecord(ctx, ownerAddr)
-	if found == false {
+	if !found {
 		return types.ErrAddressNotBound
 	}
 

@@ -499,7 +499,7 @@ func (k Keeper) OSLocator(c context.Context, request *types.OSLocatorRequest) (*
 
 	record, exists := k.GetOsLocatorRecord(ctx, accAddr)
 
-	if exists == false {
+	if !exists {
 		return nil, types.ErrAddressNotBound
 	}
 	return &types.OSLocatorResponse{Locator: &record}, nil

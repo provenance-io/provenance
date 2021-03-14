@@ -716,8 +716,8 @@ func ValidateOSLocatorObj(ownerAddr string, uri string) error {
 	}
 
 	if _, err := sdk.AccAddressFromBech32(ownerAddr); err != nil {
-		fmt.Errorf("failed to add locator for a given owner address,"+
-			" invalid address: %s\n", ownerAddr)
+		return fmt.Errorf("failed to add locator for a given owner address,"+
+			" invalid address: %s", ownerAddr)
 	}
 
 	if strings.TrimSpace(uri) == "" {
@@ -725,8 +725,8 @@ func ValidateOSLocatorObj(ownerAddr string, uri string) error {
 	}
 
 	if _, err := url.Parse(uri); err != nil {
-		fmt.Errorf("failed to add locator for a given"+
-			" owner address, invalid uri: %s\n", uri)
+		return fmt.Errorf("failed to add locator for a given"+
+			" owner address, invalid uri: %s", uri)
 	}
 	return nil
 }
