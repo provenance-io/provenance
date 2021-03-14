@@ -11,22 +11,22 @@ import (
 // Handler is a name record handler function for use with IterateRecords.
 type ObjectStoreHandler func(record types.ObjectStoreLocator) error
 
-func (keeper Keeper) GetOsLocatorRecord(ctx sdk.Context, ownerAddress sdk.AccAddress) (osLocator types.ObjectStoreLocator, found bool) {
+func (k Keeper) GetOsLocatorRecord(ctx sdk.Context, ownerAddress sdk.AccAddress) (osLocator types.ObjectStoreLocator, found bool) {
 	key, err := types.GetOsLocatorAddressKeyPrefix(ownerAddress)
 	if err != nil {
 		return types.ObjectStoreLocator{}, false
 	}
-	store := ctx.KVStore(keeper.storeKey)
+	store := ctx.KVStore(k.storeKey)
 	b := store.Get(key)
 	if b == nil {
 		return types.ObjectStoreLocator{}, false
 	}
-	keeper.cdc.MustUnmarshalBinaryBare(b, &osLocator)
+	k.cdc.MustUnmarshalBinaryBare(b, &osLocator)
 	return osLocator, true
 }
 
 // Logger returns a module-specific logger.
-func (keeper Keeper) OSLocatorExists(ctx sdk.Context, ownerAddr string) bool {
+func (k Keeper) OSLocatorExists(ctx sdk.Context, ownerAddr string) bool {
 	address, err := sdk.AccAddressFromBech32(ownerAddr)
 	if err != nil {
 		ctx.Logger().Error("failed to get locator", "err", err)
@@ -38,23 +38,23 @@ func (keeper Keeper) OSLocatorExists(ctx sdk.Context, ownerAddr string) bool {
 		ctx.Logger().Error("failed to get locator", "err", err)
 		return false
 	}
-	store := ctx.KVStore(keeper.storeKey)
+	store := ctx.KVStore(k.storeKey)
 
 	return store.Has(key)
 }
 
 // SetNameRecord binds a name to an address. An error is returned if no account exists for the address.
-func (keeper Keeper) SetOSLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, uri string) error {
+func (k Keeper) SetOSLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, uri string) error {
 	var err error
 
-	if account := keeper.authKeeper.GetAccount(ctx, ownerAddr); account == nil {
+	if account := k.authKeeper.GetAccount(ctx, ownerAddr); account == nil {
 		return types.ErrInvalidAddress
 	}
 	key, err := types.GetOsLocatorAddressKeyPrefix(ownerAddr)
 	if err != nil {
 		return err
 	}
-	store := ctx.KVStore(keeper.storeKey)
+	store := ctx.KVStore(k.storeKey)
 	if store.Has(key) {
 		return types.ErrOSLocatorAlreadyBound
 	}
@@ -75,8 +75,8 @@ func (keeper Keeper) SetOSLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddres
 }
 
 // IterateLocatorsForURI gets address's associated with a given URI.
-func (keeper Keeper) IterateLocatorsForURI(ctx sdk.Context, handler ObjectStoreHandler) error {
-	store := ctx.KVStore(keeper.storeKey)
+func (k Keeper) IterateLocatorsForURI(ctx sdk.Context, handler ObjectStoreHandler) error {
+	store := ctx.KVStore(k.storeKey)
 	prefix := types.OSLocatorAddressKeyPrefix
 	it := sdk.KVStorePrefixIterator(store, prefix)
 
@@ -94,14 +94,14 @@ func (keeper Keeper) IterateLocatorsForURI(ctx sdk.Context, handler ObjectStoreH
 	return nil
 }
 
-func (keeper Keeper) GetOSLocatorByScopeUUID(ctx sdk.Context, scopeID string) (*types.OSLocatorScopeResponse, error) {
+func (k Keeper) GetOSLocatorByScopeUUID(ctx sdk.Context, scopeID string) (*types.OSLocatorScopeResponse, error) {
 	id, err := uuid.Parse(scopeID)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid scope uuid: %s", err.Error())
 	}
 	scopeAddress := types.ScopeMetadataAddress(id)
 
-	s, found := keeper.GetScope(ctx, scopeAddress)
+	s, found := k.GetScope(ctx, scopeAddress)
 
 	if found == false {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid scope uuid: %s", err.Error())
@@ -119,7 +119,7 @@ func (keeper Keeper) GetOSLocatorByScopeUUID(ctx sdk.Context, scopeID string) (*
 
 	locators := make([]types.ObjectStoreLocator, 0, len(signers))
 	for i, addr := range signers {
-		loc, found := keeper.GetOsLocatorRecord(ctx, addr)
+		loc, found := k.GetOsLocatorRecord(ctx, addr)
 		if found == false {
 			continue
 		}
@@ -129,9 +129,9 @@ func (keeper Keeper) GetOSLocatorByScopeUUID(ctx sdk.Context, scopeID string) (*
 }
 
 // Delete a os locator record from the kvstore.
-func (keeper Keeper) deleteRecord(ctx sdk.Context, ownerAddr sdk.AccAddress) error {
+func (k Keeper) deleteRecord(ctx sdk.Context, ownerAddr sdk.AccAddress) error {
 	// Need the record to clear the address index
-	_, found := keeper.GetOsLocatorRecord(ctx, ownerAddr)
+	_, found := k.GetOsLocatorRecord(ctx, ownerAddr)
 	if found == false {
 		return types.ErrAddressNotBound
 	}
@@ -141,7 +141,7 @@ func (keeper Keeper) deleteRecord(ctx sdk.Context, ownerAddr sdk.AccAddress) err
 	if err != nil {
 		return err
 	}
-	store := ctx.KVStore(keeper.storeKey)
+	store := ctx.KVStore(k.storeKey)
 	store.Delete(key)
 	// Delete the address index record
 	addrPrefix, err := types.GetOsLocatorAddressKeyPrefix(ownerAddr)
@@ -155,9 +155,9 @@ func (keeper Keeper) deleteRecord(ctx sdk.Context, ownerAddr sdk.AccAddress) err
 	return nil
 }
 
-func (keeper Keeper) modifyRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, uri string) error {
+func (k Keeper) modifyRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, uri string) error {
 	// Need the record to clear the address index
-	_, found := keeper.GetOsLocatorRecord(ctx, ownerAddr)
+	_, found := k.GetOsLocatorRecord(ctx, ownerAddr)
 	if found == false {
 		return types.ErrAddressNotBound
 	}
@@ -167,7 +167,7 @@ func (keeper Keeper) modifyRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, uri
 	if err != nil {
 		return err
 	}
-	store := ctx.KVStore(keeper.storeKey)
+	store := ctx.KVStore(k.storeKey)
 	record := types.NewOSLocatorRecord(ownerAddr, uri)
 	bz, err := types.ModuleCdc.MarshalBinaryBare(&record)
 	if err != nil {

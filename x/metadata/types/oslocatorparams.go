@@ -22,8 +22,8 @@ var (
 )
 
 // NewParams creates a new parameter object
-func NewOSLocatorParams(maxUriLength uint32) OSLocatorParams {
-	return OSLocatorParams{MaxUriLength: maxUriLength}
+func NewOSLocatorParams(maxURILength uint32) OSLocatorParams {
+	return OSLocatorParams{MaxUriLength: maxURILength}
 }
 
 // ParamSetPairs implements the ParamSet interface and returns all the key/value pairs

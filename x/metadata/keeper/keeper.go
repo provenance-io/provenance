@@ -93,7 +93,7 @@ type MetadataKeeperI interface {
 	// add OSLocator instance
 	SetOSLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, uri string) error
 
-	GetOSLocatorByScopeUUID(ctx sdk.Context, scopeId string) (*types.OSLocatorScopeResponse, error)
+	GetOSLocatorByScopeUUID(ctx sdk.Context, scopeID string) (*types.OSLocatorScopeResponse, error)
 }
 
 // Keeper is the concrete state-based API for the metadata module.
@@ -197,8 +197,8 @@ func (k Keeper) ValidatePartiesInvolved(parties []types.Party, requiredParties [
 }
 
 // ResolvesTo to determines whether a name resolves to a given address.
-func (keeper Keeper) VerifyCorrectOwner(ctx sdk.Context, ownerAddr sdk.AccAddress) bool { // nolint:interfacer
-	stored, found := keeper.GetOsLocatorRecord(ctx, ownerAddr)
+func (k Keeper) VerifyCorrectOwner(ctx sdk.Context, ownerAddr sdk.AccAddress) bool { // nolint:interfacer
+	stored, found := k.GetOsLocatorRecord(ctx, ownerAddr)
 	if found == false {
 		return false
 	}

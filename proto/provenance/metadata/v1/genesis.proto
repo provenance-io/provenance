@@ -29,5 +29,5 @@ message GenesisState {
   repeated ContractSpecification contract_specifications = 6 [(gogoproto.nullable) = false];
   repeated RecordSpecification   record_specifications   = 7 [(gogoproto.nullable) = false];
 
-  OSLocatorParams oS_locator_params = 8 [(gogoproto.nullable) = false];
+  OSLocatorParams o_s_locator_params = 8 [(gogoproto.nullable) = false];
 }
