@@ -94,8 +94,8 @@ func (keeper Keeper) IterateLocatorsForURI(ctx sdk.Context, handler ObjectStoreH
 	return nil
 }
 
-func (keeper Keeper) GetOSLocatorByScopeUUID(ctx sdk.Context, scopeId string) (*types.OSLocatorScopeResponse, error) {
-	id, err := uuid.Parse(scopeId)
+func (keeper Keeper) GetOSLocatorByScopeUUID(ctx sdk.Context, scopeID string) (*types.OSLocatorScopeResponse, error) {
+	id, err := uuid.Parse(scopeID)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid scope uuid: %s", err.Error())
 	}
