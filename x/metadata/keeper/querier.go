@@ -30,7 +30,7 @@ func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 		// TODO: add contract spec stuff
 		// TODO: add record spec stuff
 		case types.QueryOSParams:
-			return queryOSLocatorParams(ctx, path, req, k, legacyQuerierCdc)
+			return queryOSLocatorParams(ctx, k, legacyQuerierCdc)
 		case types.QueryOSGet:
 			return queryOSGet(ctx, path, req, k, legacyQuerierCdc)
 		case types.QueryOSGetByURI:
@@ -140,7 +140,7 @@ func queryScopeSpecification(ctx sdk.Context, path []string, k Keeper, legacyQue
 	return res, nil
 }
 
-func queryOSLocatorParams(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+func queryOSLocatorParams(ctx sdk.Context, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	params := keeper.GetOSLocatorParams(ctx)
 
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, params)
