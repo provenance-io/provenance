@@ -24,7 +24,7 @@ type scopeTestSuite struct {
 
 // func ownerPartyList is defined in msg_test.go
 
-func TestAddressTestSuite(t *testing.T) {
+func TestScopeTestSuite(t *testing.T) {
 	suite.Run(t, new(scopeTestSuite))
 }
 
