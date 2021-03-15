@@ -28,9 +28,7 @@ var handlers = map[string]appUpgrade{
 	"v0.2.0": {},
 	"v0.2.1": {
 		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) {
-			existing := app.MarkerKeeper.GetParams(ctx)
-			existing.UnrestrictedDenomRegex = markertypes.DefaultUnrestrictedDenomRegex
-			app.MarkerKeeper.SetParams(ctx, existing)
+			app.MarkerKeeper.SetParams(ctx, markertypes.DefaultParams())
 		},
 	},
 
