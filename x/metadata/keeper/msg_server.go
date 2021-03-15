@@ -421,8 +421,8 @@ func (k msgServer) DeleteRecordSpecification(
 
 func (k msgServer) P8EMemorializeContract(
 	goCtx context.Context,
-	msg *types.MsgP8EMemorializeContractRequest,
-) (*types.MsgP8EMemorializeContractResponse, error) {
+	msg *types.MsgP8EMemorializeContractRequest, //nolint:staticcheck // Ignore deprecation error here.
+) (*types.MsgP8EMemorializeContractResponse, error) { //nolint:staticcheck // Ignore deprecation error here.
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// TODO: implement P8EMemorializeContract.

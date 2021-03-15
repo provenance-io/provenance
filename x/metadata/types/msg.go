@@ -672,7 +672,7 @@ func (msg MsgP8EMemorializeContractRequest) ValidateBasic() error {
 }
 
 // Migrate Converts a P8eMsgMemorializeP8eContractRequest object into the new objects.
-func (p *MsgP8EMemorializeContractRequest) Migrate() (scope Scope, session Session, records []Record, err error) {
+func (msg *MsgP8EMemorializeContractRequest) Migrate() (scope Scope, session Session, records []Record, err error) {
 	scope = *EmptyScope()
 	session = *EmptySession()
 	records = []Record{}

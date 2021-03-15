@@ -184,7 +184,7 @@ func NewRecord(name string, sessionID MetadataAddress, process Process, inputs [
 
 // EmptyRecord creates a new empty Record.
 func EmptyRecord() *Record {
-	return &Record {
+	return &Record{
 		Name:      "",
 		SessionId: MetadataAddress{},
 		Process:   *EmptyProcess(),
