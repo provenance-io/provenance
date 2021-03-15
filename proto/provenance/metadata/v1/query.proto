@@ -103,11 +103,11 @@ service Query {
 
   // for querying oslocator by uri.
   rpc OSLocatorByURI(OSLocatorByURIRequest) returns (OSLocatorResponses) {
-    option (google.api.http).get = "/provenance/metadata/v1/locator/{uri}";
+    option (google.api.http).get = "/provenance/metadata/v1/locator/uri/{uri}";
   }
   // for querying all the oslocator for all signer's present in a scope uuid.
   rpc OSLocatorByScopeUUID(ScopeRequest) returns (OSLocatorScopeResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/locator/{scope_uuid}";
+    option (google.api.http).get = "/provenance/metadata/v1/locator/scope/{scope_uuid}";
   }
 }
 

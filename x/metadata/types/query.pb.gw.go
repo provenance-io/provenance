@@ -1954,9 +1954,9 @@ var (
 
 	pattern_Query_OSLocator_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"provenance", "metadata", "v1", "locator", "owner"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_OSLocatorByURI_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"provenance", "metadata", "v1", "locator", "uri"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_OSLocatorByURI_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 4}, []string{"provenance", "metadata", "v1", "locator", "uri"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_OSLocatorByScopeUUID_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"provenance", "metadata", "v1", "locator", "scope_uuid"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_OSLocatorByScopeUUID_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"provenance", "metadata", "v1", "locator", "scope", "scope_uuid"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (

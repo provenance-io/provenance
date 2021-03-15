@@ -43,7 +43,7 @@ func (k Keeper) OSLocatorExists(ctx sdk.Context, ownerAddr string) bool {
 	return store.Has(key)
 }
 
-// SetNameRecord binds a name to an address. An error is returned if no account exists for the address.
+// SetOSLocatorRecord binds a oslocator to an address. An error is returned if no account exists for the address.
 func (k Keeper) SetOSLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, uri string) error {
 	var err error
 
@@ -75,7 +75,7 @@ func (k Keeper) SetOSLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, ur
 }
 
 // IterateLocators gets address's associated with a given URI.
-func (k Keeper) IterateLocators(ctx sdk.Context, handler ObjectStoreHandler) error {
+func (k Keeper) IterateLocators(ctx sdk.Context, cb func(account types.ObjectStoreLocator) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
 	prefix := types.OSLocatorAddressKeyPrefix
 	it := sdk.KVStorePrefixIterator(store, prefix)
@@ -84,11 +84,12 @@ func (k Keeper) IterateLocators(ctx sdk.Context, handler ObjectStoreHandler) err
 
 	for ; it.Valid(); it.Next() {
 		record := types.ObjectStoreLocator{}
+		println("in  next ")
 		if err := types.ModuleCdc.UnmarshalBinaryBare(it.Value(), &record); err != nil {
 			return err
 		}
-		if err := handler(record); err != nil {
-			return err
+		if cb(record) {
+			break
 		}
 	}
 	return nil

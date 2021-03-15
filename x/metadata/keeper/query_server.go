@@ -510,17 +510,22 @@ func (k Keeper) OSLocatorByURI(ctx context.Context, request *types.OSLocatorByUR
 	// Return value data structure.
 	var records []types.ObjectStoreLocator
 	// Handler that adds records if account address matches.
-	appendToRecords := func(record types.ObjectStoreLocator) error {
+	appendToRecords := func(record types.ObjectStoreLocator) bool {
 		if record.LocatorUri == request.Uri {
 			records = append(records, record)
+			// have to get all the uri associated with an address..imo..check
 		}
-		return nil
+		return false
 	}
-	// Collect and return all names that match.
+
 	if err := k.IterateLocators(ctxSDK, appendToRecords); err != nil {
-		return &types.OSLocatorResponses{Locator: records}, err
+		return nil, err
 	}
-	return &types.OSLocatorResponses{Locator: records}, nil
+	if records == nil {
+		return nil, types.ErrNoRecordsFound
+	}
+	uniqueRecords := uniqueRecords(records)
+	return &types.OSLocatorResponses{Locator: uniqueRecords}, nil
 }
 
 func (k Keeper) OSLocatorByScopeUUID(ctx context.Context, request *types.ScopeRequest) (*types.OSLocatorScopeResponse, error) {

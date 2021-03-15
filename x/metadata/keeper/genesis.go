@@ -98,9 +98,9 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 		return false
 	}
 
-	appendToObjectLocatorRecords := func(objectLocator types.ObjectStoreLocator) error {
+	appendToObjectLocatorRecords := func(objectLocator types.ObjectStoreLocator) bool {
 		objectStoreLocators = append(objectStoreLocators, objectLocator)
-		return nil
+		return false
 	}
 
 	if err := k.IterateScopes(ctx, appendToScopes); err != nil {

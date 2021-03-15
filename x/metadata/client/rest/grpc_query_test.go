@@ -51,8 +51,8 @@ type IntegrationTestSuite struct {
 	specID   types.MetadataAddress
 
 	objectLocator metadatatypes.ObjectStoreLocator
-	ownerAddr sdk.AccAddress
-	uri       string
+	ownerAddr     sdk.AccAddress
+	uri           string
 }
 
 func ownerPartyList(addresses ...string) []types.Party {
@@ -104,7 +104,7 @@ func (suite *IntegrationTestSuite) SetupSuite() {
 
 	// add os locator
 	suite.ownerAddr = suite.accountAddr
-	suite.uri = "http://google.com"
+	suite.uri = "foo"
 	suite.objectLocator = metadatatypes.NewOSLocatorRecord(suite.ownerAddr, suite.uri)
 
 	var metadataData metadatatypes.GenesisState
@@ -198,6 +198,22 @@ func (suite *IntegrationTestSuite) TestGRPCQueries() {
 			&metadatatypes.OSLocatorResponse{},
 			&metadatatypes.OSLocatorResponse{
 				Locator: &suite.objectLocator,
+			},
+		},
+		{
+			"Get os locator from owner uri.",
+			fmt.Sprintf("%s/provenance/metadata/v1/locator/uri/%s", baseURL, "foo"),
+			map[string]string{
+				grpctypes.GRPCBlockHeightHeader: "1",
+			},
+			false,
+			&metadatatypes.OSLocatorResponses{},
+			&metadatatypes.OSLocatorResponses{
+				Locator: []metadatatypes.ObjectStoreLocator{metadatatypes.ObjectStoreLocator{
+					Owner:      suite.ownerAddr.String(),
+					LocatorUri: suite.uri,
+				}},
+				Pagination: nil,
 			},
 		},
 	}

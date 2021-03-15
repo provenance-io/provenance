@@ -170,17 +170,20 @@ func queryOSGetByURI(ctx sdk.Context, path []string, keeper Keeper, legacyQuerie
 	// Return value data structure.
 	// TODO make this common code
 	var records []types.ObjectStoreLocator
-	appendToRecords := func(record types.ObjectStoreLocator) error {
+
+	appendToRecords := func(record types.ObjectStoreLocator) bool {
 		if record.LocatorUri == path[1] {
 			records = append(records, record)
+			// have to get all the uri associated with an address..imo..check
 		}
-		return nil
+		return false
 	}
 	if err := keeper.IterateLocators(ctx, appendToRecords); err != nil {
 		return nil, err
 	}
+	uniqueRecords := uniqueRecords(records)
 
-	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, records)
+	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, &uniqueRecords)
 
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
@@ -200,4 +203,26 @@ func queryOSGetByScope(ctx sdk.Context, path []string, keeper Keeper, legacyQuer
 	}
 
 	return bz, nil
+}
+
+func uniqueRecords(records []types.ObjectStoreLocator) []types.ObjectStoreLocator {
+	if len(records) == 0 {
+		return records
+	}
+	seen := make([]types.ObjectStoreLocator, 0, len(records))
+
+slice:
+	for i, n := range records {
+		if i == 0 {
+			records = records[:0]
+		}
+		for _, t := range seen {
+			if n.Owner == t.Owner && n.LocatorUri == t.LocatorUri {
+				continue slice
+			}
+		}
+		seen = append(seen, n)
+		records = append(records, n)
+	}
+	return records
 }
