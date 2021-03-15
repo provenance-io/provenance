@@ -13,11 +13,15 @@ option java_multiple_files = true;
 // P8eMsg defines the immediately deprecated p8e Metadata Msg service.
 service P8eMsg {
   // MemorializeContract records the results of a P8e contract execution as a session and set of records in a scope
-  rpc MemorializeP8eContract(P8eMsgMemorializeP8eContractRequest) returns (P8eMsgMemorializeP8eContractResponse);
+  rpc MemorializeP8eContract(P8eMsgMemorializeP8eContractRequest) returns (P8eMsgMemorializeP8eContractResponse) {
+    option deprecated = true;
+  };
 }
 
 // P8eMsgMemorializeP8eContractRequest is the input for a MemorializeP8eContract call
 message P8eMsgMemorializeP8eContractRequest {
+  option deprecated = true;
+
   // The scope id of the object being add or modified on blockchain.
   string scope_id = 1;
   // The uuid of the contract execution.
@@ -35,7 +39,9 @@ message P8eMsgMemorializeP8eContractRequest {
 }
 
 // P8eMsgMemorializeP8eContractResponse is the out for a MemorializeP8eContract call
-message P8eMsgMemorializeP8eContractResponse {}
+message P8eMsgMemorializeP8eContractResponse {
+  option deprecated = true;
+}
 
 // The rest of the messages defined in here were copied from the old provenance repo.
 // Changes:
