@@ -22,6 +22,7 @@ const (
 	TypeMsgDeleteContractSpecificationRequest = "delete_contract_specification_request"
 	TypeMsgAddRecordSpecificationRequest      = "add_record_specification_request"
 	TypeMsgDeleteRecordSpecificationRequest   = "delete_record_specification_request"
+	TypeMsgP8eMemorializeContractRequest      = "p8e_memorialize_contract_request"
 )
 
 // Compile time interface checks.
@@ -39,6 +40,7 @@ var (
 	_ sdk.Msg = &MsgDeleteContractSpecificationRequest{}
 	_ sdk.Msg = &MsgAddRecordSpecificationRequest{}
 	_ sdk.Msg = &MsgDeleteRecordSpecificationRequest{}
+	_ sdk.Msg = &MsgP8EMemorializeContractRequest{}
 )
 
 // private method to convert an array of strings into an array of Acc Addresses.
@@ -621,4 +623,66 @@ func (msg MsgDeleteRecordSpecificationRequest) ValidateBasic() error {
 		return fmt.Errorf("at least one signer is required")
 	}
 	return nil
+}
+
+// ------------------  MsgP8EMemorializeContractRequest  ------------------
+
+// NewMsgDeleteRecordSpecificationRequest creates a new msg instance
+func NewMsgP8EMemorializeContractRequest() *MsgP8EMemorializeContractRequest {
+	return &MsgP8EMemorializeContractRequest{}
+}
+
+func (msg MsgP8EMemorializeContractRequest) String() string {
+	out, _ := yaml.Marshal(msg)
+	return string(out)
+}
+
+// Route returns the module route
+func (msg MsgP8EMemorializeContractRequest) Route() string {
+	return ModuleName
+}
+
+// Type returns the type name for this msg
+func (msg MsgP8EMemorializeContractRequest) Type() string {
+	return TypeMsgP8eMemorializeContractRequest
+}
+
+// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
+func (msg MsgP8EMemorializeContractRequest) GetSigners() []sdk.AccAddress {
+	// TODO: implement MsgP8EMemorializeContractRequest GetSigners
+	// Probably want to use .Signatures.
+	return []sdk.AccAddress{}
+}
+
+// GetSignBytes gets the bytes for the message signer to sign on
+func (msg MsgP8EMemorializeContractRequest) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// ValidateBasic performs a quick validity check
+func (msg MsgP8EMemorializeContractRequest) ValidateBasic() error {
+	// TODO: implement MsgP8EMemorializeContractRequest ValidateBasic
+	return nil
+}
+
+// Migrate Converts a P8eMsgMemorializeP8eContractRequest object into the new objects.
+func (p *MsgP8EMemorializeContractRequest) Migrate() (scope Scope, session Session, records []Record) {
+	scope = *EmptyScope()
+	// TODO: Set scope.ScopeId
+	// TODO: Set scope.SpecificationId
+	// TODO: Add scope.Owners.
+	// TODO: Add scope.DataAccess entries.
+	// TODO: Set scope.ValueOwnerAddress.
+
+	// TODO: Set proper session id and set proper specification id.
+	session = *EmptySession()
+	// TODO: Set session.SessionId
+	// TODO: Set session.SpecificationId
+	// TODO: Add session.Parties.
+	// TODO: Set session.Name
+
+	records = []Record{}
+	// TODO: Add records.
+
+	return
 }

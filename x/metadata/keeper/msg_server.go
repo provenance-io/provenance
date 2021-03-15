@@ -418,3 +418,22 @@ func (k msgServer) DeleteRecordSpecification(
 
 	return &types.MsgDeleteRecordSpecificationResponse{}, nil
 }
+
+func (k msgServer) P8EMemorializeContract(
+	goCtx context.Context,
+	msg *types.MsgP8EMemorializeContractRequest,
+) (*types.MsgP8EMemorializeContractResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// TODO: implement P8EMemorializeContract.
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, string(msg.Invoker)),
+		),
+	)
+
+	return nil, fmt.Errorf("not implemented")
+}
