@@ -1753,6 +1753,7 @@ func (m *OSLocatorQueryParamsResponse) GetParams() OSLocatorParams {
 	return OSLocatorParams{}
 }
 
+// OSLocatorResponses is an array of ObjectStoreLocator with pagination info
 type OSLocatorResponses struct {
 	Locator []ObjectStoreLocator `protobuf:"bytes,1,rep,name=locator,proto3" json:"locator"`
 	// pagination defines an optional pagination for the request.
@@ -1806,6 +1807,7 @@ func (m *OSLocatorResponses) GetPagination() *query.PageResponse {
 	return nil
 }
 
+// OSLocatorResponse is an array of ObjectStoreLocator.
 type OSLocatorScopeResponse struct {
 	Locator []ObjectStoreLocator `protobuf:"bytes,1,rep,name=locator,proto3" json:"locator"`
 }
@@ -2059,6 +2061,7 @@ type QueryClient interface {
 	OSLocator(ctx context.Context, in *OSLocatorRequest, opts ...grpc.CallOption) (*OSLocatorResponse, error)
 	// for querying oslocator by uri.
 	OSLocatorByURI(ctx context.Context, in *OSLocatorByURIRequest, opts ...grpc.CallOption) (*OSLocatorResponses, error)
+	// for querying all the oslocator for all signer's present in a scope uuid.
 	OSLocatorByScopeUUID(ctx context.Context, in *ScopeRequest, opts ...grpc.CallOption) (*OSLocatorScopeResponse, error)
 }
 
@@ -2271,6 +2274,7 @@ type QueryServer interface {
 	OSLocator(context.Context, *OSLocatorRequest) (*OSLocatorResponse, error)
 	// for querying oslocator by uri.
 	OSLocatorByURI(context.Context, *OSLocatorByURIRequest) (*OSLocatorResponses, error)
+	// for querying all the oslocator for all signer's present in a scope uuid.
 	OSLocatorByScopeUUID(context.Context, *ScopeRequest) (*OSLocatorScopeResponse, error)
 }
 

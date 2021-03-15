@@ -105,7 +105,7 @@ service Query {
   rpc OSLocatorByURI(OSLocatorByURIRequest) returns (OSLocatorResponses) {
     option (google.api.http).get = "/provenance/metadata/v1/locator/{uri}";
   }
-
+  // for querying all the oslocator for all signer's present in a scope uuid.
   rpc OSLocatorByScopeUUID(ScopeRequest) returns (OSLocatorScopeResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/locator/{scope_uuid}";
   }
@@ -318,6 +318,7 @@ message OSLocatorQueryParamsResponse {
   OSLocatorParams params = 1 [(gogoproto.nullable) = false];
 }
 
+// OSLocatorResponses is an array of ObjectStoreLocator with pagination info
 message OSLocatorResponses {
   repeated ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
 
@@ -325,6 +326,7 @@ message OSLocatorResponses {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
+// OSLocatorResponse is an array of ObjectStoreLocator.
 message OSLocatorScopeResponse {
   repeated ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
 }

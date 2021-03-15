@@ -40,7 +40,7 @@ func DefaultOSLocatorParams() OSLocatorParams {
 }
 
 func validateMaxURILength(i interface{}) error {
-	_, ok := i.(uint64)
+	_, ok := i.(uint32)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}

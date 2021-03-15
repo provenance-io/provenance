@@ -1449,12 +1449,12 @@ type MsgClient interface {
 	AddRecordSpecification(ctx context.Context, in *MsgAddRecordSpecificationRequest, opts ...grpc.CallOption) (*MsgAddRecordSpecificationResponse, error)
 	// DeleteRecordSpecification deletes a record specification
 	DeleteRecordSpecification(ctx context.Context, in *MsgDeleteRecordSpecificationRequest, opts ...grpc.CallOption) (*MsgDeleteRecordSpecificationResponse, error)
-	//Os Locator
+	// Os Locator
 	// BindOSLocator binds a owner address to a uri.
 	BindOSLocator(ctx context.Context, in *MsgAddOSLocatorRequest, opts ...grpc.CallOption) (*MsgAddOSLocatorResponse, error)
 	// DeleteName defines a method to verify a particular invariance.
 	DeleteOSLocator(ctx context.Context, in *MsgDeleteOSLocatorRequest, opts ...grpc.CallOption) (*MsgDeleteOSLocatorResponse, error)
-	//Modify existing OSLocator record.
+	// Modify existing OSLocator record.
 	ModifyOSLocator(ctx context.Context, in *MsgModifyOSLocatorRequest, opts ...grpc.CallOption) (*MsgModifyOSLocatorResponse, error)
 }
 
@@ -1638,12 +1638,12 @@ type MsgServer interface {
 	AddRecordSpecification(context.Context, *MsgAddRecordSpecificationRequest) (*MsgAddRecordSpecificationResponse, error)
 	// DeleteRecordSpecification deletes a record specification
 	DeleteRecordSpecification(context.Context, *MsgDeleteRecordSpecificationRequest) (*MsgDeleteRecordSpecificationResponse, error)
-	//Os Locator
+	// Os Locator
 	// BindOSLocator binds a owner address to a uri.
 	BindOSLocator(context.Context, *MsgAddOSLocatorRequest) (*MsgAddOSLocatorResponse, error)
 	// DeleteName defines a method to verify a particular invariance.
 	DeleteOSLocator(context.Context, *MsgDeleteOSLocatorRequest) (*MsgDeleteOSLocatorResponse, error)
-	//Modify existing OSLocator record.
+	// Modify existing OSLocator record.
 	ModifyOSLocator(context.Context, *MsgModifyOSLocatorRequest) (*MsgModifyOSLocatorResponse, error)
 }
 

@@ -42,6 +42,18 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 			k.SetRecordSpecification(ctx, s)
 		}
 	}
+	if data.ObjectStoreLocators != nil {
+		for _, s := range data.ObjectStoreLocators {
+			addr, err := sdk.AccAddressFromBech32(s.Owner)
+			if err != nil {
+				panic(err)
+			}
+			err = k.ImportLocatorRecord(ctx, addr, s.LocatorUri)
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
 }
 
 // ExportGenesis exports the current keeper state of the metadata module.ExportGenesis
@@ -54,6 +66,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 	scopeSpecs := make([]types.ScopeSpecification, 0)
 	contractSpecs := make([]types.ContractSpecification, 0)
 	recordSpecs := make([]types.RecordSpecification, 0)
+	objectStoreLocators := make([]types.ObjectStoreLocator, 0)
 
 	appendToScopes := func(scope types.Scope) bool {
 		scopes = append(scopes, scope)
@@ -85,6 +98,11 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 		return false
 	}
 
+	appendToObjectLocatorRecords := func(objectLocator types.ObjectStoreLocator) error {
+		objectStoreLocators = append(objectStoreLocators, objectLocator)
+		return nil
+	}
+
 	if err := k.IterateScopes(ctx, appendToScopes); err != nil {
 		panic(err)
 	}
@@ -104,5 +122,10 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 		panic(err)
 	}
 
-	return types.NewGenesisState(params, oslocatorparams, scopes, sessions, records, scopeSpecs, contractSpecs, recordSpecs)
+	// os locator records
+	if err := k.IterateLocators(ctx, appendToObjectLocatorRecords); err != nil {
+		panic(err)
+	}
+
+	return types.NewGenesisState(params, oslocatorparams, scopes, sessions, records, scopeSpecs, contractSpecs, recordSpecs, objectStoreLocators)
 }

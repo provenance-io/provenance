@@ -176,7 +176,7 @@ func queryOSGetByURI(ctx sdk.Context, path []string, keeper Keeper, legacyQuerie
 		}
 		return nil
 	}
-	if err := keeper.IterateLocatorsForURI(ctx, appendToRecords); err != nil {
+	if err := keeper.IterateLocators(ctx, appendToRecords); err != nil {
 		return nil, err
 	}
 

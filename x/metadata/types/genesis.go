@@ -15,6 +15,7 @@ func NewGenesisState(
 	scopeSpecs []ScopeSpecification,
 	contracSpecs []ContractSpecification,
 	recordSpecs []RecordSpecification,
+	objectStoreLocators []ObjectStoreLocator,
 ) *GenesisState {
 	return &GenesisState{
 		Params:                 params,
@@ -25,6 +26,7 @@ func NewGenesisState(
 		ScopeSpecifications:    scopeSpecs,
 		ContractSpecifications: contracSpecs,
 		RecordSpecifications:   recordSpecs,
+		ObjectStoreLocators:    objectStoreLocators,
 	}
 }
 

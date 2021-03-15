@@ -74,8 +74,8 @@ func (k Keeper) SetOSLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, ur
 	return nil
 }
 
-// IterateLocatorsForURI gets address's associated with a given URI.
-func (k Keeper) IterateLocatorsForURI(ctx sdk.Context, handler ObjectStoreHandler) error {
+// IterateLocators gets address's associated with a given URI.
+func (k Keeper) IterateLocators(ctx sdk.Context, handler ObjectStoreHandler) error {
 	store := ctx.KVStore(k.storeKey)
 	prefix := types.OSLocatorAddressKeyPrefix
 	it := sdk.KVStorePrefixIterator(store, prefix)
@@ -174,5 +174,33 @@ func (k Keeper) modifyRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, uri stri
 		return err
 	}
 	store.Set(key, bz)
+	return nil
+}
+
+// ImportLocatorRecord binds a name to an address. An error is returned if no account exists for the address.
+func (k Keeper) ImportLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, uri string) error {
+	var err error
+
+	key, err := types.GetOsLocatorAddressKeyPrefix(ownerAddr)
+	if err != nil {
+		return err
+	}
+	store := ctx.KVStore(k.storeKey)
+	if store.Has(key) {
+		return types.ErrOSLocatorAlreadyBound
+	}
+	record := types.NewOSLocatorRecord(ownerAddr, uri)
+	bz, err := types.ModuleCdc.MarshalBinaryBare(&record)
+	if err != nil {
+		return err
+	}
+	store.Set(key, bz)
+	// Now index by address
+	addrPrefix, err := types.GetOsLocatorAddressKeyPrefix(ownerAddr)
+	if err != nil {
+		return err
+	}
+	indexKey := append(addrPrefix, key...) // [0x02] :: [addr-bytes]
+	store.Set(indexKey, bz)
 	return nil
 }

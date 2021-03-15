@@ -517,7 +517,7 @@ func (k Keeper) OSLocatorByURI(ctx context.Context, request *types.OSLocatorByUR
 		return nil
 	}
 	// Collect and return all names that match.
-	if err := k.IterateLocatorsForURI(ctxSDK, appendToRecords); err != nil {
+	if err := k.IterateLocators(ctxSDK, appendToRecords); err != nil {
 		return &types.OSLocatorResponses{Locator: records}, err
 	}
 	return &types.OSLocatorResponses{Locator: records}, nil
