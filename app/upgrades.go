@@ -26,8 +26,7 @@ type appUpgrade struct {
 
 var handlers = map[string]appUpgrade{
 	"v0.2.0": {},
-	"v0.2.1": {},
-	"v0.2.2": {
+	"v0.2.1": {
 		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) {
 			app.MarkerKeeper.SetParams(ctx, markertypes.DefaultParams())
 		},
