@@ -627,7 +627,7 @@ func (msg MsgDeleteRecordSpecificationRequest) ValidateBasic() error {
 
 // ------------------  MsgP8EMemorializeContractRequest  ------------------
 
-// NewMsgDeleteRecordSpecificationRequest creates a new msg instance
+// NewMsgP8EMemorializeContractRequest creates a new msg instance
 func NewMsgP8EMemorializeContractRequest() *MsgP8EMemorializeContractRequest {
 	return &MsgP8EMemorializeContractRequest{}
 }
