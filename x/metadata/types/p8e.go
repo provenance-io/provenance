@@ -43,10 +43,11 @@ func EmptyProcess() *Process {
 }
 
 // Migrate Converts a MsgP8EMemorializeContractRequest object into the new objects.
-func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest) (scope Scope, session Session, records []Record, err error) {
+func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest) (scope Scope, session Session, records []Record, signers []string, err error) {
 	scope = *EmptyScope()
 	session = *EmptySession()
 	records = []Record{}
+	signers = []string{}
 	err = nil
 
 	// TODO: Set scope.ScopeId
@@ -61,6 +62,8 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 	// TODO: Set session.Name
 
 	// TODO: Add records.
+
+	// TODO: Add signers.
 
 	return
 }

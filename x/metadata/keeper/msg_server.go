@@ -425,7 +425,38 @@ func (k msgServer) P8EMemorializeContract(
 ) (*types.MsgP8EMemorializeContractResponse, error) { //nolint:staticcheck // Ignore deprecation error here.
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// TODO: implement P8EMemorializeContract.
+	scope, session, records, signers, err := types.ConvertP8eMemorializeContractRequest(msg)
+
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = k.AddScope(goCtx, &types.MsgAddScopeRequest{
+		Scope:   scope,
+		Signers: signers,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = k.AddSession(goCtx, &types.MsgAddSessionRequest{
+		Session: &session,
+		Signers: signers,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, record := range records {
+		_, err = k.AddRecord(goCtx, &types.MsgAddRecordRequest{
+			SessionId: session.SessionId,
+			Record:    &record,
+			Signers:   signers,
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(

@@ -416,3 +416,4 @@ func (s *p8eTestSuite) TestEmptyProcess() {
 	})
 }
 
+// TODO: ConvertP8eMemorializeContractRequest tests
