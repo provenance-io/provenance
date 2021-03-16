@@ -8,7 +8,8 @@ import (
 	p8e "github.com/provenance-io/provenance/x/metadata/types/p8e"
 )
 
-func ConvertContractSpec(old *p8e.ContractSpec, owners []string) (
+// ConvertP8eContractSpec converts a v39 ContractSpec to a v40 ContractSpecification
+func ConvertP8eContractSpec(old *p8e.ContractSpec, owners []string) (
 	newSpec ContractSpecification,
 	newRecords []RecordSpecification,
 	err error,
@@ -44,7 +45,7 @@ func ConvertContractSpec(old *p8e.ContractSpec, owners []string) (
 
 	newRecords = make([]RecordSpecification, len(old.ConsiderationSpecs))
 	for i := range old.ConsiderationSpecs {
-		recordInputs, err := convertInputSpecs(old.ConsiderationSpecs[i].InputSpecs)
+		recordInputs, err := convertP8eInputSpecs(old.ConsiderationSpecs[i].InputSpecs)
 		if err != nil {
 			return newSpec, nil, err
 		}
@@ -66,8 +67,8 @@ func ConvertContractSpec(old *p8e.ContractSpec, owners []string) (
 	return newSpec, newRecords, nil
 }
 
-// converts a v39 DefinitionSpec used for inputs into a v40 input specification.
-func convertInputSpecs(old []*p8e.DefinitionSpec) (inputs []*InputSpecification, err error) {
+// convertP8eInputSpecs a v39 DefinitionSpec used for inputs into a v40 InputSpecification
+func convertP8eInputSpecs(old []*p8e.DefinitionSpec) (inputs []*InputSpecification, err error) {
 	inputs = make([]*InputSpecification, len(old))
 	for i, oldInput := range old {
 		if oldInput.ResourceLocation.Ref.ScopeUuid != nil &&

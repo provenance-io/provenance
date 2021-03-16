@@ -417,7 +417,7 @@ func (k msgServer) AddP8EContractSpec(
 	msg *types.MsgAddP8EContractSpecRequest,
 ) (*types.MsgAddP8EContractSpecResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	newspec, newrecords, err := types.ConvertContractSpec(&msg.Contractspec, msg.Signers)
+	newspec, newrecords, err := types.ConvertP8eContractSpec(&msg.Contractspec, msg.Signers)
 
 	if err != nil {
 		return nil, err
