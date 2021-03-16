@@ -167,8 +167,7 @@ func queryOSGet(ctx sdk.Context, path []string, keeper Keeper, legacyQuerierCdc 
 }
 
 func queryOSGetByURI(ctx sdk.Context, path []string, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
-	// Return value data structure.
-	// TODO make this common code
+	// intentionally leaving out pagination for now for this one, not really anything legacy rest for this :shrug:
 	var records []types.ObjectStoreLocator
 
 	appendToRecords := func(record types.ObjectStoreLocator) bool {

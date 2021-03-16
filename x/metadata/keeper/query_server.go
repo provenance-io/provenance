@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	b64 "encoding/base64"
+	"fmt"
 	"net/url"
 	"strings"
 
@@ -16,6 +17,8 @@ import (
 
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
+
+const defaultLimit = 100
 
 var _ types.QueryServer = Keeper{}
 
@@ -539,7 +542,32 @@ func (k Keeper) OSLocatorByURI(ctx context.Context, request *types.OSLocatorByUR
 		return nil, types.ErrNoRecordsFound
 	}
 	uniqueRecords := uniqueRecords(records)
-	return &types.OSLocatorByURIResponse{Locator: uniqueRecords}, nil
+
+	pageRequest := request.Pagination
+	// if the PageRequest is nil, use default PageRequest
+	if pageRequest == nil {
+		pageRequest = &query.PageRequest{}
+	}
+
+	limit := pageRequest.Limit
+	if limit == 0 {
+		limit = defaultLimit
+	}
+	end := pageRequest.Offset + limit
+	totalResults := uint64(len(uniqueRecords))
+
+	if pageRequest.Offset > totalResults {
+		return nil, fmt.Errorf("invalid offset")
+	}
+
+	if end > totalResults {
+		end = totalResults
+	}
+
+	return &types.OSLocatorByURIResponse{
+		Locator:    uniqueRecords[pageRequest.Offset:end],
+		Pagination: &query.PageResponse{Total: totalResults},
+	}, nil
 }
 
 func (k Keeper) OSLocatorByScopeUUID(ctx context.Context, request *types.OSLocatorByScopeUUIDRequest) (*types.OSLocatorByScopeUUIDResponse, error) {

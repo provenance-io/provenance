@@ -3,6 +3,7 @@ package rest_test
 import (
 	b64 "encoding/base64"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"testing"
 
 	"github.com/google/uuid"
@@ -57,7 +58,7 @@ type IntegrationTestSuite struct {
 
 	objectLocator1 metadatatypes.ObjectStoreLocator
 	ownerAddr1     sdk.AccAddress
-	uri1       string
+	uri1           string
 }
 
 func ownerPartyList(addresses ...string) []types.Party {
@@ -225,7 +226,10 @@ func (suite *IntegrationTestSuite) TestGRPCQueries() {
 					Owner:      suite.ownerAddr.String(),
 					LocatorUri: suite.uri,
 				}},
-				Pagination: nil,
+				Pagination: &query.PageResponse{
+					NextKey: nil,
+					Total:   1,
+				},
 			},
 		},
 		{
