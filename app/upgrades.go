@@ -35,8 +35,7 @@ var handlers = map[string]appUpgrade{
 	// TODO - Add new upgrade definitions here.
 }
 
-// CustomUpgradeStoreLoader provides upgrade handlers for store and application module upgrades at specified versions
-func CustomUpgradeStoreLoader(app *App, info storetypes.UpgradeInfo) baseapp.StoreLoader {
+func InstallCustomUpgradeHandlers(app *App) {
 	// Register all explicit appUpgrades
 	for name, upgrade := range handlers {
 		// If the handler has been defined, add it here, otherwise, use no-op.
@@ -51,17 +50,31 @@ func CustomUpgradeStoreLoader(app *App, info storetypes.UpgradeInfo) baseapp.Sto
 		}
 		app.UpgradeKeeper.SetUpgradeHandler(name, handler)
 	}
+}
 
+// CustomUpgradeStoreLoader provides upgrade handlers for store and application module upgrades at specified versions
+func CustomUpgradeStoreLoader(app *App, info storetypes.UpgradeInfo) baseapp.StoreLoader {
+	// Current upgrade info is empty. Skip any possible store upgrades.
+	if info.Name == "" {
+		return nil
+	}
+	// Find the upgrade handler that matches this currently executing upgrade.
 	for name, upgrade := range handlers {
 		// If the plan is executing this block, set the store locator to create any
 		// missing modules, delete unused modules, or rename any keys required in the plan.
-		if info.Name == name && !app.UpgradeKeeper.IsSkipHeight(info.Height) {
+		if info.Name == name && info.Height - 1 == app.LastBlockHeight() && !app.UpgradeKeeper.IsSkipHeight(info.Height) {
 			storeUpgrades := storetypes.StoreUpgrades{
 				Added:   upgrade.Added,
 				Renamed: upgrade.Renamed,
 				Deleted: upgrade.Deleted,
 			}
-			app.Logger().Info("Store upgrades", "plan", name, "height", info.Height, "upgrade", upgrade)
+			app.Logger().Info("Store upgrades",
+				"plan", name,
+				"height", info.Height,
+				"upgrade.added", upgrade.Added,
+				"upgrade.deleted", upgrade.Deleted,
+				"upgrade.renamed", upgrade.Renamed,
+			)
 			return upgradetypes.UpgradeStoreLoader(info.Height, &storeUpgrades)
 		}
 	}

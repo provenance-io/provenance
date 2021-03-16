@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -573,9 +574,13 @@ func New(
 		panic(err)
 	}
 
-	storeLoader := CustomUpgradeStoreLoader(app, upgradeInfo)
-	if storeLoader != nil {
-		app.SetStoreLoader(storeLoader)
+	InstallCustomUpgradeHandlers(app)
+	fmt.Printf("name:%s height:%d current:%d", upgradeInfo.Name, upgradeInfo.Height, app.LastBlockHeight())
+	if upgradeInfo.Name != "" && upgradeInfo.Height == app.LastBlockHeight() + 1 {
+		storeLoader := CustomUpgradeStoreLoader(app, upgradeInfo)
+		if storeLoader != nil {
+			app.SetStoreLoader(storeLoader)
+		}
 	}
 	// --
 
