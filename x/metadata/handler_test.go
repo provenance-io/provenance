@@ -108,6 +108,33 @@ func (s HandlerTestSuite) TestAddContractSpecMsg() {
 		InputSpecs:      []*v039metadata.DefinitionSpec{&validInputSpec},
 		PartiesInvolved: []v039metadata.PartyType{v039metadata.PartyType_PARTY_TYPE_AFFILIATE},
 	}
+	invalidOutputSpec := v039metadata.OutputSpec{Spec: &v039metadata.DefinitionSpec{
+		Name: "additional_parties",
+		ResourceLocation: &v039metadata.Location{
+			Classname: "",
+			Ref: &v039metadata.ProvenanceReference{
+				Hash: "Adv+huolGTKofYCR0dw5GHm/R7sUWOwF32XR8r8r9kDy4il5U/LApxOWYHb05jhK4+eY4YzRMRiWcxU3Lx0+Mw==",
+			},
+		},
+		Type: 1,
+	},
+	}
+
+	invalidContractSpec := v039metadata.ContractSpec{ConsiderationSpecs: []*v039metadata.ConsiderationSpec{
+		{FuncName: "additionalParties",
+			InputSpecs:       []*v039metadata.DefinitionSpec{&validInputSpec},
+			OutputSpec:       &invalidOutputSpec,
+			ResponsibleParty: 1,
+		},
+	},
+		Definition:      &validDefinition,
+		InputSpecs:      []*v039metadata.DefinitionSpec{&validInputSpec},
+		PartiesInvolved: []v039metadata.PartyType{v039metadata.PartyType_PARTY_TYPE_AFFILIATE},
+	}
 	_, err := s.handler(s.ctx, &types.MsgAddP8EContractSpecRequest{Contractspec: validContractSpec, Signers: []string{s.user1Addr.String()}})
 	s.NoError(err)
+
+	_, err = s.handler(s.ctx, &types.MsgAddP8EContractSpecRequest{Contractspec: invalidContractSpec, Signers: []string{s.user1Addr.String()}})
+	s.Error(err)
+
 }
