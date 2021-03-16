@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -437,8 +438,11 @@ func (k msgServer) BindOSLocator(goCtx context.Context, msg *types.MsgAddOSLocat
 		ctx.Logger().Error("invalid address", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
-
-	if err := k.Keeper.SetOSLocatorRecord(ctx, address, msg.Locator.LocatorUri); err != nil {
+	urlToPersist, err := url.Parse(msg.Locator.LocatorUri)
+	if err != nil {
+		return nil, err
+	}
+	if err := k.Keeper.SetOSLocatorRecord(ctx, address, urlToPersist.String()); err != nil {
 		ctx.Logger().Error("unable to bind name", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}

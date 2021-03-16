@@ -1,6 +1,7 @@
 package rest_test
 
 import (
+	b64 "encoding/base64"
 	"fmt"
 	"testing"
 
@@ -104,7 +105,7 @@ func (suite *IntegrationTestSuite) SetupSuite() {
 
 	// add os locator
 	suite.ownerAddr = suite.accountAddr
-	suite.uri = "foo"
+	suite.uri = "http://foo.com"
 	suite.objectLocator = metadatatypes.NewOSLocatorRecord(suite.ownerAddr, suite.uri)
 
 	var metadataData metadatatypes.GenesisState
@@ -202,7 +203,10 @@ func (suite *IntegrationTestSuite) TestGRPCQueries() {
 		},
 		{
 			"Get os locator from owner uri.",
-			fmt.Sprintf("%s/provenance/metadata/v1/locator/uri/%s", baseURL, "foo"),
+			// only way i could get around http url parse isseus for rest
+			// This encodes/decodes using a URL-compatible base64
+			// format.
+			fmt.Sprintf("%s/provenance/metadata/v1/locator/uri/%s", baseURL, b64.StdEncoding.EncodeToString([]byte(suite.uri))),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},

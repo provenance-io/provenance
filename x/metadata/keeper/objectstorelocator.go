@@ -84,7 +84,6 @@ func (k Keeper) IterateLocators(ctx sdk.Context, cb func(account types.ObjectSto
 
 	for ; it.Valid(); it.Next() {
 		record := types.ObjectStoreLocator{}
-		println("in  next ")
 		if err := types.ModuleCdc.UnmarshalBinaryBare(it.Value(), &record); err != nil {
 			return err
 		}

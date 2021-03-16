@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"context"
+	b64 "encoding/base64"
+	"net/url"
 	"strings"
 
 	"google.golang.org/grpc/codes"
@@ -507,11 +509,24 @@ func (k Keeper) OSLocator(c context.Context, request *types.OSLocatorRequest) (*
 
 func (k Keeper) OSLocatorByURI(ctx context.Context, request *types.OSLocatorByURIRequest) (*types.OSLocatorResponses, error) {
 	ctxSDK := sdk.UnwrapSDKContext(ctx)
+	var sDec []byte
+	//rest request send in base64 encoded uri, using a URL-compatible base64
+	//format.
+	if IsBase64(request.Uri) {
+		sDec, _ = b64.StdEncoding.DecodeString(request.Uri)
+	} else
+	{
+		sDec = []byte(request.Uri)
+	}
+	url, err := url.Parse(string(sDec))
+	if err != nil {
+		return nil, err
+	}
 	// Return value data structure.
 	var records []types.ObjectStoreLocator
 	// Handler that adds records if account address matches.
 	appendToRecords := func(record types.ObjectStoreLocator) bool {
-		if record.LocatorUri == request.Uri {
+		if record.LocatorUri == url.String() {
 			records = append(records, record)
 			// have to get all the uri associated with an address..imo..check
 		}
@@ -539,4 +554,9 @@ func (k Keeper) OSLocatorByScopeUUID(ctx context.Context, request *types.ScopeRe
 	}
 
 	return k.GetOSLocatorByScopeUUID(ctxSDK, request.ScopeUuid)
+}
+
+func IsBase64(s string) bool {
+	_, err := b64.StdEncoding.DecodeString(s)
+	return err == nil
 }
