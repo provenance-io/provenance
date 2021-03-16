@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/provenance-io/provenance/x/metadata/types/p8e"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -428,8 +429,11 @@ func (msg MsgAddScopeSpecificationRequest) ValidateBasic() error {
 // ------------------  MsgAddContractSpecRequest  ------------------
 
 // NewMsgAddContractSpecRequest creates a new msg instance
-func NewMsgAddContractSpecRequest() *MsgAddP8EContractSpecRequest {
-	return &MsgAddP8EContractSpecRequest{}
+func NewMsgAddP8EContractSpecRequest(contractSpec p8e.ContractSpec, signers []string) *MsgAddP8EContractSpecRequest {
+	return &MsgAddP8EContractSpecRequest{
+		Contractspec: contractSpec,
+		Signers:      signers,
+	}
 }
 
 func (msg MsgAddP8EContractSpecRequest) String() string {
