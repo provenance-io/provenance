@@ -51,7 +51,7 @@ service Msg {
 
   // Os Locator
   // BindOSLocator binds a owner address to a uri.
-  rpc BindOSLocator(MsgAddOSLocatorRequest) returns (MsgAddOSLocatorResponse);
+  rpc BindOSLocator(MsgBindOSLocatorRequest) returns (MsgBindOSLocatorResponse);
 
   // DeleteName defines a method to verify a particular invariance.
   rpc DeleteOSLocator(MsgDeleteOSLocatorRequest) returns (MsgDeleteOSLocatorResponse);
@@ -294,16 +294,15 @@ message MsgDeleteRecordSpecificationRequest {
 // MsgDeleteRecordSpecificationResponse from a delete record specification request
 message MsgDeleteRecordSpecificationResponse {}
 
-// MsgBindNameRequest defines an sdk.Msg type that is used to add an address/name binding under an optional parent name.
-// The record may optionally be restricted to prevent additional names from being added under this one without the
-// owner signing the request.
-message MsgAddOSLocatorRequest {
+// MsgBindOSLocatorRequest defines an sdk.Msg type that is used to add an address of an owner to a particular uri.
+message MsgBindOSLocatorRequest {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
   // The object locator to bind the address to bind to the URI.
   ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
 }
 
+// MsgModifyOSLocatorRequest defines an sdk.Msg type that is used to modify a uri associated with an owner address.
 message MsgModifyOSLocatorRequest {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
@@ -312,10 +311,11 @@ message MsgModifyOSLocatorRequest {
 }
 
 // MsgAddOSLocatorResponse defines the Msg/BindObjectLocator response type.
-message MsgAddOSLocatorResponse {
+message MsgBindOSLocatorResponse {
   ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
 }
 
+// MsgModifyOSLocatorResponse defines the Msg/ModifyObjectLocator response type
 message MsgModifyOSLocatorResponse {
   ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
 }

@@ -3267,7 +3267,10 @@ func (m *P8EMsgMemorializeP8EContractRequest) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthP8E
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthP8E
 			}
 			if (iNdEx + skippy) > l {
@@ -3317,7 +3320,10 @@ func (m *P8EMsgMemorializeP8EContractResponse) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthP8E
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthP8E
 			}
 			if (iNdEx + skippy) > l {
@@ -3666,7 +3672,10 @@ func (m *Contract) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthP8E
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthP8E
 			}
 			if (iNdEx + skippy) > l {
@@ -3839,7 +3848,10 @@ func (m *DefinitionSpec) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthP8E
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthP8E
 			}
 			if (iNdEx + skippy) > l {
@@ -3957,7 +3969,10 @@ func (m *Fact) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthP8E
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthP8E
 			}
 			if (iNdEx + skippy) > l {
@@ -4075,7 +4090,10 @@ func (m *Condition) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthP8E
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthP8E
 			}
 			if (iNdEx + skippy) > l {
@@ -4227,7 +4245,10 @@ func (m *Consideration) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthP8E
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthP8E
 			}
 			if (iNdEx + skippy) > l {
@@ -4409,7 +4430,10 @@ func (m *ProposedFact) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthP8E
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthP8E
 			}
 			if (iNdEx + skippy) > l {
@@ -4582,7 +4606,10 @@ func (m *ExecutionResult) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthP8E
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthP8E
 			}
 			if (iNdEx + skippy) > l {
@@ -4666,7 +4693,10 @@ func (m *Recitals) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthP8E
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthP8E
 			}
 			if (iNdEx + skippy) > l {
@@ -4805,7 +4835,10 @@ func (m *Recital) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthP8E
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthP8E
 			}
 			if (iNdEx + skippy) > l {
@@ -4923,7 +4956,10 @@ func (m *Location) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthP8E
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthP8E
 			}
 			if (iNdEx + skippy) > l {
@@ -5109,7 +5145,10 @@ func (m *ProvenanceReference) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthP8E
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthP8E
 			}
 			if (iNdEx + skippy) > l {
@@ -5193,7 +5232,10 @@ func (m *SignatureSet) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthP8E
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthP8E
 			}
 			if (iNdEx + skippy) > l {
@@ -5375,7 +5417,10 @@ func (m *Signature) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthP8E
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthP8E
 			}
 			if (iNdEx + skippy) > l {
@@ -5497,7 +5542,10 @@ func (m *SigningAndEncryptionPublicKeys) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthP8E
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthP8E
 			}
 			if (iNdEx + skippy) > l {
@@ -5619,7 +5667,10 @@ func (m *PublicKey) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthP8E
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthP8E
 			}
 			if (iNdEx + skippy) > l {
@@ -5701,7 +5752,10 @@ func (m *UUID) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthP8E
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthP8E
 			}
 			if (iNdEx + skippy) > l {
@@ -5789,7 +5843,10 @@ func (m *Timestamp) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
+			if skippy < 0 {
+				return ErrInvalidLengthP8E
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthP8E
 			}
 			if (iNdEx + skippy) > l {

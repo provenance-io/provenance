@@ -169,7 +169,7 @@ func AddOsLocatorCmd() *cobra.Command {
 				LocatorUri: args[1], Owner: args[0],
 			}
 
-			addOSLocator := *types.NewMsgAddOSLocatorRequest(objectStoreLocator)
+			addOSLocator := *types.NewMsgBindOSLocatorRequest(objectStoreLocator)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &addOSLocator)
 		},
 	}

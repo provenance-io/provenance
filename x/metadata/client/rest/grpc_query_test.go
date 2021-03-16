@@ -186,8 +186,8 @@ func (suite *IntegrationTestSuite) TestGRPCQueries() {
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
 			false,
-			&metadatatypes.OSLocatorQueryParamsResponse{},
-			&metadatatypes.OSLocatorQueryParamsResponse{Params: metadatatypes.DefaultOSLocatorParams()},
+			&metadatatypes.OSLocatorParamsResponse{},
+			&metadatatypes.OSLocatorParamsResponse{Params: metadatatypes.DefaultOSLocatorParams()},
 		},
 		{
 			"Get os locator from owner address.",
@@ -211,8 +211,8 @@ func (suite *IntegrationTestSuite) TestGRPCQueries() {
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
 			false,
-			&metadatatypes.OSLocatorResponses{},
-			&metadatatypes.OSLocatorResponses{
+			&metadatatypes.OSLocatorByURIResponse{},
+			&metadatatypes.OSLocatorByURIResponse{
 				Locator: []metadatatypes.ObjectStoreLocator{metadatatypes.ObjectStoreLocator{
 					Owner:      suite.ownerAddr.String(),
 					LocatorUri: suite.uri,

@@ -22,7 +22,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgDeleteContractSpecificationRequest{}, "provenance/metadata/DeleteContractSpecificationRequest", nil)
 	cdc.RegisterConcrete(&MsgAddRecordSpecificationRequest{}, "provenance/metadata/AddRecordSpecificationRequest", nil)
 	cdc.RegisterConcrete(&MsgDeleteRecordSpecificationRequest{}, "provenance/metadata/DeleteRecordSpecificationRequest", nil)
-	cdc.RegisterConcrete(&MsgAddOSLocatorRequest{}, "provenance/metadata/MsgAddOSLocatorRequest", nil)
+	cdc.RegisterConcrete(&MsgBindOSLocatorRequest{}, "provenance/metadata/MsgBindOSLocatorRequest", nil)
 	cdc.RegisterConcrete(&MsgModifyOSLocatorRequest{}, "provenance/metadata/MsgModifyOSLocatorRequest", nil)
 	cdc.RegisterConcrete(&MsgDeleteOSLocatorRequest{}, "provenance/metadata/MsgDeleteOSLocatorRequest", nil)
 }
@@ -42,7 +42,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgDeleteContractSpecificationRequest{},
 		&MsgAddRecordSpecificationRequest{},
 		&MsgDeleteRecordSpecificationRequest{},
-		&MsgAddOSLocatorRequest{},
+		&MsgBindOSLocatorRequest{},
 		&MsgModifyOSLocatorRequest{},
 		&MsgDeleteOSLocatorRequest{},
 	)

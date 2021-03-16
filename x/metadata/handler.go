@@ -48,7 +48,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgDeleteRecordSpecificationRequest:
 			res, err := msgServer.DeleteRecordSpecification(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgAddOSLocatorRequest:
+		case *types.MsgBindOSLocatorRequest:
 			res, err := msgServer.BindOSLocator(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 		case *types.MsgDeleteOSLocatorRequest:

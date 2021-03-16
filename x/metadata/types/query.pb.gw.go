@@ -900,7 +900,7 @@ func local_request_Query_RecordSpecificationByID_0(ctx context.Context, marshale
 }
 
 func request_Query_OSLocatorParams_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq OSLocatorQueryParamsRequest
+	var protoReq OSLocatorParamsRequest
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.OSLocatorParams(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -909,7 +909,7 @@ func request_Query_OSLocatorParams_0(ctx context.Context, marshaler runtime.Mars
 }
 
 func local_request_Query_OSLocatorParams_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq OSLocatorQueryParamsRequest
+	var protoReq OSLocatorParamsRequest
 	var metadata runtime.ServerMetadata
 
 	msg, err := server.OSLocatorParams(ctx, &protoReq)
@@ -1044,7 +1044,7 @@ func local_request_Query_OSLocatorByURI_0(ctx context.Context, marshaler runtime
 }
 
 func request_Query_OSLocatorByScopeUUID_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ScopeRequest
+	var protoReq OSLocatorByScopeUUIDRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -1071,7 +1071,7 @@ func request_Query_OSLocatorByScopeUUID_0(ctx context.Context, marshaler runtime
 }
 
 func local_request_Query_OSLocatorByScopeUUID_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ScopeRequest
+	var protoReq OSLocatorByScopeUUIDRequest
 	var metadata runtime.ServerMetadata
 
 	var (

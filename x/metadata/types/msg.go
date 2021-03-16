@@ -23,7 +23,7 @@ const (
 	TypeMsgDeleteContractSpecificationRequest = "delete_contract_specification_request"
 	TypeMsgAddRecordSpecificationRequest      = "add_record_specification_request"
 	TypeMsgDeleteRecordSpecificationRequest   = "delete_record_specification_request"
-	TypeMsgAddOSLocatorRequest                = "add_os_locator_request"
+	TypeMsgBindOSLocatorRequest                = "add_os_locator_request"
 	TypeMsgDeleteOSLocatorRequest             = "delete_os_locator_request"
 	TypeMsgModifyOSLocatorRequest             = "modify_os_locator_request"
 )
@@ -43,7 +43,7 @@ var (
 	_ sdk.Msg = &MsgDeleteContractSpecificationRequest{}
 	_ sdk.Msg = &MsgAddRecordSpecificationRequest{}
 	_ sdk.Msg = &MsgDeleteRecordSpecificationRequest{}
-	_ sdk.Msg = &MsgAddOSLocatorRequest{}
+	_ sdk.Msg = &MsgBindOSLocatorRequest{}
 	_ sdk.Msg = &MsgDeleteOSLocatorRequest{}
 	_ sdk.Msg = &MsgModifyOSLocatorRequest{}
 )
@@ -632,22 +632,22 @@ func (msg MsgDeleteRecordSpecificationRequest) ValidateBasic() error {
 
 // --------------------------- AddOSLocatorRequest------------------------------------------
 
-// NewMsgAddOSLocatorRequest creates a new msg instance
-func NewMsgAddOSLocatorRequest(obj ObjectStoreLocator) *MsgAddOSLocatorRequest {
-	return &MsgAddOSLocatorRequest{
+// NewMsgBindOSLocatorRequest creates a new msg instance
+func NewMsgBindOSLocatorRequest(obj ObjectStoreLocator) *MsgBindOSLocatorRequest {
+	return &MsgBindOSLocatorRequest{
 		Locator: obj,
 	}
 }
 
-func (msg MsgAddOSLocatorRequest) Route() string {
+func (msg MsgBindOSLocatorRequest) Route() string {
 	return ModuleName
 }
 
-func (msg MsgAddOSLocatorRequest) Type() string {
-	return TypeMsgAddOSLocatorRequest
+func (msg MsgBindOSLocatorRequest) Type() string {
+	return TypeMsgBindOSLocatorRequest
 }
 
-func (msg MsgAddOSLocatorRequest) ValidateBasic() error {
+func (msg MsgBindOSLocatorRequest) ValidateBasic() error {
 	err := ValidateOSLocatorObj(msg.Locator.Owner, msg.Locator.LocatorUri)
 	if err != nil {
 		return err
@@ -655,11 +655,11 @@ func (msg MsgAddOSLocatorRequest) ValidateBasic() error {
 	return nil
 }
 
-func (msg MsgAddOSLocatorRequest) GetSignBytes() []byte {
+func (msg MsgBindOSLocatorRequest) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
-func (msg MsgAddOSLocatorRequest) GetSigners() []sdk.AccAddress {
+func (msg MsgBindOSLocatorRequest) GetSigners() []sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.Locator.Owner)
 	if err != nil {
 		panic(err)

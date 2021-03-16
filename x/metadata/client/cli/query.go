@@ -961,7 +961,7 @@ $ %s query name params
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.OSLocatorParams(context.Background(), &types.OSLocatorQueryParamsRequest{})
+			res, err := queryClient.OSLocatorParams(context.Background(), &types.OSLocatorParamsRequest{})
 			if err != nil {
 				return err
 			}
@@ -1036,7 +1036,7 @@ $ %s query metadata locator foocorp
 				return err
 			}
 			queryClient := types.NewQueryClient(clientCtx)
-			var response *types.OSLocatorResponses
+			var response *types.OSLocatorByURIResponse
 
 			response, err = queryClient.OSLocatorByURI(context.Background(), &types.OSLocatorByURIRequest{Uri: uri, Pagination: pageReq})
 
@@ -1075,9 +1075,9 @@ $ %s query metadata locator foocorp
 			scopeUUID := strings.ToLower(strings.TrimSpace(args[0]))
 
 			queryClient := types.NewQueryClient(clientCtx)
-			var response *types.OSLocatorScopeResponse
+			var response *types.OSLocatorByScopeUUIDResponse
 
-			response, err = queryClient.OSLocatorByScopeUUID(context.Background(), &types.ScopeRequest{ScopeUuid: scopeUUID})
+			response, err = queryClient.OSLocatorByScopeUUID(context.Background(), &types.OSLocatorByScopeUUIDRequest{ScopeUuid: scopeUUID})
 
 			if err != nil {
 				return err

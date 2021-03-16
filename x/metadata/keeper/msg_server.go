@@ -415,7 +415,7 @@ func (k msgServer) DeleteRecordSpecification(
 	return &types.MsgDeleteRecordSpecificationResponse{}, nil
 }
 
-func (k msgServer) BindOSLocator(goCtx context.Context, msg *types.MsgAddOSLocatorRequest) (*types.MsgAddOSLocatorResponse, error) {
+func (k msgServer) BindOSLocator(goCtx context.Context, msg *types.MsgBindOSLocatorRequest) (*types.MsgBindOSLocatorResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// Validate
 	if err := msg.ValidateBasic(); err != nil {
@@ -455,7 +455,7 @@ func (k msgServer) BindOSLocator(goCtx context.Context, msg *types.MsgAddOSLocat
 		),
 	)
 
-	return &types.MsgAddOSLocatorResponse{}, nil
+	return &types.MsgBindOSLocatorResponse{}, nil
 }
 
 func (k msgServer) DeleteOSLocator(ctx context.Context, msg *types.MsgDeleteOSLocatorRequest) (*types.MsgDeleteOSLocatorResponse, error) {

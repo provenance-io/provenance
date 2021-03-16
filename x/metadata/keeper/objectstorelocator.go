@@ -94,7 +94,7 @@ func (k Keeper) IterateLocators(ctx sdk.Context, cb func(account types.ObjectSto
 	return nil
 }
 
-func (k Keeper) GetOSLocatorByScopeUUID(ctx sdk.Context, scopeID string) (*types.OSLocatorScopeResponse, error) {
+func (k Keeper) GetOSLocatorByScopeUUID(ctx sdk.Context, scopeID string) (*types.OSLocatorByScopeUUIDResponse, error) {
 	id, err := uuid.Parse(scopeID)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid scope uuid: %s", err.Error())
@@ -125,7 +125,7 @@ func (k Keeper) GetOSLocatorByScopeUUID(ctx sdk.Context, scopeID string) (*types
 		}
 		locators[i] = loc
 	}
-	return &types.OSLocatorScopeResponse{Locator: locators}, nil
+	return &types.OSLocatorByScopeUUIDResponse{Locator: locators}, nil
 }
 
 // Delete a os locator record from the kvstore.

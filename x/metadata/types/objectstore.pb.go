@@ -23,6 +23,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// Defines an Locator object stored on chain, which represents a owner( blockchain address) associated with a endpoint
+// uri for it's associated object store.
 type ObjectStoreLocator struct {
 	// account address the endpoint is owned by
 	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`

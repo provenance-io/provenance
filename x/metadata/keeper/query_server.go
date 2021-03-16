@@ -484,12 +484,12 @@ func (k Keeper) RecordSpecificationByID(c context.Context, req *types.RecordSpec
 	return &retval, nil
 }
 
-func (k Keeper) OSLocatorParams(c context.Context, request *types.OSLocatorQueryParamsRequest) (*types.OSLocatorQueryParamsResponse, error) {
+func (k Keeper) OSLocatorParams(c context.Context, request *types.OSLocatorParamsRequest) (*types.OSLocatorParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	var params types.OSLocatorParams
 	k.paramSpace.GetParamSet(ctx, &params)
 
-	return &types.OSLocatorQueryParamsResponse{Params: params}, nil
+	return &types.OSLocatorParamsResponse{Params: params}, nil
 }
 
 func (k Keeper) OSLocator(c context.Context, request *types.OSLocatorRequest) (*types.OSLocatorResponse, error) {
@@ -507,7 +507,7 @@ func (k Keeper) OSLocator(c context.Context, request *types.OSLocatorRequest) (*
 	return &types.OSLocatorResponse{Locator: &record}, nil
 }
 
-func (k Keeper) OSLocatorByURI(ctx context.Context, request *types.OSLocatorByURIRequest) (*types.OSLocatorResponses, error) {
+func (k Keeper) OSLocatorByURI(ctx context.Context, request *types.OSLocatorByURIRequest) (*types.OSLocatorByURIResponse, error) {
 	ctxSDK := sdk.UnwrapSDKContext(ctx)
 	var sDec []byte
 	// rest request send in base64 encoded uri, using a URL-compatible base64
@@ -539,10 +539,10 @@ func (k Keeper) OSLocatorByURI(ctx context.Context, request *types.OSLocatorByUR
 		return nil, types.ErrNoRecordsFound
 	}
 	uniqueRecords := uniqueRecords(records)
-	return &types.OSLocatorResponses{Locator: uniqueRecords}, nil
+	return &types.OSLocatorByURIResponse{Locator: uniqueRecords}, nil
 }
 
-func (k Keeper) OSLocatorByScopeUUID(ctx context.Context, request *types.ScopeRequest) (*types.OSLocatorScopeResponse, error) {
+func (k Keeper) OSLocatorByScopeUUID(ctx context.Context, request *types.OSLocatorByScopeUUIDRequest) (*types.OSLocatorByScopeUUIDResponse, error) {
 	ctxSDK := sdk.UnwrapSDKContext(ctx)
 	if request == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
