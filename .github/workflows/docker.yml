@@ -45,8 +45,6 @@ jobs:
           echo ::set-output name=version::${VERSION}
           echo ::set-output name=tags::${TAGS}
           echo ::set-output name=created::$(date -u +'%Y-%m-%dT%H:%M:%SZ')
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v1
@@ -64,7 +62,7 @@ jobs:
           target: run
           build-args: |
             VERSION=${{ steps.prep.outputs.version }}
-          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          platforms: linux/amd64
           file: docker/blockchain/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.prep.outputs.tags }}
