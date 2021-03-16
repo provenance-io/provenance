@@ -61,15 +61,14 @@ func (s *MsgServerTestSuite) SetupTest() {
 	s.queryClient = queryClient
 	msgServer := keeper.NewMsgServerImpl(app.MetadataKeeper)
 	s.msgServer = msgServer
+
+	// TODO: Add a msgServer client to properly pass context
+	// for now use the handler_tests.go to test msg_server
+
 }
 
 func TestMsgServerTestSuite(t *testing.T) {
 	suite.Run(t, new(MsgServerTestSuite))
-}
-
-func (s MsgServerTestSuite) TestAddRecordSpec() {
-	s.msgServer.AddContractSpec(s.ctx.Context(), &types.MsgAddContractSpecRequest{})
-	s.Equal("nope", "actual")
 }
 
 // TODO: MemorializeContract tests
