@@ -37,3 +37,4 @@ WORKDIR /home/provenance
 
 EXPOSE 9090 26656 26657
 CMD ["/usr/bin/provenanced"]
+
