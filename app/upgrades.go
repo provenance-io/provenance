@@ -55,7 +55,7 @@ func InstallCustomUpgradeHandlers(app *App) {
 // CustomUpgradeStoreLoader provides upgrade handlers for store and application module upgrades at specified versions
 func CustomUpgradeStoreLoader(app *App, info storetypes.UpgradeInfo) baseapp.StoreLoader {
 	// Current upgrade info is empty or we are at the wrong height, skip this.
-	if info.Name == "" || info.Height - 1 != app.LastBlockHeight() {
+	if info.Name == "" || info.Height-1 != app.LastBlockHeight() {
 		return nil
 	}
 	// Find the upgrade handler that matches this currently executing upgrade.
