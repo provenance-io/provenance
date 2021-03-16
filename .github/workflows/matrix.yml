@@ -50,7 +50,7 @@ jobs:
           body_path: RELEASE_CHANGELOG.md
       - name: Build release and plan
         run: |
-          make RELEASE_TAG=${{ steps.get_ver.outputs.release_tag }} build-release
+          make VERSION=${{ steps.get_ver.outputs.release_tag }} build-release
       - name: Upload release zip
         uses: actions/upload-release-asset@v1
         env:
