@@ -1,4 +1,6 @@
 FROM golang:1.15-buster as build
+ARG VERSION
+
 WORKDIR /go/src/github.com/provenance-io/provenance
 
 RUN apt-get update && apt-get upgrade -y && apt-get install -y libleveldb-dev
@@ -9,10 +11,14 @@ COPY cmd/ ./cmd/
 COPY internal/ ./internal/
 COPY x/ ./x/
 COPY vendor/ ./vendor/
-COPY . .
+COPY testutil/ ./testutil/
+COPY .git/ ./.git/
+COPY contrib/ ./contrib/
+COPY Makefile sims.mk ./
 
 # Build the binaries
-RUN make install
+ENV VERSION=$VERSION
+RUN make VERSION=${VERSION} install
 
 ###
 FROM debian:buster-slim as run
