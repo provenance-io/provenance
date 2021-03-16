@@ -9,9 +9,10 @@ COPY cmd/ ./cmd/
 COPY internal/ ./internal/
 COPY x/ ./x/
 COPY vendor/ ./vendor/
+COPY . .
 
 # Build the binaries
-RUN go build -mod vendor -tags cleveldb -o /go/bin/ ./cmd/...
+RUN make install
 
 ###
 FROM debian:buster-slim as run
