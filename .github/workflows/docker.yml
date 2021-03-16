@@ -64,7 +64,7 @@ jobs:
           target: run
           build-args: |
             VERSION=${{ steps.prep.outputs.version }}
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
           file: docker/blockchain/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.prep.outputs.tags }}
