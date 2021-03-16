@@ -1,4 +1,6 @@
 FROM golang:1.15-buster as build
+ARG VERSION
+
 WORKDIR /go/src/github.com/provenance-io/provenance
 
 RUN apt-get update && apt-get upgrade -y && apt-get install -y libleveldb-dev
@@ -9,9 +11,14 @@ COPY cmd/ ./cmd/
 COPY internal/ ./internal/
 COPY x/ ./x/
 COPY vendor/ ./vendor/
+COPY testutil/ ./testutil/
+COPY .git/ ./.git/
+COPY contrib/ ./contrib/
+COPY Makefile sims.mk ./
 
 # Build the binaries
-RUN go build -mod vendor -tags cleveldb -o /go/bin/ ./cmd/...
+ENV VERSION=$VERSION
+RUN make VERSION=${VERSION} install
 
 ###
 FROM debian:buster-slim as run
@@ -30,3 +37,4 @@ WORKDIR /home/provenance
 
 EXPOSE 9090 26656 26657
 CMD ["/usr/bin/provenanced"]
+
