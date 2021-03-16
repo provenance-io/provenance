@@ -62,10 +62,29 @@ func HandleSupplyIncreaseProposal(ctx sdk.Context, k Keeper, c *types.SupplyIncr
 		return fmt.Errorf("%s marker does not allow governance control", c.Amount.Denom)
 	}
 
+	if err := k.IncreaseSupply(ctx, m, c.Amount); err != nil {
+		return err
+	}
+
 	logger := k.Logger(ctx)
 	logger.Info("marker total supply increased", "marker", c.Amount.Denom, "amount", c.Amount.Amount.String())
 
-	return k.IncreaseSupply(ctx, m, c.Amount)
+	// If a target address for minted coins is given then send them there.
+	if len(c.TargetAdddress) > 0 {
+		recipient, err := sdk.AccAddressFromBech32(c.TargetAdddress)
+		if err != nil {
+			return err
+		}
+
+		if err := k.bankKeeper.InputOutputCoins(ctx, []banktypes.Input{banktypes.NewInput(addr, sdk.NewCoins(c.Amount))},
+			[]banktypes.Output{banktypes.NewOutput(recipient, sdk.NewCoins(c.Amount))}); err != nil {
+			return err
+		}
+
+		logger.Info("transferred escrowed coin from marker", "marker", c.Amount.Denom, "amount", c.Amount.String(), "recipient", c.TargetAdddress)
+	}
+
+	return nil
 }
 
 // HandleSupplyDecreaseProposal handles a SupplyDecrease governance proposal request
