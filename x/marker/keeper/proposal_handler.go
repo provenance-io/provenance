@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -26,8 +27,13 @@ func HandleAddMarkerProposal(ctx sdk.Context, k Keeper, c *types.AddMarkerPropos
 	newMarker.AllowGovernanceControl = c.AllowGovernanceControl
 	newMarker.SupplyFixed = c.SupplyFixed
 
-	newMarker.SetSupply(c.Amount)
-	newMarker.SetStatus(c.Status)
+	if err := newMarker.SetSupply(c.Amount); err != nil {
+		return err
+	}
+
+	if err := newMarker.SetStatus(c.Status); err != nil {
+		return err
+	}
 
 	if err := newMarker.Validate(); err != nil {
 		return err
