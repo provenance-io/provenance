@@ -462,6 +462,10 @@ func (msg MsgAddP8EContractSpecRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
+	_, _, err := ConvertP8eContractSpec(&msg.Contractspec, msg.Signers)
+	if err != nil {
+		return fmt.Errorf("failed to convert p8e ContractSpec %s", err)
+	}
 	return nil
 }
 

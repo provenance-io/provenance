@@ -417,11 +417,12 @@ func (k msgServer) AddP8EContractSpec(
 	msg *types.MsgAddP8EContractSpecRequest,
 ) (*types.MsgAddP8EContractSpecResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	newspec, newrecords, err := types.ConvertP8eContractSpec(&msg.Contractspec, msg.Signers)
 
+	newspec, newrecords, err := types.ConvertP8eContractSpec(&msg.Contractspec, msg.Signers)
 	if err != nil {
 		return nil, err
 	}
+
 	var existing *types.ContractSpecification = nil
 	if e, found := k.GetContractSpecification(ctx, newspec.SpecificationId); found {
 		existing = &e
@@ -429,6 +430,7 @@ func (k msgServer) AddP8EContractSpec(
 			return nil, err
 		}
 	}
+
 	if err := k.ValidateContractSpecUpdate(ctx, existing, newspec); err != nil {
 		return nil, err
 	}

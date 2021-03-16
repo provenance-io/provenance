@@ -42,6 +42,10 @@ func ConvertP8eContractSpec(old *p8e.ContractSpec, owners []string) (
 		},
 		ClassName: old.Definition.ResourceLocation.Classname,
 	}
+	err = newSpec.ValidateBasic()
+	if err != nil {
+		return ContractSpecification{}, nil, err
+	}
 
 	newRecords = make([]RecordSpecification, len(old.ConsiderationSpecs))
 	for i := range old.ConsiderationSpecs {
@@ -61,6 +65,10 @@ func ConvertP8eContractSpec(old *p8e.ContractSpec, owners []string) (
 			ResultType:         DefinitionType(old.ConsiderationSpecs[i].OutputSpec.Spec.Type),
 			Inputs:             recordInputs,
 			ResponsibleParties: []PartyType{PartyType(old.ConsiderationSpecs[i].ResponsibleParty)},
+		}
+		err = newRecords[i].ValidateBasic()
+		if err != nil {
+			return newSpec, nil, err
 		}
 	}
 
@@ -96,6 +104,10 @@ func convertP8eInputSpecs(old []*p8e.DefinitionSpec) (inputs []*InputSpecificati
 				},
 			}
 		}
+		err := inputs[i].ValidateBasic()
+		if err != nil {
+			return nil, err
+		}
 	}
-	return
+	return inputs, nil
 }
