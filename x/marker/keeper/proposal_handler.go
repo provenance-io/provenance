@@ -39,10 +39,14 @@ func HandleAddMarkerProposal(ctx sdk.Context, k Keeper, c *types.AddMarkerPropos
 		return err
 	}
 
+	if err := k.AddMarkerAccount(ctx, newMarker); err != nil {
+		return err
+	}
+
 	logger := k.Logger(ctx)
 	logger.Info("a new marker was added", "marker", c.Amount.Denom, "supply", c.Amount.String())
 
-	return k.AddMarkerAccount(ctx, newMarker)
+	return nil
 }
 
 // HandleSupplyIncreaseProposal handles a SupplyIncrease governance proposal request
@@ -105,10 +109,14 @@ func HandleSupplyDecreaseProposal(ctx sdk.Context, k Keeper, c *types.SupplyDecr
 		return fmt.Errorf("%s marker does not allow governance control", c.Amount.Denom)
 	}
 
+	if err := k.DecreaseSupply(ctx, m, c.Amount); err != nil {
+		return err
+	}
+
 	logger := k.Logger(ctx)
 	logger.Info("marker total supply reduced", "marker", c.Amount.Denom, "amount", c.Amount.Amount.String())
 
-	return k.DecreaseSupply(ctx, m, c.Amount)
+	return nil
 }
 
 // HandleSetAdministratorProposal handles a SetAdministrator governance proposal request
@@ -133,6 +141,10 @@ func HandleSetAdministratorProposal(ctx sdk.Context, k Keeper, c *types.SetAdmin
 		}
 		logger := k.Logger(ctx)
 		logger.Info("controlling access to marker assigned ", "marker", c.Denom, "access", a.String())
+	}
+
+	if err := m.Validate(); err != nil {
+		return err
 	}
 
 	k.SetMarker(ctx, m)
@@ -165,10 +177,15 @@ func HandleRemoveAdministratorProposal(ctx sdk.Context, k Keeper, c *types.Remov
 		}
 	}
 
+	if err := m.Validate(); err != nil {
+		return err
+	}
+
+	k.SetMarker(ctx, m)
+
 	logger := k.Logger(ctx)
 	logger.Info("marker access revoked", "marker", c.Denom, "administrator", c.RemovedAddress)
 
-	k.SetMarker(ctx, m)
 	return nil
 }
 
@@ -192,6 +209,11 @@ func HandleChangeStatusProposal(ctx sdk.Context, k Keeper, c *types.ChangeStatus
 	if err := m.SetStatus(c.NewStatus); err != nil {
 		return err
 	}
+
+	if err := m.Validate(); err != nil {
+		return err
+	}
+
 	k.SetMarker(ctx, m)
 
 	logger := k.Logger(ctx)
