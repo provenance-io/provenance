@@ -109,7 +109,7 @@ func HandleSetAdministratorProposal(ctx sdk.Context, k Keeper, c *types.SetAdmin
 		return fmt.Errorf("%s marker does not allow governance control", c.Denom)
 	}
 	for _, a := range c.Access {
-		if err := m.GrantAccess(&a); err != nil {
+		if err := m.GrantAccess(types.NewAccessGrant(a.GetAddress(), a.Permissions)); err != nil {
 			return err
 		}
 		logger := k.Logger(ctx)
