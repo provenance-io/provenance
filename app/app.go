@@ -576,7 +576,7 @@ func New(
 		panic(err)
 	}
 	// Currently in an upgrade hold for this block.
-	if upgradeInfo.Name != "" && upgradeInfo.Height == app.LastBlockHeight() + 1 {
+	if upgradeInfo.Name != "" && upgradeInfo.Height == app.LastBlockHeight()+1 {
 		app.Logger().Info("Managing upgrade",
 			"plan", upgradeInfo.Name,
 			"upgradeHeight", upgradeInfo.Height,
