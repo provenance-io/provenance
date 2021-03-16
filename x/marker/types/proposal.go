@@ -21,6 +21,8 @@ const (
 	ProposalTypeRemoveAdministrator string = "RemoveAdministrator"
 	// ProposalTypeChangeStatus to transition the status of a marker account.
 	ProposalTypeChangeStatus string = "ChangeStatus"
+	// ProposalTypeWithdrawEscrow is a proposal to withdraw coins from marker escrow and transfer to a specified account
+	ProposalTypeWithdrawEscrow string = "WithdrawEscrow"
 )
 
 var (
@@ -229,4 +231,25 @@ func (csp ChangeStatusProposal) String() string {
   Description: %s
   Change Status To : %s
 `, csp.Denom, csp.Title, csp.Description, csp.NewStatus)
+}
+
+func NewWithdrawEscrowProposal(title, description, denom string, amount sdk.Coins, target string) *WithdrawEscrowProposal { // nolint:interfacer
+	return &WithdrawEscrowProposal{title, description, denom, amount, target}
+}
+
+// Implements Proposal Interface
+
+func (wep WithdrawEscrowProposal) ProposalRoute() string { return RouterKey }
+func (wep WithdrawEscrowProposal) ProposalType() string  { return ProposalTypeWithdrawEscrow }
+func (wep WithdrawEscrowProposal) ValidateBasic() error {
+	return govtypes.ValidateAbstract(&wep)
+}
+
+func (wep WithdrawEscrowProposal) String() string {
+	return fmt.Sprintf(`MarkerAccount Withdraw Escrow Proposal:
+  Marker:      %s
+  Title:       %s
+  Description: %s
+  Withdraw %s and transfer to %s
+`, wep.Denom, wep.Title, wep.Description, wep.Amount, wep.TargetAdddress)
 }
