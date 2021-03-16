@@ -569,7 +569,7 @@ func New(
 	// * https://pkg.go.dev/github.com/cosmos/cosmos-sdk@v0.40.0-rc6/x/upgrade#hdr-Performing_Upgrades
 	// * https://github.com/cosmos/cosmos-sdk/issues/8265
 	InstallCustomUpgradeHandlers(app)
-	// Use the dump of $home/data/upgrade.info:{"name":"$plan","height":321654} to determine
+	// Use the dump of $home/data/upgrade-info.json:{"name":"$plan","height":321654} to determine
 	// if we load a store upgrade from the handlers. No file == no error from read func.
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if err != nil {
