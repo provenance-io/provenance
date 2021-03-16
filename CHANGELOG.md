@@ -34,6 +34,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+* Add `AddP8eContractSpec` endpoint to convert v39 contract spec into v40 contract specification  #167
+
 ## [v0.2.1](https://github.com/provenance-io/provenance/releases/tag/v0.2.1) - 2021-03-11
 
 * Update to Cosmos SDK 0.42.1
