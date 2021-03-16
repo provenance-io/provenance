@@ -107,7 +107,8 @@ func (k Keeper) GetOSLocatorByScopeUUID(ctx sdk.Context, scopeID string) (*types
 		return nil, status.Errorf(codes.InvalidArgument, "invalid scope uuid: %s", err.Error())
 	}
 
-	signers := make([]sdk.AccAddress, 0, len(s.Owners))
+	// should always have valid owners, hence creating it with capacity
+	signers := make([]sdk.AccAddress, len(s.Owners))
 
 	for i, p := range s.Owners {
 		addr, err := sdk.AccAddressFromBech32(p.Address)
@@ -117,13 +118,14 @@ func (k Keeper) GetOSLocatorByScopeUUID(ctx sdk.Context, scopeID string) (*types
 		signers[i] = addr
 	}
 
+	// may not have object locator's defined for owners
 	locators := make([]types.ObjectStoreLocator, 0, len(signers))
-	for i, addr := range signers {
+	for _, addr := range signers {
 		loc, found := k.GetOsLocatorRecord(ctx, addr)
 		if !found {
 			continue
 		}
-		locators[i] = loc
+		locators = append(locators, loc)
 	}
 	return &types.OSLocatorByScopeUUIDResponse{Locator: locators}, nil
 }

@@ -303,6 +303,7 @@ message OSLocatorRequest {
   string owner = 1;
 }
 
+// OSLocatorByURIRequest get os locator's by uri
 message OSLocatorByURIRequest {
   string uri = 1;
   // pagination defines an optional pagination for the request.

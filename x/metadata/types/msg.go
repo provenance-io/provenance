@@ -23,7 +23,7 @@ const (
 	TypeMsgDeleteContractSpecificationRequest = "delete_contract_specification_request"
 	TypeMsgAddRecordSpecificationRequest      = "add_record_specification_request"
 	TypeMsgDeleteRecordSpecificationRequest   = "delete_record_specification_request"
-	TypeMsgBindOSLocatorRequest                = "add_os_locator_request"
+	TypeMsgBindOSLocatorRequest               = "add_os_locator_request"
 	TypeMsgDeleteOSLocatorRequest             = "delete_os_locator_request"
 	TypeMsgModifyOSLocatorRequest             = "modify_os_locator_request"
 )
