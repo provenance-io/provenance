@@ -42,7 +42,7 @@ func Migrate(oldGenState v039metadata.GenesisState) *v040metadata.GenesisState {
 	}
 
 	return &v040metadata.GenesisState{
-		Params: v040metadata.DefaultGenesisState().Params,
+		Params:          v040metadata.DefaultGenesisState().Params,
 		OSLocatorParams: v040metadata.DefaultGenesisState().OSLocatorParams,
 
 		Scopes:                 scopes,
