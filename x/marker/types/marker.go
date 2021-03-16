@@ -43,6 +43,8 @@ type MarkerAccountI interface {
 
 	AddressHasAccess(sdk.AccAddress, Access) bool
 	AddressListForPermission(Access) []sdk.AccAddress
+
+	HasGovernanceEnabled() bool
 }
 
 // NewEmptyMarkerAccount creates a new empty marker account in a Proposed state
@@ -98,6 +100,9 @@ func (ma MarkerAccount) GetDenom() string { return ma.Denom }
 // HasFixedSupply return true if the total supply for the marker is considered "fixed" and should be controlled with an
 // invariant check
 func (ma MarkerAccount) HasFixedSupply() bool { return ma.SupplyFixed }
+
+// HasGovernanceEnabled returns true if this marker allows governance proposals to control this marker
+func (ma MarkerAccount) HasGovernanceEnabled() bool { return ma.AllowGovernanceControl }
 
 // AddressHasAccess returns true if the provided address has been assigned the provided
 // role within the current MarkerAccount AccessControl
@@ -253,7 +258,7 @@ func (ma MarkerAccount) GetSupply() sdk.Coin {
 // GrantAccess appends the access grant to the marker account.
 func (ma *MarkerAccount) GrantAccess(access AccessGrantI) error {
 	if err := access.Validate(); err != nil {
-		return fmt.Errorf(err.Error())
+		return err
 	}
 	// Find any existing permissions and append specified permissions
 	for _, ac := range ma.AccessControl {
