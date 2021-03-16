@@ -667,29 +667,6 @@ func (msg MsgP8EMemorializeContractRequest) GetSignBytes() []byte {
 
 // ValidateBasic performs a quick validity check
 func (msg MsgP8EMemorializeContractRequest) ValidateBasic() error {
-	_, _, _, err := msg.Migrate()
+	_, _, _, err := ConvertP8eMemorializeContractRequest(&msg)
 	return err
-}
-
-// Migrate Converts a P8eMsgMemorializeP8eContractRequest object into the new objects.
-func (msg *MsgP8EMemorializeContractRequest) Migrate() (scope Scope, session Session, records []Record, err error) {
-	scope = *EmptyScope()
-	session = *EmptySession()
-	records = []Record{}
-	err = nil
-
-	// TODO: Set scope.ScopeId
-	// TODO: Set scope.SpecificationId
-	// TODO: Add scope.Owners.
-	// TODO: Add scope.DataAccess entries.
-	// TODO: Set scope.ValueOwnerAddress.
-
-	// TODO: Set session.SessionId
-	// TODO: Set session.SpecificationId
-	// TODO: Add session.Parties.
-	// TODO: Set session.Name
-
-	// TODO: Add records.
-
-	return
 }

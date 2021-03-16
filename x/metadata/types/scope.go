@@ -33,17 +33,6 @@ func NewScope(
 	}
 }
 
-// EmptyScope creates a new empty Scope.
-func EmptyScope() *Scope {
-	return &Scope{
-		ScopeId:           MetadataAddress{},
-		SpecificationId:   MetadataAddress{},
-		Owners:            []Party{},
-		DataAccess:        []string{},
-		ValueOwnerAddress: "",
-	}
-}
-
 // ValidateBasic performs basic format checking of data within a scope
 func (s *Scope) ValidateBasic() error {
 	prefix, err := VerifyMetadataAddressFormat(s.ScopeId)
@@ -120,17 +109,6 @@ func NewSession(name string, sessionID, contractSpecification MetadataAddress, p
 	}
 }
 
-// EmptySession creates a new empty Session.
-func EmptySession() *Session {
-	return &Session{
-		SessionId:       MetadataAddress{},
-		SpecificationId: MetadataAddress{},
-		Parties:         []Party{},
-		Name:            "",
-		Audit:           nil,
-	}
-}
-
 // ValidateBasic performs basic format checking of data within a scope
 func (s *Session) ValidateBasic() error {
 	prefix, err := VerifyMetadataAddressFormat(s.SessionId)
@@ -179,17 +157,6 @@ func NewRecord(name string, sessionID MetadataAddress, process Process, inputs [
 		Process:   process,
 		Inputs:    inputs,
 		Outputs:   outputs,
-	}
-}
-
-// EmptyRecord creates a new empty Record.
-func EmptyRecord() *Record {
-	return &Record{
-		Name:      "",
-		SessionId: MetadataAddress{},
-		Process:   *EmptyProcess(),
-		Inputs:    []RecordInput{},
-		Outputs:   []RecordOutput{},
 	}
 }
 
@@ -324,15 +291,6 @@ func NewProcess(name string, processID isProcess_ProcessId, method string) *Proc
 		Name:      name,
 		ProcessId: processID,
 		Method:    method,
-	}
-}
-
-// EmptyProcess creates a new empty Process.
-func EmptyProcess() *Process {
-	return &Process{
-		ProcessId: nil,
-		Name:      "",
-		Method:    "",
 	}
 }
 
