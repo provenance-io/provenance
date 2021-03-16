@@ -92,6 +92,15 @@ type IntegrationTestSuite struct {
 
 	recordSpecAsJson string
 	recordSpecAsText string
+
+	//os locator's
+	objectLocator metadatatypes.ObjectStoreLocator
+	ownerAddr     sdk.AccAddress
+	uri           string
+
+	objectLocator1 metadatatypes.ObjectStoreLocator
+	ownerAddr1     sdk.AccAddress
+	uri1           string
 }
 
 func ownerPartyList(addresses ...string) []metadatatypes.Party {
@@ -357,6 +366,16 @@ type_name: recordtypename`,
 		s.recordSpecID,
 	)
 
+	//os locators
+	// add os locator
+	s.ownerAddr = s.user1Addr
+	s.uri = "http://foo.com"
+	s.objectLocator = metadatatypes.NewOSLocatorRecord(s.ownerAddr, s.uri)
+
+	s.ownerAddr1 = s.user2Addr
+	s.uri1 = "http://bar.com"
+	s.objectLocator1 = metadatatypes.NewOSLocatorRecord(s.ownerAddr1, s.uri1)
+
 	var metadataData metadatatypes.GenesisState
 	s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[metadatatypes.ModuleName], &metadataData))
 	metadataData.Scopes = append(metadataData.Scopes, s.scope)
@@ -365,6 +384,7 @@ type_name: recordtypename`,
 	metadataData.ScopeSpecifications = append(metadataData.ScopeSpecifications, s.scopeSpec)
 	metadataData.ContractSpecifications = append(metadataData.ContractSpecifications, s.contractSpec)
 	metadataData.RecordSpecifications = append(metadataData.RecordSpecifications, s.recordSpec)
+	metadataData.ObjectStoreLocators = append(metadataData.ObjectStoreLocators, s.objectLocator, s.objectLocator1)
 	metadataDataBz, err := cfg.Codec.MarshalJSON(&metadataData)
 	s.Require().NoError(err)
 	genesisState[metadatatypes.ModuleName] = metadataDataBz
@@ -1450,14 +1470,7 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 	userAddr := sdk.AccAddress(pubkey.Address())
 	user := userAddr.String()
 
-	testCases := []struct {
-		name         string
-		cmd          *cobra.Command
-		args         []string
-		expectErr    bool
-		respType     proto.Message
-		expectedCode uint32
-	}{
+	testCases := []osTestStruct{
 		{
 			"Should successfully add metadata scope",
 			cli.AddMetadataScopeCmd(),
@@ -1579,23 +1592,16 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 		},
 	}
 
-	for _, tc := range testCases {
-		tc := tc
-		s.Run(tc.name, func() {
-			clientCtx := s.testnet.Validators[0].ClientCtx
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
+	s.runTestCase(testCases)
+}
 
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code)
-			}
-		})
-	}
+type osTestStruct struct {
+	name         string
+	cmd          *cobra.Command
+	args         []string
+	expectErr    bool
+	respType     proto.Message
+	expectedCode uint32
 }
 
 func (s *IntegrationTestSuite) TestRemoveMetadataScopeCmd() {
@@ -1603,14 +1609,7 @@ func (s *IntegrationTestSuite) TestRemoveMetadataScopeCmd() {
 	userId := s.testnet.Validators[0].Address.String()
 	scopeUUID := uuid.New().String()
 
-	testCases := []struct {
-		name         string
-		cmd          *cobra.Command
-		args         []string
-		expectErr    bool
-		respType     proto.Message
-		expectedCode uint32
-	}{
+	testCases := []osTestStruct{
 		{
 			"Should successfully add metadata scope for testing scope removal",
 			cli.AddMetadataScopeCmd(),
@@ -1669,37 +1668,14 @@ func (s *IntegrationTestSuite) TestRemoveMetadataScopeCmd() {
 		},
 	}
 
-	for _, tc := range testCases {
-		tc := tc
-		s.Run(tc.name, func() {
-			clientCtx := s.testnet.Validators[0].ClientCtx
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
-
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code)
-			}
-		})
-	}
+	s.runTestCase(testCases)
 }
 
 // os locator tx cmds
 func (s *IntegrationTestSuite) TestAddObjectLocatorCmd() {
 	userURI := "http://foo.com"
-	userURIMod := "http://bar.com"
-	testCases := []struct {
-		name         string
-		cmd          *cobra.Command
-		args         []string
-		expectErr    bool
-		respType     proto.Message
-		expectedCode uint32
-	}{
+	userURIMod := "https://www.google.com/search?q=red+butte+garden&oq=red+butte+garden&aqs=chrome..69i57j46i131i175i199i433j0j0i457j0l6.3834j0j7&sourceid=chrome&ie=UTF-8#lpqa=d,2"
+	testCases := []osTestStruct{
 		{
 			"Should successfully add os locator",
 			cli.AddOsLocatorCmd(),
@@ -1725,7 +1701,6 @@ func (s *IntegrationTestSuite) TestAddObjectLocatorCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			false, &sdk.TxResponse{}, 0,
-
 		},
 		{
 			"Should successfully delete os locator",
@@ -1739,10 +1714,27 @@ func (s *IntegrationTestSuite) TestAddObjectLocatorCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			false, &sdk.TxResponse{}, 0,
-
 		},
-
 	}
+	s.runTestCase(testCases)
+}
+
+func (s *IntegrationTestSuite) TestGetOSLocatorCmd() {
+	cmd := cli.GetOSLocatorCmd()
+
+	testCases := []queryCmdTestCase{
+		{
+			"get os locator",
+			[]string{s.user1Addr.String(), s.asJson},
+			"",
+			fmt.Sprintf("{\"owner\":\"%s\",\"locator_uri\":\"%s\"}",s.user1Addr.String(),"http://foo.com"),
+		},
+	}
+
+	runQueryCmdTestCases(s, cmd, testCases)
+}
+
+func (s *IntegrationTestSuite) runTestCase(testCases []osTestStruct) {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
