@@ -243,6 +243,10 @@ func TestMigrate(t *testing.T) {
       "specification_id": "contractspec1qvfha8nex5j0qeshr9uvsmv5um3q7sghss"
     }
   ],
+  "o_s_locator_params": {
+    "max_uri_length": 2048
+  },
+  "object_store_locators": [],
   "params": {},
   "record_specifications": [
     {
@@ -355,5 +359,6 @@ func TestMigrate(t *testing.T) {
 	indentedBz, err := json.MarshalIndent(jsonObj, "", "  ")
 	require.NoError(t, err)
 
+	println(string(indentedBz))
 	require.Equal(t, expected, string(indentedBz))
 }
