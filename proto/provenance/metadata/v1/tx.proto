@@ -49,7 +49,7 @@ service Msg {
   // DeleteRecordSpecification deletes a record specification
   rpc DeleteRecordSpecification(MsgDeleteRecordSpecificationRequest) returns (MsgDeleteRecordSpecificationResponse);
 
-  // AddP8eContractSpec adds a P8e v39 contract spec
+  // AddP8eContractSpec adds a P8e v39 contract spec as a v40 ContractSpecification 
   rpc AddP8eContractSpec(MsgAddP8eContractSpecRequest) returns (MsgAddP8eContractSpecResponse) {
     option deprecated = true;
   };
@@ -298,6 +298,7 @@ message MsgAddP8eContractSpecRequest {
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
+  // ContractSpec v39 p8e ContractSpect to be converted into a v40
   p8e.ContractSpec contractspec = 1 [(gogoproto.nullable) = false];
   repeated string signers = 2;
 }
