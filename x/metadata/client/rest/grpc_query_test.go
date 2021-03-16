@@ -1,6 +1,7 @@
 package rest_test
 
 import (
+	b64 "encoding/base64"
 	"fmt"
 	"testing"
 
@@ -154,77 +155,77 @@ func (suite *IntegrationTestSuite) TestGRPCQueries() {
 		respType proto.Message
 		expected proto.Message
 	}{
-		//{
-		//	"Get metadata params",
-		//	fmt.Sprintf("%s/provenance/metadata/v1/params", baseURL),
-		//	map[string]string{
-		//		grpctypes.GRPCBlockHeightHeader: "1",
-		//	},
-		//	false,
-		//	&metadatatypes.QueryParamsResponse{},
-		//	&metadatatypes.QueryParamsResponse{Params: metadatatypes.DefaultParams()},
-		//},
-		//{
-		//	"Get metadata scope by id",
-		//	fmt.Sprintf("%s/provenance/metadata/v1/scope/%s", baseURL, suite.scopeUUID),
-		//	map[string]string{
-		//		grpctypes.GRPCBlockHeightHeader: "1",
-		//	},
-		//	false,
-		//	&metadatatypes.ScopeResponse{},
-		//	&metadatatypes.ScopeResponse{Scope: &suite.scope, ScopeUuid: suite.scopeUUID.String()},
-		//},
-		//{
-		//	"Unknown metadata scope id",
-		//	fmt.Sprintf("%s/provenance/metadata/v1/scope/%s", baseURL, uuid.New()),
-		//	map[string]string{
-		//		grpctypes.GRPCBlockHeightHeader: "1",
-		//	},
-		//	true,
-		//	&status.Status{},
-		//	&status.Status{},
-		//},
-		//{
-		//	"Get metadata os locator params",
-		//	fmt.Sprintf("%s/provenance/metadata/v1/locator/params", baseURL),
-		//	map[string]string{
-		//		grpctypes.GRPCBlockHeightHeader: "1",
-		//	},
-		//	false,
-		//	&metadatatypes.OSLocatorParamsResponse{},
-		//	&metadatatypes.OSLocatorParamsResponse{Params: metadatatypes.DefaultOSLocatorParams()},
-		//},
-		//{
-		//	"Get os locator from owner address.",
-		//	fmt.Sprintf("%s/provenance/metadata/v1/locator/%s", baseURL, suite.ownerAddr.String()),
-		//	map[string]string{
-		//		grpctypes.GRPCBlockHeightHeader: "1",
-		//	},
-		//	false,
-		//	&metadatatypes.OSLocatorResponse{},
-		//	&metadatatypes.OSLocatorResponse{
-		//		Locator: &suite.objectLocator,
-		//	},
-		//},
-		//{
-		//	"Get os locator from owner uri.",
-		//	// only way i could get around http url parse isseus for rest
-		//	// This encodes/decodes using a URL-compatible base64
-		//	// format.
-		//	fmt.Sprintf("%s/provenance/metadata/v1/locator/uri/%s", baseURL, b64.StdEncoding.EncodeToString([]byte(suite.uri))),
-		//	map[string]string{
-		//		grpctypes.GRPCBlockHeightHeader: "1",
-		//	},
-		//	false,
-		//	&metadatatypes.OSLocatorByURIResponse{},
-		//	&metadatatypes.OSLocatorByURIResponse{
-		//		Locator: []metadatatypes.ObjectStoreLocator{metadatatypes.ObjectStoreLocator{
-		//			Owner:      suite.ownerAddr.String(),
-		//			LocatorUri: suite.uri,
-		//		}},
-		//		Pagination: nil,
-		//	},
-		//},
+		{
+			"Get metadata params",
+			fmt.Sprintf("%s/provenance/metadata/v1/params", baseURL),
+			map[string]string{
+				grpctypes.GRPCBlockHeightHeader: "1",
+			},
+			false,
+			&metadatatypes.QueryParamsResponse{},
+			&metadatatypes.QueryParamsResponse{Params: metadatatypes.DefaultParams()},
+		},
+		{
+			"Get metadata scope by id",
+			fmt.Sprintf("%s/provenance/metadata/v1/scope/%s", baseURL, suite.scopeUUID),
+			map[string]string{
+				grpctypes.GRPCBlockHeightHeader: "1",
+			},
+			false,
+			&metadatatypes.ScopeResponse{},
+			&metadatatypes.ScopeResponse{Scope: &suite.scope, ScopeUuid: suite.scopeUUID.String()},
+		},
+		{
+			"Unknown metadata scope id",
+			fmt.Sprintf("%s/provenance/metadata/v1/scope/%s", baseURL, uuid.New()),
+			map[string]string{
+				grpctypes.GRPCBlockHeightHeader: "1",
+			},
+			true,
+			&status.Status{},
+			&status.Status{},
+		},
+		{
+			"Get metadata os locator params",
+			fmt.Sprintf("%s/provenance/metadata/v1/locator/params", baseURL),
+			map[string]string{
+				grpctypes.GRPCBlockHeightHeader: "1",
+			},
+			false,
+			&metadatatypes.OSLocatorParamsResponse{},
+			&metadatatypes.OSLocatorParamsResponse{Params: metadatatypes.DefaultOSLocatorParams()},
+		},
+		{
+			"Get os locator from owner address.",
+			fmt.Sprintf("%s/provenance/metadata/v1/locator/%s", baseURL, suite.ownerAddr.String()),
+			map[string]string{
+				grpctypes.GRPCBlockHeightHeader: "1",
+			},
+			false,
+			&metadatatypes.OSLocatorResponse{},
+			&metadatatypes.OSLocatorResponse{
+				Locator: &suite.objectLocator,
+			},
+		},
+		{
+			"Get os locator from owner uri.",
+			// only way i could get around http url parse isseus for rest
+			// This encodes/decodes using a URL-compatible base64
+			// format.
+			fmt.Sprintf("%s/provenance/metadata/v1/locator/uri/%s", baseURL, b64.StdEncoding.EncodeToString([]byte(suite.uri))),
+			map[string]string{
+				grpctypes.GRPCBlockHeightHeader: "1",
+			},
+			false,
+			&metadatatypes.OSLocatorByURIResponse{},
+			&metadatatypes.OSLocatorByURIResponse{
+				Locator: []metadatatypes.ObjectStoreLocator{metadatatypes.ObjectStoreLocator{
+					Owner:      suite.ownerAddr.String(),
+					LocatorUri: suite.uri,
+				}},
+				Pagination: nil,
+			},
+		},
 		{
 			"Get os locator's for given scope.",
 			// only way i could get around http url parse isseus for rest
