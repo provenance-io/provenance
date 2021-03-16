@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -569,14 +568,21 @@ func New(
 	//    NOTE: These have to be added before the baseapp seals via LoadLatestVersion() down below.
 	// * https://pkg.go.dev/github.com/cosmos/cosmos-sdk@v0.40.0-rc6/x/upgrade#hdr-Performing_Upgrades
 	// * https://github.com/cosmos/cosmos-sdk/issues/8265
+	InstallCustomUpgradeHandlers(app)
+	// Use the dump of $home/data/upgrade.info:{"name":"$plan","height":321654} to determine
+	// if we load a store upgrade from the handlers. No file == no error from read func.
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if err != nil {
 		panic(err)
 	}
-
-	InstallCustomUpgradeHandlers(app)
-	fmt.Printf("name:%s height:%d current:%d", upgradeInfo.Name, upgradeInfo.Height, app.LastBlockHeight())
+	// Currently in an upgrade hold for this block.
 	if upgradeInfo.Name != "" && upgradeInfo.Height == app.LastBlockHeight() + 1 {
+		app.Logger().Info("Managing upgrade",
+			"plan", upgradeInfo.Name,
+			"upgradeHeight", upgradeInfo.Height,
+			"lastHeight", app.LastBlockHeight(),
+		)
+		// See if we have a custom store loader to use for upgrades.
 		storeLoader := CustomUpgradeStoreLoader(app, upgradeInfo)
 		if storeLoader != nil {
 			app.SetStoreLoader(storeLoader)

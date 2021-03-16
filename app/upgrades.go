@@ -54,20 +54,29 @@ func InstallCustomUpgradeHandlers(app *App) {
 
 // CustomUpgradeStoreLoader provides upgrade handlers for store and application module upgrades at specified versions
 func CustomUpgradeStoreLoader(app *App, info storetypes.UpgradeInfo) baseapp.StoreLoader {
-	// Current upgrade info is empty. Skip any possible store upgrades.
-	if info.Name == "" {
+	// Current upgrade info is empty or we are at the wrong height, skip this.
+	if info.Name == "" || info.Height - 1 != app.LastBlockHeight() {
 		return nil
 	}
 	// Find the upgrade handler that matches this currently executing upgrade.
 	for name, upgrade := range handlers {
 		// If the plan is executing this block, set the store locator to create any
 		// missing modules, delete unused modules, or rename any keys required in the plan.
-		if info.Name == name && info.Height - 1 == app.LastBlockHeight() && !app.UpgradeKeeper.IsSkipHeight(info.Height) {
+		if info.Name == name && !app.UpgradeKeeper.IsSkipHeight(info.Height) {
 			storeUpgrades := storetypes.StoreUpgrades{
 				Added:   upgrade.Added,
 				Renamed: upgrade.Renamed,
 				Deleted: upgrade.Deleted,
 			}
+
+			if isEmptyUpgrade(storeUpgrades) {
+				app.Logger().Info("No store upgrades required",
+					"plan", name,
+					"height", info.Height,
+				)
+				return nil
+			}
+
 			app.Logger().Info("Store upgrades",
 				"plan", name,
 				"height", info.Height,
@@ -79,4 +88,8 @@ func CustomUpgradeStoreLoader(app *App, info storetypes.UpgradeInfo) baseapp.Sto
 		}
 	}
 	return nil
+}
+
+func isEmptyUpgrade(upgrades storetypes.StoreUpgrades) bool {
+	return len(upgrades.Renamed) == 0 && len(upgrades.Deleted) == 0 && len(upgrades.Added) == 0
 }
