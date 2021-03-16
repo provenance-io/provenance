@@ -49,7 +49,7 @@ service Msg {
   // DeleteRecordSpecification deletes a record specification
   rpc DeleteRecordSpecification(MsgDeleteRecordSpecificationRequest) returns (MsgDeleteRecordSpecificationResponse);
 
-  // AddContractSpec adds a P8e v39 contract spec
+  // AddP8eContractSpec adds a P8e v39 contract spec
   rpc AddP8eContractSpec(MsgAddP8eContractSpecRequest) returns (MsgAddP8eContractSpecResponse) {
     option deprecated = true;
   };
@@ -291,7 +291,7 @@ message MsgDeleteRecordSpecificationRequest {
 // MsgDeleteRecordSpecificationResponse from a delete record specification request
 message MsgDeleteRecordSpecificationResponse {}
 
-// MsgAddContractSpecRequest records the result of a change ownership p8e contract execution
+// MsgAddP8eContractSpecRequest records the result of a change ownership p8e contract execution
 message MsgAddP8eContractSpecRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
@@ -302,4 +302,5 @@ message MsgAddP8eContractSpecRequest {
   repeated string signers = 2;
 }
 
+// MsgAddP8eContractSpecResponse returns a successful response
 message MsgAddP8eContractSpecResponse{}

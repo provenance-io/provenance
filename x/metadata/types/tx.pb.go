@@ -1034,7 +1034,7 @@ func (m *MsgDeleteRecordSpecificationResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgDeleteRecordSpecificationResponse proto.InternalMessageInfo
 
-// MsgAddContractSpecRequest records the result of a change ownership p8e contract execution
+// MsgAddP8eContractSpecRequest records the result of a change ownership p8e contract execution
 type MsgAddP8EContractSpecRequest struct {
 	Contractspec p8e.ContractSpec `protobuf:"bytes,1,opt,name=contractspec,proto3" json:"contractspec"`
 	Signers      []string         `protobuf:"bytes,2,rep,name=signers,proto3" json:"signers,omitempty"`
@@ -1072,6 +1072,7 @@ func (m *MsgAddP8EContractSpecRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgAddP8EContractSpecRequest proto.InternalMessageInfo
 
+// MsgAddP8eContractSpecResponse returns a successful response
 type MsgAddP8EContractSpecResponse struct {
 }
 
@@ -1262,7 +1263,7 @@ type MsgClient interface {
 	AddRecordSpecification(ctx context.Context, in *MsgAddRecordSpecificationRequest, opts ...grpc.CallOption) (*MsgAddRecordSpecificationResponse, error)
 	// DeleteRecordSpecification deletes a record specification
 	DeleteRecordSpecification(ctx context.Context, in *MsgDeleteRecordSpecificationRequest, opts ...grpc.CallOption) (*MsgDeleteRecordSpecificationResponse, error)
-	// AddContractSpec adds a P8e v39 contract spec
+	// AddP8eContractSpec adds a P8e v39 contract spec
 	AddP8EContractSpec(ctx context.Context, in *MsgAddP8EContractSpecRequest, opts ...grpc.CallOption) (*MsgAddP8EContractSpecResponse, error)
 }
 
@@ -1429,7 +1430,7 @@ type MsgServer interface {
 	AddRecordSpecification(context.Context, *MsgAddRecordSpecificationRequest) (*MsgAddRecordSpecificationResponse, error)
 	// DeleteRecordSpecification deletes a record specification
 	DeleteRecordSpecification(context.Context, *MsgDeleteRecordSpecificationRequest) (*MsgDeleteRecordSpecificationResponse, error)
-	// AddContractSpec adds a P8e v39 contract spec
+	// AddP8eContractSpec adds a P8e v39 contract spec
 	AddP8EContractSpec(context.Context, *MsgAddP8EContractSpecRequest) (*MsgAddP8EContractSpecResponse, error)
 }
 
