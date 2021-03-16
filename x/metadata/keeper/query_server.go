@@ -510,12 +510,11 @@ func (k Keeper) OSLocator(c context.Context, request *types.OSLocatorRequest) (*
 func (k Keeper) OSLocatorByURI(ctx context.Context, request *types.OSLocatorByURIRequest) (*types.OSLocatorResponses, error) {
 	ctxSDK := sdk.UnwrapSDKContext(ctx)
 	var sDec []byte
-	//rest request send in base64 encoded uri, using a URL-compatible base64
-	//format.
+	// rest request send in base64 encoded uri, using a URL-compatible base64
+	// format.
 	if IsBase64(request.Uri) {
 		sDec, _ = b64.StdEncoding.DecodeString(request.Uri)
-	} else
-	{
+	} else {
 		sDec = []byte(request.Uri)
 	}
 	url, err := url.Parse(string(sDec))

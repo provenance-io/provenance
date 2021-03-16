@@ -423,7 +423,7 @@ func (k msgServer) BindOSLocator(goCtx context.Context, msg *types.MsgAddOSLocat
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	if int(k.Keeper.GetOSLocatorParams(ctx).MaxUriLength) > len(msg.Locator.LocatorUri) {
+	if int(k.Keeper.GetOSLocatorParams(ctx).MaxUriLength) < len(msg.Locator.LocatorUri) {
 		return nil, types.ErrOSLocatorURIToolong
 	}
 
@@ -474,7 +474,7 @@ func (k msgServer) DeleteOSLocator(ctx context.Context, msg *types.MsgDeleteOSLo
 	// already valid address, checked in ValidateBasic
 	ownerAddr, _ := sdk.AccAddressFromBech32(msg.Locator.Owner)
 
-	if k.Keeper.VerifyCorrectOwner(sdkCtx, ownerAddr) {
+	if !k.Keeper.VerifyCorrectOwner(sdkCtx, ownerAddr) {
 		sdkCtx.Logger().Error("msg sender cannot delete os locator", "owner", ownerAddr)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "msg sender cannot delete os locator.")
 	}
@@ -511,8 +511,8 @@ func (k msgServer) ModifyOSLocator(ctx context.Context, msg *types.MsgModifyOSLo
 	// already valid address, checked in ValidateBasic
 	ownerAddr, _ := sdk.AccAddressFromBech32(msg.Locator.Owner)
 
-	if k.Keeper.VerifyCorrectOwner(sdkCtx, ownerAddr) {
-		sdkCtx.Logger().Error("msg sender cannot delete os locator", "owner", ownerAddr)
+	if !k.Keeper.VerifyCorrectOwner(sdkCtx, ownerAddr) {
+		sdkCtx.Logger().Error("msg sender cannot modify os locator", "owner", ownerAddr)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "msg sender cannot delete os locator.")
 	}
 
