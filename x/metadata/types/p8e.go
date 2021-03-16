@@ -1,5 +1,10 @@
 package types
 
+import (
+	"fmt"
+	"github.com/google/uuid"
+)
+
 // EmptyScope creates a new empty Scope.
 func EmptyScope() *Scope {
 	return &Scope{
@@ -50,20 +55,58 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 	signers = []string{}
 	err = nil
 
-	// TODO: Set scope.ScopeId
+	// Set the scope pieces.
+	scopeID, maErr := MetadataAddressFromBech32(msg.ScopeId)
+	if maErr != nil {
+		scopeUUID, uuidErr := uuid.Parse(msg.ScopeId)
+		if uuidErr != nil {
+			err = fmt.Errorf("could not convert %s into either metadata address (%s) or uuid (%s)",
+				msg.ScopeId, maErr.Error(), uuidErr.Error())
+			return
+		}
+		scopeID = ScopeMetadataAddress(scopeUUID)
+	}
+	scope.ScopeId = scopeID
 	// TODO: Set scope.SpecificationId
+	//       Not sure where to get this from.
 	// TODO: Add scope.Owners.
+	//       Get from contract.Recitals
 	// TODO: Add scope.DataAccess entries.
+	//       This is a new field. Leave it empty?
 	// TODO: Set scope.ValueOwnerAddress.
+	//       If the contract.Invoker public key matches one in contract.Recitals,
+	//       then use that as the scope.ValueOwnerAddress.
+	//       Otherwise, use scope.Parties looking for roles in this order: Marker, Owner, Originator.
+	//       Otherwise, just use the first party.
 
+	// Set the session pieces.
 	// TODO: Set session.SessionId
+	//       Parse it from the msg.GroupId
 	// TODO: Set session.SpecificationId
+	//       old way comes from contract.Spec.DataLocation.Ref.Hash string
+	//       Might need to communicate a value change here?
 	// TODO: Add session.Parties.
+	//       Sae as the scope Owners.
 	// TODO: Set session.Name
+	//       Old way: From the contract spec, .Definition.ResourceLocation.Classname
+	//       New way: From the contract spec, ClassName
 
+	// Create the records.
 	// TODO: Add records.
+	//       Loop through the considerations.
+	//       See old repo types/apply.go func considerationsAsRecords for clues.
 
-	// TODO: Add signers.
+	// Get the signers.
+	if msg.Signatures != nil {
+		for _, sig := range msg.Signatures.Signatures {
+			if sig != nil && len(sig.Signature) > 0 {
+				// TODO: verify that the sig.Signature value is what's desired here.
+				//       other data piece: sig.Signer.SigningPublicKey.PublicKeyBytes []byte
+				//       See old repo types/apply.go func OnChainRecitals for clues.
+				signers = append(signers, sig.Signature)
+			}
+		}
+	}
 
 	return
 }
