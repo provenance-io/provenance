@@ -1,8 +1,6 @@
 syntax = "proto3";
 package provenance.metadata.v1.p8e;
 
-import "gogoproto/gogo.proto";
-
 option go_package = "github.com/provenance-io/provenance/x/metadata/types/p8e";
 
 option java_package        = "io.provenance.metadata.v1.p8e";
@@ -16,10 +14,6 @@ option java_multiple_files = true;
 service P8eMsg {
   // MemorializeContract records the results of a P8e contract execution as a session and set of records in a scope
   rpc MemorializeP8eContract(P8eMsgMemorializeP8eContractRequest) returns (P8eMsgMemorializeP8eContractResponse) {
-    option deprecated = true;
-  };
-  // AddContractSpec adds a P8e v39 contract spec
-  rpc AddContractSpec(P8eMsgAddContractSpecRequest) returns (P8eMsgAddContractSpecResponse) {
     option deprecated = true;
   };
 }
@@ -48,20 +42,6 @@ message P8eMsgMemorializeP8eContractRequest {
 message P8eMsgMemorializeP8eContractResponse {
   option deprecated = true;
 }
-
-// MsgAddContractSpecRequest records the result of a change ownership p8e contract execution
-message P8eMsgAddContractSpecRequest {
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
-  option (gogoproto.goproto_getters)  = false;
-
-  ContractSpec contractspec = 1 [(gogoproto.nullable) = false];
-  repeated string signers = 2;
-}
-
-message P8eMsgAddContractSpecResponse{}
-
 
 // The rest of the messages defined in here were copied from the old provenance repo.
 // Changes:

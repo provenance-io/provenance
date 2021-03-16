@@ -412,10 +412,10 @@ func (k msgServer) DeleteRecordSpecification(
 	return &types.MsgDeleteRecordSpecificationResponse{}, nil
 }
 
-func (k msgServer) AddContractSpec(
+func (k msgServer) AddP8EContractSpec(
 	goCtx context.Context,
-	msg *types.MsgAddContractSpecRequest,
-) (*types.MsgAddContractSpecResponse, error) {
+	msg *types.MsgAddP8EContractSpecRequest,
+) (*types.MsgAddP8EContractSpecResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	newspec, newrecords, err := types.ConvertContractSpec(&msg.Contractspec, msg.Signers)
 
@@ -455,5 +455,5 @@ func (k msgServer) AddContractSpec(
 		),
 	)
 
-	return &types.MsgAddContractSpecResponse{}, nil
+	return &types.MsgAddP8EContractSpecResponse{}, nil
 }

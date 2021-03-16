@@ -22,7 +22,7 @@ const (
 	TypeMsgDeleteContractSpecificationRequest = "delete_contract_specification_request"
 	TypeMsgAddRecordSpecificationRequest      = "add_record_specification_request"
 	TypeMsgDeleteRecordSpecificationRequest   = "delete_record_specification_request"
-	TypeMsgAddContractSpecRequest             = "add_contract_spec_request"
+	TypeMsgAddP8EContractSpecRequest          = "add_p8e_contract_spec_request"
 )
 
 // Compile time interface checks.
@@ -40,7 +40,7 @@ var (
 	_ sdk.Msg = &MsgDeleteContractSpecificationRequest{}
 	_ sdk.Msg = &MsgAddRecordSpecificationRequest{}
 	_ sdk.Msg = &MsgDeleteRecordSpecificationRequest{}
-	_ sdk.Msg = &MsgAddContractSpecRequest{}
+	_ sdk.Msg = &MsgAddP8EContractSpecRequest{}
 )
 
 // private method to convert an array of strings into an array of Acc Addresses.
@@ -428,37 +428,37 @@ func (msg MsgAddScopeSpecificationRequest) ValidateBasic() error {
 // ------------------  MsgAddContractSpecRequest  ------------------
 
 // NewMsgAddContractSpecRequest creates a new msg instance
-func NewMsgAddContractSpecRequest() *MsgAddContractSpecRequest {
-	return &MsgAddContractSpecRequest{}
+func NewMsgAddContractSpecRequest() *MsgAddP8EContractSpecRequest {
+	return &MsgAddP8EContractSpecRequest{}
 }
 
-func (msg MsgAddContractSpecRequest) String() string {
+func (msg MsgAddP8EContractSpecRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
 // Route returns the module route
-func (msg MsgAddContractSpecRequest) Route() string {
+func (msg MsgAddP8EContractSpecRequest) Route() string {
 	return ModuleName
 }
 
 // Type returns the type name for this msg
-func (msg MsgAddContractSpecRequest) Type() string {
-	return TypeMsgAddContractSpecRequest
+func (msg MsgAddP8EContractSpecRequest) Type() string {
+	return TypeMsgAddP8EContractSpecRequest
 }
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
-func (msg MsgAddContractSpecRequest) GetSigners() []sdk.AccAddress {
+func (msg MsgAddP8EContractSpecRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
 }
 
 // GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgAddContractSpecRequest) GetSignBytes() []byte {
+func (msg MsgAddP8EContractSpecRequest) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
-func (msg MsgAddContractSpecRequest) ValidateBasic() error {
+func (msg MsgAddP8EContractSpecRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}

@@ -8,7 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/google/uuid"
-	v039metadata "github.com/provenance-io/provenance/x/metadata/legacy/v039"
+	v039metadata "github.com/provenance-io/provenance/x/metadata/types/p8e"
 	"gopkg.in/yaml.v2"
 )
 

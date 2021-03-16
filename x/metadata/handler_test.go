@@ -17,8 +17,8 @@ import (
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/provenance-io/provenance/x/metadata"
 	"github.com/provenance-io/provenance/x/metadata/keeper"
-	v039metadata "github.com/provenance-io/provenance/x/metadata/legacy/v039"
 	"github.com/provenance-io/provenance/x/metadata/types"
+	v039metadata "github.com/provenance-io/provenance/x/metadata/types/p8e"
 )
 
 type HandlerTestSuite struct {
@@ -108,6 +108,6 @@ func (s HandlerTestSuite) TestAddContractSpecMsg() {
 		InputSpecs:      []*v039metadata.DefinitionSpec{&validInputSpec},
 		PartiesInvolved: []v039metadata.PartyType{v039metadata.PartyType_PARTY_TYPE_AFFILIATE},
 	}
-	_, err := s.handler(s.ctx, &types.MsgAddContractSpecRequest{Contractspec: validContractSpec, Signers: []string{s.user1Addr.String()}})
+	_, err := s.handler(s.ctx, &types.MsgAddP8EContractSpecRequest{Contractspec: validContractSpec, Signers: []string{s.user1Addr.String()}})
 	s.NoError(err)
 }
