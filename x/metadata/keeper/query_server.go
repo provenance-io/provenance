@@ -583,7 +583,7 @@ func (k Keeper) OSLocatorByScopeUUID(ctx context.Context, request *types.OSLocat
 	return k.GetOSLocatorByScopeUUID(ctxSDK, request.ScopeUuid)
 }
 
-func (k Keeper) OSAllLocators(ctx context.Context, request *types.AllOSLocatorsRequest) (*types.OSLocatorResponseAll, error) {
+func (k Keeper) OSAllLocators(ctx context.Context, request *types.OSAllLocatorsRequest) (*types.OSAllLocatorsResponse, error) {
 	ctxSDK := sdk.UnwrapSDKContext(ctx)
 
 	// Return value data structure.
@@ -624,7 +624,7 @@ func (k Keeper) OSAllLocators(ctx context.Context, request *types.AllOSLocatorsR
 		end = totalResults
 	}
 
-	return &types.OSLocatorResponseAll{
+	return &types.OSAllLocatorsResponse{
 		Locator:    uniqueRecords[pageRequest.Offset:end],
 		Pagination: &query.PageResponse{Total: totalResults},
 	}, nil

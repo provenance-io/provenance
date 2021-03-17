@@ -1102,7 +1102,7 @@ var (
 )
 
 func request_Query_OSAllLocators_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq AllOSLocatorsRequest
+	var protoReq OSAllLocatorsRequest
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
@@ -1118,7 +1118,7 @@ func request_Query_OSAllLocators_0(ctx context.Context, marshaler runtime.Marsha
 }
 
 func local_request_Query_OSAllLocators_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq AllOSLocatorsRequest
+	var protoReq OSAllLocatorsRequest
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
@@ -2037,7 +2037,7 @@ var (
 
 	pattern_Query_OSLocatorByScopeUUID_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"provenance", "metadata", "v1", "locator", "scope", "scope_uuid"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_OSAllLocators_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"provenance", "metadata", "v1", "locator", "all"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_OSAllLocators_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"provenance", "metadata", "v1", "locators", "all"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (

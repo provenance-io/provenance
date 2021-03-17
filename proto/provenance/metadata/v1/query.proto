@@ -111,8 +111,8 @@ service Query {
   }
 
   // get all os locators
-  rpc OSAllLocators(AllOSLocatorsRequest) returns (OSLocatorResponseAll) {
-    option (google.api.http).get = "/provenance/metadata/v1/locator/all";
+  rpc OSAllLocators(OSAllLocatorsRequest) returns (OSAllLocatorsResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/locators/all";
   }
 }
 
@@ -120,7 +120,7 @@ service Query {
 message QueryParamsRequest {}
 
 // AllOSLocatorsRequest get all os locator's request.
-message AllOSLocatorsRequest {
+message OSAllLocatorsRequest {
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
@@ -349,7 +349,7 @@ message OSLocatorByScopeUUIDResponse {
 }
 
 // OSLocatorAll is an array of ObjectStoreLocator with pagination info
-message OSLocatorResponseAll {
+message OSAllLocatorsResponse {
   repeated ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
 
   // pagination defines an optional pagination for the request.

@@ -1118,9 +1118,9 @@ $ %s query metadata locator-all
 				return err
 			}
 			queryClient := types.NewQueryClient(clientCtx)
-			var response *types.OSLocatorResponseAll
+			var response *types.OSAllLocatorsResponse
 
-			response, err = queryClient.OSAllLocators(context.Background(), &types.AllOSLocatorsRequest{Pagination: pageReq})
+			response, err = queryClient.OSAllLocators(context.Background(), &types.OSAllLocatorsRequest{Pagination: pageReq})
 
 			if err != nil {
 				return err

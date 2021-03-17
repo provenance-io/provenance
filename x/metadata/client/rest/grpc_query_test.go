@@ -4,11 +4,8 @@ import (
 	b64 "encoding/base64"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"testing"
-
-	"github.com/google/uuid"
-	"github.com/stretchr/testify/suite"
 	"google.golang.org/genproto/googleapis/rpc/status"
+	"testing"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -17,6 +14,8 @@ import (
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/provenance-io/provenance/testutil"
 
@@ -244,10 +243,35 @@ func (suite *IntegrationTestSuite) TestGRPCQueries() {
 			false,
 			&metadatatypes.OSLocatorByScopeUUIDResponse{},
 			&metadatatypes.OSLocatorByScopeUUIDResponse{
-				Locator: []metadatatypes.ObjectStoreLocator{metadatatypes.ObjectStoreLocator{
+				Locator: []metadatatypes.ObjectStoreLocator{{
 					Owner:      suite.ownerAddr1.String(),
 					LocatorUri: suite.uri1,
 				}},
+			},
+		},
+		{
+			"Get  all os locator.",
+			// only way i could get around http url parse isseus for rest
+			// This encodes/decodes using a URL-compatible base64
+			// format.
+			fmt.Sprintf("%s/provenance/metadata/v1/locators/all", baseURL),
+			map[string]string{
+				grpctypes.GRPCBlockHeightHeader: "1",
+			},
+			false,
+			&metadatatypes.OSAllLocatorsResponse{},
+			&metadatatypes.OSAllLocatorsResponse{
+				Locator: []metadatatypes.ObjectStoreLocator{{
+					Owner:      suite.ownerAddr1.String(),
+					LocatorUri: suite.uri1,
+				},{
+					Owner:      suite.ownerAddr.String(),
+					LocatorUri: suite.uri,
+				}},
+				Pagination: &query.PageResponse{
+					NextKey: nil,
+					Total:   2,
+				},
 			},
 		},
 	}

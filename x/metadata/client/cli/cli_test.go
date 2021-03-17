@@ -1734,6 +1734,20 @@ func (s *IntegrationTestSuite) TestGetOSLocatorCmd() {
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
+func (s *IntegrationTestSuite) TestGetAllOSLocatorCmd() {
+	cmd := cli.GetOSLocatorCmd()
+
+	testCases := []queryCmdTestCase{
+		{
+			"get os locator",
+			[]string{s.user1Addr.String(), s.asJson},
+			"",
+			fmt.Sprintf("{\"owner\":\"%s\",\"locator_uri\":\"%s\"}",s.user1Addr.String(),"http://foo.com"),
+		},
+	}
+
+	runQueryCmdTestCases(s, cmd, testCases)
+}
 func (s *IntegrationTestSuite) runTestCase(testCases []osTestStruct) {
 	for _, tc := range testCases {
 		tc := tc
