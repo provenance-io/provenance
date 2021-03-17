@@ -60,15 +60,21 @@ func NewAddMarkerProposal(
 	totalSupply sdk.Int,
 	manager sdk.AccAddress,
 	status MarkerStatus,
-	markerType MarkerType, // nolint:interfacer
+	markerType MarkerType,
+	access []AccessGrant,
+	fixed bool,
+	allowGov bool, // nolint:interfacer
 ) *AddMarkerProposal {
 	return &AddMarkerProposal{
-		Title:       title,
-		Description: description,
-		Amount:      sdk.NewCoin(denom, totalSupply),
-		Manager:     manager.String(),
-		Status:      status,
-		MarkerType:  markerType,
+		Title:                  title,
+		Description:            description,
+		Amount:                 sdk.NewCoin(denom, totalSupply),
+		Manager:                manager.String(),
+		Status:                 status,
+		MarkerType:             markerType,
+		AccessList:             access,
+		SupplyFixed:            fixed,
+		AllowGovernanceControl: allowGov,
 	}
 }
 

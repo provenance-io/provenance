@@ -43,6 +43,13 @@ func HandleAddMarkerProposal(ctx sdk.Context, k Keeper, c *types.AddMarkerPropos
 		return err
 	}
 
+	// active markers should have supply set.
+	if newMarker.Status == types.StatusActive {
+		if err := k.AdjustCirculation(ctx, newMarker, c.Amount); err != nil {
+			return err
+		}
+	}
+
 	logger := k.Logger(ctx)
 	logger.Info("a new marker was added", "marker", c.Amount.Denom, "supply", c.Amount.String())
 
@@ -51,6 +58,7 @@ func HandleAddMarkerProposal(ctx sdk.Context, k Keeper, c *types.AddMarkerPropos
 
 // HandleSupplyIncreaseProposal handles a SupplyIncrease governance proposal request
 func HandleSupplyIncreaseProposal(ctx sdk.Context, k Keeper, c *types.SupplyIncreaseProposal) error {
+	logger := k.Logger(ctx)
 	addr, err := types.MarkerAddress(c.Amount.Denom)
 	if err != nil {
 		return err
@@ -66,11 +74,22 @@ func HandleSupplyIncreaseProposal(ctx sdk.Context, k Keeper, c *types.SupplyIncr
 		return fmt.Errorf("%s marker does not allow governance control", c.Amount.Denom)
 	}
 
+	if m.GetStatus() == types.StatusProposed || m.GetStatus() == types.StatusFinalized {
+		total := m.GetSupply().Add(c.Amount)
+		if err = m.SetSupply(total); err != nil {
+			return err
+		}
+		k.SetMarker(ctx, m)
+		logger.Info("marker configured supply increased", "marker", c.Amount.Denom, "amount", c.Amount.Amount.String())
+		return nil
+	} else if m.GetStatus() != types.StatusActive {
+		return fmt.Errorf("cannot mint coin for a marker that is not in Active status")
+	}
+
 	if err := k.IncreaseSupply(ctx, m, c.Amount); err != nil {
 		return err
 	}
 
-	logger := k.Logger(ctx)
 	logger.Info("marker total supply increased", "marker", c.Amount.Denom, "amount", c.Amount.Amount.String())
 
 	// If a target address for minted coins is given then send them there.
