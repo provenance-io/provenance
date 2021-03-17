@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/google/uuid"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -42,53 +43,26 @@ func createContractSpec(inputSpecs []*p8e.DefinitionSpec, outputSpec p8e.OutputS
 		PartiesInvolved: []p8e.PartyType{p8e.PartyType_PARTY_TYPE_AFFILIATE},
 	}
 }
+
+func createDefinitionSpec(name string, classname string, reference p8e.ProvenanceReference, defType int) p8e.DefinitionSpec {
+	return p8e.DefinitionSpec{
+		Name: name,
+		ResourceLocation: &p8e.Location{Classname: classname,
+			Ref: &reference,
+		},
+		Type: 1,
+	}
+}
+
 func (s *P8eTestSuite) TestConvertP8eContractSpec() {
-	validInputSpec := p8e.DefinitionSpec{
-		Name: "perform_input_checks",
-		ResourceLocation: &p8e.Location{Classname: "io.provenance.loan.LoanProtos$PartiesList",
-			Ref: &p8e.ProvenanceReference{Hash: "Adv+huolGTKofYCR0dw5GHm/R7sUWOwF32XR8r8r9kDy4il5U/LApxOWYHb05jhK4+eY4YzRMRiWcxU3Lx0+Mw=="},
-		},
-		Type: 1,
-	}
-	invalidInputSpec := p8e.DefinitionSpec{
-		Name: "",
-		ResourceLocation: &p8e.Location{Classname: "io.provenance.loan.LoanProtos$PartiesList",
-			Ref: &p8e.ProvenanceReference{Hash: "Adv+huolGTKofYCR0dw5GHm/R7sUWOwF32XR8r8r9kDy4il5U/LApxOWYHb05jhK4+eY4YzRMRiWcxU3Lx0+Mw=="},
-		},
-		Type: 1,
-	}
+	validDefSpec := createDefinitionSpec("perform_input_checks", "io.provenance.loan.LoanProtos$PartiesList", p8e.ProvenanceReference{Hash: "Adv+huolGTKofYCR0dw5GHm/R7sUWOwF32XR8r8r9kDy4il5U/LApxOWYHb05jhK4+eY4YzRMRiWcxU3Lx0+Mw=="}, 1)
+	validDefSpecUUID := createDefinitionSpec("perform_input_checks", "io.provenance.loan.LoanProtos$PartiesList", p8e.ProvenanceReference{ScopeUuid: &p8e.UUID{Value: uuid.New().String()}, Name: "recordname"}, 1)
 
-	validOutputSpec := p8e.OutputSpec{Spec: &p8e.DefinitionSpec{
-		Name: "additional_parties",
-		ResourceLocation: &p8e.Location{
-			Classname: "io.provenance.loan.LoanProtos$PartiesList",
-			Ref: &p8e.ProvenanceReference{
-				Hash: "Adv+huolGTKofYCR0dw5GHm/R7sUWOwF32XR8r8r9kDy4il5U/LApxOWYHb05jhK4+eY4YzRMRiWcxU3Lx0+Mw==",
-			},
-		},
-		Type: 1,
-	},
-	}
-
-	invalidOutputSpec := p8e.OutputSpec{Spec: &p8e.DefinitionSpec{
-		Name: "additional_parties",
-		ResourceLocation: &p8e.Location{
-			Classname: "",
-			Ref: &p8e.ProvenanceReference{
-				Hash: "Adv+huolGTKofYCR0dw5GHm/R7sUWOwF32XR8r8r9kDy4il5U/LApxOWYHb05jhK4+eY4YzRMRiWcxU3Lx0+Mw==",
-			},
-		},
-		Type: 1,
-	},
-	}
-
-	validDefinition := p8e.DefinitionSpec{
-		Name: "ExampleContract",
-		ResourceLocation: &p8e.Location{Classname: "io.provenance.contracts.ExampleContract",
-			Ref: &p8e.ProvenanceReference{Hash: "E36eeTUk8GYXGXjIbZTm4s/Dw3G1e42SinH1195t4ekgcXXPhfIpfQaEJ21PTzKhdv6JjhzQJ2kAJXK+TRXmeQ=="},
-		},
-		Type: 1,
-	}
+	invalidDefSpecNoName := createDefinitionSpec("", "io.provenance.loan.LoanProtos$PartiesList", p8e.ProvenanceReference{Hash: "Adv+huolGTKofYCR0dw5GHm/R7sUWOwF32XR8r8r9kDy4il5U/LApxOWYHb05jhK4+eY4YzRMRiWcxU3Lx0+Mw=="}, 1)
+	invalidDefSpecNoClass := createDefinitionSpec("perform_action", "", p8e.ProvenanceReference{Hash: "Adv+huolGTKofYCR0dw5GHm/R7sUWOwF32XR8r8r9kDy4il5U/LApxOWYHb05jhK4+eY4YzRMRiWcxU3Lx0+Mw=="}, 1)
+	invalidDefSpecUUID := createDefinitionSpec("perform_input_checks", "io.provenance.loan.LoanProtos$PartiesList", p8e.ProvenanceReference{ScopeUuid: &p8e.UUID{Value: "not-a-uuid"}, Name: "recordname"}, 1)
+	invalidDefSpecUUIDNoName := createDefinitionSpec("perform_input_checks", "io.provenance.loan.LoanProtos$PartiesList", p8e.ProvenanceReference{ScopeUuid: &p8e.UUID{Value: uuid.New().String()}}, 1)
+	invalidDefSpecHash := createDefinitionSpec("ExampleContract", "io.provenance.contracts.ExampleContract", p8e.ProvenanceReference{Hash: "should fail to decode this"}, 1)
 
 	cases := map[string]struct {
 		v39CSpec p8e.ContractSpec
@@ -97,28 +71,52 @@ func (s *P8eTestSuite) TestConvertP8eContractSpec() {
 		errorMsg string
 	}{
 		"should convert a contract spec successfully": {
-			createContractSpec([]*p8e.DefinitionSpec{&validInputSpec}, validOutputSpec, validDefinition),
+			createContractSpec([]*p8e.DefinitionSpec{&validDefSpec}, p8e.OutputSpec{Spec: &validDefSpec}, validDefSpec),
+			[]string{s.user1},
+			false,
+			"",
+		},
+		"should convert a contract spec successfully with uuid input spec": {
+			createContractSpec([]*p8e.DefinitionSpec{&validDefSpecUUID}, p8e.OutputSpec{Spec: &validDefSpec}, validDefSpec),
 			[]string{s.user1},
 			false,
 			"",
 		},
 		"should fail to validate basic on contract specification": {
-			createContractSpec([]*p8e.DefinitionSpec{&validInputSpec}, validOutputSpec, validDefinition),
+			createContractSpec([]*p8e.DefinitionSpec{&validDefSpec}, p8e.OutputSpec{Spec: &validDefSpec}, validDefSpec),
 			[]string{},
 			true,
 			"invalid owner addresses count (expected > 0 got: 0)",
 		},
 		"should fail to validatebasic on input specification": {
-			createContractSpec([]*p8e.DefinitionSpec{&invalidInputSpec}, validOutputSpec, validDefinition),
+			createContractSpec([]*p8e.DefinitionSpec{&invalidDefSpecNoName}, p8e.OutputSpec{Spec: &validDefSpec}, validDefSpec),
 			[]string{s.user1},
 			true,
 			"input specification name cannot be empty",
 		},
 		"should fail to validatebasic on record specification": {
-			createContractSpec([]*p8e.DefinitionSpec{&validInputSpec}, invalidOutputSpec, validDefinition),
+			createContractSpec([]*p8e.DefinitionSpec{&validDefSpec}, p8e.OutputSpec{Spec: &invalidDefSpecNoClass}, validDefSpec),
 			[]string{s.user1},
 			true,
 			"record specification type name cannot be empty",
+		},
+		"should fail to decode resource location": {
+			createContractSpec([]*p8e.DefinitionSpec{&validDefSpec}, p8e.OutputSpec{Spec: &validDefSpec}, invalidDefSpecHash),
+			[]string{s.user1},
+			true,
+			"illegal base64 data at input byte 6",
+		},
+		"should fail to decode input spec uuid": {
+			createContractSpec([]*p8e.DefinitionSpec{&invalidDefSpecUUID}, p8e.OutputSpec{Spec: &validDefSpec}, validDefSpec),
+			[]string{s.user1},
+			true,
+			"invalid UUID length: 10",
+		},
+		"should fail to find name on record with uuid": {
+			createContractSpec([]*p8e.DefinitionSpec{&invalidDefSpecUUIDNoName}, p8e.OutputSpec{Spec: &validDefSpec}, validDefSpec),
+			[]string{s.user1},
+			true,
+			"must have a value for record name",
 		},
 	}
 

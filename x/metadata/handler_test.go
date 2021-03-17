@@ -131,10 +131,13 @@ func (s HandlerTestSuite) TestAddContractSpecMsg() {
 		InputSpecs:      []*v039metadata.DefinitionSpec{&validInputSpec},
 		PartiesInvolved: []v039metadata.PartyType{v039metadata.PartyType_PARTY_TYPE_AFFILIATE},
 	}
-	_, err := s.handler(s.ctx, &types.MsgAddP8EContractSpecRequest{Contractspec: validContractSpec, Signers: []string{s.user1Addr.String()}})
+	_, err := s.handler(s.ctx, &types.MsgAddP8EContractSpecRequest{Contractspec: validContractSpec, Signers: []string{s.user1}})
 	s.NoError(err)
 
-	_, err = s.handler(s.ctx, &types.MsgAddP8EContractSpecRequest{Contractspec: invalidContractSpec, Signers: []string{s.user1Addr.String()}})
+	_, err = s.handler(s.ctx, &types.MsgAddP8EContractSpecRequest{Contractspec: invalidContractSpec, Signers: []string{s.user1}})
+	s.Error(err)
+
+	_, err = s.handler(s.ctx, &types.MsgAddP8EContractSpecRequest{Contractspec: invalidContractSpec, Signers: []string{s.user2}})
 	s.Error(err)
 
 }
