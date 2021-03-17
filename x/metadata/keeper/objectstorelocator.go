@@ -21,7 +21,11 @@ func (k Keeper) GetOsLocatorRecord(ctx sdk.Context, ownerAddress sdk.AccAddress)
 	if b == nil {
 		return types.ObjectStoreLocator{}, false
 	}
-	k.cdc.MustUnmarshalBinaryBare(b, &osLocator)
+	err = k.cdc.UnmarshalBinaryBare(b, &osLocator)
+	if err != nil {
+		ctx.Logger().Error("failed to get locator", "err", err)
+		return types.ObjectStoreLocator{}, false
+	}
 	return osLocator, true
 }
 
