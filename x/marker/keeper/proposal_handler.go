@@ -224,6 +224,29 @@ func HandleChangeStatusProposal(ctx sdk.Context, k Keeper, c *types.ChangeStatus
 	if !m.HasGovernanceEnabled() {
 		return fmt.Errorf("%s marker does not allow governance control", c.Denom)
 	}
+	if c.NewStatus == types.StatusUndefined {
+		return fmt.Errorf("error invalid marker status undefined")
+	}
+	if int(m.GetStatus()) > int(c.NewStatus) {
+		return fmt.Errorf("invalid status transition %s precedes existing status of %s", c.NewStatus, m.GetStatus())
+	}
+
+	// activate (must be pending, finalized currently)
+	if c.NewStatus == types.StatusActive {
+		if err = k.AdjustCirculation(ctx, m, m.GetSupply()); err != nil {
+			return fmt.Errorf("could not create marker supply: %w", err)
+		}
+	}
+
+	// delete (must be cancelled currently)
+	if c.NewStatus == types.StatusDestroyed {
+		if m.GetStatus() != types.StatusCancelled {
+			return fmt.Errorf("only cancelled markers can be deleted")
+		}
+		if err = k.AdjustCirculation(ctx, m, sdk.NewCoin(c.Denom, sdk.ZeroInt())); err != nil {
+			return fmt.Errorf("could not dispose of marker supply: %w", err)
+		}
+	}
 
 	if err := m.SetStatus(c.NewStatus); err != nil {
 		return err

@@ -47,6 +47,7 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 		wantErr bool
 		err     error
 	}{
+		// ADD MARKER PROPOSALS
 		{
 			"add marker - valid",
 			markertypes.NewAddMarkerProposal("title", "description", "test1", sdk.NewInt(100), sdk.AccAddress{}, markertypes.StatusActive, markertypes.MarkerType_Coin, []markertypes.AccessGrant{}, true, true),
@@ -77,6 +78,8 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 			true,
 			fmt.Errorf("error invalid marker status undefined"),
 		},
+
+		// INCREASE SUPPLY PROPOSALS
 		{
 			"supply increase - valid",
 			markertypes.NewSupplyIncreaseProposal("title", "description", sdk.NewCoin("test1", sdk.NewInt(100)), s.accountAddr.String()),
@@ -102,22 +105,50 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 			fmt.Errorf("testnogov marker does not allow governance control"),
 		},
 		{
+			"supply increase - valid no target",
+			markertypes.NewSupplyIncreaseProposal("title", "description", sdk.NewCoin("test1", sdk.NewInt(100)), ""),
+			false,
+			nil,
+		},
+
+		// DECREASE SUPPLY PROPOSALS
+		{
 			"supply decrease - valid",
 			markertypes.NewSupplyDecreaseProposal("title", "description", sdk.NewCoin("test1", sdk.NewInt(100))),
 			false,
 			nil,
 		},
 		{
-			"supply increase - valid no target",
-			markertypes.NewSupplyIncreaseProposal("title", "description", sdk.NewCoin("test1", sdk.NewInt(100)), ""),
+			"supply decrease - no governance allowed",
+			markertypes.NewSupplyDecreaseProposal("title", "description", sdk.NewCoin("testnogov", sdk.NewInt(100))),
+			true,
+			fmt.Errorf("testnogov marker does not allow governance control"),
+		},
+		{
+			"supply decrease - marker doesnot exist",
+			markertypes.NewSupplyDecreaseProposal("title", "description", sdk.NewCoin("test", sdk.NewInt(100))),
+			true,
+			fmt.Errorf("test marker does not exist"),
+		},
+
+		// WITHDRAW PROPOSALS
+		{
+			"withdraw - valid",
+			markertypes.NewWithdrawEscrowProposal("title", "description", "test1", sdk.NewCoins(sdk.NewCoin("test1", sdk.NewInt(10))), s.accountAddr.String()),
 			false,
 			nil,
 		},
 		{
-			"withdraw - empty recpient",
-			markertypes.NewWithdrawEscrowProposal("title", "description", "test1", sdk.NewCoins(sdk.NewCoin("test1", sdk.NewInt(100))), ""),
+			"withdraw - no governance",
+			markertypes.NewWithdrawEscrowProposal("title", "description", "testnogov", sdk.NewCoins(sdk.NewCoin("testnogov", sdk.NewInt(1))), ""),
 			true,
-			fmt.Errorf("empty address string is not allowed"),
+			fmt.Errorf("testnogov marker does not allow governance control"),
+		},
+		{
+			"withdraw - marker doesnot exist",
+			markertypes.NewWithdrawEscrowProposal("title", "description", "test", sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(100))), ""),
+			true,
+			fmt.Errorf("test marker does not exist"),
 		},
 		{
 			"withdraw - invalid recpient",
@@ -125,15 +156,99 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 			true,
 			fmt.Errorf("decoding bech32 failed: checksum failed. Expected dpg8tu, got ddress."),
 		},
+
+		// STATUS CHANGE PROPOSALS
 		{
-			"withdraw - valid",
-			markertypes.NewWithdrawEscrowProposal("title", "description", "test1", sdk.NewCoins(sdk.NewCoin("test1", sdk.NewInt(100))), s.accountAddr.String()),
-			false,
-			nil,
+			"status change - no governance",
+			markertypes.NewChangeStatusProposal("title", "description", "testnogov", markertypes.StatusActive),
+			true,
+			fmt.Errorf("testnogov marker does not allow governance control"),
+		},
+		{
+			"status change - marker doesnot exist",
+			markertypes.NewChangeStatusProposal("title", "description", "test", markertypes.StatusActive),
+			true,
+			fmt.Errorf("test marker does not exist"),
+		},
+		{
+			"status change - invalid status",
+			markertypes.NewChangeStatusProposal("title", "description", "pending", markertypes.StatusUndefined),
+			true,
+			fmt.Errorf("error invalid marker status undefined"),
+		},
+		{
+			"status change - invalid status order",
+			markertypes.NewChangeStatusProposal("title", "description", "test1", markertypes.StatusProposed),
+			true,
+			fmt.Errorf("invalid status transition proposed precedes existing status of active"),
 		},
 		{
 			"status change - valid",
 			markertypes.NewChangeStatusProposal("title", "description", "pending", markertypes.StatusActive),
+			false,
+			nil,
+		},
+		{
+			"status change - invalid destroy",
+			markertypes.NewChangeStatusProposal("title", "description", "pending", markertypes.StatusDestroyed),
+			true,
+			fmt.Errorf("only cancelled markers can be deleted"),
+		},
+		{
+			"status change - valid cancel",
+			markertypes.NewChangeStatusProposal("title", "description", "pending", markertypes.StatusCancelled),
+			false,
+			nil,
+		},
+		{
+			"status change - valid destroy",
+			markertypes.NewChangeStatusProposal("title", "description", "pending", markertypes.StatusDestroyed),
+			false,
+			nil,
+		},
+
+		// ADD ACCESS
+		{
+			"add access - no governance",
+			markertypes.NewSetAdministratorProposal("title", "description", "testnogov", []markertypes.AccessGrant{{Address: s.accountAddr.String(), Permissions: markertypes.AccessListByNames("mint, burn")}}),
+			true,
+			fmt.Errorf("testnogov marker does not allow governance control"),
+		},
+		{
+			"add access - marker doesnot exist",
+			markertypes.NewSetAdministratorProposal("title", "description", "test", []markertypes.AccessGrant{{Address: s.accountAddr.String(), Permissions: markertypes.AccessListByNames("mint, burn")}}),
+			true,
+			fmt.Errorf("test marker does not exist"),
+		},
+		{
+			"add access - valid",
+			markertypes.NewSetAdministratorProposal("title", "description", "test1", []markertypes.AccessGrant{{Address: s.accountAddr.String(), Permissions: markertypes.AccessListByNames("mint, burn")}}),
+			false,
+			nil,
+		},
+
+		// REMOVE ACCESS
+		{
+			"remove access - no governance",
+			markertypes.NewRemoveAdministratorProposal("title", "description", "testnogov", []string{s.accountAddr.String()}),
+			true,
+			fmt.Errorf("testnogov marker does not allow governance control"),
+		},
+		{
+			"remove access - marker doesnot exist",
+			markertypes.NewRemoveAdministratorProposal("title", "description", "test", []string{s.accountAddr.String()}),
+			true,
+			fmt.Errorf("test marker does not exist"),
+		},
+		{
+			"remove access - marker doesnot exist",
+			markertypes.NewRemoveAdministratorProposal("title", "description", "test1", []string{"bad1address"}),
+			true,
+			fmt.Errorf("decoding bech32 failed: checksum failed. Expected dpg8tu, got ddress."),
+		},
+		{
+			"remove access - valid",
+			markertypes.NewRemoveAdministratorProposal("title", "description", "test1", []string{s.accountAddr.String()}),
 			false,
 			nil,
 		},
