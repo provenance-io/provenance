@@ -249,31 +249,7 @@ func (suite *IntegrationTestSuite) TestGRPCQueries() {
 				}},
 			},
 		},
-		{
-			"Get  all os locator.",
-			// only way i could get around http url parse isseus for rest
-			// This encodes/decodes using a URL-compatible base64
-			// format.
-			fmt.Sprintf("%s/provenance/metadata/v1/locators/all", baseURL),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "1",
-			},
-			false,
-			&metadatatypes.OSAllLocatorsResponse{},
-			&metadatatypes.OSAllLocatorsResponse{
-				Locator: []metadatatypes.ObjectStoreLocator{{
-					Owner:      suite.ownerAddr1.String(),
-					LocatorUri: suite.uri1,
-				},{
-					Owner:      suite.ownerAddr.String(),
-					LocatorUri: suite.uri,
-				}},
-				Pagination: &query.PageResponse{
-					NextKey: nil,
-					Total:   2,
-				},
-			},
-		},
+
 	}
 
 	for _, tc := range testCases {
@@ -288,6 +264,61 @@ func (suite *IntegrationTestSuite) TestGRPCQueries() {
 			} else {
 				suite.Require().NoError(err)
 				suite.Require().Equal(tc.expected.String(), tc.respType.String())
+			}
+		})
+	}
+}
+func (suite *IntegrationTestSuite) TestAllOSLocator() {
+	val := suite.testnet.Validators[0]
+	baseURL := val.APIAddress
+
+	testCases := []struct {
+		name     string
+		url      string
+		headers  map[string]string
+		expErr   bool
+		respType proto.Message
+		expected proto.Message
+	}{
+
+		{
+			"Get all os locator.",
+			// only way i could get around http url parse isseus for rest
+			// This encodes/decodes using a URL-compatible base64
+			// format.
+			fmt.Sprintf("%s/provenance/metadata/v1/locators/all", baseURL),
+			map[string]string{
+				grpctypes.GRPCBlockHeightHeader: "1",
+			},
+			false,
+			&metadatatypes.OSAllLocatorsResponse{},
+			&metadatatypes.OSAllLocatorsResponse{
+				Locator: []metadatatypes.ObjectStoreLocator{{
+					Owner:      suite.ownerAddr1.String(),
+					LocatorUri: suite.uri1,
+				}, {
+					Owner:      suite.ownerAddr.String(),
+					LocatorUri: suite.uri,
+				}},
+				Pagination: &query.PageResponse{
+					NextKey: nil,
+					Total:   2,
+				},
+			},
+		},
+	}
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			resp, err := sdktestutil.GetRequestWithHeaders(tc.url, tc.headers)
+			suite.Require().NoError(err)
+			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType)
+			if tc.expErr {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().NoError(err)
+				suite.Require().Equal(fmt.Sprint(tc.expected), fmt.Sprint(tc.respType))
 			}
 		})
 	}
