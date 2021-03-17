@@ -7,6 +7,7 @@ services:
     ports:
       - "26656-26657:26656-26657"
       - "1317:1317"
+      - "9090:9090"
     environment:
       - ID=0
       - LOG=${LOG:-provenanced.log}
@@ -71,4 +72,3 @@ networks:
       config:
       -
         subnet: 192.168.20.0/24
-
