@@ -431,23 +431,9 @@ func (k Keeper) ActivateMarker(ctx sdk.Context, caller sdk.Address, denom string
 			" supply %v, can not finalize marker", supplyRequest, preexistingCoin)
 	}
 
-	// Amount we will mint is remainder after subtracting the existing supply from the system.
-	mintAmount := sdk.NewCoins(supplyRequest.Sub(preexistingCoin))
-
-	// coins are minted by the supply module and distributed to the markermodule
-	if err = k.bankKeeper.MintCoins(ctx, types.CoinPoolName, mintAmount); err != nil {
-		return fmt.Errorf("could not mint specified token supply for marker: %w", err)
-	}
-	// distribute minted coin to the markeraccount instance
-	if err = k.bankKeeper.SendCoinsFromModuleToAccount(
-		ctx, types.CoinPoolName, m.GetAddress(), mintAmount,
-	); err != nil {
-		return fmt.Errorf("could not distribute coin allocation from markermodule to marker instance: %w", err)
-	}
-	// reload our marker instance
-	m, err = k.GetMarker(ctx, m.GetAddress())
-	if err != nil {
-		return fmt.Errorf("could not reload existing marker using address: %s, %w", m.GetAddress(), err)
+	// Ensure the supply amount requested is minted and placed in the marker's account
+	if err = k.AdjustCirculation(ctx, m, supplyRequest); err != nil {
+		return err
 	}
 
 	// With the coin supply minted and assigned to the marker we can transition to the Active state.

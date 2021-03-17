@@ -10,6 +10,7 @@ import (
 	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
+	p8e "github.com/provenance-io/provenance/x/metadata/types/p8e"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -1033,24 +1034,24 @@ func (m *MsgDeleteRecordSpecificationResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgDeleteRecordSpecificationResponse proto.InternalMessageInfo
 
-// MsgBindOSLocatorRequest defines an sdk.Msg type that is used to add an address of an owner to a particular uri.
-type MsgBindOSLocatorRequest struct {
-	// The object locator to bind the address to bind to the URI.
-	Locator ObjectStoreLocator `protobuf:"bytes,1,opt,name=locator,proto3" json:"locator"`
+// MsgAddP8eContractSpecRequest records the result of a change ownership p8e contract execution
+type MsgAddP8EContractSpecRequest struct {
+	// ContractSpec v39 p8e ContractSpect to be converted into a v40
+	Contractspec p8e.ContractSpec `protobuf:"bytes,1,opt,name=contractspec,proto3" json:"contractspec"`
+	Signers      []string         `protobuf:"bytes,2,rep,name=signers,proto3" json:"signers,omitempty"`
 }
 
-func (m *MsgBindOSLocatorRequest) Reset()         { *m = MsgBindOSLocatorRequest{} }
-func (m *MsgBindOSLocatorRequest) String() string { return proto.CompactTextString(m) }
-func (*MsgBindOSLocatorRequest) ProtoMessage()    {}
-func (*MsgBindOSLocatorRequest) Descriptor() ([]byte, []int) {
+func (m *MsgAddP8EContractSpecRequest) Reset()      { *m = MsgAddP8EContractSpecRequest{} }
+func (*MsgAddP8EContractSpecRequest) ProtoMessage() {}
+func (*MsgAddP8EContractSpecRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3a3a0892f91e3036, []int{26}
 }
-func (m *MsgBindOSLocatorRequest) XXX_Unmarshal(b []byte) error {
+func (m *MsgAddP8EContractSpecRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgBindOSLocatorRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgAddP8EContractSpecRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgBindOSLocatorRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgAddP8EContractSpecRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -1060,36 +1061,34 @@ func (m *MsgBindOSLocatorRequest) XXX_Marshal(b []byte, deterministic bool) ([]b
 		return b[:n], nil
 	}
 }
-func (m *MsgBindOSLocatorRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgBindOSLocatorRequest.Merge(m, src)
+func (m *MsgAddP8EContractSpecRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAddP8EContractSpecRequest.Merge(m, src)
 }
-func (m *MsgBindOSLocatorRequest) XXX_Size() int {
+func (m *MsgAddP8EContractSpecRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgBindOSLocatorRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgBindOSLocatorRequest.DiscardUnknown(m)
+func (m *MsgAddP8EContractSpecRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAddP8EContractSpecRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgBindOSLocatorRequest proto.InternalMessageInfo
+var xxx_messageInfo_MsgAddP8EContractSpecRequest proto.InternalMessageInfo
 
-// MsgModifyOSLocatorRequest defines an sdk.Msg type that is used to modify a uri associated with an owner address.
-type MsgModifyOSLocatorRequest struct {
-	// The object locator to bind the address to bind to the URI.
-	Locator ObjectStoreLocator `protobuf:"bytes,1,opt,name=locator,proto3" json:"locator"`
+// MsgAddP8eContractSpecResponse returns a successful response
+type MsgAddP8EContractSpecResponse struct {
 }
 
-func (m *MsgModifyOSLocatorRequest) Reset()         { *m = MsgModifyOSLocatorRequest{} }
-func (m *MsgModifyOSLocatorRequest) String() string { return proto.CompactTextString(m) }
-func (*MsgModifyOSLocatorRequest) ProtoMessage()    {}
-func (*MsgModifyOSLocatorRequest) Descriptor() ([]byte, []int) {
+func (m *MsgAddP8EContractSpecResponse) Reset()         { *m = MsgAddP8EContractSpecResponse{} }
+func (m *MsgAddP8EContractSpecResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgAddP8EContractSpecResponse) ProtoMessage()    {}
+func (*MsgAddP8EContractSpecResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3a3a0892f91e3036, []int{27}
 }
-func (m *MsgModifyOSLocatorRequest) XXX_Unmarshal(b []byte) error {
+func (m *MsgAddP8EContractSpecResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgModifyOSLocatorRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgAddP8EContractSpecResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgModifyOSLocatorRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgAddP8EContractSpecResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -1099,191 +1098,17 @@ func (m *MsgModifyOSLocatorRequest) XXX_Marshal(b []byte, deterministic bool) ([
 		return b[:n], nil
 	}
 }
-func (m *MsgModifyOSLocatorRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgModifyOSLocatorRequest.Merge(m, src)
+func (m *MsgAddP8EContractSpecResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAddP8EContractSpecResponse.Merge(m, src)
 }
-func (m *MsgModifyOSLocatorRequest) XXX_Size() int {
+func (m *MsgAddP8EContractSpecResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgModifyOSLocatorRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgModifyOSLocatorRequest.DiscardUnknown(m)
+func (m *MsgAddP8EContractSpecResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAddP8EContractSpecResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgModifyOSLocatorRequest proto.InternalMessageInfo
-
-// MsgAddOSLocatorResponse defines the Msg/BindObjectLocator response type.
-type MsgBindOSLocatorResponse struct {
-	Locator ObjectStoreLocator `protobuf:"bytes,1,opt,name=locator,proto3" json:"locator"`
-}
-
-func (m *MsgBindOSLocatorResponse) Reset()         { *m = MsgBindOSLocatorResponse{} }
-func (m *MsgBindOSLocatorResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgBindOSLocatorResponse) ProtoMessage()    {}
-func (*MsgBindOSLocatorResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3a3a0892f91e3036, []int{28}
-}
-func (m *MsgBindOSLocatorResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgBindOSLocatorResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgBindOSLocatorResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgBindOSLocatorResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgBindOSLocatorResponse.Merge(m, src)
-}
-func (m *MsgBindOSLocatorResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgBindOSLocatorResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgBindOSLocatorResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgBindOSLocatorResponse proto.InternalMessageInfo
-
-func (m *MsgBindOSLocatorResponse) GetLocator() ObjectStoreLocator {
-	if m != nil {
-		return m.Locator
-	}
-	return ObjectStoreLocator{}
-}
-
-// MsgModifyOSLocatorResponse defines the Msg/ModifyObjectLocator response type
-type MsgModifyOSLocatorResponse struct {
-	Locator ObjectStoreLocator `protobuf:"bytes,1,opt,name=locator,proto3" json:"locator"`
-}
-
-func (m *MsgModifyOSLocatorResponse) Reset()         { *m = MsgModifyOSLocatorResponse{} }
-func (m *MsgModifyOSLocatorResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgModifyOSLocatorResponse) ProtoMessage()    {}
-func (*MsgModifyOSLocatorResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3a3a0892f91e3036, []int{29}
-}
-func (m *MsgModifyOSLocatorResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgModifyOSLocatorResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgModifyOSLocatorResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgModifyOSLocatorResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgModifyOSLocatorResponse.Merge(m, src)
-}
-func (m *MsgModifyOSLocatorResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgModifyOSLocatorResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgModifyOSLocatorResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgModifyOSLocatorResponse proto.InternalMessageInfo
-
-func (m *MsgModifyOSLocatorResponse) GetLocator() ObjectStoreLocator {
-	if m != nil {
-		return m.Locator
-	}
-	return ObjectStoreLocator{}
-}
-
-// MsgDeleteOSLocatorRequest defines an sdk.Msg type that is used to remove an existing OSLocator record binding.
-type MsgDeleteOSLocatorRequest struct {
-	// The record being removed
-	Locator ObjectStoreLocator `protobuf:"bytes,1,opt,name=locator,proto3" json:"locator"`
-}
-
-func (m *MsgDeleteOSLocatorRequest) Reset()         { *m = MsgDeleteOSLocatorRequest{} }
-func (m *MsgDeleteOSLocatorRequest) String() string { return proto.CompactTextString(m) }
-func (*MsgDeleteOSLocatorRequest) ProtoMessage()    {}
-func (*MsgDeleteOSLocatorRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3a3a0892f91e3036, []int{30}
-}
-func (m *MsgDeleteOSLocatorRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgDeleteOSLocatorRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgDeleteOSLocatorRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgDeleteOSLocatorRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgDeleteOSLocatorRequest.Merge(m, src)
-}
-func (m *MsgDeleteOSLocatorRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgDeleteOSLocatorRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgDeleteOSLocatorRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgDeleteOSLocatorRequest proto.InternalMessageInfo
-
-// MsgDeleteNameResponse defines the Msg/DeleteName response type.
-type MsgDeleteOSLocatorResponse struct {
-	Locator ObjectStoreLocator `protobuf:"bytes,1,opt,name=locator,proto3" json:"locator"`
-}
-
-func (m *MsgDeleteOSLocatorResponse) Reset()         { *m = MsgDeleteOSLocatorResponse{} }
-func (m *MsgDeleteOSLocatorResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgDeleteOSLocatorResponse) ProtoMessage()    {}
-func (*MsgDeleteOSLocatorResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3a3a0892f91e3036, []int{31}
-}
-func (m *MsgDeleteOSLocatorResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgDeleteOSLocatorResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgDeleteOSLocatorResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgDeleteOSLocatorResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgDeleteOSLocatorResponse.Merge(m, src)
-}
-func (m *MsgDeleteOSLocatorResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgDeleteOSLocatorResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgDeleteOSLocatorResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgDeleteOSLocatorResponse proto.InternalMessageInfo
-
-func (m *MsgDeleteOSLocatorResponse) GetLocator() ObjectStoreLocator {
-	if m != nil {
-		return m.Locator
-	}
-	return ObjectStoreLocator{}
-}
+var xxx_messageInfo_MsgAddP8EContractSpecResponse proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*MsgMemorializeContractRequest)(nil), "provenance.metadata.v1.MsgMemorializeContractRequest")
@@ -1312,102 +1137,93 @@ func init() {
 	proto.RegisterType((*MsgAddRecordSpecificationResponse)(nil), "provenance.metadata.v1.MsgAddRecordSpecificationResponse")
 	proto.RegisterType((*MsgDeleteRecordSpecificationRequest)(nil), "provenance.metadata.v1.MsgDeleteRecordSpecificationRequest")
 	proto.RegisterType((*MsgDeleteRecordSpecificationResponse)(nil), "provenance.metadata.v1.MsgDeleteRecordSpecificationResponse")
-	proto.RegisterType((*MsgBindOSLocatorRequest)(nil), "provenance.metadata.v1.MsgBindOSLocatorRequest")
-	proto.RegisterType((*MsgModifyOSLocatorRequest)(nil), "provenance.metadata.v1.MsgModifyOSLocatorRequest")
-	proto.RegisterType((*MsgBindOSLocatorResponse)(nil), "provenance.metadata.v1.MsgBindOSLocatorResponse")
-	proto.RegisterType((*MsgModifyOSLocatorResponse)(nil), "provenance.metadata.v1.MsgModifyOSLocatorResponse")
-	proto.RegisterType((*MsgDeleteOSLocatorRequest)(nil), "provenance.metadata.v1.MsgDeleteOSLocatorRequest")
-	proto.RegisterType((*MsgDeleteOSLocatorResponse)(nil), "provenance.metadata.v1.MsgDeleteOSLocatorResponse")
+	proto.RegisterType((*MsgAddP8EContractSpecRequest)(nil), "provenance.metadata.v1.MsgAddP8eContractSpecRequest")
+	proto.RegisterType((*MsgAddP8EContractSpecResponse)(nil), "provenance.metadata.v1.MsgAddP8eContractSpecResponse")
 }
 
 func init() { proto.RegisterFile("provenance/metadata/v1/tx.proto", fileDescriptor_3a3a0892f91e3036) }
 
 var fileDescriptor_3a3a0892f91e3036 = []byte{
-	// 1332 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x58, 0xdd, 0x6f, 0xdb, 0xd4,
-	0x1b, 0x8e, 0xd7, 0xad, 0x1f, 0x6f, 0x3b, 0xb5, 0xbf, 0xd3, 0xb5, 0x4d, 0xf3, 0xa3, 0x49, 0xe6,
-	0xd1, 0x51, 0xf5, 0xc3, 0xa1, 0x61, 0x8c, 0xad, 0x1b, 0x48, 0xcd, 0x86, 0x44, 0x81, 0xa8, 0x28,
-	0x15, 0x20, 0x90, 0x10, 0x72, 0xed, 0xd3, 0xd4, 0x90, 0xfa, 0x64, 0x3e, 0x6e, 0x49, 0x41, 0x48,
-	0x5c, 0x20, 0x34, 0x21, 0x81, 0x90, 0x90, 0x10, 0x17, 0x5c, 0xf4, 0x06, 0x71, 0xc1, 0x05, 0x88,
-	0x4b, 0xee, 0xb8, 0x41, 0xbb, 0xdc, 0x25, 0x42, 0xa8, 0x42, 0xed, 0x0d, 0xd7, 0xfd, 0x0b, 0x50,
-	0xec, 0xd7, 0x89, 0x9d, 0xd8, 0xc7, 0x4e, 0x55, 0xa6, 0xdd, 0xc5, 0xf6, 0xfb, 0xf1, 0x3c, 0xef,
-	0x73, 0x8e, 0xcf, 0xe3, 0x40, 0xae, 0x6e, 0xb1, 0x3d, 0x6a, 0xaa, 0xa6, 0x46, 0x0b, 0x3b, 0xd4,
-	0x56, 0x75, 0xd5, 0x56, 0x0b, 0x7b, 0xcb, 0x05, 0xbb, 0xa1, 0xd4, 0x2d, 0x66, 0x33, 0x32, 0xd9,
-	0x0e, 0x50, 0xbc, 0x00, 0x65, 0x6f, 0x39, 0x73, 0xa9, 0xca, 0xaa, 0xcc, 0x09, 0x29, 0x34, 0x7f,
-	0xb9, 0xd1, 0x19, 0x39, 0xa2, 0x1c, 0xd7, 0x58, 0x9d, 0x62, 0xcc, 0x6c, 0x44, 0x8c, 0xc6, 0x4c,
-	0xdb, 0x52, 0x35, 0x1b, 0xc3, 0xe6, 0xa3, 0x4a, 0xd5, 0xa9, 0x66, 0x6c, 0x19, 0x9a, 0x6a, 0x1b,
-	0xcc, 0xc4, 0xd8, 0xa7, 0x34, 0xc6, 0x77, 0x18, 0x2f, 0xd8, 0x8d, 0x02, 0x37, 0xaa, 0xa6, 0x61,
-	0x56, 0x0b, 0x7b, 0xcb, 0x9b, 0xd4, 0x56, 0x97, 0xbd, 0x6b, 0x0c, 0x9c, 0x8b, 0x28, 0xca, 0x36,
-	0xdf, 0xa3, 0x9a, 0xcd, 0x6d, 0x66, 0x21, 0x4a, 0xf9, 0xb7, 0x73, 0x30, 0x53, 0xe6, 0xd5, 0x32,
-	0xdd, 0x61, 0x96, 0xa1, 0xd6, 0x8c, 0x0f, 0xe9, 0x1d, 0xc4, 0x57, 0xa1, 0xf7, 0x76, 0x29, 0xb7,
-	0xc9, 0x34, 0x0c, 0x3a, 0xb4, 0xde, 0x35, 0xf4, 0xb4, 0x94, 0x97, 0xe6, 0x86, 0x2a, 0x03, 0xce,
-	0xf5, 0x9a, 0x4e, 0x66, 0x00, 0x38, 0xe5, 0xdc, 0x60, 0x66, 0xf3, 0xe1, 0x39, 0xe7, 0xe1, 0x10,
-	0xde, 0x59, 0xd3, 0xc9, 0x65, 0x18, 0xa1, 0x0d, 0xaa, 0xed, 0xda, 0x18, 0xd0, 0xe7, 0x04, 0x0c,
-	0xb7, 0xee, 0xad, 0xe9, 0xa4, 0x04, 0x83, 0xde, 0x3c, 0xd2, 0xe7, 0xf3, 0xd2, 0xdc, 0x70, 0x31,
-	0xaf, 0x84, 0x2b, 0xa1, 0x78, 0xb8, 0x4a, 0xe7, 0x1f, 0x1c, 0xe6, 0x52, 0x95, 0x56, 0x1e, 0x79,
-	0x1d, 0xa0, 0xc9, 0x5e, 0xb5, 0x77, 0x2d, 0xca, 0xd3, 0x17, 0x9c, 0x2a, 0x05, 0xc5, 0x1d, 0x95,
-	0x62, 0x37, 0x14, 0x6f, 0x34, 0x38, 0x2a, 0x65, 0xc3, 0x0b, 0xbe, 0x4b, 0xb9, 0x66, 0x19, 0x75,
-	0x9b, 0x59, 0x1c, 0x8b, 0xfa, 0x0a, 0x91, 0x49, 0xe8, 0x37, 0x99, 0xad, 0x5a, 0xfb, 0xe9, 0x7e,
-	0x07, 0x37, 0x5e, 0xad, 0x8c, 0xdd, 0x3f, 0xc8, 0xa5, 0xbe, 0x3d, 0xc8, 0xa5, 0xfe, 0x39, 0xc8,
-	0xa5, 0x3e, 0xf9, 0x2b, 0x9f, 0x92, 0xf3, 0x90, 0x8d, 0x1a, 0x21, 0xaf, 0x33, 0x93, 0x53, 0xf9,
-	0xd7, 0x3e, 0x98, 0x2e, 0xf3, 0xea, 0x9d, 0x6d, 0xd5, 0xac, 0xd2, 0xf5, 0x0f, 0x4c, 0x6a, 0xf1,
-	0x6d, 0xa3, 0xee, 0x4d, 0x58, 0xe9, 0x9c, 0x70, 0x69, 0xfc, 0xe4, 0x30, 0x37, 0xba, 0xaf, 0xee,
-	0xd4, 0x56, 0x64, 0xef, 0x89, 0xdc, 0x1e, 0xfb, 0xb5, 0xee, 0xb1, 0x97, 0x26, 0x4e, 0x0e, 0x73,
-	0xff, 0xc3, 0x8c, 0xd6, 0x33, 0xd9, 0xaf, 0xc6, 0x4a, 0x98, 0x1a, 0xa5, 0xa9, 0x93, 0xc3, 0xdc,
-	0xb8, 0x9b, 0xe7, 0x7f, 0x2a, 0x07, 0x65, 0xba, 0x0d, 0x83, 0x16, 0xd5, 0x0c, 0x5b, 0xad, 0xf1,
-	0x38, 0x99, 0x2a, 0x18, 0x57, 0x69, 0x65, 0x34, 0xb3, 0x5b, 0x22, 0x5f, 0x48, 0x26, 0x72, 0xa4,
-	0xbc, 0xfd, 0x67, 0x2f, 0xef, 0x40, 0x8c, 0xbc, 0x4f, 0x40, 0x26, 0x4c, 0x3b, 0x94, 0xf6, 0x23,
-	0x20, 0x65, 0x5e, 0x5d, 0xd5, 0xf5, 0x8d, 0xa6, 0x3a, 0x9e, 0xa4, 0x37, 0xe1, 0x82, 0xa3, 0x96,
-	0xa3, 0xe7, 0x70, 0x71, 0x26, 0x8a, 0xaf, 0x93, 0x84, 0xe8, 0xdc, 0x0c, 0x92, 0x86, 0x81, 0x26,
-	0x4c, 0x6a, 0xf1, 0xf4, 0xb9, 0x7c, 0x9f, 0xb3, 0xdd, 0xdc, 0xcb, 0x10, 0x68, 0x13, 0x30, 0x1e,
-	0x68, 0x8e, 0x98, 0x3e, 0x97, 0x60, 0xa2, 0xcc, 0xab, 0x77, 0x69, 0x8d, 0xda, 0x34, 0x80, 0xeb,
-	0xc5, 0x8e, 0xa5, 0x36, 0x52, 0x9a, 0x6f, 0xf6, 0xfe, 0xf3, 0x30, 0x37, 0x5a, 0x46, 0x58, 0xab,
-	0xba, 0x6e, 0x51, 0xce, 0x85, 0x2b, 0xb0, 0x17, 0x8c, 0x69, 0x98, 0xec, 0xc4, 0x82, 0x30, 0x3f,
-	0x86, 0x4b, 0x88, 0xde, 0x5d, 0xa4, 0xed, 0xe1, 0x0d, 0xe0, 0xb2, 0xc5, 0xf1, 0xe5, 0x22, 0xc7,
-	0x87, 0x89, 0x5e, 0x7c, 0x4f, 0xc0, 0xa6, 0x9c, 0x21, 0xf9, 0xdb, 0x23, 0xae, 0xdf, 0x25, 0x6f,
-	0xac, 0x15, 0xaa, 0x31, 0x4b, 0xf7, 0x70, 0xbd, 0x12, 0xd8, 0x77, 0xee, 0xf8, 0x16, 0xa3, 0xc7,
-	0x27, 0xde, 0x8e, 0xd7, 0xa1, 0xdf, 0x72, 0xaa, 0x3b, 0x1b, 0x78, 0xb8, 0x98, 0x15, 0x6c, 0xa8,
-	0x26, 0x06, 0x8c, 0xf6, 0x33, 0xec, 0x8b, 0x63, 0x38, 0xe9, 0x0d, 0xd8, 0xe3, 0x81, 0x04, 0xbf,
-	0x94, 0x7c, 0x9a, 0x04, 0x39, 0xbe, 0x04, 0x43, 0x6e, 0xa3, 0x36, 0xc5, 0x85, 0x68, 0x8a, 0x63,
-	0x2e, 0xc5, 0x56, 0x86, 0xec, 0xec, 0x7a, 0x66, 0xe9, 0x3d, 0xae, 0x91, 0x69, 0x98, 0xea, 0xc2,
-	0x83, 0x58, 0xbf, 0x97, 0x20, 0xe7, 0x5b, 0xe3, 0x1b, 0xfe, 0x63, 0xd1, 0x03, 0xfd, 0x06, 0x5c,
-	0x0c, 0x1c, 0x97, 0xb8, 0x6c, 0xe6, 0x85, 0xbb, 0x2e, 0x50, 0x09, 0xb7, 0x60, 0xb0, 0x4c, 0x4f,
-	0x14, 0x64, 0xc8, 0x47, 0xc3, 0x44, 0x2e, 0x3f, 0x49, 0x20, 0x07, 0xf7, 0x42, 0x28, 0x9d, 0x77,
-	0x60, 0x2c, 0x80, 0xa3, 0x2d, 0x45, 0x31, 0x5a, 0x8a, 0x29, 0x5c, 0x6d, 0x1d, 0x89, 0x72, 0x65,
-	0x34, 0x70, 0xab, 0x47, 0x61, 0x66, 0xe1, 0x8a, 0x10, 0x30, 0x12, 0xfb, 0xd1, 0x25, 0xb6, 0xaa,
-	0xeb, 0xde, 0x0b, 0x3c, 0x94, 0xd8, 0x5b, 0xe1, 0x3a, 0x2d, 0xc5, 0x9d, 0x06, 0x67, 0x2c, 0x95,
-	0x4b, 0x2a, 0x1a, 0x2c, 0x92, 0xfa, 0x45, 0x82, 0xd9, 0x16, 0x79, 0x21, 0xaf, 0xc7, 0x48, 0xb0,
-	0x39, 0xb8, 0x1a, 0x87, 0x19, 0xe9, 0xfd, 0x20, 0x79, 0x2b, 0xd6, 0xdd, 0x71, 0xa1, 0xcc, 0xde,
-	0x0c, 0x57, 0x6c, 0x41, 0xfc, 0xb2, 0x3a, 0x63, 0xbd, 0xae, 0xc0, 0x65, 0x01, 0x50, 0xa4, 0xf3,
-	0xb3, 0xe4, 0x5b, 0xaa, 0x02, 0x46, 0x8f, 0x91, 0x56, 0x57, 0xe1, 0x49, 0x31, 0x62, 0xa4, 0xc6,
-	0x9c, 0xb7, 0x63, 0xc9, 0x30, 0xf5, 0xf5, 0x8d, 0x57, 0x99, 0xa6, 0xda, 0xcc, 0xf2, 0xd8, 0xbc,
-	0x0c, 0x03, 0x35, 0xf7, 0x4e, 0xdc, 0x3b, 0x6f, 0xdd, 0xb1, 0xfe, 0x1b, 0x4d, 0xeb, 0x8f, 0x35,
-	0x50, 0x18, 0xaf, 0xc0, 0xca, 0xe0, 0x7d, 0x04, 0x27, 0xdf, 0x73, 0xdc, 0x6a, 0x99, 0xe9, 0xc6,
-	0xd6, 0xfe, 0x23, 0x6a, 0xb9, 0x05, 0xe9, 0x6e, 0x8e, 0x2e, 0xff, 0xb3, 0xec, 0x28, 0x6f, 0x3b,
-	0x66, 0xae, 0x8b, 0xda, 0x7f, 0xd0, 0xc9, 0x1d, 0xa2, 0xab, 0xee, 0x23, 0x1a, 0xa2, 0x4b, 0xae,
-	0xab, 0xe5, 0xd9, 0x93, 0x2b, 0x7e, 0x36, 0x06, 0x7d, 0x65, 0x5e, 0x25, 0x9f, 0x36, 0xad, 0x52,
-	0xf7, 0x87, 0x0f, 0x79, 0x36, 0xaa, 0xb4, 0xf0, 0x5b, 0x33, 0x73, 0xbd, 0xd7, 0x34, 0xa4, 0xd6,
-	0x80, 0xd1, 0x0e, 0x7f, 0x4e, 0x96, 0x05, 0xa5, 0xc2, 0xbf, 0xc3, 0x32, 0xc5, 0x5e, 0x52, 0xb0,
-	0xb3, 0x06, 0x83, 0xde, 0x99, 0x4f, 0xe6, 0x05, 0xf9, 0x1d, 0x1f, 0x08, 0x99, 0x85, 0x44, 0xb1,
-	0xd8, 0xa4, 0x06, 0xc3, 0xbe, 0x23, 0x98, 0x2c, 0x09, 0x72, 0xbb, 0x3d, 0x7f, 0x46, 0x49, 0x1a,
-	0x8e, 0xdd, 0x0c, 0x80, 0xb6, 0x29, 0x26, 0x8b, 0x31, 0x40, 0x03, 0xd6, 0x3d, 0xb3, 0x94, 0x30,
-	0x1a, 0x5b, 0x6d, 0xc1, 0x50, 0xeb, 0xb5, 0x4e, 0x62, 0x46, 0x12, 0xf0, 0xa9, 0x99, 0xc5, 0x64,
-	0xc1, 0xd8, 0x87, 0xc1, 0x88, 0xff, 0x35, 0x4b, 0xe2, 0x47, 0x12, 0xec, 0x56, 0x48, 0x1c, 0x8f,
-	0x0d, 0x9b, 0x5f, 0x60, 0xa1, 0x5e, 0x90, 0x3c, 0x97, 0x40, 0xf8, 0xb0, 0x83, 0x2b, 0x73, 0xa3,
-	0xf7, 0x44, 0x04, 0xf3, 0xb5, 0x04, 0xe9, 0x28, 0x0b, 0x47, 0x56, 0x92, 0xad, 0x8e, 0x50, 0x48,
-	0xb7, 0x4e, 0x95, 0xeb, 0x43, 0x15, 0xe5, 0xc1, 0x84, 0xa8, 0x62, 0x5c, 0xa6, 0x10, 0x55, 0x9c,
-	0xe9, 0x23, 0xdf, 0x49, 0xf0, 0x7f, 0x81, 0x7b, 0x22, 0xcf, 0xc7, 0x52, 0x16, 0x62, 0x7b, 0xe1,
-	0xb4, 0xe9, 0x08, 0xef, 0x0b, 0x09, 0x26, 0xc3, 0x8d, 0x10, 0xb9, 0x91, 0x64, 0x47, 0x84, 0x82,
-	0xba, 0x79, 0x8a, 0x4c, 0xc4, 0xf3, 0x8d, 0x04, 0xd3, 0x91, 0x06, 0x86, 0xdc, 0x4a, 0xb8, 0x6d,
-	0x42, 0x51, 0xdd, 0x3e, 0x5d, 0x32, 0x02, 0xb3, 0xe0, 0x62, 0xc0, 0x4c, 0x10, 0xd1, 0x16, 0x0e,
-	0xb3, 0x56, 0x99, 0xa7, 0x93, 0x27, 0xb4, 0x4f, 0xa1, 0x8e, 0xb3, 0x57, 0x78, 0x0a, 0x85, 0x5b,
-	0x03, 0xe1, 0x29, 0x14, 0x75, 0xb4, 0x37, 0x60, 0xb4, 0xc3, 0xd2, 0x08, 0x3b, 0x87, 0x3b, 0x3b,
-	0x61, 0xe7, 0x08, 0xc7, 0x54, 0x7a, 0xff, 0xc1, 0x51, 0x56, 0x7a, 0x78, 0x94, 0x95, 0xfe, 0x3e,
-	0xca, 0x4a, 0x5f, 0x1d, 0x67, 0x53, 0x0f, 0x8f, 0xb3, 0xa9, 0x3f, 0x8e, 0xb3, 0x29, 0x98, 0x36,
-	0x58, 0x44, 0xbd, 0xd7, 0xa4, 0xb7, 0xaf, 0x55, 0x0d, 0x7b, 0x7b, 0x77, 0x53, 0xd1, 0xd8, 0x4e,
-	0xa1, 0x1d, 0xb4, 0x64, 0x30, 0xdf, 0x55, 0xa1, 0xd1, 0xfe, 0xef, 0xda, 0xde, 0xaf, 0x53, 0xbe,
-	0xd9, 0xef, 0xfc, 0x67, 0xfd, 0xcc, 0xbf, 0x01, 0x00, 0x00, 0xff, 0xff, 0x72, 0xa3, 0x43, 0x68,
-	0xce, 0x17, 0x00, 0x00,
+	// 1260 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x58, 0x4d, 0x6f, 0xdc, 0x54,
+	0x14, 0x9d, 0x97, 0x69, 0xf3, 0x71, 0x13, 0x48, 0x79, 0x6d, 0x92, 0xc9, 0xd0, 0x8c, 0xa7, 0x6e,
+	0x53, 0xa2, 0x7c, 0xd8, 0xca, 0x90, 0x96, 0x34, 0x2d, 0x48, 0x99, 0x16, 0x89, 0x08, 0x8d, 0xa8,
+	0x26, 0x02, 0x04, 0x12, 0x42, 0x8e, 0xfd, 0xea, 0x58, 0x24, 0xf6, 0xe0, 0xe7, 0x84, 0x09, 0x08,
+	0x89, 0x05, 0x42, 0x15, 0x12, 0x08, 0x09, 0x09, 0xb1, 0x40, 0x28, 0x1b, 0xd4, 0x05, 0x0b, 0x10,
+	0x4b, 0x76, 0x6c, 0x50, 0x97, 0x5d, 0x22, 0x84, 0x22, 0x94, 0x6c, 0x58, 0xe7, 0x17, 0x20, 0xdb,
+	0xd7, 0x33, 0xf6, 0xc4, 0x1f, 0x33, 0x51, 0x16, 0x5d, 0x44, 0x8a, 0xed, 0x73, 0xdf, 0x3b, 0xe7,
+	0x9e, 0x77, 0x7d, 0xaf, 0x07, 0x84, 0x86, 0x6d, 0xed, 0x32, 0x53, 0x31, 0x55, 0x26, 0x6f, 0x33,
+	0x47, 0xd1, 0x14, 0x47, 0x91, 0x77, 0x17, 0x65, 0xa7, 0x29, 0x35, 0x6c, 0xcb, 0xb1, 0xe8, 0x78,
+	0x1b, 0x20, 0x05, 0x00, 0x69, 0x77, 0xb1, 0x78, 0x49, 0xb7, 0x74, 0xcb, 0x83, 0xc8, 0xee, 0x7f,
+	0x3e, 0xba, 0x28, 0x26, 0x2c, 0xc7, 0x55, 0xab, 0xc1, 0x10, 0x33, 0x9d, 0x80, 0x51, 0x2d, 0xd3,
+	0xb1, 0x15, 0xd5, 0x41, 0xd8, 0x6c, 0xd2, 0x52, 0x0d, 0xa6, 0x1a, 0x0f, 0x0c, 0x55, 0x71, 0x0c,
+	0xcb, 0x44, 0xec, 0xb5, 0x04, 0x6c, 0x63, 0x99, 0xb9, 0x7f, 0x88, 0x7a, 0x41, 0xb5, 0xf8, 0xb6,
+	0xc5, 0x65, 0xa7, 0x29, 0x73, 0x43, 0x37, 0x0d, 0x53, 0x97, 0x77, 0x17, 0x37, 0x98, 0xa3, 0x2c,
+	0x06, 0xd7, 0x3e, 0x50, 0xfc, 0xa3, 0x0f, 0xa6, 0x6a, 0x5c, 0xaf, 0xb1, 0x6d, 0xcb, 0x36, 0x94,
+	0x2d, 0xe3, 0x63, 0x76, 0x17, 0xb9, 0xd5, 0xd9, 0x87, 0x3b, 0x8c, 0x3b, 0x74, 0x12, 0x06, 0x3d,
+	0x49, 0xef, 0x1b, 0x5a, 0x81, 0x94, 0xc9, 0xcc, 0x50, 0x7d, 0xc0, 0xbb, 0x5e, 0xd3, 0xe8, 0x14,
+	0x00, 0x67, 0x9c, 0x1b, 0x96, 0xe9, 0x3e, 0xec, 0xf3, 0x1e, 0x0e, 0xe1, 0x9d, 0x35, 0x8d, 0x5e,
+	0x81, 0x11, 0xd6, 0x64, 0xea, 0x8e, 0x83, 0x80, 0xbc, 0x07, 0x18, 0x6e, 0xdd, 0x5b, 0xd3, 0x68,
+	0x15, 0x06, 0x83, 0x5c, 0x14, 0xce, 0x95, 0xc9, 0xcc, 0x70, 0xa5, 0x2c, 0xc5, 0xbb, 0x20, 0x05,
+	0xbc, 0xaa, 0xe7, 0x1e, 0x1f, 0x08, 0xb9, 0x7a, 0x2b, 0x8e, 0xbe, 0x09, 0xe0, 0x6a, 0x52, 0x9c,
+	0x1d, 0x9b, 0xf1, 0xc2, 0x79, 0x6f, 0x15, 0x59, 0xf2, 0x13, 0x20, 0x39, 0x4d, 0x29, 0x10, 0x8c,
+	0x09, 0x90, 0xd6, 0x03, 0xf0, 0x3d, 0xc6, 0x55, 0xdb, 0x68, 0x38, 0x96, 0xcd, 0x71, 0xd1, 0xd0,
+	0x42, 0x74, 0x1c, 0xfa, 0x4d, 0xcb, 0x51, 0xec, 0xbd, 0x42, 0xbf, 0xc7, 0x1b, 0xaf, 0x56, 0x2e,
+	0x3c, 0xdc, 0x17, 0x72, 0xdf, 0xef, 0x0b, 0xb9, 0xff, 0xf6, 0x85, 0xdc, 0x67, 0xff, 0x94, 0x73,
+	0x62, 0x19, 0x4a, 0x49, 0x29, 0xe4, 0x0d, 0xcb, 0xe4, 0x4c, 0xfc, 0x3d, 0x0f, 0x93, 0x35, 0xae,
+	0xdf, 0xdd, 0x54, 0x4c, 0x9d, 0xbd, 0xf1, 0x91, 0xc9, 0x6c, 0xbe, 0x69, 0x34, 0x82, 0x0c, 0x4b,
+	0x9d, 0x19, 0xae, 0x5e, 0x3c, 0x3e, 0x10, 0x46, 0xf7, 0x94, 0xed, 0xad, 0x15, 0x31, 0x78, 0x22,
+	0xb6, 0xd3, 0xbe, 0x74, 0x32, 0xed, 0xd5, 0xb1, 0xe3, 0x03, 0xe1, 0x39, 0x8c, 0x68, 0x3d, 0x13,
+	0xc3, 0x6e, 0xac, 0xc4, 0xb9, 0x51, 0x9d, 0x38, 0x3e, 0x10, 0x2e, 0xfa, 0x71, 0xe1, 0xa7, 0x62,
+	0xd4, 0xa6, 0x3b, 0x30, 0x68, 0x33, 0xd5, 0x70, 0x94, 0x2d, 0x9e, 0x65, 0x53, 0x1d, 0x71, 0xf5,
+	0x56, 0x84, 0x1b, 0xdd, 0x32, 0xf9, 0x7c, 0x77, 0x26, 0x27, 0xda, 0xdb, 0x7f, 0xf6, 0xf6, 0x0e,
+	0x64, 0xd8, 0x7b, 0x19, 0x8a, 0x71, 0xde, 0xa1, 0xb5, 0x9f, 0x00, 0xad, 0x71, 0x7d, 0x55, 0xd3,
+	0xd6, 0x5d, 0x77, 0x02, 0x4b, 0x6f, 0xc1, 0x79, 0xcf, 0x2d, 0xcf, 0xcf, 0xe1, 0xca, 0x54, 0x92,
+	0x5e, 0x2f, 0x08, 0xd9, 0xf9, 0x11, 0xb4, 0x00, 0x03, 0x2e, 0x4d, 0x66, 0xf3, 0x42, 0x5f, 0x39,
+	0xef, 0x95, 0x9b, 0x7f, 0x19, 0x43, 0x6d, 0x0c, 0x2e, 0x46, 0x36, 0x47, 0x4e, 0x5f, 0x12, 0x18,
+	0xab, 0x71, 0xfd, 0x1e, 0xdb, 0x62, 0x0e, 0x8b, 0xf0, 0x7a, 0xb5, 0xe3, 0xa8, 0x8d, 0x54, 0x67,
+	0xdd, 0xbd, 0xff, 0x3e, 0x10, 0x46, 0x6b, 0x48, 0x6b, 0x55, 0xd3, 0x6c, 0xc6, 0x79, 0xea, 0x09,
+	0xec, 0x85, 0x63, 0x01, 0xc6, 0x3b, 0xb9, 0x20, 0xcd, 0x4f, 0xe1, 0x12, 0xb2, 0xf7, 0x0f, 0x69,
+	0x3b, 0x79, 0x03, 0x78, 0x6c, 0x31, 0x7d, 0x42, 0x62, 0xfa, 0x30, 0x30, 0xc0, 0xf7, 0x44, 0x6c,
+	0xc2, 0x4b, 0x52, 0x78, 0x7b, 0xe4, 0xf5, 0x27, 0x09, 0xd2, 0x5a, 0x67, 0xaa, 0x65, 0x6b, 0x01,
+	0xaf, 0xd7, 0x23, 0x75, 0xe7, 0xa7, 0x6f, 0x3e, 0x39, 0x7d, 0xe9, 0xe5, 0x78, 0x13, 0xfa, 0x6d,
+	0x6f, 0x75, 0xaf, 0x80, 0x87, 0x2b, 0xa5, 0x94, 0x82, 0x72, 0x39, 0x20, 0x3a, 0xac, 0x30, 0x9f,
+	0xa5, 0x70, 0x3c, 0x48, 0x70, 0xa0, 0x03, 0x05, 0x7e, 0x4d, 0x42, 0x9e, 0x44, 0x35, 0xbe, 0x06,
+	0x43, 0xfe, 0x46, 0x6d, 0x89, 0x73, 0xc9, 0x12, 0x2f, 0xf8, 0x12, 0x5b, 0x11, 0xa2, 0x57, 0xf5,
+	0x96, 0xad, 0xf5, 0x78, 0x46, 0x26, 0x61, 0xe2, 0x04, 0x1f, 0xe4, 0xfa, 0x13, 0x01, 0x21, 0x74,
+	0xc6, 0xd7, 0xc3, 0x2d, 0x31, 0x20, 0xfd, 0x16, 0x3c, 0x13, 0x69, 0x95, 0x78, 0x6c, 0x66, 0x53,
+	0xab, 0x2e, 0xb2, 0x12, 0x96, 0x60, 0x74, 0x99, 0x9e, 0x24, 0x88, 0x50, 0x4e, 0xa6, 0x89, 0x5a,
+	0x7e, 0x21, 0x20, 0x46, 0x6b, 0x21, 0x56, 0xce, 0x7b, 0x70, 0x21, 0xc2, 0xa3, 0x6d, 0x45, 0x25,
+	0xd9, 0x8a, 0x09, 0x3c, 0x6d, 0x1d, 0x81, 0x62, 0x7d, 0x34, 0x72, 0xab, 0x47, 0x63, 0xa6, 0xe1,
+	0x6a, 0x2a, 0x61, 0x14, 0xf6, 0xb3, 0x2f, 0x6c, 0x55, 0xd3, 0x82, 0x17, 0x78, 0xac, 0xb0, 0x77,
+	0xe2, 0x7d, 0x5a, 0xc8, 0xea, 0x06, 0x67, 0x6c, 0x95, 0x2f, 0x2a, 0x99, 0x2c, 0x8a, 0xfa, 0x8d,
+	0xc0, 0x74, 0x4b, 0x7c, 0xaa, 0xae, 0xa7, 0xc8, 0xb0, 0x19, 0xb8, 0x9e, 0xc5, 0x19, 0xe5, 0x3d,
+	0x22, 0xc1, 0x89, 0xf5, 0x2b, 0x2e, 0x56, 0xd9, 0xdb, 0xf1, 0x8e, 0xcd, 0xa5, 0xbf, 0xac, 0xce,
+	0xd8, 0xaf, 0xab, 0x70, 0x25, 0x85, 0x28, 0xca, 0xf9, 0x95, 0x84, 0x8e, 0x6a, 0x8a, 0xa2, 0xa7,
+	0xc8, 0xab, 0xeb, 0x70, 0x2d, 0x9d, 0x31, 0x4a, 0xfb, 0x91, 0xc0, 0x65, 0x3f, 0x01, 0xf7, 0x97,
+	0x23, 0xa6, 0x06, 0x9a, 0xea, 0x30, 0x12, 0x8c, 0x4b, 0x2e, 0x1f, 0x34, 0x69, 0x26, 0xc9, 0x24,
+	0xf7, 0x33, 0x21, 0xbc, 0x0c, 0x3a, 0x14, 0x59, 0xa3, 0x27, 0x21, 0x82, 0xf7, 0x0d, 0x11, 0xc7,
+	0xcf, 0x57, 0x50, 0x79, 0xf4, 0x2c, 0xe4, 0x6b, 0x5c, 0xa7, 0x9f, 0xbb, 0x9d, 0xf5, 0xe4, 0x9c,
+	0x4c, 0x6f, 0x24, 0x51, 0x4d, 0xfd, 0x34, 0x29, 0xde, 0xec, 0x35, 0xcc, 0xa7, 0x43, 0x9b, 0x30,
+	0xda, 0x31, 0xce, 0xd1, 0xc5, 0x94, 0xa5, 0xe2, 0xc7, 0xf6, 0x62, 0xa5, 0x97, 0x10, 0xdc, 0x59,
+	0x85, 0xc1, 0xa0, 0x45, 0xd0, 0xd9, 0x94, 0xf8, 0x8e, 0x79, 0xb2, 0x38, 0xd7, 0x15, 0x16, 0x37,
+	0xd9, 0x82, 0xe1, 0xd0, 0x1b, 0x9b, 0x2e, 0xa4, 0xc4, 0x9e, 0x1c, 0x11, 0x8b, 0x52, 0xb7, 0x70,
+	0xdc, 0xcd, 0x00, 0x68, 0xcf, 0x50, 0x74, 0x3e, 0x83, 0x68, 0x64, 0xd2, 0x2b, 0x2e, 0x74, 0x89,
+	0xc6, 0xad, 0x1e, 0xc0, 0x50, 0xeb, 0x2d, 0x40, 0x33, 0x52, 0x12, 0x19, 0x6b, 0x8a, 0xf3, 0xdd,
+	0x81, 0x71, 0x1f, 0x0b, 0x46, 0xc2, 0x55, 0x49, 0xb3, 0x53, 0x12, 0xdd, 0x4d, 0xee, 0x1a, 0x8f,
+	0x1b, 0xba, 0x03, 0x7b, 0xec, 0xe8, 0x40, 0x5f, 0xea, 0xc2, 0xf8, 0xb8, 0xf7, 0x5c, 0x71, 0xb9,
+	0xf7, 0x40, 0x24, 0xf3, 0x2d, 0x81, 0x42, 0x52, 0xc7, 0xa7, 0x2b, 0xdd, 0x9d, 0x8e, 0x58, 0x4a,
+	0xb7, 0x4f, 0x15, 0x1b, 0x62, 0x95, 0xd4, 0xb2, 0x53, 0x59, 0x65, 0x0c, 0x25, 0xa9, 0xac, 0xb2,
+	0x66, 0x04, 0xfa, 0x03, 0x81, 0xe7, 0x53, 0x9a, 0x2d, 0x7d, 0x39, 0x53, 0x72, 0x2a, 0xb7, 0x57,
+	0x4e, 0x1b, 0x8e, 0xf4, 0xbe, 0x22, 0x30, 0x1e, 0xdf, 0x37, 0xe9, 0x72, 0x37, 0x15, 0x11, 0x4b,
+	0xea, 0xd6, 0x29, 0x22, 0x91, 0xcf, 0x77, 0x04, 0x26, 0x13, 0xfb, 0x1d, 0xbd, 0xdd, 0x65, 0xd9,
+	0xc4, 0xb2, 0xba, 0x73, 0xba, 0x60, 0x24, 0xf6, 0x05, 0x01, 0x7a, 0xb2, 0x7f, 0xd1, 0xa5, 0x74,
+	0xa9, 0xf1, 0xed, 0xb8, 0x78, 0xa3, 0xc7, 0x28, 0x6c, 0xf3, 0xf9, 0x87, 0x7d, 0xa4, 0xfa, 0xc1,
+	0xe3, 0xc3, 0x12, 0x79, 0x72, 0x58, 0x22, 0xff, 0x1e, 0x96, 0xc8, 0x37, 0x47, 0xa5, 0xdc, 0x93,
+	0xa3, 0x52, 0xee, 0xaf, 0xa3, 0x52, 0x0e, 0x26, 0x0d, 0x2b, 0x61, 0xdd, 0xfb, 0xe4, 0xdd, 0x25,
+	0xdd, 0x70, 0x36, 0x77, 0x36, 0x24, 0xd5, 0xda, 0x96, 0xdb, 0xa0, 0x05, 0xc3, 0x0a, 0x5d, 0xc9,
+	0xcd, 0xf6, 0x0f, 0x86, 0xce, 0x5e, 0x83, 0xf1, 0x8d, 0x7e, 0xef, 0x37, 0xc0, 0x17, 0xff, 0x0f,
+	0x00, 0x00, 0xff, 0xff, 0x89, 0x1d, 0x65, 0xfc, 0x1a, 0x15, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1448,13 +1264,8 @@ type MsgClient interface {
 	AddRecordSpecification(ctx context.Context, in *MsgAddRecordSpecificationRequest, opts ...grpc.CallOption) (*MsgAddRecordSpecificationResponse, error)
 	// DeleteRecordSpecification deletes a record specification
 	DeleteRecordSpecification(ctx context.Context, in *MsgDeleteRecordSpecificationRequest, opts ...grpc.CallOption) (*MsgDeleteRecordSpecificationResponse, error)
-	// Os Locator
-	// BindOSLocator binds a owner address to a uri.
-	BindOSLocator(ctx context.Context, in *MsgBindOSLocatorRequest, opts ...grpc.CallOption) (*MsgBindOSLocatorResponse, error)
-	// DeleteOSLocator defines a method to delete existing OSLocator record by the current owner.
-	DeleteOSLocator(ctx context.Context, in *MsgDeleteOSLocatorRequest, opts ...grpc.CallOption) (*MsgDeleteOSLocatorResponse, error)
-	// Modify existing OSLocator record by the current owner
-	ModifyOSLocator(ctx context.Context, in *MsgModifyOSLocatorRequest, opts ...grpc.CallOption) (*MsgModifyOSLocatorResponse, error)
+	// AddP8eContractSpec adds a P8e v39 contract spec as a v40 ContractSpecification
+	AddP8EContractSpec(ctx context.Context, in *MsgAddP8EContractSpecRequest, opts ...grpc.CallOption) (*MsgAddP8EContractSpecResponse, error)
 }
 
 type msgClient struct {
@@ -1582,27 +1393,10 @@ func (c *msgClient) DeleteRecordSpecification(ctx context.Context, in *MsgDelete
 	return out, nil
 }
 
-func (c *msgClient) BindOSLocator(ctx context.Context, in *MsgBindOSLocatorRequest, opts ...grpc.CallOption) (*MsgBindOSLocatorResponse, error) {
-	out := new(MsgBindOSLocatorResponse)
-	err := c.cc.Invoke(ctx, "/provenance.metadata.v1.Msg/BindOSLocator", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgClient) DeleteOSLocator(ctx context.Context, in *MsgDeleteOSLocatorRequest, opts ...grpc.CallOption) (*MsgDeleteOSLocatorResponse, error) {
-	out := new(MsgDeleteOSLocatorResponse)
-	err := c.cc.Invoke(ctx, "/provenance.metadata.v1.Msg/DeleteOSLocator", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgClient) ModifyOSLocator(ctx context.Context, in *MsgModifyOSLocatorRequest, opts ...grpc.CallOption) (*MsgModifyOSLocatorResponse, error) {
-	out := new(MsgModifyOSLocatorResponse)
-	err := c.cc.Invoke(ctx, "/provenance.metadata.v1.Msg/ModifyOSLocator", in, out, opts...)
+// Deprecated: Do not use.
+func (c *msgClient) AddP8EContractSpec(ctx context.Context, in *MsgAddP8EContractSpecRequest, opts ...grpc.CallOption) (*MsgAddP8EContractSpecResponse, error) {
+	out := new(MsgAddP8EContractSpecResponse)
+	err := c.cc.Invoke(ctx, "/provenance.metadata.v1.Msg/AddP8eContractSpec", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1637,13 +1431,8 @@ type MsgServer interface {
 	AddRecordSpecification(context.Context, *MsgAddRecordSpecificationRequest) (*MsgAddRecordSpecificationResponse, error)
 	// DeleteRecordSpecification deletes a record specification
 	DeleteRecordSpecification(context.Context, *MsgDeleteRecordSpecificationRequest) (*MsgDeleteRecordSpecificationResponse, error)
-	// Os Locator
-	// BindOSLocator binds a owner address to a uri.
-	BindOSLocator(context.Context, *MsgBindOSLocatorRequest) (*MsgBindOSLocatorResponse, error)
-	// DeleteOSLocator defines a method to delete existing OSLocator record by the current owner.
-	DeleteOSLocator(context.Context, *MsgDeleteOSLocatorRequest) (*MsgDeleteOSLocatorResponse, error)
-	// Modify existing OSLocator record by the current owner
-	ModifyOSLocator(context.Context, *MsgModifyOSLocatorRequest) (*MsgModifyOSLocatorResponse, error)
+	// AddP8eContractSpec adds a P8e v39 contract spec as a v40 ContractSpecification
+	AddP8EContractSpec(context.Context, *MsgAddP8EContractSpecRequest) (*MsgAddP8EContractSpecResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -1689,14 +1478,8 @@ func (*UnimplementedMsgServer) AddRecordSpecification(ctx context.Context, req *
 func (*UnimplementedMsgServer) DeleteRecordSpecification(ctx context.Context, req *MsgDeleteRecordSpecificationRequest) (*MsgDeleteRecordSpecificationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteRecordSpecification not implemented")
 }
-func (*UnimplementedMsgServer) BindOSLocator(ctx context.Context, req *MsgBindOSLocatorRequest) (*MsgBindOSLocatorResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method BindOSLocator not implemented")
-}
-func (*UnimplementedMsgServer) DeleteOSLocator(ctx context.Context, req *MsgDeleteOSLocatorRequest) (*MsgDeleteOSLocatorResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteOSLocator not implemented")
-}
-func (*UnimplementedMsgServer) ModifyOSLocator(ctx context.Context, req *MsgModifyOSLocatorRequest) (*MsgModifyOSLocatorResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ModifyOSLocator not implemented")
+func (*UnimplementedMsgServer) AddP8EContractSpec(ctx context.Context, req *MsgAddP8EContractSpecRequest) (*MsgAddP8EContractSpecResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddP8EContractSpec not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -1937,56 +1720,20 @@ func _Msg_DeleteRecordSpecification_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_BindOSLocator_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgBindOSLocatorRequest)
+func _Msg_AddP8EContractSpec_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgAddP8EContractSpecRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).BindOSLocator(ctx, in)
+		return srv.(MsgServer).AddP8EContractSpec(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.metadata.v1.Msg/BindOSLocator",
+		FullMethod: "/provenance.metadata.v1.Msg/AddP8EContractSpec",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).BindOSLocator(ctx, req.(*MsgBindOSLocatorRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Msg_DeleteOSLocator_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgDeleteOSLocatorRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).DeleteOSLocator(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/provenance.metadata.v1.Msg/DeleteOSLocator",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).DeleteOSLocator(ctx, req.(*MsgDeleteOSLocatorRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Msg_ModifyOSLocator_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgModifyOSLocatorRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).ModifyOSLocator(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/provenance.metadata.v1.Msg/ModifyOSLocator",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).ModifyOSLocator(ctx, req.(*MsgModifyOSLocatorRequest))
+		return srv.(MsgServer).AddP8EContractSpec(ctx, req.(*MsgAddP8EContractSpecRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2048,16 +1795,8 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_DeleteRecordSpecification_Handler,
 		},
 		{
-			MethodName: "BindOSLocator",
-			Handler:    _Msg_BindOSLocator_Handler,
-		},
-		{
-			MethodName: "DeleteOSLocator",
-			Handler:    _Msg_DeleteOSLocator_Handler,
-		},
-		{
-			MethodName: "ModifyOSLocator",
-			Handler:    _Msg_ModifyOSLocator_Handler,
+			MethodName: "AddP8eContractSpec",
+			Handler:    _Msg_AddP8EContractSpec_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -2995,7 +2734,7 @@ func (m *MsgDeleteRecordSpecificationResponse) MarshalToSizedBuffer(dAtA []byte)
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgBindOSLocatorRequest) Marshal() (dAtA []byte, err error) {
+func (m *MsgAddP8EContractSpecRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -3005,18 +2744,27 @@ func (m *MsgBindOSLocatorRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgBindOSLocatorRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgAddP8EContractSpecRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgBindOSLocatorRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgAddP8EContractSpecRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
+	if len(m.Signers) > 0 {
+		for iNdEx := len(m.Signers) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Signers[iNdEx])
+			copy(dAtA[i:], m.Signers[iNdEx])
+			i = encodeVarintTx(dAtA, i, uint64(len(m.Signers[iNdEx])))
+			i--
+			dAtA[i] = 0x12
+		}
+	}
 	{
-		size, err := m.Locator.MarshalToSizedBuffer(dAtA[:i])
+		size, err := m.Contractspec.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -3028,7 +2776,7 @@ func (m *MsgBindOSLocatorRequest) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgModifyOSLocatorRequest) Marshal() (dAtA []byte, err error) {
+func (m *MsgAddP8EContractSpecResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -3038,158 +2786,16 @@ func (m *MsgModifyOSLocatorRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgModifyOSLocatorRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgAddP8EContractSpecResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgModifyOSLocatorRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgAddP8EContractSpecResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	{
-		size, err := m.Locator.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
-		}
-		i -= size
-		i = encodeVarintTx(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0xa
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgBindOSLocatorResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgBindOSLocatorResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgBindOSLocatorResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	{
-		size, err := m.Locator.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
-		}
-		i -= size
-		i = encodeVarintTx(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0xa
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgModifyOSLocatorResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgModifyOSLocatorResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgModifyOSLocatorResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	{
-		size, err := m.Locator.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
-		}
-		i -= size
-		i = encodeVarintTx(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0xa
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgDeleteOSLocatorRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgDeleteOSLocatorRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgDeleteOSLocatorRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	{
-		size, err := m.Locator.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
-		}
-		i -= size
-		i = encodeVarintTx(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0xa
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgDeleteOSLocatorResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgDeleteOSLocatorResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgDeleteOSLocatorResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	{
-		size, err := m.Locator.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
-		}
-		i -= size
-		i = encodeVarintTx(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -3578,69 +3184,29 @@ func (m *MsgDeleteRecordSpecificationResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgBindOSLocatorRequest) Size() (n int) {
+func (m *MsgAddP8EContractSpecRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	l = m.Locator.Size()
+	l = m.Contractspec.Size()
 	n += 1 + l + sovTx(uint64(l))
+	if len(m.Signers) > 0 {
+		for _, s := range m.Signers {
+			l = len(s)
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
 	return n
 }
 
-func (m *MsgModifyOSLocatorRequest) Size() (n int) {
+func (m *MsgAddP8EContractSpecResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	l = m.Locator.Size()
-	n += 1 + l + sovTx(uint64(l))
-	return n
-}
-
-func (m *MsgBindOSLocatorResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = m.Locator.Size()
-	n += 1 + l + sovTx(uint64(l))
-	return n
-}
-
-func (m *MsgModifyOSLocatorResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = m.Locator.Size()
-	n += 1 + l + sovTx(uint64(l))
-	return n
-}
-
-func (m *MsgDeleteOSLocatorRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = m.Locator.Size()
-	n += 1 + l + sovTx(uint64(l))
-	return n
-}
-
-func (m *MsgDeleteOSLocatorResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = m.Locator.Size()
-	n += 1 + l + sovTx(uint64(l))
 	return n
 }
 
@@ -3879,10 +3445,7 @@ func (m *MsgMemorializeContractRequest) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -3932,10 +3495,7 @@ func (m *MsgMemorializeContractResponse) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -4218,10 +3778,7 @@ func (m *MsgChangeOwnershipRequest) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -4271,10 +3828,7 @@ func (m *MsgChangeOwnershipResponse) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -4389,10 +3943,7 @@ func (m *MsgAddScopeRequest) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -4442,10 +3993,7 @@ func (m *MsgAddScopeResponse) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -4560,10 +4108,7 @@ func (m *MsgDeleteScopeRequest) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -4613,10 +4158,7 @@ func (m *MsgDeleteScopeResponse) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -4734,10 +4276,7 @@ func (m *MsgAddSessionRequest) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -4787,10 +4326,7 @@ func (m *MsgAddSessionResponse) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -4941,10 +4477,7 @@ func (m *MsgAddRecordRequest) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -4994,10 +4527,7 @@ func (m *MsgAddRecordResponse) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -5112,10 +4642,7 @@ func (m *MsgDeleteRecordRequest) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -5165,10 +4692,7 @@ func (m *MsgDeleteRecordResponse) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -5283,10 +4807,7 @@ func (m *MsgAddScopeSpecificationRequest) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -5336,10 +4857,7 @@ func (m *MsgAddScopeSpecificationResponse) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -5454,10 +4972,7 @@ func (m *MsgDeleteScopeSpecificationRequest) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -5507,10 +5022,7 @@ func (m *MsgDeleteScopeSpecificationResponse) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -5625,10 +5137,7 @@ func (m *MsgAddContractSpecificationRequest) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -5678,10 +5187,7 @@ func (m *MsgAddContractSpecificationResponse) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -5796,10 +5302,7 @@ func (m *MsgDeleteContractSpecificationRequest) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -5849,10 +5352,7 @@ func (m *MsgDeleteContractSpecificationResponse) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -5967,10 +5467,7 @@ func (m *MsgAddRecordSpecificationRequest) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -6020,10 +5517,7 @@ func (m *MsgAddRecordSpecificationResponse) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -6138,10 +5632,7 @@ func (m *MsgDeleteRecordSpecificationRequest) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -6191,10 +5682,7 @@ func (m *MsgDeleteRecordSpecificationResponse) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -6209,7 +5697,7 @@ func (m *MsgDeleteRecordSpecificationResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgBindOSLocatorRequest) Unmarshal(dAtA []byte) error {
+func (m *MsgAddP8EContractSpecRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -6232,15 +5720,15 @@ func (m *MsgBindOSLocatorRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgBindOSLocatorRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgAddP8eContractSpecRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgBindOSLocatorRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgAddP8eContractSpecRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Locator", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Contractspec", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -6267,9 +5755,41 @@ func (m *MsgBindOSLocatorRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.Locator.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.Contractspec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Signers", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Signers = append(m.Signers, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -6277,10 +5797,7 @@ func (m *MsgBindOSLocatorRequest) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {
@@ -6295,7 +5812,7 @@ func (m *MsgBindOSLocatorRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgModifyOSLocatorRequest) Unmarshal(dAtA []byte) error {
+func (m *MsgAddP8EContractSpecResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -6318,399 +5835,19 @@ func (m *MsgModifyOSLocatorRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgModifyOSLocatorRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgAddP8eContractSpecResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgModifyOSLocatorRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgAddP8eContractSpecResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Locator", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.Locator.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgBindOSLocatorResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgBindOSLocatorResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgBindOSLocatorResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Locator", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.Locator.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgModifyOSLocatorResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgModifyOSLocatorResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgModifyOSLocatorResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Locator", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.Locator.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgDeleteOSLocatorRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgDeleteOSLocatorRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgDeleteOSLocatorRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Locator", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.Locator.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgDeleteOSLocatorResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgDeleteOSLocatorResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgDeleteOSLocatorResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Locator", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.Locator.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthTx
 			}
 			if (iNdEx + skippy) > l {

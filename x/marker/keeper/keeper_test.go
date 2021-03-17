@@ -58,6 +58,8 @@ func TestAccountMapperGetSet(t *testing.T) {
 	acc = app.AccountKeeper.GetAccount(ctx, addr)
 	require.Nil(t, acc)
 
+	require.Empty(t, app.MarkerKeeper.GetAllMarkerHolders(ctx, "testcoin"))
+
 	// check for error on invaid marker denom
 	_, err := app.MarkerKeeper.GetMarkerByDenom(ctx, "doesntexist")
 	require.Error(t, err, "marker does not exist, should error")
@@ -315,8 +317,15 @@ func TestAccountKeeperMintBurnCoins(t *testing.T) {
 	// Fails because a user is holding some of the supply
 	require.Error(t, app.MarkerKeeper.CancelMarker(ctx, user, "testcoin"))
 
+	// two a user and the marker
+	require.Equal(t, 2, len(app.MarkerKeeper.GetAllMarkerHolders(ctx, "testcoin")))
+
 	// put the coins back in the types.
 	require.NoError(t, app.BankKeeper.SendCoins(ctx, user, addr, sdk.NewCoins(sdk.NewInt64Coin("testcoin", 50))))
+
+	// one, only the marker
+	require.Equal(t, 1, len(app.MarkerKeeper.GetAllMarkerHolders(ctx, "testcoin")))
+
 	// succeeds because marker has all its supply
 	require.NoError(t, app.MarkerKeeper.CancelMarker(ctx, user, "testcoin"))
 
@@ -329,6 +338,9 @@ func TestAccountKeeperMintBurnCoins(t *testing.T) {
 	require.NoError(t, app.MarkerKeeper.CancelMarker(ctx, user, "testcoin"))
 
 	require.NoError(t, app.MarkerKeeper.DeleteMarker(ctx, user, "testcoin"))
+
+	// none, marker has been deleted
+	require.Equal(t, 0, len(app.MarkerKeeper.GetAllMarkerHolders(ctx, "testcoin")))
 
 	// verify status is destroyed and supply is zero.
 	m, err = app.MarkerKeeper.GetMarker(ctx, addr)

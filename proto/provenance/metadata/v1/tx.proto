@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 import "provenance/metadata/v1/scope.proto";
 import "provenance/metadata/v1/contract.proto";
 import "provenance/metadata/v1/specification.proto";
+import "provenance/metadata/v1/p8e/p8e.proto";
 
 import "cosmos/tx/signing/v1beta1/signing.proto";
 import "provenance/metadata/v1/objectstore.proto";
@@ -48,6 +49,12 @@ service Msg {
   rpc AddRecordSpecification(MsgAddRecordSpecificationRequest) returns (MsgAddRecordSpecificationResponse);
   // DeleteRecordSpecification deletes a record specification
   rpc DeleteRecordSpecification(MsgDeleteRecordSpecificationRequest) returns (MsgDeleteRecordSpecificationResponse);
+
+  // AddP8eContractSpec adds a P8e v39 contract spec as a v40 ContractSpecification
+  rpc AddP8eContractSpec(MsgAddP8eContractSpecRequest) returns (MsgAddP8eContractSpecResponse) {
+    option deprecated = true;
+  };
+
 
   // Os Locator
   // BindOSLocator binds a owner address to a uri.
@@ -292,6 +299,21 @@ message MsgDeleteRecordSpecificationRequest {
 
 // MsgDeleteRecordSpecificationResponse from a delete record specification request
 message MsgDeleteRecordSpecificationResponse {}
+
+// MsgAddP8eContractSpecRequest records the result of a change ownership p8e contract execution
+message MsgAddP8eContractSpecRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  // ContractSpec v39 p8e ContractSpect to be converted into a v40
+  p8e.ContractSpec contractspec = 1 [(gogoproto.nullable) = false];
+  repeated string signers = 2;
+}
+
+// MsgAddP8eContractSpecResponse returns a successful response
+message MsgAddP8eContractSpecResponse{}
 
 // MsgBindOSLocatorRequest defines an sdk.Msg type that is used to add an address of an owner to a particular uri.
 message MsgBindOSLocatorRequest {
