@@ -425,14 +425,14 @@ func (k msgServer) P8EMemorializeContract(
 ) (*types.MsgP8EMemorializeContractResponse, error) { //nolint:staticcheck // Ignore deprecation error here.
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	scope, session, records, signers, err := types.ConvertP8eMemorializeContractRequest(msg)
+	p8EData, signers, err := types.ConvertP8eMemorializeContractRequest(msg)
 
 	if err != nil {
 		return nil, err
 	}
 
 	_, err = k.AddScope(goCtx, &types.MsgAddScopeRequest{
-		Scope:   scope,
+		Scope:   *p8EData.Scope,
 		Signers: signers,
 	})
 	if err != nil {
@@ -440,17 +440,17 @@ func (k msgServer) P8EMemorializeContract(
 	}
 
 	_, err = k.AddSession(goCtx, &types.MsgAddSessionRequest{
-		Session: &session,
+		Session: p8EData.Session,
 		Signers: signers,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	for _, record := range records {
+	for _, record := range p8EData.Records {
 		_, err = k.AddRecord(goCtx, &types.MsgAddRecordRequest{
-			SessionId: session.SessionId,
-			Record:    &record,
+			SessionId: p8EData.Session.SessionId,
+			Record:    record,
 			Signers:   signers,
 		})
 		if err != nil {

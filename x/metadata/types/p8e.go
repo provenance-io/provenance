@@ -48,16 +48,24 @@ func EmptyProcess() *Process {
 	}
 }
 
+type P8EData struct {
+	Scope   *Scope
+	Session *Session
+	Records []*Record
+}
+
 // Migrate Converts a MsgP8EMemorializeContractRequest object into the new objects.
-func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest) (scope Scope, session Session, records []Record, signers []string, err error) {
-	scope = *EmptyScope()
-	session = *EmptySession()
-	records = []Record{}
+func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest) (p8EData P8EData, signers []string, err error) {
+	p8EData = P8EData{
+		Scope:   EmptyScope(),
+		Session: EmptySession(),
+		Records: []*Record{},
+	}
 	signers = []string{}
 	err = nil
 
 	// Set the scope pieces.
-	scope.ScopeId, err = parseScopeID(msg.ScopeId)
+	p8EData.Scope.ScopeId, err = parseScopeID(msg.ScopeId)
 	if err != nil {
 		return
 	}
@@ -74,7 +82,7 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 	//       Otherwise, just use the first party.
 
 	// Set the session pieces.
-	session.SpecificationId, err = parseSessionID(scope.ScopeId, msg.GroupId)
+	p8EData.Session.SpecificationId, err = parseSessionID(p8EData.Scope.ScopeId, msg.GroupId)
 	if err != nil {
 		return
 	}
@@ -83,7 +91,7 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 	//       old way comes from contract.Spec.DataLocation.Ref.Hash string
 	//       Might need to communicate a value change here?
 	// TODO: Add session.Parties.
-	//       Sae as the scope Owners.
+	//       Same as the scope Owners.
 	// TODO: Set session.Name
 	//       Old way: From the contract spec, .Definition.ResourceLocation.Classname
 	//       New way: From the contract spec, ClassName
@@ -104,7 +112,7 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 			}
 		}
 	}
-	return
+	return p8EData, signers, err
 }
 
 func parseScopeID(input string) (MetadataAddress, error) {
