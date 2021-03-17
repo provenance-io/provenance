@@ -47,6 +47,10 @@ func (k Keeper) OSLocatorExists(ctx sdk.Context, ownerAddr string) bool {
 func (k Keeper) SetOSLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, uri string) error {
 	var err error
 
+	urlToPersist, err := k.checkValidURI(uri, ctx)
+	if err != nil {
+		return err
+	}
 	if account := k.authKeeper.GetAccount(ctx, ownerAddr); account == nil {
 		return types.ErrInvalidAddress
 	}
@@ -58,7 +62,7 @@ func (k Keeper) SetOSLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, ur
 	if store.Has(key) {
 		return types.ErrOSLocatorAlreadyBound
 	}
-	record := types.NewOSLocatorRecord(ownerAddr, uri)
+	record := types.NewOSLocatorRecord(ownerAddr, urlToPersist.String())
 	bz, err := types.ModuleCdc.MarshalBinaryBare(&record)
 	if err != nil {
 		return err
@@ -164,13 +168,17 @@ func (k Keeper) modifyRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, uri stri
 		return types.ErrAddressNotBound
 	}
 
+	urlToPersist, err := k.checkValidURI(uri, ctx)
+	if err != nil {
+		return err
+	}
 	// Delete the main name record
 	key, err := types.GetOsLocatorAddressKeyPrefix(ownerAddr)
 	if err != nil {
 		return err
 	}
 	store := ctx.KVStore(k.storeKey)
-	record := types.NewOSLocatorRecord(ownerAddr, uri)
+	record := types.NewOSLocatorRecord(ownerAddr, urlToPersist.String())
 	bz, err := types.ModuleCdc.MarshalBinaryBare(&record)
 	if err != nil {
 		return err

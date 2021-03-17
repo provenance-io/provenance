@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"strings"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -434,12 +433,8 @@ func (k msgServer) BindOSLocator(goCtx context.Context, msg *types.MsgBindOSLoca
 		ctx.Logger().Error("invalid address", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
-	urlToPersist, err := checkValidURI(msg.Locator.LocatorUri, k, ctx)
 
-	if err != nil {
-		return nil, err
-	}
-	if err := k.Keeper.SetOSLocatorRecord(ctx, address, urlToPersist.String()); err != nil {
+	if err := k.Keeper.SetOSLocatorRecord(ctx, address, msg.Locator.LocatorUri); err != nil {
 		ctx.Logger().Error("unable to bind name", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
@@ -512,13 +507,8 @@ func (k msgServer) ModifyOSLocator(ctx context.Context, msg *types.MsgModifyOSLo
 		sdkCtx.Logger().Error("msg sender cannot modify os locator", "owner", ownerAddr)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "msg sender cannot delete os locator.")
 	}
-	urlToPersist, err := checkValidURI(msg.Locator.LocatorUri, k, sdkCtx)
-	if err != nil {
-		return nil, err
-	}
-
 	// Modify
-	if err := k.Keeper.modifyRecord(sdkCtx, ownerAddr, urlToPersist.String()); err != nil {
+	if err := k.Keeper.modifyRecord(sdkCtx, ownerAddr, msg.Locator.LocatorUri); err != nil {
 		sdkCtx.Logger().Error("error deleting name", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
@@ -531,16 +521,4 @@ func (k msgServer) ModifyOSLocator(ctx context.Context, msg *types.MsgModifyOSLo
 		),
 	)
 	return &types.MsgModifyOSLocatorResponse{Locator: msg.Locator}, nil
-}
-
-func checkValidURI(uri string, k msgServer, ctx sdk.Context) (*url.URL, error) {
-	urlToPersist, err := url.Parse(uri)
-	if err != nil {
-		return nil, err
-	}
-
-	if int(k.Keeper.GetOSLocatorParams(ctx).MaxUriLength) < len(uri) {
-		return nil, types.ErrOSLocatorURIToolong
-	}
-	return urlToPersist, nil
 }

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"net/url"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -203,4 +204,16 @@ func (k Keeper) VerifyCorrectOwner(ctx sdk.Context, ownerAddr sdk.AccAddress) bo
 		return false
 	}
 	return ownerAddr.String() == stored.Owner
+}
+
+func (k Keeper) checkValidURI(uri string, ctx sdk.Context) (*url.URL, error) {
+	urlToPersist, err := url.Parse(uri)
+	if err != nil {
+		return nil, err
+	}
+
+	if int(k.GetOSLocatorParams(ctx).MaxUriLength) < len(uri) {
+		return nil, types.ErrOSLocatorURIToolong
+	}
+	return urlToPersist, nil
 }
