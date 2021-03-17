@@ -258,7 +258,7 @@ func (ma MarkerAccount) GetSupply() sdk.Coin {
 // GrantAccess appends the access grant to the marker account.
 func (ma *MarkerAccount) GrantAccess(access AccessGrantI) error {
 	if err := access.Validate(); err != nil {
-		return err
+		return fmt.Errorf(err.Error())
 	}
 	// Find any existing permissions and append specified permissions
 	for _, ac := range ma.AccessControl {
