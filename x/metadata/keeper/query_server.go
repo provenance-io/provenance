@@ -22,7 +22,7 @@ const defaultLimit = 100
 
 var _ types.QueryServer = Keeper{}
 
-// NameRecords within the GenesisState
+// ObjectStoreLocators within the GenesisState
 type ObjectStoreLocators []types.ObjectStoreLocator
 
 // Params queries params of metadata module

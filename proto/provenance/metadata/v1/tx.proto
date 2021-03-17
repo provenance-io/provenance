@@ -331,7 +331,7 @@ message MsgModifyOSLocatorRequest {
   ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
 }
 
-// MsgAddOSLocatorResponse defines the Msg/BindObjectLocator response type.
+// MsgBindOSLocatorResponse defines the Msg/BindObjectLocator response type.
 message MsgBindOSLocatorResponse {
   ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
 }

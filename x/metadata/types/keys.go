@@ -17,9 +17,6 @@ const (
 	// QuerierRoute to be used for queries
 	QuerierRoute = ModuleName
 
-	// CoinPoolName to be used for coin pool associated with mint/burn activities.
-	CoinPoolName = ModuleName
-
 	// DefaultParamspace is the name used for the parameter subspace for this module.
 	DefaultParamspace = ModuleName
 )

@@ -1188,7 +1188,7 @@ func (m *MsgModifyOSLocatorRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgModifyOSLocatorRequest proto.InternalMessageInfo
 
-// MsgAddOSLocatorResponse defines the Msg/BindObjectLocator response type.
+// MsgBindOSLocatorResponse defines the Msg/BindObjectLocator response type.
 type MsgBindOSLocatorResponse struct {
 	Locator ObjectStoreLocator `protobuf:"bytes,1,opt,name=locator,proto3" json:"locator"`
 }

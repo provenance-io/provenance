@@ -343,12 +343,12 @@ message OSLocatorByURIResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// OSLocatorResponse is an array of ObjectStoreLocator.
+// OSLocatorByScopeUUIDResponse is an array of ObjectStoreLocator.
 message OSLocatorByScopeUUIDResponse {
   repeated ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
 }
 
-// OSLocatorAll is an array of ObjectStoreLocator with pagination info
+// OSAllLocatorsResponse is an array of ObjectStoreLocator with pagination info
 message OSAllLocatorsResponse {
   repeated ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
 
