@@ -318,7 +318,7 @@ func (suite *IntegrationTestSuite) TestAllOSLocator() {
 				suite.Require().Error(err)
 			} else {
 				suite.Require().NoError(err)
-				suite.Require().Equal(fmt.Sprint(tc.expected), fmt.Sprint(tc.respType))
+				suite.Require().Contains(fmt.Sprint(tc.expected), fmt.Sprint(tc.respType))
 			}
 		})
 	}
