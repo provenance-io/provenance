@@ -33,6 +33,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 -->
 
 ## Unreleased
+### Features
+
+* Governance proposal support for marker module
+### Bug Fixes
+
+* Gov module route added for name module root name proposal
 
 * Add `AddP8eContractSpec` endpoint to convert v39 contract spec into v40 contract specification  #167
 

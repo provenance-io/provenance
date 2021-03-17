@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // NewHandler returns a handler for marker messages.
@@ -51,16 +52,31 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			res, err := msgServer.Transfer(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
-		/*
-		   Governance (these will require extra work to bypass authz restrictions in account keeper)
-		   	SupplyIncreaseProposal
-		   	SupplyDecreaseProposal
-		   	SetAdministratorProposal
-		   	RemoveAdministratorProposal
-		   	ChangeStatusProposal
-		*/
 		default:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown message type: %v", msg.Type())
+		}
+	}
+}
+
+func NewProposalHandler(k keeper.Keeper) govtypes.Handler {
+	return func(ctx sdk.Context, content govtypes.Content) error {
+		switch c := content.(type) {
+		case *types.AddMarkerProposal:
+			return keeper.HandleAddMarkerProposal(ctx, k, c)
+		case *types.SupplyIncreaseProposal:
+			return keeper.HandleSupplyIncreaseProposal(ctx, k, c)
+		case *types.SupplyDecreaseProposal:
+			return keeper.HandleSupplyDecreaseProposal(ctx, k, c)
+		case *types.SetAdministratorProposal:
+			return keeper.HandleSetAdministratorProposal(ctx, k, c)
+		case *types.RemoveAdministratorProposal:
+			return keeper.HandleRemoveAdministratorProposal(ctx, k, c)
+		case *types.ChangeStatusProposal:
+			return keeper.HandleChangeStatusProposal(ctx, k, c)
+		case *types.WithdrawEscrowProposal:
+			return keeper.HandleWithdrawEscrowProposal(ctx, k, c)
+		default:
+			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized marker proposal content type: %T", c)
 		}
 	}
 }
