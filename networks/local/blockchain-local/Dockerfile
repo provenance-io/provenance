@@ -32,7 +32,7 @@ RUN apt-get update && \
 # Requires a mounted volume with the config in it.
 VOLUME [ /provenance ]
 WORKDIR /provenance
-EXPOSE 26656 26657 1317
+EXPOSE 26656 26657 1317 9090
 
 # Source binaries from the build above
 COPY --from=build /go/src/github.com/provenance-io/provenance/vendor/github.com/CosmWasm/wasmvm/api/libwasmvm.so /lib/x86_64-linux-gnu/libwasmvm.so
