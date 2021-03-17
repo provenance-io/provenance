@@ -418,35 +418,35 @@ func (k msgServer) AddP8EContractSpec(
 ) (*types.MsgAddP8EContractSpecResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	newspec, newrecords, err := types.ConvertP8eContractSpec(&msg.Contractspec, msg.Signers)
+	proposed, newrecords, err := types.ConvertP8eContractSpec(&msg.Contractspec, msg.Signers)
 	if err != nil {
 		return nil, err
 	}
 
 	var existing *types.ContractSpecification = nil
-	if e, found := k.GetContractSpecification(ctx, newspec.SpecificationId); found {
+	if e, found := k.GetContractSpecification(ctx, proposed.SpecificationId); found {
 		existing = &e
 		if err := k.ValidateAllOwnersAreSigners(existing.OwnerAddresses, msg.Signers); err != nil {
 			return nil, err
 		}
 	}
 
-	if err := k.ValidateContractSpecUpdate(ctx, existing, newspec); err != nil {
+	if err := k.ValidateContractSpecUpdate(ctx, existing, proposed); err != nil {
 		return nil, err
 	}
 
-	k.SetContractSpecification(ctx, newspec)
+	k.SetContractSpecification(ctx, proposed)
 
-	for _, record := range newrecords {
+	for _, proposedRecord := range newrecords {
 		var existing *types.RecordSpecification = nil
-		if e, found := k.GetRecordSpecification(ctx, record.SpecificationId); found {
+		if e, found := k.GetRecordSpecification(ctx, proposedRecord.SpecificationId); found {
 			existing = &e
 		}
-		if err := k.ValidateRecordSpecUpdate(ctx, existing, record); err != nil {
+		if err := k.ValidateRecordSpecUpdate(ctx, existing, proposedRecord); err != nil {
 			return nil, err
 		}
 
-		k.SetRecordSpecification(ctx, record)
+		k.SetRecordSpecification(ctx, proposedRecord)
 	}
 
 	ctx.EventManager().EmitEvent(
