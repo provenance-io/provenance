@@ -56,17 +56,10 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 	err = nil
 
 	// Set the scope pieces.
-	scopeID, maErr := MetadataAddressFromBech32(msg.ScopeId)
-	if maErr != nil {
-		scopeUUID, uuidErr := uuid.Parse(msg.ScopeId)
-		if uuidErr != nil {
-			err = fmt.Errorf("could not convert %s into either metadata address (%s) or uuid (%s)",
-				msg.ScopeId, maErr.Error(), uuidErr.Error())
-			return
-		}
-		scopeID = ScopeMetadataAddress(scopeUUID)
+	scope.ScopeId, err = parseScopeID(msg.ScopeId)
+	if err != nil {
+		return
 	}
-	scope.ScopeId = scopeID
 	// TODO: Set scope.SpecificationId
 	//       Not sure where to get this from.
 	// TODO: Add scope.Owners.
@@ -80,7 +73,10 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 	//       Otherwise, just use the first party.
 
 	// Set the session pieces.
-	// TODO: Set session.SessionId
+	session.SpecificationId, err = parseSessionID(scope.ScopeId, msg.GroupId)
+	if err != nil {
+		return
+	}
 	//       Parse it from the msg.GroupId
 	// TODO: Set session.SpecificationId
 	//       old way comes from contract.Spec.DataLocation.Ref.Hash string
@@ -109,4 +105,36 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 	}
 
 	return
+}
+
+func parseScopeID(input string) (MetadataAddress, error) {
+	scopeID, maErr := MetadataAddressFromBech32(input)
+	if maErr == nil {
+		if !scopeID.IsScopeAddress() {
+			return scopeID, fmt.Errorf("metadata address %s is not for a scope", scopeID)
+		}
+		return scopeID, nil
+	}
+	scopeUUID, uuidErr := uuid.Parse(input)
+	if uuidErr == nil {
+		return ScopeMetadataAddress(scopeUUID), nil
+	}
+	return MetadataAddress{}, fmt.Errorf("could not convert %s into either a scope metadata address (%s) or uuid (%s)",
+		input, maErr.Error(), uuidErr.Error())
+}
+
+func parseSessionID(scopeID MetadataAddress, input string) (MetadataAddress, error) {
+	sessionID, maErr := MetadataAddressFromBech32(input)
+	if maErr == nil {
+		if !sessionID.IsScopeAddress() {
+			return sessionID, fmt.Errorf("metadata address %s is not for a session", sessionID)
+		}
+		return sessionID, nil
+	}
+	sessionUUID, uuidErr := uuid.Parse(input)
+	if uuidErr == nil {
+		return scopeID.AsSessionAddress(sessionUUID)
+	}
+	return MetadataAddress{}, fmt.Errorf("could not convert %s into either session metadata address (%s) or uuid (%s)",
+		input, maErr.Error(), uuidErr.Error())
 }
