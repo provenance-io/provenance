@@ -9,7 +9,6 @@ import (
 	"github.com/provenance-io/provenance/app"
 	simapp "github.com/provenance-io/provenance/app"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,7 +16,6 @@ import (
 
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/provenance-io/provenance/x/metadata"
-	"github.com/provenance-io/provenance/x/metadata/keeper"
 	"github.com/provenance-io/provenance/x/metadata/types"
 	"github.com/provenance-io/provenance/x/metadata/types/p8e"
 )
@@ -27,10 +25,8 @@ type HandlerTestSuite struct {
 	cfg     testnet.Config
 	testnet *testnet.Network
 
-	app         *app.App
-	ctx         sdk.Context
-	queryClient types.QueryClient
-	msgServer   types.MsgServer
+	app *app.App
+	ctx sdk.Context
 
 	pubkey1   cryptotypes.PubKey
 	user1     string
@@ -58,12 +54,6 @@ func (s *HandlerTestSuite) SetupTest() {
 
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
 
-	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, app.MetadataKeeper)
-	queryClient := types.NewQueryClient(queryHelper)
-	s.queryClient = queryClient
-	msgServer := keeper.NewMsgServerImpl(app.MetadataKeeper)
-	s.msgServer = msgServer
 	handler := metadata.NewHandler(app.MetadataKeeper)
 	s.handler = handler
 }
