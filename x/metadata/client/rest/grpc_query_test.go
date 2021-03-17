@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"google.golang.org/genproto/googleapis/rpc/status"
+	"strings"
 	"testing"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -296,14 +297,7 @@ func (suite *IntegrationTestSuite) TestAllOSLocator() {
 				Locator: []metadatatypes.ObjectStoreLocator{{
 					Owner:      suite.ownerAddr1.String(),
 					LocatorUri: suite.uri1,
-				}, {
-					Owner:      suite.ownerAddr.String(),
-					LocatorUri: suite.uri,
 				}},
-				Pagination: &query.PageResponse{
-					NextKey: nil,
-					Total:   2,
-				},
 			},
 		},
 	}
@@ -318,7 +312,7 @@ func (suite *IntegrationTestSuite) TestAllOSLocator() {
 				suite.Require().Error(err)
 			} else {
 				suite.Require().NoError(err)
-				suite.Require().Contains(fmt.Sprint(tc.expected), fmt.Sprint(tc.respType))
+				suite.Require().True( strings.Contains(fmt.Sprint(tc.respType),fmt.Sprint(tc.expected)))
 			}
 		})
 	}
