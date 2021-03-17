@@ -14,13 +14,15 @@ const (
 	// ProposalTypeIncreaseSupply to mint coins
 	ProposalTypeIncreaseSupply string = "IncreaseSupply"
 	// ProposalTypeDecreaseSupply to burn coins
-	ProposalTypeDecreaseSupply string = "DescreaseSupply"
+	ProposalTypeDecreaseSupply string = "DecreaseSupply"
 	// ProposalTypeSetAdministrator to set permissions for an account address on marker account
 	ProposalTypeSetAdministrator string = "SetAdministrator"
 	// ProposalTypeRemoveAdministrator to remove an existing address and all permissions from marker account
 	ProposalTypeRemoveAdministrator string = "RemoveAdministrator"
 	// ProposalTypeChangeStatus to transition the status of a marker account.
 	ProposalTypeChangeStatus string = "ChangeStatus"
+	// ProposalTypeWithdrawEscrow is a proposal to withdraw coins from marker escrow and transfer to a specified account
+	ProposalTypeWithdrawEscrow string = "WithdrawEscrow"
 )
 
 var (
@@ -58,15 +60,21 @@ func NewAddMarkerProposal(
 	totalSupply sdk.Int,
 	manager sdk.AccAddress,
 	status MarkerStatus,
-	markerType MarkerType, // nolint:interfacer
+	markerType MarkerType,
+	access []AccessGrant,
+	fixed bool,
+	allowGov bool, // nolint:interfacer
 ) *AddMarkerProposal {
 	return &AddMarkerProposal{
-		Title:       title,
-		Description: description,
-		Amount:      sdk.NewCoin(denom, totalSupply),
-		Manager:     manager.String(),
-		Status:      status,
-		MarkerType:  markerType,
+		Title:                  title,
+		Description:            description,
+		Amount:                 sdk.NewCoin(denom, totalSupply),
+		Manager:                manager.String(),
+		Status:                 status,
+		MarkerType:             markerType,
+		AccessList:             access,
+		SupplyFixed:            fixed,
+		AllowGovernanceControl: allowGov,
 	}
 }
 
@@ -124,8 +132,8 @@ func (sip SupplyIncreaseProposal) String() string {
   Marker:      %s
   Title:       %s
   Description: %s
-  Amount to Increase: %d
-`, sip.Amount.Denom, sip.Title, sip.Description, sip.Amount.Amount)
+  Amount to Increase: %s
+`, sip.Amount.Denom, sip.Title, sip.Description, sip.Amount.Amount.String())
 }
 
 // NewSupplyDecreaseProposal creates a new proposal
@@ -149,20 +157,20 @@ func (sdp SupplyDecreaseProposal) String() string {
   Marker:      %s
   Title:       %s
   Description: %s
-  Amount to Decrease: %d
-`, sdp.Amount.Denom, sdp.Title, sdp.Description, sdp.Amount.Amount)
+  Amount to Decrease: %s
+`, sdp.Amount.Denom, sdp.Title, sdp.Description, sdp.Amount.Amount.String())
 }
 
 func NewSetAdministratorProposal(
-	title, description string, marker sdk.AccAddress, accessGrants []AccessGrant, // nolint:interfacer
+	title, description, denom string, accessGrants []AccessGrant, // nolint:interfacer
 ) *SetAdministratorProposal {
-	return &SetAdministratorProposal{title, description, marker.String(), accessGrants}
+	return &SetAdministratorProposal{title, description, denom, accessGrants}
 }
 
 // Implements Proposal Interface
 
 func (sap SetAdministratorProposal) ProposalRoute() string { return RouterKey }
-func (sap SetAdministratorProposal) ProposalType() string  { return ProposalTypeDecreaseSupply }
+func (sap SetAdministratorProposal) ProposalType() string  { return ProposalTypeSetAdministrator }
 func (sap SetAdministratorProposal) ValidateBasic() error {
 	for _, a := range sap.Access {
 		if err := a.Validate(); err != nil {
@@ -182,18 +190,18 @@ func (sap SetAdministratorProposal) String() string {
 }
 
 func NewRemoveAdministratorProposal(
-	title, description string, denom string, administrator sdk.AccAddress,
+	title, description, denom string, administrators []string,
 ) *RemoveAdministratorProposal {
-	return &RemoveAdministratorProposal{title, description, denom, []string{administrator.String()}}
+	return &RemoveAdministratorProposal{title, description, denom, administrators}
 }
 
 // Implements Proposal Interface
 
 func (rap RemoveAdministratorProposal) ProposalRoute() string { return RouterKey }
-func (rap RemoveAdministratorProposal) ProposalType() string  { return ProposalTypeDecreaseSupply }
+func (rap RemoveAdministratorProposal) ProposalType() string  { return ProposalTypeRemoveAdministrator }
 func (rap RemoveAdministratorProposal) ValidateBasic() error {
 	for _, ra := range rap.RemovedAddress {
-		if err := sdk.VerifyAddressFormat([]byte(ra)); err != nil {
+		if _, err := sdk.AccAddressFromBech32(ra); err != nil {
 			return fmt.Errorf("administrator account address is invalid: %w", err)
 		}
 	}
@@ -210,8 +218,8 @@ func (rap RemoveAdministratorProposal) String() string {
 `, rap.Denom, rap.Title, rap.Description, rap.RemovedAddress)
 }
 
-func NewChangeStatusProposal(title, description string, marker sdk.AccAddress, status MarkerStatus) *ChangeStatusProposal { // nolint:interfacer
-	return &ChangeStatusProposal{title, description, marker.String(), status}
+func NewChangeStatusProposal(title, description, denom string, status MarkerStatus) *ChangeStatusProposal { // nolint:interfacer
+	return &ChangeStatusProposal{title, description, denom, status}
 }
 
 // Implements Proposal Interface
@@ -227,6 +235,27 @@ func (csp ChangeStatusProposal) String() string {
   Marker:      %s
   Title:       %s
   Description: %s
-  Change Status To : %s
+  Change Status To: %s
 `, csp.Denom, csp.Title, csp.Description, csp.NewStatus)
+}
+
+func NewWithdrawEscrowProposal(title, description, denom string, amount sdk.Coins, target string) *WithdrawEscrowProposal { // nolint:interfacer
+	return &WithdrawEscrowProposal{title, description, denom, amount, target}
+}
+
+// Implements Proposal Interface
+
+func (wep WithdrawEscrowProposal) ProposalRoute() string { return RouterKey }
+func (wep WithdrawEscrowProposal) ProposalType() string  { return ProposalTypeWithdrawEscrow }
+func (wep WithdrawEscrowProposal) ValidateBasic() error {
+	return govtypes.ValidateAbstract(&wep)
+}
+
+func (wep WithdrawEscrowProposal) String() string {
+	return fmt.Sprintf(`MarkerAccount Withdraw Escrow Proposal:
+  Marker:      %s
+  Title:       %s
+  Description: %s
+  Withdraw %s and transfer to %s
+`, wep.Denom, wep.Title, wep.Description, wep.Amount, wep.TargetAdddress)
 }
