@@ -1201,8 +1201,7 @@ func (m *MsgModifyOSLocatorResponse) GetLocator() ObjectStoreLocator {
 	return ObjectStoreLocator{}
 }
 
-// MsgDeleteNameRequest defines an sdk.Msg type that is used to remove an existing address/name binding.  The binding
-// may not have any child names currently bound for this request to be successful.
+// MsgDeleteOSLocatorRequest defines an sdk.Msg type that is used to remove an existing OSLocator record binding.
 type MsgDeleteOSLocatorRequest struct {
 	// The record being removed
 	Locator ObjectStoreLocator `protobuf:"bytes,1,opt,name=locator,proto3" json:"locator"`
@@ -1452,9 +1451,9 @@ type MsgClient interface {
 	// Os Locator
 	// BindOSLocator binds a owner address to a uri.
 	BindOSLocator(ctx context.Context, in *MsgBindOSLocatorRequest, opts ...grpc.CallOption) (*MsgBindOSLocatorResponse, error)
-	// DeleteName defines a method to verify a particular invariance.
+	// DeleteOSLocator defines a method to delete existing OSLocator record by the current owner.
 	DeleteOSLocator(ctx context.Context, in *MsgDeleteOSLocatorRequest, opts ...grpc.CallOption) (*MsgDeleteOSLocatorResponse, error)
-	// Modify existing OSLocator record.
+	// Modify existing OSLocator record by the current owner
 	ModifyOSLocator(ctx context.Context, in *MsgModifyOSLocatorRequest, opts ...grpc.CallOption) (*MsgModifyOSLocatorResponse, error)
 }
 
@@ -1641,9 +1640,9 @@ type MsgServer interface {
 	// Os Locator
 	// BindOSLocator binds a owner address to a uri.
 	BindOSLocator(context.Context, *MsgBindOSLocatorRequest) (*MsgBindOSLocatorResponse, error)
-	// DeleteName defines a method to verify a particular invariance.
+	// DeleteOSLocator defines a method to delete existing OSLocator record by the current owner.
 	DeleteOSLocator(context.Context, *MsgDeleteOSLocatorRequest) (*MsgDeleteOSLocatorResponse, error)
-	// Modify existing OSLocator record.
+	// Modify existing OSLocator record by the current owner
 	ModifyOSLocator(context.Context, *MsgModifyOSLocatorRequest) (*MsgModifyOSLocatorResponse, error)
 }
 

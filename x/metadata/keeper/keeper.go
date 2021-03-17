@@ -197,7 +197,7 @@ func (k Keeper) ValidatePartiesInvolved(parties []types.Party, requiredParties [
 	return nil
 }
 
-// ResolvesTo to determines whether a name resolves to a given address.
+// VerifyCorrectOwner to determines whether the signer resolves to the owner of the OSLocator record.
 func (k Keeper) VerifyCorrectOwner(ctx sdk.Context, ownerAddr sdk.AccAddress) bool { // nolint:interfacer
 	stored, found := k.GetOsLocatorRecord(ctx, ownerAddr)
 	if !found {

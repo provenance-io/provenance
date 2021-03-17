@@ -309,7 +309,7 @@ message RecordSpecificationByIDResponse {
   string              record_specification_id = 2 [(gogoproto.moretags) = "yaml:\"record_specification_id\""];
 }
 
-// OSLocationRequest is used for requesting a Objectstore location by name
+// OSLocationRequest is used for requesting a Objectstore location by owner
 message OSLocatorRequest {
   string owner = 1;
 }

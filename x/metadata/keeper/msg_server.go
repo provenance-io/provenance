@@ -515,7 +515,7 @@ func (k msgServer) ModifyOSLocator(ctx context.Context, msg *types.MsgModifyOSLo
 	// Emit event and return
 	sdkCtx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			types.EventTypeOsLocatorDeleted,
+			types.EventTypeOsLocatorModified,
 			sdk.NewAttribute(types.AttributeKeyOSLocatorAddress, msg.Locator.Owner),
 			sdk.NewAttribute(types.AttributeKeyOSLocatorURI, msg.Locator.LocatorUri),
 		),

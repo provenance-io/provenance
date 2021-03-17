@@ -1618,7 +1618,7 @@ func (m *RecordSpecificationByIDResponse) GetRecordSpecificationId() string {
 	return ""
 }
 
-// OSLocationRequest is used for requesting a Objectstore location by name
+// OSLocationRequest is used for requesting a Objectstore location by owner
 type OSLocatorRequest struct {
 	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
 }
