@@ -763,6 +763,76 @@ func TestScopeAddressConverters(t *testing.T) {
 	}
 }
 
+func TestSessionAddressConverters(t *testing.T) {
+	randomUUID := uuid.New()
+	randomUUID2 := uuid.New()
+	scopeID := ScopeMetadataAddress(randomUUID)
+	sessionID := SessionMetadataAddress(randomUUID, randomUUID2)
+	recordID := RecordMetadataAddress(randomUUID, "pet sounds")
+	scopeSpecID := ScopeSpecMetadataAddress(randomUUID)
+	contractSpecID := ContractSpecMetadataAddress(randomUUID)
+	recordSpecID := RecordSpecMetadataAddress(randomUUID, "smile")
+
+	tests := []struct {
+		name string
+		baseID MetadataAddress
+		expectedID MetadataAddress
+		expectedError string
+	}{
+		{
+			"scope id",
+			scopeID,
+			sessionID,
+			"",
+		},
+		{
+			"session id",
+			sessionID,
+			sessionID,
+			"",
+		},
+		{
+			"record id",
+			recordID,
+			sessionID,
+			"",
+		},
+		{
+			"scope spec id",
+			scopeSpecID,
+			MetadataAddress{},
+			fmt.Sprintf("this metadata address (%s) does not contain a scope uuid",
+				scopeSpecID),
+		},
+		{
+			"contract spec id",
+			contractSpecID,
+			MetadataAddress{},
+			fmt.Sprintf("this metadata address (%s) does not contain a scope uuid",
+				contractSpecID),
+		},
+		{
+			"record spec id",
+			recordSpecID,
+			MetadataAddress{},
+			fmt.Sprintf("this metadata address (%s) does not contain a scope uuid",
+				recordSpecID),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("%s AsSessionAddress", test.name), func(subtest *testing.T) {
+			actualID, err := test.baseID.AsSessionAddress(randomUUID2)
+			if len(test.expectedError) == 0 {
+				assert.NoError(t, err, "%s AsSessionAddress err", test.name)
+				assert.Equal(t, test.expectedID, actualID, "%s AsSessionAddress value", test.name)
+			} else {
+				assert.EqualError(t, err, test.expectedError, "%s AsSessionAddress expected err", test.name)
+			}
+		})
+	}
+}
+
 func TestRecordAddressConverters(t *testing.T) {
 	randomUUID := uuid.New()
 	recordName := "the fragile"
