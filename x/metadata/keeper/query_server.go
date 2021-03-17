@@ -583,6 +583,53 @@ func (k Keeper) OSLocatorByScopeUUID(ctx context.Context, request *types.OSLocat
 	return k.GetOSLocatorByScopeUUID(ctxSDK, request.ScopeUuid)
 }
 
+func (k Keeper) OSAllLocators(ctx context.Context, request *types.AllOSLocatorsRequest) (*types.OSLocatorResponseAll, error) {
+	ctxSDK := sdk.UnwrapSDKContext(ctx)
+
+	// Return value data structure.
+	var records []types.ObjectStoreLocator
+	// Handler that adds records if account address matches.
+	appendToRecords := func(record types.ObjectStoreLocator) bool {
+		records = append(records, record)
+		// have to get all the uri associated with an address..imo..check
+		return false
+	}
+
+	if err := k.IterateLocators(ctxSDK, appendToRecords); err != nil {
+		return nil, err
+	}
+	if records == nil {
+		return nil, types.ErrNoRecordsFound
+	}
+	uniqueRecords := uniqueRecords(records)
+
+	pageRequest := request.Pagination
+	// if the PageRequest is nil, use default PageRequest
+	if pageRequest == nil {
+		pageRequest = &query.PageRequest{}
+	}
+
+	limit := pageRequest.Limit
+	if limit == 0 {
+		limit = defaultLimit
+	}
+	end := pageRequest.Offset + limit
+	totalResults := uint64(len(uniqueRecords))
+
+	if pageRequest.Offset > totalResults {
+		return nil, fmt.Errorf("invalid offset")
+	}
+
+	if end > totalResults {
+		end = totalResults
+	}
+
+	return &types.OSLocatorResponseAll{
+		Locator:    uniqueRecords[pageRequest.Offset:end],
+		Pagination: &query.PageResponse{Total: totalResults},
+	}, nil
+}
+
 func IsBase64(s string) bool {
 	_, err := b64.StdEncoding.DecodeString(s)
 	return err == nil

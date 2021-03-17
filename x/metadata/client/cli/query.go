@@ -48,6 +48,8 @@ func GetQueryCmd() *cobra.Command {
 		GetOSLocatorParamsCmd(),
 		GetOSLocatorCmd(),
 		GetOSLocatorByURICmd(),
+		GetOSLocatorByScopeUUIDCmd(),
+		GetOSAllLocatorCmd(),
 	)
 	return queryCmd
 }
@@ -1054,7 +1056,7 @@ $ %s query metadata locator foocorp
 }
 
 // GetOSLocatorByURICmd returns the command handler for querying oslocator by uri.
-func GetOSLocatorByScopeUUID() *cobra.Command {
+func GetOSLocatorByScopeUUIDCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "locator-by-scope [scope_uuid]",
 		Short: "Query the OS locator uri for the given scope owners",
@@ -1078,6 +1080,47 @@ $ %s query metadata locator foocorp
 			var response *types.OSLocatorByScopeUUIDResponse
 
 			response, err = queryClient.OSLocatorByScopeUUID(context.Background(), &types.OSLocatorByScopeUUIDRequest{ScopeUuid: scopeUUID})
+
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(response)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetOSLocatorByURICmd returns the command handler for querying oslocator by uri.
+func GetOSAllLocatorCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "locator-all",
+		Short: "Query the OS locator uri for the given owner",
+		Args:  cobra.ExactArgs(1),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query the OS locator records for the uri provided:
+Example:
+$ %s query metadata locator-all 
+`,
+				version.AppName,
+			)),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+			var response *types.OSLocatorResponseAll
+
+			response, err = queryClient.OSAllLocators(context.Background(), &types.AllOSLocatorsRequest{Pagination: pageReq})
 
 			if err != nil {
 				return err

@@ -109,10 +109,21 @@ service Query {
   rpc OSLocatorByScopeUUID(OSLocatorByScopeUUIDRequest) returns (OSLocatorByScopeUUIDResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/locator/scope/{scope_uuid}";
   }
+
+  // get all os locators
+  rpc OSAllLocators(AllOSLocatorsRequest) returns (OSLocatorResponseAll) {
+    option (google.api.http).get = "/provenance/metadata/v1/locator/all";
+  }
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
 message QueryParamsRequest {}
+
+// AllOSLocatorsRequest get all os locator's request.
+message AllOSLocatorsRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
 
 // QueryParamsResponse is the response type for the Query/Params RPC method.
 message QueryParamsResponse {
@@ -335,4 +346,12 @@ message OSLocatorByURIResponse {
 // OSLocatorResponse is an array of ObjectStoreLocator.
 message OSLocatorByScopeUUIDResponse {
   repeated ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
+}
+
+// OSLocatorAll is an array of ObjectStoreLocator with pagination info
+message OSLocatorResponseAll {
+  repeated ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

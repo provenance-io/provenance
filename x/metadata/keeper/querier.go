@@ -37,6 +37,8 @@ func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 			return queryOSGetByURI(ctx, path, k, legacyQuerierCdc)
 		case types.QueryOSGetByScope:
 			return queryOSGetByScope(ctx, path, k, legacyQuerierCdc)
+		case types.QueryOSGetAll:
+			return queryOSGetAll(ctx, k, legacyQuerierCdc)
 		default:
 			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown query endpoint")
 		}
@@ -175,6 +177,29 @@ func queryOSGetByURI(ctx sdk.Context, path []string, keeper Keeper, legacyQuerie
 			records = append(records, record)
 			// have to get all the uri associated with an address..imo..check
 		}
+		return false
+	}
+	if err := keeper.IterateLocators(ctx, appendToRecords); err != nil {
+		return nil, err
+	}
+	uniqueRecords := uniqueRecords(records)
+
+	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, &uniqueRecords)
+
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+	}
+
+	return bz, nil
+}
+
+func queryOSGetAll(ctx sdk.Context, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+	// intentionally leaving out pagination for now for this one, not really anything legacy rest for this :shrug:
+	var records []types.ObjectStoreLocator
+
+	appendToRecords := func(record types.ObjectStoreLocator) bool {
+		records = append(records, record)
+		// have to get all the uri associated with an address..imo..check
 		return false
 	}
 	if err := keeper.IterateLocators(ctx, appendToRecords); err != nil {
