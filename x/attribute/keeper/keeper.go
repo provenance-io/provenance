@@ -104,7 +104,7 @@ func (k Keeper) SetAttribute(
 	ctx sdk.Context, acc sdk.AccAddress, attr types.Attribute, owner sdk.AccAddress,
 ) error {
 	// Ensure attribute is valid
-	if err := attr.Validate(); err != nil {
+	if err := attr.ValidateBasic(); err != nil {
 		return err
 	}
 	// Ensure name is stored in normalized format.
@@ -186,7 +186,7 @@ func (k Keeper) prefixScan(ctx sdk.Context, prefix []byte, f namePred) (attrs []
 // A genesis helper that imports attribute state without owner checks.
 func (k Keeper) importAttribute(ctx sdk.Context, attr types.Attribute) error {
 	// Ensure attribute is valid
-	if err := attr.Validate(); err != nil {
+	if err := attr.ValidateBasic(); err != nil {
 		return err
 	}
 	// Attribute must have a valid, non-empty address to import
