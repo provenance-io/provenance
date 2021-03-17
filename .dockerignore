@@ -3,3 +3,6 @@ build/
 out/
 data/
 config/
+pio-testnet-1/
+testnet-alpha/
+testnet-beta/
