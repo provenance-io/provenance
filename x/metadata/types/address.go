@@ -446,7 +446,7 @@ func (ma MetadataAddress) AsScopeAddress() (MetadataAddress, error) {
 	return ScopeMetadataAddress(scopeUUID), nil
 }
 
-// AsScopeAddress returns the MetadataAddress for a scope using the scope UUID within the current context
+// AsSessionAddress returns the MetadataAddress for a session using the scope UUID within the current context and the provided session UUID.
 func (ma MetadataAddress) AsSessionAddress(sessionUUID uuid.UUID) (MetadataAddress, error) {
 	scopeUUID, err := ma.ScopeUUID()
 	if err != nil {

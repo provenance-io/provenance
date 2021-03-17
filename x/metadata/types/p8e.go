@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+
 	"github.com/google/uuid"
 )
 
@@ -103,7 +104,6 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 			}
 		}
 	}
-
 	return
 }
 
