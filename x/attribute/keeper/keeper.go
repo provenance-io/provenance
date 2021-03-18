@@ -104,14 +104,23 @@ func (k Keeper) SetAttribute(
 	ctx sdk.Context, acc sdk.AccAddress, attr types.Attribute, owner sdk.AccAddress,
 ) error {
 	// Ensure attribute is valid
-	if err := attr.Validate(); err != nil {
+	if err := attr.ValidateBasic(); err != nil {
 		return err
 	}
+
+	// Ensure attribute value length does not exceed max length value
+	maxLength := k.GetMaxValueLength(ctx)
+	if int(maxLength) < len(attr.Value) {
+		return fmt.Errorf("attribute value length of %v exceeds max length %v", len(attr.Value), maxLength)
+	}
+
 	// Ensure name is stored in normalized format.
 	var err error
-	if attr.Name, err = k.nameKeeper.Normalize(ctx, attr.Name); err != nil {
+	normalizedName, err := k.nameKeeper.Normalize(ctx, attr.Name)
+	if err != nil {
 		return fmt.Errorf("unable to normalize attribute name \"%s\": %w", attr.Name, err)
 	}
+	attr.Name = normalizedName
 	// Verify an account exists for the given owner address
 	if ownerAcc := k.authKeeper.GetAccount(ctx, owner); ownerAcc == nil {
 		return fmt.Errorf("no account found for owner address \"%s\"", owner.String())
@@ -186,7 +195,7 @@ func (k Keeper) prefixScan(ctx sdk.Context, prefix []byte, f namePred) (attrs []
 // A genesis helper that imports attribute state without owner checks.
 func (k Keeper) importAttribute(ctx sdk.Context, attr types.Attribute) error {
 	// Ensure attribute is valid
-	if err := attr.Validate(); err != nil {
+	if err := attr.ValidateBasic(); err != nil {
 		return err
 	}
 	// Attribute must have a valid, non-empty address to import

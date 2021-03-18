@@ -56,7 +56,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxE
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 
-	return data.Validate()
+	return data.ValidateBasic()
 }
 
 // RegisterRESTRoutes registers rest routes.

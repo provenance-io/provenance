@@ -48,7 +48,7 @@ func (msg MsgAddAttributeRequest) ValidateBasic() error {
 		return err
 	}
 	a := NewAttribute(msg.Name, accAddr, msg.AttributeType, msg.Value)
-	return a.Validate()
+	return a.ValidateBasic()
 }
 
 // GetSignBytes encodes the message for signing
