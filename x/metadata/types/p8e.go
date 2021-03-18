@@ -1,7 +1,15 @@
 package types
 
 import (
+	"bytes"
 	"fmt"
+
+	"github.com/provenance-io/provenance/x/metadata/types/p8e"
+
+	"github.com/btcsuite/btcd/btcec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	tmcrypt "github.com/tendermint/tendermint/crypto"
+	tmcurve "github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/google/uuid"
 )
@@ -55,38 +63,40 @@ type P8EData struct {
 }
 
 // Migrate Converts a MsgP8EMemorializeContractRequest object into the new objects.
-func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest) (p8EData P8EData, signers []string, err error) {
-	p8EData = P8EData{
+func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest) (P8EData, []string, error) {
+	p8EData := P8EData{
 		Scope:   EmptyScope(),
 		Session: EmptySession(),
 		Records: []*Record{},
 	}
-	signers = []string{}
-	err = nil
+	signers := []string{}
+	var err error
+
+	contractRecitalParties, err := convertParties(msg.Contract.Recitals)
+	if err != nil {
+		return p8EData, signers, err
+	}
 
 	// Set the scope pieces.
 	p8EData.Scope.ScopeId, err = parseScopeID(msg.ScopeId)
 	if err != nil {
-		return
+		return p8EData, signers, err
 	}
 	// TODO: Set scope.SpecificationId
 	//       Not sure where to get this from.
-	// TODO: Add scope.Owners.
-	//       Get from contract.Recitals
-	// TODO: Add scope.DataAccess entries.
-	//       This is a new field. Leave it empty?
-	// TODO: Set scope.ValueOwnerAddress.
-	//       If the contract.Invoker public key matches one in contract.Recitals,
-	//       then use that as the scope.ValueOwnerAddress.
-	//       Otherwise, use scope.Parties looking for roles in this order: Marker, Owner, Originator.
-	//       Otherwise, just use the first party.
+	p8EData.Scope.SpecificationId = MetadataAddress{}
+	p8EData.Scope.Owners = contractRecitalParties
+	p8EData.Scope.DataAccess = partyAddresses(contractRecitalParties)
+	p8EData.Scope.ValueOwnerAddress, err = getValueOwner(msg.Contract.Invoker, msg.Contract.Recitals)
+	if err != nil {
+		return p8EData, signers, err
+	}
 
 	// Set the session pieces.
 	p8EData.Session.SpecificationId, err = parseSessionID(p8EData.Scope.ScopeId, msg.GroupId)
 	if err != nil {
-		return
+		return p8EData, signers, err
 	}
-	//       Parse it from the msg.GroupId
 	// TODO: Set session.SpecificationId
 	//       old way comes from contract.Spec.DataLocation.Ref.Hash string
 	//       Might need to communicate a value change here?
@@ -145,4 +155,124 @@ func parseSessionID(scopeID MetadataAddress, input string) (MetadataAddress, err
 	}
 	return MetadataAddress{}, fmt.Errorf("could not convert %s into either session metadata address (%s) or uuid (%s)",
 		input, maErr.Error(), uuidErr.Error())
+}
+
+func convertParties(old []*p8e.Recital) (parties []Party, err error) {
+	parties = make([]Party, len(old))
+	err = nil
+	for i, r := range old {
+		p, e := convertParty(*r)
+		if e != nil {
+			if err == nil {
+				err = e
+			} else {
+				err = fmt.Errorf("%s, %s", err.Error(), e.Error())
+			}
+		} else {
+			parties[i] = p
+		}
+	}
+	return
+}
+
+func convertParty(old p8e.Recital) (Party, error) {
+	party := Party{}
+	if len(old.Address) > 0 {
+		party.Address = sdk.AccAddress(old.Address).String()
+	} else {
+		addr, err := getAddressFromSigner(old.Signer)
+		if err != nil {
+			return party, err
+		}
+		party.Address = addr.String()
+	}
+	// All old party types map over by their values except for MARKER which no longer exists.
+	if old.SignerRole == p8e.PartyType_PARTY_TYPE_MARKER {
+		return party, fmt.Errorf("invalid signer role %s", old.SignerRole)
+	}
+	party.Role = PartyType(old.SignerRole)
+	return party, nil
+}
+
+func getAddressFromSigner(signer *p8e.SigningAndEncryptionPublicKeys) (sdk.AccAddress, error) {
+	if signer == nil {
+		return sdk.AccAddress{}, fmt.Errorf("nil signer")
+	}
+	return getAddressFromPublicKey(signer.SigningPublicKey)
+}
+
+func getAddressFromPublicKey(key *p8e.PublicKey) (sdk.AccAddress, error) {
+	if key == nil {
+		return sdk.AccAddress{}, fmt.Errorf("nil public key")
+	}
+	if key.Curve != p8e.PublicKeyCurve_SECP256K1 {
+		return sdk.AccAddress{}, fmt.Errorf("address unavailable due to unsupported public key type %s", key.Curve)
+	}
+	_, addr, err := parsePublicKey(key.PublicKeyBytes)
+	return addr, err
+}
+
+// parsePublicKey parses a secp256k1 public key, calculates the account address, and returns both.
+func parsePublicKey(data []byte) (tmcrypt.PubKey, sdk.AccAddress, error) {
+	// Parse the secp256k1 public key.
+	pk, err := btcec.ParsePubKey(data, btcec.S256())
+	if err != nil {
+		return nil, nil, err
+	}
+	// Create tendermint public key type and return with address.
+	tmKey := tmcurve.PubKey{} // PubKeySecp256k1{}
+	copy(tmKey[:], pk.SerializeCompressed())
+	return tmKey, tmKey.Address().Bytes(), nil
+}
+
+// partyAddresses returns an array of addresses from an array of parties
+func partyAddresses(parties []Party) (addresses []string) {
+	addresses = make([]string, len(parties))
+	for i, p := range parties {
+		addresses[i] = p.Address
+	}
+	return
+}
+
+func addrString(addr sdk.AccAddress, err error) (string, error) {
+	if err != nil {
+		return "", err
+	}
+	return addr.String(), nil
+}
+
+func getValueOwner(invoker *p8e.SigningAndEncryptionPublicKeys, recitals []*p8e.Recital) (string, error) {
+	// If the contract.Invoker public key matches one in contract.Recitals, then use that.
+	if invoker != nil && invoker.SigningPublicKey != nil && len(invoker.SigningPublicKey.PublicKeyBytes) > 0 {
+		for _, r := range recitals {
+			if r != nil && r.Signer != nil && r.Signer.SigningPublicKey != nil &&
+				bytes.Equal(invoker.SigningPublicKey.PublicKeyBytes, r.Signer.SigningPublicKey.PublicKeyBytes) {
+				return addrString(getAddressFromPublicKey(r.Signer.SigningPublicKey))
+			}
+		}
+	}
+
+	// Otherwise, use scope.Parties looking for roles in this order: Marker, Owner, Originator.
+	roles := []p8e.PartyType{p8e.PartyType_PARTY_TYPE_MARKER, p8e.PartyType_PARTY_TYPE_OWNER, p8e.PartyType_PARTY_TYPE_ORIGINATOR}
+	for _, role := range roles {
+		if r := getFirstRecitalWithRole(recitals, role); r != nil {
+			return addrString(getAddressFromSigner(r.Signer))
+		}
+	}
+
+	// Otherwise, just use the first party.
+	if len(recitals) > 0 {
+		return addrString(getAddressFromSigner(recitals[0].Signer))
+	}
+
+	return "", fmt.Errorf("no suitable party found to be value owner")
+}
+
+func getFirstRecitalWithRole(recitals []*p8e.Recital, role p8e.PartyType) *p8e.Recital {
+	for _, r := range recitals {
+		if r != nil && r.SignerRole == role {
+			return r
+		}
+	}
+	return nil
 }
