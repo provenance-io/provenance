@@ -318,7 +318,7 @@ proto-swagger-gen:
 	@./scripts/protoc-swagger-gen.sh
 
 proto-lint:
-	@buf lint --error-format=json
+	@buf check lint --error-format=json
 
 proto-check-breaking:
 	@buf check breaking --against-input '.git#branch=main'
