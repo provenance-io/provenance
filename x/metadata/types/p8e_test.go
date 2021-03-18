@@ -305,7 +305,7 @@ func (s *P8eTestSuite) TestEmptyScope() {
 			name = fmt.Sprintf("%s %s", tc.field, tc.name)
 		}
 		s.T().Run(fmt.Sprintf("%d %s", i, name), func(t *testing.T) {
-			scope := EmptyScope()
+			scope := emptyScope()
 			tc.test(scope, t)
 			if len(tc.field) > 0 {
 				testedFields = appendUnique(testedFields, tc.field)
@@ -383,7 +383,7 @@ func (s *P8eTestSuite) TestEmptySession() {
 			name = fmt.Sprintf("%s %s", tc.field, tc.name)
 		}
 		s.T().Run(fmt.Sprintf("%d %s", i, name), func(t *testing.T) {
-			session := EmptySession()
+			session := emptySession()
 			tc.test(session, t)
 			if len(tc.field) > 0 {
 				testedFields = appendUnique(testedFields, tc.field)
@@ -429,7 +429,7 @@ func (s *P8eTestSuite) TestEmptyRecord() {
 			"Process",
 			"is empty",
 			func(record *Record, t *testing.T) {
-				assert.Equal(t, *EmptyProcess(), record.Process, "Process")
+				assert.Equal(t, *emptyProcess(), record.Process, "Process")
 			},
 		},
 		{
@@ -468,7 +468,7 @@ func (s *P8eTestSuite) TestEmptyRecord() {
 			name = fmt.Sprintf("%s %s", tc.field, tc.name)
 		}
 		s.T().Run(fmt.Sprintf("%d %s", i, name), func(t *testing.T) {
-			record := EmptyRecord()
+			record := emptyRecord()
 			tc.test(record, t)
 			if len(tc.field) > 0 {
 				testedFields = appendUnique(testedFields, tc.field)
@@ -525,7 +525,7 @@ func (s *P8eTestSuite) TestEmptyProcess() {
 			name = fmt.Sprintf("%s %s", tc.field, tc.name)
 		}
 		s.T().Run(fmt.Sprintf("%d %s", i, name), func(t *testing.T) {
-			process := EmptyProcess()
+			process := emptyProcess()
 			tc.test(process, t)
 			if len(tc.field) > 0 {
 				testedFields = appendUnique(testedFields, tc.field)

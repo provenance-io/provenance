@@ -128,8 +128,8 @@ type P8EData struct {
 // Migrate Converts a MsgP8EMemorializeContractRequest object into the new objects.
 func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest) (P8EData, []string, error) {
 	p8EData := P8EData{
-		Scope:   EmptyScope(),
-		Session: EmptySession(),
+		Scope:   emptyScope(),
+		Session: emptySession(),
 		Records: []*Record{},
 	}
 	signers := []string{}
@@ -173,7 +173,7 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 	// Create the records.
 	for _, c := range msg.Contract.Considerations {
 		if c != nil && c.Result != nil && c.Result.Output != nil && c.Result.Result != p8e.ExecutionResultType_RESULT_TYPE_SKIP {
-			record := EmptyRecord()
+			record := emptyRecord()
 			record.Name = c.ConsiderationName
 			record.SessionId = p8EData.Session.SessionId
 			record.Process.ProcessId = &Process_Hash{Hash: "NO-SPEC-HASH-AVAILABLE"} // TODO: Overwrite this using the spec
@@ -212,8 +212,8 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 	return p8EData, signers, err
 }
 
-// EmptyScope creates a new empty Scope.
-func EmptyScope() *Scope {
+// emptyScope creates a new empty Scope.
+func emptyScope() *Scope {
 	return &Scope{
 		ScopeId:           MetadataAddress{},
 		SpecificationId:   MetadataAddress{},
@@ -223,8 +223,8 @@ func EmptyScope() *Scope {
 	}
 }
 
-// EmptySession creates a new empty Session.
-func EmptySession() *Session {
+// emptySession creates a new empty Session.
+func emptySession() *Session {
 	return &Session{
 		SessionId:       MetadataAddress{},
 		SpecificationId: MetadataAddress{},
@@ -234,19 +234,19 @@ func EmptySession() *Session {
 	}
 }
 
-// EmptyRecord creates a new empty Record.
-func EmptyRecord() *Record {
+// emptyRecord creates a new empty Record.
+func emptyRecord() *Record {
 	return &Record{
 		Name:      "",
 		SessionId: MetadataAddress{},
-		Process:   *EmptyProcess(),
+		Process:   *emptyProcess(),
 		Inputs:    []RecordInput{},
 		Outputs:   []RecordOutput{},
 	}
 }
 
-// EmptyProcess creates a new empty Process.
-func EmptyProcess() *Process {
+// emptyProcess creates a new empty Process.
+func emptyProcess() *Process {
 	return &Process{
 		ProcessId: nil,
 		Name:      "",
