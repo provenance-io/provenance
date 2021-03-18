@@ -44,40 +44,39 @@ type MetadataAddress []byte
 // returns the associated bech32 hrp/type name or any errors encountered during verification
 func VerifyMetadataAddressFormat(bz []byte) (string, error) {
 	hrp := ""
-	requiredLength := 1 + 16 // type byte plus size of one uuid
-	if len(bz) < requiredLength {
-		return hrp, fmt.Errorf("incorrect address length (must be at least 17, actual: %d)", len(bz))
-	}
+	requiredLength := 1
 	checkSecondaryUUID := false
-	switch bz[0] {
-	case ScopeKeyPrefix[0]:
-		hrp = PrefixScope
-		requiredLength = 1 + 16 // type byte plus size of one uuid
-	case SessionKeyPrefix[0]:
-		hrp = PrefixSession
-		requiredLength = 1 + 16 + 16 // type byte plus size of two uuids
-		checkSecondaryUUID = true
-	case RecordKeyPrefix[0]:
-		hrp = PrefixRecord
-		requiredLength = 1 + 16 + 16 // type byte plus size of one uuid and one half sha256 hash
+	if len(bz) >= 1 {
+		switch bz[0] {
+		case ScopeKeyPrefix[0]:
+			hrp = PrefixScope
+			requiredLength = 1 + 16 // type byte plus size of one uuid
+		case SessionKeyPrefix[0]:
+			hrp = PrefixSession
+			requiredLength = 1 + 16 + 16 // type byte plus size of two uuids
+			checkSecondaryUUID = true
+		case RecordKeyPrefix[0]:
+			hrp = PrefixRecord
+			requiredLength = 1 + 16 + 16 // type byte plus size of one uuid and one half sha256 hash
 
-	case ScopeSpecificationKeyPrefix[0]:
-		hrp = PrefixScopeSpecification
-		requiredLength = 1 + 16 // type byte plus size of one uuid
-	case ContractSpecificationKeyPrefix[0]:
-		hrp = PrefixContractSpecification
-		requiredLength = 1 + 16 // type byte plus size of one uuid
-	case RecordSpecificationKeyPrefix[0]:
-		hrp = PrefixRecordSpecification
-		requiredLength = 1 + 16 + 16 // type byte plus size of one uuid plus one-half sha256 hash
+		case ScopeSpecificationKeyPrefix[0]:
+			hrp = PrefixScopeSpecification
+			requiredLength = 1 + 16 // type byte plus size of one uuid
+		case ContractSpecificationKeyPrefix[0]:
+			hrp = PrefixContractSpecification
+			requiredLength = 1 + 16 // type byte plus size of one uuid
+		case RecordSpecificationKeyPrefix[0]:
+			hrp = PrefixRecordSpecification
+			requiredLength = 1 + 16 + 16 // type byte plus size of one uuid plus one-half sha256 hash
 
-	default:
-		return hrp, fmt.Errorf("invalid metadata address type: %d", bz[0])
+		default:
+			return hrp, fmt.Errorf("invalid metadata address type: %d", bz[0])
+		}
 	}
 	if len(bz) != requiredLength {
 		return hrp, fmt.Errorf("incorrect address length (expected: %d, actual: %d)", requiredLength, len(bz))
 	}
-	// all valid metdata address have at least one uuid
+	// all valid metadata address have at least one uuid
 	if _, err := uuid.FromBytes(bz[1:17]); err != nil {
 		return hrp, fmt.Errorf("invalid address bytes of uuid, expected uuid compliant: %w", err)
 	}
@@ -89,23 +88,43 @@ func VerifyMetadataAddressFormat(bz []byte) (string, error) {
 	return hrp, nil
 }
 
-// ConvertHashToAddress constructs a MetadataAddress using the provided type code and the first 16 bytes of the
-// base64 decoded hash.  Resulting Address is not guaranteed to contain a valid V4 UUID (random only)
-func ConvertHashToAddress(typeCode []byte, hash string) (addr MetadataAddress, err error) {
+// ConvertHashToAddress constructs a MetadataAddress using the provided type code and the raw bytes of the
+// base64 decoded hash, limited appropriately by the desired typeCode.
+// The resulting Address is not guaranteed to contain valid UUIDS or name hashes.
+func ConvertHashToAddress(typeCode []byte, hash string) (MetadataAddress, error) {
+	var addr MetadataAddress
+	var err error
+	if len(typeCode) == 0 {
+		return addr, errors.New("empty typeCode bytes")
+	}
+	if len(hash) == 0 {
+		return addr, errors.New("empty hash string")
+	}
+	reqLen := 0
+	switch typeCode[0] {
+	case ScopeKeyPrefix[0], ContractSpecificationKeyPrefix[0], ScopeSpecificationKeyPrefix[0]:
+		// Scopes, ContractSpecs, and ScopeSpecs are a type byte followed by 16 bytes (usually a uuid)
+		reqLen = 16
+	case SessionKeyPrefix[0]:
+		// Sessions are a type byte followed by 32 bytes (usually two uuids)
+		reqLen = 32
+	case RecordKeyPrefix[0], RecordSpecificationKeyPrefix[0]:
+		// Records and Record specifications are a type byte followed by 16 bytes (usually a uuid) followed by 16 bytes (from the hashed name value)
+		reqLen = 32
+	default:
+		return addr, fmt.Errorf("invalid address type code 0x%X", typeCode)
+	}
 	var raw []byte
 	raw, err = base64.StdEncoding.DecodeString(hash)
 	if err != nil {
 		return addr, err
 	}
-	if len(raw) < 16 {
-		return addr, fmt.Errorf("invalid specification identifier, expected at least 16 bytes, found %d", len(raw))
+	if len(raw) < reqLen {
+		return addr, fmt.Errorf("invalid hash \"%s\" byte length, expected at least %d bytes, found %d",
+			hash, reqLen, len(raw))
 	}
-	// The codes 0,3,4 all start with a code followed by uuid bytes meaning we can create a valid address with them
-	if len(typeCode) > 1 || !(typeCode[0] == 0x00 || typeCode[0] == 0x03 || typeCode[0] == 0x04) {
-		return addr, fmt.Errorf("invalid address type code 0x%X, expected 0x00, 0x03, or 0x04", typeCode)
-	}
-	err = addr.Unmarshal(append(typeCode, raw[0:16]...))
-	return
+	err = addr.Unmarshal(append(typeCode, raw[0:reqLen]...))
+	return addr, err
 }
 
 // MetadataAddressFromHex creates a MetadataAddress from a hex string.  NOTE: Does not perform validation on address,
@@ -382,7 +401,11 @@ func (ma MetadataAddress) ContractSpecUUID() (uuid.UUID, error) {
 // Prefix returns the human readable part (prefix) of this MetadataAddress, e.g. "scope" or "contractspec"
 // More accurately, this converts the 1st byte into its human readable string value.
 func (ma MetadataAddress) Prefix() (string, error) {
-	return VerifyMetadataAddressFormat(ma)
+	prefix, err := VerifyMetadataAddressFormat(ma)
+	if len(prefix) == 0 {
+		return prefix, err
+	}
+	return prefix, nil
 }
 
 // PrimaryUUID returns the primary UUID from this MetadataAddress (if applicable).

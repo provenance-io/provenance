@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,27 +26,167 @@ var (
 	recordBech32  = "record1q2xcpvj6czy5g354dews3nlruxjelpkssxyyclt9ngh74gx9ttgp27gt8kl"
 )
 
+func requireBech32String (t *testing.T, typeCode []byte, data []byte) string {
+	hrp, err := MetadataAddress{typeCode[0]}.Prefix()
+	require.NoError(t, err, "getPrefix error")
+	addr = append([]byte{typeCode[0]}, data...)
+	bech32Addr, err := bech32.ConvertAndEncode(hrp, addr)
+	require.NoError(t, err, "bech32.ConvertAndEncode error")
+	return bech32Addr
+}
+
 func TestLegacySha512HashToAddress(t *testing.T) {
-	testHash := sha512.Sum512([]byte("test"))
-	hash := base64.StdEncoding.EncodeToString(testHash[:])
-	specAddress, err := ConvertHashToAddress(ScopeSpecificationKeyPrefix, hash)
-	require.NoError(t, err)
-	require.NoError(t, specAddress.Validate())
-	require.True(t, specAddress.IsScopeSpecificationAddress())
-	// hash of "test" is consistent, this address should be too.
-	require.Equal(t, "scopespec1qnhzdvxaftm7wjd2r28w8sg2axfqhzcsx0", specAddress.String())
+	testHashBytes := sha512.Sum512([]byte("test"))
+	testHash := base64.StdEncoding.EncodeToString(testHashBytes[:])
+	testHash15 := base64.StdEncoding.EncodeToString(testHashBytes[:15])
+	testHash31 := base64.StdEncoding.EncodeToString(testHashBytes[:31])
 
-	_, err = ConvertHashToAddress(RecordKeyPrefix, hash)
-	require.Error(t, err)
-	require.Equal(t, fmt.Errorf("invalid address type code 0x02, expected 0x00, 0x03, or 0x04"), err)
+	tests := []struct {
+		name string
+		typeBytes []byte
+		hash string
+		expectedAddr string
+		expectedError string
+	} {
+		{
+			"empty typeBytes",
+			[]byte{},
+			testHash,
+			"",
+			"empty typeCode bytes",
+		},
+		{
+			"empty hash",
+			ScopeKeyPrefix,
+			"",
+			"",
+			"empty hash string",
+		},
+		{
+			"scope key prefix - valid",
+			ScopeKeyPrefix,
+			testHash,
+			requireBech32String(t, ScopeKeyPrefix, testHashBytes[:16]),
+			"",
+		},
+		{
+			"scope key prefix - too short",
+			ScopeKeyPrefix,
+			testHash15,
+			"",
+			fmt.Sprintf("invalid hash \"%s\" byte length, expected at least %d bytes, found %d",
+				testHash15, 16, 15),
+		},
+		{
+			"session key prefix - valid",
+			SessionKeyPrefix,
+			testHash,
+			requireBech32String(t, SessionKeyPrefix, testHashBytes[:32]),
+			"",
+		},
+		{
+			"session key prefix - too short",
+			SessionKeyPrefix,
+			testHash31,
+			"",
+			fmt.Sprintf("invalid hash \"%s\" byte length, expected at least %d bytes, found %d",
+				testHash31, 32, 31),
+		},
+		{
+			"record key prefix - valid",
+			RecordKeyPrefix,
+			testHash,
+			requireBech32String(t, RecordKeyPrefix, testHashBytes[:32]),
+			"",
+		},
+		{
+			"record key prefix - too short",
+			RecordKeyPrefix,
+			testHash31,
+			"",
+			fmt.Sprintf("invalid hash \"%s\" byte length, expected at least %d bytes, found %d",
+				testHash31, 32, 31),
+		},
+		{
+			"scope spec key prefix - valid",
+			ScopeSpecificationKeyPrefix,
+			testHash,
+			requireBech32String(t, ScopeSpecificationKeyPrefix, testHashBytes[:16]),
+			"",
+		},
+		{
+			"scope spec key prefix - too short",
+			ScopeSpecificationKeyPrefix,
+			testHash15,
+			"",
+			fmt.Sprintf("invalid hash \"%s\" byte length, expected at least %d bytes, found %d",
+				testHash15, 16, 15),
+		},
+		{
+			"contract spec key prefix - valid",
+			ContractSpecificationKeyPrefix,
+			testHash,
+			requireBech32String(t, ContractSpecificationKeyPrefix, testHashBytes[:16]),
+			"",
+		},
+		{
+			"contract spec key prefix - too short",
+			ContractSpecificationKeyPrefix,
+			testHash15,
+			"",
+			fmt.Sprintf("invalid hash \"%s\" byte length, expected at least %d bytes, found %d",
+				testHash15, 16, 15),
+		},
+		{
+			"record spec key prefix - valid",
+			RecordSpecificationKeyPrefix,
+			testHash,
+			requireBech32String(t, RecordSpecificationKeyPrefix, testHashBytes[:32]),
+			"",
+		},
+		{
+			"record spec key prefix - too short",
+			RecordSpecificationKeyPrefix,
+			testHash31,
+			"",
+			fmt.Sprintf("invalid hash \"%s\" byte length, expected at least %d bytes, found %d",
+				testHash31, 32, 31),
+		},
+		{
+			"invalid type bytes",
+			[]byte{0x07},
+			testHash,
+			"",
+			"invalid address type code 0x07",
+		},
+		{
+			"invalid hash",
+			ScopeKeyPrefix,
+			"invalid hash",
+			"",
+			base64.CorruptInputError(7).Error(),
+		},
+		{
+			"hash string decodes to empty",
+			ScopeKeyPrefix,
+			"MA==",
+			"",
+			"invalid hash \"MA==\" byte length, expected at least 16 bytes, found 1",
+		},
+	}
 
-	_, err = ConvertHashToAddress(ScopeKeyPrefix, "invalid hash")
-	require.Error(t, err)
-	require.Equal(t, base64.CorruptInputError(7), err)
-
-	_, err = ConvertHashToAddress(ScopeKeyPrefix, "MA==") // 0
-	require.Error(t, err)
-	require.Equal(t, fmt.Errorf("invalid specification identifier, expected at least 16 bytes, found 1"), err)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			addr, err := ConvertHashToAddress(tc.typeBytes, tc.hash)
+			if len(tc.expectedError) == 0 {
+				require.NoError(t, err, "ConvertHashToAddress error")
+				require.NoError(t, addr.Validate(), "addr.Validate() error")
+				require.Equal(t, tc.expectedAddr, addr.String(), "ConvertHashToAddress value (as string)")
+			} else {
+				require.EqualError(t, err, tc.expectedError, "ConvertHashToAddress error expected")
+			}
+		})
+	}
 }
 
 func TestMetadataAddressWithInvalidData(t *testing.T) {
@@ -54,8 +195,6 @@ func TestMetadataAddressWithInvalidData(t *testing.T) {
 
 	_, err := VerifyMetadataAddressFormat(addr)
 	require.EqualValues(t, fmt.Errorf("invalid metadata address type: %d", addr[0]), err)
-	_, err = VerifyMetadataAddressFormat(addr[0:12])
-	require.EqualValues(t, fmt.Errorf("incorrect address length (must be at least 17, actual: %d)", 12), err)
 
 	scopeID := ScopeMetadataAddress(scopeUUID)
 	padded := make([]byte, 20)
@@ -416,10 +555,24 @@ func TestPrefix(t *testing.T) {
 		assert.Equal(subtest, PrefixScope, actualScopePrefix, "actualScopePrefix")
 	})
 
+	t.Run("scope without address", func(subtest *testing.T) {
+		addr := MetadataAddress{ScopeKeyPrefix[0]}
+		actual, err := addr.Prefix()
+		assert.NoError(subtest, err, "Prefix error")
+		assert.Equal(subtest, PrefixScope, actual, "Prefix value")
+	})
+
 	t.Run("session", func(subtest *testing.T) {
 		actualSessionPrefix, actualSessionPrefixErr := SessionMetadataAddress(uuid.New(), uuid.New()).Prefix()
 		assert.NoError(subtest, actualSessionPrefixErr, "actualSessionPrefixErr")
 		assert.Equal(subtest, PrefixSession, actualSessionPrefix, "actualSessionPrefix")
+	})
+
+	t.Run("session without address", func(subtest *testing.T) {
+		addr := MetadataAddress{SessionKeyPrefix[0]}
+		actual, err := addr.Prefix()
+		assert.NoError(subtest, err, "Prefix error")
+		assert.Equal(subtest, PrefixSession, actual, "Prefix value")
 	})
 
 	t.Run("record", func(subtest *testing.T) {
@@ -428,10 +581,24 @@ func TestPrefix(t *testing.T) {
 		assert.Equal(subtest, PrefixRecord, actualRecordPrefix, "actualRecordPrefix")
 	})
 
+	t.Run("record without address", func(subtest *testing.T) {
+		addr := MetadataAddress{RecordKeyPrefix[0]}
+		actual, err := addr.Prefix()
+		assert.NoError(subtest, err, "Prefix error")
+		assert.Equal(subtest, PrefixRecord, actual, "Prefix value")
+	})
+
 	t.Run("scope spec", func(subtest *testing.T) {
 		actualScopeSpecPrefix, actualScopeSpecPrefixErr := ScopeSpecMetadataAddress(uuid.New()).Prefix()
 		assert.NoError(subtest, actualScopeSpecPrefixErr, "actualScopeSpecPrefixErr")
 		assert.Equal(subtest, PrefixScopeSpecification, actualScopeSpecPrefix, "actualScopeSpecPrefix")
+	})
+
+	t.Run("scope spec without address", func(subtest *testing.T) {
+		addr := MetadataAddress{ScopeSpecificationKeyPrefix[0]}
+		actual, err := addr.Prefix()
+		assert.NoError(subtest, err, "Prefix error")
+		assert.Equal(subtest, PrefixScopeSpecification, actual, "Prefix value")
 	})
 
 	t.Run("contract spec", func(subtest *testing.T) {
@@ -440,10 +607,24 @@ func TestPrefix(t *testing.T) {
 		assert.Equal(subtest, PrefixContractSpecification, actualContractSpecPrefix, "actualContractSpecPrefix")
 	})
 
+	t.Run("contract spec without address", func(subtest *testing.T) {
+		addr := MetadataAddress{ContractSpecificationKeyPrefix[0]}
+		actual, err := addr.Prefix()
+		assert.NoError(subtest, err, "Prefix error")
+		assert.Equal(subtest, PrefixContractSpecification, actual, "Prefix value")
+	})
+
 	t.Run("record spec", func(subtest *testing.T) {
 		actualRecordSpecPrefix, actualRecordSpecPrefixErr := RecordSpecMetadataAddress(uuid.New(), "george").Prefix()
 		assert.NoError(subtest, actualRecordSpecPrefixErr, "actualRecordSpecPrefixErr")
 		assert.Equal(subtest, PrefixRecordSpecification, actualRecordSpecPrefix, "actualRecordSpecPrefix")
+	})
+
+	t.Run("record spec without address", func(subtest *testing.T) {
+		addr := MetadataAddress{RecordSpecificationKeyPrefix[0]}
+		actual, err := addr.Prefix()
+		assert.NoError(subtest, err, "Prefix error")
+		assert.Equal(subtest, PrefixRecordSpecification, actual, "Prefix value")
 	})
 
 	t.Run("bad", func(subtest *testing.T) {
