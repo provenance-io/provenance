@@ -47,7 +47,7 @@ func VerifyMetadataAddressFormat(bz []byte) (string, error) {
 	if len(bz) == 0 {
 		return hrp, errors.New("address is empty")
 	}
-	requiredLength := 1
+	var requiredLength int
 	checkSecondaryUUID := false
 	switch bz[0] {
 	case ScopeKeyPrefix[0]:

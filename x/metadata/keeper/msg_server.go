@@ -516,4 +516,3 @@ func (k msgServer) P8EMemorializeContract(
 
 	return nil, fmt.Errorf("not implemented")
 }
-

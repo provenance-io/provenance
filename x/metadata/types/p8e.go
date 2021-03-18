@@ -231,7 +231,6 @@ func EmptyProcess() *Process {
 	}
 }
 
-
 func parseScopeID(input string) (MetadataAddress, error) {
 	scopeID, maErr := MetadataAddressFromBech32(input)
 	if maErr == nil {
@@ -395,4 +394,3 @@ func getSessionSpecID(contract *p8e.Contract) (MetadataAddress, error) {
 	hash := contract.Spec.DataLocation.Ref.Hash
 	return ConvertHashToAddress(SessionKeyPrefix, hash)
 }
-
