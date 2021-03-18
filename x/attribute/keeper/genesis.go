@@ -9,7 +9,7 @@ import (
 // InitGenesis creates the initial genesis state for the attribute module.
 func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 	k.SetParams(ctx, data.Params)
-	if err := data.Validate(); err != nil {
+	if err := data.ValidateBasic(); err != nil {
 		panic(err)
 	}
 	for _, attr := range data.Attributes {
