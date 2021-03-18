@@ -170,7 +170,7 @@ func convertParties(old []*v039metadata.Recital) (new []v040metadata.Party) {
 				r.Signer.SigningPublicKey.Curve != v039metadata.PublicKeyCurve_SECP256K1 {
 				panic(fmt.Errorf("unsupported signing publickey type and account address unavailable"))
 			}
-			_, addr, err := v039metadata.ParsePublicKey(r.Signer.EncryptionPublicKey.PublicKeyBytes)
+			_, addr, err := v039metadata.ParsePublicKey(r.Signer.SigningPublicKey.PublicKeyBytes)
 			if err != nil {
 				panic(err)
 			}
