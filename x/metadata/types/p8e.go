@@ -164,16 +164,39 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 	if err != nil {
 		return p8EData, signers, err
 	}
-	// TODO: Add session.Parties.
-	//       Same as the scope Owners.
+	p8EData.Session.Parties = contractRecitalParties
 	// TODO: Set session.Name
 	//       Old way: From the contract spec, .Definition.ResourceLocation.Classname
 	//       New way: From the contract spec, ClassName
+	//       Will need to handle this outside of here.
 
 	// Create the records.
-	// TODO: Add records.
-	//       Loop through the considerations.
-	//       See old repo types/apply.go func considerationsAsRecords for clues.
+	for _, c := range msg.Contract.Considerations {
+		if c != nil && c.Result != nil && c.Result.Output != nil && c.Result.Result != p8e.ExecutionResultType_RESULT_TYPE_SKIP {
+			record := EmptyRecord()
+			record.Name = c.ConsiderationName
+			record.SessionId = p8EData.Session.SessionId
+			record.Process.ProcessId = &Process_Hash{Hash: "NO-SPEC-HASH-AVAILABLE"} // TODO: Overwrite this using the spec
+			record.Process.Name = c.Result.Output.Classname
+			record.Process.Method = record.Name
+			for _, f := range c.Inputs {
+				record.Inputs = append(record.Inputs, RecordInput{
+					Name:     f.Name,
+					Source:   &RecordInput_Hash{Hash: f.Hash},
+					TypeName: f.Classname,
+					Status:   RecordInputStatus_Unknown,  // TODO: Overwrite this using the spec
+				})
+			}
+			record.Outputs = []RecordOutput{
+				{
+					Hash:   c.Result.Output.Hash,
+					Status: ResultStatus(c.Result.Result),
+				},
+			}
+
+			p8EData.Records = append(p8EData.Records, record)
+		}
+	}
 
 	// Get the signers.
 	if msg.Signatures != nil {
