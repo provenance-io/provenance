@@ -36,6 +36,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * Governance proposal support for marker module
+* Decentralized discovery for object store instances #105
+
 ### Bug Fixes
 
 * Gov module route added for name module root name proposal
