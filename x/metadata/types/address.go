@@ -44,34 +44,35 @@ type MetadataAddress []byte
 // returns the associated bech32 hrp/type name or any errors encountered during verification
 func VerifyMetadataAddressFormat(bz []byte) (string, error) {
 	hrp := ""
+	if len(bz) == 0 {
+		return hrp, errors.New("address is empty")
+	}
 	requiredLength := 1
 	checkSecondaryUUID := false
-	if len(bz) >= 1 {
-		switch bz[0] {
-		case ScopeKeyPrefix[0]:
-			hrp = PrefixScope
-			requiredLength = 1 + 16 // type byte plus size of one uuid
-		case SessionKeyPrefix[0]:
-			hrp = PrefixSession
-			requiredLength = 1 + 16 + 16 // type byte plus size of two uuids
-			checkSecondaryUUID = true
-		case RecordKeyPrefix[0]:
-			hrp = PrefixRecord
-			requiredLength = 1 + 16 + 16 // type byte plus size of one uuid and one half sha256 hash
+	switch bz[0] {
+	case ScopeKeyPrefix[0]:
+		hrp = PrefixScope
+		requiredLength = 1 + 16 // type byte plus size of one uuid
+	case SessionKeyPrefix[0]:
+		hrp = PrefixSession
+		requiredLength = 1 + 16 + 16 // type byte plus size of two uuids
+		checkSecondaryUUID = true
+	case RecordKeyPrefix[0]:
+		hrp = PrefixRecord
+		requiredLength = 1 + 16 + 16 // type byte plus size of one uuid and one half sha256 hash
 
-		case ScopeSpecificationKeyPrefix[0]:
-			hrp = PrefixScopeSpecification
-			requiredLength = 1 + 16 // type byte plus size of one uuid
-		case ContractSpecificationKeyPrefix[0]:
-			hrp = PrefixContractSpecification
-			requiredLength = 1 + 16 // type byte plus size of one uuid
-		case RecordSpecificationKeyPrefix[0]:
-			hrp = PrefixRecordSpecification
-			requiredLength = 1 + 16 + 16 // type byte plus size of one uuid plus one-half sha256 hash
+	case ScopeSpecificationKeyPrefix[0]:
+		hrp = PrefixScopeSpecification
+		requiredLength = 1 + 16 // type byte plus size of one uuid
+	case ContractSpecificationKeyPrefix[0]:
+		hrp = PrefixContractSpecification
+		requiredLength = 1 + 16 // type byte plus size of one uuid
+	case RecordSpecificationKeyPrefix[0]:
+		hrp = PrefixRecordSpecification
+		requiredLength = 1 + 16 + 16 // type byte plus size of one uuid plus one-half sha256 hash
 
-		default:
-			return hrp, fmt.Errorf("invalid metadata address type: %d", bz[0])
-		}
+	default:
+		return hrp, fmt.Errorf("invalid metadata address type: %d", bz[0])
 	}
 	if len(bz) != requiredLength {
 		return hrp, fmt.Errorf("incorrect address length (expected: %d, actual: %d)", requiredLength, len(bz))
