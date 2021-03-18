@@ -97,9 +97,10 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 	if err != nil {
 		return p8EData, signers, err
 	}
-	// TODO: Set session.SpecificationId
-	//       old way comes from contract.Spec.DataLocation.Ref.Hash string
-	//       Might need to communicate a value change here?
+	p8EData.Session.SpecificationId, err = getSessionSpecID(msg.Contract)
+	if err != nil {
+		return p8EData, signers, err
+	}
 	// TODO: Add session.Parties.
 	//       Same as the scope Owners.
 	// TODO: Set session.Name
@@ -275,4 +276,16 @@ func getFirstRecitalWithRole(recitals []*p8e.Recital, role p8e.PartyType) *p8e.R
 		}
 	}
 	return nil
+}
+
+func getSessionSpecID(contract *p8e.Contract) (MetadataAddress, error) {
+	if contract == nil {
+		return MetadataAddress{}, fmt.Errorf("nil contract")
+	}
+	if contract.Spec == nil || contract.Spec.DataLocation == nil ||
+		contract.Spec.DataLocation.Ref == nil || len(contract.Spec.DataLocation.Ref.Hash) == 0 {
+		return MetadataAddress{}, fmt.Errorf("no spec datalocation ref hash value")
+	}
+	hash := contract.Spec.DataLocation.Ref.Hash
+	return ConvertHashToAddress(SessionKeyPrefix, hash)
 }
