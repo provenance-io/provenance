@@ -141,3 +141,27 @@ func TestAddP8eContractSpecValidation(t *testing.T) {
 	err = msg.ValidateBasic()
 	require.NoError(t, err)
 }
+
+func TestAddOSLocator(t *testing.T) {
+	var bindRequestMsg = NewMsgBindOSLocatorRequest(ObjectStoreLocator{Owner:
+	"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", LocatorUri: "http://foo.com"})
+
+	err := bindRequestMsg.ValidateBasic()
+	require.NoError(t, err)
+}
+
+func TestModifyOSLocator(t *testing.T) {
+	var modifyRequest = NewMsgModifyOSLocatorRequest(ObjectStoreLocator{Owner:
+	"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", LocatorUri: "http://foo.com"})
+
+	err := modifyRequest.ValidateBasic()
+	require.NoError(t, err)
+}
+
+func TestDeleteOSLocator(t *testing.T) {
+	var deleteRequest = NewMsgModifyOSLocatorRequest(ObjectStoreLocator{Owner:
+	"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", LocatorUri: "http://foo.com"})
+
+	err := deleteRequest.ValidateBasic()
+	require.NoError(t, err)
+}
