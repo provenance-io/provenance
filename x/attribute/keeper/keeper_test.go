@@ -180,7 +180,30 @@ func (s *KeeperTestSuite) TestGetAllAttributes() {
 
 	attributes, err = s.app.AttributeKeeper.GetAllAttributes(s.ctx, s.user1Addr)
 	s.NoError(err)
+	s.Equal(attr.Name, attributes[0].Name)
+	s.Equal(attr.Address, attributes[0].Address)
+	s.Equal(attr.Value, attributes[0].Value)
+}
+
+func (s *KeeperTestSuite) TestGetAttributesByName() {
+
+	attr := types.Attribute{
+		Name:          "example.attribute",
+		Value:         []byte("0123456789"),
+		Address:       s.user1,
+		AttributeType: types.AttributeType_String,
+	}
+	s.app.AttributeKeeper.SetAttribute(s.ctx, s.user1Addr, attr, s.user1Addr)
+
+	_, err := s.app.AttributeKeeper.GetAttributes(s.ctx, s.user1Addr, "blah")
+	s.Error(err)
+	s.Equal("no address bound to name", err.Error())
+	attributes, err := s.app.AttributeKeeper.GetAttributes(s.ctx, s.user1Addr, "example.attribute")
+	s.NoError(err)
 	s.Equal(1, len(attributes))
+	s.Equal(attr.Name, attributes[0].Name)
+	s.Equal(attr.Address, attributes[0].Address)
+	s.Equal(attr.Value, attributes[0].Value)
 }
 
 func (s *KeeperTestSuite) TestInitGenesisAddingAttributes() {
