@@ -126,6 +126,10 @@ type P8EData struct {
 }
 
 // Migrate Converts a MsgP8EMemorializeContractRequest object into the new objects.
+// The following fields require looking up specs and should be overwritten accordingly:
+//  * P8EData.Session.Name string from the contract specification ClassName
+//  * P8EData.Records[*].Process.ProcessId from the contract specification Source?
+//  * P8EData.Records[*].Inputs[*].Status from the record specification ?????
 func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest) (P8EData, []string, error) {
 	p8EData := P8EData{
 		Scope:   emptyScope(),
@@ -165,10 +169,7 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 		return p8EData, signers, err
 	}
 	p8EData.Session.Parties = contractRecitalParties
-	// TODO: Set session.Name
-	//       Old way: From the contract spec, .Definition.ResourceLocation.Classname
-	//       New way: From the contract spec, ClassName
-	//       Will need to handle this outside of here.
+	p8EData.Session.Name = "NO-SESSION-NAME-AVAILABLE"
 
 	// Create the records.
 	for _, c := range msg.Contract.Considerations {
@@ -176,7 +177,7 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 			record := emptyRecord()
 			record.Name = c.ConsiderationName
 			record.SessionId = p8EData.Session.SessionId
-			record.Process.ProcessId = &Process_Hash{Hash: "NO-SPEC-HASH-AVAILABLE"} // TODO: Overwrite this using the spec
+			record.Process.ProcessId = &Process_Hash{Hash: "NO-SPEC-HASH-AVAILABLE"}
 			record.Process.Name = c.Result.Output.Classname
 			record.Process.Method = record.Name
 			for _, f := range c.Inputs {
@@ -184,7 +185,7 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 					Name:     f.Name,
 					Source:   &RecordInput_Hash{Hash: f.Hash},
 					TypeName: f.Classname,
-					Status:   RecordInputStatus_Unknown,  // TODO: Overwrite this using the spec
+					Status:   RecordInputStatus_Unknown,
 				})
 			}
 			record.Outputs = []RecordOutput{
@@ -200,15 +201,13 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 
 	// Get the signers.
 	if msg.Signatures != nil {
-		for _, sig := range msg.Signatures.Signatures {
-			if sig != nil && len(sig.Signature) > 0 {
-				// TODO: verify that the sig.Signature value is what's desired here.
-				//       other data piece: sig.Signer.SigningPublicKey.PublicKeyBytes []byte
-				//       See old repo types/apply.go func OnChainRecitals for clues.
-				signers = append(signers, sig.Signature)
-			}
+		newSigners, err := convertSigners(msg.Signatures)
+		if err != nil {
+			return p8EData, signers, err
 		}
+		signers = append(signers, newSigners...)
 	}
+
 	return p8EData, signers, err
 }
 
@@ -292,11 +291,7 @@ func convertParties(old []*p8e.Recital) (parties []Party, err error) {
 	for i, r := range old {
 		p, e := convertParty(*r)
 		if e != nil {
-			if err == nil {
-				err = e
-			} else {
-				err = fmt.Errorf("%s, %s", err.Error(), e.Error())
-			}
+			err = appendError(err, e)
 		} else {
 			parties[i] = p
 		}
@@ -321,6 +316,30 @@ func convertParty(old p8e.Recital) (Party, error) {
 	}
 	party.Role = PartyType(old.SignerRole)
 	return party, nil
+}
+
+func convertSigners(ss *p8e.SignatureSet) ([]string, error) {
+	signers := make([]string, len(ss.Signatures))
+	var err error
+	for i, s := range ss.Signatures {
+		addr, e := getAddressFromSigner(s.Signer)
+		if e != nil {
+			err = appendError(err, e)
+		} else {
+			signers[i] = addr.String()
+		}
+	}
+	return signers, err
+}
+
+func appendError(err1 error, err2 error) error {
+	if err1 == nil {
+		return err2
+	}
+	if err2 == nil {
+		return err1
+	}
+	return fmt.Errorf("%s, %s", err1.Error(), err2.Error())
 }
 
 func getAddressFromSigner(signer *p8e.SigningAndEncryptionPublicKeys) (sdk.AccAddress, error) {
