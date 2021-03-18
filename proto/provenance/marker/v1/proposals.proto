@@ -88,3 +88,16 @@ message ChangeStatusProposal {
   string       denom       = 3;
   MarkerStatus new_status  = 4;
 }
+
+// WithdrawEscrowProposal defines a governance proposal to withdraw escrow coins from a marker
+message WithdrawEscrowProposal {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  string   title                           = 1;
+  string   description                     = 2;
+  string   denom                           = 3;
+  repeated cosmos.base.v1beta1.Coin amount = 4
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  string target_adddress = 5;
+}

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/provenance-io/provenance/x/metadata/types/p8e"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -22,6 +23,7 @@ const (
 	TypeMsgDeleteContractSpecificationRequest = "delete_contract_specification_request"
 	TypeMsgAddRecordSpecificationRequest      = "add_record_specification_request"
 	TypeMsgDeleteRecordSpecificationRequest   = "delete_record_specification_request"
+	TypeMsgAddP8EContractSpecRequest          = "add_p8e_contract_spec_request"
 	TypeMsgP8eMemorializeContractRequest      = "p8e_memorialize_contract_request"
 )
 
@@ -40,6 +42,7 @@ var (
 	_ sdk.Msg = &MsgDeleteContractSpecificationRequest{}
 	_ sdk.Msg = &MsgAddRecordSpecificationRequest{}
 	_ sdk.Msg = &MsgDeleteRecordSpecificationRequest{}
+	_ sdk.Msg = &MsgAddP8EContractSpecRequest{}
 	_ sdk.Msg = &MsgP8EMemorializeContractRequest{}
 )
 
@@ -423,6 +426,53 @@ func (msg MsgAddScopeSpecificationRequest) ValidateBasic() error {
 		return fmt.Errorf("at least one signer is required")
 	}
 	return msg.Specification.ValidateBasic()
+}
+
+// ------------------  MsgAddContractSpecRequest  ------------------
+
+// NewMsgAddContractSpecRequest creates a new msg instance
+func NewMsgAddP8EContractSpecRequest(contractSpec p8e.ContractSpec, signers []string) *MsgAddP8EContractSpecRequest {
+	return &MsgAddP8EContractSpecRequest{
+		Contractspec: contractSpec,
+		Signers:      signers,
+	}
+}
+
+func (msg MsgAddP8EContractSpecRequest) String() string {
+	out, _ := yaml.Marshal(msg)
+	return string(out)
+}
+
+// Route returns the module route
+func (msg MsgAddP8EContractSpecRequest) Route() string {
+	return ModuleName
+}
+
+// Type returns the type name for this msg
+func (msg MsgAddP8EContractSpecRequest) Type() string {
+	return TypeMsgAddP8EContractSpecRequest
+}
+
+// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
+func (msg MsgAddP8EContractSpecRequest) GetSigners() []sdk.AccAddress {
+	return stringsToAccAddresses(msg.Signers)
+}
+
+// GetSignBytes gets the bytes for the message signer to sign on
+func (msg MsgAddP8EContractSpecRequest) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// ValidateBasic performs a quick validity check
+func (msg MsgAddP8EContractSpecRequest) ValidateBasic() error {
+	if len(msg.Signers) < 1 {
+		return fmt.Errorf("at least one signer is required")
+	}
+	_, _, err := ConvertP8eContractSpec(&msg.Contractspec, msg.Signers)
+	if err != nil {
+		return fmt.Errorf("failed to convert p8e ContractSpec %s", err)
+	}
+	return nil
 }
 
 // ------------------  MsgDeleteScopeSpecificationRequest  ------------------

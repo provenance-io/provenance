@@ -22,6 +22,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgDeleteContractSpecificationRequest{}, "provenance/metadata/DeleteContractSpecificationRequest", nil)
 	cdc.RegisterConcrete(&MsgAddRecordSpecificationRequest{}, "provenance/metadata/AddRecordSpecificationRequest", nil)
 	cdc.RegisterConcrete(&MsgDeleteRecordSpecificationRequest{}, "provenance/metadata/DeleteRecordSpecificationRequest", nil)
+	cdc.RegisterConcrete(&MsgAddP8EContractSpecRequest{}, "provenance/metadata/AddP8EContractSpecRequest", nil)
 }
 
 // RegisterInterfaces registers implementations for the tx messages
@@ -39,6 +40,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgDeleteContractSpecificationRequest{},
 		&MsgAddRecordSpecificationRequest{},
 		&MsgDeleteRecordSpecificationRequest{},
+		&MsgAddP8EContractSpecRequest{},
 	)
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }

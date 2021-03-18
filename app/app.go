@@ -406,7 +406,9 @@ func New(
 		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper)).
 		AddRoute(ibchost.RouterKey, ibcclient.NewClientUpdateProposalHandler(app.IBCKeeper.ClientKeeper)).
-		AddRoute(wasm.RouterKey, wasm.NewWasmProposalHandler(app.WasmKeeper, wasm.EnableAllProposals))
+		AddRoute(wasm.RouterKey, wasm.NewWasmProposalHandler(app.WasmKeeper, wasm.EnableAllProposals)).
+		AddRoute(nametypes.ModuleName, name.NewProposalHandler(app.NameKeeper)).
+		AddRoute(markertypes.ModuleName, marker.NewProposalHandler(app.MarkerKeeper))
 	app.GovKeeper = govkeeper.NewKeeper(
 		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
 		&stakingKeeper, govRouter,
@@ -568,14 +570,25 @@ func New(
 	//    NOTE: These have to be added before the baseapp seals via LoadLatestVersion() down below.
 	// * https://pkg.go.dev/github.com/cosmos/cosmos-sdk@v0.40.0-rc6/x/upgrade#hdr-Performing_Upgrades
 	// * https://github.com/cosmos/cosmos-sdk/issues/8265
+	InstallCustomUpgradeHandlers(app)
+	// Use the dump of $home/data/upgrade-info.json:{"name":"$plan","height":321654} to determine
+	// if we load a store upgrade from the handlers. No file == no error from read func.
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if err != nil {
 		panic(err)
 	}
-
-	storeLoader := CustomUpgradeStoreLoader(app, upgradeInfo)
-	if storeLoader != nil {
-		app.SetStoreLoader(storeLoader)
+	// Currently in an upgrade hold for this block.
+	if upgradeInfo.Name != "" && upgradeInfo.Height == app.LastBlockHeight()+1 {
+		app.Logger().Info("Managing upgrade",
+			"plan", upgradeInfo.Name,
+			"upgradeHeight", upgradeInfo.Height,
+			"lastHeight", app.LastBlockHeight(),
+		)
+		// See if we have a custom store loader to use for upgrades.
+		storeLoader := CustomUpgradeStoreLoader(app, upgradeInfo)
+		if storeLoader != nil {
+			app.SetStoreLoader(storeLoader)
+		}
 	}
 	// --
 

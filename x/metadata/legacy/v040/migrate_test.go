@@ -263,7 +263,7 @@ func TestMigrate(t *testing.T) {
         "PARTY_TYPE_ORIGINATOR"
       ],
       "result_type": "DEFINITION_TYPE_PROPOSED",
-      "specification_id": "contractspec1qvfha8nex5j0qeshr9uvsmv5um3q7sghss",
+      "specification_id": "recspec1q5fha8nex5j0qeshr9uvsmv5um32y0aeyhnus90eqmv3xfwwugdwqt2xfzw",
       "type_name": "io.provenance.loan.LoanProtos$PartiesList"
     },
     {
@@ -284,7 +284,7 @@ func TestMigrate(t *testing.T) {
         "PARTY_TYPE_ORIGINATOR"
       ],
       "result_type": "DEFINITION_TYPE_PROPOSED",
-      "specification_id": "contractspec1qvfha8nex5j0qeshr9uvsmv5um3q7sghss",
+      "specification_id": "recspec1q5fha8nex5j0qeshr9uvsmv5um3fk945f58q5h9vf7tghmaskk67kve3mq3",
       "type_name": "io.provenance.common.DocumentProtos$DocumentList"
     }
   ],

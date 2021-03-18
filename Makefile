@@ -136,14 +136,13 @@ run: check-built run-config;
 # Release artifacts and plan #
 ##############################
 
-RELEASE_TAG=SNAPSHOT
 RELEASE_BIN=$(BUILDDIR)/bin
-RELEASE_PROTO_NAME=protos-$(RELEASE_TAG).zip
+RELEASE_PROTO_NAME=protos-$(VERSION).zip
 RELEASE_PROTO=$(BUILDDIR)/$(RELEASE_PROTO_NAME)
-RELEASE_PLAN=$(BUILDDIR)/plan-$(RELEASE_TAG).json
+RELEASE_PLAN=$(BUILDDIR)/plan-$(VERSION).json
 RELEASE_CHECKSUM_NAME=sha256sum.txt
 RELEASE_CHECKSUM=$(BUILDDIR)/$(RELEASE_CHECKSUM_NAME)
-RELEASE_ZIP_NAME=provenance-linux-amd64-$(RELEASE_TAG).zip
+RELEASE_ZIP_NAME=provenance-linux-amd64-$(VERSION).zip
 RELEASE_ZIP=$(BUILDDIR)/$(RELEASE_ZIP_NAME)
 
 .PHONY: build-release-clean
@@ -161,7 +160,7 @@ build-release-plan: build-release-zip build-release-checksum
 	cd $(BUILDDIR) && \
 	  sum="$(firstword $(shell cat $(RELEASE_CHECKSUM)))" && \
 	  echo "sum=$$sum" && \
-	  echo "{\"binaries\":{\"linux/amd64\":\"https://github.com/provenance-io/provenance/releases/download/$(RELEASE_TAG)/$(RELEASE_ZIP_NAME)?checksum=sha256:$$sum\"}}" > $(RELEASE_PLAN) && \
+	  echo "{\"binaries\":{\"linux/amd64\":\"https://github.com/provenance-io/provenance/releases/download/$(VERSION)/$(RELEASE_ZIP_NAME)?checksum=sha256:$$sum\"}}" > $(RELEASE_PLAN) && \
 	cd ..
 
 .PHONY: build-release-bin
@@ -319,7 +318,7 @@ proto-swagger-gen:
 	@./scripts/protoc-swagger-gen.sh
 
 proto-lint:
-	@buf lint --error-format=json
+	@buf check lint --error-format=json
 
 proto-check-breaking:
 	@buf check breaking --against-input '.git#branch=main'

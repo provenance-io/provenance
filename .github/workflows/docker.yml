@@ -60,6 +60,9 @@ jobs:
         with:
           context: .
           target: run
+          build-args: |
+            VERSION=${{ steps.prep.outputs.version }}
+          platforms: linux/amd64
           file: docker/blockchain/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.prep.outputs.tags }}

@@ -400,8 +400,13 @@ func convertContractSpec(old *v039metadata.ContractSpec) (
 		if err != nil {
 			return newSpec, nil, err
 		}
+		specUUID, err := newSpec.SpecificationId.ContractSpecUUID()
+		if err != nil {
+			return newSpec, nil, err
+		}
+		recordSpecID := v040metadata.RecordSpecMetadataAddress(specUUID, old.ConsiderationSpecs[i].OutputSpec.Spec.Name)
 		newRecords[i] = v040metadata.RecordSpecification{
-			SpecificationId:    newSpec.SpecificationId,
+			SpecificationId:    recordSpecID,
 			Name:               old.ConsiderationSpecs[i].OutputSpec.Spec.Name,
 			TypeName:           old.ConsiderationSpecs[i].OutputSpec.Spec.ResourceLocation.Classname,
 			ResultType:         v040metadata.DefinitionType(old.ConsiderationSpecs[i].OutputSpec.Spec.Type),

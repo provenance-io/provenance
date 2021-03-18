@@ -38,8 +38,11 @@ func TestNewEmptyMarkerValidate(t *testing.T) {
 
 	require.EqualValues(t, "test", m.GetDenom())
 	require.EqualValues(t, "proposed", m.GetStatus().String())
+	require.True(t, m.HasGovernanceEnabled())
+	require.True(t, m.HasFixedSupply())
 	require.True(t, m.AddressHasAccess(creatorAddr, Access_Mint), "creator was assigned mint permission")
 	require.False(t, m.AddressHasAccess(creatorAddr, Access_Burn), "creator was not assigned burn permission")
+	require.ElementsMatch(t, m.AddressListForPermission(Access_Mint), []sdk.AccAddress{creatorAddr})
 
 	require.NoError(t, m.GrantAccess(NewAccessGrant(creatorAddr, []Access{Access_Burn})))
 	require.True(t, m.AddressHasAccess(creatorAddr, Access_Mint), "creator still has mint permission")

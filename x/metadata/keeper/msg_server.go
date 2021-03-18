@@ -419,6 +419,54 @@ func (k msgServer) DeleteRecordSpecification(
 	return &types.MsgDeleteRecordSpecificationResponse{}, nil
 }
 
+func (k msgServer) AddP8EContractSpec(
+	goCtx context.Context,
+	msg *types.MsgAddP8EContractSpecRequest,
+) (*types.MsgAddP8EContractSpecResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	proposed, newrecords, err := types.ConvertP8eContractSpec(&msg.Contractspec, msg.Signers)
+	if err != nil {
+		return nil, err
+	}
+
+	var existing *types.ContractSpecification = nil
+	if e, found := k.GetContractSpecification(ctx, proposed.SpecificationId); found {
+		existing = &e
+		if err := k.ValidateAllOwnersAreSigners(existing.OwnerAddresses, msg.Signers); err != nil {
+			return nil, err
+		}
+	}
+
+	if err := k.ValidateContractSpecUpdate(ctx, existing, proposed); err != nil {
+		return nil, err
+	}
+
+	k.SetContractSpecification(ctx, proposed)
+
+	for _, proposedRecord := range newrecords {
+		var existing *types.RecordSpecification = nil
+		if e, found := k.GetRecordSpecification(ctx, proposedRecord.SpecificationId); found {
+			existing = &e
+		}
+		if err := k.ValidateRecordSpecUpdate(ctx, existing, proposedRecord); err != nil {
+			return nil, err
+		}
+
+		k.SetRecordSpecification(ctx, proposedRecord)
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
+		),
+	)
+
+	return &types.MsgAddP8EContractSpecResponse{}, nil
+}
+
 func (k msgServer) P8EMemorializeContract(
 	goCtx context.Context,
 	msg *types.MsgP8EMemorializeContractRequest, //nolint:staticcheck // Ignore deprecation error here.
@@ -468,3 +516,4 @@ func (k msgServer) P8EMemorializeContract(
 
 	return nil, fmt.Errorf("not implemented")
 }
+
