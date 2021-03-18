@@ -30,6 +30,7 @@ endif
 
 GO := go
 
+HTTPS_GIT := https://github.com/provenance-io/provenance.git
 DOCKER := $(shell which docker)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 
@@ -312,22 +313,16 @@ proto-format:
 
 # This generates the SDK's custom wrapper for google.protobuf.Any. It should only be run manually when needed
 proto-gen-any:
-	@./scripts/protocgen-any.sh
+	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace tendermintdev/sdk-proto-gen sh ./scripts/protocgen-any.sh
 
 proto-swagger-gen:
 	@./scripts/protoc-swagger-gen.sh
 
 proto-lint:
-	@buf check lint --error-format=json
+	@$(DOCKER_BUF) lint --error-format=json
 
 proto-check-breaking:
-	@buf check breaking --against-input '.git#branch=main'
-
-proto-lint-docker:
-	@$(DOCKER_BUF) check lint --error-format=json
-
-proto-check-breaking-docker:
-	@$(DOCKER_BUF) check breaking --against-input $(HTTPS_GIT)#branch=main
+	@$(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=main
 
 TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/v0.34.x/proto/tendermint
 GOGO_PROTO_URL   = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
@@ -409,7 +404,7 @@ proto-update-deps:
 	@rm $(CONFIO_TYPES)/proofs.proto.orig
 
 .PHONY: proto-all proto-gen proto-format proto-gen-any proto-swagger-gen proto-lint proto-check-breaking
-.PHONY: proto-lint-docker proto-check-breaking-docker proto-update-deps
+.PHONY: proto-update-deps
 
 
 ##############################
