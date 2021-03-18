@@ -123,7 +123,7 @@ func ConvertHashToAddress(typeCode []byte, hash string) (MetadataAddress, error)
 		return addr, fmt.Errorf("invalid hash \"%s\" byte length, expected at least %d bytes, found %d",
 			hash, reqLen, len(raw))
 	}
-	err = addr.Unmarshal(append(typeCode, raw[0:reqLen]...))
+	err = addr.Unmarshal(append([]byte{typeCode[0]}, raw[0:reqLen]...))
 	return addr, err
 }
 
