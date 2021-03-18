@@ -116,10 +116,10 @@ func TestCompare(t *testing.T) {
 	ma11 := MetadataAddress("11")
 	ma22 := MetadataAddress("22")
 
-	tests := []struct {
-		name     string
-		base     MetadataAddress
-		arg      MetadataAddress
+	tests := []struct{
+		name string
+		base MetadataAddress
+		arg MetadataAddress
 		expected int
 	}{
 		{"maEmpty v maEmpty", maEmpty, maEmpty, 0},
@@ -175,10 +175,10 @@ func TestMetadataAddressIteratorPrefix(t *testing.T) {
 
 	scopeSpecID := ScopeSpecMetadataAddress(scopeUUID)
 	bz, err = scopeSpecID.ScopeSessionIteratorPrefix()
-	assert.EqualError(t, err, "this metadata address does not contain a scope uuid", "scope spec id ScopeSessionIteratorPrefix error message")
+	assert.EqualError(t, err,  "this metadata address does not contain a scope uuid", "scope spec id ScopeSessionIteratorPrefix error message")
 	assert.Equal(t, []byte{}, bz, "scope spec id ScopeSessionIteratorPrefix value")
 	bz, err = scopeSpecID.ScopeRecordIteratorPrefix()
-	assert.EqualError(t, err, "this metadata address does not contain a scope uuid", "scope spec id ScopeRecordIteratorPrefix error message")
+	assert.EqualError(t, err,  "this metadata address does not contain a scope uuid", "scope spec id ScopeRecordIteratorPrefix error message")
 	assert.Equal(t, []byte{}, bz, "scope spec id ScopeRecordIteratorPrefix value")
 
 	scopeID := ScopeMetadataAddress(scopeUUID)
@@ -461,11 +461,11 @@ func TestPrimaryUUID(t *testing.T) {
 	recordSpecPrimaryUUID := uuid.New()
 
 	tests := []struct {
-		name          string
-		id            MetadataAddress
+		name string
+		id MetadataAddress
 		expectedValue uuid.UUID
 		expectedError string
-	}{
+	} {
 		{
 			"scope",
 			ScopeMetadataAddress(scopePrimaryUUID),
@@ -539,11 +539,11 @@ func TestSecondaryUUID(t *testing.T) {
 	sessionSecondaryUUID := uuid.New()
 
 	tests := []struct {
-		name          string
-		id            MetadataAddress
+		name string
+		id MetadataAddress
 		expectedValue uuid.UUID
 		expectedError string
-	}{
+	} {
 		{
 			"scope",
 			ScopeMetadataAddress(uuid.New()),
@@ -620,11 +620,11 @@ func TestNameHash(t *testing.T) {
 	recordSpecNameHash := sha256.Sum256([]byte(recordSpecName))
 
 	tests := []struct {
-		name          string
-		id            MetadataAddress
+		name string
+		id MetadataAddress
 		expectedValue []byte
 		expectedError string
-	}{
+	} {
 		{
 			"scope",
 			ScopeMetadataAddress(uuid.New()),
@@ -704,9 +704,9 @@ func TestScopeAddressConverters(t *testing.T) {
 	recordSpecID := RecordSpecMetadataAddress(randomUUID, "the downard spiral")
 
 	tests := []struct {
-		name          string
-		baseID        MetadataAddress
-		expectedID    MetadataAddress
+		name string
+		baseID MetadataAddress
+		expectedID MetadataAddress
 		expectedError string
 	}{
 		{
@@ -781,9 +781,9 @@ func TestRecordAddressConverters(t *testing.T) {
 	}
 
 	tests := []struct {
-		name          string
-		baseID        MetadataAddress
-		expectedID    MetadataAddress
+		name string
+		baseID MetadataAddress
+		expectedID MetadataAddress
 		expectedError string
 	}{
 		{
@@ -860,9 +860,9 @@ func TestRecordSpecAddressConverters(t *testing.T) {
 	}
 
 	tests := []struct {
-		name          string
-		baseID        MetadataAddress
-		expectedID    MetadataAddress
+		name string
+		baseID MetadataAddress
+		expectedID MetadataAddress
 		expectedError string
 	}{
 		{
@@ -932,9 +932,9 @@ func TestContractSpecAddressConverters(t *testing.T) {
 	recordSpecID := RecordSpecMetadataAddress(randomUUID, "with teeth")
 
 	tests := []struct {
-		name          string
-		baseID        MetadataAddress
-		expectedID    MetadataAddress
+		name string
+		baseID MetadataAddress
+		expectedID MetadataAddress
 		expectedError string
 	}{
 		{
@@ -997,9 +997,9 @@ func TestFormat(t *testing.T) {
 	emptyID := MetadataAddress{}
 
 	tests := []struct {
-		name     string
-		id       MetadataAddress
-		format   string
+		name string
+		id MetadataAddress
+		format string
 		expected string
 	}{
 		{
