@@ -234,7 +234,7 @@ func (s *P8eTestSuite) TestConvertP8eContractSpec() {
 	}
 }
 
-func (s *p8eTestSuite) TestEmptyScope() {
+func (s *P8eTestSuite) TestEmptyScope() {
 	testedFields := []string{}
 	tests := []struct {
 		field string
@@ -319,7 +319,7 @@ func (s *p8eTestSuite) TestEmptyScope() {
 	})
 }
 
-func (s *p8eTestSuite) TestEmptySession() {
+func (s *P8eTestSuite) TestEmptySession() {
 	testedFields := []string{}
 	tests := []struct {
 		field string
@@ -397,7 +397,7 @@ func (s *p8eTestSuite) TestEmptySession() {
 	})
 }
 
-func (s *p8eTestSuite) TestEmptyRecord() {
+func (s *P8eTestSuite) TestEmptyRecord() {
 	testedFields := []string{}
 	tests := []struct {
 		field string
@@ -482,7 +482,7 @@ func (s *p8eTestSuite) TestEmptyRecord() {
 	})
 }
 
-func (s *p8eTestSuite) TestEmptyProcess() {
+func (s *P8eTestSuite) TestEmptyProcess() {
 	testedFields := []string{}
 	tests := []struct {
 		field string
