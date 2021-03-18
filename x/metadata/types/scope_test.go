@@ -13,26 +13,28 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var (
-	pubHex, _ = hex.DecodeString("85EA54E8598B27EC37EAEEEEA44F1E78A9B5E671")
-	addr      = sdk.AccAddress(pubHex)
-)
-
-type scopeTestSuite struct {
+type ScopeTestSuite struct {
 	suite.Suite
+
+	Addr string
 }
 
 // func ownerPartyList is defined in msg_test.go
 
 func TestScopeTestSuite(t *testing.T) {
-	suite.Run(t, new(scopeTestSuite))
+	suite.Run(t, new(ScopeTestSuite))
 }
 
-func (s *scopeTestSuite) SetupSuite() {
+func (s *ScopeTestSuite) SetupSuite() {
 	s.T().Parallel()
+
+	pubHex := "85EA54E8598B27EC37EAEEEEA44F1E78A9B5E671"
+	addrHex, err := hex.DecodeString(pubHex)
+	s.Require().NoError(err, "DecodeString(%s) error", pubHex)
+	s.Addr = sdk.AccAddress(addrHex).String()
 }
 
-func (s *scopeTestSuite) TestScopeValidateBasic() {
+func (s *ScopeTestSuite) TestScopeValidateBasic() {
 	tests := []struct {
 		name    string
 		scope   *Scope
@@ -41,13 +43,13 @@ func (s *scopeTestSuite) TestScopeValidateBasic() {
 	}{
 		{
 			"valid scope one owner",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(addr.String()), []string{}, ""),
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{}, ""),
 			"",
 			false,
 		},
 		{
 			"valid scope one owner, one data access",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(addr.String()), []string{addr.String()}, ""),
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{s.Addr}, ""),
 			"",
 			false,
 		},
@@ -59,7 +61,7 @@ func (s *scopeTestSuite) TestScopeValidateBasic() {
 		},
 		{
 			"no owners, data access",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{addr.String()}, ""),
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{s.Addr}, ""),
 			"scope must have at least one owner",
 			true,
 		},
@@ -71,7 +73,7 @@ func (s *scopeTestSuite) TestScopeValidateBasic() {
 		},
 		{
 			"invalid scope id - wrong address type",
-			NewScope(MetadataAddress(addr), ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
+			NewScope(MetadataAddress{0x85}, ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
 			"invalid metadata address type: 133",
 			true,
 		},
@@ -83,7 +85,7 @@ func (s *scopeTestSuite) TestScopeValidateBasic() {
 		},
 		{
 			"invalid spec id - wrong address type",
-			NewScope(ScopeMetadataAddress(uuid.New()), MetadataAddress(addr), []Party{}, []string{}, ""),
+			NewScope(ScopeMetadataAddress(uuid.New()), MetadataAddress{0x85}, []Party{}, []string{}, ""),
 			"invalid metadata address type: 133",
 			true,
 		},
@@ -112,18 +114,17 @@ func (s *scopeTestSuite) TestScopeValidateBasic() {
 			if tt.wantErr {
 				require.Equal(t, tt.want, err.Error())
 			}
-
 		})
 	}
 }
 
-func (s *scopeTestSuite) TestScopeString() {
+func (s *ScopeTestSuite) TestScopeString() {
 	s.T().Run("scope string", func(t *testing.T) {
 		scopeUUID := uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")
 		sessionUUID := uuid.MustParse("c25c7bd4-c639-4367-a842-f64fa5fccc19")
 		scope := NewScope(ScopeMetadataAddress(
 			scopeUUID), ScopeSpecMetadataAddress(sessionUUID),
-			ownerPartyList(addr.String()),
+			ownerPartyList(s.Addr),
 			[]string{},
 			"")
 		require.Equal(t, `scope_id: scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp
@@ -138,7 +139,7 @@ value_owner_address: ""
 	})
 }
 
-func (s *scopeTestSuite) TestRecordValidateBasic() {
+func (s *ScopeTestSuite) TestRecordValidateBasic() {
 	scopeUUID := uuid.New()
 	sessionUUID := uuid.New()
 	sessionID := SessionMetadataAddress(scopeUUID, sessionUUID)
@@ -318,7 +319,7 @@ func (s *scopeTestSuite) TestRecordValidateBasic() {
 	}
 }
 
-func (s *scopeTestSuite) TestSessionValidateBasic() {
+func (s *ScopeTestSuite) TestSessionValidateBasic() {
 	scopeUUID := uuid.New()
 	sessionUUID := uuid.New()
 	sessionID := SessionMetadataAddress(scopeUUID, sessionUUID)
@@ -418,7 +419,7 @@ func (s *scopeTestSuite) TestSessionValidateBasic() {
 	}
 }
 
-func (s *scopeTestSuite) TestSessionString() {
+func (s *ScopeTestSuite) TestSessionString() {
 
 	scopeUUID := uuid.New()
 	sessionUUID := uuid.New()
@@ -448,7 +449,7 @@ audit:
 	})
 }
 
-func (s *scopeTestSuite) TestMetadataAuditUpdate() {
+func (s *ScopeTestSuite) TestMetadataAuditUpdate() {
 	blockTime := time.Now()
 	var initial *AuditFields
 	result := initial.UpdateAudit(blockTime, "creator", "initial")

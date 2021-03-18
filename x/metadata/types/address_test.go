@@ -29,7 +29,7 @@ var (
 func requireBech32String (t *testing.T, typeCode []byte, data []byte) string {
 	hrp, err := MetadataAddress{typeCode[0]}.Prefix()
 	require.NoError(t, err, "getPrefix error")
-	addr = append([]byte{typeCode[0]}, data...)
+	addr := append([]byte{typeCode[0]}, data...)
 	bech32Addr, err := bech32.ConvertAndEncode(hrp, addr)
 	require.NoError(t, err, "bech32.ConvertAndEncode error")
 	return bech32Addr
