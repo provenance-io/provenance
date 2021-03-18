@@ -549,88 +549,126 @@ func TestMetadataAddressTypeTestFuncs(t *testing.T) {
 }
 
 func TestPrefix(t *testing.T) {
-	t.Run("scope", func(subtest *testing.T) {
-		actualScopePrefix, actualScopePrefixErr := ScopeMetadataAddress(uuid.New()).Prefix()
-		assert.NoError(subtest, actualScopePrefixErr, "actualScopePrefixErr")
-		assert.Equal(subtest, PrefixScope, actualScopePrefix, "actualScopePrefix")
-	})
+	tests := []struct {
+		name string
+		addr MetadataAddress
+		expectedValue string
+		expectedError string
+		expectAnyError bool    // set to true if you expect an error, but don't care what the error string is.
+	}{
+		{
+			"scope",
+			ScopeMetadataAddress(uuid.New()),
+			PrefixScope,
+			"",
+			false,
+		},
+		{
+			"scope without address",
+			MetadataAddress{ScopeKeyPrefix[0]},
+			PrefixScope,
+			"",
+			false,
+		},
+		{
+			"session",
+			SessionMetadataAddress(uuid.New(), uuid.New()),
+			PrefixSession,
+			"",
+			false,
+		},
+		{
+			"session without address",
+			MetadataAddress{SessionKeyPrefix[0]},
+			PrefixSession,
+			"",
+			false,
+		},
+		{
+			"record",
+			RecordMetadataAddress(uuid.New(), "ronald"),
+			PrefixRecord,
+			"",
+			false,
+		},
+		{
+			"record without address",
+			MetadataAddress{RecordKeyPrefix[0]},
+			PrefixRecord,
+			"",
+			false,
+		},
+		{
+			"scope spec",
+			ScopeSpecMetadataAddress(uuid.New()),
+			PrefixScopeSpecification,
+			"",
+			false,
+		},
+		{
+			"scope spec without address",
+			MetadataAddress{ScopeSpecificationKeyPrefix[0]},
+			PrefixScopeSpecification,
+			"",
+			false,
+		},
+		{
+			"contract spec",
+			ContractSpecMetadataAddress(uuid.New()),
+			PrefixContractSpecification,
+			"",
+			false,
+		},
+		{
+			"contract spec without address",
+			MetadataAddress{ContractSpecificationKeyPrefix[0]},
+			PrefixContractSpecification,
+			"",
+			false,
+		},
+		{
+			"record spec",
+			RecordSpecMetadataAddress(uuid.New(), "george"),
+			PrefixRecordSpecification,
+			"",
+			false,
+		},
+		{
+			"record spec without address",
+			MetadataAddress{RecordSpecificationKeyPrefix[0]},
+			PrefixRecordSpecification,
+			"",
+			false,
+		},
+		{
+			"empty",
+			MetadataAddress{},
+			"",
+			"address is empty",
+			false,
+		},
+		{
+			"bad",
+			MetadataAddress("don't do this"),
+			"",
+			"",
+			true,
+		},
+	}
 
-	t.Run("scope without address", func(subtest *testing.T) {
-		addr := MetadataAddress{ScopeKeyPrefix[0]}
-		actual, err := addr.Prefix()
-		assert.NoError(subtest, err, "Prefix error")
-		assert.Equal(subtest, PrefixScope, actual, "Prefix value")
-	})
-
-	t.Run("session", func(subtest *testing.T) {
-		actualSessionPrefix, actualSessionPrefixErr := SessionMetadataAddress(uuid.New(), uuid.New()).Prefix()
-		assert.NoError(subtest, actualSessionPrefixErr, "actualSessionPrefixErr")
-		assert.Equal(subtest, PrefixSession, actualSessionPrefix, "actualSessionPrefix")
-	})
-
-	t.Run("session without address", func(subtest *testing.T) {
-		addr := MetadataAddress{SessionKeyPrefix[0]}
-		actual, err := addr.Prefix()
-		assert.NoError(subtest, err, "Prefix error")
-		assert.Equal(subtest, PrefixSession, actual, "Prefix value")
-	})
-
-	t.Run("record", func(subtest *testing.T) {
-		actualRecordPrefix, actualRecordPrefixErr := RecordMetadataAddress(uuid.New(), "ronald").Prefix()
-		assert.NoError(subtest, actualRecordPrefixErr, "actualRecordPrefixErr")
-		assert.Equal(subtest, PrefixRecord, actualRecordPrefix, "actualRecordPrefix")
-	})
-
-	t.Run("record without address", func(subtest *testing.T) {
-		addr := MetadataAddress{RecordKeyPrefix[0]}
-		actual, err := addr.Prefix()
-		assert.NoError(subtest, err, "Prefix error")
-		assert.Equal(subtest, PrefixRecord, actual, "Prefix value")
-	})
-
-	t.Run("scope spec", func(subtest *testing.T) {
-		actualScopeSpecPrefix, actualScopeSpecPrefixErr := ScopeSpecMetadataAddress(uuid.New()).Prefix()
-		assert.NoError(subtest, actualScopeSpecPrefixErr, "actualScopeSpecPrefixErr")
-		assert.Equal(subtest, PrefixScopeSpecification, actualScopeSpecPrefix, "actualScopeSpecPrefix")
-	})
-
-	t.Run("scope spec without address", func(subtest *testing.T) {
-		addr := MetadataAddress{ScopeSpecificationKeyPrefix[0]}
-		actual, err := addr.Prefix()
-		assert.NoError(subtest, err, "Prefix error")
-		assert.Equal(subtest, PrefixScopeSpecification, actual, "Prefix value")
-	})
-
-	t.Run("contract spec", func(subtest *testing.T) {
-		actualContractSpecPrefix, actualContractSpecPrefixErr := ContractSpecMetadataAddress(uuid.New()).Prefix()
-		assert.NoError(subtest, actualContractSpecPrefixErr, "actualContractSpecPrefixErr")
-		assert.Equal(subtest, PrefixContractSpecification, actualContractSpecPrefix, "actualContractSpecPrefix")
-	})
-
-	t.Run("contract spec without address", func(subtest *testing.T) {
-		addr := MetadataAddress{ContractSpecificationKeyPrefix[0]}
-		actual, err := addr.Prefix()
-		assert.NoError(subtest, err, "Prefix error")
-		assert.Equal(subtest, PrefixContractSpecification, actual, "Prefix value")
-	})
-
-	t.Run("record spec", func(subtest *testing.T) {
-		actualRecordSpecPrefix, actualRecordSpecPrefixErr := RecordSpecMetadataAddress(uuid.New(), "george").Prefix()
-		assert.NoError(subtest, actualRecordSpecPrefixErr, "actualRecordSpecPrefixErr")
-		assert.Equal(subtest, PrefixRecordSpecification, actualRecordSpecPrefix, "actualRecordSpecPrefix")
-	})
-
-	t.Run("record spec without address", func(subtest *testing.T) {
-		addr := MetadataAddress{RecordSpecificationKeyPrefix[0]}
-		actual, err := addr.Prefix()
-		assert.NoError(subtest, err, "Prefix error")
-		assert.Equal(subtest, PrefixRecordSpecification, actual, "Prefix value")
-	})
-
-	t.Run("bad", func(subtest *testing.T) {
-		_, badPrefixErr := MetadataAddress("don't do this").Prefix()
-		assert.Error(subtest, badPrefixErr, "badPrefixErr")
-	})
+	for _, tc := range tests {
+		t.Run(tc.name, func(subtest *testing.T) {
+			actual, err := tc.addr.Prefix()
+			assert.Equal(subtest, tc.expectedValue, actual, "Prefix value")
+			if len(tc.expectedError) > 0 {
+				assert.EqualError(subtest, err, tc.expectedError, "Prefix error string")
+			} else if tc.expectAnyError {
+				assert.Error(subtest, err, "Prefix error (any)")
+			} else {
+				assert.NoError(subtest, err, "Prefix error")
+			}
+		})
+	}
 }
 
 func TestPrimaryUUID(t *testing.T) {
