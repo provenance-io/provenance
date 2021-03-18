@@ -163,3 +163,14 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 	}
 
 }
+
+func (s *KeeperTestSuite) TestInitGenesisShouldFailValidateBasicOnAttribute() {
+	var attributeData types.GenesisState
+	attributeData.Attributes = append(attributeData.Attributes, types.Attribute{
+		Name:          "",
+		Value:         []byte("0123456789"),
+		Address:       s.user1,
+		AttributeType: types.AttributeType_String,
+	})
+	s.Assert().Panics(func() { s.app.AttributeKeeper.InitGenesis(s.ctx, &attributeData) })
+}
