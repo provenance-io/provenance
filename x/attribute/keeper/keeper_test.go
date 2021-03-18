@@ -164,6 +164,61 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 
 }
 
+func (s *KeeperTestSuite) TestDeleteAttribute() {
+
+	attr := types.Attribute{
+		Name:          "example.attribute",
+		Value:         []byte("0123456789"),
+		Address:       s.user1,
+		AttributeType: types.AttributeType_String,
+	}
+	s.app.AttributeKeeper.SetAttribute(s.ctx, s.user1Addr, attr, s.user1Addr)
+
+	cases := map[string]struct {
+		name      string
+		accAddr   sdk.AccAddress
+		ownerAddr sdk.AccAddress
+		wantErr   bool
+		errorMsg  string
+	}{
+		"should fail to delete, cant resolve name wrong owner": {
+			name:      "example.attribute",
+			accAddr:   s.user1Addr,
+			ownerAddr: s.user2Addr,
+			wantErr:   true,
+			errorMsg:  fmt.Sprintf("no account found for owner address \"%s\"", s.user2Addr),
+		},
+		"should fail to delete, cant resolve unknown name": {
+			name:      "dne",
+			accAddr:   s.user1Addr,
+			ownerAddr: s.user1Addr,
+			wantErr:   true,
+			errorMsg:  fmt.Sprintf("\"dne\" does not resolve to address \"%s\"", s.user1Addr),
+		},
+		"should successfully delete attribute": {
+			name:      "example.attribute",
+			accAddr:   s.user1Addr,
+			ownerAddr: s.user1Addr,
+			wantErr:   false,
+			errorMsg:  "",
+		},
+	}
+	for n, tc := range cases {
+		tc := tc
+
+		s.Run(n, func() {
+			err := s.app.AttributeKeeper.DeleteAttribute(s.ctx, tc.accAddr, tc.name, tc.ownerAddr)
+			if tc.wantErr {
+				s.Error(err)
+				s.Equal(tc.errorMsg, err.Error())
+			} else {
+				s.NoError(err)
+			}
+		})
+	}
+
+}
+
 func (s *KeeperTestSuite) TestGetAllAttributes() {
 
 	attributes, err := s.app.AttributeKeeper.GetAllAttributes(s.ctx, s.user1Addr)
