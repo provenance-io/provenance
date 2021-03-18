@@ -129,7 +129,7 @@ type P8EData struct {
 // The following fields require looking up specs and should be overwritten accordingly:
 //  * P8EData.Session.Name string from the contract specification ClassName
 //  * P8EData.Records[*].Process.ProcessId from the contract specification Source?
-//  * P8EData.Records[*].Inputs[*].Status from the record specification ?????
+//  * P8EData.Records[*].Inputs[*].Status from the record specification ResultType
 func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest) (P8EData, []string, error) {
 	p8EData := P8EData{
 		Scope:   emptyScope(),
