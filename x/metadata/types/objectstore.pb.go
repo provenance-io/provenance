@@ -359,10 +359,7 @@ func (m *ObjectStoreLocator) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthObjectstore
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthObjectstore
 			}
 			if (iNdEx + skippy) > l {
@@ -431,10 +428,7 @@ func (m *OSLocatorParams) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthObjectstore
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthObjectstore
 			}
 			if (iNdEx + skippy) > l {
