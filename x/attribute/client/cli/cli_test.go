@@ -268,12 +268,12 @@ func (s *IntegrationTestSuite) TestGetAttributeParamsCmd() {
 		{
 			"json output",
 			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			"{\"max_value_length\":32}",
+			"{\"max_value_length\":128}",
 		},
 		{
 			"text output",
 			[]string{fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
-			"max_value_length: 32",
+			"max_value_length: 128",
 		},
 	}
 
