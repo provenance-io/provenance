@@ -167,7 +167,7 @@ func (s *scopeTestSuite) TestRecordValidateBasic() {
 		{
 			"invalid record, missing sessionid",
 			NewRecord("name", nil, *validPs, []RecordInput{*validRI}, []RecordOutput{*validRO}),
-			"incorrect address length (must be at least 17, actual: 0)",
+			"address is empty",
 			true,
 		},
 		{
@@ -257,7 +257,7 @@ func (s *scopeTestSuite) TestRecordValidateBasic() {
 			NewRecord("name", sessionID, *validPs,
 				[]RecordInput{*NewRecordInput("name", &RecordInput_RecordId{}, "type_name", RecordInputStatus_Record)},
 				[]RecordOutput{*validRO}),
-			"invalid record input: invalid record input recordid incorrect address length (must be at least 17, actual: 0)",
+			"invalid record input: invalid record input recordid address is empty",
 			true,
 		},
 		{
@@ -316,7 +316,6 @@ func (s *scopeTestSuite) TestRecordValidateBasic() {
 
 		})
 	}
-
 }
 
 func (s *scopeTestSuite) TestSessionValidateBasic() {

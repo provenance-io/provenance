@@ -221,7 +221,7 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 			proposed: types.Record{},
 			signers:  []string{s.user1},
 			wantErr:  true,
-			errorMsg: "incorrect address length (must be at least 17, actual: 0)",
+			errorMsg: "address is empty",
 		},
 		"existing and proposed names do not match": {
 			existing: types.NewRecord("notamatch", s.sessionId, *process, []types.RecordInput{}, []types.RecordOutput{}),

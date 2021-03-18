@@ -163,7 +163,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdate() {
 			proposed: types.Scope{},
 			signers:  []string{s.user1},
 			wantErr:  true,
-			errorMsg: "incorrect address length (must be at least 17, actual: 0)",
+			errorMsg: "address is empty",
 		},
 		"valid proposed with nil existing doesn't error": {
 			existing: types.Scope{},

@@ -179,7 +179,7 @@ func (s *SessionKeeperTestSuite) TestMetadataValidateSessionUpdate() {
 			proposed: types.Session{},
 			signers:  []string{s.user1},
 			wantErr:  true,
-			errorMsg: "incorrect address length (must be at least 17, actual: 0)",
+			errorMsg: "address is empty",
 		},
 		"valid session update, existing and proposed satisfy validation": {
 			existing: validSession,
