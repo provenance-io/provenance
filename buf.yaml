@@ -16,6 +16,7 @@ lint:
     - COMMENT_FIELD
     - SERVICE_SUFFIX
     - PACKAGE_VERSION_SUFFIX
+    - RPC_REQUEST_STANDARD_NAME
   ignore:
     - tendermint
     - gogoproto
@@ -36,6 +37,8 @@ lint:
 breaking:
   use:
     - FILE
+  except:
+    - FIELD_NO_DELETE
   ignore:
     - tendermint
     - gogoproto
