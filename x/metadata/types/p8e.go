@@ -127,7 +127,6 @@ type P8EData struct {
 
 // Migrate Converts a MsgP8EMemorializeContractRequest object into the new objects.
 // The following fields require looking up specs and should be overwritten accordingly:
-//  * P8EData.Scope.SpecificationId MetadataAddress looked up from the iterator on contract spec.
 //  * P8EData.Records[*].Process.ProcessId from the contract specification Source?
 //  * P8EData.Records[*].Inputs[*].Status from the record specification ResultType
 func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest) (P8EData, []string, error) {
@@ -149,7 +148,10 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 	if err != nil {
 		return p8EData, signers, err
 	}
-	p8EData.Scope.SpecificationId = MetadataAddress{}
+	p8EData.Scope.SpecificationId, err = parseScopeSpecificationID(msg.ScopeSpecificationId)
+	if err != nil {
+		return p8EData, signers, err
+	}
 	p8EData.Scope.Owners = contractRecitalParties
 	p8EData.Scope.DataAccess = partyAddresses(contractRecitalParties)
 	p8EData.Scope.ValueOwnerAddress, err = getValueOwner(msg.Contract.Invoker, msg.Contract.Recitals)
@@ -264,6 +266,22 @@ func parseScopeID(input string) (MetadataAddress, error) {
 		return ScopeMetadataAddress(scopeUUID), nil
 	}
 	return MetadataAddress{}, fmt.Errorf("could not convert %s into either a scope metadata address (%s) or uuid (%s)",
+		input, maErr.Error(), uuidErr.Error())
+}
+
+func parseScopeSpecificationID(input string) (MetadataAddress, error) {
+	scopeSpecID, maErr := MetadataAddressFromBech32(input)
+	if maErr == nil {
+		if !scopeSpecID.IsScopeSpecificationAddress() {
+			return scopeSpecID, fmt.Errorf("metadata address %s is not for a scope specification", scopeSpecID)
+		}
+		return scopeSpecID, nil
+	}
+	scopeSpecUUID, uuidErr := uuid.Parse(input)
+	if uuidErr == nil {
+		return ScopeSpecMetadataAddress(scopeSpecUUID), nil
+	}
+	return MetadataAddress{}, fmt.Errorf("could not convert %s into either a scope specification metadata address (%s) or uuid (%s)",
 		input, maErr.Error(), uuidErr.Error())
 }
 
