@@ -294,6 +294,7 @@ func NewProcess(name string, processID isProcess_ProcessId, method string) *Proc
 	}
 }
 
+// ProcessID is a publicly exposed isProcess_ProcessId
 type ProcessID isProcess_ProcessId
 
 // ValidateBasic performs a static check over the process format
