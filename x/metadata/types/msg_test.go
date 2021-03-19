@@ -148,6 +148,13 @@ func TestAddOSLocator(t *testing.T) {
 
 	err := bindRequestMsg.ValidateBasic()
 	require.NoError(t, err)
+	signers := bindRequestMsg.GetSigners()
+	route := bindRequestMsg.Route()
+	require.Equal(t, "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", signers[0].String())
+	require.Equal(t, ModuleName, route)
+	require.Equal(t, TypeMsgBindOSLocatorRequest, bindRequestMsg.Type())
+	require.Equal(t, "{\"type\":\"provenance/metadata/MsgBindOSLocatorRequest\",\"value\":{\"locator\":{\"locator_uri\":\"http://foo.com\",\"owner\":\"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck\"}}}", string(bindRequestMsg.GetSignBytes()))
+
 }
 
 func TestModifyOSLocator(t *testing.T) {
@@ -156,12 +163,25 @@ func TestModifyOSLocator(t *testing.T) {
 
 	err := modifyRequest.ValidateBasic()
 	require.NoError(t, err)
+	signers := modifyRequest.GetSigners()
+	require.Equal(t, "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", signers[0].String())
+	require.Equal(t, ModuleName, modifyRequest.Route())
+	require.Equal(t, TypeMsgModifyOSLocatorRequest, modifyRequest.Type())
+	require.Equal(t, "{\"type\":\"provenance/metadata/MsgModifyOSLocatorRequest\",\"value\":{\"locator\":{\"locator_uri\":\"http://foo.com\",\"owner\":\"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck\"}}}", string(modifyRequest.GetSignBytes()))
+
 }
 
 func TestDeleteOSLocator(t *testing.T) {
-	var deleteRequest = NewMsgModifyOSLocatorRequest(ObjectStoreLocator{Owner:
+	var deleteRequest = NewMsgDeleteOSLocatorRequest(ObjectStoreLocator{Owner:
 	"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", LocatorUri: "http://foo.com"})
 
 	err := deleteRequest.ValidateBasic()
 	require.NoError(t, err)
+
+	signers := deleteRequest.GetSigners()
+	require.Equal(t, "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", signers[0].String())
+	require.Equal(t, ModuleName, deleteRequest.Route())
+	require.Equal(t, TypeMsgDeleteOSLocatorRequest, deleteRequest.Type())
+	require.Equal(t, "{\"type\":\"provenance/metadata/MsgDeleteOSLocatorRequest\",\"value\":{\"locator\":{\"locator_uri\":\"http://foo.com\",\"owner\":\"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck\"}}}", string(deleteRequest.GetSignBytes()))
+
 }
