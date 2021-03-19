@@ -43,6 +43,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * Gov module route added for name module root name proposal
+* Update Cosmos SDK to 0.42.2 for bug fixes and improvements
 
 
 ## [v0.2.1](https://github.com/provenance-io/provenance/releases/tag/v0.2.1) - 2021-03-11
