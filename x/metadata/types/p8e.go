@@ -201,9 +201,9 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 
 	// Get the signers.
 	if msg.Signatures != nil {
-		newSigners, err := convertSigners(msg.Signatures)
-		if err != nil {
-			return p8EData, signers, err
+		newSigners, e := convertSigners(msg.Signatures)
+		if e != nil {
+			return p8EData, signers, e
 		}
 		signers = append(signers, newSigners...)
 	}
