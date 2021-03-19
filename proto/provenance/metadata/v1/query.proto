@@ -7,6 +7,7 @@ import "google/api/annotations.proto";
 import "provenance/metadata/v1/metadata.proto";
 import "provenance/metadata/v1/scope.proto";
 import "provenance/metadata/v1/specification.proto";
+import "provenance/metadata/v1/objectstore.proto";
 
 option go_package = "github.com/provenance-io/provenance/x/metadata/types";
 
@@ -88,10 +89,41 @@ service Query {
   rpc RecordSpecificationByID(RecordSpecificationByIDRequest) returns (RecordSpecificationByIDResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/recordspec/id/{record_specification_id}";
   }
+
+  // ---- OS locator methods -----
+  // Params queries all parameters for os locator sub module.
+  rpc OSLocatorParams(OSLocatorParamsRequest) returns (OSLocatorParamsResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/locator/params";
+  }
+
+  // for querying oslocator by address.
+  rpc OSLocator(OSLocatorRequest) returns (OSLocatorResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/locator/{owner}";
+  }
+
+  // for querying oslocator by uri.
+  rpc OSLocatorByURI(OSLocatorByURIRequest) returns (OSLocatorByURIResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/locator/uri/{uri}";
+  }
+  // for querying all the oslocator for all signer's present in a scope uuid.
+  rpc OSLocatorByScopeUUID(OSLocatorByScopeUUIDRequest) returns (OSLocatorByScopeUUIDResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/locator/scope/{scope_uuid}";
+  }
+
+  // get all os locators
+  rpc OSAllLocators(OSAllLocatorsRequest) returns (OSAllLocatorsResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/locators/all";
+  }
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
 message QueryParamsRequest {}
+
+// AllOSLocatorsRequest get all os locator's request.
+message OSAllLocatorsRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
 
 // QueryParamsResponse is the response type for the Query/Params RPC method.
 message QueryParamsResponse {
@@ -101,6 +133,11 @@ message QueryParamsResponse {
 
 // ScopeRequest is used for requesting a scope by id
 message ScopeRequest {
+  string scope_uuid = 1 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
+}
+
+// OSLocatorScopeRequest is used for requesting all the OSLocator associated with a scope_id
+message OSLocatorByScopeUUIDRequest {
   string scope_uuid = 1 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
 }
 
@@ -270,4 +307,51 @@ message RecordSpecificationByIDRequest {
 message RecordSpecificationByIDResponse {
   RecordSpecification record_specification    = 1 [(gogoproto.moretags) = "yaml:\"record_specification\""];
   string              record_specification_id = 2 [(gogoproto.moretags) = "yaml:\"record_specification_id\""];
+}
+
+// OSLocationRequest is used for requesting a Objectstore location by owner
+message OSLocatorRequest {
+  string owner = 1;
+}
+
+// OSLocatorByURIRequest get os locator's by uri
+message OSLocatorByURIRequest {
+  string uri = 1;
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// OSLocatorResponse is the response to a os locator request.
+message OSLocatorResponse {
+  ObjectStoreLocator locator = 1;
+}
+
+// OSLocatorParamsRequest is the request type for the Query/Params RPC method.
+message OSLocatorParamsRequest {}
+
+// OSLocatorParamsResponse is the response type for the Query/Params RPC method.
+message OSLocatorParamsResponse {
+  // params defines the parameters of the module.
+  OSLocatorParams params = 1 [(gogoproto.nullable) = false];
+}
+
+// OSLocatorByURIResponse is an array of ObjectStoreLocator with pagination info
+message OSLocatorByURIResponse {
+  repeated ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// OSLocatorByScopeUUIDResponse is an array of ObjectStoreLocator.
+message OSLocatorByScopeUUIDResponse {
+  repeated ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
+}
+
+// OSAllLocatorsResponse is an array of ObjectStoreLocator with pagination info
+message OSAllLocatorsResponse {
+  repeated ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

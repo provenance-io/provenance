@@ -10,6 +10,7 @@ import "gogoproto/gogo.proto";
 import "provenance/metadata/v1/metadata.proto";
 import "provenance/metadata/v1/scope.proto";
 import "provenance/metadata/v1/specification.proto";
+import "provenance/metadata/v1/objectstore.proto";
 
 // GenesisState defines the account module's genesis state.
 message GenesisState {
@@ -27,4 +28,7 @@ message GenesisState {
   repeated ScopeSpecification    scope_specifications    = 5 [(gogoproto.nullable) = false];
   repeated ContractSpecification contract_specifications = 6 [(gogoproto.nullable) = false];
   repeated RecordSpecification   record_specifications   = 7 [(gogoproto.nullable) = false];
+
+  OSLocatorParams             o_s_locator_params    = 8 [(gogoproto.nullable) = false];
+  repeated ObjectStoreLocator object_store_locators = 9 [(gogoproto.nullable) = false];
 }

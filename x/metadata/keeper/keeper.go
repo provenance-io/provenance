@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"net/url"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -85,6 +86,15 @@ type MetadataKeeperI interface {
 	IterateRecordSpecsForContractSpec(ctx sdk.Context, contractSpecID types.MetadataAddress, handler func(recordSpecID types.MetadataAddress) (stop bool)) error
 	// GetRecordSpecificationsForContractSpecificationID returns all the record specifications associated with given contractSpecID
 	GetRecordSpecificationsForContractSpecificationID(ctx sdk.Context, contractSpecID types.MetadataAddress) ([]*types.RecordSpecification, error)
+
+	// GetOsLocatorRecord returns the OS locator records for a given name record.
+	GetOsLocatorRecord(ctx sdk.Context, ownerAddress sdk.AccAddress) (types.ObjectStoreLocator, bool)
+	// return if OSLocator exists for a given owner addr
+	OSLocatorExists(ctx sdk.Context, ownerAddr string) bool
+	// add OSLocator instance
+	SetOSLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, uri string) error
+	// get OS locator by scope UUID.
+	GetOSLocatorByScopeUUID(ctx sdk.Context, scopeID string) (*types.OSLocatorByScopeUUIDResponse, error)
 }
 
 // Keeper is the concrete state-based API for the metadata module.
@@ -103,6 +113,10 @@ func NewKeeper(
 	cdc codec.BinaryMarshaler, key sdk.StoreKey, paramSpace paramtypes.Subspace,
 	authKeeper authkeeper.AccountKeeper,
 ) Keeper {
+	// set KeyTable if it has not already been set
+	if !paramSpace.HasKeyTable() {
+		paramSpace = paramSpace.WithKeyTable(types.OSParamKeyTable())
+	}
 	return Keeper{
 		storeKey:   key,
 		cdc:        cdc,
@@ -218,4 +232,25 @@ func FindMissing(required []string, entries []string) []string {
 		}
 	}
 	return retval
+}
+
+// VerifyCorrectOwner to determines whether the signer resolves to the owner of the OSLocator record.
+func (k Keeper) VerifyCorrectOwner(ctx sdk.Context, ownerAddr sdk.AccAddress) bool { // nolint:interfacer
+	stored, found := k.GetOsLocatorRecord(ctx, ownerAddr)
+	if !found {
+		return false
+	}
+	return ownerAddr.String() == stored.Owner
+}
+
+func (k Keeper) checkValidURI(uri string, ctx sdk.Context) (*url.URL, error) {
+	urlToPersist, err := url.Parse(uri)
+	if err != nil {
+		return nil, err
+	}
+
+	if int(k.GetOSLocatorParams(ctx).MaxUriLength) < len(uri) {
+		return nil, types.ErrOSLocatorURIToolong
+	}
+	return urlToPersist, nil
 }

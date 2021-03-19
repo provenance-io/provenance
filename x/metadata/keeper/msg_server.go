@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
@@ -545,4 +547,113 @@ func (k msgServer) P8EMemorializeContract(
 	)
 
 	return &types.MsgP8EMemorializeContractResponse{}, nil //nolint:staticcheck // Ignore deprecation error here.
+}
+
+func (k msgServer) BindOSLocator(goCtx context.Context, msg *types.MsgBindOSLocatorRequest) (*types.MsgBindOSLocatorResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	// Validate
+	if err := msg.ValidateBasic(); err != nil {
+		ctx.Logger().Error("unable to validate message", "err", err)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
+	if k.Keeper.OSLocatorExists(ctx, msg.Locator.Owner) {
+		ctx.Logger().Error("Address already bound to an URI", "owner", msg.Locator.Owner)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, types.ErrOSLocatorAlreadyBound.Error())
+	}
+
+	// Bind owner to URI
+	address, err := sdk.AccAddressFromBech32(msg.Locator.Owner)
+	if err != nil {
+		ctx.Logger().Error("invalid address", "err", err)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
+	if err := k.Keeper.SetOSLocatorRecord(ctx, address, msg.Locator.LocatorUri); err != nil {
+		ctx.Logger().Error("unable to bind name", "err", err)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+	// Emit event and return
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeOsLocatorCreated,
+			sdk.NewAttribute(types.AttributeKeyOSLocatorAddress, msg.Locator.Owner),
+			sdk.NewAttribute(types.AttributeKeyOSLocatorURI, msg.Locator.LocatorUri),
+		),
+	)
+
+	return &types.MsgBindOSLocatorResponse{}, nil
+}
+
+func (k msgServer) DeleteOSLocator(ctx context.Context, msg *types.MsgDeleteOSLocatorRequest) (*types.MsgDeleteOSLocatorResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	// Validate
+	if err := msg.ValidateBasic(); err != nil {
+		sdkCtx.Logger().Error("unable to validate message", "err", err)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
+	if !k.Keeper.OSLocatorExists(sdkCtx, msg.Locator.Owner) {
+		sdkCtx.Logger().Error("Address not already bound to an URI", "owner", msg.Locator.Owner)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, types.ErrOSLocatorAlreadyBound.Error())
+	}
+
+	// already valid address, checked in ValidateBasic
+	ownerAddr, _ := sdk.AccAddressFromBech32(msg.Locator.Owner)
+
+	if !k.Keeper.VerifyCorrectOwner(sdkCtx, ownerAddr) {
+		sdkCtx.Logger().Error("msg sender cannot delete os locator", "owner", ownerAddr)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "msg sender cannot delete os locator.")
+	}
+
+	// Delete
+	if err := k.Keeper.deleteRecord(sdkCtx, ownerAddr); err != nil {
+		sdkCtx.Logger().Error("error deleting name", "err", err)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+	// Emit event and return
+	sdkCtx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeOsLocatorDeleted,
+			sdk.NewAttribute(types.AttributeKeyOSLocatorAddress, msg.Locator.Owner),
+			sdk.NewAttribute(types.AttributeKeyOSLocatorURI, msg.Locator.LocatorUri),
+		),
+	)
+	return &types.MsgDeleteOSLocatorResponse{Locator: msg.Locator}, nil
+}
+
+func (k msgServer) ModifyOSLocator(ctx context.Context, msg *types.MsgModifyOSLocatorRequest) (*types.MsgModifyOSLocatorResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	// Validate
+	if err := msg.ValidateBasic(); err != nil {
+		sdkCtx.Logger().Error("unable to validate message", "err", err)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
+	if !k.Keeper.OSLocatorExists(sdkCtx, msg.Locator.Owner) {
+		sdkCtx.Logger().Error("Address not already bound to an URI", "owner", msg.Locator.Owner)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, types.ErrOSLocatorAlreadyBound.Error())
+	}
+
+	// already valid address, checked in ValidateBasic
+	ownerAddr, _ := sdk.AccAddressFromBech32(msg.Locator.Owner)
+
+	if !k.Keeper.VerifyCorrectOwner(sdkCtx, ownerAddr) {
+		sdkCtx.Logger().Error("msg sender cannot modify os locator", "owner", ownerAddr)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "msg sender cannot delete os locator.")
+	}
+	// Modify
+	if err := k.Keeper.modifyRecord(sdkCtx, ownerAddr, msg.Locator.LocatorUri); err != nil {
+		sdkCtx.Logger().Error("error deleting name", "err", err)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+	// Emit event and return
+	sdkCtx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeOsLocatorModified,
+			sdk.NewAttribute(types.AttributeKeyOSLocatorAddress, msg.Locator.Owner),
+			sdk.NewAttribute(types.AttributeKeyOSLocatorURI, msg.Locator.LocatorUri),
+		),
+	)
+	return &types.MsgModifyOSLocatorResponse{Locator: msg.Locator}, nil
 }

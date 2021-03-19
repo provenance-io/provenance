@@ -1,12 +1,12 @@
 package rest_test
 
 import (
+	b64 "encoding/base64"
 	"fmt"
-	"testing"
-
-	"github.com/google/uuid"
-	"github.com/stretchr/testify/suite"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"google.golang.org/genproto/googleapis/rpc/status"
+	"strings"
+	"testing"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -15,6 +15,8 @@ import (
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/provenance-io/provenance/testutil"
 
@@ -49,6 +51,14 @@ type IntegrationTestSuite struct {
 
 	specUUID uuid.UUID
 	specID   types.MetadataAddress
+
+	objectLocator metadatatypes.ObjectStoreLocator
+	ownerAddr     sdk.AccAddress
+	uri           string
+
+	objectLocator1 metadatatypes.ObjectStoreLocator
+	ownerAddr1     sdk.AccAddress
+	uri1           string
 }
 
 func ownerPartyList(addresses ...string) []types.Party {
@@ -98,9 +108,20 @@ func (suite *IntegrationTestSuite) SetupSuite() {
 	suite.scope = *metadatatypes.NewScope(suite.scopeID, suite.specID, ownerPartyList(suite.user1), []string{suite.user1}, suite.user1)
 	// Configure Genesis data for metadata module
 
+	// add os locator
+	suite.ownerAddr = suite.accountAddr
+	suite.uri = "http://foo.com"
+	suite.objectLocator = metadatatypes.NewOSLocatorRecord(suite.ownerAddr, suite.uri)
+
+	suite.ownerAddr1 = suite.user1Addr
+	suite.uri1 = "http://bar.com"
+	suite.objectLocator1 = metadatatypes.NewOSLocatorRecord(suite.ownerAddr1, suite.uri1)
+
 	var metadataData metadatatypes.GenesisState
 	metadataData.Params = metadatatypes.DefaultParams()
+	metadataData.OSLocatorParams = metadatatypes.DefaultOSLocatorParams()
 	metadataData.Scopes = append(metadataData.Scopes, suite.scope)
+	metadataData.ObjectStoreLocators = append(metadataData.ObjectStoreLocators, suite.objectLocator, suite.objectLocator1)
 	metadataDataBz, err := cfg.Codec.MarshalJSON(&metadataData)
 	suite.Require().NoError(err)
 
@@ -167,6 +188,69 @@ func (suite *IntegrationTestSuite) TestGRPCQueries() {
 			&status.Status{},
 			&status.Status{},
 		},
+		{
+			"Get metadata os locator params",
+			fmt.Sprintf("%s/provenance/metadata/v1/locator/params", baseURL),
+			map[string]string{
+				grpctypes.GRPCBlockHeightHeader: "1",
+			},
+			false,
+			&metadatatypes.OSLocatorParamsResponse{},
+			&metadatatypes.OSLocatorParamsResponse{Params: metadatatypes.DefaultOSLocatorParams()},
+		},
+		{
+			"Get os locator from owner address.",
+			fmt.Sprintf("%s/provenance/metadata/v1/locator/%s", baseURL, suite.ownerAddr.String()),
+			map[string]string{
+				grpctypes.GRPCBlockHeightHeader: "1",
+			},
+			false,
+			&metadatatypes.OSLocatorResponse{},
+			&metadatatypes.OSLocatorResponse{
+				Locator: &suite.objectLocator,
+			},
+		},
+		{
+			"Get os locator from owner uri.",
+			// only way i could get around http url parse isseus for rest
+			// This encodes/decodes using a URL-compatible base64
+			// format.
+			fmt.Sprintf("%s/provenance/metadata/v1/locator/uri/%s", baseURL, b64.StdEncoding.EncodeToString([]byte(suite.uri))),
+			map[string]string{
+				grpctypes.GRPCBlockHeightHeader: "1",
+			},
+			false,
+			&metadatatypes.OSLocatorByURIResponse{},
+			&metadatatypes.OSLocatorByURIResponse{
+				Locator: []metadatatypes.ObjectStoreLocator{metadatatypes.ObjectStoreLocator{
+					Owner:      suite.ownerAddr.String(),
+					LocatorUri: suite.uri,
+				}},
+				Pagination: &query.PageResponse{
+					NextKey: nil,
+					Total:   1,
+				},
+			},
+		},
+		{
+			"Get os locator's for given scope.",
+			// only way i could get around http url parse isseus for rest
+			// This encodes/decodes using a URL-compatible base64
+			// format.
+			fmt.Sprintf("%s/provenance/metadata/v1/locator/scope/%s", baseURL, suite.scopeUUID),
+			map[string]string{
+				grpctypes.GRPCBlockHeightHeader: "1",
+			},
+			false,
+			&metadatatypes.OSLocatorByScopeUUIDResponse{},
+			&metadatatypes.OSLocatorByScopeUUIDResponse{
+				Locator: []metadatatypes.ObjectStoreLocator{{
+					Owner:      suite.ownerAddr1.String(),
+					LocatorUri: suite.uri1,
+				}},
+			},
+		},
+
 	}
 
 	for _, tc := range testCases {
@@ -181,6 +265,54 @@ func (suite *IntegrationTestSuite) TestGRPCQueries() {
 			} else {
 				suite.Require().NoError(err)
 				suite.Require().Equal(tc.expected.String(), tc.respType.String())
+			}
+		})
+	}
+}
+func (suite *IntegrationTestSuite) TestAllOSLocator() {
+	val := suite.testnet.Validators[0]
+	baseURL := val.APIAddress
+
+	testCases := []struct {
+		name     string
+		url      string
+		headers  map[string]string
+		expErr   bool
+		respType proto.Message
+		expected proto.Message
+	}{
+
+		{
+			"Get all os locator.",
+			// only way i could get around http url parse isseus for rest
+			// This encodes/decodes using a URL-compatible base64
+			// format.
+			fmt.Sprintf("%s/provenance/metadata/v1/locators/all", baseURL),
+			map[string]string{
+				grpctypes.GRPCBlockHeightHeader: "1",
+			},
+			false,
+			&metadatatypes.OSAllLocatorsResponse{},
+			&metadatatypes.OSAllLocatorsResponse{
+				Locator: []metadatatypes.ObjectStoreLocator{{
+					Owner:      suite.ownerAddr1.String(),
+					LocatorUri: suite.uri1,
+				}},
+			},
+		},
+	}
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			resp, err := sdktestutil.GetRequestWithHeaders(tc.url, tc.headers)
+			suite.Require().NoError(err)
+			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType)
+			if tc.expErr {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().NoError(err)
+				suite.Require().True( strings.Contains(fmt.Sprint(tc.respType),fmt.Sprint(tc.expected)))
 			}
 		})
 	}

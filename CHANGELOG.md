@@ -36,12 +36,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * Governance proposal support for marker module
+* Decentralized discovery for object store instances #105
 * Add `AddP8eContractSpec` endpoint to convert v39 contract spec into v40 contract specification  #167
 * Refactor `Attribute` validate to sdk standard validate basic and validate size of attribute value #175
 
 ### Bug Fixes
 
 * Gov module route added for name module root name proposal
+* Update Cosmos SDK to 0.42.2 for bug fixes and improvements
 
 
 ## [v0.2.1](https://github.com/provenance-io/provenance/releases/tag/v0.2.1) - 2021-03-11

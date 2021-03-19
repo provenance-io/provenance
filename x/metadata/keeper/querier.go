@@ -29,7 +29,16 @@ func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 			return queryScopeSpecification(ctx, path, k, legacyQuerierCdc)
 		// TODO: add contract spec stuff
 		// TODO: add record spec stuff
-
+		case types.QueryOSParams:
+			return queryOSLocatorParams(ctx, k, legacyQuerierCdc)
+		case types.QueryOSGet:
+			return queryOSGet(ctx, path, k, legacyQuerierCdc)
+		case types.QueryOSGetByURI:
+			return queryOSGetByURI(ctx, path, k, legacyQuerierCdc)
+		case types.QueryOSGetByScope:
+			return queryOSGetByScope(ctx, path, k, legacyQuerierCdc)
+		case types.QueryOSGetAll:
+			return queryOSGetAll(ctx, k, legacyQuerierCdc)
 		default:
 			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown query endpoint")
 		}
@@ -131,4 +140,113 @@ func queryScopeSpecification(ctx sdk.Context, path []string, k Keeper, legacyQue
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
 	return res, nil
+}
+
+func queryOSLocatorParams(ctx sdk.Context, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+	params := keeper.GetOSLocatorParams(ctx)
+
+	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, params)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+	}
+
+	return res, nil
+}
+
+func queryOSGet(ctx sdk.Context, path []string, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+	accAddr, err := sdk.AccAddressFromBech32(path[1])
+	if err != nil {
+		return nil, types.ErrInvalidAddress
+	}
+	msgs, _ := keeper.GetOsLocatorRecord(ctx, accAddr)
+
+	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, msgs)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+	}
+
+	return bz, nil
+}
+
+func queryOSGetByURI(ctx sdk.Context, path []string, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+	// intentionally leaving out pagination for now for this one, not really anything legacy rest for this :shrug:
+	var records []types.ObjectStoreLocator
+
+	appendToRecords := func(record types.ObjectStoreLocator) bool {
+		if record.LocatorUri == path[1] {
+			records = append(records, record)
+			// have to get all the uri associated with an address..imo..check
+		}
+		return false
+	}
+	if err := keeper.IterateLocators(ctx, appendToRecords); err != nil {
+		return nil, err
+	}
+	uniqueRecords := uniqueRecords(records)
+
+	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, &uniqueRecords)
+
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+	}
+
+	return bz, nil
+}
+
+func queryOSGetAll(ctx sdk.Context, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+	// intentionally leaving out pagination for now for this one, not really anything legacy rest for this :shrug:
+	var records []types.ObjectStoreLocator
+
+	appendToRecords := func(record types.ObjectStoreLocator) bool {
+		records = append(records, record)
+		// have to get all the uri associated with an address..imo..check
+		return false
+	}
+	if err := keeper.IterateLocators(ctx, appendToRecords); err != nil {
+		return nil, err
+	}
+	uniqueRecords := uniqueRecords(records)
+
+	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, &uniqueRecords)
+
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+	}
+
+	return bz, nil
+}
+
+func queryOSGetByScope(ctx sdk.Context, path []string, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+	// Return value data structure.
+
+	msgs, _ := keeper.GetOSLocatorByScopeUUID(ctx, path[1])
+
+	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, msgs)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+	}
+
+	return bz, nil
+}
+
+func uniqueRecords(records []types.ObjectStoreLocator) []types.ObjectStoreLocator {
+	if len(records) == 0 {
+		return records
+	}
+	seen := make([]types.ObjectStoreLocator, 0, len(records))
+
+slice:
+	for i, n := range records {
+		if i == 0 {
+			records = records[:0]
+		}
+		for _, t := range seen {
+			if n.Owner == t.Owner && n.LocatorUri == t.LocatorUri {
+				continue slice
+			}
+		}
+		seen = append(seen, n)
+		records = append(records, n)
+	}
+	return records
 }

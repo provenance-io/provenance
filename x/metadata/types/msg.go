@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,6 +26,9 @@ const (
 	TypeMsgDeleteRecordSpecificationRequest   = "delete_record_specification_request"
 	TypeMsgAddP8EContractSpecRequest          = "add_p8e_contract_spec_request"
 	TypeMsgP8eMemorializeContractRequest      = "p8e_memorialize_contract_request"
+	TypeMsgBindOSLocatorRequest               = "add_os_locator_request"
+	TypeMsgDeleteOSLocatorRequest             = "delete_os_locator_request"
+	TypeMsgModifyOSLocatorRequest             = "modify_os_locator_request"
 )
 
 // Compile time interface checks.
@@ -42,6 +46,9 @@ var (
 	_ sdk.Msg = &MsgDeleteContractSpecificationRequest{}
 	_ sdk.Msg = &MsgAddRecordSpecificationRequest{}
 	_ sdk.Msg = &MsgDeleteRecordSpecificationRequest{}
+	_ sdk.Msg = &MsgBindOSLocatorRequest{}
+	_ sdk.Msg = &MsgDeleteOSLocatorRequest{}
+	_ sdk.Msg = &MsgModifyOSLocatorRequest{}
 	_ sdk.Msg = &MsgAddP8EContractSpecRequest{}
 	_ sdk.Msg = &MsgP8EMemorializeContractRequest{}
 )
@@ -719,4 +726,142 @@ func (msg MsgP8EMemorializeContractRequest) GetSignBytes() []byte {
 func (msg MsgP8EMemorializeContractRequest) ValidateBasic() error {
 	_, _, err := ConvertP8eMemorializeContractRequest(&msg)
 	return err
+}
+
+// --------------------------- OSLocator------------------------------------------
+
+// NewMsgBindOSLocatorRequest creates a new msg instance
+func NewMsgBindOSLocatorRequest(obj ObjectStoreLocator) *MsgBindOSLocatorRequest {
+	return &MsgBindOSLocatorRequest{
+		Locator: obj,
+	}
+}
+
+func (msg MsgBindOSLocatorRequest) Route() string {
+	return ModuleName
+}
+
+func (msg MsgBindOSLocatorRequest) Type() string {
+	return TypeMsgBindOSLocatorRequest
+}
+
+func (msg MsgBindOSLocatorRequest) ValidateBasic() error {
+	err := ValidateOSLocatorObj(msg.Locator.Owner, msg.Locator.LocatorUri)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (msg MsgBindOSLocatorRequest) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgBindOSLocatorRequest) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Locator.Owner)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
+}
+
+// ---- Delete OS locator ------
+func NewMsgDeleteOSLocatorRequest(obj ObjectStoreLocator) *MsgDeleteOSLocatorRequest {
+	return &MsgDeleteOSLocatorRequest{
+		Locator: obj,
+	}
+}
+func (msg MsgDeleteOSLocatorRequest) Route() string {
+	return ModuleName
+}
+
+func (msg MsgDeleteOSLocatorRequest) Type() string {
+	return TypeMsgDeleteOSLocatorRequest
+}
+
+func (msg MsgDeleteOSLocatorRequest) ValidateBasic() error {
+	err := ValidateOSLocatorObj(msg.Locator.Owner, msg.Locator.LocatorUri)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (msg MsgDeleteOSLocatorRequest) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// Signers returns the addrs of signers that must sign.
+// CONTRACT: All signatures must be present to be valid.
+// CONTRACT: Returns addrs in some deterministic order.
+// here we assume msg for delete request has the right address
+// should be verified later in the keeper?
+func (msg MsgDeleteOSLocatorRequest) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Locator.Owner)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
+}
+
+/**
+Validates OSLocatorObj
+*/
+func ValidateOSLocatorObj(ownerAddr string, uri string) error {
+	if strings.TrimSpace(ownerAddr) == "" {
+		return fmt.Errorf("owner address cannot be empty")
+	}
+
+	if _, err := sdk.AccAddressFromBech32(ownerAddr); err != nil {
+		return fmt.Errorf("failed to add locator for a given owner address,"+
+			" invalid address: %s", ownerAddr)
+	}
+
+	if strings.TrimSpace(uri) == "" {
+		return fmt.Errorf("uri cannot be empty")
+	}
+
+	if _, err := url.Parse(uri); err != nil {
+		return fmt.Errorf("failed to add locator for a given"+
+			" owner address, invalid uri: %s", uri)
+	}
+	return nil
+}
+
+//----------Modify OS Locator -----------------
+
+func NewMsgModifyOSLocatorRequest(obj ObjectStoreLocator) *MsgModifyOSLocatorRequest {
+	return &MsgModifyOSLocatorRequest{
+		Locator: obj,
+	}
+}
+
+func (msg MsgModifyOSLocatorRequest) Route() string {
+	return ModuleName
+}
+
+func (msg MsgModifyOSLocatorRequest) Type() string {
+	return TypeMsgModifyOSLocatorRequest
+}
+
+func (msg MsgModifyOSLocatorRequest) ValidateBasic() error {
+	err := ValidateOSLocatorObj(msg.Locator.Owner, msg.Locator.LocatorUri)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (msg MsgModifyOSLocatorRequest) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgModifyOSLocatorRequest) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Locator.Owner)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
 }

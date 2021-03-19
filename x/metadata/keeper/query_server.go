@@ -2,6 +2,9 @@ package keeper
 
 import (
 	"context"
+	b64 "encoding/base64"
+	"fmt"
+	"net/url"
 	"strings"
 
 	"google.golang.org/grpc/codes"
@@ -15,7 +18,12 @@ import (
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
+const defaultLimit = 100
+
 var _ types.QueryServer = Keeper{}
+
+// ObjectStoreLocators within the GenesisState
+type ObjectStoreLocators []types.ObjectStoreLocator
 
 // Params queries params of metadata module
 func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
@@ -477,4 +485,152 @@ func (k Keeper) RecordSpecificationByID(c context.Context, req *types.RecordSpec
 	retval.RecordSpecification = &spec
 
 	return &retval, nil
+}
+
+func (k Keeper) OSLocatorParams(c context.Context, request *types.OSLocatorParamsRequest) (*types.OSLocatorParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	var params types.OSLocatorParams
+	k.paramSpace.GetParamSet(ctx, &params)
+
+	return &types.OSLocatorParamsResponse{Params: params}, nil
+}
+
+func (k Keeper) OSLocator(c context.Context, request *types.OSLocatorRequest) (*types.OSLocatorResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	accAddr, err := sdk.AccAddressFromBech32(request.Owner)
+	if err != nil {
+		return nil, types.ErrInvalidAddress
+	}
+
+	record, exists := k.GetOsLocatorRecord(ctx, accAddr)
+
+	if !exists {
+		return nil, types.ErrAddressNotBound
+	}
+	return &types.OSLocatorResponse{Locator: &record}, nil
+}
+
+func (k Keeper) OSLocatorByURI(ctx context.Context, request *types.OSLocatorByURIRequest) (*types.OSLocatorByURIResponse, error) {
+	ctxSDK := sdk.UnwrapSDKContext(ctx)
+	var sDec []byte
+	// rest request send in base64 encoded uri, using a URL-compatible base64
+	// format.
+	if IsBase64(request.Uri) {
+		sDec, _ = b64.StdEncoding.DecodeString(request.Uri)
+	} else {
+		sDec = []byte(request.Uri)
+	}
+	url, err := url.Parse(string(sDec))
+	if err != nil {
+		return nil, err
+	}
+	// Return value data structure.
+	var records []types.ObjectStoreLocator
+	// Handler that adds records if account address matches.
+	appendToRecords := func(record types.ObjectStoreLocator) bool {
+		if record.LocatorUri == url.String() {
+			records = append(records, record)
+			// have to get all the uri associated with an address..imo..check
+		}
+		return false
+	}
+
+	if err := k.IterateLocators(ctxSDK, appendToRecords); err != nil {
+		return nil, err
+	}
+	if records == nil {
+		return nil, types.ErrNoRecordsFound
+	}
+	uniqueRecords := uniqueRecords(records)
+
+	pageRequest := request.Pagination
+	// if the PageRequest is nil, use default PageRequest
+	if pageRequest == nil {
+		pageRequest = &query.PageRequest{}
+	}
+
+	limit := pageRequest.Limit
+	if limit == 0 {
+		limit = defaultLimit
+	}
+	end := pageRequest.Offset + limit
+	totalResults := uint64(len(uniqueRecords))
+
+	if pageRequest.Offset > totalResults {
+		return nil, fmt.Errorf("invalid offset")
+	}
+
+	if end > totalResults {
+		end = totalResults
+	}
+
+	return &types.OSLocatorByURIResponse{
+		Locator:    uniqueRecords[pageRequest.Offset:end],
+		Pagination: &query.PageResponse{Total: totalResults},
+	}, nil
+}
+
+func (k Keeper) OSLocatorByScopeUUID(ctx context.Context, request *types.OSLocatorByScopeUUIDRequest) (*types.OSLocatorByScopeUUIDResponse, error) {
+	ctxSDK := sdk.UnwrapSDKContext(ctx)
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if request.ScopeUuid == "" {
+		return nil, status.Error(codes.InvalidArgument, "scope uuid cannot be empty")
+	}
+
+	return k.GetOSLocatorByScopeUUID(ctxSDK, request.ScopeUuid)
+}
+
+func (k Keeper) OSAllLocators(ctx context.Context, request *types.OSAllLocatorsRequest) (*types.OSAllLocatorsResponse, error) {
+	ctxSDK := sdk.UnwrapSDKContext(ctx)
+
+	// Return value data structure.
+	var records []types.ObjectStoreLocator
+	// Handler that adds records if account address matches.
+	appendToRecords := func(record types.ObjectStoreLocator) bool {
+		records = append(records, record)
+		// have to get all the uri associated with an address..imo..check
+		return false
+	}
+
+	if err := k.IterateLocators(ctxSDK, appendToRecords); err != nil {
+		return nil, err
+	}
+	if records == nil {
+		return nil, types.ErrNoRecordsFound
+	}
+	uniqueRecords := uniqueRecords(records)
+
+	pageRequest := request.Pagination
+	// if the PageRequest is nil, use default PageRequest
+	if pageRequest == nil {
+		pageRequest = &query.PageRequest{}
+	}
+
+	limit := pageRequest.Limit
+	if limit == 0 {
+		limit = defaultLimit
+	}
+	end := pageRequest.Offset + limit
+	totalResults := uint64(len(uniqueRecords))
+
+	if pageRequest.Offset > totalResults {
+		return nil, fmt.Errorf("invalid offset")
+	}
+
+	if end > totalResults {
+		end = totalResults
+	}
+
+	return &types.OSAllLocatorsResponse{
+		Locator:    uniqueRecords[pageRequest.Offset:end],
+		Pagination: &query.PageResponse{Total: totalResults},
+	}, nil
+}
+
+func IsBase64(s string) bool {
+	_, err := b64.StdEncoding.DecodeString(s)
+	return err == nil
 }

@@ -1,0 +1,25 @@
+syntax = "proto3";
+package provenance.metadata.v1;
+import "gogoproto/gogo.proto";
+option go_package = "github.com/provenance-io/provenance/x/metadata/types";
+
+option java_package        = "io.provenance.metadata.v1";
+option java_multiple_files = true;
+
+// Defines an Locator object stored on chain, which represents a owner( blockchain address) associated with a endpoint
+// uri for it's associated object store.
+message ObjectStoreLocator {
+  // account address the endpoint is owned by
+  string owner = 1;
+  // locator endpoint uri
+  string locator_uri = 2;
+}
+
+// Params defines the parameters for the metadata-locator module methods.
+message OSLocatorParams {
+  uint32 max_uri_length = 1 [
+    (gogoproto.customtype) = "uint32",
+    (gogoproto.nullable)   = false,
+    (gogoproto.moretags)   = "yaml:\"max_uri_length\""
+  ];
+}
