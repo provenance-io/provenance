@@ -42,30 +42,6 @@ func TestP8eTestSuite(t *testing.T) {
 
 // func ownerPartyList is defined in msg_test.go
 
-func createContractSpec(inputSpecs []*p8e.DefinitionSpec, outputSpec p8e.OutputSpec, definitionSpec p8e.DefinitionSpec) p8e.ContractSpec {
-	return p8e.ContractSpec{ConsiderationSpecs: []*p8e.ConsiderationSpec{
-		{FuncName: "additionalParties",
-			InputSpecs:       inputSpecs,
-			OutputSpec:       &outputSpec,
-			ResponsibleParty: 1,
-		},
-	},
-		Definition:      &definitionSpec,
-		InputSpecs:      inputSpecs,
-		PartiesInvolved: []p8e.PartyType{p8e.PartyType_PARTY_TYPE_AFFILIATE},
-	}
-}
-
-func createDefinitionSpec(name string, classname string, reference p8e.ProvenanceReference, defType int) p8e.DefinitionSpec {
-	return p8e.DefinitionSpec{
-		Name: name,
-		ResourceLocation: &p8e.Location{Classname: classname,
-			Ref: &reference,
-		},
-		Type: 1,
-	}
-}
-
 // getPublicFieldNames gets all the public field names in the provided struct.
 // Panics if the provided thing isn't a struct.
 func getPublicFieldNames(thing interface{}) []string {
@@ -151,6 +127,30 @@ func appendUnique(list []string, newval string) []string {
 		return append(list, newval)
 	}
 	return list
+}
+
+func createContractSpec(inputSpecs []*p8e.DefinitionSpec, outputSpec p8e.OutputSpec, definitionSpec p8e.DefinitionSpec) p8e.ContractSpec {
+	return p8e.ContractSpec{ConsiderationSpecs: []*p8e.ConsiderationSpec{
+		{FuncName: "additionalParties",
+			InputSpecs:       inputSpecs,
+			OutputSpec:       &outputSpec,
+			ResponsibleParty: 1,
+		},
+	},
+		Definition:      &definitionSpec,
+		InputSpecs:      inputSpecs,
+		PartiesInvolved: []p8e.PartyType{p8e.PartyType_PARTY_TYPE_AFFILIATE},
+	}
+}
+
+func createDefinitionSpec(name string, classname string, reference p8e.ProvenanceReference, defType int) p8e.DefinitionSpec {
+	return p8e.DefinitionSpec{
+		Name: name,
+		ResourceLocation: &p8e.Location{Classname: classname,
+			Ref: &reference,
+		},
+		Type: 1,
+	}
 }
 
 func (s *P8eTestSuite) TestConvertP8eContractSpec() {
