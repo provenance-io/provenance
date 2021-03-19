@@ -60,9 +60,13 @@ func (s *IntegrationTestSuite) TestParamChangeVariations() {
 			rn := NewCreateRootNameProposal(tc.title, tc.description, tc.rootname, tc.owner, tc.restricted)
 			// in order to evaluate wrapped errors we need to convert to string form for basic evaluation
 			if tc.valError != nil {
-				s.Require().Equal(tc.valError.Error(), rn.ValidateBasic().Error())
+				err := rn.ValidateBasic()
+				s.Require().Error(err)
+				if err != nil {
+					s.Require().Equal(tc.valError.Error(), err.Error())
+				}
 			} else {
-				s.Require().Equal(tc.valError, rn.ValidateBasic())
+				s.Require().NoError(rn.ValidateBasic())
 			}
 		})
 
