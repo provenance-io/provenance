@@ -1,10 +1,6 @@
 package types
 
 import (
-
-
-)
-import (
 	"fmt"
 	"reflect"
 	"testing"
@@ -13,6 +9,7 @@ import (
 	"github.com/provenance-io/provenance/x/metadata/types/p8e"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -539,4 +536,116 @@ func (s *P8eTestSuite) TestEmptyProcess() {
 	})
 }
 
-// TODO: ConvertP8eMemorializeContractRequest tests
+func (s *P8eTestSuite) TestConvertP8eMemorializeContractRequest() {
+	scopeUUID := uuid.New()
+	scopeID := ScopeMetadataAddress(scopeUUID)
+	sessionUUID := uuid.New()
+	sessionID := SessionMetadataAddress(scopeUUID, sessionUUID)
+
+	tests := []struct {
+		name string
+		req MsgP8EMemorializeContractRequest
+		p8EData P8EData
+		signers []string
+		errorMsg string
+	}{
+		{
+			"valid conversion",
+			MsgP8EMemorializeContractRequest{
+				ScopeId:              scopeID.String(),
+				GroupId:              sessionID.String(),
+				ScopeSpecificationId: "", // TODO
+				Recitals: &p8e.Recitals{
+					Parties: []*p8e.Recital{
+						{
+							SignerRole: p8e.PartyType_PARTY_TYPE_OWNER,
+							Signer: &p8e.SigningAndEncryptionPublicKeys{
+								SigningPublicKey:    &p8e.PublicKey{
+									PublicKeyBytes: s.pubkey1.Bytes(),
+									Type:           p8e.PublicKeyType_ELLIPTIC,
+									Curve:          p8e.PublicKeyCurve_SECP256K1,
+								},
+								EncryptionPublicKey: nil,
+							},
+							Address: s.user1Addr,
+						},
+					},
+				},
+				Contract: &p8e.Contract{
+					Definition:     nil,
+					Spec:           &p8e.Fact{
+						Name:         "", // TODO
+						DataLocation: &p8e.Location{
+							Ref:       nil, // TODO
+							Classname: "",
+						},
+					},
+					Invoker: &p8e.SigningAndEncryptionPublicKeys{
+						SigningPublicKey:    &p8e.PublicKey{
+							PublicKeyBytes: s.pubkey1.Bytes(),
+							Type:           p8e.PublicKeyType_ELLIPTIC,
+							Curve:          p8e.PublicKeyCurve_SECP256K1,
+						},
+						EncryptionPublicKey: nil,
+					},
+					Inputs: []*p8e.Fact{}, // TODO
+					Conditions: []*p8e.Condition{}, // TODO
+					Considerations: []*p8e.Consideration{}, // TODO
+					Recitals: []*p8e.Recital{}, // TODO
+					TimesExecuted:  1,
+					StartTime:      nil,
+				},
+				Signatures: &p8e.SignatureSet{
+					Signatures: []*p8e.Signature{
+						{
+							Algo:      "",
+							Provider:  "",
+							Signature: "",
+							Signer:    &p8e.SigningAndEncryptionPublicKeys{
+								SigningPublicKey:    &p8e.PublicKey{
+									PublicKeyBytes: s.pubkey1.Bytes(),
+									Type:           p8e.PublicKeyType_ELLIPTIC,
+									Curve:          p8e.PublicKeyCurve_SECP256K1,
+								},
+								EncryptionPublicKey: nil,
+							},
+						},
+					},
+				},
+				Invoker: s.user1Addr.Bytes(),
+			},
+			P8EData{
+				Scope:   nil, // TODO
+				Session: nil, // TODO
+				Records: nil, // TODO
+			},
+			[]string{}, // TODO
+			"",
+		},
+		// TODO: Valid call
+		// TODO: convertParties fails
+		// TODO: parseScopeID fails
+		// TODO: getValueOwner fails
+		// TODO: getValueOwner fails
+		// TODO: parseSessionID fails
+		// TODO: getSessionSpecID fails
+		// TODO: convertSigners fails
+	}
+
+	tests = tests[:0] // TODO: Remove this line once tests are actually ready.
+
+	for _, tc := range tests {
+		s.T().Run(tc.name, func(t *testing.T) {
+			p8eData, signers, err := ConvertP8eMemorializeContractRequest(&tc.req)
+			if len(tc.errorMsg) > 0 {
+				assert.EqualError(t, err, tc.errorMsg, "expected error")
+			} else {
+				require.NoError(t, err, "unexpected error")
+				assert.Equal(t, tc.p8EData.Scope, p8eData.Scope, "scope")
+				assert.Equal(t, tc.p8EData.Session, p8eData.Session, "session")
+				assert.Equal(t, tc.p8EData.Records, p8eData.Records, "records")
+				assert.Equal(t, tc.signers, signers, "signers")
+			}
+		})
+	}
+}
