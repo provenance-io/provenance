@@ -584,15 +584,10 @@ func (msg MsgP8EMemorializeContractRequest) Type() string {
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgP8EMemorializeContractRequest) GetSigners() []sdk.AccAddress {
-	retval := []sdk.AccAddress{}
-	if msg.Signatures != nil {
-		for _, signature := range msg.Signatures.Signatures {
-			if signature != nil && signature.Signer != nil {
-				retval = append(retval, signature.Signer.SigningPublicKey.PublicKeyBytes)
-			}
-		}
+	if len(msg.Invoker) > 0 {
+		return []sdk.AccAddress{msg.Invoker}
 	}
-	return retval
+	return []sdk.AccAddress{}
 }
 
 // GetSignBytes gets the bytes for the message signer to sign on
