@@ -2,6 +2,7 @@ package metadata_test
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"testing"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -14,7 +15,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/provenance-io/provenance/x/metadata"
 	"github.com/provenance-io/provenance/x/metadata/types"
 	"github.com/provenance-io/provenance/x/metadata/types/p8e"
@@ -22,11 +22,10 @@ import (
 
 type HandlerTestSuite struct {
 	suite.Suite
-	cfg     testnet.Config
-	testnet *testnet.Network
 
 	app *app.App
 	ctx sdk.Context
+	handler   sdk.Handler
 
 	pubkey1   cryptotypes.PubKey
 	user1     string
@@ -35,14 +34,12 @@ type HandlerTestSuite struct {
 	pubkey2   cryptotypes.PubKey
 	user2     string
 	user2Addr sdk.AccAddress
-	handler   sdk.Handler
 }
 
 func (s *HandlerTestSuite) SetupTest() {
-	app := simapp.Setup(false)
-	s.app = app
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	s.ctx = ctx
+	s.app = simapp.Setup(false)
+	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.handler = metadata.NewHandler(s.app.MetadataKeeper)
 
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
@@ -53,9 +50,6 @@ func (s *HandlerTestSuite) SetupTest() {
 	s.user2 = s.user2Addr.String()
 
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
-
-	handler := metadata.NewHandler(app.MetadataKeeper)
-	s.handler = handler
 }
 
 func TestHandlerTestSuite(t *testing.T) {
@@ -86,53 +80,67 @@ func createDefinitionSpec(name string, classname string, reference p8e.Provenanc
 	}
 }
 
-func (s HandlerTestSuite) TestAddContractSpecMsg() {
+// TODO: MemorializeContract tests
+// TODO: ChangeOwnership tests
+// TODO: AddScope tests
+// TODO: DeleteScope tests
+// TODO: AddSession tests
+// TODO: AddRecord tests
+// TODO: DeleteRecord tests
+// TODO: AddScopeSpecification tests
+// TODO: DeleteScopeSpecification tests
+// TODO: AddContractSpecification tests
+// TODO: DeleteContractSpecification tests
+// TODO: AddRecordSpecification tests
+// TODO: DeleteRecordSpecification tests
+
+func (s HandlerTestSuite) TestAddP8EContractSpec() {
 	validDefSpec := createDefinitionSpec("perform_input_checks", "io.provenance.loan.LoanProtos$PartiesList", p8e.ProvenanceReference{Hash: "Adv+huolGTKofYCR0dw5GHm/R7sUWOwF32XR8r8r9kDy4il5U/LApxOWYHb05jhK4+eY4YzRMRiWcxU3Lx0+Mw=="}, 1)
 	invalidDefSpec := createDefinitionSpec("perform_action", "", p8e.ProvenanceReference{Hash: "Adv+huolGTKofYCR0dw5GHm/R7sUWOwF32XR8r8r9kDy4il5U/LApxOWYHb05jhK4+eY4YzRMRiWcxU3Lx0+Mw=="}, 1)
 
-	cases := map[string]struct {
+	cases := []struct {
+		name     string
 		v39CSpec p8e.ContractSpec
 		signers  []string
-		wantErr  bool
 		errorMsg string
 	}{
-		"should successfully ADD contract spec in from v38 to v40": {
+		{
+			"should successfully ADD contract spec in from v38 to v40",
 			createContractSpec([]*p8e.DefinitionSpec{&validDefSpec}, p8e.OutputSpec{Spec: &validDefSpec}, validDefSpec),
 			[]string{s.user1},
-			false,
 			"",
 		},
-		"should successfully UPDATE contract spec in from v38 to v40": {
+		{
+			"should successfully UPDATE contract spec in from v38 to v40",
 			createContractSpec([]*p8e.DefinitionSpec{&validDefSpec}, p8e.OutputSpec{Spec: &validDefSpec}, validDefSpec),
 			[]string{s.user1},
-			false,
 			"",
 		},
-		"should fail to add due to invalid signers": {
+		{
+			"should fail to add due to invalid signers",
 			createContractSpec([]*p8e.DefinitionSpec{&validDefSpec}, p8e.OutputSpec{Spec: &validDefSpec}, validDefSpec),
 			[]string{s.user2},
-			true,
 			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1),
 		},
-		"should fail on converting contract validate basic": {
+		{
+			"should fail on converting contract validate basic",
 			createContractSpec([]*p8e.DefinitionSpec{&invalidDefSpec}, p8e.OutputSpec{Spec: &validDefSpec}, validDefSpec),
 			[]string{s.user1},
-			true,
 			"input specification type name cannot be empty",
 		},
 	}
-	for n, tc := range cases {
-		tc := tc
 
-		s.Run(n, func() {
+	for _, tc := range cases {
+		s.T().Run(tc.name, func(t *testing.T) {
 			_, err := s.handler(s.ctx, &types.MsgAddP8EContractSpecRequest{Contractspec: tc.v39CSpec, Signers: tc.signers})
-			if tc.wantErr {
-				s.Error(err)
-				s.Equal(tc.errorMsg, err.Error())
+			if len(tc.errorMsg) > 0 {
+				assert.EqualError(t, err, tc.errorMsg)
 			} else {
-				s.NoError(err)
+				assert.NoError(t, err)
 			}
 		})
 	}
-
 }
+
+// TODO: P8EMemorializeContract tests
+
