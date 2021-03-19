@@ -2,19 +2,18 @@ package metadata_test
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"testing"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/provenance-io/provenance/app"
-	simapp "github.com/provenance-io/provenance/app"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/metadata"
 	"github.com/provenance-io/provenance/x/metadata/types"
 	"github.com/provenance-io/provenance/x/metadata/types/p8e"
@@ -37,7 +36,7 @@ type HandlerTestSuite struct {
 }
 
 func (s *HandlerTestSuite) SetupTest() {
-	s.app = simapp.Setup(false)
+	s.app = app.Setup(false)
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 	s.handler = metadata.NewHandler(s.app.MetadataKeeper)
 
