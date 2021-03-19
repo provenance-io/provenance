@@ -103,13 +103,9 @@ func (p *Params) Equal(that interface{}) bool {
 }
 
 func validateIntParam(i interface{}) error {
-	v, ok := i.(uint32)
+	_, ok := i.(uint32)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	if v < 1 {
-		return fmt.Errorf("value must be greater than zero: %d", v)
 	}
 
 	return nil
