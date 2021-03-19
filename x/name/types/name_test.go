@@ -42,11 +42,6 @@ func (s *NameRecordTestSuite) TestNameRecordValidateBasic() {
 			true,
 			"segment of name is too short",
 		},
-		"should fail to validate basic segmented name": {
-			NewNameRecord("example.fail", s.addr, true),
-			true,
-			"invalid name: \".\" is reserved",
-		},
 		"should fail to validate basic empty addr": {
 			NewNameRecord("example", sdk.AccAddress{}, true),
 			true,

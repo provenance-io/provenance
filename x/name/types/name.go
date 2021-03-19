@@ -32,8 +32,5 @@ func (nr NameRecord) ValidateBasic() error {
 	if strings.TrimSpace(nr.Name) == "" {
 		return ErrNameSegmentTooShort
 	}
-	if strings.Contains(nr.Name, ".") {
-		return ErrNameContainsSegments
-	}
 	return nil
 }
