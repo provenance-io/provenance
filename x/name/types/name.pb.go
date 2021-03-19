@@ -96,7 +96,7 @@ func (m *Params) GetAllowUnrestrictedNames() bool {
 	return false
 }
 
-// NameRecord is a structure used to bind ownership of a name heirarchy to a collection of addresses
+// NameRecord is a structure used to bind ownership of a name hierarchy to a collection of addresses
 type NameRecord struct {
 	// The bound name
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`

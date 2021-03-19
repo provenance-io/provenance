@@ -20,7 +20,7 @@ message Params {
   bool allow_unrestricted_names = 4;
 }
 
-// NameRecord is a structure used to bind ownership of a name heirarchy to a collection of addresses
+// NameRecord is a structure used to bind ownership of a name hierarchy to a collection of addresses
 message NameRecord {
   option (gogoproto.goproto_stringer) = false;
 
