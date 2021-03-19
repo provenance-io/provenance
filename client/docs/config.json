@@ -3,7 +3,7 @@
     "info": {
       "title": "Provenance Blockchain",
       "description": "Provenance Blockchain Node Application",
-      "version": "2.0.0"
+      "version": "1.0.0"
     },
     "apis": [
       {
@@ -40,14 +40,7 @@
             "Params": "NameParams"
           }
         }
-      },      {
-        "url": "./tmp-swagger-gen/provenance/spec/v1/query.swagger.json",
-        "operationIds": {
-          "rename": {
-            "Params": "SpecificationParams"
-          }
-        }
-      },
+      }
     ]
   }
   

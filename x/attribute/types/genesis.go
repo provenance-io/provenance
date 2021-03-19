@@ -8,10 +8,10 @@ func NewGenesisState(params Params, attributes []Attribute) *GenesisState {
 	}
 }
 
-// Validate ensures a genesis state is valid.
-func (state GenesisState) Validate() error {
+// ValidateBasic ensures a genesis state is valid.
+func (state GenesisState) ValidateBasic() error {
 	for _, a := range state.Attributes {
-		if err := a.Validate(); err != nil {
+		if err := a.ValidateBasic(); err != nil {
 			return err
 		}
 	}

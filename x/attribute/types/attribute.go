@@ -40,18 +40,20 @@ func (a Attribute) Hash() []byte {
 	return sum[:]
 }
 
-// Validate ensures an attribute is valid.
-func (a Attribute) Validate() error {
+// ValidateBascic ensures an attribute is valid.
+func (a Attribute) ValidateBasic() error {
 	if strings.TrimSpace(a.Name) == "" {
 		return fmt.Errorf("invalid name: empty")
 	}
 	if a.Value == nil {
 		return fmt.Errorf("invalid value: nil")
 	}
-	// TODO: this is now a stateful check and can't be performed here since we do not have the params for the module
-	// if len(a.Value) > maxValueLen {
-	// 	return fmt.Errorf("invalid value: too large")
-	// }
+
+	_, err := sdk.AccAddressFromBech32(a.Address)
+	if err != nil {
+		return fmt.Errorf("invalid attribute address: %s", a.Address)
+	}
+
 	if !ValidAttributeType(a.AttributeType) {
 		return fmt.Errorf("invalid attribute type")
 	}

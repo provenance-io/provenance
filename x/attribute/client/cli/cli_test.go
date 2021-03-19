@@ -86,7 +86,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			s.accountAddr,
 			attributetypes.AttributeType_Int,
 			[]byte("2")))
-	attributeData.Params.MaxValueLength = 32
+	attributeData.Params.MaxValueLength = 128
 	attributeDataBz, err := cfg.Codec.MarshalJSON(&attributeData)
 	s.Require().NoError(err)
 	genesisState[attributetypes.ModuleName] = attributeDataBz
@@ -268,12 +268,12 @@ func (s *IntegrationTestSuite) TestGetAttributeParamsCmd() {
 		{
 			"json output",
 			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			"{\"max_value_length\":32}",
+			"{\"max_value_length\":128}",
 		},
 		{
 			"text output",
 			[]string{fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
-			"max_value_length: 32",
+			"max_value_length: 128",
 		},
 	}
 
@@ -520,6 +520,21 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 		},
 		{
 			"set attribute, unknown type",
+			cli.NewAddAccountAttributeCmd(),
+			[]string{
+				"txtest.attribute",
+				s.testnet.Validators[0].Address.String(),
+				"notdog",
+				"toomanycharstoomanycharstoomanycharstoomanycharstoomanycharstoomanycharstoomanycharstoomanycharstoomanycharstoomanycharstoomanychars",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, &sdk.TxResponse{}, 1,
+		},
+		{
+			"set attribute, exceeds max length",
 			cli.NewAddAccountAttributeCmd(),
 			[]string{
 				"txtest.attribute",
