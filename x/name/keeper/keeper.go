@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	uuid "github.com/google/uuid"
@@ -22,9 +23,6 @@ type Handler func(record types.NameRecord) error
 type Keeper struct {
 	// The reference to the Paramstore to get and set account specific params
 	paramSpace paramtypes.Subspace
-
-	// To check whether accounts exist for addresses.
-	authKeeper types.AccountKeeper
 
 	// Key to access the key-value store from sdk.Context.
 	storeKey sdk.StoreKey
@@ -42,7 +40,6 @@ func NewKeeper(
 	cdc codec.BinaryMarshaler,
 	key sdk.StoreKey,
 	paramSpace paramtypes.Subspace,
-	authKeeper types.AccountKeeper,
 ) Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
@@ -52,7 +49,6 @@ func NewKeeper(
 	return Keeper{
 		storeKey:   key,
 		paramSpace: paramSpace,
-		authKeeper: authKeeper,
 		cdc:        cdc,
 	}
 }
@@ -77,8 +73,8 @@ func (keeper Keeper) setNameRecord(ctx sdk.Context, name string, addr sdk.AccAdd
 	if name, err = keeper.Normalize(ctx, name); err != nil {
 		return err
 	}
-	if account := keeper.authKeeper.GetAccount(ctx, addr); account == nil {
-		return types.ErrInvalidAddress
+	if err := sdk.VerifyAddressFormat(addr); err == nil {
+		return sdkerrors.Wrap(types.ErrInvalidAddress, err.Error())
 	}
 	key, err := types.GetNameKeyPrefix(name)
 	if err != nil {
@@ -89,42 +85,9 @@ func (keeper Keeper) setNameRecord(ctx sdk.Context, name string, addr sdk.AccAdd
 		return types.ErrNameAlreadyBound
 	}
 	record := types.NewNameRecord(name, addr, restrict)
-	bz, err := types.ModuleCdc.MarshalBinaryBare(&record)
-	if err != nil {
+	if err := record.ValidateBasic(); err != nil {
 		return err
 	}
-	store.Set(key, bz)
-	// Now index by address
-	addrPrefix, err := types.GetAddressKeyPrefix(addr)
-	if err != nil {
-		return err
-	}
-	indexKey := append(addrPrefix, key...) // [0x02] :: [addr-bytes] :: [name-key-bytes]
-	store.Set(indexKey, bz)
-	return nil
-}
-
-// setGenesisRecord will allow a record to be created for an address that does not exist if in proper format
-func (keeper Keeper) setGenesisRecord(ctx sdk.Context, name string, addr sdk.AccAddress, restrict bool) error {
-	var err error
-	if addr.Empty() {
-		return types.ErrNameInvalid
-	}
-	if err = sdk.VerifyAddressFormat(addr); err != nil {
-		return err
-	}
-	if name, err = keeper.Normalize(ctx, name); err != nil {
-		return err
-	}
-	key, err := types.GetNameKeyPrefix(name)
-	if err != nil {
-		return err
-	}
-	store := ctx.KVStore(keeper.storeKey)
-	if store.Has(key) {
-		return types.ErrNameAlreadyBound
-	}
-	record := types.NewNameRecord(name, addr, restrict)
 	bz, err := types.ModuleCdc.MarshalBinaryBare(&record)
 	if err != nil {
 		return err

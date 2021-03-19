@@ -339,7 +339,7 @@ func New(
 	)
 
 	app.NameKeeper = namekeeper.NewKeeper(
-		appCodec, keys[nametypes.StoreKey], app.GetSubspace(nametypes.ModuleName), app.AccountKeeper,
+		appCodec, keys[nametypes.StoreKey], app.GetSubspace(nametypes.ModuleName),
 	)
 
 	app.AttributeKeeper = attributekeeper.NewKeeper(
@@ -461,7 +461,7 @@ func New(
 
 		metadata.NewAppModule(appCodec, app.MetadataKeeper, app.AccountKeeper),
 		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper),
-		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper),
+		name.NewAppModule(appCodec, app.NameKeeper),
 		attribute.NewAppModule(app.AttributeKeeper),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper),
 
@@ -537,7 +537,7 @@ func New(
 		// metadata.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper),
 		// TODO -- add simulation to marker module
 		// marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper),
-		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper),
+		name.NewAppModule(appCodec, app.NameKeeper),
 		attribute.NewAppModule(app.AttributeKeeper),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper),
 
