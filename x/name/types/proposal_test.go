@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -20,6 +21,13 @@ func TestParameterChangeProposal(t *testing.T) {
 	require.Equal(t, false, crnp.Restricted)
 	require.Equal(t, sdk.AccAddress{}.String(), crnp.Owner)
 	require.Nil(t, crnp.ValidateBasic())
+	require.Equal(t, `Create Root Name Proposal:
+  Title:       test title
+  Description: test description
+  Owner:       
+  Name:        root
+  Restricted:  false
+`, crnp.String())
 }
 
 type IntegrationTestSuite struct {
@@ -42,6 +50,7 @@ func (s *IntegrationTestSuite) TestParamChangeVariations() {
 		{"invalid name", "test title", "test description", "sub.root", addr, false, ErrNameContainsSegments},
 		{"invalid empty name", "test title", "test description", "", addr, false, ErrInvalidLengthName},
 		{"invalid addr", "test title", "test description", "root", sdk.AccAddress("invalid"), false, ErrInvalidAddress},
+		{"invalid gov base proposal", "", "test description", "root", sdk.AccAddress("invalid"), false, fmt.Errorf("proposal title cannot be blank: invalid proposal content")},
 	}
 
 	for _, tc := range testCases {
@@ -49,7 +58,12 @@ func (s *IntegrationTestSuite) TestParamChangeVariations() {
 
 		s.Run(tc.name, func() {
 			rn := NewCreateRootNameProposal(tc.title, tc.description, tc.rootname, tc.owner, tc.restricted)
-			s.Require().Equal(tc.valError, rn.ValidateBasic())
+			// in order to evaluate wrapped errors we need to convert to string form for basic evaluation
+			if tc.valError != nil {
+				s.Require().Equal(tc.valError.Error(), rn.ValidateBasic().Error())
+			} else {
+				s.Require().Equal(tc.valError, rn.ValidateBasic())
+			}
 		})
 
 	}
