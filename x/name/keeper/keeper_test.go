@@ -16,7 +16,7 @@ func TestNameNormalization(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	nameKeeper := keeper.NewKeeper(app.AppCodec(), nil, app.GetSubspace(types.ModuleName), app.AccountKeeper)
+	nameKeeper := keeper.NewKeeper(app.AppCodec(), nil, app.GetSubspace(types.ModuleName))
 
 	params := nameKeeper.GetParams(ctx)
 	params.MaxNameLevels = 16
