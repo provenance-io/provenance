@@ -30,7 +30,7 @@ func (nr NameRecord) ValidateBasic() error {
 		return ErrInvalidAddress
 	}
 	if strings.TrimSpace(nr.Name) == "" {
-		return ErrInvalidLengthName
+		return ErrNameSegmentTooShort
 	}
 	if strings.Contains(nr.Name, ".") {
 		return ErrNameContainsSegments
