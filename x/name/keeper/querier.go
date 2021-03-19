@@ -21,6 +21,7 @@ func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 			return queryResolveName(ctx, path[1:], req, k, legacyQuerierCdc)
 		case types.QueryLookup:
 			return queryLookupNames(ctx, path[1:], req, k, legacyQuerierCdc)
+
 		default:
 			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown query endpoint")
 		}

@@ -8,6 +8,7 @@ import "provenance/metadata/v1/specification.proto";
 import "provenance/metadata/v1/p8e/p8e.proto";
 
 import "cosmos/tx/signing/v1beta1/signing.proto";
+import "provenance/metadata/v1/objectstore.proto";
 
 option go_package = "github.com/provenance-io/provenance/x/metadata/types";
 
@@ -49,11 +50,19 @@ service Msg {
   // DeleteRecordSpecification deletes a record specification
   rpc DeleteRecordSpecification(MsgDeleteRecordSpecificationRequest) returns (MsgDeleteRecordSpecificationResponse);
 
-  // AddP8eContractSpec adds a P8e v39 contract spec as a v40 ContractSpecification 
+  // AddP8eContractSpec adds a P8e v39 contract spec as a v40 ContractSpecification
   rpc AddP8eContractSpec(MsgAddP8eContractSpecRequest) returns (MsgAddP8eContractSpecResponse) {
     option deprecated = true;
   };
 
+
+  // Os Locator
+  // BindOSLocator binds a owner address to a uri.
+  rpc BindOSLocator(MsgBindOSLocatorRequest) returns (MsgBindOSLocatorResponse);
+  // DeleteOSLocator defines a method to delete existing OSLocator record by the current owner.
+  rpc DeleteOSLocator(MsgDeleteOSLocatorRequest) returns (MsgDeleteOSLocatorResponse);
+  // Modify existing OSLocator record by the current owner
+  rpc ModifyOSLocator(MsgModifyOSLocatorRequest) returns (MsgModifyOSLocatorResponse);
 }
 
 // MsgMemorializeContractRequest is a request from a P8e execution environment to record results of a contract
@@ -305,3 +314,43 @@ message MsgAddP8eContractSpecRequest {
 
 // MsgAddP8eContractSpecResponse returns a successful response
 message MsgAddP8eContractSpecResponse{}
+
+// MsgBindOSLocatorRequest defines an sdk.Msg type that is used to add an address of an owner to a particular uri.
+message MsgBindOSLocatorRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+  // The object locator to bind the address to bind to the URI.
+  ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
+}
+
+// MsgModifyOSLocatorRequest defines an sdk.Msg type that is used to modify a uri associated with an owner address.
+message MsgModifyOSLocatorRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+  // The object locator to bind the address to bind to the URI.
+  ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
+}
+
+// MsgBindOSLocatorResponse defines the Msg/BindObjectLocator response type.
+message MsgBindOSLocatorResponse {
+  ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
+}
+
+// MsgModifyOSLocatorResponse defines the Msg/ModifyObjectLocator response type
+message MsgModifyOSLocatorResponse {
+  ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
+}
+
+// MsgDeleteOSLocatorRequest defines an sdk.Msg type that is used to remove an existing OSLocator record binding.
+message MsgDeleteOSLocatorRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // The record being removed
+  ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
+}
+
+// MsgDeleteNameResponse defines the Msg/DeleteName response type.
+message MsgDeleteOSLocatorResponse {
+  ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
+}

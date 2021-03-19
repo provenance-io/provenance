@@ -23,7 +23,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// Params defines the set of params for the account module.
+// Params defines the set of params for the metadata module.
 type Params struct {
 }
 

@@ -36,6 +36,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * Governance proposal support for marker module
+* Decentralized discovery for object store instances #105
 * Add `AddP8eContractSpec` endpoint to convert v39 contract spec into v40 contract specification  #167
 * Refactor `Attribute` validate to sdk standard validate basic and validate size of attribute value #175
 

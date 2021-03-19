@@ -45,6 +45,11 @@ func GetQueryCmd() *cobra.Command {
 		GetMetadataRecordSpecCmd(),
 		GetOwnershipCmd(),
 		GetValueOwnershipCmd(),
+		GetOSLocatorParamsCmd(),
+		GetOSLocatorCmd(),
+		GetOSLocatorByURICmd(),
+		GetOSLocatorByScopeUUIDCmd(),
+		GetOSAllLocatorCmd(),
 	)
 	return queryCmd
 }
@@ -936,4 +941,196 @@ func printProtoList(ctx client.Context, toPrint []proto.Message) error {
 	}
 
 	return nil
+}
+
+// GetOSLocatorParamsCmd returns the command handler for metadata locator parameter querying.
+func GetOSLocatorParamsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "locator params",
+		Short: "Query the current os locator parameters",
+		Args:  cobra.NoArgs,
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query the current name module parameters:
+
+$ %s query name params
+`,
+				version.AppName,
+			)),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.OSLocatorParams(context.Background(), &types.OSLocatorParamsRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(&res.Params)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetOSLocatorCmd returns the command handler for querying oslocator by address .
+func GetOSLocatorCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "locator-by-addr [owner]",
+		Short: "Query the OS locator uri for the given owner",
+		Args:  cobra.ExactArgs(1),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query the OS locator records for the name provided:
+Example:
+$ %s query metadata locator foocorp
+`,
+				version.AppName,
+			)),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			owner := strings.ToLower(strings.TrimSpace(args[0]))
+
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.OSLocator(context.Background(), &types.OSLocatorRequest{Owner: owner})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res.Locator)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetOSLocatorByURICmd returns the command handler for querying oslocator by uri.
+func GetOSLocatorByURICmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "locator-by-uri [uri]",
+		Short: "Query the OS locator uri for the given owner",
+		Args:  cobra.ExactArgs(1),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query the OS locator records for the uri provided:
+Example:
+$ %s query metadata locator foocorp
+`,
+				version.AppName,
+			)),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			uri := strings.ToLower(strings.TrimSpace(args[0]))
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+			var response *types.OSLocatorByURIResponse
+
+			response, err = queryClient.OSLocatorByURI(context.Background(), &types.OSLocatorByURIRequest{Uri: uri, Pagination: pageReq})
+
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(response)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetOSLocatorByURICmd returns the command handler for querying oslocator by uri.
+func GetOSLocatorByScopeUUIDCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "locator-by-scope [scope_uuid]",
+		Short: "Query the OS locator uri for the given scope owners",
+		Args:  cobra.ExactArgs(1),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query the OS locator records for the scope uuid provided:
+Example:
+$ %s query metadata locator foocorp
+`,
+				version.AppName,
+			)),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			scopeUUID := strings.ToLower(strings.TrimSpace(args[0]))
+
+			queryClient := types.NewQueryClient(clientCtx)
+			var response *types.OSLocatorByScopeUUIDResponse
+
+			response, err = queryClient.OSLocatorByScopeUUID(context.Background(), &types.OSLocatorByScopeUUIDRequest{ScopeUuid: scopeUUID})
+
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(response)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetOSLocatorByURICmd returns the command handler for querying oslocator by uri.
+func GetOSAllLocatorCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "locator-all",
+		Short: "Query the OS locator uri for the given owner",
+		Args:  cobra.ExactArgs(1),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query the OS locator records for the uri provided:
+Example:
+$ %s query metadata locator-all 
+`,
+				version.AppName,
+			)),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+			var response *types.OSAllLocatorsResponse
+
+			response, err = queryClient.OSAllLocators(context.Background(), &types.OSAllLocatorsRequest{Pagination: pageReq})
+
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(response)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }
