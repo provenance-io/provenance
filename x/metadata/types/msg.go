@@ -54,14 +54,18 @@ func stringsToAccAddresses(strings []string) []sdk.AccAddress {
 	retval := make([]sdk.AccAddress, len(strings))
 
 	for i, str := range strings {
-		accAddress, err := sdk.AccAddressFromBech32(str)
-		if err != nil {
-			panic(err)
-		}
-		retval[i] = accAddress
+		retval[i] = stringToAccAddress(str)
 	}
 
 	return retval
+}
+
+func stringToAccAddress(s string) sdk.AccAddress {
+	accAddress, err := sdk.AccAddressFromBech32(s)
+	if err != nil {
+		panic(err)
+	}
+	return accAddress
 }
 
 // ------------------  MsgAddScopeRequest  ------------------
@@ -584,10 +588,7 @@ func (msg MsgP8EMemorializeContractRequest) Type() string {
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgP8EMemorializeContractRequest) GetSigners() []sdk.AccAddress {
-	if len(msg.Invoker) > 0 {
-		return []sdk.AccAddress{msg.Invoker}
-	}
-	return []sdk.AccAddress{}
+	return []sdk.AccAddress{stringToAccAddress(msg.Invoker)}
 }
 
 // GetSignBytes gets the bytes for the message signer to sign on
@@ -631,11 +632,7 @@ func (msg MsgBindOSLocatorRequest) GetSignBytes() []byte {
 }
 
 func (msg MsgBindOSLocatorRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Locator.Owner)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
+	return []sdk.AccAddress{stringToAccAddress(msg.Locator.Owner)}
 }
 
 // ---- Delete OS locator ------
@@ -671,11 +668,7 @@ func (msg MsgDeleteOSLocatorRequest) GetSignBytes() []byte {
 // here we assume msg for delete request has the right address
 // should be verified later in the keeper?
 func (msg MsgDeleteOSLocatorRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Locator.Owner)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
+	return []sdk.AccAddress{stringToAccAddress(msg.Locator.Owner)}
 }
 
 /**
@@ -732,9 +725,5 @@ func (msg MsgModifyOSLocatorRequest) GetSignBytes() []byte {
 }
 
 func (msg MsgModifyOSLocatorRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Locator.Owner)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
+	return []sdk.AccAddress{stringToAccAddress(msg.Locator.Owner)}
 }

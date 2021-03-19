@@ -282,8 +282,8 @@ message MsgP8eMemorializeContractRequest {
   provenance.metadata.v1.p8e.Contract contract = 5;
   // The contract signatures
   provenance.metadata.v1.p8e.SignatureSet signatures = 6;
-  // The address of the notary (ie the broadcaster of this message).
-  bytes invoker = 7;
+  // The bech32 address of the notary (ie the broadcaster of this message).
+  string invoker = 7;
 }
 
 // MsgP8eMemorializeContractResponse is the output for a P8eMemorializeContract call

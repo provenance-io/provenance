@@ -504,7 +504,7 @@ func (k msgServer) P8EMemorializeContract(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, string(msg.Invoker)),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Invoker),
 		),
 	)
 

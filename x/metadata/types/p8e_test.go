@@ -612,7 +612,7 @@ func (s *P8eTestSuite) TestConvertP8eMemorializeContractRequest() {
 						},
 					},
 				},
-				Invoker: s.user1Addr.Bytes(),
+				Invoker: s.user1,
 			},
 			P8EData{
 				Scope:   nil, // TODO
