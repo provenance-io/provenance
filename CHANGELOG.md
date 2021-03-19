@@ -39,6 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Decentralized discovery for object store instances #105
 * Add `AddP8eContractSpec` endpoint to convert v39 contract spec into v40 contract specification  #167
 * Refactor `Attribute` validate to sdk standard validate basic and validate size of attribute value #175
+* Add the temporary `P8eMemorializeContract` endpoint to help facilitate the transition. #164 
 
 ### Bug Fixes
 
