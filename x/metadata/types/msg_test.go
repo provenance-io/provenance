@@ -185,3 +185,27 @@ func TestDeleteOSLocator(t *testing.T) {
 	require.Equal(t, "{\"type\":\"provenance/metadata/MsgDeleteOSLocatorRequest\",\"value\":{\"locator\":{\"locator_uri\":\"http://foo.com\",\"owner\":\"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck\"}}}", string(deleteRequest.GetSignBytes()))
 
 }
+
+func TestAddOSLocatorInvalid(t *testing.T) {
+	var bindRequestMsg = NewMsgBindOSLocatorRequest(ObjectStoreLocator{Owner:
+	"vamonos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", LocatorUri: "http://foo.com"})
+
+	err := bindRequestMsg.ValidateBasic()
+	require.Error(t, err)
+}
+
+func TestAddOSLocatorInvalidAddr(t *testing.T) {
+	var bindRequestMsg = NewMsgBindOSLocatorRequest(ObjectStoreLocator{Owner:
+	"", LocatorUri: "http://foo.com"})
+
+	err := bindRequestMsg.ValidateBasic()
+	require.Error(t, err)
+}
+
+func TestAddOSLocatorInvalidURI(t *testing.T) {
+	var bindRequestMsg = NewMsgBindOSLocatorRequest(ObjectStoreLocator{Owner:
+	"", LocatorUri: "foo://foo.com"})
+
+	err := bindRequestMsg.ValidateBasic()
+	require.Error(t, err)
+}
