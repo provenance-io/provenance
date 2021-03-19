@@ -151,50 +151,87 @@ func (k Keeper) CreateAccountForKey(ctx sdk.Context, addr sdk.AccAddress, pubKey
 
 // ValidateAllOwnersAreSigners makes sure that all entries in the existingOwners list are contained in the signers list.
 func (k Keeper) ValidateAllOwnersAreSigners(existingOwners []string, signers []string) error {
-	for _, owner := range existingOwners {
-		found := false
-		for _, signer := range signers {
-			if owner == signer {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return fmt.Errorf("missing signature from existing owner %s; required for update", owner)
-		}
+	missing := FindMissing(existingOwners, signers)
+	switch len(missing) {
+	case 0:
+		return nil
+	case 1:
+		return fmt.Errorf("missing signature from existing owner %s; required for update", missing[0])
+	default:
+		return fmt.Errorf("missing signatures from existing owners %v; required for update", missing)
 	}
-	return nil
 }
 
-// ValidateRequiredSignatures validate all owners are signers
-func (k Keeper) ValidateRequiredSignatures(owners []types.Party, signers []string) error {
-	// Validate any changes to the ValueOwner property.
-	requiredSignatures := []string{}
-	for _, p := range owners {
-		requiredSignatures = append(requiredSignatures, p.Address)
+// ValidateAllPartiesAreSigners validate all parties are signers
+func (k Keeper) ValidateAllPartiesAreSigners(parties []types.Party, signers []string) error {
+	addresses := make([]string, len(parties))
+	for i, party := range parties {
+		addresses[i] = party.Address
 	}
-
-	if err := k.ValidateAllOwnersAreSigners(requiredSignatures, signers); err != nil {
-		return err
+	missing := FindMissing(addresses, signers)
+	switch len(missing) {
+	case 0:
+		return nil
+	case 1:
+		for _, party := range parties {
+			if party.Address == missing[0] {
+				return fmt.Errorf("missing signature from %s (%s)", party.Address, party.Role.String())
+			}
+		}
+		// Should never get here, but the compiler can't tell that.
+		return fmt.Errorf("missing signature from %s", missing[0])
+	default:
+		missingWithRoles := make([]string, len(missing))
+		for i, addr := range missing {
+			for _, party := range parties {
+				if addr == party.Address {
+					missingWithRoles[i] = fmt.Sprintf("%s (%s)", addr, party.Role.String())
+					break
+				}
+			}
+		}
+		return fmt.Errorf("missing signatures from %v", missingWithRoles)
 	}
-	return nil
 }
 
 // ValidatePartiesInvolved validate that all required parties are involved
 func (k Keeper) ValidatePartiesInvolved(parties []types.Party, requiredParties []types.PartyType) error {
-	for _, pi := range requiredParties {
+	partyRoles := make([]string, len(parties))
+	reqRoles := make([]string, len(requiredParties))
+	for i, party := range parties {
+		partyRoles[i] = party.Role.String()
+	}
+	for i, req := range requiredParties {
+		reqRoles[i] = req.String()
+	}
+	missing := FindMissing(reqRoles, partyRoles)
+	switch len(missing) {
+	case 0:
+		return nil
+	case 1:
+		return fmt.Errorf("missing required party type %s from parties", missing[0])
+	default:
+		return fmt.Errorf("missing required party types %v from parties", missing)
+	}
+}
+
+// FindMissing returns all elements of the required list that are not found in the entries list
+// It is exported only so that it can be unit tested.
+func FindMissing(required []string, entries []string) []string {
+	retval := []string{}
+	for _, req := range required {
 		found := false
-		for _, p := range parties {
-			if p.Role.String() == pi.String() {
+		for _, entry := range entries {
+			if req == entry {
 				found = true
 				break
 			}
 		}
 		if !found {
-			return fmt.Errorf("missing party type from required parties %s", pi.String())
+			retval = append(retval, req)
 		}
 	}
-	return nil
+	return retval
 }
 
 // VerifyCorrectOwner to determines whether the signer resolves to the owner of the OSLocator record.

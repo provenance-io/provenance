@@ -21,19 +21,19 @@ var (
 	specTestBech32    = specTestAddr.String() // cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck
 )
 
-type specificationTestSuite struct {
+type SpecificationTestSuite struct {
 	suite.Suite
 }
 
 func TestSpecificationTestSuite(t *testing.T) {
-	suite.Run(t, new(specificationTestSuite))
+	suite.Run(t, new(SpecificationTestSuite))
 }
 
-func (s *specificationTestSuite) SetupSuite() {
+func (s *SpecificationTestSuite) SetupSuite() {
 	s.T().Parallel()
 }
 
-func (s *specificationTestSuite) TestScopeSpecValidateBasic() {
+func (s *SpecificationTestSuite) TestScopeSpecValidateBasic() {
 	tests := []struct {
 		name    string
 		spec    *ScopeSpecification
@@ -228,7 +228,7 @@ func (m *WeirdSource) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (s *specificationTestSuite) TestContractSpecValidateBasic() {
+func (s *SpecificationTestSuite) TestContractSpecValidateBasic() {
 	contractSpecUuid1 := uuid.New()
 	tests := []struct {
 		name string
@@ -446,7 +446,7 @@ func (s *specificationTestSuite) TestContractSpecValidateBasic() {
 	}
 }
 
-func (s *specificationTestSuite) TestRecordSpecValidateBasic() {
+func (s *SpecificationTestSuite) TestRecordSpecValidateBasic() {
 	contractSpecUUID := uuid.New()
 	tests := []struct {
 		name string
@@ -687,7 +687,7 @@ func (s *specificationTestSuite) TestRecordSpecValidateBasic() {
 	}
 }
 
-func (s *specificationTestSuite) TestInputSpecValidateBasic() {
+func (s *SpecificationTestSuite) TestInputSpecValidateBasic() {
 	tests := []struct {
 		name string
 		spec *InputSpecification
@@ -826,7 +826,7 @@ func (s *specificationTestSuite) TestInputSpecValidateBasic() {
 	}
 }
 
-func (s *specificationTestSuite) TestDescriptionValidateBasic() {
+func (s *SpecificationTestSuite) TestDescriptionValidateBasic() {
 	tests := []struct {
 		name    string
 		desc    *Description
@@ -1114,7 +1114,7 @@ func (s *specificationTestSuite) TestDescriptionValidateBasic() {
 	}
 }
 
-func (s *specificationTestSuite) TestScopeSpecString() {
+func (s *SpecificationTestSuite) TestScopeSpecString() {
 	scopeSpecUuid := uuid.MustParse("c2074a03-6f6d-4029-bfe2-c3a5eb7e68b1")
 	contractSpecUuid := uuid.MustParse("540dadf1-3dbc-4c3f-a205-7575b7f74384")
 	scopeSpec := NewScopeSpecification(
@@ -1147,7 +1147,7 @@ contract_spec_ids:
 	require.Equal(s.T(), expected, actual)
 }
 
-func (s *specificationTestSuite) TestContractSpecString() {
+func (s *SpecificationTestSuite) TestContractSpecString() {
 	contractSpecUuid := uuid.MustParse("540dadf1-3dbc-4c3f-a205-7575b7f74384")
 	contractSpec := NewContractSpecification(
 		ContractSpecMetadataAddress(contractSpecUuid),
@@ -1180,7 +1180,7 @@ class_name: 'CS 201: Intro to Blockchain'
 	require.Equal(s.T(), expected, actual)
 }
 
-func (s *specificationTestSuite) TestRecordSpecString() {
+func (s *SpecificationTestSuite) TestRecordSpecString() {
 	contractSpecUuid := uuid.MustParse("540dadf1-3dbc-4c3f-a205-7575b7f74384")
 	recordName := "somename"
 	recordSpec := NewRecordSpecification(
@@ -1227,7 +1227,7 @@ responsible_parties:
 	require.Equal(s.T(), expected, actual)
 }
 
-func (s *specificationTestSuite) TestInputSpecString() {
+func (s *SpecificationTestSuite) TestInputSpecString() {
 	tests := []struct {
 		name         string
 		outputActual bool
@@ -1279,7 +1279,7 @@ source:
 	}
 }
 
-func (s *specificationTestSuite) TestDescriptionString() {
+func (s *SpecificationTestSuite) TestDescriptionString() {
 	description := NewDescription(
 		"TestDescriptionString",
 		"This is a description of a description used in a unit test.",

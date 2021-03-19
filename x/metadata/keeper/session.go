@@ -110,15 +110,18 @@ func (k Keeper) IterateSessions(ctx sdk.Context, scopeID types.MetadataAddress, 
 
 // ValidateSessionUpdate checks the current session and the proposed session to determine if the the proposed changes are valid
 // based on the existing state
-func (k Keeper) ValidateSessionUpdate(ctx sdk.Context, existing, proposed types.Session, signers []string) error {
-	if len(existing.SessionId) > 0 {
+func (k Keeper) ValidateSessionUpdate(ctx sdk.Context, existing *types.Session, proposed types.Session, signers []string) error {
+	if err := proposed.ValidateBasic(); err != nil {
+		return err
+	}
+
+	if existing != nil {
 		if !proposed.SessionId.Equals(existing.SessionId) {
 			return fmt.Errorf("cannot update session identifier. expected %s, got %s", existing.SessionId, proposed.SessionId)
 		}
-	}
-
-	if err := proposed.ValidateBasic(); err != nil {
-		return err
+		if !proposed.SpecificationId.Equals(existing.SpecificationId) {
+			return fmt.Errorf("cannot update specification identifier. expected %s, got %s", existing.SpecificationId, proposed.SpecificationId)
+		}
 	}
 
 	scopeUUID, err := proposed.SessionId.ScopeUUID()
@@ -146,19 +149,21 @@ func (k Keeper) ValidateSessionUpdate(ctx sdk.Context, existing, proposed types.
 		return err
 	}
 
-	if err = k.ValidateRequiredSignatures(scope.Owners, signers); err != nil {
+	if err = k.ValidateAllPartiesAreSigners(scope.Owners, signers); err != nil {
 		return err
 	}
 
-	if err = k.ValidateAuditUpdate(ctx, existing.Audit, proposed.Audit); err != nil {
-		return err
+	if existing != nil {
+		if err = k.ValidateAuditUpdate(ctx, existing.Audit, proposed.Audit); err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
 // ValidateAuditUpdate ensure that a given reference to audit fields represents no changes to
-// existing audit field data.  NOTE: A nil proposed is considered "no update" and not attempt to unset.
+// existing audit field data.  NOTE: A nil proposed is considered "no update" and not an attempt to unset.
 func (k Keeper) ValidateAuditUpdate(ctx sdk.Context, existing, proposed *types.AuditFields) error {
 	if proposed == nil {
 		return nil
