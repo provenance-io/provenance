@@ -124,17 +124,15 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, pr
 		}
 	}
 
-	scopeUUID, err := proposed.SessionId.ScopeUUID()
+	scopeID, err := proposed.SessionId.AsScopeAddress()
 	if err != nil {
 		return err
 	}
 
-	scopeID := types.ScopeMetadataAddress(scopeUUID)
-
 	// get scope for existing record
 	scope, found := k.GetScope(ctx, scopeID)
 	if !found {
-		return fmt.Errorf("scope not found for scope uuid %s", scopeUUID)
+		return fmt.Errorf("scope not found for scope id %s", scopeID)
 	}
 
 	// Make sure all the scope owners have signed.
@@ -157,19 +155,16 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, pr
 	recSpec, found := k.GetRecordSpecification(ctx, recSpecID)
 	if !found {
 		return fmt.Errorf("record specification not found for record specification id %s (contract spec uuid %s and record name %s)",
-			proposed.SessionId, contractSpecUUID, proposed.Name)
-	}
-
-	// Make sure all the responsible parties are involved.
-	err = k.ValidatePartiesInvolved(session.Parties, recSpec.ResponsibleParties)
-	if err != nil {
-		return err
+			recSpecID, contractSpecUUID, proposed.Name)
 	}
 
 	// Make sure all input specs are present as inputs.
 	inputNames := make([]string, len(proposed.Inputs))
 	inputMap := make(map[string]types.RecordInput)
 	for i, input := range proposed.Inputs {
+		if _, found := inputMap[input.Name]; found {
+			return fmt.Errorf("input name %s provided twice", input.Name)
+		}
 		inputNames[i] = input.Name
 		inputMap[input.Name] = input
 	}
@@ -179,11 +174,17 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, pr
 		inputSpecNames[i] = inputSpec.Name
 		inputSpecMap[inputSpec.Name] = *inputSpec
 	}
-	missingInputNames := FindMissing(inputNames, inputSpecNames)
+	missingInputNames := FindMissing(inputSpecNames, inputNames)
 	if len(missingInputNames) == 1 {
 		return fmt.Errorf("missing input %s", missingInputNames[0])
 	} else if len(missingInputNames) > 1 {
 		return fmt.Errorf("missing inputs %v", missingInputNames)
+	}
+	extraInputNames := FindMissing(inputNames, inputSpecNames)
+	if len(extraInputNames) == 1 {
+		return fmt.Errorf("extra input %s", extraInputNames[0])
+	} else if len(extraInputNames) > 1 {
+		return fmt.Errorf("extra inputs %v", extraInputNames)
 	}
 
 	// Make sure all the inputs conform to their spec.
