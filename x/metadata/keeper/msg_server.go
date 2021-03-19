@@ -504,8 +504,6 @@ func (k msgServer) P8EMemorializeContract(
 		return nil, fmt.Errorf("unexpected source type on contract specification %s", p8EData.Session.SpecificationId)
 	}
 
-	p8EData.Session.Name = contractSpec.ClassName
-
 	for _, r := range p8EData.Records {
 		r.Process.ProcessId = processID
 		recSpecID, e := p8EData.Session.SpecificationId.AsRecordSpecAddress(r.Name)
