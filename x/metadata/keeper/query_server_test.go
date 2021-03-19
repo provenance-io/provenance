@@ -55,8 +55,11 @@ type QueryServerTestSuite struct {
 }
 
 func (s *QueryServerTestSuite) SetupTest() {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	s.app = simapp.Setup(false)
+	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, s.app.MetadataKeeper)
+	s.queryClient = types.NewQueryClient(queryHelper)
 
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
@@ -71,8 +74,6 @@ func (s *QueryServerTestSuite) SetupTest() {
 
 	s.specUUID = uuid.New()
 	s.specID = types.ScopeSpecMetadataAddress(s.specUUID)
-	s.app = app
-	s.ctx = ctx
 
 	s.recordName = "TestRecord"
 	s.recordID = types.RecordMetadataAddress(s.scopeUUID, s.recordName)
@@ -85,11 +86,6 @@ func (s *QueryServerTestSuite) SetupTest() {
 	s.cSpecID = types.ContractSpecMetadataAddress(s.cSpecUUID)
 
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
-
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, app.MetadataKeeper)
-	queryClient := types.NewQueryClient(queryHelper)
-	s.queryClient = queryClient
 }
 
 func TestQuerierTestSuite(t *testing.T) {
