@@ -127,6 +127,7 @@ type P8EData struct {
 
 // Migrate Converts a MsgP8EMemorializeContractRequest object into the new objects.
 // The following fields require looking up specs and should be overwritten accordingly:
+//  * P8EData.Scope.SpecificationId MetadataAddress looked up from the iterator on contract spec.
 //  * P8EData.Session.Name string from the contract specification ClassName
 //  * P8EData.Records[*].Process.ProcessId from the contract specification Source?
 //  * P8EData.Records[*].Inputs[*].Status from the record specification ResultType
@@ -149,8 +150,6 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 	if err != nil {
 		return p8EData, signers, err
 	}
-	// TODO: Set scope.SpecificationId
-	//       Not sure where to get this from.
 	p8EData.Scope.SpecificationId = MetadataAddress{}
 	p8EData.Scope.Owners = contractRecitalParties
 	p8EData.Scope.DataAccess = partyAddresses(contractRecitalParties)

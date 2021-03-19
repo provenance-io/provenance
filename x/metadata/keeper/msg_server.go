@@ -479,6 +479,17 @@ func (k msgServer) P8EMemorializeContract(
 	}
 
 	// Add the stuff that needs to come from the specs.
+	err = k.IterateScopeSpecsForContractSpec(ctx, p8EData.Session.SpecificationId, func(scopeSpecID types.MetadataAddress) bool {
+		p8EData.Scope.SpecificationId = scopeSpecID
+		return true
+	})
+	if err != nil {
+		return nil, err
+	}
+	if p8EData.Scope.SpecificationId.Empty() {
+		return nil, fmt.Errorf("no scope specifications found associated with contract specification %s",
+			p8EData.Session.SpecificationId)
+	}
 	var processID types.ProcessID
 	contractSpec, found := k.GetContractSpecification(ctx, p8EData.Session.SpecificationId)
 	if !found {
