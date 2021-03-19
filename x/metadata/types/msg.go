@@ -11,8 +11,6 @@ import (
 )
 
 const (
-	TypeMsgMemorializeContractRequest         = "memorialize_contract_request"
-	TypeMsgChangeOwnershipRequest             = "change_ownership_request"
 	TypeMsgAddScopeRequest                    = "add_scope_request"
 	TypeMsgDeleteScopeRequest                 = "delete_scope_request"
 	TypeMsgAddSessionRequest                  = "add_session_request"
@@ -33,8 +31,6 @@ const (
 
 // Compile time interface checks.
 var (
-	_ sdk.Msg = &MsgMemorializeContractRequest{}
-	_ sdk.Msg = &MsgChangeOwnershipRequest{}
 	_ sdk.Msg = &MsgAddScopeRequest{}
 	_ sdk.Msg = &MsgDeleteScopeRequest{}
 	_ sdk.Msg = &MsgAddSessionRequest{}
@@ -66,124 +62,6 @@ func stringsToAccAddresses(strings []string) []sdk.AccAddress {
 	}
 
 	return retval
-}
-
-// ------------------  MsgMemorializeContractRequest  ------------------
-
-// NewMsgMemorializeContractRequest creates a new msg instance
-func NewMsgMemorializeContractRequest() *MsgMemorializeContractRequest {
-	return &MsgMemorializeContractRequest{}
-}
-
-func (msg MsgMemorializeContractRequest) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
-}
-
-// Route returns the module route
-func (msg MsgMemorializeContractRequest) Route() string {
-	return ModuleName
-}
-
-// Type returns the type name for this msg
-func (msg MsgMemorializeContractRequest) Type() string {
-	return TypeMsgMemorializeContractRequest
-}
-
-// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
-func (msg MsgMemorializeContractRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Notary)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
-}
-
-// GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgMemorializeContractRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
-// ValidateBasic quick validity check
-func (msg MsgMemorializeContractRequest) ValidateBasic() error {
-	if strings.TrimSpace(msg.ScopeId) == "" {
-		return fmt.Errorf("scope ID is empty")
-	}
-	if strings.TrimSpace(msg.SessionId) == "" {
-		return fmt.Errorf("session ID is empty")
-	}
-	if strings.TrimSpace(msg.ExecutionId) == "" {
-		return fmt.Errorf("execution ID is empty")
-	}
-	if strings.TrimSpace(msg.Notary) == "" {
-		return fmt.Errorf("notary address is empty")
-	}
-	if err := msg.Contract.ValidateBasic(); err != nil {
-		return err
-	}
-
-	return msg.Contract.ValidateBasic()
-}
-
-// ------------------  MsgChangeOwnershipRequest  ------------------
-
-// NewMsgChangeOwnershipRequest creates a new msg instance
-func NewMsgChangeOwnershipRequest() *MsgChangeOwnershipRequest {
-	return &MsgChangeOwnershipRequest{}
-}
-
-func (msg MsgChangeOwnershipRequest) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
-}
-
-// Route returns the module route
-func (msg MsgChangeOwnershipRequest) Route() string {
-	return ModuleName
-}
-
-// Type returns the type name for this msg
-func (msg MsgChangeOwnershipRequest) Type() string {
-	return TypeMsgChangeOwnershipRequest
-}
-
-// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
-func (msg MsgChangeOwnershipRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Notary)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
-}
-
-// GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgChangeOwnershipRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
-// ValidateBasic performs a quick validity check
-func (msg MsgChangeOwnershipRequest) ValidateBasic() error {
-	if strings.TrimSpace(msg.ScopeId) == "" {
-		return fmt.Errorf("scope ID is empty")
-	}
-	if strings.TrimSpace(msg.SessionId) == "" {
-		return fmt.Errorf("session ID is empty")
-	}
-	if strings.TrimSpace(msg.ExecutionId) == "" {
-		return fmt.Errorf("execution ID is empty")
-	}
-	if strings.TrimSpace(msg.Notary) == "" {
-		return fmt.Errorf("notary address is empty")
-	}
-
-	// Must have one of contract, recitals but not both.
-	if msg.Contract == nil && msg.Recitals == nil {
-		return fmt.Errorf("one of contract or recitals is required")
-	}
-	if msg.Contract != nil && msg.Recitals != nil {
-		return fmt.Errorf("only one of contract or recitals is allowed")
-	}
-	return msg.Contract.ValidateBasic()
 }
 
 // ------------------  MsgAddScopeRequest  ------------------

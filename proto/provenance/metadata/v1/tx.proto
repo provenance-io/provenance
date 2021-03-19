@@ -3,11 +3,9 @@ package provenance.metadata.v1;
 
 import "gogoproto/gogo.proto";
 import "provenance/metadata/v1/scope.proto";
-import "provenance/metadata/v1/contract.proto";
 import "provenance/metadata/v1/specification.proto";
 import "provenance/metadata/v1/p8e/p8e.proto";
 
-import "cosmos/tx/signing/v1beta1/signing.proto";
 import "provenance/metadata/v1/objectstore.proto";
 
 option go_package = "github.com/provenance-io/provenance/x/metadata/types";
@@ -17,11 +15,6 @@ option java_multiple_files = true;
 
 // Msg defines the Metadata Msg service.
 service Msg {
-  // MemorializeContract records the results of a contract execution as a session and set of records in a scope
-  rpc MemorializeContract(MsgMemorializeContractRequest) returns (MsgMemorializeContractResponse);
-  // ChangeOwnership allows P8e contracts to record a new set of owners on a scope
-  rpc ChangeOwnership(MsgChangeOwnershipRequest) returns (MsgChangeOwnershipResponse);
-
   // AddScope adds a new scope
   rpc AddScope(MsgAddScopeRequest) returns (MsgAddScopeResponse);
   // DeleteScope deletes a scope and all associated Records, Sessions
@@ -68,56 +61,6 @@ service Msg {
   // Modify existing OSLocator record by the current owner
   rpc ModifyOSLocator(MsgModifyOSLocatorRequest) returns (MsgModifyOSLocatorResponse);
 }
-
-// MsgMemorializeContractRequest is a request from an execution environment to record results of a contract
-message MsgMemorializeContractRequest {
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
-  option (gogoproto.goproto_getters)  = false;
-
-  // The scope of the object being modified on blockchain.
-  string scope_id = 1;
-  // The uuid of the contract execution.
-  string session_id = 2;
-  // Unique identifier for determining contract/session execution instance
-  string execution_id = 3;
-  // The executed contract.
-  Contract contract = 4 [(gogoproto.nullable) = false];
-  // The contract signatures
-  cosmos.tx.signing.v1beta1.SignatureDescriptors signatures = 5 [(gogoproto.nullable) = false];
-  // The address of the notary (ie the broadcaster of this message).
-  string notary = 6;
-}
-
-// MsgMemorializeContractResponse from a contract execution memorialization request
-message MsgMemorializeContractResponse {}
-
-// MsgChangeOwnershipRequest records the result of a change ownership contract execution
-message MsgChangeOwnershipRequest {
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
-  option (gogoproto.goproto_getters)  = false;
-
-  // The scope of the object being modified on blockchain.
-  string scope_id = 1 [(gogoproto.moretags) = "yaml:\"scope_id\""];
-  // The uuid of the contract execution.
-  string session_id = 2 [(gogoproto.moretags) = "yaml:\"session_id\""];
-  // Unique identifier for determining contract/session execution instance
-  string execution_id = 3 [(gogoproto.moretags) = "yaml:\"execution_id\""];
-  // The recitals to use for the scope parties
-  Recitals recitals = 4;
-  // The executed contract.
-  Contract contract = 5;
-  // The contract signatures
-  cosmos.tx.signing.v1beta1.SignatureDescriptors signatures = 6 [(gogoproto.nullable) = false];
-  // The address of the notary (ie the broadcaster of this message).
-  string notary = 7;
-}
-
-// MsgChangeOwnershipResponse from a contract execution ownership change request
-message MsgChangeOwnershipResponse {}
 
 // MsgAddScopeRequest adds a new scope
 message MsgAddScopeRequest {

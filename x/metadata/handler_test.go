@@ -80,8 +80,6 @@ func createDefinitionSpec(name string, classname string, reference p8e.Provenanc
 	}
 }
 
-// TODO: MemorializeContract tests
-// TODO: ChangeOwnership tests
 // TODO: AddScope tests
 // TODO: DeleteScope tests
 // TODO: AddSession tests

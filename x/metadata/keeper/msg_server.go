@@ -24,44 +24,6 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 
 var _ types.MsgServer = msgServer{}
 
-func (k msgServer) MemorializeContract(
-	goCtx context.Context,
-	msg *types.MsgMemorializeContractRequest,
-) (*types.MsgMemorializeContractResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	// TODO (contract keeper class  methods to process contract execution, scope keeper methods to record it)
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Notary),
-		),
-	)
-
-	return nil, fmt.Errorf("not implemented")
-}
-
-func (k msgServer) ChangeOwnership(
-	goCtx context.Context,
-	msg *types.MsgChangeOwnershipRequest,
-) (*types.MsgChangeOwnershipResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	// TODO (contract keeper class  methods to process contract execution, scope keeper methods to record it)
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Notary),
-		),
-	)
-
-	return nil, fmt.Errorf("not implemented")
-}
-
 func (k msgServer) AddScope(
 	goCtx context.Context,
 	msg *types.MsgAddScopeRequest,
