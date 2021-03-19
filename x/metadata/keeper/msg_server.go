@@ -474,11 +474,43 @@ func (k msgServer) P8EMemorializeContract(
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	p8EData, signers, err := types.ConvertP8eMemorializeContractRequest(msg)
-
 	if err != nil {
 		return nil, err
 	}
 
+	// Add the stuff that needs to come from the specs.
+	var processID types.ProcessID = nil
+	contractSpec, found := k.GetContractSpecification(ctx, p8EData.Session.SpecificationId)
+	if !found {
+		return nil, fmt.Errorf("contract specification %s not found", p8EData.Session.SpecificationId)
+	} else {
+		p8EData.Session.Name = contractSpec.ClassName
+		switch source := contractSpec.Source.(type) {
+		case *types.ContractSpecification_ResourceId:
+			processID = &types.Process_Address{Address: source.ResourceId.String()}
+		case *types.ContractSpecification_Hash:
+			processID = &types.Process_Hash{Hash: source.Hash}
+		default:
+			return nil, fmt.Errorf("unexpected source type on contract specification %s", p8EData.Session.SpecificationId)
+		}
+	}
+
+	for _, r := range p8EData.Records {
+		r.Process.ProcessId = processID
+		recSpecID, err := p8EData.Session.SpecificationId.AsRecordSpecAddress(r.Name)
+		if err != nil {
+			return nil, err
+		}
+		recSpec, found := k.GetRecordSpecification(ctx, recSpecID)
+		if !found {
+			return nil, fmt.Errorf("record specification %s not found", recSpecID)
+		}
+		for _, input := range r.Inputs {
+			input.Status = types.RecordInputStatus(recSpec.ResultType)
+		}
+	}
+
+	// Finally, store everything.
 	_, err = k.AddScope(goCtx, &types.MsgAddScopeRequest{
 		Scope:   *p8EData.Scope,
 		Signers: signers,
@@ -514,5 +546,5 @@ func (k msgServer) P8EMemorializeContract(
 		),
 	)
 
-	return nil, fmt.Errorf("not implemented")
+	return &types.MsgP8EMemorializeContractResponse{}, nil
 }

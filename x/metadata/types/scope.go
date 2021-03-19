@@ -294,6 +294,8 @@ func NewProcess(name string, processID isProcess_ProcessId, method string) *Proc
 	}
 }
 
+type ProcessID isProcess_ProcessId
+
 // ValidateBasic performs a static check over the process format
 func (ps Process) ValidateBasic() error {
 	if len(ps.Method) < 1 {
