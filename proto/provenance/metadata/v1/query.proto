@@ -21,96 +21,98 @@ service Query {
     option (google.api.http).get = "/provenance/metadata/v1/params";
   }
 
-  // Scope returns a specific scope by id
+  // Scope returns the scope with the given id.
   rpc Scope(ScopeRequest) returns (ScopeResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/scope/{scope_uuid}";
   }
 
-  // SessionContextByUUID returns a specific session context within a scope (or all sessions)
+  // SessionContextByUUID returns the session contexts within a scope (or all sessions).
   rpc SessionContextByUUID(SessionContextByUUIDRequest) returns (SessionContextByUUIDResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/scope/uuid/{scope_uuid}/session/{session_uuid}";
   }
 
-  // SessionContextByID returns a specific session context within a scope (or all sessions)
+  // SessionContextByID returns the session contexts within a scope (or all sessions).
   rpc SessionContextByID(SessionContextByIDRequest) returns (SessionContextByIDResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/scope/id/{scope_id}/session/{session_id}";
   }
 
-  // RecordsByScopeUUID returns a collection of the records in a scope by scope uuid or a specific one by name
+  // RecordsByScopeUUID returns the records in a scope by scope uuid or a specific record by name.
   rpc RecordsByScopeUUID(RecordsByScopeUUIDRequest) returns (RecordsByScopeUUIDResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/scope/uuid/{scope_uuid}/records/{name}";
   }
 
-  // RecordsByScopeID returns a collection of the records in a scope by scope bech32 id or a specific one by name
+  // RecordsByScopeID returns a collection of the records in a scope by scope bech32 id or a specific one by name.
   rpc RecordsByScopeID(RecordsByScopeIDRequest) returns (RecordsByScopeIDResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/scope/id/{scope_id}/records/{name}";
   }
 
-  // Ownership returns a list of scope identifiers that list the given address as a data or value owner
+  // Ownership returns the scope identifiers that list the given address as either a data or value owner.
   rpc Ownership(OwnershipRequest) returns (OwnershipResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/ownership/{address}";
   }
 
-  // ValueOwnership returns a list of scope identifiers that list the given address as the value owner
+  // ValueOwnership returns the scope identifiers that list the given address as the value owner.
   rpc ValueOwnership(ValueOwnershipRequest) returns (ValueOwnershipResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/valueownership/{address}";
   }
 
-  // ScopeSpecification returns a scope specification for the given specification uuid
+  // ScopeSpecification returns a scope specification for the given specification uuid.
   rpc ScopeSpecification(ScopeSpecificationRequest) returns (ScopeSpecificationResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/scopespec/{specification_uuid}";
   }
 
-  // ContractSpecification returns a contract specification for the given specification uuid
+  // ContractSpecification returns a contract specification for the given specification uuid.
   rpc ContractSpecification(ContractSpecificationRequest) returns (ContractSpecificationResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/contractspec/{specification_uuid}";
   }
 
-  // ContractSpecification returns a contract specification and record specifications for the given contract
-  // specification uuid
+  // ContractSpecificationExtended returns a contract specification and record specifications for the given contract
+  // specification uuid.
   rpc ContractSpecificationExtended(ContractSpecificationExtendedRequest)
       returns (ContractSpecificationExtendedResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/contractspec/{specification_uuid}/extended";
   }
 
   // RecordSpecificationsForContractSpecification returns the record specifications for the given contract specification
-  // uuid
+  // uuid.
   rpc RecordSpecificationsForContractSpecification(RecordSpecificationsForContractSpecificationRequest)
       returns (RecordSpecificationsForContractSpecificationResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/contractspec/{contract_specification_uuid}/recordspecs";
   }
 
-  // RecordSpecification returns a record specification for the given contract specification uuid and record name
+  // RecordSpecification returns a record specification for the given contract specification uuid and record name.
   rpc RecordSpecification(RecordSpecificationRequest) returns (RecordSpecificationResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/recordspec/{contract_specification_uuid}/{name}";
   }
 
-  // RecordSpecificationByID returns a record specification for the given record specification id
+  // RecordSpecificationByID returns a record specification for the given record specification id.
   rpc RecordSpecificationByID(RecordSpecificationByIDRequest) returns (RecordSpecificationByIDResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/recordspec/id/{record_specification_id}";
   }
 
   // ---- OS locator methods -----
-  // Params queries all parameters for os locator sub module.
+
+  // OSLocatorParams returns all parameters for the os locator sub module.
   rpc OSLocatorParams(OSLocatorParamsRequest) returns (OSLocatorParamsResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/locator/params";
   }
 
-  // for querying oslocator by address.
+  // OSLocator returns an ObjectStoreLocator by its owner's address.
   rpc OSLocator(OSLocatorRequest) returns (OSLocatorResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/locator/{owner}";
   }
 
-  // for querying oslocator by uri.
+  // OSLocator returns all ObjectStoreLocator for a locator uri.
   rpc OSLocatorByURI(OSLocatorByURIRequest) returns (OSLocatorByURIResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/locator/uri/{uri}";
   }
-  // for querying all the oslocator for all signer's present in a scope uuid.
+
+  // OSLocatorByScopeUUID returns all ObjectStoreLocator for a for all signer's present in the specified scope.
   rpc OSLocatorByScopeUUID(OSLocatorByScopeUUIDRequest) returns (OSLocatorByScopeUUIDResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/locator/scope/{scope_uuid}";
   }
 
-  // get all os locators
+  // OSAllLocators returns all ObjectStoreLocator entries.
   rpc OSAllLocators(OSAllLocatorsRequest) returns (OSAllLocatorsResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/locators/all";
   }
@@ -118,12 +120,6 @@ service Query {
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
 message QueryParamsRequest {}
-
-// AllOSLocatorsRequest get all os locator's request.
-message OSAllLocatorsRequest {
-  // pagination defines an optional pagination for the request.
-  cosmos.base.query.v1beta1.PageRequest pagination = 1;
-}
 
 // QueryParamsResponse is the response type for the Query/Params RPC method.
 message QueryParamsResponse {
@@ -133,11 +129,6 @@ message QueryParamsResponse {
 
 // ScopeRequest is used for requesting a scope by id
 message ScopeRequest {
-  string scope_uuid = 1 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
-}
-
-// OSLocatorScopeRequest is used for requesting all the OSLocator associated with a scope_id
-message OSLocatorByScopeUUIDRequest {
   string scope_uuid = 1 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
 }
 
@@ -243,7 +234,7 @@ message ScopeSpecificationRequest {
   string specification_uuid = 1 [(gogoproto.moretags) = "yaml:\"specification_uuid\""];
 }
 
-// ScopeSpecification is the response to a scope specification request.
+// ScopeSpecificationResponse is the response to a scope specification request.
 message ScopeSpecificationResponse {
   ScopeSpecification scope_specification = 1 [(gogoproto.moretags) = "yaml:\"scope_specification\""];
   string             specification_uuid  = 2 [(gogoproto.moretags) = "yaml:\"specification_uuid\""];
@@ -279,7 +270,7 @@ message RecordSpecificationsForContractSpecificationRequest {
   string contract_specification_uuid = 1 [(gogoproto.moretags) = "yaml:\"contract_specification_uuid\""];
 }
 
-// RecordSpecificationResponseResponse is the response to a record specification for contract specification request.
+// RecordSpecificationsForContractSpecificationResponse is the response to a record specification for contract specification request.
 message RecordSpecificationsForContractSpecificationResponse {
   repeated RecordSpecification record_specifications = 1 [(gogoproto.moretags) = "yaml:\"record_specifications\""];
   string contract_specification_uuid = 2 [(gogoproto.moretags) = "yaml:\"contract_specification_uuid\""];
@@ -309,23 +300,6 @@ message RecordSpecificationByIDResponse {
   string              record_specification_id = 2 [(gogoproto.moretags) = "yaml:\"record_specification_id\""];
 }
 
-// OSLocationRequest is used for requesting a Objectstore location by owner
-message OSLocatorRequest {
-  string owner = 1;
-}
-
-// OSLocatorByURIRequest get os locator's by uri
-message OSLocatorByURIRequest {
-  string uri = 1;
-  // pagination defines an optional pagination for the request.
-  cosmos.base.query.v1beta1.PageRequest pagination = 2;
-}
-
-// OSLocatorResponse is the response to a os locator request.
-message OSLocatorResponse {
-  ObjectStoreLocator locator = 1;
-}
-
 // OSLocatorParamsRequest is the request type for the Query/Params RPC method.
 message OSLocatorParamsRequest {}
 
@@ -333,6 +307,23 @@ message OSLocatorParamsRequest {}
 message OSLocatorParamsResponse {
   // params defines the parameters of the module.
   OSLocatorParams params = 1 [(gogoproto.nullable) = false];
+}
+
+// OSLocationRequest is used for requesting a Objectstore location by owner
+message OSLocatorRequest {
+  string owner = 1;
+}
+
+// OSLocatorResponse is the response to a os locator request.
+message OSLocatorResponse {
+  ObjectStoreLocator locator = 1;
+}
+
+// OSLocatorByURIRequest get os locator's by uri
+message OSLocatorByURIRequest {
+  string uri = 1;
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 // OSLocatorByURIResponse is an array of ObjectStoreLocator with pagination info
@@ -343,9 +334,20 @@ message OSLocatorByURIResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
+// OSLocatorByScopeUUIDRequest is used for requesting all the OSLocator associated with a scope_id
+message OSLocatorByScopeUUIDRequest {
+  string scope_uuid = 1 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
+}
+
 // OSLocatorByScopeUUIDResponse is an array of ObjectStoreLocator.
 message OSLocatorByScopeUUIDResponse {
   repeated ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
+}
+
+// OSAllLocatorsRequest get all os locator's request.
+message OSAllLocatorsRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
 // OSAllLocatorsResponse is an array of ObjectStoreLocator with pagination info
