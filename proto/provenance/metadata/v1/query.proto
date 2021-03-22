@@ -23,21 +23,32 @@ service Query {
 
   // ---- Primary Data Queries -----
 
-  // Scope returns the scope with the given id. The id can either be scope uuid, e.g.
+  // Scope returns the scope with the given id. The scope id can either be scope uuid, e.g.
   // 91978ba2-5f35-459a-86a7-feca1b0512e0 or a scope address, e.g. scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel. Case
   // doesn't matter.
   rpc Scope(ScopeRequest) returns (ScopeResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/scope/{scope_id}";
   }
 
-  // SessionContextByUUID returns the session contexts within a scope (or all sessions).
-  rpc SessionContextByUUID(SessionContextByUUIDRequest) returns (SessionContextByUUIDResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/scope/uuid/{scope_uuid}/session/{session_uuid}";
-  }
-
-  // SessionContextByID returns the session contexts within a scope (or all sessions).
-  rpc SessionContextByID(SessionContextByIDRequest) returns (SessionContextByIDResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/scope/id/{scope_id}/session/{session_id}";
+  // SessionContextByID returns session contexts for the provided parameters. The scope id can either be scope uuid,
+  // e.g. 91978ba2-5f35-459a-86a7-feca1b0512e0 or a scope address, e.g. scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel.
+  // Similarly, the session_id can either be a uuid or session address, e.g.
+  // session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr. Case doesn't matter.
+  // * If only a session id is provided, and it is an address, then the scope id will be ignored and the session id used
+  // to find a single session.
+  // * If only a session id is provided, and it is a uuid, a bad request is returned.
+  // * If only a scope id is provided, all sessions for that scope will be returned.
+  // * If both a scope id and session id is provided, and the session id is a uuid, then the session in the provided
+  // scope, with the provided session uuid is returned.
+  // * If neither a scope id, nor a session id are provided, a bad request is returned.
+  rpc Sessions(SessionsRequest) returns (SessionsResponse) {
+    option (google.api.http) = {
+      get: "/provenance/metadata/v1/scope/{scope_id}/session/{session_id}",
+      additional_bindings: [
+        {get: "/provenance/metadata/v1/scope/{scope_id}/sessions"},
+        {get: "/provenance/metadata/v1/session/{session_id}"}
+      ]
+    };
   }
 
   // RecordsByScopeUUID returns the records in a scope by scope uuid or a specific record by name.
@@ -146,31 +157,37 @@ message ScopeResponse {
   string           scope_uuid = 4 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
 }
 
-// SessionContextByUUIDRequest is the request type for the Query/SessionContextByUUID RPC method.
-message SessionContextByUUIDRequest {
-  string scope_uuid   = 1 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
-  string session_uuid = 2 [(gogoproto.moretags) = "yaml:\"session_uuid\""];
-}
-
-// SessionContextByUUIDResponse is the response type for the Query/SessionContextByUUID RPC method.
-message SessionContextByUUIDResponse {
-  string scope_id   = 1 [(gogoproto.moretags) = "yaml:\"scope_id\""];
-  string session_id = 2 [(gogoproto.moretags) = "yaml:\"session_id\""];
-
-  repeated Session sessions = 3;
-}
-
-// SessionContextByIDRequest is the request type for the Query/SessionContextByID RPC method.
-message SessionContextByIDRequest {
-  string scope_id   = 1 [(gogoproto.moretags) = "yaml:\"scope_id\""];
+// SessionsRequest is the request type for the Query/Sessions RPC method.
+message SessionsRequest {
+  // scope_id can either be a uuid, e.g. 91978ba2-5f35-459a-86a7-feca1b0512e0 or a scope address, e.g.
+  // scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel.
+  string scope_id = 1 [(gogoproto.moretags) = "yaml:\"scope_id\""];
+  // session_id can either be a uuid, e.g. 5803f8bc-6067-4eb5-951f-2121671c2ec0 or a session address, e.g.
+  // session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr.
   string session_id = 2 [(gogoproto.moretags) = "yaml:\"session_id\""];
 }
 
-// SessionContextByIDResponse is the response type for the Query/SessionContextByID RPC method.
-message SessionContextByIDResponse {
-  string           scope_id   = 1 [(gogoproto.moretags) = "yaml:\"scope_id\""];
-  string           session_id = 2 [(gogoproto.moretags) = "yaml:\"session_id\""];
-  repeated Session sessions   = 3;
+// SessionsResponse is the response type for the Query/Sessions RPC method.
+message SessionsResponse {
+  // sessions is any number of session results.
+  repeated SessionWrapper sessions = 1;
+  // request is a copy of the request that generated these results.
+  SessionsRequest request = 98;
+}
+
+// SessionWrapper contains a single session and some extra identifiers for it.
+message SessionWrapper {
+  // session is the on-chain session message.
+  Session session = 1;
+  // session_id is the address of the session, e.g. session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr.
+  string session_id = 2 [(gogoproto.moretags) = "yaml:\"session_id\""];
+  // scope_id is the address of the scope containing this session, e.g. scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel.
+  string scope_id = 3 [(gogoproto.moretags) = "yaml:\"scope_id\""];
+  // scope_uuid is the uuid of the scope containing this session, e.g. 91978ba2-5f35-459a-86a7-feca1b0512e0.
+  string scope_uuid = 4 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
+  // session_uuid is the uuid of the session, e.g. 5803f8bc-6067-4eb5-951f-2121671c2ec0.
+  // This is meaningless without the added context of the scope uuid (or scope id).
+  string session_uuid = 5 [(gogoproto.moretags) = "yaml:\"session_uuid\""];
 }
 
 // RecordsByScopeUUIDRequest is the request type for the Query/RecordsByScopeUUID RPC method.
