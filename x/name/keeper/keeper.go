@@ -73,7 +73,7 @@ func (keeper Keeper) SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAdd
 	if name, err = keeper.Normalize(ctx, name); err != nil {
 		return err
 	}
-	if err := sdk.VerifyAddressFormat(addr); err != nil {
+	if err = sdk.VerifyAddressFormat(addr); err != nil {
 		return sdkerrors.Wrap(types.ErrInvalidAddress, err.Error())
 	}
 	key, err := types.GetNameKeyPrefix(name)
@@ -85,7 +85,7 @@ func (keeper Keeper) SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAdd
 		return types.ErrNameAlreadyBound
 	}
 	record := types.NewNameRecord(name, addr, restrict)
-	if err := record.ValidateBasic(); err != nil {
+	if err = record.ValidateBasic(); err != nil {
 		return err
 	}
 	bz, err := types.ModuleCdc.MarshalBinaryBare(&record)
