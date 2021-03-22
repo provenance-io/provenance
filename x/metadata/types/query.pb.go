@@ -113,7 +113,7 @@ func (m *QueryParamsResponse) GetParams() Params {
 	return Params{}
 }
 
-// ScopeRequest is used for requesting a scope by id
+// ScopeRequest is the request type for the Query/Scope RPC method.
 type ScopeRequest struct {
 	ScopeId string `protobuf:"bytes,1,opt,name=scope_id,json=scopeId,proto3" json:"scope_id,omitempty" yaml:"scope_id"`
 }
@@ -158,7 +158,7 @@ func (m *ScopeRequest) GetScopeId() string {
 	return ""
 }
 
-// ScopeResponse is the response to a scope request.
+// ScopeResponse is the response type for the Query/Scope RPC method.
 type ScopeResponse struct {
 	Scope     *Scope     `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
 	Sessions  []*Session `protobuf:"bytes,2,rep,name=sessions,proto3" json:"sessions,omitempty"`
@@ -227,226 +227,7 @@ func (m *ScopeResponse) GetScopeUuid() string {
 	return ""
 }
 
-// OwnershipRequest looks for all scope level resources associated with the given addrss
-type OwnershipRequest struct {
-	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	// pagination defines an optional pagination for the request.
-	Pagination *query.PageRequest `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
-}
-
-func (m *OwnershipRequest) Reset()         { *m = OwnershipRequest{} }
-func (m *OwnershipRequest) String() string { return proto.CompactTextString(m) }
-func (*OwnershipRequest) ProtoMessage()    {}
-func (*OwnershipRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{4}
-}
-func (m *OwnershipRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *OwnershipRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_OwnershipRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *OwnershipRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_OwnershipRequest.Merge(m, src)
-}
-func (m *OwnershipRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *OwnershipRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_OwnershipRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_OwnershipRequest proto.InternalMessageInfo
-
-func (m *OwnershipRequest) GetAddress() string {
-	if m != nil {
-		return m.Address
-	}
-	return ""
-}
-
-func (m *OwnershipRequest) GetPagination() *query.PageRequest {
-	if m != nil {
-		return m.Pagination
-	}
-	return nil
-}
-
-// OwnershipResponse is the reponse to the ownership request and includes a list of scope identifiers
-type OwnershipResponse struct {
-	// A list of scope ids (uuid) associated with the given address.
-	ScopeUuids []string `protobuf:"bytes,1,rep,name=scope_uuids,json=scopeUuids,proto3" json:"scope_uuids,omitempty" yaml:"scope_uuids"`
-	// pagination defines an optional pagination for the request.
-	Pagination *query.PageResponse `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
-}
-
-func (m *OwnershipResponse) Reset()         { *m = OwnershipResponse{} }
-func (m *OwnershipResponse) String() string { return proto.CompactTextString(m) }
-func (*OwnershipResponse) ProtoMessage()    {}
-func (*OwnershipResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{5}
-}
-func (m *OwnershipResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *OwnershipResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_OwnershipResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *OwnershipResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_OwnershipResponse.Merge(m, src)
-}
-func (m *OwnershipResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *OwnershipResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_OwnershipResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_OwnershipResponse proto.InternalMessageInfo
-
-func (m *OwnershipResponse) GetScopeUuids() []string {
-	if m != nil {
-		return m.ScopeUuids
-	}
-	return nil
-}
-
-func (m *OwnershipResponse) GetPagination() *query.PageResponse {
-	if m != nil {
-		return m.Pagination
-	}
-	return nil
-}
-
-// ValueOwnershipRequest looks for all scope level resources that have the address as the value owner
-type ValueOwnershipRequest struct {
-	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	// pagination defines an optional pagination for the request.
-	Pagination *query.PageRequest `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
-}
-
-func (m *ValueOwnershipRequest) Reset()         { *m = ValueOwnershipRequest{} }
-func (m *ValueOwnershipRequest) String() string { return proto.CompactTextString(m) }
-func (*ValueOwnershipRequest) ProtoMessage()    {}
-func (*ValueOwnershipRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{6}
-}
-func (m *ValueOwnershipRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *ValueOwnershipRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_ValueOwnershipRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *ValueOwnershipRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ValueOwnershipRequest.Merge(m, src)
-}
-func (m *ValueOwnershipRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *ValueOwnershipRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_ValueOwnershipRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ValueOwnershipRequest proto.InternalMessageInfo
-
-func (m *ValueOwnershipRequest) GetAddress() string {
-	if m != nil {
-		return m.Address
-	}
-	return ""
-}
-
-func (m *ValueOwnershipRequest) GetPagination() *query.PageRequest {
-	if m != nil {
-		return m.Pagination
-	}
-	return nil
-}
-
-// ValueOwnershipResponse is the reponse to the Valueownership request and includes a list of scope identifiers
-type ValueOwnershipResponse struct {
-	// A list of scope ids (uuid) associated with the given address.
-	ScopeUuids []string `protobuf:"bytes,1,rep,name=scope_uuids,json=scopeUuids,proto3" json:"scope_uuids,omitempty" yaml:"scope_uuids"`
-	// pagination defines an optional pagination for the request.
-	Pagination *query.PageResponse `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
-}
-
-func (m *ValueOwnershipResponse) Reset()         { *m = ValueOwnershipResponse{} }
-func (m *ValueOwnershipResponse) String() string { return proto.CompactTextString(m) }
-func (*ValueOwnershipResponse) ProtoMessage()    {}
-func (*ValueOwnershipResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{7}
-}
-func (m *ValueOwnershipResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *ValueOwnershipResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_ValueOwnershipResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *ValueOwnershipResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ValueOwnershipResponse.Merge(m, src)
-}
-func (m *ValueOwnershipResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *ValueOwnershipResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_ValueOwnershipResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ValueOwnershipResponse proto.InternalMessageInfo
-
-func (m *ValueOwnershipResponse) GetScopeUuids() []string {
-	if m != nil {
-		return m.ScopeUuids
-	}
-	return nil
-}
-
-func (m *ValueOwnershipResponse) GetPagination() *query.PageResponse {
-	if m != nil {
-		return m.Pagination
-	}
-	return nil
-}
-
-// SessionContextByUUIDRequest returns the record sessions for a given scope identifer or optionally a specific record
-// session
+// SessionContextByUUIDRequest is the request type for the Query/SessionContextByUUID RPC method.
 type SessionContextByUUIDRequest struct {
 	ScopeUuid   string `protobuf:"bytes,1,opt,name=scope_uuid,json=scopeUuid,proto3" json:"scope_uuid,omitempty" yaml:"scope_uuid"`
 	SessionUuid string `protobuf:"bytes,2,opt,name=session_uuid,json=sessionUuid,proto3" json:"session_uuid,omitempty" yaml:"session_uuid"`
@@ -456,7 +237,7 @@ func (m *SessionContextByUUIDRequest) Reset()         { *m = SessionContextByUUI
 func (m *SessionContextByUUIDRequest) String() string { return proto.CompactTextString(m) }
 func (*SessionContextByUUIDRequest) ProtoMessage()    {}
 func (*SessionContextByUUIDRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{8}
+	return fileDescriptor_a68790bc0b96eeb9, []int{4}
 }
 func (m *SessionContextByUUIDRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -499,7 +280,7 @@ func (m *SessionContextByUUIDRequest) GetSessionUuid() string {
 	return ""
 }
 
-// SessionContextByUUIDResponse is the response to a SessionContextByUUIDRequest
+// SessionContextByUUIDResponse is the response type for the Query/SessionContextByUUID RPC method.
 type SessionContextByUUIDResponse struct {
 	ScopeId   string     `protobuf:"bytes,1,opt,name=scope_id,json=scopeId,proto3" json:"scope_id,omitempty" yaml:"scope_id"`
 	SessionId string     `protobuf:"bytes,2,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty" yaml:"session_id"`
@@ -510,7 +291,7 @@ func (m *SessionContextByUUIDResponse) Reset()         { *m = SessionContextByUU
 func (m *SessionContextByUUIDResponse) String() string { return proto.CompactTextString(m) }
 func (*SessionContextByUUIDResponse) ProtoMessage()    {}
 func (*SessionContextByUUIDResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{9}
+	return fileDescriptor_a68790bc0b96eeb9, []int{5}
 }
 func (m *SessionContextByUUIDResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -560,8 +341,7 @@ func (m *SessionContextByUUIDResponse) GetSessions() []*Session {
 	return nil
 }
 
-// SessionContextByIDRequest returns the record sessions for a given scope identifer or optionally a specific record
-// session
+// SessionContextByIDRequest is the request type for the Query/SessionContextByID RPC method.
 type SessionContextByIDRequest struct {
 	ScopeId   string `protobuf:"bytes,1,opt,name=scope_id,json=scopeId,proto3" json:"scope_id,omitempty" yaml:"scope_id"`
 	SessionId string `protobuf:"bytes,2,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty" yaml:"session_id"`
@@ -571,7 +351,7 @@ func (m *SessionContextByIDRequest) Reset()         { *m = SessionContextByIDReq
 func (m *SessionContextByIDRequest) String() string { return proto.CompactTextString(m) }
 func (*SessionContextByIDRequest) ProtoMessage()    {}
 func (*SessionContextByIDRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{10}
+	return fileDescriptor_a68790bc0b96eeb9, []int{6}
 }
 func (m *SessionContextByIDRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -614,7 +394,7 @@ func (m *SessionContextByIDRequest) GetSessionId() string {
 	return ""
 }
 
-// SessionContextByIDResponse is the response to a SessionContextByIDRequest
+// SessionContextByIDResponse is the response type for the Query/SessionContextByID RPC method.
 type SessionContextByIDResponse struct {
 	ScopeId   string     `protobuf:"bytes,1,opt,name=scope_id,json=scopeId,proto3" json:"scope_id,omitempty" yaml:"scope_id"`
 	SessionId string     `protobuf:"bytes,2,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty" yaml:"session_id"`
@@ -625,7 +405,7 @@ func (m *SessionContextByIDResponse) Reset()         { *m = SessionContextByIDRe
 func (m *SessionContextByIDResponse) String() string { return proto.CompactTextString(m) }
 func (*SessionContextByIDResponse) ProtoMessage()    {}
 func (*SessionContextByIDResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{11}
+	return fileDescriptor_a68790bc0b96eeb9, []int{7}
 }
 func (m *SessionContextByIDResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -675,8 +455,7 @@ func (m *SessionContextByIDResponse) GetSessions() []*Session {
 	return nil
 }
 
-// RecordsByScopeUUIDRequest is a request for all of the records in a specific scope by uuid or a specific record if a
-// name is given.
+// RecordsByScopeUUIDRequest is the request type for the Query/RecordsByScopeUUID RPC method.
 type RecordsByScopeUUIDRequest struct {
 	ScopeUuid string `protobuf:"bytes,1,opt,name=scope_uuid,json=scopeUuid,proto3" json:"scope_uuid,omitempty" yaml:"scope_uuid"`
 	Name      string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
@@ -686,7 +465,7 @@ func (m *RecordsByScopeUUIDRequest) Reset()         { *m = RecordsByScopeUUIDReq
 func (m *RecordsByScopeUUIDRequest) String() string { return proto.CompactTextString(m) }
 func (*RecordsByScopeUUIDRequest) ProtoMessage()    {}
 func (*RecordsByScopeUUIDRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{12}
+	return fileDescriptor_a68790bc0b96eeb9, []int{8}
 }
 func (m *RecordsByScopeUUIDRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -729,7 +508,7 @@ func (m *RecordsByScopeUUIDRequest) GetName() string {
 	return ""
 }
 
-// RecordsByScopeUUIDResponse is the response to a RecordsByScopeUUIDRequest
+// RecordsByScopeUUIDResponse is the response type for the Query/RecordsByScopeUUID RPC method.
 type RecordsByScopeUUIDResponse struct {
 	ScopeUuid string    `protobuf:"bytes,1,opt,name=scope_uuid,json=scopeUuid,proto3" json:"scope_uuid,omitempty" yaml:"scope_uuid"`
 	ScopeId   string    `protobuf:"bytes,2,opt,name=scope_id,json=scopeId,proto3" json:"scope_id,omitempty" yaml:"scope_id"`
@@ -740,7 +519,7 @@ func (m *RecordsByScopeUUIDResponse) Reset()         { *m = RecordsByScopeUUIDRe
 func (m *RecordsByScopeUUIDResponse) String() string { return proto.CompactTextString(m) }
 func (*RecordsByScopeUUIDResponse) ProtoMessage()    {}
 func (*RecordsByScopeUUIDResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{13}
+	return fileDescriptor_a68790bc0b96eeb9, []int{9}
 }
 func (m *RecordsByScopeUUIDResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -790,8 +569,7 @@ func (m *RecordsByScopeUUIDResponse) GetRecords() []*Record {
 	return nil
 }
 
-// RecordsByScopeIDRequest is a request for all of the records in a specific scope by bech32 id or a specific record if
-// a name is given.
+// RecordsByScopeIDRequest is the request type for the Query/RecordsByScopeID RPC method.
 type RecordsByScopeIDRequest struct {
 	ScopeId string `protobuf:"bytes,1,opt,name=scope_id,json=scopeId,proto3" json:"scope_id,omitempty" yaml:"scope_id"`
 	Name    string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
@@ -801,7 +579,7 @@ func (m *RecordsByScopeIDRequest) Reset()         { *m = RecordsByScopeIDRequest
 func (m *RecordsByScopeIDRequest) String() string { return proto.CompactTextString(m) }
 func (*RecordsByScopeIDRequest) ProtoMessage()    {}
 func (*RecordsByScopeIDRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{14}
+	return fileDescriptor_a68790bc0b96eeb9, []int{10}
 }
 func (m *RecordsByScopeIDRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -844,7 +622,7 @@ func (m *RecordsByScopeIDRequest) GetName() string {
 	return ""
 }
 
-// RecordsByScopeIDResponse is the response to a RecordsByScopeIDRequest
+// RecordsByScopeIDResponse is the response type for the Query/RecordsByScopeID RPC method.
 type RecordsByScopeIDResponse struct {
 	ScopeUuid string    `protobuf:"bytes,1,opt,name=scope_uuid,json=scopeUuid,proto3" json:"scope_uuid,omitempty" yaml:"scope_uuid"`
 	ScopeId   string    `protobuf:"bytes,2,opt,name=scope_id,json=scopeId,proto3" json:"scope_id,omitempty" yaml:"scope_id"`
@@ -855,7 +633,7 @@ func (m *RecordsByScopeIDResponse) Reset()         { *m = RecordsByScopeIDRespon
 func (m *RecordsByScopeIDResponse) String() string { return proto.CompactTextString(m) }
 func (*RecordsByScopeIDResponse) ProtoMessage()    {}
 func (*RecordsByScopeIDResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{15}
+	return fileDescriptor_a68790bc0b96eeb9, []int{11}
 }
 func (m *RecordsByScopeIDResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -905,7 +683,225 @@ func (m *RecordsByScopeIDResponse) GetRecords() []*Record {
 	return nil
 }
 
-// ScopeSpecificationRequest is used for requesting a scope specification by uuid
+// OwnershipRequest is the request type for the Query/Ownership RPC method.
+type OwnershipRequest struct {
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	// pagination defines optional pagination parameters for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *OwnershipRequest) Reset()         { *m = OwnershipRequest{} }
+func (m *OwnershipRequest) String() string { return proto.CompactTextString(m) }
+func (*OwnershipRequest) ProtoMessage()    {}
+func (*OwnershipRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a68790bc0b96eeb9, []int{12}
+}
+func (m *OwnershipRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *OwnershipRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_OwnershipRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *OwnershipRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_OwnershipRequest.Merge(m, src)
+}
+func (m *OwnershipRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *OwnershipRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_OwnershipRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_OwnershipRequest proto.InternalMessageInfo
+
+func (m *OwnershipRequest) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
+func (m *OwnershipRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// OwnershipResponse is the response type for the Query/Ownership RPC method.
+type OwnershipResponse struct {
+	// A list of scope ids (uuid) associated with the given address.
+	ScopeUuids []string `protobuf:"bytes,1,rep,name=scope_uuids,json=scopeUuids,proto3" json:"scope_uuids,omitempty" yaml:"scope_uuids"`
+	// pagination provides the pagination information of this response.
+	Pagination *query.PageResponse `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *OwnershipResponse) Reset()         { *m = OwnershipResponse{} }
+func (m *OwnershipResponse) String() string { return proto.CompactTextString(m) }
+func (*OwnershipResponse) ProtoMessage()    {}
+func (*OwnershipResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a68790bc0b96eeb9, []int{13}
+}
+func (m *OwnershipResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *OwnershipResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_OwnershipResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *OwnershipResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_OwnershipResponse.Merge(m, src)
+}
+func (m *OwnershipResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *OwnershipResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_OwnershipResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_OwnershipResponse proto.InternalMessageInfo
+
+func (m *OwnershipResponse) GetScopeUuids() []string {
+	if m != nil {
+		return m.ScopeUuids
+	}
+	return nil
+}
+
+func (m *OwnershipResponse) GetPagination() *query.PageResponse {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// ValueOwnershipRequest is the request type for the Query/ValueOwnership RPC method.
+type ValueOwnershipRequest struct {
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	// pagination defines optional pagination parameters for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *ValueOwnershipRequest) Reset()         { *m = ValueOwnershipRequest{} }
+func (m *ValueOwnershipRequest) String() string { return proto.CompactTextString(m) }
+func (*ValueOwnershipRequest) ProtoMessage()    {}
+func (*ValueOwnershipRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a68790bc0b96eeb9, []int{14}
+}
+func (m *ValueOwnershipRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ValueOwnershipRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ValueOwnershipRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ValueOwnershipRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ValueOwnershipRequest.Merge(m, src)
+}
+func (m *ValueOwnershipRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *ValueOwnershipRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ValueOwnershipRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ValueOwnershipRequest proto.InternalMessageInfo
+
+func (m *ValueOwnershipRequest) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
+func (m *ValueOwnershipRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// ValueOwnershipResponse is the response type for the Query/ValueOwnership RPC method.
+type ValueOwnershipResponse struct {
+	// A list of scope ids (uuid) associated with the given address.
+	ScopeUuids []string `protobuf:"bytes,1,rep,name=scope_uuids,json=scopeUuids,proto3" json:"scope_uuids,omitempty" yaml:"scope_uuids"`
+	// pagination provides the pagination information of this response.
+	Pagination *query.PageResponse `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *ValueOwnershipResponse) Reset()         { *m = ValueOwnershipResponse{} }
+func (m *ValueOwnershipResponse) String() string { return proto.CompactTextString(m) }
+func (*ValueOwnershipResponse) ProtoMessage()    {}
+func (*ValueOwnershipResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a68790bc0b96eeb9, []int{15}
+}
+func (m *ValueOwnershipResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ValueOwnershipResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ValueOwnershipResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ValueOwnershipResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ValueOwnershipResponse.Merge(m, src)
+}
+func (m *ValueOwnershipResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *ValueOwnershipResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ValueOwnershipResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ValueOwnershipResponse proto.InternalMessageInfo
+
+func (m *ValueOwnershipResponse) GetScopeUuids() []string {
+	if m != nil {
+		return m.ScopeUuids
+	}
+	return nil
+}
+
+func (m *ValueOwnershipResponse) GetPagination() *query.PageResponse {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// ScopeSpecificationRequest is the request type for the Query/ScopeSpecification RPC method.
 type ScopeSpecificationRequest struct {
 	SpecificationUuid string `protobuf:"bytes,1,opt,name=specification_uuid,json=specificationUuid,proto3" json:"specification_uuid,omitempty" yaml:"specification_uuid"`
 }
@@ -950,7 +946,7 @@ func (m *ScopeSpecificationRequest) GetSpecificationUuid() string {
 	return ""
 }
 
-// ScopeSpecificationResponse is the response to a scope specification request.
+// ScopeSpecificationResponse is the response type for the Query/ScopeSpecification RPC method.
 type ScopeSpecificationResponse struct {
 	ScopeSpecification *ScopeSpecification `protobuf:"bytes,1,opt,name=scope_specification,json=scopeSpecification,proto3" json:"scope_specification,omitempty" yaml:"scope_specification"`
 	SpecificationUuid  string              `protobuf:"bytes,2,opt,name=specification_uuid,json=specificationUuid,proto3" json:"specification_uuid,omitempty" yaml:"specification_uuid"`
@@ -1003,7 +999,7 @@ func (m *ScopeSpecificationResponse) GetSpecificationUuid() string {
 	return ""
 }
 
-// ContractSpecificationRequest is used for requesting a contract specification by uuid
+// ContractSpecificationRequest is the request type for the Query/ContractSpecification RPC method.
 type ContractSpecificationRequest struct {
 	SpecificationUuid string `protobuf:"bytes,1,opt,name=specification_uuid,json=specificationUuid,proto3" json:"specification_uuid,omitempty" yaml:"specification_uuid"`
 }
@@ -1048,7 +1044,7 @@ func (m *ContractSpecificationRequest) GetSpecificationUuid() string {
 	return ""
 }
 
-// ContractSpecificationResponse is the response to a contract specification request.
+// ContractSpecificationResponse is the response type for the Query/ContractSpecification RPC method.
 type ContractSpecificationResponse struct {
 	ContractSpecification     *ContractSpecification `protobuf:"bytes,1,opt,name=contract_specification,json=contractSpecification,proto3" json:"contract_specification,omitempty" yaml:"contract_specification"`
 	ContractSpecificationUuid string                 `protobuf:"bytes,2,opt,name=contract_specification_uuid,json=contractSpecificationUuid,proto3" json:"contract_specification_uuid,omitempty" yaml:"contract_specification_uuid"`
@@ -1101,7 +1097,7 @@ func (m *ContractSpecificationResponse) GetContractSpecificationUuid() string {
 	return ""
 }
 
-// ContractSpecificationExtendedRequest is used for requesting a contract specification with extended data by contract
+// ContractSpecificationExtendedRequest is the request type for the Query/ContractSpecificationExtended RPC method.
 // specification uuid
 type ContractSpecificationExtendedRequest struct {
 	SpecificationUuid string `protobuf:"bytes,1,opt,name=specification_uuid,json=specificationUuid,proto3" json:"specification_uuid,omitempty" yaml:"specification_uuid"`
@@ -1147,7 +1143,7 @@ func (m *ContractSpecificationExtendedRequest) GetSpecificationUuid() string {
 	return ""
 }
 
-// ContractSpecificationExtendedResponse is the response to a contract specification extended request.
+// ContractSpecificationExtendedResponse is the response type for the Query/ContractSpecificationExtended RPC method.
 type ContractSpecificationExtendedResponse struct {
 	ContractSpecification     *ContractSpecification `protobuf:"bytes,1,opt,name=contract_specification,json=contractSpecification,proto3" json:"contract_specification,omitempty" yaml:"contract_specification"`
 	RecordSpecifications      []*RecordSpecification `protobuf:"bytes,2,rep,name=record_specifications,json=recordSpecifications,proto3" json:"record_specifications,omitempty" yaml:"record_specifications"`
@@ -1208,8 +1204,8 @@ func (m *ContractSpecificationExtendedResponse) GetContractSpecificationUuid() s
 	return ""
 }
 
-// RecordSpecificationsForContractSpecificationRequest is used for requesting record specifications by contract
-// specification uuid
+// RecordSpecificationsForContractSpecificationRequest is the request type for the
+// Query/RecordSpecificationsForContractSpecification RPC method.
 type RecordSpecificationsForContractSpecificationRequest struct {
 	ContractSpecificationUuid string `protobuf:"bytes,1,opt,name=contract_specification_uuid,json=contractSpecificationUuid,proto3" json:"contract_specification_uuid,omitempty" yaml:"contract_specification_uuid"`
 }
@@ -1258,8 +1254,8 @@ func (m *RecordSpecificationsForContractSpecificationRequest) GetContractSpecifi
 	return ""
 }
 
-// RecordSpecificationsForContractSpecificationResponse is the response to a record specification for contract
-// specification request.
+// RecordSpecificationsForContractSpecificationResponse is the response type for the
+// Query/RecordSpecificationsForContractSpecification RPC method.
 type RecordSpecificationsForContractSpecificationResponse struct {
 	RecordSpecifications      []*RecordSpecification `protobuf:"bytes,1,rep,name=record_specifications,json=recordSpecifications,proto3" json:"record_specifications,omitempty" yaml:"record_specifications"`
 	ContractSpecificationUuid string                 `protobuf:"bytes,2,opt,name=contract_specification_uuid,json=contractSpecificationUuid,proto3" json:"contract_specification_uuid,omitempty" yaml:"contract_specification_uuid"`
@@ -1316,7 +1312,7 @@ func (m *RecordSpecificationsForContractSpecificationResponse) GetContractSpecif
 	return ""
 }
 
-// RecordSpecificationRequest is used for requesting a record specification by contract spec uuid and record name
+// RecordSpecificationRequest is the request type for the Query/RecordSpecification RPC method.
 type RecordSpecificationRequest struct {
 	ContractSpecificationUuid string `protobuf:"bytes,1,opt,name=contract_specification_uuid,json=contractSpecificationUuid,proto3" json:"contract_specification_uuid,omitempty" yaml:"contract_specification_uuid"`
 	Name                      string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
@@ -1369,7 +1365,7 @@ func (m *RecordSpecificationRequest) GetName() string {
 	return ""
 }
 
-// RecordSpecificationResponse is the response to a record specification request.
+// RecordSpecificationResponse is the response type for the Query/RecordSpecification RPC method.
 type RecordSpecificationResponse struct {
 	RecordSpecification       *RecordSpecification `protobuf:"bytes,1,opt,name=record_specification,json=recordSpecification,proto3" json:"record_specification,omitempty" yaml:"record_specification"`
 	ContractSpecificationUuid string               `protobuf:"bytes,2,opt,name=contract_specification_uuid,json=contractSpecificationUuid,proto3" json:"contract_specification_uuid,omitempty" yaml:"contract_specification_uuid"`
@@ -1430,7 +1426,7 @@ func (m *RecordSpecificationResponse) GetName() string {
 	return ""
 }
 
-// RecordSpecificationByIDRequest is used for requesting a record specification by id
+// RecordSpecificationByIDRequest is the request type for the Query/RecordSpecificationByID RPC method.
 type RecordSpecificationByIDRequest struct {
 	RecordSpecificationId string `protobuf:"bytes,1,opt,name=record_specification_id,json=recordSpecificationId,proto3" json:"record_specification_id,omitempty" yaml:"record_specification_id"`
 }
@@ -1475,7 +1471,7 @@ func (m *RecordSpecificationByIDRequest) GetRecordSpecificationId() string {
 	return ""
 }
 
-// RecordSpecificationByIDResponse is the response to a record specification by id request.
+// RecordSpecificationByIDResponse is the response type for the Query/RecordSpecificationByID RPC method.
 type RecordSpecificationByIDResponse struct {
 	RecordSpecification   *RecordSpecification `protobuf:"bytes,1,opt,name=record_specification,json=recordSpecification,proto3" json:"record_specification,omitempty" yaml:"record_specification"`
 	RecordSpecificationId string               `protobuf:"bytes,2,opt,name=record_specification_id,json=recordSpecificationId,proto3" json:"record_specification_id,omitempty" yaml:"record_specification_id"`
@@ -1528,7 +1524,7 @@ func (m *RecordSpecificationByIDResponse) GetRecordSpecificationId() string {
 	return ""
 }
 
-// OSLocatorParamsRequest is the request type for the Query/Params RPC method.
+// OSLocatorParamsRequest is the request type for the Query/OSLocatorParams RPC method.
 type OSLocatorParamsRequest struct {
 }
 
@@ -1565,7 +1561,7 @@ func (m *OSLocatorParamsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_OSLocatorParamsRequest proto.InternalMessageInfo
 
-// OSLocatorParamsResponse is the response type for the Query/Params RPC method.
+// OSLocatorParamsResponse is the response type for the Query/OSLocatorParams RPC method.
 type OSLocatorParamsResponse struct {
 	// params defines the parameters of the module.
 	Params OSLocatorParams `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
@@ -1611,7 +1607,7 @@ func (m *OSLocatorParamsResponse) GetParams() OSLocatorParams {
 	return OSLocatorParams{}
 }
 
-// OSLocationRequest is used for requesting a Objectstore location by owner
+// OSLocationRequest is the request type for the Query/OSLocator RPC method.
 type OSLocatorRequest struct {
 	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
 }
@@ -1656,7 +1652,7 @@ func (m *OSLocatorRequest) GetOwner() string {
 	return ""
 }
 
-// OSLocatorResponse is the response to a os locator request.
+// OSLocatorResponse is the response type for the Query/OSLocator RPC method.
 type OSLocatorResponse struct {
 	Locator *ObjectStoreLocator `protobuf:"bytes,1,opt,name=locator,proto3" json:"locator,omitempty"`
 }
@@ -1701,10 +1697,10 @@ func (m *OSLocatorResponse) GetLocator() *ObjectStoreLocator {
 	return nil
 }
 
-// OSLocatorByURIRequest get os locator's by uri
+// OSLocatorByURIRequest is the request type for the Query/OSLocatorByURI RPC method.
 type OSLocatorByURIRequest struct {
 	Uri string `protobuf:"bytes,1,opt,name=uri,proto3" json:"uri,omitempty"`
-	// pagination defines an optional pagination for the request.
+	// pagination defines optional pagination parameters for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -1755,10 +1751,10 @@ func (m *OSLocatorByURIRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
-// OSLocatorByURIResponse is an array of ObjectStoreLocator with pagination info
+// OSLocatorByURIResponse is the response type for the Query/OSLocatorByURI RPC method.
 type OSLocatorByURIResponse struct {
 	Locator []ObjectStoreLocator `protobuf:"bytes,1,rep,name=locator,proto3" json:"locator"`
-	// pagination defines an optional pagination for the request.
+	// pagination provides the pagination information of this response.
 	Pagination *query.PageResponse `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -1809,7 +1805,7 @@ func (m *OSLocatorByURIResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// OSLocatorByScopeUUIDRequest is used for requesting all the OSLocator associated with a scope_id
+// OSLocatorByScopeUUIDRequest is the request type for the Query/OSLocatorByScopeUUID RPC method.
 type OSLocatorByScopeUUIDRequest struct {
 	ScopeUuid string `protobuf:"bytes,1,opt,name=scope_uuid,json=scopeUuid,proto3" json:"scope_uuid,omitempty" yaml:"scope_uuid"`
 }
@@ -1854,7 +1850,7 @@ func (m *OSLocatorByScopeUUIDRequest) GetScopeUuid() string {
 	return ""
 }
 
-// OSLocatorByScopeUUIDResponse is an array of ObjectStoreLocator.
+// OSLocatorByScopeUUIDResponse is the response type for the Query/OSLocatorByScopeUUID RPC method.
 type OSLocatorByScopeUUIDResponse struct {
 	Locator []ObjectStoreLocator `protobuf:"bytes,1,rep,name=locator,proto3" json:"locator"`
 }
@@ -1899,9 +1895,9 @@ func (m *OSLocatorByScopeUUIDResponse) GetLocator() []ObjectStoreLocator {
 	return nil
 }
 
-// OSAllLocatorsRequest get all os locator's request.
+// OSAllLocatorsRequest is the request type for the Query/OSAllLocators RPC method.
 type OSAllLocatorsRequest struct {
-	// pagination defines an optional pagination for the request.
+	// pagination defines optional pagination parameters for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -1945,10 +1941,10 @@ func (m *OSAllLocatorsRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
-// OSAllLocatorsResponse is an array of ObjectStoreLocator with pagination info
+// OSAllLocatorsResponse is the response type for the Query/OSAllLocators RPC method.
 type OSAllLocatorsResponse struct {
 	Locator []ObjectStoreLocator `protobuf:"bytes,1,rep,name=locator,proto3" json:"locator"`
-	// pagination defines an optional pagination for the request.
+	// pagination provides the pagination information of this response.
 	Pagination *query.PageResponse `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -2004,10 +2000,6 @@ func init() {
 	proto.RegisterType((*QueryParamsResponse)(nil), "provenance.metadata.v1.QueryParamsResponse")
 	proto.RegisterType((*ScopeRequest)(nil), "provenance.metadata.v1.ScopeRequest")
 	proto.RegisterType((*ScopeResponse)(nil), "provenance.metadata.v1.ScopeResponse")
-	proto.RegisterType((*OwnershipRequest)(nil), "provenance.metadata.v1.OwnershipRequest")
-	proto.RegisterType((*OwnershipResponse)(nil), "provenance.metadata.v1.OwnershipResponse")
-	proto.RegisterType((*ValueOwnershipRequest)(nil), "provenance.metadata.v1.ValueOwnershipRequest")
-	proto.RegisterType((*ValueOwnershipResponse)(nil), "provenance.metadata.v1.ValueOwnershipResponse")
 	proto.RegisterType((*SessionContextByUUIDRequest)(nil), "provenance.metadata.v1.SessionContextByUUIDRequest")
 	proto.RegisterType((*SessionContextByUUIDResponse)(nil), "provenance.metadata.v1.SessionContextByUUIDResponse")
 	proto.RegisterType((*SessionContextByIDRequest)(nil), "provenance.metadata.v1.SessionContextByIDRequest")
@@ -2016,6 +2008,10 @@ func init() {
 	proto.RegisterType((*RecordsByScopeUUIDResponse)(nil), "provenance.metadata.v1.RecordsByScopeUUIDResponse")
 	proto.RegisterType((*RecordsByScopeIDRequest)(nil), "provenance.metadata.v1.RecordsByScopeIDRequest")
 	proto.RegisterType((*RecordsByScopeIDResponse)(nil), "provenance.metadata.v1.RecordsByScopeIDResponse")
+	proto.RegisterType((*OwnershipRequest)(nil), "provenance.metadata.v1.OwnershipRequest")
+	proto.RegisterType((*OwnershipResponse)(nil), "provenance.metadata.v1.OwnershipResponse")
+	proto.RegisterType((*ValueOwnershipRequest)(nil), "provenance.metadata.v1.ValueOwnershipRequest")
+	proto.RegisterType((*ValueOwnershipResponse)(nil), "provenance.metadata.v1.ValueOwnershipResponse")
 	proto.RegisterType((*ScopeSpecificationRequest)(nil), "provenance.metadata.v1.ScopeSpecificationRequest")
 	proto.RegisterType((*ScopeSpecificationResponse)(nil), "provenance.metadata.v1.ScopeSpecificationResponse")
 	proto.RegisterType((*ContractSpecificationRequest)(nil), "provenance.metadata.v1.ContractSpecificationRequest")
@@ -2045,7 +2041,7 @@ func init() {
 }
 
 var fileDescriptor_a68790bc0b96eeb9 = []byte{
-	// 1908 bytes of a gzipped FileDescriptorProto
+	// 1907 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x5a, 0xdd, 0x6f, 0x13, 0xd9,
 	0x15, 0xcf, 0xb5, 0x09, 0x21, 0x27, 0x7c, 0x24, 0x37, 0x5f, 0x8e, 0x93, 0xd8, 0xe9, 0x15, 0x04,
 	0x43, 0x88, 0x87, 0x7c, 0x14, 0x68, 0xa0, 0x14, 0x5c, 0x08, 0x84, 0x22, 0x92, 0x4e, 0x14, 0xa4,
@@ -2053,119 +2049,119 @@ var fileDescriptor_a68790bc0b96eeb9 = []byte{
 	0x68, 0xd5, 0xa7, 0x16, 0x55, 0x48, 0x15, 0x52, 0x2b, 0xb5, 0x7d, 0xaa, 0xd4, 0xfe, 0x01, 0xdd,
 	0x0f, 0xad, 0x56, 0xab, 0xd5, 0xf2, 0xb6, 0xac, 0x78, 0xd9, 0x27, 0x6b, 0x05, 0x2b, 0xed, 0xbe,
 	0xae, 0x9f, 0xf6, 0x69, 0xb5, 0x9a, 0x3b, 0x77, 0xec, 0x19, 0xfb, 0x5e, 0xdb, 0x13, 0xbc, 0x10,
-	0xde, 0x66, 0x3c, 0xe7, 0xdc, 0xf3, 0xfb, 0xfd, 0xee, 0xc7, 0x9c, 0x73, 0xc6, 0x40, 0x72, 0xba,
-	0xb6, 0xa5, 0x66, 0x95, 0x6c, 0x52, 0x95, 0x36, 0x55, 0x53, 0x49, 0x29, 0xa6, 0x22, 0x6d, 0xcd,
-	0x48, 0xf7, 0xf2, 0xaa, 0xbe, 0x1d, 0xcf, 0xe9, 0x9a, 0xa9, 0xe1, 0xa1, 0xaa, 0x4d, 0xdc, 0xb1,
-	0x89, 0x6f, 0xcd, 0x84, 0x07, 0x36, 0xb4, 0x0d, 0x8d, 0x9a, 0x48, 0xd6, 0x95, 0x6d, 0x1d, 0x3e,
-	0x9e, 0xd4, 0x8c, 0x4d, 0xcd, 0x90, 0xd6, 0x15, 0x43, 0xb5, 0x87, 0x91, 0xb6, 0x66, 0xd6, 0x55,
-	0x53, 0x99, 0x91, 0x72, 0xca, 0x46, 0x3a, 0xab, 0x98, 0x69, 0x2d, 0xcb, 0x6c, 0xc7, 0x36, 0x34,
-	0x6d, 0x23, 0xa3, 0x4a, 0x4a, 0x2e, 0x2d, 0x29, 0xd9, 0xac, 0x66, 0xd2, 0x87, 0x06, 0x7b, 0x7a,
-	0x44, 0x80, 0xad, 0x82, 0xc1, 0x36, 0x13, 0x51, 0x30, 0x92, 0x5a, 0x4e, 0x75, 0x40, 0x89, 0x6c,
-	0x72, 0x6a, 0x32, 0x7d, 0x3b, 0x9d, 0x74, 0x83, 0x8a, 0x09, 0x6c, 0xb5, 0xf5, 0xbb, 0x6a, 0xd2,
-	0x34, 0x4c, 0x4d, 0x67, 0xa3, 0x92, 0x01, 0xc0, 0x3f, 0xb5, 0x08, 0xae, 0x28, 0xba, 0xb2, 0x69,
-	0xc8, 0xea, 0xbd, 0xbc, 0x6a, 0x98, 0x64, 0x15, 0xfa, 0x3d, 0xbf, 0x1a, 0x39, 0x2d, 0x6b, 0xa8,
-	0xf8, 0x1c, 0xec, 0xcd, 0xd1, 0x5f, 0x42, 0x68, 0x02, 0xc5, 0x7a, 0x66, 0x23, 0x71, 0xbe, 0xac,
-	0x71, 0xdb, 0x2f, 0xb1, 0xe7, 0x49, 0x29, 0xda, 0x21, 0x33, 0x1f, 0x72, 0x1e, 0xf6, 0xaf, 0x5a,
-	0x7c, 0x58, 0x10, 0x1c, 0x87, 0x7d, 0x94, 0xdf, 0x2f, 0xd3, 0x29, 0x3a, 0x5e, 0x77, 0xa2, 0xbf,
-	0x5c, 0x8a, 0x1e, 0xda, 0x56, 0x36, 0x33, 0x0b, 0xc4, 0x79, 0x42, 0xe4, 0x2e, 0x7a, 0xb9, 0x94,
-	0x22, 0x5f, 0x21, 0x38, 0xc0, 0x06, 0x60, 0x78, 0xe6, 0xa0, 0x93, 0x3e, 0x64, 0x70, 0xc6, 0x45,
-	0x70, 0x6c, 0x2f, 0xdb, 0x16, 0x9f, 0x85, 0x7d, 0x86, 0x6a, 0x18, 0xd6, 0x24, 0x85, 0x02, 0x13,
-	0xc1, 0x58, 0xcf, 0x6c, 0x54, 0xe8, 0x67, 0xdb, 0xc9, 0x15, 0x07, 0x7c, 0x06, 0xba, 0x74, 0x35,
-	0xa9, 0xe9, 0x29, 0x23, 0x14, 0xa4, 0xbe, 0x42, 0x09, 0x64, 0x6a, 0x26, 0x3b, 0xe6, 0x78, 0x1e,
-	0xc0, 0xe6, 0x94, 0xcf, 0xa7, 0x53, 0xa1, 0x3d, 0x94, 0xef, 0x60, 0xb9, 0x14, 0xed, 0x73, 0xf3,
-	0xb5, 0x9e, 0x11, 0xb9, 0x9b, 0xde, 0xac, 0x59, 0xd7, 0x26, 0xf4, 0x2e, 0xff, 0x26, 0xab, 0xea,
-	0xc6, 0x9d, 0x74, 0xce, 0xd1, 0x2d, 0x04, 0x5d, 0x4a, 0x2a, 0xa5, 0xab, 0x86, 0x3d, 0x0d, 0xdd,
-	0xb2, 0x73, 0x8b, 0x17, 0x01, 0xaa, 0xeb, 0x33, 0x94, 0xa4, 0xa2, 0x4c, 0xc6, 0xed, 0xc5, 0x1c,
-	0xb7, 0x16, 0x73, 0xdc, 0xde, 0x13, 0x6c, 0x31, 0xc7, 0x57, 0x94, 0x0d, 0x67, 0x36, 0x64, 0x97,
-	0x27, 0x79, 0x84, 0xa0, 0xcf, 0x15, 0x96, 0xa9, 0x7d, 0x1a, 0x7a, 0xaa, 0x28, 0xad, 0xd8, 0xc1,
-	0x58, 0x77, 0x62, 0xa8, 0x5c, 0x8a, 0xe2, 0x5a, 0x0a, 0x06, 0x91, 0xa1, 0xc2, 0xc1, 0xc0, 0x57,
-	0x38, 0xb0, 0x8e, 0x36, 0x85, 0x65, 0x47, 0xf5, 0xe0, 0xda, 0x86, 0xc1, 0x9b, 0x4a, 0x26, 0xaf,
-	0xbe, 0x06, 0x49, 0x1e, 0x23, 0x18, 0xaa, 0x8d, 0xbd, 0x6b, 0x74, 0xf9, 0x33, 0x82, 0x51, 0xb6,
-	0x56, 0x7f, 0xac, 0x65, 0x4d, 0xf5, 0xbe, 0x99, 0xd8, 0x5e, 0x5b, 0x5b, 0xba, 0xe4, 0xc8, 0xe3,
-	0x5d, 0x7b, 0xa8, 0xb5, 0xb5, 0x87, 0x17, 0x60, 0x3f, 0x5b, 0xf7, 0xb6, 0x5f, 0x80, 0xfa, 0x0d,
-	0x97, 0x4b, 0xd1, 0x7e, 0xe6, 0xe7, 0x7a, 0x4a, 0xe4, 0x1e, 0x76, 0x4b, 0xd7, 0xed, 0xfb, 0x08,
-	0xc6, 0xf8, 0x88, 0x98, 0x68, 0x3e, 0x37, 0x3f, 0xa5, 0xc0, 0xc2, 0x55, 0xa0, 0xb8, 0x29, 0x54,
-	0x9e, 0x59, 0x14, 0xec, 0x9b, 0xa5, 0x94, 0x67, 0xaf, 0x07, 0x7d, 0xee, 0x75, 0xf2, 0x7b, 0x04,
-	0x23, 0xb5, 0x1c, 0xaa, 0x9a, 0xbe, 0x12, 0x02, 0xe4, 0x3d, 0x04, 0x61, 0x1e, 0x86, 0x37, 0x47,
-	0x45, 0x15, 0x46, 0xec, 0xa3, 0xd0, 0x48, 0x6c, 0xd3, 0x73, 0xf8, 0xe5, 0x17, 0x26, 0x86, 0x3d,
-	0x59, 0x65, 0x53, 0xb5, 0xf1, 0xcb, 0xf4, 0x9a, 0xbc, 0x83, 0x20, 0xcc, 0x8b, 0xc3, 0x84, 0xda,
-	0x59, 0x20, 0xb7, 0xbc, 0x81, 0x16, 0xe4, 0xdd, 0xf1, 0xdb, 0x81, 0xfc, 0x1c, 0x86, 0xbd, 0xe8,
-	0x77, 0xbe, 0xd0, 0x78, 0xea, 0xbc, 0x85, 0x20, 0x54, 0x3f, 0xfe, 0x1b, 0xa2, 0x4d, 0x1a, 0x46,
-	0x28, 0xe4, 0x55, 0x77, 0xa2, 0xe3, 0xa8, 0x73, 0x1d, 0xb0, 0x27, 0x01, 0x72, 0x93, 0x18, 0x2f,
-	0x97, 0xa2, 0x23, 0x0c, 0x50, 0x9d, 0x0d, 0x91, 0xfb, 0x3c, 0x3f, 0xd2, 0x63, 0xeb, 0x0b, 0x6b,
-	0xbb, 0x71, 0x62, 0x31, 0xa5, 0x0a, 0xd0, 0x6f, 0x33, 0xf3, 0x78, 0xb2, 0xec, 0xe3, 0x78, 0xc3,
-	0xec, 0xc3, 0x33, 0x60, 0x22, 0x52, 0x2e, 0x45, 0xc3, 0x6e, 0xa9, 0x3c, 0x03, 0x12, 0x19, 0x1b,
-	0x75, 0x3e, 0x02, 0xa6, 0x81, 0x1d, 0x32, 0xcd, 0xc0, 0x98, 0x75, 0xa0, 0xe8, 0x4a, 0xd2, 0x7c,
-	0x05, 0xba, 0x3e, 0x0c, 0xc0, 0xb8, 0x20, 0x1c, 0x93, 0xf6, 0x8f, 0x08, 0x86, 0x92, 0xcc, 0x82,
-	0x2b, 0xef, 0xb4, 0x48, 0x5e, 0xee, 0xb8, 0x89, 0xef, 0x95, 0x4b, 0xd1, 0x71, 0x1b, 0x23, 0x7f,
-	0x58, 0x22, 0x0f, 0x26, 0x79, 0x9e, 0xf8, 0x36, 0x8c, 0xf2, 0x3d, 0xdc, 0x82, 0x4f, 0x96, 0x4b,
-	0x51, 0xd2, 0x68, 0x78, 0xa6, 0xc5, 0x08, 0x37, 0x06, 0x4b, 0xed, 0x0e, 0x73, 0xa1, 0x5f, 0xbe,
-	0x6f, 0xaa, 0xd9, 0x94, 0x9a, 0xfa, 0x6e, 0x66, 0xe2, 0x1f, 0x41, 0x38, 0xd2, 0x24, 0xec, 0xae,
-	0x9b, 0x91, 0x07, 0x08, 0x06, 0xed, 0xc3, 0xc0, 0xeb, 0xe0, 0xe4, 0xef, 0x53, 0x8d, 0x4f, 0x12,
-	0x2f, 0x8c, 0x89, 0x72, 0x29, 0x3a, 0x66, 0xc3, 0xe0, 0x8e, 0x49, 0xe4, 0x01, 0xbd, 0xde, 0xcd,
-	0x68, 0xb6, 0x2c, 0x82, 0xed, 0x5a, 0x16, 0x7f, 0x47, 0x30, 0xc7, 0xc1, 0x6d, 0x2c, 0x6a, 0x7a,
-	0xc3, 0x0d, 0xdb, 0x04, 0x1f, 0x6a, 0x17, 0xbe, 0x7f, 0x07, 0x60, 0xde, 0x1f, 0x3e, 0xb6, 0x9e,
-	0xc4, 0xb3, 0x88, 0x76, 0xcd, 0x2c, 0xb6, 0x6d, 0x73, 0xff, 0xad, 0x92, 0x8e, 0xbc, 0xce, 0xc9,
-	0xe2, 0xe6, 0x02, 0x8f, 0x03, 0x30, 0xca, 0x85, 0xc6, 0xe6, 0xe9, 0x77, 0x30, 0xc0, 0x93, 0x94,
-	0x6d, 0x7a, 0x5f, 0xb3, 0x14, 0x2d, 0x97, 0xa2, 0xa3, 0xe2, 0x59, 0x22, 0x72, 0x3f, 0x67, 0x92,
-	0x5e, 0xd5, 0x1c, 0x55, 0xc4, 0x09, 0xba, 0xc4, 0xf9, 0x2d, 0x44, 0x78, 0x44, 0x5c, 0x79, 0xff,
-	0x2d, 0x18, 0xe6, 0x71, 0xa9, 0x66, 0x67, 0xa4, 0x5c, 0x8a, 0x46, 0xc4, 0xa4, 0x69, 0x56, 0x34,
-	0xc8, 0xe1, 0xbd, 0x94, 0x22, 0xdf, 0x20, 0x88, 0x0a, 0xc3, 0xef, 0x96, 0xe9, 0x69, 0x20, 0x40,
-	0xe0, 0x65, 0x05, 0x08, 0xc1, 0xd0, 0xf2, 0xea, 0x75, 0x2d, 0xa9, 0x98, 0x9a, 0xee, 0xed, 0x48,
-	0xfd, 0x0a, 0x86, 0xeb, 0x9e, 0x30, 0x45, 0x2e, 0xd7, 0x74, 0xa5, 0x8e, 0x8a, 0x34, 0xa8, 0x19,
-	0xa0, 0xa6, 0x3d, 0x15, 0x83, 0xde, 0x8a, 0x81, 0x33, 0xd9, 0x03, 0xd0, 0xa9, 0x59, 0xf5, 0x3e,
-	0xeb, 0x2a, 0xd8, 0x37, 0xe4, 0x67, 0xd0, 0xe7, 0xb2, 0x64, 0x28, 0x2e, 0x41, 0x57, 0xc6, 0xfe,
-	0xa9, 0x59, 0x3e, 0xb8, 0x4c, 0x9b, 0x70, 0xab, 0xa6, 0xa6, 0xab, 0xce, 0x20, 0x8e, 0x2b, 0xb9,
-	0x07, 0x83, 0x95, 0xa1, 0x13, 0xdb, 0x6b, 0xf2, 0x92, 0x83, 0xa4, 0x17, 0x82, 0x79, 0x3d, 0xcd,
-	0x70, 0x58, 0x97, 0x6d, 0xeb, 0x6c, 0xfc, 0x0f, 0xb9, 0x44, 0x67, 0x31, 0x19, 0xa7, 0x6b, 0x6e,
-	0x4e, 0x41, 0x7f, 0x9c, 0x98, 0xba, 0xce, 0x00, 0xed, 0x6b, 0x76, 0xac, 0xc2, 0xa8, 0x0b, 0x6e,
-	0x7b, 0x4a, 0x4a, 0x72, 0x17, 0xc6, 0xf8, 0x83, 0xb6, 0x5f, 0x09, 0xf2, 0x0b, 0x18, 0x58, 0x5e,
-	0xbd, 0x98, 0xc9, 0xb0, 0xc7, 0xce, 0x12, 0x6f, 0xdb, 0x84, 0xfe, 0x17, 0x59, 0x8b, 0xc8, 0x13,
-	0x60, 0x17, 0xcf, 0xe7, 0xec, 0xd7, 0xa3, 0xd0, 0x49, 0x9b, 0xcd, 0xf8, 0x4f, 0x08, 0xf6, 0xda,
-	0x5b, 0x13, 0x0b, 0x81, 0xd5, 0x37, 0xab, 0xc3, 0x53, 0x2d, 0xd9, 0xda, 0x91, 0xc9, 0xe4, 0x83,
-	0x67, 0x9f, 0xff, 0x35, 0x30, 0x81, 0x23, 0x92, 0xa0, 0x45, 0x6e, 0x9f, 0x06, 0xf8, 0x0f, 0x08,
-	0x3a, 0xe9, 0x32, 0xc0, 0x87, 0x1b, 0x77, 0x95, 0x19, 0x88, 0x23, 0x4d, 0xac, 0x58, 0xf8, 0x93,
-	0x34, 0xfc, 0x71, 0x1c, 0x93, 0x1a, 0x75, 0xfc, 0xa5, 0x82, 0x53, 0x40, 0x17, 0xf1, 0x27, 0x08,
-	0x06, 0x78, 0x9d, 0x34, 0x3c, 0xd7, 0xa4, 0x07, 0xc3, 0xeb, 0x04, 0x86, 0xe7, 0xfd, 0x39, 0x31,
-	0xd4, 0x37, 0x28, 0xea, 0xab, 0x78, 0xb1, 0x31, 0x6a, 0x6b, 0x57, 0x39, 0xd0, 0xad, 0xeb, 0xa2,
-	0xc4, 0xba, 0x40, 0x52, 0xc1, 0xdd, 0x2a, 0x2c, 0xe2, 0x0f, 0x11, 0xe0, 0xfa, 0xae, 0x16, 0x9e,
-	0x69, 0x15, 0x5c, 0x95, 0xcf, 0xac, 0x1f, 0x17, 0xc6, 0xe6, 0x2a, 0x65, 0x93, 0xc0, 0x17, 0x1a,
-	0xb3, 0xa9, 0x72, 0xe1, 0x32, 0xb1, 0x78, 0x7c, 0x80, 0x00, 0xd7, 0x37, 0x9d, 0xc4, 0x3c, 0x84,
-	0x8d, 0x30, 0x31, 0x0f, 0x71, 0x4f, 0x8b, 0x2c, 0x52, 0x1e, 0x17, 0xf0, 0x79, 0xbf, 0xb3, 0xc2,
-	0x1a, 0x2b, 0x52, 0xc1, 0x4a, 0x79, 0x8a, 0xf8, 0xff, 0x08, 0x7a, 0x6b, 0x9b, 0x43, 0x58, 0x6a,
-	0x0d, 0x50, 0x95, 0xc1, 0xc9, 0xd6, 0x1d, 0x18, 0xfe, 0x04, 0xc5, 0x7f, 0x0e, 0x2f, 0xf8, 0x99,
-	0x87, 0x1a, 0xec, 0x8f, 0x10, 0x74, 0x57, 0x3a, 0xf2, 0x38, 0x26, 0x3c, 0xce, 0x6a, 0x3e, 0x18,
-	0x84, 0x8f, 0xb5, 0x60, 0xc9, 0x60, 0xce, 0x51, 0x98, 0xd3, 0x78, 0x4a, 0x04, 0x53, 0x73, 0x5c,
-	0xa4, 0x02, 0xfb, 0xea, 0x50, 0xc4, 0xff, 0x41, 0x70, 0xd0, 0xfb, 0xb9, 0x00, 0x0b, 0xcb, 0x65,
-	0xee, 0x27, 0x8d, 0x70, 0xbc, 0x55, 0x73, 0x06, 0xf3, 0x0c, 0x85, 0x39, 0x8b, 0x4f, 0x8a, 0x60,
-	0x6e, 0x59, 0x7e, 0x3c, 0xac, 0x6f, 0x5b, 0xbb, 0xb1, 0xbe, 0xdf, 0x34, 0xd3, 0x7a, 0x3f, 0xab,
-	0xf9, 0x6e, 0x14, 0xf6, 0xd4, 0xc8, 0x79, 0x8a, 0xfb, 0x0c, 0x3e, 0xd5, 0x70, 0x15, 0x58, 0x19,
-	0xa4, 0x54, 0xa8, 0x4f, 0xf0, 0x8b, 0xf8, 0x23, 0x04, 0x83, 0xdc, 0xc2, 0x13, 0xcf, 0xfb, 0xea,
-	0x4f, 0x38, 0x1c, 0xbe, 0xef, 0xd3, 0x8b, 0xd1, 0xb8, 0x48, 0x69, 0x9c, 0xc5, 0x3f, 0x10, 0xd1,
-	0x70, 0xea, 0x10, 0x31, 0x93, 0x2f, 0x91, 0xa0, 0x49, 0xe6, 0xb4, 0x66, 0xf0, 0x39, 0x5f, 0xd8,
-	0x6a, 0x1a, 0x49, 0xe1, 0x1f, 0xee, 0xd0, 0x9b, 0x31, 0xbc, 0x46, 0x19, 0x5e, 0xc2, 0x89, 0x1d,
-	0x33, 0x94, 0x54, 0x87, 0xc8, 0x3f, 0x03, 0x70, 0xc2, 0x4f, 0x13, 0x01, 0xff, 0xc4, 0x47, 0x5d,
-	0xd3, 0xac, 0x55, 0x12, 0xbe, 0xde, 0x9e, 0xc1, 0x98, 0x2e, 0x37, 0xa9, 0x2e, 0x2b, 0xf8, 0x46,
-	0x6b, 0xba, 0x34, 0xa8, 0x56, 0x2b, 0xa7, 0x5b, 0x4e, 0x4d, 0x1a, 0xf8, 0x63, 0x04, 0xfd, 0x1c,
-	0x40, 0x78, 0xd6, 0x07, 0x7a, 0x87, 0xf1, 0x9c, 0x2f, 0x1f, 0x46, 0x6c, 0x99, 0x12, 0x5b, 0xc2,
-	0x57, 0x44, 0xc4, 0xaa, 0x68, 0x9b, 0xd0, 0x62, 0x87, 0xf5, 0x33, 0xe4, 0x7c, 0xe5, 0xa8, 0x2b,
-	0x6f, 0xf1, 0x29, 0x3f, 0x85, 0xab, 0x2b, 0x01, 0x38, 0xed, 0xdb, 0x8f, 0xb1, 0xbb, 0x42, 0xd9,
-	0x5d, 0xc4, 0x3f, 0x6a, 0x81, 0x9d, 0xf5, 0x0a, 0x12, 0x94, 0xb2, 0x45, 0xfc, 0x2f, 0x04, 0x87,
-	0x6a, 0x2a, 0x4b, 0x1c, 0x6f, 0xb1, 0x04, 0x75, 0x58, 0x48, 0x2d, 0xdb, 0x33, 0xf4, 0x71, 0x8a,
-	0x3e, 0x86, 0x27, 0x45, 0xe8, 0x59, 0x9a, 0xee, 0xa4, 0xb3, 0x0f, 0xad, 0xf7, 0xa4, 0x33, 0x56,
-	0x83, 0xf7, 0x64, 0x4d, 0x01, 0xdc, 0xe0, 0x3d, 0x59, 0x5b, 0x00, 0x13, 0x89, 0x42, 0x3a, 0x86,
-	0x8f, 0x36, 0x83, 0x54, 0xa0, 0x2f, 0x21, 0x2a, 0xdc, 0x41, 0x6f, 0xe1, 0x29, 0x7e, 0x47, 0x72,
-	0x8b, 0xe2, 0x70, 0xbc, 0x55, 0x73, 0x06, 0x71, 0x86, 0x42, 0x9c, 0xc2, 0xc7, 0x9a, 0x41, 0xcc,
-	0xeb, 0x69, 0xa9, 0x90, 0xd7, 0xd3, 0x45, 0xfc, 0x2e, 0xb2, 0xaa, 0xb5, 0xfa, 0xca, 0x50, 0x9c,
-	0x7e, 0x37, 0x28, 0x4e, 0xc5, 0xe9, 0x77, 0xa3, 0xe2, 0x93, 0x2c, 0x50, 0xd8, 0xf3, 0x78, 0xb6,
-	0x19, 0x6c, 0x4f, 0xf1, 0x60, 0xbf, 0x54, 0x1e, 0x23, 0x38, 0xe0, 0x29, 0x06, 0xf1, 0x09, 0x31,
-	0x86, 0xfa, 0xa2, 0x34, 0x3c, 0xdd, 0xa2, 0x35, 0x83, 0x7a, 0x82, 0x42, 0x9d, 0xc4, 0x87, 0x9b,
-	0x40, 0x35, 0x24, 0x25, 0x93, 0x49, 0xfc, 0xfa, 0xc9, 0xf3, 0x08, 0x7a, 0xfa, 0x3c, 0x82, 0x3e,
-	0x7b, 0x1e, 0x41, 0x7f, 0x79, 0x11, 0xe9, 0x78, 0xfa, 0x22, 0xd2, 0xf1, 0xe9, 0x8b, 0x48, 0x07,
-	0x8c, 0xa4, 0x35, 0x41, 0xe0, 0x15, 0x74, 0x6b, 0x7e, 0x23, 0x6d, 0xde, 0xc9, 0xaf, 0xc7, 0x93,
-	0xda, 0xa6, 0x2b, 0xcc, 0x74, 0x5a, 0x73, 0x07, 0xbd, 0x5f, 0x0d, 0x6b, 0x6e, 0xe7, 0x54, 0x63,
-	0x7d, 0x2f, 0xfd, 0xc3, 0xd3, 0xdc, 0xb7, 0x01, 0x00, 0x00, 0xff, 0xff, 0xfe, 0x0c, 0x91, 0x60,
-	0x2f, 0x26, 0x00, 0x00,
+	0xde, 0x66, 0x3c, 0xe7, 0xdc, 0xf3, 0xfb, 0xfd, 0xce, 0x9d, 0xb9, 0xe7, 0x9c, 0x04, 0x48, 0x4e,
+	0xd7, 0xb6, 0xd4, 0xac, 0x92, 0x4d, 0xaa, 0xd2, 0xa6, 0x6a, 0x2a, 0x29, 0xc5, 0x54, 0xa4, 0xad,
+	0x19, 0xe9, 0x5e, 0x5e, 0xd5, 0xb7, 0xe3, 0x39, 0x5d, 0x33, 0x35, 0x3c, 0x54, 0xb5, 0x89, 0x3b,
+	0x36, 0xf1, 0xad, 0x99, 0xf0, 0xc0, 0x86, 0xb6, 0xa1, 0x51, 0x13, 0xc9, 0xba, 0xb2, 0xad, 0xc3,
+	0xc7, 0x93, 0x9a, 0xb1, 0xa9, 0x19, 0xd2, 0xba, 0x62, 0xa8, 0xf6, 0x32, 0xd2, 0xd6, 0xcc, 0xba,
+	0x6a, 0x2a, 0x33, 0x52, 0x4e, 0xd9, 0x48, 0x67, 0x15, 0x33, 0xad, 0x65, 0x99, 0xed, 0xd8, 0x86,
+	0xa6, 0x6d, 0x64, 0x54, 0x49, 0xc9, 0xa5, 0x25, 0x25, 0x9b, 0xd5, 0x4c, 0xfa, 0xd0, 0x60, 0x4f,
+	0x8f, 0x08, 0xb0, 0x55, 0x30, 0xd8, 0x66, 0x22, 0x0a, 0x46, 0x52, 0xcb, 0xa9, 0x0e, 0x28, 0x91,
+	0x4d, 0x4e, 0x4d, 0xa6, 0x6f, 0xa7, 0x93, 0x6e, 0x50, 0x31, 0x81, 0xad, 0xb6, 0x7e, 0x57, 0x4d,
+	0x9a, 0x86, 0xa9, 0xe9, 0x6c, 0x55, 0x32, 0x00, 0xf8, 0xa7, 0x16, 0xc1, 0x15, 0x45, 0x57, 0x36,
+	0x0d, 0x59, 0xbd, 0x97, 0x57, 0x0d, 0x93, 0xac, 0x42, 0xbf, 0xe7, 0x57, 0x23, 0xa7, 0x65, 0x0d,
+	0x15, 0x9f, 0x83, 0xbd, 0x39, 0xfa, 0x4b, 0x08, 0x4d, 0xa0, 0x58, 0xcf, 0x6c, 0x24, 0xce, 0x97,
+	0x35, 0x6e, 0xfb, 0x25, 0xf6, 0x3c, 0x29, 0x45, 0x3b, 0x64, 0xe6, 0x43, 0xce, 0xc3, 0xfe, 0x55,
+	0x8b, 0x0f, 0x0b, 0x82, 0xe3, 0xb0, 0x8f, 0xf2, 0xfb, 0x65, 0x3a, 0x45, 0xd7, 0xeb, 0x4e, 0xf4,
+	0x97, 0x4b, 0xd1, 0x43, 0xdb, 0xca, 0x66, 0x66, 0x81, 0x38, 0x4f, 0x88, 0xdc, 0x45, 0x2f, 0x97,
+	0x52, 0xe4, 0x2b, 0x04, 0x07, 0xd8, 0x02, 0x0c, 0xcf, 0x1c, 0x74, 0xd2, 0x87, 0x0c, 0xce, 0xb8,
+	0x08, 0x8e, 0xed, 0x65, 0xdb, 0xe2, 0xb3, 0xb0, 0xcf, 0x50, 0x0d, 0xc3, 0x4a, 0x52, 0x28, 0x30,
+	0x11, 0x8c, 0xf5, 0xcc, 0x46, 0x85, 0x7e, 0xb6, 0x9d, 0x5c, 0x71, 0xc0, 0x67, 0xa0, 0x4b, 0x57,
+	0x93, 0x9a, 0x9e, 0x32, 0x42, 0x41, 0xea, 0x2b, 0x94, 0x40, 0xa6, 0x66, 0xb2, 0x63, 0x8e, 0xe7,
+	0x01, 0x6c, 0x4e, 0xf9, 0x7c, 0x3a, 0x15, 0xda, 0x43, 0xf9, 0x0e, 0x96, 0x4b, 0xd1, 0x3e, 0x37,
+	0x5f, 0xeb, 0x19, 0x91, 0xbb, 0xe9, 0xcd, 0x9a, 0x75, 0xfd, 0x67, 0x04, 0xa3, 0x0c, 0xc5, 0x8f,
+	0xb5, 0xac, 0xa9, 0xde, 0x37, 0x13, 0xdb, 0x6b, 0x6b, 0x4b, 0x97, 0x1c, 0x0d, 0xbd, 0xab, 0xa2,
+	0xd6, 0x56, 0xc5, 0x0b, 0xb0, 0x9f, 0x31, 0xb2, 0xfd, 0x02, 0xd4, 0x6f, 0xb8, 0x5c, 0x8a, 0xf6,
+	0x33, 0x3f, 0xd7, 0x53, 0x22, 0xf7, 0xb0, 0x5b, 0x8a, 0xe8, 0x7d, 0x04, 0x63, 0x7c, 0x44, 0x2c,
+	0x29, 0x3e, 0xd3, 0x4a, 0x29, 0xb0, 0x70, 0x15, 0x28, 0x6e, 0x0a, 0x95, 0x67, 0x16, 0x05, 0xfb,
+	0x66, 0x29, 0xe5, 0xc9, 0x62, 0xd0, 0x67, 0x16, 0xc9, 0xef, 0x11, 0x8c, 0xd4, 0x72, 0xa8, 0x6a,
+	0xfa, 0x4a, 0x08, 0x90, 0xf7, 0x10, 0x84, 0x79, 0x18, 0xde, 0x1c, 0x15, 0x55, 0x18, 0xb1, 0x37,
+	0xb9, 0x91, 0xd8, 0xa6, 0x6f, 0xd8, 0xcb, 0x6f, 0x4c, 0x0c, 0x7b, 0xb2, 0xca, 0xa6, 0x6a, 0xe3,
+	0x97, 0xe9, 0x35, 0x79, 0x07, 0x41, 0x98, 0x17, 0x87, 0x09, 0xb5, 0xb3, 0x40, 0x6e, 0x79, 0x03,
+	0x2d, 0xc8, 0xbb, 0xe3, 0xf7, 0x9e, 0xfc, 0x1c, 0x86, 0xbd, 0xe8, 0x77, 0xbe, 0xd1, 0x78, 0xea,
+	0xbc, 0x85, 0x20, 0x54, 0xbf, 0xfe, 0x1b, 0xa2, 0x8d, 0x09, 0xbd, 0xcb, 0xbf, 0xc9, 0xaa, 0xba,
+	0x71, 0x27, 0x9d, 0x73, 0x44, 0x09, 0x41, 0x97, 0x92, 0x4a, 0xe9, 0xaa, 0x61, 0x1f, 0x32, 0xdd,
+	0xb2, 0x73, 0x8b, 0x17, 0x01, 0xaa, 0xa7, 0x6f, 0x28, 0x49, 0x3f, 0xf9, 0x93, 0x71, 0xfb, 0xa8,
+	0x8e, 0x5b, 0x47, 0x75, 0xdc, 0x3e, 0xf1, 0xd9, 0x51, 0x1d, 0x5f, 0x51, 0x36, 0x9c, 0xb3, 0x46,
+	0x76, 0x79, 0x92, 0x47, 0x08, 0xfa, 0x5c, 0x61, 0x99, 0x56, 0xa7, 0xa1, 0xa7, 0xaa, 0x87, 0x15,
+	0x3b, 0x18, 0xeb, 0x4e, 0x0c, 0x95, 0x4b, 0x51, 0x5c, 0x2b, 0x96, 0x41, 0x64, 0xa8, 0xa8, 0x65,
+	0xe0, 0x2b, 0x1c, 0x58, 0x47, 0x9b, 0xc2, 0xb2, 0xa3, 0x7a, 0x70, 0x6d, 0xc3, 0xe0, 0x4d, 0x25,
+	0x93, 0x57, 0x5f, 0x83, 0x24, 0x8f, 0x11, 0x0c, 0xd5, 0xc6, 0xde, 0x35, 0xba, 0xa4, 0x61, 0x84,
+	0x6e, 0xec, 0x55, 0x77, 0xa1, 0xe3, 0x68, 0x73, 0x1d, 0xb0, 0xa7, 0x00, 0x72, 0x6f, 0xf5, 0xf1,
+	0x72, 0x29, 0x3a, 0xc2, 0x50, 0xd6, 0xd9, 0x10, 0xb9, 0xcf, 0xf3, 0x23, 0x3d, 0xdc, 0xbe, 0xb0,
+	0x3e, 0xca, 0x9c, 0x58, 0x4c, 0x8b, 0x02, 0xf4, 0xdb, 0x74, 0x3d, 0x9e, 0xac, 0xfa, 0x38, 0xde,
+	0xb0, 0xfa, 0xf0, 0x2c, 0x98, 0x88, 0x94, 0x4b, 0xd1, 0xb0, 0x5b, 0x3f, 0xcf, 0x82, 0x44, 0xc6,
+	0x46, 0x9d, 0x8f, 0x80, 0x69, 0x60, 0x87, 0x4c, 0x33, 0x30, 0x66, 0x1d, 0x3b, 0xba, 0x92, 0x34,
+	0x5f, 0x81, 0xae, 0x0f, 0x03, 0x30, 0x2e, 0x08, 0xc7, 0xa4, 0xfd, 0x23, 0x82, 0xa1, 0x24, 0xb3,
+	0xe0, 0xca, 0x3b, 0x2d, 0x92, 0x97, 0xbb, 0x6e, 0xe2, 0x7b, 0xe5, 0x52, 0x74, 0xdc, 0xc6, 0xc8,
+	0x5f, 0x96, 0xc8, 0x83, 0x49, 0x9e, 0x27, 0xbe, 0x0d, 0xa3, 0x7c, 0x0f, 0xb7, 0xe0, 0x93, 0xe5,
+	0x52, 0x94, 0x34, 0x5a, 0x9e, 0x69, 0x31, 0xc2, 0x8d, 0x41, 0x35, 0x31, 0xe1, 0x30, 0x17, 0xfa,
+	0xe5, 0xfb, 0xa6, 0x9a, 0x4d, 0xa9, 0xa9, 0xef, 0x26, 0x13, 0xff, 0x08, 0xc2, 0x91, 0x26, 0x61,
+	0x77, 0x5d, 0x46, 0x1e, 0x20, 0x18, 0xb4, 0x8f, 0x0c, 0xaf, 0x83, 0x53, 0xbf, 0x4f, 0x35, 0x3e,
+	0x6f, 0xbc, 0x30, 0x26, 0xca, 0xa5, 0xe8, 0x98, 0x0d, 0x83, 0xbb, 0x26, 0x91, 0x07, 0xf4, 0x7a,
+	0x37, 0xa3, 0xd9, 0xb6, 0x08, 0xb6, 0x6b, 0x5b, 0xfc, 0x1d, 0xc1, 0x1c, 0x07, 0xb7, 0xb1, 0xa8,
+	0xe9, 0x0d, 0x5f, 0xd8, 0x26, 0xf8, 0x50, 0xbb, 0xf0, 0xfd, 0x3b, 0x00, 0xf3, 0xfe, 0xf0, 0xb1,
+	0xfd, 0x24, 0xce, 0x22, 0xda, 0x35, 0x59, 0x6c, 0xdb, 0xcb, 0xfd, 0xb7, 0x4a, 0xd1, 0xfa, 0x3a,
+	0x93, 0xc5, 0xad, 0x18, 0x1f, 0x07, 0x60, 0x94, 0x0b, 0x8d, 0xe5, 0xe9, 0x77, 0x30, 0xc0, 0x93,
+	0x94, 0xbd, 0xf4, 0xbe, 0xb2, 0x14, 0x2d, 0x97, 0xa2, 0xa3, 0xe2, 0x2c, 0x11, 0xb9, 0x9f, 0x93,
+	0xa4, 0x57, 0x95, 0xa3, 0x8a, 0x38, 0x41, 0x97, 0x38, 0xbf, 0x85, 0x08, 0x8f, 0x88, 0xab, 0x3b,
+	0xbc, 0x05, 0xc3, 0x3c, 0x2e, 0xd5, 0x1a, 0x9e, 0x94, 0x4b, 0xd1, 0x88, 0x98, 0x34, 0xad, 0x9d,
+	0x07, 0x39, 0xbc, 0x97, 0x52, 0xe4, 0x1b, 0x04, 0x51, 0x61, 0xf8, 0xdd, 0x92, 0x9e, 0x06, 0x02,
+	0x04, 0x5e, 0x56, 0x80, 0x10, 0x0c, 0x2d, 0xaf, 0x5e, 0xd7, 0x92, 0x8a, 0xa9, 0xe9, 0xde, 0x89,
+	0xd4, 0xaf, 0x60, 0xb8, 0xee, 0x09, 0x53, 0xe4, 0x72, 0xcd, 0x54, 0xea, 0xa8, 0x48, 0x83, 0x9a,
+	0x05, 0x6a, 0xc6, 0x53, 0x31, 0xe8, 0xad, 0x18, 0x38, 0xc9, 0x1e, 0x80, 0x4e, 0xcd, 0xaa, 0x88,
+	0x59, 0xdd, 0x6d, 0xdf, 0x90, 0x9f, 0x41, 0x9f, 0xcb, 0x92, 0xa1, 0xb8, 0x04, 0x5d, 0x19, 0xfb,
+	0xa7, 0x66, 0xf5, 0xe0, 0x32, 0x1d, 0xc2, 0xad, 0x9a, 0x9a, 0xae, 0x3a, 0x8b, 0x38, 0xae, 0xe4,
+	0x1e, 0x0c, 0x56, 0x96, 0x4e, 0x6c, 0xaf, 0xc9, 0x4b, 0x0e, 0x92, 0x5e, 0x08, 0xe6, 0xf5, 0x34,
+	0xc3, 0x61, 0x5d, 0xb6, 0xad, 0xf6, 0xff, 0x1f, 0x72, 0x89, 0xce, 0x62, 0x32, 0x4e, 0xd7, 0xdc,
+	0x9c, 0x82, 0xfe, 0x38, 0x31, 0x75, 0x9d, 0x05, 0xda, 0xd7, 0x0e, 0xac, 0xc2, 0xa8, 0x0b, 0x6e,
+	0x7b, 0x06, 0x0f, 0xe4, 0x2e, 0x8c, 0xf1, 0x17, 0x6d, 0xbf, 0x12, 0xe4, 0x17, 0x30, 0xb0, 0xbc,
+	0x7a, 0x31, 0x93, 0x61, 0x8f, 0x9d, 0x2d, 0xde, 0xb6, 0x84, 0xfe, 0x17, 0x59, 0x9b, 0xc8, 0x13,
+	0x60, 0x17, 0xe7, 0x73, 0xf6, 0xeb, 0x51, 0xe8, 0xa4, 0xc3, 0x66, 0xfc, 0x27, 0x04, 0x7b, 0xed,
+	0x57, 0x13, 0x0b, 0x81, 0xd5, 0x0f, 0xab, 0xc3, 0x53, 0x2d, 0xd9, 0xda, 0x91, 0xc9, 0xe4, 0x83,
+	0x67, 0x9f, 0xff, 0x35, 0x30, 0x81, 0x23, 0x92, 0x60, 0x44, 0x6e, 0x7f, 0x0d, 0xf0, 0x1f, 0x10,
+	0x74, 0xd2, 0x6d, 0x80, 0x0f, 0x37, 0x9e, 0x2a, 0x33, 0x10, 0x47, 0x9a, 0x58, 0xb1, 0xf0, 0x27,
+	0x69, 0xf8, 0xe3, 0x38, 0x26, 0x35, 0x9a, 0xf8, 0x4b, 0x05, 0x67, 0xcc, 0x52, 0xc4, 0x9f, 0x20,
+	0x18, 0xe0, 0xcd, 0x5b, 0xf1, 0x5c, 0x93, 0x49, 0x1d, 0x6f, 0x5e, 0x1c, 0x9e, 0xf7, 0xe7, 0xc4,
+	0x50, 0xdf, 0xa0, 0xa8, 0xaf, 0xe2, 0xc5, 0xc6, 0xa8, 0xad, 0xb7, 0xca, 0x81, 0x6e, 0x5d, 0x17,
+	0x25, 0x36, 0x2b, 0x94, 0x0a, 0xee, 0x81, 0x72, 0x11, 0x7f, 0x88, 0x00, 0xd7, 0xcf, 0x3e, 0xf1,
+	0x4c, 0xab, 0xe0, 0xaa, 0x7c, 0x66, 0xfd, 0xb8, 0x30, 0x36, 0x57, 0x29, 0x9b, 0x04, 0xbe, 0xd0,
+	0x98, 0x4d, 0x95, 0x0b, 0x97, 0x89, 0xc5, 0xe3, 0x03, 0x04, 0xb8, 0x7e, 0x34, 0x29, 0xe6, 0x21,
+	0x1c, 0x97, 0x8a, 0x79, 0x88, 0x27, 0x9f, 0x64, 0x91, 0xf2, 0xb8, 0x80, 0xcf, 0xfb, 0xcd, 0x0a,
+	0x1b, 0xbf, 0x49, 0x05, 0xab, 0xe4, 0x29, 0xe2, 0xff, 0x23, 0xe8, 0xad, 0x1d, 0x21, 0x62, 0xa9,
+	0x35, 0x40, 0x55, 0x06, 0x27, 0x5b, 0x77, 0x60, 0xf8, 0x13, 0x14, 0xff, 0x39, 0xbc, 0xe0, 0x27,
+	0x0f, 0x35, 0xd8, 0x1f, 0x21, 0xe8, 0xae, 0xcc, 0xac, 0x70, 0x4c, 0xf8, 0x39, 0xab, 0x19, 0xa9,
+	0x85, 0x8f, 0xb5, 0x60, 0xc9, 0x60, 0xce, 0x51, 0x98, 0xd3, 0x78, 0x4a, 0x04, 0x53, 0x73, 0x5c,
+	0xa4, 0x02, 0x9b, 0xcb, 0x15, 0xf1, 0x7f, 0x10, 0x1c, 0xf4, 0x0e, 0xd4, 0xb0, 0xb0, 0x5d, 0xe6,
+	0x0e, 0xfd, 0xc2, 0xf1, 0x56, 0xcd, 0x19, 0xcc, 0x33, 0x14, 0xe6, 0x2c, 0x3e, 0x29, 0x82, 0xb9,
+	0x65, 0xf9, 0xf1, 0xb0, 0xbe, 0x6d, 0xbd, 0x8d, 0xf5, 0xf3, 0xa6, 0x99, 0xd6, 0xe7, 0x59, 0xcd,
+	0xdf, 0x46, 0xe1, 0x4c, 0x8d, 0x9c, 0xa7, 0xb8, 0xcf, 0xe0, 0x53, 0x0d, 0x77, 0x81, 0x55, 0x41,
+	0x4a, 0x85, 0xfa, 0x02, 0xbf, 0x88, 0x3f, 0x42, 0x30, 0xc8, 0x6d, 0x3c, 0xf1, 0xbc, 0xaf, 0xf9,
+	0x84, 0xc3, 0xe1, 0xfb, 0x3e, 0xbd, 0x18, 0x8d, 0x8b, 0x94, 0xc6, 0x59, 0xfc, 0x03, 0x11, 0x0d,
+	0xa7, 0x0f, 0x11, 0x33, 0xf9, 0x12, 0x09, 0x86, 0x64, 0xce, 0x68, 0x06, 0x9f, 0xf3, 0x85, 0xad,
+	0x66, 0x90, 0x14, 0xfe, 0xe1, 0x0e, 0xbd, 0x19, 0xc3, 0x6b, 0x94, 0xe1, 0x25, 0x9c, 0xd8, 0x31,
+	0x43, 0x49, 0x75, 0x88, 0xfc, 0x33, 0x00, 0x27, 0xfc, 0x0c, 0x11, 0xf0, 0x4f, 0x7c, 0xf4, 0x35,
+	0xcd, 0x46, 0x25, 0xe1, 0xeb, 0xed, 0x59, 0x8c, 0xe9, 0x72, 0x93, 0xea, 0xb2, 0x82, 0x6f, 0xb4,
+	0xa6, 0x4b, 0x83, 0x6e, 0xb5, 0xf2, 0x75, 0xcb, 0xa9, 0x49, 0x03, 0x7f, 0x8c, 0xa0, 0x9f, 0x03,
+	0x08, 0xcf, 0xfa, 0x40, 0xef, 0x30, 0x9e, 0xf3, 0xe5, 0xc3, 0x88, 0x2d, 0x53, 0x62, 0x4b, 0xf8,
+	0x8a, 0x88, 0x58, 0x15, 0x6d, 0x13, 0x5a, 0xec, 0x63, 0xfd, 0x0c, 0x39, 0x7f, 0x0b, 0xab, 0x6b,
+	0x6f, 0xf1, 0x29, 0x3f, 0x8d, 0xab, 0xab, 0x00, 0x38, 0xed, 0xdb, 0x8f, 0xb1, 0xbb, 0x42, 0xd9,
+	0x5d, 0xc4, 0x3f, 0x6a, 0x81, 0x9d, 0x75, 0x04, 0x09, 0x5a, 0xd9, 0x22, 0xfe, 0x17, 0x82, 0x43,
+	0x35, 0x9d, 0x25, 0x8e, 0xb7, 0xd8, 0x82, 0x3a, 0x2c, 0xa4, 0x96, 0xed, 0x19, 0xfa, 0x38, 0x45,
+	0x1f, 0xc3, 0x93, 0x22, 0xf4, 0xac, 0x4c, 0x77, 0xca, 0xd9, 0x87, 0xd6, 0x39, 0xe9, 0xac, 0xd5,
+	0xe0, 0x9c, 0xac, 0x69, 0x80, 0x1b, 0x9c, 0x93, 0xb5, 0x0d, 0x30, 0x91, 0x28, 0xa4, 0x63, 0xf8,
+	0x68, 0x33, 0x48, 0x05, 0x7a, 0x08, 0x51, 0xe1, 0x0e, 0x7a, 0x1b, 0x4f, 0xf1, 0x19, 0xc9, 0x6d,
+	0x8a, 0xc3, 0xf1, 0x56, 0xcd, 0x19, 0xc4, 0x19, 0x0a, 0x71, 0x0a, 0x1f, 0x6b, 0x06, 0x31, 0xaf,
+	0xa7, 0xa5, 0x42, 0x5e, 0x4f, 0x17, 0xf1, 0xbb, 0xc8, 0xea, 0xd6, 0xea, 0x3b, 0x43, 0x71, 0xf9,
+	0xdd, 0xa0, 0x39, 0x15, 0x97, 0xdf, 0x8d, 0x9a, 0x4f, 0xb2, 0x40, 0x61, 0xcf, 0xe3, 0xd9, 0x66,
+	0xb0, 0x3d, 0xcd, 0x83, 0x7d, 0xa8, 0x3c, 0x46, 0x70, 0xc0, 0xd3, 0x0c, 0xe2, 0x13, 0x62, 0x0c,
+	0xf5, 0x4d, 0x69, 0x78, 0xba, 0x45, 0x6b, 0x06, 0xf5, 0x04, 0x85, 0x3a, 0x89, 0x0f, 0x37, 0x81,
+	0x6a, 0x48, 0x4a, 0x26, 0x93, 0xf8, 0xf5, 0x93, 0xe7, 0x11, 0xf4, 0xf4, 0x79, 0x04, 0x7d, 0xf6,
+	0x3c, 0x82, 0xfe, 0xf2, 0x22, 0xd2, 0xf1, 0xf4, 0x45, 0xa4, 0xe3, 0xd3, 0x17, 0x91, 0x0e, 0x18,
+	0x49, 0x6b, 0x82, 0xc0, 0x2b, 0xe8, 0xd6, 0xfc, 0x46, 0xda, 0xbc, 0x93, 0x5f, 0x8f, 0x27, 0xb5,
+	0x4d, 0x57, 0x98, 0xe9, 0xb4, 0xe6, 0x0e, 0x7a, 0xbf, 0x1a, 0xd6, 0xdc, 0xce, 0xa9, 0xc6, 0xfa,
+	0x5e, 0xfa, 0x0f, 0x4f, 0x73, 0xdf, 0x06, 0x00, 0x00, 0xff, 0xff, 0x32, 0x97, 0x23, 0x1c, 0x2f,
+	0x26, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -3098,186 +3094,6 @@ func (m *ScopeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *OwnershipRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *OwnershipRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *OwnershipRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Pagination != nil {
-		{
-			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintQuery(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x6
-		i--
-		dAtA[i] = 0x9a
-	}
-	if len(m.Address) > 0 {
-		i -= len(m.Address)
-		copy(dAtA[i:], m.Address)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.Address)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *OwnershipResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *OwnershipResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *OwnershipResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Pagination != nil {
-		{
-			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintQuery(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x6
-		i--
-		dAtA[i] = 0x9a
-	}
-	if len(m.ScopeUuids) > 0 {
-		for iNdEx := len(m.ScopeUuids) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.ScopeUuids[iNdEx])
-			copy(dAtA[i:], m.ScopeUuids[iNdEx])
-			i = encodeVarintQuery(dAtA, i, uint64(len(m.ScopeUuids[iNdEx])))
-			i--
-			dAtA[i] = 0xa
-		}
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *ValueOwnershipRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *ValueOwnershipRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *ValueOwnershipRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Pagination != nil {
-		{
-			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintQuery(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x6
-		i--
-		dAtA[i] = 0x9a
-	}
-	if len(m.Address) > 0 {
-		i -= len(m.Address)
-		copy(dAtA[i:], m.Address)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.Address)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *ValueOwnershipResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *ValueOwnershipResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *ValueOwnershipResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Pagination != nil {
-		{
-			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintQuery(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x6
-		i--
-		dAtA[i] = 0x9a
-	}
-	if len(m.ScopeUuids) > 0 {
-		for iNdEx := len(m.ScopeUuids) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.ScopeUuids[iNdEx])
-			copy(dAtA[i:], m.ScopeUuids[iNdEx])
-			i = encodeVarintQuery(dAtA, i, uint64(len(m.ScopeUuids[iNdEx])))
-			i--
-			dAtA[i] = 0xa
-		}
-	}
-	return len(dAtA) - i, nil
-}
-
 func (m *SessionContextByUUIDRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -3626,6 +3442,186 @@ func (m *RecordsByScopeIDResponse) MarshalToSizedBuffer(dAtA []byte) (int, error
 		i = encodeVarintQuery(dAtA, i, uint64(len(m.ScopeUuid)))
 		i--
 		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *OwnershipRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *OwnershipRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *OwnershipRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x6
+		i--
+		dAtA[i] = 0x9a
+	}
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *OwnershipResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *OwnershipResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *OwnershipResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x6
+		i--
+		dAtA[i] = 0x9a
+	}
+	if len(m.ScopeUuids) > 0 {
+		for iNdEx := len(m.ScopeUuids) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.ScopeUuids[iNdEx])
+			copy(dAtA[i:], m.ScopeUuids[iNdEx])
+			i = encodeVarintQuery(dAtA, i, uint64(len(m.ScopeUuids[iNdEx])))
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ValueOwnershipRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ValueOwnershipRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ValueOwnershipRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x6
+		i--
+		dAtA[i] = 0x9a
+	}
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ValueOwnershipResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ValueOwnershipResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ValueOwnershipResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x6
+		i--
+		dAtA[i] = 0x9a
+	}
+	if len(m.ScopeUuids) > 0 {
+		for iNdEx := len(m.ScopeUuids) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.ScopeUuids[iNdEx])
+			copy(dAtA[i:], m.ScopeUuids[iNdEx])
+			i = encodeVarintQuery(dAtA, i, uint64(len(m.ScopeUuids[iNdEx])))
+			i--
+			dAtA[i] = 0xa
+		}
 	}
 	return len(dAtA) - i, nil
 }
@@ -4536,78 +4532,6 @@ func (m *ScopeResponse) Size() (n int) {
 	return n
 }
 
-func (m *OwnershipRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Address)
-	if l > 0 {
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	if m.Pagination != nil {
-		l = m.Pagination.Size()
-		n += 2 + l + sovQuery(uint64(l))
-	}
-	return n
-}
-
-func (m *OwnershipResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if len(m.ScopeUuids) > 0 {
-		for _, s := range m.ScopeUuids {
-			l = len(s)
-			n += 1 + l + sovQuery(uint64(l))
-		}
-	}
-	if m.Pagination != nil {
-		l = m.Pagination.Size()
-		n += 2 + l + sovQuery(uint64(l))
-	}
-	return n
-}
-
-func (m *ValueOwnershipRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Address)
-	if l > 0 {
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	if m.Pagination != nil {
-		l = m.Pagination.Size()
-		n += 2 + l + sovQuery(uint64(l))
-	}
-	return n
-}
-
-func (m *ValueOwnershipResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if len(m.ScopeUuids) > 0 {
-		for _, s := range m.ScopeUuids {
-			l = len(s)
-			n += 1 + l + sovQuery(uint64(l))
-		}
-	}
-	if m.Pagination != nil {
-		l = m.Pagination.Size()
-		n += 2 + l + sovQuery(uint64(l))
-	}
-	return n
-}
-
 func (m *SessionContextByUUIDRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -4764,6 +4688,78 @@ func (m *RecordsByScopeIDResponse) Size() (n int) {
 			l = e.Size()
 			n += 1 + l + sovQuery(uint64(l))
 		}
+	}
+	return n
+}
+
+func (m *OwnershipRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 2 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *OwnershipResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.ScopeUuids) > 0 {
+		for _, s := range m.ScopeUuids {
+			l = len(s)
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 2 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *ValueOwnershipRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 2 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *ValueOwnershipResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.ScopeUuids) > 0 {
+		for _, s := range m.ScopeUuids {
+			l = len(s)
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 2 + l + sovQuery(uint64(l))
 	}
 	return n
 }
@@ -5491,478 +5487,6 @@ func (m *ScopeResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.ScopeUuid = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *OwnershipRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: OwnershipRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: OwnershipRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Address = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 99:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Pagination == nil {
-				m.Pagination = &query.PageRequest{}
-			}
-			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *OwnershipResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: OwnershipResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: OwnershipResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ScopeUuids", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ScopeUuids = append(m.ScopeUuids, string(dAtA[iNdEx:postIndex]))
-			iNdEx = postIndex
-		case 99:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Pagination == nil {
-				m.Pagination = &query.PageResponse{}
-			}
-			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *ValueOwnershipRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: ValueOwnershipRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ValueOwnershipRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Address = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 99:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Pagination == nil {
-				m.Pagination = &query.PageRequest{}
-			}
-			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *ValueOwnershipResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: ValueOwnershipResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ValueOwnershipResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ScopeUuids", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ScopeUuids = append(m.ScopeUuids, string(dAtA[iNdEx:postIndex]))
-			iNdEx = postIndex
-		case 99:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Pagination == nil {
-				m.Pagination = &query.PageResponse{}
-			}
-			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -7009,6 +6533,478 @@ func (m *RecordsByScopeIDResponse) Unmarshal(dAtA []byte) error {
 			}
 			m.Records = append(m.Records, &Record{})
 			if err := m.Records[len(m.Records)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *OwnershipRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: OwnershipRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: OwnershipRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 99:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageRequest{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *OwnershipResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: OwnershipResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: OwnershipResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ScopeUuids", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ScopeUuids = append(m.ScopeUuids, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 99:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageResponse{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ValueOwnershipRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ValueOwnershipRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ValueOwnershipRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 99:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageRequest{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ValueOwnershipResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ValueOwnershipResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ValueOwnershipResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ScopeUuids", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ScopeUuids = append(m.ScopeUuids, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 99:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageResponse{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

@@ -21,6 +21,8 @@ service Query {
     option (google.api.http).get = "/provenance/metadata/v1/params";
   }
 
+  // ---- Primary Data Queries -----
+
   // Scope returns the scope with the given id. The id can either be scope uuid, e.g.
   // 91978ba2-5f35-459a-86a7-feca1b0512e0 or a scope address, e.g. scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel. Case
   // doesn't matter.
@@ -58,6 +60,8 @@ service Query {
     option (google.api.http).get = "/provenance/metadata/v1/valueownership/{address}";
   }
 
+  // ---- Specification Queries -----
+
   // ScopeSpecification returns a scope specification for the given specification uuid.
   rpc ScopeSpecification(ScopeSpecificationRequest) returns (ScopeSpecificationResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/scopespec/{specification_uuid}";
@@ -92,7 +96,7 @@ service Query {
     option (google.api.http).get = "/provenance/metadata/v1/recordspec/id/{record_specification_id}";
   }
 
-  // ---- OS locator methods -----
+  // ---- Object Store Locator Queries -----
 
   // OSLocatorParams returns all parameters for the os locator sub module.
   rpc OSLocatorParams(OSLocatorParamsRequest) returns (OSLocatorParamsResponse) {
@@ -129,12 +133,12 @@ message QueryParamsResponse {
   Params params = 1 [(gogoproto.nullable) = false];
 }
 
-// ScopeRequest is used for requesting a scope by id
+// ScopeRequest is the request type for the Query/Scope RPC method.
 message ScopeRequest {
   string scope_id = 1 [(gogoproto.moretags) = "yaml:\"scope_id\""];
 }
 
-// ScopeResponse is the response to a scope request.
+// ScopeResponse is the response type for the Query/Scope RPC method.
 message ScopeResponse {
   Scope            scope      = 1;
   repeated Session sessions   = 2;
@@ -142,46 +146,13 @@ message ScopeResponse {
   string           scope_uuid = 4 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
 }
 
-// OwnershipRequest looks for all scope level resources associated with the given addrss
-message OwnershipRequest {
-  string address = 1;
-  // pagination defines an optional pagination for the request.
-  cosmos.base.query.v1beta1.PageRequest pagination = 99;
-}
-
-// OwnershipResponse is the reponse to the ownership request and includes a list of scope identifiers
-message OwnershipResponse {
-  // A list of scope ids (uuid) associated with the given address.
-  repeated string scope_uuids = 1 [(gogoproto.moretags) = "yaml:\"scope_uuids\""];
-
-  // pagination defines an optional pagination for the request.
-  cosmos.base.query.v1beta1.PageResponse pagination = 99;
-}
-
-// ValueOwnershipRequest looks for all scope level resources that have the address as the value owner
-message ValueOwnershipRequest {
-  string address = 1;
-  // pagination defines an optional pagination for the request.
-  cosmos.base.query.v1beta1.PageRequest pagination = 99;
-}
-
-// ValueOwnershipResponse is the reponse to the Valueownership request and includes a list of scope identifiers
-message ValueOwnershipResponse {
-  // A list of scope ids (uuid) associated with the given address.
-  repeated string scope_uuids = 1 [(gogoproto.moretags) = "yaml:\"scope_uuids\""];
-
-  // pagination defines an optional pagination for the request.
-  cosmos.base.query.v1beta1.PageResponse pagination = 99;
-}
-
-// SessionContextByUUIDRequest returns the record sessions for a given scope identifer or optionally a specific record
-// session
+// SessionContextByUUIDRequest is the request type for the Query/SessionContextByUUID RPC method.
 message SessionContextByUUIDRequest {
   string scope_uuid   = 1 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
   string session_uuid = 2 [(gogoproto.moretags) = "yaml:\"session_uuid\""];
 }
 
-// SessionContextByUUIDResponse is the response to a SessionContextByUUIDRequest
+// SessionContextByUUIDResponse is the response type for the Query/SessionContextByUUID RPC method.
 message SessionContextByUUIDResponse {
   string scope_id   = 1 [(gogoproto.moretags) = "yaml:\"scope_id\""];
   string session_id = 2 [(gogoproto.moretags) = "yaml:\"session_id\""];
@@ -189,174 +160,206 @@ message SessionContextByUUIDResponse {
   repeated Session sessions = 3;
 }
 
-// SessionContextByIDRequest returns the record sessions for a given scope identifer or optionally a specific record
-// session
+// SessionContextByIDRequest is the request type for the Query/SessionContextByID RPC method.
 message SessionContextByIDRequest {
   string scope_id   = 1 [(gogoproto.moretags) = "yaml:\"scope_id\""];
   string session_id = 2 [(gogoproto.moretags) = "yaml:\"session_id\""];
 }
 
-// SessionContextByIDResponse is the response to a SessionContextByIDRequest
+// SessionContextByIDResponse is the response type for the Query/SessionContextByID RPC method.
 message SessionContextByIDResponse {
   string           scope_id   = 1 [(gogoproto.moretags) = "yaml:\"scope_id\""];
   string           session_id = 2 [(gogoproto.moretags) = "yaml:\"session_id\""];
   repeated Session sessions   = 3;
 }
 
-// RecordsByScopeUUIDRequest is a request for all of the records in a specific scope by uuid or a specific record if a
-// name is given.
+// RecordsByScopeUUIDRequest is the request type for the Query/RecordsByScopeUUID RPC method.
 message RecordsByScopeUUIDRequest {
   string scope_uuid = 1 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
   string name       = 2;
 }
 
-// RecordsByScopeUUIDResponse is the response to a RecordsByScopeUUIDRequest
+// RecordsByScopeUUIDResponse is the response type for the Query/RecordsByScopeUUID RPC method.
 message RecordsByScopeUUIDResponse {
   string          scope_uuid = 1 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
   string          scope_id   = 2 [(gogoproto.moretags) = "yaml:\"scope_id\""];
   repeated Record records    = 3;
 }
 
-// RecordsByScopeIDRequest is a request for all of the records in a specific scope by bech32 id or a specific record if
-// a name is given.
+// RecordsByScopeIDRequest is the request type for the Query/RecordsByScopeID RPC method.
 message RecordsByScopeIDRequest {
   string scope_id = 1 [(gogoproto.moretags) = "yaml:\"scope_id\""];
   string name     = 2;
 }
 
-// RecordsByScopeIDResponse is the response to a RecordsByScopeIDRequest
+// RecordsByScopeIDResponse is the response type for the Query/RecordsByScopeID RPC method.
 message RecordsByScopeIDResponse {
   string          scope_uuid = 1 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
   string          scope_id   = 2 [(gogoproto.moretags) = "yaml:\"scope_id\""];
   repeated Record records    = 3;
 }
 
-// ScopeSpecificationRequest is used for requesting a scope specification by uuid
+// OwnershipRequest is the request type for the Query/Ownership RPC method.
+message OwnershipRequest {
+  string address = 1;
+
+  // pagination defines optional pagination parameters for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// OwnershipResponse is the response type for the Query/Ownership RPC method.
+message OwnershipResponse {
+  // A list of scope ids (uuid) associated with the given address.
+  repeated string scope_uuids = 1 [(gogoproto.moretags) = "yaml:\"scope_uuids\""];
+
+  // pagination provides the pagination information of this response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
+}
+
+// ValueOwnershipRequest is the request type for the Query/ValueOwnership RPC method.
+message ValueOwnershipRequest {
+  string address = 1;
+
+  // pagination defines optional pagination parameters for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// ValueOwnershipResponse is the response type for the Query/ValueOwnership RPC method.
+message ValueOwnershipResponse {
+  // A list of scope ids (uuid) associated with the given address.
+  repeated string scope_uuids = 1 [(gogoproto.moretags) = "yaml:\"scope_uuids\""];
+
+  // pagination provides the pagination information of this response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
+}
+
+// ScopeSpecificationRequest is the request type for the Query/ScopeSpecification RPC method.
 message ScopeSpecificationRequest {
   string specification_uuid = 1 [(gogoproto.moretags) = "yaml:\"specification_uuid\""];
 }
 
-// ScopeSpecificationResponse is the response to a scope specification request.
+// ScopeSpecificationResponse is the response type for the Query/ScopeSpecification RPC method.
 message ScopeSpecificationResponse {
   ScopeSpecification scope_specification = 1 [(gogoproto.moretags) = "yaml:\"scope_specification\""];
   string             specification_uuid  = 2 [(gogoproto.moretags) = "yaml:\"specification_uuid\""];
 }
 
-// ContractSpecificationRequest is used for requesting a contract specification by uuid
+// ContractSpecificationRequest is the request type for the Query/ContractSpecification RPC method.
 message ContractSpecificationRequest {
   string specification_uuid = 1 [(gogoproto.moretags) = "yaml:\"specification_uuid\""];
 }
 
-// ContractSpecificationResponse is the response to a contract specification request.
+// ContractSpecificationResponse is the response type for the Query/ContractSpecification RPC method.
 message ContractSpecificationResponse {
   ContractSpecification contract_specification      = 1 [(gogoproto.moretags) = "yaml:\"contract_specification\""];
   string                contract_specification_uuid = 2 [(gogoproto.moretags) = "yaml:\"contract_specification_uuid\""];
 }
 
-// ContractSpecificationExtendedRequest is used for requesting a contract specification with extended data by contract
+// ContractSpecificationExtendedRequest is the request type for the Query/ContractSpecificationExtended RPC method.
 // specification uuid
 message ContractSpecificationExtendedRequest {
   string specification_uuid = 1 [(gogoproto.moretags) = "yaml:\"specification_uuid\""];
 }
 
-// ContractSpecificationExtendedResponse is the response to a contract specification extended request.
+// ContractSpecificationExtendedResponse is the response type for the Query/ContractSpecificationExtended RPC method.
 message ContractSpecificationExtendedResponse {
   ContractSpecification        contract_specification = 1 [(gogoproto.moretags) = "yaml:\"contract_specification\""];
   repeated RecordSpecification record_specifications  = 2 [(gogoproto.moretags) = "yaml:\"record_specifications\""];
   string contract_specification_uuid = 3 [(gogoproto.moretags) = "yaml:\"contract_specification_uuid\""];
 }
 
-// RecordSpecificationsForContractSpecificationRequest is used for requesting record specifications by contract
-// specification uuid
+// RecordSpecificationsForContractSpecificationRequest is the request type for the
+// Query/RecordSpecificationsForContractSpecification RPC method.
 message RecordSpecificationsForContractSpecificationRequest {
   string contract_specification_uuid = 1 [(gogoproto.moretags) = "yaml:\"contract_specification_uuid\""];
 }
 
-// RecordSpecificationsForContractSpecificationResponse is the response to a record specification for contract
-// specification request.
+// RecordSpecificationsForContractSpecificationResponse is the response type for the
+// Query/RecordSpecificationsForContractSpecification RPC method.
 message RecordSpecificationsForContractSpecificationResponse {
   repeated RecordSpecification record_specifications = 1 [(gogoproto.moretags) = "yaml:\"record_specifications\""];
   string contract_specification_uuid = 2 [(gogoproto.moretags) = "yaml:\"contract_specification_uuid\""];
 }
 
-// RecordSpecificationRequest is used for requesting a record specification by contract spec uuid and record name
+// RecordSpecificationRequest is the request type for the Query/RecordSpecification RPC method.
 message RecordSpecificationRequest {
   string contract_specification_uuid = 1 [(gogoproto.moretags) = "yaml:\"contract_specification_uuid\""];
   string name                        = 2;
 }
 
-// RecordSpecificationResponse is the response to a record specification request.
+// RecordSpecificationResponse is the response type for the Query/RecordSpecification RPC method.
 message RecordSpecificationResponse {
   RecordSpecification record_specification        = 1 [(gogoproto.moretags) = "yaml:\"record_specification\""];
   string              contract_specification_uuid = 2 [(gogoproto.moretags) = "yaml:\"contract_specification_uuid\""];
   string              name                        = 3;
 }
 
-// RecordSpecificationByIDRequest is used for requesting a record specification by id
+// RecordSpecificationByIDRequest is the request type for the Query/RecordSpecificationByID RPC method.
 message RecordSpecificationByIDRequest {
   string record_specification_id = 1 [(gogoproto.moretags) = "yaml:\"record_specification_id\""];
 }
 
-// RecordSpecificationByIDResponse is the response to a record specification by id request.
+// RecordSpecificationByIDResponse is the response type for the Query/RecordSpecificationByID RPC method.
 message RecordSpecificationByIDResponse {
   RecordSpecification record_specification    = 1 [(gogoproto.moretags) = "yaml:\"record_specification\""];
   string              record_specification_id = 2 [(gogoproto.moretags) = "yaml:\"record_specification_id\""];
 }
 
-// OSLocatorParamsRequest is the request type for the Query/Params RPC method.
+// OSLocatorParamsRequest is the request type for the Query/OSLocatorParams RPC method.
 message OSLocatorParamsRequest {}
 
-// OSLocatorParamsResponse is the response type for the Query/Params RPC method.
+// OSLocatorParamsResponse is the response type for the Query/OSLocatorParams RPC method.
 message OSLocatorParamsResponse {
   // params defines the parameters of the module.
   OSLocatorParams params = 1 [(gogoproto.nullable) = false];
 }
 
-// OSLocationRequest is used for requesting a Objectstore location by owner
+// OSLocationRequest is the request type for the Query/OSLocator RPC method.
 message OSLocatorRequest {
   string owner = 1;
 }
 
-// OSLocatorResponse is the response to a os locator request.
+// OSLocatorResponse is the response type for the Query/OSLocator RPC method.
 message OSLocatorResponse {
   ObjectStoreLocator locator = 1;
 }
 
-// OSLocatorByURIRequest get os locator's by uri
+// OSLocatorByURIRequest is the request type for the Query/OSLocatorByURI RPC method.
 message OSLocatorByURIRequest {
   string uri = 1;
-  // pagination defines an optional pagination for the request.
+
+  // pagination defines optional pagination parameters for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
 
-// OSLocatorByURIResponse is an array of ObjectStoreLocator with pagination info
+// OSLocatorByURIResponse is the response type for the Query/OSLocatorByURI RPC method.
 message OSLocatorByURIResponse {
   repeated ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
 
-  // pagination defines an optional pagination for the request.
+  // pagination provides the pagination information of this response.
   cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
 
-// OSLocatorByScopeUUIDRequest is used for requesting all the OSLocator associated with a scope_id
+// OSLocatorByScopeUUIDRequest is the request type for the Query/OSLocatorByScopeUUID RPC method.
 message OSLocatorByScopeUUIDRequest {
   string scope_uuid = 1 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
 }
 
-// OSLocatorByScopeUUIDResponse is an array of ObjectStoreLocator.
+// OSLocatorByScopeUUIDResponse is the response type for the Query/OSLocatorByScopeUUID RPC method.
 message OSLocatorByScopeUUIDResponse {
   repeated ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
 }
 
-// OSAllLocatorsRequest get all os locator's request.
+// OSAllLocatorsRequest is the request type for the Query/OSAllLocators RPC method.
 message OSAllLocatorsRequest {
-  // pagination defines an optional pagination for the request.
+  // pagination defines optional pagination parameters for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
 
-// OSAllLocatorsResponse is an array of ObjectStoreLocator with pagination info
+// OSAllLocatorsResponse is the response type for the Query/OSAllLocators RPC method.
 message OSAllLocatorsResponse {
   repeated ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
 
-  // pagination defines an optional pagination for the request.
+  // pagination provides the pagination information of this response.
   cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
