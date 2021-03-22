@@ -10,10 +10,8 @@ import (
 
 // HandleCreateRootNameProposal is a handler for executing a passed create root name proposal
 func HandleCreateRootNameProposal(ctx sdk.Context, k Keeper, p *types.CreateRootNameProposal) error {
-	existing, err := k.GetRecordByName(ctx, p.Name)
-	if err != nil {
-		return err
-	}
+	// err is suppressed because it returns an error on not found.  TODO - Remove use of error for not found
+	existing, _ := k.GetRecordByName(ctx, p.Name)
 	if existing != nil {
 		return types.ErrNameAlreadyBound
 	}
