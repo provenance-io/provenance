@@ -21,9 +21,11 @@ service Query {
     option (google.api.http).get = "/provenance/metadata/v1/params";
   }
 
-  // Scope returns the scope with the given id.
+  // Scope returns the scope with the given id. The id can either be scope uuid, e.g.
+  // 91978ba2-5f35-459a-86a7-feca1b0512e0 or a scope address, e.g. scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel. Case
+  // doesn't matter.
   rpc Scope(ScopeRequest) returns (ScopeResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/scope/{scope_uuid}";
+    option (google.api.http).get = "/provenance/metadata/v1/scope/{scope_id}";
   }
 
   // SessionContextByUUID returns the session contexts within a scope (or all sessions).
@@ -129,7 +131,7 @@ message QueryParamsResponse {
 
 // ScopeRequest is used for requesting a scope by id
 message ScopeRequest {
-  string scope_uuid = 1 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
+  string scope_id = 1 [(gogoproto.moretags) = "yaml:\"scope_id\""];
 }
 
 // ScopeResponse is the response to a scope request.
