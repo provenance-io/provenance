@@ -40,11 +40,11 @@ func (k Keeper) Scope(c context.Context, req *types.ScopeRequest) (*types.ScopeR
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.ScopeUuid == "" {
+	if req.ScopeId == "" {
 		return nil, status.Error(codes.InvalidArgument, "scope uuid cannot be empty")
 	}
 
-	scopeUUID, err := uuid.Parse(req.ScopeUuid)
+	scopeUUID, err := uuid.Parse(req.ScopeId)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid scope uuid: %s", err.Error())
 	}
@@ -129,7 +129,7 @@ func (k Keeper) Sessions(c context.Context, req *types.SessionsRequest) (*types.
 		return false
 	})
 	if itErr != nil {
-		return &retval, status.Error(codes.Unavailable, fmt.Sprintf("error getting sessions for scope"))
+		return &retval, status.Error(codes.Unavailable, fmt.Sprintf("error getting sessions for scope with address %s", scopeID))
 	}
 
 	return &retval, nil

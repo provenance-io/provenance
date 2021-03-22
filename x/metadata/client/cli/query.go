@@ -487,7 +487,7 @@ func scopeByUUID(cmd *cobra.Command, scopeUUID string) error {
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.Scope(context.Background(), &types.ScopeRequest{ScopeUuid: scopeUUID})
+	res, err := queryClient.Scope(context.Background(), &types.ScopeRequest{ScopeId: scopeUUID})
 	if err != nil {
 		return err
 	}
@@ -515,7 +515,7 @@ func sessionsByScopeUUID(cmd *cobra.Command, scopeUUID string) error {
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.Scope(context.Background(), &types.ScopeRequest{ScopeUuid: scopeUUID})
+	res, err := queryClient.Scope(context.Background(), &types.ScopeRequest{ScopeId: scopeUUID})
 	if err != nil {
 		return err
 	}
@@ -551,7 +551,7 @@ func recordsByScopeUUID(cmd *cobra.Command, scopeUUID string) error {
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.Scope(context.Background(), &types.ScopeRequest{ScopeUuid: scopeUUID})
+	res, err := queryClient.Scope(context.Background(), &types.ScopeRequest{ScopeId: scopeUUID})
 	if err != nil {
 		return err
 	}
@@ -582,7 +582,7 @@ func recordsBySessionID(cmd *cobra.Command, sessionID types.MetadataAddress) err
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.Scope(context.Background(), &types.ScopeRequest{ScopeUuid: scopeUUID.String()})
+	res, err := queryClient.Scope(context.Background(), &types.ScopeRequest{ScopeId: scopeUUID.String()})
 	if err != nil {
 		return err
 	}
@@ -616,7 +616,7 @@ func fullScopeByUUID(cmd *cobra.Command, scopeUUID string) error {
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.Scope(context.Background(), &types.ScopeRequest{ScopeUuid: scopeUUID})
+	res, err := queryClient.Scope(context.Background(), &types.ScopeRequest{ScopeId: scopeUUID})
 	if err != nil {
 		return err
 	}
@@ -648,11 +648,11 @@ func sessionByUUIDs(cmd *cobra.Command, scopeUUID string, sessionUUID string) er
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.SessionContextByUUID(
+	res, err := queryClient.Sessions(
 		context.Background(),
-		&types.SessionContextByUUIDRequest{
-			ScopeUuid:   scopeUUID,
-			SessionUuid: sessionUUID,
+		&types.SessionsRequest{
+			ScopeId:   scopeUUID,
+			SessionId: sessionUUID,
 		},
 	)
 	if err != nil {
@@ -681,7 +681,7 @@ func recordByID(cmd *cobra.Command, recordID types.MetadataAddress) error {
 		return err
 	}
 	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.Scope(context.Background(), &types.ScopeRequest{ScopeUuid: scopeUUID.String()})
+	res, err := queryClient.Scope(context.Background(), &types.ScopeRequest{ScopeId: scopeUUID.String()})
 	if err != nil {
 		return err
 	}
