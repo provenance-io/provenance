@@ -31,6 +31,7 @@ var handlers = map[string]appUpgrade{
 			app.MarkerKeeper.SetParams(ctx, markertypes.DefaultParams())
 		},
 	},
+	"v0.3.0": {},
 
 	// TODO - Add new upgrade definitions here.
 }
