@@ -62,6 +62,23 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
 }
 
+func (s *KeeperTestSuite) TestSetup() {
+	s.Run("verify test setup params", func() {
+		s.Require().True(s.app.NameKeeper.GetAllowUnrestrictedNames(s.ctx))
+		s.Require().Equal(uint32(16), s.app.NameKeeper.GetMaxNameLevels(s.ctx))
+		s.Require().Equal(uint32(2), s.app.NameKeeper.GetMinSegmentLength(s.ctx))
+		s.Require().Equal(uint32(16), s.app.NameKeeper.GetMaxSegmentLength(s.ctx))
+	})
+	s.Run("verify get all test setup params", func() {
+		p := s.app.NameKeeper.GetParams(s.ctx)
+		s.Require().NotNil(p)
+		s.Require().True(p.AllowUnrestrictedNames)
+		s.Require().Equal(uint32(16), p.MaxNameLevels)
+		s.Require().Equal(uint32(2), p.MinSegmentLength)
+		s.Require().Equal(uint32(16), p.MaxSegmentLength)
+	})
+}
+
 func (s *KeeperTestSuite) TestNameNormalization() {
 	type args struct {
 		name string
