@@ -30,7 +30,7 @@ service Query {
     option (google.api.http).get = "/provenance/metadata/v1/scope/{scope_id}";
   }
 
-  // SessionContextByID returns session contexts for the provided parameters. The scope id can either be scope uuid,
+  // Sessions returns session contexts for the provided parameters. The scope id can either be scope uuid,
   // e.g. 91978ba2-5f35-459a-86a7-feca1b0512e0 or a scope address, e.g. scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel.
   // Similarly, the session_id can either be a uuid or session address, e.g.
   // session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr. Case doesn't matter.
@@ -43,22 +43,38 @@ service Query {
   // * If neither a scope id, nor a session id are provided, a bad request is returned.
   rpc Sessions(SessionsRequest) returns (SessionsResponse) {
     option (google.api.http) = {
-      get: "/provenance/metadata/v1/scope/{scope_id}/session/{session_id}",
+      get: "/provenance/metadata/v1/session/{session_id}",
       additional_bindings: [
         {get: "/provenance/metadata/v1/scope/{scope_id}/sessions"},
-        {get: "/provenance/metadata/v1/session/{session_id}"}
+        {get: "/provenance/metadata/v1/scope/{scope_id}/session/{session_id}"}
       ]
     };
   }
 
-  // RecordsByScopeUUID returns the records in a scope by scope uuid or a specific record by name.
-  rpc RecordsByScopeUUID(RecordsByScopeUUIDRequest) returns (RecordsByScopeUUIDResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/scope/uuid/{scope_uuid}/records/{name}";
-  }
-
-  // RecordsByScopeID returns a collection of the records in a scope by scope bech32 id or a specific one by name.
-  rpc RecordsByScopeID(RecordsByScopeIDRequest) returns (RecordsByScopeIDResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/scope/id/{scope_id}/records/{name}";
+  // Records returns records for the provided parameters.
+  // The record_addr, if provided, must be a bech32 record address, e.g.
+  // record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3. The scope id can either be scope uuid, e.g.
+  // 91978ba2-5f35-459a-86a7-feca1b0512e0 or a scope address, e.g. scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel. Similarly,
+  // the session_id can either be a uuid or session address, e.g.
+  // session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr. The name is the name of the record you're
+  // interested in. Case doesn't matter.
+  // * If a record_addr is provided, the rest of the fields are ignored and that record is returned.
+  // * If only a scope_id is provided, all records in that scope are returned.
+  // * If only a session_id is provided, it must be a bech32 session address. All records in that session are returned.
+  // * If a name is provided, either a scope_id must be provided or a session_id must be provided as a bech32 session
+  // address. The record with the provided name in the provided context is returned.
+  rpc Records(RecordsRequest) returns (RecordsResponse) {
+    option (google.api.http) = {
+      get: "/provenance/metadata/v1/record/{record_addr}",
+      additional_bindings: [
+        {get: "/provenance/metadata/v1/scope/{scope_id}/records"},
+        {get: "/provenance/metadata/v1/scope/{scope_id}/record/{name}"},
+        {get: "/provenance/metadata/v1/scope/{scope_id}/session/{session_id}/records"},
+        {get: "/provenance/metadata/v1/scope/{scope_id}/session/{session_id}/record/{name}"},
+        {get: "/provenance/metadata/v1/session/{session_id}/records"},
+        {get: "/provenance/metadata/v1/session/{session_id}/record/{name}"}
+      ]
+    };
   }
 
   // Ownership returns the scope identifiers that list the given address as either a data or value owner.
@@ -159,18 +175,20 @@ message ScopeResponse {
 
 // SessionsRequest is the request type for the Query/Sessions RPC method.
 message SessionsRequest {
-  // scope_id can either be a uuid, e.g. 91978ba2-5f35-459a-86a7-feca1b0512e0 or a scope address, e.g.
+  // scope_id can either be a uuid, e.g. 91978ba2-5f35-459a-86a7-feca1b0512e0 or a bech32 scope address, e.g.
   // scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel.
   string scope_id = 1 [(gogoproto.moretags) = "yaml:\"scope_id\""];
-  // session_id can either be a uuid, e.g. 5803f8bc-6067-4eb5-951f-2121671c2ec0 or a session address, e.g.
-  // session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr.
+  // session_id can either be a uuid, e.g. 5803f8bc-6067-4eb5-951f-2121671c2ec0 or a bech32 session address, e.g.
+  // session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr. This can only be a uuid if a scope_id is also
+  // provided.
   string session_id = 2 [(gogoproto.moretags) = "yaml:\"session_id\""];
 }
 
 // SessionsResponse is the response type for the Query/Sessions RPC method.
 message SessionsResponse {
-  // sessions is any number of session results.
+  // sessions is any number of wrapped session results.
   repeated SessionWrapper sessions = 1;
+
   // request is a copy of the request that generated these results.
   SessionsRequest request = 98;
 }
@@ -179,41 +197,60 @@ message SessionsResponse {
 message SessionWrapper {
   // session is the on-chain session message.
   Session session = 1;
-  // session_id is the address of the session, e.g. session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr.
-  string session_id = 2 [(gogoproto.moretags) = "yaml:\"session_id\""];
-  // scope_id is the address of the scope containing this session, e.g. scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel.
-  string scope_id = 3 [(gogoproto.moretags) = "yaml:\"scope_id\""];
+  // scope_addr is the bech32 address of the scope containing this session, e.g.
+  // scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel.
+  string scope_addr = 2 [(gogoproto.moretags) = "yaml:\"scope_addr\""];
+  // session_addr is the bech32 address of the session, e.g.
+  // session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr.
+  string session_addr = 3 [(gogoproto.moretags) = "yaml:\"session_addr\""];
   // scope_uuid is the uuid of the scope containing this session, e.g. 91978ba2-5f35-459a-86a7-feca1b0512e0.
   string scope_uuid = 4 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
   // session_uuid is the uuid of the session, e.g. 5803f8bc-6067-4eb5-951f-2121671c2ec0.
-  // This is meaningless without the added context of the scope uuid (or scope id).
+  // This is meaningless without the added context of the scope uuid (or scope addr).
   string session_uuid = 5 [(gogoproto.moretags) = "yaml:\"session_uuid\""];
 }
 
-// RecordsByScopeUUIDRequest is the request type for the Query/RecordsByScopeUUID RPC method.
-message RecordsByScopeUUIDRequest {
-  string scope_uuid = 1 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
-  string name       = 2;
+// RecordsRequest is the request type for the Query/Records RPC method.
+message RecordsRequest {
+  // record_addr is a bech32 record addres, e.g. record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3.
+  string record_addr = 1 [(gogoproto.moretags) = "yaml:\"record_addr\""];
+  // scope_id can either be a uuid, e.g. 91978ba2-5f35-459a-86a7-feca1b0512e0 or a bech32 scope address, e.g.
+  // scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel.
+  string scope_id = 2 [(gogoproto.moretags) = "yaml:\"scope_id\""];
+  // session_id can either be a uuid, e.g. 5803f8bc-6067-4eb5-951f-2121671c2ec0 or a bech32 session address, e.g.
+  // session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr. This can only be a uuid if a scope_id is also
+  // provided.
+  string session_id = 3 [(gogoproto.moretags) = "yaml:\"session_id\""];
+  // name is the name of the record to look for
+  string name = 4;
 }
 
-// RecordsByScopeUUIDResponse is the response type for the Query/RecordsByScopeUUID RPC method.
-message RecordsByScopeUUIDResponse {
-  string          scope_uuid = 1 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
-  string          scope_id   = 2 [(gogoproto.moretags) = "yaml:\"scope_id\""];
-  repeated Record records    = 3;
+// RecordsResponse is the response type for the Query/Records RPC method.
+message RecordsResponse {
+  repeated RecordWrapper records = 1;
+
+  // request is a copy of the request that generated these results.
+  RecordsRequest request = 98;
 }
 
-// RecordsByScopeIDRequest is the request type for the Query/RecordsByScopeID RPC method.
-message RecordsByScopeIDRequest {
-  string scope_id = 1 [(gogoproto.moretags) = "yaml:\"scope_id\""];
-  string name     = 2;
-}
-
-// RecordsByScopeIDResponse is the response type for the Query/RecordsByScopeID RPC method.
-message RecordsByScopeIDResponse {
-  string          scope_uuid = 1 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
-  string          scope_id   = 2 [(gogoproto.moretags) = "yaml:\"scope_id\""];
-  repeated Record records    = 3;
+// RecordWrapper contains a single record and some extra identifiers for it.
+message RecordWrapper {
+  // record is the on-chain record message.
+  Record record = 1;
+  // scope_addr is the bech32 address of the scope containing this record, e.g.
+  // scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel.
+  string scope_addr = 2 [(gogoproto.moretags) = "yaml:\"scope_addr\""];
+  // session_addr is the bech32 address of the session containing this record, e.g.
+  // session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr.
+  string session_addr = 3 [(gogoproto.moretags) = "yaml:\"session_addr\""];
+  // record_addr is the bech32 address of this record, e.g.
+  // record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3
+  string record_addr = 4 [(gogoproto.moretags) = "yaml:\"record_addr\""];
+  // scope_uuid is the uuid of the scope containing this record, e.g. 91978ba2-5f35-459a-86a7-feca1b0512e0.
+  string scope_uuid = 5 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
+  // session_uuid is the uuid of the session containing this record, e.g. 5803f8bc-6067-4eb5-951f-2121671c2ec0.
+  // This is meaningless without the added context of the scope_uuid (or scope_addr).
+  string session_uuid = 6 [(gogoproto.moretags) = "yaml:\"session_uuid\""];
 }
 
 // OwnershipRequest is the request type for the Query/Ownership RPC method.
