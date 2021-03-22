@@ -21,7 +21,7 @@ func HandleCreateRootNameProposal(ctx sdk.Context, k Keeper, p *types.CreateRoot
 	if err != nil {
 		return err
 	}
-	if err = k.setNameRecord(ctx, p.Name, addr, p.Restricted); err != nil {
+	if err = k.SetNameRecord(ctx, p.Name, addr, p.Restricted); err != nil {
 		return err
 	}
 	logger := k.Logger(ctx)

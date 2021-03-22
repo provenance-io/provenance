@@ -68,7 +68,7 @@ func (keeper Keeper) ResolvesTo(ctx sdk.Context, name string, addr sdk.AccAddres
 }
 
 // SetNameRecord binds a name to an address. An error is returned if no account exists for the address.
-func (keeper Keeper) setNameRecord(ctx sdk.Context, name string, addr sdk.AccAddress, restrict bool) error {
+func (keeper Keeper) SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAddress, restrict bool) error {
 	var err error
 	if name, err = keeper.Normalize(ctx, name); err != nil {
 		return err
@@ -119,8 +119,8 @@ func (keeper Keeper) GetRecordByName(ctx sdk.Context, name string) (record *type
 	return record, err
 }
 
-// Logger returns a module-specific logger.
-func (keeper Keeper) nameExists(ctx sdk.Context, name string) bool {
+// NameExists returns true if store contains a record for the given name.
+func (keeper Keeper) NameExists(ctx sdk.Context, name string) bool {
 	key, err := types.GetNameKeyPrefix(name)
 	if err != nil {
 		return false
@@ -152,8 +152,8 @@ func (keeper Keeper) GetRecordsByAddress(ctx sdk.Context, address sdk.AccAddress
 	return records, nil
 }
 
-// Delete a name record from the kvstore.
-func (keeper Keeper) deleteRecord(ctx sdk.Context, name string) error {
+// DeleteRecord removes a name record from the kvstore.
+func (keeper Keeper) DeleteRecord(ctx sdk.Context, name string) error {
 	// Need the record to clear the address index
 	record, err := keeper.GetRecordByName(ctx, name)
 	if err != nil {
