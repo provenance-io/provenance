@@ -155,7 +155,7 @@ message OwnershipResponse {
   repeated string scope_uuids = 1 [(gogoproto.moretags) = "yaml:\"scope_uuids\""];
 
   // pagination defines an optional pagination for the request.
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
 
 // ValueOwnershipRequest looks for all scope level resources that have the address as the value owner
@@ -171,7 +171,7 @@ message ValueOwnershipResponse {
   repeated string scope_uuids = 1 [(gogoproto.moretags) = "yaml:\"scope_uuids\""];
 
   // pagination defines an optional pagination for the request.
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
 
 // SessionContextByUUIDRequest returns the record sessions for a given scope identifer or optionally a specific record
@@ -334,7 +334,7 @@ message OSLocatorByURIResponse {
   repeated ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
 
   // pagination defines an optional pagination for the request.
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
 
 // OSLocatorByScopeUUIDRequest is used for requesting all the OSLocator associated with a scope_id
@@ -358,5 +358,5 @@ message OSAllLocatorsResponse {
   repeated ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
 
   // pagination defines an optional pagination for the request.
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
