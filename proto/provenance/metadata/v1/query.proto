@@ -144,7 +144,7 @@ message ScopeResponse {
 message OwnershipRequest {
   string address = 1;
   // pagination defines an optional pagination for the request.
-  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
 
 // OwnershipResponse is the reponse to the ownership request and includes a list of scope identifiers
@@ -160,7 +160,7 @@ message OwnershipResponse {
 message ValueOwnershipRequest {
   string address = 1;
   // pagination defines an optional pagination for the request.
-  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
 
 // ValueOwnershipResponse is the reponse to the Valueownership request and includes a list of scope identifiers
@@ -324,7 +324,7 @@ message OSLocatorResponse {
 message OSLocatorByURIRequest {
   string uri = 1;
   // pagination defines an optional pagination for the request.
-  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
 
 // OSLocatorByURIResponse is an array of ObjectStoreLocator with pagination info
@@ -348,7 +348,7 @@ message OSLocatorByScopeUUIDResponse {
 // OSAllLocatorsRequest get all os locator's request.
 message OSAllLocatorsRequest {
   // pagination defines an optional pagination for the request.
-  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
 
 // OSAllLocatorsResponse is an array of ObjectStoreLocator with pagination info
