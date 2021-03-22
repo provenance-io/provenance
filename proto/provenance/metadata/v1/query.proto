@@ -270,7 +270,8 @@ message RecordSpecificationsForContractSpecificationRequest {
   string contract_specification_uuid = 1 [(gogoproto.moretags) = "yaml:\"contract_specification_uuid\""];
 }
 
-// RecordSpecificationsForContractSpecificationResponse is the response to a record specification for contract specification request.
+// RecordSpecificationsForContractSpecificationResponse is the response to a record specification for contract
+// specification request.
 message RecordSpecificationsForContractSpecificationResponse {
   repeated RecordSpecification record_specifications = 1 [(gogoproto.moretags) = "yaml:\"record_specifications\""];
   string contract_specification_uuid = 2 [(gogoproto.moretags) = "yaml:\"contract_specification_uuid\""];
