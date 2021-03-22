@@ -55,6 +55,18 @@ func (s *IntegrationTestSuite) TestNameProposals() {
 			nil,
 		},
 		{
+			"add marker - valid full domain",
+			nametypes.NewCreateRootNameProposal("title", "description", "example.provenance.io", s.accountAddr, false),
+			false,
+			nil,
+		},
+		{
+			"add marker - valid new sub domain",
+			nametypes.NewCreateRootNameProposal("title", "description", "another.provenance.io", s.accountAddr, false),
+			false,
+			nil,
+		},
+		{
 			"add marker - invalid address",
 			&nametypes.CreateRootNameProposal{Title: "title", Description: "description", Name: "badroot", Owner: "bad1address", Restricted: false},
 			true,
@@ -63,6 +75,24 @@ func (s *IntegrationTestSuite) TestNameProposals() {
 		{
 			"add marker - fails duplicate",
 			nametypes.NewCreateRootNameProposal("title", "description", "root", s.accountAddr, false),
+			true,
+			fmt.Errorf("name is already bound to an address"),
+		},
+		{
+			"add marker - fails duplicate sub domain",
+			nametypes.NewCreateRootNameProposal("title", "description", "provenance.io", s.accountAddr, false),
+			true,
+			fmt.Errorf("name is already bound to an address"),
+		},
+		{
+			"add marker - fails duplicate third level domain",
+			nametypes.NewCreateRootNameProposal("title", "description", "example.provenance.io", s.accountAddr, false),
+			true,
+			fmt.Errorf("name is already bound to an address"),
+		},
+		{
+			"add marker - fails another duplicate third level domain",
+			nametypes.NewCreateRootNameProposal("title", "description", "another.provenance.io", s.accountAddr, false),
 			true,
 			fmt.Errorf("name is already bound to an address"),
 		},
