@@ -67,52 +67,6 @@ func (m *QueryParamsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryParamsRequest proto.InternalMessageInfo
 
-// AllOSLocatorsRequest get all os locator's request.
-type OSAllLocatorsRequest struct {
-	// pagination defines an optional pagination for the request.
-	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
-}
-
-func (m *OSAllLocatorsRequest) Reset()         { *m = OSAllLocatorsRequest{} }
-func (m *OSAllLocatorsRequest) String() string { return proto.CompactTextString(m) }
-func (*OSAllLocatorsRequest) ProtoMessage()    {}
-func (*OSAllLocatorsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{1}
-}
-func (m *OSAllLocatorsRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *OSAllLocatorsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_OSAllLocatorsRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *OSAllLocatorsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_OSAllLocatorsRequest.Merge(m, src)
-}
-func (m *OSAllLocatorsRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *OSAllLocatorsRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_OSAllLocatorsRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_OSAllLocatorsRequest proto.InternalMessageInfo
-
-func (m *OSAllLocatorsRequest) GetPagination() *query.PageRequest {
-	if m != nil {
-		return m.Pagination
-	}
-	return nil
-}
-
 // QueryParamsResponse is the response type for the Query/Params RPC method.
 type QueryParamsResponse struct {
 	// params defines the parameters of the module.
@@ -123,7 +77,7 @@ func (m *QueryParamsResponse) Reset()         { *m = QueryParamsResponse{} }
 func (m *QueryParamsResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryParamsResponse) ProtoMessage()    {}
 func (*QueryParamsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{2}
+	return fileDescriptor_a68790bc0b96eeb9, []int{1}
 }
 func (m *QueryParamsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -168,7 +122,7 @@ func (m *ScopeRequest) Reset()         { *m = ScopeRequest{} }
 func (m *ScopeRequest) String() string { return proto.CompactTextString(m) }
 func (*ScopeRequest) ProtoMessage()    {}
 func (*ScopeRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{3}
+	return fileDescriptor_a68790bc0b96eeb9, []int{2}
 }
 func (m *ScopeRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -204,51 +158,6 @@ func (m *ScopeRequest) GetScopeUuid() string {
 	return ""
 }
 
-// OSLocatorScopeRequest is used for requesting all the OSLocator associated with a scope_id
-type OSLocatorByScopeUUIDRequest struct {
-	ScopeUuid string `protobuf:"bytes,1,opt,name=scope_uuid,json=scopeUuid,proto3" json:"scope_uuid,omitempty" yaml:"scope_uuid"`
-}
-
-func (m *OSLocatorByScopeUUIDRequest) Reset()         { *m = OSLocatorByScopeUUIDRequest{} }
-func (m *OSLocatorByScopeUUIDRequest) String() string { return proto.CompactTextString(m) }
-func (*OSLocatorByScopeUUIDRequest) ProtoMessage()    {}
-func (*OSLocatorByScopeUUIDRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{4}
-}
-func (m *OSLocatorByScopeUUIDRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *OSLocatorByScopeUUIDRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_OSLocatorByScopeUUIDRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *OSLocatorByScopeUUIDRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_OSLocatorByScopeUUIDRequest.Merge(m, src)
-}
-func (m *OSLocatorByScopeUUIDRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *OSLocatorByScopeUUIDRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_OSLocatorByScopeUUIDRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_OSLocatorByScopeUUIDRequest proto.InternalMessageInfo
-
-func (m *OSLocatorByScopeUUIDRequest) GetScopeUuid() string {
-	if m != nil {
-		return m.ScopeUuid
-	}
-	return ""
-}
-
 // ScopeResponse is the response to a scope request.
 type ScopeResponse struct {
 	Scope     *Scope     `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
@@ -261,7 +170,7 @@ func (m *ScopeResponse) Reset()         { *m = ScopeResponse{} }
 func (m *ScopeResponse) String() string { return proto.CompactTextString(m) }
 func (*ScopeResponse) ProtoMessage()    {}
 func (*ScopeResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{5}
+	return fileDescriptor_a68790bc0b96eeb9, []int{3}
 }
 func (m *ScopeResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -322,14 +231,14 @@ func (m *ScopeResponse) GetScopeUuid() string {
 type OwnershipRequest struct {
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 	// pagination defines an optional pagination for the request.
-	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	Pagination *query.PageRequest `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *OwnershipRequest) Reset()         { *m = OwnershipRequest{} }
 func (m *OwnershipRequest) String() string { return proto.CompactTextString(m) }
 func (*OwnershipRequest) ProtoMessage()    {}
 func (*OwnershipRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{6}
+	return fileDescriptor_a68790bc0b96eeb9, []int{4}
 }
 func (m *OwnershipRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -384,7 +293,7 @@ func (m *OwnershipResponse) Reset()         { *m = OwnershipResponse{} }
 func (m *OwnershipResponse) String() string { return proto.CompactTextString(m) }
 func (*OwnershipResponse) ProtoMessage()    {}
 func (*OwnershipResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{7}
+	return fileDescriptor_a68790bc0b96eeb9, []int{5}
 }
 func (m *OwnershipResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -431,14 +340,14 @@ func (m *OwnershipResponse) GetPagination() *query.PageResponse {
 type ValueOwnershipRequest struct {
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 	// pagination defines an optional pagination for the request.
-	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	Pagination *query.PageRequest `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *ValueOwnershipRequest) Reset()         { *m = ValueOwnershipRequest{} }
 func (m *ValueOwnershipRequest) String() string { return proto.CompactTextString(m) }
 func (*ValueOwnershipRequest) ProtoMessage()    {}
 func (*ValueOwnershipRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{8}
+	return fileDescriptor_a68790bc0b96eeb9, []int{6}
 }
 func (m *ValueOwnershipRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -493,7 +402,7 @@ func (m *ValueOwnershipResponse) Reset()         { *m = ValueOwnershipResponse{}
 func (m *ValueOwnershipResponse) String() string { return proto.CompactTextString(m) }
 func (*ValueOwnershipResponse) ProtoMessage()    {}
 func (*ValueOwnershipResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{9}
+	return fileDescriptor_a68790bc0b96eeb9, []int{7}
 }
 func (m *ValueOwnershipResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -547,7 +456,7 @@ func (m *SessionContextByUUIDRequest) Reset()         { *m = SessionContextByUUI
 func (m *SessionContextByUUIDRequest) String() string { return proto.CompactTextString(m) }
 func (*SessionContextByUUIDRequest) ProtoMessage()    {}
 func (*SessionContextByUUIDRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{10}
+	return fileDescriptor_a68790bc0b96eeb9, []int{8}
 }
 func (m *SessionContextByUUIDRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -601,7 +510,7 @@ func (m *SessionContextByUUIDResponse) Reset()         { *m = SessionContextByUU
 func (m *SessionContextByUUIDResponse) String() string { return proto.CompactTextString(m) }
 func (*SessionContextByUUIDResponse) ProtoMessage()    {}
 func (*SessionContextByUUIDResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{11}
+	return fileDescriptor_a68790bc0b96eeb9, []int{9}
 }
 func (m *SessionContextByUUIDResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -662,7 +571,7 @@ func (m *SessionContextByIDRequest) Reset()         { *m = SessionContextByIDReq
 func (m *SessionContextByIDRequest) String() string { return proto.CompactTextString(m) }
 func (*SessionContextByIDRequest) ProtoMessage()    {}
 func (*SessionContextByIDRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{12}
+	return fileDescriptor_a68790bc0b96eeb9, []int{10}
 }
 func (m *SessionContextByIDRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -716,7 +625,7 @@ func (m *SessionContextByIDResponse) Reset()         { *m = SessionContextByIDRe
 func (m *SessionContextByIDResponse) String() string { return proto.CompactTextString(m) }
 func (*SessionContextByIDResponse) ProtoMessage()    {}
 func (*SessionContextByIDResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{13}
+	return fileDescriptor_a68790bc0b96eeb9, []int{11}
 }
 func (m *SessionContextByIDResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -777,7 +686,7 @@ func (m *RecordsByScopeUUIDRequest) Reset()         { *m = RecordsByScopeUUIDReq
 func (m *RecordsByScopeUUIDRequest) String() string { return proto.CompactTextString(m) }
 func (*RecordsByScopeUUIDRequest) ProtoMessage()    {}
 func (*RecordsByScopeUUIDRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{14}
+	return fileDescriptor_a68790bc0b96eeb9, []int{12}
 }
 func (m *RecordsByScopeUUIDRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -831,7 +740,7 @@ func (m *RecordsByScopeUUIDResponse) Reset()         { *m = RecordsByScopeUUIDRe
 func (m *RecordsByScopeUUIDResponse) String() string { return proto.CompactTextString(m) }
 func (*RecordsByScopeUUIDResponse) ProtoMessage()    {}
 func (*RecordsByScopeUUIDResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{15}
+	return fileDescriptor_a68790bc0b96eeb9, []int{13}
 }
 func (m *RecordsByScopeUUIDResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -892,7 +801,7 @@ func (m *RecordsByScopeIDRequest) Reset()         { *m = RecordsByScopeIDRequest
 func (m *RecordsByScopeIDRequest) String() string { return proto.CompactTextString(m) }
 func (*RecordsByScopeIDRequest) ProtoMessage()    {}
 func (*RecordsByScopeIDRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{16}
+	return fileDescriptor_a68790bc0b96eeb9, []int{14}
 }
 func (m *RecordsByScopeIDRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -946,7 +855,7 @@ func (m *RecordsByScopeIDResponse) Reset()         { *m = RecordsByScopeIDRespon
 func (m *RecordsByScopeIDResponse) String() string { return proto.CompactTextString(m) }
 func (*RecordsByScopeIDResponse) ProtoMessage()    {}
 func (*RecordsByScopeIDResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{17}
+	return fileDescriptor_a68790bc0b96eeb9, []int{15}
 }
 func (m *RecordsByScopeIDResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1005,7 +914,7 @@ func (m *ScopeSpecificationRequest) Reset()         { *m = ScopeSpecificationReq
 func (m *ScopeSpecificationRequest) String() string { return proto.CompactTextString(m) }
 func (*ScopeSpecificationRequest) ProtoMessage()    {}
 func (*ScopeSpecificationRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{18}
+	return fileDescriptor_a68790bc0b96eeb9, []int{16}
 }
 func (m *ScopeSpecificationRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1041,7 +950,7 @@ func (m *ScopeSpecificationRequest) GetSpecificationUuid() string {
 	return ""
 }
 
-// ScopeSpecification is the response to a scope specification request.
+// ScopeSpecificationResponse is the response to a scope specification request.
 type ScopeSpecificationResponse struct {
 	ScopeSpecification *ScopeSpecification `protobuf:"bytes,1,opt,name=scope_specification,json=scopeSpecification,proto3" json:"scope_specification,omitempty" yaml:"scope_specification"`
 	SpecificationUuid  string              `protobuf:"bytes,2,opt,name=specification_uuid,json=specificationUuid,proto3" json:"specification_uuid,omitempty" yaml:"specification_uuid"`
@@ -1051,7 +960,7 @@ func (m *ScopeSpecificationResponse) Reset()         { *m = ScopeSpecificationRe
 func (m *ScopeSpecificationResponse) String() string { return proto.CompactTextString(m) }
 func (*ScopeSpecificationResponse) ProtoMessage()    {}
 func (*ScopeSpecificationResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{19}
+	return fileDescriptor_a68790bc0b96eeb9, []int{17}
 }
 func (m *ScopeSpecificationResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1103,7 +1012,7 @@ func (m *ContractSpecificationRequest) Reset()         { *m = ContractSpecificat
 func (m *ContractSpecificationRequest) String() string { return proto.CompactTextString(m) }
 func (*ContractSpecificationRequest) ProtoMessage()    {}
 func (*ContractSpecificationRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{20}
+	return fileDescriptor_a68790bc0b96eeb9, []int{18}
 }
 func (m *ContractSpecificationRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1149,7 +1058,7 @@ func (m *ContractSpecificationResponse) Reset()         { *m = ContractSpecifica
 func (m *ContractSpecificationResponse) String() string { return proto.CompactTextString(m) }
 func (*ContractSpecificationResponse) ProtoMessage()    {}
 func (*ContractSpecificationResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{21}
+	return fileDescriptor_a68790bc0b96eeb9, []int{19}
 }
 func (m *ContractSpecificationResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1202,7 +1111,7 @@ func (m *ContractSpecificationExtendedRequest) Reset()         { *m = ContractSp
 func (m *ContractSpecificationExtendedRequest) String() string { return proto.CompactTextString(m) }
 func (*ContractSpecificationExtendedRequest) ProtoMessage()    {}
 func (*ContractSpecificationExtendedRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{22}
+	return fileDescriptor_a68790bc0b96eeb9, []int{20}
 }
 func (m *ContractSpecificationExtendedRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1249,7 +1158,7 @@ func (m *ContractSpecificationExtendedResponse) Reset()         { *m = ContractS
 func (m *ContractSpecificationExtendedResponse) String() string { return proto.CompactTextString(m) }
 func (*ContractSpecificationExtendedResponse) ProtoMessage()    {}
 func (*ContractSpecificationExtendedResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{23}
+	return fileDescriptor_a68790bc0b96eeb9, []int{21}
 }
 func (m *ContractSpecificationExtendedResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1313,7 +1222,7 @@ func (m *RecordSpecificationsForContractSpecificationRequest) String() string {
 }
 func (*RecordSpecificationsForContractSpecificationRequest) ProtoMessage() {}
 func (*RecordSpecificationsForContractSpecificationRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{24}
+	return fileDescriptor_a68790bc0b96eeb9, []int{22}
 }
 func (m *RecordSpecificationsForContractSpecificationRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1349,7 +1258,8 @@ func (m *RecordSpecificationsForContractSpecificationRequest) GetContractSpecifi
 	return ""
 }
 
-// RecordSpecificationResponseResponse is the response to a record specification for contract specification request.
+// RecordSpecificationsForContractSpecificationResponse is the response to a record specification for contract
+// specification request.
 type RecordSpecificationsForContractSpecificationResponse struct {
 	RecordSpecifications      []*RecordSpecification `protobuf:"bytes,1,rep,name=record_specifications,json=recordSpecifications,proto3" json:"record_specifications,omitempty" yaml:"record_specifications"`
 	ContractSpecificationUuid string                 `protobuf:"bytes,2,opt,name=contract_specification_uuid,json=contractSpecificationUuid,proto3" json:"contract_specification_uuid,omitempty" yaml:"contract_specification_uuid"`
@@ -1363,7 +1273,7 @@ func (m *RecordSpecificationsForContractSpecificationResponse) String() string {
 }
 func (*RecordSpecificationsForContractSpecificationResponse) ProtoMessage() {}
 func (*RecordSpecificationsForContractSpecificationResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{25}
+	return fileDescriptor_a68790bc0b96eeb9, []int{23}
 }
 func (m *RecordSpecificationsForContractSpecificationResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1416,7 +1326,7 @@ func (m *RecordSpecificationRequest) Reset()         { *m = RecordSpecificationR
 func (m *RecordSpecificationRequest) String() string { return proto.CompactTextString(m) }
 func (*RecordSpecificationRequest) ProtoMessage()    {}
 func (*RecordSpecificationRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{26}
+	return fileDescriptor_a68790bc0b96eeb9, []int{24}
 }
 func (m *RecordSpecificationRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1470,7 +1380,7 @@ func (m *RecordSpecificationResponse) Reset()         { *m = RecordSpecification
 func (m *RecordSpecificationResponse) String() string { return proto.CompactTextString(m) }
 func (*RecordSpecificationResponse) ProtoMessage()    {}
 func (*RecordSpecificationResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{27}
+	return fileDescriptor_a68790bc0b96eeb9, []int{25}
 }
 func (m *RecordSpecificationResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1529,7 +1439,7 @@ func (m *RecordSpecificationByIDRequest) Reset()         { *m = RecordSpecificat
 func (m *RecordSpecificationByIDRequest) String() string { return proto.CompactTextString(m) }
 func (*RecordSpecificationByIDRequest) ProtoMessage()    {}
 func (*RecordSpecificationByIDRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{28}
+	return fileDescriptor_a68790bc0b96eeb9, []int{26}
 }
 func (m *RecordSpecificationByIDRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1575,7 +1485,7 @@ func (m *RecordSpecificationByIDResponse) Reset()         { *m = RecordSpecifica
 func (m *RecordSpecificationByIDResponse) String() string { return proto.CompactTextString(m) }
 func (*RecordSpecificationByIDResponse) ProtoMessage()    {}
 func (*RecordSpecificationByIDResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{29}
+	return fileDescriptor_a68790bc0b96eeb9, []int{27}
 }
 func (m *RecordSpecificationByIDResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1616,6 +1526,89 @@ func (m *RecordSpecificationByIDResponse) GetRecordSpecificationId() string {
 		return m.RecordSpecificationId
 	}
 	return ""
+}
+
+// OSLocatorParamsRequest is the request type for the Query/Params RPC method.
+type OSLocatorParamsRequest struct {
+}
+
+func (m *OSLocatorParamsRequest) Reset()         { *m = OSLocatorParamsRequest{} }
+func (m *OSLocatorParamsRequest) String() string { return proto.CompactTextString(m) }
+func (*OSLocatorParamsRequest) ProtoMessage()    {}
+func (*OSLocatorParamsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a68790bc0b96eeb9, []int{28}
+}
+func (m *OSLocatorParamsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *OSLocatorParamsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_OSLocatorParamsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *OSLocatorParamsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_OSLocatorParamsRequest.Merge(m, src)
+}
+func (m *OSLocatorParamsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *OSLocatorParamsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_OSLocatorParamsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_OSLocatorParamsRequest proto.InternalMessageInfo
+
+// OSLocatorParamsResponse is the response type for the Query/Params RPC method.
+type OSLocatorParamsResponse struct {
+	// params defines the parameters of the module.
+	Params OSLocatorParams `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
+}
+
+func (m *OSLocatorParamsResponse) Reset()         { *m = OSLocatorParamsResponse{} }
+func (m *OSLocatorParamsResponse) String() string { return proto.CompactTextString(m) }
+func (*OSLocatorParamsResponse) ProtoMessage()    {}
+func (*OSLocatorParamsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a68790bc0b96eeb9, []int{29}
+}
+func (m *OSLocatorParamsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *OSLocatorParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_OSLocatorParamsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *OSLocatorParamsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_OSLocatorParamsResponse.Merge(m, src)
+}
+func (m *OSLocatorParamsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *OSLocatorParamsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_OSLocatorParamsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_OSLocatorParamsResponse proto.InternalMessageInfo
+
+func (m *OSLocatorParamsResponse) GetParams() OSLocatorParams {
+	if m != nil {
+		return m.Params
+	}
+	return OSLocatorParams{}
 }
 
 // OSLocationRequest is used for requesting a Objectstore location by owner
@@ -1663,18 +1656,63 @@ func (m *OSLocatorRequest) GetOwner() string {
 	return ""
 }
 
+// OSLocatorResponse is the response to a os locator request.
+type OSLocatorResponse struct {
+	Locator *ObjectStoreLocator `protobuf:"bytes,1,opt,name=locator,proto3" json:"locator,omitempty"`
+}
+
+func (m *OSLocatorResponse) Reset()         { *m = OSLocatorResponse{} }
+func (m *OSLocatorResponse) String() string { return proto.CompactTextString(m) }
+func (*OSLocatorResponse) ProtoMessage()    {}
+func (*OSLocatorResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a68790bc0b96eeb9, []int{31}
+}
+func (m *OSLocatorResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *OSLocatorResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_OSLocatorResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *OSLocatorResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_OSLocatorResponse.Merge(m, src)
+}
+func (m *OSLocatorResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *OSLocatorResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_OSLocatorResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_OSLocatorResponse proto.InternalMessageInfo
+
+func (m *OSLocatorResponse) GetLocator() *ObjectStoreLocator {
+	if m != nil {
+		return m.Locator
+	}
+	return nil
+}
+
 // OSLocatorByURIRequest get os locator's by uri
 type OSLocatorByURIRequest struct {
 	Uri string `protobuf:"bytes,1,opt,name=uri,proto3" json:"uri,omitempty"`
 	// pagination defines an optional pagination for the request.
-	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	Pagination *query.PageRequest `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *OSLocatorByURIRequest) Reset()         { *m = OSLocatorByURIRequest{} }
 func (m *OSLocatorByURIRequest) String() string { return proto.CompactTextString(m) }
 func (*OSLocatorByURIRequest) ProtoMessage()    {}
 func (*OSLocatorByURIRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{31}
+	return fileDescriptor_a68790bc0b96eeb9, []int{32}
 }
 func (m *OSLocatorByURIRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1717,134 +1755,6 @@ func (m *OSLocatorByURIRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
-// OSLocatorResponse is the response to a os locator request.
-type OSLocatorResponse struct {
-	Locator *ObjectStoreLocator `protobuf:"bytes,1,opt,name=locator,proto3" json:"locator,omitempty"`
-}
-
-func (m *OSLocatorResponse) Reset()         { *m = OSLocatorResponse{} }
-func (m *OSLocatorResponse) String() string { return proto.CompactTextString(m) }
-func (*OSLocatorResponse) ProtoMessage()    {}
-func (*OSLocatorResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{32}
-}
-func (m *OSLocatorResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *OSLocatorResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_OSLocatorResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *OSLocatorResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_OSLocatorResponse.Merge(m, src)
-}
-func (m *OSLocatorResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *OSLocatorResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_OSLocatorResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_OSLocatorResponse proto.InternalMessageInfo
-
-func (m *OSLocatorResponse) GetLocator() *ObjectStoreLocator {
-	if m != nil {
-		return m.Locator
-	}
-	return nil
-}
-
-// OSLocatorParamsRequest is the request type for the Query/Params RPC method.
-type OSLocatorParamsRequest struct {
-}
-
-func (m *OSLocatorParamsRequest) Reset()         { *m = OSLocatorParamsRequest{} }
-func (m *OSLocatorParamsRequest) String() string { return proto.CompactTextString(m) }
-func (*OSLocatorParamsRequest) ProtoMessage()    {}
-func (*OSLocatorParamsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{33}
-}
-func (m *OSLocatorParamsRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *OSLocatorParamsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_OSLocatorParamsRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *OSLocatorParamsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_OSLocatorParamsRequest.Merge(m, src)
-}
-func (m *OSLocatorParamsRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *OSLocatorParamsRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_OSLocatorParamsRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_OSLocatorParamsRequest proto.InternalMessageInfo
-
-// OSLocatorParamsResponse is the response type for the Query/Params RPC method.
-type OSLocatorParamsResponse struct {
-	// params defines the parameters of the module.
-	Params OSLocatorParams `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
-}
-
-func (m *OSLocatorParamsResponse) Reset()         { *m = OSLocatorParamsResponse{} }
-func (m *OSLocatorParamsResponse) String() string { return proto.CompactTextString(m) }
-func (*OSLocatorParamsResponse) ProtoMessage()    {}
-func (*OSLocatorParamsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{34}
-}
-func (m *OSLocatorParamsResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *OSLocatorParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_OSLocatorParamsResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *OSLocatorParamsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_OSLocatorParamsResponse.Merge(m, src)
-}
-func (m *OSLocatorParamsResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *OSLocatorParamsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_OSLocatorParamsResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_OSLocatorParamsResponse proto.InternalMessageInfo
-
-func (m *OSLocatorParamsResponse) GetParams() OSLocatorParams {
-	if m != nil {
-		return m.Params
-	}
-	return OSLocatorParams{}
-}
-
 // OSLocatorByURIResponse is an array of ObjectStoreLocator with pagination info
 type OSLocatorByURIResponse struct {
 	Locator []ObjectStoreLocator `protobuf:"bytes,1,rep,name=locator,proto3" json:"locator"`
@@ -1856,7 +1766,7 @@ func (m *OSLocatorByURIResponse) Reset()         { *m = OSLocatorByURIResponse{}
 func (m *OSLocatorByURIResponse) String() string { return proto.CompactTextString(m) }
 func (*OSLocatorByURIResponse) ProtoMessage()    {}
 func (*OSLocatorByURIResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{35}
+	return fileDescriptor_a68790bc0b96eeb9, []int{33}
 }
 func (m *OSLocatorByURIResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1899,6 +1809,51 @@ func (m *OSLocatorByURIResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
+// OSLocatorByScopeUUIDRequest is used for requesting all the OSLocator associated with a scope_id
+type OSLocatorByScopeUUIDRequest struct {
+	ScopeUuid string `protobuf:"bytes,1,opt,name=scope_uuid,json=scopeUuid,proto3" json:"scope_uuid,omitempty" yaml:"scope_uuid"`
+}
+
+func (m *OSLocatorByScopeUUIDRequest) Reset()         { *m = OSLocatorByScopeUUIDRequest{} }
+func (m *OSLocatorByScopeUUIDRequest) String() string { return proto.CompactTextString(m) }
+func (*OSLocatorByScopeUUIDRequest) ProtoMessage()    {}
+func (*OSLocatorByScopeUUIDRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a68790bc0b96eeb9, []int{34}
+}
+func (m *OSLocatorByScopeUUIDRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *OSLocatorByScopeUUIDRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_OSLocatorByScopeUUIDRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *OSLocatorByScopeUUIDRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_OSLocatorByScopeUUIDRequest.Merge(m, src)
+}
+func (m *OSLocatorByScopeUUIDRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *OSLocatorByScopeUUIDRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_OSLocatorByScopeUUIDRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_OSLocatorByScopeUUIDRequest proto.InternalMessageInfo
+
+func (m *OSLocatorByScopeUUIDRequest) GetScopeUuid() string {
+	if m != nil {
+		return m.ScopeUuid
+	}
+	return ""
+}
+
 // OSLocatorByScopeUUIDResponse is an array of ObjectStoreLocator.
 type OSLocatorByScopeUUIDResponse struct {
 	Locator []ObjectStoreLocator `protobuf:"bytes,1,rep,name=locator,proto3" json:"locator"`
@@ -1908,7 +1863,7 @@ func (m *OSLocatorByScopeUUIDResponse) Reset()         { *m = OSLocatorByScopeUU
 func (m *OSLocatorByScopeUUIDResponse) String() string { return proto.CompactTextString(m) }
 func (*OSLocatorByScopeUUIDResponse) ProtoMessage()    {}
 func (*OSLocatorByScopeUUIDResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a68790bc0b96eeb9, []int{36}
+	return fileDescriptor_a68790bc0b96eeb9, []int{35}
 }
 func (m *OSLocatorByScopeUUIDResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1940,6 +1895,52 @@ var xxx_messageInfo_OSLocatorByScopeUUIDResponse proto.InternalMessageInfo
 func (m *OSLocatorByScopeUUIDResponse) GetLocator() []ObjectStoreLocator {
 	if m != nil {
 		return m.Locator
+	}
+	return nil
+}
+
+// OSAllLocatorsRequest get all os locator's request.
+type OSAllLocatorsRequest struct {
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *OSAllLocatorsRequest) Reset()         { *m = OSAllLocatorsRequest{} }
+func (m *OSAllLocatorsRequest) String() string { return proto.CompactTextString(m) }
+func (*OSAllLocatorsRequest) ProtoMessage()    {}
+func (*OSAllLocatorsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a68790bc0b96eeb9, []int{36}
+}
+func (m *OSAllLocatorsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *OSAllLocatorsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_OSAllLocatorsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *OSAllLocatorsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_OSAllLocatorsRequest.Merge(m, src)
+}
+func (m *OSAllLocatorsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *OSAllLocatorsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_OSAllLocatorsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_OSAllLocatorsRequest proto.InternalMessageInfo
+
+func (m *OSAllLocatorsRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
 	}
 	return nil
 }
@@ -2000,10 +2001,8 @@ func (m *OSAllLocatorsResponse) GetPagination() *query.PageResponse {
 
 func init() {
 	proto.RegisterType((*QueryParamsRequest)(nil), "provenance.metadata.v1.QueryParamsRequest")
-	proto.RegisterType((*OSAllLocatorsRequest)(nil), "provenance.metadata.v1.OSAllLocatorsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "provenance.metadata.v1.QueryParamsResponse")
 	proto.RegisterType((*ScopeRequest)(nil), "provenance.metadata.v1.ScopeRequest")
-	proto.RegisterType((*OSLocatorByScopeUUIDRequest)(nil), "provenance.metadata.v1.OSLocatorByScopeUUIDRequest")
 	proto.RegisterType((*ScopeResponse)(nil), "provenance.metadata.v1.ScopeResponse")
 	proto.RegisterType((*OwnershipRequest)(nil), "provenance.metadata.v1.OwnershipRequest")
 	proto.RegisterType((*OwnershipResponse)(nil), "provenance.metadata.v1.OwnershipResponse")
@@ -2029,13 +2028,15 @@ func init() {
 	proto.RegisterType((*RecordSpecificationResponse)(nil), "provenance.metadata.v1.RecordSpecificationResponse")
 	proto.RegisterType((*RecordSpecificationByIDRequest)(nil), "provenance.metadata.v1.RecordSpecificationByIDRequest")
 	proto.RegisterType((*RecordSpecificationByIDResponse)(nil), "provenance.metadata.v1.RecordSpecificationByIDResponse")
-	proto.RegisterType((*OSLocatorRequest)(nil), "provenance.metadata.v1.OSLocatorRequest")
-	proto.RegisterType((*OSLocatorByURIRequest)(nil), "provenance.metadata.v1.OSLocatorByURIRequest")
-	proto.RegisterType((*OSLocatorResponse)(nil), "provenance.metadata.v1.OSLocatorResponse")
 	proto.RegisterType((*OSLocatorParamsRequest)(nil), "provenance.metadata.v1.OSLocatorParamsRequest")
 	proto.RegisterType((*OSLocatorParamsResponse)(nil), "provenance.metadata.v1.OSLocatorParamsResponse")
+	proto.RegisterType((*OSLocatorRequest)(nil), "provenance.metadata.v1.OSLocatorRequest")
+	proto.RegisterType((*OSLocatorResponse)(nil), "provenance.metadata.v1.OSLocatorResponse")
+	proto.RegisterType((*OSLocatorByURIRequest)(nil), "provenance.metadata.v1.OSLocatorByURIRequest")
 	proto.RegisterType((*OSLocatorByURIResponse)(nil), "provenance.metadata.v1.OSLocatorByURIResponse")
+	proto.RegisterType((*OSLocatorByScopeUUIDRequest)(nil), "provenance.metadata.v1.OSLocatorByScopeUUIDRequest")
 	proto.RegisterType((*OSLocatorByScopeUUIDResponse)(nil), "provenance.metadata.v1.OSLocatorByScopeUUIDResponse")
+	proto.RegisterType((*OSAllLocatorsRequest)(nil), "provenance.metadata.v1.OSAllLocatorsRequest")
 	proto.RegisterType((*OSAllLocatorsResponse)(nil), "provenance.metadata.v1.OSAllLocatorsResponse")
 }
 
@@ -2044,125 +2045,126 @@ func init() {
 }
 
 var fileDescriptor_a68790bc0b96eeb9 = []byte{
-	// 1886 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x5a, 0xdd, 0x6f, 0xdb, 0xd4,
-	0x1b, 0xee, 0x49, 0xd6, 0x75, 0x7d, 0xbb, 0x8f, 0xf6, 0x34, 0xfd, 0x4a, 0xdb, 0xa4, 0x3f, 0x6b,
-	0xeb, 0xba, 0xb5, 0x8d, 0xd7, 0xb4, 0xbf, 0x6d, 0x74, 0x63, 0x6c, 0xa1, 0xeb, 0xd6, 0x31, 0xad,
-	0xc5, 0x55, 0x27, 0x31, 0x89, 0x0f, 0x37, 0xf1, 0xba, 0x8c, 0x34, 0xce, 0x6c, 0xa7, 0xac, 0x0a,
-	0x15, 0x62, 0x37, 0xc0, 0x15, 0x4c, 0x68, 0x12, 0x9a, 0x04, 0x12, 0x70, 0x85, 0x04, 0x7f, 0x00,
-	0x5f, 0x42, 0x08, 0x21, 0x76, 0xc7, 0xd0, 0x6e, 0xb8, 0x8a, 0xd0, 0x86, 0x04, 0xb7, 0xe4, 0x92,
-	0x0b, 0x84, 0x7c, 0x7c, 0x9c, 0xd8, 0xc9, 0x39, 0x49, 0xdc, 0x85, 0xad, 0xbb, 0xb3, 0xe3, 0xf7,
-	0xe3, 0x79, 0x9e, 0x73, 0x8e, 0xfd, 0xbe, 0x6f, 0x0b, 0x42, 0x46, 0x53, 0xd7, 0x94, 0xb4, 0x9c,
-	0x8e, 0x2b, 0xe2, 0xaa, 0x62, 0xc8, 0x09, 0xd9, 0x90, 0xc5, 0xb5, 0x09, 0xf1, 0x5a, 0x56, 0xd1,
-	0xd6, 0x23, 0x19, 0x4d, 0x35, 0x54, 0xdc, 0x5d, 0xb2, 0x89, 0xd8, 0x36, 0x91, 0xb5, 0x89, 0x60,
-	0x60, 0x45, 0x5d, 0x51, 0x89, 0x89, 0x68, 0x5e, 0x59, 0xd6, 0xc1, 0x83, 0x71, 0x55, 0x5f, 0x55,
-	0x75, 0x71, 0x59, 0xd6, 0x15, 0x2b, 0x8c, 0xb8, 0x36, 0xb1, 0xac, 0x18, 0xf2, 0x84, 0x98, 0x91,
-	0x57, 0x92, 0x69, 0xd9, 0x48, 0xaa, 0x69, 0x6a, 0x3b, 0xb0, 0xa2, 0xaa, 0x2b, 0x29, 0x45, 0x94,
-	0x33, 0x49, 0x51, 0x4e, 0xa7, 0x55, 0x83, 0x3c, 0xd4, 0xe9, 0xd3, 0x7d, 0x1c, 0x6c, 0x45, 0x0c,
-	0x96, 0x19, 0x8f, 0x82, 0x1e, 0x57, 0x33, 0x8a, 0x0d, 0x8a, 0x67, 0x93, 0x51, 0xe2, 0xc9, 0xcb,
-	0xc9, 0xb8, 0x13, 0xd4, 0x08, 0xc7, 0x56, 0x5d, 0xbe, 0xaa, 0xc4, 0x0d, 0xdd, 0x50, 0x35, 0x1a,
-	0x55, 0x08, 0x00, 0x7e, 0xde, 0x24, 0xb8, 0x20, 0x6b, 0xf2, 0xaa, 0x2e, 0x29, 0xd7, 0xb2, 0x8a,
-	0x6e, 0x08, 0x2f, 0x41, 0x60, 0x7e, 0xf1, 0x54, 0x2a, 0x75, 0x5e, 0x8d, 0xcb, 0x86, 0xaa, 0xd9,
-	0xbf, 0xe3, 0x59, 0x80, 0x92, 0x00, 0xbd, 0x68, 0x08, 0x8d, 0xb4, 0x45, 0x87, 0x23, 0x96, 0x5a,
-	0x11, 0x53, 0xad, 0x88, 0x25, 0x3a, 0x55, 0x2b, 0xb2, 0x20, 0xaf, 0x28, 0xd4, 0x57, 0x72, 0x78,
-	0x0a, 0x8b, 0xd0, 0xe9, 0xca, 0xaa, 0x67, 0xd4, 0xb4, 0xae, 0xe0, 0xe3, 0xb0, 0x3d, 0x43, 0x7e,
-	0xa1, 0xa1, 0x43, 0x11, 0xf6, 0xb2, 0x45, 0x2c, 0xbf, 0xd8, 0xb6, 0x3b, 0xf9, 0x70, 0x93, 0x44,
-	0x7d, 0x84, 0x19, 0xd8, 0xb9, 0x68, 0xea, 0x65, 0x83, 0x9d, 0x02, 0x20, 0xfa, 0xbd, 0x9c, 0xcd,
-	0x26, 0x13, 0x24, 0x62, 0x6b, 0xac, 0xab, 0x90, 0x0f, 0x77, 0xac, 0xcb, 0xab, 0xa9, 0x69, 0xa1,
-	0xf4, 0x4c, 0x90, 0x5a, 0xc9, 0xcd, 0x92, 0x79, 0xbd, 0x08, 0xfd, 0xf3, 0x8b, 0x94, 0x77, 0x6c,
-	0x9d, 0x04, 0x5c, 0x5a, 0x9a, 0x9b, 0x79, 0xb8, 0xa0, 0x7f, 0x21, 0xd8, 0x45, 0xb1, 0x51, 0xaa,
-	0x93, 0xd0, 0x4c, 0x1e, 0x53, 0xa6, 0x83, 0x3c, 0xa6, 0x96, 0x97, 0x65, 0x8b, 0x8f, 0xc1, 0x0e,
-	0x5d, 0xd1, 0x75, 0x73, 0x7f, 0xf5, 0xfa, 0x86, 0xfc, 0x23, 0x6d, 0xd1, 0x30, 0xd7, 0xcf, 0xb2,
-	0x93, 0x8a, 0x0e, 0xf8, 0x28, 0xb4, 0x68, 0x4a, 0x5c, 0xd5, 0x12, 0x7a, 0xaf, 0x9f, 0xf8, 0x72,
-	0xd5, 0x95, 0x88, 0x99, 0x64, 0x9b, 0x97, 0x71, 0xde, 0x56, 0x27, 0x67, 0x03, 0xda, 0xe7, 0x5f,
-	0x4b, 0x2b, 0x9a, 0x7e, 0x25, 0x99, 0xb1, 0xd5, 0xeb, 0x85, 0x16, 0x39, 0x91, 0xd0, 0x14, 0xdd,
-	0x5a, 0xe1, 0x56, 0xc9, 0xbe, 0x2d, 0xdb, 0x59, 0xbe, 0x4d, 0xef, 0xac, 0x5b, 0x08, 0x3a, 0x1c,
-	0x69, 0xa9, 0xda, 0x47, 0xa0, 0xad, 0x84, 0xd2, 0xcc, 0xed, 0x1f, 0x69, 0x8d, 0x75, 0x17, 0xf2,
-	0x61, 0x5c, 0x4e, 0x41, 0x17, 0x24, 0x28, 0x72, 0xd0, 0xf1, 0x19, 0x06, 0xac, 0xfd, 0x35, 0x61,
-	0x59, 0x59, 0x5d, 0xb8, 0xd6, 0xa1, 0xeb, 0xa2, 0x9c, 0xca, 0x2a, 0x8f, 0x41, 0x92, 0xdb, 0x08,
-	0xba, 0xcb, 0x73, 0x6f, 0x19, 0x5d, 0xde, 0x45, 0xd0, 0x4f, 0xf7, 0xea, 0xb3, 0x6a, 0xda, 0x50,
-	0xae, 0x1b, 0xb1, 0xf5, 0x87, 0x3e, 0x6f, 0x78, 0x1a, 0x76, 0xd2, 0x7d, 0x6f, 0xf9, 0xf9, 0x88,
-	0x5f, 0x4f, 0x21, 0x1f, 0xee, 0xa4, 0x7e, 0x8e, 0xa7, 0x82, 0xd4, 0x46, 0x6f, 0xc9, 0xbe, 0xfd,
-	0x1e, 0xc1, 0x00, 0x1b, 0x11, 0x15, 0x2d, 0x02, 0x3b, 0xac, 0xb4, 0x45, 0x40, 0x9d, 0x85, 0x7c,
-	0x78, 0x8f, 0x13, 0x90, 0x19, 0xb4, 0x85, 0x5c, 0xce, 0x25, 0x08, 0x05, 0x9a, 0xae, 0x08, 0xc5,
-	0x49, 0xa1, 0xf8, 0xcc, 0xa4, 0x60, 0xdd, 0xcc, 0x25, 0x5c, 0x67, 0xdd, 0xef, 0xf1, 0xac, 0x0b,
-	0x6f, 0x22, 0xe8, 0x2b, 0xe7, 0x50, 0xd2, 0xf4, 0x91, 0x10, 0x10, 0xbe, 0x43, 0x10, 0x64, 0x61,
-	0x78, 0x72, 0x54, 0x54, 0xa0, 0xcf, 0x7a, 0x15, 0xea, 0x8d, 0xfa, 0x10, 0x60, 0x0c, 0xdb, 0xd2,
-	0xf2, 0xaa, 0x62, 0xe1, 0x97, 0xc8, 0xb5, 0xf0, 0x0d, 0x82, 0x20, 0x2b, 0x0f, 0x15, 0x6a, 0x73,
-	0x89, 0x9c, 0xf2, 0xfa, 0xea, 0x90, 0x77, 0xd3, 0x5f, 0x07, 0xe1, 0x45, 0xe8, 0x71, 0xa3, 0xdf,
-	0xfc, 0x46, 0x63, 0xa9, 0xf3, 0x15, 0x82, 0xde, 0xca, 0xf8, 0x4f, 0x88, 0x36, 0x49, 0xe8, 0x23,
-	0x90, 0x17, 0x9d, 0x35, 0x9a, 0xad, 0xce, 0x79, 0xc0, 0xae, 0xda, 0xcd, 0x49, 0x62, 0xb0, 0x90,
-	0x0f, 0xf7, 0x51, 0x40, 0x15, 0x36, 0x82, 0xd4, 0xe1, 0xfa, 0x91, 0xbc, 0xb6, 0xfe, 0x30, 0x8f,
-	0x1b, 0x23, 0x17, 0x55, 0x2a, 0x07, 0x9d, 0x16, 0x33, 0x97, 0x27, 0xad, 0x3e, 0x0e, 0x56, 0xad,
-	0x3e, 0x5c, 0x01, 0x63, 0xa1, 0x42, 0x3e, 0x1c, 0x74, 0x4a, 0xe5, 0x0a, 0x28, 0x48, 0x58, 0xaf,
-	0xf0, 0xe1, 0x30, 0xf5, 0x6d, 0x92, 0x69, 0x0a, 0x06, 0xcc, 0x17, 0x8a, 0x26, 0xc7, 0x8d, 0x47,
-	0xa0, 0xeb, 0x4d, 0x1f, 0x0c, 0x72, 0xd2, 0x51, 0x69, 0xdf, 0x42, 0xd0, 0x1d, 0xa7, 0x16, 0x4c,
-	0x79, 0xc7, 0x79, 0xf2, 0x32, 0xe3, 0xc6, 0xfe, 0x57, 0xc8, 0x87, 0x07, 0x2d, 0x8c, 0xec, 0xb0,
-	0x82, 0xd4, 0x15, 0x67, 0x79, 0xe2, 0xcb, 0xd0, 0xcf, 0xf6, 0x70, 0x0a, 0x3e, 0x5c, 0xc8, 0x87,
-	0x85, 0x6a, 0xe1, 0xa9, 0x16, 0x7d, 0xcc, 0x1c, 0xb4, 0xb4, 0xdb, 0xcb, 0x84, 0x7e, 0xfa, 0xba,
-	0xa1, 0xa4, 0x13, 0x4a, 0xe2, 0xbf, 0x59, 0x89, 0x8f, 0xfc, 0xb0, 0xaf, 0x46, 0xda, 0x2d, 0xb7,
-	0x22, 0x37, 0x10, 0x74, 0x59, 0x2f, 0x03, 0xb7, 0x83, 0x5d, 0xbf, 0x8f, 0x56, 0x7f, 0x93, 0xb8,
-	0x61, 0x0c, 0x15, 0xf2, 0xe1, 0x01, 0x0b, 0x06, 0x33, 0xa6, 0x20, 0x05, 0xb4, 0x4a, 0x37, 0xbd,
-	0xd6, 0xb6, 0xf0, 0x37, 0x6a, 0x5b, 0x7c, 0x88, 0x60, 0x92, 0x81, 0x5b, 0x9f, 0x55, 0xb5, 0xaa,
-	0x07, 0xb6, 0x06, 0x3e, 0xd4, 0x28, 0x7c, 0x9f, 0xfa, 0x60, 0xca, 0x1b, 0x3e, 0xba, 0x9f, 0xf8,
-	0xab, 0x88, 0xb6, 0xcc, 0x2a, 0x36, 0xec, 0x70, 0x7f, 0x50, 0x2c, 0x47, 0x1e, 0xe7, 0x62, 0x31,
-	0x6b, 0x81, 0xdb, 0x3e, 0xe8, 0x67, 0x42, 0xa3, 0xeb, 0xf4, 0x06, 0x04, 0x58, 0x92, 0xd2, 0x43,
-	0xef, 0x69, 0x95, 0xc2, 0x85, 0x7c, 0xb8, 0x9f, 0xbf, 0x4a, 0x82, 0xd4, 0xc9, 0x58, 0xa4, 0x47,
-	0xb5, 0x46, 0x45, 0x71, 0xfc, 0x0e, 0x71, 0x5e, 0x87, 0x10, 0x8b, 0x88, 0xa3, 0xee, 0xbf, 0x04,
-	0x3d, 0x2c, 0x2e, 0xa5, 0xea, 0x4c, 0x28, 0xe4, 0xc3, 0x21, 0x3e, 0x69, 0x52, 0x15, 0x75, 0x31,
-	0x78, 0xcf, 0x25, 0x84, 0x7f, 0x10, 0x84, 0xb9, 0xe9, 0xb7, 0xca, 0xf2, 0x54, 0x11, 0xc0, 0xf7,
-	0xb0, 0x02, 0x8c, 0x40, 0x7b, 0x71, 0x6e, 0x64, 0x0b, 0x1e, 0x80, 0x66, 0xd5, 0xec, 0xb9, 0x69,
-	0x67, 0x6f, 0xdd, 0x08, 0xd7, 0xa0, 0xcb, 0x31, 0x61, 0x5a, 0x92, 0xe6, 0x6c, 0xf3, 0x76, 0xf0,
-	0x67, 0xb5, 0x24, 0x35, 0x36, 0x2f, 0x1b, 0x36, 0x02, 0x78, 0x01, 0x3a, 0x1c, 0xe0, 0xe8, 0x72,
-	0xcc, 0x40, 0x4b, 0xca, 0xfa, 0xa9, 0x56, 0x19, 0x38, 0x4f, 0xc6, 0x86, 0x8b, 0x86, 0xaa, 0x29,
-	0x76, 0x10, 0xdb, 0x55, 0xe8, 0x85, 0xee, 0x62, 0x68, 0xf7, 0x10, 0xf1, 0x15, 0xe8, 0xa9, 0x78,
-	0x42, 0x53, 0x9f, 0x2e, 0x1b, 0xf4, 0xed, 0xe7, 0x66, 0x76, 0x07, 0x28, 0x9b, 0xf8, 0x7d, 0x81,
-	0x1c, 0xc9, 0xa9, 0x94, 0x34, 0xc3, 0x39, 0x27, 0x39, 0xbf, 0x37, 0x72, 0x34, 0x8b, 0x1d, 0xa0,
-	0x71, 0xc3, 0x8e, 0xab, 0x30, 0xc0, 0x9e, 0x2d, 0x36, 0x1e, 0xb4, 0xf0, 0x39, 0x32, 0xb7, 0x99,
-	0x6b, 0x86, 0xbb, 0x85, 0xa5, 0x89, 0xfe, 0xdd, 0x0f, 0xcd, 0x64, 0x24, 0x8c, 0xdf, 0x41, 0xb0,
-	0xdd, 0x5a, 0x6d, 0xcc, 0x05, 0x56, 0x39, 0xb2, 0x0e, 0x8e, 0xd6, 0x65, 0x6b, 0x65, 0x16, 0x86,
-	0x6f, 0xdc, 0xfb, 0xfd, 0x7d, 0xdf, 0x10, 0x0e, 0x89, 0x9c, 0x41, 0xb9, 0xb5, 0xc1, 0xf0, 0xdb,
-	0x08, 0x9a, 0xc9, 0x32, 0xe1, 0xbd, 0xd5, 0x07, 0xb4, 0x14, 0xc4, 0xbe, 0x1a, 0x56, 0x34, 0x7d,
-	0x94, 0xa4, 0x1f, 0xc3, 0x07, 0xc5, 0x6a, 0x73, 0x7f, 0x31, 0x57, 0xea, 0x5f, 0x37, 0xf0, 0x2f,
-	0x08, 0x02, 0xac, 0xb1, 0x14, 0x9e, 0xac, 0x31, 0xd0, 0x60, 0x8d, 0xd5, 0x82, 0x53, 0xde, 0x9c,
-	0x28, 0xee, 0x0b, 0x04, 0xf7, 0x59, 0x3c, 0x5b, 0x1d, 0xb7, 0x09, 0xd8, 0x05, 0x5e, 0xa4, 0x23,
-	0x15, 0x31, 0xe7, 0x9c, 0xbb, 0x6d, 0xe0, 0x1f, 0x11, 0xe0, 0xca, 0x11, 0x11, 0x9e, 0xa8, 0x17,
-	0x5c, 0x89, 0x4f, 0xd4, 0x8b, 0x0b, 0x65, 0x73, 0x96, 0xb0, 0x89, 0xe1, 0x93, 0xd5, 0xd9, 0x94,
-	0xb8, 0x30, 0x99, 0x98, 0x3c, 0x7e, 0x40, 0x80, 0x2b, 0x27, 0x38, 0x7c, 0x1e, 0xdc, 0xa9, 0x12,
-	0x9f, 0x07, 0x7f, 0x40, 0x24, 0xcc, 0x12, 0x1e, 0x27, 0xf1, 0x09, 0xaf, 0xab, 0x42, 0xa7, 0x14,
-	0x62, 0xce, 0xac, 0x1f, 0x36, 0xf0, 0x97, 0x08, 0xda, 0xcb, 0x27, 0x2d, 0x58, 0xac, 0x0f, 0x50,
-	0x89, 0xc1, 0xa1, 0xfa, 0x1d, 0x28, 0xfe, 0x18, 0xc1, 0x7f, 0x1c, 0x4f, 0x7b, 0x59, 0x87, 0x32,
-	0xec, 0xb7, 0x10, 0xb4, 0x16, 0xc7, 0xdb, 0x78, 0x84, 0xfb, 0x42, 0x2b, 0x9b, 0xbe, 0x07, 0x0f,
-	0xd4, 0x61, 0x49, 0x61, 0x4e, 0x12, 0x98, 0xe3, 0x78, 0x94, 0x07, 0x53, 0xb5, 0x5d, 0xc4, 0x1c,
-	0x1d, 0xe1, 0x6f, 0xe0, 0xcf, 0x10, 0xec, 0x76, 0xcf, 0xde, 0x31, 0xb7, 0xf7, 0x64, 0xfe, 0x7d,
-	0x20, 0x18, 0xa9, 0xd7, 0x9c, 0xc2, 0x3c, 0x4a, 0x60, 0x46, 0xf1, 0x21, 0x1e, 0xcc, 0x35, 0xd3,
-	0x8f, 0x85, 0xf5, 0x6b, 0xf3, 0x34, 0x56, 0x0e, 0x6f, 0x26, 0xea, 0x1f, 0x0e, 0xd5, 0x3e, 0x8d,
-	0xdc, 0x01, 0x95, 0x70, 0x82, 0xe0, 0x3e, 0x8a, 0x0f, 0x57, 0xdd, 0x05, 0x66, 0x39, 0x26, 0xe6,
-	0x2a, 0xab, 0xe5, 0x0d, 0xfc, 0x13, 0x82, 0x2e, 0x66, 0x17, 0x87, 0xa7, 0x3c, 0x35, 0xfb, 0x36,
-	0x87, 0xff, 0x7b, 0xf4, 0xa2, 0x34, 0x4e, 0x11, 0x1a, 0xc7, 0xf0, 0x53, 0x3c, 0x1a, 0x76, 0x51,
-	0xcf, 0x67, 0xf2, 0x27, 0xe2, 0x4c, 0x9c, 0xec, 0x39, 0x07, 0x3e, 0xee, 0x09, 0x5b, 0xd9, 0x54,
-	0x26, 0xf8, 0xf4, 0x26, 0xbd, 0x29, 0xc3, 0x73, 0x84, 0xe1, 0x0c, 0x8e, 0x6d, 0x9a, 0xa1, 0xa8,
-	0xd8, 0x44, 0x3e, 0xf6, 0xc1, 0x98, 0x97, 0x8e, 0x1c, 0x3f, 0xe7, 0xa1, 0x49, 0xa8, 0x35, 0x77,
-	0x08, 0x9e, 0x6f, 0x4c, 0x30, 0xaa, 0xcb, 0x45, 0xa2, 0xcb, 0x02, 0xbe, 0x50, 0x9f, 0x2e, 0x55,
-	0x5a, 0xbf, 0xe2, 0xdb, 0x2d, 0xa3, 0xc4, 0x75, 0xfc, 0x33, 0x82, 0x4e, 0x06, 0x20, 0x1c, 0xf5,
-	0x80, 0xde, 0x66, 0x3c, 0xe9, 0xc9, 0x87, 0x12, 0x9b, 0x27, 0xc4, 0xe6, 0xf0, 0x19, 0x1e, 0xb1,
-	0x12, 0xda, 0x1a, 0xb4, 0xe8, 0xcb, 0xfa, 0x1e, 0xb2, 0xff, 0x64, 0x50, 0xd1, 0x2b, 0xe2, 0xc3,
-	0x5e, 0xba, 0x40, 0x47, 0x01, 0x70, 0xc4, 0xb3, 0x1f, 0x65, 0x77, 0x86, 0xb0, 0x3b, 0x85, 0x9f,
-	0xa9, 0x83, 0x9d, 0xf9, 0x09, 0xe2, 0xf4, 0x85, 0x1b, 0xf8, 0x13, 0x04, 0x7b, 0xca, 0xda, 0x15,
-	0x1c, 0xa9, 0xb3, 0xaf, 0xb1, 0x59, 0x88, 0x75, 0xdb, 0x53, 0xf4, 0x11, 0x82, 0x7e, 0x04, 0x0f,
-	0xf3, 0xd0, 0xd3, 0x42, 0xdd, 0x2e, 0x68, 0x6f, 0x9a, 0xdf, 0x49, 0x3b, 0x56, 0x95, 0xef, 0x64,
-	0x59, 0x27, 0x5b, 0xe5, 0x3b, 0x59, 0xde, 0x56, 0x0a, 0x22, 0x81, 0x74, 0x00, 0xef, 0xaf, 0x05,
-	0x29, 0x47, 0x3e, 0x42, 0x44, 0xb8, 0xdd, 0xee, 0x2e, 0x8e, 0xff, 0x8d, 0x64, 0x36, 0xce, 0xc1,
-	0x48, 0xbd, 0xe6, 0x14, 0xe2, 0x04, 0x81, 0x38, 0x8a, 0x0f, 0xd4, 0x82, 0x98, 0xd5, 0x92, 0x62,
-	0x2e, 0xab, 0x25, 0x37, 0xf0, 0xb7, 0x08, 0x02, 0xac, 0xde, 0x8d, 0x5f, 0x7e, 0x57, 0xf9, 0x2f,
-	0x12, 0x7e, 0xf9, 0x5d, 0xad, 0x3d, 0x14, 0xa6, 0x09, 0xec, 0x29, 0x1c, 0xad, 0x05, 0x9b, 0xd1,
-	0x3e, 0xdc, 0x46, 0xb0, 0xcb, 0xd5, 0x0e, 0xe2, 0x31, 0x3e, 0x86, 0xca, 0xff, 0xfc, 0x09, 0x8e,
-	0xd7, 0x69, 0x4d, 0xa1, 0x8e, 0x11, 0xa8, 0xc3, 0x78, 0x6f, 0x0d, 0xa8, 0xba, 0x28, 0xa7, 0x52,
-	0xb1, 0x57, 0xef, 0xdc, 0x0f, 0xa1, 0xbb, 0xf7, 0x43, 0xe8, 0xb7, 0xfb, 0x21, 0xf4, 0xde, 0x83,
-	0x50, 0xd3, 0xdd, 0x07, 0xa1, 0xa6, 0x5f, 0x1f, 0x84, 0x9a, 0xa0, 0x2f, 0xa9, 0x72, 0x12, 0x2f,
-	0xa0, 0x4b, 0x53, 0x2b, 0x49, 0xe3, 0x4a, 0x76, 0x39, 0x12, 0x57, 0x57, 0x1d, 0x69, 0xc6, 0x93,
-	0xaa, 0x33, 0xe9, 0xf5, 0x52, 0x5a, 0x63, 0x3d, 0xa3, 0xe8, 0xcb, 0xdb, 0xc9, 0x3f, 0x3e, 0x4d,
-	0xfe, 0x1b, 0x00, 0x00, 0xff, 0xff, 0x3d, 0xb5, 0x27, 0xe1, 0x37, 0x26, 0x00, 0x00,
+	// 1895 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x5a, 0xcd, 0x6f, 0x13, 0xd7,
+	0x16, 0xcf, 0xb5, 0x09, 0x21, 0x27, 0x7c, 0x24, 0x37, 0xdf, 0x4e, 0x62, 0xe7, 0x8d, 0x20, 0x04,
+	0x92, 0x78, 0x88, 0x93, 0x07, 0xbc, 0xc0, 0xe3, 0x81, 0x5f, 0x08, 0x84, 0x87, 0x48, 0xde, 0x44,
+	0x41, 0x7a, 0x48, 0xaf, 0xed, 0xc4, 0x1e, 0x82, 0xa9, 0xe3, 0x31, 0x33, 0xe3, 0x94, 0xc8, 0x8d,
+	0xaa, 0xb2, 0x69, 0xbb, 0x6a, 0x51, 0x85, 0x54, 0x21, 0xb5, 0x52, 0xdb, 0x55, 0xa5, 0xf6, 0x0f,
+	0xe8, 0x97, 0xaa, 0xaa, 0xaa, 0xca, 0xae, 0x54, 0x6c, 0xba, 0xb2, 0x2a, 0xa8, 0xd4, 0x6e, 0xeb,
+	0x65, 0x17, 0x55, 0x35, 0x77, 0xee, 0xd8, 0x33, 0xf6, 0xbd, 0xf6, 0x4c, 0x70, 0x21, 0xec, 0x66,
+	0x3c, 0xe7, 0xdc, 0xf3, 0xfb, 0xfd, 0xee, 0xc7, 0x9c, 0x73, 0xc6, 0x20, 0x64, 0x35, 0x75, 0x5d,
+	0xc9, 0xc8, 0x99, 0x84, 0x22, 0xae, 0x29, 0x86, 0x9c, 0x94, 0x0d, 0x59, 0x5c, 0x9f, 0x14, 0x6f,
+	0xe4, 0x14, 0x6d, 0x23, 0x9a, 0xd5, 0x54, 0x43, 0xc5, 0x3d, 0x65, 0x9b, 0xa8, 0x6d, 0x13, 0x5d,
+	0x9f, 0x0c, 0x75, 0xad, 0xaa, 0xab, 0x2a, 0x31, 0x11, 0xcd, 0x2b, 0xcb, 0x3a, 0x74, 0x38, 0xa1,
+	0xea, 0x6b, 0xaa, 0x2e, 0xae, 0xc8, 0xba, 0x62, 0x0d, 0x23, 0xae, 0x4f, 0xae, 0x28, 0x86, 0x3c,
+	0x29, 0x66, 0xe5, 0xd5, 0x54, 0x46, 0x36, 0x52, 0x6a, 0x86, 0xda, 0x0e, 0xae, 0xaa, 0xea, 0x6a,
+	0x5a, 0x11, 0xe5, 0x6c, 0x4a, 0x94, 0x33, 0x19, 0xd5, 0x20, 0x0f, 0x75, 0xfa, 0xf4, 0x00, 0x07,
+	0x5b, 0x09, 0x83, 0x65, 0xc6, 0xa3, 0xa0, 0x27, 0xd4, 0xac, 0x62, 0x83, 0xe2, 0xd9, 0x64, 0x95,
+	0x44, 0xea, 0x6a, 0x2a, 0xe1, 0x04, 0x35, 0xca, 0xb1, 0x55, 0x57, 0xae, 0x2b, 0x09, 0x43, 0x37,
+	0x54, 0x8d, 0x8e, 0x2a, 0x74, 0x01, 0xfe, 0xaf, 0x49, 0x70, 0x51, 0xd6, 0xe4, 0x35, 0x5d, 0x52,
+	0x6e, 0xe4, 0x14, 0xdd, 0x10, 0x96, 0xa0, 0xd3, 0xf5, 0xab, 0x9e, 0x55, 0x33, 0xba, 0x82, 0x4f,
+	0xc2, 0xce, 0x2c, 0xf9, 0xa5, 0x0f, 0x0d, 0xa3, 0xd1, 0xb6, 0x58, 0x38, 0xca, 0x96, 0x35, 0x6a,
+	0xf9, 0xc5, 0x77, 0xdc, 0x2b, 0x44, 0x9a, 0x24, 0xea, 0x23, 0xcc, 0xc2, 0xee, 0x25, 0x93, 0x0f,
+	0x0d, 0x82, 0xa7, 0x01, 0x08, 0xbf, 0xe7, 0x73, 0xb9, 0x54, 0x92, 0x8c, 0xd8, 0x1a, 0xef, 0x2e,
+	0x16, 0x22, 0x1d, 0x1b, 0xf2, 0x5a, 0x7a, 0x46, 0x28, 0x3f, 0x13, 0xa4, 0x56, 0x72, 0xb3, 0x6c,
+	0x5e, 0xff, 0x86, 0x60, 0x0f, 0x1d, 0x86, 0xa2, 0x9a, 0x82, 0x66, 0xf2, 0x98, 0x82, 0x1a, 0xe2,
+	0x81, 0xb2, 0xbc, 0x2c, 0x5b, 0x7c, 0x02, 0x76, 0xe9, 0x8a, 0xae, 0x9b, 0x53, 0xd5, 0x17, 0x18,
+	0x0e, 0x8e, 0xb6, 0xc5, 0x22, 0x5c, 0x3f, 0xcb, 0x4e, 0x2a, 0x39, 0xe0, 0xe3, 0xd0, 0xa2, 0x29,
+	0x09, 0x55, 0x4b, 0xea, 0x7d, 0x41, 0xe2, 0xcb, 0x15, 0x42, 0x22, 0x66, 0x92, 0x6d, 0x5e, 0xc1,
+	0x79, 0x87, 0x47, 0xce, 0x06, 0xb4, 0x2f, 0xbc, 0x94, 0x51, 0x34, 0xfd, 0x5a, 0x2a, 0x6b, 0xab,
+	0xd7, 0x07, 0x2d, 0x72, 0x32, 0xa9, 0x29, 0xba, 0x35, 0x19, 0xad, 0x92, 0x7d, 0x8b, 0xe7, 0x00,
+	0xca, 0xab, 0xb4, 0x2f, 0x41, 0x44, 0x19, 0x89, 0x5a, 0x4b, 0x3a, 0x6a, 0x2e, 0xe9, 0xa8, 0xb5,
+	0x33, 0xe8, 0x92, 0x8e, 0x2e, 0xca, 0xab, 0xf6, 0x9c, 0x48, 0x0e, 0x4f, 0xe1, 0x0e, 0x82, 0x0e,
+	0x47, 0x58, 0xaa, 0xf6, 0x31, 0x68, 0x2b, 0xa3, 0x34, 0x63, 0x07, 0x47, 0x5b, 0xe3, 0x3d, 0xc5,
+	0x42, 0x04, 0x57, 0x52, 0xd0, 0x05, 0x09, 0x4a, 0x1c, 0x74, 0x7c, 0xce, 0x05, 0x2b, 0x40, 0x60,
+	0x1d, 0xac, 0x0b, 0xcb, 0x8a, 0xea, 0xc2, 0xb5, 0x01, 0xdd, 0x97, 0xe5, 0x74, 0x4e, 0x79, 0x0a,
+	0x92, 0xdc, 0x45, 0xd0, 0x53, 0x19, 0x7b, 0xdb, 0xe8, 0xf2, 0x26, 0x82, 0x01, 0xba, 0x56, 0xff,
+	0xad, 0x66, 0x0c, 0xe5, 0xa6, 0x11, 0xdf, 0x58, 0x5e, 0x9e, 0x9f, 0x7d, 0xac, 0xfd, 0x86, 0x67,
+	0x60, 0x37, 0x5d, 0xf7, 0x96, 0x5f, 0x80, 0xf8, 0xf5, 0x16, 0x0b, 0x91, 0x4e, 0xea, 0xe7, 0x78,
+	0x2a, 0x48, 0x6d, 0xf4, 0x96, 0xac, 0xdb, 0xaf, 0x11, 0x0c, 0xb2, 0x11, 0x51, 0xd1, 0xa2, 0xb0,
+	0xcb, 0x0a, 0x5b, 0x02, 0xd4, 0x59, 0x2c, 0x44, 0xf6, 0x39, 0x01, 0x99, 0x83, 0xb6, 0x90, 0xcb,
+	0xf9, 0x24, 0xa1, 0x40, 0xc3, 0x95, 0xa0, 0x38, 0x29, 0x94, 0x9e, 0x99, 0x14, 0xac, 0x9b, 0xf9,
+	0xa4, 0x6b, 0xaf, 0x07, 0x7d, 0xee, 0x75, 0xe1, 0x55, 0x04, 0xfd, 0x95, 0x1c, 0xca, 0x9a, 0x3e,
+	0x11, 0x02, 0xc2, 0x57, 0x08, 0x42, 0x2c, 0x0c, 0xcf, 0x8e, 0x8a, 0x0a, 0xf4, 0x5b, 0x47, 0xa1,
+	0x1e, 0xdf, 0x20, 0xe7, 0xf0, 0xe3, 0x2f, 0x4c, 0x0c, 0x3b, 0x32, 0xf2, 0x9a, 0x62, 0xe1, 0x97,
+	0xc8, 0xb5, 0xf0, 0x05, 0x82, 0x10, 0x2b, 0x0e, 0x15, 0x6a, 0x6b, 0x81, 0x9c, 0xf2, 0x06, 0x3c,
+	0xc8, 0xbb, 0xe5, 0xb7, 0x83, 0xf0, 0x7f, 0xe8, 0x75, 0xa3, 0xdf, 0xfa, 0x42, 0x63, 0xa9, 0xf3,
+	0x19, 0x82, 0xbe, 0xea, 0xf1, 0x9f, 0x11, 0x6d, 0x52, 0xd0, 0x4f, 0x20, 0x2f, 0x39, 0xd3, 0x1d,
+	0x5b, 0x9d, 0x8b, 0x80, 0x5d, 0x69, 0x90, 0x93, 0xc4, 0x50, 0xb1, 0x10, 0xe9, 0xa7, 0x80, 0xaa,
+	0x6c, 0x04, 0xa9, 0xc3, 0xf5, 0x23, 0x39, 0xb6, 0x7e, 0x31, 0xb7, 0x1b, 0x23, 0x16, 0x55, 0x2a,
+	0x0f, 0x9d, 0x16, 0x33, 0x97, 0x27, 0xcd, 0x3e, 0x0e, 0xd7, 0xcc, 0x3e, 0x5c, 0x03, 0xc6, 0xc3,
+	0xc5, 0x42, 0x24, 0xe4, 0x94, 0xca, 0x35, 0xa0, 0x20, 0x61, 0xbd, 0xca, 0x87, 0xc3, 0x34, 0xb0,
+	0x45, 0xa6, 0x69, 0x18, 0x34, 0x0f, 0x14, 0x4d, 0x4e, 0x18, 0x4f, 0x40, 0xd7, 0xdb, 0x01, 0x18,
+	0xe2, 0x84, 0xa3, 0xd2, 0xbe, 0x86, 0xa0, 0x27, 0x41, 0x2d, 0x98, 0xf2, 0x4e, 0xf0, 0xe4, 0x65,
+	0x8e, 0x1b, 0xff, 0x5b, 0xb1, 0x10, 0x19, 0xb2, 0x30, 0xb2, 0x87, 0x15, 0xa4, 0xee, 0x04, 0xcb,
+	0x13, 0x5f, 0x85, 0x01, 0xb6, 0x87, 0x53, 0xf0, 0x91, 0x62, 0x21, 0x22, 0xd4, 0x1a, 0x9e, 0x6a,
+	0xd1, 0xcf, 0x8c, 0x41, 0x53, 0xbb, 0xfd, 0x4c, 0xe8, 0x67, 0x6f, 0x1a, 0x4a, 0x26, 0xa9, 0x24,
+	0xff, 0x9a, 0x99, 0x78, 0x2f, 0x08, 0x07, 0xea, 0x84, 0xdd, 0x76, 0x33, 0x72, 0x0b, 0x41, 0xb7,
+	0x75, 0x18, 0xb8, 0x1d, 0xec, 0xfc, 0x7d, 0xac, 0xf6, 0x49, 0xe2, 0x86, 0x31, 0x5c, 0x2c, 0x44,
+	0x06, 0x2d, 0x18, 0xcc, 0x31, 0x05, 0xa9, 0x4b, 0xab, 0x76, 0xd3, 0xeb, 0x2d, 0x8b, 0x60, 0xa3,
+	0x96, 0xc5, 0xbb, 0x08, 0xa6, 0x18, 0xb8, 0xf5, 0x39, 0x55, 0xab, 0xb9, 0x61, 0xeb, 0xe0, 0x43,
+	0x8d, 0xc2, 0xf7, 0x61, 0x00, 0xa6, 0xfd, 0xe1, 0xa3, 0xeb, 0x89, 0x3f, 0x8b, 0x68, 0xdb, 0xcc,
+	0x62, 0xc3, 0x36, 0xf7, 0x3b, 0xa5, 0x74, 0xe4, 0x69, 0x4e, 0x16, 0x33, 0x17, 0xb8, 0x1b, 0x80,
+	0x01, 0x26, 0x34, 0x3a, 0x4f, 0xaf, 0x40, 0x17, 0x4b, 0x52, 0xba, 0xe9, 0x7d, 0xcd, 0x52, 0xa4,
+	0x58, 0x88, 0x0c, 0xf0, 0x67, 0x49, 0x90, 0x3a, 0x19, 0x93, 0xf4, 0xa4, 0xe6, 0xa8, 0x24, 0x4e,
+	0xd0, 0x21, 0xce, 0xcb, 0x10, 0x66, 0x11, 0x71, 0xe4, 0xfd, 0x57, 0xa0, 0x97, 0xc5, 0xa5, 0x9c,
+	0x9d, 0x09, 0xc5, 0x42, 0x24, 0xcc, 0x27, 0x4d, 0xb2, 0xa2, 0x6e, 0x06, 0xef, 0xf9, 0xa4, 0xf0,
+	0x07, 0x82, 0x08, 0x37, 0xfc, 0x76, 0x99, 0x9e, 0x1a, 0x02, 0x04, 0x1e, 0x57, 0x80, 0x3e, 0xe8,
+	0x59, 0x58, 0xba, 0xa8, 0x26, 0x64, 0x43, 0xd5, 0xdc, 0x7d, 0xa9, 0x17, 0xa0, 0xb7, 0xea, 0x09,
+	0x55, 0xe4, 0x6c, 0x45, 0x6f, 0xea, 0x20, 0x4f, 0x83, 0x8a, 0x01, 0x2a, 0x9a, 0x54, 0xa3, 0xd0,
+	0x5e, 0x32, 0xb0, 0x27, 0xbb, 0x0b, 0x9a, 0x55, 0xb3, 0xde, 0xa7, 0x5d, 0x05, 0xeb, 0x46, 0xf8,
+	0x1f, 0x74, 0x38, 0x2c, 0x29, 0x8a, 0x59, 0x68, 0x49, 0x5b, 0x3f, 0xd5, 0xcb, 0x07, 0x17, 0x48,
+	0x2b, 0x6e, 0xc9, 0x50, 0x35, 0xc5, 0x1e, 0xc4, 0x76, 0x15, 0x6e, 0x40, 0x77, 0x69, 0xe8, 0xf8,
+	0xc6, 0xb2, 0x34, 0x6f, 0x23, 0x69, 0x87, 0x60, 0x4e, 0x4b, 0x51, 0x1c, 0xe6, 0x65, 0xc3, 0x3a,
+	0x1b, 0x9f, 0x20, 0x87, 0xe8, 0x34, 0x26, 0xe5, 0x74, 0xc1, 0xc9, 0x29, 0xe8, 0x8f, 0x13, 0x55,
+	0xd7, 0x1e, 0xa0, 0x71, 0xcd, 0x8e, 0x25, 0x18, 0x70, 0xc0, 0x6d, 0x4c, 0x49, 0x29, 0x5c, 0x87,
+	0x41, 0xf6, 0xa0, 0x8d, 0x57, 0x42, 0x78, 0x0e, 0xba, 0x16, 0x96, 0xce, 0xa4, 0xd3, 0xf4, 0xb1,
+	0xbd, 0xc4, 0x1b, 0x36, 0xa1, 0x1f, 0x23, 0x73, 0x11, 0xb9, 0x02, 0x6c, 0xe3, 0xf9, 0x8c, 0xfd,
+	0x3e, 0x00, 0xcd, 0xa4, 0xe5, 0x8c, 0xdf, 0x40, 0xb0, 0xd3, 0xda, 0x9a, 0x98, 0x0b, 0xac, 0xba,
+	0x65, 0x1d, 0x1a, 0xf3, 0x64, 0x6b, 0x45, 0x16, 0x46, 0x6e, 0x3d, 0xf8, 0xf9, 0xed, 0xc0, 0x30,
+	0x0e, 0x8b, 0x9c, 0x46, 0xb9, 0x75, 0x1a, 0xe0, 0xd7, 0x11, 0x34, 0x93, 0x65, 0x80, 0xf7, 0xd7,
+	0xee, 0x2a, 0x53, 0x10, 0x07, 0xea, 0x58, 0xd1, 0xf0, 0x31, 0x12, 0x7e, 0x1c, 0x1f, 0x16, 0x6b,
+	0xf5, 0xfd, 0xc5, 0x7c, 0x79, 0x99, 0x6e, 0xe2, 0x1f, 0x10, 0x74, 0xb1, 0x7a, 0x69, 0x78, 0xaa,
+	0x4e, 0x17, 0x86, 0xd5, 0x0b, 0x0c, 0x4d, 0xfb, 0x73, 0xa2, 0xb8, 0x2f, 0x11, 0xdc, 0xe7, 0xf1,
+	0x5c, 0x6d, 0xdc, 0x26, 0x60, 0x17, 0x78, 0x91, 0xf6, 0x81, 0xc4, 0xbc, 0xb3, 0x59, 0xb8, 0x89,
+	0xbf, 0x45, 0x80, 0xab, 0xfb, 0x5a, 0x78, 0xd2, 0x2b, 0xb8, 0x32, 0x9f, 0x98, 0x1f, 0x17, 0xca,
+	0xe6, 0x3c, 0x61, 0x13, 0xc7, 0xa7, 0x6b, 0xb3, 0x29, 0x73, 0x61, 0x32, 0x31, 0x79, 0x7c, 0x83,
+	0x00, 0x57, 0xb7, 0x9d, 0xf8, 0x3c, 0xb8, 0xad, 0x30, 0x3e, 0x0f, 0x7e, 0x57, 0x4b, 0x98, 0x23,
+	0x3c, 0x4e, 0xe3, 0x53, 0x7e, 0x67, 0x85, 0xb6, 0x56, 0xc4, 0xbc, 0x99, 0xf4, 0x6c, 0xe2, 0x4f,
+	0x11, 0xb4, 0x57, 0xb6, 0x87, 0xb0, 0xe8, 0x0d, 0x50, 0x99, 0xc1, 0x11, 0xef, 0x0e, 0x14, 0x7f,
+	0x9c, 0xe0, 0x3f, 0x89, 0x67, 0xfc, 0xcc, 0x43, 0x05, 0xf6, 0x3b, 0x08, 0x5a, 0x4b, 0x3d, 0x79,
+	0x3c, 0xca, 0x3d, 0xd0, 0x2a, 0x3e, 0x19, 0x84, 0x0e, 0x79, 0xb0, 0xa4, 0x30, 0xa7, 0x08, 0xcc,
+	0x09, 0x3c, 0xc6, 0x83, 0xa9, 0xda, 0x2e, 0x62, 0x9e, 0x7e, 0x77, 0xd8, 0xc4, 0x1f, 0x21, 0xd8,
+	0xeb, 0xfe, 0x60, 0x80, 0xb9, 0x05, 0x33, 0xf3, 0xa3, 0x46, 0x28, 0xea, 0xd5, 0x9c, 0xc2, 0x3c,
+	0x4e, 0x60, 0xc6, 0xf0, 0x11, 0x1e, 0xcc, 0x75, 0xd3, 0x8f, 0x85, 0xf5, 0x73, 0x73, 0x37, 0x56,
+	0x77, 0x9c, 0x26, 0xbd, 0x77, 0xb4, 0xea, 0xef, 0x46, 0x6e, 0x57, 0x4d, 0x38, 0x45, 0x70, 0x1f,
+	0xc7, 0x47, 0x6b, 0xae, 0x02, 0x33, 0x87, 0x14, 0xf3, 0xd5, 0x29, 0xfe, 0x26, 0xfe, 0x0e, 0x41,
+	0x37, 0xb3, 0xf4, 0xc4, 0xd3, 0xbe, 0x3a, 0x14, 0x36, 0x87, 0xbf, 0xfb, 0xf4, 0xa2, 0x34, 0xce,
+	0x10, 0x1a, 0x27, 0xf0, 0x3f, 0x78, 0x34, 0xec, 0x4a, 0x84, 0xcf, 0xe4, 0x57, 0xc4, 0x69, 0x93,
+	0xd9, 0xcd, 0x19, 0x7c, 0xd2, 0x17, 0xb6, 0x8a, 0x56, 0x52, 0xe8, 0x9f, 0x5b, 0xf4, 0xa6, 0x0c,
+	0x2f, 0x10, 0x86, 0xb3, 0x38, 0xbe, 0x65, 0x86, 0xa2, 0x62, 0x13, 0x79, 0x3f, 0x00, 0xe3, 0x7e,
+	0xda, 0x08, 0xf8, 0x3f, 0x3e, 0x2a, 0x9b, 0x7a, 0xcd, 0x92, 0xd0, 0xc5, 0xc6, 0x0c, 0x46, 0x75,
+	0xb9, 0x4c, 0x74, 0x59, 0xc4, 0x97, 0xbc, 0xe9, 0x52, 0xa3, 0x5e, 0x2d, 0x9d, 0x6e, 0x59, 0x25,
+	0xa1, 0xe3, 0xef, 0x11, 0x74, 0x32, 0x00, 0xe1, 0x98, 0x0f, 0xf4, 0x36, 0xe3, 0x29, 0x5f, 0x3e,
+	0x94, 0xd8, 0x02, 0x21, 0x36, 0x8f, 0xcf, 0xf1, 0x88, 0x95, 0xd1, 0xd6, 0xa1, 0x45, 0x0f, 0xeb,
+	0x07, 0xc8, 0xfe, 0xce, 0x51, 0x55, 0xe0, 0xe2, 0xa3, 0x7e, 0x4a, 0x57, 0x47, 0x02, 0x70, 0xcc,
+	0xb7, 0x1f, 0x65, 0x77, 0x8e, 0xb0, 0x3b, 0x83, 0xff, 0xe5, 0x81, 0x9d, 0xf9, 0x0a, 0xe2, 0x14,
+	0xb3, 0x9b, 0xf8, 0x03, 0x04, 0xfb, 0x2a, 0x6a, 0x4b, 0x1c, 0xf5, 0x58, 0x84, 0xda, 0x2c, 0x44,
+	0xcf, 0xf6, 0x14, 0x7d, 0x94, 0xa0, 0x1f, 0xc5, 0x23, 0x3c, 0xf4, 0x34, 0x51, 0xb7, 0x13, 0xda,
+	0xdb, 0xe6, 0x7b, 0xd2, 0x1e, 0xab, 0xc6, 0x7b, 0xb2, 0xa2, 0x04, 0xae, 0xf1, 0x9e, 0xac, 0x2c,
+	0x81, 0x05, 0x91, 0x40, 0x3a, 0x84, 0x0f, 0xd6, 0x83, 0x94, 0x27, 0x2f, 0x21, 0x22, 0xdc, 0x5e,
+	0x77, 0xe9, 0xc9, 0x7f, 0x47, 0x32, 0xcb, 0xe2, 0x50, 0xd4, 0xab, 0x39, 0x85, 0x38, 0x49, 0x20,
+	0x8e, 0xe1, 0x43, 0xf5, 0x20, 0xe6, 0xb4, 0x94, 0x98, 0xcf, 0x69, 0xa9, 0x4d, 0xfc, 0x25, 0x32,
+	0xeb, 0xb5, 0xea, 0xda, 0x90, 0x9f, 0x7e, 0xd7, 0x28, 0x4f, 0xf9, 0xe9, 0x77, 0xad, 0xf2, 0x53,
+	0x98, 0x21, 0xb0, 0xa7, 0x71, 0xac, 0x1e, 0x6c, 0x46, 0xf9, 0x70, 0x17, 0xc1, 0x1e, 0x57, 0x39,
+	0x88, 0xc7, 0xf9, 0x18, 0xaa, 0xcb, 0xd2, 0xd0, 0x84, 0x47, 0x6b, 0x0a, 0x75, 0x9c, 0x40, 0x1d,
+	0xc1, 0xfb, 0xeb, 0x40, 0xd5, 0x45, 0x39, 0x9d, 0x8e, 0xbf, 0x78, 0xef, 0x61, 0x18, 0xdd, 0x7f,
+	0x18, 0x46, 0x3f, 0x3d, 0x0c, 0xa3, 0xb7, 0x1e, 0x85, 0x9b, 0xee, 0x3f, 0x0a, 0x37, 0xfd, 0xf8,
+	0x28, 0xdc, 0x04, 0xfd, 0x29, 0x95, 0x13, 0x78, 0x11, 0x5d, 0x99, 0x5e, 0x4d, 0x19, 0xd7, 0x72,
+	0x2b, 0xd1, 0x84, 0xba, 0xe6, 0x08, 0x33, 0x91, 0x52, 0x9d, 0x41, 0x6f, 0x96, 0xc3, 0x1a, 0x1b,
+	0x59, 0x45, 0x5f, 0xd9, 0x49, 0xfe, 0xf8, 0x34, 0xf5, 0x67, 0x00, 0x00, 0x00, 0xff, 0xff, 0xd2,
+	0x16, 0x55, 0xd6, 0x37, 0x26, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -2179,44 +2181,43 @@ const _ = grpc.SupportPackageIsVersion4
 type QueryClient interface {
 	// Params queries the parameters of x/metadata module.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
-	// Scope returns a specific scope by id
+	// Scope returns the scope with the given id.
 	Scope(ctx context.Context, in *ScopeRequest, opts ...grpc.CallOption) (*ScopeResponse, error)
-	// SessionContextByUUID returns a specific session context within a scope (or all sessions)
+	// SessionContextByUUID returns the session contexts within a scope (or all sessions).
 	SessionContextByUUID(ctx context.Context, in *SessionContextByUUIDRequest, opts ...grpc.CallOption) (*SessionContextByUUIDResponse, error)
-	// SessionContextByID returns a specific session context within a scope (or all sessions)
+	// SessionContextByID returns the session contexts within a scope (or all sessions).
 	SessionContextByID(ctx context.Context, in *SessionContextByIDRequest, opts ...grpc.CallOption) (*SessionContextByIDResponse, error)
-	// RecordsByScopeUUID returns a collection of the records in a scope by scope uuid or a specific one by name
+	// RecordsByScopeUUID returns the records in a scope by scope uuid or a specific record by name.
 	RecordsByScopeUUID(ctx context.Context, in *RecordsByScopeUUIDRequest, opts ...grpc.CallOption) (*RecordsByScopeUUIDResponse, error)
-	// RecordsByScopeID returns a collection of the records in a scope by scope bech32 id or a specific one by name
+	// RecordsByScopeID returns a collection of the records in a scope by scope bech32 id or a specific one by name.
 	RecordsByScopeID(ctx context.Context, in *RecordsByScopeIDRequest, opts ...grpc.CallOption) (*RecordsByScopeIDResponse, error)
-	// Ownership returns a list of scope identifiers that list the given address as a data or value owner
+	// Ownership returns the scope identifiers that list the given address as either a data or value owner.
 	Ownership(ctx context.Context, in *OwnershipRequest, opts ...grpc.CallOption) (*OwnershipResponse, error)
-	// ValueOwnership returns a list of scope identifiers that list the given address as the value owner
+	// ValueOwnership returns the scope identifiers that list the given address as the value owner.
 	ValueOwnership(ctx context.Context, in *ValueOwnershipRequest, opts ...grpc.CallOption) (*ValueOwnershipResponse, error)
-	// ScopeSpecification returns a scope specification for the given specification uuid
+	// ScopeSpecification returns a scope specification for the given specification uuid.
 	ScopeSpecification(ctx context.Context, in *ScopeSpecificationRequest, opts ...grpc.CallOption) (*ScopeSpecificationResponse, error)
-	// ContractSpecification returns a contract specification for the given specification uuid
+	// ContractSpecification returns a contract specification for the given specification uuid.
 	ContractSpecification(ctx context.Context, in *ContractSpecificationRequest, opts ...grpc.CallOption) (*ContractSpecificationResponse, error)
-	// ContractSpecification returns a contract specification and record specifications for the given contract
-	// specification uuid
+	// ContractSpecificationExtended returns a contract specification and record specifications for the given contract
+	// specification uuid.
 	ContractSpecificationExtended(ctx context.Context, in *ContractSpecificationExtendedRequest, opts ...grpc.CallOption) (*ContractSpecificationExtendedResponse, error)
 	// RecordSpecificationsForContractSpecification returns the record specifications for the given contract specification
-	// uuid
+	// uuid.
 	RecordSpecificationsForContractSpecification(ctx context.Context, in *RecordSpecificationsForContractSpecificationRequest, opts ...grpc.CallOption) (*RecordSpecificationsForContractSpecificationResponse, error)
-	// RecordSpecification returns a record specification for the given contract specification uuid and record name
+	// RecordSpecification returns a record specification for the given contract specification uuid and record name.
 	RecordSpecification(ctx context.Context, in *RecordSpecificationRequest, opts ...grpc.CallOption) (*RecordSpecificationResponse, error)
-	// RecordSpecificationByID returns a record specification for the given record specification id
+	// RecordSpecificationByID returns a record specification for the given record specification id.
 	RecordSpecificationByID(ctx context.Context, in *RecordSpecificationByIDRequest, opts ...grpc.CallOption) (*RecordSpecificationByIDResponse, error)
-	// ---- OS locator methods -----
-	// Params queries all parameters for os locator sub module.
+	// OSLocatorParams returns all parameters for the os locator sub module.
 	OSLocatorParams(ctx context.Context, in *OSLocatorParamsRequest, opts ...grpc.CallOption) (*OSLocatorParamsResponse, error)
-	// for querying oslocator by address.
+	// OSLocator returns an ObjectStoreLocator by its owner's address.
 	OSLocator(ctx context.Context, in *OSLocatorRequest, opts ...grpc.CallOption) (*OSLocatorResponse, error)
-	// for querying oslocator by uri.
+	// OSLocator returns all ObjectStoreLocator for a locator uri.
 	OSLocatorByURI(ctx context.Context, in *OSLocatorByURIRequest, opts ...grpc.CallOption) (*OSLocatorByURIResponse, error)
-	// for querying all the oslocator for all signer's present in a scope uuid.
+	// OSLocatorByScopeUUID returns all ObjectStoreLocator for a for all signer's present in the specified scope.
 	OSLocatorByScopeUUID(ctx context.Context, in *OSLocatorByScopeUUIDRequest, opts ...grpc.CallOption) (*OSLocatorByScopeUUIDResponse, error)
-	// get all os locators
+	// OSAllLocators returns all ObjectStoreLocator entries.
 	OSAllLocators(ctx context.Context, in *OSAllLocatorsRequest, opts ...grpc.CallOption) (*OSAllLocatorsResponse, error)
 }
 
@@ -2403,44 +2404,43 @@ func (c *queryClient) OSAllLocators(ctx context.Context, in *OSAllLocatorsReques
 type QueryServer interface {
 	// Params queries the parameters of x/metadata module.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
-	// Scope returns a specific scope by id
+	// Scope returns the scope with the given id.
 	Scope(context.Context, *ScopeRequest) (*ScopeResponse, error)
-	// SessionContextByUUID returns a specific session context within a scope (or all sessions)
+	// SessionContextByUUID returns the session contexts within a scope (or all sessions).
 	SessionContextByUUID(context.Context, *SessionContextByUUIDRequest) (*SessionContextByUUIDResponse, error)
-	// SessionContextByID returns a specific session context within a scope (or all sessions)
+	// SessionContextByID returns the session contexts within a scope (or all sessions).
 	SessionContextByID(context.Context, *SessionContextByIDRequest) (*SessionContextByIDResponse, error)
-	// RecordsByScopeUUID returns a collection of the records in a scope by scope uuid or a specific one by name
+	// RecordsByScopeUUID returns the records in a scope by scope uuid or a specific record by name.
 	RecordsByScopeUUID(context.Context, *RecordsByScopeUUIDRequest) (*RecordsByScopeUUIDResponse, error)
-	// RecordsByScopeID returns a collection of the records in a scope by scope bech32 id or a specific one by name
+	// RecordsByScopeID returns a collection of the records in a scope by scope bech32 id or a specific one by name.
 	RecordsByScopeID(context.Context, *RecordsByScopeIDRequest) (*RecordsByScopeIDResponse, error)
-	// Ownership returns a list of scope identifiers that list the given address as a data or value owner
+	// Ownership returns the scope identifiers that list the given address as either a data or value owner.
 	Ownership(context.Context, *OwnershipRequest) (*OwnershipResponse, error)
-	// ValueOwnership returns a list of scope identifiers that list the given address as the value owner
+	// ValueOwnership returns the scope identifiers that list the given address as the value owner.
 	ValueOwnership(context.Context, *ValueOwnershipRequest) (*ValueOwnershipResponse, error)
-	// ScopeSpecification returns a scope specification for the given specification uuid
+	// ScopeSpecification returns a scope specification for the given specification uuid.
 	ScopeSpecification(context.Context, *ScopeSpecificationRequest) (*ScopeSpecificationResponse, error)
-	// ContractSpecification returns a contract specification for the given specification uuid
+	// ContractSpecification returns a contract specification for the given specification uuid.
 	ContractSpecification(context.Context, *ContractSpecificationRequest) (*ContractSpecificationResponse, error)
-	// ContractSpecification returns a contract specification and record specifications for the given contract
-	// specification uuid
+	// ContractSpecificationExtended returns a contract specification and record specifications for the given contract
+	// specification uuid.
 	ContractSpecificationExtended(context.Context, *ContractSpecificationExtendedRequest) (*ContractSpecificationExtendedResponse, error)
 	// RecordSpecificationsForContractSpecification returns the record specifications for the given contract specification
-	// uuid
+	// uuid.
 	RecordSpecificationsForContractSpecification(context.Context, *RecordSpecificationsForContractSpecificationRequest) (*RecordSpecificationsForContractSpecificationResponse, error)
-	// RecordSpecification returns a record specification for the given contract specification uuid and record name
+	// RecordSpecification returns a record specification for the given contract specification uuid and record name.
 	RecordSpecification(context.Context, *RecordSpecificationRequest) (*RecordSpecificationResponse, error)
-	// RecordSpecificationByID returns a record specification for the given record specification id
+	// RecordSpecificationByID returns a record specification for the given record specification id.
 	RecordSpecificationByID(context.Context, *RecordSpecificationByIDRequest) (*RecordSpecificationByIDResponse, error)
-	// ---- OS locator methods -----
-	// Params queries all parameters for os locator sub module.
+	// OSLocatorParams returns all parameters for the os locator sub module.
 	OSLocatorParams(context.Context, *OSLocatorParamsRequest) (*OSLocatorParamsResponse, error)
-	// for querying oslocator by address.
+	// OSLocator returns an ObjectStoreLocator by its owner's address.
 	OSLocator(context.Context, *OSLocatorRequest) (*OSLocatorResponse, error)
-	// for querying oslocator by uri.
+	// OSLocator returns all ObjectStoreLocator for a locator uri.
 	OSLocatorByURI(context.Context, *OSLocatorByURIRequest) (*OSLocatorByURIResponse, error)
-	// for querying all the oslocator for all signer's present in a scope uuid.
+	// OSLocatorByScopeUUID returns all ObjectStoreLocator for a for all signer's present in the specified scope.
 	OSLocatorByScopeUUID(context.Context, *OSLocatorByScopeUUIDRequest) (*OSLocatorByScopeUUIDResponse, error)
-	// get all os locators
+	// OSAllLocators returns all ObjectStoreLocator entries.
 	OSAllLocators(context.Context, *OSAllLocatorsRequest) (*OSAllLocatorsResponse, error)
 }
 
@@ -2960,41 +2960,6 @@ func (m *QueryParamsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *OSAllLocatorsRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *OSAllLocatorsRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *OSAllLocatorsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Pagination != nil {
-		{
-			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintQuery(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
 func (m *QueryParamsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -3044,36 +3009,6 @@ func (m *ScopeRequest) MarshalTo(dAtA []byte) (int, error) {
 }
 
 func (m *ScopeRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.ScopeUuid) > 0 {
-		i -= len(m.ScopeUuid)
-		copy(dAtA[i:], m.ScopeUuid)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.ScopeUuid)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *OSLocatorByScopeUUIDRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *OSLocatorByScopeUUIDRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *OSLocatorByScopeUUIDRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -3188,7 +3123,9 @@ func (m *OwnershipRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i = encodeVarintQuery(dAtA, i, uint64(size))
 		}
 		i--
-		dAtA[i] = 0x12
+		dAtA[i] = 0x6
+		i--
+		dAtA[i] = 0x9a
 	}
 	if len(m.Address) > 0 {
 		i -= len(m.Address)
@@ -3274,7 +3211,9 @@ func (m *ValueOwnershipRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i = encodeVarintQuery(dAtA, i, uint64(size))
 		}
 		i--
-		dAtA[i] = 0x12
+		dAtA[i] = 0x6
+		i--
+		dAtA[i] = 0x9a
 	}
 	if len(m.Address) > 0 {
 		i -= len(m.Address)
@@ -4144,113 +4083,6 @@ func (m *RecordSpecificationByIDResponse) MarshalToSizedBuffer(dAtA []byte) (int
 	return len(dAtA) - i, nil
 }
 
-func (m *OSLocatorRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *OSLocatorRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *OSLocatorRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Owner) > 0 {
-		i -= len(m.Owner)
-		copy(dAtA[i:], m.Owner)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.Owner)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *OSLocatorByURIRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *OSLocatorByURIRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *OSLocatorByURIRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Pagination != nil {
-		{
-			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintQuery(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.Uri) > 0 {
-		i -= len(m.Uri)
-		copy(dAtA[i:], m.Uri)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.Uri)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *OSLocatorResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *OSLocatorResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *OSLocatorResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Locator != nil {
-		{
-			size, err := m.Locator.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintQuery(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
 func (m *OSLocatorParamsRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -4307,6 +4139,115 @@ func (m *OSLocatorParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	return len(dAtA) - i, nil
 }
 
+func (m *OSLocatorRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *OSLocatorRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *OSLocatorRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Owner) > 0 {
+		i -= len(m.Owner)
+		copy(dAtA[i:], m.Owner)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Owner)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *OSLocatorResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *OSLocatorResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *OSLocatorResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Locator != nil {
+		{
+			size, err := m.Locator.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *OSLocatorByURIRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *OSLocatorByURIRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *OSLocatorByURIRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x6
+		i--
+		dAtA[i] = 0x9a
+	}
+	if len(m.Uri) > 0 {
+		i -= len(m.Uri)
+		copy(dAtA[i:], m.Uri)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Uri)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *OSLocatorByURIResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -4356,6 +4297,36 @@ func (m *OSLocatorByURIResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	return len(dAtA) - i, nil
 }
 
+func (m *OSLocatorByScopeUUIDRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *OSLocatorByScopeUUIDRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *OSLocatorByScopeUUIDRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ScopeUuid) > 0 {
+		i -= len(m.ScopeUuid)
+		copy(dAtA[i:], m.ScopeUuid)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.ScopeUuid)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *OSLocatorByScopeUUIDResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -4389,6 +4360,43 @@ func (m *OSLocatorByScopeUUIDResponse) MarshalToSizedBuffer(dAtA []byte) (int, e
 			i--
 			dAtA[i] = 0xa
 		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *OSAllLocatorsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *OSAllLocatorsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *OSAllLocatorsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x6
+		i--
+		dAtA[i] = 0x9a
 	}
 	return len(dAtA) - i, nil
 }
@@ -4462,19 +4470,6 @@ func (m *QueryParamsRequest) Size() (n int) {
 	return n
 }
 
-func (m *OSAllLocatorsRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Pagination != nil {
-		l = m.Pagination.Size()
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	return n
-}
-
 func (m *QueryParamsResponse) Size() (n int) {
 	if m == nil {
 		return 0
@@ -4487,19 +4482,6 @@ func (m *QueryParamsResponse) Size() (n int) {
 }
 
 func (m *ScopeRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.ScopeUuid)
-	if l > 0 {
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	return n
-}
-
-func (m *OSLocatorByScopeUUIDRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -4553,7 +4535,7 @@ func (m *OwnershipRequest) Size() (n int) {
 	}
 	if m.Pagination != nil {
 		l = m.Pagination.Size()
-		n += 1 + l + sovQuery(uint64(l))
+		n += 2 + l + sovQuery(uint64(l))
 	}
 	return n
 }
@@ -4589,7 +4571,7 @@ func (m *ValueOwnershipRequest) Size() (n int) {
 	}
 	if m.Pagination != nil {
 		l = m.Pagination.Size()
-		n += 1 + l + sovQuery(uint64(l))
+		n += 2 + l + sovQuery(uint64(l))
 	}
 	return n
 }
@@ -4969,6 +4951,26 @@ func (m *RecordSpecificationByIDResponse) Size() (n int) {
 	return n
 }
 
+func (m *OSLocatorParamsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *OSLocatorParamsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Params.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
 func (m *OSLocatorRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -4977,23 +4979,6 @@ func (m *OSLocatorRequest) Size() (n int) {
 	_ = l
 	l = len(m.Owner)
 	if l > 0 {
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	return n
-}
-
-func (m *OSLocatorByURIRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Uri)
-	if l > 0 {
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	if m.Pagination != nil {
-		l = m.Pagination.Size()
 		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
@@ -5012,23 +4997,20 @@ func (m *OSLocatorResponse) Size() (n int) {
 	return n
 }
 
-func (m *OSLocatorParamsRequest) Size() (n int) {
+func (m *OSLocatorByURIRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	return n
-}
-
-func (m *OSLocatorParamsResponse) Size() (n int) {
-	if m == nil {
-		return 0
+	l = len(m.Uri)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
 	}
-	var l int
-	_ = l
-	l = m.Params.Size()
-	n += 1 + l + sovQuery(uint64(l))
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 2 + l + sovQuery(uint64(l))
+	}
 	return n
 }
 
@@ -5051,6 +5033,19 @@ func (m *OSLocatorByURIResponse) Size() (n int) {
 	return n
 }
 
+func (m *OSLocatorByScopeUUIDRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ScopeUuid)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
 func (m *OSLocatorByScopeUUIDResponse) Size() (n int) {
 	if m == nil {
 		return 0
@@ -5062,6 +5057,19 @@ func (m *OSLocatorByScopeUUIDResponse) Size() (n int) {
 			l = e.Size()
 			n += 1 + l + sovQuery(uint64(l))
 		}
+	}
+	return n
+}
+
+func (m *OSAllLocatorsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 2 + l + sovQuery(uint64(l))
 	}
 	return n
 }
@@ -5120,92 +5128,6 @@ func (m *QueryParamsRequest) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: QueryParamsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *OSAllLocatorsRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: OSAllLocatorsRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: OSAllLocatorsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Pagination == nil {
-				m.Pagination = &query.PageRequest{}
-			}
-			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
@@ -5337,88 +5259,6 @@ func (m *ScopeRequest) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: ScopeRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ScopeUuid", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ScopeUuid = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *OSLocatorByScopeUUIDRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: OSLocatorByScopeUUIDRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: OSLocatorByScopeUUIDRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -5721,7 +5561,7 @@ func (m *OwnershipRequest) Unmarshal(dAtA []byte) error {
 			}
 			m.Address = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 2:
+		case 99:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
 			}
@@ -5957,7 +5797,7 @@ func (m *ValueOwnershipRequest) Unmarshal(dAtA []byte) error {
 			}
 			m.Address = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 2:
+		case 99:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
 			}
@@ -8476,292 +8316,6 @@ func (m *RecordSpecificationByIDResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *OSLocatorRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: OSLocatorRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: OSLocatorRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Owner = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *OSLocatorByURIRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: OSLocatorByURIRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: OSLocatorByURIRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Uri", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Uri = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Pagination == nil {
-				m.Pagination = &query.PageRequest{}
-			}
-			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *OSLocatorResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: OSLocatorResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: OSLocatorResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Locator", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Locator == nil {
-				m.Locator = &ObjectStoreLocator{}
-			}
-			if err := m.Locator.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
 func (m *OSLocatorParamsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -8871,6 +8425,292 @@ func (m *OSLocatorParamsResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *OSLocatorRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: OSLocatorRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: OSLocatorRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Owner = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *OSLocatorResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: OSLocatorResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: OSLocatorResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Locator", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Locator == nil {
+				m.Locator = &ObjectStoreLocator{}
+			}
+			if err := m.Locator.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *OSLocatorByURIRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: OSLocatorByURIRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: OSLocatorByURIRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Uri", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Uri = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 99:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageRequest{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -9015,6 +8855,88 @@ func (m *OSLocatorByURIResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *OSLocatorByScopeUUIDRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: OSLocatorByScopeUUIDRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: OSLocatorByScopeUUIDRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ScopeUuid", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ScopeUuid = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *OSLocatorByScopeUUIDResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -9075,6 +8997,92 @@ func (m *OSLocatorByScopeUUIDResponse) Unmarshal(dAtA []byte) error {
 			}
 			m.Locator = append(m.Locator, ObjectStoreLocator{})
 			if err := m.Locator[len(m.Locator)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *OSAllLocatorsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: OSAllLocatorsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: OSAllLocatorsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 99:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageRequest{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
