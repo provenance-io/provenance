@@ -1,13 +1,13 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"gopkg.in/yaml.v2"
 
 	"github.com/provenance-io/provenance/app"
-
-	simapp "github.com/provenance-io/provenance/app"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -36,7 +36,7 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	app := simapp.Setup(false)
+	app := app.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	s.app = app
 	s.ctx = ctx
@@ -64,7 +64,7 @@ func (s *KeeperTestSuite) SetupTest() {
 
 func (s *KeeperTestSuite) TestSetup() {
 	s.Run("verify test setup params", func() {
-		s.Require().True(s.app.NameKeeper.GetAllowUnrestrictedNames(s.ctx))
+		s.Require().False(s.app.NameKeeper.GetAllowUnrestrictedNames(s.ctx))
 		s.Require().Equal(uint32(16), s.app.NameKeeper.GetMaxNameLevels(s.ctx))
 		s.Require().Equal(uint32(2), s.app.NameKeeper.GetMinSegmentLength(s.ctx))
 		s.Require().Equal(uint32(16), s.app.NameKeeper.GetMaxSegmentLength(s.ctx))
@@ -72,11 +72,27 @@ func (s *KeeperTestSuite) TestSetup() {
 	s.Run("verify get all test setup params", func() {
 		p := s.app.NameKeeper.GetParams(s.ctx)
 		s.Require().NotNil(p)
-		s.Require().True(p.AllowUnrestrictedNames)
+		s.Require().False(p.AllowUnrestrictedNames)
 		s.Require().Equal(uint32(16), p.MaxNameLevels)
 		s.Require().Equal(uint32(2), p.MinSegmentLength)
 		s.Require().Equal(uint32(16), p.MaxSegmentLength)
 	})
+	gen := s.app.NameKeeper.ExportGenesis(s.ctx)
+	out, err := yaml.Marshal(gen)
+	s.Require().NoError(err)
+	s.Require().Equal(fmt.Sprintf(`params:
+  maxsegmentlength: 16
+  minsegmentlength: 2
+  maxnamelevels: 16
+  allowunrestrictednames: false
+bindings:
+- name: name
+  address: %[1]s
+  restricted: false
+- name: example.name
+  address: %[1]s
+  restricted: false
+`, s.user1Addr.String()), string(out))
 }
 
 func (s *KeeperTestSuite) TestNameNormalization() {
