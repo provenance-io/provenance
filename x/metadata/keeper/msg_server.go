@@ -24,44 +24,6 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 
 var _ types.MsgServer = msgServer{}
 
-func (k msgServer) MemorializeContract(
-	goCtx context.Context,
-	msg *types.MsgMemorializeContractRequest,
-) (*types.MsgMemorializeContractResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	// TODO (contract keeper class  methods to process contract execution, scope keeper methods to record it)
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Notary),
-		),
-	)
-
-	return nil, fmt.Errorf("not implemented")
-}
-
-func (k msgServer) ChangeOwnership(
-	goCtx context.Context,
-	msg *types.MsgChangeOwnershipRequest,
-) (*types.MsgChangeOwnershipResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	// TODO (contract keeper class  methods to process contract execution, scope keeper methods to record it)
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Notary),
-		),
-	)
-
-	return nil, fmt.Errorf("not implemented")
-}
-
 func (k msgServer) AddScope(
 	goCtx context.Context,
 	msg *types.MsgAddScopeRequest,
@@ -116,13 +78,17 @@ func (k msgServer) AddSession(
 ) (*types.MsgAddSessionResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	existing, _ := k.GetSession(ctx, msg.Session.SessionId)
+	var existing *types.Session = nil
+	var existingAudit *types.AuditFields = nil
+	if e, found := k.GetSession(ctx, msg.Session.SessionId); found {
+		existing = &e
+		existingAudit = existing.Audit
+	}
 	if err := k.ValidateSessionUpdate(ctx, existing, *msg.Session, msg.Signers); err != nil {
 		return nil, err
 	}
 
-	audit := existing.Audit.UpdateAudit(ctx.BlockTime(), strings.Join(msg.Signers, ", "), "")
-	*msg.Session.Audit = *audit
+	msg.Session.Audit = existingAudit.UpdateAudit(ctx.BlockTime(), strings.Join(msg.Signers, ", "), "")
 
 	k.SetSession(ctx, *msg.Session)
 
@@ -150,7 +116,10 @@ func (k msgServer) AddRecord(
 
 	recordID := types.RecordMetadataAddress(scopeUUID, msg.Record.Name)
 
-	existing, _ := k.GetRecord(ctx, recordID)
+	var existing *types.Record = nil
+	if e, found := k.GetRecord(ctx, recordID); found {
+		existing = &e
+	}
 	if err := k.ValidateRecordUpdate(ctx, existing, *msg.Record, msg.Signers); err != nil {
 		return nil, err
 	}
@@ -460,6 +429,86 @@ func (k msgServer) AddP8EContractSpec(
 	)
 
 	return &types.MsgAddP8EContractSpecResponse{}, nil
+}
+
+func (k msgServer) P8EMemorializeContract(
+	goCtx context.Context,
+	msg *types.MsgP8EMemorializeContractRequest, //nolint:staticcheck // Ignore deprecation error here.
+) (*types.MsgP8EMemorializeContractResponse, error) { //nolint:staticcheck // Ignore deprecation error here.
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	p8EData, signers, err := types.ConvertP8eMemorializeContractRequest(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	// Add the stuff that needs to come from the specs.
+	var processID types.ProcessID
+	contractSpec, found := k.GetContractSpecification(ctx, p8EData.Session.SpecificationId)
+	if !found {
+		return nil, fmt.Errorf("contract specification %s not found", p8EData.Session.SpecificationId)
+	}
+	switch source := contractSpec.Source.(type) {
+	case *types.ContractSpecification_ResourceId:
+		processID = &types.Process_Address{Address: source.ResourceId.String()}
+	case *types.ContractSpecification_Hash:
+		processID = &types.Process_Hash{Hash: source.Hash}
+	default:
+		return nil, fmt.Errorf("unexpected source type on contract specification %s", p8EData.Session.SpecificationId)
+	}
+
+	for _, r := range p8EData.Records {
+		r.Process.ProcessId = processID
+		recSpecID, e := p8EData.Session.SpecificationId.AsRecordSpecAddress(r.Name)
+		if e != nil {
+			return nil, e
+		}
+		recSpec, found := k.GetRecordSpecification(ctx, recSpecID)
+		if !found {
+			return nil, fmt.Errorf("record specification %s not found", recSpecID)
+		}
+		for _, input := range r.Inputs {
+			input.Status = types.RecordInputStatus(recSpec.ResultType)
+		}
+	}
+
+	// Finally, store everything.
+	_, err = k.AddScope(goCtx, &types.MsgAddScopeRequest{
+		Scope:   *p8EData.Scope,
+		Signers: signers,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = k.AddSession(goCtx, &types.MsgAddSessionRequest{
+		Session: p8EData.Session,
+		Signers: signers,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, record := range p8EData.Records {
+		_, err = k.AddRecord(goCtx, &types.MsgAddRecordRequest{
+			SessionId: p8EData.Session.SessionId,
+			Record:    record,
+			Signers:   signers,
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Invoker),
+		),
+	)
+
+	return &types.MsgP8EMemorializeContractResponse{}, nil //nolint:staticcheck // Ignore deprecation error here.
 }
 
 func (k msgServer) BindOSLocator(goCtx context.Context, msg *types.MsgBindOSLocatorRequest) (*types.MsgBindOSLocatorResponse, error) {

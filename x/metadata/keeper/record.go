@@ -8,6 +8,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const sourceTypeHash = "hash"
+const sourceTypeRecord = "record"
+
 // GetRecord returns the record with the given id.
 func (k Keeper) GetRecord(ctx sdk.Context, id types.MetadataAddress) (record types.Record, found bool) {
 	if !id.IsRecordAddress() {
@@ -107,36 +110,146 @@ func (k Keeper) IterateRecords(ctx sdk.Context, scopeID types.MetadataAddress, h
 
 // ValidateRecordUpdate checks the current record and the proposed record to determine if the the proposed changes are valid
 // based on the existing state
-func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing, proposed types.Record, signers []string) error {
-	if len(existing.SessionId) > 0 {
-		if !existing.SessionId.Equals(proposed.SessionId) || existing.Name != proposed.Name {
-			return fmt.Errorf("existing and proposed records do not match")
-		}
-	}
-
+func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, proposed types.Record, signers []string) error {
 	if err := proposed.ValidateBasic(); err != nil {
 		return err
 	}
 
-	scopeUUID, err := proposed.SessionId.ScopeUUID()
+	if existing != nil {
+		if existing.Name != proposed.Name {
+			return fmt.Errorf("the Name field of records cannot be changed")
+		}
+		if !existing.SessionId.Equals(proposed.SessionId) || existing.Name != proposed.Name {
+			return fmt.Errorf("the SessionId field of records cannot be changed")
+		}
+	}
+
+	scopeID, err := proposed.SessionId.AsScopeAddress()
 	if err != nil {
 		return err
 	}
 
-	scopeID := types.ScopeMetadataAddress(scopeUUID)
-
 	// get scope for existing record
 	scope, found := k.GetScope(ctx, scopeID)
 	if !found {
-		return fmt.Errorf("scope not found for scope uuid %s", scopeUUID)
+		return fmt.Errorf("scope not found for scope id %s", scopeID)
 	}
 
-	// Validate any changes to the ValueOwner property.
-	if err := k.ValidateRequiredSignatures(scope.Owners, signers); err != nil {
+	// Make sure all the scope owners have signed.
+	if signErr := k.ValidateAllPartiesAreSigners(scope.Owners, signers); signErr != nil {
+		return signErr
+	}
+
+	// Get the session (and make sure it exists)
+	session, found := k.GetSession(ctx, proposed.SessionId)
+	if !found {
+		return fmt.Errorf("session not found for session id %s", proposed.SessionId)
+	}
+
+	// Get the record specification
+	contractSpecUUID, err := session.SpecificationId.ContractSpecUUID()
+	if err != nil {
 		return err
 	}
+	recSpecID := types.RecordSpecMetadataAddress(contractSpecUUID, proposed.Name)
+	recSpec, found := k.GetRecordSpecification(ctx, recSpecID)
+	if !found {
+		return fmt.Errorf("record specification not found for record specification id %s (contract spec uuid %s and record name %s)",
+			recSpecID, contractSpecUUID, proposed.Name)
+	}
 
-	// TODO finish full validation of update once specs are complete
+	// Make sure all input specs are present as inputs.
+	inputNames := make([]string, len(proposed.Inputs))
+	inputMap := make(map[string]types.RecordInput)
+	for i, input := range proposed.Inputs {
+		if _, found := inputMap[input.Name]; found {
+			return fmt.Errorf("input name %s provided twice", input.Name)
+		}
+		inputNames[i] = input.Name
+		inputMap[input.Name] = input
+	}
+	inputSpecNames := make([]string, len(recSpec.Inputs))
+	inputSpecMap := make(map[string]types.InputSpecification)
+	for i, inputSpec := range recSpec.Inputs {
+		inputSpecNames[i] = inputSpec.Name
+		inputSpecMap[inputSpec.Name] = *inputSpec
+	}
+	missingInputNames := FindMissing(inputSpecNames, inputNames)
+	if len(missingInputNames) == 1 {
+		return fmt.Errorf("missing input %s", missingInputNames[0])
+	} else if len(missingInputNames) > 1 {
+		return fmt.Errorf("missing inputs %v", missingInputNames)
+	}
+	extraInputNames := FindMissing(inputNames, inputSpecNames)
+	if len(extraInputNames) == 1 {
+		return fmt.Errorf("extra input %s", extraInputNames[0])
+	} else if len(extraInputNames) > 1 {
+		return fmt.Errorf("extra inputs %v", extraInputNames)
+	}
+
+	// Make sure all the inputs conform to their spec.
+	for _, name := range inputNames {
+		input := inputMap[name]
+		inputSpec := inputSpecMap[name]
+
+		// Make sure the input TypeName is correct.
+		if inputSpec.TypeName != input.TypeName {
+			return fmt.Errorf("input %s has TypeName %s but spec calls for %s",
+				input.Name, input.TypeName, inputSpec.TypeName)
+		}
+
+		// Get the input specification source type and value
+		inputSpecSourceType := ""
+		inputSpecSourceValue := ""
+		switch source := inputSpec.Source.(type) {
+		case *types.InputSpecification_RecordId:
+			inputSpecSourceType = sourceTypeRecord
+			inputSpecSourceValue = source.RecordId.String()
+		case *types.InputSpecification_Hash:
+			inputSpecSourceType = sourceTypeHash
+			inputSpecSourceValue = source.Hash
+		default:
+			return fmt.Errorf("input spec %s has an unknown source type", inputSpec.Name)
+		}
+
+		// Get the input source type and value
+		inputSourceType := ""
+		inputSourceValue := ""
+		switch source := input.Source.(type) {
+		case *types.RecordInput_RecordId:
+			inputSourceType = sourceTypeRecord
+			inputSourceValue = source.RecordId.String()
+		case *types.RecordInput_Hash:
+			inputSourceType = sourceTypeHash
+			inputSourceValue = source.Hash
+		default:
+			return fmt.Errorf("input %s has an unknown source type", input.Name)
+		}
+
+		// Make sure the input spec source type and value match the input source type and value
+		if inputSourceType != inputSpecSourceType {
+			return fmt.Errorf("input %s has source type %s but spec calls for %s",
+				input.Name, inputSourceType, inputSpecSourceType)
+		}
+		if inputSourceValue != inputSpecSourceValue {
+			return fmt.Errorf("input %s has source value %s but spec calls for %s",
+				input.Name, inputSourceValue, inputSpecSourceValue)
+		}
+	}
+
+	// Validate the output count
+	switch recSpec.ResultType {
+	case types.DefinitionType_DEFINITION_TYPE_RECORD:
+		if len(proposed.Outputs) != 1 {
+			return fmt.Errorf("invalid output count (expected: 1, got: %d)", len(proposed.Outputs))
+		}
+	case types.DefinitionType_DEFINITION_TYPE_RECORD_LIST:
+		if len(proposed.Outputs) == 0 {
+			return fmt.Errorf("invalid output count (expected > 0, got: 0)")
+		}
+	}
+	// case types.DefinitionType_DEFINITION_TYPE_PROPOSED: ignored
+	// case types.DefinitionType_DEFINITION_TYPE_UNSPECIFIED: ignored
 
 	return nil
 }
@@ -158,7 +271,7 @@ func (k Keeper) ValidateRecordRemove(ctx sdk.Context, existing types.Record, pro
 		return fmt.Errorf("cannot remove record. expected %s, got %s", recordID, proposedID)
 	}
 
-	if err := k.ValidateRequiredSignatures(scope.Owners, signers); err != nil {
+	if err := k.ValidateAllPartiesAreSigners(scope.Owners, signers); err != nil {
 		return err
 	}
 

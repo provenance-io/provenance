@@ -22,17 +22,27 @@ const (
 )
 
 // KVStore Key Prefixes used for iterator/scans against the store and identification of key types
-// Items are stored with the following key: values  these keys are handled using the MetadataAddress class.
+// Items are stored with the following key: values
+// The "..._key_bytes" parts are 16 bytes generally represented as a uuid
+// The "..._hash" parts are the first 16 bytes of the sha256 checksum
+// These keys are handled using the MetadataAddress class.
 //
 // - 0x00<scope_key_bytes>: Scope
 //
-// - 0x01<scope_key_bytes><session_id_bytes>: Session
+// - 0x01<scope_key_bytes><session_key_bytes>: Session
 //
-// - 0x02<scope_key_bytes><record_name_bytes>: Record
+// - 0x02<scope_key_bytes><record_name_hash>: Record
 //
-// - 0x03<session_specification_hash>: ContractSpecification
+// - 0x03<session_specification_key_bytes>: ContractSpecification
 //
-// - 0x04<scope_specification_id_bytes>: ScopeSpecification
+// - 0x04<scope_specification_key_bytes>: ScopeSpecification
+//
+// - 0x05<session_specification_key_bytes><record_spec_name_hash>: RecordSpecification
+//
+// These keys are used for indexing and more specific iteration.
+// These keys are handled using the stuff in this file.
+// The "..._address" parts are all bytes of an Account Address.
+// The "..._id" parts are all bytes of a MetadataAddress
 //
 // - 0x10<party_address><scope_key_bytes>: 0x01
 //

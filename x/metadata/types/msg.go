@@ -11,8 +11,6 @@ import (
 )
 
 const (
-	TypeMsgMemorializeContractRequest         = "memorialize_contract_request"
-	TypeMsgChangeOwnershipRequest             = "change_ownership_request"
 	TypeMsgAddScopeRequest                    = "add_scope_request"
 	TypeMsgDeleteScopeRequest                 = "delete_scope_request"
 	TypeMsgAddSessionRequest                  = "add_session_request"
@@ -25,6 +23,7 @@ const (
 	TypeMsgAddRecordSpecificationRequest      = "add_record_specification_request"
 	TypeMsgDeleteRecordSpecificationRequest   = "delete_record_specification_request"
 	TypeMsgAddP8EContractSpecRequest          = "add_p8e_contract_spec_request"
+	TypeMsgP8eMemorializeContractRequest      = "p8e_memorialize_contract_request"
 	TypeMsgBindOSLocatorRequest               = "add_os_locator_request"
 	TypeMsgDeleteOSLocatorRequest             = "delete_os_locator_request"
 	TypeMsgModifyOSLocatorRequest             = "modify_os_locator_request"
@@ -32,8 +31,6 @@ const (
 
 // Compile time interface checks.
 var (
-	_ sdk.Msg = &MsgMemorializeContractRequest{}
-	_ sdk.Msg = &MsgChangeOwnershipRequest{}
 	_ sdk.Msg = &MsgAddScopeRequest{}
 	_ sdk.Msg = &MsgDeleteScopeRequest{}
 	_ sdk.Msg = &MsgAddSessionRequest{}
@@ -49,6 +46,7 @@ var (
 	_ sdk.Msg = &MsgDeleteOSLocatorRequest{}
 	_ sdk.Msg = &MsgModifyOSLocatorRequest{}
 	_ sdk.Msg = &MsgAddP8EContractSpecRequest{}
+	_ sdk.Msg = &MsgP8EMemorializeContractRequest{}
 )
 
 // private method to convert an array of strings into an array of Acc Addresses.
@@ -56,132 +54,18 @@ func stringsToAccAddresses(strings []string) []sdk.AccAddress {
 	retval := make([]sdk.AccAddress, len(strings))
 
 	for i, str := range strings {
-		accAddress, err := sdk.AccAddressFromBech32(str)
-		if err != nil {
-			panic(err)
-		}
-		retval[i] = accAddress
+		retval[i] = stringToAccAddress(str)
 	}
 
 	return retval
 }
 
-// ------------------  MsgMemorializeContractRequest  ------------------
-
-// NewMsgMemorializeContractRequest creates a new msg instance
-func NewMsgMemorializeContractRequest() *MsgMemorializeContractRequest {
-	return &MsgMemorializeContractRequest{}
-}
-
-func (msg MsgMemorializeContractRequest) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
-}
-
-// Route returns the module route
-func (msg MsgMemorializeContractRequest) Route() string {
-	return ModuleName
-}
-
-// Type returns the type name for this msg
-func (msg MsgMemorializeContractRequest) Type() string {
-	return TypeMsgMemorializeContractRequest
-}
-
-// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
-func (msg MsgMemorializeContractRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Notary)
+func stringToAccAddress(s string) sdk.AccAddress {
+	accAddress, err := sdk.AccAddressFromBech32(s)
 	if err != nil {
 		panic(err)
 	}
-	return []sdk.AccAddress{addr}
-}
-
-// GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgMemorializeContractRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
-// ValidateBasic quick validity check
-func (msg MsgMemorializeContractRequest) ValidateBasic() error {
-	if strings.TrimSpace(msg.ScopeId) == "" {
-		return fmt.Errorf("scope ID is empty")
-	}
-	if strings.TrimSpace(msg.SessionId) == "" {
-		return fmt.Errorf("session ID is empty")
-	}
-	if strings.TrimSpace(msg.ExecutionId) == "" {
-		return fmt.Errorf("execution ID is empty")
-	}
-	if strings.TrimSpace(msg.Notary) == "" {
-		return fmt.Errorf("notary address is empty")
-	}
-	if err := msg.Contract.ValidateBasic(); err != nil {
-		return err
-	}
-
-	return msg.Contract.ValidateBasic()
-}
-
-// ------------------  MsgChangeOwnershipRequest  ------------------
-
-// NewMsgChangeOwnershipRequest creates a new msg instance
-func NewMsgChangeOwnershipRequest() *MsgChangeOwnershipRequest {
-	return &MsgChangeOwnershipRequest{}
-}
-
-func (msg MsgChangeOwnershipRequest) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
-}
-
-// Route returns the module route
-func (msg MsgChangeOwnershipRequest) Route() string {
-	return ModuleName
-}
-
-// Type returns the type name for this msg
-func (msg MsgChangeOwnershipRequest) Type() string {
-	return TypeMsgChangeOwnershipRequest
-}
-
-// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
-func (msg MsgChangeOwnershipRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Notary)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
-}
-
-// GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgChangeOwnershipRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
-// ValidateBasic performs a quick validity check
-func (msg MsgChangeOwnershipRequest) ValidateBasic() error {
-	if strings.TrimSpace(msg.ScopeId) == "" {
-		return fmt.Errorf("scope ID is empty")
-	}
-	if strings.TrimSpace(msg.SessionId) == "" {
-		return fmt.Errorf("session ID is empty")
-	}
-	if strings.TrimSpace(msg.ExecutionId) == "" {
-		return fmt.Errorf("execution ID is empty")
-	}
-	if strings.TrimSpace(msg.Notary) == "" {
-		return fmt.Errorf("notary address is empty")
-	}
-
-	// Must have one of contract, recitals but not both.
-	if msg.Contract == nil && msg.Recitals == nil {
-		return fmt.Errorf("one of contract or recitals is required")
-	}
-	if msg.Contract != nil && msg.Recitals != nil {
-		return fmt.Errorf("only one of contract or recitals is allowed")
-	}
-	return msg.Contract.ValidateBasic()
+	return accAddress
 }
 
 // ------------------  MsgAddScopeRequest  ------------------
@@ -680,6 +564,44 @@ func (msg MsgDeleteRecordSpecificationRequest) ValidateBasic() error {
 	return nil
 }
 
+// ------------------  MsgP8EMemorializeContractRequest  ------------------
+
+// NewMsgP8EMemorializeContractRequest creates a new msg instance
+func NewMsgP8EMemorializeContractRequest() *MsgP8EMemorializeContractRequest {
+	return &MsgP8EMemorializeContractRequest{}
+}
+
+func (msg MsgP8EMemorializeContractRequest) String() string {
+	out, _ := yaml.Marshal(msg)
+	return string(out)
+}
+
+// Route returns the module route
+func (msg MsgP8EMemorializeContractRequest) Route() string {
+	return ModuleName
+}
+
+// Type returns the type name for this msg
+func (msg MsgP8EMemorializeContractRequest) Type() string {
+	return TypeMsgP8eMemorializeContractRequest
+}
+
+// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
+func (msg MsgP8EMemorializeContractRequest) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{stringToAccAddress(msg.Invoker)}
+}
+
+// GetSignBytes gets the bytes for the message signer to sign on
+func (msg MsgP8EMemorializeContractRequest) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// ValidateBasic performs a quick validity check
+func (msg MsgP8EMemorializeContractRequest) ValidateBasic() error {
+	_, _, err := ConvertP8eMemorializeContractRequest(&msg)
+	return err
+}
+
 // --------------------------- OSLocator------------------------------------------
 
 // NewMsgBindOSLocatorRequest creates a new msg instance
@@ -710,11 +632,7 @@ func (msg MsgBindOSLocatorRequest) GetSignBytes() []byte {
 }
 
 func (msg MsgBindOSLocatorRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Locator.Owner)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
+	return []sdk.AccAddress{stringToAccAddress(msg.Locator.Owner)}
 }
 
 // ---- Delete OS locator ------
@@ -750,11 +668,7 @@ func (msg MsgDeleteOSLocatorRequest) GetSignBytes() []byte {
 // here we assume msg for delete request has the right address
 // should be verified later in the keeper?
 func (msg MsgDeleteOSLocatorRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Locator.Owner)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
+	return []sdk.AccAddress{stringToAccAddress(msg.Locator.Owner)}
 }
 
 /**
@@ -811,9 +725,5 @@ func (msg MsgModifyOSLocatorRequest) GetSignBytes() []byte {
 }
 
 func (msg MsgModifyOSLocatorRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Locator.Owner)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
+	return []sdk.AccAddress{stringToAccAddress(msg.Locator.Owner)}
 }
