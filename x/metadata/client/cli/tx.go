@@ -338,3 +338,38 @@ func parseDescription(cliArgs []string) *types.Description {
 	}
 	return &description
 }
+
+func RemoveContractSpecificationCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "remove-contract-specification [specification-id] [signers]",
+		Short: "Removes a contract specification on the provenance blockchain",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			var specificationID types.MetadataAddress
+			specificationID, err = types.MetadataAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			if !specificationID.IsContractSpecificationAddress() {
+				return fmt.Errorf("invalid contract specification id: %s", args[0])
+			}
+
+			msg := types.NewMsgDeleteContractSpecificationRequest(specificationID, strings.Split(args[1], ","))
+			err = msg.ValidateBasic()
+			if err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
