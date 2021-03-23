@@ -242,3 +242,130 @@ func ModifyOsLocatorCmd() *cobra.Command {
 
 	return cmd
 }
+
+func AddRecordSpecificationCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "add-record-specification [specification-id] [name] [input-specifications] [type-name] [result-types] [responsible-parties] [signers]",
+		Short: "Add/Update metadata record specification to the provenance blockchain",
+		Args:  cobra.MinimumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			specificationID, err := types.MetadataAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+			if !specificationID.IsRecordSpecificationAddress() {
+				return fmt.Errorf("invalid record specification id: %s", args[0])
+			}
+
+			inputs, err := inputSpecification(args[2])
+			if err != nil {
+				return err
+			}
+
+			resultType := definitionType(args[4])
+			partyTypes := partyTypes(args[5])
+			signers := strings.Split(args[6], ",")
+
+			recordSpecification := types.RecordSpecification{
+				SpecificationId:    specificationID,
+				Name:               args[1],
+				Inputs:             inputs,
+				TypeName:           args[3],
+				ResultType:         resultType,
+				ResponsibleParties: partyTypes,
+			}
+
+			msg := *types.NewMsgAddRecordSpecificationRequest(recordSpecification, signers)
+
+			err = msg.ValidateBasic()
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// inputSpecification converts cli delimited argument and converts it to InputSpecifications
+func inputSpecification(cliDelimitedValue string) ([]*types.InputSpecification, error) {
+	delimitedInputs := strings.Split(cliDelimitedValue, ";")
+	inputs := make([]*types.InputSpecification, len(delimitedInputs))
+	for i, delimitedInput := range delimitedInputs {
+		values := strings.Split(delimitedInput, ",")
+		if len(values) != 4 {
+			return nil, fmt.Errorf("invalid number of values for input specification: %v", len(values))
+		}
+		name := values[0]
+		typeName := values[1]
+		switch s := strings.ToUpper(values[2]); s {
+		case "RECORDID":
+			recordID, err := types.MetadataAddressFromBech32(values[3])
+			if err != nil {
+				return nil, err
+			}
+			inputs[i] = &types.InputSpecification{
+				Name: name,
+				Source: &types.InputSpecification_RecordId{
+					RecordId: recordID,
+				},
+				TypeName: typeName,
+			}
+		case "HASH":
+			inputs[i] = &types.InputSpecification{
+				Name:     name,
+				Source:   &types.InputSpecification_Hash{Hash: values[3]},
+				TypeName: typeName,
+			}
+		default:
+			return nil, fmt.Errorf("incorrect source type for input specification: %s", s)
+		}
+	}
+	return inputs, nil
+
+}
+
+func partyTypes(delimitedPartyTypes string) []types.PartyType {
+	parties := strings.Split(delimitedPartyTypes, ",")
+	partyTypes := make([]types.PartyType, len(parties))
+	for i, party := range parties {
+		partyValue := types.PartyType_value[fmt.Sprintf("PARTY_TYPE_%s", strings.ToUpper(party))]
+		partyTypes[i] = types.PartyType(partyValue)
+	}
+	return partyTypes
+}
+
+func definitionType(cliValue string) types.DefinitionType {
+	typeValue := types.DefinitionType_value[fmt.Sprintf("DEFINITION_TYPE_%s", strings.ToUpper(cliValue))]
+	return types.DefinitionType(typeValue)
+}
+
+func RemoveRecordSpecificationCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "remove-record-specification [owner] [uri]",
+		Short: "Remove record specification from the provenance blockchain",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			//TODO: remove record specification
+			msg := *types.NewMsgDeleteRecordSpecificationRequest()
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}

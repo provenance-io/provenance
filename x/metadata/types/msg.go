@@ -487,8 +487,8 @@ func (msg MsgDeleteContractSpecificationRequest) ValidateBasic() error {
 // ------------------  MsgAddRecordSpecificationRequest  ------------------
 
 // NewMsgAddRecordSpecificationRequest creates a new msg instance
-func NewMsgAddRecordSpecificationRequest() *MsgAddRecordSpecificationRequest {
-	return &MsgAddRecordSpecificationRequest{}
+func NewMsgAddRecordSpecificationRequest(recordSpecification RecordSpecification, signers []string) *MsgAddRecordSpecificationRequest {
+	return &MsgAddRecordSpecificationRequest{Specification: recordSpecification, Signers: signers}
 }
 
 func (msg MsgAddRecordSpecificationRequest) String() string {

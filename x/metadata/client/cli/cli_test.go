@@ -27,6 +27,7 @@ import (
 	"github.com/provenance-io/provenance/testutil"
 
 	"github.com/provenance-io/provenance/x/metadata/client/cli"
+	"github.com/provenance-io/provenance/x/metadata/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -1470,7 +1471,7 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 	userAddr := sdk.AccAddress(pubkey.Address())
 	user := userAddr.String()
 
-	testCases := []osTestStruct{
+	testCases := []commonTestStruct{
 		{
 			"Should successfully add metadata scope",
 			cli.AddMetadataScopeCmd(),
@@ -1595,7 +1596,7 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 	s.runTestCase(testCases)
 }
 
-type osTestStruct struct {
+type commonTestStruct struct {
 	name         string
 	cmd          *cobra.Command
 	args         []string
@@ -1609,7 +1610,7 @@ func (s *IntegrationTestSuite) TestRemoveMetadataScopeCmd() {
 	userId := s.testnet.Validators[0].Address.String()
 	scopeUUID := uuid.New().String()
 
-	testCases := []osTestStruct{
+	testCases := []commonTestStruct{
 		{
 			"Should successfully add metadata scope for testing scope removal",
 			cli.AddMetadataScopeCmd(),
@@ -1675,7 +1676,7 @@ func (s *IntegrationTestSuite) TestRemoveMetadataScopeCmd() {
 func (s *IntegrationTestSuite) TestAddObjectLocatorCmd() {
 	userURI := "http://foo.com"
 	userURIMod := "https://www.google.com/search?q=red+butte+garden&oq=red+butte+garden&aqs=chrome..69i57j46i131i175i199i433j0j0i457j0l6.3834j0j7&sourceid=chrome&ie=UTF-8#lpqa=d,2"
-	testCases := []osTestStruct{
+	testCases := []commonTestStruct{
 		{
 			"Should successfully add os locator",
 			cli.AddOsLocatorCmd(),
@@ -1727,7 +1728,7 @@ func (s *IntegrationTestSuite) TestGetOSLocatorCmd() {
 			"get os locator",
 			[]string{s.user1Addr.String(), s.asJson},
 			"",
-			fmt.Sprintf("{\"owner\":\"%s\",\"locator_uri\":\"%s\"}",s.user1Addr.String(),"http://foo.com"),
+			fmt.Sprintf("{\"owner\":\"%s\",\"locator_uri\":\"%s\"}", s.user1Addr.String(), "http://foo.com"),
 		},
 	}
 
@@ -1742,13 +1743,41 @@ func (s *IntegrationTestSuite) TestGetAllOSLocatorCmd() {
 			"get os locator",
 			[]string{s.user1Addr.String(), s.asJson},
 			"",
-			fmt.Sprintf("{\"owner\":\"%s\",\"locator_uri\":\"%s\"}",s.user1Addr.String(),"http://foo.com"),
+			fmt.Sprintf("{\"owner\":\"%s\",\"locator_uri\":\"%s\"}", s.user1Addr.String(), "http://foo.com"),
 		},
 	}
 
 	runQueryCmdTestCases(s, cmd, testCases)
 }
-func (s *IntegrationTestSuite) runTestCase(testCases []osTestStruct) {
+
+func (s *IntegrationTestSuite) TestAddRecordSpecificationCmd() {
+	cmd := cli.AddRecordSpecificationCmd()
+	recordName := "testrecordspecid"
+	specificationID := types.RecordSpecMetadataAddress(s.contractSpecUUID, "testrecordspecid")
+	testCases := []commonTestStruct{
+		{
+			"Should successfully add os locator",
+			cmd,
+			[]string{
+				specificationID.String(),
+				recordName,
+				"record1,typename1,hash,hashy;record2,typename2,hash,hashy",
+				"typename",
+				"resulttypes",
+				"responsibleparties",
+				fmt.Sprintf("%s", s.user1),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+	}
+	s.runTestCase(testCases)
+}
+
+func (s *IntegrationTestSuite) runTestCase(testCases []commonTestStruct) {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
