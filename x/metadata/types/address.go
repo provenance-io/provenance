@@ -485,6 +485,9 @@ func (ma MetadataAddress) AsRecordAddress(name string) (MetadataAddress, error) 
 	if err != nil {
 		return MetadataAddress{}, err
 	}
+	if len(name) == 0 {
+		return MetadataAddress{}, errors.New("missing name value for record metadata address")
+	}
 	return RecordMetadataAddress(scopeUUID, name), nil
 }
 
