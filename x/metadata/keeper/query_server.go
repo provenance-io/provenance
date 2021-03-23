@@ -95,31 +95,20 @@ func (k Keeper) Sessions(c context.Context, req *types.SessionsRequest) (*types.
 	ctx := sdk.UnwrapSDKContext(c)
 
 	if haveSessionID {
-		var sessionID types.MetadataAddress
-		var sessionIDErr error
-		if haveScopeID {
-			sessionID, sessionIDErr = types.ParseSessionID(req.ScopeId, req.SessionId)
-		} else {
-			sessionID, sessionIDErr = types.MetadataAddressFromBech32(req.SessionId)
-			if sessionIDErr != nil {
-				sessionIDErr = fmt.Errorf("session id is not a bech32 address: %w", sessionIDErr)
-			} else if !sessionID.IsSessionAddress() {
-				sessionIDErr = fmt.Errorf("address [%s] is not a session address", req.SessionId)
-			}
+		sessionAddr, err := ParseSessionID(req.ScopeId, req.SessionId)
+		if err != nil {
+			return &retval, status.Error(codes.InvalidArgument, err.Error())
 		}
-		if sessionIDErr != nil {
-			return &retval, status.Error(codes.InvalidArgument, sessionIDErr.Error())
-		}
-		session, found := k.GetSession(ctx, sessionID)
+		session, found := k.GetSession(ctx, sessionAddr)
 		if found {
 			retval.Sessions = append(retval.Sessions, types.WrapSession(&session))
 		} else {
-			retval.Sessions = append(retval.Sessions, types.WrapSessionNotFound(sessionID))
+			retval.Sessions = append(retval.Sessions, types.WrapSessionNotFound(sessionAddr))
 		}
 		return &retval, nil
 	}
 
-	scopeID, scopeIDErr := types.ParseScopeID(req.ScopeId)
+	scopeID, scopeIDErr := ParseScopeID(req.ScopeId)
 	if scopeIDErr != nil {
 		return &retval, scopeIDErr
 	}
@@ -135,58 +124,89 @@ func (k Keeper) Sessions(c context.Context, req *types.SessionsRequest) (*types.
 	return &retval, nil
 }
 
-// RecordsByScopeUUID returns a collection of the records in a scope or a specific one by name
-func (k Keeper) RecordsByScopeUUID(c context.Context, req *types.RecordsByScopeUUIDRequest) (*types.RecordsByScopeUUIDResponse, error) {
+// Records returns records based ont eh provided request.
+func (k Keeper) Records(c context.Context, req *types.RecordsRequest) (*types.RecordsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.GetScopeUuid() == "" {
-		return nil, status.Error(codes.InvalidArgument, "scope uuid cannot be empty")
-	}
-
-	scopeUUID, err := uuid.Parse(req.GetScopeUuid())
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid scope uuid: %s", err.Error())
-	}
-
-	scopeAddr := types.ScopeMetadataAddress(scopeUUID)
+	retval := types.RecordsResponse{Request: req}
 	ctx := sdk.UnwrapSDKContext(c)
-	records, err := k.GetRecords(ctx, scopeAddr, req.Name)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "unable to get records: %s", err.Error())
+
+	haveRecordAddr := len(req.RecordAddr) > 0
+	haveScopeID := len(req.ScopeId) > 0
+	haveSessionID := len(req.SessionId) > 0
+
+	if !haveRecordAddr && !haveScopeID && !haveSessionID {
+		return &retval, status.Error(codes.InvalidArgument, "empty request parameters")
 	}
 
-	return &types.RecordsByScopeUUIDResponse{ScopeUuid: scopeUUID.String(), ScopeId: scopeAddr.String(), Records: records}, nil
-}
-
-// RecordsByScopeID returns a collection of the records in a scope or a specific one by name
-func (k Keeper) RecordsByScopeID(c context.Context, req *types.RecordsByScopeIDRequest) (*types.RecordsByScopeIDResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
+	if haveRecordAddr {
+		recordAddr, err := ParseRecordAddr(req.RecordAddr)
+		if err != nil {
+			return &retval, status.Error(codes.InvalidArgument, err.Error())
+		}
+		record, found := k.GetRecord(ctx, recordAddr)
+		if found {
+			retval.Records = append(retval.Records, types.WrapRecord(&record))
+		} else {
+			retval.Records = append(retval.Records, types.WrapRecordNotFound(recordAddr))
+		}
+		return &retval, nil
 	}
 
-	if req.GetScopeId() == "" {
-		return nil, status.Error(codes.InvalidArgument, "scope id cannot be empty")
+	var scopeAddr, sessionAddr types.MetadataAddress
+
+	if haveScopeID {
+		var err error
+		scopeAddr, err = ParseScopeID(req.ScopeId)
+		if err != nil {
+			return &retval, status.Error(codes.InvalidArgument, err.Error())
+		}
+	}
+	if haveSessionID {
+		var err error
+		sessionAddr, err = ParseSessionID(req.ScopeId, req.SessionId)
+		if err != nil {
+			return &retval, status.Error(codes.InvalidArgument, err.Error())
+		}
+		if scopeAddr.Empty() {
+			scopeAddr, err = sessionAddr.AsScopeAddress()
+			if err != nil {
+				return &retval, status.Error(codes.InvalidArgument, err.Error())
+			}
+		}
 	}
 
-	scopeAddr, err := types.MetadataAddressFromBech32(req.GetScopeId())
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid scope id %s : %s", req.GetScopeId(), err)
+	var records []*types.Record
+
+	if len(req.Name) > 0 {
+		recordAddr, err := scopeAddr.AsRecordAddress(req.Name)
+		if err != nil {
+			return &retval, status.Error(codes.InvalidArgument, err.Error())
+		}
+		record, found := k.GetRecord(ctx, recordAddr)
+		if found {
+			records = append(records, &record)
+		}
+	} else {
+		var err error
+		records, err = k.GetRecords(ctx, scopeAddr, req.Name)
+		if err != nil {
+			return &retval, status.Error(codes.InvalidArgument, err.Error())
+		}
 	}
 
-	scopeUUID, err := scopeAddr.ScopeUUID()
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "unable to extract uuid from scope metaaddress %s", err)
+	if len(records) > 0 {
+		haveSessionAddr := sessionAddr.Empty()
+		for _, r := range records {
+			if !haveSessionAddr || sessionAddr.Equals(r.SessionId) {
+				retval.Records = append(retval.Records, types.WrapRecord(r))
+			}
+		}
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
-	records, err := k.GetRecords(ctx, scopeAddr, req.Name)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "unable to get records: %s", err.Error())
-	}
-
-	return &types.RecordsByScopeIDResponse{ScopeUuid: scopeUUID.String(), ScopeId: req.GetScopeId(), Records: records}, nil
+	return &retval, nil
 }
 
 // Ownership returns a list of scope identifiers that list the given address as a data or value owner
@@ -604,4 +624,62 @@ func (k Keeper) OSAllLocators(ctx context.Context, request *types.OSAllLocatorsR
 func IsBase64(s string) bool {
 	_, err := b64.StdEncoding.DecodeString(s)
 	return err == nil
+}
+
+// ParseScopeID parses the provided input into a scope MetadataAddress.
+// The input can either be a uuid string or scope address bech32 string.
+func ParseScopeID(scopeID string) (types.MetadataAddress, error) {
+	addr, addrErr := types.MetadataAddressFromBech32(scopeID)
+	if addrErr == nil {
+		if addr.IsScopeAddress() {
+			return addr, nil
+		}
+		return types.MetadataAddress{}, fmt.Errorf("address [%s] is not a scope address", scopeID)
+	}
+	uid, uidErr := uuid.Parse(scopeID)
+	if uidErr == nil {
+		return types.ScopeMetadataAddress(uid), nil
+	}
+	return types.MetadataAddress{}, fmt.Errorf("could not parse [%s] into either a scope address (%s) or uuid (%s)",
+		scopeID, addrErr, uidErr)
+}
+
+// ParseSessionID parses the provided input into a session MetadataAddress.
+// The scopeID field can be either a uuid or scope address bech32 string.
+// The sessionID field can be either a uuid or session address bech32 string.
+// If the sessionID field is a bech32 address, the scopeID field is ignored.
+// Otherwise, the scope id field is parsed using ParseScopeID and converted to a session MetadataAddress using the uuid in the sessionID field.
+func ParseSessionID(scopeID string, sessionID string) (types.MetadataAddress, error) {
+	sessionAddr, sessionAddrErr := types.MetadataAddressFromBech32(sessionID)
+	if sessionAddrErr == nil {
+		if sessionAddr.IsSessionAddress() {
+			return sessionAddr, nil
+		}
+		return types.MetadataAddress{}, fmt.Errorf("address [%s] is not a session address", sessionID)
+	} else if len(scopeID) == 0 {
+		return types.MetadataAddress{}, fmt.Errorf("could not parse [%s] into a session address: %w", sessionID, sessionAddrErr)
+	}
+	scopeAddr, scopeAddrErr := ParseScopeID(scopeID)
+	if scopeAddrErr != nil {
+		return types.MetadataAddress{}, scopeAddrErr
+	}
+	sessionUUID, sessionUUIDErr := uuid.Parse(sessionID)
+	if sessionUUIDErr == nil {
+		return scopeAddr.AsSessionAddress(sessionUUID)
+	}
+	return types.MetadataAddress{}, fmt.Errorf("could not parse [%s] into either a session address (%s) or uuid (%s)",
+		sessionID, sessionAddrErr, sessionUUIDErr)
+}
+
+// ParseRecordAddr parses the provided input into a scope MetadataAddress.
+// The input must be a record address bech32 string.
+func ParseRecordAddr(recordAddr string) (types.MetadataAddress, error) {
+	addr, addrErr := types.MetadataAddressFromBech32(recordAddr)
+	if addrErr == nil {
+		if addr.IsRecordAddress() {
+			return addr, nil
+		}
+		return types.MetadataAddress{}, fmt.Errorf("address [%s] is not a record address", recordAddr)
+	}
+	return types.MetadataAddress{}, fmt.Errorf("could not parse [%s] into a record address: %w", recordAddr, addrErr)
 }

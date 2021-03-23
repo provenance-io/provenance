@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
 
@@ -28,14 +29,23 @@ func (k Keeper) GetRecord(ctx sdk.Context, id types.MetadataAddress) (record typ
 // GetRecords returns records with scopeAddress and name
 func (k Keeper) GetRecords(ctx sdk.Context, scopeAddress types.MetadataAddress, name string) ([]*types.Record, error) {
 	records := []*types.Record{}
-	err := k.IterateRecords(ctx, scopeAddress, func(r types.Record) (stop bool) {
-		if name == "" {
+	var iterator func(r types.Record) (stop bool)
+	if len(name) == 0 {
+		iterator = func(r types.Record) (stop bool) {
 			records = append(records, &r)
-		} else if name == r.Name {
-			records = append(records, &r)
+			return false
 		}
-		return false
-	})
+	} else {
+		name = strings.ToLower(name)
+		iterator = func(r types.Record) (stop bool) {
+			if name == strings.ToLower(r.Name) {
+				records = append(records, &r)
+				return true
+			}
+			return false
+		}
+	}
+	err := k.IterateRecords(ctx, scopeAddress, iterator)
 	if err != nil {
 		return nil, err
 	}
@@ -100,8 +110,10 @@ func (k Keeper) IterateRecords(ctx sdk.Context, scopeID types.MetadataAddress, h
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var record types.Record
-		k.cdc.MustUnmarshalBinaryBare(it.Value(), &record)
-		if handler(record) {
+		err = k.cdc.UnmarshalBinaryBare(it.Value(), &record)
+		if err != nil {
+			k.Logger(ctx).Error("could not unmarshal record", "address", it.Key(), "error", err)
+		} else if handler(record) {
 			break
 		}
 	}
