@@ -247,14 +247,17 @@ func AddContractSpecificationCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-contract-specification [contractspec-id] [owners] [parties-involved] [source-type] [source-value] [classname] [signers] [description-name] [description] [website-url] [icon-url]",
 		Short: "Add/Update metadata contract specification on the provenance blockchain",
-		Args:  cobra.RangeArgs(6, 11),
+		Long: `Add-Contract-Specification adds 
+		`,
+		Args: cobra.RangeArgs(7, 11),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			specificationID, err := types.MetadataAddressFromBech32(args[0])
+			var specificationID types.MetadataAddress
+			specificationID, err = types.MetadataAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
@@ -264,41 +267,33 @@ func AddContractSpecificationCmd() *cobra.Command {
 			}
 
 			partiesInvolved := partyTypes(args[2])
-
-			var contractSpecification *types.ContractSpecification
+			description := parseDescription(args[7:])
+			contractSpecification := types.ContractSpecification{SpecificationId: specificationID,
+				Description:     description,
+				OwnerAddresses:  strings.Split(args[1], ","),
+				PartiesInvolved: partiesInvolved,
+				ClassName:       args[5],
+			}
 			switch s := strings.ToUpper(args[3]); s {
 			case "RESOURCEID":
 				recordID, err := types.MetadataAddressFromBech32(args[4])
 				if err != nil {
 					return err
 				}
-				contractSpecification = &types.ContractSpecification{
-					SpecificationId: specificationID,
-					Description:     nil,
-					OwnerAddresses:  strings.Split(args[1], ","),
-					PartiesInvolved: partiesInvolved,
-					ClassName:       args[5],
-					Source: &types.ContractSpecification_ResourceId{
-						ResourceId: recordID,
-					},
+				contractSpecification.Source = &types.ContractSpecification_ResourceId{
+					ResourceId: recordID,
 				}
 			case "HASH":
-				contractSpecification = &types.ContractSpecification{
-					SpecificationId: specificationID,
-					Description:     nil,
-					OwnerAddresses:  strings.Split(args[1], ","),
-					PartiesInvolved: partiesInvolved,
-					ClassName:       args[5],
-					Source: &types.ContractSpecification_Hash{
-						Hash: args[4],
-					},
+				contractSpecification.Source = &types.ContractSpecification_Hash{
+					Hash: args[4],
 				}
 			default:
 				return fmt.Errorf("incorrect source type for contract specification: %s", s)
 			}
 
 			signers := strings.Split(args[6], ",")
-			msg := types.MsgAddContractSpecificationRequest{Specification: *contractSpecification, Signers: signers}
+
+			msg := types.MsgAddContractSpecificationRequest{Specification: contractSpecification, Signers: signers}
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err
@@ -321,4 +316,25 @@ func partyTypes(delimitedPartyTypes string) []types.PartyType {
 		partyTypes[i] = types.PartyType(partyValue)
 	}
 	return partyTypes
+}
+
+func parseDescription(cliArgs []string) *types.Description {
+	if len(cliArgs) == 0 {
+		return nil
+	}
+
+	description := types.Description{}
+	if len(cliArgs) >= 1 {
+		description.Name = cliArgs[0]
+	}
+	if len(cliArgs) >= 2 {
+		description.Description = cliArgs[1]
+	}
+	if len(cliArgs) >= 3 {
+		description.WebsiteUrl = cliArgs[2]
+	}
+	if len(cliArgs) >= 4 {
+		description.IconUrl = cliArgs[3]
+	}
+	return &description
 }
