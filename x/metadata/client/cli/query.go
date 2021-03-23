@@ -726,7 +726,7 @@ func scopeSpecByUUID(cmd *cobra.Command, scopeSpecUUID string) error {
 		return err
 	}
 	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.ScopeSpecification(context.Background(), &types.ScopeSpecificationRequest{SpecificationUuid: scopeSpecUUID})
+	res, err := queryClient.ScopeSpecification(context.Background(), &types.ScopeSpecificationRequest{SpecificationId: scopeSpecUUID})
 	if err != nil {
 		return err
 	}

@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	b64 "encoding/base64"
+	"errors"
 	"fmt"
 	"net/url"
 	"strings"
@@ -415,22 +416,21 @@ func (k Keeper) ScopeSpecification(c context.Context, req *types.ScopeSpecificat
 
 	retval := types.ScopeSpecificationResponse{Request: req}
 
-	if len(req.SpecificationUuid) == 0 {
-		return &retval, status.Error(codes.InvalidArgument, "specification uuid cannot be empty")
+	if len(req.SpecificationId) == 0 {
+		return &retval, status.Error(codes.InvalidArgument, "specification id cannot be empty")
 	}
 
-	specUUID, err := uuid.Parse(req.SpecificationUuid)
+	specAddr, err := ParseScopeSpecID(req.SpecificationId)
 	if err != nil {
-		return &retval, status.Errorf(codes.InvalidArgument, "invalid specification uuid: %s", err.Error())
+		return &retval, status.Error(codes.InvalidArgument, err.Error())
 	}
-	specID := types.ScopeSpecMetadataAddress(specUUID)
 
-	retval.SpecificationUuid = specUUID.String()
+	retval.SpecificationUuid = specAddr.String()
 
 	ctx := sdk.UnwrapSDKContext(c)
-	spec, found := k.GetScopeSpecification(ctx, specID)
+	spec, found := k.GetScopeSpecification(ctx, specAddr)
 	if !found {
-		return &retval, status.Errorf(codes.NotFound, "scope specification uuid %s not found", req.SpecificationUuid)
+		return &retval, status.Errorf(codes.NotFound, "scope specification %s not found", req.SpecificationId)
 	}
 	retval.ScopeSpecification = &spec
 
@@ -853,4 +853,65 @@ func ParseRecordAddr(recordAddr string) (types.MetadataAddress, error) {
 		return types.MetadataAddress{}, fmt.Errorf("address [%s] is not a record address", recordAddr)
 	}
 	return addr, nil
+}
+
+// ParseScopeSpecID parses the provided input into a scope spec MetadataAddress.
+// The input can either be a uuid string or scope spec address bech32 string.
+func ParseScopeSpecID(scopeSpecID string) (types.MetadataAddress, error) {
+	addr, addrErr := types.MetadataAddressFromBech32(scopeSpecID)
+	if addrErr == nil {
+		if addr.IsScopeSpecificationAddress() {
+			return addr, nil
+		}
+		return types.MetadataAddress{}, fmt.Errorf("address [%s] is not a scope spec address", scopeSpecID)
+	}
+	uid, uidErr := uuid.Parse(scopeSpecID)
+	if uidErr == nil {
+		return types.ScopeSpecMetadataAddress(uid), nil
+	}
+	return types.MetadataAddress{}, fmt.Errorf("could not parse [%s] into either a scope spec address (%s) or uuid (%s)",
+		scopeSpecID, addrErr, uidErr)
+}
+
+// ParseContractSpecID parses the provided input into a contract spec MetadataAddress.
+// The input can either be a uuid string or contract spec address bech32 string.
+func ParseContractSpecID(contractSpecID string) (types.MetadataAddress, error) {
+	addr, addrErr := types.MetadataAddressFromBech32(contractSpecID)
+	if addrErr == nil {
+		if addr.IsContractSpecificationAddress() {
+			return addr, nil
+		}
+		return types.MetadataAddress{}, fmt.Errorf("address [%s] is not a contract spec address", contractSpecID)
+	}
+	uid, uidErr := uuid.Parse(contractSpecID)
+	if uidErr == nil {
+		return types.ContractSpecMetadataAddress(uid), nil
+	}
+	return types.MetadataAddress{}, fmt.Errorf("could not parse [%s] into either a contract spec address (%s) or uuid (%s)",
+		contractSpecID, addrErr, uidErr)
+}
+
+// ParseRecordSpecID parses the provided input into a record spec MetadataAddress.
+// The recordSpecID can either be a uuid string, a record spec address bech32 string, or a contract spec address bech32 string.
+// If it's a contract spec address or a uuid, then a name is required.
+func ParseRecordSpecID(recordSpecID string, name string) (types.MetadataAddress, error) {
+	addr, addrErr := types.MetadataAddressFromBech32(recordSpecID)
+	if addrErr == nil {
+		if addr.IsRecordSpecificationAddress() {
+			return addr, nil
+		}
+		if addr.IsContractSpecificationAddress() && len(name) > 0 {
+			return addr.AsRecordSpecAddress(name)
+		}
+		return types.MetadataAddress{}, fmt.Errorf("address [%s] is not a contract spec address", recordSpecID)
+	}
+	if len(name) == 0 {
+		return types.MetadataAddress{}, errors.New("a name is required when creating a record spec address using a uuid")
+	}
+	uid, uidErr := uuid.Parse(recordSpecID)
+	if uidErr == nil {
+		return types.RecordSpecMetadataAddress(uid, name), nil
+	}
+	return types.MetadataAddress{}, fmt.Errorf("could not parse [%s] into either a record spec address (%s) or uuid (%s)",
+		recordSpecID, addrErr, uidErr)
 }
