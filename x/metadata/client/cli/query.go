@@ -752,7 +752,7 @@ func contractSpecByUUID(cmd *cobra.Command, contractSpecUUID string) error {
 		return err
 	}
 	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.ContractSpecification(context.Background(), &types.ContractSpecificationRequest{SpecificationUuid: contractSpecUUID})
+	res, err := queryClient.ContractSpecification(context.Background(), &types.ContractSpecificationRequest{SpecificationId: contractSpecUUID})
 	if err != nil {
 		return err
 	}
@@ -773,9 +773,9 @@ func recordSpecByID(cmd *cobra.Command, recordSpecID types.MetadataAddress) erro
 		return err
 	}
 	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.RecordSpecificationByID(
+	res, err := queryClient.RecordSpecification(
 		context.Background(),
-		&types.RecordSpecificationByIDRequest{RecordSpecificationId: recordSpecID.String()},
+		&types.RecordSpecificationRequest{SpecificationId: recordSpecID.String()},
 	)
 	if err != nil {
 		return err
@@ -813,7 +813,7 @@ func recordSpecsByContractSpecUUID(cmd *cobra.Command, contractSpecUUID string) 
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.RecordSpecificationsForContractSpecification(
 		context.Background(),
-		&types.RecordSpecificationsForContractSpecificationRequest{ContractSpecificationUuid: contractSpecUUID},
+		&types.RecordSpecificationsForContractSpecificationRequest{SpecificationId: contractSpecUUID},
 	)
 	if err != nil {
 		return err

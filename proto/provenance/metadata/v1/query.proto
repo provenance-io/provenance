@@ -64,6 +64,9 @@ service Query {
   // * If both a scope id and session id is provided, and the session id is a uuid, then the session in the provided
   // scope, with the provided session uuid is returned.
   // * If neither a scope id, nor a session id are provided, a bad request is returned.
+  //
+  // By default, the scope and records are not included.
+  // Set include_scope and/or include_records to true to include the scope and/or records.
   rpc Sessions(SessionsRequest) returns (SessionsResponse) {
     option (google.api.http) = {
       get: "/provenance/metadata/v1/session/{session_id}",
@@ -88,6 +91,9 @@ service Query {
   // * If only a session_id is provided, it must be a bech32 session address. All records in that session are returned.
   // * If a name is provided, either a scope_id must be provided or a session_id must be provided as a bech32 session
   // address. The record with the provided name in the provided context is returned.
+  //
+  // By default, the scope and sessions are not included.
+  // Set include_scope and/or include_sessions to true to include the scope and/or sessions.
   rpc Records(RecordsRequest) returns (RecordsResponse) {
     option (google.api.http) = {
       get: "/provenance/metadata/v1/record/{record_addr}",
@@ -115,39 +121,43 @@ service Query {
   // ---- Specification Queries -----
 
   // ScopeSpecification returns a scope specification for the given specification id.
+  //
   // The specification_id can either be a uuid, e.g. dc83ea70-eacd-40fe-9adf-1cf6148bf8a2 or a bech32 scope
   // specification address, e.g. scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m.
   rpc ScopeSpecification(ScopeSpecificationRequest) returns (ScopeSpecificationResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/scopespec/{specification_id}";
   }
 
-  // ContractSpecification returns a contract specification for the given specification uuid.
+  // ContractSpecification returns a contract specification for the given specification id.
+  //
+  // The specification_id can either be a uuid, e.g. def6bc0a-c9dd-4874-948f-5206e6060a84, a bech32 contract
+  // specification address, e.g. contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn, or a bech32 record specification
+  // address, e.g. recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44. If it is a record specification
+  // address, then the contract specification that contains that record specification is looked up.
+  //
+  // By default, the record specifications for this contract specification are not included.
+  // Set include_record_specs to true to include them in the result.
   rpc ContractSpecification(ContractSpecificationRequest) returns (ContractSpecificationResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/contractspec/{specification_uuid}";
+    option (google.api.http).get = "/provenance/metadata/v1/contractspec/{specification_id}";
   }
 
-  // ContractSpecificationExtended returns a contract specification and record specifications for the given contract
-  // specification uuid.
-  rpc ContractSpecificationExtended(ContractSpecificationExtendedRequest)
-      returns (ContractSpecificationExtendedResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/contractspec/{specification_uuid}/extended";
-  }
-
-  // RecordSpecificationsForContractSpecification returns the record specifications for the given contract specification
-  // uuid.
+  // RecordSpecificationsForContractSpecification returns the record specifications for the given input.
+  //
+  // The specification_id can either be a uuid, e.g. def6bc0a-c9dd-4874-948f-5206e6060a84, a bech32 contract
+  // specification address, e.g. contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn, or a bech32 record specification
+  // address, e.g. recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44. If it is a record specification
+  // address, then the contract specification that contains that record specification is used.
   rpc RecordSpecificationsForContractSpecification(RecordSpecificationsForContractSpecificationRequest)
       returns (RecordSpecificationsForContractSpecificationResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/contractspec/{contract_specification_uuid}/recordspecs";
+    option (google.api.http).get = "/provenance/metadata/v1/contractspec/{specification_id}/recordspecs";
   }
 
-  // RecordSpecification returns a record specification for the given contract specification uuid and record name.
+  // RecordSpecification returns a record specification for the given input.
   rpc RecordSpecification(RecordSpecificationRequest) returns (RecordSpecificationResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/recordspec/{contract_specification_uuid}/{name}";
-  }
-
-  // RecordSpecificationByID returns a record specification for the given record specification id.
-  rpc RecordSpecificationByID(RecordSpecificationByIDRequest) returns (RecordSpecificationByIDResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/recordspec/id/{record_specification_id}";
+    option (google.api.http) = {
+      get: "/provenance/metadata/v1/recordspec/{specification_id}"
+      additional_bindings: [{get: "/provenance/metadata/v1/contractspec/{specification_id}/recordspec/{name}"}]
+    };
   }
 
   // ---- Object Store Locator Queries -----
@@ -376,8 +386,10 @@ message ScopeSpecificationRequest {
 
 // ScopeSpecificationResponse is the response type for the Query/ScopeSpecification RPC method.
 message ScopeSpecificationResponse {
+  // scope_specification is the on-chain scope specification message.
   ScopeSpecification scope_specification = 1 [(gogoproto.moretags) = "yaml:\"scope_specification\""];
-  string             specification_uuid  = 2 [(gogoproto.moretags) = "yaml:\"specification_uuid\""];
+  // specification_uuid is the uuid of the scope specification.
+  string specification_uuid = 2 [(gogoproto.moretags) = "yaml:\"specification_uuid\""];
 
   // request is a copy of the request that generated these results.
   ScopeSpecificationRequest request = 98;
@@ -385,45 +397,51 @@ message ScopeSpecificationResponse {
 
 // ContractSpecificationRequest is the request type for the Query/ContractSpecification RPC method.
 message ContractSpecificationRequest {
-  string specification_uuid = 1 [(gogoproto.moretags) = "yaml:\"specification_uuid\""];
+  // specification_id can either be a uuid, e.g. def6bc0a-c9dd-4874-948f-5206e6060a84 or a bech32 contract specification
+  // address, e.g. contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn.
+  // It can also be a record specification address, e.g.
+  // recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44.
+  string specification_id = 1 [(gogoproto.moretags) = "yaml:\"specification_id\""];
+
+  // include_record_specs is a flag for whether or not the record specifications in this contract specification should
+  // be included in the result.
+  bool include_record_specs = 10 [(gogoproto.moretags) = "yaml:\"include_record_specs\""];
 }
 
 // ContractSpecificationResponse is the response type for the Query/ContractSpecification RPC method.
 message ContractSpecificationResponse {
-  ContractSpecification contract_specification      = 1 [(gogoproto.moretags) = "yaml:\"contract_specification\""];
-  string                contract_specification_uuid = 2 [(gogoproto.moretags) = "yaml:\"contract_specification_uuid\""];
+  // contract_specification is the on-chain contract specification message.
+  ContractSpecification contract_specification = 1 [(gogoproto.moretags) = "yaml:\"contract_specification\""];
+  // contract_specification_uuid is the uuid of this contract specification.
+  string contract_specification_uuid = 2 [(gogoproto.moretags) = "yaml:\"contract_specification_uuid\""];
+  // record_specifications is any number or on-chain record specifications associated with this contract_specification
+  // (if requested).
+  repeated RecordSpecification record_specifications = 3
+      [(gogoproto.moretags) = "yaml:\"record_specifications,omitempty\""];
 
   // request is a copy of the request that generated these results.
   ContractSpecificationRequest request = 98;
 }
 
-// ContractSpecificationExtendedRequest is the request type for the Query/ContractSpecificationExtended RPC method.
-// specification uuid
-message ContractSpecificationExtendedRequest {
-  string specification_uuid = 1 [(gogoproto.moretags) = "yaml:\"specification_uuid\""];
-}
-
-// ContractSpecificationExtendedResponse is the response type for the Query/ContractSpecificationExtended RPC method.
-message ContractSpecificationExtendedResponse {
-  ContractSpecification        contract_specification = 1 [(gogoproto.moretags) = "yaml:\"contract_specification\""];
-  repeated RecordSpecification record_specifications  = 2 [(gogoproto.moretags) = "yaml:\"record_specifications\""];
-  string contract_specification_uuid = 3 [(gogoproto.moretags) = "yaml:\"contract_specification_uuid\""];
-
-  // request is a copy of the request that generated these results.
-  ContractSpecificationExtendedRequest request = 98;
-}
-
 // RecordSpecificationsForContractSpecificationRequest is the request type for the
 // Query/RecordSpecificationsForContractSpecification RPC method.
 message RecordSpecificationsForContractSpecificationRequest {
-  string contract_specification_uuid = 1 [(gogoproto.moretags) = "yaml:\"contract_specification_uuid\""];
+  // specification_id can either be a uuid, e.g. def6bc0a-c9dd-4874-948f-5206e6060a84 or a bech32 contract specification
+  // address, e.g. contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn.
+  // It can also be a record specification address, e.g.
+  // recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44.
+  string specification_id = 1 [(gogoproto.moretags) = "yaml:\"specification_id\""];
 }
 
 // RecordSpecificationsForContractSpecificationResponse is the response type for the
 // Query/RecordSpecificationsForContractSpecification RPC method.
 message RecordSpecificationsForContractSpecificationResponse {
+  // record_specifications is any number or on-chain record specifications associated with this contract_specification.
   repeated RecordSpecification record_specifications = 1 [(gogoproto.moretags) = "yaml:\"record_specifications\""];
+  // contract_specification_uuid is the uuid of this contract specification.
   string contract_specification_uuid = 2 [(gogoproto.moretags) = "yaml:\"contract_specification_uuid\""];
+  // contract_specification_addr is the contract specification address as a bech32 encoded string.
+  string contract_specification_addr = 3 [(gogoproto.moretags) = "yaml:\"contract_specification_addr\""];
 
   // request is a copy of the request that generated these results.
   RecordSpecificationsForContractSpecificationRequest request = 98;
@@ -431,32 +449,28 @@ message RecordSpecificationsForContractSpecificationResponse {
 
 // RecordSpecificationRequest is the request type for the Query/RecordSpecification RPC method.
 message RecordSpecificationRequest {
-  string contract_specification_uuid = 1 [(gogoproto.moretags) = "yaml:\"contract_specification_uuid\""];
-  string name                        = 2;
+  // specification_id can either be a uuid, e.g. def6bc0a-c9dd-4874-948f-5206e6060a84 or a bech32 contract specification
+  // address, e.g. contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn.
+  // It can also be a record specification address, e.g.
+  // recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44.
+  string specification_id = 1 [(gogoproto.moretags) = "yaml:\"specification_id\""];
+  // name is the name of the record to look up.
+  // It is required if the specification_id is a uuid or contract specification address.
+  // It is ignored if the specification_id is a record specification address.
+  string name = 2;
 }
 
 // RecordSpecificationResponse is the response type for the Query/RecordSpecification RPC method.
 message RecordSpecificationResponse {
-  RecordSpecification record_specification        = 1 [(gogoproto.moretags) = "yaml:\"record_specification\""];
-  string              contract_specification_uuid = 2 [(gogoproto.moretags) = "yaml:\"contract_specification_uuid\""];
-  string              name                        = 3;
+  // record_specification is the on-chain record specification message.
+  RecordSpecification record_specification = 1 [(gogoproto.moretags) = "yaml:\"record_specification\""];
+  // contract_specification_uuid is the uuid of the contract specification that holds this record specification.
+  string contract_specification_uuid = 2 [(gogoproto.moretags) = "yaml:\"contract_specification_uuid\""];
+  // contract_specification_addr is the contract specification address as a bech32 encoded string.
+  string contract_specification_addr = 3 [(gogoproto.moretags) = "yaml:\"contract_specification_addr\""];
 
   // request is a copy of the request that generated these results.
   RecordSpecificationRequest request = 98;
-}
-
-// RecordSpecificationByIDRequest is the request type for the Query/RecordSpecificationByID RPC method.
-message RecordSpecificationByIDRequest {
-  string record_specification_id = 1 [(gogoproto.moretags) = "yaml:\"record_specification_id\""];
-}
-
-// RecordSpecificationByIDResponse is the response type for the Query/RecordSpecificationByID RPC method.
-message RecordSpecificationByIDResponse {
-  RecordSpecification record_specification    = 1 [(gogoproto.moretags) = "yaml:\"record_specification\""];
-  string              record_specification_id = 2 [(gogoproto.moretags) = "yaml:\"record_specification_id\""];
-
-  // request is a copy of the request that generated these results.
-  RecordSpecificationByIDRequest request = 98;
 }
 
 // OSLocatorParamsRequest is the request type for the Query/OSLocatorParams RPC method.

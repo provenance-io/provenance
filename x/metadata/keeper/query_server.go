@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"strings"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -445,63 +444,36 @@ func (k Keeper) ContractSpecification(c context.Context, req *types.ContractSpec
 
 	retval := types.ContractSpecificationResponse{Request: req}
 
-	if len(req.SpecificationUuid) == 0 {
-		return &retval, status.Error(codes.InvalidArgument, "specification uuid cannot be empty")
+	if len(req.SpecificationId) == 0 {
+		return &retval, status.Error(codes.InvalidArgument, "specification id cannot be empty")
 	}
 
-	specUUID, err := uuid.Parse(req.SpecificationUuid)
-	if err != nil {
-		return &retval, status.Errorf(codes.InvalidArgument, "invalid specification uuid: %s", err.Error())
+	specAddr, addrErr := ParseContractSpecID(req.SpecificationId)
+	if addrErr != nil {
+		return &retval, status.Errorf(codes.InvalidArgument, "invalid specification id: %s", addrErr.Error())
 	}
-	specID := types.ContractSpecMetadataAddress(specUUID)
+	specUUID, uuidErr := specAddr.ContractSpecUUID()
+	if uuidErr != nil {
+		return &retval, status.Errorf(codes.InvalidArgument, "could not extract contract spec uuid: %s", uuidErr.Error())
+	}
 
 	retval.ContractSpecificationUuid = specUUID.String()
 
 	ctx := sdk.UnwrapSDKContext(c)
-	spec, found := k.GetContractSpecification(ctx, specID)
+	spec, found := k.GetContractSpecification(ctx, specAddr)
 	if !found {
-		return &retval, status.Errorf(codes.NotFound, "contract specification with id %s (uuid %s) not found",
-			specID, req.SpecificationUuid)
+		return &retval, status.Errorf(codes.NotFound, "contract specification %s not found", req.SpecificationId)
 	}
 	retval.ContractSpecification = &spec
 
-	return &retval, nil
-}
-
-// ContractSpecificationExtended returns a specific contract specification and record specifications by contract specification id
-func (k Keeper) ContractSpecificationExtended(c context.Context, req *types.ContractSpecificationExtendedRequest) (*types.ContractSpecificationExtendedResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
+	if req.IncludeRecordSpecs {
+		recSpecs, err := k.GetRecordSpecificationsForContractSpecificationID(ctx, specAddr)
+		if err != nil {
+			return &retval, status.Errorf(codes.Unavailable, "error getting record specifications for contract spec %s: %s",
+				specAddr, err.Error())
+		}
+		retval.RecordSpecifications = recSpecs
 	}
-
-	retval := types.ContractSpecificationExtendedResponse{Request: req}
-
-	if len(req.SpecificationUuid) == 0 {
-		return &retval, status.Error(codes.InvalidArgument, "specification uuid cannot be empty")
-	}
-
-	contractSpecUUID, err := uuid.Parse(req.SpecificationUuid)
-	if err != nil {
-		return &retval, status.Errorf(codes.InvalidArgument, "invalid specification uuid: %s", err.Error())
-	}
-	contractSpecID := types.ContractSpecMetadataAddress(contractSpecUUID)
-
-	retval.ContractSpecificationUuid = contractSpecUUID.String()
-
-	ctx := sdk.UnwrapSDKContext(c)
-	contractSpec, found := k.GetContractSpecification(ctx, contractSpecID)
-	if !found {
-		return &retval, status.Errorf(codes.NotFound, "contract specification with id %s (uuid %s) not found",
-			contractSpecID, req.SpecificationUuid)
-	}
-	retval.ContractSpecification = &contractSpec
-
-	recSpecs, err := k.GetRecordSpecificationsForContractSpecificationID(ctx, contractSpecID)
-	if err != nil {
-		return &retval, status.Errorf(codes.Aborted, "error getting record specifications for contract spec uuid %s: %s",
-			contractSpecUUID, err.Error())
-	}
-	retval.RecordSpecifications = recSpecs
 
 	return &retval, nil
 }
@@ -517,26 +489,28 @@ func (k Keeper) RecordSpecificationsForContractSpecification(
 
 	retval := types.RecordSpecificationsForContractSpecificationResponse{Request: req}
 
-	if len(req.ContractSpecificationUuid) == 0 {
-		return &retval, status.Error(codes.InvalidArgument, "contract specification uuid cannot be empty")
+	if len(req.SpecificationId) == 0 {
+		return &retval, status.Error(codes.InvalidArgument, "contract specification id cannot be empty")
 	}
-	contractSpecUUID, err := uuid.Parse(req.ContractSpecificationUuid)
-	if err != nil {
-		return &retval, status.Errorf(codes.InvalidArgument, "invalid contract specification uuid: %s", err.Error())
+	contractSpecAddr, cSpecAddrErr := ParseContractSpecID(req.SpecificationId)
+	if cSpecAddrErr != nil {
+		return &retval, status.Errorf(codes.InvalidArgument, "invalid specification id: %s", cSpecAddrErr.Error())
 	}
-	contractSpecID := types.ContractSpecMetadataAddress(contractSpecUUID)
+	contractSpecUUID, cSpecUUIDErr := contractSpecAddr.ContractSpecUUID()
+	if cSpecUUIDErr != nil {
+		return &retval, status.Errorf(codes.InvalidArgument, "could not extract contract spec uuid: %s", cSpecUUIDErr.Error())
+	}
 
+	retval.ContractSpecificationAddr = contractSpecAddr.String()
 	retval.ContractSpecificationUuid = contractSpecUUID.String()
 
 	ctx := sdk.UnwrapSDKContext(c)
-	recSpecs, err := k.GetRecordSpecificationsForContractSpecificationID(ctx, contractSpecID)
+	recSpecs, err := k.GetRecordSpecificationsForContractSpecificationID(ctx, contractSpecAddr)
 	if err != nil {
-		return &retval, status.Errorf(codes.Aborted, "error getting record specifications for contract spec uuid %s: %s",
-			contractSpecUUID, err.Error())
+		return &retval, status.Errorf(codes.Unavailable, "error getting record specifications for contract spec %s: %s",
+			contractSpecAddr, err.Error())
 	}
-	if len(recSpecs) == 0 {
-		return &retval, status.Errorf(codes.NotFound, "no record specifications found for contract spec uuid %s", contractSpecUUID)
-	}
+
 	retval.RecordSpecifications = recSpecs
 
 	return &retval, err
@@ -550,60 +524,27 @@ func (k Keeper) RecordSpecification(c context.Context, req *types.RecordSpecific
 
 	retval := types.RecordSpecificationResponse{Request: req}
 
-	if len(req.ContractSpecificationUuid) == 0 {
-		return &retval, status.Error(codes.InvalidArgument, "contract specification uuid cannot be empty")
-	}
-	contractSpecUUID, err := uuid.Parse(req.ContractSpecificationUuid)
-	if err != nil {
-		return &retval, status.Errorf(codes.InvalidArgument, "invalid contract specification uuid: %s", err.Error())
+	if len(req.SpecificationId) == 0 {
+		return &retval, status.Error(codes.InvalidArgument, "specification id cannot be empty")
 	}
 
-	if len(strings.TrimSpace(req.Name)) == 0 {
-		return &retval, status.Error(codes.InvalidArgument, "name cannot be empty")
+	recSpecAddr, recSpecAddrErr := ParseRecordSpecID(req.SpecificationId, req.Name)
+	if recSpecAddrErr != nil {
+		return &retval, status.Errorf(codes.InvalidArgument, "invalid input: %s", recSpecAddrErr.Error())
 	}
+	cSpecUUID, cSpecUUIDErr := recSpecAddr.ContractSpecUUID()
+	if cSpecUUIDErr != nil {
+		return &retval, status.Errorf(codes.InvalidArgument, "could not extract contract spec uuid: %s", cSpecUUIDErr.Error())
+	}
+	cSpecAddr := types.ContractSpecMetadataAddress(cSpecUUID)
 
-	recSpecID := types.RecordSpecMetadataAddress(contractSpecUUID, req.Name)
-
-	retval.ContractSpecificationUuid = contractSpecUUID.String()
-	retval.Name = req.Name
+	retval.ContractSpecificationAddr = cSpecAddr.String()
+	retval.ContractSpecificationUuid = cSpecUUID.String()
 
 	ctx := sdk.UnwrapSDKContext(c)
-	spec, found := k.GetRecordSpecification(ctx, recSpecID)
+	spec, found := k.GetRecordSpecification(ctx, recSpecAddr)
 	if !found {
-		return &retval, status.Errorf(codes.NotFound, "record specification not found for id %s (contract spec uuid %s and name %s)",
-			recSpecID, req.ContractSpecificationUuid, req.Name)
-	}
-	retval.RecordSpecification = &spec
-
-	return &retval, nil
-}
-
-// RecordSpecification returns a specific record specification by contract spec uuid and record name
-func (k Keeper) RecordSpecificationByID(c context.Context, req *types.RecordSpecificationByIDRequest) (*types.RecordSpecificationByIDResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
-	retval := types.RecordSpecificationByIDResponse{Request: req}
-
-	if len(req.RecordSpecificationId) == 0 {
-		return &retval, status.Error(codes.InvalidArgument, "record specification id cannot be empty")
-	}
-
-	recSpecID, err := types.MetadataAddressFromBech32(req.RecordSpecificationId)
-	if err != nil {
-		return &retval, status.Errorf(codes.InvalidArgument, "invalid record specification id: %s", err.Error())
-	}
-	if !recSpecID.IsRecordSpecificationAddress() {
-		return &retval, status.Errorf(codes.InvalidArgument, "metadata address %s is not a record specification id", recSpecID.String())
-	}
-
-	retval.RecordSpecificationId = recSpecID.String()
-
-	ctx := sdk.UnwrapSDKContext(c)
-	spec, found := k.GetRecordSpecification(ctx, recSpecID)
-	if !found {
-		return &retval, status.Errorf(codes.NotFound, "record specification not found for id %s", recSpecID)
+		return &retval, status.Errorf(codes.NotFound, "record specification %s not found", recSpecAddr)
 	}
 	retval.RecordSpecification = &spec
 
@@ -874,12 +815,19 @@ func ParseScopeSpecID(scopeSpecID string) (types.MetadataAddress, error) {
 }
 
 // ParseContractSpecID parses the provided input into a contract spec MetadataAddress.
-// The input can either be a uuid string or contract spec address bech32 string.
+// The input can either be a uuid string, a contract spec address bech32 string, or a record spec address bech32 string.
 func ParseContractSpecID(contractSpecID string) (types.MetadataAddress, error) {
 	addr, addrErr := types.MetadataAddressFromBech32(contractSpecID)
 	if addrErr == nil {
 		if addr.IsContractSpecificationAddress() {
 			return addr, nil
+		}
+		if addr.IsRecordSpecificationAddress() {
+			addr2, addr2Err := addr.AsContractSpecAddress()
+			if addr2Err != nil {
+				return types.MetadataAddress{}, addr2Err
+			}
+			return addr2, nil
 		}
 		return types.MetadataAddress{}, fmt.Errorf("address [%s] is not a contract spec address", contractSpecID)
 	}
@@ -894,24 +842,27 @@ func ParseContractSpecID(contractSpecID string) (types.MetadataAddress, error) {
 // ParseRecordSpecID parses the provided input into a record spec MetadataAddress.
 // The recordSpecID can either be a uuid string, a record spec address bech32 string, or a contract spec address bech32 string.
 // If it's a contract spec address or a uuid, then a name is required.
-func ParseRecordSpecID(recordSpecID string, name string) (types.MetadataAddress, error) {
-	addr, addrErr := types.MetadataAddressFromBech32(recordSpecID)
+func ParseRecordSpecID(specID string, name string) (types.MetadataAddress, error) {
+	addr, addrErr := types.MetadataAddressFromBech32(specID)
 	if addrErr == nil {
 		if addr.IsRecordSpecificationAddress() {
 			return addr, nil
 		}
-		if addr.IsContractSpecificationAddress() && len(name) > 0 {
+		if addr.IsContractSpecificationAddress() {
+			if len(name) == 0 {
+				return types.MetadataAddress{}, errors.New("a name is required when providing a contract spec address")
+			}
 			return addr.AsRecordSpecAddress(name)
 		}
-		return types.MetadataAddress{}, fmt.Errorf("address [%s] is not a contract spec address", recordSpecID)
+		return types.MetadataAddress{}, fmt.Errorf("address [%s] is not a valid type", specID)
+	}
+	uid, uidErr := uuid.Parse(specID)
+	if uidErr != nil {
+		return types.MetadataAddress{}, fmt.Errorf("could not parse [%s] into either a record spec address (%s) or uuid (%s)",
+			specID, addrErr, uidErr)
 	}
 	if len(name) == 0 {
-		return types.MetadataAddress{}, errors.New("a name is required when creating a record spec address using a uuid")
+		return types.MetadataAddress{}, errors.New("a name is required when providing a uuid")
 	}
-	uid, uidErr := uuid.Parse(recordSpecID)
-	if uidErr == nil {
-		return types.RecordSpecMetadataAddress(uid, name), nil
-	}
-	return types.MetadataAddress{}, fmt.Errorf("could not parse [%s] into either a record spec address (%s) or uuid (%s)",
-		recordSpecID, addrErr, uidErr)
+	return types.RecordSpecMetadataAddress(uid, name), nil
 }
