@@ -152,7 +152,7 @@ service Query {
 
   // ---- Object Store Locator Queries -----
 
-  // OSLocatorParams returns all parameters for the os locator sub module.
+  // OSLocatorParams returns all parameters for the object store locator sub module.
   rpc OSLocatorParams(OSLocatorParamsRequest) returns (OSLocatorParamsResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/locator/params";
   }
@@ -162,19 +162,19 @@ service Query {
     option (google.api.http).get = "/provenance/metadata/v1/locator/{owner}";
   }
 
-  // OSLocator returns all ObjectStoreLocator for a locator uri.
-  rpc OSLocatorByURI(OSLocatorByURIRequest) returns (OSLocatorByURIResponse) {
+  // OSLocatorsByURI returns all ObjectStoreLocator entries for a locator uri.
+  rpc OSLocatorsByURI(OSLocatorsByURIRequest) returns (OSLocatorsByURIResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/locator/uri/{uri}";
   }
 
-  // OSLocatorByScopeUUID returns all ObjectStoreLocator for a for all signer's present in the specified scope.
-  rpc OSLocatorByScopeUUID(OSLocatorByScopeUUIDRequest) returns (OSLocatorByScopeUUIDResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/locator/scope/{scope_uuid}";
+  // OSLocatorsByScope returns all ObjectStoreLocator entries for a for all signer's present in the specified scope.
+  rpc OSLocatorsByScope(OSLocatorsByScopeRequest) returns (OSLocatorsByScopeResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/locator/scope/{scope_id}";
   }
 
   // OSAllLocators returns all ObjectStoreLocator entries.
   rpc OSAllLocators(OSAllLocatorsRequest) returns (OSAllLocatorsResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/locators/all";
+    option (google.api.http).get = "/provenance/metadata/v1/locator/all";
   }
 }
 
@@ -471,7 +471,7 @@ message OSLocatorParamsResponse {
   OSLocatorParamsRequest request = 98;
 }
 
-// OSLocationRequest is the request type for the Query/OSLocator RPC method.
+// OSLocatorRequest is the request type for the Query/OSLocator RPC method.
 message OSLocatorRequest {
   string owner = 1;
 }
@@ -484,35 +484,35 @@ message OSLocatorResponse {
   OSLocatorRequest request = 98;
 }
 
-// OSLocatorByURIRequest is the request type for the Query/OSLocatorByURI RPC method.
-message OSLocatorByURIRequest {
+// OSLocatorsByURIRequest is the request type for the Query/OSLocatorsByURI RPC method.
+message OSLocatorsByURIRequest {
   string uri = 1;
 
   // pagination defines optional pagination parameters for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
 
-// OSLocatorByURIResponse is the response type for the Query/OSLocatorByURI RPC method.
-message OSLocatorByURIResponse {
-  repeated ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
+// OSLocatorsByURIResponse is the response type for the Query/OSLocatorsByURI RPC method.
+message OSLocatorsByURIResponse {
+  repeated ObjectStoreLocator locators = 1 [(gogoproto.nullable) = false];
 
   // request is a copy of the request that generated these results.
-  OSLocatorByURIRequest request = 98;
+  OSLocatorsByURIRequest request = 98;
   // pagination provides the pagination information of this response.
   cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
 
-// OSLocatorByScopeUUIDRequest is the request type for the Query/OSLocatorByScopeUUID RPC method.
-message OSLocatorByScopeUUIDRequest {
-  string scope_uuid = 1 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
+// OSLocatorsByScopeRequest is the request type for the Query/OSLocatorsByScope RPC method.
+message OSLocatorsByScopeRequest {
+  string scope_id = 1 [(gogoproto.moretags) = "yaml:\"scope_id\""];
 }
 
-// OSLocatorByScopeUUIDResponse is the response type for the Query/OSLocatorByScopeUUID RPC method.
-message OSLocatorByScopeUUIDResponse {
-  repeated ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
+// OSLocatorsByScopeResponse is the response type for the Query/OSLocatorsByScope RPC method.
+message OSLocatorsByScopeResponse {
+  repeated ObjectStoreLocator locators = 1 [(gogoproto.nullable) = false];
 
   // request is a copy of the request that generated these results.
-  OSLocatorByScopeUUIDRequest request = 98;
+  OSLocatorsByScopeRequest request = 98;
 }
 
 // OSAllLocatorsRequest is the request type for the Query/OSAllLocators RPC method.
@@ -523,7 +523,7 @@ message OSAllLocatorsRequest {
 
 // OSAllLocatorsResponse is the response type for the Query/OSAllLocators RPC method.
 message OSAllLocatorsResponse {
-  repeated ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
+  repeated ObjectStoreLocator locators = 1 [(gogoproto.nullable) = false];
 
   // request is a copy of the request that generated these results.
   OSAllLocatorsRequest request = 98;

@@ -47,8 +47,8 @@ func GetQueryCmd() *cobra.Command {
 		GetValueOwnershipCmd(),
 		GetOSLocatorParamsCmd(),
 		GetOSLocatorCmd(),
-		GetOSLocatorByURICmd(),
-		GetOSLocatorByScopeUUIDCmd(),
+		GetOSLocatorsByURICmd(),
+		GetOSLocatorsByScopeCmd(),
 		GetOSAllLocatorCmd(),
 	)
 	return queryCmd
@@ -1014,7 +1014,7 @@ $ %s query metadata locator foocorp
 }
 
 // GetOSLocatorByURICmd returns the command handler for querying oslocator by uri.
-func GetOSLocatorByURICmd() *cobra.Command {
+func GetOSLocatorsByURICmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "locator-by-uri [uri]",
 		Short: "Query the OS locator uri for the given owner",
@@ -1038,9 +1038,9 @@ $ %s query metadata locator foocorp
 				return err
 			}
 			queryClient := types.NewQueryClient(clientCtx)
-			var response *types.OSLocatorByURIResponse
+			var response *types.OSLocatorsByURIResponse
 
-			response, err = queryClient.OSLocatorByURI(context.Background(), &types.OSLocatorByURIRequest{Uri: uri, Pagination: pageReq})
+			response, err = queryClient.OSLocatorsByURI(context.Background(), &types.OSLocatorsByURIRequest{Uri: uri, Pagination: pageReq})
 
 			if err != nil {
 				return err
@@ -1056,7 +1056,7 @@ $ %s query metadata locator foocorp
 }
 
 // GetOSLocatorByURICmd returns the command handler for querying oslocator by uri.
-func GetOSLocatorByScopeUUIDCmd() *cobra.Command {
+func GetOSLocatorsByScopeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "locator-by-scope [scope_uuid]",
 		Short: "Query the OS locator uri for the given scope owners",
@@ -1077,9 +1077,9 @@ $ %s query metadata locator foocorp
 			scopeUUID := strings.ToLower(strings.TrimSpace(args[0]))
 
 			queryClient := types.NewQueryClient(clientCtx)
-			var response *types.OSLocatorByScopeUUIDResponse
+			var response *types.OSLocatorsByScopeResponse
 
-			response, err = queryClient.OSLocatorByScopeUUID(context.Background(), &types.OSLocatorByScopeUUIDRequest{ScopeUuid: scopeUUID})
+			response, err = queryClient.OSLocatorsByScope(context.Background(), &types.OSLocatorsByScopeRequest{ScopeId: scopeUUID})
 
 			if err != nil {
 				return err

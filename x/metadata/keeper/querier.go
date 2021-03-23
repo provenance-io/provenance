@@ -217,13 +217,12 @@ func queryOSGetAll(ctx sdk.Context, keeper Keeper, legacyQuerierCdc *codec.Legac
 }
 
 func queryOSGetByScope(ctx sdk.Context, path []string, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
-	// Return value data structure.
+	locators, lErr := keeper.GetOSLocatorByScope(ctx, path[1])
+	if lErr != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, lErr.Error())
+	}
 
-	msgs, _ := keeper.GetOSLocatorByScopeUUID(ctx, path[1])
-
-	resp := types.OSLocatorByScopeUUIDResponse{Locator: msgs}
-
-	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, resp)
+	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, locators)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}

@@ -640,12 +640,12 @@ func (k Keeper) OSLocator(c context.Context, request *types.OSLocatorRequest) (*
 	return &retval, nil
 }
 
-func (k Keeper) OSLocatorByURI(ctx context.Context, request *types.OSLocatorByURIRequest) (*types.OSLocatorByURIResponse, error) {
+func (k Keeper) OSLocatorsByURI(ctx context.Context, request *types.OSLocatorsByURIRequest) (*types.OSLocatorsByURIResponse, error) {
 	if request == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	retval := types.OSLocatorByURIResponse{Request: request}
+	retval := types.OSLocatorsByURIResponse{Request: request}
 
 	ctxSDK := sdk.UnwrapSDKContext(ctx)
 	var sDec []byte
@@ -699,29 +699,29 @@ func (k Keeper) OSLocatorByURI(ctx context.Context, request *types.OSLocatorByUR
 		end = totalResults
 	}
 
-	retval.Locator = uniqueRecords[pageRequest.Offset:end]
+	retval.Locators = uniqueRecords[pageRequest.Offset:end]
 	retval.Pagination = &query.PageResponse{Total: totalResults}
 
 	return &retval, nil
 }
 
-func (k Keeper) OSLocatorByScopeUUID(ctx context.Context, request *types.OSLocatorByScopeUUIDRequest) (*types.OSLocatorByScopeUUIDResponse, error) {
+func (k Keeper) OSLocatorsByScope(ctx context.Context, request *types.OSLocatorsByScopeRequest) (*types.OSLocatorsByScopeResponse, error) {
 	if request == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	retval := types.OSLocatorByScopeUUIDResponse{Request: request}
+	retval := types.OSLocatorsByScopeResponse{Request: request}
 
 	ctxSDK := sdk.UnwrapSDKContext(ctx)
-	if request.ScopeUuid == "" {
-		return &retval, status.Error(codes.InvalidArgument, "scope uuid cannot be empty")
+	if request.ScopeId == "" {
+		return &retval, status.Error(codes.InvalidArgument, "scope id cannot be empty")
 	}
 
-	locators, err := k.GetOSLocatorByScopeUUID(ctxSDK, request.ScopeUuid)
+	locators, err := k.GetOSLocatorByScope(ctxSDK, request.ScopeId)
 	if err != nil {
-		return &retval, err
+		return &retval, status.Error(codes.InvalidArgument, err.Error())
 	}
-	retval.Locator = locators
+	retval.Locators = locators
 
 	return &retval, nil
 }
@@ -773,7 +773,7 @@ func (k Keeper) OSAllLocators(ctx context.Context, request *types.OSAllLocatorsR
 		end = totalResults
 	}
 
-	retval.Locator = uniqueRecords[pageRequest.Offset:end]
+	retval.Locators = uniqueRecords[pageRequest.Offset:end]
 	retval.Pagination = &query.PageResponse{Total: totalResults}
 
 	return &retval, nil

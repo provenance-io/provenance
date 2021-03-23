@@ -237,13 +237,13 @@ func (suite *IntegrationTestSuite) TestGRPCQueries() {
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
 			false,
-			&metadatatypes.OSLocatorByURIResponse{},
-			&metadatatypes.OSLocatorByURIResponse{
-				Locator: []metadatatypes.ObjectStoreLocator{metadatatypes.ObjectStoreLocator{
+			&metadatatypes.OSLocatorsByURIResponse{},
+			&metadatatypes.OSLocatorsByURIResponse{
+				Locators: []metadatatypes.ObjectStoreLocator{metadatatypes.ObjectStoreLocator{
 					Owner:      suite.ownerAddr.String(),
 					LocatorUri: suite.uri,
 				}},
-				Request: &metadatatypes.OSLocatorByURIRequest{
+				Request: &metadatatypes.OSLocatorsByURIRequest{
 					Uri:        b64.StdEncoding.EncodeToString([]byte(suite.uri)),
 					Pagination: nil,
 				},
@@ -263,14 +263,14 @@ func (suite *IntegrationTestSuite) TestGRPCQueries() {
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
 			false,
-			&metadatatypes.OSLocatorByScopeUUIDResponse{},
-			&metadatatypes.OSLocatorByScopeUUIDResponse{
-				Locator: []metadatatypes.ObjectStoreLocator{{
+			&metadatatypes.OSLocatorsByScopeResponse{},
+			&metadatatypes.OSLocatorsByScopeResponse{
+				Locators: []metadatatypes.ObjectStoreLocator{{
 					Owner:      suite.ownerAddr1.String(),
 					LocatorUri: suite.uri1,
 				}},
-				Request: &metadatatypes.OSLocatorByScopeUUIDRequest{
-					ScopeUuid: suite.scopeUUID.String(),
+				Request: &metadatatypes.OSLocatorsByScopeRequest{
+					ScopeId: suite.scopeUUID.String(),
 				},
 			},
 		},
@@ -309,17 +309,17 @@ func (suite *IntegrationTestSuite) TestAllOSLocator() {
 
 		{
 			"Get all os locator.",
-			// only way i could get around http url parse isseus for rest
+			// only way i could get around http url parse issues for rest
 			// This encodes/decodes using a URL-compatible base64
 			// format.
-			fmt.Sprintf("%s/provenance/metadata/v1/locators/all", baseURL),
+			fmt.Sprintf("%s/provenance/metadata/v1/locator/all", baseURL),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
 			false,
 			&metadatatypes.OSAllLocatorsResponse{},
 			&metadatatypes.OSAllLocatorsResponse{
-				Locator: []metadatatypes.ObjectStoreLocator{{
+				Locators: []metadatatypes.ObjectStoreLocator{{
 					Owner:      suite.ownerAddr1.String(),
 					LocatorUri: suite.uri1,
 				}},
