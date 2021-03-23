@@ -312,7 +312,7 @@ func (suite *IntegrationTestSuite) TestAllOSLocator() {
 			// only way i could get around http url parse issues for rest
 			// This encodes/decodes using a URL-compatible base64
 			// format.
-			fmt.Sprintf("%s/provenance/metadata/v1/locator/all", baseURL),
+			fmt.Sprintf("%s/provenance/metadata/v1/locators/all", baseURL),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
@@ -331,12 +331,12 @@ func (suite *IntegrationTestSuite) TestAllOSLocator() {
 
 		suite.Run(tc.name, func() {
 			resp, err := sdktestutil.GetRequestWithHeaders(tc.url, tc.headers)
-			suite.Require().NoError(err)
+			suite.Require().NoError(err, "GetRequestWithHeaders err")
 			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType)
 			if tc.expErr {
-				suite.Require().Error(err)
+				suite.Require().Error(err, "UnmarshalJSON expected error")
 			} else {
-				suite.Require().NoError(err)
+				suite.Require().NoError(err, "UnmarshalJSON unexpected error")
 				suite.Require().True( strings.Contains(fmt.Sprint(tc.respType),fmt.Sprint(tc.expected)))
 			}
 		})

@@ -174,7 +174,7 @@ service Query {
 
   // OSAllLocators returns all ObjectStoreLocator entries.
   rpc OSAllLocators(OSAllLocatorsRequest) returns (OSAllLocatorsResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/locator/all";
+    option (google.api.http).get = "/provenance/metadata/v1/locators/all";
   }
 }
 
