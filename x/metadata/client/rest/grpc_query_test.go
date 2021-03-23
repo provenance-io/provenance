@@ -142,6 +142,7 @@ func (suite *IntegrationTestSuite) TearDownSuite() {
 	suite.T().Log("tearing down integration test suite")
 	suite.testnet.Cleanup()
 }
+
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
 }
@@ -166,7 +167,10 @@ func (suite *IntegrationTestSuite) TestGRPCQueries() {
 			},
 			false,
 			&metadatatypes.QueryParamsResponse{},
-			&metadatatypes.QueryParamsResponse{Params: metadatatypes.DefaultParams()},
+			&metadatatypes.QueryParamsResponse{
+				Params: metadatatypes.DefaultParams(),
+				Request: &metadatatypes.QueryParamsRequest{},
+			},
 		},
 		{
 			"Get metadata scope by id",
@@ -203,7 +207,10 @@ func (suite *IntegrationTestSuite) TestGRPCQueries() {
 			},
 			false,
 			&metadatatypes.OSLocatorParamsResponse{},
-			&metadatatypes.OSLocatorParamsResponse{Params: metadatatypes.DefaultOSLocatorParams()},
+			&metadatatypes.OSLocatorParamsResponse{
+				Params: metadatatypes.DefaultOSLocatorParams(),
+				Request: &metadatatypes.OSLocatorParamsRequest{},
+			},
 		},
 		{
 			"Get os locator from owner address.",
@@ -215,6 +222,9 @@ func (suite *IntegrationTestSuite) TestGRPCQueries() {
 			&metadatatypes.OSLocatorResponse{},
 			&metadatatypes.OSLocatorResponse{
 				Locator: &suite.objectLocator,
+				Request: &metadatatypes.OSLocatorRequest{
+					Owner: suite.ownerAddr.String(),
+				},
 			},
 		},
 		{
@@ -233,6 +243,10 @@ func (suite *IntegrationTestSuite) TestGRPCQueries() {
 					Owner:      suite.ownerAddr.String(),
 					LocatorUri: suite.uri,
 				}},
+				Request: &metadatatypes.OSLocatorByURIRequest{
+					Uri:        b64.StdEncoding.EncodeToString([]byte(suite.uri)),
+					Pagination: nil,
+				},
 				Pagination: &query.PageResponse{
 					NextKey: nil,
 					Total:   1,
@@ -255,6 +269,9 @@ func (suite *IntegrationTestSuite) TestGRPCQueries() {
 					Owner:      suite.ownerAddr1.String(),
 					LocatorUri: suite.uri1,
 				}},
+				Request: &metadatatypes.OSLocatorByScopeUUIDRequest{
+					ScopeUuid: suite.scopeUUID.String(),
+				},
 			},
 		},
 
@@ -276,6 +293,7 @@ func (suite *IntegrationTestSuite) TestGRPCQueries() {
 		})
 	}
 }
+
 func (suite *IntegrationTestSuite) TestAllOSLocator() {
 	val := suite.testnet.Validators[0]
 	baseURL := val.APIAddress
