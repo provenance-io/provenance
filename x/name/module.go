@@ -94,17 +94,15 @@ func (b AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) 
 // AppModule is the standard form name module.
 type AppModule struct {
 	AppModuleBasic
-	accountKeeper types.AccountKeeper
-	keeper        keeper.Keeper
+	keeper keeper.Keeper
 }
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(
-	cdc codec.Marshaler, keeper keeper.Keeper, accountKeeper types.AccountKeeper,
+	cdc codec.Marshaler, keeper keeper.Keeper,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
-		accountKeeper:  accountKeeper,
 		keeper:         keeper,
 	}
 }

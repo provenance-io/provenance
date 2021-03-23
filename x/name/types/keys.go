@@ -39,6 +39,10 @@ func GetNameKeyPrefix(name string) (key []byte, err error) {
 	hsh := sha256.New()
 	for i := len(comps) - 1; i >= 0; i-- {
 		comp := strings.TrimSpace(comps[i])
+		if len(comp) == 0 {
+			err = fmt.Errorf("name segment cannot be empty: %w", ErrNameInvalid)
+			return
+		}
 		if _, err = hsh.Write([]byte(comp)); err != nil {
 			return
 		}
