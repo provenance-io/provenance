@@ -31,7 +31,7 @@ func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types
 	var params types.Params
 	k.paramSpace.GetParamSet(ctx, &params)
 
-	return &types.QueryParamsResponse{Params: params}, nil
+	return &types.QueryParamsResponse{Params: params, Request: req}, nil
 }
 
 // Scope returns a specific scope by id
@@ -332,20 +332,21 @@ func (k Keeper) Ownership(c context.Context, req *types.OwnershipRequest) (*type
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
+	retval := types.OwnershipResponse{Request: req}
+
 	if req.Address == "" {
-		return nil, status.Error(codes.InvalidArgument, "address cannot be empty")
+		return &retval, status.Error(codes.InvalidArgument, "address cannot be empty")
 	}
 
 	addr, err := sdk.AccAddressFromBech32(req.Address)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
+		return &retval, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 	store := ctx.KVStore(k.storeKey)
 	scopeStore := prefix.NewStore(store, types.GetAddressScopeCacheIteratorPrefix(addr))
 
-	scopeUUIDs := make([]string, req.Pagination.Size())
 	pageRes, err := query.Paginate(scopeStore, req.Pagination, func(key, _ []byte) error {
 		var ma types.MetadataAddress
 		if mErr := ma.Unmarshal(key); mErr != nil {
@@ -355,13 +356,15 @@ func (k Keeper) Ownership(c context.Context, req *types.OwnershipRequest) (*type
 		if sErr != nil {
 			return sErr
 		}
-		scopeUUIDs = append(scopeUUIDs, scopeUUID.String())
+		retval.ScopeUuids = append(retval.ScopeUuids, scopeUUID.String())
 		return nil
 	})
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
+		return &retval, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
 	}
-	return &types.OwnershipResponse{ScopeUuids: scopeUUIDs, Pagination: pageRes}, nil
+	retval.Pagination = pageRes
+
+	return &retval, nil
 }
 
 // ValueOwnership returns a list of scope identifiers that list the given address as a value owner
@@ -370,20 +373,21 @@ func (k Keeper) ValueOwnership(c context.Context, req *types.ValueOwnershipReque
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
+	retval := types.ValueOwnershipResponse{Request: req}
+
 	if req.Address == "" {
-		return nil, status.Error(codes.InvalidArgument, "address cannot be empty")
+		return &retval, status.Error(codes.InvalidArgument, "address cannot be empty")
 	}
 
 	addr, err := sdk.AccAddressFromBech32(req.Address)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
+		return &retval, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 	store := ctx.KVStore(k.storeKey)
 	scopeStore := prefix.NewStore(store, types.GetValueOwnerScopeCacheIteratorPrefix(addr))
 
-	scopes := []string{}
 	pageRes, err := query.Paginate(scopeStore, req.Pagination, func(key, _ []byte) error {
 		var ma types.MetadataAddress
 		if mErr := ma.Unmarshal(key); mErr != nil {
@@ -393,13 +397,14 @@ func (k Keeper) ValueOwnership(c context.Context, req *types.ValueOwnershipReque
 		if sErr != nil {
 			return sErr
 		}
-		scopes = append(scopes, scopeID.String())
+		retval.ScopeUuids = append(retval.ScopeUuids, scopeID.String())
 		return nil
 	})
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
+		return &retval, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
 	}
-	return &types.ValueOwnershipResponse{ScopeUuids: scopes, Pagination: pageRes}, nil
+	retval.Pagination = pageRes
+	return &retval, nil
 }
 
 // ScopeSpecification returns a specific scope specification by id
@@ -408,17 +413,19 @@ func (k Keeper) ScopeSpecification(c context.Context, req *types.ScopeSpecificat
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
+	retval := types.ScopeSpecificationResponse{Request: req}
+
 	if len(req.SpecificationUuid) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "specification uuid cannot be empty")
+		return &retval, status.Error(codes.InvalidArgument, "specification uuid cannot be empty")
 	}
 
 	specUUID, err := uuid.Parse(req.SpecificationUuid)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid specification uuid: %s", err.Error())
+		return &retval, status.Errorf(codes.InvalidArgument, "invalid specification uuid: %s", err.Error())
 	}
 	specID := types.ScopeSpecMetadataAddress(specUUID)
 
-	retval := types.ScopeSpecificationResponse{SpecificationUuid: specUUID.String()}
+	retval.SpecificationUuid = specUUID.String()
 
 	ctx := sdk.UnwrapSDKContext(c)
 	spec, found := k.GetScopeSpecification(ctx, specID)
@@ -436,17 +443,19 @@ func (k Keeper) ContractSpecification(c context.Context, req *types.ContractSpec
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
+	retval := types.ContractSpecificationResponse{Request: req}
+
 	if len(req.SpecificationUuid) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "specification uuid cannot be empty")
+		return &retval, status.Error(codes.InvalidArgument, "specification uuid cannot be empty")
 	}
 
 	specUUID, err := uuid.Parse(req.SpecificationUuid)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid specification uuid: %s", err.Error())
+		return &retval, status.Errorf(codes.InvalidArgument, "invalid specification uuid: %s", err.Error())
 	}
 	specID := types.ContractSpecMetadataAddress(specUUID)
 
-	retval := types.ContractSpecificationResponse{ContractSpecificationUuid: specUUID.String()}
+	retval.ContractSpecificationUuid = specUUID.String()
 
 	ctx := sdk.UnwrapSDKContext(c)
 	spec, found := k.GetContractSpecification(ctx, specID)
@@ -465,17 +474,19 @@ func (k Keeper) ContractSpecificationExtended(c context.Context, req *types.Cont
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
+	retval := types.ContractSpecificationExtendedResponse{Request: req}
+
 	if len(req.SpecificationUuid) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "specification uuid cannot be empty")
+		return &retval, status.Error(codes.InvalidArgument, "specification uuid cannot be empty")
 	}
 
 	contractSpecUUID, err := uuid.Parse(req.SpecificationUuid)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid specification uuid: %s", err.Error())
+		return &retval, status.Errorf(codes.InvalidArgument, "invalid specification uuid: %s", err.Error())
 	}
 	contractSpecID := types.ContractSpecMetadataAddress(contractSpecUUID)
 
-	retval := types.ContractSpecificationExtendedResponse{ContractSpecificationUuid: contractSpecUUID.String()}
+	retval.ContractSpecificationUuid = contractSpecUUID.String()
 
 	ctx := sdk.UnwrapSDKContext(c)
 	contractSpec, found := k.GetContractSpecification(ctx, contractSpecID)
@@ -504,16 +515,18 @@ func (k Keeper) RecordSpecificationsForContractSpecification(
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
+	retval := types.RecordSpecificationsForContractSpecificationResponse{Request: req}
+
 	if len(req.ContractSpecificationUuid) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "contract specification uuid cannot be empty")
+		return &retval, status.Error(codes.InvalidArgument, "contract specification uuid cannot be empty")
 	}
 	contractSpecUUID, err := uuid.Parse(req.ContractSpecificationUuid)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid contract specification uuid: %s", err.Error())
+		return &retval, status.Errorf(codes.InvalidArgument, "invalid contract specification uuid: %s", err.Error())
 	}
 	contractSpecID := types.ContractSpecMetadataAddress(contractSpecUUID)
 
-	retval := types.RecordSpecificationsForContractSpecificationResponse{ContractSpecificationUuid: contractSpecUUID.String()}
+	retval.ContractSpecificationUuid = contractSpecUUID.String()
 
 	ctx := sdk.UnwrapSDKContext(c)
 	recSpecs, err := k.GetRecordSpecificationsForContractSpecificationID(ctx, contractSpecID)
@@ -535,24 +548,24 @@ func (k Keeper) RecordSpecification(c context.Context, req *types.RecordSpecific
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
+	retval := types.RecordSpecificationResponse{Request: req}
+
 	if len(req.ContractSpecificationUuid) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "contract specification uuid cannot be empty")
+		return &retval, status.Error(codes.InvalidArgument, "contract specification uuid cannot be empty")
 	}
 	contractSpecUUID, err := uuid.Parse(req.ContractSpecificationUuid)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid contract specification uuid: %s", err.Error())
+		return &retval, status.Errorf(codes.InvalidArgument, "invalid contract specification uuid: %s", err.Error())
 	}
 
 	if len(strings.TrimSpace(req.Name)) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "name cannot be empty")
+		return &retval, status.Error(codes.InvalidArgument, "name cannot be empty")
 	}
 
 	recSpecID := types.RecordSpecMetadataAddress(contractSpecUUID, req.Name)
 
-	retval := types.RecordSpecificationResponse{
-		ContractSpecificationUuid: contractSpecUUID.String(),
-		Name:                      req.Name,
-	}
+	retval.ContractSpecificationUuid = contractSpecUUID.String()
+	retval.Name = req.Name
 
 	ctx := sdk.UnwrapSDKContext(c)
 	spec, found := k.GetRecordSpecification(ctx, recSpecID)
@@ -571,19 +584,21 @@ func (k Keeper) RecordSpecificationByID(c context.Context, req *types.RecordSpec
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
+	retval := types.RecordSpecificationByIDResponse{Request: req}
+
 	if len(req.RecordSpecificationId) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "record specification id cannot be empty")
+		return &retval, status.Error(codes.InvalidArgument, "record specification id cannot be empty")
 	}
 
 	recSpecID, err := types.MetadataAddressFromBech32(req.RecordSpecificationId)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid record specification id: %s", err.Error())
+		return &retval, status.Errorf(codes.InvalidArgument, "invalid record specification id: %s", err.Error())
 	}
 	if !recSpecID.IsRecordSpecificationAddress() {
-		return nil, status.Errorf(codes.InvalidArgument, "metadata address %s is not a record specification id", recSpecID.String())
+		return &retval, status.Errorf(codes.InvalidArgument, "metadata address %s is not a record specification id", recSpecID.String())
 	}
 
-	retval := types.RecordSpecificationByIDResponse{RecordSpecificationId: recSpecID.String()}
+	retval.RecordSpecificationId = recSpecID.String()
 
 	ctx := sdk.UnwrapSDKContext(c)
 	spec, found := k.GetRecordSpecification(ctx, recSpecID)
@@ -600,43 +615,55 @@ func (k Keeper) OSLocatorParams(c context.Context, request *types.OSLocatorParam
 	var params types.OSLocatorParams
 	k.paramSpace.GetParamSet(ctx, &params)
 
-	return &types.OSLocatorParamsResponse{Params: params}, nil
+	return &types.OSLocatorParamsResponse{Params: params, Request: request}, nil
 }
 
 func (k Keeper) OSLocator(c context.Context, request *types.OSLocatorRequest) (*types.OSLocatorResponse, error) {
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	retval := types.OSLocatorResponse{Request: request}
+
 	ctx := sdk.UnwrapSDKContext(c)
 	accAddr, err := sdk.AccAddressFromBech32(request.Owner)
 	if err != nil {
-		return nil, types.ErrInvalidAddress
+		return &retval, types.ErrInvalidAddress
 	}
 
 	record, exists := k.GetOsLocatorRecord(ctx, accAddr)
-
 	if !exists {
-		return nil, types.ErrAddressNotBound
+		return &retval, types.ErrAddressNotBound
 	}
-	return &types.OSLocatorResponse{Locator: &record}, nil
+	retval.Locator = &record
+
+	return &retval, nil
 }
 
 func (k Keeper) OSLocatorByURI(ctx context.Context, request *types.OSLocatorByURIRequest) (*types.OSLocatorByURIResponse, error) {
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	retval := types.OSLocatorByURIResponse{Request: request}
+
 	ctxSDK := sdk.UnwrapSDKContext(ctx)
 	var sDec []byte
-	// rest request send in base64 encoded uri, using a URL-compatible base64
-	// format.
+	// rest request send in base64 encoded uri, using a URL-compatible base64 format.
 	if IsBase64(request.Uri) {
 		sDec, _ = b64.StdEncoding.DecodeString(request.Uri)
 	} else {
 		sDec = []byte(request.Uri)
 	}
-	url, err := url.Parse(string(sDec))
+	uri, err := url.Parse(string(sDec))
 	if err != nil {
-		return nil, err
+		return &retval, err
 	}
 	// Return value data structure.
 	var records []types.ObjectStoreLocator
 	// Handler that adds records if account address matches.
 	appendToRecords := func(record types.ObjectStoreLocator) bool {
-		if record.LocatorUri == url.String() {
+		if record.LocatorUri == uri.String() {
 			records = append(records, record)
 			// have to get all the uri associated with an address..imo..check
 		}
@@ -644,10 +671,10 @@ func (k Keeper) OSLocatorByURI(ctx context.Context, request *types.OSLocatorByUR
 	}
 
 	if err := k.IterateLocators(ctxSDK, appendToRecords); err != nil {
-		return nil, err
+		return &retval, err
 	}
 	if records == nil {
-		return nil, types.ErrNoRecordsFound
+		return &retval, types.ErrNoRecordsFound
 	}
 	uniqueRecords := uniqueRecords(records)
 
@@ -665,33 +692,47 @@ func (k Keeper) OSLocatorByURI(ctx context.Context, request *types.OSLocatorByUR
 	totalResults := uint64(len(uniqueRecords))
 
 	if pageRequest.Offset > totalResults {
-		return nil, fmt.Errorf("invalid offset")
+		return &retval, fmt.Errorf("invalid offset")
 	}
 
 	if end > totalResults {
 		end = totalResults
 	}
 
-	return &types.OSLocatorByURIResponse{
-		Locator:    uniqueRecords[pageRequest.Offset:end],
-		Pagination: &query.PageResponse{Total: totalResults},
-	}, nil
+	retval.Locator = uniqueRecords[pageRequest.Offset:end]
+	retval.Pagination = &query.PageResponse{Total: totalResults}
+
+	return &retval, nil
 }
 
 func (k Keeper) OSLocatorByScopeUUID(ctx context.Context, request *types.OSLocatorByScopeUUIDRequest) (*types.OSLocatorByScopeUUIDResponse, error) {
-	ctxSDK := sdk.UnwrapSDKContext(ctx)
 	if request == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
+	retval := types.OSLocatorByScopeUUIDResponse{Request: request}
+
+	ctxSDK := sdk.UnwrapSDKContext(ctx)
 	if request.ScopeUuid == "" {
-		return nil, status.Error(codes.InvalidArgument, "scope uuid cannot be empty")
+		return &retval, status.Error(codes.InvalidArgument, "scope uuid cannot be empty")
 	}
 
-	return k.GetOSLocatorByScopeUUID(ctxSDK, request.ScopeUuid)
+	locators, err := k.GetOSLocatorByScopeUUID(ctxSDK, request.ScopeUuid)
+	if err != nil {
+		return &retval, err
+	}
+	retval.Locator = locators
+
+	return &retval, nil
 }
 
 func (k Keeper) OSAllLocators(ctx context.Context, request *types.OSAllLocatorsRequest) (*types.OSAllLocatorsResponse, error) {
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	retval := types.OSAllLocatorsResponse{Request: request}
+
 	ctxSDK := sdk.UnwrapSDKContext(ctx)
 
 	// Return value data structure.
@@ -704,10 +745,10 @@ func (k Keeper) OSAllLocators(ctx context.Context, request *types.OSAllLocatorsR
 	}
 
 	if err := k.IterateLocators(ctxSDK, appendToRecords); err != nil {
-		return nil, err
+		return &retval, err
 	}
 	if records == nil {
-		return nil, types.ErrNoRecordsFound
+		return &retval, types.ErrNoRecordsFound
 	}
 	uniqueRecords := uniqueRecords(records)
 
@@ -725,17 +766,17 @@ func (k Keeper) OSAllLocators(ctx context.Context, request *types.OSAllLocatorsR
 	totalResults := uint64(len(uniqueRecords))
 
 	if pageRequest.Offset > totalResults {
-		return nil, fmt.Errorf("invalid offset")
+		return &retval, fmt.Errorf("invalid offset")
 	}
 
 	if end > totalResults {
 		end = totalResults
 	}
 
-	return &types.OSAllLocatorsResponse{
-		Locator:    uniqueRecords[pageRequest.Offset:end],
-		Pagination: &query.PageResponse{Total: totalResults},
-	}, nil
+	retval.Locator = uniqueRecords[pageRequest.Offset:end]
+	retval.Pagination = &query.PageResponse{Total: totalResults}
+
+	return &retval, nil
 }
 
 func IsBase64(s string) bool {

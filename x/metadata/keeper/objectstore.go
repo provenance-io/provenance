@@ -102,17 +102,17 @@ func (k Keeper) IterateLocators(ctx sdk.Context, cb func(account types.ObjectSto
 	return nil
 }
 
-func (k Keeper) GetOSLocatorByScopeUUID(ctx sdk.Context, scopeID string) (*types.OSLocatorByScopeUUIDResponse, error) {
+func (k Keeper) GetOSLocatorByScopeUUID(ctx sdk.Context, scopeID string) ([]types.ObjectStoreLocator, error) {
 	id, err := uuid.Parse(scopeID)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid scope uuid: %s", err.Error())
+		return []types.ObjectStoreLocator{}, status.Errorf(codes.InvalidArgument, "invalid scope uuid: %s", err.Error())
 	}
 	scopeAddress := types.ScopeMetadataAddress(id)
 
 	s, found := k.GetScope(ctx, scopeAddress)
 
 	if !found {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid scope uuid: %s", err.Error())
+		return []types.ObjectStoreLocator{}, status.Errorf(codes.InvalidArgument, "invalid scope uuid: %s", err.Error())
 	}
 
 	// should always have valid owners, hence creating it with capacity
@@ -135,7 +135,7 @@ func (k Keeper) GetOSLocatorByScopeUUID(ctx sdk.Context, scopeID string) (*types
 		}
 		locators = append(locators, loc)
 	}
-	return &types.OSLocatorByScopeUUIDResponse{Locator: locators}, nil
+	return locators, nil
 }
 
 // Delete a os locator record from the kvstore.

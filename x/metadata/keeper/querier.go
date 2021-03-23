@@ -221,7 +221,9 @@ func queryOSGetByScope(ctx sdk.Context, path []string, keeper Keeper, legacyQuer
 
 	msgs, _ := keeper.GetOSLocatorByScopeUUID(ctx, path[1])
 
-	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, msgs)
+	resp := types.OSLocatorByScopeUUIDResponse{Locator: msgs}
+
+	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, resp)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}

@@ -183,6 +183,9 @@ message QueryParamsRequest {}
 message QueryParamsResponse {
   // params defines the parameters of the module.
   Params params = 1 [(gogoproto.nullable) = false];
+
+  // request is a copy of the request that generated these results.
+  QueryParamsRequest request = 98;
 }
 
 // ScopeRequest is the request type for the Query/Scope RPC method.
@@ -337,6 +340,8 @@ message OwnershipResponse {
   // A list of scope ids (uuid) associated with the given address.
   repeated string scope_uuids = 1 [(gogoproto.moretags) = "yaml:\"scope_uuids\""];
 
+  // request is a copy of the request that generated these results.
+  OwnershipRequest request = 98;
   // pagination provides the pagination information of this response.
   cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
@@ -354,6 +359,8 @@ message ValueOwnershipResponse {
   // A list of scope ids (uuid) associated with the given address.
   repeated string scope_uuids = 1 [(gogoproto.moretags) = "yaml:\"scope_uuids\""];
 
+  // request is a copy of the request that generated these results.
+  ValueOwnershipRequest request = 98;
   // pagination provides the pagination information of this response.
   cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
@@ -367,6 +374,9 @@ message ScopeSpecificationRequest {
 message ScopeSpecificationResponse {
   ScopeSpecification scope_specification = 1 [(gogoproto.moretags) = "yaml:\"scope_specification\""];
   string             specification_uuid  = 2 [(gogoproto.moretags) = "yaml:\"specification_uuid\""];
+
+  // request is a copy of the request that generated these results.
+  ScopeSpecificationRequest request = 98;
 }
 
 // ContractSpecificationRequest is the request type for the Query/ContractSpecification RPC method.
@@ -378,6 +388,9 @@ message ContractSpecificationRequest {
 message ContractSpecificationResponse {
   ContractSpecification contract_specification      = 1 [(gogoproto.moretags) = "yaml:\"contract_specification\""];
   string                contract_specification_uuid = 2 [(gogoproto.moretags) = "yaml:\"contract_specification_uuid\""];
+
+  // request is a copy of the request that generated these results.
+  ContractSpecificationRequest request = 98;
 }
 
 // ContractSpecificationExtendedRequest is the request type for the Query/ContractSpecificationExtended RPC method.
@@ -391,6 +404,9 @@ message ContractSpecificationExtendedResponse {
   ContractSpecification        contract_specification = 1 [(gogoproto.moretags) = "yaml:\"contract_specification\""];
   repeated RecordSpecification record_specifications  = 2 [(gogoproto.moretags) = "yaml:\"record_specifications\""];
   string contract_specification_uuid = 3 [(gogoproto.moretags) = "yaml:\"contract_specification_uuid\""];
+
+  // request is a copy of the request that generated these results.
+  ContractSpecificationExtendedRequest request = 98;
 }
 
 // RecordSpecificationsForContractSpecificationRequest is the request type for the
@@ -404,6 +420,9 @@ message RecordSpecificationsForContractSpecificationRequest {
 message RecordSpecificationsForContractSpecificationResponse {
   repeated RecordSpecification record_specifications = 1 [(gogoproto.moretags) = "yaml:\"record_specifications\""];
   string contract_specification_uuid = 2 [(gogoproto.moretags) = "yaml:\"contract_specification_uuid\""];
+
+  // request is a copy of the request that generated these results.
+  RecordSpecificationsForContractSpecificationRequest request = 98;
 }
 
 // RecordSpecificationRequest is the request type for the Query/RecordSpecification RPC method.
@@ -417,6 +436,9 @@ message RecordSpecificationResponse {
   RecordSpecification record_specification        = 1 [(gogoproto.moretags) = "yaml:\"record_specification\""];
   string              contract_specification_uuid = 2 [(gogoproto.moretags) = "yaml:\"contract_specification_uuid\""];
   string              name                        = 3;
+
+  // request is a copy of the request that generated these results.
+  RecordSpecificationRequest request = 98;
 }
 
 // RecordSpecificationByIDRequest is the request type for the Query/RecordSpecificationByID RPC method.
@@ -428,6 +450,9 @@ message RecordSpecificationByIDRequest {
 message RecordSpecificationByIDResponse {
   RecordSpecification record_specification    = 1 [(gogoproto.moretags) = "yaml:\"record_specification\""];
   string              record_specification_id = 2 [(gogoproto.moretags) = "yaml:\"record_specification_id\""];
+
+  // request is a copy of the request that generated these results.
+  RecordSpecificationByIDRequest request = 98;
 }
 
 // OSLocatorParamsRequest is the request type for the Query/OSLocatorParams RPC method.
@@ -437,6 +462,9 @@ message OSLocatorParamsRequest {}
 message OSLocatorParamsResponse {
   // params defines the parameters of the module.
   OSLocatorParams params = 1 [(gogoproto.nullable) = false];
+
+  // request is a copy of the request that generated these results.
+  OSLocatorParamsRequest request = 98;
 }
 
 // OSLocationRequest is the request type for the Query/OSLocator RPC method.
@@ -447,6 +475,9 @@ message OSLocatorRequest {
 // OSLocatorResponse is the response type for the Query/OSLocator RPC method.
 message OSLocatorResponse {
   ObjectStoreLocator locator = 1;
+
+  // request is a copy of the request that generated these results.
+  OSLocatorRequest request = 98;
 }
 
 // OSLocatorByURIRequest is the request type for the Query/OSLocatorByURI RPC method.
@@ -461,6 +492,8 @@ message OSLocatorByURIRequest {
 message OSLocatorByURIResponse {
   repeated ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
 
+  // request is a copy of the request that generated these results.
+  OSLocatorByURIRequest request = 98;
   // pagination provides the pagination information of this response.
   cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
@@ -473,6 +506,9 @@ message OSLocatorByScopeUUIDRequest {
 // OSLocatorByScopeUUIDResponse is the response type for the Query/OSLocatorByScopeUUID RPC method.
 message OSLocatorByScopeUUIDResponse {
   repeated ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
+
+  // request is a copy of the request that generated these results.
+  OSLocatorByScopeUUIDRequest request = 98;
 }
 
 // OSAllLocatorsRequest is the request type for the Query/OSAllLocators RPC method.
@@ -485,6 +521,8 @@ message OSAllLocatorsRequest {
 message OSAllLocatorsResponse {
   repeated ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
 
+  // request is a copy of the request that generated these results.
+  OSAllLocatorsRequest request = 98;
   // pagination provides the pagination information of this response.
   cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }

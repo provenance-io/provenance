@@ -94,7 +94,7 @@ type MetadataKeeperI interface {
 	// add OSLocator instance
 	SetOSLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, uri string) error
 	// get OS locator by scope UUID.
-	GetOSLocatorByScopeUUID(ctx sdk.Context, scopeID string) (*types.OSLocatorByScopeUUIDResponse, error)
+	GetOSLocatorByScopeUUID(ctx sdk.Context, scopeID string) ([]types.ObjectStoreLocator, error)
 }
 
 // Keeper is the concrete state-based API for the metadata module.
