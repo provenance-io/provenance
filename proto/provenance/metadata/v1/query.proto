@@ -219,8 +219,10 @@ message ScopeResponse {
 message ScopeWrapper {
   // scope is the on-chain scope message.
   Scope scope = 1;
-  // scope_uuid is the uuid this scope, e.g. 91978ba2-5f35-459a-86a7-feca1b0512e0.
-  string scope_uuid = 2 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
+  // scope_addr is the bech32 address of the scope, e.g. scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel.
+  string scope_addr = 2 [(gogoproto.moretags) = "yaml:\"scope_addr\""];
+  // scope_uuid is the uuid of this scope, e.g. 91978ba2-5f35-459a-86a7-feca1b0512e0.
+  string scope_uuid = 3 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
 }
 
 // SessionsRequest is the request type for the Query/Sessions RPC method.
