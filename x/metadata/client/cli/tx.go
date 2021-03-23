@@ -266,7 +266,7 @@ func AddContractSpecificationCmd() *cobra.Command {
 				return fmt.Errorf("invalid contract specification id: %s", args[0])
 			}
 
-			partiesInvolved := partyTypes(args[2])
+			partiesInvolved := parsePartyTypes(args[2])
 			description := parseDescription(args[7:])
 			contractSpecification := types.ContractSpecification{SpecificationId: specificationID,
 				Description:     description,
@@ -293,13 +293,13 @@ func AddContractSpecificationCmd() *cobra.Command {
 
 			signers := strings.Split(args[6], ",")
 
-			msg := types.MsgAddContractSpecificationRequest{Specification: contractSpecification, Signers: signers}
+			msg := types.NewMsgAddContractSpecificationRequest(contractSpecification, signers)
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
@@ -308,7 +308,7 @@ func AddContractSpecificationCmd() *cobra.Command {
 	return cmd
 }
 
-func partyTypes(delimitedPartyTypes string) []types.PartyType {
+func parsePartyTypes(delimitedPartyTypes string) []types.PartyType {
 	parties := strings.Split(delimitedPartyTypes, ",")
 	partyTypes := make([]types.PartyType, len(parties))
 	for i, party := range parties {
