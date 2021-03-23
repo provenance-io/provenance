@@ -176,7 +176,14 @@ func (suite *IntegrationTestSuite) TestGRPCQueries() {
 			},
 			false,
 			&metadatatypes.ScopeResponse{},
-			&metadatatypes.ScopeResponse{Scope: &suite.scope, ScopeUuid: suite.scopeUUID.String()},
+			&metadatatypes.ScopeResponse{
+				Scope: &metadatatypes.ScopeWrapper{
+					Scope: &suite.scope,
+					ScopeAddr: suite.scopeID.String(),
+					ScopeUuid: suite.scopeUUID.String(),
+				},
+				Request: &metadatatypes.ScopeRequest{ScopeId: suite.scopeUUID.String()},
+			},
 		},
 		{
 			"Unknown metadata scope id",
