@@ -40,39 +40,79 @@ func (k Keeper) Scope(c context.Context, req *types.ScopeRequest) (*types.ScopeR
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.ScopeId == "" {
-		return nil, status.Error(codes.InvalidArgument, "scope uuid cannot be empty")
+	retval := types.ScopeResponse{Request: req}
+
+	var scopeAddr types.MetadataAddress
+	var addrErr error
+
+	// Get the scope address from the input.
+	switch {
+	case len(req.ScopeId) > 0:
+		scopeAddr, addrErr = ParseScopeID(req.ScopeId)
+	case len(req.SessionAddr) > 0:
+		sessionAddr, sessionAddrErr := ParseSessionAddr(req.SessionAddr)
+		if sessionAddrErr != nil {
+			addrErr = sessionAddrErr
+		} else {
+			scopeAddr, addrErr = sessionAddr.AsScopeAddress()
+		}
+	case len(req.RecordAddr) > 0:
+		recordAddr, recordAddrErr := ParseRecordAddr(req.RecordAddr)
+		if recordAddrErr != nil {
+			addrErr = recordAddrErr
+		} else {
+			scopeAddr, addrErr = recordAddr.AsScopeAddress()
+		}
+	default:
+		return &retval, status.Error(codes.InvalidArgument, "empty request parameters")
 	}
 
-	scopeUUID, err := uuid.Parse(req.ScopeId)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid scope uuid: %s", err.Error())
+	if addrErr != nil {
+		return &retval, status.Error(codes.InvalidArgument, addrErr.Error())
 	}
-	scopeAddress := types.ScopeMetadataAddress(scopeUUID)
-
-	retval := types.ScopeResponse{ScopeUuid: scopeUUID.String()}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	scope, found := k.GetScope(ctx, scopeAddress)
-	if !found {
-		return &retval, status.Errorf(codes.NotFound, "scope uuid %s not found", scopeUUID)
-	}
-	retval.Scope = &scope
-
-	err = k.IterateRecords(ctx, scopeAddress, func(record types.Record) (stop bool) {
-		retval.Records = append(retval.Records, &record)
-		return false
-	})
-	if err != nil {
-		return &retval, status.Errorf(codes.Internal, "error iterating scope records: %v", err)
+	scope, found := k.GetScope(ctx, scopeAddr)
+	if found {
+		retval.Scope = types.WrapScope(&scope)
+	} else {
+		retval.Scope = types.WrapScopeNotFound(scopeAddr)
 	}
 
-	err = k.IterateSessions(ctx, scopeAddress, func(session types.Session) (stop bool) {
-		retval.Sessions = append(retval.Sessions, &session)
-		return false
-	})
+	var sessErr, recErr error
+
+	if req.IncludeSessions {
+		err := k.IterateSessions(ctx, scopeAddr, func(session types.Session) (stop bool) {
+			retval.Sessions = append(retval.Sessions, types.WrapSession(&session))
+			return false
+		})
+		if err != nil {
+			sessErr = fmt.Errorf("error iterating scope [%s] sessions: %w", scopeAddr, err)
+		}
+	}
+
+	if req.IncludeRecords {
+		err := k.IterateRecords(ctx, scopeAddr, func(record types.Record) (stop bool) {
+			retval.Records = append(retval.Records, types.WrapRecord(&record))
+			return false
+		})
+		if err != nil {
+			recErr = fmt.Errorf("error iterating scope [%s] records: %w", scopeAddr, err)
+		}
+	}
+
+	var err error
+	switch {
+	case sessErr != nil && recErr != nil:
+		err = fmt.Errorf("errors getting sessions and records: %s, %s", sessErr.Error(), recErr.Error())
+	case sessErr != nil:
+		err = sessErr
+	case recErr != nil:
+		err = recErr
+	}
+
 	if err != nil {
-		return &retval, status.Errorf(codes.Internal, "error iterating scope sessions: %v", err)
+		return &retval, status.Error(codes.Unavailable, err.Error())
 	}
 
 	return &retval, nil
@@ -86,18 +126,21 @@ func (k Keeper) Sessions(c context.Context, req *types.SessionsRequest) (*types.
 
 	retval := types.SessionsResponse{Request: req}
 
-	haveScopeID := len(req.ScopeId) > 0
-	haveSessionID := len(req.SessionId) > 0
-	if !haveScopeID && !haveSessionID {
-		return &retval, status.Error(codes.InvalidArgument, "empty request parameters")
-	}
+	var scopeAddr types.MetadataAddress
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	if haveSessionID {
+	// Get all the sessions based on the input, and set things up for extra info.
+	switch {
+	case len(req.SessionId) > 0:
 		sessionAddr, err := ParseSessionID(req.ScopeId, req.SessionId)
 		if err != nil {
 			return &retval, status.Error(codes.InvalidArgument, err.Error())
+		}
+		scopeAddr, err = sessionAddr.AsScopeAddress()
+		if err != nil {
+			// Should never happen, but whatever... just being safe.
+			return &retval, status.Errorf(codes.InvalidArgument, "error extracting scope address: %s", err.Error())
 		}
 		session, found := k.GetSession(ctx, sessionAddr)
 		if found {
@@ -105,26 +148,63 @@ func (k Keeper) Sessions(c context.Context, req *types.SessionsRequest) (*types.
 		} else {
 			retval.Sessions = append(retval.Sessions, types.WrapSessionNotFound(sessionAddr))
 		}
-		return &retval, nil
+	case len(req.ScopeId) > 0:
+		var err error
+		scopeAddr, err = ParseScopeID(req.ScopeId)
+		if err != nil {
+			return &retval, status.Error(codes.InvalidArgument, err.Error())
+		}
+		itErr := k.IterateSessions(ctx, scopeAddr, func(s types.Session) (stop bool) {
+			retval.Sessions = append(retval.Sessions, types.WrapSession(&s))
+			return false
+		})
+		if itErr != nil {
+			return &retval, status.Error(codes.Unavailable, fmt.Sprintf("error getting sessions for scope with address %s", scopeAddr))
+		}
+	default:
+		return &retval, status.Error(codes.InvalidArgument, "empty request parameters")
 	}
 
-	scopeID, scopeIDErr := ParseScopeID(req.ScopeId)
-	if scopeIDErr != nil {
-		return &retval, scopeIDErr
+	if req.IncludeScope {
+		scope, found := k.GetScope(ctx, scopeAddr)
+		if found {
+			retval.Scope = types.WrapScope(&scope)
+		} else {
+			retval.Scope = types.WrapScopeNotFound(scopeAddr)
+		}
 	}
 
-	itErr := k.IterateSessions(ctx, scopeID, func(s types.Session) (stop bool) {
-		retval.Sessions = append(retval.Sessions, types.WrapSession(&s))
-		return false
-	})
-	if itErr != nil {
-		return &retval, status.Error(codes.Unavailable, fmt.Sprintf("error getting sessions for scope with address %s", scopeID))
+	if req.IncludeRecords {
+		// Get all the session ids
+		sessionAddrs := []types.MetadataAddress{}
+		for _, s := range retval.Sessions {
+			if s.Session != nil {
+				sessionAddrs = append(sessionAddrs, s.Session.SessionId)
+			}
+		}
+		// Iterate the records for the whole scope, and just keep the ones for our sessions.
+		err := k.IterateRecords(ctx, scopeAddr, func(r types.Record) (stop bool) {
+			keep := false
+			for _, a := range sessionAddrs {
+				if r.SessionId.Equals(a) {
+					keep = true
+					break
+				}
+			}
+			if keep {
+				retval.Records = append(retval.Records, types.WrapRecord(&r))
+			}
+			return false
+		})
+		if err != nil {
+			return &retval, status.Errorf(codes.Unavailable, "error iterating scope [%s] records: %s", scopeAddr, err.Error())
+		}
 	}
 
 	return &retval, nil
 }
 
-// Records returns records based ont eh provided request.
+// Records returns records based on the provided request.
 func (k Keeper) Records(c context.Context, req *types.RecordsRequest) (*types.RecordsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -133,15 +213,13 @@ func (k Keeper) Records(c context.Context, req *types.RecordsRequest) (*types.Re
 	retval := types.RecordsResponse{Request: req}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	haveRecordAddr := len(req.RecordAddr) > 0
 	haveScopeID := len(req.ScopeId) > 0
 	haveSessionID := len(req.SessionId) > 0
+	var scopeAddr types.MetadataAddress
 
-	if !haveRecordAddr && !haveScopeID && !haveSessionID {
-		return &retval, status.Error(codes.InvalidArgument, "empty request parameters")
-	}
-
-	if haveRecordAddr {
+	// Get all the records based on the input, and set things up for extra info.
+	switch {
+	case len(req.RecordAddr) > 0:
 		recordAddr, err := ParseRecordAddr(req.RecordAddr)
 		if err != nil {
 			return &retval, status.Error(codes.InvalidArgument, err.Error())
@@ -152,56 +230,95 @@ func (k Keeper) Records(c context.Context, req *types.RecordsRequest) (*types.Re
 		} else {
 			retval.Records = append(retval.Records, types.WrapRecordNotFound(recordAddr))
 		}
-		return &retval, nil
-	}
-
-	var scopeAddr, sessionAddr types.MetadataAddress
-
-	if haveScopeID {
-		var err error
-		scopeAddr, err = ParseScopeID(req.ScopeId)
-		if err != nil {
-			return &retval, status.Error(codes.InvalidArgument, err.Error())
-		}
-	}
-	if haveSessionID {
-		var err error
-		sessionAddr, err = ParseSessionID(req.ScopeId, req.SessionId)
-		if err != nil {
-			return &retval, status.Error(codes.InvalidArgument, err.Error())
-		}
-		if scopeAddr.Empty() {
-			scopeAddr, err = sessionAddr.AsScopeAddress()
+	case haveScopeID || haveSessionID:
+		// If we were given a scope id, try to get a scope address from it.
+		if haveScopeID {
+			var err error
+			scopeAddr, err = ParseScopeID(req.ScopeId)
 			if err != nil {
 				return &retval, status.Error(codes.InvalidArgument, err.Error())
 			}
 		}
+		// If we were given a session id, try to get the session address from it (and also the scope address if we don't have it yet).
+		var sessionAddr types.MetadataAddress
+		if haveSessionID {
+			var err error
+			sessionAddr, err = ParseSessionID(req.ScopeId, req.SessionId)
+			if err != nil {
+				return &retval, status.Error(codes.InvalidArgument, err.Error())
+			}
+			if scopeAddr.Empty() {
+				scopeAddr, err = sessionAddr.AsScopeAddress()
+				if err != nil {
+					return &retval, status.Error(codes.InvalidArgument, err.Error())
+				}
+			}
+		}
+		var records []*types.Record
+		if len(req.Name) > 0 {
+			// If we were given a name, just try to get the one specific record
+			recordAddr, err := scopeAddr.AsRecordAddress(req.Name)
+			if err != nil {
+				return &retval, status.Error(codes.InvalidArgument, err.Error())
+			}
+			record, found := k.GetRecord(ctx, recordAddr)
+			if found {
+				records = append(records, &record)
+			}
+		} else {
+			// If no name was given, we'll get all the records for the scope (and thin them out later if needed).
+			var err error
+			records, err = k.GetRecords(ctx, scopeAddr, req.Name)
+			if err != nil {
+				return &retval, status.Error(codes.InvalidArgument, err.Error())
+			}
+		}
+		// Filter the records (if needed) and add them to the return value.
+		if len(records) > 0 {
+			haveSessionAddr := !sessionAddr.Empty()
+			for _, r := range records {
+				if !haveSessionAddr || sessionAddr.Equals(r.SessionId) {
+					retval.Records = append(retval.Records, types.WrapRecord(r))
+				}
+			}
+		}
+	default:
+		return &retval, status.Error(codes.InvalidArgument, "empty request parameters")
 	}
 
-	var records []*types.Record
-
-	if len(req.Name) > 0 {
-		recordAddr, err := scopeAddr.AsRecordAddress(req.Name)
-		if err != nil {
-			return &retval, status.Error(codes.InvalidArgument, err.Error())
-		}
-		record, found := k.GetRecord(ctx, recordAddr)
+	if req.IncludeScope {
+		scope, found := k.GetScope(ctx, scopeAddr)
 		if found {
-			records = append(records, &record)
-		}
-	} else {
-		var err error
-		records, err = k.GetRecords(ctx, scopeAddr, req.Name)
-		if err != nil {
-			return &retval, status.Error(codes.InvalidArgument, err.Error())
+			retval.Scope = types.WrapScope(&scope)
+		} else {
+			retval.Scope = types.WrapScopeNotFound(scopeAddr)
 		}
 	}
 
-	if len(records) > 0 {
-		haveSessionAddr := sessionAddr.Empty()
-		for _, r := range records {
-			if !haveSessionAddr || sessionAddr.Equals(r.SessionId) {
-				retval.Records = append(retval.Records, types.WrapRecord(r))
+	if req.IncludeSessions {
+		// Get a list of unique session addresses from the records.
+		sessionAddrs := []types.MetadataAddress{}
+		for _, r := range retval.Records {
+			if r.Record != nil {
+				alreadyHave := false
+				for _, a := range sessionAddrs {
+					if r.Record.SessionId.Equals(a) {
+						alreadyHave = true
+						break
+					}
+				}
+				if !alreadyHave {
+					sessionAddrs = append(sessionAddrs, r.Record.SessionId)
+				}
+			}
+		}
+		// Get each session.
+		for _, a := range sessionAddrs {
+			session, found := k.GetSession(ctx, a)
+			if found {
+				retval.Sessions = append(retval.Sessions, types.WrapSession(&session))
+			} else {
+				retval.Sessions = append(retval.Sessions, types.WrapSessionNotFound(a))
 			}
 		}
 	}
@@ -671,15 +788,28 @@ func ParseSessionID(scopeID string, sessionID string) (types.MetadataAddress, er
 		sessionID, sessionAddrErr, sessionUUIDErr)
 }
 
-// ParseRecordAddr parses the provided input into a scope MetadataAddress.
+// ParseSessionAddr parses the provided input into a session MetadataAddress.
+// The input must be a session address bech32 string.
+func ParseSessionAddr(sessionAddr string) (types.MetadataAddress, error) {
+	addr, addrErr := types.MetadataAddressFromBech32(sessionAddr)
+	if addrErr != nil {
+		return types.MetadataAddress{}, fmt.Errorf("could not parse [%s] into a session address: %w", sessionAddr, addrErr)
+	}
+	if !addr.IsSessionAddress() {
+		return types.MetadataAddress{}, fmt.Errorf("address [%s] is not a session address", sessionAddr)
+	}
+	return addr, nil
+}
+
+// ParseRecordAddr parses the provided input into a record MetadataAddress.
 // The input must be a record address bech32 string.
 func ParseRecordAddr(recordAddr string) (types.MetadataAddress, error) {
 	addr, addrErr := types.MetadataAddressFromBech32(recordAddr)
-	if addrErr == nil {
-		if addr.IsRecordAddress() {
-			return addr, nil
-		}
+	if addrErr != nil {
+		return types.MetadataAddress{}, fmt.Errorf("could not parse [%s] into a record address: %w", recordAddr, addrErr)
+	}
+	if !addr.IsRecordAddress() {
 		return types.MetadataAddress{}, fmt.Errorf("address [%s] is not a record address", recordAddr)
 	}
-	return types.MetadataAddress{}, fmt.Errorf("could not parse [%s] into a record address: %w", recordAddr, addrErr)
+	return addr, nil
 }

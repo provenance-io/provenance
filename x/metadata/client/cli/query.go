@@ -592,7 +592,7 @@ func recordsBySessionID(cmd *cobra.Command, sessionID types.MetadataAddress) err
 
 	protoList := []proto.Message{}
 	for _, record := range res.Records {
-		if record != nil && sessionID.Equals(record.SessionId) {
+		if record != nil && sessionID.Equals(record.Record.SessionId) {
 			protoList = append(protoList, record)
 		}
 	}
@@ -687,8 +687,8 @@ func recordByID(cmd *cobra.Command, recordID types.MetadataAddress) error {
 	}
 	var record *types.Record = nil
 	for _, r := range res.Records {
-		if recordID.Equals(types.RecordMetadataAddress(scopeUUID, r.Name)) {
-			record = r
+		if recordID.Equals(types.RecordMetadataAddress(scopeUUID, r.Record.Name)) {
+			record = r.Record
 			break
 		}
 	}
