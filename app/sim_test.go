@@ -1,23 +1,44 @@
-package app_test
+package app
+
+// DONTCOVER
 
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"os"
 	"testing"
 
-	provenance "github.com/provenance-io/provenance/app"
-
 	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
-	"github.com/tendermint/tendermint/libs/rand"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	sdksim "github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/store"
-	simulation2 "github.com/cosmos/cosmos-sdk/types/simulation"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
+	//authztypes "github.com/cosmos/cosmos-sdk/x/authz/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
+	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
 const (
@@ -26,11 +47,17 @@ const (
 )
 
 func init() {
-	simapp.GetSimulatorFlags()
+	sdksim.GetSimulatorFlags()
+}
+
+type StoreKeysPrefixes struct {
+	A        sdk.StoreKey
+	B        sdk.StoreKey
+	Prefixes [][]byte
 }
 
 func TestFullAppSimulation(t *testing.T) {
-	config, db, dir, logger, skip, err := simapp.SetupSimulation("leveldb-app-sim", "Simulation")
+	config, db, dir, logger, skip, err := sdksim.SetupSimulation("leveldb-app-sim", "Simulation")
 	if skip {
 		t.Skip("skipping provenance application simulation")
 	}
@@ -41,7 +68,7 @@ func TestFullAppSimulation(t *testing.T) {
 		require.NoError(t, os.RemoveAll(dir))
 	}()
 
-	app := provenance.New(appName, logger, db, nil, true, map[int64]bool{}, provenance.DefaultNodeHome(appName), simapp.FlagPeriodValue, provenance.MakeEncodingConfig(), simapp.EmptyAppOptions{}, fauxMerkleModeOpt)
+	app := New(appName, logger, db, nil, true, map[int64]bool{}, DefaultNodeHome(appName), sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, fauxMerkleModeOpt)
 	require.Equal(t, appName, app.Name())
 
 	fmt.Printf("running provenance full app simulation")
@@ -51,102 +78,219 @@ func TestFullAppSimulation(t *testing.T) {
 		t,
 		os.Stdout,
 		app.BaseApp,
-		simapp.AppStateFn(app.AppCodec(), app.SimulationManager()),
-		simulation2.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-		simapp.SimulationOperations(app, app.AppCodec(), config),
+		sdksim.AppStateFn(app.AppCodec(), app.SimulationManager()),
+		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
+		sdksim.SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
 		config,
 		app.AppCodec(),
 	)
 
 	// export state and simParams before the simulation error is checked
-	err = simapp.CheckExportSimulation(app, config, simParams)
+	err = sdksim.CheckExportSimulation(app, config, simParams)
 	require.NoError(t, err)
 	require.NoError(t, simErr)
 
 	if config.Commit {
-		simapp.PrintStats(db)
+		sdksim.PrintStats(db)
 	}
 }
 
 // Profile with:
 // /usr/local/go/bin/go test -benchmem -run=^$ github.com/provenance-io/provenance -bench ^BenchmarkFullAppSimulation$ -Commit=true -cpuprofile cpu.out
-func BenchmarkFullAppSimulation(b *testing.B) {
+func TestAppImportExport(t *testing.T) {
 	// uncomment to run in ide without flags.
-	//simapp.FlagEnabledValue = true
-	if !simapp.FlagEnabledValue {
-		b.Skip("skipping provenance application benchmark simulation")
-	}
+	//sdksim.FlagEnabledValue = true
 
-	config, db, dir, logger, _, err := simapp.SetupSimulation("goleveldb-app-sim", "Simulation")
-	if err != nil {
-		b.Fatalf("simulation setup failed: %s", err.Error())
+	config, db, dir, logger, skip, err := sdksim.SetupSimulation("leveldb-app-sim", "Simulation")
+	if skip {
+		t.Skip("skipping application import/export simulation")
 	}
+	require.NoError(t, err, "simulation setup failed")
 
 	defer func() {
 		db.Close()
-		err = os.RemoveAll(dir)
-		if err != nil {
-			b.Fatal(err)
-		}
+		require.NoError(t, os.RemoveAll(dir))
 	}()
 
-	app := provenance.New(appName, logger, db, nil, true, map[int64]bool{}, provenance.DefaultNodeHome(appName), simapp.FlagPeriodValue, provenance.MakeEncodingConfig(), simapp.EmptyAppOptions{}, interBlockCacheOpt())
+	app := New(appName, logger, db, nil, true, map[int64]bool{}, DefaultNodeHome(appName), sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, fauxMerkleModeOpt)
 
 	fmt.Printf("running provenance benchmark full app simulation")
 
-	// Run randomized simulation:w
+	// Run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
-		b,
+		t,
 		os.Stdout,
 		app.BaseApp,
-		simapp.AppStateFn(app.AppCodec(), app.SimulationManager()),
-		simulation2.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-		simapp.SimulationOperations(app, app.AppCodec(), config),
+		sdksim.AppStateFn(app.AppCodec(), app.SimulationManager()),
+		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
+		sdksim.SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
 		config,
 		app.AppCodec(),
 	)
 
 	// export state and simParams before the simulation error is checked
-	if err = simapp.CheckExportSimulation(app, config, simParams); err != nil {
-		b.Fatal(err)
-	}
-
-	if simErr != nil {
-		b.Fatal(simErr)
-	}
+	err = sdksim.CheckExportSimulation(app, config, simParams)
+	require.NoError(t, err)
+	require.NoError(t, simErr)
 
 	if config.Commit {
-		simapp.PrintStats(db)
+		sdksim.PrintStats(db)
+	}
+
+	fmt.Printf("exporting genesis...\n")
+
+	exported, err := app.ExportAppStateAndValidators(false, []string{})
+	require.NoError(t, err)
+
+	fmt.Printf("importing genesis...\n")
+
+	_, newDB, newDir, _, _, err := sdksim.SetupSimulation("leveldb-app-sim-2", "Simulation-2")
+	require.NoError(t, err, "simulation setup failed")
+
+	defer func() {
+		newDB.Close()
+		require.NoError(t, os.RemoveAll(newDir))
+	}()
+
+	newApp := New(appName, log.NewNopLogger(), newDB, nil, true, map[int64]bool{}, DefaultNodeHome(appName), sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, fauxMerkleModeOpt)
+
+	var genesisState sdksim.GenesisState
+	err = json.Unmarshal(exported.AppState, &genesisState)
+	require.NoError(t, err)
+
+	ctxA := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
+	ctxB := newApp.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
+	newApp.mm.InitGenesis(ctxB, app.AppCodec(), genesisState)
+	newApp.StoreConsensusParams(ctxB, exported.ConsensusParams)
+
+	fmt.Printf("comparing stores...\n")
+
+	storeKeysPrefixes := []StoreKeysPrefixes{
+		{app.keys[authtypes.StoreKey], newApp.keys[authtypes.StoreKey], [][]byte{}},
+		{app.keys[stakingtypes.StoreKey], newApp.keys[stakingtypes.StoreKey],
+			[][]byte{
+				stakingtypes.UnbondingQueueKey, stakingtypes.RedelegationQueueKey, stakingtypes.ValidatorQueueKey,
+				stakingtypes.HistoricalInfoKey,
+			}}, // ordering may change but it doesn't matter
+		{app.keys[slashingtypes.StoreKey], newApp.keys[slashingtypes.StoreKey], [][]byte{}},
+		{app.keys[minttypes.StoreKey], newApp.keys[minttypes.StoreKey], [][]byte{}},
+		{app.keys[distrtypes.StoreKey], newApp.keys[distrtypes.StoreKey], [][]byte{}},
+		{app.keys[banktypes.StoreKey], newApp.keys[banktypes.StoreKey], [][]byte{banktypes.BalancesPrefix}},
+		{app.keys[paramtypes.StoreKey], newApp.keys[paramtypes.StoreKey], [][]byte{}},
+		{app.keys[govtypes.StoreKey], newApp.keys[govtypes.StoreKey], [][]byte{}},
+		{app.keys[evidencetypes.StoreKey], newApp.keys[evidencetypes.StoreKey], [][]byte{}},
+		{app.keys[capabilitytypes.StoreKey], newApp.keys[capabilitytypes.StoreKey], [][]byte{}},
+		//{app.keys[authztypes.StoreKey], newApp.keys[authztypes.StoreKey], [][]byte{}},
+
+		{app.keys[markertypes.StoreKey], newApp.keys[markertypes.StoreKey], [][]byte{}},
+		{app.keys[attributetypes.StoreKey], newApp.keys[attributetypes.StoreKey], [][]byte{}},
+		{app.keys[nametypes.StoreKey], newApp.keys[nametypes.StoreKey], [][]byte{}},
+		{app.keys[metadatatypes.StoreKey], newApp.keys[metadatatypes.StoreKey], [][]byte{}},
+	}
+
+	for _, skp := range storeKeysPrefixes {
+		storeA := ctxA.KVStore(skp.A)
+		storeB := ctxB.KVStore(skp.B)
+
+		failedKVAs, failedKVBs := sdk.DiffKVStores(storeA, storeB, skp.Prefixes)
+		require.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare")
+
+		fmt.Printf("compared %d different key/value pairs between %s and %s\n", len(failedKVAs), skp.A, skp.B)
+		require.Equal(t, len(failedKVAs), 0, sdksim.GetSimulationLog(skp.A.Name(), app.SimulationManager().StoreDecoders, failedKVAs, failedKVBs))
 	}
 }
 
-// interBlockCacheOpt returns a BaseApp option function that sets the persistent
-// inter-block write-through cache.
-func interBlockCacheOpt() func(*baseapp.BaseApp) {
-	return baseapp.SetInterBlockCache(store.NewCommitKVStoreCacheManager())
+func TestAppSimulationAfterImport(t *testing.T) {
+	config, db, dir, logger, skip, err := sdksim.SetupSimulation("leveldb-app-sim", "Simulation")
+	if skip {
+		t.Skip("skipping application simulation after import")
+	}
+	require.NoError(t, err, "simulation setup failed")
+
+	defer func() {
+		db.Close()
+		require.NoError(t, os.RemoveAll(dir))
+	}()
+
+	app := New(appName, logger, db, nil, true, map[int64]bool{}, DefaultNodeHome(appName), sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, fauxMerkleModeOpt)
+
+	// Run randomized simulation
+	stopEarly, simParams, simErr := simulation.SimulateFromSeed(
+		t,
+		os.Stdout,
+		app.BaseApp,
+		sdksim.AppStateFn(app.AppCodec(), app.SimulationManager()),
+		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
+		sdksim.SimulationOperations(app, app.AppCodec(), config),
+		app.ModuleAccountAddrs(),
+		config,
+		app.AppCodec(),
+	)
+
+	// export state and simParams before the simulation error is checked
+	err = sdksim.CheckExportSimulation(app, config, simParams)
+	require.NoError(t, err)
+	require.NoError(t, simErr)
+
+	if config.Commit {
+		sdksim.PrintStats(db)
+	}
+
+	if stopEarly {
+		fmt.Println("can't export or import a zero-validator genesis, exiting test...")
+		return
+	}
+
+	fmt.Printf("exporting genesis...\n")
+
+	exported, err := app.ExportAppStateAndValidators(true, []string{})
+	require.NoError(t, err)
+
+	fmt.Printf("importing genesis...\n")
+
+	_, newDB, newDir, _, _, err := sdksim.SetupSimulation("leveldb-app-sim-2", "Simulation-2")
+	require.NoError(t, err, "simulation setup failed")
+
+	defer func() {
+		newDB.Close()
+		require.NoError(t, os.RemoveAll(newDir))
+	}()
+
+	newApp := New(appName, log.NewNopLogger(), newDB, nil, true, map[int64]bool{}, DefaultNodeHome(appName), sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, fauxMerkleModeOpt)
+
+	newApp.InitChain(abci.RequestInitChain{
+		AppStateBytes: exported.AppState,
+	})
+
+	_, _, err = simulation.SimulateFromSeed(
+		t,
+		os.Stdout,
+		newApp.BaseApp,
+		sdksim.AppStateFn(app.AppCodec(), app.SimulationManager()),
+		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
+		sdksim.SimulationOperations(newApp, newApp.AppCodec(), config),
+		app.ModuleAccountAddrs(),
+		config,
+		app.AppCodec(),
+	)
+	require.NoError(t, err)
 }
 
-// fauxMerkleModeOpt returns a BaseApp option to use a dbStoreAdapter instead of
-// an IAVLStore for faster simulation speed.
-func fauxMerkleModeOpt(bapp *baseapp.BaseApp) {
-	bapp.SetFauxMerkleMode()
-}
-
-//// TODO: Make another test for the fuzzer itself, which just has noOp txs
-//// and doesn't depend on the application.
+// TODO: Make another test for the fuzzer itself, which just has noOp txs
+// and doesn't depend on the application.
 func TestAppStateDeterminism(t *testing.T) {
-	if !simapp.FlagEnabledValue {
+	if !sdksim.FlagEnabledValue {
 		t.Skip("skipping application simulation")
 	}
 
-	config := simapp.NewConfigFromFlags()
+	config := sdksim.NewConfigFromFlags()
 	config.InitialBlockHeight = 1
 	config.ExportParamsPath = ""
 	config.OnOperation = false
 	config.AllInvariants = false
-	config.ChainID = chainID
+	config.ChainID = helpers.SimAppChainID
 
 	numSeeds := 3
 	numTimesToRunPerSeed := 5
@@ -157,14 +301,14 @@ func TestAppStateDeterminism(t *testing.T) {
 
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			var logger log.Logger
-			if simapp.FlagVerboseValue {
+			if sdksim.FlagVerboseValue {
 				logger = log.TestingLogger()
 			} else {
 				logger = log.NewNopLogger()
 			}
 
 			db := dbm.NewMemDB()
-			app := provenance.New(appName, logger, db, nil, true, map[int64]bool{}, provenance.DefaultNodeHome(appName), simapp.FlagPeriodValue, provenance.MakeEncodingConfig(), simapp.EmptyAppOptions{}, interBlockCacheOpt())
+			app := New(appName, logger, db, nil, true, map[int64]bool{}, DefaultNodeHome(appName), sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, interBlockCacheOpt())
 
 			fmt.Printf(
 				"running provenance non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
@@ -175,9 +319,9 @@ func TestAppStateDeterminism(t *testing.T) {
 				t,
 				os.Stdout,
 				app.BaseApp,
-				simapp.AppStateFn(app.AppCodec(), app.SimulationManager()),
-				simulation2.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-				simapp.SimulationOperations(app, app.AppCodec(), config),
+				sdksim.AppStateFn(app.AppCodec(), app.SimulationManager()),
+				simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
+				sdksim.SimulationOperations(app, app.AppCodec(), config),
 				app.ModuleAccountAddrs(),
 				config,
 				app.AppCodec(),
@@ -185,7 +329,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			require.NoError(t, err)
 
 			if config.Commit {
-				simapp.PrintStats(db)
+				sdksim.PrintStats(db)
 			}
 
 			appHash := app.LastCommitID().Hash
@@ -199,4 +343,16 @@ func TestAppStateDeterminism(t *testing.T) {
 			}
 		}
 	}
+}
+
+// fauxMerkleModeOpt returns a BaseApp option to use a dbStoreAdapter instead of
+// an IAVLStore for faster simulation speed.
+func fauxMerkleModeOpt(bapp *baseapp.BaseApp) {
+	bapp.SetFauxMerkleMode()
+}
+
+// interBlockCacheOpt returns a BaseApp option function that sets the persistent
+// inter-block write-through cache.
+func interBlockCacheOpt() func(*baseapp.BaseApp) {
+	return baseapp.SetInterBlockCache(store.NewCommitKVStoreCacheManager())
 }

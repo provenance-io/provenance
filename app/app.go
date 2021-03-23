@@ -537,8 +537,8 @@ func New(
 		// metadata.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper),
 		// TODO -- add simulation to marker module
 		// marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper),
-		name.NewAppModule(appCodec, app.NameKeeper),
-		attribute.NewAppModule(app.AttributeKeeper),
+		//name.NewAppModule(appCodec, app.NameKeeper),
+		//attribute.NewAppModule(app.AttributeKeeper),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper),
 
 		params.NewAppModule(app.ParamsKeeper),

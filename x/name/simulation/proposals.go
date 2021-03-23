@@ -36,7 +36,7 @@ func SimulateCreateRootNameProposalContent(k keeper.Keeper) simtypes.ContentSimu
 		return types.NewCreateRootNameProposal(
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 100),
-			simtypes.RandStringOfLength(r, 40),
+			simtypes.RandStringOfLength(r, 10),
 			simAccount.Address,
 			restricted,
 		)
