@@ -242,3 +242,83 @@ func ModifyOsLocatorCmd() *cobra.Command {
 
 	return cmd
 }
+
+func AddContractSpecificationCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "add-contract-specification [contractspec-id] [owners] [parties-involved] [source-type] [source-value] [classname] [signers] [description-name] [description] [website-url] [icon-url]",
+		Short: "Add/Update metadata contract specification on the provenance blockchain",
+		Args:  cobra.RangeArgs(6, 11),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			specificationID, err := types.MetadataAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			if !specificationID.IsContractSpecificationAddress() {
+				return fmt.Errorf("invalid contract specification id: %s", args[0])
+			}
+
+			partiesInvolved := partyTypes(args[2])
+
+			var contractSpecification *types.ContractSpecification
+			switch s := strings.ToUpper(args[3]); s {
+			case "RESOURCEID":
+				recordID, err := types.MetadataAddressFromBech32(args[4])
+				if err != nil {
+					return err
+				}
+				contractSpecification = &types.ContractSpecification{
+					SpecificationId: specificationID,
+					Description:     nil,
+					OwnerAddresses:  strings.Split(args[1], ","),
+					PartiesInvolved: partiesInvolved,
+					ClassName:       args[5],
+					Source: &types.ContractSpecification_ResourceId{
+						ResourceId: recordID,
+					},
+				}
+			case "HASH":
+				contractSpecification = &types.ContractSpecification{
+					SpecificationId: specificationID,
+					Description:     nil,
+					OwnerAddresses:  strings.Split(args[1], ","),
+					PartiesInvolved: partiesInvolved,
+					ClassName:       args[5],
+					Source: &types.ContractSpecification_Hash{
+						Hash: args[4],
+					},
+				}
+			default:
+				return fmt.Errorf("incorrect source type for contract specification: %s", s)
+			}
+
+			signers := strings.Split(args[6], ",")
+			msg := types.MsgAddContractSpecificationRequest{Specification: *contractSpecification, Signers: signers}
+			err = msg.ValidateBasic()
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func partyTypes(delimitedPartyTypes string) []types.PartyType {
+	parties := strings.Split(delimitedPartyTypes, ",")
+	partyTypes := make([]types.PartyType, len(parties))
+	for i, party := range parties {
+		partyValue := types.PartyType_value[fmt.Sprintf("PARTY_TYPE_%s", strings.ToUpper(party))]
+		partyTypes[i] = types.PartyType(partyValue)
+	}
+	return partyTypes
+}

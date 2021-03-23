@@ -27,6 +27,7 @@ import (
 	"github.com/provenance-io/provenance/testutil"
 
 	"github.com/provenance-io/provenance/x/metadata/client/cli"
+	"github.com/provenance-io/provenance/x/metadata/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -1470,7 +1471,7 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 	userAddr := sdk.AccAddress(pubkey.Address())
 	user := userAddr.String()
 
-	testCases := []osTestStruct{
+	testCases := []commonTestStruct{
 		{
 			"Should successfully add metadata scope",
 			cli.AddMetadataScopeCmd(),
@@ -1595,7 +1596,7 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 	s.runTestCase(testCases)
 }
 
-type osTestStruct struct {
+type commonTestStruct struct {
 	name         string
 	cmd          *cobra.Command
 	args         []string
@@ -1609,7 +1610,7 @@ func (s *IntegrationTestSuite) TestRemoveMetadataScopeCmd() {
 	userId := s.testnet.Validators[0].Address.String()
 	scopeUUID := uuid.New().String()
 
-	testCases := []osTestStruct{
+	testCases := []commonTestStruct{
 		{
 			"Should successfully add metadata scope for testing scope removal",
 			cli.AddMetadataScopeCmd(),
@@ -1675,7 +1676,7 @@ func (s *IntegrationTestSuite) TestRemoveMetadataScopeCmd() {
 func (s *IntegrationTestSuite) TestAddObjectLocatorCmd() {
 	userURI := "http://foo.com"
 	userURIMod := "https://www.google.com/search?q=red+butte+garden&oq=red+butte+garden&aqs=chrome..69i57j46i131i175i199i433j0j0i457j0l6.3834j0j7&sourceid=chrome&ie=UTF-8#lpqa=d,2"
-	testCases := []osTestStruct{
+	testCases := []commonTestStruct{
 		{
 			"Should successfully add os locator",
 			cli.AddOsLocatorCmd(),
@@ -1727,7 +1728,7 @@ func (s *IntegrationTestSuite) TestGetOSLocatorCmd() {
 			"get os locator",
 			[]string{s.user1Addr.String(), s.asJson},
 			"",
-			fmt.Sprintf("{\"owner\":\"%s\",\"locator_uri\":\"%s\"}",s.user1Addr.String(),"http://foo.com"),
+			fmt.Sprintf("{\"owner\":\"%s\",\"locator_uri\":\"%s\"}", s.user1Addr.String(), "http://foo.com"),
 		},
 	}
 
@@ -1742,13 +1743,257 @@ func (s *IntegrationTestSuite) TestGetAllOSLocatorCmd() {
 			"get os locator",
 			[]string{s.user1Addr.String(), s.asJson},
 			"",
-			fmt.Sprintf("{\"owner\":\"%s\",\"locator_uri\":\"%s\"}",s.user1Addr.String(),"http://foo.com"),
+			fmt.Sprintf("{\"owner\":\"%s\",\"locator_uri\":\"%s\"}", s.user1Addr.String(), "http://foo.com"),
 		},
 	}
 
 	runQueryCmdTestCases(s, cmd, testCases)
 }
-func (s *IntegrationTestSuite) runTestCase(testCases []osTestStruct) {
+
+type commonTxTestStruct struct {
+	name         string
+	cmd          *cobra.Command
+	args         []string
+	expectErr    bool
+	expectErrMsg string
+	expectPanic  bool
+	respType     proto.Message
+	expectedCode uint32
+}
+
+func (s *IntegrationTestSuite) TestContractSpecificationCmd() {
+	cmd := cli.AddContractSpecificationCmd()
+	contractSpecUUID := uuid.New()
+	specificationID := types.ContractSpecMetadataAddress(contractSpecUUID)
+	testCases := []commonTxTestStruct{
+		{
+			"Should successfully add contract specification with resource hash",
+			cmd,
+			[]string{
+				specificationID.String(),
+				s.testnet.Validators[0].Address.String(),
+				"owner",
+				"hash",
+				"hashvalue",
+				"myclassname",
+				s.testnet.Validators[0].Address.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false,
+			"",
+			false,
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"Should successfully add contract specification with resource id",
+			cmd,
+			[]string{
+				specificationID.String(),
+				s.testnet.Validators[0].Address.String(),
+				"owner",
+				"resourceid",
+				specificationID.String(),
+				"myclassname",
+				s.testnet.Validators[0].Address.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false,
+			"",
+			false,
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"Should panic too few arguments",
+			cmd,
+			[]string{
+				specificationID.String(),
+				s.testnet.Validators[0].Address.String(),
+				"owner",
+				"hash",
+				"hashvalue",
+				s.testnet.Validators[0].Address.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false,
+			"",
+			true,
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"should fail incorrect specification id",
+			cmd,
+			[]string{
+				"invalid-spec-id",
+				s.testnet.Validators[0].Address.String(),
+				"owner",
+				"hash",
+				"hashvalue",
+				"myclassname",
+				s.testnet.Validators[0].Address.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true,
+			"decoding bech32 failed: invalid index of 1",
+			false,
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"should fail id is not a contract specification id",
+			cmd,
+			[]string{
+				s.scopeSpecID.String(),
+				s.testnet.Validators[0].Address.String(),
+				"owner",
+				"hash",
+				"hashvalue",
+				"myclassname",
+				s.testnet.Validators[0].Address.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true,
+			fmt.Sprintf("invalid contract specification id: %s", s.scopeSpecID.String()),
+			false,
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"should fail source resource id not valid",
+			cmd,
+			[]string{
+				specificationID.String(),
+				s.testnet.Validators[0].Address.String(),
+				"owner",
+				"resourceid",
+				"not-a-resourceid",
+				"myclassname",
+				s.testnet.Validators[0].Address.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true,
+			fmt.Sprintf("decoding bech32 failed: invalid index of 1"),
+			false,
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"should fail source type not found",
+			cmd,
+			[]string{
+				specificationID.String(),
+				s.testnet.Validators[0].Address.String(),
+				"owner",
+				"not-a-resource-type",
+				"notaresourceid",
+				"myclassname",
+				s.testnet.Validators[0].Address.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true,
+			fmt.Sprintf("incorrect source type for contract specification: NOT-A-RESOURCE-TYPE"),
+			false,
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"Should fail invalid signer",
+			cmd,
+			[]string{
+				specificationID.String(),
+				s.testnet.Validators[0].Address.String(),
+				"owner",
+				"hash",
+				"hashvalue",
+				"myclassname",
+				s.user1,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false,
+			"",
+			false,
+			&sdk.TxResponse{},
+			8,
+		},
+		{
+			"Should fail validate basic on message",
+			cmd,
+			[]string{
+				specificationID.String(),
+				s.testnet.Validators[0].Address.String(),
+				"owner",
+				"hash",
+				"",
+				"myclassname",
+				s.testnet.Validators[0].Address.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true,
+			"source hash cannot be empty",
+			false,
+			&sdk.TxResponse{},
+			0,
+		},
+	}
+	s.runTxTestCases(testCases)
+}
+
+func (s *IntegrationTestSuite) runTxTestCases(testCases []commonTxTestStruct) {
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			if tc.expectPanic {
+				s.Assert().Panics(func() { clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args) })
+				return
+			}
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+				s.Require().EqualError(err, tc.expectErrMsg)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code)
+			}
+		})
+
+	}
+}
+
+func (s *IntegrationTestSuite) runTestCase(testCases []commonTestStruct) {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
