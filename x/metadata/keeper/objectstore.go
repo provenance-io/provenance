@@ -67,7 +67,7 @@ func (k Keeper) SetOSLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, ur
 		return types.ErrOSLocatorAlreadyBound
 	}
 	record := types.NewOSLocatorRecord(ownerAddr, urlToPersist.String())
-	bz, err := types.ModuleCdc.MarshalBinaryBare(&record)
+	bz, err := k.cdc.MarshalBinaryBare(&record)
 	if err != nil {
 		return err
 	}
@@ -92,7 +92,7 @@ func (k Keeper) IterateLocators(ctx sdk.Context, cb func(account types.ObjectSto
 
 	for ; it.Valid(); it.Next() {
 		record := types.ObjectStoreLocator{}
-		if err := types.ModuleCdc.UnmarshalBinaryBare(it.Value(), &record); err != nil {
+		if err := k.cdc.UnmarshalBinaryBare(it.Value(), &record); err != nil {
 			return err
 		}
 		if cb(record) {
@@ -183,7 +183,7 @@ func (k Keeper) modifyRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, uri stri
 	}
 	store := ctx.KVStore(k.storeKey)
 	record := types.NewOSLocatorRecord(ownerAddr, urlToPersist.String())
-	bz, err := types.ModuleCdc.MarshalBinaryBare(&record)
+	bz, err := k.cdc.MarshalBinaryBare(&record)
 	if err != nil {
 		return err
 	}
@@ -204,7 +204,7 @@ func (k Keeper) ImportLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, u
 		return types.ErrOSLocatorAlreadyBound
 	}
 	record := types.NewOSLocatorRecord(ownerAddr, uri)
-	bz, err := types.ModuleCdc.MarshalBinaryBare(&record)
+	bz, err := k.cdc.MarshalBinaryBare(&record)
 	if err != nil {
 		return err
 	}
