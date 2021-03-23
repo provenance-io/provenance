@@ -114,9 +114,11 @@ service Query {
 
   // ---- Specification Queries -----
 
-  // ScopeSpecification returns a scope specification for the given specification uuid.
+  // ScopeSpecification returns a scope specification for the given specification id.
+  // The specification_id can either be a uuid, e.g. dc83ea70-eacd-40fe-9adf-1cf6148bf8a2 or a bech32 scope
+  // specification address, e.g. scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m.
   rpc ScopeSpecification(ScopeSpecificationRequest) returns (ScopeSpecificationResponse) {
-    option (google.api.http).get = "/provenance/metadata/v1/scopespec/{specification_uuid}";
+    option (google.api.http).get = "/provenance/metadata/v1/scopespec/{specification_id}";
   }
 
   // ContractSpecification returns a contract specification for the given specification uuid.
@@ -367,7 +369,9 @@ message ValueOwnershipResponse {
 
 // ScopeSpecificationRequest is the request type for the Query/ScopeSpecification RPC method.
 message ScopeSpecificationRequest {
-  string specification_uuid = 1 [(gogoproto.moretags) = "yaml:\"specification_uuid\""];
+  // specification_id can either be a uuid, e.g. dc83ea70-eacd-40fe-9adf-1cf6148bf8a2 or a bech32 scope specification
+  // address, e.g. scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m.
+  string specification_id = 1 [(gogoproto.moretags) = "yaml:\"specification_id\""];
 }
 
 // ScopeSpecificationResponse is the response type for the Query/ScopeSpecification RPC method.
