@@ -2,10 +2,11 @@ syntax = "proto3";
 package provenance.metadata.v1;
 
 import "gogoproto/gogo.proto";
-import "provenance/metadata/v1/scope.proto";
-import "provenance/metadata/v1/specification.proto";
+import "provenance/metadata/v1/metadata.proto";
 import "provenance/metadata/v1/objectstore.proto";
 import "provenance/metadata/v1/p8e/p8e.proto";
+import "provenance/metadata/v1/scope.proto";
+import "provenance/metadata/v1/specification.proto";
 
 option go_package = "github.com/provenance-io/provenance/x/metadata/types";
 
@@ -82,7 +83,10 @@ message MsgWriteScopeRequest {
 }
 
 // MsgWriteScopeResponse is the response type for the Msg/WriteScope RPC method.
-message MsgWriteScopeResponse {}
+message MsgWriteScopeResponse {
+  // scope_id_info contains information about the id/address of the scope that was added or updated.
+  ScopeIdInfo scope_id_info = 1 [(gogoproto.moretags) = "yaml:\"scope_id_info\""];
+}
 
 // MsgDeleteScopeRequest is the request type for the Msg/DeleteScope RPC method.
 message MsgDeleteScopeRequest {
@@ -115,7 +119,10 @@ message MsgWriteSessionRequest {
 }
 
 // MsgWriteSessionResponse is the response type for the Msg/WriteSession RPC method.
-message MsgWriteSessionResponse {}
+message MsgWriteSessionResponse {
+  // session_id_info contains information about the id/address of the session that was added or updated.
+  SessionIdInfo session_id_info = 1 [(gogoproto.moretags) = "yaml:\"session_id_info\""];
+}
 
 // MsgWriteRecordRequest is the request type for the Msg/WriteRecord RPC method.
 message MsgWriteRecordRequest {
@@ -135,7 +142,10 @@ message MsgWriteRecordRequest {
 }
 
 // MsgWriteRecordResponse is the response type for the Msg/WriteRecord RPC method.
-message MsgWriteRecordResponse {}
+message MsgWriteRecordResponse {
+  // record_id_info contains information about the id/address of the record that was added or updated.
+  RecordIdInfo record_id_info = 1 [(gogoproto.moretags) = "yaml:\"record_id_info\""];
+}
 
 // MsgDeleteRecordRequest is the request type for the Msg/DeleteRecord RPC method.
 message MsgDeleteRecordRequest {
@@ -168,7 +178,10 @@ message MsgWriteScopeSpecificationRequest {
 }
 
 // MsgWriteScopeSpecificationResponse is the response type for the Msg/WriteScopeSpecification RPC method.
-message MsgWriteScopeSpecificationResponse {}
+message MsgWriteScopeSpecificationResponse {
+  // scope_spec_id_info contains information about the id/address of the scope specification that was added or updated.
+  ScopeSpecIdInfo scope_spec_id_info = 1 [(gogoproto.moretags) = "yaml:\"scope_spec_id_info\""];
+}
 
 // MsgDeleteScopeSpecificationRequest is the request type for the Msg/DeleteScopeSpecification RPC method.
 message MsgDeleteScopeSpecificationRequest {
@@ -201,7 +214,11 @@ message MsgWriteContractSpecificationRequest {
 }
 
 // MsgWriteContractSpecificationResponse is the response type for the Msg/WriteContractSpecification RPC method.
-message MsgWriteContractSpecificationResponse {}
+message MsgWriteContractSpecificationResponse {
+  // contract_spec_id_info contains information about the id/address of the contract specification that was added or
+  // updated.
+  ContractSpecIdInfo contract_spec_id_info = 1 [(gogoproto.moretags) = "yaml:\"contract_spec_id_info\""];
+}
 
 // MsgDeleteContractSpecificationRequest is the request type for the Msg/DeleteContractSpecification RPC method.
 message MsgDeleteContractSpecificationRequest {
@@ -234,7 +251,11 @@ message MsgWriteRecordSpecificationRequest {
 }
 
 // MsgWriteRecordSpecificationResponse is the response type for the Msg/WriteRecordSpecification RPC method.
-message MsgWriteRecordSpecificationResponse {}
+message MsgWriteRecordSpecificationResponse {
+  // record_spec_id_info contains information about the id/address of the record specification that was added or
+  // updated.
+  RecordSpecIdInfo record_spec_id_info = 1 [(gogoproto.moretags) = "yaml:\"record_spec_id_info\""];
+}
 
 // MsgDeleteRecordSpecificationRequest is the request type for the Msg/DeleteRecordSpecification RPC method.
 message MsgDeleteRecordSpecificationRequest {
@@ -268,7 +289,14 @@ message MsgWriteP8eContractSpecRequest {
 }
 
 // MsgWriteP8eContractSpecResponse is the response type for the Msg/WriteP8eContractSpec RPC method.
-message MsgWriteP8eContractSpecResponse {}
+message MsgWriteP8eContractSpecResponse {
+  // contract_spec_id_info contains information about the id/address of the contract specification that was added or
+  // updated.
+  ContractSpecIdInfo contract_spec_id_info = 1 [(gogoproto.moretags) = "yaml:\"contract_spec_id_info\""];
+  // record_spec_id_infos contains information about the ids/addresses of the record specifications that were added or
+  // updated.
+  repeated RecordSpecIdInfo record_spec_id_infos = 2 [(gogoproto.moretags) = "yaml:\"record_spec_id_infos\""];
+}
 
 // MsgP8eMemorializeContractRequest is the request type for the Msg/P8eMemorializeContract RPC method.
 message MsgP8eMemorializeContractRequest {
@@ -294,7 +322,14 @@ message MsgP8eMemorializeContractRequest {
 }
 
 // MsgP8eMemorializeContractResponse is the response type for the Msg/P8eMemorializeContract RPC method.
-message MsgP8eMemorializeContractResponse {}
+message MsgP8eMemorializeContractResponse {
+  // scope_id_info contains information about the id/address of the scope that was added or updated.
+  ScopeIdInfo scope_id_info = 1 [(gogoproto.moretags) = "yaml:\"scope_id_info\""];
+  // session_id_info contains information about the id/address of the session that was added or updated.
+  SessionIdInfo session_id_info = 2 [(gogoproto.moretags) = "yaml:\"session_id_info\""];
+  // record_id_infos contains information about the ids/addresses of the records that were added or updated.
+  repeated RecordIdInfo record_id_infos = 3 [(gogoproto.moretags) = "yaml:\"record_id_infos\""];
+}
 
 // MsgBindOSLocatorRequest is the request type for the Msg/BindOSLocator RPC method.
 message MsgBindOSLocatorRequest {
