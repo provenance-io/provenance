@@ -37,6 +37,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * Resolves an issue where Gov Proposals to Create a new name would fail for new root domains #192
+* Remove deprecated ModuleCdc amino encoding from Metadata Locator records #187
 
 ### Features
 
