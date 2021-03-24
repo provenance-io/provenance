@@ -22,9 +22,6 @@ const defaultLimit = 100
 
 var _ types.QueryServer = Keeper{}
 
-// ObjectStoreLocators within the GenesisState
-type ObjectStoreLocators []types.ObjectStoreLocator
-
 // Params queries params of metadata module.
 func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
