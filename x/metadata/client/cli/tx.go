@@ -340,7 +340,6 @@ func parseSigners(cmd *cobra.Command, client *client.Context) []string {
 		return strings.Split(signerList, ",")
 	}
 	return []string{client.GetFromAddress().String()}
-
 }
 
 func parsePartyTypes(delimitedPartyTypes string) []types.PartyType {
