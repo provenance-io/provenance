@@ -33,7 +33,7 @@ type MarkerMsgParams struct {
 	// Params for encoding a MsgBurnRequest
 	Burn *BurnSupplyParams `json:"burn_marker_supply,omitempty"`
 	// Params for encoding a MsgWithdrawRequest
-	Withdraw *WithdrawParams `json:"withdraw_marker_coins,omitempty"`
+	Withdraw *WithdrawParams `json:"withdraw_coins,omitempty"`
 	// Params for encoding a MsgTransferRequest
 	Transfer *TransferParams `json:"transfer_marker_coins,omitempty"`
 }
@@ -102,9 +102,11 @@ type BurnSupplyParams struct {
 
 // WithdrawParams are params for encoding a MsgWithdrawRequest.
 type WithdrawParams struct {
-	// The marker denomination and amount to withdraw
+	// The marker denomination
+	Denom string `json:"marker_denom"`
+	// The withdrawal denomination and amount
 	Coin sdk.Coin `json:"coin"`
-	// The recipient of the transfer
+	// The recipient of the withdrawal
 	Recipient string `json:"recipient"`
 }
 
@@ -202,8 +204,8 @@ func (params *GrantAccessParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, err
 // Encode creates a MsgDeleteAccessRequest.
 // The contract must be the administrator of the marker.
 func (params *RevokeAccessParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error) {
-	if strings.TrimSpace(params.Denom) == "" {
-		return nil, fmt.Errorf("wasm: empty denomination in RevokeAccessParams")
+	if err := sdk.ValidateDenom(params.Denom); err != nil {
+		return nil, fmt.Errorf("wasm: invalid denomination in RevokeAccessParams: %w", err)
 	}
 	address, err := sdk.AccAddressFromBech32(params.Address)
 	if err != nil {
@@ -216,8 +218,8 @@ func (params *RevokeAccessParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, er
 // Encode creates a MsgFinalizeRequest.
 // The contract must be the administrator of the marker.
 func (params *FinalizeMarkerParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error) {
-	if strings.TrimSpace(params.Denom) == "" {
-		return nil, fmt.Errorf("wasm: empty denomination in FinalizeMarkerParams")
+	if err := sdk.ValidateDenom(params.Denom); err != nil {
+		return nil, fmt.Errorf("wasm: invalid denomination in FinalizeMarkerParams: %w", err)
 	}
 	msg := types.NewFinalizeRequest(params.Denom, contract)
 	return []sdk.Msg{msg}, nil
@@ -226,8 +228,8 @@ func (params *FinalizeMarkerParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, 
 // Encode creates a MsgActivateRequest.
 // The contract must be the administrator of the marker.
 func (params *ActivateMarkerParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error) {
-	if strings.TrimSpace(params.Denom) == "" {
-		return nil, fmt.Errorf("wasm: empty denomination in ActivateMarkerParams")
+	if err := sdk.ValidateDenom(params.Denom); err != nil {
+		return nil, fmt.Errorf("wasm: invalid denomination in ActivateMarkerParams: %w", err)
 	}
 	msg := types.NewActivateRequest(params.Denom, contract)
 	return []sdk.Msg{msg}, nil
@@ -236,8 +238,8 @@ func (params *ActivateMarkerParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, 
 // Encode creates a MsgCancelRequest.
 // The contract must be the administrator of the marker.
 func (params *CancelMarkerParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error) {
-	if strings.TrimSpace(params.Denom) == "" {
-		return nil, fmt.Errorf("wasm: empty denomination in CancelMarkerParams")
+	if err := sdk.ValidateDenom(params.Denom); err != nil {
+		return nil, fmt.Errorf("wasm: invalid denomination in CancelMarkerParams: %w", err)
 	}
 	msg := types.NewCancelRequest(params.Denom, contract)
 	return []sdk.Msg{msg}, nil
@@ -246,8 +248,8 @@ func (params *CancelMarkerParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, er
 // Encode creates a MsgDeleteRequest.
 // The contract must be the administrator of the marker.
 func (params *DestroyMarkerParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error) {
-	if strings.TrimSpace(params.Denom) == "" {
-		return nil, fmt.Errorf("wasm: empty denomination in DestroyMarkerParams")
+	if err := sdk.ValidateDenom(params.Denom); err != nil {
+		return nil, fmt.Errorf("wasm: invalid denomination in DestroyMarkerParams: %w", err)
 	}
 	msg := types.NewDeleteRequest(params.Denom, contract)
 	return []sdk.Msg{msg}, nil
@@ -276,6 +278,9 @@ func (params *BurnSupplyParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, erro
 // Encode creates a MsgWithdrawRequest.
 // The contract must be the administrator of the marker.
 func (params *WithdrawParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error) {
+	if err := sdk.ValidateDenom(params.Denom); err != nil {
+		return nil, fmt.Errorf("wasm: invalid marker denom in WithdrawParams: %w", err)
+	}
 	if !params.Coin.IsValid() {
 		return nil, fmt.Errorf("wasm: invalid WithdrawParams: coin is invalid")
 	}
@@ -284,7 +289,7 @@ func (params *WithdrawParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error)
 		return nil, fmt.Errorf("wasm: invalid recipient address: %w", err)
 	}
 	msg := types.NewWithdrawRequest(
-		contract, recipient, params.Coin.Denom, sdk.NewCoins(params.Coin))
+		contract, recipient, params.Denom, sdk.NewCoins(params.Coin))
 	return []sdk.Msg{msg}, nil
 }
 

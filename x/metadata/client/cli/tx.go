@@ -17,6 +17,10 @@ import (
 	uuid "github.com/google/uuid"
 )
 
+const (
+	FlagSigners = "signers"
+)
+
 // NewTxCmd is the top-level command for attribute CLI transactions.
 func NewTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
@@ -33,6 +37,8 @@ func NewTxCmd() *cobra.Command {
 		AddOsLocatorCmd(),
 		RemoveOsLocatorCmd(),
 		ModifyOsLocatorCmd(),
+		AddContractSpecificationCmd(),
+		RemoveContractSpecificationCmd(),
 	)
 
 	return txCmd
@@ -41,9 +47,9 @@ func NewTxCmd() *cobra.Command {
 // AddMetadataScopeCmd creates a command for adding a metadata scope.
 func AddMetadataScopeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-scope [scope-uuid] [spec-id] [owner-addresses] [data-access] [value-owner-address] [signers]",
+		Use:   "add-scope [scope-uuid] [spec-id] [owner-addresses] [data-access] [value-owner-address]",
 		Short: "Add a metadata scope to the provenance blockchain",
-		Args:  cobra.ExactArgs(6),
+		Args:  cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -71,13 +77,9 @@ func AddMetadataScopeCmd() *cobra.Command {
 			dataAccess := strings.Split(args[3], ",")
 			valueOwnerAddress := args[4]
 
-			signers := strings.Split(args[5], ",")
-			for _, signer := range signers {
-				_, err := sdk.AccAddressFromBech32(signer)
-				if err != nil {
-					fmt.Printf("signer address must be a Bech32 string: %v", err)
-					return err
-				}
+			signers, err := parseSigners(cmd, &clientCtx)
+			if err != nil {
+				return err
 			}
 
 			scope := *types.NewScope(
@@ -92,13 +94,12 @@ func AddMetadataScopeCmd() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgAddScopeRequest(
-				scope,
-				signers)
+			msg := types.NewMsgAddScopeRequest(scope, signers)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
+	addSignerFlagCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -109,7 +110,7 @@ func RemoveMetadataScopeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "remove-scope [scope-address] [signers]",
 		Short: "Remove a metadata scope to the provenance blockchain",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -123,14 +124,10 @@ func RemoveMetadataScopeCmd() *cobra.Command {
 			}
 
 			scopeMetaAddress := types.ScopeMetadataAddress(scopeUUID)
-			signers := strings.Split(args[1], ",")
 
-			for _, signer := range signers {
-				_, err := sdk.AccAddressFromBech32(signer)
-				if err != nil {
-					fmt.Printf("signer address must be a Bech32 string: %v", err)
-					return err
-				}
+			signers, err := parseSigners(cmd, &clientCtx)
+			if err != nil {
+				return err
 			}
 
 			deleteScope := *types.NewMsgDeleteScopeRequest(scopeMetaAddress, signers)
@@ -143,6 +140,7 @@ func RemoveMetadataScopeCmd() *cobra.Command {
 		},
 	}
 
+	addSignerFlagCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -179,6 +177,7 @@ func AddOsLocatorCmd() *cobra.Command {
 	return cmd
 }
 
+// RemoveOsLocatorCmd creates a command for removing a os locator
 func RemoveOsLocatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "remove-locator [owner] [uri]",
@@ -209,6 +208,7 @@ func RemoveOsLocatorCmd() *cobra.Command {
 	return cmd
 }
 
+// ModifyOsLocatorCmd creates a command for modifying os locator
 func ModifyOsLocatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "modify-locator [owner] [uri]",
@@ -243,11 +243,89 @@ func ModifyOsLocatorCmd() *cobra.Command {
 	return cmd
 }
 
+// AddContractSpecificationCmd creates a command to add/update contract specifications
+func AddContractSpecificationCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "add-contract-specification [contractspec-id] [owners] [parties-involved] [source-type] [source-value] [classname] [description-name] [description] [website-url] [icon-url]",
+		Short: "Add/Update metadata contract specification on the provenance blockchain",
+		Long: `Add/Update metadata contract specification on the provenance blockchain
+[contractspec-id] - metaaddress of contract specification
+[owners] - comma delimited list of bech32 owner addresses
+[parties-involved] - comma delimited list of party types.  Accepted values: originator,servicer,investor,custodian,owner,affiliate,omnibus,provenance
+[source-type] - accepted values: hash or resourceid
+[source-value] - source identifier of type hash or resourceid
+[classname] - Name of contract specification
+[description-name] - optional- description name identifier 
+[description] - optional - description text
+[website-url] - optional - address of website
+[icon-url] - optional - address to a image to be used as an icon
+		`,
+		Args: cobra.RangeArgs(6, 10),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			var specificationID types.MetadataAddress
+			specificationID, err = types.MetadataAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			if !specificationID.IsContractSpecificationAddress() {
+				return fmt.Errorf("invalid contract specification id: %s", args[0])
+			}
+
+			partiesInvolved := parsePartyTypes(args[2])
+			description := parseDescription(args[6:])
+			contractSpecification := types.ContractSpecification{SpecificationId: specificationID,
+				Description:     description,
+				OwnerAddresses:  strings.Split(args[1], ","),
+				PartiesInvolved: partiesInvolved,
+				ClassName:       args[5],
+			}
+			switch s := strings.ToUpper(args[3]); s {
+			case "RESOURCEID":
+				var recordID types.MetadataAddress
+				recordID, err = types.MetadataAddressFromBech32(args[4])
+				if err != nil {
+					return err
+				}
+				contractSpecification.Source = &types.ContractSpecification_ResourceId{
+					ResourceId: recordID,
+				}
+			case "HASH":
+				contractSpecification.Source = &types.ContractSpecification_Hash{
+					Hash: args[4],
+				}
+			default:
+				return fmt.Errorf("incorrect source type for contract specification: %s", s)
+			}
+
+			signers, err := parseSigners(cmd, &clientCtx)
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgAddContractSpecificationRequest(contractSpecification, signers)
+			err = msg.ValidateBasic()
+			if err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	addSignerFlagCmd(cmd)
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
 func AddRecordSpecificationCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-record-specification [specification-id] [name] [input-specifications] [type-name] [result-types] [responsible-parties] [signers]",
+		Use:   "add-record-specification [specification-id] [name] [input-specifications] [type-name] [result-types] [responsible-parties]",
 		Short: "Add/Update metadata record specification to the provenance blockchain",
-		Args:  cobra.MinimumNArgs(1),
+		Args:  cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -268,8 +346,11 @@ func AddRecordSpecificationCmd() *cobra.Command {
 			}
 
 			resultType := definitionType(args[4])
-			partyTypes := partyTypes(args[5])
-			signers := strings.Split(args[6], ",")
+			partyTypes := parsePartyTypes(args[5])
+			signers, err := parseSigners(cmd, &clientCtx)
+			if err != nil {
+				return err
+			}
 
 			recordSpecification := types.RecordSpecification{
 				SpecificationId:    specificationID,
@@ -291,6 +372,7 @@ func AddRecordSpecificationCmd() *cobra.Command {
 		},
 	}
 
+	addSignerFlagCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -334,7 +416,28 @@ func inputSpecification(cliDelimitedValue string) ([]*types.InputSpecification, 
 
 }
 
-func partyTypes(delimitedPartyTypes string) []types.PartyType {
+func addSignerFlagCmd(cmd *cobra.Command) {
+	cmd.Flags().String(FlagSigners, "", "comma delimited list of bech32 addresses")
+}
+
+func parseSigners(cmd *cobra.Command, client *client.Context) ([]string, error) {
+	flagSet := cmd.Flags()
+	if flagSet.Changed(FlagSigners) {
+		signerList, _ := flagSet.GetString(FlagSigners)
+		signers := strings.Split(signerList, ",")
+		for _, signer := range signers {
+			_, err := sdk.AccAddressFromBech32(signer)
+			if err != nil {
+				fmt.Printf("signer address must be a Bech32 string: %v", err)
+				return nil, err
+			}
+		}
+		return signers, nil
+	}
+	return []string{client.GetFromAddress().String()}, nil
+}
+
+func parsePartyTypes(delimitedPartyTypes string) []types.PartyType {
 	parties := strings.Split(delimitedPartyTypes, ",")
 	partyTypes := make([]types.PartyType, len(parties))
 	for i, party := range parties {
@@ -349,22 +452,99 @@ func definitionType(cliValue string) types.DefinitionType {
 	return types.DefinitionType(typeValue)
 }
 
-func RemoveRecordSpecificationCmd() *cobra.Command {
+func parseDescription(cliArgs []string) *types.Description {
+	if len(cliArgs) == 0 {
+		return nil
+	}
+
+	description := types.Description{}
+	if len(cliArgs) >= 1 {
+		description.Name = cliArgs[0]
+	}
+	if len(cliArgs) >= 2 {
+		description.Description = cliArgs[1]
+	}
+	if len(cliArgs) >= 3 {
+		description.WebsiteUrl = cliArgs[2]
+	}
+	if len(cliArgs) >= 4 {
+		description.IconUrl = cliArgs[3]
+	}
+	return &description
+}
+
+// RemoveContractSpecificationCmd creates a command to remove a contract specification
+func RemoveContractSpecificationCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "remove-record-specification [owner] [uri]",
-		Short: "Remove record specification from the provenance blockchain",
-		Args:  cobra.ExactArgs(2),
+		Use:   "remove-contract-specification [specification-id]",
+		Short: "Removes a contract specification on the provenance blockchain",
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-			//TODO: remove record specification
-			msg := *types.NewMsgDeleteRecordSpecificationRequest()
+
+			var specificationID types.MetadataAddress
+			specificationID, err = types.MetadataAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			if !specificationID.IsContractSpecificationAddress() {
+				return fmt.Errorf("invalid contract specification id: %s", args[0])
+			}
+
+			signers, err := parseSigners(cmd, &clientCtx)
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgDeleteContractSpecificationRequest(specificationID, signers)
+			err = msg.ValidateBasic()
+			if err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	addSignerFlagCmd(cmd)
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func RemoveRecordSpecificationCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "remove-record-specification [specification-id]",
+		Short: "Remove record specification from the provenance blockchain",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			var specificationID types.MetadataAddress
+			specificationID, err = types.MetadataAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			if !specificationID.IsContractSpecificationAddress() {
+				return fmt.Errorf("invalid contract specification id: %s", args[0])
+			}
+			signers, err := parseSigners(cmd, &clientCtx)
+			if err != nil {
+				return err
+			}
+			msg := *types.NewMsgDeleteRecordSpecificationRequest(nil, signers)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
 		},
 	}
 
+	addSignerFlagCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
