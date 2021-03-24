@@ -56,7 +56,7 @@ func (s msgServer) BindName(goCtx context.Context, msg *types.MsgBindNameRequest
 		ctx.Logger().Error("invalid name", "name", name)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
-	if s.Keeper.nameExists(ctx, name) {
+	if s.Keeper.NameExists(ctx, name) {
 		ctx.Logger().Error("name already bound", "name", name)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, types.ErrNameAlreadyBound.Error())
 	}
@@ -66,7 +66,7 @@ func (s msgServer) BindName(goCtx context.Context, msg *types.MsgBindNameRequest
 		ctx.Logger().Error("invalid address", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
-	if err := s.Keeper.setNameRecord(ctx, name, address, msg.Record.Restricted); err != nil {
+	if err := s.Keeper.SetNameRecord(ctx, name, address, msg.Record.Restricted); err != nil {
 		ctx.Logger().Error("unable to bind name", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
@@ -102,7 +102,7 @@ func (s msgServer) DeleteName(goCtx context.Context, msg *types.MsgDeleteNameReq
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 	// Ensure the name exists
-	if !s.Keeper.nameExists(ctx, name) {
+	if !s.Keeper.NameExists(ctx, name) {
 		ctx.Logger().Error("invalid name", "name", name)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "name does not exist")
 	}
@@ -112,7 +112,7 @@ func (s msgServer) DeleteName(goCtx context.Context, msg *types.MsgDeleteNameReq
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "msg sender cannot delete name")
 	}
 	// Delete
-	if err := s.Keeper.deleteRecord(ctx, name); err != nil {
+	if err := s.Keeper.DeleteRecord(ctx, name); err != nil {
 		ctx.Logger().Error("error deleting name", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}

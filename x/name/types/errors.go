@@ -19,7 +19,7 @@ var (
 	// ErrNameHasTooManySegments occurs when a name has too many segments (names separated by a period)
 	ErrNameHasTooManySegments = sdkerrors.Register(ModuleName, 7, "name has too many segments")
 	// ErrInvalidAddress indicates the address given does not match an existing account.
-	ErrInvalidAddress = sdkerrors.Register(ModuleName, 8, "address does not match an existing account")
+	ErrInvalidAddress = sdkerrors.Register(ModuleName, 8, "invalid account address")
 	// ErrNameContainsSegments indicates a multi-segment name in a single segment context.
 	ErrNameContainsSegments = sdkerrors.Register(ModuleName, 9, "invalid name: \".\" is reserved")
 )
