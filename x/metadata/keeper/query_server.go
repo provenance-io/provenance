@@ -733,7 +733,7 @@ func (k Keeper) RecordSpecificationsAll(c context.Context, req *types.RecordSpec
 
 	ctx := sdk.UnwrapSDKContext(c)
 	kvStore := ctx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(kvStore, types.ContractSpecificationKeyPrefix)
+	prefixStore := prefix.NewStore(kvStore, types.RecordSpecificationKeyPrefix)
 
 	pageRes, err := query.Paginate(prefixStore, pageRequest, func(key, value []byte) error {
 		var recordSpec types.RecordSpecification
