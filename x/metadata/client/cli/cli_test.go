@@ -1734,13 +1734,14 @@ func (s *IntegrationTestSuite) TestAddObjectLocatorCmd() {
 }
 
 func (s *IntegrationTestSuite) TestContractSpecificationCmd() {
-	cmd := cli.AddContractSpecificationCmd()
+	addCommand := cli.AddContractSpecificationCmd()
+	removeCommand := cli.RemoveContractSpecificationCmd()
 	contractSpecUUID := uuid.New()
 	specificationID := types.ContractSpecMetadataAddress(contractSpecUUID)
 	testCases := []commonTxTestStruct{
 		{
 			"Should successfully add contract specification with resource hash",
-			cmd,
+			addCommand,
 			[]string{
 				specificationID.String(),
 				s.testnet.Validators[0].Address.String(),
@@ -1761,7 +1762,7 @@ func (s *IntegrationTestSuite) TestContractSpecificationCmd() {
 		},
 		{
 			"Should successfully add contract specification with resource id",
-			cmd,
+			addCommand,
 			[]string{
 				specificationID.String(),
 				s.testnet.Validators[0].Address.String(),
@@ -1782,7 +1783,7 @@ func (s *IntegrationTestSuite) TestContractSpecificationCmd() {
 		},
 		{
 			"Should successfully add contract specification with description",
-			cmd,
+			addCommand,
 			[]string{
 				specificationID.String(),
 				s.testnet.Validators[0].Address.String(),
@@ -1806,8 +1807,40 @@ func (s *IntegrationTestSuite) TestContractSpecificationCmd() {
 			0,
 		},
 		{
+			"Should successfully remove contract specification",
+			removeCommand,
+			[]string{
+				specificationID.String(),
+				s.testnet.Validators[0].Address.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false,
+			"",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"Should fail to remove contract specification that dne",
+			removeCommand,
+			[]string{
+				specificationID.String(),
+				s.testnet.Validators[0].Address.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false,
+			"",
+			&sdk.TxResponse{},
+			1,
+		},
+		{
 			"should fail incorrect specification id",
-			cmd,
+			addCommand,
 			[]string{
 				"invalid-spec-id",
 				s.testnet.Validators[0].Address.String(),
@@ -1828,7 +1861,7 @@ func (s *IntegrationTestSuite) TestContractSpecificationCmd() {
 		},
 		{
 			"should fail id is not a contract specification id",
-			cmd,
+			addCommand,
 			[]string{
 				s.scopeSpecID.String(),
 				s.testnet.Validators[0].Address.String(),
@@ -1849,7 +1882,7 @@ func (s *IntegrationTestSuite) TestContractSpecificationCmd() {
 		},
 		{
 			"should fail source resource id not valid",
-			cmd,
+			addCommand,
 			[]string{
 				specificationID.String(),
 				s.testnet.Validators[0].Address.String(),
@@ -1870,7 +1903,7 @@ func (s *IntegrationTestSuite) TestContractSpecificationCmd() {
 		},
 		{
 			"should fail source type not found",
-			cmd,
+			addCommand,
 			[]string{
 				specificationID.String(),
 				s.testnet.Validators[0].Address.String(),
@@ -1891,7 +1924,7 @@ func (s *IntegrationTestSuite) TestContractSpecificationCmd() {
 		},
 		{
 			"Should fail invalid signer",
-			cmd,
+			addCommand,
 			[]string{
 				specificationID.String(),
 				s.testnet.Validators[0].Address.String(),
@@ -1912,7 +1945,7 @@ func (s *IntegrationTestSuite) TestContractSpecificationCmd() {
 		},
 		{
 			"Should fail validate basic on message",
-			cmd,
+			addCommand,
 			[]string{
 				specificationID.String(),
 				s.testnet.Validators[0].Address.String(),
@@ -1928,6 +1961,38 @@ func (s *IntegrationTestSuite) TestContractSpecificationCmd() {
 			},
 			true,
 			"source hash cannot be empty",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"Should fail to remove contract specification invalid address",
+			removeCommand,
+			[]string{
+				"not-a-id",
+				s.testnet.Validators[0].Address.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true,
+			"decoding bech32 failed: invalid index of 1",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"Should fail to remove contract invalid address type",
+			removeCommand,
+			[]string{
+				s.scopeSpecID.String(),
+				s.testnet.Validators[0].Address.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true,
+			fmt.Sprintf("invalid contract specification id: %s", s.scopeSpecID.String()),
 			&sdk.TxResponse{},
 			0,
 		},

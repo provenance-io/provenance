@@ -276,7 +276,8 @@ func AddContractSpecificationCmd() *cobra.Command {
 			}
 			switch s := strings.ToUpper(args[3]); s {
 			case "RESOURCEID":
-				recordID, err := types.MetadataAddressFromBech32(args[4])
+				var recordID types.MetadataAddress
+				recordID, err = types.MetadataAddressFromBech32(args[4])
 				if err != nil {
 					return err
 				}
