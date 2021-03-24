@@ -181,6 +181,7 @@ func AddOsLocatorCmd() *cobra.Command {
 	return cmd
 }
 
+// RemoveOsLocatorCmd creates a command for removing a os locator
 func RemoveOsLocatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "remove-locator [owner] [uri]",
@@ -211,6 +212,7 @@ func RemoveOsLocatorCmd() *cobra.Command {
 	return cmd
 }
 
+// ModifyOsLocatorCmd creates a command for modifying os locator
 func ModifyOsLocatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "modify-locator [owner] [uri]",
@@ -245,6 +247,7 @@ func ModifyOsLocatorCmd() *cobra.Command {
 	return cmd
 }
 
+// AddContractSpecificationCmd creates a command to add/update contract specifications
 func AddContractSpecificationCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-contract-specification [contractspec-id] [owners] [parties-involved] [source-type] [source-value] [classname] [signers] [description-name] [description] [website-url] [icon-url]",
@@ -353,6 +356,7 @@ func parseDescription(cliArgs []string) *types.Description {
 	return &description
 }
 
+// RemoveContractSpecificationCmd creates a command to remove a contract specification
 func RemoveContractSpecificationCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "remove-contract-specification [specification-id] [signers]",
