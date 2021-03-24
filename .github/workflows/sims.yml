@@ -21,6 +21,12 @@ jobs:
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
     steps:
       - uses: actions/checkout@v2
+      - name: Install leveldb
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libleveldb-dev
       - uses: actions/setup-go@v2.1.3
         with:
           go-version: 1.16
