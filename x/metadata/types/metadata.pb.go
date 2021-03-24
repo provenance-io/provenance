@@ -59,8 +59,473 @@ func (m *Params) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Params proto.InternalMessageInfo
 
+// ScopeIdInfo contains various info regarding a scope id.
+type ScopeIdInfo struct {
+	// scope_id is the raw bytes of the scope address.
+	ScopeId MetadataAddress `protobuf:"bytes,1,opt,name=scope_id,json=scopeId,proto3,customtype=MetadataAddress" json:"scope_id" yaml:"scope_id"`
+	// scope_id_prefix is the prefix portion of the scope_id.
+	ScopeIdPrefix []byte `protobuf:"bytes,2,opt,name=scope_id_prefix,json=scopeIdPrefix,proto3" json:"scope_id_prefix,omitempty" yaml:"scope_id_prefix"`
+	// scope_id_scope_uuid is the scope_uuid portion of the scope_id.
+	ScopeIdScopeUuid []byte `protobuf:"bytes,3,opt,name=scope_id_scope_uuid,json=scopeIdScopeUuid,proto3" json:"scope_id_scope_uuid,omitempty" yaml:"scope_id_scope_uuid"`
+	// scope_addr is the bech32 string version of the scope_id.
+	ScopeAddr string `protobuf:"bytes,4,opt,name=scope_addr,json=scopeAddr,proto3" json:"scope_addr,omitempty" yaml:"scope_addr"`
+}
+
+func (m *ScopeIdInfo) Reset()         { *m = ScopeIdInfo{} }
+func (m *ScopeIdInfo) String() string { return proto.CompactTextString(m) }
+func (*ScopeIdInfo) ProtoMessage()    {}
+func (*ScopeIdInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_786fb0ab3f663d79, []int{1}
+}
+func (m *ScopeIdInfo) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ScopeIdInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ScopeIdInfo.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ScopeIdInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ScopeIdInfo.Merge(m, src)
+}
+func (m *ScopeIdInfo) XXX_Size() int {
+	return m.Size()
+}
+func (m *ScopeIdInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_ScopeIdInfo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ScopeIdInfo proto.InternalMessageInfo
+
+func (m *ScopeIdInfo) GetScopeIdPrefix() []byte {
+	if m != nil {
+		return m.ScopeIdPrefix
+	}
+	return nil
+}
+
+func (m *ScopeIdInfo) GetScopeIdScopeUuid() []byte {
+	if m != nil {
+		return m.ScopeIdScopeUuid
+	}
+	return nil
+}
+
+func (m *ScopeIdInfo) GetScopeAddr() string {
+	if m != nil {
+		return m.ScopeAddr
+	}
+	return ""
+}
+
+// SessionIdInfo contains various info regarding a session id.
+type SessionIdInfo struct {
+	// session_id is the raw bytes of the session address.
+	SessionId MetadataAddress `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3,customtype=MetadataAddress" json:"session_id" yaml:"session_id"`
+	// session_id_prefix is the prefix portion of the session_id.
+	SessionIdPrefix []byte `protobuf:"bytes,2,opt,name=session_id_prefix,json=sessionIdPrefix,proto3" json:"session_id_prefix,omitempty" yaml:"session_id_prefix"`
+	// session_id_scope_uuid is the scope_uuid portion of the session_id.
+	SessionIdScopeUuid []byte `protobuf:"bytes,3,opt,name=session_id_scope_uuid,json=sessionIdScopeUuid,proto3" json:"session_id_scope_uuid,omitempty" yaml:"session_id_scope_uuid"`
+	// session_id_session_uuid is the session_uuid portion of the session_id.
+	SessionIdSessionUuid []byte `protobuf:"bytes,4,opt,name=session_id_session_uuid,json=sessionIdSessionUuid,proto3" json:"session_id_session_uuid,omitempty" yaml:"session_id_session_uuid"`
+	// session_addr is the bech32 string version of the session_id.
+	SessionAddr string `protobuf:"bytes,5,opt,name=session_addr,json=sessionAddr,proto3" json:"session_addr,omitempty" yaml:"session_addr"`
+	// scope_id_info is information about the scope id referenced in the session_id.
+	ScopeIdInfo *ScopeIdInfo `protobuf:"bytes,6,opt,name=scope_id_info,json=scopeIdInfo,proto3" json:"scope_id_info,omitempty" yaml:"scope_id_info"`
+}
+
+func (m *SessionIdInfo) Reset()         { *m = SessionIdInfo{} }
+func (m *SessionIdInfo) String() string { return proto.CompactTextString(m) }
+func (*SessionIdInfo) ProtoMessage()    {}
+func (*SessionIdInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_786fb0ab3f663d79, []int{2}
+}
+func (m *SessionIdInfo) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *SessionIdInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_SessionIdInfo.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *SessionIdInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SessionIdInfo.Merge(m, src)
+}
+func (m *SessionIdInfo) XXX_Size() int {
+	return m.Size()
+}
+func (m *SessionIdInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_SessionIdInfo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SessionIdInfo proto.InternalMessageInfo
+
+func (m *SessionIdInfo) GetSessionIdPrefix() []byte {
+	if m != nil {
+		return m.SessionIdPrefix
+	}
+	return nil
+}
+
+func (m *SessionIdInfo) GetSessionIdScopeUuid() []byte {
+	if m != nil {
+		return m.SessionIdScopeUuid
+	}
+	return nil
+}
+
+func (m *SessionIdInfo) GetSessionIdSessionUuid() []byte {
+	if m != nil {
+		return m.SessionIdSessionUuid
+	}
+	return nil
+}
+
+func (m *SessionIdInfo) GetSessionAddr() string {
+	if m != nil {
+		return m.SessionAddr
+	}
+	return ""
+}
+
+func (m *SessionIdInfo) GetScopeIdInfo() *ScopeIdInfo {
+	if m != nil {
+		return m.ScopeIdInfo
+	}
+	return nil
+}
+
+// RecordIdInfo contains various info regarding a record id.
+type RecordIdInfo struct {
+	// record_id is the raw bytes of the record address.
+	RecordId MetadataAddress `protobuf:"bytes,1,opt,name=record_id,json=recordId,proto3,customtype=MetadataAddress" json:"record_id" yaml:"record_id"`
+	// record_id_prefix is the prefix portion of the record_id.
+	RecordIdPrefix []byte `protobuf:"bytes,2,opt,name=record_id_prefix,json=recordIdPrefix,proto3" json:"record_id_prefix,omitempty" yaml:"record_id_prefix"`
+	// record_id_scope_uuid is the scope_uuid portion of the record_id.
+	RecordIdScopeUuid []byte `protobuf:"bytes,3,opt,name=record_id_scope_uuid,json=recordIdScopeUuid,proto3" json:"record_id_scope_uuid,omitempty" yaml:"record_id_scope_uuid"`
+	// record_id_hashed_name is the hashed name portion of the record_id.
+	RecordIdHashedName []byte `protobuf:"bytes,4,opt,name=record_id_hashed_name,json=recordIdHashedName,proto3" json:"record_id_hashed_name,omitempty" yaml:"record_id_hashed_name"`
+	// record_addr is the bech32 string version of the record_id.
+	RecordAddr string `protobuf:"bytes,5,opt,name=record_addr,json=recordAddr,proto3" json:"record_addr,omitempty" yaml:"record_addr"`
+	// scope_id_info is information about the scope id referenced in the record_id.
+	ScopeIdInfo *ScopeIdInfo `protobuf:"bytes,6,opt,name=scope_id_info,json=scopeIdInfo,proto3" json:"scope_id_info,omitempty" yaml:"scope_id_info"`
+}
+
+func (m *RecordIdInfo) Reset()         { *m = RecordIdInfo{} }
+func (m *RecordIdInfo) String() string { return proto.CompactTextString(m) }
+func (*RecordIdInfo) ProtoMessage()    {}
+func (*RecordIdInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_786fb0ab3f663d79, []int{3}
+}
+func (m *RecordIdInfo) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *RecordIdInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_RecordIdInfo.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *RecordIdInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RecordIdInfo.Merge(m, src)
+}
+func (m *RecordIdInfo) XXX_Size() int {
+	return m.Size()
+}
+func (m *RecordIdInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_RecordIdInfo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RecordIdInfo proto.InternalMessageInfo
+
+func (m *RecordIdInfo) GetRecordIdPrefix() []byte {
+	if m != nil {
+		return m.RecordIdPrefix
+	}
+	return nil
+}
+
+func (m *RecordIdInfo) GetRecordIdScopeUuid() []byte {
+	if m != nil {
+		return m.RecordIdScopeUuid
+	}
+	return nil
+}
+
+func (m *RecordIdInfo) GetRecordIdHashedName() []byte {
+	if m != nil {
+		return m.RecordIdHashedName
+	}
+	return nil
+}
+
+func (m *RecordIdInfo) GetRecordAddr() string {
+	if m != nil {
+		return m.RecordAddr
+	}
+	return ""
+}
+
+func (m *RecordIdInfo) GetScopeIdInfo() *ScopeIdInfo {
+	if m != nil {
+		return m.ScopeIdInfo
+	}
+	return nil
+}
+
+// ScopeSpecIdInfo contains various info regarding a scope specification id.
+type ScopeSpecIdInfo struct {
+	// scope_spec_id is the raw bytes of the scope specification address.
+	ScopeSpecId MetadataAddress `protobuf:"bytes,1,opt,name=scope_spec_id,json=scopeSpecId,proto3,customtype=MetadataAddress" json:"scope_spec_id" yaml:"scope_spec_id"`
+	// scope_spec_id_prefix is the prefix portion of the scope_spec_id.
+	ScopeSpecIdPrefix []byte `protobuf:"bytes,2,opt,name=scope_spec_id_prefix,json=scopeSpecIdPrefix,proto3" json:"scope_spec_id_prefix,omitempty" yaml:"scope_spec_id_prefix"`
+	// scope_spec_id_scope_spec_uuid is the scope_spec_uuid portion of the scope_spec_id.
+	ScopeSpecIdScopeSpecUuid []byte `protobuf:"bytes,3,opt,name=scope_spec_id_scope_spec_uuid,json=scopeSpecIdScopeSpecUuid,proto3" json:"scope_spec_id_scope_spec_uuid,omitempty" yaml:"scope_spec_id_scope_spec_uuid"`
+	// scope_spec_addr is the bech32 string version of the scope_spec_id.
+	ScopeSpecAddr string `protobuf:"bytes,4,opt,name=scope_spec_addr,json=scopeSpecAddr,proto3" json:"scope_spec_addr,omitempty" yaml:"scope_spec_addr"`
+}
+
+func (m *ScopeSpecIdInfo) Reset()         { *m = ScopeSpecIdInfo{} }
+func (m *ScopeSpecIdInfo) String() string { return proto.CompactTextString(m) }
+func (*ScopeSpecIdInfo) ProtoMessage()    {}
+func (*ScopeSpecIdInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_786fb0ab3f663d79, []int{4}
+}
+func (m *ScopeSpecIdInfo) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ScopeSpecIdInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ScopeSpecIdInfo.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ScopeSpecIdInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ScopeSpecIdInfo.Merge(m, src)
+}
+func (m *ScopeSpecIdInfo) XXX_Size() int {
+	return m.Size()
+}
+func (m *ScopeSpecIdInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_ScopeSpecIdInfo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ScopeSpecIdInfo proto.InternalMessageInfo
+
+func (m *ScopeSpecIdInfo) GetScopeSpecIdPrefix() []byte {
+	if m != nil {
+		return m.ScopeSpecIdPrefix
+	}
+	return nil
+}
+
+func (m *ScopeSpecIdInfo) GetScopeSpecIdScopeSpecUuid() []byte {
+	if m != nil {
+		return m.ScopeSpecIdScopeSpecUuid
+	}
+	return nil
+}
+
+func (m *ScopeSpecIdInfo) GetScopeSpecAddr() string {
+	if m != nil {
+		return m.ScopeSpecAddr
+	}
+	return ""
+}
+
+// ContractSpecIdInfo contains various info regarding a contract specification id.
+type ContractSpecIdInfo struct {
+	// contract_spec_id is the raw bytes of the contract specification address.
+	ContractSpecId MetadataAddress `protobuf:"bytes,1,opt,name=contract_spec_id,json=contractSpecId,proto3,customtype=MetadataAddress" json:"contract_spec_id" yaml:"contract_spec_id"`
+	// contract_spec_id_prefix is the prefix portion of the contract_spec_id.
+	ContractSpecIdPrefix []byte `protobuf:"bytes,2,opt,name=contract_spec_id_prefix,json=contractSpecIdPrefix,proto3" json:"contract_spec_id_prefix,omitempty" yaml:"contract_spec_id_prefix"`
+	// contract_spec_id_contract_spec_uuid is the contract_spec_uuid portion of the contract_spec_id.
+	ContractSpecIdContractSpecUuid []byte `protobuf:"bytes,3,opt,name=contract_spec_id_contract_spec_uuid,json=contractSpecIdContractSpecUuid,proto3" json:"contract_spec_id_contract_spec_uuid,omitempty" yaml:"contract_spec_id_contract_spec_uuid"`
+	// contract_spec_addr is the bech32 string version of the contract_spec_id.
+	ContractSpecAddr string `protobuf:"bytes,4,opt,name=contract_spec_addr,json=contractSpecAddr,proto3" json:"contract_spec_addr,omitempty" yaml:"contract_spec_addr"`
+	// contract_spec_uuid is the string representation of contract_spec_id_contract_spec_uuid.
+	ContractSpecUuid string `protobuf:"bytes,5,opt,name=contract_spec_uuid,json=contractSpecUuid,proto3" json:"contract_spec_uuid,omitempty" yaml:"contract_spec_uuid"`
+}
+
+func (m *ContractSpecIdInfo) Reset()         { *m = ContractSpecIdInfo{} }
+func (m *ContractSpecIdInfo) String() string { return proto.CompactTextString(m) }
+func (*ContractSpecIdInfo) ProtoMessage()    {}
+func (*ContractSpecIdInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_786fb0ab3f663d79, []int{5}
+}
+func (m *ContractSpecIdInfo) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ContractSpecIdInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ContractSpecIdInfo.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ContractSpecIdInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ContractSpecIdInfo.Merge(m, src)
+}
+func (m *ContractSpecIdInfo) XXX_Size() int {
+	return m.Size()
+}
+func (m *ContractSpecIdInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_ContractSpecIdInfo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ContractSpecIdInfo proto.InternalMessageInfo
+
+func (m *ContractSpecIdInfo) GetContractSpecIdPrefix() []byte {
+	if m != nil {
+		return m.ContractSpecIdPrefix
+	}
+	return nil
+}
+
+func (m *ContractSpecIdInfo) GetContractSpecIdContractSpecUuid() []byte {
+	if m != nil {
+		return m.ContractSpecIdContractSpecUuid
+	}
+	return nil
+}
+
+func (m *ContractSpecIdInfo) GetContractSpecAddr() string {
+	if m != nil {
+		return m.ContractSpecAddr
+	}
+	return ""
+}
+
+func (m *ContractSpecIdInfo) GetContractSpecUuid() string {
+	if m != nil {
+		return m.ContractSpecUuid
+	}
+	return ""
+}
+
+// RecordSpecIdInfo contains various info regarding a record specification id.
+type RecordSpecIdInfo struct {
+	// record_spec_id is the raw bytes of the record specification address.
+	RecordSpecId MetadataAddress `protobuf:"bytes,1,opt,name=record_spec_id,json=recordSpecId,proto3,customtype=MetadataAddress" json:"record_spec_id" yaml:"record_spec_id"`
+	// record_spec_id_prefix is the prefix portion of the record_spec_id.
+	ContractSpecIdPrefix []byte `protobuf:"bytes,2,opt,name=contract_spec_id_prefix,json=contractSpecIdPrefix,proto3" json:"contract_spec_id_prefix,omitempty" yaml:"record_spec_id_prefix"`
+	// record_spec_id_contract_spec_uuid is the contract_spec_uuid portion of the record_spec_id.
+	RecordSpecIdContractSpecUuid []byte `protobuf:"bytes,3,opt,name=record_spec_id_contract_spec_uuid,json=recordSpecIdContractSpecUuid,proto3" json:"record_spec_id_contract_spec_uuid,omitempty" yaml:"record_spec_id_contract_spec_uuid"`
+	// record_spec_id_hashed_name is the hashed name portion of the record_spec_id.
+	RecordSpecIdHashedName []byte `protobuf:"bytes,4,opt,name=record_spec_id_hashed_name,json=recordSpecIdHashedName,proto3" json:"record_spec_id_hashed_name,omitempty" yaml:"record_spec_id_hashed_name"`
+	// record_spec_addr is the bech32 string version of the record_spec_id.
+	RecordSpecAddr string `protobuf:"bytes,5,opt,name=record_spec_addr,json=recordSpecAddr,proto3" json:"record_spec_addr,omitempty" yaml:"record_spec_addr"`
+	// contract_spec_id_info is information about the contract spec id referenced in the record_spec_id.
+	ContractSpecIdInfo *ContractSpecIdInfo `protobuf:"bytes,6,opt,name=contract_spec_id_info,json=contractSpecIdInfo,proto3" json:"contract_spec_id_info,omitempty" yaml:"contract_spec_id_info"`
+}
+
+func (m *RecordSpecIdInfo) Reset()         { *m = RecordSpecIdInfo{} }
+func (m *RecordSpecIdInfo) String() string { return proto.CompactTextString(m) }
+func (*RecordSpecIdInfo) ProtoMessage()    {}
+func (*RecordSpecIdInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_786fb0ab3f663d79, []int{6}
+}
+func (m *RecordSpecIdInfo) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *RecordSpecIdInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_RecordSpecIdInfo.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *RecordSpecIdInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RecordSpecIdInfo.Merge(m, src)
+}
+func (m *RecordSpecIdInfo) XXX_Size() int {
+	return m.Size()
+}
+func (m *RecordSpecIdInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_RecordSpecIdInfo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RecordSpecIdInfo proto.InternalMessageInfo
+
+func (m *RecordSpecIdInfo) GetContractSpecIdPrefix() []byte {
+	if m != nil {
+		return m.ContractSpecIdPrefix
+	}
+	return nil
+}
+
+func (m *RecordSpecIdInfo) GetRecordSpecIdContractSpecUuid() []byte {
+	if m != nil {
+		return m.RecordSpecIdContractSpecUuid
+	}
+	return nil
+}
+
+func (m *RecordSpecIdInfo) GetRecordSpecIdHashedName() []byte {
+	if m != nil {
+		return m.RecordSpecIdHashedName
+	}
+	return nil
+}
+
+func (m *RecordSpecIdInfo) GetRecordSpecAddr() string {
+	if m != nil {
+		return m.RecordSpecAddr
+	}
+	return ""
+}
+
+func (m *RecordSpecIdInfo) GetContractSpecIdInfo() *ContractSpecIdInfo {
+	if m != nil {
+		return m.ContractSpecIdInfo
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*Params)(nil), "provenance.metadata.v1.Params")
+	proto.RegisterType((*ScopeIdInfo)(nil), "provenance.metadata.v1.ScopeIdInfo")
+	proto.RegisterType((*SessionIdInfo)(nil), "provenance.metadata.v1.SessionIdInfo")
+	proto.RegisterType((*RecordIdInfo)(nil), "provenance.metadata.v1.RecordIdInfo")
+	proto.RegisterType((*ScopeSpecIdInfo)(nil), "provenance.metadata.v1.ScopeSpecIdInfo")
+	proto.RegisterType((*ContractSpecIdInfo)(nil), "provenance.metadata.v1.ContractSpecIdInfo")
+	proto.RegisterType((*RecordSpecIdInfo)(nil), "provenance.metadata.v1.RecordSpecIdInfo")
 }
 
 func init() {
@@ -68,18 +533,67 @@ func init() {
 }
 
 var fileDescriptor_786fb0ab3f663d79 = []byte{
-	// 169 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x2d, 0x28, 0xca, 0x2f,
-	0x4b, 0xcd, 0x4b, 0xcc, 0x4b, 0x4e, 0xd5, 0xcf, 0x4d, 0x2d, 0x49, 0x4c, 0x49, 0x2c, 0x49, 0xd4,
-	0x2f, 0x33, 0x84, 0xb3, 0xf5, 0x0a, 0x8a, 0xf2, 0x4b, 0xf2, 0x85, 0xc4, 0x10, 0xca, 0xf4, 0xe0,
-	0x52, 0x65, 0x86, 0x52, 0x22, 0xe9, 0xf9, 0xe9, 0xf9, 0x60, 0x25, 0xfa, 0x20, 0x16, 0x44, 0xb5,
-	0x92, 0x10, 0x17, 0x5b, 0x40, 0x62, 0x51, 0x62, 0x6e, 0xb1, 0x15, 0xc7, 0x8c, 0x05, 0xf2, 0x0c,
-	0x2f, 0x16, 0xc8, 0x33, 0x3a, 0x65, 0x9f, 0x78, 0x24, 0xc7, 0x78, 0xe1, 0x91, 0x1c, 0xe3, 0x83,
-	0x47, 0x72, 0x8c, 0x13, 0x1e, 0xcb, 0x31, 0x5c, 0x78, 0x2c, 0xc7, 0x70, 0xe3, 0xb1, 0x1c, 0x03,
-	0x97, 0x64, 0x26, 0x58, 0x1f, 0x16, 0xe3, 0x03, 0x18, 0xa3, 0x4c, 0xd2, 0x33, 0x4b, 0x32, 0x4a,
-	0x93, 0xf4, 0x92, 0xf3, 0x73, 0xf5, 0x11, 0x8a, 0x74, 0x33, 0xf3, 0x91, 0x78, 0xfa, 0x15, 0x08,
-	0xa7, 0x97, 0x54, 0x16, 0xa4, 0x16, 0x27, 0xb1, 0x81, 0xdd, 0x61, 0x0c, 0x08, 0x00, 0x00, 0xff,
-	0xff, 0xcf, 0xd8, 0x4b, 0x0e, 0xde, 0x00, 0x00, 0x00,
+	// 949 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x96, 0x4f, 0x6f, 0xdc, 0x44,
+	0x18, 0xc6, 0xd7, 0x49, 0x1a, 0x92, 0x37, 0x7f, 0x76, 0x33, 0xdd, 0x4d, 0xdc, 0x34, 0xf5, 0x6c,
+	0xa7, 0x54, 0x5a, 0x85, 0xb2, 0x4b, 0x4b, 0x25, 0xa4, 0xdc, 0x58, 0x54, 0x29, 0x55, 0x55, 0xb4,
+	0xf2, 0x0a, 0x10, 0x08, 0x29, 0x72, 0x6d, 0x27, 0xb1, 0x60, 0xd7, 0x2b, 0x7b, 0x37, 0x6a, 0xc5,
+	0x81, 0xaf, 0xc0, 0x91, 0x0b, 0x52, 0x3f, 0x4e, 0x8f, 0x3d, 0x22, 0x0e, 0x23, 0xb4, 0x01, 0xc1,
+	0x79, 0x24, 0xee, 0xc8, 0xe3, 0xb1, 0x67, 0xc6, 0x7f, 0x80, 0x13, 0x37, 0xcf, 0xf8, 0x79, 0x9f,
+	0xd7, 0xfb, 0xfc, 0xc6, 0xaf, 0x17, 0xee, 0xcf, 0xa2, 0xf0, 0xca, 0x9f, 0x3a, 0x53, 0xd7, 0x1f,
+	0x4c, 0xfc, 0xb9, 0xe3, 0x39, 0x73, 0x67, 0x70, 0xf5, 0x30, 0xbf, 0xee, 0xcf, 0xa2, 0x70, 0x1e,
+	0xa2, 0x7d, 0x29, 0xeb, 0xe7, 0xb7, 0xae, 0x1e, 0x1e, 0xb6, 0x2f, 0xc2, 0x8b, 0x90, 0x4b, 0x06,
+	0xc9, 0x55, 0xaa, 0x26, 0x08, 0xd6, 0x47, 0x4e, 0xe4, 0x4c, 0xe2, 0x93, 0x8d, 0x1f, 0x5f, 0xe3,
+	0xc6, 0x9f, 0xaf, 0xb1, 0x41, 0x7e, 0x5a, 0x81, 0xad, 0xb1, 0x1b, 0xce, 0xfc, 0xa7, 0xde, 0xd3,
+	0xe9, 0x79, 0x88, 0x9e, 0xc0, 0x46, 0x9c, 0x2c, 0xcf, 0x02, 0xcf, 0x34, 0xba, 0x46, 0x6f, 0x7b,
+	0x78, 0xfc, 0x86, 0xe2, 0xc6, 0x2f, 0x14, 0x37, 0x9f, 0x8b, 0x06, 0x1f, 0x7b, 0x5e, 0xe4, 0xc7,
+	0x31, 0xa3, 0xb8, 0xf9, 0xca, 0x99, 0x7c, 0x7b, 0x42, 0xb2, 0x02, 0x62, 0xbf, 0x13, 0xa7, 0x56,
+	0x68, 0x08, 0xcd, 0x6c, 0xf7, 0x6c, 0x16, 0xf9, 0xe7, 0xc1, 0x4b, 0x73, 0x85, 0xbb, 0x1d, 0x32,
+	0x8a, 0xf7, 0xf5, 0x32, 0x21, 0x20, 0xf6, 0x8e, 0xa8, 0x1e, 0xf1, 0x35, 0x7a, 0x0e, 0x37, 0x73,
+	0x49, 0x7a, 0xb1, 0x58, 0x04, 0x9e, 0xb9, 0xca, 0x7d, 0x2c, 0x46, 0xf1, 0x61, 0xc1, 0x47, 0x8a,
+	0x88, 0xdd, 0x12, 0x5e, 0xfc, 0xb7, 0x7d, 0xb6, 0x08, 0x3c, 0xf4, 0x18, 0x20, 0x15, 0x38, 0x9e,
+	0x17, 0x99, 0x6b, 0x5d, 0xa3, 0xb7, 0x39, 0xec, 0x30, 0x8a, 0xf7, 0x54, 0x97, 0xe4, 0x1e, 0xb1,
+	0x37, 0xf9, 0x22, 0xf9, 0x9d, 0xe4, 0xaf, 0x55, 0xd8, 0x19, 0xfb, 0x71, 0x1c, 0x84, 0x53, 0x91,
+	0xd0, 0x33, 0x80, 0x38, 0xdd, 0x90, 0x19, 0x3d, 0xa8, 0xcf, 0x28, 0xb3, 0xcf, 0x4b, 0x12, 0xfb,
+	0xcc, 0x10, 0x9d, 0xc2, 0x9e, 0xbc, 0xa3, 0x27, 0x75, 0xc4, 0x28, 0x36, 0x8b, 0xc5, 0x79, 0x56,
+	0xcd, 0xdc, 0x43, 0xa4, 0x35, 0x86, 0x8e, 0x22, 0x2b, 0xe5, 0xd5, 0x65, 0x14, 0x1f, 0x95, 0xdc,
+	0xd4, 0xc4, 0x50, 0xee, 0x28, 0x33, 0xfb, 0x12, 0x0e, 0x54, 0xb5, 0xb8, 0xe4, 0xb6, 0x6b, 0xdc,
+	0x96, 0x30, 0x8a, 0xad, 0xb2, 0xad, 0x22, 0x24, 0x76, 0x5b, 0x1a, 0xa7, 0x17, 0xdc, 0xfa, 0x04,
+	0xb6, 0x33, 0x19, 0x07, 0x72, 0x83, 0x03, 0x39, 0x60, 0x14, 0xdf, 0xd4, 0xfd, 0x52, 0x24, 0x5b,
+	0x62, 0x99, 0x04, 0x8b, 0x1c, 0xd8, 0xc9, 0xa1, 0x07, 0xd3, 0xf3, 0xd0, 0x5c, 0xef, 0x1a, 0xbd,
+	0xad, 0x47, 0xf7, 0xfa, 0xd5, 0xaf, 0x43, 0x5f, 0x39, 0xe0, 0x43, 0x93, 0x51, 0xdc, 0x2e, 0x1c,
+	0x9c, 0xc4, 0x23, 0x69, 0x21, 0x65, 0x64, 0xb9, 0x0a, 0xdb, 0xb6, 0xef, 0x86, 0x91, 0x27, 0xb0,
+	0x9f, 0xc2, 0x66, 0xc4, 0xd7, 0x92, 0xfa, 0x7b, 0xf5, 0xd4, 0x5b, 0x69, 0x87, 0xbc, 0x82, 0xd8,
+	0x1b, 0x91, 0x70, 0x43, 0x4f, 0xa0, 0x95, 0xef, 0xeb, 0xc8, 0x6f, 0x33, 0x8a, 0x0f, 0x0a, 0x95,
+	0x39, 0xf1, 0xdd, 0xcc, 0x40, 0x00, 0x1f, 0x41, 0x5b, 0x8a, 0x4a, 0xbc, 0x31, 0xa3, 0xf8, 0x76,
+	0xd1, 0x4a, 0xc5, 0xbd, 0x97, 0xd9, 0x49, 0xda, 0x63, 0xe8, 0x48, 0xed, 0xa5, 0x13, 0x5f, 0xfa,
+	0xde, 0xd9, 0xd4, 0x99, 0xf8, 0x82, 0xb5, 0x72, 0x84, 0x2a, 0x65, 0xc4, 0x46, 0x99, 0xe7, 0x29,
+	0xdf, 0xfd, 0xd4, 0x99, 0xf8, 0xe8, 0x23, 0xd8, 0x12, 0x6a, 0x05, 0xf3, 0x3e, 0xa3, 0x18, 0x69,
+	0x56, 0x29, 0x65, 0x48, 0x57, 0xff, 0x17, 0xe4, 0x3f, 0x56, 0xa0, 0xc9, 0xcb, 0xc6, 0x33, 0xdf,
+	0x15, 0x9c, 0xc7, 0x59, 0xdb, 0x78, 0xe6, 0xbb, 0x92, 0xf5, 0xa0, 0x9e, 0xb5, 0xd6, 0x48, 0x54,
+	0x65, 0x8d, 0x52, 0xe3, 0x84, 0x95, 0x76, 0x5b, 0xc7, 0xae, 0xb0, 0xaa, 0x52, 0x11, 0x7b, 0x4f,
+	0xf1, 0x12, 0xf4, 0x03, 0xb8, 0xa3, 0x6b, 0x95, 0x95, 0x72, 0x0c, 0x7a, 0x8c, 0xe2, 0x77, 0xab,
+	0xac, 0x0b, 0x72, 0x62, 0x9b, 0x4a, 0x8f, 0x3c, 0x13, 0x7e, 0x2c, 0xf2, 0x59, 0xce, 0xd5, 0xca,
+	0xf4, 0x2c, 0xcd, 0xf2, 0x5c, 0x90, 0xcd, 0xf2, 0xc4, 0x83, 0x8f, 0xd1, 0xdf, 0x56, 0x01, 0x7d,
+	0x12, 0x4e, 0xe7, 0x91, 0xe3, 0xce, 0x95, 0xb0, 0xbf, 0x86, 0x96, 0x2b, 0x76, 0x0b, 0x79, 0x3f,
+	0xaa, 0xcf, 0x5b, 0xbc, 0x21, 0xc5, 0x42, 0x62, 0xef, 0xba, 0x5a, 0x87, 0x64, 0x7a, 0x15, 0x45,
+	0x7a, 0xf0, 0xca, 0xf4, 0xaa, 0x11, 0x12, 0xbb, 0xad, 0x9b, 0x8a, 0xf8, 0xbf, 0x83, 0x7b, 0xa5,
+	0x0a, 0x7d, 0x43, 0x81, 0xd0, 0x67, 0x14, 0x1f, 0xd7, 0xb4, 0x29, 0x17, 0x11, 0xdb, 0xd2, 0x5b,
+	0xaa, 0xb9, 0x71, 0x20, 0xcf, 0x00, 0xe9, 0x65, 0x0a, 0x93, 0x3b, 0x8c, 0xe2, 0x5b, 0x55, 0xbd,
+	0x52, 0x2c, 0x2d, 0xd5, 0x9a, 0xbf, 0x66, 0x25, 0x33, 0xfe, 0xe0, 0x37, 0xfe, 0xd9, 0x4c, 0x7c,
+	0x63, 0xdd, 0xc2, 0x93, 0x91, 0xdf, 0xd7, 0xa0, 0x95, 0x4e, 0x4d, 0x05, 0xf2, 0xe7, 0x20, 0x46,
+	0x57, 0x01, 0xf1, 0x07, 0xf5, 0x88, 0x3b, 0xda, 0x6c, 0xc8, 0x01, 0x6f, 0x47, 0x8a, 0x37, 0xfa,
+	0xe2, 0xdf, 0xf0, 0x96, 0x07, 0xd6, 0x7f, 0x83, 0xbb, 0x80, 0xbb, 0x05, 0x7d, 0x2d, 0xda, 0x07,
+	0x8c, 0xe2, 0x5e, 0x65, 0x8b, 0xaa, 0xc0, 0x8e, 0xd4, 0xe7, 0x2f, 0x61, 0x75, 0xe0, 0xb0, 0xe0,
+	0x51, 0x9e, 0xc1, 0xf7, 0x19, 0xc5, 0x77, 0x2b, 0xfb, 0x69, 0x83, 0x78, 0x5f, 0x6d, 0xa4, 0x0c,
+	0x63, 0xf9, 0xe9, 0x91, 0xe7, 0x26, 0x45, 0x5d, 0xfe, 0xf4, 0x28, 0xa7, 0x66, 0x57, 0xda, 0xf1,
+	0x33, 0xf3, 0x3d, 0x74, 0x4a, 0xc9, 0x2b, 0x23, 0xfa, 0xb8, 0x6e, 0x44, 0x97, 0x27, 0x80, 0xca,
+	0xa8, 0xd2, 0x92, 0xd8, 0xc8, 0x2d, 0x57, 0x7d, 0xf3, 0x66, 0x69, 0x19, 0x6f, 0x97, 0x96, 0xf1,
+	0xeb, 0xd2, 0x32, 0x7e, 0xb8, 0xb6, 0x1a, 0x6f, 0xaf, 0xad, 0xc6, 0xcf, 0xd7, 0x56, 0x03, 0x6e,
+	0x05, 0x61, 0x4d, 0xf7, 0x91, 0xf1, 0xd5, 0xe3, 0x8b, 0x60, 0x7e, 0xb9, 0x78, 0xd1, 0x77, 0xc3,
+	0xc9, 0x40, 0x8a, 0xde, 0x0f, 0x42, 0x65, 0x35, 0x78, 0x29, 0xff, 0x70, 0xcf, 0x5f, 0xcd, 0xfc,
+	0xf8, 0xc5, 0x3a, 0xff, 0xf7, 0xfc, 0xe1, 0xdf, 0x01, 0x00, 0x00, 0xff, 0xff, 0x64, 0x41, 0xea,
+	0x03, 0x94, 0x0b, 0x00, 0x00,
 }
 
 func (this *Params) Equal(that interface{}) bool {
@@ -126,6 +640,394 @@ func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *ScopeIdInfo) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ScopeIdInfo) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ScopeIdInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ScopeAddr) > 0 {
+		i -= len(m.ScopeAddr)
+		copy(dAtA[i:], m.ScopeAddr)
+		i = encodeVarintMetadata(dAtA, i, uint64(len(m.ScopeAddr)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.ScopeIdScopeUuid) > 0 {
+		i -= len(m.ScopeIdScopeUuid)
+		copy(dAtA[i:], m.ScopeIdScopeUuid)
+		i = encodeVarintMetadata(dAtA, i, uint64(len(m.ScopeIdScopeUuid)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.ScopeIdPrefix) > 0 {
+		i -= len(m.ScopeIdPrefix)
+		copy(dAtA[i:], m.ScopeIdPrefix)
+		i = encodeVarintMetadata(dAtA, i, uint64(len(m.ScopeIdPrefix)))
+		i--
+		dAtA[i] = 0x12
+	}
+	{
+		size := m.ScopeId.Size()
+		i -= size
+		if _, err := m.ScopeId.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintMetadata(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *SessionIdInfo) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SessionIdInfo) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *SessionIdInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.ScopeIdInfo != nil {
+		{
+			size, err := m.ScopeIdInfo.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintMetadata(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x32
+	}
+	if len(m.SessionAddr) > 0 {
+		i -= len(m.SessionAddr)
+		copy(dAtA[i:], m.SessionAddr)
+		i = encodeVarintMetadata(dAtA, i, uint64(len(m.SessionAddr)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.SessionIdSessionUuid) > 0 {
+		i -= len(m.SessionIdSessionUuid)
+		copy(dAtA[i:], m.SessionIdSessionUuid)
+		i = encodeVarintMetadata(dAtA, i, uint64(len(m.SessionIdSessionUuid)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.SessionIdScopeUuid) > 0 {
+		i -= len(m.SessionIdScopeUuid)
+		copy(dAtA[i:], m.SessionIdScopeUuid)
+		i = encodeVarintMetadata(dAtA, i, uint64(len(m.SessionIdScopeUuid)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.SessionIdPrefix) > 0 {
+		i -= len(m.SessionIdPrefix)
+		copy(dAtA[i:], m.SessionIdPrefix)
+		i = encodeVarintMetadata(dAtA, i, uint64(len(m.SessionIdPrefix)))
+		i--
+		dAtA[i] = 0x12
+	}
+	{
+		size := m.SessionId.Size()
+		i -= size
+		if _, err := m.SessionId.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintMetadata(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *RecordIdInfo) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RecordIdInfo) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *RecordIdInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.ScopeIdInfo != nil {
+		{
+			size, err := m.ScopeIdInfo.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintMetadata(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x32
+	}
+	if len(m.RecordAddr) > 0 {
+		i -= len(m.RecordAddr)
+		copy(dAtA[i:], m.RecordAddr)
+		i = encodeVarintMetadata(dAtA, i, uint64(len(m.RecordAddr)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.RecordIdHashedName) > 0 {
+		i -= len(m.RecordIdHashedName)
+		copy(dAtA[i:], m.RecordIdHashedName)
+		i = encodeVarintMetadata(dAtA, i, uint64(len(m.RecordIdHashedName)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.RecordIdScopeUuid) > 0 {
+		i -= len(m.RecordIdScopeUuid)
+		copy(dAtA[i:], m.RecordIdScopeUuid)
+		i = encodeVarintMetadata(dAtA, i, uint64(len(m.RecordIdScopeUuid)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.RecordIdPrefix) > 0 {
+		i -= len(m.RecordIdPrefix)
+		copy(dAtA[i:], m.RecordIdPrefix)
+		i = encodeVarintMetadata(dAtA, i, uint64(len(m.RecordIdPrefix)))
+		i--
+		dAtA[i] = 0x12
+	}
+	{
+		size := m.RecordId.Size()
+		i -= size
+		if _, err := m.RecordId.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintMetadata(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *ScopeSpecIdInfo) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ScopeSpecIdInfo) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ScopeSpecIdInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ScopeSpecAddr) > 0 {
+		i -= len(m.ScopeSpecAddr)
+		copy(dAtA[i:], m.ScopeSpecAddr)
+		i = encodeVarintMetadata(dAtA, i, uint64(len(m.ScopeSpecAddr)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.ScopeSpecIdScopeSpecUuid) > 0 {
+		i -= len(m.ScopeSpecIdScopeSpecUuid)
+		copy(dAtA[i:], m.ScopeSpecIdScopeSpecUuid)
+		i = encodeVarintMetadata(dAtA, i, uint64(len(m.ScopeSpecIdScopeSpecUuid)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.ScopeSpecIdPrefix) > 0 {
+		i -= len(m.ScopeSpecIdPrefix)
+		copy(dAtA[i:], m.ScopeSpecIdPrefix)
+		i = encodeVarintMetadata(dAtA, i, uint64(len(m.ScopeSpecIdPrefix)))
+		i--
+		dAtA[i] = 0x12
+	}
+	{
+		size := m.ScopeSpecId.Size()
+		i -= size
+		if _, err := m.ScopeSpecId.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintMetadata(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *ContractSpecIdInfo) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ContractSpecIdInfo) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ContractSpecIdInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ContractSpecUuid) > 0 {
+		i -= len(m.ContractSpecUuid)
+		copy(dAtA[i:], m.ContractSpecUuid)
+		i = encodeVarintMetadata(dAtA, i, uint64(len(m.ContractSpecUuid)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.ContractSpecAddr) > 0 {
+		i -= len(m.ContractSpecAddr)
+		copy(dAtA[i:], m.ContractSpecAddr)
+		i = encodeVarintMetadata(dAtA, i, uint64(len(m.ContractSpecAddr)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.ContractSpecIdContractSpecUuid) > 0 {
+		i -= len(m.ContractSpecIdContractSpecUuid)
+		copy(dAtA[i:], m.ContractSpecIdContractSpecUuid)
+		i = encodeVarintMetadata(dAtA, i, uint64(len(m.ContractSpecIdContractSpecUuid)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.ContractSpecIdPrefix) > 0 {
+		i -= len(m.ContractSpecIdPrefix)
+		copy(dAtA[i:], m.ContractSpecIdPrefix)
+		i = encodeVarintMetadata(dAtA, i, uint64(len(m.ContractSpecIdPrefix)))
+		i--
+		dAtA[i] = 0x12
+	}
+	{
+		size := m.ContractSpecId.Size()
+		i -= size
+		if _, err := m.ContractSpecId.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintMetadata(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *RecordSpecIdInfo) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RecordSpecIdInfo) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *RecordSpecIdInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.ContractSpecIdInfo != nil {
+		{
+			size, err := m.ContractSpecIdInfo.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintMetadata(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x32
+	}
+	if len(m.RecordSpecAddr) > 0 {
+		i -= len(m.RecordSpecAddr)
+		copy(dAtA[i:], m.RecordSpecAddr)
+		i = encodeVarintMetadata(dAtA, i, uint64(len(m.RecordSpecAddr)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.RecordSpecIdHashedName) > 0 {
+		i -= len(m.RecordSpecIdHashedName)
+		copy(dAtA[i:], m.RecordSpecIdHashedName)
+		i = encodeVarintMetadata(dAtA, i, uint64(len(m.RecordSpecIdHashedName)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.RecordSpecIdContractSpecUuid) > 0 {
+		i -= len(m.RecordSpecIdContractSpecUuid)
+		copy(dAtA[i:], m.RecordSpecIdContractSpecUuid)
+		i = encodeVarintMetadata(dAtA, i, uint64(len(m.RecordSpecIdContractSpecUuid)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.ContractSpecIdPrefix) > 0 {
+		i -= len(m.ContractSpecIdPrefix)
+		copy(dAtA[i:], m.ContractSpecIdPrefix)
+		i = encodeVarintMetadata(dAtA, i, uint64(len(m.ContractSpecIdPrefix)))
+		i--
+		dAtA[i] = 0x12
+	}
+	{
+		size := m.RecordSpecId.Size()
+		i -= size
+		if _, err := m.RecordSpecId.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintMetadata(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintMetadata(dAtA []byte, offset int, v uint64) int {
 	offset -= sovMetadata(v)
 	base := offset
@@ -143,6 +1045,172 @@ func (m *Params) Size() (n int) {
 	}
 	var l int
 	_ = l
+	return n
+}
+
+func (m *ScopeIdInfo) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.ScopeId.Size()
+	n += 1 + l + sovMetadata(uint64(l))
+	l = len(m.ScopeIdPrefix)
+	if l > 0 {
+		n += 1 + l + sovMetadata(uint64(l))
+	}
+	l = len(m.ScopeIdScopeUuid)
+	if l > 0 {
+		n += 1 + l + sovMetadata(uint64(l))
+	}
+	l = len(m.ScopeAddr)
+	if l > 0 {
+		n += 1 + l + sovMetadata(uint64(l))
+	}
+	return n
+}
+
+func (m *SessionIdInfo) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.SessionId.Size()
+	n += 1 + l + sovMetadata(uint64(l))
+	l = len(m.SessionIdPrefix)
+	if l > 0 {
+		n += 1 + l + sovMetadata(uint64(l))
+	}
+	l = len(m.SessionIdScopeUuid)
+	if l > 0 {
+		n += 1 + l + sovMetadata(uint64(l))
+	}
+	l = len(m.SessionIdSessionUuid)
+	if l > 0 {
+		n += 1 + l + sovMetadata(uint64(l))
+	}
+	l = len(m.SessionAddr)
+	if l > 0 {
+		n += 1 + l + sovMetadata(uint64(l))
+	}
+	if m.ScopeIdInfo != nil {
+		l = m.ScopeIdInfo.Size()
+		n += 1 + l + sovMetadata(uint64(l))
+	}
+	return n
+}
+
+func (m *RecordIdInfo) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.RecordId.Size()
+	n += 1 + l + sovMetadata(uint64(l))
+	l = len(m.RecordIdPrefix)
+	if l > 0 {
+		n += 1 + l + sovMetadata(uint64(l))
+	}
+	l = len(m.RecordIdScopeUuid)
+	if l > 0 {
+		n += 1 + l + sovMetadata(uint64(l))
+	}
+	l = len(m.RecordIdHashedName)
+	if l > 0 {
+		n += 1 + l + sovMetadata(uint64(l))
+	}
+	l = len(m.RecordAddr)
+	if l > 0 {
+		n += 1 + l + sovMetadata(uint64(l))
+	}
+	if m.ScopeIdInfo != nil {
+		l = m.ScopeIdInfo.Size()
+		n += 1 + l + sovMetadata(uint64(l))
+	}
+	return n
+}
+
+func (m *ScopeSpecIdInfo) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.ScopeSpecId.Size()
+	n += 1 + l + sovMetadata(uint64(l))
+	l = len(m.ScopeSpecIdPrefix)
+	if l > 0 {
+		n += 1 + l + sovMetadata(uint64(l))
+	}
+	l = len(m.ScopeSpecIdScopeSpecUuid)
+	if l > 0 {
+		n += 1 + l + sovMetadata(uint64(l))
+	}
+	l = len(m.ScopeSpecAddr)
+	if l > 0 {
+		n += 1 + l + sovMetadata(uint64(l))
+	}
+	return n
+}
+
+func (m *ContractSpecIdInfo) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.ContractSpecId.Size()
+	n += 1 + l + sovMetadata(uint64(l))
+	l = len(m.ContractSpecIdPrefix)
+	if l > 0 {
+		n += 1 + l + sovMetadata(uint64(l))
+	}
+	l = len(m.ContractSpecIdContractSpecUuid)
+	if l > 0 {
+		n += 1 + l + sovMetadata(uint64(l))
+	}
+	l = len(m.ContractSpecAddr)
+	if l > 0 {
+		n += 1 + l + sovMetadata(uint64(l))
+	}
+	l = len(m.ContractSpecUuid)
+	if l > 0 {
+		n += 1 + l + sovMetadata(uint64(l))
+	}
+	return n
+}
+
+func (m *RecordSpecIdInfo) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.RecordSpecId.Size()
+	n += 1 + l + sovMetadata(uint64(l))
+	l = len(m.ContractSpecIdPrefix)
+	if l > 0 {
+		n += 1 + l + sovMetadata(uint64(l))
+	}
+	l = len(m.RecordSpecIdContractSpecUuid)
+	if l > 0 {
+		n += 1 + l + sovMetadata(uint64(l))
+	}
+	l = len(m.RecordSpecIdHashedName)
+	if l > 0 {
+		n += 1 + l + sovMetadata(uint64(l))
+	}
+	l = len(m.RecordSpecAddr)
+	if l > 0 {
+		n += 1 + l + sovMetadata(uint64(l))
+	}
+	if m.ContractSpecIdInfo != nil {
+		l = m.ContractSpecIdInfo.Size()
+		n += 1 + l + sovMetadata(uint64(l))
+	}
 	return n
 }
 
@@ -181,6 +1249,1346 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: Params: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMetadata(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ScopeIdInfo) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMetadata
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ScopeIdInfo: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ScopeIdInfo: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ScopeId", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetadata
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ScopeId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ScopeIdPrefix", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetadata
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ScopeIdPrefix = append(m.ScopeIdPrefix[:0], dAtA[iNdEx:postIndex]...)
+			if m.ScopeIdPrefix == nil {
+				m.ScopeIdPrefix = []byte{}
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ScopeIdScopeUuid", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetadata
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ScopeIdScopeUuid = append(m.ScopeIdScopeUuid[:0], dAtA[iNdEx:postIndex]...)
+			if m.ScopeIdScopeUuid == nil {
+				m.ScopeIdScopeUuid = []byte{}
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ScopeAddr", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetadata
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ScopeAddr = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMetadata(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SessionIdInfo) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMetadata
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SessionIdInfo: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SessionIdInfo: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SessionId", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetadata
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.SessionId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SessionIdPrefix", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetadata
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SessionIdPrefix = append(m.SessionIdPrefix[:0], dAtA[iNdEx:postIndex]...)
+			if m.SessionIdPrefix == nil {
+				m.SessionIdPrefix = []byte{}
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SessionIdScopeUuid", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetadata
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SessionIdScopeUuid = append(m.SessionIdScopeUuid[:0], dAtA[iNdEx:postIndex]...)
+			if m.SessionIdScopeUuid == nil {
+				m.SessionIdScopeUuid = []byte{}
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SessionIdSessionUuid", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetadata
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SessionIdSessionUuid = append(m.SessionIdSessionUuid[:0], dAtA[iNdEx:postIndex]...)
+			if m.SessionIdSessionUuid == nil {
+				m.SessionIdSessionUuid = []byte{}
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SessionAddr", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetadata
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SessionAddr = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ScopeIdInfo", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetadata
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.ScopeIdInfo == nil {
+				m.ScopeIdInfo = &ScopeIdInfo{}
+			}
+			if err := m.ScopeIdInfo.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMetadata(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RecordIdInfo) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMetadata
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RecordIdInfo: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RecordIdInfo: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RecordId", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetadata
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.RecordId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RecordIdPrefix", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetadata
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RecordIdPrefix = append(m.RecordIdPrefix[:0], dAtA[iNdEx:postIndex]...)
+			if m.RecordIdPrefix == nil {
+				m.RecordIdPrefix = []byte{}
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RecordIdScopeUuid", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetadata
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RecordIdScopeUuid = append(m.RecordIdScopeUuid[:0], dAtA[iNdEx:postIndex]...)
+			if m.RecordIdScopeUuid == nil {
+				m.RecordIdScopeUuid = []byte{}
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RecordIdHashedName", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetadata
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RecordIdHashedName = append(m.RecordIdHashedName[:0], dAtA[iNdEx:postIndex]...)
+			if m.RecordIdHashedName == nil {
+				m.RecordIdHashedName = []byte{}
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RecordAddr", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetadata
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RecordAddr = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ScopeIdInfo", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetadata
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.ScopeIdInfo == nil {
+				m.ScopeIdInfo = &ScopeIdInfo{}
+			}
+			if err := m.ScopeIdInfo.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMetadata(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ScopeSpecIdInfo) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMetadata
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ScopeSpecIdInfo: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ScopeSpecIdInfo: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ScopeSpecId", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetadata
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ScopeSpecId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ScopeSpecIdPrefix", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetadata
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ScopeSpecIdPrefix = append(m.ScopeSpecIdPrefix[:0], dAtA[iNdEx:postIndex]...)
+			if m.ScopeSpecIdPrefix == nil {
+				m.ScopeSpecIdPrefix = []byte{}
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ScopeSpecIdScopeSpecUuid", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetadata
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ScopeSpecIdScopeSpecUuid = append(m.ScopeSpecIdScopeSpecUuid[:0], dAtA[iNdEx:postIndex]...)
+			if m.ScopeSpecIdScopeSpecUuid == nil {
+				m.ScopeSpecIdScopeSpecUuid = []byte{}
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ScopeSpecAddr", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetadata
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ScopeSpecAddr = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMetadata(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ContractSpecIdInfo) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMetadata
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ContractSpecIdInfo: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ContractSpecIdInfo: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ContractSpecId", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetadata
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ContractSpecId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ContractSpecIdPrefix", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetadata
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ContractSpecIdPrefix = append(m.ContractSpecIdPrefix[:0], dAtA[iNdEx:postIndex]...)
+			if m.ContractSpecIdPrefix == nil {
+				m.ContractSpecIdPrefix = []byte{}
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ContractSpecIdContractSpecUuid", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetadata
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ContractSpecIdContractSpecUuid = append(m.ContractSpecIdContractSpecUuid[:0], dAtA[iNdEx:postIndex]...)
+			if m.ContractSpecIdContractSpecUuid == nil {
+				m.ContractSpecIdContractSpecUuid = []byte{}
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ContractSpecAddr", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetadata
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ContractSpecAddr = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ContractSpecUuid", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetadata
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ContractSpecUuid = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMetadata(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RecordSpecIdInfo) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMetadata
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RecordSpecIdInfo: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RecordSpecIdInfo: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RecordSpecId", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetadata
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.RecordSpecId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ContractSpecIdPrefix", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetadata
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ContractSpecIdPrefix = append(m.ContractSpecIdPrefix[:0], dAtA[iNdEx:postIndex]...)
+			if m.ContractSpecIdPrefix == nil {
+				m.ContractSpecIdPrefix = []byte{}
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RecordSpecIdContractSpecUuid", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetadata
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RecordSpecIdContractSpecUuid = append(m.RecordSpecIdContractSpecUuid[:0], dAtA[iNdEx:postIndex]...)
+			if m.RecordSpecIdContractSpecUuid == nil {
+				m.RecordSpecIdContractSpecUuid = []byte{}
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RecordSpecIdHashedName", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetadata
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RecordSpecIdHashedName = append(m.RecordSpecIdHashedName[:0], dAtA[iNdEx:postIndex]...)
+			if m.RecordSpecIdHashedName == nil {
+				m.RecordSpecIdHashedName = []byte{}
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RecordSpecAddr", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetadata
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RecordSpecAddr = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ContractSpecIdInfo", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetadata
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthMetadata
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.ContractSpecIdInfo == nil {
+				m.ContractSpecIdInfo = &ContractSpecIdInfo{}
+			}
+			if err := m.ContractSpecIdInfo.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipMetadata(dAtA[iNdEx:])
