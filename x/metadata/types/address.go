@@ -620,3 +620,97 @@ func (ma MetadataAddress) isTypeOneOf(options ...[]byte) bool {
 	}
 	return false
 }
+
+// MetadataAddressDetails contains a breakdown of the components in a MetadataAddress.
+type MetadataAddressDetails struct {
+	// Address is the full MetadataAddress in question.
+	Address MetadataAddress
+	// AddressPrefix is the prefix bytes. It will have length 1 only if Address has a prefix portion.
+	AddressPrefix []byte
+	// AddressPrimaryUUID is the primary uuid. It will have length 16 only if Address has a primary UUID portion.
+	AddressPrimaryUUID []byte
+	// AddressSecondaryUUID is the secondary uuid. It will have length 16 only if Address has a secondary UUID portion.
+	AddressSecondaryUUID []byte
+	// AddressNameHash is the hashed name. It will have length 16 only if Address has a name hash portion.
+	AddressNameHash []byte
+	// AddressExcess is any bytes in Address that are not accounted for in the other byte arrays.
+	AddressExcess []byte
+	// Prefix is the human readable version of AddressPrefix. E.g. "scope"
+	Prefix string
+	// PrimaryUUID is the string version of AddressPrimaryUUID. E.g. "9e3e80f4-78ba-4fad-aed1-b79e1370cebd"
+	PrimaryUUID string
+	// SecondaryUUID is the string version of AddressSecondaryUUID. E.g. "164eb1bf-0818-4ad1-b3b9-39e86441d446"
+	SecondaryUUID string
+	// NameHashHex is the hex string encoded version of AddressNameHash. E.g. "787ec76dcafd20c1908eb0936a12f91e"
+	NameHashHex string
+	// NameHashBase64 is the base64 string encoded version of NameHashBase64. E.g. "eH7Hbcr9IMGQjrCTahL5Hg=="
+	NameHashBase64 string
+	// ExcessHex is the hex string encoded version of AddressExcess. E.g. "6578747261"
+	ExcessHex string
+	// ExcessBase64 is the base64 string encoded version of AddressExcess. E.g. "ZXh0cmE="
+	ExcessBase64 string
+	// ParentAddress is the MetadataAddress of the parent structure.
+	// I.e. for session and record addresses, this will be a scope address.
+	// For record spec addresses, this will be a contract spec address.
+	// For all other types, it will be empty.
+	ParentAddress MetadataAddress
+}
+
+func (ma MetadataAddress) GetDetails() MetadataAddressDetails {
+	// Copying this MetadataAddress to prevent weird behavior.
+	addr := MetadataAddress{}
+	copy(addr, ma)
+
+	retval := MetadataAddressDetails{Address: addr}
+	// Set the prefix info if we've got anything at all.
+	if len(addr) >= 1 {
+		retval.AddressPrefix = addr[0:1]
+		// If there's an error, we'll still get an empty string and we don't really care about the error.
+		retval.Prefix, _ = addr.Prefix()
+	}
+	// Every type has a primary uuid as the 16 bytes after the prefix.
+	// So if those exist, get set the primary uuid info.
+	if len(addr) >= 17 {
+		// Getting bytes directly so that we get the bytes even if .PrimaryUUID() would give an error.
+		retval.AddressPrimaryUUID = addr[1:17]
+		// Try to convert it to an actual UUID in order to use the UUID.String() method.
+		// The only reason this conversion will fail is if the length isn't 16. We know it is, so just ignore the error.
+		uid, _ := uuid.FromBytes(retval.AddressPrimaryUUID)
+		retval.PrimaryUUID = uid.String()
+	}
+	// Secondary UUIDs or only for some types. Check if we've got one and set it accordingly.
+	secondaryUUID, secondaryUUIDErr := addr.SecondaryUUID()
+	if secondaryUUIDErr == nil {
+		retval.AddressSecondaryUUID = secondaryUUID[:]
+		retval.SecondaryUUID = secondaryUUID.String()
+	}
+	// Hashed names are only for some types. Check if we've got one and set it accordingly.
+	nameHash, nameHashErr := addr.NameHash()
+	if nameHashErr == nil {
+		retval.AddressNameHash = nameHash
+		retval.NameHashHex = hex.EncodeToString(retval.AddressNameHash)
+		retval.NameHashBase64 = base64.StdEncoding.EncodeToString(retval.AddressNameHash)
+	}
+	// Check for any excess bytes
+	expectedLength := 17 // 1 + 16 = prefix byte + primary UUID.
+	if secondaryUUIDErr == nil || nameHashErr == nil {
+		expectedLength += 16 // 16 = the secondary UUID length = the name hash length.
+	}
+	if len(addr) > expectedLength {
+		retval.AddressExcess = addr[expectedLength:]
+		retval.ExcessHex = hex.EncodeToString(retval.AddressExcess)
+		retval.ExcessBase64 = base64.StdEncoding.EncodeToString(retval.AddressExcess)
+	}
+	// And set the parent if we can.
+	if !addr.IsScopeAddress() {
+		if pAddr, err := addr.AsScopeAddress(); err == nil {
+			retval.ParentAddress = pAddr
+		}
+	}
+	if !addr.IsContractSpecificationAddress() {
+		if pAddr, err := addr.AsContractSpecAddress(); err == nil {
+			retval.ParentAddress = pAddr
+		}
+	}
+	return retval
+}

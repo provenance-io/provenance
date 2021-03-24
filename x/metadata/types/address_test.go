@@ -1356,3 +1356,5 @@ func TestFormat(t *testing.T) {
 		})
 	}
 }
+
+// TODO: GetDetails tests.
