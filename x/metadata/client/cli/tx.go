@@ -128,7 +128,7 @@ func RemoveMetadataScopeCmd() *cobra.Command {
 			}
 
 			scopeMetaAddress := types.ScopeMetadataAddress(scopeUUID)
-			signers := strings.Split(args[1], ",")
+			signers := parseSigners(cmd, &clientCtx)
 
 			for _, signer := range signers {
 				_, err := sdk.AccAddressFromBech32(signer)
@@ -338,9 +338,9 @@ func parseSigners(cmd *cobra.Command, client *client.Context) []string {
 	if flagSet.Changed(FlagSigners) {
 		signerList, _ := flagSet.GetString(FlagSigners)
 		return strings.Split(signerList, ",")
-	} else {
-		return []string{client.GetFromAddress().String()}
 	}
+	return []string{client.GetFromAddress().String()}
+
 }
 
 func parsePartyTypes(delimitedPartyTypes string) []types.PartyType {

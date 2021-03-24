@@ -1668,7 +1668,7 @@ func (s *IntegrationTestSuite) TestRemoveMetadataScopeCmd() {
 			cli.RemoveMetadataScopeCmd(),
 			[]string{
 				scopeUUID,
-				fmt.Sprintf("--%s=%s", cli.FlagSigners, "not-valid"),
+				fmt.Sprintf("--%s=%s", cli.FlagSigners, "not-a-validuser"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
