@@ -45,7 +45,9 @@ func (k msgServer) WriteScope(
 		),
 	)
 
-	return &types.MsgWriteScopeResponse{}, nil
+	return &types.MsgWriteScopeResponse{
+		ScopeIdInfo: types.GetScopeIDInfo(msg.Scope.ScopeId),
+	}, nil
 }
 
 func (k msgServer) DeleteScope(
@@ -100,7 +102,9 @@ func (k msgServer) WriteSession(
 		),
 	)
 
-	return &types.MsgWriteSessionResponse{}, nil
+	return &types.MsgWriteSessionResponse{
+		SessionIdInfo: types.GetSessionIDInfo(msg.Session.SessionId),
+	}, nil
 }
 
 func (k msgServer) WriteRecord(
@@ -134,7 +138,9 @@ func (k msgServer) WriteRecord(
 		),
 	)
 
-	return &types.MsgWriteRecordResponse{}, nil
+	return &types.MsgWriteRecordResponse{
+		RecordIdInfo: types.GetRecordIDInfo(recordID),
+	}, nil
 }
 
 func (k msgServer) DeleteRecord(
@@ -188,7 +194,9 @@ func (k msgServer) WriteScopeSpecification(
 		),
 	)
 
-	return &types.MsgWriteScopeSpecificationResponse{}, nil
+	return &types.MsgWriteScopeSpecificationResponse{
+		ScopeSpecIdInfo: types.GetScopeSpecIDInfo(msg.Specification.SpecificationId),
+	}, nil
 }
 
 func (k msgServer) DeleteScopeSpecification(
@@ -247,7 +255,9 @@ func (k msgServer) WriteContractSpecification(
 		),
 	)
 
-	return &types.MsgWriteContractSpecificationResponse{}, nil
+	return &types.MsgWriteContractSpecificationResponse{
+		ContractSpecIdInfo: types.GetContractSpecIDInfo(msg.Specification.SpecificationId),
+	}, nil
 }
 
 func (k msgServer) DeleteContractSpecification(
@@ -342,7 +352,9 @@ func (k msgServer) WriteRecordSpecification(
 		),
 	)
 
-	return &types.MsgWriteRecordSpecificationResponse{}, nil
+	return &types.MsgWriteRecordSpecificationResponse{
+		RecordSpecIdInfo: types.GetRecordSpecIDInfo(msg.Specification.SpecificationId),
+	}, nil
 }
 
 func (k msgServer) DeleteRecordSpecification(
@@ -408,7 +420,8 @@ func (k msgServer) WriteP8EContractSpec(
 
 	k.SetContractSpecification(ctx, proposed)
 
-	for _, proposedRecord := range newrecords {
+	recSpecIDInfos := make([]*types.RecordSpecIdInfo, len(newrecords))
+	for i, proposedRecord := range newrecords {
 		var existing *types.RecordSpecification = nil
 		if e, found := k.GetRecordSpecification(ctx, proposedRecord.SpecificationId); found {
 			existing = &e
@@ -418,6 +431,7 @@ func (k msgServer) WriteP8EContractSpec(
 		}
 
 		k.SetRecordSpecification(ctx, proposedRecord)
+		recSpecIDInfos[i] = types.GetRecordSpecIDInfo(proposedRecord.SpecificationId)
 	}
 
 	ctx.EventManager().EmitEvent(
@@ -428,7 +442,10 @@ func (k msgServer) WriteP8EContractSpec(
 		),
 	)
 
-	return &types.MsgWriteP8EContractSpecResponse{}, nil
+	return &types.MsgWriteP8EContractSpecResponse{
+		ContractSpecIdInfo: types.GetContractSpecIDInfo(proposed.SpecificationId),
+		RecordSpecIdInfos:  recSpecIDInfos,
+	}, nil
 }
 
 func (k msgServer) P8EMemorializeContract(
@@ -473,7 +490,7 @@ func (k msgServer) P8EMemorializeContract(
 	}
 
 	// Finally, store everything.
-	_, err = k.WriteScope(goCtx, &types.MsgWriteScopeRequest{
+	scopeResp, err := k.WriteScope(goCtx, &types.MsgWriteScopeRequest{
 		Scope:   *p8EData.Scope,
 		Signers: signers,
 	})
@@ -481,7 +498,7 @@ func (k msgServer) P8EMemorializeContract(
 		return nil, err
 	}
 
-	_, err = k.WriteSession(goCtx, &types.MsgWriteSessionRequest{
+	sessionResp, err := k.WriteSession(goCtx, &types.MsgWriteSessionRequest{
 		Session: p8EData.Session,
 		Signers: signers,
 	})
@@ -489,8 +506,9 @@ func (k msgServer) P8EMemorializeContract(
 		return nil, err
 	}
 
-	for _, record := range p8EData.Records {
-		_, err = k.WriteRecord(goCtx, &types.MsgWriteRecordRequest{
+	recordIDInfos := make([]*types.RecordIdInfo, len(p8EData.Records))
+	for i, record := range p8EData.Records {
+		recordResp, err := k.WriteRecord(goCtx, &types.MsgWriteRecordRequest{
 			SessionId: p8EData.Session.SessionId,
 			Record:    record,
 			Signers:   signers,
@@ -498,6 +516,7 @@ func (k msgServer) P8EMemorializeContract(
 		if err != nil {
 			return nil, err
 		}
+		recordIDInfos[i] = recordResp.RecordIdInfo
 	}
 
 	ctx.EventManager().EmitEvent(
@@ -508,7 +527,11 @@ func (k msgServer) P8EMemorializeContract(
 		),
 	)
 
-	return &types.MsgP8EMemorializeContractResponse{}, nil
+	return &types.MsgP8EMemorializeContractResponse{
+		ScopeIdInfo:   scopeResp.ScopeIdInfo,
+		SessionIdInfo: sessionResp.SessionIdInfo,
+		RecordIdInfos: recordIDInfos,
+	}, nil
 }
 
 func (k msgServer) BindOSLocator(goCtx context.Context, msg *types.MsgBindOSLocatorRequest) (*types.MsgBindOSLocatorResponse, error) {
