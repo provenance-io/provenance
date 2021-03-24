@@ -30,7 +30,7 @@ import (
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
-type IntegrationTestSuite struct {
+type IntegrationCLITestSuite struct {
 	suite.Suite
 
 	cfg     testnet.Config
@@ -111,11 +111,11 @@ func ownerPartyList(addresses ...string) []metadatatypes.Party {
 	return retval
 }
 
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
+func TestIntegrationCLITestSuite(t *testing.T) {
+	suite.Run(t, new(IntegrationCLITestSuite))
 }
 
-func (s *IntegrationTestSuite) SetupSuite() {
+func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
 	addr, err := sdk.AccAddressFromHex(s.accountKey.PubKey().Address().String())
 	s.Require().NoError(err)
@@ -419,7 +419,7 @@ type_name: recordtypename`,
 	s.Require().NoError(err)
 }
 
-func (s *IntegrationTestSuite) TearDownSuite() {
+func (s *IntegrationCLITestSuite) TearDownSuite() {
 	s.testnet.WaitForNextBlock()
 	s.T().Log("tearing down integration test suite")
 	s.testnet.Cleanup()
@@ -466,7 +466,7 @@ type queryCmdTestCase struct {
 	expectedOutput string
 }
 
-func runQueryCmdTestCases(s *IntegrationTestSuite, cmd *cobra.Command, testCases []queryCmdTestCase) {
+func runQueryCmdTestCases(s *IntegrationCLITestSuite, cmd *cobra.Command, testCases []queryCmdTestCase) {
 	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
 			clientCtx := s.testnet.Validators[0].ClientCtx
@@ -487,7 +487,7 @@ func runQueryCmdTestCases(s *IntegrationTestSuite, cmd *cobra.Command, testCases
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetMetadataParamsCmd() {
+func (s *IntegrationCLITestSuite) TestGetMetadataParamsCmd() {
 	cmd := cli.GetMetadataParamsCmd()
 
 	testCases := []queryCmdTestCase{
@@ -514,7 +514,7 @@ func (s *IntegrationTestSuite) TestGetMetadataParamsCmd() {
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
-func (s *IntegrationTestSuite) TestGetMetadataByIDCmd() {
+func (s *IntegrationCLITestSuite) TestGetMetadataByIDCmd() {
 	cmd := cli.GetMetadataByIDCmd()
 
 	testCases := []queryCmdTestCase{
@@ -661,7 +661,7 @@ func (s *IntegrationTestSuite) TestGetMetadataByIDCmd() {
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
-func (s *IntegrationTestSuite) TestGetMetadataScopeCmd() {
+func (s *IntegrationCLITestSuite) TestGetMetadataScopeCmd() {
 	cmd := cli.GetMetadataScopeCmd()
 
 	testCases := []queryCmdTestCase{
@@ -742,7 +742,7 @@ func (s *IntegrationTestSuite) TestGetMetadataScopeCmd() {
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
-func (s *IntegrationTestSuite) TestGetMetadataFullScopeCmd() {
+func (s *IntegrationCLITestSuite) TestGetMetadataFullScopeCmd() {
 	cmd := cli.GetMetadataFullScopeCmd()
 
 	testCases := []queryCmdTestCase{
@@ -835,7 +835,7 @@ func (s *IntegrationTestSuite) TestGetMetadataFullScopeCmd() {
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
-func (s *IntegrationTestSuite) TestGetMetadataSessionCmd() {
+func (s *IntegrationCLITestSuite) TestGetMetadataSessionCmd() {
 	cmd := cli.GetMetadataSessionCmd()
 
 	sessionListAsJson := fmt.Sprintf("[%s]", s.sessionAsJson)
@@ -951,7 +951,7 @@ func (s *IntegrationTestSuite) TestGetMetadataSessionCmd() {
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
-func (s *IntegrationTestSuite) TestGetMetadataRecordCmd() {
+func (s *IntegrationCLITestSuite) TestGetMetadataRecordCmd() {
 	cmd := cli.GetMetadataRecordCmd()
 
 	recordListAsJson := fmt.Sprintf("[%s]", s.recordAsJson)
@@ -1086,7 +1086,7 @@ func (s *IntegrationTestSuite) TestGetMetadataRecordCmd() {
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
-func (s *IntegrationTestSuite) TestGetMetadataScopeSpecCmd() {
+func (s *IntegrationCLITestSuite) TestGetMetadataScopeSpecCmd() {
 	cmd := cli.GetMetadataScopeSpecCmd()
 
 	testCases := []queryCmdTestCase{
@@ -1155,7 +1155,7 @@ func (s *IntegrationTestSuite) TestGetMetadataScopeSpecCmd() {
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
-func (s *IntegrationTestSuite) TestGetMetadataContractSpecCmd() {
+func (s *IntegrationCLITestSuite) TestGetMetadataContractSpecCmd() {
 	cmd := cli.GetMetadataContractSpecCmd()
 
 	testCases := []queryCmdTestCase{
@@ -1242,7 +1242,7 @@ func (s *IntegrationTestSuite) TestGetMetadataContractSpecCmd() {
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
-func (s *IntegrationTestSuite) TestGetMetadataRecordSpecCmd() {
+func (s *IntegrationCLITestSuite) TestGetMetadataRecordSpecCmd() {
 	cmd := cli.GetMetadataRecordSpecCmd()
 
 	recordSpecListAsJson := fmt.Sprintf("[%s]", s.recordSpecAsJson)
@@ -1352,7 +1352,7 @@ func (s *IntegrationTestSuite) TestGetMetadataRecordSpecCmd() {
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
-func (s *IntegrationTestSuite) TestGetOwnershipCmd() {
+func (s *IntegrationCLITestSuite) TestGetOwnershipCmd() {
 	cmd := cli.GetOwnershipCmd()
 
 	newUser := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()
@@ -1410,7 +1410,7 @@ scope_uuids:
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
-func (s *IntegrationTestSuite) TestGetValueOwnershipCmd() {
+func (s *IntegrationCLITestSuite) TestGetValueOwnershipCmd() {
 	cmd := cli.GetValueOwnershipCmd()
 
 	ownedScopesAsJson := fmt.Sprintf("{\"scope_uuids\":[\"%s\"],\"pagination\":{\"next_key\":null,\"total\":\"1\"}}",
@@ -1463,7 +1463,7 @@ scope_uuids:
 
 // ---------- tx cmd tests ----------
 
-func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
+func (s *IntegrationCLITestSuite) TestAddMetadataScopeCmd() {
 
 	scopeUUID := uuid.New().String()
 	pubkey := secp256k1.GenPrivKey().PubKey()
@@ -1604,7 +1604,7 @@ type osTestStruct struct {
 	expectedCode uint32
 }
 
-func (s *IntegrationTestSuite) TestRemoveMetadataScopeCmd() {
+func (s *IntegrationCLITestSuite) TestRemoveMetadataScopeCmd() {
 
 	userId := s.testnet.Validators[0].Address.String()
 	scopeUUID := uuid.New().String()
@@ -1672,7 +1672,7 @@ func (s *IntegrationTestSuite) TestRemoveMetadataScopeCmd() {
 }
 
 // os locator tx cmds
-func (s *IntegrationTestSuite) TestAddObjectLocatorCmd() {
+func (s *IntegrationCLITestSuite) TestAddObjectLocatorCmd() {
 	userURI := "http://foo.com"
 	userURIMod := "https://www.google.com/search?q=red+butte+garden&oq=red+butte+garden&aqs=chrome..69i57j46i131i175i199i433j0j0i457j0l6.3834j0j7&sourceid=chrome&ie=UTF-8#lpqa=d,2"
 	testCases := []osTestStruct{
@@ -1719,7 +1719,7 @@ func (s *IntegrationTestSuite) TestAddObjectLocatorCmd() {
 	s.runTestCase(testCases)
 }
 
-func (s *IntegrationTestSuite) TestGetOSLocatorCmd() {
+func (s *IntegrationCLITestSuite) TestGetOSLocatorCmd() {
 	cmd := cli.GetOSLocatorCmd()
 
 	testCases := []queryCmdTestCase{
@@ -1734,7 +1734,7 @@ func (s *IntegrationTestSuite) TestGetOSLocatorCmd() {
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
-func (s *IntegrationTestSuite) TestGetAllOSLocatorCmd() {
+func (s *IntegrationCLITestSuite) TestGetAllOSLocatorCmd() {
 	cmd := cli.GetOSLocatorCmd()
 
 	testCases := []queryCmdTestCase{
@@ -1748,7 +1748,7 @@ func (s *IntegrationTestSuite) TestGetAllOSLocatorCmd() {
 
 	runQueryCmdTestCases(s, cmd, testCases)
 }
-func (s *IntegrationTestSuite) runTestCase(testCases []osTestStruct) {
+func (s *IntegrationCLITestSuite) runTestCase(testCases []osTestStruct) {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {

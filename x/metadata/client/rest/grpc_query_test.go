@@ -28,7 +28,7 @@ import (
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 )
 
-type IntegrationTestSuite struct {
+type IntegrationGRPCTestSuite struct {
 	suite.Suite
 
 	cfg     testnet.Config
@@ -69,7 +69,7 @@ func ownerPartyList(addresses ...string) []types.Party {
 	return retval
 }
 
-func (suite *IntegrationTestSuite) SetupSuite() {
+func (suite *IntegrationGRPCTestSuite) SetupSuite() {
 	suite.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
 	addr, err := sdk.AccAddressFromHex(suite.accountKey.PubKey().Address().String())
 	suite.Require().NoError(err)
@@ -137,17 +137,17 @@ func (suite *IntegrationTestSuite) SetupSuite() {
 	suite.Require().NoError(err)
 }
 
-func (suite *IntegrationTestSuite) TearDownSuite() {
+func (suite *IntegrationGRPCTestSuite) TearDownSuite() {
 	suite.testnet.WaitForNextBlock()
 	suite.T().Log("tearing down integration test suite")
 	suite.testnet.Cleanup()
 }
 
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
+func TestIntegrationGRPCTestSuite(t *testing.T) {
+	suite.Run(t, new(IntegrationGRPCTestSuite))
 }
 
-func (suite *IntegrationTestSuite) TestGRPCQueries() {
+func (suite *IntegrationGRPCTestSuite) TestGRPCQueries() {
 	val := suite.testnet.Validators[0]
 	baseURL := val.APIAddress
 
@@ -294,7 +294,7 @@ func (suite *IntegrationTestSuite) TestGRPCQueries() {
 	}
 }
 
-func (suite *IntegrationTestSuite) TestAllOSLocator() {
+func (suite *IntegrationGRPCTestSuite) TestAllOSLocator() {
 	val := suite.testnet.Validators[0]
 	baseURL := val.APIAddress
 
