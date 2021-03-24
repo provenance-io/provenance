@@ -139,6 +139,12 @@ message Record {
   repeated RecordInput inputs = 4 [(gogoproto.nullable) = false];
   // output(s) is the results of executing the process on the given process indicated in this record
   repeated RecordOutput outputs = 5 [(gogoproto.nullable) = false];
+  // specification_id is the id of the record specification that was used to create this record.
+  bytes specification_id = 6 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customtype) = "MetadataAddress",
+    (gogoproto.moretags)   = "yaml:\"specification_id\""
+  ];
 }
 
 // Process contains information used to uniquely identify what was used to generate this record

@@ -134,6 +134,12 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, pr
 		if !existing.SessionId.Equals(proposed.SessionId) || existing.Name != proposed.Name {
 			return fmt.Errorf("the SessionId field of records cannot be changed")
 		}
+		// The existing specification id might be empty for old stuff.
+		// And for now, we'll allow the proposed specification id to be missing and set it appropriately below.
+		// But if we've got both, make sure they didn't change.
+		if !existing.SpecificationId.Empty() && !proposed.SpecificationId.Empty() && !existing.SpecificationId.Equals(proposed.SpecificationId) {
+			return fmt.Errorf("the SpecificationId of records cannot be changed")
+		}
 	}
 
 	scopeID, err := proposed.SessionId.AsScopeAddress()
@@ -164,6 +170,14 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, pr
 		return err
 	}
 	recSpecID := types.RecordSpecMetadataAddress(contractSpecUUID, proposed.Name)
+
+	if proposed.SpecificationId.Empty() {
+		proposed.SpecificationId = recSpecID
+	} else if !proposed.SpecificationId.Equals(recSpecID) {
+		return fmt.Errorf("proposed specification id %s does not match expected specification id %s",
+			proposed.SpecificationId, recSpecID)
+	}
+
 	recSpec, found := k.GetRecordSpecification(ctx, recSpecID)
 	if !found {
 		return fmt.Errorf("record specification not found for record specification id %s (contract spec uuid %s and record name %s)",

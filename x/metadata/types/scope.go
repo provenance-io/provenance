@@ -166,6 +166,20 @@ func (r Record) ValidateBasic() error {
 	if err != nil {
 		return err
 	}
+	if prefix != PrefixSession {
+		return fmt.Errorf("invalid record identifier (expected: %s, got %s)", PrefixSession, prefix)
+	}
+	if !r.SpecificationId.Empty() {
+		// For now, we'll allow an empty specification id and set it appropriately during ValidateRecordUpdate if it's missing.
+		// But if we've got it, we should make sure it's okay.
+		specPrefix, e := VerifyMetadataAddressFormat(r.SpecificationId)
+		if e != nil {
+			return e
+		}
+		if specPrefix != PrefixRecordSpecification {
+			return fmt.Errorf("invalid record specification identifier (expected: %s, got %s)", PrefixRecordSpecification, specPrefix)
+		}
+	}
 	for _, i := range r.Inputs {
 		if err = i.ValidateBasic(); err != nil {
 			return fmt.Errorf("invalid record input: %w", err)
@@ -175,9 +189,6 @@ func (r Record) ValidateBasic() error {
 		if err = o.ValidateBasic(); err != nil {
 			return fmt.Errorf("invalid record output: %w", err)
 		}
-	}
-	if prefix != PrefixSession {
-		return fmt.Errorf("invalid session identifier (expected: %s, got %s)", PrefixSession, prefix)
 	}
 	if len(r.Name) < 1 {
 		return fmt.Errorf("invalid/missing name for record")
