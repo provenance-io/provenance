@@ -1473,7 +1473,7 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 	testCases := []osTestStruct{
 		{
 			"Should successfully add metadata scope",
-			cli.AddMetadataScopeCmd(),
+			cli.WriteMetadataScopeCmd(),
 			[]string{
 				scopeUUID,
 				uuid.New().String(),
@@ -1490,7 +1490,7 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 		},
 		{
 			"Should fail to add metadata scope, incorrect scope uuid",
-			cli.AddMetadataScopeCmd(),
+			cli.WriteMetadataScopeCmd(),
 			[]string{
 				"not-a-uuid",
 				uuid.New().String(),
@@ -1507,7 +1507,7 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 		},
 		{
 			"Should fail to add metadata scope, incorrect scope spec uuid",
-			cli.AddMetadataScopeCmd(),
+			cli.WriteMetadataScopeCmd(),
 			[]string{
 				uuid.New().String(),
 				"not-a-uuid",
@@ -1524,7 +1524,7 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 		},
 		{
 			"Should fail to add metadata scope, incorrect scope spec uuid",
-			cli.AddMetadataScopeCmd(),
+			cli.WriteMetadataScopeCmd(),
 			[]string{
 				uuid.New().String(),
 				"not-a-uuid",
@@ -1541,7 +1541,7 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 		},
 		{
 			"Should fail to add metadata scope, incorrect owner address format",
-			cli.AddMetadataScopeCmd(),
+			cli.WriteMetadataScopeCmd(),
 			[]string{
 				uuid.New().String(),
 				uuid.New().String(),
@@ -1558,7 +1558,7 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 		},
 		{
 			"Should fail to add metadata scope, incorrect data access format",
-			cli.AddMetadataScopeCmd(),
+			cli.WriteMetadataScopeCmd(),
 			[]string{
 				uuid.New().String(),
 				uuid.New().String(),
@@ -1575,7 +1575,7 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 		},
 		{
 			"Should fail to add metadata scope, incorrect value owner address",
-			cli.AddMetadataScopeCmd(),
+			cli.WriteMetadataScopeCmd(),
 			[]string{
 				uuid.New().String(),
 				uuid.New().String(),
@@ -1612,7 +1612,7 @@ func (s *IntegrationTestSuite) TestRemoveMetadataScopeCmd() {
 	testCases := []osTestStruct{
 		{
 			"Should successfully add metadata scope for testing scope removal",
-			cli.AddMetadataScopeCmd(),
+			cli.WriteMetadataScopeCmd(),
 			[]string{
 				scopeUUID,
 				uuid.New().String(),
@@ -1678,7 +1678,7 @@ func (s *IntegrationTestSuite) TestAddObjectLocatorCmd() {
 	testCases := []osTestStruct{
 		{
 			"Should successfully add os locator",
-			cli.AddOsLocatorCmd(),
+			cli.BindOsLocatorCmd(),
 			[]string{
 				s.testnet.Validators[0].Address.String(),
 				userURI,

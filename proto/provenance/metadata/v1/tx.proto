@@ -4,9 +4,8 @@ package provenance.metadata.v1;
 import "gogoproto/gogo.proto";
 import "provenance/metadata/v1/scope.proto";
 import "provenance/metadata/v1/specification.proto";
-import "provenance/metadata/v1/p8e/p8e.proto";
-
 import "provenance/metadata/v1/objectstore.proto";
+import "provenance/metadata/v1/p8e/p8e.proto";
 
 option go_package = "github.com/provenance-io/provenance/x/metadata/types";
 
@@ -15,55 +14,64 @@ option java_multiple_files = true;
 
 // Msg defines the Metadata Msg service.
 service Msg {
-  // AddScope adds a new scope
-  rpc AddScope(MsgAddScopeRequest) returns (MsgAddScopeResponse);
-  // DeleteScope deletes a scope and all associated Records, Sessions
+  // ---- Primary Data Management -----
+
+  // WriteScope adds or updates a scope.
+  rpc WriteScope(MsgWriteScopeRequest) returns (MsgWriteScopeResponse);
+  // DeleteScope deletes a scope and all associated Records, Sessions.
   rpc DeleteScope(MsgDeleteScopeRequest) returns (MsgDeleteScopeResponse);
 
-  // AddSession adds a new session context to a scope
-  rpc AddSession(MsgAddSessionRequest) returns (MsgAddSessionResponse);
-  // AddRecord adds a set of records in a session within a scope
-  rpc AddRecord(MsgAddRecordRequest) returns (MsgAddRecordResponse);
-  // DeleteRecord deletes a record in a session
+  // WriteSession adds or updates a session context.
+  rpc WriteSession(MsgWriteSessionRequest) returns (MsgWriteSessionResponse);
+
+  // WriteRecord adds or updates a record.
+  rpc WriteRecord(MsgWriteRecordRequest) returns (MsgWriteRecordResponse);
+  // DeleteRecord deletes a record.
   rpc DeleteRecord(MsgDeleteRecordRequest) returns (MsgDeleteRecordResponse);
 
-  // AddScopeSpecification adds a scope specification
-  rpc AddScopeSpecification(MsgAddScopeSpecificationRequest) returns (MsgAddScopeSpecificationResponse);
-  // DeleteScopeSpecification deletes a scope specification
+  // ---- Specification Management -----
+
+  // WriteScopeSpecification adds or updates a scope specification.
+  rpc WriteScopeSpecification(MsgWriteScopeSpecificationRequest) returns (MsgWriteScopeSpecificationResponse);
+  // DeleteScopeSpecification deletes a scope specification.
   rpc DeleteScopeSpecification(MsgDeleteScopeSpecificationRequest) returns (MsgDeleteScopeSpecificationResponse);
 
-  // AddContractSpecification adds a contract specification
-  rpc AddContractSpecification(MsgAddContractSpecificationRequest) returns (MsgAddContractSpecificationResponse);
-  // DeleteContractSpecification deletes a contract specification
+  // WriteContractSpecification adds or updates a contract specification.
+  rpc WriteContractSpecification(MsgWriteContractSpecificationRequest) returns (MsgWriteContractSpecificationResponse);
+  // DeleteContractSpecification deletes a contract specification.
   rpc DeleteContractSpecification(MsgDeleteContractSpecificationRequest)
       returns (MsgDeleteContractSpecificationResponse);
 
-  // AddRecordSpecification adds a record specification
-  rpc AddRecordSpecification(MsgAddRecordSpecificationRequest) returns (MsgAddRecordSpecificationResponse);
-  // DeleteRecordSpecification deletes a record specification
+  // WriteRecordSpecification adds or updates a record specification.
+  rpc WriteRecordSpecification(MsgWriteRecordSpecificationRequest) returns (MsgWriteRecordSpecificationResponse);
+  // DeleteRecordSpecification deletes a record specification.
   rpc DeleteRecordSpecification(MsgDeleteRecordSpecificationRequest) returns (MsgDeleteRecordSpecificationResponse);
 
-  // AddP8eContractSpec adds a P8e v39 contract spec as a v40 ContractSpecification
-  rpc AddP8eContractSpec(MsgAddP8eContractSpecRequest) returns (MsgAddP8eContractSpecResponse) {
+  // ---- Deprecated Transition Endpoints -----
+
+  // WriteP8eContractSpec adds a P8e v39 contract spec as a v40 ContractSpecification
+  // It only exists to help facilitate the transition. Users should transition to WriteContractSpecification.
+  rpc WriteP8eContractSpec(MsgWriteP8eContractSpecRequest) returns (MsgWriteP8eContractSpecResponse) {
     option deprecated = true;
   };
   // P8EMemorializeContract records the results of a P8e contract execution as a session and set of records in a scope
-  // It only exists to help facilitate the transition. The MemorializeContract is the one to use now.
+  // It only exists to help facilitate the transition. Users should transition to calling the individual Write methods.
   rpc P8eMemorializeContract(MsgP8eMemorializeContractRequest) returns (MsgP8eMemorializeContractResponse) {
     option deprecated = true;
   };
 
-  // Os Locator
-  // BindOSLocator binds a owner address to a uri.
+  // ---- Object Store Locator Management -----
+
+  // BindOSLocator binds an owner address to a uri.
   rpc BindOSLocator(MsgBindOSLocatorRequest) returns (MsgBindOSLocatorResponse);
-  // DeleteOSLocator defines a method to delete existing OSLocator record by the current owner.
+  // DeleteOSLocator deletes an existing ObjectStoreLocator record.
   rpc DeleteOSLocator(MsgDeleteOSLocatorRequest) returns (MsgDeleteOSLocatorResponse);
-  // Modify existing OSLocator record by the current owner
+  // ModifyOSLocator updates an ObjectStoreLocator record by the current owner.
   rpc ModifyOSLocator(MsgModifyOSLocatorRequest) returns (MsgModifyOSLocatorResponse);
 }
 
-// MsgAddScopeRequest adds a new scope
-message MsgAddScopeRequest {
+// MsgWriteScopeRequest is the request type for the Msg/WriteScope RPC method.
+message MsgWriteScopeRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
@@ -73,10 +81,10 @@ message MsgAddScopeRequest {
   repeated string signers = 2;
 }
 
-// MsgAddScopeResponse from an add scope request
-message MsgAddScopeResponse {}
+// MsgWriteScopeResponse is the response type for the Msg/WriteScope RPC method.
+message MsgWriteScopeResponse {}
 
-// MsgDeleteScopeRequest deletes a scope
+// MsgDeleteScopeRequest is the request type for the Msg/DeleteScope RPC method.
 message MsgDeleteScopeRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
@@ -92,11 +100,11 @@ message MsgDeleteScopeRequest {
   repeated string signers = 2;
 }
 
-// MsgDeleteScopeResponse from a delete scope request
+// MsgDeleteScopeResponse is the response type for the Msg/DeleteScope RPC method.
 message MsgDeleteScopeResponse {}
 
-// MsgAddSessionRequest adds a new session
-message MsgAddSessionRequest {
+// MsgWriteSessionRequest is the request type for the Msg/WriteSession RPC method.
+message MsgWriteSessionRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
@@ -106,11 +114,11 @@ message MsgAddSessionRequest {
   repeated string signers = 2;
 }
 
-// MsgAddSessionResponse from an add session request
-message MsgAddSessionResponse {}
+// MsgWriteSessionResponse is the response type for the Msg/WriteSession RPC method.
+message MsgWriteSessionResponse {}
 
-// MsgAddRecordRequest is a request to add a session of records to a scope
-message MsgAddRecordRequest {
+// MsgWriteRecordRequest is the request type for the Msg/WriteRecord RPC method.
+message MsgWriteRecordRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
@@ -126,10 +134,10 @@ message MsgAddRecordRequest {
   repeated string signers = 3;
 }
 
-// MsgAddRecordResponse from an add records request
-message MsgAddRecordResponse {}
+// MsgWriteRecordResponse is the response type for the Msg/WriteRecord RPC method.
+message MsgWriteRecordResponse {}
 
-// MsgDeleteRecordRequest is a request to add a session of records to a scope
+// MsgDeleteRecordRequest is the request type for the Msg/DeleteRecord RPC method.
 message MsgDeleteRecordRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
@@ -145,11 +153,11 @@ message MsgDeleteRecordRequest {
   repeated string signers = 2;
 }
 
-// MsgDeleteRecordResponse from a delete record request
+// MsgDeleteRecordResponse is the response type for the Msg/DeleteRecord RPC method.
 message MsgDeleteRecordResponse {}
 
-// MsgAddScopeSpecificationRequest is a request to add a scope specification
-message MsgAddScopeSpecificationRequest {
+// MsgWriteScopeSpecificationRequest is the request type for the Msg/WriteScopeSpecification RPC method.
+message MsgWriteScopeSpecificationRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
@@ -159,10 +167,10 @@ message MsgAddScopeSpecificationRequest {
   repeated string    signers       = 2;
 }
 
-// MsgAddScopeSpecificationResponse from an add scope specification request
-message MsgAddScopeSpecificationResponse {}
+// MsgWriteScopeSpecificationResponse is the response type for the Msg/WriteScopeSpecification RPC method.
+message MsgWriteScopeSpecificationResponse {}
 
-// MsgDeleteScopeSpecificationRequest deletes a scope specification
+// MsgDeleteScopeSpecificationRequest is the request type for the Msg/DeleteScopeSpecification RPC method.
 message MsgDeleteScopeSpecificationRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
@@ -178,11 +186,11 @@ message MsgDeleteScopeSpecificationRequest {
   repeated string signers = 2;
 }
 
-// MsgDeleteScopeSpecificationResponse from a delete scope specification request
+// MsgDeleteScopeSpecificationResponse is the response type for the Msg/DeleteScopeSpecification RPC method.
 message MsgDeleteScopeSpecificationResponse {}
 
-// MsgAddContractSpecificationRequest is a request to add a contract specification
-message MsgAddContractSpecificationRequest {
+// MsgWriteContractSpecificationRequest is the request type for the Msg/WriteContractSpecification RPC method.
+message MsgWriteContractSpecificationRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
@@ -192,10 +200,10 @@ message MsgAddContractSpecificationRequest {
   repeated string       signers       = 2;
 }
 
-// AddContractSpecificationResponse from an add contract specification request
-message MsgAddContractSpecificationResponse {}
+// MsgWriteContractSpecificationResponse is the response type for the Msg/WriteContractSpecification RPC method.
+message MsgWriteContractSpecificationResponse {}
 
-// MsgDeleteContractSpecificationRequest deletes a contract specification
+// MsgDeleteContractSpecificationRequest is the request type for the Msg/DeleteContractSpecification RPC method.
 message MsgDeleteContractSpecificationRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
@@ -211,11 +219,11 @@ message MsgDeleteContractSpecificationRequest {
   repeated string signers = 2;
 }
 
-// MsgDeleteContractSpecificationResponse from a delete contract specification request
+// MsgDeleteContractSpecificationResponse is the response type for the Msg/DeleteContractSpecification RPC method.
 message MsgDeleteContractSpecificationResponse {}
 
-// MsgAddRecordSpecificationRequest is a request to add a record specification
-message MsgAddRecordSpecificationRequest {
+// MsgWriteRecordSpecificationRequest is the request type for the Msg/WriteRecordSpecification RPC method.
+message MsgWriteRecordSpecificationRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
@@ -225,10 +233,10 @@ message MsgAddRecordSpecificationRequest {
   repeated string     signers       = 2;
 }
 
-// MsgAddRecordSpecificationResponse from an add record specification request
-message MsgAddRecordSpecificationResponse {}
+// MsgWriteRecordSpecificationResponse is the response type for the Msg/WriteRecordSpecification RPC method.
+message MsgWriteRecordSpecificationResponse {}
 
-// MsgDeleteRecordSpecificationRequest deletes a record specification
+// MsgDeleteRecordSpecificationRequest is the request type for the Msg/DeleteRecordSpecification RPC method.
 message MsgDeleteRecordSpecificationRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
@@ -244,11 +252,11 @@ message MsgDeleteRecordSpecificationRequest {
   repeated string signers = 2;
 }
 
-// MsgDeleteRecordSpecificationResponse from a delete record specification request
+// MsgDeleteRecordSpecificationResponse is the response type for the Msg/DeleteRecordSpecification RPC method.
 message MsgDeleteRecordSpecificationResponse {}
 
-// MsgAddP8eContractSpecRequest records the result of a change ownership p8e contract execution
-message MsgAddP8eContractSpecRequest {
+// MsgWriteP8eContractSpecRequest is the request type for the Msg/WriteP8eContractSpec RPC method.
+message MsgWriteP8eContractSpecRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
@@ -259,12 +267,11 @@ message MsgAddP8eContractSpecRequest {
   repeated string  signers      = 2;
 }
 
-// MsgAddP8eContractSpecResponse returns a successful response
-message MsgAddP8eContractSpecResponse {}
+// MsgWriteP8eContractSpecResponse is the response type for the Msg/WriteP8eContractSpec RPC method.
+message MsgWriteP8eContractSpecResponse {}
 
-// MsgP8eMemorializeContractRequest is the input for a P8eMemorializeContract call
+// MsgP8eMemorializeContractRequest is the request type for the Msg/P8eMemorializeContract RPC method.
 message MsgP8eMemorializeContractRequest {
-  option deprecated                   = true;
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
@@ -286,12 +293,10 @@ message MsgP8eMemorializeContractRequest {
   string invoker = 7;
 }
 
-// MsgP8eMemorializeContractResponse is the output for a P8eMemorializeContract call
-message MsgP8eMemorializeContractResponse {
-  option deprecated = true;
-}
+// MsgP8eMemorializeContractResponse is the response type for the Msg/P8eMemorializeContract RPC method.
+message MsgP8eMemorializeContractResponse {}
 
-// MsgBindOSLocatorRequest defines an sdk.Msg type that is used to add an address of an owner to a particular uri.
+// MsgBindOSLocatorRequest is the request type for the Msg/BindOSLocator RPC method.
 message MsgBindOSLocatorRequest {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
@@ -299,25 +304,12 @@ message MsgBindOSLocatorRequest {
   ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
 }
 
-// MsgModifyOSLocatorRequest defines an sdk.Msg type that is used to modify a uri associated with an owner address.
-message MsgModifyOSLocatorRequest {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
-  // The object locator to bind the address to bind to the URI.
-  ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
-}
-
-// MsgBindOSLocatorResponse defines the Msg/BindObjectLocator response type.
+// MsgBindOSLocatorResponse is the response type for the Msg/BindOSLocator RPC method.
 message MsgBindOSLocatorResponse {
   ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
 }
 
-// MsgModifyOSLocatorResponse defines the Msg/ModifyObjectLocator response type
-message MsgModifyOSLocatorResponse {
-  ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
-}
-
-// MsgDeleteOSLocatorRequest defines an sdk.Msg type that is used to remove an existing OSLocator record binding.
+// MsgDeleteOSLocatorRequest is the request type for the Msg/DeleteOSLocator RPC method.
 message MsgDeleteOSLocatorRequest {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
@@ -326,7 +318,20 @@ message MsgDeleteOSLocatorRequest {
   ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
 }
 
-// MsgDeleteNameResponse defines the Msg/DeleteName response type.
+// MsgDeleteOSLocatorResponse is the response type for the Msg/DeleteOSLocator RPC method.
 message MsgDeleteOSLocatorResponse {
+  ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
+}
+
+// MsgModifyOSLocatorRequest is the request type for the Msg/ModifyOSLocator RPC method.
+message MsgModifyOSLocatorRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+  // The object locator to bind the address to bind to the URI.
+  ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
+}
+
+// MsgModifyOSLocatorResponse is the response type for the Msg/ModifyOSLocator RPC method.
+message MsgModifyOSLocatorResponse {
   ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
 }

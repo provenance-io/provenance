@@ -17,7 +17,7 @@ import (
 	uuid "github.com/google/uuid"
 )
 
-// NewTxCmd is the top-level command for attribute CLI transactions.
+// NewTxCmd is the top-level command for Metadata CLI transactions.
 func NewTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -29,8 +29,8 @@ func NewTxCmd() *cobra.Command {
 	}
 
 	txCmd.AddCommand(
-		AddMetadataScopeCmd(),
-		AddOsLocatorCmd(),
+		WriteMetadataScopeCmd(),
+		BindOsLocatorCmd(),
 		RemoveOsLocatorCmd(),
 		ModifyOsLocatorCmd(),
 	)
@@ -38,11 +38,11 @@ func NewTxCmd() *cobra.Command {
 	return txCmd
 }
 
-// AddMetadataScopeCmd creates a command for adding a metadata scope.
-func AddMetadataScopeCmd() *cobra.Command {
+// WriteMetadataScopeCmd creates a command for adding or updating a metadata scope.
+func WriteMetadataScopeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-scope [scope-uuid] [spec-id] [owner-addresses] [data-access] [value-owner-address] [signers]",
-		Short: "Add a metadata scope to the provenance blockchain",
+		Use:   "write-scope [scope-uuid] [spec-id] [owner-addresses] [data-access] [value-owner-address] [signers]",
+		Short: "Write a metadata scope to the provenance blockchain",
 		Args:  cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -92,7 +92,7 @@ func AddMetadataScopeCmd() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgAddScopeRequest(
+			msg := types.NewMsgWriteScopeRequest(
 				scope,
 				signers)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -148,11 +148,11 @@ func RemoveMetadataScopeCmd() *cobra.Command {
 	return cmd
 }
 
-// RemoveMetadataScopeCmd creates a command for removing a scope.
-func AddOsLocatorCmd() *cobra.Command {
+// BindOsLocatorCmd creates a command for binding an owner to uri in the object store.
+func BindOsLocatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-locator [owner] [uri]",
-		Short: "Add a uri to an owner address on the provenance blockchain",
+		Use:   "bind-locator [owner] [uri]",
+		Short: "Bind a uri to an owner address on the provenance blockchain",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -161,7 +161,7 @@ func AddOsLocatorCmd() *cobra.Command {
 			}
 
 			if _, errAddr := sdk.AccAddressFromBech32(args[0]); errAddr != nil {
-				fmt.Printf("failed to add locator for a given owner address, invalid address: %s\n", args[0])
+				fmt.Printf("failed to bind locator for a given owner address, invalid address: %s\n", args[0])
 				return fmt.Errorf("invalid address: %w", errAddr)
 			}
 
@@ -179,6 +179,7 @@ func AddOsLocatorCmd() *cobra.Command {
 	return cmd
 }
 
+// RemoveOsLocatorCmd creates a command for removing an object store locator entry.
 func RemoveOsLocatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "remove-locator [owner] [uri]",
@@ -209,6 +210,7 @@ func RemoveOsLocatorCmd() *cobra.Command {
 	return cmd
 }
 
+// ModifyOsLocatorCmd creates a command to modify the object store locator uri for an owner.
 func ModifyOsLocatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "modify-locator [owner] [uri]",
