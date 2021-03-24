@@ -1506,7 +1506,6 @@ type commonTxTestStruct struct {
 
 func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 
-	scopeUUID := uuid.New().String()
 	pubkey := secp256k1.GenPrivKey().PubKey()
 	userAddr := sdk.AccAddress(pubkey.Address())
 	user := userAddr.String()
@@ -1516,7 +1515,7 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 			"Should successfully add metadata scope",
 			cli.AddMetadataScopeCmd(),
 			[]string{
-				scopeUUID,
+				uuid.New().String(),
 				uuid.New().String(),
 				user,
 				user,
@@ -1532,7 +1531,7 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 			"Should successfully add metadata scope with signers flag",
 			cli.AddMetadataScopeCmd(),
 			[]string{
-				scopeUUID,
+				uuid.New().String(),
 				uuid.New().String(),
 				user,
 				user,
