@@ -1,5 +1,6 @@
 package types
 
+// GetScopeIDInfo creates a ScopeIdInfo populated with info about the provided MetadataAddress.
 func GetScopeIDInfo(scopeID MetadataAddress) *ScopeIdInfo {
 	info := scopeID.GetDetails()
 	return &ScopeIdInfo{
@@ -11,6 +12,7 @@ func GetScopeIDInfo(scopeID MetadataAddress) *ScopeIdInfo {
 	}
 }
 
+// GetSessionIDInfo creates a SessionIdInfo populated with info about the provided MetadataAddress.
 func GetSessionIDInfo(sessionID MetadataAddress) *SessionIdInfo {
 	info := sessionID.GetDetails()
 	return &SessionIdInfo{
@@ -24,6 +26,7 @@ func GetSessionIDInfo(sessionID MetadataAddress) *SessionIdInfo {
 	}
 }
 
+// GetRecordIDInfo creates a RecordIdInfo populated with info about the provided MetadataAddress.
 func GetRecordIDInfo(recordID MetadataAddress) *RecordIdInfo {
 	info := recordID.GetDetails()
 	return &RecordIdInfo{
@@ -36,6 +39,7 @@ func GetRecordIDInfo(recordID MetadataAddress) *RecordIdInfo {
 	}
 }
 
+// GetScopeSpecIDInfo creates a ScopeSpecIdInfo populated with info about the provided MetadataAddress.
 func GetScopeSpecIDInfo(scopeSpecID MetadataAddress) *ScopeSpecIdInfo {
 	info := scopeSpecID.GetDetails()
 	return &ScopeSpecIdInfo{
@@ -47,6 +51,7 @@ func GetScopeSpecIDInfo(scopeSpecID MetadataAddress) *ScopeSpecIdInfo {
 	}
 }
 
+// GetContractSpecIDInfo creates a ContractSpecIdInfo populated with info about the provided MetadataAddress.
 func GetContractSpecIDInfo(contractSpecID MetadataAddress) *ContractSpecIdInfo {
 	info := contractSpecID.GetDetails()
 	return &ContractSpecIdInfo{
@@ -58,6 +63,7 @@ func GetContractSpecIDInfo(contractSpecID MetadataAddress) *ContractSpecIdInfo {
 	}
 }
 
+// GetRecordSpecIDInfo creates a RecordSpecIdInfo populated with info about the provided MetadataAddress.
 func GetRecordSpecIDInfo(recordSpecID MetadataAddress) *RecordSpecIdInfo {
 	info := recordSpecID.GetDetails()
 	return &RecordSpecIdInfo{
