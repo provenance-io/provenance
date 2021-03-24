@@ -18,7 +18,7 @@ func ownerPartyList(addresses ...string) []Party {
 	return retval
 }
 
-func TestAddScopeRoute(t *testing.T) {
+func TestWriteScopeRoute(t *testing.T) {
 	var scope = NewScope(
 		ScopeMetadataAddress(uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")),
 		ScopeSpecMetadataAddress(uuid.MustParse("22fc17a6-40dd-4d68-a95b-ec94e7572a09")),
@@ -26,10 +26,10 @@ func TestAddScopeRoute(t *testing.T) {
 		[]string{"data_accessor"},
 		"value_owner",
 	)
-	var msg = NewMsgAddScopeRequest(*scope, []string{})
+	var msg = NewMsgWriteScopeRequest(*scope, []string{})
 
 	require.Equal(t, msg.Route(), RouterKey)
-	require.Equal(t, msg.Type(), "add_scope_request")
+	require.Equal(t, msg.Type(), "write_scope_request")
 	yaml := `scope:
   scope_id: scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp
   specification_id: scopespec1qs30c9axgrw5669ft0kffe6h9gysfe58v3
@@ -42,10 +42,10 @@ func TestAddScopeRoute(t *testing.T) {
 signers: []
 `
 	require.Equal(t, yaml, msg.String())
-	require.Equal(t, "{\"type\":\"provenance/metadata/AddScopeRequest\",\"value\":{\"scope\":{\"data_access\":[\"data_accessor\"],\"owners\":[{\"address\":\"data_owner\",\"role\":5}],\"scope_id\":\"scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp\",\"specification_id\":\"scopespec1qs30c9axgrw5669ft0kffe6h9gysfe58v3\",\"value_owner_address\":\"value_owner\"}}}", string(msg.GetSignBytes()))
+	require.Equal(t, "{\"type\":\"provenance/metadata/WriteScopeRequest\",\"value\":{\"scope\":{\"data_access\":[\"data_accessor\"],\"owners\":[{\"address\":\"data_owner\",\"role\":5}],\"scope_id\":\"scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp\",\"specification_id\":\"scopespec1qs30c9axgrw5669ft0kffe6h9gysfe58v3\",\"value_owner_address\":\"value_owner\"}}}", string(msg.GetSignBytes()))
 }
 
-func TestAddScopeValidation(t *testing.T) {
+func TestWriteScopeValidation(t *testing.T) {
 	var scope = NewScope(
 		ScopeMetadataAddress(uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")),
 		ScopeSpecMetadataAddress(uuid.MustParse("22fc17a6-40dd-4d68-a95b-ec94e7572a09")),
@@ -53,7 +53,7 @@ func TestAddScopeValidation(t *testing.T) {
 		[]string{"data_accessor"},
 		"value_owner",
 	)
-	var msg = NewMsgAddScopeRequest(*scope, []string{"invalid"})
+	var msg = NewMsgWriteScopeRequest(*scope, []string{"invalid"})
 	err := msg.ValidateBasic()
 	require.Panics(t, func() { msg.GetSigners() }, "panics due to invalid addresses")
 	require.Error(t, err, "invalid addresses")
@@ -87,7 +87,7 @@ func TestAddScopeValidation(t *testing.T) {
 	require.Equal(t, sdk.AccAddress(hex), requiredSigners[0])
 }
 
-func TestAddP8eContractSpecValidation(t *testing.T) {
+func TestWriteP8eContractSpecValidation(t *testing.T) {
 
 	validInputSpec := p8e.DefinitionSpec{
 		Name: "perform_input_checks",
@@ -129,20 +129,20 @@ func TestAddP8eContractSpecValidation(t *testing.T) {
 		PartiesInvolved: []p8e.PartyType{p8e.PartyType_PARTY_TYPE_AFFILIATE},
 	}
 
-	msg := NewMsgAddP8EContractSpecRequest(validContractSpec, []string{})
+	msg := NewMsgWriteP8EContractSpecRequest(validContractSpec, []string{})
 	err := msg.ValidateBasic()
 	require.Error(t, err, "should fail due to signatures < 1")
 
-	msg = NewMsgAddP8EContractSpecRequest(validContractSpec, []string{"invalid"})
+	msg = NewMsgWriteP8EContractSpecRequest(validContractSpec, []string{"invalid"})
 	err = msg.ValidateBasic()
 	require.Error(t, err, "should fail in convert validation due to address not being valid")
 
-	msg = NewMsgAddP8EContractSpecRequest(validContractSpec, []string{"cosmos1s0kcwmhstu6urpp4080qjzatta02y0rarrcgrp"})
+	msg = NewMsgWriteP8EContractSpecRequest(validContractSpec, []string{"cosmos1s0kcwmhstu6urpp4080qjzatta02y0rarrcgrp"})
 	err = msg.ValidateBasic()
 	require.NoError(t, err)
 }
 
-func TestAddOSLocator(t *testing.T) {
+func TestBindOSLocator(t *testing.T) {
 	var bindRequestMsg = NewMsgBindOSLocatorRequest(ObjectStoreLocator{Owner:
 	"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", LocatorUri: "http://foo.com"})
 
@@ -153,7 +153,7 @@ func TestAddOSLocator(t *testing.T) {
 	require.Equal(t, "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", signers[0].String())
 	require.Equal(t, ModuleName, route)
 	require.Equal(t, TypeMsgBindOSLocatorRequest, bindRequestMsg.Type())
-	require.Equal(t, "{\"type\":\"provenance/metadata/MsgBindOSLocatorRequest\",\"value\":{\"locator\":{\"locator_uri\":\"http://foo.com\",\"owner\":\"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck\"}}}", string(bindRequestMsg.GetSignBytes()))
+	require.Equal(t, "{\"type\":\"provenance/metadata/BindOSLocatorRequest\",\"value\":{\"locator\":{\"locator_uri\":\"http://foo.com\",\"owner\":\"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck\"}}}", string(bindRequestMsg.GetSignBytes()))
 
 }
 
@@ -167,7 +167,7 @@ func TestModifyOSLocator(t *testing.T) {
 	require.Equal(t, "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", signers[0].String())
 	require.Equal(t, ModuleName, modifyRequest.Route())
 	require.Equal(t, TypeMsgModifyOSLocatorRequest, modifyRequest.Type())
-	require.Equal(t, "{\"type\":\"provenance/metadata/MsgModifyOSLocatorRequest\",\"value\":{\"locator\":{\"locator_uri\":\"http://foo.com\",\"owner\":\"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck\"}}}", string(modifyRequest.GetSignBytes()))
+	require.Equal(t, "{\"type\":\"provenance/metadata/ModifyOSLocatorRequest\",\"value\":{\"locator\":{\"locator_uri\":\"http://foo.com\",\"owner\":\"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck\"}}}", string(modifyRequest.GetSignBytes()))
 
 }
 
@@ -182,11 +182,11 @@ func TestDeleteOSLocator(t *testing.T) {
 	require.Equal(t, "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", signers[0].String())
 	require.Equal(t, ModuleName, deleteRequest.Route())
 	require.Equal(t, TypeMsgDeleteOSLocatorRequest, deleteRequest.Type())
-	require.Equal(t, "{\"type\":\"provenance/metadata/MsgDeleteOSLocatorRequest\",\"value\":{\"locator\":{\"locator_uri\":\"http://foo.com\",\"owner\":\"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck\"}}}", string(deleteRequest.GetSignBytes()))
+	require.Equal(t, "{\"type\":\"provenance/metadata/DeleteOSLocatorRequest\",\"value\":{\"locator\":{\"locator_uri\":\"http://foo.com\",\"owner\":\"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck\"}}}", string(deleteRequest.GetSignBytes()))
 
 }
 
-func TestAddOSLocatorInvalid(t *testing.T) {
+func TestBindOSLocatorInvalid(t *testing.T) {
 	var bindRequestMsg = NewMsgBindOSLocatorRequest(ObjectStoreLocator{Owner:
 	"vamonos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", LocatorUri: "http://foo.com"})
 
@@ -194,7 +194,7 @@ func TestAddOSLocatorInvalid(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestAddOSLocatorInvalidAddr(t *testing.T) {
+func TestBindOSLocatorInvalidAddr(t *testing.T) {
 	var bindRequestMsg = NewMsgBindOSLocatorRequest(ObjectStoreLocator{Owner:
 	"", LocatorUri: "http://foo.com"})
 
@@ -202,7 +202,7 @@ func TestAddOSLocatorInvalidAddr(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestAddOSLocatorInvalidURI(t *testing.T) {
+func TestBindOSLocatorInvalidURI(t *testing.T) {
 	var bindRequestMsg = NewMsgBindOSLocatorRequest(ObjectStoreLocator{Owner:
 	"", LocatorUri: "foo://foo.com"})
 
