@@ -1537,7 +1537,7 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 				user,
 				user,
 				user,
-				fmt.Sprintf("--%s=%s", cli.FlagSigners, user),
+				fmt.Sprintf("--%s=%s", cli.FlagSigners, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
