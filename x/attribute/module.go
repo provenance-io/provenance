@@ -164,12 +164,12 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 // ProposalContents returns all the attribute content functions used to
 // simulate attribute governance proposals.
 func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return []simtypes.WeightedProposalContent{} //simulation.ProposalContents(am.keeper)
+	return simulation.ProposalContents(am.keeper)
 }
 
 // RandomizedParams creates randomized attribute param changes for the simulator.
 func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	return []simtypes.ParamChange{} // simulation.ParamChanges(r)
+	return simulation.ParamChanges(r)
 }
 
 // RegisterStoreDecoder registers a decoder for attribute module's types
@@ -181,6 +181,6 @@ func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	// return simulation.WeightedOperations(
 	//	simState.AppParams, simState.Cdc, am.keeper, simState.Contents,
-	//)
+	// )
 	return []simtypes.WeightedOperation{}
 }
