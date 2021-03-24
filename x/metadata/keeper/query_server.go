@@ -25,7 +25,7 @@ var _ types.QueryServer = Keeper{}
 // ObjectStoreLocators within the GenesisState
 type ObjectStoreLocators []types.ObjectStoreLocator
 
-// Params queries params of metadata module
+// Params queries params of metadata module.
 func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	var params types.Params
@@ -34,7 +34,7 @@ func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types
 	return &types.QueryParamsResponse{Params: params, Request: req}, nil
 }
 
-// Scope returns a specific scope by id
+// Scope returns a specific scope by id.
 func (k Keeper) Scope(c context.Context, req *types.ScopeRequest) (*types.ScopeResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -115,6 +115,44 @@ func (k Keeper) Scope(c context.Context, req *types.ScopeRequest) (*types.ScopeR
 		return &retval, status.Error(codes.Unavailable, err.Error())
 	}
 
+	return &retval, nil
+}
+
+// ScopesAll returns all scopes (limited by pagination).
+func (k Keeper) ScopesAll(c context.Context, req *types.ScopesAllRequest) (*types.ScopesAllResponse, error) {
+	retval := types.ScopesAllResponse{Request: req}
+
+	pageRequest := getPageRequest(req)
+
+	ctx := sdk.UnwrapSDKContext(c)
+	kvStore := ctx.KVStore(k.storeKey)
+	prefixStore := prefix.NewStore(kvStore, types.ScopeKeyPrefix)
+
+	pageRes, err := query.Paginate(prefixStore, pageRequest, func(key, value []byte) error {
+		var scope types.Scope
+		vErr := scope.Unmarshal(value)
+		if vErr == nil {
+			retval.Scopes = append(retval.Scopes, types.WrapScope(&scope))
+			return nil
+		}
+		// Something's wrong. Let's do what we can to give indications of it.
+		var addr types.MetadataAddress
+		kErr := addr.Unmarshal(key)
+		if kErr == nil {
+			k.Logger(ctx).Error("failed to unmarshal scope", "address", addr, "error", vErr)
+			retval.Scopes = append(retval.Scopes, types.WrapScopeNotFound(addr))
+		} else {
+			k64 := b64.StdEncoding.EncodeToString(key)
+			k.Logger(ctx).Error("failed to unmarshal scope key and value",
+				"key error", kErr, "value error", vErr, "key (base64)", k64)
+			retval.Scopes = append(retval.Scopes, &types.ScopeWrapper{})
+		}
+		return nil // Still want to move on to the next.
+	})
+	if err != nil {
+		return &retval, status.Error(codes.Unavailable, err.Error())
+	}
+	retval.Pagination = pageRes
 	return &retval, nil
 }
 
@@ -201,6 +239,44 @@ func (k Keeper) Sessions(c context.Context, req *types.SessionsRequest) (*types.
 		}
 	}
 
+	return &retval, nil
+}
+
+// SessionsAll returns all sessions (limited by pagination).
+func (k Keeper) SessionsAll(c context.Context, req *types.SessionsAllRequest) (*types.SessionsAllResponse, error) {
+	retval := types.SessionsAllResponse{Request: req}
+
+	pageRequest := getPageRequest(req)
+
+	ctx := sdk.UnwrapSDKContext(c)
+	kvStore := ctx.KVStore(k.storeKey)
+	prefixStore := prefix.NewStore(kvStore, types.SessionKeyPrefix)
+
+	pageRes, err := query.Paginate(prefixStore, pageRequest, func(key, value []byte) error {
+		var session types.Session
+		vErr := session.Unmarshal(value)
+		if vErr == nil {
+			retval.Sessions = append(retval.Sessions, types.WrapSession(&session))
+			return nil
+		}
+		// Something's wrong. Let's do what we can to give indications of it.
+		var addr types.MetadataAddress
+		kErr := addr.Unmarshal(key)
+		if kErr == nil {
+			k.Logger(ctx).Error("failed to unmarshal session", "address", addr, "error", vErr)
+			retval.Sessions = append(retval.Sessions, types.WrapSessionNotFound(addr))
+		} else {
+			k64 := b64.StdEncoding.EncodeToString(key)
+			k.Logger(ctx).Error("failed to unmarshal session key and value",
+				"key error", kErr, "value error", vErr, "key (base64)", k64)
+			retval.Sessions = append(retval.Sessions, &types.SessionWrapper{})
+		}
+		return nil // Still want to move on to the next.
+	})
+	if err != nil {
+		return &retval, status.Error(codes.Unavailable, err.Error())
+	}
+	retval.Pagination = pageRes
 	return &retval, nil
 }
 
@@ -326,7 +402,45 @@ func (k Keeper) Records(c context.Context, req *types.RecordsRequest) (*types.Re
 	return &retval, nil
 }
 
-// Ownership returns a list of scope identifiers that list the given address as a data or value owner
+// RecordsAll returns all records (limited by pagination).
+func (k Keeper) RecordsAll(c context.Context, req *types.RecordsAllRequest) (*types.RecordsAllResponse, error) {
+	retval := types.RecordsAllResponse{Request: req}
+
+	pageRequest := getPageRequest(req)
+
+	ctx := sdk.UnwrapSDKContext(c)
+	kvStore := ctx.KVStore(k.storeKey)
+	prefixStore := prefix.NewStore(kvStore, types.RecordKeyPrefix)
+
+	pageRes, err := query.Paginate(prefixStore, pageRequest, func(key, value []byte) error {
+		var record types.Record
+		vErr := record.Unmarshal(value)
+		if vErr == nil {
+			retval.Records = append(retval.Records, types.WrapRecord(&record))
+			return nil
+		}
+		// Something's wrong. Let's do what we can to give indications of it.
+		var addr types.MetadataAddress
+		kErr := addr.Unmarshal(key)
+		if kErr == nil {
+			k.Logger(ctx).Error("failed to unmarshal record", "address", addr, "error", vErr)
+			retval.Records = append(retval.Records, types.WrapRecordNotFound(addr))
+		} else {
+			k64 := b64.StdEncoding.EncodeToString(key)
+			k.Logger(ctx).Error("failed to unmarshal record key and value",
+				"key error", kErr, "value error", vErr, "key (base64)", k64)
+			retval.Records = append(retval.Records, &types.RecordWrapper{})
+		}
+		return nil // Still want to move on to the next.
+	})
+	if err != nil {
+		return &retval, status.Error(codes.Unavailable, err.Error())
+	}
+	retval.Pagination = pageRes
+	return &retval, nil
+}
+
+// Ownership returns a list of scope identifiers that list the given address as a data or value owner.
 func (k Keeper) Ownership(c context.Context, req *types.OwnershipRequest) (*types.OwnershipResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -367,7 +481,7 @@ func (k Keeper) Ownership(c context.Context, req *types.OwnershipRequest) (*type
 	return &retval, nil
 }
 
-// ValueOwnership returns a list of scope identifiers that list the given address as a value owner
+// ValueOwnership returns a list of scope identifiers that list the given address as a value owner.
 func (k Keeper) ValueOwnership(c context.Context, req *types.ValueOwnershipRequest) (*types.ValueOwnershipResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -407,7 +521,7 @@ func (k Keeper) ValueOwnership(c context.Context, req *types.ValueOwnershipReque
 	return &retval, nil
 }
 
-// ScopeSpecification returns a specific scope specification by id
+// ScopeSpecification returns a specific scope specification by id.
 func (k Keeper) ScopeSpecification(c context.Context, req *types.ScopeSpecificationRequest) (*types.ScopeSpecificationResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -424,19 +538,56 @@ func (k Keeper) ScopeSpecification(c context.Context, req *types.ScopeSpecificat
 		return &retval, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	retval.SpecificationUuid = specAddr.String()
-
 	ctx := sdk.UnwrapSDKContext(c)
 	spec, found := k.GetScopeSpecification(ctx, specAddr)
-	if !found {
-		return &retval, status.Errorf(codes.NotFound, "scope specification %s not found", req.SpecificationId)
+	if found {
+		retval.ScopeSpecification = types.WrapScopeSpec(&spec)
+	} else {
+		retval.ScopeSpecification = types.WrapScopeSpecNotFound(specAddr)
 	}
-	retval.ScopeSpecification = &spec
 
 	return &retval, nil
 }
 
-// ContractSpecification returns a specific contract specification by id
+// ScopeSpecificationsAll returns all scope specifications (limited by pagination).
+func (k Keeper) ScopeSpecificationsAll(c context.Context, req *types.ScopeSpecificationsAllRequest) (*types.ScopeSpecificationsAllResponse, error) {
+	retval := types.ScopeSpecificationsAllResponse{Request: req}
+
+	pageRequest := getPageRequest(req)
+
+	ctx := sdk.UnwrapSDKContext(c)
+	kvStore := ctx.KVStore(k.storeKey)
+	prefixStore := prefix.NewStore(kvStore, types.ScopeSpecificationKeyPrefix)
+
+	pageRes, err := query.Paginate(prefixStore, pageRequest, func(key, value []byte) error {
+		var scopeSpec types.ScopeSpecification
+		vErr := scopeSpec.Unmarshal(value)
+		if vErr == nil {
+			retval.ScopeSpecifications = append(retval.ScopeSpecifications, types.WrapScopeSpec(&scopeSpec))
+			return nil
+		}
+		// Something's wrong. Let's do what we can to give indications of it.
+		var addr types.MetadataAddress
+		kErr := addr.Unmarshal(key)
+		if kErr == nil {
+			k.Logger(ctx).Error("failed to unmarshal scope spec", "address", addr, "error", vErr)
+			retval.ScopeSpecifications = append(retval.ScopeSpecifications, types.WrapScopeSpecNotFound(addr))
+		} else {
+			k64 := b64.StdEncoding.EncodeToString(key)
+			k.Logger(ctx).Error("failed to unmarshal scope spec key and value",
+				"key error", kErr, "value error", vErr, "key (base64)", k64)
+			retval.ScopeSpecifications = append(retval.ScopeSpecifications, &types.ScopeSpecificationWrapper{})
+		}
+		return nil // Still want to move on to the next.
+	})
+	if err != nil {
+		return &retval, status.Error(codes.Unavailable, err.Error())
+	}
+	retval.Pagination = pageRes
+	return &retval, nil
+}
+
+// ContractSpecification returns a specific contract specification by id.
 func (k Keeper) ContractSpecification(c context.Context, req *types.ContractSpecificationRequest) (*types.ContractSpecificationResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -452,19 +603,14 @@ func (k Keeper) ContractSpecification(c context.Context, req *types.ContractSpec
 	if addrErr != nil {
 		return &retval, status.Errorf(codes.InvalidArgument, "invalid specification id: %s", addrErr.Error())
 	}
-	specUUID, uuidErr := specAddr.ContractSpecUUID()
-	if uuidErr != nil {
-		return &retval, status.Errorf(codes.InvalidArgument, "could not extract contract spec uuid: %s", uuidErr.Error())
-	}
-
-	retval.ContractSpecificationUuid = specUUID.String()
 
 	ctx := sdk.UnwrapSDKContext(c)
 	spec, found := k.GetContractSpecification(ctx, specAddr)
-	if !found {
-		return &retval, status.Errorf(codes.NotFound, "contract specification %s not found", req.SpecificationId)
+	if found {
+		retval.ContractSpecification = types.WrapContractSpec(&spec)
+	} else {
+		retval.ContractSpecification = types.WrapContractSpecNotFound(specAddr)
 	}
-	retval.ContractSpecification = &spec
 
 	if req.IncludeRecordSpecs {
 		recSpecs, err := k.GetRecordSpecificationsForContractSpecificationID(ctx, specAddr)
@@ -472,13 +618,51 @@ func (k Keeper) ContractSpecification(c context.Context, req *types.ContractSpec
 			return &retval, status.Errorf(codes.Unavailable, "error getting record specifications for contract spec %s: %s",
 				specAddr, err.Error())
 		}
-		retval.RecordSpecifications = recSpecs
+		retval.RecordSpecifications = types.WrapRecordSpecs(recSpecs)
 	}
 
 	return &retval, nil
 }
 
-// RecordSpecificationsForContractSpecification returns the record specifications associated with a contract specification
+// ContractSpecificationsAll returns all contract specifications (limited by pagination).
+func (k Keeper) ContractSpecificationsAll(c context.Context, req *types.ContractSpecificationsAllRequest) (*types.ContractSpecificationsAllResponse, error) {
+	retval := types.ContractSpecificationsAllResponse{Request: req}
+
+	pageRequest := getPageRequest(req)
+
+	ctx := sdk.UnwrapSDKContext(c)
+	kvStore := ctx.KVStore(k.storeKey)
+	prefixStore := prefix.NewStore(kvStore, types.ContractSpecificationKeyPrefix)
+
+	pageRes, err := query.Paginate(prefixStore, pageRequest, func(key, value []byte) error {
+		var contractSpec types.ContractSpecification
+		vErr := contractSpec.Unmarshal(value)
+		if vErr == nil {
+			retval.ContractSpecifications = append(retval.ContractSpecifications, types.WrapContractSpec(&contractSpec))
+			return nil
+		}
+		// Something's wrong. Let's do what we can to give indications of it.
+		var addr types.MetadataAddress
+		kErr := addr.Unmarshal(key)
+		if kErr == nil {
+			k.Logger(ctx).Error("failed to unmarshal contract spec", "address", addr, "error", vErr)
+			retval.ContractSpecifications = append(retval.ContractSpecifications, types.WrapContractSpecNotFound(addr))
+		} else {
+			k64 := b64.StdEncoding.EncodeToString(key)
+			k.Logger(ctx).Error("failed to unmarshal contract spec key and value",
+				"key error", kErr, "value error", vErr, "key (base64)", k64)
+			retval.ContractSpecifications = append(retval.ContractSpecifications, &types.ContractSpecificationWrapper{})
+		}
+		return nil // Still want to move on to the next.
+	})
+	if err != nil {
+		return &retval, status.Error(codes.Unavailable, err.Error())
+	}
+	retval.Pagination = pageRes
+	return &retval, nil
+}
+
+// RecordSpecificationsForContractSpecification returns the record specifications associated with a contract specification.
 func (k Keeper) RecordSpecificationsForContractSpecification(
 	c context.Context,
 	req *types.RecordSpecificationsForContractSpecificationRequest,
@@ -511,12 +695,12 @@ func (k Keeper) RecordSpecificationsForContractSpecification(
 			contractSpecAddr, err.Error())
 	}
 
-	retval.RecordSpecifications = recSpecs
+	retval.RecordSpecifications = types.WrapRecordSpecs(recSpecs)
 
 	return &retval, err
 }
 
-// RecordSpecification returns a specific record specification by contract spec uuid and record name
+// RecordSpecification returns a specific record specification.
 func (k Keeper) RecordSpecification(c context.Context, req *types.RecordSpecificationRequest) (*types.RecordSpecificationResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -532,22 +716,53 @@ func (k Keeper) RecordSpecification(c context.Context, req *types.RecordSpecific
 	if recSpecAddrErr != nil {
 		return &retval, status.Errorf(codes.InvalidArgument, "invalid input: %s", recSpecAddrErr.Error())
 	}
-	cSpecUUID, cSpecUUIDErr := recSpecAddr.ContractSpecUUID()
-	if cSpecUUIDErr != nil {
-		return &retval, status.Errorf(codes.InvalidArgument, "could not extract contract spec uuid: %s", cSpecUUIDErr.Error())
-	}
-	cSpecAddr := types.ContractSpecMetadataAddress(cSpecUUID)
-
-	retval.ContractSpecificationAddr = cSpecAddr.String()
-	retval.ContractSpecificationUuid = cSpecUUID.String()
 
 	ctx := sdk.UnwrapSDKContext(c)
 	spec, found := k.GetRecordSpecification(ctx, recSpecAddr)
-	if !found {
-		return &retval, status.Errorf(codes.NotFound, "record specification %s not found", recSpecAddr)
+	if found {
+		retval.RecordSpecification = types.WrapRecordSpec(&spec)
+	} else {
+		retval.RecordSpecification = types.WrapRecordSpecNotFound(recSpecAddr)
 	}
-	retval.RecordSpecification = &spec
 
+	return &retval, nil
+}
+
+// RecordSpecificationsAll returns all record specifications (limited by pagination).
+func (k Keeper) RecordSpecificationsAll(c context.Context, req *types.RecordSpecificationsAllRequest) (*types.RecordSpecificationsAllResponse, error) {
+	retval := types.RecordSpecificationsAllResponse{Request: req}
+
+	pageRequest := getPageRequest(req)
+
+	ctx := sdk.UnwrapSDKContext(c)
+	kvStore := ctx.KVStore(k.storeKey)
+	prefixStore := prefix.NewStore(kvStore, types.ContractSpecificationKeyPrefix)
+
+	pageRes, err := query.Paginate(prefixStore, pageRequest, func(key, value []byte) error {
+		var recordSpec types.RecordSpecification
+		vErr := recordSpec.Unmarshal(value)
+		if vErr == nil {
+			retval.RecordSpecifications = append(retval.RecordSpecifications, types.WrapRecordSpec(&recordSpec))
+			return nil
+		}
+		// Something's wrong. Let's do what we can to give indications of it.
+		var addr types.MetadataAddress
+		kErr := addr.Unmarshal(key)
+		if kErr == nil {
+			k.Logger(ctx).Error("failed to unmarshal record spec", "address", addr, "error", vErr)
+			retval.RecordSpecifications = append(retval.RecordSpecifications, types.WrapRecordSpecNotFound(addr))
+		} else {
+			k64 := b64.StdEncoding.EncodeToString(key)
+			k.Logger(ctx).Error("failed to unmarshal record spec key and value",
+				"key error", kErr, "value error", vErr, "key (base64)", k64)
+			retval.RecordSpecifications = append(retval.RecordSpecifications, &types.RecordSpecificationWrapper{})
+		}
+		return nil // Still want to move on to the next.
+	})
+	if err != nil {
+		return &retval, status.Error(codes.Unavailable, err.Error())
+	}
+	retval.Pagination = pageRes
 	return &retval, nil
 }
 
@@ -865,4 +1080,25 @@ func ParseRecordSpecID(specID string, name string) (types.MetadataAddress, error
 		return types.MetadataAddress{}, errors.New("a name is required when providing a uuid")
 	}
 	return types.RecordSpecMetadataAddress(uid, name), nil
+}
+
+// hasPageRequest is just for use with the getPageRequest func below.
+type hasPageRequest interface {
+	GetPagination() *query.PageRequest
+}
+
+// Gets the query.PageRequest from the provided request if there is one.
+// Also sets the default limit if it's not already set yet.
+func getPageRequest(req hasPageRequest) *query.PageRequest {
+	var pageRequest *query.PageRequest
+	if req != nil {
+		pageRequest = req.GetPagination()
+	}
+	if pageRequest == nil {
+		pageRequest = &query.PageRequest{}
+	}
+	if pageRequest.Limit == 0 {
+		pageRequest.Limit = defaultLimit
+	}
+	return pageRequest
 }

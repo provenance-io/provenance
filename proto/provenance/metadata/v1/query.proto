@@ -51,6 +51,11 @@ service Query {
     };
   }
 
+  // ScopesAll retrieves all scopes.
+  rpc ScopesAll(ScopesAllRequest) returns (ScopesAllResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/scopes/all";
+  }
+
   // Sessions searches for sessions.
   //
   // The scope id can either be scope uuid, e.g. 91978ba2-5f35-459a-86a7-feca1b0512e0 or a scope address, e.g.
@@ -75,6 +80,11 @@ service Query {
         {get: "/provenance/metadata/v1/scope/{scope_id}/session/{session_id}"}
       ]
     };
+  }
+
+  // SessionsAll retrieves all sessions.
+  rpc SessionsAll(SessionsAllRequest) returns (SessionsAllResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/sessions/all";
   }
 
   // Records searches for records.
@@ -108,6 +118,11 @@ service Query {
     };
   }
 
+  // RecordsAll retrieves all records.
+  rpc RecordsAll(RecordsAllRequest) returns (RecordsAllResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/records/all";
+  }
+
   // Ownership returns the scope identifiers that list the given address as either a data or value owner.
   rpc Ownership(OwnershipRequest) returns (OwnershipResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/ownership/{address}";
@@ -128,6 +143,11 @@ service Query {
     option (google.api.http).get = "/provenance/metadata/v1/scopespec/{specification_id}";
   }
 
+  // ScopeSpecificationsAll retrieves all scope specifications.
+  rpc ScopeSpecificationsAll(ScopeSpecificationsAllRequest) returns (ScopeSpecificationsAllResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/scopespecs/all";
+  }
+
   // ContractSpecification returns a contract specification for the given specification id.
   //
   // The specification_id can either be a uuid, e.g. def6bc0a-c9dd-4874-948f-5206e6060a84, a bech32 contract
@@ -139,6 +159,11 @@ service Query {
   // Set include_record_specs to true to include them in the result.
   rpc ContractSpecification(ContractSpecificationRequest) returns (ContractSpecificationResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/contractspec/{specification_id}";
+  }
+
+  // ContractSpecificationsAll retrieves all contract specifications.
+  rpc ContractSpecificationsAll(ContractSpecificationsAllRequest) returns (ContractSpecificationsAllResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/contractspecs/all";
   }
 
   // RecordSpecificationsForContractSpecification returns the record specifications for the given input.
@@ -158,6 +183,11 @@ service Query {
       get: "/provenance/metadata/v1/recordspec/{specification_id}"
       additional_bindings: [{get: "/provenance/metadata/v1/contractspec/{specification_id}/recordspec/{name}"}]
     };
+  }
+
+  // RecordSpecificationsAll retrieves all record specifications.
+  rpc RecordSpecificationsAll(RecordSpecificationsAllRequest) returns (RecordSpecificationsAllResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/recordspecs/all";
   }
 
   // ---- Object Store Locator Queries -----
@@ -240,6 +270,23 @@ message ScopeWrapper {
   string scope_uuid = 3 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
 }
 
+// ScopesAllRequest is the request type for the Query/ScopesAll RPC method.
+message ScopesAllRequest {
+  // pagination defines optional pagination parameters for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// ScopesAllResponse is the response type for the Query/ScopesAll RPC method.
+message ScopesAllResponse {
+  // scopes are the wrapped scopes.
+  repeated ScopeWrapper scopes = 1;
+
+  // request is a copy of the request that generated these results.
+  ScopesAllRequest request = 98;
+  // pagination provides the pagination information of this response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
+}
+
 // SessionsRequest is the request type for the Query/Sessions RPC method.
 message SessionsRequest {
   // scope_id can either be a uuid, e.g. 91978ba2-5f35-459a-86a7-feca1b0512e0 or a bech32 scope address, e.g.
@@ -284,6 +331,23 @@ message SessionWrapper {
   // session_uuid is the uuid of the session, e.g. 5803f8bc-6067-4eb5-951f-2121671c2ec0.
   // This is meaningless without the added context of the scope uuid (or scope addr).
   string session_uuid = 5 [(gogoproto.moretags) = "yaml:\"session_uuid\""];
+}
+
+// SessionsAllRequest is the request type for the Query/SessionsAll RPC method.
+message SessionsAllRequest {
+  // pagination defines optional pagination parameters for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// SessionsAllResponse is the response type for the Query/SessionsAll RPC method.
+message SessionsAllResponse {
+  // sessions are the wrapped sessions.
+  repeated SessionWrapper sessions = 1;
+
+  // request is a copy of the request that generated these results.
+  SessionsAllRequest request = 98;
+  // pagination provides the pagination information of this response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
 
 // RecordsRequest is the request type for the Query/Records RPC method.
@@ -339,6 +403,23 @@ message RecordWrapper {
   string session_uuid = 6 [(gogoproto.moretags) = "yaml:\"session_uuid\""];
 }
 
+// RecordsAllRequest is the request type for the Query/RecordsAll RPC method.
+message RecordsAllRequest {
+  // pagination defines optional pagination parameters for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// RecordsAllResponse is the response type for the Query/RecordsAll RPC method.
+message RecordsAllResponse {
+  // records are the wrapped records.
+  repeated RecordWrapper records = 1;
+
+  // request is a copy of the request that generated these results.
+  RecordsAllRequest request = 98;
+  // pagination provides the pagination information of this response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
+}
+
 // OwnershipRequest is the request type for the Query/Ownership RPC method.
 message OwnershipRequest {
   string address = 1;
@@ -386,13 +467,38 @@ message ScopeSpecificationRequest {
 
 // ScopeSpecificationResponse is the response type for the Query/ScopeSpecification RPC method.
 message ScopeSpecificationResponse {
-  // scope_specification is the on-chain scope specification message.
-  ScopeSpecification scope_specification = 1 [(gogoproto.moretags) = "yaml:\"scope_specification\""];
-  // specification_uuid is the uuid of the scope specification.
-  string specification_uuid = 2 [(gogoproto.moretags) = "yaml:\"specification_uuid\""];
+  // scope_specification is the wrapped scope specification.
+  ScopeSpecificationWrapper scope_specification = 1 [(gogoproto.moretags) = "yaml:\"scope_specification\""];
 
   // request is a copy of the request that generated these results.
   ScopeSpecificationRequest request = 98;
+}
+
+// ScopeSpecificationWrapper contains a single scope specification and some extra identifiers for it.
+message ScopeSpecificationWrapper {
+  // specification is the on-chain scope specification message.
+  ScopeSpecification specification = 1;
+  // specification_uuid is the uuid of the scope specification.
+  string specification_uuid = 2 [(gogoproto.moretags) = "yaml:\"specification_uuid\""];
+  // specification_addr is the address of the scope specification.
+  string specification_addr = 3 [(gogoproto.moretags) = "yaml:\"specification_addr\""];
+}
+
+// ScopeSpecificationsAllRequest is the request type for the Query/ScopeSpecificationsAll RPC method.
+message ScopeSpecificationsAllRequest {
+  // pagination defines optional pagination parameters for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// ScopeSpecificationsAllResponse is the response type for the Query/ScopeSpecificationsAll RPC method.
+message ScopeSpecificationsAllResponse {
+  // scope_specifications are the wrapped scope specifications.
+  repeated ScopeSpecificationWrapper scope_specifications = 1 [(gogoproto.moretags) = "yaml:\"scope_specifications\""];
+
+  // request is a copy of the request that generated these results.
+  ScopeSpecificationsAllRequest request = 98;
+  // pagination provides the pagination information of this response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
 
 // ContractSpecificationRequest is the request type for the Query/ContractSpecification RPC method.
@@ -410,17 +516,43 @@ message ContractSpecificationRequest {
 
 // ContractSpecificationResponse is the response type for the Query/ContractSpecification RPC method.
 message ContractSpecificationResponse {
-  // contract_specification is the on-chain contract specification message.
-  ContractSpecification contract_specification = 1 [(gogoproto.moretags) = "yaml:\"contract_specification\""];
-  // contract_specification_uuid is the uuid of this contract specification.
-  string contract_specification_uuid = 2 [(gogoproto.moretags) = "yaml:\"contract_specification_uuid\""];
-  // record_specifications is any number or on-chain record specifications associated with this contract_specification
+  // contract_specification is the wrapped contract specification.
+  ContractSpecificationWrapper contract_specification = 1 [(gogoproto.moretags) = "yaml:\"contract_specification\""];
+  // record_specifications is any number or wrapped record specifications associated with this contract_specification
   // (if requested).
-  repeated RecordSpecification record_specifications = 3
+  repeated RecordSpecificationWrapper record_specifications = 3
       [(gogoproto.moretags) = "yaml:\"record_specifications,omitempty\""];
 
   // request is a copy of the request that generated these results.
   ContractSpecificationRequest request = 98;
+}
+
+// ContractSpecificationWrapper contains a single contract specification and some extra identifiers for it.
+message ContractSpecificationWrapper {
+  // specification is the on-chain contract specification message.
+  ContractSpecification specification = 1;
+  // specification_uuid is the uuid of the contract specification.
+  string specification_uuid = 2 [(gogoproto.moretags) = "yaml:\"specification_uuid\""];
+  // specification_addr is the address of the contract specification.
+  string specification_addr = 3 [(gogoproto.moretags) = "yaml:\"specification_addr\""];
+}
+
+// ContractSpecificationsAllRequest is the request type for the Query/ContractSpecificationsAll RPC method.
+message ContractSpecificationsAllRequest {
+  // pagination defines optional pagination parameters for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// ContractSpecificationsAllResponse is the response type for the Query/ContractSpecificationsAll RPC method.
+message ContractSpecificationsAllResponse {
+  // contract_specifications are the wrapped contract specifications.
+  repeated ContractSpecificationWrapper contract_specifications = 1
+      [(gogoproto.moretags) = "yaml:\"contract_specifications\""];
+
+  // request is a copy of the request that generated these results.
+  ContractSpecificationsAllRequest request = 98;
+  // pagination provides the pagination information of this response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
 
 // RecordSpecificationsForContractSpecificationRequest is the request type for the
@@ -436,8 +568,9 @@ message RecordSpecificationsForContractSpecificationRequest {
 // RecordSpecificationsForContractSpecificationResponse is the response type for the
 // Query/RecordSpecificationsForContractSpecification RPC method.
 message RecordSpecificationsForContractSpecificationResponse {
-  // record_specifications is any number or on-chain record specifications associated with this contract_specification.
-  repeated RecordSpecification record_specifications = 1 [(gogoproto.moretags) = "yaml:\"record_specifications\""];
+  // record_specifications is any number of wrapped record specifications associated with this contract_specification.
+  repeated RecordSpecificationWrapper record_specifications = 1
+      [(gogoproto.moretags) = "yaml:\"record_specifications\""];
   // contract_specification_uuid is the uuid of this contract specification.
   string contract_specification_uuid = 2 [(gogoproto.moretags) = "yaml:\"contract_specification_uuid\""];
   // contract_specification_addr is the contract specification address as a bech32 encoded string.
@@ -462,15 +595,41 @@ message RecordSpecificationRequest {
 
 // RecordSpecificationResponse is the response type for the Query/RecordSpecification RPC method.
 message RecordSpecificationResponse {
-  // record_specification is the on-chain record specification message.
-  RecordSpecification record_specification = 1 [(gogoproto.moretags) = "yaml:\"record_specification\""];
-  // contract_specification_uuid is the uuid of the contract specification that holds this record specification.
-  string contract_specification_uuid = 2 [(gogoproto.moretags) = "yaml:\"contract_specification_uuid\""];
-  // contract_specification_addr is the contract specification address as a bech32 encoded string.
-  string contract_specification_addr = 3 [(gogoproto.moretags) = "yaml:\"contract_specification_addr\""];
+  // record_specification is the wrapped record specification.
+  RecordSpecificationWrapper record_specification = 1 [(gogoproto.moretags) = "yaml:\"record_specification\""];
 
   // request is a copy of the request that generated these results.
   RecordSpecificationRequest request = 98;
+}
+
+// RecordSpecificationWrapper contains a single record specification and some extra identifiers for it.
+message RecordSpecificationWrapper {
+  // specification is the on-chain record specification message.
+  RecordSpecification specification = 1;
+  // specification_addr is the address of this record specification.
+  string specification_addr = 2 [(gogoproto.moretags) = "yaml:\"specification_addr\""];
+  // contract_specification_uuid is the uuid of the contract specification that holds this record specification.
+  string contract_specification_uuid = 3 [(gogoproto.moretags) = "yaml:\"contract_specification_uuid\""];
+  // contract_specification_addr is the address of the contract specification that holds this record specification.
+  string contract_specification_addr = 4 [(gogoproto.moretags) = "yaml:\"contract_specification_addr\""];
+}
+
+// RecordSpecificationsAllRequest is the request type for the Query/RecordSpecificationsAll RPC method.
+message RecordSpecificationsAllRequest {
+  // pagination defines optional pagination parameters for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// RecordSpecificationsAllResponse is the response type for the Query/RecordSpecificationsAll RPC method.
+message RecordSpecificationsAllResponse {
+  // record_specifications are the wrapped record specifications.
+  repeated RecordSpecificationWrapper record_specifications = 1
+      [(gogoproto.moretags) = "yaml:\"record_specifications\""];
+
+  // request is a copy of the request that generated these results.
+  RecordSpecificationsAllRequest request = 98;
+  // pagination provides the pagination information of this response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
 
 // OSLocatorParamsRequest is the request type for the Query/OSLocatorParams RPC method.
