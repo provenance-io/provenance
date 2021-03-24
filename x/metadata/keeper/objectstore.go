@@ -139,7 +139,7 @@ func (k Keeper) GetOSLocatorByScopeUUID(ctx sdk.Context, scopeID string) (*types
 }
 
 // Delete a os locator record from the kvstore.
-func (k Keeper) deleteRecord(ctx sdk.Context, ownerAddr sdk.AccAddress) error {
+func (k Keeper) DeleteRecord(ctx sdk.Context, ownerAddr sdk.AccAddress) error {
 	// Need the record to clear the address index
 	_, found := k.GetOsLocatorRecord(ctx, ownerAddr)
 	if !found {
@@ -165,7 +165,7 @@ func (k Keeper) deleteRecord(ctx sdk.Context, ownerAddr sdk.AccAddress) error {
 	return nil
 }
 
-func (k Keeper) modifyRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, uri string) error {
+func (k Keeper) ModifyRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, uri string) error {
 	// Need the record to clear the address index
 	_, found := k.GetOsLocatorRecord(ctx, ownerAddr)
 	if !found {
