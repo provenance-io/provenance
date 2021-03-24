@@ -33,6 +33,8 @@ func NewTxCmd() *cobra.Command {
 		AddOsLocatorCmd(),
 		RemoveOsLocatorCmd(),
 		ModifyOsLocatorCmd(),
+		AddContractSpecificationCmd(),
+		RemoveContractSpecificationCmd(),
 	)
 
 	return txCmd
@@ -247,7 +249,18 @@ func AddContractSpecificationCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-contract-specification [contractspec-id] [owners] [parties-involved] [source-type] [source-value] [classname] [signers] [description-name] [description] [website-url] [icon-url]",
 		Short: "Add/Update metadata contract specification on the provenance blockchain",
-		Long: `Add-Contract-Specification adds 
+		Long: `Add/Update metadata contract specification on the provenance blockchain
+[contractspec-id] - metaaddress of contract specification
+[owners] - comma delimited list of bech32 owner addresses
+[parties-involved] - comma delimited list of party types.  Accepted values: originator,servicer,investor,custodian,owner,affiliate,omnibus,provenance
+[source-type] - accepted values: hash or resourceid
+[source-value] - source identifier of type hash or resourceid
+[classname] - Name of contract specification
+[signers] - commad delimited list of bech32 addresses
+[description-name] - optional- description name identifier 
+[description] - optional - description text
+[website-url] - optional - address of website
+[icon-url] - optional - address to a image to be used as an icon
 		`,
 		Args: cobra.RangeArgs(7, 11),
 		RunE: func(cmd *cobra.Command, args []string) error {
