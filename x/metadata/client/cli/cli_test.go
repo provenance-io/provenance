@@ -661,6 +661,8 @@ func (s *IntegrationCLITestSuite) TestGetMetadataByIDCmd() {
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
+// TODO: GetMetadataGetAllCmd
+
 func (s *IntegrationCLITestSuite) TestGetMetadataScopeCmd() {
 	cmd := cli.GetMetadataScopeCmd()
 
@@ -1368,16 +1370,62 @@ scope_uuids:
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
+func (s *IntegrationCLITestSuite) TestGetOSLocatorCmd() {
+	cmd := cli.GetOSLocatorCmd()
+
+	testCases := []queryCmdTestCase{
+		{
+			"get os locator by owner",
+			[]string{s.user1Addr.String(), s.asJson},
+			"",
+			fmt.Sprintf("{\"owner\":\"%s\",\"locator_uri\":\"%s\"}",s.user1Addr.String(),"http://foo.com"),
+		},
+	}
+
+	runQueryCmdTestCases(s, cmd, testCases)
+}
+
 // ---------- tx cmd tests ----------
 
-func (s *IntegrationCLITestSuite) TestAddMetadataScopeCmd() {
+type txCmdTestCase struct {
+	name         string
+	cmd          *cobra.Command
+	args         []string
+	expectErr    bool
+	respType     proto.Message
+	expectedCode uint32
+}
 
+func runTxCmdTestCases(s *IntegrationCLITestSuite, testCases []txCmdTestCase) {
+	for _, tc := range testCases {
+		tc := tc
+		s.T().Run(tc.name, func(t *testing.T) {
+			cmdName := tc.cmd.Name()
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
+
+			if tc.expectErr {
+				require.Error(t, err, "%s expected error", cmdName)
+			} else {
+				require.NoError(t, err, "%s unexpected error", cmdName)
+
+				umErr := clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType)
+				require.NoError(t, umErr, "%s UnmarshalJSON error", cmdName)
+
+				txResp := tc.respType.(*sdk.TxResponse)
+				require.Equal(t, tc.expectedCode, txResp.Code, "%s response code", cmdName)
+			}
+		})
+	}
+}
+
+func (s *IntegrationCLITestSuite) TestAddMetadataScopeCmd() {
 	scopeUUID := uuid.New().String()
 	pubkey := secp256k1.GenPrivKey().PubKey()
 	userAddr := sdk.AccAddress(pubkey.Address())
 	user := userAddr.String()
 
-	testCases := []osTestStruct{
+	testCases := []txCmdTestCase{
 		{
 			"Should successfully add metadata scope",
 			cli.WriteMetadataScopeCmd(),
@@ -1499,16 +1547,7 @@ func (s *IntegrationCLITestSuite) TestAddMetadataScopeCmd() {
 		},
 	}
 
-	s.runTestCase(testCases)
-}
-
-type osTestStruct struct {
-	name         string
-	cmd          *cobra.Command
-	args         []string
-	expectErr    bool
-	respType     proto.Message
-	expectedCode uint32
+	runTxCmdTestCases(s, testCases)
 }
 
 func (s *IntegrationCLITestSuite) TestRemoveMetadataScopeCmd() {
@@ -1516,7 +1555,7 @@ func (s *IntegrationCLITestSuite) TestRemoveMetadataScopeCmd() {
 	userId := s.testnet.Validators[0].Address.String()
 	scopeUUID := uuid.New().String()
 
-	testCases := []osTestStruct{
+	testCases := []txCmdTestCase{
 		{
 			"Should successfully add metadata scope for testing scope removal",
 			cli.WriteMetadataScopeCmd(),
@@ -1575,14 +1614,13 @@ func (s *IntegrationCLITestSuite) TestRemoveMetadataScopeCmd() {
 		},
 	}
 
-	s.runTestCase(testCases)
+	runTxCmdTestCases(s, testCases)
 }
 
-// os locator tx cmds
 func (s *IntegrationCLITestSuite) TestAddObjectLocatorCmd() {
 	userURI := "http://foo.com"
 	userURIMod := "https://www.google.com/search?q=red+butte+garden&oq=red+butte+garden&aqs=chrome..69i57j46i131i175i199i433j0j0i457j0l6.3834j0j7&sourceid=chrome&ie=UTF-8#lpqa=d,2"
-	testCases := []osTestStruct{
+	testCases := []txCmdTestCase{
 		{
 			"Should successfully add os locator",
 			cli.BindOsLocatorCmd(),
@@ -1623,40 +1661,7 @@ func (s *IntegrationCLITestSuite) TestAddObjectLocatorCmd() {
 			false, &sdk.TxResponse{}, 0,
 		},
 	}
-	s.runTestCase(testCases)
+
+	runTxCmdTestCases(s, testCases)
 }
 
-func (s *IntegrationCLITestSuite) TestGetOSLocatorCmd() {
-	cmd := cli.GetOSLocatorCmd()
-
-	testCases := []queryCmdTestCase{
-		{
-			"get os locator by owner",
-			[]string{s.user1Addr.String(), s.asJson},
-			"",
-			fmt.Sprintf("{\"owner\":\"%s\",\"locator_uri\":\"%s\"}",s.user1Addr.String(),"http://foo.com"),
-		},
-	}
-
-	runQueryCmdTestCases(s, cmd, testCases)
-}
-
-func (s *IntegrationCLITestSuite) runTestCase(testCases []osTestStruct) {
-	for _, tc := range testCases {
-		tc := tc
-		s.Run(tc.name, func() {
-			clientCtx := s.testnet.Validators[0].ClientCtx
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
-
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code)
-			}
-		})
-	}
-}
