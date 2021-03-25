@@ -786,117 +786,114 @@ func (s *IntegrationCLITestSuite) TestGetMetadataScopeCmd() {
 func (s *IntegrationCLITestSuite) TestGetMetadataSessionCmd() {
 	cmd := cli.GetMetadataSessionCmd()
 
-	sessionListAsJson := fmt.Sprintf("[%s]", s.sessionAsJson)
-	sessionListAsText := yamlListEntry(s.sessionAsText)
+	indentedSessionText := indent(s.sessionAsText, 4)
 
-	testCases := []queryCmdTestCase{
+	testCases := []queryCmdTestCaseV2{
 		{
 			"session from session id as json",
 			[]string{s.sessionID.String(), s.asJson},
 			"",
-			s.sessionAsJson,
+			[]string{s.sessionAsJson},
 		},
 		{
 			"session from session id as text",
 			[]string{s.sessionID.String(), s.asText},
 			"",
-			s.sessionAsText,
+			[]string{indentedSessionText},
 		},
 		{
 			"session id does not exist",
 			[]string{"session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr"},
-			"rpc error: code = NotFound desc = session id session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr not found: key not found",
 			"",
+			[]string{"session: null", "session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr"},
 		},
 		{
 			"sessions from scope id as json",
 			[]string{s.scopeID.String(), s.asJson},
 			"",
-			sessionListAsJson,
+			[]string{s.sessionAsJson},
 		},
 		{
 			"sessions from scope id as text",
 			[]string{s.scopeID.String(), s.asText},
 			"",
-			sessionListAsText,
+			[]string{indentedSessionText},
 		},
 		{
 			"scope id does not exist",
 			[]string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
-			"rpc error: code = NotFound desc = scope uuid 91978ba2-5f35-459a-86a7-feca1b0512e0 not found: key not found",
-			"",
+			"no sessions found",
+			[]string{},
 		},
 		{
 			"sessions from scope uuid as json",
 			[]string{s.scopeUUID.String(), s.asJson},
 			"",
-			sessionListAsJson,
+			[]string{s.sessionAsJson},
 		},
 		{
 			"sessions from scope uuid as text",
 			[]string{s.scopeUUID.String(), s.asText},
 			"",
-			sessionListAsText,
+			[]string{indentedSessionText},
 		},
 		{
 			"scope uuid does not exist",
 			[]string{"91978ba2-5f35-459a-86a7-feca1b0512e0"},
-			"rpc error: code = NotFound desc = scope uuid 91978ba2-5f35-459a-86a7-feca1b0512e0 not found: key not found",
-			"",
+			"no sessions found",
+			[]string{},
 		},
 		{
 			"session from scope uuid and session uuid as json",
 			[]string{s.scopeUUID.String(), s.sessionUUID.String(), s.asJson},
 			"",
-			s.sessionAsJson,
+			[]string{s.sessionAsJson},
 		},
 		{
 			"session from scope uuid ad session uuid as text",
 			[]string{s.scopeUUID.String(), s.sessionUUID.String(), s.asText},
 			"",
-			s.sessionAsText,
+			[]string{indentedSessionText},
 		},
 		{
 			"scope uuid exists but session uuid does not exist",
 			[]string{s.scopeUUID.String(), "5803f8bc-6067-4eb5-951f-2121671c2ec0"},
-			fmt.Sprintf("rpc error: code = NotFound desc = session id %s not found: key not found",
-				metadatatypes.SessionMetadataAddress(s.scopeUUID, uuid.MustParse("5803f8bc-6067-4eb5-951f-2121671c2ec0")),
-			),
 			"",
+			[]string{"session:", "session: null"},
 		},
 		{
 			"bad prefix",
 			[]string{"scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"},
-			"unexpected metadata address prefix on scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m",
-			"",
+			"rpc error: code = InvalidArgument desc = address [scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m] is not a scope address: invalid request",
+			[]string{},
 		},
 		{
 			"bad arg 1",
 			[]string{"bad"},
-			"argument bad is neither a metadata address (decoding bech32 failed: invalid bech32 string length 3) nor uuid (invalid UUID length: 3)",
-			"",
+			"rpc error: code = InvalidArgument desc = could not parse [bad] into either a scope address (decoding bech32 failed: invalid bech32 string length 3) or uuid (invalid UUID length: 3): invalid request",
+			[]string{},
 		},
 		{
 			"good arg 1, bad arg 2",
 			[]string{s.scopeUUID.String(), "still-bad"},
-			"invalid UUID length: 9",
-			"",
+			"rpc error: code = InvalidArgument desc = could not parse [still-bad] into either a session address (decoding bech32 failed: invalid index of 1) or uuid (invalid UUID length: 9): invalid request",
+			[]string{},
 		},
 		{
 			"3 args",
 			[]string{s.scopeUUID.String(), s.sessionID.String(), s.recordName},
 			"accepts between 1 and 2 arg(s), received 3",
-			"",
+			[]string{},
 		},
 		{
 			"no args",
 			[]string{},
 			"accepts between 1 and 2 arg(s), received 0",
-			"",
+			[]string{},
 		},
 	}
 
-	runQueryCmdTestCases(s, cmd, testCases)
+	runQueryCmdTestCasesV2(s, cmd, testCases)
 }
 
 func (s *IntegrationCLITestSuite) TestGetMetadataRecordCmd() {
