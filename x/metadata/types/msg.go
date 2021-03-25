@@ -1,11 +1,13 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/google/uuid"
 	"github.com/provenance-io/provenance/x/metadata/types/p8e"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -108,7 +110,30 @@ func (msg MsgWriteScopeRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
-	return msg.Scope.ValidateBasic()
+	return nil
+}
+
+// ConvertOptionalFields will look at the ScopeUuid and SpecUuid fields in the message.
+// For each, if present, it will be converted to a MetadataAddress and set in the Scope appropriately.
+// Once used, those uuid fields will be set to empty strings so that calling this again has no effect.
+func (msg *MsgWriteScopeRequest) ConvertOptionalFields() error {
+	if len(msg.ScopeUuid) > 0 {
+		uid, err := uuid.Parse(msg.ScopeUuid)
+		if err != nil {
+			return fmt.Errorf("invalid scope uuid: %w", err)
+		}
+		msg.Scope.ScopeId = ScopeMetadataAddress(uid)
+		msg.ScopeUuid = ""
+	}
+	if len(msg.SpecUuid) > 0 {
+		uid, err := uuid.Parse(msg.SpecUuid)
+		if err != nil {
+			return fmt.Errorf("invalid spec uuid: %w", err)
+		}
+		msg.Scope.SpecificationId = ScopeSpecMetadataAddress(uid)
+		msg.SpecUuid = ""
+	}
+	return nil
 }
 
 // ------------------  NewMsgDeleteScopeRequest  ------------------
@@ -194,7 +219,32 @@ func (msg MsgWriteSessionRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
-	return msg.Session.ValidateBasic()
+	return nil
+}
+
+// ConvertOptionalFields will look at the SessionIdComponents and SpecUuid fields in the message.
+// For each, if present, it will be converted to a MetadataAddress and set in the Session appropriately.
+// Once used, those fields will be emptied so that calling this again has no effect.
+func (msg *MsgWriteSessionRequest) ConvertOptionalFields() error {
+	if msg.SessionIdComponents != nil {
+		sessionID, err := msg.SessionIdComponents.GetSessionID()
+		if err != nil {
+			return fmt.Errorf("invalid session id components: %w", err)
+		}
+		if sessionID != nil {
+			msg.Session.SessionId = *sessionID
+		}
+		msg.SessionIdComponents = nil
+	}
+	if len(msg.SpecUuid) > 0 {
+		uid, err := uuid.Parse(msg.SpecUuid)
+		if err != nil {
+			return fmt.Errorf("invalid spec uuid: %w", err)
+		}
+		msg.Session.SpecificationId = ContractSpecMetadataAddress(uid)
+		msg.SpecUuid = ""
+	}
+	return nil
 }
 
 // ------------------  MsgWriteRecordRequest  ------------------
@@ -234,7 +284,35 @@ func (msg MsgWriteRecordRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
-	return msg.Record.ValidateBasic()
+	return nil
+}
+
+// ConvertOptionalFields will look at the SessionIdComponents and ContractSpecUuid fields in the message.
+// For each, if present, it will be converted to a MetadataAddress and set in the Record appropriately.
+// Once used, those fields will be emptied so that calling this again has no effect.
+func (msg *MsgWriteRecordRequest) ConvertOptionalFields() error {
+	if msg.SessionIdComponents != nil {
+		sessionID, err := msg.SessionIdComponents.GetSessionID()
+		if err != nil {
+			return fmt.Errorf("invalid session id components: %w", err)
+		}
+		if sessionID != nil {
+			msg.Record.SessionId = *sessionID
+		}
+		msg.SessionIdComponents = nil
+	}
+	if len(msg.ContractSpecUuid) > 0 {
+		uid, err := uuid.Parse(msg.ContractSpecUuid)
+		if err != nil {
+			return fmt.Errorf("invalid contract spec uuid: %w", err)
+		}
+		if len(strings.TrimSpace(msg.Record.Name)) == 0 {
+			return errors.New("empty record name")
+		}
+		msg.Record.SpecificationId = RecordSpecMetadataAddress(uid, msg.Record.Name)
+		msg.ContractSpecUuid = ""
+	}
+	return nil
 }
 
 // ------------------  MsgDeleteRecordRequest  ------------------
@@ -314,10 +392,25 @@ func (msg MsgWriteScopeSpecificationRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
-	return msg.Specification.ValidateBasic()
+	return nil
 }
 
-// ------------------  MsgWriteContractSpecRequest  ------------------
+// ConvertOptionalFields will look at the SpecUuid field in the message.
+// If present, it will be converted to a MetadataAddress and set in the Specification appropriately.
+// Once used, it will be emptied so that calling this again has no effect.
+func (msg *MsgWriteScopeSpecificationRequest) ConvertOptionalFields() error {
+	if len(msg.SpecUuid) > 0 {
+		uid, err := uuid.Parse(msg.SpecUuid)
+		if err != nil {
+			return fmt.Errorf("invalid spec uuid: %w", err)
+		}
+		msg.Specification.SpecificationId = ScopeSpecMetadataAddress(uid)
+		msg.SpecUuid = ""
+	}
+	return nil
+}
+
+// ------------------  MsgWriteP8EContractSpecRequest  ------------------
 
 // NewMsgWriteContractSpecRequest creates a new msg instance
 func NewMsgWriteP8EContractSpecRequest(contractSpec p8e.ContractSpec, signers []string) *MsgWriteP8EContractSpecRequest {
@@ -441,7 +534,22 @@ func (msg MsgWriteContractSpecificationRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
-	return msg.Specification.ValidateBasic()
+	return nil
+}
+
+// ConvertOptionalFields will look at the SpecUuid field in the message.
+// If present, it will be converted to a MetadataAddress and set in the Specification appropriately.
+// Once used, it will be emptied so that calling this again has no effect.
+func (msg *MsgWriteContractSpecificationRequest) ConvertOptionalFields() error {
+	if len(msg.SpecUuid) > 0 {
+		uid, err := uuid.Parse(msg.SpecUuid)
+		if err != nil {
+			return fmt.Errorf("invalid spec uuid: %w", err)
+		}
+		msg.Specification.SpecificationId = ContractSpecMetadataAddress(uid)
+		msg.SpecUuid = ""
+	}
+	return nil
 }
 
 // ------------------  MsgDeleteContractSpecificationRequest  ------------------
@@ -524,6 +632,24 @@ func (msg MsgWriteRecordSpecificationRequest) ValidateBasic() error {
 	return nil
 }
 
+// ConvertOptionalFields will look at the ContractSpecUuid field in the message.
+// If present, it will be converted to a MetadataAddress and set in the Specification appropriately.
+// Once used, it will be emptied so that calling this again has no effect.
+func (msg *MsgWriteRecordSpecificationRequest) ConvertOptionalFields() error {
+	if len(msg.ContractSpecUuid) > 0 {
+		uid, err := uuid.Parse(msg.ContractSpecUuid)
+		if err != nil {
+			return fmt.Errorf("invalid spec uuid: %w", err)
+		}
+		if len(strings.TrimSpace(msg.Specification.Name)) == 0 {
+			return errors.New("empty specification name")
+		}
+		msg.Specification.SpecificationId = RecordSpecMetadataAddress(uid, msg.Specification.Name)
+		msg.ContractSpecUuid = ""
+	}
+	return nil
+}
+
 // ------------------  MsgDeleteRecordSpecificationRequest  ------------------
 
 // NewMsgDeleteRecordSpecificationRequest creates a new msg instance
@@ -602,7 +728,7 @@ func (msg MsgP8EMemorializeContractRequest) ValidateBasic() error {
 	return err
 }
 
-// --------------------------- OSLocator------------------------------------------
+// ------------------  MsgBindOSLocatorRequest  ------------------
 
 // NewMsgBindOSLocatorRequest creates a new msg instance
 func NewMsgBindOSLocatorRequest(obj ObjectStoreLocator) *MsgBindOSLocatorRequest {
@@ -635,7 +761,8 @@ func (msg MsgBindOSLocatorRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{stringToAccAddress(msg.Locator.Owner)}
 }
 
-// ---- Delete OS locator ------
+// ------------------  MsgDeleteOSLocatorRequest  ------------------
+
 func NewMsgDeleteOSLocatorRequest(obj ObjectStoreLocator) *MsgDeleteOSLocatorRequest {
 	return &MsgDeleteOSLocatorRequest{
 		Locator: obj,
@@ -671,9 +798,7 @@ func (msg MsgDeleteOSLocatorRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{stringToAccAddress(msg.Locator.Owner)}
 }
 
-/**
-Validates OSLocatorObj
-*/
+// ValidateOSLocatorObj Validates OSLocatorObj data
 func ValidateOSLocatorObj(ownerAddr string, uri string) error {
 	if strings.TrimSpace(ownerAddr) == "" {
 		return fmt.Errorf("owner address cannot be empty")
@@ -695,7 +820,7 @@ func ValidateOSLocatorObj(ownerAddr string, uri string) error {
 	return nil
 }
 
-//----------Modify OS Locator -----------------
+// ------------------  MsgModifyOSLocatorRequest  ------------------
 
 func NewMsgModifyOSLocatorRequest(obj ObjectStoreLocator) *MsgModifyOSLocatorRequest {
 	return &MsgModifyOSLocatorRequest{
@@ -726,4 +851,46 @@ func (msg MsgModifyOSLocatorRequest) GetSignBytes() []byte {
 
 func (msg MsgModifyOSLocatorRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{stringToAccAddress(msg.Locator.Owner)}
+}
+
+// ------------------  SessionIdComponents  ------------------
+
+func (msg *SessionIdComponents) GetSessionID() (*MetadataAddress, error) {
+	var scopeUUID, sessionUUID *uuid.UUID
+	if len(msg.SessionUuid) > 0 {
+		uid, err := uuid.Parse(msg.SessionUuid)
+		if err != nil {
+			return nil, fmt.Errorf("invalid session uuid: %w", err)
+		}
+		scopeUUID = &uid
+	}
+	if msgScopeUUID := msg.GetScopeUuid(); len(msgScopeUUID) > 0 {
+		uid, err := uuid.Parse(msgScopeUUID)
+		if err != nil {
+			return nil, fmt.Errorf("invalid scope uuid: %w", err)
+		}
+		sessionUUID = &uid
+	} else if msgScopeAddr := msg.GetScopeAddr(); len(msgScopeAddr) > 0 {
+		addr, addrErr := MetadataAddressFromBech32(msgScopeAddr)
+		if addrErr != nil {
+			return nil, fmt.Errorf("invalid scope addr: %w", addrErr)
+		}
+		uid, err := addr.ScopeUUID()
+		if err != nil {
+			return nil, fmt.Errorf("invalid scope addr: %w", err)
+		}
+		sessionUUID = &uid
+	}
+
+	if scopeUUID == nil && sessionUUID == nil {
+		return nil, nil
+	}
+	if scopeUUID == nil {
+		return nil, errors.New("session uuid provided but missing scope uuid or addr")
+	}
+	if sessionUUID == nil {
+		return nil, errors.New("scope uuid or addr provided but missing session uuid")
+	}
+	ma := SessionMetadataAddress(*scopeUUID, *sessionUUID)
+	return &ma, nil
 }
