@@ -28,6 +28,10 @@ func (k msgServer) WriteScope(
 	goCtx context.Context,
 	msg *types.MsgWriteScopeRequest,
 ) (*types.MsgWriteScopeResponse, error) {
+	if err := msg.ConvertOptionalFields(); err != nil {
+		return nil, err
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	existing, _ := k.GetScope(ctx, msg.Scope.ScopeId)
@@ -78,6 +82,10 @@ func (k msgServer) WriteSession(
 	goCtx context.Context,
 	msg *types.MsgWriteSessionRequest,
 ) (*types.MsgWriteSessionResponse, error) {
+	if err := msg.ConvertOptionalFields(); err != nil {
+		return nil, err
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	var existing *types.Session = nil
@@ -86,13 +94,13 @@ func (k msgServer) WriteSession(
 		existing = &e
 		existingAudit = existing.Audit
 	}
-	if err := k.ValidateSessionUpdate(ctx, existing, *msg.Session, msg.Signers); err != nil {
+	if err := k.ValidateSessionUpdate(ctx, existing, msg.Session, msg.Signers); err != nil {
 		return nil, err
 	}
 
 	msg.Session.Audit = existingAudit.UpdateAudit(ctx.BlockTime(), strings.Join(msg.Signers, ", "), "")
 
-	k.SetSession(ctx, *msg.Session)
+	k.SetSession(ctx, msg.Session)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -111,6 +119,10 @@ func (k msgServer) WriteRecord(
 	goCtx context.Context,
 	msg *types.MsgWriteRecordRequest,
 ) (*types.MsgWriteRecordResponse, error) {
+	if err := msg.ConvertOptionalFields(); err != nil {
+		return nil, err
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	scopeUUID, err := msg.Record.SessionId.ScopeUUID()
@@ -124,11 +136,11 @@ func (k msgServer) WriteRecord(
 	if e, found := k.GetRecord(ctx, recordID); found {
 		existing = &e
 	}
-	if err := k.ValidateRecordUpdate(ctx, existing, *msg.Record, msg.Signers); err != nil {
+	if err := k.ValidateRecordUpdate(ctx, existing, msg.Record, msg.Signers); err != nil {
 		return nil, err
 	}
 
-	k.SetRecord(ctx, *msg.Record)
+	k.SetRecord(ctx, msg.Record)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -171,6 +183,10 @@ func (k msgServer) WriteScopeSpecification(
 	goCtx context.Context,
 	msg *types.MsgWriteScopeSpecificationRequest,
 ) (*types.MsgWriteScopeSpecificationResponse, error) {
+	if err := msg.ConvertOptionalFields(); err != nil {
+		return nil, err
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	var existing *types.ScopeSpecification = nil
@@ -232,6 +248,10 @@ func (k msgServer) WriteContractSpecification(
 	goCtx context.Context,
 	msg *types.MsgWriteContractSpecificationRequest,
 ) (*types.MsgWriteContractSpecificationResponse, error) {
+	if err := msg.ConvertOptionalFields(); err != nil {
+		return nil, err
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	var existing *types.ContractSpecification = nil
@@ -318,6 +338,10 @@ func (k msgServer) WriteRecordSpecification(
 	goCtx context.Context,
 	msg *types.MsgWriteRecordSpecificationRequest,
 ) (*types.MsgWriteRecordSpecificationResponse, error) {
+	if err := msg.ConvertOptionalFields(); err != nil {
+		return nil, err
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	contractSpecID, err := msg.Specification.SpecificationId.AsContractSpecAddress()
@@ -499,7 +523,7 @@ func (k msgServer) P8EMemorializeContract(
 	}
 
 	sessionResp, err := k.WriteSession(goCtx, &types.MsgWriteSessionRequest{
-		Session: p8EData.Session,
+		Session: *p8EData.Session,
 		Signers: signers,
 	})
 	if err != nil {
@@ -509,7 +533,7 @@ func (k msgServer) P8EMemorializeContract(
 	recordIDInfos := make([]*types.RecordIdInfo, len(p8EData.Records))
 	for i, record := range p8EData.Records {
 		recordResp, err := k.WriteRecord(goCtx, &types.MsgWriteRecordRequest{
-			Record:  record,
+			Record:  *record,
 			Signers: signers,
 		})
 		if err != nil {
