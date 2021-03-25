@@ -487,8 +487,8 @@ func (msg MsgDeleteContractSpecificationRequest) ValidateBasic() error {
 // ------------------  MsgAddRecordSpecificationRequest  ------------------
 
 // NewMsgAddRecordSpecificationRequest creates a new msg instance
-func NewMsgAddRecordSpecificationRequest() *MsgAddRecordSpecificationRequest {
-	return &MsgAddRecordSpecificationRequest{}
+func NewMsgAddRecordSpecificationRequest(recordSpecification RecordSpecification, signers []string) *MsgAddRecordSpecificationRequest {
+	return &MsgAddRecordSpecificationRequest{Specification: recordSpecification, Signers: signers}
 }
 
 func (msg MsgAddRecordSpecificationRequest) String() string {
@@ -521,14 +521,14 @@ func (msg MsgAddRecordSpecificationRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
-	return nil
+	return msg.Specification.ValidateBasic()
 }
 
 // ------------------  MsgDeleteRecordSpecificationRequest  ------------------
 
 // NewMsgDeleteRecordSpecificationRequest creates a new msg instance
-func NewMsgDeleteRecordSpecificationRequest() *MsgDeleteRecordSpecificationRequest {
-	return &MsgDeleteRecordSpecificationRequest{}
+func NewMsgDeleteRecordSpecificationRequest(specificationID MetadataAddress, signers []string) *MsgDeleteRecordSpecificationRequest {
+	return &MsgDeleteRecordSpecificationRequest{SpecificationId: specificationID, Signers: signers}
 }
 
 func (msg MsgDeleteRecordSpecificationRequest) String() string {

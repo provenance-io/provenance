@@ -43,6 +43,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Allow withdrawals of any coin type from a marker account in WASM smart contracts. #151
 * Added cli tx commands `add-contract-specification` `remove-contract-specification` for updating/adding/removing metadata `ContractSpecification`s. #195
+* Added cli tx commands `add-record-specification` `remove-record-specification` for updating/adding/removing metadata `RecordSpecification`s. #176
 * Simulation testing support #95
 * Name module simulation testing #24
 
