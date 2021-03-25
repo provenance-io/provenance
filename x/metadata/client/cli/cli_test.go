@@ -703,82 +703,84 @@ func (s *IntegrationCLITestSuite) TestGetMetadataByIDCmd() {
 func (s *IntegrationCLITestSuite) TestGetMetadataScopeCmd() {
 	cmd := cli.GetMetadataScopeCmd()
 
-	testCases := []queryCmdTestCase{
+	indentedScopeText := indent(s.scopeAsText, 4)
+
+	testCases := []queryCmdTestCaseV2{
 		{
 			"get scope by metadata scope id as json output",
 			[]string{s.scopeID.String(), s.asJson},
 			"",
-			s.scopeAsJson,
+			[]string{s.scopeAsJson},
 		},
 		{
 			"get scope by metadata scope id as text output",
 			[]string{s.scopeID.String(), s.asText},
 			"",
-			s.scopeAsText,
+			[]string{indentedScopeText},
 		},
 		{
 			"get scope by uuid as json output",
 			[]string{s.scopeUUID.String(), s.asJson},
 			"",
-			s.scopeAsJson,
+			[]string{s.scopeAsJson},
 		},
 		{
 			"get scope by uuid as text output",
 			[]string{s.scopeUUID.String(), s.asText},
 			"",
-			s.scopeAsText,
+			[]string{indentedScopeText},
 		},
 		{
 			"get scope by metadata session id as json output",
 			[]string{s.sessionID.String(), s.asJson},
 			"",
-			s.scopeAsJson,
+			[]string{s.scopeAsJson},
 		},
 		{
 			"get scope by metadata session id as text output",
 			[]string{s.sessionID.String(), s.asText},
 			"",
-			s.scopeAsText,
+			[]string{indentedScopeText},
 		},
 		{
 			"get scope by metadata record id as json output",
 			[]string{s.recordID.String(), s.asJson},
 			"",
-			s.scopeAsJson,
+			[]string{s.scopeAsJson},
 		},
 		{
 			"get scope by metadata record id as text output",
 			[]string{s.recordID.String(), s.asText},
 			"",
-			s.scopeAsText,
+			[]string{indentedScopeText},
 		},
 		{
 			"get scope by metadata id - does not exist",
 			[]string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel", s.asText},
-			"rpc error: code = NotFound desc = scope uuid 91978ba2-5f35-459a-86a7-feca1b0512e0 not found: key not found",
 			"",
+			[]string{"scope: null", "scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
 		},
 		{
 			"get scope by uuid - does not exist",
 			[]string{"91978ba2-5f35-459a-86a7-feca1b0512e0", s.asText},
-			"rpc error: code = NotFound desc = scope uuid 91978ba2-5f35-459a-86a7-feca1b0512e0 not found: key not found",
 			"",
+			[]string{"scope: null", "91978ba2-5f35-459a-86a7-feca1b0512e0"},
 		},
 		{
-			"get scope bad arg",
+			"get scope bad input",
 			[]string{"not-a-valid-arg", s.asText},
-			"argument not-a-valid-arg is neither a metadata address (decoding bech32 failed: invalid index of 1) nor uuid (invalid UUID length: 15)",
-			"",
+			"rpc error: code = InvalidArgument desc = could not parse [not-a-valid-arg] into either a scope address (decoding bech32 failed: invalid index of 1) or uuid (invalid UUID length: 15): invalid request",
+			[]string{},
 		},
 		{
 			"get scope no args",
 			[]string{},
 			"accepts 1 arg(s), received 0",
-			"",
+			[]string{},
 		},
 	}
 
-	runQueryCmdTestCases(s, cmd, testCases)
+	runQueryCmdTestCasesV2(s, cmd, testCases)
 }
 
 func (s *IntegrationCLITestSuite) TestGetMetadataSessionCmd() {
