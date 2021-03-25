@@ -521,7 +521,7 @@ func (msg MsgAddRecordSpecificationRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
-	return nil
+	return msg.Specification.ValidateBasic()
 }
 
 // ------------------  MsgDeleteRecordSpecificationRequest  ------------------

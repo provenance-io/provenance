@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/version"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
 
@@ -34,11 +35,17 @@ func NewTxCmd() *cobra.Command {
 
 	txCmd.AddCommand(
 		AddMetadataScopeCmd(),
+		RemoveMetadataScopeCmd(),
+
 		AddOsLocatorCmd(),
 		RemoveOsLocatorCmd(),
 		ModifyOsLocatorCmd(),
+
 		AddContractSpecificationCmd(),
 		RemoveContractSpecificationCmd(),
+
+		AddRecordSpecificationCmd(),
+		RemoveRecordSpecificationCmd(),
 	)
 
 	return txCmd
@@ -48,7 +55,7 @@ func NewTxCmd() *cobra.Command {
 func AddMetadataScopeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-scope [scope-uuid] [spec-id] [owner-addresses] [data-access] [value-owner-address]",
-		Short: "Add a metadata scope to the provenance blockchain",
+		Short: "Add/Update a metadata scope to the provenance blockchain",
 		Args:  cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -249,7 +256,7 @@ func AddContractSpecificationCmd() *cobra.Command {
 		Use:   "add-contract-specification [contractspec-id] [owners] [parties-involved] [source-type] [source-value] [classname] [description-name] [description] [website-url] [icon-url]",
 		Short: "Add/Update metadata contract specification on the provenance blockchain",
 		Long: `Add/Update metadata contract specification on the provenance blockchain
-[contractspec-id] - metaaddress of contract specification
+[contractspec-id] - contract specification metaaddress
 [owners] - comma delimited list of bech32 owner addresses
 [parties-involved] - comma delimited list of party types.  Accepted values: originator,servicer,investor,custodian,owner,affiliate,omnibus,provenance
 [source-type] - accepted values: hash or resourceid
@@ -325,7 +332,19 @@ func AddRecordSpecificationCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-record-specification [specification-id] [name] [input-specifications] [type-name] [result-types] [responsible-parties]",
 		Short: "Add/Update metadata record specification to the provenance blockchain",
-		Args:  cobra.ExactArgs(6),
+		Long: fmt.Sprintf(`Add/Update metadata record specification to the provenance blockchain.
+[specification-id] - record specification metaaddress
+[name] - record name
+[input-specifications] - semi-colon delimited list of input specifications <name>,<type-name>,<source>,<source-value>
+[type-name] - contract specification type name
+[result-types] - result definition type.  Accepted values: proposed,record,record_list
+[responsible-parties] - comma delimited list of party types.  Accepted values: originator,servicer,investor,custodian,owner,affiliate,omnibus,provenance
+
+Example: 
+$ %s tx metadata recspec1qh... recordname inputname1,typename1,hash,hashvalue;inputename2,typename2,recordid,<recordmetaaddress> record_list owner,originator
+
+`, version.AppName),
+		Args: cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -338,6 +357,13 @@ func AddRecordSpecificationCmd() *cobra.Command {
 			}
 			if !specificationID.IsRecordSpecificationAddress() {
 				return fmt.Errorf("invalid record specification id: %s", args[0])
+			}
+
+			recordName := args[1]
+			contractSpecUUID, _ := specificationID.ContractSpecUUID()
+			expectedRecordID := types.RecordSpecMetadataAddress(contractSpecUUID, recordName)
+			if expectedRecordID.String() != specificationID.String() {
+				return fmt.Errorf("invalid record name does not produce correct record id actual: %v expected %v", specificationID.String(), expectedRecordID.String())
 			}
 
 			inputs, err := inputSpecification(args[2])
@@ -413,7 +439,6 @@ func inputSpecification(cliDelimitedValue string) ([]*types.InputSpecification, 
 		}
 	}
 	return inputs, nil
-
 }
 
 func addSignerFlagCmd(cmd *cobra.Command) {
@@ -532,14 +557,15 @@ func RemoveRecordSpecificationCmd() *cobra.Command {
 				return err
 			}
 
-			if !specificationID.IsContractSpecificationAddress() {
+			if !specificationID.IsRecordSpecificationAddress() {
 				return fmt.Errorf("invalid contract specification id: %s", args[0])
 			}
 			signers, err := parseSigners(cmd, &clientCtx)
 			if err != nil {
 				return err
 			}
-			msg := *types.NewMsgDeleteRecordSpecificationRequest(nil, signers)
+			msg := *types.NewMsgDeleteRecordSpecificationRequest(specificationID, signers)
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
 		},
 	}

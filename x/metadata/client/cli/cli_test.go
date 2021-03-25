@@ -1740,7 +1740,7 @@ func (s *IntegrationTestSuite) TestAddObjectLocatorCmd() {
 	s.runTxTestCases(testCases)
 }
 
-func (s *IntegrationTestSuite) TestContractSpecificationCmd() {
+func (s *IntegrationTestSuite) TestContractSpecificationTxCommands() {
 	addCommand := cli.AddContractSpecificationCmd()
 	removeCommand := cli.RemoveContractSpecificationCmd()
 	contractSpecUUID := uuid.New()
@@ -2016,13 +2016,39 @@ func (s *IntegrationTestSuite) TestContractSpecificationCmd() {
 	s.runTxTestCases(testCases)
 }
 
-func (s *IntegrationTestSuite) TestAddRecordSpecificationCmd() {
+func (s *IntegrationTestSuite) TestRecordSpecificationTxCommands() {
 	cmd := cli.AddRecordSpecificationCmd()
+	addConractSpecCmd := cli.AddContractSpecificationCmd()
+	deleteRecordSpecCmd := cli.RemoveRecordSpecificationCmd()
 	recordName := "testrecordspecid"
-	specificationID := types.RecordSpecMetadataAddress(s.contractSpecUUID, "testrecordspecid")
+	incorrectRecordName := "produces-incorrect-id"
+	contractSpecUUID := uuid.New()
+	contractSpecID := types.ContractSpecMetadataAddress(contractSpecUUID)
+	specificationID := types.RecordSpecMetadataAddress(contractSpecUUID, recordName)
+	incorrectSpecID := types.RecordSpecMetadataAddress(contractSpecUUID, incorrectRecordName)
 	testCases := []commonTxTestStruct{
 		{
-			"Should successfully add record specification locator",
+			"Should successfully add contract specification with resource hash",
+			addConractSpecCmd,
+			[]string{
+				contractSpecID.String(),
+				s.testnet.Validators[0].Address.String(),
+				"owner",
+				"hash",
+				"hashvalue",
+				"`myclassname`",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false,
+			"",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"Should successfully add record specification",
 			cmd,
 			[]string{
 				specificationID.String(),
@@ -2039,6 +2065,229 @@ func (s *IntegrationTestSuite) TestAddRecordSpecificationCmd() {
 			false,
 			"",
 			&sdk.TxResponse{}, 0,
+		},
+		{
+			"Should fail to add record specification, incorrect spec id format",
+			cmd,
+			[]string{
+				"incorrect",
+				incorrectRecordName,
+				"record1,typename1,hash,hashy;record2,typename2,hash,hashy",
+				"typename",
+				"resulttypes",
+				"responsibleparties",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true,
+			"decoding bech32 failed: invalid index of 1",
+			&sdk.TxResponse{}, 0,
+		},
+		{
+			"Should fail to add record specification, not a record specification id",
+			cmd,
+			[]string{
+				contractSpecID.String(),
+				incorrectRecordName,
+				"record1,typename1,hash,hashy;record2,typename2,hash,hashy",
+				"typename",
+				"resulttypes",
+				"responsibleparties",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true,
+			fmt.Sprintf("invalid record specification id: %v", contractSpecID.String()),
+			&sdk.TxResponse{}, 0,
+		},
+		{
+			"Should fail to add record specification, name is incorrect",
+			cmd,
+			[]string{
+				specificationID.String(),
+				incorrectRecordName,
+				"record1,typename1,hash,hashy;record2,typename2,hash,hashy",
+				"typename",
+				"resulttypes",
+				"responsibleparties",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true,
+			fmt.Sprintf("invalid record name does not produce correct record id actual: %v expected %v", specificationID.String(), incorrectSpecID.String()),
+			&sdk.TxResponse{}, 0,
+		},
+		{
+			"Should fail to add record specification, fail parsing inputs too few values",
+			cmd,
+			[]string{
+				specificationID.String(),
+				recordName,
+				"record1,typename1;record2,typename2,hash,hashy",
+				"typename",
+				"resulttypes",
+				"responsibleparties",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true,
+			"invalid number of values for input specification: 2",
+			&sdk.TxResponse{}, 0,
+		},
+		{
+			"Should fail to add record specification, incorrect source type",
+			cmd,
+			[]string{
+				specificationID.String(),
+				recordName,
+				"record1,typename1,notasource,hashy;record2,typename2,hash,hashy",
+				"typename",
+				"resulttypes",
+				"responsibleparties",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true,
+			"incorrect source type for input specification: NOTASOURCE",
+			&sdk.TxResponse{}, 0,
+		},
+		{
+			"Should fail to add record specification, incorrect signer format",
+			cmd,
+			[]string{
+				specificationID.String(),
+				recordName,
+				"record1,typename1,hash,hashy;record2,typename2,hash,hashy",
+				"typename",
+				"resulttypes",
+				"responsibleparties",
+				fmt.Sprintf("--%s=%s", cli.FlagSigners, "incorrect-signer-format"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true,
+			"decoding bech32 failed: invalid index of 1",
+			&sdk.TxResponse{}, 0,
+		},
+		{
+			"Should fail to add record specification, empty signer not allowed",
+			cmd,
+			[]string{
+				specificationID.String(),
+				recordName,
+				"record1,typename1,hash,hashy;record2,typename2,hash,hashy",
+				"typename",
+				"resulttypes",
+				"responsibleparties",
+				fmt.Sprintf("--%s=%s", cli.FlagSigners, ""),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true,
+			"empty address string is not allowed",
+			&sdk.TxResponse{}, 0,
+		},
+		{
+			"Should fail to delete record specification, incorrect id",
+			deleteRecordSpecCmd,
+			[]string{
+				"incorrect-id",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true,
+			"decoding bech32 failed: invalid index of 1",
+			&sdk.TxResponse{}, 0,
+		},
+		{
+			"Should fail to delete record specification, not a record specification",
+			deleteRecordSpecCmd,
+			[]string{
+				contractSpecID.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true,
+			fmt.Sprintf("invalid contract specification id: %v", contractSpecID.String()),
+			&sdk.TxResponse{}, 0,
+		},
+		{
+			"Should fail to delete record specification, incorrect signer id",
+			deleteRecordSpecCmd,
+			[]string{
+				specificationID.String(),
+				fmt.Sprintf("--%s=%s", cli.FlagSigners, "incorrectsignerid"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true,
+			"decoding bech32 failed: invalid index of 1",
+			&sdk.TxResponse{}, 0,
+		},
+		{
+			"Should fail to delete record specification, empty signer",
+			deleteRecordSpecCmd,
+			[]string{
+				specificationID.String(),
+				fmt.Sprintf("--%s=%s", cli.FlagSigners, ""),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true,
+			"empty address string is not allowed",
+			&sdk.TxResponse{}, 0,
+		},
+		{
+			"Should successfully delete record specification",
+			deleteRecordSpecCmd,
+			[]string{
+				specificationID.String(),
+				fmt.Sprintf("--%s=%s", cli.FlagSigners, s.user1),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false,
+			"",
+			&sdk.TxResponse{}, 0,
+		},
+		{
+			"Should fail to delete record specification that does not exist",
+			deleteRecordSpecCmd,
+			[]string{
+				specificationID.String(),
+				fmt.Sprintf("--%s=%s", cli.FlagSigners, s.user1),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false,
+			"",
+			&sdk.TxResponse{}, 1,
 		},
 	}
 	s.runTxTestCases(testCases)
