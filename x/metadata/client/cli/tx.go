@@ -253,13 +253,12 @@ func ModifyOsLocatorCmd() *cobra.Command {
 // AddContractSpecificationCmd creates a command to add/update contract specifications
 func AddContractSpecificationCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-contract-specification [contractspec-id] [owners] [parties-involved] [source-type] [source-value] [classname] [description-name] [description] [website-url] [icon-url]",
+		Use:   "add-contract-specification [contractspec-id] [owners] [parties-involved] [source-value] [classname] [description-name] [description] [website-url] [icon-url]",
 		Short: "Add/Update metadata contract specification on the provenance blockchain",
 		Long: `Add/Update metadata contract specification on the provenance blockchain
 [contractspec-id] - contract specification metaaddress
 [owners] - comma delimited list of bech32 owner addresses
 [parties-involved] - comma delimited list of party types.  Accepted values: originator,servicer,investor,custodian,owner,affiliate,omnibus,provenance
-[source-type] - accepted values: hash or resourceid
 [source-value] - source identifier of type hash or resourceid
 [classname] - Name of contract specification
 [description-name] - optional- description name identifier 
@@ -267,7 +266,7 @@ func AddContractSpecificationCmd() *cobra.Command {
 [website-url] - optional - address of website
 [icon-url] - optional - address to a image to be used as an icon
 		`,
-		Args: cobra.RangeArgs(6, 10),
+		Args: cobra.RangeArgs(5, 9),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -279,34 +278,25 @@ func AddContractSpecificationCmd() *cobra.Command {
 				return err
 			}
 
-			if !specificationID.IsContractSpecificationAddress() {
-				return fmt.Errorf("invalid contract specification id: %s", args[0])
-			}
-
 			partiesInvolved := parsePartyTypes(args[2])
-			description := parseDescription(args[6:])
+			description := parseDescription(args[5:])
 			contractSpecification := types.ContractSpecification{SpecificationId: specificationID,
 				Description:     description,
 				OwnerAddresses:  strings.Split(args[1], ","),
 				PartiesInvolved: partiesInvolved,
-				ClassName:       args[5],
+				ClassName:       args[4],
 			}
-			switch s := strings.ToUpper(args[3]); s {
-			case "RESOURCEID":
-				var recordID types.MetadataAddress
-				recordID, err = types.MetadataAddressFromBech32(args[4])
-				if err != nil {
-					return err
+			sourceValue := args[3]
+			var recordID types.MetadataAddress
+			recordID, err = types.MetadataAddressFromBech32(sourceValue)
+			if err != nil {
+				contractSpecification.Source = &types.ContractSpecification_Hash{
+					Hash: sourceValue,
 				}
+			} else {
 				contractSpecification.Source = &types.ContractSpecification_ResourceId{
 					ResourceId: recordID,
 				}
-			case "HASH":
-				contractSpecification.Source = &types.ContractSpecification_Hash{
-					Hash: args[4],
-				}
-			default:
-				return fmt.Errorf("incorrect source type for contract specification: %s", s)
 			}
 
 			signers, err := parseSigners(cmd, &clientCtx)
@@ -358,7 +348,7 @@ $ %s tx metadata recspec1qh... recordname inputname1,typename1,hashvalue;inputen
 
 			recordName := args[1]
 
-			inputs, err := inputSpecification(args[2])
+			inputs, err := parseInputSpecification(args[2])
 			if err != nil {
 				return err
 			}
@@ -396,8 +386,8 @@ $ %s tx metadata recspec1qh... recordname inputname1,typename1,hashvalue;inputen
 	return cmd
 }
 
-// inputSpecification converts cli delimited argument and converts it to InputSpecifications
-func inputSpecification(cliDelimitedValue string) ([]*types.InputSpecification, error) {
+// parseInputSpecification converts cli delimited argument and converts it to InputSpecifications
+func parseInputSpecification(cliDelimitedValue string) ([]*types.InputSpecification, error) {
 	delimitedInputs := strings.Split(cliDelimitedValue, ";")
 	inputs := make([]*types.InputSpecification, len(delimitedInputs))
 	for i, delimitedInput := range delimitedInputs {
@@ -412,15 +402,10 @@ func inputSpecification(cliDelimitedValue string) ([]*types.InputSpecification, 
 		sourceValue := values[2]
 		recordID, err := types.MetadataAddressFromBech32(sourceValue)
 		if err != nil {
-			inputs[i].Source = &types.InputSpecification_Hash{
-				Hash: sourceValue,
-			}
+			inputs[i].Source = &types.InputSpecification_Hash{Hash: sourceValue}
 		} else {
-			inputs[i].Source = &types.InputSpecification_RecordId{
-				RecordId: recordID,
-			}
+			inputs[i].Source = &types.InputSpecification_RecordId{RecordId: recordID}
 		}
-
 	}
 	return inputs, nil
 }
@@ -498,10 +483,6 @@ func RemoveContractSpecificationCmd() *cobra.Command {
 			specificationID, err = types.MetadataAddressFromBech32(args[0])
 			if err != nil {
 				return err
-			}
-
-			if !specificationID.IsContractSpecificationAddress() {
-				return fmt.Errorf("invalid contract specification id: %s", args[0])
 			}
 
 			signers, err := parseSigners(cmd, &clientCtx)

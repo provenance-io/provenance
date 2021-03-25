@@ -1747,13 +1747,12 @@ func (s *IntegrationTestSuite) TestContractSpecificationTxCommands() {
 	specificationID := types.ContractSpecMetadataAddress(contractSpecUUID)
 	testCases := []commonTxTestStruct{
 		{
-			"Should successfully add contract specification with resource hash",
+			"should successfully add contract specification with resource hash",
 			addCommand,
 			[]string{
 				specificationID.String(),
 				s.testnet.Validators[0].Address.String(),
 				"owner",
-				"hash",
 				"hashvalue",
 				"`myclassname`",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -1767,13 +1766,12 @@ func (s *IntegrationTestSuite) TestContractSpecificationTxCommands() {
 			0,
 		},
 		{
-			"Should successfully add contract specification with resource hash using signer flag",
+			"should successfully update contract specification with resource hash using signer flag",
 			addCommand,
 			[]string{
 				specificationID.String(),
 				s.testnet.Validators[0].Address.String(),
 				"owner",
-				"hash",
 				"hashvalue",
 				"`myclassname`",
 				fmt.Sprintf("--%s=%s", cli.FlagSigners, s.testnet.Validators[0].Address.String()),
@@ -1788,13 +1786,12 @@ func (s *IntegrationTestSuite) TestContractSpecificationTxCommands() {
 			0,
 		},
 		{
-			"Should successfully add contract specification with resource id",
+			"should successfully update contract specification with resource id",
 			addCommand,
 			[]string{
 				specificationID.String(),
 				s.testnet.Validators[0].Address.String(),
 				"owner",
-				"resourceid",
 				specificationID.String(),
 				"myclassname",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -1808,13 +1805,12 @@ func (s *IntegrationTestSuite) TestContractSpecificationTxCommands() {
 			0,
 		},
 		{
-			"Should successfully add contract specification with description",
+			"should successfully update contract specification with description",
 			addCommand,
 			[]string{
 				specificationID.String(),
 				s.testnet.Validators[0].Address.String(),
 				"owner",
-				"hash",
 				"hashvalue",
 				"myclassname",
 				"description-name",
@@ -1832,7 +1828,7 @@ func (s *IntegrationTestSuite) TestContractSpecificationTxCommands() {
 			0,
 		},
 		{
-			"Should successfully remove contract specification",
+			"should successfully remove contract specification",
 			removeCommand,
 			[]string{
 				specificationID.String(),
@@ -1847,28 +1843,12 @@ func (s *IntegrationTestSuite) TestContractSpecificationTxCommands() {
 			0,
 		},
 		{
-			"Should fail to remove contract specification that dne",
-			removeCommand,
-			[]string{
-				specificationID.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			false,
-			"",
-			&sdk.TxResponse{},
-			1,
-		},
-		{
-			"should fail incorrect specification id",
+			"should fail to add contract specification on validate basic error",
 			addCommand,
 			[]string{
 				"invalid-spec-id",
 				s.testnet.Validators[0].Address.String(),
 				"owner",
-				"hash",
 				"hashvalue",
 				"myclassname",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -1882,108 +1862,7 @@ func (s *IntegrationTestSuite) TestContractSpecificationTxCommands() {
 			0,
 		},
 		{
-			"should fail id is not a contract specification id",
-			addCommand,
-			[]string{
-				s.scopeSpecID.String(),
-				s.testnet.Validators[0].Address.String(),
-				"owner",
-				"hash",
-				"hashvalue",
-				"myclassname",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			true,
-			fmt.Sprintf("invalid contract specification id: %s", s.scopeSpecID.String()),
-			&sdk.TxResponse{},
-			0,
-		},
-		{
-			"should fail source resource id not valid",
-			addCommand,
-			[]string{
-				specificationID.String(),
-				s.testnet.Validators[0].Address.String(),
-				"owner",
-				"resourceid",
-				"not-a-resourceid",
-				"myclassname",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			true,
-			fmt.Sprintf("decoding bech32 failed: invalid index of 1"),
-			&sdk.TxResponse{},
-			0,
-		},
-		{
-			"should fail source type not found",
-			addCommand,
-			[]string{
-				specificationID.String(),
-				s.testnet.Validators[0].Address.String(),
-				"owner",
-				"not-a-resource-type",
-				"notaresourceid",
-				"myclassname",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			true,
-			fmt.Sprintf("incorrect source type for contract specification: NOT-A-RESOURCE-TYPE"),
-			&sdk.TxResponse{},
-			0,
-		},
-		{
-			"Should fail invalid signer",
-			addCommand,
-			[]string{
-				specificationID.String(),
-				s.testnet.Validators[0].Address.String(),
-				"owner",
-				"hash",
-				"hashvalue",
-				"myclassname",
-				fmt.Sprintf("--%s=%s", cli.FlagSigners, s.user1),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			false,
-			"",
-			&sdk.TxResponse{},
-			8,
-		},
-		{
-			"Should fail validate basic on message",
-			addCommand,
-			[]string{
-				specificationID.String(),
-				s.testnet.Validators[0].Address.String(),
-				"owner",
-				"hash",
-				"",
-				"myclassname",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			true,
-			"source hash cannot be empty",
-			&sdk.TxResponse{},
-			0,
-		},
-		{
-			"Should fail to remove contract specification invalid address",
+			"should fail to remove contract specification invalid address",
 			removeCommand,
 			[]string{
 				"not-a-id",
@@ -1998,19 +1877,19 @@ func (s *IntegrationTestSuite) TestContractSpecificationTxCommands() {
 			0,
 		},
 		{
-			"Should fail to remove contract invalid address type",
+			"should fail to remove contract that no longer exists",
 			removeCommand,
 			[]string{
-				s.scopeSpecID.String(),
+				specificationID.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true,
-			fmt.Sprintf("invalid contract specification id: %s", s.scopeSpecID.String()),
+			false,
+			"",
 			&sdk.TxResponse{},
-			0,
+			1,
 		},
 	}
 	s.runTxTestCases(testCases)
@@ -2026,13 +1905,12 @@ func (s *IntegrationTestSuite) TestRecordSpecificationTxCommands() {
 	specificationID := types.RecordSpecMetadataAddress(contractSpecUUID, recordName)
 	testCases := []commonTxTestStruct{
 		{
-			"Should successfully add contract specification with resource hash",
+			"setup test with a record specification owned by signer",
 			addConractSpecCmd,
 			[]string{
 				contractSpecID.String(),
 				s.testnet.Validators[0].Address.String(),
 				"owner",
-				"hash",
 				"hashvalue",
 				"`myclassname`",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -2046,7 +1924,7 @@ func (s *IntegrationTestSuite) TestRecordSpecificationTxCommands() {
 			0,
 		},
 		{
-			"Should successfully add record specification",
+			"should successfully add record specification",
 			cmd,
 			[]string{
 				specificationID.String(),
@@ -2065,7 +1943,7 @@ func (s *IntegrationTestSuite) TestRecordSpecificationTxCommands() {
 			&sdk.TxResponse{}, 0,
 		},
 		{
-			"Should successfully add record specification",
+			"should successfully add record specification",
 			cmd,
 			[]string{
 				specificationID.String(),
@@ -2084,7 +1962,7 @@ func (s *IntegrationTestSuite) TestRecordSpecificationTxCommands() {
 			&sdk.TxResponse{}, 0,
 		},
 		{
-			"Should fail to add record specification, validate basic fail",
+			"should fail to add record specification, validate basic fail",
 			cmd,
 			[]string{
 				specificationID.String(),
@@ -2103,7 +1981,7 @@ func (s *IntegrationTestSuite) TestRecordSpecificationTxCommands() {
 			&sdk.TxResponse{}, 0,
 		},
 		{
-			"Should fail to add record specification, fail parsing inputs too few values",
+			"should fail to add record specification, fail parsing inputs too few values",
 			cmd,
 			[]string{
 				specificationID.String(),
@@ -2122,7 +2000,7 @@ func (s *IntegrationTestSuite) TestRecordSpecificationTxCommands() {
 			&sdk.TxResponse{}, 0,
 		},
 		{
-			"Should fail to add record specification, incorrect signer format",
+			"should fail to add record specification, incorrect signer format",
 			cmd,
 			[]string{
 				specificationID.String(),
@@ -2142,7 +2020,7 @@ func (s *IntegrationTestSuite) TestRecordSpecificationTxCommands() {
 			&sdk.TxResponse{}, 0,
 		},
 		{
-			"Should fail to delete record specification, incorrect id",
+			"should fail to delete record specification, incorrect id",
 			deleteRecordSpecCmd,
 			[]string{
 				"incorrect-id",
@@ -2156,7 +2034,7 @@ func (s *IntegrationTestSuite) TestRecordSpecificationTxCommands() {
 			&sdk.TxResponse{}, 0,
 		},
 		{
-			"Should fail to delete record specification, not a record specification",
+			"should fail to delete record specification, not a record specification",
 			deleteRecordSpecCmd,
 			[]string{
 				contractSpecID.String(),
@@ -2170,7 +2048,7 @@ func (s *IntegrationTestSuite) TestRecordSpecificationTxCommands() {
 			&sdk.TxResponse{}, 0,
 		},
 		{
-			"Should successfully delete record specification",
+			"should successfully delete record specification",
 			deleteRecordSpecCmd,
 			[]string{
 				specificationID.String(),
@@ -2185,7 +2063,7 @@ func (s *IntegrationTestSuite) TestRecordSpecificationTxCommands() {
 			&sdk.TxResponse{}, 0,
 		},
 		{
-			"Should fail to delete record specification that does not exist",
+			"should fail to delete record specification that does not exist",
 			deleteRecordSpecCmd,
 			[]string{
 				specificationID.String(),
