@@ -1028,70 +1028,70 @@ func (s *IntegrationCLITestSuite) TestGetMetadataRecordCmd() {
 func (s *IntegrationCLITestSuite) TestGetMetadataScopeSpecCmd() {
 	cmd := cli.GetMetadataScopeSpecCmd()
 
-	testCases := []queryCmdTestCase{
+	testCases := []queryCmdTestCaseV2{
 		{
 			"scope spec from scope spec id as json",
 			[]string{s.scopeSpecID.String(), s.asJson},
 			"",
-			s.scopeSpecAsJson,
+			[]string{s.scopeSpecAsJson},
 		},
 		{
 			"scope spec from scope spec id as text",
 			[]string{s.scopeSpecID.String(), s.asText},
 			"",
-			s.scopeSpecAsText,
+			[]string{indent(s.scopeSpecAsText, 4)},
 		},
 		{
 			"scope spec id bad prefix",
 			[]string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
-			"id scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel is not a scope specification metadata address",
-			"",
+			"rpc error: code = InvalidArgument desc = address [scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel] is not a scope spec address: invalid request",
+			[]string{},
 		},
 		{
 			"scope spec id does not exist",
 			[]string{"scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"},
-			"rpc error: code = NotFound desc = scope specification uuid dc83ea70-eacd-40fe-9adf-1cf6148bf8a2 not found: key not found",
 			"",
+			[]string{"specification: null", "scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"},
 		},
 		{
 			"scope spec from scope spec uuid as json",
 			[]string{s.scopeSpecUUID.String(), s.asJson},
 			"",
-			s.scopeSpecAsJson,
+			[]string{s.scopeSpecAsJson},
 		},
 		{
 			"scope spec from scope spec uuid as text",
 			[]string{s.scopeSpecUUID.String(), s.asText},
 			"",
-			s.scopeSpecAsText,
+			[]string{indent(s.scopeSpecAsText, 4)},
 		},
 		{
 			"scope spec uuid does not exist",
 			[]string{"dc83ea70-eacd-40fe-9adf-1cf6148bf8a2"},
-			"rpc error: code = NotFound desc = scope specification uuid dc83ea70-eacd-40fe-9adf-1cf6148bf8a2 not found: key not found",
 			"",
+			[]string{"specification: null", "dc83ea70-eacd-40fe-9adf-1cf6148bf8a2"},
 		},
 		{
 			"bad arg",
 			[]string{"reallybad"},
-			"argument reallybad is neither a metadata address (decoding bech32 failed: invalid index of 1) nor uuid (invalid UUID length: 9)",
-			"",
+			"rpc error: code = InvalidArgument desc = could not parse [reallybad] into either a scope spec address (decoding bech32 failed: invalid index of 1) or uuid (invalid UUID length: 9): invalid request",
+			[]string{},
 		},
 		{
 			"two args",
 			[]string{"arg1", "arg2"},
 			"accepts 1 arg(s), received 2",
-			"",
+			[]string{},
 		},
 		{
 			"no args",
 			[]string{},
 			"accepts 1 arg(s), received 0",
-			"",
+			[]string{},
 		},
 	}
 
-	runQueryCmdTestCases(s, cmd, testCases)
+	runQueryCmdTestCasesV2(s, cmd, testCases)
 }
 
 func (s *IntegrationCLITestSuite) TestGetMetadataContractSpecCmd() {
