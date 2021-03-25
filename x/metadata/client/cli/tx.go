@@ -335,7 +335,7 @@ func AddRecordSpecificationCmd() *cobra.Command {
 		Long: fmt.Sprintf(`Add/Update metadata record specification to the provenance blockchain.
 [specification-id] - record specification metaaddress
 [name] - record name
-[input-specifications] - semi-colon delimited list of input specifications <name>,<type-name>,<source>,<source-value>
+[input-specifications] - semi-colon delimited list of input specifications <name>,<type-name>,<source-value>
 [type-name] - contract specification type name
 [result-types] - result definition type.  Accepted values: proposed,record,record_list
 [responsible-parties] - comma delimited list of party types.  Accepted values: originator,servicer,investor,custodian,owner,affiliate,omnibus,provenance
@@ -355,16 +355,8 @@ $ %s tx metadata recspec1qh... recordname inputname1,typename1,hash,hashvalue;in
 			if err != nil {
 				return err
 			}
-			if !specificationID.IsRecordSpecificationAddress() {
-				return fmt.Errorf("invalid record specification id: %s", args[0])
-			}
 
 			recordName := args[1]
-			contractSpecUUID, _ := specificationID.ContractSpecUUID()
-			expectedRecordID := types.RecordSpecMetadataAddress(contractSpecUUID, recordName)
-			if expectedRecordID.String() != specificationID.String() {
-				return fmt.Errorf("invalid record name does not produce correct record id actual: %v expected %v", specificationID.String(), expectedRecordID.String())
-			}
 
 			inputs, err := inputSpecification(args[2])
 			if err != nil {
@@ -380,7 +372,7 @@ $ %s tx metadata recspec1qh... recordname inputname1,typename1,hash,hashvalue;in
 
 			recordSpecification := types.RecordSpecification{
 				SpecificationId:    specificationID,
-				Name:               args[1],
+				Name:               recordName,
 				Inputs:             inputs,
 				TypeName:           args[3],
 				ResultType:         resultType,
@@ -410,33 +402,25 @@ func inputSpecification(cliDelimitedValue string) ([]*types.InputSpecification, 
 	inputs := make([]*types.InputSpecification, len(delimitedInputs))
 	for i, delimitedInput := range delimitedInputs {
 		values := strings.Split(delimitedInput, ",")
-		if len(values) != 4 {
+		if len(values) != 3 {
 			return nil, fmt.Errorf("invalid number of values for input specification: %v", len(values))
 		}
-		name := values[0]
-		typeName := values[1]
-		switch s := strings.ToUpper(values[2]); s {
-		case "RECORDID":
-			recordID, err := types.MetadataAddressFromBech32(values[3])
-			if err != nil {
-				return nil, err
-			}
-			inputs[i] = &types.InputSpecification{
-				Name: name,
-				Source: &types.InputSpecification_RecordId{
-					RecordId: recordID,
-				},
-				TypeName: typeName,
-			}
-		case "HASH":
-			inputs[i] = &types.InputSpecification{
-				Name:     name,
-				Source:   &types.InputSpecification_Hash{Hash: values[3]},
-				TypeName: typeName,
-			}
-		default:
-			return nil, fmt.Errorf("incorrect source type for input specification: %s", s)
+		inputs[i] = &types.InputSpecification{
+			Name:     values[0],
+			TypeName: values[1],
 		}
+		sourceValue := values[2]
+		recordID, err := types.MetadataAddressFromBech32(sourceValue)
+		if err != nil {
+			inputs[i].Source = &types.InputSpecification_Hash{
+				Hash: sourceValue,
+			}
+		} else {
+			inputs[i].Source = &types.InputSpecification_RecordId{
+				RecordId: recordID,
+			}
+		}
+
 	}
 	return inputs, nil
 }
