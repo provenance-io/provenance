@@ -658,7 +658,7 @@ type MetadataAddressDetails struct {
 
 func (ma MetadataAddress) GetDetails() MetadataAddressDetails {
 	// Copying this MetadataAddress to prevent weird behavior.
-	addr := MetadataAddress{}
+	addr := make(MetadataAddress, len(ma))
 	copy(addr, ma)
 
 	retval := MetadataAddressDetails{Address: addr}
