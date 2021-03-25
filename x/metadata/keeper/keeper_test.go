@@ -141,28 +141,28 @@ func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSigners() {
 			errorMsg: "missing signature from missingowner (PARTY_TYPE_OWNER)",
 		},
 		"two owners - both are signers": {
-			owners:   []types.Party{
+			owners: []types.Party{
 				{Address: "owner1", Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: "owner2", Role: types.PartyType_PARTY_TYPE_OWNER}},
 			signers:  []string{"owner2", "owner1"},
 			errorMsg: "",
 		},
 		"two owners - only one is signer": {
-			owners:   []types.Party{
+			owners: []types.Party{
 				{Address: "owner1", Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: "missingowner", Role: types.PartyType_PARTY_TYPE_OWNER}},
 			signers:  []string{"owner2", "owner1"},
 			errorMsg: "missing signature from missingowner (PARTY_TYPE_OWNER)",
 		},
 		"two parties - one owner one other - only owner is signer": {
-			owners:   []types.Party{
+			owners: []types.Party{
 				{Address: "owner", Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: "affiliate", Role: types.PartyType_PARTY_TYPE_AFFILIATE}},
 			signers:  []string{"owner"},
 			errorMsg: "missing signature from affiliate (PARTY_TYPE_AFFILIATE)",
 		},
 		"two parties - one owner one other - only other is signer": {
-			owners:   []types.Party{
+			owners: []types.Party{
 				{Address: "owner", Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: "affiliate", Role: types.PartyType_PARTY_TYPE_AFFILIATE}},
 			signers:  []string{"affiliate"},
@@ -262,9 +262,9 @@ func (s *KeeperTestSuite) TestValidateAllOwnersAreSigners() {
 func (s *KeeperTestSuite) TestFindMissing() {
 	tests := map[string]struct {
 		required []string
-		entries []string
+		entries  []string
 		expected []string
-	} {
+	}{
 		"empty required - empty entries - empty out": {
 			[]string{},
 			[]string{},
@@ -388,4 +388,16 @@ func (s *KeeperTestSuite) TestFindMissing() {
 			assert.Equal(t, tc.expected, actual)
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestParams() {
+	s.T().Run("param tests", func(t *testing.T) {
+		p := s.app.MetadataKeeper.GetParams(s.ctx)
+		assert.NotNil(t, p)
+
+		osp := s.app.MetadataKeeper.GetOSLocatorParams(s.ctx)
+		assert.NotNil(t, osp)
+		assert.Equal(t, osp.MaxUriLength, s.app.MetadataKeeper.GetMaxURILength(s.ctx))
+	})
+
 }
