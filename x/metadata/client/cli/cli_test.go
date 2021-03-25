@@ -1291,57 +1291,58 @@ func (s *IntegrationCLITestSuite) TestGetOwnershipCmd() {
 
 	newUser := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()
 
-	ownedScopesAsJson := fmt.Sprintf("{\"scope_uuids\":[\"%s\"],\"pagination\":{\"next_key\":null,\"total\":\"1\"}}",
-		s.scopeUUID,
-	)
-	ownedScopesAsText := fmt.Sprintf(`pagination:
+	paginationText := `pagination:
   next_key: null
   total: "1"
-scope_uuids:
+`
+	scopeUUIDsText := fmt.Sprintf(`scope_uuids:
 - %s`,
 		s.scopeUUID,
 	)
 
-	testCases := []queryCmdTestCase{
+	testCases := []queryCmdTestCaseV2{
 		{
 			"scopes as json",
 			[]string{s.user1, s.asJson},
 			"",
-			ownedScopesAsJson,
+			[]string{
+				fmt.Sprintf("\"scope_uuids\":[\"%s\"]", s.scopeUUID),
+				"\"pagination\":{\"next_key\":null,\"total\":\"1\"}",
+			},
 		},
 		{
 			"scopes as text",
 			[]string{s.user1, s.asText},
 			"",
-			ownedScopesAsText,
+			[]string{scopeUUIDsText, paginationText},
 		},
 		{
 			"scope through value owner",
 			[]string{s.user2},
 			"",
-			ownedScopesAsText,
+			[]string{scopeUUIDsText},
 		},
 		{
 			"no result",
 			[]string{newUser},
-			fmt.Sprintf("no scopes are owned by address %s", newUser),
 			"",
+			[]string{"scope_uuids: []", "total: \"0\""},
 		},
 		{
 			"two args",
 			[]string{s.user1, s.user2},
 			"accepts 1 arg(s), received 2",
-			"",
+			[]string{},
 		},
 		{
 			"no args",
 			[]string{},
 			"accepts 1 arg(s), received 0",
-			"",
+			[]string{},
 		},
 	}
 
-	runQueryCmdTestCases(s, cmd, testCases)
+	runQueryCmdTestCasesV2(s, cmd, testCases)
 }
 
 func (s *IntegrationCLITestSuite) TestGetValueOwnershipCmd() {
