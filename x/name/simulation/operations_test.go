@@ -93,9 +93,9 @@ func (suite *SimTestSuite) TestSimulateMsgBindName() {
 	suite.Require().Len(futureOperations, 0)
 }
 
-// TestSimulateMsgBindName tests the normal scenario of a valid message of type TypeMsgBindName.
+// TestSimulateMsgDeleteName tests the normal scenario of a valid message of type MsgDeleteName.
 // Abonormal scenarios, where the message is created by an errors, are not tested here.
-func (suite *SimTestSuite) TestSimulateMsgDewleteName() {
+func (suite *SimTestSuite) TestSimulateMsgDeleteName() {
 
 	// setup 3 accounts
 	s := rand.NewSource(1)
