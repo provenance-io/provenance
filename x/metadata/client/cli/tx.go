@@ -341,7 +341,7 @@ func AddRecordSpecificationCmd() *cobra.Command {
 [responsible-parties] - comma delimited list of party types.  Accepted values: originator,servicer,investor,custodian,owner,affiliate,omnibus,provenance
 
 Example: 
-$ %s tx metadata recspec1qh... recordname inputname1,typename1,hash,hashvalue;inputename2,typename2,recordid,<recordmetaaddress> record_list owner,originator
+$ %s tx metadata recspec1qh... recordname inputname1,typename1,hashvalue;inputename2,typename2,<recordmetaaddress> record_list owner,originator
 
 `, version.AppName),
 		Args: cobra.ExactArgs(6),
