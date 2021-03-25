@@ -1504,22 +1504,20 @@ type commonTxTestStruct struct {
 	expectedCode uint32
 }
 
-func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
+func (s *IntegrationTestSuite) TestMetadataScopeTxCommands() {
 
-	pubkey := secp256k1.GenPrivKey().PubKey()
-	userAddr := sdk.AccAddress(pubkey.Address())
-	user := userAddr.String()
-
+	scopeID := types.ScopeMetadataAddress(uuid.New()).String()
+	specID := types.ScopeSpecMetadataAddress(uuid.New()).String()
 	testCases := []commonTxTestStruct{
 		{
-			"Should successfully add metadata scope",
+			"should successfully add metadata scope",
 			cli.AddMetadataScopeCmd(),
 			[]string{
-				uuid.New().String(),
-				uuid.New().String(),
-				user,
-				user,
-				user,
+				scopeID,
+				specID,
+				s.testnet.Validators[0].Address.String(),
+				s.testnet.Validators[0].Address.String(),
+				s.testnet.Validators[0].Address.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -1528,14 +1526,14 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 			false, "", &sdk.TxResponse{}, 0,
 		},
 		{
-			"Should successfully add metadata scope with signers flag",
+			"should successfully add metadata scope with signers flag",
 			cli.AddMetadataScopeCmd(),
 			[]string{
-				uuid.New().String(),
-				uuid.New().String(),
-				user,
-				user,
-				user,
+				types.ScopeMetadataAddress(uuid.New()).String(),
+				types.ScopeSpecMetadataAddress(uuid.New()).String(),
+				s.user1,
+				s.user1,
+				s.user1,
 				fmt.Sprintf("--%s=%s", cli.FlagSigners, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -1545,129 +1543,14 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 			false, "", &sdk.TxResponse{}, 0,
 		},
 		{
-			"Should fail to add metadata scope, incorrect scope uuid",
+			"should fail to add metadata scope, incorrect scope id",
 			cli.AddMetadataScopeCmd(),
 			[]string{
 				"not-a-uuid",
-				uuid.New().String(),
-				user,
-				user,
-				user,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			true, "invalid UUID length: 10", &sdk.TxResponse{}, 0,
-		},
-		{
-			"Should fail to add metadata scope, incorrect scope spec uuid",
-			cli.AddMetadataScopeCmd(),
-			[]string{
-				uuid.New().String(),
-				"not-a-uuid",
-				user,
-				user,
-				user,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			true, "invalid UUID length: 10", &sdk.TxResponse{}, 0,
-		},
-		{
-			"Should fail to add metadata scope, incorrect owner address format",
-			cli.AddMetadataScopeCmd(),
-			[]string{
-				uuid.New().String(),
-				uuid.New().String(),
-				"incorrect,incorrect",
-				user,
-				user,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			true, "invalid owner on scope: decoding bech32 failed: invalid index of 1", &sdk.TxResponse{}, 0,
-		},
-		{
-			"Should fail to add metadata scope, incorrect data access format",
-			cli.AddMetadataScopeCmd(),
-			[]string{
-				uuid.New().String(),
-				uuid.New().String(),
-				user,
-				"incorrect,incorrect",
-				user,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, user),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			true, "The specified item could not be found in the keyring", &sdk.TxResponse{}, 0,
-		},
-		{
-			"Should fail to add metadata scope, incorrect value owner address",
-			cli.AddMetadataScopeCmd(),
-			[]string{
-				uuid.New().String(),
-				uuid.New().String(),
-				user,
-				user,
-				"incorrect",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, user),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			true, "The specified item could not be found in the keyring", &sdk.TxResponse{}, 0,
-		},
-	}
-
-	s.runTxTestCases(testCases)
-}
-
-func (s *IntegrationTestSuite) TestRemoveMetadataScopeCmd() {
-	userId := s.testnet.Validators[0].Address.String()
-	scopeUUID := uuid.New().String()
-
-	testCases := []commonTxTestStruct{
-		{
-			"Should successfully add metadata scope for testing scope removal",
-			cli.AddMetadataScopeCmd(),
-			[]string{
-				scopeUUID,
-				uuid.New().String(),
-				userId,
-				userId,
-				userId,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			false, "", &sdk.TxResponse{}, 0,
-		},
-		{
-			"Should fail to remove metadata scope, invalid scopeid",
-			cli.RemoveMetadataScopeCmd(),
-			[]string{
-				"not-valid",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			true, "invalid UUID length: 9", &sdk.TxResponse{}, 0,
-		},
-		{
-			"Should fail to remove metadata scope, invalid userid",
-			cli.RemoveMetadataScopeCmd(),
-			[]string{
-				scopeUUID,
-				fmt.Sprintf("--%s=%s", cli.FlagSigners, "not-a-validuser"),
+				types.ScopeSpecMetadataAddress(uuid.New()).String(),
+				s.user1,
+				s.user1,
+				s.user1,
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -1676,16 +1559,72 @@ func (s *IntegrationTestSuite) TestRemoveMetadataScopeCmd() {
 			true, "decoding bech32 failed: invalid index of 1", &sdk.TxResponse{}, 0,
 		},
 		{
-			"Should remove metadata scope",
+			"should fail to add metadata scope, incorrect scope spec id",
+			cli.AddMetadataScopeCmd(),
+			[]string{
+				types.ScopeMetadataAddress(uuid.New()).String(),
+				"not-a-uuid",
+				s.user1,
+				s.user1,
+				s.user1,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, "decoding bech32 failed: invalid index of 1", &sdk.TxResponse{}, 0,
+		},
+		{
+			"should fail to add metadata scope, validate basic will err on owner format",
+			cli.AddMetadataScopeCmd(),
+			[]string{
+				types.ScopeMetadataAddress(uuid.New()).String(),
+				types.ScopeSpecMetadataAddress(uuid.New()).String(),
+				"incorrect,incorrect",
+				s.user1,
+				s.user1,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, "invalid owner on scope: decoding bech32 failed: invalid index of 1", &sdk.TxResponse{}, 0,
+		},
+		{
+			"should fail to remove metadata scope, invalid scopeid",
 			cli.RemoveMetadataScopeCmd(),
 			[]string{
-				scopeUUID,
+				"not-valid",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, "decoding bech32 failed: invalid index of 1", &sdk.TxResponse{}, 0,
+		},
+		{
+			"should successfully remove metadata scope",
+			cli.RemoveMetadataScopeCmd(),
+			[]string{
+				scopeID,
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			false, "", &sdk.TxResponse{}, 0,
+		},
+		{
+			"should to remove metadata scope that no longer exists",
+			cli.RemoveMetadataScopeCmd(),
+			[]string{
+				scopeID,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, "", &sdk.TxResponse{}, 1,
 		},
 	}
 

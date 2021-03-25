@@ -67,18 +67,10 @@ func AddMetadataScopeCmd() *cobra.Command {
 				return err
 			}
 
-			if !scopeID.IsScopeAddress() {
-				return fmt.Errorf("invalid scope id: %s", args[0])
-			}
-
 			var specID types.MetadataAddress
-			specID, err = types.MetadataAddressFromBech32(args[0])
+			specID, err = types.MetadataAddressFromBech32(args[1])
 			if err != nil {
 				return err
-			}
-
-			if !specID.IsScopeSpecificationAddress() {
-				return fmt.Errorf("invalid scope specification id: %s", args[0])
 			}
 
 			ownerAddresses := strings.Split(args[2], ",")
@@ -101,12 +93,12 @@ func AddMetadataScopeCmd() *cobra.Command {
 				dataAccess,
 				valueOwnerAddress)
 
-			if err := scope.ValidateBasic(); err != nil {
-				fmt.Printf("Failed to validate scope %s : %v", scope.String(), err)
+			msg := types.NewMsgAddScopeRequest(scope, signers)
+			err = msg.ValidateBasic()
+			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgAddScopeRequest(scope, signers)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -135,20 +127,19 @@ func RemoveMetadataScopeCmd() *cobra.Command {
 				return err
 
 			}
-			scopeMetaAddress := types.ScopeMetadataAddress(scopeUUID)
 
 			signers, err := parseSigners(cmd, &clientCtx)
 			if err != nil {
 				return err
 			}
 
-			deleteScope := *types.NewMsgDeleteScopeRequest(scopeID, signers)
-			if err := deleteScope.ValidateBasic(); err != nil {
-				fmt.Printf("Failed to validate remove scope %s : %v", deleteScope.String(), err)
+			msg := *types.NewMsgDeleteScopeRequest(scopeID, signers)
+			err = msg.ValidateBasic()
+			if err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &deleteScope)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
 		},
 	}
 
