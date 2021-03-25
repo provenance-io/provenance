@@ -78,8 +78,20 @@ message MsgWriteScopeRequest {
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-  Scope           scope   = 1 [(gogoproto.nullable) = false];
+  // scope is the Scope you want added or updated.
+  Scope scope = 1 [(gogoproto.nullable) = false];
+  // signers is the list of address of those signing this request.
   repeated string signers = 2;
+
+  // scope_uuid is an optional uuid string, e.g. "91978ba2-5f35-459a-86a7-feca1b0512e0"
+  // If provided, it will be used to generate the MetadataAddress for the scope which will override the scope_id in the
+  // provided scope. If not provided (or it is an empty string), nothing special happens.
+  string scope_uuid = 3 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
+
+  // spec_uuid is an optional scope specification uuid string, e.g. "dc83ea70-eacd-40fe-9adf-1cf6148bf8a2"
+  // If provided, it will be used to generate the MetadataAddress for the scope specification which will override the
+  // specification_id in the provided scope. If not provided (or it is an empty string), nothing special happens.
+  string spec_uuid = 4 [(gogoproto.moretags) = "yaml:\"spec_uuid\""];
 }
 
 // MsgWriteScopeResponse is the response type for the Msg/WriteScope RPC method.
@@ -114,8 +126,34 @@ message MsgWriteSessionRequest {
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-  Session         session = 1;
+  // session is the Session you want added or updated.
+  Session session = 1;
+  // signers is the list of address of those signing this request.
   repeated string signers = 2;
+
+  // SessionIDComponents is an optional (alternate) way of defining what the session_id should be in the provided
+  // session. If provided, it must have both a scope and session_uuid. Those components will be used to create the
+  // MetadataAddress for the session which will override the session_id in the provided session. If not provided (or
+  // missing something), nothing special happens.
+  SessionIDComponents session_id_components = 3 [(gogoproto.moretags) = "yaml:\"session_id_components\""];
+
+  // spec_uuid is an optional contract specification uuid string, e.g. "def6bc0a-c9dd-4874-948f-5206e6060a84"
+  // If provided, it will be used to generate the MetadataAddress for the contract specification which will override the
+  // specification_id in the provided session. If not provided (or it is an empty string), nothing special happens.
+  string spec_uuid = 4 [(gogoproto.moretags) = "yaml:\"spec_uuid\""];
+}
+
+// SessionIDComponents contains fields for the components that make up a session id.
+message SessionIDComponents {
+  // scope is used to define the scope this session belongs to.
+  oneof scope_identifier {
+    // scope_uuid is the uuid string for the scope, e.g. "91978ba2-5f35-459a-86a7-feca1b0512e0"
+    string scope_uuid = 1 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
+    // scope_addr is the bech32 address string for the scope, g.g. "scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"
+    string scope_addr = 2 [(gogoproto.moretags) = "yaml:\"scope_addr\""];
+  }
+  // session_uuid is a uuid string for identifying this session, e.g. "5803f8bc-6067-4eb5-951f-2121671c2ec0"
+  string session_uuid = 3 [(gogoproto.moretags) = "yaml:\"session_uuid\""];
 }
 
 // MsgWriteSessionResponse is the response type for the Msg/WriteSession RPC method.
@@ -131,14 +169,22 @@ message MsgWriteRecordRequest {
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-  bytes session_id = 1 [
-    (gogoproto.nullable)   = false,
-    (gogoproto.customtype) = "MetadataAddress",
-    (gogoproto.moretags)   = "yaml:\"session_id\""
-  ];
+  // record is the Record you want added or updated.
+  Record record = 1;
+  // signers is the list of address of those signing this request.
+  repeated string signers = 2;
 
-  Record          record  = 2;
-  repeated string signers = 3;
+  // SessionIDComponents is an optional (alternate) way of defining what the session_id should be in the provided
+  // record. If provided, it must have both a scope and session_uuid. Those components will be used to create the
+  // MetadataAddress for the session which will override the session_id in the provided record. If not provided (or
+  // missing something), nothing special happens.
+  SessionIDComponents session_id_components = 3 [(gogoproto.moretags) = "yaml:\"session_id_components\""];
+
+  // contract_spec_uuid is an optional contract specification uuid string, e.g. "def6bc0a-c9dd-4874-948f-5206e6060a84"
+  // If provided, it will be combined with the record name to generate the MetadataAddress for the record specification
+  // which will override the specification_id in the provided record. If not provided (or it is an empty string),
+  // nothing special happens.
+  string contract_spec_uuid = 4 [(gogoproto.moretags) = "yaml:\"contract_spec_uuid\""];
 }
 
 // MsgWriteRecordResponse is the response type for the Msg/WriteRecord RPC method.
@@ -173,8 +219,16 @@ message MsgWriteScopeSpecificationRequest {
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
+  // specification is the ScopeSpecification you want added or updated.
   ScopeSpecification specification = 1 [(gogoproto.nullable) = false];
-  repeated string    signers       = 2;
+  // signers is the list of address of those signing this request.
+  repeated string signers = 2;
+
+  // spec_uuid is an optional scope specification uuid string, e.g. "dc83ea70-eacd-40fe-9adf-1cf6148bf8a2"
+  // If provided, it will be used to generate the MetadataAddress for the scope specification which will override the
+  // specification_id in the provided specification. If not provided (or it is an empty string), nothing special
+  // happens.
+  string spec_uuid = 3 [(gogoproto.moretags) = "yaml:\"spec_uuid\""];
 }
 
 // MsgWriteScopeSpecificationResponse is the response type for the Msg/WriteScopeSpecification RPC method.
@@ -209,8 +263,16 @@ message MsgWriteContractSpecificationRequest {
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
+  // specification is the ContractSpecification you want added or updated.
   ContractSpecification specification = 1 [(gogoproto.nullable) = false];
-  repeated string       signers       = 2;
+  // signers is the list of address of those signing this request.
+  repeated string signers = 2;
+
+  // spec_uuid is an optional contract specification uuid string, e.g. "def6bc0a-c9dd-4874-948f-5206e6060a84"
+  // If provided, it will be used to generate the MetadataAddress for the contract specification which will override the
+  // specification_id in the provided specification. If not provided (or it is an empty string), nothing special
+  // happens.
+  string spec_uuid = 3 [(gogoproto.moretags) = "yaml:\"spec_uuid\""];
 }
 
 // MsgWriteContractSpecificationResponse is the response type for the Msg/WriteContractSpecification RPC method.
@@ -246,8 +308,16 @@ message MsgWriteRecordSpecificationRequest {
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
+  // specification is the RecordSpecification you want added or updated.
   RecordSpecification specification = 1 [(gogoproto.nullable) = false];
-  repeated string     signers       = 2;
+  // signers is the list of address of those signing this request.
+  repeated string signers = 2;
+
+  // contract_spec_uuid is an optional contract specification uuid string, e.g. "def6bc0a-c9dd-4874-948f-5206e6060a84"
+  // If provided, it will be combined with the record specification name to generate the MetadataAddress for the record
+  // specification which will override the specification_id in the provided specification. If not provided (or it is an
+  // empty string), nothing special happens.
+  string contract_spec_uuid = 3 [(gogoproto.moretags) = "yaml:\"contract_spec_uuid\""];
 }
 
 // MsgWriteRecordSpecificationResponse is the response type for the Msg/WriteRecordSpecification RPC method.

@@ -509,9 +509,8 @@ func (k msgServer) P8EMemorializeContract(
 	recordIDInfos := make([]*types.RecordIdInfo, len(p8EData.Records))
 	for i, record := range p8EData.Records {
 		recordResp, err := k.WriteRecord(goCtx, &types.MsgWriteRecordRequest{
-			SessionId: p8EData.Session.SessionId,
-			Record:    record,
-			Signers:   signers,
+			Record:  record,
+			Signers: signers,
 		})
 		if err != nil {
 			return nil, err
