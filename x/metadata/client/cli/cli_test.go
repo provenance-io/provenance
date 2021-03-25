@@ -37,8 +37,9 @@ type IntegrationCLITestSuite struct {
 	cfg     testnet.Config
 	testnet *testnet.Network
 
-	asJson string
-	asText string
+	asJson         string
+	asText         string
+	includeRequest string
 
 	accountAddr sdk.AccAddress
 	accountKey  *secp256k1.PrivKey
@@ -127,6 +128,7 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 
 	s.asJson = fmt.Sprintf("--%s=json", tmcli.OutputFlag)
 	s.asText = fmt.Sprintf("--%s=text", tmcli.OutputFlag)
+	s.includeRequest = "--include-request"
 
 	genesisState := cfg.GenesisState
 	cfg.NumValidators = 1
@@ -496,19 +498,37 @@ func (s *IntegrationCLITestSuite) TestGetMetadataParamsCmd() {
 			"get params as json output",
 			[]string{s.asJson},
 			"",
-			"{}",
+			"{\"params\":{},\"request\":null}",
 		},
 		{
 			"get params as text output",
 			[]string{s.asText},
 			"",
-			"{}",
+			"params: {}\nrequest: null",
 		},
 		{
 			"get params - invalid args",
 			[]string{"bad-arg"},
-			"unknown command \"bad-arg\" for \"params\"",
-			"{}",
+			"unknown argument: bad-arg",
+			"",
+		},
+		{
+			"get params as json output including request",
+			[]string{s.asJson, s.includeRequest},
+			"",
+			"{\"params\":{},\"request\":{}}",
+		},
+		{
+			"get locator params as json",
+			[]string{"locator", s.asJson},
+			"",
+			"{\"params\":{\"max_uri_length\":2048},\"request\":{}}",
+		},
+		{
+			"get locator params as text including request",
+			[]string{"locator", s.asText, s.includeRequest},
+			"",
+			"params:\n  max_uri_length: 2048\nrequest: {}",
 		},
 	}
 
