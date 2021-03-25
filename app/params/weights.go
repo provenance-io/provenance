@@ -20,4 +20,8 @@ const (
 	DefaultWeightCommunitySpendProposal int = 5
 	DefaultWeightTextProposal           int = 5
 	DefaultWeightParamChangeProposal    int = 5
+
+	DefaultWeightMsgBindName            int = 5
+	DefaultWeightMsgDeleteName          int = 5
+	DefaultWeightCreateRootNameProposal int = 5
 )

@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	keyMaxValueLength = "maxvaluelength"
+	keyMaxValueLength = "MaxValueLength"
 )
 
 // ParamChanges defines the parameters that can be modified by param change proposals
@@ -23,7 +23,7 @@ func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
 	return []simtypes.ParamChange{
 		simulation.NewSimParamChange(types.ModuleName, keyMaxValueLength,
 			func(r *rand.Rand) string {
-				return fmt.Sprintf("\"%v\"", GenMaxValueLength(r))
+				return fmt.Sprintf("%d", GenMaxValueLength(r))
 			},
 		),
 	}

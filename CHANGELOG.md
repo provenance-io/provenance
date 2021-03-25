@@ -43,6 +43,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Allow withdrawals of any coin type from a marker account in WASM smart contracts. #151
 * Added cli tx commands `add-contract-specification` `remove-contract-specification` for updating/adding/removing metadata `ContractSpecification`s. #195
+* Simulation testing support #95
+* Name module simulation testing #24
 
 ## [v0.3.0](https://github.com/provenance-io/provenance/releases/tag/v0.3.0) - 2021-03-19
 

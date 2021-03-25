@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
@@ -17,11 +18,13 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
 	// "github.com/provenance-io/provenance/x/metadata/client/rest"
 	"github.com/provenance-io/provenance/x/metadata/client/cli"
 	"github.com/provenance-io/provenance/x/metadata/keeper"
+	"github.com/provenance-io/provenance/x/metadata/simulation"
 
 	// "github.com/provenance-io/provenance/x/metadata/simulation"
 	"github.com/provenance-io/provenance/x/metadata/types"
@@ -168,35 +171,32 @@ func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.Validato
 }
 
 // ____________________________________________________________________________
-/*
-// AppModuleSimulation functions
 
-// GenerateGenesisState creates a randomized GenState of the account module.
+// GenerateGenesisState creates a randomized GenState of the metadata module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
 }
 
-// ProposalContents returns all the account content functions used to
-// simulate account governance proposals.
+// ProposalContents returns all the metadata content functions used to
+// simulate metadata governance proposals.
 func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return simulation.ProposalContents(am.keeper)
+	return []simtypes.WeightedProposalContent{} // simulation.ProposalContents(am.keeper)
 }
 
-// RandomizedParams creates randomized account param changes for the simulator.
+// RandomizedParams creates randomized metadata param changes for the simulator.
 func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	return simulation.ParamChanges(r)
+	return []simtypes.ParamChange{} // simulation.ParamChanges(r)
 }
 
-// RegisterStoreDecoder registers a decoder for account module's types
+// RegisterStoreDecoder registers a decoder for metadata module's types
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	//sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
+	// sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
-// WeightedOperations returns the all the account module operations with their respective weights.
+// WeightedOperations returns the all the metadata module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	//return simulation.WeightedOperations(
+	// return simulation.WeightedOperations(
 	//	simState.AppParams, simState.Cdc, am.keeper, simState.Contents,
-	//)
+	// )
 	return []simtypes.WeightedOperation{}
 }
-*/
