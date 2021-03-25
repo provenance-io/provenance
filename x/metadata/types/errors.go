@@ -13,4 +13,5 @@ var (
 	ErrAddressNotBound     = sdkerrors.Register(ModuleName, 4, "no locator bound to address")
 	ErrOSLocatorURIToolong = sdkerrors.Register(ModuleName, 5, "uri length greater than allowed")
 	ErrNoRecordsFound      = sdkerrors.Register(ModuleName, 6, "No records found.")
+	ErrOSLocatorURIInvalid = sdkerrors.Register(ModuleName, 7, "uri is invalid")
 )

@@ -14,6 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
@@ -32,6 +33,18 @@ type KeeperTestSuite struct {
 	pubkey2   cryptotypes.PubKey
 	user2     string
 	user2Addr sdk.AccAddress
+
+	pubkey3   cryptotypes.PubKey
+	user3     string
+	user3Addr sdk.AccAddress
+
+	objectLocator metadatatypes.ObjectStoreLocator
+	ownerAddr     sdk.AccAddress
+	uri           string
+
+	objectLocator1 metadatatypes.ObjectStoreLocator
+	ownerAddr1     sdk.AccAddress
+	uri1           string
 }
 
 func (s *KeeperTestSuite) SetupTest() {
@@ -49,6 +62,25 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.pubkey2 = secp256k1.GenPrivKey().PubKey()
 	s.user2Addr = sdk.AccAddress(s.pubkey2.Address())
 	s.user2 = s.user2Addr.String()
+
+	s.pubkey3 = secp256k1.GenPrivKey().PubKey()
+	s.user3Addr = sdk.AccAddress(s.pubkey3.Address())
+	s.user3 = s.user3Addr.String()
+
+	// add os locator
+	s.ownerAddr = s.user1Addr
+	s.uri = "http://foo.com"
+	s.objectLocator = metadatatypes.NewOSLocatorRecord(s.ownerAddr, s.uri)
+
+	s.ownerAddr1 = s.user2Addr
+	s.uri1 = "http://bar.com"
+	s.objectLocator1 = metadatatypes.NewOSLocatorRecord(s.ownerAddr1, s.uri1)
+	//set up genesis
+	var metadataData metadatatypes.GenesisState
+	metadataData.Params = metadatatypes.DefaultParams()
+	metadataData.OSLocatorParams = metadatatypes.DefaultOSLocatorParams()
+	metadataData.ObjectStoreLocators = append(metadataData.ObjectStoreLocators, s.objectLocator, s.objectLocator1)
+	s.app.MetadataKeeper.InitGenesis(s.ctx, &metadataData)
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -141,28 +173,28 @@ func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSigners() {
 			errorMsg: "missing signature from missingowner (PARTY_TYPE_OWNER)",
 		},
 		"two owners - both are signers": {
-			owners:   []types.Party{
+			owners: []types.Party{
 				{Address: "owner1", Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: "owner2", Role: types.PartyType_PARTY_TYPE_OWNER}},
 			signers:  []string{"owner2", "owner1"},
 			errorMsg: "",
 		},
 		"two owners - only one is signer": {
-			owners:   []types.Party{
+			owners: []types.Party{
 				{Address: "owner1", Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: "missingowner", Role: types.PartyType_PARTY_TYPE_OWNER}},
 			signers:  []string{"owner2", "owner1"},
 			errorMsg: "missing signature from missingowner (PARTY_TYPE_OWNER)",
 		},
 		"two parties - one owner one other - only owner is signer": {
-			owners:   []types.Party{
+			owners: []types.Party{
 				{Address: "owner", Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: "affiliate", Role: types.PartyType_PARTY_TYPE_AFFILIATE}},
 			signers:  []string{"owner"},
 			errorMsg: "missing signature from affiliate (PARTY_TYPE_AFFILIATE)",
 		},
 		"two parties - one owner one other - only other is signer": {
-			owners:   []types.Party{
+			owners: []types.Party{
 				{Address: "owner", Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: "affiliate", Role: types.PartyType_PARTY_TYPE_AFFILIATE}},
 			signers:  []string{"affiliate"},
@@ -262,9 +294,9 @@ func (s *KeeperTestSuite) TestValidateAllOwnersAreSigners() {
 func (s *KeeperTestSuite) TestFindMissing() {
 	tests := map[string]struct {
 		required []string
-		entries []string
+		entries  []string
 		expected []string
-	} {
+	}{
 		"empty required - empty entries - empty out": {
 			[]string{},
 			[]string{},
@@ -388,4 +420,101 @@ func (s *KeeperTestSuite) TestFindMissing() {
 			assert.Equal(t, tc.expected, actual)
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestGetOSLocator() {
+	s.Run("get os locator by owner address", func() {
+		r, found := s.app.MetadataKeeper.GetOsLocatorRecord(s.ctx, s.user1Addr)
+		s.Require().NotEmpty(r)
+		s.Require().True(found)
+	})
+	s.Run("not found by owner address", func() {
+		r, found := s.app.MetadataKeeper.GetOsLocatorRecord(s.ctx, sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()))
+		s.Require().Empty(r)
+		s.Require().False(found)
+	})
+}
+
+func (s *KeeperTestSuite) TestAddOSLocator() {
+	s.Run("add os locator", func() {
+		// create account and check default values
+		acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user3Addr)
+		s.Require().NotNil(acc)
+		s.Require().Equal(s.user3Addr, acc.GetAddress())
+		s.Require().EqualValues(nil, acc.GetPubKey())
+		s.Require().EqualValues(0, acc.GetSequence())
+		// set and get the new account.
+		s.app.AccountKeeper.SetAccount(s.ctx, acc)
+		acc1 := s.app.AccountKeeper.GetAccount(s.ctx, s.user3Addr)
+		s.Require().NotNil(acc1)
+		// create os locator with ^^ account
+		err := s.app.MetadataKeeper.SetOSLocatorRecord(s.ctx, s.user3Addr, "https://bob.com/alice")
+		s.Require().Empty(err)
+		r, found := s.app.MetadataKeeper.GetOsLocatorRecord(s.ctx, s.user1Addr)
+		s.Require().NotEmpty(r)
+		s.Require().True(found)
+	})
+
+	s.Run("add os locator account does not exist.", func() {
+		// create account and check default values
+		err := s.app.MetadataKeeper.SetOSLocatorRecord(s.ctx, sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()), "https://bob.com/alice")
+		s.Require().NotEmpty(err)
+	})
+
+	s.Run("add os bad uri.", func() {
+		pubkey4 := secp256k1.GenPrivKey().PubKey()
+		user4Addr := sdk.AccAddress(pubkey4.Address())
+		// create account and check default values
+		acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, user4Addr)
+		s.Require().NotNil(acc)
+		s.Require().Equal(user4Addr, acc.GetAddress())
+		s.Require().EqualValues(nil, acc.GetPubKey())
+		s.Require().EqualValues(0, acc.GetSequence())
+		// set and get the new account.
+		s.app.AccountKeeper.SetAccount(s.ctx, acc)
+		acc1 := s.app.AccountKeeper.GetAccount(s.ctx, user4Addr)
+		s.Require().NotNil(acc1)
+		// create os locator with ^^ account
+		err := s.app.MetadataKeeper.SetOSLocatorRecord(s.ctx, user4Addr, "foo.com")
+		s.Require().NotEmpty(err)
+		r, found := s.app.MetadataKeeper.GetOsLocatorRecord(s.ctx, user4Addr)
+		s.Require().Empty(r)
+		s.Require().False(found)
+	})
+}
+
+func (s *KeeperTestSuite) TestModifyOSLocator() {
+	s.Run("modify os locator", func() {
+		// modify os locator
+		err := s.app.MetadataKeeper.ModifyRecord(s.ctx, s.user1Addr, "https://bob.com/alice")
+		s.Require().Empty(err)
+		r, found := s.app.MetadataKeeper.GetOsLocatorRecord(s.ctx, s.user1Addr)
+		s.Require().NotEmpty(r)
+		s.Require().True(found)
+		s.Require().Equal("https://bob.com/alice", r.LocatorUri)
+	})
+	s.Run("modify os locator invalid uri", func() {
+		// modify os locator
+		err := s.app.MetadataKeeper.ModifyRecord(s.ctx, s.user1Addr, "://bob.com/alice")
+		s.Require().NotEmpty(err)
+	})
+
+	s.Run("modify os locator invalid uri length", func() {
+		// modify os locator
+		err := s.app.MetadataKeeper.ModifyRecord(s.ctx, s.user1Addr, "https://www.google.com/search?q=long+url+example&oq=long+uril+&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8")
+		s.Require().NotEmpty(err)
+		s.Require().Equal("uri length greater than allowed",err.Error())
+	})
+}
+
+func (s *KeeperTestSuite) TestDeleteOSLocator() {
+	s.Run("delete os locator", func() {
+		// modify os locator
+		err := s.app.MetadataKeeper.DeleteRecord(s.ctx, s.user1Addr)
+		s.Require().Empty(err)
+		r, found := s.app.MetadataKeeper.GetOsLocatorRecord(s.ctx, s.user1Addr)
+		s.Require().Empty(r)
+		s.Require().False(found)
+
+	})
 }
