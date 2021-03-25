@@ -3,10 +3,10 @@ package simulation
 import (
 	"math/rand"
 
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	simappparams "github.com/provenance-io/provenance/app/params"
 
 	"github.com/provenance-io/provenance/x/name/keeper"
 	"github.com/provenance-io/provenance/x/name/types"
@@ -20,7 +20,7 @@ func ProposalContents(k keeper.Keeper) []simtypes.WeightedProposalContent {
 	return []simtypes.WeightedProposalContent{
 		simulation.NewWeightedProposalContent(
 			OpWeightSubmitCreateRootNameProposal,
-			simappparams.DefaultWeightCommunitySpendProposal,
+			simappparams.DefaultWeightCreateRootNameProposal,
 			SimulateCreateRootNameProposalContent(k),
 		),
 	}
