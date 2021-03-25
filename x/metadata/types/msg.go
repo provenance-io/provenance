@@ -407,8 +407,8 @@ func (msg MsgDeleteScopeSpecificationRequest) ValidateBasic() error {
 // ------------------  MsgWriteContractSpecificationRequest  ------------------
 
 // NewMsgWriteContractSpecificationRequest creates a new msg instance
-func NewMsgWriteContractSpecificationRequest() *MsgWriteContractSpecificationRequest {
-	return &MsgWriteContractSpecificationRequest{}
+func NewMsgWriteContractSpecificationRequest(specification ContractSpecification, signers []string) *MsgWriteContractSpecificationRequest {
+	return &MsgWriteContractSpecificationRequest{Specification: specification, Signers: signers}
 }
 
 func (msg MsgWriteContractSpecificationRequest) String() string {
@@ -447,8 +447,8 @@ func (msg MsgWriteContractSpecificationRequest) ValidateBasic() error {
 // ------------------  MsgDeleteContractSpecificationRequest  ------------------
 
 // NewMsgDeleteContractSpecificationRequest creates a new msg instance
-func NewMsgDeleteContractSpecificationRequest() *MsgDeleteContractSpecificationRequest {
-	return &MsgDeleteContractSpecificationRequest{}
+func NewMsgDeleteContractSpecificationRequest(specificationID MetadataAddress, signers []string) *MsgDeleteContractSpecificationRequest {
+	return &MsgDeleteContractSpecificationRequest{SpecificationId: specificationID, Signers: signers}
 }
 
 func (msg MsgDeleteContractSpecificationRequest) String() string {
