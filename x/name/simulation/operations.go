@@ -56,6 +56,7 @@ func WeightedOperations(
 	}
 }
 
+// SimulateMsgBindName will bind a name under an existing name using a 40% probability of restricting it.
 func SimulateMsgBindName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
@@ -78,16 +79,23 @@ func SimulateMsgBindName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankk
 		if parent.Restricted && parent.Address != simAccount.Address.String() {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgBindNameRequest, "parent name record is restricted, not current owner"), nil, nil
 		}
-		// tell the system we are the owner/signer of the parent record
-		parent.Address = simAccount.Address.String()
 
-		restrict := r.Intn(9) < 1
-		msg := types.NewMsgBindNameRequest(types.NewNameRecord(simtypes.RandStringOfLength(r, r.Intn(10)+2), simAccount.Address, restrict), parent)
+		restrict := r.Intn(9) < 4
+		msg := types.NewMsgBindNameRequest(
+			types.NewNameRecord(
+				simtypes.RandStringOfLength(r, r.Intn(10)+2),
+				simAccount.Address,
+				restrict),
+			types.NewNameRecord(
+				parent.Name,
+				simAccount.Address,
+				parent.Restricted))
 
 		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg)
 	}
 }
 
+// SimulateMsgDeleteName will dispatch a delete name operation against a random name record
 func SimulateMsgDeleteName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
@@ -118,6 +126,8 @@ func SimulateMsgDeleteName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk ban
 	}
 }
 
+// Dispatch sends an operation to the chain using a given account/funds on account for fees.  Failures on the server side
+// are handled as no-op msg operations with the error string as the status/response.
 func Dispatch(
 	r *rand.Rand,
 	app *baseapp.BaseApp,
