@@ -264,10 +264,10 @@ message ScopeResponse {
 message ScopeWrapper {
   // scope is the on-chain scope message.
   Scope scope = 1;
-  // scope_addr is the bech32 address of the scope, e.g. scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel.
-  string scope_addr = 2 [(gogoproto.moretags) = "yaml:\"scope_addr\""];
-  // scope_uuid is the uuid of this scope, e.g. 91978ba2-5f35-459a-86a7-feca1b0512e0.
-  string scope_uuid = 3 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
+  // scope_id_info contains information about the id/address of the scope.
+  ScopeIdInfo scope_id_info = 2 [(gogoproto.moretags) = "yaml:\"scope_id_info\""];
+  // scope_spec_id_info contains information about the id/address of the scope specification.
+  ScopeSpecIdInfo scope_spec_id_info = 3 [(gogoproto.moretags) = "yaml:\"scope_spec_id_info\""];
 }
 
 // ScopesAllRequest is the request type for the Query/ScopesAll RPC method.
@@ -320,17 +320,10 @@ message SessionsResponse {
 message SessionWrapper {
   // session is the on-chain session message.
   Session session = 1;
-  // scope_addr is the bech32 address of the scope containing this session, e.g.
-  // scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel.
-  string scope_addr = 2 [(gogoproto.moretags) = "yaml:\"scope_addr\""];
-  // session_addr is the bech32 address of the session, e.g.
-  // session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr.
-  string session_addr = 3 [(gogoproto.moretags) = "yaml:\"session_addr\""];
-  // scope_uuid is the uuid of the scope containing this session, e.g. 91978ba2-5f35-459a-86a7-feca1b0512e0.
-  string scope_uuid = 4 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
-  // session_uuid is the uuid of the session, e.g. 5803f8bc-6067-4eb5-951f-2121671c2ec0.
-  // This is meaningless without the added context of the scope uuid (or scope addr).
-  string session_uuid = 5 [(gogoproto.moretags) = "yaml:\"session_uuid\""];
+  // session_id_info contains information about the id/address of the session.
+  SessionIdInfo session_id_info = 2 [(gogoproto.moretags) = "yaml:\"session_id_info\""];
+  // contract_spec_id_info contains information about the id/address of the contract specification.
+  ContractSpecIdInfo contract_spec_id_info = 3 [(gogoproto.moretags) = "yaml:\"contract_spec_id_info\""];
 }
 
 // SessionsAllRequest is the request type for the Query/SessionsAll RPC method.
@@ -387,20 +380,10 @@ message RecordsResponse {
 message RecordWrapper {
   // record is the on-chain record message.
   Record record = 1;
-  // scope_addr is the bech32 address of the scope containing this record, e.g.
-  // scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel.
-  string scope_addr = 2 [(gogoproto.moretags) = "yaml:\"scope_addr\""];
-  // session_addr is the bech32 address of the session containing this record, e.g.
-  // session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr.
-  string session_addr = 3 [(gogoproto.moretags) = "yaml:\"session_addr\""];
-  // record_addr is the bech32 address of this record, e.g.
-  // record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3
-  string record_addr = 4 [(gogoproto.moretags) = "yaml:\"record_addr\""];
-  // scope_uuid is the uuid of the scope containing this record, e.g. 91978ba2-5f35-459a-86a7-feca1b0512e0.
-  string scope_uuid = 5 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
-  // session_uuid is the uuid of the session containing this record, e.g. 5803f8bc-6067-4eb5-951f-2121671c2ec0.
-  // This is meaningless without the added context of the scope_uuid (or scope_addr).
-  string session_uuid = 6 [(gogoproto.moretags) = "yaml:\"session_uuid\""];
+  // record_id_info contains information about the id/address of the record.
+  RecordIdInfo record_id_info = 2 [(gogoproto.moretags) = "yaml:\"record_id_info\""];
+  // record_spec_id_info contains information about the id/address of the record specification.
+  RecordSpecIdInfo record_spec_id_info = 3 [(gogoproto.moretags) = "yaml:\"record_spec_id_info\""];
 }
 
 // RecordsAllRequest is the request type for the Query/RecordsAll RPC method.
@@ -478,10 +461,8 @@ message ScopeSpecificationResponse {
 message ScopeSpecificationWrapper {
   // specification is the on-chain scope specification message.
   ScopeSpecification specification = 1;
-  // specification_uuid is the uuid of the scope specification.
-  string specification_uuid = 2 [(gogoproto.moretags) = "yaml:\"specification_uuid\""];
-  // specification_addr is the address of the scope specification.
-  string specification_addr = 3 [(gogoproto.moretags) = "yaml:\"specification_addr\""];
+  // scope_spec_id_info contains information about the id/address of the scope specification.
+  ScopeSpecIdInfo scope_spec_id_info = 2 [(gogoproto.moretags) = "yaml:\"scope_spec_id_info\""];
 }
 
 // ScopeSpecificationsAllRequest is the request type for the Query/ScopeSpecificationsAll RPC method.
@@ -531,10 +512,8 @@ message ContractSpecificationResponse {
 message ContractSpecificationWrapper {
   // specification is the on-chain contract specification message.
   ContractSpecification specification = 1;
-  // specification_uuid is the uuid of the contract specification.
-  string specification_uuid = 2 [(gogoproto.moretags) = "yaml:\"specification_uuid\""];
-  // specification_addr is the address of the contract specification.
-  string specification_addr = 3 [(gogoproto.moretags) = "yaml:\"specification_addr\""];
+  // contract_spec_id_info contains information about the id/address of the contract specification.
+  ContractSpecIdInfo contract_spec_id_info = 2 [(gogoproto.moretags) = "yaml:\"contract_spec_id_info\""];
 }
 
 // ContractSpecificationsAllRequest is the request type for the Query/ContractSpecificationsAll RPC method.
@@ -606,12 +585,8 @@ message RecordSpecificationResponse {
 message RecordSpecificationWrapper {
   // specification is the on-chain record specification message.
   RecordSpecification specification = 1;
-  // specification_addr is the address of this record specification.
-  string specification_addr = 2 [(gogoproto.moretags) = "yaml:\"specification_addr\""];
-  // contract_specification_uuid is the uuid of the contract specification that holds this record specification.
-  string contract_specification_uuid = 3 [(gogoproto.moretags) = "yaml:\"contract_specification_uuid\""];
-  // contract_specification_addr is the address of the contract specification that holds this record specification.
-  string contract_specification_addr = 4 [(gogoproto.moretags) = "yaml:\"contract_specification_addr\""];
+  // record_spec_id_info contains information about the id/address of the record specification.
+  RecordSpecIdInfo record_spec_id_info = 2 [(gogoproto.moretags) = "yaml:\"record_spec_id_info\""];
 }
 
 // RecordSpecificationsAllRequest is the request type for the Query/RecordSpecificationsAll RPC method.

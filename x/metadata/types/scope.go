@@ -210,6 +210,15 @@ func (r Record) String() string {
 	return out
 }
 
+// GetRecordAddress returns the address for this record, or an empty MetadataAddress if it cannot be constructed.
+func (r Record) GetRecordAddress() MetadataAddress {
+	addr, err := r.SessionId.AsRecordAddress(r.Name)
+	if err == nil {
+		return addr
+	}
+	return MetadataAddress{}
+}
+
 // NewRecordInput creates new instance of RecordInput
 func NewRecordInput(name string, source isRecordInput_Source, typeName string, status RecordInputStatus) *RecordInput {
 	return &RecordInput{
