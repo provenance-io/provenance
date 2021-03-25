@@ -207,22 +207,22 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 	sc, err := queryClient.Sessions(gocontext.Background(), &types.SessionsRequest{ScopeId: scopeUUID.String()})
 	s.NoError(err)
 	s.Equal(10, len(sc.Sessions), "should be 10 sessions in set for session context query by scope uuid")
-	s.Equal(scopeID.String(), sc.Sessions[0].ScopeAddr)
+	s.Equal(scopeID.String(), sc.Sessions[0].SessionIdInfo.ScopeIdInfo.ScopeAddr)
 
 	sc, err = queryClient.Sessions(gocontext.Background(), &types.SessionsRequest{ScopeId: scopeUUID.String(), SessionId: sessionUUID.String()})
 	s.NoError(err)
 	s.Equal(1, len(sc.Sessions), "should be 1 session in set for session context query by scope uuid and session uuid")
-	s.Equal(scopeID.String(), sc.Sessions[0].ScopeAddr)
-	s.Equal(sessionID.String(), sc.Sessions[0].SessionAddr)
+	s.Equal(scopeID.String(), sc.Sessions[0].SessionIdInfo.ScopeIdInfo.ScopeAddr)
+	s.Equal(sessionID.String(), sc.Sessions[0].SessionIdInfo.SessionAddr)
 
 	scrs, err := queryClient.Sessions(gocontext.Background(), &types.SessionsRequest{ScopeId: scopeID.String()})
 	s.Equal(10, len(scrs.Sessions), "should be 10 sessions in set for session context query by scope uuid")
-	s.Equal(scopeID.String(), scrs.Sessions[0].ScopeAddr)
+	s.Equal(scopeID.String(), scrs.Sessions[0].SessionIdInfo.ScopeIdInfo.ScopeAddr)
 
 	scrs, err = queryClient.Sessions(gocontext.Background(), &types.SessionsRequest{ScopeId: scopeID.String(), SessionId: sessionID.String()})
 	s.Equal(1, len(scrs.Sessions), "should be 1 sessions in set for session context query by scope id and session id")
-	s.Equal(scopeID.String(), scrs.Sessions[0].ScopeAddr)
-	s.Equal(sessionID.String(), scrs.Sessions[0].SessionAddr)
+	s.Equal(scopeID.String(), scrs.Sessions[0].SessionIdInfo.ScopeIdInfo.ScopeAddr)
+	s.Equal(sessionID.String(), scrs.Sessions[0].SessionIdInfo.SessionAddr)
 }
 
 // TODO: SessionsAll tests
@@ -252,27 +252,27 @@ func (s *QueryServerTestSuite) TestRecordsQuery() {
 	rsUUID, err := queryClient.Records(gocontext.Background(), &types.RecordsRequest{ScopeId: scopeUUID.String()})
 	s.NoError(err)
 	s.Equal(10, len(rsUUID.Records), "should be 10 records in set for record query by scope uuid")
-	s.Equal(scopeUUID.String(), rsUUID.Records[0].ScopeUuid)
-	s.Equal(scopeID.String(), rsUUID.Records[0].ScopeAddr)
+	s.Equal(scopeUUID.String(), rsUUID.Records[0].RecordIdInfo.ScopeIdInfo.ScopeUuid)
+	s.Equal(scopeID.String(), rsUUID.Records[0].RecordIdInfo.ScopeIdInfo.ScopeAddr)
 
 	rsUUID2, err2 := queryClient.Records(gocontext.Background(), &types.RecordsRequest{ScopeId: scopeUUID.String(), Name: recordNames[0]})
 	s.NoError(err2)
 	s.Equal(1, len(rsUUID2.Records), "should be 1 record in set for record query by scope uuid")
-	s.Equal(scopeUUID.String(), rsUUID2.Records[0].ScopeUuid)
-	s.Equal(scopeID.String(), rsUUID2.Records[0].ScopeAddr)
+	s.Equal(scopeUUID.String(), rsUUID2.Records[0].RecordIdInfo.ScopeIdInfo.ScopeUuid)
+	s.Equal(scopeID.String(), rsUUID2.Records[0].RecordIdInfo.ScopeIdInfo.ScopeAddr)
 	s.Equal(recordNames[0], rsUUID2.Records[0].Record.Name)
 
 	rsID, err := queryClient.Records(gocontext.Background(), &types.RecordsRequest{ScopeId: scopeID.String()})
 	s.NoError(err)
 	s.Equal(10, len(rsID.Records), "should be 10 records in set for record query by scope id")
-	s.Equal(scopeUUID.String(), rsID.Records[0].ScopeUuid)
-	s.Equal(scopeID.String(), rsID.Records[0].ScopeAddr)
+	s.Equal(scopeUUID.String(), rsID.Records[0].RecordIdInfo.ScopeIdInfo.ScopeUuid)
+	s.Equal(scopeID.String(), rsID.Records[0].RecordIdInfo.ScopeIdInfo.ScopeAddr)
 
 	rsID, err = queryClient.Records(gocontext.Background(), &types.RecordsRequest{ScopeId: scopeID.String(), Name: recordNames[0]})
 	s.NoError(err)
 	s.Equal(1, len(rsID.Records), "should be 1 record in set for record query by scope id")
-	s.Equal(scopeUUID.String(), rsID.Records[0].ScopeUuid)
-	s.Equal(scopeID.String(), rsID.Records[0].ScopeAddr)
+	s.Equal(scopeUUID.String(), rsID.Records[0].RecordIdInfo.ScopeIdInfo.ScopeUuid)
+	s.Equal(scopeID.String(), rsID.Records[0].RecordIdInfo.ScopeIdInfo.ScopeAddr)
 	s.Equal(recordNames[0], rsID.Records[0].Record.Name)
 }
 

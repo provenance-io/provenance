@@ -183,8 +183,8 @@ func (suite *IntegrationGRPCTestSuite) TestGRPCQueries() {
 			&metadatatypes.ScopeResponse{
 				Scope: &metadatatypes.ScopeWrapper{
 					Scope: &suite.scope,
-					ScopeAddr: suite.scopeID.String(),
-					ScopeUuid: suite.scopeUUID.String(),
+					ScopeIdInfo: types.GetScopeIDInfo(suite.scopeID),
+					ScopeSpecIdInfo: types.GetScopeSpecIDInfo(suite.specID),
 				},
 				Request: &metadatatypes.ScopeRequest{ScopeId: suite.scopeUUID.String()},
 			},
