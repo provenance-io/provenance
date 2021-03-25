@@ -98,14 +98,18 @@ func convertGroups(oldScopeUUID uuid.UUID, old []*v039metadata.RecordGroup) (new
 		}
 		newSession[i].SpecificationId = specAddr
 
-		newRecords = append(newRecords, convertRecords(newSession[i].SessionId, g.Records)...)
+		newRecords = append(newRecords, convertRecords(newSession[i].SessionId, specAddr, g.Records)...)
 	}
 	return
 }
 
 // convertRecords converts the v039 Records within a RecordGroup structure to the updated independent record assigning
 // each using the groupID provided.
-func convertRecords(sessionID v040metadata.MetadataAddress, old []*v039metadata.Record) (new []v040metadata.Record) {
+func convertRecords(sessionID v040metadata.MetadataAddress, cSpecAddr v040metadata.MetadataAddress, old []*v039metadata.Record) (new []v040metadata.Record) {
+	cSpecUUID, err := cSpecAddr.ContractSpecUUID()
+	if err != nil {
+		panic(err)
+	}
 	new = make([]v040metadata.Record, len(old))
 	for i, r := range old {
 		new[i] = v040metadata.Record{
@@ -125,6 +129,7 @@ func convertRecords(sessionID v040metadata.MetadataAddress, old []*v039metadata.
 					Status: v040metadata.ResultStatus(int32(r.Result)),
 				},
 			},
+			SpecificationId: v040metadata.RecordSpecMetadataAddress(cSpecUUID, r.ResultName),
 		}
 	}
 	return
