@@ -56,5 +56,6 @@ ignore:
   - "x/**/*.pb.go"
   - "x/**/*.pb.gw.go"
   - "x/**/test_common.go"
+  - "x/**/test_helpers.go"
   - "scripts/"
   - "contrib"

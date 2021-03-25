@@ -63,10 +63,12 @@ func SimulateMsgBindName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankk
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 
 		var records []types.NameRecord
-		k.IterateRecords(ctx, types.NameKeyPrefix, func(record types.NameRecord) error {
+		if err := k.IterateRecords(ctx, types.NameKeyPrefix, func(record types.NameRecord) error {
 			records = append(records, record)
 			return nil
-		})
+		}); err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgBindNameRequest, "iterator of existing records failed"), nil, err
+		}
 
 		if len(records) == 0 {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgBindNameRequest, "no name records available to create under"), nil, nil
@@ -75,10 +77,9 @@ func SimulateMsgBindName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankk
 		parent := records[r.Intn(len(records))]
 		if parent.Restricted && parent.Address != simAccount.Address.String() {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgBindNameRequest, "parent name record is restricted, not current owner"), nil, nil
-		} else {
-			// tell the system we are the owner/signer of the parent record
-			parent.Address = simAccount.Address.String()
 		}
+		// tell the system we are the owner/signer of the parent record
+		parent.Address = simAccount.Address.String()
 
 		restrict := r.Intn(9) < 1
 		msg := types.NewMsgBindNameRequest(types.NewNameRecord(simtypes.RandStringOfLength(r, r.Intn(10)+2), simAccount.Address, restrict), parent)
@@ -94,10 +95,12 @@ func SimulateMsgDeleteName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk ban
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 
 		var records []types.NameRecord
-		k.IterateRecords(ctx, types.NameKeyPrefix, func(record types.NameRecord) error {
+		if err := k.IterateRecords(ctx, types.NameKeyPrefix, func(record types.NameRecord) error {
 			records = append(records, record)
 			return nil
-		})
+		}); err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgBindNameRequest, "iterator of existing records failed"), nil, err
+		}
 
 		if len(records) == 0 {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgDeleteNameRequest, "no name records available to delete"), nil, nil
