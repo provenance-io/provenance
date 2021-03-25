@@ -1097,88 +1097,88 @@ func (s *IntegrationCLITestSuite) TestGetMetadataScopeSpecCmd() {
 func (s *IntegrationCLITestSuite) TestGetMetadataContractSpecCmd() {
 	cmd := cli.GetMetadataContractSpecCmd()
 
-	testCases := []queryCmdTestCase{
+	testCases := []queryCmdTestCaseV2{
 		{
 			"contract spec from contract spec id as json",
 			[]string{s.contractSpecID.String(), s.asJson},
 			"",
-			s.contractSpecAsJson,
+			[]string{s.contractSpecAsJson},
 		},
 		{
 			"contract spec from contract spec id as text",
 			[]string{s.contractSpecID.String(), s.asText},
 			"",
-			s.contractSpecAsText,
+			[]string{indent(s.contractSpecAsText, 4)},
 		},
 		{
 			"contract spec id does not exist",
 			[]string{"contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn"},
-			"rpc error: code = NotFound desc = contract specification with id contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn (uuid def6bc0a-c9dd-4874-948f-5206e6060a84) not found: key not found",
 			"",
+			[]string{"specification: null", "contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn"},
 		},
 		{
 			"contract spec from contract spec uuid as json",
 			[]string{s.contractSpecUUID.String(), s.asJson},
 			"",
-			s.contractSpecAsJson,
+			[]string{s.contractSpecAsJson},
 		},
 		{
 			"contract spec from contract spec uuid as text",
 			[]string{s.contractSpecUUID.String(), s.asText},
 			"",
-			s.contractSpecAsText,
+			[]string{indent(s.contractSpecAsText, 4)},
 		},
 		{
 			"contract spec uuid does not exist",
 			[]string{"def6bc0a-c9dd-4874-948f-5206e6060a84"},
-			"rpc error: code = NotFound desc = contract specification with id contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn (uuid def6bc0a-c9dd-4874-948f-5206e6060a84) not found: key not found",
 			"",
+			[]string{"specification: null", "def6bc0a-c9dd-4874-948f-5206e6060a84"},
 		},
 		{
 			"contract spec from record spec id as json",
 			[]string{s.recordSpecID.String(), s.asJson},
 			"",
-			s.contractSpecAsJson,
+			[]string{s.contractSpecAsJson},
 		},
 		{
 			"contract spec from record spec id as text",
 			[]string{s.recordSpecID.String(), s.asText},
 			"",
-			s.contractSpecAsText,
+			[]string{indent(s.contractSpecAsText, 4)},
 		},
 		{
 			"record spec id does not exist",
 			[]string{"recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44"},
-			"rpc error: code = NotFound desc = contract specification with id contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn (uuid def6bc0a-c9dd-4874-948f-5206e6060a84) not found: key not found",
 			"",
+			[]string{"specification: null"},
 		},
 		{
 			"bad prefix",
 			[]string{"record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3"},
-			"unexpected metadata address prefix on record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3: this metadata address (record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3) does not contain a contract specification uuid",
-			"",
+			"rpc error: code = InvalidArgument desc = invalid specification id: address [record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3] is not a contract spec address: invalid request",
+			[]string{},
 		},
 		{
 			"bad arg",
 			[]string{"badbadarg"},
-			"argument badbadarg is neither a metadata address (decoding bech32 failed: invalid index of 1) nor uuid (invalid UUID length: 9)",
-			"",
+			"rpc error: code = InvalidArgument desc = invalid specification id: could not parse [badbadarg] into either a contract spec address (decoding bech32 failed: invalid index of 1) or uuid (invalid UUID length: 9): invalid request",
+			[]string{},
 		},
 		{
 			"two args",
 			[]string{"arg1", "arg2"},
 			"accepts 1 arg(s), received 2",
-			"",
+			[]string{},
 		},
 		{
 			"no args",
 			[]string{},
 			"accepts 1 arg(s), received 0",
-			"",
+			[]string{},
 		},
 	}
 
-	runQueryCmdTestCases(s, cmd, testCases)
+	runQueryCmdTestCasesV2(s, cmd, testCases)
 }
 
 func (s *IntegrationCLITestSuite) TestGetMetadataRecordSpecCmd() {
