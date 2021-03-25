@@ -13,7 +13,7 @@ const (
 	// DefaultEnableGovernance (true) indicates that governance proposals are allowed for managing markers
 	DefaultEnableGovernance = true
 	// DefaultMaxTotalSupply is the upper bound to enforce on supply for markers.
-	DefaultMaxTotalSupply = 100000000000
+	DefaultMaxTotalSupply = uint64(100000000000)
 	// DefaultUnrestrictedDenomRegex is a regex that denoms created by normal requests must pass.
 	DefaultUnrestrictedDenomRegex = `[a-zA-Z][a-zA-Z0-9/]{2,64}`
 )
