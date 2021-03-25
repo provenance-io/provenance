@@ -20,23 +20,23 @@ func TestParamChanges(t *testing.T) {
 		subspace    string
 	}{
 		{
-			composedKey: "name/minsegmentlength",
-			key:         "minsegmentlength",
+			composedKey: "name/MinSegmentLength",
+			key:         "MinSegmentLength",
 			subspace:    nametypes.ModuleName,
 		},
 		{
-			composedKey: "name/maxsegmentlength",
-			key:         "maxsegmentlength",
+			composedKey: "name/MaxSegmentLength",
+			key:         "MaxSegmentLength",
 			subspace:    nametypes.ModuleName,
 		},
 		{
-			composedKey: "name/maxnamelevels",
-			key:         "maxnamelevels",
+			composedKey: "name/MaxNameLevels",
+			key:         "MaxNameLevels",
 			subspace:    nametypes.ModuleName,
 		},
 		{
-			composedKey: "name/unrestricednames",
-			key:         "unrestricednames",
+			composedKey: "name/AllowUnrestrictedNames",
+			key:         "AllowUnrestrictedNames",
 			subspace:    nametypes.ModuleName,
 		},
 	}
