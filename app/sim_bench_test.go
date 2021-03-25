@@ -7,7 +7,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/provenance-io/provenance/app/params"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdksim "github.com/cosmos/cosmos-sdk/simapp"
@@ -16,7 +15,7 @@ import (
 )
 
 // Profile with:
-// /usr/local/go/bin/go test -benchmem -run=^$ github.com/cosmos/cosmos-sdk/simapp -bench ^BenchmarkFullAppSimulation$ -Commit=true -cpuprofile cpu.out
+// go test -benchmem -run=^$ github.com/provenance-io/provenance/app -bench ^BenchmarkFullAppSimulation$ -Commit=true -cpuprofile cpu.out
 func BenchmarkFullAppSimulation(b *testing.B) {
 	b.ReportAllocs()
 	config, db, dir, logger, skip, err := sdksim.SetupSimulation("goleveldb-app-sim", "Simulation")
@@ -36,7 +35,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		}
 	}()
 
-	app := New(appName, logger, db, nil, true, map[int64]bool{}, DefaultNodeHome(appName), sdksim.FlagPeriodValue, params.MakeTestEncodingConfig(), EmptyAppOptions{}, interBlockCacheOpt())
+	app := New(appName, logger, db, nil, true, map[int64]bool{}, DefaultNodeHome(appName), sdksim.FlagPeriodValue, MakeEncodingConfig(), EmptyAppOptions{}, interBlockCacheOpt())
 
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
@@ -86,7 +85,7 @@ func BenchmarkInvariants(b *testing.B) {
 		}
 	}()
 
-	app := New(appName, logger, db, nil, true, map[int64]bool{}, DefaultNodeHome(appName), sdksim.FlagPeriodValue, params.MakeTestEncodingConfig(), EmptyAppOptions{}, interBlockCacheOpt())
+	app := New(appName, logger, db, nil, true, map[int64]bool{}, DefaultNodeHome(appName), sdksim.FlagPeriodValue, MakeEncodingConfig(), EmptyAppOptions{}, interBlockCacheOpt())
 
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(

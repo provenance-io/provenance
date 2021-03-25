@@ -42,6 +42,9 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	app2 := New(appName, log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome(appName), 0, encCfg, EmptyAppOptions{})
 	_, err = app2.ExportAppStateAndValidators(false, []string{})
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
+
+	_, err = app2.ExportAppStateAndValidators(true, []string{})
+	require.NoError(t, err, "ExportAppStateAndValidators (for zero height) should not have an error")
 }
 
 func TestGetMaccPerms(t *testing.T) {
