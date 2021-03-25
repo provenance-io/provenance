@@ -40,6 +40,8 @@ func TestWriteScopeRoute(t *testing.T) {
   - data_accessor
   value_owner_address: value_owner
 signers: []
+scope_uuid: ""
+spec_uuid: ""
 `
 	require.Equal(t, yaml, msg.String())
 	require.Equal(t, "{\"type\":\"provenance/metadata/WriteScopeRequest\",\"value\":{\"scope\":{\"data_access\":[\"data_accessor\"],\"owners\":[{\"address\":\"data_owner\",\"role\":5}],\"scope_id\":\"scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp\",\"specification_id\":\"scopespec1qs30c9axgrw5669ft0kffe6h9gysfe58v3\",\"value_owner_address\":\"value_owner\"}}}", string(msg.GetSignBytes()))
@@ -55,7 +57,10 @@ func TestWriteScopeValidation(t *testing.T) {
 	)
 	var msg = NewMsgWriteScopeRequest(*scope, []string{"invalid"})
 	err := msg.ValidateBasic()
+	require.NoError(t, err)
 	require.Panics(t, func() { msg.GetSigners() }, "panics due to invalid addresses")
+
+	err = msg.Scope.ValidateBasic()
 	require.Error(t, err, "invalid addresses")
 	require.Equal(t, "invalid owner on scope: decoding bech32 failed: invalid index of 1", err.Error())
 
@@ -66,7 +71,7 @@ func TestWriteScopeValidation(t *testing.T) {
 		[]string{},
 		"",
 	)
-	err = msg.ValidateBasic()
+	err = msg.Scope.ValidateBasic()
 	require.Error(t, err, "no owners")
 	require.Equal(t, "scope must have at least one owner", err.Error())
 
@@ -78,13 +83,13 @@ func TestWriteScopeValidation(t *testing.T) {
 		"",
 	)
 	msg.Signers = []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}
-	err = msg.ValidateBasic()
+	err = msg.Scope.ValidateBasic()
 	require.NoError(t, err, "valid add scope request")
 	requiredSigners := msg.GetSigners()
 	require.Equal(t, 1, len(requiredSigners))
-	hex, err := hex.DecodeString("85EA54E8598B27EC37EAEEEEA44F1E78A9B5E671")
+	x, err := hex.DecodeString("85EA54E8598B27EC37EAEEEEA44F1E78A9B5E671")
 	require.NoError(t, err)
-	require.Equal(t, sdk.AccAddress(hex), requiredSigners[0])
+	require.Equal(t, sdk.AccAddress(x), requiredSigners[0])
 }
 
 func TestWriteP8eContractSpecValidation(t *testing.T) {
