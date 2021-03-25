@@ -2,6 +2,7 @@ package cli_test
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
 	"time"
@@ -56,10 +57,8 @@ type IntegrationCLITestSuite struct {
 	scopeUUID uuid.UUID
 	scopeID   metadatatypes.MetadataAddress
 
-	scopeAsJson     string
-	scopeAsText     string
-	fullScopeAsJson string
-	fullScopeAsText string
+	scopeAsJson string
+	scopeAsText string
 
 	session     metadatatypes.Session
 	sessionUUID uuid.UUID
@@ -200,6 +199,7 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 			),
 		},
 	)
+	s.record.SpecificationId = s.recordSpecID
 
 	s.scopeSpec = *metadatatypes.NewScopeSpecification(
 		s.scopeSpecID,
@@ -280,8 +280,9 @@ specification_id: %s`,
 		s.contractSpecID,
 	)
 
-	s.recordAsJson = fmt.Sprintf("{\"name\":\"recordname\",\"session_id\":\"%s\",\"process\":{\"hash\":\"notarealprocesshash\",\"name\":\"record process\",\"method\":\"myMethod\"},\"inputs\":[{\"name\":\"inputname\",\"hash\":\"notarealrecordinputhash\",\"type_name\":\"inputtypename\",\"status\":\"RECORD_INPUT_STATUS_RECORD\"}],\"outputs\":[{\"hash\":\"notarealrecordoutputhash\",\"status\":\"RESULT_STATUS_PASS\"}]}",
+	s.recordAsJson = fmt.Sprintf("{\"name\":\"recordname\",\"session_id\":\"%s\",\"process\":{\"hash\":\"notarealprocesshash\",\"name\":\"record process\",\"method\":\"myMethod\"},\"inputs\":[{\"name\":\"inputname\",\"hash\":\"notarealrecordinputhash\",\"type_name\":\"inputtypename\",\"status\":\"RECORD_INPUT_STATUS_RECORD\"}],\"outputs\":[{\"hash\":\"notarealrecordoutputhash\",\"status\":\"RESULT_STATUS_PASS\"}],\"specification_id\":\"%s\"}",
 		s.sessionID,
+		s.recordSpecID,
 	)
 	s.recordAsText = fmt.Sprintf(`inputs:
 - hash: notarealrecordinputhash
@@ -296,27 +297,10 @@ process:
   hash: notarealprocesshash
   method: myMethod
   name: record process
-session_id: %s`,
+session_id: %s
+specification_id: %s`,
 		s.sessionID,
-	)
-
-	s.fullScopeAsJson = fmt.Sprintf("{\"scope\":%s,\"sessions\":[%s],\"records\":[%s],\"scope_uuid\":\"%s\"}",
-		s.scopeAsJson,
-		s.sessionAsJson,
-		s.recordAsJson,
-		s.scopeUUID,
-	)
-	s.fullScopeAsText = fmt.Sprintf(`records:
-%s
-scope:
-%s
-scope_uuid: %s
-sessions:
-%s`,
-		yamlListEntry(s.recordAsText),
-		indent(s.scopeAsText),
-		s.scopeUUID,
-		yamlListEntry(s.sessionAsText),
+		s.recordSpecID,
 	)
 
 	s.scopeSpecAsJson = fmt.Sprintf("{\"specification_id\":\"%s\",\"description\":null,\"owner_addresses\":[\"%s\"],\"parties_involved\":[\"PARTY_TYPE_OWNER\"],\"contract_spec_ids\":[\"%s\"]}",
@@ -428,12 +412,13 @@ func (s *IntegrationCLITestSuite) TearDownSuite() {
 	s.testnet.Cleanup()
 }
 
-func indent(str string) string {
+func indent(str string, spaces int) string {
 	var sb strings.Builder
 	lines := strings.Split(str, "\n")
 	maxI := len(lines) - 1
+	s := strings.Repeat(" ", spaces)
 	for i, l := range strings.Split(str, "\n") {
-		sb.WriteString("  ")
+		sb.WriteString(s)
 		sb.WriteString(l)
 		if i != maxI {
 			sb.WriteString("\n")
@@ -490,196 +475,227 @@ func runQueryCmdTestCases(s *IntegrationCLITestSuite, cmd *cobra.Command, testCa
 	}
 }
 
+type queryCmdTestCaseV2 struct {
+	name             string
+	args             []string
+	expectedError    string
+	expectedInOutput []string
+}
+
+func runQueryCmdTestCasesV2(s *IntegrationCLITestSuite, cmd *cobra.Command, testCases []queryCmdTestCaseV2) {
+	for _, tc := range testCases {
+		s.T().Run(tc.name, func(t *testing.T) {
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if len(tc.expectedError) > 0 {
+				actualError := ""
+				if err != nil {
+					actualError = err.Error()
+				}
+				require.Equal(t, tc.expectedError, actualError, "expected error")
+			} else {
+				require.NoError(t, err, "unexpected error")
+			}
+			if err == nil {
+				result := strings.TrimSpace(out.String())
+				for _, exp := range tc.expectedInOutput {
+					assert.Contains(t, result, exp)
+				}
+			}
+		})
+	}
+}
+
 func (s *IntegrationCLITestSuite) TestGetMetadataParamsCmd() {
 	cmd := cli.GetMetadataParamsCmd()
 
-	testCases := []queryCmdTestCase{
+	testCases := []queryCmdTestCaseV2{
 		{
 			"get params as json output",
 			[]string{s.asJson},
 			"",
-			"{\"params\":{},\"request\":null}",
+			[]string{"\"params\":{}"},
 		},
 		{
 			"get params as text output",
 			[]string{s.asText},
 			"",
-			"params: {}\nrequest: null",
+			[]string{"params: {}"},
 		},
 		{
 			"get params - invalid args",
 			[]string{"bad-arg"},
 			"unknown argument: bad-arg",
-			"",
+			[]string{},
 		},
 		{
 			"get params as json output including request",
 			[]string{s.asJson, s.includeRequest},
 			"",
-			"{\"params\":{},\"request\":{}}",
+			[]string{"\"params\":{}", "\"request\":{}"},
 		},
 		{
 			"get locator params as json",
 			[]string{"locator", s.asJson},
 			"",
-			"{\"params\":{\"max_uri_length\":2048},\"request\":{}}",
+			[]string{"\"params\":{", "\"max_uri_length\":2048"},
 		},
 		{
 			"get locator params as text including request",
 			[]string{"locator", s.asText, s.includeRequest},
 			"",
-			"params:\n  max_uri_length: 2048\nrequest: {}",
+			[]string{"params:", "max_uri_length: 2048", "request: {}"},
 		},
 	}
 
-	runQueryCmdTestCases(s, cmd, testCases)
+	runQueryCmdTestCasesV2(s, cmd, testCases)
 }
 
 func (s *IntegrationCLITestSuite) TestGetMetadataByIDCmd() {
 	cmd := cli.GetMetadataByIDCmd()
 
-	testCases := []queryCmdTestCase{
+	testCases := []queryCmdTestCaseV2{
 		{
 			"get metadata by id - scope id as json",
 			[]string{s.scopeID.String(), s.asJson},
 			"",
-			s.fullScopeAsJson,
+			[]string{s.scopeAsJson},
 		},
 		{
 			"get metadata by id - scope id as text",
 			[]string{s.scopeID.String(), s.asText},
 			"",
-			s.fullScopeAsText,
+			[]string{indent(s.scopeAsText, 4)},
 		},
 		{
 			"get metadata by id - scope id does not exist",
 			[]string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
-			"rpc error: code = NotFound desc = scope uuid 91978ba2-5f35-459a-86a7-feca1b0512e0 not found: key not found",
 			"",
+			[]string{"scope: null", "scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
 		},
 		{
 			"get metadata by id - session id as json",
 			[]string{s.sessionID.String(), s.asJson},
 			"",
-			s.sessionAsJson,
+			[]string{s.sessionAsJson},
 		},
 		{
 			"get metadata by id - session id as text",
 			[]string{s.sessionID.String(), s.asText},
 			"",
-			s.sessionAsText,
+			[]string{indent(s.sessionAsText, 4)},
 		},
 		{
 			"get metadata by id - session id does not exist",
 			[]string{"session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr"},
-			"rpc error: code = NotFound desc = session id session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr not found: key not found",
 			"",
+			[]string{"session: null", "session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr"},
 		},
 		{
 			"get metadata by id - record id as json",
 			[]string{s.recordID.String(), s.asJson},
 			"",
-			s.recordAsJson,
+			[]string{s.recordAsJson},
 		},
 		{
 			"get metadata by id - record id as text",
 			[]string{s.recordID.String(), s.asText},
 			"",
-			s.recordAsText,
+			[]string{indent(s.recordAsText, 4)},
 		},
 		{
 			"get metadata by id - record id does not exist",
 			[]string{"record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3"},
-			"rpc error: code = NotFound desc = scope uuid 91978ba2-5f35-459a-86a7-feca1b0512e0 not found: key not found",
 			"",
+			[]string{"record: null", "record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3"},
 		},
 		{
 			"get metadata by id - scope spec id as json",
 			[]string{s.scopeSpecID.String(), s.asJson},
 			"",
-			s.scopeSpecAsJson,
+			[]string{s.scopeSpecAsJson},
 		},
 		{
 			"get metadata by id - scope spec id as text",
 			[]string{s.scopeSpecID.String(), s.asText},
 			"",
-			s.scopeSpecAsText,
+			[]string{indent(s.scopeSpecAsText, 4)},
 		},
 		{
 			"get metadata by id - scope spec id does not exist",
 			[]string{"scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"},
-			"rpc error: code = NotFound desc = scope specification uuid dc83ea70-eacd-40fe-9adf-1cf6148bf8a2 not found: key not found",
 			"",
+			[]string{"specification: null", "scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"},
 		},
 		{
 			"get metadata by id - contract spec id as json",
 			[]string{s.contractSpecID.String(), s.asJson},
 			"",
-			s.contractSpecAsJson,
+			[]string{s.contractSpecAsJson},
 		},
 		{
 			"get metadata by id - contract spec id as text",
 			[]string{s.contractSpecID.String(), s.asText},
 			"",
-			s.contractSpecAsText,
+			[]string{indent(s.contractSpecAsText, 4)},
 		},
 		{
 			"get metadata by id - contract spec id does not exist",
 			[]string{"contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn"},
-			"rpc error: code = NotFound desc = contract specification with id contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn (uuid def6bc0a-c9dd-4874-948f-5206e6060a84) not found: key not found",
 			"",
+			[]string{"specification: null", "contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn"},
 		},
 		{
 			"get metadata by id - record spec id as json",
 			[]string{s.recordSpecID.String(), s.asJson},
 			"",
-			s.recordSpecAsJson,
+			[]string{s.recordSpecAsJson},
 		},
 		{
 			"get metadata by id - record spec id as text",
 			[]string{s.recordSpecID.String(), s.asText},
 			"",
-			s.recordSpecAsText,
+			[]string{indent(s.recordSpecAsText, 4)},
 		},
 		{
 			"get metadata by id - record spec id does not exist",
 			[]string{"recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44"},
-			"rpc error: code = NotFound desc = record specification not found for id recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44: key not found",
 			"",
+			[]string{"specification: null", "recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44"},
 		},
 		{
 			"get metadata by id - bad prefix",
 			[]string{"foo1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
 			"decoding bech32 failed: checksum failed. Expected kzwk8c, got xlkwel.",
-			"",
+			[]string{},
 		},
 		{
 			"get metadata by id - no args",
 			[]string{},
 			"accepts 1 arg(s), received 0",
-			"",
+			[]string{},
 		},
 		{
 			"get metadata by id - two args",
 			[]string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel", "scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"},
 			"accepts 1 arg(s), received 2",
-			"",
+			[]string{},
 		},
 		{
 			"get metadata by id - uuid",
 			[]string{"91978ba2-5f35-459a-86a7-feca1b0512e0"},
 			"decoding bech32 failed: invalid index of 1",
-			"",
+			[]string{},
 		},
 		{
 			"get metadata by id - bad arg",
 			[]string{"not-an-id"},
 			"decoding bech32 failed: invalid index of 1",
-			"",
+			[]string{},
 		},
 	}
 
-	runQueryCmdTestCases(s, cmd, testCases)
+	runQueryCmdTestCasesV2(s, cmd, testCases)
 }
 
 // TODO: GetMetadataGetAllCmd
