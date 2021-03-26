@@ -28,10 +28,6 @@ func (k msgServer) WriteScope(
 	goCtx context.Context,
 	msg *types.MsgWriteScopeRequest,
 ) (*types.MsgWriteScopeResponse, error) {
-	if err := msg.ConvertOptionalFields(); err != nil {
-		return nil, err
-	}
-
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	existing, _ := k.GetScope(ctx, msg.Scope.ScopeId)
@@ -82,10 +78,6 @@ func (k msgServer) WriteSession(
 	goCtx context.Context,
 	msg *types.MsgWriteSessionRequest,
 ) (*types.MsgWriteSessionResponse, error) {
-	if err := msg.ConvertOptionalFields(); err != nil {
-		return nil, err
-	}
-
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	var existing *types.Session = nil
@@ -119,10 +111,6 @@ func (k msgServer) WriteRecord(
 	goCtx context.Context,
 	msg *types.MsgWriteRecordRequest,
 ) (*types.MsgWriteRecordResponse, error) {
-	if err := msg.ConvertOptionalFields(); err != nil {
-		return nil, err
-	}
-
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	scopeUUID, err := msg.Record.SessionId.ScopeUUID()
@@ -183,10 +171,6 @@ func (k msgServer) WriteScopeSpecification(
 	goCtx context.Context,
 	msg *types.MsgWriteScopeSpecificationRequest,
 ) (*types.MsgWriteScopeSpecificationResponse, error) {
-	if err := msg.ConvertOptionalFields(); err != nil {
-		return nil, err
-	}
-
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	var existing *types.ScopeSpecification = nil
@@ -248,10 +232,6 @@ func (k msgServer) WriteContractSpecification(
 	goCtx context.Context,
 	msg *types.MsgWriteContractSpecificationRequest,
 ) (*types.MsgWriteContractSpecificationResponse, error) {
-	if err := msg.ConvertOptionalFields(); err != nil {
-		return nil, err
-	}
-
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	var existing *types.ContractSpecification = nil
@@ -338,10 +318,6 @@ func (k msgServer) WriteRecordSpecification(
 	goCtx context.Context,
 	msg *types.MsgWriteRecordSpecificationRequest,
 ) (*types.MsgWriteRecordSpecificationResponse, error) {
-	if err := msg.ConvertOptionalFields(); err != nil {
-		return nil, err
-	}
-
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	contractSpecID, err := msg.Specification.SpecificationId.AsContractSpecAddress()

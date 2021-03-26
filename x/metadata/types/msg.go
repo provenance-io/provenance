@@ -110,7 +110,10 @@ func (msg MsgWriteScopeRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
-	return nil
+	if err := msg.ConvertOptionalFields(); err != nil {
+		return err
+	}
+	return msg.Scope.ValidateBasic()
 }
 
 // ConvertOptionalFields will look at the ScopeUuid and SpecUuid fields in the message.
@@ -219,7 +222,10 @@ func (msg MsgWriteSessionRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
-	return nil
+	if err := msg.ConvertOptionalFields(); err != nil {
+		return err
+	}
+	return msg.Session.ValidateBasic()
 }
 
 // ConvertOptionalFields will look at the SessionIdComponents and SpecUuid fields in the message.
@@ -284,7 +290,10 @@ func (msg MsgWriteRecordRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
-	return nil
+	if err := msg.ConvertOptionalFields(); err != nil {
+		return err
+	}
+	return msg.Record.ValidateBasic()
 }
 
 // ConvertOptionalFields will look at the SessionIdComponents and ContractSpecUuid fields in the message.
@@ -392,7 +401,10 @@ func (msg MsgWriteScopeSpecificationRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
-	return nil
+	if err := msg.ConvertOptionalFields(); err != nil {
+		return err
+	}
+	return msg.Specification.ValidateBasic()
 }
 
 // ConvertOptionalFields will look at the SpecUuid field in the message.
@@ -534,7 +546,10 @@ func (msg MsgWriteContractSpecificationRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
-	return nil
+	if err := msg.ConvertOptionalFields(); err != nil {
+		return err
+	}
+	return msg.Specification.ValidateBasic()
 }
 
 // ConvertOptionalFields will look at the SpecUuid field in the message.
@@ -647,7 +662,10 @@ func (msg *MsgWriteRecordSpecificationRequest) ConvertOptionalFields() error {
 		msg.Specification.SpecificationId = RecordSpecMetadataAddress(uid, msg.Specification.Name)
 		msg.ContractSpecUuid = ""
 	}
-	return nil
+	if err := msg.ConvertOptionalFields(); err != nil {
+		return err
+	}
+	return msg.Specification.ValidateBasic()
 }
 
 // ------------------  MsgDeleteRecordSpecificationRequest  ------------------
