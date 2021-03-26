@@ -200,8 +200,8 @@ func (msg MsgAddSessionRequest) ValidateBasic() error {
 // ------------------  MsgAddRecordRequest  ------------------
 
 // NewMsgAddRecordRequest creates a new msg instance
-func NewMsgAddRecordRequest(sessionId MetadataAddress, record Record, partiesInvolved []PartyType, signers []string) *MsgAddRecordRequest {
-	return &MsgAddRecordRequest{SessionId: sessionId, Record: record, PartiesInvolved: partiesInvolved, Signers: signers}
+func NewMsgAddRecordRequest(sessionID MetadataAddress, record Record, partiesInvolved []PartyType, signers []string) *MsgAddRecordRequest {
+	return &MsgAddRecordRequest{SessionId: sessionID, Record: record, PartiesInvolved: partiesInvolved, Signers: signers}
 }
 
 func (msg MsgAddRecordRequest) String() string {
@@ -240,8 +240,8 @@ func (msg MsgAddRecordRequest) ValidateBasic() error {
 // ------------------  MsgDeleteRecordRequest  ------------------
 
 // NewMsgDeleteScopeSpecificationRequest creates a new msg instance
-func NewMsgDeleteRecordRequest(recordId MetadataAddress, signers []string) *MsgDeleteRecordRequest {
-	return &MsgDeleteRecordRequest{RecordId: recordId, Signers: signers}
+func NewMsgDeleteRecordRequest(recordID MetadataAddress, signers []string) *MsgDeleteRecordRequest {
+	return &MsgDeleteRecordRequest{RecordId: recordID, Signers: signers}
 }
 
 func (msg MsgDeleteRecordRequest) String() string {

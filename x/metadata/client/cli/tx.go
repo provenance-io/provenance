@@ -403,7 +403,7 @@ $ %s tx metadata add-record recspec1qh... recordname myprocessname,myhashvalue i
 	return cmd
 }
 
-// parseProcess parses a comma seperated structure of name, processid(hash or metaaddress), method.  name,hashvalue,methodnam;...
+// parseProcess parses a comma separated structure of name, processid(hash or metaaddress), method.  name,hashvalue,methodnam;...
 func parseProcess(cliDelimitedValue string) (*types.Process, error) {
 	values := strings.Split(cliDelimitedValue, ",")
 	if len(values) != 3 {
@@ -421,7 +421,6 @@ func parseProcess(cliDelimitedValue string) (*types.Process, error) {
 		process.ProcessId = &types.Process_Hash{Hash: values[0]}
 	}
 	return &process, nil
-
 }
 
 // parseRecordInputs parses a list of semicolon, comma delimited input structure name,soure-value(hash or metaaddress),typename,status(proposed,record);...
@@ -662,8 +661,8 @@ func RemoveRecordCmd() *cobra.Command {
 				return err
 			}
 
-			var recordId types.MetadataAddress
-			recordId, err = types.MetadataAddressFromBech32(args[0])
+			var recordID types.MetadataAddress
+			recordID, err = types.MetadataAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
@@ -672,7 +671,7 @@ func RemoveRecordCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			msg := *types.NewMsgDeleteRecordRequest(recordId, signers)
+			msg := *types.NewMsgDeleteRecordRequest(recordID, signers)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
 		},
