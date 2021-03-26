@@ -56,7 +56,10 @@ func (k msgServer) DeleteScope(
 ) (*types.MsgDeleteScopeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	existing, _ := k.GetScope(ctx, msg.ScopeId)
+	existing, found := k.GetScope(ctx, msg.ScopeId)
+	if !found {
+		return nil, fmt.Errorf("scope not found with id %s", msg.ScopeId)
+	}
 	// validate that all fields can be unset with the given list of signers
 	if err := k.ValidateScopeRemove(ctx, existing, types.Scope{ScopeId: msg.ScopeId}, msg.Signers); err != nil {
 		return nil, err
