@@ -125,7 +125,12 @@ func (msg *MsgWriteScopeRequest) ConvertOptionalFields() error {
 		if err != nil {
 			return fmt.Errorf("invalid scope uuid: %w", err)
 		}
-		msg.Scope.ScopeId = ScopeMetadataAddress(uid)
+		scopeAddr := ScopeMetadataAddress(uid)
+		if !msg.Scope.ScopeId.Empty() && !msg.Scope.ScopeId.Equals(scopeAddr) {
+			return fmt.Errorf("msg.Scope.ScopeId [%s] is different from the one created from msg.ScopeUuid [%s]",
+				msg.Scope.ScopeId, msg.ScopeUuid)
+		}
+		msg.Scope.ScopeId = scopeAddr
 		msg.ScopeUuid = ""
 	}
 	if len(msg.SpecUuid) > 0 {
@@ -133,7 +138,12 @@ func (msg *MsgWriteScopeRequest) ConvertOptionalFields() error {
 		if err != nil {
 			return fmt.Errorf("invalid spec uuid: %w", err)
 		}
-		msg.Scope.SpecificationId = ScopeSpecMetadataAddress(uid)
+		specAddr := ScopeSpecMetadataAddress(uid)
+		if !msg.Scope.SpecificationId.Empty() && !msg.Scope.SpecificationId.Equals(specAddr) {
+			return fmt.Errorf("msg.Scope.SpecificationId [%s] is different from the one created from msg.SpecUuid [%s]",
+				msg.Scope.SpecificationId, msg.SpecUuid)
+		}
+		msg.Scope.SpecificationId = specAddr
 		msg.SpecUuid = ""
 	}
 	return nil
@@ -233,12 +243,16 @@ func (msg MsgWriteSessionRequest) ValidateBasic() error {
 // Once used, those fields will be emptied so that calling this again has no effect.
 func (msg *MsgWriteSessionRequest) ConvertOptionalFields() error {
 	if msg.SessionIdComponents != nil {
-		sessionID, err := msg.SessionIdComponents.GetSessionID()
+		sessionAddr, err := msg.SessionIdComponents.GetSessionAddr()
 		if err != nil {
 			return fmt.Errorf("invalid session id components: %w", err)
 		}
-		if sessionID != nil {
-			msg.Session.SessionId = *sessionID
+		if sessionAddr != nil {
+			if !msg.Session.SessionId.Empty() && !msg.Session.SessionId.Equals(*sessionAddr) {
+				return fmt.Errorf("msg.Session.SessionId [%s] is different from the one created from msg.SessionIdComponents %v",
+					msg.Session.SessionId, msg.SessionIdComponents)
+			}
+			msg.Session.SessionId = *sessionAddr
 		}
 		msg.SessionIdComponents = nil
 	}
@@ -247,7 +261,12 @@ func (msg *MsgWriteSessionRequest) ConvertOptionalFields() error {
 		if err != nil {
 			return fmt.Errorf("invalid spec uuid: %w", err)
 		}
-		msg.Session.SpecificationId = ContractSpecMetadataAddress(uid)
+		specAddr := ContractSpecMetadataAddress(uid)
+		if !msg.Session.SpecificationId.Empty() && !msg.Session.SpecificationId.Equals(specAddr) {
+			return fmt.Errorf("msg.Session.SpecificationId [%s] is different from the one created from msg.SpecUuid [%s]",
+				msg.Session.SpecificationId, msg.SpecUuid)
+		}
+		msg.Session.SpecificationId = specAddr
 		msg.SpecUuid = ""
 	}
 	return nil
@@ -301,12 +320,16 @@ func (msg MsgWriteRecordRequest) ValidateBasic() error {
 // Once used, those fields will be emptied so that calling this again has no effect.
 func (msg *MsgWriteRecordRequest) ConvertOptionalFields() error {
 	if msg.SessionIdComponents != nil {
-		sessionID, err := msg.SessionIdComponents.GetSessionID()
+		sessionAddr, err := msg.SessionIdComponents.GetSessionAddr()
 		if err != nil {
 			return fmt.Errorf("invalid session id components: %w", err)
 		}
-		if sessionID != nil {
-			msg.Record.SessionId = *sessionID
+		if sessionAddr != nil {
+			if !msg.Record.SessionId.Empty() && !msg.Record.SessionId.Equals(*sessionAddr) {
+				return fmt.Errorf("msg.Record.SessionId [%s] is different from the one created from msg.SessionIdComponents %v",
+					msg.Record.SessionId, msg.SessionIdComponents)
+			}
+			msg.Record.SessionId = *sessionAddr
 		}
 		msg.SessionIdComponents = nil
 	}
@@ -318,7 +341,12 @@ func (msg *MsgWriteRecordRequest) ConvertOptionalFields() error {
 		if len(strings.TrimSpace(msg.Record.Name)) == 0 {
 			return errors.New("empty record name")
 		}
-		msg.Record.SpecificationId = RecordSpecMetadataAddress(uid, msg.Record.Name)
+		specAddr := RecordSpecMetadataAddress(uid, msg.Record.Name)
+		if !msg.Record.SpecificationId.Empty() && !msg.Record.SpecificationId.Equals(specAddr) {
+			return fmt.Errorf("msg.Record.SpecificationId [%s] is different from the one created from msg.ContractSpecUuid [%s] and msg.Record.Name [%s]",
+				msg.Record.SpecificationId, msg.ContractSpecUuid, msg.Record.Name)
+		}
+		msg.Record.SpecificationId = specAddr
 		msg.ContractSpecUuid = ""
 	}
 	return nil
@@ -416,7 +444,12 @@ func (msg *MsgWriteScopeSpecificationRequest) ConvertOptionalFields() error {
 		if err != nil {
 			return fmt.Errorf("invalid spec uuid: %w", err)
 		}
-		msg.Specification.SpecificationId = ScopeSpecMetadataAddress(uid)
+		specAddr := ScopeSpecMetadataAddress(uid)
+		if !msg.Specification.SpecificationId.Empty() && !msg.Specification.SpecificationId.Equals(specAddr) {
+			return fmt.Errorf("msg.Specification.SpecificationId [%s] is different from the one created from msg.SpecUuid [%s]",
+				msg.Specification.SpecificationId, msg.SpecUuid)
+		}
+		msg.Specification.SpecificationId = specAddr
 		msg.SpecUuid = ""
 	}
 	return nil
@@ -561,7 +594,12 @@ func (msg *MsgWriteContractSpecificationRequest) ConvertOptionalFields() error {
 		if err != nil {
 			return fmt.Errorf("invalid spec uuid: %w", err)
 		}
-		msg.Specification.SpecificationId = ContractSpecMetadataAddress(uid)
+		specAddr := ContractSpecMetadataAddress(uid)
+		if !msg.Specification.SpecificationId.Empty() && !msg.Specification.SpecificationId.Equals(specAddr) {
+			return fmt.Errorf("msg.Specification.SpecificationId [%s] is different from the one created from msg.SpecUuid [%s]",
+				msg.Specification.SpecificationId, msg.SpecUuid)
+		}
+		msg.Specification.SpecificationId = specAddr
 		msg.SpecUuid = ""
 	}
 	return nil
@@ -644,6 +682,9 @@ func (msg MsgWriteRecordSpecificationRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
+	if err := msg.ConvertOptionalFields(); err != nil {
+		return err
+	}
 	return msg.Specification.ValidateBasic()
 }
 
@@ -659,13 +700,15 @@ func (msg *MsgWriteRecordSpecificationRequest) ConvertOptionalFields() error {
 		if len(strings.TrimSpace(msg.Specification.Name)) == 0 {
 			return errors.New("empty specification name")
 		}
-		msg.Specification.SpecificationId = RecordSpecMetadataAddress(uid, msg.Specification.Name)
+		specAddr := RecordSpecMetadataAddress(uid, msg.Specification.Name)
+		if !msg.Specification.SpecificationId.Empty() && !msg.Specification.SpecificationId.Equals(specAddr) {
+			return fmt.Errorf("msg.Specification.SpecificationId [%s] is different from the one created from msg.ContractSpecUuid [%s] and msg.Specification.Name [%s]",
+				msg.Specification.SpecificationId, msg.ContractSpecUuid, msg.Specification.Name)
+		}
+		msg.Specification.SpecificationId = specAddr
 		msg.ContractSpecUuid = ""
 	}
-	if err := msg.ConvertOptionalFields(); err != nil {
-		return err
-	}
-	return msg.Specification.ValidateBasic()
+	return nil
 }
 
 // ------------------  MsgDeleteRecordSpecificationRequest  ------------------
@@ -873,7 +916,7 @@ func (msg MsgModifyOSLocatorRequest) GetSigners() []sdk.AccAddress {
 
 // ------------------  SessionIdComponents  ------------------
 
-func (msg *SessionIdComponents) GetSessionID() (*MetadataAddress, error) {
+func (msg *SessionIdComponents) GetSessionAddr() (*MetadataAddress, error) {
 	var scopeUUID, sessionUUID *uuid.UUID
 	if len(msg.SessionUuid) > 0 {
 		uid, err := uuid.Parse(msg.SessionUuid)
