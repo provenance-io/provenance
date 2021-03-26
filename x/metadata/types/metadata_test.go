@@ -232,7 +232,7 @@ func (s *MetadataTypesTestSuite) GetRecordSpecIDInfo() {
 		assert.Equal(t, "", info.ContractSpecIdInfo.ContractSpecUuid, "ContractSpecIdInfo.ContractSpecUuid")
 	})
 
-	s.T().Run("recoprd spec id, everything populated", func(t *testing.T) {
+	s.T().Run("record spec id, everything populated", func(t *testing.T) {
 		info := GetRecordSpecIDInfo(s.recordSpecID)
 		require.NotNil(t, info, "GetRecordSpecIDInfo result")
 		assert.Equal(t, s.recordSpecID, info.RecordSpecId, "RecordSpecId")
