@@ -448,41 +448,13 @@ func yamlListEntry(str string) string {
 // ---------- query cmd tests ----------
 
 type queryCmdTestCase struct {
-	name           string
-	args           []string
-	expectedError  string
-	expectedOutput string
-}
-
-func runQueryCmdTestCases(s *IntegrationCLITestSuite, cmd *cobra.Command, testCases []queryCmdTestCase) {
-	for _, tc := range testCases {
-		s.T().Run(tc.name, func(t *testing.T) {
-			clientCtx := s.testnet.Validators[0].ClientCtx
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if len(tc.expectedError) > 0 {
-				actualError := ""
-				if err != nil {
-					actualError = err.Error()
-				}
-				require.Equal(t, tc.expectedError, actualError, "expected error")
-			} else {
-				require.NoError(t, err, "unexpected error")
-			}
-			if err == nil {
-				require.Equal(t, tc.expectedOutput, strings.TrimSpace(out.String()), "expected output")
-			}
-		})
-	}
-}
-
-type queryCmdTestCaseV2 struct {
 	name             string
 	args             []string
 	expectedError    string
 	expectedInOutput []string
 }
 
-func runQueryCmdTestCasesV2(s *IntegrationCLITestSuite, cmd *cobra.Command, testCases []queryCmdTestCaseV2) {
+func runQueryCmdTestCases(s *IntegrationCLITestSuite, cmd *cobra.Command, testCases []queryCmdTestCase) {
 	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
 			clientCtx := s.testnet.Validators[0].ClientCtx
@@ -509,7 +481,7 @@ func runQueryCmdTestCasesV2(s *IntegrationCLITestSuite, cmd *cobra.Command, test
 func (s *IntegrationCLITestSuite) TestGetMetadataParamsCmd() {
 	cmd := cli.GetMetadataParamsCmd()
 
-	testCases := []queryCmdTestCaseV2{
+	testCases := []queryCmdTestCase{
 		{
 			"get params as json output",
 			[]string{s.asJson},
@@ -548,13 +520,13 @@ func (s *IntegrationCLITestSuite) TestGetMetadataParamsCmd() {
 		},
 	}
 
-	runQueryCmdTestCasesV2(s, cmd, testCases)
+	runQueryCmdTestCases(s, cmd, testCases)
 }
 
 func (s *IntegrationCLITestSuite) TestGetMetadataByIDCmd() {
 	cmd := cli.GetMetadataByIDCmd()
 
-	testCases := []queryCmdTestCaseV2{
+	testCases := []queryCmdTestCase{
 		{
 			"get metadata by id - scope id as json",
 			[]string{s.scopeID.String(), s.asJson},
@@ -695,7 +667,7 @@ func (s *IntegrationCLITestSuite) TestGetMetadataByIDCmd() {
 		},
 	}
 
-	runQueryCmdTestCasesV2(s, cmd, testCases)
+	runQueryCmdTestCases(s, cmd, testCases)
 }
 
 // TODO: GetMetadataGetAllCmd
@@ -705,7 +677,7 @@ func (s *IntegrationCLITestSuite) TestGetMetadataScopeCmd() {
 
 	indentedScopeText := indent(s.scopeAsText, 4)
 
-	testCases := []queryCmdTestCaseV2{
+	testCases := []queryCmdTestCase{
 		{
 			"get scope by metadata scope id as json output",
 			[]string{s.scopeID.String(), s.asJson},
@@ -780,7 +752,7 @@ func (s *IntegrationCLITestSuite) TestGetMetadataScopeCmd() {
 		},
 	}
 
-	runQueryCmdTestCasesV2(s, cmd, testCases)
+	runQueryCmdTestCases(s, cmd, testCases)
 }
 
 func (s *IntegrationCLITestSuite) TestGetMetadataSessionCmd() {
@@ -788,7 +760,7 @@ func (s *IntegrationCLITestSuite) TestGetMetadataSessionCmd() {
 
 	indentedSessionText := indent(s.sessionAsText, 4)
 
-	testCases := []queryCmdTestCaseV2{
+	testCases := []queryCmdTestCase{
 		{
 			"session from session id as json",
 			[]string{s.sessionID.String(), s.asJson},
@@ -893,13 +865,13 @@ func (s *IntegrationCLITestSuite) TestGetMetadataSessionCmd() {
 		},
 	}
 
-	runQueryCmdTestCasesV2(s, cmd, testCases)
+	runQueryCmdTestCases(s, cmd, testCases)
 }
 
 func (s *IntegrationCLITestSuite) TestGetMetadataRecordCmd() {
 	cmd := cli.GetMetadataRecordCmd()
 
-	testCases := []queryCmdTestCaseV2{
+	testCases := []queryCmdTestCase{
 		{
 			"record from record id as json",
 			[]string{s.recordID.String(), s.asJson},
@@ -1022,13 +994,13 @@ func (s *IntegrationCLITestSuite) TestGetMetadataRecordCmd() {
 		},
 	}
 
-	runQueryCmdTestCasesV2(s, cmd, testCases)
+	runQueryCmdTestCases(s, cmd, testCases)
 }
 
 func (s *IntegrationCLITestSuite) TestGetMetadataScopeSpecCmd() {
 	cmd := cli.GetMetadataScopeSpecCmd()
 
-	testCases := []queryCmdTestCaseV2{
+	testCases := []queryCmdTestCase{
 		{
 			"scope spec from scope spec id as json",
 			[]string{s.scopeSpecID.String(), s.asJson},
@@ -1091,13 +1063,13 @@ func (s *IntegrationCLITestSuite) TestGetMetadataScopeSpecCmd() {
 		},
 	}
 
-	runQueryCmdTestCasesV2(s, cmd, testCases)
+	runQueryCmdTestCases(s, cmd, testCases)
 }
 
 func (s *IntegrationCLITestSuite) TestGetMetadataContractSpecCmd() {
 	cmd := cli.GetMetadataContractSpecCmd()
 
-	testCases := []queryCmdTestCaseV2{
+	testCases := []queryCmdTestCase{
 		{
 			"contract spec from contract spec id as json",
 			[]string{s.contractSpecID.String(), s.asJson},
@@ -1178,13 +1150,13 @@ func (s *IntegrationCLITestSuite) TestGetMetadataContractSpecCmd() {
 		},
 	}
 
-	runQueryCmdTestCasesV2(s, cmd, testCases)
+	runQueryCmdTestCases(s, cmd, testCases)
 }
 
 func (s *IntegrationCLITestSuite) TestGetMetadataRecordSpecCmd() {
 	cmd := cli.GetMetadataRecordSpecCmd()
 
-	testCases := []queryCmdTestCaseV2{
+	testCases := []queryCmdTestCase{
 		{
 			"record spec from rec spec id as json",
 			[]string{s.recordSpecID.String(), s.asJson},
@@ -1283,7 +1255,7 @@ func (s *IntegrationCLITestSuite) TestGetMetadataRecordSpecCmd() {
 		},
 	}
 
-	runQueryCmdTestCasesV2(s, cmd, testCases)
+	runQueryCmdTestCases(s, cmd, testCases)
 }
 
 func (s *IntegrationCLITestSuite) TestGetOwnershipCmd() {
@@ -1300,7 +1272,7 @@ func (s *IntegrationCLITestSuite) TestGetOwnershipCmd() {
 		s.scopeUUID,
 	)
 
-	testCases := []queryCmdTestCaseV2{
+	testCases := []queryCmdTestCase{
 		{
 			"scopes as json",
 			[]string{s.user1, s.asJson},
@@ -1342,7 +1314,7 @@ func (s *IntegrationCLITestSuite) TestGetOwnershipCmd() {
 		},
 	}
 
-	runQueryCmdTestCasesV2(s, cmd, testCases)
+	runQueryCmdTestCases(s, cmd, testCases)
 }
 
 func (s *IntegrationCLITestSuite) TestGetValueOwnershipCmd() {
@@ -1357,7 +1329,7 @@ func (s *IntegrationCLITestSuite) TestGetValueOwnershipCmd() {
 		s.scopeUUID,
 	)
 
-	testCases := []queryCmdTestCaseV2{
+	testCases := []queryCmdTestCase{
 		{
 			"as json",
 			[]string{s.user2, s.asJson},
@@ -1393,13 +1365,13 @@ func (s *IntegrationCLITestSuite) TestGetValueOwnershipCmd() {
 		},
 	}
 
-	runQueryCmdTestCasesV2(s, cmd, testCases)
+	runQueryCmdTestCases(s, cmd, testCases)
 }
 
 func (s *IntegrationCLITestSuite) TestGetOSLocatorCmd() {
 	cmd := cli.GetOSLocatorCmd()
 
-	testCases := []queryCmdTestCaseV2{
+	testCases := []queryCmdTestCase{
 		{
 			"get os locator by owner",
 			[]string{s.user1Addr.String(), s.asJson},
@@ -1411,7 +1383,7 @@ func (s *IntegrationCLITestSuite) TestGetOSLocatorCmd() {
 		},
 	}
 
-	runQueryCmdTestCasesV2(s, cmd, testCases)
+	runQueryCmdTestCases(s, cmd, testCases)
 }
 
 // ---------- tx cmd tests ----------
