@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+
 	v038auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v038"
 	v039auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v039"
 	v040auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v040"
@@ -32,6 +33,11 @@ import (
 	v038upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/legacy/v038"
 
 	captypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
+	ibcxfertypes "github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types"
+	ibchost "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
+	ibcexported "github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
+	ibccoretypes "github.com/cosmos/cosmos-sdk/x/ibc/core/types"
 
 	v039attribute "github.com/provenance-io/provenance/x/attribute/legacy/v039"
 	v040attribute "github.com/provenance-io/provenance/x/attribute/legacy/v040"
@@ -237,20 +243,17 @@ func Migrate(appState v040gentypes.AppMap, clientCtx client.Context) v040gentype
 	capGenesis := captypes.DefaultGenesis()
 	appState[captypes.ModuleName] = v040Codec.MustMarshalJSON(capGenesis)
 
-	/*
-		TODO: default configuration for IBC
-		ibcTransferGenesis := ibcxfertypes.DefaultGenesisState()
-		ibcCoreGenesis := ibccoretypes.DefaultGenesisState()
-		evGenesis := evtypes.DefaultGenesisState()
+	ibcTransferGenesis := ibcxfertypes.DefaultGenesisState()
+	ibcCoreGenesis := ibccoretypes.DefaultGenesisState()
+	evGenesis := evidencetypes.DefaultGenesisState()
 
-		ibcTransferGenesis.Params.ReceiveEnabled = false
-		ibcTransferGenesis.Params.SendEnabled = false
-		ibcCoreGenesis.ClientGenesis.Params.AllowedClients = []string{exported.Tendermint}
+	ibcTransferGenesis.Params.ReceiveEnabled = true
+	ibcTransferGenesis.Params.SendEnabled = true
+	ibcCoreGenesis.ClientGenesis.Params.AllowedClients = []string{ibcexported.Solomachine, ibcexported.Tendermint}
 
-		appState[ibcxfertypes.ModuleName] = v040Codec.MustMarshalJSON(ibcTransferGenesis)
-		appState[host.ModuleName] = v040Codec.MustMarshalJSON(ibcCoreGenesis)
-		appState[evtypes.ModuleName] = v040Codec.MustMarshalJSON(evGenesis)
-	*/
+	appState[ibcxfertypes.ModuleName] = v040Codec.MustMarshalJSON(ibcTransferGenesis)
+	appState[ibchost.ModuleName] = v040Codec.MustMarshalJSON(ibcCoreGenesis)
+	appState[v040evidence.ModuleName] = v040Codec.MustMarshalJSON(evGenesis)
 
 	// Migrate x/account (attribute)
 	if appState[v039attribute.ModuleName] != nil {
