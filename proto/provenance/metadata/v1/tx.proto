@@ -86,11 +86,14 @@ message MsgWriteScopeRequest {
   // scope_uuid is an optional uuid string, e.g. "91978ba2-5f35-459a-86a7-feca1b0512e0"
   // If provided, it will be used to generate the MetadataAddress for the scope which will override the scope_id in the
   // provided scope. If not provided (or it is an empty string), nothing special happens.
+  // If there is a value in scope.scope_id that is different from the one created from this uuid, an error is returned.
   string scope_uuid = 3 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
 
   // spec_uuid is an optional scope specification uuid string, e.g. "dc83ea70-eacd-40fe-9adf-1cf6148bf8a2"
   // If provided, it will be used to generate the MetadataAddress for the scope specification which will override the
   // specification_id in the provided scope. If not provided (or it is an empty string), nothing special happens.
+  // If there is a value in scope.specification_id that is different from the one created from this uuid, an error is
+  // returned.
   string spec_uuid = 4 [(gogoproto.moretags) = "yaml:\"spec_uuid\""];
 }
 
@@ -135,11 +138,15 @@ message MsgWriteSessionRequest {
   // session. If provided, it must have both a scope and session_uuid. Those components will be used to create the
   // MetadataAddress for the session which will override the session_id in the provided session. If not provided (or
   // all empty), nothing special happens.
+  // If there is a value in session.session_id that is different from the one created from these components, an error is
+  // returned.
   SessionIdComponents session_id_components = 3 [(gogoproto.moretags) = "yaml:\"session_id_components\""];
 
   // spec_uuid is an optional contract specification uuid string, e.g. "def6bc0a-c9dd-4874-948f-5206e6060a84"
   // If provided, it will be used to generate the MetadataAddress for the contract specification which will override the
   // specification_id in the provided session. If not provided (or it is an empty string), nothing special happens.
+  // If there is a value in session.specification_id that is different from the one created from this uuid, an error is
+  // returned.
   string spec_uuid = 4 [(gogoproto.moretags) = "yaml:\"spec_uuid\""];
 }
 
@@ -178,12 +185,16 @@ message MsgWriteRecordRequest {
   // record. If provided, it must have both a scope and session_uuid. Those components will be used to create the
   // MetadataAddress for the session which will override the session_id in the provided record. If not provided (or
   // all empty), nothing special happens.
+  // If there is a value in record.session_id that is different from the one created from these components, an error is
+  // returned.
   SessionIdComponents session_id_components = 3 [(gogoproto.moretags) = "yaml:\"session_id_components\""];
 
   // contract_spec_uuid is an optional contract specification uuid string, e.g. "def6bc0a-c9dd-4874-948f-5206e6060a84"
   // If provided, it will be combined with the record name to generate the MetadataAddress for the record specification
   // which will override the specification_id in the provided record. If not provided (or it is an empty string),
   // nothing special happens.
+  // If there is a value in record.specification_id that is different from the one created from this uuid and
+  // record.name, an error is returned.
   string contract_spec_uuid = 4 [(gogoproto.moretags) = "yaml:\"contract_spec_uuid\""];
 }
 
@@ -228,6 +239,8 @@ message MsgWriteScopeSpecificationRequest {
   // If provided, it will be used to generate the MetadataAddress for the scope specification which will override the
   // specification_id in the provided specification. If not provided (or it is an empty string), nothing special
   // happens.
+  // If there is a value in specification.specification_id that is different from the one created from this uuid, an
+  // error is returned.
   string spec_uuid = 3 [(gogoproto.moretags) = "yaml:\"spec_uuid\""];
 }
 
@@ -272,6 +285,8 @@ message MsgWriteContractSpecificationRequest {
   // If provided, it will be used to generate the MetadataAddress for the contract specification which will override the
   // specification_id in the provided specification. If not provided (or it is an empty string), nothing special
   // happens.
+  // If there is a value in specification.specification_id that is different from the one created from this uuid, an
+  // error is returned.
   string spec_uuid = 3 [(gogoproto.moretags) = "yaml:\"spec_uuid\""];
 }
 
@@ -317,6 +332,8 @@ message MsgWriteRecordSpecificationRequest {
   // If provided, it will be combined with the record specification name to generate the MetadataAddress for the record
   // specification which will override the specification_id in the provided specification. If not provided (or it is an
   // empty string), nothing special happens.
+  // If there is a value in specification.specification_id that is different from the one created from this uuid and
+  // specification.name, an error is returned.
   string contract_spec_uuid = 3 [(gogoproto.moretags) = "yaml:\"contract_spec_uuid\""];
 }
 

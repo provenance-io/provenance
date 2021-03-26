@@ -38,10 +38,13 @@ type MsgWriteScopeRequest struct {
 	// scope_uuid is an optional uuid string, e.g. "91978ba2-5f35-459a-86a7-feca1b0512e0"
 	// If provided, it will be used to generate the MetadataAddress for the scope which will override the scope_id in the
 	// provided scope. If not provided (or it is an empty string), nothing special happens.
+	// If there is a value in scope.scope_id that is different from the one created from this uuid, an error is returned.
 	ScopeUuid string `protobuf:"bytes,3,opt,name=scope_uuid,json=scopeUuid,proto3" json:"scope_uuid,omitempty" yaml:"scope_uuid"`
 	// spec_uuid is an optional scope specification uuid string, e.g. "dc83ea70-eacd-40fe-9adf-1cf6148bf8a2"
 	// If provided, it will be used to generate the MetadataAddress for the scope specification which will override the
 	// specification_id in the provided scope. If not provided (or it is an empty string), nothing special happens.
+	// If there is a value in scope.specification_id that is different from the one created from this uuid, an error is
+	// returned.
 	SpecUuid string `protobuf:"bytes,4,opt,name=spec_uuid,json=specUuid,proto3" json:"spec_uuid,omitempty" yaml:"spec_uuid"`
 }
 
@@ -209,10 +212,14 @@ type MsgWriteSessionRequest struct {
 	// session. If provided, it must have both a scope and session_uuid. Those components will be used to create the
 	// MetadataAddress for the session which will override the session_id in the provided session. If not provided (or
 	// all empty), nothing special happens.
+	// If there is a value in session.session_id that is different from the one created from these components, an error is
+	// returned.
 	SessionIdComponents *SessionIdComponents `protobuf:"bytes,3,opt,name=session_id_components,json=sessionIdComponents,proto3" json:"session_id_components,omitempty" yaml:"session_id_components"`
 	// spec_uuid is an optional contract specification uuid string, e.g. "def6bc0a-c9dd-4874-948f-5206e6060a84"
 	// If provided, it will be used to generate the MetadataAddress for the contract specification which will override the
 	// specification_id in the provided session. If not provided (or it is an empty string), nothing special happens.
+	// If there is a value in session.specification_id that is different from the one created from this uuid, an error is
+	// returned.
 	SpecUuid string `protobuf:"bytes,4,opt,name=spec_uuid,json=specUuid,proto3" json:"spec_uuid,omitempty" yaml:"spec_uuid"`
 }
 
@@ -401,11 +408,15 @@ type MsgWriteRecordRequest struct {
 	// record. If provided, it must have both a scope and session_uuid. Those components will be used to create the
 	// MetadataAddress for the session which will override the session_id in the provided record. If not provided (or
 	// all empty), nothing special happens.
+	// If there is a value in record.session_id that is different from the one created from these components, an error is
+	// returned.
 	SessionIdComponents *SessionIdComponents `protobuf:"bytes,3,opt,name=session_id_components,json=sessionIdComponents,proto3" json:"session_id_components,omitempty" yaml:"session_id_components"`
 	// contract_spec_uuid is an optional contract specification uuid string, e.g. "def6bc0a-c9dd-4874-948f-5206e6060a84"
 	// If provided, it will be combined with the record name to generate the MetadataAddress for the record specification
 	// which will override the specification_id in the provided record. If not provided (or it is an empty string),
 	// nothing special happens.
+	// If there is a value in record.specification_id that is different from the one created from this uuid and
+	// record.name, an error is returned.
 	ContractSpecUuid string `protobuf:"bytes,4,opt,name=contract_spec_uuid,json=contractSpecUuid,proto3" json:"contract_spec_uuid,omitempty" yaml:"contract_spec_uuid"`
 }
 
@@ -572,6 +583,8 @@ type MsgWriteScopeSpecificationRequest struct {
 	// If provided, it will be used to generate the MetadataAddress for the scope specification which will override the
 	// specification_id in the provided specification. If not provided (or it is an empty string), nothing special
 	// happens.
+	// If there is a value in specification.specification_id that is different from the one created from this uuid, an
+	// error is returned.
 	SpecUuid string `protobuf:"bytes,3,opt,name=spec_uuid,json=specUuid,proto3" json:"spec_uuid,omitempty" yaml:"spec_uuid"`
 }
 
@@ -739,6 +752,8 @@ type MsgWriteContractSpecificationRequest struct {
 	// If provided, it will be used to generate the MetadataAddress for the contract specification which will override the
 	// specification_id in the provided specification. If not provided (or it is an empty string), nothing special
 	// happens.
+	// If there is a value in specification.specification_id that is different from the one created from this uuid, an
+	// error is returned.
 	SpecUuid string `protobuf:"bytes,3,opt,name=spec_uuid,json=specUuid,proto3" json:"spec_uuid,omitempty" yaml:"spec_uuid"`
 }
 
@@ -909,6 +924,8 @@ type MsgWriteRecordSpecificationRequest struct {
 	// If provided, it will be combined with the record specification name to generate the MetadataAddress for the record
 	// specification which will override the specification_id in the provided specification. If not provided (or it is an
 	// empty string), nothing special happens.
+	// If there is a value in specification.specification_id that is different from the one created from this uuid and
+	// specification.name, an error is returned.
 	ContractSpecUuid string `protobuf:"bytes,3,opt,name=contract_spec_uuid,json=contractSpecUuid,proto3" json:"contract_spec_uuid,omitempty" yaml:"contract_spec_uuid"`
 }
 
