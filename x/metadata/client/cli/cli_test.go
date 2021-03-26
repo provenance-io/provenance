@@ -1348,52 +1348,52 @@ func (s *IntegrationCLITestSuite) TestGetOwnershipCmd() {
 func (s *IntegrationCLITestSuite) TestGetValueOwnershipCmd() {
 	cmd := cli.GetValueOwnershipCmd()
 
-	ownedScopesAsJson := fmt.Sprintf("{\"scope_uuids\":[\"%s\"],\"pagination\":{\"next_key\":null,\"total\":\"1\"}}",
-		s.scopeUUID,
-	)
-	ownedScopesAsText := fmt.Sprintf(`pagination:
+	paginationText := `pagination:
   next_key: null
   total: "1"
-scope_uuids:
+`
+	scopeUUIDsText := fmt.Sprintf(`scope_uuids:
 - %s`,
 		s.scopeUUID,
 	)
 
-	testCases := []queryCmdTestCase{
+	testCases := []queryCmdTestCaseV2{
 		{
 			"as json",
 			[]string{s.user2, s.asJson},
 			"",
-			ownedScopesAsJson,
+			[]string{
+				fmt.Sprintf("\"scope_uuids\":[\"%s\"]", s.scopeUUID),
+				"\"pagination\":{\"next_key\":null,\"total\":\"1\"}",
+			},
 		},
 		{
 			"as text",
 			[]string{s.user2, s.asText},
 			"",
-			ownedScopesAsText,
+			[]string{scopeUUIDsText, paginationText},
 		},
 		{
 			"no result",
 			[]string{s.user1},
-			fmt.Sprintf("address %s is not the value owner on any scopes",
-				s.user1),
 			"",
+			[]string{"scope_uuids: []", "total: \"0\""},
 		},
 		{
 			"two args",
 			[]string{s.user1, s.user2},
 			"accepts 1 arg(s), received 2",
-			"",
+			[]string{},
 		},
 		{
 			"no args",
 			[]string{},
 			"accepts 1 arg(s), received 0",
-			"",
+			[]string{},
 		},
 	}
 
-	runQueryCmdTestCases(s, cmd, testCases)
+	runQueryCmdTestCasesV2(s, cmd, testCases)
 }
 
 func (s *IntegrationCLITestSuite) TestGetOSLocatorCmd() {
