@@ -1513,7 +1513,7 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 	testCases := []commonTxTestStruct{
 		{
 			"Should successfully add metadata scope",
-			cli.AddMetadataScopeCmd(),
+			cli.AddScopeCmd(),
 			[]string{
 				uuid.New().String(),
 				uuid.New().String(),
@@ -1529,7 +1529,7 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 		},
 		{
 			"Should successfully add metadata scope with signers flag",
-			cli.AddMetadataScopeCmd(),
+			cli.AddScopeCmd(),
 			[]string{
 				uuid.New().String(),
 				uuid.New().String(),
@@ -1546,7 +1546,7 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 		},
 		{
 			"Should fail to add metadata scope, incorrect scope uuid",
-			cli.AddMetadataScopeCmd(),
+			cli.AddScopeCmd(),
 			[]string{
 				"not-a-uuid",
 				uuid.New().String(),
@@ -1562,7 +1562,7 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 		},
 		{
 			"Should fail to add metadata scope, incorrect scope spec uuid",
-			cli.AddMetadataScopeCmd(),
+			cli.AddScopeCmd(),
 			[]string{
 				uuid.New().String(),
 				"not-a-uuid",
@@ -1578,7 +1578,7 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 		},
 		{
 			"Should fail to add metadata scope, incorrect owner address format",
-			cli.AddMetadataScopeCmd(),
+			cli.AddScopeCmd(),
 			[]string{
 				uuid.New().String(),
 				uuid.New().String(),
@@ -1594,7 +1594,7 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 		},
 		{
 			"Should fail to add metadata scope, incorrect data access format",
-			cli.AddMetadataScopeCmd(),
+			cli.AddScopeCmd(),
 			[]string{
 				uuid.New().String(),
 				uuid.New().String(),
@@ -1610,7 +1610,7 @@ func (s *IntegrationTestSuite) TestAddMetadataScopeCmd() {
 		},
 		{
 			"Should fail to add metadata scope, incorrect value owner address",
-			cli.AddMetadataScopeCmd(),
+			cli.AddScopeCmd(),
 			[]string{
 				uuid.New().String(),
 				uuid.New().String(),
@@ -1636,7 +1636,7 @@ func (s *IntegrationTestSuite) TestRemoveMetadataScopeCmd() {
 	testCases := []commonTxTestStruct{
 		{
 			"Should successfully add metadata scope for testing scope removal",
-			cli.AddMetadataScopeCmd(),
+			cli.AddScopeCmd(),
 			[]string{
 				scopeUUID,
 				uuid.New().String(),
@@ -1652,7 +1652,7 @@ func (s *IntegrationTestSuite) TestRemoveMetadataScopeCmd() {
 		},
 		{
 			"Should fail to remove metadata scope, invalid scopeid",
-			cli.RemoveMetadataScopeCmd(),
+			cli.RemoveScopeCmd(),
 			[]string{
 				"not-valid",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -1664,7 +1664,7 @@ func (s *IntegrationTestSuite) TestRemoveMetadataScopeCmd() {
 		},
 		{
 			"Should fail to remove metadata scope, invalid userid",
-			cli.RemoveMetadataScopeCmd(),
+			cli.RemoveScopeCmd(),
 			[]string{
 				scopeUUID,
 				fmt.Sprintf("--%s=%s", cli.FlagSigners, "not-a-validuser"),
@@ -1677,7 +1677,7 @@ func (s *IntegrationTestSuite) TestRemoveMetadataScopeCmd() {
 		},
 		{
 			"Should remove metadata scope",
-			cli.RemoveMetadataScopeCmd(),
+			cli.RemoveScopeCmd(),
 			[]string{
 				scopeUUID,
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -2076,6 +2076,35 @@ func (s *IntegrationTestSuite) TestRecordSpecificationTxCommands() {
 			false,
 			"",
 			&sdk.TxResponse{}, 1,
+		},
+	}
+	s.runTxTestCases(testCases)
+}
+
+func (s *IntegrationTestSuite) TestRecordTxCommands() {
+	// addScopeCmd := cli.AddScopeCmd()
+	addRecordCmd := cli.AddRecordCmd()
+	// removeRecordCmd := cli.RemoveRecordCmd()
+	testCases := []commonTxTestStruct{
+		{
+			"should successfully add record without a session",
+			addRecordCmd,
+			[]string{
+				s.contractSpecID.String(),
+				"nameforsessionless",
+				"processname,hashvalue,methodname",
+				"input1name,hashvalue,typename,proposed",
+				"outputhashvalue,pass",
+				"owner,originator",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false,
+			"",
+			&sdk.TxResponse{},
+			0,
 		},
 	}
 	s.runTxTestCases(testCases)

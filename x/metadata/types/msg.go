@@ -200,8 +200,8 @@ func (msg MsgAddSessionRequest) ValidateBasic() error {
 // ------------------  MsgAddRecordRequest  ------------------
 
 // NewMsgAddRecordRequest creates a new msg instance
-func NewMsgAddRecordRequest() *MsgAddRecordRequest {
-	return &MsgAddRecordRequest{}
+func NewMsgAddRecordRequest(sessionId MetadataAddress, record Record, partiesInvolved []PartyType, signers []string) *MsgAddRecordRequest {
+	return &MsgAddRecordRequest{SessionId: sessionId, Record: record, PartiesInvolved: partiesInvolved, Signers: signers}
 }
 
 func (msg MsgAddRecordRequest) String() string {
@@ -234,14 +234,14 @@ func (msg MsgAddRecordRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
-	return msg.Record.ValidateBasic()
+	return nil
 }
 
 // ------------------  MsgDeleteRecordRequest  ------------------
 
 // NewMsgDeleteScopeSpecificationRequest creates a new msg instance
-func NewMsgDeleteRecordRequest() *MsgDeleteRecordRequest {
-	return &MsgDeleteRecordRequest{}
+func NewMsgDeleteRecordRequest(recordId MetadataAddress, signers []string) *MsgDeleteRecordRequest {
+	return &MsgDeleteRecordRequest{RecordId: recordId, Signers: signers}
 }
 
 func (msg MsgDeleteRecordRequest) String() string {

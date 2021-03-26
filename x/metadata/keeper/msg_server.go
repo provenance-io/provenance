@@ -84,13 +84,13 @@ func (k msgServer) AddSession(
 		existing = &e
 		existingAudit = existing.Audit
 	}
-	if err := k.ValidateSessionUpdate(ctx, existing, *msg.Session, msg.Signers); err != nil {
+	if err := k.ValidateSessionUpdate(ctx, existing, msg.Session, msg.Signers); err != nil {
 		return nil, err
 	}
 
 	msg.Session.Audit = existingAudit.UpdateAudit(ctx.BlockTime(), strings.Join(msg.Signers, ", "), "")
 
-	k.SetSession(ctx, *msg.Session)
+	k.SetSession(ctx, msg.Session)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -120,11 +120,11 @@ func (k msgServer) AddRecord(
 	if e, found := k.GetRecord(ctx, recordID); found {
 		existing = &e
 	}
-	if err := k.ValidateRecordUpdate(ctx, existing, *msg.Record, msg.Signers); err != nil {
+	if err := k.ValidateRecordUpdate(ctx, existing, msg.Record, msg.Signers); err != nil {
 		return nil, err
 	}
 
-	k.SetRecord(ctx, *msg.Record)
+	k.SetRecord(ctx, msg.Record)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -482,7 +482,7 @@ func (k msgServer) P8EMemorializeContract(
 	}
 
 	_, err = k.AddSession(goCtx, &types.MsgAddSessionRequest{
-		Session: p8EData.Session,
+		Session: *p8EData.Session,
 		Signers: signers,
 	})
 	if err != nil {
@@ -492,7 +492,7 @@ func (k msgServer) P8EMemorializeContract(
 	for _, record := range p8EData.Records {
 		_, err = k.AddRecord(goCtx, &types.MsgAddRecordRequest{
 			SessionId: p8EData.Session.SessionId,
-			Record:    record,
+			Record:    *record,
 			Signers:   signers,
 		})
 		if err != nil {

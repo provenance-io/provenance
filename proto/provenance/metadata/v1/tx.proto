@@ -102,7 +102,7 @@ message MsgAddSessionRequest {
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-  Session         session = 1;
+  Session         session = 1 [(gogoproto.nullable) = false];
   repeated string signers = 2;
 }
 
@@ -122,8 +122,9 @@ message MsgAddRecordRequest {
     (gogoproto.moretags)   = "yaml:\"session_id\""
   ];
 
-  Record          record  = 2;
-  repeated string signers = 3;
+  Record          record  = 2 [(gogoproto.nullable) = false];
+  repeated PartyType parties_involved = 3;
+  repeated string signers = 4;
 }
 
 // MsgAddRecordResponse from an add records request
@@ -142,7 +143,7 @@ message MsgDeleteRecordRequest {
     (gogoproto.moretags)   = "yaml:\"record_id\""
   ];
 
-  repeated string signers = 2;
+  repeated string signers = 3;
 }
 
 // MsgDeleteRecordResponse from a delete record request
