@@ -1399,16 +1399,19 @@ func (s *IntegrationCLITestSuite) TestGetValueOwnershipCmd() {
 func (s *IntegrationCLITestSuite) TestGetOSLocatorCmd() {
 	cmd := cli.GetOSLocatorCmd()
 
-	testCases := []queryCmdTestCase{
+	testCases := []queryCmdTestCaseV2{
 		{
 			"get os locator by owner",
 			[]string{s.user1Addr.String(), s.asJson},
 			"",
-			fmt.Sprintf("{\"owner\":\"%s\",\"locator_uri\":\"%s\"}",s.user1Addr.String(),"http://foo.com"),
+			[]string{
+				fmt.Sprintf("\"owner\":\"%s\"", s.user1Addr.String()),
+				fmt.Sprintf("\"locator_uri\":\"%s\"}", "http://foo.com"),
+			},
 		},
 	}
 
-	runQueryCmdTestCases(s, cmd, testCases)
+	runQueryCmdTestCasesV2(s, cmd, testCases)
 }
 
 // ---------- tx cmd tests ----------
