@@ -1615,10 +1615,120 @@ func (s *IntegrationTestSuite) TestMetadataScopeTxCommands() {
 			false, "", &sdk.TxResponse{}, 0,
 		},
 		{
-			"should to remove metadata scope that no longer exists",
+			"should fail to metadata scope that no longer exists",
 			cli.RemoveMetadataScopeCmd(),
 			[]string{
 				scopeID,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, "", &sdk.TxResponse{}, 1,
+		},
+	}
+
+	s.runTxTestCases(testCases)
+}
+
+func (s *IntegrationTestSuite) TestScopeSpecificationTxCommands() {
+	addCommand := cli.AddScopeSpecificationCmd()
+	removeCommand := cli.RemoveScopeSpecificationCmd()
+	specID := types.ScopeSpecMetadataAddress(uuid.New())
+	testCases := []commonTxTestStruct{
+		{
+			"should successfully add scope specification",
+			addCommand,
+			[]string{
+				specID.String(),
+				s.testnet.Validators[0].Address.String(),
+				"owner",
+				s.contractSpecID.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, "", &sdk.TxResponse{}, 0,
+		},
+		{
+			"should successfully update scope specification with descriptions",
+			addCommand,
+			[]string{
+				specID.String(),
+				s.testnet.Validators[0].Address.String(),
+				"owner",
+				s.contractSpecID.String(),
+				"description-name",
+				"description",
+				"http://www.blockchain.com/",
+				"http://www.blockchain.com/icon.png",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, "", &sdk.TxResponse{}, 0,
+		},
+		{
+			"should fail to add scope specification, invalid spec id format",
+			addCommand,
+			[]string{
+				"invalid",
+				s.testnet.Validators[0].Address.String(),
+				"owner",
+				s.contractSpecID.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, "decoding bech32 failed: invalid bech32 string length 7", &sdk.TxResponse{}, 0,
+		},
+		{
+			"should fail to add scope specification validate basic error",
+			addCommand,
+			[]string{
+				specID.String(),
+				s.testnet.Validators[0].Address.String(),
+				"owner",
+				specID.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, "invalid contract specification id prefix at index 0 (expected: contractspec, got scopespec)", &sdk.TxResponse{}, 0,
+		},
+		{
+			"should fail to remove scope specification invalid id",
+			removeCommand,
+			[]string{
+				"notvalid",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, "decoding bech32 failed: invalid index of 1", &sdk.TxResponse{}, 0,
+		},
+		{
+			"should successfully remove scope specification",
+			removeCommand,
+			[]string{
+				specID.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, "", &sdk.TxResponse{}, 0,
+		},
+		{
+			"should fail to remove scope specification that has already been removed",
+			removeCommand,
+			[]string{
+				specID.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
