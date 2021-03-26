@@ -57,7 +57,7 @@ func TestWriteScopeValidation(t *testing.T) {
 	)
 	var msg = NewMsgWriteScopeRequest(*scope, []string{"invalid"})
 	err := msg.ValidateBasic()
-	require.NoError(t, err)
+	require.EqualError(t, err, "invalid owner on scope: decoding bech32 failed: invalid index of 1")
 	require.Panics(t, func() { msg.GetSigners() }, "panics due to invalid addresses")
 
 	err = msg.Scope.ValidateBasic()
