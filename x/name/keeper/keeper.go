@@ -88,7 +88,7 @@ func (keeper Keeper) SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAdd
 	if err = record.ValidateBasic(); err != nil {
 		return err
 	}
-	bz, err := types.ModuleCdc.MarshalBinaryBare(&record)
+	bz, err := keeper.cdc.MarshalBinaryBare(&record)
 	if err != nil {
 		return err
 	}
@@ -115,7 +115,7 @@ func (keeper Keeper) GetRecordByName(ctx sdk.Context, name string) (record *type
 	}
 	bz := store.Get(key)
 	record = &types.NameRecord{}
-	err = types.ModuleCdc.UnmarshalBinaryBare(bz, record)
+	err = keeper.cdc.UnmarshalBinaryBare(bz, record)
 	return record, err
 }
 
@@ -191,7 +191,7 @@ func (keeper Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle Handl
 	// Iterate over records, processing callbacks.
 	for ; iterator.Valid(); iterator.Next() {
 		record := types.NameRecord{}
-		if err := types.ModuleCdc.UnmarshalBinaryBare(iterator.Value(), &record); err != nil {
+		if err := keeper.cdc.UnmarshalBinaryBare(iterator.Value(), &record); err != nil {
 			return err
 		}
 		if err := handle(record); err != nil {
