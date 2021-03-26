@@ -28,8 +28,7 @@ service Query {
   // The scope id, if provided, must either be scope uuid, e.g. 91978ba2-5f35-459a-86a7-feca1b0512e0 or a scope address,
   // e.g. scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel. The session addr, if provided, must be a bech32 session address,
   // e.g. session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr. The record_addr, if provided, must be a
-  // bech32 record address, e.g. record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3. Case doesn't
-  // matter.
+  // bech32 record address, e.g. record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3.
   //
   // Providing a session addr or record addr does not limit the sessions and records returned.
   // Those parameters are only used to find the scope.
@@ -60,7 +59,7 @@ service Query {
   //
   // The scope id can either be scope uuid, e.g. 91978ba2-5f35-459a-86a7-feca1b0512e0 or a scope address, e.g.
   // scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel. Similarly, the session_id can either be a uuid or session address, e.g.
-  // session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr. Case doesn't matter.
+  // session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr.
   //
   // * If only a session id is provided, and it is an address, then the scope id will be ignored and the session id used
   // to find a single session.
@@ -94,7 +93,7 @@ service Query {
   // 91978ba2-5f35-459a-86a7-feca1b0512e0 or a scope address, e.g. scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel. Similarly,
   // the session_id can either be a uuid or session address, e.g.
   // session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr. The name is the name of the record you're
-  // interested in. Case doesn't matter.
+  // interested in.
   //
   // * If a record_addr is provided, the rest of the fields are ignored and that record is returned.
   // * If only a scope_id is provided, all records in that scope are returned.
