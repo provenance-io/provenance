@@ -49,6 +49,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Added cli tx commands `add-scope` `remove-scope` for updating/adding/removing metadata `Scope`s. #199
 * Simulation testing support #95
 * Name module simulation testing #24
+* Added default IBC parameters for v039 chain genesis migration script #102
 * Expand and simplify querying. #169
   * Added endpoints for getting all entries of a type, e.g. `RecordsAll`.
   * Combined some endpoints (see notesin "API Breaking" section).
