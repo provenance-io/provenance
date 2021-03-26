@@ -154,7 +154,7 @@ func (s *MetadataTypesTestSuite) TestGetRecordIDInfo() {
 		assert.Equal(t, "", info.ScopeIdInfo.ScopeUuid, "ScopeIdInfo.ScopeUuid")
 	})
 
-	s.T().Run("recoprd id, everything populated", func(t *testing.T) {
+	s.T().Run("record id, everything populated", func(t *testing.T) {
 		info := GetRecordIDInfo(s.recordID)
 		require.NotNil(t, info, "GetRecordIDInfo result")
 		assert.Equal(t, s.recordID, info.RecordId, "RecordId")
