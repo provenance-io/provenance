@@ -125,7 +125,6 @@ func RemoveMetadataScopeCmd() *cobra.Command {
 			scopeID, err = types.MetadataAddressFromBech32(args[0])
 			if err != nil {
 				return err
-
 			}
 
 			signers, err := parseSigners(cmd, &clientCtx)
