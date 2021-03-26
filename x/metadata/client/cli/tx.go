@@ -14,8 +14,6 @@ import (
 	"github.com/provenance-io/provenance/x/metadata/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	uuid "github.com/google/uuid"
 )
 
 const (
@@ -54,7 +52,7 @@ func NewTxCmd() *cobra.Command {
 // AddMetadataScopeCmd creates a command for adding a metadata scope.
 func AddMetadataScopeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-scope [scope-uuid] [spec-id] [owner-addresses] [data-access] [value-owner-address]",
+		Use:   "add-scope [scope-id] [spec-id] [owner-addresses] [data-access] [value-owner-address]",
 		Short: "Add/Update a metadata scope to the provenance blockchain",
 		Args:  cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -63,18 +61,17 @@ func AddMetadataScopeCmd() *cobra.Command {
 				return err
 			}
 
-			scopeUUID, err := uuid.Parse(args[0])
+			var scopeID types.MetadataAddress
+			scopeID, err = types.MetadataAddressFromBech32(args[0])
 			if err != nil {
-				fmt.Printf("Invalid uuid for scope uuid: %s", args[0])
-				return err
-			}
-			specUUID, err := uuid.Parse(args[1])
-			if err != nil {
-				fmt.Printf("Invalid uuid for specification uuid: %s", args[0])
 				return err
 			}
 
-			specID := types.ScopeSpecMetadataAddress(specUUID)
+			var specID types.MetadataAddress
+			specID, err = types.MetadataAddressFromBech32(args[1])
+			if err != nil {
+				return err
+			}
 
 			ownerAddresses := strings.Split(args[2], ",")
 			owners := make([]types.Party, len(ownerAddresses))
@@ -90,18 +87,18 @@ func AddMetadataScopeCmd() *cobra.Command {
 			}
 
 			scope := *types.NewScope(
-				types.ScopeMetadataAddress(scopeUUID),
+				scopeID,
 				specID,
 				owners,
 				dataAccess,
 				valueOwnerAddress)
 
-			if err := scope.ValidateBasic(); err != nil {
-				fmt.Printf("Failed to validate scope %s : %v", scope.String(), err)
+			msg := types.NewMsgAddScopeRequest(scope, signers)
+			err = msg.ValidateBasic()
+			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgAddScopeRequest(scope, signers)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -115,7 +112,7 @@ func AddMetadataScopeCmd() *cobra.Command {
 // RemoveMetadataScopeCmd creates a command for removing a scope.
 func RemoveMetadataScopeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "remove-scope [scope-address] [signers]",
+		Use:   "remove-scope [scope-id]",
 		Short: "Remove a metadata scope to the provenance blockchain",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -124,26 +121,24 @@ func RemoveMetadataScopeCmd() *cobra.Command {
 				return err
 			}
 
-			scopeUUID, err := uuid.Parse(args[0])
+			var scopeID types.MetadataAddress
+			scopeID, err = types.MetadataAddressFromBech32(args[0])
 			if err != nil {
-				fmt.Printf("Invalid uuid for scope id: %s", args[0])
 				return err
 			}
-
-			scopeMetaAddress := types.ScopeMetadataAddress(scopeUUID)
 
 			signers, err := parseSigners(cmd, &clientCtx)
 			if err != nil {
 				return err
 			}
 
-			deleteScope := *types.NewMsgDeleteScopeRequest(scopeMetaAddress, signers)
-			if err := deleteScope.ValidateBasic(); err != nil {
-				fmt.Printf("Failed to validate remove scope %s : %v", deleteScope.String(), err)
+			msg := *types.NewMsgDeleteScopeRequest(scopeID, signers)
+			err = msg.ValidateBasic()
+			if err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &deleteScope)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
 		},
 	}
 
