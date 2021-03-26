@@ -960,7 +960,7 @@ func (s *IntegrationCLITestSuite) TestGetMetadataRecordCmd() {
 			"scope uuid exists but record name does not",
 			[]string{s.scopeUUID.String(), "nope"},
 			"",
-			[]string{"records: []"},
+			[]string{"record: null"},
 		},
 		{
 			"bad prefix",
