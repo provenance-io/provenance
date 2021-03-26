@@ -3086,13 +3086,14 @@ type QueryClient interface {
 	// e.g. session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr. The record_addr, if provided, must be a
 	// bech32 record address, e.g. record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3.
 	//
-	// Providing a session addr or record addr does not limit the sessions and records returned.
-	// Those parameters are only used to find the scope.
+	// * If only a scope_id is provided, that scope is returned.
+	// * If only a session_addr is provided, the scope containing that session is returned.
+	// * If only a record_addr is provided, the scope containing that record is returned.
+	// * If more than one of scope_id, session_addr, and record_addr are provided, and they don't refer to the same scope,
+	// a bad request is returned.
 	//
-	// * If a scope id is provided, the other input is ignored and that scope is returned.
-	// * Otherwise, if a session addr is provided, the record addr is ignored and the scope containing that session is
-	// returned.
-	// * Lastly, if a record addr is provided, the scope containing that record is returned.
+	// Providing a session addr or record addr does not limit the sessions and records returned (if requested).
+	// Those parameters are only used to find the scope.
 	//
 	// By default, sessions and records are not included.
 	// Set include_sessions and/or include_records to true to include sessions and/or records.
@@ -3101,17 +3102,14 @@ type QueryClient interface {
 	ScopesAll(ctx context.Context, in *ScopesAllRequest, opts ...grpc.CallOption) (*ScopesAllResponse, error)
 	// Sessions searches for sessions.
 	//
-	// The scope id can either be scope uuid, e.g. 91978ba2-5f35-459a-86a7-feca1b0512e0 or a scope address, e.g.
+	// The scope_id can either be scope uuid, e.g. 91978ba2-5f35-459a-86a7-feca1b0512e0 or a scope address, e.g.
 	// scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel. Similarly, the session_id can either be a uuid or session address, e.g.
 	// session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr.
 	//
-	// * If only a session id is provided, and it is an address, then the scope id will be ignored and the session id used
-	// to find a single session.
-	// * If only a session id is provided, and it is a uuid, a bad request is returned.
-	// * If only a scope id is provided, all sessions for that scope will be returned.
-	// * If both a scope id and session id is provided, and the session id is a uuid, then the session in the provided
-	// scope, with the provided session uuid is returned.
-	// * If neither a scope id, nor a session id are provided, a bad request is returned.
+	// * If only a scope_id is provided, all sessions in that scope are returned.
+	// * If only a session_id is provided, it must be an address, and that single session is returned.
+	// * If both are provided, that single session is returned.
+	// * If both scope_id and session_id are addresses, and they don't refer to the same scope, a bad request is returned.
 	//
 	// By default, the scope and records are not included.
 	// Set include_scope and/or include_records to true to include the scope and/or records.
@@ -3121,17 +3119,22 @@ type QueryClient interface {
 	// Records searches for records.
 	//
 	// The record_addr, if provided, must be a bech32 record address, e.g.
-	// record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3. The scope id can either be scope uuid, e.g.
+	// record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3. The scope-id can either be scope uuid, e.g.
 	// 91978ba2-5f35-459a-86a7-feca1b0512e0 or a scope address, e.g. scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel. Similarly,
 	// the session_id can either be a uuid or session address, e.g.
 	// session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr. The name is the name of the record you're
 	// interested in.
 	//
-	// * If a record_addr is provided, the rest of the fields are ignored and that record is returned.
-	// * If only a scope_id is provided, all records in that scope are returned.
-	// * If only a session_id is provided, it must be a bech32 session address. All records in that session are returned.
-	// * If a name is provided, either a scope_id must be provided or a session_id must be provided as a bech32 session
-	// address. The record with the provided name in the provided context is returned.
+	// * If only a record_addr is provided, that single record will be returned.
+	// * If only a scope_id is provided, all records in that scope will be returned.
+	// * If only a session_id (or scope_id/session_id), all records in that session will be returned.
+	// * If a name is provided with a scope_id and/or session_id, that single record will be returned.
+	//
+	// A bad request is returned if:
+	// * The session_id is a uuid and no scope_id is provided.
+	// * There are two or more of record_addr, session_id, and scope_id, and they don't all refer to the same scope.
+	// * A name is provided, but not a scope_id and/or a session_id.
+	// * A name and record_addr are provided and the name doesn't match the record_addr.
 	//
 	// By default, the scope and sessions are not included.
 	// Set include_scope and/or include_sessions to true to include the scope and/or sessions.
@@ -3392,13 +3395,14 @@ type QueryServer interface {
 	// e.g. session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr. The record_addr, if provided, must be a
 	// bech32 record address, e.g. record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3.
 	//
-	// Providing a session addr or record addr does not limit the sessions and records returned.
-	// Those parameters are only used to find the scope.
+	// * If only a scope_id is provided, that scope is returned.
+	// * If only a session_addr is provided, the scope containing that session is returned.
+	// * If only a record_addr is provided, the scope containing that record is returned.
+	// * If more than one of scope_id, session_addr, and record_addr are provided, and they don't refer to the same scope,
+	// a bad request is returned.
 	//
-	// * If a scope id is provided, the other input is ignored and that scope is returned.
-	// * Otherwise, if a session addr is provided, the record addr is ignored and the scope containing that session is
-	// returned.
-	// * Lastly, if a record addr is provided, the scope containing that record is returned.
+	// Providing a session addr or record addr does not limit the sessions and records returned (if requested).
+	// Those parameters are only used to find the scope.
 	//
 	// By default, sessions and records are not included.
 	// Set include_sessions and/or include_records to true to include sessions and/or records.
@@ -3407,17 +3411,14 @@ type QueryServer interface {
 	ScopesAll(context.Context, *ScopesAllRequest) (*ScopesAllResponse, error)
 	// Sessions searches for sessions.
 	//
-	// The scope id can either be scope uuid, e.g. 91978ba2-5f35-459a-86a7-feca1b0512e0 or a scope address, e.g.
+	// The scope_id can either be scope uuid, e.g. 91978ba2-5f35-459a-86a7-feca1b0512e0 or a scope address, e.g.
 	// scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel. Similarly, the session_id can either be a uuid or session address, e.g.
 	// session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr.
 	//
-	// * If only a session id is provided, and it is an address, then the scope id will be ignored and the session id used
-	// to find a single session.
-	// * If only a session id is provided, and it is a uuid, a bad request is returned.
-	// * If only a scope id is provided, all sessions for that scope will be returned.
-	// * If both a scope id and session id is provided, and the session id is a uuid, then the session in the provided
-	// scope, with the provided session uuid is returned.
-	// * If neither a scope id, nor a session id are provided, a bad request is returned.
+	// * If only a scope_id is provided, all sessions in that scope are returned.
+	// * If only a session_id is provided, it must be an address, and that single session is returned.
+	// * If both are provided, that single session is returned.
+	// * If both scope_id and session_id are addresses, and they don't refer to the same scope, a bad request is returned.
 	//
 	// By default, the scope and records are not included.
 	// Set include_scope and/or include_records to true to include the scope and/or records.
@@ -3427,17 +3428,22 @@ type QueryServer interface {
 	// Records searches for records.
 	//
 	// The record_addr, if provided, must be a bech32 record address, e.g.
-	// record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3. The scope id can either be scope uuid, e.g.
+	// record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3. The scope-id can either be scope uuid, e.g.
 	// 91978ba2-5f35-459a-86a7-feca1b0512e0 or a scope address, e.g. scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel. Similarly,
 	// the session_id can either be a uuid or session address, e.g.
 	// session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr. The name is the name of the record you're
 	// interested in.
 	//
-	// * If a record_addr is provided, the rest of the fields are ignored and that record is returned.
-	// * If only a scope_id is provided, all records in that scope are returned.
-	// * If only a session_id is provided, it must be a bech32 session address. All records in that session are returned.
-	// * If a name is provided, either a scope_id must be provided or a session_id must be provided as a bech32 session
-	// address. The record with the provided name in the provided context is returned.
+	// * If only a record_addr is provided, that single record will be returned.
+	// * If only a scope_id is provided, all records in that scope will be returned.
+	// * If only a session_id (or scope_id/session_id), all records in that session will be returned.
+	// * If a name is provided with a scope_id and/or session_id, that single record will be returned.
+	//
+	// A bad request is returned if:
+	// * The session_id is a uuid and no scope_id is provided.
+	// * There are two or more of record_addr, session_id, and scope_id, and they don't all refer to the same scope.
+	// * A name is provided, but not a scope_id and/or a session_id.
+	// * A name and record_addr are provided and the name doesn't match the record_addr.
 	//
 	// By default, the scope and sessions are not included.
 	// Set include_scope and/or include_sessions to true to include the scope and/or sessions.
