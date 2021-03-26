@@ -248,6 +248,7 @@ func ModifyOsLocatorCmd() *cobra.Command {
 	return cmd
 }
 
+// AddScopeSpecificationCmd creates a command for adding scope specificiation
 func AddScopeSpecificationCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-scope-specification [specification-id] [owner-addresses] [responsible-parties] [contract-specification-ids] [description-name] [description] [website-url] [icon-url]",
@@ -519,6 +520,7 @@ func parseDescription(cliArgs []string) *types.Description {
 	return &description
 }
 
+// RemoveScopeSpecificationCmd creates a command to remove scope specification
 func RemoveScopeSpecificationCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "remove-scope-specification [specification-id]",
@@ -594,6 +596,7 @@ func RemoveContractSpecificationCmd() *cobra.Command {
 	return cmd
 }
 
+// RemoveRecordSpecificationCmd creates a command to remove record specification
 func RemoveRecordSpecificationCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "remove-record-specification [specification-id]",
