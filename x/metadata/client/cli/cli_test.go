@@ -1659,7 +1659,7 @@ func (s *IntegrationCLITestSuite) TestAddObjectLocatorCmd() {
 	runTxCmdTestCases(s, testCases)
 }
 
-func (s *IntegrationTestSuite) TestContractSpecificationTxCommands() {
+func (s *IntegrationCLITestSuite) TestContractSpecificationTxCommands() {
 	addCommand := cli.WriteContractSpecificationCmd()
 	removeCommand := cli.RemoveContractSpecificationCmd()
 	contractSpecUUID := uuid.New()
@@ -1811,18 +1811,19 @@ func (s *IntegrationTestSuite) TestContractSpecificationTxCommands() {
 			1,
 		},
 	}
-	s.runTxTestCases(testCases)
+
+	runTxCmdTestCases(s, testCases)
 }
 
-func (s *IntegrationTestSuite) TestRecordSpecificationTxCommands() {
-	cmd := cli.AddRecordSpecificationCmd()
-	addConractSpecCmd := cli.AddContractSpecificationCmd()
+func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
+	cmd := cli.WriteRecordSpecificationCmd()
+	addConractSpecCmd := cli.WriteContractSpecificationCmd()
 	deleteRecordSpecCmd := cli.RemoveRecordSpecificationCmd()
 	recordName := "testrecordspecid"
 	contractSpecUUID := uuid.New()
 	contractSpecID := types.ContractSpecMetadataAddress(contractSpecUUID)
 	specificationID := types.RecordSpecMetadataAddress(contractSpecUUID, recordName)
-	testCases := []commonTxTestStruct{
+	testCases := []txCmdTestCase{
 		{
 			"setup test with a record specification owned by signer",
 			addConractSpecCmd,
