@@ -67,7 +67,7 @@ func (keeper Keeper) ResolvesTo(ctx sdk.Context, name string, addr sdk.AccAddres
 	return addr.String() == stored.Address
 }
 
-// SetNameRecord binds a name to an address. An error is returned if no account exists for the address.
+// SetNameRecord binds a name to an address.
 func (keeper Keeper) SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAddress, restrict bool) error {
 	var err error
 	if name, err = keeper.Normalize(ctx, name); err != nil {

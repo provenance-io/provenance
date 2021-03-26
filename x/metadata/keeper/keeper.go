@@ -249,6 +249,10 @@ func (k Keeper) checkValidURI(uri string, ctx sdk.Context) (*url.URL, error) {
 		return nil, err
 	}
 
+	if urlToPersist.Scheme == "" || urlToPersist.Host == "" {
+		return nil, types.ErrOSLocatorURIInvalid
+	}
+
 	if int(k.GetOSLocatorParams(ctx).MaxUriLength) < len(uri) {
 		return nil, types.ErrOSLocatorURIToolong
 	}

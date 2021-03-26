@@ -591,7 +591,7 @@ func (k msgServer) DeleteOSLocator(ctx context.Context, msg *types.MsgDeleteOSLo
 	}
 
 	// Delete
-	if err := k.Keeper.deleteRecord(sdkCtx, ownerAddr); err != nil {
+	if err := k.Keeper.DeleteRecord(sdkCtx, ownerAddr); err != nil {
 		sdkCtx.Logger().Error("error deleting name", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
@@ -627,7 +627,7 @@ func (k msgServer) ModifyOSLocator(ctx context.Context, msg *types.MsgModifyOSLo
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "msg sender cannot delete os locator.")
 	}
 	// Modify
-	if err := k.Keeper.modifyRecord(sdkCtx, ownerAddr, msg.Locator.LocatorUri); err != nil {
+	if err := k.Keeper.ModifyRecord(sdkCtx, ownerAddr, msg.Locator.LocatorUri); err != nil {
 		sdkCtx.Logger().Error("error deleting name", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}

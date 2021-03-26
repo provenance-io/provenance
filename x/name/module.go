@@ -18,6 +18,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	"github.com/provenance-io/provenance/x/name/client/cli"
 	"github.com/provenance-io/provenance/x/name/client/rest"
@@ -95,15 +97,19 @@ func (b AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) 
 type AppModule struct {
 	AppModuleBasic
 	keeper keeper.Keeper
+	ak     authkeeper.AccountKeeperI
+	bk     bankkeeper.ViewKeeper
 }
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(
-	cdc codec.Marshaler, keeper keeper.Keeper,
+	cdc codec.Marshaler, keeper keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
+		ak:             ak,
+		bk:             bk,
 	}
 }
 
@@ -182,14 +188,13 @@ func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 }
 
 // RegisterStoreDecoder registers a decoder for name module's types
-func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
-	// sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
+func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	sdr[types.StoreKey] = simulation.NewDecodeStore(*types.ModuleCdc.LegacyAmino)
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	// return simulation.WeightedOperations(
-	// 	simState.AppParams, simState.Cdc, am.accountKeeper, am.keeper,
-	// )
-	return []simtypes.WeightedOperation{}
+	return simulation.WeightedOperations(
+		simState.AppParams, simState.Cdc, am.keeper, am.ak, am.bk,
+	)
 }

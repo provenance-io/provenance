@@ -14,10 +14,10 @@ import (
 )
 
 const (
-	keyMinSegmentLength  = "minsegmentlength"
-	keyMaxSegmentLength  = "maxsegmentlength"
-	keyMaxNameLevels     = "maxnamelevels"
-	keyAllowUnrestricted = "unrestricednames"
+	keyMinSegmentLength  = "MinSegmentLength"
+	keyMaxSegmentLength  = "MaxSegmentLength"
+	keyMaxNameLevels     = "MaxNameLevels"
+	keyAllowUnrestricted = "AllowUnrestrictedNames"
 )
 
 // ParamChanges defines the parameters that can be modified by param change proposals
@@ -26,24 +26,24 @@ func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
 	return []simtypes.ParamChange{
 		simulation.NewSimParamChange(types.ModuleName, keyMinSegmentLength,
 			func(r *rand.Rand) string {
-				return fmt.Sprintf("\"%d\"", GenMinSegmentLength(r))
+				return fmt.Sprintf("%d", GenMinSegmentLength(r))
 			},
 		),
 		simulation.NewSimParamChange(types.ModuleName, keyMaxSegmentLength,
 			func(r *rand.Rand) string {
-				return fmt.Sprintf("\"%d\"", GenMaxSegmentLength(r))
+				return fmt.Sprintf("%d", GenMaxSegmentLength(r))
 			},
 		),
 
 		simulation.NewSimParamChange(types.ModuleName, keyMaxNameLevels,
 			func(r *rand.Rand) string {
-				return fmt.Sprintf("\"%d\"", GenMaxNameLevels(r))
+				return fmt.Sprintf("%d", GenMaxNameLevels(r))
 			},
 		),
 
 		simulation.NewSimParamChange(types.ModuleName, keyAllowUnrestricted,
 			func(r *rand.Rand) string {
-				return fmt.Sprintf("\"%v\"", GenAllowUnrestrictedNames(r))
+				return fmt.Sprintf("%v", GenAllowUnrestrictedNames(r))
 			},
 		),
 	}

@@ -609,9 +609,9 @@ func (msg MsgDeleteContractSpecificationRequest) ValidateBasic() error {
 
 // ------------------  MsgWriteRecordSpecificationRequest  ------------------
 
-// NewMsgWriteRecordSpecificationRequest creates a new msg instance
-func NewMsgWriteRecordSpecificationRequest() *MsgWriteRecordSpecificationRequest {
-	return &MsgWriteRecordSpecificationRequest{}
+// NewMsgAddRecordSpecificationRequest creates a new msg instance
+func NewMsgWriteRecordSpecificationRequest(recordSpecification RecordSpecification, signers []string) *MsgWriteRecordSpecificationRequest {
+	return &MsgWriteRecordSpecificationRequest{Specification: recordSpecification, Signers: signers}
 }
 
 func (msg MsgWriteRecordSpecificationRequest) String() string {
@@ -644,7 +644,7 @@ func (msg MsgWriteRecordSpecificationRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
-	return nil
+	return msg.Specification.ValidateBasic()
 }
 
 // ConvertOptionalFields will look at the ContractSpecUuid field in the message.
@@ -671,8 +671,8 @@ func (msg *MsgWriteRecordSpecificationRequest) ConvertOptionalFields() error {
 // ------------------  MsgDeleteRecordSpecificationRequest  ------------------
 
 // NewMsgDeleteRecordSpecificationRequest creates a new msg instance
-func NewMsgDeleteRecordSpecificationRequest() *MsgDeleteRecordSpecificationRequest {
-	return &MsgDeleteRecordSpecificationRequest{}
+func NewMsgDeleteRecordSpecificationRequest(specificationID MetadataAddress, signers []string) *MsgDeleteRecordSpecificationRequest {
+	return &MsgDeleteRecordSpecificationRequest{SpecificationId: specificationID, Signers: signers}
 }
 
 func (msg MsgDeleteRecordSpecificationRequest) String() string {

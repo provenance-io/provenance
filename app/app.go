@@ -242,8 +242,7 @@ type App struct {
 	sm *module.SimulationManager
 }
 
-// New returns a reference to an initialized Provenanced.
-// NewSimApp returns a reference to an initialized SimApp.
+// New returns a reference to an initialized Provenance Blockchain App.
 func New(
 	appName string, logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, skipUpgradeHeights map[int64]bool,
 	homePath string, invCheckPeriod uint, encodingConfig appparams.EncodingConfig,
@@ -461,7 +460,7 @@ func New(
 
 		metadata.NewAppModule(appCodec, app.MetadataKeeper, app.AccountKeeper),
 		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper),
-		name.NewAppModule(appCodec, app.NameKeeper),
+		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),
 		attribute.NewAppModule(app.AttributeKeeper),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper),
 
@@ -533,11 +532,9 @@ func New(
 		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 
-		// TODO -- add simulation to metadata module
-		// metadata.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper),
-		// TODO -- add simulation to marker module
-		// marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper),
-		name.NewAppModule(appCodec, app.NameKeeper),
+		metadata.NewAppModule(appCodec, app.MetadataKeeper, app.AccountKeeper),
+		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper),
+		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),
 		attribute.NewAppModule(app.AttributeKeeper),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper),
 
