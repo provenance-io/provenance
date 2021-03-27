@@ -307,7 +307,8 @@ func TestMigrate(t *testing.T) {
         "method": "noop",
         "name": "io.provenance.proto.loan.LoanProtos$Loan"
       },
-      "session_id": "session1qyqqq2wf3c4yt4u447m8pw65qcdq7trdkw95wnvc4e0kg7n72y252q9j0yu"
+      "session_id": "session1qyqqq2wf3c4yt4u447m8pw65qcdq7trdkw95wnvc4e0kg7n72y252q9j0yu",
+      "specification_id": "recspec1qhvjj76putlkvl0mx80hp5gemjt5w2alzjfrutnualv99xp9csq7s7xf2aw"
     }
   ],
   "scope_specifications": [],

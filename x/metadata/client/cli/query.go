@@ -2,27 +2,34 @@ package cli
 
 import (
 	"context"
-	"encoding/json"
+	"errors"
 	"fmt"
-	"os"
+	"regexp"
 	"strings"
 
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/version"
-
-	"github.com/gogo/protobuf/proto"
-
 	"github.com/google/uuid"
 
-	"github.com/provenance-io/provenance/x/metadata/types"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
+	"github.com/cosmos/cosmos-sdk/version"
 
-	"gopkg.in/yaml.v2"
+	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
-var cmdStart = fmt.Sprintf("%s query metadata", version.AppName)
+var (
+	cmdStart = fmt.Sprintf("%s query metadata", version.AppName)
+
+	includeScope       bool
+	includeSessions    bool
+	includeRecords     bool
+	includeRecordSpecs bool
+	includeRequest     bool
+)
+
+const all = "all"
 
 // GetQueryCmd returns the top-level command for marker CLI queries.
 func GetQueryCmd() *cobra.Command {
@@ -36,8 +43,8 @@ func GetQueryCmd() *cobra.Command {
 	queryCmd.AddCommand(
 		GetMetadataParamsCmd(),
 		GetMetadataByIDCmd(),
+		GetMetadataGetAllCmd(),
 		GetMetadataScopeCmd(),
-		GetMetadataFullScopeCmd(),
 		GetMetadataSessionCmd(),
 		GetMetadataRecordCmd(),
 		GetMetadataScopeSpecCmd(),
@@ -45,38 +52,33 @@ func GetQueryCmd() *cobra.Command {
 		GetMetadataRecordSpecCmd(),
 		GetOwnershipCmd(),
 		GetValueOwnershipCmd(),
-		GetOSLocatorParamsCmd(),
 		GetOSLocatorCmd(),
-		GetOSLocatorByURICmd(),
-		GetOSLocatorByScopeUUIDCmd(),
-		GetOSAllLocatorCmd(),
 	)
 	return queryCmd
 }
 
+// ------------ Individual Commands ------------
+
 // GetMetadataParamsCmd returns the command handler for metadata parameter querying.
 func GetMetadataParamsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "params",
+		Use:     "params [locator]",
 		Short:   "Query the current metadata parameters",
-		Args:    cobra.NoArgs,
+		Args:    cobra.MaximumNArgs(1),
 		Example: fmt.Sprintf("%s params", cmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
+			if len(args) == 0 {
+				return outputParams(cmd)
 			}
-
-			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.Params(context.Background(), &types.QueryParamsRequest{})
-			if err != nil {
-				return err
+			arg0 := strings.TrimSpace(args[0])
+			if arg0 == "locator" {
+				return outputOSLocatorParams(cmd)
 			}
-
-			return clientCtx.PrintProto(&res.Params)
+			return fmt.Errorf("unknown argument: %s", arg0)
 		},
 	}
 
+	addIncludeRequestFlag(cmd)
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
@@ -112,22 +114,78 @@ func GetMetadataByIDCmd() *cobra.Command {
 
 			switch prefix {
 			case types.PrefixScope:
-				return fullScopeByID(cmd, id)
+				return outputScope(cmd, id.String(), "", "")
 			case types.PrefixSession:
-				return sessionByID(cmd, id)
+				return outputSessions(cmd, "", id.String())
 			case types.PrefixRecord:
-				return recordByID(cmd, id)
+				return outputRecords(cmd, id.String(), "", "", "")
 			case types.PrefixScopeSpecification:
-				return scopeSpecByID(cmd, id)
+				return outputScopeSpec(cmd, id.String())
 			case types.PrefixContractSpecification:
-				return contractSpecByID(cmd, id)
+				return outputContractSpec(cmd, id.String())
 			case types.PrefixRecordSpecification:
-				return recordSpecByID(cmd, id)
+				return outputRecordSpec(cmd, id.String(), "")
 			}
 			return fmt.Errorf("unexpected address prefix %s", prefix)
 		},
 	}
 
+	addIncludeScopeFlag(cmd)
+	addIncludeSessionsFlag(cmd)
+	addIncludeRecordsFlag(cmd)
+	addIncludeRecordSpecsFlag(cmd)
+	addIncludeRequestFlag(cmd)
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetMetadataGetAllCmd returns the command handler for querying metadata for all entries of a type.
+func GetMetadataGetAllCmd() *cobra.Command {
+	nonLetterRegex := regexp.MustCompile("[^[:alpha:]]+")
+	cmd := &cobra.Command{
+		Use:   "all {scopes|sessions|records|scopespecs|contractspecs|recordspecs|locators}",
+		Short: "Get all entries of a certain type",
+		Long: fmt.Sprintf(`%[1]s all scopes - gets all scopes.
+%[1]s all sessions - gets all sessions.
+%[1]s all records - gets all records.
+%[1]s all scopespecs - gets all scope specifications.
+%[1]s all contractspecs - gets all contract specifications.
+%[1]s all recordspecs - gets all record specifications.
+%[1]s all locators - gets all object store locators.`, cmdStart),
+		Args: cobra.MinimumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Smash all the args together. We only want a single "word" anyway.
+			input := strings.ToLower(trimSpaceAndJoin(args, ""))
+			// Get rid of non-letters
+			// This simplifies the switch below, e.g. record-specs becomes recordspecs.
+			input = nonLetterRegex.ReplaceAllString(input, "")
+			// Make sure it ends with an "s"
+			// This simplifies the switch below, e.g. "scope" becomes "scopes"
+			if input[len(input)-1:] != "s" {
+				input += "s"
+			}
+			switch input {
+			case "scopes":
+				return outputScopesAll(cmd)
+			case "sessions", "sess":
+				return outputSessionsAll(cmd)
+			case "records", "recs":
+				return outputRecordsAll(cmd)
+			case "scopespecs", "scopespecifications":
+				return outputScopeSpecsAll(cmd)
+			case "contractspecs", "cspecs", "contractspecifications":
+				return outputContractSpecsAll(cmd)
+			case "recordspecs", "recspecs", "recordspecifications", "recspecifications":
+				return outputRecordSpecsAll(cmd)
+			case "locators", "locs":
+				return outputOSLocatorsAll(cmd)
+			}
+			return fmt.Errorf("unknown entry type: %s", input)
+		},
+	}
+
+	addIncludeRequestFlag(cmd)
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
@@ -136,72 +194,42 @@ func GetMetadataByIDCmd() *cobra.Command {
 // GetMetadataScopeCmd returns the command handler for metadata scope querying.
 func GetMetadataScopeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "scope {scope_id|scope_uuid|session_id|record_id}",
+		Use:   "scope {scope_id|scope_uuid|session_id|record_id|\"all\"}",
 		Short: "Query the current metadata for a scope",
 		Long: fmt.Sprintf(`%[1]s scope {scope_id} - gets the scope with the given id.
 %[1]s scope {scope_uuid} - gets the scope with the given uuid.
 %[1]s scope {session_id} - gets the scope containing the given session.
-%[1]s scope {record_id} - gets the scope containing the given record.`, cmdStart),
+%[1]s scope {record_id} - gets the scope containing the given record.
+%[1]s scope all - gets all scopes.`, cmdStart),
 		Args: cobra.ExactArgs(1),
 		Example: fmt.Sprintf(`%[1]s scope scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel
 %[1]s scope 91978ba2-5f35-459a-86a7-feca1b0512e0
 %[1]s scope session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr
-%[1]s scope record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3`, cmdStart),
+%[1]s scope record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3
+%[1]s scope all`, cmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			arg0 := strings.TrimSpace(args[0])
-			scopeUUID, uuidErr := uuid.Parse(arg0)
-			if uuidErr != nil {
-				id, idErr := types.MetadataAddressFromBech32(arg0)
-				if idErr != nil {
-					return fmt.Errorf("argument %s is neither a metadata address (%s) nor uuid (%s)", arg0, idErr.Error(), uuidErr.Error())
-				}
-				scopeUUID, uuidErr = id.ScopeUUID()
-				if uuidErr != nil {
-					return uuidErr
+			if arg0 == all {
+				return outputScopesAll(cmd)
+			}
+			id, idErr := types.MetadataAddressFromBech32(arg0)
+			if idErr == nil {
+				switch {
+				case id.IsScopeAddress():
+					return outputScope(cmd, id.String(), "", "")
+				case id.IsSessionAddress():
+					return outputScope(cmd, "", id.String(), "")
+				case id.IsRecordAddress():
+					return outputScope(cmd, "", "", id.String())
 				}
 			}
-			return scopeByUUID(cmd, scopeUUID.String())
+			return outputScope(cmd, arg0, "", "")
 		},
 	}
 
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
-}
-
-// GetMetadataFullScopeCmd returns the command handler for metadata full-scope querying.
-func GetMetadataFullScopeCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "fullscope {scope_id|scope_uuid|session_id|record_id}",
-		Short: "Query the current metadata for a scope, its sessions, and its records",
-		Long: fmt.Sprintf(`%[1]s fullscope {scope_id} - gets a scope, sessions, and records with the given scope id.
-%[1]s fullscope {scope_uuid} - gets a scope, sessions, and records with the given scope uuid.
-%[1]s fullscope {session_id} - gets a scope (including sessions and records) for the scope uuid in the session id.
-%[1]s fullscope {record_id} - gets a scope (including sessions and records) for the scope uuid in the record id.`, cmdStart),
-		Args: cobra.ExactArgs(1),
-		Example: fmt.Sprintf(`
-%[1]s fullscope scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel
-%[1]s fullscope 91978ba2-5f35-459a-86a7-feca1b0512e0
-%[1]s fullscope session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr
-%[1]s fullscope record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3
-`, cmdStart),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			arg0 := strings.TrimSpace(args[0])
-			scopeUUID, uuidErr := uuid.Parse(arg0)
-			if uuidErr != nil {
-				id, idErr := types.MetadataAddressFromBech32(arg0)
-				if idErr != nil {
-					return fmt.Errorf("argument %s is neither a metadata address (%s) nor uuid (%s)", arg0, idErr.Error(), uuidErr.Error())
-				}
-				scopeUUID, uuidErr = id.ScopeUUID()
-				if uuidErr != nil {
-					return uuidErr
-				}
-			}
-			return fullScopeByUUID(cmd, scopeUUID.String())
-		},
-	}
-
+	addIncludeSessionsFlag(cmd)
+	addIncludeRecordsFlag(cmd)
+	addIncludeRequestFlag(cmd)
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
@@ -210,48 +238,41 @@ func GetMetadataFullScopeCmd() *cobra.Command {
 // GetMetadataSessionCmd returns the command handler for metadata session querying.
 func GetMetadataSessionCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "session {session_id|scope_id|scope_uuid [session_uuid]}",
+		Use:     "session {session_id|{scope_id|scope_uuid} [session_uuid]|\"all\"}",
 		Aliases: []string{"sessions"},
 		Short:   "Query the current metadata for sessions",
 		Long: fmt.Sprintf(`%[1]s session {session_id} - gets the session with the given id.
 %[1]s session {scope_id} - gets the list of sessions associated with a scope.
+%[1]s session {scope_id} {session_uuid} - gets a session with the given scope and session uuid.
 %[1]s session {scope_uuid} - gets the list of sessions associated with a scope.
-%[1]s session {scope_uuid} {session_uuid} - gets a session with the given scope uuid and session uuid.`, cmdStart),
+%[1]s session {scope_uuid} {session_uuid} - gets a session with the given scope uuid and session uuid.
+%[1]s session all - gets all sessions.`, cmdStart),
 		Args: cobra.RangeArgs(1, 2),
-		Example: fmt.Sprintf(`%[1]s session 91978ba2-5f35-459a-86a7-feca1b0512e0 5803f8bc-6067-4eb5-951f-2121671c2ec0
-%[1]s session session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr`, cmdStart),
+		Example: fmt.Sprintf(`%[1]s session session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr
+%[1]s session scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel
+%[1]s session scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel 5803f8bc-6067-4eb5-951f-2121671c2ec0
+%[1]s session 91978ba2-5f35-459a-86a7-feca1b0512e0
+%[1]s session 91978ba2-5f35-459a-86a7-feca1b0512e0 5803f8bc-6067-4eb5-951f-2121671c2ec0
+%[1]s session all`, cmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			arg0 := strings.TrimSpace(args[0])
-			if len(args) == 1 {
-				id, idErr := types.MetadataAddressFromBech32(arg0)
-				if idErr == nil {
-					switch {
-					case id.IsSessionAddress():
-						return sessionByID(cmd, id)
-					case id.IsScopeAddress():
-						return sessionsByScopeID(cmd, id)
-					}
-					return fmt.Errorf("unexpected metadata address prefix on %s", id)
-				}
-				_, uuidErr := uuid.Parse(arg0)
-				if uuidErr == nil {
-					return sessionsByScopeUUID(cmd, arg0)
-				}
-				return fmt.Errorf("argument %s is neither a metadata address (%s) nor uuid (%s)", arg0, idErr.Error(), uuidErr.Error())
-			} // else there's 2 more arguments.
-			_, uuidErr := uuid.Parse(arg0)
-			if uuidErr != nil {
-				return uuidErr
+			if arg0 == all {
+				return outputSessionsAll(cmd)
 			}
-			arg1 := strings.TrimSpace(args[1])
-			_, uuidErr = uuid.Parse(arg1)
-			if uuidErr != nil {
-				return uuidErr
+			if len(args) == 2 {
+				return outputSessions(cmd, arg0, strings.TrimSpace(args[1]))
 			}
-			return sessionByUUIDs(cmd, arg0, arg1)
+			id, idErr := types.MetadataAddressFromBech32(arg0)
+			if idErr == nil && id.IsSessionAddress() {
+				return outputSessions(cmd, "", id.String())
+			}
+			return outputSessions(cmd, arg0, "")
 		},
 	}
 
+	addIncludeScopeFlag(cmd)
+	addIncludeRecordsFlag(cmd)
+	addIncludeRequestFlag(cmd)
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
@@ -260,54 +281,53 @@ func GetMetadataSessionCmd() *cobra.Command {
 // GetMetadataRecordCmd returns the command handler for metadata record querying.
 func GetMetadataRecordCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "record {record_id|session_id|scope_id|scope_uuid [record_name]}",
+		Use:     "record {record_id|{session_id|scope_id|scope_uuid} [record_name]|\"all\"}",
 		Aliases: []string{"r", "records"},
 		Short:   "Query the current metadata for records",
 		Long: fmt.Sprintf(`%[1]s record {record_id} - gets the record with the given id.
 %[1]s record {session_id} - gets the list of records associated with a session id.
+%[1]s record {session_id} {record_name} - gets the record with the given name the scope containing that session.
 %[1]s record {scope_id} - gets the list of records associated with a scope id.
+%[1]s record {scope_id} {record_name} - gets the record with the given name from the given scope.
 %[1]s record {scope_uuid} - gets the list of records associated with a scope uuid.
-%[1]s record {scope_uuid} {record_name} - gets the record with the given name from the given scope.`, cmdStart),
+%[1]s record {scope_uuid} {record_name} - gets the record with the given name from the given scope.
+%[1]s record all - all records.`, cmdStart),
 		Args: cobra.MinimumNArgs(1),
 		Example: fmt.Sprintf(`%[1]s record record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3
 %[1]s record session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr
+%[1]s record session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr recordname
 %[1]s record scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel
+%[1]s record scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel recordname
 %[1]s record 91978ba2-5f35-459a-86a7-feca1b0512e0
 %[1]s record 91978ba2-5f35-459a-86a7-feca1b0512e0 recordname
-`, cmdStart),
+%[1]s record all`, cmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			arg0 := strings.TrimSpace(args[0])
-			if len(args) == 1 {
-				id, idErr := types.MetadataAddressFromBech32(arg0)
-				if idErr == nil {
-					switch {
-					case id.IsRecordAddress():
-						return recordByID(cmd, id)
-					case id.IsSessionAddress():
-						return recordsBySessionID(cmd, id)
-					case id.IsScopeAddress():
-						return recordsByScopeID(cmd, id)
-					}
-					return fmt.Errorf("unexpected metadata address prefix on %s", id)
-				}
-				_, uuidErr := uuid.Parse(arg0)
-				if uuidErr == nil {
-					return recordsByScopeUUID(cmd, arg0)
-				}
-				return fmt.Errorf("argument %s is neither a metadata address (%s) nor uuid (%s)", arg0, idErr.Error(), uuidErr.Error())
-			} // else there's 2 more arguments.
-			_, uuidErr := uuid.Parse(arg0)
-			if uuidErr != nil {
-				return uuidErr
+			if arg0 == all {
+				return outputRecordsAll(cmd)
 			}
-			arg1 := trimSpaceAndJoin(args[1:], " ")
-			if len(arg1) == 0 {
-				return recordsByScopeUUID(cmd, arg0)
+			name := ""
+			if len(args) > 1 {
+				name = trimSpaceAndJoin(args[1:], " ")
 			}
-			return recordByScopeUUIDAndName(cmd, arg0, arg1)
+			id, idErr := types.MetadataAddressFromBech32(arg0)
+			if idErr == nil {
+				switch {
+				case id.IsRecordAddress():
+					return outputRecords(cmd, id.String(), "", "", name)
+				case id.IsScopeAddress():
+					return outputRecords(cmd, "", id.String(), "", name)
+				case id.IsSessionAddress():
+					return outputRecords(cmd, "", "", id.String(), name)
+				}
+			}
+			return outputRecords(cmd, "", arg0, "", name)
 		},
 	}
 
+	addIncludeScopeFlag(cmd)
+	addIncludeSessionsFlag(cmd)
+	addIncludeRequestFlag(cmd)
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
@@ -316,28 +336,26 @@ func GetMetadataRecordCmd() *cobra.Command {
 // GetMetadataScopeSpecCmd returns the command handler for metadata scope specification querying.
 func GetMetadataScopeSpecCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "scopespec {scope_spec_id|scope_spec_uuid}",
+		Use:     "scopespec {scope_spec_id|scope_spec_uuid|\"all\"}",
 		Aliases: []string{"ss", "scopespecification"},
 		Short:   "Query the current metadata for a scope specification",
 		Long: fmt.Sprintf(`%[1]s scopespec {scope_spec_id} - gets the scope specification for that a given id.
-%[1]s scopespec {scope_spec_uuid} - gets the scope specification for a given uuid.`, cmdStart),
+%[1]s scopespec {scope_spec_uuid} - gets the scope specification for a given uuid.
+%[1]s scopespec all - gets all the scope specifications.`, cmdStart),
 		Args: cobra.ExactArgs(1),
 		Example: fmt.Sprintf(`%[1]s scopespec scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m
-%[1]s scopespec dc83ea70-eacd-40fe-9adf-1cf6148bf8a2`, cmdStart),
+%[1]s scopespec dc83ea70-eacd-40fe-9adf-1cf6148bf8a2
+%[1]s scopespec all`, cmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			arg0 := strings.TrimSpace(args[0])
-			id, idErr := types.MetadataAddressFromBech32(arg0)
-			if idErr == nil {
-				return scopeSpecByID(cmd, id)
+			if arg0 == all {
+				return outputScopeSpecsAll(cmd)
 			}
-			_, uuidErr := uuid.Parse(arg0)
-			if uuidErr == nil {
-				return scopeSpecByUUID(cmd, arg0)
-			}
-			return fmt.Errorf("argument %s is neither a metadata address (%s) nor uuid (%s)", arg0, idErr.Error(), uuidErr.Error())
+			return outputScopeSpec(cmd, arg0)
 		},
 	}
 
+	addIncludeRequestFlag(cmd)
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
@@ -346,34 +364,29 @@ func GetMetadataScopeSpecCmd() *cobra.Command {
 // GetMetadataContractSpecCmd returns the command handler for metadata contract specification querying.
 func GetMetadataContractSpecCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "contractspec {contract_spec_id|contract_spec_uuid|record_spec_id}",
+		Use:     "contractspec {contract_spec_id|contract_spec_uuid|record_spec_id|\"all\"}",
 		Aliases: []string{"cs", "contractspecification"},
 		Short:   "Query the current metadata for a contract specification",
 		Long: fmt.Sprintf(`%[1]s contractspec {contract_spec_id} - gets the contract specification for that a given id.
 %[1]s contractspec {contract_spec_uuid} - gets the contract specification for a given uuid.
-%[1]s contractspec {record_spec_id} - gets the contract specification associated with that record spec id.`, cmdStart),
+%[1]s contractspec {record_spec_id} - gets the contract specification associated with that record spec id.
+%[1]s contractspec all - gets all the contract specifications.`, cmdStart),
 		Args: cobra.ExactArgs(1),
 		Example: fmt.Sprintf(`%[1]s contractspec contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn
 %[1]s contractspec def6bc0a-c9dd-4874-948f-5206e6060a84
-%[1]s contractspec recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44`, cmdStart),
+%[1]s contractspec recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44
+%[1]s contractspec all`, cmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			arg0 := strings.TrimSpace(args[0])
-			id, idErr := types.MetadataAddressFromBech32(arg0)
-			if idErr == nil {
-				contractSpecID, err := id.AsContractSpecAddress()
-				if err != nil {
-					return fmt.Errorf("unexpected metadata address prefix on %s: %w", id, err)
-				}
-				return contractSpecByID(cmd, contractSpecID)
+			if arg0 == all {
+				return outputContractSpecsAll(cmd)
 			}
-			_, uuidErr := uuid.Parse(arg0)
-			if uuidErr == nil {
-				return contractSpecByUUID(cmd, arg0)
-			}
-			return fmt.Errorf("argument %s is neither a metadata address (%s) nor uuid (%s)", arg0, idErr.Error(), uuidErr.Error())
+			return outputContractSpec(cmd, arg0)
 		},
 	}
 
+	addIncludeRecordSpecsFlag(cmd)
+	addIncludeRequestFlag(cmd)
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
@@ -382,49 +395,39 @@ func GetMetadataContractSpecCmd() *cobra.Command {
 // GetMetadataRecordSpecCmd returns the command handler for metadata record specification querying.
 func GetMetadataRecordSpecCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "recordspec {rec_spec_id|contract_spec_id|contract_spec_uuid [record_name]}",
+		Use:     "recordspec {rec_spec_id|{contract_spec_id|contract_spec_uuid} [record_name]|\"all\"}",
 		Aliases: []string{"rs", "recordspecs", "recspec", "recspecs", "recordspecification", "recordspecifications"},
 		Short:   "Query the current metadata for record specifications",
 		Long: fmt.Sprintf(`%[1]s recordspec {rec_spec_id} - gets the record specification for a given id.
 %[1]s recordspec {contract_spec_id} - gets the list of record specifications for the given contract specification.
+%[1]s recordspec {contract_spec_id} {record_name} - gets the record specification for a given contract specification and record name.
 %[1]s recordspec {contract_spec_uuid} - gets the list of record specifications for the given contract specification.
-%[1]s recordspec {contract_spec_uuid} {record_name} - gets the record specification for a given contract specification uuid and record name.`, cmdStart),
+%[1]s recordspec {contract_spec_uuid} {record_name} - gets the record specification for a given contract specification and record name.
+%[1]s recordspec all - gets all the record specifications`, cmdStart),
 		Args: cobra.MinimumNArgs(1),
 		Example: fmt.Sprintf(`%[1]s recordspec recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44
 %[1]s recordspec contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn
+%[1]s recordspec contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn recordname
 %[1]s recordspec def6bc0a-c9dd-4874-948f-5206e6060a84
-%[1]s recordspec def6bc0a-c9dd-4874-948f-5206e6060a84 recordname`, cmdStart),
+%[1]s recordspec def6bc0a-c9dd-4874-948f-5206e6060a84 recordname
+%[1]s recordspec all`, cmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			arg0 := strings.TrimSpace(args[0])
-			if len(args) == 1 {
-				id, idErr := types.MetadataAddressFromBech32(arg0)
-				if idErr == nil {
-					switch {
-					case id.IsRecordSpecificationAddress():
-						return recordSpecByID(cmd, id)
-					case id.IsContractSpecificationAddress():
-						return recordSpecsByContractSpecID(cmd, id)
-					}
-					return fmt.Errorf("unexpected metadata address prefix on %s", id)
-				}
-				_, uuidErr := uuid.Parse(arg0)
-				if uuidErr == nil {
-					return recordSpecsByContractSpecUUID(cmd, arg0)
-				}
-				return fmt.Errorf("argument %s is neither a metadata address (%s) nor uuid (%s)", arg0, idErr.Error(), uuidErr.Error())
-			} // else there's 2 more arguments.
-			_, uuidErr := uuid.Parse(arg0)
-			if uuidErr != nil {
-				return uuidErr
+			if arg0 == all {
+				return outputRecordSpecsAll(cmd)
 			}
-			arg1 := trimSpaceAndJoin(args[1:], " ")
-			if len(arg1) == 0 {
-				return recordSpecsByContractSpecUUID(cmd, arg0)
+			name := ""
+			if len(args) > 1 {
+				name = trimSpaceAndJoin(args[1:], " ")
 			}
-			return recordSpecByContractSpecUUIDAndName(cmd, arg0, arg1)
+			if len(name) == 0 {
+				return outputRecordSpecsForContractSpec(cmd, arg0)
+			}
+			return outputRecordSpec(cmd, arg0, name)
 		},
 	}
 
+	addIncludeRequestFlag(cmd)
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
@@ -436,7 +439,7 @@ func GetOwnershipCmd() *cobra.Command {
 	// we can add a 2nd argument to this command to restrict the search to one specific type.
 	// E.g. Use: "owner {address} [scope|session|record|scopespec|contractspec|recordspec]"
 	cmd := &cobra.Command{
-		Use:     "owner {address}",
+		Use:     "owner address",
 		Aliases: []string{"o", "ownership"},
 		Short:   "Query the current metadata for entries owned by an address",
 		Long:    fmt.Sprintf(`%[1]s owner {address} - gets a list of scope uuids owned by the provided address.`, cmdStart),
@@ -447,10 +450,11 @@ func GetOwnershipCmd() *cobra.Command {
 			if len(address) == 0 {
 				return fmt.Errorf("empty address")
 			}
-			return scopesOwnedByAddress(cmd, address)
+			return outputOwnership(cmd, address)
 		},
 	}
 
+	addIncludeRequestFlag(cmd)
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
@@ -459,7 +463,7 @@ func GetOwnershipCmd() *cobra.Command {
 // GetValueOwnershipCmd returns the command handler for metadata scope querying by owner address
 func GetValueOwnershipCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "valueowner {address}",
+		Use:     "valueowner address",
 		Aliases: []string{"vo", "valueownership"},
 		Short:   "Query the current metadata for scopes with the provided address as the value owner",
 		Long:    fmt.Sprintf(`%[1]s valueowner {address} - gets a list of scope uuids value-owned by the provided address.`, cmdStart),
@@ -470,371 +474,260 @@ func GetValueOwnershipCmd() *cobra.Command {
 			if len(address) == 0 {
 				return fmt.Errorf("empty address")
 			}
-			return scopesValueOwnedByAddress(cmd, address)
+			return outputValueOwnership(cmd, address)
 		},
 	}
 
+	addIncludeRequestFlag(cmd)
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }
 
-// scopeByUUID outputs a scope looked up by scope UUID.
-func scopeByUUID(cmd *cobra.Command, scopeUUID string) error {
+// GetOSLocatorCmd returns the command handler for metadata object store locator querying.
+func GetOSLocatorCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "locator {owner|scope_id|scope_uuid|uri|\"params\"|\"all\"}",
+		Aliases: []string{"l", "locators"},
+		Short:   "Query the current metadata for object store locators",
+		Long: fmt.Sprintf(`%[1]s locator {owner} - gets the object store locator for that owner.
+%[1]s locator {scope_id} - gets object store locators for all the owners of that scope.
+%[1]s locator {scope_uuid} - gets object store locators for all the owners of that scope.
+%[1]s locator {uri} - gets object store locators with that uri.
+%[1]s locator params - gets the object store locator params.
+%[1]s locator all - gets all object store locators.`, cmdStart),
+		Args: cobra.ExactArgs(1),
+		Example: fmt.Sprintf(`%[1]s locator cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck
+%[1]s locator scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel
+%[1]s locator 91978ba2-5f35-459a-86a7-feca1b0512e0
+%[1]s locator https://provenance.io/
+%[1]s locator params
+%[1]s locator all`, cmdStart),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			arg0 := strings.TrimSpace(args[0])
+			// First check if it's just the string "params".
+			if arg0 == "params" {
+				return outputOSLocatorParams(cmd)
+			}
+			// And then look for "all".
+			if arg0 == all {
+				return outputOSLocatorsAll(cmd)
+			}
+			// Now look to see if it's a metadata address.
+			_, idErr := types.MetadataAddressFromBech32(arg0)
+			if idErr == nil {
+				return outputOSLocatorsByScope(cmd, arg0)
+			}
+			// Okay... maybe check for a generic bech32.
+			_, _, bech32Err := bech32.DecodeAndConvert(arg0)
+			if bech32Err == nil {
+				return outputOSLocator(cmd, arg0)
+			}
+			// Well maybe a UUID?
+			_, uuidErr := uuid.Parse(arg0)
+			if uuidErr == nil {
+				return outputOSLocatorsByScope(cmd, arg0)
+			}
+			// Fine... let's just hope it's a URI.
+			return outputOSLocatorsByURI(cmd, arg0)
+		},
+	}
+
+	addIncludeRequestFlag(cmd)
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// ------------ private funcs for actually querying and outputting ------------
+
+// outputParams calls the Params query and outputs the response.
+func outputParams(cmd *cobra.Command) error {
 	clientCtx, err := client.GetClientQueryContext(cmd)
 	if err != nil {
 		return err
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.Scope(context.Background(), &types.ScopeRequest{ScopeUuid: scopeUUID})
+	res, err := queryClient.Params(context.Background(), &types.QueryParamsRequest{})
 	if err != nil {
 		return err
 	}
-	if res == nil || res.Scope == nil {
-		return fmt.Errorf("no scope found with uuid %s", scopeUUID)
+
+	if !includeRequest {
+		res.Request = nil
 	}
 
-	return clientCtx.PrintProto(res.Scope)
+	return clientCtx.PrintProto(res)
 }
 
-// sessionsByScopeID outputs the sessions for a scope looked up by a MetadataAddress containing a scope UUID.
-func sessionsByScopeID(cmd *cobra.Command, id types.MetadataAddress) error {
-	scopeUUID, err := id.ScopeUUID()
-	if err != nil {
-		return err
-	}
-	return sessionsByScopeUUID(cmd, scopeUUID.String())
-}
-
-// sessionsByScopeUUID outputs the sessions for a scope looked up by scope UUID.
-func sessionsByScopeUUID(cmd *cobra.Command, scopeUUID string) error {
+// outputScope calls the Scope query and outputs the response.
+func outputScope(cmd *cobra.Command, scopeID string, sessionAddr string, recordAddr string) error {
 	clientCtx, err := client.GetClientQueryContext(cmd)
 	if err != nil {
 		return err
 	}
 
+	req := types.ScopeRequest{
+		ScopeId:         scopeID,
+		SessionAddr:     sessionAddr,
+		RecordAddr:      recordAddr,
+		IncludeSessions: includeSessions,
+		IncludeRecords:  includeRecords,
+	}
+
 	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.Scope(context.Background(), &types.ScopeRequest{ScopeUuid: scopeUUID})
+	res, err := queryClient.Scope(context.Background(), &req)
+	if err != nil {
+		return err
+	}
+
+	if !includeRequest {
+		res.Request = nil
+	}
+
+	return clientCtx.PrintProto(res)
+}
+
+// outputScopesAll calls the ScopesAllRequest query and outputs the response.
+func outputScopesAll(cmd *cobra.Command) error {
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return err
+	}
+	pageReq, e := client.ReadPageRequest(cmd.Flags())
+	if e != nil {
+		return e
+	}
+	queryClient := types.NewQueryClient(clientCtx)
+	res, err := queryClient.ScopesAll(
+		context.Background(),
+		&types.ScopesAllRequest{Pagination: pageReq},
+	)
+	if err != nil {
+		return err
+	}
+
+	if !includeRequest {
+		res.Request = nil
+	}
+
+	return clientCtx.PrintProto(res)
+}
+
+// outputSessions calls the Sessions query and outputs the response.
+func outputSessions(cmd *cobra.Command, scopeID string, sessionID string) error {
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return err
+	}
+
+	req := types.SessionsRequest{
+		ScopeId:        scopeID,
+		SessionId:      sessionID,
+		IncludeScope:   includeScope,
+		IncludeRecords: includeRecords,
+	}
+
+	queryClient := types.NewQueryClient(clientCtx)
+	res, err := queryClient.Sessions(context.Background(), &req)
 	if err != nil {
 		return err
 	}
 	if res == nil || res.Sessions == nil || len(res.Sessions) == 0 {
-		return fmt.Errorf("no sessions found for scope uuid %s", scopeUUID)
+		return errors.New("no sessions found")
 	}
 
-	protoList := make([]proto.Message, len(res.Sessions))
-	for i, session := range res.Sessions {
-		if session != nil {
-			protoList[i] = session
-		} else {
-			protoList[i] = &types.Session{}
-		}
-	}
-	return printProtoList(clientCtx, protoList)
-}
-
-// recordsByScopeID outputs the records for a scope looked up by a MetadataAddress containing a scope UUID.
-func recordsByScopeID(cmd *cobra.Command, id types.MetadataAddress) error {
-	scopeUUID, err := id.ScopeUUID()
-	if err != nil {
-		return err
-	}
-	return recordsByScopeUUID(cmd, scopeUUID.String())
-}
-
-// recordsByScopeUUID outputs the records for a scope looked up by scope UUID.
-func recordsByScopeUUID(cmd *cobra.Command, scopeUUID string) error {
-	clientCtx, err := client.GetClientQueryContext(cmd)
-	if err != nil {
-		return err
-	}
-
-	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.Scope(context.Background(), &types.ScopeRequest{ScopeUuid: scopeUUID})
-	if err != nil {
-		return err
-	}
-	if res == nil || res.Records == nil || len(res.Records) == 0 {
-		return fmt.Errorf("no records found for scope uuid %s", scopeUUID)
-	}
-
-	protoList := make([]proto.Message, len(res.Records))
-	for i, record := range res.Records {
-		if record != nil {
-			protoList[i] = record
-		} else {
-			protoList[i] = &types.Record{}
-		}
-	}
-	return printProtoList(clientCtx, protoList)
-}
-
-// recordsBySessionID outputs the records associated with a session id.
-func recordsBySessionID(cmd *cobra.Command, sessionID types.MetadataAddress) error {
-	scopeUUID, err := sessionID.ScopeUUID()
-	if err != nil {
-		return err
-	}
-	clientCtx, err := client.GetClientQueryContext(cmd)
-	if err != nil {
-		return err
-	}
-
-	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.Scope(context.Background(), &types.ScopeRequest{ScopeUuid: scopeUUID.String()})
-	if err != nil {
-		return err
-	}
-	if res == nil || res.Records == nil || len(res.Records) == 0 {
-		return fmt.Errorf("no records found for scope uuid %s", scopeUUID)
-	}
-
-	protoList := []proto.Message{}
-	for _, record := range res.Records {
-		if record != nil && sessionID.Equals(record.SessionId) {
-			protoList = append(protoList, record)
-		}
-	}
-	return printProtoList(clientCtx, protoList)
-}
-
-// fullScopeByID outputs a scope, its sessions, and its records, looked up by a MetadataAddress containing a scope UUID.
-func fullScopeByID(cmd *cobra.Command, id types.MetadataAddress) error {
-	scopeUUID, err := id.ScopeUUID()
-	if err != nil {
-		return err
-	}
-	return fullScopeByUUID(cmd, scopeUUID.String())
-}
-
-// fullScopeByUUID outputs a scope, its sessions, and its records, looked up by scope UUID.
-func fullScopeByUUID(cmd *cobra.Command, scopeUUID string) error {
-	clientCtx, err := client.GetClientQueryContext(cmd)
-	if err != nil {
-		return err
-	}
-
-	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.Scope(context.Background(), &types.ScopeRequest{ScopeUuid: scopeUUID})
-	if err != nil {
-		return err
-	}
-	if res == nil {
-		return fmt.Errorf("no scope found with uuid %s", scopeUUID)
+	if !includeRequest {
+		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
 }
 
-// sessionByID outputs a session looked up by a MetadataAddress containing both scope UUID and session UUID.
-func sessionByID(cmd *cobra.Command, sessionID types.MetadataAddress) error {
-	scopeUUID, err := sessionID.ScopeUUID()
-	if err != nil {
-		return err
-	}
-	sessionUUID, err := sessionID.SessionUUID()
-	if err != nil {
-		return err
-	}
-	return sessionByUUIDs(cmd, scopeUUID.String(), sessionUUID.String())
-}
-
-// sessionByUUIDs outputs a session looked up by scope UUID and session UUID.
-func sessionByUUIDs(cmd *cobra.Command, scopeUUID string, sessionUUID string) error {
+// outputSessionsAll calls the SessionsAll query and outputs the response.
+func outputSessionsAll(cmd *cobra.Command) error {
 	clientCtx, err := client.GetClientQueryContext(cmd)
 	if err != nil {
 		return err
 	}
-
+	pageReq, e := client.ReadPageRequest(cmd.Flags())
+	if e != nil {
+		return e
+	}
 	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.SessionContextByUUID(
+	res, err := queryClient.SessionsAll(
 		context.Background(),
-		&types.SessionContextByUUIDRequest{
-			ScopeUuid:   scopeUUID,
-			SessionUuid: sessionUUID,
-		},
+		&types.SessionsAllRequest{Pagination: pageReq},
 	)
 	if err != nil {
 		return err
 	}
-	if res.Sessions == nil || len(res.Sessions) == 0 {
-		return fmt.Errorf("no session found with scope uuid %s and session uuid %s", scopeUUID, sessionUUID)
+
+	if !includeRequest {
+		res.Request = nil
 	}
-	if len(res.Sessions) == 1 {
-		return clientCtx.PrintProto(res.Sessions[0])
-	}
+
 	return clientCtx.PrintProto(res)
 }
 
-// recordByID outputs a record looked up by a record MetadataAddress.
-func recordByID(cmd *cobra.Command, recordID types.MetadataAddress) error {
-	if !recordID.IsRecordAddress() {
-		return fmt.Errorf("id %s is not a record metadata address", recordID)
-	}
-	scopeUUID, err := recordID.ScopeUUID()
-	if err != nil {
-		return err
-	}
+// outputRecords calls the Records query and outputs the response.
+func outputRecords(cmd *cobra.Command, recordAddr string, scopeID string, sessionID string, name string) error {
 	clientCtx, err := client.GetClientQueryContext(cmd)
 	if err != nil {
 		return err
 	}
+
+	req := types.RecordsRequest{
+		RecordAddr:      recordAddr,
+		ScopeId:         scopeID,
+		SessionId:       sessionID,
+		Name:            name,
+		IncludeScope:    includeScope,
+		IncludeSessions: includeSessions,
+	}
+
 	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.Scope(context.Background(), &types.ScopeRequest{ScopeUuid: scopeUUID.String()})
+	res, err := queryClient.Records(context.Background(), &req)
 	if err != nil {
 		return err
 	}
-	var record *types.Record = nil
-	for _, r := range res.Records {
-		if recordID.Equals(types.RecordMetadataAddress(scopeUUID, r.Name)) {
-			record = r
-			break
-		}
+
+	if !includeRequest {
+		res.Request = nil
 	}
-	if record == nil {
-		return fmt.Errorf("no records with id %s found in scope with uuid %s", recordID, scopeUUID)
-	}
-	return clientCtx.PrintProto(record)
+
+	return clientCtx.PrintProto(res)
 }
 
-// recordByScopeUUIDAndName outputs a record looked up by scope UUID ane record name.
-func recordByScopeUUIDAndName(cmd *cobra.Command, scopeUUID string, name string) error {
-	primaryUUID, err := uuid.Parse(scopeUUID)
-	if err != nil {
-		return err
-	}
-	return recordByID(cmd, types.RecordMetadataAddress(primaryUUID, name))
-}
-
-// scopeSpecByID outputs a scope specification looked up by a scope specification MetadataAddress.
-func scopeSpecByID(cmd *cobra.Command, scopeSpecID types.MetadataAddress) error {
-	if !scopeSpecID.IsScopeSpecificationAddress() {
-		return fmt.Errorf("id %s is not a scope specification metadata address", scopeSpecID)
-	}
-	scopeSpecUUID, err := scopeSpecID.ScopeSpecUUID()
-	if err != nil {
-		return err
-	}
-	return scopeSpecByUUID(cmd, scopeSpecUUID.String())
-}
-
-// scopeSpecByUUID outputs a scope specification looked up by scope specification UUID.
-func scopeSpecByUUID(cmd *cobra.Command, scopeSpecUUID string) error {
+// outputRecordsAll calls the RecordsAll query and outputs the response.
+func outputRecordsAll(cmd *cobra.Command) error {
 	clientCtx, err := client.GetClientQueryContext(cmd)
 	if err != nil {
 		return err
 	}
-	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.ScopeSpecification(context.Background(), &types.ScopeSpecificationRequest{SpecificationUuid: scopeSpecUUID})
-	if err != nil {
-		return err
-	}
-	if res.ScopeSpecification == nil {
-		return fmt.Errorf("no scope specification found with uuid %s", scopeSpecUUID)
-	}
-	return clientCtx.PrintProto(res.ScopeSpecification)
-}
-
-// contractSpecByID outputs a contract specification looked up by a MetadataAddress containing a contract specification UUID.
-func contractSpecByID(cmd *cobra.Command, id types.MetadataAddress) error {
-	contractSpecUUID, err := id.ContractSpecUUID()
-	if err != nil {
-		return err
-	}
-	return contractSpecByUUID(cmd, contractSpecUUID.String())
-}
-
-// contractSpecByUUID outputs a contract specification looked up by contract specification UUID.
-func contractSpecByUUID(cmd *cobra.Command, contractSpecUUID string) error {
-	clientCtx, err := client.GetClientQueryContext(cmd)
-	if err != nil {
-		return err
+	pageReq, e := client.ReadPageRequest(cmd.Flags())
+	if e != nil {
+		return e
 	}
 	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.ContractSpecification(context.Background(), &types.ContractSpecificationRequest{SpecificationUuid: contractSpecUUID})
-	if err != nil {
-		return err
-	}
-	if res.ContractSpecification == nil {
-		return fmt.Errorf("no contract specification found with uuid %s", contractSpecUUID)
-	}
-	return clientCtx.PrintProto(res.ContractSpecification)
-}
-
-// recordSpecByID outputs a record specification looked up by a record specification MetadataAddress.
-func recordSpecByID(cmd *cobra.Command, recordSpecID types.MetadataAddress) error {
-	if !recordSpecID.IsRecordSpecificationAddress() {
-		return fmt.Errorf("id %s is not a record specification metadata address", recordSpecID)
-	}
-
-	clientCtx, err := client.GetClientQueryContext(cmd)
-	if err != nil {
-		return err
-	}
-	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.RecordSpecificationByID(
+	res, err := queryClient.RecordsAll(
 		context.Background(),
-		&types.RecordSpecificationByIDRequest{RecordSpecificationId: recordSpecID.String()},
+		&types.RecordsAllRequest{Pagination: pageReq},
 	)
 	if err != nil {
 		return err
 	}
-	if res == nil || res.RecordSpecification == nil {
-		return fmt.Errorf("no record specification found with id %s", recordSpecID)
+
+	if !includeRequest {
+		res.Request = nil
 	}
-	return clientCtx.PrintProto(res.RecordSpecification)
+
+	return clientCtx.PrintProto(res)
 }
 
-// recordSpecByContractSpecUUIDAndName outputs a record specification looked up by contract specification UUID and record specification name.
-func recordSpecByContractSpecUUIDAndName(cmd *cobra.Command, contractSpecUUID string, name string) error {
-	primaryUUID, err := uuid.Parse(contractSpecUUID)
-	if err != nil {
-		return err
-	}
-	return recordSpecByID(cmd, types.RecordSpecMetadataAddress(primaryUUID, name))
-}
-
-// recordSpecsByContractSpecID outputs the record specifications looked up by a MetadataAddress containing a contract specification UUID.
-func recordSpecsByContractSpecID(cmd *cobra.Command, contractSpecID types.MetadataAddress) error {
-	contractSpecUUID, err := contractSpecID.ContractSpecUUID()
-	if err != nil {
-		return err
-	}
-	return recordSpecsByContractSpecUUID(cmd, contractSpecUUID.String())
-}
-
-// recordSpecsByContractSpecUUID outputs the record specifications looked up by contract specification UUID.
-func recordSpecsByContractSpecUUID(cmd *cobra.Command, contractSpecUUID string) error {
-	clientCtx, err := client.GetClientQueryContext(cmd)
-	if err != nil {
-		return err
-	}
-	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.RecordSpecificationsForContractSpecification(
-		context.Background(),
-		&types.RecordSpecificationsForContractSpecificationRequest{ContractSpecificationUuid: contractSpecUUID},
-	)
-	if err != nil {
-		return err
-	}
-	if res == nil || res.RecordSpecifications == nil || len(res.RecordSpecifications) == 0 {
-		return fmt.Errorf("no contract specification found with uuid %s", contractSpecUUID)
-	}
-
-	protoList := make([]proto.Message, len(res.RecordSpecifications))
-	for i, recSpec := range res.RecordSpecifications {
-		if recSpec != nil {
-			protoList[i] = recSpec
-		} else {
-			protoList[i] = &types.RecordSpecification{}
-		}
-	}
-	return printProtoList(clientCtx, protoList)
-}
-
-// scopesOwnedByAddress outputs the scope uuids owned by the provided address.
-func scopesOwnedByAddress(cmd *cobra.Command, address string) error {
+// outputOwnership calls the Ownership query and outputs the response.
+func outputOwnership(cmd *cobra.Command, address string) error {
 	clientCtx, err := client.GetClientQueryContext(cmd)
 	if err != nil {
 		return err
@@ -847,15 +740,16 @@ func scopesOwnedByAddress(cmd *cobra.Command, address string) error {
 	if err != nil {
 		return err
 	}
-	if res == nil || len(res.ScopeUuids) == 0 {
-		return fmt.Errorf("no scopes are owned by address %s", address)
+
+	if !includeRequest {
+		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
 }
 
-// scopesValueOwnedByAddress outputs the scope uuids that the provided address is the value owner of.
-func scopesValueOwnedByAddress(cmd *cobra.Command, address string) error {
+// outputValueOwnership calls the ValueOwnership query and outputs the response.
+func outputValueOwnership(cmd *cobra.Command, address string) error {
 	clientCtx, err := client.GetClientQueryContext(cmd)
 	if err != nil {
 		return err
@@ -868,12 +762,305 @@ func scopesValueOwnedByAddress(cmd *cobra.Command, address string) error {
 	if err != nil {
 		return err
 	}
-	if res == nil || len(res.ScopeUuids) == 0 {
-		return fmt.Errorf("address %s is not the value owner on any scopes", address)
+
+	if !includeRequest {
+		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
 }
+
+// outputScopeSpec calls the ScopeSpecification query and outputs the response.
+func outputScopeSpec(cmd *cobra.Command, specificationID string) error {
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return err
+	}
+
+	req := types.ScopeSpecificationRequest{
+		SpecificationId: specificationID,
+	}
+
+	queryClient := types.NewQueryClient(clientCtx)
+	res, err := queryClient.ScopeSpecification(context.Background(), &req)
+	if err != nil {
+		return err
+	}
+
+	if !includeRequest {
+		res.Request = nil
+	}
+
+	return clientCtx.PrintProto(res)
+}
+
+// outputScopeSpecsAll calls the ScopeSpecificationsAll query and outputs the response.
+func outputScopeSpecsAll(cmd *cobra.Command) error {
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return err
+	}
+	pageReq, e := client.ReadPageRequest(cmd.Flags())
+	if e != nil {
+		return e
+	}
+	queryClient := types.NewQueryClient(clientCtx)
+	res, err := queryClient.ScopeSpecificationsAll(
+		context.Background(),
+		&types.ScopeSpecificationsAllRequest{Pagination: pageReq},
+	)
+	if err != nil {
+		return err
+	}
+
+	if !includeRequest {
+		res.Request = nil
+	}
+
+	return clientCtx.PrintProto(res)
+}
+
+// outputContractSpec calls the ContractSpecification query and outputs the response.
+func outputContractSpec(cmd *cobra.Command, specificationID string) error {
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return err
+	}
+
+	req := types.ContractSpecificationRequest{
+		SpecificationId:    specificationID,
+		IncludeRecordSpecs: includeRecordSpecs,
+	}
+
+	queryClient := types.NewQueryClient(clientCtx)
+	res, err := queryClient.ContractSpecification(context.Background(), &req)
+	if err != nil {
+		return err
+	}
+
+	if !includeRequest {
+		res.Request = nil
+	}
+
+	return clientCtx.PrintProto(res)
+}
+
+// outputContractSpecsAll calls the ContractSpecificationsAll query and outputs the response.
+func outputContractSpecsAll(cmd *cobra.Command) error {
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return err
+	}
+	pageReq, e := client.ReadPageRequest(cmd.Flags())
+	if e != nil {
+		return e
+	}
+	queryClient := types.NewQueryClient(clientCtx)
+	res, err := queryClient.ContractSpecificationsAll(
+		context.Background(),
+		&types.ContractSpecificationsAllRequest{Pagination: pageReq},
+	)
+	if err != nil {
+		return err
+	}
+
+	if !includeRequest {
+		res.Request = nil
+	}
+
+	return clientCtx.PrintProto(res)
+}
+
+// outputRecordSpec calls the RecordSpecification query and outputs the response.
+func outputRecordSpec(cmd *cobra.Command, specificationID string, name string) error {
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return err
+	}
+
+	req := types.RecordSpecificationRequest{
+		SpecificationId: specificationID,
+		Name:            name,
+	}
+
+	queryClient := types.NewQueryClient(clientCtx)
+	res, err := queryClient.RecordSpecification(context.Background(), &req)
+	if err != nil {
+		return err
+	}
+
+	if !includeRequest {
+		res.Request = nil
+	}
+
+	return clientCtx.PrintProto(res)
+}
+
+// outputRecordSpecsForContractSpec calls the RecordSpecificationsForContractSpecification query and outputs the response.
+func outputRecordSpecsForContractSpec(cmd *cobra.Command, specificationID string) error {
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return err
+	}
+
+	req := types.RecordSpecificationsForContractSpecificationRequest{
+		SpecificationId: specificationID,
+	}
+
+	queryClient := types.NewQueryClient(clientCtx)
+	res, err := queryClient.RecordSpecificationsForContractSpecification(context.Background(), &req)
+	if err != nil {
+		return err
+	}
+
+	if !includeRequest {
+		res.Request = nil
+	}
+
+	return clientCtx.PrintProto(res)
+}
+
+// outputRecordSpecsAll calls the RecordSpecificationsAll query and outputs the response.
+func outputRecordSpecsAll(cmd *cobra.Command) error {
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return err
+	}
+	pageReq, e := client.ReadPageRequest(cmd.Flags())
+	if e != nil {
+		return e
+	}
+	queryClient := types.NewQueryClient(clientCtx)
+	res, err := queryClient.RecordSpecificationsAll(
+		context.Background(),
+		&types.RecordSpecificationsAllRequest{Pagination: pageReq},
+	)
+	if err != nil {
+		return err
+	}
+
+	if !includeRequest {
+		res.Request = nil
+	}
+
+	return clientCtx.PrintProto(res)
+}
+
+// outputOSLocatorParams calls the OSLocatorParams query and outputs the response.
+func outputOSLocatorParams(cmd *cobra.Command) error {
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return err
+	}
+	queryClient := types.NewQueryClient(clientCtx)
+	res, err := queryClient.OSLocatorParams(
+		context.Background(),
+		&types.OSLocatorParamsRequest{},
+	)
+	if err != nil {
+		return err
+	}
+
+	if !includeRequest {
+		res.Request = nil
+	}
+
+	return clientCtx.PrintProto(res)
+}
+
+// outputOSLocator calls the OSLocator query and outputs the response.
+func outputOSLocator(cmd *cobra.Command, owner string) error {
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return err
+	}
+	queryClient := types.NewQueryClient(clientCtx)
+	res, err := queryClient.OSLocator(
+		context.Background(),
+		&types.OSLocatorRequest{Owner: owner},
+	)
+	if err != nil {
+		return err
+	}
+
+	if !includeRequest {
+		res.Request = nil
+	}
+
+	return clientCtx.PrintProto(res)
+}
+
+// outputOSLocatorsByURI calls the OSLocatorsByURI query and outputs the response.
+func outputOSLocatorsByURI(cmd *cobra.Command, uri string) error {
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return err
+	}
+	queryClient := types.NewQueryClient(clientCtx)
+	res, err := queryClient.OSLocatorsByURI(
+		context.Background(),
+		&types.OSLocatorsByURIRequest{Uri: uri},
+	)
+	if err != nil {
+		return err
+	}
+
+	if !includeRequest {
+		res.Request = nil
+	}
+
+	return clientCtx.PrintProto(res)
+}
+
+// outputOSLocatorsByScope calls the OSLocatorsByScope query and outputs the response.
+func outputOSLocatorsByScope(cmd *cobra.Command, scopeID string) error {
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return err
+	}
+	queryClient := types.NewQueryClient(clientCtx)
+	res, err := queryClient.OSLocatorsByScope(
+		context.Background(),
+		&types.OSLocatorsByScopeRequest{ScopeId: scopeID},
+	)
+	if err != nil {
+		return err
+	}
+
+	if !includeRequest {
+		res.Request = nil
+	}
+
+	return clientCtx.PrintProto(res)
+}
+
+// outputOSLocatorsAll calls the OSAllLocators query and outputs the response.
+func outputOSLocatorsAll(cmd *cobra.Command) error {
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return err
+	}
+	pageReq, e := client.ReadPageRequest(cmd.Flags())
+	if e != nil {
+		return e
+	}
+	queryClient := types.NewQueryClient(clientCtx)
+	res, err := queryClient.OSAllLocators(
+		context.Background(),
+		&types.OSAllLocatorsRequest{Pagination: pageReq},
+	)
+	if err != nil {
+		return err
+	}
+
+	if !includeRequest {
+		res.Request = nil
+	}
+
+	return clientCtx.PrintProto(res)
+}
+
+// ------------ private generic helper functions ------------
 
 // trimSpaceAndJoin trims leading and trailing whitespace from each arg,
 // then joins them using the provided sep string,
@@ -886,251 +1073,32 @@ func trimSpaceAndJoin(args []string, sep string) string {
 	return strings.TrimSpace(strings.Join(trimmedArgs, sep))
 }
 
-// printProtoList outputs toPrint to the ctx.Output based on ctx.OutputFormat which is
-// either text or json. If text, toPrint will be YAML encoded. Otherwise, toPrint
-// will be JSON encoded using ctx.JSONMarshaler. An error is returned upon failure.
-// See also: client.Context.PrintProto
-func printProtoList(ctx client.Context, toPrint []proto.Message) error {
-	// always serialize JSON initially because proto json can't be directly YAML encoded
-	result := []byte{}
-	result = append(result, []byte("[")...)
-	maxI := len(toPrint) - 1
-	for i, p := range toPrint {
-		out, err := ctx.JSONMarshaler.MarshalJSON(p)
-		if err != nil {
-			return fmt.Errorf("[%d]: %w", i, err)
-		}
-		result = append(result, out...)
-		if i < maxI {
-			result = append(result, []byte(",")...)
-		}
-	}
-	result = append(result, []byte("]")...)
-
-	if ctx.OutputFormat == "text" {
-		// handle text format by decoding and re-encoding JSON as YAML
-		var j interface{}
-
-		err := json.Unmarshal(result, &j)
-		if err != nil {
-			return err
-		}
-
-		result, err = yaml.Marshal(j)
-		if err != nil {
-			return err
-		}
-	}
-
-	writer := ctx.Output
-	if writer == nil {
-		writer = os.Stdout
-	}
-
-	_, err := writer.Write(result)
-	if err != nil {
-		return err
-	}
-
-	if ctx.OutputFormat != "text" {
-		// append new-line for formats besides YAML
-		_, err = writer.Write([]byte("\n"))
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+// addIncludeScopeFlag sets up a command to look for an --include-scope flag.
+// The flag value is tied to the includeScope variable.
+func addIncludeScopeFlag(cmd *cobra.Command) {
+	cmd.Flags().BoolVar(&includeScope, "include-scope", false, "include the scope in the output")
 }
 
-// GetOSLocatorParamsCmd returns the command handler for metadata locator parameter querying.
-func GetOSLocatorParamsCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "locator params",
-		Short: "Query the current os locator parameters",
-		Args:  cobra.NoArgs,
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query the current name module parameters:
-
-$ %s query name params
-`,
-				version.AppName,
-			)),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.OSLocatorParams(context.Background(), &types.OSLocatorParamsRequest{})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(&res.Params)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+// addIncludeSessionsFlag sets up a command to look for an --include-sessions flag.
+// The flag value is tied to the includeSessions variable.
+func addIncludeSessionsFlag(cmd *cobra.Command) {
+	cmd.Flags().BoolVar(&includeSessions, "include-sessions", false, "include sessions in the output")
 }
 
-// GetOSLocatorCmd returns the command handler for querying oslocator by address .
-func GetOSLocatorCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "locator-by-addr [owner]",
-		Short: "Query the OS locator uri for the given owner",
-		Args:  cobra.ExactArgs(1),
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query the OS locator records for the name provided:
-Example:
-$ %s query metadata locator foocorp
-`,
-				version.AppName,
-			)),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			owner := strings.ToLower(strings.TrimSpace(args[0]))
-
-			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.OSLocator(context.Background(), &types.OSLocatorRequest{Owner: owner})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res.Locator)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+// addIncludeRecordsFlag sets up a command to look for an --include-records flag.
+// The flag value is tied to the includeRecords variable.
+func addIncludeRecordsFlag(cmd *cobra.Command) {
+	cmd.Flags().BoolVar(&includeRecords, "include-records", false, "include records in the output")
 }
 
-// GetOSLocatorByURICmd returns the command handler for querying oslocator by uri.
-func GetOSLocatorByURICmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "locator-by-uri [uri]",
-		Short: "Query the OS locator uri for the given owner",
-		Args:  cobra.ExactArgs(1),
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query the OS locator records for the uri provided:
-Example:
-$ %s query metadata locator foocorp
-`,
-				version.AppName,
-			)),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			uri := strings.ToLower(strings.TrimSpace(args[0]))
-			pageReq, err := client.ReadPageRequest(cmd.Flags())
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-			var response *types.OSLocatorByURIResponse
-
-			response, err = queryClient.OSLocatorByURI(context.Background(), &types.OSLocatorByURIRequest{Uri: uri, Pagination: pageReq})
-
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(response)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+// addIncludeRecordSpecsFlag sets up a command to look for an --include-record-specs.
+// The flag value is tied to the includeRecordSpecs variable.
+func addIncludeRecordSpecsFlag(cmd *cobra.Command) {
+	cmd.Flags().BoolVar(&includeRecordSpecs, "include-record-specs", false, "include record specs in the output")
 }
 
-// GetOSLocatorByURICmd returns the command handler for querying oslocator by uri.
-func GetOSLocatorByScopeUUIDCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "locator-by-scope [scope_uuid]",
-		Short: "Query the OS locator uri for the given scope owners",
-		Args:  cobra.ExactArgs(1),
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query the OS locator records for the scope uuid provided:
-Example:
-$ %s query metadata locator foocorp
-`,
-				version.AppName,
-			)),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			scopeUUID := strings.ToLower(strings.TrimSpace(args[0]))
-
-			queryClient := types.NewQueryClient(clientCtx)
-			var response *types.OSLocatorByScopeUUIDResponse
-
-			response, err = queryClient.OSLocatorByScopeUUID(context.Background(), &types.OSLocatorByScopeUUIDRequest{ScopeUuid: scopeUUID})
-
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(response)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
-}
-
-// GetOSLocatorByURICmd returns the command handler for querying oslocator by uri.
-func GetOSAllLocatorCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "locator-all",
-		Short: "Query the OS locator uri for the given owner",
-		Args:  cobra.ExactArgs(1),
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query the OS locator records for the uri provided:
-Example:
-$ %s query metadata locator-all 
-`,
-				version.AppName,
-			)),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			pageReq, err := client.ReadPageRequest(cmd.Flags())
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-			var response *types.OSAllLocatorsResponse
-
-			response, err = queryClient.OSAllLocators(context.Background(), &types.OSAllLocatorsRequest{Pagination: pageReq})
-
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(response)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+// addIncludeRequestFlag sets up a command to look for an --include-request.
+// The flag value is tied to the includeRequest variable.
+func addIncludeRequestFlag(cmd *cobra.Command) {
+	cmd.Flags().BoolVar(&includeRequest, "include-request", false, "include the query request in the output")
 }

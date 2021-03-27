@@ -10,42 +10,44 @@ import (
 
 // RegisterLegacyAminoCodec registers concrete types on the Amino codec
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgAddScopeRequest{}, "provenance/metadata/AddScopeRequest", nil)
+	cdc.RegisterConcrete(&MsgWriteScopeRequest{}, "provenance/metadata/WriteScopeRequest", nil)
 	cdc.RegisterConcrete(&MsgDeleteScopeRequest{}, "provenance/metadata/DeleteScopeRequest", nil)
-	cdc.RegisterConcrete(&MsgAddSessionRequest{}, "provenance/metadata/AddSessionRequest", nil)
-	cdc.RegisterConcrete(&MsgAddRecordRequest{}, "provenance/metadata/AddRecordRequest", nil)
+	cdc.RegisterConcrete(&MsgWriteSessionRequest{}, "provenance/metadata/WriteSessionRequest", nil)
+	cdc.RegisterConcrete(&MsgWriteRecordRequest{}, "provenance/metadata/WriteRecordRequest", nil)
+	cdc.RegisterConcrete(&MsgDeleteRecordRequest{}, "provenance/metadata/DeleteRecordRequest", nil)
 
-	cdc.RegisterConcrete(&MsgAddScopeSpecificationRequest{}, "provenance/metadata/AddScopeSpecificationRequest", nil)
+	cdc.RegisterConcrete(&MsgWriteScopeSpecificationRequest{}, "provenance/metadata/WriteScopeSpecificationRequest", nil)
 	cdc.RegisterConcrete(&MsgDeleteScopeSpecificationRequest{}, "provenance/metadata/DeleteScopeSpecificationRequest", nil)
-	cdc.RegisterConcrete(&MsgAddContractSpecificationRequest{}, "provenance/metadata/AddContractSpecificationRequest", nil)
+	cdc.RegisterConcrete(&MsgWriteContractSpecificationRequest{}, "provenance/metadata/WriteContractSpecificationRequest", nil)
 	cdc.RegisterConcrete(&MsgDeleteContractSpecificationRequest{}, "provenance/metadata/DeleteContractSpecificationRequest", nil)
-	cdc.RegisterConcrete(&MsgAddRecordSpecificationRequest{}, "provenance/metadata/AddRecordSpecificationRequest", nil)
+	cdc.RegisterConcrete(&MsgWriteRecordSpecificationRequest{}, "provenance/metadata/WriteRecordSpecificationRequest", nil)
 	cdc.RegisterConcrete(&MsgDeleteRecordSpecificationRequest{}, "provenance/metadata/DeleteRecordSpecificationRequest", nil)
 
-	cdc.RegisterConcrete(&MsgAddP8EContractSpecRequest{}, "provenance/metadata/AddP8EContractSpecRequest", nil)
-	cdc.RegisterConcrete(&MsgP8EMemorializeContractRequest{}, "provenance/metadata/MsgP8EMemorializeContractRequest", nil)
+	cdc.RegisterConcrete(&MsgWriteP8EContractSpecRequest{}, "provenance/metadata/WriteP8EContractSpecRequest", nil)
+	cdc.RegisterConcrete(&MsgP8EMemorializeContractRequest{}, "provenance/metadata/P8EMemorializeContractRequest", nil)
 
-	cdc.RegisterConcrete(&MsgBindOSLocatorRequest{}, "provenance/metadata/MsgBindOSLocatorRequest", nil)
-	cdc.RegisterConcrete(&MsgModifyOSLocatorRequest{}, "provenance/metadata/MsgModifyOSLocatorRequest", nil)
-	cdc.RegisterConcrete(&MsgDeleteOSLocatorRequest{}, "provenance/metadata/MsgDeleteOSLocatorRequest", nil)
+	cdc.RegisterConcrete(&MsgBindOSLocatorRequest{}, "provenance/metadata/BindOSLocatorRequest", nil)
+	cdc.RegisterConcrete(&MsgModifyOSLocatorRequest{}, "provenance/metadata/ModifyOSLocatorRequest", nil)
+	cdc.RegisterConcrete(&MsgDeleteOSLocatorRequest{}, "provenance/metadata/DeleteOSLocatorRequest", nil)
 }
 
 // RegisterInterfaces registers implementations for the tx messages
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
-		&MsgAddScopeRequest{},
+		&MsgWriteScopeRequest{},
 		&MsgDeleteScopeRequest{},
-		&MsgAddSessionRequest{},
-		&MsgAddRecordRequest{},
+		&MsgWriteSessionRequest{},
+		&MsgWriteRecordRequest{},
+		&MsgDeleteRecordRequest{},
 
-		&MsgAddScopeSpecificationRequest{},
+		&MsgWriteScopeSpecificationRequest{},
 		&MsgDeleteScopeSpecificationRequest{},
-		&MsgAddContractSpecificationRequest{},
+		&MsgWriteContractSpecificationRequest{},
 		&MsgDeleteContractSpecificationRequest{},
-		&MsgAddRecordSpecificationRequest{},
+		&MsgWriteRecordSpecificationRequest{},
 		&MsgDeleteRecordSpecificationRequest{},
 
-		&MsgAddP8EContractSpecRequest{},
+		&MsgWriteP8EContractSpecRequest{},
 		&MsgP8EMemorializeContractRequest{},
 
 		&MsgBindOSLocatorRequest{},
