@@ -1,11 +1,11 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/google/uuid"
+
 	"github.com/provenance-io/provenance/x/metadata/types"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 // Handler is a name record handler function for use with IterateRecords.
@@ -102,23 +102,21 @@ func (k Keeper) IterateLocators(ctx sdk.Context, cb func(account types.ObjectSto
 	return nil
 }
 
-func (k Keeper) GetOSLocatorByScopeUUID(ctx sdk.Context, scopeID string) (*types.OSLocatorByScopeUUIDResponse, error) {
-	id, err := uuid.Parse(scopeID)
+func (k Keeper) GetOSLocatorByScope(ctx sdk.Context, scopeID string) ([]types.ObjectStoreLocator, error) {
+	scopeAddr, err := ParseScopeID(scopeID)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid scope uuid: %s", err.Error())
+		return []types.ObjectStoreLocator{}, err
 	}
-	scopeAddress := types.ScopeMetadataAddress(id)
 
-	s, found := k.GetScope(ctx, scopeAddress)
-
+	scope, found := k.GetScope(ctx, scopeAddr)
 	if !found {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid scope uuid: %s", err.Error())
+		return []types.ObjectStoreLocator{}, fmt.Errorf("scope [%s] not found", scopeID)
 	}
 
 	// should always have valid owners, hence creating it with capacity
-	signers := make([]sdk.AccAddress, len(s.Owners))
+	signers := make([]sdk.AccAddress, len(scope.Owners))
 
-	for i, p := range s.Owners {
+	for i, p := range scope.Owners {
 		addr, err := sdk.AccAddressFromBech32(p.Address)
 		if err != nil {
 			panic(err)
@@ -126,7 +124,7 @@ func (k Keeper) GetOSLocatorByScopeUUID(ctx sdk.Context, scopeID string) (*types
 		signers[i] = addr
 	}
 
-	// may not have object locator's defined for owners
+	// may not have object locators defined for all owners
 	locators := make([]types.ObjectStoreLocator, 0, len(signers))
 	for _, addr := range signers {
 		loc, found := k.GetOsLocatorRecord(ctx, addr)
@@ -135,7 +133,7 @@ func (k Keeper) GetOSLocatorByScopeUUID(ctx sdk.Context, scopeID string) (*types
 		}
 		locators = append(locators, loc)
 	}
-	return &types.OSLocatorByScopeUUIDResponse{Locator: locators}, nil
+	return locators, nil
 }
 
 // Delete a os locator record from the kvstore.

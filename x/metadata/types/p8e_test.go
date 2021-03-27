@@ -457,6 +457,13 @@ func (s *P8eTestSuite) TestEmptyRecord() {
 				assert.Equal(t, 0, len(record.Outputs), "Outputs")
 			},
 		},
+		{
+			"SpecificationId",
+			"is empty",
+			func(record *Record, t *testing.T) {
+				assert.True(t, record.SpecificationId.Empty(), "SpecificationId")
+			},
+		},
 	}
 
 	for i, tc := range tests {

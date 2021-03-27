@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
+	"github.com/stretchr/testify/suite"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,26 +17,46 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var (
-	scopeUUID   = uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")
-	sessionUUID = uuid.MustParse("c25c7bd4-c639-4367-a842-f64fa5fccc19")
+type AddressTestSuite struct {
+	suite.Suite
 
-	scopeHex      = "008D80B25AC0894446956E5D08CFE3E1A5"
-	scopeBech32   = "scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp"
-	sessionBech32 = "session1qxxcpvj6czy5g354dews3nlruxjuyhrm6nrrjsm84pp0vna9lnxpjewp6kf"
-	recordBech32  = "record1q2xcpvj6czy5g354dews3nlruxjelpkssxyyclt9ngh74gx9ttgp27gt8kl"
-)
+	scopeUUIDstr   string
+	scopeUUID      uuid.UUID
+	sessionUUIDstr string
+	sessionUUID    uuid.UUID
 
-func requireBech32String (t *testing.T, typeCode []byte, data []byte) string {
+	scopeHex      string
+	scopeBech32   string
+	sessionBech32 string
+	recordBech32  string
+}
+
+func (s *AddressTestSuite) SetupTest() {
+	s.scopeUUIDstr = "8d80b25a-c089-4446-956e-5d08cfe3e1a5"
+	s.scopeUUID   = uuid.MustParse(s.scopeUUIDstr)
+	s.sessionUUIDstr = "c25c7bd4-c639-4367-a842-f64fa5fccc19"
+	s.sessionUUID = uuid.MustParse(s.sessionUUIDstr)
+
+	s.scopeHex      = "008D80B25AC0894446956E5D08CFE3E1A5"
+	s.scopeBech32   = "scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp"
+	s.sessionBech32 = "session1qxxcpvj6czy5g354dews3nlruxjuyhrm6nrrjsm84pp0vna9lnxpjewp6kf"
+	s.recordBech32  = "record1q2xcpvj6czy5g354dews3nlruxjelpkssxyyclt9ngh74gx9ttgp27gt8kl"
+}
+
+func TestAddressTestSuite(t *testing.T) {
+	suite.Run(t, new(AddressTestSuite))
+}
+
+func (s *AddressTestSuite) requireBech32String (typeCode []byte, data []byte) string {
 	hrp, err := MetadataAddress{typeCode[0]}.Prefix()
-	require.NoError(t, err, "getPrefix error")
+	s.Require().NoError(err, "getPrefix error")
 	addr := append([]byte{typeCode[0]}, data...)
 	bech32Addr, err := bech32.ConvertAndEncode(hrp, addr)
-	require.NoError(t, err, "bech32.ConvertAndEncode error")
+	s.Require().NoError(err, "bech32.ConvertAndEncode error")
 	return bech32Addr
 }
 
-func TestLegacySha512HashToAddress(t *testing.T) {
+func (s *AddressTestSuite) TestLegacySha512HashToAddress() {
 	testHashBytes := sha512.Sum512([]byte("test"))
 	testHash := base64.StdEncoding.EncodeToString(testHashBytes[:])
 	testHash15 := base64.StdEncoding.EncodeToString(testHashBytes[:15])
@@ -66,7 +87,7 @@ func TestLegacySha512HashToAddress(t *testing.T) {
 			"scope key prefix - valid",
 			ScopeKeyPrefix,
 			testHash,
-			requireBech32String(t, ScopeKeyPrefix, testHashBytes[:16]),
+			s.requireBech32String(ScopeKeyPrefix, testHashBytes[:16]),
 			"",
 		},
 		{
@@ -81,7 +102,7 @@ func TestLegacySha512HashToAddress(t *testing.T) {
 			"session key prefix - valid",
 			SessionKeyPrefix,
 			testHash,
-			requireBech32String(t, SessionKeyPrefix, testHashBytes[:32]),
+			s.requireBech32String(SessionKeyPrefix, testHashBytes[:32]),
 			"",
 		},
 		{
@@ -96,7 +117,7 @@ func TestLegacySha512HashToAddress(t *testing.T) {
 			"record key prefix - valid",
 			RecordKeyPrefix,
 			testHash,
-			requireBech32String(t, RecordKeyPrefix, testHashBytes[:32]),
+			s.requireBech32String(RecordKeyPrefix, testHashBytes[:32]),
 			"",
 		},
 		{
@@ -111,7 +132,7 @@ func TestLegacySha512HashToAddress(t *testing.T) {
 			"scope spec key prefix - valid",
 			ScopeSpecificationKeyPrefix,
 			testHash,
-			requireBech32String(t, ScopeSpecificationKeyPrefix, testHashBytes[:16]),
+			s.requireBech32String(ScopeSpecificationKeyPrefix, testHashBytes[:16]),
 			"",
 		},
 		{
@@ -126,7 +147,7 @@ func TestLegacySha512HashToAddress(t *testing.T) {
 			"contract spec key prefix - valid",
 			ContractSpecificationKeyPrefix,
 			testHash,
-			requireBech32String(t, ContractSpecificationKeyPrefix, testHashBytes[:16]),
+			s.requireBech32String(ContractSpecificationKeyPrefix, testHashBytes[:16]),
 			"",
 		},
 		{
@@ -141,7 +162,7 @@ func TestLegacySha512HashToAddress(t *testing.T) {
 			"record spec key prefix - valid",
 			RecordSpecificationKeyPrefix,
 			testHash,
-			requireBech32String(t, RecordSpecificationKeyPrefix, testHashBytes[:32]),
+			s.requireBech32String(RecordSpecificationKeyPrefix, testHashBytes[:32]),
 			"",
 		},
 		{
@@ -176,7 +197,7 @@ func TestLegacySha512HashToAddress(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+		s.T().Run(tc.name, func(t *testing.T) {
 			addr, err := ConvertHashToAddress(tc.typeBytes, tc.hash)
 			if len(tc.expectedError) == 0 {
 				require.NoError(t, err, "ConvertHashToAddress error")
@@ -189,14 +210,16 @@ func TestLegacySha512HashToAddress(t *testing.T) {
 	}
 }
 
-func TestMetadataAddressWithInvalidData(t *testing.T) {
+func (s *AddressTestSuite) TestMetadataAddressWithInvalidData() {
+	t := s.T()
+
 	addr, addrErr := sdk.AccAddressFromBech32("cosmos1zgp4n2yvrtxkj5zl6rzcf6phqg0gfzuf3v08r4")
 	require.NoError(t, addrErr, "address parsing error")
 
 	_, err := VerifyMetadataAddressFormat(addr)
 	require.EqualValues(t, fmt.Errorf("invalid metadata address type: %d", addr[0]), err)
 
-	scopeID := ScopeMetadataAddress(scopeUUID)
+	scopeID := ScopeMetadataAddress(s.scopeUUID)
 	padded := make([]byte, 20)
 	len, err := scopeID.MarshalTo(padded)
 	require.EqualValues(t, 17, len)
@@ -213,13 +236,13 @@ func TestMetadataAddressWithInvalidData(t *testing.T) {
 	_, err = MetadataAddressFromHex("")
 	require.EqualValues(t, errors.New("address decode failed: must provide an address"), err)
 
-	_, err = MetadataAddressFromHex(scopeHex + "!!BAD")
+	_, err = MetadataAddressFromHex(s.scopeHex + "!!BAD")
 	require.EqualValues(t, hex.InvalidByteError(0x21), err)
 
 	var testMarshal MetadataAddress
-	err = testMarshal.UnmarshalJSON([]byte(scopeBech32 + "{bad}{json}"))
+	err = testMarshal.UnmarshalJSON([]byte(s.scopeBech32 + "{bad}{json}"))
 	require.Error(t, err)
-	err = testMarshal.UnmarshalYAML([]byte(scopeBech32 + "\n{badyaml}"))
+	err = testMarshal.UnmarshalYAML([]byte(s.scopeBech32 + "\n{badyaml}"))
 	require.Error(t, err)
 	err = testMarshal.Unmarshal([]byte{})
 	require.NoError(t, err)
@@ -229,11 +252,13 @@ func TestMetadataAddressWithInvalidData(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestMetadataAddressMarshal(t *testing.T) {
+func (s *AddressTestSuite) TestMetadataAddressMarshal() {
+	t := s.T()
+
 	var scopeID, newInstance MetadataAddress
 	require.True(t, scopeID.Equals(newInstance), "two empty instances are equal")
 
-	scopeID = ScopeMetadataAddress(scopeUUID)
+	scopeID = ScopeMetadataAddress(s.scopeUUID)
 
 	bz, err := scopeID.Marshal()
 	require.NoError(t, err)
@@ -248,7 +273,7 @@ func TestMetadataAddressMarshal(t *testing.T) {
 	require.EqualValues(t, scopeID, newInstance)
 }
 
-func TestCompare(t *testing.T) {
+func (s *AddressTestSuite) TestCompare() {
 	maEmpty := MetadataAddress{}
 	ma1 := MetadataAddress("1")
 	ma2 := MetadataAddress("2")
@@ -293,14 +318,16 @@ func TestCompare(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.name, func(subtest *testing.T) {
+		s.T().Run(test.name, func(t *testing.T) {
 			actual := test.base.Compare(test.arg)
-			assert.Equal(subtest, test.expected, actual)
+			assert.Equal(t, test.expected, actual)
 		})
 	}
 }
 
-func TestMetadataAddressIteratorPrefix(t *testing.T) {
+func (s *AddressTestSuite) TestMetadataAddressIteratorPrefix() {
+	t := s.T()
+
 	var emptyID MetadataAddress
 	bz, err := emptyID.ScopeSessionIteratorPrefix()
 	assert.NoError(t, err, "empty address ScopeSessionIteratorPrefix error")
@@ -312,7 +339,7 @@ func TestMetadataAddressIteratorPrefix(t *testing.T) {
 	assert.NoError(t, err, "empty address ContractSpecRecordSpecIteratorPrefix error")
 	assert.Equal(t, RecordSpecificationKeyPrefix, bz, "empty address ContractSpecRecordSpecIteratorPrefix value")
 
-	scopeSpecID := ScopeSpecMetadataAddress(scopeUUID)
+	scopeSpecID := ScopeSpecMetadataAddress(s.scopeUUID)
 	bz, err = scopeSpecID.ScopeSessionIteratorPrefix()
 	assert.EqualError(t, err,  "this metadata address does not contain a scope uuid", "scope spec id ScopeSessionIteratorPrefix error message")
 	assert.Equal(t, []byte{}, bz, "scope spec id ScopeSessionIteratorPrefix value")
@@ -320,7 +347,7 @@ func TestMetadataAddressIteratorPrefix(t *testing.T) {
 	assert.EqualError(t, err,  "this metadata address does not contain a scope uuid", "scope spec id ScopeRecordIteratorPrefix error message")
 	assert.Equal(t, []byte{}, bz, "scope spec id ScopeRecordIteratorPrefix value")
 
-	scopeID := ScopeMetadataAddress(scopeUUID)
+	scopeID := ScopeMetadataAddress(s.scopeUUID)
 	bz, err = scopeID.ScopeSessionIteratorPrefix()
 	require.NoError(t, err, "ScopeSessionIteratorPrefix error")
 	require.Equal(t, 17, len(bz), "ScopeSessionIteratorPrefix length")
@@ -330,20 +357,22 @@ func TestMetadataAddressIteratorPrefix(t *testing.T) {
 	require.Equal(t, 17, len(bz), "ScopeRecordIteratorPrefix length")
 	require.Equal(t, RecordKeyPrefix[0], bz[0], "ScopeRecordIteratorPrefix first byte")
 
-	contractSpecID := ContractSpecMetadataAddress(scopeUUID)
+	contractSpecID := ContractSpecMetadataAddress(s.scopeUUID)
 	bz, err = contractSpecID.ContractSpecRecordSpecIteratorPrefix()
 	require.NoError(t, err, "ContractSpecRecordSpecIteratorPrefix error")
 	require.Equal(t, 17, len(bz), "ContractSpecRecordSpecIteratorPrefix length")
 	require.Equal(t, RecordSpecificationKeyPrefix[0], bz[0], "ContractSpecRecordSpecIteratorPrefix first byte")
 }
 
-func TestScopeMetadataAddress(t *testing.T) {
+func (s *AddressTestSuite) TestScopeMetadataAddress() {
+	t := s.T()
+
 	// Make an address instance for a scope uuid
-	scopeID := ScopeMetadataAddress(scopeUUID)
+	scopeID := ScopeMetadataAddress(s.scopeUUID)
 	require.NoError(t, scopeID.Validate())
 	require.True(t, scopeID.IsScopeAddress())
 	// Verify we can get a bech32 string for the scope
-	require.Equal(t, scopeBech32, scopeID.String())
+	require.Equal(t, s.scopeBech32, scopeID.String())
 
 	// Verify we can get the uuid back
 	scopeAddrUUID, err := scopeID.ScopeUUID()
@@ -354,21 +383,21 @@ func TestScopeMetadataAddress(t *testing.T) {
 	require.Error(t, fmt.Errorf("this metadata addresss does not contain a session uuid"), err)
 
 	// Check the string formatter for the scopeID
-	require.Equal(t, scopeBech32, fmt.Sprintf("%s", scopeID))
-	require.Equal(t, fmt.Sprintf("%s", scopeHex), fmt.Sprintf("%X", scopeID))
+	require.Equal(t, s.scopeBech32, fmt.Sprintf("%s", scopeID))
+	require.Equal(t, fmt.Sprintf("%s", s.scopeHex), fmt.Sprintf("%X", scopeID))
 
 	// Ensure a second instance is equal to the first
-	scopeID2 := ScopeMetadataAddress(scopeUUID)
+	scopeID2 := ScopeMetadataAddress(s.scopeUUID)
 	require.True(t, scopeID.Equals(scopeID2))
-	require.False(t, scopeID.Equals(ScopeMetadataAddress(sessionUUID)))
+	require.False(t, scopeID.Equals(ScopeMetadataAddress(s.sessionUUID)))
 
 	json, err := scopeID.MarshalJSON()
 	require.NoError(t, err)
-	require.Equal(t, fmt.Sprintf("\"%s\"", scopeBech32), string(json))
+	require.Equal(t, fmt.Sprintf("\"%s\"", s.scopeBech32), string(json))
 
 	yaml, err := scopeID.MarshalYAML()
 	require.NoError(t, err)
-	require.Equal(t, scopeBech32, yaml)
+	require.Equal(t, s.scopeBech32, yaml)
 
 	var yamlAddress MetadataAddress
 	yamlAddress.UnmarshalYAML([]byte(yaml.(string)))
@@ -379,9 +408,11 @@ func TestScopeMetadataAddress(t *testing.T) {
 	require.EqualValues(t, scopeID, jsonAddress)
 }
 
-func TestSessionMetadataAddress(t *testing.T) {
+func (s *AddressTestSuite) TestSessionMetadataAddress() {
+	t := s.T()
+
 	// Construct a composite key for a session within a scope
-	sessionAddress := SessionMetadataAddress(scopeUUID, sessionUUID)
+	sessionAddress := SessionMetadataAddress(s.scopeUUID, s.sessionUUID)
 	require.NoError(t, sessionAddress.Validate(), "expect a valid MetadataAddress for a session")
 	require.True(t, sessionAddress.IsSessionAddress())
 
@@ -393,15 +424,15 @@ func TestSessionMetadataAddress(t *testing.T) {
 	require.NoError(t, err, "there should be no error getting the session uuid from the session address")
 	require.Equal(t, "c25c7bd4-c639-4367-a842-f64fa5fccc19", sessionUUID.String(), "the session uuid should be recoverable")
 
-	require.Equal(t, sessionBech32, sessionAddress.String())
+	require.Equal(t, s.sessionBech32, sessionAddress.String())
 
 	json, err := sessionAddress.MarshalJSON()
 	require.NoError(t, err)
-	require.Equal(t, fmt.Sprintf("\"%s\"", sessionBech32), string(json))
+	require.Equal(t, fmt.Sprintf("\"%s\"", s.sessionBech32), string(json))
 
 	yaml, err := sessionAddress.MarshalYAML()
 	require.NoError(t, err)
-	require.Equal(t, sessionBech32, yaml)
+	require.Equal(t, s.sessionBech32, yaml)
 
 	var yamlAddress MetadataAddress
 	require.True(t, yamlAddress.Empty())
@@ -414,26 +445,30 @@ func TestSessionMetadataAddress(t *testing.T) {
 	require.EqualValues(t, sessionAddress, jsonAddress)
 }
 
-func TestRecordMetadataAddress(t *testing.T) {
+func (s *AddressTestSuite) TestRecordMetadataAddress() {
+	t := s.T()
+
 	// Construct a composite key for a record within a scope
-	scopeID := ScopeMetadataAddress(scopeUUID)
-	recordID := RecordMetadataAddress(scopeUUID, "test")
+	scopeID := ScopeMetadataAddress(s.scopeUUID)
+	recordID := RecordMetadataAddress(s.scopeUUID, "test")
 	require.True(t, recordID.IsRecordAddress())
-	require.Equal(t, recordBech32, recordID.String())
-	recordAddress, err := MetadataAddressFromBech32(recordBech32)
+	require.Equal(t, s.recordBech32, recordID.String())
+	recordAddress, err := MetadataAddressFromBech32(s.recordBech32)
 	require.NoError(t, err)
 	require.Equal(t, recordID, recordAddress)
 
-	require.Equal(t, recordID, RecordMetadataAddress(scopeUUID, "tEst"))
-	require.Equal(t, recordID, RecordMetadataAddress(scopeUUID, "TEST"))
-	require.Equal(t, recordID, RecordMetadataAddress(scopeUUID, "   test   "))
+	require.Equal(t, recordID, RecordMetadataAddress(s.scopeUUID, "tEst"))
+	require.Equal(t, recordID, RecordMetadataAddress(s.scopeUUID, "TEST"))
+	require.Equal(t, recordID, RecordMetadataAddress(s.scopeUUID, "   test   "))
 
 	recAddrFromScopeID, err := scopeID.AsRecordAddress("test")
 	require.NoError(t, err, "AsRecordAddress error")
 	require.Equal(t, recordID, recAddrFromScopeID, "AsRecordAddress value")
 }
 
-func TestScopeSpecMetadataAddress(t *testing.T) {
+func (s *AddressTestSuite) TestScopeSpecMetadataAddress() {
+	t := s.T()
+
 	scopeSpecUUID := uuid.New()
 	scopeSpecID := ScopeSpecMetadataAddress(scopeSpecUUID)
 
@@ -451,7 +486,9 @@ func TestScopeSpecMetadataAddress(t *testing.T) {
 	require.Equal(t, scopeSpecUUID, scopeSpecUUIDFromScopeSpecId, "value from ScopeSpecUUID")
 }
 
-func TestContractSpecMetadataAddress(t *testing.T) {
+func (s *AddressTestSuite) TestContractSpecMetadataAddress() {
+	t := s.T()
+
 	contractSpecUUID := uuid.New()
 	contractSpecID := ContractSpecMetadataAddress(contractSpecUUID)
 
@@ -469,7 +506,9 @@ func TestContractSpecMetadataAddress(t *testing.T) {
 	require.Equal(t, contractSpecUUID, contractSpecUUIDFromContractSpecId, "value from ContractSpecUUID")
 }
 
-func TestRecordSpecMetadataAddress(t *testing.T) {
+func (s *AddressTestSuite) TestRecordSpecMetadataAddress() {
+	t := s.T()
+
 	contractSpecUUID := uuid.New()
 	contractSpecID := ContractSpecMetadataAddress(contractSpecUUID)
 	recordSpecID := RecordSpecMetadataAddress(contractSpecUUID, "myname")
@@ -498,7 +537,7 @@ func TestRecordSpecMetadataAddress(t *testing.T) {
 	require.Equal(t, contractSpecUUID, contractSpecUUIDFromRecordSpecId, "value from ContractSpecUUID")
 }
 
-func TestMetadataAddressTypeTestFuncs(t *testing.T) {
+func (s *AddressTestSuite) TestMetadataAddressTypeTestFuncs() {
 	tests := []struct {
 		name     string
 		id       MetadataAddress
@@ -537,18 +576,18 @@ func TestMetadataAddressTypeTestFuncs(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.name, func(subtest *testing.T) {
-			assert.Equal(subtest, test.expected[0], test.id.IsScopeAddress(), fmt.Sprintf("%s: IsScopeAddress", test.name))
-			assert.Equal(subtest, test.expected[1], test.id.IsSessionAddress(), fmt.Sprintf("%s: IsSessionAddress", test.name))
-			assert.Equal(subtest, test.expected[2], test.id.IsRecordAddress(), fmt.Sprintf("%s: IsRecordAddress", test.name))
-			assert.Equal(subtest, test.expected[3], test.id.IsScopeSpecificationAddress(), fmt.Sprintf("%s: IsScopeSpecificationAddress", test.name))
-			assert.Equal(subtest, test.expected[4], test.id.IsContractSpecificationAddress(), fmt.Sprintf("%s: IsContractSpecificationAddress", test.name))
-			assert.Equal(subtest, test.expected[5], test.id.IsRecordSpecificationAddress(), fmt.Sprintf("%s: IsRecordSpecificationAddress", test.name))
+		s.T().Run(test.name, func(t *testing.T) {
+			assert.Equal(t, test.expected[0], test.id.IsScopeAddress(), fmt.Sprintf("%s: IsScopeAddress", test.name))
+			assert.Equal(t, test.expected[1], test.id.IsSessionAddress(), fmt.Sprintf("%s: IsSessionAddress", test.name))
+			assert.Equal(t, test.expected[2], test.id.IsRecordAddress(), fmt.Sprintf("%s: IsRecordAddress", test.name))
+			assert.Equal(t, test.expected[3], test.id.IsScopeSpecificationAddress(), fmt.Sprintf("%s: IsScopeSpecificationAddress", test.name))
+			assert.Equal(t, test.expected[4], test.id.IsContractSpecificationAddress(), fmt.Sprintf("%s: IsContractSpecificationAddress", test.name))
+			assert.Equal(t, test.expected[5], test.id.IsRecordSpecificationAddress(), fmt.Sprintf("%s: IsRecordSpecificationAddress", test.name))
 		})
 	}
 }
 
-func TestPrefix(t *testing.T) {
+func (s *AddressTestSuite) TestPrefix() {
 	tests := []struct {
 		name string
 		addr MetadataAddress
@@ -657,21 +696,21 @@ func TestPrefix(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		t.Run(tc.name, func(subtest *testing.T) {
+		s.T().Run(tc.name, func(t *testing.T) {
 			actual, err := tc.addr.Prefix()
-			assert.Equal(subtest, tc.expectedValue, actual, "Prefix value")
+			assert.Equal(t, tc.expectedValue, actual, "Prefix value")
 			if len(tc.expectedError) > 0 {
-				assert.EqualError(subtest, err, tc.expectedError, "Prefix error string")
+				assert.EqualError(t, err, tc.expectedError, "Prefix error string")
 			} else if tc.expectAnyError {
-				assert.Error(subtest, err, "Prefix error (any)")
+				assert.Error(t, err, "Prefix error (any)")
 			} else {
-				assert.NoError(subtest, err, "Prefix error")
+				assert.NoError(t, err, "Prefix error")
 			}
 		})
 	}
 }
 
-func TestPrimaryUUID(t *testing.T) {
+func (s *AddressTestSuite) TestPrimaryUUID() {
 	scopePrimaryUUID := uuid.New()
 	sessionPrimaryUUID := uuid.New()
 	recordPrimaryUUID := uuid.New()
@@ -742,7 +781,7 @@ func TestPrimaryUUID(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.name, func(subtest *testing.T) {
+		s.T().Run(test.name, func(t *testing.T) {
 			primaryUUID, err := test.id.PrimaryUUID()
 			if len(test.expectedError) == 0 {
 				assert.NoError(t, err, fmt.Sprintf("%s: err", test.name))
@@ -754,7 +793,7 @@ func TestPrimaryUUID(t *testing.T) {
 	}
 }
 
-func TestSecondaryUUID(t *testing.T) {
+func (s *AddressTestSuite) TestSecondaryUUID() {
 	sessionSecondaryUUID := uuid.New()
 
 	tests := []struct {
@@ -820,7 +859,7 @@ func TestSecondaryUUID(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.name, func(subtest *testing.T) {
+		s.T().Run(test.name, func(t *testing.T) {
 			secondaryUUID, err := test.id.SecondaryUUID()
 			if len(test.expectedError) == 0 {
 				assert.NoError(t, err, fmt.Sprintf("%s: err", test.name))
@@ -832,7 +871,7 @@ func TestSecondaryUUID(t *testing.T) {
 	}
 }
 
-func TestNameHash(t *testing.T) {
+func (s *AddressTestSuite) TestNameHash() {
 	recordName := "mothership"
 	recordNameHash := sha256.Sum256([]byte(recordName))
 	recordSpecName := "houses of the holy"
@@ -901,7 +940,7 @@ func TestNameHash(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.name, func(subtest *testing.T) {
+		s.T().Run(test.name, func(t *testing.T) {
 			nameHash, err := test.id.NameHash()
 			if len(test.expectedError) == 0 {
 				assert.NoError(t, err, fmt.Sprintf("%s: err", test.name))
@@ -913,7 +952,7 @@ func TestNameHash(t *testing.T) {
 	}
 }
 
-func TestScopeAddressConverters(t *testing.T) {
+func (s *AddressTestSuite) TestScopeAddressConverters() {
 	randomUUID := uuid.New()
 	scopeID := ScopeMetadataAddress(randomUUID)
 	sessionID := SessionMetadataAddress(randomUUID, uuid.New())
@@ -970,7 +1009,7 @@ func TestScopeAddressConverters(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(fmt.Sprintf("%s AsScopeAddress", test.name), func(subtest *testing.T) {
+		s.T().Run(fmt.Sprintf("%s AsScopeAddress", test.name), func(t *testing.T) {
 			actualID, err := test.baseID.AsScopeAddress()
 			if len(test.expectedError) == 0 {
 				assert.NoError(t, err, "%s AsScopeAddress err", test.name)
@@ -982,7 +1021,7 @@ func TestScopeAddressConverters(t *testing.T) {
 	}
 }
 
-func TestSessionAddressConverters(t *testing.T) {
+func (s *AddressTestSuite) TestSessionAddressConverters() {
 	randomUUID := uuid.New()
 	randomUUID2 := uuid.New()
 	scopeID := ScopeMetadataAddress(randomUUID)
@@ -1040,7 +1079,7 @@ func TestSessionAddressConverters(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(fmt.Sprintf("%s AsSessionAddress", test.name), func(subtest *testing.T) {
+		s.T().Run(fmt.Sprintf("%s AsSessionAddress", test.name), func(t *testing.T) {
 			actualID, err := test.baseID.AsSessionAddress(randomUUID2)
 			if len(test.expectedError) == 0 {
 				assert.NoError(t, err, "%s AsSessionAddress err", test.name)
@@ -1052,7 +1091,7 @@ func TestSessionAddressConverters(t *testing.T) {
 	}
 }
 
-func TestRecordAddressConverters(t *testing.T) {
+func (s *AddressTestSuite) TestRecordAddressConverters() {
 	randomUUID := uuid.New()
 	recordName := "the fragile"
 	scopeID := ScopeMetadataAddress(randomUUID)
@@ -1118,7 +1157,7 @@ func TestRecordAddressConverters(t *testing.T) {
 
 	for _, test := range tests {
 		for _, rName := range recordNameVersions {
-			t.Run(fmt.Sprintf("%s AsRecordAddress(\"%s\")", test.name, rName), func(subtest *testing.T) {
+			s.T().Run(fmt.Sprintf("%s AsRecordAddress(\"%s\")", test.name, rName), func(t *testing.T) {
 				actualID, err := test.baseID.AsRecordAddress(rName)
 				if len(test.expectedError) == 0 {
 					assert.NoError(t, err, "%s AsRecordAddress err", test.name)
@@ -1131,7 +1170,7 @@ func TestRecordAddressConverters(t *testing.T) {
 	}
 }
 
-func TestRecordSpecAddressConverters(t *testing.T) {
+func (s *AddressTestSuite) TestRecordSpecAddressConverters() {
 	randomUUID := uuid.New()
 	recordName := "bad witch"
 	scopeID := ScopeMetadataAddress(randomUUID)
@@ -1198,7 +1237,7 @@ func TestRecordSpecAddressConverters(t *testing.T) {
 
 	for _, test := range tests {
 		for _, rName := range recordNameVersions {
-			t.Run(fmt.Sprintf("%s AsRecordSpecAddress(\"%s\")", test.name, rName), func(subtest *testing.T) {
+			s.T().Run(fmt.Sprintf("%s AsRecordSpecAddress(\"%s\")", test.name, rName), func(t *testing.T) {
 				actualID, err := test.baseID.AsRecordSpecAddress(rName)
 				if len(test.expectedError) == 0 {
 					assert.NoError(t, err, "%s AsRecordSpecAddress err", test.name)
@@ -1211,7 +1250,7 @@ func TestRecordSpecAddressConverters(t *testing.T) {
 	}
 }
 
-func TestContractSpecAddressConverters(t *testing.T) {
+func (s *AddressTestSuite) TestContractSpecAddressConverters() {
 	randomUUID := uuid.New()
 	scopeID := ScopeMetadataAddress(randomUUID)
 	sessionID := SessionMetadataAddress(randomUUID, uuid.New())
@@ -1269,7 +1308,7 @@ func TestContractSpecAddressConverters(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(fmt.Sprintf("%s AsContractSpecAddress", test.name), func(subtest *testing.T) {
+		s.T().Run(fmt.Sprintf("%s AsContractSpecAddress", test.name), func(t *testing.T) {
 			actualID, err := test.baseID.AsContractSpecAddress()
 			if len(test.expectedError) == 0 {
 				assert.NoError(t, err, "%s AsContractSpecAddress err", test.name)
@@ -1281,8 +1320,8 @@ func TestContractSpecAddressConverters(t *testing.T) {
 	}
 }
 
-func TestFormat(t *testing.T) {
-	scopeID := ScopeMetadataAddress(scopeUUID)
+func (s *AddressTestSuite) TestFormat() {
+	scopeID := ScopeMetadataAddress(s.scopeUUID)
 	emptyID := MetadataAddress{}
 
 	tests := []struct {
@@ -1295,7 +1334,7 @@ func TestFormat(t *testing.T) {
 			"format using %s",
 			scopeID,
 			"%s",
-			scopeBech32,
+			s.scopeBech32,
 		},
 		{
 			// %p is for the address (in memory). Can't hard-code it.
@@ -1350,9 +1389,11 @@ func TestFormat(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.name, func(subtest *testing.T) {
+		s.T().Run(test.name, func(t *testing.T) {
 			actual := fmt.Sprintf(test.format, test.id)
 			assert.Equal(t, test.expected, actual, test.name)
 		})
 	}
 }
+
+// TODO: GetDetails tests.

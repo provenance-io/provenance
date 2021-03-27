@@ -236,11 +236,12 @@ func emptySession() *Session {
 // emptyRecord creates a new empty Record.
 func emptyRecord() *Record {
 	return &Record{
-		Name:      "",
-		SessionId: MetadataAddress{},
-		Process:   *emptyProcess(),
-		Inputs:    []RecordInput{},
-		Outputs:   []RecordOutput{},
+		Name:            "",
+		SessionId:       MetadataAddress{},
+		Process:         *emptyProcess(),
+		Inputs:          []RecordInput{},
+		Outputs:         []RecordOutput{},
+		SpecificationId: MetadataAddress{},
 	}
 }
 

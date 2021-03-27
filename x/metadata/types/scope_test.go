@@ -440,9 +440,7 @@ parties:
   role: 6
 type: name
 audit:
-  created_date: 0001-01-01T00:00:00Z
   created_by: cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck
-  version: 0
   message: message
 `, session.SessionId.String(), session.SpecificationId.String()),
 			session.String())

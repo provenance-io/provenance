@@ -1,51 +1,53 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/google/uuid"
 	"github.com/provenance-io/provenance/x/metadata/types/p8e"
 	yaml "gopkg.in/yaml.v2"
 )
 
 const (
-	TypeMsgAddScopeRequest                    = "add_scope_request"
+	TypeMsgWriteScopeRequest                  = "write_scope_request"
 	TypeMsgDeleteScopeRequest                 = "delete_scope_request"
-	TypeMsgAddSessionRequest                  = "add_session_request"
-	TypeMsgAddRecordRequest                   = "add_record_request"
+	TypeMsgWriteSessionRequest                = "write_session_request"
+	TypeMsgWriteRecordRequest                 = "write_record_request"
 	TypeMsgDeleteRecordRequest                = "delete_record_request"
-	TypeMsgAddScopeSpecificationRequest       = "add_scope_specification_request"
+	TypeMsgWriteScopeSpecificationRequest     = "write_scope_specification_request"
 	TypeMsgDeleteScopeSpecificationRequest    = "delete_scope_specification_request"
-	TypeMsgAddContractSpecificationRequest    = "add_contract_specification_request"
+	TypeMsgWriteContractSpecificationRequest  = "write_contract_specification_request"
 	TypeMsgDeleteContractSpecificationRequest = "delete_contract_specification_request"
-	TypeMsgAddRecordSpecificationRequest      = "add_record_specification_request"
+	TypeMsgWriteRecordSpecificationRequest    = "write_record_specification_request"
 	TypeMsgDeleteRecordSpecificationRequest   = "delete_record_specification_request"
-	TypeMsgAddP8EContractSpecRequest          = "add_p8e_contract_spec_request"
+	TypeMsgWriteP8EContractSpecRequest        = "write_p8e_contract_spec_request"
 	TypeMsgP8eMemorializeContractRequest      = "p8e_memorialize_contract_request"
-	TypeMsgBindOSLocatorRequest               = "add_os_locator_request"
+	TypeMsgBindOSLocatorRequest               = "write_os_locator_request"
 	TypeMsgDeleteOSLocatorRequest             = "delete_os_locator_request"
 	TypeMsgModifyOSLocatorRequest             = "modify_os_locator_request"
 )
 
 // Compile time interface checks.
 var (
-	_ sdk.Msg = &MsgAddScopeRequest{}
+	_ sdk.Msg = &MsgWriteScopeRequest{}
 	_ sdk.Msg = &MsgDeleteScopeRequest{}
-	_ sdk.Msg = &MsgAddSessionRequest{}
-	_ sdk.Msg = &MsgAddRecordRequest{}
+	_ sdk.Msg = &MsgWriteSessionRequest{}
+	_ sdk.Msg = &MsgWriteRecordRequest{}
 	_ sdk.Msg = &MsgDeleteRecordRequest{}
-	_ sdk.Msg = &MsgAddScopeSpecificationRequest{}
+	_ sdk.Msg = &MsgWriteScopeSpecificationRequest{}
 	_ sdk.Msg = &MsgDeleteScopeSpecificationRequest{}
-	_ sdk.Msg = &MsgAddContractSpecificationRequest{}
+	_ sdk.Msg = &MsgWriteContractSpecificationRequest{}
 	_ sdk.Msg = &MsgDeleteContractSpecificationRequest{}
-	_ sdk.Msg = &MsgAddRecordSpecificationRequest{}
+	_ sdk.Msg = &MsgWriteRecordSpecificationRequest{}
 	_ sdk.Msg = &MsgDeleteRecordSpecificationRequest{}
 	_ sdk.Msg = &MsgBindOSLocatorRequest{}
 	_ sdk.Msg = &MsgDeleteOSLocatorRequest{}
 	_ sdk.Msg = &MsgModifyOSLocatorRequest{}
-	_ sdk.Msg = &MsgAddP8EContractSpecRequest{}
+	_ sdk.Msg = &MsgWriteP8EContractSpecRequest{}
 	_ sdk.Msg = &MsgP8EMemorializeContractRequest{}
 )
 
@@ -68,47 +70,83 @@ func stringToAccAddress(s string) sdk.AccAddress {
 	return accAddress
 }
 
-// ------------------  MsgAddScopeRequest  ------------------
+// ------------------  MsgWriteScopeRequest  ------------------
 
-// NewMsgAddScopeRequest creates a new msg instance
-func NewMsgAddScopeRequest(scope Scope, signers []string) *MsgAddScopeRequest {
-	return &MsgAddScopeRequest{
+// NewMsgWriteScopeRequest creates a new msg instance
+func NewMsgWriteScopeRequest(scope Scope, signers []string) *MsgWriteScopeRequest {
+	return &MsgWriteScopeRequest{
 		Scope:   scope,
 		Signers: signers,
 	}
 }
 
-func (msg MsgAddScopeRequest) String() string {
+func (msg MsgWriteScopeRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
 // Route returns the module route
-func (msg MsgAddScopeRequest) Route() string {
+func (msg MsgWriteScopeRequest) Route() string {
 	return ModuleName
 }
 
 // Type returns the type name for this msg
-func (msg MsgAddScopeRequest) Type() string {
-	return TypeMsgAddScopeRequest
+func (msg MsgWriteScopeRequest) Type() string {
+	return TypeMsgWriteScopeRequest
 }
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
-func (msg MsgAddScopeRequest) GetSigners() []sdk.AccAddress {
+func (msg MsgWriteScopeRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
 }
 
 // GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgAddScopeRequest) GetSignBytes() []byte {
+func (msg MsgWriteScopeRequest) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
-func (msg MsgAddScopeRequest) ValidateBasic() error {
+func (msg MsgWriteScopeRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
+	if err := msg.ConvertOptionalFields(); err != nil {
+		return err
+	}
 	return msg.Scope.ValidateBasic()
+}
+
+// ConvertOptionalFields will look at the ScopeUuid and SpecUuid fields in the message.
+// For each, if present, it will be converted to a MetadataAddress and set in the Scope appropriately.
+// Once used, those uuid fields will be set to empty strings so that calling this again has no effect.
+func (msg *MsgWriteScopeRequest) ConvertOptionalFields() error {
+	if len(msg.ScopeUuid) > 0 {
+		uid, err := uuid.Parse(msg.ScopeUuid)
+		if err != nil {
+			return fmt.Errorf("invalid scope uuid: %w", err)
+		}
+		scopeAddr := ScopeMetadataAddress(uid)
+		if !msg.Scope.ScopeId.Empty() && !msg.Scope.ScopeId.Equals(scopeAddr) {
+			return fmt.Errorf("msg.Scope.ScopeId [%s] is different from the one created from msg.ScopeUuid [%s]",
+				msg.Scope.ScopeId, msg.ScopeUuid)
+		}
+		msg.Scope.ScopeId = scopeAddr
+		msg.ScopeUuid = ""
+	}
+	if len(msg.SpecUuid) > 0 {
+		uid, err := uuid.Parse(msg.SpecUuid)
+		if err != nil {
+			return fmt.Errorf("invalid spec uuid: %w", err)
+		}
+		specAddr := ScopeSpecMetadataAddress(uid)
+		if !msg.Scope.SpecificationId.Empty() && !msg.Scope.SpecificationId.Equals(specAddr) {
+			return fmt.Errorf("msg.Scope.SpecificationId [%s] is different from the one created from msg.SpecUuid [%s]",
+				msg.Scope.SpecificationId, msg.SpecUuid)
+		}
+		msg.Scope.SpecificationId = specAddr
+		msg.SpecUuid = ""
+	}
+	return nil
 }
 
 // ------------------  NewMsgDeleteScopeRequest  ------------------
@@ -157,84 +195,161 @@ func (msg MsgDeleteScopeRequest) ValidateBasic() error {
 	return nil
 }
 
-// ------------------  MsgAddSessionRequest  ------------------
+// ------------------  MsgWriteSessionRequest  ------------------
 
-// NewMsgAddSessionRequest creates a new msg instance
-func NewMsgAddSessionRequest() *MsgAddSessionRequest {
-	return &MsgAddSessionRequest{}
+// NewMsgWriteSessionRequest creates a new msg instance
+func NewMsgWriteSessionRequest() *MsgWriteSessionRequest {
+	return &MsgWriteSessionRequest{}
 }
 
-func (msg MsgAddSessionRequest) String() string {
+func (msg MsgWriteSessionRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
 // Route returns the module route
-func (msg MsgAddSessionRequest) Route() string {
+func (msg MsgWriteSessionRequest) Route() string {
 	return ModuleName
 }
 
 // Type returns the type name for this msg
-func (msg MsgAddSessionRequest) Type() string {
-	return TypeMsgAddSessionRequest
+func (msg MsgWriteSessionRequest) Type() string {
+	return TypeMsgWriteSessionRequest
 }
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
-func (msg MsgAddSessionRequest) GetSigners() []sdk.AccAddress {
+func (msg MsgWriteSessionRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
 }
 
 // GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgAddSessionRequest) GetSignBytes() []byte {
+func (msg MsgWriteSessionRequest) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
-func (msg MsgAddSessionRequest) ValidateBasic() error {
+func (msg MsgWriteSessionRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
+	}
+	if err := msg.ConvertOptionalFields(); err != nil {
+		return err
 	}
 	return msg.Session.ValidateBasic()
 }
 
-// ------------------  MsgAddRecordRequest  ------------------
-
-// NewMsgAddRecordRequest creates a new msg instance
-func NewMsgAddRecordRequest() *MsgAddRecordRequest {
-	return &MsgAddRecordRequest{}
+// ConvertOptionalFields will look at the SessionIdComponents and SpecUuid fields in the message.
+// For each, if present, it will be converted to a MetadataAddress and set in the Session appropriately.
+// Once used, those fields will be emptied so that calling this again has no effect.
+func (msg *MsgWriteSessionRequest) ConvertOptionalFields() error {
+	if msg.SessionIdComponents != nil {
+		sessionAddr, err := msg.SessionIdComponents.GetSessionAddr()
+		if err != nil {
+			return fmt.Errorf("invalid session id components: %w", err)
+		}
+		if sessionAddr != nil {
+			if !msg.Session.SessionId.Empty() && !msg.Session.SessionId.Equals(*sessionAddr) {
+				return fmt.Errorf("msg.Session.SessionId [%s] is different from the one created from msg.SessionIdComponents %v",
+					msg.Session.SessionId, msg.SessionIdComponents)
+			}
+			msg.Session.SessionId = *sessionAddr
+		}
+		msg.SessionIdComponents = nil
+	}
+	if len(msg.SpecUuid) > 0 {
+		uid, err := uuid.Parse(msg.SpecUuid)
+		if err != nil {
+			return fmt.Errorf("invalid spec uuid: %w", err)
+		}
+		specAddr := ContractSpecMetadataAddress(uid)
+		if !msg.Session.SpecificationId.Empty() && !msg.Session.SpecificationId.Equals(specAddr) {
+			return fmt.Errorf("msg.Session.SpecificationId [%s] is different from the one created from msg.SpecUuid [%s]",
+				msg.Session.SpecificationId, msg.SpecUuid)
+		}
+		msg.Session.SpecificationId = specAddr
+		msg.SpecUuid = ""
+	}
+	return nil
 }
 
-func (msg MsgAddRecordRequest) String() string {
+// ------------------  MsgWriteRecordRequest  ------------------
+
+// NewMsgWriteRecordRequest creates a new msg instance
+func NewMsgWriteRecordRequest() *MsgWriteRecordRequest {
+	return &MsgWriteRecordRequest{}
+}
+
+func (msg MsgWriteRecordRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
 // Route returns the module route
-func (msg MsgAddRecordRequest) Route() string {
+func (msg MsgWriteRecordRequest) Route() string {
 	return ModuleName
 }
 
 // Type returns the type name for this msg
-func (msg MsgAddRecordRequest) Type() string {
-	return TypeMsgAddRecordRequest
+func (msg MsgWriteRecordRequest) Type() string {
+	return TypeMsgWriteRecordRequest
 }
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
-func (msg MsgAddRecordRequest) GetSigners() []sdk.AccAddress {
+func (msg MsgWriteRecordRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
 }
 
 // GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgAddRecordRequest) GetSignBytes() []byte {
+func (msg MsgWriteRecordRequest) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
-func (msg MsgAddRecordRequest) ValidateBasic() error {
+func (msg MsgWriteRecordRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
+	if err := msg.ConvertOptionalFields(); err != nil {
+		return err
+	}
 	return msg.Record.ValidateBasic()
+}
+
+// ConvertOptionalFields will look at the SessionIdComponents and ContractSpecUuid fields in the message.
+// For each, if present, it will be converted to a MetadataAddress and set in the Record appropriately.
+// Once used, those fields will be emptied so that calling this again has no effect.
+func (msg *MsgWriteRecordRequest) ConvertOptionalFields() error {
+	if msg.SessionIdComponents != nil {
+		sessionAddr, err := msg.SessionIdComponents.GetSessionAddr()
+		if err != nil {
+			return fmt.Errorf("invalid session id components: %w", err)
+		}
+		if sessionAddr != nil {
+			if !msg.Record.SessionId.Empty() && !msg.Record.SessionId.Equals(*sessionAddr) {
+				return fmt.Errorf("msg.Record.SessionId [%s] is different from the one created from msg.SessionIdComponents %v",
+					msg.Record.SessionId, msg.SessionIdComponents)
+			}
+			msg.Record.SessionId = *sessionAddr
+		}
+		msg.SessionIdComponents = nil
+	}
+	if len(msg.ContractSpecUuid) > 0 {
+		uid, err := uuid.Parse(msg.ContractSpecUuid)
+		if err != nil {
+			return fmt.Errorf("invalid contract spec uuid: %w", err)
+		}
+		if len(strings.TrimSpace(msg.Record.Name)) == 0 {
+			return errors.New("empty record name")
+		}
+		specAddr := RecordSpecMetadataAddress(uid, msg.Record.Name)
+		if !msg.Record.SpecificationId.Empty() && !msg.Record.SpecificationId.Equals(specAddr) {
+			return fmt.Errorf("msg.Record.SpecificationId [%s] is different from the one created from msg.ContractSpecUuid [%s] and msg.Record.Name [%s]",
+				msg.Record.SpecificationId, msg.ContractSpecUuid, msg.Record.Name)
+		}
+		msg.Record.SpecificationId = specAddr
+		msg.ContractSpecUuid = ""
+	}
+	return nil
 }
 
 // ------------------  MsgDeleteRecordRequest  ------------------
@@ -277,83 +392,106 @@ func (msg MsgDeleteRecordRequest) ValidateBasic() error {
 	return nil
 }
 
-// ------------------  MsgAddScopeSpecificationRequest  ------------------
+// ------------------  MsgWriteScopeSpecificationRequest  ------------------
 
 // NewMsgAddScopeSpecificationRequest creates a new msg instance
-func NewMsgAddScopeSpecificationRequest(specification ScopeSpecification, signers []string) *MsgAddScopeSpecificationRequest {
-	return &MsgAddScopeSpecificationRequest{Specification: specification, Signers: signers}
+func NewMsgWriteScopeSpecificationRequest(specification ScopeSpecification, signers []string) *MsgWriteScopeSpecificationRequest {
+	return &MsgWriteScopeSpecificationRequest{Specification: specification, Signers: signers}
 }
 
-func (msg MsgAddScopeSpecificationRequest) String() string {
+func (msg MsgWriteScopeSpecificationRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
 // Route returns the module route
-func (msg MsgAddScopeSpecificationRequest) Route() string {
+func (msg MsgWriteScopeSpecificationRequest) Route() string {
 	return ModuleName
 }
 
 // Type returns the type name for this msg
-func (msg MsgAddScopeSpecificationRequest) Type() string {
-	return TypeMsgAddScopeSpecificationRequest
+func (msg MsgWriteScopeSpecificationRequest) Type() string {
+	return TypeMsgWriteScopeSpecificationRequest
 }
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
-func (msg MsgAddScopeSpecificationRequest) GetSigners() []sdk.AccAddress {
+func (msg MsgWriteScopeSpecificationRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
 }
 
 // GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgAddScopeSpecificationRequest) GetSignBytes() []byte {
+func (msg MsgWriteScopeSpecificationRequest) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
-func (msg MsgAddScopeSpecificationRequest) ValidateBasic() error {
+func (msg MsgWriteScopeSpecificationRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
+	}
+	if err := msg.ConvertOptionalFields(); err != nil {
+		return err
 	}
 	return msg.Specification.ValidateBasic()
 }
 
-// ------------------  MsgAddContractSpecRequest  ------------------
+// ConvertOptionalFields will look at the SpecUuid field in the message.
+// If present, it will be converted to a MetadataAddress and set in the Specification appropriately.
+// Once used, it will be emptied so that calling this again has no effect.
+func (msg *MsgWriteScopeSpecificationRequest) ConvertOptionalFields() error {
+	if len(msg.SpecUuid) > 0 {
+		uid, err := uuid.Parse(msg.SpecUuid)
+		if err != nil {
+			return fmt.Errorf("invalid spec uuid: %w", err)
+		}
+		specAddr := ScopeSpecMetadataAddress(uid)
+		if !msg.Specification.SpecificationId.Empty() && !msg.Specification.SpecificationId.Equals(specAddr) {
+			return fmt.Errorf("msg.Specification.SpecificationId [%s] is different from the one created from msg.SpecUuid [%s]",
+				msg.Specification.SpecificationId, msg.SpecUuid)
+		}
+		msg.Specification.SpecificationId = specAddr
+		msg.SpecUuid = ""
+	}
+	return nil
+}
 
-// NewMsgAddContractSpecRequest creates a new msg instance
-func NewMsgAddP8EContractSpecRequest(contractSpec p8e.ContractSpec, signers []string) *MsgAddP8EContractSpecRequest {
-	return &MsgAddP8EContractSpecRequest{
+// ------------------  MsgWriteP8EContractSpecRequest  ------------------
+
+// NewMsgWriteContractSpecRequest creates a new msg instance
+func NewMsgWriteP8EContractSpecRequest(contractSpec p8e.ContractSpec, signers []string) *MsgWriteP8EContractSpecRequest {
+	return &MsgWriteP8EContractSpecRequest{
 		Contractspec: contractSpec,
 		Signers:      signers,
 	}
 }
 
-func (msg MsgAddP8EContractSpecRequest) String() string {
+func (msg MsgWriteP8EContractSpecRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
 // Route returns the module route
-func (msg MsgAddP8EContractSpecRequest) Route() string {
+func (msg MsgWriteP8EContractSpecRequest) Route() string {
 	return ModuleName
 }
 
 // Type returns the type name for this msg
-func (msg MsgAddP8EContractSpecRequest) Type() string {
-	return TypeMsgAddP8EContractSpecRequest
+func (msg MsgWriteP8EContractSpecRequest) Type() string {
+	return TypeMsgWriteP8EContractSpecRequest
 }
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
-func (msg MsgAddP8EContractSpecRequest) GetSigners() []sdk.AccAddress {
+func (msg MsgWriteP8EContractSpecRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
 }
 
 // GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgAddP8EContractSpecRequest) GetSignBytes() []byte {
+func (msg MsgWriteP8EContractSpecRequest) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
-func (msg MsgAddP8EContractSpecRequest) ValidateBasic() error {
+func (msg MsgWriteP8EContractSpecRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
@@ -404,44 +542,67 @@ func (msg MsgDeleteScopeSpecificationRequest) ValidateBasic() error {
 	return nil
 }
 
-// ------------------  MsgAddContractSpecificationRequest  ------------------
+// ------------------  MsgWriteContractSpecificationRequest  ------------------
 
-// NewMsgAddContractSpecificationRequest creates a new msg instance
-func NewMsgAddContractSpecificationRequest(specification ContractSpecification, signers []string) *MsgAddContractSpecificationRequest {
-	return &MsgAddContractSpecificationRequest{Specification: specification, Signers: signers}
+// NewMsgWriteContractSpecificationRequest creates a new msg instance
+func NewMsgWriteContractSpecificationRequest(specification ContractSpecification, signers []string) *MsgWriteContractSpecificationRequest {
+	return &MsgWriteContractSpecificationRequest{Specification: specification, Signers: signers}
 }
 
-func (msg MsgAddContractSpecificationRequest) String() string {
+func (msg MsgWriteContractSpecificationRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
 // Route returns the module route
-func (msg MsgAddContractSpecificationRequest) Route() string {
+func (msg MsgWriteContractSpecificationRequest) Route() string {
 	return ModuleName
 }
 
 // Type returns the type name for this msg
-func (msg MsgAddContractSpecificationRequest) Type() string {
-	return TypeMsgAddContractSpecificationRequest
+func (msg MsgWriteContractSpecificationRequest) Type() string {
+	return TypeMsgWriteContractSpecificationRequest
 }
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
-func (msg MsgAddContractSpecificationRequest) GetSigners() []sdk.AccAddress {
+func (msg MsgWriteContractSpecificationRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
 }
 
 // GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgAddContractSpecificationRequest) GetSignBytes() []byte {
+func (msg MsgWriteContractSpecificationRequest) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
-func (msg MsgAddContractSpecificationRequest) ValidateBasic() error {
+func (msg MsgWriteContractSpecificationRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
+	if err := msg.ConvertOptionalFields(); err != nil {
+		return err
+	}
 	return msg.Specification.ValidateBasic()
+}
+
+// ConvertOptionalFields will look at the SpecUuid field in the message.
+// If present, it will be converted to a MetadataAddress and set in the Specification appropriately.
+// Once used, it will be emptied so that calling this again has no effect.
+func (msg *MsgWriteContractSpecificationRequest) ConvertOptionalFields() error {
+	if len(msg.SpecUuid) > 0 {
+		uid, err := uuid.Parse(msg.SpecUuid)
+		if err != nil {
+			return fmt.Errorf("invalid spec uuid: %w", err)
+		}
+		specAddr := ContractSpecMetadataAddress(uid)
+		if !msg.Specification.SpecificationId.Empty() && !msg.Specification.SpecificationId.Equals(specAddr) {
+			return fmt.Errorf("msg.Specification.SpecificationId [%s] is different from the one created from msg.SpecUuid [%s]",
+				msg.Specification.SpecificationId, msg.SpecUuid)
+		}
+		msg.Specification.SpecificationId = specAddr
+		msg.SpecUuid = ""
+	}
+	return nil
 }
 
 // ------------------  MsgDeleteContractSpecificationRequest  ------------------
@@ -484,44 +645,70 @@ func (msg MsgDeleteContractSpecificationRequest) ValidateBasic() error {
 	return nil
 }
 
-// ------------------  MsgAddRecordSpecificationRequest  ------------------
+// ------------------  MsgWriteRecordSpecificationRequest  ------------------
 
 // NewMsgAddRecordSpecificationRequest creates a new msg instance
-func NewMsgAddRecordSpecificationRequest(recordSpecification RecordSpecification, signers []string) *MsgAddRecordSpecificationRequest {
-	return &MsgAddRecordSpecificationRequest{Specification: recordSpecification, Signers: signers}
+func NewMsgWriteRecordSpecificationRequest(recordSpecification RecordSpecification, signers []string) *MsgWriteRecordSpecificationRequest {
+	return &MsgWriteRecordSpecificationRequest{Specification: recordSpecification, Signers: signers}
 }
 
-func (msg MsgAddRecordSpecificationRequest) String() string {
+func (msg MsgWriteRecordSpecificationRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
 // Route returns the module route
-func (msg MsgAddRecordSpecificationRequest) Route() string {
+func (msg MsgWriteRecordSpecificationRequest) Route() string {
 	return ModuleName
 }
 
 // Type returns the type name for this msg
-func (msg MsgAddRecordSpecificationRequest) Type() string {
-	return TypeMsgAddRecordSpecificationRequest
+func (msg MsgWriteRecordSpecificationRequest) Type() string {
+	return TypeMsgWriteRecordSpecificationRequest
 }
 
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
-func (msg MsgAddRecordSpecificationRequest) GetSigners() []sdk.AccAddress {
+func (msg MsgWriteRecordSpecificationRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
 }
 
 // GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgAddRecordSpecificationRequest) GetSignBytes() []byte {
+func (msg MsgWriteRecordSpecificationRequest) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
-func (msg MsgAddRecordSpecificationRequest) ValidateBasic() error {
+func (msg MsgWriteRecordSpecificationRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
+	if err := msg.ConvertOptionalFields(); err != nil {
+		return err
+	}
 	return msg.Specification.ValidateBasic()
+}
+
+// ConvertOptionalFields will look at the ContractSpecUuid field in the message.
+// If present, it will be converted to a MetadataAddress and set in the Specification appropriately.
+// Once used, it will be emptied so that calling this again has no effect.
+func (msg *MsgWriteRecordSpecificationRequest) ConvertOptionalFields() error {
+	if len(msg.ContractSpecUuid) > 0 {
+		uid, err := uuid.Parse(msg.ContractSpecUuid)
+		if err != nil {
+			return fmt.Errorf("invalid spec uuid: %w", err)
+		}
+		if len(strings.TrimSpace(msg.Specification.Name)) == 0 {
+			return errors.New("empty specification name")
+		}
+		specAddr := RecordSpecMetadataAddress(uid, msg.Specification.Name)
+		if !msg.Specification.SpecificationId.Empty() && !msg.Specification.SpecificationId.Equals(specAddr) {
+			return fmt.Errorf("msg.Specification.SpecificationId [%s] is different from the one created from msg.ContractSpecUuid [%s] and msg.Specification.Name [%s]",
+				msg.Specification.SpecificationId, msg.ContractSpecUuid, msg.Specification.Name)
+		}
+		msg.Specification.SpecificationId = specAddr
+		msg.ContractSpecUuid = ""
+	}
+	return nil
 }
 
 // ------------------  MsgDeleteRecordSpecificationRequest  ------------------
@@ -602,7 +789,7 @@ func (msg MsgP8EMemorializeContractRequest) ValidateBasic() error {
 	return err
 }
 
-// --------------------------- OSLocator------------------------------------------
+// ------------------  MsgBindOSLocatorRequest  ------------------
 
 // NewMsgBindOSLocatorRequest creates a new msg instance
 func NewMsgBindOSLocatorRequest(obj ObjectStoreLocator) *MsgBindOSLocatorRequest {
@@ -635,7 +822,8 @@ func (msg MsgBindOSLocatorRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{stringToAccAddress(msg.Locator.Owner)}
 }
 
-// ---- Delete OS locator ------
+// ------------------  MsgDeleteOSLocatorRequest  ------------------
+
 func NewMsgDeleteOSLocatorRequest(obj ObjectStoreLocator) *MsgDeleteOSLocatorRequest {
 	return &MsgDeleteOSLocatorRequest{
 		Locator: obj,
@@ -671,9 +859,7 @@ func (msg MsgDeleteOSLocatorRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{stringToAccAddress(msg.Locator.Owner)}
 }
 
-/**
-Validates OSLocatorObj
-*/
+// ValidateOSLocatorObj Validates OSLocatorObj data
 func ValidateOSLocatorObj(ownerAddr string, uri string) error {
 	if strings.TrimSpace(ownerAddr) == "" {
 		return fmt.Errorf("owner address cannot be empty")
@@ -695,7 +881,7 @@ func ValidateOSLocatorObj(ownerAddr string, uri string) error {
 	return nil
 }
 
-//----------Modify OS Locator -----------------
+// ------------------  MsgModifyOSLocatorRequest  ------------------
 
 func NewMsgModifyOSLocatorRequest(obj ObjectStoreLocator) *MsgModifyOSLocatorRequest {
 	return &MsgModifyOSLocatorRequest{
@@ -726,4 +912,46 @@ func (msg MsgModifyOSLocatorRequest) GetSignBytes() []byte {
 
 func (msg MsgModifyOSLocatorRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{stringToAccAddress(msg.Locator.Owner)}
+}
+
+// ------------------  SessionIdComponents  ------------------
+
+func (msg *SessionIdComponents) GetSessionAddr() (*MetadataAddress, error) {
+	var scopeUUID, sessionUUID *uuid.UUID
+	if len(msg.SessionUuid) > 0 {
+		uid, err := uuid.Parse(msg.SessionUuid)
+		if err != nil {
+			return nil, fmt.Errorf("invalid session uuid: %w", err)
+		}
+		scopeUUID = &uid
+	}
+	if msgScopeUUID := msg.GetScopeUuid(); len(msgScopeUUID) > 0 {
+		uid, err := uuid.Parse(msgScopeUUID)
+		if err != nil {
+			return nil, fmt.Errorf("invalid scope uuid: %w", err)
+		}
+		sessionUUID = &uid
+	} else if msgScopeAddr := msg.GetScopeAddr(); len(msgScopeAddr) > 0 {
+		addr, addrErr := MetadataAddressFromBech32(msgScopeAddr)
+		if addrErr != nil {
+			return nil, fmt.Errorf("invalid scope addr: %w", addrErr)
+		}
+		uid, err := addr.ScopeUUID()
+		if err != nil {
+			return nil, fmt.Errorf("invalid scope addr: %w", err)
+		}
+		sessionUUID = &uid
+	}
+
+	if scopeUUID == nil && sessionUUID == nil {
+		return nil, nil
+	}
+	if scopeUUID == nil {
+		return nil, errors.New("session uuid provided but missing scope uuid or addr")
+	}
+	if sessionUUID == nil {
+		return nil, errors.New("scope uuid or addr provided but missing session uuid")
+	}
+	ma := SessionMetadataAddress(*scopeUUID, *sessionUUID)
+	return &ma, nil
 }

@@ -14,45 +14,45 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		switch msg := msg.(type) {
-		case *types.MsgAddScopeRequest:
-			res, err := msgServer.AddScope(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgWriteScopeRequest:
+			res, err := msgServer.WriteScope(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 		case *types.MsgDeleteScopeRequest:
 			res, err := msgServer.DeleteScope(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgAddRecordRequest:
-			res, err := msgServer.AddRecord(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgWriteRecordRequest:
+			res, err := msgServer.WriteRecord(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 		case *types.MsgDeleteRecordRequest:
 			res, err := msgServer.DeleteRecord(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgAddSessionRequest:
-			res, err := msgServer.AddSession(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgWriteSessionRequest:
+			res, err := msgServer.WriteSession(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
-		case *types.MsgAddScopeSpecificationRequest:
-			res, err := msgServer.AddScopeSpecification(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgWriteScopeSpecificationRequest:
+			res, err := msgServer.WriteScopeSpecification(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 		case *types.MsgDeleteScopeSpecificationRequest:
 			res, err := msgServer.DeleteScopeSpecification(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgAddContractSpecificationRequest:
-			res, err := msgServer.AddContractSpecification(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgWriteContractSpecificationRequest:
+			res, err := msgServer.WriteContractSpecification(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 		case *types.MsgDeleteContractSpecificationRequest:
 			res, err := msgServer.DeleteContractSpecification(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgAddRecordSpecificationRequest:
-			res, err := msgServer.AddRecordSpecification(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgWriteRecordSpecificationRequest:
+			res, err := msgServer.WriteRecordSpecification(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 		case *types.MsgDeleteRecordSpecificationRequest:
 			res, err := msgServer.DeleteRecordSpecification(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
-		case *types.MsgAddP8EContractSpecRequest:
-			res, err := msgServer.AddP8EContractSpec(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgWriteP8EContractSpecRequest:
+			res, err := msgServer.WriteP8EContractSpec(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgP8EMemorializeContractRequest: //nolint:staticcheck // Ignore deprecation error here.
+		case *types.MsgP8EMemorializeContractRequest:
 			res, err := msgServer.P8EMemorializeContract(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
