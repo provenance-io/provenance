@@ -49,6 +49,7 @@ ignore:
   - "*.md"
   - "*.rst"
   - "**/*.pb.go"
+  - "**/test_helpers.go"
   - "types/*.pb.go"
   - "types/*.pb.gw.go"
   - "tests/*"
