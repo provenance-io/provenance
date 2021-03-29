@@ -28,7 +28,7 @@ import (
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 )
 
-type IntegrationTestSuite struct {
+type IntegrationGRPCTestSuite struct {
 	suite.Suite
 
 	cfg     testnet.Config
@@ -69,7 +69,7 @@ func ownerPartyList(addresses ...string) []types.Party {
 	return retval
 }
 
-func (suite *IntegrationTestSuite) SetupSuite() {
+func (suite *IntegrationGRPCTestSuite) SetupSuite() {
 	suite.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
 	addr, err := sdk.AccAddressFromHex(suite.accountKey.PubKey().Address().String())
 	suite.Require().NoError(err)
@@ -137,16 +137,17 @@ func (suite *IntegrationTestSuite) SetupSuite() {
 	suite.Require().NoError(err)
 }
 
-func (suite *IntegrationTestSuite) TearDownSuite() {
+func (suite *IntegrationGRPCTestSuite) TearDownSuite() {
 	suite.testnet.WaitForNextBlock()
 	suite.T().Log("tearing down integration test suite")
 	suite.testnet.Cleanup()
 }
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
+
+func TestIntegrationGRPCTestSuite(t *testing.T) {
+	suite.Run(t, new(IntegrationGRPCTestSuite))
 }
 
-func (suite *IntegrationTestSuite) TestGRPCQueries() {
+func (suite *IntegrationGRPCTestSuite) TestGRPCQueries() {
 	val := suite.testnet.Validators[0]
 	baseURL := val.APIAddress
 
@@ -166,7 +167,10 @@ func (suite *IntegrationTestSuite) TestGRPCQueries() {
 			},
 			false,
 			&metadatatypes.QueryParamsResponse{},
-			&metadatatypes.QueryParamsResponse{Params: metadatatypes.DefaultParams()},
+			&metadatatypes.QueryParamsResponse{
+				Params: metadatatypes.DefaultParams(),
+				Request: &metadatatypes.QueryParamsRequest{},
+			},
 		},
 		{
 			"Get metadata scope by id",
@@ -176,7 +180,14 @@ func (suite *IntegrationTestSuite) TestGRPCQueries() {
 			},
 			false,
 			&metadatatypes.ScopeResponse{},
-			&metadatatypes.ScopeResponse{Scope: &suite.scope, ScopeUuid: suite.scopeUUID.String()},
+			&metadatatypes.ScopeResponse{
+				Scope: &metadatatypes.ScopeWrapper{
+					Scope: &suite.scope,
+					ScopeIdInfo: types.GetScopeIDInfo(suite.scopeID),
+					ScopeSpecIdInfo: types.GetScopeSpecIDInfo(suite.specID),
+				},
+				Request: &metadatatypes.ScopeRequest{ScopeId: suite.scopeUUID.String()},
+			},
 		},
 		{
 			"Unknown metadata scope id",
@@ -196,7 +207,10 @@ func (suite *IntegrationTestSuite) TestGRPCQueries() {
 			},
 			false,
 			&metadatatypes.OSLocatorParamsResponse{},
-			&metadatatypes.OSLocatorParamsResponse{Params: metadatatypes.DefaultOSLocatorParams()},
+			&metadatatypes.OSLocatorParamsResponse{
+				Params: metadatatypes.DefaultOSLocatorParams(),
+				Request: &metadatatypes.OSLocatorParamsRequest{},
+			},
 		},
 		{
 			"Get os locator from owner address.",
@@ -208,6 +222,9 @@ func (suite *IntegrationTestSuite) TestGRPCQueries() {
 			&metadatatypes.OSLocatorResponse{},
 			&metadatatypes.OSLocatorResponse{
 				Locator: &suite.objectLocator,
+				Request: &metadatatypes.OSLocatorRequest{
+					Owner: suite.ownerAddr.String(),
+				},
 			},
 		},
 		{
@@ -220,12 +237,16 @@ func (suite *IntegrationTestSuite) TestGRPCQueries() {
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
 			false,
-			&metadatatypes.OSLocatorByURIResponse{},
-			&metadatatypes.OSLocatorByURIResponse{
-				Locator: []metadatatypes.ObjectStoreLocator{metadatatypes.ObjectStoreLocator{
+			&metadatatypes.OSLocatorsByURIResponse{},
+			&metadatatypes.OSLocatorsByURIResponse{
+				Locators: []metadatatypes.ObjectStoreLocator{metadatatypes.ObjectStoreLocator{
 					Owner:      suite.ownerAddr.String(),
 					LocatorUri: suite.uri,
 				}},
+				Request: &metadatatypes.OSLocatorsByURIRequest{
+					Uri:        b64.StdEncoding.EncodeToString([]byte(suite.uri)),
+					Pagination: nil,
+				},
 				Pagination: &query.PageResponse{
 					NextKey: nil,
 					Total:   1,
@@ -242,12 +263,15 @@ func (suite *IntegrationTestSuite) TestGRPCQueries() {
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
 			false,
-			&metadatatypes.OSLocatorByScopeUUIDResponse{},
-			&metadatatypes.OSLocatorByScopeUUIDResponse{
-				Locator: []metadatatypes.ObjectStoreLocator{{
+			&metadatatypes.OSLocatorsByScopeResponse{},
+			&metadatatypes.OSLocatorsByScopeResponse{
+				Locators: []metadatatypes.ObjectStoreLocator{{
 					Owner:      suite.ownerAddr1.String(),
 					LocatorUri: suite.uri1,
 				}},
+				Request: &metadatatypes.OSLocatorsByScopeRequest{
+					ScopeId: suite.scopeUUID.String(),
+				},
 			},
 		},
 
@@ -269,7 +293,8 @@ func (suite *IntegrationTestSuite) TestGRPCQueries() {
 		})
 	}
 }
-func (suite *IntegrationTestSuite) TestAllOSLocator() {
+
+func (suite *IntegrationGRPCTestSuite) TestAllOSLocator() {
 	val := suite.testnet.Validators[0]
 	baseURL := val.APIAddress
 
@@ -284,7 +309,7 @@ func (suite *IntegrationTestSuite) TestAllOSLocator() {
 
 		{
 			"Get all os locator.",
-			// only way i could get around http url parse isseus for rest
+			// only way i could get around http url parse issues for rest
 			// This encodes/decodes using a URL-compatible base64
 			// format.
 			fmt.Sprintf("%s/provenance/metadata/v1/locators/all", baseURL),
@@ -294,7 +319,7 @@ func (suite *IntegrationTestSuite) TestAllOSLocator() {
 			false,
 			&metadatatypes.OSAllLocatorsResponse{},
 			&metadatatypes.OSAllLocatorsResponse{
-				Locator: []metadatatypes.ObjectStoreLocator{{
+				Locators: []metadatatypes.ObjectStoreLocator{{
 					Owner:      suite.ownerAddr1.String(),
 					LocatorUri: suite.uri1,
 				}},
@@ -306,12 +331,12 @@ func (suite *IntegrationTestSuite) TestAllOSLocator() {
 
 		suite.Run(tc.name, func() {
 			resp, err := sdktestutil.GetRequestWithHeaders(tc.url, tc.headers)
-			suite.Require().NoError(err)
+			suite.Require().NoError(err, "GetRequestWithHeaders err")
 			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType)
 			if tc.expErr {
-				suite.Require().Error(err)
+				suite.Require().Error(err, "UnmarshalJSON expected error")
 			} else {
-				suite.Require().NoError(err)
+				suite.Require().NoError(err, "UnmarshalJSON unexpected error")
 				suite.Require().True( strings.Contains(fmt.Sprint(tc.respType),fmt.Sprint(tc.expected)))
 			}
 		})

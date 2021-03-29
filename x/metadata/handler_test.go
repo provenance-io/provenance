@@ -129,7 +129,7 @@ func (s HandlerTestSuite) TestAddP8EContractSpec() {
 
 	for _, tc := range cases {
 		s.T().Run(tc.name, func(t *testing.T) {
-			_, err := s.handler(s.ctx, &types.MsgAddP8EContractSpecRequest{Contractspec: tc.v39CSpec, Signers: tc.signers})
+			_, err := s.handler(s.ctx, &types.MsgWriteP8EContractSpecRequest{Contractspec: tc.v39CSpec, Signers: tc.signers})
 			if len(tc.errorMsg) > 0 {
 				assert.EqualError(t, err, tc.errorMsg)
 			} else {
@@ -140,4 +140,6 @@ func (s HandlerTestSuite) TestAddP8EContractSpec() {
 }
 
 // TODO: P8EMemorializeContract tests
-
+// TODO: BindOSLocatorRequest tests
+// TODO: DeleteOSLocatorRequest tests
+// TODO: ModifyOSLocatorRequest tests

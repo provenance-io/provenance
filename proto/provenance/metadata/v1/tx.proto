@@ -2,11 +2,11 @@ syntax = "proto3";
 package provenance.metadata.v1;
 
 import "gogoproto/gogo.proto";
+import "provenance/metadata/v1/metadata.proto";
+import "provenance/metadata/v1/objectstore.proto";
+import "provenance/metadata/v1/p8e/p8e.proto";
 import "provenance/metadata/v1/scope.proto";
 import "provenance/metadata/v1/specification.proto";
-import "provenance/metadata/v1/p8e/p8e.proto";
-
-import "provenance/metadata/v1/objectstore.proto";
 
 option go_package = "github.com/provenance-io/provenance/x/metadata/types";
 
@@ -15,68 +15,95 @@ option java_multiple_files = true;
 
 // Msg defines the Metadata Msg service.
 service Msg {
-  // AddScope adds a new scope
-  rpc AddScope(MsgAddScopeRequest) returns (MsgAddScopeResponse);
-  // DeleteScope deletes a scope and all associated Records, Sessions
+  // ---- Primary Data Management -----
+
+  // WriteScope adds or updates a scope.
+  rpc WriteScope(MsgWriteScopeRequest) returns (MsgWriteScopeResponse);
+  // DeleteScope deletes a scope and all associated Records, Sessions.
   rpc DeleteScope(MsgDeleteScopeRequest) returns (MsgDeleteScopeResponse);
 
-  // AddSession adds a new session context to a scope
-  rpc AddSession(MsgAddSessionRequest) returns (MsgAddSessionResponse);
-  // AddRecord adds a set of records in a session within a scope
-  rpc AddRecord(MsgAddRecordRequest) returns (MsgAddRecordResponse);
-  // DeleteRecord deletes a record in a session
+  // WriteSession adds or updates a session context.
+  rpc WriteSession(MsgWriteSessionRequest) returns (MsgWriteSessionResponse);
+
+  // WriteRecord adds or updates a record.
+  rpc WriteRecord(MsgWriteRecordRequest) returns (MsgWriteRecordResponse);
+  // DeleteRecord deletes a record.
   rpc DeleteRecord(MsgDeleteRecordRequest) returns (MsgDeleteRecordResponse);
 
-  // AddScopeSpecification adds a scope specification
-  rpc AddScopeSpecification(MsgAddScopeSpecificationRequest) returns (MsgAddScopeSpecificationResponse);
-  // DeleteScopeSpecification deletes a scope specification
+  // ---- Specification Management -----
+
+  // WriteScopeSpecification adds or updates a scope specification.
+  rpc WriteScopeSpecification(MsgWriteScopeSpecificationRequest) returns (MsgWriteScopeSpecificationResponse);
+  // DeleteScopeSpecification deletes a scope specification.
   rpc DeleteScopeSpecification(MsgDeleteScopeSpecificationRequest) returns (MsgDeleteScopeSpecificationResponse);
 
-  // AddContractSpecification adds a contract specification
-  rpc AddContractSpecification(MsgAddContractSpecificationRequest) returns (MsgAddContractSpecificationResponse);
-  // DeleteContractSpecification deletes a contract specification
+  // WriteContractSpecification adds or updates a contract specification.
+  rpc WriteContractSpecification(MsgWriteContractSpecificationRequest) returns (MsgWriteContractSpecificationResponse);
+  // DeleteContractSpecification deletes a contract specification.
   rpc DeleteContractSpecification(MsgDeleteContractSpecificationRequest)
       returns (MsgDeleteContractSpecificationResponse);
 
-  // AddRecordSpecification adds a record specification
-  rpc AddRecordSpecification(MsgAddRecordSpecificationRequest) returns (MsgAddRecordSpecificationResponse);
-  // DeleteRecordSpecification deletes a record specification
+  // WriteRecordSpecification adds or updates a record specification.
+  rpc WriteRecordSpecification(MsgWriteRecordSpecificationRequest) returns (MsgWriteRecordSpecificationResponse);
+  // DeleteRecordSpecification deletes a record specification.
   rpc DeleteRecordSpecification(MsgDeleteRecordSpecificationRequest) returns (MsgDeleteRecordSpecificationResponse);
 
-  // AddP8eContractSpec adds a P8e v39 contract spec as a v40 ContractSpecification
-  rpc AddP8eContractSpec(MsgAddP8eContractSpecRequest) returns (MsgAddP8eContractSpecResponse) {
+  // ---- Deprecated Transition Endpoints -----
+
+  // WriteP8eContractSpec adds a P8e v39 contract spec as a v40 ContractSpecification
+  // It only exists to help facilitate the transition. Users should transition to WriteContractSpecification.
+  rpc WriteP8eContractSpec(MsgWriteP8eContractSpecRequest) returns (MsgWriteP8eContractSpecResponse) {
     option deprecated = true;
   };
   // P8EMemorializeContract records the results of a P8e contract execution as a session and set of records in a scope
-  // It only exists to help facilitate the transition. The MemorializeContract is the one to use now.
+  // It only exists to help facilitate the transition. Users should transition to calling the individual Write methods.
   rpc P8eMemorializeContract(MsgP8eMemorializeContractRequest) returns (MsgP8eMemorializeContractResponse) {
     option deprecated = true;
   };
 
-  // Os Locator
-  // BindOSLocator binds a owner address to a uri.
+  // ---- Object Store Locator Management -----
+
+  // BindOSLocator binds an owner address to a uri.
   rpc BindOSLocator(MsgBindOSLocatorRequest) returns (MsgBindOSLocatorResponse);
-  // DeleteOSLocator defines a method to delete existing OSLocator record by the current owner.
+  // DeleteOSLocator deletes an existing ObjectStoreLocator record.
   rpc DeleteOSLocator(MsgDeleteOSLocatorRequest) returns (MsgDeleteOSLocatorResponse);
-  // Modify existing OSLocator record by the current owner
+  // ModifyOSLocator updates an ObjectStoreLocator record by the current owner.
   rpc ModifyOSLocator(MsgModifyOSLocatorRequest) returns (MsgModifyOSLocatorResponse);
 }
 
-// MsgAddScopeRequest adds a new scope
-message MsgAddScopeRequest {
+// MsgWriteScopeRequest is the request type for the Msg/WriteScope RPC method.
+message MsgWriteScopeRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-  Scope           scope   = 1 [(gogoproto.nullable) = false];
+  // scope is the Scope you want added or updated.
+  Scope scope = 1 [(gogoproto.nullable) = false];
+  // signers is the list of address of those signing this request.
   repeated string signers = 2;
+
+  // scope_uuid is an optional uuid string, e.g. "91978ba2-5f35-459a-86a7-feca1b0512e0"
+  // If provided, it will be used to generate the MetadataAddress for the scope which will override the scope_id in the
+  // provided scope. If not provided (or it is an empty string), nothing special happens.
+  // If there is a value in scope.scope_id that is different from the one created from this uuid, an error is returned.
+  string scope_uuid = 3 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
+
+  // spec_uuid is an optional scope specification uuid string, e.g. "dc83ea70-eacd-40fe-9adf-1cf6148bf8a2"
+  // If provided, it will be used to generate the MetadataAddress for the scope specification which will override the
+  // specification_id in the provided scope. If not provided (or it is an empty string), nothing special happens.
+  // If there is a value in scope.specification_id that is different from the one created from this uuid, an error is
+  // returned.
+  string spec_uuid = 4 [(gogoproto.moretags) = "yaml:\"spec_uuid\""];
 }
 
-// MsgAddScopeResponse from an add scope request
-message MsgAddScopeResponse {}
+// MsgWriteScopeResponse is the response type for the Msg/WriteScope RPC method.
+message MsgWriteScopeResponse {
+  // scope_id_info contains information about the id/address of the scope that was added or updated.
+  ScopeIdInfo scope_id_info = 1 [(gogoproto.moretags) = "yaml:\"scope_id_info\""];
+}
 
-// MsgDeleteScopeRequest deletes a scope
+// MsgDeleteScopeRequest is the request type for the Msg/DeleteScope RPC method.
 message MsgDeleteScopeRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
@@ -92,44 +119,92 @@ message MsgDeleteScopeRequest {
   repeated string signers = 2;
 }
 
-// MsgDeleteScopeResponse from a delete scope request
+// MsgDeleteScopeResponse is the response type for the Msg/DeleteScope RPC method.
 message MsgDeleteScopeResponse {}
 
-// MsgAddSessionRequest adds a new session
-message MsgAddSessionRequest {
+// MsgWriteSessionRequest is the request type for the Msg/WriteSession RPC method.
+message MsgWriteSessionRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-  Session         session = 1;
+  // session is the Session you want added or updated.
+  Session session = 1 [(gogoproto.nullable) = false];
+  // signers is the list of address of those signing this request.
   repeated string signers = 2;
+
+  // SessionIDComponents is an optional (alternate) way of defining what the session_id should be in the provided
+  // session. If provided, it must have both a scope and session_uuid. Those components will be used to create the
+  // MetadataAddress for the session which will override the session_id in the provided session. If not provided (or
+  // all empty), nothing special happens.
+  // If there is a value in session.session_id that is different from the one created from these components, an error is
+  // returned.
+  SessionIdComponents session_id_components = 3 [(gogoproto.moretags) = "yaml:\"session_id_components\""];
+
+  // spec_uuid is an optional contract specification uuid string, e.g. "def6bc0a-c9dd-4874-948f-5206e6060a84"
+  // If provided, it will be used to generate the MetadataAddress for the contract specification which will override the
+  // specification_id in the provided session. If not provided (or it is an empty string), nothing special happens.
+  // If there is a value in session.specification_id that is different from the one created from this uuid, an error is
+  // returned.
+  string spec_uuid = 4 [(gogoproto.moretags) = "yaml:\"spec_uuid\""];
 }
 
-// MsgAddSessionResponse from an add session request
-message MsgAddSessionResponse {}
+// SessionIDComponents contains fields for the components that make up a session id.
+message SessionIdComponents {
+  // scope is used to define the scope this session belongs to.
+  oneof scope_identifier {
+    // scope_uuid is the uuid string for the scope, e.g. "91978ba2-5f35-459a-86a7-feca1b0512e0"
+    string scope_uuid = 1 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
+    // scope_addr is the bech32 address string for the scope, g.g. "scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"
+    string scope_addr = 2 [(gogoproto.moretags) = "yaml:\"scope_addr\""];
+  }
+  // session_uuid is a uuid string for identifying this session, e.g. "5803f8bc-6067-4eb5-951f-2121671c2ec0"
+  string session_uuid = 3 [(gogoproto.moretags) = "yaml:\"session_uuid\""];
+}
 
-// MsgAddRecordRequest is a request to add a session of records to a scope
-message MsgAddRecordRequest {
+// MsgWriteSessionResponse is the response type for the Msg/WriteSession RPC method.
+message MsgWriteSessionResponse {
+  // session_id_info contains information about the id/address of the session that was added or updated.
+  SessionIdInfo session_id_info = 1 [(gogoproto.moretags) = "yaml:\"session_id_info\""];
+}
+
+// MsgWriteRecordRequest is the request type for the Msg/WriteRecord RPC method.
+message MsgWriteRecordRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-  bytes session_id = 1 [
-    (gogoproto.nullable)   = false,
-    (gogoproto.customtype) = "MetadataAddress",
-    (gogoproto.moretags)   = "yaml:\"session_id\""
-  ];
+  // record is the Record you want added or updated.
+  Record record = 1 [(gogoproto.nullable) = false];
+  // signers is the list of address of those signing this request.
+  repeated string signers = 2;
 
-  Record          record  = 2;
-  repeated string signers = 3;
+  // SessionIDComponents is an optional (alternate) way of defining what the session_id should be in the provided
+  // record. If provided, it must have both a scope and session_uuid. Those components will be used to create the
+  // MetadataAddress for the session which will override the session_id in the provided record. If not provided (or
+  // all empty), nothing special happens.
+  // If there is a value in record.session_id that is different from the one created from these components, an error is
+  // returned.
+  SessionIdComponents session_id_components = 3 [(gogoproto.moretags) = "yaml:\"session_id_components\""];
+
+  // contract_spec_uuid is an optional contract specification uuid string, e.g. "def6bc0a-c9dd-4874-948f-5206e6060a84"
+  // If provided, it will be combined with the record name to generate the MetadataAddress for the record specification
+  // which will override the specification_id in the provided record. If not provided (or it is an empty string),
+  // nothing special happens.
+  // If there is a value in record.specification_id that is different from the one created from this uuid and
+  // record.name, an error is returned.
+  string contract_spec_uuid = 4 [(gogoproto.moretags) = "yaml:\"contract_spec_uuid\""];
 }
 
-// MsgAddRecordResponse from an add records request
-message MsgAddRecordResponse {}
+// MsgWriteRecordResponse is the response type for the Msg/WriteRecord RPC method.
+message MsgWriteRecordResponse {
+  // record_id_info contains information about the id/address of the record that was added or updated.
+  RecordIdInfo record_id_info = 1 [(gogoproto.moretags) = "yaml:\"record_id_info\""];
+}
 
-// MsgDeleteRecordRequest is a request to add a session of records to a scope
+// MsgDeleteRecordRequest is the request type for the Msg/DeleteRecord RPC method.
 message MsgDeleteRecordRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
@@ -145,24 +220,37 @@ message MsgDeleteRecordRequest {
   repeated string signers = 2;
 }
 
-// MsgDeleteRecordResponse from a delete record request
+// MsgDeleteRecordResponse is the response type for the Msg/DeleteRecord RPC method.
 message MsgDeleteRecordResponse {}
 
-// MsgAddScopeSpecificationRequest is a request to add a scope specification
-message MsgAddScopeSpecificationRequest {
+// MsgWriteScopeSpecificationRequest is the request type for the Msg/WriteScopeSpecification RPC method.
+message MsgWriteScopeSpecificationRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
+  // specification is the ScopeSpecification you want added or updated.
   ScopeSpecification specification = 1 [(gogoproto.nullable) = false];
-  repeated string    signers       = 2;
+  // signers is the list of address of those signing this request.
+  repeated string signers = 2;
+
+  // spec_uuid is an optional scope specification uuid string, e.g. "dc83ea70-eacd-40fe-9adf-1cf6148bf8a2"
+  // If provided, it will be used to generate the MetadataAddress for the scope specification which will override the
+  // specification_id in the provided specification. If not provided (or it is an empty string), nothing special
+  // happens.
+  // If there is a value in specification.specification_id that is different from the one created from this uuid, an
+  // error is returned.
+  string spec_uuid = 3 [(gogoproto.moretags) = "yaml:\"spec_uuid\""];
 }
 
-// MsgAddScopeSpecificationResponse from an add scope specification request
-message MsgAddScopeSpecificationResponse {}
+// MsgWriteScopeSpecificationResponse is the response type for the Msg/WriteScopeSpecification RPC method.
+message MsgWriteScopeSpecificationResponse {
+  // scope_spec_id_info contains information about the id/address of the scope specification that was added or updated.
+  ScopeSpecIdInfo scope_spec_id_info = 1 [(gogoproto.moretags) = "yaml:\"scope_spec_id_info\""];
+}
 
-// MsgDeleteScopeSpecificationRequest deletes a scope specification
+// MsgDeleteScopeSpecificationRequest is the request type for the Msg/DeleteScopeSpecification RPC method.
 message MsgDeleteScopeSpecificationRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
@@ -178,24 +266,38 @@ message MsgDeleteScopeSpecificationRequest {
   repeated string signers = 2;
 }
 
-// MsgDeleteScopeSpecificationResponse from a delete scope specification request
+// MsgDeleteScopeSpecificationResponse is the response type for the Msg/DeleteScopeSpecification RPC method.
 message MsgDeleteScopeSpecificationResponse {}
 
-// MsgAddContractSpecificationRequest is a request to add a contract specification
-message MsgAddContractSpecificationRequest {
+// MsgWriteContractSpecificationRequest is the request type for the Msg/WriteContractSpecification RPC method.
+message MsgWriteContractSpecificationRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
+  // specification is the ContractSpecification you want added or updated.
   ContractSpecification specification = 1 [(gogoproto.nullable) = false];
-  repeated string       signers       = 2;
+  // signers is the list of address of those signing this request.
+  repeated string signers = 2;
+
+  // spec_uuid is an optional contract specification uuid string, e.g. "def6bc0a-c9dd-4874-948f-5206e6060a84"
+  // If provided, it will be used to generate the MetadataAddress for the contract specification which will override the
+  // specification_id in the provided specification. If not provided (or it is an empty string), nothing special
+  // happens.
+  // If there is a value in specification.specification_id that is different from the one created from this uuid, an
+  // error is returned.
+  string spec_uuid = 3 [(gogoproto.moretags) = "yaml:\"spec_uuid\""];
 }
 
-// AddContractSpecificationResponse from an add contract specification request
-message MsgAddContractSpecificationResponse {}
+// MsgWriteContractSpecificationResponse is the response type for the Msg/WriteContractSpecification RPC method.
+message MsgWriteContractSpecificationResponse {
+  // contract_spec_id_info contains information about the id/address of the contract specification that was added or
+  // updated.
+  ContractSpecIdInfo contract_spec_id_info = 1 [(gogoproto.moretags) = "yaml:\"contract_spec_id_info\""];
+}
 
-// MsgDeleteContractSpecificationRequest deletes a contract specification
+// MsgDeleteContractSpecificationRequest is the request type for the Msg/DeleteContractSpecification RPC method.
 message MsgDeleteContractSpecificationRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
@@ -211,24 +313,38 @@ message MsgDeleteContractSpecificationRequest {
   repeated string signers = 2;
 }
 
-// MsgDeleteContractSpecificationResponse from a delete contract specification request
+// MsgDeleteContractSpecificationResponse is the response type for the Msg/DeleteContractSpecification RPC method.
 message MsgDeleteContractSpecificationResponse {}
 
-// MsgAddRecordSpecificationRequest is a request to add a record specification
-message MsgAddRecordSpecificationRequest {
+// MsgWriteRecordSpecificationRequest is the request type for the Msg/WriteRecordSpecification RPC method.
+message MsgWriteRecordSpecificationRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
+  // specification is the RecordSpecification you want added or updated.
   RecordSpecification specification = 1 [(gogoproto.nullable) = false];
-  repeated string     signers       = 2;
+  // signers is the list of address of those signing this request.
+  repeated string signers = 2;
+
+  // contract_spec_uuid is an optional contract specification uuid string, e.g. "def6bc0a-c9dd-4874-948f-5206e6060a84"
+  // If provided, it will be combined with the record specification name to generate the MetadataAddress for the record
+  // specification which will override the specification_id in the provided specification. If not provided (or it is an
+  // empty string), nothing special happens.
+  // If there is a value in specification.specification_id that is different from the one created from this uuid and
+  // specification.name, an error is returned.
+  string contract_spec_uuid = 3 [(gogoproto.moretags) = "yaml:\"contract_spec_uuid\""];
 }
 
-// MsgAddRecordSpecificationResponse from an add record specification request
-message MsgAddRecordSpecificationResponse {}
+// MsgWriteRecordSpecificationResponse is the response type for the Msg/WriteRecordSpecification RPC method.
+message MsgWriteRecordSpecificationResponse {
+  // record_spec_id_info contains information about the id/address of the record specification that was added or
+  // updated.
+  RecordSpecIdInfo record_spec_id_info = 1 [(gogoproto.moretags) = "yaml:\"record_spec_id_info\""];
+}
 
-// MsgDeleteRecordSpecificationRequest deletes a record specification
+// MsgDeleteRecordSpecificationRequest is the request type for the Msg/DeleteRecordSpecification RPC method.
 message MsgDeleteRecordSpecificationRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
@@ -244,11 +360,11 @@ message MsgDeleteRecordSpecificationRequest {
   repeated string signers = 2;
 }
 
-// MsgDeleteRecordSpecificationResponse from a delete record specification request
+// MsgDeleteRecordSpecificationResponse is the response type for the Msg/DeleteRecordSpecification RPC method.
 message MsgDeleteRecordSpecificationResponse {}
 
-// MsgAddP8eContractSpecRequest records the result of a change ownership p8e contract execution
-message MsgAddP8eContractSpecRequest {
+// MsgWriteP8eContractSpecRequest is the request type for the Msg/WriteP8eContractSpec RPC method.
+message MsgWriteP8eContractSpecRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
@@ -259,12 +375,18 @@ message MsgAddP8eContractSpecRequest {
   repeated string  signers      = 2;
 }
 
-// MsgAddP8eContractSpecResponse returns a successful response
-message MsgAddP8eContractSpecResponse {}
+// MsgWriteP8eContractSpecResponse is the response type for the Msg/WriteP8eContractSpec RPC method.
+message MsgWriteP8eContractSpecResponse {
+  // contract_spec_id_info contains information about the id/address of the contract specification that was added or
+  // updated.
+  ContractSpecIdInfo contract_spec_id_info = 1 [(gogoproto.moretags) = "yaml:\"contract_spec_id_info\""];
+  // record_spec_id_infos contains information about the ids/addresses of the record specifications that were added or
+  // updated.
+  repeated RecordSpecIdInfo record_spec_id_infos = 2 [(gogoproto.moretags) = "yaml:\"record_spec_id_infos\""];
+}
 
-// MsgP8eMemorializeContractRequest is the input for a P8eMemorializeContract call
+// MsgP8eMemorializeContractRequest is the request type for the Msg/P8eMemorializeContract RPC method.
 message MsgP8eMemorializeContractRequest {
-  option deprecated                   = true;
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
@@ -286,12 +408,17 @@ message MsgP8eMemorializeContractRequest {
   string invoker = 7;
 }
 
-// MsgP8eMemorializeContractResponse is the output for a P8eMemorializeContract call
+// MsgP8eMemorializeContractResponse is the response type for the Msg/P8eMemorializeContract RPC method.
 message MsgP8eMemorializeContractResponse {
-  option deprecated = true;
+  // scope_id_info contains information about the id/address of the scope that was added or updated.
+  ScopeIdInfo scope_id_info = 1 [(gogoproto.moretags) = "yaml:\"scope_id_info\""];
+  // session_id_info contains information about the id/address of the session that was added or updated.
+  SessionIdInfo session_id_info = 2 [(gogoproto.moretags) = "yaml:\"session_id_info\""];
+  // record_id_infos contains information about the ids/addresses of the records that were added or updated.
+  repeated RecordIdInfo record_id_infos = 3 [(gogoproto.moretags) = "yaml:\"record_id_infos\""];
 }
 
-// MsgBindOSLocatorRequest defines an sdk.Msg type that is used to add an address of an owner to a particular uri.
+// MsgBindOSLocatorRequest is the request type for the Msg/BindOSLocator RPC method.
 message MsgBindOSLocatorRequest {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
@@ -299,25 +426,12 @@ message MsgBindOSLocatorRequest {
   ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
 }
 
-// MsgModifyOSLocatorRequest defines an sdk.Msg type that is used to modify a uri associated with an owner address.
-message MsgModifyOSLocatorRequest {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
-  // The object locator to bind the address to bind to the URI.
-  ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
-}
-
-// MsgBindOSLocatorResponse defines the Msg/BindObjectLocator response type.
+// MsgBindOSLocatorResponse is the response type for the Msg/BindOSLocator RPC method.
 message MsgBindOSLocatorResponse {
   ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
 }
 
-// MsgModifyOSLocatorResponse defines the Msg/ModifyObjectLocator response type
-message MsgModifyOSLocatorResponse {
-  ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
-}
-
-// MsgDeleteOSLocatorRequest defines an sdk.Msg type that is used to remove an existing OSLocator record binding.
+// MsgDeleteOSLocatorRequest is the request type for the Msg/DeleteOSLocator RPC method.
 message MsgDeleteOSLocatorRequest {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
@@ -326,7 +440,20 @@ message MsgDeleteOSLocatorRequest {
   ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
 }
 
-// MsgDeleteNameResponse defines the Msg/DeleteName response type.
+// MsgDeleteOSLocatorResponse is the response type for the Msg/DeleteOSLocator RPC method.
 message MsgDeleteOSLocatorResponse {
+  ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
+}
+
+// MsgModifyOSLocatorRequest is the request type for the Msg/ModifyOSLocator RPC method.
+message MsgModifyOSLocatorRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+  // The object locator to bind the address to bind to the URI.
+  ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
+}
+
+// MsgModifyOSLocatorResponse is the response type for the Msg/ModifyOSLocator RPC method.
+message MsgModifyOSLocatorResponse {
   ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
 }

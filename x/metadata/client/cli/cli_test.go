@@ -9,6 +9,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -31,14 +32,15 @@ import (
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
-type IntegrationTestSuite struct {
+type IntegrationCLITestSuite struct {
 	suite.Suite
 
 	cfg     testnet.Config
 	testnet *testnet.Network
 
-	asJson string
-	asText string
+	asJson         string
+	asText         string
+	includeRequest string
 
 	accountAddr sdk.AccAddress
 	accountKey  *secp256k1.PrivKey
@@ -55,10 +57,8 @@ type IntegrationTestSuite struct {
 	scopeUUID uuid.UUID
 	scopeID   metadatatypes.MetadataAddress
 
-	scopeAsJson     string
-	scopeAsText     string
-	fullScopeAsJson string
-	fullScopeAsText string
+	scopeAsJson string
+	scopeAsText string
 
 	session     metadatatypes.Session
 	sessionUUID uuid.UUID
@@ -112,11 +112,11 @@ func ownerPartyList(addresses ...string) []metadatatypes.Party {
 	return retval
 }
 
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
+func TestIntegrationCLITestSuite(t *testing.T) {
+	suite.Run(t, new(IntegrationCLITestSuite))
 }
 
-func (s *IntegrationTestSuite) SetupSuite() {
+func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
 	addr, err := sdk.AccAddressFromHex(s.accountKey.PubKey().Address().String())
 	s.Require().NoError(err)
@@ -127,6 +127,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.asJson = fmt.Sprintf("--%s=json", tmcli.OutputFlag)
 	s.asText = fmt.Sprintf("--%s=text", tmcli.OutputFlag)
+	s.includeRequest = "--include-request"
 
 	genesisState := cfg.GenesisState
 	cfg.NumValidators = 1
@@ -198,6 +199,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			),
 		},
 	)
+	s.record.SpecificationId = s.recordSpecID
 
 	s.scopeSpec = *metadatatypes.NewScopeSpecification(
 		s.scopeSpecID,
@@ -278,8 +280,9 @@ specification_id: %s`,
 		s.contractSpecID,
 	)
 
-	s.recordAsJson = fmt.Sprintf("{\"name\":\"recordname\",\"session_id\":\"%s\",\"process\":{\"hash\":\"notarealprocesshash\",\"name\":\"record process\",\"method\":\"myMethod\"},\"inputs\":[{\"name\":\"inputname\",\"hash\":\"notarealrecordinputhash\",\"type_name\":\"inputtypename\",\"status\":\"RECORD_INPUT_STATUS_RECORD\"}],\"outputs\":[{\"hash\":\"notarealrecordoutputhash\",\"status\":\"RESULT_STATUS_PASS\"}]}",
+	s.recordAsJson = fmt.Sprintf("{\"name\":\"recordname\",\"session_id\":\"%s\",\"process\":{\"hash\":\"notarealprocesshash\",\"name\":\"record process\",\"method\":\"myMethod\"},\"inputs\":[{\"name\":\"inputname\",\"hash\":\"notarealrecordinputhash\",\"type_name\":\"inputtypename\",\"status\":\"RECORD_INPUT_STATUS_RECORD\"}],\"outputs\":[{\"hash\":\"notarealrecordoutputhash\",\"status\":\"RESULT_STATUS_PASS\"}],\"specification_id\":\"%s\"}",
 		s.sessionID,
+		s.recordSpecID,
 	)
 	s.recordAsText = fmt.Sprintf(`inputs:
 - hash: notarealrecordinputhash
@@ -294,27 +297,10 @@ process:
   hash: notarealprocesshash
   method: myMethod
   name: record process
-session_id: %s`,
+session_id: %s
+specification_id: %s`,
 		s.sessionID,
-	)
-
-	s.fullScopeAsJson = fmt.Sprintf("{\"scope\":%s,\"sessions\":[%s],\"records\":[%s],\"scope_uuid\":\"%s\"}",
-		s.scopeAsJson,
-		s.sessionAsJson,
-		s.recordAsJson,
-		s.scopeUUID,
-	)
-	s.fullScopeAsText = fmt.Sprintf(`records:
-%s
-scope:
-%s
-scope_uuid: %s
-sessions:
-%s`,
-		yamlListEntry(s.recordAsText),
-		indent(s.scopeAsText),
-		s.scopeUUID,
-		yamlListEntry(s.sessionAsText),
+		s.recordSpecID,
 	)
 
 	s.scopeSpecAsJson = fmt.Sprintf("{\"specification_id\":\"%s\",\"description\":null,\"owner_addresses\":[\"%s\"],\"parties_involved\":[\"PARTY_TYPE_OWNER\"],\"contract_spec_ids\":[\"%s\"]}",
@@ -420,18 +406,19 @@ type_name: recordtypename`,
 	s.Require().NoError(err)
 }
 
-func (s *IntegrationTestSuite) TearDownSuite() {
+func (s *IntegrationCLITestSuite) TearDownSuite() {
 	s.testnet.WaitForNextBlock()
 	s.T().Log("tearing down integration test suite")
 	s.testnet.Cleanup()
 }
 
-func indent(str string) string {
+func indent(str string, spaces int) string {
 	var sb strings.Builder
 	lines := strings.Split(str, "\n")
 	maxI := len(lines) - 1
+	s := strings.Repeat(" ", spaces)
 	for i, l := range strings.Split(str, "\n") {
-		sb.WriteString("  ")
+		sb.WriteString(s)
 		sb.WriteString(l)
 		if i != maxI {
 			sb.WriteString("\n")
@@ -461,13 +448,13 @@ func yamlListEntry(str string) string {
 // ---------- query cmd tests ----------
 
 type queryCmdTestCase struct {
-	name           string
-	args           []string
-	expectedError  string
-	expectedOutput string
+	name             string
+	args             []string
+	expectedError    string
+	expectedInOutput []string
 }
 
-func runQueryCmdTestCases(s *IntegrationTestSuite, cmd *cobra.Command, testCases []queryCmdTestCase) {
+func runQueryCmdTestCases(s *IntegrationCLITestSuite, cmd *cobra.Command, testCases []queryCmdTestCase) {
 	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
 			clientCtx := s.testnet.Validators[0].ClientCtx
@@ -482,13 +469,16 @@ func runQueryCmdTestCases(s *IntegrationTestSuite, cmd *cobra.Command, testCases
 				require.NoError(t, err, "unexpected error")
 			}
 			if err == nil {
-				require.Equal(t, tc.expectedOutput, strings.TrimSpace(out.String()), "expected output")
+				result := strings.TrimSpace(out.String())
+				for _, exp := range tc.expectedInOutput {
+					assert.Contains(t, result, exp)
+				}
 			}
 		})
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetMetadataParamsCmd() {
+func (s *IntegrationCLITestSuite) TestGetMetadataParamsCmd() {
 	cmd := cli.GetMetadataParamsCmd()
 
 	testCases := []queryCmdTestCase{
@@ -496,26 +486,44 @@ func (s *IntegrationTestSuite) TestGetMetadataParamsCmd() {
 			"get params as json output",
 			[]string{s.asJson},
 			"",
-			"{}",
+			[]string{"\"params\":{}"},
 		},
 		{
 			"get params as text output",
 			[]string{s.asText},
 			"",
-			"{}",
+			[]string{"params: {}"},
 		},
 		{
 			"get params - invalid args",
 			[]string{"bad-arg"},
-			"unknown command \"bad-arg\" for \"params\"",
-			"{}",
+			"unknown argument: bad-arg",
+			[]string{},
+		},
+		{
+			"get params as json output including request",
+			[]string{s.asJson, s.includeRequest},
+			"",
+			[]string{"\"params\":{}", "\"request\":{}"},
+		},
+		{
+			"get locator params as json",
+			[]string{"locator", s.asJson},
+			"",
+			[]string{"\"params\":{", "\"max_uri_length\":2048"},
+		},
+		{
+			"get locator params as text including request",
+			[]string{"locator", s.asText, s.includeRequest},
+			"",
+			[]string{"params:", "max_uri_length: 2048", "request: {}"},
 		},
 	}
 
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
-func (s *IntegrationTestSuite) TestGetMetadataByIDCmd() {
+func (s *IntegrationCLITestSuite) TestGetMetadataByIDCmd() {
 	cmd := cli.GetMetadataByIDCmd()
 
 	testCases := []queryCmdTestCase{
@@ -523,571 +531,473 @@ func (s *IntegrationTestSuite) TestGetMetadataByIDCmd() {
 			"get metadata by id - scope id as json",
 			[]string{s.scopeID.String(), s.asJson},
 			"",
-			s.fullScopeAsJson,
+			[]string{s.scopeAsJson},
 		},
 		{
 			"get metadata by id - scope id as text",
 			[]string{s.scopeID.String(), s.asText},
 			"",
-			s.fullScopeAsText,
+			[]string{indent(s.scopeAsText, 4)},
 		},
 		{
 			"get metadata by id - scope id does not exist",
 			[]string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
-			"rpc error: code = NotFound desc = scope uuid 91978ba2-5f35-459a-86a7-feca1b0512e0 not found: key not found",
 			"",
+			[]string{"scope: null", "scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
 		},
 		{
 			"get metadata by id - session id as json",
 			[]string{s.sessionID.String(), s.asJson},
 			"",
-			s.sessionAsJson,
+			[]string{s.sessionAsJson},
 		},
 		{
 			"get metadata by id - session id as text",
 			[]string{s.sessionID.String(), s.asText},
 			"",
-			s.sessionAsText,
+			[]string{indent(s.sessionAsText, 4)},
 		},
 		{
 			"get metadata by id - session id does not exist",
 			[]string{"session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr"},
-			"rpc error: code = NotFound desc = session id session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr not found: key not found",
 			"",
+			[]string{"session: null", "session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr"},
 		},
 		{
 			"get metadata by id - record id as json",
 			[]string{s.recordID.String(), s.asJson},
 			"",
-			s.recordAsJson,
+			[]string{s.recordAsJson},
 		},
 		{
 			"get metadata by id - record id as text",
 			[]string{s.recordID.String(), s.asText},
 			"",
-			s.recordAsText,
+			[]string{indent(s.recordAsText, 4)},
 		},
 		{
 			"get metadata by id - record id does not exist",
 			[]string{"record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3"},
-			"rpc error: code = NotFound desc = scope uuid 91978ba2-5f35-459a-86a7-feca1b0512e0 not found: key not found",
 			"",
+			[]string{"record: null", "record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3"},
 		},
 		{
 			"get metadata by id - scope spec id as json",
 			[]string{s.scopeSpecID.String(), s.asJson},
 			"",
-			s.scopeSpecAsJson,
+			[]string{s.scopeSpecAsJson},
 		},
 		{
 			"get metadata by id - scope spec id as text",
 			[]string{s.scopeSpecID.String(), s.asText},
 			"",
-			s.scopeSpecAsText,
+			[]string{indent(s.scopeSpecAsText, 4)},
 		},
 		{
 			"get metadata by id - scope spec id does not exist",
 			[]string{"scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"},
-			"rpc error: code = NotFound desc = scope specification uuid dc83ea70-eacd-40fe-9adf-1cf6148bf8a2 not found: key not found",
 			"",
+			[]string{"specification: null", "scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"},
 		},
 		{
 			"get metadata by id - contract spec id as json",
 			[]string{s.contractSpecID.String(), s.asJson},
 			"",
-			s.contractSpecAsJson,
+			[]string{s.contractSpecAsJson},
 		},
 		{
 			"get metadata by id - contract spec id as text",
 			[]string{s.contractSpecID.String(), s.asText},
 			"",
-			s.contractSpecAsText,
+			[]string{indent(s.contractSpecAsText, 4)},
 		},
 		{
 			"get metadata by id - contract spec id does not exist",
 			[]string{"contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn"},
-			"rpc error: code = NotFound desc = contract specification with id contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn (uuid def6bc0a-c9dd-4874-948f-5206e6060a84) not found: key not found",
 			"",
+			[]string{"specification: null", "contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn"},
 		},
 		{
 			"get metadata by id - record spec id as json",
 			[]string{s.recordSpecID.String(), s.asJson},
 			"",
-			s.recordSpecAsJson,
+			[]string{s.recordSpecAsJson},
 		},
 		{
 			"get metadata by id - record spec id as text",
 			[]string{s.recordSpecID.String(), s.asText},
 			"",
-			s.recordSpecAsText,
+			[]string{indent(s.recordSpecAsText, 4)},
 		},
 		{
 			"get metadata by id - record spec id does not exist",
 			[]string{"recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44"},
-			"rpc error: code = NotFound desc = record specification not found for id recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44: key not found",
 			"",
+			[]string{"specification: null", "recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44"},
 		},
 		{
 			"get metadata by id - bad prefix",
 			[]string{"foo1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
 			"decoding bech32 failed: checksum failed. Expected kzwk8c, got xlkwel.",
-			"",
+			[]string{},
 		},
 		{
 			"get metadata by id - no args",
 			[]string{},
 			"accepts 1 arg(s), received 0",
-			"",
+			[]string{},
 		},
 		{
 			"get metadata by id - two args",
 			[]string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel", "scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"},
 			"accepts 1 arg(s), received 2",
-			"",
+			[]string{},
 		},
 		{
 			"get metadata by id - uuid",
 			[]string{"91978ba2-5f35-459a-86a7-feca1b0512e0"},
 			"decoding bech32 failed: invalid index of 1",
-			"",
+			[]string{},
 		},
 		{
 			"get metadata by id - bad arg",
 			[]string{"not-an-id"},
 			"decoding bech32 failed: invalid index of 1",
-			"",
+			[]string{},
 		},
 	}
 
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
-func (s *IntegrationTestSuite) TestGetMetadataScopeCmd() {
+// TODO: GetMetadataGetAllCmd
+
+func (s *IntegrationCLITestSuite) TestGetMetadataScopeCmd() {
 	cmd := cli.GetMetadataScopeCmd()
+
+	indentedScopeText := indent(s.scopeAsText, 4)
 
 	testCases := []queryCmdTestCase{
 		{
 			"get scope by metadata scope id as json output",
 			[]string{s.scopeID.String(), s.asJson},
 			"",
-			s.scopeAsJson,
+			[]string{s.scopeAsJson},
 		},
 		{
 			"get scope by metadata scope id as text output",
 			[]string{s.scopeID.String(), s.asText},
 			"",
-			s.scopeAsText,
+			[]string{indentedScopeText},
 		},
 		{
 			"get scope by uuid as json output",
 			[]string{s.scopeUUID.String(), s.asJson},
 			"",
-			s.scopeAsJson,
+			[]string{s.scopeAsJson},
 		},
 		{
 			"get scope by uuid as text output",
 			[]string{s.scopeUUID.String(), s.asText},
 			"",
-			s.scopeAsText,
+			[]string{indentedScopeText},
 		},
 		{
 			"get scope by metadata session id as json output",
 			[]string{s.sessionID.String(), s.asJson},
 			"",
-			s.scopeAsJson,
+			[]string{s.scopeAsJson},
 		},
 		{
 			"get scope by metadata session id as text output",
 			[]string{s.sessionID.String(), s.asText},
 			"",
-			s.scopeAsText,
+			[]string{indentedScopeText},
 		},
 		{
 			"get scope by metadata record id as json output",
 			[]string{s.recordID.String(), s.asJson},
 			"",
-			s.scopeAsJson,
+			[]string{s.scopeAsJson},
 		},
 		{
 			"get scope by metadata record id as text output",
 			[]string{s.recordID.String(), s.asText},
 			"",
-			s.scopeAsText,
+			[]string{indentedScopeText},
 		},
 		{
 			"get scope by metadata id - does not exist",
 			[]string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel", s.asText},
-			"rpc error: code = NotFound desc = scope uuid 91978ba2-5f35-459a-86a7-feca1b0512e0 not found: key not found",
 			"",
+			[]string{"scope: null", "scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
 		},
 		{
 			"get scope by uuid - does not exist",
 			[]string{"91978ba2-5f35-459a-86a7-feca1b0512e0", s.asText},
-			"rpc error: code = NotFound desc = scope uuid 91978ba2-5f35-459a-86a7-feca1b0512e0 not found: key not found",
 			"",
+			[]string{"scope: null", "91978ba2-5f35-459a-86a7-feca1b0512e0"},
 		},
 		{
-			"get scope bad arg",
+			"get scope bad input",
 			[]string{"not-a-valid-arg", s.asText},
-			"argument not-a-valid-arg is neither a metadata address (decoding bech32 failed: invalid index of 1) nor uuid (invalid UUID length: 15)",
-			"",
+			"rpc error: code = InvalidArgument desc = could not parse [not-a-valid-arg] into either a scope address (decoding bech32 failed: invalid index of 1) or uuid (invalid UUID length: 15): invalid request",
+			[]string{},
 		},
 		{
 			"get scope no args",
 			[]string{},
 			"accepts 1 arg(s), received 0",
-			"",
-		},
-	}
-
-	runQueryCmdTestCases(s, cmd, testCases)
-}
-
-func (s *IntegrationTestSuite) TestGetMetadataFullScopeCmd() {
-	cmd := cli.GetMetadataFullScopeCmd()
-
-	testCases := []queryCmdTestCase{
-		{
-			"from scope id as json",
-			[]string{s.scopeID.String(), s.asJson},
-			"",
-			s.fullScopeAsJson,
-		},
-		{
-			"from scope id as text",
-			[]string{s.scopeID.String(), s.asText},
-			"",
-			s.fullScopeAsText,
-		},
-		{
-			"from scope uuid as json",
-			[]string{s.scopeUUID.String(), s.asJson},
-			"",
-			s.fullScopeAsJson,
-		},
-		{
-			"from scope uuid as text",
-			[]string{s.scopeUUID.String(), s.asText},
-			"",
-			s.fullScopeAsText,
-		},
-		{
-			"from session id as json",
-			[]string{s.sessionID.String(), s.asJson},
-			"",
-			s.fullScopeAsJson,
-		},
-		{
-			"from session id as text",
-			[]string{s.sessionID.String(), s.asText},
-			"",
-			s.fullScopeAsText,
-		},
-		{
-			"from record id as json",
-			[]string{s.recordID.String(), s.asJson},
-			"",
-			s.fullScopeAsJson,
-		},
-		{
-			"from record id as text",
-			[]string{s.recordID.String(), s.asText},
-			"",
-			s.fullScopeAsText,
-		},
-		{
-			"scope id does not exist",
-			[]string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
-			"rpc error: code = NotFound desc = scope uuid 91978ba2-5f35-459a-86a7-feca1b0512e0 not found: key not found",
-			"",
-		},
-		{
-			"scope uuid does not exist",
-			[]string{"91978ba2-5f35-459a-86a7-feca1b0512e0"},
-			"rpc error: code = NotFound desc = scope uuid 91978ba2-5f35-459a-86a7-feca1b0512e0 not found: key not found",
-			"",
-		},
-		{
-			"bad prefix",
-			[]string{"foo1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
-			"argument foo1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel is neither a metadata address (decoding bech32 failed: checksum failed. Expected kzwk8c, got xlkwel.) nor uuid (invalid UUID format)",
-			"",
-		},
-		{
-			"bad arg",
-			[]string{"not-an-argument"},
-			"argument not-an-argument is neither a metadata address (decoding bech32 failed: invalid index of 1) nor uuid (invalid UUID length: 15)",
-			"",
-		},
-		{
-			"two args",
-			[]string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel", "record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3"},
-			"accepts 1 arg(s), received 2",
-			"",
-		},
-		{
-			"no args",
 			[]string{},
-			"accepts 1 arg(s), received 0",
-			"",
 		},
 	}
 
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
-func (s *IntegrationTestSuite) TestGetMetadataSessionCmd() {
+func (s *IntegrationCLITestSuite) TestGetMetadataSessionCmd() {
 	cmd := cli.GetMetadataSessionCmd()
 
-	sessionListAsJson := fmt.Sprintf("[%s]", s.sessionAsJson)
-	sessionListAsText := yamlListEntry(s.sessionAsText)
+	indentedSessionText := indent(s.sessionAsText, 4)
 
 	testCases := []queryCmdTestCase{
 		{
 			"session from session id as json",
 			[]string{s.sessionID.String(), s.asJson},
 			"",
-			s.sessionAsJson,
+			[]string{s.sessionAsJson},
 		},
 		{
 			"session from session id as text",
 			[]string{s.sessionID.String(), s.asText},
 			"",
-			s.sessionAsText,
+			[]string{indentedSessionText},
 		},
 		{
 			"session id does not exist",
 			[]string{"session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr"},
-			"rpc error: code = NotFound desc = session id session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr not found: key not found",
 			"",
+			[]string{"session: null", "session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr"},
 		},
 		{
 			"sessions from scope id as json",
 			[]string{s.scopeID.String(), s.asJson},
 			"",
-			sessionListAsJson,
+			[]string{s.sessionAsJson},
 		},
 		{
 			"sessions from scope id as text",
 			[]string{s.scopeID.String(), s.asText},
 			"",
-			sessionListAsText,
+			[]string{indentedSessionText},
 		},
 		{
 			"scope id does not exist",
 			[]string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
-			"rpc error: code = NotFound desc = scope uuid 91978ba2-5f35-459a-86a7-feca1b0512e0 not found: key not found",
-			"",
+			"no sessions found",
+			[]string{},
 		},
 		{
 			"sessions from scope uuid as json",
 			[]string{s.scopeUUID.String(), s.asJson},
 			"",
-			sessionListAsJson,
+			[]string{s.sessionAsJson},
 		},
 		{
 			"sessions from scope uuid as text",
 			[]string{s.scopeUUID.String(), s.asText},
 			"",
-			sessionListAsText,
+			[]string{indentedSessionText},
 		},
 		{
 			"scope uuid does not exist",
 			[]string{"91978ba2-5f35-459a-86a7-feca1b0512e0"},
-			"rpc error: code = NotFound desc = scope uuid 91978ba2-5f35-459a-86a7-feca1b0512e0 not found: key not found",
-			"",
+			"no sessions found",
+			[]string{},
 		},
 		{
 			"session from scope uuid and session uuid as json",
 			[]string{s.scopeUUID.String(), s.sessionUUID.String(), s.asJson},
 			"",
-			s.sessionAsJson,
+			[]string{s.sessionAsJson},
 		},
 		{
 			"session from scope uuid ad session uuid as text",
 			[]string{s.scopeUUID.String(), s.sessionUUID.String(), s.asText},
 			"",
-			s.sessionAsText,
+			[]string{indentedSessionText},
 		},
 		{
 			"scope uuid exists but session uuid does not exist",
 			[]string{s.scopeUUID.String(), "5803f8bc-6067-4eb5-951f-2121671c2ec0"},
-			fmt.Sprintf("rpc error: code = NotFound desc = session id %s not found: key not found",
-				metadatatypes.SessionMetadataAddress(s.scopeUUID, uuid.MustParse("5803f8bc-6067-4eb5-951f-2121671c2ec0")),
-			),
 			"",
+			[]string{"session:", "session: null"},
 		},
 		{
 			"bad prefix",
 			[]string{"scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"},
-			"unexpected metadata address prefix on scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m",
-			"",
+			"rpc error: code = InvalidArgument desc = address [scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m] is not a scope address: invalid request",
+			[]string{},
 		},
 		{
 			"bad arg 1",
 			[]string{"bad"},
-			"argument bad is neither a metadata address (decoding bech32 failed: invalid bech32 string length 3) nor uuid (invalid UUID length: 3)",
-			"",
+			"rpc error: code = InvalidArgument desc = could not parse [bad] into either a scope address (decoding bech32 failed: invalid bech32 string length 3) or uuid (invalid UUID length: 3): invalid request",
+			[]string{},
 		},
 		{
 			"good arg 1, bad arg 2",
 			[]string{s.scopeUUID.String(), "still-bad"},
-			"invalid UUID length: 9",
-			"",
+			"rpc error: code = InvalidArgument desc = could not parse [still-bad] into either a session address (decoding bech32 failed: invalid index of 1) or uuid (invalid UUID length: 9): invalid request",
+			[]string{},
 		},
 		{
 			"3 args",
 			[]string{s.scopeUUID.String(), s.sessionID.String(), s.recordName},
 			"accepts between 1 and 2 arg(s), received 3",
-			"",
+			[]string{},
 		},
 		{
 			"no args",
 			[]string{},
 			"accepts between 1 and 2 arg(s), received 0",
-			"",
+			[]string{},
 		},
 	}
 
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
-func (s *IntegrationTestSuite) TestGetMetadataRecordCmd() {
+func (s *IntegrationCLITestSuite) TestGetMetadataRecordCmd() {
 	cmd := cli.GetMetadataRecordCmd()
-
-	recordListAsJson := fmt.Sprintf("[%s]", s.recordAsJson)
-	recordListAsText := yamlListEntry(s.recordAsText)
 
 	testCases := []queryCmdTestCase{
 		{
 			"record from record id as json",
 			[]string{s.recordID.String(), s.asJson},
 			"",
-			s.recordAsJson,
+			[]string{s.recordAsJson},
 		},
 		{
 			"record from record id as text",
 			[]string{s.recordID.String(), s.asText},
 			"",
-			s.recordAsText,
+			[]string{indent(s.recordAsText, 4)},
 		},
 		{
 			"record id does not exist",
 			[]string{"record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3"},
-			"rpc error: code = NotFound desc = scope uuid 91978ba2-5f35-459a-86a7-feca1b0512e0 not found: key not found",
 			"",
+			[]string{"records:", "record: null", "record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3"},
 		},
 		{
 			"records from session id as json",
 			[]string{s.sessionID.String(), s.asJson},
 			"",
-			recordListAsJson,
+			[]string{s.recordAsJson},
 		},
 		{
 			"records from session id as text",
 			[]string{s.sessionID.String(), s.asText},
 			"",
-			recordListAsText,
+			[]string{indent(s.recordAsText, 4)},
 		},
 		{
 			"session id does not exist",
 			[]string{"session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr"},
-			"rpc error: code = NotFound desc = scope uuid 91978ba2-5f35-459a-86a7-feca1b0512e0 not found: key not found",
 			"",
+			[]string{"records: []"},
 		},
 		{
 			"records from scope id as json",
 			[]string{s.scopeID.String(), s.asJson},
 			"",
-			recordListAsJson,
+			[]string{s.recordAsJson},
 		},
 		{
 			"records from scope id as text",
 			[]string{s.scopeID.String(), s.asText},
 			"",
-			recordListAsText,
+			[]string{indent(s.recordAsText, 4)},
 		},
 		{
 			"scope id does not exist",
 			[]string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
-			"rpc error: code = NotFound desc = scope uuid 91978ba2-5f35-459a-86a7-feca1b0512e0 not found: key not found",
 			"",
+			[]string{"records: []"},
 		},
 		{
 			"records from scope uuid as json",
 			[]string{s.scopeUUID.String(), s.asJson},
 			"",
-			recordListAsJson,
+			[]string{s.recordAsJson},
 		},
 		{
 			"records from scope uuid as text",
 			[]string{s.scopeUUID.String(), s.asText},
 			"",
-			recordListAsText,
+			[]string{indent(s.recordAsText, 4)},
 		},
 		{
 			"scope uuid does not exist",
 			[]string{"91978ba2-5f35-459a-86a7-feca1b0512e0"},
-			"rpc error: code = NotFound desc = scope uuid 91978ba2-5f35-459a-86a7-feca1b0512e0 not found: key not found",
 			"",
+			[]string{"records: []"},
 		},
 		{
 			"record from scope uuid and record name as json",
 			[]string{s.scopeUUID.String(), s.recordName, s.asJson},
 			"",
-			s.recordAsJson,
+			[]string{s.recordAsJson},
 		},
 		{
 			"record from scope uuid and record name as text",
 			[]string{s.scopeUUID.String(), s.recordName, s.asText},
 			"",
-			s.recordAsText,
+			[]string{indent(s.recordAsText, 4)},
 		},
 		{
 			"scope uuid exists but record name does not",
 			[]string{s.scopeUUID.String(), "nope"},
-			fmt.Sprintf("no records with id %s found in scope with uuid %s",
-				metadatatypes.RecordMetadataAddress(s.scopeUUID, "nope"),
-				s.scopeUUID,
-			),
 			"",
+			[]string{"record: null"},
 		},
 		{
 			"bad prefix",
 			[]string{"contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn"},
-			"unexpected metadata address prefix on contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn",
-			"",
+			"rpc error: code = InvalidArgument desc = address [contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn] is not a scope address: invalid request",
+			[]string{},
 		},
 		{
 			"bad arg 1",
 			[]string{"badbad"},
-			"argument badbad is neither a metadata address (decoding bech32 failed: invalid bech32 string length 6) nor uuid (invalid UUID length: 6)",
-			"",
+			"rpc error: code = InvalidArgument desc = could not parse [badbad] into either a scope address (decoding bech32 failed: invalid bech32 string length 6) or uuid (invalid UUID length: 6): invalid request",
+			[]string{},
 		},
 		{
 			"uuid arg 1 and whitespace args 2 and 3 as json",
 			[]string{s.scopeUUID.String(), "  ", " ", s.asJson},
 			"",
-			recordListAsJson,
+			[]string{s.recordAsJson},
 		},
 		{
 			"uuid arg 1 and whitespace args 2 and 3 as text",
 			[]string{s.scopeUUID.String(), "  ", " ", s.asText},
 			"",
-			recordListAsText,
+			[]string{indent(s.recordAsText, 4)},
 		},
 		{
 			"no args",
 			[]string{},
 			"requires at least 1 arg(s), only received 0",
-			"",
+			[]string{""},
 		},
 	}
 
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
-func (s *IntegrationTestSuite) TestGetMetadataScopeSpecCmd() {
+func (s *IntegrationCLITestSuite) TestGetMetadataScopeSpecCmd() {
 	cmd := cli.GetMetadataScopeSpecCmd()
 
 	testCases := []queryCmdTestCase{
@@ -1095,68 +1005,68 @@ func (s *IntegrationTestSuite) TestGetMetadataScopeSpecCmd() {
 			"scope spec from scope spec id as json",
 			[]string{s.scopeSpecID.String(), s.asJson},
 			"",
-			s.scopeSpecAsJson,
+			[]string{s.scopeSpecAsJson},
 		},
 		{
 			"scope spec from scope spec id as text",
 			[]string{s.scopeSpecID.String(), s.asText},
 			"",
-			s.scopeSpecAsText,
+			[]string{indent(s.scopeSpecAsText, 4)},
 		},
 		{
 			"scope spec id bad prefix",
 			[]string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
-			"id scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel is not a scope specification metadata address",
-			"",
+			"rpc error: code = InvalidArgument desc = address [scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel] is not a scope spec address: invalid request",
+			[]string{},
 		},
 		{
 			"scope spec id does not exist",
 			[]string{"scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"},
-			"rpc error: code = NotFound desc = scope specification uuid dc83ea70-eacd-40fe-9adf-1cf6148bf8a2 not found: key not found",
 			"",
+			[]string{"specification: null", "scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"},
 		},
 		{
 			"scope spec from scope spec uuid as json",
 			[]string{s.scopeSpecUUID.String(), s.asJson},
 			"",
-			s.scopeSpecAsJson,
+			[]string{s.scopeSpecAsJson},
 		},
 		{
 			"scope spec from scope spec uuid as text",
 			[]string{s.scopeSpecUUID.String(), s.asText},
 			"",
-			s.scopeSpecAsText,
+			[]string{indent(s.scopeSpecAsText, 4)},
 		},
 		{
 			"scope spec uuid does not exist",
 			[]string{"dc83ea70-eacd-40fe-9adf-1cf6148bf8a2"},
-			"rpc error: code = NotFound desc = scope specification uuid dc83ea70-eacd-40fe-9adf-1cf6148bf8a2 not found: key not found",
 			"",
+			[]string{"specification: null", "dc83ea70-eacd-40fe-9adf-1cf6148bf8a2"},
 		},
 		{
 			"bad arg",
 			[]string{"reallybad"},
-			"argument reallybad is neither a metadata address (decoding bech32 failed: invalid index of 1) nor uuid (invalid UUID length: 9)",
-			"",
+			"rpc error: code = InvalidArgument desc = could not parse [reallybad] into either a scope spec address (decoding bech32 failed: invalid index of 1) or uuid (invalid UUID length: 9): invalid request",
+			[]string{},
 		},
 		{
 			"two args",
 			[]string{"arg1", "arg2"},
 			"accepts 1 arg(s), received 2",
-			"",
+			[]string{},
 		},
 		{
 			"no args",
 			[]string{},
 			"accepts 1 arg(s), received 0",
-			"",
+			[]string{},
 		},
 	}
 
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
-func (s *IntegrationTestSuite) TestGetMetadataContractSpecCmd() {
+func (s *IntegrationCLITestSuite) TestGetMetadataContractSpecCmd() {
 	cmd := cli.GetMetadataContractSpecCmd()
 
 	testCases := []queryCmdTestCase{
@@ -1164,207 +1074,200 @@ func (s *IntegrationTestSuite) TestGetMetadataContractSpecCmd() {
 			"contract spec from contract spec id as json",
 			[]string{s.contractSpecID.String(), s.asJson},
 			"",
-			s.contractSpecAsJson,
+			[]string{s.contractSpecAsJson},
 		},
 		{
 			"contract spec from contract spec id as text",
 			[]string{s.contractSpecID.String(), s.asText},
 			"",
-			s.contractSpecAsText,
+			[]string{indent(s.contractSpecAsText, 4)},
 		},
 		{
 			"contract spec id does not exist",
 			[]string{"contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn"},
-			"rpc error: code = NotFound desc = contract specification with id contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn (uuid def6bc0a-c9dd-4874-948f-5206e6060a84) not found: key not found",
 			"",
+			[]string{"specification: null", "contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn"},
 		},
 		{
 			"contract spec from contract spec uuid as json",
 			[]string{s.contractSpecUUID.String(), s.asJson},
 			"",
-			s.contractSpecAsJson,
+			[]string{s.contractSpecAsJson},
 		},
 		{
 			"contract spec from contract spec uuid as text",
 			[]string{s.contractSpecUUID.String(), s.asText},
 			"",
-			s.contractSpecAsText,
+			[]string{indent(s.contractSpecAsText, 4)},
 		},
 		{
 			"contract spec uuid does not exist",
 			[]string{"def6bc0a-c9dd-4874-948f-5206e6060a84"},
-			"rpc error: code = NotFound desc = contract specification with id contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn (uuid def6bc0a-c9dd-4874-948f-5206e6060a84) not found: key not found",
 			"",
+			[]string{"specification: null", "def6bc0a-c9dd-4874-948f-5206e6060a84"},
 		},
 		{
 			"contract spec from record spec id as json",
 			[]string{s.recordSpecID.String(), s.asJson},
 			"",
-			s.contractSpecAsJson,
+			[]string{s.contractSpecAsJson},
 		},
 		{
 			"contract spec from record spec id as text",
 			[]string{s.recordSpecID.String(), s.asText},
 			"",
-			s.contractSpecAsText,
+			[]string{indent(s.contractSpecAsText, 4)},
 		},
 		{
 			"record spec id does not exist",
 			[]string{"recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44"},
-			"rpc error: code = NotFound desc = contract specification with id contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn (uuid def6bc0a-c9dd-4874-948f-5206e6060a84) not found: key not found",
 			"",
+			[]string{"specification: null"},
 		},
 		{
 			"bad prefix",
 			[]string{"record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3"},
-			"unexpected metadata address prefix on record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3: this metadata address (record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3) does not contain a contract specification uuid",
-			"",
+			"rpc error: code = InvalidArgument desc = invalid specification id: address [record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3] is not a contract spec address: invalid request",
+			[]string{},
 		},
 		{
 			"bad arg",
 			[]string{"badbadarg"},
-			"argument badbadarg is neither a metadata address (decoding bech32 failed: invalid index of 1) nor uuid (invalid UUID length: 9)",
-			"",
+			"rpc error: code = InvalidArgument desc = invalid specification id: could not parse [badbadarg] into either a contract spec address (decoding bech32 failed: invalid index of 1) or uuid (invalid UUID length: 9): invalid request",
+			[]string{},
 		},
 		{
 			"two args",
 			[]string{"arg1", "arg2"},
 			"accepts 1 arg(s), received 2",
-			"",
+			[]string{},
 		},
 		{
 			"no args",
 			[]string{},
 			"accepts 1 arg(s), received 0",
-			"",
+			[]string{},
 		},
 	}
 
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
-func (s *IntegrationTestSuite) TestGetMetadataRecordSpecCmd() {
+func (s *IntegrationCLITestSuite) TestGetMetadataRecordSpecCmd() {
 	cmd := cli.GetMetadataRecordSpecCmd()
-
-	recordSpecListAsJson := fmt.Sprintf("[%s]", s.recordSpecAsJson)
-	recordSpecListAsText := yamlListEntry(s.recordSpecAsText)
 
 	testCases := []queryCmdTestCase{
 		{
 			"record spec from rec spec id as json",
 			[]string{s.recordSpecID.String(), s.asJson},
 			"",
-			s.recordSpecAsJson,
+			[]string{s.recordSpecAsJson},
 		},
 		{
 			"record spec from rec spec id as text",
 			[]string{s.recordSpecID.String(), s.asText},
 			"",
-			s.recordSpecAsText,
+			[]string{indent(s.recordSpecAsText, 4)},
 		},
 		{
 			"rec spec id does not exist",
 			[]string{"recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44"},
-			"rpc error: code = NotFound desc = record specification not found for id recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44: key not found",
 			"",
+			[]string{"record_specifications: []"},
 		},
 		{
 			"record specs from contract spec id as json",
 			[]string{s.contractSpecID.String(), s.asJson},
 			"",
-			recordSpecListAsJson,
+			[]string{s.recordSpecAsJson},
 		},
 		{
 			"record specs from contract spec id as text",
 			[]string{s.contractSpecID.String(), s.asText},
 			"",
-			recordSpecListAsText,
+			[]string{indent(s.recordSpecAsText, 4)},
 		},
 		{
 			"contract spec id does not exist",
 			[]string{"contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn"},
-			"rpc error: code = NotFound desc = no record specifications found for contract spec uuid def6bc0a-c9dd-4874-948f-5206e6060a84: key not found",
 			"",
+			[]string{"record_specifications: []", "contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn"},
 		},
 		{
 			"record specs from contract spec uuid as json",
 			[]string{s.contractSpecUUID.String(), s.asJson},
 			"",
-			recordSpecListAsJson,
+			[]string{s.recordSpecAsJson},
 		},
 		{
 			"record specs from contract spec uuid as text",
 			[]string{s.contractSpecUUID.String(), s.asText},
 			"",
-			recordSpecListAsText,
+			[]string{indent(s.recordSpecAsText, 4)},
 		},
 		{
 			"contract spec uuid does not exist",
 			[]string{"def6bc0a-c9dd-4874-948f-5206e6060a84"},
-			"rpc error: code = NotFound desc = no record specifications found for contract spec uuid def6bc0a-c9dd-4874-948f-5206e6060a84: key not found",
 			"",
+			[]string{"record_specifications: []", "def6bc0a-c9dd-4874-948f-5206e6060a84"},
 		},
 		{
 			"record spec from contract spec uuid and record spec name as json",
 			[]string{s.contractSpecUUID.String(), s.recordName, s.asJson},
 			"",
-			s.recordSpecAsJson,
+			[]string{s.recordSpecAsJson},
 		},
 		{
 			"record spec from contract spec uuid and record spec name as text",
 			[]string{s.contractSpecUUID.String(), s.recordName, s.asText},
 			"",
-			s.recordSpecAsText,
+			[]string{indent(s.recordSpecAsText, 4)},
 		},
 		{
 			"contract spec uuid exists record spec name does not",
-			[]string{s.contractSpecUUID.String(), "nopenopenope"},
-			fmt.Sprintf("rpc error: code = NotFound desc = record specification not found for id %s: key not found",
-				metadatatypes.RecordSpecMetadataAddress(s.contractSpecUUID, "nopenopenope"),
-			),
+			[]string{s.contractSpecUUID.String(), s.contractSpecUUID.String()},
 			"",
+			[]string{"specification: null", s.contractSpecUUID.String()},
 		},
 		{
 			"record specs from contract spec uuid and only whitespace name args",
 			[]string{s.contractSpecUUID.String(), "   ", " ", "      "},
 			"",
-			recordSpecListAsText,
+			[]string{indent(s.recordSpecAsText, 4)},
 		},
 		{
 			"bad prefix",
 			[]string{"session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr"},
-			"unexpected metadata address prefix on session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr",
-			"",
+			"rpc error: code = InvalidArgument desc = invalid specification id: address [session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr] is not a contract spec address: invalid request",
+			[]string{},
 		},
 		{
 			"bad arg 1",
 			[]string{"not-gonna-parse"},
-			"argument not-gonna-parse is neither a metadata address (decoding bech32 failed: invalid index of 1) nor uuid (invalid UUID length: 15)",
-			"",
+			"rpc error: code = InvalidArgument desc = invalid specification id: could not parse [not-gonna-parse] into either a contract spec address (decoding bech32 failed: invalid index of 1) or uuid (invalid UUID length: 15): invalid request",
+			[]string{},
 		},
 		{
 			"no args",
 			[]string{s.asJson},
 			"requires at least 1 arg(s), only received 0",
-			"",
+			[]string{},
 		},
 	}
 
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
-func (s *IntegrationTestSuite) TestGetOwnershipCmd() {
+func (s *IntegrationCLITestSuite) TestGetOwnershipCmd() {
 	cmd := cli.GetOwnershipCmd()
 
 	newUser := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()
 
-	ownedScopesAsJson := fmt.Sprintf("{\"scope_uuids\":[\"%s\"],\"pagination\":{\"next_key\":null,\"total\":\"1\"}}",
-		s.scopeUUID,
-	)
-	ownedScopesAsText := fmt.Sprintf(`pagination:
+	paginationText := `pagination:
   next_key: null
   total: "1"
-scope_uuids:
+`
+	scopeUUIDsText := fmt.Sprintf(`scope_uuids:
 - %s`,
 		s.scopeUUID,
 	)
@@ -1374,53 +1277,54 @@ scope_uuids:
 			"scopes as json",
 			[]string{s.user1, s.asJson},
 			"",
-			ownedScopesAsJson,
+			[]string{
+				fmt.Sprintf("\"scope_uuids\":[\"%s\"]", s.scopeUUID),
+				"\"pagination\":{\"next_key\":null,\"total\":\"1\"}",
+			},
 		},
 		{
 			"scopes as text",
 			[]string{s.user1, s.asText},
 			"",
-			ownedScopesAsText,
+			[]string{scopeUUIDsText, paginationText},
 		},
 		{
 			"scope through value owner",
 			[]string{s.user2},
 			"",
-			ownedScopesAsText,
+			[]string{scopeUUIDsText},
 		},
 		{
 			"no result",
 			[]string{newUser},
-			fmt.Sprintf("no scopes are owned by address %s", newUser),
 			"",
+			[]string{"scope_uuids: []", "total: \"0\""},
 		},
 		{
 			"two args",
 			[]string{s.user1, s.user2},
 			"accepts 1 arg(s), received 2",
-			"",
+			[]string{},
 		},
 		{
 			"no args",
 			[]string{},
 			"accepts 1 arg(s), received 0",
-			"",
+			[]string{},
 		},
 	}
 
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
-func (s *IntegrationTestSuite) TestGetValueOwnershipCmd() {
+func (s *IntegrationCLITestSuite) TestGetValueOwnershipCmd() {
 	cmd := cli.GetValueOwnershipCmd()
 
-	ownedScopesAsJson := fmt.Sprintf("{\"scope_uuids\":[\"%s\"],\"pagination\":{\"next_key\":null,\"total\":\"1\"}}",
-		s.scopeUUID,
-	)
-	ownedScopesAsText := fmt.Sprintf(`pagination:
+	paginationText := `pagination:
   next_key: null
   total: "1"
-scope_uuids:
+`
+	scopeUUIDsText := fmt.Sprintf(`scope_uuids:
 - %s`,
 		s.scopeUUID,
 	)
@@ -1430,62 +1334,52 @@ scope_uuids:
 			"as json",
 			[]string{s.user2, s.asJson},
 			"",
-			ownedScopesAsJson,
+			[]string{
+				fmt.Sprintf("\"scope_uuids\":[\"%s\"]", s.scopeUUID),
+				"\"pagination\":{\"next_key\":null,\"total\":\"1\"}",
+			},
 		},
 		{
 			"as text",
 			[]string{s.user2, s.asText},
 			"",
-			ownedScopesAsText,
+			[]string{scopeUUIDsText, paginationText},
 		},
 		{
 			"no result",
 			[]string{s.user1},
-			fmt.Sprintf("address %s is not the value owner on any scopes",
-				s.user1),
 			"",
+			[]string{"scope_uuids: []", "total: \"0\""},
 		},
 		{
 			"two args",
 			[]string{s.user1, s.user2},
 			"accepts 1 arg(s), received 2",
-			"",
+			[]string{},
 		},
 		{
 			"no args",
 			[]string{},
 			"accepts 1 arg(s), received 0",
-			"",
+			[]string{},
 		},
 	}
 
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
-func (s *IntegrationTestSuite) TestGetOSLocatorCmd() {
+func (s *IntegrationCLITestSuite) TestGetOSLocatorCmd() {
 	cmd := cli.GetOSLocatorCmd()
 
 	testCases := []queryCmdTestCase{
 		{
-			"get os locator",
+			"get os locator by owner",
 			[]string{s.user1Addr.String(), s.asJson},
 			"",
-			fmt.Sprintf("{\"owner\":\"%s\",\"locator_uri\":\"%s\"}", s.user1Addr.String(), "http://foo.com"),
-		},
-	}
-
-	runQueryCmdTestCases(s, cmd, testCases)
-}
-
-func (s *IntegrationTestSuite) TestGetAllOSLocatorCmd() {
-	cmd := cli.GetOSLocatorCmd()
-
-	testCases := []queryCmdTestCase{
-		{
-			"get os locator",
-			[]string{s.user1Addr.String(), s.asJson},
-			"",
-			fmt.Sprintf("{\"owner\":\"%s\",\"locator_uri\":\"%s\"}", s.user1Addr.String(), "http://foo.com"),
+			[]string{
+				fmt.Sprintf("\"owner\":\"%s\"", s.user1Addr.String()),
+				fmt.Sprintf("\"locator_uri\":\"%s\"}", "http://foo.com"),
+			},
 		},
 	}
 
@@ -1494,7 +1388,7 @@ func (s *IntegrationTestSuite) TestGetAllOSLocatorCmd() {
 
 // ---------- tx cmd tests ----------
 
-type commonTxTestStruct struct {
+type txCmdTestCase struct {
 	name         string
 	cmd          *cobra.Command
 	args         []string
@@ -1504,14 +1398,39 @@ type commonTxTestStruct struct {
 	expectedCode uint32
 }
 
-func (s *IntegrationTestSuite) TestMetadataScopeTxCommands() {
+func runTxCmdTestCases(s *IntegrationCLITestSuite, testCases []txCmdTestCase) {
+	for _, tc := range testCases {
+		tc := tc
+		s.T().Run(tc.name, func(t *testing.T) {
+			cmdName := tc.cmd.Name()
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
+
+			if len(tc.expectErrMsg) > 0 {
+				require.EqualError(t, err, tc.expectErrMsg, "%s expected error message", cmdName)
+			} else if tc.expectErr {
+				require.Error(t, err, "%s expected error", cmdName)
+			} else {
+				require.NoError(t, err, "%s unexpected error", cmdName)
+
+				umErr := clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType)
+				require.NoError(t, umErr, "%s UnmarshalJSON error", cmdName)
+
+				txResp := tc.respType.(*sdk.TxResponse)
+				require.Equal(t, tc.expectedCode, txResp.Code, "%s response code", cmdName)
+			}
+		})
+	}
+}
+
+func (s *IntegrationCLITestSuite) TestMetadataScopeTxCommands() {
 
 	scopeID := types.ScopeMetadataAddress(uuid.New()).String()
 	specID := types.ScopeSpecMetadataAddress(uuid.New()).String()
-	testCases := []commonTxTestStruct{
+	testCases := []txCmdTestCase{
 		{
 			"should successfully add metadata scope",
-			cli.AddMetadataScopeCmd(),
+			cli.WriteMetadataScopeCmd(),
 			[]string{
 				scopeID,
 				specID,
@@ -1527,7 +1446,7 @@ func (s *IntegrationTestSuite) TestMetadataScopeTxCommands() {
 		},
 		{
 			"should successfully add metadata scope with signers flag",
-			cli.AddMetadataScopeCmd(),
+			cli.WriteMetadataScopeCmd(),
 			[]string{
 				types.ScopeMetadataAddress(uuid.New()).String(),
 				types.ScopeSpecMetadataAddress(uuid.New()).String(),
@@ -1544,7 +1463,7 @@ func (s *IntegrationTestSuite) TestMetadataScopeTxCommands() {
 		},
 		{
 			"should fail to add metadata scope, incorrect scope id",
-			cli.AddMetadataScopeCmd(),
+			cli.WriteMetadataScopeCmd(),
 			[]string{
 				"not-a-uuid",
 				types.ScopeSpecMetadataAddress(uuid.New()).String(),
@@ -1560,7 +1479,7 @@ func (s *IntegrationTestSuite) TestMetadataScopeTxCommands() {
 		},
 		{
 			"should fail to add metadata scope, incorrect scope spec id",
-			cli.AddMetadataScopeCmd(),
+			cli.WriteMetadataScopeCmd(),
 			[]string{
 				types.ScopeMetadataAddress(uuid.New()).String(),
 				"not-a-uuid",
@@ -1576,7 +1495,7 @@ func (s *IntegrationTestSuite) TestMetadataScopeTxCommands() {
 		},
 		{
 			"should fail to add metadata scope, validate basic will err on owner format",
-			cli.AddMetadataScopeCmd(),
+			cli.WriteMetadataScopeCmd(),
 			[]string{
 				types.ScopeMetadataAddress(uuid.New()).String(),
 				types.ScopeSpecMetadataAddress(uuid.New()).String(),
@@ -1628,14 +1547,14 @@ func (s *IntegrationTestSuite) TestMetadataScopeTxCommands() {
 		},
 	}
 
-	s.runTxTestCases(testCases)
+	runTxCmdTestCases(s, testCases)
 }
 
-func (s *IntegrationTestSuite) TestScopeSpecificationTxCommands() {
-	addCommand := cli.AddScopeSpecificationCmd()
+func (s *IntegrationCLITestSuite) TestScopeSpecificationTxCommands() {
+	addCommand := cli.WriteScopeSpecificationCmd()
 	removeCommand := cli.RemoveScopeSpecificationCmd()
 	specID := types.ScopeSpecMetadataAddress(uuid.New())
-	testCases := []commonTxTestStruct{
+	testCases := []txCmdTestCase{
 		{
 			"should successfully add scope specification",
 			addCommand,
@@ -1738,17 +1657,17 @@ func (s *IntegrationTestSuite) TestScopeSpecificationTxCommands() {
 		},
 	}
 
-	s.runTxTestCases(testCases)
+	runTxCmdTestCases(s, testCases)
 }
 
-// os locator tx cmds
-func (s *IntegrationTestSuite) TestAddObjectLocatorCmd() {
+func (s *IntegrationCLITestSuite) TestAddObjectLocatorCmd() {
 	userURI := "http://foo.com"
 	userURIMod := "https://www.google.com/search?q=red+butte+garden&oq=red+butte+garden&aqs=chrome..69i57j46i131i175i199i433j0j0i457j0l6.3834j0j7&sourceid=chrome&ie=UTF-8#lpqa=d,2"
-	testCases := []commonTxTestStruct{
+
+	testCases := []txCmdTestCase{
 		{
 			"Should successfully add os locator",
-			cli.AddOsLocatorCmd(),
+			cli.BindOsLocatorCmd(),
 			[]string{
 				s.testnet.Validators[0].Address.String(),
 				userURI,
@@ -1786,15 +1705,16 @@ func (s *IntegrationTestSuite) TestAddObjectLocatorCmd() {
 			false, "", &sdk.TxResponse{}, 0,
 		},
 	}
-	s.runTxTestCases(testCases)
+
+	runTxCmdTestCases(s, testCases)
 }
 
-func (s *IntegrationTestSuite) TestContractSpecificationTxCommands() {
-	addCommand := cli.AddContractSpecificationCmd()
+func (s *IntegrationCLITestSuite) TestContractSpecificationTxCommands() {
+	addCommand := cli.WriteContractSpecificationCmd()
 	removeCommand := cli.RemoveContractSpecificationCmd()
 	contractSpecUUID := uuid.New()
 	specificationID := types.ContractSpecMetadataAddress(contractSpecUUID)
-	testCases := []commonTxTestStruct{
+	testCases := []txCmdTestCase{
 		{
 			"should successfully add contract specification with resource hash",
 			addCommand,
@@ -1941,18 +1861,19 @@ func (s *IntegrationTestSuite) TestContractSpecificationTxCommands() {
 			1,
 		},
 	}
-	s.runTxTestCases(testCases)
+
+	runTxCmdTestCases(s, testCases)
 }
 
-func (s *IntegrationTestSuite) TestRecordSpecificationTxCommands() {
-	cmd := cli.AddRecordSpecificationCmd()
-	addConractSpecCmd := cli.AddContractSpecificationCmd()
+func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
+	cmd := cli.WriteRecordSpecificationCmd()
+	addConractSpecCmd := cli.WriteContractSpecificationCmd()
 	deleteRecordSpecCmd := cli.RemoveRecordSpecificationCmd()
 	recordName := "testrecordspecid"
 	contractSpecUUID := uuid.New()
 	contractSpecID := types.ContractSpecMetadataAddress(contractSpecUUID)
 	specificationID := types.RecordSpecMetadataAddress(contractSpecUUID, recordName)
-	testCases := []commonTxTestStruct{
+	testCases := []txCmdTestCase{
 		{
 			"setup test with a record specification owned by signer",
 			addConractSpecCmd,
@@ -2127,26 +2048,7 @@ func (s *IntegrationTestSuite) TestRecordSpecificationTxCommands() {
 			&sdk.TxResponse{}, 1,
 		},
 	}
-	s.runTxTestCases(testCases)
+
+	runTxCmdTestCases(s, testCases)
 }
 
-func (s *IntegrationTestSuite) runTxTestCases(testCases []commonTxTestStruct) {
-	for _, tc := range testCases {
-		tc := tc
-		s.Run(tc.name, func() {
-			clientCtx := s.testnet.Validators[0].ClientCtx
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
-				s.Require().EqualError(err, tc.expectErrMsg)
-			} else {
-				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code)
-			}
-		})
-
-	}
-}

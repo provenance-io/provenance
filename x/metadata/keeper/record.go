@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
 
@@ -28,14 +29,23 @@ func (k Keeper) GetRecord(ctx sdk.Context, id types.MetadataAddress) (record typ
 // GetRecords returns records with scopeAddress and name
 func (k Keeper) GetRecords(ctx sdk.Context, scopeAddress types.MetadataAddress, name string) ([]*types.Record, error) {
 	records := []*types.Record{}
-	err := k.IterateRecords(ctx, scopeAddress, func(r types.Record) (stop bool) {
-		if name == "" {
+	var iterator func(r types.Record) (stop bool)
+	if len(name) == 0 {
+		iterator = func(r types.Record) (stop bool) {
 			records = append(records, &r)
-		} else if name == r.Name {
-			records = append(records, &r)
+			return false
 		}
-		return false
-	})
+	} else {
+		name = strings.ToLower(name)
+		iterator = func(r types.Record) (stop bool) {
+			if name == strings.ToLower(r.Name) {
+				records = append(records, &r)
+				return true
+			}
+			return false
+		}
+	}
+	err := k.IterateRecords(ctx, scopeAddress, iterator)
 	if err != nil {
 		return nil, err
 	}
@@ -100,8 +110,10 @@ func (k Keeper) IterateRecords(ctx sdk.Context, scopeID types.MetadataAddress, h
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var record types.Record
-		k.cdc.MustUnmarshalBinaryBare(it.Value(), &record)
-		if handler(record) {
+		err = k.cdc.UnmarshalBinaryBare(it.Value(), &record)
+		if err != nil {
+			k.Logger(ctx).Error("could not unmarshal record", "address", it.Key(), "error", err)
+		} else if handler(record) {
 			break
 		}
 	}
@@ -121,6 +133,12 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, pr
 		}
 		if !existing.SessionId.Equals(proposed.SessionId) || existing.Name != proposed.Name {
 			return fmt.Errorf("the SessionId field of records cannot be changed")
+		}
+		// The existing specification id might be empty for old stuff.
+		// And for now, we'll allow the proposed specification id to be missing and set it appropriately below.
+		// But if we've got both, make sure they didn't change.
+		if !existing.SpecificationId.Empty() && !proposed.SpecificationId.Empty() && !existing.SpecificationId.Equals(proposed.SpecificationId) {
+			return fmt.Errorf("the SpecificationId of records cannot be changed")
 		}
 	}
 
@@ -152,6 +170,14 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, pr
 		return err
 	}
 	recSpecID := types.RecordSpecMetadataAddress(contractSpecUUID, proposed.Name)
+
+	if proposed.SpecificationId.Empty() {
+		proposed.SpecificationId = recSpecID
+	} else if !proposed.SpecificationId.Equals(recSpecID) {
+		return fmt.Errorf("proposed specification id %s does not match expected specification id %s",
+			proposed.SpecificationId, recSpecID)
+	}
+
 	recSpec, found := k.GetRecordSpecification(ctx, recSpecID)
 	if !found {
 		return fmt.Errorf("record specification not found for record specification id %s (contract spec uuid %s and record name %s)",

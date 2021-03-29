@@ -20,7 +20,7 @@ const (
 	FlagSigners = "signers"
 )
 
-// NewTxCmd is the top-level command for attribute CLI transactions.
+// NewTxCmd is the top-level command for Metadata CLI transactions.
 func NewTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -32,30 +32,30 @@ func NewTxCmd() *cobra.Command {
 	}
 
 	txCmd.AddCommand(
-		AddMetadataScopeCmd(),
+		WriteMetadataScopeCmd(),
 		RemoveMetadataScopeCmd(),
 
-		AddScopeSpecificationCmd(),
-		RemoveScopeSpecificationCmd(),
-
-		AddOsLocatorCmd(),
+		BindOsLocatorCmd(),
 		RemoveOsLocatorCmd(),
 		ModifyOsLocatorCmd(),
 
-		AddContractSpecificationCmd(),
+		WriteScopeSpecificationCmd(),
+		RemoveScopeSpecificationCmd(),
+
+		WriteContractSpecificationCmd(),
 		RemoveContractSpecificationCmd(),
 
-		AddRecordSpecificationCmd(),
+		WriteRecordSpecificationCmd(),
 		RemoveRecordSpecificationCmd(),
 	)
 
 	return txCmd
 }
 
-// AddMetadataScopeCmd creates a command for adding a metadata scope.
-func AddMetadataScopeCmd() *cobra.Command {
+// WriteMetadataScopeCmd creates a command for adding or updating a metadata scope.
+func WriteMetadataScopeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-scope [scope-id] [spec-id] [owner-addresses] [data-access] [value-owner-address]",
+		Use:   "write-scope [scope-id] [spec-id] [owner-addresses] [data-access] [value-owner-address]",
 		Short: "Add/Update a metadata scope to the provenance blockchain",
 		Args:  cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -96,7 +96,7 @@ func AddMetadataScopeCmd() *cobra.Command {
 				dataAccess,
 				valueOwnerAddress)
 
-			msg := types.NewMsgAddScopeRequest(scope, signers)
+			msg := types.NewMsgWriteScopeRequest(scope, signers)
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err
@@ -151,11 +151,11 @@ func RemoveMetadataScopeCmd() *cobra.Command {
 	return cmd
 }
 
-// RemoveMetadataScopeCmd creates a command for removing a scope.
-func AddOsLocatorCmd() *cobra.Command {
+// BindOsLocatorCmd creates a command for binding an owner to uri in the object store.
+func BindOsLocatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-locator [owner] [uri]",
-		Short: "Add a uri to an owner address on the provenance blockchain",
+		Use:   "bind-locator [owner] [uri]",
+		Short: "Bind a uri to an owner address on the provenance blockchain",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -164,7 +164,7 @@ func AddOsLocatorCmd() *cobra.Command {
 			}
 
 			if _, errAddr := sdk.AccAddressFromBech32(args[0]); errAddr != nil {
-				fmt.Printf("failed to add locator for a given owner address, invalid address: %s\n", args[0])
+				fmt.Printf("failed to bind locator for a given owner address, invalid address: %s\n", args[0])
 				return fmt.Errorf("invalid address: %w", errAddr)
 			}
 
@@ -182,7 +182,7 @@ func AddOsLocatorCmd() *cobra.Command {
 	return cmd
 }
 
-// RemoveOsLocatorCmd creates a command for removing a os locator
+// RemoveOsLocatorCmd creates a command for removing an object store locator entry.
 func RemoveOsLocatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "remove-locator [owner] [uri]",
@@ -213,7 +213,7 @@ func RemoveOsLocatorCmd() *cobra.Command {
 	return cmd
 }
 
-// ModifyOsLocatorCmd creates a command for modifying os locator
+// ModifyOsLocatorCmd creates a command to modify the object store locator uri for an owner.
 func ModifyOsLocatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "modify-locator [owner] [uri]",
@@ -248,10 +248,10 @@ func ModifyOsLocatorCmd() *cobra.Command {
 	return cmd
 }
 
-// AddScopeSpecificationCmd creates a command for adding scope specificiation
-func AddScopeSpecificationCmd() *cobra.Command {
+// WriteScopeSpecificationCmd creates a command for adding scope specificiation
+func WriteScopeSpecificationCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-scope-specification [specification-id] [owner-addresses] [responsible-parties] [contract-specification-ids] [description-name] [description] [website-url] [icon-url]",
+		Use:   "write-scope-specification [specification-id] [owner-addresses] [responsible-parties] [contract-specification-ids] [description-name] [description] [website-url] [icon-url]",
 		Short: "Add/Update metadata scope specification to the provenance blockchain",
 		Args:  cobra.RangeArgs(4, 8),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -287,7 +287,7 @@ func AddScopeSpecificationCmd() *cobra.Command {
 				ContractSpecIds: contractSpecIds,
 			}
 
-			msg := types.NewMsgAddScopeSpecificationRequest(scopeSpec, signers)
+			msg := types.NewMsgWriteScopeSpecificationRequest(scopeSpec, signers)
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err
@@ -303,10 +303,10 @@ func AddScopeSpecificationCmd() *cobra.Command {
 	return cmd
 }
 
-// AddContractSpecificationCmd creates a command to add/update contract specifications
-func AddContractSpecificationCmd() *cobra.Command {
+// WriteContractSpecificationCmd creates a command to add/update contract specifications
+func WriteContractSpecificationCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-contract-specification [contractspec-id] [owners] [parties-involved] [source-value] [classname] [description-name] [description] [website-url] [icon-url]",
+		Use:   "write-contract-specification [contractspec-id] [owners] [parties-involved] [source-value] [classname] [description-name] [description] [website-url] [icon-url]",
 		Short: "Add/Update metadata contract specification on the provenance blockchain",
 		Long: `Add/Update metadata contract specification on the provenance blockchain
 [contractspec-id] - contract specification metaaddress
@@ -314,7 +314,7 @@ func AddContractSpecificationCmd() *cobra.Command {
 [parties-involved] - comma delimited list of party types.  Accepted values: originator,servicer,investor,custodian,owner,affiliate,omnibus,provenance
 [source-value] - source identifier of type hash or resourceid
 [classname] - Name of contract specification
-[description-name] - optional- description name identifier 
+[description-name] - optional- description name identifier
 [description] - optional - description text
 [website-url] - optional - address of website
 [icon-url] - optional - address to a image to be used as an icon
@@ -357,7 +357,7 @@ func AddContractSpecificationCmd() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgAddContractSpecificationRequest(contractSpecification, signers)
+			msg := types.NewMsgWriteContractSpecificationRequest(contractSpecification, signers)
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err
@@ -371,9 +371,9 @@ func AddContractSpecificationCmd() *cobra.Command {
 	return cmd
 }
 
-func AddRecordSpecificationCmd() *cobra.Command {
+func WriteRecordSpecificationCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-record-specification [specification-id] [name] [input-specifications] [type-name] [result-types] [responsible-parties]",
+		Use:   "write-record-specification [specification-id] [name] [input-specifications] [type-name] [result-types] [responsible-parties]",
 		Short: "Add/Update metadata record specification to the provenance blockchain",
 		Long: fmt.Sprintf(`Add/Update metadata record specification to the provenance blockchain.
 [specification-id] - record specification metaaddress
@@ -422,7 +422,7 @@ $ %s tx metadata recspec1qh... recordname inputname1,typename1,hashvalue;inputen
 				ResponsibleParties: partyTypes,
 			}
 
-			msg := *types.NewMsgAddRecordSpecificationRequest(recordSpecification, signers)
+			msg := *types.NewMsgWriteRecordSpecificationRequest(recordSpecification, signers)
 
 			err = msg.ValidateBasic()
 			if err != nil {

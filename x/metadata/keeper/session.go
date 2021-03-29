@@ -89,7 +89,9 @@ func (k Keeper) hasSessionRecords(ctx sdk.Context, id types.MetadataAddress) (bo
 	return hasRecords, nil
 }
 
-// IterateSessions processes all stored scopes with the given handler.
+// IterateSessions processes stored sessions with the given handler.
+// If the scopeID is an empty MetadataAddress, all sessions will be processed.
+// Otherwise, just the sessions for the given scopeID will be processed.
 func (k Keeper) IterateSessions(ctx sdk.Context, scopeID types.MetadataAddress, handler func(types.Session) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
 	prefix, err := scopeID.ScopeSessionIteratorPrefix()
@@ -100,8 +102,10 @@ func (k Keeper) IterateSessions(ctx sdk.Context, scopeID types.MetadataAddress, 
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var session types.Session
-		k.cdc.MustUnmarshalBinaryBare(it.Value(), &session)
-		if handler(session) {
+		err = k.cdc.UnmarshalBinaryBare(it.Value(), &session)
+		if err != nil {
+			k.Logger(ctx).Error("could not unmarshal session", "address", it.Key(), "error", err)
+		} else if handler(session) {
 			break
 		}
 	}
