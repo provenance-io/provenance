@@ -42,10 +42,13 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 
 	// Add marker requests must pass extra validation for denom (in addition to regular coin validation expression)
 	valExp := k.GetParams(ctx).UnrestrictedDenomRegex
-	if v, expErr := regexp.Compile(valExp); err != nil {
-		return nil, expErr
-	} else if !v.MatchString(msg.Amount.Denom) {
-		return nil, fmt.Errorf("invalid denom (fails unrestricted marker denom validation %s): %s", valExp, msg.Amount.Denom)
+	if len(valExp) > 0 {
+		v, expErr := regexp.Compile(valExp)
+		if expErr != nil {
+			return nil, expErr
+		} else if !v.MatchString(msg.Amount.Denom) {
+			return nil, fmt.Errorf("invalid denom (fails unrestricted marker denom validation %s): %s", valExp, msg.Amount.Denom)
+		}
 	}
 
 	addr := types.MustGetMarkerAddress(msg.Amount.Denom)
