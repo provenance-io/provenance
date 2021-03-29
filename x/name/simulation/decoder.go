@@ -11,7 +11,7 @@ import (
 
 // NewDecodeStore returns a decoder function closure that unmarshals the KVPair's
 // Value
-func NewDecodeStore(cdc codec.LegacyAmino) func(kvA, kvB kv.Pair) string {
+func NewDecodeStore(cdc codec.Marshaler) func(kvA, kvB kv.Pair) string {
 	return func(kvA, kvB kv.Pair) string {
 		switch {
 		case bytes.Equal(kvA.Key[:1], types.NameKeyPrefixAmino):

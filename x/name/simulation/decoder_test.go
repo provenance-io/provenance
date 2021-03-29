@@ -2,28 +2,28 @@ package simulation_test
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	"github.com/provenance-io/provenance/app"
 
 	"github.com/provenance-io/provenance/x/name/simulation"
 	"github.com/provenance-io/provenance/x/name/types"
 )
 
 func TestDecodeStore(t *testing.T) {
-	cdc := app.MakeEncodingConfig().Amino
-	dec := simulation.NewDecodeStore(*cdc)
+	cdc, _ := simapp.MakeCodecs()
+	dec := simulation.NewDecodeStore(cdc)
 
 	testNameRecord := types.NewNameRecord("test", sdk.AccAddress{}, true)
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{
-			{Key: types.NameKeyPrefixAmino, Value: cdc.MustMarshalBinaryBare(testNameRecord)},
-			{Key: types.AddressKeyPrefixAmino, Value: cdc.MustMarshalBinaryBare(testNameRecord)},
+			{Key: types.NameKeyPrefixAmino, Value: cdc.MustMarshalBinaryBare(&testNameRecord)},
+			{Key: types.AddressKeyPrefixAmino, Value: cdc.MustMarshalBinaryBare(&testNameRecord)},
 			{Key: []byte{0x99}, Value: []byte{0x99}},
 		},
 	}
