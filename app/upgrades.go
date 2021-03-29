@@ -32,7 +32,7 @@ var handlers = map[string]appUpgrade{
 		},
 	},
 	"v0.3.0": {},
-	"v0.4.0": {
+	"v1.0.0": {
 		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) {
 			app.NameKeeper.ConvertLegacyAmino(ctx)
 		},
