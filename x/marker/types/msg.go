@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -37,6 +38,8 @@ var (
 	_ sdk.Msg = &MsgWithdrawRequest{}
 	_ sdk.Msg = &MsgTransferRequest{}
 )
+
+const maxDenomMetadataDescriptionLength = 200
 
 // Type returns the message action.
 func (msg MsgAddMarkerRequest) Type() string { return TypeAddMarkerRequest }
@@ -522,7 +525,11 @@ func (msg MsgSetDenomMetadataRequest) Route() string { return ModuleName }
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgSetDenomMetadataRequest) ValidateBasic() error {
 	if msg.Metadata.Base == "" {
-		return fmt.Errorf("invalid set denom metadata request, base denom value must be set")
+		return errors.New("invalid set denom metadata request, base denom value must be set")
+	}
+	if len(msg.Metadata.Description) > maxDenomMetadataDescriptionLength {
+		return fmt.Errorf("invalid set denom metadata request, description too long (expected <= %d, got %d)",
+			maxDenomMetadataDescriptionLength, len(msg.Metadata.Description))
 	}
 
 	hasBaseDenomUnits := false
