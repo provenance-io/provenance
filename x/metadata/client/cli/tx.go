@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -32,8 +33,8 @@ func NewTxCmd() *cobra.Command {
 	}
 
 	txCmd.AddCommand(
-		WriteMetadataScopeCmd(),
-		RemoveMetadataScopeCmd(),
+		WriteScopeCmd(),
+		RemoveScopeCmd(),
 
 		BindOsLocatorCmd(),
 		RemoveOsLocatorCmd(),
@@ -52,8 +53,8 @@ func NewTxCmd() *cobra.Command {
 	return txCmd
 }
 
-// WriteMetadataScopeCmd creates a command for adding or updating a metadata scope.
-func WriteMetadataScopeCmd() *cobra.Command {
+// WriteScopeCmd creates a command for adding or updating a metadata scope.
+func WriteScopeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "write-scope [scope-id] [spec-id] [owner-addresses] [data-access] [value-owner-address]",
 		Short: "Add/Update a metadata scope to the provenance blockchain",
@@ -112,8 +113,8 @@ func WriteMetadataScopeCmd() *cobra.Command {
 	return cmd
 }
 
-// RemoveMetadataScopeCmd creates a command for removing a scope.
-func RemoveMetadataScopeCmd() *cobra.Command {
+// RemoveScopeCmd creates a command for removing a scope.
+func RemoveScopeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "remove-scope [scope-id]",
 		Short: "Remove a metadata scope to the provenance blockchain",
@@ -309,24 +310,24 @@ func WriteContractSpecificationCmd() *cobra.Command {
 		Use:   "write-contract-specification [contractspec-id] [owners] [parties-involved] [source-value] [classname] [description-name] [description] [website-url] [icon-url]",
 		Short: "Add/Update metadata contract specification on the provenance blockchain",
 		Long: `Add/Update metadata contract specification on the provenance blockchain
-[contractspec-id] - contract specification metaaddress
-[owners] - comma delimited list of bech32 owner addresses
-[parties-involved] - comma delimited list of party types.  Accepted values: originator,servicer,investor,custodian,owner,affiliate,omnibus,provenance
-[source-value] - source identifier of type hash or resourceid
-[classname] - Name of contract specification
-[description-name] - optional- description name identifier
-[description] - optional - description text
-[website-url] - optional - address of website
-[icon-url] - optional - address to a image to be used as an icon
-		`,
+contractspec-id]   - contract specification metaaddress
+[owners]            - comma delimited list of bech32 owner addresses
+[parties-involved]  - comma delimited list of party types.  Accepted values: originator,servicer,investor,custodian,owner,affiliate,omnibus,provenance
+[source-value]      - source identifier of type hash or resourceid
+[classname]         - name of contract specification
+[description-name]* - description name identifier 
+[description]*      - description text
+[website-url]*      - address of website
+[icon-url]*         - address to a image to be used as an icon
+* - are optional values		
+`,
 		Args: cobra.RangeArgs(5, 9),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-			var specificationID types.MetadataAddress
-			specificationID, err = types.MetadataAddressFromBech32(args[0])
+			specificationID, err := types.MetadataAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
@@ -371,21 +372,178 @@ func WriteContractSpecificationCmd() *cobra.Command {
 	return cmd
 }
 
+// AddRecordCmd creates a command to add/update records
+func AddRecordCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "add-record [scope-id] [record-spec-id] [name] [process] [inputs] [outputs] [parties-involved] [session-id]",
+		Short: "Add/Update metadata record to the provenance blockchain",
+		Long: fmt.Sprintf(`Add/Update metadata record to the provenance blockchain.
+[scope-id]         - scope metaaddress for the record
+[record-spec-id]   - associated record specification metaaddress
+[name]             - record name
+[process]          - comma delimited structure of process name, id (hash or bech32 address), and method: Example: processname,hashvalue,method
+[inputs]           - semicolon delimited list of input structures.  Example: name,soure-value(hash or metaaddress),typename,status(proposed,record);...
+[outputs]          - semicolon delimited list of outputs structures. Example: hash-value,status(pass,skip,fail);...
+[parties-involved] - comma delimited list of party types.  Accepted values: originator,servicer,investor,custodian,owner,affiliate,omnibus,provenance
+[session-id]       - optional - session metaaddress, if not provided it will be created
+Example: 
+$ %s tx metadata add-record recspec1qh... recordname myprocessname,myhashvalue input1name,input1hashvalue,input1typename,proposed;... output1hash,pass;... session123...
+`, version.AppName),
+		Args: cobra.RangeArgs(7, 8),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			scopeID, err := types.MetadataAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			recordSpecID, err := types.MetadataAddressFromBech32(args[1])
+			if err != nil {
+				return err
+			}
+
+			process, err := parseProcess(args[3])
+			if err != nil {
+				return err
+			}
+			inputs, err := parseRecordInputs(args[4])
+			if err != nil {
+				return err
+			}
+			outputs, err := parseRecordOutputs(args[5])
+			if err != nil {
+				return err
+			}
+			parties := parsePartyTypes(args[6])
+
+			signers, err := parseSigners(cmd, &clientCtx)
+			if err != nil {
+				return err
+			}
+
+			sessionID := types.MetadataAddress{}
+			stringUUID := uuid.New()
+			if len(args) == 8 {
+				sessionID, err = types.MetadataAddressFromBech32(args[7])
+				if err != nil {
+					return err
+				}
+			} else {
+				scopeUUID, _ := scopeID.ScopeUUID()
+				sessionID = types.SessionMetadataAddress(scopeUUID, stringUUID)
+			}
+			sessionUUID, _ := sessionID.SessionUUID()
+			sessionIDComponents := types.SessionIdComponents{
+				ScopeIdentifier: &types.SessionIdComponents_ScopeAddr{ScopeAddr: scopeID.String()},
+				SessionUuid:     stringUUID.String(),
+			}
+			if sessionUUID.String() != stringUUID.String() {
+				return nil
+			}
+			record := types.Record{
+				Name:            args[2],
+				SpecificationId: recordSpecID,
+				Process:         *process,
+				Inputs:          inputs,
+				Outputs:         outputs,
+				SessionId:       sessionID,
+			}
+
+			msg := *types.NewMsgWriteRecordRequest(record, &sessionIDComponents, "", signers, parties)
+			err = msg.ValidateBasic()
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+		},
+	}
+
+	addSignerFlagCmd(cmd)
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// parseProcess parses a comma separated structure of name, processid(hash or metaaddress), method.  name,hashvalue,methodnam;...
+func parseProcess(cliDelimitedValue string) (*types.Process, error) {
+	values := strings.Split(cliDelimitedValue, ",")
+	if len(values) != 3 {
+		return nil, fmt.Errorf("invalid number of values for process: %v", len(values))
+	}
+
+	process := types.Process{
+		Name:   values[0],
+		Method: values[2],
+	}
+	processID, err := types.MetadataAddressFromBech32(values[1])
+	if err != nil {
+		process.ProcessId = &types.Process_Address{Address: string(processID)}
+	} else {
+		process.ProcessId = &types.Process_Hash{Hash: values[0]}
+	}
+	return &process, nil
+}
+
+// parseRecordInputs parses a list of semicolon, comma delimited input structure name,soure-value(hash or metaaddress),typename,status(proposed,record);...
+func parseRecordInputs(cliDelimitedValue string) ([]types.RecordInput, error) {
+	delimitedInputs := strings.Split(cliDelimitedValue, ";")
+	inputs := make([]types.RecordInput, len(delimitedInputs))
+	for i, delimitedInput := range delimitedInputs {
+		values := strings.Split(delimitedInput, ",")
+		if len(values) != 4 {
+			return nil, fmt.Errorf("invalid number of values for record input: %v", len(values))
+		}
+		inputs[i] = types.RecordInput{
+			Name:     values[0],
+			TypeName: values[2],
+			Status:   types.RecordInputStatus(types.RecordInputStatus_value[fmt.Sprintf("RECORD_INPUT_STATUS_%s", strings.ToUpper(values[3]))]),
+		}
+		sourceValue := values[1]
+		recordID, err := types.MetadataAddressFromBech32(sourceValue)
+		if err != nil {
+			inputs[i].Source = &types.RecordInput_Hash{Hash: sourceValue}
+		} else {
+			inputs[i].Source = &types.RecordInput_RecordId{RecordId: recordID}
+		}
+	}
+	return inputs, nil
+}
+
+// parseRecordOutputs parses a list of semicolon, comma delimited output structures hash,status(pass,skip,fail);...
+func parseRecordOutputs(cliDelimitedValue string) ([]types.RecordOutput, error) {
+	delimitedOutputs := strings.Split(cliDelimitedValue, ";")
+	outputs := make([]types.RecordOutput, len(delimitedOutputs))
+	for i, delimitedOutput := range delimitedOutputs {
+		values := strings.Split(delimitedOutput, ",")
+		if len(values) != 2 {
+			return nil, fmt.Errorf("invalid number of values for record output: %v", len(values))
+		}
+		outputs[i] = types.RecordOutput{
+			Hash:   values[0],
+			Status: types.ResultStatus(types.ResultStatus_value[fmt.Sprintf("ResultStatus_RESULT_STATUS_%s", strings.ToUpper(values[1]))]),
+		}
+	}
+	return outputs, nil
+}
+
 func WriteRecordSpecificationCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "write-record-specification [specification-id] [name] [input-specifications] [type-name] [result-types] [responsible-parties]",
 		Short: "Add/Update metadata record specification to the provenance blockchain",
 		Long: fmt.Sprintf(`Add/Update metadata record specification to the provenance blockchain.
-[specification-id] - record specification metaaddress
-[name] - record name
+[specification-id]     - record specification metaaddress
+[name]                 - record name
 [input-specifications] - semi-colon delimited list of input specifications <name>,<type-name>,<source-value>
-[type-name] - contract specification type name
-[result-types] - result definition type.  Accepted values: proposed,record,record_list
-[responsible-parties] - comma delimited list of party types.  Accepted values: originator,servicer,investor,custodian,owner,affiliate,omnibus,provenance
-
+[type-name]            - contract specification type name
+[result-types]         - result definition type.  Accepted values: proposed,record,record_list
+[responsible-parties]  - comma delimited list of party types.  Accepted values: originator,servicer,investor,custodian,owner,affiliate,omnibus,provenance
 Example: 
-$ %s tx metadata recspec1qh... recordname inputname1,typename1,hashvalue;inputename2,typename2,<recordmetaaddress> record_list owner,originator
-
+$ %s tx metadata write-record-specification recspec1qh... recordname inputname1,typename1,hashvalue;inputename2,typename2,<recordmetaaddress> record_list owner,originator
 `, version.AppName),
 		Args: cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -406,7 +564,7 @@ $ %s tx metadata recspec1qh... recordname inputname1,typename1,hashvalue;inputen
 				return err
 			}
 
-			resultType := definitionType(args[4])
+			resultType := types.DefinitionType(types.DefinitionType_value[fmt.Sprintf("DEFINITION_TYPE_%s", strings.ToUpper(args[4]))])
 			partyTypes := parsePartyTypes(args[5])
 			signers, err := parseSigners(cmd, &clientCtx)
 			if err != nil {
@@ -423,7 +581,6 @@ $ %s tx metadata recspec1qh... recordname inputname1,typename1,hashvalue;inputen
 			}
 
 			msg := *types.NewMsgWriteRecordSpecificationRequest(recordSpecification, signers)
-
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err
@@ -467,6 +624,7 @@ func addSignerFlagCmd(cmd *cobra.Command) {
 	cmd.Flags().String(FlagSigners, "", "comma delimited list of bech32 addresses")
 }
 
+// parseSigners checks signers flag for signers, else uses the from address
 func parseSigners(cmd *cobra.Command, client *client.Context) ([]string, error) {
 	flagSet := cmd.Flags()
 	if flagSet.Changed(FlagSigners) {
@@ -499,6 +657,7 @@ func definitionType(cliValue string) types.DefinitionType {
 	return types.DefinitionType(typeValue)
 }
 
+// parseDescription hydrates Description from a sorted array name,description,website,icon-url
 func parseDescription(cliArgs []string) *types.Description {
 	if len(cliArgs) == 0 {
 		return nil
@@ -596,7 +755,41 @@ func RemoveContractSpecificationCmd() *cobra.Command {
 	return cmd
 }
 
-// RemoveRecordSpecificationCmd creates a command to remove record specification
+// RemoveRecordCmd creates a command to remove a contract specification
+func RemoveRecordCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "remove-record [record-id]",
+		Short: "Remove record specification from the provenance blockchain",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			var recordID types.MetadataAddress
+			recordID, err = types.MetadataAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			signers, err := parseSigners(cmd, &clientCtx)
+			if err != nil {
+				return err
+			}
+			msg := *types.NewMsgDeleteRecordRequest(recordID, signers)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+		},
+	}
+
+	addSignerFlagCmd(cmd)
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// RemoveRecordSpecificationCmd creates  a command to remove a record specification
 func RemoveRecordSpecificationCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "remove-record-specification [specification-id]",

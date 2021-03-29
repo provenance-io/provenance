@@ -127,7 +127,7 @@ func (k msgServer) WriteRecord(
 	if e, found := k.GetRecord(ctx, recordID); found {
 		existing = &e
 	}
-	if err := k.ValidateRecordUpdate(ctx, existing, msg.Record, msg.Signers); err != nil {
+	if err := k.ValidateRecordUpdate(ctx, existing, msg.Record, msg.Signers, msg.PartiesInvolved); err != nil {
 		return nil, err
 	}
 

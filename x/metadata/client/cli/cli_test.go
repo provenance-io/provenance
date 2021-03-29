@@ -1430,7 +1430,7 @@ func (s *IntegrationCLITestSuite) TestMetadataScopeTxCommands() {
 	testCases := []txCmdTestCase{
 		{
 			"should successfully add metadata scope",
-			cli.WriteMetadataScopeCmd(),
+			cli.WriteScopeCmd(),
 			[]string{
 				scopeID,
 				specID,
@@ -1446,7 +1446,7 @@ func (s *IntegrationCLITestSuite) TestMetadataScopeTxCommands() {
 		},
 		{
 			"should successfully add metadata scope with signers flag",
-			cli.WriteMetadataScopeCmd(),
+			cli.WriteScopeCmd(),
 			[]string{
 				types.ScopeMetadataAddress(uuid.New()).String(),
 				types.ScopeSpecMetadataAddress(uuid.New()).String(),
@@ -1463,7 +1463,7 @@ func (s *IntegrationCLITestSuite) TestMetadataScopeTxCommands() {
 		},
 		{
 			"should fail to add metadata scope, incorrect scope id",
-			cli.WriteMetadataScopeCmd(),
+			cli.WriteScopeCmd(),
 			[]string{
 				"not-a-uuid",
 				types.ScopeSpecMetadataAddress(uuid.New()).String(),
@@ -1479,7 +1479,7 @@ func (s *IntegrationCLITestSuite) TestMetadataScopeTxCommands() {
 		},
 		{
 			"should fail to add metadata scope, incorrect scope spec id",
-			cli.WriteMetadataScopeCmd(),
+			cli.WriteScopeCmd(),
 			[]string{
 				types.ScopeMetadataAddress(uuid.New()).String(),
 				"not-a-uuid",
@@ -1495,7 +1495,7 @@ func (s *IntegrationCLITestSuite) TestMetadataScopeTxCommands() {
 		},
 		{
 			"should fail to add metadata scope, validate basic will err on owner format",
-			cli.WriteMetadataScopeCmd(),
+			cli.WriteScopeCmd(),
 			[]string{
 				types.ScopeMetadataAddress(uuid.New()).String(),
 				types.ScopeSpecMetadataAddress(uuid.New()).String(),
@@ -1511,7 +1511,7 @@ func (s *IntegrationCLITestSuite) TestMetadataScopeTxCommands() {
 		},
 		{
 			"should fail to remove metadata scope, invalid scopeid",
-			cli.RemoveMetadataScopeCmd(),
+			cli.RemoveScopeCmd(),
 			[]string{
 				"not-valid",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -1523,7 +1523,7 @@ func (s *IntegrationCLITestSuite) TestMetadataScopeTxCommands() {
 		},
 		{
 			"should successfully remove metadata scope",
-			cli.RemoveMetadataScopeCmd(),
+			cli.RemoveScopeCmd(),
 			[]string{
 				scopeID,
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -1535,7 +1535,7 @@ func (s *IntegrationCLITestSuite) TestMetadataScopeTxCommands() {
 		},
 		{
 			"should fail to metadata scope that no longer exists",
-			cli.RemoveMetadataScopeCmd(),
+			cli.RemoveScopeCmd(),
 			[]string{
 				scopeID,
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -2052,3 +2052,32 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 	runTxCmdTestCases(s, testCases)
 }
 
+func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
+	// addScopeCmd := cli.AddScopeCmd()
+	addRecordCmd := cli.AddRecordCmd()
+	// removeRecordCmd := cli.RemoveRecordCmd()
+	testCases := []txCmdTestCase{
+		{
+			"should successfully add record without a session",
+			addRecordCmd,
+			[]string{
+				s.scopeID.String(),
+				s.contractSpecID.String(),
+				"nameforsessionless",
+				"processname,hashvalue,methodname",
+				"input1name,hashvalue,typename,proposed",
+				"outputhashvalue,pass",
+				"owner,originator",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false,
+			"",
+			&sdk.TxResponse{},
+			0,
+		},
+	}
+	runTxCmdTestCases(s, testCases)
+}

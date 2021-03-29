@@ -275,8 +275,8 @@ func (msg *MsgWriteSessionRequest) ConvertOptionalFields() error {
 // ------------------  MsgWriteRecordRequest  ------------------
 
 // NewMsgWriteRecordRequest creates a new msg instance
-func NewMsgWriteRecordRequest() *MsgWriteRecordRequest {
-	return &MsgWriteRecordRequest{}
+func NewMsgWriteRecordRequest(record Record, sessionIDComponents *SessionIdComponents, contractSpecUUID string, signers []string, partiesInvolved []PartyType) *MsgWriteRecordRequest {
+	return &MsgWriteRecordRequest{Record: record, PartiesInvolved: partiesInvolved, Signers: signers, SessionIdComponents: sessionIDComponents, ContractSpecUuid: contractSpecUUID}
 }
 
 func (msg MsgWriteRecordRequest) String() string {
@@ -355,8 +355,8 @@ func (msg *MsgWriteRecordRequest) ConvertOptionalFields() error {
 // ------------------  MsgDeleteRecordRequest  ------------------
 
 // NewMsgDeleteScopeSpecificationRequest creates a new msg instance
-func NewMsgDeleteRecordRequest() *MsgDeleteRecordRequest {
-	return &MsgDeleteRecordRequest{}
+func NewMsgDeleteRecordRequest(recordID MetadataAddress, signers []string) *MsgDeleteRecordRequest {
+	return &MsgDeleteRecordRequest{RecordId: recordID, Signers: signers}
 }
 
 func (msg MsgDeleteRecordRequest) String() string {
@@ -923,14 +923,14 @@ func (msg *SessionIdComponents) GetSessionAddr() (*MetadataAddress, error) {
 		if err != nil {
 			return nil, fmt.Errorf("invalid session uuid: %w", err)
 		}
-		scopeUUID = &uid
+		sessionUUID = &uid
 	}
 	if msgScopeUUID := msg.GetScopeUuid(); len(msgScopeUUID) > 0 {
 		uid, err := uuid.Parse(msgScopeUUID)
 		if err != nil {
 			return nil, fmt.Errorf("invalid scope uuid: %w", err)
 		}
-		sessionUUID = &uid
+		scopeUUID = &uid
 	} else if msgScopeAddr := msg.GetScopeAddr(); len(msgScopeAddr) > 0 {
 		addr, addrErr := MetadataAddressFromBech32(msgScopeAddr)
 		if addrErr != nil {
@@ -940,7 +940,7 @@ func (msg *SessionIdComponents) GetSessionAddr() (*MetadataAddress, error) {
 		if err != nil {
 			return nil, fmt.Errorf("invalid scope addr: %w", err)
 		}
-		sessionUUID = &uid
+		scopeUUID = &uid
 	}
 
 	if scopeUUID == nil && sessionUUID == nil {
