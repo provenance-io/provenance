@@ -2,7 +2,6 @@ package simulation_test
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -10,12 +9,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 
+	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/name/simulation"
 	"github.com/provenance-io/provenance/x/name/types"
 )
 
 func TestDecodeStore(t *testing.T) {
-	cdc, _ := simapp.MakeCodecs()
+	cdc:= app.MakeEncodingConfig().Marshaler
 	dec := simulation.NewDecodeStore(cdc)
 
 	testNameRecord := types.NewNameRecord("test", sdk.AccAddress{}, true)
