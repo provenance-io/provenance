@@ -318,3 +318,12 @@ func MarkerTypeFromString(str string) (MarkerType, error) {
 
 	return MarkerType_Unknown, fmt.Errorf("'%s' is not a valid marker status", str)
 }
+
+func (ms MarkerStatus) IsOneOf(statuses ...MarkerStatus) bool {
+	for _, s := range statuses {
+		if ms == s {
+			return true
+		}
+	}
+	return false
+}

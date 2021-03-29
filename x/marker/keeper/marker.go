@@ -574,9 +574,9 @@ func (k Keeper) SetMarkerMetadata(ctx sdk.Context, metadata banktypes.Metadata, 
 	if !m.GetManager().Equals(caller) && !m.AddressHasAccess(caller, types.Access_Admin) {
 		return fmt.Errorf("%s is not allowed to manage marker metadata", caller.String())
 	}
-	// status must currently be set to proposed
-	if m.GetStatus() != types.StatusProposed {
-		return fmt.Errorf("can only set denom metadata for markers in the Proposed status")
+	// status must currently be set to proposed or active.
+	if !m.GetStatus().IsOneOf(types.StatusProposed, types.StatusActive) {
+		return fmt.Errorf("can only set denom metadata for markers in the Proposed or Active status")
 	}
 
 	// record the metadata with the bank
