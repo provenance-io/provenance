@@ -14,14 +14,14 @@ import (
 func NewDecodeStore(cdc codec.LegacyAmino) func(kvA, kvB kv.Pair) string {
 	return func(kvA, kvB kv.Pair) string {
 		switch {
-		case bytes.Equal(kvA.Key[:1], types.NameKeyPrefix):
+		case bytes.Equal(kvA.Key[:1], types.NameKeyPrefixAmino):
 			var nameA, nameB types.NameRecord
 
 			cdc.MustUnmarshalBinaryBare(kvA.Value, &nameA)
 			cdc.MustUnmarshalBinaryBare(kvB.Value, &nameB)
 
 			return fmt.Sprintf("%v\n%v", nameA, nameB)
-		case bytes.Equal(kvA.Key[:1], types.AddressKeyPrefix):
+		case bytes.Equal(kvA.Key[:1], types.AddressKeyPrefixAmino):
 			var nameA, nameB types.NameRecord
 
 			cdc.MustUnmarshalBinaryBare(kvA.Value, &nameA)

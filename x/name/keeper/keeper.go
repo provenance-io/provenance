@@ -98,7 +98,7 @@ func (keeper Keeper) SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAdd
 	if err != nil {
 		return err
 	}
-	indexKey := append(addrPrefix, key...) // [0x02] :: [addr-bytes] :: [name-key-bytes]
+	indexKey := append(addrPrefix, key...) // [0x04] :: [addr-bytes] :: [name-key-bytes]
 	store.Set(indexKey, bz)
 	return nil
 }
@@ -109,6 +109,19 @@ func (keeper Keeper) GetRecordByName(ctx sdk.Context, name string) (record *type
 	if err != nil {
 		return nil, err
 	}
+	return getNameRecord(ctx, keeper, key)
+}
+
+// GetRecordByName resolves a record by name.
+func (keeper Keeper) GetRecordByNameLegacy(ctx sdk.Context, name string) (record *types.NameRecord, err error) {
+	key, err := types.GetNameKeyPrefixLegacyAmino(name)
+	if err != nil {
+		return nil, err
+	}
+	return getNameRecord(ctx, keeper, key)
+}
+
+func getNameRecord(ctx sdk.Context, keeper Keeper, key []byte) (record *types.NameRecord, err error) {
 	store := ctx.KVStore(keeper.storeKey)
 	if !store.Has(key) {
 		return nil, types.ErrNameNotBound
