@@ -18,6 +18,7 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
+// DELETE THIS TEST SUITE A FEW VERSIONS AFTER 1.0.0
 type KeeperLegacyTestSuite struct {
 	suite.Suite
 

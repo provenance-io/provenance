@@ -37,6 +37,7 @@ func (keeper Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	return types.NewGenesisState(params, records)
 }
 
+// convert name records before 1.0.0 to the right proto encoding.
 func (keeper Keeper) ConvertLegacyAmino(ctx sdk.Context) types.NameRecords {
 	// Genesis state data structure.
 	records := types.NameRecords{}
