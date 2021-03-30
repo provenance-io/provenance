@@ -43,7 +43,8 @@ func MarkerStatusFromString(str string) (MarkerStatus, error) {
 
 // ValidMarkerStatus returns true if the marker status is valid and false otherwise.
 func ValidMarkerStatus(markerStatus MarkerStatus) bool {
-	return markerStatus.IsOneOf(StatusProposed, StatusFinalized, StatusActive, StatusCancelled, StatusDestroyed)
+	_, ok := MarkerStatus_name[int32(markerStatus)]
+	return ok && markerStatus != StatusUndefined
 }
 
 // Marshal needed for protobuf compatibility.
