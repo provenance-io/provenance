@@ -8,7 +8,7 @@ import (
 	"math/rand"
 	"strings"
 
-	tmrand "github.com/tendermint/tendermint/libs/rand"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 
@@ -21,6 +21,7 @@ const (
 	MinSegmentLength       = "min_segment_length"
 	MaxNameLevels          = "max_namne_levels"
 	AllowUnrestrictedNames = "allow_unrestricted_names"
+	RootNameSegment        = "root_name_segment"
 )
 
 // GenMaxSegmentLength randomized Max Segment Length
@@ -41,6 +42,11 @@ func GenMinSegmentLength(r *rand.Rand) uint32 {
 // GenAllowUnrestrictedNames returns a randomized AllowUnrestrictedNames parameter.
 func GenAllowUnrestrictedNames(r *rand.Rand) bool {
 	return r.Int63n(101) <= 50 // 50% chance of unrestricted names being enabled
+}
+
+// GenRootNameSegment returns a randomized String to use for the root name binding
+func GenRootNameSegment(r *rand.Rand, minSegmentLength uint32) string {
+	return strings.ToLower(simtypes.RandStringOfLength(r, int(minSegmentLength)))
 }
 
 // RandomizedGenState generates a random GenesisState for name
@@ -69,7 +75,12 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { allowUnrestrictedNames = GenAllowUnrestrictedNames(r) },
 	)
 
-	rootNameSegment := strings.ToLower(tmrand.NewRand().Str(int(minValueLength)))
+	var rootNameSegment string
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, RootNameSegment, &rootNameSegment, simState.Rand,
+		func(r *rand.Rand) { rootNameSegment = GenRootNameSegment(r, minValueLength) },
+	)
+
 	accountGenesis := types.GenesisState{
 		Params: types.Params{
 			MaxSegmentLength:       maxValueLength,
