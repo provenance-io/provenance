@@ -432,6 +432,7 @@ $ %s tx metadata add-record recspec1qh... recordname myprocessname,myhashvalue i
 				Inputs:          inputs,
 				Outputs:         outputs,
 			}
+			var sessionIDComponents *types.SessionIdComponents
 			if len(args) == 8 {
 				sessionID, err := types.MetadataAddressFromBech32(args[7])
 				if err != nil {
@@ -440,14 +441,16 @@ $ %s tx metadata add-record recspec1qh... recordname myprocessname,myhashvalue i
 				record.SessionId = sessionID
 			} else {
 				scopeUUID, _ := scopeID.ScopeUUID()
-				record.SessionId = types.SessionMetadataAddress(scopeUUID, uuid.New())
+				sessionIDComponents = &types.SessionIdComponents{
+					ScopeIdentifier: &types.SessionIdComponents_ScopeUuid{ScopeUuid: scopeUUID.String()},
+					SessionUuid:     uuid.New().String(),
+				}
 			}
-			msg := *types.NewMsgWriteRecordRequest(record, nil, "", signers, parties)
+			msg := *types.NewMsgWriteRecordRequest(record, sessionIDComponents, "", signers, parties)
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err
 			}
-
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
 		},
 	}

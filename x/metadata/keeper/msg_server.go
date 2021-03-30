@@ -121,7 +121,7 @@ func (k msgServer) WriteRecord(
 		return nil, err
 	}
 
-	if _, found := k.GetSession(ctx, msg.Record.SessionId); !found {
+	if _, found := k.GetSession(ctx, msg.Record.SessionId); !found && msg.SessionIdComponents != nil {
 		// create session
 		contractSpecAddr, err := msg.Record.SpecificationId.AsContractSpecAddress()
 		if err != nil {
@@ -139,7 +139,7 @@ func (k msgServer) WriteRecord(
 					Address: owner,
 					Role:    pi,
 				}
-				i = i + 1
+				i++
 			}
 		}
 		session := types.Session{
@@ -153,6 +153,8 @@ func (k msgServer) WriteRecord(
 		}
 
 		k.SetSession(ctx, session)
+	} else if !found {
+		return nil, fmt.Errorf("unable to find session id %s", msg.Record.SessionId.String())
 	}
 
 	recordID := types.RecordMetadataAddress(scopeUUID, msg.Record.Name)
