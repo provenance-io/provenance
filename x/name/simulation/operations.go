@@ -56,7 +56,7 @@ func WeightedOperations(
 	}
 }
 
-// SimulateMsgBindName will bind a name under an existing name using a 40% probability of restricting it.
+// SimulateMsgBindName will bind a NAME under an existing name using a 40% probability of restricting it.
 func SimulateMsgBindName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
