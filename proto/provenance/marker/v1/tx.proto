@@ -179,9 +179,9 @@ message MsgSetDenomMetadataRequest {
   // description is A description of this denomination.
   // It is used to populate the Metadata.description field.
   string description = 3;
-  // base_name is the root of the name of this denomination. SI Prefix strings will be added to this to create the
+  // coin_name_root is the root of the name of this denomination. SI Prefix strings will be added to this to create the
   // desired denom units.
-  string base_name = 4;
+  string coin_name_root = 4;
   // available_prefixes is the list of available SI Prefixes for this denomination.
   // At least one must be supplied.
   // The smallest will be considered the base and be given an exponent of zero in its DenomUnit.
