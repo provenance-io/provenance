@@ -121,6 +121,40 @@ func (k msgServer) WriteRecord(
 		return nil, err
 	}
 
+	if _, found := k.GetSession(ctx, msg.Record.SessionId); !found {
+		// create session
+		contractSpecAddr, err := msg.Record.SpecificationId.AsContractSpecAddress()
+		if err != nil {
+			return nil, err
+		}
+		contractSpec, found := k.GetContractSpecification(ctx, contractSpecAddr)
+		if !found {
+			return nil, fmt.Errorf("unable to find contract specification %s", contractSpecAddr.String())
+		}
+		parties := make([]types.Party, len(contractSpec.OwnerAddresses)*len(contractSpec.PartiesInvolved))
+		i := 0
+		for _, owner := range contractSpec.OwnerAddresses {
+			for _, pi := range contractSpec.PartiesInvolved {
+				parties[i] = types.Party{
+					Address: owner,
+					Role:    pi,
+				}
+				i = i + 1
+			}
+		}
+		session := types.Session{
+			SessionId:       msg.Record.SessionId,
+			Name:            contractSpec.ClassName,
+			SpecificationId: contractSpecAddr,
+			Parties:         parties,
+		}
+		if err := k.ValidateSessionUpdate(ctx, nil, session, msg.Signers); err != nil {
+			return nil, err
+		}
+
+		k.SetSession(ctx, session)
+	}
+
 	recordID := types.RecordMetadataAddress(scopeUUID, msg.Record.Name)
 
 	var existing *types.Record = nil

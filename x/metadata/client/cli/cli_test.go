@@ -2053,19 +2053,95 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 }
 
 func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
-	// addScopeCmd := cli.AddScopeCmd()
-	addRecordCmd := cli.AddRecordCmd()
-	// removeRecordCmd := cli.RemoveRecordCmd()
+	userAddress := s.testnet.Validators[0].Address.String()
+	addRecordCmd := cli.WriteRecordCmd()
+	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
+	scopeID := types.ScopeMetadataAddress(uuid.New())
+	contractSpecUUID := uuid.New()
+	contractSpecID := types.ContractSpecMetadataAddress(contractSpecUUID)
+
+	recordName := "recordnamefortests"
+	recSpecID := types.RecordSpecMetadataAddress(contractSpecUUID, recordName)
+
 	testCases := []txCmdTestCase{
 		{
-			"should successfully add record without a session",
+			"should successfully add scope specification for test setup",
+			cli.WriteScopeSpecificationCmd(),
+			[]string{
+				scopeSpecID.String(),
+				userAddress,
+				"owner,originator",
+				s.contractSpecID.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, userAddress),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, "", &sdk.TxResponse{}, 0,
+		},
+		{
+			"should successfully add metadata scope for test setup",
+			cli.WriteScopeCmd(),
+			[]string{
+				scopeID.String(),
+				scopeSpecID.String(),
+				userAddress,
+				userAddress,
+				userAddress,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, userAddress),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, "", &sdk.TxResponse{}, 0,
+		},
+		{
+			"should successfully add contract specification with resource hash for test setup",
+			cli.WriteContractSpecificationCmd(),
+			[]string{
+				contractSpecID.String(),
+				userAddress,
+				"owner,originator",
+				"hashvalue",
+				"`myclassname`",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, userAddress),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false,
+			"",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"should successfully add record specification for test setup",
+			cli.WriteRecordSpecificationCmd(),
+			[]string{
+				recSpecID.String(),
+				recordName,
+				"input1name,typename1,hashvalue",
+				"typename",
+				"resulttypes",
+				"responsibleparties",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false,
+			"",
+			&sdk.TxResponse{}, 0,
+		},
+		{
+			"should successfully add record with and create new session",
 			addRecordCmd,
 			[]string{
-				s.scopeID.String(),
-				s.contractSpecID.String(),
-				"nameforsessionless",
+				scopeID.String(),
+				recSpecID.String(),
+				recordName,
 				"processname,hashvalue,methodname",
-				"input1name,hashvalue,typename,proposed",
+				"input1name,hashvalue,typename1,proposed",
 				"outputhashvalue,pass",
 				"owner,originator",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),

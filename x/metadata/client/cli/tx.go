@@ -372,10 +372,10 @@ contractspec-id]   - contract specification metaaddress
 	return cmd
 }
 
-// AddRecordCmd creates a command to add/update records
-func AddRecordCmd() *cobra.Command {
+// WriteRecordCmd creates a command to add/update records
+func WriteRecordCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-record [scope-id] [record-spec-id] [name] [process] [inputs] [outputs] [parties-involved] [session-id]",
+		Use:   "write-record [scope-id] [record-spec-id] [name] [process] [inputs] [outputs] [parties-involved] [session-id]",
 		Short: "Add/Update metadata record to the provenance blockchain",
 		Long: fmt.Sprintf(`Add/Update metadata record to the provenance blockchain.
 [scope-id]         - scope metaaddress for the record
@@ -425,35 +425,24 @@ $ %s tx metadata add-record recspec1qh... recordname myprocessname,myhashvalue i
 				return err
 			}
 
-			sessionID := types.MetadataAddress{}
-			stringUUID := uuid.New()
-			if len(args) == 8 {
-				sessionID, err = types.MetadataAddressFromBech32(args[7])
-				if err != nil {
-					return err
-				}
-			} else {
-				scopeUUID, _ := scopeID.ScopeUUID()
-				sessionID = types.SessionMetadataAddress(scopeUUID, stringUUID)
-			}
-			sessionUUID, _ := sessionID.SessionUUID()
-			sessionIDComponents := types.SessionIdComponents{
-				ScopeIdentifier: &types.SessionIdComponents_ScopeAddr{ScopeAddr: scopeID.String()},
-				SessionUuid:     stringUUID.String(),
-			}
-			if sessionUUID.String() != stringUUID.String() {
-				return nil
-			}
 			record := types.Record{
 				Name:            args[2],
 				SpecificationId: recordSpecID,
 				Process:         *process,
 				Inputs:          inputs,
 				Outputs:         outputs,
-				SessionId:       sessionID,
 			}
-
-			msg := *types.NewMsgWriteRecordRequest(record, &sessionIDComponents, "", signers, parties)
+			if len(args) == 8 {
+				sessionID, err := types.MetadataAddressFromBech32(args[7])
+				if err != nil {
+					return err
+				}
+				record.SessionId = sessionID
+			} else {
+				scopeUUID, _ := scopeID.ScopeUUID()
+				record.SessionId = types.SessionMetadataAddress(scopeUUID, uuid.New())
+			}
+			msg := *types.NewMsgWriteRecordRequest(record, nil, "", signers, parties)
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err
@@ -525,7 +514,7 @@ func parseRecordOutputs(cliDelimitedValue string) ([]types.RecordOutput, error) 
 		}
 		outputs[i] = types.RecordOutput{
 			Hash:   values[0],
-			Status: types.ResultStatus(types.ResultStatus_value[fmt.Sprintf("ResultStatus_RESULT_STATUS_%s", strings.ToUpper(values[1]))]),
+			Status: types.ResultStatus(types.ResultStatus_value[fmt.Sprintf("RESULT_STATUS_%s", strings.ToUpper(values[1]))]),
 		}
 	}
 	return outputs, nil
