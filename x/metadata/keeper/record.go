@@ -164,6 +164,15 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, pr
 		return fmt.Errorf("session not found for session id %s", proposed.SessionId)
 	}
 
+	// Get contract specification
+	contractSpec, found := k.GetContractSpecification(ctx, session.SpecificationId)
+	if !found {
+		return fmt.Errorf("contract specification not found: %s", session.SpecificationId.String())
+	}
+	err = k.ValidatePartiesInvolved(partiesInvolved, contractSpec.PartiesInvolved)
+	if err != nil {
+		return err
+	}
 	// Get the record specification
 	contractSpecUUID, err := session.SpecificationId.ContractSpecUUID()
 	if err != nil {

@@ -514,6 +514,7 @@ func (k msgServer) P8EMemorializeContract(
 		recordResp, err := k.WriteRecord(goCtx, &types.MsgWriteRecordRequest{
 			Record:  *record,
 			Signers: signers,
+			Parties: p8EData.Session.Parties,
 		})
 		if err != nil {
 			return nil, err
