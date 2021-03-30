@@ -372,7 +372,7 @@ func (k msgServer) SetDenomMetadata(
 		return nil, err
 	}
 
-	err = k.SetMarkerMetadata(ctx, msg.Metadata, admin)
+	err = k.SetMarkerMetadata(ctx, *msg.Metadata, admin)
 	if err != nil {
 		return nil, err
 	}

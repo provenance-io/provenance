@@ -116,3 +116,12 @@ func (rt MarkerStatus) Format(s fmt.State, verb rune) {
 		s.Write([]byte(fmt.Sprintf("%v", byte(rt))))
 	}
 }
+
+func (rt MarkerStatus) IsOneOf(statuses ...MarkerStatus) bool {
+	for _, s := range statuses {
+		if rt == s {
+			return true
+		}
+	}
+	return false
+}
