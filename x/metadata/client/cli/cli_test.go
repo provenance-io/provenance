@@ -2058,6 +2058,7 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
 	scopeID := types.ScopeMetadataAddress(uuid.New())
 	contractSpecUUID := uuid.New()
+	contractSpecName := "`myclassname`"
 	contractSpecID := types.ContractSpecMetadataAddress(contractSpecUUID)
 
 	recordName := "recordnamefortests"
@@ -2103,7 +2104,7 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 				userAddress,
 				"owner,originator",
 				"hashvalue",
-				"`myclassname`",
+				contractSpecName,
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, userAddress),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -2143,7 +2144,9 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 				"processname,hashvalue,methodname",
 				"input1name,hashvalue,typename1,proposed",
 				"outputhashvalue,pass",
-				"owner,originator",
+				fmt.Sprintf("%s,owner;%s,originator", userAddress, userAddress),
+				contractSpecID.String(),
+				contractSpecName,
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),

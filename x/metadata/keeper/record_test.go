@@ -377,7 +377,7 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 					},
 				},
 				[]types.RecordOutput{}),
-			signers:  []string{s.user1},
+			signers: []string{s.user1},
 			errorMsg: fmt.Sprintf("input %s has TypeName %s but spec calls for %s",
 				goodInput.Name, "bad type name", inputSpec.TypeName),
 		},
@@ -394,7 +394,7 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 					},
 				},
 				[]types.RecordOutput{}),
-			signers:  []string{s.user1},
+			signers: []string{s.user1},
 			errorMsg: fmt.Sprintf("input %s has source type %s but spec calls for %s",
 				goodInput.Name, "record", "hash"),
 		},
@@ -411,7 +411,7 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 					},
 				},
 				[]types.RecordOutput{}),
-			signers:  []string{s.user1},
+			signers: []string{s.user1},
 			errorMsg: fmt.Sprintf("input %s has source value %s but spec calls for %s",
 				goodInput.Name, "incorrectsourcehash", inputSpecSourceHash),
 		},
@@ -479,7 +479,7 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 
 	for n, tc := range cases {
 		s.T().Run(n, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidateRecordUpdate(s.ctx, tc.existing, tc.proposed, tc.signers)
+			err := s.app.MetadataKeeper.ValidateRecordUpdate(s.ctx, tc.existing, tc.proposed, tc.signers, nil)
 			if len(tc.errorMsg) != 0 {
 				assert.EqualError(t, err, tc.errorMsg)
 			} else {

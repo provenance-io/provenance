@@ -196,7 +196,7 @@ message MsgWriteRecordRequest {
   // If there is a value in record.specification_id that is different from the one created from this uuid and
   // record.name, an error is returned.
   string contract_spec_uuid = 4 [(gogoproto.moretags) = "yaml:\"contract_spec_uuid\""];
-  repeated PartyType parties_involved = 5;
+  repeated Party parties = 5 [(gogoproto.nullable) = false];
 }
 
 // MsgWriteRecordResponse is the response type for the Msg/WriteRecord RPC method.

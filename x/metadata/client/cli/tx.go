@@ -375,21 +375,23 @@ contractspec-id]   - contract specification metaaddress
 // WriteRecordCmd creates a command to add/update records
 func WriteRecordCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "write-record [scope-id] [record-spec-id] [name] [process] [inputs] [outputs] [parties-involved] [session-id]",
+		Use:   "write-record [scope-id] [record-spec-id] [name] [process] [inputs] [outputs] [parties-involved] [contract-id | session-id]",
 		Short: "Add/Update metadata record to the provenance blockchain",
 		Long: fmt.Sprintf(`Add/Update metadata record to the provenance blockchain.
-[scope-id]         - scope metaaddress for the record
-[record-spec-id]   - associated record specification metaaddress
-[name]             - record name
-[process]          - comma delimited structure of process name, id (hash or bech32 address), and method: Example: processname,hashvalue,method
-[inputs]           - semicolon delimited list of input structures.  Example: name,soure-value(hash or metaaddress),typename,status(proposed,record);...
-[outputs]          - semicolon delimited list of outputs structures. Example: hash-value,status(pass,skip,fail);...
-[parties-involved] - comma delimited list of party types.  Accepted values: originator,servicer,investor,custodian,owner,affiliate,omnibus,provenance
-[session-id]       - optional - session metaaddress, if not provided it will be created
+[scope-id]                 - scope metaaddress for the record
+[record-spec-id]           - associated record specification metaaddress
+[name]                     - record name
+[process]                  - comma delimited structure of process name, id (hash or bech32 address), and method: Example: processname,hashvalue,method
+[inputs]                   - semicolon delimited list of input structures.  Example: name,soure-value(hash or metaaddress),typename,status(proposed,record);...
+[outputs]                  - semicolon delimited list of outputs structures. Example: hash-value,status(pass,skip,fail);...
+[parties-involved]         - semicolon delimited list of party structures(address,role). Accepted roles: originator,servicer,investor,custodian,owner,affiliate,omnibus,provenance
+[contract-id | session-id] - a contract or session id. 
+[contract-name]            - contract name must be set if using contract id to create a new session
 Example: 
-$ %s tx metadata add-record recspec1qh... recordname myprocessname,myhashvalue input1name,input1hashvalue,input1typename,proposed;... output1hash,pass;... session123...
-`, version.AppName),
-		Args: cobra.RangeArgs(7, 8),
+$ %s tx metadata add-record recspec1qh... recordname myprocessname,myhashvalue input1name,input1hashvalue,input1typename,proposed;... output1hash,pass;... userid,owner;... session123...
+$ %s tx metadata add-record recspec1qh... recordname myprocessname,myhashvalue input1name,input1hashvalue,input1typename,proposed;... output1hash,pass;... userid,owner;... contractspec123... contractspec-name
+`, version.AppName, version.AppName),
+		Args: cobra.RangeArgs(8, 9),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -406,6 +408,8 @@ $ %s tx metadata add-record recspec1qh... recordname myprocessname,myhashvalue i
 				return err
 			}
 
+			name := args[2]
+
 			process, err := parseProcess(args[3])
 			if err != nil {
 				return err
@@ -418,7 +422,11 @@ $ %s tx metadata add-record recspec1qh... recordname myprocessname,myhashvalue i
 			if err != nil {
 				return err
 			}
-			parties := parsePartyTypes(args[6])
+
+			parties, err := parsePartiesInvolved(args[6])
+			if err != nil {
+				return err
+			}
 
 			signers, err := parseSigners(cmd, &clientCtx)
 			if err != nil {
@@ -426,31 +434,50 @@ $ %s tx metadata add-record recspec1qh... recordname myprocessname,myhashvalue i
 			}
 
 			record := types.Record{
-				Name:            args[2],
+				Name:            name,
 				SpecificationId: recordSpecID,
 				Process:         *process,
 				Inputs:          inputs,
 				Outputs:         outputs,
 			}
-			var sessionIDComponents *types.SessionIdComponents
-			if len(args) == 8 {
-				var sessionID types.MetadataAddress
-				sessionID, err = types.MetadataAddressFromBech32(args[7])
+
+			contractOrSessionID, err := types.MetadataAddressFromBech32(args[7])
+			if err != nil {
+				return err
+			}
+			var sessionID types.MetadataAddress
+			var writeSessionMsg *types.MsgWriteSessionRequest
+			switch {
+			case contractOrSessionID.IsSessionAddress():
+				record.SessionId = contractOrSessionID
+			case contractOrSessionID.IsContractSpecificationAddress():
+				if len(args) != 9 {
+					return fmt.Errorf("contract name must be provided")
+				}
+				scopeUUID, _ := scopeID.ScopeUUID()
+				sessionID = types.SessionMetadataAddress(scopeUUID, uuid.New())
+				record.SessionId = sessionID
+				session := types.Session{
+					SessionId:       sessionID,
+					Name:            args[8],
+					SpecificationId: contractOrSessionID,
+					Parties:         parties,
+				}
+				writeSessionMsg = types.NewMsgWriteSessionRequest(session, signers)
+				err = writeSessionMsg.ValidateBasic()
 				if err != nil {
 					return err
 				}
-				record.SessionId = sessionID
-			} else {
-				scopeUUID, _ := scopeID.ScopeUUID()
-				sessionIDComponents = &types.SessionIdComponents{
-					ScopeIdentifier: &types.SessionIdComponents_ScopeUuid{ScopeUuid: scopeUUID.String()},
-					SessionUuid:     uuid.New().String(),
-				}
+			default:
+				return fmt.Errorf("id must be a contract or session id: %s", contractOrSessionID.String())
 			}
-			msg := *types.NewMsgWriteRecordRequest(record, sessionIDComponents, "", signers, parties)
+			msg := *types.NewMsgWriteRecordRequest(record, nil, "", signers, parties)
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err
+			}
+			if writeSessionMsg != nil {
+				return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), writeSessionMsg, &msg)
 			}
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
 		},
@@ -480,6 +507,23 @@ func parseProcess(cliDelimitedValue string) (*types.Process, error) {
 		process.ProcessId = &types.Process_Hash{Hash: values[0]}
 	}
 	return &process, nil
+}
+
+// parseRecordInputs parses a list of semicolon, comma delimited input structure name,soure-value(hash or metaaddress),typename,status(proposed,record);...
+func parsePartiesInvolved(cliDelimitedValue string) ([]types.Party, error) {
+	delimitedInputs := strings.Split(cliDelimitedValue, ";")
+	parties := make([]types.Party, len(delimitedInputs))
+	for i, delimitedInput := range delimitedInputs {
+		values := strings.Split(delimitedInput, ",")
+		if len(values) != 2 {
+			return nil, fmt.Errorf("invalid number of values for parties: %v", len(values))
+		}
+		parties[i] = types.Party{
+			Address: values[0],
+			Role:    types.PartyType(types.PartyType_value[fmt.Sprintf("PARTY_TYPE_%s", strings.ToUpper(values[1]))]),
+		}
+	}
+	return parties, nil
 }
 
 // parseRecordInputs parses a list of semicolon, comma delimited input structure name,soure-value(hash or metaaddress),typename,status(proposed,record);...

@@ -198,8 +198,8 @@ func (msg MsgDeleteScopeRequest) ValidateBasic() error {
 // ------------------  MsgWriteSessionRequest  ------------------
 
 // NewMsgWriteSessionRequest creates a new msg instance
-func NewMsgWriteSessionRequest() *MsgWriteSessionRequest {
-	return &MsgWriteSessionRequest{}
+func NewMsgWriteSessionRequest(session Session, signers []string) *MsgWriteSessionRequest {
+	return &MsgWriteSessionRequest{Session: session, Signers: signers}
 }
 
 func (msg MsgWriteSessionRequest) String() string {
@@ -275,8 +275,8 @@ func (msg *MsgWriteSessionRequest) ConvertOptionalFields() error {
 // ------------------  MsgWriteRecordRequest  ------------------
 
 // NewMsgWriteRecordRequest creates a new msg instance
-func NewMsgWriteRecordRequest(record Record, sessionIDComponents *SessionIdComponents, contractSpecUUID string, signers []string, partiesInvolved []PartyType) *MsgWriteRecordRequest {
-	return &MsgWriteRecordRequest{Record: record, PartiesInvolved: partiesInvolved, Signers: signers, SessionIdComponents: sessionIDComponents, ContractSpecUuid: contractSpecUUID}
+func NewMsgWriteRecordRequest(record Record, sessionIDComponents *SessionIdComponents, contractSpecUUID string, signers []string, parties []Party) *MsgWriteRecordRequest {
+	return &MsgWriteRecordRequest{Record: record, Parties: parties, Signers: signers, SessionIdComponents: sessionIDComponents, ContractSpecUuid: contractSpecUUID}
 }
 
 func (msg MsgWriteRecordRequest) String() string {
@@ -330,6 +330,7 @@ func (msg *MsgWriteRecordRequest) ConvertOptionalFields() error {
 					msg.Record.SessionId, msg.SessionIdComponents)
 			}
 			msg.Record.SessionId = *sessionAddr
+			msg.SessionIdComponents = nil
 		}
 	}
 	if len(msg.ContractSpecUuid) > 0 {
