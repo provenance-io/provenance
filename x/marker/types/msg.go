@@ -511,7 +511,7 @@ func (msg MsgTransferRequest) GetSigners() []sdk.AccAddress {
 
 // NewSetDenomMetadataRequest  creates a new marker in a proposed state with a given total supply a denomination
 func NewSetDenomMetadataRequest(
-	metadata *banktypes.Metadata, admin sdk.AccAddress, // nolint:interfacer
+	metadata banktypes.Metadata, admin sdk.AccAddress, // nolint:interfacer
 ) *MsgSetDenomMetadataRequest {
 	return &MsgSetDenomMetadataRequest{
 		Metadata:      metadata,

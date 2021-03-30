@@ -4,9 +4,8 @@ package provenance.marker.v1;
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/bank/v1beta1/bank.proto";
-import "provenance/marker/v1/accessgrant.proto";
-import "provenance/marker/v1/si.proto";
 import "provenance/marker/v1/marker.proto";
+import "provenance/marker/v1/accessgrant.proto";
 
 option go_package = "github.com/provenance-io/provenance/x/marker/types";
 
@@ -37,10 +36,7 @@ service Msg {
   rpc AddMarker(MsgAddMarkerRequest) returns (MsgAddMarkerResponse);
   // Transfer marker denominated coin between accounts
   rpc Transfer(MsgTransferRequest) returns (MsgTransferResponse);
-  // Allows Denom Metadata (see bank module) to be set for the Marker's Denom.
-  // You must either provide the metadata OR all three of description, base_name, and available_prefixes.
-  // Providing the metadata along with one or more of those fields will result in an error.
-  // The administrator must be provided in either case.
+  // Allows Denom Metadata (see bank module) to be set for the Marker's Denom
   rpc SetDenomMetadata(MsgSetDenomMetadataRequest) returns (MsgSetDenomMetadataResponse);
 }
 
@@ -154,38 +150,9 @@ message MsgTransferResponse {}
 
 // MsgSetDenomMetadataRequest defines the Msg/SetDenomMetadata request type
 message MsgSetDenomMetadataRequest {
-  // metadata is the optional raw metadata structure to be stored.
-  // If not provided, then the description, base_name, and available_prefixes must be provided.
-  // Those will be used to define the appropriate denom metadata structure.
-  //
-  // If provided, it must conform to the following restrictions:
-  // * A DenomUnit must exist with a denom field equal to the base field, and an exponent of 0 (zero).
-  // * A DenomUnit must exist with either a denom field equal to the display field, or an alias equal to the display
-  // field.
-  // * A DenomUnit must exist with an unprefixed denom field and it must not have any aliases.
-  // * The denom field of all DenomUnits must be the long SI prefix + unprefixed denom, e.g. "nanohash" (except the
-  // DenomUnit for the un-prefixed entry).
-  // * The aliases of all DenomUnits must be a single entry of the short SI Prefix + unprefixed denom, e.g. "nhash"
-  // (except the DenomUnit for the un-prefixed entry).
-  // * The exponent of all DenomUnits must be the exponent of the SI prefix on its denom minus the exponent of the SI
-  // prefix on the base DenomUnit. For example, if the base is "nanohash", it's SI prefix exponent is -9 (and the
-  // DenomUnit for it has an exponent of 0). A DenomUnit for "microhash" has an SI prefix exponent of -6. So the
-  // exponent of the "microhash" DenomUnit is -6 - -9 = 3. A DenomUnit for "hash" must have an exponent of 0 - -9 = 9,
-  // and a DenomUnit for "kilohash" must have an exponent of 3 - -9 = 12.
   cosmos.bank.v1beta1.Metadata metadata = 1
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/x/bank/types.Metadata"];
-  // administrator is the address of the administrator making this request.
+      [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/x/bank/types.Metadata"];
   string administrator = 2;
-  // description is A description of this denomination.
-  // It is used to populate the Metadata.description field.
-  string description = 3;
-  // coin_name_root is the root of the name of this denomination. SI Prefix strings will be added to this to create the
-  // desired denom units.
-  string coin_name_root = 4;
-  // available_prefixes is the list of available SI Prefixes for this denomination.
-  // At least one must be supplied.
-  // The smallest will be considered the base and be given an exponent of zero in its DenomUnit.
-  repeated SIPrefix available_prefixes = 5;
 }
 
 // MsgSetDenomMetadataResponse defines the Msg/SetDenomMetadata response type
