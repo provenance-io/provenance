@@ -434,7 +434,8 @@ $ %s tx metadata add-record recspec1qh... recordname myprocessname,myhashvalue i
 			}
 			var sessionIDComponents *types.SessionIdComponents
 			if len(args) == 8 {
-				sessionID, err := types.MetadataAddressFromBech32(args[7])
+				var sessionID types.MetadataAddress
+				sessionID, err = types.MetadataAddressFromBech32(args[7])
 				if err != nil {
 					return err
 				}
@@ -642,11 +643,6 @@ func parsePartyTypes(delimitedPartyTypes string) []types.PartyType {
 		partyTypes[i] = types.PartyType(partyValue)
 	}
 	return partyTypes
-}
-
-func definitionType(cliValue string) types.DefinitionType {
-	typeValue := types.DefinitionType_value[fmt.Sprintf("DEFINITION_TYPE_%s", strings.ToUpper(cliValue))]
-	return types.DefinitionType(typeValue)
 }
 
 // parseDescription hydrates Description from a sorted array name,description,website,icon-url

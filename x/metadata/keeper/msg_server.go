@@ -127,7 +127,8 @@ func (k msgServer) WriteRecord(
 		if err != nil {
 			return nil, err
 		}
-		contractSpec, found := k.GetContractSpecification(ctx, contractSpecAddr)
+		var contractSpec types.ContractSpecification
+		contractSpec, found = k.GetContractSpecification(ctx, contractSpecAddr)
 		if !found {
 			return nil, fmt.Errorf("unable to find contract specification %s", contractSpecAddr.String())
 		}
