@@ -305,7 +305,7 @@ func (msg MsgWriteRecordRequest) GetSignBytes() []byte {
 }
 
 // ValidateBasic performs a quick validity check
-func (msg MsgWriteRecordRequest) ValidateBasic() error {
+func (msg *MsgWriteRecordRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
@@ -331,7 +331,6 @@ func (msg *MsgWriteRecordRequest) ConvertOptionalFields() error {
 			}
 			msg.Record.SessionId = *sessionAddr
 		}
-		msg.SessionIdComponents = nil
 	}
 	if len(msg.ContractSpecUuid) > 0 {
 		uid, err := uuid.Parse(msg.ContractSpecUuid)
