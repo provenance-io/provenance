@@ -39,8 +39,6 @@ var (
 	_ sdk.Msg = &MsgTransferRequest{}
 )
 
-const maxDenomMetadataDescriptionLength = 200
-
 // Type returns the message action.
 func (msg MsgAddMarkerRequest) Type() string { return TypeAddMarkerRequest }
 
@@ -524,36 +522,14 @@ func (msg MsgSetDenomMetadataRequest) Route() string { return ModuleName }
 
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgSetDenomMetadataRequest) ValidateBasic() error {
-	if msg.Metadata.Base == "" {
-		return errors.New("invalid set denom metadata request, base denom value must be set")
+	if len(msg.Administrator) == 0 {
+		return errors.New("invalid set denom metadata request: adminstrator cannot be empty")
 	}
-	if len(msg.Metadata.Description) > maxDenomMetadataDescriptionLength {
-		return fmt.Errorf("invalid set denom metadata request, description too long (expected <= %d, got %d)",
-			maxDenomMetadataDescriptionLength, len(msg.Metadata.Description))
+	if _, err := sdk.AccAddressFromBech32(msg.Administrator); err != nil {
+		return fmt.Errorf("invalid set denom metadata request: administrator must be a bech32 address string: %w", err)
 	}
-
-	hasBaseDenomUnits := false
-	hasDisplayDenomUnits := false
-
-	// if denom units are given and one matches the current base denom, then consider this valid.
-	for i := range msg.Metadata.DenomUnits {
-		if msg.Metadata.DenomUnits[i].Denom == msg.Metadata.Base {
-			hasBaseDenomUnits = true
-		}
-		if msg.Metadata.DenomUnits[i].Denom == msg.Metadata.Display {
-			hasDisplayDenomUnits = true
-		}
-		// TODO: should alternate denom units be required to derive from base in some way?
-	}
-
-	// If denom units are provided or a display denom record is set, denom unit records are required.
-	if len(msg.Metadata.DenomUnits) > 0 || len(msg.Metadata.Display) > 0 {
-		if !hasBaseDenomUnits {
-			return fmt.Errorf("invalid metadata, denom units does not contain record for marker denom")
-		}
-		if len(msg.Metadata.Display) > 0 && !hasDisplayDenomUnits {
-			return fmt.Errorf("missing denom unit definition for selected display")
-		}
+	if err := ValidateDenomMetadataBasic(msg.Metadata); err != nil {
+		return fmt.Errorf("invalid set denom metadata request: %w", err)
 	}
 	return nil
 }

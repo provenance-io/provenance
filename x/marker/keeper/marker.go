@@ -562,21 +562,27 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 	return nil
 }
 
-// SetMarkerMetadata updates the denom metadata records for the current marker.
-func (k Keeper) SetMarkerMetadata(ctx sdk.Context, metadata banktypes.Metadata, caller sdk.AccAddress) error {
+// SetMarkerDenomMetadata updates the denom metadata records for the current marker.
+func (k Keeper) SetMarkerDenomMetadata(ctx sdk.Context, metadata banktypes.Metadata, caller sdk.AccAddress) error {
 	if metadata.Base == "" {
 		return fmt.Errorf("invalid metadata request, base denom must match existing marker")
 	}
-	m, err := k.GetMarkerByDenom(ctx, metadata.Base)
-	if err != nil {
-		return fmt.Errorf("marker not found for %s: %w", metadata.Base, err)
+	marker, markerErr := k.GetMarkerByDenom(ctx, metadata.Base)
+	if markerErr != nil {
+		return fmt.Errorf("marker not found for %s: %w", metadata.Base, markerErr)
 	}
-	if !m.GetManager().Equals(caller) && !m.AddressHasAccess(caller, types.Access_Admin) {
+	if !marker.GetManager().Equals(caller) && !marker.AddressHasAccess(caller, types.Access_Admin) {
 		return fmt.Errorf("%s is not allowed to manage marker metadata", caller.String())
 	}
-	// status must currently be set to proposed or active.
-	if !m.GetStatus().IsOneOf(types.StatusProposed, types.StatusActive) {
-		return fmt.Errorf("can only set denom metadata for markers in the Proposed or Active status")
+
+	var existing *banktypes.Metadata
+	if e := k.bankKeeper.GetDenomMetaData(ctx, metadata.Base); len(e.Base) > 0 {
+		existing = &e
+	}
+
+	params := k.GetParams(ctx)
+	if err := types.ValidateDenomMetadataExtended(metadata, existing, marker.GetStatus(), params); err != nil {
+		return err
 	}
 
 	// record the metadata with the bank

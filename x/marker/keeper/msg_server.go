@@ -364,12 +364,12 @@ func (k msgServer) SetDenomMetadata(
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	admin, err := sdk.AccAddressFromBech32(msg.Administrator)
-	if err != nil {
-		return nil, err
+	admin, addrErr := sdk.AccAddressFromBech32(msg.Administrator)
+	if addrErr != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, addrErr.Error())
 	}
 
-	err = k.SetMarkerMetadata(ctx, msg.Metadata, admin)
+	err := k.SetMarkerDenomMetadata(ctx, msg.Metadata, admin)
 	if err != nil {
 		return nil, err
 	}
