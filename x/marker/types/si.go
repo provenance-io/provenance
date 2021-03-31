@@ -139,11 +139,11 @@ func ParseSIPrefixedString(val string, root string) (SIPrefix, bool) {
 	if len(val) < len(root) {
 		return invalidSIPrefix, false
 	}
-	if strings.ToLower(val) == strings.ToLower(root) {
+	if strings.EqualFold(val, root) {
 		return SI_PREFIX_NONE, true
 	}
 	valRoot := val[len(val)-len(root):]
-	if strings.ToLower(val) != strings.ToLower(valRoot) {
+	if strings.EqualFold(val, valRoot) {
 		return invalidSIPrefix, false
 	}
 	prefix := val[:len(val)-len(root)]

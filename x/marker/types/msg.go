@@ -523,7 +523,7 @@ func (msg MsgSetDenomMetadataRequest) Route() string { return ModuleName }
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgSetDenomMetadataRequest) ValidateBasic() error {
 	if len(msg.Administrator) == 0 {
-		return errors.New("invalid set denom metadata request: adminstrator cannot be empty")
+		return errors.New("invalid set denom metadata request: administrator cannot be empty")
 	}
 	if _, err := sdk.AccAddressFromBech32(msg.Administrator); err != nil {
 		return fmt.Errorf("invalid set denom metadata request: administrator must be a bech32 address string: %w", err)
