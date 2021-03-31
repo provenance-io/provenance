@@ -270,6 +270,7 @@ func (s *KeeperTestSuite) TestInitGenesisAddingAttributes() {
 		AttributeType: types.AttributeType_String,
 	})
 	s.Assert().NotPanics(func() { s.app.AttributeKeeper.InitGenesis(s.ctx, &attributeData) })
+	s.Assert().NotPanics(func() { s.app.AttributeKeeper.ExportGenesis(s.ctx) })
 
 	attributeData.Attributes = append(attributeData.Attributes, types.Attribute{
 		Name:          "",
