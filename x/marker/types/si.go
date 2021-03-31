@@ -55,6 +55,8 @@ var (
 // Also populate the SIPrefixName and SIPrefixNameMap maps.
 func init() {
 	SIPrefixSymbolMap = make(map[string]SIPrefix)
+	SIPrefixName = make(map[SIPrefix]string)
+	SIPrefixNameMap = make(map[string]SIPrefix)
 	for i, str := range SIPrefix_name {
 		p := SIPrefix(i)
 		if s, ok := SIPrefixSymbol[p]; ok {
@@ -101,7 +103,7 @@ func SIPrefixFromString(str string) (SIPrefix, error) {
 		return val, nil
 	}
 	// Check if it's an enum int32 value that was converted to a string (because why not?).
-	if exp, err := strconv.Atoi(str); err != nil {
+	if exp, err := strconv.Atoi(str); err == nil {
 		return SIPrefixFromExponent(exp)
 	}
 	// Give up.
@@ -142,7 +144,7 @@ func ParseSIPrefixedString(val string, root string) (SIPrefix, bool) {
 		return SI_PREFIX_NONE, true
 	}
 	valRoot := val[len(val)-len(root):]
-	if strings.EqualFold(val, valRoot) {
+	if !strings.EqualFold(root, valRoot) {
 		return invalidSIPrefix, false
 	}
 	prefix := val[:len(val)-len(root)]
@@ -187,8 +189,8 @@ func (p SIPrefix) GetName() string {
 	if str, ok := SIPrefixName[p]; ok {
 		return str
 	}
-	// Should never happen
-	panic(fmt.Errorf("no name defined for SIPrefix with value [%d]", int(p)))
+	// should only happen for invalid SIPrefix values.
+	return "invalid"
 }
 
 // GetSymbol gets the symbol for this prefix, e.g. "n", "E", or "µ".
@@ -197,8 +199,8 @@ func (p SIPrefix) GetSymbol() string {
 	if s, ok := SIPrefixSymbol[p]; ok {
 		return s
 	}
-	// should never get here.
-	panic(fmt.Errorf("no symbol defined for SIPrefix with value [%d]", int(p)))
+	// should only happen for invalid SIPrefix values.
+	return "INV"
 }
 
 // GetDecimalString gets a string with the decimal representation of the multiplier for this SI Prefix.
@@ -220,6 +222,8 @@ func (p SIPrefix) GetExponentString() string {
 	return fmt.Sprintf("1e%+d", int(p))
 }
 
+// Get the Exponent value of this SIPrefix.
+// Examples, SI_PREFIX_PETA is 15 and SI_PREFIX_MICRO is -6.
 func (p SIPrefix) GetExponent() int {
 	return int(p)
 }
