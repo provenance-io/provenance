@@ -133,9 +133,6 @@ func (s *Session) ValidateBasic() error {
 	if prefix != PrefixContractSpecification {
 		return fmt.Errorf("invalid contract specification identifier (expected: %s, got %s)", PrefixContractSpecification, prefix)
 	}
-	if len(s.Name) == 0 {
-		return errors.New("session name can not be empty")
-	}
 	if s.Audit != nil && len(s.Audit.Message) > maxAuditMessageLength {
 		return fmt.Errorf("session audit message exceeds maximum length (expected < %d got: %d)",
 			maxAuditMessageLength, len(s.Audit.Message))

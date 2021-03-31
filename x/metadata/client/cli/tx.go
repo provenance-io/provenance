@@ -389,12 +389,11 @@ func WriteRecordCmd() *cobra.Command {
 [outputs]                  - semicolon delimited list of outputs structures. Example: hash-value,status(pass,skip,fail);...
 [parties-involved]         - semicolon delimited list of party structures(address,role). Accepted roles: originator,servicer,investor,custodian,owner,affiliate,omnibus,provenance
 [contract-id | session-id] - a contract or session id. 
-[contract-name]            - contract name must be set if using contract id to create a new session
 Example: 
 $ %s tx metadata add-record recspec1qh... recordname myprocessname,myhashvalue input1name,input1hashvalue,input1typename,proposed;... output1hash,pass;... userid,owner;... session123...
 $ %s tx metadata add-record recspec1qh... recordname myprocessname,myhashvalue input1name,input1hashvalue,input1typename,proposed;... output1hash,pass;... userid,owner;... contractspec123... contractspec-name
 `, version.AppName, version.AppName),
-		Args: cobra.RangeArgs(8, 9),
+		Args: cobra.ExactArgs(8),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -454,15 +453,11 @@ $ %s tx metadata add-record recspec1qh... recordname myprocessname,myhashvalue i
 			case contractOrSessionID.IsSessionAddress():
 				record.SessionId = contractOrSessionID
 			case contractOrSessionID.IsContractSpecificationAddress():
-				if len(args) != 9 {
-					return fmt.Errorf("contract name must be provided")
-				}
 				scopeUUID, _ := scopeID.ScopeUUID()
 				sessionID = types.SessionMetadataAddress(scopeUUID, uuid.New())
 				record.SessionId = sessionID
 				session := types.Session{
 					SessionId:       sessionID,
-					Name:            args[8],
 					SpecificationId: contractOrSessionID,
 					Parties:         parties,
 				}
