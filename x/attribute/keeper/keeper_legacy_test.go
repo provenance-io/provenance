@@ -263,7 +263,6 @@ func (s *KeeperLegacyTestSuite) TestGetAttributesByName() {
 	s.Equal(attr.Value, attributes[0].Value)
 }
 
-
 func (s *KeeperLegacyTestSuite) TestInitGenesisAddingAttributes() {
 	var attributeData types.GenesisState
 	attributeData.Attributes = append(attributeData.Attributes, types.Attribute{
@@ -284,6 +283,29 @@ func (s *KeeperLegacyTestSuite) TestInitGenesisAddingAttributes() {
 	s.Assert().Panics(func() { s.app.AttributeKeeper.InitGenesis(s.ctx, &attributeData) })
 }
 
+func (s *KeeperLegacyTestSuite) TestIterateRecord() {
+	s.Run("iterate attribute's", func() {
+		attr := types.Attribute{
+			Name:          "example.attribute",
+			Value:         []byte("0123456789"),
+			Address:       s.user1,
+			AttributeType: types.AttributeType_String,
+		}
+		s.app.AttributeKeeper.SetAttribute(s.ctx, s.user1Addr, attr, s.user1Addr)
+
+		records := []types.Attribute{}
+		// Callback func that adds records to genesis state.
+		appendToRecords := func(record types.Attribute) error {
+			records = append(records, record)
+			return nil
+		}
+		// Collect and return genesis state.
+		err := s.app.AttributeKeeper.IterateRecords(s.ctx, types.AttributeKeyPrefixAmino, appendToRecords)
+		s.Require().NoError(err)
+		s.Require().Equal(1, len(records))
+	})
+
+}
 
 // InitGenesisLegacy creates the initial genesis state for the attribute module. ONLY FOR TESTING.
 func InitGenesisLegacy(ctx sdk.Context, data *types.GenesisState, app *app.App) {
@@ -325,6 +347,7 @@ func importAttributeLegacy(ctx sdk.Context, attr types.Attribute, app *app.App) 
 	store.Set(key, bz)
 	return nil
 }
+
 // ONLY FOR TESTING.
 func accountAttributeKeyLegacy(acc sdk.AccAddress, attr types.Attribute) []byte {
 	key := append(types.AttributeKeyPrefixAmino, acc.Bytes()...)

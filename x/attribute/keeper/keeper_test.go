@@ -281,3 +281,27 @@ func (s *KeeperTestSuite) TestInitGenesisAddingAttributes() {
 
 	s.Assert().Panics(func() { s.app.AttributeKeeper.InitGenesis(s.ctx, &attributeData) })
 }
+
+func (s *KeeperTestSuite) TestIterateRecord() {
+	s.Run("iterate attribute's", func() {
+		attr := types.Attribute{
+			Name:          "example.attribute",
+			Value:         []byte("0123456789"),
+			Address:       s.user1,
+			AttributeType: types.AttributeType_String,
+		}
+		s.app.AttributeKeeper.SetAttribute(s.ctx, s.user1Addr, attr, s.user1Addr)
+
+		records := []types.Attribute{}
+		// Callback func that adds records to genesis state.
+		appendToRecords := func(record types.Attribute) error {
+			records = append(records, record)
+			return nil
+		}
+		// Collect and return genesis state.
+		err := s.app.AttributeKeeper.IterateRecords(s.ctx, types.AttributeKeyPrefix, appendToRecords)
+		s.Require().NoError(err)
+		s.Require().Equal(1, len(records))
+	})
+
+}
