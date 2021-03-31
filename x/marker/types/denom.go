@@ -248,7 +248,7 @@ func matchUnrestrictedDenomRegex(denom string, params Params) error {
 	if r, err := regexp.Compile(params.UnrestrictedDenomRegex); err != nil {
 		return err
 	} else if !r.MatchString(denom) {
-		return fmt.Errorf("denom [%s] fails unrestricted marker denom regix [%s]", denom, params.UnrestrictedDenomRegex)
+		return fmt.Errorf("denom [%s] fails unrestricted marker denom regex [%s]", denom, params.UnrestrictedDenomRegex)
 	}
 	return nil
 }
