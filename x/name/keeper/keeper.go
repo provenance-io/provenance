@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"strings"
 	"unicode"
 
@@ -204,8 +205,15 @@ func (keeper Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle Handl
 	// Iterate over records, processing callbacks.
 	for ; iterator.Valid(); iterator.Next() {
 		record := types.NameRecord{}
-		if err := keeper.cdc.UnmarshalBinaryBare(iterator.Value(), &record); err != nil {
-			return err
+		// get proto objects for legacy prefix with legacy amino codec.
+		if bytes.Equal(prefix, types.NameKeyPrefixAmino) {
+			if err := types.ModuleCdc.UnmarshalBinaryBare(iterator.Value(), &record); err != nil {
+				return err
+			}
+		} else {
+			if err := keeper.cdc.UnmarshalBinaryBare(iterator.Value(), &record); err != nil {
+				return err
+			}
 		}
 		if err := handle(record); err != nil {
 			return err
