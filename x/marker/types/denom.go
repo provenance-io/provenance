@@ -38,7 +38,7 @@ func ValidateDenomMetadataBasic(md banktypes.Metadata) error {
 	if len(rootCoinName) == 0 {
 		return errors.New("denom metadata root coin name could not be found, invalid DenomUnit denom and alias values")
 	}
-	if _, err := ValidateDenom(rootCoinName, rootCoinName); err != nil {
+	if _, err := validateDenom(rootCoinName, rootCoinName); err != nil {
 		return fmt.Errorf("denom metadata root coin name %w", err)
 	}
 
@@ -94,11 +94,11 @@ func ValidateDenomMetadataExtended(proposed banktypes.Metadata, existing *bankty
 
 	// Make sure all the DenomUnit Denom and alias strings pass the extra validation regex.
 	for _, du := range proposed.DenomUnits {
-		if err := MatchUnrestrictedDenomRegex(du.Denom, params); err != nil {
+		if err := matchUnrestrictedDenomRegex(du.Denom, params); err != nil {
 			return fmt.Errorf("invalid denom unit denom: %w", err)
 		}
 		for _, a := range du.Aliases {
-			if err := MatchUnrestrictedDenomRegex(a, params); err != nil {
+			if err := matchUnrestrictedDenomRegex(a, params); err != nil {
 				return fmt.Errorf("invalid denom unit alias: %w", err)
 			}
 		}
@@ -152,37 +152,6 @@ func ValidateDenomMetadataExtended(proposed banktypes.Metadata, existing *bankty
 	return nil
 }
 
-// denomUnitValidateBasic performs validation of the denom unit fields.
-//  - The Denom must pass ValidateDenom.
-//  - The Exponenet must be {SI prefix exponent of this DenomUnit} - basePrefixExp
-//  - The aliases must all pass ValidateDenom.
-//  - The aliases must all have the same SI prefix as the Denom (but maybe different forms, e.g. name vs symbol)
-func denomUnitValidateBasic(du *banktypes.DenomUnit, rootCoinName string, basePrefixExp int) error {
-	// Make sure the Denom is valid.
-	denomPrefix, denomError := ValidateDenom(du.Denom, rootCoinName)
-	if denomError != nil {
-		return fmt.Errorf("invalid denom: %w", denomError)
-	}
-	// Make sure the exponent is as expected: {SI prefix exponent of this DenomUnit} - basePrefixExp
-	expectedExponent := denomPrefix.GetExponent() - basePrefixExp
-	if int(du.Exponent) != expectedExponent {
-		return fmt.Errorf("denom [%s] exponent is invalid (expected: %d - %d = %d, actual: %d)",
-			du.Denom, denomPrefix.GetExponent(), basePrefixExp, expectedExponent, du.Exponent)
-	}
-	// Make sure the aliases are all valid and a SI prefix + root using the same prefix as the denom.
-	for _, alias := range du.Aliases {
-		ap, apErr := ValidateDenom(du.Denom, rootCoinName)
-		if apErr != nil {
-			return fmt.Errorf("invalid alias: %w", apErr)
-		}
-		if denomPrefix != ap {
-			return fmt.Errorf("denom [%s] SI prefix is not the same as alias [%s] SI prefix",
-				du.Denom, alias)
-		}
-	}
-	return nil
-}
-
 // GetRootCoinName gathers all the names (Denom or Alias) and tries to find a common root name for them all.
 // An empty string indicates that there is no common root among all the names.
 func GetRootCoinName(md banktypes.Metadata) string {
@@ -229,10 +198,41 @@ func GetRootCoinName(md banktypes.Metadata) string {
 	return ""
 }
 
-// ValidateDenom checks that:
-//  - The denom passes sdk.ValidateDenom.
+// denomUnitValidateBasic performs validation of the denom unit fields.
+//  - The Denom must pass validateDenom.
+//  - The Exponenet must be {SI prefix exponent of this DenomUnit} - basePrefixExp
+//  - The aliases must all pass validateDenom.
+//  - The aliases must all have the same SI prefix as the Denom (but maybe different forms, e.g. name vs symbol)
+func denomUnitValidateBasic(du *banktypes.DenomUnit, rootCoinName string, basePrefixExp int) error {
+	// Make sure the Denom is valid.
+	denomPrefix, denomError := validateDenom(du.Denom, rootCoinName)
+	if denomError != nil {
+		return fmt.Errorf("invalid denom: %w", denomError)
+	}
+	// Make sure the exponent is as expected: {SI prefix exponent of this DenomUnit} - basePrefixExp
+	expectedExponent := denomPrefix.GetExponent() - basePrefixExp
+	if int(du.Exponent) != expectedExponent {
+		return fmt.Errorf("denom [%s] exponent is invalid (expected: %d - %d = %d, actual: %d)",
+			du.Denom, denomPrefix.GetExponent(), basePrefixExp, expectedExponent, du.Exponent)
+	}
+	// Make sure the aliases are all valid and a SI prefix + root using the same prefix as the denom.
+	for _, alias := range du.Aliases {
+		ap, apErr := validateDenom(du.Denom, rootCoinName)
+		if apErr != nil {
+			return fmt.Errorf("invalid alias: %w", apErr)
+		}
+		if denomPrefix != ap {
+			return fmt.Errorf("denom [%s] SI prefix is not the same as alias [%s] SI prefix",
+				du.Denom, alias)
+		}
+	}
+	return nil
+}
+
+// validateDenom checks that:
+//  - The denom passes sdk.validateDenom.
 //  - The denom is a SI prefix + root coin name (or just the root coin name).
-func ValidateDenom(denom string, rootCoinName string) (SIPrefix, error) {
+func validateDenom(denom string, rootCoinName string) (SIPrefix, error) {
 	if err := sdk.ValidateDenom(denom); err != nil {
 		return invalidSIPrefix, err
 	}
@@ -243,8 +243,8 @@ func ValidateDenom(denom string, rootCoinName string) (SIPrefix, error) {
 	return prefix, nil
 }
 
-// MatchUnrestrictedDenomRegex compiles the UnrestrictedDenomRegex and checks if denom matches it.
-func MatchUnrestrictedDenomRegex(denom string, params Params) error {
+// matchUnrestrictedDenomRegex compiles the UnrestrictedDenomRegex and checks if denom matches it.
+func matchUnrestrictedDenomRegex(denom string, params Params) error {
 	if r, err := regexp.Compile(params.UnrestrictedDenomRegex); err != nil {
 		return err
 	} else if !r.MatchString(denom) {
