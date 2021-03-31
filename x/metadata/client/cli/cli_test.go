@@ -1410,6 +1410,7 @@ func runTxCmdTestCases(s *IntegrationCLITestSuite, testCases []txCmdTestCase) {
 				require.EqualError(t, err, tc.expectErrMsg, "%s expected error message", cmdName)
 			} else if tc.expectErr {
 				require.Error(t, err, "%s expected error", cmdName)
+				require.EqualError(t, err, tc.expectErrMsg)
 			} else {
 				require.NoError(t, err, "%s unexpected error", cmdName)
 
@@ -2056,13 +2057,16 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 	userAddress := s.testnet.Validators[0].Address.String()
 	addRecordCmd := cli.WriteRecordCmd()
 	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
-	scopeID := types.ScopeMetadataAddress(uuid.New())
+	scopeUUID := uuid.New()
+	scopeID := types.ScopeMetadataAddress(scopeUUID)
 	contractSpecUUID := uuid.New()
 	contractSpecName := "`myclassname`"
 	contractSpecID := types.ContractSpecMetadataAddress(contractSpecUUID)
 
 	recordName := "recordnamefortests"
 	recSpecID := types.RecordSpecMetadataAddress(contractSpecUUID, recordName)
+
+	recordId := types.RecordMetadataAddress(scopeUUID, recordName)
 
 	testCases := []txCmdTestCase{
 		{
@@ -2154,6 +2158,174 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 			},
 			false,
 			"",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"should fail to add record incorrect scope id format",
+			addRecordCmd,
+			[]string{
+				"not-a-scope-id",
+				recSpecID.String(),
+				recordName,
+				"processname,hashvalue,methodname",
+				"input1name,hashvalue,typename1,proposed",
+				"outputhashvalue,pass",
+				fmt.Sprintf("%s,owner;%s,originator", userAddress, userAddress),
+				contractSpecID.String(),
+				contractSpecName,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, "decoding bech32 failed: invalid index of 1",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"should fail to add record incorrect record id format",
+			addRecordCmd,
+			[]string{
+				scopeID.String(),
+				"not-a-record-id",
+				recordName,
+				"processname,hashvalue,methodname",
+				"input1name,hashvalue,typename1,proposed",
+				"outputhashvalue,pass",
+				fmt.Sprintf("%s,owner;%s,originator", userAddress, userAddress),
+				contractSpecID.String(),
+				contractSpecName,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, "decoding bech32 failed: invalid index of 1",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"should fail to add record incorrect process format",
+			addRecordCmd,
+			[]string{
+				scopeID.String(),
+				recSpecID.String(),
+				recordName,
+				"hashvalue,methodname",
+				"input1name,hashvalue,typename1,proposed",
+				"outputhashvalue,pass",
+				fmt.Sprintf("%s,owner;%s,originator", userAddress, userAddress),
+				contractSpecID.String(),
+				contractSpecName,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, "invalid number of values for process: 2",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"should fail to add record incorrect record inputs format",
+			addRecordCmd,
+			[]string{
+				scopeID.String(),
+				recSpecID.String(),
+				recordName,
+				"processname,hashvalue,methodname",
+				"input1name,typename1,proposed",
+				"outputhashvalue,pass",
+				fmt.Sprintf("%s,owner;%s,originator", userAddress, userAddress),
+				contractSpecID.String(),
+				contractSpecName,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, "invalid number of values for record input: 3",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"should fail to add record incorrect record output format",
+			addRecordCmd,
+			[]string{
+				scopeID.String(),
+				recSpecID.String(),
+				recordName,
+				"processname,hashvalue,methodname",
+				"input1name,hashvalue,typename1,proposed",
+				"outputhashvalue",
+				fmt.Sprintf("%s,owner;%s,originator", userAddress, userAddress),
+				contractSpecID.String(),
+				contractSpecName,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, "invalid number of values for record output: 1",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"should fail to add record incorrect parties involved format",
+			addRecordCmd,
+			[]string{
+				scopeID.String(),
+				recSpecID.String(),
+				recordName,
+				"processname,hashvalue,methodname",
+				"input1name,hashvalue,typename1,proposed",
+				"outputhashvalue,pass",
+				fmt.Sprintf("%s;%s", userAddress, userAddress),
+				contractSpecID.String(),
+				contractSpecName,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, "invalid number of values for parties: 1",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"should fail to add record incorrect contract or session id format",
+			addRecordCmd,
+			[]string{
+				scopeID.String(),
+				recSpecID.String(),
+				recordName,
+				"processname,hashvalue,methodname",
+				"input1name,hashvalue,typename1,proposed",
+				"outputhashvalue,pass",
+				fmt.Sprintf("%s,owner;%s,originator", userAddress, userAddress),
+				scopeID.String(),
+				contractSpecName,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, fmt.Sprintf("id must be a contract or session id: %s", scopeID.String()),
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"should successfully remove record",
+			cli.RemoveRecordCmd(),
+			[]string{
+				recordId.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, "",
 			&sdk.TxResponse{},
 			0,
 		},
