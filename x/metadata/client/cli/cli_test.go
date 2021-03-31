@@ -1410,7 +1410,6 @@ func runTxCmdTestCases(s *IntegrationCLITestSuite, testCases []txCmdTestCase) {
 				require.EqualError(t, err, tc.expectErrMsg, "%s expected error message", cmdName)
 			} else if tc.expectErr {
 				require.Error(t, err, "%s expected error", cmdName)
-				require.EqualError(t, err, tc.expectErrMsg)
 			} else {
 				require.NoError(t, err, "%s unexpected error", cmdName)
 
