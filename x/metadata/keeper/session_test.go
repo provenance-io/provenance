@@ -251,6 +251,13 @@ func (s *SessionKeeperTestSuite) TestMetadataValidateSessionUpdate() {
 			wantErr:  true,
 			errorMsg: fmt.Sprintf("missing signature from %s (PARTY_TYPE_OWNER)", s.user1),
 		},
+		"invalid session update, invalid proposed name of empty to existing session": {
+			existing: validSessionWithAudit,
+			proposed: *types.NewSession("", s.sessionId, s.contractSpecId, parties, &types.AuditFields{CreatedDate: auditTime, CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Version: 1, Message: "fault"}),
+			signers:  []string{s.user1},
+			wantErr:  true,
+			errorMsg: "proposed name to existing session must not be empty",
+		},
 		"invalid session update, modified audit message": {
 			existing: validSessionWithAudit,
 			proposed: *types.NewSession("processname", s.sessionId, s.contractSpecId, parties, &types.AuditFields{CreatedDate: auditTime, CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Version: 1, Message: "fault"}),
