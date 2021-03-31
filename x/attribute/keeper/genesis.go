@@ -29,9 +29,30 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 		return nil
 	}
 
-	if err := k.IterateRecords(ctx, appendToRecords); err != nil {
+	if err := k.IterateRecords(ctx, types.AttributeKeyPrefix, appendToRecords); err != nil {
 		panic(err)
 	}
 
 	return types.NewGenesisState(params, attrs)
+}
+
+// convert name records before 1.0.0 to the right proto encoding.
+func (k Keeper) ConvertLegacyAmino(ctx sdk.Context) []types.Attribute {
+	attrs := make([]types.Attribute, 0)
+
+	appendToRecords := func(attr types.Attribute) error {
+		attrs = append(attrs, attr)
+		return nil
+	}
+
+	if err := k.IterateRecords(ctx, types.AttributeKeyPrefixAmino, appendToRecords); err != nil {
+		panic(err)
+	}
+
+	for _, record := range attrs {
+		if err := k.importAttribute(ctx, record); err != nil {
+			panic(err)
+		}
+	}
+	return attrs
 }

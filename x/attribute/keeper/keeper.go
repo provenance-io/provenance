@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
@@ -78,20 +79,24 @@ func (k Keeper) GetAttributes(ctx sdk.Context, acc sdk.AccAddress, name string) 
 }
 
 // IterateRecords iterates over all the stored attribute records and passes them to a callback function.
-func (k Keeper) IterateRecords(ctx sdk.Context, handle Handler) error {
+func (k Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle Handler) error {
 	// Init a attribute record iterator
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.AttributeKeyPrefix)
+	iterator := sdk.KVStorePrefixIterator(store, prefix)
 	defer iterator.Close()
 	// Iterate over records, processing callbacks.
 	for ; iterator.Valid(); iterator.Next() {
 		record := types.Attribute{}
-		if err := types.ModuleCdc.UnmarshalBinaryBare(iterator.Value(), &record); err != nil {
-			return err
+		// get proto objects for legacy prefix with legacy amino codec.
+		if bytes.Equal(types.AttributeKeyPrefix, prefix) {
+			if err := types.ModuleCdc.UnmarshalBinaryBare(iterator.Value(), &record); err != nil {
+				return err
+			}
+		} else {
+			if err := k.cdc.UnmarshalBinaryBare(iterator.Value(), &record); err != nil {
+				return err
+			}
 		}
-		// if address := parseAddressFromKey(iterator.Key()); address != "" {
-		// 	record.Address = address
-		// }
 		if err := handle(record); err != nil {
 			return err
 		}
@@ -130,7 +135,7 @@ func (k Keeper) SetAttribute(
 		return fmt.Errorf("\"%s\" does not resolve to address \"%s\"", attr.Name, owner.String())
 	}
 	// Store the sanitized account attribute
-	bz, err := types.ModuleCdc.MarshalBinaryBare(&attr)
+	bz, err := k.cdc.MarshalBinaryBare(&attr)
 	if err != nil {
 		return err
 	}
@@ -156,7 +161,7 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, acc sdk.AccAddress, name string
 	var count int
 	for ; it.Valid(); it.Next() {
 		attr := types.Attribute{}
-		if err := types.ModuleCdc.UnmarshalBinaryBare(it.Value(), &attr); err != nil {
+		if err := k.cdc.UnmarshalBinaryBare(it.Value(), &attr); err != nil {
 			return err
 		}
 		// Only delete exact matches
@@ -182,7 +187,7 @@ func (k Keeper) prefixScan(ctx sdk.Context, prefix []byte, f namePred) (attrs []
 	it := sdk.KVStorePrefixIterator(store, prefix)
 	for ; it.Valid(); it.Next() {
 		attr := types.Attribute{}
-		if err = types.ModuleCdc.UnmarshalBinaryBare(it.Value(), &attr); err != nil {
+		if err = k.cdc.UnmarshalBinaryBare(it.Value(), &attr); err != nil {
 			return
 		}
 		if f(attr.Name) {
@@ -211,7 +216,7 @@ func (k Keeper) importAttribute(ctx sdk.Context, attr types.Attribute) error {
 		return fmt.Errorf("unable to normalize attribute name \"%s\": %w", attr.Name, err)
 	}
 	// Store the sanitized account attribute
-	bz, err := types.ModuleCdc.MarshalBinaryBare(&attr)
+	bz, err := k.cdc.MarshalBinaryBare(&attr)
 	if err != nil {
 		return err
 	}

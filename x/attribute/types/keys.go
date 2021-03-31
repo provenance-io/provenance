@@ -23,8 +23,10 @@ const (
 )
 
 var (
-	AttributeKeyPrefix = []byte{0x00}
-	AttributeKeyLength = 1 + sdk.AddrLen + 32 + 32 // prefix + address + name-hash + value-hash
+	// Legacy amino encoded objects use this key prefix
+	AttributeKeyPrefixAmino = []byte{0x00}
+	AttributeKeyPrefix      = []byte{0x01}
+	AttributeKeyLength      = 1 + sdk.AddrLen + 32 + 32 // prefix length + address + name-hash + value-hash
 )
 
 // AccountAttributeKey creates a key for an account attribute
