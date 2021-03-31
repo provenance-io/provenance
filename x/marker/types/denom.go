@@ -217,7 +217,7 @@ func denomUnitValidateBasic(du *banktypes.DenomUnit, rootCoinName string, basePr
 	}
 	// Make sure the aliases are all valid and a SI prefix + root using the same prefix as the denom.
 	for _, alias := range du.Aliases {
-		ap, apErr := validateDenom(du.Denom, rootCoinName)
+		ap, apErr := validateDenom(alias, rootCoinName)
 		if apErr != nil {
 			return fmt.Errorf("invalid alias: %w", apErr)
 		}
