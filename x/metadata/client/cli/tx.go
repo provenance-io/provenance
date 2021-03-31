@@ -48,6 +48,9 @@ func NewTxCmd() *cobra.Command {
 
 		WriteRecordSpecificationCmd(),
 		RemoveRecordSpecificationCmd(),
+
+		WriteRecordCmd(),
+		RemoveRecordCmd(),
 	)
 
 	return txCmd
