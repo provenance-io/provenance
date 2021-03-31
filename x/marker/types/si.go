@@ -36,15 +36,16 @@ var (
 	}
 
 	// SIPrefixSymbolMap is used to look up the SIPrefix enum entry for a symbol.
-	// It is the inverse of SIPrefixSymbol.
+	// Some SIPrefix values might appear more than once in this map.
 	SIPrefixSymbolMap map[string]SIPrefix
 
 	// SIPrefixName is used to look up the name for a SIPrefix enum entry.
-	// It is the inverse of SIPrefixNameMap.
+	// The values are all lower-case.
 	SIPrefixName map[SIPrefix]string
 
 	// SIPrefixSymbolMap is used to look up the SIPrefix enum entry for a name.
-	// It is the inverse of SIPrefixName.
+	// The keys are all lower-case.
+	// Some SIPrefix values might appear more than once in this map.
 	SIPrefixNameMap map[string]SIPrefix
 
 	// invalidSIPrefix is an int32 that's been converted to a SIPrefix but doesn't have a valid value.
@@ -55,7 +56,7 @@ var (
 // Also populate the SIPrefixName and SIPrefixNameMap maps.
 func init() {
 	SIPrefixSymbolMap = make(map[string]SIPrefix)
-	for str, i := range SIPrefix_value {
+	for i, str := range SIPrefix_name {
 		p := SIPrefix(i)
 		if s, ok := SIPrefixSymbol[p]; ok {
 			SIPrefixSymbolMap[s] = p
@@ -69,6 +70,8 @@ func init() {
 	// SI_PREFIX_NONE is a special case. Override the name for it with "", and add "" as a name mapping back to it.
 	SIPrefixName[SI_PREFIX_NONE] = ""
 	SIPrefixNameMap[""] = SI_PREFIX_NONE
+	// SI_PREFIX_MICRO has a difficult symbol: Greek lowercase mu. To be nice, also allow a "u" there.
+	SIPrefixSymbolMap["u"] = SI_PREFIX_MICRO
 }
 
 // MustGetSIPrefixFromString turns a string into a SIPrefix enum entry or panics if invalid.
@@ -126,6 +129,34 @@ func SIPrefixFromExponent(exp int) (SIPrefix, error) {
 	return invalidSIPrefix, fmt.Errorf("could not convert exponent [%d] to a SIPrefix value", exp)
 }
 
+// ParseSIPrefixedString extracts the prefix from the provided val using root as the base.
+// Returns the SI prefix, and a boolean to indicate that it was successful.
+// Possible reasons for it to be unsuccessful:
+//  - The provided val is shorter than the root.
+//  - The right-most characters in val are not equal to root (case insensitive).
+//  - No SI Prefix can be found matching the left-most portion of val (that isn't root).
+func ParseSIPrefixedString(val string, root string) (SIPrefix, bool) {
+	if len(val) < len(root) {
+		return invalidSIPrefix, false
+	}
+	if strings.ToLower(val) == strings.ToLower(root) {
+		return SI_PREFIX_NONE, true
+	}
+	valRoot := val[len(val)-len(root):]
+	if strings.ToLower(val) != strings.ToLower(valRoot) {
+		return invalidSIPrefix, false
+	}
+	prefix := val[:len(val)-len(root)]
+	if p, ok := SIPrefixNameMap[strings.ToLower(prefix)]; ok {
+		return p, true
+	}
+	if p, ok := SIPrefixSymbolMap[prefix]; ok {
+		return p, true
+	}
+	return invalidSIPrefix, false
+}
+
+// IsValid checks that this SIPrefix is a valid value.
 func (p SIPrefix) IsValid() bool {
 	_, ok := SIPrefix_name[int32(p)]
 	return ok
@@ -188,4 +219,8 @@ func (p SIPrefix) GetDecimalString() string {
 // Examples: "1e+6", "1e-12".
 func (p SIPrefix) GetExponentString() string {
 	return fmt.Sprintf("1e%+d", int(p))
+}
+
+func (p SIPrefix) GetExponent() int {
+	return int(p)
 }
