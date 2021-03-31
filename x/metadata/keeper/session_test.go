@@ -161,7 +161,6 @@ func (s *SessionKeeperTestSuite) TestMetadataValidateSessionUpdate() {
 	invalidContractId := types.NewSession("processname", s.sessionId, types.ContractSpecMetadataAddress(uuid.New()), parties, nil)
 	invalidParties := []types.Party{{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: types.PartyType_PARTY_TYPE_CUSTODIAN}}
 	invalidPartiesSession := types.NewSession("processname", s.sessionId, s.contractSpecId, invalidParties, nil)
-	invalidNameSession := types.NewSession("invalid", s.sessionId, s.contractSpecId, parties, nil)
 
 	partiesInvolved := []types.PartyType{types.PartyType_PARTY_TYPE_AFFILIATE}
 	contractSpec := types.NewContractSpecification(s.contractSpecId, types.NewDescription("name", "desc", "url", "icon"), []string{s.user1}, partiesInvolved, &types.ContractSpecification_Hash{"hash"}, "processname")
@@ -252,12 +251,12 @@ func (s *SessionKeeperTestSuite) TestMetadataValidateSessionUpdate() {
 			wantErr:  true,
 			errorMsg: fmt.Sprintf("missing signature from %s (PARTY_TYPE_OWNER)", s.user1),
 		},
-		"invalid session update, proposed name does not match contract spec": {
-			existing: validSession,
-			proposed: *invalidNameSession,
+		"invalid session update, invalid proposed name of empty to existing session": {
+			existing: validSessionWithAudit,
+			proposed: *types.NewSession("", s.sessionId, s.contractSpecId, parties, &types.AuditFields{CreatedDate: auditTime, CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Version: 1, Message: "fault"}),
 			signers:  []string{s.user1},
 			wantErr:  true,
-			errorMsg: "proposed name does not match contract spec. expected invalid, got processname)",
+			errorMsg: "proposed name to existing session must not be empty",
 		},
 		"invalid session update, modified audit message": {
 			existing: validSessionWithAudit,

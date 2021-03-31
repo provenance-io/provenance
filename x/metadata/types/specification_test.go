@@ -35,9 +35,9 @@ func (s *SpecificationTestSuite) SetupSuite() {
 
 func (s *SpecificationTestSuite) TestScopeSpecValidateBasic() {
 	tests := []struct {
-		name    string
-		spec    *ScopeSpecification
-		want    string
+		name string
+		spec *ScopeSpecification
+		want string
 	}{
 		// SpecificationId tests.
 		{
@@ -64,7 +64,7 @@ func (s *SpecificationTestSuite) TestScopeSpecValidateBasic() {
 				NewDescription(strings.Repeat("x", maxDescriptionNameLength+1), "", "", ""),
 				[]string{}, []PartyType{}, []MetadataAddress{},
 			),
-			fmt.Sprintf("description (ScopeSpecification.Description) Name exceeds maximum length (expected <= %d got: %d)", maxDescriptionNameLength, maxDescriptionNameLength + 1),
+			fmt.Sprintf("description (ScopeSpecification.Description) Name exceeds maximum length (expected <= %d got: %d)", maxDescriptionNameLength, maxDescriptionNameLength+1),
 		},
 		// OwnerAddresses tests
 		{
@@ -210,7 +210,7 @@ func NewWeirdSource(value uint32) *WeirdSource {
 	}
 }
 func (*WeirdSource) isContractSpecification_Source() {}
-func (*WeirdSource) isInputSpecification_Source() {}
+func (*WeirdSource) isInputSpecification_Source()    {}
 func (m *WeirdSource) Size() (n int) {
 	return 1 + sovSpecTests(uint64(n))
 }
@@ -400,7 +400,7 @@ func (s *SpecificationTestSuite) TestContractSpecValidateBasic() {
 				[]string{specTestBech32},
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				NewContractSpecificationSourceHash("somehash"),
-				strings.Repeat("l", maxContractSpecificationClassNameLength + 1),
+				strings.Repeat("l", maxContractSpecificationClassNameLength+1),
 			),
 			fmt.Sprintf("class name exceeds maximum length (expected <= %d got: %d)",
 				maxContractSpecificationClassNameLength, maxContractSpecificationClassNameLength+1),
@@ -457,11 +457,11 @@ func (s *SpecificationTestSuite) TestRecordSpecValidateBasic() {
 		{
 			"SpecificationId - invalid format",
 			&RecordSpecification{
-				SpecificationId: MetadataAddress(specTestAddr),
-				Name: "recspecname",
-				Inputs: []*InputSpecification{},
-				TypeName: "recspectypename",
-				ResultType: DefinitionType_DEFINITION_TYPE_RECORD,
+				SpecificationId:    MetadataAddress(specTestAddr),
+				Name:               "recspecname",
+				Inputs:             []*InputSpecification{},
+				TypeName:           "recspectypename",
+				ResultType:         DefinitionType_DEFINITION_TYPE_RECORD,
 				ResponsibleParties: []PartyType{PartyType_PARTY_TYPE_OWNER},
 			},
 			"invalid record specification id: invalid metadata address type: 133",
@@ -469,11 +469,11 @@ func (s *SpecificationTestSuite) TestRecordSpecValidateBasic() {
 		{
 			"SpecificationId - invalid prefix (record)",
 			&RecordSpecification{
-				SpecificationId: RecordMetadataAddress(contractSpecUUID, "recspecname"),
-				Name: "recspecname",
-				Inputs: []*InputSpecification{},
-				TypeName: "recspectypename",
-				ResultType: DefinitionType_DEFINITION_TYPE_RECORD,
+				SpecificationId:    RecordMetadataAddress(contractSpecUUID, "recspecname"),
+				Name:               "recspecname",
+				Inputs:             []*InputSpecification{},
+				TypeName:           "recspectypename",
+				ResultType:         DefinitionType_DEFINITION_TYPE_RECORD,
 				ResponsibleParties: []PartyType{PartyType_PARTY_TYPE_OWNER},
 			},
 			fmt.Sprintf("invalid record specification id prefix (expected: %s, got %s)",
@@ -482,11 +482,11 @@ func (s *SpecificationTestSuite) TestRecordSpecValidateBasic() {
 		{
 			"SpecificationId - invalid prefix (contract spec)",
 			&RecordSpecification{
-				SpecificationId: ContractSpecMetadataAddress(contractSpecUUID),
-				Name: "recspecname",
-				Inputs: []*InputSpecification{},
-				TypeName: "recspectypename",
-				ResultType: DefinitionType_DEFINITION_TYPE_RECORD,
+				SpecificationId:    ContractSpecMetadataAddress(contractSpecUUID),
+				Name:               "recspecname",
+				Inputs:             []*InputSpecification{},
+				TypeName:           "recspectypename",
+				ResultType:         DefinitionType_DEFINITION_TYPE_RECORD,
 				ResponsibleParties: []PartyType{PartyType_PARTY_TYPE_OWNER},
 			},
 			fmt.Sprintf("invalid record specification id prefix (expected: %s, got %s)",
@@ -495,11 +495,11 @@ func (s *SpecificationTestSuite) TestRecordSpecValidateBasic() {
 		{
 			"SpecificationId - incorrect name hash",
 			&RecordSpecification{
-				SpecificationId: RecordSpecMetadataAddress(contractSpecUUID, "recspecothername"),
-				Name: "recspecname",
-				Inputs: []*InputSpecification{},
-				TypeName: "recspectypename",
-				ResultType: DefinitionType_DEFINITION_TYPE_RECORD,
+				SpecificationId:    RecordSpecMetadataAddress(contractSpecUUID, "recspecothername"),
+				Name:               "recspecname",
+				Inputs:             []*InputSpecification{},
+				TypeName:           "recspectypename",
+				ResultType:         DefinitionType_DEFINITION_TYPE_RECORD,
 				ResponsibleParties: []PartyType{PartyType_PARTY_TYPE_OWNER},
 			},
 			fmt.Sprintf("invalid record specification id value (expected: %s, got %s)",
@@ -511,11 +511,11 @@ func (s *SpecificationTestSuite) TestRecordSpecValidateBasic() {
 		{
 			"Name - empty",
 			&RecordSpecification{
-				SpecificationId: RecordSpecMetadataAddress(contractSpecUUID, "recspecname"),
-				Name: "",
-				Inputs: []*InputSpecification{},
-				TypeName: "recspectypename",
-				ResultType: DefinitionType_DEFINITION_TYPE_RECORD,
+				SpecificationId:    RecordSpecMetadataAddress(contractSpecUUID, "recspecname"),
+				Name:               "",
+				Inputs:             []*InputSpecification{},
+				TypeName:           "recspectypename",
+				ResultType:         DefinitionType_DEFINITION_TYPE_RECORD,
 				ResponsibleParties: []PartyType{PartyType_PARTY_TYPE_OWNER},
 			},
 			"record specification name cannot be empty",
@@ -523,24 +523,24 @@ func (s *SpecificationTestSuite) TestRecordSpecValidateBasic() {
 		{
 			"Name - too long",
 			&RecordSpecification{
-				SpecificationId: RecordSpecMetadataAddress(contractSpecUUID, "recspecname"),
-				Name: strings.Repeat("r", maxRecordSpecificationNameLength + 1),
-				Inputs: []*InputSpecification{},
-				TypeName: "recspectypename",
-				ResultType: DefinitionType_DEFINITION_TYPE_RECORD,
+				SpecificationId:    RecordSpecMetadataAddress(contractSpecUUID, "recspecname"),
+				Name:               strings.Repeat("r", maxRecordSpecificationNameLength+1),
+				Inputs:             []*InputSpecification{},
+				TypeName:           "recspectypename",
+				ResultType:         DefinitionType_DEFINITION_TYPE_RECORD,
 				ResponsibleParties: []PartyType{PartyType_PARTY_TYPE_OWNER},
 			},
 			fmt.Sprintf("record specification name exceeds maximum length (expected <= %d got: %d)",
-				maxRecordSpecificationNameLength, maxRecordSpecificationNameLength + 1),
+				maxRecordSpecificationNameLength, maxRecordSpecificationNameLength+1),
 		},
 		{
 			"Name - max length - okay",
 			&RecordSpecification{
-				SpecificationId: RecordSpecMetadataAddress(contractSpecUUID, strings.Repeat("r", maxRecordSpecificationNameLength)),
-				Name: strings.Repeat("r", maxRecordSpecificationNameLength),
-				Inputs: []*InputSpecification{},
-				TypeName: "recspectypename",
-				ResultType: DefinitionType_DEFINITION_TYPE_RECORD,
+				SpecificationId:    RecordSpecMetadataAddress(contractSpecUUID, strings.Repeat("r", maxRecordSpecificationNameLength)),
+				Name:               strings.Repeat("r", maxRecordSpecificationNameLength),
+				Inputs:             []*InputSpecification{},
+				TypeName:           "recspectypename",
+				ResultType:         DefinitionType_DEFINITION_TYPE_RECORD,
 				ResponsibleParties: []PartyType{PartyType_PARTY_TYPE_OWNER},
 			},
 			"",
@@ -551,26 +551,26 @@ func (s *SpecificationTestSuite) TestRecordSpecValidateBasic() {
 			"Inputs - invalid name at index 0",
 			&RecordSpecification{
 				SpecificationId: RecordSpecMetadataAddress(contractSpecUUID, "recspecname"),
-				Name: "recspecname",
+				Name:            "recspecname",
 				Inputs: []*InputSpecification{
 					{
-						Name: "",
+						Name:     "",
 						TypeName: "typename1",
-						Source: NewInputSpecificationSourceHash("inputspecsourcehash1"),
+						Source:   NewInputSpecificationSourceHash("inputspecsourcehash1"),
 					},
 					{
-						Name: "name2",
+						Name:     "name2",
 						TypeName: "typename2",
-						Source: NewInputSpecificationSourceHash("inputspecsourcehash2"),
+						Source:   NewInputSpecificationSourceHash("inputspecsourcehash2"),
 					},
 					{
-						Name: "name3",
+						Name:     "name3",
 						TypeName: "typename3",
-						Source: NewInputSpecificationSourceHash("inputspecsourcehash3"),
+						Source:   NewInputSpecificationSourceHash("inputspecsourcehash3"),
 					},
 				},
-				TypeName: "recspectypename",
-				ResultType: DefinitionType_DEFINITION_TYPE_RECORD,
+				TypeName:           "recspectypename",
+				ResultType:         DefinitionType_DEFINITION_TYPE_RECORD,
 				ResponsibleParties: []PartyType{PartyType_PARTY_TYPE_OWNER},
 			},
 			fmt.Sprintf("invalid input specification at index %d: %s",
@@ -580,26 +580,26 @@ func (s *SpecificationTestSuite) TestRecordSpecValidateBasic() {
 			"Inputs - invalid name at index 2",
 			&RecordSpecification{
 				SpecificationId: RecordSpecMetadataAddress(contractSpecUUID, "recspecname"),
-				Name: "recspecname",
+				Name:            "recspecname",
 				Inputs: []*InputSpecification{
 					{
-						Name: "name1",
+						Name:     "name1",
 						TypeName: "typename1",
-						Source: NewInputSpecificationSourceHash("inputspecsourcehash1"),
+						Source:   NewInputSpecificationSourceHash("inputspecsourcehash1"),
 					},
 					{
-						Name: "name2",
+						Name:     "name2",
 						TypeName: "typename2",
-						Source: NewInputSpecificationSourceHash("inputspecsourcehash2"),
+						Source:   NewInputSpecificationSourceHash("inputspecsourcehash2"),
 					},
 					{
-						Name: "",
+						Name:     "",
 						TypeName: "typename3",
-						Source: NewInputSpecificationSourceHash("inputspecsourcehash3"),
+						Source:   NewInputSpecificationSourceHash("inputspecsourcehash3"),
 					},
 				},
-				TypeName: "recspectypename",
-				ResultType: DefinitionType_DEFINITION_TYPE_RECORD,
+				TypeName:           "recspectypename",
+				ResultType:         DefinitionType_DEFINITION_TYPE_RECORD,
 				ResponsibleParties: []PartyType{PartyType_PARTY_TYPE_OWNER},
 			},
 			fmt.Sprintf("invalid input specification at index %d: %s",
@@ -610,11 +610,11 @@ func (s *SpecificationTestSuite) TestRecordSpecValidateBasic() {
 		{
 			"TypeName - empty",
 			&RecordSpecification{
-				SpecificationId: RecordSpecMetadataAddress(contractSpecUUID, "recspecname"),
-				Name: "recspecname",
-				Inputs: []*InputSpecification{},
-				TypeName: "",
-				ResultType: DefinitionType_DEFINITION_TYPE_RECORD,
+				SpecificationId:    RecordSpecMetadataAddress(contractSpecUUID, "recspecname"),
+				Name:               "recspecname",
+				Inputs:             []*InputSpecification{},
+				TypeName:           "",
+				ResultType:         DefinitionType_DEFINITION_TYPE_RECORD,
 				ResponsibleParties: []PartyType{PartyType_PARTY_TYPE_OWNER},
 			},
 			"record specification type name cannot be empty",
@@ -622,24 +622,24 @@ func (s *SpecificationTestSuite) TestRecordSpecValidateBasic() {
 		{
 			"TypeName - too long",
 			&RecordSpecification{
-				SpecificationId: RecordSpecMetadataAddress(contractSpecUUID, "recspecname"),
-				Name: "recspecname",
-				Inputs: []*InputSpecification{},
-				TypeName: strings.Repeat("t", maxRecordSpecificationTypeNameLength + 1),
-				ResultType: DefinitionType_DEFINITION_TYPE_RECORD,
+				SpecificationId:    RecordSpecMetadataAddress(contractSpecUUID, "recspecname"),
+				Name:               "recspecname",
+				Inputs:             []*InputSpecification{},
+				TypeName:           strings.Repeat("t", maxRecordSpecificationTypeNameLength+1),
+				ResultType:         DefinitionType_DEFINITION_TYPE_RECORD,
 				ResponsibleParties: []PartyType{PartyType_PARTY_TYPE_OWNER},
 			},
 			fmt.Sprintf("record specification type name exceeds maximum length (expected <= %d got: %d)",
-				maxRecordSpecificationTypeNameLength, maxRecordSpecificationTypeNameLength + 1),
+				maxRecordSpecificationTypeNameLength, maxRecordSpecificationTypeNameLength+1),
 		},
 		{
 			"TypeName - max length - okay",
 			&RecordSpecification{
-				SpecificationId: RecordSpecMetadataAddress(contractSpecUUID, "recspecname"),
-				Name: "recspecname",
-				Inputs: []*InputSpecification{},
-				TypeName: strings.Repeat("t", maxRecordSpecificationTypeNameLength),
-				ResultType: DefinitionType_DEFINITION_TYPE_RECORD,
+				SpecificationId:    RecordSpecMetadataAddress(contractSpecUUID, "recspecname"),
+				Name:               "recspecname",
+				Inputs:             []*InputSpecification{},
+				TypeName:           strings.Repeat("t", maxRecordSpecificationTypeNameLength),
+				ResultType:         DefinitionType_DEFINITION_TYPE_RECORD,
 				ResponsibleParties: []PartyType{PartyType_PARTY_TYPE_OWNER},
 			},
 			"",
@@ -649,11 +649,11 @@ func (s *SpecificationTestSuite) TestRecordSpecValidateBasic() {
 		{
 			"ResponsibleParties - empty",
 			&RecordSpecification{
-				SpecificationId: RecordSpecMetadataAddress(contractSpecUUID, "recspecname"),
-				Name: "recspecname",
-				Inputs: []*InputSpecification{},
-				TypeName: "recspectypename",
-				ResultType: DefinitionType_DEFINITION_TYPE_RECORD,
+				SpecificationId:    RecordSpecMetadataAddress(contractSpecUUID, "recspecname"),
+				Name:               "recspecname",
+				Inputs:             []*InputSpecification{},
+				TypeName:           "recspectypename",
+				ResultType:         DefinitionType_DEFINITION_TYPE_RECORD,
 				ResponsibleParties: []PartyType{},
 			},
 			"invalid responsible parties count (expected > 0 got: 0)",
@@ -663,14 +663,28 @@ func (s *SpecificationTestSuite) TestRecordSpecValidateBasic() {
 		{
 			"simple valid RecordSpecification",
 			&RecordSpecification{
-				SpecificationId: RecordSpecMetadataAddress(contractSpecUUID, "recspecname"),
-				Name: "recspecname",
-				Inputs: []*InputSpecification{},
-				TypeName: "recspectypename",
-				ResultType: DefinitionType_DEFINITION_TYPE_RECORD,
+				SpecificationId:    RecordSpecMetadataAddress(contractSpecUUID, "recspecname"),
+				Name:               "recspecname",
+				Inputs:             []*InputSpecification{},
+				TypeName:           "recspectypename",
+				ResultType:         DefinitionType_DEFINITION_TYPE_RECORD,
 				ResponsibleParties: []PartyType{PartyType_PARTY_TYPE_OWNER},
 			},
 			"",
+		},
+
+		// ResultType test
+		{
+			"result type cannot be unspecified",
+			&RecordSpecification{
+				SpecificationId:    RecordSpecMetadataAddress(contractSpecUUID, "recspecname"),
+				Name:               "recspecname",
+				Inputs:             []*InputSpecification{},
+				TypeName:           "recspectypename",
+				ResultType:         DefinitionType_DEFINITION_TYPE_UNSPECIFIED,
+				ResponsibleParties: []PartyType{PartyType_PARTY_TYPE_OWNER},
+			},
+			"record specification result type cannot be unspecified",
 		},
 	}
 
@@ -697,28 +711,28 @@ func (s *SpecificationTestSuite) TestInputSpecValidateBasic() {
 		{
 			"Name - empty",
 			&InputSpecification{
-				Name: "",
+				Name:     "",
 				TypeName: "typename",
-				Source: NewInputSpecificationSourceHash("inputspecsourcehash"),
+				Source:   NewInputSpecificationSourceHash("inputspecsourcehash"),
 			},
 			"input specification name cannot be empty",
 		},
 		{
 			"Name - too long",
 			&InputSpecification{
-				Name: strings.Repeat("i", maxInputSpecificationNameLength + 1),
+				Name:     strings.Repeat("i", maxInputSpecificationNameLength+1),
 				TypeName: "typename",
-				Source: NewInputSpecificationSourceHash("inputspecsourcehash"),
+				Source:   NewInputSpecificationSourceHash("inputspecsourcehash"),
 			},
 			fmt.Sprintf("input specification name exceeds maximum length (expected <= %d got: %d)",
-				maxInputSpecificationNameLength, maxInputSpecificationNameLength + 1),
+				maxInputSpecificationNameLength, maxInputSpecificationNameLength+1),
 		},
 		{
 			"Name - at max length - okay",
 			&InputSpecification{
-				Name: strings.Repeat("i", maxInputSpecificationNameLength),
+				Name:     strings.Repeat("i", maxInputSpecificationNameLength),
 				TypeName: "typename",
-				Source: NewInputSpecificationSourceHash("inputspecsourcehash"),
+				Source:   NewInputSpecificationSourceHash("inputspecsourcehash"),
 			},
 			"",
 		},
@@ -727,28 +741,28 @@ func (s *SpecificationTestSuite) TestInputSpecValidateBasic() {
 		{
 			"TypeName - empty",
 			&InputSpecification{
-				Name: "name",
+				Name:     "name",
 				TypeName: "",
-				Source: NewInputSpecificationSourceHash("inputspecsourcehash"),
+				Source:   NewInputSpecificationSourceHash("inputspecsourcehash"),
 			},
 			"input specification type name cannot be empty",
 		},
 		{
 			"TypeName - too long",
 			&InputSpecification{
-				Name: "name",
-				TypeName: strings.Repeat("i", maxInputSpecificationTypeNameLength + 1),
-				Source: NewInputSpecificationSourceHash("inputspecsourcehash"),
+				Name:     "name",
+				TypeName: strings.Repeat("i", maxInputSpecificationTypeNameLength+1),
+				Source:   NewInputSpecificationSourceHash("inputspecsourcehash"),
 			},
 			fmt.Sprintf("input specification type name exceeds maximum length (expected <= %d got: %d)",
-				maxInputSpecificationTypeNameLength, maxInputSpecificationTypeNameLength + 1),
+				maxInputSpecificationTypeNameLength, maxInputSpecificationTypeNameLength+1),
 		},
 		{
 			"TypeName - at max length - okay",
 			&InputSpecification{
-				Name: "name",
+				Name:     "name",
 				TypeName: strings.Repeat("i", maxInputSpecificationTypeNameLength),
-				Source: NewInputSpecificationSourceHash("inputspecsourcehash"),
+				Source:   NewInputSpecificationSourceHash("inputspecsourcehash"),
 			},
 			"",
 		},
@@ -757,27 +771,27 @@ func (s *SpecificationTestSuite) TestInputSpecValidateBasic() {
 		{
 			"Source - nil",
 			&InputSpecification{
-				Name: "name",
+				Name:     "name",
 				TypeName: "typename",
-				Source: nil,
+				Source:   nil,
 			},
 			"input specification source is required",
 		},
 		{
 			"Source - RecordId - not a metadata address",
 			&InputSpecification{
-				Name: "name",
+				Name:     "name",
 				TypeName: "typename",
-				Source: NewInputSpecificationSourceRecordID(MetadataAddress(specTestAddr)),
+				Source:   NewInputSpecificationSourceRecordID(MetadataAddress(specTestAddr)),
 			},
 			"invalid input specification source record id: invalid metadata address type: 133",
 		},
 		{
 			"Source - RecordId - wrong prefix",
 			&InputSpecification{
-				Name: "name",
+				Name:     "name",
 				TypeName: "typename",
-				Source: NewInputSpecificationSourceRecordID(ContractSpecMetadataAddress(uuid.New())),
+				Source:   NewInputSpecificationSourceRecordID(ContractSpecMetadataAddress(uuid.New())),
 			},
 			fmt.Sprintf("invalid input specification source record id prefix (expected: %s, got: %s)",
 				PrefixRecord, PrefixContractSpecification),
@@ -785,18 +799,18 @@ func (s *SpecificationTestSuite) TestInputSpecValidateBasic() {
 		{
 			"Source - Hash - empty",
 			&InputSpecification{
-				Name: "name",
+				Name:     "name",
 				TypeName: "typename",
-				Source: NewInputSpecificationSourceHash(""),
+				Source:   NewInputSpecificationSourceHash(""),
 			},
 			"input specification source hash cannot be empty",
 		},
 		{
 			"Source - Weird",
 			&InputSpecification{
-				Name: "name",
+				Name:     "name",
 				TypeName: "typename",
-				Source: NewWeirdSource(8),
+				Source:   NewWeirdSource(8),
 			},
 			"unknown input specification source type",
 		},
@@ -805,9 +819,9 @@ func (s *SpecificationTestSuite) TestInputSpecValidateBasic() {
 		{
 			"simple valid InputSpecification",
 			&InputSpecification{
-				Name: "name",
+				Name:     "name",
 				TypeName: "typename",
-				Source: NewInputSpecificationSourceHash("inputspecsourcehash"),
+				Source:   NewInputSpecificationSourceHash("inputspecsourcehash"),
 			},
 			"",
 		},
@@ -828,9 +842,9 @@ func (s *SpecificationTestSuite) TestInputSpecValidateBasic() {
 
 func (s *SpecificationTestSuite) TestDescriptionValidateBasic() {
 	tests := []struct {
-		name    string
-		desc    *Description
-		want    string
+		name string
+		desc *Description
+		want string
 	}{
 		// Name tests
 		{
@@ -851,7 +865,7 @@ func (s *SpecificationTestSuite) TestDescriptionValidateBasic() {
 				"",
 				"",
 			),
-			fmt.Sprintf("description Name exceeds maximum length (expected <= %d got: %d)", maxDescriptionNameLength, maxDescriptionNameLength + 1),
+			fmt.Sprintf("description Name exceeds maximum length (expected <= %d got: %d)", maxDescriptionNameLength, maxDescriptionNameLength+1),
 		},
 		{
 			"valid name - 1 char",
@@ -883,7 +897,7 @@ func (s *SpecificationTestSuite) TestDescriptionValidateBasic() {
 				"",
 				"",
 			),
-			fmt.Sprintf("description Description exceeds maximum length (expected <= %d got: %d)", maxDescriptionDescriptionLength, maxDescriptionDescriptionLength + 1),
+			fmt.Sprintf("description Description exceeds maximum length (expected <= %d got: %d)", maxDescriptionDescriptionLength, maxDescriptionDescriptionLength+1),
 		},
 		{
 			"valid description - empty",
@@ -925,7 +939,7 @@ func (s *SpecificationTestSuite) TestDescriptionValidateBasic() {
 				strings.Repeat("h", maxURLLength+1),
 				"",
 			),
-			fmt.Sprintf("url WebsiteUrl exceeds maximum length (expected <= %d got: %d)", maxURLLength, maxURLLength + 1),
+			fmt.Sprintf("url WebsiteUrl exceeds maximum length (expected <= %d got: %d)", maxURLLength, maxURLLength+1),
 		},
 		{
 			"invalid website url - no protocol",
@@ -1017,7 +1031,7 @@ func (s *SpecificationTestSuite) TestDescriptionValidateBasic() {
 				"",
 				strings.Repeat("h", maxURLLength+1),
 			),
-			fmt.Sprintf("url IconUrl exceeds maximum length (expected <= %d got: %d)", maxURLLength, maxURLLength + 1),
+			fmt.Sprintf("url IconUrl exceeds maximum length (expected <= %d got: %d)", maxURLLength, maxURLLength+1),
 		},
 		{
 			"invalid icon url - no protocol",
@@ -1271,7 +1285,7 @@ source:
 		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
 			actual := tt.spec.String()
-			if (tt.outputActual) {
+			if tt.outputActual {
 				fmt.Printf("Actual [%s]:\n%s\n-----\n", tt.name, actual)
 			}
 			require.Equal(t, tt.expected, actual)

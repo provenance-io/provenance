@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
@@ -126,6 +127,9 @@ func (k Keeper) ValidateSessionUpdate(ctx sdk.Context, existing *types.Session, 
 		if !proposed.SpecificationId.Equals(existing.SpecificationId) {
 			return fmt.Errorf("cannot update specification identifier. expected %s, got %s", existing.SpecificationId, proposed.SpecificationId)
 		}
+		if len(proposed.GetName()) == 0 {
+			return errors.New("proposed name to existing session must not be empty")
+		}
 	}
 
 	scopeUUID, err := proposed.SessionId.ScopeUUID()
@@ -145,8 +149,8 @@ func (k Keeper) ValidateSessionUpdate(ctx sdk.Context, existing *types.Session, 
 		return fmt.Errorf("cannot find contract specification %s", proposed.SpecificationId)
 	}
 
-	if proposed.GetName() != contractSpec.GetClassName() {
-		return fmt.Errorf("proposed name does not match contract spec. expected %s, got %s)", proposed.GetName(), contractSpec.GetClassName())
+	if len(proposed.GetName()) == 0 && existing == nil {
+		proposed.Name = contractSpec.ClassName
 	}
 
 	if err = k.ValidatePartiesInvolved(proposed.Parties, contractSpec.PartiesInvolved); err != nil {
@@ -173,25 +177,25 @@ func (k Keeper) ValidateAuditUpdate(ctx sdk.Context, existing, proposed *types.A
 		return nil
 	}
 	if existing == nil {
-		return fmt.Errorf("attempt to modify audit fields, modification not allowed")
+		return errors.New("attempt to modify audit fields, modification not allowed")
 	}
 	if existing.CreatedBy != proposed.CreatedBy {
-		return fmt.Errorf("attempt to modify created-by audit field, modification not allowed")
+		return errors.New("attempt to modify created-by audit field, modification not allowed")
 	}
 	if existing.UpdatedBy != proposed.UpdatedBy {
-		return fmt.Errorf("attempt to modify updated-by audit field, modification not allowed")
+		return errors.New("attempt to modify updated-by audit field, modification not allowed")
 	}
 	if existing.CreatedDate != proposed.CreatedDate {
-		return fmt.Errorf("attempt to modify created-date audit field, modification not allowed")
+		return errors.New("attempt to modify created-date audit field, modification not allowed")
 	}
 	if existing.UpdatedDate != proposed.UpdatedDate {
-		return fmt.Errorf("attempt to modify updated-date audit field, modification not allowed")
+		return errors.New("attempt to modify updated-date audit field, modification not allowed")
 	}
 	if existing.Version != proposed.Version {
-		return fmt.Errorf("attempt to modify version audit field, modification not allowed")
+		return errors.New("attempt to modify version audit field, modification not allowed")
 	}
 	if existing.Message != proposed.Message {
-		return fmt.Errorf("attempt to modify message audit field, modification not allowed")
+		return errors.New("attempt to modify message audit field, modification not allowed")
 	}
 
 	return nil

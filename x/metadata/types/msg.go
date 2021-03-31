@@ -198,8 +198,8 @@ func (msg MsgDeleteScopeRequest) ValidateBasic() error {
 // ------------------  MsgWriteSessionRequest  ------------------
 
 // NewMsgWriteSessionRequest creates a new msg instance
-func NewMsgWriteSessionRequest() *MsgWriteSessionRequest {
-	return &MsgWriteSessionRequest{}
+func NewMsgWriteSessionRequest(session Session, signers []string) *MsgWriteSessionRequest {
+	return &MsgWriteSessionRequest{Session: session, Signers: signers}
 }
 
 func (msg MsgWriteSessionRequest) String() string {
@@ -275,8 +275,8 @@ func (msg *MsgWriteSessionRequest) ConvertOptionalFields() error {
 // ------------------  MsgWriteRecordRequest  ------------------
 
 // NewMsgWriteRecordRequest creates a new msg instance
-func NewMsgWriteRecordRequest() *MsgWriteRecordRequest {
-	return &MsgWriteRecordRequest{}
+func NewMsgWriteRecordRequest(record Record, sessionIDComponents *SessionIdComponents, contractSpecUUID string, signers []string, parties []Party) *MsgWriteRecordRequest {
+	return &MsgWriteRecordRequest{Record: record, Parties: parties, Signers: signers, SessionIdComponents: sessionIDComponents, ContractSpecUuid: contractSpecUUID}
 }
 
 func (msg MsgWriteRecordRequest) String() string {
@@ -305,7 +305,7 @@ func (msg MsgWriteRecordRequest) GetSignBytes() []byte {
 }
 
 // ValidateBasic performs a quick validity check
-func (msg MsgWriteRecordRequest) ValidateBasic() error {
+func (msg *MsgWriteRecordRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
@@ -330,8 +330,8 @@ func (msg *MsgWriteRecordRequest) ConvertOptionalFields() error {
 					msg.Record.SessionId, msg.SessionIdComponents)
 			}
 			msg.Record.SessionId = *sessionAddr
+			msg.SessionIdComponents = nil
 		}
-		msg.SessionIdComponents = nil
 	}
 	if len(msg.ContractSpecUuid) > 0 {
 		uid, err := uuid.Parse(msg.ContractSpecUuid)
@@ -355,8 +355,8 @@ func (msg *MsgWriteRecordRequest) ConvertOptionalFields() error {
 // ------------------  MsgDeleteRecordRequest  ------------------
 
 // NewMsgDeleteScopeSpecificationRequest creates a new msg instance
-func NewMsgDeleteRecordRequest() *MsgDeleteRecordRequest {
-	return &MsgDeleteRecordRequest{}
+func NewMsgDeleteRecordRequest(recordID MetadataAddress, signers []string) *MsgDeleteRecordRequest {
+	return &MsgDeleteRecordRequest{RecordId: recordID, Signers: signers}
 }
 
 func (msg MsgDeleteRecordRequest) String() string {
@@ -923,14 +923,14 @@ func (msg *SessionIdComponents) GetSessionAddr() (*MetadataAddress, error) {
 		if err != nil {
 			return nil, fmt.Errorf("invalid session uuid: %w", err)
 		}
-		scopeUUID = &uid
+		sessionUUID = &uid
 	}
 	if msgScopeUUID := msg.GetScopeUuid(); len(msgScopeUUID) > 0 {
 		uid, err := uuid.Parse(msgScopeUUID)
 		if err != nil {
 			return nil, fmt.Errorf("invalid scope uuid: %w", err)
 		}
-		sessionUUID = &uid
+		scopeUUID = &uid
 	} else if msgScopeAddr := msg.GetScopeAddr(); len(msgScopeAddr) > 0 {
 		addr, addrErr := MetadataAddressFromBech32(msgScopeAddr)
 		if addrErr != nil {
@@ -940,7 +940,7 @@ func (msg *SessionIdComponents) GetSessionAddr() (*MetadataAddress, error) {
 		if err != nil {
 			return nil, fmt.Errorf("invalid scope addr: %w", err)
 		}
-		sessionUUID = &uid
+		scopeUUID = &uid
 	}
 
 	if scopeUUID == nil && sessionUUID == nil {

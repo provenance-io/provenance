@@ -245,6 +245,10 @@ func (s *RecordSpecification) ValidateBasic() error {
 	if len(s.ResponsibleParties) == 0 {
 		return fmt.Errorf("invalid responsible parties count (expected > 0 got: %d)", len(s.ResponsibleParties))
 	}
+	if s.ResultType == DefinitionType_DEFINITION_TYPE_UNSPECIFIED {
+		return errors.New("record specification result type cannot be unspecified")
+	}
+
 	return nil
 }
 
