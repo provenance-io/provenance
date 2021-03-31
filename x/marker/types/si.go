@@ -8,7 +8,6 @@ import (
 
 var (
 	// SIPrefixSymbol is used to look up the symbol for a SIPrefix enum entry.
-	// It is the inverse of SIPrefixSymbolMap.
 	SIPrefixSymbol = map[SIPrefix]string{
 		SI_PREFIX_NONE: "",
 
@@ -36,7 +35,7 @@ var (
 	}
 
 	// SIPrefixSymbolMap is used to look up the SIPrefix enum entry for a symbol.
-	// Some SIPrefix values might appear more than once in this map.
+	// Some SIPrefix values might appear more than once in this map, e.g. "u" and "µ" are both for SI_PREFIX_MICRO.
 	SIPrefixSymbolMap map[string]SIPrefix
 
 	// SIPrefixName is used to look up the name for a SIPrefix enum entry.
@@ -45,7 +44,7 @@ var (
 
 	// SIPrefixSymbolMap is used to look up the SIPrefix enum entry for a name.
 	// The keys are all lower-case.
-	// Some SIPrefix values might appear more than once in this map.
+	// Some SIPrefix values might appear more than once in this map, e.g. "" and "none" are both for SI_PREFIX_NONE.
 	SIPrefixNameMap map[string]SIPrefix
 
 	// invalidSIPrefix is an int32 that's been converted to a SIPrefix but doesn't have a valid value.
