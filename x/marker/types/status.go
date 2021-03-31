@@ -43,14 +43,8 @@ func MarkerStatusFromString(str string) (MarkerStatus, error) {
 
 // ValidMarkerStatus returns true if the marker status is valid and false otherwise.
 func ValidMarkerStatus(markerStatus MarkerStatus) bool {
-	if markerStatus == StatusProposed ||
-		markerStatus == StatusFinalized ||
-		markerStatus == StatusActive ||
-		markerStatus == StatusCancelled ||
-		markerStatus == StatusDestroyed {
-		return true
-	}
-	return false
+	_, ok := MarkerStatus_name[int32(markerStatus)]
+	return ok && markerStatus != StatusUndefined
 }
 
 // Marshal needed for protobuf compatibility.
@@ -115,4 +109,14 @@ func (rt MarkerStatus) Format(s fmt.State, verb rune) {
 	default:
 		s.Write([]byte(fmt.Sprintf("%v", byte(rt))))
 	}
+}
+
+// IsOneOf checks to see if this MarkerStatus is equal to one of the provided statuses.
+func (rt MarkerStatus) IsOneOf(statuses ...MarkerStatus) bool {
+	for _, s := range statuses {
+		if rt == s {
+			return true
+		}
+	}
+	return false
 }

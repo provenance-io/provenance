@@ -42,7 +42,7 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 
 	// Add marker requests must pass extra validation for denom (in addition to regular coin validation expression)
 	valExp := k.GetParams(ctx).UnrestrictedDenomRegex
-	if v, expErr := regexp.Compile(valExp); err != nil {
+	if v, expErr := regexp.Compile(valExp); expErr != nil {
 		return nil, expErr
 	} else if !v.MatchString(msg.Amount.Denom) {
 		return nil, fmt.Errorf("invalid denom (fails unrestricted marker denom validation %s): %s", valExp, msg.Amount.Denom)
@@ -364,12 +364,12 @@ func (k msgServer) SetDenomMetadata(
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	admin, err := sdk.AccAddressFromBech32(msg.Administrator)
-	if err != nil {
-		return nil, err
+	admin, addrErr := sdk.AccAddressFromBech32(msg.Administrator)
+	if addrErr != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, addrErr.Error())
 	}
 
-	err = k.SetMarkerMetadata(ctx, msg.Metadata, admin)
+	err := k.SetMarkerDenomMetadata(ctx, msg.Metadata, admin)
 	if err != nil {
 		return nil, err
 	}

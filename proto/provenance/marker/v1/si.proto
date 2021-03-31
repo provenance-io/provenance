@@ -1,0 +1,58 @@
+syntax = "proto3";
+package provenance.marker.v1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/provenance-io/provenance/x/marker/types";
+
+option java_package        = "io.provenance.marker.v1";
+option java_multiple_files = true;
+
+// SIPrefix represents an International System of Units (SI) Prefix.
+enum SIPrefix {
+  option (gogoproto.goproto_enum_prefix) = false;
+  // 10^0    (none)
+  SI_PREFIX_NONE = 0;
+
+  // 10^1    deka   da
+  SI_PREFIX_DEKA = 1;
+  // 10^2    hecto   h
+  SI_PREFIX_HECTO = 2;
+  // 10^3    kilo    k
+  SI_PREFIX_KILO = 3;
+  // 10^6    mega    M
+  SI_PREFIX_MEGA = 6;
+  // 10^9    giga    G
+  SI_PREFIX_GIGA = 9;
+  // 10^12   tera    T
+  SI_PREFIX_TERA = 12;
+  // 10^15   peta    P
+  SI_PREFIX_PETA = 15;
+  // 10^18   exa     E
+  SI_PREFIX_EXA = 18;
+  // 10^21   zetta   Z
+  SI_PREFIX_ZETTA = 21;
+  // 10^24   yotta   Y
+  SI_PREFIX_YOTTA = 24;
+
+  // 10^-1   deci    d
+  SI_PREFIX_DECI = -1;
+  // 10^-2   centi   c
+  SI_PREFIX_CENTI = -2;
+  // 10^-3   milli   m
+  SI_PREFIX_MILLI = -3;
+  // 10^-6   micro   µ
+  SI_PREFIX_MICRO = -6;
+  // 10^-9   nano    n
+  SI_PREFIX_NANO = -9;
+  // 10^-12  pico    p
+  SI_PREFIX_PICO = -12;
+  // 10^-15  femto   f
+  SI_PREFIX_FEMTO = -15;
+  // 10^-18  atto    a
+  SI_PREFIX_ATTO = -18;
+  // 10^-21  zepto   z
+  SI_PREFIX_ZEPTO = -21;
+  // 10^-24  yocto   y
+  SI_PREFIX_YOCTO = -24;
+}

@@ -61,6 +61,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add optional identification fields in tx `Write...` messages. #169
 * The `Write` endpoints now return information about the written entries. #169
 * Added a CLI command for getting all entries of a type, `query metadata all <type>`, or `query metadata <type> all`. #169
+* Restrict denom metadata. #208
 
 ### API Breaking
 
