@@ -122,7 +122,7 @@ func (k Keeper) IterateRecords(ctx sdk.Context, scopeID types.MetadataAddress, h
 
 // ValidateRecordUpdate checks the current record and the proposed record to determine if the the proposed changes are valid
 // based on the existing state
-func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, proposed types.Record, signers []string) error {
+func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, proposed types.Record, signers []string, partiesInvolved []types.Party) error {
 	if err := proposed.ValidateBasic(); err != nil {
 		return err
 	}
@@ -164,6 +164,15 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, pr
 		return fmt.Errorf("session not found for session id %s", proposed.SessionId)
 	}
 
+	// Get contract specification
+	contractSpec, found := k.GetContractSpecification(ctx, session.SpecificationId)
+	if !found {
+		return fmt.Errorf("contract specification not found: %s", session.SpecificationId.String())
+	}
+	err = k.ValidatePartiesInvolved(partiesInvolved, contractSpec.PartiesInvolved)
+	if err != nil {
+		return err
+	}
 	// Get the record specification
 	contractSpecUUID, err := session.SpecificationId.ContractSpecUUID()
 	if err != nil {

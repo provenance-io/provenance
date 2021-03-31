@@ -40,14 +40,16 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Remove deprecated ModuleCdc amino encoding from Metadata Locator records #187
 * Update Cosmos SDK to 0.42.3
 * Remove deprecated ModuleCdc amino encoding from name module #189
+* Remove deprecated ModuleCdc amino encoding from attribute module #188
 
 ### Features
 
 * Allow withdrawals of any coin type from a marker account in WASM smart contracts. #151
-* Added cli tx commands `add-contract-specification` `remove-contract-specification` for updating/adding/removing metadata `ContractSpecification`s. #195
-* Added cli tx commands `add-record-specification` `remove-record-specification` for updating/adding/removing metadata `RecordSpecification`s. #176
-* Added cli tx commands `add-scope-specification` `remove-scope-specification` for updating/adding/removing metadata `ScopeSpecification`s. #202
-* Added cli tx commands `add-scope` `remove-scope` for updating/adding/removing metadata `Scope`s. #199
+* Added cli tx commands `write-contract-specification` `remove-contract-specification` for updating/adding/removing metadata `ContractSpecification`s. #195
+* Added cli tx commands `write-record-specification` `remove-record-specification` for updating/adding/removing metadata `RecordSpecification`s. #176
+* Added cli tx commands `write-scope-specification` `remove-scope-specification` for updating/adding/removing metadata `ScopeSpecification`s. #202
+* Added cli tx commands `write-scope` `remove-scope` for updating/adding/removing metadata `Scope`s. #199
+* Added cli tx commands `write-record` `remove-record` for updating/adding/removing metadata `Record`s. #205
 * Simulation testing support #95
 * Name module simulation testing #24
 * Added default IBC parameters for v039 chain genesis migration script #102

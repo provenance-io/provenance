@@ -384,13 +384,6 @@ func (s *ScopeTestSuite) TestSessionValidateBasic() {
 			true,
 		},
 		{
-			"Invalid session, session name empty",
-			NewSession("", sessionID, contractSpec, []Party{
-				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_AFFILIATE}}, nil),
-			"session name can not be empty",
-			true,
-		},
-		{
 			"Invalid session, max audit message length too long",
 			NewSession("name", sessionID, contractSpec, []Party{
 				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_AFFILIATE}},

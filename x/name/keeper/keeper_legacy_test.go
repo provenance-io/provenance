@@ -229,6 +229,21 @@ func (s *KeeperLegacyTestSuite) TestSetName() {
 	}
 }
 
+func (s *KeeperLegacyTestSuite) TestIterateRecord() {
+	s.Run("iterate invalid name", func() {
+		records := nametypes.NameRecords{}
+		// Callback func that adds records to genesis state.
+		appendToRecords := func(record nametypes.NameRecord) error {
+			records = append(records, record)
+			return nil
+		}
+		// Collect and return genesis state.
+		err := s.app.NameKeeper.IterateRecords(s.ctx, nametypes.NameKeyPrefixAmino, appendToRecords)
+		s.Require().NoError(err)
+		s.Require().Equal(2, len(records))
+	})
+}
+
 // THIS IS ONLY FOR TESTING LEGACY AMINO stored obh
 func SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAddress, restrict bool, app *app.App) error {
 	var err error

@@ -35,6 +35,7 @@ var handlers = map[string]appUpgrade{
 	"v1.0.0": {
 		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) {
 			app.NameKeeper.ConvertLegacyAmino(ctx)
+			app.AttributeKeeper.ConvertLegacyAmino(ctx)
 		},
 	},
 
