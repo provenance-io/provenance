@@ -30,19 +30,19 @@ func (s *NameKeyTestSuite) TestNameKeyPrefix() {
 	}{
 		"valid two-part": {
 			"name.domain",
-			mustHexDecode("0169e54bac206cf0d1dc5a11c9ae404c5f15a1b75456327e2dba1a8182e507e23a"),
+			mustHexDecode("0369e54bac206cf0d1dc5a11c9ae404c5f15a1b75456327e2dba1a8182e507e23a"),
 			false,
 			"",
 		},
 		"valid single": {
 			"domain",
-			mustHexDecode("01f2ff83860a4dc203988ed1a22ba1f21237f04abdbd0c4c951103cfbed121de78"),
+			mustHexDecode("03f2ff83860a4dc203988ed1a22ba1f21237f04abdbd0c4c951103cfbed121de78"),
 			false,
 			"",
 		},
 		"valid multi-part": {
 			"first.second.third.fourth.fifth.sixth.seventh.eighth.ninth.tenth",
-			mustHexDecode("0119f8e4495c302135434642f853698172ef1f167400d04c12864f9cdf539fbaba"),
+			mustHexDecode("0319f8e4495c302135434642f853698172ef1f167400d04c12864f9cdf539fbaba"),
 			false,
 			"",
 		},
@@ -94,7 +94,7 @@ func (s *NameKeyTestSuite) TestAddressKeyPrefix() {
 	key, err := GetAddressKeyPrefix(s.addr)
 	s.Require().NoError(err)
 	// check for address prefix
-	s.Require().Equal("02", hex.EncodeToString(key[0:1]))
+	s.Require().Equal("04", hex.EncodeToString(key[0:1]))
 	s.Require().Equal(AddressKeyPrefix, key[0:1])
 }
 

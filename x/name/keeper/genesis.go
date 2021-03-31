@@ -36,3 +36,29 @@ func (keeper Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	}
 	return types.NewGenesisState(params, records)
 }
+
+// convert name records before 1.0.0 to the right proto encoding.
+func (keeper Keeper) ConvertLegacyAmino(ctx sdk.Context) types.NameRecords {
+	// Genesis state data structure.
+	records := types.NameRecords{}
+	// Callback func that adds records to genesis state.
+	appendToRecords := func(record types.NameRecord) error {
+		records = append(records, record)
+		return nil
+	}
+	// Collect and return genesis state.
+	if err := keeper.IterateRecords(ctx, types.NameKeyPrefixAmino, appendToRecords); err != nil {
+		panic(err)
+	}
+	for _, record := range records {
+		addr, err := sdk.AccAddressFromBech32(record.Address)
+		if err != nil {
+			panic(err)
+		}
+		if err := keeper.SetNameRecord(ctx, record.Name, addr, record.Restricted); err != nil {
+			panic(err)
+		}
+	}
+
+	return records
+}
