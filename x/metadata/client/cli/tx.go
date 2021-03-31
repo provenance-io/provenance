@@ -313,7 +313,7 @@ func WriteContractSpecificationCmd() *cobra.Command {
 		Use:   "write-contract-specification [contractspec-id] [owners] [parties-involved] [source-value] [classname] [description-name] [description] [website-url] [icon-url]",
 		Short: "Add/Update metadata contract specification on the provenance blockchain",
 		Long: `Add/Update metadata contract specification on the provenance blockchain
-contractspec-id]   - contract specification metaaddress
+[contractspec-id]   - contract specification metaaddress
 [owners]            - comma delimited list of bech32 owner addresses
 [parties-involved]  - comma delimited list of party types.  Accepted values: originator,servicer,investor,custodian,owner,affiliate,omnibus,provenance
 [source-value]      - source identifier of type hash or resourceid
