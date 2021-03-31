@@ -263,6 +263,28 @@ func (s *KeeperLegacyTestSuite) TestGetAttributesByName() {
 	s.Equal(attr.Value, attributes[0].Value)
 }
 
+
+func (s *KeeperLegacyTestSuite) TestInitGenesisAddingAttributes() {
+	var attributeData types.GenesisState
+	attributeData.Attributes = append(attributeData.Attributes, types.Attribute{
+		Name:          "example.attribute",
+		Value:         []byte("0123456789"),
+		Address:       s.user1,
+		AttributeType: types.AttributeType_String,
+	})
+	s.Assert().NotPanics(func() { s.app.AttributeKeeper.InitGenesis(s.ctx, &attributeData) })
+
+	attributeData.Attributes = append(attributeData.Attributes, types.Attribute{
+		Name:          "",
+		Value:         []byte("0123456789"),
+		Address:       s.user1,
+		AttributeType: types.AttributeType_String,
+	})
+
+	s.Assert().Panics(func() { s.app.AttributeKeeper.InitGenesis(s.ctx, &attributeData) })
+}
+
+
 // InitGenesisLegacy creates the initial genesis state for the attribute module. ONLY FOR TESTING.
 func InitGenesisLegacy(ctx sdk.Context, data *types.GenesisState, app *app.App) {
 	if err := data.ValidateBasic(); err != nil {

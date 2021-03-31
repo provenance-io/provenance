@@ -259,3 +259,19 @@ func (s *KeeperTestSuite) TestDeleteRecord() {
 	})
 
 }
+
+func (s *KeeperTestSuite) TestIterateRecord() {
+	s.Run("iterate invalid name", func() {
+		records := nametypes.NameRecords{}
+		// Callback func that adds records to genesis state.
+		appendToRecords := func(record nametypes.NameRecord) error {
+			records = append(records, record)
+			return nil
+		}
+		// Collect and return genesis state.
+		err := s.app.NameKeeper.IterateRecords(s.ctx, nametypes.NameKeyPrefix, appendToRecords)
+		s.Require().NoError(err)
+		s.Require().Equal(2, len(records))
+	})
+
+}
