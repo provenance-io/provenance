@@ -34,6 +34,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Bug Fixes
+* Fix handling of Metadata Write message id helper fields.
+
 ## [v1.0.0](https://github.com/provenance-io/provenance/releases/tag/v1.0.0) - 2021-03-31
 
 ### Bug Fixes
