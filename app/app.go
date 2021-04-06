@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/provenance-io/provenance/internal/statesync"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/gorilla/mux"
@@ -283,6 +285,9 @@ func New(
 		tkeys:             tkeys,
 		memKeys:           memKeys,
 	}
+
+	// Register helpers for state-sync status.
+	statesync.RegisterSyncStatus()
 
 	app.ParamsKeeper = initParamsKeeper(appCodec, cdc, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
 
