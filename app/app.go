@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/provenance-io/provenance/internal/statesync"
 	"io"
 	"net/http"
 	"os"
@@ -283,6 +284,9 @@ func New(
 		tkeys:             tkeys,
 		memKeys:           memKeys,
 	}
+
+	// Register helpers for state-sync status.
+	statesync.RegisterSyncStatus()
 
 	app.ParamsKeeper = initParamsKeeper(appCodec, cdc, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
 
