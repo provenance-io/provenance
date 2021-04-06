@@ -11,21 +11,21 @@ func RegisterSyncStatus() {
 	tmrpccore.Routes["sync_info"] = tmrpc.NewRPCFunc(GetSyncInfoAtBlock, "height")
 }
 
-func GetSyncInfoAtBlock(ctx *tmrpctypes.Context, height *int64) (*syncInfo, error) {
+func GetSyncInfoAtBlock(ctx *tmrpctypes.Context, height *int64) (*GetSyncInfo, error) {
 	block, err := tmrpccore.Block(ctx, height)
 	if err != nil {
 		return nil, err
 	}
 	versionInfo := version.NewInfo()
-	si := &syncInfo{
+	si := &GetSyncInfo{
 		BlockHeight: block.Block.Header.Height,
-		BlockHash: block.Block.Header.Hash().String(),
-		Version: versionInfo.Version,
+		BlockHash:   block.Block.Header.Hash().String(),
+		Version:     versionInfo.Version,
 	}
 	return si, nil
 }
 
-type syncInfo struct {
+type GetSyncInfo struct {
 	BlockHeight int64  `json:"block_height"`
 	BlockHash   string `json:"block_hash"`
 	Version     string `json:"version"`
