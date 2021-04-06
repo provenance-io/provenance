@@ -38,7 +38,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add some extra aliases for the CLI query metadata commands.
 
 ### Bug Fixes
-* Fix handling of Metadata Write message id helper fields.
 * Add pagination flags to the CLI query metadata commands.
 * Fix handling of Metadata Write message id helper fields.
 
