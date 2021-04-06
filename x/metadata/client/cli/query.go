@@ -63,6 +63,7 @@ func GetQueryCmd() *cobra.Command {
 func GetMetadataParamsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "params [locator]",
+		Aliases: []string{"p"},
 		Short:   "Query the current metadata parameters",
 		Args:    cobra.MaximumNArgs(1),
 		Example: fmt.Sprintf("%s params", cmdStart),
@@ -87,8 +88,9 @@ func GetMetadataParamsCmd() *cobra.Command {
 // GetMetadataByIDCmd returns the command handler for querying metadata for anything from an id.
 func GetMetadataByIDCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get id",
-		Short: "Query the current metadata by id",
+		Use:     "get id",
+		Short:   "Query the current metadata by id",
+		Aliases: []string{"g"},
 		Long: fmt.Sprintf(`%[1]s get {scope_id} - gets the scope with the given scope id.
 %[1]s get {session_id} - gets the session with the given session id.
 %[1]s get {record_id} - gets the record with the given record id.
@@ -144,8 +146,9 @@ func GetMetadataByIDCmd() *cobra.Command {
 func GetMetadataGetAllCmd() *cobra.Command {
 	nonLetterRegex := regexp.MustCompile("[^[:alpha:]]+")
 	cmd := &cobra.Command{
-		Use:   "all {scopes|sessions|records|scopespecs|contractspecs|recordspecs|locators}",
-		Short: "Get all entries of a certain type",
+		Use:     "all {scopes|sessions|records|scopespecs|contractspecs|recordspecs|locators}",
+		Aliases: []string{"a"},
+		Short:   "Get all entries of a certain type",
 		Long: fmt.Sprintf(`%[1]s all scopes - gets all scopes.
 %[1]s all sessions - gets all sessions.
 %[1]s all records - gets all records.
@@ -187,6 +190,7 @@ func GetMetadataGetAllCmd() *cobra.Command {
 
 	addIncludeRequestFlag(cmd)
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "entries")
 
 	return cmd
 }
@@ -194,8 +198,9 @@ func GetMetadataGetAllCmd() *cobra.Command {
 // GetMetadataScopeCmd returns the command handler for metadata scope querying.
 func GetMetadataScopeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "scope {scope_id|scope_uuid|session_id|record_id|\"all\"}",
-		Short: "Query the current metadata for a scope",
+		Use:     "scope {scope_id|scope_uuid|session_id|record_id|\"all\"}",
+		Aliases: []string{"sc", "scopes"},
+		Short:   "Query the current metadata for a scope",
 		Long: fmt.Sprintf(`%[1]s scope {scope_id} - gets the scope with the given id.
 %[1]s scope {scope_uuid} - gets the scope with the given uuid.
 %[1]s scope {session_id} - gets the scope containing the given session.
@@ -231,6 +236,7 @@ func GetMetadataScopeCmd() *cobra.Command {
 	addIncludeRecordsFlag(cmd)
 	addIncludeRequestFlag(cmd)
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "scopes (all)")
 
 	return cmd
 }
@@ -239,7 +245,7 @@ func GetMetadataScopeCmd() *cobra.Command {
 func GetMetadataSessionCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "session {session_id|{scope_id|scope_uuid} [session_uuid]|\"all\"}",
-		Aliases: []string{"sessions"},
+		Aliases: []string{"se", "sessions"},
 		Short:   "Query the current metadata for sessions",
 		Long: fmt.Sprintf(`%[1]s session {session_id} - gets the session with the given id.
 %[1]s session {scope_id} - gets the list of sessions associated with a scope.
@@ -274,6 +280,7 @@ func GetMetadataSessionCmd() *cobra.Command {
 	addIncludeRecordsFlag(cmd)
 	addIncludeRequestFlag(cmd)
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "sessions (all)")
 
 	return cmd
 }
@@ -329,6 +336,7 @@ func GetMetadataRecordCmd() *cobra.Command {
 	addIncludeSessionsFlag(cmd)
 	addIncludeRequestFlag(cmd)
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "records (all)")
 
 	return cmd
 }
@@ -337,7 +345,7 @@ func GetMetadataRecordCmd() *cobra.Command {
 func GetMetadataScopeSpecCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "scopespec {scope_spec_id|scope_spec_uuid|\"all\"}",
-		Aliases: []string{"ss", "scopespecification"},
+		Aliases: []string{"ss", "scopespecification", "scopespecs", "scopespecifications"},
 		Short:   "Query the current metadata for a scope specification",
 		Long: fmt.Sprintf(`%[1]s scopespec {scope_spec_id} - gets the scope specification for that a given id.
 %[1]s scopespec {scope_spec_uuid} - gets the scope specification for a given uuid.
@@ -357,6 +365,7 @@ func GetMetadataScopeSpecCmd() *cobra.Command {
 
 	addIncludeRequestFlag(cmd)
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "scope specifications (all)")
 
 	return cmd
 }
@@ -365,7 +374,7 @@ func GetMetadataScopeSpecCmd() *cobra.Command {
 func GetMetadataContractSpecCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "contractspec {contract_spec_id|contract_spec_uuid|record_spec_id|\"all\"}",
-		Aliases: []string{"cs", "contractspecification"},
+		Aliases: []string{"cs", "contractspecification", "contractspecs", "contractspecifications"},
 		Short:   "Query the current metadata for a contract specification",
 		Long: fmt.Sprintf(`%[1]s contractspec {contract_spec_id} - gets the contract specification for that a given id.
 %[1]s contractspec {contract_spec_uuid} - gets the contract specification for a given uuid.
@@ -388,6 +397,7 @@ func GetMetadataContractSpecCmd() *cobra.Command {
 	addIncludeRecordSpecsFlag(cmd)
 	addIncludeRequestFlag(cmd)
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "contract specifications (all)")
 
 	return cmd
 }
@@ -429,6 +439,7 @@ func GetMetadataRecordSpecCmd() *cobra.Command {
 
 	addIncludeRequestFlag(cmd)
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "record specifications (all)")
 
 	return cmd
 }
@@ -456,6 +467,7 @@ func GetOwnershipCmd() *cobra.Command {
 
 	addIncludeRequestFlag(cmd)
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "scopes")
 
 	return cmd
 }
@@ -480,6 +492,7 @@ func GetValueOwnershipCmd() *cobra.Command {
 
 	addIncludeRequestFlag(cmd)
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "scopes")
 
 	return cmd
 }
@@ -535,6 +548,7 @@ func GetOSLocatorCmd() *cobra.Command {
 
 	addIncludeRequestFlag(cmd)
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "locators (all)")
 
 	return cmd
 }
