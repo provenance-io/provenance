@@ -90,8 +90,8 @@ func GetMetadataParamsCmd() *cobra.Command {
 func GetMetadataByIDCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "get id",
-		Short:   "Query the current metadata by id",
 		Aliases: []string{"g"},
+		Short:   "Query the current metadata by id",
 		Long: fmt.Sprintf(`%[1]s get {scope_id} - gets the scope with the given scope id.
 %[1]s get {session_id} - gets the session with the given session id.
 %[1]s get {record_id} - gets the record with the given record id.
