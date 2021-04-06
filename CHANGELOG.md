@@ -34,6 +34,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Improvements
+* Add some extra aliases for the CLI query metadata commands.
+
+### Bug Fixes
+* Add pagination flags to the CLI query metadata commands.
+
 ## [v1.0.0](https://github.com/provenance-io/provenance/releases/tag/v1.0.0) - 2021-03-31
 
 ### Bug Fixes
