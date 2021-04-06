@@ -35,6 +35,7 @@ const all = "all"
 func GetQueryCmd() *cobra.Command {
 	queryCmd := &cobra.Command{
 		Use:                        types.ModuleName,
+		Aliases:                    []string{"md"},
 		Short:                      "Querying commands for the metadata module",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
