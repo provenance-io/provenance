@@ -1,12 +1,13 @@
 # Metadata Parameters
 
-TODO: Rewrite this file for metadata then add it to the main README contents.
+## Base Module Parameters
 
-The name module contains the following parameters:
+The base metadata module itself does not have any parameters.
+
+## Object Store Locator Parameters
+
+The object store locator sub-module contains the following parameters:
 
 | Key                    | Type   | Example |
 |------------------------|--------|---------|
-| MaxSegmentLength       | uint32 | 32      |
-| MinSegmentLength       | uint32 | 2       |
-| MaxNameLevels          | uint32 | 16      |
-| AllowUnrestrictedNames | bool   | false   |
+| MaxUriLength           | uint32 | 2048    |
