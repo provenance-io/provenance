@@ -8,11 +8,15 @@ It can be used to record and validate information as well as the processes that 
 ## Contents
 
 1. **[Concepts](01_concepts.md)**
-    - [Entries](01_concepts.md#entries)
-    - [Specifications](01_concepts.md#specifications)
     - [Metadata Addresses](01_concepts.md#metadata-addresses)
-    - [Object Store Locators](01_concepts.md#object-store-locators)
 1. **[State](02_state.md)**
+    - [Scopes](02_state.md#scopes)
+    - [Sessions](02_state.md#sessions)
+    - [Records](02_state.md#records)
+    - [Scope Specifications](02_state.md#scope-specifications)
+    - [Contract Specifications](02_state.md#contract-specifications)
+    - [Record Specifications](02_state.md#record-specifications)
+    - [Object Store Locators](02_state.md#object-store-locators)
 1. **[Messages](03_messages.md)**
 1. **[Queries](04_queries.md)**
 1. **[Events](05_events.md)**
