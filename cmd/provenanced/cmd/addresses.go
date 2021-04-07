@@ -3,16 +3,35 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
+// GetQueryCmd is the top-level command for name CLI queries.
+func AddMetaAddressCmd() *cobra.Command {
+	queryCmd := &cobra.Command{
+		Use:                        "metaaddress",
+		Short:                      "Decode/Encode Metaaddresses commands",
+		DisableFlagParsing:         true,
+		SuggestionsMinimumDistance: 2,
+		RunE:                       client.ValidateCmd,
+	}
+
+	queryCmd.AddCommand(
+		AddMetaAddressEncoder(),
+		AddMetaAddressParser(),
+	)
+
+	return queryCmd
+}
+
 // AddMetaAddressParser returns metadata address parser cobra Command.
 func AddMetaAddressParser() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "metaaddress parse [metaaddress]",
+		Use:   "parse [metaaddress]",
 		Short: "Parse MetaAddress and display associate IDs and types",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -87,7 +106,7 @@ Scope Specification UUID: %s
 // AddMetaAddressEncoder returns metadata address encoder cobra Command.
 func AddMetaAddressEncoder() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "metaaddress encode [type] [uuid] [uuid|name]",
+		Use:   "encode [type] [uuid] [uuid|name]",
 		Short: "Encodes metadata uuids to bech32 address for specific type",
 		Long: `Encodes metadata uuids to bech32 address for specific type. 
 		Types: scope,session,record,contract-specification,scope-specification`,
