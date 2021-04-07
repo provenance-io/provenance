@@ -1,4 +1,4 @@
-# `x/marker`
+# `Marker`
 
 ## Abstract
 
@@ -11,10 +11,22 @@ be represented including standard coins and restricted coins (securities).
 Further the marker module allows for coins to be fixed upon creation or
 managed by an identified list of accounts, or through the governance
 proposal process.
+## Context
+
+Using the blockchain as a ledger requires the ability to track fungible and non-fungible resources on chain with
+fractional ownership.  Each of these resources requires rules governing supply and exchange.  Examples of resources
+include fractional ownership in the network itself (stake), credits for network resources (gas/fees), fractional
+ownership of an arbitrary asset (metadata/scope), and omnibus account balances (stable coins).  The rules governing the
+asset must be enforced by the blockchain itself such that the entity controlling the asset must abide by these
+rules and is not able to invalidate these processes.  These enforced constraints are what provide the value and
+support trust in the platform itself.
 
 ## Overview
 
-The marker module is intended to be 
+The marker module provides various tools for defining fractional ownership and control.  Markers can be created and
+managed by normal Msg requests or through the governance process.  A marker can have many users with explicit control
+or none at all.  A marker can be used to create a coin that can be freely exchange or one that requires facilitated
+transfer by the marker itself when invoked by a user/process with appropriate permisisons.
 
 ## Contents
 
