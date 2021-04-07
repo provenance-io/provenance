@@ -1,6 +1,66 @@
 # Metadata Messages
 
-TODO: Rewrite this file for metadata then add it to the main README contents.
+In this section we describe the processing of the metadata messages and the corresponding updates to the state.
+All created/modified state objects specified by each message are defined within the [state](02_state.md) section.
+
+## Msg/WriteScope
+TODO: WriteScope messages
+
+## Msg/DeleteScope
+TODO: DeleteScope messages
+
+## Msg/WriteSession
+TODO: WriteSession messages
+
+## Msg/WriteRecord
+TODO: WriteRecord messages
+
+## Msg/DeleteRecord
+TODO: DeleteRecord messages
+
+## Msg/WriteScopeSpecification
+TODO: WriteScopeSpecification messages
+
+## Msg/DeleteScopeSpecification
+TODO: DeleteScopeSpecification messages
+
+## Msg/WriteContractSpecification
+TODO: WriteContractSpecification messages
+
+## Msg/DeleteContractSpecification
+TODO: DeleteContractSpecification messages
+
+## Msg/WriteRecordSpecification
+TODO: WriteRecordSpecification messages
+
+## Msg/DeleteRecordSpecification
+TODO: DeleteRecordSpecification messages
+
+## Msg/BindOSLocator
+TODO: BindOSLocator messages
+
+## Msg/DeleteOSLocator
+TODO: DeleteOSLocator messages
+
+## Msg/ModifyOSLocator
+TODO: ModifyOSLocator messages
+
+## Deprecated Endpoints
+
+These are messages associated with deprecated endpoints.
+These endpoints exist only to facilitate a transition to the new models.
+As such, they are sparsely documented a probably shouldn't be trusted. 
+
+### Msg/WriteP8eContractSpec
+TODO: WriteP8eContractSpec messages
+
+### Msg/P8eMemorializeContract
+TODO: P8eMemorializeContract messages
+
+
+
+
+
 
 <!-- This was given in slack as example formatting:
 # Messages
@@ -19,80 +79,3 @@ must have a valid supply and denomination value
 
 +++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L57
 -->
-
-
-
-In this section we describe the processing of the staking messages and the corresponding updates to the state.
-
-## MsgBindNameRequest
-
-A name record is created using the `MsgBindNameRequest` message.
-
-```proto
-message MsgBindNameRequest {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
-
-  // The parent record to bind this name under.
-  NameRecord parent = 1 [(gogoproto.nullable) = false];
-  // The name record to bind under the parent
-  NameRecord record = 2 [(gogoproto.nullable) = false];
-}
-```
-
-This message is expected to fail if:
-- The parent name record does not exist
-- The requestor does not match the owner listed on the parent record _and_ the parent record indicates creation of child records is restricted.
-- The record being created is otherwise invalid due to format or contents of the name value itself
-    - Insuffient length of name
-    - Excessive length of name
-    - Not deriving from the parent record (targets another root)
-
-If successful a name record will be created as described and an address index record will be created for the address associated with the name.
-## MsgDeleteNameRequest
-
-The delete name request method allows a name record that does not contain any children records to be removed from the system.
-
-```proto
-// MsgDeleteNameRequest defines an sdk.Msg type that is used to remove an existing address/name binding.  The binding
-// may not have any child names currently bound for this request to be successful.
-message MsgDeleteNameRequest {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
-
-  // The parent record the record to remove is under.
-  NameRecord parent = 1 [(gogoproto.nullable) = false];
-  // The record being removed
-  NameRecord record = 2 [(gogoproto.nullable) = false];
-}
-```
-
-This message is expected to fail if:
-- Any components of the request do not pass basic integrity and format checks
-- The parent name record does not exist
-- The record to remove does not exist
-- Any child records exist under the record being removed
-- The requestor does not match the owner listed on the record.
-
-## CreateRootNameProposal
-
-The create root name proposal is a governance proposal that allows new root level names to be established after the genesis of the blockchain.
-
-```proto
-message CreateRootNameProposal {
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_getters)  = false;
-  option (gogoproto.goproto_stringer) = false;
-
-  string title       = 1;
-  string description = 2;
-  string name        = 3;
-  string owner       = 4;
-  bool   restricted  = 5;
-}
-```
-
-This message is expected to fail if:
-- The name already exists
-- Insuffient length of name
-- Excessive length of name

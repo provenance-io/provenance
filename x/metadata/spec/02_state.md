@@ -17,7 +17,7 @@ They group and identify information.
 
 ### Scopes
 
-A scope is a high-level grouping information combined with some access control.
+A scope is a high-level grouping of information combined with some access control.
 
 * A scope must conform to a pre-determined scope specification.
 * A scope is used to group together many sessions and records.
