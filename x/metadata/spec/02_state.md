@@ -6,7 +6,7 @@ The Metadata module manages the state of seven different types:
 1. [Sessions](#sessions)
 1. [Records](#records)
 1. [Scope Specifications](#scope-specifications)
-1. [Contract Specifications](#contractsspecifications)
+1. [Contract Specifications](#contract-specifications)
 1. [Record Specifications](#record-specifications)
 1. [Object Store Locators](#object-store-locators)
 
@@ -37,7 +37,37 @@ Byte Array Length: `17`
 
 #### Scope Definition
 
-TODO: Scope definition
++++ https://github.com/provenance-io/provenance/blob/4192fd46ea56574bb4ffcacb632d8bb54a720b28/proto/provenance/metadata/v1/scope.proto#L69-L93
+<details><summary>message Scope</summary>
+
+```protobuf
+// Scope defines a root reference for a collection of records owned by one or more parties.
+message Scope {
+  option (gogoproto.goproto_stringer) = false;
+
+  // Unique ID for this scope.  Implements sdk.Address interface for use where addresses are required in Cosmos
+  bytes scope_id = 1 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customtype) = "MetadataAddress",
+    (gogoproto.moretags)   = "yaml:\"scope_id\""
+  ];
+  // the scope specification that contains the specifications for data elements allowed within this scope
+  bytes specification_id = 2 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customtype) = "MetadataAddress",
+    (gogoproto.moretags)   = "yaml:\"specification_id\""
+  ];
+  // These parties represent top level owners of the records within.  These parties must sign any requests that modify
+  // the data within the scope.  These addresses are in union with parties listed on the sessions.
+  repeated Party owners = 3 [(gogoproto.nullable) = false];
+  // Addessses in this list are authorized to recieve off-chain data associated with this scope.
+  repeated string data_access = 4 [(gogoproto.moretags) = "yaml:\"data_access\""];
+  // An address that controls the value associated with this scope.  Standard blockchain accounts and marker accounts
+  // are supported for this value.  This attribute may only be changed by the entity indicated once it is set.
+  string value_owner_address = 5 [(gogoproto.moretags) = "yaml:\"value_owner_address\""];
+}
+```
+</details>
 
 #### Scope Indexes
 
