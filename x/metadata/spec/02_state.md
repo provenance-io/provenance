@@ -39,8 +39,6 @@ Byte Array Length: `17`
 
 +++ https://github.com/provenance-io/provenance/blob/4192fd46ea56574bb4ffcacb632d8bb54a720b28/proto/provenance/metadata/v1/scope.proto#L69-L93
 
-<details><summary>message Scope</summary>
-
 ```protobuf
 // Scope defines a root reference for a collection of records owned by one or more parties.
 message Scope {
@@ -68,7 +66,6 @@ message Scope {
   string value_owner_address = 5 [(gogoproto.moretags) = "yaml:\"value_owner_address\""];
 }
 ```
-</details>
 
 #### Scope Indexes
 
@@ -101,8 +98,6 @@ Byte Array Length: `33`
 
 +++ https://github.com/provenance-io/provenance/blob/4192fd46ea56574bb4ffcacb632d8bb54a720b28/proto/provenance/metadata/v1/scope.proto#L95-L122
 
-<details><summary>message Session</summary>
-
 ```protobuf
 /*
 A Session is created for an execution context against a specific specification instance
@@ -132,7 +127,6 @@ message Session {
   AuditFields audit = 99 [(gogoproto.moretags) = "yaml:\"audit,omitempty\""];
 }
 ```
-</details>
 
 #### Session Indexes
 
@@ -165,8 +159,6 @@ Byte Array Length: `33`
 
 +++ https://github.com/provenance-io/provenance/blob/4192fd46ea56574bb4ffcacb632d8bb54a720b28/proto/provenance/metadata/v1/scope.proto#L124-L148
 
-<details><summary>message Record</summary>
-
 ```protobuf
 // A record (of fact) is attached to a session or each consideration output from a contract
 message Record {
@@ -194,7 +186,6 @@ message Record {
   ];
 }
 ```
-</details>
 
 #### Record Indexes
 
@@ -228,8 +219,6 @@ Byte Array Length: `17`
 
 +++ https://github.com/provenance-io/provenance/blob/4192fd46ea56574bb4ffcacb632d8bb54a720b28/proto/provenance/metadata/v1/specification.proto#L36-L58
 
-<details><summary>message ScopeSpecification</summary>
-
 ```protobuf
 // ScopeSpecification defines the required parties, resources, conditions, and consideration outputs for a contract
 message ScopeSpecification {
@@ -255,7 +244,6 @@ message ScopeSpecification {
   ];
 }
 ```
-</details>
 
 #### Scope Specification Indexes
 
@@ -286,8 +274,6 @@ Byte Array Length: `17`
 
 +++ https://github.com/provenance-io/provenance/blob/4192fd46ea56574bb4ffcacb632d8bb54a720b28/proto/provenance/metadata/v1/specification.proto#L60-L86
 
-<details><summary>message ContractSpecification</summary>
-
 ```protobuf
 // ContractSpecification defines the required parties, resources, conditions, and consideration outputs for a contract
 message ContractSpecification {
@@ -317,7 +303,6 @@ message ContractSpecification {
   string class_name = 7 [(gogoproto.moretags) = "yaml:\"class_name\""];
 }
 ```
-</details>
 
 #### Contract Specification Indexes
 
@@ -348,8 +333,6 @@ Byte Array Length: `33`
 
 +++ https://github.com/provenance-io/provenance/blob/4192fd46ea56574bb4ffcacb632d8bb54a720b28/proto/provenance/metadata/v1/specification.proto#L88-L108
 
-<details><summary>message RecordSpecification</summary>
-
 ```protobuf
 // RecordSpecification defines the specification for a Record including allowed/required inputs/outputs
 message RecordSpecification {
@@ -373,7 +356,6 @@ message RecordSpecification {
   repeated PartyType responsible_parties = 6 [(gogoproto.moretags) = "yaml:\"responsible_parties\""];
 }
 ```
-</details>
 
 #### Record Specification Indexes
 
@@ -391,8 +373,6 @@ TODO: Object Store Locator Addresses
 
 +++ https://github.com/provenance-io/provenance/blob/main/proto/provenance/metadata/v1/objectstore.proto#L9-L16
 
-<details><summary>message ObjectStoreLocator</summary>
-
 ```protobuf
 // Defines an Locator object stored on chain, which represents a owner( blockchain address) associated with a endpoint
 // uri for it's associated object store.
@@ -403,7 +383,6 @@ message ObjectStoreLocator {
   string locator_uri = 2;
 }
 ```
-</details>
 
 ### Object Store Locator Indexes
 
