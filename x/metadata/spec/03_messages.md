@@ -1,6 +1,26 @@
+# Metadata Messages
+
+TODO: Rewrite this file for metadata then add it to the main README contents.
+
+<!-- This was given in slack as example formatting:
 # Messages
 
-TODO: Rewrite this file for metadata
+In this section we describe the processing of the marker messages and the corresponding updates to the state.
+All created/modified state objects specified by each message are defined within the 
+[state](./02_state_transitions.md) section.
+
+## Msg/AddMarkerRequest
+
+A marker is created using the Add Marker service message.
+The created marker can not be directly added in an Active (or Cancelled/Destroyed) status.  Markers
+must have a valid supply and denomination value
+
++++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L44-L54
+
++++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L57
+-->
+
+
 
 In this section we describe the processing of the staking messages and the corresponding updates to the state.
 

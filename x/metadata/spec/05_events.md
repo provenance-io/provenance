@@ -1,6 +1,6 @@
-# Events
+# Metadata Events
 
-TODO: Rewrite this file for metadata
+TODO: Rewrite this file for metadata then add it to the main README contents.
 
 The name module emits the following events:
 

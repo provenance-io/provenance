@@ -1,6 +1,6 @@
-# Parameters
+# Metadata Parameters
 
-TODO: Rewrite this file for metadata
+TODO: Rewrite this file for metadata then add it to the main README contents.
 
 The name module contains the following parameters:
 

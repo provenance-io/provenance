@@ -1,4 +1,4 @@
-# Concepts
+# Metadata Concepts
 
 The metadata service manages things that define and reference off-chain data.
 There are three categories of things stored: entries, specifications, and object store locators.
