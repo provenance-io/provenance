@@ -111,6 +111,7 @@ import (
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
 	"github.com/provenance-io/provenance/internal/provwasm"
 )
@@ -402,13 +403,14 @@ func New(
 		app.IBCKeeper.ChannelKeeper,
 		&app.IBCKeeper.PortKeeper,
 		scopedWasmKeeper,
+		app.TransferKeeper,
 		wasmRouter,
 		app.GRPCQueryRouter(),
 		wasmDir,
 		wasmConfig,
 		supportedFeatures,
-		provwasm.MessageEncoders(encoderRegistry, logger),
-		provwasm.QueryPlugins(querierRegistry),
+		wasmkeeper.WithQueryPlugins(provwasm.QueryPlugins(querierRegistry)),
+		wasmkeeper.WithMessageEncoders(provwasm.MessageEncoders(encoderRegistry, logger)),
 	)
 
 	// register the proposal types
