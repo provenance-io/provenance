@@ -40,8 +40,10 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "a marker can not be created in an ACTIVE status")
 	}
 
+	params := k.GetParams(ctx)
+
 	// Add marker requests must pass extra validation for denom (in addition to regular coin validation expression)
-	valExp := k.GetParams(ctx).UnrestrictedDenomRegex
+	valExp := params.UnrestrictedDenomRegex
 	if v, expErr := regexp.Compile(valExp); expErr != nil {
 		return nil, expErr
 	} else if !v.MatchString(msg.Amount.Denom) {
@@ -67,7 +69,12 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 		msg.Status,
 		msg.MarkerType)
 	ma.SupplyFixed = msg.SupplyFixed
-	ma.AllowGovernanceControl = msg.AllowGovernanceControl
+
+	if params.EnableGovernance {
+		ma.AllowGovernanceControl = true
+	} else {
+		ma.AllowGovernanceControl = msg.AllowGovernanceControl
+	}
 
 	if err := k.Keeper.AddMarkerAccount(ctx, ma); err != nil {
 		ctx.Logger().Error("unable to add marker", "err", err)
