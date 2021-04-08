@@ -450,7 +450,7 @@ func getContractSpecID(contract *p8e.Contract) (MetadataAddress, error) {
 		contract.Spec.DataLocation.Ref != nil && len(contract.Spec.DataLocation.Ref.Hash) > 0 {
 		hash = contract.Spec.DataLocation.Ref.Hash
 	} else if contract.Definition != nil && contract.Definition.ResourceLocation != nil &&
-		contract.Definition.ResourceLocation.Ref != nil &&  len(contract.Definition.ResourceLocation.Ref.Hash) > 0 {
+		contract.Definition.ResourceLocation.Ref != nil && len(contract.Definition.ResourceLocation.Ref.Hash) > 0 {
 		hash = contract.Definition.ResourceLocation.Ref.Hash
 	}
 	if len(hash) == 0 {
@@ -461,9 +461,8 @@ func getContractSpecID(contract *p8e.Contract) (MetadataAddress, error) {
 	if addr, err := MetadataAddressFromBech32(hash); err == nil {
 		if addr.IsContractSpecificationAddress() {
 			return addr, nil
-		} else {
-			return addr, fmt.Errorf("metadata address is not for a contract spec: %s", hash)
 		}
+		return addr, fmt.Errorf("metadata address is not for a contract spec: %s", hash)
 	}
 
 	// Okay, it's hopefully a hash...
