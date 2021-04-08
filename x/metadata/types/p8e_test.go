@@ -1,6 +1,7 @@
 package types
 
 import (
+	b64 "encoding/base64"
 	"fmt"
 	"reflect"
 	"testing"
@@ -12,8 +13,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/google/uuid"
@@ -52,7 +53,7 @@ func getPublicFieldNames(thing interface{}) []string {
 			retval = append(retval, field)
 		}
 	}
-	return retval;
+	return retval
 }
 
 // getAllFieldNames attempts to get the field names of the provided thing.
@@ -69,7 +70,7 @@ func getAllFieldNames(thing interface{}) (fields []string, err error) {
 	// Get the thing type and follow it until it's not a pointer anymore.
 	thingValue := reflect.ValueOf(thing)
 	thingType := thingValue.Type()
-	for  thingType.Kind() == reflect.Ptr {
+	for thingType.Kind() == reflect.Ptr {
 		thingValue = thingValue.Elem()
 		thingType = thingValue.Type()
 	}
@@ -82,7 +83,7 @@ func getAllFieldNames(thing interface{}) (fields []string, err error) {
 	if thingType.Kind() == reflect.Struct {
 		fieldCount := thingType.NumField()
 		for i := 0; i < fieldCount; i++ {
-			fields  = append(fields, thingType.Field(i).Name)
+			fields = append(fields, thingType.Field(i).Name)
 		}
 	}
 	return
@@ -92,7 +93,7 @@ func getAllFieldNames(thing interface{}) (fields []string, err error) {
 // Assumes elements in a set are unique.
 func assertSetsAreEqual(t *testing.T, expected []string, actual []string) bool {
 	allPass := assert.Equal(t, len(expected), len(actual), "lengths")
-	if (allPass) {
+	if allPass {
 		for _, e := range expected {
 			found := false
 			for _, a := range actual {
@@ -235,9 +236,9 @@ func (s *P8eTestSuite) TestEmptyScope() {
 	testedFields := []string{}
 	tests := []struct {
 		field string
-		name string
-		test func(scope *Scope, t *testing.T)
-	} {
+		name  string
+		test  func(scope *Scope, t *testing.T)
+	}{
 		{
 			"",
 			"Does not return nil",
@@ -320,9 +321,9 @@ func (s *P8eTestSuite) TestEmptySession() {
 	testedFields := []string{}
 	tests := []struct {
 		field string
-		name string
-		test func(session *Session, t *testing.T)
-	} {
+		name  string
+		test  func(session *Session, t *testing.T)
+	}{
 		{
 			"",
 			"Does not return nil",
@@ -398,9 +399,9 @@ func (s *P8eTestSuite) TestEmptyRecord() {
 	testedFields := []string{}
 	tests := []struct {
 		field string
-		name string
-		test func(record *Record, t *testing.T)
-	} {
+		name  string
+		test  func(record *Record, t *testing.T)
+	}{
 		{
 			"",
 			"Does not return nil",
@@ -490,9 +491,9 @@ func (s *P8eTestSuite) TestEmptyProcess() {
 	testedFields := []string{}
 	tests := []struct {
 		field string
-		name string
-		test func(record *Process, t *testing.T)
-	} {
+		name  string
+		test  func(record *Process, t *testing.T)
+	}{
 		{
 			"",
 			"Does not return nil",
@@ -550,10 +551,10 @@ func (s *P8eTestSuite) TestConvertP8eMemorializeContractRequest() {
 	sessionID := SessionMetadataAddress(scopeUUID, sessionUUID)
 
 	tests := []struct {
-		name string
-		req MsgP8EMemorializeContractRequest
-		p8EData P8EData
-		signers []string
+		name     string
+		req      MsgP8EMemorializeContractRequest
+		p8EData  P8EData
+		signers  []string
 		errorMsg string
 	}{
 		{
@@ -567,7 +568,7 @@ func (s *P8eTestSuite) TestConvertP8eMemorializeContractRequest() {
 						{
 							SignerRole: p8e.PartyType_PARTY_TYPE_OWNER,
 							Signer: &p8e.SigningAndEncryptionPublicKeys{
-								SigningPublicKey:    &p8e.PublicKey{
+								SigningPublicKey: &p8e.PublicKey{
 									PublicKeyBytes: s.pubkey1.Bytes(),
 									Type:           p8e.PublicKeyType_ELLIPTIC,
 									Curve:          p8e.PublicKeyCurve_SECP256K1,
@@ -579,26 +580,26 @@ func (s *P8eTestSuite) TestConvertP8eMemorializeContractRequest() {
 					},
 				},
 				Contract: &p8e.Contract{
-					Definition:     nil,
-					Spec:           &p8e.Fact{
-						Name:         "", // TODO
+					Definition: nil,
+					Spec: &p8e.Fact{
+						Name: "", // TODO
 						DataLocation: &p8e.Location{
 							Ref:       nil, // TODO
 							Classname: "",
 						},
 					},
 					Invoker: &p8e.SigningAndEncryptionPublicKeys{
-						SigningPublicKey:    &p8e.PublicKey{
+						SigningPublicKey: &p8e.PublicKey{
 							PublicKeyBytes: s.pubkey1.Bytes(),
 							Type:           p8e.PublicKeyType_ELLIPTIC,
 							Curve:          p8e.PublicKeyCurve_SECP256K1,
 						},
 						EncryptionPublicKey: nil,
 					},
-					Inputs: []*p8e.Fact{}, // TODO
-					Conditions: []*p8e.Condition{}, // TODO
+					Inputs:         []*p8e.Fact{},          // TODO
+					Conditions:     []*p8e.Condition{},     // TODO
 					Considerations: []*p8e.Consideration{}, // TODO
-					Recitals: []*p8e.Recital{}, // TODO
+					Recitals:       []*p8e.Recital{},       // TODO
 					TimesExecuted:  1,
 					StartTime:      nil,
 				},
@@ -608,8 +609,8 @@ func (s *P8eTestSuite) TestConvertP8eMemorializeContractRequest() {
 							Algo:      "",
 							Provider:  "",
 							Signature: "",
-							Signer:    &p8e.SigningAndEncryptionPublicKeys{
-								SigningPublicKey:    &p8e.PublicKey{
+							Signer: &p8e.SigningAndEncryptionPublicKeys{
+								SigningPublicKey: &p8e.PublicKey{
 									PublicKeyBytes: s.pubkey1.Bytes(),
 									Type:           p8e.PublicKeyType_ELLIPTIC,
 									Curve:          p8e.PublicKeyCurve_SECP256K1,
@@ -655,4 +656,37 @@ func (s *P8eTestSuite) TestConvertP8eMemorializeContractRequest() {
 			}
 		})
 	}
+}
+
+func (s *P8eTestSuite) TestParsePublicKey() {
+	tests := []struct {
+		name      string
+		key       string
+		expectErr bool
+	}{
+		// {
+		// 	"uncompressed public key",
+		// 	"BGxX6eJRAdXlU64APi95Al44m1FJVgfHlrTpXAqUAB+8JNhM0HgIGWElKbgD6K0KOX9HTJZdlX0z3WTmQrdW+8Q",
+		// 	"blah",
+		// },
+		{
+			"compressed public key",
+			"AmxX6eJRAdXlU64APi95Al44m1FJVgfHlrTpXAqUAB+8",
+			false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.T().Run(tc.name, func(t *testing.T) {
+			b, _ := b64.StdEncoding.DecodeString(tc.key)
+			pubKey, addr, err := parsePublicKey(b)
+			if tc.expectErr {
+				assert.Error(t, err)
+			} else {
+				assert.NotNil(t, pubKey, "should have successfully created public key")
+				assert.NotNil(t, addr, "should have successfully  account address")
+			}
+		})
+	}
+
 }
