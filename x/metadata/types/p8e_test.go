@@ -664,15 +664,20 @@ func (s *P8eTestSuite) TestParsePublicKey() {
 		key       string
 		expectErr bool
 	}{
-		// {
-		// 	"uncompressed public key",
-		// 	"BGxX6eJRAdXlU64APi95Al44m1FJVgfHlrTpXAqUAB+8JNhM0HgIGWElKbgD6K0KOX9HTJZdlX0z3WTmQrdW+8Q",
-		// 	"blah",
-		// },
 		{
-			"compressed public key",
-			"AmxX6eJRAdXlU64APi95Al44m1FJVgfHlrTpXAqUAB+8",
+			"should parse uncompressed public key",
+			"BGxX6eJRAdXlU64APi95Al44m1FJVgfHlrTpXAqUAB+8JNhM0HgIGWElKbgD6K0KOX9HTJZdlX0z3WTmQrdW+8Q=",
 			false,
+		},
+		{
+			"should parse compressed public key",
+			"AmxX6eJRAdXlU64APi95Al44m1FJVgfHlrTpXAqUAB+8=",
+			false,
+		},
+		{
+			"should fail to parse incorrect public key size",
+			"4m1FJVgfHlrTpXAqUAB+8",
+			true,
 		},
 	}
 
@@ -684,7 +689,7 @@ func (s *P8eTestSuite) TestParsePublicKey() {
 				assert.Error(t, err)
 			} else {
 				assert.NotNil(t, pubKey, "should have successfully created public key")
-				assert.NotNil(t, addr, "should have successfully  account address")
+				assert.NotNil(t, addr, "should have successfully account address")
 			}
 		})
 	}
