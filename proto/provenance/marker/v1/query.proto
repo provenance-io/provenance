@@ -86,10 +86,10 @@ message QueryMarkerRequest {
   // the address or denom of the marker
   string id = 1;
 }
-// QueryMarkerResponse is the response type for the Query/Marker method.
-message QueryMarkerResponse {
-  google.protobuf.Any marker = 1 [(cosmos_proto.accepts_interface) = "MarkerAccountI"];
-}
+  // QueryMarkerResponse is the response type for the Query/Marker method.
+  message QueryMarkerResponse {
+    google.protobuf.Any marker = 1 [(cosmos_proto.accepts_interface) = "MarkerAccountI"];
+  }
 
 // QueryHoldingRequest is the request type for the Query/MarkerHolders method.
 message QueryHoldingRequest {

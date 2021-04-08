@@ -46,3 +46,15 @@ message CreateRootNameProposal {
   string owner       = 4;
   bool   restricted  = 5;
 }
+
+// Event emitted when name is bound.
+message EventNameBound {
+  string address = 1;
+  string name = 2;
+}
+
+// Event emitted when name is unbound.
+message EventNameUnbound {
+  string address = 1;
+  string name = 2;
+}

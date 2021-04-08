@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -70,14 +69,20 @@ func (s msgServer) BindName(goCtx context.Context, msg *types.MsgBindNameRequest
 		ctx.Logger().Error("unable to bind name", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
+	// create event.
+	nameBoundEvent := types.EventNameBound{
+		Address: msg.Record.Address,
+		Name:    name,
+	}
+	// for code review:
+	// before name of the event was types.EventTypeNameBound == name_bound
+	// because proto message format's do not encourage _ like convention
+	// but prefer CamelCase for message name, NameBound
+	// https://developers.google.com/protocol-buffers/docs/style
+	// Use CamelCase (with an initial capital) for message names – for example, SongServerRequest.
+	//Use underscore_separated_names for field names (including oneof field and extension names) – for example, song_name.
 	// Emit event and return
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeNameBound,
-			sdk.NewAttribute(types.KeyAttributeAddress, msg.Record.Address),
-			sdk.NewAttribute(types.KeyAttributeName, name),
-		),
-	)
+	ctx.EventManager().EmitTypedEvent(&nameBoundEvent)
 	return &types.MsgBindNameResponse{}, nil
 }
 
@@ -116,13 +121,14 @@ func (s msgServer) DeleteName(goCtx context.Context, msg *types.MsgDeleteNameReq
 		ctx.Logger().Error("error deleting name", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
+
+	// create name unbound event.
+	nameUnboundEvent := types.EventNameUnbound{
+		Address: msg.Record.Address,
+		Name:    name,
+	}
 	// Emit event and return
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeNameUnbound,
-			sdk.NewAttribute(types.KeyAttributeAddress, msg.Record.Address),
-			sdk.NewAttribute(types.KeyAttributeName, msg.Record.Name),
-		),
-	)
+	ctx.EventManager().EmitTypedEvent(&nameUnboundEvent)
+
 	return &types.MsgDeleteNameResponse{}, nil
 }
