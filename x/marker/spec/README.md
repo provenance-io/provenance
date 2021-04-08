@@ -26,7 +26,7 @@ support trust in the platform itself.
 The marker module provides various tools for defining fractional ownership and control.  Markers can be created and
 managed by normal Msg requests or through the governance process.  A marker can have many users with explicit control
 or none at all.  A marker can be used to create a coin that can be freely exchange or one that requires facilitated
-transfer by the marker itself when invoked by a user/process with appropriate permisisons.
+transfer by the marker itself when invoked by a user/process with appropriate permissions.
 
 ## Contents
 
