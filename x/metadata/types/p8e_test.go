@@ -636,7 +636,7 @@ func (s *P8eTestSuite) TestConvertP8eMemorializeContractRequest() {
 		// TODO: getValueOwner fails
 		// TODO: getValueOwner fails
 		// TODO: parseSessionID fails
-		// TODO: getSessionSpecID fails
+		// TODO: getContractSpecID fails
 		// TODO: convertSigners fails
 	}
 
