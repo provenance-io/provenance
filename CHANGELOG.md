@@ -50,7 +50,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Update Cosmos SDK to 0.42.3
 * Remove deprecated ModuleCdc amino encoding from name module #189
 * Remove deprecated ModuleCdc amino encoding from attribute module #188
-
+* Fix cli metadata address encoding/decoding command tree #231
 ### Features
 
 * Allow withdrawals of any coin type from a marker account in WASM smart contracts. #151
