@@ -88,9 +88,9 @@ type MetadataKeeperI interface {
 	GetRecordSpecificationsForContractSpecificationID(ctx sdk.Context, contractSpecID types.MetadataAddress) ([]*types.RecordSpecification, error)
 
 	// GetOsLocatorRecord returns the OS locator records for a given name record.
-	GetOsLocatorRecord(ctx sdk.Context, ownerAddress sdk.AccAddress) (types.ObjectStoreLocator, bool)
+	GetOsLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddress) (types.ObjectStoreLocator, bool)
 	// return if OSLocator exists for a given owner addr
-	OSLocatorExists(ctx sdk.Context, ownerAddr string) bool
+	OSLocatorExists(ctx sdk.Context, ownerAddr sdk.AccAddress) bool
 	// add OSLocator instance
 	SetOSLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, uri string) error
 	// get OS locator by scope UUID.

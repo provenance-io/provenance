@@ -39,6 +39,8 @@ const (
 //
 // - 0x05<session_specification_key_bytes><record_spec_name_hash>: RecordSpecification
 //
+// - 0x16<owner_address>: ObjectStoreLocator
+//
 // These keys are used for indexing and more specific iteration.
 // These keys are handled using the stuff in this file.
 // The "..._address" parts are all bytes of an Account Address.
@@ -147,12 +149,11 @@ func GetAddressContractSpecCacheKey(addr sdk.AccAddress, contractSpecID Metadata
 	return append(GetAddressContractSpecCacheIteratorPrefix(addr), contractSpecID.Bytes()...)
 }
 
-// GetAddressKeyPrefix returns a store key for a name record address
-func GetOsLocatorAddressKeyPrefix(address sdk.AccAddress) (key []byte, err error) {
-	err = sdk.VerifyAddressFormat(address.Bytes())
-	if err == nil {
-		key = OSLocatorAddressKeyPrefix
-		key = append(key, address.Bytes()...)
+// GetOSLocatorKey returns a store key for an object store locator entry
+func GetOSLocatorKey(address sdk.AccAddress) ([]byte, error) {
+	err := sdk.VerifyAddressFormat(address.Bytes())
+	if err != nil {
+		return []byte{}, err
 	}
-	return
+	return append(OSLocatorAddressKeyPrefix, address.Bytes()...), nil
 }
