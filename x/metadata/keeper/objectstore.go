@@ -10,16 +10,13 @@ import (
 
 // GetOsLocatorRecord Gets the object store locator entry from the kvstore for the given owner address.
 func (k Keeper) GetOsLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddress) (osLocator types.ObjectStoreLocator, found bool) {
-	key, err := types.GetOSLocatorKey(ownerAddr)
-	if err != nil {
-		return types.ObjectStoreLocator{}, false
-	}
+	key := types.GetOSLocatorKey(ownerAddr)
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(key)
 	if b == nil {
 		return types.ObjectStoreLocator{}, false
 	}
-	err = k.cdc.UnmarshalBinaryBare(b, &osLocator)
+	err := k.cdc.UnmarshalBinaryBare(b, &osLocator)
 	if err != nil {
 		ctx.Logger().Error("failed to unmarshal locator", "err", err)
 		return types.ObjectStoreLocator{}, false
@@ -29,10 +26,7 @@ func (k Keeper) GetOsLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddress) (o
 
 // OSLocatorExists checks if the provided bech32 owner address has a OSL entry in the kvstore.
 func (k Keeper) OSLocatorExists(ctx sdk.Context, ownerAddr sdk.AccAddress) bool {
-	key, err := types.GetOSLocatorKey(ownerAddr)
-	if err != nil {
-		return false
-	}
+	key := types.GetOSLocatorKey(ownerAddr)
 	store := ctx.KVStore(k.storeKey)
 	return store.Has(key)
 }
@@ -48,10 +42,7 @@ func (k Keeper) SetOSLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, ur
 	if account := k.authKeeper.GetAccount(ctx, ownerAddr); account == nil {
 		return types.ErrInvalidAddress
 	}
-	key, err := types.GetOSLocatorKey(ownerAddr)
-	if err != nil {
-		return err
-	}
+	key := types.GetOSLocatorKey(ownerAddr)
 	store := ctx.KVStore(k.storeKey)
 	if store.Has(key) {
 		return types.ErrOSLocatorAlreadyBound
@@ -122,10 +113,7 @@ func (k Keeper) GetOSLocatorByScope(ctx sdk.Context, scopeID string) ([]types.Ob
 
 // DeleteRecord deletes an os locator record from the kvstore.
 func (k Keeper) DeleteRecord(ctx sdk.Context, ownerAddr sdk.AccAddress) error {
-	key, err := types.GetOSLocatorKey(ownerAddr)
-	if err != nil {
-		return err
-	}
+	key := types.GetOSLocatorKey(ownerAddr)
 	store := ctx.KVStore(k.storeKey)
 	if store.Has(key) {
 		store.Delete(key)
@@ -139,10 +127,7 @@ func (k Keeper) ModifyRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, uri stri
 	if err != nil {
 		return err
 	}
-	key, err := types.GetOSLocatorKey(ownerAddr)
-	if err != nil {
-		return err
-	}
+	key := types.GetOSLocatorKey(ownerAddr)
 	store := ctx.KVStore(k.storeKey)
 	if !store.Has(key) {
 		return types.ErrAddressNotBound
@@ -160,10 +145,7 @@ func (k Keeper) ModifyRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, uri stri
 // Different from SetOSLocatorRecord in there is less validation.
 // The uri format is not checked, and the owner address account is not looked up.
 func (k Keeper) ImportLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, uri string) error {
-	key, err := types.GetOSLocatorKey(ownerAddr)
-	if err != nil {
-		return err
-	}
+	key := types.GetOSLocatorKey(ownerAddr)
 	store := ctx.KVStore(k.storeKey)
 	if store.Has(key) {
 		return types.ErrOSLocatorAlreadyBound

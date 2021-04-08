@@ -150,10 +150,6 @@ func GetAddressContractSpecCacheKey(addr sdk.AccAddress, contractSpecID Metadata
 }
 
 // GetOSLocatorKey returns a store key for an object store locator entry
-func GetOSLocatorKey(address sdk.AccAddress) ([]byte, error) {
-	err := sdk.VerifyAddressFormat(address.Bytes())
-	if err != nil {
-		return []byte{}, err
-	}
-	return append(OSLocatorAddressKeyPrefix, address.Bytes()...), nil
+func GetOSLocatorKey(address sdk.AccAddress) []byte {
+	return append(OSLocatorAddressKeyPrefix, address.Bytes()...)
 }
