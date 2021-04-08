@@ -487,8 +487,15 @@ func (k msgServer) P8EMemorializeContract(
 		if !found {
 			return nil, fmt.Errorf("record specification %s not found", recSpecID)
 		}
+		inputStatus := types.RecordInputStatus_Unknown
+		switch recSpec.ResultType {
+		case types.DefinitionType_DEFINITION_TYPE_PROPOSED:
+			inputStatus = types.RecordInputStatus_Proposed
+		case types.DefinitionType_DEFINITION_TYPE_RECORD, types.DefinitionType_DEFINITION_TYPE_RECORD_LIST:
+			inputStatus = types.RecordInputStatus_Record
+		}
 		for _, input := range r.Inputs {
-			input.Status = types.RecordInputStatus(recSpec.ResultType)
+			input.Status = inputStatus
 		}
 	}
 
