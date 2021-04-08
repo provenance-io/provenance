@@ -367,7 +367,12 @@ An object store locator indicates the location of off-chain data.
 
 ### Object Store Locator Keys
 
-TODO: Object Store Locator Addresses
+Byte Array Length: `21`
+
+| Byte range | Description
+|------------|---
+| 0          | `0x16`
+| 1-20       | The 20 bytes of the owner address.
 
 ### Object Store Locator Values
 
@@ -386,5 +391,5 @@ message ObjectStoreLocator {
 
 ### Object Store Locator Indexes
 
-TODO: Indexes Object Store Locators
+TODO: Indexes for Object Store Locators
 
