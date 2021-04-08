@@ -160,11 +160,11 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 	}
 
 	// Set the session pieces.
-	p8EData.Session.SpecificationId, err = parseSessionID(p8EData.Scope.ScopeId, msg.GroupId)
+	p8EData.Session.SessionId, err = parseSessionID(p8EData.Scope.ScopeId, msg.GroupId)
 	if err != nil {
 		return p8EData, signers, err
 	}
-	p8EData.Session.SpecificationId, err = getSessionSpecID(msg.Contract)
+	p8EData.Session.SpecificationId, err = getContractSpecID(msg.Contract)
 	if err != nil {
 		return p8EData, signers, err
 	}
@@ -385,8 +385,7 @@ func parsePublicKey(data []byte) (tmcrypt.PubKey, sdk.AccAddress, error) {
 		return nil, nil, err
 	}
 	// Create tendermint public key type and return with address.
-	tmKey := tmcurve.PubKey{} // PubKeySecp256k1{}
-	copy(tmKey[:], pk.SerializeCompressed())
+	tmKey := tmcurve.PubKey(pk.SerializeCompressed()) // PubKeySecp256k1{}
 	return tmKey, tmKey.Address().Bytes(), nil
 }
 
@@ -442,7 +441,7 @@ func getFirstRecitalWithRole(recitals []*p8e.Recital, role p8e.PartyType) *p8e.R
 	return nil
 }
 
-func getSessionSpecID(contract *p8e.Contract) (MetadataAddress, error) {
+func getContractSpecID(contract *p8e.Contract) (MetadataAddress, error) {
 	if contract == nil {
 		return MetadataAddress{}, fmt.Errorf("nil contract")
 	}
@@ -451,5 +450,5 @@ func getSessionSpecID(contract *p8e.Contract) (MetadataAddress, error) {
 		return MetadataAddress{}, fmt.Errorf("no spec datalocation ref hash value")
 	}
 	hash := contract.Spec.DataLocation.Ref.Hash
-	return ConvertHashToAddress(SessionKeyPrefix, hash)
+	return ConvertHashToAddress(ContractSpecificationKeyPrefix, hash)
 }
