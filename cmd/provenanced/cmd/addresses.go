@@ -23,18 +23,19 @@ func AddMetaAddressCmd() *cobra.Command {
 
 	queryCmd.AddCommand(
 		AddMetaAddressEncoder(),
-		AddMetaAddressParser(),
+		AddMetaAddressDecoder(),
 	)
 
 	return queryCmd
 }
 
-// AddMetaAddressParser returns metadata address parser cobra Command.
-func AddMetaAddressParser() *cobra.Command {
+// AddMetaAddressDecoder returns metadata address parser cobra Command.
+func AddMetaAddressDecoder() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "parse [metaaddress]",
-		Short: "Parse MetaAddress and display associate IDs and types",
-		Args:  cobra.ExactArgs(2),
+		Use:     "decode [metaaddress]",
+		Aliases: []string{"d"},
+		Short:   "Decode MetaAddress and display associate IDs and types",
+		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			addr, parseErr := types.MetadataAddressFromBech32(args[1])
 			if parseErr != nil {
