@@ -57,8 +57,8 @@ func GetCmdAddMarker() *cobra.Command {
 with the given supply amount and denomination provided in the coin argument
 
 Example:
-$ %s tx marker new 1000hotdogcoin --type COIN --from mykey --supplyFixed false --allowGovernanceControl false
-0`, version.AppName)),
+$ %s tx marker new 1000hotdogcoin --%s=COIN --%s=false --%s=false --from=mykey
+0`, FlagType, FlagSupplyFixed, FlagAllowGovernanceControl, version.AppName)),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -83,11 +83,11 @@ $ %s tx marker new 1000hotdogcoin --type COIN --from mykey --supplyFixed false -
 			}
 			supplyFixed, err := cmd.Flags().GetBool(FlagSupplyFixed)
 			if err != nil {
-				return err
+				return fmt.Errorf("incorrect value for %s flag.  Accepted: true,false Error: %s", FlagSupplyFixed, err)
 			}
 			allowGovernanceControl, err := cmd.Flags().GetBool(FlagAllowGovernanceControl)
 			if err != nil {
-				return err
+				return fmt.Errorf("incorrect value for %s flag.  Accepted: true,false Error: %s", FlagAllowGovernanceControl, err)
 			}
 			msg := types.NewAddMarkerRequest(coin.Denom, coin.Amount, callerAddr, callerAddr, typeValue, supplyFixed, allowGovernanceControl)
 
