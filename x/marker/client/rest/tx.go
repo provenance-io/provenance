@@ -226,7 +226,7 @@ func createMarkerHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		msg := types.NewAddMarkerRequest(denom, req.Supply, fromAddr, req.Manager, typeValue)
+		msg := types.NewAddMarkerRequest(denom, req.Supply, fromAddr, req.Manager, typeValue, false, false)
 		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
 }
