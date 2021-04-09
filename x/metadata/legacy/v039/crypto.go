@@ -28,7 +28,7 @@ func ParsePublicKey(data []byte) (tmcrypt.PubKey, sdk.AccAddress, error) {
 		return nil, nil, err
 	}
 	// Create tendermint public key type and return with address.
-	tmKey := tmcurve.PubKey{} // PubKeySecp256k1{}
-	copy(tmKey[:], pk.SerializeCompressed())
+	tmKey := tmcurve.PubKey(pk.SerializeCompressed()) // PubKeySecp256k1{}
+
 	return tmKey, tmKey.Address().Bytes(), nil
 }
