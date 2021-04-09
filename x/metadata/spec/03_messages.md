@@ -5,7 +5,9 @@ All created/modified state objects specified by each message are defined within 
 
 These endpoints, requests, and responses are defined in [tx.proto](https://github.com/provenance-io/provenance/blob/b295b03b5584741041d8a4e19ef0a03f2300bd2f/proto/provenance/metadata/v1/tx.proto).
 
-<!-- TOC:START -->
+<!-- TOC -->
+
+
 
 ## Entries
 
