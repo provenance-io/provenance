@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 * Add pagination flags to the CLI query metadata commands.
 * Fix handling of Metadata Write message id helper fields.
+* Fix cli metadata address encoding/decoding command tree #231
 
 ## [v1.0.0](https://github.com/provenance-io/provenance/releases/tag/v1.0.0) - 2021-03-31
 
@@ -50,7 +51,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Update Cosmos SDK to 0.42.3
 * Remove deprecated ModuleCdc amino encoding from name module #189
 * Remove deprecated ModuleCdc amino encoding from attribute module #188
-* Fix cli metadata address encoding/decoding command tree #231
+
 ### Features
 
 * Allow withdrawals of any coin type from a marker account in WASM smart contracts. #151
