@@ -5,9 +5,9 @@ PACKAGES               := $(shell go list ./... 2>/dev/null || true)
 PACKAGES_NOSIMULATION  := $(filter-out %/simulation%,$(PACKAGES))
 PACKAGES_SIMULATION    := $(filter     %/simulation%,$(PACKAGES))
 
-LEVELDB_PATH := $(shell brew --prefix leveldb 2>/dev/null || echo "$(HOME)/Cellar/leveldb/1.22/include")
-CGO_CFLAGS := -I$(LEVELDB_PATH)/include
-CGO_LDFLAGS := -L$(LEVELDB_PATH)/lib
+LEVELDB_PATH = $(shell brew --prefix leveldb 2>/dev/null || echo "$(HOME)/Cellar/leveldb/1.22/include")
+CGO_CFLAGS   = -I$(LEVELDB_PATH)/include
+CGO_LDFLAGS  = "-L$(LEVELDB_PATH)/lib -Wl,-rpath,\$$ORIGIN"
 
 BINDIR ?= $(GOPATH)/bin
 BUILDDIR ?= $(CURDIR)/build
