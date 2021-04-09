@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 * Add some extra aliases for the CLI query metadata commands.
 * Make p8e contract spec id easier to communicate.
+* Modify 'enable governance' behavior on marker module #227
 
 ### Bug Fixes
 * Add pagination flags to the CLI query metadata commands.

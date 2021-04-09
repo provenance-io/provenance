@@ -72,10 +72,10 @@ func TestInvalidProposal(t *testing.T) {
 }
 
 func (s HandlerTestSuite) TestMsgAddMarkerRequest() {
-	activeStatus := types.NewAddMarkerRequest("hotdog", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin)
+	activeStatus := types.NewAddMarkerRequest("hotdog", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true)
 	activeStatus.Status = types.StatusActive
 
-	undefinedStatus := types.NewAddMarkerRequest("hotdog", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin)
+	undefinedStatus := types.NewAddMarkerRequest("hotdog", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true)
 	undefinedStatus.Status = types.StatusUndefined
 
 	cases := []struct {
@@ -86,7 +86,7 @@ func (s HandlerTestSuite) TestMsgAddMarkerRequest() {
 	}{
 		{
 			"should successfully ADD new marker",
-			types.NewAddMarkerRequest("hotdog", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin),
+			types.NewAddMarkerRequest("hotdog", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
 			[]string{s.user1},
 			"",
 		},
@@ -104,13 +104,13 @@ func (s HandlerTestSuite) TestMsgAddMarkerRequest() {
 		},
 		{
 			"should fail to ADD new marker, marker already exists",
-			types.NewAddMarkerRequest("hotdog", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin),
+			types.NewAddMarkerRequest("hotdog", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
 			[]string{s.user1},
 			fmt.Sprintf("marker address already exists for %s: invalid request", types.MustGetMarkerAddress("hotdog")),
 		},
 		{
 			"turn gov ",
-			types.NewAddMarkerRequest("hotdog", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin),
+			types.NewAddMarkerRequest("hotdog", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
 			[]string{s.user1},
 			fmt.Sprintf("marker address already exists for %s: invalid request", types.MustGetMarkerAddress("hotdog")),
 		},
