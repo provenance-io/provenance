@@ -14,6 +14,7 @@ import (
 func AddMetaAddressCmd() *cobra.Command {
 	queryCmd := &cobra.Command{
 		Use:                        "metaaddress",
+		Aliases:                    []string{"ma"},
 		Short:                      "Decode/Encode Metaaddresses commands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
