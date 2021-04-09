@@ -34,6 +34,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Bug Fixes
+
+* Add rpath fix for libwasmvm lib lookup.
+
 ## [v1.0.0](https://github.com/provenance-io/provenance/releases/tag/v1.0.0) - 2021-03-31
 
 ### Bug Fixes
