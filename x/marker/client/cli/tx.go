@@ -16,7 +16,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const flagType = "type"
+const (
+	FlagType                   = "type"
+	FlagSupplyFixed            = "supplyFixed"
+	FlagAllowGovernanceControl = "allowGovernanceControl"
+)
 
 // NewTxCmd returns the top-level command for marker CLI transactions.
 func NewTxCmd() *cobra.Command {
@@ -53,8 +57,8 @@ func GetCmdAddMarker() *cobra.Command {
 with the given supply amount and denomination provided in the coin argument
 
 Example:
-$ %s tx marker new 1000hotdogcoin --type COIN --from mykey
-`, version.AppName)),
+$ %s tx marker new 1000hotdogcoin --type COIN --from mykey --supplyFixed false --allowGovernanceControl false
+0`, version.AppName)),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -66,7 +70,7 @@ $ %s tx marker new 1000hotdogcoin --type COIN --from mykey
 				return fmt.Errorf("invalid coin %s", args[0])
 			}
 			callerAddr := clientCtx.GetFromAddress()
-			markerType, err = cmd.Flags().GetString(flagType)
+			markerType, err = cmd.Flags().GetString(FlagType)
 			if err != nil {
 				return fmt.Errorf("invalid marker type: %w", err)
 			}
@@ -77,12 +81,22 @@ $ %s tx marker new 1000hotdogcoin --type COIN --from mykey
 					return fmt.Errorf("invalid marker type: %s; expected COIN|RESTRICTED", markerType)
 				}
 			}
-			msg := types.NewAddMarkerRequest(coin.Denom, coin.Amount, callerAddr, callerAddr, typeValue)
+			supplyFixed, err := cmd.Flags().GetBool(FlagSupplyFixed)
+			if err != nil {
+				return err
+			}
+			allowGovernanceControl, err := cmd.Flags().GetBool(FlagAllowGovernanceControl)
+			if err != nil {
+				return err
+			}
+			msg := types.NewAddMarkerRequest(coin.Denom, coin.Amount, callerAddr, callerAddr, typeValue, supplyFixed, allowGovernanceControl)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-	cmd.Flags().String(flagType, "COIN", "a marker type to assign (default is COIN)")
+	cmd.Flags().String(FlagType, "COIN", "a marker type to assign (default is COIN)")
+	cmd.Flags().Bool(FlagSupplyFixed, false, "a true or false value to denote if a supply is fixed (default is false)")
+	cmd.Flags().Bool(FlagAllowGovernanceControl, false, "a true or false value to denote if marker is allowed governance control (default is false)")
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }

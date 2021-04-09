@@ -77,14 +77,16 @@ func (msg MsgSetDenomMetadataRequest) Type() string { return TypeSetMetadataRequ
 
 // NewAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
 func NewAddMarkerRequest(
-	denom string, totalSupply sdk.Int, fromAddress sdk.AccAddress, manager sdk.AccAddress, markerType MarkerType, // nolint:interfacer
+	denom string, totalSupply sdk.Int, fromAddress sdk.AccAddress, manager sdk.AccAddress, markerType MarkerType, supplyFixed bool, allowGovernanceControl bool, // nolint:interfacer
 ) *MsgAddMarkerRequest {
 	return &MsgAddMarkerRequest{
-		Amount:      sdk.NewCoin(denom, totalSupply),
-		Manager:     manager.String(),
-		FromAddress: fromAddress.String(),
-		Status:      StatusProposed,
-		MarkerType:  markerType,
+		Amount:                 sdk.NewCoin(denom, totalSupply),
+		Manager:                manager.String(),
+		FromAddress:            fromAddress.String(),
+		Status:                 StatusProposed,
+		MarkerType:             markerType,
+		SupplyFixed:            supplyFixed,
+		AllowGovernanceControl: allowGovernanceControl,
 	}
 }
 
