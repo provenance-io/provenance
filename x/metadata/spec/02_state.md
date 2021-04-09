@@ -69,7 +69,23 @@ message Scope {
 
 #### Scope Indexes
 
-TODO: Indexes for Scopes
+Scopes by owner:
+* Type byte: `0x10`
+* Part 1: All bytes of the owner address
+* Part 2: All bytes of the scope key
+
+<!-- This index also appears in the section for scope specification indexes. They must stay the same. -->
+Scopes by Scope Specification:
+* Type byte: `0x11`
+* Part 1: All bytes of the scope specification key
+* Part 2: All bytes of the scope key
+
+Scopes by value owner:
+* Type byte: `0x12`
+* Part 1: All bytes of the value owner address
+* Part 2: All bytes of the scope key
+
+
 
 ### Sessions
 
@@ -130,7 +146,10 @@ message Session {
 
 #### Session Indexes
 
-TODO: Indexes for Sessions
+There are no extra indexes involving sessions.
+Note, though, that the session key is constructed in a way that automatically indexes sessions by scope.
+
+
 
 ### Records
 
@@ -189,7 +208,10 @@ message Record {
 
 #### Record Indexes
 
-TODO: Indexes for Records
+There are no extra indexes involving records.
+Note, though, that the record key is constructed in a way that automatically indexes records by scope.
+
+
 
 ## Specifications
 
@@ -247,7 +269,24 @@ message ScopeSpecification {
 
 #### Scope Specification Indexes
 
-TODO: Indexes for Scope Specifications
+Scope specifications by owner:
+* Type byte: `0x13`
+* Part 1: All bytes of the owner address
+* Part 2: All bytes of the scope specification key
+
+<!-- This index also appears in the section for contract specification indexes.  They must stay the same. -->
+Scope Specifications by contract specification:
+* Type byte: `0x14`
+* Part 1: All bytes of the contract specification key
+* Part 2: All bytes of the scope specification key
+
+<!-- This index also appears in the section for scope indexes. They must stay the same. -->
+Scopes by Scope Specification:
+* Type byte: `0x11`
+* Part 1: All bytes of the scope specification key
+* Part 2: All bytes of the scope key
+
+
 
 ### Contract Specifications
 
@@ -306,7 +345,18 @@ message ContractSpecification {
 
 #### Contract Specification Indexes
 
-TODO: Indexes for Contract Specifications
+Contract specifications by owner:
+* Type byte: `0x15`
+* Part 1: All bytes of the owner address
+* Part 2: All bytes of the contract specification key
+
+<!-- This index also appears in the section for scope specification indexes. They must stay the same. -->
+Scope Specifications by contract specification:
+* Type byte: `0x14`
+* Part 1: All bytes of the contract specification key
+* Part 2: All bytes of the scope specification key
+
+
 
 ### Record Specifications
 
@@ -359,7 +409,10 @@ message RecordSpecification {
 
 #### Record Specification Indexes
 
-TODO: Indexes for Record Specifications
+There are no extra indexes involving record specifications.
+Note, though, that the record key is constructed in a way that automatically indexes record specifications by contract specification.
+
+
 
 ## Object Store Locators
 
@@ -391,5 +444,5 @@ message ObjectStoreLocator {
 
 ### Object Store Locator Indexes
 
-TODO: Indexes for Object Store Locators
+There are no extra indexes involving object store locators.
 

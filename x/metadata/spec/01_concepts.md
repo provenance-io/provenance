@@ -40,11 +40,16 @@ Some address types contain other elements too.
 
 ## Indexes
 
-Indexes are specially formatted key/value pairs used to find associated things.
+Indexes are specially formatted entries in the kvstore used to find associated things.
 
-The keys are byte arrays with three parts:
-1. Index type
-1. Address of the starting thing in the association
-1. Address of the thing to find
+The keys contain all of the relevant information.
+They are byte arrays with three parts:
+1. Type byte: A single byte representing the type of index.
+1. Part 1: Address of the starting thing in the association.
+1. Part 2: Address of the entry to find.
 
+The values are always a single byte: `0x01`.
 
+The general use of them is to create a prefix using the type byte and part 1.
+Then use that prefix to iterate over all keys with that same prefix.
+During iteration, remove the prefix from the current entry's key in order to get the key of the thing to find.
