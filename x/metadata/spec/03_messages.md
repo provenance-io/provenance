@@ -6,6 +6,26 @@ All created/modified state objects specified by each message are defined within 
 These endpoints, requests, and responses are defined in [tx.proto](https://github.com/provenance-io/provenance/blob/b295b03b5584741041d8a4e19ef0a03f2300bd2f/proto/provenance/metadata/v1/tx.proto).
 
 <!-- TOC -->
+  - [Entries](#entries)
+    - [Msg/WriteScope](#msg-writescope)
+    - [Msg/DeleteScope](#msg-deletescope)
+    - [Msg/WriteSession](#msg-writesession)
+    - [Msg/WriteRecord](#msg-writerecord)
+    - [Msg/DeleteRecord](#msg-deleterecord)
+  - [Specifications](#specifications)
+    - [Msg/WriteScopeSpecification](#msg-writescopespecification)
+    - [Msg/DeleteScopeSpecification](#msg-deletescopespecification)
+    - [Msg/WriteContractSpecification](#msg-writecontractspecification)
+    - [Msg/DeleteContractSpecification](#msg-deletecontractspecification)
+    - [Msg/WriteRecordSpecification](#msg-writerecordspecification)
+    - [Msg/DeleteRecordSpecification](#msg-deleterecordspecification)
+  - [Object Store Locators](#object-store-locators)
+    - [Msg/BindOSLocator](#msg-bindoslocator)
+    - [Msg/DeleteOSLocator](#msg-deleteoslocator)
+    - [Msg/ModifyOSLocator](#msg-modifyoslocator)
+  - [Deprecated](#deprecated)
+    - [Msg/WriteP8eContractSpec](#msg-writep8econtractspec)
+    - [Msg/P8eMemorializeContract](#msg-p8ememorializecontract)
 
 
 
