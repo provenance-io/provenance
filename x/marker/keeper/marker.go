@@ -58,7 +58,7 @@ func (k Keeper) AddMarkerAccount(ctx sdk.Context, marker types.MarkerAccountI) e
 		return err
 	}
 	if existing != nil {
-		return fmt.Errorf("account already exists for %s", markerAddress)
+		return fmt.Errorf("marker address already exists for %s", markerAddress)
 	}
 
 	// set base account number
