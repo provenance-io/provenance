@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+
 	"github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -76,8 +77,8 @@ func (s msgServer) BindName(goCtx context.Context, msg *types.MsgBindNameRequest
 		Address: msg.Record.Address,
 		Name:    name,
 	}
-	// for code review:
-	// before name of the event was types.EventTypeNameBound == name_bound
+
+	// before name of the event was `types.EventTypeNameBound` == name_bound
 	// because proto message format's do not encourage _ like convention
 	// but prefer CamelCase for message name, NameBound
 	// https://developers.google.com/protocol-buffers/docs/style
@@ -88,7 +89,9 @@ func (s msgServer) BindName(goCtx context.Context, msg *types.MsgBindNameRequest
 
 	// Sample event:
 	// [{"events":[{"type":"message","attributes":[{"key":"action","value":"bind_name"},{"key":"sender","value":"tp13ulywwfe7v38y0vetsqayccsgzexh6zq38h3d4"}]},{"type":"provenance.name.v1.EventNameBound","attributes":[{"key":"address","value":"\"tp13ulywwfe7v38y0vetsqayccsgzexh6zq38h3d4\""},{"key":"name","value":"\"sc1.pb\""}]},{"type":"transfer","attributes":[{"key":"recipient","value":"tp17xpfvakm2amg962yls6f84z3kell8c5l2udfyt"},{"key":"sender","value":"tp13ulywwfe7v38y0vetsqayccsgzexh6zq38h3d4"},{"key":"amount","value":"2000nhash"}]}]}]
-	ctx.EventManager().EmitTypedEvent(&nameBoundEvent)
+	if err := ctx.EventManager().EmitTypedEvent(&nameBoundEvent); err != nil {
+		return nil, err
+	}
 
 	// key: modulename+name+bind
 	defer func() {
@@ -144,7 +147,9 @@ func (s msgServer) DeleteName(goCtx context.Context, msg *types.MsgDeleteNameReq
 		Name:    name,
 	}
 	// Emit event and return
-	ctx.EventManager().EmitTypedEvent(&nameUnboundEvent)
+	if err := ctx.EventManager().EmitTypedEvent(&nameUnboundEvent); err != nil {
+		return nil, err
+	}
 
 	// key: modulename+name+unbind
 	defer func() {
