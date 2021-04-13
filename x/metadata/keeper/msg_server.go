@@ -494,8 +494,8 @@ func (k msgServer) P8EMemorializeContract(
 		case types.DefinitionType_DEFINITION_TYPE_RECORD, types.DefinitionType_DEFINITION_TYPE_RECORD_LIST:
 			inputStatus = types.RecordInputStatus_Record
 		}
-		for _, input := range r.Inputs {
-			input.Status = inputStatus
+		for i, _ := range r.Inputs {
+			r.Inputs[i].Status = inputStatus
 		}
 	}
 
