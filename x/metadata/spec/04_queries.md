@@ -338,60 +338,72 @@ The only input to this query is pagination information.
 
 
 ## Query/OSLocatorParams
-TODO: OSLocatorParams messages
-The `xxx` query gets xxxxxxxxxxx
+
+The `OSLocatorParams` query gets the parameters of the Object Store Locator sub-module.
 
 ### Request
-+++ 
++++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L612-L613
 
-Info about the query request fields.
+There are no inputs for this query.
 
 ### Response
-+++ 
++++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L615-L622
 
 
 
 ## Query/OSLocator
-TODO: OSLocator messages
-The `xxx` query gets xxxxxxxxxxx
+
+The `OSLocator` query gets an Object Store Locator for an address.
 
 ### Request
-+++ 
++++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L624-L627
 
-Info about the query request fields.
+The `owner` should be a bech32 address string.
 
 ### Response
-+++ 
++++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L629-L635
 
 
 
 ## Query/OSLocatorsByURI
-TODO: OSLocatorsByURI messages
-The `xxx` query gets xxxxxxxxxxx
+
+The `OSLocatorsByURI` query gets the object store locators by URI.
 
 ### Request
-+++ 
++++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L637-L643
 
-Info about the query request fields.
+The `uri` is string the URI to find object store locators for.
 
 ### Response
-+++ 
++++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L645-L653
 
 
 
 ## Query/OSLocatorsByScope
-TODO: OSLocatorsByScope messages
-The `xxx` query gets xxxxxxxxxxx
+
+The `OSLocatorsByScope` query gets the object store locators for the owners and value owner of a scope.
 
 ### Request
-+++ 
++++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L655-L658
 
-Info about the query request fields.
+The `scope_id`, must either be scope uuid, e.g. `91978ba2-5f35-459a-86a7-feca1b0512e0` or a scope address,
+e.g. `scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel`
 
 ### Response
-+++ 
++++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L660-L666
 
 
 
 ## Query/OSAllLocators
-TODO: OSAllLocators messages
+
+The `OSAllLocators` query gets all object store locators.
+
+This query is paginated.
+
+### Request
++++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L668-L672
+
+The only input to this query is pagination information.
+
+### Response
++++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L674-L682
