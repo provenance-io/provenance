@@ -150,6 +150,17 @@ var (
         }
       },
       "signer_role": 1
+    },
+    {
+      "signer": {
+        "encryption_public_key": {
+          "public_key_bytes": "BGxX6eJRAdXlU64APi95Al44m1FJVgfHlrTpXAqUAB+8JNhM0HgIGWElKbgD6K0KOX9HTJZdlX0z3WTmQrdW+8Q="
+        },
+        "signing_public_key": {
+          "public_key_bytes": "BGxX6eJRAdXlU64APi95Al44m1FJVgfHlrTpXAqUAB+8JNhM0HgIGWElKbgD6K0KOX9HTJZdlX0z3WTmQrdW+8Q="
+        }
+      },
+      "signer_role": 1
     }
   ],
   "record_group": [
@@ -315,11 +326,16 @@ func TestMigrate(t *testing.T) {
   "scopes": [
     {
       "data_access": [
-        "cosmos1rr4d0eu62pgt4edw38d2ev27798pfhdhm39zct"
+        "cosmos1rr4d0eu62pgt4edw38d2ev27798pfhdhm39zct",
+        "cosmos1vz99nyd2er8myeugsr4xm5duwhulhp5ae4dvpa"
       ],
       "owners": [
         {
           "address": "cosmos1rr4d0eu62pgt4edw38d2ev27798pfhdhm39zct",
+          "role": "PARTY_TYPE_ORIGINATOR"
+        },
+        {
+          "address": "cosmos1vz99nyd2er8myeugsr4xm5duwhulhp5ae4dvpa",
           "role": "PARTY_TYPE_ORIGINATOR"
         }
       ],

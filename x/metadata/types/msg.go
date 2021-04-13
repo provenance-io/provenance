@@ -106,7 +106,7 @@ func (msg MsgWriteScopeRequest) GetSignBytes() []byte {
 }
 
 // ValidateBasic performs a quick validity check
-func (msg MsgWriteScopeRequest) ValidateBasic() error {
+func (msg *MsgWriteScopeRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
@@ -228,7 +228,7 @@ func (msg MsgWriteSessionRequest) GetSignBytes() []byte {
 }
 
 // ValidateBasic performs a quick validity check
-func (msg MsgWriteSessionRequest) ValidateBasic() error {
+func (msg *MsgWriteSessionRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
@@ -425,7 +425,7 @@ func (msg MsgWriteScopeSpecificationRequest) GetSignBytes() []byte {
 }
 
 // ValidateBasic performs a quick validity check
-func (msg MsgWriteScopeSpecificationRequest) ValidateBasic() error {
+func (msg *MsgWriteScopeSpecificationRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
@@ -575,7 +575,7 @@ func (msg MsgWriteContractSpecificationRequest) GetSignBytes() []byte {
 }
 
 // ValidateBasic performs a quick validity check
-func (msg MsgWriteContractSpecificationRequest) ValidateBasic() error {
+func (msg *MsgWriteContractSpecificationRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
@@ -678,7 +678,7 @@ func (msg MsgWriteRecordSpecificationRequest) GetSignBytes() []byte {
 }
 
 // ValidateBasic performs a quick validity check
-func (msg MsgWriteRecordSpecificationRequest) ValidateBasic() error {
+func (msg *MsgWriteRecordSpecificationRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}

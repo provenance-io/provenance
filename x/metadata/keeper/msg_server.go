@@ -545,18 +545,15 @@ func (k msgServer) BindOSLocator(goCtx context.Context, msg *types.MsgBindOSLoca
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	if k.Keeper.OSLocatorExists(ctx, msg.Locator.Owner) {
+	// already valid address, checked in ValidateBasic
+	address, _ := sdk.AccAddressFromBech32(msg.Locator.Owner)
+
+	if k.Keeper.OSLocatorExists(ctx, address) {
 		ctx.Logger().Error("Address already bound to an URI", "owner", msg.Locator.Owner)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, types.ErrOSLocatorAlreadyBound.Error())
 	}
 
 	// Bind owner to URI
-	address, err := sdk.AccAddressFromBech32(msg.Locator.Owner)
-	if err != nil {
-		ctx.Logger().Error("invalid address", "err", err)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
-	}
-
 	if err := k.Keeper.SetOSLocatorRecord(ctx, address, msg.Locator.LocatorUri); err != nil {
 		ctx.Logger().Error("unable to bind name", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
@@ -581,13 +578,13 @@ func (k msgServer) DeleteOSLocator(ctx context.Context, msg *types.MsgDeleteOSLo
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	if !k.Keeper.OSLocatorExists(sdkCtx, msg.Locator.Owner) {
+	// already valid address, checked in ValidateBasic
+	ownerAddr, _ := sdk.AccAddressFromBech32(msg.Locator.Owner)
+
+	if !k.Keeper.OSLocatorExists(sdkCtx, ownerAddr) {
 		sdkCtx.Logger().Error("Address not already bound to an URI", "owner", msg.Locator.Owner)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, types.ErrOSLocatorAlreadyBound.Error())
 	}
-
-	// already valid address, checked in ValidateBasic
-	ownerAddr, _ := sdk.AccAddressFromBech32(msg.Locator.Owner)
 
 	if !k.Keeper.VerifyCorrectOwner(sdkCtx, ownerAddr) {
 		sdkCtx.Logger().Error("msg sender cannot delete os locator", "owner", ownerAddr)
@@ -618,13 +615,13 @@ func (k msgServer) ModifyOSLocator(ctx context.Context, msg *types.MsgModifyOSLo
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	if !k.Keeper.OSLocatorExists(sdkCtx, msg.Locator.Owner) {
+	// already valid address, checked in ValidateBasic
+	ownerAddr, _ := sdk.AccAddressFromBech32(msg.Locator.Owner)
+
+	if !k.Keeper.OSLocatorExists(sdkCtx, ownerAddr) {
 		sdkCtx.Logger().Error("Address not already bound to an URI", "owner", msg.Locator.Owner)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, types.ErrOSLocatorAlreadyBound.Error())
 	}
-
-	// already valid address, checked in ValidateBasic
-	ownerAddr, _ := sdk.AccAddressFromBech32(msg.Locator.Owner)
 
 	if !k.Keeper.VerifyCorrectOwner(sdkCtx, ownerAddr) {
 		sdkCtx.Logger().Error("msg sender cannot modify os locator", "owner", ownerAddr)
