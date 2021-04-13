@@ -86,3 +86,87 @@ enum MarkerStatus {
   // actions allowed.
   MARKER_STATUS_DESTROYED = 5 [(gogoproto.enumvalue_customname) = "StatusDestroyed"];
 }
+
+// EventAddMarker event emitted when marker is added
+message EventAddMarker {
+  string denom       = 1;
+  string amount      = 2;
+  string status      = 3;
+  string manager     = 4;
+  string marker_type = 5;
+}
+
+// EventAddMarkerAccess event emitted when marker access is added
+message EventAddMarkerAccess {
+  string access        = 1;
+  string denom         = 2;
+  string administrator = 3;
+}
+
+// EventDeleteMarkerAccess event emitted when marker access is revoked
+message EventDeleteMarkerAccess {
+  string remove_address = 1;
+  string denom          = 2;
+  string administrator  = 3;
+}
+
+// EventFinalizeMarker event emitted when marker is finalized
+message EventFinalizeMarker {
+  string denom         = 1;
+  string administrator = 2;
+}
+
+// EventActivateMarker event emitted when marker is activated
+message EventActivateMarker {
+  string denom         = 1;
+  string administrator = 2;
+}
+
+// EventCancelMarker event emitted when marker is cancelled
+message EventCancelMarker {
+  string denom         = 1;
+  string administrator = 2;
+}
+
+// EventDeleteMarker event emitted when marker is deleted
+message EventDeleteMarker {
+  string denom         = 1;
+  string administrator = 2;
+}
+
+// EventMintMarker event emitted when additional marker supply is minted
+message EventMintMarker {
+  string amount        = 1;
+  string denom         = 2;
+  string administrator = 3;
+}
+
+// EventBurnMarker event emitted when coin is burned from marker
+message EventBurnMarker {
+  string amount        = 1;
+  string denom         = 2;
+  string administrator = 3;
+}
+
+// EventWithdrawMarker event emitted when coins are withdrew from marker
+message EventWithdrawMarker {
+  string amount        = 1;
+  string denom         = 2;
+  string administrator = 3;
+  string to_address    = 4;
+}
+
+// EventTransferMarker event emitted when coins are transfered to from account to another
+message EventTransferMarker {
+  string amount        = 1;
+  string denom         = 2;
+  string administrator = 3;
+  string to_address    = 4;
+  string from_address  = 5;
+}
+
+// EventSetDenomMetadataMarker event emitted when metadata is set on marker with denom
+message EventSetDenomMetadataMarker {
+  string denom         = 1;
+  string administrator = 2;
+}

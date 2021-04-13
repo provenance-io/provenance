@@ -121,7 +121,7 @@ func (k msgServer) AddAccess(goCtx context.Context, msg *types.MsgAddAccessReque
 	return &types.MsgAddAccessResponse{}, nil
 }
 
-// DeleteAccess handles a message to revoke access to  marker account.
+// DeleteAccess handles a message to revoke access to marker account.
 func (k msgServer) DeleteAccess(goCtx context.Context, msg *types.MsgDeleteAccessRequest) (*types.MsgDeleteAccessResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -255,6 +255,7 @@ func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMintRequest) (*type
 		ctx.Logger().Error("unable to mint coin for marker", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
+
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -264,7 +265,7 @@ func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMintRequest) (*type
 	return &types.MsgMintResponse{}, nil
 }
 
-// Burn handles a message to burn coin from a  marker account.
+// Burn handles a message to burn coin from a marker account.
 func (k msgServer) Burn(goCtx context.Context, msg *types.MsgBurnRequest) (*types.MsgBurnResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -303,6 +304,7 @@ func (k msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdrawRequest
 		ctx.Logger().Error("unable to withdraw coins from marker", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
+
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
