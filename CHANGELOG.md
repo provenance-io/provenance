@@ -34,6 +34,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+## Features
+* Add marker cli has two new flags to set SupplyFixed and AllowGovernanceControl #241
+* Modify 'enable governance' behavior on marker module #227
+
 ### Improvements
 * Add some extra aliases for the CLI query metadata commands.
 * Make p8e contract spec id easier to communicate.
