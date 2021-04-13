@@ -12,9 +12,6 @@ The Metadata module manages the state of several types of entries related to off
     - [Contract Specifications](#contract-specifications)
     - [Record Specifications](#record-specifications)
   - [Object Store Locators](#object-store-locators)
-    - [Object Store Locator Keys](#object-store-locator-keys)
-    - [Object Store Locator Values](#object-store-locator-values)
-    - [Object Store Locator Indexes](#object-store-locator-indexes)
 
 
 
