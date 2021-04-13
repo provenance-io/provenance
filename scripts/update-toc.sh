@@ -23,7 +23,7 @@ If the provided file does not have a TOC comment line then the table of
 contents will be placed above the first heading with level 2 or greater.
 
 If the provided file has neither a TOC comment line, nor a heading with level
-2 or greater, the table of contents will be placed at the end of the file.
+2 or greater, a TOC placed at the top of the file.
 
 A TOC comment line has the following format:
 <!-- TOC [<max depth>|<min depth> <max depth>] -->
@@ -69,10 +69,20 @@ update_toc () {
     return 1
   fi
 
-  local toc_loc_regex tempfile has_toc_loc line toc_params toc_included in_old_toc
+  local toc_loc_regex has_toc_loc has_heading_two tempfile line toc_params toc_included in_old_toc
   toc_loc_regex="^[[:space:]]*<\!--[[:space:]]*TOC.*-->"
-  tempfile="$( mktemp -t "$( sed 's/\//-/g' <<< 'x/metadata/spec/03_messages.md' )" )"
   has_toc_loc="$( grep -q "$toc_loc_regex" "$filename" && printf 'YES' )"
+  has_heading_two="$( grep -q '^##' "$filename" && printf 'YES' )"
+
+  tempfile="$( mktemp -t "$( sed 's/\//-/g' <<< 'x/metadata/spec/03_messages.md' )" )"
+
+  # if there's no pre-defined TOC location, and no level 2 heading, put the TOC at the top.
+  if [[ -z "$has_toc_loc" && -z "$has_heading_two" ]]; then
+      printf '<!-- TOC 1 -->\n' >> "$tempfile"
+      generate_toc "$filename" '1' >> "$tempfile"
+      printf '\n' >> "$tempfile"
+      toc_included='YES'
+  fi
 
   while IFS= read -r line; do
     if [[ -n "$in_old_toc" ]] && ! grep -q "^[[:space:]]*- \[" <<< "$line"; then
@@ -101,15 +111,12 @@ update_toc () {
     elif [[ -z "$in_old_toc" ]]; then
       printf '%s\n' "$line" >> "$tempfile"
     fi
-  done < "$filename"
+  done <<< "$( cat "$filename" )"
+  # Note: The above uses <<< "$( cat "$filename" )" because:
+  # 1) Using just < "$filename" results in loss of the last line if the last line doesn't end in a newline.
+  # 2) Starting the loop with cat "$filename" | while ... can cause weird variable behavior in the loop.
 
-  if [[ -z "$toc_included" ]]; then
-      printf '<!-- TOC -->\n' >> "$tempfile"
-      generate_toc "$filename" >> "$tempfile"
-      printf '\n' >> "$tempfile"
-  fi
-
-  # Using cp and rm here to preserve permissions.
+  # Using cp and rm here (instead of mv) to preserve permissions.
   cp "$tempfile" "$filename"
   rm "$tempfile"
 }
