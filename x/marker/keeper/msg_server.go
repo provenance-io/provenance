@@ -80,17 +80,14 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 		ctx.Logger().Error("unable to add marker", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeMarkerAdded,
-			sdk.NewAttribute(types.EventAttributeDenomKey, msg.Amount.Denom),
-			sdk.NewAttribute(types.EventAttributeAmountKey, msg.Amount.Amount.String()),
-			sdk.NewAttribute(types.EventAttributeMarkerStatusKey, msg.Status.String()),
-			sdk.NewAttribute(types.EventAttributeAdministratorKey, msg.Manager),
-			sdk.NewAttribute(types.EventAttributeMarkerTypeKey, msg.MarkerType.String()),
-			sdk.NewAttribute(types.EventAttributeModuleNameKey, types.ModuleName),
-		),
-	)
+
+	markerAddEvent := types.NewEventMarkerAdd(msg.Amount.Denom, msg.Amount.Amount.String(), msg.Status.String(), msg.Manager, msg.MarkerType.String())
+	if err := ctx.EventManager().EmitTypedEvent(markerAddEvent); err != nil {
+		// TODO Figure out proper attribute for this
+		//sdk.NewAttribute(types.KeyAttributeName, name),
+		return nil, err
+		//),
+	}
 	return &types.MsgAddMarkerResponse{}, nil
 }
 

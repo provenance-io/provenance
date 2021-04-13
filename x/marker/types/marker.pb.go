@@ -212,8 +212,8 @@ func (m *MarkerAccount) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MarkerAccount proto.InternalMessageInfo
 
-// EventAddMarker event emitted when marker is added
-type EventAddMarker struct {
+// EventMarkerAdd event emitted when marker is added
+type EventMarkerAdd struct {
 	Denom      string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
 	Amount     string `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount,omitempty"`
 	Status     string `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"`
@@ -221,18 +221,18 @@ type EventAddMarker struct {
 	MarkerType string `protobuf:"bytes,5,opt,name=marker_type,json=markerType,proto3" json:"marker_type,omitempty"`
 }
 
-func (m *EventAddMarker) Reset()         { *m = EventAddMarker{} }
-func (m *EventAddMarker) String() string { return proto.CompactTextString(m) }
-func (*EventAddMarker) ProtoMessage()    {}
-func (*EventAddMarker) Descriptor() ([]byte, []int) {
+func (m *EventMarkerAdd) Reset()         { *m = EventMarkerAdd{} }
+func (m *EventMarkerAdd) String() string { return proto.CompactTextString(m) }
+func (*EventMarkerAdd) ProtoMessage()    {}
+func (*EventMarkerAdd) Descriptor() ([]byte, []int) {
 	return fileDescriptor_f7e2c25c71db7f99, []int{2}
 }
-func (m *EventAddMarker) XXX_Unmarshal(b []byte) error {
+func (m *EventMarkerAdd) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *EventAddMarker) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *EventMarkerAdd) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_EventAddMarker.Marshal(b, m, deterministic)
+		return xxx_messageInfo_EventMarkerAdd.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -242,72 +242,72 @@ func (m *EventAddMarker) XXX_Marshal(b []byte, deterministic bool) ([]byte, erro
 		return b[:n], nil
 	}
 }
-func (m *EventAddMarker) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventAddMarker.Merge(m, src)
+func (m *EventMarkerAdd) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventMarkerAdd.Merge(m, src)
 }
-func (m *EventAddMarker) XXX_Size() int {
+func (m *EventMarkerAdd) XXX_Size() int {
 	return m.Size()
 }
-func (m *EventAddMarker) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventAddMarker.DiscardUnknown(m)
+func (m *EventMarkerAdd) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventMarkerAdd.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_EventAddMarker proto.InternalMessageInfo
+var xxx_messageInfo_EventMarkerAdd proto.InternalMessageInfo
 
-func (m *EventAddMarker) GetDenom() string {
+func (m *EventMarkerAdd) GetDenom() string {
 	if m != nil {
 		return m.Denom
 	}
 	return ""
 }
 
-func (m *EventAddMarker) GetAmount() string {
+func (m *EventMarkerAdd) GetAmount() string {
 	if m != nil {
 		return m.Amount
 	}
 	return ""
 }
 
-func (m *EventAddMarker) GetStatus() string {
+func (m *EventMarkerAdd) GetStatus() string {
 	if m != nil {
 		return m.Status
 	}
 	return ""
 }
 
-func (m *EventAddMarker) GetManager() string {
+func (m *EventMarkerAdd) GetManager() string {
 	if m != nil {
 		return m.Manager
 	}
 	return ""
 }
 
-func (m *EventAddMarker) GetMarkerType() string {
+func (m *EventMarkerAdd) GetMarkerType() string {
 	if m != nil {
 		return m.MarkerType
 	}
 	return ""
 }
 
-// EventAddMarkerAccess event emitted when marker access is added
-type EventAddMarkerAccess struct {
+// EventMarkerAddAccess event emitted when marker access is added
+type EventMarkerAddAccess struct {
 	Access        string `protobuf:"bytes,1,opt,name=access,proto3" json:"access,omitempty"`
 	Denom         string `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
 	Administrator string `protobuf:"bytes,3,opt,name=administrator,proto3" json:"administrator,omitempty"`
 }
 
-func (m *EventAddMarkerAccess) Reset()         { *m = EventAddMarkerAccess{} }
-func (m *EventAddMarkerAccess) String() string { return proto.CompactTextString(m) }
-func (*EventAddMarkerAccess) ProtoMessage()    {}
-func (*EventAddMarkerAccess) Descriptor() ([]byte, []int) {
+func (m *EventMarkerAddAccess) Reset()         { *m = EventMarkerAddAccess{} }
+func (m *EventMarkerAddAccess) String() string { return proto.CompactTextString(m) }
+func (*EventMarkerAddAccess) ProtoMessage()    {}
+func (*EventMarkerAddAccess) Descriptor() ([]byte, []int) {
 	return fileDescriptor_f7e2c25c71db7f99, []int{3}
 }
-func (m *EventAddMarkerAccess) XXX_Unmarshal(b []byte) error {
+func (m *EventMarkerAddAccess) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *EventAddMarkerAccess) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *EventMarkerAddAccess) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_EventAddMarkerAccess.Marshal(b, m, deterministic)
+		return xxx_messageInfo_EventMarkerAddAccess.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -317,58 +317,58 @@ func (m *EventAddMarkerAccess) XXX_Marshal(b []byte, deterministic bool) ([]byte
 		return b[:n], nil
 	}
 }
-func (m *EventAddMarkerAccess) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventAddMarkerAccess.Merge(m, src)
+func (m *EventMarkerAddAccess) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventMarkerAddAccess.Merge(m, src)
 }
-func (m *EventAddMarkerAccess) XXX_Size() int {
+func (m *EventMarkerAddAccess) XXX_Size() int {
 	return m.Size()
 }
-func (m *EventAddMarkerAccess) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventAddMarkerAccess.DiscardUnknown(m)
+func (m *EventMarkerAddAccess) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventMarkerAddAccess.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_EventAddMarkerAccess proto.InternalMessageInfo
+var xxx_messageInfo_EventMarkerAddAccess proto.InternalMessageInfo
 
-func (m *EventAddMarkerAccess) GetAccess() string {
+func (m *EventMarkerAddAccess) GetAccess() string {
 	if m != nil {
 		return m.Access
 	}
 	return ""
 }
 
-func (m *EventAddMarkerAccess) GetDenom() string {
+func (m *EventMarkerAddAccess) GetDenom() string {
 	if m != nil {
 		return m.Denom
 	}
 	return ""
 }
 
-func (m *EventAddMarkerAccess) GetAdministrator() string {
+func (m *EventMarkerAddAccess) GetAdministrator() string {
 	if m != nil {
 		return m.Administrator
 	}
 	return ""
 }
 
-// EventDeleteMarkerAccess event emitted when marker access is revoked
-type EventDeleteMarkerAccess struct {
+// EventMarkerDeleteAccess event emitted when marker access is revoked
+type EventMarkerDeleteAccess struct {
 	RemoveAddress string `protobuf:"bytes,1,opt,name=remove_address,json=removeAddress,proto3" json:"remove_address,omitempty"`
 	Denom         string `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
 	Administrator string `protobuf:"bytes,3,opt,name=administrator,proto3" json:"administrator,omitempty"`
 }
 
-func (m *EventDeleteMarkerAccess) Reset()         { *m = EventDeleteMarkerAccess{} }
-func (m *EventDeleteMarkerAccess) String() string { return proto.CompactTextString(m) }
-func (*EventDeleteMarkerAccess) ProtoMessage()    {}
-func (*EventDeleteMarkerAccess) Descriptor() ([]byte, []int) {
+func (m *EventMarkerDeleteAccess) Reset()         { *m = EventMarkerDeleteAccess{} }
+func (m *EventMarkerDeleteAccess) String() string { return proto.CompactTextString(m) }
+func (*EventMarkerDeleteAccess) ProtoMessage()    {}
+func (*EventMarkerDeleteAccess) Descriptor() ([]byte, []int) {
 	return fileDescriptor_f7e2c25c71db7f99, []int{4}
 }
-func (m *EventDeleteMarkerAccess) XXX_Unmarshal(b []byte) error {
+func (m *EventMarkerDeleteAccess) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *EventDeleteMarkerAccess) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *EventMarkerDeleteAccess) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_EventDeleteMarkerAccess.Marshal(b, m, deterministic)
+		return xxx_messageInfo_EventMarkerDeleteAccess.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -378,57 +378,57 @@ func (m *EventDeleteMarkerAccess) XXX_Marshal(b []byte, deterministic bool) ([]b
 		return b[:n], nil
 	}
 }
-func (m *EventDeleteMarkerAccess) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventDeleteMarkerAccess.Merge(m, src)
+func (m *EventMarkerDeleteAccess) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventMarkerDeleteAccess.Merge(m, src)
 }
-func (m *EventDeleteMarkerAccess) XXX_Size() int {
+func (m *EventMarkerDeleteAccess) XXX_Size() int {
 	return m.Size()
 }
-func (m *EventDeleteMarkerAccess) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventDeleteMarkerAccess.DiscardUnknown(m)
+func (m *EventMarkerDeleteAccess) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventMarkerDeleteAccess.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_EventDeleteMarkerAccess proto.InternalMessageInfo
+var xxx_messageInfo_EventMarkerDeleteAccess proto.InternalMessageInfo
 
-func (m *EventDeleteMarkerAccess) GetRemoveAddress() string {
+func (m *EventMarkerDeleteAccess) GetRemoveAddress() string {
 	if m != nil {
 		return m.RemoveAddress
 	}
 	return ""
 }
 
-func (m *EventDeleteMarkerAccess) GetDenom() string {
+func (m *EventMarkerDeleteAccess) GetDenom() string {
 	if m != nil {
 		return m.Denom
 	}
 	return ""
 }
 
-func (m *EventDeleteMarkerAccess) GetAdministrator() string {
+func (m *EventMarkerDeleteAccess) GetAdministrator() string {
 	if m != nil {
 		return m.Administrator
 	}
 	return ""
 }
 
-// EventFinalizeMarker event emitted when marker is finalized
-type EventFinalizeMarker struct {
+// EventMarkerFinalize event emitted when marker is finalized
+type EventMarkerFinalize struct {
 	Denom         string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
 	Administrator string `protobuf:"bytes,2,opt,name=administrator,proto3" json:"administrator,omitempty"`
 }
 
-func (m *EventFinalizeMarker) Reset()         { *m = EventFinalizeMarker{} }
-func (m *EventFinalizeMarker) String() string { return proto.CompactTextString(m) }
-func (*EventFinalizeMarker) ProtoMessage()    {}
-func (*EventFinalizeMarker) Descriptor() ([]byte, []int) {
+func (m *EventMarkerFinalize) Reset()         { *m = EventMarkerFinalize{} }
+func (m *EventMarkerFinalize) String() string { return proto.CompactTextString(m) }
+func (*EventMarkerFinalize) ProtoMessage()    {}
+func (*EventMarkerFinalize) Descriptor() ([]byte, []int) {
 	return fileDescriptor_f7e2c25c71db7f99, []int{5}
 }
-func (m *EventFinalizeMarker) XXX_Unmarshal(b []byte) error {
+func (m *EventMarkerFinalize) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *EventFinalizeMarker) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *EventMarkerFinalize) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_EventFinalizeMarker.Marshal(b, m, deterministic)
+		return xxx_messageInfo_EventMarkerFinalize.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -438,50 +438,50 @@ func (m *EventFinalizeMarker) XXX_Marshal(b []byte, deterministic bool) ([]byte,
 		return b[:n], nil
 	}
 }
-func (m *EventFinalizeMarker) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventFinalizeMarker.Merge(m, src)
+func (m *EventMarkerFinalize) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventMarkerFinalize.Merge(m, src)
 }
-func (m *EventFinalizeMarker) XXX_Size() int {
+func (m *EventMarkerFinalize) XXX_Size() int {
 	return m.Size()
 }
-func (m *EventFinalizeMarker) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventFinalizeMarker.DiscardUnknown(m)
+func (m *EventMarkerFinalize) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventMarkerFinalize.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_EventFinalizeMarker proto.InternalMessageInfo
+var xxx_messageInfo_EventMarkerFinalize proto.InternalMessageInfo
 
-func (m *EventFinalizeMarker) GetDenom() string {
+func (m *EventMarkerFinalize) GetDenom() string {
 	if m != nil {
 		return m.Denom
 	}
 	return ""
 }
 
-func (m *EventFinalizeMarker) GetAdministrator() string {
+func (m *EventMarkerFinalize) GetAdministrator() string {
 	if m != nil {
 		return m.Administrator
 	}
 	return ""
 }
 
-// EventActivateMarker event emitted when marker is activated
-type EventActivateMarker struct {
+// EventMarkerActivate event emitted when marker is activated
+type EventMarkerActivate struct {
 	Denom         string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
 	Administrator string `protobuf:"bytes,2,opt,name=administrator,proto3" json:"administrator,omitempty"`
 }
 
-func (m *EventActivateMarker) Reset()         { *m = EventActivateMarker{} }
-func (m *EventActivateMarker) String() string { return proto.CompactTextString(m) }
-func (*EventActivateMarker) ProtoMessage()    {}
-func (*EventActivateMarker) Descriptor() ([]byte, []int) {
+func (m *EventMarkerActivate) Reset()         { *m = EventMarkerActivate{} }
+func (m *EventMarkerActivate) String() string { return proto.CompactTextString(m) }
+func (*EventMarkerActivate) ProtoMessage()    {}
+func (*EventMarkerActivate) Descriptor() ([]byte, []int) {
 	return fileDescriptor_f7e2c25c71db7f99, []int{6}
 }
-func (m *EventActivateMarker) XXX_Unmarshal(b []byte) error {
+func (m *EventMarkerActivate) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *EventActivateMarker) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *EventMarkerActivate) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_EventActivateMarker.Marshal(b, m, deterministic)
+		return xxx_messageInfo_EventMarkerActivate.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -491,50 +491,50 @@ func (m *EventActivateMarker) XXX_Marshal(b []byte, deterministic bool) ([]byte,
 		return b[:n], nil
 	}
 }
-func (m *EventActivateMarker) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventActivateMarker.Merge(m, src)
+func (m *EventMarkerActivate) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventMarkerActivate.Merge(m, src)
 }
-func (m *EventActivateMarker) XXX_Size() int {
+func (m *EventMarkerActivate) XXX_Size() int {
 	return m.Size()
 }
-func (m *EventActivateMarker) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventActivateMarker.DiscardUnknown(m)
+func (m *EventMarkerActivate) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventMarkerActivate.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_EventActivateMarker proto.InternalMessageInfo
+var xxx_messageInfo_EventMarkerActivate proto.InternalMessageInfo
 
-func (m *EventActivateMarker) GetDenom() string {
+func (m *EventMarkerActivate) GetDenom() string {
 	if m != nil {
 		return m.Denom
 	}
 	return ""
 }
 
-func (m *EventActivateMarker) GetAdministrator() string {
+func (m *EventMarkerActivate) GetAdministrator() string {
 	if m != nil {
 		return m.Administrator
 	}
 	return ""
 }
 
-// EventCancelMarker event emitted when marker is cancelled
-type EventCancelMarker struct {
+// EventMarkerCancel event emitted when marker is cancelled
+type EventMarkerCancel struct {
 	Denom         string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
 	Administrator string `protobuf:"bytes,2,opt,name=administrator,proto3" json:"administrator,omitempty"`
 }
 
-func (m *EventCancelMarker) Reset()         { *m = EventCancelMarker{} }
-func (m *EventCancelMarker) String() string { return proto.CompactTextString(m) }
-func (*EventCancelMarker) ProtoMessage()    {}
-func (*EventCancelMarker) Descriptor() ([]byte, []int) {
+func (m *EventMarkerCancel) Reset()         { *m = EventMarkerCancel{} }
+func (m *EventMarkerCancel) String() string { return proto.CompactTextString(m) }
+func (*EventMarkerCancel) ProtoMessage()    {}
+func (*EventMarkerCancel) Descriptor() ([]byte, []int) {
 	return fileDescriptor_f7e2c25c71db7f99, []int{7}
 }
-func (m *EventCancelMarker) XXX_Unmarshal(b []byte) error {
+func (m *EventMarkerCancel) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *EventCancelMarker) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *EventMarkerCancel) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_EventCancelMarker.Marshal(b, m, deterministic)
+		return xxx_messageInfo_EventMarkerCancel.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -544,50 +544,50 @@ func (m *EventCancelMarker) XXX_Marshal(b []byte, deterministic bool) ([]byte, e
 		return b[:n], nil
 	}
 }
-func (m *EventCancelMarker) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventCancelMarker.Merge(m, src)
+func (m *EventMarkerCancel) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventMarkerCancel.Merge(m, src)
 }
-func (m *EventCancelMarker) XXX_Size() int {
+func (m *EventMarkerCancel) XXX_Size() int {
 	return m.Size()
 }
-func (m *EventCancelMarker) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventCancelMarker.DiscardUnknown(m)
+func (m *EventMarkerCancel) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventMarkerCancel.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_EventCancelMarker proto.InternalMessageInfo
+var xxx_messageInfo_EventMarkerCancel proto.InternalMessageInfo
 
-func (m *EventCancelMarker) GetDenom() string {
+func (m *EventMarkerCancel) GetDenom() string {
 	if m != nil {
 		return m.Denom
 	}
 	return ""
 }
 
-func (m *EventCancelMarker) GetAdministrator() string {
+func (m *EventMarkerCancel) GetAdministrator() string {
 	if m != nil {
 		return m.Administrator
 	}
 	return ""
 }
 
-// EventDeleteMarker event emitted when marker is deleted
-type EventDeleteMarker struct {
+// EventMarkerDelete event emitted when marker is deleted
+type EventMarkerDelete struct {
 	Denom         string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
 	Administrator string `protobuf:"bytes,2,opt,name=administrator,proto3" json:"administrator,omitempty"`
 }
 
-func (m *EventDeleteMarker) Reset()         { *m = EventDeleteMarker{} }
-func (m *EventDeleteMarker) String() string { return proto.CompactTextString(m) }
-func (*EventDeleteMarker) ProtoMessage()    {}
-func (*EventDeleteMarker) Descriptor() ([]byte, []int) {
+func (m *EventMarkerDelete) Reset()         { *m = EventMarkerDelete{} }
+func (m *EventMarkerDelete) String() string { return proto.CompactTextString(m) }
+func (*EventMarkerDelete) ProtoMessage()    {}
+func (*EventMarkerDelete) Descriptor() ([]byte, []int) {
 	return fileDescriptor_f7e2c25c71db7f99, []int{8}
 }
-func (m *EventDeleteMarker) XXX_Unmarshal(b []byte) error {
+func (m *EventMarkerDelete) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *EventDeleteMarker) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *EventMarkerDelete) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_EventDeleteMarker.Marshal(b, m, deterministic)
+		return xxx_messageInfo_EventMarkerDelete.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -597,51 +597,51 @@ func (m *EventDeleteMarker) XXX_Marshal(b []byte, deterministic bool) ([]byte, e
 		return b[:n], nil
 	}
 }
-func (m *EventDeleteMarker) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventDeleteMarker.Merge(m, src)
+func (m *EventMarkerDelete) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventMarkerDelete.Merge(m, src)
 }
-func (m *EventDeleteMarker) XXX_Size() int {
+func (m *EventMarkerDelete) XXX_Size() int {
 	return m.Size()
 }
-func (m *EventDeleteMarker) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventDeleteMarker.DiscardUnknown(m)
+func (m *EventMarkerDelete) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventMarkerDelete.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_EventDeleteMarker proto.InternalMessageInfo
+var xxx_messageInfo_EventMarkerDelete proto.InternalMessageInfo
 
-func (m *EventDeleteMarker) GetDenom() string {
+func (m *EventMarkerDelete) GetDenom() string {
 	if m != nil {
 		return m.Denom
 	}
 	return ""
 }
 
-func (m *EventDeleteMarker) GetAdministrator() string {
+func (m *EventMarkerDelete) GetAdministrator() string {
 	if m != nil {
 		return m.Administrator
 	}
 	return ""
 }
 
-// EventMintMarker event emitted when additional marker supply is minted
-type EventMintMarker struct {
+// EventMarkerMint event emitted when additional marker supply is minted
+type EventMarkerMint struct {
 	Amount        string `protobuf:"bytes,1,opt,name=amount,proto3" json:"amount,omitempty"`
 	Denom         string `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
 	Administrator string `protobuf:"bytes,3,opt,name=administrator,proto3" json:"administrator,omitempty"`
 }
 
-func (m *EventMintMarker) Reset()         { *m = EventMintMarker{} }
-func (m *EventMintMarker) String() string { return proto.CompactTextString(m) }
-func (*EventMintMarker) ProtoMessage()    {}
-func (*EventMintMarker) Descriptor() ([]byte, []int) {
+func (m *EventMarkerMint) Reset()         { *m = EventMarkerMint{} }
+func (m *EventMarkerMint) String() string { return proto.CompactTextString(m) }
+func (*EventMarkerMint) ProtoMessage()    {}
+func (*EventMarkerMint) Descriptor() ([]byte, []int) {
 	return fileDescriptor_f7e2c25c71db7f99, []int{9}
 }
-func (m *EventMintMarker) XXX_Unmarshal(b []byte) error {
+func (m *EventMarkerMint) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *EventMintMarker) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *EventMarkerMint) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_EventMintMarker.Marshal(b, m, deterministic)
+		return xxx_messageInfo_EventMarkerMint.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -651,58 +651,58 @@ func (m *EventMintMarker) XXX_Marshal(b []byte, deterministic bool) ([]byte, err
 		return b[:n], nil
 	}
 }
-func (m *EventMintMarker) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventMintMarker.Merge(m, src)
+func (m *EventMarkerMint) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventMarkerMint.Merge(m, src)
 }
-func (m *EventMintMarker) XXX_Size() int {
+func (m *EventMarkerMint) XXX_Size() int {
 	return m.Size()
 }
-func (m *EventMintMarker) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventMintMarker.DiscardUnknown(m)
+func (m *EventMarkerMint) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventMarkerMint.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_EventMintMarker proto.InternalMessageInfo
+var xxx_messageInfo_EventMarkerMint proto.InternalMessageInfo
 
-func (m *EventMintMarker) GetAmount() string {
+func (m *EventMarkerMint) GetAmount() string {
 	if m != nil {
 		return m.Amount
 	}
 	return ""
 }
 
-func (m *EventMintMarker) GetDenom() string {
+func (m *EventMarkerMint) GetDenom() string {
 	if m != nil {
 		return m.Denom
 	}
 	return ""
 }
 
-func (m *EventMintMarker) GetAdministrator() string {
+func (m *EventMarkerMint) GetAdministrator() string {
 	if m != nil {
 		return m.Administrator
 	}
 	return ""
 }
 
-// EventBurnMarker event emitted when coin is burned from marker
-type EventBurnMarker struct {
+// EventMarkerBurn event emitted when coin is burned from marker
+type EventMarkerBurn struct {
 	Amount        string `protobuf:"bytes,1,opt,name=amount,proto3" json:"amount,omitempty"`
 	Denom         string `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
 	Administrator string `protobuf:"bytes,3,opt,name=administrator,proto3" json:"administrator,omitempty"`
 }
 
-func (m *EventBurnMarker) Reset()         { *m = EventBurnMarker{} }
-func (m *EventBurnMarker) String() string { return proto.CompactTextString(m) }
-func (*EventBurnMarker) ProtoMessage()    {}
-func (*EventBurnMarker) Descriptor() ([]byte, []int) {
+func (m *EventMarkerBurn) Reset()         { *m = EventMarkerBurn{} }
+func (m *EventMarkerBurn) String() string { return proto.CompactTextString(m) }
+func (*EventMarkerBurn) ProtoMessage()    {}
+func (*EventMarkerBurn) Descriptor() ([]byte, []int) {
 	return fileDescriptor_f7e2c25c71db7f99, []int{10}
 }
-func (m *EventBurnMarker) XXX_Unmarshal(b []byte) error {
+func (m *EventMarkerBurn) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *EventBurnMarker) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *EventMarkerBurn) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_EventBurnMarker.Marshal(b, m, deterministic)
+		return xxx_messageInfo_EventMarkerBurn.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -712,59 +712,59 @@ func (m *EventBurnMarker) XXX_Marshal(b []byte, deterministic bool) ([]byte, err
 		return b[:n], nil
 	}
 }
-func (m *EventBurnMarker) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventBurnMarker.Merge(m, src)
+func (m *EventMarkerBurn) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventMarkerBurn.Merge(m, src)
 }
-func (m *EventBurnMarker) XXX_Size() int {
+func (m *EventMarkerBurn) XXX_Size() int {
 	return m.Size()
 }
-func (m *EventBurnMarker) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventBurnMarker.DiscardUnknown(m)
+func (m *EventMarkerBurn) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventMarkerBurn.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_EventBurnMarker proto.InternalMessageInfo
+var xxx_messageInfo_EventMarkerBurn proto.InternalMessageInfo
 
-func (m *EventBurnMarker) GetAmount() string {
+func (m *EventMarkerBurn) GetAmount() string {
 	if m != nil {
 		return m.Amount
 	}
 	return ""
 }
 
-func (m *EventBurnMarker) GetDenom() string {
+func (m *EventMarkerBurn) GetDenom() string {
 	if m != nil {
 		return m.Denom
 	}
 	return ""
 }
 
-func (m *EventBurnMarker) GetAdministrator() string {
+func (m *EventMarkerBurn) GetAdministrator() string {
 	if m != nil {
 		return m.Administrator
 	}
 	return ""
 }
 
-// EventWithdrawMarker event emitted when coins are withdrew from marker
-type EventWithdrawMarker struct {
+// EventMarkerWithdraw event emitted when coins are withdrew from marker
+type EventMarkerWithdraw struct {
 	Amount        string `protobuf:"bytes,1,opt,name=amount,proto3" json:"amount,omitempty"`
 	Denom         string `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
 	Administrator string `protobuf:"bytes,3,opt,name=administrator,proto3" json:"administrator,omitempty"`
 	ToAddress     string `protobuf:"bytes,4,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty"`
 }
 
-func (m *EventWithdrawMarker) Reset()         { *m = EventWithdrawMarker{} }
-func (m *EventWithdrawMarker) String() string { return proto.CompactTextString(m) }
-func (*EventWithdrawMarker) ProtoMessage()    {}
-func (*EventWithdrawMarker) Descriptor() ([]byte, []int) {
+func (m *EventMarkerWithdraw) Reset()         { *m = EventMarkerWithdraw{} }
+func (m *EventMarkerWithdraw) String() string { return proto.CompactTextString(m) }
+func (*EventMarkerWithdraw) ProtoMessage()    {}
+func (*EventMarkerWithdraw) Descriptor() ([]byte, []int) {
 	return fileDescriptor_f7e2c25c71db7f99, []int{11}
 }
-func (m *EventWithdrawMarker) XXX_Unmarshal(b []byte) error {
+func (m *EventMarkerWithdraw) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *EventWithdrawMarker) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *EventMarkerWithdraw) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_EventWithdrawMarker.Marshal(b, m, deterministic)
+		return xxx_messageInfo_EventMarkerWithdraw.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -774,48 +774,48 @@ func (m *EventWithdrawMarker) XXX_Marshal(b []byte, deterministic bool) ([]byte,
 		return b[:n], nil
 	}
 }
-func (m *EventWithdrawMarker) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventWithdrawMarker.Merge(m, src)
+func (m *EventMarkerWithdraw) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventMarkerWithdraw.Merge(m, src)
 }
-func (m *EventWithdrawMarker) XXX_Size() int {
+func (m *EventMarkerWithdraw) XXX_Size() int {
 	return m.Size()
 }
-func (m *EventWithdrawMarker) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventWithdrawMarker.DiscardUnknown(m)
+func (m *EventMarkerWithdraw) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventMarkerWithdraw.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_EventWithdrawMarker proto.InternalMessageInfo
+var xxx_messageInfo_EventMarkerWithdraw proto.InternalMessageInfo
 
-func (m *EventWithdrawMarker) GetAmount() string {
+func (m *EventMarkerWithdraw) GetAmount() string {
 	if m != nil {
 		return m.Amount
 	}
 	return ""
 }
 
-func (m *EventWithdrawMarker) GetDenom() string {
+func (m *EventMarkerWithdraw) GetDenom() string {
 	if m != nil {
 		return m.Denom
 	}
 	return ""
 }
 
-func (m *EventWithdrawMarker) GetAdministrator() string {
+func (m *EventMarkerWithdraw) GetAdministrator() string {
 	if m != nil {
 		return m.Administrator
 	}
 	return ""
 }
 
-func (m *EventWithdrawMarker) GetToAddress() string {
+func (m *EventMarkerWithdraw) GetToAddress() string {
 	if m != nil {
 		return m.ToAddress
 	}
 	return ""
 }
 
-// EventTransferMarker event emitted when coins are transfered to from account to another
-type EventTransferMarker struct {
+// EventMarkerTransfer event emitted when coins are transfered to from account to another
+type EventMarkerTransfer struct {
 	Amount        string `protobuf:"bytes,1,opt,name=amount,proto3" json:"amount,omitempty"`
 	Denom         string `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
 	Administrator string `protobuf:"bytes,3,opt,name=administrator,proto3" json:"administrator,omitempty"`
@@ -823,18 +823,18 @@ type EventTransferMarker struct {
 	FromAddress   string `protobuf:"bytes,5,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
 }
 
-func (m *EventTransferMarker) Reset()         { *m = EventTransferMarker{} }
-func (m *EventTransferMarker) String() string { return proto.CompactTextString(m) }
-func (*EventTransferMarker) ProtoMessage()    {}
-func (*EventTransferMarker) Descriptor() ([]byte, []int) {
+func (m *EventMarkerTransfer) Reset()         { *m = EventMarkerTransfer{} }
+func (m *EventMarkerTransfer) String() string { return proto.CompactTextString(m) }
+func (*EventMarkerTransfer) ProtoMessage()    {}
+func (*EventMarkerTransfer) Descriptor() ([]byte, []int) {
 	return fileDescriptor_f7e2c25c71db7f99, []int{12}
 }
-func (m *EventTransferMarker) XXX_Unmarshal(b []byte) error {
+func (m *EventMarkerTransfer) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *EventTransferMarker) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *EventMarkerTransfer) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_EventTransferMarker.Marshal(b, m, deterministic)
+		return xxx_messageInfo_EventMarkerTransfer.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -844,71 +844,71 @@ func (m *EventTransferMarker) XXX_Marshal(b []byte, deterministic bool) ([]byte,
 		return b[:n], nil
 	}
 }
-func (m *EventTransferMarker) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventTransferMarker.Merge(m, src)
+func (m *EventMarkerTransfer) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventMarkerTransfer.Merge(m, src)
 }
-func (m *EventTransferMarker) XXX_Size() int {
+func (m *EventMarkerTransfer) XXX_Size() int {
 	return m.Size()
 }
-func (m *EventTransferMarker) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventTransferMarker.DiscardUnknown(m)
+func (m *EventMarkerTransfer) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventMarkerTransfer.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_EventTransferMarker proto.InternalMessageInfo
+var xxx_messageInfo_EventMarkerTransfer proto.InternalMessageInfo
 
-func (m *EventTransferMarker) GetAmount() string {
+func (m *EventMarkerTransfer) GetAmount() string {
 	if m != nil {
 		return m.Amount
 	}
 	return ""
 }
 
-func (m *EventTransferMarker) GetDenom() string {
+func (m *EventMarkerTransfer) GetDenom() string {
 	if m != nil {
 		return m.Denom
 	}
 	return ""
 }
 
-func (m *EventTransferMarker) GetAdministrator() string {
+func (m *EventMarkerTransfer) GetAdministrator() string {
 	if m != nil {
 		return m.Administrator
 	}
 	return ""
 }
 
-func (m *EventTransferMarker) GetToAddress() string {
+func (m *EventMarkerTransfer) GetToAddress() string {
 	if m != nil {
 		return m.ToAddress
 	}
 	return ""
 }
 
-func (m *EventTransferMarker) GetFromAddress() string {
+func (m *EventMarkerTransfer) GetFromAddress() string {
 	if m != nil {
 		return m.FromAddress
 	}
 	return ""
 }
 
-// EventSetDenomMetadataMarker event emitted when metadata is set on marker with denom
-type EventSetDenomMetadataMarker struct {
+// EventMarkerSetDenomMetadata event emitted when metadata is set on marker with denom
+type EventMarkerSetDenomMetadata struct {
 	Denom         string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
 	Administrator string `protobuf:"bytes,2,opt,name=administrator,proto3" json:"administrator,omitempty"`
 }
 
-func (m *EventSetDenomMetadataMarker) Reset()         { *m = EventSetDenomMetadataMarker{} }
-func (m *EventSetDenomMetadataMarker) String() string { return proto.CompactTextString(m) }
-func (*EventSetDenomMetadataMarker) ProtoMessage()    {}
-func (*EventSetDenomMetadataMarker) Descriptor() ([]byte, []int) {
+func (m *EventMarkerSetDenomMetadata) Reset()         { *m = EventMarkerSetDenomMetadata{} }
+func (m *EventMarkerSetDenomMetadata) String() string { return proto.CompactTextString(m) }
+func (*EventMarkerSetDenomMetadata) ProtoMessage()    {}
+func (*EventMarkerSetDenomMetadata) Descriptor() ([]byte, []int) {
 	return fileDescriptor_f7e2c25c71db7f99, []int{13}
 }
-func (m *EventSetDenomMetadataMarker) XXX_Unmarshal(b []byte) error {
+func (m *EventMarkerSetDenomMetadata) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *EventSetDenomMetadataMarker) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *EventMarkerSetDenomMetadata) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_EventSetDenomMetadataMarker.Marshal(b, m, deterministic)
+		return xxx_messageInfo_EventMarkerSetDenomMetadata.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -918,26 +918,26 @@ func (m *EventSetDenomMetadataMarker) XXX_Marshal(b []byte, deterministic bool) 
 		return b[:n], nil
 	}
 }
-func (m *EventSetDenomMetadataMarker) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventSetDenomMetadataMarker.Merge(m, src)
+func (m *EventMarkerSetDenomMetadata) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventMarkerSetDenomMetadata.Merge(m, src)
 }
-func (m *EventSetDenomMetadataMarker) XXX_Size() int {
+func (m *EventMarkerSetDenomMetadata) XXX_Size() int {
 	return m.Size()
 }
-func (m *EventSetDenomMetadataMarker) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventSetDenomMetadataMarker.DiscardUnknown(m)
+func (m *EventMarkerSetDenomMetadata) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventMarkerSetDenomMetadata.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_EventSetDenomMetadataMarker proto.InternalMessageInfo
+var xxx_messageInfo_EventMarkerSetDenomMetadata proto.InternalMessageInfo
 
-func (m *EventSetDenomMetadataMarker) GetDenom() string {
+func (m *EventMarkerSetDenomMetadata) GetDenom() string {
 	if m != nil {
 		return m.Denom
 	}
 	return ""
 }
 
-func (m *EventSetDenomMetadataMarker) GetAdministrator() string {
+func (m *EventMarkerSetDenomMetadata) GetAdministrator() string {
 	if m != nil {
 		return m.Administrator
 	}
@@ -949,98 +949,98 @@ func init() {
 	proto.RegisterEnum("provenance.marker.v1.MarkerStatus", MarkerStatus_name, MarkerStatus_value)
 	proto.RegisterType((*Params)(nil), "provenance.marker.v1.Params")
 	proto.RegisterType((*MarkerAccount)(nil), "provenance.marker.v1.MarkerAccount")
-	proto.RegisterType((*EventAddMarker)(nil), "provenance.marker.v1.EventAddMarker")
-	proto.RegisterType((*EventAddMarkerAccess)(nil), "provenance.marker.v1.EventAddMarkerAccess")
-	proto.RegisterType((*EventDeleteMarkerAccess)(nil), "provenance.marker.v1.EventDeleteMarkerAccess")
-	proto.RegisterType((*EventFinalizeMarker)(nil), "provenance.marker.v1.EventFinalizeMarker")
-	proto.RegisterType((*EventActivateMarker)(nil), "provenance.marker.v1.EventActivateMarker")
-	proto.RegisterType((*EventCancelMarker)(nil), "provenance.marker.v1.EventCancelMarker")
-	proto.RegisterType((*EventDeleteMarker)(nil), "provenance.marker.v1.EventDeleteMarker")
-	proto.RegisterType((*EventMintMarker)(nil), "provenance.marker.v1.EventMintMarker")
-	proto.RegisterType((*EventBurnMarker)(nil), "provenance.marker.v1.EventBurnMarker")
-	proto.RegisterType((*EventWithdrawMarker)(nil), "provenance.marker.v1.EventWithdrawMarker")
-	proto.RegisterType((*EventTransferMarker)(nil), "provenance.marker.v1.EventTransferMarker")
-	proto.RegisterType((*EventSetDenomMetadataMarker)(nil), "provenance.marker.v1.EventSetDenomMetadataMarker")
+	proto.RegisterType((*EventMarkerAdd)(nil), "provenance.marker.v1.EventMarkerAdd")
+	proto.RegisterType((*EventMarkerAddAccess)(nil), "provenance.marker.v1.EventMarkerAddAccess")
+	proto.RegisterType((*EventMarkerDeleteAccess)(nil), "provenance.marker.v1.EventMarkerDeleteAccess")
+	proto.RegisterType((*EventMarkerFinalize)(nil), "provenance.marker.v1.EventMarkerFinalize")
+	proto.RegisterType((*EventMarkerActivate)(nil), "provenance.marker.v1.EventMarkerActivate")
+	proto.RegisterType((*EventMarkerCancel)(nil), "provenance.marker.v1.EventMarkerCancel")
+	proto.RegisterType((*EventMarkerDelete)(nil), "provenance.marker.v1.EventMarkerDelete")
+	proto.RegisterType((*EventMarkerMint)(nil), "provenance.marker.v1.EventMarkerMint")
+	proto.RegisterType((*EventMarkerBurn)(nil), "provenance.marker.v1.EventMarkerBurn")
+	proto.RegisterType((*EventMarkerWithdraw)(nil), "provenance.marker.v1.EventMarkerWithdraw")
+	proto.RegisterType((*EventMarkerTransfer)(nil), "provenance.marker.v1.EventMarkerTransfer")
+	proto.RegisterType((*EventMarkerSetDenomMetadata)(nil), "provenance.marker.v1.EventMarkerSetDenomMetadata")
 }
 
 func init() { proto.RegisterFile("provenance/marker/v1/marker.proto", fileDescriptor_f7e2c25c71db7f99) }
 
 var fileDescriptor_f7e2c25c71db7f99 = []byte{
-	// 1172 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x56, 0xbd, 0x4f, 0x23, 0x47,
-	0x14, 0xf7, 0x82, 0x31, 0x30, 0x06, 0x9f, 0x6f, 0x41, 0xe0, 0xf3, 0x5d, 0xec, 0x65, 0x95, 0x5c,
-	0x2c, 0x12, 0xec, 0x40, 0xa2, 0xd3, 0x89, 0xce, 0x1f, 0xcb, 0xc9, 0x0a, 0x1f, 0xce, 0xda, 0x24,
-	0xe2, 0x9a, 0xcd, 0xd8, 0x3b, 0x98, 0x3d, 0x76, 0x67, 0x9c, 0xdd, 0xb1, 0xc1, 0x51, 0xea, 0x08,
-	0x51, 0x25, 0x5d, 0x8a, 0x20, 0x21, 0x25, 0x45, 0xa4, 0x94, 0x49, 0x9d, 0xfa, 0x4a, 0x94, 0x2a,
-	0x4a, 0x61, 0x45, 0xd0, 0xa4, 0xe6, 0x2f, 0x88, 0x76, 0x66, 0x6c, 0xaf, 0x73, 0x88, 0x86, 0x3b,
-	0x5d, 0xe5, 0x9d, 0xf7, 0x7e, 0xef, 0x63, 0x7e, 0xef, 0xe7, 0x99, 0x01, 0x4b, 0x2d, 0x97, 0x74,
-	0x10, 0x86, 0xb8, 0x81, 0x72, 0x0e, 0x74, 0x0f, 0x91, 0x9b, 0xeb, 0xac, 0x8a, 0xaf, 0x6c, 0xcb,
-	0x25, 0x94, 0xc8, 0xf3, 0x43, 0x48, 0x56, 0x38, 0x3a, 0xab, 0xc9, 0xf9, 0x26, 0x69, 0x12, 0x06,
-	0xc8, 0xf9, 0x5f, 0x1c, 0x9b, 0x4c, 0x35, 0x88, 0xe7, 0x10, 0x2f, 0x07, 0xdb, 0xf4, 0x20, 0xd7,
-	0x59, 0xad, 0x23, 0x0a, 0x57, 0xd9, 0x42, 0xf8, 0x1f, 0x70, 0xbf, 0xc1, 0x03, 0xf9, 0x42, 0xb8,
-	0x1e, 0xdf, 0xd8, 0x09, 0x6c, 0x34, 0x90, 0xe7, 0x35, 0x5d, 0x88, 0x29, 0xc7, 0xa9, 0xbf, 0x49,
-	0x20, 0x52, 0x81, 0x2e, 0x74, 0x3c, 0xf9, 0x29, 0x88, 0x3b, 0xf0, 0xd8, 0xa0, 0x84, 0x42, 0xdb,
-	0xf0, 0xda, 0xad, 0x96, 0xdd, 0x4d, 0x48, 0x8a, 0x94, 0x09, 0x17, 0x62, 0x2f, 0x7b, 0xe9, 0xd0,
-	0xdf, 0xbd, 0x74, 0xa4, 0x6d, 0x61, 0xfa, 0xe4, 0x13, 0x3d, 0xe6, 0xc0, 0xe3, 0x9a, 0x0f, 0xab,
-	0x32, 0x94, 0xfc, 0x01, 0xb8, 0x8f, 0x30, 0xac, 0xdb, 0xc8, 0x68, 0x92, 0x0e, 0x72, 0x59, 0xd5,
-	0xc4, 0x98, 0x22, 0x65, 0xa6, 0xf4, 0x38, 0x77, 0x3c, 0x1b, 0xd8, 0xe5, 0xa7, 0x20, 0xd1, 0xc6,
-	0x2e, 0xf2, 0xa8, 0x6b, 0x35, 0x28, 0x32, 0x0d, 0x13, 0x61, 0xe2, 0x18, 0x2e, 0x6a, 0xa2, 0xe3,
-	0xc4, 0xb8, 0x22, 0x65, 0xa6, 0xf5, 0x85, 0xa0, 0xbf, 0xe4, 0xbb, 0x75, 0xdf, 0xbb, 0x3e, 0xf5,
-	0xc3, 0x79, 0x3a, 0xf4, 0xef, 0x79, 0x3a, 0xa4, 0xfe, 0x38, 0x01, 0x66, 0xb7, 0xd8, 0xae, 0xf2,
-	0x8d, 0x06, 0x69, 0x63, 0x2a, 0x7f, 0x09, 0x66, 0xea, 0xd0, 0x43, 0x06, 0xe4, 0x6b, 0xd6, 0x78,
-	0x74, 0x4d, 0xc9, 0x0a, 0x52, 0x18, 0x69, 0x82, 0xc1, 0x6c, 0x01, 0x7a, 0x48, 0xc4, 0x15, 0x1e,
-	0x5e, 0xf4, 0xd2, 0xd2, 0x75, 0x2f, 0x3d, 0xd7, 0x85, 0x8e, 0xbd, 0xae, 0x06, 0x73, 0xa8, 0x7a,
-	0xb4, 0x3e, 0x44, 0xca, 0x4f, 0xc0, 0xa4, 0x03, 0x31, 0x6c, 0x22, 0x97, 0x6d, 0x6d, 0xba, 0xf0,
-	0xe8, 0xba, 0x97, 0x4e, 0xbc, 0xf0, 0x08, 0x5e, 0x57, 0x85, 0xe3, 0x43, 0xe2, 0x58, 0x14, 0x39,
-	0x2d, 0xda, 0x55, 0xf5, 0x3e, 0x58, 0xde, 0x06, 0x31, 0x4e, 0xbb, 0xd1, 0x20, 0x98, 0xba, 0xc4,
-	0x4e, 0x8c, 0x2b, 0xe3, 0x99, 0xe8, 0xda, 0x52, 0xf6, 0x26, 0x25, 0x64, 0xf3, 0x0c, 0xfb, 0xcc,
-	0x1f, 0x51, 0x21, 0xec, 0xf3, 0xae, 0xcf, 0xf2, 0xf0, 0x22, 0x8f, 0x96, 0xd7, 0x41, 0xc4, 0xa3,
-	0x90, 0xb6, 0xbd, 0x44, 0x58, 0x91, 0x32, 0xb1, 0x35, 0xf5, 0xe6, 0x3c, 0x9c, 0x9e, 0x2a, 0x43,
-	0xea, 0x22, 0x42, 0x9e, 0x07, 0x13, 0x8c, 0xee, 0xc4, 0x04, 0x23, 0x9a, 0x2f, 0xe4, 0xaf, 0x40,
-	0x44, 0x8c, 0x3b, 0xc2, 0x36, 0xb6, 0x27, 0xc6, 0xfd, 0xb8, 0x69, 0xd1, 0x83, 0x76, 0x3d, 0xdb,
-	0x20, 0x8e, 0x10, 0x97, 0xf8, 0x59, 0xf1, 0xcc, 0xc3, 0x1c, 0xed, 0xb6, 0x90, 0x97, 0x2d, 0x63,
-	0x7a, 0xdd, 0x4b, 0xbf, 0xcf, 0x69, 0x08, 0x4a, 0x47, 0x55, 0x38, 0xa3, 0x23, 0x36, 0x5d, 0x14,
-	0x92, 0x1b, 0x20, 0xca, 0x5b, 0x35, 0xfc, 0x34, 0x89, 0x49, 0xb6, 0x13, 0xe5, 0xb6, 0x9d, 0xd4,
-	0xba, 0x2d, 0x54, 0x50, 0xae, 0x7b, 0xe9, 0x47, 0x7d, 0xca, 0x07, 0xe1, 0x41, 0xda, 0x81, 0x33,
-	0x40, 0xcb, 0x4b, 0x60, 0x86, 0x97, 0x33, 0xf6, 0xad, 0x63, 0x64, 0x26, 0xa6, 0x98, 0x22, 0xa3,
-	0xdc, 0xb6, 0xe1, 0x9b, 0x7c, 0x31, 0x42, 0xdb, 0x26, 0x47, 0x01, 0xe1, 0x0e, 0xc6, 0x34, 0xcd,
-	0xe0, 0x0b, 0xcc, 0x3f, 0xd4, 0xaf, 0x18, 0xc3, 0x7a, 0xf2, 0xe4, 0x3c, 0x1d, 0xf2, 0x05, 0xf9,
-	0xe7, 0xef, 0x2b, 0xb1, 0x11, 0x2d, 0x96, 0xd5, 0xef, 0x25, 0x10, 0xd3, 0x3a, 0x08, 0xd3, 0xbc,
-	0x69, 0x72, 0xd7, 0x90, 0x79, 0x29, 0xc8, 0xfc, 0x02, 0x88, 0x40, 0x87, 0xe9, 0x95, 0x49, 0x4a,
-	0x17, 0x2b, 0xdf, 0x2e, 0x66, 0xcc, 0xff, 0x11, 0xfd, 0xf9, 0x25, 0x86, 0x1a, 0x0c, 0x33, 0xc7,
-	0x40, 0x65, 0xe9, 0x51, 0x42, 0xf9, 0x7c, 0x03, 0x64, 0xa8, 0x2f, 0xc0, 0xfc, 0x68, 0x4b, 0x5c,
-	0x68, 0xac, 0x05, 0xf6, 0x25, 0x3a, 0x13, 0xab, 0x61, 0xc3, 0x63, 0xc1, 0x86, 0xdf, 0x05, 0xb3,
-	0xd0, 0x74, 0x2c, 0x6c, 0x79, 0xd4, 0x85, 0x94, 0xb8, 0xa2, 0xbf, 0x51, 0xa3, 0xfa, 0x0d, 0x58,
-	0x64, 0xb5, 0x4a, 0xc8, 0x46, 0x14, 0x8d, 0x94, 0x7b, 0x0f, 0xc4, 0x5c, 0xe4, 0x90, 0x0e, 0x32,
-	0xa0, 0x69, 0xba, 0xc3, 0xb2, 0xb3, 0xdc, 0x9a, 0xe7, 0xc6, 0x3b, 0x55, 0xff, 0x0c, 0xcc, 0xb1,
-	0xea, 0x1b, 0x16, 0x86, 0xb6, 0xf5, 0x35, 0xba, 0x75, 0x02, 0xaf, 0xa4, 0x1c, 0xbb, 0x2d, 0x65,
-	0xbe, 0x41, 0xad, 0x0e, 0xa4, 0xaf, 0x23, 0xe5, 0x0e, 0xb8, 0xcf, 0x52, 0x16, 0x7d, 0x51, 0xd9,
-	0xaf, 0x31, 0x61, 0x90, 0xf4, 0x3b, 0x25, 0x44, 0xe0, 0x1e, 0x4b, 0xb8, 0x65, 0x61, 0x2a, 0xd2,
-	0x0d, 0xf5, 0x2a, 0x8d, 0xe8, 0xf5, 0x2e, 0xe3, 0xea, 0x97, 0x29, 0xb4, 0x5d, 0xfc, 0x06, 0xcb,
-	0x9c, 0x48, 0x62, 0x86, 0x5f, 0x58, 0xf4, 0xc0, 0x74, 0xe1, 0xd1, 0x9b, 0xab, 0x25, 0xbf, 0x03,
-	0x00, 0x25, 0x03, 0x81, 0xf3, 0x7f, 0xea, 0x34, 0x25, 0x42, 0xdc, 0xea, 0xaf, 0xfd, 0x56, 0x6a,
-	0x2e, 0xc4, 0xde, 0x3e, 0x72, 0xdf, 0x5a, 0x2b, 0xfe, 0x11, 0xb9, 0xef, 0x12, 0x67, 0x00, 0xe0,
-	0xe7, 0x46, 0xd4, 0xb7, 0xf5, 0xbb, 0xdd, 0x03, 0x0f, 0x59, 0xb3, 0x55, 0x44, 0xd9, 0x5d, 0xbc,
-	0x85, 0x28, 0x34, 0x21, 0x85, 0x77, 0x57, 0xd8, 0xf2, 0xb7, 0x12, 0x00, 0xc3, 0xd3, 0x5d, 0xce,
-	0x80, 0xc5, 0xad, 0xbc, 0xfe, 0xa9, 0xa6, 0x1b, 0xb5, 0xbd, 0x8a, 0x66, 0xec, 0x6e, 0x57, 0x2b,
-	0x5a, 0xb1, 0xbc, 0x51, 0xd6, 0x4a, 0xf1, 0x50, 0x32, 0x7a, 0x7a, 0xa6, 0x4c, 0xee, 0xe2, 0x43,
-	0x4c, 0x8e, 0xb0, 0x9c, 0x02, 0xf1, 0x20, 0xb2, 0xb8, 0x53, 0xde, 0x8e, 0x4b, 0xc9, 0xa9, 0xd3,
-	0x33, 0x25, 0x5c, 0x24, 0x16, 0x96, 0xb3, 0x60, 0x21, 0xe8, 0xd7, 0xb5, 0x6a, 0x4d, 0x2f, 0x17,
-	0x6b, 0x5a, 0x29, 0x3e, 0x96, 0x94, 0x4f, 0xcf, 0x94, 0x98, 0x3e, 0x78, 0x5f, 0xf8, 0xf8, 0xe5,
-	0x3f, 0xc6, 0xc0, 0x4c, 0xf0, 0xc2, 0x94, 0xd7, 0xc0, 0x03, 0x91, 0xa0, 0x5a, 0xcb, 0xd7, 0x76,
-	0xab, 0xff, 0x6b, 0x66, 0xee, 0xf4, 0x4c, 0xb9, 0xc7, 0xa1, 0xbb, 0xd8, 0x44, 0xfb, 0x16, 0x46,
-	0x66, 0xa0, 0xa8, 0x88, 0xa9, 0xe8, 0x3b, 0x95, 0x9d, 0xaa, 0x56, 0x8a, 0x4b, 0xbc, 0x28, 0x0f,
-	0xa8, 0xb8, 0xa4, 0x45, 0x3c, 0x64, 0xca, 0x1f, 0x0d, 0xb6, 0x2b, 0xf0, 0x1b, 0xe5, 0xed, 0xfc,
-	0x66, 0xf9, 0x39, 0xeb, 0x32, 0x50, 0xa1, 0x7f, 0x8e, 0x99, 0xf2, 0x32, 0x98, 0x1f, 0x8d, 0xc8,
-	0x17, 0x6b, 0xe5, 0xcf, 0xb5, 0xf8, 0x78, 0x32, 0x7e, 0x7a, 0xa6, 0xcc, 0x70, 0x38, 0x3b, 0xa3,
-	0xd0, 0xab, 0xd9, 0x8b, 0xf9, 0xed, 0xa2, 0xb6, 0xb9, 0xa9, 0x95, 0xe2, 0xe1, 0x60, 0x76, 0x7e,
-	0xfe, 0xd8, 0x37, 0xf5, 0x53, 0xf2, 0x69, 0xdb, 0xd9, 0xd3, 0x4a, 0xf1, 0x89, 0x60, 0x44, 0xc9,
-	0xe7, 0x8e, 0x74, 0x91, 0x99, 0x9c, 0x3a, 0xf9, 0x29, 0x15, 0xfa, 0xe5, 0xe7, 0x54, 0xa8, 0xd0,
-	0x7c, 0x79, 0x99, 0x92, 0x2e, 0x2e, 0x53, 0xd2, 0x3f, 0x97, 0x29, 0xe9, 0xbb, 0xab, 0x54, 0xe8,
-	0xe2, 0x2a, 0x15, 0xfa, 0xeb, 0x2a, 0x15, 0x02, 0x8b, 0x16, 0xb9, 0xf1, 0x5a, 0xaf, 0x48, 0xcf,
-	0xd7, 0x02, 0xef, 0x8b, 0x21, 0x64, 0xc5, 0x22, 0x81, 0x55, 0xee, 0xb8, 0xff, 0x7c, 0x65, 0xef,
-	0x8d, 0x7a, 0x84, 0x3d, 0x5b, 0x3f, 0xfe, 0x2f, 0x00, 0x00, 0xff, 0xff, 0xa9, 0x24, 0xf2, 0x14,
-	0x6a, 0x0b, 0x00, 0x00,
+	// 1173 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x56, 0xbd, 0x6f, 0x23, 0xc5,
+	0x1b, 0xf6, 0x26, 0x8e, 0x2f, 0x19, 0x27, 0x3e, 0xdf, 0x5e, 0x94, 0xf8, 0x7c, 0xf7, 0xb3, 0x37,
+	0xab, 0x1f, 0x87, 0x15, 0x88, 0x4d, 0x02, 0x3a, 0x9d, 0xd2, 0xf9, 0x63, 0x73, 0xb2, 0xc8, 0x87,
+	0x59, 0x3b, 0xa0, 0x5c, 0xb3, 0x8c, 0xbd, 0x13, 0x67, 0x2f, 0xde, 0x19, 0xb3, 0x3b, 0x76, 0x62,
+	0x44, 0x8d, 0xa2, 0x54, 0xd0, 0x51, 0x10, 0x29, 0x12, 0x14, 0x48, 0x94, 0x50, 0x53, 0x5f, 0x19,
+	0x51, 0x21, 0x0a, 0x0b, 0x25, 0x0d, 0x75, 0xfe, 0x02, 0xb4, 0x33, 0x63, 0x7b, 0xcc, 0x05, 0x28,
+	0xc2, 0x89, 0xca, 0x3b, 0xef, 0xfb, 0xbc, 0x1f, 0xf3, 0xbc, 0x8f, 0x67, 0x06, 0x2c, 0xb5, 0x3d,
+	0xd2, 0x45, 0x18, 0xe2, 0x06, 0xca, 0xb9, 0xd0, 0x3b, 0x44, 0x5e, 0xae, 0xbb, 0x2a, 0xbe, 0xb2,
+	0x6d, 0x8f, 0x50, 0xa2, 0xce, 0x8f, 0x20, 0x59, 0xe1, 0xe8, 0xae, 0x26, 0xe7, 0x9b, 0xa4, 0x49,
+	0x18, 0x20, 0x17, 0x7c, 0x71, 0x6c, 0x32, 0xd5, 0x20, 0xbe, 0x4b, 0xfc, 0x1c, 0xec, 0xd0, 0x83,
+	0x5c, 0x77, 0xb5, 0x8e, 0x28, 0x5c, 0x65, 0x0b, 0xe1, 0x7f, 0xc0, 0xfd, 0x16, 0x0f, 0xe4, 0x0b,
+	0xe1, 0x7a, 0x7c, 0x63, 0x27, 0xb0, 0xd1, 0x40, 0xbe, 0xdf, 0xf4, 0x20, 0xa6, 0x1c, 0xa7, 0xff,
+	0xa0, 0x80, 0x48, 0x05, 0x7a, 0xd0, 0xf5, 0xd5, 0xa7, 0x20, 0xee, 0xc2, 0x63, 0x8b, 0x12, 0x0a,
+	0x5b, 0x96, 0xdf, 0x69, 0xb7, 0x5b, 0xbd, 0x84, 0xa2, 0x29, 0x99, 0x70, 0x21, 0xf6, 0xb2, 0x9f,
+	0x0e, 0xfd, 0xda, 0x4f, 0x47, 0x3a, 0x0e, 0xa6, 0x4f, 0xde, 0x33, 0x63, 0x2e, 0x3c, 0xae, 0x05,
+	0xb0, 0x2a, 0x43, 0xa9, 0x6f, 0x81, 0x7b, 0x08, 0xc3, 0x7a, 0x0b, 0x59, 0x4d, 0xd2, 0x45, 0x1e,
+	0xab, 0x9a, 0x98, 0xd0, 0x94, 0xcc, 0xb4, 0x19, 0xe7, 0x8e, 0x67, 0x43, 0xbb, 0xfa, 0x14, 0x24,
+	0x3a, 0xd8, 0x43, 0x3e, 0xf5, 0x9c, 0x06, 0x45, 0xb6, 0x65, 0x23, 0x4c, 0x5c, 0xcb, 0x43, 0x4d,
+	0x74, 0x9c, 0x98, 0xd4, 0x94, 0xcc, 0x8c, 0xb9, 0x20, 0xfb, 0x4b, 0x81, 0xdb, 0x0c, 0xbc, 0xeb,
+	0xd3, 0x5f, 0x9d, 0xa7, 0x43, 0xbf, 0x9f, 0xa7, 0x43, 0xfa, 0xd7, 0x53, 0x60, 0x6e, 0x8b, 0xed,
+	0x2a, 0xdf, 0x68, 0x90, 0x0e, 0xa6, 0xea, 0xc7, 0x60, 0xb6, 0x0e, 0x7d, 0x64, 0x41, 0xbe, 0x66,
+	0x8d, 0x47, 0xd7, 0xb4, 0xac, 0x20, 0x85, 0x91, 0x26, 0x18, 0xcc, 0x16, 0xa0, 0x8f, 0x44, 0x5c,
+	0xe1, 0xe1, 0x45, 0x3f, 0xad, 0x5c, 0xf7, 0xd3, 0xf7, 0x7b, 0xd0, 0x6d, 0xad, 0xeb, 0x72, 0x0e,
+	0xdd, 0x8c, 0xd6, 0x47, 0x48, 0xf5, 0x09, 0xb8, 0xe3, 0x42, 0x0c, 0x9b, 0xc8, 0x63, 0x5b, 0x9b,
+	0x29, 0x3c, 0xba, 0xee, 0xa7, 0x13, 0x2f, 0x7c, 0x82, 0xd7, 0x75, 0xe1, 0x78, 0x9b, 0xb8, 0x0e,
+	0x45, 0x6e, 0x9b, 0xf6, 0x74, 0x73, 0x00, 0x56, 0xb7, 0x41, 0x8c, 0xd3, 0x6e, 0x35, 0x08, 0xa6,
+	0x1e, 0x69, 0x25, 0x26, 0xb5, 0xc9, 0x4c, 0x74, 0x6d, 0x29, 0x7b, 0x93, 0x12, 0xb2, 0x79, 0x86,
+	0x7d, 0x16, 0x8c, 0xa8, 0x10, 0x0e, 0x78, 0x37, 0xe7, 0x78, 0x78, 0x91, 0x47, 0xab, 0xeb, 0x20,
+	0xe2, 0x53, 0x48, 0x3b, 0x7e, 0x22, 0xac, 0x29, 0x99, 0xd8, 0x9a, 0x7e, 0x73, 0x1e, 0x4e, 0x4f,
+	0x95, 0x21, 0x4d, 0x11, 0xa1, 0xce, 0x83, 0x29, 0x46, 0x77, 0x62, 0x8a, 0x11, 0xcd, 0x17, 0xea,
+	0x27, 0x20, 0x22, 0xc6, 0x1d, 0x61, 0x1b, 0xdb, 0x13, 0xe3, 0x7e, 0xdc, 0x74, 0xe8, 0x41, 0xa7,
+	0x9e, 0x6d, 0x10, 0x57, 0x88, 0x4b, 0xfc, 0xac, 0xf8, 0xf6, 0x61, 0x8e, 0xf6, 0xda, 0xc8, 0xcf,
+	0x96, 0x31, 0xbd, 0xee, 0xa7, 0xdf, 0xe4, 0x34, 0xc8, 0xd2, 0xd1, 0x35, 0xce, 0xe8, 0x98, 0xcd,
+	0x14, 0x85, 0xd4, 0x06, 0x88, 0xf2, 0x56, 0xad, 0x20, 0x4d, 0xe2, 0x0e, 0xdb, 0x89, 0xf6, 0x77,
+	0x3b, 0xa9, 0xf5, 0xda, 0xa8, 0xa0, 0x5d, 0xf7, 0xd3, 0x8f, 0x06, 0x94, 0x0f, 0xc3, 0x65, 0xda,
+	0x81, 0x3b, 0x44, 0xab, 0x4b, 0x60, 0x96, 0x97, 0xb3, 0xf6, 0x9d, 0x63, 0x64, 0x27, 0xa6, 0x99,
+	0x22, 0xa3, 0xdc, 0xb6, 0x11, 0x98, 0x02, 0x31, 0xc2, 0x56, 0x8b, 0x1c, 0x49, 0xc2, 0x1d, 0x8e,
+	0x69, 0x86, 0xc1, 0x17, 0x98, 0x7f, 0xa4, 0x5f, 0x31, 0x86, 0xf5, 0xe4, 0xc9, 0x79, 0x3a, 0x14,
+	0x08, 0xf2, 0xe7, 0x1f, 0x57, 0x62, 0x63, 0x5a, 0x2c, 0xeb, 0x5f, 0x2a, 0x20, 0x66, 0x74, 0x11,
+	0xa6, 0xc2, 0x6e, 0xdb, 0x23, 0xe6, 0x15, 0x99, 0xf9, 0x05, 0x10, 0x81, 0x2e, 0xd3, 0x2b, 0x93,
+	0x94, 0x29, 0x56, 0x81, 0x5d, 0xcc, 0x98, 0xff, 0x23, 0x06, 0xf3, 0x4b, 0x8c, 0x34, 0x18, 0x66,
+	0x8e, 0xa1, 0xca, 0xd2, 0xe3, 0x84, 0xf2, 0xf9, 0x4a, 0x64, 0xe8, 0x2f, 0xc0, 0xfc, 0x78, 0x4b,
+	0x5c, 0x68, 0xac, 0x05, 0xf6, 0x25, 0x3a, 0x13, 0xab, 0x51, 0xc3, 0x13, 0x72, 0xc3, 0xff, 0x07,
+	0x73, 0xd0, 0x76, 0x1d, 0xec, 0xf8, 0xd4, 0x83, 0x94, 0x78, 0xa2, 0xbf, 0x71, 0xa3, 0xfe, 0x19,
+	0x58, 0x94, 0x6a, 0x95, 0x50, 0x0b, 0x51, 0x24, 0xca, 0xbd, 0x01, 0x62, 0x1e, 0x72, 0x49, 0x17,
+	0x59, 0xd0, 0xb6, 0xbd, 0x51, 0xd9, 0x39, 0x6e, 0xcd, 0x73, 0xe3, 0xad, 0xaa, 0x7f, 0x00, 0xee,
+	0x4b, 0xd5, 0x37, 0x1c, 0x0c, 0x5b, 0xce, 0xa7, 0xe8, 0x2f, 0x26, 0xf0, 0x4a, 0xca, 0x89, 0x7f,
+	0x4e, 0x99, 0x6f, 0x50, 0xa7, 0x0b, 0xe9, 0xed, 0x52, 0xee, 0x80, 0x7b, 0x52, 0xca, 0x62, 0x20,
+	0xad, 0xd6, 0xbf, 0x98, 0x90, 0x93, 0x7e, 0xab, 0x84, 0x08, 0xdc, 0x95, 0x12, 0x6e, 0x39, 0x5c,
+	0x97, 0x42, 0xaf, 0xca, 0x98, 0x5e, 0x6f, 0x33, 0xae, 0xf1, 0x32, 0x85, 0x8e, 0x87, 0x5f, 0x4b,
+	0x99, 0x13, 0x65, 0x6c, 0x86, 0x1f, 0x39, 0xf4, 0xc0, 0xf6, 0xe0, 0xd1, 0xeb, 0xa8, 0xa5, 0xfe,
+	0x0f, 0x00, 0x4a, 0x86, 0x02, 0xe7, 0xff, 0xd4, 0x19, 0x4a, 0x84, 0xb8, 0xf5, 0xef, 0xc7, 0x5b,
+	0xa9, 0x79, 0x10, 0xfb, 0xfb, 0xc8, 0xfb, 0x0f, 0x5a, 0x09, 0x8e, 0xc8, 0x7d, 0x8f, 0xb8, 0x43,
+	0x00, 0x3f, 0x37, 0xa2, 0x81, 0x6d, 0xd0, 0xed, 0x1e, 0x78, 0x28, 0x35, 0x5b, 0x45, 0x94, 0xdd,
+	0xc8, 0x5b, 0x88, 0x42, 0x1b, 0x52, 0x78, 0x1b, 0x85, 0x2d, 0x7f, 0xae, 0x00, 0x30, 0x3a, 0xdd,
+	0xd5, 0x0c, 0x58, 0xdc, 0xca, 0x9b, 0xef, 0x1b, 0xa6, 0x55, 0xdb, 0xab, 0x18, 0xd6, 0xee, 0x76,
+	0xb5, 0x62, 0x14, 0xcb, 0x1b, 0x65, 0xa3, 0x14, 0x0f, 0x25, 0xa3, 0xa7, 0x67, 0xda, 0x9d, 0x5d,
+	0x7c, 0x88, 0xc9, 0x11, 0x56, 0x53, 0x20, 0x2e, 0x23, 0x8b, 0x3b, 0xe5, 0xed, 0xb8, 0x92, 0x9c,
+	0x3e, 0x3d, 0xd3, 0xc2, 0x45, 0xe2, 0x60, 0x35, 0x0b, 0x16, 0x64, 0xbf, 0x69, 0x54, 0x6b, 0x66,
+	0xb9, 0x58, 0x33, 0x4a, 0xf1, 0x89, 0xa4, 0x7a, 0x7a, 0xa6, 0xc5, 0xcc, 0xe1, 0xfb, 0x22, 0xc0,
+	0x2f, 0xff, 0x34, 0x01, 0x66, 0xe5, 0x0b, 0x53, 0x5d, 0x03, 0x0f, 0x44, 0x82, 0x6a, 0x2d, 0x5f,
+	0xdb, 0xad, 0xfe, 0xa9, 0x99, 0xfb, 0xa7, 0x67, 0xda, 0x5d, 0x0e, 0xdd, 0xc5, 0x36, 0xda, 0x77,
+	0x30, 0xb2, 0xa5, 0xa2, 0x22, 0xa6, 0x62, 0xee, 0x54, 0x76, 0xaa, 0x46, 0x29, 0xae, 0xf0, 0xa2,
+	0x3c, 0xa0, 0xe2, 0x91, 0x36, 0xf1, 0x91, 0xad, 0xbe, 0x33, 0xdc, 0xae, 0xc0, 0x6f, 0x94, 0xb7,
+	0xf3, 0x9b, 0xe5, 0xe7, 0xac, 0x4b, 0xa9, 0xc2, 0xe0, 0x04, 0xb3, 0xd5, 0x65, 0x30, 0x3f, 0x1e,
+	0x91, 0x2f, 0xd6, 0xca, 0x1f, 0x1a, 0xf1, 0xc9, 0x64, 0xfc, 0xf4, 0x4c, 0x9b, 0xe5, 0x70, 0x76,
+	0x3a, 0xa1, 0x57, 0xb3, 0x17, 0xf3, 0xdb, 0x45, 0x63, 0x73, 0xd3, 0x28, 0xc5, 0xc3, 0x72, 0x76,
+	0x7e, 0xf2, 0xb4, 0x6e, 0xea, 0xa7, 0x14, 0xd0, 0xb6, 0xb3, 0x67, 0x94, 0xe2, 0x53, 0x72, 0x44,
+	0x29, 0xe0, 0x8e, 0xf4, 0x90, 0x9d, 0x9c, 0x3e, 0xf9, 0x26, 0x15, 0xfa, 0xee, 0xdb, 0x54, 0xa8,
+	0xd0, 0x7c, 0x79, 0x99, 0x52, 0x2e, 0x2e, 0x53, 0xca, 0x6f, 0x97, 0x29, 0xe5, 0x8b, 0xab, 0x54,
+	0xe8, 0xe2, 0x2a, 0x15, 0xfa, 0xe5, 0x2a, 0x15, 0x02, 0x8b, 0x0e, 0xb9, 0xf1, 0x5a, 0xaf, 0x28,
+	0xcf, 0xd7, 0xa4, 0xf7, 0xc5, 0x08, 0xb2, 0xe2, 0x10, 0x69, 0x95, 0x3b, 0x1e, 0x3c, 0x5f, 0xd9,
+	0x7b, 0xa3, 0x1e, 0x61, 0xcf, 0xd6, 0x77, 0xff, 0x08, 0x00, 0x00, 0xff, 0xff, 0xb6, 0x71, 0x76,
+	0x1f, 0x6a, 0x0b, 0x00, 0x00,
 }
 
 func (m *Params) Marshal() (dAtA []byte, err error) {
@@ -1191,7 +1191,7 @@ func (m *MarkerAccount) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *EventAddMarker) Marshal() (dAtA []byte, err error) {
+func (m *EventMarkerAdd) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1201,12 +1201,12 @@ func (m *EventAddMarker) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *EventAddMarker) MarshalTo(dAtA []byte) (int, error) {
+func (m *EventMarkerAdd) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *EventAddMarker) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *EventMarkerAdd) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1249,7 +1249,7 @@ func (m *EventAddMarker) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *EventAddMarkerAccess) Marshal() (dAtA []byte, err error) {
+func (m *EventMarkerAddAccess) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1259,12 +1259,12 @@ func (m *EventAddMarkerAccess) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *EventAddMarkerAccess) MarshalTo(dAtA []byte) (int, error) {
+func (m *EventMarkerAddAccess) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *EventAddMarkerAccess) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *EventMarkerAddAccess) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1293,7 +1293,7 @@ func (m *EventAddMarkerAccess) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *EventDeleteMarkerAccess) Marshal() (dAtA []byte, err error) {
+func (m *EventMarkerDeleteAccess) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1303,12 +1303,12 @@ func (m *EventDeleteMarkerAccess) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *EventDeleteMarkerAccess) MarshalTo(dAtA []byte) (int, error) {
+func (m *EventMarkerDeleteAccess) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *EventDeleteMarkerAccess) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *EventMarkerDeleteAccess) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1337,7 +1337,7 @@ func (m *EventDeleteMarkerAccess) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	return len(dAtA) - i, nil
 }
 
-func (m *EventFinalizeMarker) Marshal() (dAtA []byte, err error) {
+func (m *EventMarkerFinalize) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1347,12 +1347,12 @@ func (m *EventFinalizeMarker) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *EventFinalizeMarker) MarshalTo(dAtA []byte) (int, error) {
+func (m *EventMarkerFinalize) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *EventFinalizeMarker) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *EventMarkerFinalize) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1374,7 +1374,7 @@ func (m *EventFinalizeMarker) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *EventActivateMarker) Marshal() (dAtA []byte, err error) {
+func (m *EventMarkerActivate) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1384,12 +1384,12 @@ func (m *EventActivateMarker) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *EventActivateMarker) MarshalTo(dAtA []byte) (int, error) {
+func (m *EventMarkerActivate) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *EventActivateMarker) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *EventMarkerActivate) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1411,7 +1411,7 @@ func (m *EventActivateMarker) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *EventCancelMarker) Marshal() (dAtA []byte, err error) {
+func (m *EventMarkerCancel) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1421,12 +1421,12 @@ func (m *EventCancelMarker) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *EventCancelMarker) MarshalTo(dAtA []byte) (int, error) {
+func (m *EventMarkerCancel) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *EventCancelMarker) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *EventMarkerCancel) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1448,7 +1448,7 @@ func (m *EventCancelMarker) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *EventDeleteMarker) Marshal() (dAtA []byte, err error) {
+func (m *EventMarkerDelete) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1458,12 +1458,12 @@ func (m *EventDeleteMarker) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *EventDeleteMarker) MarshalTo(dAtA []byte) (int, error) {
+func (m *EventMarkerDelete) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *EventDeleteMarker) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *EventMarkerDelete) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1485,7 +1485,7 @@ func (m *EventDeleteMarker) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *EventMintMarker) Marshal() (dAtA []byte, err error) {
+func (m *EventMarkerMint) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1495,56 +1495,12 @@ func (m *EventMintMarker) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *EventMintMarker) MarshalTo(dAtA []byte) (int, error) {
+func (m *EventMarkerMint) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *EventMintMarker) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Administrator) > 0 {
-		i -= len(m.Administrator)
-		copy(dAtA[i:], m.Administrator)
-		i = encodeVarintMarker(dAtA, i, uint64(len(m.Administrator)))
-		i--
-		dAtA[i] = 0x1a
-	}
-	if len(m.Denom) > 0 {
-		i -= len(m.Denom)
-		copy(dAtA[i:], m.Denom)
-		i = encodeVarintMarker(dAtA, i, uint64(len(m.Denom)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.Amount) > 0 {
-		i -= len(m.Amount)
-		copy(dAtA[i:], m.Amount)
-		i = encodeVarintMarker(dAtA, i, uint64(len(m.Amount)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *EventBurnMarker) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *EventBurnMarker) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *EventBurnMarker) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *EventMarkerMint) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1573,7 +1529,7 @@ func (m *EventBurnMarker) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *EventWithdrawMarker) Marshal() (dAtA []byte, err error) {
+func (m *EventMarkerBurn) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1583,12 +1539,56 @@ func (m *EventWithdrawMarker) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *EventWithdrawMarker) MarshalTo(dAtA []byte) (int, error) {
+func (m *EventMarkerBurn) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *EventWithdrawMarker) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *EventMarkerBurn) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Administrator) > 0 {
+		i -= len(m.Administrator)
+		copy(dAtA[i:], m.Administrator)
+		i = encodeVarintMarker(dAtA, i, uint64(len(m.Administrator)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintMarker(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Amount) > 0 {
+		i -= len(m.Amount)
+		copy(dAtA[i:], m.Amount)
+		i = encodeVarintMarker(dAtA, i, uint64(len(m.Amount)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *EventMarkerWithdraw) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventMarkerWithdraw) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventMarkerWithdraw) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1624,7 +1624,7 @@ func (m *EventWithdrawMarker) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *EventTransferMarker) Marshal() (dAtA []byte, err error) {
+func (m *EventMarkerTransfer) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1634,12 +1634,12 @@ func (m *EventTransferMarker) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *EventTransferMarker) MarshalTo(dAtA []byte) (int, error) {
+func (m *EventMarkerTransfer) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *EventTransferMarker) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *EventMarkerTransfer) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1682,7 +1682,7 @@ func (m *EventTransferMarker) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *EventSetDenomMetadataMarker) Marshal() (dAtA []byte, err error) {
+func (m *EventMarkerSetDenomMetadata) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1692,12 +1692,12 @@ func (m *EventSetDenomMetadataMarker) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *EventSetDenomMetadataMarker) MarshalTo(dAtA []byte) (int, error) {
+func (m *EventMarkerSetDenomMetadata) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *EventSetDenomMetadataMarker) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *EventMarkerSetDenomMetadata) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1790,7 +1790,7 @@ func (m *MarkerAccount) Size() (n int) {
 	return n
 }
 
-func (m *EventAddMarker) Size() (n int) {
+func (m *EventMarkerAdd) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1819,7 +1819,7 @@ func (m *EventAddMarker) Size() (n int) {
 	return n
 }
 
-func (m *EventAddMarkerAccess) Size() (n int) {
+func (m *EventMarkerAddAccess) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1840,7 +1840,7 @@ func (m *EventAddMarkerAccess) Size() (n int) {
 	return n
 }
 
-func (m *EventDeleteMarkerAccess) Size() (n int) {
+func (m *EventMarkerDeleteAccess) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1861,7 +1861,7 @@ func (m *EventDeleteMarkerAccess) Size() (n int) {
 	return n
 }
 
-func (m *EventFinalizeMarker) Size() (n int) {
+func (m *EventMarkerFinalize) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1878,7 +1878,7 @@ func (m *EventFinalizeMarker) Size() (n int) {
 	return n
 }
 
-func (m *EventActivateMarker) Size() (n int) {
+func (m *EventMarkerActivate) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1895,7 +1895,7 @@ func (m *EventActivateMarker) Size() (n int) {
 	return n
 }
 
-func (m *EventCancelMarker) Size() (n int) {
+func (m *EventMarkerCancel) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1912,7 +1912,7 @@ func (m *EventCancelMarker) Size() (n int) {
 	return n
 }
 
-func (m *EventDeleteMarker) Size() (n int) {
+func (m *EventMarkerDelete) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1929,28 +1929,7 @@ func (m *EventDeleteMarker) Size() (n int) {
 	return n
 }
 
-func (m *EventMintMarker) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Amount)
-	if l > 0 {
-		n += 1 + l + sovMarker(uint64(l))
-	}
-	l = len(m.Denom)
-	if l > 0 {
-		n += 1 + l + sovMarker(uint64(l))
-	}
-	l = len(m.Administrator)
-	if l > 0 {
-		n += 1 + l + sovMarker(uint64(l))
-	}
-	return n
-}
-
-func (m *EventBurnMarker) Size() (n int) {
+func (m *EventMarkerMint) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1971,7 +1950,28 @@ func (m *EventBurnMarker) Size() (n int) {
 	return n
 }
 
-func (m *EventWithdrawMarker) Size() (n int) {
+func (m *EventMarkerBurn) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Amount)
+	if l > 0 {
+		n += 1 + l + sovMarker(uint64(l))
+	}
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovMarker(uint64(l))
+	}
+	l = len(m.Administrator)
+	if l > 0 {
+		n += 1 + l + sovMarker(uint64(l))
+	}
+	return n
+}
+
+func (m *EventMarkerWithdraw) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1996,7 +1996,7 @@ func (m *EventWithdrawMarker) Size() (n int) {
 	return n
 }
 
-func (m *EventTransferMarker) Size() (n int) {
+func (m *EventMarkerTransfer) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2025,7 +2025,7 @@ func (m *EventTransferMarker) Size() (n int) {
 	return n
 }
 
-func (m *EventSetDenomMetadataMarker) Size() (n int) {
+func (m *EventMarkerSetDenomMetadata) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2465,7 +2465,7 @@ func (m *MarkerAccount) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *EventAddMarker) Unmarshal(dAtA []byte) error {
+func (m *EventMarkerAdd) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2488,10 +2488,10 @@ func (m *EventAddMarker) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: EventAddMarker: wiretype end group for non-group")
+			return fmt.Errorf("proto: EventMarkerAdd: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EventAddMarker: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EventMarkerAdd: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2675,7 +2675,7 @@ func (m *EventAddMarker) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *EventAddMarkerAccess) Unmarshal(dAtA []byte) error {
+func (m *EventMarkerAddAccess) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2698,10 +2698,10 @@ func (m *EventAddMarkerAccess) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: EventAddMarkerAccess: wiretype end group for non-group")
+			return fmt.Errorf("proto: EventMarkerAddAccess: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EventAddMarkerAccess: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EventMarkerAddAccess: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2821,7 +2821,7 @@ func (m *EventAddMarkerAccess) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *EventDeleteMarkerAccess) Unmarshal(dAtA []byte) error {
+func (m *EventMarkerDeleteAccess) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2844,10 +2844,10 @@ func (m *EventDeleteMarkerAccess) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: EventDeleteMarkerAccess: wiretype end group for non-group")
+			return fmt.Errorf("proto: EventMarkerDeleteAccess: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EventDeleteMarkerAccess: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EventMarkerDeleteAccess: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2967,7 +2967,7 @@ func (m *EventDeleteMarkerAccess) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *EventFinalizeMarker) Unmarshal(dAtA []byte) error {
+func (m *EventMarkerFinalize) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2990,10 +2990,10 @@ func (m *EventFinalizeMarker) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: EventFinalizeMarker: wiretype end group for non-group")
+			return fmt.Errorf("proto: EventMarkerFinalize: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EventFinalizeMarker: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EventMarkerFinalize: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -3081,7 +3081,7 @@ func (m *EventFinalizeMarker) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *EventActivateMarker) Unmarshal(dAtA []byte) error {
+func (m *EventMarkerActivate) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3104,10 +3104,10 @@ func (m *EventActivateMarker) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: EventActivateMarker: wiretype end group for non-group")
+			return fmt.Errorf("proto: EventMarkerActivate: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EventActivateMarker: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EventMarkerActivate: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -3195,7 +3195,7 @@ func (m *EventActivateMarker) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *EventCancelMarker) Unmarshal(dAtA []byte) error {
+func (m *EventMarkerCancel) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3218,10 +3218,10 @@ func (m *EventCancelMarker) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: EventCancelMarker: wiretype end group for non-group")
+			return fmt.Errorf("proto: EventMarkerCancel: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EventCancelMarker: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EventMarkerCancel: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -3309,7 +3309,7 @@ func (m *EventCancelMarker) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *EventDeleteMarker) Unmarshal(dAtA []byte) error {
+func (m *EventMarkerDelete) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3332,10 +3332,10 @@ func (m *EventDeleteMarker) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: EventDeleteMarker: wiretype end group for non-group")
+			return fmt.Errorf("proto: EventMarkerDelete: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EventDeleteMarker: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EventMarkerDelete: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -3423,7 +3423,7 @@ func (m *EventDeleteMarker) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *EventMintMarker) Unmarshal(dAtA []byte) error {
+func (m *EventMarkerMint) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3446,156 +3446,10 @@ func (m *EventMintMarker) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: EventMintMarker: wiretype end group for non-group")
+			return fmt.Errorf("proto: EventMarkerMint: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EventMintMarker: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowMarker
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthMarker
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthMarker
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Amount = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowMarker
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthMarker
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthMarker
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Denom = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Administrator", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowMarker
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthMarker
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthMarker
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Administrator = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipMarker(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthMarker
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *EventBurnMarker) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowMarker
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: EventBurnMarker: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EventBurnMarker: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EventMarkerMint: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -3715,7 +3569,7 @@ func (m *EventBurnMarker) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *EventWithdrawMarker) Unmarshal(dAtA []byte) error {
+func (m *EventMarkerBurn) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3738,10 +3592,156 @@ func (m *EventWithdrawMarker) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: EventWithdrawMarker: wiretype end group for non-group")
+			return fmt.Errorf("proto: EventMarkerBurn: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EventWithdrawMarker: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EventMarkerBurn: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMarker
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMarker
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMarker
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Amount = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMarker
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMarker
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMarker
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Administrator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMarker
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMarker
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMarker
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Administrator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMarker(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthMarker
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventMarkerWithdraw) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMarker
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventMarkerWithdraw: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventMarkerWithdraw: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -3893,7 +3893,7 @@ func (m *EventWithdrawMarker) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *EventTransferMarker) Unmarshal(dAtA []byte) error {
+func (m *EventMarkerTransfer) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3916,10 +3916,10 @@ func (m *EventTransferMarker) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: EventTransferMarker: wiretype end group for non-group")
+			return fmt.Errorf("proto: EventMarkerTransfer: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EventTransferMarker: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EventMarkerTransfer: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -4103,7 +4103,7 @@ func (m *EventTransferMarker) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *EventSetDenomMetadataMarker) Unmarshal(dAtA []byte) error {
+func (m *EventMarkerSetDenomMetadata) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4126,10 +4126,10 @@ func (m *EventSetDenomMetadataMarker) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: EventSetDenomMetadataMarker: wiretype end group for non-group")
+			return fmt.Errorf("proto: EventMarkerSetDenomMetadata: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EventSetDenomMetadataMarker: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EventMarkerSetDenomMetadata: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

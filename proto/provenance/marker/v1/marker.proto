@@ -87,8 +87,8 @@ enum MarkerStatus {
   MARKER_STATUS_DESTROYED = 5 [(gogoproto.enumvalue_customname) = "StatusDestroyed"];
 }
 
-// EventAddMarker event emitted when marker is added
-message EventAddMarker {
+// EventMarkerAdd event emitted when marker is added
+message EventMarkerAdd {
   string denom       = 1;
   string amount      = 2;
   string status      = 3;
@@ -96,68 +96,68 @@ message EventAddMarker {
   string marker_type = 5;
 }
 
-// EventAddMarkerAccess event emitted when marker access is added
-message EventAddMarkerAccess {
+// EventMarkerAddAccess event emitted when marker access is added
+message EventMarkerAddAccess {
   string access        = 1;
   string denom         = 2;
   string administrator = 3;
 }
 
-// EventDeleteMarkerAccess event emitted when marker access is revoked
-message EventDeleteMarkerAccess {
+// EventMarkerDeleteAccess event emitted when marker access is revoked
+message EventMarkerDeleteAccess {
   string remove_address = 1;
   string denom          = 2;
   string administrator  = 3;
 }
 
-// EventFinalizeMarker event emitted when marker is finalized
-message EventFinalizeMarker {
+// EventMarkerFinalize event emitted when marker is finalized
+message EventMarkerFinalize {
   string denom         = 1;
   string administrator = 2;
 }
 
-// EventActivateMarker event emitted when marker is activated
-message EventActivateMarker {
+// EventMarkerActivate event emitted when marker is activated
+message EventMarkerActivate {
   string denom         = 1;
   string administrator = 2;
 }
 
-// EventCancelMarker event emitted when marker is cancelled
-message EventCancelMarker {
+// EventMarkerCancel event emitted when marker is cancelled
+message EventMarkerCancel {
   string denom         = 1;
   string administrator = 2;
 }
 
-// EventDeleteMarker event emitted when marker is deleted
-message EventDeleteMarker {
+// EventMarkerDelete event emitted when marker is deleted
+message EventMarkerDelete {
   string denom         = 1;
   string administrator = 2;
 }
 
-// EventMintMarker event emitted when additional marker supply is minted
-message EventMintMarker {
+// EventMarkerMint event emitted when additional marker supply is minted
+message EventMarkerMint {
   string amount        = 1;
   string denom         = 2;
   string administrator = 3;
 }
 
-// EventBurnMarker event emitted when coin is burned from marker
-message EventBurnMarker {
+// EventMarkerBurn event emitted when coin is burned from marker
+message EventMarkerBurn {
   string amount        = 1;
   string denom         = 2;
   string administrator = 3;
 }
 
-// EventWithdrawMarker event emitted when coins are withdrew from marker
-message EventWithdrawMarker {
+// EventMarkerWithdraw event emitted when coins are withdrew from marker
+message EventMarkerWithdraw {
   string amount        = 1;
   string denom         = 2;
   string administrator = 3;
   string to_address    = 4;
 }
 
-// EventTransferMarker event emitted when coins are transfered to from account to another
-message EventTransferMarker {
+// EventMarkerTransfer event emitted when coins are transfered to from account to another
+message EventMarkerTransfer {
   string amount        = 1;
   string denom         = 2;
   string administrator = 3;
@@ -165,8 +165,8 @@ message EventTransferMarker {
   string from_address  = 5;
 }
 
-// EventSetDenomMetadataMarker event emitted when metadata is set on marker with denom
-message EventSetDenomMetadataMarker {
+// EventMarkerSetDenomMetadata event emitted when metadata is set on marker with denom
+message EventMarkerSetDenomMetadata {
   string denom         = 1;
   string administrator = 2;
 }

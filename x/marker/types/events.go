@@ -55,3 +55,13 @@ const (
 	// EventTypeWithdrawAsset emitted when assets are removed from marker collateral
 	EventTypeWithdrawAsset string = EventAttributeMarkerKey + "_asset_withdrawn"
 )
+
+func NewEventMarkerAdd(denom string, amount string, status string, manager string, markerType string) *EventMarkerAdd {
+	return &EventMarkerAdd{
+		Denom:      denom,
+		Amount:     amount,
+		Status:     status,
+		Manager:    manager,
+		MarkerType: markerType,
+	}
+}
