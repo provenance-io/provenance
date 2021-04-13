@@ -1,11 +1,15 @@
 package name_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/name"
 	"github.com/provenance-io/provenance/x/name/keeper"
+	nametypes "github.com/provenance-io/provenance/x/name/types"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"strings"
@@ -22,4 +26,60 @@ func TestInvalidMsg(t *testing.T) {
 
 	_, _, log := sdkerrors.ABCIInfo(err, false)
 	require.True(t, strings.Contains(log, "unrecognized name message type"))
+}
+
+// A module account cannot be the recipient of bank sends unless it has been marked as such
+func TestSendToModuleAccount(t *testing.T) {
+	priv1 := secp256k1.GenPrivKey()
+	addr1 := sdk.AccAddress(priv1.PubKey().Address())
+	priv2 := secp256k1.GenPrivKey()
+	addr2 := sdk.AccAddress(priv2.PubKey().Address())
+
+	tests := []struct {
+		name          string
+		expectedError error
+		msg           *nametypes.MsgBindNameRequest
+	}{
+		{
+			name:          "create name record",
+			msg:           nametypes.NewMsgBindNameRequest(nametypes.NewNameRecord("new", addr2, false), nametypes.NewNameRecord("example.name", addr1, false)),
+			expectedError: nil,
+		},
+		{
+			name:          "create bad name record",
+			msg:           nametypes.NewMsgBindNameRequest(nametypes.NewNameRecord("new", addr2, false), nametypes.NewNameRecord("foo.name", addr1, false)),
+			expectedError: sdkerrors.Wrapf(nametypes.ErrNameNotBound, "no address bound to name"),
+		},
+	}
+
+	acc1 := &authtypes.BaseAccount{
+		Address: addr1.String(),
+	}
+	accs := authtypes.GenesisAccounts{acc1}
+	app := simapp.SetupWithGenesisAccounts(accs)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	var nameData nametypes.GenesisState
+	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("name", addr1, false))
+	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("example.name", addr1, false))
+	nameData.Params.AllowUnrestrictedNames = false
+	nameData.Params.MaxNameLevels = 16
+	nameData.Params.MinSegmentLength = 2
+	nameData.Params.MaxSegmentLength = 16
+
+	app.NameKeeper.InitGenesis(ctx, nameData)
+
+	app.NameKeeper = keeper.NewKeeper(app.AppCodec(), app.GetKey(nametypes.ModuleName), app.GetSubspace(nametypes.ModuleName))
+	handler := name.NewHandler(app.NameKeeper)
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := handler(ctx, tc.msg)
+			if tc.expectedError != nil {
+				require.EqualError(t, err, tc.expectedError.Error())
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
 }
