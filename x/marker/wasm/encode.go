@@ -174,8 +174,9 @@ func (params *CreateMarkerParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, er
 		return nil, fmt.Errorf("wasm: invalid marker type in CreateMarkerParams: %w", err)
 	}
 	msg := types.NewAddMarkerRequest(
-		params.Coin.Denom, params.Coin.Amount, contract, contract, markerType,
+		params.Coin.Denom, params.Coin.Amount, contract, contract, markerType, false, false,
 	)
+
 	return []sdk.Msg{msg}, nil
 }
 
