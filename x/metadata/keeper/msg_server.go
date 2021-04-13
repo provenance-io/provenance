@@ -494,6 +494,8 @@ func (k msgServer) P8EMemorializeContract(
 		case types.DefinitionType_DEFINITION_TYPE_RECORD, types.DefinitionType_DEFINITION_TYPE_RECORD_LIST:
 			inputStatus = types.RecordInputStatus_Record
 		}
+		// r.Inputs is a list of structs (not a list of references).
+		// Need to use the list index to update the actual entry and make it stay.
 		for i := range r.Inputs {
 			r.Inputs[i].Status = inputStatus
 		}
