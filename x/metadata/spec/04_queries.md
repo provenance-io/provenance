@@ -5,6 +5,31 @@ All state objects specified by each message are defined within the [state](02_st
 
 Each entry or specification state object is wrapped with an `*IdInfo` message containing information about that state object's address/id.
 
+<!-- TOC -->
+  - [Query/Params](#query-params)
+  - [Query/Scope](#query-scope)
+  - [Query/ScopesAll](#query-scopesall)
+  - [Query/Sessions](#query-sessions)
+  - [Query/SessionsAll](#query-sessionsall)
+  - [Query/Records](#query-records)
+  - [Query/RecordsAll](#query-recordsall)
+  - [Query/Ownership](#query-ownership)
+  - [Query/ValueOwnership](#query-valueownership)
+  - [Query/ScopeSpecification](#query-scopespecification)
+  - [Query/ScopeSpecificationsAll](#query-scopespecificationsall)
+  - [Query/ContractSpecification](#query-contractspecification)
+  - [Query/ContractSpecificationsAll](#query-contractspecificationsall)
+  - [Query/RecordSpecificationsForContractSpecification](#query-recordspecificationsforcontractspecification)
+  - [Query/RecordSpecification](#query-recordspecification)
+  - [Query/RecordSpecificationsAll](#query-recordspecificationsall)
+  - [Query/OSLocatorParams](#query-oslocatorparams)
+  - [Query/OSLocator](#query-oslocator)
+  - [Query/OSLocatorsByURI](#query-oslocatorsbyuri)
+  - [Query/OSLocatorsByScope](#query-oslocatorsbyscope)
+  - [Query/OSAllLocators](#query-osalllocators)
+
+
+
 ## Query/Params
 TODO: Params messages
 
@@ -67,4 +92,3 @@ TODO: OSLocatorsByScope messages
 
 ## Query/OSAllLocators
 TODO: OSAllLocators messages
-

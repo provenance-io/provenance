@@ -5,6 +5,14 @@ There are three categories of things stored: entries, specifications, and object
 Each entry and specification has a unique Metadata Address that is often simply called its "id".
 Additionally, several indexes are created to help with linking and iterating over related messages.
 
+<!-- TOC -->
+  - [Entries](#entries)
+  - [Specifications](#specifications)
+  - [Metadata Addresses](#metadata-addresses)
+  - [Indexes](#indexes)
+
+
+
 ## Entries
 
 The term "entries" refers to scopes, sessions, and records.

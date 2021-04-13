@@ -1,14 +1,22 @@
 # Metadata State
 
-The Metadata module manages the state of seven different types:
+The Metadata module manages the state of several types of entries related to off-chain information.
 
-1. [Scopes](#scopes)
-1. [Sessions](#sessions)
-1. [Records](#records)
-1. [Scope Specifications](#scope-specifications)
-1. [Contract Specifications](#contract-specifications)
-1. [Record Specifications](#record-specifications)
-1. [Object Store Locators](#object-store-locators)
+<!-- TOC -->
+  - [Entries](#entries)
+    - [Scopes](#scopes)
+    - [Sessions](#sessions)
+    - [Records](#records)
+  - [Specifications](#specifications)
+    - [Scope Specifications](#scope-specifications)
+    - [Contract Specifications](#contract-specifications)
+    - [Record Specifications](#record-specifications)
+  - [Object Store Locators](#object-store-locators)
+    - [Object Store Locator Keys](#object-store-locator-keys)
+    - [Object Store Locator Values](#object-store-locator-values)
+    - [Object Store Locator Indexes](#object-store-locator-indexes)
+
+
 
 ## Entries
 
@@ -445,4 +453,3 @@ message ObjectStoreLocator {
 ### Object Store Locator Indexes
 
 There are no extra indexes involving object store locators.
-
