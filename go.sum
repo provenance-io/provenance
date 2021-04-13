@@ -21,8 +21,8 @@ github.com/CosmWasm/wasmd v0.16.0-alpha1.0.20210331112406-8109bba87111 h1:d7FqQY
 github.com/CosmWasm/wasmd v0.16.0-alpha1.0.20210331112406-8109bba87111/go.mod h1:OHTI/g+6pMIQYzvp2u6+8CIx8il5l/+F9BrG2rg186U=
 github.com/CosmWasm/wasmvm v0.14.0-beta1 h1:ASqXB/2D8CEBmAI/uljRw6eEMbeKXPQtL/wZzKXZGGA=
 github.com/CosmWasm/wasmvm v0.14.0-beta1/go.mod h1:Id107qllDJyJjVQQsKMOy2YYF98sqPJ2t+jX1QES40A=
-github.com/CosmWasm/wasmvm v0.14.0-beta2 h1:8bLLNaxj796qUwu6UuQDbqpMV9zPpxG3lNZZbswNdOo=
-github.com/CosmWasm/wasmvm v0.14.0-beta2/go.mod h1:Id107qllDJyJjVQQsKMOy2YYF98sqPJ2t+jX1QES40A=
+github.com/CosmWasm/wasmvm v0.14.0-beta3 h1:HN1+HrC2kgO/V4voGdOWrN1sdUoTnSoLuSrBXbDVnbY=
+github.com/CosmWasm/wasmvm v0.14.0-beta3/go.mod h1:Id107qllDJyJjVQQsKMOy2YYF98sqPJ2t+jX1QES40A=
 github.com/DataDog/datadog-go v3.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
 github.com/DataDog/zstd v1.4.1/go.mod h1:1jcaCB/ufaK+sKp1NBhlGmpz41jOoPQ35bpF36t7BBo=
 github.com/DataDog/zstd v1.4.5 h1:EndNeuB0l9syBZhut0wns3gV1hL8zX8LIu6ZiVHWLIQ=
