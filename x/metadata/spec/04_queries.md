@@ -75,7 +75,9 @@ Set `include_sessions` and/or `include_records` to true to include sessions and/
 
 ## Query/ScopesAll
 
-The `ScopesAll` query gets all scopes in a paginated manner.
+The `ScopesAll` query gets all scopes.
+
+This query is paginated.
 
 ### Request
 +++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L275-L279
@@ -113,7 +115,9 @@ Set `include_scope` and/or `include_records` to true to include the scope and/or
 
 ## Query/SessionsAll
 
-The `SessionsAll` query gets all sessions in a paginated manner.
+The `SessionsAll` query gets all sessions.
+
+This query is paginated.
 
 ### Request
 +++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L331-L335
@@ -160,7 +164,9 @@ Set `include_scope` and/or `include_sessions` to true to include the scope and/o
 
 ## Query/RecordsAll
 
-The `RecordsAll` query gets all records in a paginated manner.
+The `RecordsAll` query gets all records.
+
+This query is paginated.
 
 ### Request
 +++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L391-L395
@@ -173,128 +179,161 @@ The only input to this query is pagination information.
 
 
 ## Query/Ownership
-TODO: Ownership messages
-The `xxx` query gets xxxxxxxxxxx
+
+The `Ownership` query gets the ids of scopes owned by an address.
+
+A scope is owned by an address if the address is listed as either an owner, or the value owner.
+
+This query is paginated.
 
 ### Request
-+++ 
++++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L408-L414
 
-Info about the query request fields.
+The `address` should be a bech32 address string.
 
 ### Response
-+++ 
++++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L416-L425
 
 
 
 ## Query/ValueOwnership
-TODO: ValueOwnership messages
-The `xxx` query gets xxxxxxxxxxx
+
+The `ValueOwnership` query gets gets the ids of scopes that list an address as the value owner.
+
+This query is paginated.
 
 ### Request
-+++ 
++++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L427-L433
 
-Info about the query request fields.
+The `address` should be a bech32 address string.
 
 ### Response
-+++ 
++++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L435-L444
 
 
 
 ## Query/ScopeSpecification
-TODO: ScopeSpecification messages
-The `xxx` query gets xxxxxxxxxxx
+
+The `ScopeSpecification` query gets a scope specification.
 
 ### Request
-+++ 
++++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L446-L451
 
-Info about the query request fields.
+The `specification_id` can either be a uuid, e.g. `dc83ea70-eacd-40fe-9adf-1cf6148bf8a2` or a bech32 scope
+specification address, e.g. `scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m`.
 
 ### Response
-+++ 
++++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L453-L460
 
 
 
 ## Query/ScopeSpecificationsAll
-TODO: ScopeSpecificationsAll messages
-The `xxx` query gets xxxxxxxxxxx
+
+The `ScopeSpecificationsAll` query gets all scope specifications.
+
+This query is paginated.
 
 ### Request
-+++ 
++++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L470-L474
 
-Info about the query request fields.
+The only input to this query is pagination information.
 
 ### Response
-+++ 
++++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L476-L485
 
 
 
 ## Query/ContractSpecification
-TODO: ContractSpecification messages
-The `xxx` query gets xxxxxxxxxxx
+
+The `ContractSpecification` query gets a contract specification.
 
 ### Request
-+++ 
++++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L487-L498
 
-Info about the query request fields.
+The `specification_id` can either be a uuid, e.g. `def6bc0a-c9dd-4874-948f-5206e6060a84`, a bech32 contract
+specification address, e.g. `contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn`, or a bech32 record specification
+address, e.g. `recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44`. If it is a record specification
+address, then the contract specification that contains that record specification is looked up.
+
+By default, the record specifications for this contract specification are not included.
+Set `include_record_specs` to true to include them in the result.
+
 
 ### Response
-+++ 
++++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L500-L511
 
 
 
 ## Query/ContractSpecificationsAll
-TODO: ContractSpecificationsAll messages
-The `xxx` query gets xxxxxxxxxxx
+
+The `ContractSpecificationsAll` query gets all contract specifications.
+
+This query is paginated.
 
 ### Request
-+++ 
++++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L521-L525
 
-Info about the query request fields.
+The only input to this query is pagination information.
 
 ### Response
-+++ 
++++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L527-L537
 
 
 
 ## Query/RecordSpecificationsForContractSpecification
-TODO: RecordSpecificationsForContractSpecification messages
-The `xxx` query gets xxxxxxxxxxx
+
+The `RecordSpecificationsForContractSpecification` query gets all record specifications for a contract specification.
+
+The only difference between this query and `ContractSpecification` with `include_record_specs = true` is that
+this query does not return the contract specification.
 
 ### Request
-+++ 
++++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L539-L547
 
-Info about the query request fields.
+The `specification_id` can either be a uuid, e.g. `def6bc0a-c9dd-4874-948f-5206e6060a84`, a bech32 contract
+specification address, e.g. `contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn`, or a bech32 record specification
+address, e.g. `recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44`. If it is a record specification
+address, then the contract specification that contains that record specification is used.
 
 ### Response
-+++ 
++++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L549-L562
 
 
 
 ## Query/RecordSpecification
-TODO: RecordSpecification messages
-The `xxx` query gets xxxxxxxxxxx
+
+The `RecordSpecification` query gets a record specification.
 
 ### Request
-+++ 
++++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L564-L575
 
-Info about the query request fields.
+The `specification_id` can either be a uuid, e.g. `def6bc0a-c9dd-4874-948f-5206e6060a84` or a bech32 contract specification
+address, e.g. `contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn`.
+It can also be a record specification address, e.g.
+`recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44`.
+
+The `name` is the name of the record to look up.
+It is required if the `specification_id` is a uuid or contract specification address.
+It is ignored if the `specification_id` is a record specification address.
 
 ### Response
-+++ 
++++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L577-L584
 
 
 
 ## Query/RecordSpecificationsAll
-TODO: RecordSpecificationsAll messages
-The `xxx` query gets xxxxxxxxxxx
+
+The `RecordSpecificationsAll` query gets all record specifications.
+
+This query is paginated.
 
 ### Request
-+++ 
++++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L594-L598
 
-Info about the query request fields.
+The only input to this query is pagination information.
 
 ### Response
-+++ 
++++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L600-L610
 
 
 
