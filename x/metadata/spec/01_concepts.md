@@ -16,12 +16,12 @@ Additionally, several indexes are created to help with linking and iterating ove
 ## Entries
 
 The term "entries" refers to scopes, sessions, and records.
-See [Entries](#02_state.md#entries) for details.
+See [Entries](02_state.md#entries) for details.
 
 ## Specifications
 
 The term "specifications" refers to scope specifications, contract specifications, and record specifications.
-See [Specifications](#02_state.md#specifications) for details.
+See [Specifications](02_state.md#specifications) for details.
 
 ## Metadata Addresses
 
