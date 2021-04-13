@@ -29,7 +29,7 @@ func TestInvalidMsg(t *testing.T) {
 }
 
 // A module account cannot be the recipient of bank sends unless it has been marked as such
-func TestSendToModuleAccount(t *testing.T) {
+func TestCreateName(t *testing.T) {
 	priv1 := secp256k1.GenPrivKey()
 	addr1 := sdk.AccAddress(priv1.PubKey().Address())
 	priv2 := secp256k1.GenPrivKey()
@@ -39,11 +39,16 @@ func TestSendToModuleAccount(t *testing.T) {
 		name          string
 		expectedError error
 		msg           *nametypes.MsgBindNameRequest
+		expectedEvent *nametypes.EventNameBound
 	}{
 		{
 			name:          "create name record",
 			msg:           nametypes.NewMsgBindNameRequest(nametypes.NewNameRecord("new", addr2, false), nametypes.NewNameRecord("example.name", addr1, false)),
 			expectedError: nil,
+			expectedEvent: &nametypes.EventNameBound{
+				Address: addr2.String(),
+				Name: "new.example.name",
+			},
 		},
 		{
 			name:          "create bad name record",
@@ -58,7 +63,7 @@ func TestSendToModuleAccount(t *testing.T) {
 	accs := authtypes.GenesisAccounts{acc1}
 	app := simapp.SetupWithGenesisAccounts(accs)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
+	em := ctx.EventManager()
 	var nameData nametypes.GenesisState
 	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("name", addr1, false))
 	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("example.name", addr1, false))
@@ -80,6 +85,11 @@ func TestSendToModuleAccount(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 			}
-		})
+			if tc.expectedEvent!=nil {
+				require.Equal(t,1, len(em.Events().ToABCIEvents()))
+				msg1, _ := sdk.ParseTypedEvent(em.Events().ToABCIEvents()[0])
+				require.Equal(t,tc.expectedEvent,msg1)
+		}
+	})
 	}
 }
