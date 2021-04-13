@@ -48,7 +48,7 @@ func TestSendToModuleAccount(t *testing.T) {
 		{
 			name:          "create bad name record",
 			msg:           nametypes.NewMsgBindNameRequest(nametypes.NewNameRecord("new", addr2, false), nametypes.NewNameRecord("foo.name", addr1, false)),
-			expectedError: sdkerrors.Wrapf(nametypes.ErrNameNotBound, "no address bound to name"),
+			expectedError: sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, nametypes.ErrNameNotBound.Error()),
 		},
 	}
 
