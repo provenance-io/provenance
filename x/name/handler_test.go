@@ -47,7 +47,7 @@ func TestCreateName(t *testing.T) {
 			expectedError: nil,
 			expectedEvent: &nametypes.EventNameBound{
 				Address: addr2.String(),
-				Name: "new.example.name",
+				Name:    "new.example.name",
 			},
 		},
 		{
@@ -85,12 +85,12 @@ func TestCreateName(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 			}
-			if tc.expectedEvent!=nil {
-				require.Equal(t,1, len(em.Events().ToABCIEvents()))
+			if tc.expectedEvent != nil {
+				require.Equal(t, 1, len(em.Events().ToABCIEvents()))
 				msg1, _ := sdk.ParseTypedEvent(em.Events().ToABCIEvents()[0])
-				require.Equal(t,tc.expectedEvent,msg1)
-		}
-	})
+				require.Equal(t, tc.expectedEvent, msg1)
+			}
+		})
 	}
 }
 
@@ -111,7 +111,7 @@ func TestDeleteName(t *testing.T) {
 			expectedError: nil,
 			expectedEvent: &nametypes.EventNameUnbound{
 				Address: addr1.String(),
-				Name: "example.name",
+				Name:    "example.name",
 			},
 		},
 		{
@@ -149,10 +149,10 @@ func TestDeleteName(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 			}
-			if tc.expectedEvent!=nil {
-				require.Equal(t,1, len(em.Events().ToABCIEvents()))
+			if tc.expectedEvent != nil {
+				require.Equal(t, 1, len(em.Events().ToABCIEvents()))
 				msg1, _ := sdk.ParseTypedEvent(em.Events().ToABCIEvents()[0])
-				require.Equal(t,tc.expectedEvent,msg1)
+				require.Equal(t, tc.expectedEvent, msg1)
 			}
 		})
 	}
