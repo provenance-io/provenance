@@ -37,6 +37,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## Features
 * Add marker cli has two new flags to set SupplyFixed and AllowGovernanceControl #241
 * Modify 'enable governance' behavior on marker module #227
+* Typed Events and Metric counters in Name Module #85
 
 ### Improvements
 * Add some extra aliases for the CLI query metadata commands.
@@ -48,6 +49,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Metadata Module parsing of base64 public key fixed #225
 * Fix some conversion pieces in `P8EMemorializeContract`.
 * Remove extra Object Store Locator storage.
+* Fix input status mapping.
 
 ## [v1.0.0](https://github.com/provenance-io/provenance/releases/tag/v1.0.0) - 2021-03-31
 
