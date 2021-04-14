@@ -114,7 +114,7 @@ This service message is expected to fail if:
 * The `audit.message` string is longer than 200 characters.
 * The `specification_id` is being changed.
 * The session is being updated, but no `name` is provided.
-* The session's scope does not exist.
+* The session's scope cannot be found.
 * The session's contract specification does not exist.
 * A party type required by the contract specification is not in the `parties` list.
 * One or more of the `owners` are not `signers`.
@@ -143,7 +143,35 @@ If supplied, it will be used with `record.name` to generate the appropriate reco
 #### Expected failures
 
 This service message is expected to fail if:
-TODO: WriteRecord failure points.
+* The `session_id` is missing or invalid.
+* The `specification_id` is provided but invalid.
+* An entry in `inputs` does not have a `name`.
+* An entry in `inputs` does not have a `source`.
+* An entry in `inputs` has a `source` type that doesn't match the input's `status`.
+* An entry in `inputs` has a `record_id` `source` but the `record_id` is missing or invalid.
+* An entry in `inputs` does not have a `type_name`.
+* An entry in `outputs` has a `status` of `unspecified`.
+* An entry in `outputs` has a `status` of `pass` or `fail`, and doesn't have a `hash`.
+* The `name` is missing.
+* The `process.method` is missing.
+* The `process.name` is missing.
+* The `process.process_id` is missing.
+* A record is being updated and the `name` values are different.
+* A record is being updated and the `session` values are different.
+* A record is being updated and the `specification_id` values are different.
+* The record's scope cannot be found.
+* The record's session cannot be found.
+* The record's contract specification cannot be found.
+* The record's record specification cannot be found.
+* The `parties_involved` is missing an entry required by the contract specification.
+* There are duplicate `inputs` by `name`.
+* An entry in `inputs` exists that is not part of the record specification.
+* The `inputs` list does not contain one or more inputs defined in the record specification.
+* An entry in `inputs` has a `type_name` different from its input specification.
+* An entry in `inputs` has a `source` type that doesn't match the input specification.
+* An entry in `inputs` has a `source` value that doesn't match the intput specification.
+* The record specification has a result type of `record` but there isn't exactly one entry in `outputs`.
+* The record specification has a result type of `record_list` but the `outputs` list is empty.
 
 
 
@@ -160,7 +188,9 @@ A record is deleted using the `DeleteRecord` service method.
 #### Expected failures
 
 This service message is expected to fail if:
-TODO: DeleteRecord failure points.
+* No record exists with the given `record_id`.
+* The record's scope cannot be found.
+* One or more scope `owners` are not `signers`.
 
 
 
