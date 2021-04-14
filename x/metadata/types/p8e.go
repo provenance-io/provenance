@@ -445,17 +445,11 @@ func getContractSpecID(contract *p8e.Contract) (MetadataAddress, error) {
 	if contract == nil {
 		return MetadataAddress{}, fmt.Errorf("nil contract")
 	}
-	hash := ""
-	if contract.Spec != nil && contract.Spec.DataLocation != nil &&
-		contract.Spec.DataLocation.Ref != nil && len(contract.Spec.DataLocation.Ref.Hash) > 0 {
-		hash = contract.Spec.DataLocation.Ref.Hash
-	} else if contract.Definition != nil && contract.Definition.ResourceLocation != nil &&
-		contract.Definition.ResourceLocation.Ref != nil && len(contract.Definition.ResourceLocation.Ref.Hash) > 0 {
-		hash = contract.Definition.ResourceLocation.Ref.Hash
+	if contract.Definition == nil || contract.Definition.ResourceLocation == nil ||
+		contract.Definition.ResourceLocation.Ref == nil || len(contract.Definition.ResourceLocation.Ref.Hash) == 0 {
+		return MetadataAddress{}, fmt.Errorf("no contract.definition.resourcelocation.ref.hash value")
 	}
-	if len(hash) == 0 {
-		return MetadataAddress{}, fmt.Errorf("no contract.spec.datalocation.ref or contract.definition.resourcelocation.ref.hash hash value")
-	}
+	hash := contract.Definition.ResourceLocation.Ref.Hash
 
 	// First... just see if it's already a bech32 address. Maybe things are looking up!
 	if addr, err := MetadataAddressFromBech32(hash); err == nil {
