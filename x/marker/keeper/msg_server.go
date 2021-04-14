@@ -83,11 +83,23 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 
 	markerAddEvent := types.NewEventMarkerAdd(msg.Amount.Denom, msg.Amount.Amount.String(), msg.Status.String(), msg.Manager, msg.MarkerType.String())
 	if err := ctx.EventManager().EmitTypedEvent(markerAddEvent); err != nil {
-		// TODO Figure out proper attribute for this
-		//sdk.NewAttribute(types.KeyAttributeName, name),
 		return nil, err
-		//),
 	}
+
+	defer func() {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, "add", "marker"},
+			1,
+			[]metrics.Label{
+				telemetry.NewLabel("amount", markerAddEvent.Amount),
+				telemetry.NewLabel("denom", markerAddEvent.Denom),
+				telemetry.NewLabel("status", markerAddEvent.Status),
+				telemetry.NewLabel("manager", markerAddEvent.Manager),
+				telemetry.NewLabel("marker-type", markerAddEvent.MarkerType),
+			},
+		)
+	}()
+
 	return &types.MsgAddMarkerResponse{}, nil
 }
 
