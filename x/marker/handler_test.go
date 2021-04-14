@@ -79,40 +79,39 @@ func (s HandlerTestSuite) TestMsgAddMarkerRequest() {
 	undefinedStatus.Status = types.StatusUndefined
 
 	cases := []struct {
-		name     string
-		msg      *types.MsgAddMarkerRequest
-		signers  []string
-		errorMsg string
+		name          string
+		msg           *types.MsgAddMarkerRequest
+		signers       []string
+		errorMsg      string
+		expectedEvent *types.EventMarkerAdd
 	}{
 		{
 			"should successfully ADD new marker",
 			types.NewAddMarkerRequest("hotdog", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
 			[]string{s.user1},
 			"",
+			types.NewEventMarkerAdd("hotdog", "100", "proposed", s.user1, types.MarkerType_Coin.String()),
 		},
 		{
 			"should fail to ADD new marker, validate basic failure",
 			undefinedStatus,
 			[]string{s.user1},
 			"invalid marker status: invalid request",
+			nil,
 		},
 		{
 			"should fail to ADD new marker, invalid status",
 			activeStatus,
 			[]string{s.user1},
 			"marker can only be created with a Proposed or Finalized status: invalid request",
+			nil,
 		},
 		{
 			"should fail to ADD new marker, marker already exists",
 			types.NewAddMarkerRequest("hotdog", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
 			[]string{s.user1},
 			fmt.Sprintf("marker address already exists for %s: invalid request", types.MustGetMarkerAddress("hotdog")),
-		},
-		{
-			"turn gov ",
-			types.NewAddMarkerRequest("hotdog", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
-			[]string{s.user1},
-			fmt.Sprintf("marker address already exists for %s: invalid request", types.MustGetMarkerAddress("hotdog")),
+			nil,
 		},
 	}
 
@@ -124,6 +123,13 @@ func (s HandlerTestSuite) TestMsgAddMarkerRequest() {
 				assert.EqualError(t, err, tc.errorMsg)
 			} else {
 				assert.NoError(t, err)
+				em := s.ctx.EventManager()
+				if tc.expectedEvent != nil {
+					require.Equal(t, 1, len(em.Events().ToABCIEvents()))
+					msg1, _ := sdk.ParseTypedEvent(em.Events().ToABCIEvents()[0])
+					require.Equal(t, tc.expectedEvent, msg1)
+				}
+
 			}
 		})
 	}
