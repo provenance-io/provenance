@@ -54,8 +54,16 @@ If supplied, it will be used to generate the appropriate scope specification id 
 #### Expected failures
 
 This service message is expected to fail if:
-TODO: WriteScope failure points.
-
+* The `scope_id` is missing or invalid.
+* The `specification_id` is missing or invalid.
+* The `owners` list is empty.
+* Any of the owner `address` values aren't bech32 address strings.
+* Any of the `data_access` values aren't bech32 address strings.
+* A `value_owner_address` is provided that isn't a bech32 address string.
+* One or more `owners` are not `signers`.
+* The `value_owner` is changing, and the existing value owner is a marker, but none of the signers have `withdraw` access.
+* The `value_owner` is changing, and the existing value owner is not a marker, and is also not in `signers`.
+* The `value_owner` is changing, and the proposed value owner is a marker, but none of the signers have `deposit` access.
 
 
 ### Msg/DeleteScope
@@ -71,7 +79,8 @@ A scope is deleted using the `DeleteScope` service method.
 #### Expected failures
 
 This service message is expected to fail if:
-TODO: DeleteScope failure points.
+* No scope exists with the given `scope_id`.
+* One or more `owners` are not `signers`.
 
 
 
@@ -97,8 +106,19 @@ If supplied, it will be used to generate the appropriate contract specification 
 #### Expected failures
 
 This service message is expected to fail if:
-TODO: WriteSession failure points.
-
+* The `session_id` is missing or invalid.
+* The `specification_id` is missing or invalid.
+* The `parties` list is empty.
+* Any of the `parties` have an `address` that isn't a bech32 address string.
+* Any of the `parties` have a `role` of `unspecified`.
+* The `audit.message` string is longer than 200 characters.
+* The `specification_id` is being changed.
+* The session is being updated, but no `name` is provided.
+* The session's scope does not exist.
+* The session's contract specification does not exist.
+* A party type required by the contract specification is not in the `parties` list.
+* One or more of the `owners` are not `signers`.
+* The `audit` fields are changed.
 
 
 ### Msg/WriteRecord
