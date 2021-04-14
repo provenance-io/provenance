@@ -52,6 +52,10 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			res, err := msgServer.Transfer(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
+		case *types.MsgSetDenomMetadataRequest:
+			res, err := msgServer.SetDenomMetadata(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+
 		default:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown message type: %v", msg.Type())
 		}

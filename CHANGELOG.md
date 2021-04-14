@@ -50,6 +50,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Fix some conversion pieces in `P8EMemorializeContract`.
 * Remove extra Object Store Locator storage.
 * Fix input status mapping.
+* Add MsgSetDenomMetadataRequest to the marker handler.
 
 ## [v1.0.0](https://github.com/provenance-io/provenance/releases/tag/v1.0.0) - 2021-03-31
 
