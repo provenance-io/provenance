@@ -34,6 +34,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+## [v1.1.0](https://github.com/provenance-io/provenance/releases/tag/v1.1.0) - 2021-04-15
 ## Features
 * Add marker cli has two new flags to set SupplyFixed and AllowGovernanceControl #241
 * Modify 'enable governance' behavior on marker module #227
