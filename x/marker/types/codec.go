@@ -56,6 +56,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgBurnRequest{},
 		&MsgWithdrawRequest{},
 		&MsgTransferRequest{},
+		&MsgSetDenomMetadataRequest{},
 	)
 
 	registry.RegisterImplementations(
@@ -66,6 +67,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&SetAdministratorProposal{},
 		&RemoveAdministratorProposal{},
 		&ChangeStatusProposal{},
+		&WithdrawEscrowProposal{},
 	)
 
 	registry.RegisterInterface(
