@@ -160,11 +160,11 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 	}
 
 	// Set the session pieces.
-	p8EData.Session.SpecificationId, err = parseSessionID(p8EData.Scope.ScopeId, msg.GroupId)
+	p8EData.Session.SessionId, err = parseSessionID(p8EData.Scope.ScopeId, msg.GroupId)
 	if err != nil {
 		return p8EData, signers, err
 	}
-	p8EData.Session.SpecificationId, err = getSessionSpecID(msg.Contract)
+	p8EData.Session.SpecificationId, err = getContractSpecID(msg.Contract)
 	if err != nil {
 		return p8EData, signers, err
 	}
@@ -385,8 +385,7 @@ func parsePublicKey(data []byte) (tmcrypt.PubKey, sdk.AccAddress, error) {
 		return nil, nil, err
 	}
 	// Create tendermint public key type and return with address.
-	tmKey := tmcurve.PubKey{} // PubKeySecp256k1{}
-	copy(tmKey[:], pk.SerializeCompressed())
+	tmKey := tmcurve.PubKey(pk.SerializeCompressed()) // PubKeySecp256k1{}
 	return tmKey, tmKey.Address().Bytes(), nil
 }
 
@@ -442,14 +441,24 @@ func getFirstRecitalWithRole(recitals []*p8e.Recital, role p8e.PartyType) *p8e.R
 	return nil
 }
 
-func getSessionSpecID(contract *p8e.Contract) (MetadataAddress, error) {
+func getContractSpecID(contract *p8e.Contract) (MetadataAddress, error) {
 	if contract == nil {
 		return MetadataAddress{}, fmt.Errorf("nil contract")
 	}
-	if contract.Spec == nil || contract.Spec.DataLocation == nil ||
-		contract.Spec.DataLocation.Ref == nil || len(contract.Spec.DataLocation.Ref.Hash) == 0 {
-		return MetadataAddress{}, fmt.Errorf("no spec datalocation ref hash value")
+	if contract.Definition == nil || contract.Definition.ResourceLocation == nil ||
+		contract.Definition.ResourceLocation.Ref == nil || len(contract.Definition.ResourceLocation.Ref.Hash) == 0 {
+		return MetadataAddress{}, fmt.Errorf("no contract.definition.resourcelocation.ref.hash value")
 	}
-	hash := contract.Spec.DataLocation.Ref.Hash
-	return ConvertHashToAddress(SessionKeyPrefix, hash)
+	hash := contract.Definition.ResourceLocation.Ref.Hash
+
+	// First... just see if it's already a bech32 address. Maybe things are looking up!
+	if addr, err := MetadataAddressFromBech32(hash); err == nil {
+		if addr.IsContractSpecificationAddress() {
+			return addr, nil
+		}
+		return addr, fmt.Errorf("metadata address is not for a contract spec: %s", hash)
+	}
+
+	// Okay, it's hopefully a hash...
+	return ConvertHashToAddress(ContractSpecificationKeyPrefix, hash)
 }

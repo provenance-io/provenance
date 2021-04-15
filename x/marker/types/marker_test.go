@@ -161,7 +161,7 @@ func TestNewMarkerValidate(t *testing.T) {
 
 func TestNewMarkerMsgEncoding(t *testing.T) {
 	base := authtypes.NewBaseAccountWithAddress(MustGetMarkerAddress("testcoin"))
-	newMsgMarker := NewAddMarkerRequest("testcoin", sdk.OneInt(), base.GetAddress(), base.GetAddress(), MarkerType_Coin)
+	newMsgMarker := NewAddMarkerRequest("testcoin", sdk.OneInt(), base.GetAddress(), base.GetAddress(), MarkerType_Coin, false, false)
 
 	require.NoError(t, newMsgMarker.ValidateBasic())
 }
