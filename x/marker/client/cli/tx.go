@@ -297,7 +297,7 @@ $ %s tx marker grant pb1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj coindenom burn --
 				return sdkErrors.Wrapf(err, "invalid access grant permission: %s", args[2])
 			}
 			callerAddr := clientCtx.GetFromAddress()
-			msg := types.NewAddAccessRequest(args[1], callerAddr, *grant)
+			msg := types.NewMsgAddAccessRequest(args[1], callerAddr, *grant)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

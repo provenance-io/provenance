@@ -132,7 +132,7 @@ func (msg MsgAddMarkerRequest) GetSigners() []sdk.AccAddress {
 }
 
 // NewAddAccessRequest
-func NewAddAccessRequest(denom string, admin sdk.AccAddress, access AccessGrant) *MsgAddAccessRequest { //nolint:interfacer
+func NewMsgAddAccessRequest(denom string, admin sdk.AccAddress, access AccessGrant) *MsgAddAccessRequest { //nolint:interfacer
 	return &MsgAddAccessRequest{
 		Denom:         denom,
 		Administrator: admin.String(),

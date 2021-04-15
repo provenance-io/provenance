@@ -54,6 +54,14 @@ const (
 	EventTypeDepositAsset string = EventAttributeMarkerKey + "_asset_deposited"
 	// EventTypeWithdrawAsset emitted when assets are removed from marker collateral
 	EventTypeWithdrawAsset string = EventAttributeMarkerKey + "_asset_withdrawn"
+
+	EventTelemetryLabelAmount        string = "amount"
+	EventTelemetryLabelDenom         string = "denom"
+	EventTelemetryLabelStatus        string = "status"
+	EventTelemetryLabelManager       string = "manager"
+	EventTelemetryLabelAdministrator string = "administrator"
+	EventTelemetryLabelMarkerType    string = "marker-type"
+	EventTelemetryLabelAccess        string = "access"
 )
 
 func NewEventMarkerAdd(denom string, amount string, status string, manager string, markerType string) *EventMarkerAdd {
@@ -63,5 +71,24 @@ func NewEventMarkerAdd(denom string, amount string, status string, manager strin
 		Status:     status,
 		Manager:    manager,
 		MarkerType: markerType,
+	}
+}
+
+func NewEventMarkerAddAccess(accessGrant AccessGrant, denom string, administrator string) *EventMarkerAddAccess {
+
+	permissions := make([]string, len(accessGrant.Permissions))
+	for i, permission := range accessGrant.Permissions {
+		permissions[i] = permission.String()
+	}
+
+	access := EventMarkerAccess{
+		Address:     accessGrant.Address,
+		Permissions: permissions,
+	}
+
+	return &EventMarkerAddAccess{
+		Access:        access,
+		Denom:         denom,
+		Administrator: administrator,
 	}
 }

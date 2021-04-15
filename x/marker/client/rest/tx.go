@@ -286,7 +286,7 @@ func grantAccessHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 		grant := types.NewAccessGrant(req.Address, types.AccessListByNames(req.Grant))
 
-		msg := types.NewAddAccessRequest(denom, fromAddr, *grant)
+		msg := types.NewMsgAddAccessRequest(denom, fromAddr, *grant)
 		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
 }

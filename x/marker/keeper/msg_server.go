@@ -91,11 +91,11 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 			[]string{types.ModuleName, "add", "marker"},
 			1,
 			[]metrics.Label{
-				telemetry.NewLabel("amount", markerAddEvent.Amount),
-				telemetry.NewLabel("denom", markerAddEvent.Denom),
-				telemetry.NewLabel("status", markerAddEvent.Status),
-				telemetry.NewLabel("manager", markerAddEvent.Manager),
-				telemetry.NewLabel("marker-type", markerAddEvent.MarkerType),
+				telemetry.NewLabel(types.EventTelemetryLabelAccess, markerAddEvent.Amount),
+				telemetry.NewLabel(types.EventTelemetryLabelDenom, markerAddEvent.Denom),
+				telemetry.NewLabel(types.EventTelemetryLabelStatus, markerAddEvent.Status),
+				telemetry.NewLabel(types.EventTelemetryLabelManager, markerAddEvent.Manager),
+				telemetry.NewLabel(types.EventTelemetryLabelMarkerType, markerAddEvent.MarkerType),
 			},
 		)
 	}()
@@ -117,15 +117,24 @@ func (k msgServer) AddAccess(goCtx context.Context, msg *types.MsgAddAccessReque
 			ctx.Logger().Error("unable to add access grant to marker", "err", err)
 			return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, err.Error())
 		}
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeGrantAccess,
-				sdk.NewAttribute(types.EventAttributeGrantKey, msg.Access[i].String()),
-				sdk.NewAttribute(types.EventAttributeDenomKey, msg.Denom),
-				sdk.NewAttribute(types.EventAttributeAdministratorKey, msg.Administrator),
-				sdk.NewAttribute(types.EventAttributeModuleNameKey, types.ModuleName),
-			),
-		)
+
+		markerAddAccessEvent := types.NewEventMarkerAddAccess(msg.Access[i], msg.Denom, msg.Administrator)
+		if err := ctx.EventManager().EmitTypedEvent(markerAddAccessEvent); err != nil {
+			return nil, err
+		}
+
+		defer func() {
+			telemetry.IncrCounterWithLabels(
+				[]string{types.ModuleName, "add", "access"},
+				1,
+				[]metrics.Label{
+					telemetry.NewLabel(types.EventTelemetryLabelAccess, "markerAddAccessEvent.Access"),
+					telemetry.NewLabel(types.EventTelemetryLabelDenom, markerAddAccessEvent.Denom),
+					telemetry.NewLabel(types.EventTelemetryLabelAdministrator, markerAddAccessEvent.Administrator),
+				},
+			)
+		}()
+
 	}
 	return &types.MsgAddAccessResponse{}, nil
 }

@@ -194,7 +194,7 @@ func (params *GrantAccessParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, err
 	for i, perm := range params.Permissions {
 		access[i] = types.AccessByName(perm)
 	}
-	msg := types.NewAddAccessRequest(
+	msg := types.NewMsgAddAccessRequest(
 		params.Denom,
 		contract,
 		*types.NewAccessGrant(address, access),

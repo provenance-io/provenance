@@ -98,9 +98,15 @@ message EventMarkerAdd {
 
 // EventMarkerAddAccess event emitted when marker access is added
 message EventMarkerAddAccess {
-  string access        = 1;
-  string denom         = 2;
-  string administrator = 3;
+  EventMarkerAccess access        = 1 [(gogoproto.nullable) = false];
+  string            denom         = 2;
+  string            administrator = 3;
+}
+
+// EventMarkerAccess event access permissions for address
+message EventMarkerAccess {
+  string          address     = 1;
+  repeated string permissions = 2;
 }
 
 // EventMarkerDeleteAccess event emitted when marker access is revoked
