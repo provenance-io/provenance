@@ -46,6 +46,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 * Add pagination flags to the CLI query metadata commands.
 * Fix handling of Metadata Write message id helper fields.
+* Fix cli metadata address encoding/decoding command tree #231
 * Metadata Module parsing of base64 public key fixed #225
 * Fix some conversion pieces in `P8EMemorializeContract`.
 * Remove extra Object Store Locator storage.
