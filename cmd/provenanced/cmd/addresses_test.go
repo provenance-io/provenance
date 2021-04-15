@@ -13,7 +13,7 @@ import (
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
-func TestAddMetaAddressParser(t *testing.T) {
+func TestAddMetaAddressDecoder(t *testing.T) {
 	scopeUUID := uuid.New()
 	scopeID := types.ScopeMetadataAddress(scopeUUID)
 	sessionUUID := uuid.New()
@@ -71,9 +71,9 @@ func TestAddMetaAddressParser(t *testing.T) {
 	for _, tc := range tests {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			command := cmd.AddMetaAddressParser()
+			command := cmd.AddMetaAddressDecoder()
 			command.SetArgs([]string{
-				"parse", tc.addr})
+				"decode", tc.addr})
 			b := bytes.NewBufferString("")
 			command.SetOut(b)
 			if tc.expectErr {
