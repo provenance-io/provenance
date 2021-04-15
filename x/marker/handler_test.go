@@ -34,6 +34,10 @@ type HandlerTestSuite struct {
 	pubkey1   cryptotypes.PubKey
 	user1     string
 	user1Addr sdk.AccAddress
+
+	pubkey2   cryptotypes.PubKey
+	user2     string
+	user2Addr sdk.AccAddress
 }
 
 func (s *HandlerTestSuite) SetupTest() {
@@ -44,6 +48,10 @@ func (s *HandlerTestSuite) SetupTest() {
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
 	s.user1 = s.user1Addr.String()
+
+	s.pubkey2 = secp256k1.GenPrivKey().PubKey()
+	s.user2Addr = sdk.AccAddress(s.pubkey2.Address())
+	s.user2 = s.user2Addr.String()
 
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
 }
@@ -137,6 +145,16 @@ func (s HandlerTestSuite) TestMsgAddMarkerRequest() {
 
 func (s HandlerTestSuite) TestMsgAddAccessRequest() {
 
+	accessMintGrant := types.AccessGrant{
+		Address:     s.user1,
+		Permissions: types.AccessListByNames("MINT"),
+	}
+
+	accessInvalidGrant := types.AccessGrant{
+		Address:     s.user1,
+		Permissions: types.AccessListByNames("Invalid"),
+	}
+
 	cases := []struct {
 		name          string
 		msg           sdk.Msg
@@ -156,15 +174,28 @@ func (s HandlerTestSuite) TestMsgAddAccessRequest() {
 
 		{
 			"should successfully grant access to marker",
-			types.NewMsgAddAccessRequest("hotdog", s.user1Addr, types.AccessGrant{
-				Address:     s.user1,
-				Permissions: types.AccessListByNames("MINT"),
-			}),
+			types.NewMsgAddAccessRequest("hotdog", s.user1Addr, accessMintGrant),
 
 			[]string{s.user1},
 			"",
-			nil,
+			types.NewEventMarkerAddAccess(accessMintGrant, "hotdog", s.user1),
 			1,
+		},
+		{
+			"should fail to ADD access to marker, validate basic fails",
+			types.NewMsgAddAccessRequest("hotdog", s.user1Addr, accessInvalidGrant),
+			[]string{s.user1},
+			"invalid access type: invalid request",
+			nil,
+			0,
+		},
+		{
+			"should fail to ADD access to marker, keeper AddAccess failure",
+			types.NewMsgAddAccessRequest("hotdog", s.user2Addr, accessMintGrant),
+			[]string{s.user1},
+			fmt.Sprintf("updates to pending marker hotdog can only be made by %s: unauthorized", s.user1),
+			nil,
+			0,
 		},
 	}
 
