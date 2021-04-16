@@ -449,7 +449,8 @@ Then it either creates or updates the provided contract specification and record
 #### Expected failures
 
 This service message is expected to fail if:
-TODO: WriteP8eContractSpec failure points.
+* The converted contract specification meets one of the failure criteria for [contract specifications](#msg-writecontractspecification).
+* One of the converted record specifications meets one of the failure criteria for [record specifications](#msg-writerecordspecification).
 
 
 
@@ -467,4 +468,6 @@ Then it either creates or updates a scope, session, and records.
 #### Expected failures
 
 This service message is expected to fail if:
-TODO: P8eMemorializeContract failure points.
+* The converted scope meets one of the failure criteria for [scopes](#msg-writescope).
+* The converted session meets one of the failure criteria for [sessions](#msg-writesession).
+* One of the converted records meets one of the failure criteria for [records](#msg-writerecord).
