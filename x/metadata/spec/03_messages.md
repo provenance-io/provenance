@@ -215,7 +215,17 @@ If supplied, it will be used to generate the appropriate scope specification id 
 #### Expected failures
 
 This service message is expected to fail if:
-TODO: WriteScopeSpecification failure points.
+* The `specificatio_id` is missing or invalid.
+* The `description` has an empty `name` or the `name` is longer than 200 characters.
+* The `description` has a `description` longer than 5000 characters.
+* The `description` has a `website_url` or `icon_url` that is empty or longer than 2048 characters.
+* The `description` has a `website_url` or `icon_url` that has a protocol other than `http`, `https`, or `data`.
+* The `owners` list is empty.
+* One of the entries in `owners` is not a valid bech32 address.
+* The `parties_involved` list is empty.
+* One of the entries in `contract_spec_ids` is invalid.
+* One of the entries in `contract_spec_ids` does not exist.
+* One or more `owners` of the existing scope specification are not `signers`.
 
 
 
@@ -232,7 +242,8 @@ A scope specification is deleted using the `DeleteScopeSpecification` service me
 #### Expected failures
 
 This service message is expected to fail if:
-TODO: DeleteScopeSpecification failure points.
+* No scope specification exists with the given `specification_id`
+* One or more `owners` are not `signers`.
 
 
 
@@ -255,13 +266,27 @@ If supplied, it will be used to generate the appropriate contract specification 
 #### Expected failures
 
 This service message is expected to fail if:
-TODO: WriteContractSpecification failure points.
+* The `specification_id` is missing or invalid.
+* The `description` has an empty `name` or the `name` is longer than 200 characters.
+* The `description` has a `description` longer than 5000 characters.
+* The `description` has a `website_url` or `icon_url` that is empty or longer than 2048 characters.
+* The `description` has a `website_url` or `icon_url` that has a protocol other than `http`, `https`, or `data`.
+* The `owners` list is empty.
+* One of the entries in `owners` is not a valid bech32 address.
+* The `parties_involved` list is empty.
+* The `source` is empty.
+* The `source` is a resource id, that is invalid.
+* The `source` is a hash that is empty.
+* The `class_name` is empty or longer than 1000 characters.
+* One or more `owners` of the existing contract specification are not `signers`.
 
 
 
 ### Msg/DeleteContractSpecification
 
 A contract specification is deleted using the `DeleteContractSpecification` service method.
+
+This will also delete all record specifications associated with this contract specification.
 
 #### Request
 +++ https://github.com/provenance-io/provenance/blob/b295b03b5584741041d8a4e19ef0a03f2300bd2f/proto/provenance/metadata/v1/tx.proto#L301-L315
@@ -272,7 +297,10 @@ A contract specification is deleted using the `DeleteContractSpecification` serv
 #### Expected failures
 
 This service message is expected to fail if:
-TODO: DeleteContractSpecification failure points.
+* No contract specification exists with the given `specification_id`
+* One or more `owners` are not `signers`.
+* One of the record specifications associated with this contract specification cannot be deleted.
+
 
 
 
@@ -295,7 +323,20 @@ If supplied, it will be used with the `specification.name` to generate the appro
 #### Expected failures
 
 This service message is expected to fail if:
-TODO: WriteRecordSpecification failure points.
+* The `specification_id` is missing or invalid.
+* No contract specification exists with the given contract specification id portion of the `specification_id`.
+* One or more contract specification `owners` are not `signers`.
+* The `name` is longer than 200 characters.
+* One of the `input_specifications` is missing a `name` or its `name` is longer than 200 characters.
+* One of the `input_specifications` is missing a `type_name` or its `type_name` is longer than 1000 characters.
+* One of the `input_specifications` is missing a `source`.
+* One of the `input_specifications` has a `source` that is a record id that is missing or invalid.
+* One of the `input_specifications` has a `source` that is a hash that is missing.
+* The `type_name` is longer than 1000 characters.
+* The `responsible_parties` list is empty.
+* The `result_type` is unspecified.
+* A record specification is being updated and the `name` values are different.
+* A record specification is being updated and the `specification_id` values are different.
 
 
 
@@ -312,7 +353,9 @@ A record specification is deleted using the `DeleteRecordSpecification` service 
 #### Expected failures
 
 This service message is expected to fail if:
-TODO: DeleteRecordSpecification failure points.
+* No record specification exists with the given `specification_id`.
+* No contract specification exists with the given contract specification id portion of the `specification_id`.
+* One or more `owners` of the contracts specification are not `signers`.
 
 
 
@@ -331,7 +374,12 @@ An Object Store Locator entry is created using the `BindOSLocator` service metho
 #### Expected failures
 
 This service message is expected to fail if:
-TODO: BindOSLocator failure points.
+* The `owner` is missing.
+* The `owner` is not a valid bech32 address.
+* The `uri` is empty.
+* The `uri` is not a valid URI.
+* The `owner` does not match an existing account.
+* An object store locator already exists for the given `owner`.
 
 
 
@@ -348,7 +396,12 @@ An Object Store Locator entry is deleted using the `DeleteOSLocator` service met
 #### Expected failures
 
 This service message is expected to fail if:
-TODO: DeleteOSLocator failure points.
+* The `owner` is missing.
+* The `owner` is not a valid bech32 address.
+* The `uri` is empty.
+* The `uri` is not a valid URI.
+* The `owner` does not match an existing account.
+* An object store locator does not exist for the given `owner`.
 
 
 
@@ -367,8 +420,12 @@ Object Store Locators are identified by their `owner`.
 #### Expected failures
 
 This service message is expected to fail if:
-TODO: ModifyOSLocator failure points.
-
+* The `owner` is missing.
+* The `owner` is not a valid bech32 address.
+* The `uri` is empty.
+* The `uri` is not a valid URI.
+* The `owner` does not match an existing account.
+* An object store locator does not exist for the given `owner`.
 
 
 
