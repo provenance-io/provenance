@@ -128,7 +128,7 @@ func (k msgServer) AddAccess(goCtx context.Context, msg *types.MsgAddAccessReque
 				[]string{types.ModuleName, "add", "access"},
 				1,
 				[]metrics.Label{
-					telemetry.NewLabel(types.EventTelemetryLabelAccess, "markerAddAccessEvent.Access"),
+					telemetry.NewLabel(types.EventTelemetryLabelAccess, "TODO"),
 					telemetry.NewLabel(types.EventTelemetryLabelDenom, markerAddAccessEvent.Denom),
 					telemetry.NewLabel(types.EventTelemetryLabelAdministrator, markerAddAccessEvent.Administrator),
 				},

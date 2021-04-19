@@ -55,14 +55,22 @@ const (
 	// EventTypeWithdrawAsset emitted when assets are removed from marker collateral
 	EventTypeWithdrawAsset string = EventAttributeMarkerKey + "_asset_withdrawn"
 
-	EventTelemetryAddress            string = "address"
-	EventTelemetryLabelAmount        string = "amount"
-	EventTelemetryLabelDenom         string = "denom"
-	EventTelemetryLabelStatus        string = "status"
-	EventTelemetryLabelManager       string = "manager"
+	// EventTelemetryAddress address label for telemetry metrics
+	EventTelemetryAddress string = "address"
+	// EventTelemetryLabelAmount amount label for telemetry metrics
+	EventTelemetryLabelAmount string = "amount"
+	// EventTelemetryLabelDenom denom label for telemetry metrics
+	EventTelemetryLabelDenom string = "denom"
+	// EventTelemetryLabelStatus status label for telemetry metrics
+	EventTelemetryLabelStatus string = "status"
+	// EventTelemetryLabelManager manager label for telemetry metrics
+	EventTelemetryLabelManager string = "manager"
+	// EventTelemetryLabelAdministrator administrator label for telemetry metrics
 	EventTelemetryLabelAdministrator string = "administrator"
-	EventTelemetryLabelMarkerType    string = "marker-type"
-	EventTelemetryLabelAccess        string = "access"
+	// EventTelemetryLabelMarkerType marker type label for telemetry metrics
+	EventTelemetryLabelMarkerType string = "marker-type"
+	// EventTelemetryLabelAccess access label for telemetry metrics
+	EventTelemetryLabelAccess string = "access"
 )
 
 func NewEventMarkerAdd(denom string, amount string, status string, manager string, markerType string) *EventMarkerAdd {
