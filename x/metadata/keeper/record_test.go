@@ -355,7 +355,7 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 		},
 		"record specification not found": {
 			existing:        nil,
-			proposed:        types.NewRecord(missingRecordSpecName, sessionID, *process, []types.RecordInput{}, []types.RecordOutput{}, s.recordSpecID),
+			proposed:        types.NewRecord(missingRecordSpecName, sessionID, *process, []types.RecordInput{}, []types.RecordOutput{}, missingRecordSpecID),
 			signers:         []string{s.user1},
 			partiesInvolved: ownerPartyList(s.user1),
 			errorMsg: fmt.Sprintf("record specification not found for record specification id %s (contract spec uuid %s and record name %s)",
@@ -468,7 +468,7 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 		},
 		"output count wrong - record list - zero": {
 			existing:        nil,
-			proposed:        types.NewRecord(recordName2, sessionID, *process, []types.RecordInput{*goodInput2}, []types.RecordOutput{}, s.recordSpecID),
+			proposed:        types.NewRecord(recordName2, sessionID, *process, []types.RecordInput{*goodInput2}, []types.RecordOutput{}, recordSpec2ID),
 			signers:         []string{s.user1},
 			partiesInvolved: ownerPartyList(s.user1),
 			errorMsg:        "invalid output count (expected > 0, got: 0)",
@@ -502,13 +502,13 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 						Status: types.ResultStatus_RESULT_STATUS_PASS,
 					},
 				},
-				s.recordSpecID),
+				recordSpec2ID),
 			signers:         []string{s.user1},
 			partiesInvolved: ownerPartyList(s.user1),
 			errorMsg:        "",
 		},
 	}
-	// TODO: Add test cases for when the SpecificationId is actually provided.
+	// TODO: Add test cases for when the SpecificationId is nil.
 
 	for n, tc := range cases {
 		s.T().Run(n, func(t *testing.T) {
