@@ -484,11 +484,21 @@ func (k msgServer) SetDenomMetadata(
 		return nil, err
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		),
-	)
+	markerSetDenomMetaEvent := types.NewEventMarkerSetDenomMetadata(msg.Metadata.Base, msg.Metadata.Description, msg.Metadata.Display, msg.Metadata.DenomUnits, msg.Administrator)
+	if err := ctx.EventManager().EmitTypedEvent(markerSetDenomMetaEvent); err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, "set", "denom", "metadata", "marker"},
+			1,
+			[]metrics.Label{
+				telemetry.NewLabel(types.EventTelemetryLabelDenom, markerSetDenomMetaEvent.MetadataBase),
+				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, markerSetDenomMetaEvent.Administrator),
+			},
+		)
+	}()
+
 	return &types.MsgSetDenomMetadataResponse{}, nil
 }

@@ -1,5 +1,11 @@
 package types
 
+import (
+	"fmt"
+
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+)
+
 const (
 	// EventAttributeMarkerKey is the attribute key for a marker.
 	EventAttributeMarkerKey string = "marker"
@@ -176,5 +182,26 @@ func NewEventMarkerTransfer(amount string, denom string, administrator string, t
 		Administrator: administrator,
 		ToAddress:     toAddress,
 		FromAddress:   fromAddress,
+	}
+}
+
+func NewEventMarkerSetDenomMetadata(base string, description string, display string, denomUnits []*banktypes.DenomUnit, administrator string) *EventMarkerSetDenomMetadata {
+
+	metadataDenomUnits := make([]*EventDenomUnit, len(denomUnits))
+	for i, du := range denomUnits {
+		denomUnit := EventDenomUnit{
+			Denom:    du.Denom,
+			Exponent: fmt.Sprint(du.Exponent),
+			Aliases:  du.Aliases,
+		}
+		metadataDenomUnits[i] = &denomUnit
+	}
+
+	return &EventMarkerSetDenomMetadata{
+		MetadataBase:        base,
+		MetadataDescription: description,
+		MetadataDisplay:     display,
+		MetadataDenomUnits:  metadataDenomUnits,
+		Administrator:       administrator,
 	}
 }
