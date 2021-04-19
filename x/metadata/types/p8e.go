@@ -127,7 +127,6 @@ type P8EData struct {
 
 // Migrate Converts a MsgP8EMemorializeContractRequest object into the new objects.
 // The following fields require looking up specs and should be overwritten accordingly:
-//  * P8EData.Records[*].Process.ProcessId from the contract specification Source?
 //  * P8EData.Records[*].Inputs[*].Status from the record specification ResultType
 func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest) (P8EData, []string, error) {
 	p8EData := P8EData{
@@ -171,15 +170,18 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 	p8EData.Session.Parties = contractRecitalParties
 	p8EData.Session.Name = msg.Contract.Spec.Name
 
+	processID := getProcessID(msg.Contract)
+
 	// Create the records.
 	for _, c := range msg.Contract.Considerations {
 		if c != nil && c.Result != nil && c.Result.Output != nil && c.Result.Result != p8e.ExecutionResultType_RESULT_TYPE_SKIP {
 			record := emptyRecord()
 			record.Name = c.ConsiderationName
 			record.SessionId = p8EData.Session.SessionId
-			record.Process.ProcessId = &Process_Hash{Hash: "NO-SPEC-HASH-AVAILABLE"}
+			record.Process.ProcessId = processID
 			record.Process.Name = c.Result.Output.Classname
 			record.Process.Method = record.Name
+			// TODO: Overhaul this input creation loop.
 			for _, f := range c.Inputs {
 				record.Inputs = append(record.Inputs, RecordInput{
 					Name:     f.Name,
@@ -458,4 +460,19 @@ func getContractSpecID(contract *p8e.Contract) (MetadataAddress, error) {
 
 	// Okay, it's hopefully a hash...
 	return ConvertHashToAddress(ContractSpecificationKeyPrefix, hash)
+}
+
+func getProcessID(contract *p8e.Contract) isProcess_ProcessId {
+	if contract == nil || contract.Definition == nil || contract.Definition.ResourceLocation == nil ||
+		contract.Definition.ResourceLocation.Ref == nil {
+		return nil
+	}
+
+	if len(contract.Definition.ResourceLocation.Ref.Hash) > 0 {
+		return &Process_Hash{Hash: contract.Definition.ResourceLocation.Ref.Hash}
+	}
+
+	// TODO: Handle if it should be a Process_Address?
+
+	return nil
 }

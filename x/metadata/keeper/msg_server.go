@@ -463,22 +463,7 @@ func (k msgServer) P8EMemorializeContract(
 	}
 
 	// Add the stuff that needs to come from the specs.
-	var processID types.ProcessID
-	contractSpec, found := k.GetContractSpecification(ctx, p8EData.Session.SpecificationId)
-	if !found {
-		return nil, fmt.Errorf("contract specification %s not found", p8EData.Session.SpecificationId)
-	}
-	switch source := contractSpec.Source.(type) {
-	case *types.ContractSpecification_ResourceId:
-		processID = &types.Process_Address{Address: source.ResourceId.String()}
-	case *types.ContractSpecification_Hash:
-		processID = &types.Process_Hash{Hash: source.Hash}
-	default:
-		return nil, fmt.Errorf("unexpected source type on contract specification %s", p8EData.Session.SpecificationId)
-	}
-
 	for _, r := range p8EData.Records {
-		r.Process.ProcessId = processID
 		recSpecID, e := p8EData.Session.SpecificationId.AsRecordSpecAddress(r.Name)
 		if e != nil {
 			return nil, e
