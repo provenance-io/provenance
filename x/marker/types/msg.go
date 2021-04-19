@@ -75,8 +75,8 @@ func (msg MsgTransferRequest) Type() string { return TypeTransferRequest }
 // Type returns the message action.
 func (msg MsgSetDenomMetadataRequest) Type() string { return TypeSetMetadataRequest }
 
-// NewAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
-func NewAddMarkerRequest(
+// NewMsgAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
+func NewMsgAddMarkerRequest(
 	denom string, totalSupply sdk.Int, fromAddress sdk.AccAddress, manager sdk.AccAddress, markerType MarkerType, supplyFixed bool, allowGovernanceControl bool, // nolint:interfacer
 ) *MsgAddMarkerRequest {
 	return &MsgAddMarkerRequest{

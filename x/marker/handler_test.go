@@ -80,10 +80,10 @@ func TestInvalidProposal(t *testing.T) {
 }
 
 func (s HandlerTestSuite) TestMsgAddMarkerRequest() {
-	activeStatus := types.NewAddMarkerRequest("hotdog", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true)
+	activeStatus := types.NewMsgAddMarkerRequest("hotdog", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true)
 	activeStatus.Status = types.StatusActive
 
-	undefinedStatus := types.NewAddMarkerRequest("hotdog", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true)
+	undefinedStatus := types.NewMsgAddMarkerRequest("hotdog", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true)
 	undefinedStatus.Status = types.StatusUndefined
 
 	cases := []struct {
@@ -95,7 +95,7 @@ func (s HandlerTestSuite) TestMsgAddMarkerRequest() {
 	}{
 		{
 			"should successfully ADD new marker",
-			types.NewAddMarkerRequest("hotdog", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
+			types.NewMsgAddMarkerRequest("hotdog", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
 			[]string{s.user1},
 			"",
 			types.NewEventMarkerAdd("hotdog", "100", "proposed", s.user1, types.MarkerType_Coin.String()),
@@ -116,7 +116,7 @@ func (s HandlerTestSuite) TestMsgAddMarkerRequest() {
 		},
 		{
 			"should fail to ADD new marker, marker already exists",
-			types.NewAddMarkerRequest("hotdog", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
+			types.NewMsgAddMarkerRequest("hotdog", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
 			[]string{s.user1},
 			fmt.Sprintf("marker address already exists for %s: invalid request", types.MustGetMarkerAddress("hotdog")),
 			nil,
@@ -165,7 +165,7 @@ func (s HandlerTestSuite) TestMsgAddAccessRequest() {
 	}{
 		{
 			"setup new marker for test",
-			types.NewAddMarkerRequest("hotdog", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
+			types.NewMsgAddMarkerRequest("hotdog", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
 			[]string{s.user1},
 			"",
 			nil,
@@ -234,7 +234,7 @@ func (s HandlerTestSuite) TestMsgDeleteAccessMarkerRequest() {
 	}{
 		{
 			"setup new marker for test",
-			types.NewAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
+			types.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
 			[]string{s.user1},
 			"",
 			nil,
