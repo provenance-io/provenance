@@ -352,12 +352,24 @@ func (k msgServer) Burn(goCtx context.Context, msg *types.MsgBurnRequest) (*type
 		ctx.Logger().Error("unable to burn coin from marker", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		),
-	)
+
+	markerBurnEvent := types.NewEventMarkerBurn(msg.Amount.Amount.String(), msg.Amount.GetDenom(), msg.Administrator)
+	if err := ctx.EventManager().EmitTypedEvent(markerBurnEvent); err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, "burn", "marker"},
+			1,
+			[]metrics.Label{
+				telemetry.NewLabel(types.EventTelemetryLabelAmount, markerBurnEvent.Amount),
+				telemetry.NewLabel(types.EventTelemetryLabelDenom, markerBurnEvent.Denom),
+				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, markerBurnEvent.Administrator),
+			},
+		)
+	}()
+
 	return &types.MsgBurnResponse{}, nil
 }
 

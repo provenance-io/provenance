@@ -145,3 +145,11 @@ func NewEventMarkerMint(amount string, denom string, administrator string) *Even
 		Administrator: administrator,
 	}
 }
+
+func NewEventMarkerBurn(amount string, denom string, administrator string) *EventMarkerBurn {
+	return &EventMarkerBurn{
+		Amount:        amount,
+		Denom:         denom,
+		Administrator: administrator,
+	}
+}
