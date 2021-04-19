@@ -116,3 +116,10 @@ func NewEventMarkerFinalize(denom string, administrator string) *EventMarkerFina
 		Administrator: administrator,
 	}
 }
+
+func NewEventMarkerActivate(denom string, administrator string) *EventMarkerActivate {
+	return &EventMarkerActivate{
+		Denom:         denom,
+		Administrator: administrator,
+	}
+}

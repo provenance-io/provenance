@@ -136,6 +136,7 @@ func (k msgServer) AddAccess(goCtx context.Context, msg *types.MsgAddAccessReque
 		}()
 
 	}
+
 	return &types.MsgAddAccessResponse{}, nil
 }
 
@@ -157,6 +158,7 @@ func (k msgServer) DeleteAccess(goCtx context.Context, msg *types.MsgDeleteAcces
 		ctx.Logger().Error("unable to remove access grant from marker", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, err.Error())
 	}
+
 	markerDeleteAccessEvent := types.NewEventMarkerDeleteAccess(msg.RemovedAddress, msg.Denom, msg.Administrator)
 	if err := ctx.EventManager().EmitTypedEvent(markerDeleteAccessEvent); err != nil {
 		return nil, err
@@ -189,6 +191,7 @@ func (k msgServer) Finalize(goCtx context.Context, msg *types.MsgFinalizeRequest
 		ctx.Logger().Error("unable to finalize marker", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
+
 	markerFinalizeEvent := types.NewEventMarkerFinalize(msg.Denom, msg.Administrator)
 	if err := ctx.EventManager().EmitTypedEvent(markerFinalizeEvent); err != nil {
 		return nil, err
@@ -204,6 +207,7 @@ func (k msgServer) Finalize(goCtx context.Context, msg *types.MsgFinalizeRequest
 			},
 		)
 	}()
+
 	return &types.MsgFinalizeResponse{}, nil
 }
 
@@ -219,14 +223,23 @@ func (k msgServer) Activate(goCtx context.Context, msg *types.MsgActivateRequest
 		ctx.Logger().Error("unable to activate marker", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeActivate,
-			sdk.NewAttribute(types.EventAttributeDenomKey, msg.Denom),
-			sdk.NewAttribute(types.EventAttributeAdministratorKey, msg.Administrator),
-			sdk.NewAttribute(types.EventAttributeModuleNameKey, types.ModuleName),
-		),
-	)
+
+	markerActivateEvent := types.NewEventMarkerActivate(msg.Denom, msg.Administrator)
+	if err := ctx.EventManager().EmitTypedEvent(markerActivateEvent); err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, "activate", "marker"},
+			1,
+			[]metrics.Label{
+				telemetry.NewLabel(types.EventTelemetryLabelDenom, markerActivateEvent.Denom),
+				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, markerActivateEvent.Administrator),
+			},
+		)
+	}()
+
 	return &types.MsgActivateResponse{}, nil
 }
 
