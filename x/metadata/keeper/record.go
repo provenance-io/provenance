@@ -187,10 +187,6 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, pr
 	recSpecID := types.RecordSpecMetadataAddress(contractSpecUUID, proposed.Name)
 
 	if proposed.SpecificationId.Empty() {
-		// TODO: Fix this: Setting here doesn't work.
-		//       proposed is passed into this function as a value (not reference).
-		//       So setting this here doesn't have any effect outside of this function.
-		//       I.e. if it's empty right here, it will be empty on chain.
 		proposed.SpecificationId = recSpecID
 	} else if !proposed.SpecificationId.Equals(recSpecID) {
 		return fmt.Errorf("proposed specification id %s does not match expected specification id %s",
