@@ -258,6 +258,21 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, pr
 		inputSourceValue := ""
 		switch source := input.Source.(type) {
 		case *types.RecordInput_RecordId:
+			rec, found := k.GetRecord(ctx, source.RecordId)
+			if !found {
+				return fmt.Errorf("input %s source record id %s not found", input.Name, source.RecordId)
+			}
+			hasInput := false
+			for _, ri := range rec.Inputs {
+				if ri.Name == input.Name {
+					hasInput = true
+					break
+				}
+			}
+			if !hasInput {
+				return fmt.Errorf("input %s source record id %s does not have an input with name %s",
+					input.Name, source.RecordId, input.Name)
+			}
 			inputSourceType = sourceTypeRecord
 			inputSourceValue = source.RecordId.String()
 		case *types.RecordInput_Hash:
