@@ -157,15 +157,23 @@ func (k msgServer) DeleteAccess(goCtx context.Context, msg *types.MsgDeleteAcces
 		ctx.Logger().Error("unable to remove access grant from marker", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, err.Error())
 	}
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeRevokeAccess,
-			sdk.NewAttribute(types.EventAttributeRevokeKey, msg.RemovedAddress),
-			sdk.NewAttribute(types.EventAttributeDenomKey, msg.Denom),
-			sdk.NewAttribute(types.EventAttributeAdministratorKey, msg.Administrator),
-			sdk.NewAttribute(types.EventAttributeModuleNameKey, types.ModuleName),
-		),
-	)
+	markerDeleteAccessEvent := types.NewEventMarkerDeleteAccess(msg.RemovedAddress, msg.Denom, msg.Administrator)
+	if err := ctx.EventManager().EmitTypedEvent(markerDeleteAccessEvent); err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, "delete", "access"},
+			1,
+			[]metrics.Label{
+				telemetry.NewLabel(types.EventTelemetryAddress, markerDeleteAccessEvent.RemoveAddress),
+				telemetry.NewLabel(types.EventTelemetryLabelDenom, markerDeleteAccessEvent.Denom),
+				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, markerDeleteAccessEvent.Administrator),
+			},
+		)
+	}()
+
 	return &types.MsgDeleteAccessResponse{}, nil
 }
 

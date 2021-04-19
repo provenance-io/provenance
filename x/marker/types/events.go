@@ -55,6 +55,7 @@ const (
 	// EventTypeWithdrawAsset emitted when assets are removed from marker collateral
 	EventTypeWithdrawAsset string = EventAttributeMarkerKey + "_asset_withdrawn"
 
+	EventTelemetryAddress            string = "address"
 	EventTelemetryLabelAmount        string = "amount"
 	EventTelemetryLabelDenom         string = "denom"
 	EventTelemetryLabelStatus        string = "status"
@@ -88,6 +89,14 @@ func NewEventMarkerAddAccess(accessGrant AccessGrant, denom string, administrato
 
 	return &EventMarkerAddAccess{
 		Access:        access,
+		Denom:         denom,
+		Administrator: administrator,
+	}
+}
+
+func NewEventMarkerDeleteAccess(removeAddress string, denom string, administrator string) *EventMarkerDeleteAccess {
+	return &EventMarkerDeleteAccess{
+		RemoveAddress: removeAddress,
 		Denom:         denom,
 		Administrator: administrator,
 	}
