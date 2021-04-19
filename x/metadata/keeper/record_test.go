@@ -208,12 +208,13 @@ func (s *RecordKeeperTestSuite) TestValidateRecordRemove() {
 }
 
 func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
-	scopeID := types.ScopeMetadataAddress(uuid.New())
+	scopeUUID := uuid.New()
+	scopeID := types.ScopeMetadataAddress(scopeUUID)
 	scope := types.NewScope(scopeID, s.scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, s.user1)
 	s.app.MetadataKeeper.SetScope(s.ctx, *scope)
 
-	sessionID, err := scopeID.AsSessionAddress(uuid.New())
-	s.Require().NoError(err, "error making sessionID")
+	sessionUUID := uuid.New()
+	sessionID := types.SessionMetadataAddress(scopeUUID, sessionUUID)
 	session := types.NewSession(
 		s.sessionName,
 		sessionID,
@@ -295,14 +296,55 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 		types.RecordInputStatus_Proposed,
 	)
 
-	randomScopeID := types.ScopeMetadataAddress(uuid.New())
-	randomSessionID, err := randomScopeID.AsSessionAddress(uuid.New())
-	s.Require().NoError(err, "error making randomSessionID")
-	randomInScopeSessionID, err := scope.ScopeId.AsSessionAddress(uuid.New())
-	s.Require().NoError(err, "error making randomInScopeSessionID")
+	randomScopeUUID := uuid.New()
+	randomScopeID := types.ScopeMetadataAddress(randomScopeUUID)
+	randomSessionUUID := uuid.New()
+	randomSessionID := types.SessionMetadataAddress(randomScopeUUID, randomSessionUUID)
+	randomInScopeSessionID := types.SessionMetadataAddress(scopeUUID, uuid.New())
 	missingRecordSpecName := "missing"
-	missingRecordSpecID, err := s.contractSpecID.AsRecordSpecAddress(missingRecordSpecName)
-	s.Require().NoError(err, "error making randomInScopeSessionID")
+	missingRecordSpecID := types.RecordSpecMetadataAddress(s.contractSpecUUID, missingRecordSpecName)
+
+	anotherScopeUUID := uuid.New()
+	anotherScopeID := types.ScopeMetadataAddress(anotherScopeUUID)
+	anotherScope := types.NewScope(anotherScopeID, s.scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, s.user1)
+	s.app.MetadataKeeper.SetScope(s.ctx, *anotherScope)
+
+	anotherSessionUUID := uuid.New()
+	anotherSessionID := types.SessionMetadataAddress(anotherScopeUUID, anotherSessionUUID)
+	anotherSession := types.NewSession(
+		s.sessionName,
+		anotherSessionID,
+		s.contractSpecID,
+		ownerPartyList(s.user1),
+		&types.AuditFields{
+			CreatedDate: time.Time{},
+			CreatedBy:   s.user1,
+			UpdatedDate: time.Time{},
+			UpdatedBy:   "",
+			Version:     0,
+			Message:     "",
+		},
+	)
+	s.app.MetadataKeeper.SetSession(s.ctx, *anotherSession)
+
+	anotherRecord := types.NewRecord(
+		// name string, sessionID MetadataAddress, process Process, inputs []RecordInput, outputs []RecordOutput, specificationID MetadataAddress
+		s.recordName,
+		anotherSessionID,
+		*process,
+		[]types.RecordInput{*goodInput},
+		[]types.RecordOutput{
+			{
+				Hash:   "anotheroutput",
+				Status: types.ResultStatus_RESULT_STATUS_PASS,
+			},
+		},
+		s.recordSpecID,
+	)
+	anotherRecordID := types.RecordMetadataAddress(anotherScopeUUID, anotherRecord.Name)
+	s.app.MetadataKeeper.SetRecord(s.ctx, *anotherRecord)
+
+	missingRecordID := types.RecordMetadataAddress(uuid.New(), anotherRecord.Name)
 
 	cases := map[string]struct {
 		existing        *types.Record
@@ -408,7 +450,7 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 				[]types.RecordInput{
 					{
 						Name:     goodInput.Name,
-						Source:   &types.RecordInput_RecordId{RecordId: s.recordID},
+						Source:   &types.RecordInput_RecordId{RecordId: anotherRecordID},
 						TypeName: goodInput.TypeName,
 						Status:   types.RecordInputStatus_Record,
 					},
@@ -419,6 +461,25 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 			partiesInvolved: ownerPartyList(s.user1),
 			errorMsg: fmt.Sprintf("input %s has source type %s but spec calls for %s",
 				goodInput.Name, "record", "hash"),
+		},
+		"input source record id does not exist": {
+			existing: nil,
+			proposed: types.NewRecord(
+				s.recordName, sessionID, *process,
+				[]types.RecordInput{
+					{
+						Name:     goodInput.Name,
+						Source:   &types.RecordInput_RecordId{RecordId: missingRecordID},
+						TypeName: goodInput.TypeName,
+						Status:   types.RecordInputStatus_Record,
+					},
+				},
+				[]types.RecordOutput{},
+				s.recordSpecID),
+			signers:         []string{s.user1},
+			partiesInvolved: ownerPartyList(s.user1),
+			errorMsg: fmt.Sprintf("input %s source record id %s not found",
+				goodInput.Name, missingRecordID),
 		},
 		"input source value wrong": {
 			existing: nil,
