@@ -57,6 +57,10 @@ const (
 
 	// EventTelemetryAddress address label for telemetry metrics
 	EventTelemetryAddress string = "address"
+	// EventTelemetryToAddress to address label for telemetry metrics
+	EventTelemetryToAddress string = "to-address"
+	// EventTelemetryFromAddress from address label for telemetry metrics
+	EventTelemetryFromAddress string = "from-address"
 	// EventTelemetryLabelAmount amount label for telemetry metrics
 	EventTelemetryLabelAmount string = "amount"
 	// EventTelemetryLabelCoins coins label for telemetry metrics
@@ -162,5 +166,15 @@ func NewEventMarkerWithdraw(coins string, denom string, administrator string, to
 		Denom:         denom,
 		Administrator: administrator,
 		ToAddress:     toAddress,
+	}
+}
+
+func NewEventMarkerTransfer(amount string, denom string, administrator string, toAddress string, fromAddress string) *EventMarkerTransfer {
+	return &EventMarkerTransfer{
+		Amount:        amount,
+		Denom:         denom,
+		Administrator: administrator,
+		ToAddress:     toAddress,
+		FromAddress:   fromAddress,
 	}
 }

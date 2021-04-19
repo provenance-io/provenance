@@ -402,7 +402,7 @@ func (k msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdrawRequest
 			[]string{types.ModuleName, "withdraw", "marker"},
 			1,
 			[]metrics.Label{
-				telemetry.NewLabel(types.EventTelemetryAddress, markerWithdrawEvent.ToAddress),
+				telemetry.NewLabel(types.EventTelemetryToAddress, markerWithdrawEvent.ToAddress),
 				telemetry.NewLabel(types.EventTelemetryLabelAmount, markerWithdrawEvent.Coins),
 				telemetry.NewLabel(types.EventTelemetryLabelDenom, markerWithdrawEvent.Denom),
 				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, markerWithdrawEvent.Administrator),
@@ -441,22 +441,24 @@ func (k msgServer) Transfer(goCtx context.Context, msg *types.MsgTransferRequest
 		return nil, err
 	}
 
-	defer func() {
-		if msg.Amount.Amount.IsInt64() {
-			telemetry.SetGaugeWithLabels(
-				[]string{"tx", "msg", "transfer"},
-				float32(msg.Amount.Amount.Int64()),
-				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
-			)
-		}
-	}()
+	markerTransferEvent := types.NewEventMarkerTransfer(msg.Amount.String(), msg.Amount.Denom, msg.Administrator, msg.ToAddress, msg.FromAddress)
+	if err := ctx.EventManager().EmitTypedEvent(markerTransferEvent); err != nil {
+		return nil, err
+	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		),
-	)
+	defer func() {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, "withdraw", "marker"},
+			1,
+			[]metrics.Label{
+				telemetry.NewLabel(types.EventTelemetryToAddress, markerTransferEvent.ToAddress),
+				telemetry.NewLabel(types.EventTelemetryFromAddress, markerTransferEvent.FromAddress),
+				telemetry.NewLabel(types.EventTelemetryLabelAmount, markerTransferEvent.Amount),
+				telemetry.NewLabel(types.EventTelemetryLabelDenom, markerTransferEvent.Denom),
+				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, markerTransferEvent.Administrator),
+			},
+		)
+	}()
 	return &types.MsgTransferResponse{}, nil
 }
 
