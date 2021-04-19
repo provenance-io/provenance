@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -122,7 +123,12 @@ func (k Keeper) IterateRecords(ctx sdk.Context, scopeID types.MetadataAddress, h
 
 // ValidateRecordUpdate checks the current record and the proposed record to determine if the the proposed changes are valid
 // based on the existing state
-func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, proposed types.Record, signers []string, partiesInvolved []types.Party) error {
+// Note: The proposed parameter is a reference here so that the SpecificationId can be set in cases when it's not provided.
+func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, proposed *types.Record, signers []string, partiesInvolved []types.Party) error {
+	if proposed == nil {
+		return errors.New("proposed record cannot be nil")
+	}
+
 	if err := proposed.ValidateBasic(); err != nil {
 		return err
 	}
