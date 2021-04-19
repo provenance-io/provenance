@@ -288,7 +288,7 @@ func (k msgServer) Delete(goCtx context.Context, msg *types.MsgDeleteRequest) (*
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	markerDeleteEvent := types.NewEventMarkerCancel(msg.Denom, msg.Administrator)
+	markerDeleteEvent := types.NewEventMarkerDelete(msg.Denom, msg.Administrator)
 	if err := ctx.EventManager().EmitTypedEvent(markerDeleteEvent); err != nil {
 		return nil, err
 	}

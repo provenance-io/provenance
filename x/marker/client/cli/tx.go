@@ -260,7 +260,7 @@ func GetCmdDelete() *cobra.Command {
 			}
 
 			callerAddr := clientCtx.GetFromAddress()
-			msg := types.NewDeleteRequest(args[0], callerAddr)
+			msg := types.NewMsgDeleteRequest(args[0], callerAddr)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

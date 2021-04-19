@@ -252,7 +252,7 @@ func (params *DestroyMarkerParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, e
 	if err := sdk.ValidateDenom(params.Denom); err != nil {
 		return nil, fmt.Errorf("wasm: invalid denomination in DestroyMarkerParams: %w", err)
 	}
-	msg := types.NewDeleteRequest(params.Denom, contract)
+	msg := types.NewMsgDeleteRequest(params.Denom, contract)
 	return []sdk.Msg{msg}, nil
 }
 

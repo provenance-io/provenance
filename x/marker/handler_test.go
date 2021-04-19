@@ -433,61 +433,69 @@ func (s HandlerTestSuite) TestMsgCancelMarkerRequest() {
 	}
 }
 
-// func (s HandlerTestSuite) TestMsgMintMarkerRequest() {
+func (s HandlerTestSuite) TestMsgDeleteMarkerRequest() {
 
-// 	hotdogDenom := "hotdog"
-// 	accessDeleteGrant := types.AccessGrant{
-// 		Address:     s.user1,
-// 		Permissions: types.AccessListByNames("DELETE"),
-// 	}
+	hotdogDenom := "hotdog"
+	accessDeleteMintGrant := types.AccessGrant{
+		Address:     s.user1,
+		Permissions: types.AccessListByNames("DELETE,MINT"),
+	}
 
-// 	cases := []struct {
-// 		name          string
-// 		msg           sdk.Msg
-// 		signers       []string
-// 		errorMsg      string
-// 		expectedEvent *types.EventMarkerMint
-// 		eventIdx      int
-// 	}{
-// 		{
-// 			"setup new marker for test",
-// 			types.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
-// 			[]string{s.user1},
-// 			"",
-// 			nil,
-// 			0,
-// 		},
-// 		{
-// 			"setup grant delete access to marker",
-// 			types.NewMsgAddAccessRequest("hotdog", s.user1Addr, accessDeleteGrant),
-// 			[]string{s.user1},
-// 			"",
-// 			nil,
-// 			0,
-// 		},
-// 		{
-// 			"should successfully cancel marker",
-// 			types.NewMsgCancelRequest(hotdogDenom, s.user1Addr),
-// 			[]string{s.user1},
-// 			"",
-// 			types.NewEventMarkerCancel(hotdogDenom, s.user1),
-// 			2,
-// 		},
-// 	}
-// 	for _, tc := range cases {
-// 		s.T().Run(tc.name, func(t *testing.T) {
-// 			_, err := s.handler(s.ctx, tc.msg)
-// 			if len(tc.errorMsg) > 0 {
-// 				assert.EqualError(t, err, tc.errorMsg)
-// 			} else {
-// 				assert.NoError(t, err)
-// 				if tc.expectedEvent != nil {
-// 					em := s.ctx.EventManager()
-// 					events := em.Events().ToABCIEvents()
-// 					msg1, _ := sdk.ParseTypedEvent(events[tc.eventIdx])
-// 					require.Equal(t, tc.expectedEvent, msg1)
-// 				}
-// 			}
-// 		})
-// 	}
-// }
+	cases := []struct {
+		name          string
+		msg           sdk.Msg
+		signers       []string
+		errorMsg      string
+		expectedEvent *types.EventMarkerDelete
+		eventIdx      int
+	}{
+		{
+			"setup new marker for test",
+			types.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
+			[]string{s.user1},
+			"",
+			nil,
+			0,
+		},
+		{
+			"setup grant delete access to marker",
+			types.NewMsgAddAccessRequest("hotdog", s.user1Addr, accessDeleteMintGrant),
+			[]string{s.user1},
+			"",
+			nil,
+			0,
+		},
+		{
+			"should successfully cancel marker",
+			types.NewMsgCancelRequest(hotdogDenom, s.user1Addr),
+			[]string{s.user1},
+			"",
+			nil,
+			0,
+		},
+		{
+			"should successfully delete marker",
+			types.NewMsgDeleteRequest(hotdogDenom, s.user1Addr),
+			[]string{s.user1},
+			"",
+			types.NewEventMarkerDelete(hotdogDenom, s.user1),
+			3,
+		},
+	}
+	for _, tc := range cases {
+		s.T().Run(tc.name, func(t *testing.T) {
+			_, err := s.handler(s.ctx, tc.msg)
+			if len(tc.errorMsg) > 0 {
+				assert.EqualError(t, err, tc.errorMsg)
+			} else {
+				assert.NoError(t, err)
+				if tc.expectedEvent != nil {
+					em := s.ctx.EventManager()
+					events := em.Events().ToABCIEvents()
+					msg1, _ := sdk.ParseTypedEvent(events[tc.eventIdx])
+					require.Equal(t, tc.expectedEvent, msg1)
+				}
+			}
+		})
+	}
+}

@@ -183,7 +183,7 @@ func updateStatusHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		case types.StatusCancelled:
 			msg = types.NewMsgCancelRequest(denom, fromAddr)
 		case types.StatusDestroyed:
-			msg = types.NewDeleteRequest(denom, fromAddr)
+			msg = types.NewMsgDeleteRequest(denom, fromAddr)
 		default:
 			rest.WriteErrorResponse(w, http.StatusBadRequest, "invalid status change request")
 			return

@@ -307,8 +307,8 @@ func (msg MsgCancelRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-// NewDeleteRequest
-func NewDeleteRequest(denom string, admin sdk.AccAddress) *MsgDeleteRequest { // nolint:interfacer
+// NewMsgDeleteRequest
+func NewMsgDeleteRequest(denom string, admin sdk.AccAddress) *MsgDeleteRequest { // nolint:interfacer
 	return &MsgDeleteRequest{
 		Denom:         denom,
 		Administrator: admin.String(),
