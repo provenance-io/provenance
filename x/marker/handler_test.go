@@ -617,3 +617,78 @@ func (s HandlerTestSuite) TestMsgBurnMarkerRequest() {
 		})
 	}
 }
+
+func (s HandlerTestSuite) TestMsgWithdrawMarkerRequest() {
+
+	hotdogDenom := "hotdog"
+	access := types.AccessGrant{
+		Address:     s.user1,
+		Permissions: types.AccessListByNames("DELETE,MINT,WITHDRAW"),
+	}
+
+	cases := []struct {
+		name          string
+		msg           sdk.Msg
+		signers       []string
+		errorMsg      string
+		expectedEvent *types.EventMarkerWithdraw
+		eventIdx      int
+	}{
+		{
+			"setup new marker for test",
+			types.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
+			[]string{s.user1},
+			"",
+			nil,
+			0,
+		},
+		{
+			"setup grant access to marker",
+			types.NewMsgAddAccessRequest(hotdogDenom, s.user1Addr, access),
+			[]string{s.user1},
+			"",
+			nil,
+			0,
+		},
+		{
+			"setup finalize marker",
+			types.NewMsgFinalizeRequest(hotdogDenom, s.user1Addr),
+			[]string{s.user1},
+			"",
+			nil,
+			0,
+		},
+		{
+			"should successfully activate marker",
+			types.NewMsgActivateRequest(hotdogDenom, s.user1Addr),
+			[]string{s.user1},
+			"",
+			nil,
+			0, //finalize marker will emit a send and message event from bank module
+		},
+		{
+			"should successfully withdraw marker",
+			types.NewWithdrawRequest(s.user1Addr, s.user1Addr, hotdogDenom, sdk.NewCoins(sdk.NewCoin(hotdogDenom, sdk.NewInt(100)))),
+			[]string{s.user1},
+			"",
+			types.NewEventMarkerWithdraw("100hotdog", hotdogDenom, s.user1, s.user1),
+			9,
+		},
+	}
+	for _, tc := range cases {
+		s.T().Run(tc.name, func(t *testing.T) {
+			_, err := s.handler(s.ctx, tc.msg)
+			if len(tc.errorMsg) > 0 {
+				assert.EqualError(t, err, tc.errorMsg)
+			} else {
+				assert.NoError(t, err)
+				if tc.expectedEvent != nil {
+					em := s.ctx.EventManager()
+					events := em.Events().ToABCIEvents()
+					msg1, _ := sdk.ParseTypedEvent(events[tc.eventIdx])
+					require.Equal(t, tc.expectedEvent, msg1)
+				}
+			}
+		})
+	}
+}

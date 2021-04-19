@@ -156,7 +156,7 @@ message EventMarkerBurn {
 
 // EventMarkerWithdraw event emitted when coins are withdrew from marker
 message EventMarkerWithdraw {
-  string amount        = 1;
+  string coins         = 1;
   string denom         = 2;
   string administrator = 3;
   string to_address    = 4;

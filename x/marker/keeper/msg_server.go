@@ -403,7 +403,7 @@ func (k msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdrawRequest
 			1,
 			[]metrics.Label{
 				telemetry.NewLabel(types.EventTelemetryAddress, markerWithdrawEvent.ToAddress),
-				telemetry.NewLabel(types.EventTelemetryLabelAmount, markerWithdrawEvent.Amount),
+				telemetry.NewLabel(types.EventTelemetryLabelAmount, markerWithdrawEvent.Coins),
 				telemetry.NewLabel(types.EventTelemetryLabelDenom, markerWithdrawEvent.Denom),
 				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, markerWithdrawEvent.Administrator),
 			},
