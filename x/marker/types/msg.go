@@ -410,8 +410,8 @@ func (msg MsgBurnRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-// NewWithdrawRequest
-func NewWithdrawRequest(
+// NewMsgWithdrawRequest
+func NewMsgWithdrawRequest(
 	admin sdk.AccAddress, toAddress sdk.AccAddress, denom string, amount sdk.Coins,
 ) *MsgWithdrawRequest {
 	if toAddress.Empty() {
@@ -460,8 +460,8 @@ func (msg MsgWithdrawRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-// NewTransferRequest
-func NewTransferRequest(
+// NewMsgTransferRequest
+func NewMsgTransferRequest(
 	admin, fromAddress, toAddress sdk.AccAddress, amount sdk.Coin, // nolint:interfacer
 ) *MsgTransferRequest {
 	return &MsgTransferRequest{

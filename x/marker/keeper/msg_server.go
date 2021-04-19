@@ -441,14 +441,14 @@ func (k msgServer) Transfer(goCtx context.Context, msg *types.MsgTransferRequest
 		return nil, err
 	}
 
-	markerTransferEvent := types.NewEventMarkerTransfer(msg.Amount.String(), msg.Amount.Denom, msg.Administrator, msg.ToAddress, msg.FromAddress)
+	markerTransferEvent := types.NewEventMarkerTransfer(msg.Amount.Amount.String(), msg.Amount.Denom, msg.Administrator, msg.ToAddress, msg.FromAddress)
 	if err := ctx.EventManager().EmitTypedEvent(markerTransferEvent); err != nil {
 		return nil, err
 	}
 
 	defer func() {
 		telemetry.IncrCounterWithLabels(
-			[]string{types.ModuleName, "withdraw", "marker"},
+			[]string{types.ModuleName, "transfer", "marker"},
 			1,
 			[]metrics.Label{
 				telemetry.NewLabel(types.EventTelemetryToAddress, markerTransferEvent.ToAddress),

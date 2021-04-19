@@ -363,7 +363,7 @@ func GetCmdWithdrawCoins() *cobra.Command {
 					return sdkErrors.Wrapf(err, "invalid recipient address %s", args[0])
 				}
 			}
-			msg := types.NewWithdrawRequest(callerAddr, recipientAddr, denom, coins)
+			msg := types.NewMsgWithdrawRequest(callerAddr, recipientAddr, denom, coins)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

@@ -255,7 +255,7 @@ func withdrawSupplyHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		msg := types.NewWithdrawRequest(fromAddr, req.Recipient, denom, sdk.NewCoins(req.Amount))
+		msg := types.NewMsgWithdrawRequest(fromAddr, req.Recipient, denom, sdk.NewCoins(req.Amount))
 		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
 }

@@ -289,7 +289,7 @@ func (params *WithdrawParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error)
 	if err != nil {
 		return nil, fmt.Errorf("wasm: invalid recipient address: %w", err)
 	}
-	msg := types.NewWithdrawRequest(
+	msg := types.NewMsgWithdrawRequest(
 		contract, recipient, params.Denom, sdk.NewCoins(params.Coin))
 	return []sdk.Msg{msg}, nil
 }
@@ -308,6 +308,6 @@ func (params *TransferParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error)
 	if err != nil {
 		return nil, fmt.Errorf("wasm: invalid 'from' address in TransferParams: %w", err)
 	}
-	msg := types.NewTransferRequest(contract, from, to, params.Coin)
+	msg := types.NewMsgTransferRequest(contract, from, to, params.Coin)
 	return []sdk.Msg{msg}, nil
 }
