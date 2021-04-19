@@ -137,3 +137,11 @@ func NewEventMarkerDelete(denom string, administrator string) *EventMarkerDelete
 		Administrator: administrator,
 	}
 }
+
+func NewEventMarkerMint(amount string, denom string, administrator string) *EventMarkerMint {
+	return &EventMarkerMint{
+		Amount:        amount,
+		Denom:         denom,
+		Administrator: administrator,
+	}
+}

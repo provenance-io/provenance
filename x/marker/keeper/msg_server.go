@@ -320,12 +320,23 @@ func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMintRequest) (*type
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		),
-	)
+	markerMintEvent := types.NewEventMarkerMint(msg.Amount.Amount.String(), msg.Amount.GetDenom(), msg.Administrator)
+	if err := ctx.EventManager().EmitTypedEvent(markerMintEvent); err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, "mint", "marker"},
+			1,
+			[]metrics.Label{
+				telemetry.NewLabel(types.EventTelemetryLabelAmount, markerMintEvent.Amount),
+				telemetry.NewLabel(types.EventTelemetryLabelDenom, markerMintEvent.Denom),
+				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, markerMintEvent.Administrator),
+			},
+		)
+	}()
+
 	return &types.MsgMintResponse{}, nil
 }
 
