@@ -507,9 +507,10 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 		s.T().Run(n, func(t *testing.T) {
 			err := s.app.MetadataKeeper.ValidateRecordUpdate(s.ctx, tc.existing, tc.proposed, tc.signers, ownerPartyList(s.user1))
 			if len(tc.errorMsg) != 0 {
-				assert.EqualError(t, err, tc.errorMsg)
+				assert.EqualError(t, err, tc.errorMsg, "ValidateRecordUpdate expected error")
 			} else {
-				assert.NoError(t, err)
+				assert.NoError(t, err, "ValidateRecordUpdate unexpected error")
+				assert.NotEmpty(t, tc.proposed.SpecificationId, "proposed.SpecificationId after ValidateRecordUpdate")
 			}
 		})
 	}
