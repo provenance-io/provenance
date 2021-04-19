@@ -140,7 +140,7 @@ func burnSupplyHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		msg := types.NewBurnRequest(fromAddr, req.Amount)
+		msg := types.NewMsgBurnRequest(fromAddr, req.Amount)
 		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
 }

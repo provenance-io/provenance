@@ -272,7 +272,7 @@ func (params *BurnSupplyParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, erro
 	if !params.Coin.IsValid() {
 		return nil, fmt.Errorf("wasm: invalid BurnSupplyParams: coin is invalid")
 	}
-	msg := types.NewBurnRequest(contract, params.Coin)
+	msg := types.NewMsgBurnRequest(contract, params.Coin)
 	return []sdk.Msg{msg}, nil
 }
 

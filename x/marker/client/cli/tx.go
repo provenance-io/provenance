@@ -160,7 +160,7 @@ $ %s tx marker burn 1000hotdogcoin --from mykey
 				return sdkErrors.Wrapf(sdkErrors.ErrInvalidCoins, "invalid coin %s", args[0])
 			}
 			callerAddr := clientCtx.GetFromAddress()
-			msg := types.NewBurnRequest(callerAddr, coin)
+			msg := types.NewMsgBurnRequest(callerAddr, coin)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

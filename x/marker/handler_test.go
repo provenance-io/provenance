@@ -503,9 +503,9 @@ func (s HandlerTestSuite) TestMsgDeleteMarkerRequest() {
 func (s HandlerTestSuite) TestMsgMintMarkerRequest() {
 
 	hotdogDenom := "hotdog"
-	accessDeleteMintGrant := types.AccessGrant{
+	access := types.AccessGrant{
 		Address:     s.user1,
-		Permissions: types.AccessListByNames("DELETE,MINT"),
+		Permissions: types.AccessListByNames("MINT,BURN"),
 	}
 
 	cases := []struct {
@@ -526,7 +526,7 @@ func (s HandlerTestSuite) TestMsgMintMarkerRequest() {
 		},
 		{
 			"setup grant mint access to marker",
-			types.NewMsgAddAccessRequest(hotdogDenom, s.user1Addr, accessDeleteMintGrant),
+			types.NewMsgAddAccessRequest(hotdogDenom, s.user1Addr, access),
 			[]string{s.user1},
 			"",
 			nil,
@@ -538,6 +538,65 @@ func (s HandlerTestSuite) TestMsgMintMarkerRequest() {
 			[]string{s.user1},
 			"",
 			types.NewEventMarkerMint("100", hotdogDenom, s.user1),
+			2,
+		},
+	}
+	for _, tc := range cases {
+		s.T().Run(tc.name, func(t *testing.T) {
+			_, err := s.handler(s.ctx, tc.msg)
+			if len(tc.errorMsg) > 0 {
+				assert.EqualError(t, err, tc.errorMsg)
+			} else {
+				assert.NoError(t, err)
+				if tc.expectedEvent != nil {
+					em := s.ctx.EventManager()
+					events := em.Events().ToABCIEvents()
+					msg1, _ := sdk.ParseTypedEvent(events[tc.eventIdx])
+					require.Equal(t, tc.expectedEvent, msg1)
+				}
+			}
+		})
+	}
+}
+
+func (s HandlerTestSuite) TestMsgBurnMarkerRequest() {
+
+	hotdogDenom := "hotdog"
+	accessDeleteMintGrant := types.AccessGrant{
+		Address:     s.user1,
+		Permissions: types.AccessListByNames("DELETE,MINT"),
+	}
+
+	cases := []struct {
+		name          string
+		msg           sdk.Msg
+		signers       []string
+		errorMsg      string
+		expectedEvent *types.EventMarkerBurn
+		eventIdx      int
+	}{
+		{
+			"setup new marker for test",
+			types.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
+			[]string{s.user1},
+			"",
+			nil,
+			0,
+		},
+		{
+			"setup grant mint access to marker",
+			types.NewMsgAddAccessRequest(hotdogDenom, s.user1Addr, accessDeleteMintGrant),
+			[]string{s.user1},
+			"",
+			nil,
+			0,
+		},
+		{
+			"should successfully burn marker",
+			types.NewMsgBurnRequest(s.user1Addr, sdk.NewCoin(hotdogDenom, sdk.NewInt(100))),
+			[]string{s.user1},
+			"",
+			types.NewEventMarkerBurn("100", hotdogDenom, s.user1),
 			2,
 		},
 	}

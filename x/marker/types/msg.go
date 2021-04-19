@@ -375,8 +375,8 @@ func (msg MsgMintRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-// NewBurnRequest creates a burn supply message
-func NewBurnRequest(admin sdk.AccAddress, amount sdk.Coin) *MsgBurnRequest { // nolint:interfacer
+// NewMsgBurnRequest creates a burn supply message
+func NewMsgBurnRequest(admin sdk.AccAddress, amount sdk.Coin) *MsgBurnRequest { // nolint:interfacer
 	return &MsgBurnRequest{
 		Administrator: admin.String(),
 		Amount:        amount,
