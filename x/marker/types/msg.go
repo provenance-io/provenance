@@ -205,8 +205,8 @@ func (msg MsgDeleteAccessRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-// NewFinalizeRequest
-func NewFinalizeRequest(denom string, admin sdk.AccAddress) *MsgFinalizeRequest { // nolint:interfacer
+// NewMsgFinalizeRequest
+func NewMsgFinalizeRequest(denom string, admin sdk.AccAddress) *MsgFinalizeRequest { // nolint:interfacer
 	return &MsgFinalizeRequest{
 		Denom:         denom,
 		Administrator: admin.String(),

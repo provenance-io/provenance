@@ -189,7 +189,7 @@ $ %s tx marker finalize hotdogcoin --from mykey
 			}
 
 			callerAddr := clientCtx.GetFromAddress()
-			msg := types.NewFinalizeRequest(args[0], callerAddr)
+			msg := types.NewMsgFinalizeRequest(args[0], callerAddr)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

@@ -179,7 +179,7 @@ func updateStatusHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		case types.StatusActive:
 			msg = types.NewActivateRequest(denom, fromAddr)
 		case types.StatusFinalized:
-			msg = types.NewFinalizeRequest(denom, fromAddr)
+			msg = types.NewMsgFinalizeRequest(denom, fromAddr)
 		case types.StatusCancelled:
 			msg = types.NewCancelRequest(denom, fromAddr)
 		case types.StatusDestroyed:

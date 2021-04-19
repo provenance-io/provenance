@@ -222,7 +222,7 @@ func (params *FinalizeMarkerParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, 
 	if err := sdk.ValidateDenom(params.Denom); err != nil {
 		return nil, fmt.Errorf("wasm: invalid denomination in FinalizeMarkerParams: %w", err)
 	}
-	msg := types.NewFinalizeRequest(params.Denom, contract)
+	msg := types.NewMsgFinalizeRequest(params.Denom, contract)
 	return []sdk.Msg{msg}, nil
 }
 
