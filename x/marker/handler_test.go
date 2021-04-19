@@ -354,7 +354,7 @@ func (s HandlerTestSuite) TestMsgActivateMarkerRequest() {
 			[]string{s.user1},
 			"",
 			types.NewEventMarkerActivate(hotdogDenom, s.user1),
-			4, //finalize marker will also emit a send and message event from bank module
+			4, //finalize marker will emit a send and message event from bank module
 		},
 	}
 	for _, tc := range cases {

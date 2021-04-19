@@ -255,14 +255,23 @@ func (k msgServer) Cancel(goCtx context.Context, msg *types.MsgCancelRequest) (*
 		ctx.Logger().Error("unable to cancel marker", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeCancel,
-			sdk.NewAttribute(types.EventAttributeDenomKey, msg.Denom),
-			sdk.NewAttribute(types.EventAttributeAdministratorKey, msg.Administrator),
-			sdk.NewAttribute(types.EventAttributeModuleNameKey, types.ModuleName),
-		),
-	)
+
+	markerCancelEvent := types.NewEventMarkerCancel(msg.Denom, msg.Administrator)
+	if err := ctx.EventManager().EmitTypedEvent(markerCancelEvent); err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, "cancel", "marker"},
+			1,
+			[]metrics.Label{
+				telemetry.NewLabel(types.EventTelemetryLabelDenom, markerCancelEvent.Denom),
+				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, markerCancelEvent.Administrator),
+			},
+		)
+	}()
+
 	return &types.MsgCancelResponse{}, nil
 }
 

@@ -123,3 +123,10 @@ func NewEventMarkerActivate(denom string, administrator string) *EventMarkerActi
 		Administrator: administrator,
 	}
 }
+
+func NewEventMarkerCancel(denom string, administrator string) *EventMarkerCancel {
+	return &EventMarkerCancel{
+		Denom:         denom,
+		Administrator: administrator,
+	}
+}
