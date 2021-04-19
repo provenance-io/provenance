@@ -147,13 +147,21 @@ func (s Session) String() string {
 }
 
 // NewRecord creates new instance of Record
-func NewRecord(name string, sessionID MetadataAddress, process Process, inputs []RecordInput, outputs []RecordOutput) *Record {
+func NewRecord(
+	name string,
+	sessionID MetadataAddress,
+	process Process,
+	inputs []RecordInput,
+	outputs []RecordOutput,
+	specificationID MetadataAddress,
+) *Record {
 	return &Record{
-		Name:      name,
-		SessionId: sessionID,
-		Process:   process,
-		Inputs:    inputs,
-		Outputs:   outputs,
+		Name:            name,
+		SessionId:       sessionID,
+		Process:         process,
+		Inputs:          inputs,
+		Outputs:         outputs,
+		SpecificationId: specificationID,
 	}
 }
 
