@@ -392,12 +392,24 @@ func (k msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdrawRequest
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		),
-	)
+	markerWithdrawEvent := types.NewEventMarkerWithdraw(msg.Amount.String(), msg.GetDenom(), msg.Administrator, msg.ToAddress)
+	if err := ctx.EventManager().EmitTypedEvent(markerWithdrawEvent); err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, "withdraw", "marker"},
+			1,
+			[]metrics.Label{
+				telemetry.NewLabel(types.EventTelemetryAddress, markerWithdrawEvent.ToAddress),
+				telemetry.NewLabel(types.EventTelemetryLabelAmount, markerWithdrawEvent.Amount),
+				telemetry.NewLabel(types.EventTelemetryLabelDenom, markerWithdrawEvent.Denom),
+				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, markerWithdrawEvent.Administrator),
+			},
+		)
+	}()
+
 	return &types.MsgWithdrawResponse{}, nil
 }
 

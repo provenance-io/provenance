@@ -153,3 +153,12 @@ func NewEventMarkerBurn(amount string, denom string, administrator string) *Even
 		Administrator: administrator,
 	}
 }
+
+func NewEventMarkerWithdraw(amount string, denom string, administrator string, toAddress string) *EventMarkerWithdraw {
+	return &EventMarkerWithdraw{
+		Amount:        amount,
+		Denom:         denom,
+		Administrator: administrator,
+		ToAddress:     toAddress,
+	}
+}
