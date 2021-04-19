@@ -341,8 +341,8 @@ func (msg MsgDeleteRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-// NewMintRequest creates a mint supply message
-func NewMintRequest(admin sdk.AccAddress, amount sdk.Coin) *MsgMintRequest { // nolint:interfacer
+// NewMsgMintRequest creates a mint supply message
+func NewMsgMintRequest(admin sdk.AccAddress, amount sdk.Coin) *MsgMintRequest { // nolint:interfacer
 	return &MsgMintRequest{
 		Administrator: admin.String(),
 		Amount:        amount,

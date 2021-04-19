@@ -126,7 +126,7 @@ $ %s tx marker mint 1000hotdogcoin --from mykey
 				return sdkErrors.Wrapf(sdkErrors.ErrInvalidCoins, "invalid coin %s", args[0])
 			}
 			callerAddr := clientCtx.GetFromAddress()
-			msg := types.NewMintRequest(callerAddr, coin)
+			msg := types.NewMsgMintRequest(callerAddr, coin)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

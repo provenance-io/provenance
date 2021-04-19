@@ -262,7 +262,7 @@ func (params *MintSupplyParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, erro
 	if !params.Coin.IsValid() {
 		return nil, fmt.Errorf("wasm: invalid MintSupplyParams: coin is invalid")
 	}
-	msg := types.NewMintRequest(contract, params.Coin)
+	msg := types.NewMsgMintRequest(contract, params.Coin)
 	return []sdk.Msg{msg}, nil
 }
 

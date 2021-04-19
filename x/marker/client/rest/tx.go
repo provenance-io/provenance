@@ -105,7 +105,7 @@ func mintSupplyHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		msg := types.NewMintRequest(fromAddr, req.Amount)
+		msg := types.NewMsgMintRequest(fromAddr, req.Amount)
 		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
 }
