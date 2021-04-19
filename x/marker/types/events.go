@@ -130,3 +130,10 @@ func NewEventMarkerCancel(denom string, administrator string) *EventMarkerCancel
 		Administrator: administrator,
 	}
 }
+
+func NewEventMarkerDelete(denom string, administrator string) *EventMarkerDelete {
+	return &EventMarkerDelete{
+		Denom:         denom,
+		Administrator: administrator,
+	}
+}

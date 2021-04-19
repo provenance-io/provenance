@@ -287,14 +287,23 @@ func (k msgServer) Delete(goCtx context.Context, msg *types.MsgDeleteRequest) (*
 		ctx.Logger().Error("unable to delete marker", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeDestroy,
-			sdk.NewAttribute(types.EventAttributeDenomKey, msg.Denom),
-			sdk.NewAttribute(types.EventAttributeAdministratorKey, msg.Administrator),
-			sdk.NewAttribute(types.EventAttributeModuleNameKey, types.ModuleName),
-		),
-	)
+
+	markerDeleteEvent := types.NewEventMarkerCancel(msg.Denom, msg.Administrator)
+	if err := ctx.EventManager().EmitTypedEvent(markerDeleteEvent); err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, "delete", "marker"},
+			1,
+			[]metrics.Label{
+				telemetry.NewLabel(types.EventTelemetryLabelDenom, markerDeleteEvent.Denom),
+				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, markerDeleteEvent.Administrator),
+			},
+		)
+	}()
+
 	return &types.MsgDeleteResponse{}, nil
 }
 
