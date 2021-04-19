@@ -177,7 +177,7 @@ func updateStatusHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		var msg sdk.Msg
 		switch status {
 		case types.StatusActive:
-			msg = types.NewActivateRequest(denom, fromAddr)
+			msg = types.NewMsgActivateRequest(denom, fromAddr)
 		case types.StatusFinalized:
 			msg = types.NewMsgFinalizeRequest(denom, fromAddr)
 		case types.StatusCancelled:

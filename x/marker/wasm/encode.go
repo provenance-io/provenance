@@ -232,7 +232,7 @@ func (params *ActivateMarkerParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, 
 	if err := sdk.ValidateDenom(params.Denom); err != nil {
 		return nil, fmt.Errorf("wasm: invalid denomination in ActivateMarkerParams: %w", err)
 	}
-	msg := types.NewActivateRequest(params.Denom, contract)
+	msg := types.NewMsgActivateRequest(params.Denom, contract)
 	return []sdk.Msg{msg}, nil
 }
 

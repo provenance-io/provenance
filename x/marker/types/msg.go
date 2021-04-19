@@ -239,8 +239,8 @@ func (msg MsgFinalizeRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-// NewActivateRequest
-func NewActivateRequest(denom string, admin sdk.AccAddress) *MsgActivateRequest { // nolint:interfacer
+// NewMsgActivateRequest
+func NewMsgActivateRequest(denom string, admin sdk.AccAddress) *MsgActivateRequest { // nolint:interfacer
 	return &MsgActivateRequest{
 		Denom:         denom,
 		Administrator: admin.String(),

@@ -218,7 +218,7 @@ $ %s tx marker activate hotdogcoin --from mykey
 			}
 
 			callerAddr := clientCtx.GetFromAddress()
-			msg := types.NewActivateRequest(args[0], callerAddr)
+			msg := types.NewMsgActivateRequest(args[0], callerAddr)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
