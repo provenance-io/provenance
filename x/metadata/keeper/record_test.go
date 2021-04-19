@@ -473,6 +473,21 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 			partiesInvolved: ownerPartyList(s.user1),
 			errorMsg:        "invalid output count (expected > 0, got: 0)",
 		},
+		"valid - empty specification id": {
+			existing: nil,
+			proposed: types.NewRecord(
+				s.recordName, sessionID, *process, []types.RecordInput{*goodInput},
+				[]types.RecordOutput{
+					{
+						Hash:   "justsomeoutput",
+						Status: types.ResultStatus_RESULT_STATUS_PASS,
+					},
+				},
+				nil),
+			signers:         []string{s.user1},
+			partiesInvolved: ownerPartyList(s.user1),
+			errorMsg:        "",
+		},
 		"valid - single output": {
 			existing: nil,
 			proposed: types.NewRecord(
@@ -508,7 +523,6 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 			errorMsg:        "",
 		},
 	}
-	// TODO: Add test cases for when the SpecificationId is nil.
 
 	for n, tc := range cases {
 		s.T().Run(n, func(t *testing.T) {
