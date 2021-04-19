@@ -239,7 +239,7 @@ func GetCmdCancel() *cobra.Command {
 			}
 
 			callerAddr := clientCtx.GetFromAddress()
-			msg := types.NewCancelRequest(args[0], callerAddr)
+			msg := types.NewMsgCancelRequest(args[0], callerAddr)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

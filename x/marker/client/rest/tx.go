@@ -181,7 +181,7 @@ func updateStatusHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		case types.StatusFinalized:
 			msg = types.NewMsgFinalizeRequest(denom, fromAddr)
 		case types.StatusCancelled:
-			msg = types.NewCancelRequest(denom, fromAddr)
+			msg = types.NewMsgCancelRequest(denom, fromAddr)
 		case types.StatusDestroyed:
 			msg = types.NewDeleteRequest(denom, fromAddr)
 		default:

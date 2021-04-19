@@ -242,7 +242,7 @@ func (params *CancelMarkerParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, er
 	if err := sdk.ValidateDenom(params.Denom); err != nil {
 		return nil, fmt.Errorf("wasm: invalid denomination in CancelMarkerParams: %w", err)
 	}
-	msg := types.NewCancelRequest(params.Denom, contract)
+	msg := types.NewMsgCancelRequest(params.Denom, contract)
 	return []sdk.Msg{msg}, nil
 }
 
