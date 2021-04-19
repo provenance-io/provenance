@@ -109,3 +109,10 @@ func NewEventMarkerDeleteAccess(removeAddress string, denom string, administrato
 		Administrator: administrator,
 	}
 }
+
+func NewEventMarkerFinalize(denom string, administrator string) *EventMarkerFinalize {
+	return &EventMarkerFinalize{
+		Denom:         denom,
+		Administrator: administrator,
+	}
+}

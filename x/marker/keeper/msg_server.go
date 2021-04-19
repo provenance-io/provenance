@@ -189,14 +189,21 @@ func (k msgServer) Finalize(goCtx context.Context, msg *types.MsgFinalizeRequest
 		ctx.Logger().Error("unable to finalize marker", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeFinalize,
-			sdk.NewAttribute(types.EventAttributeDenomKey, msg.Denom),
-			sdk.NewAttribute(types.EventAttributeAdministratorKey, msg.Administrator),
-			sdk.NewAttribute(types.EventAttributeModuleNameKey, types.ModuleName),
-		),
-	)
+	markerFinalizeEvent := types.NewEventMarkerFinalize(msg.Denom, msg.Administrator)
+	if err := ctx.EventManager().EmitTypedEvent(markerFinalizeEvent); err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, "finalize", "marker"},
+			1,
+			[]metrics.Label{
+				telemetry.NewLabel(types.EventTelemetryLabelDenom, markerFinalizeEvent.Denom),
+				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, markerFinalizeEvent.Administrator),
+			},
+		)
+	}()
 	return &types.MsgFinalizeResponse{}, nil
 }
 
