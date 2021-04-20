@@ -182,19 +182,10 @@ $(RELEASE_CHECKSUM):
 	cd ..
 
 .PHONY: build-release-plan
-build-release-plan: $(RELEASE_PLAN)
+build-release-plan: $(RELEASE_PLAN) 
 
 $(RELEASE_PLAN): $(RELEASE_CHECKSUM)
-	echo "Running..." && \
-	cd $(BUILDDIR) && \
-	echo "{\"binaries\":{" > $(RELEASE_PLAN) && \
-	for z in *.zip; do \
-	  sum="$(firstword $(shell grep $$z $(RELEASE_CHECKSUM)))" && \
-	  echo "sum=$$sum" && \
-	  echo "  \"$$arch/amd64\":\"https://github.com/provenance-io/provenance/releases/download/$(VERSION)/provenance-$$arch-amd64-$(VERSION).zip?checksum=sha256:$$sum\"," >> $(RELEASE_PLAN) && \
-	done && \
-	echo "}}" >> $(RELEASE_PLAN) && \
-	cd ..
+	scripts/release-plan $(RELEASE_CHECKSUM) $(VERSION) > $(RELEASE_PLAN)
 
 .PHONY: build-release-libwasm
 build-release-libwasm: $(RELEASE_WASM)
