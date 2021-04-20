@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/provenance-io/provenance/app"
@@ -756,6 +757,77 @@ func (s HandlerTestSuite) TestMsgTransferMarkerRequest() {
 			"",
 			types.NewEventMarkerTransfer("0", hotdogDenom, s.user1, s.user2, s.user1),
 			13,
+		},
+	}
+	for _, tc := range cases {
+		s.T().Run(tc.name, func(t *testing.T) {
+			_, err := s.handler(s.ctx, tc.msg)
+			if len(tc.errorMsg) > 0 {
+				assert.EqualError(t, err, tc.errorMsg)
+			} else {
+				assert.NoError(t, err)
+				if tc.expectedEvent != nil {
+					em := s.ctx.EventManager()
+					events := em.Events().ToABCIEvents()
+					msg1, _ := sdk.ParseTypedEvent(events[tc.eventIdx])
+					require.Equal(t, tc.expectedEvent, msg1)
+				}
+			}
+		})
+	}
+}
+
+func (s HandlerTestSuite) TestMsgSetDenomMetadataRequest() {
+
+	hotdogDenom := "hotdog"
+	access := types.AccessGrant{
+		Address:     s.user1,
+		Permissions: types.AccessListByNames("DELETE,MINT,WITHDRAW,TRANSFER"),
+	}
+
+	hotdogMetadata := banktypes.Metadata{
+		Description: "a description",
+		DenomUnits: []*banktypes.DenomUnit{
+			{Denom: fmt.Sprintf("n%s", hotdogDenom), Exponent: 0, Aliases: []string{fmt.Sprintf("nano%s", hotdogDenom)}},
+			{Denom: fmt.Sprintf("u%s", hotdogDenom), Exponent: 3, Aliases: []string{}},
+			{Denom: hotdogDenom, Exponent: 9, Aliases: []string{}},
+			{Denom: fmt.Sprintf("mega%s", hotdogDenom), Exponent: 15, Aliases: []string{}},
+		},
+		Base:    fmt.Sprintf("n%s", hotdogDenom),
+		Display: hotdogDenom,
+	}
+
+	cases := []struct {
+		name          string
+		msg           sdk.Msg
+		signers       []string
+		errorMsg      string
+		expectedEvent *types.EventMarkerSetDenomMetadata
+		eventIdx      int
+	}{
+		{
+			"setup new marker for test",
+			types.NewMsgAddMarkerRequest(fmt.Sprintf("n%s", hotdogDenom), sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_RestrictedCoin, true, true),
+			[]string{s.user1},
+			"",
+			nil,
+			0,
+		},
+		{
+			"setup grant access to marker",
+			types.NewMsgAddAccessRequest(fmt.Sprintf("n%s", hotdogDenom), s.user1Addr, access),
+			[]string{s.user1},
+			"",
+			nil,
+			0,
+		},
+		{
+			"should successfully set denom metadata on marker",
+			types.NewSetDenomMetadataRequest(hotdogMetadata, s.user1Addr),
+			[]string{s.user1},
+			"",
+			types.NewEventMarkerSetDenomMetadata(hotdogMetadata.Base, hotdogMetadata.Description, hotdogMetadata.Display, hotdogMetadata.DenomUnits, s.user1),
+			3,
 		},
 	}
 	for _, tc := range cases {
