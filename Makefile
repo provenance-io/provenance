@@ -16,6 +16,7 @@ LEDGER_ENABLED ?= true
 WITH_CLEVELDB ?= yes
 
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+BRANCH_PRETTY := $(subst /,-,$(BRANCH))
 TM_VERSION := $(shell go list -m github.com/tendermint/tendermint | sed 's:.* ::') # grab everything after the space in "github.com/tendermint/tendermint v0.34.7"
 COMMIT := $(shell git log -1 --format='%h')
 # don't override user values
@@ -23,7 +24,7 @@ ifeq (,$(VERSION))
   VERSION := $(shell git describe --exact-match 2>/dev/null)
   # if VERSION is empty, then populate it with branch's name and raw commit hash
   ifeq (,$(VERSION))
-    VERSION := $(BRANCH)-$(COMMIT)
+    VERSION := $(BRANCH_PRETTY)-$(COMMIT)
   endif
 endif
 
@@ -137,13 +138,31 @@ run: check-built run-config;
 # Release artifacts and plan #
 ##############################
 
+UNAME_S   = $(shell uname -s | tr '[:upper:]' '[:lower:]')
+UNAME_M   = $(shell uname -m)
+LIBWASMVM := libwasmvm
+
 RELEASE_BIN=$(BUILDDIR)/bin
 RELEASE_PROTO_NAME=protos-$(VERSION).zip
 RELEASE_PROTO=$(BUILDDIR)/$(RELEASE_PROTO_NAME)
 RELEASE_PLAN=$(BUILDDIR)/plan-$(VERSION).json
 RELEASE_CHECKSUM_NAME=sha256sum.txt
 RELEASE_CHECKSUM=$(BUILDDIR)/$(RELEASE_CHECKSUM_NAME)
-RELEASE_ZIP_NAME=provenance-linux-amd64-$(VERSION).zip
+
+ifeq ($(UNAME_S),darwin)
+    LIBWASMVM := $(LIBWASMVM).dylib
+endif
+ifeq ($(UNAME_S),linux)
+    LIBWASMVM := $(LIBWASMVM).so
+endif
+
+ifeq ($(UNAME_M),x86_64)
+	ARCH=amd64
+endif
+
+RELEASE_WASM=$(RELEASE_BIN)/$(LIBWASMVM)
+RELEASE_PIO=$(RELEASE_BIN)/provenanced
+RELEASE_ZIP_NAME=provenance-$(UNAME_S)-$(ARCH)-$(VERSION).zip
 RELEASE_ZIP=$(BUILDDIR)/$(RELEASE_ZIP_NAME)
 
 .PHONY: build-release-clean
@@ -151,31 +170,51 @@ build-release-clean:
 	rm -rf $(RELEASE_BIN) $(RELEASE_PLAN) $(RELEASE_CHECKSUM) $(RELEASE_ZIP)
 
 .PHONY: build-release-checksum
-build-release-checksum: build-release-zip
+build-release-checksum: $(RELEASE_CHECKSUM)
+
+$(RELEASE_CHECKSUM):
 	cd $(BUILDDIR) && \
-	  shasum -a 256 $(RELEASE_ZIP_NAME) > $(RELEASE_CHECKSUM) && \
+	  shasum -a 256 *.zip  > $(RELEASE_CHECKSUM) && \
 	cd ..
 
 .PHONY: build-release-plan
-build-release-plan: build-release-zip build-release-checksum
+build-release-plan: $(RELEASE_PLAN)
+
+$(RELEASE_PLAN): $(RELEASE_CHECKSUM)
+	echo "Running..." && \
 	cd $(BUILDDIR) && \
-	  sum="$(firstword $(shell cat $(RELEASE_CHECKSUM)))" && \
+	echo "{\"binaries\":{" > $(RELEASE_PLAN) && \
+	for z in *.zip; do \
+	  sum="$(firstword $(shell grep $$z $(RELEASE_CHECKSUM)))" && \
 	  echo "sum=$$sum" && \
-	  echo "{\"binaries\":{\"linux/amd64\":\"https://github.com/provenance-io/provenance/releases/download/$(VERSION)/$(RELEASE_ZIP_NAME)?checksum=sha256:$$sum\"}}" > $(RELEASE_PLAN) && \
+	  echo "  \"$$arch/amd64\":\"https://github.com/provenance-io/provenance/releases/download/$(VERSION)/provenance-$$arch-amd64-$(VERSION).zip?checksum=sha256:$$sum\"," >> $(RELEASE_PLAN) && \
+	done && \
+	echo "}}" >> $(RELEASE_PLAN) && \
 	cd ..
 
-.PHONY: build-release-bin
-build-release-bin: build
+.PHONY: build-release-libwasm
+build-release-libwasm: $(RELEASE_WASM)
+
+$(RELEASE_WASM): $(RELEASE_BIN)
 	go mod vendor && \
-	mkdir -p $(RELEASE_BIN) && \
+	cp vendor/github.com/CosmWasm/wasmvm/api/$(LIBWASMVM) $(RELEASE_BIN)
+
+.PHONY: build-release-bin
+build-release-bin: $(RELEASE_PIO)
+
+$(RELEASE_PIO): $(BUILDDIR)/provenanced $(RELEASE_BIN)
 	cp $(BUILDDIR)/provenanced $(RELEASE_BIN) && \
-	cp vendor/github.com/CosmWasm/wasmvm/api/libwasmvm.so $(RELEASE_BIN) && \
-	chmod +x $(RELEASE_BIN)/provenanced
+	chmod +x $(RELEASE_PIO)
+
+$(BUILDDIR)/provenanced:
+	$(MAKE) build
 
 .PHONY: build-release-zip
-build-release-zip: build-release-bin
+build-release-zip: $(RELEASE_ZIP)
+
+$(RELEASE_ZIP): $(RELEASE_PIO) $(RELEASE_WASM)
 	cd $(BUILDDIR) && \
-	  zip -r $(RELEASE_ZIP_NAME) bin/ && \
+	  zip -u $(RELEASE_ZIP_NAME) bin/$(LIBWASMVM) bin/provenanced && \
 	cd ..
 
 .PHONY: bulid-release-proto
@@ -184,6 +223,10 @@ build-release-proto:
 
 .PHONY: build-release
 build-release: build-release-zip build-release-plan build-release-proto
+
+
+$(RELEASE_BIN):
+	mkdir -p $(RELEASE_BIN)
 
 ##############################
 # Tools / Dependencies
@@ -423,3 +466,16 @@ update-swagger-docs: statik
     fi
 
 .PHONY: update-swagger-docs
+
+
+xbuild: go.sum
+	docker pull cosmossdk/rbuilder:latest
+	docker rm latest-build || true
+	docker run -it --volume=$(CURDIR):/sources:ro \
+	    --env TARGET_PLATFORMS='linux/amd64 darwin/amd64 windows/amd64' \
+	    --env APP=provenanced \
+	    --env VERSION=$(VERSION) \
+	    --env COMMIT=$(COMMIT) \
+	    --env LEDGER_ENABLED=$(LEDGER_ENABLED) \
+	    --name latest-build cosmossdk/rbuilder:latest
+	docker cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
