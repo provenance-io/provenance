@@ -34,6 +34,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Features
+* Add typed events and telemetry metrics to metadata module #247
+
 ## [v1.1.1](https://github.com/provenance-io/provenance/releases/tag/v1.1.1) - 2021-04-15
 
 ### Bug Fixes
