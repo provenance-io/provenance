@@ -38,7 +38,7 @@ var handlers = map[string]appUpgrade{
 			app.AttributeKeeper.ConvertLegacyAmino(ctx)
 		},
 	},
-
+	"v1.1.1": {},
 	// TODO - Add new upgrade definitions here.
 }
 
