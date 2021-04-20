@@ -96,7 +96,6 @@ func NewEventMarkerAdd(denom string, amount string, status string, manager strin
 }
 
 func NewEventMarkerAddAccess(accessGrant AccessGrant, denom string, administrator string) *EventMarkerAddAccess {
-
 	permissions := make([]string, len(accessGrant.Permissions))
 	for i, permission := range accessGrant.Permissions {
 		permissions[i] = permission.String()
@@ -186,7 +185,6 @@ func NewEventMarkerTransfer(amount string, denom string, administrator string, t
 }
 
 func NewEventMarkerSetDenomMetadata(base string, description string, display string, denomUnits []*banktypes.DenomUnit, administrator string) *EventMarkerSetDenomMetadata {
-
 	metadataDenomUnits := make([]*EventDenomUnit, len(denomUnits))
 	for i, du := range denomUnits {
 		denomUnit := EventDenomUnit{
@@ -196,7 +194,6 @@ func NewEventMarkerSetDenomMetadata(base string, description string, display str
 		}
 		metadataDenomUnits[i] = &denomUnit
 	}
-
 	return &EventMarkerSetDenomMetadata{
 		MetadataBase:        base,
 		MetadataDescription: description,

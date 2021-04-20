@@ -134,7 +134,6 @@ func (k msgServer) AddAccess(goCtx context.Context, msg *types.MsgAddAccessReque
 				},
 			)
 		}()
-
 	}
 
 	return &types.MsgAddAccessResponse{}, nil
