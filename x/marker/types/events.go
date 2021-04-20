@@ -61,12 +61,12 @@ const (
 	// EventTypeWithdrawAsset emitted when assets are removed from marker collateral
 	EventTypeWithdrawAsset string = EventAttributeMarkerKey + "_asset_withdrawn"
 
-	// EventTelemetryAddress address label for telemetry metrics
-	EventTelemetryAddress string = "address"
-	// EventTelemetryToAddress to address label for telemetry metrics
-	EventTelemetryToAddress string = "to-address"
-	// EventTelemetryFromAddress from address label for telemetry metrics
-	EventTelemetryFromAddress string = "from-address"
+	// EventTelemetryLabelAddress address label for telemetry metrics
+	EventTelemetryLabelAddress string = "address"
+	// EventTelemetryLabelToAddress to address label for telemetry metrics
+	EventTelemetryLabelToAddress string = "to-address"
+	// EventTelemetryLabelFromAddress from address label for telemetry metrics
+	EventTelemetryLabelFromAddress string = "from-address"
 	// EventTelemetryLabelAmount amount label for telemetry metrics
 	EventTelemetryLabelAmount string = "amount"
 	// EventTelemetryLabelCoins coins label for telemetry metrics

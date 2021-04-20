@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/armon/go-metrics"
 
@@ -128,7 +129,8 @@ func (k msgServer) AddAccess(goCtx context.Context, msg *types.MsgAddAccessReque
 				[]string{types.ModuleName, "add", "access"},
 				1,
 				[]metrics.Label{
-					telemetry.NewLabel(types.EventTelemetryLabelAccess, "TODO"),
+					telemetry.NewLabel(types.EventTelemetryLabelAddress, markerAddAccessEvent.Access.Address),
+					telemetry.NewLabel(types.EventTelemetryLabelAccess, strings.Join(markerAddAccessEvent.Access.Permissions[:], ",")),
 					telemetry.NewLabel(types.EventTelemetryLabelDenom, markerAddAccessEvent.Denom),
 					telemetry.NewLabel(types.EventTelemetryLabelAdministrator, markerAddAccessEvent.Administrator),
 				},
@@ -168,7 +170,7 @@ func (k msgServer) DeleteAccess(goCtx context.Context, msg *types.MsgDeleteAcces
 			[]string{types.ModuleName, "delete", "access"},
 			1,
 			[]metrics.Label{
-				telemetry.NewLabel(types.EventTelemetryAddress, markerDeleteAccessEvent.RemoveAddress),
+				telemetry.NewLabel(types.EventTelemetryLabelAddress, markerDeleteAccessEvent.RemoveAddress),
 				telemetry.NewLabel(types.EventTelemetryLabelDenom, markerDeleteAccessEvent.Denom),
 				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, markerDeleteAccessEvent.Administrator),
 			},
@@ -401,7 +403,7 @@ func (k msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdrawRequest
 			[]string{types.ModuleName, "withdraw", "marker"},
 			1,
 			[]metrics.Label{
-				telemetry.NewLabel(types.EventTelemetryToAddress, markerWithdrawEvent.ToAddress),
+				telemetry.NewLabel(types.EventTelemetryLabelToAddress, markerWithdrawEvent.ToAddress),
 				telemetry.NewLabel(types.EventTelemetryLabelAmount, markerWithdrawEvent.Coins),
 				telemetry.NewLabel(types.EventTelemetryLabelDenom, markerWithdrawEvent.Denom),
 				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, markerWithdrawEvent.Administrator),
@@ -450,8 +452,8 @@ func (k msgServer) Transfer(goCtx context.Context, msg *types.MsgTransferRequest
 			[]string{types.ModuleName, "transfer", "marker"},
 			1,
 			[]metrics.Label{
-				telemetry.NewLabel(types.EventTelemetryToAddress, markerTransferEvent.ToAddress),
-				telemetry.NewLabel(types.EventTelemetryFromAddress, markerTransferEvent.FromAddress),
+				telemetry.NewLabel(types.EventTelemetryLabelToAddress, markerTransferEvent.ToAddress),
+				telemetry.NewLabel(types.EventTelemetryLabelFromAddress, markerTransferEvent.FromAddress),
 				telemetry.NewLabel(types.EventTelemetryLabelAmount, markerTransferEvent.Amount),
 				telemetry.NewLabel(types.EventTelemetryLabelDenom, markerTransferEvent.Denom),
 				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, markerTransferEvent.Administrator),
