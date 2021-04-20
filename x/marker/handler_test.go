@@ -563,9 +563,9 @@ func (s HandlerTestSuite) TestMsgMintMarkerRequest() {
 func (s HandlerTestSuite) TestMsgBurnMarkerRequest() {
 
 	hotdogDenom := "hotdog"
-	accessDeleteMintGrant := types.AccessGrant{
+	access := types.AccessGrant{
 		Address:     s.user1,
-		Permissions: types.AccessListByNames("DELETE,MINT"),
+		Permissions: types.AccessListByNames("DELETE,MINT,BURN"),
 	}
 
 	cases := []struct {
@@ -586,7 +586,7 @@ func (s HandlerTestSuite) TestMsgBurnMarkerRequest() {
 		},
 		{
 			"setup grant mint access to marker",
-			types.NewMsgAddAccessRequest(hotdogDenom, s.user1Addr, accessDeleteMintGrant),
+			types.NewMsgAddAccessRequest(hotdogDenom, s.user1Addr, access),
 			[]string{s.user1},
 			"",
 			nil,
