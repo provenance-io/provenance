@@ -82,8 +82,8 @@ func TestInvalidProposal(t *testing.T) {
 }
 
 func (s HandlerTestSuite) containsMessage(msg proto.Message) bool {
-	em := s.ctx.EventManager()
-	for _, event := range em.Events().ToABCIEvents() {
+	events := s.ctx.EventManager().Events().ToABCIEvents()
+	for _, event := range events {
 		typeEvent, _ := sdk.ParseTypedEvent(event)
 		if assert.ObjectsAreEqual(msg, typeEvent) {
 			return true

@@ -214,17 +214,16 @@ func (k Keeper) MintCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 			return err
 		}
 		k.SetMarker(ctx, m)
-		return nil
 	} else if m.GetStatus() != types.StatusActive {
 		return fmt.Errorf("cannot mint coin for a marker that is not in Active status")
-	}
+	} else {
+		// Increase the tracked supply value for the marker.
+		err = k.IncreaseSupply(ctx, m, coin)
+		if err != nil {
+			return err
+		}
 
-	// Increase the tracked supply value for the marker.
-	err = k.IncreaseSupply(ctx, m, coin)
-	if err != nil {
-		return err
 	}
-
 	markerMintEvent := types.NewEventMarkerMint(coin.Amount.String(), coin.Denom, caller.String())
 	if err := ctx.EventManager().EmitTypedEvent(markerMintEvent); err != nil {
 		return err
@@ -251,15 +250,14 @@ func (k Keeper) BurnCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 			return err
 		}
 		k.SetMarker(ctx, m)
-		return nil
 	} else if m.GetStatus() != types.StatusActive { // check to see if marker is active
 		return fmt.Errorf("cannot mint coin for a marker that is not in Active status")
+	} else {
+		err = k.DecreaseSupply(ctx, m, coin)
+		if err != nil {
+			return err
+		}
 	}
-	err = k.DecreaseSupply(ctx, m, coin)
-	if err != nil {
-		return err
-	}
-
 	markerBurnEvent := types.NewEventMarkerBurn(coin.Amount.String(), coin.Denom, caller.String())
 	if err := ctx.EventManager().EmitTypedEvent(markerBurnEvent); err != nil {
 		return err
