@@ -1,6 +1,24 @@
 # Events
 
 The marker module emits the following events:
+
+* [Marker Added](#Marker-Added)
+* [Marker Updated](#Marker-Updated)
+* [Grant Access](#Grant-Access)
+* [Revoke Access](#Revoke-Access)
+* [Finalize](#Finalize)
+* [Activate](#Activate)
+* [Cancel](#Cancel)
+* [Destroy](#Destroy)
+* [Mint](#Mint)
+* [Burn](#Burn)
+* [Withdraw](#Withdraw)
+* [Transfer](#Transfer)
+* [Deposit Asset](#Deposit-Asset)
+* [Withdraw Asset](#Withdraw-Asset)
+
+
+---
 ## Marker Added
 
 Fires when a marker is added using the Add Marker Msg.
@@ -15,6 +33,8 @@ Fires when a marker is added using the Add Marker Msg.
 | marker_added           | marker_AccessGrant    | {access grant string}     |
 | marker_added           | marker_access_revoked | {address removed}         |
 
+
+---
 ## Marker Updated
 
 | Type                   | Attribute Key         | Attribute Value           |
@@ -27,6 +47,8 @@ Fires when a marker is added using the Add Marker Msg.
 | marker_updated         | marker_AccessGrant    | {access grant string}     |
 | marker_updated         | marker_access_revoked | {address removed}         |
 
+
+---
 ## Grant Access
 
 | Type                   | Attribute Key         | Attribute Value           |
@@ -40,6 +62,8 @@ Fires when a marker is added using the Add Marker Msg.
 | marker_AccessGranted   | marker_access_revoked | {address removed}         |
 
 
+
+---
 ## Revoke Access
 
 | Type                   | Attribute Key         | Attribute Value           |
@@ -53,6 +77,8 @@ Fires when a marker is added using the Add Marker Msg.
 | marker_access_revoked  | marker_access_revoked | {address removed}         |
 
 
+
+---
 ## Finalize
 
 | Type                   | Attribute Key         | Attribute Value           |
@@ -66,6 +92,8 @@ Fires when a marker is added using the Add Marker Msg.
 | marker_finalized       | marker_access_revoked | {address removed}         |
 
 
+
+---
 ## Activate
 
 | Type                   | Attribute Key         | Attribute Value           |
@@ -78,6 +106,8 @@ Fires when a marker is added using the Add Marker Msg.
 | marker_activated       | marker_AccessGrant    | {access grant string}     |
 | marker_activated       | marker_access_revoked | {address removed}         |
 
+
+---
 ## Cancel
 
 | Type                   | Attribute Key         | Attribute Value           |
@@ -90,6 +120,8 @@ Fires when a marker is added using the Add Marker Msg.
 | marker_cancelled       | marker_AccessGrant    | {access grant string}     |
 | marker_cancelled       | marker_access_revoked | {address removed}         |
 
+
+---
 ## Destroy
 
 
@@ -103,6 +135,8 @@ Fires when a marker is added using the Add Marker Msg.
 | marker_destroyed       | marker_AccessGrant    | {access grant string}     |
 | marker_destroyed       | marker_access_revoked | {address removed}         |
 
+
+---
 ## Mint
 
 | Type                   | Attribute Key         | Attribute Value           |
@@ -116,6 +150,8 @@ Fires when a marker is added using the Add Marker Msg.
 | marker_minted_coins    | marker_access_revoked | {address removed}         |
 
 
+
+---
 ## Burn
 
 | Type                   | Attribute Key         | Attribute Value           |
@@ -129,6 +165,8 @@ Fires when a marker is added using the Add Marker Msg.
 | marker_burned_coins    | marker_access_revoked | {address removed}         |
 
 
+
+---
 ## Withdraw
 
 | Type                   | Attribute Key         | Attribute Value           |
@@ -142,6 +180,8 @@ Fires when a marker is added using the Add Marker Msg.
 | marker_withdraw_coins  | marker_access_revoked | {address removed}         |
 
 
+
+---
 ## Transfer
 
 | Type                   | Attribute Key         | Attribute Value           |
@@ -155,6 +195,8 @@ Fires when a marker is added using the Add Marker Msg.
 | marker_tranfer_coin    | marker_access_revoked | {address removed}         |
 
 
+
+---
 ## Deposit Asset
 
 
@@ -168,6 +210,8 @@ Fires when a marker is added using the Add Marker Msg.
 | marker_asset_deposited | marker_AccessGrant    | {access grant string}     |
 | marker_asset_deposited | marker_access_revoked | {address removed}         |
 
+
+---
 ## Withdraw Asset
 
 | Type                   | Attribute Key         | Attribute Value           |

@@ -11,26 +11,37 @@ be queried against for balance information from the `bank` module.
 type MarkerAccount struct {
 	// cosmos base_account  including address and account number
     Address       string
-    PubKey        *types.Any // NOTE: not used for marker
     AccountNumber uint64
+
+    PubKey        *types.Any // NOTE: not used for marker
     Sequence      uint64     // NOTE: always zero on marker
 
     // Address that owns the marker configuration.  This account must sign any requests
 	// to change marker config (only valid for statuses prior to finalization)
 	Manager string
-	// Access control lists
+
+	// Access control lists.  Account addresses are assigned control of the marker using these entries
 	AccessControl []AccessGrant
-	// Indicates the current status of this marker record.
+
+	// Indicates the current status of this marker record. (Pending, Active, Cancelled, etc)
 	Status MarkerStatus
-	// value denomination and total supply for the token.
+
+	// value denomination.
 	Denom string
-	// the total supply expected for a marker.  This is the amount that is minted when a marker is created.
+
+	// the total supply expected for a marker.  This is the amount that is minted when a marker is created.  For 
+	// SupplyFixed markers this value will be enforced through an invariant that mints/burns from this account to
+	// maintain a match between this value and the supply on the chain (maintained by bank module).  For all non-fixed
+	// supply markers this value will be set to zero when the marker is activated.
 	Supply Int
-	// Marker type information
+
+	// Marker type information.  The type of marker controls behavior of its account.
 	MarkerType MarkerType
+
 	// A fixed supply will mint additional coin automatically if the total supply decreases below a set value.  This
 	// may occur if the coin is burned or an account holding the coin is slashed. (default: true)
 	SupplyFixed bool
+
 	// indicates that governance based control is allowed for this marker
 	AllowGovernanceControl bool
 }
@@ -89,7 +100,7 @@ type AccessGrant struct {
 A marker can be configured to have a fixed supply or one that is allowed to float.  A marker will always mint an amount
 of coin indicated in its `supply` field when it is activated.  For markers that have a fixed supply an invariant check
 is enforced that ensure the supply of the marker is always matching the configured value.  For a floating supply no 
-additional checks or adjustments are performed.
+additional checks or adjustments are performed and the supply value is set to zero when activated.
 
 #### When a Marker has a Fixed Supply that does not match target
 
