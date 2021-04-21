@@ -92,7 +92,7 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 			[]string{types.ModuleName, "add", "marker"},
 			1,
 			[]metrics.Label{
-				telemetry.NewLabel(types.EventTelemetryLabelAccess, markerAddEvent.Amount),
+				telemetry.NewLabel(types.EventTelemetryLabelAmount, markerAddEvent.Amount),
 				telemetry.NewLabel(types.EventTelemetryLabelDenom, markerAddEvent.Denom),
 				telemetry.NewLabel(types.EventTelemetryLabelStatus, markerAddEvent.Status),
 				telemetry.NewLabel(types.EventTelemetryLabelManager, markerAddEvent.Manager),
