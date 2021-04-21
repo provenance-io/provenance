@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/golang/protobuf/proto"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -80,6 +81,43 @@ func TestInvalidProposal(t *testing.T) {
 	require.True(t, strings.Contains(err.Error(), "unrecognized marker proposal content type: *types.TextProposal"))
 }
 
+func (s HandlerTestSuite) containsMessage(msg proto.Message) bool {
+	em := s.ctx.EventManager()
+	for _, event := range em.Events().ToABCIEvents() {
+		typeEvent, _ := sdk.ParseTypedEvent(event)
+		if assert.ObjectsAreEqual(msg, typeEvent) {
+			return true
+		}
+	}
+	return false
+}
+
+type CommonTest struct {
+	name          string
+	msg           sdk.Msg
+	signers       []string
+	errorMsg      string
+	expectedEvent proto.Message
+}
+
+func (s HandlerTestSuite) runTests(cases []CommonTest) {
+	for _, tc := range cases {
+		s.T().Run(tc.name, func(t *testing.T) {
+			_, err := s.handler(s.ctx, tc.msg)
+
+			if len(tc.errorMsg) > 0 {
+				assert.EqualError(t, err, tc.errorMsg)
+			} else {
+				if tc.expectedEvent != nil {
+					result := s.containsMessage(tc.expectedEvent)
+					s.True(result, fmt.Sprintf("Expected typed event was not found: %v", tc.expectedEvent))
+				}
+
+			}
+		})
+	}
+}
+
 func (s HandlerTestSuite) TestMsgAddMarkerRequest() {
 	activeStatus := types.NewMsgAddMarkerRequest("hotdog", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true)
 	activeStatus.Status = types.StatusActive
@@ -87,13 +125,7 @@ func (s HandlerTestSuite) TestMsgAddMarkerRequest() {
 	undefinedStatus := types.NewMsgAddMarkerRequest("hotdog", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true)
 	undefinedStatus.Status = types.StatusUndefined
 
-	cases := []struct {
-		name          string
-		msg           *types.MsgAddMarkerRequest
-		signers       []string
-		errorMsg      string
-		expectedEvent *types.EventMarkerAdd
-	}{
+	cases := []CommonTest{
 		{
 			"should successfully ADD new marker",
 			types.NewMsgAddMarkerRequest("hotdog", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
@@ -123,25 +155,7 @@ func (s HandlerTestSuite) TestMsgAddMarkerRequest() {
 			nil,
 		},
 	}
-
-	for _, tc := range cases {
-		s.T().Run(tc.name, func(t *testing.T) {
-			_, err := s.handler(s.ctx, tc.msg)
-
-			if len(tc.errorMsg) > 0 {
-				assert.EqualError(t, err, tc.errorMsg)
-			} else {
-				assert.NoError(t, err)
-				em := s.ctx.EventManager()
-				if tc.expectedEvent != nil {
-					require.Equal(t, 1, len(em.Events().ToABCIEvents()))
-					msg1, _ := sdk.ParseTypedEvent(em.Events().ToABCIEvents()[0])
-					require.Equal(t, tc.expectedEvent, msg1)
-				}
-
-			}
-		})
-	}
+	s.runTests(cases)
 }
 
 func (s HandlerTestSuite) TestMsgAddAccessRequest() {
@@ -156,21 +170,13 @@ func (s HandlerTestSuite) TestMsgAddAccessRequest() {
 		Permissions: types.AccessListByNames("Invalid"),
 	}
 
-	cases := []struct {
-		name          string
-		msg           sdk.Msg
-		signers       []string
-		errorMsg      string
-		expectedEvent *types.EventMarkerAddAccess
-		eventIdx      int
-	}{
+	cases := []CommonTest{
 		{
 			"setup new marker for test",
 			types.NewMsgAddMarkerRequest("hotdog", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
 			[]string{s.user1},
 			"",
 			nil,
-			0,
 		},
 		{
 			"should successfully grant access to marker",
@@ -178,8 +184,7 @@ func (s HandlerTestSuite) TestMsgAddAccessRequest() {
 
 			[]string{s.user1},
 			"",
-			types.NewEventMarkerAddAccess(accessMintGrant, "hotdog", s.user1),
-			1,
+			types.NewEventMarkerAddAccess(&accessMintGrant, "hotdog", s.user1),
 		},
 		{
 			"should fail to ADD access to marker, validate basic fails",
@@ -187,7 +192,6 @@ func (s HandlerTestSuite) TestMsgAddAccessRequest() {
 			[]string{s.user1},
 			"invalid access type: invalid request",
 			nil,
-			0,
 		},
 		{
 			"should fail to ADD access to marker, keeper AddAccess failure",
@@ -195,25 +199,10 @@ func (s HandlerTestSuite) TestMsgAddAccessRequest() {
 			[]string{s.user1},
 			fmt.Sprintf("updates to pending marker hotdog can only be made by %s: unauthorized", s.user1),
 			nil,
-			0,
 		},
 	}
 
-	for _, tc := range cases {
-		s.T().Run(tc.name, func(t *testing.T) {
-			_, err := s.handler(s.ctx, tc.msg)
-			if len(tc.errorMsg) > 0 {
-				assert.EqualError(t, err, tc.errorMsg)
-			} else {
-				assert.NoError(t, err)
-				if tc.expectedEvent != nil {
-					em := s.ctx.EventManager()
-					msg1, _ := sdk.ParseTypedEvent(em.Events().ToABCIEvents()[tc.eventIdx])
-					require.Equal(t, tc.expectedEvent, msg1)
-				}
-			}
-		})
-	}
+	s.runTests(cases)
 }
 
 func (s HandlerTestSuite) TestMsgDeleteAccessMarkerRequest() {
@@ -224,21 +213,13 @@ func (s HandlerTestSuite) TestMsgDeleteAccessMarkerRequest() {
 		Permissions: types.AccessListByNames("MINT"),
 	}
 
-	cases := []struct {
-		name          string
-		msg           sdk.Msg
-		signers       []string
-		errorMsg      string
-		expectedEvent *types.EventMarkerDeleteAccess
-		eventIdx      int
-	}{
+	cases := []CommonTest{
 		{
 			"setup new marker for test",
 			types.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
 			[]string{s.user1},
 			"",
 			nil,
-			0,
 		},
 		{
 			"setup grant access to marker",
@@ -246,7 +227,6 @@ func (s HandlerTestSuite) TestMsgDeleteAccessMarkerRequest() {
 			[]string{s.user1},
 			"",
 			nil,
-			0,
 		},
 		{
 			"should successfully delete grant access to marker",
@@ -254,45 +234,22 @@ func (s HandlerTestSuite) TestMsgDeleteAccessMarkerRequest() {
 			[]string{s.user1},
 			"",
 			types.NewEventMarkerDeleteAccess(s.user1, hotdogDenom, s.user1),
-			2,
 		},
 	}
-	for _, tc := range cases {
-		s.T().Run(tc.name, func(t *testing.T) {
-			_, err := s.handler(s.ctx, tc.msg)
-			if len(tc.errorMsg) > 0 {
-				assert.EqualError(t, err, tc.errorMsg)
-			} else {
-				assert.NoError(t, err)
-				if tc.expectedEvent != nil {
-					em := s.ctx.EventManager()
-					msg1, _ := sdk.ParseTypedEvent(em.Events().ToABCIEvents()[tc.eventIdx])
-					require.Equal(t, tc.expectedEvent, msg1)
-				}
-			}
-		})
-	}
+	s.runTests(cases)
 }
 
 func (s HandlerTestSuite) TestMsgFinalizeMarkerRequest() {
 
 	hotdogDenom := "hotdog"
 
-	cases := []struct {
-		name          string
-		msg           sdk.Msg
-		signers       []string
-		errorMsg      string
-		expectedEvent *types.EventMarkerFinalize
-		eventIdx      int
-	}{
+	cases := []CommonTest{
 		{
 			"setup new marker for test",
 			types.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
 			[]string{s.user1},
 			"",
 			nil,
-			0,
 		},
 		{
 			"should successfully finalize marker",
@@ -300,45 +257,22 @@ func (s HandlerTestSuite) TestMsgFinalizeMarkerRequest() {
 			[]string{s.user1},
 			"",
 			types.NewEventMarkerFinalize(hotdogDenom, s.user1),
-			1,
 		},
 	}
-	for _, tc := range cases {
-		s.T().Run(tc.name, func(t *testing.T) {
-			_, err := s.handler(s.ctx, tc.msg)
-			if len(tc.errorMsg) > 0 {
-				assert.EqualError(t, err, tc.errorMsg)
-			} else {
-				assert.NoError(t, err)
-				if tc.expectedEvent != nil {
-					em := s.ctx.EventManager()
-					msg1, _ := sdk.ParseTypedEvent(em.Events().ToABCIEvents()[tc.eventIdx])
-					require.Equal(t, tc.expectedEvent, msg1)
-				}
-			}
-		})
-	}
+	s.runTests(cases)
 }
 
 func (s HandlerTestSuite) TestMsgActivateMarkerRequest() {
 
 	hotdogDenom := "hotdog"
 
-	cases := []struct {
-		name          string
-		msg           sdk.Msg
-		signers       []string
-		errorMsg      string
-		expectedEvent *types.EventMarkerActivate
-		eventIdx      int
-	}{
+	cases := []CommonTest{
 		{
 			"setup new marker for test",
 			types.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
 			[]string{s.user1},
 			"",
 			nil,
-			0,
 		},
 		{
 			"setup finalize marker",
@@ -346,7 +280,6 @@ func (s HandlerTestSuite) TestMsgActivateMarkerRequest() {
 			[]string{s.user1},
 			"",
 			nil,
-			0,
 		},
 		{
 			"should successfully activate marker",
@@ -354,25 +287,9 @@ func (s HandlerTestSuite) TestMsgActivateMarkerRequest() {
 			[]string{s.user1},
 			"",
 			types.NewEventMarkerActivate(hotdogDenom, s.user1),
-			4, //finalize marker will emit a send and message event from bank module
 		},
 	}
-	for _, tc := range cases {
-		s.T().Run(tc.name, func(t *testing.T) {
-			_, err := s.handler(s.ctx, tc.msg)
-			if len(tc.errorMsg) > 0 {
-				assert.EqualError(t, err, tc.errorMsg)
-			} else {
-				assert.NoError(t, err)
-				if tc.expectedEvent != nil {
-					em := s.ctx.EventManager()
-					events := em.Events().ToABCIEvents()
-					msg1, _ := sdk.ParseTypedEvent(events[tc.eventIdx])
-					require.Equal(t, tc.expectedEvent, msg1)
-				}
-			}
-		})
-	}
+	s.runTests(cases)
 }
 
 func (s HandlerTestSuite) TestMsgCancelMarkerRequest() {
@@ -383,21 +300,13 @@ func (s HandlerTestSuite) TestMsgCancelMarkerRequest() {
 		Permissions: types.AccessListByNames("DELETE"),
 	}
 
-	cases := []struct {
-		name          string
-		msg           sdk.Msg
-		signers       []string
-		errorMsg      string
-		expectedEvent *types.EventMarkerCancel
-		eventIdx      int
-	}{
+	cases := []CommonTest{
 		{
 			"setup new marker for test",
 			types.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
 			[]string{s.user1},
 			"",
 			nil,
-			0,
 		},
 		{
 			"setup grant delete access to marker",
@@ -405,7 +314,6 @@ func (s HandlerTestSuite) TestMsgCancelMarkerRequest() {
 			[]string{s.user1},
 			"",
 			nil,
-			0,
 		},
 		{
 			"should successfully cancel marker",
@@ -413,25 +321,9 @@ func (s HandlerTestSuite) TestMsgCancelMarkerRequest() {
 			[]string{s.user1},
 			"",
 			types.NewEventMarkerCancel(hotdogDenom, s.user1),
-			2,
 		},
 	}
-	for _, tc := range cases {
-		s.T().Run(tc.name, func(t *testing.T) {
-			_, err := s.handler(s.ctx, tc.msg)
-			if len(tc.errorMsg) > 0 {
-				assert.EqualError(t, err, tc.errorMsg)
-			} else {
-				assert.NoError(t, err)
-				if tc.expectedEvent != nil {
-					em := s.ctx.EventManager()
-					events := em.Events().ToABCIEvents()
-					msg1, _ := sdk.ParseTypedEvent(events[tc.eventIdx])
-					require.Equal(t, tc.expectedEvent, msg1)
-				}
-			}
-		})
-	}
+	s.runTests(cases)
 }
 
 func (s HandlerTestSuite) TestMsgDeleteMarkerRequest() {
@@ -442,21 +334,13 @@ func (s HandlerTestSuite) TestMsgDeleteMarkerRequest() {
 		Permissions: types.AccessListByNames("DELETE,MINT"),
 	}
 
-	cases := []struct {
-		name          string
-		msg           sdk.Msg
-		signers       []string
-		errorMsg      string
-		expectedEvent *types.EventMarkerDelete
-		eventIdx      int
-	}{
+	cases := []CommonTest{
 		{
 			"setup new marker for test",
 			types.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
 			[]string{s.user1},
 			"",
 			nil,
-			0,
 		},
 		{
 			"setup grant delete access to marker",
@@ -464,7 +348,6 @@ func (s HandlerTestSuite) TestMsgDeleteMarkerRequest() {
 			[]string{s.user1},
 			"",
 			nil,
-			0,
 		},
 		{
 			"setup cancel marker",
@@ -472,7 +355,6 @@ func (s HandlerTestSuite) TestMsgDeleteMarkerRequest() {
 			[]string{s.user1},
 			"",
 			nil,
-			0,
 		},
 		{
 			"should successfully delete marker",
@@ -480,25 +362,9 @@ func (s HandlerTestSuite) TestMsgDeleteMarkerRequest() {
 			[]string{s.user1},
 			"",
 			types.NewEventMarkerDelete(hotdogDenom, s.user1),
-			3,
 		},
 	}
-	for _, tc := range cases {
-		s.T().Run(tc.name, func(t *testing.T) {
-			_, err := s.handler(s.ctx, tc.msg)
-			if len(tc.errorMsg) > 0 {
-				assert.EqualError(t, err, tc.errorMsg)
-			} else {
-				assert.NoError(t, err)
-				if tc.expectedEvent != nil {
-					em := s.ctx.EventManager()
-					events := em.Events().ToABCIEvents()
-					msg1, _ := sdk.ParseTypedEvent(events[tc.eventIdx])
-					require.Equal(t, tc.expectedEvent, msg1)
-				}
-			}
-		})
-	}
+	s.runTests(cases)
 }
 
 func (s HandlerTestSuite) TestMsgMintMarkerRequest() {
@@ -509,21 +375,13 @@ func (s HandlerTestSuite) TestMsgMintMarkerRequest() {
 		Permissions: types.AccessListByNames("MINT,BURN"),
 	}
 
-	cases := []struct {
-		name          string
-		msg           sdk.Msg
-		signers       []string
-		errorMsg      string
-		expectedEvent *types.EventMarkerMint
-		eventIdx      int
-	}{
+	cases := []CommonTest{
 		{
 			"setup new marker for test",
 			types.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
 			[]string{s.user1},
 			"",
 			nil,
-			0,
 		},
 		{
 			"setup grant mint access to marker",
@@ -531,7 +389,6 @@ func (s HandlerTestSuite) TestMsgMintMarkerRequest() {
 			[]string{s.user1},
 			"",
 			nil,
-			0,
 		},
 		{
 			"should successfully mint marker",
@@ -539,25 +396,9 @@ func (s HandlerTestSuite) TestMsgMintMarkerRequest() {
 			[]string{s.user1},
 			"",
 			types.NewEventMarkerMint("100", hotdogDenom, s.user1),
-			2,
 		},
 	}
-	for _, tc := range cases {
-		s.T().Run(tc.name, func(t *testing.T) {
-			_, err := s.handler(s.ctx, tc.msg)
-			if len(tc.errorMsg) > 0 {
-				assert.EqualError(t, err, tc.errorMsg)
-			} else {
-				assert.NoError(t, err)
-				if tc.expectedEvent != nil {
-					em := s.ctx.EventManager()
-					events := em.Events().ToABCIEvents()
-					msg1, _ := sdk.ParseTypedEvent(events[tc.eventIdx])
-					require.Equal(t, tc.expectedEvent, msg1)
-				}
-			}
-		})
-	}
+	s.runTests(cases)
 }
 
 func (s HandlerTestSuite) TestMsgBurnMarkerRequest() {
@@ -568,21 +409,13 @@ func (s HandlerTestSuite) TestMsgBurnMarkerRequest() {
 		Permissions: types.AccessListByNames("DELETE,MINT,BURN"),
 	}
 
-	cases := []struct {
-		name          string
-		msg           sdk.Msg
-		signers       []string
-		errorMsg      string
-		expectedEvent *types.EventMarkerBurn
-		eventIdx      int
-	}{
+	cases := []CommonTest{
 		{
 			"setup new marker for test",
 			types.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
 			[]string{s.user1},
 			"",
 			nil,
-			0,
 		},
 		{
 			"setup grant mint access to marker",
@@ -590,7 +423,6 @@ func (s HandlerTestSuite) TestMsgBurnMarkerRequest() {
 			[]string{s.user1},
 			"",
 			nil,
-			0,
 		},
 		{
 			"should successfully burn marker",
@@ -598,25 +430,9 @@ func (s HandlerTestSuite) TestMsgBurnMarkerRequest() {
 			[]string{s.user1},
 			"",
 			types.NewEventMarkerBurn("100", hotdogDenom, s.user1),
-			2,
 		},
 	}
-	for _, tc := range cases {
-		s.T().Run(tc.name, func(t *testing.T) {
-			_, err := s.handler(s.ctx, tc.msg)
-			if len(tc.errorMsg) > 0 {
-				assert.EqualError(t, err, tc.errorMsg)
-			} else {
-				assert.NoError(t, err)
-				if tc.expectedEvent != nil {
-					em := s.ctx.EventManager()
-					events := em.Events().ToABCIEvents()
-					msg1, _ := sdk.ParseTypedEvent(events[tc.eventIdx])
-					require.Equal(t, tc.expectedEvent, msg1)
-				}
-			}
-		})
-	}
+	s.runTests(cases)
 }
 
 func (s HandlerTestSuite) TestMsgWithdrawMarkerRequest() {
@@ -627,21 +443,13 @@ func (s HandlerTestSuite) TestMsgWithdrawMarkerRequest() {
 		Permissions: types.AccessListByNames("DELETE,MINT,WITHDRAW"),
 	}
 
-	cases := []struct {
-		name          string
-		msg           sdk.Msg
-		signers       []string
-		errorMsg      string
-		expectedEvent *types.EventMarkerWithdraw
-		eventIdx      int
-	}{
+	cases := []CommonTest{
 		{
 			"setup new marker for test",
 			types.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
 			[]string{s.user1},
 			"",
 			nil,
-			0,
 		},
 		{
 			"setup grant access to marker",
@@ -649,7 +457,6 @@ func (s HandlerTestSuite) TestMsgWithdrawMarkerRequest() {
 			[]string{s.user1},
 			"",
 			nil,
-			0,
 		},
 		{
 			"setup finalize marker",
@@ -657,7 +464,6 @@ func (s HandlerTestSuite) TestMsgWithdrawMarkerRequest() {
 			[]string{s.user1},
 			"",
 			nil,
-			0,
 		},
 		{
 			"setup activate marker",
@@ -665,7 +471,6 @@ func (s HandlerTestSuite) TestMsgWithdrawMarkerRequest() {
 			[]string{s.user1},
 			"",
 			nil,
-			0,
 		},
 		{
 			"should successfully withdraw marker",
@@ -673,25 +478,9 @@ func (s HandlerTestSuite) TestMsgWithdrawMarkerRequest() {
 			[]string{s.user1},
 			"",
 			types.NewEventMarkerWithdraw("100hotdog", hotdogDenom, s.user1, s.user1),
-			9,
 		},
 	}
-	for _, tc := range cases {
-		s.T().Run(tc.name, func(t *testing.T) {
-			_, err := s.handler(s.ctx, tc.msg)
-			if len(tc.errorMsg) > 0 {
-				assert.EqualError(t, err, tc.errorMsg)
-			} else {
-				assert.NoError(t, err)
-				if tc.expectedEvent != nil {
-					em := s.ctx.EventManager()
-					events := em.Events().ToABCIEvents()
-					msg1, _ := sdk.ParseTypedEvent(events[tc.eventIdx])
-					require.Equal(t, tc.expectedEvent, msg1)
-				}
-			}
-		})
-	}
+	s.runTests(cases)
 }
 
 func (s HandlerTestSuite) TestMsgTransferMarkerRequest() {
@@ -702,21 +491,13 @@ func (s HandlerTestSuite) TestMsgTransferMarkerRequest() {
 		Permissions: types.AccessListByNames("DELETE,MINT,WITHDRAW,TRANSFER"),
 	}
 
-	cases := []struct {
-		name          string
-		msg           sdk.Msg
-		signers       []string
-		errorMsg      string
-		expectedEvent *types.EventMarkerTransfer
-		eventIdx      int
-	}{
+	cases := []CommonTest{
 		{
 			"setup new marker for test",
 			types.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_RestrictedCoin, true, true),
 			[]string{s.user1},
 			"",
 			nil,
-			0,
 		},
 		{
 			"setup grant access to marker",
@@ -724,7 +505,6 @@ func (s HandlerTestSuite) TestMsgTransferMarkerRequest() {
 			[]string{s.user1},
 			"",
 			nil,
-			0,
 		},
 		{
 			"setup finalize marker",
@@ -732,7 +512,6 @@ func (s HandlerTestSuite) TestMsgTransferMarkerRequest() {
 			[]string{s.user1},
 			"",
 			nil,
-			0,
 		},
 		{
 			"setup activate marker",
@@ -740,7 +519,6 @@ func (s HandlerTestSuite) TestMsgTransferMarkerRequest() {
 			[]string{s.user1},
 			"",
 			nil,
-			0,
 		},
 		{
 			"should successfully mint marker",
@@ -748,7 +526,6 @@ func (s HandlerTestSuite) TestMsgTransferMarkerRequest() {
 			[]string{s.user1},
 			"",
 			nil,
-			0,
 		},
 		{
 			"should successfully transfer marker",
@@ -756,25 +533,9 @@ func (s HandlerTestSuite) TestMsgTransferMarkerRequest() {
 			[]string{s.user1},
 			"",
 			types.NewEventMarkerTransfer("0", hotdogDenom, s.user1, s.user2, s.user1),
-			13,
 		},
 	}
-	for _, tc := range cases {
-		s.T().Run(tc.name, func(t *testing.T) {
-			_, err := s.handler(s.ctx, tc.msg)
-			if len(tc.errorMsg) > 0 {
-				assert.EqualError(t, err, tc.errorMsg)
-			} else {
-				assert.NoError(t, err)
-				if tc.expectedEvent != nil {
-					em := s.ctx.EventManager()
-					events := em.Events().ToABCIEvents()
-					msg1, _ := sdk.ParseTypedEvent(events[tc.eventIdx])
-					require.Equal(t, tc.expectedEvent, msg1)
-				}
-			}
-		})
-	}
+	s.runTests(cases)
 }
 
 func (s HandlerTestSuite) TestMsgSetDenomMetadataRequest() {
@@ -797,21 +558,13 @@ func (s HandlerTestSuite) TestMsgSetDenomMetadataRequest() {
 		Display: hotdogDenom,
 	}
 
-	cases := []struct {
-		name          string
-		msg           sdk.Msg
-		signers       []string
-		errorMsg      string
-		expectedEvent *types.EventMarkerSetDenomMetadata
-		eventIdx      int
-	}{
+	cases := []CommonTest{
 		{
 			"setup new marker for test",
 			types.NewMsgAddMarkerRequest(fmt.Sprintf("n%s", hotdogDenom), sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_RestrictedCoin, true, true),
 			[]string{s.user1},
 			"",
 			nil,
-			0,
 		},
 		{
 			"setup grant access to marker",
@@ -819,7 +572,6 @@ func (s HandlerTestSuite) TestMsgSetDenomMetadataRequest() {
 			[]string{s.user1},
 			"",
 			nil,
-			0,
 		},
 		{
 			"should successfully set denom metadata on marker",
@@ -827,23 +579,7 @@ func (s HandlerTestSuite) TestMsgSetDenomMetadataRequest() {
 			[]string{s.user1},
 			"",
 			types.NewEventMarkerSetDenomMetadata(hotdogMetadata.Base, hotdogMetadata.Description, hotdogMetadata.Display, hotdogMetadata.DenomUnits, s.user1),
-			3,
 		},
 	}
-	for _, tc := range cases {
-		s.T().Run(tc.name, func(t *testing.T) {
-			_, err := s.handler(s.ctx, tc.msg)
-			if len(tc.errorMsg) > 0 {
-				assert.EqualError(t, err, tc.errorMsg)
-			} else {
-				assert.NoError(t, err)
-				if tc.expectedEvent != nil {
-					em := s.ctx.EventManager()
-					events := em.Events().ToABCIEvents()
-					msg1, _ := sdk.ParseTypedEvent(events[tc.eventIdx])
-					require.Equal(t, tc.expectedEvent, msg1)
-				}
-			}
-		})
-	}
+	s.runTests(cases)
 }
