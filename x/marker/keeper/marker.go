@@ -207,16 +207,16 @@ func (k Keeper) MintCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 		return fmt.Errorf("%s does not have %s on %s markeraccount", caller, types.Access_Mint, m.GetDenom())
 	}
 
-	switch m.GetStatus() {
+	switch {
 	// For proposed, finalized accounts we allow adjusting the total_supply of the marker but we do not
 	// mint actual coin.
-	case types.StatusProposed, types.StatusFinalized:
+	case m.GetStatus() == types.StatusProposed || m.GetStatus() == types.StatusFinalized:
 		total := m.GetSupply().Add(coin)
 		if err = m.SetSupply(total); err != nil {
 			return err
 		}
 		k.SetMarker(ctx, m)
-	case types.StatusActive:
+	case m.GetStatus() != types.StatusActive:
 		return fmt.Errorf("cannot mint coin for a marker that is not in Active status")
 	default:
 		// Increase the tracked supply value for the marker.
@@ -245,16 +245,16 @@ func (k Keeper) BurnCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 		return fmt.Errorf("%s does not have %s on %s markeraccount", caller, types.Access_Burn, m.GetDenom())
 	}
 
-	switch m.GetStatus() {
+	switch {
 	// For proposed, finalized accounts we allow adjusting the total_supply of the marker but we do not
 	// burn actual coin.
-	case types.StatusProposed, types.StatusFinalized:
+	case m.GetStatus() == types.StatusProposed || m.GetStatus() == types.StatusFinalized:
 		total := m.GetSupply().Sub(coin)
 		if err = m.SetSupply(total); err != nil {
 			return err
 		}
 		k.SetMarker(ctx, m)
-	case types.StatusActive: // check to see if marker is active
+	case m.GetStatus() != types.StatusActive:
 		return fmt.Errorf("cannot mint coin for a marker that is not in Active status")
 	default:
 		err = k.DecreaseSupply(ctx, m, coin)
