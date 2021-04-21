@@ -580,8 +580,7 @@ func (k Keeper) SetMarkerDenomMetadata(ctx sdk.Context, metadata banktypes.Metad
 		existing = &e
 	}
 
-	params := k.GetParams(ctx)
-	if err := types.ValidateDenomMetadataExtended(metadata, existing, marker.GetStatus(), params); err != nil {
+	if err := k.ValidateDenomMetadata(ctx, metadata, existing, marker.GetStatus()); err != nil {
 		return err
 	}
 
