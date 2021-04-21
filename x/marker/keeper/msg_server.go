@@ -82,21 +82,23 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	markerAddEvent := types.NewEventMarkerAdd(msg.Amount.Denom, msg.Amount.Amount.String(), msg.Status.String(), msg.Manager, msg.MarkerType.String())
-	if err := ctx.EventManager().EmitTypedEvent(markerAddEvent); err != nil {
-		return nil, err
-	}
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
 
 	defer func() {
 		telemetry.IncrCounterWithLabels(
 			[]string{types.ModuleName, "add", "marker"},
 			1,
 			[]metrics.Label{
-				telemetry.NewLabel(types.EventTelemetryLabelAmount, markerAddEvent.Amount),
-				telemetry.NewLabel(types.EventTelemetryLabelDenom, markerAddEvent.Denom),
-				telemetry.NewLabel(types.EventTelemetryLabelStatus, markerAddEvent.Status),
-				telemetry.NewLabel(types.EventTelemetryLabelManager, markerAddEvent.Manager),
-				telemetry.NewLabel(types.EventTelemetryLabelMarkerType, markerAddEvent.MarkerType),
+				telemetry.NewLabel(types.EventTelemetryLabelAmount, msg.Amount.Amount.String()),
+				telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Amount.Denom),
+				telemetry.NewLabel(types.EventTelemetryLabelStatus, msg.Status.String()),
+				telemetry.NewLabel(types.EventTelemetryLabelManager, msg.Manager),
+				telemetry.NewLabel(types.EventTelemetryLabelMarkerType, msg.MarkerType.String()),
 			},
 		)
 	}()
@@ -114,29 +116,36 @@ func (k msgServer) AddAccess(goCtx context.Context, msg *types.MsgAddAccessReque
 	}
 
 	for i := range msg.Access {
-		if err := k.Keeper.AddAccess(ctx, msg.GetSigners()[0], msg.Denom, &msg.Access[i]); err != nil {
+		access := msg.Access[i]
+		if err := k.Keeper.AddAccess(ctx, msg.GetSigners()[0], msg.Denom, &access); err != nil {
 			ctx.Logger().Error("unable to add access grant to marker", "err", err)
 			return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, err.Error())
 		}
 
-		markerAddAccessEvent := types.NewEventMarkerAddAccess(msg.Access[i], msg.Denom, msg.Administrator)
-		if err := ctx.EventManager().EmitTypedEvent(markerAddAccessEvent); err != nil {
-			return nil, err
-		}
-
 		defer func() {
+			permissions := make([]string, len(access.Permissions))
+			for j, permission := range access.Permissions {
+				permissions[j] = permission.String()
+			}
 			telemetry.IncrCounterWithLabels(
 				[]string{types.ModuleName, "add", "access"},
 				1,
 				[]metrics.Label{
-					telemetry.NewLabel(types.EventTelemetryLabelAddress, markerAddAccessEvent.Access.Address),
-					telemetry.NewLabel(types.EventTelemetryLabelAccess, strings.Join(markerAddAccessEvent.Access.Permissions, ",")),
-					telemetry.NewLabel(types.EventTelemetryLabelDenom, markerAddAccessEvent.Denom),
-					telemetry.NewLabel(types.EventTelemetryLabelAdministrator, markerAddAccessEvent.Administrator),
+					telemetry.NewLabel(types.EventTelemetryLabelAddress, access.Address),
+					telemetry.NewLabel(types.EventTelemetryLabelAccess, strings.Join(permissions, ",")),
+					telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Denom),
+					telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
 				},
 			)
 		}()
 	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
 
 	return &types.MsgAddAccessResponse{}, nil
 }

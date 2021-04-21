@@ -95,14 +95,15 @@ func NewEventMarkerAdd(denom string, amount string, status string, manager strin
 	}
 }
 
-func NewEventMarkerAddAccess(accessGrant AccessGrant, denom string, administrator string) *EventMarkerAddAccess {
-	permissions := make([]string, len(accessGrant.Permissions))
-	for i, permission := range accessGrant.Permissions {
+func NewEventMarkerAddAccess(accessGrant AccessGrantI, denom string, administrator string) *EventMarkerAddAccess {
+	accessList := accessGrant.GetAccessList()
+	permissions := make([]string, len(accessList))
+	for i, permission := range accessList {
 		permissions[i] = permission.String()
 	}
 
 	access := EventMarkerAccess{
-		Address:     accessGrant.Address,
+		Address:     accessGrant.GetAddress().String(),
 		Permissions: permissions,
 	}
 

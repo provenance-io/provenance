@@ -66,6 +66,17 @@ func (k Keeper) AddMarkerAccount(ctx sdk.Context, marker types.MarkerAccountI) e
 
 	k.SetMarker(ctx, marker)
 
+	markerAddEvent := types.NewEventMarkerAdd(
+		marker.GetSupply().Denom,
+		marker.GetSupply().Amount.String(),
+		marker.GetStatus().String(),
+		marker.GetManager().String(),
+		marker.GetMarkerType().String(),
+	)
+	if err := ctx.EventManager().EmitTypedEvent(markerAddEvent); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -100,6 +111,12 @@ func (k Keeper) AddAccess(
 	default:
 		return fmt.Errorf("marker in %s state can not be modified", m.GetStatus())
 	}
+
+	markerAddAccessEvent := types.NewEventMarkerAddAccess(grant, denom, caller.String())
+	if err := ctx.EventManager().EmitTypedEvent(markerAddAccessEvent); err != nil {
+		return err
+	}
+
 	return nil
 }
 
