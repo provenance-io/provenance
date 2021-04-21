@@ -2,12 +2,13 @@ package types
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"strings"
-	"testing"
 )
 
 type DenomTestSuite struct {
@@ -340,7 +341,7 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 			nil,
 			StatusProposed,
 			testParams(`^[nu]hash$`),
-			[]string{"fails unrestricted marker denom regex", "hash"},
+			[]string{"fails unrestricted marker denom validation", "hash"},
 		},
 		{
 			"alias fails extra regex",
@@ -357,7 +358,7 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 			nil,
 			StatusProposed,
 			testParams(`^[nu]?hash$`),
-			[]string{"fails unrestricted marker denom regex", "nanohash"},
+			[]string{"fails unrestricted marker denom validation", "nanohash"},
 		},
 		{
 			"invalid unrestricted marker denom regex",

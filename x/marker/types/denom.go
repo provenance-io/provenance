@@ -94,11 +94,11 @@ func ValidateDenomMetadataExtended(proposed banktypes.Metadata, existing *bankty
 
 	// Make sure all the DenomUnit Denom and alias strings pass the extra validation regex.
 	for _, du := range proposed.DenomUnits {
-		if err := matchUnrestrictedDenomRegex(du.Denom, params); err != nil {
+		if err := ValidUnrestictedDenom(du.Denom, params); err != nil {
 			return fmt.Errorf("invalid denom unit denom: %w", err)
 		}
 		for _, a := range du.Aliases {
-			if err := matchUnrestrictedDenomRegex(a, params); err != nil {
+			if err := ValidUnrestictedDenom(a, params); err != nil {
 				return fmt.Errorf("invalid denom unit alias: %w", err)
 			}
 		}
@@ -243,12 +243,14 @@ func validateDenom(denom string, rootCoinName string) (SIPrefix, error) {
 	return prefix, nil
 }
 
-// matchUnrestrictedDenomRegex compiles the UnrestrictedDenomRegex and checks if denom matches it.
-func matchUnrestrictedDenomRegex(denom string, params Params) error {
-	if r, err := regexp.Compile(params.UnrestrictedDenomRegex); err != nil {
+// ValidUnrestictedDenom checks if the supplied denom is valid based on the provided configuration parameters
+func ValidUnrestictedDenom(denom string, params Params) error {
+	// Anchors are enforced on the denom validation expression.  Similar to how the SDK does hits.
+	// https://github.com/cosmos/cosmos-sdk/blob/512b533242d34926972a8fc2f5639e8cf182f5bd/types/coin.go#L625
+	if r, err := regexp.Compile(fmt.Sprintf(`^%s$`, params.UnrestrictedDenomRegex)); err != nil {
 		return err
 	} else if !r.MatchString(denom) {
-		return fmt.Errorf("denom [%s] fails unrestricted marker denom regex [%s]", denom, params.UnrestrictedDenomRegex)
+		return fmt.Errorf("invalid denom [%s] (fails unrestricted marker denom validation %s)", denom, params.UnrestrictedDenomRegex)
 	}
 	return nil
 }

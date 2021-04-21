@@ -2,8 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
-	"regexp"
 
 	"github.com/armon/go-metrics"
 
@@ -43,11 +41,8 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 	params := k.GetParams(ctx)
 
 	// Add marker requests must pass extra validation for denom (in addition to regular coin validation expression)
-	valExp := params.UnrestrictedDenomRegex
-	if v, expErr := regexp.Compile(valExp); expErr != nil {
-		return nil, expErr
-	} else if !v.MatchString(msg.Amount.Denom) {
-		return nil, fmt.Errorf("invalid denom (fails unrestricted marker denom validation %s): %s", valExp, msg.Amount.Denom)
+	if err = types.ValidUnrestictedDenom(msg.Amount.Denom, params); err != nil {
+		return nil, err
 	}
 
 	addr := types.MustGetMarkerAddress(msg.Amount.Denom)
