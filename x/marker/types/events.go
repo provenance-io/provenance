@@ -67,8 +67,6 @@ const (
 	EventTelemetryLabelToAddress string = "to-address"
 	// EventTelemetryLabelFromAddress from address label for telemetry metrics
 	EventTelemetryLabelFromAddress string = "from-address"
-	// EventTelemetryLabelAmount amount label for telemetry metrics
-	EventTelemetryLabelAmount string = "amount"
 	// EventTelemetryLabelCoins coins label for telemetry metrics
 	EventTelemetryLabelCoins string = "coins"
 	// EventTelemetryLabelDenom denom label for telemetry metrics
@@ -81,8 +79,6 @@ const (
 	EventTelemetryLabelAdministrator string = "administrator"
 	// EventTelemetryLabelMarkerType marker type label for telemetry metrics
 	EventTelemetryLabelMarkerType string = "marker-type"
-	// EventTelemetryLabelAccess access label for telemetry metrics
-	EventTelemetryLabelAccess string = "access"
 )
 
 func NewEventMarkerAdd(denom string, amount string, status string, manager string, markerType string) *EventMarkerAdd {

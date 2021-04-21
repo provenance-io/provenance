@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"regexp"
-	"strings"
 
 	"github.com/armon/go-metrics"
 
@@ -94,7 +93,6 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 			[]string{types.ModuleName, "add", "marker"},
 			1,
 			[]metrics.Label{
-				telemetry.NewLabel(types.EventTelemetryLabelAmount, msg.Amount.Amount.String()),
 				telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Amount.Denom),
 				telemetry.NewLabel(types.EventTelemetryLabelStatus, msg.Status.String()),
 				telemetry.NewLabel(types.EventTelemetryLabelManager, msg.Manager),
@@ -132,7 +130,6 @@ func (k msgServer) AddAccess(goCtx context.Context, msg *types.MsgAddAccessReque
 				1,
 				[]metrics.Label{
 					telemetry.NewLabel(types.EventTelemetryLabelAddress, access.Address),
-					telemetry.NewLabel(types.EventTelemetryLabelAccess, strings.Join(permissions, ",")),
 					telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Denom),
 					telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
 				},
@@ -352,7 +349,6 @@ func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMintRequest) (*type
 			[]string{types.ModuleName, "mint", "marker"},
 			1,
 			[]metrics.Label{
-				telemetry.NewLabel(types.EventTelemetryLabelAmount, msg.Amount.Amount.String()),
 				telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Amount.GetDenom()),
 				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
 			},
@@ -387,7 +383,6 @@ func (k msgServer) Burn(goCtx context.Context, msg *types.MsgBurnRequest) (*type
 			[]string{types.ModuleName, "burn", "marker"},
 			1,
 			[]metrics.Label{
-				telemetry.NewLabel(types.EventTelemetryLabelAmount, msg.Amount.Amount.String()),
 				telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Amount.GetDenom()),
 				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
 			},
@@ -429,7 +424,6 @@ func (k msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdrawRequest
 			1,
 			[]metrics.Label{
 				telemetry.NewLabel(types.EventTelemetryLabelToAddress, msg.ToAddress),
-				telemetry.NewLabel(types.EventTelemetryLabelAmount, msg.Amount.String()),
 				telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.GetDenom()),
 				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
 			},
@@ -481,7 +475,6 @@ func (k msgServer) Transfer(goCtx context.Context, msg *types.MsgTransferRequest
 			[]metrics.Label{
 				telemetry.NewLabel(types.EventTelemetryLabelToAddress, msg.ToAddress),
 				telemetry.NewLabel(types.EventTelemetryLabelFromAddress, msg.FromAddress),
-				telemetry.NewLabel(types.EventTelemetryLabelAmount, msg.Amount.Amount.String()),
 				telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Amount.Denom),
 				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
 			},
