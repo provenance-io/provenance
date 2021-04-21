@@ -13,13 +13,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/provenance-io/provenance/x/authz/exported"
+	"github.com/provenance-io/provenance/x/authz/msgservice"
 	"github.com/provenance-io/provenance/x/authz/types"
-	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
-	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
+	marker "github.com/provenance-io/provenance/x/marker/types"
 )
 
 const FlagSpendLimit = "spend-limit"
@@ -61,7 +60,7 @@ func NewCmdGrantAuthorization() *cobra.Command {
 Examples:
  $ %s tx %s grant cosmos1skjw.. send %s --spend-limit=1000stake --from=cosmos1skl..
  $ %s tx %s grant cosmos1skjw.. generic --msg-type=/cosmos.gov.v1beta1.Msg/Vote --from=cosmos1sk..
-	`, version.AppName, types.ModuleName, bank.SendAuthorization{}.MethodName(), version.AppName, types.ModuleName),
+	`, version.AppName, types.ModuleName, marker.MarkerSendAuthorization{}.MethodName(), version.AppName, types.ModuleName),
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -97,7 +96,7 @@ Examples:
 					return fmt.Errorf("spend-limit should be greater than zero")
 				}
 
-				authorization = bank.NewSendAuthorization(spendLimit)
+				authorization = marker.NewMarkerSendAuthorization(spendLimit)
 			case "generic":
 				msgType, err := cmd.Flags().GetString(FlagMsgType)
 				if err != nil {
@@ -105,57 +104,6 @@ Examples:
 				}
 
 				authorization = types.NewGenericAuthorization(msgType)
-			case delegate, unbond, redelegate:
-				limit, err := cmd.Flags().GetString(FlagSpendLimit)
-				if err != nil {
-					return err
-				}
-
-				allowValidators, err := cmd.Flags().GetStringSlice(FlagAllowedValidators)
-				if err != nil {
-					return err
-				}
-
-				denyValidators, err := cmd.Flags().GetStringSlice(FlagDenyValidators)
-				if err != nil {
-					return err
-				}
-
-				var delegateLimit *sdk.Coin
-				if limit != "" {
-					spendLimit, err := sdk.ParseCoinsNormalized(limit)
-					if err != nil {
-						return err
-					}
-
-					if !spendLimit.IsAllPositive() {
-						return fmt.Errorf("spend-limit should be greater than zero")
-					}
-					delegateLimit = &spendLimit[0]
-				}
-
-				allowed, err := bech32toValidatorAddresses(allowValidators)
-				if err != nil {
-					return err
-				}
-
-				denied, err := bech32toValidatorAddresses(denyValidators)
-				if err != nil {
-					return err
-				}
-
-				switch args[1] {
-				case delegate:
-					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE, delegateLimit)
-				case unbond:
-					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE, delegateLimit)
-				default:
-					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE, delegateLimit)
-				}
-				if err != nil {
-					return err
-				}
-
 			default:
 				return fmt.Errorf("invalid authorization type, %s", args[1])
 			}
@@ -192,7 +140,7 @@ func NewCmdRevokeAuthorization() *cobra.Command {
 			fmt.Sprintf(`revoke authorization from a granter to a grantee:
 Example:
  $ %s tx %s revoke cosmos1skj.. %s --from=cosmos1skj..
-			`, version.AppName, types.ModuleName, bank.SendAuthorization{}.MethodName()),
+			`, version.AppName, types.ModuleName, marker.MarkerSendAuthorization{}.MethodName()),
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {

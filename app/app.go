@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/provenance-io/provenance/x/authz"
 	"io"
 	"net/http"
 	"os"
@@ -113,6 +114,9 @@ import (
 	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
 
 	"github.com/provenance-io/provenance/internal/provwasm"
+
+	authzkeeper "github.com/provenance-io/provenance/x/authz/keeper"
+	authztypes "github.com/provenance-io/provenance/x/authz/types"
 )
 
 const (
@@ -166,6 +170,7 @@ var (
 		name.AppModuleBasic{},
 		metadata.AppModuleBasic{},
 		wasm.AppModuleBasic{},
+		authz.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -232,6 +237,7 @@ type App struct {
 	AttributeKeeper attributekeeper.Keeper
 	NameKeeper      namekeeper.Keeper
 	WasmKeeper      wasm.Keeper
+	AuthzKeeper 	authzkeeper.Keeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
@@ -270,6 +276,7 @@ func New(
 		attributetypes.StoreKey,
 		nametypes.StoreKey,
 		wasm.StoreKey,
+		authztypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -350,6 +357,10 @@ func New(
 		appCodec, keys[attributetypes.StoreKey], app.GetSubspace(attributetypes.ModuleName), app.AccountKeeper, app.NameKeeper,
 	)
 
+	// TODO may this should have a
+	app.AuthzKeeper = authzkeeper.NewKeeper(
+		 keys[authztypes.StoreKey], appCodec , app.BaseApp.MsgServiceRouter(),
+	)
 	// Init CosmWasm module
 	var wasmRouter = bApp.Router()
 	wasmDir := filepath.Join(homePath, "data", "wasm")
@@ -467,6 +478,7 @@ func New(
 		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper),
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),
 		attribute.NewAppModule(app.AttributeKeeper),
+		authz.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper),
 
 		upgrade.NewAppModule(app.UpgradeKeeper),

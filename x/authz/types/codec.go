@@ -5,6 +5,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/provenance-io/provenance/x/authz/exported"
+	marker "github.com/provenance-io/provenance/x/marker/types"
+
 )
 
 // RegisterInterfaces registers the interfaces types with the interface registry
@@ -16,8 +18,9 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	)
 
 	registry.RegisterInterface(
-		"cosmos.authz.v1beta1.Authorization",
+		"provenance.authz.v1.Authorization",
 		(*exported.Authorization)(nil),
+		&marker.MarkerSendAuthorization{},
 		&GenericAuthorization{},
 	)
 

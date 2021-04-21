@@ -5,7 +5,10 @@ import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "provenance/authz/v1/authz.proto";
 
-option go_package = "github.com/provenance/provenance-io/x/authz/types";
+option go_package = "github.com/provenance-io/provenance/x/authz/types";
+
+option java_package        = "io.provenance.authz.v1";
+option java_multiple_files = true;
 
 // Query defines the gRPC querier service.
 service Query {

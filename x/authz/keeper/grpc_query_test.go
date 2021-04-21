@@ -8,7 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/authz/exported"
 	"github.com/provenance-io/provenance/x/authz/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
+
 )
 
 func (suite *TestSuite) TestGRPCQueryAuthorization() {
@@ -57,7 +58,7 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 			func() {
 				now := ctx.BlockHeader().Time
 				newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
-				expAuthorization = &banktypes.SendAuthorization{SpendLimit: newCoins}
+				expAuthorization = &markertypes.MarkerSendAuthorization{SpendLimit: newCoins}
 				err := app.AuthzKeeper.Grant(ctx, addrs[0], addrs[1], expAuthorization, now.Add(time.Hour))
 				suite.Require().NoError(err)
 				req = &types.QueryAuthorizationRequest{
@@ -125,7 +126,7 @@ func (suite *TestSuite) TestGRPCQueryAuthorizations() {
 			func() {
 				now := ctx.BlockHeader().Time
 				newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
-				expAuthorization = &banktypes.SendAuthorization{SpendLimit: newCoins}
+				expAuthorization = &markertypes.MarkerSendAuthorization{SpendLimit: newCoins}
 				err := app.AuthzKeeper.Grant(ctx, addrs[0], addrs[1], expAuthorization, now.Add(time.Hour))
 				suite.Require().NoError(err)
 				req = &types.QueryAuthorizationsRequest{

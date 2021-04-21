@@ -15,7 +15,6 @@ import (
 	"github.com/provenance-io/provenance/x/authz/client/cli"
 
 	authztestutil "github.com/provenance-io/provenance/x/authz/client/testutil"
-	"github.com/provenance-io/provenance/x/authz/types"
 )
 
 func (s *IntegrationTestSuite) TestQueryAuthorizations() {

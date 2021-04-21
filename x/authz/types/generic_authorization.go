@@ -3,8 +3,8 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/provenance-io/provenance/x/authz/exported"
+	"strings"
 )
 
 var (
@@ -30,8 +30,15 @@ func (authorization GenericAuthorization) Accept(ctx sdk.Context, msg sdk.Servic
 
 // ValidateBasic implements Authorization.ValidateBasic.
 func (authorization GenericAuthorization) ValidateBasic() error {
-	if !msgservice.IsServiceMsg(authorization.MessageName) {
+	if !IsServiceMsg(authorization.MessageName) {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, " %s is not a valid service msg", authorization.MessageName)
 	}
 	return nil
+}
+
+
+// IsServiceMsg checks if a type URL corresponds to a service method name,
+// i.e. /cosmos.bank.Msg/Send vs /cosmos.bank.MsgSend
+func IsServiceMsg(typeURL string) bool {
+	return strings.Count(typeURL, "/") >= 2
 }

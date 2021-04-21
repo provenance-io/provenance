@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/authz/exported"
@@ -30,11 +30,12 @@ func TestMsgExecAuthorized(t *testing.T) {
 		{"zero-messages test: should fail", grantee, []sdk.ServiceMsg{}, false},
 		{"valid test: msg type", grantee, []sdk.ServiceMsg{
 			{
-				MethodName: banktypes.SendAuthorization{}.MethodName(),
-				Request: &banktypes.MsgSend{
-					Amount:      sdk.NewCoins(sdk.NewInt64Coin("steak", 2)),
+				MethodName: markertypes.MarkerSendAuthorization{}.MethodName(),
+				Request: &markertypes.MsgTransferRequest{
+					Amount:      sdk.NewCoin("steak", sdk.NewInt(2)),
 					FromAddress: granter.String(),
 					ToAddress:   grantee.String(),
+					Administrator: grantee.String(),
 				},
 			},
 		}, true},
@@ -79,12 +80,12 @@ func TestMsgGrantAuthorization(t *testing.T) {
 		expectErr        bool
 		expectPass       bool
 	}{
-		{"nil granter address", nil, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, time.Now(), false, false},
-		{"nil grantee address", granter, nil, &banktypes.SendAuthorization{SpendLimit: coinsPos}, time.Now(), false, false},
-		{"nil granter and grantee address", nil, nil, &banktypes.SendAuthorization{SpendLimit: coinsPos}, time.Now(), false, false},
+		{"nil granter address", nil, grantee, &markertypes.MarkerSendAuthorization{SpendLimit: coinsPos}, time.Now(), false, false},
+		{"nil grantee address", granter, nil, &markertypes.MarkerSendAuthorization{SpendLimit: coinsPos}, time.Now(), false, false},
+		{"nil granter and grantee address", nil, nil, &markertypes.MarkerSendAuthorization{SpendLimit: coinsPos}, time.Now(), false, false},
 		{"nil authorization", granter, grantee, nil, time.Now(), true, false},
-		{"valid test case", granter, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, time.Now().AddDate(0, 1, 0), false, true},
-		{"past time", granter, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, time.Now().AddDate(0, 0, -1), false, false},
+		{"valid test case", granter, grantee, &markertypes.MarkerSendAuthorization{SpendLimit: coinsPos}, time.Now().AddDate(0, 1, 0), false, true},
+		{"past time", granter, grantee, &markertypes.MarkerSendAuthorization{SpendLimit: coinsPos}, time.Now().AddDate(0, 0, -1), false, false},
 	}
 	for i, tc := range tests {
 		msg, err := types.NewMsgGrantAuthorization(

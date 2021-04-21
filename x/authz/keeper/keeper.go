@@ -52,7 +52,7 @@ func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 	grantStoreKey := types.GetAuthorizationStoreKey(grantee, granter, updated.MethodName())
 	grant, found := k.getAuthorizationGrant(ctx, grantStoreKey)
 	if !found {
-		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "authorization not found")
+		return sdkerrors.Wrapf(sdkerrors.ErrKeyNotFound, "authorization not found")
 	}
 
 	msg, ok := updated.(proto.Message)
@@ -148,7 +148,7 @@ func (k Keeper) Revoke(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 	grantStoreKey := types.GetAuthorizationStoreKey(grantee, granter, msgType)
 	_, found := k.getAuthorizationGrant(ctx, grantStoreKey)
 	if !found {
-		return sdkerrors.Wrap(sdkerrors.ErrNotFound, "authorization not found")
+		return sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, "authorization not found")
 	}
 	store.Delete(grantStoreKey)
 

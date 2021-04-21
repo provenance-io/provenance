@@ -2,7 +2,10 @@ package simulation
 
 import (
 	"context"
+	"fmt"
+	"github.com/provenance-io/provenance/x/authz/msgservice"
 	"math/rand"
+	"reflect"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -11,19 +14,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/provenance-io/provenance/x/authz/keeper"
 	"github.com/provenance-io/provenance/x/authz/types"
-	banktype "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/simulation"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 // authz message types
 const (
-	TypeMsgGrantAuthorization  = "/cosmos.authz.v1beta1.Msg/GrantAuthorization"
-	TypeMsgRevokeAuthorization = "/cosmos.authz.v1beta1.Msg/RevokeAuthorization"
-	TypeMsgExecDelegated       = "/cosmos.authz.v1beta1.Msg/ExecAuthorized"
+	TypeMsgGrantAuthorization  = "/provenance.authz.v1.Msg/GrantAuthorization"
+	TypeMsgRevokeAuthorization = "/provenance.authz.v1.Msg/RevokeAuthorization"
+	TypeMsgExecDelegated       = "/provenance.authz.v1.Msg/ExecAuthorized"
 )
 
 // Simulation operation weights constants
@@ -101,7 +103,7 @@ func SimulateMsgGrantAuthorization(ak types.AccountKeeper, bk types.BankKeeper, 
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgGrantAuthorization, "spend limit is nil"), nil, nil
 		}
 		msg, err := types.NewMsgGrantAuthorization(granter.Address, grantee.Address,
-			banktype.NewSendAuthorization(spendLimit), blockTime.AddDate(1, 0, 0))
+			markertypes.NewMarkerSendAuthorization(spendLimit), blockTime.AddDate(1, 0, 0))
 
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgGrantAuthorization, err.Error()), nil, err
@@ -132,7 +134,7 @@ func SimulateMsgGrantAuthorization(ak types.AccountKeeper, bk types.BankKeeper, 
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, svcMsgClientConn.GetMsgs()[0].Type(), "unable to deliver tx"), nil, err
 		}
-		return simtypes.NewOperationMsg(svcMsgClientConn.GetMsgs()[0], true, "", protoCdc), nil, err
+		return NewOperationMsg(svcMsgClientConn.GetMsgs()[0], true, "", protoCdc), nil, err
 	}
 }
 
@@ -195,7 +197,7 @@ func SimulateMsgRevokeAuthorization(ak types.AccountKeeper, bk types.BankKeeper,
 		}
 
 		_, _, err = app.Deliver(txGen.TxEncoder(), tx)
-		return simtypes.NewOperationMsg(svcMsgClientConn.GetMsgs()[0], true, "", protoCdc), nil, err
+		return NewOperationMsg(svcMsgClientConn.GetMsgs()[0], true, "", protoCdc), nil, err
 	}
 }
 
@@ -240,11 +242,12 @@ func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecDelegated, "fee error"), nil, err
 		}
-		sendCoins := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10)))
+		sendCoins := sdk.NewCoin("foo", sdk.NewInt(10))
 
 		execMsg := sdk.ServiceMsg{
-			MethodName: banktype.SendAuthorization{}.MethodName(),
-			Request: banktype.NewMsgSend(
+			MethodName: markertypes.MarkerSendAuthorization{}.MethodName(),
+			Request: markertypes.NewTransferRequest(
+				granterAddr,
 				granterAddr,
 				granteeAddr,
 				sendCoins,
@@ -252,7 +255,7 @@ func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k
 		}
 
 		msg := types.NewMsgExecAuthorized(grantee.Address, []sdk.ServiceMsg{execMsg})
-		sendGrant := targetGrant.Authorization.GetCachedValue().(*banktype.SendAuthorization)
+		sendGrant := targetGrant.Authorization.GetCachedValue().(*markertypes.MarkerSendAuthorization)
 		_, _, err = sendGrant.Accept(ctx, execMsg)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecDelegated, err.Error()), nil, nil
@@ -290,6 +293,20 @@ func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecDelegated, "unmarshal error"), nil, err
 		}
-		return simtypes.NewOperationMsg(svcMsgClientConn.GetMsgs()[0], true, "success", protoCdc), nil, nil
+		return NewOperationMsg(svcMsgClientConn.GetMsgs()[0], true, "success", protoCdc), nil, nil
 	}
+}
+
+// NewOperationMsg - create a new operation message from sdk.Msg
+func NewOperationMsg(msg sdk.Msg, ok bool, comment string, cdc *codec.ProtoCodec) simtypes.OperationMsg {
+	if reflect.TypeOf(msg) == reflect.TypeOf(sdk.ServiceMsg{}) {
+		srvMsg, ok := msg.(sdk.ServiceMsg)
+		if !ok {
+			panic(fmt.Sprintf("Expecting %T to implement sdk.ServiceMsg", msg))
+		}
+		bz := cdc.MustMarshalJSON(srvMsg.Request)
+
+		return simtypes.NewOperationMsgBasic(srvMsg.MethodName, srvMsg.MethodName, comment, ok, bz)
+	}
+	return simtypes.NewOperationMsgBasic(msg.Route(), msg.Type(), comment, ok, msg.GetSignBytes())
 }
