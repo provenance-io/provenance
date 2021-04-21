@@ -190,7 +190,7 @@ type Contract struct {
 	// Constructor arguments.
 	// These are always the output of a previously recorded consideration.
 	Inputs []*Fact `protobuf:"bytes,4,rep,name=inputs,proto3" json:"inputs,omitempty"`
-	// considerations is a deprecated field that is not used at all anymore.
+	// conditions is a deprecated field that is not used at all anymore.
 	Conditions     []*Condition     `protobuf:"bytes,5,rep,name=conditions,proto3" json:"conditions,omitempty"` // Deprecated: Do not use.
 	Considerations []*Consideration `protobuf:"bytes,6,rep,name=considerations,proto3" json:"considerations,omitempty"`
 	Recitals       []*Recital       `protobuf:"bytes,7,rep,name=recitals,proto3" json:"recitals,omitempty"`
