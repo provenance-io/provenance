@@ -169,19 +169,21 @@ func (k msgServer) DeleteAccess(goCtx context.Context, msg *types.MsgDeleteAcces
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, err.Error())
 	}
 
-	markerDeleteAccessEvent := types.NewEventMarkerDeleteAccess(msg.RemovedAddress, msg.Denom, msg.Administrator)
-	if err := ctx.EventManager().EmitTypedEvent(markerDeleteAccessEvent); err != nil {
-		return nil, err
-	}
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
 
 	defer func() {
 		telemetry.IncrCounterWithLabels(
 			[]string{types.ModuleName, "delete", "access"},
 			1,
 			[]metrics.Label{
-				telemetry.NewLabel(types.EventTelemetryLabelAddress, markerDeleteAccessEvent.RemoveAddress),
-				telemetry.NewLabel(types.EventTelemetryLabelDenom, markerDeleteAccessEvent.Denom),
-				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, markerDeleteAccessEvent.Administrator),
+				telemetry.NewLabel(types.EventTelemetryLabelAddress, msg.RemovedAddress),
+				telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Denom),
+				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
 			},
 		)
 	}()
@@ -202,18 +204,20 @@ func (k msgServer) Finalize(goCtx context.Context, msg *types.MsgFinalizeRequest
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	markerFinalizeEvent := types.NewEventMarkerFinalize(msg.Denom, msg.Administrator)
-	if err := ctx.EventManager().EmitTypedEvent(markerFinalizeEvent); err != nil {
-		return nil, err
-	}
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
 
 	defer func() {
 		telemetry.IncrCounterWithLabels(
 			[]string{types.ModuleName, "finalize", "marker"},
 			1,
 			[]metrics.Label{
-				telemetry.NewLabel(types.EventTelemetryLabelDenom, markerFinalizeEvent.Denom),
-				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, markerFinalizeEvent.Administrator),
+				telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Denom),
+				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
 			},
 		)
 	}()
@@ -234,18 +238,20 @@ func (k msgServer) Activate(goCtx context.Context, msg *types.MsgActivateRequest
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	markerActivateEvent := types.NewEventMarkerActivate(msg.Denom, msg.Administrator)
-	if err := ctx.EventManager().EmitTypedEvent(markerActivateEvent); err != nil {
-		return nil, err
-	}
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
 
 	defer func() {
 		telemetry.IncrCounterWithLabels(
 			[]string{types.ModuleName, "activate", "marker"},
 			1,
 			[]metrics.Label{
-				telemetry.NewLabel(types.EventTelemetryLabelDenom, markerActivateEvent.Denom),
-				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, markerActivateEvent.Administrator),
+				telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Denom),
+				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
 			},
 		)
 	}()
@@ -266,18 +272,20 @@ func (k msgServer) Cancel(goCtx context.Context, msg *types.MsgCancelRequest) (*
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	markerCancelEvent := types.NewEventMarkerCancel(msg.Denom, msg.Administrator)
-	if err := ctx.EventManager().EmitTypedEvent(markerCancelEvent); err != nil {
-		return nil, err
-	}
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
 
 	defer func() {
 		telemetry.IncrCounterWithLabels(
 			[]string{types.ModuleName, "cancel", "marker"},
 			1,
 			[]metrics.Label{
-				telemetry.NewLabel(types.EventTelemetryLabelDenom, markerCancelEvent.Denom),
-				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, markerCancelEvent.Administrator),
+				telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Denom),
+				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
 			},
 		)
 	}()
@@ -298,18 +306,20 @@ func (k msgServer) Delete(goCtx context.Context, msg *types.MsgDeleteRequest) (*
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	markerDeleteEvent := types.NewEventMarkerDelete(msg.Denom, msg.Administrator)
-	if err := ctx.EventManager().EmitTypedEvent(markerDeleteEvent); err != nil {
-		return nil, err
-	}
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
 
 	defer func() {
 		telemetry.IncrCounterWithLabels(
 			[]string{types.ModuleName, "delete", "marker"},
 			1,
 			[]metrics.Label{
-				telemetry.NewLabel(types.EventTelemetryLabelDenom, markerDeleteEvent.Denom),
-				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, markerDeleteEvent.Administrator),
+				telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Denom),
+				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
 			},
 		)
 	}()
@@ -330,19 +340,21 @@ func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMintRequest) (*type
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	markerMintEvent := types.NewEventMarkerMint(msg.Amount.Amount.String(), msg.Amount.GetDenom(), msg.Administrator)
-	if err := ctx.EventManager().EmitTypedEvent(markerMintEvent); err != nil {
-		return nil, err
-	}
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
 
 	defer func() {
 		telemetry.IncrCounterWithLabels(
 			[]string{types.ModuleName, "mint", "marker"},
 			1,
 			[]metrics.Label{
-				telemetry.NewLabel(types.EventTelemetryLabelAmount, markerMintEvent.Amount),
-				telemetry.NewLabel(types.EventTelemetryLabelDenom, markerMintEvent.Denom),
-				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, markerMintEvent.Administrator),
+				telemetry.NewLabel(types.EventTelemetryLabelAmount, msg.Amount.Amount.String()),
+				telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Amount.GetDenom()),
+				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
 			},
 		)
 	}()
@@ -363,19 +375,21 @@ func (k msgServer) Burn(goCtx context.Context, msg *types.MsgBurnRequest) (*type
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	markerBurnEvent := types.NewEventMarkerBurn(msg.Amount.Amount.String(), msg.Amount.GetDenom(), msg.Administrator)
-	if err := ctx.EventManager().EmitTypedEvent(markerBurnEvent); err != nil {
-		return nil, err
-	}
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
 
 	defer func() {
 		telemetry.IncrCounterWithLabels(
 			[]string{types.ModuleName, "burn", "marker"},
 			1,
 			[]metrics.Label{
-				telemetry.NewLabel(types.EventTelemetryLabelAmount, markerBurnEvent.Amount),
-				telemetry.NewLabel(types.EventTelemetryLabelDenom, markerBurnEvent.Denom),
-				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, markerBurnEvent.Administrator),
+				telemetry.NewLabel(types.EventTelemetryLabelAmount, msg.Amount.Amount.String()),
+				telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Amount.GetDenom()),
+				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
 			},
 		)
 	}()
@@ -402,20 +416,22 @@ func (k msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdrawRequest
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	markerWithdrawEvent := types.NewEventMarkerWithdraw(msg.Amount.String(), msg.GetDenom(), msg.Administrator, msg.ToAddress)
-	if err := ctx.EventManager().EmitTypedEvent(markerWithdrawEvent); err != nil {
-		return nil, err
-	}
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
 
 	defer func() {
 		telemetry.IncrCounterWithLabels(
 			[]string{types.ModuleName, "withdraw", "marker"},
 			1,
 			[]metrics.Label{
-				telemetry.NewLabel(types.EventTelemetryLabelToAddress, markerWithdrawEvent.ToAddress),
-				telemetry.NewLabel(types.EventTelemetryLabelAmount, markerWithdrawEvent.Coins),
-				telemetry.NewLabel(types.EventTelemetryLabelDenom, markerWithdrawEvent.Denom),
-				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, markerWithdrawEvent.Administrator),
+				telemetry.NewLabel(types.EventTelemetryLabelToAddress, msg.ToAddress),
+				telemetry.NewLabel(types.EventTelemetryLabelAmount, msg.Amount.String()),
+				telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.GetDenom()),
+				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
 			},
 		)
 	}()
@@ -451,21 +467,23 @@ func (k msgServer) Transfer(goCtx context.Context, msg *types.MsgTransferRequest
 		return nil, err
 	}
 
-	markerTransferEvent := types.NewEventMarkerTransfer(msg.Amount.Amount.String(), msg.Amount.Denom, msg.Administrator, msg.ToAddress, msg.FromAddress)
-	if err := ctx.EventManager().EmitTypedEvent(markerTransferEvent); err != nil {
-		return nil, err
-	}
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
 
 	defer func() {
 		telemetry.IncrCounterWithLabels(
 			[]string{types.ModuleName, "transfer", "marker"},
 			1,
 			[]metrics.Label{
-				telemetry.NewLabel(types.EventTelemetryLabelToAddress, markerTransferEvent.ToAddress),
-				telemetry.NewLabel(types.EventTelemetryLabelFromAddress, markerTransferEvent.FromAddress),
-				telemetry.NewLabel(types.EventTelemetryLabelAmount, markerTransferEvent.Amount),
-				telemetry.NewLabel(types.EventTelemetryLabelDenom, markerTransferEvent.Denom),
-				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, markerTransferEvent.Administrator),
+				telemetry.NewLabel(types.EventTelemetryLabelToAddress, msg.ToAddress),
+				telemetry.NewLabel(types.EventTelemetryLabelFromAddress, msg.FromAddress),
+				telemetry.NewLabel(types.EventTelemetryLabelAmount, msg.Amount.Amount.String()),
+				telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Amount.Denom),
+				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
 			},
 		)
 	}()
@@ -494,18 +512,20 @@ func (k msgServer) SetDenomMetadata(
 		return nil, err
 	}
 
-	markerSetDenomMetaEvent := types.NewEventMarkerSetDenomMetadata(msg.Metadata.Base, msg.Metadata.Description, msg.Metadata.Display, msg.Metadata.DenomUnits, msg.Administrator)
-	if err := ctx.EventManager().EmitTypedEvent(markerSetDenomMetaEvent); err != nil {
-		return nil, err
-	}
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
 
 	defer func() {
 		telemetry.IncrCounterWithLabels(
 			[]string{types.ModuleName, "set", "denom", "metadata", "marker"},
 			1,
 			[]metrics.Label{
-				telemetry.NewLabel(types.EventTelemetryLabelDenom, markerSetDenomMetaEvent.MetadataBase),
-				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, markerSetDenomMetaEvent.Administrator),
+				telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Metadata.Base),
+				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
 			},
 		)
 	}()

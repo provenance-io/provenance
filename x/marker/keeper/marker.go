@@ -150,6 +150,11 @@ func (k Keeper) RemoveAccess(ctx sdk.Context, caller sdk.AccAddress, denom strin
 		return fmt.Errorf("marker in %s state can not be modified", m.GetStatus())
 	}
 
+	markerDeleteAccessEvent := types.NewEventMarkerDeleteAccess(remove.String(), denom, caller.String())
+	if err := ctx.EventManager().EmitTypedEvent(markerDeleteAccessEvent); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -181,15 +186,11 @@ func (k Keeper) WithdrawCoins(
 		return err
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeWithdraw,
-			sdk.NewAttribute(types.EventAttributeDenomKey, denom),
-			sdk.NewAttribute(types.EventAttributeAmountKey, coins.String()),
-			sdk.NewAttribute(types.EventAttributeAdministratorKey, caller.String()),
-			sdk.NewAttribute(types.EventAttributeModuleNameKey, types.ModuleName),
-		),
-	)
+	markerWithdrawEvent := types.NewEventMarkerWithdraw(coins.String(), denom, caller.String(), recipient.String())
+	if err := ctx.EventManager().EmitTypedEvent(markerWithdrawEvent); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -223,15 +224,12 @@ func (k Keeper) MintCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 	if err != nil {
 		return err
 	}
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeMint,
-			sdk.NewAttribute(types.EventAttributeDenomKey, coin.Denom),
-			sdk.NewAttribute(types.EventAttributeAmountKey, coin.Amount.String()),
-			sdk.NewAttribute(types.EventAttributeAdministratorKey, caller.String()),
-			sdk.NewAttribute(types.EventAttributeModuleNameKey, types.ModuleName),
-		),
-	)
+
+	markerMintEvent := types.NewEventMarkerMint(coin.Amount.String(), coin.Denom, caller.String())
+	if err := ctx.EventManager().EmitTypedEvent(markerMintEvent); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -261,15 +259,12 @@ func (k Keeper) BurnCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 	if err != nil {
 		return err
 	}
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeBurn,
-			sdk.NewAttribute(types.EventAttributeDenomKey, coin.Denom),
-			sdk.NewAttribute(types.EventAttributeAmountKey, coin.Amount.String()),
-			sdk.NewAttribute(types.EventAttributeAdministratorKey, caller.String()),
-			sdk.NewAttribute(types.EventAttributeModuleNameKey, types.ModuleName),
-		),
-	)
+
+	markerBurnEvent := types.NewEventMarkerBurn(coin.Amount.String(), coin.Denom, caller.String())
+	if err := ctx.EventManager().EmitTypedEvent(markerBurnEvent); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -406,6 +401,12 @@ func (k Keeper) FinalizeMarker(ctx sdk.Context, caller sdk.Address, denom string
 
 	// record status as finalized.
 	k.SetMarker(ctx, m)
+
+	markerFinalizeEvent := types.NewEventMarkerFinalize(denom, caller.String())
+	if err := ctx.EventManager().EmitTypedEvent(markerFinalizeEvent); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -461,6 +462,12 @@ func (k Keeper) ActivateMarker(ctx sdk.Context, caller sdk.Address, denom string
 
 	// record status as active
 	k.SetMarker(ctx, m)
+
+	markerActivateEvent := types.NewEventMarkerActivate(denom, caller.String())
+	if err := ctx.EventManager().EmitTypedEvent(markerActivateEvent); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -499,6 +506,12 @@ func (k Keeper) CancelMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 		return fmt.Errorf("could not update marker status: %w", err)
 	}
 	k.SetMarker(ctx, m)
+
+	markerCancelEvent := types.NewEventMarkerCancel(denom, caller.String())
+	if err := ctx.EventManager().EmitTypedEvent(markerCancelEvent); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -543,6 +556,11 @@ func (k Keeper) DeleteMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 	}
 	k.SetMarker(ctx, m)
 
+	markerDeleteEvent := types.NewEventMarkerDelete(denom, caller.String())
+	if err := ctx.EventManager().EmitTypedEvent(markerDeleteEvent); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -567,15 +585,17 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 		return err
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeTransfer,
-			sdk.NewAttribute(types.EventAttributeDenomKey, amount.Denom),
-			sdk.NewAttribute(types.EventAttributeAmountKey, amount.String()),
-			sdk.NewAttribute(types.EventAttributeAdministratorKey, admin.String()),
-			sdk.NewAttribute(types.EventAttributeModuleNameKey, types.ModuleName),
-		),
+	markerTransferEvent := types.NewEventMarkerTransfer(
+		amount.Amount.String(),
+		amount.Denom,
+		admin.String(),
+		to.String(),
+		from.String(),
 	)
+	if err := ctx.EventManager().EmitTypedEvent(markerTransferEvent); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -605,14 +625,17 @@ func (k Keeper) SetMarkerDenomMetadata(ctx sdk.Context, metadata banktypes.Metad
 	// record the metadata with the bank
 	k.bankKeeper.SetDenomMetaData(ctx, metadata)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeMarkerUpdated,
-			sdk.NewAttribute(types.EventAttributeDenomKey, metadata.Base),
-			sdk.NewAttribute(types.EventAttributeAdministratorKey, caller.String()),
-			sdk.NewAttribute(types.EventAttributeModuleNameKey, types.ModuleName),
-		),
+	markerSetDenomMetaEvent := types.NewEventMarkerSetDenomMetadata(
+		metadata.Base,
+		metadata.Description,
+		metadata.Display,
+		metadata.DenomUnits,
+		caller.String(),
 	)
+	if err := ctx.EventManager().EmitTypedEvent(markerSetDenomMetaEvent); err != nil {
+		return err
+	}
+
 	return nil
 }
 
