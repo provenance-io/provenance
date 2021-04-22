@@ -462,31 +462,6 @@ func (k msgServer) P8EMemorializeContract(
 		return nil, err
 	}
 
-	// Add the stuff that needs to come from the specs.
-	for _, r := range p8EData.Records {
-		recSpecID, e := p8EData.Session.SpecificationId.AsRecordSpecAddress(r.Name)
-		if e != nil {
-			return nil, e
-		}
-		recSpec, found := k.GetRecordSpecification(ctx, recSpecID)
-		if !found {
-			return nil, fmt.Errorf("record specification %s not found", recSpecID)
-		}
-		inputStatus := types.RecordInputStatus_Unknown
-		switch recSpec.ResultType {
-		case types.DefinitionType_DEFINITION_TYPE_PROPOSED:
-			inputStatus = types.RecordInputStatus_Proposed
-		case types.DefinitionType_DEFINITION_TYPE_RECORD, types.DefinitionType_DEFINITION_TYPE_RECORD_LIST:
-			inputStatus = types.RecordInputStatus_Record
-		}
-		// r.Inputs is a list of structs (not a list of references).
-		// Need to use the list index to update the actual entry and make it stay.
-		for i := range r.Inputs {
-			r.Inputs[i].Status = inputStatus
-		}
-	}
-
-	// Finally, store everything.
 	scopeResp, err := k.WriteScope(goCtx, &types.MsgWriteScopeRequest{
 		Scope:   *p8EData.Scope,
 		Signers: signers,

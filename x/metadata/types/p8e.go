@@ -119,6 +119,7 @@ func convertP8eInputSpecs(old []*p8e.DefinitionSpec) (inputs []*InputSpecificati
 	return inputs, nil
 }
 
+// P8EData contains entries converted from a MsgP8EMemorializeContractRequest.
 type P8EData struct {
 	Scope   *Scope
 	Session *Session
@@ -126,8 +127,7 @@ type P8EData struct {
 }
 
 // Migrate Converts a MsgP8EMemorializeContractRequest object into the new objects.
-// The following fields require looking up specs and should be overwritten accordingly:
-//  * P8EData.Records[*].Inputs[*].Status from the record specification ResultType
+// The []string return parameter is a list of signer address strings.
 func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest) (P8EData, []string, error) {
 	p8EData := P8EData{
 		Scope:   emptyScope(),
@@ -172,7 +172,16 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 
 	processID := getProcessID(msg.Contract)
 
+	facts := map[string]*p8e.Fact{}
+	for i, f := range msg.Contract.Inputs {
+		if len(f.Name) == 0 {
+			return p8EData, signers, fmt.Errorf("missing value in contract.input[%d].name", i)
+		}
+		facts[f.Name] = f
+	}
+
 	// Create the records.
+	p8EData.Records = make([]*Record, 0, len(msg.Contract.Considerations))
 	for _, c := range msg.Contract.Considerations {
 		if c != nil && c.Result != nil && c.Result.Output != nil && c.Result.Result != p8e.ExecutionResultType_RESULT_TYPE_SKIP {
 			record := emptyRecord()
@@ -181,14 +190,41 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 			record.Process.ProcessId = processID
 			record.Process.Name = c.Result.Output.Classname
 			record.Process.Method = record.Name
-			// TODO: Overhaul this input creation loop.
-			for _, f := range c.Inputs {
-				record.Inputs = append(record.Inputs, RecordInput{
+			record.Inputs = make([]RecordInput, len(c.Inputs))
+			for i, f := range c.Inputs {
+				if len(f.Hash) == 0 && len(f.Name) == 0 {
+					return p8EData, signers, fmt.Errorf("consideration %s inputs[%d] name and hash cannot both be empty",
+						c.ConsiderationName, i)
+				}
+
+				ri := RecordInput{
 					Name:     f.Name,
-					Source:   &RecordInput_Hash{Hash: f.Hash},
 					TypeName: f.Classname,
 					Status:   RecordInputStatus_Unknown,
-				})
+				}
+
+				if len(f.Hash) > 0 {
+					ri.Source = &RecordInput_Hash{Hash: f.Hash}
+					ri.Status = RecordInputStatus_Proposed
+				} else {
+					if facts[f.Name] == nil {
+						return p8EData, signers, fmt.Errorf("consideration %s inputs[%d] %s not found as contract input",
+							c.ConsiderationName, i, f.Name)
+					}
+					if facts[f.Name].DataLocation == nil || facts[f.Name].DataLocation.Ref == nil ||
+						facts[f.Name].DataLocation.Ref.ScopeUuid == nil ||
+						len(facts[f.Name].DataLocation.Ref.ScopeUuid.Value) == 0 {
+						return p8EData, signers, fmt.Errorf("contract input %s missing required scope uuid", f.Name)
+					}
+					scopeUUID, scopeUUIDErr := uuid.Parse(facts[f.Name].DataLocation.Ref.ScopeUuid.Value)
+					if scopeUUIDErr != nil {
+						return p8EData, signers, fmt.Errorf("invalid UUID in contract input %s: %w", f.Name, scopeUUIDErr)
+					}
+					ri.Source = &RecordInput_RecordId{RecordId: RecordMetadataAddress(scopeUUID, f.Name)}
+					ri.Status = RecordInputStatus_Record
+				}
+
+				record.Inputs[i] = ri
 			}
 			record.Outputs = []RecordOutput{
 				{
