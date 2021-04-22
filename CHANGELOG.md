@@ -34,6 +34,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Features
+
+* Add typed events and telemetry metrics to marker module #247
+
 ### Bug Fixes
 
 * Wired recovery flag into `init` command #254

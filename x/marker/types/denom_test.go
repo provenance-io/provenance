@@ -216,6 +216,21 @@ func getValidateDenomMetadataTestCases() []denomMetadataTestCase {
 			},
 			[]string{"SI prefix", "mhash", "megahash"},
 		},
+		{
+			"should successfully validate metadata",
+			banktypes.Metadata{
+				Description: "a description",
+				DenomUnits: []*banktypes.DenomUnit{
+					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
+					{Denom: "uhash", Exponent: 3, Aliases: nil},
+					{Denom: "hash", Exponent: 9, Aliases: nil},
+					{Denom: "megahash", Exponent: 15, Aliases: nil},
+				},
+				Base:    "nhash",
+				Display: "hash",
+			},
+			[]string{},
+		},
 	}
 }
 

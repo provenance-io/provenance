@@ -1,6 +1,9 @@
 package name_test
 
 import (
+	"strings"
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,8 +15,6 @@ import (
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"strings"
-	"testing"
 )
 
 func TestInvalidMsg(t *testing.T) {
