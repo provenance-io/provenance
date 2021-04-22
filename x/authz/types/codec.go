@@ -20,7 +20,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterInterface(
 		"provenance.authz.v1.Authorization",
 		(*exported.Authorization)(nil),
-		&marker.MarkerSendAuthorization{},
+		&marker.SendAuthorization{},
 		&GenericAuthorization{},
 	)
 

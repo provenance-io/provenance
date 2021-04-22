@@ -60,7 +60,7 @@ func NewCmdGrantAuthorization() *cobra.Command {
 Examples:
  $ %s tx %s grant cosmos1skjw.. send %s --spend-limit=1000stake --from=cosmos1skl..
  $ %s tx %s grant cosmos1skjw.. generic --msg-type=/cosmos.gov.v1beta1.Msg/Vote --from=cosmos1sk..
-	`, version.AppName, types.ModuleName, marker.MarkerSendAuthorization{}.MethodName(), version.AppName, types.ModuleName),
+	`, version.AppName, types.ModuleName, marker.SendAuthorization{}.MethodName(), version.AppName, types.ModuleName),
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -96,7 +96,7 @@ Examples:
 					return fmt.Errorf("spend-limit should be greater than zero")
 				}
 
-				authorization = marker.NewMarkerSendAuthorization(spendLimit)
+				authorization = marker.NewSendAuthorization(spendLimit)
 			case "generic":
 				msgType, err := cmd.Flags().GetString(FlagMsgType)
 				if err != nil {
@@ -140,7 +140,7 @@ func NewCmdRevokeAuthorization() *cobra.Command {
 			fmt.Sprintf(`revoke authorization from a granter to a grantee:
 Example:
  $ %s tx %s revoke cosmos1skj.. %s --from=cosmos1skj..
-			`, version.AppName, types.ModuleName, marker.MarkerSendAuthorization{}.MethodName()),
+			`, version.AppName, types.ModuleName, marker.SendAuthorization{}.MethodName()),
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {

@@ -54,7 +54,7 @@ func (s *TestSuite) TestKeeper() {
 	recipientAddr := addrs[2]
 
 	s.T().Log("verify that no authorization returns nil")
-	authorization, expiration := app.AuthzKeeper.GetOrRevokeAuthorization(ctx, granteeAddr, granterAddr, markertypes.MarkerSendAuthorization{}.MethodName())
+	authorization, expiration := app.AuthzKeeper.GetOrRevokeAuthorization(ctx, granteeAddr, granterAddr, markertypes.SendAuthorization{}.MethodName())
 	s.Require().Nil(authorization)
 	s.Require().Equal(expiration, time.Time{})
 	now := s.ctx.BlockHeader().Time
@@ -62,38 +62,38 @@ func (s *TestSuite) TestKeeper() {
 
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
 	s.T().Log("verify if expired authorization is rejected")
-	x := &markertypes.MarkerSendAuthorization{SpendLimit: newCoins}
+	x := &markertypes.SendAuthorization{SpendLimit: newCoins}
 	err := app.AuthzKeeper.Grant(ctx, granterAddr, granteeAddr, x, now.Add(-1*time.Hour))
 	s.Require().NoError(err)
-	authorization, _ = app.AuthzKeeper.GetOrRevokeAuthorization(ctx, granteeAddr, granterAddr, markertypes.MarkerSendAuthorization{}.MethodName())
+	authorization, _ = app.AuthzKeeper.GetOrRevokeAuthorization(ctx, granteeAddr, granterAddr, markertypes.SendAuthorization{}.MethodName())
 	s.Require().Nil(authorization)
 
 	s.T().Log("verify if authorization is accepted")
-	x = &markertypes.MarkerSendAuthorization{SpendLimit: newCoins}
+	x = &markertypes.SendAuthorization{SpendLimit: newCoins}
 	err = app.AuthzKeeper.Grant(ctx, granteeAddr, granterAddr, x, now.Add(time.Hour))
 	s.Require().NoError(err)
-	authorization, _ = app.AuthzKeeper.GetOrRevokeAuthorization(ctx, granteeAddr, granterAddr, markertypes.MarkerSendAuthorization{}.MethodName())
+	authorization, _ = app.AuthzKeeper.GetOrRevokeAuthorization(ctx, granteeAddr, granterAddr, markertypes.SendAuthorization{}.MethodName())
 	s.Require().NotNil(authorization)
-	s.Require().Equal(authorization.MethodName(), markertypes.MarkerSendAuthorization{}.MethodName())
+	s.Require().Equal(authorization.MethodName(), markertypes.SendAuthorization{}.MethodName())
 
 	s.T().Log("verify fetching authorization with wrong msg type fails")
 	authorization, _ = app.AuthzKeeper.GetOrRevokeAuthorization(ctx, granteeAddr, granterAddr, proto.MessageName(&banktypes.MsgMultiSend{}))
 	s.Require().Nil(authorization)
 
 	s.T().Log("verify fetching authorization with wrong grantee fails")
-	authorization, _ = app.AuthzKeeper.GetOrRevokeAuthorization(ctx, recipientAddr, granterAddr, markertypes.MarkerSendAuthorization{}.MethodName())
+	authorization, _ = app.AuthzKeeper.GetOrRevokeAuthorization(ctx, recipientAddr, granterAddr, markertypes.SendAuthorization{}.MethodName())
 	s.Require().Nil(authorization)
 
 	s.T().Log("verify revoke fails with wrong information")
-	err = app.AuthzKeeper.Revoke(ctx, recipientAddr, granterAddr, markertypes.MarkerSendAuthorization{}.MethodName())
+	err = app.AuthzKeeper.Revoke(ctx, recipientAddr, granterAddr, markertypes.SendAuthorization{}.MethodName())
 	s.Require().Error(err)
-	authorization, _ = app.AuthzKeeper.GetOrRevokeAuthorization(ctx, recipientAddr, granterAddr, markertypes.MarkerSendAuthorization{}.MethodName())
+	authorization, _ = app.AuthzKeeper.GetOrRevokeAuthorization(ctx, recipientAddr, granterAddr, markertypes.SendAuthorization{}.MethodName())
 	s.Require().Nil(authorization)
 
 	s.T().Log("verify revoke executes with correct information")
-	err = app.AuthzKeeper.Revoke(ctx, granteeAddr, granterAddr, markertypes.MarkerSendAuthorization{}.MethodName())
+	err = app.AuthzKeeper.Revoke(ctx, granteeAddr, granterAddr, markertypes.SendAuthorization{}.MethodName())
 	s.Require().NoError(err)
-	authorization, _ = app.AuthzKeeper.GetOrRevokeAuthorization(ctx, granteeAddr, granterAddr, markertypes.MarkerSendAuthorization{}.MethodName())
+	authorization, _ = app.AuthzKeeper.GetOrRevokeAuthorization(ctx, granteeAddr, granterAddr, markertypes.SendAuthorization{}.MethodName())
 	s.Require().Nil(authorization)
 
 }
@@ -113,7 +113,7 @@ func (s *TestSuite) TestKeeperIter() {
 
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
 	s.T().Log("verify if expired authorization is rejected")
-	x := &markertypes.MarkerSendAuthorization{SpendLimit: newCoins}
+	x := &markertypes.SendAuthorization{SpendLimit: newCoins}
 	err := app.AuthzKeeper.Grant(ctx, granteeAddr, granterAddr, x, now.Add(-1*time.Hour))
 	s.Require().NoError(err)
 	authorization, _ = app.AuthzKeeper.GetOrRevokeAuthorization(ctx, granteeAddr, granterAddr, "abcd")
@@ -142,12 +142,11 @@ func (s *TestSuite) TestKeeperFees() {
 
 	msgs := types.NewMsgExecAuthorized(granteeAddr, []sdk.ServiceMsg{
 		{
-			MethodName: markertypes.MarkerSendAuthorization{}.MethodName(),
-			Request: &markertypes.MsgTransferRequest{
-				Amount:      sdk.NewCoin("steak", sdk.NewInt(2)),
+			MethodName: markertypes.SendAuthorization{}.MethodName(),
+			Request: &banktypes.MsgSend{
+				Amount:      sdk.NewCoins(sdk.NewInt64Coin("steak", 2)),
 				FromAddress: granterAddr.String(),
 				ToAddress:   recipientAddr.String(),
-				Administrator: granteeAddr.String(),
 			},
 		},
 	})
@@ -164,12 +163,12 @@ func (s *TestSuite) TestKeeperFees() {
 
 	s.T().Log("verify dispatch executes with correct information")
 	// grant authorization
-	err = app.AuthzKeeper.Grant(s.ctx, granteeAddr, granterAddr, &markertypes.MarkerSendAuthorization{SpendLimit: smallCoin}, now)
+	err = app.AuthzKeeper.Grant(s.ctx, granteeAddr, granterAddr, &markertypes.SendAuthorization{SpendLimit: smallCoin}, now)
 	s.Require().NoError(err)
-	authorization, _ := app.AuthzKeeper.GetOrRevokeAuthorization(s.ctx, granteeAddr, granterAddr, markertypes.MarkerSendAuthorization{}.MethodName())
+	authorization, _ := app.AuthzKeeper.GetOrRevokeAuthorization(s.ctx, granteeAddr, granterAddr, markertypes.SendAuthorization{}.MethodName())
 	s.Require().NotNil(authorization)
 
-	s.Require().Equal(authorization.MethodName(), markertypes.MarkerSendAuthorization{}.MethodName())
+	s.Require().Equal(authorization.MethodName(), markertypes.SendAuthorization{}.MethodName())
 
 	executeMsgs, err = msgs.GetServiceMsgs()
 	s.Require().NoError(err)
@@ -178,7 +177,7 @@ func (s *TestSuite) TestKeeperFees() {
 	s.Require().NoError(err)
 	s.Require().NotNil(result)
 
-	authorization, _ = app.AuthzKeeper.GetOrRevokeAuthorization(s.ctx, granteeAddr, granterAddr, markertypes.MarkerSendAuthorization{}.MethodName())
+	authorization, _ = app.AuthzKeeper.GetOrRevokeAuthorization(s.ctx, granteeAddr, granterAddr, markertypes.SendAuthorization{}.MethodName())
 	s.Require().NotNil(authorization)
 
 	s.T().Log("verify dispatch fails with overlimit")
@@ -186,7 +185,7 @@ func (s *TestSuite) TestKeeperFees() {
 
 	msgs = types.NewMsgExecAuthorized(granteeAddr, []sdk.ServiceMsg{
 		{
-			MethodName: markertypes.MarkerSendAuthorization{}.MethodName(),
+			MethodName: markertypes.SendAuthorization{}.MethodName(),
 			Request: &banktypes.MsgSend{
 				Amount:      someCoin,
 				FromAddress: granterAddr.String(),
@@ -203,7 +202,7 @@ func (s *TestSuite) TestKeeperFees() {
 	s.Require().Nil(result)
 	s.Require().NotNil(err)
 
-	authorization, _ = app.AuthzKeeper.GetOrRevokeAuthorization(s.ctx, granteeAddr, granterAddr, markertypes.MarkerSendAuthorization{}.MethodName())
+	authorization, _ = app.AuthzKeeper.GetOrRevokeAuthorization(s.ctx, granteeAddr, granterAddr, markertypes.SendAuthorization{}.MethodName())
 	s.Require().NotNil(authorization)
 }
 

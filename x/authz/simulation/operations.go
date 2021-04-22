@@ -103,7 +103,7 @@ func SimulateMsgGrantAuthorization(ak types.AccountKeeper, bk types.BankKeeper, 
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgGrantAuthorization, "spend limit is nil"), nil, nil
 		}
 		msg, err := types.NewMsgGrantAuthorization(granter.Address, grantee.Address,
-			markertypes.NewMarkerSendAuthorization(spendLimit), blockTime.AddDate(1, 0, 0))
+			markertypes.NewSendAuthorization(spendLimit), blockTime.AddDate(1, 0, 0))
 
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgGrantAuthorization, err.Error()), nil, err
@@ -245,7 +245,7 @@ func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k
 		sendCoins := sdk.NewCoin("foo", sdk.NewInt(10))
 
 		execMsg := sdk.ServiceMsg{
-			MethodName: markertypes.MarkerSendAuthorization{}.MethodName(),
+			MethodName: markertypes.SendAuthorization{}.MethodName(),
 			Request: markertypes.NewTransferRequest(
 				granterAddr,
 				granterAddr,
@@ -255,7 +255,7 @@ func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k
 		}
 
 		msg := types.NewMsgExecAuthorized(grantee.Address, []sdk.ServiceMsg{execMsg})
-		sendGrant := targetGrant.Authorization.GetCachedValue().(*markertypes.MarkerSendAuthorization)
+		sendGrant := targetGrant.Authorization.GetCachedValue().(*markertypes.SendAuthorization)
 		_, _, err = sendGrant.Accept(ctx, execMsg)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecDelegated, err.Error()), nil, nil

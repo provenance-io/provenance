@@ -58,7 +58,7 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 			func() {
 				now := ctx.BlockHeader().Time
 				newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
-				expAuthorization = &markertypes.MarkerSendAuthorization{SpendLimit: newCoins}
+				expAuthorization = &markertypes.SendAuthorization{SpendLimit: newCoins}
 				err := app.AuthzKeeper.Grant(ctx, addrs[0], addrs[1], expAuthorization, now.Add(time.Hour))
 				suite.Require().NoError(err)
 				req = &types.QueryAuthorizationRequest{
@@ -126,7 +126,7 @@ func (suite *TestSuite) TestGRPCQueryAuthorizations() {
 			func() {
 				now := ctx.BlockHeader().Time
 				newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
-				expAuthorization = &markertypes.MarkerSendAuthorization{SpendLimit: newCoins}
+				expAuthorization = &markertypes.SendAuthorization{SpendLimit: newCoins}
 				err := app.AuthzKeeper.Grant(ctx, addrs[0], addrs[1], expAuthorization, now.Add(time.Hour))
 				suite.Require().NoError(err)
 				req = &types.QueryAuthorizationsRequest{
