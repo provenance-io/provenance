@@ -71,14 +71,18 @@ const (
 	EventTelemetryLabelCoins string = "coins"
 	// EventTelemetryLabelDenom denom label for telemetry metrics
 	EventTelemetryLabelDenom string = "denom"
-	// EventTelemetryLabelStatus status label for telemetry metrics
-	EventTelemetryLabelStatus string = "status"
 	// EventTelemetryLabelManager manager label for telemetry metrics
 	EventTelemetryLabelManager string = "manager"
 	// EventTelemetryLabelAdministrator administrator label for telemetry metrics
 	EventTelemetryLabelAdministrator string = "administrator"
-	// EventTelemetryLabelMarkerType marker type label for telemetry metrics
-	EventTelemetryLabelMarkerType string = "marker-type"
+	// EventTelemetryKeyBurn burn telemetry metrics key
+	EventTelemetryKeyBurn string = "burn"
+	// EventTelemetryKeyMint mint telemetry metrics key
+	EventTelemetryKeyMint string = "mint"
+	// EventTelemetryKeyTransfer transfer telemetry metrics key
+	EventTelemetryKeyTransfer string = "transfer"
+	// EventTelemetryKeyWithdraw withdraw telemetry metrics key
+	EventTelemetryKeyWithdraw string = "withdraw"
 )
 
 func NewEventMarkerAdd(denom string, amount string, status string, manager string, markerType string) *EventMarkerAdd {

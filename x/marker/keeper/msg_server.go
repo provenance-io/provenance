@@ -254,7 +254,7 @@ func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMintRequest) (*type
 
 	defer func() {
 		telemetry.IncrCounterWithLabels(
-			[]string{types.ModuleName, "mint", "marker"},
+			[]string{types.ModuleName, types.EventTelemetryKeyMint},
 			1,
 			[]metrics.Label{
 				telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Amount.GetDenom()),
@@ -288,7 +288,7 @@ func (k msgServer) Burn(goCtx context.Context, msg *types.MsgBurnRequest) (*type
 
 	defer func() {
 		telemetry.IncrCounterWithLabels(
-			[]string{types.ModuleName, "burn", "marker"},
+			[]string{types.ModuleName, types.EventTelemetryKeyBurn},
 			1,
 			[]metrics.Label{
 				telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Amount.GetDenom()),
@@ -328,7 +328,7 @@ func (k msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdrawRequest
 
 	defer func() {
 		telemetry.IncrCounterWithLabels(
-			[]string{types.ModuleName, "withdraw", "marker"},
+			[]string{types.ModuleName, types.EventTelemetryKeyWithdraw},
 			1,
 			[]metrics.Label{
 				telemetry.NewLabel(types.EventTelemetryLabelToAddress, msg.ToAddress),
@@ -336,6 +336,15 @@ func (k msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdrawRequest
 				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
 			},
 		)
+		for _, coin := range msg.Amount {
+			if coin.Amount.IsInt64() {
+				telemetry.SetGaugeWithLabels(
+					[]string{types.ModuleName, types.EventTelemetryKeyWithdraw, msg.Denom},
+					float32(coin.Amount.Int64()),
+					[]metrics.Label{telemetry.NewLabel(types.EventTelemetryLabelDenom, coin.Denom)},
+				)
+			}
+		}
 	}()
 
 	return &types.MsgWithdrawResponse{}, nil
@@ -378,7 +387,7 @@ func (k msgServer) Transfer(goCtx context.Context, msg *types.MsgTransferRequest
 
 	defer func() {
 		telemetry.IncrCounterWithLabels(
-			[]string{types.ModuleName, "transfer", "marker"},
+			[]string{types.ModuleName, types.EventTelemetryKeyTransfer},
 			1,
 			[]metrics.Label{
 				telemetry.NewLabel(types.EventTelemetryLabelToAddress, msg.ToAddress),
@@ -387,7 +396,15 @@ func (k msgServer) Transfer(goCtx context.Context, msg *types.MsgTransferRequest
 				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
 			},
 		)
+		if msg.Amount.Amount.IsInt64() {
+			telemetry.SetGaugeWithLabels(
+				[]string{types.ModuleName, types.EventTelemetryKeyTransfer, msg.Amount.Denom},
+				float32(msg.Amount.Amount.Int64()),
+				[]metrics.Label{telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Amount.Denom)},
+			)
+		}
 	}()
+
 	return &types.MsgTransferResponse{}, nil
 }
 
