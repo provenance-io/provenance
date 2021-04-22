@@ -79,11 +79,17 @@ func TestAccountUnrestrictedDenoms(t *testing.T) {
 	app.MarkerKeeper.SetParams(ctx, types.Params{UnrestrictedDenomRegex: "[a-z]{12,20}"})
 
 	_, err := server.AddMarker(sdk.WrapSDKContext(ctx), types.NewAddMarkerRequest("tooshort", sdk.NewInt(30), user, user, types.MarkerType_Coin, true, true))
-	require.Error(t, err)
-	require.Equal(t, fmt.Errorf("invalid denom [tooshort] (fails unrestricted marker denom validation [a-z]{12,20})"), err)
+	require.Error(t, err, "fails with unrestricted denom length fault")
+	require.Equal(t, fmt.Errorf("invalid denom [tooshort] (fails unrestricted marker denom validation [a-z]{12,20})"), err, "should fail with denom restriction")
 
 	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewAddMarkerRequest("itslongenough", sdk.NewInt(30), user, user, types.MarkerType_Coin, true, true))
-	require.NoError(t, err)
+	require.NoError(t, err, "should allow a marker with a sufficiently long denom")
+
+	// Set to an empty string (returns to default expression)
+	app.MarkerKeeper.SetParams(ctx, types.Params{UnrestrictedDenomRegex: ""})
+	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewAddMarkerRequest("short", sdk.NewInt(30), user, user, types.MarkerType_Coin, true, true))
+	// succeeds now as the default unrestricted denom expression allows any valid denom (minimum length is 2)
+	require.NoError(t, err, "should allow any valid denom with a min length of two")
 }
 
 func TestAccountKeeperReader(t *testing.T) {
