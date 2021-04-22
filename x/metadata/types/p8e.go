@@ -205,24 +205,33 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 				}
 
 				if len(f.Hash) > 0 {
-					ri.Source = &RecordInput_Hash{Hash: f.Hash}
 					ri.Status = RecordInputStatus_Proposed
+					ri.Source = &RecordInput_Hash{Hash: f.Hash}
 				} else {
+					ri.Status = RecordInputStatus_Record
 					if facts[f.Name] == nil {
 						return p8EData, fmt.Errorf("consideration %s inputs[%d] %s not found as contract input",
 							c.ConsiderationName, i, f.Name)
 					}
-					if facts[f.Name].DataLocation == nil || facts[f.Name].DataLocation.Ref == nil ||
-						facts[f.Name].DataLocation.Ref.ScopeUuid == nil ||
-						len(facts[f.Name].DataLocation.Ref.ScopeUuid.Value) == 0 {
-						return p8EData, fmt.Errorf("contract input %s missing required scope uuid", f.Name)
+					if facts[f.Name].DataLocation == nil || facts[f.Name].DataLocation.Ref == nil {
+						return p8EData, fmt.Errorf("contract input %s missing datalocation ref", f.Name)
 					}
-					scopeUUID, scopeUUIDErr := uuid.Parse(facts[f.Name].DataLocation.Ref.ScopeUuid.Value)
-					if scopeUUIDErr != nil {
-						return p8EData, fmt.Errorf("invalid UUID in contract input %s: %w", f.Name, scopeUUIDErr)
+					if len(facts[f.Name].DataLocation.Ref.Hash) == 0 &&
+						(facts[f.Name].DataLocation.Ref.ScopeUuid == nil ||
+							len(facts[f.Name].DataLocation.Ref.ScopeUuid.Value) == 0) {
+						return p8EData, fmt.Errorf("contract input %s datalocation ref must have either a hash or scope uuid",
+							f.Name)
 					}
-					ri.Source = &RecordInput_RecordId{RecordId: RecordMetadataAddress(scopeUUID, f.Name)}
-					ri.Status = RecordInputStatus_Record
+
+					if len(facts[f.Name].DataLocation.Ref.Hash) > 0 {
+						ri.Source = &RecordInput_Hash{Hash: facts[f.Name].DataLocation.Ref.Hash}
+					} else {
+						scopeUUID, scopeUUIDErr := uuid.Parse(facts[f.Name].DataLocation.Ref.ScopeUuid.Value)
+						if scopeUUIDErr != nil {
+							return p8EData, fmt.Errorf("invalid UUID in contract input %s: %w", f.Name, scopeUUIDErr)
+						}
+						ri.Source = &RecordInput_RecordId{RecordId: RecordMetadataAddress(scopeUUID, f.Name)}
+					}
 				}
 
 				record.Inputs[i] = ri
