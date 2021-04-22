@@ -59,9 +59,10 @@ func (k Keeper) ValidateUnrestictedDenom(ctx sdk.Context, denom string) error {
 	// Anchors are enforced on the denom validation expression.  Similar to how the SDK does hits.
 	// https://github.com/cosmos/cosmos-sdk/blob/512b533242d34926972a8fc2f5639e8cf182f5bd/types/coin.go#L625
 	exp := k.GetUnrestrictedDenomRegex(ctx)
-	if r, err := regexp.Compile(fmt.Sprintf(`^%s$`, exp)); err != nil {
-		return err
-	} else if !r.MatchString(denom) {
+
+	// Safe to use must compile here because the regular expression is validated on parameter set.
+	r := regexp.MustCompile(fmt.Sprintf(`^%s$`, exp))
+	if !r.MatchString(denom) {
 		return fmt.Errorf("invalid denom [%s] (fails unrestricted marker denom validation %s)", denom, exp)
 	}
 	return nil
