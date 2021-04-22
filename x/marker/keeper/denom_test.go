@@ -52,6 +52,23 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 		wantInErr                 []string
 	}{
 		{
+			"fails basic validation",
+			banktypes.Metadata{
+				Description: "a description",
+				DenomUnits: []*banktypes.DenomUnit{
+					{Denom: "nhash", Exponent: 0, Aliases: nil},
+					{Denom: "uhash", Exponent: 3, Aliases: nil},
+					{Denom: "invalid", Exponent: 9, Aliases: nil},
+				},
+				Base:    "1234invalid",
+				Display: "invalid",
+			},
+			nil,
+			types.StatusUndefined,
+			types.DefaultUnrestrictedDenomRegex,
+			[]string{"invalid proposed metadata", "invalid metadata base denom"},
+		},
+		{
 			"marker status undefined",
 			banktypes.Metadata{
 				Description: "a description",

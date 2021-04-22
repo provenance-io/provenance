@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -14,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/stretchr/testify/require"
 
+	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -63,6 +65,25 @@ func TestAccountMapperGetSet(t *testing.T) {
 	// check for error on invaid marker denom
 	_, err := app.MarkerKeeper.GetMarkerByDenom(ctx, "doesntexist")
 	require.Error(t, err, "marker does not exist, should error")
+}
+
+func TestAccountUnrestrictedDenoms(t *testing.T) {
+	//app, ctx := createTestApp(true)
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+
+	user := testUserAddress("test")
+
+	// Require a long unrestricted denom
+	app.MarkerKeeper.SetParams(ctx, types.Params{UnrestrictedDenomRegex: "[a-z]{12,20}"})
+
+	_, err := server.AddMarker(sdk.WrapSDKContext(ctx), types.NewAddMarkerRequest("tooshort", sdk.NewInt(30), user, user, types.MarkerType_Coin, true, true))
+	require.Error(t, err)
+	require.Equal(t, fmt.Errorf("invalid denom [tooshort] (fails unrestricted marker denom validation [a-z]{12,20})"), err)
+
+	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewAddMarkerRequest("itslongenough", sdk.NewInt(30), user, user, types.MarkerType_Coin, true, true))
+	require.NoError(t, err)
 }
 
 func TestAccountKeeperReader(t *testing.T) {
