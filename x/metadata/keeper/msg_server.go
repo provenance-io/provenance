@@ -457,14 +457,14 @@ func (k msgServer) P8EMemorializeContract(
 ) (*types.MsgP8EMemorializeContractResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	p8EData, signers, err := types.ConvertP8eMemorializeContractRequest(msg)
+	p8EData, err := types.ConvertP8eMemorializeContractRequest(msg)
 	if err != nil {
 		return nil, err
 	}
 
 	scopeResp, err := k.WriteScope(goCtx, &types.MsgWriteScopeRequest{
 		Scope:   *p8EData.Scope,
-		Signers: signers,
+		Signers: p8EData.Signers,
 	})
 	if err != nil {
 		return nil, err
@@ -472,7 +472,7 @@ func (k msgServer) P8EMemorializeContract(
 
 	sessionResp, err := k.WriteSession(goCtx, &types.MsgWriteSessionRequest{
 		Session: *p8EData.Session,
-		Signers: signers,
+		Signers: p8EData.Signers,
 	})
 	if err != nil {
 		return nil, err
@@ -482,7 +482,7 @@ func (k msgServer) P8EMemorializeContract(
 	for i, record := range p8EData.Records {
 		recordResp, err := k.WriteRecord(goCtx, &types.MsgWriteRecordRequest{
 			Record:  *record,
-			Signers: signers,
+			Signers: p8EData.Signers,
 			Parties: p8EData.Session.Parties,
 		})
 		if err != nil {

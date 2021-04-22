@@ -124,48 +124,49 @@ type P8EData struct {
 	Scope   *Scope
 	Session *Session
 	Records []*Record
+	Signers []string
 }
 
 // Migrate Converts a MsgP8EMemorializeContractRequest object into the new objects.
 // The []string return parameter is a list of signer address strings.
-func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest) (P8EData, []string, error) {
+func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest) (P8EData, error) {
 	p8EData := P8EData{
 		Scope:   emptyScope(),
 		Session: emptySession(),
 		Records: []*Record{},
+		Signers: []string{},
 	}
-	signers := []string{}
 	var err error
 
 	contractRecitalParties, err := convertParties(msg.Contract.Recitals)
 	if err != nil {
-		return p8EData, signers, err
+		return p8EData, err
 	}
 
 	// Set the scope pieces.
 	p8EData.Scope.ScopeId, err = parseScopeID(msg.ScopeId)
 	if err != nil {
-		return p8EData, signers, err
+		return p8EData, err
 	}
 	p8EData.Scope.SpecificationId, err = parseScopeSpecificationID(msg.ScopeSpecificationId)
 	if err != nil {
-		return p8EData, signers, err
+		return p8EData, err
 	}
 	p8EData.Scope.Owners = contractRecitalParties
 	p8EData.Scope.DataAccess = partyAddresses(contractRecitalParties)
 	p8EData.Scope.ValueOwnerAddress, err = getValueOwner(msg.Contract.Invoker, msg.Contract.Recitals)
 	if err != nil {
-		return p8EData, signers, err
+		return p8EData, err
 	}
 
 	// Set the session pieces.
 	p8EData.Session.SessionId, err = parseSessionID(p8EData.Scope.ScopeId, msg.GroupId)
 	if err != nil {
-		return p8EData, signers, err
+		return p8EData, err
 	}
 	p8EData.Session.SpecificationId, err = getContractSpecID(msg.Contract)
 	if err != nil {
-		return p8EData, signers, err
+		return p8EData, err
 	}
 	p8EData.Session.Parties = contractRecitalParties
 	p8EData.Session.Name = msg.Contract.Spec.Name
@@ -175,7 +176,7 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 	facts := map[string]*p8e.Fact{}
 	for i, f := range msg.Contract.Inputs {
 		if len(f.Name) == 0 {
-			return p8EData, signers, fmt.Errorf("missing value in contract.input[%d].name", i)
+			return p8EData, fmt.Errorf("missing value in contract.input[%d].name", i)
 		}
 		facts[f.Name] = f
 	}
@@ -193,7 +194,7 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 			record.Inputs = make([]RecordInput, len(c.Inputs))
 			for i, f := range c.Inputs {
 				if len(f.Hash) == 0 && len(f.Name) == 0 {
-					return p8EData, signers, fmt.Errorf("consideration %s inputs[%d] name and hash cannot both be empty",
+					return p8EData, fmt.Errorf("consideration %s inputs[%d] name and hash cannot both be empty",
 						c.ConsiderationName, i)
 				}
 
@@ -208,17 +209,17 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 					ri.Status = RecordInputStatus_Proposed
 				} else {
 					if facts[f.Name] == nil {
-						return p8EData, signers, fmt.Errorf("consideration %s inputs[%d] %s not found as contract input",
+						return p8EData, fmt.Errorf("consideration %s inputs[%d] %s not found as contract input",
 							c.ConsiderationName, i, f.Name)
 					}
 					if facts[f.Name].DataLocation == nil || facts[f.Name].DataLocation.Ref == nil ||
 						facts[f.Name].DataLocation.Ref.ScopeUuid == nil ||
 						len(facts[f.Name].DataLocation.Ref.ScopeUuid.Value) == 0 {
-						return p8EData, signers, fmt.Errorf("contract input %s missing required scope uuid", f.Name)
+						return p8EData, fmt.Errorf("contract input %s missing required scope uuid", f.Name)
 					}
 					scopeUUID, scopeUUIDErr := uuid.Parse(facts[f.Name].DataLocation.Ref.ScopeUuid.Value)
 					if scopeUUIDErr != nil {
-						return p8EData, signers, fmt.Errorf("invalid UUID in contract input %s: %w", f.Name, scopeUUIDErr)
+						return p8EData, fmt.Errorf("invalid UUID in contract input %s: %w", f.Name, scopeUUIDErr)
 					}
 					ri.Source = &RecordInput_RecordId{RecordId: RecordMetadataAddress(scopeUUID, f.Name)}
 					ri.Status = RecordInputStatus_Record
@@ -241,12 +242,12 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 	if msg.Signatures != nil {
 		newSigners, e := convertSigners(msg.Signatures)
 		if e != nil {
-			return p8EData, signers, e
+			return p8EData, e
 		}
-		signers = append(signers, newSigners...)
+		p8EData.Signers = append(p8EData.Signers, newSigners...)
 	}
 
-	return p8EData, signers, err
+	return p8EData, err
 }
 
 // emptyScope creates a new empty Scope.
