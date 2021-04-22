@@ -36,6 +36,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 * Wired recovery flag into `init` command #254
+
+### Client Breaking
+* Update marker transfer request signing behavior #246
+
 ## [v1.1.1](https://github.com/provenance-io/provenance/releases/tag/v1.1.1) - 2021-04-15
 
 ### Bug Fixes
