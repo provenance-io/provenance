@@ -88,19 +88,6 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 		),
 	)
 
-	defer func() {
-		telemetry.IncrCounterWithLabels(
-			[]string{types.ModuleName, "add", "marker"},
-			1,
-			[]metrics.Label{
-				telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Amount.Denom),
-				telemetry.NewLabel(types.EventTelemetryLabelStatus, msg.Status.String()),
-				telemetry.NewLabel(types.EventTelemetryLabelManager, msg.Manager),
-				telemetry.NewLabel(types.EventTelemetryLabelMarkerType, msg.MarkerType.String()),
-			},
-		)
-	}()
-
 	return &types.MsgAddMarkerResponse{}, nil
 }
 
@@ -119,22 +106,6 @@ func (k msgServer) AddAccess(goCtx context.Context, msg *types.MsgAddAccessReque
 			ctx.Logger().Error("unable to add access grant to marker", "err", err)
 			return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, err.Error())
 		}
-
-		defer func() {
-			permissions := make([]string, len(access.Permissions))
-			for j, permission := range access.Permissions {
-				permissions[j] = permission.String()
-			}
-			telemetry.IncrCounterWithLabels(
-				[]string{types.ModuleName, "add", "access"},
-				1,
-				[]metrics.Label{
-					telemetry.NewLabel(types.EventTelemetryLabelAddress, access.Address),
-					telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Denom),
-					telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
-				},
-			)
-		}()
 	}
 
 	ctx.EventManager().EmitEvent(
@@ -166,25 +137,6 @@ func (k msgServer) DeleteAccess(goCtx context.Context, msg *types.MsgDeleteAcces
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, err.Error())
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		),
-	)
-
-	defer func() {
-		telemetry.IncrCounterWithLabels(
-			[]string{types.ModuleName, "delete", "access"},
-			1,
-			[]metrics.Label{
-				telemetry.NewLabel(types.EventTelemetryLabelAddress, msg.RemovedAddress),
-				telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Denom),
-				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
-			},
-		)
-	}()
-
 	return &types.MsgDeleteAccessResponse{}, nil
 }
 
@@ -207,17 +159,6 @@ func (k msgServer) Finalize(goCtx context.Context, msg *types.MsgFinalizeRequest
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 		),
 	)
-
-	defer func() {
-		telemetry.IncrCounterWithLabels(
-			[]string{types.ModuleName, "finalize", "marker"},
-			1,
-			[]metrics.Label{
-				telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Denom),
-				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
-			},
-		)
-	}()
 
 	return &types.MsgFinalizeResponse{}, nil
 }
@@ -242,17 +183,6 @@ func (k msgServer) Activate(goCtx context.Context, msg *types.MsgActivateRequest
 		),
 	)
 
-	defer func() {
-		telemetry.IncrCounterWithLabels(
-			[]string{types.ModuleName, "activate", "marker"},
-			1,
-			[]metrics.Label{
-				telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Denom),
-				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
-			},
-		)
-	}()
-
 	return &types.MsgActivateResponse{}, nil
 }
 
@@ -276,17 +206,6 @@ func (k msgServer) Cancel(goCtx context.Context, msg *types.MsgCancelRequest) (*
 		),
 	)
 
-	defer func() {
-		telemetry.IncrCounterWithLabels(
-			[]string{types.ModuleName, "cancel", "marker"},
-			1,
-			[]metrics.Label{
-				telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Denom),
-				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
-			},
-		)
-	}()
-
 	return &types.MsgCancelResponse{}, nil
 }
 
@@ -309,17 +228,6 @@ func (k msgServer) Delete(goCtx context.Context, msg *types.MsgDeleteRequest) (*
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 		),
 	)
-
-	defer func() {
-		telemetry.IncrCounterWithLabels(
-			[]string{types.ModuleName, "delete", "marker"},
-			1,
-			[]metrics.Label{
-				telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Denom),
-				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
-			},
-		)
-	}()
 
 	return &types.MsgDeleteResponse{}, nil
 }
@@ -511,17 +419,6 @@ func (k msgServer) SetDenomMetadata(
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 		),
 	)
-
-	defer func() {
-		telemetry.IncrCounterWithLabels(
-			[]string{types.ModuleName, "set", "denom", "metadata", "marker"},
-			1,
-			[]metrics.Label{
-				telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Metadata.Base),
-				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
-			},
-		)
-	}()
 
 	return &types.MsgSetDenomMetadataResponse{}, nil
 }
