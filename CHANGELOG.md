@@ -34,7 +34,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-### Features
+### Improvements
 
 * Add spec documentation for the metadata module #224
 
