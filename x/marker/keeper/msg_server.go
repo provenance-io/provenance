@@ -80,17 +80,14 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 		ctx.Logger().Error("unable to add marker", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
+
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			types.EventTypeMarkerAdded,
-			sdk.NewAttribute(types.EventAttributeDenomKey, msg.Amount.Denom),
-			sdk.NewAttribute(types.EventAttributeAmountKey, msg.Amount.Amount.String()),
-			sdk.NewAttribute(types.EventAttributeMarkerStatusKey, msg.Status.String()),
-			sdk.NewAttribute(types.EventAttributeAdministratorKey, msg.Manager),
-			sdk.NewAttribute(types.EventAttributeMarkerTypeKey, msg.MarkerType.String()),
-			sdk.NewAttribute(types.EventAttributeModuleNameKey, types.ModuleName),
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 		),
 	)
+
 	return &types.MsgAddMarkerResponse{}, nil
 }
 
@@ -104,24 +101,24 @@ func (k msgServer) AddAccess(goCtx context.Context, msg *types.MsgAddAccessReque
 	}
 
 	for i := range msg.Access {
-		if err := k.Keeper.AddAccess(ctx, msg.GetSigners()[0], msg.Denom, &msg.Access[i]); err != nil {
+		access := msg.Access[i]
+		if err := k.Keeper.AddAccess(ctx, msg.GetSigners()[0], msg.Denom, &access); err != nil {
 			ctx.Logger().Error("unable to add access grant to marker", "err", err)
 			return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, err.Error())
 		}
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeGrantAccess,
-				sdk.NewAttribute(types.EventAttributeGrantKey, msg.Access[i].String()),
-				sdk.NewAttribute(types.EventAttributeDenomKey, msg.Denom),
-				sdk.NewAttribute(types.EventAttributeAdministratorKey, msg.Administrator),
-				sdk.NewAttribute(types.EventAttributeModuleNameKey, types.ModuleName),
-			),
-		)
 	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
+
 	return &types.MsgAddAccessResponse{}, nil
 }
 
-// DeleteAccess handles a message to revoke access to  marker account.
+// DeleteAccess handles a message to revoke access to marker account.
 func (k msgServer) DeleteAccess(goCtx context.Context, msg *types.MsgDeleteAccessRequest) (*types.MsgDeleteAccessResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -139,15 +136,7 @@ func (k msgServer) DeleteAccess(goCtx context.Context, msg *types.MsgDeleteAcces
 		ctx.Logger().Error("unable to remove access grant from marker", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, err.Error())
 	}
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeRevokeAccess,
-			sdk.NewAttribute(types.EventAttributeRevokeKey, msg.RemovedAddress),
-			sdk.NewAttribute(types.EventAttributeDenomKey, msg.Denom),
-			sdk.NewAttribute(types.EventAttributeAdministratorKey, msg.Administrator),
-			sdk.NewAttribute(types.EventAttributeModuleNameKey, types.ModuleName),
-		),
-	)
+
 	return &types.MsgDeleteAccessResponse{}, nil
 }
 
@@ -163,14 +152,14 @@ func (k msgServer) Finalize(goCtx context.Context, msg *types.MsgFinalizeRequest
 		ctx.Logger().Error("unable to finalize marker", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
+
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			types.EventTypeFinalize,
-			sdk.NewAttribute(types.EventAttributeDenomKey, msg.Denom),
-			sdk.NewAttribute(types.EventAttributeAdministratorKey, msg.Administrator),
-			sdk.NewAttribute(types.EventAttributeModuleNameKey, types.ModuleName),
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 		),
 	)
+
 	return &types.MsgFinalizeResponse{}, nil
 }
 
@@ -186,14 +175,14 @@ func (k msgServer) Activate(goCtx context.Context, msg *types.MsgActivateRequest
 		ctx.Logger().Error("unable to activate marker", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
+
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			types.EventTypeActivate,
-			sdk.NewAttribute(types.EventAttributeDenomKey, msg.Denom),
-			sdk.NewAttribute(types.EventAttributeAdministratorKey, msg.Administrator),
-			sdk.NewAttribute(types.EventAttributeModuleNameKey, types.ModuleName),
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 		),
 	)
+
 	return &types.MsgActivateResponse{}, nil
 }
 
@@ -209,14 +198,14 @@ func (k msgServer) Cancel(goCtx context.Context, msg *types.MsgCancelRequest) (*
 		ctx.Logger().Error("unable to cancel marker", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
+
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			types.EventTypeCancel,
-			sdk.NewAttribute(types.EventAttributeDenomKey, msg.Denom),
-			sdk.NewAttribute(types.EventAttributeAdministratorKey, msg.Administrator),
-			sdk.NewAttribute(types.EventAttributeModuleNameKey, types.ModuleName),
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 		),
 	)
+
 	return &types.MsgCancelResponse{}, nil
 }
 
@@ -232,14 +221,14 @@ func (k msgServer) Delete(goCtx context.Context, msg *types.MsgDeleteRequest) (*
 		ctx.Logger().Error("unable to delete marker", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
+
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			types.EventTypeDestroy,
-			sdk.NewAttribute(types.EventAttributeDenomKey, msg.Denom),
-			sdk.NewAttribute(types.EventAttributeAdministratorKey, msg.Administrator),
-			sdk.NewAttribute(types.EventAttributeModuleNameKey, types.ModuleName),
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 		),
 	)
+
 	return &types.MsgDeleteResponse{}, nil
 }
 
@@ -255,16 +244,36 @@ func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMintRequest) (*type
 		ctx.Logger().Error("unable to mint coin for marker", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
+
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 		),
 	)
+
+	defer func() {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, types.EventTelemetryKeyMint},
+			1,
+			[]metrics.Label{
+				telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Amount.GetDenom()),
+				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
+			},
+		)
+		if msg.Amount.Amount.IsInt64() {
+			telemetry.SetGaugeWithLabels(
+				[]string{types.ModuleName, types.EventTelemetryKeyMint, msg.Amount.Denom},
+				float32(msg.Amount.Amount.Int64()),
+				[]metrics.Label{telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Amount.Denom)},
+			)
+		}
+	}()
+
 	return &types.MsgMintResponse{}, nil
 }
 
-// Burn handles a message to burn coin from a  marker account.
+// Burn handles a message to burn coin from a marker account.
 func (k msgServer) Burn(goCtx context.Context, msg *types.MsgBurnRequest) (*types.MsgBurnResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -276,12 +285,32 @@ func (k msgServer) Burn(goCtx context.Context, msg *types.MsgBurnRequest) (*type
 		ctx.Logger().Error("unable to burn coin from marker", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
+
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 		),
 	)
+
+	defer func() {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, types.EventTelemetryKeyBurn},
+			1,
+			[]metrics.Label{
+				telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Amount.GetDenom()),
+				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
+			},
+		)
+		if msg.Amount.Amount.IsInt64() {
+			telemetry.SetGaugeWithLabels(
+				[]string{types.ModuleName, types.EventTelemetryKeyBurn, msg.Amount.Denom},
+				float32(msg.Amount.Amount.Int64()),
+				[]metrics.Label{telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Amount.Denom)},
+			)
+		}
+	}()
+
 	return &types.MsgBurnResponse{}, nil
 }
 
@@ -303,12 +332,35 @@ func (k msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdrawRequest
 		ctx.Logger().Error("unable to withdraw coins from marker", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
+
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 		),
 	)
+
+	defer func() {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, types.EventTelemetryKeyWithdraw},
+			1,
+			[]metrics.Label{
+				telemetry.NewLabel(types.EventTelemetryLabelToAddress, msg.ToAddress),
+				telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.GetDenom()),
+				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
+			},
+		)
+		for _, coin := range msg.Amount {
+			if coin.Amount.IsInt64() {
+				telemetry.SetGaugeWithLabels(
+					[]string{types.ModuleName, types.EventTelemetryKeyWithdraw, msg.Denom},
+					float32(coin.Amount.Int64()),
+					[]metrics.Label{telemetry.NewLabel(types.EventTelemetryLabelDenom, coin.Denom)},
+				)
+			}
+		}
+	}()
+
 	return &types.MsgWithdrawResponse{}, nil
 }
 
@@ -340,22 +392,33 @@ func (k msgServer) Transfer(goCtx context.Context, msg *types.MsgTransferRequest
 		return nil, err
 	}
 
-	defer func() {
-		if msg.Amount.Amount.IsInt64() {
-			telemetry.SetGaugeWithLabels(
-				[]string{"tx", "msg", "transfer"},
-				float32(msg.Amount.Amount.Int64()),
-				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
-			)
-		}
-	}()
-
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 		),
 	)
+
+	defer func() {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, types.EventTelemetryKeyTransfer},
+			1,
+			[]metrics.Label{
+				telemetry.NewLabel(types.EventTelemetryLabelToAddress, msg.ToAddress),
+				telemetry.NewLabel(types.EventTelemetryLabelFromAddress, msg.FromAddress),
+				telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Amount.Denom),
+				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
+			},
+		)
+		if msg.Amount.Amount.IsInt64() {
+			telemetry.SetGaugeWithLabels(
+				[]string{types.ModuleName, types.EventTelemetryKeyTransfer, msg.Amount.Denom},
+				float32(msg.Amount.Amount.Int64()),
+				[]metrics.Label{telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Amount.Denom)},
+			)
+		}
+	}()
+
 	return &types.MsgTransferResponse{}, nil
 }
 
@@ -387,5 +450,6 @@ func (k msgServer) SetDenomMetadata(
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 		),
 	)
+
 	return &types.MsgSetDenomMetadataResponse{}, nil
 }

@@ -75,8 +75,8 @@ func (msg MsgTransferRequest) Type() string { return TypeTransferRequest }
 // Type returns the message action.
 func (msg MsgSetDenomMetadataRequest) Type() string { return TypeSetMetadataRequest }
 
-// NewAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
-func NewAddMarkerRequest(
+// NewMsgAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
+func NewMsgAddMarkerRequest(
 	denom string, totalSupply sdk.Int, fromAddress sdk.AccAddress, manager sdk.AccAddress, markerType MarkerType, supplyFixed bool, allowGovernanceControl bool, // nolint:interfacer
 ) *MsgAddMarkerRequest {
 	return &MsgAddMarkerRequest{
@@ -132,7 +132,7 @@ func (msg MsgAddMarkerRequest) GetSigners() []sdk.AccAddress {
 }
 
 // NewAddAccessRequest
-func NewAddAccessRequest(denom string, admin sdk.AccAddress, access AccessGrant) *MsgAddAccessRequest { //nolint:interfacer
+func NewMsgAddAccessRequest(denom string, admin sdk.AccAddress, access AccessGrant) *MsgAddAccessRequest { //nolint:interfacer
 	return &MsgAddAccessRequest{
 		Denom:         denom,
 		Administrator: admin.String(),
@@ -205,8 +205,8 @@ func (msg MsgDeleteAccessRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-// NewFinalizeRequest
-func NewFinalizeRequest(denom string, admin sdk.AccAddress) *MsgFinalizeRequest { // nolint:interfacer
+// NewMsgFinalizeRequest
+func NewMsgFinalizeRequest(denom string, admin sdk.AccAddress) *MsgFinalizeRequest { // nolint:interfacer
 	return &MsgFinalizeRequest{
 		Denom:         denom,
 		Administrator: admin.String(),
@@ -239,8 +239,8 @@ func (msg MsgFinalizeRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-// NewActivateRequest
-func NewActivateRequest(denom string, admin sdk.AccAddress) *MsgActivateRequest { // nolint:interfacer
+// NewMsgActivateRequest
+func NewMsgActivateRequest(denom string, admin sdk.AccAddress) *MsgActivateRequest { // nolint:interfacer
 	return &MsgActivateRequest{
 		Denom:         denom,
 		Administrator: admin.String(),
@@ -273,8 +273,8 @@ func (msg MsgActivateRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-// NewCancelRequest
-func NewCancelRequest(denom string, admin sdk.AccAddress) *MsgCancelRequest { // nolint:interfacer
+// NewMsgCancelRequest
+func NewMsgCancelRequest(denom string, admin sdk.AccAddress) *MsgCancelRequest { // nolint:interfacer
 	return &MsgCancelRequest{
 		Denom:         denom,
 		Administrator: admin.String(),
@@ -307,8 +307,8 @@ func (msg MsgCancelRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-// NewDeleteRequest
-func NewDeleteRequest(denom string, admin sdk.AccAddress) *MsgDeleteRequest { // nolint:interfacer
+// NewMsgDeleteRequest
+func NewMsgDeleteRequest(denom string, admin sdk.AccAddress) *MsgDeleteRequest { // nolint:interfacer
 	return &MsgDeleteRequest{
 		Denom:         denom,
 		Administrator: admin.String(),
@@ -341,8 +341,8 @@ func (msg MsgDeleteRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-// NewMintRequest creates a mint supply message
-func NewMintRequest(admin sdk.AccAddress, amount sdk.Coin) *MsgMintRequest { // nolint:interfacer
+// NewMsgMintRequest creates a mint supply message
+func NewMsgMintRequest(admin sdk.AccAddress, amount sdk.Coin) *MsgMintRequest { // nolint:interfacer
 	return &MsgMintRequest{
 		Administrator: admin.String(),
 		Amount:        amount,
@@ -375,8 +375,8 @@ func (msg MsgMintRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-// NewBurnRequest creates a burn supply message
-func NewBurnRequest(admin sdk.AccAddress, amount sdk.Coin) *MsgBurnRequest { // nolint:interfacer
+// NewMsgBurnRequest creates a burn supply message
+func NewMsgBurnRequest(admin sdk.AccAddress, amount sdk.Coin) *MsgBurnRequest { // nolint:interfacer
 	return &MsgBurnRequest{
 		Administrator: admin.String(),
 		Amount:        amount,
@@ -410,8 +410,8 @@ func (msg MsgBurnRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-// NewWithdrawRequest
-func NewWithdrawRequest(
+// NewMsgWithdrawRequest
+func NewMsgWithdrawRequest(
 	admin sdk.AccAddress, toAddress sdk.AccAddress, denom string, amount sdk.Coins,
 ) *MsgWithdrawRequest {
 	if toAddress.Empty() {
@@ -460,8 +460,8 @@ func (msg MsgWithdrawRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-// NewTransferRequest
-func NewTransferRequest(
+// NewMsgTransferRequest
+func NewMsgTransferRequest(
 	admin, fromAddress, toAddress sdk.AccAddress, amount sdk.Coin, // nolint:interfacer
 ) *MsgTransferRequest {
 	return &MsgTransferRequest{
