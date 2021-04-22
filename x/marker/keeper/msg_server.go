@@ -261,6 +261,13 @@ func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMintRequest) (*type
 				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
 			},
 		)
+		if msg.Amount.Amount.IsInt64() {
+			telemetry.SetGaugeWithLabels(
+				[]string{types.ModuleName, types.EventTelemetryKeyMint, msg.Amount.Denom},
+				float32(msg.Amount.Amount.Int64()),
+				[]metrics.Label{telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Amount.Denom)},
+			)
+		}
 	}()
 
 	return &types.MsgMintResponse{}, nil
@@ -295,6 +302,13 @@ func (k msgServer) Burn(goCtx context.Context, msg *types.MsgBurnRequest) (*type
 				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
 			},
 		)
+		if msg.Amount.Amount.IsInt64() {
+			telemetry.SetGaugeWithLabels(
+				[]string{types.ModuleName, types.EventTelemetryKeyBurn, msg.Amount.Denom},
+				float32(msg.Amount.Amount.Int64()),
+				[]metrics.Label{telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Amount.Denom)},
+			)
+		}
 	}()
 
 	return &types.MsgBurnResponse{}, nil
