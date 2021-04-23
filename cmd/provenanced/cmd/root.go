@@ -65,6 +65,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		WithAccountRetriever(types.AccountRetriever{}).
 		WithBroadcastMode(flags.BroadcastBlock).
 		WithHomeDir(app.DefaultNodeHome(appName))
+	sdk.SetCoinDenomRegex(app.SdkCoinDenomRegex)
 
 	rootCmd := &cobra.Command{
 		Use:   appName,
