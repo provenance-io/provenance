@@ -48,7 +48,7 @@ func (k Keeper) getAuthorizationGrant(ctx sdk.Context, grantStoreKey []byte) (gr
 	return grant, true
 }
 
-func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, updated exported.Authorization) error {
+func (k Keeper) Update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, updated exported.Authorization) error {
 	grantStoreKey := types.GetAuthorizationStoreKey(grantee, granter, updated.MethodName())
 	grant, found := k.getAuthorizationGrant(ctx, grantStoreKey)
 	if !found {
@@ -97,7 +97,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, service
 					return nil, err
 				}
 			} else if updated != nil {
-				err = k.update(ctx, grantee, granter, updated)
+				err = k.Update(ctx, grantee, granter, updated)
 				if err != nil {
 					return nil, err
 				}

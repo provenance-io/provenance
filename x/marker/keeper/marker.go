@@ -538,10 +538,35 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 		return fmt.Errorf("marker not found for %s: %s", amount.Denom, err)
 	}
 	// check that authorization exists for admin to do the needful.
-	authorization, _ := k.authzKeeper.GetOrRevokeAuthorization(ctx, admin, from, types.MarkerSendAuthorization{}.MethodName())
+	authorization, _ := k.authzKeeper.GetOrRevokeAuthorization(ctx, from, admin, types.MarkerSendAuthorization{}.MethodName())
 	if authorization == nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "authorization not found")
 	}
+	serviceMsg := sdk.ServiceMsg{
+			MethodName: types.MarkerSendAuthorization{}.MethodName(),
+			Request: &types.MsgTransferRequest{
+				Amount:        sdk.NewCoin("steakM", sdk.NewInt(2)),
+				Administrator: admin.String(),
+				FromAddress:   from.String(),
+				ToAddress:     to.String(),
+			},
+	}
+	updated, del, err := authorization.Accept(ctx, serviceMsg)
+	if err != nil {
+		return  err
+	}
+	if del {
+		err = k.authzKeeper.Revoke(ctx, from, admin, serviceMsg.Type())
+		if err != nil {
+			return  err
+		}
+	} else if updated != nil {
+		err = k.authzKeeper.Update(ctx, from, admin, updated)
+		if err != nil {
+			return  err
+		}
+	}
+
 	if m.GetMarkerType() != types.MarkerType_RestrictedCoin {
 		return fmt.Errorf("marker type is not restricted_coin, brokered transfer not supported")
 	}
