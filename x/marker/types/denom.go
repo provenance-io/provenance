@@ -10,13 +10,7 @@ import (
 
 const (
 	maxDenomMetadataDescriptionLength = 200
-	reDnmString                       = `[a-zA-Z][a-zA-Z0-9]{2,127}`
 )
-
-// SdkCoinDenomRegex returns a new sdk base denom regex string
-func SdkCoinDenomRegex() string {
-	return reDnmString
-}
 
 // ValidateDenomMetadataBasic performs validation of the denom metadata fields.
 // It checks that:
@@ -33,7 +27,6 @@ func SdkCoinDenomRegex() string {
 //  - All Denomination unit Aliases have the same SI prefix as their Denom (but maybe different forms, e.g. name vs symbol)
 //  - All Denomination unit Exponents are {SI prefix exponent of the Denom} - {SI prefix exponent of the base}.
 func ValidateDenomMetadataBasic(md banktypes.Metadata) error {
-	sdk.SetCoinDenomRegex(SdkCoinDenomRegex)
 	if err := md.Validate(); err != nil {
 		return fmt.Errorf("denom metadata %w", err)
 	}
