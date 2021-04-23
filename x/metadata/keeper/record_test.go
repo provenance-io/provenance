@@ -84,9 +84,6 @@ func (s *RecordKeeperTestSuite) SetupTest() {
 	s.sessionID = types.SessionMetadataAddress(s.scopeUUID, s.sessionUUID)
 	s.sessionName = "TestSession"
 
-	s.sessionUUID = uuid.New()
-	s.sessionID = types.SessionMetadataAddress(s.scopeUUID, s.sessionUUID)
-
 	s.contractSpecUUID = uuid.New()
 	s.contractSpecID = types.ContractSpecMetadataAddress(s.contractSpecUUID)
 
@@ -181,7 +178,7 @@ func (s *RecordKeeperTestSuite) TestValidateRecordRemove() {
 			proposed: recordID,
 			signers:  []string{"no-matchin"},
 			wantErr:  true,
-			errorMsg: fmt.Sprintf("missing signature from %s (PARTY_TYPE_OWNER)", s.user1),
+			errorMsg: fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user1),
 		},
 		"valid, passed all validation": {
 			existing: *record,
@@ -362,34 +359,34 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 			errorMsg:        "address is empty",
 		},
 		"existing and proposed names do not match": {
-			existing:         types.NewRecord("notamatch", s.sessionID, *process, []types.RecordInput{}, []types.RecordOutput{}, s.recordSpecID),
+			existing:         types.NewRecord("notamatch", sessionID, *process, []types.RecordInput{}, []types.RecordOutput{}, s.recordSpecID),
 			origOutputHashes: []string{},
-			proposed:         types.NewRecord("not-a-match", s.sessionID, *process, []types.RecordInput{}, []types.RecordOutput{}, s.recordSpecID),
+			proposed:         types.NewRecord("not-a-match", sessionID, *process, []types.RecordInput{}, []types.RecordOutput{}, s.recordSpecID),
 			signers:          []string{s.user1},
 			partiesInvolved:  ownerPartyList(s.user1),
 			errorMsg:        "the Name field of records cannot be changed",
 		},
-		"existing and proposed ids do not match": {
-			existing:         types.NewRecord(s.recordName, s.sessionID, *process, []types.RecordInput{}, []types.RecordOutput{}, s.recordSpecID),
+		"original session id not found": {
+			existing:         types.NewRecord(s.recordName, randomSessionID, *process, []types.RecordInput{}, []types.RecordOutput{}, s.recordSpecID),
 			origOutputHashes: []string{},
-			proposed:         types.NewRecord(s.recordName, randomSessionID, *process, []types.RecordInput{}, []types.RecordOutput{}, s.recordSpecID),
+			proposed:         types.NewRecord(s.recordName, sessionID, *process, []types.RecordInput{}, []types.RecordOutput{}, s.recordSpecID),
 			signers:          []string{s.user1},
 			partiesInvolved:  ownerPartyList(s.user1),
-			errorMsg:         "the SessionId field of records cannot be changed",
+			errorMsg:         fmt.Sprintf("original session %s not found for existing record", randomSessionID),
 		},
 		"scope not found": {
 			existing:        nil,
 			proposed:        types.NewRecord(s.recordName, randomSessionID, *process, []types.RecordInput{}, []types.RecordOutput{}, s.recordSpecID),
 			signers:         []string{s.user1},
 			partiesInvolved: ownerPartyList(s.user1),
-			errorMsg:        fmt.Sprintf("scope not found for scope id %s", randomScopeID),
+			errorMsg:        fmt.Sprintf("scope not found with id %s", randomScopeID),
 		},
 		"missing signature from existing owner": {
 			existing:        nil,
 			proposed:        types.NewRecord(s.recordName, sessionID, *process, []types.RecordInput{}, []types.RecordOutput{}, s.recordSpecID),
 			signers:         []string{},
 			partiesInvolved: ownerPartyList(s.user1),
-			errorMsg:        fmt.Sprintf("missing signature from %s (PARTY_TYPE_OWNER)", s.user1),
+			errorMsg:        fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user1),
 		},
 		"session not found": {
 			existing:        nil,
@@ -411,14 +408,14 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 			proposed:        types.NewRecord(s.recordName, sessionID, *process, []types.RecordInput{*otherInput}, []types.RecordOutput{}, s.recordSpecID),
 			signers:         []string{s.user1},
 			partiesInvolved: ownerPartyList(s.user1),
-			errorMsg:        fmt.Sprintf("missing input %s", goodInput.Name),
+			errorMsg:        fmt.Sprintf("missing input [%s]", goodInput.Name),
 		},
 		"extra input": {
 			existing:        nil,
 			proposed:        types.NewRecord(s.recordName, sessionID, *process, []types.RecordInput{*goodInput, *otherInput}, []types.RecordOutput{}, s.recordSpecID),
 			signers:         []string{s.user1},
 			partiesInvolved: ownerPartyList(s.user1),
-			errorMsg:        fmt.Sprintf("extra input %s", otherInput.Name),
+			errorMsg:        fmt.Sprintf("extra input [%s]", otherInput.Name),
 		},
 		"duplicate input": {
 			existing:        nil,

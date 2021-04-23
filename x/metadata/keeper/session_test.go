@@ -244,14 +244,14 @@ func (s *SessionKeeperTestSuite) TestMetadataValidateSessionUpdate() {
 			proposed: *invalidPartiesSession,
 			signers:  []string{s.user1},
 			wantErr:  true,
-			errorMsg: "missing required party type PARTY_TYPE_AFFILIATE from parties",
+			errorMsg: "missing required party type [PARTY_TYPE_AFFILIATE] from parties",
 		},
 		"invalid session update, missing required signers": {
 			existing: validSession,
 			proposed: *validSession,
 			signers:  []string{"unknown signer"},
 			wantErr:  true,
-			errorMsg: fmt.Sprintf("missing signature from %s (PARTY_TYPE_OWNER)", s.user1),
+			errorMsg: fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user1),
 		},
 		"invalid session update, invalid proposed name of empty to existing session": {
 			existing: validSessionWithAudit,
