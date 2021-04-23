@@ -10,8 +10,7 @@ import (
 
 const (
 	maxDenomMetadataDescriptionLength = 200
-
-	reDnmString = `[a-zA-Z][a-zA-Z0-9]{2,127}`
+	reDnmString                       = `[a-zA-Z][a-zA-Z0-9]{2,127}`
 )
 
 // SdkCoinDenomRegex returns a new sdk base denom regex string
