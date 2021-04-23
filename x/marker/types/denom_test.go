@@ -2,12 +2,13 @@ package types
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"strings"
-	"testing"
 )
 
 type DenomTestSuite struct {
@@ -21,8 +22,8 @@ func TestDenomTestSuite(t *testing.T) {
 }
 
 type denomMetadataTestCase struct {
-	name     string
-	md       banktypes.Metadata
+	name      string
+	md        banktypes.Metadata
 	wantInErr []string
 }
 
@@ -52,11 +53,11 @@ func getValidateDenomMetadataTestCases() []denomMetadataTestCase {
 			"first denom unit is not exponent 0",
 			banktypes.Metadata{
 				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
+				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "hash", Exponent: 1, Aliases: nil},
 				},
-				Base:        "hash",
-				Display:     "hash",
+				Base:    "hash",
+				Display: "hash",
 			},
 			[]string{"denom metadata"},
 		},
@@ -64,12 +65,12 @@ func getValidateDenomMetadataTestCases() []denomMetadataTestCase {
 			"first denom unit is not base",
 			banktypes.Metadata{
 				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
+				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: nil},
 					{Denom: "hash", Exponent: 9, Aliases: nil},
 				},
-				Base:        "hash",
-				Display:     "hash",
+				Base:    "hash",
+				Display: "hash",
 			},
 			[]string{"denom metadata"},
 		},
@@ -77,13 +78,13 @@ func getValidateDenomMetadataTestCases() []denomMetadataTestCase {
 			"denom units not ordered",
 			banktypes.Metadata{
 				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
+				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: nil},
 					{Denom: "hash", Exponent: 9, Aliases: nil},
 					{Denom: "uhash", Exponent: 3, Aliases: nil},
 				},
-				Base:        "nhash",
-				Display:     "hash",
+				Base:    "nhash",
+				Display: "hash",
 			},
 			[]string{"denom metadata"},
 		},
@@ -91,27 +92,27 @@ func getValidateDenomMetadataTestCases() []denomMetadataTestCase {
 			"description too long",
 			banktypes.Metadata{
 				Description: strings.Repeat("d", maxDenomMetadataDescriptionLength+1),
-				DenomUnits:  []*banktypes.DenomUnit{
+				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: nil},
 					{Denom: "uhash", Exponent: 3, Aliases: nil},
 					{Denom: "hash", Exponent: 9, Aliases: nil},
 				},
-				Base:        "nhash",
-				Display:     "hash",
+				Base:    "nhash",
+				Display: "hash",
 			},
-			[]string{"description", fmt.Sprint(maxDenomMetadataDescriptionLength), fmt.Sprint(maxDenomMetadataDescriptionLength+1)},
+			[]string{"description", fmt.Sprint(maxDenomMetadataDescriptionLength), fmt.Sprint(maxDenomMetadataDescriptionLength + 1)},
 		},
 		{
 			"no root coin name",
 			banktypes.Metadata{
 				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
+				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: nil},
 					{Denom: "hashx", Exponent: 3, Aliases: nil},
 					{Denom: "hash", Exponent: 9, Aliases: nil},
 				},
-				Base:        "nhash",
-				Display:     "hash",
+				Base:    "nhash",
+				Display: "hash",
 			},
 			[]string{"root coin name"},
 		},
@@ -119,13 +120,13 @@ func getValidateDenomMetadataTestCases() []denomMetadataTestCase {
 			"base prefix not SI",
 			banktypes.Metadata{
 				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
+				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "xhash", Exponent: 0, Aliases: nil},
 					{Denom: "uhash", Exponent: 3, Aliases: nil},
 					{Denom: "hash", Exponent: 9, Aliases: nil},
 				},
-				Base:        "xhash",
-				Display:     "hash",
+				Base:    "xhash",
+				Display: "hash",
 			},
 			[]string{"root coin name", "is not a SI prefix"},
 		},
@@ -133,13 +134,13 @@ func getValidateDenomMetadataTestCases() []denomMetadataTestCase {
 			"alias duplicates other name",
 			banktypes.Metadata{
 				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
+				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: nil},
 					{Denom: "uhash", Exponent: 3, Aliases: nil},
 					{Denom: "hash", Exponent: 9, Aliases: []string{"uhash"}},
 				},
-				Base:        "nhash",
-				Display:     "hash",
+				Base:    "nhash",
+				Display: "hash",
 			},
 			[]string{"denom or alias", "is not unique", "uhash"},
 		},
@@ -147,14 +148,14 @@ func getValidateDenomMetadataTestCases() []denomMetadataTestCase {
 			"denom duplicates other name",
 			banktypes.Metadata{
 				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
+				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
 					{Denom: "uhash", Exponent: 3, Aliases: nil},
 					{Denom: "hash", Exponent: 9, Aliases: nil},
 					{Denom: "nanohash", Exponent: 12, Aliases: nil},
 				},
-				Base:        "nhash",
-				Display:     "hash",
+				Base:    "nhash",
+				Display: "hash",
 			},
 			[]string{"denom or alias", "is not unique", "nanohash"},
 		},
@@ -162,13 +163,13 @@ func getValidateDenomMetadataTestCases() []denomMetadataTestCase {
 			"denom unit denom is not valid a coin denomination",
 			banktypes.Metadata{
 				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
+				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: nil},
 					{Denom: "uhash", Exponent: 3, Aliases: nil},
 					{Denom: "x", Exponent: 9, Aliases: nil},
 				},
-				Base:        "nhash",
-				Display:     "hash",
+				Base:    "nhash",
+				Display: "hash",
 			},
 			[]string{"denom metadata"},
 		},
@@ -176,13 +177,13 @@ func getValidateDenomMetadataTestCases() []denomMetadataTestCase {
 			"denom unit denom exponent is incorrect",
 			banktypes.Metadata{
 				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
+				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: nil},
 					{Denom: "uhash", Exponent: 3, Aliases: nil},
 					{Denom: "hash", Exponent: 8, Aliases: nil},
 				},
-				Base:        "nhash",
-				Display:     "hash",
+				Base:    "nhash",
+				Display: "hash",
 			},
 			[]string{"exponent", "hash", "0", "-9", "= 9", "8"},
 		},
@@ -190,13 +191,13 @@ func getValidateDenomMetadataTestCases() []denomMetadataTestCase {
 			"denom unit alias is not valid a coin denomination",
 			banktypes.Metadata{
 				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
+				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: nil},
 					{Denom: "uhash", Exponent: 3, Aliases: nil},
-					{Denom: "hash", Exponent: 9, Aliases: []string{strings.Repeat("x", 128)+"hash"}},
+					{Denom: "hash", Exponent: 9, Aliases: []string{strings.Repeat("x", 128) + "hash"}},
 				},
-				Base:        "nhash",
-				Display:     "hash",
+				Base:    "nhash",
+				Display: "hash",
 			},
 			[]string{"invalid alias", "x"},
 		},
@@ -204,29 +205,32 @@ func getValidateDenomMetadataTestCases() []denomMetadataTestCase {
 			"denom unit denom alias prefix mismatch",
 			banktypes.Metadata{
 				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
+				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: nil},
 					{Denom: "uhash", Exponent: 3, Aliases: nil},
 					{Denom: "hash", Exponent: 9, Aliases: nil},
 					{Denom: "megahash", Exponent: 15, Aliases: []string{"mhash"}},
 				},
-				Base:        "nhash",
-				Display:     "hash",
+				Base:    "nhash",
+				Display: "hash",
 			},
 			[]string{"SI prefix", "mhash", "megahash"},
 		},
-	}
-}
-
-func defaultTestParams() Params {
-	return testParams(`^[a-zA-Z]{4,30}$`)
-}
-
-func testParams(regex string) Params {
-	return Params{
-		MaxTotalSupply:         0,
-		EnableGovernance:       false,
-		UnrestrictedDenomRegex: regex,
+		{
+			"should successfully validate metadata",
+			banktypes.Metadata{
+				Description: "a description",
+				DenomUnits: []*banktypes.DenomUnit{
+					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
+					{Denom: "uhash", Exponent: 3, Aliases: nil},
+					{Denom: "hash", Exponent: 9, Aliases: nil},
+					{Denom: "megahash", Exponent: 15, Aliases: nil},
+				},
+				Base:    "nhash",
+				Display: "hash",
+			},
+			[]string{},
+		},
 	}
 }
 
@@ -248,408 +252,6 @@ func (s *DenomTestSuite) TestValidateDenomMetadataBasic() {
 	}
 }
 
-func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
-	basicTests := getValidateDenomMetadataTestCases()
-
-	// Should call ValidateDenomMetadataBasic, so all these should apply here too.
-	for _, tc := range basicTests {
-		s.T().Run("basic " + tc.name, func(t *testing.T) {
-			err := ValidateDenomMetadataExtended(tc.md, nil, StatusProposed, defaultTestParams())
-			if len(tc.wantInErr) > 0 {
-				require.Error(t, err, "ValidateDenomMetadataExtended expected error")
-				for _, e := range tc.wantInErr {
-					assert.Contains(t, err.Error(), e, "ValidateDenomMetadataExtended expected in error message")
-				}
-			} else {
-				require.NoError(t, err, "ValidateDenomMetadataExtended unexpected error")
-			}
-		})
-	}
-
-	tests := []struct {
-		name string
-		proposed     banktypes.Metadata
-		existing     *banktypes.Metadata
-		markerStatus MarkerStatus
-		params       Params
-		wantInErr    []string
-	}{
-		{
-			"marker status undefined",
-			banktypes.Metadata{
-				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: nil},
-					{Denom: "uhash", Exponent: 3, Aliases: nil},
-					{Denom: "hash", Exponent: 9, Aliases: nil},
-				},
-				Base:        "nhash",
-				Display:     "hash",
-			},
-			nil,
-			StatusUndefined,
-			defaultTestParams(),
-			[]string{"cannot add or update denom metadata", "undefined"},
-		},
-		{
-			"marker status destroyed",
-			banktypes.Metadata{
-				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: nil},
-					{Denom: "uhash", Exponent: 3, Aliases: nil},
-					{Denom: "hash", Exponent: 9, Aliases: nil},
-				},
-				Base:        "nhash",
-				Display:     "hash",
-			},
-			nil,
-			StatusDestroyed,
-			defaultTestParams(),
-			[]string{"cannot add or update denom metadata", "destroyed"},
-		},
-		{
-			"marker status cancelled",
-			banktypes.Metadata{
-				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: nil},
-					{Denom: "uhash", Exponent: 3, Aliases: nil},
-					{Denom: "hash", Exponent: 9, Aliases: nil},
-				},
-				Base:        "nhash",
-				Display:     "hash",
-			},
-			nil,
-			StatusCancelled,
-			defaultTestParams(),
-			[]string{"cannot add or update denom metadata", "cancelled"},
-		},
-		{
-			"denom fails extra regex",
-			banktypes.Metadata{
-				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: nil},
-					{Denom: "uhash", Exponent: 3, Aliases: nil},
-					{Denom: "hash", Exponent: 9, Aliases: nil},
-				},
-				Base:        "nhash",
-				Display:     "hash",
-			},
-			nil,
-			StatusProposed,
-			testParams(`^[nu]hash$`),
-			[]string{"fails unrestricted marker denom regex", "hash"},
-		},
-		{
-			"alias fails extra regex",
-			banktypes.Metadata{
-				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
-					{Denom: "uhash", Exponent: 3, Aliases: nil},
-					{Denom: "hash", Exponent: 9, Aliases: nil},
-				},
-				Base:        "nhash",
-				Display:     "hash",
-			},
-			nil,
-			StatusProposed,
-			testParams(`^[nu]?hash$`),
-			[]string{"fails unrestricted marker denom regex", "nanohash"},
-		},
-		{
-			"invalid unrestricted marker denom regex",
-			banktypes.Metadata{
-				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
-					{Denom: "uhash", Exponent: 3, Aliases: nil},
-					{Denom: "hash", Exponent: 9, Aliases: nil},
-				},
-				Base:        "nhash",
-				Display:     "hash",
-			},
-			nil,
-			StatusProposed,
-			testParams(`(foo`),
-			[]string{"error parsing regexp"},
-		},
-		{
-			"base changed",
-			banktypes.Metadata{
-				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
-					{Denom: "uhash", Exponent: 3, Aliases: nil},
-					{Denom: "hash", Exponent: 9, Aliases: nil},
-				},
-				Base:        "nhash",
-				Display:     "hash",
-			},
-			&banktypes.Metadata{
-				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
-					{Denom: "uhash", Exponent: 3, Aliases: nil},
-					{Denom: "hash", Exponent: 9, Aliases: nil},
-				},
-				Base:        "uhash",
-				Display:     "hash",
-			},
-			StatusProposed,
-			defaultTestParams(),
-			[]string{"denom metadata base value cannot be changed"},
-		},
-		{
-			"active denom unit removed",
-			banktypes.Metadata{
-				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
-					{Denom: "hash", Exponent: 9, Aliases: nil},
-				},
-				Base:        "nhash",
-				Display:     "hash",
-			},
-			&banktypes.Metadata{
-				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
-					{Denom: "uhash", Exponent: 3, Aliases: nil},
-					{Denom: "hash", Exponent: 9, Aliases: nil},
-				},
-				Base:        "nhash",
-				Display:     "hash",
-			},
-			StatusActive,
-			defaultTestParams(),
-			[]string{"cannot remove denom unit", "uhash"},
-		},
-		{
-			"finalized denom unit removed",
-			banktypes.Metadata{
-				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
-					{Denom: "hash", Exponent: 9, Aliases: nil},
-				},
-				Base:        "nhash",
-				Display:     "hash",
-			},
-			&banktypes.Metadata{
-				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
-					{Denom: "uhash", Exponent: 3, Aliases: nil},
-					{Denom: "hash", Exponent: 9, Aliases: nil},
-				},
-				Base:        "nhash",
-				Display:     "hash",
-			},
-			StatusFinalized,
-			defaultTestParams(),
-			[]string{"cannot remove denom unit", "uhash"},
-		},
-		{
-			"proposed denom unit removed",
-			banktypes.Metadata{
-				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
-					{Denom: "hash", Exponent: 9, Aliases: nil},
-				},
-				Base:        "nhash",
-				Display:     "hash",
-			},
-			&banktypes.Metadata{
-				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
-					{Denom: "uhash", Exponent: 3, Aliases: nil},
-					{Denom: "hash", Exponent: 9, Aliases: nil},
-				},
-				Base:        "nhash",
-				Display:     "hash",
-			},
-			StatusProposed,
-			defaultTestParams(),
-			[]string{},
-		},
-		{
-			"active denom unit denom changed",
-			banktypes.Metadata{
-				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
-					{Denom: "microhash", Exponent: 3, Aliases: nil},
-					{Denom: "hash", Exponent: 9, Aliases: nil},
-				},
-				Base:        "nhash",
-				Display:     "hash",
-			},
-			&banktypes.Metadata{
-				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
-					{Denom: "uhash", Exponent: 3, Aliases: nil},
-					{Denom: "hash", Exponent: 9, Aliases: nil},
-				},
-				Base:        "nhash",
-				Display:     "hash",
-			},
-			StatusActive,
-			defaultTestParams(),
-			[]string{"denom unit Denom", "uhash", "microhash"},
-		},
-		{
-			"finalized denom unit denom changed",
-			banktypes.Metadata{
-				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
-					{Denom: "microhash", Exponent: 3, Aliases: nil},
-					{Denom: "hash", Exponent: 9, Aliases: nil},
-				},
-				Base:        "nhash",
-				Display:     "hash",
-			},
-			&banktypes.Metadata{
-				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
-					{Denom: "uhash", Exponent: 3, Aliases: nil},
-					{Denom: "hash", Exponent: 9, Aliases: nil},
-				},
-				Base:        "nhash",
-				Display:     "hash",
-			},
-			StatusFinalized,
-			defaultTestParams(),
-			[]string{"denom unit Denom", "uhash", "microhash"},
-		},
-		{
-			"proposed denom unit denom changed",
-			banktypes.Metadata{
-				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
-					{Denom: "microhash", Exponent: 3, Aliases: nil},
-					{Denom: "hash", Exponent: 9, Aliases: nil},
-				},
-				Base:        "nhash",
-				Display:     "hash",
-			},
-			&banktypes.Metadata{
-				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
-					{Denom: "uhash", Exponent: 3, Aliases: nil},
-					{Denom: "hash", Exponent: 9, Aliases: nil},
-				},
-				Base:        "nhash",
-				Display:     "hash",
-			},
-			StatusProposed,
-			defaultTestParams(),
-			[]string{},
-		},
-		{
-			"active denom unit alias removed",
-			banktypes.Metadata{
-				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: nil},
-					{Denom: "uhash", Exponent: 3, Aliases: nil},
-					{Denom: "hash", Exponent: 9, Aliases: nil},
-				},
-				Base:        "nhash",
-				Display:     "hash",
-			},
-			&banktypes.Metadata{
-				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
-					{Denom: "uhash", Exponent: 3, Aliases: nil},
-					{Denom: "hash", Exponent: 9, Aliases: nil},
-				},
-				Base:        "nhash",
-				Display:     "hash",
-			},
-			StatusActive,
-			defaultTestParams(),
-			[]string{"cannot remove alias", "nanohash", "nhash"},
-		},
-		{
-			"finalized denom unit alias removed",
-			banktypes.Metadata{
-				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: nil},
-					{Denom: "uhash", Exponent: 3, Aliases: nil},
-					{Denom: "hash", Exponent: 9, Aliases: nil},
-				},
-				Base:        "nhash",
-				Display:     "hash",
-			},
-			&banktypes.Metadata{
-				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
-					{Denom: "uhash", Exponent: 3, Aliases: nil},
-					{Denom: "hash", Exponent: 9, Aliases: nil},
-				},
-				Base:        "nhash",
-				Display:     "hash",
-			},
-			StatusFinalized,
-			defaultTestParams(),
-			[]string{"cannot remove alias", "nanohash", "nhash"},
-		},
-		{
-			"proposed denom unit alias removed",
-			banktypes.Metadata{
-				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: nil},
-					{Denom: "uhash", Exponent: 3, Aliases: nil},
-					{Denom: "hash", Exponent: 9, Aliases: nil},
-				},
-				Base:        "nhash",
-				Display:     "hash",
-			},
-			&banktypes.Metadata{
-				Description: "a description",
-				DenomUnits:  []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
-					{Denom: "uhash", Exponent: 3, Aliases: nil},
-					{Denom: "hash", Exponent: 9, Aliases: nil},
-				},
-				Base:        "nhash",
-				Display:     "hash",
-			},
-			StatusProposed,
-			defaultTestParams(),
-			[]string{},
-		},
-	}
-
-	for _, tc := range tests {
-		s.T().Run(tc.name, func(t *testing.T) {
-			err := ValidateDenomMetadataExtended(tc.proposed, tc.existing, tc.markerStatus, tc.params)
-			if len(tc.wantInErr) > 0 {
-				require.Error(t, err, "ValidateDenomMetadataExtended expected error")
-				for _, e := range tc.wantInErr {
-					assert.Contains(t, err.Error(), e, "ValidateDenomMetadataExtended expected in error message")
-				}
-			} else {
-				require.NoError(t, err, "ValidateDenomMetadataExtended unexpected error")
-			}
-		})
-	}
-}
-
 func (s *DenomTestSuite) TestGetRootCoinName() {
 	tests := []struct {
 		name     string
@@ -664,10 +266,10 @@ func (s *DenomTestSuite) TestGetRootCoinName() {
 		{
 			"only one name",
 			banktypes.Metadata{
-				DenomUnits:  []*banktypes.DenomUnit{
+				DenomUnits: []*banktypes.DenomUnit{
 					{
-						Denom:    "onename",
-						Aliases:  nil,
+						Denom:   "onename",
+						Aliases: nil,
 					},
 				},
 			},
@@ -676,10 +278,10 @@ func (s *DenomTestSuite) TestGetRootCoinName() {
 		{
 			"no common root",
 			banktypes.Metadata{
-				DenomUnits:  []*banktypes.DenomUnit{
+				DenomUnits: []*banktypes.DenomUnit{
 					{
-						Denom:    "onename",
-						Aliases:  []string{"another"},
+						Denom:   "onename",
+						Aliases: []string{"another"},
 					},
 				},
 			},
@@ -688,10 +290,10 @@ func (s *DenomTestSuite) TestGetRootCoinName() {
 		{
 			"simple test",
 			banktypes.Metadata{
-				DenomUnits:  []*banktypes.DenomUnit{
+				DenomUnits: []*banktypes.DenomUnit{
 					{
-						Denom:    "onename",
-						Aliases:  []string{"twoname"},
+						Denom:   "onename",
+						Aliases: []string{"twoname"},
 					},
 				},
 			},
@@ -700,18 +302,18 @@ func (s *DenomTestSuite) TestGetRootCoinName() {
 		{
 			"real-use test",
 			banktypes.Metadata{
-				DenomUnits:  []*banktypes.DenomUnit{
+				DenomUnits: []*banktypes.DenomUnit{
 					{
-						Denom:    "nanohash",
-						Aliases:  []string{"nhash"},
+						Denom:   "nanohash",
+						Aliases: []string{"nhash"},
 					},
 					{
-						Denom:    "hash",
-						Aliases:  nil,
+						Denom:   "hash",
+						Aliases: nil,
 					},
 					{
-						Denom:    "kilohash",
-						Aliases:  []string{"khash"},
+						Denom:   "kilohash",
+						Aliases: []string{"khash"},
 					},
 				},
 			},

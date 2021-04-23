@@ -105,7 +105,7 @@ func mintSupplyHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		msg := types.NewMintRequest(fromAddr, req.Amount)
+		msg := types.NewMsgMintRequest(fromAddr, req.Amount)
 		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
 }
@@ -140,7 +140,7 @@ func burnSupplyHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		msg := types.NewBurnRequest(fromAddr, req.Amount)
+		msg := types.NewMsgBurnRequest(fromAddr, req.Amount)
 		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
 }
@@ -177,13 +177,13 @@ func updateStatusHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		var msg sdk.Msg
 		switch status {
 		case types.StatusActive:
-			msg = types.NewActivateRequest(denom, fromAddr)
+			msg = types.NewMsgActivateRequest(denom, fromAddr)
 		case types.StatusFinalized:
-			msg = types.NewFinalizeRequest(denom, fromAddr)
+			msg = types.NewMsgFinalizeRequest(denom, fromAddr)
 		case types.StatusCancelled:
-			msg = types.NewCancelRequest(denom, fromAddr)
+			msg = types.NewMsgCancelRequest(denom, fromAddr)
 		case types.StatusDestroyed:
-			msg = types.NewDeleteRequest(denom, fromAddr)
+			msg = types.NewMsgDeleteRequest(denom, fromAddr)
 		default:
 			rest.WriteErrorResponse(w, http.StatusBadRequest, "invalid status change request")
 			return
@@ -226,7 +226,7 @@ func createMarkerHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		msg := types.NewAddMarkerRequest(denom, req.Supply, fromAddr, req.Manager, typeValue, false, false)
+		msg := types.NewMsgAddMarkerRequest(denom, req.Supply, fromAddr, req.Manager, typeValue, false, false)
 		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
 }
@@ -255,7 +255,7 @@ func withdrawSupplyHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		msg := types.NewWithdrawRequest(fromAddr, req.Recipient, denom, sdk.NewCoins(req.Amount))
+		msg := types.NewMsgWithdrawRequest(fromAddr, req.Recipient, denom, sdk.NewCoins(req.Amount))
 		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
 }
@@ -286,7 +286,7 @@ func grantAccessHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 		grant := types.NewAccessGrant(req.Address, types.AccessListByNames(req.Grant))
 
-		msg := types.NewAddAccessRequest(denom, fromAddr, *grant)
+		msg := types.NewMsgAddAccessRequest(denom, fromAddr, *grant)
 		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
 }

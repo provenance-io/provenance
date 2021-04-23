@@ -1,6 +1,9 @@
 package keeper
 
 import (
+	"fmt"
+	"regexp"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/marker/types"
@@ -43,6 +46,24 @@ func (k Keeper) GetUnrestrictedDenomRegex(ctx sdk.Context) (regex string) {
 	regex = types.DefaultUnrestrictedDenomRegex
 	if k.paramSpace.Has(ctx, types.ParamStoreKeyUnrestrictedDenomRegex) {
 		k.paramSpace.Get(ctx, types.ParamStoreKeyUnrestrictedDenomRegex, &regex)
+		// use the default value for empty regex expressions.
+		if len(regex) == 0 {
+			regex = types.DefaultUnrestrictedDenomRegex
+		}
 	}
 	return
+}
+
+// ValidateUnrestictedDenom checks if the supplied denom is valid based on the module params
+func (k Keeper) ValidateUnrestictedDenom(ctx sdk.Context, denom string) error {
+	// Anchors are enforced on the denom validation expression.  Similar to how the SDK does hits.
+	// https://github.com/cosmos/cosmos-sdk/blob/512b533242d34926972a8fc2f5639e8cf182f5bd/types/coin.go#L625
+	exp := k.GetUnrestrictedDenomRegex(ctx)
+
+	// Safe to use must compile here because the regular expression is validated on parameter set.
+	r := regexp.MustCompile(fmt.Sprintf(`^%s$`, exp))
+	if !r.MatchString(denom) {
+		return fmt.Errorf("invalid denom [%s] (fails unrestricted marker denom validation %s)", denom, exp)
+	}
+	return nil
 }
