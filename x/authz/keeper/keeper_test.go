@@ -206,14 +206,12 @@ func (s *TestSuite) TestKeeperFees() {
 	s.Require().NotNil(authorization)
 }
 
-
 func (s *TestSuite) TestKeeperUsingMarkers() {
 	app, addrs := s.app, s.addrs
 
 	granterAddr := addrs[0]
 	granteeAddr := addrs[1]
 	recipientAddr := addrs[2]
-	s.Require().NoError(simapp.FundAccount(app, s.ctx, granterAddr, sdk.NewCoins(sdk.NewInt64Coin("steak", 10000))))
 	s.Require().NoError(simapp.CreateMarker(app, s.ctx, granteeAddr, sdk.NewCoin("steakM", sdk.NewInt(10000)), markertypes.MarkerType_RestrictedCoin))
 	s.Require().NoError(app.MarkerKeeper.WithdrawCoins(s.ctx, granteeAddr, granterAddr, "steakM",
 		sdk.NewCoins(sdk.NewInt64Coin("steakM", 1000))))
@@ -228,10 +226,10 @@ func (s *TestSuite) TestKeeperUsingMarkers() {
 		{
 			MethodName: markertypes.MarkerSendAuthorization{}.MethodName(),
 			Request: &markertypes.MsgTransferRequest{
-				Amount:      sdk.NewCoin("steakM", sdk.NewInt(2)),
-				Administrator:      granteeAddr.String(),
-				FromAddress: granterAddr.String(),
-				ToAddress:   recipientAddr.String(),
+				Amount:        sdk.NewCoin("steakM", sdk.NewInt(2)),
+				Administrator: granteeAddr.String(),
+				FromAddress:   granterAddr.String(),
+				ToAddress:     recipientAddr.String(),
 			},
 		},
 	})
@@ -272,10 +270,10 @@ func (s *TestSuite) TestKeeperUsingMarkers() {
 		{
 			MethodName: markertypes.MarkerSendAuthorization{}.MethodName(),
 			Request: &markertypes.MsgTransferRequest{
-				Amount:      someCoin,
-				FromAddress: granterAddr.String(),
+				Amount:        someCoin,
+				FromAddress:   granterAddr.String(),
 				Administrator: granteeAddr.String(),
-				ToAddress:   recipientAddr.String(),
+				ToAddress:     recipientAddr.String(),
 			},
 		},
 	})
