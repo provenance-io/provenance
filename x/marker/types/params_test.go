@@ -61,6 +61,15 @@ func TestParamSetPairs(t *testing.T) {
 			require.Error(t, pairs[i].ValidatorFn("\\!(")) // invalid regex
 			require.NoError(t, pairs[i].ValidatorFn("[a-z].*"))
 
+			// Prohibit use of anchors (these are always enforced and will be added to every expression)
+			require.Error(t, pairs[i].ValidatorFn("^[a-z].*"))
+			require.Error(t, pairs[i].ValidatorFn("^[a-z].*$"))
+			require.Error(t, pairs[i].ValidatorFn("[a-z].*$"))
+
+			// If the expression contains the anchors but they are not at the end of the expression that is allowed (however unrealistic)
+			require.NoError(t, pairs[i].ValidatorFn("[a-z].*$."))
+			require.NoError(t, pairs[i].ValidatorFn(".^[a-z].*$."))
+
 		default:
 			require.Fail(t, "unexpected param set pair")
 		}

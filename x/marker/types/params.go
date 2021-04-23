@@ -123,7 +123,10 @@ func validateRegexParam(i interface{}) error {
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-	_, err := regexp.Compile(exp)
+	if len(exp) > 0 && (exp[0:1] == "^" || exp[len(exp)-1:] == "$") {
+		return fmt.Errorf("invalid parameter, validation regex must not contain anchors ^,$")
+	}
+	_, err := regexp.Compile(fmt.Sprintf(`^%s$`, exp))
 
 	return err
 }
