@@ -176,7 +176,10 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 	p8EData.Session.Parties = contractRecitalParties
 	p8EData.Session.Name = msg.Contract.Spec.Name
 
-	processID := getProcessID(msg.Contract)
+	processID, pidErr := getProcessID(msg.Contract)
+	if pidErr != nil {
+		return p8EData, pidErr
+	}
 
 	facts := map[string]*p8e.Fact{}
 	for i, f := range msg.Contract.Inputs {
@@ -520,17 +523,24 @@ func getContractSpecID(contract *p8e.Contract) (MetadataAddress, error) {
 	return ConvertHashToAddress(ContractSpecificationKeyPrefix, hash)
 }
 
-func getProcessID(contract *p8e.Contract) isProcess_ProcessId {
+func getProcessID(contract *p8e.Contract) (isProcess_ProcessId, error) {
 	if contract == nil || contract.Definition == nil || contract.Definition.ResourceLocation == nil ||
 		contract.Definition.ResourceLocation.Ref == nil {
-		return nil
+		return nil, nil
+	}
+	ref := contract.Definition.ResourceLocation.Ref
+
+	if len(ref.Hash) > 0 {
+		return &Process_Hash{Hash: ref.Hash}, nil
 	}
 
-	if len(contract.Definition.ResourceLocation.Ref.Hash) > 0 {
-		return &Process_Hash{Hash: contract.Definition.ResourceLocation.Ref.Hash}
+	if ref.ScopeUuid != nil && len(ref.ScopeUuid.Value) > 0 && len(ref.Name) > 0 {
+		scopeUUID, err := uuid.Parse(ref.ScopeUuid.Value)
+		if err != nil {
+			return nil, fmt.Errorf("invalid contract definition resource location ref scope uuid value: %w", err)
+		}
+		return &Process_Address{Address: RecordMetadataAddress(scopeUUID, ref.Name).String()}, nil
 	}
 
-	// TODO: Handle if it should be a Process_Address?
-
-	return nil
+	return nil, nil
 }
