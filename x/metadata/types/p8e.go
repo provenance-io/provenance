@@ -505,11 +505,11 @@ func getFirstRecitalWithRole(recitals []*p8e.Recital, role p8e.PartyType) *p8e.R
 }
 
 func getContractSpecID(contract *p8e.Contract) (MetadataAddress, error) {
-	if contract == nil || contract.Spec == nil || contract.Spec.DataLocation == nil ||
-		contract.Spec.DataLocation.Ref == nil || len(contract.Spec.DataLocation.Ref.Hash) == 0 {
-		return MetadataAddress{}, fmt.Errorf("no contract.Spec.DataLocation.Ref.Hash value")
+	if contract == nil || contract.Definition == nil || contract.Definition.ResourceLocation == nil ||
+		contract.Definition.ResourceLocation.Ref == nil || len(contract.Definition.ResourceLocation.Ref.Hash) == 0 {
+		return MetadataAddress{}, fmt.Errorf("no contract.Definition.ResourceLocation.Ref.Hash value")
 	}
-	hash := contract.Spec.DataLocation.Ref.Hash
+	hash := contract.Definition.ResourceLocation.Ref.Hash
 
 	// First... just see if it's already a bech32 address. Maybe things are looking up!
 	if addr, err := MetadataAddressFromBech32(hash); err == nil {
