@@ -195,8 +195,16 @@ message MsgWriteRecordRequest {
   // nothing special happens.
   // If there is a value in record.specification_id that is different from the one created from this uuid and
   // record.name, an error is returned.
-  string         contract_spec_uuid = 4 [(gogoproto.moretags) = "yaml:\"contract_spec_uuid\""];
-  repeated Party parties            = 5 [(gogoproto.nullable) = false];
+  string contract_spec_uuid = 4 [(gogoproto.moretags) = "yaml:\"contract_spec_uuid\""];
+
+  // parties is the list of parties involved in this session.
+  repeated Party parties = 5 [(gogoproto.nullable) = false];
+
+  // original_output_hashes is an array hash strings.
+  // If the record in this message is supposed to be new, this should be empty.
+  // If the record in this message is meant to update an existing record, you must populate this array with the values
+  // from the original record's output hashes, i.e. the values from Record.Outputs[x].Hash.
+  repeated string original_output_hashes = 6 [(gogoproto.moretags) = "yaml:\"original_output_hashes\""];
 }
 
 // MsgWriteRecordResponse is the response type for the Msg/WriteRecord RPC method.
