@@ -232,21 +232,6 @@ func getValidateDenomMetadataTestCases() []denomMetadataTestCase {
 			[]string{},
 		},
 		{
-			"should successfully validate metadata with dash and period ",
-			banktypes.Metadata{
-				Description: "a description",
-				DenomUnits: []*banktypes.DenomUnit{
-					{Denom: "nhash-myhash.pio", Exponent: 0, Aliases: []string{"nanohash"}},
-					{Denom: "uhash-myhash.pio", Exponent: 3, Aliases: nil},
-					{Denom: "hash-myhash.pio", Exponent: 9, Aliases: nil},
-					{Denom: "megahash-myhash.pio", Exponent: 15, Aliases: nil},
-				},
-				Base:    "nhash-myhash.pio",
-				Display: "hash-myhash.pio",
-			},
-			[]string{},
-		},
-		{
 			"base denom is not valid has a slash coin denomination",
 			banktypes.Metadata{
 				Description: "a description",
