@@ -94,8 +94,7 @@ Scopes by value owner:
 
 ### Sessions
 
-A session is a grouping of records that are all generally created together.
-It is conceptually similar to the running of a program.
+A session is a grouping of records and the parties in charge of those records.
 
 * A session must conform to a pre-determined contract specification.
 * A session groups together a collection of records.
