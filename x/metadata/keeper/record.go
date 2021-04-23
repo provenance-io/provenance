@@ -126,7 +126,7 @@ func (k Keeper) IterateRecords(ctx sdk.Context, scopeID types.MetadataAddress, h
 // Note: The proposed parameter is a reference here so that the SpecificationId can be set in cases when it's not provided.
 func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, proposed *types.Record, signers []string, partiesInvolved []types.Party) error {
 	if proposed == nil {
-		return errors.New("proposed record cannot be nil")
+		return errors.New("missing required proposed record")
 	}
 
 	if err := proposed.ValidateBasic(); err != nil {
@@ -137,8 +137,15 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, pr
 		if existing.Name != proposed.Name {
 			return fmt.Errorf("the Name field of records cannot be changed")
 		}
-		if !existing.SessionId.Equals(proposed.SessionId) || existing.Name != proposed.Name {
-			return fmt.Errorf("the SessionId field of records cannot be changed")
+		if !existing.SessionId.Equals(proposed.SessionId) {
+			// Make sure the original session parties are signers.
+			session, found := k.GetSession(ctx, existing.SessionId)
+			if !found {
+				return fmt.Errorf("original session %s not found for existing record", existing.SessionId)
+			}
+			if err := k.ValidateAllPartiesAreSigners(session.Parties, signers); err != nil {
+				return fmt.Errorf("missing signer from original session %s: %w", session.SessionId, err)
+			}
 		}
 		// The existing specification id might be empty for old stuff.
 		// And for now, we'll allow the proposed specification id to be missing and set it appropriately below.
@@ -148,41 +155,31 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, pr
 		}
 	}
 
-	scopeID, err := proposed.SessionId.AsScopeAddress()
-	if err != nil {
-		return err
+	scopeID, scopeIDErr := proposed.SessionId.AsScopeAddress()
+	if scopeIDErr != nil {
+		return scopeIDErr
 	}
 
-	// get scope for existing record
-	scope, found := k.GetScope(ctx, scopeID)
-	if !found {
-		return fmt.Errorf("scope not found for scope id %s", scopeID)
+	// Make sure the scope exists.
+	if _, found := k.GetScope(ctx, scopeID); !found {
+		return fmt.Errorf("scope not found with id %s", scopeID)
 	}
 
-	// Make sure all the scope owners have signed.
-	if signErr := k.ValidateAllPartiesAreSigners(scope.Owners, signers); signErr != nil {
-		return signErr
-	}
-
-	// Get the session (and make sure it exists)
+	// Get the session.
 	session, found := k.GetSession(ctx, proposed.SessionId)
 	if !found {
 		return fmt.Errorf("session not found for session id %s", proposed.SessionId)
 	}
 
-	// Get contract specification
-	contractSpec, found := k.GetContractSpecification(ctx, session.SpecificationId)
-	if !found {
-		return fmt.Errorf("contract specification not found: %s", session.SpecificationId.String())
+	// Make sure all the session parties have signed.
+	if signErr := k.ValidateAllPartiesAreSigners(session.Parties, signers); signErr != nil {
+		return signErr
 	}
-	err = k.ValidatePartiesInvolved(partiesInvolved, contractSpec.PartiesInvolved)
-	if err != nil {
-		return err
-	}
+
 	// Get the record specification
-	contractSpecUUID, err := session.SpecificationId.ContractSpecUUID()
-	if err != nil {
-		return err
+	contractSpecUUID, cSpecUUIDErr := session.SpecificationId.ContractSpecUUID()
+	if cSpecUUIDErr != nil {
+		return cSpecUUIDErr
 	}
 	recSpecID := types.RecordSpecMetadataAddress(contractSpecUUID, proposed.Name)
 
@@ -193,8 +190,8 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, pr
 			proposed.SpecificationId, recSpecID)
 	}
 
-	recSpec, found := k.GetRecordSpecification(ctx, recSpecID)
-	if !found {
+	recSpec, recSpecFound := k.GetRecordSpecification(ctx, recSpecID)
+	if !recSpecFound {
 		return fmt.Errorf("record specification not found for record specification id %s (contract spec uuid %s and record name %s)",
 			recSpecID, contractSpecUUID, proposed.Name)
 	}
