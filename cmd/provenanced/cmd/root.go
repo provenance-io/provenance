@@ -55,6 +55,7 @@ var ChainID string
 // NewRootCmd creates a new root command for simd. It is called once in the
 // main function.
 func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
+	sdk.SetCoinDenomRegex(app.SdkCoinDenomRegex)
 	encodingConfig := app.MakeEncodingConfig()
 	initClientCtx := client.Context{}.
 		WithJSONMarshaler(encodingConfig.Marshaler).
