@@ -622,10 +622,10 @@ func (s *P8eTestSuite) TestConvertP8eMemorializeContractRequest() {
 				Invoker: s.user1,
 			},
 			P8EData{
-				Scope:   nil, // TODO
-				Session: nil, // TODO
-				Records: nil, // TODO
-				Signers: []string{}, // TODO
+				Scope:      nil, // TODO
+				Session:    nil, // TODO
+				RecordReqs: nil, // TODO
+				Signers:    []string{}, // TODO
 			},
 			"",
 		},
@@ -650,7 +650,7 @@ func (s *P8eTestSuite) TestConvertP8eMemorializeContractRequest() {
 				require.NoError(t, err, "unexpected error")
 				assert.Equal(t, tc.p8EData.Scope, p8eData.Scope, "scope")
 				assert.Equal(t, tc.p8EData.Session, p8eData.Session, "session")
-				assert.Equal(t, tc.p8EData.Records, p8eData.Records, "records")
+				assert.Equal(t, tc.p8EData.RecordReqs, p8eData.RecordReqs, "recordReqs")
 				assert.Equal(t, tc.p8EData.Signers, p8eData.Signers, "signers")
 			}
 		})

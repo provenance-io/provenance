@@ -478,12 +478,13 @@ func (k msgServer) P8EMemorializeContract(
 		return nil, err
 	}
 
-	recordIDInfos := make([]*types.RecordIdInfo, len(p8EData.Records))
-	for i, record := range p8EData.Records {
+	recordIDInfos := make([]*types.RecordIdInfo, len(p8EData.RecordReqs))
+	for i, recordReq := range p8EData.RecordReqs {
 		recordResp, err := k.WriteRecord(goCtx, &types.MsgWriteRecordRequest{
-			Record:  *record,
-			Signers: p8EData.Signers,
-			Parties: p8EData.Session.Parties,
+			Record:               *recordReq.Record,
+			Signers:              p8EData.Signers,
+			Parties:              p8EData.Session.Parties,
+			OriginalOutputHashes: recordReq.OriginalOutputHashes,
 		})
 		if err != nil {
 			return nil, err

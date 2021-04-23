@@ -121,20 +121,25 @@ func convertP8eInputSpecs(old []*p8e.DefinitionSpec) (inputs []*InputSpecificati
 
 // P8EData contains entries converted from a MsgP8EMemorializeContractRequest.
 type P8EData struct {
-	Scope   *Scope
-	Session *Session
-	Records []*Record
-	Signers []string
+	Scope      *Scope
+	Session    *Session
+	RecordReqs []*RecordReq
+	Signers    []string
+}
+
+type RecordReq struct {
+	Record               *Record
+	OriginalOutputHashes []string
 }
 
 // Migrate Converts a MsgP8EMemorializeContractRequest object into the new objects.
 // The []string return parameter is a list of signer address strings.
 func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest) (P8EData, error) {
 	p8EData := P8EData{
-		Scope:   emptyScope(),
-		Session: emptySession(),
-		Records: []*Record{},
-		Signers: []string{},
+		Scope:      emptyScope(),
+		Session:    emptySession(),
+		RecordReqs: []*RecordReq{},
+		Signers:    []string{},
 	}
 	var err error
 
@@ -182,7 +187,7 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 	}
 
 	// Create the records.
-	p8EData.Records = make([]*Record, 0, len(msg.Contract.Considerations))
+	p8EData.RecordReqs = make([]*RecordReq, 0, len(msg.Contract.Considerations))
 	for _, c := range msg.Contract.Considerations {
 		if c != nil && c.Result != nil && c.Result.Output != nil && c.Result.Result != p8e.ExecutionResultType_RESULT_TYPE_SKIP {
 			record := emptyRecord()
@@ -242,8 +247,15 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 					Status: ResultStatus(c.Result.Result),
 				},
 			}
+			recReq := RecordReq{
+				Record:               record,
+				OriginalOutputHashes: []string{},
+			}
+			if c.Result.Output.Ancestor != nil && len(c.Result.Output.Ancestor.Hash) > 0 {
+				recReq.OriginalOutputHashes = append(recReq.OriginalOutputHashes, c.Result.Output.Ancestor.Hash)
+			}
 
-			p8EData.Records = append(p8EData.Records, record)
+			p8EData.RecordReqs = append(p8EData.RecordReqs, &recReq)
 		}
 	}
 
