@@ -231,6 +231,16 @@ func getValidateDenomMetadataTestCases() []denomMetadataTestCase {
 			},
 			[]string{},
 		},
+		{
+			"base denom is not valid has a slash coin denomination",
+			banktypes.Metadata{
+				Description: "a description",
+				DenomUnits:  nil,
+				Base:        "my/hash",
+				Display:     "hash",
+			},
+			[]string{"denom metadata"},
+		},
 	}
 }
 
