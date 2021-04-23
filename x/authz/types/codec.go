@@ -6,7 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/provenance-io/provenance/x/authz/exported"
 	marker "github.com/provenance-io/provenance/x/marker/types"
-
 )
 
 // RegisterInterfaces registers the interfaces types with the interface registry

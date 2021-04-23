@@ -3,10 +3,11 @@ package simulation
 import (
 	"context"
 	"fmt"
-	"github.com/provenance-io/provenance/x/authz/msgservice"
 	"math/rand"
 	"reflect"
 	"strings"
+
+	"github.com/provenance-io/provenance/x/authz/msgservice"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -38,7 +39,6 @@ const (
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONMarshaler, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, appCdc cdctypes.AnyUnpacker, protoCdc *codec.ProtoCodec) simulation.WeightedOperations {
-
 	var (
 		weightMsgGrantAuthorization int
 		weightRevokeAuthorization   int
@@ -207,7 +207,6 @@ func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-
 		hasGrant := false
 		var targetGrant types.AuthorizationGrant
 		var granterAddr sdk.AccAddress

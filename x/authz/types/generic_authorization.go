@@ -1,10 +1,11 @@
 package types
 
 import (
+	"strings"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/provenance-io/provenance/x/authz/exported"
-	"strings"
 )
 
 var (
@@ -35,7 +36,6 @@ func (authorization GenericAuthorization) ValidateBasic() error {
 	}
 	return nil
 }
-
 
 // IsServiceMsg checks if a type URL corresponds to a service method name,
 // i.e. /cosmos.bank.Msg/Send vs /cosmos.bank.MsgSend

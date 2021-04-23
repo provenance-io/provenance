@@ -1,12 +1,13 @@
 package app
 
 import (
-	"github.com/provenance-io/provenance/x/authz"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/provenance-io/provenance/x/authz"
 
 	"github.com/provenance-io/provenance/internal/statesync"
 
@@ -237,7 +238,7 @@ type App struct {
 	AttributeKeeper attributekeeper.Keeper
 	NameKeeper      namekeeper.Keeper
 	WasmKeeper      wasm.Keeper
-	AuthzKeeper 	authzkeeper.Keeper
+	AuthzKeeper     authzkeeper.Keeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
@@ -333,6 +334,10 @@ func New(
 	app.CrisisKeeper = crisiskeeper.NewKeeper(
 		app.GetSubspace(crisistypes.ModuleName), invCheckPeriod, app.BankKeeper, authtypes.FeeCollectorName,
 	)
+	// Authz
+	app.AuthzKeeper = authzkeeper.NewKeeper(
+		keys[authztypes.StoreKey], appCodec, app.BaseApp.MsgServiceRouter(),
+	)
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath)
 
 	// register the staking hooks
@@ -346,7 +351,7 @@ func New(
 	)
 
 	app.MarkerKeeper = markerkeeper.NewKeeper(
-		appCodec, keys[markertypes.StoreKey], app.GetSubspace(markertypes.ModuleName), app.AccountKeeper, app.BankKeeper,
+		appCodec, keys[markertypes.StoreKey], app.GetSubspace(markertypes.ModuleName), app.AccountKeeper, app.BankKeeper, app.AuthzKeeper,
 	)
 
 	app.NameKeeper = namekeeper.NewKeeper(
@@ -357,10 +362,6 @@ func New(
 		appCodec, keys[attributetypes.StoreKey], app.GetSubspace(attributetypes.ModuleName), app.AccountKeeper, app.NameKeeper,
 	)
 
-	// TODO may this should have a
-	app.AuthzKeeper = authzkeeper.NewKeeper(
-		 keys[authztypes.StoreKey], appCodec , app.BaseApp.MsgServiceRouter(),
-	)
 	// Init CosmWasm module
 	var wasmRouter = bApp.Router()
 	wasmDir := filepath.Join(homePath, "data", "wasm")

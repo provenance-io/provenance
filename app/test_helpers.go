@@ -7,10 +7,11 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/provenance-io/provenance/x/marker/types"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/provenance-io/provenance/x/marker/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/stretchr/testify/require"

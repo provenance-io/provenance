@@ -51,7 +51,7 @@ func ExtractAddressesFromGrantKey(key []byte) (granterAddr, granteeAddr sdk.AccA
 	return granterAddr, granteeAddr
 }
 
-//TODO Delete this when we goto 0.43
+// TODO Delete this when we goto 0.43
 // MaxAddrLen is the maximum allowed length (in bytes) for an address.
 const MaxAddrLen = 255
 

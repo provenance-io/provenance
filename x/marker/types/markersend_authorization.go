@@ -8,7 +8,6 @@ import (
 	authz "github.com/provenance-io/provenance/x/authz/exported"
 )
 
-
 var (
 	_ authz.Authorization = &MarkerSendAuthorization{}
 )

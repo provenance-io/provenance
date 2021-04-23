@@ -57,7 +57,7 @@ func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 
 	msg, ok := updated.(proto.Message)
 	if !ok {
-		sdkerrors.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", updated)
+		return sdkerrors.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", updated)
 	}
 
 	any, err := codectypes.NewAnyWithValue(msg)
@@ -92,7 +92,10 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, service
 				return nil, err
 			}
 			if del {
-				k.Revoke(ctx, grantee, granter, serviceMsg.Type())
+				err = k.Revoke(ctx, grantee, granter, serviceMsg.Type())
+				if err != nil {
+					return nil, err
+				}
 			} else if updated != nil {
 				err = k.update(ctx, grantee, granter, updated)
 				if err != nil {

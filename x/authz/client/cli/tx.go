@@ -26,9 +26,7 @@ const FlagMsgType = "msg-type"
 const FlagExpiration = "expiration"
 const FlagAllowedValidators = "allowed-validators"
 const FlagDenyValidators = "deny-validators"
-const delegate = "delegate"
-const redelegate = "redelegate"
-const unbond = "unbond"
+
 
 // GetTxCmd returns the transaction commands for this module
 func GetTxCmd() *cobra.Command {
@@ -187,7 +185,6 @@ Example:
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
@@ -227,16 +224,4 @@ Example:
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
-}
-
-func bech32toValidatorAddresses(validators []string) ([]sdk.ValAddress, error) {
-	vals := make([]sdk.ValAddress, len(validators))
-	for i, validator := range validators {
-		addr, err := sdk.ValAddressFromBech32(validator)
-		if err != nil {
-			return nil, err
-		}
-		vals[i] = addr
-	}
-	return vals, nil
 }

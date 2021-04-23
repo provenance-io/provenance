@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/provenance-io/provenance/x/marker/types"
@@ -535,6 +536,11 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 	m, err := k.GetMarkerByDenom(ctx, amount.Denom)
 	if err != nil {
 		return fmt.Errorf("marker not found for %s: %s", amount.Denom, err)
+	}
+	// check that authorization exists for admin to do the needful.
+	authorization, _ := k.authzKeeper.GetOrRevokeAuthorization(ctx, admin, from, types.MarkerSendAuthorization{}.MethodName())
+	if authorization == nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "authorization not found")
 	}
 	if m.GetMarkerType() != types.MarkerType_RestrictedCoin {
 		return fmt.Errorf("marker type is not restricted_coin, brokered transfer not supported")

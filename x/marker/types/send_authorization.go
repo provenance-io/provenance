@@ -5,10 +5,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authz "github.com/provenance-io/provenance/x/authz/exported"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	authz "github.com/provenance-io/provenance/x/authz/exported"
 )
-
 
 var (
 	_ authz.Authorization = &SendAuthorization{}
