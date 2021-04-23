@@ -169,18 +169,7 @@ func (k Keeper) ValidateAllPartiesAreSigners(parties []types.Party, signers []st
 		addresses[i] = party.Address
 	}
 	missing := FindMissing(addresses, signers)
-	switch len(missing) {
-	case 0:
-		return nil
-	case 1:
-		for _, party := range parties {
-			if party.Address == missing[0] {
-				return fmt.Errorf("missing signature from %s (%s)", party.Address, party.Role.String())
-			}
-		}
-		// Should never get here, but the compiler can't tell that.
-		return fmt.Errorf("missing signature from %s", missing[0])
-	default:
+	if len(missing) > 0 {
 		missingWithRoles := make([]string, len(missing))
 		for i, addr := range missing {
 			for _, party := range parties {
@@ -190,8 +179,9 @@ func (k Keeper) ValidateAllPartiesAreSigners(parties []types.Party, signers []st
 				}
 			}
 		}
-		return fmt.Errorf("missing signatures from %v", missingWithRoles)
+		return fmt.Errorf("missing signature%s from %v", pluralEnding(len(missing)), missingWithRoles)
 	}
+	return nil
 }
 
 // ValidatePartiesInvolved validate that all required parties are involved
@@ -205,14 +195,10 @@ func (k Keeper) ValidatePartiesInvolved(parties []types.Party, requiredParties [
 		reqRoles[i] = req.String()
 	}
 	missing := FindMissing(reqRoles, partyRoles)
-	switch len(missing) {
-	case 0:
-		return nil
-	case 1:
-		return fmt.Errorf("missing required party type %s from parties", missing[0])
-	default:
-		return fmt.Errorf("missing required party types %v from parties", missing)
+	if len(missing) > 0 {
+		return fmt.Errorf("missing required party type%s %v from parties", pluralEnding(len(missing)), missing)
 	}
+	return nil
 }
 
 // FindMissing returns all elements of the required list that are not found in the entries list
@@ -257,4 +243,20 @@ func (k Keeper) checkValidURI(uri string, ctx sdk.Context) (*url.URL, error) {
 		return nil, types.ErrOSLocatorURIToolong
 	}
 	return urlToPersist, nil
+}
+
+// pluralEnding returns "" if i == 1, or "s" otherwise.
+func pluralEnding(i int) string {
+	if i == 1 {
+		return ""
+	}
+	return "s"
+}
+
+// pluralize returns singular if i == 1, or plural otherwise.
+func pluralize(i int, singular string, plural string) string {
+	if i == 1 {
+		return singular
+	}
+	return plural
 }

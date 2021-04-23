@@ -124,7 +124,13 @@ func (k Keeper) IterateRecords(ctx sdk.Context, scopeID types.MetadataAddress, h
 // ValidateRecordUpdate checks the current record and the proposed record to determine if the the proposed changes are valid
 // based on the existing state
 // Note: The proposed parameter is a reference here so that the SpecificationId can be set in cases when it's not provided.
-func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, proposed *types.Record, signers []string, partiesInvolved []types.Party) error {
+func (k Keeper) ValidateRecordUpdate(
+	ctx sdk.Context,
+	existing, proposed *types.Record,
+	signers []string,
+	partiesInvolved []types.Party,
+	origOutputHashes []string,
+) error {
 	if proposed == nil {
 		return errors.New("missing required proposed record")
 	}
@@ -152,6 +158,40 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, pr
 		// But if we've got both, make sure they didn't change.
 		if !existing.SpecificationId.Empty() && !proposed.SpecificationId.Empty() && !existing.SpecificationId.Equals(proposed.SpecificationId) {
 			return fmt.Errorf("the SpecificationId of records cannot be changed")
+		}
+		// Get the existing output hashes as both a slice and a map counting occurrences.
+		existingOutputHashes := make([]string, len(existing.Outputs))
+		existingOutputHashMap := map[string]int{}
+		for i, o := range existing.Outputs {
+			existingOutputHashes[i] = o.Hash
+			existingOutputHashMap[o.Hash]++
+		}
+		// Get the orig output hashes as a map counting occurrences.
+		origOutputHashMap := map[string]int{}
+		for _, h := range origOutputHashes {
+			origOutputHashMap[h]++
+		}
+		// Make sure that all the existing values are in the provided originals.
+		notInOrig := FindMissing(existingOutputHashes, origOutputHashes)
+		if len(notInOrig) > 0 {
+			return fmt.Errorf("original output hashes missing %s: %v",
+				pluralize(len(notInOrig), "entry", "entries"), notInOrig)
+		}
+		// Make sure that all the provided original output hashes are in the existing record.
+		notInExisting := FindMissing(origOutputHashes, existingOutputHashes)
+		if len(notInOrig) > 0 {
+			return fmt.Errorf("original output hashes contains %s not in existing record outputs: %v",
+				pluralize(len(notInExisting), "an entry", "entries"), notInExisting)
+		}
+		// Make sure the counts match up (so that e.g [a, a, b] vs [a, b, b] fails).
+		for o, oc := range origOutputHashMap {
+			ec := existingOutputHashMap[o]
+			if oc != ec {
+				return fmt.Errorf("output hash count mismatch for %s: "+
+					"original output hashes contains the value %d time%s "+
+					"but the existing record outputs contains the value %d time%s",
+					o, oc, pluralEnding(oc), ec, pluralEnding(ec))
+			}
 		}
 	}
 
@@ -213,16 +253,12 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, pr
 		inputSpecMap[inputSpec.Name] = *inputSpec
 	}
 	missingInputNames := FindMissing(inputSpecNames, inputNames)
-	if len(missingInputNames) == 1 {
-		return fmt.Errorf("missing input %s", missingInputNames[0])
-	} else if len(missingInputNames) > 1 {
-		return fmt.Errorf("missing inputs %v", missingInputNames)
+	if len(missingInputNames) > 0 {
+		return fmt.Errorf("missing input%s %v", pluralEnding(len(missingInputNames)), missingInputNames)
 	}
 	extraInputNames := FindMissing(inputNames, inputSpecNames)
-	if len(extraInputNames) == 1 {
-		return fmt.Errorf("extra input %s", extraInputNames[0])
-	} else if len(extraInputNames) > 1 {
-		return fmt.Errorf("extra inputs %v", extraInputNames)
+	if len(extraInputNames) > 0 {
+		return fmt.Errorf("extra input%s %v", pluralEnding(len(extraInputNames)), extraInputNames)
 	}
 
 	// Make sure all the inputs conform to their spec.

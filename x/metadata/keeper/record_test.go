@@ -347,11 +347,12 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 	missingRecordID := types.RecordMetadataAddress(uuid.New(), anotherRecord.Name)
 
 	cases := map[string]struct {
-		existing        *types.Record
-		proposed        *types.Record
-		partiesInvolved []types.Party
-		signers         []string
-		errorMsg        string
+		existing         *types.Record
+		origOutputHashes []string
+		proposed         *types.Record
+		partiesInvolved  []types.Party
+		signers          []string
+		errorMsg         string
 	}{
 		"validate basic called on proposed": {
 			existing:        nil,
@@ -361,18 +362,20 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 			errorMsg:        "address is empty",
 		},
 		"existing and proposed names do not match": {
-			existing:        types.NewRecord("notamatch", s.sessionID, *process, []types.RecordInput{}, []types.RecordOutput{}, s.recordSpecID),
-			proposed:        types.NewRecord("not-a-match", s.sessionID, *process, []types.RecordInput{}, []types.RecordOutput{}, s.recordSpecID),
-			signers:         []string{s.user1},
-			partiesInvolved: ownerPartyList(s.user1),
+			existing:         types.NewRecord("notamatch", s.sessionID, *process, []types.RecordInput{}, []types.RecordOutput{}, s.recordSpecID),
+			origOutputHashes: []string{},
+			proposed:         types.NewRecord("not-a-match", s.sessionID, *process, []types.RecordInput{}, []types.RecordOutput{}, s.recordSpecID),
+			signers:          []string{s.user1},
+			partiesInvolved:  ownerPartyList(s.user1),
 			errorMsg:        "the Name field of records cannot be changed",
 		},
 		"existing and proposed ids do not match": {
-			existing:        types.NewRecord(s.recordName, s.sessionID, *process, []types.RecordInput{}, []types.RecordOutput{}, s.recordSpecID),
-			proposed:        types.NewRecord(s.recordName, randomSessionID, *process, []types.RecordInput{}, []types.RecordOutput{}, s.recordSpecID),
-			signers:         []string{s.user1},
-			partiesInvolved: ownerPartyList(s.user1),
-			errorMsg:        "the SessionId field of records cannot be changed",
+			existing:         types.NewRecord(s.recordName, s.sessionID, *process, []types.RecordInput{}, []types.RecordOutput{}, s.recordSpecID),
+			origOutputHashes: []string{},
+			proposed:         types.NewRecord(s.recordName, randomSessionID, *process, []types.RecordInput{}, []types.RecordOutput{}, s.recordSpecID),
+			signers:          []string{s.user1},
+			partiesInvolved:  ownerPartyList(s.user1),
+			errorMsg:         "the SessionId field of records cannot be changed",
 		},
 		"scope not found": {
 			existing:        nil,
@@ -587,7 +590,7 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 
 	for n, tc := range cases {
 		s.T().Run(n, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidateRecordUpdate(s.ctx, tc.existing, tc.proposed, tc.signers, ownerPartyList(s.user1))
+			err := s.app.MetadataKeeper.ValidateRecordUpdate(s.ctx, tc.existing, tc.proposed, tc.signers, tc.partiesInvolved, tc.origOutputHashes)
 			if len(tc.errorMsg) != 0 {
 				assert.EqualError(t, err, tc.errorMsg, "ValidateRecordUpdate expected error")
 			} else {
