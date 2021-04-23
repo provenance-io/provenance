@@ -418,7 +418,7 @@ type MsgWriteRecordRequest struct {
 	// If there is a value in record.specification_id that is different from the one created from this uuid and
 	// record.name, an error is returned.
 	ContractSpecUuid string `protobuf:"bytes,4,opt,name=contract_spec_uuid,json=contractSpecUuid,proto3" json:"contract_spec_uuid,omitempty" yaml:"contract_spec_uuid"`
-	// parties is the list of parties involved in this session.
+	// parties is the list of parties involved with this record.
 	Parties []Party `protobuf:"bytes,5,rep,name=parties,proto3" json:"parties"`
 	// original_output_hashes is an array hash strings.
 	// If the record in this message is supposed to be new, this should be empty.

@@ -197,7 +197,7 @@ message MsgWriteRecordRequest {
   // record.name, an error is returned.
   string contract_spec_uuid = 4 [(gogoproto.moretags) = "yaml:\"contract_spec_uuid\""];
 
-  // parties is the list of parties involved in this session.
+  // parties is the list of parties involved with this record.
   repeated Party parties = 5 [(gogoproto.nullable) = false];
 
   // original_output_hashes is an array hash strings.
