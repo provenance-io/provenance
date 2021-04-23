@@ -18,6 +18,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	)
 
 	registry.RegisterInterface(
+		// TODO : change to cosmos pkg when available.
 		"provenance.authz.v1.Authorization",
 		(*exported.Authorization)(nil),
 		&marker.SendAuthorization{},

@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/provenance-io/provenance/x/marker/types"
 	"strconv"
 	"testing"
 	"time"
@@ -447,4 +448,22 @@ func FundAccount(app *App, ctx sdk.Context, addr sdk.AccAddress, amounts sdk.Coi
 		return err
 	}
 	return app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, amounts)
+}
+
+func CreateMarker(app *App, ctx sdk.Context, addr sdk.AccAddress, coin sdk.Coin, markerType types.MarkerType) error {
+	// create account and check default values
+	mac := types.NewEmptyMarkerAccount(coin.Denom, addr.String(), []types.AccessGrant{*types.NewAccessGrant(addr,
+		[]types.Access{types.Access_Mint, types.Access_Burn, types.Access_Withdraw, types.Access_Delete, types.Access_Transfer})})
+
+	mac.MarkerType = markerType
+	mac.SetManager(addr)
+	mac.SetSupply(coin)
+
+	app.MarkerKeeper.AddMarkerAccount(ctx, mac)
+
+	// Moves to finalized, mints required supply, moves to active status.
+	app.MarkerKeeper.FinalizeMarker(ctx, addr, coin.Denom)
+	// No send enabled flag enforced yet, default is allowed
+	app.BankKeeper.SendEnabledCoin(ctx, sdk.NewCoin(coin.Denom, sdk.NewInt(10)))
+	return app.MarkerKeeper.ActivateMarker(ctx, addr, coin.Denom)
 }

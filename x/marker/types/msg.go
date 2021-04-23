@@ -497,7 +497,7 @@ func (msg MsgTransferRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgTransferRequest) GetSigners() []sdk.AccAddress {
-	adminAddr, err := sdk.AccAddressFromBech32(msg.Administrator)
+	_, err := sdk.AccAddressFromBech32(msg.Administrator)
 	if err != nil {
 		panic(err)
 	}
@@ -506,7 +506,7 @@ func (msg MsgTransferRequest) GetSigners() []sdk.AccAddress {
 		panic(err)
 	}
 
-	return []sdk.AccAddress{adminAddr, sourceAddr}
+	return []sdk.AccAddress{sourceAddr}
 }
 
 // NewSetDenomMetadataRequest  creates a new marker in a proposed state with a given total supply a denomination

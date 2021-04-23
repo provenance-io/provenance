@@ -72,14 +72,61 @@ func (m *SendAuthorization) GetSpendLimit() github_com_cosmos_cosmos_sdk_types.C
 	return nil
 }
 
+// MarkerSendAuthorization allows the grantee to spend up to spend_limit coins from
+// the granter's account.
+type MarkerSendAuthorization struct {
+	SpendLimit github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=spend_limit,json=spendLimit,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"spend_limit"`
+}
+
+func (m *MarkerSendAuthorization) Reset()         { *m = MarkerSendAuthorization{} }
+func (m *MarkerSendAuthorization) String() string { return proto.CompactTextString(m) }
+func (*MarkerSendAuthorization) ProtoMessage()    {}
+func (*MarkerSendAuthorization) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e86b03f937f368fb, []int{1}
+}
+func (m *MarkerSendAuthorization) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MarkerSendAuthorization) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MarkerSendAuthorization.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MarkerSendAuthorization) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MarkerSendAuthorization.Merge(m, src)
+}
+func (m *MarkerSendAuthorization) XXX_Size() int {
+	return m.Size()
+}
+func (m *MarkerSendAuthorization) XXX_DiscardUnknown() {
+	xxx_messageInfo_MarkerSendAuthorization.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MarkerSendAuthorization proto.InternalMessageInfo
+
+func (m *MarkerSendAuthorization) GetSpendLimit() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.SpendLimit
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*SendAuthorization)(nil), "provenance.marker.v1.SendAuthorization")
+	proto.RegisterType((*MarkerSendAuthorization)(nil), "provenance.marker.v1.MarkerSendAuthorization")
 }
 
 func init() { proto.RegisterFile("provenance/marker/v1/authz.proto", fileDescriptor_e86b03f937f368fb) }
 
 var fileDescriptor_e86b03f937f368fb = []byte{
-	// 290 bytes of a gzipped FileDescriptorProto
+	// 302 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x28, 0x28, 0xca, 0x2f,
 	0x4b, 0xcd, 0x4b, 0xcc, 0x4b, 0x4e, 0xd5, 0xcf, 0x4d, 0x2c, 0xca, 0x4e, 0x2d, 0xd2, 0x2f, 0x33,
 	0xd4, 0x4f, 0x2c, 0x2d, 0xc9, 0xa8, 0xd2, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x41, 0xa8,
@@ -93,12 +140,12 @@ var fileDescriptor_e86b03f937f368fb = []byte{
 	0x7e, 0x66, 0x9e, 0x93, 0xc1, 0x89, 0x7b, 0xf2, 0x0c, 0xab, 0xee, 0xcb, 0x6b, 0xa4, 0x67, 0x96,
 	0x64, 0x94, 0x26, 0xe9, 0x25, 0xe7, 0xe7, 0x42, 0x9d, 0x01, 0xa5, 0x74, 0x8b, 0x53, 0xb2, 0xf5,
 	0x4b, 0x2a, 0x0b, 0x52, 0x8b, 0xc1, 0x1a, 0x8a, 0x83, 0xb8, 0xc0, 0xe6, 0xfb, 0x80, 0x8c, 0xb7,
-	0x12, 0xbc, 0xb4, 0x45, 0x97, 0x17, 0xc5, 0x01, 0x4e, 0xe9, 0x27, 0x1e, 0xc9, 0x31, 0x5e, 0x78,
-	0x24, 0xc7, 0xf8, 0xe0, 0x91, 0x1c, 0xe3, 0x84, 0xc7, 0x72, 0x0c, 0x17, 0x1e, 0xcb, 0x31, 0xdc,
-	0x78, 0x2c, 0xc7, 0xc0, 0x25, 0x9e, 0x09, 0xf6, 0x35, 0x46, 0xd0, 0x04, 0x30, 0x46, 0x19, 0x21,
-	0xd9, 0x8e, 0x50, 0xa2, 0x9b, 0x99, 0x8f, 0xc4, 0xd3, 0xaf, 0x80, 0x85, 0x37, 0xd8, 0x35, 0x49,
-	0x6c, 0xe0, 0x60, 0x30, 0x06, 0x04, 0x00, 0x00, 0xff, 0xff, 0x67, 0x5d, 0xf4, 0x42, 0x91, 0x01,
-	0x00, 0x00,
+	0x12, 0xbc, 0xb4, 0x45, 0x97, 0x17, 0xc5, 0x01, 0x4a, 0xb3, 0x18, 0xb9, 0xc4, 0x7d, 0xc1, 0xbe,
+	0x1e, 0x7c, 0x8e, 0x73, 0x4a, 0x3f, 0xf1, 0x48, 0x8e, 0xf1, 0xc2, 0x23, 0x39, 0xc6, 0x07, 0x8f,
+	0xe4, 0x18, 0x27, 0x3c, 0x96, 0x63, 0xb8, 0xf0, 0x58, 0x8e, 0xe1, 0xc6, 0x63, 0x39, 0x06, 0x2e,
+	0xf1, 0x4c, 0x70, 0x94, 0x60, 0xc4, 0x5b, 0x00, 0x63, 0x94, 0x11, 0x92, 0xed, 0x08, 0x25, 0xba,
+	0x99, 0xf9, 0x48, 0x3c, 0xfd, 0x0a, 0x58, 0x62, 0x00, 0xbb, 0x26, 0x89, 0x0d, 0x1c, 0x47, 0xc6,
+	0x80, 0x00, 0x00, 0x00, 0xff, 0xff, 0x70, 0xda, 0x6d, 0x52, 0x2e, 0x02, 0x00, 0x00,
 }
 
 func (m *SendAuthorization) Marshal() (dAtA []byte, err error) {
@@ -117,6 +164,43 @@ func (m *SendAuthorization) MarshalTo(dAtA []byte) (int, error) {
 }
 
 func (m *SendAuthorization) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.SpendLimit) > 0 {
+		for iNdEx := len(m.SpendLimit) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.SpendLimit[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintAuthz(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MarkerSendAuthorization) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MarkerSendAuthorization) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MarkerSendAuthorization) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -164,6 +248,21 @@ func (m *SendAuthorization) Size() (n int) {
 	return n
 }
 
+func (m *MarkerSendAuthorization) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.SpendLimit) > 0 {
+		for _, e := range m.SpendLimit {
+			l = e.Size()
+			n += 1 + l + sovAuthz(uint64(l))
+		}
+	}
+	return n
+}
+
 func sovAuthz(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
@@ -197,6 +296,90 @@ func (m *SendAuthorization) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: SendAuthorization: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SpendLimit", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAuthz
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAuthz
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAuthz
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SpendLimit = append(m.SpendLimit, types.Coin{})
+			if err := m.SpendLimit[len(m.SpendLimit)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAuthz(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthAuthz
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MarkerSendAuthorization) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAuthz
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MarkerSendAuthorization: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MarkerSendAuthorization: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
