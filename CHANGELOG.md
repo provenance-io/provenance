@@ -41,7 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * Wired recovery flag into `init` command #254
-* Always anchor unrestricted denom validation expressions #258
+* Always anchor unrestricted denom validation expressions, Do not allow slashes in marker denom expressions #258
 * Mapping and validation fixes found while trying to use `P8EMemorializeContract` #256
 
 ### Client Breaking

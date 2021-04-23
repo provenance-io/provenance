@@ -231,6 +231,21 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			false, &sdk.TxResponse{}, 0,
 		},
 		{
+			"create a new marker with dashes and periods",
+			markercli.GetCmdAddMarker(),
+			[]string{
+				"1000cat-scratch-fever.bobcat",
+				fmt.Sprintf("--%s=%s", markercli.FlagType, "RESTRICTED"),
+				fmt.Sprintf("--%s=%s", markercli.FlagSupplyFixed, "true"),
+				fmt.Sprintf("--%s=%s", markercli.FlagAllowGovernanceControl, "true"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
 			"fail to create add marker, incorrect allow governance value",
 			markercli.GetCmdAddMarker(),
 			[]string{

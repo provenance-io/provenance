@@ -8,7 +8,9 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-const maxDenomMetadataDescriptionLength = 200
+const (
+	maxDenomMetadataDescriptionLength = 200
+)
 
 // ValidateDenomMetadataBasic performs validation of the denom metadata fields.
 // It checks that:

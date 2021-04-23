@@ -119,19 +119,21 @@ func (s HandlerTestSuite) runTests(cases []CommonTest) {
 }
 
 func (s HandlerTestSuite) TestMsgAddMarkerRequest() {
-	activeStatus := types.NewMsgAddMarkerRequest("hotdog", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true)
+	denom := "hotdog"
+	denomWithDashPeriod := fmt.Sprintf("%s-my.marker", denom)
+	activeStatus := types.NewMsgAddMarkerRequest(denom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true)
 	activeStatus.Status = types.StatusActive
 
-	undefinedStatus := types.NewMsgAddMarkerRequest("hotdog", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true)
+	undefinedStatus := types.NewMsgAddMarkerRequest(denom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true)
 	undefinedStatus.Status = types.StatusUndefined
 
 	cases := []CommonTest{
 		{
 			"should successfully ADD new marker",
-			types.NewMsgAddMarkerRequest("hotdog", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
+			types.NewMsgAddMarkerRequest(denom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
 			[]string{s.user1},
 			"",
-			types.NewEventMarkerAdd("hotdog", "100", "proposed", s.user1, types.MarkerType_Coin.String()),
+			types.NewEventMarkerAdd(denom, "100", "proposed", s.user1, types.MarkerType_Coin.String()),
 		},
 		{
 			"should fail to ADD new marker, validate basic failure",
@@ -149,10 +151,17 @@ func (s HandlerTestSuite) TestMsgAddMarkerRequest() {
 		},
 		{
 			"should fail to ADD new marker, marker already exists",
-			types.NewMsgAddMarkerRequest("hotdog", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
+			types.NewMsgAddMarkerRequest(denom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
 			[]string{s.user1},
-			fmt.Sprintf("marker address already exists for %s: invalid request", types.MustGetMarkerAddress("hotdog")),
+			fmt.Sprintf("marker address already exists for %s: invalid request", types.MustGetMarkerAddress(denom)),
 			nil,
+		},
+		{
+			"should successfully add marker with dash and period",
+			types.NewMsgAddMarkerRequest(denomWithDashPeriod, sdk.NewInt(1000), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
+			[]string{s.user1},
+			"",
+			types.NewEventMarkerAdd(denomWithDashPeriod, "1000", "proposed", s.user1, types.MarkerType_Coin.String()),
 		},
 	}
 	s.runTests(cases)
