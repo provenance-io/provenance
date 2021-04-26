@@ -252,11 +252,3 @@ func pluralEnding(i int) string {
 	}
 	return "s"
 }
-
-// pluralize returns singular if i == 1, or plural otherwise.
-func pluralize(i int, singular string, plural string) string {
-	if i == 1 {
-		return singular
-	}
-	return plural
-}

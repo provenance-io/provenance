@@ -568,7 +568,7 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 
 	for n, tc := range cases {
 		s.T().Run(n, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidateRecordUpdate(s.ctx, tc.existing, tc.proposed, tc.signers, tc.partiesInvolved, tc.origOutputHashes)
+			err := s.app.MetadataKeeper.ValidateRecordUpdate(s.ctx, tc.existing, tc.proposed, tc.signers, tc.partiesInvolved)
 			if len(tc.errorMsg) != 0 {
 				assert.EqualError(t, err, tc.errorMsg, "ValidateRecordUpdate expected error")
 			} else {

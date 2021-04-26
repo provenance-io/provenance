@@ -129,7 +129,6 @@ func (k Keeper) ValidateRecordUpdate(
 	existing, proposed *types.Record,
 	signers []string,
 	partiesInvolved []types.Party,
-	origOutputHashes []string,
 ) error {
 	if proposed == nil {
 		return errors.New("missing required proposed record")
@@ -165,33 +164,6 @@ func (k Keeper) ValidateRecordUpdate(
 		for i, o := range existing.Outputs {
 			existingOutputHashes[i] = o.Hash
 			existingOutputHashMap[o.Hash]++
-		}
-		// Get the orig output hashes as a map counting occurrences.
-		origOutputHashMap := map[string]int{}
-		for _, h := range origOutputHashes {
-			origOutputHashMap[h]++
-		}
-		// Make sure that all the existing values are in the provided originals.
-		notInOrig := FindMissing(existingOutputHashes, origOutputHashes)
-		if len(notInOrig) > 0 {
-			return fmt.Errorf("original output hashes missing %s: %v",
-				pluralize(len(notInOrig), "entry", "entries"), notInOrig)
-		}
-		// Make sure that all the provided original output hashes are in the existing record.
-		notInExisting := FindMissing(origOutputHashes, existingOutputHashes)
-		if len(notInOrig) > 0 {
-			return fmt.Errorf("original output hashes contains %s not in existing record outputs: %v",
-				pluralize(len(notInExisting), "an entry", "entries"), notInExisting)
-		}
-		// Make sure the counts match up (so that e.g [a, a, b] vs [a, b, b] fails).
-		for o, oc := range origOutputHashMap {
-			ec := existingOutputHashMap[o]
-			if oc != ec {
-				return fmt.Errorf("output hash count mismatch for %s: "+
-					"original output hashes contains the value %d time%s "+
-					"but the existing record outputs contains the value %d time%s",
-					o, oc, pluralEnding(oc), ec, pluralEnding(ec))
-			}
 		}
 	}
 

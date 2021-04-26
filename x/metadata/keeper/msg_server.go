@@ -127,7 +127,7 @@ func (k msgServer) WriteRecord(
 	if e, found := k.GetRecord(ctx, recordID); found {
 		existing = &e
 	}
-	if err := k.ValidateRecordUpdate(ctx, existing, &msg.Record, msg.Signers, msg.Parties, msg.OriginalOutputHashes); err != nil {
+	if err := k.ValidateRecordUpdate(ctx, existing, &msg.Record, msg.Signers, msg.Parties); err != nil {
 		return nil, err
 	}
 
@@ -481,10 +481,9 @@ func (k msgServer) P8EMemorializeContract(
 	recordIDInfos := make([]*types.RecordIdInfo, len(p8EData.RecordReqs))
 	for i, recordReq := range p8EData.RecordReqs {
 		recordResp, err := k.WriteRecord(goCtx, &types.MsgWriteRecordRequest{
-			Record:               *recordReq.Record,
-			Signers:              p8EData.Signers,
-			Parties:              p8EData.Session.Parties,
-			OriginalOutputHashes: recordReq.OriginalOutputHashes,
+			Record:  *recordReq.Record,
+			Signers: p8EData.Signers,
+			Parties: p8EData.Session.Parties,
 		})
 		if err != nil {
 			return nil, err
