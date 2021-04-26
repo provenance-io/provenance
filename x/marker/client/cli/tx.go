@@ -89,7 +89,7 @@ $ %s tx marker new 1000hotdogcoin --%s=COIN --%s=false --%s=false --from=mykey
 			if err != nil {
 				return fmt.Errorf("incorrect value for %s flag.  Accepted: true,false Error: %s", FlagAllowGovernanceControl, err)
 			}
-			msg := types.NewAddMarkerRequest(coin.Denom, coin.Amount, callerAddr, callerAddr, typeValue, supplyFixed, allowGovernanceControl)
+			msg := types.NewMsgAddMarkerRequest(coin.Denom, coin.Amount, callerAddr, callerAddr, typeValue, supplyFixed, allowGovernanceControl)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -126,7 +126,7 @@ $ %s tx marker mint 1000hotdogcoin --from mykey
 				return sdkErrors.Wrapf(sdkErrors.ErrInvalidCoins, "invalid coin %s", args[0])
 			}
 			callerAddr := clientCtx.GetFromAddress()
-			msg := types.NewMintRequest(callerAddr, coin)
+			msg := types.NewMsgMintRequest(callerAddr, coin)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -160,7 +160,7 @@ $ %s tx marker burn 1000hotdogcoin --from mykey
 				return sdkErrors.Wrapf(sdkErrors.ErrInvalidCoins, "invalid coin %s", args[0])
 			}
 			callerAddr := clientCtx.GetFromAddress()
-			msg := types.NewBurnRequest(callerAddr, coin)
+			msg := types.NewMsgBurnRequest(callerAddr, coin)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -189,7 +189,7 @@ $ %s tx marker finalize hotdogcoin --from mykey
 			}
 
 			callerAddr := clientCtx.GetFromAddress()
-			msg := types.NewFinalizeRequest(args[0], callerAddr)
+			msg := types.NewMsgFinalizeRequest(args[0], callerAddr)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -218,7 +218,7 @@ $ %s tx marker activate hotdogcoin --from mykey
 			}
 
 			callerAddr := clientCtx.GetFromAddress()
-			msg := types.NewActivateRequest(args[0], callerAddr)
+			msg := types.NewMsgActivateRequest(args[0], callerAddr)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -239,7 +239,7 @@ func GetCmdCancel() *cobra.Command {
 			}
 
 			callerAddr := clientCtx.GetFromAddress()
-			msg := types.NewCancelRequest(args[0], callerAddr)
+			msg := types.NewMsgCancelRequest(args[0], callerAddr)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -260,7 +260,7 @@ func GetCmdDelete() *cobra.Command {
 			}
 
 			callerAddr := clientCtx.GetFromAddress()
-			msg := types.NewDeleteRequest(args[0], callerAddr)
+			msg := types.NewMsgDeleteRequest(args[0], callerAddr)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -297,7 +297,7 @@ $ %s tx marker grant pb1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj coindenom burn --
 				return sdkErrors.Wrapf(err, "invalid access grant permission: %s", args[2])
 			}
 			callerAddr := clientCtx.GetFromAddress()
-			msg := types.NewAddAccessRequest(args[1], callerAddr, *grant)
+			msg := types.NewMsgAddAccessRequest(args[1], callerAddr, *grant)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -363,7 +363,7 @@ func GetCmdWithdrawCoins() *cobra.Command {
 					return sdkErrors.Wrapf(err, "invalid recipient address %s", args[0])
 				}
 			}
-			msg := types.NewWithdrawRequest(callerAddr, recipientAddr, denom, coins)
+			msg := types.NewMsgWithdrawRequest(callerAddr, recipientAddr, denom, coins)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

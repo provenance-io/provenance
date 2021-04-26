@@ -38,13 +38,19 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Add spec documentation for the metadata module #224
 
+### Features
+
+* Add typed events and telemetry metrics to marker module #247
+
 ### Bug Fixes
 
 * Wired recovery flag into `init` command #254
+* Always anchor unrestricted denom validation expressions, Do not allow slashes in marker denom expressions #258
 
 ### Client Breaking
 
 * Update marker transfer request signing behavior #246
+
 
 ## [v1.1.1](https://github.com/provenance-io/provenance/releases/tag/v1.1.1) - 2021-04-15
 

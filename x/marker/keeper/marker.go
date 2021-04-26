@@ -66,6 +66,17 @@ func (k Keeper) AddMarkerAccount(ctx sdk.Context, marker types.MarkerAccountI) e
 
 	k.SetMarker(ctx, marker)
 
+	markerAddEvent := types.NewEventMarkerAdd(
+		marker.GetSupply().Denom,
+		marker.GetSupply().Amount.String(),
+		marker.GetStatus().String(),
+		marker.GetManager().String(),
+		marker.GetMarkerType().String(),
+	)
+	if err := ctx.EventManager().EmitTypedEvent(markerAddEvent); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -100,6 +111,12 @@ func (k Keeper) AddAccess(
 	default:
 		return fmt.Errorf("marker in %s state can not be modified", m.GetStatus())
 	}
+
+	markerAddAccessEvent := types.NewEventMarkerAddAccess(grant, denom, caller.String())
+	if err := ctx.EventManager().EmitTypedEvent(markerAddAccessEvent); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -133,6 +150,11 @@ func (k Keeper) RemoveAccess(ctx sdk.Context, caller sdk.AccAddress, denom strin
 		return fmt.Errorf("marker in %s state can not be modified", m.GetStatus())
 	}
 
+	markerDeleteAccessEvent := types.NewEventMarkerDeleteAccess(remove.String(), denom, caller.String())
+	if err := ctx.EventManager().EmitTypedEvent(markerDeleteAccessEvent); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -164,15 +186,11 @@ func (k Keeper) WithdrawCoins(
 		return err
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeWithdraw,
-			sdk.NewAttribute(types.EventAttributeDenomKey, denom),
-			sdk.NewAttribute(types.EventAttributeAmountKey, coins.String()),
-			sdk.NewAttribute(types.EventAttributeAdministratorKey, caller.String()),
-			sdk.NewAttribute(types.EventAttributeModuleNameKey, types.ModuleName),
-		),
-	)
+	markerWithdrawEvent := types.NewEventMarkerWithdraw(coins.String(), denom, caller.String(), recipient.String())
+	if err := ctx.EventManager().EmitTypedEvent(markerWithdrawEvent); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -188,33 +206,31 @@ func (k Keeper) MintCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 	if !m.AddressHasAccess(caller, types.Access_Mint) {
 		return fmt.Errorf("%s does not have %s on %s markeraccount", caller, types.Access_Mint, m.GetDenom())
 	}
+
+	switch {
 	// For proposed, finalized accounts we allow adjusting the total_supply of the marker but we do not
 	// mint actual coin.
-	if m.GetStatus() == types.StatusProposed || m.GetStatus() == types.StatusFinalized {
+	case m.GetStatus() == types.StatusProposed || m.GetStatus() == types.StatusFinalized:
 		total := m.GetSupply().Add(coin)
 		if err = m.SetSupply(total); err != nil {
 			return err
 		}
 		k.SetMarker(ctx, m)
-		return nil
-	} else if m.GetStatus() != types.StatusActive {
+	case m.GetStatus() != types.StatusActive:
 		return fmt.Errorf("cannot mint coin for a marker that is not in Active status")
+	default:
+		// Increase the tracked supply value for the marker.
+		err = k.IncreaseSupply(ctx, m, coin)
+		if err != nil {
+			return err
+		}
 	}
 
-	// Increase the tracked supply value for the marker.
-	err = k.IncreaseSupply(ctx, m, coin)
-	if err != nil {
+	markerMintEvent := types.NewEventMarkerMint(coin.Amount.String(), coin.Denom, caller.String())
+	if err := ctx.EventManager().EmitTypedEvent(markerMintEvent); err != nil {
 		return err
 	}
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeMint,
-			sdk.NewAttribute(types.EventAttributeDenomKey, coin.Denom),
-			sdk.NewAttribute(types.EventAttributeAmountKey, coin.Amount.String()),
-			sdk.NewAttribute(types.EventAttributeAdministratorKey, caller.String()),
-			sdk.NewAttribute(types.EventAttributeModuleNameKey, types.ModuleName),
-		),
-	)
+
 	return nil
 }
 
@@ -228,31 +244,30 @@ func (k Keeper) BurnCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 	if !m.AddressHasAccess(caller, types.Access_Burn) {
 		return fmt.Errorf("%s does not have %s on %s markeraccount", caller, types.Access_Burn, m.GetDenom())
 	}
+
+	switch {
 	// For proposed, finalized accounts we allow adjusting the total_supply of the marker but we do not
 	// burn actual coin.
-	if m.GetStatus() == types.StatusProposed || m.GetStatus() == types.StatusFinalized {
+	case m.GetStatus() == types.StatusProposed || m.GetStatus() == types.StatusFinalized:
 		total := m.GetSupply().Sub(coin)
 		if err = m.SetSupply(total); err != nil {
 			return err
 		}
 		k.SetMarker(ctx, m)
-		return nil
-	} else if m.GetStatus() != types.StatusActive { // check to see if marker is active
+	case m.GetStatus() != types.StatusActive:
 		return fmt.Errorf("cannot mint coin for a marker that is not in Active status")
+	default:
+		err = k.DecreaseSupply(ctx, m, coin)
+		if err != nil {
+			return err
+		}
 	}
-	err = k.DecreaseSupply(ctx, m, coin)
-	if err != nil {
+
+	markerBurnEvent := types.NewEventMarkerBurn(coin.Amount.String(), coin.Denom, caller.String())
+	if err := ctx.EventManager().EmitTypedEvent(markerBurnEvent); err != nil {
 		return err
 	}
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeBurn,
-			sdk.NewAttribute(types.EventAttributeDenomKey, coin.Denom),
-			sdk.NewAttribute(types.EventAttributeAmountKey, coin.Amount.String()),
-			sdk.NewAttribute(types.EventAttributeAdministratorKey, caller.String()),
-			sdk.NewAttribute(types.EventAttributeModuleNameKey, types.ModuleName),
-		),
-	)
+
 	return nil
 }
 
@@ -389,6 +404,12 @@ func (k Keeper) FinalizeMarker(ctx sdk.Context, caller sdk.Address, denom string
 
 	// record status as finalized.
 	k.SetMarker(ctx, m)
+
+	markerFinalizeEvent := types.NewEventMarkerFinalize(denom, caller.String())
+	if err := ctx.EventManager().EmitTypedEvent(markerFinalizeEvent); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -444,6 +465,12 @@ func (k Keeper) ActivateMarker(ctx sdk.Context, caller sdk.Address, denom string
 
 	// record status as active
 	k.SetMarker(ctx, m)
+
+	markerActivateEvent := types.NewEventMarkerActivate(denom, caller.String())
+	if err := ctx.EventManager().EmitTypedEvent(markerActivateEvent); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -482,6 +509,12 @@ func (k Keeper) CancelMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 		return fmt.Errorf("could not update marker status: %w", err)
 	}
 	k.SetMarker(ctx, m)
+
+	markerCancelEvent := types.NewEventMarkerCancel(denom, caller.String())
+	if err := ctx.EventManager().EmitTypedEvent(markerCancelEvent); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -526,6 +559,11 @@ func (k Keeper) DeleteMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 	}
 	k.SetMarker(ctx, m)
 
+	markerDeleteEvent := types.NewEventMarkerDelete(denom, caller.String())
+	if err := ctx.EventManager().EmitTypedEvent(markerDeleteEvent); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -550,15 +588,17 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 		return err
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeTransfer,
-			sdk.NewAttribute(types.EventAttributeDenomKey, amount.Denom),
-			sdk.NewAttribute(types.EventAttributeAmountKey, amount.String()),
-			sdk.NewAttribute(types.EventAttributeAdministratorKey, admin.String()),
-			sdk.NewAttribute(types.EventAttributeModuleNameKey, types.ModuleName),
-		),
+	markerTransferEvent := types.NewEventMarkerTransfer(
+		amount.Amount.String(),
+		amount.Denom,
+		admin.String(),
+		to.String(),
+		from.String(),
 	)
+	if err := ctx.EventManager().EmitTypedEvent(markerTransferEvent); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -580,22 +620,24 @@ func (k Keeper) SetMarkerDenomMetadata(ctx sdk.Context, metadata banktypes.Metad
 		existing = &e
 	}
 
-	params := k.GetParams(ctx)
-	if err := types.ValidateDenomMetadataExtended(metadata, existing, marker.GetStatus(), params); err != nil {
+	if err := k.ValidateDenomMetadata(ctx, metadata, existing, marker.GetStatus()); err != nil {
 		return err
 	}
 
 	// record the metadata with the bank
 	k.bankKeeper.SetDenomMetaData(ctx, metadata)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeMarkerUpdated,
-			sdk.NewAttribute(types.EventAttributeDenomKey, metadata.Base),
-			sdk.NewAttribute(types.EventAttributeAdministratorKey, caller.String()),
-			sdk.NewAttribute(types.EventAttributeModuleNameKey, types.ModuleName),
-		),
+	markerSetDenomMetaEvent := types.NewEventMarkerSetDenomMetadata(
+		metadata.Base,
+		metadata.Description,
+		metadata.Display,
+		metadata.DenomUnits,
+		caller.String(),
 	)
+	if err := ctx.EventManager().EmitTypedEvent(markerSetDenomMetaEvent); err != nil {
+		return err
+	}
+
 	return nil
 }
 

@@ -38,7 +38,7 @@ func TestParamString(t *testing.T) {
 	p := DefaultParams()
 	require.Equal(t, `maxtotalsupply: 100000000000
 enablegovernance: true
-unrestricteddenomregex: '[a-zA-Z][a-zA-Z0-9/]{2,64}'
+unrestricteddenomregex: '[a-zA-Z][a-zA-Z0-9\-\.]{2,64}'
 `, p.String())
 }
 
@@ -60,6 +60,15 @@ func TestParamSetPairs(t *testing.T) {
 			require.Error(t, pairs[i].ValidatorFn(1))
 			require.Error(t, pairs[i].ValidatorFn("\\!(")) // invalid regex
 			require.NoError(t, pairs[i].ValidatorFn("[a-z].*"))
+
+			// Prohibit use of anchors (these are always enforced and will be added to every expression)
+			require.Error(t, pairs[i].ValidatorFn("^[a-z].*"))
+			require.Error(t, pairs[i].ValidatorFn("^[a-z].*$"))
+			require.Error(t, pairs[i].ValidatorFn("[a-z].*$"))
+
+			// If the expression contains the anchors but they are not at the end of the expression that is allowed (however unrealistic)
+			require.NoError(t, pairs[i].ValidatorFn("[a-z].*$."))
+			require.NoError(t, pairs[i].ValidatorFn(".^[a-z].*$."))
 
 		default:
 			require.Fail(t, "unexpected param set pair")

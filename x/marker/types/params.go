@@ -15,7 +15,7 @@ const (
 	// DefaultMaxTotalSupply is the upper bound to enforce on supply for markers.
 	DefaultMaxTotalSupply = uint64(100000000000)
 	// DefaultUnrestrictedDenomRegex is a regex that denoms created by normal requests must pass.
-	DefaultUnrestrictedDenomRegex = `[a-zA-Z][a-zA-Z0-9/]{2,64}`
+	DefaultUnrestrictedDenomRegex = `[a-zA-Z][a-zA-Z0-9\-\.]{2,64}`
 )
 
 var (
@@ -123,7 +123,10 @@ func validateRegexParam(i interface{}) error {
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-	_, err := regexp.Compile(exp)
+	if len(exp) > 0 && (exp[0:1] == "^" || exp[len(exp)-1:] == "$") {
+		return fmt.Errorf("invalid parameter, validation regex must not contain anchors ^,$")
+	}
+	_, err := regexp.Compile(fmt.Sprintf(`^%s$`, exp))
 
 	return err
 }
