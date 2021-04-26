@@ -4,21 +4,21 @@ function join_by { local d=${1-} f=${2-}; if shift 2; then printf %s "$f" "${@/#
 
 sums="${1}"
 version="${2}"
-printf '{"binaries":{'
-
-archs="linux/amd64 darwin/amd64"
+arches="linux/amd64 darwin/amd64"
 a=( )
-for arch in ${archs}; do
-	name=$(echo "${arch}" | sed 's|/|-|g')
+for arch in ${arches}; do
+	name="${arch//\//-}"
+	echo "name: $name version: $version" >&2
 	if [ ! -f "build/provenance-${name}-${version}.zip" ]; then
-		echo build/provenance-${name}-${version}.zip does not exist >&2
+		echo "build/provenance-${name}-${version}.zip does not exist" >&2
 		continue
 	fi
 
 	sum=$(grep "provenance-${name}-${version}" "${sums}" | cut -d' ' -f1)
     url="https://github.com/provenance-io/provenance/releases/download/${version}/provenance-${name}-${version}.zip?checksum=sha256:${sum}"
-	a+=( $(printf '"%s":"%s"' "${arch}" "${url}") )
+	a+=( "$(printf '"%s":"%s"' "${arch}" "${url}")" )
 done
 
-printf "$(join_by ',' "${a[@]}")"
+printf '{"binaries":{'
+printf "%s" "$(join_by ',' "${a[@]}")"
 printf '}}'
