@@ -480,6 +480,7 @@ func (k msgServer) P8EMemorializeContract(
 
 	recordIDInfos := make([]*types.RecordIdInfo, len(p8EData.RecordReqs))
 	for i, recordReq := range p8EData.RecordReqs {
+		// TODO: If there is a OriginalOutputHashes value, get the existing record and make sure it's output is as expected.
 		recordResp, err := k.WriteRecord(goCtx, &types.MsgWriteRecordRequest{
 			Record:  *recordReq.Record,
 			Signers: p8EData.Signers,
