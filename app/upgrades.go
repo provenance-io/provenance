@@ -42,7 +42,6 @@ var handlers = map[string]appUpgrade{
 	"amaranth": {}, // associated with v1.2.x upgrades in testnet, mainnet
 
 	// TODO - Add new upgrade definitions here.
-
 }
 
 func InstallCustomUpgradeHandlers(app *App) {
