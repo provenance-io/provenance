@@ -34,6 +34,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Improvements
+
+* Add spec documentation for the metadata module #224
+
 ### Features
 
 * Add typed events and telemetry metrics to marker module #247
@@ -224,6 +228,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Denom Metadata config for nhash in testnet #42
 * Denom Metadata support for marker module #47
 * WASM support for Marker module #28
+
 ### Bug Fixes
 
 * Name service allows uuids as segments despite length restrictions #48
