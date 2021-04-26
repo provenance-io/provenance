@@ -308,7 +308,7 @@ func (k Keeper) ValidateRecordUpdate(
 			return fmt.Errorf("input %s has source type %s but spec calls for %s",
 				input.Name, inputSourceType, inputSpecSourceType)
 		}
-		if inputSourceValue != inputSpecSourceValue {
+		if inputSourceType == sourceTypeRecord && inputSourceValue != inputSpecSourceValue {
 			return fmt.Errorf("input %s has source value %s but spec calls for %s",
 				input.Name, inputSourceValue, inputSpecSourceValue)
 		}
