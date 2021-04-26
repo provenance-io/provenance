@@ -127,7 +127,7 @@ func (k msgServer) WriteRecord(
 	if e, found := k.GetRecord(ctx, recordID); found {
 		existing = &e
 	}
-	if err := k.ValidateRecordUpdate(ctx, existing, msg.Record, msg.Signers, msg.Parties); err != nil {
+	if err := k.ValidateRecordUpdate(ctx, existing, &msg.Record, msg.Signers, msg.Parties); err != nil {
 		return nil, err
 	}
 
@@ -457,54 +457,14 @@ func (k msgServer) P8EMemorializeContract(
 ) (*types.MsgP8EMemorializeContractResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	p8EData, signers, err := types.ConvertP8eMemorializeContractRequest(msg)
+	p8EData, err := types.ConvertP8eMemorializeContractRequest(msg)
 	if err != nil {
 		return nil, err
 	}
 
-	// Add the stuff that needs to come from the specs.
-	var processID types.ProcessID
-	contractSpec, found := k.GetContractSpecification(ctx, p8EData.Session.SpecificationId)
-	if !found {
-		return nil, fmt.Errorf("contract specification %s not found", p8EData.Session.SpecificationId)
-	}
-	switch source := contractSpec.Source.(type) {
-	case *types.ContractSpecification_ResourceId:
-		processID = &types.Process_Address{Address: source.ResourceId.String()}
-	case *types.ContractSpecification_Hash:
-		processID = &types.Process_Hash{Hash: source.Hash}
-	default:
-		return nil, fmt.Errorf("unexpected source type on contract specification %s", p8EData.Session.SpecificationId)
-	}
-
-	for _, r := range p8EData.Records {
-		r.Process.ProcessId = processID
-		recSpecID, e := p8EData.Session.SpecificationId.AsRecordSpecAddress(r.Name)
-		if e != nil {
-			return nil, e
-		}
-		recSpec, found := k.GetRecordSpecification(ctx, recSpecID)
-		if !found {
-			return nil, fmt.Errorf("record specification %s not found", recSpecID)
-		}
-		inputStatus := types.RecordInputStatus_Unknown
-		switch recSpec.ResultType {
-		case types.DefinitionType_DEFINITION_TYPE_PROPOSED:
-			inputStatus = types.RecordInputStatus_Proposed
-		case types.DefinitionType_DEFINITION_TYPE_RECORD, types.DefinitionType_DEFINITION_TYPE_RECORD_LIST:
-			inputStatus = types.RecordInputStatus_Record
-		}
-		// r.Inputs is a list of structs (not a list of references).
-		// Need to use the list index to update the actual entry and make it stay.
-		for i := range r.Inputs {
-			r.Inputs[i].Status = inputStatus
-		}
-	}
-
-	// Finally, store everything.
 	scopeResp, err := k.WriteScope(goCtx, &types.MsgWriteScopeRequest{
 		Scope:   *p8EData.Scope,
-		Signers: signers,
+		Signers: p8EData.Signers,
 	})
 	if err != nil {
 		return nil, err
@@ -512,17 +472,18 @@ func (k msgServer) P8EMemorializeContract(
 
 	sessionResp, err := k.WriteSession(goCtx, &types.MsgWriteSessionRequest{
 		Session: *p8EData.Session,
-		Signers: signers,
+		Signers: p8EData.Signers,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	recordIDInfos := make([]*types.RecordIdInfo, len(p8EData.Records))
-	for i, record := range p8EData.Records {
+	recordIDInfos := make([]*types.RecordIdInfo, len(p8EData.RecordReqs))
+	for i, recordReq := range p8EData.RecordReqs {
+		// TODO: If there is a OriginalOutputHashes value, get the existing record and make sure it's output is as expected.
 		recordResp, err := k.WriteRecord(goCtx, &types.MsgWriteRecordRequest{
-			Record:  *record,
-			Signers: signers,
+			Record:  *recordReq.Record,
+			Signers: p8EData.Signers,
 			Parties: p8EData.Session.Parties,
 		})
 		if err != nil {

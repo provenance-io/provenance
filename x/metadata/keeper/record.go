@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -122,7 +123,17 @@ func (k Keeper) IterateRecords(ctx sdk.Context, scopeID types.MetadataAddress, h
 
 // ValidateRecordUpdate checks the current record and the proposed record to determine if the the proposed changes are valid
 // based on the existing state
-func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, proposed types.Record, signers []string, partiesInvolved []types.Party) error {
+// Note: The proposed parameter is a reference here so that the SpecificationId can be set in cases when it's not provided.
+func (k Keeper) ValidateRecordUpdate(
+	ctx sdk.Context,
+	existing, proposed *types.Record,
+	signers []string,
+	partiesInvolved []types.Party,
+) error {
+	if proposed == nil {
+		return errors.New("missing required proposed record")
+	}
+
 	if err := proposed.ValidateBasic(); err != nil {
 		return err
 	}
@@ -131,8 +142,15 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, pr
 		if existing.Name != proposed.Name {
 			return fmt.Errorf("the Name field of records cannot be changed")
 		}
-		if !existing.SessionId.Equals(proposed.SessionId) || existing.Name != proposed.Name {
-			return fmt.Errorf("the SessionId field of records cannot be changed")
+		if !existing.SessionId.Equals(proposed.SessionId) {
+			// Make sure the original session parties are signers.
+			session, found := k.GetSession(ctx, existing.SessionId)
+			if !found {
+				return fmt.Errorf("original session %s not found for existing record", existing.SessionId)
+			}
+			if err := k.ValidateAllPartiesAreSigners(session.Parties, signers); err != nil {
+				return fmt.Errorf("missing signer from original session %s: %w", session.SessionId, err)
+			}
 		}
 		// The existing specification id might be empty for old stuff.
 		// And for now, we'll allow the proposed specification id to be missing and set it appropriately below.
@@ -140,43 +158,40 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, pr
 		if !existing.SpecificationId.Empty() && !proposed.SpecificationId.Empty() && !existing.SpecificationId.Equals(proposed.SpecificationId) {
 			return fmt.Errorf("the SpecificationId of records cannot be changed")
 		}
+		// Get the existing output hashes as both a slice and a map counting occurrences.
+		existingOutputHashes := make([]string, len(existing.Outputs))
+		existingOutputHashMap := map[string]int{}
+		for i, o := range existing.Outputs {
+			existingOutputHashes[i] = o.Hash
+			existingOutputHashMap[o.Hash]++
+		}
 	}
 
-	scopeID, err := proposed.SessionId.AsScopeAddress()
-	if err != nil {
-		return err
+	scopeID, scopeIDErr := proposed.SessionId.AsScopeAddress()
+	if scopeIDErr != nil {
+		return scopeIDErr
 	}
 
-	// get scope for existing record
-	scope, found := k.GetScope(ctx, scopeID)
-	if !found {
-		return fmt.Errorf("scope not found for scope id %s", scopeID)
+	// Make sure the scope exists.
+	if _, found := k.GetScope(ctx, scopeID); !found {
+		return fmt.Errorf("scope not found with id %s", scopeID)
 	}
 
-	// Make sure all the scope owners have signed.
-	if signErr := k.ValidateAllPartiesAreSigners(scope.Owners, signers); signErr != nil {
-		return signErr
-	}
-
-	// Get the session (and make sure it exists)
+	// Get the session.
 	session, found := k.GetSession(ctx, proposed.SessionId)
 	if !found {
 		return fmt.Errorf("session not found for session id %s", proposed.SessionId)
 	}
 
-	// Get contract specification
-	contractSpec, found := k.GetContractSpecification(ctx, session.SpecificationId)
-	if !found {
-		return fmt.Errorf("contract specification not found: %s", session.SpecificationId.String())
+	// Make sure all the session parties have signed.
+	if signErr := k.ValidateAllPartiesAreSigners(session.Parties, signers); signErr != nil {
+		return signErr
 	}
-	err = k.ValidatePartiesInvolved(partiesInvolved, contractSpec.PartiesInvolved)
-	if err != nil {
-		return err
-	}
+
 	// Get the record specification
-	contractSpecUUID, err := session.SpecificationId.ContractSpecUUID()
-	if err != nil {
-		return err
+	contractSpecUUID, cSpecUUIDErr := session.SpecificationId.ContractSpecUUID()
+	if cSpecUUIDErr != nil {
+		return cSpecUUIDErr
 	}
 	recSpecID := types.RecordSpecMetadataAddress(contractSpecUUID, proposed.Name)
 
@@ -187,8 +202,8 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, pr
 			proposed.SpecificationId, recSpecID)
 	}
 
-	recSpec, found := k.GetRecordSpecification(ctx, recSpecID)
-	if !found {
+	recSpec, recSpecFound := k.GetRecordSpecification(ctx, recSpecID)
+	if !recSpecFound {
 		return fmt.Errorf("record specification not found for record specification id %s (contract spec uuid %s and record name %s)",
 			recSpecID, contractSpecUUID, proposed.Name)
 	}
@@ -210,16 +225,12 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, pr
 		inputSpecMap[inputSpec.Name] = *inputSpec
 	}
 	missingInputNames := FindMissing(inputSpecNames, inputNames)
-	if len(missingInputNames) == 1 {
-		return fmt.Errorf("missing input %s", missingInputNames[0])
-	} else if len(missingInputNames) > 1 {
-		return fmt.Errorf("missing inputs %v", missingInputNames)
+	if len(missingInputNames) > 0 {
+		return fmt.Errorf("missing input%s %v", pluralEnding(len(missingInputNames)), missingInputNames)
 	}
 	extraInputNames := FindMissing(inputNames, inputSpecNames)
-	if len(extraInputNames) == 1 {
-		return fmt.Errorf("extra input %s", extraInputNames[0])
-	} else if len(extraInputNames) > 1 {
-		return fmt.Errorf("extra inputs %v", extraInputNames)
+	if len(extraInputNames) > 0 {
+		return fmt.Errorf("extra input%s %v", pluralEnding(len(extraInputNames)), extraInputNames)
 	}
 
 	// Make sure all the inputs conform to their spec.
@@ -252,6 +263,9 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, pr
 		inputSourceValue := ""
 		switch source := input.Source.(type) {
 		case *types.RecordInput_RecordId:
+			if _, found := k.GetRecord(ctx, source.RecordId); !found {
+				return fmt.Errorf("input %s source record id %s not found", input.Name, source.RecordId)
+			}
 			inputSourceType = sourceTypeRecord
 			inputSourceValue = source.RecordId.String()
 		case *types.RecordInput_Hash:
@@ -266,7 +280,7 @@ func (k Keeper) ValidateRecordUpdate(ctx sdk.Context, existing *types.Record, pr
 			return fmt.Errorf("input %s has source type %s but spec calls for %s",
 				input.Name, inputSourceType, inputSpecSourceType)
 		}
-		if inputSourceValue != inputSpecSourceValue {
+		if inputSourceType == sourceTypeRecord && inputSourceValue != inputSpecSourceValue {
 			return fmt.Errorf("input %s has source value %s but spec calls for %s",
 				input.Name, inputSourceValue, inputSpecSourceValue)
 		}

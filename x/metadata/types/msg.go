@@ -785,7 +785,7 @@ func (msg MsgP8EMemorializeContractRequest) GetSignBytes() []byte {
 
 // ValidateBasic performs a quick validity check
 func (msg MsgP8EMemorializeContractRequest) ValidateBasic() error {
-	_, _, err := ConvertP8eMemorializeContractRequest(&msg)
+	_, err := ConvertP8eMemorializeContractRequest(&msg)
 	return err
 }
 

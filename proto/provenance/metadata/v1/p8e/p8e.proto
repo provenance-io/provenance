@@ -28,7 +28,8 @@ message Contract {
   // These are always the output of a previously recorded consideration.
   repeated Fact inputs = 4;
 
-  repeated Condition     conditions     = 5;
+  // conditions is a deprecated field that is not used at all anymore.
+  repeated Condition     conditions     = 5 [deprecated = true];
   repeated Consideration considerations = 6;
 
   repeated Recital recitals = 7;

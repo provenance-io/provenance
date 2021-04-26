@@ -51,6 +51,7 @@ type QueryServerTestSuite struct {
 
 	cSpecUUID uuid.UUID
 	cSpecID   types.MetadataAddress
+	recSpecID types.MetadataAddress
 }
 
 func (s *QueryServerTestSuite) SetupTest() {
@@ -83,6 +84,7 @@ func (s *QueryServerTestSuite) SetupTest() {
 
 	s.cSpecUUID = uuid.New()
 	s.cSpecID = types.ContractSpecMetadataAddress(s.cSpecUUID)
+	s.recSpecID = types.RecordSpecMetadataAddress(s.cSpecUUID, s.recordName)
 
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
 }
@@ -116,7 +118,7 @@ func (s *QueryServerTestSuite) TestScopeQuery() {
 
 		rName := fmt.Sprintf("%s%d", recordName, i)
 		process := types.NewProcess("processname", &types.Process_Hash{Hash: "HASH"}, "process_method")
-		record := types.NewRecord(rName, sessionID, *process, []types.RecordInput{}, []types.RecordOutput{})
+		record := types.NewRecord(rName, sessionID, *process, []types.RecordInput{}, []types.RecordOutput{}, s.recSpecID)
 		app.MetadataKeeper.SetRecord(ctx, *record)
 	}
 	scope0UUID, err := testIDs[0].ScopeUUID()
@@ -234,7 +236,7 @@ func (s *QueryServerTestSuite) TestRecordsQuery() {
 	for i := 0; i < 10; i++ {
 		recordNames[i] = fmt.Sprintf("%s%v", recordName, i)
 		process := types.NewProcess("processname", &types.Process_Hash{Hash: "HASH"}, "process_method")
-		record := types.NewRecord(recordNames[i], sessionID, *process, []types.RecordInput{}, []types.RecordOutput{})
+		record := types.NewRecord(recordNames[i], sessionID, *process, []types.RecordInput{}, []types.RecordOutput{}, s.recSpecID)
 		app.MetadataKeeper.SetRecord(ctx, *record)
 	}
 

@@ -554,7 +554,6 @@ func (s *P8eTestSuite) TestConvertP8eMemorializeContractRequest() {
 		name     string
 		req      MsgP8EMemorializeContractRequest
 		p8EData  P8EData
-		signers  []string
 		errorMsg string
 	}{
 		{
@@ -623,11 +622,11 @@ func (s *P8eTestSuite) TestConvertP8eMemorializeContractRequest() {
 				Invoker: s.user1,
 			},
 			P8EData{
-				Scope:   nil, // TODO
-				Session: nil, // TODO
-				Records: nil, // TODO
+				Scope:      nil, // TODO
+				Session:    nil, // TODO
+				RecordReqs: nil, // TODO
+				Signers:    []string{}, // TODO
 			},
-			[]string{}, // TODO
 			"",
 		},
 		// TODO: Valid call
@@ -644,15 +643,15 @@ func (s *P8eTestSuite) TestConvertP8eMemorializeContractRequest() {
 
 	for _, tc := range tests {
 		s.T().Run(tc.name, func(t *testing.T) {
-			p8eData, signers, err := ConvertP8eMemorializeContractRequest(&tc.req)
+			p8eData, err := ConvertP8eMemorializeContractRequest(&tc.req)
 			if len(tc.errorMsg) > 0 {
 				assert.EqualError(t, err, tc.errorMsg, "expected error")
 			} else {
 				require.NoError(t, err, "unexpected error")
 				assert.Equal(t, tc.p8EData.Scope, p8eData.Scope, "scope")
 				assert.Equal(t, tc.p8EData.Session, p8eData.Session, "session")
-				assert.Equal(t, tc.p8EData.Records, p8eData.Records, "records")
-				assert.Equal(t, tc.signers, signers, "signers")
+				assert.Equal(t, tc.p8EData.RecordReqs, p8eData.RecordReqs, "recordReqs")
+				assert.Equal(t, tc.p8EData.Signers, p8eData.Signers, "signers")
 			}
 		})
 	}

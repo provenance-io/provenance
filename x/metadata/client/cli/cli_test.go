@@ -198,8 +198,8 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 				metadatatypes.ResultStatus_RESULT_STATUS_PASS,
 			),
 		},
+		s.recordSpecID,
 	)
-	s.record.SpecificationId = s.recordSpecID
 
 	s.scopeSpec = *metadatatypes.NewScopeSpecification(
 		s.scopeSpecID,
