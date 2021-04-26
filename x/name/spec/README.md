@@ -13,7 +13,6 @@ Another challenge for users of a blockchain is establishing authority and delega
 ## Contents
 
 1. **[Concepts](01_concepts.md)**
-    - [Reference Counting in F1 Fee Distribution](01_concepts.md#reference-counting-in-f1-fee-distribution)
 2. **[State](02_state.md)**
 3. **[Messages](03_messages.md)**
     - [MsgBindNameRequest](03_messages.md#msgbindnamerequest)

@@ -34,16 +34,45 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-## Features
+### Improvements
+
+* Add spec documentation for the metadata module #224
+
+### Features
+
+* Add typed events and telemetry metrics to marker module #247
+
+### Bug Fixes
+
+* Wired recovery flag into `init` command #254
+* Always anchor unrestricted denom validation expressions, Do not allow slashes in marker denom expressions #258
+
+### Client Breaking
+
+* Update marker transfer request signing behavior #246
+
+
+## [v1.1.1](https://github.com/provenance-io/provenance/releases/tag/v1.1.1) - 2021-04-15
+
+### Bug Fixes
+
+* Add upgrade plan v1.1.1
+
+## [v1.1.0](https://github.com/provenance-io/provenance/releases/tag/v1.1.0) - 2021-04-15
+
+### Features
+
 * Add marker cli has two new flags to set SupplyFixed and AllowGovernanceControl #241
 * Modify 'enable governance' behavior on marker module #227
 * Typed Events and Metric counters in Name Module #85
 
 ### Improvements
+
 * Add some extra aliases for the CLI query metadata commands.
 * Make p8e contract spec id easier to communicate.
 
 ### Bug Fixes
+
 * Add pagination flags to the CLI query metadata commands.
 * Fix handling of Metadata Write message id helper fields.
 * Fix cli metadata address encoding/decoding command tree #231
@@ -199,6 +228,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Denom Metadata config for nhash in testnet #42
 * Denom Metadata support for marker module #47
 * WASM support for Marker module #28
+
 ### Bug Fixes
 
 * Name service allows uuids as segments despite length restrictions #48

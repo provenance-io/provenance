@@ -50,11 +50,11 @@ message CreateRootNameProposal {
 // Event emitted when name is bound.
 message EventNameBound {
   string address = 1;
-  string name = 2;
+  string name    = 2;
 }
 
 // Event emitted when name is unbound.
 message EventNameUnbound {
   string address = 1;
-  string name = 2;
+  string name    = 2;
 }

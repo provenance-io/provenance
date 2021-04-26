@@ -173,7 +173,7 @@ func (params *CreateMarkerParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, er
 	if err != nil {
 		return nil, fmt.Errorf("wasm: invalid marker type in CreateMarkerParams: %w", err)
 	}
-	msg := types.NewAddMarkerRequest(
+	msg := types.NewMsgAddMarkerRequest(
 		params.Coin.Denom, params.Coin.Amount, contract, contract, markerType, false, false,
 	)
 
@@ -194,7 +194,7 @@ func (params *GrantAccessParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, err
 	for i, perm := range params.Permissions {
 		access[i] = types.AccessByName(perm)
 	}
-	msg := types.NewAddAccessRequest(
+	msg := types.NewMsgAddAccessRequest(
 		params.Denom,
 		contract,
 		*types.NewAccessGrant(address, access),
@@ -222,7 +222,7 @@ func (params *FinalizeMarkerParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, 
 	if err := sdk.ValidateDenom(params.Denom); err != nil {
 		return nil, fmt.Errorf("wasm: invalid denomination in FinalizeMarkerParams: %w", err)
 	}
-	msg := types.NewFinalizeRequest(params.Denom, contract)
+	msg := types.NewMsgFinalizeRequest(params.Denom, contract)
 	return []sdk.Msg{msg}, nil
 }
 
@@ -232,7 +232,7 @@ func (params *ActivateMarkerParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, 
 	if err := sdk.ValidateDenom(params.Denom); err != nil {
 		return nil, fmt.Errorf("wasm: invalid denomination in ActivateMarkerParams: %w", err)
 	}
-	msg := types.NewActivateRequest(params.Denom, contract)
+	msg := types.NewMsgActivateRequest(params.Denom, contract)
 	return []sdk.Msg{msg}, nil
 }
 
@@ -242,7 +242,7 @@ func (params *CancelMarkerParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, er
 	if err := sdk.ValidateDenom(params.Denom); err != nil {
 		return nil, fmt.Errorf("wasm: invalid denomination in CancelMarkerParams: %w", err)
 	}
-	msg := types.NewCancelRequest(params.Denom, contract)
+	msg := types.NewMsgCancelRequest(params.Denom, contract)
 	return []sdk.Msg{msg}, nil
 }
 
@@ -252,7 +252,7 @@ func (params *DestroyMarkerParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, e
 	if err := sdk.ValidateDenom(params.Denom); err != nil {
 		return nil, fmt.Errorf("wasm: invalid denomination in DestroyMarkerParams: %w", err)
 	}
-	msg := types.NewDeleteRequest(params.Denom, contract)
+	msg := types.NewMsgDeleteRequest(params.Denom, contract)
 	return []sdk.Msg{msg}, nil
 }
 
@@ -262,7 +262,7 @@ func (params *MintSupplyParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, erro
 	if !params.Coin.IsValid() {
 		return nil, fmt.Errorf("wasm: invalid MintSupplyParams: coin is invalid")
 	}
-	msg := types.NewMintRequest(contract, params.Coin)
+	msg := types.NewMsgMintRequest(contract, params.Coin)
 	return []sdk.Msg{msg}, nil
 }
 
@@ -272,7 +272,7 @@ func (params *BurnSupplyParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, erro
 	if !params.Coin.IsValid() {
 		return nil, fmt.Errorf("wasm: invalid BurnSupplyParams: coin is invalid")
 	}
-	msg := types.NewBurnRequest(contract, params.Coin)
+	msg := types.NewMsgBurnRequest(contract, params.Coin)
 	return []sdk.Msg{msg}, nil
 }
 
@@ -289,7 +289,7 @@ func (params *WithdrawParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error)
 	if err != nil {
 		return nil, fmt.Errorf("wasm: invalid recipient address: %w", err)
 	}
-	msg := types.NewWithdrawRequest(
+	msg := types.NewMsgWithdrawRequest(
 		contract, recipient, params.Denom, sdk.NewCoins(params.Coin))
 	return []sdk.Msg{msg}, nil
 }
@@ -308,6 +308,6 @@ func (params *TransferParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error)
 	if err != nil {
 		return nil, fmt.Errorf("wasm: invalid 'from' address in TransferParams: %w", err)
 	}
-	msg := types.NewTransferRequest(contract, from, to, params.Coin)
+	msg := types.NewMsgTransferRequest(contract, from, to, params.Coin)
 	return []sdk.Msg{msg}, nil
 }

@@ -125,6 +125,8 @@ const (
 	DefaultBondDenom = "nhash" // nano-hash
 	// DefaultFeeDenom is the denomination of coin to use for fees
 	DefaultFeeDenom = "nhash" // nano-hash
+	// DefaultReDnmString is the allowed denom regex expression
+	DefaultReDnmString = `[a-zA-Z][a-zA-Z0-9\-\.]{2,127}`
 )
 
 var (
@@ -198,6 +200,11 @@ type WasmWrapper struct {
 	Wasm wasm.Config `mapstructure:"wasm"`
 }
 
+// SdkCoinDenomRegex returns a new sdk base denom regex string
+func SdkCoinDenomRegex() string {
+	return DefaultReDnmString
+}
+
 // App extends an ABCI application, but with most of its parameters exported.
 // They are exported for convenience in creating helper functions, as object
 // capabilities aren't needed for testing.
@@ -265,6 +272,7 @@ func New(
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetAppVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
+	sdk.SetCoinDenomRegex(SdkCoinDenomRegex)
 
 	keys := sdk.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
