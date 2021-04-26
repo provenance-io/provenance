@@ -481,25 +481,6 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 			errorMsg: fmt.Sprintf("input %s source record id %s not found",
 				goodInput.Name, missingRecordID),
 		},
-		"input source value wrong": {
-			existing: nil,
-			proposed: types.NewRecord(
-				s.recordName, sessionID, *process,
-				[]types.RecordInput{
-					{
-						Name:     goodInput.Name,
-						Source:   &types.RecordInput_Hash{Hash: "incorrectsourcehash"},
-						TypeName: goodInput.TypeName,
-						Status:   goodInput.Status,
-					},
-				},
-				[]types.RecordOutput{},
-				s.recordSpecID),
-			signers:         []string{s.user1},
-			partiesInvolved: ownerPartyList(s.user1),
-			errorMsg: fmt.Sprintf("input %s has source value %s but spec calls for %s",
-				goodInput.Name, "incorrectsourcehash", inputSpecSourceHash),
-		},
 		"output count wrong - record - zero": {
 			existing: nil,
 			proposed: types.NewRecord(
