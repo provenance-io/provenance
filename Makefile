@@ -178,7 +178,7 @@ $(RELEASE_CHECKSUM):
 	cd ..
 
 .PHONY: build-release-plan
-build-release-plan: $(RELEASE_PLAN) 
+build-release-plan: $(RELEASE_PLAN)
 
 $(RELEASE_PLAN): $(RELEASE_CHECKSUM)
 	scripts/release-plan $(RELEASE_CHECKSUM) $(VERSION) > $(RELEASE_PLAN)
@@ -211,10 +211,6 @@ $(RELEASE_ZIP): $(RELEASE_PIO) $(RELEASE_WASM)
 .PHONY: bulid-release-proto
 build-release-proto:
 	scripts/protoball.sh $(RELEASE_PROTO)
-
-.PHONY: build-release
-build-release: build-release-zip build-release-plan build-release-proto
-
 
 $(RELEASE_BIN):
 	mkdir -p $(RELEASE_BIN)
