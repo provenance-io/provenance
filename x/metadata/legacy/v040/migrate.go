@@ -1,6 +1,7 @@
 package v040
 
 import (
+	"crypto/sha512"
 	"encoding/base64"
 	"fmt"
 	"time"
@@ -9,6 +10,7 @@ import (
 	v040metadata "github.com/provenance-io/provenance/x/metadata/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gogo/protobuf/proto"
 	"github.com/google/uuid"
 )
 
@@ -192,11 +194,12 @@ func convertContractSpec(old *v039metadata.ContractSpec) (
 	newRecords []v040metadata.RecordSpecification,
 	err error,
 ) {
-	raw, err := base64.StdEncoding.DecodeString(old.Definition.ResourceLocation.Ref.Hash)
+	rawProtoOld, err := proto.Marshal(old)
 	if err != nil {
 		return newSpec, nil, err
 	}
-	specUUID, err := uuid.FromBytes(raw[0:16])
+	sha512Old := sha512.Sum512(rawProtoOld)
+	specUUID, err := uuid.FromBytes(sha512Old[0:16])
 	if err != nil {
 		return newSpec, nil, err
 	}
@@ -216,7 +219,7 @@ func convertContractSpec(old *v039metadata.ContractSpec) (
 		PartiesInvolved: parties,
 		// OwnerAddresses: -- TODO: there were no owners set on the v39 chain, maybe trace one from a group that used this spec?
 		Source: &v040metadata.ContractSpecification_Hash{
-			Hash: old.Definition.ResourceLocation.Ref.Hash,
+			Hash: base64.StdEncoding.EncodeToString(sha512Old[:]),
 		},
 		ClassName: old.Definition.ResourceLocation.Classname,
 	}

@@ -246,12 +246,12 @@ func TestMigrate(t *testing.T) {
         "name": "ExampleContract",
         "website_url": ""
       },
-      "hash": "E36eeTUk8GYXGXjIbZTm4s/Dw3G1e42SinH1195t4ekgcXXPhfIpfQaEJ21PTzKhdv6JjhzQJ2kAJXK+TRXmeQ==",
+      "hash": "fJXLW6TsYwWys0utfWwrqaZiqAx27Kl2sj3dXVO9fOU8g32/uuL2fBr6ajlSeRMPRrNE05Mz8AVJE2XvWhvEvw==",
       "owner_addresses": [],
       "parties_involved": [
         "PARTY_TYPE_ORIGINATOR"
       ],
-      "specification_id": "contractspec1qvfha8nex5j0qeshr9uvsmv5um3q7sghss"
+      "specification_id": "contractspec1qd7ftj6m5nkxxpdjkd966ltv9w5sjjc9tt"
     }
   ],
   "o_s_locator_params": {
@@ -278,7 +278,7 @@ func TestMigrate(t *testing.T) {
         "PARTY_TYPE_ORIGINATOR"
       ],
       "result_type": "DEFINITION_TYPE_PROPOSED",
-      "specification_id": "recspec1q5fha8nex5j0qeshr9uvsmv5um32y0aeyhnus90eqmv3xfwwugdwqt2xfzw",
+      "specification_id": "recspec1q47ftj6m5nkxxpdjkd966ltv9w56y0aeyhnus90eqmv3xfwwugdwq738ll6",
       "type_name": "io.provenance.loan.LoanProtos$PartiesList"
     },
     {
@@ -299,7 +299,7 @@ func TestMigrate(t *testing.T) {
         "PARTY_TYPE_ORIGINATOR"
       ],
       "result_type": "DEFINITION_TYPE_PROPOSED",
-      "specification_id": "recspec1q5fha8nex5j0qeshr9uvsmv5um3fk945f58q5h9vf7tghmaskk67kve3mq3",
+      "specification_id": "recspec1q47ftj6m5nkxxpdjkd966ltv9w5ek945f58q5h9vf7tghmaskk67kezsda9",
       "type_name": "io.provenance.common.DocumentProtos$DocumentList"
     }
   ],
