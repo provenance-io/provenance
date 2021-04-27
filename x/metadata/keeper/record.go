@@ -74,7 +74,7 @@ func (k Keeper) SetRecord(ctx sdk.Context, record types.Record) {
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			eventType,
-			sdk.NewAttribute(types.AttributeKeyScopeID, recordID.String()),
+			sdk.NewAttribute(types.AttributeKeyRecordID, recordID.String()),
 		),
 	)
 }
