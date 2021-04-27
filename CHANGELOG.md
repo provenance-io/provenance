@@ -34,6 +34,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Features
+
+* Add a `context` field to the `Session` #276
+
 ## [v1.2.0](https://github.com/provenance-io/provenance/releases/tag/v1.2.0) - 2021-04-26
 
 ### Improvements
