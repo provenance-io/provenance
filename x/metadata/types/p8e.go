@@ -10,11 +10,10 @@ import (
 
 	"github.com/btcsuite/btcd/btcec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/golang/protobuf/proto"
+	"github.com/gogo/protobuf/proto"
+	"github.com/google/uuid"
 	tmcrypt "github.com/tendermint/tendermint/crypto"
 	tmcurve "github.com/tendermint/tendermint/crypto/secp256k1"
-
-	"github.com/google/uuid"
 )
 
 // ConvertP8eContractSpec converts a v39 ContractSpec to a v40 ContractSpecification
