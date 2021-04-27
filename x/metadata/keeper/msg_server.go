@@ -77,6 +77,84 @@ func (k msgServer) DeleteScope(
 	return &types.MsgDeleteScopeResponse{}, nil
 }
 
+func (k msgServer) AddScopeDataAccess(
+	goCtx context.Context,
+	msg *types.MsgAddScopeDataAccessRequest,
+) (*types.MsgAddScopeDataAccessResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	existing, found := k.GetScope(ctx, msg.ScopeId)
+	if !found {
+		return nil, fmt.Errorf("scope not found with id %s", msg.ScopeId)
+	}
+
+	if err := k.ValidateScopeAddDataAccess(ctx, msg.DataAccess, existing, msg.Signers); err != nil {
+		return nil, err
+	}
+
+	for _, da := range msg.DataAccess {
+		existing.DataAccess = append(existing.DataAccess, da)
+	}
+
+	k.SetScope(ctx, existing)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
+		),
+	)
+
+	return &types.MsgAddScopeDataAccessResponse{}, nil
+}
+
+func (k msgServer) DeleteScopeDataAccess(
+	goCtx context.Context,
+	msg *types.MsgDeleteScopeDataAccessRequest,
+) (*types.MsgDeleteScopeDataAccessResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	existing, found := k.GetScope(ctx, msg.ScopeId)
+	if !found {
+		return nil, fmt.Errorf("scope not found with id %s", msg.ScopeId)
+	}
+
+	if err := k.ValidateScopeDeleteDataAccess(ctx, msg.DataAccess, existing, msg.Signers); err != nil {
+		return nil, err
+	}
+
+	newDataAccess := []string{}
+	for _, da := range msg.DataAccess {
+		found := false
+		for _, pda := range existing.DataAccess {
+			if pda == da {
+				found = true
+			}
+		}
+		if !found {
+			newDataAccess = append(newDataAccess, da)
+		}
+	}
+	if len(newDataAccess) == 0 {
+		return nil, fmt.Errorf("cannot remove all addresses from scope")
+	}
+
+	existing.DataAccess = newDataAccess
+
+	k.SetScope(ctx, existing)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
+		),
+	)
+
+	return &types.MsgDeleteScopeDataAccessResponse{}, nil
+}
+
 func (k msgServer) WriteSession(
 	goCtx context.Context,
 	msg *types.MsgWriteSessionRequest,

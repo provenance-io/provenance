@@ -15,6 +15,8 @@ import (
 const (
 	TypeMsgWriteScopeRequest                  = "write_scope_request"
 	TypeMsgDeleteScopeRequest                 = "delete_scope_request"
+	TypeMsgAddScopeDataAccessRequest          = "add_scope_data_access_request"
+	TypeMsgDeleteScopeDataAccessRequest       = "delete_scope_data_access_request"
 	TypeMsgWriteSessionRequest                = "write_session_request"
 	TypeMsgWriteRecordRequest                 = "write_record_request"
 	TypeMsgDeleteRecordRequest                = "delete_record_request"
@@ -35,6 +37,8 @@ const (
 var (
 	_ sdk.Msg = &MsgWriteScopeRequest{}
 	_ sdk.Msg = &MsgDeleteScopeRequest{}
+	_ sdk.Msg = &MsgAddScopeDataAccessRequest{}
+	_ sdk.Msg = &MsgDeleteScopeDataAccessRequest{}
 	_ sdk.Msg = &MsgWriteSessionRequest{}
 	_ sdk.Msg = &MsgWriteRecordRequest{}
 	_ sdk.Msg = &MsgDeleteRecordRequest{}
@@ -191,6 +195,100 @@ func (msg MsgDeleteScopeRequest) ValidateBasic() error {
 	}
 	if !msg.ScopeId.IsScopeAddress() {
 		return fmt.Errorf("invalid scope address")
+	}
+	return nil
+}
+
+// ------------------  MsgAddScopeDataAccessRequest  ------------------
+
+// NewMsgAddScopeDataAccessRequest creates a new msg instance
+func NewMsgAddScopeDataAccessRequest(scopeID MetadataAddress, dataAccessAddrs []string, signers []string) *MsgAddScopeDataAccessRequest {
+	return &MsgAddScopeDataAccessRequest{
+		ScopeId:    scopeID,
+		DataAccess: dataAccessAddrs,
+		Signers:    signers,
+	}
+}
+
+func (msg MsgAddScopeDataAccessRequest) String() string {
+	out, _ := yaml.Marshal(msg)
+	return string(out)
+}
+
+// Route returns the module route
+func (msg MsgAddScopeDataAccessRequest) Route() string {
+	return ModuleName
+}
+
+// Type returns the type name for this msg
+func (msg MsgAddScopeDataAccessRequest) Type() string {
+	return TypeMsgAddScopeDataAccessRequest
+}
+
+// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
+func (msg MsgAddScopeDataAccessRequest) GetSigners() []sdk.AccAddress {
+	return stringsToAccAddresses(msg.Signers)
+}
+
+// GetSignBytes gets the bytes for the message signer to sign on
+func (msg MsgAddScopeDataAccessRequest) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// ValidateBasic performs a quick validity check
+func (msg *MsgAddScopeDataAccessRequest) ValidateBasic() error {
+	if !msg.ScopeId.IsScopeAddress() {
+		return fmt.Errorf("address is not a scope id: %v", msg.ScopeId.String())
+	}
+	if len(msg.Signers) < 1 {
+		return fmt.Errorf("at least one signer is required")
+	}
+	return nil
+}
+
+// ------------------  MsgDeleteScopeDataAccessRequest  ------------------
+
+// NewMsgDeleteScopeDataAccessRequest creates a new msg instance
+func NewMsgDeleteScopeDataAccessRequest(scopeID MetadataAddress, dataAccessAddrs []string, signers []string) *MsgDeleteScopeDataAccessRequest {
+	return &MsgDeleteScopeDataAccessRequest{
+		ScopeId:    scopeID,
+		DataAccess: dataAccessAddrs,
+		Signers:    signers,
+	}
+}
+
+func (msg MsgDeleteScopeDataAccessRequest) String() string {
+	out, _ := yaml.Marshal(msg)
+	return string(out)
+}
+
+// Route returns the module route
+func (msg MsgDeleteScopeDataAccessRequest) Route() string {
+	return ModuleName
+}
+
+// Type returns the type name for this msg
+func (msg MsgDeleteScopeDataAccessRequest) Type() string {
+	return TypeMsgDeleteScopeDataAccessRequest
+}
+
+// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
+func (msg MsgDeleteScopeDataAccessRequest) GetSigners() []sdk.AccAddress {
+	return stringsToAccAddresses(msg.Signers)
+}
+
+// GetSignBytes gets the bytes for the message signer to sign on
+func (msg MsgDeleteScopeDataAccessRequest) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// ValidateBasic performs a quick validity check
+func (msg *MsgDeleteScopeDataAccessRequest) ValidateBasic() error {
+	if !msg.ScopeId.IsScopeAddress() {
+		return fmt.Errorf("address is not a scope id: %v", msg.ScopeId.String())
+	}
+	if len(msg.Signers) < 1 {
+		return fmt.Errorf("at least one signer is required")
 	}
 	return nil
 }

@@ -22,6 +22,11 @@ service Msg {
   // DeleteScope deletes a scope and all associated Records, Sessions.
   rpc DeleteScope(MsgDeleteScopeRequest) returns (MsgDeleteScopeResponse);
 
+  // AddScopeDataAccess adds data access to scope
+  rpc AddScopeDataAccess(MsgAddScopeDataAccessRequest) returns (MsgAddScopeDataAccessResponse);
+  // RemoveScopeDataAccess adds data access to scope
+  rpc DeleteScopeDataAccess(MsgDeleteScopeDataAccessRequest) returns (MsgDeleteScopeDataAccessResponse);
+
   // WriteSession adds or updates a session context.
   rpc WriteSession(MsgWriteSessionRequest) returns (MsgWriteSessionResponse);
 
@@ -121,6 +126,52 @@ message MsgDeleteScopeRequest {
 
 // MsgDeleteScopeResponse is the response type for the Msg/DeleteScope RPC method.
 message MsgDeleteScopeResponse {}
+
+// MsgAddScopeDataAccessRequest
+message MsgAddScopeDataAccessRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  // scope MetadataAddress for updating data access
+  bytes scope_id = 1 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customtype) = "MetadataAddress",
+    (gogoproto.moretags)   = "yaml:\"scope_id\""
+  ];
+
+  // MetadataAddresses to be added to scope
+  repeated string data_access = 2 [(gogoproto.moretags) = "yaml:\"data_access\""];
+
+  repeated string signers = 3;
+}
+
+// MsgAddScopeDataAccessResponse
+message MsgAddScopeDataAccessResponse {}
+
+// MsgRemoveScopeDataAccessRequest
+message MsgDeleteScopeDataAccessRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  // scope MetadataAddress for removing data access
+  bytes scope_id = 1 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customtype) = "MetadataAddress",
+    (gogoproto.moretags)   = "yaml:\"scope_id\""
+  ];
+
+  // MetadataAddresses to be removed from scope
+  repeated string data_access = 2 [(gogoproto.moretags) = "yaml:\"data_access\""];
+
+  repeated string signers = 3;
+}
+
+// MsgRemoveScopeDataAccessResponse
+message MsgDeleteScopeDataAccessResponse {}
 
 // MsgWriteSessionRequest is the request type for the Msg/WriteSession RPC method.
 message MsgWriteSessionRequest {
