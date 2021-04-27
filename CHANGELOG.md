@@ -34,7 +34,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-* Added Linkify script [#107](https://github.com/provenance-io/provenance/issues/107)
+### Improvements
+
+* Added linkify script for changelog issue links [#107](https://github.com/provenance-io/provenance/issues/107)
+
+### Bug Fixes
+
+* More mapping fixes related to `WriteP8EContractSpec` and `P8EMemorializeContract` #275
+
 
 ## [v1.2.0](https://github.com/provenance-io/provenance/releases/tag/v1.2.0) - 2021-04-26
 
