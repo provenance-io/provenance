@@ -128,13 +128,14 @@ func appendUnique(list []string, newval string) []string {
 }
 
 func createContractSpec(inputSpecs []*p8e.DefinitionSpec, outputSpec p8e.OutputSpec, definitionSpec p8e.DefinitionSpec) p8e.ContractSpec {
-	return p8e.ContractSpec{ConsiderationSpecs: []*p8e.ConsiderationSpec{
-		{FuncName: "additionalParties",
-			InputSpecs:       inputSpecs,
-			OutputSpec:       &outputSpec,
-			ResponsibleParty: 1,
+	return p8e.ContractSpec{
+		ConsiderationSpecs: []*p8e.ConsiderationSpec{
+			{FuncName: "additionalParties",
+				InputSpecs:       inputSpecs,
+				OutputSpec:       &outputSpec,
+				ResponsibleParty: 1,
+			},
 		},
-	},
 		Definition:      &definitionSpec,
 		InputSpecs:      inputSpecs,
 		PartiesInvolved: []p8e.PartyType{p8e.PartyType_PARTY_TYPE_AFFILIATE},
@@ -159,7 +160,6 @@ func (s *P8eTestSuite) TestConvertP8eContractSpec() {
 	invalidDefSpecNoClass := createDefinitionSpec("perform_action", "", p8e.ProvenanceReference{Hash: "Adv+huolGTKofYCR0dw5GHm/R7sUWOwF32XR8r8r9kDy4il5U/LApxOWYHb05jhK4+eY4YzRMRiWcxU3Lx0+Mw=="}, 1)
 	invalidDefSpecUUID := createDefinitionSpec("perform_input_checks", "io.provenance.loan.LoanProtos$PartiesList", p8e.ProvenanceReference{ScopeUuid: &p8e.UUID{Value: "not-a-uuid"}, Name: "recordname"}, 1)
 	invalidDefSpecUUIDNoName := createDefinitionSpec("perform_input_checks", "io.provenance.loan.LoanProtos$PartiesList", p8e.ProvenanceReference{ScopeUuid: &p8e.UUID{Value: uuid.New().String()}}, 1)
-	invalidDefSpecHash := createDefinitionSpec("ExampleContract", "io.provenance.contracts.ExampleContract", p8e.ProvenanceReference{Hash: "should fail to decode this"}, 1)
 
 	cases := map[string]struct {
 		v39CSpec p8e.ContractSpec
@@ -196,12 +196,6 @@ func (s *P8eTestSuite) TestConvertP8eContractSpec() {
 			[]string{s.user1},
 			true,
 			"record specification type name cannot be empty",
-		},
-		"should fail to decode resource location": {
-			createContractSpec([]*p8e.DefinitionSpec{&validDefSpec}, p8e.OutputSpec{Spec: &validDefSpec}, invalidDefSpecHash),
-			[]string{s.user1},
-			true,
-			"illegal base64 data at input byte 6",
 		},
 		"should fail to decode input spec uuid": {
 			createContractSpec([]*p8e.DefinitionSpec{&invalidDefSpecUUID}, p8e.OutputSpec{Spec: &validDefSpec}, validDefSpec),
