@@ -2,7 +2,7 @@ package types
 
 import (
 	"bytes"
-	"crypto/sha256"
+	"crypto/sha512"
 	"encoding/base64"
 	"fmt"
 
@@ -26,8 +26,8 @@ func ConvertP8eContractSpec(old *p8e.ContractSpec, owners []string) (
 	if err != nil {
 		return newSpec, nil, err
 	}
-	sha256Old := sha256.Sum256(rawProtoOld)
-	specUUID, err := uuid.FromBytes(sha256Old[0:16])
+	sha512Old := sha512.Sum512(rawProtoOld)
+	specUUID, err := uuid.FromBytes(sha512Old[0:16])
 	if err != nil {
 		return newSpec, nil, err
 	}
@@ -47,7 +47,7 @@ func ConvertP8eContractSpec(old *p8e.ContractSpec, owners []string) (
 		PartiesInvolved: parties,
 		OwnerAddresses:  owners,
 		Source: &ContractSpecification_Hash{
-			Hash: base64.StdEncoding.EncodeToString(sha256Old[:]),
+			Hash: base64.StdEncoding.EncodeToString(sha512Old[:]),
 		},
 		ClassName: old.Definition.ResourceLocation.Classname,
 	}
