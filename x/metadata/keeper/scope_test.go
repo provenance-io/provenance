@@ -35,6 +35,10 @@ type ScopeKeeperTestSuite struct {
 	user2     string
 	user2Addr sdk.AccAddress
 
+	pubkey3   cryptotypes.PubKey
+	user3     string
+	user3Addr sdk.AccAddress
+
 	scopeUUID uuid.UUID
 	scopeID   types.MetadataAddress
 
@@ -57,6 +61,10 @@ func (s *ScopeKeeperTestSuite) SetupTest() {
 	s.pubkey2 = secp256k1.GenPrivKey().PubKey()
 	s.user2Addr = sdk.AccAddress(s.pubkey2.Address())
 	s.user2 = s.user2Addr.String()
+
+	s.pubkey3 = secp256k1.GenPrivKey().PubKey()
+	s.user3Addr = sdk.AccAddress(s.pubkey3.Address())
+	s.user3 = s.user3Addr.String()
 
 	s.scopeUUID = uuid.New()
 	s.scopeID = types.ScopeMetadataAddress(s.scopeUUID)
@@ -274,3 +282,127 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdate() {
 }
 
 // TODO: ValidateScopeRemove tests
+
+func (s *ScopeKeeperTestSuite) TestValidateScopeAddDataAccess() {
+	scope := *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), ownerPartyList(s.user1), []string{s.user1}, s.user1)
+
+	cases := map[string]struct {
+		dataAccessAddrs []string
+		existing        types.Scope
+		signers         []string
+		wantErr         bool
+		errorMsg        string
+	}{
+		"should fail to validate add scope data access, does not have any users": {
+			[]string{},
+			scope,
+			[]string{s.user1},
+			true,
+			"data access list cannot be empty",
+		},
+		"should fail to validate add scope data access, user is already on the data access list": {
+			[]string{s.user1},
+			scope,
+			[]string{s.user1},
+			true,
+			fmt.Sprintf("address already exists for data access %s", s.user1),
+		},
+		"should fail to validate add scope data access, incorrect signer for scope": {
+			[]string{s.user2},
+			scope,
+			[]string{s.user2},
+			true,
+			fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user1),
+		},
+		"should fail to validate add scope data access, incorrect address type": {
+			[]string{"invalidaddr"},
+			scope,
+			[]string{s.user1},
+			true,
+			"failed to decode data access address invalidaddr : decoding bech32 failed: invalid index of 1",
+		},
+		"should successfully validate add scope data access": {
+			[]string{s.user2},
+			scope,
+			[]string{s.user1},
+			false,
+			"",
+		},
+	}
+
+	for n, tc := range cases {
+		tc := tc
+
+		s.Run(n, func() {
+			err := s.app.MetadataKeeper.ValidateScopeAddDataAccess(s.ctx, tc.dataAccessAddrs, tc.existing, tc.signers)
+			if tc.wantErr {
+				s.Error(err)
+				s.Equal(tc.errorMsg, err.Error())
+			} else {
+				s.NoError(err)
+			}
+		})
+	}
+}
+
+func (s *ScopeKeeperTestSuite) TestValidateScopeDeleteDataAccess() {
+	scope := *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), ownerPartyList(s.user1), []string{s.user1, s.user2}, s.user1)
+
+	cases := map[string]struct {
+		dataAccessAddrs []string
+		existing        types.Scope
+		signers         []string
+		wantErr         bool
+		errorMsg        string
+	}{
+		"should fail to validate delete scope data access, does not have any users": {
+			[]string{},
+			scope,
+			[]string{s.user1},
+			true,
+			"data access list cannot be empty",
+		},
+		"should fail to validate delete scope data access, address is not in data access list": {
+			[]string{s.user2, s.user3},
+			scope,
+			[]string{s.user1},
+			true,
+			fmt.Sprintf("address does not exist in scope data access: %s", s.user3),
+		},
+		"should fail to validate delete scope data access, incorrect signer for scope": {
+			[]string{s.user2},
+			scope,
+			[]string{s.user2},
+			true,
+			fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user1),
+		},
+		"should fail to validate delete scope data access, incorrect address type": {
+			[]string{"invalidaddr"},
+			scope,
+			[]string{s.user1},
+			true,
+			"failed to decode data access address invalidaddr : decoding bech32 failed: invalid index of 1",
+		},
+		"should successfully validate delete scope data access": {
+			[]string{s.user1, s.user2},
+			scope,
+			[]string{s.user1},
+			false,
+			"",
+		},
+	}
+
+	for n, tc := range cases {
+		tc := tc
+
+		s.Run(n, func() {
+			err := s.app.MetadataKeeper.ValidateScopeDeleteDataAccess(s.ctx, tc.dataAccessAddrs, tc.existing, tc.signers)
+			if tc.wantErr {
+				s.Error(err)
+				s.Equal(tc.errorMsg, err.Error())
+			} else {
+				s.NoError(err)
+			}
+		})
+	}
+}
