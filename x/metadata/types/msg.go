@@ -240,6 +240,15 @@ func (msg *MsgAddScopeDataAccessRequest) ValidateBasic() error {
 	if !msg.ScopeId.IsScopeAddress() {
 		return fmt.Errorf("address is not a scope id: %v", msg.ScopeId.String())
 	}
+	if len(msg.DataAccess) < 1 {
+		return fmt.Errorf("at least one data access address is required")
+	}
+	for _, da := range msg.DataAccess {
+		_, err := sdk.AccAddressFromBech32(da)
+		if err != nil {
+			return fmt.Errorf("data access address is invalid: %s", da)
+		}
+	}
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
@@ -286,6 +295,15 @@ func (msg MsgDeleteScopeDataAccessRequest) GetSignBytes() []byte {
 func (msg *MsgDeleteScopeDataAccessRequest) ValidateBasic() error {
 	if !msg.ScopeId.IsScopeAddress() {
 		return fmt.Errorf("address is not a scope id: %v", msg.ScopeId.String())
+	}
+	if len(msg.DataAccess) < 1 {
+		return fmt.Errorf("at least one data access address is required")
+	}
+	for _, da := range msg.DataAccess {
+		_, err := sdk.AccAddressFromBech32(da)
+		if err != nil {
+			return fmt.Errorf("data access address is invalid: %s", da)
+		}
 	}
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
