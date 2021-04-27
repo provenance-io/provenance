@@ -92,10 +92,7 @@ func (k msgServer) AddScopeDataAccess(
 		return nil, err
 	}
 
-	for _, da := range msg.DataAccess {
-		existing.DataAccess = append(existing.DataAccess, da)
-	}
-
+	existing.DataAccess = append(existing.DataAccess, msg.DataAccess...)
 	k.SetScope(ctx, existing)
 
 	ctx.EventManager().EmitEvent(
