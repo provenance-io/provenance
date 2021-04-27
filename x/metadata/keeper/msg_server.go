@@ -133,9 +133,6 @@ func (k msgServer) DeleteScopeDataAccess(
 			newDataAccess = append(newDataAccess, da)
 		}
 	}
-	if len(newDataAccess) == 0 {
-		return nil, fmt.Errorf("cannot remove all addresses from scope")
-	}
 
 	existing.DataAccess = newDataAccess
 
