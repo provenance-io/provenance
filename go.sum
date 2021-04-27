@@ -17,10 +17,10 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d h1:nalkkPQcITbvhmL4+C4cKA87NW0tfm3Kl9VXRoPywFg=
 github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d/go.mod h1:URdX5+vg25ts3aCh8H5IFZybJYKWhJHYMTnf+ULtoC4=
-github.com/CosmWasm/wasmd v0.16.0-alpha1.0.20210413102921-4b8d0247cc90 h1:k2Kmw1/IcDoL1C37LgVh4ajveq7Nnh9/ytC3RLB7AhY=
-github.com/CosmWasm/wasmd v0.16.0-alpha1.0.20210413102921-4b8d0247cc90/go.mod h1:6ygDUDool0+CH7oRQDdP7/BWtyX7I7MIf6iuBRCZFGE=
-github.com/CosmWasm/wasmvm v0.14.0-beta3 h1:HN1+HrC2kgO/V4voGdOWrN1sdUoTnSoLuSrBXbDVnbY=
-github.com/CosmWasm/wasmvm v0.14.0-beta3/go.mod h1:Id107qllDJyJjVQQsKMOy2YYF98sqPJ2t+jX1QES40A=
+github.com/CosmWasm/wasmd v0.16.0-alpha1.0.20210427120042-305f13cc0a79 h1:31azSsxfK4Yn58hBXHuGDWw8VVGRjhQ1GYxuhryvbOk=
+github.com/CosmWasm/wasmd v0.16.0-alpha1.0.20210427120042-305f13cc0a79/go.mod h1:us6E+B8IfzfM4DGv9QTj+4husiehxd757bVrVQd/hLg=
+github.com/CosmWasm/wasmvm v0.14.0-beta4 h1:H8zVI/zRc+GAO+dk9jgGlo+5w0AENDJi6KN8Phvd2O0=
+github.com/CosmWasm/wasmvm v0.14.0-beta4/go.mod h1:Id107qllDJyJjVQQsKMOy2YYF98sqPJ2t+jX1QES40A=
 github.com/DataDog/datadog-go v3.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
 github.com/DataDog/zstd v1.4.1/go.mod h1:1jcaCB/ufaK+sKp1NBhlGmpz41jOoPQ35bpF36t7BBo=
 github.com/DataDog/zstd v1.4.5 h1:EndNeuB0l9syBZhut0wns3gV1hL8zX8LIu6ZiVHWLIQ=
@@ -211,8 +211,8 @@ github.com/golang/protobuf v1.4.2/go.mod h1:oDoupMAO8OvCJWAcko0GGGIgR6R6ocIYbsSw
 github.com/golang/protobuf v1.4.3 h1:JjCZWpVbqXDqFVmTfYWEVTMIYrL/NPdPSCHPJ0T/raM=
 github.com/golang/protobuf v1.4.3/go.mod h1:oDoupMAO8OvCJWAcko0GGGIgR6R6ocIYbsSw735rRwI=
 github.com/golang/protobuf v1.5.0/go.mod h1:FsONVRAS9T7sI+LIUmWTfcYkHO4aIWwzhcaSAoJOfIk=
-github.com/golang/protobuf v1.5.1 h1:jAbXjIeW2ZSW2AwFxlGTDoc2CjI2XujLkV3ArsZFCvc=
-github.com/golang/protobuf v1.5.1/go.mod h1:DopwsBzvsk0Fs44TXzsVbJyPhcCPeIwnvohx4u74HPM=
+github.com/golang/protobuf v1.5.2 h1:ROPKBNFfQgOUMifHyP+KYbvpjbdoFNs+aK7DXlji0Tw=
+github.com/golang/protobuf v1.5.2/go.mod h1:XVQd3VNwM+JqD3oG2Ue2ip4fOMUkwXdXDdiuN0vRsmY=
 github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db/go.mod h1:/XxbfmMg8lxefKM7IXC3fBNl/7bRcc72aCRzEWrmP2Q=
 github.com/golang/snappy v0.0.1/go.mod h1:/XxbfmMg8lxefKM7IXC3fBNl/7bRcc72aCRzEWrmP2Q=
 github.com/golang/snappy v0.0.2 h1:aeE13tS0IiQgFjYdoL8qN3K1N2bXXtI6Vi51/y7BpMw=
@@ -577,6 +577,8 @@ github.com/tendermint/tendermint v0.34.0-rc6/go.mod h1:ugzyZO5foutZImv0Iyx/gOFCX
 github.com/tendermint/tendermint v0.34.0/go.mod h1:Aj3PIipBFSNO21r+Lq3TtzQ+uKESxkbA3yo/INM4QwQ=
 github.com/tendermint/tendermint v0.34.9 h1:9P2MXDEPOcPW0NBcHQ/HDSfvczZm+q5nUUw7AZ6f1Vc=
 github.com/tendermint/tendermint v0.34.9/go.mod h1:kl4Z1JwGx1I+u1SXIzMDy7Z3T8LiMeCAOnzNn6AIMT4=
+github.com/tendermint/tendermint v0.34.10 h1:wBOc/It8sh/pVH9np2V5fBvRmIyFN/bUrGPx+eAHexs=
+github.com/tendermint/tendermint v0.34.10/go.mod h1:aeHL7alPh4uTBIJQ8mgFEE8VwJLXI1VD3rVOmH2Mcy0=
 github.com/tendermint/tm-db v0.5.1/go.mod h1:g92zWjHpCYlEvQXvy9M168Su8V1IBEeawpXVVBaK4f4=
 github.com/tendermint/tm-db v0.6.2/go.mod h1:GYtQ67SUvATOcoY8/+x6ylk8Qo02BQyLrAs+yAcLvGI=
 github.com/tendermint/tm-db v0.6.3/go.mod h1:lfA1dL9/Y/Y8wwyPp2NMLyn5P5Ptr/gvDFNWtrCWSf8=
