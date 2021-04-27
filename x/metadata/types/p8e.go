@@ -2,6 +2,7 @@ package types
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
 
@@ -9,6 +10,7 @@ import (
 
 	"github.com/btcsuite/btcd/btcec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/golang/protobuf/proto"
 	tmcrypt "github.com/tendermint/tendermint/crypto"
 	tmcurve "github.com/tendermint/tendermint/crypto/secp256k1"
 
@@ -21,11 +23,12 @@ func ConvertP8eContractSpec(old *p8e.ContractSpec, owners []string) (
 	newRecords []RecordSpecification,
 	err error,
 ) {
-	raw, err := base64.StdEncoding.DecodeString(old.Definition.ResourceLocation.Ref.Hash)
+	rawProtoOld, err := proto.Marshal(old)
 	if err != nil {
 		return newSpec, nil, err
 	}
-	specUUID, err := uuid.FromBytes(raw[0:16])
+	sha256Old := sha256.Sum256(rawProtoOld)
+	specUUID, err := uuid.FromBytes(sha256Old[0:16])
 	if err != nil {
 		return newSpec, nil, err
 	}
@@ -45,7 +48,7 @@ func ConvertP8eContractSpec(old *p8e.ContractSpec, owners []string) (
 		PartiesInvolved: parties,
 		OwnerAddresses:  owners,
 		Source: &ContractSpecification_Hash{
-			Hash: old.Definition.ResourceLocation.Ref.Hash,
+			Hash: base64.StdEncoding.EncodeToString(sha256Old[:]),
 		},
 		ClassName: old.Definition.ResourceLocation.Classname,
 	}
@@ -174,7 +177,7 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 		return p8EData, err
 	}
 	p8EData.Session.Parties = contractRecitalParties
-	p8EData.Session.Name = msg.Contract.Spec.Name
+	p8EData.Session.Name = msg.Contract.Definition.Name
 
 	processID, pidErr := getProcessID(msg.Contract)
 	if pidErr != nil {
@@ -505,11 +508,11 @@ func getFirstRecitalWithRole(recitals []*p8e.Recital, role p8e.PartyType) *p8e.R
 }
 
 func getContractSpecID(contract *p8e.Contract) (MetadataAddress, error) {
-	if contract == nil || contract.Definition == nil || contract.Definition.ResourceLocation == nil ||
-		contract.Definition.ResourceLocation.Ref == nil || len(contract.Definition.ResourceLocation.Ref.Hash) == 0 {
-		return MetadataAddress{}, fmt.Errorf("no contract.Definition.ResourceLocation.Ref.Hash value")
+	if contract == nil || contract.Spec == nil || contract.Spec.DataLocation == nil ||
+		contract.Spec.DataLocation.Ref == nil || len(contract.Spec.DataLocation.Ref.Hash) == 0 {
+		return MetadataAddress{}, fmt.Errorf("no contract.spec.datalocation.ref.hash value")
 	}
-	hash := contract.Definition.ResourceLocation.Ref.Hash
+	hash := contract.Spec.DataLocation.Ref.Hash
 
 	// First... just see if it's already a bech32 address. Maybe things are looking up!
 	if addr, err := MetadataAddressFromBech32(hash); err == nil {
