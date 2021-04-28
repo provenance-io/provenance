@@ -36,6 +36,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgWriteScopeRequest{},
 		&MsgDeleteScopeRequest{},
+		&MsgAddScopeDataAccessRequest{},
+		&MsgDeleteScopeDataAccessRequest{},
 		&MsgWriteSessionRequest{},
 		&MsgWriteRecordRequest{},
 		&MsgDeleteRecordRequest{},

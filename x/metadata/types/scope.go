@@ -78,6 +78,39 @@ func (s Scope) String() string {
 	return string(out)
 }
 
+func (s *Scope) RemoveDataAccess(addresses []string) {
+	newDataAccess := []string{}
+	for _, da := range s.DataAccess {
+		found := false
+		for _, addr := range addresses {
+			if addr == da {
+				found = true
+				break
+			}
+		}
+		if !found {
+			newDataAccess = append(newDataAccess, da)
+		}
+	}
+
+	s.DataAccess = newDataAccess
+}
+
+func (s *Scope) AddDataAccess(addresses []string) {
+	for _, addr := range addresses {
+		found := false
+		for _, da := range s.DataAccess {
+			if addr == da {
+				found = true
+				break
+			}
+		}
+		if !found {
+			s.DataAccess = append(s.DataAccess, addr)
+		}
+	}
+}
+
 // UpdateAudit computes a set of changes to the audit fields based on the existing message.
 func (a *AuditFields) UpdateAudit(blocktime time.Time, signers, message string) *AuditFields {
 	if a == nil {

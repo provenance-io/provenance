@@ -36,6 +36,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* Add grpc messages and cli command to add/remove addresses from metadata scope data access [#220](https://github.com/provenance-io/provenance/issues/220)
 * Add a `context` field to the `Session` [#276](https://github.com/provenance-io/provenance/issues/276)
 
 ### Improvements

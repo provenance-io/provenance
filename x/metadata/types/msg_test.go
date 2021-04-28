@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/hex"
+	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -92,6 +93,110 @@ func TestWriteScopeValidation(t *testing.T) {
 	require.Equal(t, sdk.AccAddress(x), requiredSigners[0])
 }
 
+func TestAddScopeDataAccessValidateBasic(t *testing.T) {
+	notAScopeId := RecordMetadataAddress(uuid.New(), "recordname")
+	actualScopeId := ScopeMetadataAddress(uuid.New())
+
+	cases := map[string]struct {
+		msg      *MsgAddScopeDataAccessRequest
+		wantErr  bool
+		errorMsg string
+	}{
+		"should fail to validate basic, incorrect scope id type": {
+			NewMsgAddScopeDataAccessRequest(notAScopeId, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			true,
+			fmt.Sprintf("address is not a scope id: %v", notAScopeId.String()),
+		},
+		"should fail to validate basic, requires at least one data access address": {
+			NewMsgAddScopeDataAccessRequest(actualScopeId, []string{}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			true,
+			"at least one data access address is required",
+		},
+		"should fail to validate basic, incorrect data access address format": {
+			NewMsgAddScopeDataAccessRequest(actualScopeId, []string{"notabech32address"}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			true,
+			"data access address is invalid: notabech32address",
+		},
+		"should fail to validate basic, requires at least one signer": {
+			NewMsgAddScopeDataAccessRequest(actualScopeId, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}, []string{}),
+			true,
+			"at least one signer is required",
+		},
+		"should successfully validate basic": {
+			NewMsgAddScopeDataAccessRequest(actualScopeId, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			false,
+			"",
+		},
+	}
+
+	for n, tc := range cases {
+		tc := tc
+
+		t.Run(n, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.wantErr {
+				require.Error(t, err)
+				require.Equal(t, tc.errorMsg, err.Error())
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+
+}
+
+func TestDeleteScopeDataAccessValidateBasic(t *testing.T) {
+	notAScopeId := RecordMetadataAddress(uuid.New(), "recordname")
+	actualScopeId := ScopeMetadataAddress(uuid.New())
+
+	cases := map[string]struct {
+		msg      *MsgDeleteScopeDataAccessRequest
+		wantErr  bool
+		errorMsg string
+	}{
+		"should fail to validate basic, incorrect scope id type": {
+			NewMsgDeleteScopeDataAccessRequest(notAScopeId, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			true,
+			fmt.Sprintf("address is not a scope id: %v", notAScopeId.String()),
+		},
+		"should fail to validate basic, requires at least one data access address": {
+			NewMsgDeleteScopeDataAccessRequest(actualScopeId, []string{}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			true,
+			"at least one data access address is required",
+		},
+		"should fail to validate basic, incorrect data access address format": {
+			NewMsgDeleteScopeDataAccessRequest(actualScopeId, []string{"notabech32address"}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			true,
+			"data access address is invalid: notabech32address",
+		},
+		"should fail to validate basic, requires at least one signer": {
+			NewMsgDeleteScopeDataAccessRequest(actualScopeId, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}, []string{}),
+			true,
+			"at least one signer is required",
+		},
+		"should successfully validate basic": {
+			NewMsgDeleteScopeDataAccessRequest(actualScopeId, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			false,
+			"",
+		},
+	}
+
+	for n, tc := range cases {
+		tc := tc
+
+		t.Run(n, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.wantErr {
+				require.Error(t, err)
+				require.Equal(t, tc.errorMsg, err.Error())
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+
+}
+
 func TestWriteP8eContractSpecValidation(t *testing.T) {
 
 	validInputSpec := p8e.DefinitionSpec{
@@ -148,8 +253,7 @@ func TestWriteP8eContractSpecValidation(t *testing.T) {
 }
 
 func TestBindOSLocator(t *testing.T) {
-	var bindRequestMsg = NewMsgBindOSLocatorRequest(ObjectStoreLocator{Owner:
-	"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", LocatorUri: "http://foo.com"})
+	var bindRequestMsg = NewMsgBindOSLocatorRequest(ObjectStoreLocator{Owner: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", LocatorUri: "http://foo.com"})
 
 	err := bindRequestMsg.ValidateBasic()
 	require.NoError(t, err)
@@ -163,8 +267,7 @@ func TestBindOSLocator(t *testing.T) {
 }
 
 func TestModifyOSLocator(t *testing.T) {
-	var modifyRequest = NewMsgModifyOSLocatorRequest(ObjectStoreLocator{Owner:
-	"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", LocatorUri: "http://foo.com"})
+	var modifyRequest = NewMsgModifyOSLocatorRequest(ObjectStoreLocator{Owner: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", LocatorUri: "http://foo.com"})
 
 	err := modifyRequest.ValidateBasic()
 	require.NoError(t, err)
@@ -177,8 +280,7 @@ func TestModifyOSLocator(t *testing.T) {
 }
 
 func TestDeleteOSLocator(t *testing.T) {
-	var deleteRequest = NewMsgDeleteOSLocatorRequest(ObjectStoreLocator{Owner:
-	"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", LocatorUri: "http://foo.com"})
+	var deleteRequest = NewMsgDeleteOSLocatorRequest(ObjectStoreLocator{Owner: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", LocatorUri: "http://foo.com"})
 
 	err := deleteRequest.ValidateBasic()
 	require.NoError(t, err)
@@ -192,24 +294,21 @@ func TestDeleteOSLocator(t *testing.T) {
 }
 
 func TestBindOSLocatorInvalid(t *testing.T) {
-	var bindRequestMsg = NewMsgBindOSLocatorRequest(ObjectStoreLocator{Owner:
-	"vamonos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", LocatorUri: "http://foo.com"})
+	var bindRequestMsg = NewMsgBindOSLocatorRequest(ObjectStoreLocator{Owner: "vamonos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", LocatorUri: "http://foo.com"})
 
 	err := bindRequestMsg.ValidateBasic()
 	require.Error(t, err)
 }
 
 func TestBindOSLocatorInvalidAddr(t *testing.T) {
-	var bindRequestMsg = NewMsgBindOSLocatorRequest(ObjectStoreLocator{Owner:
-	"", LocatorUri: "http://foo.com"})
+	var bindRequestMsg = NewMsgBindOSLocatorRequest(ObjectStoreLocator{Owner: "", LocatorUri: "http://foo.com"})
 
 	err := bindRequestMsg.ValidateBasic()
 	require.Error(t, err)
 }
 
 func TestBindOSLocatorInvalidURI(t *testing.T) {
-	var bindRequestMsg = NewMsgBindOSLocatorRequest(ObjectStoreLocator{Owner:
-	"", LocatorUri: "foo://foo.com"})
+	var bindRequestMsg = NewMsgBindOSLocatorRequest(ObjectStoreLocator{Owner: "", LocatorUri: "foo://foo.com"})
 
 	err := bindRequestMsg.ValidateBasic()
 	require.Error(t, err)

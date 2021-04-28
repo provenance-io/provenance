@@ -260,3 +260,63 @@ func (k Keeper) ValidateScopeRemove(ctx sdk.Context, existing, proposed types.Sc
 
 	return nil
 }
+
+// ValidateScopeAddDataAccess checks the current scope and the proposed
+func (k Keeper) ValidateScopeAddDataAccess(ctx sdk.Context, dataAccessAddrs []string, existing types.Scope, signers []string) error {
+	if len(dataAccessAddrs) < 1 {
+		return fmt.Errorf("data access list cannot be empty")
+	}
+
+	for _, da := range dataAccessAddrs {
+		_, err := sdk.AccAddressFromBech32(da)
+		if err != nil {
+			return fmt.Errorf("failed to decode data access address %s : %v", da, err.Error())
+		}
+	}
+
+	for _, da := range existing.DataAccess {
+		for _, pda := range dataAccessAddrs {
+			if da == pda {
+				return fmt.Errorf("address already exists for data access %s", pda)
+			}
+		}
+	}
+
+	if err := k.ValidateAllPartiesAreSigners(existing.Owners, signers); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ValidateScopeDeleteDataAccess checks the current scope and the proposed
+func (k Keeper) ValidateScopeDeleteDataAccess(ctx sdk.Context, dataAccessAddrs []string, existing types.Scope, signers []string) error {
+	if len(dataAccessAddrs) < 1 {
+		return fmt.Errorf("data access list cannot be empty")
+	}
+	for _, da := range dataAccessAddrs {
+		_, err := sdk.AccAddressFromBech32(da)
+		if err != nil {
+			return fmt.Errorf("failed to decode data access address %s : %v", da, err.Error())
+		}
+	}
+
+	for _, da := range dataAccessAddrs {
+		found := false
+		for _, pda := range existing.DataAccess {
+			if da == pda {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("address does not exist in scope data access: %s", da)
+		}
+	}
+
+	if err := k.ValidateAllPartiesAreSigners(existing.Owners, signers); err != nil {
+		return err
+	}
+
+	return nil
+}

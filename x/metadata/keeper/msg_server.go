@@ -77,6 +77,68 @@ func (k msgServer) DeleteScope(
 	return &types.MsgDeleteScopeResponse{}, nil
 }
 
+func (k msgServer) AddScopeDataAccess(
+	goCtx context.Context,
+	msg *types.MsgAddScopeDataAccessRequest,
+) (*types.MsgAddScopeDataAccessResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	existing, found := k.GetScope(ctx, msg.ScopeId)
+	if !found {
+		return nil, fmt.Errorf("scope not found with id %s", msg.ScopeId)
+	}
+
+	if err := k.ValidateScopeAddDataAccess(ctx, msg.DataAccess, existing, msg.Signers); err != nil {
+		return nil, err
+	}
+
+	existing.DataAccess = append(existing.DataAccess, msg.DataAccess...)
+
+	existing.AddDataAccess(msg.DataAccess)
+
+	k.SetScope(ctx, existing)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
+		),
+	)
+
+	return &types.MsgAddScopeDataAccessResponse{}, nil
+}
+
+func (k msgServer) DeleteScopeDataAccess(
+	goCtx context.Context,
+	msg *types.MsgDeleteScopeDataAccessRequest,
+) (*types.MsgDeleteScopeDataAccessResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	existing, found := k.GetScope(ctx, msg.ScopeId)
+	if !found {
+		return nil, fmt.Errorf("scope not found with id %s", msg.ScopeId)
+	}
+
+	if err := k.ValidateScopeDeleteDataAccess(ctx, msg.DataAccess, existing, msg.Signers); err != nil {
+		return nil, err
+	}
+
+	existing.RemoveDataAccess(msg.DataAccess)
+
+	k.SetScope(ctx, existing)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
+		),
+	)
+
+	return &types.MsgDeleteScopeDataAccessResponse{}, nil
+}
+
 func (k msgServer) WriteSession(
 	goCtx context.Context,
 	msg *types.MsgWriteSessionRequest,

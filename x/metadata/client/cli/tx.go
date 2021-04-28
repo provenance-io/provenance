@@ -36,6 +36,7 @@ func NewTxCmd() *cobra.Command {
 	txCmd.AddCommand(
 		WriteScopeCmd(),
 		RemoveScopeCmd(),
+		AddRemoveScopeDataAccessCmd(),
 
 		BindOsLocatorCmd(),
 		RemoveOsLocatorCmd(),
@@ -149,6 +150,58 @@ func RemoveScopeCmd() *cobra.Command {
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+		},
+	}
+
+	addSignerFlagCmd(cmd)
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func AddRemoveScopeDataAccessCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "scope-data-access {add|remove} scope-id data-access",
+		Short: "Add or remove a metadata scope data access on to the provenance blockchain",
+		Args:  cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			removeOrAdd := strings.ToLower(args[0])
+			if removeOrAdd != "remove" && removeOrAdd != "add" {
+				return fmt.Errorf("incorrect command %s : required remove or update", removeOrAdd)
+			}
+
+			var scopeID types.MetadataAddress
+			scopeID, err = types.MetadataAddressFromBech32(args[1])
+			if err != nil {
+				return err
+			}
+
+			if !scopeID.IsScopeAddress() {
+				return fmt.Errorf("meta address is not a scope: %s", scopeID.String())
+			}
+
+			signers, err := parseSigners(cmd, &clientCtx)
+			if err != nil {
+				return err
+			}
+
+			dataAccess := strings.Split(args[2], ",")
+			var msg sdk.Msg
+			if removeOrAdd == "add" {
+				msg = types.NewMsgAddScopeDataAccessRequest(scopeID, dataAccess, signers)
+			} else {
+				msg = types.NewMsgDeleteScopeDataAccessRequest(scopeID, dataAccess, signers)
+			}
+			err = msg.ValidateBasic()
+			if err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 

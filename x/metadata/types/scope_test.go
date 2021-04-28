@@ -118,6 +118,92 @@ func (s *ScopeTestSuite) TestScopeValidateBasic() {
 	}
 }
 
+func (s *ScopeTestSuite) TestScopeAddAccess() {
+	tests := []struct {
+		name       string
+		scope      *Scope
+		dataAccess []string
+		expected   []string
+	}{
+		{
+			"should successfully add new address to scope data access",
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{}, ""),
+			[]string{"addr1"},
+			[]string{"addr1"},
+		},
+		{
+			"should successfully not add same address twice to data access",
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{"addr1"}, ""),
+			[]string{"addr1"},
+			[]string{"addr1"},
+		},
+		{
+			"should successfully add new address to data access",
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{"addr1"}, ""),
+			[]string{"addr2"},
+			[]string{"addr1", "addr2"},
+		},
+		{
+			"should successfully add new address only once to data access",
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{"addr1"}, ""),
+			[]string{"addr2", "addr2", "addr2"},
+			[]string{"addr1", "addr2"},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		s.T().Run(tt.name, func(t *testing.T) {
+
+			tt.scope.AddDataAccess(tt.dataAccess)
+			require.Equal(t, tt.scope.DataAccess, tt.expected)
+		})
+	}
+}
+
+func (s *ScopeTestSuite) TestScopeRemoveAccess() {
+	tests := []struct {
+		name       string
+		scope      *Scope
+		dataAccess []string
+		expected   []string
+	}{
+		{
+			"should successfully remove address from scope data access",
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{"addr1"}, ""),
+			[]string{"addr1"},
+			[]string{},
+		},
+		{
+			"should successfully remove from a list more with more than one",
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{"addr1", "addr2"}, ""),
+			[]string{"addr2"},
+			[]string{"addr1"},
+		},
+		{
+			"should successfully remove nothing",
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{}, ""),
+			[]string{"addr2"},
+			[]string{},
+		},
+		{
+			"should successfully remove address even when repeated in list",
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{"addr1", "addr2", "addr3"}, ""),
+			[]string{"addr2", "addr2", "addr2"},
+			[]string{"addr1", "addr3"},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		s.T().Run(tt.name, func(t *testing.T) {
+
+			tt.scope.RemoveDataAccess(tt.dataAccess)
+			require.Equal(t, tt.scope.DataAccess, tt.expected)
+		})
+	}
+}
+
 func (s *ScopeTestSuite) TestScopeString() {
 	s.T().Run("scope string", func(t *testing.T) {
 		scopeUUID := uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")
