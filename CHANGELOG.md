@@ -34,6 +34,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Features
+
+* Add grpc messages and cli command to add/remove addresses from metadata scope data access #220
+
+
 ## [v1.2.0](https://github.com/provenance-io/provenance/releases/tag/v1.2.0) - 2021-04-26
 
 ### Improvements

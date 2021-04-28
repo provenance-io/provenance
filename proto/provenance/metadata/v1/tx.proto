@@ -127,7 +127,7 @@ message MsgDeleteScopeRequest {
 // MsgDeleteScopeResponse is the response type for the Msg/DeleteScope RPC method.
 message MsgDeleteScopeResponse {}
 
-// MsgAddScopeDataAccessRequest
+// MsgAddScopeDataAccessRequest is the request to add data access metaaddresses to scope
 message MsgAddScopeDataAccessRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
@@ -147,10 +147,10 @@ message MsgAddScopeDataAccessRequest {
   repeated string signers = 3;
 }
 
-// MsgAddScopeDataAccessResponse
+// MsgAddScopeDataAccessResponse is the response for adding data access metaaddresses to scope
 message MsgAddScopeDataAccessResponse {}
 
-// MsgRemoveScopeDataAccessRequest
+// MsgRemoveScopeDataAccessRequest is the request to remove data access metaaddresses to scope
 message MsgDeleteScopeDataAccessRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
@@ -170,7 +170,7 @@ message MsgDeleteScopeDataAccessRequest {
   repeated string signers = 3;
 }
 
-// MsgRemoveScopeDataAccessResponse
+// MsgRemoveScopeDataAccessResponse is the response from removing data access metaaddresses to scope
 message MsgDeleteScopeDataAccessResponse {}
 
 // MsgWriteSessionRequest is the request type for the Msg/WriteSession RPC method.

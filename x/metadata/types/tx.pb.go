@@ -202,7 +202,7 @@ func (m *MsgDeleteScopeResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgDeleteScopeResponse proto.InternalMessageInfo
 
-// MsgAddScopeDataAccessRequest
+// MsgAddScopeDataAccessRequest is the request to add data access metaaddresses to scope
 type MsgAddScopeDataAccessRequest struct {
 	// scope MetadataAddress for updating data access
 	ScopeId MetadataAddress `protobuf:"bytes,1,opt,name=scope_id,json=scopeId,proto3,customtype=MetadataAddress" json:"scope_id" yaml:"scope_id"`
@@ -243,7 +243,7 @@ func (m *MsgAddScopeDataAccessRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgAddScopeDataAccessRequest proto.InternalMessageInfo
 
-// MsgAddScopeDataAccessResponse
+// MsgAddScopeDataAccessResponse is the response for adding data access metaaddresses to scope
 type MsgAddScopeDataAccessResponse struct {
 }
 
@@ -280,7 +280,7 @@ func (m *MsgAddScopeDataAccessResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgAddScopeDataAccessResponse proto.InternalMessageInfo
 
-// MsgRemoveScopeDataAccessRequest
+// MsgRemoveScopeDataAccessRequest is the request to remove data access metaaddresses to scope
 type MsgDeleteScopeDataAccessRequest struct {
 	// scope MetadataAddress for removing data access
 	ScopeId MetadataAddress `protobuf:"bytes,1,opt,name=scope_id,json=scopeId,proto3,customtype=MetadataAddress" json:"scope_id" yaml:"scope_id"`
@@ -321,7 +321,7 @@ func (m *MsgDeleteScopeDataAccessRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgDeleteScopeDataAccessRequest proto.InternalMessageInfo
 
-// MsgRemoveScopeDataAccessResponse
+// MsgRemoveScopeDataAccessResponse is the response from removing data access metaaddresses to scope
 type MsgDeleteScopeDataAccessResponse struct {
 }
 
