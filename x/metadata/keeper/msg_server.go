@@ -93,6 +93,9 @@ func (k msgServer) AddScopeDataAccess(
 	}
 
 	existing.DataAccess = append(existing.DataAccess, msg.DataAccess...)
+
+	existing.AddDataAccess(msg.DataAccess)
+
 	k.SetScope(ctx, existing)
 
 	ctx.EventManager().EmitEvent(
@@ -121,20 +124,7 @@ func (k msgServer) DeleteScopeDataAccess(
 		return nil, err
 	}
 
-	newDataAccess := []string{}
-	for _, da := range msg.DataAccess {
-		found := false
-		for _, pda := range existing.DataAccess {
-			if pda == da {
-				found = true
-			}
-		}
-		if !found {
-			newDataAccess = append(newDataAccess, da)
-		}
-	}
-
-	existing.DataAccess = newDataAccess
+	existing.RemoveDataAccess(msg.DataAccess)
 
 	k.SetScope(ctx, existing)
 
