@@ -3,9 +3,6 @@ package metadata_test
 import (
 	"encoding/base64"
 	"fmt"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/google/uuid"
-	"github.com/stretchr/testify/require"
 	"testing"
 
 	"github.com/google/uuid"
@@ -16,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/provenance-io/provenance/app"
@@ -148,10 +146,7 @@ func (s HandlerTestSuite) TestWriteSession() {
 				SpecificationId: cSpec.SpecificationId,
 				Parties:         scope.Owners,
 				Name:            "someclass",
-				Context:         &codectypes.Any{
-					TypeUrl: "github.com/provenance-io/provenance/x/metadata/types/p8e.UUID",
-					Value:   someBytes,
-				},
+				Context:         someBytes,
 				Audit:           nil,
 			},
 			[]string{s.user1},

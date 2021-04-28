@@ -518,7 +518,7 @@ parties:
 - address: cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck
   role: 6
 type: name
-context: null
+context: []
 audit:
   created_by: cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck
   message: message
