@@ -35,6 +35,7 @@ func NewTxCmd() *cobra.Command {
 	txCmd.AddCommand(
 		WriteScopeCmd(),
 		RemoveScopeCmd(),
+		AddRemoveScopeDataAccessCmd(),
 
 		BindOsLocatorCmd(),
 		RemoveOsLocatorCmd(),
@@ -59,7 +60,7 @@ func NewTxCmd() *cobra.Command {
 // WriteScopeCmd creates a command for adding or updating a metadata scope.
 func WriteScopeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "write-scope [scope-id] [spec-id] [owner-addresses] [data-access] [value-owner-address]",
+		Use:   "write-scope scope-id spec-id owner-addresses data-access value-owner-address",
 		Short: "Add/Update a metadata scope to the provenance blockchain",
 		Args:  cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -119,7 +120,7 @@ func WriteScopeCmd() *cobra.Command {
 // RemoveScopeCmd creates a command for removing a scope.
 func RemoveScopeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "remove-scope [scope-id]",
+		Use:   "remove-scope scope-id",
 		Short: "Remove a metadata scope to the provenance blockchain",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -155,10 +156,62 @@ func RemoveScopeCmd() *cobra.Command {
 	return cmd
 }
 
+func AddRemoveScopeDataAccessCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "scope-data-access {add|remove} scope-id data-access",
+		Short: "Add or remove a metadata scope data access on to the provenance blockchain",
+		Args:  cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			removeOrAdd := strings.ToLower(args[0])
+			if removeOrAdd != "remove" && removeOrAdd != "add" {
+				return fmt.Errorf("incorrect command %s : required remove or update", removeOrAdd)
+			}
+
+			var scopeID types.MetadataAddress
+			scopeID, err = types.MetadataAddressFromBech32(args[1])
+			if err != nil {
+				return err
+			}
+
+			if !scopeID.IsScopeAddress() {
+				return fmt.Errorf("meta address is not a scope: %s", scopeID.String())
+			}
+
+			signers, err := parseSigners(cmd, &clientCtx)
+			if err != nil {
+				return err
+			}
+
+			dataAccess := strings.Split(args[2], ",")
+			var msg sdk.Msg
+			if removeOrAdd == "add" {
+				msg = types.NewMsgAddScopeDataAccessRequest(scopeID, dataAccess, signers)
+			} else {
+				msg = types.NewMsgDeleteScopeDataAccessRequest(scopeID, dataAccess, signers)
+			}
+			err = msg.ValidateBasic()
+			if err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	addSignerFlagCmd(cmd)
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
 // BindOsLocatorCmd creates a command for binding an owner to uri in the object store.
 func BindOsLocatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "bind-locator [owner] [uri]",
+		Use:   "bind-locator owner uri",
 		Short: "Bind a uri to an owner address on the provenance blockchain",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -189,7 +242,7 @@ func BindOsLocatorCmd() *cobra.Command {
 // RemoveOsLocatorCmd creates a command for removing an object store locator entry.
 func RemoveOsLocatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "remove-locator [owner] [uri]",
+		Use:   "remove-locator owner uri",
 		Short: "Remove an os locator already associated owner address on the provenance blockchain",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -220,7 +273,7 @@ func RemoveOsLocatorCmd() *cobra.Command {
 // ModifyOsLocatorCmd creates a command to modify the object store locator uri for an owner.
 func ModifyOsLocatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "modify-locator [owner] [uri]",
+		Use:   "modify-locator owner uri",
 		Short: "Modify a uri already associated owner address on the provenance blockchain",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -255,7 +308,7 @@ func ModifyOsLocatorCmd() *cobra.Command {
 // WriteScopeSpecificationCmd creates a command for adding scope specificiation
 func WriteScopeSpecificationCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "write-scope-specification [specification-id] [owner-addresses] [responsible-parties] [contract-specification-ids] [description-name] [description] [website-url] [icon-url]",
+		Use:   "write-scope-specification specification-id owner-addresses responsible-parties contract-specification-ids [description-name] [description] [website-url] [icon-url]",
 		Short: "Add/Update metadata scope specification to the provenance blockchain",
 		Args:  cobra.RangeArgs(4, 8),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -310,7 +363,7 @@ func WriteScopeSpecificationCmd() *cobra.Command {
 // WriteContractSpecificationCmd creates a command to add/update contract specifications
 func WriteContractSpecificationCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "write-contract-specification [contractspec-id] [owners] [parties-involved] [source-value] [classname] [description-name] [description] [website-url] [icon-url]",
+		Use:   "write-contract-specification contractspec-id owners parties-involved source-value classname [description-name] [description] [website-url] [icon-url]",
 		Short: "Add/Update metadata contract specification on the provenance blockchain",
 		Long: `Add/Update metadata contract specification on the provenance blockchain
 [contractspec-id]   - contract specification metaaddress
@@ -378,7 +431,7 @@ func WriteContractSpecificationCmd() *cobra.Command {
 // WriteRecordCmd creates a command to add/update records
 func WriteRecordCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "write-record [scope-id] [record-spec-id] [name] [process] [inputs] [outputs] [parties-involved] [contract-id | session-id]",
+		Use:   "write-record scope-id record-spec-id name process inputs outputs parties-involved {contract-id|session-id}",
 		Short: "Add/Update metadata record to the provenance blockchain",
 		Long: fmt.Sprintf(`Add/Update metadata record to the provenance blockchain.
 [scope-id]                 - scope metaaddress for the record
@@ -568,7 +621,7 @@ func parseRecordOutputs(cliDelimitedValue string) ([]types.RecordOutput, error) 
 
 func WriteRecordSpecificationCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "write-record-specification [specification-id] [name] [input-specifications] [type-name] [result-types] [responsible-parties]",
+		Use:   "write-record-specification specification-id name input-specifications type-name result-types responsible-parties",
 		Short: "Add/Update metadata record specification to the provenance blockchain",
 		Long: fmt.Sprintf(`Add/Update metadata record specification to the provenance blockchain.
 [specification-id]     - record specification metaaddress
@@ -712,7 +765,7 @@ func parseDescription(cliArgs []string) *types.Description {
 // RemoveScopeSpecificationCmd creates a command to remove scope specification
 func RemoveScopeSpecificationCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "remove-scope-specification [specification-id]",
+		Use:   "remove-scope-specification specification-id",
 		Short: "Remove scope specification from the provenance blockchain",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -750,7 +803,7 @@ func RemoveScopeSpecificationCmd() *cobra.Command {
 // RemoveContractSpecificationCmd creates a command to remove a contract specification
 func RemoveContractSpecificationCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "remove-contract-specification [specification-id]",
+		Use:   "remove-contract-specification specification-id",
 		Short: "Removes a contract specification on the provenance blockchain",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -788,7 +841,7 @@ func RemoveContractSpecificationCmd() *cobra.Command {
 // RemoveRecordCmd creates a command to remove a contract specification
 func RemoveRecordCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "remove-record [record-id]",
+		Use:   "remove-record record-id",
 		Short: "Remove record specification from the provenance blockchain",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -822,7 +875,7 @@ func RemoveRecordCmd() *cobra.Command {
 // RemoveRecordSpecificationCmd creates  a command to remove a record specification
 func RemoveRecordSpecificationCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "remove-record-specification [specification-id]",
+		Use:   "remove-record-specification specification-id",
 		Short: "Remove record specification from the provenance blockchain",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
