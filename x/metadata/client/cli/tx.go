@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/base64"
 	"fmt"
 	"strings"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/version"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
@@ -48,6 +50,8 @@ func NewTxCmd() *cobra.Command {
 
 		WriteRecordSpecificationCmd(),
 		RemoveRecordSpecificationCmd(),
+
+		WriteSessionCmd(),
 
 		WriteRecordCmd(),
 		RemoveRecordCmd(),
@@ -369,6 +373,139 @@ func WriteContractSpecificationCmd() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+	addSignerFlagCmd(cmd)
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func WriteSessionCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "write-session {session-id|{scope-id|scope-uuid} session-uuid} {contract-specification-id} {parties} {name} [context-type-url context-value]",
+		Short: "Add/Update metadata sessioon to the provenance blockchain",
+		Long: `Add/Update metadata session to the provenance blockchain.
+session-id                 - a bech32 address string for this session
+scope-id                   - a bech32 address string for the scope this session belongs to
+scope-uuid                 - a UUID string representing the uuid of the scope this session belongs to
+session-uuid               - a UUID string representing the uuid for this session
+contract-specification-id  - a bech32 address string for the contract specification that applies to this session
+parties-involved           - semicolon delimited list of party structures(address,role). Accepted roles: originator,servicer,investor,custodian,owner,affiliate,omnibus,provenance
+name                       - a name for this session (usually a classname)
+context-type-url           - a type url describing whats in the context-value (optional, if provided, a context-value must also be provided)
+context-value              - a base64 encoded string of the bytes that represent the session context (optional, if provided, a context-type-url must also be provided)
+`,
+		Example: fmt.Sprintf(`$ %[1]s tx metadata write-session \
+91978ba2-5f35-459a-86a7-feca1b0512e0 5803f8bc-6067-4eb5-951f-2121671c2ec0 \
+contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn \
+cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck,owner \
+io.p8e.contracts.example.HelloWorldContract
+
+$ %[1]s tx metadata write-session \
+session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr \
+contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn \
+cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck,owner \
+io.p8e.contracts.example.HelloWorldContract \
+type.googleapis.com/google.protobuf.StringValue \
+SEVMTE8gUFJPVkVOQU5DRSEK
+`, version.AppName),
+		Args: cobra.RangeArgs(4, 7),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, ctxErr := client.GetClientTxContext(cmd)
+			if ctxErr != nil {
+				return ctxErr
+			}
+
+			var scopeUUID uuid.UUID
+			var sessionID types.MetadataAddress
+			var cSpecID types.MetadataAddress
+			var parties []types.Party
+			var name string
+			var context *codectypes.Any
+			var signers []string
+			var err error
+
+			argsLeft := args
+
+			// Parse: {session-id|{scope-id|scope-uuid} session-uuid}
+			arg0AsID, asIDErr := types.MetadataAddressFromBech32(argsLeft[0])
+			if asIDErr == nil {
+				switch {
+				case arg0AsID.IsSessionAddress():
+					sessionID = arg0AsID
+				case arg0AsID.IsScopeAddress():
+					scopeUUID, _ = arg0AsID.ScopeUUID()
+				default:
+					return fmt.Errorf("invalid address type in argument [%s]", arg0AsID)
+				}
+			} else {
+				arg0AsUUID, asUUIDerr := uuid.Parse(argsLeft[0])
+				if asUUIDerr != nil {
+					return fmt.Errorf("argument [%s] is neither a bech32 address (%s) nor UUID (%s)", argsLeft[0], asIDErr, asUUIDerr)
+				}
+				scopeUUID = arg0AsUUID
+			}
+			argsLeft = argsLeft[1:]
+			if len(sessionID) == 0 {
+				sUUID, sUUIDErr := uuid.Parse(argsLeft[0])
+				if sUUIDErr != nil {
+					return fmt.Errorf("invalid session uuid as argument [%s]: %w", argsLeft[0], sUUIDErr)
+				}
+				sessionID = types.SessionMetadataAddress(scopeUUID, sUUID)
+				argsLeft = argsLeft[1:]
+			}
+
+			if len(argsLeft) < 3 {
+				return fmt.Errorf("not enough arguments (expected >= %d, found %d)", len(args)-len(argsLeft)+3, len(args))
+			}
+
+			// arguments left: {contract-specification-id} {parties} {name} and possibly context stuff.
+			cSpecID, err = types.MetadataAddressFromBech32(argsLeft[0])
+			if err != nil {
+				return fmt.Errorf("invalid contract specification id [%s]: %w", argsLeft[0], err)
+			}
+			parties, err = parsePartiesInvolved(argsLeft[1])
+			if err != nil {
+				return err
+			}
+			name = argsLeft[2]
+			argsLeft = argsLeft[3:]
+
+			// Handle the optional context stuff.
+			if len(argsLeft) > 0 {
+				// Need two args left
+				if len(argsLeft) < 2 {
+					return fmt.Errorf("not enough arguments (expected >= %d, found %d)", len(args)-len(argsLeft)+2, len(args))
+				}
+				context = &codectypes.Any{TypeUrl: argsLeft[0]}
+				context.Value, err = base64.StdEncoding.DecodeString(argsLeft[1])
+				if err != nil {
+					return fmt.Errorf("invalid context-value: %w", err)
+				}
+				argsLeft = argsLeft[2:]
+			}
+
+			// Make sure there aren't any leftover/unused arguments
+			if len(argsLeft) > 0 {
+				return fmt.Errorf("too many arguments (expected <= %d, found %d)", len(args)-len(argsLeft), len(args))
+			}
+
+			signers, err = parseSigners(cmd, &clientCtx)
+			if err != nil {
+				return err
+			}
+
+			session := types.Session{
+				SessionId:       sessionID,
+				SpecificationId: cSpecID,
+				Parties:         parties,
+				Name:            name,
+				Context:         context,
+			}
+			writeSessionMsg := types.NewMsgWriteSessionRequest(session, signers)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), writeSessionMsg)
+		},
+	}
+
 	addSignerFlagCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 
