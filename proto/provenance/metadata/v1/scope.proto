@@ -113,10 +113,12 @@ message Session {
     (gogoproto.customtype) = "MetadataAddress",
     (gogoproto.moretags)   = "yaml:\"specification_id\""
   ];
-  // Set of identities that signed this contract
+  // parties is the set of identities that signed this contract
   repeated Party parties = 3 [(gogoproto.nullable) = false];
   // name to associate with this session execution context, typically classname
   string name = 4 [(gogoproto.jsontag) = "type", (gogoproto.moretags) = "yaml:\"type\""];
+  // context is a field for storing client specific data associated with a session.
+  bytes context = 5;
   // Created by, updated by, timestamps, version number, and related info.
   AuditFields audit = 99 [(gogoproto.moretags) = "yaml:\"audit,omitempty\""];
 }

@@ -177,6 +177,7 @@ func ConvertP8eMemorializeContractRequest(msg *MsgP8EMemorializeContractRequest)
 	}
 	p8EData.Session.Parties = contractRecitalParties
 	p8EData.Session.Name = msg.Contract.Definition.Name
+	p8EData.Session.Context = msg.Contract.Context
 
 	processID, pidErr := getProcessID(msg.Contract)
 	if pidErr != nil {
@@ -295,6 +296,7 @@ func emptySession() *Session {
 		Parties:         []Party{},
 		Name:            "",
 		Audit:           nil,
+		Context:         nil,
 	}
 }
 

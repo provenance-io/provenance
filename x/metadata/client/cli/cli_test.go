@@ -28,7 +28,6 @@ import (
 	"github.com/provenance-io/provenance/testutil"
 
 	"github.com/provenance-io/provenance/x/metadata/client/cli"
-	"github.com/provenance-io/provenance/x/metadata/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -255,7 +254,7 @@ value_owner_address: %s`,
 		s.user2,
 	)
 
-	s.sessionAsJson = fmt.Sprintf("{\"session_id\":\"%s\",\"specification_id\":\"%s\",\"parties\":[{\"address\":\"%s\",\"role\":\"PARTY_TYPE_OWNER\"}],\"name\":\"unit test session\",\"audit\":{\"created_date\":\"0001-01-01T00:00:00Z\",\"created_by\":\"%s\",\"updated_date\":\"0001-01-01T00:00:00Z\",\"updated_by\":\"\",\"version\":0,\"message\":\"unit testing\"}}",
+	s.sessionAsJson = fmt.Sprintf("{\"session_id\":\"%s\",\"specification_id\":\"%s\",\"parties\":[{\"address\":\"%s\",\"role\":\"PARTY_TYPE_OWNER\"}],\"name\":\"unit test session\",\"context\":null,\"audit\":{\"created_date\":\"0001-01-01T00:00:00Z\",\"created_by\":\"%s\",\"updated_date\":\"0001-01-01T00:00:00Z\",\"updated_by\":\"\",\"version\":0,\"message\":\"unit testing\"}}",
 		s.sessionID,
 		s.contractSpecID,
 		s.user1,
@@ -268,6 +267,7 @@ value_owner_address: %s`,
   updated_by: ""
   updated_date: "0001-01-01T00:00:00Z"
   version: 0
+context: null
 name: unit test session
 parties:
 - address: %s
@@ -1417,7 +1417,13 @@ func runTxCmdTestCases(s *IntegrationCLITestSuite, testCases []txCmdTestCase) {
 				require.NoError(t, umErr, "%s UnmarshalJSON error", cmdName)
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				require.Equal(t, tc.expectedCode, txResp.Code, "%s response code", cmdName)
+				assert.Equal(t, tc.expectedCode, txResp.Code, "%s response code", cmdName)
+				// Note: If the above is failing because a 0 is expected, but it's getting a 1,
+				//       it might mean that the keeper method is returning an error.
+
+				if t.Failed() {
+					t.Logf("tx:\n%v\n", txResp)
+				}
 			}
 		})
 	}
@@ -1425,8 +1431,8 @@ func runTxCmdTestCases(s *IntegrationCLITestSuite, testCases []txCmdTestCase) {
 
 func (s *IntegrationCLITestSuite) TestMetadataScopeTxCommands() {
 
-	scopeID := types.ScopeMetadataAddress(uuid.New()).String()
-	specID := types.ScopeSpecMetadataAddress(uuid.New()).String()
+	scopeID := metadatatypes.ScopeMetadataAddress(uuid.New()).String()
+	specID := metadatatypes.ScopeSpecMetadataAddress(uuid.New()).String()
 	testCases := []txCmdTestCase{
 		{
 			"should successfully add metadata scope",
@@ -1448,8 +1454,8 @@ func (s *IntegrationCLITestSuite) TestMetadataScopeTxCommands() {
 			"should successfully add metadata scope with signers flag",
 			cli.WriteScopeCmd(),
 			[]string{
-				types.ScopeMetadataAddress(uuid.New()).String(),
-				types.ScopeSpecMetadataAddress(uuid.New()).String(),
+				metadatatypes.ScopeMetadataAddress(uuid.New()).String(),
+				metadatatypes.ScopeSpecMetadataAddress(uuid.New()).String(),
 				s.user1,
 				s.user1,
 				s.user1,
@@ -1466,7 +1472,7 @@ func (s *IntegrationCLITestSuite) TestMetadataScopeTxCommands() {
 			cli.WriteScopeCmd(),
 			[]string{
 				"not-a-uuid",
-				types.ScopeSpecMetadataAddress(uuid.New()).String(),
+				metadatatypes.ScopeSpecMetadataAddress(uuid.New()).String(),
 				s.user1,
 				s.user1,
 				s.user1,
@@ -1481,7 +1487,7 @@ func (s *IntegrationCLITestSuite) TestMetadataScopeTxCommands() {
 			"should fail to add metadata scope, incorrect scope spec id",
 			cli.WriteScopeCmd(),
 			[]string{
-				types.ScopeMetadataAddress(uuid.New()).String(),
+				metadatatypes.ScopeMetadataAddress(uuid.New()).String(),
 				"not-a-uuid",
 				s.user1,
 				s.user1,
@@ -1497,8 +1503,8 @@ func (s *IntegrationCLITestSuite) TestMetadataScopeTxCommands() {
 			"should fail to add metadata scope, validate basic will err on owner format",
 			cli.WriteScopeCmd(),
 			[]string{
-				types.ScopeMetadataAddress(uuid.New()).String(),
-				types.ScopeSpecMetadataAddress(uuid.New()).String(),
+				metadatatypes.ScopeMetadataAddress(uuid.New()).String(),
+				metadatatypes.ScopeSpecMetadataAddress(uuid.New()).String(),
 				"incorrect,incorrect",
 				s.user1,
 				s.user1,
@@ -1637,7 +1643,7 @@ func (s *IntegrationCLITestSuite) TestMetadataScopeTxCommands() {
 func (s *IntegrationCLITestSuite) TestScopeSpecificationTxCommands() {
 	addCommand := cli.WriteScopeSpecificationCmd()
 	removeCommand := cli.RemoveScopeSpecificationCmd()
-	specID := types.ScopeSpecMetadataAddress(uuid.New())
+	specID := metadatatypes.ScopeSpecMetadataAddress(uuid.New())
 	testCases := []txCmdTestCase{
 		{
 			"should successfully add scope specification",
@@ -1797,7 +1803,7 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationTxCommands() {
 	addCommand := cli.WriteContractSpecificationCmd()
 	removeCommand := cli.RemoveContractSpecificationCmd()
 	contractSpecUUID := uuid.New()
-	specificationID := types.ContractSpecMetadataAddress(contractSpecUUID)
+	specificationID := metadatatypes.ContractSpecMetadataAddress(contractSpecUUID)
 	testCases := []txCmdTestCase{
 		{
 			"should successfully add contract specification with resource hash",
@@ -1955,8 +1961,8 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 	deleteRecordSpecCmd := cli.RemoveRecordSpecificationCmd()
 	recordName := "testrecordspecid"
 	contractSpecUUID := uuid.New()
-	contractSpecID := types.ContractSpecMetadataAddress(contractSpecUUID)
-	specificationID := types.RecordSpecMetadataAddress(contractSpecUUID, recordName)
+	contractSpecID := metadatatypes.ContractSpecMetadataAddress(contractSpecUUID)
+	specificationID := metadatatypes.RecordSpecMetadataAddress(contractSpecUUID, recordName)
 	testCases := []txCmdTestCase{
 		{
 			"setup test with a record specification owned by signer",
@@ -2158,17 +2164,17 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 	userAddress := s.testnet.Validators[0].Address.String()
 	addRecordCmd := cli.WriteRecordCmd()
-	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
+	scopeSpecID := metadatatypes.ScopeSpecMetadataAddress(uuid.New())
 	scopeUUID := uuid.New()
-	scopeID := types.ScopeMetadataAddress(scopeUUID)
+	scopeID := metadatatypes.ScopeMetadataAddress(scopeUUID)
 	contractSpecUUID := uuid.New()
 	contractSpecName := "`myclassname`"
-	contractSpecID := types.ContractSpecMetadataAddress(contractSpecUUID)
+	contractSpecID := metadatatypes.ContractSpecMetadataAddress(contractSpecUUID)
 
 	recordName := "recordnamefortests"
-	recSpecID := types.RecordSpecMetadataAddress(contractSpecUUID, recordName)
+	recSpecID := metadatatypes.RecordSpecMetadataAddress(contractSpecUUID, recordName)
 
-	recordId := types.RecordMetadataAddress(scopeUUID, recordName)
+	recordId := metadatatypes.RecordMetadataAddress(scopeUUID, recordName)
 
 	testCases := []txCmdTestCase{
 		{
@@ -2424,5 +2430,197 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 			0,
 		},
 	}
+	runTxCmdTestCases(s, testCases)
+}
+
+func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
+	cmd := cli.WriteSessionCmd()
+
+	owner := s.testnet.Validators[0].Address.String()
+	sender := s.testnet.Validators[0].Address.String()
+	scopeUUID := uuid.New()
+	scopeID := metadatatypes.ScopeMetadataAddress(scopeUUID)
+
+	writeScopeCmd := cli.WriteScopeCmd()
+	ctx := s.testnet.Validators[0].ClientCtx
+	out, err := clitestutil.ExecTestCLICmd(
+		ctx,
+		writeScopeCmd,
+		[]string{
+			scopeID.String(),
+			s.scopeSpecID.String(),
+			owner,
+			owner,
+			owner,
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, sender),
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		},
+	)
+	require.NoError(s.T(), err, "adding base scope")
+	scopeResp := sdk.TxResponse{}
+	umErr := ctx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &scopeResp)
+	require.NoError(s.T(), umErr, "%s UnmarshalJSON error", writeScopeCmd.Name())
+	if scopeResp.Code != 0 {
+		s.T().Logf("write-scope response code is not 0.\ntx response:\n%v\n", scopeResp)
+		s.T().FailNow()
+	}
+
+	testCases := []txCmdTestCase{
+		{
+			"session-id no context",
+			cmd,
+			[]string{
+				metadatatypes.SessionMetadataAddress(scopeUUID, uuid.New()).String(),
+				s.contractSpecID.String(), fmt.Sprintf("%s,owner", owner), "somename",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, sender),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false,
+			"",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"scope-id session-uuid no context",
+			cmd,
+			[]string{
+				scopeID.String(),
+				uuid.New().String(),
+				s.contractSpecID.String(), fmt.Sprintf("%s,owner", owner), "somename",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, sender),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false,
+			"",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"scope-uuid session-uuid no context",
+			cmd,
+			[]string{
+				scopeUUID.String(),
+				uuid.New().String(),
+				s.contractSpecID.String(), fmt.Sprintf("%s,owner", owner), "somename",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, sender),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false,
+			"",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"session-id with context",
+			cmd,
+			[]string{
+				metadatatypes.SessionMetadataAddress(scopeUUID, uuid.New()).String(),
+				s.contractSpecID.String(), fmt.Sprintf("%s,owner", owner), "somename",
+				"ChFIRUxMTyBQUk9WRU5BTkNFIQ==",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, sender),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false,
+			"",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"scope-id session-uuid with context",
+			cmd,
+			[]string{
+				scopeID.String(),
+				uuid.New().String(),
+				s.contractSpecID.String(), fmt.Sprintf("%s,owner", owner), "somename",
+				"ChFIRUxMTyBQUk9WRU5BTkNFIQ==",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, sender),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false,
+			"",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"scope-uuid session-uuid with context",
+			cmd,
+			[]string{
+				scopeUUID.String(),
+				uuid.New().String(),
+				s.contractSpecID.String(), fmt.Sprintf("%s,owner", owner), "somename",
+				"ChFIRUxMTyBQUk9WRU5BTkNFIQ==",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, sender),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false,
+			"",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"wrong id type",
+			cmd,
+			[]string{
+				s.scopeSpecID.String(),
+				s.contractSpecID.String(), fmt.Sprintf("%s,owner", owner), "somename",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, sender),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true,
+			fmt.Sprintf("invalid address type in argument [%s]", s.scopeSpecID),
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"invalid first argument",
+			cmd,
+			[]string{
+				"invalid",
+				s.contractSpecID.String(), fmt.Sprintf("%s,owner", owner), "somename",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, sender),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true,
+			fmt.Sprintf("argument [%s] is neither a bech32 address (%s) nor UUID (%s)", "invalid", "decoding bech32 failed: invalid bech32 string length 7", "invalid UUID length: 7"),
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"session-id with different context",
+			cmd,
+			[]string{
+				metadatatypes.SessionMetadataAddress(scopeUUID, uuid.New()).String(),
+				s.contractSpecID.String(), fmt.Sprintf("%s,owner", owner), "somename",
+				"SEVMTE8gUFJPVkVOQU5DRSEK",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, sender),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false,
+			"",
+			&sdk.TxResponse{},
+			0,
+		},
+	}
+
 	runTxCmdTestCases(s, testCases)
 }

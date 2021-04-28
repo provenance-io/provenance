@@ -38,6 +38,8 @@ message Contract {
 
   // This is only set once when the contract is initially executed
   Timestamp start_time = 9;
+
+  bytes context = 10;
 }
 
 message DefinitionSpec {
