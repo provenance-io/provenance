@@ -36,7 +36,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
-* Add a `context` field to the `Session` #276
+* Add a `context` field to the `Session` [#276](https://github.com/provenance-io/provenance/issues/276)
 
 ### Improvements
 
@@ -44,7 +44,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
-* More mapping fixes related to `WriteP8EContractSpec` and `P8EMemorializeContract` #275
+* More mapping fixes related to `WriteP8EContractSpec` and `P8EMemorializeContract` [#275](https://github.com/provenance-io/provenance/issues/275)
 
 
 ## [v1.2.0](https://github.com/provenance-io/provenance/releases/tag/v1.2.0) - 2021-04-26
