@@ -154,12 +154,10 @@ func ownerPartyList(addresses ...string) []types.Party {
 }
 
 func (s HandlerTestSuite) TestAddAndDeleteScopeDataAccess() {
-
 	scopeID := types.ScopeMetadataAddress(uuid.New())
 	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
 	scope := types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, "")
 	dneScopeID := types.ScopeMetadataAddress(uuid.New())
-
 	user3 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()
 
 	cases := []struct {
