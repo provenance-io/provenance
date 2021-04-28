@@ -1,7 +1,11 @@
 package metadata_test
 
 import (
+	"encoding/base64"
 	"fmt"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/require"
 	"testing"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -81,7 +85,97 @@ func createDefinitionSpec(name string, classname string, reference p8e.Provenanc
 
 // TODO: AddScope tests
 // TODO: DeleteScope tests
-// TODO: AddSession tests
+
+func (s HandlerTestSuite) TestWriteSession() {
+	cSpec := types.ContractSpecification{
+		SpecificationId: types.ContractSpecMetadataAddress(uuid.New()),
+		Description:     nil,
+		OwnerAddresses:  []string{s.user1},
+		PartiesInvolved: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+		Source:          types.NewContractSpecificationSourceHash("somesource"),
+		ClassName:       "someclass",
+	}
+	s.app.MetadataKeeper.SetContractSpecification(s.ctx, cSpec)
+	sSpec := types.ScopeSpecification{
+		SpecificationId: types.ScopeSpecMetadataAddress(uuid.New()),
+		Description:     nil,
+		OwnerAddresses:  []string{s.user1},
+		PartiesInvolved: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+		ContractSpecIds: []types.MetadataAddress{cSpec.SpecificationId},
+	}
+	s.app.MetadataKeeper.SetScopeSpecification(s.ctx, sSpec)
+
+	scopeUUID := uuid.New()
+	scope := types.Scope{
+		ScopeId:           types.ScopeMetadataAddress(scopeUUID),
+		SpecificationId:   nil,
+		Owners:            []types.Party{{
+			Address: s.user1,
+			Role:    types.PartyType_PARTY_TYPE_OWNER,
+		}},
+		DataAccess:        nil,
+		ValueOwnerAddress: "",
+	}
+	s.app.MetadataKeeper.SetScope(s.ctx, scope)
+
+	someBytes, err := base64.StdEncoding.DecodeString("ChFIRUxMTyBQUk9WRU5BTkNFIQ==")
+	require.NoError(s.T(), err, "trying to create someBytes")
+
+	cases := []struct {
+		name     string
+		session  types.Session
+		signers  []string
+		errorMsg string
+	}{
+		{
+			"valid without context",
+			types.Session{
+				SessionId:       types.SessionMetadataAddress(scopeUUID, uuid.New()),
+				SpecificationId: cSpec.SpecificationId,
+				Parties:         scope.Owners,
+				Name:            "someclass",
+				Context:         nil,
+				Audit:           nil,
+			},
+			[]string{s.user1},
+			"",
+		},
+		{
+			"valid with context",
+			types.Session{
+				SessionId:       types.SessionMetadataAddress(scopeUUID, uuid.New()),
+				SpecificationId: cSpec.SpecificationId,
+				Parties:         scope.Owners,
+				Name:            "someclass",
+				Context:         &codectypes.Any{
+					TypeUrl: "github.com/provenance-io/provenance/x/metadata/types/p8e.UUID",
+					Value:   someBytes,
+				},
+				Audit:           nil,
+			},
+			[]string{s.user1},
+			"",
+		},
+	}
+
+	for _, tc := range cases {
+		s.T().Run(tc.name, func(t *testing.T) {
+			msg := types.MsgWriteSessionRequest{
+				Session:             tc.session,
+				Signers:             tc.signers,
+				SessionIdComponents: nil,
+				SpecUuid:            "",
+			}
+			_, err := s.handler(s.ctx, &msg)
+			if len(tc.errorMsg) > 0 {
+				assert.EqualError(t, err, tc.errorMsg)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
 // TODO: AddRecord tests
 // TODO: DeleteRecord tests
 // TODO: AddScopeSpecification tests
