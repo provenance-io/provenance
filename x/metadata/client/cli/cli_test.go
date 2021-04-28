@@ -1418,6 +1418,8 @@ func runTxCmdTestCases(s *IntegrationCLITestSuite, testCases []txCmdTestCase) {
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				assert.Equal(t, tc.expectedCode, txResp.Code, "%s response code", cmdName)
+				// Note: If the above is failing because a 0 is expected, but it's getting a 1,
+				//       it might mean that the keeper method is returning an error.
 
 				if t.Failed() {
 					t.Logf("tx:\n%v\n", txResp)
@@ -2350,16 +2352,45 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
 	cmd := cli.WriteSessionCmd()
 
-	user := s.scope.Owners[0].Address
+	owner := s.testnet.Validators[0].Address.String()
+	sender := s.testnet.Validators[0].Address.String()
+	scopeUUID := uuid.New()
+	scopeID := metadatatypes.ScopeMetadataAddress(scopeUUID)
+
+	writeScopeCmd := cli.WriteScopeCmd()
+	ctx := s.testnet.Validators[0].ClientCtx
+	out, err := clitestutil.ExecTestCLICmd(
+		ctx,
+		writeScopeCmd,
+		[]string{
+			scopeID.String(),
+			s.scopeSpecID.String(),
+			owner,
+			owner,
+			owner,
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, sender),
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		},
+	)
+	require.NoError(s.T(), err, "adding base scope")
+	scopeResp := sdk.TxResponse{}
+	umErr := ctx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &scopeResp)
+	require.NoError(s.T(), umErr, "%s UnmarshalJSON error", writeScopeCmd.Name())
+	if scopeResp.Code != 0 {
+		s.T().Logf("write-scope response code is not 0.\ntx response:\n%v\n", scopeResp)
+		s.T().FailNow()
+	}
 
 	testCases := []txCmdTestCase{
 		{
 			"session-id no context",
 			cmd,
 			[]string{
-				metadatatypes.SessionMetadataAddress(s.scopeUUID, uuid.New()).String(),
-				s.contractSpecID.String(), fmt.Sprintf("%s,owner", user), "somename",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				metadatatypes.SessionMetadataAddress(scopeUUID, uuid.New()).String(),
+				s.contractSpecID.String(), fmt.Sprintf("%s,owner", owner), "somename",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, sender),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2373,10 +2404,10 @@ func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
 			"scope-id session-uuid no context",
 			cmd,
 			[]string{
-				s.scopeID.String(),
+				scopeID.String(),
 				uuid.New().String(),
-				s.contractSpecID.String(), fmt.Sprintf("%s,owner", s.user1), "somename",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				s.contractSpecID.String(), fmt.Sprintf("%s,owner", owner), "somename",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, sender),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2390,10 +2421,10 @@ func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
 			"scope-uuid session-uuid no context",
 			cmd,
 			[]string{
+				scopeUUID.String(),
 				uuid.New().String(),
-				uuid.New().String(),
-				s.contractSpecID.String(), fmt.Sprintf("%s,owner", s.user1), "somename",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				s.contractSpecID.String(), fmt.Sprintf("%s,owner", owner), "somename",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, sender),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2407,10 +2438,10 @@ func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
 			"session-id with context",
 			cmd,
 			[]string{
-				metadatatypes.SessionMetadataAddress(s.scopeUUID, uuid.New()).String(),
-				s.contractSpecID.String(), fmt.Sprintf("%s,owner", s.user1), "somename",
+				metadatatypes.SessionMetadataAddress(scopeUUID, uuid.New()).String(),
+				s.contractSpecID.String(), fmt.Sprintf("%s,owner", owner), "somename",
 				"ChFIRUxMTyBQUk9WRU5BTkNFIQ==",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, sender),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2424,11 +2455,11 @@ func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
 			"scope-id session-uuid with context",
 			cmd,
 			[]string{
-				s.scopeID.String(),
+				scopeID.String(),
 				uuid.New().String(),
-				s.contractSpecID.String(), fmt.Sprintf("%s,owner", s.user1), "somename",
+				s.contractSpecID.String(), fmt.Sprintf("%s,owner", owner), "somename",
 				"ChFIRUxMTyBQUk9WRU5BTkNFIQ==",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, sender),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2442,11 +2473,11 @@ func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
 			"scope-uuid session-uuid with context",
 			cmd,
 			[]string{
+				scopeUUID.String(),
 				uuid.New().String(),
-				uuid.New().String(),
-				s.contractSpecID.String(), fmt.Sprintf("%s,owner", s.user1), "somename",
+				s.contractSpecID.String(), fmt.Sprintf("%s,owner", owner), "somename",
 				"ChFIRUxMTyBQUk9WRU5BTkNFIQ==",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, sender),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2461,8 +2492,8 @@ func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
 			cmd,
 			[]string{
 				s.scopeSpecID.String(),
-				s.contractSpecID.String(), fmt.Sprintf("%s,owner", s.user1), "somename",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				s.contractSpecID.String(), fmt.Sprintf("%s,owner", owner), "somename",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, sender),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2477,8 +2508,8 @@ func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
 			cmd,
 			[]string{
 				"invalid",
-				s.contractSpecID.String(), fmt.Sprintf("%s,owner", s.user1), "somename",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				s.contractSpecID.String(), fmt.Sprintf("%s,owner", owner), "somename",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, sender),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2492,10 +2523,10 @@ func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
 			"session-id with different context",
 			cmd,
 			[]string{
-				metadatatypes.SessionMetadataAddress(s.scopeUUID, uuid.New()).String(),
-				s.contractSpecID.String(), fmt.Sprintf("%s,owner", s.user1), "somename",
+				metadatatypes.SessionMetadataAddress(scopeUUID, uuid.New()).String(),
+				s.contractSpecID.String(), fmt.Sprintf("%s,owner", owner), "somename",
 				"SEVMTE8gUFJPVkVOQU5DRSEK",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, sender),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2506,8 +2537,6 @@ func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
 			0,
 		},
 	}
-
-	testCases = testCases[1:2] // TODO: Remove this so all tests are run.
 
 	runTxCmdTestCases(s, testCases)
 }
