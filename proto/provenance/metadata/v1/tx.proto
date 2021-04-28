@@ -141,7 +141,7 @@ message MsgAddScopeDataAccessRequest {
     (gogoproto.moretags)   = "yaml:\"scope_id\""
   ];
 
-  // MetadataAddresses to be added to scope
+  // bech32 address to be added to scope
   repeated string data_access = 2 [(gogoproto.moretags) = "yaml:\"data_access\""];
   // signers is the list of address of those signing this request.
   repeated string signers = 3;
@@ -164,7 +164,7 @@ message MsgDeleteScopeDataAccessRequest {
     (gogoproto.moretags)   = "yaml:\"scope_id\""
   ];
 
-  // MetadataAddresses to be removed from scope
+  // bech32 address to be removed from scope
   repeated string data_access = 2 [(gogoproto.moretags) = "yaml:\"data_access\""];
   // signers is the list of address of those signing this request.
   repeated string signers = 3;
