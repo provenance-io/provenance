@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/version"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
@@ -379,7 +378,7 @@ icon-url           - address to a image to be used as an icon (optional, can onl
 
 func WriteSessionCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "write-session {session-id|{scope-id|scope-uuid} session-uuid} contract-spec-id parties name [context-type-url context-value]",
+		Use:   "write-session {session-id|{scope-id|scope-uuid} session-uuid} contract-spec-id parties name [context]",
 		Short: "Add/Update metadata sessioon to the provenance blockchain",
 		Long: `Add/Update metadata session to the provenance blockchain.
 session-id        - a bech32 address string for this session
@@ -393,8 +392,7 @@ session-uuid      - a UUID string representing the uuid for this session
 contract-spec-id  - a bech32 address string for the contract specification that applies to this session
 parties-involved  - semicolon delimited list of party structures(address,role). Accepted roles: originator,servicer,investor,custodian,owner,affiliate,omnibus,provenance
 name              - a name for this session
-context-type-url  - a type url describing whats in the context-value (optional, if provided, a context-value must also be provided)
-context-value     - a base64 encoded string of the bytes that represent the session context (optional, if provided, a context-type-url must also be provided)`,
+context           - a base64 encoded string of the bytes that represent the session context (optional)`,
 		Example: fmt.Sprintf(`$ %[1]s tx metadata write-session \
 91978ba2-5f35-459a-86a7-feca1b0512e0 5803f8bc-6067-4eb5-951f-2121671c2ec0 \
 contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn \
@@ -420,7 +418,7 @@ ChFIRUxMTyBQUk9WRU5BTkNFIQ==`, version.AppName),
 			var cSpecID types.MetadataAddress
 			var parties []types.Party
 			var name string
-			var context *codectypes.Any
+			var context []byte
 			var signers []string
 			var err error
 
@@ -472,16 +470,11 @@ ChFIRUxMTyBQUk9WRU5BTkNFIQ==`, version.AppName),
 
 			// Handle the optional context stuff.
 			if len(argsLeft) > 0 {
-				// Need two args left
-				if len(argsLeft) < 2 {
-					return fmt.Errorf("not enough arguments (expected >= %d, found %d)", len(args)-len(argsLeft)+2, len(args))
-				}
-				context = &codectypes.Any{TypeUrl: argsLeft[0]}
-				context.Value, err = base64.StdEncoding.DecodeString(argsLeft[1])
+				context, err = base64.StdEncoding.DecodeString(argsLeft[0])
 				if err != nil {
-					return fmt.Errorf("invalid context-value: %w", err)
+					return fmt.Errorf("invalid context: %w", err)
 				}
-				argsLeft = argsLeft[2:]
+				argsLeft = argsLeft[1:]
 			}
 
 			// Make sure there aren't any leftover/unused arguments

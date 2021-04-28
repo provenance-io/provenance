@@ -6,8 +6,6 @@ option go_package = "github.com/provenance-io/provenance/x/metadata/types/p8e";
 option java_package        = "io.provenance.metadata.v1.p8e";
 option java_multiple_files = true;
 
-import "google/protobuf/any.proto";
-
 // This stuff only exists to help facilitate the transition to new stuff.
 // It is copied from (or modeled after) old stuff.
 // The goal is to remove this entire file (and everything defined in it) in the near future.
@@ -41,7 +39,7 @@ message Contract {
   // This is only set once when the contract is initially executed
   Timestamp start_time = 9;
 
-  google.protobuf.Any context = 10;
+  bytes context = 10;
 }
 
 message DefinitionSpec {
