@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/google/uuid"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -22,9 +23,9 @@ import (
 type HandlerTestSuite struct {
 	suite.Suite
 
-	app *app.App
-	ctx sdk.Context
-	handler   sdk.Handler
+	app     *app.App
+	ctx     sdk.Context
+	handler sdk.Handler
 
 	pubkey1   cryptotypes.PubKey
 	user1     string
@@ -143,3 +144,94 @@ func (s HandlerTestSuite) TestAddP8EContractSpec() {
 // TODO: BindOSLocatorRequest tests
 // TODO: DeleteOSLocatorRequest tests
 // TODO: ModifyOSLocatorRequest tests
+
+func ownerPartyList(addresses ...string) []types.Party {
+	retval := make([]types.Party, len(addresses))
+	for i, addr := range addresses {
+		retval[i] = types.Party{Address: addr, Role: types.PartyType_PARTY_TYPE_OWNER}
+	}
+	return retval
+}
+
+func (s HandlerTestSuite) TestAddAndDeleteScopeDataAccess() {
+
+	scopeID := types.ScopeMetadataAddress(uuid.New())
+	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
+	scope := types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, "")
+	dneScopeID := types.ScopeMetadataAddress(uuid.New())
+
+	user3 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()
+
+	cases := []struct {
+		name     string
+		msg      sdk.Msg
+		signers  []string
+		errorMsg string
+	}{
+		{
+			"setup test with new scope",
+			types.NewMsgWriteScopeRequest(*scope, []string{s.user1}),
+			[]string{s.user1},
+			"",
+		},
+		{
+			"should fail to ADD address to data access, msg validate basic failure",
+			types.NewMsgAddScopeDataAccessRequest(scopeID, []string{}, []string{s.user1}),
+			[]string{s.user1},
+			"data access list cannot be empty",
+		},
+		{
+			"should fail to ADD address to data access, validate add failure",
+			types.NewMsgAddScopeDataAccessRequest(dneScopeID, []string{s.user1}, []string{s.user1}),
+			[]string{s.user1},
+			fmt.Sprintf("scope not found with id %s", dneScopeID),
+		},
+		{
+			"should fail to ADD address to data access, validate add failure",
+			types.NewMsgAddScopeDataAccessRequest(scopeID, []string{s.user1}, []string{s.user1}),
+			[]string{s.user1},
+			fmt.Sprintf("address already exists for data access %s", s.user1),
+		},
+		{
+			"should successfully ADD address to data access",
+			types.NewMsgAddScopeDataAccessRequest(scopeID, []string{s.user2}, []string{s.user1}),
+			[]string{s.user1},
+			"",
+		},
+		{
+			"should fail to DELETE address from data access, msg validate basic failure",
+			types.NewMsgDeleteScopeDataAccessRequest(scopeID, []string{}, []string{s.user1}),
+			[]string{s.user1},
+			"data access list cannot be empty",
+		},
+		{
+			"should fail to DELETE address from data access, validate add failure",
+			types.NewMsgDeleteScopeDataAccessRequest(dneScopeID, []string{s.user1}, []string{s.user1}),
+			[]string{s.user1},
+			fmt.Sprintf("scope not found with id %s", dneScopeID),
+		},
+		{
+			"should fail to DELETE address from data access, validate add failure",
+			types.NewMsgDeleteScopeDataAccessRequest(scopeID, []string{user3}, []string{s.user1}),
+			[]string{s.user1},
+			fmt.Sprintf("address does not exist in scope data access: %s", user3),
+		},
+		{
+			"should successfully DELETE address from data access",
+			types.NewMsgDeleteScopeDataAccessRequest(scopeID, []string{s.user2}, []string{s.user1}),
+			[]string{s.user1},
+			"",
+		},
+	}
+
+	for _, tc := range cases {
+		s.T().Run(tc.name, func(t *testing.T) {
+			_, err := s.handler(s.ctx, tc.msg)
+			if len(tc.errorMsg) > 0 {
+				assert.EqualError(t, err, tc.errorMsg)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
