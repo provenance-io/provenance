@@ -143,6 +143,8 @@ message Session {
   repeated Party parties = 3 [(gogoproto.nullable) = false];
   // name to associate with this session execution context, typically classname
   string name = 4 [(gogoproto.jsontag) = "type", (gogoproto.moretags) = "yaml:\"type\""];
+  // context is a field for storing client specific data associated with a session.
+  google.protobuf.Any context = 5;
   // Created by, updated by, timestamps, version number, and related info.
   AuditFields audit = 99 [(gogoproto.moretags) = "yaml:\"audit,omitempty\""];
 }
