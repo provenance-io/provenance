@@ -502,6 +502,10 @@ ChFIRUxMTyBQUk9WRU5BTkNFIQ==`, version.AppName),
 				Context:         context,
 			}
 			writeSessionMsg := types.NewMsgWriteSessionRequest(session, signers)
+			err = writeSessionMsg.ValidateBasic()
+			if err != nil {
+				return err
+			}
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), writeSessionMsg)
 		},
 	}
