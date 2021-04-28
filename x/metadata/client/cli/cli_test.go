@@ -28,7 +28,6 @@ import (
 	"github.com/provenance-io/provenance/testutil"
 
 	"github.com/provenance-io/provenance/x/metadata/client/cli"
-	"github.com/provenance-io/provenance/x/metadata/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -1430,8 +1429,8 @@ func runTxCmdTestCases(s *IntegrationCLITestSuite, testCases []txCmdTestCase) {
 
 func (s *IntegrationCLITestSuite) TestMetadataScopeTxCommands() {
 
-	scopeID := types.ScopeMetadataAddress(uuid.New()).String()
-	specID := types.ScopeSpecMetadataAddress(uuid.New()).String()
+	scopeID := metadatatypes.ScopeMetadataAddress(uuid.New()).String()
+	specID := metadatatypes.ScopeSpecMetadataAddress(uuid.New()).String()
 	testCases := []txCmdTestCase{
 		{
 			"should successfully add metadata scope",
@@ -1453,8 +1452,8 @@ func (s *IntegrationCLITestSuite) TestMetadataScopeTxCommands() {
 			"should successfully add metadata scope with signers flag",
 			cli.WriteScopeCmd(),
 			[]string{
-				types.ScopeMetadataAddress(uuid.New()).String(),
-				types.ScopeSpecMetadataAddress(uuid.New()).String(),
+				metadatatypes.ScopeMetadataAddress(uuid.New()).String(),
+				metadatatypes.ScopeSpecMetadataAddress(uuid.New()).String(),
 				s.user1,
 				s.user1,
 				s.user1,
@@ -1471,7 +1470,7 @@ func (s *IntegrationCLITestSuite) TestMetadataScopeTxCommands() {
 			cli.WriteScopeCmd(),
 			[]string{
 				"not-a-uuid",
-				types.ScopeSpecMetadataAddress(uuid.New()).String(),
+				metadatatypes.ScopeSpecMetadataAddress(uuid.New()).String(),
 				s.user1,
 				s.user1,
 				s.user1,
@@ -1486,7 +1485,7 @@ func (s *IntegrationCLITestSuite) TestMetadataScopeTxCommands() {
 			"should fail to add metadata scope, incorrect scope spec id",
 			cli.WriteScopeCmd(),
 			[]string{
-				types.ScopeMetadataAddress(uuid.New()).String(),
+				metadatatypes.ScopeMetadataAddress(uuid.New()).String(),
 				"not-a-uuid",
 				s.user1,
 				s.user1,
@@ -1502,8 +1501,8 @@ func (s *IntegrationCLITestSuite) TestMetadataScopeTxCommands() {
 			"should fail to add metadata scope, validate basic will err on owner format",
 			cli.WriteScopeCmd(),
 			[]string{
-				types.ScopeMetadataAddress(uuid.New()).String(),
-				types.ScopeSpecMetadataAddress(uuid.New()).String(),
+				metadatatypes.ScopeMetadataAddress(uuid.New()).String(),
+				metadatatypes.ScopeSpecMetadataAddress(uuid.New()).String(),
 				"incorrect,incorrect",
 				s.user1,
 				s.user1,
@@ -1558,7 +1557,7 @@ func (s *IntegrationCLITestSuite) TestMetadataScopeTxCommands() {
 func (s *IntegrationCLITestSuite) TestScopeSpecificationTxCommands() {
 	addCommand := cli.WriteScopeSpecificationCmd()
 	removeCommand := cli.RemoveScopeSpecificationCmd()
-	specID := types.ScopeSpecMetadataAddress(uuid.New())
+	specID := metadatatypes.ScopeSpecMetadataAddress(uuid.New())
 	testCases := []txCmdTestCase{
 		{
 			"should successfully add scope specification",
@@ -1718,7 +1717,7 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationTxCommands() {
 	addCommand := cli.WriteContractSpecificationCmd()
 	removeCommand := cli.RemoveContractSpecificationCmd()
 	contractSpecUUID := uuid.New()
-	specificationID := types.ContractSpecMetadataAddress(contractSpecUUID)
+	specificationID := metadatatypes.ContractSpecMetadataAddress(contractSpecUUID)
 	testCases := []txCmdTestCase{
 		{
 			"should successfully add contract specification with resource hash",
@@ -1876,8 +1875,8 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 	deleteRecordSpecCmd := cli.RemoveRecordSpecificationCmd()
 	recordName := "testrecordspecid"
 	contractSpecUUID := uuid.New()
-	contractSpecID := types.ContractSpecMetadataAddress(contractSpecUUID)
-	specificationID := types.RecordSpecMetadataAddress(contractSpecUUID, recordName)
+	contractSpecID := metadatatypes.ContractSpecMetadataAddress(contractSpecUUID)
+	specificationID := metadatatypes.RecordSpecMetadataAddress(contractSpecUUID, recordName)
 	testCases := []txCmdTestCase{
 		{
 			"setup test with a record specification owned by signer",
@@ -2079,17 +2078,17 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 	userAddress := s.testnet.Validators[0].Address.String()
 	addRecordCmd := cli.WriteRecordCmd()
-	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
+	scopeSpecID := metadatatypes.ScopeSpecMetadataAddress(uuid.New())
 	scopeUUID := uuid.New()
-	scopeID := types.ScopeMetadataAddress(scopeUUID)
+	scopeID := metadatatypes.ScopeMetadataAddress(scopeUUID)
 	contractSpecUUID := uuid.New()
 	contractSpecName := "`myclassname`"
-	contractSpecID := types.ContractSpecMetadataAddress(contractSpecUUID)
+	contractSpecID := metadatatypes.ContractSpecMetadataAddress(contractSpecUUID)
 
 	recordName := "recordnamefortests"
-	recSpecID := types.RecordSpecMetadataAddress(contractSpecUUID, recordName)
+	recSpecID := metadatatypes.RecordSpecMetadataAddress(contractSpecUUID, recordName)
 
-	recordId := types.RecordMetadataAddress(scopeUUID, recordName)
+	recordId := metadatatypes.RecordMetadataAddress(scopeUUID, recordName)
 
 	testCases := []txCmdTestCase{
 		{
