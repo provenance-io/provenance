@@ -373,6 +373,13 @@ func (s *P8eTestSuite) TestEmptySession() {
 				assert.Nil(t, session.Audit)
 			},
 		},
+		{
+			"Context",
+			"is nil",
+			func(session *Session, t *testing.T) {
+				assert.Nil(t, session.Context)
+			},
+		},
 	}
 
 	for i, tc := range tests {

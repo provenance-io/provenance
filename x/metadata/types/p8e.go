@@ -293,6 +293,7 @@ func emptySession() *Session {
 		Parties:         []Party{},
 		Name:            "",
 		Audit:           nil,
+		Context:         nil,
 	}
 }
 

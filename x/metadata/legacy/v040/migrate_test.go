@@ -354,6 +354,7 @@ func TestMigrate(t *testing.T) {
         "updated_date": "0001-01-01T00:00:00Z",
         "version": 1
       },
+      "context": null,
       "name": "io.p8e.contracts.origination.ETLTouch",
       "parties": [
         {
