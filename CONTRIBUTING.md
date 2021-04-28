@@ -237,7 +237,7 @@ only pull requests targeted directly against main.
   manager/coordinator
   - **no PRs targeting this branch should be merged unless exceptional circumstances arise**
 - On the `RC` branch, prepare a new version section in the `CHANGELOG.md`
-  - All links must be link-ified: `$ python ./scripts/linkify_changelog.py CHANGELOG.md`
+  - All links must be link-ified: `$ python ./scripts/linkify.py CHANGELOG.md`
   - Copy the entries into a `RELEASE_CHANGELOG.md`, this is needed so the bot knows which entries to add to the release page on github.
 - Kick off a large round of simulation testing (e.g. 400 seeds for 2k blocks)
 - If errors are found during the simulation testing, commit the fixes to `main`
