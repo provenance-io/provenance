@@ -405,8 +405,8 @@ session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr \
 contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn \
 cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck,owner \
 io.p8e.contracts.example.HelloWorldContract \
-type.googleapis.com/google.protobuf.StringValue \
-SEVMTE8gUFJPVkVOQU5DRSEK
+github.com/provenance-io/provenance/x/metadata/types/p8e.UUID \
+ChFIRUxMTyBQUk9WRU5BTkNFIQ==
 `, version.AppName),
 		Args: cobra.RangeArgs(4, 7),
 		RunE: func(cmd *cobra.Command, args []string) error {
