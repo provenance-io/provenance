@@ -35,6 +35,7 @@ func NewTxCmd() *cobra.Command {
 	txCmd.AddCommand(
 		WriteScopeCmd(),
 		RemoveScopeCmd(),
+		AddRemoveScopeDataAccessCmd(),
 
 		BindOsLocatorCmd(),
 		RemoveOsLocatorCmd(),

@@ -208,7 +208,8 @@ type MsgAddScopeDataAccessRequest struct {
 	ScopeId MetadataAddress `protobuf:"bytes,1,opt,name=scope_id,json=scopeId,proto3,customtype=MetadataAddress" json:"scope_id" yaml:"scope_id"`
 	// MetadataAddresses to be added to scope
 	DataAccess []string `protobuf:"bytes,2,rep,name=data_access,json=dataAccess,proto3" json:"data_access,omitempty" yaml:"data_access"`
-	Signers    []string `protobuf:"bytes,3,rep,name=signers,proto3" json:"signers,omitempty"`
+	// signers is the list of address of those signing this request.
+	Signers []string `protobuf:"bytes,3,rep,name=signers,proto3" json:"signers,omitempty"`
 }
 
 func (m *MsgAddScopeDataAccessRequest) Reset()      { *m = MsgAddScopeDataAccessRequest{} }
@@ -286,7 +287,8 @@ type MsgDeleteScopeDataAccessRequest struct {
 	ScopeId MetadataAddress `protobuf:"bytes,1,opt,name=scope_id,json=scopeId,proto3,customtype=MetadataAddress" json:"scope_id" yaml:"scope_id"`
 	// MetadataAddresses to be removed from scope
 	DataAccess []string `protobuf:"bytes,2,rep,name=data_access,json=dataAccess,proto3" json:"data_access,omitempty" yaml:"data_access"`
-	Signers    []string `protobuf:"bytes,3,rep,name=signers,proto3" json:"signers,omitempty"`
+	// signers is the list of address of those signing this request.
+	Signers []string `protobuf:"bytes,3,rep,name=signers,proto3" json:"signers,omitempty"`
 }
 
 func (m *MsgDeleteScopeDataAccessRequest) Reset()      { *m = MsgDeleteScopeDataAccessRequest{} }
@@ -1880,9 +1882,9 @@ type MsgClient interface {
 	WriteScope(ctx context.Context, in *MsgWriteScopeRequest, opts ...grpc.CallOption) (*MsgWriteScopeResponse, error)
 	// DeleteScope deletes a scope and all associated Records, Sessions.
 	DeleteScope(ctx context.Context, in *MsgDeleteScopeRequest, opts ...grpc.CallOption) (*MsgDeleteScopeResponse, error)
-	// AddScopeDataAccess adds data access to scope
+	// AddScopeDataAccess adds data access MetaAddresses to scope
 	AddScopeDataAccess(ctx context.Context, in *MsgAddScopeDataAccessRequest, opts ...grpc.CallOption) (*MsgAddScopeDataAccessResponse, error)
-	// RemoveScopeDataAccess adds data access to scope
+	// DeleteScopeDataAccess removes data access MetaAddresses from scope
 	DeleteScopeDataAccess(ctx context.Context, in *MsgDeleteScopeDataAccessRequest, opts ...grpc.CallOption) (*MsgDeleteScopeDataAccessResponse, error)
 	// WriteSession adds or updates a session context.
 	WriteSession(ctx context.Context, in *MsgWriteSessionRequest, opts ...grpc.CallOption) (*MsgWriteSessionResponse, error)
@@ -2094,9 +2096,9 @@ type MsgServer interface {
 	WriteScope(context.Context, *MsgWriteScopeRequest) (*MsgWriteScopeResponse, error)
 	// DeleteScope deletes a scope and all associated Records, Sessions.
 	DeleteScope(context.Context, *MsgDeleteScopeRequest) (*MsgDeleteScopeResponse, error)
-	// AddScopeDataAccess adds data access to scope
+	// AddScopeDataAccess adds data access MetaAddresses to scope
 	AddScopeDataAccess(context.Context, *MsgAddScopeDataAccessRequest) (*MsgAddScopeDataAccessResponse, error)
-	// RemoveScopeDataAccess adds data access to scope
+	// DeleteScopeDataAccess removes data access MetaAddresses from scope
 	DeleteScopeDataAccess(context.Context, *MsgDeleteScopeDataAccessRequest) (*MsgDeleteScopeDataAccessResponse, error)
 	// WriteSession adds or updates a session context.
 	WriteSession(context.Context, *MsgWriteSessionRequest) (*MsgWriteSessionResponse, error)
