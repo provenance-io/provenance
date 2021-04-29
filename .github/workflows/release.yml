@@ -164,9 +164,14 @@ jobs:
       -
         name: Create release items
         run: |
-          make VERSION=${{ needs.build_init.outputs.version }} build-release-checksum build-release-plan build-release-protos
+          ls -lah
+          ls -lah build
           ls -lah build/*
-          ls -lah build/*/*
+          make VERSION=${{ needs.build_init.outputs.version }} build-release-checksum build-release-plan build-release-protos
+          ls -lah
+          ls -lah build
+          ls -lah build/*
+
       -
         name: Upload linux zip artifact
         uses: actions/upload-release-asset@v1
