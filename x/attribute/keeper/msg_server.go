@@ -58,6 +58,10 @@ func (k msgServer) AddAttribute(goCtx context.Context, msg *types.MsgAddAttribut
 				telemetry.NewLabel(types.EventTelemetryLabelOwner, msg.Owner),
 			},
 		)
+		telemetry.SetGaugeWithLabels(
+			[]string{types.ModuleName, types.EventTelemetryKeyAdd},
+			float32(len(msg.Value)),
+			[]metrics.Label{telemetry.NewLabel(types.EventTelemetryLabelSize, msg.Name)})
 	}()
 
 	ctx.EventManager().EmitEvent(

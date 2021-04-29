@@ -22,6 +22,8 @@ const (
 	EventTelemetryLabelOwner string = "owner"
 	// EventTelemetryKeyAccount acount telemetry metrics label
 	EventTelemetryLabelAccount string = "account"
+	// EventTelemetryKeyAccount size telemetry metrics label
+	EventTelemetryLabelSize string = "size"
 )
 
 func NewEventAttributeAdd(attribute Attribute, owner string) *EventAttributeAdd {
