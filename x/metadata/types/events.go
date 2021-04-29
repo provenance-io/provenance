@@ -84,3 +84,43 @@ const (
 	// AttributeValueCategory indicates the category for this value
 	AttributeValueCategory = ModuleName
 )
+
+// TxEndpoint is an enum for metadata TX endpoints.
+type TxEndpoint string
+
+const (
+	TxEndpoint_WriteScope  TxEndpoint = "WriteScope"
+	TxEndpoint_DeleteScope TxEndpoint = "DeleteScope"
+
+	TxEndpoint_AddScopeDataAccess    TxEndpoint = "AddScopeDataAccess"
+	TxEndpoint_DeleteScopeDataAccess TxEndpoint = "DeleteScopeDataAccess"
+
+	TxEndpoint_WriteSession TxEndpoint = "WriteSession"
+
+	TxEndpoint_WriteRecord  TxEndpoint = "WriteRecord"
+	TxEndpoint_DeleteRecord TxEndpoint = "DeleteRecord"
+
+	TxEndpoint_WriteScopeSpecification  TxEndpoint = "WriteScopeSpecification"
+	TxEndpoint_DeleteScopeSpecification TxEndpoint = "DeleteScopeSpecification"
+
+	TxEndpoint_WriteContractSpecification  TxEndpoint = "WriteContractSpecification"
+	TxEndpoint_DeleteContractSpecification TxEndpoint = "DeleteContractSpecification"
+
+	TxEndpoint_WriteRecordSpecification  TxEndpoint = "WriteRecordSpecification"
+	TxEndpoint_DeleteRecordSpecification TxEndpoint = "DeleteRecordSpecification"
+
+	TxEndpoint_WriteP8eContractSpec   TxEndpoint = "WriteP8eContractSpec"
+	TxEndpoint_P8eMemorializeContract TxEndpoint = "P8eMemorializeContract"
+
+	TxEndpoint_BindOSLocator   TxEndpoint = "BindOSLocator"
+	TxEndpoint_DeleteOSLocator TxEndpoint = "DeleteOSLocator"
+	TxEndpoint_ModifyOSLocator TxEndpoint = "ModifyOSLocator"
+)
+
+func NewEventTxCompleted(endpoint TxEndpoint, signers []string) *EventTxCompleted {
+	return &EventTxCompleted{
+		Module:   ModuleName,
+		Endpoint: string(endpoint),
+		Signers:  signers,
+	}
+}
