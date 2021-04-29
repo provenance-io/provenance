@@ -53,7 +53,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: osx-zip
-          path: build/
+          path: build/*.zip
 
   build_linux:
     runs-on: ubuntu-latest
@@ -73,7 +73,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: linux-zip
-          path: build/
+          path: build/*.zip
 
 #  build_linux_cleveldb:
 #    runs-on: ubuntu-latest
@@ -164,11 +164,9 @@ jobs:
       -
         name: Create release items
         run: |
-          ls -lah
           ls -lah build
           ls -lah build/*
-          make VERSION=${{ needs.build_init.outputs.version }} build-release-checksum build-release-plan build-release-protos
-          ls -lah
+          make VERSION=${{ needs.build_init.outputs.version }} build-release-checksum build-release-plan build-release-proto
           ls -lah build
           ls -lah build/*
 
