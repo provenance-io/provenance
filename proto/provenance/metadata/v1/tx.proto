@@ -193,7 +193,7 @@ message MsgAddScopeOwnerRequest {
   ];
 
   // AccAddress owner addresses to be added to scope
-  repeated string owners = 2 [(gogoproto.moretags) = "yaml:\"owners\""];
+  repeated Party owners = 2 [(gogoproto.moretags) = "yaml:\"owners\""];
   // signers is the list of address of those signing this request.
   repeated string signers = 3;
 }
@@ -216,7 +216,7 @@ message MsgDeleteScopeOwnerRequest {
   ];
 
   // AccAddress owner addresses to be removed from scope
-  repeated string owners = 2 [(gogoproto.moretags) = "yaml:\"owners\""];
+  repeated Party owners = 2 [(gogoproto.moretags) = "yaml:\"owners\""];
   // signers is the list of address of those signing this request.
   repeated string signers = 3;
 }
