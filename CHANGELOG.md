@@ -38,7 +38,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Add grpc messages and cli command to add/remove addresses from metadata scope data access [#220](https://github.com/provenance-io/provenance/issues/220)
 * Add a `context` field to the `Session` [#276](https://github.com/provenance-io/provenance/issues/276)
-* Add typed events and telemetry metrics to attribute module #86
+* Add typed events and telemetry metrics to attribute module [#86](https://github.com/provenance-io/provenance/issues/86)
 
 ### Improvements
 
