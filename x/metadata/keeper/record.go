@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/provenance-io/provenance/x/metadata/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gogo/protobuf/proto"
+
+	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
 const sourceTypeHash = "hash"
@@ -27,7 +28,7 @@ func (k Keeper) GetRecord(ctx sdk.Context, id types.MetadataAddress) (record typ
 	return record, true
 }
 
-// GetRecords returns records with scopeAddress and name
+// GetRecords returns records for a scope optionally limited to a name.
 func (k Keeper) GetRecords(ctx sdk.Context, scopeAddress types.MetadataAddress, name string) ([]*types.Record, error) {
 	records := []*types.Record{}
 	var iterator func(r types.Record) (stop bool)
@@ -57,52 +58,47 @@ func (k Keeper) GetRecords(ctx sdk.Context, scopeAddress types.MetadataAddress, 
 func (k Keeper) SetRecord(ctx sdk.Context, record types.Record) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryBare(&record)
-	eventType := types.EventTypeRecordCreated
 
 	recordID, err := record.SessionId.AsRecordAddress(record.Name)
 	if err != nil {
-		ctx.Logger().Error("could not create record id",
-			"session id", record.SessionId, "name", record.Name, "error", err)
-		return
+		panic(fmt.Errorf("could not create record id from session id [%s] and record name [%s]: %w",
+			record.SessionId, record.Name, err))
 	}
+
+	var event proto.Message = types.NewEventRecordCreated(record)
 	if store.Has(recordID) {
-		eventType = types.EventTypeRecordUpdated
+		if oldRecordBytes := store.Get(recordID); oldRecordBytes != nil {
+			var oldRecord types.Record
+			if err := k.cdc.UnmarshalBinaryBare(oldRecordBytes, &oldRecord); err == nil {
+				event = types.NewEventRecordUpdated(record, oldRecord)
+			}
+		}
 	}
 
 	store.Set(recordID, b)
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			eventType,
-			sdk.NewAttribute(types.AttributeKeyRecordID, recordID.String()),
-		),
-	)
+	_ = ctx.EventManager().EmitTypedEvent(event)
 }
 
-// RemoveRecord removes a scope from the module kv store.
+// RemoveRecord removes a record from the module kv store.
 func (k Keeper) RemoveRecord(ctx sdk.Context, id types.MetadataAddress) {
 	if !id.IsRecordAddress() {
 		panic(fmt.Errorf("invalid address, address must be for a record"))
 	}
+	record, found := k.GetRecord(ctx, id)
+	if !found {
+		return
+	}
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(id)
+	_ = ctx.EventManager().EmitTypedEvent(types.NewEventRecordRemoved(record))
 
-	// TODO: Fix this. a record id does not have a session UUID in it,
-	//       and I'm not sure we want to delete the session here anyway.
-	sessionUUID, _ := id.SessionUUID()
-	scopeUUID, _ := id.ScopeUUID()
-	sessionID := types.SessionMetadataAddress(scopeUUID, sessionUUID)
-	k.RemoveSession(ctx, sessionID)
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeRecordRemoved,
-			sdk.NewAttribute(types.AttributeKeyRecordID, id.String()),
-		),
-	)
+	// Remove the session too if there are no more records in it.
+	k.RemoveSession(ctx, record.SessionId)
 }
 
-// IterateRecords processes all records in a scope with the given handler.
+// IterateSessions processes stored records with the given handler.
+// If the scopeID is an empty MetadataAddress, all records will be processed.
+// Otherwise, just the records for the given scopeID will be processed.
 func (k Keeper) IterateRecords(ctx sdk.Context, scopeID types.MetadataAddress, handler func(types.Record) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
 	prefix, err := scopeID.ScopeRecordIteratorPrefix()

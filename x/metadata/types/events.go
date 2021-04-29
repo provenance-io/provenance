@@ -2,91 +2,6 @@ package types
 
 import sdk "github.com/cosmos/cosmos-sdk/types"
 
-const (
-	// EventTypeScopeCreated is the event type generated when new scopes are created.
-	EventTypeScopeCreated string = "scope_created"
-	// EventTypeScopeUpdated is the event type generated when existing scopes are updated.
-	EventTypeScopeUpdated string = "scope_updated"
-	// EventTypeScopeOwnership is the event type generated when existing scopes have a change ownership request processed.
-	EventTypeScopeOwnership string = "scope_ownership"
-	// EventTypeScopeRemoved is the event type generated when a scope is removed
-	EventTypeScopeRemoved string = "scope_removed"
-
-	// EventTypeSessionCreated is the event type generated when new record sessions are created.
-	EventTypeSessionCreated string = "session_created"
-	// EventTypeSessionUpdated is the event type generated when existing record sessions are updated.
-	EventTypeSessionUpdated string = "session_updated"
-	// EventTypeSessionRemoved is the event type generated when a scope is removed
-	EventTypeSessionRemoved string = "session_removed"
-
-	// EventTypeRecordCreated is the event type generated when new record sessions are created.
-	EventTypeRecordCreated string = "record_created"
-	// EventTypeRecordUpdated is the event type generated when existing record sessions are updated.
-	EventTypeRecordUpdated string = "record_updated"
-	// EventTypeRecordRemoved is the event type generated when a scope is removed
-	EventTypeRecordRemoved string = "record_removed"
-
-	// EventTypeScopeSpecificationCreated is the event type generated when a new scope specification is created.
-	EventTypeScopeSpecificationCreated string = "scope_specification_created"
-	// EventTypeScopeSpecificationUpdated is the event type generated when an existing scope specifications is updated.
-	EventTypeScopeSpecificationUpdated string = "scope_specification_updated"
-	// EventTypeScopeSpecificationRemoved is the event type generated when a scope specification is removed.
-	EventTypeScopeSpecificationRemoved string = "scope_specification_removed"
-
-	// EventTypeContractSpecificationCreated is the event type generated when a new contract specification is created.
-	EventTypeContractSpecificationCreated string = "contract_specification_created"
-	// EventTypeContractSpecificationUpdated is the event type generated when an existing contract specifications is updated.
-	EventTypeContractSpecificationUpdated string = "contract_specification_updated"
-	// EventTypeContractSpecificationRemoved is the event type generated when a contract specification is removed.
-	EventTypeContractSpecificationRemoved string = "contract_specification_removed"
-
-	// EventTypeRecordSpecificationCreated is the event type generated when a new record specification is created.
-	EventTypeRecordSpecificationCreated string = "record_specification_created"
-	// EventTypeRecordSpecificationUpdated is the event type generated when an existing record specifications is updated.
-	EventTypeRecordSpecificationUpdated string = "record_specification_updated"
-	// EventTypeRecordSpecificationRemoved is the event type generated when a record specification is removed.
-	EventTypeRecordSpecificationRemoved string = "record_specification_removed"
-
-	// AttributeKeyScopeID is the attribute key for a scope ID attribute JSON value.
-	AttributeKeyScopeID string = "scope_id"
-	// AttributeKeyScope is the attribute key for a scope attribute JSON value.
-	AttributeKeyScope string = "scope"
-	// AttributeKeySessionID is the attribute key for a scope ID attribute JSON value.
-	AttributeKeySessionID string = "session_id"
-	// AttributeKeyRecordID is the attribute key for a record ID attribute JSON value.
-	AttributeKeyRecordID string = "record_id"
-	// AttributeKeyExecutionID is the attribute key for a scope ID attribute JSON value.
-	AttributeKeyExecutionID string = "execution_id"
-	// AttributeKeyModuleName is the attribute key for this module.
-	AttributeKeyModuleName string = "module"
-	// AttributeKeyTxHash is the attribute for the transaction hash.
-	AttributeKeyTxHash = "tx_hash"
-	// AttributeKeyScopeSpecID is the attribute key for a scope spec ID attribute JSON value.
-	AttributeKeyScopeSpecID string = "scope_spec_id"
-	// AttributeKeyScopeSpec is the attribute key for a scope spec attribute JSON value.
-	AttributeKeyScopeSpec string = "scope_spec"
-	// AttributeKeyContractSpecID is the attribute key for a contract spec ID attribute JSON value.
-	AttributeKeyContractSpecID string = "contract_spec_id"
-	// AttributeKeyContractSpec is the attribute key for a contract spec attribute JSON value.
-	AttributeKeyContractSpec string = "contract_spec"
-	// AttributeKeyRecordSpecID is the attribute key for a record spec ID attribute JSON value.
-	AttributeKeyRecordSpecID string = "record_spec_id"
-	// AttributeKeyRecordSpec is the attribute key for a record spec attribute JSON value.
-	AttributeKeyRecordSpec string = "record_spec"
-
-	// EventTypeOsLocatorCreated is the event type generated when new os locator created.
-	EventTypeOsLocatorCreated string = "oslocator_created"
-	// KeyAttributeAddress is the key for an address.
-	AttributeKeyOSLocatorAddress string = "address"
-	AttributeKeyOSLocatorURI     string = "uri"
-	// EventTypeOsLocatorDeleted is the event type generated when a os locator deleted.
-	EventTypeOsLocatorDeleted  string = "oslocator_deleted"
-	EventTypeOsLocatorModified string = "oslocator_modified"
-
-	// AttributeValueCategory indicates the category for this value
-	AttributeValueCategory = ModuleName
-)
-
 // TxEndpoint is an enum for metadata TX endpoints.
 type TxEndpoint string
 
@@ -129,4 +44,161 @@ func NewEventTxCompleted(endpoint TxEndpoint, signers []sdk.AccAddress) *EventTx
 		retval.Signers[i] = s.String()
 	}
 	return retval
+}
+
+func NewEventScopeCreated(scope Scope) *EventScopeCreated {
+	return &EventScopeCreated{
+		ScopeAddr: scope.ScopeId.String(),
+		Scope:     &scope,
+	}
+}
+
+func NewEventScopeUpdated(scope, scopeReplaced Scope) *EventScopeUpdated {
+	return &EventScopeUpdated{
+		ScopeAddr:     scope.ScopeId.String(),
+		Scope:         &scope,
+		ScopeReplaced: &scopeReplaced,
+	}
+}
+
+func NewEventScopeRemoved(scope Scope) *EventScopeRemoved {
+	return &EventScopeRemoved{
+		ScopeAddr: scope.ScopeId.String(),
+		Scope:     &scope,
+	}
+}
+
+func NewEventSessionCreated(session Session) *EventSessionCreated {
+	return &EventSessionCreated{
+		SessionAddr: session.SessionId.String(),
+		Session:     &session,
+	}
+}
+
+func NewEventSessionUpdated(session, sessionReplaced Session) *EventSessionUpdated {
+	return &EventSessionUpdated{
+		SessionAddr:     session.SessionId.String(),
+		Session:         &session,
+		SessionReplaced: &sessionReplaced,
+	}
+}
+
+func NewEventSessionRemoved(session Session) *EventSessionRemoved {
+	return &EventSessionRemoved{
+		SessionAddr: session.SessionId.String(),
+		Session:     &session,
+	}
+}
+
+func NewEventRecordCreated(record Record) *EventRecordCreated {
+	addr, _ := record.SessionId.AsRecordAddress(record.Name)
+	return &EventRecordCreated{
+		RecordAddr: addr.String(),
+		Record:     &record,
+	}
+}
+
+func NewEventRecordUpdated(record, recordReplaced Record) *EventRecordUpdated {
+	addr, _ := record.SessionId.AsRecordAddress(record.Name)
+	return &EventRecordUpdated{
+		RecordAddr:     addr.String(),
+		Record:         &record,
+		RecordReplaced: &recordReplaced,
+	}
+}
+
+func NewEventRecordRemoved(record Record) *EventRecordRemoved {
+	addr, _ := record.SessionId.AsRecordAddress(record.Name)
+	return &EventRecordRemoved{
+		RecordAddr: addr.String(),
+		Record:     &record,
+	}
+}
+
+func NewEventScopeSpecificationCreated(scopeSpecification ScopeSpecification) *EventScopeSpecificationCreated {
+	return &EventScopeSpecificationCreated{
+		ScopeSpecificationAddr: scopeSpecification.SpecificationId.String(),
+		ScopeSpecification:     &scopeSpecification,
+	}
+}
+
+func NewEventScopeSpecificationUpdated(scopeSpecification, scopeSpecificationReplaced ScopeSpecification) *EventScopeSpecificationUpdated {
+	return &EventScopeSpecificationUpdated{
+		ScopeSpecificationAddr:     scopeSpecification.SpecificationId.String(),
+		ScopeSpecification:         &scopeSpecification,
+		ScopeSpecificationReplaced: &scopeSpecificationReplaced,
+	}
+}
+
+func NewEventScopeSpecificationRemoved(scopeSpecification ScopeSpecification) *EventScopeSpecificationRemoved {
+	return &EventScopeSpecificationRemoved{
+		ScopeSpecificationAddr: scopeSpecification.SpecificationId.String(),
+		ScopeSpecification:     &scopeSpecification,
+	}
+}
+
+func NewEventContractSpecificationCreated(contractSpecification ContractSpecification) *EventContractSpecificationCreated {
+	return &EventContractSpecificationCreated{
+		ContractSpecificationAddr: contractSpecification.SpecificationId.String(),
+		ContractSpecification:     &contractSpecification,
+	}
+}
+
+func NewEventContractSpecificationUpdated(contractSpecification, contractSpecificationReplaced ContractSpecification) *EventContractSpecificationUpdated {
+	return &EventContractSpecificationUpdated{
+		ContractSpecificationAddr:     contractSpecification.SpecificationId.String(),
+		ContractSpecification:         &contractSpecification,
+		ContractSpecificationReplaced: &contractSpecificationReplaced,
+	}
+}
+
+func NewEventContractSpecificationRemoved(contractSpecification ContractSpecification) *EventContractSpecificationRemoved {
+	return &EventContractSpecificationRemoved{
+		ContractSpecificationAddr: contractSpecification.SpecificationId.String(),
+		ContractSpecification:     &contractSpecification,
+	}
+}
+
+func NewEventRecordSpecificationCreated(recordSpecification RecordSpecification) *EventRecordSpecificationCreated {
+	return &EventRecordSpecificationCreated{
+		RecordSpecificationAddr: recordSpecification.SpecificationId.String(),
+		RecordSpecification:     &recordSpecification,
+	}
+}
+
+func NewEventRecordSpecificationUpdated(recordSpecification, recordSpecificationReplaced RecordSpecification) *EventRecordSpecificationUpdated {
+	return &EventRecordSpecificationUpdated{
+		RecordSpecificationAddr:     recordSpecification.SpecificationId.String(),
+		RecordSpecification:         &recordSpecification,
+		RecordSpecificationReplaced: &recordSpecificationReplaced,
+	}
+}
+
+func NewEventRecordSpecificationRemoved(recordSpecification RecordSpecification) *EventRecordSpecificationRemoved {
+	return &EventRecordSpecificationRemoved{
+		RecordSpecificationAddr: recordSpecification.SpecificationId.String(),
+		RecordSpecification:     &recordSpecification,
+	}
+}
+
+func NewEventOSLocatorCreated(osLocator ObjectStoreLocator) *EventOSLocatorCreated {
+	return &EventOSLocatorCreated{
+		Address: osLocator.Owner,
+		Uri:     osLocator.LocatorUri,
+	}
+}
+
+func NewEventOSLocatorUpdated(osLocator, osLocatorReplaced ObjectStoreLocator) *EventOSLocatorUpdated {
+	return &EventOSLocatorUpdated{
+		Address:     osLocator.Owner,
+		Uri:         osLocator.LocatorUri,
+		UriReplaced: osLocatorReplaced.LocatorUri,
+	}
+}
+
+func NewEventOSLocatorRemoved(osLocator ObjectStoreLocator) *EventOSLocatorRemoved {
+	return &EventOSLocatorRemoved{
+		Address: osLocator.Owner,
+		Uri:     osLocator.LocatorUri,
+	}
 }

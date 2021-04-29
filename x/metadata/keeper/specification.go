@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gogo/protobuf/proto"
+
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -84,7 +86,7 @@ func (k Keeper) GetRecordSpecificationsForContractSpecificationID(ctx sdk.Contex
 	return retval, err
 }
 
-// GetRecordSpecification returns the record spec with the given id.
+// GetRecordSpecification returns the record specification with the given id.
 func (k Keeper) GetRecordSpecification(ctx sdk.Context, recordSpecID types.MetadataAddress) (spec types.RecordSpecification, found bool) {
 	if !recordSpecID.IsRecordSpecificationAddress() {
 		return spec, false
@@ -103,25 +105,18 @@ func (k Keeper) SetRecordSpecification(ctx sdk.Context, spec types.RecordSpecifi
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryBare(&spec)
 
-	eventType := types.EventTypeRecordSpecificationCreated
+	var event proto.Message = types.NewEventRecordSpecificationCreated(spec)
 	if store.Has(spec.SpecificationId) {
 		if oldBytes := store.Get(spec.SpecificationId); oldBytes != nil {
 			var oldSpec types.RecordSpecification
 			if err := k.cdc.UnmarshalBinaryBare(oldBytes, &oldSpec); err == nil {
-				eventType = types.EventTypeRecordSpecificationUpdated
+				event = types.NewEventRecordSpecificationUpdated(spec, oldSpec)
 			}
 		}
 	}
 
 	store.Set(spec.SpecificationId, b)
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			eventType,
-			sdk.NewAttribute(types.AttributeKeyRecordSpecID, spec.SpecificationId.String()),
-			sdk.NewAttribute(types.AttributeKeyRecordSpec, spec.String()),
-		),
-	)
+	_ = ctx.EventManager().EmitTypedEvent(event)
 }
 
 // RemoveRecordSpecification removes a record specification from the module kv store.
@@ -138,14 +133,7 @@ func (k Keeper) RemoveRecordSpecification(ctx sdk.Context, recordSpecID types.Me
 	}
 
 	store.Delete(recordSpecID)
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeRecordSpecificationRemoved,
-			sdk.NewAttribute(types.AttributeKeyRecordSpecID, recordSpec.SpecificationId.String()),
-			sdk.NewAttribute(types.AttributeKeyRecordSpec, recordSpec.String()),
-		),
-	)
+	_ = ctx.EventManager().EmitTypedEvent(types.NewEventRecordSpecificationRemoved(recordSpec))
 
 	return nil
 }
@@ -214,7 +202,7 @@ func (k Keeper) IterateContractSpecsForOwner(ctx sdk.Context, ownerAddress sdk.A
 	return nil
 }
 
-// GetContractSpecification returns the contract spec with the given id.
+// GetContractSpecification returns the contract specification with the given id.
 func (k Keeper) GetContractSpecification(ctx sdk.Context, contractSpecID types.MetadataAddress) (spec types.ContractSpecification, found bool) {
 	if !contractSpecID.IsContractSpecificationAddress() {
 		return spec, false
@@ -233,12 +221,12 @@ func (k Keeper) SetContractSpecification(ctx sdk.Context, spec types.ContractSpe
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryBare(&spec)
 
-	eventType := types.EventTypeContractSpecificationCreated
+	var event proto.Message = types.NewEventContractSpecificationCreated(spec)
 	if store.Has(spec.SpecificationId) {
 		if oldBytes := store.Get(spec.SpecificationId); oldBytes != nil {
 			var oldSpec types.ContractSpecification
 			if err := k.cdc.UnmarshalBinaryBare(oldBytes, &oldSpec); err == nil {
-				eventType = types.EventTypeContractSpecificationUpdated
+				event = types.NewEventContractSpecificationUpdated(spec, oldSpec)
 				k.clearContractSpecificationIndex(ctx, oldSpec)
 			}
 		}
@@ -246,14 +234,7 @@ func (k Keeper) SetContractSpecification(ctx sdk.Context, spec types.ContractSpe
 
 	store.Set(spec.SpecificationId, b)
 	k.indexContractSpecification(ctx, spec)
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			eventType,
-			sdk.NewAttribute(types.AttributeKeyContractSpecID, spec.SpecificationId.String()),
-			sdk.NewAttribute(types.AttributeKeyContractSpec, spec.String()),
-		),
-	)
+	_ = ctx.EventManager().EmitTypedEvent(event)
 }
 
 // RemoveContractSpecification removes a contract specification from the module kv store.
@@ -271,14 +252,7 @@ func (k Keeper) RemoveContractSpecification(ctx sdk.Context, contractSpecID type
 
 	k.clearContractSpecificationIndex(ctx, contractSpec)
 	store.Delete(contractSpecID)
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeContractSpecificationRemoved,
-			sdk.NewAttribute(types.AttributeKeyContractSpecID, contractSpec.SpecificationId.String()),
-			sdk.NewAttribute(types.AttributeKeyContractSpec, contractSpec.String()),
-		),
-	)
+	_ = ctx.EventManager().EmitTypedEvent(types.NewEventContractSpecificationRemoved(contractSpec))
 
 	return nil
 }
@@ -405,7 +379,7 @@ func (k Keeper) IterateScopeSpecsForContractSpec(ctx sdk.Context, contractSpecID
 	return nil
 }
 
-// GetScopeSpecification returns the record with the given id.
+// GetScopeSpecification returns the scope specification with the given id.
 func (k Keeper) GetScopeSpecification(ctx sdk.Context, scopeSpecID types.MetadataAddress) (spec types.ScopeSpecification, found bool) {
 	if !scopeSpecID.IsScopeSpecificationAddress() {
 		return spec, false
@@ -424,12 +398,12 @@ func (k Keeper) SetScopeSpecification(ctx sdk.Context, spec types.ScopeSpecifica
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryBare(&spec)
 
-	eventType := types.EventTypeScopeSpecificationCreated
+	var event proto.Message = types.NewEventScopeSpecificationCreated(spec)
 	if store.Has(spec.SpecificationId) {
 		if oldBytes := store.Get(spec.SpecificationId); oldBytes != nil {
 			var oldSpec types.ScopeSpecification
 			if err := k.cdc.UnmarshalBinaryBare(oldBytes, &oldSpec); err == nil {
-				eventType = types.EventTypeScopeSpecificationUpdated
+				event = types.NewEventScopeSpecificationUpdated(spec, oldSpec)
 				k.clearScopeSpecificationIndex(ctx, oldSpec)
 			}
 		}
@@ -437,14 +411,7 @@ func (k Keeper) SetScopeSpecification(ctx sdk.Context, spec types.ScopeSpecifica
 
 	store.Set(spec.SpecificationId, b)
 	k.indexScopeSpecification(ctx, spec)
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			eventType,
-			sdk.NewAttribute(types.AttributeKeyScopeSpecID, spec.SpecificationId.String()),
-			sdk.NewAttribute(types.AttributeKeyScopeSpec, spec.String()),
-		),
-	)
+	_ = ctx.EventManager().EmitTypedEvent(event)
 }
 
 // RemoveScopeSpecification removes a scope specification from the module kv store.
@@ -462,14 +429,7 @@ func (k Keeper) RemoveScopeSpecification(ctx sdk.Context, scopeSpecID types.Meta
 
 	k.clearScopeSpecificationIndex(ctx, scopeSpec)
 	store.Delete(scopeSpecID)
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeScopeSpecificationRemoved,
-			sdk.NewAttribute(types.AttributeKeyScopeSpecID, scopeSpec.SpecificationId.String()),
-			sdk.NewAttribute(types.AttributeKeyScopeSpec, scopeSpec.String()),
-		),
-	)
+	_ = ctx.EventManager().EmitTypedEvent(types.NewEventScopeSpecificationRemoved(scopeSpec))
 
 	return nil
 }
