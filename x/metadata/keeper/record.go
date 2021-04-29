@@ -87,6 +87,8 @@ func (k Keeper) RemoveRecord(ctx sdk.Context, id types.MetadataAddress) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(id)
 
+	// TODO: Fix this. a record id does not have a session UUID in it,
+	//       and I'm not sure we want to delete the session here anyway.
 	sessionUUID, _ := id.SessionUUID()
 	scopeUUID, _ := id.ScopeUUID()
 	sessionID := types.SessionMetadataAddress(scopeUUID, sessionUUID)
