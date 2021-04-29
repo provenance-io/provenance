@@ -142,6 +142,12 @@ func (k Keeper) SetAttribute(
 	key := types.AccountAttributeKey(acc, attr)
 	store := ctx.KVStore(k.storeKey)
 	store.Set(key, bz)
+
+	attributeAddEvent := types.NewEventAttributeAdd(attr, owner.String())
+	if err := ctx.EventManager().EmitTypedEvent(attributeAddEvent); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -168,6 +174,11 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, acc sdk.AccAddress, name string
 		if attr.Name == name {
 			count++
 			store.Delete(it.Key())
+
+			attributeDeleteEvent := types.NewEventAttributeDelete(name, acc.String(), owner.String())
+			if err := ctx.EventManager().EmitTypedEvent(attributeDeleteEvent); err != nil {
+				return err
+			}
 		}
 	}
 	if count == 0 {

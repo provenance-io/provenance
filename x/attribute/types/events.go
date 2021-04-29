@@ -10,3 +10,21 @@ const (
 	AttributeKeyNameAttribute  string = "attribute_name"
 	AttributeKeyAccountAddress string = "account_address"
 )
+
+func NewEventAttributeAdd(attribute Attribute, owner string) *EventAttributeAdd {
+	return &EventAttributeAdd{
+		Name:    attribute.Name,
+		Value:   string(attribute.GetValue()),
+		Type:    attribute.AttributeType.String(),
+		Account: attribute.Address,
+		Owner:   owner,
+	}
+}
+
+func NewEventAttributeDelete(name string, account string, owner string) *EventAttributeDelete {
+	return &EventAttributeDelete{
+		Name:    name,
+		Owner:   owner,
+		Account: account,
+	}
+}
