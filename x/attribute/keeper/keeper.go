@@ -4,12 +4,14 @@ import (
 	"bytes"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/provenance-io/provenance/x/attribute/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
@@ -64,12 +66,16 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 // GetAllAttributes gets all attributes for account.
 func (k Keeper) GetAllAttributes(ctx sdk.Context, acc sdk.AccAddress) ([]types.Attribute, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "get_all")
+
 	pred := func(s string) bool { return true }
 	return k.prefixScan(ctx, types.AccountAttributesKeyPrefix(acc), pred)
 }
 
 // GetAttributes gets all attributes with the given name from an account.
 func (k Keeper) GetAttributes(ctx sdk.Context, acc sdk.AccAddress, name string) ([]types.Attribute, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "get")
+
 	name = strings.ToLower(strings.TrimSpace(name))
 	if _, err := k.nameKeeper.GetRecordByName(ctx, name); err != nil { // Ensure name exists (ie was bound to an address)
 		return nil, err
@@ -108,6 +114,8 @@ func (k Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle Handler) e
 func (k Keeper) SetAttribute(
 	ctx sdk.Context, acc sdk.AccAddress, attr types.Attribute, owner sdk.AccAddress,
 ) error {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "set")
+
 	// Ensure attribute is valid
 	if err := attr.ValidateBasic(); err != nil {
 		return err
@@ -142,11 +150,18 @@ func (k Keeper) SetAttribute(
 	key := types.AccountAttributeKey(acc, attr)
 	store := ctx.KVStore(k.storeKey)
 	store.Set(key, bz)
+
+	attributeAddEvent := types.NewEventAttributeAdd(attr, owner.String())
+	if err := ctx.EventManager().EmitTypedEvent(attributeAddEvent); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 // Removes attributes under the given account. The attribute name must resolve to the given owner address.
 func (k Keeper) DeleteAttribute(ctx sdk.Context, acc sdk.AccAddress, name string, owner sdk.AccAddress) error {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "delete")
 	// Verify an account exists for the given owner address
 	if ownerAcc := k.authKeeper.GetAccount(ctx, owner); ownerAcc == nil {
 		return fmt.Errorf("no account found for owner address \"%s\"", owner.String())
@@ -168,6 +183,11 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, acc sdk.AccAddress, name string
 		if attr.Name == name {
 			count++
 			store.Delete(it.Key())
+
+			attributeDeleteEvent := types.NewEventAttributeDelete(name, acc.String(), owner.String())
+			if err := ctx.EventManager().EmitTypedEvent(attributeDeleteEvent); err != nil {
+				return err
+			}
 		}
 	}
 	if count == 0 {
