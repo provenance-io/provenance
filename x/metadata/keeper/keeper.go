@@ -16,38 +16,45 @@ import (
 
 // MetadataKeeperI is the internal state api for the metadata module.
 type MetadataKeeperI interface {
-	// GetScope returns the scope with the given address.
+	// GetScope returns the scope with the given id.
 	GetScope(sdk.Context, types.MetadataAddress) (types.Scope, bool)
-	// SetScope persists the provided scope
+	// SetScope stores a scope in the module kv store.
 	SetScope(sdk.Context, types.Scope)
-	// RemoveScope removes the provided scope
+	// RemoveScope removes a scope from the module kv store along with all its records and sessions.
 	RemoveScope(sdk.Context, types.MetadataAddress)
 
 	// IterateScopes processes all stored scopes with the given handler.
 	IterateScopes(sdk.Context, func(types.Scope) bool) error
+	// IterateScopesForAddress processes scopes associated with the provided address with the given handler.
+	IterateScopesForAddress(sdk.Context, sdk.AccAddress, func(types.MetadataAddress) bool) error
+	// IterateScopesForScopeSpec processes scopes associated with the provided scope specification id with the given handler.
+	IterateScopesForScopeSpec(sdk.Context, types.MetadataAddress, func(types.MetadataAddress) bool) error
 
-	// GetSession returns the scope with the given address.
+	// GetSession returns the session with the given id.
 	GetSession(sdk.Context, types.MetadataAddress) (types.Session, bool)
-	// SetSession persists the provided scope
+	// SetSession stores a session in the module kv store.
 	SetSession(sdk.Context, types.Session)
-	// RemoveSession persists the provided scope
+	// RemoveSession removes a session from the module kv store if there are no records associated with it.
 	RemoveSession(sdk.Context, types.MetadataAddress)
 
-	// GetRecord returns the record with the given address.
+	// IterateSessions processes stored sessions with the given handler.
+	IterateSessions(sdk.Context, types.MetadataAddress, func(types.Session) bool) error
+
+	// GetRecord returns the record with the given id.
 	GetRecord(sdk.Context, types.MetadataAddress) (types.Record, bool)
-	// GetRecords returns records with giving scope and/or name
+	// GetRecords returns records for a scope optionally limited to a name.
 	GetRecords(sdk.Context, types.MetadataAddress, string) ([]*types.Record, error)
-	// SetRecord persists the provided record
+	// SetRecord stores a record in the module kv store.
 	SetRecord(sdk.Context, types.Record)
-	// RemoveRecord persists the provided scope
+	// RemoveRecord removes a record from the module kv store.
 	RemoveRecord(sdk.Context, types.MetadataAddress)
 
-	// IterateRecords processes all stored record for a scope with the given handler.
+	// IterateSessions processes stored records with the given handler.
 	IterateRecords(sdk.Context, types.MetadataAddress, func(types.Record) bool) error
 
-	// GetScopeSpecification returns the record with the given address.
+	// GetScopeSpecification returns the scope specification with the given id.
 	GetScopeSpecification(sdk.Context, types.MetadataAddress) (types.ScopeSpecification, bool)
-	// SetScopeSpecification persists the provided scope specification
+	// SetScopeSpecification stores a scope specification in the module kv store.
 	SetScopeSpecification(sdk.Context, types.ScopeSpecification)
 	// RemoveScopeSpecification removes a scope specification from the module kv store.
 	RemoveScopeSpecification(sdk.Context, types.MetadataAddress) error
@@ -59,21 +66,21 @@ type MetadataKeeperI interface {
 	// IterateScopeSpecsForContractSpec processes all scope specs associated with a contract spec id using a given handler.
 	IterateScopeSpecsForContractSpec(ctx sdk.Context, contractSpecID types.MetadataAddress, handler func(scopeSpecID types.MetadataAddress) (stop bool)) error
 
-	// GetContractSpecification returns the contract specification with the given address.
+	// GetContractSpecification returns the contract specification with the given id.
 	GetContractSpecification(sdk.Context, types.MetadataAddress) (types.ContractSpecification, bool)
-	// SetContractSpecification persists the provided contract specification
+	// SetContractSpecification stores a contract specification in the module kv store.
 	SetContractSpecification(sdk.Context, types.ContractSpecification)
 	// RemoveContractSpecification removes a contract specification from the module kv store.
 	RemoveContractSpecification(sdk.Context, types.MetadataAddress) error
 
-	// IterateContractSpecs processes all contract specs using the given handler.
+	// IterateContractSpecs processes all contract specs using a given handler.
 	IterateContractSpecs(ctx sdk.Context, handler func(specification types.ContractSpecification) (stop bool)) error
 	// IterateContractSpecsForOwner processes all contract specs owned by an address using a given handler.
 	IterateContractSpecsForOwner(ctx sdk.Context, ownerAddress sdk.AccAddress, handler func(contractSpecID types.MetadataAddress) (stop bool)) error
 
-	// GetRecordSpecification returns the record specification with the given address.
+	// GetRecordSpecification returns the record specification with the given id.
 	GetRecordSpecification(sdk.Context, types.MetadataAddress) (types.RecordSpecification, bool)
-	// SetRecordSpecification persists the provided record specification
+	// SetRecordSpecification stores a record specification in the module kv store.
 	SetRecordSpecification(sdk.Context, types.RecordSpecification)
 	// RemoveRecordSpecification removes a record specification from the module kv store.
 	RemoveRecordSpecification(sdk.Context, types.MetadataAddress) error
