@@ -150,27 +150,23 @@ jobs:
 #          name: linux-cleveldb-zip
 #          path: build/
       -
+        name: Download linux zip artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: linux-zip
+          path: build/
+      -
         name: Download osx zip artifact
         uses: actions/download-artifact@v2
         with:
           name: osx-zip
           path: build/
       -
-        name: Upload release osx-zip
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create_release.outputs.release_url }}
-          asset_path: ./build/provenance-darwin-amd64-${{ needs.build_init.outputs.version }}.zip
-          asset_name: provenance-darwin-amd64-${{ needs.build_init.outputs.version }}.zip
-          asset_content_type: application/octet-stream
-      -
-        name: Download linux zip artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: linux-zip
-          path: build/
+        name: Create release items
+        run: |
+          make VERSION=${{ needs.build_init.outputs.version }} build-release-checksum build-release-plan build-release-protos
+          ls -lah build/*
+          ls -lah build/*/*
       -
         name: Upload linux zip artifact
         uses: actions/upload-release-asset@v1
@@ -182,9 +178,15 @@ jobs:
           asset_name: provenance-darwin-amd64-${{ needs.build_init.outputs.version }}.zip
           asset_content_type: application/octet-stream
       -
-        name: Create release checksum
-        run: |
-          make VERSION=${{ needs.build_init.outputs.version }} build-release-checksum
+        name: Upload release osx-zip
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.release_url }}
+          asset_path: ./build/provenance-darwin-amd64-${{ needs.build_init.outputs.version }}.zip
+          asset_name: provenance-darwin-amd64-${{ needs.build_init.outputs.version }}.zip
+          asset_content_type: application/octet-stream
       -
         name: Upload release checksum
         uses: actions/upload-release-asset@v1
@@ -196,10 +198,6 @@ jobs:
           asset_name: sha256sum.txt
           asset_content_type: application/octet-stream
       -
-        name: Create release plan
-        run: |
-          make VERSION=${{ needs.build_init.outputs.version }} build-release-plan
-      -
         name: Upload release plan
         uses: actions/upload-release-asset@v1
         env:
@@ -209,10 +207,6 @@ jobs:
           asset_path: ./build/plan-${{ needs.build_init.outputs.version }}.json
           asset_name: plan-${{ needs.build_init.outputs.version }}.json
           asset_content_type: application/octet-stream
-      -
-        name: Create release protos
-        run: |
-          make VERSION=${{ needs.build_init.outputs.version }} build-release-checksum
       -
         name: Upload release protos
         uses: actions/upload-release-asset@v1
