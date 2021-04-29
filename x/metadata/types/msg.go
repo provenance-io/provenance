@@ -17,6 +17,8 @@ const (
 	TypeMsgDeleteScopeRequest                 = "delete_scope_request"
 	TypeMsgAddScopeDataAccessRequest          = "add_scope_data_access_request"
 	TypeMsgDeleteScopeDataAccessRequest       = "delete_scope_data_access_request"
+	TypeMsgAddScopeOwnerRequest               = "add_scope_owner_request"
+	TypeMsgDeleteScopeOwnerRequest            = "delete_scope_owner_request"
 	TypeMsgWriteSessionRequest                = "write_session_request"
 	TypeMsgWriteRecordRequest                 = "write_record_request"
 	TypeMsgDeleteRecordRequest                = "delete_record_request"
@@ -39,6 +41,8 @@ var (
 	_ sdk.Msg = &MsgDeleteScopeRequest{}
 	_ sdk.Msg = &MsgAddScopeDataAccessRequest{}
 	_ sdk.Msg = &MsgDeleteScopeDataAccessRequest{}
+	_ sdk.Msg = &MsgAddScopeOwnerRequest{}
+	_ sdk.Msg = &MsgDeleteScopeOwnerRequest{}
 	_ sdk.Msg = &MsgWriteSessionRequest{}
 	_ sdk.Msg = &MsgWriteRecordRequest{}
 	_ sdk.Msg = &MsgDeleteRecordRequest{}
@@ -303,6 +307,118 @@ func (msg *MsgDeleteScopeDataAccessRequest) ValidateBasic() error {
 		_, err := sdk.AccAddressFromBech32(da)
 		if err != nil {
 			return fmt.Errorf("data access address is invalid: %s", da)
+		}
+	}
+	if len(msg.Signers) < 1 {
+		return fmt.Errorf("at least one signer is required")
+	}
+	return nil
+}
+
+// ------------------  MsgAddScopeOwnerRequest  ------------------
+
+// NewMsgAddScopeOwnerRequest creates a new msg instance
+func NewMsgAddScopeOwnerRequest(scopeID MetadataAddress, owners []string, signers []string) *MsgAddScopeOwnerRequest {
+	return &MsgAddScopeOwnerRequest{
+		ScopeId: scopeID,
+		Owners:  owners,
+		Signers: signers,
+	}
+}
+
+func (msg MsgAddScopeOwnerRequest) String() string {
+	out, _ := yaml.Marshal(msg)
+	return string(out)
+}
+
+// Route returns the module route
+func (msg MsgAddScopeOwnerRequest) Route() string {
+	return ModuleName
+}
+
+// Type returns the type name for this msg
+func (msg MsgAddScopeOwnerRequest) Type() string {
+	return TypeMsgAddScopeOwnerRequest
+}
+
+// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
+func (msg MsgAddScopeOwnerRequest) GetSigners() []sdk.AccAddress {
+	return stringsToAccAddresses(msg.Signers)
+}
+
+// GetSignBytes gets the bytes for the message signer to sign on
+func (msg MsgAddScopeOwnerRequest) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// ValidateBasic performs a quick validity check
+func (msg *MsgAddScopeOwnerRequest) ValidateBasic() error {
+	if !msg.ScopeId.IsScopeAddress() {
+		return fmt.Errorf("address is not a scope id: %v", msg.ScopeId.String())
+	}
+	if len(msg.Owners) < 1 {
+		return fmt.Errorf("at least one owner address is required")
+	}
+	for _, da := range msg.Owners {
+		_, err := sdk.AccAddressFromBech32(da)
+		if err != nil {
+			return fmt.Errorf("owner address is invalid: %s", da)
+		}
+	}
+	if len(msg.Signers) < 1 {
+		return fmt.Errorf("at least one signer is required")
+	}
+	return nil
+}
+
+// ------------------  MsgDeleteScopeOwnerRequest  ------------------
+
+// NewMsgDeleteScopeOwnerRequest creates a new msg instance
+func NewMsgDeleteScopeOwnerRequest(scopeID MetadataAddress, owners []string, signers []string) *MsgDeleteScopeOwnerRequest {
+	return &MsgDeleteScopeOwnerRequest{
+		ScopeId: scopeID,
+		Owners:  owners,
+		Signers: signers,
+	}
+}
+
+func (msg MsgDeleteScopeOwnerRequest) String() string {
+	out, _ := yaml.Marshal(msg)
+	return string(out)
+}
+
+// Route returns the module route
+func (msg MsgDeleteScopeOwnerRequest) Route() string {
+	return ModuleName
+}
+
+// Type returns the type name for this msg
+func (msg MsgDeleteScopeOwnerRequest) Type() string {
+	return TypeMsgDeleteScopeOwnerRequest
+}
+
+// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
+func (msg MsgDeleteScopeOwnerRequest) GetSigners() []sdk.AccAddress {
+	return stringsToAccAddresses(msg.Signers)
+}
+
+// GetSignBytes gets the bytes for the message signer to sign on
+func (msg MsgDeleteScopeOwnerRequest) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// ValidateBasic performs a quick validity check
+func (msg *MsgDeleteScopeOwnerRequest) ValidateBasic() error {
+	if !msg.ScopeId.IsScopeAddress() {
+		return fmt.Errorf("address is not a scope id: %v", msg.ScopeId.String())
+	}
+	if len(msg.Owners) < 1 {
+		return fmt.Errorf("at least one owner address is required")
+	}
+	for _, da := range msg.Owners {
+		_, err := sdk.AccAddressFromBech32(da)
+		if err != nil {
+			return fmt.Errorf("owner address is invalid: %s", da)
 		}
 	}
 	if len(msg.Signers) < 1 {

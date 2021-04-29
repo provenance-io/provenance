@@ -26,6 +26,13 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgDeleteScopeDataAccessRequest:
 			res, err := msgServer.DeleteScopeDataAccess(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
+		case *types.MsgAddScopeOwnerRequest:
+			res, err := msgServer.AddScopeOwner(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+		case *types.MsgDeleteScopeOwnerRequest:
+			res, err := msgServer.DeleteScopeOwner(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+
 		case *types.MsgWriteRecordRequest:
 			res, err := msgServer.WriteRecord(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
