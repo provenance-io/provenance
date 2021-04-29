@@ -114,7 +114,7 @@ message EventScopeSpecificationUpdated {
   // scope_specification is the new on-chain version of the scope specification.
   ScopeSpecification scope_specification = 2;
   // scope_specification_replaced is the previous on-chain version of the scope specification.
-  Scope scope_specification_replaced = 3;
+  ScopeSpecification scope_specification_replaced = 3;
 }
 
 // EventScopeSpecificationRemoved is an event message indicating a scope specification has been removed.
