@@ -120,7 +120,8 @@ jobs:
           release_name: Release ${{ github.ref }}
           draft: true
           prerelease: true
-          body_path: RELEASE_CHANGELOG.md
+          # body_path: RELEASE_CHANGELOG.md
+          body: Testing
     outputs:
       release-url: ${{ steps.create_release.outputs.upload_url }}
 
