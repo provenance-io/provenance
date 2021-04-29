@@ -22,6 +22,7 @@ jobs:
 
   build_init:
     runs-on: ubuntu-latest
+    name: Build Init
     steps:
       - id: version
         run: echo "::set-output name=version::${GITHUB_REF##*/}"
@@ -33,12 +34,14 @@ jobs:
     runs-on: macos-latest
     needs:
       - build_init
+    name: Build OSX
     steps:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Install osx tools
         run: |
-          brew install gon
+          brew tap mitchellh/gon
+          brew install mitchellh/gon/gon
       - name: Setup go
         uses: actions/setup-go@v1
         with:
@@ -105,6 +108,7 @@ jobs:
       - build_osx
       - build_linux
 #      - build_linux_cleveldb
+    name: Create Release
     steps:
       - name: Create release ${{ needs.build_init.outputs.version }}
         uses: actions/create-release@v1
@@ -125,6 +129,7 @@ jobs:
     needs:
       - build_init
       - create_release
+    name: Attach Release Artifacts
     steps:
       -
         name: Checkout
