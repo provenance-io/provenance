@@ -136,18 +136,6 @@ jobs:
       -
         name: Checkout
         uses: actions/checkout@v2
-      -
-        name: Download osx zip
-        uses: actions/download-artifact@v2
-        with:
-          name: osx-zip
-          path: build/
-      -
-        name: Download linux zip
-        uses: actions/download-artifact@v2
-        with:
-          name: linux-zip
-          path: build/
 #      -
 #        name: Download linux cleveldb zip
 #        uses: actions/download-artifact@v2
@@ -155,7 +143,39 @@ jobs:
 #          name: linux-cleveldb-zip
 #          path: build/
       -
-        name: Create shasums
+        name: Download osx zip artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: osx-zip
+          path: build/
+      -
+        name: Upload release osx-zip
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.release_url }}
+          asset_path: ./build/provenance-darwin-amd64-${{ needs.build_init.outputs.version }}.zip
+          asset_name: provenance-darwin-amd64-${{ needs.build_init.outputs.version }}.zip
+          asset_content_type: application/octet-stream
+      -
+        name: Download linux zip artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: linux-zip
+          path: build/
+      -
+        name: Upload linux zip artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.release_url }}
+          asset_path: ./build/provenance-darwin-amd64-${{ needs.build_init.outputs.version }}.zip
+          asset_name: provenance-darwin-amd64-${{ needs.build_init.outputs.version }}.zip
+          asset_content_type: application/octet-stream
+      -
+        name: Create release checksum
         run: |
           make VERSION=${{ needs.build_init.outputs.version }} build-release-checksum
       -
@@ -168,7 +188,8 @@ jobs:
           asset_path: ./build/sha256sum.txt
           asset_name: sha256sum.txt
           asset_content_type: application/octet-stream
-      - name: Create plan
+      -
+        name: Create release plan
         run: |
           make VERSION=${{ needs.build_init.outputs.version }} build-release-plan
       -
@@ -182,6 +203,10 @@ jobs:
           asset_name: plan-${{ needs.build_init.outputs.version }}.json
           asset_content_type: application/octet-stream
       -
+        name: Create release protos
+        run: |
+          make VERSION=${{ needs.build_init.outputs.version }} build-release-checksum
+      -
         name: Upload release protos
         uses: actions/upload-release-asset@v1
         env:
@@ -190,26 +215,6 @@ jobs:
           upload_url: ${{ needs.create_release.outputs.release_url }}
           asset_path: ./build/protos-${{ needs.build_init.outputs.version }}.zip
           asset_name: protos-${{ needs.build_init.outputs.version }}.zip
-          asset_content_type: application/octet-stream
-      -
-        name: Upload release osx-zip
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create_release.outputs.release_url }}
-          asset_path: ./build/provenance-darwin-amd64-${{ needs.build_init.outputs.version }}.zip
-          asset_name: provenance-darwin-amd64-${{ needs.build_init.outputs.version }}.zip
-          asset_content_type: application/octet-stream
-      -
-        name: Upload release linux-zip
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create_release.outputs.release_url }}
-          asset_path: ./build/provenance-darwin-amd64-${{ needs.build_init.outputs.version }}.zip
-          asset_name: provenance-darwin-amd64-${{ needs.build_init.outputs.version }}.zip
           asset_content_type: application/octet-stream
 #      -
 #        name: Upload release linux-cleveldb-zip
