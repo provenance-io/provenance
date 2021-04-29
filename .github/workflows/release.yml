@@ -136,6 +136,13 @@ jobs:
       -
         name: Checkout
         uses: actions/checkout@v2
+      -
+        name: Setup go
+        uses: actions/setup-go@v1
+        with:
+          go-version: ${{ needs.build_init.outputs.go_version }}
+
+
 #      -
 #        name: Download linux cleveldb zip
 #        uses: actions/download-artifact@v2
