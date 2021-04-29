@@ -171,7 +171,7 @@ jobs:
           ls -lah build/*
 
       -
-        name: Upload linux zip artifact
+        name: Upload osx zip artifact
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -181,14 +181,14 @@ jobs:
           asset_name: provenance-darwin-amd64-${{ needs.build_init.outputs.version }}.zip
           asset_content_type: application/octet-stream
       -
-        name: Upload release osx-zip
+        name: Upload linux zip artifact
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.create_release.outputs.release_url }}
-          asset_path: ./build/provenance-darwin-amd64-${{ needs.build_init.outputs.version }}.zip
-          asset_name: provenance-darwin-amd64-${{ needs.build_init.outputs.version }}.zip
+          asset_path: ./build/provenance-linux-amd64-${{ needs.build_init.outputs.version }}.zip
+          asset_name: provenance-linux-amd64-${{ needs.build_init.outputs.version }}.zip
           asset_content_type: application/octet-stream
       -
         name: Upload release checksum
