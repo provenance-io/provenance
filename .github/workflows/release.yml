@@ -1,4 +1,4 @@
-name: Provenance Matrix
+name: Provenance Binary Release
 
 on:
   push:
@@ -14,6 +14,7 @@ jobs:
   #  most CI systems but currently not possible with GitHub actions.
   cleanup_runs:
     runs-on: ubuntu-latest
+    name: Cleanup Workflows
     steps:
       - uses: rokroskar/workflow-run-cleanup-action@v0.3.2
         env:
@@ -46,7 +47,7 @@ jobs:
         uses: actions/setup-go@v1
         with:
           go-version: ${{ needs.build_init.outputs.go_version }}
-      - name: Build linux binary
+      - name: Build osx binary
         run: |
           make WITH_CLEVELDB=no VERSION=${{ needs.build_init.outputs.version }} build-release-zip
       - uses: actions/upload-artifact@v2
@@ -123,7 +124,7 @@ jobs:
           # body_path: RELEASE_CHANGELOG.md
           body: Testing
     outputs:
-      release-url: ${{ steps.create_release.outputs.upload_url }}
+      release_url: ${{ steps.create_release.outputs.upload_url }}
 
   update_release:
     runs-on: ubuntu-latest
