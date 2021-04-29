@@ -1,5 +1,7 @@
 package types
 
+import sdk "github.com/cosmos/cosmos-sdk/types"
+
 const (
 	// EventTypeScopeCreated is the event type generated when new scopes are created.
 	EventTypeScopeCreated string = "scope_created"
@@ -117,10 +119,14 @@ const (
 	TxEndpoint_ModifyOSLocator TxEndpoint = "ModifyOSLocator"
 )
 
-func NewEventTxCompleted(endpoint TxEndpoint, signers []string) *EventTxCompleted {
-	return &EventTxCompleted{
+func NewEventTxCompleted(endpoint TxEndpoint, signers []sdk.AccAddress) *EventTxCompleted {
+	retval := &EventTxCompleted{
 		Module:   ModuleName,
 		Endpoint: string(endpoint),
-		Signers:  signers,
+		Signers:  make([]string, len(signers)),
 	}
+	for i, s := range signers {
+		retval.Signers[i] = s.String()
+	}
+	return retval
 }

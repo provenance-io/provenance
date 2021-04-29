@@ -37,17 +37,9 @@ func (k msgServer) WriteScope(
 
 	k.SetScope(ctx, msg.Scope)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
-		),
-	)
-
-	return &types.MsgWriteScopeResponse{
-		ScopeIdInfo: types.GetScopeIDInfo(msg.Scope.ScopeId),
-	}, nil
+	rv := types.NewMsgWriteScopeResponse(msg.Scope.ScopeId)
+	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_WriteScope, msg.GetSigners()))
+	return rv, re
 }
 
 func (k msgServer) DeleteScope(
@@ -67,14 +59,9 @@ func (k msgServer) DeleteScope(
 
 	k.RemoveScope(ctx, msg.ScopeId)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(types.AttributeKeyScopeID, string(msg.ScopeId)),
-		),
-	)
-
-	return &types.MsgDeleteScopeResponse{}, nil
+	rv := types.NewMsgDeleteScopeResponse()
+	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_DeleteScope, msg.GetSigners()))
+	return rv, re
 }
 
 func (k msgServer) AddScopeDataAccess(
@@ -98,15 +85,9 @@ func (k msgServer) AddScopeDataAccess(
 
 	k.SetScope(ctx, existing)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
-		),
-	)
-
-	return &types.MsgAddScopeDataAccessResponse{}, nil
+	rv := types.NewMsgAddScopeDataAccessResponse()
+	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_AddScopeDataAccess, msg.GetSigners()))
+	return rv, re
 }
 
 func (k msgServer) DeleteScopeDataAccess(
@@ -128,15 +109,9 @@ func (k msgServer) DeleteScopeDataAccess(
 
 	k.SetScope(ctx, existing)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
-		),
-	)
-
-	return &types.MsgDeleteScopeDataAccessResponse{}, nil
+	rv := types.NewMsgDeleteScopeDataAccessResponse()
+	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_DeleteScopeDataAccess, msg.GetSigners()))
+	return rv, re
 }
 
 func (k msgServer) WriteSession(
@@ -159,17 +134,9 @@ func (k msgServer) WriteSession(
 
 	k.SetSession(ctx, msg.Session)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
-		),
-	)
-
-	return &types.MsgWriteSessionResponse{
-		SessionIdInfo: types.GetSessionIDInfo(msg.Session.SessionId),
-	}, nil
+	rv := types.NewMsgWriteSessionResponse(msg.Session.SessionId)
+	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_WriteSession, msg.GetSigners()))
+	return rv, re
 }
 
 func (k msgServer) WriteRecord(
@@ -195,17 +162,9 @@ func (k msgServer) WriteRecord(
 
 	k.SetRecord(ctx, msg.Record)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
-		),
-	)
-
-	return &types.MsgWriteRecordResponse{
-		RecordIdInfo: types.GetRecordIDInfo(recordID),
-	}, nil
+	rv := types.NewMsgWriteRecordResponse(recordID)
+	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_WriteRecord, msg.GetSigners()))
+	return rv, re
 }
 
 func (k msgServer) DeleteRecord(
@@ -221,15 +180,9 @@ func (k msgServer) DeleteRecord(
 
 	k.RemoveRecord(ctx, msg.RecordId)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
-		),
-	)
-
-	return &types.MsgDeleteRecordResponse{}, nil
+	rv := types.NewMsgDeleteRecordResponse()
+	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_DeleteRecord, msg.GetSigners()))
+	return rv, re
 }
 
 func (k msgServer) WriteScopeSpecification(
@@ -251,17 +204,9 @@ func (k msgServer) WriteScopeSpecification(
 
 	k.SetScopeSpecification(ctx, msg.Specification)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
-		),
-	)
-
-	return &types.MsgWriteScopeSpecificationResponse{
-		ScopeSpecIdInfo: types.GetScopeSpecIDInfo(msg.Specification.SpecificationId),
-	}, nil
+	rv := types.NewMsgWriteScopeSpecificationResponse(msg.Specification.SpecificationId)
+	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_WriteScopeSpecification, msg.GetSigners()))
+	return rv, re
 }
 
 func (k msgServer) DeleteScopeSpecification(
@@ -282,15 +227,9 @@ func (k msgServer) DeleteScopeSpecification(
 		return nil, fmt.Errorf("cannot delete scope specification with id %s: %w", msg.SpecificationId, err)
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
-		),
-	)
-
-	return &types.MsgDeleteScopeSpecificationResponse{}, nil
+	rv := types.NewMsgDeleteScopeSpecificationResponse()
+	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_DeleteScopeSpecification, msg.GetSigners()))
+	return rv, re
 }
 
 func (k msgServer) WriteContractSpecification(
@@ -312,17 +251,9 @@ func (k msgServer) WriteContractSpecification(
 
 	k.SetContractSpecification(ctx, msg.Specification)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
-		),
-	)
-
-	return &types.MsgWriteContractSpecificationResponse{
-		ContractSpecIdInfo: types.GetContractSpecIDInfo(msg.Specification.SpecificationId),
-	}, nil
+	rv := types.NewMsgWriteContractSpecificationResponse(msg.Specification.SpecificationId)
+	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_WriteContractSpecification, msg.GetSigners()))
+	return rv, re
 }
 
 func (k msgServer) DeleteContractSpecification(
@@ -368,15 +299,9 @@ func (k msgServer) DeleteContractSpecification(
 		return nil, fmt.Errorf("cannot delete contract specification with id %s: %w", msg.SpecificationId, err)
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
-		),
-	)
-
-	return &types.MsgDeleteContractSpecificationResponse{}, nil
+	rv := types.NewMsgDeleteContractSpecificationResponse()
+	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_DeleteContractSpecification, msg.GetSigners()))
+	return rv, re
 }
 
 func (k msgServer) WriteRecordSpecification(
@@ -409,17 +334,9 @@ func (k msgServer) WriteRecordSpecification(
 
 	k.SetRecordSpecification(ctx, msg.Specification)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
-		),
-	)
-
-	return &types.MsgWriteRecordSpecificationResponse{
-		RecordSpecIdInfo: types.GetRecordSpecIDInfo(msg.Specification.SpecificationId),
-	}, nil
+	rv := types.NewMsgWriteRecordSpecificationResponse(msg.Specification.SpecificationId)
+	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_WriteRecordSpecification, msg.GetSigners()))
+	return rv, re
 }
 
 func (k msgServer) DeleteRecordSpecification(
@@ -449,15 +366,9 @@ func (k msgServer) DeleteRecordSpecification(
 		return nil, fmt.Errorf("cannot delete record specification with id %s: %w", msg.SpecificationId, err)
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
-		),
-	)
-
-	return &types.MsgDeleteRecordSpecificationResponse{}, nil
+	rv := types.NewMsgDeleteRecordSpecificationResponse()
+	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_DeleteRecordSpecification, msg.GetSigners()))
+	return rv, re
 }
 
 func (k msgServer) WriteP8EContractSpec(
@@ -485,7 +396,7 @@ func (k msgServer) WriteP8EContractSpec(
 
 	k.SetContractSpecification(ctx, proposed)
 
-	recSpecIDInfos := make([]*types.RecordSpecIdInfo, len(newrecords))
+	recSpecIDs := make([]types.MetadataAddress, len(newrecords))
 	for i, proposedRecord := range newrecords {
 		var existing *types.RecordSpecification = nil
 		if e, found := k.GetRecordSpecification(ctx, proposedRecord.SpecificationId); found {
@@ -496,21 +407,12 @@ func (k msgServer) WriteP8EContractSpec(
 		}
 
 		k.SetRecordSpecification(ctx, proposedRecord)
-		recSpecIDInfos[i] = types.GetRecordSpecIDInfo(proposedRecord.SpecificationId)
+		recSpecIDs[i] = proposedRecord.SpecificationId
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
-		),
-	)
-
-	return &types.MsgWriteP8EContractSpecResponse{
-		ContractSpecIdInfo: types.GetContractSpecIDInfo(proposed.SpecificationId),
-		RecordSpecIdInfos:  recSpecIDInfos,
-	}, nil
+	rv := types.NewMsgWriteP8EContractSpecResponse(proposed.SpecificationId, recSpecIDs...)
+	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_WriteP8eContractSpec, msg.GetSigners()))
+	return rv, re
 }
 
 func (k msgServer) P8EMemorializeContract(
@@ -554,22 +456,15 @@ func (k msgServer) P8EMemorializeContract(
 		recordIDInfos[i] = recordResp.RecordIdInfo
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Invoker),
-		),
-	)
-
-	return &types.MsgP8EMemorializeContractResponse{
-		ScopeIdInfo:   scopeResp.ScopeIdInfo,
-		SessionIdInfo: sessionResp.SessionIdInfo,
-		RecordIdInfos: recordIDInfos,
-	}, nil
+	rv := types.NewMsgP8EMemorializeContractResponse(scopeResp.ScopeIdInfo, sessionResp.SessionIdInfo, recordIDInfos)
+	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_P8eMemorializeContract, msg.GetSigners()))
+	return rv, re
 }
 
-func (k msgServer) BindOSLocator(goCtx context.Context, msg *types.MsgBindOSLocatorRequest) (*types.MsgBindOSLocatorResponse, error) {
+func (k msgServer) BindOSLocator(
+	goCtx context.Context,
+	msg *types.MsgBindOSLocatorRequest,
+) (*types.MsgBindOSLocatorResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// Validate
 	if err := msg.ValidateBasic(); err != nil {
@@ -590,87 +485,77 @@ func (k msgServer) BindOSLocator(goCtx context.Context, msg *types.MsgBindOSLoca
 		ctx.Logger().Error("unable to bind name", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
-	// Emit event and return
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeOsLocatorCreated,
-			sdk.NewAttribute(types.AttributeKeyOSLocatorAddress, msg.Locator.Owner),
-			sdk.NewAttribute(types.AttributeKeyOSLocatorURI, msg.Locator.LocatorUri),
-		),
-	)
 
-	return &types.MsgBindOSLocatorResponse{}, nil
+	rv := types.NewMsgBindOSLocatorResponse(msg.Locator)
+	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_BindOSLocator, msg.GetSigners()))
+	return rv, re
 }
 
-func (k msgServer) DeleteOSLocator(ctx context.Context, msg *types.MsgDeleteOSLocatorRequest) (*types.MsgDeleteOSLocatorResponse, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
+func (k msgServer) DeleteOSLocator(
+	goCtx context.Context,
+	msg *types.MsgDeleteOSLocatorRequest,
+) (*types.MsgDeleteOSLocatorResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
 	// Validate
 	if err := msg.ValidateBasic(); err != nil {
-		sdkCtx.Logger().Error("unable to validate message", "err", err)
+		ctx.Logger().Error("unable to validate message", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	// already valid address, checked in ValidateBasic
 	ownerAddr, _ := sdk.AccAddressFromBech32(msg.Locator.Owner)
 
-	if !k.Keeper.OSLocatorExists(sdkCtx, ownerAddr) {
-		sdkCtx.Logger().Error("Address not already bound to an URI", "owner", msg.Locator.Owner)
+	if !k.Keeper.OSLocatorExists(ctx, ownerAddr) {
+		ctx.Logger().Error("Address not already bound to an URI", "owner", msg.Locator.Owner)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, types.ErrOSLocatorAlreadyBound.Error())
 	}
 
-	if !k.Keeper.VerifyCorrectOwner(sdkCtx, ownerAddr) {
-		sdkCtx.Logger().Error("msg sender cannot delete os locator", "owner", ownerAddr)
+	if !k.Keeper.VerifyCorrectOwner(ctx, ownerAddr) {
+		ctx.Logger().Error("msg sender cannot delete os locator", "owner", ownerAddr)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "msg sender cannot delete os locator.")
 	}
 
 	// Delete
-	if err := k.Keeper.DeleteRecord(sdkCtx, ownerAddr); err != nil {
-		sdkCtx.Logger().Error("error deleting name", "err", err)
+	if err := k.Keeper.DeleteRecord(ctx, ownerAddr); err != nil {
+		ctx.Logger().Error("error deleting name", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
-	// Emit event and return
-	sdkCtx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeOsLocatorDeleted,
-			sdk.NewAttribute(types.AttributeKeyOSLocatorAddress, msg.Locator.Owner),
-			sdk.NewAttribute(types.AttributeKeyOSLocatorURI, msg.Locator.LocatorUri),
-		),
-	)
-	return &types.MsgDeleteOSLocatorResponse{Locator: msg.Locator}, nil
+
+	rv := types.NewMsgDeleteOSLocatorResponse(msg.Locator)
+	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_DeleteOSLocator, msg.GetSigners()))
+	return rv, re
 }
 
-func (k msgServer) ModifyOSLocator(ctx context.Context, msg *types.MsgModifyOSLocatorRequest) (*types.MsgModifyOSLocatorResponse, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
+func (k msgServer) ModifyOSLocator(
+	goCtx context.Context,
+	msg *types.MsgModifyOSLocatorRequest,
+) (*types.MsgModifyOSLocatorResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
 	// Validate
 	if err := msg.ValidateBasic(); err != nil {
-		sdkCtx.Logger().Error("unable to validate message", "err", err)
+		ctx.Logger().Error("unable to validate message", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	// already valid address, checked in ValidateBasic
 	ownerAddr, _ := sdk.AccAddressFromBech32(msg.Locator.Owner)
 
-	if !k.Keeper.OSLocatorExists(sdkCtx, ownerAddr) {
-		sdkCtx.Logger().Error("Address not already bound to an URI", "owner", msg.Locator.Owner)
+	if !k.Keeper.OSLocatorExists(ctx, ownerAddr) {
+		ctx.Logger().Error("Address not already bound to an URI", "owner", msg.Locator.Owner)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, types.ErrOSLocatorAlreadyBound.Error())
 	}
 
-	if !k.Keeper.VerifyCorrectOwner(sdkCtx, ownerAddr) {
-		sdkCtx.Logger().Error("msg sender cannot modify os locator", "owner", ownerAddr)
+	if !k.Keeper.VerifyCorrectOwner(ctx, ownerAddr) {
+		ctx.Logger().Error("msg sender cannot modify os locator", "owner", ownerAddr)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "msg sender cannot delete os locator.")
 	}
 	// Modify
-	if err := k.Keeper.ModifyRecord(sdkCtx, ownerAddr, msg.Locator.LocatorUri); err != nil {
-		sdkCtx.Logger().Error("error deleting name", "err", err)
+	if err := k.Keeper.ModifyRecord(ctx, ownerAddr, msg.Locator.LocatorUri); err != nil {
+		ctx.Logger().Error("error deleting name", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
-	// Emit event and return
-	sdkCtx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeOsLocatorModified,
-			sdk.NewAttribute(types.AttributeKeyOSLocatorAddress, msg.Locator.Owner),
-			sdk.NewAttribute(types.AttributeKeyOSLocatorURI, msg.Locator.LocatorUri),
-		),
-	)
-	return &types.MsgModifyOSLocatorResponse{Locator: msg.Locator}, nil
+
+	rv := types.NewMsgModifyOSLocatorResponse(msg.Locator)
+	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_ModifyOSLocator, msg.GetSigners()))
+	return rv, re
 }

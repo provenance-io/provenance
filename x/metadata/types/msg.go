@@ -1071,3 +1071,113 @@ func (msg *SessionIdComponents) GetSessionAddr() (*MetadataAddress, error) {
 	ma := SessionMetadataAddress(*scopeUUID, *sessionUUID)
 	return &ma, nil
 }
+
+// ------------------  Response Message Constructors  ------------------
+
+func NewMsgWriteScopeResponse(scopeID MetadataAddress) *MsgWriteScopeResponse {
+	return &MsgWriteScopeResponse{
+		ScopeIdInfo: GetScopeIDInfo(scopeID),
+	}
+}
+
+func NewMsgDeleteScopeResponse() *MsgDeleteScopeResponse {
+	return &MsgDeleteScopeResponse{}
+}
+
+func NewMsgAddScopeDataAccessResponse() *MsgAddScopeDataAccessResponse {
+	return &MsgAddScopeDataAccessResponse{}
+}
+
+func NewMsgDeleteScopeDataAccessResponse() *MsgDeleteScopeDataAccessResponse {
+	return &MsgDeleteScopeDataAccessResponse{}
+}
+
+func NewMsgWriteSessionResponse(sessionID MetadataAddress) *MsgWriteSessionResponse {
+	return &MsgWriteSessionResponse{
+		SessionIdInfo: GetSessionIDInfo(sessionID),
+	}
+}
+
+func NewMsgWriteRecordResponse(recordID MetadataAddress) *MsgWriteRecordResponse {
+	return &MsgWriteRecordResponse{
+		RecordIdInfo: GetRecordIDInfo(recordID),
+	}
+}
+
+func NewMsgDeleteRecordResponse() *MsgDeleteRecordResponse {
+	return &MsgDeleteRecordResponse{}
+}
+
+func NewMsgWriteScopeSpecificationResponse(scopeSpecID MetadataAddress) *MsgWriteScopeSpecificationResponse {
+	return &MsgWriteScopeSpecificationResponse{
+		ScopeSpecIdInfo: GetScopeSpecIDInfo(scopeSpecID),
+	}
+}
+
+func NewMsgDeleteScopeSpecificationResponse() *MsgDeleteScopeSpecificationResponse {
+	return &MsgDeleteScopeSpecificationResponse{}
+}
+
+func NewMsgWriteContractSpecificationResponse(contractSpecID MetadataAddress) *MsgWriteContractSpecificationResponse {
+	return &MsgWriteContractSpecificationResponse{
+		ContractSpecIdInfo: GetContractSpecIDInfo(contractSpecID),
+	}
+}
+
+func NewMsgDeleteContractSpecificationResponse() *MsgDeleteContractSpecificationResponse {
+	return &MsgDeleteContractSpecificationResponse{}
+}
+
+func NewMsgWriteRecordSpecificationResponse(recordSpecID MetadataAddress) *MsgWriteRecordSpecificationResponse {
+	return &MsgWriteRecordSpecificationResponse{
+		RecordSpecIdInfo: GetRecordSpecIDInfo(recordSpecID),
+	}
+}
+
+func NewMsgDeleteRecordSpecificationResponse() *MsgDeleteRecordSpecificationResponse {
+	return &MsgDeleteRecordSpecificationResponse{}
+}
+
+func NewMsgWriteP8EContractSpecResponse(
+	contractSpecID MetadataAddress,
+	recordSpecIDs ...MetadataAddress,
+) *MsgWriteP8EContractSpecResponse {
+	retval := &MsgWriteP8EContractSpecResponse{
+		ContractSpecIdInfo: GetContractSpecIDInfo(contractSpecID),
+		RecordSpecIdInfos:  make([]*RecordSpecIdInfo, len(recordSpecIDs)),
+	}
+	for i, rid := range recordSpecIDs {
+		retval.RecordSpecIdInfos[i] = GetRecordSpecIDInfo(rid)
+	}
+	return retval
+}
+
+func NewMsgP8EMemorializeContractResponse(
+	scopeIDInfo *ScopeIdInfo,
+	sessionIDInfo *SessionIdInfo,
+	recordIDInfos []*RecordIdInfo,
+) *MsgP8EMemorializeContractResponse {
+	return &MsgP8EMemorializeContractResponse{
+		ScopeIdInfo:   scopeIDInfo,
+		SessionIdInfo: sessionIDInfo,
+		RecordIdInfos: recordIDInfos,
+	}
+}
+
+func NewMsgBindOSLocatorResponse(objectStoreLocator ObjectStoreLocator) *MsgBindOSLocatorResponse {
+	return &MsgBindOSLocatorResponse{
+		Locator: objectStoreLocator,
+	}
+}
+
+func NewMsgDeleteOSLocatorResponse(objectStoreLocator ObjectStoreLocator) *MsgDeleteOSLocatorResponse {
+	return &MsgDeleteOSLocatorResponse{
+		Locator: objectStoreLocator,
+	}
+}
+
+func NewMsgModifyOSLocatorResponse(objectStoreLocator ObjectStoreLocator) *MsgModifyOSLocatorResponse {
+	return &MsgModifyOSLocatorResponse{
+		Locator: objectStoreLocator,
+	}
+}
