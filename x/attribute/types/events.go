@@ -9,6 +9,19 @@ const (
 	AttributeKeyAttribute      string = "attribute"
 	AttributeKeyNameAttribute  string = "attribute_name"
 	AttributeKeyAccountAddress string = "account_address"
+
+	// EventTelemetryKeyAdd add telemetry metrics key
+	EventTelemetryKeyAdd string = "add"
+	// EventTelemetryKeyDelete delete telemetry metrics key
+	EventTelemetryKeyDelete string = "delete"
+	// EventTelemetryLabelName name telemetry metrics label
+	EventTelemetryLabelName string = "name"
+	// EventTelemetryLabelType type telemetry metrics label
+	EventTelemetryLabelType string = "type"
+	// EventTelemetryLabelOwner owner telemetry metrics label
+	EventTelemetryLabelOwner string = "owner"
+	// EventTelemetryKeyAccount acount telemetry metrics label
+	EventTelemetryLabelAccount string = "account"
 )
 
 func NewEventAttributeAdd(attribute Attribute, owner string) *EventAttributeAdd {

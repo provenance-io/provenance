@@ -206,7 +206,7 @@ var xxx_messageInfo_MsgDeleteScopeResponse proto.InternalMessageInfo
 type MsgAddScopeDataAccessRequest struct {
 	// scope MetadataAddress for updating data access
 	ScopeId MetadataAddress `protobuf:"bytes,1,opt,name=scope_id,json=scopeId,proto3,customtype=MetadataAddress" json:"scope_id" yaml:"scope_id"`
-	// MetadataAddresses to be added to scope
+	// bech32 address to be added to scope
 	DataAccess []string `protobuf:"bytes,2,rep,name=data_access,json=dataAccess,proto3" json:"data_access,omitempty" yaml:"data_access"`
 	// signers is the list of address of those signing this request.
 	Signers []string `protobuf:"bytes,3,rep,name=signers,proto3" json:"signers,omitempty"`
@@ -281,11 +281,11 @@ func (m *MsgAddScopeDataAccessResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgAddScopeDataAccessResponse proto.InternalMessageInfo
 
-// MsgRemoveScopeDataAccessRequest is the request to remove data access metaaddresses to scope
+// MsgDeleteScopeDataAccessRequest is the request to remove data access metaaddresses to scope
 type MsgDeleteScopeDataAccessRequest struct {
 	// scope MetadataAddress for removing data access
 	ScopeId MetadataAddress `protobuf:"bytes,1,opt,name=scope_id,json=scopeId,proto3,customtype=MetadataAddress" json:"scope_id" yaml:"scope_id"`
-	// MetadataAddresses to be removed from scope
+	// bech32 address to be removed from scope
 	DataAccess []string `protobuf:"bytes,2,rep,name=data_access,json=dataAccess,proto3" json:"data_access,omitempty" yaml:"data_access"`
 	// signers is the list of address of those signing this request.
 	Signers []string `protobuf:"bytes,3,rep,name=signers,proto3" json:"signers,omitempty"`
@@ -323,7 +323,7 @@ func (m *MsgDeleteScopeDataAccessRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgDeleteScopeDataAccessRequest proto.InternalMessageInfo
 
-// MsgRemoveScopeDataAccessResponse is the response from removing data access metaaddresses to scope
+// MsgDeleteScopeDataAccessResponse is the response from removing data access metaaddresses to scope
 type MsgDeleteScopeDataAccessResponse struct {
 }
 

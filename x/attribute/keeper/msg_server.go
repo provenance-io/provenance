@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	"github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -46,7 +47,18 @@ func (k msgServer) AddAttribute(goCtx context.Context, msg *types.MsgAddAttribut
 		return nil, err
 	}
 
-	defer telemetry.IncrCounter(1, types.ModuleName, "attribute")
+	defer func() {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, types.EventTelemetryKeyAdd},
+			1,
+			[]metrics.Label{
+				telemetry.NewLabel(types.EventTelemetryLabelName, msg.Name),
+				telemetry.NewLabel(types.EventTelemetryLabelType, msg.AttributeType.String()),
+				telemetry.NewLabel(types.EventTelemetryLabelAccount, msg.Account),
+				telemetry.NewLabel(types.EventTelemetryLabelOwner, msg.Owner),
+			},
+		)
+	}()
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -77,7 +89,17 @@ func (k msgServer) DeleteAttribute(goCtx context.Context, msg *types.MsgDeleteAt
 		return nil, err
 	}
 
-	defer telemetry.IncrCounter(1, types.ModuleName, "attribute")
+	defer func() {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, types.EventTelemetryKeyDelete},
+			1,
+			[]metrics.Label{
+				telemetry.NewLabel(types.EventTelemetryLabelName, msg.Name),
+				telemetry.NewLabel(types.EventTelemetryLabelAccount, msg.Account),
+				telemetry.NewLabel(types.EventTelemetryLabelOwner, msg.Owner),
+			},
+		)
+	}()
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
