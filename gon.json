@@ -1,5 +1,5 @@
 {
-	"source": ["./build/provenance-darwin-amd64.zip"],
+	"source": ["./build/bin/provenanced", "./build/bin/libwasmvm.dylib"],
 	"bundle_id": "io.provenance",
 	"apple_id": {
 		"password": "@env:AC_PASSWORD"
