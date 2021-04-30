@@ -358,7 +358,7 @@ func (k Keeper) Records(c context.Context, req *types.RecordsRequest) (*types.Re
 			return &retval, status.Error(codes.InvalidArgument, "a scope or session is required to look up records by name")
 		}
 		// We know that scopeAddr is legit, and that we have a name. So this won't give an error.
-		recordAddr2, _ := scopeAddr.AsRecordAddress(req.Name)
+		recordAddr2 := scopeAddr.MustGetAsRecordAddress(req.Name)
 		if recordAddr.Empty() {
 			recordAddr = recordAddr2
 		} else if !recordAddr.Equals(recordAddr2) {

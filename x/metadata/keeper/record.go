@@ -59,11 +59,7 @@ func (k Keeper) SetRecord(ctx sdk.Context, record types.Record) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryBare(&record)
 
-	recordID, err := record.SessionId.AsRecordAddress(record.Name)
-	if err != nil {
-		panic(fmt.Errorf("could not create record id from session id [%s] and record name [%s]: %w",
-			record.SessionId, record.Name, err))
-	}
+	recordID := record.SessionId.MustGetAsRecordAddress(record.Name)
 
 	var event proto.Message = types.NewEventRecordCreated(record)
 	if store.Has(recordID) {
