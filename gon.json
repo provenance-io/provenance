@@ -2,7 +2,7 @@
 	"source": ["./build/provenance-darwin-amd64.zip"],
 	"bundle_id": "io.provenance",
 	"apple_id": {
-		"@env:AC_PASSWORD"
+		"password": "@env:AC_PASSWORD"
 	},
 	"sign": {
 		"application_identity": "Developer ID Application: FIGURE TECHNOLOGIES INC."
@@ -10,4 +10,4 @@
 	"zip": {
 		"output_path": "./build/provenance-darwin-amd64-signed.zip"
 	}
-}	
+}
