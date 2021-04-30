@@ -54,7 +54,7 @@ func (k Keeper) Scope(c context.Context, req *types.ScopeRequest) (*types.ScopeR
 			return &retval, status.Error(codes.InvalidArgument, err.Error())
 		}
 		// ParseSessionAddr if this would fail.
-		scopeAddr2, _ := sessionAddr.AsScopeAddress()
+		scopeAddr2 := sessionAddr.MustGetAsScopeAddress()
 		if scopeAddr.Empty() {
 			scopeAddr = scopeAddr2
 		} else if !scopeAddr.Equals(scopeAddr2) {
@@ -67,11 +67,11 @@ func (k Keeper) Scope(c context.Context, req *types.ScopeRequest) (*types.ScopeR
 			return &retval, status.Error(codes.InvalidArgument, err.Error())
 		}
 		// ParseRecordAddr if this would fail.
-		scopeAddr2, _ := recordAddr.AsScopeAddress()
+		scopeAddr2 := recordAddr.MustGetAsScopeAddress()
 		switch {
 		case !sessionAddr.Empty():
 			// This assumes that we have checked and set scopeAddr while processing the sessionAddr.
-			scopeAddr3, _ := sessionAddr.AsScopeAddress()
+			scopeAddr3 := sessionAddr.MustGetAsScopeAddress()
 			if !scopeAddr2.Equals(scopeAddr3) {
 				return &retval, status.Errorf(codes.InvalidArgument, "session %s and record %s are not associated with the same scope", sessionAddr, recordAddr)
 			}
@@ -198,7 +198,7 @@ func (k Keeper) Sessions(c context.Context, req *types.SessionsRequest) (*types.
 		}
 		if scopeAddr.Empty() {
 			// ParseSessionID returns an error if this wouldn't work. So we know we're safe here.
-			scopeAddr, _ = sessionAddr.AsScopeAddress()
+			scopeAddr = sessionAddr.MustGetAsScopeAddress()
 		}
 	}
 
@@ -324,7 +324,7 @@ func (k Keeper) Records(c context.Context, req *types.RecordsRequest) (*types.Re
 		if err != nil {
 			return &retval, status.Error(codes.InvalidArgument, err.Error())
 		}
-		scopeAddr2, _ := recordAddr.AsScopeAddress()
+		scopeAddr2 := recordAddr.MustGetAsScopeAddress()
 		if scopeAddr.Empty() {
 			scopeAddr = scopeAddr2
 		} else if !scopeAddr.Equals(scopeAddr2) {
@@ -338,11 +338,11 @@ func (k Keeper) Records(c context.Context, req *types.RecordsRequest) (*types.Re
 			return &retval, status.Error(codes.InvalidArgument, err.Error())
 		}
 		// ParseSessionID ensures that this will not return an error.
-		scopeAddr2, _ := sessionAddr.AsScopeAddress()
+		scopeAddr2 := sessionAddr.MustGetAsScopeAddress()
 		switch {
 		case !recordAddr.Empty():
 			// This assumes that we have checked and set scopeAddr while processing the recordAddr.
-			scopeAddr3, _ := recordAddr.AsScopeAddress()
+			scopeAddr3 := recordAddr.MustGetAsScopeAddress()
 			if !scopeAddr2.Equals(scopeAddr3) {
 				return &retval, status.Errorf(codes.InvalidArgument, "session %s and record %s are not associated with the same scope", sessionAddr, recordAddr)
 			}
