@@ -5,15 +5,20 @@ PACKAGES               := $(shell go list ./... 2>/dev/null || true)
 PACKAGES_NOSIMULATION  := $(filter-out %/simulation%,$(PACKAGES))
 PACKAGES_SIMULATION    := $(filter     %/simulation%,$(PACKAGES))
 
-LEVELDB_PATH = $(shell brew --prefix leveldb 2>/dev/null || echo "$(HOME)/Cellar/leveldb/1.22/include")
-CGO_CFLAGS   = -I$(LEVELDB_PATH)/include
-CGO_LDFLAGS  = "-L$(LEVELDB_PATH)/lib -Wl,-rpath,\$$ORIGIN"
-
 BINDIR ?= $(GOPATH)/bin
 BUILDDIR ?= $(CURDIR)/build
 
 LEDGER_ENABLED ?= true
 WITH_CLEVELDB ?= yes
+
+LEVELDB_PATH = $(shell brew --prefix leveldb 2>/dev/null || echo "$(HOME)/Cellar/leveldb/1.22/include")
+CGO_CFLAGS   = 
+CGO_LDFLAGS  = -Wl,-rpath,\$$ORIGIN
+
+ifeq ($(WITH_CLEVELDB),yes)
+  CGO_CFLAGS  += -I$(LEVELDB_PATH)/include
+  CGO_LDFLAGS += -L$(LEVELDB_PATH)/lib
+endif
 
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 BRANCH_PRETTY := $(subst /,-,$(BRANCH))
@@ -105,11 +110,11 @@ all: build format lint test
 
 # Install puts the binaries in the local environment path.
 install: go.sum
-	CGO_LDFLAGS=$(CGO_LDFLAGS) CGO_CFLAGS=$(CGO_CFLAGS) $(GO) install -mod=readonly $(BUILD_FLAGS) ./cmd/provenanced
+	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) install -mod=readonly $(BUILD_FLAGS) ./cmd/provenanced
 
 build: go.sum
 	mkdir -p $(BUILDDIR)
-	CGO_LDFLAGS=$(CGO_LDFLAGS) CGO_CFLAGS=$(CGO_CFLAGS) $(GO) build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./cmd/provenanced
+	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./cmd/provenanced
 
 build-linux: go.sum
 	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build
