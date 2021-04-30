@@ -48,6 +48,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * More mapping fixes related to `WriteP8EContractSpec` and `P8EMemorializeContract` [#275](https://github.com/provenance-io/provenance/issues/275)
+* Fix event manager scope in attribute, name, marker, and metadata modules to prevent event duplication [#289](https://github.com/provenance-io/provenance/issues/289)
 
 
 ## [v1.2.0](https://github.com/provenance-io/provenance/releases/tag/v1.2.0) - 2021-04-26

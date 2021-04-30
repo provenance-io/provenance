@@ -64,7 +64,7 @@ func TestCreateName(t *testing.T) {
 	accs := authtypes.GenesisAccounts{acc1}
 	app := simapp.SetupWithGenesisAccounts(accs)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	em := ctx.EventManager()
+
 	var nameData nametypes.GenesisState
 	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("name", addr1, false))
 	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("example.name", addr1, false))
@@ -80,15 +80,15 @@ func TestCreateName(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := handler(ctx, tc.msg)
+			response, err := handler(ctx, tc.msg)
 			if tc.expectedError != nil {
 				require.EqualError(t, err, tc.expectedError.Error())
 			} else {
 				require.NoError(t, err)
 			}
 			if tc.expectedEvent != nil {
-				require.Equal(t, 1, len(em.Events().ToABCIEvents()))
-				msg1, _ := sdk.ParseTypedEvent(em.Events().ToABCIEvents()[0])
+				require.Equal(t, 1, len(response.GetEvents().ToABCIEvents()))
+				msg1, _ := sdk.ParseTypedEvent(response.GetEvents().ToABCIEvents()[0])
 				require.Equal(t, tc.expectedEvent, msg1)
 			}
 		})
@@ -128,7 +128,7 @@ func TestDeleteName(t *testing.T) {
 	accs := authtypes.GenesisAccounts{acc1}
 	app := simapp.SetupWithGenesisAccounts(accs)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	em := ctx.EventManager()
+
 	var nameData nametypes.GenesisState
 	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("name", addr1, false))
 	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("example.name", addr1, false))
@@ -144,15 +144,15 @@ func TestDeleteName(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := handler(ctx, tc.msg)
+			response, err := handler(ctx, tc.msg)
 			if tc.expectedError != nil {
 				require.EqualError(t, err, tc.expectedError.Error())
 			} else {
 				require.NoError(t, err)
 			}
 			if tc.expectedEvent != nil {
-				require.Equal(t, 1, len(em.Events().ToABCIEvents()))
-				msg1, _ := sdk.ParseTypedEvent(em.Events().ToABCIEvents()[0])
+				require.Equal(t, 1, len(response.GetEvents().ToABCIEvents()))
+				msg1, _ := sdk.ParseTypedEvent(response.GetEvents().ToABCIEvents()[0])
 				require.Equal(t, tc.expectedEvent, msg1)
 			}
 		})
