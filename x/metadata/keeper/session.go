@@ -34,7 +34,7 @@ func (k Keeper) SetSession(ctx sdk.Context, session types.Session) {
 		if oldSessionBytes := store.Get(session.SessionId); oldSessionBytes != nil {
 			var oldSession types.Session
 			if err := k.cdc.UnmarshalBinaryBare(oldSessionBytes, &oldSession); err == nil {
-				event = types.NewEventSessionUpdated(session, oldSession)
+				event = types.NewEventSessionUpdated(session)
 			}
 		}
 	}

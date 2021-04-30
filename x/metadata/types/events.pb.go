@@ -90,8 +90,6 @@ func (m *EventTxCompleted) GetSigners() []string {
 type EventScopeCreated struct {
 	// scope_addr is the bech32 address string of the scope id that was created.
 	ScopeAddr string `protobuf:"bytes,1,opt,name=scope_addr,json=scopeAddr,proto3" json:"scope_addr,omitempty"`
-	// scope is the scope that was created.
-	Scope *Scope `protobuf:"bytes,2,opt,name=scope,proto3" json:"scope,omitempty"`
 }
 
 func (m *EventScopeCreated) Reset()         { *m = EventScopeCreated{} }
@@ -134,21 +132,10 @@ func (m *EventScopeCreated) GetScopeAddr() string {
 	return ""
 }
 
-func (m *EventScopeCreated) GetScope() *Scope {
-	if m != nil {
-		return m.Scope
-	}
-	return nil
-}
-
 // EventScopeUpdated is an event message indicating a scope has been updated.
 type EventScopeUpdated struct {
 	// scope_addr is the bech32 address string of the scope id that was updated.
 	ScopeAddr string `protobuf:"bytes,1,opt,name=scope_addr,json=scopeAddr,proto3" json:"scope_addr,omitempty"`
-	// scope is the new on-chain version of the scope.
-	Scope *Scope `protobuf:"bytes,2,opt,name=scope,proto3" json:"scope,omitempty"`
-	// scope_replaced is the previous on-chain version of the scope.
-	ScopeReplaced *Scope `protobuf:"bytes,3,opt,name=scope_replaced,json=scopeReplaced,proto3" json:"scope_replaced,omitempty"`
 }
 
 func (m *EventScopeUpdated) Reset()         { *m = EventScopeUpdated{} }
@@ -191,26 +178,10 @@ func (m *EventScopeUpdated) GetScopeAddr() string {
 	return ""
 }
 
-func (m *EventScopeUpdated) GetScope() *Scope {
-	if m != nil {
-		return m.Scope
-	}
-	return nil
-}
-
-func (m *EventScopeUpdated) GetScopeReplaced() *Scope {
-	if m != nil {
-		return m.ScopeReplaced
-	}
-	return nil
-}
-
 // EventScopeRemoved is an event message indicating a scope has been removed.
 type EventScopeRemoved struct {
 	// scope_addr is the bech32 address string of the scope id that was removed.
 	ScopeAddr string `protobuf:"bytes,1,opt,name=scope_addr,json=scopeAddr,proto3" json:"scope_addr,omitempty"`
-	// scope is the scope that was removed.
-	Scope *Scope `protobuf:"bytes,2,opt,name=scope,proto3" json:"scope,omitempty"`
 }
 
 func (m *EventScopeRemoved) Reset()         { *m = EventScopeRemoved{} }
@@ -253,19 +224,12 @@ func (m *EventScopeRemoved) GetScopeAddr() string {
 	return ""
 }
 
-func (m *EventScopeRemoved) GetScope() *Scope {
-	if m != nil {
-		return m.Scope
-	}
-	return nil
-}
-
 // EventSessionCreated is an event message indicating a session has been created.
 type EventSessionCreated struct {
 	// session_addr is the bech32 address string of the session id that was created.
 	SessionAddr string `protobuf:"bytes,1,opt,name=session_addr,json=sessionAddr,proto3" json:"session_addr,omitempty"`
-	// session is the session that was created.
-	Session *Session `protobuf:"bytes,2,opt,name=session,proto3" json:"session,omitempty"`
+	// scope_addr is the bech32 address string of the scope id this session belongs to.
+	ScopeAddr string `protobuf:"bytes,2,opt,name=scope_addr,json=scopeAddr,proto3" json:"scope_addr,omitempty"`
 }
 
 func (m *EventSessionCreated) Reset()         { *m = EventSessionCreated{} }
@@ -308,21 +272,19 @@ func (m *EventSessionCreated) GetSessionAddr() string {
 	return ""
 }
 
-func (m *EventSessionCreated) GetSession() *Session {
+func (m *EventSessionCreated) GetScopeAddr() string {
 	if m != nil {
-		return m.Session
+		return m.ScopeAddr
 	}
-	return nil
+	return ""
 }
 
 // EventSessionUpdated is an event message indicating a session has been updated.
 type EventSessionUpdated struct {
 	// session_addr is the bech32 address string of the session id that was updated.
 	SessionAddr string `protobuf:"bytes,1,opt,name=session_addr,json=sessionAddr,proto3" json:"session_addr,omitempty"`
-	// session is the new on-chain version of the session.
-	Session *Session `protobuf:"bytes,2,opt,name=session,proto3" json:"session,omitempty"`
-	// session_replaced is the previous on-chain version of the session.
-	SessionReplaced *Session `protobuf:"bytes,3,opt,name=session_replaced,json=sessionReplaced,proto3" json:"session_replaced,omitempty"`
+	// scope_addr is the bech32 address string of the scope id this session belongs to.
+	ScopeAddr string `protobuf:"bytes,2,opt,name=scope_addr,json=scopeAddr,proto3" json:"scope_addr,omitempty"`
 }
 
 func (m *EventSessionUpdated) Reset()         { *m = EventSessionUpdated{} }
@@ -365,26 +327,19 @@ func (m *EventSessionUpdated) GetSessionAddr() string {
 	return ""
 }
 
-func (m *EventSessionUpdated) GetSession() *Session {
+func (m *EventSessionUpdated) GetScopeAddr() string {
 	if m != nil {
-		return m.Session
+		return m.ScopeAddr
 	}
-	return nil
-}
-
-func (m *EventSessionUpdated) GetSessionReplaced() *Session {
-	if m != nil {
-		return m.SessionReplaced
-	}
-	return nil
+	return ""
 }
 
 // EventSessionRemoved is an event message indicating a session has been removed.
 type EventSessionRemoved struct {
 	// session_addr is the bech32 address string of the session id that was removed.
 	SessionAddr string `protobuf:"bytes,1,opt,name=session_addr,json=sessionAddr,proto3" json:"session_addr,omitempty"`
-	// session is the session that was removed.
-	Session *Session `protobuf:"bytes,2,opt,name=session,proto3" json:"session,omitempty"`
+	// scope_addr is the bech32 address string of the scope id this session belongs to.
+	ScopeAddr string `protobuf:"bytes,2,opt,name=scope_addr,json=scopeAddr,proto3" json:"scope_addr,omitempty"`
 }
 
 func (m *EventSessionRemoved) Reset()         { *m = EventSessionRemoved{} }
@@ -427,19 +382,21 @@ func (m *EventSessionRemoved) GetSessionAddr() string {
 	return ""
 }
 
-func (m *EventSessionRemoved) GetSession() *Session {
+func (m *EventSessionRemoved) GetScopeAddr() string {
 	if m != nil {
-		return m.Session
+		return m.ScopeAddr
 	}
-	return nil
+	return ""
 }
 
 // EventRecordCreated is an event message indicating a record has been created.
 type EventRecordCreated struct {
 	// record_addr is the bech32 address string of the record id that was created.
 	RecordAddr string `protobuf:"bytes,1,opt,name=record_addr,json=recordAddr,proto3" json:"record_addr,omitempty"`
-	// record is the record that was created.
-	Record *Record `protobuf:"bytes,2,opt,name=record,proto3" json:"record,omitempty"`
+	// session_addr is the bech32 address string of the session id this record belongs to.
+	SessionAddr string `protobuf:"bytes,2,opt,name=session_addr,json=sessionAddr,proto3" json:"session_addr,omitempty"`
+	// scope_addr is the bech32 address string of the scope id this record belongs to.
+	ScopeAddr string `protobuf:"bytes,3,opt,name=scope_addr,json=scopeAddr,proto3" json:"scope_addr,omitempty"`
 }
 
 func (m *EventRecordCreated) Reset()         { *m = EventRecordCreated{} }
@@ -482,21 +439,28 @@ func (m *EventRecordCreated) GetRecordAddr() string {
 	return ""
 }
 
-func (m *EventRecordCreated) GetRecord() *Record {
+func (m *EventRecordCreated) GetSessionAddr() string {
 	if m != nil {
-		return m.Record
+		return m.SessionAddr
 	}
-	return nil
+	return ""
+}
+
+func (m *EventRecordCreated) GetScopeAddr() string {
+	if m != nil {
+		return m.ScopeAddr
+	}
+	return ""
 }
 
 // EventRecordUpdated is an event message indicating a record has been updated.
 type EventRecordUpdated struct {
 	// record_addr is the bech32 address string of the record id that was updated.
 	RecordAddr string `protobuf:"bytes,1,opt,name=record_addr,json=recordAddr,proto3" json:"record_addr,omitempty"`
-	// record is the new on-chain version of the record.
-	Record *Record `protobuf:"bytes,2,opt,name=record,proto3" json:"record,omitempty"`
-	// record_replaced is the previous on-chain version of the record.
-	RecordReplaced *Record `protobuf:"bytes,3,opt,name=record_replaced,json=recordReplaced,proto3" json:"record_replaced,omitempty"`
+	// session_addr is the bech32 address string of the session id this record belongs to.
+	SessionAddr string `protobuf:"bytes,2,opt,name=session_addr,json=sessionAddr,proto3" json:"session_addr,omitempty"`
+	// scope_addr is the bech32 address string of the scope id this record belongs to.
+	ScopeAddr string `protobuf:"bytes,3,opt,name=scope_addr,json=scopeAddr,proto3" json:"scope_addr,omitempty"`
 }
 
 func (m *EventRecordUpdated) Reset()         { *m = EventRecordUpdated{} }
@@ -539,26 +503,28 @@ func (m *EventRecordUpdated) GetRecordAddr() string {
 	return ""
 }
 
-func (m *EventRecordUpdated) GetRecord() *Record {
+func (m *EventRecordUpdated) GetSessionAddr() string {
 	if m != nil {
-		return m.Record
+		return m.SessionAddr
 	}
-	return nil
+	return ""
 }
 
-func (m *EventRecordUpdated) GetRecordReplaced() *Record {
+func (m *EventRecordUpdated) GetScopeAddr() string {
 	if m != nil {
-		return m.RecordReplaced
+		return m.ScopeAddr
 	}
-	return nil
+	return ""
 }
 
 // EventRecordRemoved is an event message indicating a record has been removed.
 type EventRecordRemoved struct {
 	// record is the bech32 address string of the record id that was removed.
 	RecordAddr string `protobuf:"bytes,1,opt,name=record_addr,json=recordAddr,proto3" json:"record_addr,omitempty"`
-	// record is the record that was removed.
-	Record *Record `protobuf:"bytes,2,opt,name=record,proto3" json:"record,omitempty"`
+	// session_addr is the bech32 address string of the session id this record belongs to.
+	SessionAddr string `protobuf:"bytes,2,opt,name=session_addr,json=sessionAddr,proto3" json:"session_addr,omitempty"`
+	// scope_addr is the bech32 address string of the scope id this record belongs to.
+	ScopeAddr string `protobuf:"bytes,3,opt,name=scope_addr,json=scopeAddr,proto3" json:"scope_addr,omitempty"`
 }
 
 func (m *EventRecordRemoved) Reset()         { *m = EventRecordRemoved{} }
@@ -601,11 +567,18 @@ func (m *EventRecordRemoved) GetRecordAddr() string {
 	return ""
 }
 
-func (m *EventRecordRemoved) GetRecord() *Record {
+func (m *EventRecordRemoved) GetSessionAddr() string {
 	if m != nil {
-		return m.Record
+		return m.SessionAddr
 	}
-	return nil
+	return ""
+}
+
+func (m *EventRecordRemoved) GetScopeAddr() string {
+	if m != nil {
+		return m.ScopeAddr
+	}
+	return ""
 }
 
 // EventScopeSpecificationCreated is an event message indicating a scope specification has been created.
@@ -613,8 +586,6 @@ type EventScopeSpecificationCreated struct {
 	// scope_specification_addr is the bech32 address string of the specification id of the scope specification that was
 	// created.
 	ScopeSpecificationAddr string `protobuf:"bytes,1,opt,name=scope_specification_addr,json=scopeSpecificationAddr,proto3" json:"scope_specification_addr,omitempty"`
-	// scope_specification is the scope specification that was created.
-	ScopeSpecification *ScopeSpecification `protobuf:"bytes,2,opt,name=scope_specification,json=scopeSpecification,proto3" json:"scope_specification,omitempty"`
 }
 
 func (m *EventScopeSpecificationCreated) Reset()         { *m = EventScopeSpecificationCreated{} }
@@ -657,22 +628,11 @@ func (m *EventScopeSpecificationCreated) GetScopeSpecificationAddr() string {
 	return ""
 }
 
-func (m *EventScopeSpecificationCreated) GetScopeSpecification() *ScopeSpecification {
-	if m != nil {
-		return m.ScopeSpecification
-	}
-	return nil
-}
-
 // EventScopeSpecificationUpdated is an event message indicating a scope specification has been updated.
 type EventScopeSpecificationUpdated struct {
 	// scope_specification_addr is the bech32 address string of the specification id of the scope specification that was
 	// updated.
 	ScopeSpecificationAddr string `protobuf:"bytes,1,opt,name=scope_specification_addr,json=scopeSpecificationAddr,proto3" json:"scope_specification_addr,omitempty"`
-	// scope_specification is the new on-chain version of the scope specification.
-	ScopeSpecification *ScopeSpecification `protobuf:"bytes,2,opt,name=scope_specification,json=scopeSpecification,proto3" json:"scope_specification,omitempty"`
-	// scope_specification_replaced is the previous on-chain version of the scope specification.
-	ScopeSpecificationReplaced *ScopeSpecification `protobuf:"bytes,3,opt,name=scope_specification_replaced,json=scopeSpecificationReplaced,proto3" json:"scope_specification_replaced,omitempty"`
 }
 
 func (m *EventScopeSpecificationUpdated) Reset()         { *m = EventScopeSpecificationUpdated{} }
@@ -715,27 +675,11 @@ func (m *EventScopeSpecificationUpdated) GetScopeSpecificationAddr() string {
 	return ""
 }
 
-func (m *EventScopeSpecificationUpdated) GetScopeSpecification() *ScopeSpecification {
-	if m != nil {
-		return m.ScopeSpecification
-	}
-	return nil
-}
-
-func (m *EventScopeSpecificationUpdated) GetScopeSpecificationReplaced() *ScopeSpecification {
-	if m != nil {
-		return m.ScopeSpecificationReplaced
-	}
-	return nil
-}
-
 // EventScopeSpecificationRemoved is an event message indicating a scope specification has been removed.
 type EventScopeSpecificationRemoved struct {
 	// scope_specification_addr is the bech32 address string of the specification id of the scope specification that was
 	// removed.
 	ScopeSpecificationAddr string `protobuf:"bytes,1,opt,name=scope_specification_addr,json=scopeSpecificationAddr,proto3" json:"scope_specification_addr,omitempty"`
-	// scope_specification is the scope specification that was removed.
-	ScopeSpecification *ScopeSpecification `protobuf:"bytes,2,opt,name=scope_specification,json=scopeSpecification,proto3" json:"scope_specification,omitempty"`
 }
 
 func (m *EventScopeSpecificationRemoved) Reset()         { *m = EventScopeSpecificationRemoved{} }
@@ -778,20 +722,11 @@ func (m *EventScopeSpecificationRemoved) GetScopeSpecificationAddr() string {
 	return ""
 }
 
-func (m *EventScopeSpecificationRemoved) GetScopeSpecification() *ScopeSpecification {
-	if m != nil {
-		return m.ScopeSpecification
-	}
-	return nil
-}
-
 // EventContractSpecificationCreated is an event message indicating a contract specification has been created.
 type EventContractSpecificationCreated struct {
 	// contract_specification_addr is the bech32 address string of the specification id of the contract specification that
 	// was created.
 	ContractSpecificationAddr string `protobuf:"bytes,1,opt,name=contract_specification_addr,json=contractSpecificationAddr,proto3" json:"contract_specification_addr,omitempty"`
-	// contract_specification is the contract specification that was created.
-	ContractSpecification *ContractSpecification `protobuf:"bytes,2,opt,name=contract_specification,json=contractSpecification,proto3" json:"contract_specification,omitempty"`
 }
 
 func (m *EventContractSpecificationCreated) Reset()         { *m = EventContractSpecificationCreated{} }
@@ -834,22 +769,11 @@ func (m *EventContractSpecificationCreated) GetContractSpecificationAddr() strin
 	return ""
 }
 
-func (m *EventContractSpecificationCreated) GetContractSpecification() *ContractSpecification {
-	if m != nil {
-		return m.ContractSpecification
-	}
-	return nil
-}
-
 // EventContractSpecificationUpdated is an event message indicating a contract specification has been updated.
 type EventContractSpecificationUpdated struct {
 	// contract_specification_addr is the bech32 address string of the specification id of the contract specification that
 	// was updated.
 	ContractSpecificationAddr string `protobuf:"bytes,1,opt,name=contract_specification_addr,json=contractSpecificationAddr,proto3" json:"contract_specification_addr,omitempty"`
-	// contract_specification is the new on-chain version of the contract specification.
-	ContractSpecification *ContractSpecification `protobuf:"bytes,2,opt,name=contract_specification,json=contractSpecification,proto3" json:"contract_specification,omitempty"`
-	// contract_specification_replaced is the previous on-chain version of the contract specification.
-	ContractSpecificationReplaced *ContractSpecification `protobuf:"bytes,3,opt,name=contract_specification_replaced,json=contractSpecificationReplaced,proto3" json:"contract_specification_replaced,omitempty"`
 }
 
 func (m *EventContractSpecificationUpdated) Reset()         { *m = EventContractSpecificationUpdated{} }
@@ -892,27 +816,11 @@ func (m *EventContractSpecificationUpdated) GetContractSpecificationAddr() strin
 	return ""
 }
 
-func (m *EventContractSpecificationUpdated) GetContractSpecification() *ContractSpecification {
-	if m != nil {
-		return m.ContractSpecification
-	}
-	return nil
-}
-
-func (m *EventContractSpecificationUpdated) GetContractSpecificationReplaced() *ContractSpecification {
-	if m != nil {
-		return m.ContractSpecificationReplaced
-	}
-	return nil
-}
-
 // EventContractSpecificationRemoved is an event message indicating a contract specification has been removed.
 type EventContractSpecificationRemoved struct {
 	// contract_specification_addr is the bech32 address string of the specification id of the contract specification that
 	// was removed.
 	ContractSpecificationAddr string `protobuf:"bytes,1,opt,name=contract_specification_addr,json=contractSpecificationAddr,proto3" json:"contract_specification_addr,omitempty"`
-	// contract_specification is the contract specification that was removed.
-	ContractSpecification *ContractSpecification `protobuf:"bytes,2,opt,name=contract_specification,json=contractSpecification,proto3" json:"contract_specification,omitempty"`
 }
 
 func (m *EventContractSpecificationRemoved) Reset()         { *m = EventContractSpecificationRemoved{} }
@@ -955,20 +863,14 @@ func (m *EventContractSpecificationRemoved) GetContractSpecificationAddr() strin
 	return ""
 }
 
-func (m *EventContractSpecificationRemoved) GetContractSpecification() *ContractSpecification {
-	if m != nil {
-		return m.ContractSpecification
-	}
-	return nil
-}
-
 // EventRecordSpecificationCreated is an event message indicating a record specification has been created.
 type EventRecordSpecificationCreated struct {
 	// record_specification_addr is the bech32 address string of the specification id of the record specification that was
 	// created.
 	RecordSpecificationAddr string `protobuf:"bytes,1,opt,name=record_specification_addr,json=recordSpecificationAddr,proto3" json:"record_specification_addr,omitempty"`
-	// record_specification is the record specification that was created.
-	RecordSpecification *RecordSpecification `protobuf:"bytes,2,opt,name=record_specification,json=recordSpecification,proto3" json:"record_specification,omitempty"`
+	// contract_specification_addr is the bech32 address string of the contract specification id this record specification
+	// belongs to.
+	ContractSpecificationAddr string `protobuf:"bytes,2,opt,name=contract_specification_addr,json=contractSpecificationAddr,proto3" json:"contract_specification_addr,omitempty"`
 }
 
 func (m *EventRecordSpecificationCreated) Reset()         { *m = EventRecordSpecificationCreated{} }
@@ -1011,11 +913,11 @@ func (m *EventRecordSpecificationCreated) GetRecordSpecificationAddr() string {
 	return ""
 }
 
-func (m *EventRecordSpecificationCreated) GetRecordSpecification() *RecordSpecification {
+func (m *EventRecordSpecificationCreated) GetContractSpecificationAddr() string {
 	if m != nil {
-		return m.RecordSpecification
+		return m.ContractSpecificationAddr
 	}
-	return nil
+	return ""
 }
 
 // EventRecordSpecificationUpdated is an event message indicating a record specification has been updated.
@@ -1023,10 +925,9 @@ type EventRecordSpecificationUpdated struct {
 	// record_specification_addr is the bech32 address string of the specification id of the record specification that was
 	// updated.
 	RecordSpecificationAddr string `protobuf:"bytes,1,opt,name=record_specification_addr,json=recordSpecificationAddr,proto3" json:"record_specification_addr,omitempty"`
-	// record_specification is the new on-chain version of the record specification.
-	RecordSpecification *RecordSpecification `protobuf:"bytes,2,opt,name=record_specification,json=recordSpecification,proto3" json:"record_specification,omitempty"`
-	// record_specification_replaced is the previous on-chain version of the record specification.
-	RecordSpecificationReplaced *RecordSpecification `protobuf:"bytes,3,opt,name=record_specification_replaced,json=recordSpecificationReplaced,proto3" json:"record_specification_replaced,omitempty"`
+	// contract_specification_addr is the bech32 address string of the contract specification id this record specification
+	// belongs to.
+	ContractSpecificationAddr string `protobuf:"bytes,2,opt,name=contract_specification_addr,json=contractSpecificationAddr,proto3" json:"contract_specification_addr,omitempty"`
 }
 
 func (m *EventRecordSpecificationUpdated) Reset()         { *m = EventRecordSpecificationUpdated{} }
@@ -1069,18 +970,11 @@ func (m *EventRecordSpecificationUpdated) GetRecordSpecificationAddr() string {
 	return ""
 }
 
-func (m *EventRecordSpecificationUpdated) GetRecordSpecification() *RecordSpecification {
+func (m *EventRecordSpecificationUpdated) GetContractSpecificationAddr() string {
 	if m != nil {
-		return m.RecordSpecification
+		return m.ContractSpecificationAddr
 	}
-	return nil
-}
-
-func (m *EventRecordSpecificationUpdated) GetRecordSpecificationReplaced() *RecordSpecification {
-	if m != nil {
-		return m.RecordSpecificationReplaced
-	}
-	return nil
+	return ""
 }
 
 // EventRecordSpecificationRemoved is an event message indicating a record specification has been removed.
@@ -1088,8 +982,9 @@ type EventRecordSpecificationRemoved struct {
 	// record_specification_addr is the bech32 address string of the specification id of the record specification that was
 	// removed.
 	RecordSpecificationAddr string `protobuf:"bytes,1,opt,name=record_specification_addr,json=recordSpecificationAddr,proto3" json:"record_specification_addr,omitempty"`
-	// record_specification is the record specification that was removed.
-	RecordSpecification *RecordSpecification `protobuf:"bytes,2,opt,name=record_specification,json=recordSpecification,proto3" json:"record_specification,omitempty"`
+	// contract_specification_addr is the bech32 address string of the contract specification id this record specification
+	// belongs to.
+	ContractSpecificationAddr string `protobuf:"bytes,2,opt,name=contract_specification_addr,json=contractSpecificationAddr,proto3" json:"contract_specification_addr,omitempty"`
 }
 
 func (m *EventRecordSpecificationRemoved) Reset()         { *m = EventRecordSpecificationRemoved{} }
@@ -1132,11 +1027,11 @@ func (m *EventRecordSpecificationRemoved) GetRecordSpecificationAddr() string {
 	return ""
 }
 
-func (m *EventRecordSpecificationRemoved) GetRecordSpecification() *RecordSpecification {
+func (m *EventRecordSpecificationRemoved) GetContractSpecificationAddr() string {
 	if m != nil {
-		return m.RecordSpecification
+		return m.ContractSpecificationAddr
 	}
-	return nil
+	return ""
 }
 
 // EventOSLocatorCreated is an event message indicating an object store locator has been created.
@@ -1343,56 +1238,41 @@ func init() {
 }
 
 var fileDescriptor_476cf6cf9459cf25 = []byte{
-	// 775 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x57, 0x4f, 0x6f, 0xd3, 0x4e,
-	0x10, 0xad, 0x13, 0xfd, 0xda, 0x5f, 0x26, 0xd0, 0x96, 0x2d, 0x0d, 0x6e, 0x4a, 0x9c, 0xd6, 0x5c,
-	0xaa, 0xa2, 0x26, 0x2a, 0x45, 0x08, 0x38, 0x20, 0x41, 0x40, 0x48, 0x08, 0x09, 0xe4, 0xc2, 0x05,
-	0x24, 0xc0, 0xb5, 0xb7, 0xc5, 0x22, 0xf1, 0x5a, 0x6b, 0x27, 0x2a, 0xdf, 0x82, 0x2f, 0xc1, 0x11,
-	0x8e, 0x70, 0x42, 0x70, 0x84, 0x5b, 0x8f, 0x1c, 0x51, 0xfb, 0x45, 0x50, 0xf6, 0x8f, 0x63, 0x3b,
-	0xeb, 0x94, 0x1c, 0x22, 0xa5, 0xb7, 0xce, 0x7a, 0x66, 0xde, 0x9b, 0x79, 0xcf, 0xdb, 0x18, 0xae,
-	0x04, 0x94, 0xf4, 0xb0, 0x6f, 0xfb, 0x0e, 0x6e, 0x76, 0x70, 0x64, 0xbb, 0x76, 0x64, 0x37, 0x7b,
-	0xdb, 0x4d, 0xdc, 0xc3, 0x7e, 0x14, 0x36, 0x02, 0x4a, 0x22, 0x82, 0x2a, 0x83, 0xa4, 0x86, 0x4c,
-	0x6a, 0xf4, 0xb6, 0xab, 0x66, 0x4e, 0x71, 0xe8, 0x90, 0x00, 0xf3, 0xda, 0xea, 0x66, 0x5e, 0x4e,
-	0x80, 0x1d, 0x6f, 0xdf, 0x73, 0xec, 0xc8, 0x23, 0x3e, 0xcf, 0x35, 0xdf, 0xc0, 0xe2, 0x83, 0x3e,
-	0xee, 0xb3, 0xc3, 0x16, 0xe9, 0x04, 0x6d, 0x1c, 0x61, 0x17, 0x55, 0x60, 0xb6, 0x43, 0xdc, 0x6e,
-	0x1b, 0xeb, 0xda, 0x9a, 0xb6, 0x51, 0xb2, 0x44, 0x84, 0xaa, 0xf0, 0x3f, 0xf6, 0xdd, 0x80, 0x78,
-	0x7e, 0xa4, 0x17, 0xd8, 0x93, 0x38, 0x46, 0x3a, 0xcc, 0x85, 0xde, 0x81, 0x8f, 0x69, 0xa8, 0x17,
-	0xd7, 0x8a, 0x1b, 0x25, 0x4b, 0x86, 0xe6, 0x01, 0x5c, 0x60, 0x08, 0xbb, 0x7d, 0x86, 0x2d, 0x8a,
-	0xed, 0x3e, 0x44, 0x0d, 0x80, 0x31, 0x7e, 0x6d, 0xbb, 0x2e, 0x15, 0x30, 0x25, 0x76, 0x72, 0xd7,
-	0x75, 0x29, 0xda, 0x81, 0xff, 0x58, 0xc0, 0x60, 0xca, 0xd7, 0x6a, 0x0d, 0xf5, 0x36, 0x1a, 0xac,
-	0xa7, 0xc5, 0x73, 0xcd, 0x4f, 0x5a, 0x12, 0xe9, 0x79, 0xe0, 0x4e, 0x0a, 0x09, 0xdd, 0x87, 0x79,
-	0xde, 0x93, 0xe2, 0xa0, 0x6d, 0x3b, 0xd8, 0xd5, 0x8b, 0xff, 0x52, 0x7d, 0x9e, 0x15, 0x59, 0xa2,
-	0x26, 0xbd, 0x18, 0x0b, 0x77, 0x48, 0x6f, 0x42, 0x8b, 0x09, 0x61, 0x89, 0x03, 0xe1, 0x30, 0xf4,
-	0x88, 0x2f, 0x35, 0x58, 0x87, 0x73, 0x21, 0x3f, 0x49, 0x82, 0x95, 0xc5, 0x19, 0x83, 0xbb, 0x05,
-	0x73, 0x22, 0x14, 0x80, 0xf5, 0x5c, 0x40, 0x9e, 0x66, 0xc9, 0x7c, 0xf3, 0xbb, 0x96, 0x46, 0x95,
-	0x7a, 0x4c, 0x14, 0x15, 0x3d, 0x82, 0x45, 0xd9, 0x3d, 0xa3, 0xcd, 0xa9, 0x3d, 0x16, 0x44, 0x61,
-	0xac, 0x4f, 0x66, 0x6d, 0x52, 0xa1, 0xc9, 0xae, 0xad, 0x03, 0x88, 0x81, 0x5a, 0xd8, 0x21, 0xd4,
-	0x95, 0x52, 0xd5, 0xa1, 0x4c, 0xd9, 0x41, 0x12, 0x12, 0xf8, 0x11, 0x43, 0xbc, 0x01, 0xb3, 0x3c,
-	0x12, 0x80, 0x46, 0x1e, 0x20, 0xef, 0x6b, 0x89, 0x6c, 0xf3, 0x8b, 0x96, 0xc2, 0x93, 0x22, 0x4d,
-	0x0a, 0x0f, 0x3d, 0x84, 0x05, 0xd1, 0x38, 0x23, 0xcf, 0x69, 0x0d, 0xe6, 0x79, 0x59, 0x2c, 0x4e,
-	0x7a, 0x4f, 0x52, 0x9b, 0x89, 0xed, 0xe9, 0xab, 0x06, 0xc6, 0xe0, 0x65, 0xdd, 0x4d, 0x5e, 0xa4,
-	0x52, 0xa3, 0x9b, 0xa0, 0xf3, 0x37, 0x37, 0x75, 0xcd, 0x26, 0x89, 0x54, 0xc2, 0xa1, 0x62, 0x46,
-	0xea, 0x25, 0x2c, 0x29, 0x2a, 0x05, 0xc3, 0xcd, 0x91, 0xaf, 0x78, 0xaa, 0x99, 0x85, 0x86, 0x01,
-	0xcc, 0x8f, 0x85, 0x5c, 0xe6, 0x52, 0xed, 0xe9, 0x64, 0x8e, 0xda, 0x70, 0x59, 0x45, 0x2b, 0x63,
-	0x9c, 0x71, 0x50, 0xaa, 0xc3, 0x28, 0xb1, 0xa1, 0x46, 0x28, 0x2c, 0xdd, 0x35, 0xa5, 0x0a, 0xff,
-	0xd2, 0x60, 0x9d, 0x31, 0x6f, 0x11, 0x3f, 0xa2, 0xb6, 0x13, 0x29, 0xed, 0x79, 0x07, 0x56, 0x1d,
-	0xf1, 0x3c, 0x9f, 0xff, 0x8a, 0xa3, 0x6a, 0xc1, 0x46, 0x70, 0xa1, 0xa2, 0xae, 0x17, 0x53, 0x6c,
-	0xe5, 0x4d, 0xa1, 0x64, 0x65, 0x2d, 0x2b, 0x91, 0xcc, 0x1f, 0x85, 0x51, 0xb3, 0x48, 0xc3, 0x9e,
-	0x89, 0x59, 0x50, 0x17, 0xea, 0x39, 0x2c, 0x33, 0x16, 0x1e, 0x13, 0xae, 0xa6, 0x84, 0x8b, 0x8d,
-	0x3c, 0xda, 0x0e, 0xd2, 0xcb, 0x67, 0xc3, 0x0e, 0xdf, 0x34, 0xa8, 0x27, 0xae, 0x79, 0xa5, 0xb1,
-	0x6f, 0xc3, 0x8a, 0xb8, 0xf3, 0x73, 0xe7, 0xb8, 0x44, 0x87, 0xcb, 0xd9, 0x14, 0xaf, 0xe0, 0xa2,
-	0xaa, 0x56, 0xcc, 0x70, 0x75, 0xf4, 0x3f, 0x87, 0xf4, 0x04, 0x4b, 0x0a, 0x0c, 0xf3, 0x73, 0x21,
-	0x9f, 0xbf, 0x34, 0xf3, 0x14, 0xf3, 0x47, 0x04, 0x6a, 0x4a, 0x6e, 0x19, 0x03, 0x8f, 0x05, 0xb4,
-	0xaa, 0x00, 0x8a, 0xcd, 0x3b, 0x4a, 0x70, 0x69, 0xdd, 0x69, 0x16, 0xbc, 0x05, 0xcb, 0x8c, 0xfe,
-	0x93, 0xdd, 0xc7, 0xc4, 0xb1, 0x23, 0x42, 0xa5, 0x4b, 0x75, 0x98, 0xeb, 0xf3, 0xc3, 0x61, 0x28,
-	0x28, 0xca, 0x10, 0x2d, 0x42, 0xb1, 0x4b, 0x3d, 0xf1, 0x41, 0xd5, 0xff, 0xd3, 0xdc, 0xcf, 0x36,
-	0x91, 0x56, 0x19, 0xa3, 0x49, 0xff, 0x67, 0x6a, 0x97, 0x7a, 0x69, 0xa5, 0x4a, 0x56, 0xb9, 0x4b,
-	0xbd, 0x78, 0xd9, 0x43, 0x64, 0xe5, 0x86, 0xc7, 0xc0, 0xb9, 0xf7, 0xee, 0xe7, 0xb1, 0xa1, 0x1d,
-	0x1d, 0x1b, 0xda, 0x9f, 0x63, 0x43, 0xfb, 0x70, 0x62, 0xcc, 0x1c, 0x9d, 0x18, 0x33, 0xbf, 0x4f,
-	0x8c, 0x19, 0x58, 0xf1, 0x48, 0xce, 0x3e, 0x9f, 0x6a, 0x2f, 0xae, 0x1f, 0x78, 0xd1, 0xdb, 0xee,
-	0x5e, 0xc3, 0x21, 0x9d, 0xe6, 0x20, 0x69, 0xcb, 0x23, 0x89, 0xa8, 0x79, 0x38, 0xf8, 0x7c, 0x8d,
-	0xde, 0x07, 0x38, 0xdc, 0x9b, 0x65, 0x1f, 0xad, 0x3b, 0x7f, 0x03, 0x00, 0x00, 0xff, 0xff, 0xd9,
-	0x69, 0x4a, 0xd8, 0x43, 0x0f, 0x00, 0x00,
+	// 536 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x96, 0x41, 0x6f, 0xd3, 0x30,
+	0x14, 0xc7, 0x9b, 0x56, 0xda, 0xe8, 0x2b, 0x87, 0x11, 0x44, 0x49, 0x41, 0x64, 0x5b, 0xb9, 0xec,
+	0x42, 0xa2, 0x01, 0x07, 0xc4, 0x01, 0x09, 0x2a, 0x6e, 0x48, 0xa0, 0x14, 0x84, 0xb4, 0xcb, 0xf0,
+	0xec, 0xb7, 0x61, 0xd1, 0xc4, 0x91, 0xed, 0x84, 0xf1, 0x2d, 0xf8, 0x02, 0x7c, 0x1f, 0x8e, 0x3b,
+	0x72, 0x44, 0xed, 0x17, 0x41, 0x71, 0x63, 0x1a, 0xda, 0x8e, 0xa8, 0x94, 0x0d, 0x6e, 0x79, 0xcf,
+	0x7e, 0xbf, 0xff, 0x3f, 0xff, 0x58, 0x91, 0xe1, 0x6e, 0x2a, 0x45, 0x8e, 0x09, 0x49, 0x28, 0x86,
+	0x31, 0x6a, 0xc2, 0x88, 0x26, 0x61, 0xbe, 0x1f, 0x62, 0x8e, 0x89, 0x56, 0x41, 0x2a, 0x85, 0x16,
+	0x6e, 0x77, 0xb6, 0x29, 0xb0, 0x9b, 0x82, 0x7c, 0xbf, 0xff, 0x0e, 0xb6, 0x9e, 0x17, 0xfb, 0x5e,
+	0x9f, 0x0e, 0x44, 0x9c, 0x8e, 0x50, 0x23, 0x73, 0xbb, 0xb0, 0x11, 0x0b, 0x96, 0x8d, 0xd0, 0x73,
+	0x76, 0x9c, 0xbd, 0x76, 0x54, 0x56, 0xee, 0x2d, 0xb8, 0x82, 0x09, 0x4b, 0x05, 0x4f, 0xb4, 0xd7,
+	0x34, 0x2b, 0x3f, 0x6b, 0xd7, 0x83, 0x4d, 0xc5, 0x4f, 0x12, 0x94, 0xca, 0x6b, 0xed, 0xb4, 0xf6,
+	0xda, 0x91, 0x2d, 0xfb, 0xf7, 0xe1, 0x9a, 0x51, 0x18, 0x52, 0x91, 0xe2, 0x40, 0x22, 0x29, 0x24,
+	0xee, 0x00, 0xa8, 0xa2, 0x3e, 0x24, 0x8c, 0xc9, 0x52, 0xa6, 0x6d, 0x3a, 0x4f, 0x19, 0x93, 0xbf,
+	0xce, 0xbc, 0x49, 0xd9, 0xca, 0x33, 0x11, 0xc6, 0x22, 0xaf, 0x9f, 0x79, 0x0b, 0xd7, 0xa7, 0x33,
+	0xa8, 0x14, 0x17, 0x89, 0x75, 0xb7, 0x0b, 0x57, 0xd5, 0xb4, 0x53, 0x9d, 0xeb, 0x94, 0xbd, 0x62,
+	0x72, 0x0e, 0xdc, 0xac, 0x01, 0xdb, 0x57, 0xf8, 0xeb, 0x60, 0xfb, 0x9e, 0xeb, 0x83, 0x3f, 0x82,
+	0x6b, 0xc0, 0x11, 0x52, 0x21, 0x99, 0x4d, 0x62, 0x1b, 0x3a, 0xd2, 0x34, 0xaa, 0x58, 0x98, 0xb6,
+	0x0c, 0x75, 0x5e, 0xb8, 0x59, 0x27, 0xdc, 0xfa, 0xbd, 0xb0, 0x4d, 0xea, 0xd2, 0x85, 0x6d, 0x92,
+	0x97, 0x20, 0x7c, 0x00, 0xfe, 0xec, 0xa4, 0x0e, 0x53, 0xa4, 0xfc, 0x98, 0x53, 0xa2, 0x2b, 0x07,
+	0xf0, 0x11, 0x78, 0x53, 0x80, 0xaa, 0xae, 0x56, 0x1d, 0x75, 0xd5, 0xc2, 0x70, 0x0d, 0xdb, 0x26,
+	0x7b, 0x11, 0x6c, 0x1b, 0xde, 0x9f, 0xb3, 0x29, 0xec, 0x1a, 0xf6, 0x40, 0x24, 0x5a, 0x12, 0xaa,
+	0x97, 0xc6, 0xf2, 0x04, 0x6e, 0xd3, 0x72, 0xfd, 0x7c, 0x85, 0x1e, 0x5d, 0x86, 0xa8, 0x17, 0xb1,
+	0xf9, 0x5c, 0xa8, 0x88, 0x0d, 0x6a, 0x5d, 0x91, 0x2f, 0x0e, 0x6c, 0x57, 0x0e, 0xef, 0xd2, 0xb4,
+	0x1e, 0x43, 0xaf, 0x3c, 0xc9, 0xe7, 0x2a, 0xdc, 0x94, 0x8b, 0xe3, 0xe6, 0x04, 0xd7, 0xf8, 0x6b,
+	0xae, 0xe3, 0xcf, 0x06, 0xfd, 0xbf, 0xfa, 0xb3, 0xdf, 0xe8, 0x5f, 0xfa, 0x1b, 0xc0, 0x0d, 0x63,
+	0xef, 0xe5, 0xf0, 0x85, 0xa0, 0x44, 0x0b, 0x69, 0x3f, 0xaa, 0x07, 0x9b, 0x05, 0x01, 0x95, 0x2a,
+	0x2d, 0xd8, 0xd2, 0xdd, 0x82, 0x56, 0x26, 0x79, 0x89, 0x2e, 0x1e, 0xfb, 0xc7, 0xf3, 0x10, 0x9b,
+	0xfc, 0x0a, 0x90, 0xe2, 0x77, 0x97, 0x49, 0x7e, 0x28, 0x31, 0x1d, 0x11, 0x8a, 0xac, 0xfc, 0x9b,
+	0x75, 0x32, 0xc9, 0xa3, 0xb2, 0xb5, 0x68, 0xd6, 0x26, 0xb8, 0x82, 0xce, 0xb3, 0x0f, 0x5f, 0xc7,
+	0xbe, 0x73, 0x36, 0xf6, 0x9d, 0xef, 0x63, 0xdf, 0xf9, 0x3c, 0xf1, 0x1b, 0x67, 0x13, 0xbf, 0xf1,
+	0x6d, 0xe2, 0x37, 0xa0, 0xc7, 0x45, 0xb0, 0xfc, 0xf6, 0xf2, 0xca, 0x39, 0x78, 0x78, 0xc2, 0xf5,
+	0xfb, 0xec, 0x28, 0xa0, 0x22, 0x0e, 0x67, 0x9b, 0xee, 0x71, 0x51, 0xa9, 0xc2, 0xd3, 0xd9, 0xbd,
+	0x48, 0x7f, 0x4a, 0x51, 0x1d, 0x6d, 0x98, 0x4b, 0xd1, 0x83, 0x1f, 0x01, 0x00, 0x00, 0xff, 0xff,
+	0xa1, 0x65, 0xde, 0x30, 0x3b, 0x09, 0x00, 0x00,
 }
 
 func (m *EventTxCompleted) Marshal() (dAtA []byte, err error) {
@@ -1461,18 +1341,6 @@ func (m *EventScopeCreated) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Scope != nil {
-		{
-			size, err := m.Scope.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintEvents(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x12
-	}
 	if len(m.ScopeAddr) > 0 {
 		i -= len(m.ScopeAddr)
 		copy(dAtA[i:], m.ScopeAddr)
@@ -1503,30 +1371,6 @@ func (m *EventScopeUpdated) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.ScopeReplaced != nil {
-		{
-			size, err := m.ScopeReplaced.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintEvents(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x1a
-	}
-	if m.Scope != nil {
-		{
-			size, err := m.Scope.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintEvents(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x12
-	}
 	if len(m.ScopeAddr) > 0 {
 		i -= len(m.ScopeAddr)
 		copy(dAtA[i:], m.ScopeAddr)
@@ -1557,18 +1401,6 @@ func (m *EventScopeRemoved) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Scope != nil {
-		{
-			size, err := m.Scope.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintEvents(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x12
-	}
 	if len(m.ScopeAddr) > 0 {
 		i -= len(m.ScopeAddr)
 		copy(dAtA[i:], m.ScopeAddr)
@@ -1599,15 +1431,10 @@ func (m *EventSessionCreated) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Session != nil {
-		{
-			size, err := m.Session.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintEvents(dAtA, i, uint64(size))
-		}
+	if len(m.ScopeAddr) > 0 {
+		i -= len(m.ScopeAddr)
+		copy(dAtA[i:], m.ScopeAddr)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.ScopeAddr)))
 		i--
 		dAtA[i] = 0x12
 	}
@@ -1641,27 +1468,10 @@ func (m *EventSessionUpdated) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.SessionReplaced != nil {
-		{
-			size, err := m.SessionReplaced.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintEvents(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x1a
-	}
-	if m.Session != nil {
-		{
-			size, err := m.Session.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintEvents(dAtA, i, uint64(size))
-		}
+	if len(m.ScopeAddr) > 0 {
+		i -= len(m.ScopeAddr)
+		copy(dAtA[i:], m.ScopeAddr)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.ScopeAddr)))
 		i--
 		dAtA[i] = 0x12
 	}
@@ -1695,15 +1505,10 @@ func (m *EventSessionRemoved) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Session != nil {
-		{
-			size, err := m.Session.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintEvents(dAtA, i, uint64(size))
-		}
+	if len(m.ScopeAddr) > 0 {
+		i -= len(m.ScopeAddr)
+		copy(dAtA[i:], m.ScopeAddr)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.ScopeAddr)))
 		i--
 		dAtA[i] = 0x12
 	}
@@ -1737,15 +1542,17 @@ func (m *EventRecordCreated) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Record != nil {
-		{
-			size, err := m.Record.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintEvents(dAtA, i, uint64(size))
-		}
+	if len(m.ScopeAddr) > 0 {
+		i -= len(m.ScopeAddr)
+		copy(dAtA[i:], m.ScopeAddr)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.ScopeAddr)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.SessionAddr) > 0 {
+		i -= len(m.SessionAddr)
+		copy(dAtA[i:], m.SessionAddr)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.SessionAddr)))
 		i--
 		dAtA[i] = 0x12
 	}
@@ -1779,27 +1586,17 @@ func (m *EventRecordUpdated) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.RecordReplaced != nil {
-		{
-			size, err := m.RecordReplaced.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintEvents(dAtA, i, uint64(size))
-		}
+	if len(m.ScopeAddr) > 0 {
+		i -= len(m.ScopeAddr)
+		copy(dAtA[i:], m.ScopeAddr)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.ScopeAddr)))
 		i--
 		dAtA[i] = 0x1a
 	}
-	if m.Record != nil {
-		{
-			size, err := m.Record.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintEvents(dAtA, i, uint64(size))
-		}
+	if len(m.SessionAddr) > 0 {
+		i -= len(m.SessionAddr)
+		copy(dAtA[i:], m.SessionAddr)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.SessionAddr)))
 		i--
 		dAtA[i] = 0x12
 	}
@@ -1833,15 +1630,17 @@ func (m *EventRecordRemoved) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Record != nil {
-		{
-			size, err := m.Record.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintEvents(dAtA, i, uint64(size))
-		}
+	if len(m.ScopeAddr) > 0 {
+		i -= len(m.ScopeAddr)
+		copy(dAtA[i:], m.ScopeAddr)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.ScopeAddr)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.SessionAddr) > 0 {
+		i -= len(m.SessionAddr)
+		copy(dAtA[i:], m.SessionAddr)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.SessionAddr)))
 		i--
 		dAtA[i] = 0x12
 	}
@@ -1875,18 +1674,6 @@ func (m *EventScopeSpecificationCreated) MarshalToSizedBuffer(dAtA []byte) (int,
 	_ = i
 	var l int
 	_ = l
-	if m.ScopeSpecification != nil {
-		{
-			size, err := m.ScopeSpecification.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintEvents(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x12
-	}
 	if len(m.ScopeSpecificationAddr) > 0 {
 		i -= len(m.ScopeSpecificationAddr)
 		copy(dAtA[i:], m.ScopeSpecificationAddr)
@@ -1917,30 +1704,6 @@ func (m *EventScopeSpecificationUpdated) MarshalToSizedBuffer(dAtA []byte) (int,
 	_ = i
 	var l int
 	_ = l
-	if m.ScopeSpecificationReplaced != nil {
-		{
-			size, err := m.ScopeSpecificationReplaced.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintEvents(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x1a
-	}
-	if m.ScopeSpecification != nil {
-		{
-			size, err := m.ScopeSpecification.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintEvents(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x12
-	}
 	if len(m.ScopeSpecificationAddr) > 0 {
 		i -= len(m.ScopeSpecificationAddr)
 		copy(dAtA[i:], m.ScopeSpecificationAddr)
@@ -1971,18 +1734,6 @@ func (m *EventScopeSpecificationRemoved) MarshalToSizedBuffer(dAtA []byte) (int,
 	_ = i
 	var l int
 	_ = l
-	if m.ScopeSpecification != nil {
-		{
-			size, err := m.ScopeSpecification.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintEvents(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x12
-	}
 	if len(m.ScopeSpecificationAddr) > 0 {
 		i -= len(m.ScopeSpecificationAddr)
 		copy(dAtA[i:], m.ScopeSpecificationAddr)
@@ -2013,18 +1764,6 @@ func (m *EventContractSpecificationCreated) MarshalToSizedBuffer(dAtA []byte) (i
 	_ = i
 	var l int
 	_ = l
-	if m.ContractSpecification != nil {
-		{
-			size, err := m.ContractSpecification.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintEvents(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x12
-	}
 	if len(m.ContractSpecificationAddr) > 0 {
 		i -= len(m.ContractSpecificationAddr)
 		copy(dAtA[i:], m.ContractSpecificationAddr)
@@ -2055,30 +1794,6 @@ func (m *EventContractSpecificationUpdated) MarshalToSizedBuffer(dAtA []byte) (i
 	_ = i
 	var l int
 	_ = l
-	if m.ContractSpecificationReplaced != nil {
-		{
-			size, err := m.ContractSpecificationReplaced.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintEvents(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x1a
-	}
-	if m.ContractSpecification != nil {
-		{
-			size, err := m.ContractSpecification.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintEvents(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x12
-	}
 	if len(m.ContractSpecificationAddr) > 0 {
 		i -= len(m.ContractSpecificationAddr)
 		copy(dAtA[i:], m.ContractSpecificationAddr)
@@ -2109,18 +1824,6 @@ func (m *EventContractSpecificationRemoved) MarshalToSizedBuffer(dAtA []byte) (i
 	_ = i
 	var l int
 	_ = l
-	if m.ContractSpecification != nil {
-		{
-			size, err := m.ContractSpecification.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintEvents(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x12
-	}
 	if len(m.ContractSpecificationAddr) > 0 {
 		i -= len(m.ContractSpecificationAddr)
 		copy(dAtA[i:], m.ContractSpecificationAddr)
@@ -2151,15 +1854,10 @@ func (m *EventRecordSpecificationCreated) MarshalToSizedBuffer(dAtA []byte) (int
 	_ = i
 	var l int
 	_ = l
-	if m.RecordSpecification != nil {
-		{
-			size, err := m.RecordSpecification.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintEvents(dAtA, i, uint64(size))
-		}
+	if len(m.ContractSpecificationAddr) > 0 {
+		i -= len(m.ContractSpecificationAddr)
+		copy(dAtA[i:], m.ContractSpecificationAddr)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.ContractSpecificationAddr)))
 		i--
 		dAtA[i] = 0x12
 	}
@@ -2193,27 +1891,10 @@ func (m *EventRecordSpecificationUpdated) MarshalToSizedBuffer(dAtA []byte) (int
 	_ = i
 	var l int
 	_ = l
-	if m.RecordSpecificationReplaced != nil {
-		{
-			size, err := m.RecordSpecificationReplaced.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintEvents(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x1a
-	}
-	if m.RecordSpecification != nil {
-		{
-			size, err := m.RecordSpecification.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintEvents(dAtA, i, uint64(size))
-		}
+	if len(m.ContractSpecificationAddr) > 0 {
+		i -= len(m.ContractSpecificationAddr)
+		copy(dAtA[i:], m.ContractSpecificationAddr)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.ContractSpecificationAddr)))
 		i--
 		dAtA[i] = 0x12
 	}
@@ -2247,15 +1928,10 @@ func (m *EventRecordSpecificationRemoved) MarshalToSizedBuffer(dAtA []byte) (int
 	_ = i
 	var l int
 	_ = l
-	if m.RecordSpecification != nil {
-		{
-			size, err := m.RecordSpecification.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintEvents(dAtA, i, uint64(size))
-		}
+	if len(m.ContractSpecificationAddr) > 0 {
+		i -= len(m.ContractSpecificationAddr)
+		copy(dAtA[i:], m.ContractSpecificationAddr)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.ContractSpecificationAddr)))
 		i--
 		dAtA[i] = 0x12
 	}
@@ -2431,10 +2107,6 @@ func (m *EventScopeCreated) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
-	if m.Scope != nil {
-		l = m.Scope.Size()
-		n += 1 + l + sovEvents(uint64(l))
-	}
 	return n
 }
 
@@ -2446,14 +2118,6 @@ func (m *EventScopeUpdated) Size() (n int) {
 	_ = l
 	l = len(m.ScopeAddr)
 	if l > 0 {
-		n += 1 + l + sovEvents(uint64(l))
-	}
-	if m.Scope != nil {
-		l = m.Scope.Size()
-		n += 1 + l + sovEvents(uint64(l))
-	}
-	if m.ScopeReplaced != nil {
-		l = m.ScopeReplaced.Size()
 		n += 1 + l + sovEvents(uint64(l))
 	}
 	return n
@@ -2469,10 +2133,6 @@ func (m *EventScopeRemoved) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
-	if m.Scope != nil {
-		l = m.Scope.Size()
-		n += 1 + l + sovEvents(uint64(l))
-	}
 	return n
 }
 
@@ -2486,8 +2146,8 @@ func (m *EventSessionCreated) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
-	if m.Session != nil {
-		l = m.Session.Size()
+	l = len(m.ScopeAddr)
+	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
 	return n
@@ -2503,12 +2163,8 @@ func (m *EventSessionUpdated) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
-	if m.Session != nil {
-		l = m.Session.Size()
-		n += 1 + l + sovEvents(uint64(l))
-	}
-	if m.SessionReplaced != nil {
-		l = m.SessionReplaced.Size()
+	l = len(m.ScopeAddr)
+	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
 	return n
@@ -2524,8 +2180,8 @@ func (m *EventSessionRemoved) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
-	if m.Session != nil {
-		l = m.Session.Size()
+	l = len(m.ScopeAddr)
+	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
 	return n
@@ -2541,8 +2197,12 @@ func (m *EventRecordCreated) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
-	if m.Record != nil {
-		l = m.Record.Size()
+	l = len(m.SessionAddr)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.ScopeAddr)
+	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
 	return n
@@ -2558,12 +2218,12 @@ func (m *EventRecordUpdated) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
-	if m.Record != nil {
-		l = m.Record.Size()
+	l = len(m.SessionAddr)
+	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
-	if m.RecordReplaced != nil {
-		l = m.RecordReplaced.Size()
+	l = len(m.ScopeAddr)
+	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
 	return n
@@ -2579,8 +2239,12 @@ func (m *EventRecordRemoved) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
-	if m.Record != nil {
-		l = m.Record.Size()
+	l = len(m.SessionAddr)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.ScopeAddr)
+	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
 	return n
@@ -2596,10 +2260,6 @@ func (m *EventScopeSpecificationCreated) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
-	if m.ScopeSpecification != nil {
-		l = m.ScopeSpecification.Size()
-		n += 1 + l + sovEvents(uint64(l))
-	}
 	return n
 }
 
@@ -2611,14 +2271,6 @@ func (m *EventScopeSpecificationUpdated) Size() (n int) {
 	_ = l
 	l = len(m.ScopeSpecificationAddr)
 	if l > 0 {
-		n += 1 + l + sovEvents(uint64(l))
-	}
-	if m.ScopeSpecification != nil {
-		l = m.ScopeSpecification.Size()
-		n += 1 + l + sovEvents(uint64(l))
-	}
-	if m.ScopeSpecificationReplaced != nil {
-		l = m.ScopeSpecificationReplaced.Size()
 		n += 1 + l + sovEvents(uint64(l))
 	}
 	return n
@@ -2634,10 +2286,6 @@ func (m *EventScopeSpecificationRemoved) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
-	if m.ScopeSpecification != nil {
-		l = m.ScopeSpecification.Size()
-		n += 1 + l + sovEvents(uint64(l))
-	}
 	return n
 }
 
@@ -2649,10 +2297,6 @@ func (m *EventContractSpecificationCreated) Size() (n int) {
 	_ = l
 	l = len(m.ContractSpecificationAddr)
 	if l > 0 {
-		n += 1 + l + sovEvents(uint64(l))
-	}
-	if m.ContractSpecification != nil {
-		l = m.ContractSpecification.Size()
 		n += 1 + l + sovEvents(uint64(l))
 	}
 	return n
@@ -2668,14 +2312,6 @@ func (m *EventContractSpecificationUpdated) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
-	if m.ContractSpecification != nil {
-		l = m.ContractSpecification.Size()
-		n += 1 + l + sovEvents(uint64(l))
-	}
-	if m.ContractSpecificationReplaced != nil {
-		l = m.ContractSpecificationReplaced.Size()
-		n += 1 + l + sovEvents(uint64(l))
-	}
 	return n
 }
 
@@ -2687,10 +2323,6 @@ func (m *EventContractSpecificationRemoved) Size() (n int) {
 	_ = l
 	l = len(m.ContractSpecificationAddr)
 	if l > 0 {
-		n += 1 + l + sovEvents(uint64(l))
-	}
-	if m.ContractSpecification != nil {
-		l = m.ContractSpecification.Size()
 		n += 1 + l + sovEvents(uint64(l))
 	}
 	return n
@@ -2706,8 +2338,8 @@ func (m *EventRecordSpecificationCreated) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
-	if m.RecordSpecification != nil {
-		l = m.RecordSpecification.Size()
+	l = len(m.ContractSpecificationAddr)
+	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
 	return n
@@ -2723,12 +2355,8 @@ func (m *EventRecordSpecificationUpdated) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
-	if m.RecordSpecification != nil {
-		l = m.RecordSpecification.Size()
-		n += 1 + l + sovEvents(uint64(l))
-	}
-	if m.RecordSpecificationReplaced != nil {
-		l = m.RecordSpecificationReplaced.Size()
+	l = len(m.ContractSpecificationAddr)
+	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
 	return n
@@ -2744,8 +2372,8 @@ func (m *EventRecordSpecificationRemoved) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
-	if m.RecordSpecification != nil {
-		l = m.RecordSpecification.Size()
+	l = len(m.ContractSpecificationAddr)
+	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
 	return n
@@ -3019,42 +2647,6 @@ func (m *EventScopeCreated) Unmarshal(dAtA []byte) error {
 			}
 			m.ScopeAddr = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Scope", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvents
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthEvents
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthEvents
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Scope == nil {
-				m.Scope = &Scope{}
-			}
-			if err := m.Scope.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipEvents(dAtA[iNdEx:])
@@ -3137,78 +2729,6 @@ func (m *EventScopeUpdated) Unmarshal(dAtA []byte) error {
 			}
 			m.ScopeAddr = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Scope", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvents
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthEvents
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthEvents
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Scope == nil {
-				m.Scope = &Scope{}
-			}
-			if err := m.Scope.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ScopeReplaced", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvents
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthEvents
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthEvents
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.ScopeReplaced == nil {
-				m.ScopeReplaced = &Scope{}
-			}
-			if err := m.ScopeReplaced.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipEvents(dAtA[iNdEx:])
@@ -3290,42 +2810,6 @@ func (m *EventScopeRemoved) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.ScopeAddr = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Scope", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvents
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthEvents
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthEvents
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Scope == nil {
-				m.Scope = &Scope{}
-			}
-			if err := m.Scope.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -3411,9 +2895,9 @@ func (m *EventSessionCreated) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Session", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ScopeAddr", wireType)
 			}
-			var msglen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowEvents
@@ -3423,27 +2907,23 @@ func (m *EventSessionCreated) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthEvents
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthEvents
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Session == nil {
-				m.Session = &Session{}
-			}
-			if err := m.Session.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.ScopeAddr = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -3529,9 +3009,9 @@ func (m *EventSessionUpdated) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Session", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ScopeAddr", wireType)
 			}
-			var msglen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowEvents
@@ -3541,63 +3021,23 @@ func (m *EventSessionUpdated) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthEvents
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthEvents
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Session == nil {
-				m.Session = &Session{}
-			}
-			if err := m.Session.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field SessionReplaced", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvents
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthEvents
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthEvents
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.SessionReplaced == nil {
-				m.SessionReplaced = &Session{}
-			}
-			if err := m.SessionReplaced.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.ScopeAddr = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -3683,9 +3123,9 @@ func (m *EventSessionRemoved) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Session", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ScopeAddr", wireType)
 			}
-			var msglen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowEvents
@@ -3695,27 +3135,23 @@ func (m *EventSessionRemoved) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthEvents
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthEvents
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Session == nil {
-				m.Session = &Session{}
-			}
-			if err := m.Session.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.ScopeAddr = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -3801,9 +3237,9 @@ func (m *EventRecordCreated) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Record", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field SessionAddr", wireType)
 			}
-			var msglen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowEvents
@@ -3813,27 +3249,55 @@ func (m *EventRecordCreated) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthEvents
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthEvents
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Record == nil {
-				m.Record = &Record{}
+			m.SessionAddr = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ScopeAddr", wireType)
 			}
-			if err := m.Record.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
 			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ScopeAddr = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -3919,9 +3383,9 @@ func (m *EventRecordUpdated) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Record", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field SessionAddr", wireType)
 			}
-			var msglen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowEvents
@@ -3931,33 +3395,29 @@ func (m *EventRecordUpdated) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthEvents
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthEvents
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Record == nil {
-				m.Record = &Record{}
-			}
-			if err := m.Record.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.SessionAddr = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RecordReplaced", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ScopeAddr", wireType)
 			}
-			var msglen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowEvents
@@ -3967,27 +3427,23 @@ func (m *EventRecordUpdated) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthEvents
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthEvents
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.RecordReplaced == nil {
-				m.RecordReplaced = &Record{}
-			}
-			if err := m.RecordReplaced.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.ScopeAddr = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -4073,9 +3529,9 @@ func (m *EventRecordRemoved) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Record", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field SessionAddr", wireType)
 			}
-			var msglen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowEvents
@@ -4085,27 +3541,55 @@ func (m *EventRecordRemoved) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthEvents
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthEvents
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Record == nil {
-				m.Record = &Record{}
+			m.SessionAddr = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ScopeAddr", wireType)
 			}
-			if err := m.Record.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
 			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ScopeAddr = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -4189,42 +3673,6 @@ func (m *EventScopeSpecificationCreated) Unmarshal(dAtA []byte) error {
 			}
 			m.ScopeSpecificationAddr = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ScopeSpecification", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvents
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthEvents
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthEvents
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.ScopeSpecification == nil {
-				m.ScopeSpecification = &ScopeSpecification{}
-			}
-			if err := m.ScopeSpecification.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipEvents(dAtA[iNdEx:])
@@ -4306,78 +3754,6 @@ func (m *EventScopeSpecificationUpdated) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.ScopeSpecificationAddr = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ScopeSpecification", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvents
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthEvents
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthEvents
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.ScopeSpecification == nil {
-				m.ScopeSpecification = &ScopeSpecification{}
-			}
-			if err := m.ScopeSpecification.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ScopeSpecificationReplaced", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvents
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthEvents
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthEvents
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.ScopeSpecificationReplaced == nil {
-				m.ScopeSpecificationReplaced = &ScopeSpecification{}
-			}
-			if err := m.ScopeSpecificationReplaced.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -4461,42 +3837,6 @@ func (m *EventScopeSpecificationRemoved) Unmarshal(dAtA []byte) error {
 			}
 			m.ScopeSpecificationAddr = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ScopeSpecification", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvents
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthEvents
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthEvents
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.ScopeSpecification == nil {
-				m.ScopeSpecification = &ScopeSpecification{}
-			}
-			if err := m.ScopeSpecification.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipEvents(dAtA[iNdEx:])
@@ -4578,42 +3918,6 @@ func (m *EventContractSpecificationCreated) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.ContractSpecificationAddr = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ContractSpecification", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvents
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthEvents
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthEvents
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.ContractSpecification == nil {
-				m.ContractSpecification = &ContractSpecification{}
-			}
-			if err := m.ContractSpecification.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -4697,78 +4001,6 @@ func (m *EventContractSpecificationUpdated) Unmarshal(dAtA []byte) error {
 			}
 			m.ContractSpecificationAddr = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ContractSpecification", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvents
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthEvents
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthEvents
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.ContractSpecification == nil {
-				m.ContractSpecification = &ContractSpecification{}
-			}
-			if err := m.ContractSpecification.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ContractSpecificationReplaced", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvents
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthEvents
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthEvents
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.ContractSpecificationReplaced == nil {
-				m.ContractSpecificationReplaced = &ContractSpecification{}
-			}
-			if err := m.ContractSpecificationReplaced.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipEvents(dAtA[iNdEx:])
@@ -4850,42 +4082,6 @@ func (m *EventContractSpecificationRemoved) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.ContractSpecificationAddr = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ContractSpecification", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvents
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthEvents
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthEvents
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.ContractSpecification == nil {
-				m.ContractSpecification = &ContractSpecification{}
-			}
-			if err := m.ContractSpecification.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -4971,9 +4167,9 @@ func (m *EventRecordSpecificationCreated) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RecordSpecification", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ContractSpecificationAddr", wireType)
 			}
-			var msglen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowEvents
@@ -4983,27 +4179,23 @@ func (m *EventRecordSpecificationCreated) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthEvents
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthEvents
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.RecordSpecification == nil {
-				m.RecordSpecification = &RecordSpecification{}
-			}
-			if err := m.RecordSpecification.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.ContractSpecificationAddr = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -5089,9 +4281,9 @@ func (m *EventRecordSpecificationUpdated) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RecordSpecification", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ContractSpecificationAddr", wireType)
 			}
-			var msglen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowEvents
@@ -5101,63 +4293,23 @@ func (m *EventRecordSpecificationUpdated) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthEvents
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthEvents
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.RecordSpecification == nil {
-				m.RecordSpecification = &RecordSpecification{}
-			}
-			if err := m.RecordSpecification.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RecordSpecificationReplaced", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvents
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthEvents
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthEvents
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.RecordSpecificationReplaced == nil {
-				m.RecordSpecificationReplaced = &RecordSpecification{}
-			}
-			if err := m.RecordSpecificationReplaced.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.ContractSpecificationAddr = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -5243,9 +4395,9 @@ func (m *EventRecordSpecificationRemoved) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RecordSpecification", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ContractSpecificationAddr", wireType)
 			}
-			var msglen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowEvents
@@ -5255,27 +4407,23 @@ func (m *EventRecordSpecificationRemoved) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthEvents
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthEvents
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.RecordSpecification == nil {
-				m.RecordSpecification = &RecordSpecification{}
-			}
-			if err := m.RecordSpecification.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.ContractSpecificationAddr = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

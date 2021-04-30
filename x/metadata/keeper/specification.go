@@ -110,7 +110,7 @@ func (k Keeper) SetRecordSpecification(ctx sdk.Context, spec types.RecordSpecifi
 		if oldBytes := store.Get(spec.SpecificationId); oldBytes != nil {
 			var oldSpec types.RecordSpecification
 			if err := k.cdc.UnmarshalBinaryBare(oldBytes, &oldSpec); err == nil {
-				event = types.NewEventRecordSpecificationUpdated(spec, oldSpec)
+				event = types.NewEventRecordSpecificationUpdated(spec)
 			}
 		}
 	}
@@ -226,7 +226,7 @@ func (k Keeper) SetContractSpecification(ctx sdk.Context, spec types.ContractSpe
 		if oldBytes := store.Get(spec.SpecificationId); oldBytes != nil {
 			var oldSpec types.ContractSpecification
 			if err := k.cdc.UnmarshalBinaryBare(oldBytes, &oldSpec); err == nil {
-				event = types.NewEventContractSpecificationUpdated(spec, oldSpec)
+				event = types.NewEventContractSpecificationUpdated(spec)
 				k.clearContractSpecificationIndex(ctx, oldSpec)
 			}
 		}
@@ -403,7 +403,7 @@ func (k Keeper) SetScopeSpecification(ctx sdk.Context, spec types.ScopeSpecifica
 		if oldBytes := store.Get(spec.SpecificationId); oldBytes != nil {
 			var oldSpec types.ScopeSpecification
 			if err := k.cdc.UnmarshalBinaryBare(oldBytes, &oldSpec); err == nil {
-				event = types.NewEventScopeSpecificationUpdated(spec, oldSpec)
+				event = types.NewEventScopeSpecificationUpdated(spec)
 				k.clearScopeSpecificationIndex(ctx, oldSpec)
 			}
 		}

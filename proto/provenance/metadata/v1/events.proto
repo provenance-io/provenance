@@ -1,9 +1,6 @@
 syntax = "proto3";
 package provenance.metadata.v1;
 
-import "provenance/metadata/v1/scope.proto";
-import "provenance/metadata/v1/specification.proto";
-
 option go_package = "github.com/provenance-io/provenance/x/metadata/types";
 
 option java_package        = "io.provenance.metadata.v1";
@@ -23,78 +20,72 @@ message EventTxCompleted {
 message EventScopeCreated {
   // scope_addr is the bech32 address string of the scope id that was created.
   string scope_addr = 1;
-  // scope is the scope that was created.
-  Scope scope = 2;
 }
 
 // EventScopeUpdated is an event message indicating a scope has been updated.
 message EventScopeUpdated {
   // scope_addr is the bech32 address string of the scope id that was updated.
   string scope_addr = 1;
-  // scope is the new on-chain version of the scope.
-  Scope scope = 2;
-  // scope_replaced is the previous on-chain version of the scope.
-  Scope scope_replaced = 3;
 }
 
 // EventScopeRemoved is an event message indicating a scope has been removed.
 message EventScopeRemoved {
   // scope_addr is the bech32 address string of the scope id that was removed.
   string scope_addr = 1;
-  // scope is the scope that was removed.
-  Scope scope = 2;
 }
 
 // EventSessionCreated is an event message indicating a session has been created.
 message EventSessionCreated {
   // session_addr is the bech32 address string of the session id that was created.
   string session_addr = 1;
-  // session is the session that was created.
-  Session session = 2;
+  // scope_addr is the bech32 address string of the scope id this session belongs to.
+  string scope_addr = 2;
 }
 
 // EventSessionUpdated is an event message indicating a session has been updated.
 message EventSessionUpdated {
   // session_addr is the bech32 address string of the session id that was updated.
   string session_addr = 1;
-  // session is the new on-chain version of the session.
-  Session session = 2;
-  // session_replaced is the previous on-chain version of the session.
-  Session session_replaced = 3;
+  // scope_addr is the bech32 address string of the scope id this session belongs to.
+  string scope_addr = 2;
 }
 
 // EventSessionRemoved is an event message indicating a session has been removed.
 message EventSessionRemoved {
   // session_addr is the bech32 address string of the session id that was removed.
   string session_addr = 1;
-  // session is the session that was removed.
-  Session session = 2;
+  // scope_addr is the bech32 address string of the scope id this session belongs to.
+  string scope_addr = 2;
 }
 
 // EventRecordCreated is an event message indicating a record has been created.
 message EventRecordCreated {
   // record_addr is the bech32 address string of the record id that was created.
   string record_addr = 1;
-  // record is the record that was created.
-  Record record = 2;
+  // session_addr is the bech32 address string of the session id this record belongs to.
+  string session_addr = 2;
+  // scope_addr is the bech32 address string of the scope id this record belongs to.
+  string scope_addr = 3;
 }
 
 // EventRecordUpdated is an event message indicating a record has been updated.
 message EventRecordUpdated {
   // record_addr is the bech32 address string of the record id that was updated.
   string record_addr = 1;
-  // record is the new on-chain version of the record.
-  Record record = 2;
-  // record_replaced is the previous on-chain version of the record.
-  Record record_replaced = 3;
+  // session_addr is the bech32 address string of the session id this record belongs to.
+  string session_addr = 2;
+  // scope_addr is the bech32 address string of the scope id this record belongs to.
+  string scope_addr = 3;
 }
 
 // EventRecordRemoved is an event message indicating a record has been removed.
 message EventRecordRemoved {
   // record is the bech32 address string of the record id that was removed.
   string record_addr = 1;
-  // record is the record that was removed.
-  Record record = 2;
+  // session_addr is the bech32 address string of the session id this record belongs to.
+  string session_addr = 2;
+  // scope_addr is the bech32 address string of the scope id this record belongs to.
+  string scope_addr = 3;
 }
 
 // EventScopeSpecificationCreated is an event message indicating a scope specification has been created.
@@ -102,8 +93,6 @@ message EventScopeSpecificationCreated {
   // scope_specification_addr is the bech32 address string of the specification id of the scope specification that was
   // created.
   string scope_specification_addr = 1;
-  // scope_specification is the scope specification that was created.
-  ScopeSpecification scope_specification = 2;
 }
 
 // EventScopeSpecificationUpdated is an event message indicating a scope specification has been updated.
@@ -111,10 +100,6 @@ message EventScopeSpecificationUpdated {
   // scope_specification_addr is the bech32 address string of the specification id of the scope specification that was
   // updated.
   string scope_specification_addr = 1;
-  // scope_specification is the new on-chain version of the scope specification.
-  ScopeSpecification scope_specification = 2;
-  // scope_specification_replaced is the previous on-chain version of the scope specification.
-  ScopeSpecification scope_specification_replaced = 3;
 }
 
 // EventScopeSpecificationRemoved is an event message indicating a scope specification has been removed.
@@ -122,8 +107,6 @@ message EventScopeSpecificationRemoved {
   // scope_specification_addr is the bech32 address string of the specification id of the scope specification that was
   // removed.
   string scope_specification_addr = 1;
-  // scope_specification is the scope specification that was removed.
-  ScopeSpecification scope_specification = 2;
 }
 
 // EventContractSpecificationCreated is an event message indicating a contract specification has been created.
@@ -131,8 +114,6 @@ message EventContractSpecificationCreated {
   // contract_specification_addr is the bech32 address string of the specification id of the contract specification that
   // was created.
   string contract_specification_addr = 1;
-  // contract_specification is the contract specification that was created.
-  ContractSpecification contract_specification = 2;
 }
 
 // EventContractSpecificationUpdated is an event message indicating a contract specification has been updated.
@@ -140,10 +121,6 @@ message EventContractSpecificationUpdated {
   // contract_specification_addr is the bech32 address string of the specification id of the contract specification that
   // was updated.
   string contract_specification_addr = 1;
-  // contract_specification is the new on-chain version of the contract specification.
-  ContractSpecification contract_specification = 2;
-  // contract_specification_replaced is the previous on-chain version of the contract specification.
-  ContractSpecification contract_specification_replaced = 3;
 }
 
 // EventContractSpecificationRemoved is an event message indicating a contract specification has been removed.
@@ -151,8 +128,6 @@ message EventContractSpecificationRemoved {
   // contract_specification_addr is the bech32 address string of the specification id of the contract specification that
   // was removed.
   string contract_specification_addr = 1;
-  // contract_specification is the contract specification that was removed.
-  ContractSpecification contract_specification = 2;
 }
 
 // EventRecordSpecificationCreated is an event message indicating a record specification has been created.
@@ -160,8 +135,9 @@ message EventRecordSpecificationCreated {
   // record_specification_addr is the bech32 address string of the specification id of the record specification that was
   // created.
   string record_specification_addr = 1;
-  // record_specification is the record specification that was created.
-  RecordSpecification record_specification = 2;
+  // contract_specification_addr is the bech32 address string of the contract specification id this record specification
+  // belongs to.
+  string contract_specification_addr = 2;
 }
 
 // EventRecordSpecificationUpdated is an event message indicating a record specification has been updated.
@@ -169,10 +145,9 @@ message EventRecordSpecificationUpdated {
   // record_specification_addr is the bech32 address string of the specification id of the record specification that was
   // updated.
   string record_specification_addr = 1;
-  // record_specification is the new on-chain version of the record specification.
-  RecordSpecification record_specification = 2;
-  // record_specification_replaced is the previous on-chain version of the record specification.
-  RecordSpecification record_specification_replaced = 3;
+  // contract_specification_addr is the bech32 address string of the contract specification id this record specification
+  // belongs to.
+  string contract_specification_addr = 2;
 }
 
 // EventRecordSpecificationRemoved is an event message indicating a record specification has been removed.
@@ -180,8 +155,9 @@ message EventRecordSpecificationRemoved {
   // record_specification_addr is the bech32 address string of the specification id of the record specification that was
   // removed.
   string record_specification_addr = 1;
-  // record_specification is the record specification that was removed.
-  RecordSpecification record_specification = 2;
+  // contract_specification_addr is the bech32 address string of the contract specification id this record specification
+  // belongs to.
+  string contract_specification_addr = 2;
 }
 
 // EventOSLocatorCreated is an event message indicating an object store locator has been created.

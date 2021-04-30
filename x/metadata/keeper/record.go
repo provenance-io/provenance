@@ -70,7 +70,7 @@ func (k Keeper) SetRecord(ctx sdk.Context, record types.Record) {
 		if oldRecordBytes := store.Get(recordID); oldRecordBytes != nil {
 			var oldRecord types.Record
 			if err := k.cdc.UnmarshalBinaryBare(oldRecordBytes, &oldRecord); err == nil {
-				event = types.NewEventRecordUpdated(record, oldRecord)
+				event = types.NewEventRecordUpdated(record)
 			}
 		}
 	}

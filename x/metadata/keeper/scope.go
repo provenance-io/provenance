@@ -87,7 +87,7 @@ func (k Keeper) SetScope(ctx sdk.Context, scope types.Scope) {
 		if oldScopeBytes := store.Get(scope.ScopeId); oldScopeBytes != nil {
 			var oldScope types.Scope
 			if err := k.cdc.UnmarshalBinaryBare(oldScopeBytes, &oldScope); err == nil {
-				event = types.NewEventScopeUpdated(scope, oldScope)
+				event = types.NewEventScopeUpdated(scope)
 				k.clearScopeIndex(ctx, oldScope)
 			}
 		}
