@@ -83,8 +83,6 @@ const (
 	EventTelemetryKeyTransfer string = "transfer"
 	// EventTelemetryKeyWithdraw withdraw telemetry metrics key
 	EventTelemetryKeyWithdraw string = "withdraw"
-	// EventTelemetryKeyKeeperMethod keeper method telemetry metrics key
-	EventTelemetryKeyKeeperMethod string = "keeper_method"
 )
 
 func NewEventMarkerAdd(denom string, amount string, status string, manager string, markerType string) *EventMarkerAdd {
