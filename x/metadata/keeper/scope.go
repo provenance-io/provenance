@@ -306,7 +306,6 @@ func (k Keeper) ValidateScopeDeleteDataAccess(ctx sdk.Context, dataAccessAddrs [
 		if !found {
 			return fmt.Errorf("address does not exist in scope data access: %s", da)
 		}
-
 	}
 
 	if err := k.ValidateAllPartiesAreSigners(existing.Owners, signers); err != nil {

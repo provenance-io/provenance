@@ -19,7 +19,9 @@ import (
 )
 
 const (
-	FlagSigners = "signers"
+	FlagSigners  = "signers"
+	AddSwitch    = "add"
+	RemoveSwitch = "remove"
 )
 
 // NewTxCmd is the top-level command for Metadata CLI transactions.
@@ -37,6 +39,7 @@ func NewTxCmd() *cobra.Command {
 		WriteScopeCmd(),
 		RemoveScopeCmd(),
 		AddRemoveScopeDataAccessCmd(),
+		AddRemoveScopeOwnersCmd(),
 
 		BindOsLocatorCmd(),
 		RemoveOsLocatorCmd(),
@@ -171,7 +174,7 @@ func AddRemoveScopeDataAccessCmd() *cobra.Command {
 			}
 
 			removeOrAdd := strings.ToLower(args[0])
-			if removeOrAdd != "remove" && removeOrAdd != "add" {
+			if removeOrAdd != RemoveSwitch && removeOrAdd != AddSwitch {
 				return fmt.Errorf("incorrect command %s : required remove or update", removeOrAdd)
 			}
 
@@ -192,10 +195,67 @@ func AddRemoveScopeDataAccessCmd() *cobra.Command {
 
 			dataAccess := strings.Split(args[2], ",")
 			var msg sdk.Msg
-			if removeOrAdd == "add" {
+			if removeOrAdd == AddSwitch {
 				msg = types.NewMsgAddScopeDataAccessRequest(scopeID, dataAccess, signers)
 			} else {
 				msg = types.NewMsgDeleteScopeDataAccessRequest(scopeID, dataAccess, signers)
+			}
+			err = msg.ValidateBasic()
+			if err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	addSignerFlagCmd(cmd)
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func AddRemoveScopeOwnersCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "scope-owners {add|remove} scope-id owner-addresses",
+		Short: "Add or remove a metadata scope owners on to the provenance blockchain",
+		Args:  cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			removeOrAdd := strings.ToLower(args[0])
+			if removeOrAdd != RemoveSwitch && removeOrAdd != AddSwitch {
+				return fmt.Errorf("incorrect command %s : required remove or update", removeOrAdd)
+			}
+
+			var scopeID types.MetadataAddress
+			scopeID, err = types.MetadataAddressFromBech32(args[1])
+			if err != nil {
+				return err
+			}
+
+			if !scopeID.IsScopeAddress() {
+				return fmt.Errorf("meta address is not a scope: %s", scopeID.String())
+			}
+
+			signers, err := parseSigners(cmd, &clientCtx)
+			if err != nil {
+				return err
+			}
+
+			ownerAddresses := strings.Split(args[2], ",")
+
+			var msg sdk.Msg
+			if removeOrAdd == AddSwitch {
+				owners := make([]*types.Party, len(ownerAddresses))
+				for i, ownerAddr := range ownerAddresses {
+					owners[i] = &types.Party{Address: ownerAddr, Role: types.PartyType_PARTY_TYPE_OWNER}
+				}
+				msg = types.NewMsgAddScopeOwnerRequest(scopeID, owners, signers)
+			} else {
+				msg = types.NewMsgDeleteScopeOwnerRequest(scopeID, ownerAddresses, signers)
 			}
 			err = msg.ValidateBasic()
 			if err != nil {
