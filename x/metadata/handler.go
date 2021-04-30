@@ -13,6 +13,8 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 	msgServer := keeper.NewMsgServerImpl(k)
 
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+		ctx = ctx.WithEventManager(sdk.NewEventManager())
+
 		switch msg := msg.(type) {
 		case *types.MsgWriteScopeRequest:
 			res, err := msgServer.WriteScope(sdk.WrapSDKContext(ctx), msg)

@@ -75,8 +75,8 @@ type CommonTest struct {
 	expectedEvent proto.Message
 }
 
-func (s HandlerTestSuite) containsMessage(msg proto.Message) bool {
-	events := s.ctx.EventManager().Events().ToABCIEvents()
+func (s HandlerTestSuite) containsMessage(result *sdk.Result, msg proto.Message) bool {
+	events := result.GetEvents().ToABCIEvents()
 	for _, event := range events {
 		typeEvent, _ := sdk.ParseTypedEvent(event)
 		if assert.ObjectsAreEqual(msg, typeEvent) {
@@ -89,13 +89,13 @@ func (s HandlerTestSuite) containsMessage(msg proto.Message) bool {
 func (s HandlerTestSuite) runTests(cases []CommonTest) {
 	for _, tc := range cases {
 		s.T().Run(tc.name, func(t *testing.T) {
-			_, err := s.handler(s.ctx, tc.msg)
+			response, err := s.handler(s.ctx, tc.msg)
 
 			if len(tc.errorMsg) > 0 {
 				assert.EqualError(t, err, tc.errorMsg)
 			} else {
 				if tc.expectedEvent != nil {
-					result := s.containsMessage(tc.expectedEvent)
+					result := s.containsMessage(response, tc.expectedEvent)
 					s.True(result, fmt.Sprintf("Expected typed event was not found: %v", tc.expectedEvent))
 				}
 
