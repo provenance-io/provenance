@@ -65,6 +65,14 @@ DeleteAccess Request defines the Msg/DeleteAccess request type
 
 This service message is expected to fail if:
 
+- The given denom value is invalid or does not match an existing marker on the system
+- The marker is not pending or:
+  - And the request is not signed with an administrator address that matches the manager address or:
+  - The given administrator address does not currently have the "admin" access granted on the marker
+
+The Delete Access request will remove all access granted to the given address on the specified marker.  The method may
+only be used against markers in the Pending status when called by the current marker manager address or against `Finalized`
+and `Active` markers when the caller is currently assigned the `Admin` access type.
 ## Msg/FinalizeRequest
 
 Finalize Request defines the Msg/Finalize request type
@@ -75,6 +83,13 @@ Finalize Request defines the Msg/Finalize request type
 
 This service message is expected to fail if:
 
+- The given denom value is invalid or does not match an existing marker on the system
+- The marker is not in a `proposed` status or:
+  - And the request is not signed with an administrator address that matches the manager address or:
+  - The given administrator address does not currently have the "admin" access granted on the marker
+
+The Finalize marker status performs a set of checks to ensure the marker is ready to be activated.  It is designed to
+serve as an intermediate step prior to activation that indicates marker configuration is complete.
 ## Msg/ActivateRequest
 
 Activate Request defines the Msg/Activate request type
@@ -85,6 +100,18 @@ Activate Request defines the Msg/Activate request type
 
 This service message is expected to fail if:
 
+- The given denom value is invalid or does not match an existing marker on the system
+- The marker is not in a `finalized` status or:
+  - And the request is not signed with an administrator address that matches the manager address or:
+  - The given administrator address does not currently have the "admin" access granted on the marker
+- The marker has a supply less than the current in circulation supply (for markers created against existing coin)
+
+The Activate marker request will mint any coin required to achieve a circulation target set by the total supply.  In
+addition the marker will no longer be managed by an indicated "manager" account but will instead require explicit
+rights assigned as access grants for any modification.
+
+If a marker has a fixed supply the begin block/invariant supply checks are also performed.  If the supply is expected to
+float then the `total_supply` value will be set to zero upon activation.
 ## Msg/CancelRequest
 
 Cancel Request defines the Msg/Cancel request type
@@ -95,6 +122,11 @@ Cancel Request defines the Msg/Cancel request type
 
 This service message is expected to fail if:
 
+- The given denom value is invalid or does not match an existing marker on the system
+- The marker is not in an `active` status or:
+  - The given administrator address does not currently have the "admin" access granted on the marker
+- The amount in circulation is greater than zero or any remaining amount is not currently held in escrow within the
+  marker account.
 ## Msg/DeleteRequest
 
 Delete Request defines the Msg/Delete request type
@@ -104,6 +136,12 @@ Delete Request defines the Msg/Delete request type
 +++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L108
 
 This service message is expected to fail if:
+
+- The given denom value is invalid or does not match an existing marker on the system
+- The marker is not in an `active` status or:
+  - The given administrator address does not currently have the "admin" access granted on the marker
+- The amount in circulation is greater than zero or any remaining amount is not currently held in escrow within the
+  marker account.
 
 ## Msg/MintRequest
 
@@ -115,18 +153,34 @@ Mint Request defines the Msg/Mint request type
 
 This service message is expected to fail if:
 
+- The given denom value is invalid or does not match an existing marker on the system
+- The marker is not in a `active` status or:
+  - And the request is not signed with an administrator address that matches the manager address or:
+- The given administrator address does not currently have the "mint" access granted on the marker
+- The requested amount of mint would increase the total supply in circulation above the configured supply limit set in
+  the marker module params
 ## Msg/BurnRequest
 
-Burn Request defines the Msg/Burn request type
+Burn Request defines the Msg/Burn request type that is used to remove supply of the marker coin from circulation.  In
+order to successfully burn supply the amount to burn must be held by the marker account itself (in escrow).
 
 +++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L120-L124
 
 +++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L126
+
 This service message is expected to fail if:
 
+- The given denom value is invalid or does not match an existing marker on the system
+- The marker is not in a `active` status or:
+  - And the request is not signed with an administrator address that matches the manager address or:
+- The given administrator address does not currently have the "burn" access granted on the marker
+- The amount of coin to burn is not currently held in escrow within the marker account.
 ## Msg/WithdrawRequest
 
-Withdraw Request defines the Msg/Withdraw request type
+Withdraw Request defines the Msg/Withdraw request type and is used to withdraw coin from escrow within the marker.
+
+NOTE: any denom coin can be held within a marker "in escrow", these values are not restricted to just the denom of the 
+marker itself.
 
 +++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L129-L135
 
@@ -134,9 +188,19 @@ Withdraw Request defines the Msg/Withdraw request type
 
 This service message is expected to fail if:
 
+- The given denom value is invalid or does not match an existing marker on the system
+- The marker is not in a `active` status or:
+  - And the request is not signed with an administrator address that matches the manager address or:
+- The given administrator address does not currently have the "withdraw" access granted on the marker
+- The amount of coin requested for withdraw is not currently held by the marker account
 ## Msg/TransferRequest
 
-Transfer Request defines the Msg/Transfer request type
+Transfer Request defines the Msg/Transfer request type.  A transfer request is used to transfer coin between two
+accounts for `RESTRICTED_COIN` type markers that have `send_enabled=false` configured with the `bank` module and thus
+can not be sent using a normal `send_coin` operation.  A transfer request requires a signature from an account with
+the transfer permission as well as approval from the account the funds will be withdrawn from.
+
+NOTE: the withdraw approval has been suspended pending integration with the `auth` module.  See [Issue #262](https://github.com/provenance-io/provenance/issues/262)
 
 +++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L140-L146
 
@@ -144,12 +208,32 @@ Transfer Request defines the Msg/Transfer request type
 
 This service message is expected to fail if:
 
+- The given denom value is invalid or does not match an existing marker on the system
+- The marker is not in a `active` status or:
+  - The given administrator address does not currently have the "transfer" access granted on the marker
+  - The marker types is not `RESTRICTED_COIN`
+
 ## Msg/SetDenomMetadataRequest
 
-SetDenomMetadata Request defines the Msg/SetDenomMetadata request type
+SetDenomMetadata Request defines the Msg/SetDenomMetadata request type.  This request is used to set the informational
+denom metadata held within the bank module.  Denom metadata can be used to provide a more streamlined user experience
+within block explorers or similar applications.
 
 +++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L152-L156
 
 +++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L159
 
 This service message is expected to fail if:
+
+- The given denom value is invalid or does not match an existing marker on the system
+- The request is not signed with an administrator address that matches the manager address or:
+- The given administrator address does not currently have the "admin" access granted on the marker
+- Any of the provided display denoms is found to be invalid
+  - Does not match the proper form with an SI unit prefix matching the associated exponent
+  - Is missing the denom unit for the indicated base denom or display denom unit.
+  - If there is an existing record the update will fail if:
+     - The Base denom is changed.
+       If marker status is active or finalized:
+        - Any DenomUnit entries are removed.
+        - DenomUnit Denom fields are modified.
+        - Any aliases are removed from a DenomUnit.

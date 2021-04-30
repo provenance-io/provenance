@@ -13,7 +13,7 @@ type MarkerAccount struct {
     Address       string
     AccountNumber uint64
 
-    PubKey        *types.Any // NOTE: not used for marker
+    PubKey        *types.Any // NOTE: not used for marker, it is not possible to sign for a marker account directly
     Sequence      uint64     // NOTE: always zero on marker
 
     // Address that owns the marker configuration.  This account must sign any requests
