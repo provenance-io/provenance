@@ -12,7 +12,7 @@ LEDGER_ENABLED ?= true
 WITH_CLEVELDB ?= yes
 
 LEVELDB_PATH = $(shell brew --prefix leveldb 2>/dev/null || echo "$(HOME)/Cellar/leveldb/1.22/include")
-CGO_CFLAGS   = 
+CGO_CFLAGS   =
 CGO_LDFLAGS  = -Wl,-rpath,\$$ORIGIN
 
 ifeq ($(WITH_CLEVELDB),yes)
@@ -171,11 +171,7 @@ endif
 
 RELEASE_WASM=$(RELEASE_BIN)/$(LIBWASMVM)
 RELEASE_PIO=$(RELEASE_BIN)/provenanced
-ifeq ($(TAG_RELEASE_ZIP),no)
-  RELEASE_ZIP_NAME=provenance-$(UNAME_S)-$(ARCH).zip
-else
-  RELEASE_ZIP_NAME=provenance-$(UNAME_S)-$(ARCH)-$(VERSION).zip
-endif
+RELEASE_ZIP_NAME=provenance-$(UNAME_S)-$(ARCH)-$(VERSION).zip
 RELEASE_ZIP=$(BUILDDIR)/$(RELEASE_ZIP_NAME)
 
 .PHONY: build-release-clean
