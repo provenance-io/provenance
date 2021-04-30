@@ -30,17 +30,15 @@ func (k Keeper) SetSession(ctx sdk.Context, session types.Session) {
 	b := k.cdc.MustMarshalBinaryBare(&session)
 
 	var event proto.Message = types.NewEventSessionCreated(session)
+	action := types.TLActionCreated
 	if store.Has(session.SessionId) {
-		if oldSessionBytes := store.Get(session.SessionId); oldSessionBytes != nil {
-			var oldSession types.Session
-			if err := k.cdc.UnmarshalBinaryBare(oldSessionBytes, &oldSession); err == nil {
-				event = types.NewEventSessionUpdated(session)
-			}
-		}
+		event = types.NewEventSessionUpdated(session)
+		action = types.TLActionUpdated
 	}
 
 	store.Set(session.SessionId, b)
 	k.EmitEvent(ctx, event)
+	defer types.GetIncObjFunc(types.TLTypeSession, action)
 }
 
 // RemoveSession removes a session from the module kv store if there are no records associated with it.
@@ -54,6 +52,7 @@ func (k Keeper) RemoveSession(ctx sdk.Context, id types.MetadataAddress) {
 	if found && !k.sessionHasRecords(ctx, id) {
 		store.Delete(id)
 		k.EmitEvent(ctx, types.NewEventSessionDeleted(session))
+		defer types.GetIncObjFunc(types.TLTypeSession, types.TLActionDeleted)
 	}
 }
 

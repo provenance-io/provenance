@@ -106,17 +106,15 @@ func (k Keeper) SetRecordSpecification(ctx sdk.Context, spec types.RecordSpecifi
 	b := k.cdc.MustMarshalBinaryBare(&spec)
 
 	var event proto.Message = types.NewEventRecordSpecificationCreated(spec)
+	action := types.TLActionCreated
 	if store.Has(spec.SpecificationId) {
-		if oldBytes := store.Get(spec.SpecificationId); oldBytes != nil {
-			var oldSpec types.RecordSpecification
-			if err := k.cdc.UnmarshalBinaryBare(oldBytes, &oldSpec); err == nil {
-				event = types.NewEventRecordSpecificationUpdated(spec)
-			}
-		}
+		event = types.NewEventRecordSpecificationUpdated(spec)
+		action = types.TLActionUpdated
 	}
 
 	store.Set(spec.SpecificationId, b)
 	k.EmitEvent(ctx, event)
+	defer types.GetIncObjFunc(types.TLTypeRecordSpec, action)
 }
 
 // RemoveRecordSpecification removes a record specification from the module kv store.
@@ -134,7 +132,7 @@ func (k Keeper) RemoveRecordSpecification(ctx sdk.Context, recordSpecID types.Me
 
 	store.Delete(recordSpecID)
 	k.EmitEvent(ctx, types.NewEventRecordSpecificationDeleted(recordSpec))
-
+	defer types.GetIncObjFunc(types.TLTypeRecordSpec, types.TLActionDeleted)
 	return nil
 }
 
@@ -222,11 +220,13 @@ func (k Keeper) SetContractSpecification(ctx sdk.Context, spec types.ContractSpe
 	b := k.cdc.MustMarshalBinaryBare(&spec)
 
 	var event proto.Message = types.NewEventContractSpecificationCreated(spec)
+	action := types.TLActionCreated
 	if store.Has(spec.SpecificationId) {
+		event = types.NewEventContractSpecificationUpdated(spec)
+		action = types.TLActionUpdated
 		if oldBytes := store.Get(spec.SpecificationId); oldBytes != nil {
 			var oldSpec types.ContractSpecification
 			if err := k.cdc.UnmarshalBinaryBare(oldBytes, &oldSpec); err == nil {
-				event = types.NewEventContractSpecificationUpdated(spec)
 				k.clearContractSpecificationIndex(ctx, oldSpec)
 			}
 		}
@@ -235,6 +235,7 @@ func (k Keeper) SetContractSpecification(ctx sdk.Context, spec types.ContractSpe
 	store.Set(spec.SpecificationId, b)
 	k.indexContractSpecification(ctx, spec)
 	k.EmitEvent(ctx, event)
+	defer types.GetIncObjFunc(types.TLTypeContractSpec, action)
 }
 
 // RemoveContractSpecification removes a contract specification from the module kv store.
@@ -253,7 +254,7 @@ func (k Keeper) RemoveContractSpecification(ctx sdk.Context, contractSpecID type
 	k.clearContractSpecificationIndex(ctx, contractSpec)
 	store.Delete(contractSpecID)
 	k.EmitEvent(ctx, types.NewEventContractSpecificationDeleted(contractSpec))
-
+	defer types.GetIncObjFunc(types.TLTypeContractSpec, types.TLActionDeleted)
 	return nil
 }
 
@@ -399,11 +400,13 @@ func (k Keeper) SetScopeSpecification(ctx sdk.Context, spec types.ScopeSpecifica
 	b := k.cdc.MustMarshalBinaryBare(&spec)
 
 	var event proto.Message = types.NewEventScopeSpecificationCreated(spec)
+	action := types.TLActionCreated
 	if store.Has(spec.SpecificationId) {
+		event = types.NewEventScopeSpecificationUpdated(spec)
+		action = types.TLActionUpdated
 		if oldBytes := store.Get(spec.SpecificationId); oldBytes != nil {
 			var oldSpec types.ScopeSpecification
 			if err := k.cdc.UnmarshalBinaryBare(oldBytes, &oldSpec); err == nil {
-				event = types.NewEventScopeSpecificationUpdated(spec)
 				k.clearScopeSpecificationIndex(ctx, oldSpec)
 			}
 		}
@@ -412,6 +415,7 @@ func (k Keeper) SetScopeSpecification(ctx sdk.Context, spec types.ScopeSpecifica
 	store.Set(spec.SpecificationId, b)
 	k.indexScopeSpecification(ctx, spec)
 	k.EmitEvent(ctx, event)
+	defer types.GetIncObjFunc(types.TLTypeScopeSpec, action)
 }
 
 // RemoveScopeSpecification removes a scope specification from the module kv store.
@@ -430,7 +434,7 @@ func (k Keeper) RemoveScopeSpecification(ctx sdk.Context, scopeSpecID types.Meta
 	k.clearScopeSpecificationIndex(ctx, scopeSpec)
 	store.Delete(scopeSpecID)
 	k.EmitEvent(ctx, types.NewEventScopeSpecificationDeleted(scopeSpec))
-
+	defer types.GetIncObjFunc(types.TLTypeScopeSpec, types.TLActionDeleted)
 	return nil
 }
 
