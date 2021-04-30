@@ -1081,11 +1081,7 @@ func ParseContractSpecID(contractSpecID string) (types.MetadataAddress, error) {
 			return addr, nil
 		}
 		if addr.IsRecordSpecificationAddress() {
-			addr2, addr2Err := addr.AsContractSpecAddress()
-			if addr2Err != nil {
-				return types.MetadataAddress{}, addr2Err
-			}
-			return addr2, nil
+			return addr.MustGetAsContractSpecAddress(), nil
 		}
 		return types.MetadataAddress{}, fmt.Errorf("address [%s] is not a contract spec address", contractSpecID)
 	}
