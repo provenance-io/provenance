@@ -119,7 +119,7 @@ func (k Keeper) DeleteRecord(ctx sdk.Context, ownerAddr sdk.AccAddress) error {
 	if oldRecord, found := k.GetOsLocatorRecord(ctx, ownerAddr); found {
 		store := ctx.KVStore(k.storeKey)
 		store.Delete(key)
-		ee := ctx.EventManager().EmitTypedEvent(types.NewEventOSLocatorRemoved(oldRecord))
+		ee := ctx.EventManager().EmitTypedEvent(types.NewEventOSLocatorDeleted(oldRecord))
 		return ee
 	}
 	return nil

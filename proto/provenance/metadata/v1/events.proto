@@ -28,9 +28,9 @@ message EventScopeUpdated {
   string scope_addr = 1;
 }
 
-// EventScopeRemoved is an event message indicating a scope has been removed.
-message EventScopeRemoved {
-  // scope_addr is the bech32 address string of the scope id that was removed.
+// EventScopeDeleted is an event message indicating a scope has been deleted.
+message EventScopeDeleted {
+  // scope_addr is the bech32 address string of the scope id that was deleted.
   string scope_addr = 1;
 }
 
@@ -50,9 +50,9 @@ message EventSessionUpdated {
   string scope_addr = 2;
 }
 
-// EventSessionRemoved is an event message indicating a session has been removed.
-message EventSessionRemoved {
-  // session_addr is the bech32 address string of the session id that was removed.
+// EventSessionDeleted is an event message indicating a session has been deleted.
+message EventSessionDeleted {
+  // session_addr is the bech32 address string of the session id that was deleted.
   string session_addr = 1;
   // scope_addr is the bech32 address string of the scope id this session belongs to.
   string scope_addr = 2;
@@ -78,9 +78,9 @@ message EventRecordUpdated {
   string scope_addr = 3;
 }
 
-// EventRecordRemoved is an event message indicating a record has been removed.
-message EventRecordRemoved {
-  // record is the bech32 address string of the record id that was removed.
+// EventRecordDeleted is an event message indicating a record has been deleted.
+message EventRecordDeleted {
+  // record is the bech32 address string of the record id that was deleted.
   string record_addr = 1;
   // session_addr is the bech32 address string of the session id this record belongs to.
   string session_addr = 2;
@@ -102,10 +102,10 @@ message EventScopeSpecificationUpdated {
   string scope_specification_addr = 1;
 }
 
-// EventScopeSpecificationRemoved is an event message indicating a scope specification has been removed.
-message EventScopeSpecificationRemoved {
+// EventScopeSpecificationDeleted is an event message indicating a scope specification has been deleted.
+message EventScopeSpecificationDeleted {
   // scope_specification_addr is the bech32 address string of the specification id of the scope specification that was
-  // removed.
+  // deleted.
   string scope_specification_addr = 1;
 }
 
@@ -123,10 +123,10 @@ message EventContractSpecificationUpdated {
   string contract_specification_addr = 1;
 }
 
-// EventContractSpecificationRemoved is an event message indicating a contract specification has been removed.
-message EventContractSpecificationRemoved {
+// EventContractSpecificationDeleted is an event message indicating a contract specification has been deleted.
+message EventContractSpecificationDeleted {
   // contract_specification_addr is the bech32 address string of the specification id of the contract specification that
-  // was removed.
+  // was deleted.
   string contract_specification_addr = 1;
 }
 
@@ -150,10 +150,10 @@ message EventRecordSpecificationUpdated {
   string contract_specification_addr = 2;
 }
 
-// EventRecordSpecificationRemoved is an event message indicating a record specification has been removed.
-message EventRecordSpecificationRemoved {
+// EventRecordSpecificationDeleted is an event message indicating a record specification has been deleted.
+message EventRecordSpecificationDeleted {
   // record_specification_addr is the bech32 address string of the specification id of the record specification that was
-  // removed.
+  // deleted.
   string record_specification_addr = 1;
   // contract_specification_addr is the bech32 address string of the contract specification id this record specification
   // belongs to.
@@ -178,10 +178,10 @@ message EventOSLocatorUpdated {
   string uri_replaced = 3;
 }
 
-// EventOSLocatorRemoved is an event message indicating an object store locator has been removed.
-message EventOSLocatorRemoved {
-  // address is the address in the object store locator that was removed.
+// EventOSLocatorDeleted is an event message indicating an object store locator has been deleted.
+message EventOSLocatorDeleted {
+  // address is the address in the object store locator that was deleted.
   string address = 1;
-  // uri is the uri in the object store locator that was removed.
+  // uri is the uri in the object store locator that was deleted.
   string uri = 2;
 }

@@ -178,24 +178,24 @@ func (m *EventScopeUpdated) GetScopeAddr() string {
 	return ""
 }
 
-// EventScopeRemoved is an event message indicating a scope has been removed.
-type EventScopeRemoved struct {
-	// scope_addr is the bech32 address string of the scope id that was removed.
+// EventScopeDeleted is an event message indicating a scope has been deleted.
+type EventScopeDeleted struct {
+	// scope_addr is the bech32 address string of the scope id that was deleted.
 	ScopeAddr string `protobuf:"bytes,1,opt,name=scope_addr,json=scopeAddr,proto3" json:"scope_addr,omitempty"`
 }
 
-func (m *EventScopeRemoved) Reset()         { *m = EventScopeRemoved{} }
-func (m *EventScopeRemoved) String() string { return proto.CompactTextString(m) }
-func (*EventScopeRemoved) ProtoMessage()    {}
-func (*EventScopeRemoved) Descriptor() ([]byte, []int) {
+func (m *EventScopeDeleted) Reset()         { *m = EventScopeDeleted{} }
+func (m *EventScopeDeleted) String() string { return proto.CompactTextString(m) }
+func (*EventScopeDeleted) ProtoMessage()    {}
+func (*EventScopeDeleted) Descriptor() ([]byte, []int) {
 	return fileDescriptor_476cf6cf9459cf25, []int{3}
 }
-func (m *EventScopeRemoved) XXX_Unmarshal(b []byte) error {
+func (m *EventScopeDeleted) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *EventScopeRemoved) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *EventScopeDeleted) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_EventScopeRemoved.Marshal(b, m, deterministic)
+		return xxx_messageInfo_EventScopeDeleted.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -205,19 +205,19 @@ func (m *EventScopeRemoved) XXX_Marshal(b []byte, deterministic bool) ([]byte, e
 		return b[:n], nil
 	}
 }
-func (m *EventScopeRemoved) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventScopeRemoved.Merge(m, src)
+func (m *EventScopeDeleted) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventScopeDeleted.Merge(m, src)
 }
-func (m *EventScopeRemoved) XXX_Size() int {
+func (m *EventScopeDeleted) XXX_Size() int {
 	return m.Size()
 }
-func (m *EventScopeRemoved) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventScopeRemoved.DiscardUnknown(m)
+func (m *EventScopeDeleted) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventScopeDeleted.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_EventScopeRemoved proto.InternalMessageInfo
+var xxx_messageInfo_EventScopeDeleted proto.InternalMessageInfo
 
-func (m *EventScopeRemoved) GetScopeAddr() string {
+func (m *EventScopeDeleted) GetScopeAddr() string {
 	if m != nil {
 		return m.ScopeAddr
 	}
@@ -334,26 +334,26 @@ func (m *EventSessionUpdated) GetScopeAddr() string {
 	return ""
 }
 
-// EventSessionRemoved is an event message indicating a session has been removed.
-type EventSessionRemoved struct {
-	// session_addr is the bech32 address string of the session id that was removed.
+// EventSessionDeleted is an event message indicating a session has been deleted.
+type EventSessionDeleted struct {
+	// session_addr is the bech32 address string of the session id that was deleted.
 	SessionAddr string `protobuf:"bytes,1,opt,name=session_addr,json=sessionAddr,proto3" json:"session_addr,omitempty"`
 	// scope_addr is the bech32 address string of the scope id this session belongs to.
 	ScopeAddr string `protobuf:"bytes,2,opt,name=scope_addr,json=scopeAddr,proto3" json:"scope_addr,omitempty"`
 }
 
-func (m *EventSessionRemoved) Reset()         { *m = EventSessionRemoved{} }
-func (m *EventSessionRemoved) String() string { return proto.CompactTextString(m) }
-func (*EventSessionRemoved) ProtoMessage()    {}
-func (*EventSessionRemoved) Descriptor() ([]byte, []int) {
+func (m *EventSessionDeleted) Reset()         { *m = EventSessionDeleted{} }
+func (m *EventSessionDeleted) String() string { return proto.CompactTextString(m) }
+func (*EventSessionDeleted) ProtoMessage()    {}
+func (*EventSessionDeleted) Descriptor() ([]byte, []int) {
 	return fileDescriptor_476cf6cf9459cf25, []int{6}
 }
-func (m *EventSessionRemoved) XXX_Unmarshal(b []byte) error {
+func (m *EventSessionDeleted) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *EventSessionRemoved) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *EventSessionDeleted) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_EventSessionRemoved.Marshal(b, m, deterministic)
+		return xxx_messageInfo_EventSessionDeleted.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -363,26 +363,26 @@ func (m *EventSessionRemoved) XXX_Marshal(b []byte, deterministic bool) ([]byte,
 		return b[:n], nil
 	}
 }
-func (m *EventSessionRemoved) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventSessionRemoved.Merge(m, src)
+func (m *EventSessionDeleted) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventSessionDeleted.Merge(m, src)
 }
-func (m *EventSessionRemoved) XXX_Size() int {
+func (m *EventSessionDeleted) XXX_Size() int {
 	return m.Size()
 }
-func (m *EventSessionRemoved) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventSessionRemoved.DiscardUnknown(m)
+func (m *EventSessionDeleted) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventSessionDeleted.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_EventSessionRemoved proto.InternalMessageInfo
+var xxx_messageInfo_EventSessionDeleted proto.InternalMessageInfo
 
-func (m *EventSessionRemoved) GetSessionAddr() string {
+func (m *EventSessionDeleted) GetSessionAddr() string {
 	if m != nil {
 		return m.SessionAddr
 	}
 	return ""
 }
 
-func (m *EventSessionRemoved) GetScopeAddr() string {
+func (m *EventSessionDeleted) GetScopeAddr() string {
 	if m != nil {
 		return m.ScopeAddr
 	}
@@ -517,9 +517,9 @@ func (m *EventRecordUpdated) GetScopeAddr() string {
 	return ""
 }
 
-// EventRecordRemoved is an event message indicating a record has been removed.
-type EventRecordRemoved struct {
-	// record is the bech32 address string of the record id that was removed.
+// EventRecordDeleted is an event message indicating a record has been deleted.
+type EventRecordDeleted struct {
+	// record is the bech32 address string of the record id that was deleted.
 	RecordAddr string `protobuf:"bytes,1,opt,name=record_addr,json=recordAddr,proto3" json:"record_addr,omitempty"`
 	// session_addr is the bech32 address string of the session id this record belongs to.
 	SessionAddr string `protobuf:"bytes,2,opt,name=session_addr,json=sessionAddr,proto3" json:"session_addr,omitempty"`
@@ -527,18 +527,18 @@ type EventRecordRemoved struct {
 	ScopeAddr string `protobuf:"bytes,3,opt,name=scope_addr,json=scopeAddr,proto3" json:"scope_addr,omitempty"`
 }
 
-func (m *EventRecordRemoved) Reset()         { *m = EventRecordRemoved{} }
-func (m *EventRecordRemoved) String() string { return proto.CompactTextString(m) }
-func (*EventRecordRemoved) ProtoMessage()    {}
-func (*EventRecordRemoved) Descriptor() ([]byte, []int) {
+func (m *EventRecordDeleted) Reset()         { *m = EventRecordDeleted{} }
+func (m *EventRecordDeleted) String() string { return proto.CompactTextString(m) }
+func (*EventRecordDeleted) ProtoMessage()    {}
+func (*EventRecordDeleted) Descriptor() ([]byte, []int) {
 	return fileDescriptor_476cf6cf9459cf25, []int{9}
 }
-func (m *EventRecordRemoved) XXX_Unmarshal(b []byte) error {
+func (m *EventRecordDeleted) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *EventRecordRemoved) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *EventRecordDeleted) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_EventRecordRemoved.Marshal(b, m, deterministic)
+		return xxx_messageInfo_EventRecordDeleted.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -548,33 +548,33 @@ func (m *EventRecordRemoved) XXX_Marshal(b []byte, deterministic bool) ([]byte, 
 		return b[:n], nil
 	}
 }
-func (m *EventRecordRemoved) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventRecordRemoved.Merge(m, src)
+func (m *EventRecordDeleted) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventRecordDeleted.Merge(m, src)
 }
-func (m *EventRecordRemoved) XXX_Size() int {
+func (m *EventRecordDeleted) XXX_Size() int {
 	return m.Size()
 }
-func (m *EventRecordRemoved) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventRecordRemoved.DiscardUnknown(m)
+func (m *EventRecordDeleted) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventRecordDeleted.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_EventRecordRemoved proto.InternalMessageInfo
+var xxx_messageInfo_EventRecordDeleted proto.InternalMessageInfo
 
-func (m *EventRecordRemoved) GetRecordAddr() string {
+func (m *EventRecordDeleted) GetRecordAddr() string {
 	if m != nil {
 		return m.RecordAddr
 	}
 	return ""
 }
 
-func (m *EventRecordRemoved) GetSessionAddr() string {
+func (m *EventRecordDeleted) GetSessionAddr() string {
 	if m != nil {
 		return m.SessionAddr
 	}
 	return ""
 }
 
-func (m *EventRecordRemoved) GetScopeAddr() string {
+func (m *EventRecordDeleted) GetScopeAddr() string {
 	if m != nil {
 		return m.ScopeAddr
 	}
@@ -675,25 +675,25 @@ func (m *EventScopeSpecificationUpdated) GetScopeSpecificationAddr() string {
 	return ""
 }
 
-// EventScopeSpecificationRemoved is an event message indicating a scope specification has been removed.
-type EventScopeSpecificationRemoved struct {
+// EventScopeSpecificationDeleted is an event message indicating a scope specification has been deleted.
+type EventScopeSpecificationDeleted struct {
 	// scope_specification_addr is the bech32 address string of the specification id of the scope specification that was
-	// removed.
+	// deleted.
 	ScopeSpecificationAddr string `protobuf:"bytes,1,opt,name=scope_specification_addr,json=scopeSpecificationAddr,proto3" json:"scope_specification_addr,omitempty"`
 }
 
-func (m *EventScopeSpecificationRemoved) Reset()         { *m = EventScopeSpecificationRemoved{} }
-func (m *EventScopeSpecificationRemoved) String() string { return proto.CompactTextString(m) }
-func (*EventScopeSpecificationRemoved) ProtoMessage()    {}
-func (*EventScopeSpecificationRemoved) Descriptor() ([]byte, []int) {
+func (m *EventScopeSpecificationDeleted) Reset()         { *m = EventScopeSpecificationDeleted{} }
+func (m *EventScopeSpecificationDeleted) String() string { return proto.CompactTextString(m) }
+func (*EventScopeSpecificationDeleted) ProtoMessage()    {}
+func (*EventScopeSpecificationDeleted) Descriptor() ([]byte, []int) {
 	return fileDescriptor_476cf6cf9459cf25, []int{12}
 }
-func (m *EventScopeSpecificationRemoved) XXX_Unmarshal(b []byte) error {
+func (m *EventScopeSpecificationDeleted) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *EventScopeSpecificationRemoved) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *EventScopeSpecificationDeleted) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_EventScopeSpecificationRemoved.Marshal(b, m, deterministic)
+		return xxx_messageInfo_EventScopeSpecificationDeleted.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -703,19 +703,19 @@ func (m *EventScopeSpecificationRemoved) XXX_Marshal(b []byte, deterministic boo
 		return b[:n], nil
 	}
 }
-func (m *EventScopeSpecificationRemoved) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventScopeSpecificationRemoved.Merge(m, src)
+func (m *EventScopeSpecificationDeleted) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventScopeSpecificationDeleted.Merge(m, src)
 }
-func (m *EventScopeSpecificationRemoved) XXX_Size() int {
+func (m *EventScopeSpecificationDeleted) XXX_Size() int {
 	return m.Size()
 }
-func (m *EventScopeSpecificationRemoved) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventScopeSpecificationRemoved.DiscardUnknown(m)
+func (m *EventScopeSpecificationDeleted) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventScopeSpecificationDeleted.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_EventScopeSpecificationRemoved proto.InternalMessageInfo
+var xxx_messageInfo_EventScopeSpecificationDeleted proto.InternalMessageInfo
 
-func (m *EventScopeSpecificationRemoved) GetScopeSpecificationAddr() string {
+func (m *EventScopeSpecificationDeleted) GetScopeSpecificationAddr() string {
 	if m != nil {
 		return m.ScopeSpecificationAddr
 	}
@@ -816,25 +816,25 @@ func (m *EventContractSpecificationUpdated) GetContractSpecificationAddr() strin
 	return ""
 }
 
-// EventContractSpecificationRemoved is an event message indicating a contract specification has been removed.
-type EventContractSpecificationRemoved struct {
+// EventContractSpecificationDeleted is an event message indicating a contract specification has been deleted.
+type EventContractSpecificationDeleted struct {
 	// contract_specification_addr is the bech32 address string of the specification id of the contract specification that
-	// was removed.
+	// was deleted.
 	ContractSpecificationAddr string `protobuf:"bytes,1,opt,name=contract_specification_addr,json=contractSpecificationAddr,proto3" json:"contract_specification_addr,omitempty"`
 }
 
-func (m *EventContractSpecificationRemoved) Reset()         { *m = EventContractSpecificationRemoved{} }
-func (m *EventContractSpecificationRemoved) String() string { return proto.CompactTextString(m) }
-func (*EventContractSpecificationRemoved) ProtoMessage()    {}
-func (*EventContractSpecificationRemoved) Descriptor() ([]byte, []int) {
+func (m *EventContractSpecificationDeleted) Reset()         { *m = EventContractSpecificationDeleted{} }
+func (m *EventContractSpecificationDeleted) String() string { return proto.CompactTextString(m) }
+func (*EventContractSpecificationDeleted) ProtoMessage()    {}
+func (*EventContractSpecificationDeleted) Descriptor() ([]byte, []int) {
 	return fileDescriptor_476cf6cf9459cf25, []int{15}
 }
-func (m *EventContractSpecificationRemoved) XXX_Unmarshal(b []byte) error {
+func (m *EventContractSpecificationDeleted) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *EventContractSpecificationRemoved) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *EventContractSpecificationDeleted) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_EventContractSpecificationRemoved.Marshal(b, m, deterministic)
+		return xxx_messageInfo_EventContractSpecificationDeleted.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -844,19 +844,19 @@ func (m *EventContractSpecificationRemoved) XXX_Marshal(b []byte, deterministic 
 		return b[:n], nil
 	}
 }
-func (m *EventContractSpecificationRemoved) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventContractSpecificationRemoved.Merge(m, src)
+func (m *EventContractSpecificationDeleted) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventContractSpecificationDeleted.Merge(m, src)
 }
-func (m *EventContractSpecificationRemoved) XXX_Size() int {
+func (m *EventContractSpecificationDeleted) XXX_Size() int {
 	return m.Size()
 }
-func (m *EventContractSpecificationRemoved) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventContractSpecificationRemoved.DiscardUnknown(m)
+func (m *EventContractSpecificationDeleted) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventContractSpecificationDeleted.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_EventContractSpecificationRemoved proto.InternalMessageInfo
+var xxx_messageInfo_EventContractSpecificationDeleted proto.InternalMessageInfo
 
-func (m *EventContractSpecificationRemoved) GetContractSpecificationAddr() string {
+func (m *EventContractSpecificationDeleted) GetContractSpecificationAddr() string {
 	if m != nil {
 		return m.ContractSpecificationAddr
 	}
@@ -977,28 +977,28 @@ func (m *EventRecordSpecificationUpdated) GetContractSpecificationAddr() string 
 	return ""
 }
 
-// EventRecordSpecificationRemoved is an event message indicating a record specification has been removed.
-type EventRecordSpecificationRemoved struct {
+// EventRecordSpecificationDeleted is an event message indicating a record specification has been deleted.
+type EventRecordSpecificationDeleted struct {
 	// record_specification_addr is the bech32 address string of the specification id of the record specification that was
-	// removed.
+	// deleted.
 	RecordSpecificationAddr string `protobuf:"bytes,1,opt,name=record_specification_addr,json=recordSpecificationAddr,proto3" json:"record_specification_addr,omitempty"`
 	// contract_specification_addr is the bech32 address string of the contract specification id this record specification
 	// belongs to.
 	ContractSpecificationAddr string `protobuf:"bytes,2,opt,name=contract_specification_addr,json=contractSpecificationAddr,proto3" json:"contract_specification_addr,omitempty"`
 }
 
-func (m *EventRecordSpecificationRemoved) Reset()         { *m = EventRecordSpecificationRemoved{} }
-func (m *EventRecordSpecificationRemoved) String() string { return proto.CompactTextString(m) }
-func (*EventRecordSpecificationRemoved) ProtoMessage()    {}
-func (*EventRecordSpecificationRemoved) Descriptor() ([]byte, []int) {
+func (m *EventRecordSpecificationDeleted) Reset()         { *m = EventRecordSpecificationDeleted{} }
+func (m *EventRecordSpecificationDeleted) String() string { return proto.CompactTextString(m) }
+func (*EventRecordSpecificationDeleted) ProtoMessage()    {}
+func (*EventRecordSpecificationDeleted) Descriptor() ([]byte, []int) {
 	return fileDescriptor_476cf6cf9459cf25, []int{18}
 }
-func (m *EventRecordSpecificationRemoved) XXX_Unmarshal(b []byte) error {
+func (m *EventRecordSpecificationDeleted) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *EventRecordSpecificationRemoved) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *EventRecordSpecificationDeleted) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_EventRecordSpecificationRemoved.Marshal(b, m, deterministic)
+		return xxx_messageInfo_EventRecordSpecificationDeleted.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -1008,26 +1008,26 @@ func (m *EventRecordSpecificationRemoved) XXX_Marshal(b []byte, deterministic bo
 		return b[:n], nil
 	}
 }
-func (m *EventRecordSpecificationRemoved) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventRecordSpecificationRemoved.Merge(m, src)
+func (m *EventRecordSpecificationDeleted) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventRecordSpecificationDeleted.Merge(m, src)
 }
-func (m *EventRecordSpecificationRemoved) XXX_Size() int {
+func (m *EventRecordSpecificationDeleted) XXX_Size() int {
 	return m.Size()
 }
-func (m *EventRecordSpecificationRemoved) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventRecordSpecificationRemoved.DiscardUnknown(m)
+func (m *EventRecordSpecificationDeleted) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventRecordSpecificationDeleted.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_EventRecordSpecificationRemoved proto.InternalMessageInfo
+var xxx_messageInfo_EventRecordSpecificationDeleted proto.InternalMessageInfo
 
-func (m *EventRecordSpecificationRemoved) GetRecordSpecificationAddr() string {
+func (m *EventRecordSpecificationDeleted) GetRecordSpecificationAddr() string {
 	if m != nil {
 		return m.RecordSpecificationAddr
 	}
 	return ""
 }
 
-func (m *EventRecordSpecificationRemoved) GetContractSpecificationAddr() string {
+func (m *EventRecordSpecificationDeleted) GetContractSpecificationAddr() string {
 	if m != nil {
 		return m.ContractSpecificationAddr
 	}
@@ -1153,26 +1153,26 @@ func (m *EventOSLocatorUpdated) GetUriReplaced() string {
 	return ""
 }
 
-// EventOSLocatorRemoved is an event message indicating an object store locator has been removed.
-type EventOSLocatorRemoved struct {
-	// address is the address in the object store locator that was removed.
+// EventOSLocatorDeleted is an event message indicating an object store locator has been deleted.
+type EventOSLocatorDeleted struct {
+	// address is the address in the object store locator that was deleted.
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	// uri is the uri in the object store locator that was removed.
+	// uri is the uri in the object store locator that was deleted.
 	Uri string `protobuf:"bytes,2,opt,name=uri,proto3" json:"uri,omitempty"`
 }
 
-func (m *EventOSLocatorRemoved) Reset()         { *m = EventOSLocatorRemoved{} }
-func (m *EventOSLocatorRemoved) String() string { return proto.CompactTextString(m) }
-func (*EventOSLocatorRemoved) ProtoMessage()    {}
-func (*EventOSLocatorRemoved) Descriptor() ([]byte, []int) {
+func (m *EventOSLocatorDeleted) Reset()         { *m = EventOSLocatorDeleted{} }
+func (m *EventOSLocatorDeleted) String() string { return proto.CompactTextString(m) }
+func (*EventOSLocatorDeleted) ProtoMessage()    {}
+func (*EventOSLocatorDeleted) Descriptor() ([]byte, []int) {
 	return fileDescriptor_476cf6cf9459cf25, []int{21}
 }
-func (m *EventOSLocatorRemoved) XXX_Unmarshal(b []byte) error {
+func (m *EventOSLocatorDeleted) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *EventOSLocatorRemoved) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *EventOSLocatorDeleted) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_EventOSLocatorRemoved.Marshal(b, m, deterministic)
+		return xxx_messageInfo_EventOSLocatorDeleted.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -1182,26 +1182,26 @@ func (m *EventOSLocatorRemoved) XXX_Marshal(b []byte, deterministic bool) ([]byt
 		return b[:n], nil
 	}
 }
-func (m *EventOSLocatorRemoved) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventOSLocatorRemoved.Merge(m, src)
+func (m *EventOSLocatorDeleted) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventOSLocatorDeleted.Merge(m, src)
 }
-func (m *EventOSLocatorRemoved) XXX_Size() int {
+func (m *EventOSLocatorDeleted) XXX_Size() int {
 	return m.Size()
 }
-func (m *EventOSLocatorRemoved) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventOSLocatorRemoved.DiscardUnknown(m)
+func (m *EventOSLocatorDeleted) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventOSLocatorDeleted.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_EventOSLocatorRemoved proto.InternalMessageInfo
+var xxx_messageInfo_EventOSLocatorDeleted proto.InternalMessageInfo
 
-func (m *EventOSLocatorRemoved) GetAddress() string {
+func (m *EventOSLocatorDeleted) GetAddress() string {
 	if m != nil {
 		return m.Address
 	}
 	return ""
 }
 
-func (m *EventOSLocatorRemoved) GetUri() string {
+func (m *EventOSLocatorDeleted) GetUri() string {
 	if m != nil {
 		return m.Uri
 	}
@@ -1212,25 +1212,25 @@ func init() {
 	proto.RegisterType((*EventTxCompleted)(nil), "provenance.metadata.v1.EventTxCompleted")
 	proto.RegisterType((*EventScopeCreated)(nil), "provenance.metadata.v1.EventScopeCreated")
 	proto.RegisterType((*EventScopeUpdated)(nil), "provenance.metadata.v1.EventScopeUpdated")
-	proto.RegisterType((*EventScopeRemoved)(nil), "provenance.metadata.v1.EventScopeRemoved")
+	proto.RegisterType((*EventScopeDeleted)(nil), "provenance.metadata.v1.EventScopeDeleted")
 	proto.RegisterType((*EventSessionCreated)(nil), "provenance.metadata.v1.EventSessionCreated")
 	proto.RegisterType((*EventSessionUpdated)(nil), "provenance.metadata.v1.EventSessionUpdated")
-	proto.RegisterType((*EventSessionRemoved)(nil), "provenance.metadata.v1.EventSessionRemoved")
+	proto.RegisterType((*EventSessionDeleted)(nil), "provenance.metadata.v1.EventSessionDeleted")
 	proto.RegisterType((*EventRecordCreated)(nil), "provenance.metadata.v1.EventRecordCreated")
 	proto.RegisterType((*EventRecordUpdated)(nil), "provenance.metadata.v1.EventRecordUpdated")
-	proto.RegisterType((*EventRecordRemoved)(nil), "provenance.metadata.v1.EventRecordRemoved")
+	proto.RegisterType((*EventRecordDeleted)(nil), "provenance.metadata.v1.EventRecordDeleted")
 	proto.RegisterType((*EventScopeSpecificationCreated)(nil), "provenance.metadata.v1.EventScopeSpecificationCreated")
 	proto.RegisterType((*EventScopeSpecificationUpdated)(nil), "provenance.metadata.v1.EventScopeSpecificationUpdated")
-	proto.RegisterType((*EventScopeSpecificationRemoved)(nil), "provenance.metadata.v1.EventScopeSpecificationRemoved")
+	proto.RegisterType((*EventScopeSpecificationDeleted)(nil), "provenance.metadata.v1.EventScopeSpecificationDeleted")
 	proto.RegisterType((*EventContractSpecificationCreated)(nil), "provenance.metadata.v1.EventContractSpecificationCreated")
 	proto.RegisterType((*EventContractSpecificationUpdated)(nil), "provenance.metadata.v1.EventContractSpecificationUpdated")
-	proto.RegisterType((*EventContractSpecificationRemoved)(nil), "provenance.metadata.v1.EventContractSpecificationRemoved")
+	proto.RegisterType((*EventContractSpecificationDeleted)(nil), "provenance.metadata.v1.EventContractSpecificationDeleted")
 	proto.RegisterType((*EventRecordSpecificationCreated)(nil), "provenance.metadata.v1.EventRecordSpecificationCreated")
 	proto.RegisterType((*EventRecordSpecificationUpdated)(nil), "provenance.metadata.v1.EventRecordSpecificationUpdated")
-	proto.RegisterType((*EventRecordSpecificationRemoved)(nil), "provenance.metadata.v1.EventRecordSpecificationRemoved")
+	proto.RegisterType((*EventRecordSpecificationDeleted)(nil), "provenance.metadata.v1.EventRecordSpecificationDeleted")
 	proto.RegisterType((*EventOSLocatorCreated)(nil), "provenance.metadata.v1.EventOSLocatorCreated")
 	proto.RegisterType((*EventOSLocatorUpdated)(nil), "provenance.metadata.v1.EventOSLocatorUpdated")
-	proto.RegisterType((*EventOSLocatorRemoved)(nil), "provenance.metadata.v1.EventOSLocatorRemoved")
+	proto.RegisterType((*EventOSLocatorDeleted)(nil), "provenance.metadata.v1.EventOSLocatorDeleted")
 }
 
 func init() {
@@ -1238,41 +1238,41 @@ func init() {
 }
 
 var fileDescriptor_476cf6cf9459cf25 = []byte{
-	// 536 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x96, 0x41, 0x6f, 0xd3, 0x30,
-	0x14, 0xc7, 0x9b, 0x56, 0xda, 0xe8, 0x2b, 0x87, 0x11, 0x44, 0x49, 0x41, 0x64, 0x5b, 0xb9, 0xec,
-	0x42, 0xa2, 0x01, 0x07, 0xc4, 0x01, 0x09, 0x2a, 0x6e, 0x48, 0xa0, 0x14, 0x84, 0xb4, 0xcb, 0xf0,
-	0xec, 0xb7, 0x61, 0xd1, 0xc4, 0x91, 0xed, 0x84, 0xf1, 0x2d, 0xf8, 0x02, 0x7c, 0x1f, 0x8e, 0x3b,
-	0x72, 0x44, 0xed, 0x17, 0x41, 0x71, 0x63, 0x1a, 0xda, 0x8e, 0xa8, 0x94, 0x0d, 0x6e, 0x79, 0xcf,
-	0x7e, 0xbf, 0xff, 0x3f, 0xff, 0x58, 0x91, 0xe1, 0x6e, 0x2a, 0x45, 0x8e, 0x09, 0x49, 0x28, 0x86,
-	0x31, 0x6a, 0xc2, 0x88, 0x26, 0x61, 0xbe, 0x1f, 0x62, 0x8e, 0x89, 0x56, 0x41, 0x2a, 0x85, 0x16,
-	0x6e, 0x77, 0xb6, 0x29, 0xb0, 0x9b, 0x82, 0x7c, 0xbf, 0xff, 0x0e, 0xb6, 0x9e, 0x17, 0xfb, 0x5e,
-	0x9f, 0x0e, 0x44, 0x9c, 0x8e, 0x50, 0x23, 0x73, 0xbb, 0xb0, 0x11, 0x0b, 0x96, 0x8d, 0xd0, 0x73,
-	0x76, 0x9c, 0xbd, 0x76, 0x54, 0x56, 0xee, 0x2d, 0xb8, 0x82, 0x09, 0x4b, 0x05, 0x4f, 0xb4, 0xd7,
-	0x34, 0x2b, 0x3f, 0x6b, 0xd7, 0x83, 0x4d, 0xc5, 0x4f, 0x12, 0x94, 0xca, 0x6b, 0xed, 0xb4, 0xf6,
-	0xda, 0x91, 0x2d, 0xfb, 0xf7, 0xe1, 0x9a, 0x51, 0x18, 0x52, 0x91, 0xe2, 0x40, 0x22, 0x29, 0x24,
-	0xee, 0x00, 0xa8, 0xa2, 0x3e, 0x24, 0x8c, 0xc9, 0x52, 0xa6, 0x6d, 0x3a, 0x4f, 0x19, 0x93, 0xbf,
-	0xce, 0xbc, 0x49, 0xd9, 0xca, 0x33, 0x11, 0xc6, 0x22, 0xaf, 0x9f, 0x79, 0x0b, 0xd7, 0xa7, 0x33,
-	0xa8, 0x14, 0x17, 0x89, 0x75, 0xb7, 0x0b, 0x57, 0xd5, 0xb4, 0x53, 0x9d, 0xeb, 0x94, 0xbd, 0x62,
-	0x72, 0x0e, 0xdc, 0xac, 0x01, 0xdb, 0x57, 0xf8, 0xeb, 0x60, 0xfb, 0x9e, 0xeb, 0x83, 0x3f, 0x82,
-	0x6b, 0xc0, 0x11, 0x52, 0x21, 0x99, 0x4d, 0x62, 0x1b, 0x3a, 0xd2, 0x34, 0xaa, 0x58, 0x98, 0xb6,
-	0x0c, 0x75, 0x5e, 0xb8, 0x59, 0x27, 0xdc, 0xfa, 0xbd, 0xb0, 0x4d, 0xea, 0xd2, 0x85, 0x6d, 0x92,
-	0x97, 0x20, 0x7c, 0x00, 0xfe, 0xec, 0xa4, 0x0e, 0x53, 0xa4, 0xfc, 0x98, 0x53, 0xa2, 0x2b, 0x07,
-	0xf0, 0x11, 0x78, 0x53, 0x80, 0xaa, 0xae, 0x56, 0x1d, 0x75, 0xd5, 0xc2, 0x70, 0x0d, 0xdb, 0x26,
-	0x7b, 0x11, 0x6c, 0x1b, 0xde, 0x9f, 0xb3, 0x29, 0xec, 0x1a, 0xf6, 0x40, 0x24, 0x5a, 0x12, 0xaa,
-	0x97, 0xc6, 0xf2, 0x04, 0x6e, 0xd3, 0x72, 0xfd, 0x7c, 0x85, 0x1e, 0x5d, 0x86, 0xa8, 0x17, 0xb1,
-	0xf9, 0x5c, 0xa8, 0x88, 0x0d, 0x6a, 0x5d, 0x91, 0x2f, 0x0e, 0x6c, 0x57, 0x0e, 0xef, 0xd2, 0xb4,
-	0x1e, 0x43, 0xaf, 0x3c, 0xc9, 0xe7, 0x2a, 0xdc, 0x94, 0x8b, 0xe3, 0xe6, 0x04, 0xd7, 0xf8, 0x6b,
-	0xae, 0xe3, 0xcf, 0x06, 0xfd, 0xbf, 0xfa, 0xb3, 0xdf, 0xe8, 0x5f, 0xfa, 0x1b, 0xc0, 0x0d, 0x63,
-	0xef, 0xe5, 0xf0, 0x85, 0xa0, 0x44, 0x0b, 0x69, 0x3f, 0xaa, 0x07, 0x9b, 0x05, 0x01, 0x95, 0x2a,
-	0x2d, 0xd8, 0xd2, 0xdd, 0x82, 0x56, 0x26, 0x79, 0x89, 0x2e, 0x1e, 0xfb, 0xc7, 0xf3, 0x10, 0x9b,
-	0xfc, 0x0a, 0x90, 0xe2, 0x77, 0x97, 0x49, 0x7e, 0x28, 0x31, 0x1d, 0x11, 0x8a, 0xac, 0xfc, 0x9b,
-	0x75, 0x32, 0xc9, 0xa3, 0xb2, 0xb5, 0x68, 0xd6, 0x26, 0xb8, 0x82, 0xce, 0xb3, 0x0f, 0x5f, 0xc7,
-	0xbe, 0x73, 0x36, 0xf6, 0x9d, 0xef, 0x63, 0xdf, 0xf9, 0x3c, 0xf1, 0x1b, 0x67, 0x13, 0xbf, 0xf1,
-	0x6d, 0xe2, 0x37, 0xa0, 0xc7, 0x45, 0xb0, 0xfc, 0xf6, 0xf2, 0xca, 0x39, 0x78, 0x78, 0xc2, 0xf5,
-	0xfb, 0xec, 0x28, 0xa0, 0x22, 0x0e, 0x67, 0x9b, 0xee, 0x71, 0x51, 0xa9, 0xc2, 0xd3, 0xd9, 0xbd,
-	0x48, 0x7f, 0x4a, 0x51, 0x1d, 0x6d, 0x98, 0x4b, 0xd1, 0x83, 0x1f, 0x01, 0x00, 0x00, 0xff, 0xff,
-	0xa1, 0x65, 0xde, 0x30, 0x3b, 0x09, 0x00, 0x00,
+	// 538 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x96, 0xc1, 0x6e, 0x13, 0x3d,
+	0x10, 0xc7, 0xb3, 0x89, 0xd4, 0x7e, 0x99, 0x7c, 0x87, 0xb2, 0x88, 0xb0, 0x01, 0xb1, 0x6d, 0xc3,
+	0xa5, 0x17, 0x76, 0x55, 0xe0, 0x80, 0x38, 0x20, 0x41, 0xe0, 0x86, 0x04, 0x4a, 0x40, 0x48, 0xbd,
+	0x14, 0xd7, 0x9e, 0x16, 0x8b, 0x64, 0xbd, 0xb2, 0xbd, 0xa1, 0xbc, 0x05, 0x2f, 0xc0, 0xfb, 0x70,
+	0xec, 0x91, 0x23, 0x4a, 0x5e, 0x04, 0xad, 0xd7, 0x26, 0x4b, 0x92, 0xb2, 0x0a, 0xa1, 0x85, 0xdb,
+	0xce, 0xd8, 0xf3, 0xfb, 0x8f, 0xff, 0x3b, 0xb2, 0x0c, 0xb7, 0x53, 0x29, 0xc6, 0x98, 0x90, 0x84,
+	0x62, 0x3c, 0x42, 0x4d, 0x18, 0xd1, 0x24, 0x1e, 0xef, 0xc7, 0x38, 0xc6, 0x44, 0xab, 0x28, 0x95,
+	0x42, 0x0b, 0xbf, 0x3d, 0xdb, 0x14, 0xb9, 0x4d, 0xd1, 0x78, 0xbf, 0xfb, 0x16, 0xb6, 0x9e, 0xe5,
+	0xfb, 0x5e, 0x9d, 0xf6, 0xc4, 0x28, 0x1d, 0xa2, 0x46, 0xe6, 0xb7, 0x61, 0x63, 0x24, 0x58, 0x36,
+	0xc4, 0xc0, 0xdb, 0xf1, 0xf6, 0x9a, 0x7d, 0x1b, 0xf9, 0x37, 0xe0, 0x3f, 0x4c, 0x58, 0x2a, 0x78,
+	0xa2, 0x83, 0xba, 0x59, 0xf9, 0x11, 0xfb, 0x01, 0x6c, 0x2a, 0x7e, 0x92, 0xa0, 0x54, 0x41, 0x63,
+	0xa7, 0xb1, 0xd7, 0xec, 0xbb, 0xb0, 0x7b, 0x17, 0xae, 0x18, 0x85, 0x01, 0x15, 0x29, 0xf6, 0x24,
+	0x92, 0x5c, 0xe2, 0x16, 0x80, 0xca, 0xe3, 0x43, 0xc2, 0x98, 0xb4, 0x32, 0x4d, 0x93, 0x79, 0xcc,
+	0x98, 0xfc, 0xb9, 0xe6, 0x75, 0xca, 0x56, 0xae, 0x79, 0x8a, 0xc5, 0x51, 0x2a, 0x6a, 0xde, 0xc0,
+	0xd5, 0xa2, 0x06, 0x95, 0xe2, 0x22, 0x71, 0xdd, 0xed, 0xc2, 0xff, 0xaa, 0xc8, 0x94, 0xeb, 0x5a,
+	0x36, 0x97, 0x57, 0xce, 0x81, 0xeb, 0x15, 0x60, 0x77, 0x84, 0x3f, 0x0e, 0x76, 0xe7, 0x5c, 0x1f,
+	0xfc, 0x01, 0x7c, 0x03, 0xee, 0x23, 0x15, 0x92, 0x39, 0x27, 0xb6, 0xa1, 0x25, 0x4d, 0xa2, 0x8c,
+	0x85, 0x22, 0x65, 0xa8, 0xf3, 0xc2, 0xf5, 0x2a, 0xe1, 0xc6, 0xaf, 0x85, 0x9d, 0x53, 0x97, 0x2e,
+	0xec, 0x9c, 0xbc, 0x04, 0xe1, 0x03, 0x08, 0x67, 0x93, 0x3a, 0x48, 0x91, 0xf2, 0x63, 0x4e, 0x89,
+	0x2e, 0x0d, 0xe0, 0x03, 0x08, 0x0a, 0x80, 0x2a, 0xaf, 0x96, 0x3b, 0x6a, 0xab, 0x85, 0xe2, 0x0a,
+	0xb6, 0x73, 0xf6, 0x22, 0xd8, 0xce, 0xbc, 0xdf, 0x67, 0x53, 0xd8, 0x35, 0xec, 0x9e, 0x48, 0xb4,
+	0x24, 0x54, 0x2f, 0xb5, 0xe5, 0x11, 0xdc, 0xa4, 0x76, 0xfd, 0x7c, 0x85, 0x0e, 0x5d, 0x86, 0xa8,
+	0x16, 0x71, 0xfe, 0x5c, 0xa8, 0x88, 0x33, 0x6a, 0x5d, 0x91, 0xcf, 0x1e, 0x6c, 0x97, 0x86, 0x77,
+	0xa9, 0x5b, 0x0f, 0xa1, 0x63, 0x27, 0xf9, 0x5c, 0x85, 0xeb, 0x72, 0xb1, 0xdc, 0x4c, 0x70, 0x45,
+	0x7f, 0xf5, 0x75, 0xfa, 0x73, 0x46, 0xff, 0xab, 0xfd, 0xb9, 0x7f, 0xf4, 0x37, 0xfb, 0xeb, 0xc1,
+	0x35, 0xd3, 0xde, 0x8b, 0xc1, 0x73, 0x41, 0x89, 0x16, 0xd2, 0xfd, 0xd4, 0x00, 0x36, 0x73, 0x02,
+	0x2a, 0x65, 0x5b, 0x70, 0xa1, 0xbf, 0x05, 0x8d, 0x4c, 0x72, 0x8b, 0xce, 0x3f, 0xbb, 0xc7, 0xf3,
+	0x10, 0xe7, 0xfc, 0x0a, 0x90, 0xfc, 0xba, 0xcb, 0x24, 0x3f, 0x94, 0x98, 0x0e, 0x09, 0x45, 0x66,
+	0x6f, 0xb3, 0x56, 0x26, 0x79, 0xdf, 0xa6, 0x16, 0x9b, 0x75, 0x0e, 0xae, 0xa0, 0xf3, 0xe4, 0xfd,
+	0x97, 0x49, 0xe8, 0x9d, 0x4d, 0x42, 0xef, 0xdb, 0x24, 0xf4, 0x3e, 0x4d, 0xc3, 0xda, 0xd9, 0x34,
+	0xac, 0x7d, 0x9d, 0x86, 0x35, 0xe8, 0x70, 0x11, 0x2d, 0x7f, 0xbd, 0xbc, 0xf4, 0x0e, 0xee, 0x9f,
+	0x70, 0xfd, 0x2e, 0x3b, 0x8a, 0xa8, 0x18, 0xc5, 0xb3, 0x4d, 0x77, 0xb8, 0x28, 0x45, 0xf1, 0xe9,
+	0xec, 0x5d, 0xa4, 0x3f, 0xa6, 0xa8, 0x8e, 0x36, 0xcc, 0xa3, 0xe8, 0xde, 0xf7, 0x00, 0x00, 0x00,
+	0xff, 0xff, 0x84, 0x86, 0x7e, 0xe2, 0x3b, 0x09, 0x00, 0x00,
 }
 
 func (m *EventTxCompleted) Marshal() (dAtA []byte, err error) {
@@ -1381,7 +1381,7 @@ func (m *EventScopeUpdated) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *EventScopeRemoved) Marshal() (dAtA []byte, err error) {
+func (m *EventScopeDeleted) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1391,12 +1391,12 @@ func (m *EventScopeRemoved) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *EventScopeRemoved) MarshalTo(dAtA []byte) (int, error) {
+func (m *EventScopeDeleted) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *EventScopeRemoved) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *EventScopeDeleted) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1485,7 +1485,7 @@ func (m *EventSessionUpdated) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *EventSessionRemoved) Marshal() (dAtA []byte, err error) {
+func (m *EventSessionDeleted) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1495,12 +1495,12 @@ func (m *EventSessionRemoved) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *EventSessionRemoved) MarshalTo(dAtA []byte) (int, error) {
+func (m *EventSessionDeleted) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *EventSessionRemoved) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *EventSessionDeleted) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1610,7 +1610,7 @@ func (m *EventRecordUpdated) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *EventRecordRemoved) Marshal() (dAtA []byte, err error) {
+func (m *EventRecordDeleted) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1620,12 +1620,12 @@ func (m *EventRecordRemoved) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *EventRecordRemoved) MarshalTo(dAtA []byte) (int, error) {
+func (m *EventRecordDeleted) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *EventRecordRemoved) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *EventRecordDeleted) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1714,7 +1714,7 @@ func (m *EventScopeSpecificationUpdated) MarshalToSizedBuffer(dAtA []byte) (int,
 	return len(dAtA) - i, nil
 }
 
-func (m *EventScopeSpecificationRemoved) Marshal() (dAtA []byte, err error) {
+func (m *EventScopeSpecificationDeleted) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1724,12 +1724,12 @@ func (m *EventScopeSpecificationRemoved) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *EventScopeSpecificationRemoved) MarshalTo(dAtA []byte) (int, error) {
+func (m *EventScopeSpecificationDeleted) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *EventScopeSpecificationRemoved) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *EventScopeSpecificationDeleted) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1804,7 +1804,7 @@ func (m *EventContractSpecificationUpdated) MarshalToSizedBuffer(dAtA []byte) (i
 	return len(dAtA) - i, nil
 }
 
-func (m *EventContractSpecificationRemoved) Marshal() (dAtA []byte, err error) {
+func (m *EventContractSpecificationDeleted) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1814,12 +1814,12 @@ func (m *EventContractSpecificationRemoved) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *EventContractSpecificationRemoved) MarshalTo(dAtA []byte) (int, error) {
+func (m *EventContractSpecificationDeleted) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *EventContractSpecificationRemoved) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *EventContractSpecificationDeleted) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1908,7 +1908,7 @@ func (m *EventRecordSpecificationUpdated) MarshalToSizedBuffer(dAtA []byte) (int
 	return len(dAtA) - i, nil
 }
 
-func (m *EventRecordSpecificationRemoved) Marshal() (dAtA []byte, err error) {
+func (m *EventRecordSpecificationDeleted) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1918,12 +1918,12 @@ func (m *EventRecordSpecificationRemoved) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *EventRecordSpecificationRemoved) MarshalTo(dAtA []byte) (int, error) {
+func (m *EventRecordSpecificationDeleted) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *EventRecordSpecificationRemoved) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *EventRecordSpecificationDeleted) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2026,7 +2026,7 @@ func (m *EventOSLocatorUpdated) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *EventOSLocatorRemoved) Marshal() (dAtA []byte, err error) {
+func (m *EventOSLocatorDeleted) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2036,12 +2036,12 @@ func (m *EventOSLocatorRemoved) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *EventOSLocatorRemoved) MarshalTo(dAtA []byte) (int, error) {
+func (m *EventOSLocatorDeleted) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *EventOSLocatorRemoved) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *EventOSLocatorDeleted) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2123,7 +2123,7 @@ func (m *EventScopeUpdated) Size() (n int) {
 	return n
 }
 
-func (m *EventScopeRemoved) Size() (n int) {
+func (m *EventScopeDeleted) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2170,7 +2170,7 @@ func (m *EventSessionUpdated) Size() (n int) {
 	return n
 }
 
-func (m *EventSessionRemoved) Size() (n int) {
+func (m *EventSessionDeleted) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2229,7 +2229,7 @@ func (m *EventRecordUpdated) Size() (n int) {
 	return n
 }
 
-func (m *EventRecordRemoved) Size() (n int) {
+func (m *EventRecordDeleted) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2276,7 +2276,7 @@ func (m *EventScopeSpecificationUpdated) Size() (n int) {
 	return n
 }
 
-func (m *EventScopeSpecificationRemoved) Size() (n int) {
+func (m *EventScopeSpecificationDeleted) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2315,7 +2315,7 @@ func (m *EventContractSpecificationUpdated) Size() (n int) {
 	return n
 }
 
-func (m *EventContractSpecificationRemoved) Size() (n int) {
+func (m *EventContractSpecificationDeleted) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2362,7 +2362,7 @@ func (m *EventRecordSpecificationUpdated) Size() (n int) {
 	return n
 }
 
-func (m *EventRecordSpecificationRemoved) Size() (n int) {
+func (m *EventRecordSpecificationDeleted) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2417,7 +2417,7 @@ func (m *EventOSLocatorUpdated) Size() (n int) {
 	return n
 }
 
-func (m *EventOSLocatorRemoved) Size() (n int) {
+func (m *EventOSLocatorDeleted) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2750,7 +2750,7 @@ func (m *EventScopeUpdated) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *EventScopeRemoved) Unmarshal(dAtA []byte) error {
+func (m *EventScopeDeleted) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2773,10 +2773,10 @@ func (m *EventScopeRemoved) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: EventScopeRemoved: wiretype end group for non-group")
+			return fmt.Errorf("proto: EventScopeDeleted: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EventScopeRemoved: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EventScopeDeleted: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -3060,7 +3060,7 @@ func (m *EventSessionUpdated) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *EventSessionRemoved) Unmarshal(dAtA []byte) error {
+func (m *EventSessionDeleted) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3083,10 +3083,10 @@ func (m *EventSessionRemoved) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: EventSessionRemoved: wiretype end group for non-group")
+			return fmt.Errorf("proto: EventSessionDeleted: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EventSessionRemoved: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EventSessionDeleted: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -3466,7 +3466,7 @@ func (m *EventRecordUpdated) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *EventRecordRemoved) Unmarshal(dAtA []byte) error {
+func (m *EventRecordDeleted) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3489,10 +3489,10 @@ func (m *EventRecordRemoved) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: EventRecordRemoved: wiretype end group for non-group")
+			return fmt.Errorf("proto: EventRecordDeleted: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EventRecordRemoved: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EventRecordDeleted: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -3776,7 +3776,7 @@ func (m *EventScopeSpecificationUpdated) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *EventScopeSpecificationRemoved) Unmarshal(dAtA []byte) error {
+func (m *EventScopeSpecificationDeleted) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3799,10 +3799,10 @@ func (m *EventScopeSpecificationRemoved) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: EventScopeSpecificationRemoved: wiretype end group for non-group")
+			return fmt.Errorf("proto: EventScopeSpecificationDeleted: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EventScopeSpecificationRemoved: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EventScopeSpecificationDeleted: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -4022,7 +4022,7 @@ func (m *EventContractSpecificationUpdated) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *EventContractSpecificationRemoved) Unmarshal(dAtA []byte) error {
+func (m *EventContractSpecificationDeleted) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4045,10 +4045,10 @@ func (m *EventContractSpecificationRemoved) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: EventContractSpecificationRemoved: wiretype end group for non-group")
+			return fmt.Errorf("proto: EventContractSpecificationDeleted: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EventContractSpecificationRemoved: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EventContractSpecificationDeleted: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -4332,7 +4332,7 @@ func (m *EventRecordSpecificationUpdated) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *EventRecordSpecificationRemoved) Unmarshal(dAtA []byte) error {
+func (m *EventRecordSpecificationDeleted) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4355,10 +4355,10 @@ func (m *EventRecordSpecificationRemoved) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: EventRecordSpecificationRemoved: wiretype end group for non-group")
+			return fmt.Errorf("proto: EventRecordSpecificationDeleted: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EventRecordSpecificationRemoved: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EventRecordSpecificationDeleted: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -4706,7 +4706,7 @@ func (m *EventOSLocatorUpdated) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *EventOSLocatorRemoved) Unmarshal(dAtA []byte) error {
+func (m *EventOSLocatorDeleted) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4729,10 +4729,10 @@ func (m *EventOSLocatorRemoved) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: EventOSLocatorRemoved: wiretype end group for non-group")
+			return fmt.Errorf("proto: EventOSLocatorDeleted: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EventOSLocatorRemoved: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EventOSLocatorDeleted: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

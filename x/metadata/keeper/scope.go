@@ -126,7 +126,7 @@ func (k Keeper) RemoveScope(ctx sdk.Context, id types.MetadataAddress) {
 
 	k.clearScopeIndex(ctx, scope)
 	store.Delete(id)
-	_ = ctx.EventManager().EmitTypedEvent(types.NewEventScopeRemoved(scope))
+	_ = ctx.EventManager().EmitTypedEvent(types.NewEventScopeDeleted(scope))
 }
 
 // clearScopeIndex delete any index records for this scope

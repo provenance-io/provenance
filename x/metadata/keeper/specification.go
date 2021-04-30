@@ -133,7 +133,7 @@ func (k Keeper) RemoveRecordSpecification(ctx sdk.Context, recordSpecID types.Me
 	}
 
 	store.Delete(recordSpecID)
-	_ = ctx.EventManager().EmitTypedEvent(types.NewEventRecordSpecificationRemoved(recordSpec))
+	_ = ctx.EventManager().EmitTypedEvent(types.NewEventRecordSpecificationDeleted(recordSpec))
 
 	return nil
 }
@@ -252,7 +252,7 @@ func (k Keeper) RemoveContractSpecification(ctx sdk.Context, contractSpecID type
 
 	k.clearContractSpecificationIndex(ctx, contractSpec)
 	store.Delete(contractSpecID)
-	_ = ctx.EventManager().EmitTypedEvent(types.NewEventContractSpecificationRemoved(contractSpec))
+	_ = ctx.EventManager().EmitTypedEvent(types.NewEventContractSpecificationDeleted(contractSpec))
 
 	return nil
 }
@@ -429,7 +429,7 @@ func (k Keeper) RemoveScopeSpecification(ctx sdk.Context, scopeSpecID types.Meta
 
 	k.clearScopeSpecificationIndex(ctx, scopeSpec)
 	store.Delete(scopeSpecID)
-	_ = ctx.EventManager().EmitTypedEvent(types.NewEventScopeSpecificationRemoved(scopeSpec))
+	_ = ctx.EventManager().EmitTypedEvent(types.NewEventScopeSpecificationDeleted(scopeSpec))
 
 	return nil
 }

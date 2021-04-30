@@ -53,7 +53,7 @@ func (k Keeper) RemoveSession(ctx sdk.Context, id types.MetadataAddress) {
 	session, found := k.GetSession(ctx, id)
 	if found && !k.sessionHasRecords(ctx, id) {
 		store.Delete(id)
-		_ = ctx.EventManager().EmitTypedEvent(types.NewEventSessionRemoved(session))
+		_ = ctx.EventManager().EmitTypedEvent(types.NewEventSessionDeleted(session))
 	}
 }
 

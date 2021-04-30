@@ -58,8 +58,8 @@ func NewEventScopeUpdated(scope Scope) *EventScopeUpdated {
 	}
 }
 
-func NewEventScopeRemoved(scope Scope) *EventScopeRemoved {
-	return &EventScopeRemoved{
+func NewEventScopeDeleted(scope Scope) *EventScopeDeleted {
+	return &EventScopeDeleted{
 		ScopeAddr: scope.ScopeId.String(),
 	}
 }
@@ -78,8 +78,8 @@ func NewEventSessionUpdated(session Session) *EventSessionUpdated {
 	}
 }
 
-func NewEventSessionRemoved(session Session) *EventSessionRemoved {
-	return &EventSessionRemoved{
+func NewEventSessionDeleted(session Session) *EventSessionDeleted {
+	return &EventSessionDeleted{
 		SessionAddr: session.SessionId.String(),
 		ScopeAddr:   session.SessionId.MustGetAsScopeAddress().String(),
 	}
@@ -101,8 +101,8 @@ func NewEventRecordUpdated(record Record) *EventRecordUpdated {
 	}
 }
 
-func NewEventRecordRemoved(record Record) *EventRecordRemoved {
-	return &EventRecordRemoved{
+func NewEventRecordDeleted(record Record) *EventRecordDeleted {
+	return &EventRecordDeleted{
 		RecordAddr:  record.SessionId.MustGetAsRecordAddress(record.Name).String(),
 		SessionAddr: record.SessionId.String(),
 		ScopeAddr:   record.SessionId.MustGetAsScopeAddress().String(),
@@ -121,8 +121,8 @@ func NewEventScopeSpecificationUpdated(scopeSpecification ScopeSpecification) *E
 	}
 }
 
-func NewEventScopeSpecificationRemoved(scopeSpecification ScopeSpecification) *EventScopeSpecificationRemoved {
-	return &EventScopeSpecificationRemoved{
+func NewEventScopeSpecificationDeleted(scopeSpecification ScopeSpecification) *EventScopeSpecificationDeleted {
+	return &EventScopeSpecificationDeleted{
 		ScopeSpecificationAddr: scopeSpecification.SpecificationId.String(),
 	}
 }
@@ -139,8 +139,8 @@ func NewEventContractSpecificationUpdated(contractSpecification ContractSpecific
 	}
 }
 
-func NewEventContractSpecificationRemoved(contractSpecification ContractSpecification) *EventContractSpecificationRemoved {
-	return &EventContractSpecificationRemoved{
+func NewEventContractSpecificationDeleted(contractSpecification ContractSpecification) *EventContractSpecificationDeleted {
+	return &EventContractSpecificationDeleted{
 		ContractSpecificationAddr: contractSpecification.SpecificationId.String(),
 	}
 }
@@ -159,8 +159,8 @@ func NewEventRecordSpecificationUpdated(recordSpecification RecordSpecification)
 	}
 }
 
-func NewEventRecordSpecificationRemoved(recordSpecification RecordSpecification) *EventRecordSpecificationRemoved {
-	return &EventRecordSpecificationRemoved{
+func NewEventRecordSpecificationDeleted(recordSpecification RecordSpecification) *EventRecordSpecificationDeleted {
+	return &EventRecordSpecificationDeleted{
 		RecordSpecificationAddr:   recordSpecification.SpecificationId.String(),
 		ContractSpecificationAddr: recordSpecification.SpecificationId.MustGetAsContractSpecAddress().String(),
 	}
@@ -181,8 +181,8 @@ func NewEventOSLocatorUpdated(osLocator, osLocatorReplaced ObjectStoreLocator) *
 	}
 }
 
-func NewEventOSLocatorRemoved(osLocator ObjectStoreLocator) *EventOSLocatorRemoved {
-	return &EventOSLocatorRemoved{
+func NewEventOSLocatorDeleted(osLocator ObjectStoreLocator) *EventOSLocatorDeleted {
+	return &EventOSLocatorDeleted{
 		Address: osLocator.Owner,
 		Uri:     osLocator.LocatorUri,
 	}
