@@ -2,7 +2,9 @@ package keeper
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
@@ -11,6 +13,8 @@ import (
 
 // GetAllMarkerHolders returns an array of all account addresses holding the given denom (and the amount)
 func (k Keeper) GetAllMarkerHolders(ctx sdk.Context, denom string) []types.Balance {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "get_all_marker_holders")
+
 	var results []types.Balance
 	k.bankKeeper.IterateAllBalances(ctx, func(addr sdk.AccAddress, coin sdk.Coin) (stop bool) {
 		if coin.Denom == denom && !coin.Amount.IsZero() {
@@ -27,6 +31,8 @@ func (k Keeper) GetAllMarkerHolders(ctx sdk.Context, denom string) []types.Balan
 
 // GetMarkerByDenom looks up marker with the given denom
 func (k Keeper) GetMarkerByDenom(ctx sdk.Context, denom string) (types.MarkerAccountI, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "get_marker_by_denom")
+
 	addr, err := types.MarkerAddress(denom)
 	if err != nil {
 		return nil, err
@@ -43,6 +49,8 @@ func (k Keeper) GetMarkerByDenom(ctx sdk.Context, denom string) (types.MarkerAcc
 
 // AddMarkerAccount persists marker to the account keeper store.
 func (k Keeper) AddMarkerAccount(ctx sdk.Context, marker types.MarkerAccountI) error {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "add_marker_account")
+
 	if err := marker.Validate(); err != nil {
 		return err
 	}
@@ -84,6 +92,8 @@ func (k Keeper) AddMarkerAccount(ctx sdk.Context, marker types.MarkerAccountI) e
 func (k Keeper) AddAccess(
 	ctx sdk.Context, caller sdk.AccAddress, denom string, grant types.AccessGrantI,
 ) error {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "add_access")
+
 	// (if marker does not exist then fail)
 	m, err := k.GetMarkerByDenom(ctx, denom)
 	if err != nil {
@@ -122,6 +132,8 @@ func (k Keeper) AddAccess(
 
 // RemoveAccess delete the AccessGrant for the specified user from the marker if the caller is allowed to make changes
 func (k Keeper) RemoveAccess(ctx sdk.Context, caller sdk.AccAddress, denom string, remove sdk.AccAddress) error {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "remove_access")
+
 	// (if marker does not exist then fail)
 	m, err := k.GetMarkerByDenom(ctx, denom)
 	if err != nil {
@@ -163,6 +175,8 @@ func (k Keeper) RemoveAccess(ctx sdk.Context, caller sdk.AccAddress, denom strin
 func (k Keeper) WithdrawCoins(
 	ctx sdk.Context, caller sdk.AccAddress, recipient sdk.AccAddress, denom string, coins sdk.Coins,
 ) error {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "withdraw_coins")
+
 	// (if marker does not exist then fail)
 	m, err := k.GetMarkerByDenom(ctx, denom)
 	if err != nil {
@@ -198,6 +212,8 @@ func (k Keeper) WithdrawCoins(
 // updating the marker's record of expected total supply, and transferring the created coin to the MarkerAccount
 // for holding pending further action.
 func (k Keeper) MintCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) error {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "mint_coin")
+
 	// (if marker does not exist then fail)
 	m, err := k.GetMarkerByDenom(ctx, coin.Denom)
 	if err != nil {
@@ -236,6 +252,8 @@ func (k Keeper) MintCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 
 // BurnCoin removes supply from the marker by burning coins held within the marker acccount.
 func (k Keeper) BurnCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) error {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "burn_coin")
+
 	// (if marker does not exist then fail)
 	m, err := k.GetMarkerByDenom(ctx, coin.Denom)
 	if err != nil {
@@ -273,6 +291,8 @@ func (k Keeper) BurnCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 
 // AdjustCirculation will mint/burn coin if required to ensure desired supply matches amount in circulation
 func (k Keeper) AdjustCirculation(ctx sdk.Context, marker types.MarkerAccountI, desiredSupply sdk.Coin) error {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "adjust_circulation")
+
 	currentSupply := k.bankKeeper.GetSupply(ctx).GetTotal().AmountOf(marker.GetDenom())
 
 	if desiredSupply.Denom != marker.GetDenom() {
@@ -312,6 +332,8 @@ func (k Keeper) AdjustCirculation(ctx sdk.Context, marker types.MarkerAccountI, 
 
 // IncreaseSupply will mint coins to the marker module coin pool account, then send these to the marker account
 func (k Keeper) IncreaseSupply(ctx sdk.Context, marker types.MarkerAccountI, coin sdk.Coin) error {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "increase_supply")
+
 	inCirculation := sdk.NewCoin(marker.GetDenom(), k.bankKeeper.GetSupply(ctx).GetTotal().AmountOf(marker.GetDenom()))
 	total := inCirculation.Add(coin)
 	maxAllowed := k.GetParams(ctx).MaxTotalSupply
@@ -333,6 +355,8 @@ func (k Keeper) IncreaseSupply(ctx sdk.Context, marker types.MarkerAccountI, coi
 
 // DecreaseSupply will move a given amount of coin from the marker to the markermodule coin pool account then burn it.
 func (k Keeper) DecreaseSupply(ctx sdk.Context, marker types.MarkerAccountI, coin sdk.Coin) error {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "decrease_supply")
+
 	inCirculation := sdk.NewCoin(marker.GetDenom(), k.bankKeeper.GetSupply(ctx).GetTotal().AmountOf(marker.GetDenom()))
 
 	// Ensure the request will not send the total supply below zero
@@ -365,6 +389,8 @@ func (k Keeper) DecreaseSupply(ctx sdk.Context, marker types.MarkerAccountI, coi
 // FinalizeMarker sets the state of the marker to finalized, mints the associated supply, assigns the minted coin to
 // the marker accounts, and transitions the state to active if successful
 func (k Keeper) FinalizeMarker(ctx sdk.Context, caller sdk.Address, denom string) error {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "finalize")
+
 	// (if marker does not exist then fail)
 	m, err := k.GetMarkerByDenom(ctx, denom)
 	if err != nil {
@@ -416,6 +442,8 @@ func (k Keeper) FinalizeMarker(ctx sdk.Context, caller sdk.Address, denom string
 // ActivateMarker transistions a marker into the active status, enforcing permissions, supply constraints, and minting
 // any supply as required.
 func (k Keeper) ActivateMarker(ctx sdk.Context, caller sdk.Address, denom string) error {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "activate")
+
 	m, err := k.GetMarkerByDenom(ctx, denom)
 	if err != nil {
 		return fmt.Errorf("marker not found for %s: %s", denom, err)
@@ -476,6 +504,8 @@ func (k Keeper) ActivateMarker(ctx sdk.Context, caller sdk.Address, denom string
 
 // CancelMarker prepares transition to deleted state.
 func (k Keeper) CancelMarker(ctx sdk.Context, caller sdk.AccAddress, denom string) error {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "cancel")
+
 	m, err := k.GetMarkerByDenom(ctx, denom)
 	if err != nil {
 		return fmt.Errorf("marker not found for %s: %s", denom, err)
@@ -521,6 +551,8 @@ func (k Keeper) CancelMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 // DeleteMarker burns the entire coin supply, ensure no assets are pooled, and marks the current instance of the
 // marker as destroyed.
 func (k Keeper) DeleteMarker(ctx sdk.Context, caller sdk.AccAddress, denom string) error {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "delete")
+
 	m, err := k.GetMarkerByDenom(ctx, denom)
 	if err != nil {
 		return fmt.Errorf("marker not found for %s: %s", denom, err)
@@ -570,6 +602,8 @@ func (k Keeper) DeleteMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 // TransferCoin transfers restricted coins between to accounts when the administrator account holds the transfer
 // access right and the marker type is restricted_coin
 func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, amount sdk.Coin) error {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "transfer_coin")
+
 	m, err := k.GetMarkerByDenom(ctx, amount.Denom)
 	if err != nil {
 		return fmt.Errorf("marker not found for %s: %s", amount.Denom, err)
@@ -604,6 +638,8 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 
 // SetMarkerDenomMetadata updates the denom metadata records for the current marker.
 func (k Keeper) SetMarkerDenomMetadata(ctx sdk.Context, metadata banktypes.Metadata, caller sdk.AccAddress) error {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "set_marker_denom_metadata")
+
 	if metadata.Base == "" {
 		return fmt.Errorf("invalid metadata request, base denom must match existing marker")
 	}

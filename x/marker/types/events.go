@@ -64,9 +64,9 @@ const (
 	// EventTelemetryLabelAddress address label for telemetry metrics
 	EventTelemetryLabelAddress string = "address"
 	// EventTelemetryLabelToAddress to address label for telemetry metrics
-	EventTelemetryLabelToAddress string = "to-address"
+	EventTelemetryLabelToAddress string = "to_address"
 	// EventTelemetryLabelFromAddress from address label for telemetry metrics
-	EventTelemetryLabelFromAddress string = "from-address"
+	EventTelemetryLabelFromAddress string = "from_address"
 	// EventTelemetryLabelCoins coins label for telemetry metrics
 	EventTelemetryLabelCoins string = "coins"
 	// EventTelemetryLabelDenom denom label for telemetry metrics
