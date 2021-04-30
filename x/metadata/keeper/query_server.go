@@ -6,11 +6,13 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/google/uuid"
@@ -24,6 +26,7 @@ var _ types.QueryServer = Keeper{}
 
 // Params queries params of metadata module.
 func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "Params")
 	ctx := sdk.UnwrapSDKContext(c)
 	var params types.Params
 	k.paramSpace.GetParamSet(ctx, &params)
@@ -33,6 +36,7 @@ func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types
 
 // Scope returns a specific scope by id.
 func (k Keeper) Scope(c context.Context, req *types.ScopeRequest) (*types.ScopeResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "Scope")
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -135,6 +139,7 @@ func (k Keeper) Scope(c context.Context, req *types.ScopeRequest) (*types.ScopeR
 
 // ScopesAll returns all scopes (limited by pagination).
 func (k Keeper) ScopesAll(c context.Context, req *types.ScopesAllRequest) (*types.ScopesAllResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "ScopesAll")
 	retval := types.ScopesAllResponse{Request: req}
 
 	pageRequest := getPageRequest(req)
@@ -173,6 +178,7 @@ func (k Keeper) ScopesAll(c context.Context, req *types.ScopesAllRequest) (*type
 
 // Sessions returns sessions based on the provided request.
 func (k Keeper) Sessions(c context.Context, req *types.SessionsRequest) (*types.SessionsResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "Sessions")
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -264,6 +270,7 @@ func (k Keeper) Sessions(c context.Context, req *types.SessionsRequest) (*types.
 
 // SessionsAll returns all sessions (limited by pagination).
 func (k Keeper) SessionsAll(c context.Context, req *types.SessionsAllRequest) (*types.SessionsAllResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "SessionsAll")
 	retval := types.SessionsAllResponse{Request: req}
 
 	pageRequest := getPageRequest(req)
@@ -302,6 +309,7 @@ func (k Keeper) SessionsAll(c context.Context, req *types.SessionsAllRequest) (*
 
 // Records returns records based on the provided request.
 func (k Keeper) Records(c context.Context, req *types.RecordsRequest) (*types.RecordsResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "Records")
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -438,6 +446,7 @@ func (k Keeper) Records(c context.Context, req *types.RecordsRequest) (*types.Re
 
 // RecordsAll returns all records (limited by pagination).
 func (k Keeper) RecordsAll(c context.Context, req *types.RecordsAllRequest) (*types.RecordsAllResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "RecordsAll")
 	retval := types.RecordsAllResponse{Request: req}
 
 	pageRequest := getPageRequest(req)
@@ -476,6 +485,7 @@ func (k Keeper) RecordsAll(c context.Context, req *types.RecordsAllRequest) (*ty
 
 // Ownership returns a list of scope identifiers that list the given address as a data or value owner.
 func (k Keeper) Ownership(c context.Context, req *types.OwnershipRequest) (*types.OwnershipResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "Ownership")
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -517,6 +527,7 @@ func (k Keeper) Ownership(c context.Context, req *types.OwnershipRequest) (*type
 
 // ValueOwnership returns a list of scope identifiers that list the given address as a value owner.
 func (k Keeper) ValueOwnership(c context.Context, req *types.ValueOwnershipRequest) (*types.ValueOwnershipResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "ValueOwnership")
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -557,6 +568,7 @@ func (k Keeper) ValueOwnership(c context.Context, req *types.ValueOwnershipReque
 
 // ScopeSpecification returns a specific scope specification by id.
 func (k Keeper) ScopeSpecification(c context.Context, req *types.ScopeSpecificationRequest) (*types.ScopeSpecificationResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "ScopeSpecification")
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -585,6 +597,7 @@ func (k Keeper) ScopeSpecification(c context.Context, req *types.ScopeSpecificat
 
 // ScopeSpecificationsAll returns all scope specifications (limited by pagination).
 func (k Keeper) ScopeSpecificationsAll(c context.Context, req *types.ScopeSpecificationsAllRequest) (*types.ScopeSpecificationsAllResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "ScopeSpecificationsAll")
 	retval := types.ScopeSpecificationsAllResponse{Request: req}
 
 	pageRequest := getPageRequest(req)
@@ -623,6 +636,7 @@ func (k Keeper) ScopeSpecificationsAll(c context.Context, req *types.ScopeSpecif
 
 // ContractSpecification returns a specific contract specification by id.
 func (k Keeper) ContractSpecification(c context.Context, req *types.ContractSpecificationRequest) (*types.ContractSpecificationResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "ContractSpecification")
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -660,6 +674,7 @@ func (k Keeper) ContractSpecification(c context.Context, req *types.ContractSpec
 
 // ContractSpecificationsAll returns all contract specifications (limited by pagination).
 func (k Keeper) ContractSpecificationsAll(c context.Context, req *types.ContractSpecificationsAllRequest) (*types.ContractSpecificationsAllResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "ContractSpecificationsAll")
 	retval := types.ContractSpecificationsAllResponse{Request: req}
 
 	pageRequest := getPageRequest(req)
@@ -701,6 +716,7 @@ func (k Keeper) RecordSpecificationsForContractSpecification(
 	c context.Context,
 	req *types.RecordSpecificationsForContractSpecificationRequest,
 ) (*types.RecordSpecificationsForContractSpecificationResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "RecordSpecificationsForContractSpecification")
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -736,6 +752,7 @@ func (k Keeper) RecordSpecificationsForContractSpecification(
 
 // RecordSpecification returns a specific record specification.
 func (k Keeper) RecordSpecification(c context.Context, req *types.RecordSpecificationRequest) (*types.RecordSpecificationResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "RecordSpecification")
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -764,6 +781,7 @@ func (k Keeper) RecordSpecification(c context.Context, req *types.RecordSpecific
 
 // RecordSpecificationsAll returns all record specifications (limited by pagination).
 func (k Keeper) RecordSpecificationsAll(c context.Context, req *types.RecordSpecificationsAllRequest) (*types.RecordSpecificationsAllResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "RecordSpecificationsAll")
 	retval := types.RecordSpecificationsAllResponse{Request: req}
 
 	pageRequest := getPageRequest(req)
@@ -801,6 +819,7 @@ func (k Keeper) RecordSpecificationsAll(c context.Context, req *types.RecordSpec
 }
 
 func (k Keeper) OSLocatorParams(c context.Context, request *types.OSLocatorParamsRequest) (*types.OSLocatorParamsResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "OSLocatorParams")
 	ctx := sdk.UnwrapSDKContext(c)
 	var params types.OSLocatorParams
 	k.paramSpace.GetParamSet(ctx, &params)
@@ -809,6 +828,7 @@ func (k Keeper) OSLocatorParams(c context.Context, request *types.OSLocatorParam
 }
 
 func (k Keeper) OSLocator(c context.Context, request *types.OSLocatorRequest) (*types.OSLocatorResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "OSLocator")
 	if request == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -831,6 +851,7 @@ func (k Keeper) OSLocator(c context.Context, request *types.OSLocatorRequest) (*
 }
 
 func (k Keeper) OSLocatorsByURI(ctx context.Context, request *types.OSLocatorsByURIRequest) (*types.OSLocatorsByURIResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "OSLocatorsByURI")
 	if request == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -896,6 +917,7 @@ func (k Keeper) OSLocatorsByURI(ctx context.Context, request *types.OSLocatorsBy
 }
 
 func (k Keeper) OSLocatorsByScope(ctx context.Context, request *types.OSLocatorsByScopeRequest) (*types.OSLocatorsByScopeResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "OSLocatorsByScope")
 	if request == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -917,6 +939,7 @@ func (k Keeper) OSLocatorsByScope(ctx context.Context, request *types.OSLocators
 }
 
 func (k Keeper) OSAllLocators(ctx context.Context, request *types.OSAllLocatorsRequest) (*types.OSAllLocatorsResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "OSAllLocators")
 	if request == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
