@@ -40,9 +40,8 @@ func (k msgServer) WriteScope(
 
 	k.SetScope(ctx, msg.Scope)
 
-	rv := types.NewMsgWriteScopeResponse(msg.Scope.ScopeId)
-	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_WriteScope, msg.GetSigners()))
-	return rv, re
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteScope, msg.GetSigners()))
+	return types.NewMsgWriteScopeResponse(msg.Scope.ScopeId), nil
 }
 
 func (k msgServer) DeleteScope(
@@ -63,9 +62,8 @@ func (k msgServer) DeleteScope(
 
 	k.RemoveScope(ctx, msg.ScopeId)
 
-	rv := types.NewMsgDeleteScopeResponse()
-	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_DeleteScope, msg.GetSigners()))
-	return rv, re
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteScope, msg.GetSigners()))
+	return types.NewMsgDeleteScopeResponse(), nil
 }
 
 func (k msgServer) AddScopeDataAccess(
@@ -90,9 +88,8 @@ func (k msgServer) AddScopeDataAccess(
 
 	k.SetScope(ctx, existing)
 
-	rv := types.NewMsgAddScopeDataAccessResponse()
-	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_AddScopeDataAccess, msg.GetSigners()))
-	return rv, re
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_AddScopeDataAccess, msg.GetSigners()))
+	return types.NewMsgAddScopeDataAccessResponse(), nil
 }
 
 func (k msgServer) DeleteScopeDataAccess(
@@ -115,9 +112,8 @@ func (k msgServer) DeleteScopeDataAccess(
 
 	k.SetScope(ctx, existing)
 
-	rv := types.NewMsgDeleteScopeDataAccessResponse()
-	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_DeleteScopeDataAccess, msg.GetSigners()))
-	return rv, re
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteScopeDataAccess, msg.GetSigners()))
+	return types.NewMsgDeleteScopeDataAccessResponse(), nil
 }
 
 func (k msgServer) WriteSession(
@@ -141,9 +137,8 @@ func (k msgServer) WriteSession(
 
 	k.SetSession(ctx, msg.Session)
 
-	rv := types.NewMsgWriteSessionResponse(msg.Session.SessionId)
-	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_WriteSession, msg.GetSigners()))
-	return rv, re
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteSession, msg.GetSigners()))
+	return types.NewMsgWriteSessionResponse(msg.Session.SessionId), nil
 }
 
 func (k msgServer) WriteRecord(
@@ -170,9 +165,8 @@ func (k msgServer) WriteRecord(
 
 	k.SetRecord(ctx, msg.Record)
 
-	rv := types.NewMsgWriteRecordResponse(recordID)
-	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_WriteRecord, msg.GetSigners()))
-	return rv, re
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteRecord, msg.GetSigners()))
+	return types.NewMsgWriteRecordResponse(recordID), nil
 }
 
 func (k msgServer) DeleteRecord(
@@ -189,9 +183,8 @@ func (k msgServer) DeleteRecord(
 
 	k.RemoveRecord(ctx, msg.RecordId)
 
-	rv := types.NewMsgDeleteRecordResponse()
-	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_DeleteRecord, msg.GetSigners()))
-	return rv, re
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteRecord, msg.GetSigners()))
+	return types.NewMsgDeleteRecordResponse(), nil
 }
 
 func (k msgServer) WriteScopeSpecification(
@@ -214,9 +207,8 @@ func (k msgServer) WriteScopeSpecification(
 
 	k.SetScopeSpecification(ctx, msg.Specification)
 
-	rv := types.NewMsgWriteScopeSpecificationResponse(msg.Specification.SpecificationId)
-	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_WriteScopeSpecification, msg.GetSigners()))
-	return rv, re
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteScopeSpecification, msg.GetSigners()))
+	return types.NewMsgWriteScopeSpecificationResponse(msg.Specification.SpecificationId), nil
 }
 
 func (k msgServer) DeleteScopeSpecification(
@@ -238,9 +230,8 @@ func (k msgServer) DeleteScopeSpecification(
 		return nil, fmt.Errorf("cannot delete scope specification with id %s: %w", msg.SpecificationId, err)
 	}
 
-	rv := types.NewMsgDeleteScopeSpecificationResponse()
-	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_DeleteScopeSpecification, msg.GetSigners()))
-	return rv, re
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteScopeSpecification, msg.GetSigners()))
+	return types.NewMsgDeleteScopeSpecificationResponse(), nil
 }
 
 func (k msgServer) WriteContractSpecification(
@@ -263,9 +254,8 @@ func (k msgServer) WriteContractSpecification(
 
 	k.SetContractSpecification(ctx, msg.Specification)
 
-	rv := types.NewMsgWriteContractSpecificationResponse(msg.Specification.SpecificationId)
-	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_WriteContractSpecification, msg.GetSigners()))
-	return rv, re
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteContractSpecification, msg.GetSigners()))
+	return types.NewMsgWriteContractSpecificationResponse(msg.Specification.SpecificationId), nil
 }
 
 func (k msgServer) DeleteContractSpecification(
@@ -312,9 +302,8 @@ func (k msgServer) DeleteContractSpecification(
 		return nil, fmt.Errorf("cannot delete contract specification with id %s: %w", msg.SpecificationId, err)
 	}
 
-	rv := types.NewMsgDeleteContractSpecificationResponse()
-	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_DeleteContractSpecification, msg.GetSigners()))
-	return rv, re
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteContractSpecification, msg.GetSigners()))
+	return types.NewMsgDeleteContractSpecificationResponse(), nil
 }
 
 func (k msgServer) WriteRecordSpecification(
@@ -348,9 +337,8 @@ func (k msgServer) WriteRecordSpecification(
 
 	k.SetRecordSpecification(ctx, msg.Specification)
 
-	rv := types.NewMsgWriteRecordSpecificationResponse(msg.Specification.SpecificationId)
-	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_WriteRecordSpecification, msg.GetSigners()))
-	return rv, re
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteRecordSpecification, msg.GetSigners()))
+	return types.NewMsgWriteRecordSpecificationResponse(msg.Specification.SpecificationId), nil
 }
 
 func (k msgServer) DeleteRecordSpecification(
@@ -381,9 +369,8 @@ func (k msgServer) DeleteRecordSpecification(
 		return nil, fmt.Errorf("cannot delete record specification with id %s: %w", msg.SpecificationId, err)
 	}
 
-	rv := types.NewMsgDeleteRecordSpecificationResponse()
-	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_DeleteRecordSpecification, msg.GetSigners()))
-	return rv, re
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteRecordSpecification, msg.GetSigners()))
+	return types.NewMsgDeleteRecordSpecificationResponse(), nil
 }
 
 func (k msgServer) WriteP8EContractSpec(
@@ -426,9 +413,8 @@ func (k msgServer) WriteP8EContractSpec(
 		recSpecIDs[i] = proposedRecord.SpecificationId
 	}
 
-	rv := types.NewMsgWriteP8EContractSpecResponse(proposed.SpecificationId, recSpecIDs...)
-	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_WriteP8eContractSpec, msg.GetSigners()))
-	return rv, re
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteP8eContractSpec, msg.GetSigners()))
+	return types.NewMsgWriteP8EContractSpecResponse(proposed.SpecificationId, recSpecIDs...), nil
 }
 
 func (k msgServer) P8EMemorializeContract(
@@ -473,9 +459,8 @@ func (k msgServer) P8EMemorializeContract(
 		recordIDInfos[i] = recordResp.RecordIdInfo
 	}
 
-	rv := types.NewMsgP8EMemorializeContractResponse(scopeResp.ScopeIdInfo, sessionResp.SessionIdInfo, recordIDInfos)
-	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_P8eMemorializeContract, msg.GetSigners()))
-	return rv, re
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_P8eMemorializeContract, msg.GetSigners()))
+	return types.NewMsgP8EMemorializeContractResponse(scopeResp.ScopeIdInfo, sessionResp.SessionIdInfo, recordIDInfos), nil
 }
 
 func (k msgServer) BindOSLocator(
@@ -504,9 +489,8 @@ func (k msgServer) BindOSLocator(
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	rv := types.NewMsgBindOSLocatorResponse(msg.Locator)
-	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_BindOSLocator, msg.GetSigners()))
-	return rv, re
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_BindOSLocator, msg.GetSigners()))
+	return types.NewMsgBindOSLocatorResponse(msg.Locator), nil
 }
 
 func (k msgServer) DeleteOSLocator(
@@ -540,9 +524,8 @@ func (k msgServer) DeleteOSLocator(
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	rv := types.NewMsgDeleteOSLocatorResponse(msg.Locator)
-	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_DeleteOSLocator, msg.GetSigners()))
-	return rv, re
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteOSLocator, msg.GetSigners()))
+	return types.NewMsgDeleteOSLocatorResponse(msg.Locator), nil
 }
 
 func (k msgServer) ModifyOSLocator(
@@ -575,7 +558,6 @@ func (k msgServer) ModifyOSLocator(
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	rv := types.NewMsgModifyOSLocatorResponse(msg.Locator)
-	re := ctx.EventManager().EmitTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_ModifyOSLocator, msg.GetSigners()))
-	return rv, re
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_ModifyOSLocator, msg.GetSigners()))
+	return types.NewMsgModifyOSLocatorResponse(msg.Locator), nil
 }

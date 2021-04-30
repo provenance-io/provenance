@@ -95,7 +95,7 @@ func (k Keeper) SetScope(ctx sdk.Context, scope types.Scope) {
 
 	store.Set(scope.ScopeId, b)
 	k.indexScope(ctx, scope)
-	_ = ctx.EventManager().EmitTypedEvent(event)
+	k.EmitEvent(ctx, event)
 }
 
 // RemoveScope removes a scope from the module kv store along with all its records and sessions.
@@ -126,7 +126,7 @@ func (k Keeper) RemoveScope(ctx sdk.Context, id types.MetadataAddress) {
 
 	k.clearScopeIndex(ctx, scope)
 	store.Delete(id)
-	_ = ctx.EventManager().EmitTypedEvent(types.NewEventScopeDeleted(scope))
+	k.EmitEvent(ctx, types.NewEventScopeDeleted(scope))
 }
 
 // clearScopeIndex delete any index records for this scope

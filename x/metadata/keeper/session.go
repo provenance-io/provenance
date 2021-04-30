@@ -40,7 +40,7 @@ func (k Keeper) SetSession(ctx sdk.Context, session types.Session) {
 	}
 
 	store.Set(session.SessionId, b)
-	_ = ctx.EventManager().EmitTypedEvent(event)
+	k.EmitEvent(ctx, event)
 }
 
 // RemoveSession removes a session from the module kv store if there are no records associated with it.
@@ -53,7 +53,7 @@ func (k Keeper) RemoveSession(ctx sdk.Context, id types.MetadataAddress) {
 	session, found := k.GetSession(ctx, id)
 	if found && !k.sessionHasRecords(ctx, id) {
 		store.Delete(id)
-		_ = ctx.EventManager().EmitTypedEvent(types.NewEventSessionDeleted(session))
+		k.EmitEvent(ctx, types.NewEventSessionDeleted(session))
 	}
 }
 

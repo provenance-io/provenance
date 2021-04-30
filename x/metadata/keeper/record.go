@@ -72,7 +72,7 @@ func (k Keeper) SetRecord(ctx sdk.Context, record types.Record) {
 	}
 
 	store.Set(recordID, b)
-	_ = ctx.EventManager().EmitTypedEvent(event)
+	k.EmitEvent(ctx, event)
 }
 
 // RemoveRecord removes a record from the module kv store.
@@ -86,7 +86,7 @@ func (k Keeper) RemoveRecord(ctx sdk.Context, id types.MetadataAddress) {
 	}
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(id)
-	_ = ctx.EventManager().EmitTypedEvent(types.NewEventRecordDeleted(record))
+	k.EmitEvent(ctx, types.NewEventRecordDeleted(record))
 
 	// Remove the session too if there are no more records in it.
 	k.RemoveSession(ctx, record.SessionId)

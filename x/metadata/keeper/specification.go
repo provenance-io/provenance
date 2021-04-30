@@ -116,7 +116,7 @@ func (k Keeper) SetRecordSpecification(ctx sdk.Context, spec types.RecordSpecifi
 	}
 
 	store.Set(spec.SpecificationId, b)
-	_ = ctx.EventManager().EmitTypedEvent(event)
+	k.EmitEvent(ctx, event)
 }
 
 // RemoveRecordSpecification removes a record specification from the module kv store.
@@ -133,7 +133,7 @@ func (k Keeper) RemoveRecordSpecification(ctx sdk.Context, recordSpecID types.Me
 	}
 
 	store.Delete(recordSpecID)
-	_ = ctx.EventManager().EmitTypedEvent(types.NewEventRecordSpecificationDeleted(recordSpec))
+	k.EmitEvent(ctx, types.NewEventRecordSpecificationDeleted(recordSpec))
 
 	return nil
 }
@@ -234,7 +234,7 @@ func (k Keeper) SetContractSpecification(ctx sdk.Context, spec types.ContractSpe
 
 	store.Set(spec.SpecificationId, b)
 	k.indexContractSpecification(ctx, spec)
-	_ = ctx.EventManager().EmitTypedEvent(event)
+	k.EmitEvent(ctx, event)
 }
 
 // RemoveContractSpecification removes a contract specification from the module kv store.
@@ -252,7 +252,7 @@ func (k Keeper) RemoveContractSpecification(ctx sdk.Context, contractSpecID type
 
 	k.clearContractSpecificationIndex(ctx, contractSpec)
 	store.Delete(contractSpecID)
-	_ = ctx.EventManager().EmitTypedEvent(types.NewEventContractSpecificationDeleted(contractSpec))
+	k.EmitEvent(ctx, types.NewEventContractSpecificationDeleted(contractSpec))
 
 	return nil
 }
@@ -411,7 +411,7 @@ func (k Keeper) SetScopeSpecification(ctx sdk.Context, spec types.ScopeSpecifica
 
 	store.Set(spec.SpecificationId, b)
 	k.indexScopeSpecification(ctx, spec)
-	_ = ctx.EventManager().EmitTypedEvent(event)
+	k.EmitEvent(ctx, event)
 }
 
 // RemoveScopeSpecification removes a scope specification from the module kv store.
@@ -429,7 +429,7 @@ func (k Keeper) RemoveScopeSpecification(ctx sdk.Context, scopeSpecID types.Meta
 
 	k.clearScopeSpecificationIndex(ctx, scopeSpec)
 	store.Delete(scopeSpecID)
-	_ = ctx.EventManager().EmitTypedEvent(types.NewEventScopeSpecificationDeleted(scopeSpec))
+	k.EmitEvent(ctx, types.NewEventScopeSpecificationDeleted(scopeSpec))
 
 	return nil
 }

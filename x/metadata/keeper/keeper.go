@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"github.com/gogo/protobuf/proto"
 	"net/url"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -234,6 +235,13 @@ func (k Keeper) VerifyCorrectOwner(ctx sdk.Context, ownerAddr sdk.AccAddress) bo
 		return false
 	}
 	return ownerAddr.String() == stored.Owner
+}
+
+func (k Keeper) EmitEvent(ctx sdk.Context, event proto.Message) {
+	err := ctx.EventManager().EmitTypedEvent(event)
+	if err != nil {
+		ctx.Logger().Error("unable to emit event", "error", err, "event", event)
+	}
 }
 
 func (k Keeper) checkValidURI(uri string, ctx sdk.Context) (*url.URL, error) {

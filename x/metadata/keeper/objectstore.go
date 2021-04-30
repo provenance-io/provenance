@@ -54,8 +54,9 @@ func (k Keeper) SetOSLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, ur
 	}
 	store.Set(key, bz)
 
-	ee := ctx.EventManager().EmitTypedEvent(types.NewEventOSLocatorCreated(record))
-	return ee
+	k.EmitEvent(ctx, types.NewEventOSLocatorCreated(record))
+	defer types.GetIncObjFunc(types.TLTypeOSLocator, types.TLActionCreated)
+	return nil
 }
 
 // IterateLocators runs a function for every ObjectStoreLocator entry in the kvstore.
@@ -119,8 +120,8 @@ func (k Keeper) DeleteRecord(ctx sdk.Context, ownerAddr sdk.AccAddress) error {
 	if oldRecord, found := k.GetOsLocatorRecord(ctx, ownerAddr); found {
 		store := ctx.KVStore(k.storeKey)
 		store.Delete(key)
-		ee := ctx.EventManager().EmitTypedEvent(types.NewEventOSLocatorDeleted(oldRecord))
-		return ee
+		k.EmitEvent(ctx, types.NewEventOSLocatorDeleted(oldRecord))
+		defer types.GetIncObjFunc(types.TLTypeOSLocator, types.TLActionDeleted)
 	}
 	return nil
 }
@@ -143,8 +144,9 @@ func (k Keeper) ModifyRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, uri stri
 		return err
 	}
 	store.Set(key, bz)
-	ee := ctx.EventManager().EmitTypedEvent(types.NewEventOSLocatorUpdated(record, oldRecord))
-	return ee
+	k.EmitEvent(ctx, types.NewEventOSLocatorUpdated(record, oldRecord))
+	defer types.GetIncObjFunc(types.TLTypeOSLocator, types.TLActionUpdated)
+	return nil
 }
 
 // ImportLocatorRecord binds a name to an address in the kvstore.
@@ -163,5 +165,6 @@ func (k Keeper) ImportLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, u
 		return err
 	}
 	store.Set(key, bz)
+	defer types.GetIncObjFunc(types.TLTypeOSLocator, types.TLActionCreated)
 	return nil
 }
