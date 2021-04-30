@@ -1,6 +1,84 @@
 package types
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	"github.com/armon/go-metrics"
+	"github.com/cosmos/cosmos-sdk/telemetry"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+// TelemetryCategory is an enum for metadata telemetry categories.
+type TelemetryCategory string
+
+// TelemetryObjectType is an enum for metadata telemetry object types.
+type TelemetryObjectType string
+
+// TelemetryAction is an enum for metadata telemetry actions.
+type TelemetryAction string
+
+const (
+	// TKObject is the telemetry key for an object stored on-chain in the metadata module.
+	TKObject string = "stored-object"
+
+	// TLCategory is a string name for labels defining an object category.
+	TLCategory              string            = "category"
+	TLCategoryEntry         TelemetryCategory = "entry"
+	TLCategorySpecification TelemetryCategory = "specification"
+	TLCategoryOSLocator     TelemetryCategory = "object-store-locator"
+
+	// TLType is a string name for labels defining an object type.
+	TLType             string              = "object-type"
+	TLTypeScope        TelemetryObjectType = "scope"
+	TLTypeSession      TelemetryObjectType = "session"
+	TLTypeRecord       TelemetryObjectType = "record"
+	TLTypeScopeSpec    TelemetryObjectType = "scope-specification"
+	TLTypeContractSpec TelemetryObjectType = "contract-specification"
+	TLTypeRecordSpec   TelemetryObjectType = "record-specification"
+	TLTypeOSLocator    TelemetryObjectType = "object-store-locator"
+
+	// TLAction is a string name for labels defining an action taken.
+	TLAction        string          = "action"
+	TLActionCreated TelemetryAction = "created"
+	TLActionUpdated TelemetryAction = "updated"
+	TLActionDeleted TelemetryAction = "deleted"
+)
+
+// AsLabel Returns this TelemetryCategory as a label.
+func (t TelemetryCategory) AsLabel() metrics.Label {
+	return telemetry.NewLabel(TLCategory, string(t))
+}
+
+// AsLabel Returns this TelemetryObjectType as a label.
+func (t TelemetryObjectType) AsLabel() metrics.Label {
+	return telemetry.NewLabel(TLType, string(t))
+}
+
+// AsLabel Returns this TelemetryAction as a label.
+func (t TelemetryAction) AsLabel() metrics.Label {
+	return telemetry.NewLabel(TLAction, string(t))
+}
+
+// GetIncObjFunc creates a function that will call telemetry.IncrCounterWithLabels for counting metadata module chain objects.
+func GetIncObjFunc(objType TelemetryObjectType, action TelemetryAction) func() {
+	var val float32 = -1 // Default is for action == TLActionDeleted
+	if action == TLActionCreated {
+		val = 1
+	} else if action == TLActionUpdated {
+		val = 0
+	}
+	cat := TLCategoryOSLocator // Default is for objType == TLTypeOSLocator
+	if objType == TLTypeScope || objType == TLTypeSession || objType == TLTypeRecord {
+		cat = TLCategoryEntry
+	} else if objType == TLTypeScopeSpec || objType == TLTypeContractSpec || objType == TLTypeRecordSpec {
+		cat = TLCategorySpecification
+	}
+	return func() {
+		telemetry.IncrCounterWithLabels(
+			[]string{ModuleName, TKObject},
+			val,
+			[]metrics.Label{cat.AsLabel(), objType.AsLabel(), action.AsLabel()},
+		)
+	}
+}
 
 // TxEndpoint is an enum for metadata TX endpoints.
 type TxEndpoint string
