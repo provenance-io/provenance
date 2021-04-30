@@ -1018,6 +1018,18 @@ func (s *AddressTestSuite) TestScopeAddressConverters() {
 				assert.EqualError(t, err, test.expectedError, "%s AsScopeAddress expected err", test.name)
 			}
 		})
+		s.T().Run(fmt.Sprintf("%s MustGetAsScopeAddress", test.name), func(t *testing.T) {
+			if len(test.expectedError) == 0 {
+				assert.NotPanics(t, func() {
+					actualID := test.baseID.MustGetAsScopeAddress()
+					assert.Equal(t, test.expectedID, actualID, "%s MustGetAsScopeAddress value", test.name)
+				}, "%s MustGetAsScopeAddress unexpected panic", test.name)
+			} else {
+				assert.PanicsWithError(t, test.expectedError, func() {
+					_ = test.baseID.MustGetAsScopeAddress()
+				}, "%s MustGetAsScopeAddress expected panic", test.name)
+			}
+		})
 	}
 }
 
@@ -1164,6 +1176,18 @@ func (s *AddressTestSuite) TestRecordAddressConverters() {
 					assert.Equal(t, test.expectedID, actualID, "%s AsRecordAddress value", test.name)
 				} else {
 					assert.EqualError(t, err, test.expectedError, "%s AsRecordAddress expected err", test.name)
+				}
+			})
+			s.T().Run(fmt.Sprintf("%s MustGetAsRecordAddress(\"%s\")", test.name, rName), func(t *testing.T) {
+				if len(test.expectedError) == 0 {
+					assert.NotPanics(t, func() {
+						actualID := test.baseID.MustGetAsRecordAddress(rName)
+						assert.Equal(t, test.expectedID, actualID, "%s MustGetAsRecordAddress value", test.name)
+					}, "%s MustGetAsRecordAddress unexpected panic", test.name)
+				} else {
+					assert.PanicsWithError(t, test.expectedError, func() {
+						_ = test.baseID.MustGetAsRecordAddress(rName)
+					}, "%s MustGetAsRecordAddress expected panic", test.name)
 				}
 			})
 		}
@@ -1315,6 +1339,18 @@ func (s *AddressTestSuite) TestContractSpecAddressConverters() {
 				assert.Equal(t, test.expectedID, actualID, "%s AsContractSpecAddress value", test.name)
 			} else {
 				assert.EqualError(t, err, test.expectedError, "%s AsContractSpecAddress expected err", test.name)
+			}
+		})
+		s.T().Run(fmt.Sprintf("%s MustGetAsContractSpecAddress", test.name), func(t *testing.T) {
+			if len(test.expectedError) == 0 {
+				assert.NotPanics(t, func() {
+					actualID := test.baseID.MustGetAsContractSpecAddress()
+					assert.Equal(t, test.expectedID, actualID, "%s MustGetAsContractSpecAddress value", test.name)
+				}, "%s MustGetAsContractSpecAddress unexpected panic", test.name)
+			} else {
+				assert.PanicsWithError(t, test.expectedError, func() {
+					_ = test.baseID.MustGetAsContractSpecAddress()
+				}, "%s MustGetAsContractSpecAddress expected panic", test.name)
 			}
 		})
 	}
