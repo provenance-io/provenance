@@ -92,8 +92,6 @@ func (k msgServer) AddScopeDataAccess(
 		return nil, err
 	}
 
-	existing.DataAccess = append(existing.DataAccess, msg.DataAccess...)
-
 	existing.AddDataAccess(msg.DataAccess)
 
 	k.SetScope(ctx, existing)
@@ -143,30 +141,28 @@ func (k msgServer) AddScopeOwner(
 	goCtx context.Context,
 	msg *types.MsgAddScopeOwnerRequest,
 ) (*types.MsgAddScopeOwnerResponse, error) {
-	// ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// existing, found := k.GetScope(ctx, msg.ScopeId)
-	// if !found {
-	// 	return nil, fmt.Errorf("scope not found with id %s", msg.ScopeId)
-	// }
+	existing, found := k.GetScope(ctx, msg.ScopeId)
+	if !found {
+		return nil, fmt.Errorf("scope not found with id %s", msg.ScopeId)
+	}
 
-	// if err := k.ValidateScopeAddDataAccess(ctx, msg.DataAccess, existing, msg.Signers); err != nil {
-	// 	return nil, err
-	// }
+	if err := k.ValidateScopeUpdateOwner(ctx, msg.Owners, existing, msg.Signers); err != nil {
+		return nil, err
+	}
 
-	// existing.DataAccess = append(existing.DataAccess, msg.DataAccess...)
+	existing.AddOwners(msg.Owners)
 
-	// existing.AddDataAccess(msg.DataAccess)
+	k.SetScope(ctx, existing)
 
-	// k.SetScope(ctx, existing)
-
-	// ctx.EventManager().EmitEvent(
-	// 	sdk.NewEvent(
-	// 		sdk.EventTypeMessage,
-	// 		sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-	// 		sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
-	// 	),
-	// )
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
+		),
+	)
 
 	return &types.MsgAddScopeOwnerResponse{}, nil
 }
@@ -175,28 +171,28 @@ func (k msgServer) DeleteScopeOwner(
 	goCtx context.Context,
 	msg *types.MsgDeleteScopeOwnerRequest,
 ) (*types.MsgDeleteScopeOwnerResponse, error) {
-	// ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// existing, found := k.GetScope(ctx, msg.ScopeId)
-	// if !found {
-	// 	return nil, fmt.Errorf("scope not found with id %s", msg.ScopeId)
-	// }
+	existing, found := k.GetScope(ctx, msg.ScopeId)
+	if !found {
+		return nil, fmt.Errorf("scope not found with id %s", msg.ScopeId)
+	}
 
-	// if err := k.ValidateScopeDeleteDataAccess(ctx, msg.DataAccess, existing, msg.Signers); err != nil {
-	// 	return nil, err
-	// }
+	if err := k.ValidateScopeDeleteOwners(ctx, msg.Owners, existing, msg.Signers); err != nil {
+		return nil, err
+	}
 
-	// existing.RemoveDataAccess(msg.DataAccess)
+	existing.RemoveOwners(msg.Owners)
 
-	// k.SetScope(ctx, existing)
+	k.SetScope(ctx, existing)
 
-	// ctx.EventManager().EmitEvent(
-	// 	sdk.NewEvent(
-	// 		sdk.EventTypeMessage,
-	// 		sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-	// 		sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
-	// 	),
-	// )
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
+		),
+	)
 
 	return &types.MsgDeleteScopeOwnerResponse{}, nil
 }

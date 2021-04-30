@@ -197,6 +197,138 @@ func TestDeleteScopeDataAccessValidateBasic(t *testing.T) {
 
 }
 
+func TestAddScopeOwnersValidateBasic(t *testing.T) {
+	notAScopeId := RecordMetadataAddress(uuid.New(), "recordname")
+	actualScopeId := ScopeMetadataAddress(uuid.New())
+
+	cases := map[string]struct {
+		msg      *MsgAddScopeOwnerRequest
+		wantErr  bool
+		errorMsg string
+	}{
+		"should fail to validate basic, incorrect scope id type": {
+			NewMsgAddScopeOwnerRequest(
+				notAScopeId,
+				[]*Party{{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_OWNER}},
+				[]string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			true,
+			fmt.Sprintf("address is not a scope id: %v", notAScopeId.String()),
+		},
+		"should fail to validate basic, requires at least one owner address": {
+			NewMsgAddScopeOwnerRequest(
+				actualScopeId,
+				[]*Party{},
+				[]string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"},
+			),
+			true,
+			"at least one owner party is required",
+		},
+		"should fail to validate basic, incorrect owner address format": {
+			NewMsgAddScopeOwnerRequest(
+				actualScopeId,
+				[]*Party{{Address: "notabech32address", Role: PartyType_PARTY_TYPE_OWNER}},
+				[]string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"},
+			),
+			true,
+			"owner address is invalid: notabech32address",
+		},
+		"should fail to validate basic, incorrect party type": {
+			NewMsgAddScopeOwnerRequest(
+				actualScopeId,
+				[]*Party{{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_UNSPECIFIED}},
+				[]string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"},
+			),
+			true,
+			"invalid party type for owner: cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck",
+		},
+		"should fail to validate basic, requires at least one signer": {
+			NewMsgAddScopeOwnerRequest(
+				actualScopeId,
+				[]*Party{{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_OWNER}},
+				[]string{},
+			),
+			true,
+			"at least one signer is required",
+		},
+		"should successfully validate basic": {
+			NewMsgAddScopeOwnerRequest(
+				actualScopeId,
+				[]*Party{{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_OWNER}},
+				[]string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"},
+			),
+			false,
+			"",
+		},
+	}
+
+	for n, tc := range cases {
+		tc := tc
+
+		t.Run(n, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.wantErr {
+				require.Error(t, err)
+				require.Equal(t, tc.errorMsg, err.Error())
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+
+}
+
+func TestDeleteScopeOwnerValidateBasic(t *testing.T) {
+	notAScopeId := RecordMetadataAddress(uuid.New(), "recordname")
+	actualScopeId := ScopeMetadataAddress(uuid.New())
+
+	cases := map[string]struct {
+		msg      *MsgDeleteScopeOwnerRequest
+		wantErr  bool
+		errorMsg string
+	}{
+		"should fail to validate basic, incorrect scope id type": {
+			NewMsgDeleteScopeOwnerRequest(notAScopeId, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			true,
+			fmt.Sprintf("address is not a scope id: %v", notAScopeId.String()),
+		},
+		"should fail to validate basic, requires at least one owner address": {
+			NewMsgDeleteScopeOwnerRequest(actualScopeId, []string{}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			true,
+			"at least one owner address is required",
+		},
+		"should fail to validate basic, incorrect data access address format": {
+			NewMsgDeleteScopeOwnerRequest(actualScopeId, []string{"notabech32address"}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			true,
+			"owner address is invalid: notabech32address",
+		},
+		"should fail to validate basic, requires at least one signer": {
+			NewMsgDeleteScopeOwnerRequest(actualScopeId, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}, []string{}),
+			true,
+			"at least one signer is required",
+		},
+		"should successfully validate basic": {
+			NewMsgDeleteScopeOwnerRequest(actualScopeId, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			false,
+			"",
+		},
+	}
+
+	for n, tc := range cases {
+		tc := tc
+
+		t.Run(n, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.wantErr {
+				require.Error(t, err)
+				require.Equal(t, tc.errorMsg, err.Error())
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+
+}
+
 func TestWriteP8eContractSpecValidation(t *testing.T) {
 
 	validInputSpec := p8e.DefinitionSpec{

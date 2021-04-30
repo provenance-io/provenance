@@ -204,6 +204,92 @@ func (s *ScopeTestSuite) TestScopeRemoveAccess() {
 	}
 }
 
+func (s *ScopeTestSuite) TestScopeAddOwners() {
+	user1Owner := ownerPartyList(s.Addr)
+	user1Investor := Party{Address: s.Addr, Role: PartyType_PARTY_TYPE_INVESTOR}
+	user2Affiliate := Party{Address: "addr2", Role: PartyType_PARTY_TYPE_AFFILIATE}
+	tests := []struct {
+		name     string
+		scope    *Scope
+		owners   []*Party
+		expected []Party
+	}{
+		{
+			"should successfully add new owner address with new role",
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), user1Owner, []string{}, ""),
+			[]*Party{&user1Investor},
+			[]Party{user1Investor},
+		},
+		{
+			"should successfully not add same owner twice",
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), user1Owner, []string{"addr1"}, ""),
+			[]*Party{&user1Investor, &user1Investor},
+			[]Party{user1Investor},
+		},
+		{
+			"should successfully add new address to data access",
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), user1Owner, []string{"addr1"}, ""),
+			[]*Party{&user1Investor, &user2Affiliate},
+			[]Party{user1Investor, user2Affiliate},
+		},
+		{
+			"should successfully not change the list",
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), user1Owner, []string{"addr1"}, ""),
+			[]*Party{},
+			user1Owner,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		s.T().Run(tt.name, func(t *testing.T) {
+
+			tt.scope.AddOwners(tt.owners)
+			require.Equal(t, tt.scope.Owners, tt.expected)
+		})
+	}
+}
+
+func (s *ScopeTestSuite) TestScopeRemoveOwners() {
+	user1Owner := ownerPartyList(s.Addr)
+	user1Investor := Party{Address: s.Addr, Role: PartyType_PARTY_TYPE_INVESTOR}
+	user2Affiliate := Party{Address: "addr2", Role: PartyType_PARTY_TYPE_AFFILIATE}
+	tests := []struct {
+		name     string
+		scope    *Scope
+		owners   []string
+		expected []Party
+	}{
+		{
+			"should successfully remove owner by address",
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), user1Owner, []string{}, ""),
+			[]string{user1Owner[0].Address},
+			[]Party{},
+		},
+		{
+			"should successfully not remove any owner",
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), user1Owner, []string{"addr1"}, ""),
+			[]string{"notanowner"},
+			user1Owner,
+		},
+		{
+			"should successfully remove owner from list of multiple",
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{user1Investor, user2Affiliate}, []string{"addr1"}, ""),
+			[]string{user1Investor.Address},
+			[]Party{user2Affiliate},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		s.T().Run(tt.name, func(t *testing.T) {
+
+			tt.scope.RemoveOwners(tt.owners)
+			require.Equal(t, tt.scope.Owners, tt.expected)
+		})
+	}
+}
+
 func (s *ScopeTestSuite) TestScopeString() {
 	s.T().Run("scope string", func(t *testing.T) {
 		scopeUUID := uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")

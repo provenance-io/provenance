@@ -111,6 +111,40 @@ func (s *Scope) AddDataAccess(addresses []string) {
 	}
 }
 
+// AddOwners will append new owners or overwrite existing if address exists
+func (s *Scope) AddOwners(owners []*Party) {
+	for _, owner := range owners {
+		found := false
+		for i, existingOwner := range s.Owners {
+			if owner.Address == existingOwner.Address {
+				found = true
+				s.Owners[i] = *owner
+			}
+		}
+		if !found {
+			s.Owners = append(s.Owners, *owner)
+		}
+	}
+}
+
+func (s *Scope) RemoveOwners(owners []string) {
+	newOwners := []Party{}
+	for _, existingOwners := range s.Owners {
+		found := false
+		for _, remove := range owners {
+			if remove == existingOwners.Address {
+				found = true
+				break
+			}
+		}
+		if !found {
+			newOwners = append(newOwners, existingOwners)
+		}
+	}
+
+	s.Owners = newOwners
+}
+
 // UpdateAudit computes a set of changes to the audit fields based on the existing message.
 func (a *AuditFields) UpdateAudit(blocktime time.Time, signers, message string) *AuditFields {
 	if a == nil {

@@ -272,10 +272,7 @@ func (k Keeper) ValidateScopeAddDataAccess(ctx sdk.Context, dataAccessAddrs []st
 		if err != nil {
 			return fmt.Errorf("failed to decode data access address %s : %v", da, err.Error())
 		}
-	}
-
-	for _, da := range existing.DataAccess {
-		for _, pda := range dataAccessAddrs {
+		for _, pda := range existing.DataAccess {
 			if da == pda {
 				return fmt.Errorf("address already exists for data access %s", pda)
 			}
@@ -289,7 +286,7 @@ func (k Keeper) ValidateScopeAddDataAccess(ctx sdk.Context, dataAccessAddrs []st
 	return nil
 }
 
-// ValidateScopeDeleteDataAccess checks the current scope and the proposed
+// ValidateScopeDeleteDataAccess checks the current scope data access and the proposed removed items
 func (k Keeper) ValidateScopeDeleteDataAccess(ctx sdk.Context, dataAccessAddrs []string, existing types.Scope, signers []string) error {
 	if len(dataAccessAddrs) < 1 {
 		return fmt.Errorf("data access list cannot be empty")
@@ -299,9 +296,6 @@ func (k Keeper) ValidateScopeDeleteDataAccess(ctx sdk.Context, dataAccessAddrs [
 		if err != nil {
 			return fmt.Errorf("failed to decode data access address %s : %v", da, err.Error())
 		}
-	}
-
-	for _, da := range dataAccessAddrs {
 		found := false
 		for _, pda := range existing.DataAccess {
 			if da == pda {
@@ -311,6 +305,68 @@ func (k Keeper) ValidateScopeDeleteDataAccess(ctx sdk.Context, dataAccessAddrs [
 		}
 		if !found {
 			return fmt.Errorf("address does not exist in scope data access: %s", da)
+		}
+
+	}
+
+	if err := k.ValidateAllPartiesAreSigners(existing.Owners, signers); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ValidateScopeUpdateOwner checks the current scopes owners and the proposed update
+func (k Keeper) ValidateScopeUpdateOwner(ctx sdk.Context, owners []*types.Party, existing types.Scope, signers []string) error {
+	if len(owners) < 1 {
+		return fmt.Errorf("owner list cannot be empty")
+	}
+
+	for _, owner := range owners {
+		_, err := sdk.AccAddressFromBech32(owner.Address)
+		if err != nil {
+			return fmt.Errorf("failed to decode owner address %s : %v", owner.Address, err.Error())
+		}
+		if owner.GetRole() == types.PartyType_PARTY_TYPE_UNSPECIFIED {
+			return fmt.Errorf("invalid party type for owner: %s", owner.Address)
+		}
+	}
+
+	for _, existingOwner := range existing.Owners {
+		for _, owner := range owners {
+			if existingOwner.Address == owner.Address && existingOwner.Role == owner.Role {
+				return fmt.Errorf("owner %s already exists on with role %s", owner, owner.GetRole().String())
+			}
+		}
+	}
+
+	if err := k.ValidateAllPartiesAreSigners(existing.Owners, signers); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ValidateScopeDeleteDataAccess checks the current scope data access and the proposed removed items
+func (k Keeper) ValidateScopeDeleteOwners(ctx sdk.Context, ownerAddrs []string, existing types.Scope, signers []string) error {
+	if len(ownerAddrs) < 1 {
+		return fmt.Errorf("owner address list cannot be empty")
+	}
+	for _, owner := range ownerAddrs {
+		_, err := sdk.AccAddressFromBech32(owner)
+		if err != nil {
+			return fmt.Errorf("failed to decode owner address %s : %v", owner, err.Error())
+		}
+
+		found := false
+		for _, existingOwner := range existing.Owners {
+			if owner == existingOwner.Address {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("address does not exist in scope owners: %s", owner)
 		}
 	}
 

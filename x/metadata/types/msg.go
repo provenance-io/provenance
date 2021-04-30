@@ -357,12 +357,15 @@ func (msg *MsgAddScopeOwnerRequest) ValidateBasic() error {
 		return fmt.Errorf("address is not a scope id: %v", msg.ScopeId.String())
 	}
 	if len(msg.Owners) < 1 {
-		return fmt.Errorf("at least one owner address is required")
+		return fmt.Errorf("at least one owner party is required")
 	}
 	for _, owner := range msg.Owners {
 		_, err := sdk.AccAddressFromBech32(owner.Address)
 		if err != nil {
 			return fmt.Errorf("owner address is invalid: %s", owner.Address)
+		}
+		if owner.GetRole() == PartyType_PARTY_TYPE_UNSPECIFIED {
+			return fmt.Errorf("invalid party type for owner: %s", owner.Address)
 		}
 	}
 	if len(msg.Signers) < 1 {
@@ -374,7 +377,7 @@ func (msg *MsgAddScopeOwnerRequest) ValidateBasic() error {
 // ------------------  MsgDeleteScopeOwnerRequest  ------------------
 
 // NewMsgDeleteScopeOwnerRequest creates a new msg instance
-func NewMsgDeleteScopeOwnerRequest(scopeID MetadataAddress, owners []*Party, signers []string) *MsgDeleteScopeOwnerRequest {
+func NewMsgDeleteScopeOwnerRequest(scopeID MetadataAddress, owners []string, signers []string) *MsgDeleteScopeOwnerRequest {
 	return &MsgDeleteScopeOwnerRequest{
 		ScopeId: scopeID,
 		Owners:  owners,
@@ -416,9 +419,9 @@ func (msg *MsgDeleteScopeOwnerRequest) ValidateBasic() error {
 		return fmt.Errorf("at least one owner address is required")
 	}
 	for _, owner := range msg.Owners {
-		_, err := sdk.AccAddressFromBech32(owner.Address)
+		_, err := sdk.AccAddressFromBech32(owner)
 		if err != nil {
-			return fmt.Errorf("owner address is invalid: %s", owner.Address)
+			return fmt.Errorf("owner address is invalid: %s", owner)
 		}
 	}
 	if len(msg.Signers) < 1 {

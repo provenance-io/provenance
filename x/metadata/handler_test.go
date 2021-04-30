@@ -106,9 +106,9 @@ func (s HandlerTestSuite) TestWriteSession() {
 
 	scopeUUID := uuid.New()
 	scope := types.Scope{
-		ScopeId:           types.ScopeMetadataAddress(scopeUUID),
-		SpecificationId:   nil,
-		Owners:            []types.Party{{
+		ScopeId:         types.ScopeMetadataAddress(scopeUUID),
+		SpecificationId: nil,
+		Owners: []types.Party{{
 			Address: s.user1,
 			Role:    types.PartyType_PARTY_TYPE_OWNER,
 		}},
@@ -240,6 +240,87 @@ func ownerPartyList(addresses ...string) []types.Party {
 		retval[i] = types.Party{Address: addr, Role: types.PartyType_PARTY_TYPE_OWNER}
 	}
 	return retval
+}
+
+func (s HandlerTestSuite) TestUpdateAndDeleteScopeOwners() {
+	scopeID := types.ScopeMetadataAddress(uuid.New())
+	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
+	scope := types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, "")
+	dneScopeID := types.ScopeMetadataAddress(uuid.New())
+	user3 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()
+
+	cases := []struct {
+		name     string
+		msg      sdk.Msg
+		signers  []string
+		errorMsg string
+	}{
+		{
+			"setup test with new scope",
+			types.NewMsgWriteScopeRequest(*scope, []string{s.user1}),
+			[]string{s.user1},
+			"",
+		},
+		{
+			"should fail to UPDATE owners, msg validate basic failure",
+			types.NewMsgAddScopeOwnerRequest(scopeID, []*types.Party{}, []string{s.user1}),
+			[]string{s.user1},
+			"owner list cannot be empty",
+		},
+		{
+			"should fail to UPDATE owners, can not find scope",
+			types.NewMsgAddScopeOwnerRequest(dneScopeID, []*types.Party{{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER}}, []string{s.user1}),
+			[]string{s.user1},
+			fmt.Sprintf("scope not found with id %s", dneScopeID),
+		},
+		{
+			"should fail to UPDATE owners, validate add failure",
+			types.NewMsgAddScopeOwnerRequest(scopeID, []*types.Party{{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER}}, []string{s.user1}),
+			[]string{s.user1},
+			fmt.Sprintf("owner %s - %s already exists on with role %s", s.user1, types.PartyType_PARTY_TYPE_OWNER, types.PartyType_PARTY_TYPE_OWNER),
+		},
+		{
+			"should successfully UPDATE owners",
+			types.NewMsgAddScopeOwnerRequest(scopeID, []*types.Party{{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER}}, []string{s.user1}),
+			[]string{s.user1},
+			"",
+		},
+		{
+			"should fail to DELETE owners, msg validate basic failure",
+			types.NewMsgDeleteScopeOwnerRequest(scopeID, []string{}, []string{s.user1, s.user2}),
+			[]string{s.user1},
+			"owner address list cannot be empty",
+		},
+		{
+			"should fail to DELETE owners, validate add failure",
+			types.NewMsgDeleteScopeOwnerRequest(dneScopeID, []string{s.user1}, []string{s.user1, s.user2}),
+			[]string{s.user1},
+			fmt.Sprintf("scope not found with id %s", dneScopeID),
+		},
+		{
+			"should fail to DELETE owners, validate add failure",
+			types.NewMsgDeleteScopeOwnerRequest(scopeID, []string{user3}, []string{s.user1, s.user2}),
+			[]string{s.user1},
+			fmt.Sprintf("address does not exist in scope owners: %s", user3),
+		},
+		{
+			"should successfully DELETE owners",
+			types.NewMsgDeleteScopeOwnerRequest(scopeID, []string{s.user2}, []string{s.user1, s.user2}),
+			[]string{s.user1},
+			"",
+		},
+	}
+
+	for _, tc := range cases {
+		s.T().Run(tc.name, func(t *testing.T) {
+			_, err := s.handler(s.ctx, tc.msg)
+			if len(tc.errorMsg) > 0 {
+				assert.EqualError(t, err, tc.errorMsg)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
 }
 
 func (s HandlerTestSuite) TestAddAndDeleteScopeDataAccess() {
