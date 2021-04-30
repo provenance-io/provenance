@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	"github.com/gogo/protobuf/proto"
 	"net/url"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -11,6 +10,7 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/gogo/protobuf/proto"
 	"github.com/provenance-io/provenance/x/metadata/types"
 	"github.com/tendermint/tendermint/libs/log"
 )
