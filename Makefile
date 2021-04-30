@@ -171,7 +171,11 @@ endif
 
 RELEASE_WASM=$(RELEASE_BIN)/$(LIBWASMVM)
 RELEASE_PIO=$(RELEASE_BIN)/provenanced
-RELEASE_ZIP_NAME=provenance-$(UNAME_S)-$(ARCH)-$(VERSION).zip
+ifeq ($(TAG_RELEASE_ZIP),no)
+  RELEASE_ZIP_NAME=provenance-$(UNAME_S)-$(ARCH).zip
+else
+  RELEASE_ZIP_NAME=provenance-$(UNAME_S)-$(ARCH)-$(VERSION).zip
+endif
 RELEASE_ZIP=$(BUILDDIR)/$(RELEASE_ZIP_NAME)
 
 .PHONY: build-release-clean
