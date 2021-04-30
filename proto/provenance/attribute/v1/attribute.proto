@@ -49,3 +49,19 @@ enum AttributeType {
   // ATTRIBUTE_TYPE_BYTES defines an attribute value that contains an untyped array of bytes
   ATTRIBUTE_TYPE_BYTES = 8 [(gogoproto.enumvalue_customname) = "Bytes"];
 }
+
+// EventAttributeAdd event emitted when attribute is added
+message EventAttributeAdd {
+  string name    = 1;
+  string value   = 2;
+  string type    = 3;
+  string account = 4;
+  string owner   = 5;
+}
+
+// EventAttributeDelete event emitted when attribute is deleted
+message EventAttributeDelete {
+  string name    = 1;
+  string account = 2;
+  string owner   = 3;
+}

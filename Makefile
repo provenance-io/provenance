@@ -223,7 +223,10 @@ statik:
 	$(GO) get -u github.com/rakyll/statik
 	$(GO) generate ./api/...
 
-.PHONY: go-mod-cache go.sum lint clean format check-built statik
+linkify:
+	python ./scripts/linkify.py CHANGELOG.md
+
+.PHONY: go-mod-cache go.sum lint clean format check-built statik linkify
 
 
 ##############################

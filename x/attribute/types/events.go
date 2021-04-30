@@ -9,4 +9,37 @@ const (
 	AttributeKeyAttribute      string = "attribute"
 	AttributeKeyNameAttribute  string = "attribute_name"
 	AttributeKeyAccountAddress string = "account_address"
+
+	// EventTelemetryKeyAdd add telemetry metrics key
+	EventTelemetryKeyAdd string = "add"
+	// EventTelemetryKeyDelete delete telemetry metrics key
+	EventTelemetryKeyDelete string = "delete"
+	// EventTelemetryLabelName name telemetry metrics label
+	EventTelemetryLabelName string = "name"
+	// EventTelemetryLabelType type telemetry metrics label
+	EventTelemetryLabelType string = "type"
+	// EventTelemetryLabelOwner owner telemetry metrics label
+	EventTelemetryLabelOwner string = "owner"
+	// EventTelemetryKeyAccount acount telemetry metrics label
+	EventTelemetryLabelAccount string = "account"
+	// EventTelemetryKeyAccount size telemetry metrics label
+	EventTelemetryLabelSize string = "size"
 )
+
+func NewEventAttributeAdd(attribute Attribute, owner string) *EventAttributeAdd {
+	return &EventAttributeAdd{
+		Name:    attribute.Name,
+		Value:   string(attribute.GetValue()),
+		Type:    attribute.AttributeType.String(),
+		Account: attribute.Address,
+		Owner:   owner,
+	}
+}
+
+func NewEventAttributeDelete(name string, account string, owner string) *EventAttributeDelete {
+	return &EventAttributeDelete{
+		Name:    name,
+		Owner:   owner,
+		Account: account,
+	}
+}
