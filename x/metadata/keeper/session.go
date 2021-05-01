@@ -29,10 +29,10 @@ func (k Keeper) SetSession(ctx sdk.Context, session types.Session) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryBare(&session)
 
-	var event proto.Message = types.NewEventSessionCreated(session)
+	var event proto.Message = types.NewEventSessionCreated(session.SessionId)
 	action := types.TLActionCreated
 	if store.Has(session.SessionId) {
-		event = types.NewEventSessionUpdated(session)
+		event = types.NewEventSessionUpdated(session.SessionId)
 		action = types.TLActionUpdated
 	}
 
@@ -48,12 +48,13 @@ func (k Keeper) RemoveSession(ctx sdk.Context, id types.MetadataAddress) {
 	}
 	store := ctx.KVStore(k.storeKey)
 
-	session, found := k.GetSession(ctx, id)
-	if found && !k.sessionHasRecords(ctx, id) {
-		store.Delete(id)
-		k.EmitEvent(ctx, types.NewEventSessionDeleted(session))
-		defer types.GetIncObjFunc(types.TLTypeSession, types.TLActionDeleted)
+	if !store.Has(id) || k.sessionHasRecords(ctx, id) {
+		return
 	}
+
+	store.Delete(id)
+	k.EmitEvent(ctx, types.NewEventSessionDeleted(id))
+	defer types.GetIncObjFunc(types.TLTypeSession, types.TLActionDeleted)
 }
 
 func (k Keeper) sessionHasRecords(ctx sdk.Context, id types.MetadataAddress) bool {

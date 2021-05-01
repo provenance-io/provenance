@@ -54,7 +54,7 @@ func (k Keeper) SetOSLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, ur
 	}
 	store.Set(key, bz)
 
-	k.EmitEvent(ctx, types.NewEventOSLocatorCreated(record))
+	k.EmitEvent(ctx, types.NewEventOSLocatorCreated(record.Owner))
 	defer types.GetIncObjFunc(types.TLTypeOSLocator, types.TLActionCreated)
 	return nil
 }
@@ -117,12 +117,13 @@ func (k Keeper) GetOSLocatorByScope(ctx sdk.Context, scopeID string) ([]types.Ob
 // DeleteRecord deletes an os locator record from the kvstore.
 func (k Keeper) DeleteRecord(ctx sdk.Context, ownerAddr sdk.AccAddress) error {
 	key := types.GetOSLocatorKey(ownerAddr)
-	if oldRecord, found := k.GetOsLocatorRecord(ctx, ownerAddr); found {
-		store := ctx.KVStore(k.storeKey)
-		store.Delete(key)
-		k.EmitEvent(ctx, types.NewEventOSLocatorDeleted(oldRecord))
-		defer types.GetIncObjFunc(types.TLTypeOSLocator, types.TLActionDeleted)
+	store := ctx.KVStore(k.storeKey)
+	if !store.Has(key) {
+		return types.ErrAddressNotBound
 	}
+	store.Delete(key)
+	k.EmitEvent(ctx, types.NewEventOSLocatorDeleted(ownerAddr.String()))
+	defer types.GetIncObjFunc(types.TLTypeOSLocator, types.TLActionDeleted)
 	return nil
 }
 
@@ -134,8 +135,7 @@ func (k Keeper) ModifyRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, uri stri
 	}
 	key := types.GetOSLocatorKey(ownerAddr)
 	store := ctx.KVStore(k.storeKey)
-	oldRecord, found := k.GetOsLocatorRecord(ctx, ownerAddr)
-	if !found {
+	if !store.Has(key) {
 		return types.ErrAddressNotBound
 	}
 	record := types.NewOSLocatorRecord(ownerAddr, urlToPersist.String())
@@ -144,7 +144,7 @@ func (k Keeper) ModifyRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, uri stri
 		return err
 	}
 	store.Set(key, bz)
-	k.EmitEvent(ctx, types.NewEventOSLocatorUpdated(record, oldRecord))
+	k.EmitEvent(ctx, types.NewEventOSLocatorUpdated(record.Owner))
 	defer types.GetIncObjFunc(types.TLTypeOSLocator, types.TLActionUpdated)
 	return nil
 }

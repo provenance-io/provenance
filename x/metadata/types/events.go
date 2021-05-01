@@ -124,144 +124,137 @@ func NewEventTxCompleted(endpoint TxEndpoint, signers []sdk.AccAddress) *EventTx
 	return retval
 }
 
-func NewEventScopeCreated(scope Scope) *EventScopeCreated {
+func NewEventScopeCreated(scopeID MetadataAddress) *EventScopeCreated {
 	return &EventScopeCreated{
-		ScopeAddr: scope.ScopeId.String(),
+		ScopeAddr: scopeID.String(),
 	}
 }
 
-func NewEventScopeUpdated(scope Scope) *EventScopeUpdated {
+func NewEventScopeUpdated(scopeID MetadataAddress) *EventScopeUpdated {
 	return &EventScopeUpdated{
-		ScopeAddr: scope.ScopeId.String(),
+		ScopeAddr: scopeID.String(),
 	}
 }
 
-func NewEventScopeDeleted(scope Scope) *EventScopeDeleted {
+func NewEventScopeDeleted(scopeID MetadataAddress) *EventScopeDeleted {
 	return &EventScopeDeleted{
-		ScopeAddr: scope.ScopeId.String(),
+		ScopeAddr: scopeID.String(),
 	}
 }
 
-func NewEventSessionCreated(session Session) *EventSessionCreated {
+func NewEventSessionCreated(sessionID MetadataAddress) *EventSessionCreated {
 	return &EventSessionCreated{
-		SessionAddr: session.SessionId.String(),
-		ScopeAddr:   session.SessionId.MustGetAsScopeAddress().String(),
+		SessionAddr: sessionID.String(),
+		ScopeAddr:   sessionID.MustGetAsScopeAddress().String(),
 	}
 }
 
-func NewEventSessionUpdated(session Session) *EventSessionUpdated {
+func NewEventSessionUpdated(sessionID MetadataAddress) *EventSessionUpdated {
 	return &EventSessionUpdated{
-		SessionAddr: session.SessionId.String(),
-		ScopeAddr:   session.SessionId.MustGetAsScopeAddress().String(),
+		SessionAddr: sessionID.String(),
+		ScopeAddr:   sessionID.MustGetAsScopeAddress().String(),
 	}
 }
 
-func NewEventSessionDeleted(session Session) *EventSessionDeleted {
+func NewEventSessionDeleted(sessionID MetadataAddress) *EventSessionDeleted {
 	return &EventSessionDeleted{
-		SessionAddr: session.SessionId.String(),
-		ScopeAddr:   session.SessionId.MustGetAsScopeAddress().String(),
+		SessionAddr: sessionID.String(),
+		ScopeAddr:   sessionID.MustGetAsScopeAddress().String(),
 	}
 }
 
-func NewEventRecordCreated(record Record) *EventRecordCreated {
+func NewEventRecordCreated(recordID MetadataAddress) *EventRecordCreated {
 	return &EventRecordCreated{
-		RecordAddr:  record.SessionId.MustGetAsRecordAddress(record.Name).String(),
-		SessionAddr: record.SessionId.String(),
-		ScopeAddr:   record.SessionId.MustGetAsScopeAddress().String(),
+		RecordAddr: recordID.String(),
+		ScopeAddr:  recordID.MustGetAsScopeAddress().String(),
 	}
 }
 
-func NewEventRecordUpdated(record Record) *EventRecordUpdated {
+func NewEventRecordUpdated(recordID MetadataAddress) *EventRecordUpdated {
 	return &EventRecordUpdated{
-		RecordAddr:  record.SessionId.MustGetAsRecordAddress(record.Name).String(),
-		SessionAddr: record.SessionId.String(),
-		ScopeAddr:   record.SessionId.MustGetAsScopeAddress().String(),
+		RecordAddr: recordID.String(),
+		ScopeAddr:  recordID.MustGetAsScopeAddress().String(),
 	}
 }
 
-func NewEventRecordDeleted(record Record) *EventRecordDeleted {
+func NewEventRecordDeleted(recordID MetadataAddress) *EventRecordDeleted {
 	return &EventRecordDeleted{
-		RecordAddr:  record.SessionId.MustGetAsRecordAddress(record.Name).String(),
-		SessionAddr: record.SessionId.String(),
-		ScopeAddr:   record.SessionId.MustGetAsScopeAddress().String(),
+		RecordAddr: recordID.String(),
+		ScopeAddr:  recordID.MustGetAsScopeAddress().String(),
 	}
 }
 
-func NewEventScopeSpecificationCreated(scopeSpecification ScopeSpecification) *EventScopeSpecificationCreated {
+func NewEventScopeSpecificationCreated(scopeSpecificationID MetadataAddress) *EventScopeSpecificationCreated {
 	return &EventScopeSpecificationCreated{
-		ScopeSpecificationAddr: scopeSpecification.SpecificationId.String(),
+		ScopeSpecificationAddr: scopeSpecificationID.String(),
 	}
 }
 
-func NewEventScopeSpecificationUpdated(scopeSpecification ScopeSpecification) *EventScopeSpecificationUpdated {
+func NewEventScopeSpecificationUpdated(scopeSpecificationID MetadataAddress) *EventScopeSpecificationUpdated {
 	return &EventScopeSpecificationUpdated{
-		ScopeSpecificationAddr: scopeSpecification.SpecificationId.String(),
+		ScopeSpecificationAddr: scopeSpecificationID.String(),
 	}
 }
 
-func NewEventScopeSpecificationDeleted(scopeSpecification ScopeSpecification) *EventScopeSpecificationDeleted {
+func NewEventScopeSpecificationDeleted(scopeSpecificationID MetadataAddress) *EventScopeSpecificationDeleted {
 	return &EventScopeSpecificationDeleted{
-		ScopeSpecificationAddr: scopeSpecification.SpecificationId.String(),
+		ScopeSpecificationAddr: scopeSpecificationID.String(),
 	}
 }
 
-func NewEventContractSpecificationCreated(contractSpecification ContractSpecification) *EventContractSpecificationCreated {
+func NewEventContractSpecificationCreated(contractSpecificationID MetadataAddress) *EventContractSpecificationCreated {
 	return &EventContractSpecificationCreated{
-		ContractSpecificationAddr: contractSpecification.SpecificationId.String(),
+		ContractSpecificationAddr: contractSpecificationID.String(),
 	}
 }
 
-func NewEventContractSpecificationUpdated(contractSpecification ContractSpecification) *EventContractSpecificationUpdated {
+func NewEventContractSpecificationUpdated(contractSpecificationID MetadataAddress) *EventContractSpecificationUpdated {
 	return &EventContractSpecificationUpdated{
-		ContractSpecificationAddr: contractSpecification.SpecificationId.String(),
+		ContractSpecificationAddr: contractSpecificationID.String(),
 	}
 }
 
-func NewEventContractSpecificationDeleted(contractSpecification ContractSpecification) *EventContractSpecificationDeleted {
+func NewEventContractSpecificationDeleted(contractSpecificationID MetadataAddress) *EventContractSpecificationDeleted {
 	return &EventContractSpecificationDeleted{
-		ContractSpecificationAddr: contractSpecification.SpecificationId.String(),
+		ContractSpecificationAddr: contractSpecificationID.String(),
 	}
 }
 
-func NewEventRecordSpecificationCreated(recordSpecification RecordSpecification) *EventRecordSpecificationCreated {
+func NewEventRecordSpecificationCreated(recordSpecificationID MetadataAddress) *EventRecordSpecificationCreated {
 	return &EventRecordSpecificationCreated{
-		RecordSpecificationAddr:   recordSpecification.SpecificationId.String(),
-		ContractSpecificationAddr: recordSpecification.SpecificationId.MustGetAsContractSpecAddress().String(),
+		RecordSpecificationAddr:   recordSpecificationID.String(),
+		ContractSpecificationAddr: recordSpecificationID.MustGetAsContractSpecAddress().String(),
 	}
 }
 
-func NewEventRecordSpecificationUpdated(recordSpecification RecordSpecification) *EventRecordSpecificationUpdated {
+func NewEventRecordSpecificationUpdated(recordSpecificationID MetadataAddress) *EventRecordSpecificationUpdated {
 	return &EventRecordSpecificationUpdated{
-		RecordSpecificationAddr:   recordSpecification.SpecificationId.String(),
-		ContractSpecificationAddr: recordSpecification.SpecificationId.MustGetAsContractSpecAddress().String(),
+		RecordSpecificationAddr:   recordSpecificationID.String(),
+		ContractSpecificationAddr: recordSpecificationID.MustGetAsContractSpecAddress().String(),
 	}
 }
 
-func NewEventRecordSpecificationDeleted(recordSpecification RecordSpecification) *EventRecordSpecificationDeleted {
+func NewEventRecordSpecificationDeleted(recordSpecificationID MetadataAddress) *EventRecordSpecificationDeleted {
 	return &EventRecordSpecificationDeleted{
-		RecordSpecificationAddr:   recordSpecification.SpecificationId.String(),
-		ContractSpecificationAddr: recordSpecification.SpecificationId.MustGetAsContractSpecAddress().String(),
+		RecordSpecificationAddr:   recordSpecificationID.String(),
+		ContractSpecificationAddr: recordSpecificationID.MustGetAsContractSpecAddress().String(),
 	}
 }
 
-func NewEventOSLocatorCreated(osLocator ObjectStoreLocator) *EventOSLocatorCreated {
+func NewEventOSLocatorCreated(owner string) *EventOSLocatorCreated {
 	return &EventOSLocatorCreated{
-		Address: osLocator.Owner,
-		Uri:     osLocator.LocatorUri,
+		Owner: owner,
 	}
 }
 
-func NewEventOSLocatorUpdated(osLocator, osLocatorReplaced ObjectStoreLocator) *EventOSLocatorUpdated {
+func NewEventOSLocatorUpdated(owner string) *EventOSLocatorUpdated {
 	return &EventOSLocatorUpdated{
-		Address:     osLocator.Owner,
-		Uri:         osLocator.LocatorUri,
-		UriReplaced: osLocatorReplaced.LocatorUri,
+		Owner: owner,
 	}
 }
 
-func NewEventOSLocatorDeleted(osLocator ObjectStoreLocator) *EventOSLocatorDeleted {
+func NewEventOSLocatorDeleted(owner string) *EventOSLocatorDeleted {
 	return &EventOSLocatorDeleted{
-		Address: osLocator.Owner,
-		Uri:     osLocator.LocatorUri,
+		Owner: owner,
 	}
 }

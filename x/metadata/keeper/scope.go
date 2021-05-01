@@ -82,10 +82,10 @@ func (k Keeper) SetScope(ctx sdk.Context, scope types.Scope) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryBare(&scope)
 
-	var event proto.Message = types.NewEventScopeCreated(scope)
+	var event proto.Message = types.NewEventScopeCreated(scope.ScopeId)
 	action := types.TLActionCreated
 	if store.Has(scope.ScopeId) {
-		event = types.NewEventScopeUpdated(scope)
+		event = types.NewEventScopeUpdated(scope.ScopeId)
 		action = types.TLActionUpdated
 		if oldScopeBytes := store.Get(scope.ScopeId); oldScopeBytes != nil {
 			var oldScope types.Scope
@@ -129,7 +129,7 @@ func (k Keeper) RemoveScope(ctx sdk.Context, id types.MetadataAddress) {
 
 	k.clearScopeIndex(ctx, scope)
 	store.Delete(id)
-	k.EmitEvent(ctx, types.NewEventScopeDeleted(scope))
+	k.EmitEvent(ctx, types.NewEventScopeDeleted(scope.ScopeId))
 	defer types.GetIncObjFunc(types.TLTypeScope, types.TLActionDeleted)
 }
 
