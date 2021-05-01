@@ -484,7 +484,7 @@ func (k msgServer) BindOSLocator(
 	}
 
 	// Bind owner to URI
-	if err := k.Keeper.SetOSLocatorRecord(ctx, address, msg.Locator.LocatorUri); err != nil {
+	if err := k.Keeper.SetOSLocator(ctx, address, msg.Locator.LocatorUri); err != nil {
 		ctx.Logger().Error("unable to bind name", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
@@ -519,7 +519,7 @@ func (k msgServer) DeleteOSLocator(
 	}
 
 	// Delete
-	if err := k.Keeper.DeleteRecord(ctx, ownerAddr); err != nil {
+	if err := k.Keeper.RemoveOSLocator(ctx, ownerAddr); err != nil {
 		ctx.Logger().Error("error deleting name", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
@@ -553,7 +553,7 @@ func (k msgServer) ModifyOSLocator(
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "msg sender cannot delete os locator.")
 	}
 	// Modify
-	if err := k.Keeper.ModifyRecord(ctx, ownerAddr, msg.Locator.LocatorUri); err != nil {
+	if err := k.Keeper.ModifyOSLocator(ctx, ownerAddr, msg.Locator.LocatorUri); err != nil {
 		ctx.Logger().Error("error deleting name", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}

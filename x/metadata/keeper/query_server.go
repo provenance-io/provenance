@@ -881,7 +881,7 @@ func (k Keeper) OSLocatorsByURI(ctx context.Context, request *types.OSLocatorsBy
 		return false
 	}
 
-	if err := k.IterateLocators(ctxSDK, appendToRecords); err != nil {
+	if err := k.IterateOSLocators(ctxSDK, appendToRecords); err != nil {
 		return &retval, err
 	}
 	if records == nil {
@@ -957,7 +957,7 @@ func (k Keeper) OSAllLocators(ctx context.Context, request *types.OSAllLocatorsR
 		return false
 	}
 
-	if err := k.IterateLocators(ctxSDK, appendToRecords); err != nil {
+	if err := k.IterateOSLocators(ctxSDK, appendToRecords); err != nil {
 		return &retval, err
 	}
 	if records == nil {
