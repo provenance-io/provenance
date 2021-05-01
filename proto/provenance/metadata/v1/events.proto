@@ -162,26 +162,18 @@ message EventRecordSpecificationDeleted {
 
 // EventOSLocatorCreated is an event message indicating an object store locator has been created.
 message EventOSLocatorCreated {
-  // address is the address in the object store locator that was created.
-  string address = 1;
-  // uri is the uri in the object store locator that was created.
-  string uri = 2;
+  // owner is the owner in the object store locator that was created.
+  string owner = 1;
 }
 
 // EventOSLocatorUpdated is an event message indicating an object store locator has been updated.
 message EventOSLocatorUpdated {
-  // address is the address in the object store locator that was updated.
-  string address = 1;
-  // uri is the new uri that was just set.
-  string uri = 2;
-  // uri_replaced is the previous uri for this address (that has now been overwritten).
-  string uri_replaced = 3;
+  // owner is the owner in the object store locator that was updated.
+  string owner = 1;
 }
 
 // EventOSLocatorDeleted is an event message indicating an object store locator has been deleted.
 message EventOSLocatorDeleted {
-  // address is the address in the object store locator that was deleted.
-  string address = 1;
-  // uri is the uri in the object store locator that was deleted.
-  string uri = 2;
+  // owner is the owner in the object store locator that was deleted.
+  string owner = 1;
 }
