@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/provenance-io/provenance/x/authz"
+
 	"github.com/provenance-io/provenance/internal/statesync"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -113,6 +115,9 @@ import (
 	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
 
 	"github.com/provenance-io/provenance/internal/provwasm"
+
+	authzkeeper "github.com/provenance-io/provenance/x/authz/keeper"
+	authztypes "github.com/provenance-io/provenance/x/authz/types"
 )
 
 const (
@@ -168,6 +173,7 @@ var (
 		name.AppModuleBasic{},
 		metadata.AppModuleBasic{},
 		wasm.AppModuleBasic{},
+		authz.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -239,6 +245,7 @@ type App struct {
 	AttributeKeeper attributekeeper.Keeper
 	NameKeeper      namekeeper.Keeper
 	WasmKeeper      wasm.Keeper
+	AuthzKeeper     authzkeeper.Keeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
@@ -278,6 +285,7 @@ func New(
 		attributetypes.StoreKey,
 		nametypes.StoreKey,
 		wasm.StoreKey,
+		authztypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -334,6 +342,10 @@ func New(
 	app.CrisisKeeper = crisiskeeper.NewKeeper(
 		app.GetSubspace(crisistypes.ModuleName), invCheckPeriod, app.BankKeeper, authtypes.FeeCollectorName,
 	)
+	// Authz
+	app.AuthzKeeper = authzkeeper.NewKeeper(
+		keys[authztypes.StoreKey], appCodec, app.BaseApp.MsgServiceRouter(),
+	)
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath)
 
 	// register the staking hooks
@@ -347,7 +359,7 @@ func New(
 	)
 
 	app.MarkerKeeper = markerkeeper.NewKeeper(
-		appCodec, keys[markertypes.StoreKey], app.GetSubspace(markertypes.ModuleName), app.AccountKeeper, app.BankKeeper,
+		appCodec, keys[markertypes.StoreKey], app.GetSubspace(markertypes.ModuleName), app.AccountKeeper, app.BankKeeper, app.AuthzKeeper,
 	)
 
 	app.NameKeeper = namekeeper.NewKeeper(
@@ -475,6 +487,7 @@ func New(
 		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper),
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),
 		attribute.NewAppModule(app.AttributeKeeper),
+		authz.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper),
 
 		upgrade.NewAppModule(app.UpgradeKeeper),
@@ -773,6 +786,7 @@ func initParamsKeeper(appCodec codec.BinaryMarshaler, legacyAmino *codec.LegacyA
 	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, key, tkey)
 
 	paramsKeeper.Subspace(authtypes.ModuleName)
+	paramsKeeper.Subspace(authztypes.ModuleName)
 	paramsKeeper.Subspace(banktypes.ModuleName)
 	paramsKeeper.Subspace(stakingtypes.ModuleName)
 	paramsKeeper.Subspace(minttypes.ModuleName)

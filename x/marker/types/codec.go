@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/provenance-io/provenance/x/authz/exported"
 )
 
 // RegisterLegacyAminoCodec registers all the necessary types and interfaces for the
@@ -92,6 +93,11 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		"provenance.marker.v1.AccessGrant",
 		(*AccessGrantI)(nil),
 		&AccessGrant{},
+	)
+	registry.RegisterInterface(
+		"provenance.authz.v1.Authorization",
+		(*exported.Authorization)(nil),
+		&MarkerSendAuthorization{},
 	)
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }

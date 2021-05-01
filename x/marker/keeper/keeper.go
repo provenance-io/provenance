@@ -8,6 +8,7 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	authzkeeper "github.com/provenance-io/provenance/x/authz/keeper"
 
 	"github.com/provenance-io/provenance/x/marker/types"
 
@@ -47,6 +48,9 @@ type Keeper struct {
 	// To handle movement of coin between accounts and check total supply
 	bankKeeper bankkeeper.Keeper
 
+	// To check whether accounts exist for addresses.
+	authzKeeper authzkeeper.Keeper
+
 	// Key to access the key-value store from sdk.Context.
 	storeKey sdk.StoreKey
 
@@ -65,17 +69,19 @@ func NewKeeper(
 	paramSpace paramtypes.Subspace,
 	authKeeper authkeeper.AccountKeeper,
 	bankKeeper bankkeeper.Keeper,
+	authzkeeper authzkeeper.Keeper,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 
 	return Keeper{
-		paramSpace: paramSpace,
-		authKeeper: authKeeper,
-		bankKeeper: bankKeeper,
-		storeKey:   key,
-		cdc:        cdc,
+		paramSpace:  paramSpace,
+		authKeeper:  authKeeper,
+		bankKeeper:  bankKeeper,
+		authzKeeper: authzkeeper,
+		storeKey:    key,
+		cdc:         cdc,
 	}
 }
 
