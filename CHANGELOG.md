@@ -47,6 +47,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * Added linkify script for changelog issue links [#107](https://github.com/provenance-io/provenance/issues/107)
+* Updated marker module spec documentation [#93](https://github.com/provenance-io/provenance/issues/93)
 
 ### Bug Fixes
 
