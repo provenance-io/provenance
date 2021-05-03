@@ -61,10 +61,10 @@ func (k Keeper) SetRecord(ctx sdk.Context, record types.Record) {
 
 	recordID := record.SessionId.MustGetAsRecordAddress(record.Name)
 
-	var event proto.Message = types.NewEventRecordCreated(recordID)
+	var event proto.Message = types.NewEventRecordCreated(recordID, record.SessionId)
 	action := types.TLActionCreated
 	if store.Has(recordID) {
-		event = types.NewEventRecordUpdated(recordID)
+		event = types.NewEventRecordUpdated(recordID, record.SessionId)
 		action = types.TLActionUpdated
 	}
 

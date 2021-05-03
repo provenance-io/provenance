@@ -12,7 +12,7 @@ message EventTxCompleted {
   string module = 1;
   // endpoint is the rpc endpoint that was just completed.
   string endpoint = 2;
-  // senders are the bech32 address strings of the signers of this TX.
+  // signers are the bech32 address strings of the signers of this TX.
   repeated string signers = 3;
 }
 
@@ -82,9 +82,7 @@ message EventRecordUpdated {
 message EventRecordDeleted {
   // record is the bech32 address string of the record id that was deleted.
   string record_addr = 1;
-  // session_addr is the bech32 address string of the session id this record belongs to.
-  string session_addr = 2;
-  // scope_addr is the bech32 address string of the scope id this record belongs to.
+  // scope_addr is the bech32 address string of the scope id this record belonged to.
   string scope_addr = 3;
 }
 

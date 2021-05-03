@@ -163,17 +163,19 @@ func NewEventSessionDeleted(sessionID MetadataAddress) *EventSessionDeleted {
 	}
 }
 
-func NewEventRecordCreated(recordID MetadataAddress) *EventRecordCreated {
+func NewEventRecordCreated(recordID, sessionID MetadataAddress) *EventRecordCreated {
 	return &EventRecordCreated{
-		RecordAddr: recordID.String(),
-		ScopeAddr:  recordID.MustGetAsScopeAddress().String(),
+		RecordAddr:  recordID.String(),
+		SessionAddr: sessionID.String(),
+		ScopeAddr:   recordID.MustGetAsScopeAddress().String(),
 	}
 }
 
-func NewEventRecordUpdated(recordID MetadataAddress) *EventRecordUpdated {
+func NewEventRecordUpdated(recordID, sessionID MetadataAddress) *EventRecordUpdated {
 	return &EventRecordUpdated{
-		RecordAddr: recordID.String(),
-		ScopeAddr:  recordID.MustGetAsScopeAddress().String(),
+		RecordAddr:  recordID.String(),
+		SessionAddr: sessionID.String(),
+		ScopeAddr:   recordID.MustGetAsScopeAddress().String(),
 	}
 }
 
