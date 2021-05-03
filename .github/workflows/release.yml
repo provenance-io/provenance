@@ -182,7 +182,6 @@ jobs:
           make VERSION=${{ needs.build_init.outputs.version }} build-release-checksum build-release-plan build-release-proto
           ls -lah build
           ls -lah build/*
-
       -
         name: Upload osx zip artifact
         uses: actions/upload-release-asset@v1
