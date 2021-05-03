@@ -45,6 +45,7 @@ burning coin held within the marker
 
 This request is expected to fail if:
 - The governance proposal format (title, description, etc) is invalid
+- Marker does not allow governance control (`AllowGovernanceControl`)
 - The marker account itself is not holding sufficient supply to cover the amount of coin requested to burn
 - The amount of resulting supply would be less than zero
 
@@ -57,6 +58,12 @@ access on the marker
 
 +++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/proposals.proto#L59-L67
 
+This request is expected to fail if:
+- The governance proposal format (title, description, etc) is invalid
+- The marker does not exist
+- Marker does not allow governance control (`AllowGovernanceControl`)
+- Any of the access grants are invalid
+
 ## RemoveAdministrator Proposal
 RemoveAdministratorProposal defines a governance proposal to administer a marker and remove all permissions for a
 given address
@@ -65,6 +72,9 @@ given address
 
 This request is expected to fail if:
 - The governance proposal format (title, description, etc) is invalid
+- The marker does not exist
+- Marker does not allow governance control (`AllowGovernanceControl`)
+- The address to be removed is not present
 
 ## ChangeStatus Proposal
 ChangeStatusProposal defines a governance proposal to administer a marker to change its status
@@ -73,6 +83,12 @@ ChangeStatusProposal defines a governance proposal to administer a marker to cha
 
 This request is expected to fail if:
 - The governance proposal format (title, description, etc) is invalid
+- Marker does not allow governance control (`AllowGovernanceControl`)
+- The requested status is invalid
+- The new status is not a valid transition from the current status
+- For destroyed markers
+  - The supply of the marker is greater than zero and the amount held by the marker account does not equal this value
+    resulting in the failure to burn all remaining supply.
 
 ## WithdrawEscrow Proposal
 WithdrawEscrowProposal defines a governance proposal to withdraw escrow coins from a marker
@@ -81,3 +97,5 @@ WithdrawEscrowProposal defines a governance proposal to withdraw escrow coins fr
 
 This request is expected to fail if:
 - The governance proposal format (title, description, etc) is invalid
+- Marker does not allow governance control (`AllowGovernanceControl`)
+- The marker account is not holding sufficient assets to cover the requested withdraw amounts.
