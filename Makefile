@@ -179,7 +179,8 @@ endif
 
 RELEASE_WASM=$(RELEASE_BIN)/$(LIBWASMVM)
 RELEASE_PIO=$(RELEASE_BIN)/provenanced
-RELEASE_ZIP_NAME=provenance-$(UNAME_S)-$(ARCH)-$(VERSION).zip
+RELEASE_ZIP_BASE=provenance-$(UNAME_S)-$(ARCH)
+RELEASE_ZIP_NAME=$(RELEASE_ZIP_BASE)-$(VERSION).zip
 RELEASE_ZIP=$(BUILDDIR)/$(RELEASE_ZIP_NAME)
 
 .PHONY: build-release-clean
@@ -228,7 +229,7 @@ $(RELEASE_ZIP): $(RELEASE_PIO) $(RELEASE_WASM)
 # gon packages the zip wrong. need bin/provenanced and bin/libwasmvm
 .PHONY: build-release-rezip
 build-release-rezip:
-	scripts/fix-gon-zip $(RELEASE_ZIP)
+	scripts/fix-gon-zip $(BUILDDIR)/$(RELEASE_ZIP_BASE)
 
 .PHONY: bulid-release-proto
 build-release-proto:
