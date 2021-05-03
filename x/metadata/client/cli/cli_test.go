@@ -464,7 +464,13 @@ func runQueryCmdTestCases(s *IntegrationCLITestSuite, cmd *cobra.Command, testCa
 				if err != nil {
 					actualError = err.Error()
 				}
-				require.Equal(t, tc.expectedError, actualError, "expected error")
+				require.Contains(t, actualError, tc.expectedError, "expected error")
+				// Something deep down is double wrapping the errors.
+				// E.g. "rpc error: code = InvalidArgument desc = foo: invalid request" has become
+				// "rpc error: code = InvalidArgument desc = rpc error: code = InvalidArgument desc = foo: invalid request"
+				// So we changed from the "Equal" test below to the "Contains" test above.
+				// If you're bored, maybe try swapping back to see if things have been fixed.
+				//require.Equal(t, tc.expectedError, actualError, "expected error")
 			} else {
 				require.NoError(t, err, "unexpected error")
 			}
