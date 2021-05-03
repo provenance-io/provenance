@@ -55,7 +55,7 @@ func (k Keeper) SetOSLocator(ctx sdk.Context, ownerAddr sdk.AccAddress, uri stri
 	store.Set(key, bz)
 
 	k.EmitEvent(ctx, types.NewEventOSLocatorCreated(record.Owner))
-	defer types.GetIncObjFunc(types.TLTypeOSLocator, types.TLActionCreated)
+	defer types.GetIncObjFunc(types.TLType_OSLocator, types.TLAction_Created)
 	return nil
 }
 
@@ -123,7 +123,7 @@ func (k Keeper) RemoveOSLocator(ctx sdk.Context, ownerAddr sdk.AccAddress) error
 	}
 	store.Delete(key)
 	k.EmitEvent(ctx, types.NewEventOSLocatorDeleted(ownerAddr.String()))
-	defer types.GetIncObjFunc(types.TLTypeOSLocator, types.TLActionDeleted)
+	defer types.GetIncObjFunc(types.TLType_OSLocator, types.TLAction_Deleted)
 	return nil
 }
 
@@ -145,7 +145,7 @@ func (k Keeper) ModifyOSLocator(ctx sdk.Context, ownerAddr sdk.AccAddress, uri s
 	}
 	store.Set(key, bz)
 	k.EmitEvent(ctx, types.NewEventOSLocatorUpdated(record.Owner))
-	defer types.GetIncObjFunc(types.TLTypeOSLocator, types.TLActionUpdated)
+	defer types.GetIncObjFunc(types.TLType_OSLocator, types.TLAction_Updated)
 	return nil
 }
 
@@ -165,6 +165,6 @@ func (k Keeper) ImportOSLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddress,
 		return err
 	}
 	store.Set(key, bz)
-	defer types.GetIncObjFunc(types.TLTypeOSLocator, types.TLActionCreated)
+	defer types.GetIncObjFunc(types.TLType_OSLocator, types.TLAction_Created)
 	return nil
 }

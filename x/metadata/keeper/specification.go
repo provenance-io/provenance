@@ -106,15 +106,15 @@ func (k Keeper) SetRecordSpecification(ctx sdk.Context, spec types.RecordSpecifi
 	b := k.cdc.MustMarshalBinaryBare(&spec)
 
 	var event proto.Message = types.NewEventRecordSpecificationCreated(spec.SpecificationId)
-	action := types.TLActionCreated
+	action := types.TLAction_Created
 	if store.Has(spec.SpecificationId) {
 		event = types.NewEventRecordSpecificationUpdated(spec.SpecificationId)
-		action = types.TLActionUpdated
+		action = types.TLAction_Updated
 	}
 
 	store.Set(spec.SpecificationId, b)
 	k.EmitEvent(ctx, event)
-	defer types.GetIncObjFunc(types.TLTypeRecordSpec, action)
+	defer types.GetIncObjFunc(types.TLType_RecordSpec, action)
 }
 
 // RemoveRecordSpecification removes a record specification from the module kv store.
@@ -131,7 +131,7 @@ func (k Keeper) RemoveRecordSpecification(ctx sdk.Context, recordSpecID types.Me
 
 	store.Delete(recordSpecID)
 	k.EmitEvent(ctx, types.NewEventRecordSpecificationDeleted(recordSpecID))
-	defer types.GetIncObjFunc(types.TLTypeRecordSpec, types.TLActionDeleted)
+	defer types.GetIncObjFunc(types.TLType_RecordSpec, types.TLAction_Deleted)
 	return nil
 }
 
@@ -219,10 +219,10 @@ func (k Keeper) SetContractSpecification(ctx sdk.Context, spec types.ContractSpe
 	b := k.cdc.MustMarshalBinaryBare(&spec)
 
 	var event proto.Message = types.NewEventContractSpecificationCreated(spec.SpecificationId)
-	action := types.TLActionCreated
+	action := types.TLAction_Created
 	if store.Has(spec.SpecificationId) {
 		event = types.NewEventContractSpecificationUpdated(spec.SpecificationId)
-		action = types.TLActionUpdated
+		action = types.TLAction_Updated
 		if oldBytes := store.Get(spec.SpecificationId); oldBytes != nil {
 			var oldSpec types.ContractSpecification
 			if err := k.cdc.UnmarshalBinaryBare(oldBytes, &oldSpec); err == nil {
@@ -234,7 +234,7 @@ func (k Keeper) SetContractSpecification(ctx sdk.Context, spec types.ContractSpe
 	store.Set(spec.SpecificationId, b)
 	k.indexContractSpecification(ctx, spec)
 	k.EmitEvent(ctx, event)
-	defer types.GetIncObjFunc(types.TLTypeContractSpec, action)
+	defer types.GetIncObjFunc(types.TLType_ContractSpec, action)
 }
 
 // RemoveContractSpecification removes a contract specification from the module kv store.
@@ -253,7 +253,7 @@ func (k Keeper) RemoveContractSpecification(ctx sdk.Context, contractSpecID type
 	k.clearContractSpecificationIndex(ctx, contractSpec)
 	store.Delete(contractSpecID)
 	k.EmitEvent(ctx, types.NewEventContractSpecificationDeleted(contractSpecID))
-	defer types.GetIncObjFunc(types.TLTypeContractSpec, types.TLActionDeleted)
+	defer types.GetIncObjFunc(types.TLType_ContractSpec, types.TLAction_Deleted)
 	return nil
 }
 
@@ -399,10 +399,10 @@ func (k Keeper) SetScopeSpecification(ctx sdk.Context, spec types.ScopeSpecifica
 	b := k.cdc.MustMarshalBinaryBare(&spec)
 
 	var event proto.Message = types.NewEventScopeSpecificationCreated(spec.SpecificationId)
-	action := types.TLActionCreated
+	action := types.TLAction_Created
 	if store.Has(spec.SpecificationId) {
 		event = types.NewEventScopeSpecificationUpdated(spec.SpecificationId)
-		action = types.TLActionUpdated
+		action = types.TLAction_Updated
 		if oldBytes := store.Get(spec.SpecificationId); oldBytes != nil {
 			var oldSpec types.ScopeSpecification
 			if err := k.cdc.UnmarshalBinaryBare(oldBytes, &oldSpec); err == nil {
@@ -414,7 +414,7 @@ func (k Keeper) SetScopeSpecification(ctx sdk.Context, spec types.ScopeSpecifica
 	store.Set(spec.SpecificationId, b)
 	k.indexScopeSpecification(ctx, spec)
 	k.EmitEvent(ctx, event)
-	defer types.GetIncObjFunc(types.TLTypeScopeSpec, action)
+	defer types.GetIncObjFunc(types.TLType_ScopeSpec, action)
 }
 
 // RemoveScopeSpecification removes a scope specification from the module kv store.
@@ -433,7 +433,7 @@ func (k Keeper) RemoveScopeSpecification(ctx sdk.Context, scopeSpecID types.Meta
 	k.clearScopeSpecificationIndex(ctx, scopeSpec)
 	store.Delete(scopeSpecID)
 	k.EmitEvent(ctx, types.NewEventScopeSpecificationDeleted(scopeSpecID))
-	defer types.GetIncObjFunc(types.TLTypeScopeSpec, types.TLActionDeleted)
+	defer types.GetIncObjFunc(types.TLType_ScopeSpec, types.TLAction_Deleted)
 	return nil
 }
 

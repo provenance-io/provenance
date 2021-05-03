@@ -20,26 +20,26 @@ const (
 	TKObject string = "stored-object"
 
 	// TLCategory is a string name for labels defining an object category.
-	TLCategory              string            = "category"
-	TLCategoryEntry         TelemetryCategory = "entry"
-	TLCategorySpecification TelemetryCategory = "specification"
-	TLCategoryOSLocator     TelemetryCategory = "object-store-locator"
+	TLCategory               string            = "category"
+	TLCategory_Entry         TelemetryCategory = "entry"
+	TLCategory_Specification TelemetryCategory = "specification"
+	TLCategory_OSLocator     TelemetryCategory = "object-store-locator"
 
 	// TLType is a string name for labels defining an object type.
-	TLType             string              = "object-type"
-	TLTypeScope        TelemetryObjectType = "scope"
-	TLTypeSession      TelemetryObjectType = "session"
-	TLTypeRecord       TelemetryObjectType = "record"
-	TLTypeScopeSpec    TelemetryObjectType = "scope-specification"
-	TLTypeContractSpec TelemetryObjectType = "contract-specification"
-	TLTypeRecordSpec   TelemetryObjectType = "record-specification"
-	TLTypeOSLocator    TelemetryObjectType = "object-store-locator"
+	TLType              string              = "object-type"
+	TLType_Scope        TelemetryObjectType = "scope"
+	TLType_Session      TelemetryObjectType = "session"
+	TLType_Record       TelemetryObjectType = "record"
+	TLType_ScopeSpec    TelemetryObjectType = "scope-specification"
+	TLType_ContractSpec TelemetryObjectType = "contract-specification"
+	TLType_RecordSpec   TelemetryObjectType = "record-specification"
+	TLType_OSLocator    TelemetryObjectType = "object-store-locator"
 
 	// TLAction is a string name for labels defining an action taken.
-	TLAction        string          = "action"
-	TLActionCreated TelemetryAction = "created"
-	TLActionUpdated TelemetryAction = "updated"
-	TLActionDeleted TelemetryAction = "deleted"
+	TLAction         string          = "action"
+	TLAction_Created TelemetryAction = "created"
+	TLAction_Updated TelemetryAction = "updated"
+	TLAction_Deleted TelemetryAction = "deleted"
 )
 
 // AsLabel Returns this TelemetryCategory as a label.
@@ -59,17 +59,17 @@ func (t TelemetryAction) AsLabel() metrics.Label {
 
 // GetIncObjFunc creates a function that will call telemetry.IncrCounterWithLabels for counting metadata module chain objects.
 func GetIncObjFunc(objType TelemetryObjectType, action TelemetryAction) func() {
-	var val float32 = -1 // Default is for action == TLActionDeleted
-	if action == TLActionCreated {
+	var val float32 = -1 // Default is for action == TLAction_Deleted
+	if action == TLAction_Created {
 		val = 1
-	} else if action == TLActionUpdated {
+	} else if action == TLAction_Updated {
 		val = 0
 	}
-	cat := TLCategoryOSLocator // Default is for objType == TLTypeOSLocator
-	if objType == TLTypeScope || objType == TLTypeSession || objType == TLTypeRecord {
-		cat = TLCategoryEntry
-	} else if objType == TLTypeScopeSpec || objType == TLTypeContractSpec || objType == TLTypeRecordSpec {
-		cat = TLCategorySpecification
+	cat := TLCategory_OSLocator // Default is for objType == TLType_OSLocator
+	if objType == TLType_Scope || objType == TLType_Session || objType == TLType_Record {
+		cat = TLCategory_Entry
+	} else if objType == TLType_ScopeSpec || objType == TLType_ContractSpec || objType == TLType_RecordSpec {
+		cat = TLCategory_Specification
 	}
 	return func() {
 		telemetry.IncrCounterWithLabels(
