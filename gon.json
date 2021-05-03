@@ -8,6 +8,6 @@
 		"application_identity": "Developer ID Application: FIGURE TECHNOLOGIES INC."
 	},
 	"zip": {
-		"output_path": "./build/provenance-darwin-amd64-signed.zip"
+		"output_path": "./build/provenance-darwin-amd64.zip"
 	}
 }
