@@ -163,20 +163,19 @@ RELEASE_CHECKSUM=$(BUILDDIR)/$(RELEASE_CHECKSUM_NAME)
 
 ifeq ($(UNAME_S),Darwin)
     LIBWASMVM := $(LIBWASMVM).dylib
-endif
-ifeq ($(UNAME_S),Linux)
+else ifeq ($(UNAME_S),Linux)
     LIBWASMVM := $(LIBWASMVM).so
 endif
 
-UNAME_M   = $(shell uname -m)
-
+UNAME_M = $(shell uname -m)
 ifeq ($(UNAME_M),x86_64)
 	ARCH=amd64
 endif
 
+OPSYS=$(shell tr '[A-Z]' '[a-z]' <<< $(UNAME_S))
 RELEASE_WASM=$(RELEASE_BIN)/$(LIBWASMVM)
 RELEASE_PIO=$(RELEASE_BIN)/provenanced
-RELEASE_ZIP_NAME=provenance-$(UNAME_S)-$(ARCH)-$(VERSION).zip
+RELEASE_ZIP_NAME=provenance-$(OPSYS)-$(ARCH)-$(VERSION).zip
 RELEASE_ZIP=$(BUILDDIR)/$(RELEASE_ZIP_NAME)
 
 .PHONY: build-release-clean
