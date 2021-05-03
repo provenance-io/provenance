@@ -12,13 +12,6 @@ LEDGER_ENABLED ?= true
 WITH_CLEVELDB ?= yes
 
 LEVELDB_PATH = $(shell brew --prefix leveldb 2>/dev/null || echo "$(HOME)/Cellar/leveldb/1.22/include")
-CGO_CFLAGS   =
-CGO_LDFLAGS  = -Wl,-rpath,@loader_path/.
-
-ifeq ($(WITH_CLEVELDB),yes)
-  CGO_CFLAGS  += -I$(LEVELDB_PATH)/include
-  CGO_LDFLAGS += -L$(LEVELDB_PATH)/lib
-endif
 
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 BRANCH_PRETTY := $(subst /,-,$(BRANCH))
@@ -44,10 +37,8 @@ HTTPS_GIT := https://github.com/provenance-io/provenance.git
 DOCKER := $(shell which docker)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 
-
 # The below include contains the tools target.
 include contrib/devtools/Makefile
-
 
 ##############################
 # Build Flags/Tags
@@ -80,6 +71,24 @@ ifeq ($(LEDGER_ENABLED),true)
     endif
   endif
 endif
+
+### CGO Settings
+CGO_CFLAGS =
+
+ifeq ($(UNAME_S),Darwin)
+  # osx linker settings
+  CGO_LDFLAGS = "-Wl,-rpath,@loader_path/."
+else ifeq ($(UNAME_S),Linux)
+  # linux liner settings
+  CGO_LDFLAGS = "-Wl,-rpath,\$$ORIGIN"
+endif
+
+# cleveldb linker settings
+ifeq ($(WITH_CLEVELDB),yes)
+  CGO_CFLAGS  += -I$(LEVELDB_PATH)/include
+  CGO_LDFLAGS += -L$(LEVELDB_PATH)/lib
+endif
+
 
 build_tags += $(BUILD_TAGS)
 build_tags := $(strip $(build_tags))
@@ -147,8 +156,6 @@ run: check-built run-config;
 # Release artifacts and plan #
 ##############################
 
-UNAME_S   = $(shell uname -s | tr '[:upper:]' '[:lower:]')
-UNAME_M   = $(shell uname -m)
 LIBWASMVM := libwasmvm
 
 RELEASE_BIN=$(BUILDDIR)/bin
@@ -158,12 +165,14 @@ RELEASE_PLAN=$(BUILDDIR)/plan-$(VERSION).json
 RELEASE_CHECKSUM_NAME=sha256sum.txt
 RELEASE_CHECKSUM=$(BUILDDIR)/$(RELEASE_CHECKSUM_NAME)
 
-ifeq ($(UNAME_S),darwin)
+ifeq ($(UNAME_S),Darwin)
     LIBWASMVM := $(LIBWASMVM).dylib
 endif
-ifeq ($(UNAME_S),linux)
+ifeq ($(UNAME_S),Linux)
     LIBWASMVM := $(LIBWASMVM).so
 endif
+
+UNAME_M   = $(shell uname -m)
 
 ifeq ($(UNAME_M),x86_64)
 	ARCH=amd64
