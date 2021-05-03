@@ -13,7 +13,7 @@ WITH_CLEVELDB ?= yes
 
 LEVELDB_PATH = $(shell brew --prefix leveldb 2>/dev/null || echo "$(HOME)/Cellar/leveldb/1.22/include")
 CGO_CFLAGS   =
-CGO_LDFLAGS  = -Wl,-rpath,@executable_path
+CGO_LDFLAGS  = -Wl,-rpath,@loader_path/.
 
 ifeq ($(WITH_CLEVELDB),yes)
   CGO_CFLAGS  += -I$(LEVELDB_PATH)/include
