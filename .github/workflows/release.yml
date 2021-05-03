@@ -63,6 +63,9 @@ jobs:
           AC_PASSWORD: ${{ secrets.AC_PASSWORD }}
         run: |
           gon -log-level=info -log-json ./gon.json
+      - name: Fix zip structure for cosmovisor
+        run: |
+          make VERSION=${{ needs.build_init.outputs.version }} build-release-rezip
       - uses: actions/upload-artifact@v2
         with:
           name: osx-zip

@@ -225,7 +225,12 @@ $(RELEASE_ZIP): $(RELEASE_PIO) $(RELEASE_WASM)
 	  zip -u $(RELEASE_ZIP_NAME) bin/$(LIBWASMVM) bin/provenanced && \
 	cd ..
 
-.PHONY: build-release-proto
+# gon packages the zip wrong. need bin/provenanced and bin/libwasmvm
+.PHONY: build-release-rezip
+build-release-rezip:
+	scripts/fix-gon-zip $(RELEASE_ZIP)
+
+.PHONY: bulid-release-proto
 build-release-proto:
 	scripts/protoball.sh $(RELEASE_PROTO)
 
