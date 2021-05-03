@@ -473,16 +473,3 @@ update-swagger-docs: statik
     fi
 
 .PHONY: update-swagger-docs
-
-
-xbuild: go.sum
-	docker pull cosmossdk/rbuilder:latest
-	docker rm latest-build || true
-	docker run -it --volume=$(CURDIR):/sources:ro \
-	    --env TARGET_PLATFORMS='linux/amd64 darwin/amd64 windows/amd64' \
-	    --env APP=provenanced \
-	    --env VERSION=$(VERSION) \
-	    --env COMMIT=$(COMMIT) \
-	    --env LEDGER_ENABLED=$(LEDGER_ENABLED) \
-	    --name latest-build cosmossdk/rbuilder:latest
-	docker cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
