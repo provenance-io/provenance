@@ -529,11 +529,12 @@ func New(
 		nametypes.ModuleName,
 		attributetypes.ModuleName,
 		metadatatypes.ModuleName,
-		wasm.ModuleName,
 		ibchost.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		ibctransfertypes.ModuleName,
+		// wasm after ibc transfer
+		wasm.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
