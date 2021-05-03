@@ -229,7 +229,7 @@ $(RELEASE_ZIP): $(RELEASE_PIO) $(RELEASE_WASM)
 # gon packages the zip wrong. need bin/provenanced and bin/libwasmvm
 .PHONY: build-release-rezip
 build-release-rezip:
-	scripts/fix-gon-zip $(BUILDDIR)/$(RELEASE_ZIP_BASE)
+	scripts/fix-gon-zip $(BUILDDIR)/$(RELEASE_ZIP_BASE).zip
 
 .PHONY: bulid-release-proto
 build-release-proto:
