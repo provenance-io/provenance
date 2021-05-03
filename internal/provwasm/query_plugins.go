@@ -6,13 +6,9 @@ import (
 	"fmt"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
-	cosmwasm "github.com/CosmWasm/wasmvm"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
-
-// This is just here to force the use of wasmvm dep so we can set the version in go.mod.
-type Q cosmwasm.Querier
 
 // Querier describes behavior for provenance smart contract query support.
 type Querier func(ctx sdk.Context, query json.RawMessage, version string) ([]byte, error)
