@@ -39,9 +39,9 @@ The metadata module emits the following events and telemetry information.
       - [Stored Objects](#stored-objects)
         - [Keys](#keys)
         - [Labels](#labels)
-        - [Label: category](#label--category)
-        - [Label: object-type](#label--object-type)
-        - [Label: action](#label--action)
+        - [Label: category](#label-category)
+        - [Label: object-type](#label-object-type)
+        - [Label: action](#label-action)
 
 ## Events
 
