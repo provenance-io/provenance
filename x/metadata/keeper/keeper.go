@@ -50,7 +50,7 @@ type MetadataKeeperI interface {
 	// RemoveRecord removes a record from the module kv store.
 	RemoveRecord(sdk.Context, types.MetadataAddress)
 
-	// IterateSessions processes stored records with the given handler.
+	// IterateRecords processes stored records with the given handler.
 	IterateRecords(sdk.Context, types.MetadataAddress, func(types.Record) bool) error
 
 	// GetScopeSpecification returns the scope specification with the given id.

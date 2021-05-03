@@ -91,7 +91,7 @@ func (k Keeper) RemoveRecord(ctx sdk.Context, id types.MetadataAddress) {
 	k.RemoveSession(ctx, record.SessionId)
 }
 
-// IterateSessions processes stored records with the given handler.
+// IterateRecords processes stored records with the given handler.
 // If the scopeID is an empty MetadataAddress, all records will be processed.
 // Otherwise, just the records for the given scopeID will be processed.
 func (k Keeper) IterateRecords(ctx sdk.Context, scopeID types.MetadataAddress, handler func(types.Record) (stop bool)) error {
