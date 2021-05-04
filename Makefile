@@ -178,7 +178,7 @@ build-release-zip: build-release-bin
 	  zip -r $(RELEASE_ZIP_NAME) bin/ && \
 	cd ..
 
-.PHONY: bulid-release-proto
+.PHONY: build-release-proto
 build-release-proto:
 	scripts/protoball.sh $(RELEASE_PROTO)
 
