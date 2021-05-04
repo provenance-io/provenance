@@ -426,129 +426,93 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeDeleteDataAccess() {
 }
 
 func (s *ScopeKeeperTestSuite) TestValidateScopeUpdateOwners() {
-	originalOwners := ownerPartyList(s.user1)
-	scope := *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), originalOwners, []string{s.user1}, s.user1)
+	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
+	scopeSpec := types.NewScopeSpecification(scopeSpecID, nil, []string{s.user1}, []types.PartyType{types.PartyType_PARTY_TYPE_OWNER}, []types.MetadataAddress{})
+	s.app.MetadataKeeper.SetScopeSpecification(s.ctx, *scopeSpec)
 
-	addOwnersCases := []struct {
+	scopeWithOwners := func(owners []types.Party) types.Scope {
+		return *types.NewScope(s.scopeID, scopeSpecID, owners, []string{s.user1}, s.user1)
+	}
+	originalOwners := ownerPartyList(s.user1)
+
+	testCases := []struct {
 		name     string
-		owners   []types.Party
 		existing types.Scope
+		proposed types.Scope
 		signers  []string
 		errorMsg string
 	}{
 		{
-			"should fail to validate update scope owners, does not have any owners",
-			[]types.Party{},
-			scope,
+			"should fail to validate update scope owners, fail to decode address",
+			scopeWithOwners(originalOwners),
+			scopeWithOwners([]types.Party{{Address: "shoulderror", Role: types.PartyType_PARTY_TYPE_AFFILIATE}}),
 			[]string{s.user1},
-			"owner list cannot be empty",
+			fmt.Sprintf("invalid party address [%s]: %s", "shoulderror", "decoding bech32 failed: invalid index of 1"),
 		},
 		{
-			"should fail to validate update scope data access, fail to decode address",
-			[]types.Party{{Address: "shoulderror", Role: types.PartyType_PARTY_TYPE_AFFILIATE}},
-			scope,
+			"should fail to validate update scope owners, role cannot be unspecified",
+			scopeWithOwners(originalOwners),
+			scopeWithOwners([]types.Party{{Address: s.user1, Role: types.PartyType_PARTY_TYPE_UNSPECIFIED}}),
 			[]string{s.user1},
-			"failed to decode owner address shoulderror : decoding bech32 failed: invalid index of 1",
-		},
-		{
-			"should fail to validate update scope data access, role cannot be unspecified",
-			[]types.Party{{Address: s.user1, Role: types.PartyType_PARTY_TYPE_UNSPECIFIED}},
-			scope,
-			[]string{s.user1},
-			fmt.Sprintf("invalid party type for owner: %s", s.user1),
-		},
-		{
-			"should fail to validate add scope data access, owner with same role already present",
-			[]types.Party{{Address: originalOwners[0].Address, Role: originalOwners[0].Role}},
-			scope,
-			[]string{s.user1},
-			fmt.Sprintf("owner %s already exists on with role %s", originalOwners[0], originalOwners[0].Role),
+			fmt.Sprintf("invalid party type for party %s", s.user1),
 		},
 		{
 			"should fail to validate update scope owner, wrong signer new owner",
-			[]types.Party{{Address: s.user2, Role: types.PartyType_PARTY_TYPE_CUSTODIAN}},
-			scope,
+			scopeWithOwners(originalOwners),
+			scopeWithOwners([]types.Party{{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER}}),
 			[]string{s.user2},
 			fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user1),
 		},
 		{
 			"should successfully validate update scope owner, same owner different role",
-			[]types.Party{{Address: originalOwners[0].Address, Role: types.PartyType_PARTY_TYPE_CUSTODIAN}},
-			scope,
-			[]string{s.user1},
+			scopeWithOwners(ownerPartyList(s.user1, s.user2)),
+			scopeWithOwners([]types.Party{
+				{Address: s.user1, Role: types.PartyType_PARTY_TYPE_CUSTODIAN},
+				{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER},
+			}),
+			[]string{s.user1, s.user2},
 			"",
 		},
 		{
 			"should successfully validate update scope owner, new owner",
-			[]types.Party{{Address: s.user2, Role: types.PartyType_PARTY_TYPE_CUSTODIAN}},
-			scope,
+			scopeWithOwners(originalOwners),
+			scopeWithOwners([]types.Party{{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER}}),
 			[]string{s.user1},
 			"",
 		},
-	}
-
-	for _, tc := range addOwnersCases {
-		s.T().Run(tc.name, func(t *testing.T) {
-			proposed := tc.existing
-			_ = proposed.AddOwners(tc.owners)
-			err := s.app.MetadataKeeper.ValidateScopeUpdateOwners(s.ctx, tc.existing, proposed, tc.signers)
-			if len(tc.errorMsg) > 0 {
-				assert.EqualError(t, err, tc.errorMsg, "ValidateScopeUpdateOwners expected error")
-			} else {
-				assert.NoError(t, err, "ValidateScopeUpdateOwners unexpected error")
-			}
-		})
-	}
-
-	removeOwnersCases := []struct {
-		name     string
-		owners   []string
-		existing types.Scope
-		signers  []string
-		errorMsg string
-	}{
 		{
-			"should fail to validate delete scope owners, does not have any owners",
-			[]string{},
-			scope,
-			[]string{s.user1, s.user2},
-			"owner address list cannot be empty",
-		},
-		{
-			"should fail to validate delete scope owners, to decode address",
-			[]string{"shoulderror"},
-			scope,
-			[]string{s.user1, s.user2},
-			"failed to decode owner address shoulderror : decoding bech32 failed: invalid index of 1",
-		},
-		{
-			"should fail to validate delete scope owners, failed to find owner in list",
-			[]string{s.user3},
-			scope,
-			[]string{s.user1, s.user2},
-			fmt.Sprintf("address does not exist in scope owners: %s", s.user3),
-		},
-		{
-			"should fail to validate delete scope owners, incorrect signer",
+			"should fail to validate update scope owner, missing role",
+			scopeWithOwners(originalOwners),
+			scopeWithOwners([]types.Party{{Address: s.user1, Role: types.PartyType_PARTY_TYPE_CUSTODIAN}}),
 			[]string{s.user1},
-			scope,
-			[]string{s.user3},
-			fmt.Sprintf("missing signatures from [%s (PARTY_TYPE_OWNER) %s (PARTY_TYPE_OWNER)]", s.user1, s.user2),
+			"missing party type required by spec: [OWNER]",
 		},
 		{
-			"should successfully validate delete scope owners",
-			[]string{s.user2},
-			scope,
+			"should fail to validate update scope owner, empty list",
+			scopeWithOwners(originalOwners),
+			scopeWithOwners([]types.Party{}),
+			[]string{s.user1},
+			"at least one party is required",
+		},
+		{
+			"should successfully validate update scope owner, 1st owner removed",
+			scopeWithOwners(ownerPartyList(s.user1, s.user2)),
+			scopeWithOwners(ownerPartyList(s.user2)),
+			[]string{s.user1, s.user2},
+			"",
+		},
+		{
+			"should successfully validate update scope owner, 2nd owner removed",
+			scopeWithOwners(ownerPartyList(s.user1, s.user2)),
+			scopeWithOwners(ownerPartyList(s.user1)),
 			[]string{s.user1, s.user2},
 			"",
 		},
 	}
 
-	for _, tc := range removeOwnersCases {
+	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
-			proposed := tc.existing
-			_ = proposed.RemoveOwners(tc.owners)
-			err := s.app.MetadataKeeper.ValidateScopeUpdateOwners(s.ctx, tc.existing, proposed, tc.signers)
+			err := s.app.MetadataKeeper.ValidateScopeUpdateOwners(s.ctx, tc.existing, tc.proposed, tc.signers)
 			if len(tc.errorMsg) > 0 {
 				assert.EqualError(t, err, tc.errorMsg, "ValidateScopeUpdateOwners expected error")
 			} else {
