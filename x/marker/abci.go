@@ -26,6 +26,18 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper, 
 			}
 			// else supply is equal, nothing to do here.
 		}
+		// Clear out markers that are in the destroyed status
+		if record.GetStatus() == types.StatusDestroyed {
+			k.RemoveMarker(ctx, record)
+			ctx.EventManager().EmitEvent(
+				sdk.NewEvent(
+					"beginblock",
+					sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+					sdk.NewAttribute(sdk.AttributeKeyAction, types.EventTypeDestroy),
+					sdk.NewAttribute(types.EventAttributeDenomKey, record.GetDenom()),
+				),
+			)
+		}
 		return err != nil
 	})
 	// We have no way of dealing with this and the invariant will fail soon from mismatch halting the chain.
