@@ -20,6 +20,6 @@ It can be used to record and validate information as well as the processes that 
 1. **[Messages](03_messages.md)**
 1. **[Queries](04_queries.md)**
 1. **[Events](05_events.md)**
-1. **[Params](06_params.md)**
+1. **[Params](07_params.md)**
 
 
