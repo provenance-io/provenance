@@ -210,6 +210,13 @@ func (k Keeper) ValidateScopeUpdate(ctx sdk.Context, existing, proposed types.Sc
 		}
 	}
 
+	if err := proposed.SpecificationId.Validate(); err != nil {
+		return fmt.Errorf("invalid specification id: %w", err)
+	}
+	if !proposed.SpecificationId.IsScopeSpecificationAddress() {
+		return fmt.Errorf("invalid specification id: is not scope specification id: %s", proposed.SpecificationId)
+	}
+
 	scopeSpec, found := k.GetScopeSpecification(ctx, proposed.SpecificationId)
 	if !found {
 		return fmt.Errorf("scope specification %s not found", proposed.SpecificationId)
