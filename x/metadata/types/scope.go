@@ -441,8 +441,11 @@ func (ps Process) String() string {
 
 // ValidateBasic performs static checking of Party format
 func (p Party) ValidateBasic() error {
+	if len(p.Address) == 0 {
+		return errors.New("missing party address")
+	}
 	if _, err := sdk.AccAddressFromBech32(p.Address); err != nil {
-		return fmt.Errorf("invalid party: %w", err)
+		return fmt.Errorf("invalid party address [%s]: %w", p.Address, err)
 	}
 	if !p.Role.IsValid() || p.Role == PartyType_PARTY_TYPE_UNSPECIFIED {
 		return fmt.Errorf("invalid party type for party %s", p.Address)
