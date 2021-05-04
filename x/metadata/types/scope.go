@@ -68,24 +68,8 @@ func (s *Scope) ValidateBasic() error {
 }
 
 func (s Scope) ValidateOwnersBasic() error {
-	if len(s.Owners) < 1 {
-		return errors.New("scope must have at least one owner")
-	}
-	for i, o := range s.Owners {
-		if _, err := sdk.AccAddressFromBech32(o.Address); err != nil {
-			return fmt.Errorf("invalid owner on scope: %w", err)
-		}
-		if !o.Role.IsValid() || o.Role == PartyType_PARTY_TYPE_UNSPECIFIED {
-			return fmt.Errorf("invalid party type for owner %s", o.Address)
-		}
-		for j, o2 := range s.Owners {
-			if i == j {
-				continue
-			}
-			if o.Equals(o2) {
-				return fmt.Errorf("duplicate owners not allowed: address = %s, role = %s", o.Address, o.Role)
-			}
-		}
+	if err := ValidatePartiesBasic(s.Owners); err != nil {
+		return err
 	}
 	return nil
 }
@@ -141,14 +125,14 @@ func (s *Scope) GetOwnerIndexWithAddress(address string) (int, bool) {
 }
 
 // AddOwners will append new owners or overwrite existing if address exists
-func (s *Scope) AddOwners(owners []*Party) {
+func (s *Scope) AddOwners(owners []Party) {
 	newOwners := make([]Party, 0, len(owners))
 	for _, owner := range owners {
 		i, found := s.GetOwnerIndexWithAddress(owner.Address)
 		if found {
-			s.Owners[i] = *owner
+			s.Owners[i] = owner
 		} else {
-			newOwners = append(newOwners, *owner)
+			newOwners = append(newOwners, owner)
 		}
 	}
 	if len(newOwners) > 0 {
@@ -450,10 +434,31 @@ func (ps Process) String() string {
 // ValidateBasic performs static checking of Party format
 func (p Party) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(p.Address); err != nil {
-		return fmt.Errorf("invalid address: %w", err)
+		return fmt.Errorf("invalid party: %w", err)
 	}
-	if p.Role == PartyType_PARTY_TYPE_UNSPECIFIED {
-		return fmt.Errorf("invalid party type;  party type not specified")
+	if !p.Role.IsValid() || p.Role == PartyType_PARTY_TYPE_UNSPECIFIED {
+		return fmt.Errorf("invalid party type for party %s", p.Address)
+	}
+	return nil
+}
+
+// ValidatePartiesBasic validates a required list of parties.
+func ValidatePartiesBasic(parties []Party) error {
+	if len(parties) < 1 {
+		return errors.New("at least one party is required")
+	}
+	for i, p := range parties {
+		if err := p.ValidateBasic(); err != nil {
+			return err
+		}
+		for j, o2 := range parties {
+			if i == j {
+				continue
+			}
+			if p.Equals(o2) {
+				return fmt.Errorf("duplicate owners not allowed: address = %s, role = %s", p.Address, p.Role)
+			}
+		}
 	}
 	return nil
 }

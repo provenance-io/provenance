@@ -249,9 +249,9 @@ func AddRemoveScopeOwnersCmd() *cobra.Command {
 
 			var msg sdk.Msg
 			if removeOrAdd == AddSwitch {
-				owners := make([]*types.Party, len(ownerAddresses))
+				owners := make([]types.Party, len(ownerAddresses))
 				for i, ownerAddr := range ownerAddresses {
-					owners[i] = &types.Party{Address: ownerAddr, Role: types.PartyType_PARTY_TYPE_OWNER}
+					owners[i] = types.Party{Address: ownerAddr, Role: types.PartyType_PARTY_TYPE_OWNER}
 				}
 				msg = types.NewMsgAddScopeOwnerRequest(scopeID, owners, signers)
 			} else {
