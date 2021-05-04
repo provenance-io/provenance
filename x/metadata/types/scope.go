@@ -71,9 +71,20 @@ func (s Scope) ValidateOwnersBasic() error {
 	if len(s.Owners) < 1 {
 		return errors.New("scope must have at least one owner")
 	}
-	for _, o := range s.Owners {
+	for i, o := range s.Owners {
 		if _, err := sdk.AccAddressFromBech32(o.Address); err != nil {
 			return fmt.Errorf("invalid owner on scope: %w", err)
+		}
+		if !o.Role.IsValid() || o.Role == PartyType_PARTY_TYPE_UNSPECIFIED {
+			return fmt.Errorf("invalid party type for owner %s", o.Address)
+		}
+		for j, o2 := range s.Owners {
+			if i == j {
+				continue
+			}
+			if o.Equals(o2) {
+				return fmt.Errorf("duplicate owners not allowed: address = %s, role = %s", o.Address, o.Role)
+			}
 		}
 	}
 	return nil
@@ -118,38 +129,59 @@ func (s *Scope) AddDataAccess(addresses []string) {
 	}
 }
 
+// GetOwnerIndexWithAddress gets the index of this scopes owners list that has the provided address,
+// and a boolean for whether or not it's found.
+func (s *Scope) GetOwnerIndexWithAddress(address string) (int, bool) {
+	for i, owner := range s.Owners {
+		if owner.Address == address {
+			return i, true
+		}
+	}
+	return -1, false
+}
+
 // AddOwners will append new owners or overwrite existing if address exists
 func (s *Scope) AddOwners(owners []*Party) {
+	newOwners := make([]Party, 0, len(owners))
 	for _, owner := range owners {
-		found := false
-		for i, existingOwner := range s.Owners {
-			if owner.Address == existingOwner.Address {
-				found = true
-				s.Owners[i] = *owner
-			}
+		i, found := s.GetOwnerIndexWithAddress(owner.Address)
+		if found {
+			s.Owners[i] = *owner
+		} else {
+			newOwners = append(newOwners, *owner)
 		}
-		if !found {
-			s.Owners = append(s.Owners, *owner)
-		}
+	}
+	if len(newOwners) > 0 {
+		s.Owners = append(s.Owners, newOwners...)
 	}
 }
 
-func (s *Scope) RemoveOwners(owners []string) {
-	newOwners := []Party{}
-	for _, existingOwners := range s.Owners {
-		found := false
-		for _, remove := range owners {
-			if remove == existingOwners.Address {
-				found = true
+// RemoveOwners will remove owners with the given addresses.
+// If an address is provided that is not an owner, an error is returned.
+func (s *Scope) RemoveOwners(addressesToRemove []string) error {
+	if len(addressesToRemove) == 0 {
+		return nil
+	}
+	for _, addr := range addressesToRemove {
+		if _, found := s.GetOwnerIndexWithAddress(addr); !found {
+			return fmt.Errorf("address does not exist in scope owners: %s", addr)
+		}
+	}
+	ownersLeft := []Party{}
+	for _, existingOwner := range s.Owners {
+		keep := true
+		for _, addr := range addressesToRemove {
+			if existingOwner.Address == addr {
+				keep = false
 				break
 			}
 		}
-		if !found {
-			newOwners = append(newOwners, existingOwners)
+		if keep {
+			ownersLeft = append(ownersLeft, existingOwner)
 		}
 	}
-
-	s.Owners = newOwners
+	s.Owners = ownersLeft
+	return nil
 }
 
 // UpdateAudit computes a set of changes to the audit fields based on the existing message.
@@ -429,4 +461,8 @@ func (p Party) ValidateBasic() error {
 // String implements stringer interface
 func (p Party) String() string {
 	return fmt.Sprintf("%s - %s", p.Address, p.Role)
+}
+
+func (p Party) Equals(p2 Party) bool {
+	return p.Address == p2.Address && p.Role == p2.Role
 }

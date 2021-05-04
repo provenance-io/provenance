@@ -199,6 +199,10 @@ func (k Keeper) indexScope(ctx sdk.Context, scope types.Scope) {
 // ValidateScopeUpdate checks the current scope and the proposed scope to determine if the the proposed changes are valid
 // based on the existing state
 func (k Keeper) ValidateScopeUpdate(ctx sdk.Context, existing, proposed types.Scope, signers []string) error {
+	if err := proposed.ValidateBasic(); err != nil {
+		return err
+	}
+
 	// IDs must match
 	if len(existing.ScopeId) > 0 {
 		if !proposed.ScopeId.Equals(existing.ScopeId) {
@@ -206,7 +210,11 @@ func (k Keeper) ValidateScopeUpdate(ctx sdk.Context, existing, proposed types.Sc
 		}
 	}
 
-	if err := proposed.ValidateBasic(); err != nil {
+	scopeSpec, found := k.GetScopeSpecification(ctx, proposed.SpecificationId)
+	if !found {
+		return fmt.Errorf("scope specification %s not found", proposed.SpecificationId)
+	}
+	if err := k.ValidateScopeOwners(proposed.Owners, scopeSpec); err != nil {
 		return err
 	}
 
@@ -316,27 +324,17 @@ func (k Keeper) ValidateScopeDeleteDataAccess(ctx sdk.Context, dataAccessAddrs [
 }
 
 // ValidateScopeUpdateOwners checks the current scopes owners and the proposed update
-func (k Keeper) ValidateScopeUpdateOwners(ctx sdk.Context, owners []*types.Party, existing types.Scope, signers []string) error {
-	if len(owners) < 1 {
-		return fmt.Errorf("owner list cannot be empty")
+func (k Keeper) ValidateScopeUpdateOwners(ctx sdk.Context, existing, proposed types.Scope, signers []string) error {
+	if err := proposed.ValidateOwnersBasic(); err != nil {
+		return err
 	}
 
-	for _, owner := range owners {
-		_, err := sdk.AccAddressFromBech32(owner.Address)
-		if err != nil {
-			return fmt.Errorf("failed to decode owner address %s : %v", owner.Address, err.Error())
-		}
-		if owner.GetRole() == types.PartyType_PARTY_TYPE_UNSPECIFIED {
-			return fmt.Errorf("invalid party type for owner: %s", owner.Address)
-		}
+	scopeSpec, found := k.GetScopeSpecification(ctx, proposed.SpecificationId)
+	if !found {
+		return fmt.Errorf("scope specification %s not found", proposed.SpecificationId)
 	}
-
-	for _, existingOwner := range existing.Owners {
-		for _, owner := range owners {
-			if existingOwner.Address == owner.Address && existingOwner.Role == owner.Role {
-				return fmt.Errorf("owner %s already exists on with role %s", owner, owner.GetRole().String())
-			}
-		}
+	if err := k.ValidateScopeOwners(proposed.Owners, scopeSpec); err != nil {
+		return err
 	}
 
 	if err := k.ValidateAllPartiesAreSigners(existing.Owners, signers); err != nil {
@@ -346,32 +344,25 @@ func (k Keeper) ValidateScopeUpdateOwners(ctx sdk.Context, owners []*types.Party
 	return nil
 }
 
-// ValidateScopeDeleteDataAccess checks the current scope data access and the proposed removed items
-func (k Keeper) ValidateScopeDeleteOwners(ctx sdk.Context, ownerAddrs []string, existing types.Scope, signers []string) error {
-	if len(ownerAddrs) < 1 {
-		return fmt.Errorf("owner address list cannot be empty")
-	}
-	for _, owner := range ownerAddrs {
-		_, err := sdk.AccAddressFromBech32(owner)
-		if err != nil {
-			return fmt.Errorf("failed to decode owner address %s : %v", owner, err.Error())
-		}
-
+// ValidateScopeOwners is stateful validation for scope owners against a scope specification.
+// This does NOT involve the Scope.ValidateOwnersBasic() function.
+func (k Keeper) ValidateScopeOwners(owners []types.Party, spec types.ScopeSpecification) error {
+	var missingPartyTypes []string
+	for _, pt := range spec.PartiesInvolved {
 		found := false
-		for _, existingOwner := range existing.Owners {
-			if owner == existingOwner.Address {
+		for _, o := range owners {
+			if o.Role == pt {
 				found = true
 				break
 			}
 		}
 		if !found {
-			return fmt.Errorf("address does not exist in scope owners: %s", owner)
+			// Get the party type without the "PARTY_TYPE_" prefix.
+			missingPartyTypes = append(missingPartyTypes, pt.String()[11:])
 		}
 	}
-
-	if err := k.ValidateAllPartiesAreSigners(existing.Owners, signers); err != nil {
-		return err
+	if len(missingPartyTypes) > 0 {
+		return fmt.Errorf("missing party type%s required by spec: %v", pluralEnding(len(missingPartyTypes)), missingPartyTypes)
 	}
-
 	return nil
 }

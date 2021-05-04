@@ -148,13 +148,14 @@ func (k msgServer) AddScopeOwner(
 		return nil, fmt.Errorf("scope not found with id %s", msg.ScopeId)
 	}
 
-	if err := k.ValidateScopeUpdateOwners(ctx, msg.Owners, existing, msg.Signers); err != nil {
+	proposed := existing
+	proposed.AddOwners(msg.Owners)
+
+	if err := k.ValidateScopeUpdateOwners(ctx, existing, proposed, msg.Signers); err != nil {
 		return nil, err
 	}
 
-	existing.AddOwners(msg.Owners)
-
-	k.SetScope(ctx, existing)
+	k.SetScope(ctx, proposed)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -178,11 +179,15 @@ func (k msgServer) DeleteScopeOwner(
 		return nil, fmt.Errorf("scope not found with id %s", msg.ScopeId)
 	}
 
-	if err := k.ValidateScopeDeleteOwners(ctx, msg.Owners, existing, msg.Signers); err != nil {
-		return nil, err
+	proposed := existing
+	rmErr := proposed.RemoveOwners(msg.Owners)
+	if rmErr != nil {
+		return nil, rmErr
 	}
 
-	existing.RemoveOwners(msg.Owners)
+	if err := k.ValidateScopeUpdateOwners(ctx, existing, proposed, msg.Signers); err != nil {
+		return nil, err
+	}
 
 	k.SetScope(ctx, existing)
 
