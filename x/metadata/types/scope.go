@@ -125,11 +125,18 @@ func (s *Scope) GetOwnerIndexWithAddress(address string) (int, bool) {
 }
 
 // AddOwners will append new owners or overwrite existing if address exists
-func (s *Scope) AddOwners(owners []Party) {
+// If a scope owner already exists that's equal to a provided owner, an error is returned.
+func (s *Scope) AddOwners(owners []Party) error {
+	if len(owners) == 0 {
+		return nil
+	}
 	newOwners := make([]Party, 0, len(owners))
 	for _, owner := range owners {
 		i, found := s.GetOwnerIndexWithAddress(owner.Address)
 		if found {
+			if s.Owners[i].Equals(owner) {
+				return fmt.Errorf("party already exists with address %s and role %s", owner.Address, owner.Role)
+			}
 			s.Owners[i] = owner
 		} else {
 			newOwners = append(newOwners, owner)
@@ -138,6 +145,7 @@ func (s *Scope) AddOwners(owners []Party) {
 	if len(newOwners) > 0 {
 		s.Owners = append(s.Owners, newOwners...)
 	}
+	return nil
 }
 
 // RemoveOwners will remove owners with the given addresses.

@@ -143,13 +143,20 @@ func (k msgServer) AddScopeOwner(
 ) (*types.MsgAddScopeOwnerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	if err := msg.ValidateBasic(); err != nil {
+		return nil, err
+	}
+
 	existing, found := k.GetScope(ctx, msg.ScopeId)
 	if !found {
 		return nil, fmt.Errorf("scope not found with id %s", msg.ScopeId)
 	}
 
 	proposed := existing
-	proposed.AddOwners(msg.Owners)
+	addErr := proposed.AddOwners(msg.Owners)
+	if addErr != nil {
+		return nil, addErr
+	}
 
 	if err := k.ValidateScopeUpdateOwners(ctx, existing, proposed, msg.Signers); err != nil {
 		return nil, err
@@ -173,6 +180,10 @@ func (k msgServer) DeleteScopeOwner(
 	msg *types.MsgDeleteScopeOwnerRequest,
 ) (*types.MsgDeleteScopeOwnerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if err := msg.ValidateBasic(); err != nil {
+		return nil, err
+	}
 
 	existing, found := k.GetScope(ctx, msg.ScopeId)
 	if !found {
