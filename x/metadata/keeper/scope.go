@@ -315,8 +315,8 @@ func (k Keeper) ValidateScopeDeleteDataAccess(ctx sdk.Context, dataAccessAddrs [
 	return nil
 }
 
-// ValidateScopeUpdateOwner checks the current scopes owners and the proposed update
-func (k Keeper) ValidateScopeUpdateOwner(ctx sdk.Context, owners []*types.Party, existing types.Scope, signers []string) error {
+// ValidateScopeUpdateOwners checks the current scopes owners and the proposed update
+func (k Keeper) ValidateScopeUpdateOwners(ctx sdk.Context, owners []*types.Party, existing types.Scope, signers []string) error {
 	if len(owners) < 1 {
 		return fmt.Errorf("owner list cannot be empty")
 	}

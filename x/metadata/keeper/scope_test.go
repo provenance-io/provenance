@@ -473,7 +473,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdateOwners() {
 		tc := tc
 
 		s.Run(n, func() {
-			err := s.app.MetadataKeeper.ValidateScopeUpdateOwner(s.ctx, tc.owners, tc.existing, tc.signers)
+			err := s.app.MetadataKeeper.ValidateScopeUpdateOwners(s.ctx, tc.owners, tc.existing, tc.signers)
 			if tc.wantErr {
 				s.Error(err)
 				s.Equal(tc.errorMsg, err.Error())

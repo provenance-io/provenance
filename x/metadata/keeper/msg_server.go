@@ -148,7 +148,7 @@ func (k msgServer) AddScopeOwner(
 		return nil, fmt.Errorf("scope not found with id %s", msg.ScopeId)
 	}
 
-	if err := k.ValidateScopeUpdateOwner(ctx, msg.Owners, existing, msg.Signers); err != nil {
+	if err := k.ValidateScopeUpdateOwners(ctx, msg.Owners, existing, msg.Signers); err != nil {
 		return nil, err
 	}
 
