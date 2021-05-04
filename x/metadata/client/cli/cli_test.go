@@ -2240,7 +2240,7 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 			[]string{
 				scopeSpecID.String(),
 				userAddress,
-				"owner,originator",
+				"owner",
 				s.contractSpecID.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, userAddress),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -2271,7 +2271,7 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 			[]string{
 				contractSpecID.String(),
 				userAddress,
-				"owner,originator",
+				"owner",
 				"hashvalue",
 				contractSpecName,
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, userAddress),
