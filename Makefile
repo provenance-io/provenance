@@ -422,8 +422,8 @@ update-swagger-docs: statik
     	echo "Swagger docs are in sync";\
     fi
 
-.PHONY: update-swagger-docs
-
-.PHONY: update-tocs
 update-tocs:
 	scripts/update-toc.sh x
+
+.PHONY: update-swagger-docs update-tocs
+
