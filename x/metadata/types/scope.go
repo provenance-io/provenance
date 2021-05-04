@@ -51,13 +51,8 @@ func (s *Scope) ValidateBasic() error {
 			return fmt.Errorf("invalid scope specification identifier (expected: %s, got %s)", PrefixScopeSpecification, prefix)
 		}
 	}
-	if len(s.Owners) < 1 {
-		return errors.New("scope must have at least one owner")
-	}
-	for _, o := range s.Owners {
-		if _, err = sdk.AccAddressFromBech32(o.Address); err != nil {
-			return fmt.Errorf("invalid owner on scope: %w", err)
-		}
+	if err = s.ValidateOwnersBasic(); err != nil {
+		return err
 	}
 	for _, d := range s.DataAccess {
 		if _, err = sdk.AccAddressFromBech32(d); err != nil {
@@ -67,6 +62,18 @@ func (s *Scope) ValidateBasic() error {
 	if len(s.ValueOwnerAddress) > 0 {
 		if _, err = sdk.AccAddressFromBech32(s.ValueOwnerAddress); err != nil {
 			return fmt.Errorf("invalid value owner address on scope: %w", err)
+		}
+	}
+	return nil
+}
+
+func (s Scope) ValidateOwnersBasic() error {
+	if len(s.Owners) < 1 {
+		return errors.New("scope must have at least one owner")
+	}
+	for _, o := range s.Owners {
+		if _, err := sdk.AccAddressFromBech32(o.Address); err != nil {
+			return fmt.Errorf("invalid owner on scope: %w", err)
 		}
 	}
 	return nil
