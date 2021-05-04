@@ -46,6 +46,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * Added linkify script for changelog issue links [#107](https://github.com/provenance-io/provenance/issues/107)
+* Gas consumption telemetry and tracing [#299](https://github.com/provenance-io/provenance/issues/299)
 
 ### Bug Fixes
 
