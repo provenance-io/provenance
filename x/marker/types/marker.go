@@ -137,7 +137,10 @@ func (ma MarkerAccount) Validate() error {
 	if ma.Supply.IsNegative() {
 		return fmt.Errorf("total supply must be greater than or equal to zero")
 	}
-	if ma.Status != StatusProposed && len(ma.AddressListForPermission(Access_Mint)) == 0 && ma.Supply.IsZero() {
+	if ma.Status < StatusActive && ma.Manager == "" && len(ma.AddressListForPermission(Access_Admin)) == 0 {
+		return fmt.Errorf("a manager is required if there are no accounts with ACCESS_ADMIN and marker is not ACTIVE")
+	}
+	if ma.Status == StatusFinalized && len(ma.AddressListForPermission(Access_Mint)) == 0 && ma.Supply.IsZero() {
 		return fmt.Errorf("cannot create a marker with zero total supply and no authorization for minting more")
 	}
 	// unlikely as this is set using a Coin which prohibits this value.
@@ -160,9 +163,6 @@ func (ma MarkerAccount) Validate() error {
 	}
 	if ma.Manager == ma.GetAddress().String() {
 		return fmt.Errorf("marker can not be self managed")
-	}
-	if ma.Status < StatusActive && ma.Manager == "" && len(ma.AddressListForPermission(Access_Admin)) == 0 {
-		return fmt.Errorf("a manager is required if there are no accounts with ACCESS_ADMIN and marker is not ACTIVE")
 	}
 	return ma.BaseAccount.Validate()
 }
