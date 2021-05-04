@@ -243,8 +243,9 @@ func ownerPartyList(addresses ...string) []types.Party {
 }
 
 func (s MetadataHandlerTestSuite) TestUpdateAndDeleteScopeOwners() {
-	scopeID := types.ScopeMetadataAddress(uuid.New())
 	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
+	scopeSpec := types.NewScopeSpecification(scopeSpecID, nil, []string{s.user1}, []types.PartyType{types.PartyType_PARTY_TYPE_OWNER}, []types.MetadataAddress{})
+	scopeID := types.ScopeMetadataAddress(uuid.New())
 	scope := types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, "")
 	dneScopeID := types.ScopeMetadataAddress(uuid.New())
 	user3 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()
@@ -256,6 +257,12 @@ func (s MetadataHandlerTestSuite) TestUpdateAndDeleteScopeOwners() {
 		errorMsg string
 	}{
 		{
+			"setup test with new scope specification",
+			types.NewMsgWriteScopeSpecificationRequest(*scopeSpec, []string{s.user1}),
+			[]string{s.user1},
+			"",
+		},
+		{
 			"setup test with new scope",
 			types.NewMsgWriteScopeRequest(*scope, []string{s.user1}),
 			[]string{s.user1},
@@ -263,25 +270,25 @@ func (s MetadataHandlerTestSuite) TestUpdateAndDeleteScopeOwners() {
 		},
 		{
 			"should fail to UPDATE owners, msg validate basic failure",
-			types.NewMsgAddScopeOwnerRequest(scopeID, []*types.Party{}, []string{s.user1}),
+			types.NewMsgAddScopeOwnerRequest(scopeID, []types.Party{}, []string{s.user1}),
 			[]string{s.user1},
 			"owner list cannot be empty",
 		},
 		{
 			"should fail to UPDATE owners, can not find scope",
-			types.NewMsgAddScopeOwnerRequest(dneScopeID, []*types.Party{{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER}}, []string{s.user1}),
+			types.NewMsgAddScopeOwnerRequest(dneScopeID, []types.Party{{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER}}, []string{s.user1}),
 			[]string{s.user1},
 			fmt.Sprintf("scope not found with id %s", dneScopeID),
 		},
 		{
 			"should fail to UPDATE owners, validate add failure",
-			types.NewMsgAddScopeOwnerRequest(scopeID, []*types.Party{{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER}}, []string{s.user1}),
+			types.NewMsgAddScopeOwnerRequest(scopeID, []types.Party{{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER}}, []string{s.user1}),
 			[]string{s.user1},
 			fmt.Sprintf("owner %s - %s already exists on with role %s", s.user1, types.PartyType_PARTY_TYPE_OWNER, types.PartyType_PARTY_TYPE_OWNER),
 		},
 		{
 			"should successfully UPDATE owners",
-			types.NewMsgAddScopeOwnerRequest(scopeID, []*types.Party{{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER}}, []string{s.user1}),
+			types.NewMsgAddScopeOwnerRequest(scopeID, []types.Party{{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER}}, []string{s.user1}),
 			[]string{s.user1},
 			"",
 		},
@@ -324,8 +331,9 @@ func (s MetadataHandlerTestSuite) TestUpdateAndDeleteScopeOwners() {
 }
 
 func (s MetadataHandlerTestSuite) TestAddAndDeleteScopeDataAccess() {
-	scopeID := types.ScopeMetadataAddress(uuid.New())
 	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
+	scopeSpec := types.NewScopeSpecification(scopeSpecID, nil, []string{s.user1}, []types.PartyType{types.PartyType_PARTY_TYPE_OWNER}, []types.MetadataAddress{})
+	scopeID := types.ScopeMetadataAddress(uuid.New())
 	scope := types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, "")
 	dneScopeID := types.ScopeMetadataAddress(uuid.New())
 	user3 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()
@@ -336,6 +344,12 @@ func (s MetadataHandlerTestSuite) TestAddAndDeleteScopeDataAccess() {
 		signers  []string
 		errorMsg string
 	}{
+		{
+			"setup test with new scope specification",
+			types.NewMsgWriteScopeSpecificationRequest(*scopeSpec, []string{s.user1}),
+			[]string{s.user1},
+			"",
+		},
 		{
 			"setup test with new scope",
 			types.NewMsgWriteScopeRequest(*scope, []string{s.user1}),

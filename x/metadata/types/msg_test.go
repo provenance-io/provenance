@@ -209,7 +209,7 @@ func TestAddScopeOwnersValidateBasic(t *testing.T) {
 		"should fail to validate basic, incorrect scope id type": {
 			NewMsgAddScopeOwnerRequest(
 				notAScopeId,
-				[]*Party{{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_OWNER}},
+				[]Party{{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_OWNER}},
 				[]string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
 			true,
 			fmt.Sprintf("address is not a scope id: %v", notAScopeId.String()),
@@ -217,7 +217,7 @@ func TestAddScopeOwnersValidateBasic(t *testing.T) {
 		"should fail to validate basic, requires at least one owner address": {
 			NewMsgAddScopeOwnerRequest(
 				actualScopeId,
-				[]*Party{},
+				[]Party{},
 				[]string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"},
 			),
 			true,
@@ -226,7 +226,7 @@ func TestAddScopeOwnersValidateBasic(t *testing.T) {
 		"should fail to validate basic, incorrect owner address format": {
 			NewMsgAddScopeOwnerRequest(
 				actualScopeId,
-				[]*Party{{Address: "notabech32address", Role: PartyType_PARTY_TYPE_OWNER}},
+				[]Party{{Address: "notabech32address", Role: PartyType_PARTY_TYPE_OWNER}},
 				[]string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"},
 			),
 			true,
@@ -235,7 +235,7 @@ func TestAddScopeOwnersValidateBasic(t *testing.T) {
 		"should fail to validate basic, incorrect party type": {
 			NewMsgAddScopeOwnerRequest(
 				actualScopeId,
-				[]*Party{{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_UNSPECIFIED}},
+				[]Party{{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_UNSPECIFIED}},
 				[]string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"},
 			),
 			true,
@@ -244,7 +244,7 @@ func TestAddScopeOwnersValidateBasic(t *testing.T) {
 		"should fail to validate basic, requires at least one signer": {
 			NewMsgAddScopeOwnerRequest(
 				actualScopeId,
-				[]*Party{{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_OWNER}},
+				[]Party{{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_OWNER}},
 				[]string{},
 			),
 			true,
@@ -253,7 +253,7 @@ func TestAddScopeOwnersValidateBasic(t *testing.T) {
 		"should successfully validate basic": {
 			NewMsgAddScopeOwnerRequest(
 				actualScopeId,
-				[]*Party{{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_OWNER}},
+				[]Party{{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_OWNER}},
 				[]string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"},
 			),
 			false,
