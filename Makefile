@@ -123,11 +123,11 @@ all: build format lint test
 
 # Install puts the binaries in the local environment path.
 install: go.sum
-	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) install -mod=readonly $(BUILD_FLAGS) ./cmd/provenanced
+	CGO_LDFLAGS=$(CGO_LDFLAGS) CGO_CFLAGS=$(CGO_CFLAGS) $(GO) install -mod=readonly $(BUILD_FLAGS) ./cmd/provenanced
 
 build: go.sum
 	mkdir -p $(BUILDDIR)
-	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./cmd/provenanced
+	CGO_LDFLAGS=$(CGO_LDFLAGS) CGO_CFLAGS=$(CGO_CFLAGS) $(GO) build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./cmd/provenanced
 
 build-linux: go.sum
 	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build
@@ -228,8 +228,11 @@ $(RELEASE_ZIP): $(RELEASE_PIO) $(RELEASE_WASM)
 
 # gon packages the zip wrong. need bin/provenanced and bin/libwasmvm
 .PHONY: build-release-rezip
+build-release-rezip: ZIP_FROM = $(BUILDDIR)/$(RELEASE_ZIP_BASE).zip
+build-release-rezip: ZIP_TO   = $(BUILDDIR)/$(RELEASE_ZIP_NAME)
 build-release-rezip:
-	scripts/fix-gon-zip $(BUILDDIR)/$(RELEASE_ZIP_BASE).zip
+	scripts/fix-gon-zip $(ZIP_FROM) && \
+		mv -v $(ZIP_FROM) $(ZIP_TO)
 
 .PHONY: bulid-release-proto
 build-release-proto:
