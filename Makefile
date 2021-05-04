@@ -226,7 +226,10 @@ statik:
 linkify:
 	python ./scripts/linkify.py CHANGELOG.md
 
-.PHONY: go-mod-cache go.sum lint clean format check-built statik linkify
+update-tocs:
+	scripts/update-toc.sh x
+
+.PHONY: go-mod-cache go.sum lint clean format check-built statik linkify update-tocs
 
 
 ##############################
@@ -422,8 +425,5 @@ update-swagger-docs: statik
     	echo "Swagger docs are in sync";\
     fi
 
-update-tocs:
-	scripts/update-toc.sh x
-
-.PHONY: update-swagger-docs update-tocs
+.PHONY: update-swagger-docs
 
