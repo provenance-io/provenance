@@ -75,7 +75,7 @@ update_tocs () {
     if [[ "$1" == '--force' ]]; then
       useforce='YES'
     elif [[ -d "$1" ]]; then
-      filenames+=( $( grep -rl "$TOC_LOC_REGEX" "$( sed 's/\/$//' <<< "$1" )" 2> /dev/null ) )
+      filenames+=( $( grep -rl "$TOC_LOC_REGEX" "$( sed 's/\/$//' <<< "$1" )" 2> /dev/null | sort ) )
     elif [[ -f "$1" ]]; then
       filenames+=( "$1" )
     else
