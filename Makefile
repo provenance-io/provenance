@@ -27,6 +27,10 @@ ifeq (,$(VERSION))
   endif
 endif
 
+GOLANGCI_LINT=$(shell which golangci-lint)
+ifeq ("$(wildcard $(GOLANGCI_LINT))","")
+    GOLANGCI_LINT = $(BINDIR)/golangci-lint
+endif
 
 GO := go
 
@@ -201,7 +205,7 @@ go.sum: go.mod
 
 # look into .golangci.yml for enabling / disabling linters
 lint:
-	$(BINDIR)/golangci-lint run
+	$(GOLANGCI_LINT) run
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" | xargs gofmt -d -s
 	$(GO) mod verify
 
