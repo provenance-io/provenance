@@ -426,4 +426,3 @@ update-swagger-docs: statik
     fi
 
 .PHONY: update-swagger-docs
-
