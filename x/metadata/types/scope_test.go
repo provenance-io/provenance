@@ -211,41 +211,49 @@ func (s *ScopeTestSuite) TestScopeAddOwners() {
 	tests := []struct {
 		name     string
 		scope    *Scope
-		owners   []*Party
+		owners   []Party
 		expected []Party
+		errMsg   string
 	}{
 		{
 			"should successfully add new owner address with new role",
 			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), user1Owner, []string{}, ""),
-			[]*Party{&user1Investor},
 			[]Party{user1Investor},
+			[]Party{user1Investor},
+			"",
 		},
 		{
 			"should successfully not add same owner twice",
 			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), user1Owner, []string{"addr1"}, ""),
-			[]*Party{&user1Investor, &user1Investor},
+			[]Party{user1Investor, user1Investor},
 			[]Party{user1Investor},
+			"",
 		},
 		{
 			"should successfully add new address to data access",
 			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), user1Owner, []string{"addr1"}, ""),
-			[]*Party{&user1Investor, &user2Affiliate},
 			[]Party{user1Investor, user2Affiliate},
+			[]Party{user1Investor, user2Affiliate},
+			"",
 		},
 		{
 			"should successfully not change the list",
 			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), user1Owner, []string{"addr1"}, ""),
-			[]*Party{},
+			[]Party{},
 			user1Owner,
+			"",
 		},
 	}
 
-	for _, tt := range tests {
-		tt := tt
-		s.T().Run(tt.name, func(t *testing.T) {
-
-			tt.scope.AddOwners(tt.owners)
-			require.Equal(t, tt.scope.Owners, tt.expected)
+	for _, tc := range tests {
+		s.T().Run(tc.name, func(t *testing.T) {
+			err := tc.scope.AddOwners(tc.owners)
+			if len(tc.errMsg) > 0 {
+				require.EqualError(t, err, tc.errMsg, "AddOwners expected error")
+			} else {
+				require.NoError(t, err, "AddOwners unexpected error")
+				require.Equal(t, tc.scope.Owners, tc.expected, "new scope owners value")
+			}
 		})
 	}
 }
@@ -259,33 +267,40 @@ func (s *ScopeTestSuite) TestScopeRemoveOwners() {
 		scope    *Scope
 		owners   []string
 		expected []Party
+		errMsg   string
 	}{
 		{
 			"should successfully remove owner by address",
 			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), user1Owner, []string{}, ""),
 			[]string{user1Owner[0].Address},
 			[]Party{},
+			"",
 		},
 		{
 			"should successfully not remove any owner",
 			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), user1Owner, []string{"addr1"}, ""),
 			[]string{"notanowner"},
 			user1Owner,
+			"",
 		},
 		{
 			"should successfully remove owner from list of multiple",
 			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{user1Investor, user2Affiliate}, []string{"addr1"}, ""),
 			[]string{user1Investor.Address},
 			[]Party{user2Affiliate},
+			"",
 		},
 	}
 
-	for _, tt := range tests {
-		tt := tt
-		s.T().Run(tt.name, func(t *testing.T) {
-
-			tt.scope.RemoveOwners(tt.owners)
-			require.Equal(t, tt.scope.Owners, tt.expected)
+	for _, tc := range tests {
+		s.T().Run(tc.name, func(t *testing.T) {
+			err := tc.scope.RemoveOwners(tc.owners)
+			if len(tc.errMsg) > 0 {
+				require.EqualError(t, err, tc.errMsg, "RemoveOwners expected error")
+			} else {
+				require.NoError(t, err, "RemoveOwners unexpected error")
+				require.Equal(t, tc.scope.Owners, tc.expected, "new scope owners value")
+			}
 		})
 	}
 }
