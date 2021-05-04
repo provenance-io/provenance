@@ -2,6 +2,16 @@
 
 This document describes the state transition operations pertaining markers:
 
+<!-- TOC 2 2 -->
+  - [Undefined](#undefined)
+  - [Proposed](#proposed)
+  - [Finalized](#finalized)
+  - [Active](#active)
+  - [Cancelled](#cancelled)
+  - [Destroyed](#destroyed)
+
+
+
 ## Undefined
 
 The undefined status is not allowed and its use will be flagged as an error condition.
@@ -18,6 +28,7 @@ On Transistion:
 Next Status:
 - **Finalized**
 - **Cancelled**
+
 ## Finalized
 
 The finalized state of the marker is used to verify the readiness of a marker before activating it.
@@ -35,6 +46,7 @@ On Transistion:
 Next Status:
 - **Active**
 - **Cancelled**
+
 ## Active
 
 An active marker is considered ready for use.
@@ -48,6 +60,7 @@ On Transistion:
 
 Next Status:
 - **Cancelled**
+
 ## Cancelled
 
 A cancelled marker will have no coin supply in circulation.
@@ -61,6 +74,7 @@ On Transistion:
 
 Next Status:
 - **Destroyed**
+
 ## Destroyed
 
 A destroyed marker is denoted as available for subsequent removal from the state store by clean up processes.

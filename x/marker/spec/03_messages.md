@@ -1,8 +1,23 @@
 # Messages
 
 In this section we describe the processing of the marker messages and the corresponding updates to the state.
-All created/modified state objects specified by each message are defined within the 
+All created/modified state objects specified by each message are defined within the
 [state](./02_state_transitions.md) section.
+
+<!-- TOC 2 2 -->
+  - [Msg/AddMarkerRequest](#msg-addmarkerrequest)
+  - [Msg/AddAccessRequest](#msg-addaccessrequest)
+  - [Msg/DeleteAccessRequest](#msg-deleteaccessrequest)
+  - [Msg/FinalizeRequest](#msg-finalizerequest)
+  - [Msg/ActivateRequest](#msg-activaterequest)
+  - [Msg/CancelRequest](#msg-cancelrequest)
+  - [Msg/DeleteRequest](#msg-deleterequest)
+  - [Msg/MintRequest](#msg-mintrequest)
+  - [Msg/BurnRequest](#msg-burnrequest)
+  - [Msg/WithdrawRequest](#msg-withdrawrequest)
+  - [Msg/TransferRequest](#msg-transferrequest)
+  - [Msg/SetDenomMetadataRequest](#msg-setdenommetadatarequest)
+
 
 
 ## Msg/AddMarkerRequest
@@ -73,6 +88,7 @@ This service message is expected to fail if:
 The Delete Access request will remove all access granted to the given address on the specified marker.  The method may
 only be used against markers in the Pending status when called by the current marker manager address or against `Finalized`
 and `Active` markers when the caller is currently assigned the `Admin` access type.
+
 ## Msg/FinalizeRequest
 
 Finalize Request defines the Msg/Finalize request type
@@ -90,6 +106,7 @@ This service message is expected to fail if:
 
 The Finalize marker status performs a set of checks to ensure the marker is ready to be activated.  It is designed to
 serve as an intermediate step prior to activation that indicates marker configuration is complete.
+
 ## Msg/ActivateRequest
 
 Activate Request defines the Msg/Activate request type
@@ -112,6 +129,7 @@ rights assigned as access grants for any modification.
 
 If a marker has a fixed supply the begin block/invariant supply checks are also performed.  If the supply is expected to
 float then the `total_supply` value will be set to zero upon activation.
+
 ## Msg/CancelRequest
 
 Cancel Request defines the Msg/Cancel request type
@@ -127,6 +145,7 @@ This service message is expected to fail if:
   - The given administrator address does not currently have the "admin" access granted on the marker
 - The amount in circulation is greater than zero or any remaining amount is not currently held in escrow within the
   marker account.
+
 ## Msg/DeleteRequest
 
 Delete Request defines the Msg/Delete request type
@@ -159,6 +178,7 @@ This service message is expected to fail if:
 - The given administrator address does not currently have the "mint" access granted on the marker
 - The requested amount of mint would increase the total supply in circulation above the configured supply limit set in
   the marker module params
+
 ## Msg/BurnRequest
 
 Burn Request defines the Msg/Burn request type that is used to remove supply of the marker coin from circulation.  In
@@ -175,11 +195,12 @@ This service message is expected to fail if:
   - And the request is not signed with an administrator address that matches the manager address or:
 - The given administrator address does not currently have the "burn" access granted on the marker
 - The amount of coin to burn is not currently held in escrow within the marker account.
+
 ## Msg/WithdrawRequest
 
 Withdraw Request defines the Msg/Withdraw request type and is used to withdraw coin from escrow within the marker.
 
-NOTE: any denom coin can be held within a marker "in escrow", these values are not restricted to just the denom of the 
+NOTE: any denom coin can be held within a marker "in escrow", these values are not restricted to just the denom of the
 marker itself.
 
 +++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L129-L135
@@ -193,6 +214,7 @@ This service message is expected to fail if:
   - And the request is not signed with an administrator address that matches the manager address or:
 - The given administrator address does not currently have the "withdraw" access granted on the marker
 - The amount of coin requested for withdraw is not currently held by the marker account
+
 ## Msg/TransferRequest
 
 Transfer Request defines the Msg/Transfer request type.  A transfer request is used to transfer coin between two

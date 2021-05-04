@@ -1,11 +1,22 @@
-
 # Governance Proposal Control
 
-The marker module supports an extensive amount of control over markers via governance proposal.  This allows a 
+The marker module supports an extensive amount of control over markers via governance proposal.  This allows a
 marker to be defined where no single account is allowed to make modifications and yet it is still possible to
 issue change requests through passing a governance proposal.
 
+<!-- TOC 2 2 -->
+  - [Add Marker Proposal](#add-marker-proposal)
+  - [SupplyIncrease Proposal](#supplyincrease-proposal)
+  - [SupplyDecrease Proposal](#supplydecrease-proposal)
+  - [SetAdministrator Proposal](#setadministrator-proposal)
+  - [RemoveAdministrator Proposal](#removeadministrator-proposal)
+  - [ChangeStatus Proposal](#changestatus-proposal)
+  - [WithdrawEscrow Proposal](#withdrawescrow-proposal)
+
+
+
 ## Add Marker Proposal
+
 AddMarkerProposal defines defines a governance proposal to create a new marker.
 
 In a typical add marker situation the `UnrestrictedDenomRegex` parameter would be used to enforce longer denom
@@ -28,6 +39,7 @@ This request is expected to fail if:
 - The mint operation fails for any reason (see bank module)
 
 ## SupplyIncrease Proposal
+
 SupplyIncreaseProposal defines a governance proposal to administer a marker and increase total supply of the marker
 through minting coin and placing it within the marker or assigning it directly to an account.
 
@@ -38,6 +50,7 @@ This request is expected to fail if:
 - The requested supply exceeds the configuration parameter for `MaxTotalSupply`
 
 ## SupplyDecrease Proposal
+
 SupplyDecreaseProposal defines a governance proposal to administer a marker and decrease the total supply through
 burning coin held within the marker
 
@@ -53,6 +66,7 @@ The chain will panic and halt if:
 - The bank burn operation fails for any reason (see bank module)
 
 ## SetAdministrator Proposal
+
 SetAdministratorProposal defines a governance proposal to administer a marker and set administrators with specific
 access on the marker
 
@@ -65,6 +79,7 @@ This request is expected to fail if:
 - Any of the access grants are invalid
 
 ## RemoveAdministrator Proposal
+
 RemoveAdministratorProposal defines a governance proposal to administer a marker and remove all permissions for a
 given address
 
@@ -77,6 +92,7 @@ This request is expected to fail if:
 - The address to be removed is not present
 
 ## ChangeStatus Proposal
+
 ChangeStatusProposal defines a governance proposal to administer a marker to change its status
 
 +++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/proposals.proto#L82-L90
@@ -91,6 +107,7 @@ This request is expected to fail if:
     resulting in the failure to burn all remaining supply.
 
 ## WithdrawEscrow Proposal
+
 WithdrawEscrowProposal defines a governance proposal to withdraw escrow coins from a marker
 
 +++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/proposals.proto#L93-L103

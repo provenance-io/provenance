@@ -12,7 +12,7 @@ Param module and available for control via Governance proposal to change paramet
 | UnrestrictedDenomRegex | `string` | `"[a-zA-Z][a-zA-Z0-9/]{2,64}"` |
 
 
-## Definitions 
+## Definitions
 
 - **Max Total Supply** (uint64) - A value indicating the maximum supply level allowed for any added marker
 

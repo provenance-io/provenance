@@ -2,20 +2,21 @@
 
 The marker module emits the following events:
 
-* [Marker Added](#Marker-Added)
-* [Marker Updated](#Marker-Updated)
-* [Grant Access](#Grant-Access)
-* [Revoke Access](#Revoke-Access)
-* [Finalize](#Finalize)
-* [Activate](#Activate)
-* [Cancel](#Cancel)
-* [Destroy](#Destroy)
-* [Mint](#Mint)
-* [Burn](#Burn)
-* [Withdraw](#Withdraw)
-* [Transfer](#Transfer)
-* [Deposit Asset](#Deposit-Asset)
-* [Withdraw Asset](#Withdraw-Asset)
+<!-- TOC 2 2 -->
+  - [Marker Added](#marker-added)
+  - [Marker Updated](#marker-updated)
+  - [Grant Access](#grant-access)
+  - [Revoke Access](#revoke-access)
+  - [Finalize](#finalize)
+  - [Activate](#activate)
+  - [Cancel](#cancel)
+  - [Destroy](#destroy)
+  - [Mint](#mint)
+  - [Burn](#burn)
+  - [Withdraw](#withdraw)
+  - [Transfer](#transfer)
+  - [Withdraw Asset](#withdraw-asset)
+
 
 
 ---

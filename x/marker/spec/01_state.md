@@ -1,8 +1,18 @@
 # State
 
+<!-- TOC 2 3 -->
+  - [Marker Accounts](#marker-accounts)
+    - [Marker Types](#marker-types)
+    - [Access Grants](#access-grants)
+    - [Fixed Supply vs Floating](#fixed-supply-vs-floating)
+  - [Marker Address Cache](#marker-address-cache)
+  - [Params](#params)
+
+
+
 ## Marker Accounts
 
-Markers are represented as a type that extends the `base_account` type of the `auth` SDK module.  As a valid account a 
+Markers are represented as a type that extends the `base_account` type of the `auth` SDK module.  As a valid account a
 marker is able to perform normal functions such as receiving and holding coins, and having a defined address that can
 be queried against for balance information from the `bank` module.
 
@@ -29,7 +39,7 @@ type MarkerAccount struct {
 	// value denomination.
 	Denom string
 
-	// the total supply expected for a marker.  This is the amount that is minted when a marker is created.  For 
+	// the total supply expected for a marker.  This is the amount that is minted when a marker is created.  For
 	// SupplyFixed markers this value will be enforced through an invariant that mints/burns from this account to
 	// maintain a match between this value and the supply on the chain (maintained by bank module).  For all non-fixed
 	// supply markers this value will be set to zero when the marker is activated.
@@ -99,7 +109,7 @@ type AccessGrant struct {
 
 A marker can be configured to have a fixed supply or one that is allowed to float.  A marker will always mint an amount
 of coin indicated in its `supply` field when it is activated.  For markers that have a fixed supply an invariant check
-is enforced that ensure the supply of the marker is always matching the configured value.  For a floating supply no 
+is enforced that ensure the supply of the marker is always matching the configured value.  For a floating supply no
 additional checks or adjustments are performed and the supply value is set to zero when activated.
 
 #### When a Marker has a Fixed Supply that does not match target
@@ -127,6 +137,7 @@ allows for cheap iterator operations over all marker accounts without having to 
 iterator from the auth module.
 
 - `0x01 | Address -> Address`
+
 ## Params
 
 Params is a module-wide configuration structure that stores system parameters
@@ -135,6 +146,3 @@ and defines overall functioning of the marker module.
 - Params: `Paramsspace("marker") -> legacy_amino(params)`
 
 +++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/marker.proto#L14-L25
-
-
-
