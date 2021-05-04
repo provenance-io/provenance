@@ -120,6 +120,14 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
 		expectedOutput string
 	}{
 		{
+			"get marker params json",
+			markercli.QueryParamsCmd(),
+			[]string{
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			`{"max_total_supply":"1000000","enable_governance":true,"unrestricted_denom_regex":""}`,
+		},
+		{
 			"get testcoin marker json",
 			markercli.MarkerCmd(),
 			[]string{

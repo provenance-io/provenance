@@ -7,6 +7,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
 	simapp "github.com/provenance-io/provenance/app"
 
 	"github.com/provenance-io/provenance/x/marker/types"
