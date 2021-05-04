@@ -2,52 +2,42 @@
 
 The metadata module emits the following events and telemetry information.
 
-<!-- TOC 2 5 -->
-  - [Events](#events)
-    - [Generic](#generic)
-      - [EventTxCompleted](#eventtxcompleted)
-    - [Scope](#scope)
-      - [EventScopeCreated](#eventscopecreated)
-      - [EventScopeUpdated](#eventscopeupdated)
-      - [EventScopeDeleted](#eventscopedeleted)
-    - [Session](#session)
-      - [EventSessionCreated](#eventsessioncreated)
-      - [EventSessionUpdated](#eventsessionupdated)
-      - [EventSessionDeleted](#eventsessiondeleted)
-    - [Record](#record)
-      - [NewEventRecordCreated](#neweventrecordcreated)
-      - [EventRecordUpdated](#eventrecordupdated)
-      - [EventRecordDeleted](#eventrecorddeleted)
-    - [Scope Specification](#scope-specification)
-      - [EventScopeSpecificationCreated](#eventscopespecificationcreated)
-      - [EventScopeSpecificationUpdated](#eventscopespecificationupdated)
-      - [EventScopeSpecificationDeleted](#eventscopespecificationdeleted)
-    - [Contract Specification](#contract-specification)
-      - [EventContractSpecificationCreated](#eventcontractspecificationcreated)
-      - [EventContractSpecificationUpdated](#eventcontractspecificationupdated)
-      - [EventContractSpecificationDeleted](#eventcontractspecificationdeleted)
-    - [Record Specification](#record-specification)
-      - [EventRecordSpecificationCreated](#eventrecordspecificationcreated)
-      - [EventRecordSpecificationUpdated](#eventrecordspecificationupdated)
-      - [EventRecordSpecificationDeleted](#eventrecordspecificationdeleted)
-    - [Object Store Locator](#object-store-locator)
-      - [EventOSLocatorCreated](#eventoslocatorcreated)
-      - [EventOSLocatorUpdated](#eventoslocatorupdated)
-      - [EventOSLocatorDeleted](#eventoslocatordeleted)
-  - [Telemetry](#telemetry)
-    - [Counters](#counters)
-      - [Stored Objects](#stored-objects)
-        - [Keys](#keys)
-        - [Labels](#labels)
-        - [Label: category](#label-category)
-        - [Label: object-type](#label-object-type)
-        - [Label: action](#label-action)
+<!-- TOC 2 3 -->
+  - [Generic](#generic)
+    - [EventTxCompleted](#eventtxcompleted)
+  - [Scope](#scope)
+    - [EventScopeCreated](#eventscopecreated)
+    - [EventScopeUpdated](#eventscopeupdated)
+    - [EventScopeDeleted](#eventscopedeleted)
+  - [Session](#session)
+    - [EventSessionCreated](#eventsessioncreated)
+    - [EventSessionUpdated](#eventsessionupdated)
+    - [EventSessionDeleted](#eventsessiondeleted)
+  - [Record](#record)
+    - [EventRecordCreated](#eventrecordcreated)
+    - [EventRecordUpdated](#eventrecordupdated)
+    - [EventRecordDeleted](#eventrecorddeleted)
+  - [Scope Specification](#scope-specification)
+    - [EventScopeSpecificationCreated](#eventscopespecificationcreated)
+    - [EventScopeSpecificationUpdated](#eventscopespecificationupdated)
+    - [EventScopeSpecificationDeleted](#eventscopespecificationdeleted)
+  - [Contract Specification](#contract-specification)
+    - [EventContractSpecificationCreated](#eventcontractspecificationcreated)
+    - [EventContractSpecificationUpdated](#eventcontractspecificationupdated)
+    - [EventContractSpecificationDeleted](#eventcontractspecificationdeleted)
+  - [Record Specification](#record-specification)
+    - [EventRecordSpecificationCreated](#eventrecordspecificationcreated)
+    - [EventRecordSpecificationUpdated](#eventrecordspecificationupdated)
+    - [EventRecordSpecificationDeleted](#eventrecordspecificationdeleted)
+  - [Object Store Locator](#object-store-locator)
+    - [EventOSLocatorCreated](#eventoslocatorcreated)
+    - [EventOSLocatorUpdated](#eventoslocatorupdated)
+    - [EventOSLocatorDeleted](#eventoslocatordeleted)
 
-## Events
+---
+## Generic
 
-### Generic
-
-#### EventTxCompleted
+### EventTxCompleted
 
 This event is emitted whenever a TX has completed without issues.
 It will usually be accompanied by one or more of the other events.
@@ -58,9 +48,10 @@ It will usually be accompanied by one or more of the other events.
 | Endpoint              | The name of the rpc called, e.g. "WriteScope"     |
 | Signers               | List of bech32 address strings of the msg signers |
 
-### Scope
+---
+## Scope
 
-#### EventScopeCreated
+### EventScopeCreated
 
 This event is emitted whenever a new scope is written.
 
@@ -68,7 +59,7 @@ This event is emitted whenever a new scope is written.
 | --------------------- | ------------------------------------------------- |
 | ScopeAddr             | The bech32 address string of the ScopeId          |
 
-#### EventScopeUpdated
+### EventScopeUpdated
 
 This event is emitted whenever an existing scope is updated.
 
@@ -76,7 +67,7 @@ This event is emitted whenever an existing scope is updated.
 | --------------------- | ------------------------------------------------- |
 | ScopeAddr             | The bech32 address string of the ScopeId          |
 
-#### EventScopeDeleted
+### EventScopeDeleted
 
 This event is emitted whenever an existing scope is deleted.
 
@@ -84,9 +75,10 @@ This event is emitted whenever an existing scope is deleted.
 | --------------------- | ------------------------------------------------- |
 | ScopeAddr             | The bech32 address string of the ScopeId          |
 
-### Session
+---
+## Session
 
-#### EventSessionCreated
+### EventSessionCreated
 
 This event is emitted whenever a new session is written.
 
@@ -95,7 +87,7 @@ This event is emitted whenever a new session is written.
 | SessionAddr           | The bech32 address string of the SessionId         |
 | ScopeAddr             | The bech32 address string of the session's ScopeId |
 
-#### EventSessionUpdated
+### EventSessionUpdated
 
 This event is emitted whenever an existing session is updated.
 
@@ -104,7 +96,7 @@ This event is emitted whenever an existing session is updated.
 | SessionAddr           | The bech32 address string of the SessionId         |
 | ScopeAddr             | The bech32 address string of the session's ScopeId |
 
-#### EventSessionDeleted
+### EventSessionDeleted
 
 This event is emitted whenever an existing session is deleted.
 
@@ -113,9 +105,10 @@ This event is emitted whenever an existing session is deleted.
 | SessionAddr           | The bech32 address string of the SessionId         |
 | ScopeAddr             | The bech32 address string of the session's ScopeId |
 
-### Record
+---
+## Record
 
-#### NewEventRecordCreated
+### EventRecordCreated
 
 This event is emitted whenever a new record is written.
 
@@ -125,7 +118,7 @@ This event is emitted whenever a new record is written.
 | SessionAddr           | The bech32 address string of the record's SessionId |
 | ScopeAddr             | The bech32 address string of the record's ScopeId   |
 
-#### EventRecordUpdated
+### EventRecordUpdated
 
 This event is emitted whenever an existing record is updated.
 
@@ -135,7 +128,7 @@ This event is emitted whenever an existing record is updated.
 | SessionAddr           | The bech32 address string of the record's SessionId |
 | ScopeAddr             | The bech32 address string of the record's ScopeId   |
 
-#### EventRecordDeleted
+### EventRecordDeleted
 
 This event is emitted whenever an existing record is deleted.
 
@@ -144,9 +137,10 @@ This event is emitted whenever an existing record is deleted.
 | RecordAddr            | The bech32 address string of the RecordId         |
 | ScopeAddr             | The bech32 address string of the record's ScopeId |
 
-### Scope Specification
+---
+## Scope Specification
 
-#### EventScopeSpecificationCreated
+### EventScopeSpecificationCreated
 
 This event is emitted whenever a new scope specification is written.
 
@@ -154,7 +148,7 @@ This event is emitted whenever a new scope specification is written.
 | ---------------------- | ------------------------------------------------- |
 | ScopeSpecificationAddr | The bech32 address string of the SpecificationId  |
 
-#### EventScopeSpecificationUpdated
+### EventScopeSpecificationUpdated
 
 This event is emitted whenever an existing scope specification is updated.
 
@@ -162,7 +156,7 @@ This event is emitted whenever an existing scope specification is updated.
 | ---------------------- | ------------------------------------------------- |
 | ScopeSpecificationAddr | The bech32 address string of the SpecificationId  |
 
-#### EventScopeSpecificationDeleted
+### EventScopeSpecificationDeleted
 
 This event is emitted whenever an existing scope specification is deleted.
 
@@ -170,9 +164,10 @@ This event is emitted whenever an existing scope specification is deleted.
 | ---------------------- | ------------------------------------------------- |
 | ScopeSpecificationAddr | The bech32 address string of the SpecificationId  |
 
-### Contract Specification
+---
+## Contract Specification
 
-#### EventContractSpecificationCreated
+### EventContractSpecificationCreated
 
 This event is emitted whenever a new contract specification is written.
 
@@ -180,7 +175,7 @@ This event is emitted whenever a new contract specification is written.
 | ------------------------- | ------------------------------------------------- |
 | ContractSpecificationAddr | The bech32 address string of the SpecificationId  |
 
-#### EventContractSpecificationUpdated
+### EventContractSpecificationUpdated
 
 This event is emitted whenever an existing contract specification is updated.
 
@@ -188,7 +183,7 @@ This event is emitted whenever an existing contract specification is updated.
 | ------------------------- | ------------------------------------------------- |
 | ContractSpecificationAddr | The bech32 address string of the SpecificationId  |
 
-#### EventContractSpecificationDeleted
+### EventContractSpecificationDeleted
 
 This event is emitted whenever an existing contract specification is deleted.
 
@@ -196,9 +191,10 @@ This event is emitted whenever an existing contract specification is deleted.
 | ------------------------- | ------------------------------------------------- |
 | ContractSpecificationAddr | The bech32 address string of the SpecificationId  |
 
-### Record Specification
+---
+## Record Specification
 
-#### EventRecordSpecificationCreated
+### EventRecordSpecificationCreated
 
 This event is emitted whenever a new record specification is written.
 
@@ -207,7 +203,7 @@ This event is emitted whenever a new record specification is written.
 | RecordSpecificationAddr   | The bech32 address string of the SpecificationId           |
 | ContractSpecificationAddr | The bech32 address string of the Contract SpecificationId  |
 
-#### EventRecordSpecificationUpdated
+### EventRecordSpecificationUpdated
 
 This event is emitted whenever an existing record specification is updated.
 
@@ -216,7 +212,7 @@ This event is emitted whenever an existing record specification is updated.
 | RecordSpecificationAddr   | The bech32 address string of the SpecificationId           |
 | ContractSpecificationAddr | The bech32 address string of the Contract SpecificationId  |
 
-#### EventRecordSpecificationDeleted
+### EventRecordSpecificationDeleted
 
 This event is emitted whenever an existing record specification is deleted.
 
@@ -225,9 +221,10 @@ This event is emitted whenever an existing record specification is deleted.
 | RecordSpecificationAddr   | The bech32 address string of the SpecificationId           |
 | ContractSpecificationAddr | The bech32 address string of the Contract SpecificationId  |
 
-### Object Store Locator
+---
+## Object Store Locator
 
-#### EventOSLocatorCreated
+### EventOSLocatorCreated
 
 This event is emitted whenever a new object store locator is written.
 
@@ -235,7 +232,7 @@ This event is emitted whenever a new object store locator is written.
 | ---------------- | -------------------------------------- |
 | Owner            | The bech32 address string of the Owner |
 
-#### EventOSLocatorUpdated
+### EventOSLocatorUpdated
 
 This event is emitted whenever an existing object store locator is updated.
 
@@ -243,63 +240,10 @@ This event is emitted whenever an existing object store locator is updated.
 | ---------------- | -------------------------------------- |
 | Owner            | The bech32 address string of the Owner |
 
-#### EventOSLocatorDeleted
+### EventOSLocatorDeleted
 
 This event is emitted whenever an existing object store locator is deleted.
 
 | Attribute Key    | Attribute Value                        |
 | ---------------- | -------------------------------------- |
 | Owner            | The bech32 address string of the Owner |
-
-## Telemetry
-
-### Counters
-
-#### Stored Objects
-
-This counter is used to get counts of things stored in the chain.
-
-The counter value is updated based on the "action" label in the following ways:
-- When the action is "created", 1 is added to the counter.
-- When the action is "updated", the counter is not changed.
-- When the action is "deleted", 1 is subtracted from the counter.
-
-##### Keys
-
-"metadata", "stored-object"
-
-##### Labels
-
-"category", "object-type", "action"
-
-##### Label: category
-
-This label groups the objects into a general type.
-
-Possible values:
-- "entry"
-- "specification"
-- "object-store-locator"
-
-##### Label: object-type
-
-This label specifically identifies objects.
-Each value belongs to exactly one "category" label.
-
-Possible values:
-- "scope" (is an "entry")
-- "session" (is an "entry")
-- "record" (is an "entry")
-- "scope-specification" (is a "specification")
-- "contract-specification" (is a "specification")
-- "record-specification" (is a "specification")
-- "object-store-locator" (is an "object-store-locator")
-
-##### Label: action
-
-This label defines the actions taken with respects to the various objects.
-
-Possible values:
-- "created"
-- "updated"
-- "deleted"
