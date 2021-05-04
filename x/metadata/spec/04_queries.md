@@ -6,31 +6,31 @@ All state objects specified by each message are defined within the [state](02_st
 Each entry or specification state object is wrapped with an `*IdInfo` message containing information about that state object's address/id.
 
 <!-- TOC 2 -->
-  - [Query/Params](#query-params)
-  - [Query/Scope](#query-scope)
-  - [Query/ScopesAll](#query-scopesall)
-  - [Query/Sessions](#query-sessions)
-  - [Query/SessionsAll](#query-sessionsall)
-  - [Query/Records](#query-records)
-  - [Query/RecordsAll](#query-recordsall)
-  - [Query/Ownership](#query-ownership)
-  - [Query/ValueOwnership](#query-valueownership)
-  - [Query/ScopeSpecification](#query-scopespecification)
-  - [Query/ScopeSpecificationsAll](#query-scopespecificationsall)
-  - [Query/ContractSpecification](#query-contractspecification)
-  - [Query/ContractSpecificationsAll](#query-contractspecificationsall)
-  - [Query/RecordSpecificationsForContractSpecification](#query-recordspecificationsforcontractspecification)
-  - [Query/RecordSpecification](#query-recordspecification)
-  - [Query/RecordSpecificationsAll](#query-recordspecificationsall)
-  - [Query/OSLocatorParams](#query-oslocatorparams)
-  - [Query/OSLocator](#query-oslocator)
-  - [Query/OSLocatorsByURI](#query-oslocatorsbyuri)
-  - [Query/OSLocatorsByScope](#query-oslocatorsbyscope)
-  - [Query/OSAllLocators](#query-osalllocators)
+  - [Params](#params)
+  - [Scope](#scope)
+  - [ScopesAll](#scopesall)
+  - [Sessions](#sessions)
+  - [SessionsAll](#sessionsall)
+  - [Records](#records)
+  - [RecordsAll](#recordsall)
+  - [Ownership](#ownership)
+  - [ValueOwnership](#valueownership)
+  - [ScopeSpecification](#scopespecification)
+  - [ScopeSpecificationsAll](#scopespecificationsall)
+  - [ContractSpecification](#contractspecification)
+  - [ContractSpecificationsAll](#contractspecificationsall)
+  - [RecordSpecificationsForContractSpecification](#recordspecificationsforcontractspecification)
+  - [RecordSpecification](#recordspecification)
+  - [RecordSpecificationsAll](#recordspecificationsall)
+  - [OSLocatorParams](#oslocatorparams)
+  - [OSLocator](#oslocator)
+  - [OSLocatorsByURI](#oslocatorsbyuri)
+  - [OSLocatorsByScope](#oslocatorsbyscope)
+  - [OSAllLocators](#osalllocators)
 
 
-
-## Query/Params
+---
+## Params
 
 The `Params` query gets the parameters of the metadata module.
 
@@ -43,8 +43,8 @@ There are no inputs for this query.
 +++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L226-L233
 
 
-
-## Query/Scope
+---
+## Scope
 
 The `Scope` query gets a scope.
 
@@ -72,8 +72,8 @@ Set `include_sessions` and/or `include_records` to true to include sessions and/
 +++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L252-L263
 
 
-
-## Query/ScopesAll
+---
+## ScopesAll
 
 The `ScopesAll` query gets all scopes.
 
@@ -88,8 +88,8 @@ The only input to this query is pagination information.
 +++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L281-L290
 
 
-
-## Query/Sessions
+---
+## Sessions
 
 The `Sessions` query gets sessions.
 
@@ -112,8 +112,8 @@ Set `include_scope` and/or `include_records` to true to include the scope and/or
 +++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L308-L319
 
 
-
-## Query/SessionsAll
+---
+## SessionsAll
 
 The `SessionsAll` query gets all sessions.
 
@@ -128,8 +128,8 @@ The only input to this query is pagination information.
 +++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L337-L346
 
 
-
-## Query/Records
+---
+## Records
 
 The `Records` query gets records.
 
@@ -161,8 +161,8 @@ Set `include_scope` and/or `include_sessions` to true to include the scope and/o
 +++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L368-L379
 
 
-
-## Query/RecordsAll
+---
+## RecordsAll
 
 The `RecordsAll` query gets all records.
 
@@ -177,8 +177,8 @@ The only input to this query is pagination information.
 +++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L397-L406
 
 
-
-## Query/Ownership
+---
+## Ownership
 
 The `Ownership` query gets the ids of scopes owned by an address.
 
@@ -195,8 +195,8 @@ The `address` should be a bech32 address string.
 +++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L416-L425
 
 
-
-## Query/ValueOwnership
+---
+## ValueOwnership
 
 The `ValueOwnership` query gets gets the ids of scopes that list an address as the value owner.
 
@@ -211,8 +211,8 @@ The `address` should be a bech32 address string.
 +++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L435-L444
 
 
-
-## Query/ScopeSpecification
+---
+## ScopeSpecification
 
 The `ScopeSpecification` query gets a scope specification.
 
@@ -226,8 +226,8 @@ specification address, e.g. `scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m`.
 +++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L453-L460
 
 
-
-## Query/ScopeSpecificationsAll
+---
+## ScopeSpecificationsAll
 
 The `ScopeSpecificationsAll` query gets all scope specifications.
 
@@ -242,8 +242,8 @@ The only input to this query is pagination information.
 +++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L476-L485
 
 
-
-## Query/ContractSpecification
+---
+## ContractSpecification
 
 The `ContractSpecification` query gets a contract specification.
 
@@ -263,8 +263,8 @@ Set `include_record_specs` to true to include them in the result.
 +++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L500-L511
 
 
-
-## Query/ContractSpecificationsAll
+---
+## ContractSpecificationsAll
 
 The `ContractSpecificationsAll` query gets all contract specifications.
 
@@ -279,8 +279,8 @@ The only input to this query is pagination information.
 +++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L527-L537
 
 
-
-## Query/RecordSpecificationsForContractSpecification
+---
+## RecordSpecificationsForContractSpecification
 
 The `RecordSpecificationsForContractSpecification` query gets all record specifications for a contract specification.
 
@@ -299,8 +299,8 @@ address, then the contract specification that contains that record specification
 +++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L549-L562
 
 
-
-## Query/RecordSpecification
+---
+## RecordSpecification
 
 The `RecordSpecification` query gets a record specification.
 
@@ -320,8 +320,8 @@ It is ignored if the `specification_id` is a record specification address.
 +++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L577-L584
 
 
-
-## Query/RecordSpecificationsAll
+---
+## RecordSpecificationsAll
 
 The `RecordSpecificationsAll` query gets all record specifications.
 
@@ -336,8 +336,8 @@ The only input to this query is pagination information.
 +++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L600-L610
 
 
-
-## Query/OSLocatorParams
+---
+## OSLocatorParams
 
 The `OSLocatorParams` query gets the parameters of the Object Store Locator sub-module.
 
@@ -350,8 +350,8 @@ There are no inputs for this query.
 +++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L615-L622
 
 
-
-## Query/OSLocator
+---
+## OSLocator
 
 The `OSLocator` query gets an Object Store Locator for an address.
 
@@ -364,8 +364,8 @@ The `owner` should be a bech32 address string.
 +++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L629-L635
 
 
-
-## Query/OSLocatorsByURI
+---
+## OSLocatorsByURI
 
 The `OSLocatorsByURI` query gets the object store locators by URI.
 
@@ -378,8 +378,8 @@ The `uri` is string the URI to find object store locators for.
 +++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L645-L653
 
 
-
-## Query/OSLocatorsByScope
+---
+## OSLocatorsByScope
 
 The `OSLocatorsByScope` query gets the object store locators for the owners and value owner of a scope.
 
@@ -393,8 +393,8 @@ e.g. `scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel`
 +++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L660-L666
 
 
-
-## Query/OSAllLocators
+---
+## OSAllLocators
 
 The `OSAllLocators` query gets all object store locators.
 
