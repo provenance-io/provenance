@@ -272,7 +272,7 @@ func (s MetadataHandlerTestSuite) TestUpdateAndDeleteScopeOwners() {
 			"should fail to UPDATE owners, msg validate basic failure",
 			types.NewMsgAddScopeOwnerRequest(scopeID, []types.Party{}, []string{s.user1}),
 			[]string{s.user1},
-			"owner list cannot be empty",
+			"invalid owners: at least one party is required",
 		},
 		{
 			"should fail to UPDATE owners, can not find scope",
@@ -284,7 +284,7 @@ func (s MetadataHandlerTestSuite) TestUpdateAndDeleteScopeOwners() {
 			"should fail to UPDATE owners, validate add failure",
 			types.NewMsgAddScopeOwnerRequest(scopeID, []types.Party{{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER}}, []string{s.user1}),
 			[]string{s.user1},
-			fmt.Sprintf("owner %s - %s already exists on with role %s", s.user1, types.PartyType_PARTY_TYPE_OWNER, types.PartyType_PARTY_TYPE_OWNER),
+			fmt.Sprintf("party already exists with address %s and role %s", s.user1, types.PartyType_PARTY_TYPE_OWNER),
 		},
 		{
 			"should successfully UPDATE owners",
@@ -296,7 +296,7 @@ func (s MetadataHandlerTestSuite) TestUpdateAndDeleteScopeOwners() {
 			"should fail to DELETE owners, msg validate basic failure",
 			types.NewMsgDeleteScopeOwnerRequest(scopeID, []string{}, []string{s.user1, s.user2}),
 			[]string{s.user1},
-			"owner address list cannot be empty",
+			"at least one owner address is required",
 		},
 		{
 			"should fail to DELETE owners, validate add failure",
