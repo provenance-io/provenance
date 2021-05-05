@@ -1438,14 +1438,29 @@ func runTxCmdTestCases(s *IntegrationCLITestSuite, testCases []txCmdTestCase) {
 func (s *IntegrationCLITestSuite) TestMetadataScopeTxCommands() {
 
 	scopeID := metadatatypes.ScopeMetadataAddress(uuid.New()).String()
-	specID := metadatatypes.ScopeSpecMetadataAddress(uuid.New()).String()
+	scopeSpecID := metadatatypes.ScopeSpecMetadataAddress(uuid.New()).String()
 	testCases := []txCmdTestCase{
+		{
+			"should successfully add scope specification for test setup",
+			cli.WriteScopeSpecificationCmd(),
+			[]string{
+				scopeSpecID,
+				s.testnet.Validators[0].Address.String(),
+				"owner",
+				s.contractSpecID.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, "", &sdk.TxResponse{}, 0,
+		},
 		{
 			"should successfully add metadata scope",
 			cli.WriteScopeCmd(),
 			[]string{
 				scopeID,
-				specID,
+				scopeSpecID,
 				s.testnet.Validators[0].Address.String(),
 				s.testnet.Validators[0].Address.String(),
 				s.testnet.Validators[0].Address.String(),
@@ -1461,7 +1476,7 @@ func (s *IntegrationCLITestSuite) TestMetadataScopeTxCommands() {
 			cli.WriteScopeCmd(),
 			[]string{
 				metadatatypes.ScopeMetadataAddress(uuid.New()).String(),
-				metadatatypes.ScopeSpecMetadataAddress(uuid.New()).String(),
+				scopeSpecID,
 				s.user1,
 				s.user1,
 				s.user1,
@@ -1511,7 +1526,7 @@ func (s *IntegrationCLITestSuite) TestMetadataScopeTxCommands() {
 			[]string{
 				metadatatypes.ScopeMetadataAddress(uuid.New()).String(),
 				metadatatypes.ScopeSpecMetadataAddress(uuid.New()).String(),
-				"incorrect,incorrect",
+				"incorrect1,incorrect2",
 				s.user1,
 				s.user1,
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -1519,7 +1534,7 @@ func (s *IntegrationCLITestSuite) TestMetadataScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, "invalid owner on scope: decoding bech32 failed: invalid index of 1", &sdk.TxResponse{}, 0,
+			true, "invalid scope owners: invalid party address [incorrect1]: decoding bech32 failed: invalid index of 1", &sdk.TxResponse{}, 0,
 		},
 		{
 			"should fail to remove metadata scope, invalid scopeid",
@@ -1566,14 +1581,14 @@ func (s *IntegrationCLITestSuite) TestMetadataScopeTxCommands() {
 			cli.AddRemoveScopeDataAccessCmd(),
 			[]string{
 				"add",
-				specID,
+				scopeSpecID,
 				s.user2,
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, fmt.Sprintf("meta address is not a scope: %s", specID), &sdk.TxResponse{}, 0,
+			true, fmt.Sprintf("meta address is not a scope: %s", scopeSpecID), &sdk.TxResponse{}, 0,
 		},
 		{
 			"should fail to add/remove metadata scope data access, validatebasic fails",
@@ -1616,6 +1631,63 @@ func (s *IntegrationCLITestSuite) TestMetadataScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			false, "", &sdk.TxResponse{}, 0,
+		},
+
+		{
+			"should fail to add/remove metadata scope owners, invalid scopeid",
+			cli.AddRemoveScopeOwnersCmd(),
+			[]string{
+				"add",
+				"not-valid",
+				s.user2,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, "decoding bech32 failed: invalid index of 1", &sdk.TxResponse{}, 0,
+		},
+		{
+			"should fail to add/remove metadata scope owner, invalid command requires add or remove",
+			cli.AddRemoveScopeOwnersCmd(),
+			[]string{
+				"notaddorremove",
+				scopeID,
+				s.user2,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, "incorrect command notaddorremove : required remove or update", &sdk.TxResponse{}, 0,
+		},
+		{
+			"should fail to add/remove metadata scope owner, not a scope id",
+			cli.AddRemoveScopeOwnersCmd(),
+			[]string{
+				"add",
+				scopeSpecID,
+				s.user2,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, fmt.Sprintf("meta address is not a scope: %s", scopeSpecID), &sdk.TxResponse{}, 0,
+		},
+		{
+			"should fail to add/remove metadata scope owner, validatebasic fails",
+			cli.AddRemoveScopeOwnersCmd(),
+			[]string{
+				"add",
+				scopeID,
+				"notauser",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, "invalid owners: invalid party address [notauser]: decoding bech32 failed: invalid index of 1", &sdk.TxResponse{}, 0,
 		},
 		{
 			"should successfully remove metadata scope",
@@ -2189,7 +2261,7 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 			[]string{
 				scopeSpecID.String(),
 				userAddress,
-				"owner,originator",
+				"owner",
 				s.contractSpecID.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, userAddress),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -2220,7 +2292,7 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 			[]string{
 				contractSpecID.String(),
 				userAddress,
-				"owner,originator",
+				"owner",
 				"hashvalue",
 				contractSpecName,
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, userAddress),

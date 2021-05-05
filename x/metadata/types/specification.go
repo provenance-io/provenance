@@ -370,6 +370,11 @@ func (d Description) String() string {
 	return string(out)
 }
 
+func (x PartyType) IsValid() bool {
+	_, ok := PartyType_name[int32(x)]
+	return ok
+}
+
 // validateURLBasic - Helper function to check if a url string is superficially valid.
 // The path and fieldName parameters are combined using makeFieldString for error messages.
 func validateURLBasic(url string, required bool, path string, fieldName string) error {

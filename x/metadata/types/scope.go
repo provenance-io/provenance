@@ -51,13 +51,8 @@ func (s *Scope) ValidateBasic() error {
 			return fmt.Errorf("invalid scope specification identifier (expected: %s, got %s)", PrefixScopeSpecification, prefix)
 		}
 	}
-	if len(s.Owners) < 1 {
-		return errors.New("scope must have at least one owner")
-	}
-	for _, o := range s.Owners {
-		if _, err = sdk.AccAddressFromBech32(o.Address); err != nil {
-			return fmt.Errorf("invalid owner on scope: %w", err)
-		}
+	if err = s.ValidateOwnersBasic(); err != nil {
+		return err
 	}
 	for _, d := range s.DataAccess {
 		if _, err = sdk.AccAddressFromBech32(d); err != nil {
@@ -68,6 +63,13 @@ func (s *Scope) ValidateBasic() error {
 		if _, err = sdk.AccAddressFromBech32(s.ValueOwnerAddress); err != nil {
 			return fmt.Errorf("invalid value owner address on scope: %w", err)
 		}
+	}
+	return nil
+}
+
+func (s Scope) ValidateOwnersBasic() error {
+	if err := ValidatePartiesBasic(s.Owners); err != nil {
+		return fmt.Errorf("invalid scope owners: %w", err)
 	}
 	return nil
 }
@@ -109,6 +111,69 @@ func (s *Scope) AddDataAccess(addresses []string) {
 			s.DataAccess = append(s.DataAccess, addr)
 		}
 	}
+}
+
+// GetOwnerIndexWithAddress gets the index of this scopes owners list that has the provided address,
+// and a boolean for whether or not it's found.
+func (s *Scope) GetOwnerIndexWithAddress(address string) (int, bool) {
+	for i, owner := range s.Owners {
+		if owner.Address == address {
+			return i, true
+		}
+	}
+	return -1, false
+}
+
+// AddOwners will append new owners or overwrite existing if address exists
+// If a scope owner already exists that's equal to a provided owner, an error is returned.
+func (s *Scope) AddOwners(owners []Party) error {
+	if len(owners) == 0 {
+		return nil
+	}
+	newOwners := make([]Party, 0, len(owners))
+	for _, owner := range owners {
+		i, found := s.GetOwnerIndexWithAddress(owner.Address)
+		if found {
+			if s.Owners[i].Equals(owner) {
+				return fmt.Errorf("party already exists with address %s and role %s", owner.Address, owner.Role)
+			}
+			s.Owners[i] = owner
+		} else {
+			newOwners = append(newOwners, owner)
+		}
+	}
+	if len(newOwners) > 0 {
+		s.Owners = append(s.Owners, newOwners...)
+	}
+	return nil
+}
+
+// RemoveOwners will remove owners with the given addresses.
+// If an address is provided that is not an owner, an error is returned.
+func (s *Scope) RemoveOwners(addressesToRemove []string) error {
+	if len(addressesToRemove) == 0 {
+		return nil
+	}
+	for _, addr := range addressesToRemove {
+		if _, found := s.GetOwnerIndexWithAddress(addr); !found {
+			return fmt.Errorf("address does not exist in scope owners: %s", addr)
+		}
+	}
+	ownersLeft := []Party{}
+	for _, existingOwner := range s.Owners {
+		keep := true
+		for _, addr := range addressesToRemove {
+			if existingOwner.Address == addr {
+				keep = false
+				break
+			}
+		}
+		if keep {
+			ownersLeft = append(ownersLeft, existingOwner)
+		}
+	}
+	s.Owners = ownersLeft
+	return nil
 }
 
 // UpdateAudit computes a set of changes to the audit fields based on the existing message.
@@ -376,11 +441,35 @@ func (ps Process) String() string {
 
 // ValidateBasic performs static checking of Party format
 func (p Party) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(p.Address); err != nil {
-		return fmt.Errorf("invalid address: %w", err)
+	if len(p.Address) == 0 {
+		return errors.New("missing party address")
 	}
-	if p.Role == PartyType_PARTY_TYPE_UNSPECIFIED {
-		return fmt.Errorf("invalid party type;  party type not specified")
+	if _, err := sdk.AccAddressFromBech32(p.Address); err != nil {
+		return fmt.Errorf("invalid party address [%s]: %w", p.Address, err)
+	}
+	if !p.Role.IsValid() || p.Role == PartyType_PARTY_TYPE_UNSPECIFIED {
+		return fmt.Errorf("invalid party type for party %s", p.Address)
+	}
+	return nil
+}
+
+// ValidatePartiesBasic validates a required list of parties.
+func ValidatePartiesBasic(parties []Party) error {
+	if len(parties) < 1 {
+		return errors.New("at least one party is required")
+	}
+	for i, p := range parties {
+		if err := p.ValidateBasic(); err != nil {
+			return err
+		}
+		for j, o2 := range parties {
+			if i == j {
+				continue
+			}
+			if p.Equals(o2) {
+				return fmt.Errorf("duplicate owners not allowed: address = %s, role = %s", p.Address, p.Role)
+			}
+		}
 	}
 	return nil
 }
@@ -388,4 +477,8 @@ func (p Party) ValidateBasic() error {
 // String implements stringer interface
 func (p Party) String() string {
 	return fmt.Sprintf("%s - %s", p.Address, p.Role)
+}
+
+func (p Party) Equals(p2 Party) bool {
+	return p.Address == p2.Address && p.Role == p2.Role
 }

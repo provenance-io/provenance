@@ -22,10 +22,15 @@ service Msg {
   // DeleteScope deletes a scope and all associated Records, Sessions.
   rpc DeleteScope(MsgDeleteScopeRequest) returns (MsgDeleteScopeResponse);
 
-  // AddScopeDataAccess adds data access MetaAddresses to scope
+  // AddScopeDataAccess adds data access AccAddress to scope
   rpc AddScopeDataAccess(MsgAddScopeDataAccessRequest) returns (MsgAddScopeDataAccessResponse);
-  // DeleteScopeDataAccess removes data access MetaAddresses from scope
+  // DeleteScopeDataAccess removes data access AccAddress from scope
   rpc DeleteScopeDataAccess(MsgDeleteScopeDataAccessRequest) returns (MsgDeleteScopeDataAccessResponse);
+
+  // AddScopeOwner adds new owner AccAddress to scope
+  rpc AddScopeOwner(MsgAddScopeOwnerRequest) returns (MsgAddScopeOwnerResponse);
+  // DeleteScopeOwner removes data access AccAddress from scope
+  rpc DeleteScopeOwner(MsgDeleteScopeOwnerRequest) returns (MsgDeleteScopeOwnerResponse);
 
   // WriteSession adds or updates a session context.
   rpc WriteSession(MsgWriteSessionRequest) returns (MsgWriteSessionResponse);
@@ -127,7 +132,7 @@ message MsgDeleteScopeRequest {
 // MsgDeleteScopeResponse is the response type for the Msg/DeleteScope RPC method.
 message MsgDeleteScopeResponse {}
 
-// MsgAddScopeDataAccessRequest is the request to add data access metaaddresses to scope
+// MsgAddScopeDataAccessRequest is the request to add data access AccAddress to scope
 message MsgAddScopeDataAccessRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
@@ -141,16 +146,16 @@ message MsgAddScopeDataAccessRequest {
     (gogoproto.moretags)   = "yaml:\"scope_id\""
   ];
 
-  // bech32 address to be added to scope
+  // AccAddress addresses to be added to scope
   repeated string data_access = 2 [(gogoproto.moretags) = "yaml:\"data_access\""];
   // signers is the list of address of those signing this request.
   repeated string signers = 3;
 }
 
-// MsgAddScopeDataAccessResponse is the response for adding data access metaaddresses to scope
+// MsgAddScopeDataAccessResponse is the response for adding data access AccAddress to scope
 message MsgAddScopeDataAccessResponse {}
 
-// MsgDeleteScopeDataAccessRequest is the request to remove data access metaaddresses to scope
+// MsgDeleteScopeDataAccessRequest is the request to remove data access AccAddress to scope
 message MsgDeleteScopeDataAccessRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
@@ -164,14 +169,60 @@ message MsgDeleteScopeDataAccessRequest {
     (gogoproto.moretags)   = "yaml:\"scope_id\""
   ];
 
-  // bech32 address to be removed from scope
+  // AccAddress address to be removed from scope
   repeated string data_access = 2 [(gogoproto.moretags) = "yaml:\"data_access\""];
   // signers is the list of address of those signing this request.
   repeated string signers = 3;
 }
 
-// MsgDeleteScopeDataAccessResponse is the response from removing data access metaaddresses to scope
+// MsgDeleteScopeDataAccessResponse is the response from removing data access AccAddress to scope
 message MsgDeleteScopeDataAccessResponse {}
+
+// MsgAddScopeOwnerRequest is the request to add owner AccAddress to scope
+message MsgAddScopeOwnerRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  // scope MetadataAddress for updating data access
+  bytes scope_id = 1 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customtype) = "MetadataAddress",
+    (gogoproto.moretags)   = "yaml:\"scope_id\""
+  ];
+
+  // AccAddress owner addresses to be added to scope
+  repeated Party owners = 2 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"owners\""];
+  // signers is the list of address of those signing this request.
+  repeated string signers = 3;
+}
+
+// MsgAddScopeOwnerResponse is the response for adding owner AccAddresses to scope
+message MsgAddScopeOwnerResponse {}
+
+// MsgDeleteScopeOwnerRequest is the request to remove owner AccAddresses to scope
+message MsgDeleteScopeOwnerRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  // scope MetadataAddress for removing data access
+  bytes scope_id = 1 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customtype) = "MetadataAddress",
+    (gogoproto.moretags)   = "yaml:\"scope_id\""
+  ];
+
+  // AccAddress owner addresses to be removed from scope
+  repeated string owners = 2 [(gogoproto.moretags) = "yaml:\"owners\""];
+  // signers is the list of address of those signing this request.
+  repeated string signers = 3;
+}
+
+// MsgDeleteScopeOwnerResponse is the response from removing owner AccAddress to scope
+message MsgDeleteScopeOwnerResponse {}
 
 // MsgWriteSessionRequest is the request type for the Msg/WriteSession RPC method.
 message MsgWriteSessionRequest {
