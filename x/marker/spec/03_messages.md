@@ -191,7 +191,7 @@ order to successfully burn supply the amount to burn must be held by the marker 
 This service message is expected to fail if:
 
 - The given denom value is invalid or does not match an existing marker on the system
-- The marker is not in a `active` status or:
+- The marker is not in an `active` status or:
   - And the request is not signed with an administrator address that matches the manager address or:
 - The given administrator address does not currently have the "burn" access granted on the marker
 - The amount of coin to burn is not currently held in escrow within the marker account.
@@ -255,7 +255,7 @@ This service message is expected to fail if:
   - Is missing the denom unit for the indicated base denom or display denom unit.
   - If there is an existing record the update will fail if:
      - The Base denom is changed.
-       If marker status is active or finalized:
+       If marker status is `active` or `finalized`:
         - Any DenomUnit entries are removed.
         - DenomUnit Denom fields are modified.
         - Any aliases are removed from a DenomUnit.

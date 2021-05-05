@@ -53,8 +53,14 @@ Fires when administrative access is granted for a marker
 | ---------------------- | --------------------- | ------------------------- |
 | marker_AccessGranted   | denom                 | {denom string}            |
 | marker_AccessGranted   | administrator         | {admin account address}   |
-| marker_AccessGranted   | marker_AccessGrant    | {access grant string}     |
+| marker_AccessGranted   | marker_AccessGrant    | {access grant format}     |
 
+### Access Grant Format
+
+| Attribute Key         | Attribute Value          |
+| --------------------- | ------------------------ |
+| address               | {bech32 address string}  |
+| permissions           | {csv list of role names} |
 
 
 ---
@@ -144,11 +150,12 @@ Fires when coins are burned from a marker account.
 Fires when coin is removed from a marker account and transferred to another.
 ## Withdraw
 
-| Type                   | Attribute Key         | Attribute Value           |
-| ---------------------- | --------------------- | ------------------------- |
-| marker_withdraw_coins  | denom                 | {denom string}            |
-| marker_withdraw_coins  | amount                | {supply amount}           |
-| marker_withdraw_coins  | administrator         | {admin account address}   |
+| Type                   | Attribute Key         | Attribute Value             |
+| ---------------------- | --------------------- | --------------------------- |
+| marker_withdraw_coins  | denom                 | {denom string}              |
+| marker_withdraw_coins  | amount                | {supply amount}             |
+| marker_withdraw_coins  | administrator         | {admin account address}     |
+| marker_withdraw_coins  | toAddress             | {recipient account address} |
 
 
 ---
@@ -156,19 +163,11 @@ Fires when coin is removed from a marker account and transferred to another.
 
 Fires when a facilitated transfer is performed of the marker's coin between accounts by an administrator
 
-| Type                   | Attribute Key         | Attribute Value           |
-| ---------------------- | --------------------- | ------------------------- |
-| marker_tranfer_coin    | denom                 | {denom string}            |
-| marker_tranfer_coin    | amount                | {supply amount}           |
-| marker_tranfer_coin    | administrator         | {admin account address}   |
-
+| Type                   | Attribute Key         | Attribute Value             |
+| ---------------------- | --------------------- | --------------------------- |
+| marker_transfer_coin   | denom                 | {denom string}              |
+| marker_transfer_coin   | amount                | {supply amount}             |
+| marker_transfer_coin   | administrator         | {admin account address}     |
+| marker_transfer_coin   | fromAddress           | {source account address}    |
+| marker_transfer_coin   | toAddress             | {recipient account address} |
 ---
-## Withdraw Asset
-
-Fires when coins are withdrawn from the marker account and sent to an address by an administrator
-
-| Type                   | Attribute Key         | Attribute Value           |
-| ---------------------- | --------------------- | ------------------------- |
-| marker_asset_withdrawn | denom                 | {denom string}            |
-| marker_asset_withdrawn | amount                | {coins amount}            |
-| marker_asset_withdrawn | administrator         | {admin account address}   |

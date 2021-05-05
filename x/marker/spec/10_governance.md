@@ -17,7 +17,7 @@ issue change requests through passing a governance proposal.
 
 ## Add Marker Proposal
 
-AddMarkerProposal defines defines a governance proposal to create a new marker.
+AddMarkerProposal defines a governance proposal to create a new marker.
 
 In a typical add marker situation the `UnrestrictedDenomRegex` parameter would be used to enforce longer denom
 values (preventing users from creating coins with well known symbols such as BTC, ETH, etc).  Markers added
