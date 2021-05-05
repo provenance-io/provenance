@@ -40,7 +40,7 @@ is the first and primary user of the Provenance Blockchain.
 
 The Public Provenance blockchain is under active development.  While the modules in this blockchain are based on implementations
 from the private [Figure Technologies](https://figure.com) blockchain launched in 2018 there are still breaking API changes expected
-especially related to the transistion to Cosmos SDK v040 and GRPC.  
+especially related to the transition to Cosmos SDK v040 and GRPC.  
 
 WARNING: Versions prior to the launch of mainnet and the associated `1.0.0` version should be considered unstable and API changes expected.
 
