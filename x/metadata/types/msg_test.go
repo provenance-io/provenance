@@ -142,7 +142,6 @@ func TestAddScopeDataAccessValidateBasic(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestDeleteScopeDataAccessValidateBasic(t *testing.T) {
@@ -194,7 +193,6 @@ func TestDeleteScopeDataAccessValidateBasic(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestAddScopeOwnersValidateBasic(t *testing.T) {
@@ -274,7 +272,6 @@ func TestAddScopeOwnersValidateBasic(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestDeleteScopeOwnerValidateBasic(t *testing.T) {
@@ -326,7 +323,6 @@ func TestDeleteScopeOwnerValidateBasic(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestWriteP8eContractSpecValidation(t *testing.T) {
@@ -395,7 +391,6 @@ func TestBindOSLocator(t *testing.T) {
 	require.Equal(t, ModuleName, route)
 	require.Equal(t, TypeMsgBindOSLocatorRequest, bindRequestMsg.Type())
 	require.Equal(t, "{\"type\":\"provenance/metadata/BindOSLocatorRequest\",\"value\":{\"locator\":{\"locator_uri\":\"http://foo.com\",\"owner\":\"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck\"}}}", string(bindRequestMsg.GetSignBytes()))
-
 }
 
 func TestModifyOSLocator(t *testing.T) {
@@ -408,7 +403,6 @@ func TestModifyOSLocator(t *testing.T) {
 	require.Equal(t, ModuleName, modifyRequest.Route())
 	require.Equal(t, TypeMsgModifyOSLocatorRequest, modifyRequest.Type())
 	require.Equal(t, "{\"type\":\"provenance/metadata/ModifyOSLocatorRequest\",\"value\":{\"locator\":{\"locator_uri\":\"http://foo.com\",\"owner\":\"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck\"}}}", string(modifyRequest.GetSignBytes()))
-
 }
 
 func TestDeleteOSLocator(t *testing.T) {
@@ -422,7 +416,6 @@ func TestDeleteOSLocator(t *testing.T) {
 	require.Equal(t, ModuleName, deleteRequest.Route())
 	require.Equal(t, TypeMsgDeleteOSLocatorRequest, deleteRequest.Type())
 	require.Equal(t, "{\"type\":\"provenance/metadata/DeleteOSLocatorRequest\",\"value\":{\"locator\":{\"locator_uri\":\"http://foo.com\",\"owner\":\"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck\"}}}", string(deleteRequest.GetSignBytes()))
-
 }
 
 func TestBindOSLocatorInvalid(t *testing.T) {
