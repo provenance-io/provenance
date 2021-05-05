@@ -2,10 +2,11 @@ package types
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/suite"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 )
 
 type SITestSuite struct {
@@ -19,7 +20,7 @@ func TestSITestSuite(t *testing.T) {
 }
 
 func (s *SITestSuite) TestInit() {
-	s.T().Run("SIPrefixSymbol spot check", func (t *testing.T) {
+	s.T().Run("SIPrefixSymbol spot check", func(t *testing.T) {
 		assert.Equal(t, "", SIPrefixSymbol[SI_PREFIX_NONE], "SI_PREFIX_NONE")
 		assert.Equal(t, "Z", SIPrefixSymbol[SI_PREFIX_ZETTA], "SI_PREFIX_ZETTA")
 		assert.Equal(t, "µ", SIPrefixSymbol[SI_PREFIX_MICRO], "SI_PREFIX_MICRO")
@@ -28,7 +29,7 @@ func (s *SITestSuite) TestInit() {
 		assert.False(t, okBad, "invalid SIPrefix")
 	})
 
-	s.T().Run("SIPrefixSymbolMap spot check", func (t *testing.T) {
+	s.T().Run("SIPrefixSymbolMap spot check", func(t *testing.T) {
 		assert.Equal(t, SI_PREFIX_NONE, SIPrefixSymbolMap[""], "SI_PREFIX_NONE")
 		assert.Equal(t, SI_PREFIX_DEKA, SIPrefixSymbolMap["da"], "SI_PREFIX_DEKA")
 		assert.Equal(t, SI_PREFIX_PICO, SIPrefixSymbolMap["p"], "SI_PREFIX_PICO")
@@ -44,13 +45,13 @@ func (s *SITestSuite) TestInit() {
 		assert.False(t, okQ, "Q should not exist")
 	})
 
-	s.T().Run("SIPrefixName all lowercase", func (t *testing.T) {
+	s.T().Run("SIPrefixName all lowercase", func(t *testing.T) {
 		for k, v := range SIPrefixName {
 			assert.Equal(t, strings.ToLower(v), v, k.String())
 		}
 	})
 
-	s.T().Run("SIPrefixName spot check", func (t *testing.T) {
+	s.T().Run("SIPrefixName spot check", func(t *testing.T) {
 		assert.Equal(t, "", SIPrefixName[SI_PREFIX_NONE], "SI_PREFIX_NONE")
 		assert.Equal(t, "deci", SIPrefixName[SI_PREFIX_DECI], "SI_PREFIX_DECI")
 		assert.Equal(t, "femto", SIPrefixName[SI_PREFIX_FEMTO], "SI_PREFIX_FEMTO")
@@ -60,13 +61,13 @@ func (s *SITestSuite) TestInit() {
 		assert.False(t, okBad, "invalid SIPrefix")
 	})
 
-	s.T().Run("SIPrefixNameMap all lowercase", func (t *testing.T) {
+	s.T().Run("SIPrefixNameMap all lowercase", func(t *testing.T) {
 		for k, v := range SIPrefixNameMap {
 			assert.Equal(t, strings.ToLower(k), k, v.String())
 		}
 	})
 
-	s.T().Run("SIPrefixNameMap spot check", func (t *testing.T) {
+	s.T().Run("SIPrefixNameMap spot check", func(t *testing.T) {
 		assert.Equal(t, SI_PREFIX_NONE, SIPrefixNameMap[""], "SI_PREFIX_NONE")
 		assert.Equal(t, SI_PREFIX_NONE, SIPrefixNameMap["none"], "SI_PREFIX_NONE")
 		assert.Equal(t, SI_PREFIX_MICRO, SIPrefixNameMap["micro"], "SI_PREFIX_MICRO")
@@ -212,7 +213,7 @@ func (s *SITestSuite) TestSIPrefixFromString() {
 
 	// Run tests on the SIPrefixFromString method.
 	for _, tc := range tests {
-		s.T().Run(fmt.Sprintf("SIPrefixFromString %s", tc.name), func (t *testing.T) {
+		s.T().Run(fmt.Sprintf("SIPrefixFromString %s", tc.name), func(t *testing.T) {
 			p, err := SIPrefixFromString(tc.input)
 			if len(tc.exErr) > 0 {
 				assert.EqualError(t, err, tc.exErr, "SIPrefixFromString(\"%s\") expected error", tc.input)
@@ -228,7 +229,7 @@ func (s *SITestSuite) TestSIPrefixFromString() {
 
 	// Run tests on the MustGetSIPrefixFromString method.
 	for _, tc := range tests {
-		s.T().Run(fmt.Sprintf("MustGetSIPrefixFromString %s", tc.name), func (t *testing.T) {
+		s.T().Run(fmt.Sprintf("MustGetSIPrefixFromString %s", tc.name), func(t *testing.T) {
 			if len(tc.exErr) > 0 {
 				assert.PanicsWithError(t, tc.exErr, func() {
 					_ = MustGetSIPrefixFromString(tc.input)
@@ -425,7 +426,7 @@ func (s *SITestSuite) TestFormat() {
 		verb     string
 		value    SIPrefix
 		expected string
-	} {
+	}{
 		{
 			"s SI_PREFIX_NONE",
 			"s",
@@ -513,7 +514,7 @@ func (s *SITestSuite) TestFormat() {
 	}
 
 	for _, tc := range tests {
-		s.T().Run(tc.name, func(t *testing.T){
+		s.T().Run(tc.name, func(t *testing.T) {
 			f := fmt.Sprintf("%%%s", tc.verb)
 			actual := fmt.Sprintf(f, tc.value)
 			assert.Equal(t, tc.expected, actual, "fmt.Sprintf(\"%s\", %s)", f, tc.value)
@@ -611,25 +612,25 @@ func (s *SITestSuite) TestGetDecimalString() {
 	}{
 		{"SI_PREFIX_YOTTA", SI_PREFIX_YOTTA, "1000000000000000000000000"},
 		{"SI_PREFIX_ZETTA", SI_PREFIX_ZETTA, "1000000000000000000000"},
-		{"SI_PREFIX_EXA",   SI_PREFIX_EXA,   "1000000000000000000"},
-		{"SI_PREFIX_PETA",  SI_PREFIX_PETA,  "1000000000000000"},
-		{"SI_PREFIX_TERA",  SI_PREFIX_TERA,  "1000000000000"},
-		{"SI_PREFIX_GIGA",  SI_PREFIX_GIGA,  "1000000000"},
-		{"SI_PREFIX_MEGA",  SI_PREFIX_MEGA,  "1000000"},
-		{"SI_PREFIX_KILO",  SI_PREFIX_KILO,  "1000"},
+		{"SI_PREFIX_EXA", SI_PREFIX_EXA, "1000000000000000000"},
+		{"SI_PREFIX_PETA", SI_PREFIX_PETA, "1000000000000000"},
+		{"SI_PREFIX_TERA", SI_PREFIX_TERA, "1000000000000"},
+		{"SI_PREFIX_GIGA", SI_PREFIX_GIGA, "1000000000"},
+		{"SI_PREFIX_MEGA", SI_PREFIX_MEGA, "1000000"},
+		{"SI_PREFIX_KILO", SI_PREFIX_KILO, "1000"},
 		{"SI_PREFIX_HECTO", SI_PREFIX_HECTO, "100"},
-		{"SI_PREFIX_DEKA",  SI_PREFIX_DEKA,  "10"},
+		{"SI_PREFIX_DEKA", SI_PREFIX_DEKA, "10"},
 
-		{"SI_PREFIX_NONE",  SI_PREFIX_NONE,  "1"},
+		{"SI_PREFIX_NONE", SI_PREFIX_NONE, "1"},
 
-		{"SI_PREFIX_DECI",  SI_PREFIX_DECI,  "0.1"},
+		{"SI_PREFIX_DECI", SI_PREFIX_DECI, "0.1"},
 		{"SI_PREFIX_CENTI", SI_PREFIX_CENTI, "0.01"},
 		{"SI_PREFIX_MILLI", SI_PREFIX_MILLI, "0.001"},
 		{"SI_PREFIX_MICRO", SI_PREFIX_MICRO, "0.000001"},
-		{"SI_PREFIX_NANO",  SI_PREFIX_NANO,  "0.000000001"},
-		{"SI_PREFIX_PICO",  SI_PREFIX_PICO,  "0.000000000001"},
+		{"SI_PREFIX_NANO", SI_PREFIX_NANO, "0.000000001"},
+		{"SI_PREFIX_PICO", SI_PREFIX_PICO, "0.000000000001"},
 		{"SI_PREFIX_FEMTO", SI_PREFIX_FEMTO, "0.000000000000001"},
-		{"SI_PREFIX_ATTO",  SI_PREFIX_ATTO,  "0.000000000000000001"},
+		{"SI_PREFIX_ATTO", SI_PREFIX_ATTO, "0.000000000000000001"},
 		{"SI_PREFIX_ZEPTO", SI_PREFIX_ZEPTO, "0.000000000000000000001"},
 		{"SI_PREFIX_YOCTO", SI_PREFIX_YOCTO, "0.000000000000000000000001"},
 
@@ -652,25 +653,25 @@ func (s *SITestSuite) TestGetExponentString() {
 	}{
 		{"SI_PREFIX_YOTTA", SI_PREFIX_YOTTA, "1e+24"},
 		{"SI_PREFIX_ZETTA", SI_PREFIX_ZETTA, "1e+21"},
-		{"SI_PREFIX_EXA",   SI_PREFIX_EXA,   "1e+18"},
-		{"SI_PREFIX_PETA",  SI_PREFIX_PETA,  "1e+15"},
-		{"SI_PREFIX_TERA",  SI_PREFIX_TERA,  "1e+12"},
-		{"SI_PREFIX_GIGA",  SI_PREFIX_GIGA,  "1e+9"},
-		{"SI_PREFIX_MEGA",  SI_PREFIX_MEGA,  "1e+6"},
-		{"SI_PREFIX_KILO",  SI_PREFIX_KILO,  "1e+3"},
+		{"SI_PREFIX_EXA", SI_PREFIX_EXA, "1e+18"},
+		{"SI_PREFIX_PETA", SI_PREFIX_PETA, "1e+15"},
+		{"SI_PREFIX_TERA", SI_PREFIX_TERA, "1e+12"},
+		{"SI_PREFIX_GIGA", SI_PREFIX_GIGA, "1e+9"},
+		{"SI_PREFIX_MEGA", SI_PREFIX_MEGA, "1e+6"},
+		{"SI_PREFIX_KILO", SI_PREFIX_KILO, "1e+3"},
 		{"SI_PREFIX_HECTO", SI_PREFIX_HECTO, "1e+2"},
-		{"SI_PREFIX_DEKA",  SI_PREFIX_DEKA,  "1e+1"},
+		{"SI_PREFIX_DEKA", SI_PREFIX_DEKA, "1e+1"},
 
-		{"SI_PREFIX_NONE",  SI_PREFIX_NONE,  "1e+0"},
+		{"SI_PREFIX_NONE", SI_PREFIX_NONE, "1e+0"},
 
-		{"SI_PREFIX_DECI",  SI_PREFIX_DECI,  "1e-1"},
+		{"SI_PREFIX_DECI", SI_PREFIX_DECI, "1e-1"},
 		{"SI_PREFIX_CENTI", SI_PREFIX_CENTI, "1e-2"},
 		{"SI_PREFIX_MILLI", SI_PREFIX_MILLI, "1e-3"},
 		{"SI_PREFIX_MICRO", SI_PREFIX_MICRO, "1e-6"},
-		{"SI_PREFIX_NANO",  SI_PREFIX_NANO,  "1e-9"},
-		{"SI_PREFIX_PICO",  SI_PREFIX_PICO,  "1e-12"},
+		{"SI_PREFIX_NANO", SI_PREFIX_NANO, "1e-9"},
+		{"SI_PREFIX_PICO", SI_PREFIX_PICO, "1e-12"},
 		{"SI_PREFIX_FEMTO", SI_PREFIX_FEMTO, "1e-15"},
-		{"SI_PREFIX_ATTO",  SI_PREFIX_ATTO,  "1e-18"},
+		{"SI_PREFIX_ATTO", SI_PREFIX_ATTO, "1e-18"},
 		{"SI_PREFIX_ZEPTO", SI_PREFIX_ZEPTO, "1e-21"},
 		{"SI_PREFIX_YOCTO", SI_PREFIX_YOCTO, "1e-24"},
 
@@ -694,25 +695,25 @@ func (s *SITestSuite) TestGetExponent() {
 	}{
 		{"SI_PREFIX_YOTTA", SI_PREFIX_YOTTA, 24},
 		{"SI_PREFIX_ZETTA", SI_PREFIX_ZETTA, 21},
-		{"SI_PREFIX_EXA",   SI_PREFIX_EXA,   18},
-		{"SI_PREFIX_PETA",  SI_PREFIX_PETA,  15},
-		{"SI_PREFIX_TERA",  SI_PREFIX_TERA,  12},
-		{"SI_PREFIX_GIGA",  SI_PREFIX_GIGA,  9},
-		{"SI_PREFIX_MEGA",  SI_PREFIX_MEGA,  6},
-		{"SI_PREFIX_KILO",  SI_PREFIX_KILO,  3},
+		{"SI_PREFIX_EXA", SI_PREFIX_EXA, 18},
+		{"SI_PREFIX_PETA", SI_PREFIX_PETA, 15},
+		{"SI_PREFIX_TERA", SI_PREFIX_TERA, 12},
+		{"SI_PREFIX_GIGA", SI_PREFIX_GIGA, 9},
+		{"SI_PREFIX_MEGA", SI_PREFIX_MEGA, 6},
+		{"SI_PREFIX_KILO", SI_PREFIX_KILO, 3},
 		{"SI_PREFIX_HECTO", SI_PREFIX_HECTO, 2},
-		{"SI_PREFIX_DEKA",  SI_PREFIX_DEKA,  1},
+		{"SI_PREFIX_DEKA", SI_PREFIX_DEKA, 1},
 
-		{"SI_PREFIX_NONE",  SI_PREFIX_NONE,  0},
+		{"SI_PREFIX_NONE", SI_PREFIX_NONE, 0},
 
-		{"SI_PREFIX_DECI",  SI_PREFIX_DECI,  -1},
+		{"SI_PREFIX_DECI", SI_PREFIX_DECI, -1},
 		{"SI_PREFIX_CENTI", SI_PREFIX_CENTI, -2},
 		{"SI_PREFIX_MILLI", SI_PREFIX_MILLI, -3},
 		{"SI_PREFIX_MICRO", SI_PREFIX_MICRO, -6},
-		{"SI_PREFIX_NANO",  SI_PREFIX_NANO,  -9},
-		{"SI_PREFIX_PICO",  SI_PREFIX_PICO,  -12},
+		{"SI_PREFIX_NANO", SI_PREFIX_NANO, -9},
+		{"SI_PREFIX_PICO", SI_PREFIX_PICO, -12},
 		{"SI_PREFIX_FEMTO", SI_PREFIX_FEMTO, -15},
-		{"SI_PREFIX_ATTO",  SI_PREFIX_ATTO,  -18},
+		{"SI_PREFIX_ATTO", SI_PREFIX_ATTO, -18},
 		{"SI_PREFIX_ZEPTO", SI_PREFIX_ZEPTO, -21},
 		{"SI_PREFIX_YOCTO", SI_PREFIX_YOCTO, -24},
 

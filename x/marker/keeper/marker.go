@@ -558,7 +558,8 @@ func (k Keeper) DeleteMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 		return fmt.Errorf("marker not found for %s: %s", denom, err)
 	}
 
-	if !m.AddressHasAccess(caller, types.Access_Delete) {
+	// either the manager [set if a proposed marker was cancelled] or someone assigned `delete` can perform this action
+	if !(m.GetManager().Equals(caller) || m.AddressHasAccess(caller, types.Access_Delete)) {
 		return fmt.Errorf("%s does not have %s on %s markeraccount", caller, types.Access_Delete, m.GetDenom())
 	}
 
