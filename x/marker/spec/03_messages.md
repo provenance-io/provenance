@@ -67,7 +67,7 @@ This service message is expected to fail if:
   - Contains a grant with an invalid access enum value (Unspecified/0)
 
 The Add Access request can be called many times on a marker with some or all of the access grant values.  The method may
-only be used against markers in the Pending status when called by the current marker manager address or against `Finalized`
+only be used against markers in the `Pending` status when called by the current marker manager address or against `Finalized`
 and `Active` markers when the caller is currently assigned the `Admin` access type.
 
 ## Msg/DeleteAccessRequest
@@ -82,11 +82,11 @@ This service message is expected to fail if:
 
 - The given denom value is invalid or does not match an existing marker on the system
 - The marker is not pending or:
-  - And the request is not signed with an administrator address that matches the manager address or:
+  - The request is not signed with an administrator address that matches the manager address or:
   - The given administrator address does not currently have the "admin" access granted on the marker
 
 The Delete Access request will remove all access granted to the given address on the specified marker.  The method may
-only be used against markers in the Pending status when called by the current marker manager address or against `Finalized`
+only be used against markers in the `Pending` status when called by the current marker manager address or against `Finalized`
 and `Active` markers when the caller is currently assigned the `Admin` access type.
 
 ## Msg/FinalizeRequest
@@ -101,10 +101,10 @@ This service message is expected to fail if:
 
 - The given denom value is invalid or does not match an existing marker on the system
 - The marker is not in a `proposed` status or:
-  - And the request is not signed with an administrator address that matches the manager address or:
+  - The request is not signed with an administrator address that matches the manager address or:
   - The given administrator address does not currently have the "admin" access granted on the marker
 
-The Finalize marker status performs a set of checks to ensure the marker is ready to be activated.  It is designed to
+The `Finalize` marker status performs a set of checks to ensure the marker is ready to be activated.  It is designed to
 serve as an intermediate step prior to activation that indicates marker configuration is complete.
 
 ## Msg/ActivateRequest
@@ -118,8 +118,8 @@ Activate Request defines the Msg/Activate request type
 This service message is expected to fail if:
 
 - The given denom value is invalid or does not match an existing marker on the system
-- The marker is not in a `finalized` status or:
-  - And the request is not signed with an administrator address that matches the manager address or:
+- The marker is not in a `Finalized` status or:
+  - The request is not signed with an administrator address that matches the manager address or:
   - The given administrator address does not currently have the "admin" access granted on the marker
 - The marker has a supply less than the current in circulation supply (for markers created against existing coin)
 
@@ -141,7 +141,7 @@ Cancel Request defines the Msg/Cancel request type
 This service message is expected to fail if:
 
 - The given denom value is invalid or does not match an existing marker on the system
-- The marker is not in an `active` status or:
+- The marker is not in an `Active` status or:
   - The given administrator address does not currently have the "admin" access granted on the marker
 - The amount in circulation is greater than zero or any remaining amount is not currently held in escrow within the
   marker account.
@@ -157,7 +157,7 @@ Delete Request defines the Msg/Delete request type
 This service message is expected to fail if:
 
 - The given denom value is invalid or does not match an existing marker on the system
-- The marker is not in an `active` status or:
+- The marker is not in an `Active` status or:
   - The given administrator address does not currently have the "admin" access granted on the marker
 - The amount in circulation is greater than zero or any remaining amount is not currently held in escrow within the
   marker account.
@@ -173,8 +173,8 @@ Mint Request defines the Msg/Mint request type
 This service message is expected to fail if:
 
 - The given denom value is invalid or does not match an existing marker on the system
-- The marker is not in a `active` status or:
-  - And the request is not signed with an administrator address that matches the manager address or:
+- The marker is not in a `Active` status or:
+  - The request is not signed with an administrator address that matches the manager address or:
 - The given administrator address does not currently have the "mint" access granted on the marker
 - The requested amount of mint would increase the total supply in circulation above the configured supply limit set in
   the marker module params
@@ -191,8 +191,8 @@ order to successfully burn supply the amount to burn must be held by the marker 
 This service message is expected to fail if:
 
 - The given denom value is invalid or does not match an existing marker on the system
-- The marker is not in an `active` status or:
-  - And the request is not signed with an administrator address that matches the manager address or:
+- The marker is not in an `Active` status or:
+  - The request is not signed with an administrator address that matches the manager address or:
 - The given administrator address does not currently have the "burn" access granted on the marker
 - The amount of coin to burn is not currently held in escrow within the marker account.
 
@@ -210,8 +210,8 @@ marker itself.
 This service message is expected to fail if:
 
 - The given denom value is invalid or does not match an existing marker on the system
-- The marker is not in a `active` status or:
-  - And the request is not signed with an administrator address that matches the manager address or:
+- The marker is not in a `Active` status or:
+  - The request is not signed with an administrator address that matches the manager address or:
 - The given administrator address does not currently have the "withdraw" access granted on the marker
 - The amount of coin requested for withdraw is not currently held by the marker account
 
@@ -231,7 +231,7 @@ NOTE: the withdraw approval has been suspended pending integration with the `aut
 This service message is expected to fail if:
 
 - The given denom value is invalid or does not match an existing marker on the system
-- The marker is not in a `active` status or:
+- The marker is not in a `Active` status or:
   - The given administrator address does not currently have the "transfer" access granted on the marker
   - The marker types is not `RESTRICTED_COIN`
 
@@ -255,7 +255,7 @@ This service message is expected to fail if:
   - Is missing the denom unit for the indicated base denom or display denom unit.
   - If there is an existing record the update will fail if:
      - The Base denom is changed.
-       If marker status is `active` or `finalized`:
+       If marker status is `Active` or `Finalized`:
         - Any DenomUnit entries are removed.
         - DenomUnit Denom fields are modified.
         - Any aliases are removed from a DenomUnit.
