@@ -86,6 +86,7 @@ ifeq ($(WITH_CLEVELDB),yes)
     CGO_CFLAGS   = -I$(LEVELDB_PATH)/include
     CGO_LDFLAGS += -L$(LEVELDB_PATH)/lib
   else ifeq ($(UNAME_S),Linux)
+    # Intentionally left blank to leave it up to already installed libraries.
   endif
 endif
 
