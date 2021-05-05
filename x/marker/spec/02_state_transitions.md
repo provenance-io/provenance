@@ -52,7 +52,7 @@ Next Status:
 
 An active marker is considered ready for use.
 
-On Transistion:
+On Transition:
 - Marker status is set to `Active`
 - Requested coin supply is minted and placed in the marker account
 - For markers with a `fixed_supply` the Invariant checks are performed in `begin_block`
@@ -74,7 +74,7 @@ Requirements:
 - Caller must be the manager of the marker (applies only to proposed markers that are Cancelled)
 - The supply of the coin in circulation outside of the marker account must be zero.
 
-On Transistion:
+On Transition:
 - Marker status is set to `Cancelled`
 - A marker Cancelled typed event is dispatched
 

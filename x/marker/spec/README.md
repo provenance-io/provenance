@@ -31,7 +31,7 @@ transfer by the marker itself when invoked by a user/process with appropriate pe
 ## Contents
 
 1. **[State](01_state.md)**
-1. **[State_transistions](02_state_transistions.md)**
+1. **[State_transitions](02_state_transitions.md)**
 1. **[Messages](03_messages.md)**
 1. **[Begin Block](04_begin_block.md)**
 1. **[End Block](05_end_block.md)**
