@@ -558,7 +558,8 @@ func (k Keeper) DeleteMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 		return fmt.Errorf("marker not found for %s: %s", denom, err)
 	}
 
-	if !m.AddressHasAccess(caller, types.Access_Delete) {
+	// either the manager [set if a proposed marker was cancelled] or someone assigned `delete` can perform this action
+	if !(m.GetManager().Equals(caller) || m.AddressHasAccess(caller, types.Access_Delete)) {
 		return fmt.Errorf("%s does not have %s on %s markeraccount", caller, types.Access_Delete, m.GetDenom())
 	}
 
@@ -569,8 +570,8 @@ func (k Keeper) DeleteMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 
 	// require full supply of coin for marker to be contained within the marker account (no outstanding delegations)
 	totalSupply := k.bankKeeper.GetSupply(ctx).GetTotal().AmountOf(denom)
-	escrow := k.bankKeeper.GetBalance(ctx, m.GetAddress(), m.GetDenom())
-	inCirculation := totalSupply.Sub(escrow.Amount)
+	escrow := k.bankKeeper.GetAllBalances(ctx, m.GetAddress())
+	inCirculation := totalSupply.Sub(escrow.AmountOf(denom))
 	if inCirculation.GT(sdk.ZeroInt()) {
 		return fmt.Errorf("cannot delete marker with %d minted coin in circulation out of %d total."+
 			" ensure marker account holds the entire supply of %s", inCirculation, totalSupply, denom)
@@ -579,6 +580,11 @@ func (k Keeper) DeleteMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 	err = k.DecreaseSupply(ctx, m, sdk.NewCoin(denom, totalSupply))
 	if err != nil {
 		return fmt.Errorf("could not decrease marker supply %s: %s", denom, err)
+	}
+
+	escrow = k.bankKeeper.GetAllBalances(ctx, m.GetAddress())
+	if !escrow.IsZero() {
+		return fmt.Errorf("can not destroy marker due to balances in escrow: %s", escrow)
 	}
 
 	// get the updated state of the marker afer supply burn...

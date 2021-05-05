@@ -31,10 +31,10 @@ func (k Keeper) OSLocatorExists(ctx sdk.Context, ownerAddr sdk.AccAddress) bool 
 	return store.Has(key)
 }
 
-// SetOSLocatorRecord binds an OS Locator to an address in the kvstore.
+// SetOSLocator binds an OS Locator to an address in the kvstore.
 // An error is returned if no account exists for the address.
 // An error is returned if an OS Locator already exists for the address.
-func (k Keeper) SetOSLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, uri string) error {
+func (k Keeper) SetOSLocator(ctx sdk.Context, ownerAddr sdk.AccAddress, uri string) error {
 	urlToPersist, err := k.checkValidURI(uri, ctx)
 	if err != nil {
 		return err
@@ -53,11 +53,14 @@ func (k Keeper) SetOSLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, ur
 		return err
 	}
 	store.Set(key, bz)
+
+	k.EmitEvent(ctx, types.NewEventOSLocatorCreated(record.Owner))
+	defer types.GetIncObjFunc(types.TLType_OSLocator, types.TLAction_Created)
 	return nil
 }
 
-// IterateLocators runs a function for every ObjectStoreLocator entry in the kvstore.
-func (k Keeper) IterateLocators(ctx sdk.Context, cb func(account types.ObjectStoreLocator) (stop bool)) error {
+// IterateOSLocators runs a function for every ObjectStoreLocator entry in the kvstore.
+func (k Keeper) IterateOSLocators(ctx sdk.Context, cb func(account types.ObjectStoreLocator) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
 	prefix := types.OSLocatorAddressKeyPrefix
 	it := sdk.KVStorePrefixIterator(store, prefix)
@@ -111,18 +114,21 @@ func (k Keeper) GetOSLocatorByScope(ctx sdk.Context, scopeID string) ([]types.Ob
 	return locators, nil
 }
 
-// DeleteRecord deletes an os locator record from the kvstore.
-func (k Keeper) DeleteRecord(ctx sdk.Context, ownerAddr sdk.AccAddress) error {
+// RemoveOSLocator removes an os locator record from the kvstore.
+func (k Keeper) RemoveOSLocator(ctx sdk.Context, ownerAddr sdk.AccAddress) error {
 	key := types.GetOSLocatorKey(ownerAddr)
 	store := ctx.KVStore(k.storeKey)
-	if store.Has(key) {
-		store.Delete(key)
+	if !store.Has(key) {
+		return types.ErrAddressNotBound
 	}
+	store.Delete(key)
+	k.EmitEvent(ctx, types.NewEventOSLocatorDeleted(ownerAddr.String()))
+	defer types.GetIncObjFunc(types.TLType_OSLocator, types.TLAction_Deleted)
 	return nil
 }
 
-// ModifyRecord updates an existing os locator entry in the kvstore, returns an error if it doesn't exist.
-func (k Keeper) ModifyRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, uri string) error {
+// ModifyOSLocator updates an existing os locator entry in the kvstore, returns an error if it doesn't exist.
+func (k Keeper) ModifyOSLocator(ctx sdk.Context, ownerAddr sdk.AccAddress, uri string) error {
 	urlToPersist, err := k.checkValidURI(uri, ctx)
 	if err != nil {
 		return err
@@ -138,13 +144,16 @@ func (k Keeper) ModifyRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, uri stri
 		return err
 	}
 	store.Set(key, bz)
+	k.EmitEvent(ctx, types.NewEventOSLocatorUpdated(record.Owner))
+	defer types.GetIncObjFunc(types.TLType_OSLocator, types.TLAction_Updated)
 	return nil
 }
 
-// ImportLocatorRecord binds a name to an address in the kvstore.
-// Different from SetOSLocatorRecord in there is less validation.
+// ImportOSLocatorRecord binds a name to an address in the kvstore.
+// Different from SetOSLocator in that there is less validation here.
 // The uri format is not checked, and the owner address account is not looked up.
-func (k Keeper) ImportLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, uri string) error {
+// This also does not emit any events.
+func (k Keeper) ImportOSLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, uri string) error {
 	key := types.GetOSLocatorKey(ownerAddr)
 	store := ctx.KVStore(k.storeKey)
 	if store.Has(key) {
@@ -156,5 +165,6 @@ func (k Keeper) ImportLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, u
 		return err
 	}
 	store.Set(key, bz)
+	defer types.GetIncObjFunc(types.TLType_OSLocator, types.TLAction_Created)
 	return nil
 }

@@ -261,11 +261,20 @@ func TestAccountKeeperCancelProposedByManager(t *testing.T) {
 	require.False(t, m.AddressHasAccess(user1, types.Access_Delete))
 	require.False(t, m.AddressHasAccess(user2, types.Access_Delete))
 
+	// Delete marker (fails, marker is not cancelled)
+	require.Error(t, app.MarkerKeeper.DeleteMarker(ctx, user1, "testcoin"), "can only delete markeraccounts in the Cancelled status")
+
 	// Cancel marker and check permission enforcement. (expect fail, no access)
 	require.Error(t, app.MarkerKeeper.CancelMarker(ctx, user2, "testcoin"))
 
 	// Cancel marker and check permission enforcement. (succeeds for manager)
 	require.NoError(t, app.MarkerKeeper.CancelMarker(ctx, user1, "testcoin"))
+
+	// Delete marker and check permission enforcement. (expect fail, no access)
+	require.Error(t, app.MarkerKeeper.DeleteMarker(ctx, user2, "testcoin"), "does not have ACCESS_DELETE on testcoin markeraccount")
+
+	// Delete marker and check permission enforcement. (succeeds for manager)
+	require.NoError(t, app.MarkerKeeper.DeleteMarker(ctx, user1, "testcoin"))
 }
 
 // nolint:funlen
@@ -364,6 +373,15 @@ func TestAccountKeeperMintBurnCoins(t *testing.T) {
 	// succeeds on a cancelled marker (no-op)
 	require.NoError(t, app.MarkerKeeper.CancelMarker(ctx, user, "testcoin"))
 
+	// Set an escrow balance
+	app.BankKeeper.SetBalance(ctx, addr, sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt()))
+	// Fails because there are coins in escrow.
+	require.Error(t, app.MarkerKeeper.DeleteMarker(ctx, user, "testcoin"))
+
+	// Remove escrow balance
+	app.BankKeeper.SetBalance(ctx, addr, sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()))
+
+	// Succeeds because the bond denom coin was removed.
 	require.NoError(t, app.MarkerKeeper.DeleteMarker(ctx, user, "testcoin"))
 
 	// none, marker has been deleted

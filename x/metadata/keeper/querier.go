@@ -179,7 +179,7 @@ func queryOSGetByURI(ctx sdk.Context, path []string, keeper Keeper, legacyQuerie
 		}
 		return false
 	}
-	if err := keeper.IterateLocators(ctx, appendToRecords); err != nil {
+	if err := keeper.IterateOSLocators(ctx, appendToRecords); err != nil {
 		return nil, err
 	}
 	uniqueRecords := uniqueRecords(records)
@@ -202,7 +202,7 @@ func queryOSGetAll(ctx sdk.Context, keeper Keeper, legacyQuerierCdc *codec.Legac
 		// have to get all the uri associated with an address..imo..check
 		return false
 	}
-	if err := keeper.IterateLocators(ctx, appendToRecords); err != nil {
+	if err := keeper.IterateOSLocators(ctx, appendToRecords); err != nil {
 		return nil, err
 	}
 	uniqueRecords := uniqueRecords(records)

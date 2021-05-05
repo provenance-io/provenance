@@ -101,7 +101,7 @@ func TestNewMarkerValidate(t *testing.T) {
 		expErr error
 	}{
 		{
-			"emtpty marker is invalid",
+			"empty marker is invalid",
 			NewEmptyMarkerAccount("test", "", nil),
 			fmt.Errorf("a manager is required if there are no accounts with ACCESS_ADMIN and marker is not ACTIVE"),
 		},

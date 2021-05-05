@@ -4,12 +4,13 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/provenance-io/provenance/x/metadata/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gogo/protobuf/proto"
+
+	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
-// GetSession returns the scope with the given id.
+// GetSession returns the session with the given id.
 func (k Keeper) GetSession(ctx sdk.Context, id types.MetadataAddress) (session types.Session, found bool) {
 	if !id.IsSessionAddress() {
 		return session, false
@@ -27,67 +28,55 @@ func (k Keeper) GetSession(ctx sdk.Context, id types.MetadataAddress) (session t
 func (k Keeper) SetSession(ctx sdk.Context, session types.Session) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryBare(&session)
-	eventType := types.EventTypeSessionCreated
 
+	var event proto.Message = types.NewEventSessionCreated(session.SessionId)
+	action := types.TLAction_Created
 	if store.Has(session.SessionId) {
-		eventType = types.EventTypeSessionUpdated
+		event = types.NewEventSessionUpdated(session.SessionId)
+		action = types.TLAction_Updated
 	}
 
 	store.Set(session.SessionId, b)
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			eventType,
-			sdk.NewAttribute(types.AttributeKeySessionID, session.SessionId.String()),
-		),
-	)
+	k.EmitEvent(ctx, event)
+	defer types.GetIncObjFunc(types.TLType_Session, action)
 }
 
-// RemoveSession removes a scope from the module kv store.
+// RemoveSession removes a session from the module kv store if there are no records associated with it.
 func (k Keeper) RemoveSession(ctx sdk.Context, id types.MetadataAddress) {
 	if !id.IsSessionAddress() {
 		panic(fmt.Errorf("invalid address, address must be for a session"))
 	}
 	store := ctx.KVStore(k.storeKey)
 
-	hasRecords, err := k.hasSessionRecords(ctx, id)
-
-	if err == nil && !hasRecords {
-		store.Delete(id)
-
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeSessionRemoved,
-				sdk.NewAttribute(types.AttributeKeySessionID, id.String()),
-			),
-		)
+	if !store.Has(id) || k.sessionHasRecords(ctx, id) {
+		return
 	}
+
+	store.Delete(id)
+	k.EmitEvent(ctx, types.NewEventSessionDeleted(id))
+	defer types.GetIncObjFunc(types.TLType_Session, types.TLAction_Deleted)
 }
 
-func (k Keeper) hasSessionRecords(ctx sdk.Context, id types.MetadataAddress) (bool, error) {
+func (k Keeper) sessionHasRecords(ctx sdk.Context, id types.MetadataAddress) bool {
 	if !id.IsSessionAddress() {
-		return false, fmt.Errorf("invalid address, address must be for a session")
+		return false
 	}
 
-	scopeUUID, err := id.ScopeUUID()
+	scopeAddr, err := id.AsScopeAddress()
 	if err != nil {
-		return false, fmt.Errorf("unable to get scope uuid from session id: %s", err)
+		return false
 	}
 
-	scopeAddr := types.ScopeMetadataAddress(scopeUUID)
 	hasRecords := false
-	err = k.IterateRecords(ctx, scopeAddr, func(r types.Record) (stop bool) {
+	_ = k.IterateRecords(ctx, scopeAddr, func(r types.Record) (stop bool) {
 		if r.SessionId.Equals(id) {
 			hasRecords = true
 			return true
 		}
 		return false
 	})
-	if err != nil {
-		return false, err
-	}
 
-	return hasRecords, nil
+	return hasRecords
 }
 
 // IterateSessions processes stored sessions with the given handler.

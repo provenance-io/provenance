@@ -12,6 +12,11 @@ import (
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgWriteScopeRequest{}, "provenance/metadata/WriteScopeRequest", nil)
 	cdc.RegisterConcrete(&MsgDeleteScopeRequest{}, "provenance/metadata/DeleteScopeRequest", nil)
+	cdc.RegisterConcrete(&MsgAddScopeDataAccessRequest{}, "provenance/metadata/AddScopeDataAccessRequest", nil)
+	cdc.RegisterConcrete(&MsgDeleteScopeDataAccessRequest{}, "provenance/metadata/DeleteScopeDataAccessRequest", nil)
+	cdc.RegisterConcrete(&MsgAddScopeOwnerRequest{}, "provenance/metadata/AddScopeOwnerRequest", nil)
+	cdc.RegisterConcrete(&MsgDeleteScopeOwnerRequest{}, "provenance/metadata/DeleteScopeOwnerRequest", nil)
+
 	cdc.RegisterConcrete(&MsgWriteSessionRequest{}, "provenance/metadata/WriteSessionRequest", nil)
 	cdc.RegisterConcrete(&MsgWriteRecordRequest{}, "provenance/metadata/WriteRecordRequest", nil)
 	cdc.RegisterConcrete(&MsgDeleteRecordRequest{}, "provenance/metadata/DeleteRecordRequest", nil)
@@ -38,6 +43,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgDeleteScopeRequest{},
 		&MsgAddScopeDataAccessRequest{},
 		&MsgDeleteScopeDataAccessRequest{},
+		&MsgAddScopeOwnerRequest{},
+		&MsgDeleteScopeOwnerRequest{},
 		&MsgWriteSessionRequest{},
 		&MsgWriteRecordRequest{},
 		&MsgDeleteRecordRequest{},
