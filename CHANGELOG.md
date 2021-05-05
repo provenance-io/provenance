@@ -54,6 +54,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * More mapping fixes related to `WriteP8EContractSpec` and `P8EMemorializeContract` [#275](https://github.com/provenance-io/provenance/issues/275)
 * Fix event manager scope in attribute, name, marker, and metadata modules to prevent event duplication [#289](https://github.com/provenance-io/provenance/issues/289)
 * Proposed markers that are cancelled can be deleted without ADMIN role being assigned [#280](https://github.com/provenance-io/provenance/issues/280)
+* Fix to ensure markers have no balances in Escrow prior to being deleted. [#303](https://github.com/provenance-io/provenance/issues/303)
 
 ### State Machine Breaking
 

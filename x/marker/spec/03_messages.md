@@ -161,10 +161,12 @@ Delete Request defines the Msg/Delete request type
 This service message is expected to fail if:
 
 - The given denom value is invalid or does not match an existing marker on the system
-- The marker is not in an `Active` status or:
-  - The given administrator address does not currently have the "admin" access granted on the marker
+- The marker is not in a `Cancelled` status
+- The given administrator address does not currently have the "admin" access granted on the marker or:
+  - If the marker was previously in a `Proposed` status when cancelled the administrator must be the marker manager.
 - The amount in circulation is greater than zero or any remaining amount is not currently held in escrow within the
   marker account.
+- There are any other coins remaining in escrow after supply has been fully burned.
 
 ## Msg/MintRequest
 
@@ -214,9 +216,11 @@ marker itself.
 This service message is expected to fail if:
 
 - The given denom value is invalid or does not match an existing marker on the system
-- The marker is not in a `Active` status or:
-  - The request is not signed with an administrator address that matches the manager address or:
-- The given administrator address does not currently have the "withdraw" access granted on the marker
+- If marker is not in a `Active` status:
+  - The request is not signed with an administrator address that matches the manager address
+  - For `Pending` status: the denom being withdrawn from the marker matches the marker denom
+- If the marker is `Active`, `Cancelled`
+ - The given administrator address does not currently have the "withdraw" access granted on the marker
 - The amount of coin requested for withdraw is not currently held by the marker account
 
 ## Msg/TransferRequest
