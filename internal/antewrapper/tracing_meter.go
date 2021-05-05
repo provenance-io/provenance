@@ -31,6 +31,8 @@ func NewTracingMeterWrapper(logger log.Logger, baseMeter sdkgas.GasMeter) sdkgas
 	}
 }
 
+var _  sdkgas.GasMeter = &tracingGasMeter{}
+
 // GasConsumed reports the amount of gas consumed at Log.Info level
 func (g *tracingGasMeter) GasConsumed() sdkgas.Gas {
 	usage := "TracingGasMeter:\n  Purpose"
