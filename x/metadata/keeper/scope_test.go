@@ -17,6 +17,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -157,125 +158,142 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdate() {
 		Status:     markertypes.StatusActive,
 	})
 	s.NoError(err)
-	changedID := types.ScopeMetadataAddress(uuid.New())
 
-	cases := map[string]struct {
+	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
+	scopeSpec := types.NewScopeSpecification(scopeSpecID, nil, []string{s.user1}, []types.PartyType{types.PartyType_PARTY_TYPE_OWNER}, []types.MetadataAddress{})
+	s.app.MetadataKeeper.SetScopeSpecification(s.ctx, *scopeSpec)
+
+	scopeID := types.ScopeMetadataAddress(uuid.New())
+	scopeID2 := types.ScopeMetadataAddress(uuid.New())
+
+	cases := []struct {
+		name     string
 		existing types.Scope
 		proposed types.Scope
 		signers  []string
-		wantErr  bool
 		errorMsg string
 	}{
-		"nil previous, proposed throws address error": {
+		{
+			name:     "nil previous, proposed throws address error",
 			existing: types.Scope{},
 			proposed: types.Scope{},
 			signers:  []string{s.user1},
-			wantErr:  true,
 			errorMsg: "address is empty",
 		},
-		"valid proposed with nil existing doesn't error": {
+		{
+			name:     "valid proposed with nil existing doesn't error",
 			existing: types.Scope{},
-			proposed: *types.NewScope(s.scopeID, nil, ownerPartyList(s.user1), []string{}, ""),
+			proposed: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
 			signers:  []string{s.user1},
-			wantErr:  false,
 			errorMsg: "",
 		},
-		"can't change scope id in update": {
-			existing: *types.NewScope(s.scopeID, nil, ownerPartyList(s.user1), []string{}, ""),
-			proposed: *types.NewScope(changedID, nil, ownerPartyList(s.user1), []string{}, ""),
+		{
+			name:     "can't change scope id in update",
+			existing: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
+			proposed: *types.NewScope(scopeID2, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
 			signers:  []string{s.user1},
-			wantErr:  true,
-			errorMsg: fmt.Sprintf("cannot update scope identifier. expected %s, got %s", s.scopeID.String(), changedID.String()),
+			errorMsg: fmt.Sprintf("cannot update scope identifier. expected %s, got %s", scopeID.String(), scopeID2.String()),
 		},
-		"missing existing owner signer on update fails": {
-			existing: *types.NewScope(s.scopeID, nil, ownerPartyList(s.user1), []string{}, ""),
-			proposed: *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), ownerPartyList(s.user1), []string{}, ""),
+		{
+			name:     "missing existing owner signer on update fails",
+			existing: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
+			proposed: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
 			signers:  []string{s.user2},
-			wantErr:  true,
 			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1),
 		},
-		"no error when update includes existing owner signer": {
-			existing: *types.NewScope(s.scopeID, nil, ownerPartyList(s.user1), []string{}, ""),
-			proposed: *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), ownerPartyList(s.user1), []string{}, ""),
+		{
+			name:     "no error when update includes existing owner signer",
+			existing: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
+			proposed: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
 			signers:  []string{s.user1},
-			wantErr:  false,
 			errorMsg: "",
 		},
-		"setting value owner when unset does not error": {
-			existing: *types.NewScope(s.scopeID, nil, ownerPartyList(s.user1), []string{}, ""),
-			proposed: *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), ownerPartyList(s.user1), []string{}, s.user1),
+		{
+			name:     "setting value owner when unset does not error",
+			existing: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
+			proposed: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1),
 			signers:  []string{s.user1},
-			wantErr:  false,
 			errorMsg: "",
 		},
-		"setting value owner to user does not require their signature": {
-			existing: *types.NewScope(s.scopeID, nil, ownerPartyList(s.user1), []string{}, ""),
-			proposed: *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), ownerPartyList(s.user1), []string{}, s.user2),
+		{
+			name:     "setting value owner to user does not require their signature",
+			existing: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
+			proposed: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user2),
 			signers:  []string{s.user1},
-			wantErr:  false,
 			errorMsg: "",
 		},
-		"setting value owner to new user does not require their signature": {
-			existing: *types.NewScope(s.scopeID, nil, ownerPartyList(s.user1), []string{}, s.user1),
-			proposed: *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), ownerPartyList(s.user1), []string{}, s.user2),
+		{
+			name:     "setting value owner to new user does not require their signature",
+			existing: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1),
+			proposed: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user2),
 			signers:  []string{s.user1},
-			wantErr:  false,
 			errorMsg: "",
 		},
-		"no change to value owner should not error": {
-			existing: *types.NewScope(s.scopeID, nil, ownerPartyList(s.user1), []string{}, s.user1),
-			proposed: *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), ownerPartyList(s.user1), []string{}, s.user1),
+		{
+			name:     "no change to value owner should not error",
+			existing: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1),
+			proposed: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1),
 			signers:  []string{s.user1},
-			wantErr:  false,
 			errorMsg: "",
 		},
-		"setting a new value owner should not error with withdraw permission": {
-			existing: *types.NewScope(s.scopeID, nil, ownerPartyList(s.user1), []string{}, markerAddr),
-			proposed: *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), ownerPartyList(s.user1), []string{}, s.user1),
+		{
+			name:     "setting a new value owner should not error with withdraw permission",
+			existing: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, markerAddr),
+			proposed: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1),
 			signers:  []string{s.user1},
-			wantErr:  false,
 			errorMsg: "",
 		},
-		"setting a new value owner fails if missing withdraw permission": {
-			existing: *types.NewScope(s.scopeID, nil, ownerPartyList(s.user2), []string{}, markerAddr),
-			proposed: *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), ownerPartyList(s.user2), []string{}, s.user2),
+		{
+			name:     "setting a new value owner fails if missing withdraw permission",
+			existing: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user2), []string{}, markerAddr),
+			proposed: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user2), []string{}, s.user2),
 			signers:  []string{s.user2},
-			wantErr:  true,
 			errorMsg: fmt.Sprintf("missing signature for %s with authority to withdraw/remove existing value owner", markerAddr),
 		},
-		"setting a new value owner fails if missing deposit permission": {
-			existing: *types.NewScope(s.scopeID, nil, ownerPartyList(s.user2), []string{}, ""),
-			proposed: *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), ownerPartyList(s.user2), []string{}, markerAddr),
+		{
+			name:     "setting a new value owner fails if missing deposit permission",
+			existing: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user2), []string{}, ""),
+			proposed: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user2), []string{}, markerAddr),
 			signers:  []string{s.user2},
-			wantErr:  true,
 			errorMsg: fmt.Sprintf("no signatures present with authority to add scope to marker %s", markerAddr),
 		},
-		"setting a new value owner fails for scope owner when value owner signature is missing": {
-			existing: *types.NewScope(s.scopeID, nil, ownerPartyList(s.user1), []string{}, s.user2),
-			proposed: *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), ownerPartyList(s.user1), []string{}, s.user1),
+		{
+			name:     "setting a new value owner fails for scope owner when value owner signature is missing",
+			existing: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user2),
+			proposed: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1),
 			signers:  []string{s.user1},
-			wantErr:  true,
 			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", s.user2),
 		},
-		"unsetting all fields on a scope should be successful": {
-			existing: *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), ownerPartyList(s.user1), []string{}, s.user1),
-			proposed: types.Scope{ScopeId: s.scopeID, Owners: ownerPartyList(s.user1)},
+		{
+			name:     "unsetting all fields on a scope should be successful",
+			existing: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1),
+			proposed: types.Scope{ScopeId: scopeID, SpecificationId: scopeSpecID, Owners: ownerPartyList(s.user1)},
 			signers:  []string{s.user1},
-			wantErr:  false,
 			errorMsg: "",
+		},
+		{
+			name:     "setting specification id to nil should fail",
+			existing: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1),
+			proposed: *types.NewScope(scopeID, nil, ownerPartyList(s.user1), []string{}, s.user1),
+			signers:  []string{s.user1},
+			errorMsg: "invalid specification id: address is empty",
+		},
+		{
+			name:     "setting unknown specification id should fail",
+			existing: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1),
+			proposed: *types.NewScope(scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), ownerPartyList(s.user1), []string{}, s.user1),
+			signers:  []string{s.user1},
+			errorMsg: fmt.Sprintf("scope specification %s not found", types.ScopeSpecMetadataAddress(s.scopeUUID)),
 		},
 	}
 
-	for n, tc := range cases {
-		tc := tc
-
-		s.Run(n, func() {
+	for _, tc := range cases {
+		s.T().Run(tc.name, func(t *testing.T) {
 			err = s.app.MetadataKeeper.ValidateScopeUpdate(s.ctx, tc.existing, tc.proposed, tc.signers)
-			if tc.wantErr {
-				s.Error(err)
-				s.Equal(tc.errorMsg, err.Error())
+			if len(tc.errorMsg) > 0 {
+				assert.EqualError(t, err, tc.errorMsg, "ValidateScopeUpdate expected error")
 			} else {
-				s.NoError(err)
+				assert.NoError(t, err, "ValidateScopeUpdate unexpected error")
 			}
 		})
 	}
@@ -402,6 +420,103 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeDeleteDataAccess() {
 				s.Equal(tc.errorMsg, err.Error())
 			} else {
 				s.NoError(err)
+			}
+		})
+	}
+}
+
+func (s *ScopeKeeperTestSuite) TestValidateScopeUpdateOwners() {
+	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
+	scopeSpec := types.NewScopeSpecification(scopeSpecID, nil, []string{s.user1}, []types.PartyType{types.PartyType_PARTY_TYPE_OWNER}, []types.MetadataAddress{})
+	s.app.MetadataKeeper.SetScopeSpecification(s.ctx, *scopeSpec)
+
+	scopeWithOwners := func(owners []types.Party) types.Scope {
+		return *types.NewScope(s.scopeID, scopeSpecID, owners, []string{s.user1}, s.user1)
+	}
+	originalOwners := ownerPartyList(s.user1)
+
+	testCases := []struct {
+		name     string
+		existing types.Scope
+		proposed types.Scope
+		signers  []string
+		errorMsg string
+	}{
+		{
+			"should fail to validate update scope owners, fail to decode address",
+			scopeWithOwners(originalOwners),
+			scopeWithOwners([]types.Party{{Address: "shoulderror", Role: types.PartyType_PARTY_TYPE_AFFILIATE}}),
+			[]string{s.user1},
+			fmt.Sprintf("invalid scope owners: invalid party address [%s]: %s", "shoulderror", "decoding bech32 failed: invalid index of 1"),
+		},
+		{
+			"should fail to validate update scope owners, role cannot be unspecified",
+			scopeWithOwners(originalOwners),
+			scopeWithOwners([]types.Party{{Address: s.user1, Role: types.PartyType_PARTY_TYPE_UNSPECIFIED}}),
+			[]string{s.user1},
+			fmt.Sprintf("invalid scope owners: invalid party type for party %s", s.user1),
+		},
+		{
+			"should fail to validate update scope owner, wrong signer new owner",
+			scopeWithOwners(originalOwners),
+			scopeWithOwners([]types.Party{{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER}}),
+			[]string{s.user2},
+			fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user1),
+		},
+		{
+			"should successfully validate update scope owner, same owner different role",
+			scopeWithOwners(ownerPartyList(s.user1, s.user2)),
+			scopeWithOwners([]types.Party{
+				{Address: s.user1, Role: types.PartyType_PARTY_TYPE_CUSTODIAN},
+				{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER},
+			}),
+			[]string{s.user1, s.user2},
+			"",
+		},
+		{
+			"should successfully validate update scope owner, new owner",
+			scopeWithOwners(originalOwners),
+			scopeWithOwners([]types.Party{{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER}}),
+			[]string{s.user1},
+			"",
+		},
+		{
+			"should fail to validate update scope owner, missing role",
+			scopeWithOwners(originalOwners),
+			scopeWithOwners([]types.Party{{Address: s.user1, Role: types.PartyType_PARTY_TYPE_CUSTODIAN}}),
+			[]string{s.user1},
+			"missing party type required by spec: [OWNER]",
+		},
+		{
+			"should fail to validate update scope owner, empty list",
+			scopeWithOwners(originalOwners),
+			scopeWithOwners([]types.Party{}),
+			[]string{s.user1},
+			"invalid scope owners: at least one party is required",
+		},
+		{
+			"should successfully validate update scope owner, 1st owner removed",
+			scopeWithOwners(ownerPartyList(s.user1, s.user2)),
+			scopeWithOwners(ownerPartyList(s.user2)),
+			[]string{s.user1, s.user2},
+			"",
+		},
+		{
+			"should successfully validate update scope owner, 2nd owner removed",
+			scopeWithOwners(ownerPartyList(s.user1, s.user2)),
+			scopeWithOwners(ownerPartyList(s.user1)),
+			[]string{s.user1, s.user2},
+			"",
+		},
+	}
+
+	for _, tc := range testCases {
+		s.T().Run(tc.name, func(t *testing.T) {
+			err := s.app.MetadataKeeper.ValidateScopeUpdateOwners(s.ctx, tc.existing, tc.proposed, tc.signers)
+			if len(tc.errorMsg) > 0 {
+				assert.EqualError(t, err, tc.errorMsg, "ValidateScopeUpdateOwners expected error")
+			} else {
+				assert.NoError(t, err, "ValidateScopeUpdateOwners unexpected error")
 			}
 		})
 	}

@@ -56,13 +56,13 @@ func (s *ScopeTestSuite) TestScopeValidateBasic() {
 		{
 			"no owners",
 			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
-			"scope must have at least one owner",
+			"invalid scope owners: at least one party is required",
 			true,
 		},
 		{
 			"no owners, data access",
 			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{s.Addr}, ""),
-			"scope must have at least one owner",
+			"invalid scope owners: at least one party is required",
 			true,
 		},
 		{
@@ -90,7 +90,7 @@ func (s *ScopeTestSuite) TestScopeValidateBasic() {
 			true,
 		},
 		{
-			"invaid owner on scope",
+			"invalid owner on scope",
 			NewScope(ScopeMetadataAddress(
 				uuid.New()),
 				ScopeSpecMetadataAddress(uuid.New()),
@@ -98,7 +98,7 @@ func (s *ScopeTestSuite) TestScopeValidateBasic() {
 				[]string{},
 				"",
 			),
-			"invalid owner on scope: decoding bech32 failed: invalid index of 1",
+			"invalid scope owners: invalid party address [:invalid]: decoding bech32 failed: invalid index of 1",
 			true,
 		},
 	}
@@ -200,6 +200,114 @@ func (s *ScopeTestSuite) TestScopeRemoveAccess() {
 
 			tt.scope.RemoveDataAccess(tt.dataAccess)
 			require.Equal(t, tt.scope.DataAccess, tt.expected)
+		})
+	}
+}
+
+func (s *ScopeTestSuite) TestScopeAddOwners() {
+	user1Owner := Party{Address: s.Addr, Role: PartyType_PARTY_TYPE_OWNER}
+	user1Investor := Party{Address: s.Addr, Role: PartyType_PARTY_TYPE_INVESTOR}
+	user2Affiliate := Party{Address: "addr2", Role: PartyType_PARTY_TYPE_AFFILIATE}
+	tests := []struct {
+		name     string
+		scope    *Scope
+		owners   []Party
+		expected []Party
+		errMsg   string
+	}{
+		{
+			"should successfully update owner address with new role",
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{user1Owner}, []string{}, ""),
+			[]Party{user1Investor},
+			[]Party{user1Investor},
+			"",
+		},
+		{
+			"should fail to add same new owner twice",
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{user1Owner}, []string{"addr1"}, ""),
+			[]Party{user1Investor, user1Investor},
+			[]Party{user1Investor},
+			"party already exists with address cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck and role PARTY_TYPE_INVESTOR",
+		},
+		{
+			"should fail to add duplicate owner",
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{user1Owner}, []string{"addr1"}, ""),
+			[]Party{user1Owner},
+			[]Party{user1Owner},
+			"party already exists with address cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck and role PARTY_TYPE_OWNER",
+		},
+		{
+			"should successfully add new address to owners",
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{user1Owner}, []string{"addr1"}, ""),
+			[]Party{user2Affiliate},
+			[]Party{user1Owner, user2Affiliate},
+			"",
+		},
+		{
+			"should successfully not change the list",
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{user1Owner}, []string{"addr1"}, ""),
+			[]Party{},
+			[]Party{user1Owner},
+			"",
+		},
+	}
+
+	for _, tc := range tests {
+		s.T().Run(tc.name, func(t *testing.T) {
+			err := tc.scope.AddOwners(tc.owners)
+			if len(tc.errMsg) > 0 {
+				require.EqualError(t, err, tc.errMsg, "AddOwners expected error")
+			} else {
+				require.NoError(t, err, "AddOwners unexpected error")
+			}
+			require.Equal(t, tc.scope.Owners, tc.expected, "new scope owners value")
+		})
+	}
+}
+
+func (s *ScopeTestSuite) TestScopeRemoveOwners() {
+	user1Owner := ownerPartyList(s.Addr)
+	user1Investor := Party{Address: s.Addr, Role: PartyType_PARTY_TYPE_INVESTOR}
+	user2Affiliate := Party{Address: "addr2", Role: PartyType_PARTY_TYPE_AFFILIATE}
+	tests := []struct {
+		name     string
+		scope    *Scope
+		owners   []string
+		expected []Party
+		errMsg   string
+	}{
+		{
+			"should successfully remove owner by address",
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), user1Owner, []string{}, ""),
+			[]string{user1Owner[0].Address},
+			[]Party{},
+			"",
+		},
+		{
+			"should fail to remove any non-existant owner",
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), user1Owner, []string{"addr1"}, ""),
+			[]string{"notanowner"},
+			user1Owner,
+			"address does not exist in scope owners: notanowner",
+		},
+		{
+			"should successfully remove owner from list of multiple",
+			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{user1Investor, user2Affiliate}, []string{"addr1"}, ""),
+			[]string{user1Investor.Address},
+			[]Party{user2Affiliate},
+			"",
+		},
+	}
+
+	for _, tc := range tests {
+		s.T().Run(tc.name, func(t *testing.T) {
+			err := tc.scope.RemoveOwners(tc.owners)
+			if len(tc.errMsg) > 0 {
+				require.EqualError(t, err, tc.errMsg, "RemoveOwners expected error")
+			} else {
+				require.NoError(t, err, "RemoveOwners unexpected error")
+				require.Equal(t, tc.scope.Owners, tc.expected, "new scope owners value")
+			}
 		})
 	}
 }
@@ -414,8 +522,7 @@ func (s *ScopeTestSuite) TestSessionValidateBasic() {
 	tests := []struct {
 		name    string
 		session *Session
-		want    string
-		wantErr bool
+		errMsg  string
 	}{
 		{
 			"valid session",
@@ -426,48 +533,41 @@ func (s *ScopeTestSuite) TestSessionValidateBasic() {
 					Message: "message",
 				}),
 			"",
-			false,
 		},
 		{
 			"valid session - no audit",
 			NewSession("name", sessionID, contractSpec, []Party{
 				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_AFFILIATE}}, nil),
 			"",
-			false,
 		},
 		{
 			"invalid session, invalid prefix",
 			NewSession("my_perfect_session", recordID, contractSpec, []Party{
 				{Address: "invalidpartyaddress", Role: PartyType_PARTY_TYPE_CUSTODIAN}}, nil),
 			"invalid session identifier (expected: session, got record)",
-			true,
 		},
 		{
 			"invalid session, invalid party address",
 			NewSession("my_perfect_session", sessionID, contractSpec, []Party{
 				{Address: "invalidpartyaddress", Role: PartyType_PARTY_TYPE_CUSTODIAN}}, nil),
-			"invalid party on session: invalid address: decoding bech32 failed: invalid index of 1",
-			true,
+			"invalid party on session: invalid party address [invalidpartyaddress]: decoding bech32 failed: invalid index of 1",
 		},
 		{
 			"invalid session, invalid party type",
 			NewSession("my_perfect_session", sessionID, contractSpec, []Party{
 				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_UNSPECIFIED}}, nil),
-			"invalid party on session: invalid party type;  party type not specified",
-			true,
+			"invalid party on session: invalid party type for party cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck",
 		},
 		{
 			"Invalid session, must have at least one party ",
 			NewSession("my_perfect_session", sessionID, contractSpec, []Party{}, nil),
 			"session must have at least one party",
-			true,
 		},
 		{
 			"invalid session, invalid spec id",
 			NewSession("my_perfect_session", sessionID, recordID, []Party{
 				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_AFFILIATE}}, nil),
 			"invalid contract specification identifier (expected: contractspec, got record)",
-			true,
 		},
 		{
 			"Invalid session, max audit message length too long",
@@ -478,22 +578,18 @@ func (s *ScopeTestSuite) TestSessionValidateBasic() {
 					Message: "messssssssssaaaaaaaaaage messssssssssaaaaaaaaaage messssssssssaaaaaaaaaage messssssssssaaaaaaaaaage messssssssssaaaaaaaaaage messssssssssaaaaaaaaaage messssssssssaaaaaaaaaage messssssssssaaaaaaaaaage  1",
 				}),
 			"session audit message exceeds maximum length (expected < 200 got: 202)",
-			true,
 		},
 	}
 
-	for _, tt := range tests {
-		tt := tt
-		s.T().Run(tt.name, func(t *testing.T) {
-			err := tt.session.ValidateBasic()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Session ValidateBasic error = %v, wantErr %v", err, tt.wantErr)
-				return
+	for _, tc := range tests {
+		tc := tc
+		s.T().Run(tc.name, func(t *testing.T) {
+			err := tc.session.ValidateBasic()
+			if len(tc.errMsg) > 0 {
+				require.EqualError(t, err, tc.errMsg, "Session.ValidateBasic expected error")
+			} else {
+				require.NoError(t, err, "Session.ValidateBasic unexpected error")
 			}
-			if tt.wantErr {
-				require.Equal(t, tt.want, err.Error())
-			}
-
 		})
 	}
 }
