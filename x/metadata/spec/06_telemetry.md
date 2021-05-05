@@ -10,6 +10,9 @@ The metadata module emits the following events and telemetry information.
         - [category](#category)
         - [object-type](#object-type)
         - [action](#action)
+  - [Timers](#timers)
+    - [TX Keys](#tx-keys)
+    - [Query Keys](#query-keys)
 
 ## Counters
 
@@ -61,3 +64,19 @@ Possible values:
 - `"created"`
 - `"updated"`
 - `"deleted"`
+
+## Timers
+
+All TX and Query endpoints have related timing metrics.
+
+### TX Keys
+
+`"metadata"`, `"tx"`, `{endpoint}`
+
+Example `{endpoint}` values: `"WriteScope"`, `"DeleteContractSpecification"`, `"ModifyOSLocator"`.
+
+### Query Keys
+
+`"metadata"`, `"query"`, `{endpoint}`
+
+Example `{endpoint}` values: `"Scope"`, `"ContractSpecificationsAll"`, `"OSLocatorsByScope"`.
