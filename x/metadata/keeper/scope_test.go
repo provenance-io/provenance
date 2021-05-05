@@ -447,14 +447,14 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdateOwners() {
 			scopeWithOwners(originalOwners),
 			scopeWithOwners([]types.Party{{Address: "shoulderror", Role: types.PartyType_PARTY_TYPE_AFFILIATE}}),
 			[]string{s.user1},
-			fmt.Sprintf("invalid party address [%s]: %s", "shoulderror", "decoding bech32 failed: invalid index of 1"),
+			fmt.Sprintf("invalid scope owners: invalid party address [%s]: %s", "shoulderror", "decoding bech32 failed: invalid index of 1"),
 		},
 		{
 			"should fail to validate update scope owners, role cannot be unspecified",
 			scopeWithOwners(originalOwners),
 			scopeWithOwners([]types.Party{{Address: s.user1, Role: types.PartyType_PARTY_TYPE_UNSPECIFIED}}),
 			[]string{s.user1},
-			fmt.Sprintf("invalid party type for party %s", s.user1),
+			fmt.Sprintf("invalid scope owners: invalid party type for party %s", s.user1),
 		},
 		{
 			"should fail to validate update scope owner, wrong signer new owner",
@@ -492,7 +492,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdateOwners() {
 			scopeWithOwners(originalOwners),
 			scopeWithOwners([]types.Party{}),
 			[]string{s.user1},
-			"at least one party is required",
+			"invalid scope owners: at least one party is required",
 		},
 		{
 			"should successfully validate update scope owner, 1st owner removed",

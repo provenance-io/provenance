@@ -56,13 +56,13 @@ func (s *ScopeTestSuite) TestScopeValidateBasic() {
 		{
 			"no owners",
 			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
-			"at least one party is required",
+			"invalid scope owners: at least one party is required",
 			true,
 		},
 		{
 			"no owners, data access",
 			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{s.Addr}, ""),
-			"at least one party is required",
+			"invalid scope owners: at least one party is required",
 			true,
 		},
 		{
@@ -98,7 +98,7 @@ func (s *ScopeTestSuite) TestScopeValidateBasic() {
 				[]string{},
 				"",
 			),
-			"invalid party address [:invalid]: decoding bech32 failed: invalid index of 1",
+			"invalid scope owners: invalid party address [:invalid]: decoding bech32 failed: invalid index of 1",
 			true,
 		},
 	}

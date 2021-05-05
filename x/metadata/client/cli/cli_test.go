@@ -1534,7 +1534,7 @@ func (s *IntegrationCLITestSuite) TestMetadataScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, "invalid party address [incorrect1]: decoding bech32 failed: invalid index of 1", &sdk.TxResponse{}, 0,
+			true, "invalid scope owners: invalid party address [incorrect1]: decoding bech32 failed: invalid index of 1", &sdk.TxResponse{}, 0,
 		},
 		{
 			"should fail to remove metadata scope, invalid scopeid",
