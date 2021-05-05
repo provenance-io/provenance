@@ -141,7 +141,11 @@ Cancel Request defines the Msg/Cancel request type
 This service message is expected to fail if:
 
 - The given denom value is invalid or does not match an existing marker on the system
-- The marker is not in an `Active` status or:
+- The marker is not in a `Pending` or `Active` status
+- If marker is in a `Pending` status and:
+  - The given administrator address does not currently have the "admin" access granted on the marker
+  - Or given administrator is not listed as the manager on the marker
+- If marker is in a `Active` status and:
   - The given administrator address does not currently have the "admin" access granted on the marker
 - The amount in circulation is greater than zero or any remaining amount is not currently held in escrow within the
   marker account.
