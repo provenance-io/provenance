@@ -47,6 +47,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * Added linkify script for changelog issue links [#107](https://github.com/provenance-io/provenance/issues/107)
+* Changed Metadata events to be typed events [#88](https://github.com/provenance-io/provenance/issues/88)
 * Updated marker module spec documentation [#93](https://github.com/provenance-io/provenance/issues/93)
 * Gas consumption telemetry and tracing [#299](https://github.com/provenance-io/provenance/issues/299)
 

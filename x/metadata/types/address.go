@@ -470,6 +470,16 @@ func (ma MetadataAddress) AsScopeAddress() (MetadataAddress, error) {
 	return ScopeMetadataAddress(scopeUUID), nil
 }
 
+// MustGetAsScopeAddress returns the MetadataAddress for a scope using the scope UUID within the current context
+// This is the same as AsScopeAddress except it panics on error.
+func (ma MetadataAddress) MustGetAsScopeAddress() MetadataAddress {
+	retval, err := ma.AsScopeAddress()
+	if err != nil {
+		panic(err)
+	}
+	return retval
+}
+
 // AsSessionAddress returns the MetadataAddress for a session using the scope UUID within the current context and the provided session UUID.
 func (ma MetadataAddress) AsSessionAddress(sessionUUID uuid.UUID) (MetadataAddress, error) {
 	scopeUUID, err := ma.ScopeUUID()
@@ -491,6 +501,16 @@ func (ma MetadataAddress) AsRecordAddress(name string) (MetadataAddress, error) 
 	return RecordMetadataAddress(scopeUUID, name), nil
 }
 
+// MustGetAsRecordAddress returns the MetadataAddress for a record using the scope UUID within the current context and the provided name
+// This is the same as AsRecordAddress except it panics on error.
+func (ma MetadataAddress) MustGetAsRecordAddress(name string) MetadataAddress {
+	retval, err := ma.AsRecordAddress(name)
+	if err != nil {
+		panic(err)
+	}
+	return retval
+}
+
 // AsRecordSpecAddress returns the MetadataAddress for a record spec using the contract spec UUID within the current context and the provided name
 func (ma MetadataAddress) AsRecordSpecAddress(name string) (MetadataAddress, error) {
 	contractSpecUUID, err := ma.ContractSpecUUID()
@@ -507,6 +527,16 @@ func (ma MetadataAddress) AsContractSpecAddress() (MetadataAddress, error) {
 		return MetadataAddress{}, err
 	}
 	return ContractSpecMetadataAddress(contractSpecUUID), nil
+}
+
+// MustGetAsContractSpecAddress returns the MetadataAddress for a contract spec using the contract spec UUID within the current context
+// This is the same as AsContractSpecAddress except it panics on error.
+func (ma MetadataAddress) MustGetAsContractSpecAddress() MetadataAddress {
+	retval, err := ma.AsContractSpecAddress()
+	if err != nil {
+		panic(err)
+	}
+	return retval
 }
 
 // ScopeSessionIteratorPrefix returns an iterator prefix that finds all Sessions assigned to the scope designated in this MetadataAddress.

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gogo/protobuf/proto"
 
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provenance-io/provenance/x/metadata/types"
@@ -81,12 +82,14 @@ func (k Keeper) SetScope(ctx sdk.Context, scope types.Scope) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryBare(&scope)
 
-	eventType := types.EventTypeScopeCreated
+	var event proto.Message = types.NewEventScopeCreated(scope.ScopeId)
+	action := types.TLAction_Created
 	if store.Has(scope.ScopeId) {
+		event = types.NewEventScopeUpdated(scope.ScopeId)
+		action = types.TLAction_Updated
 		if oldScopeBytes := store.Get(scope.ScopeId); oldScopeBytes != nil {
 			var oldScope types.Scope
 			if err := k.cdc.UnmarshalBinaryBare(oldScopeBytes, &oldScope); err == nil {
-				eventType = types.EventTypeScopeUpdated
 				k.clearScopeIndex(ctx, oldScope)
 			}
 		}
@@ -94,18 +97,15 @@ func (k Keeper) SetScope(ctx sdk.Context, scope types.Scope) {
 
 	store.Set(scope.ScopeId, b)
 	k.indexScope(ctx, scope)
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			eventType,
-			sdk.NewAttribute(types.AttributeKeyScopeID, scope.ScopeId.String()),
-			sdk.NewAttribute(types.AttributeKeyScope, scope.String()),
-		),
-	)
+	k.EmitEvent(ctx, event)
+	defer types.GetIncObjFunc(types.TLType_Scope, action)
 }
 
-// RemoveScope removes a scope from the module kv store.
+// RemoveScope removes a scope from the module kv store along with all its records and sessions.
 func (k Keeper) RemoveScope(ctx sdk.Context, id types.MetadataAddress) {
+	if !id.IsScopeAddress() {
+		panic(fmt.Errorf("invalid address, address must be for a scope"))
+	}
 	// iterate and remove all records, groups
 	store := ctx.KVStore(k.storeKey)
 
@@ -122,21 +122,15 @@ func (k Keeper) RemoveScope(ctx sdk.Context, id types.MetadataAddress) {
 	iter := sdk.KVStorePrefixIterator(store, prefix)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
-		k.RemoveRecord(ctx, types.MetadataAddress(iter.Key()))
+		k.RemoveRecord(ctx, iter.Key())
 	}
 
-	// RecordGroups will be removed as the last record in each is deleted.
+	// Sessions will be removed as the last record in each is deleted.
 
 	k.clearScopeIndex(ctx, scope)
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeScopeRemoved,
-			sdk.NewAttribute(types.AttributeKeyScopeID, id.String()),
-		),
-	)
-
 	store.Delete(id)
+	k.EmitEvent(ctx, types.NewEventScopeDeleted(scope.ScopeId))
+	defer types.GetIncObjFunc(types.TLType_Scope, types.TLAction_Deleted)
 }
 
 // clearScopeIndex delete any index records for this scope

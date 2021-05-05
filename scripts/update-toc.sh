@@ -1,6 +1,7 @@
 #!/bin/bash
 # This file can either be executed or sourced.
-# If sourced, the update_toc function will be added to the environment.
+# If sourced, the update_toc and update_tocs functions will be added to the environment.
+# If sourced, the generate_toc.sh file will also be sourced.
 # If executed, it will be run using the provided parameters (provide --help for usage).
 # This depends on the generate-toc.sh file being in the same directory.
 
@@ -14,7 +15,12 @@ __update_toc_usage () {
   cat << EOF
 update-toc: Updates the table of contents in a markdown file.
 
-Usage: ./update-toc.sh <filename>
+Usage: ./update-toc.sh [--force] <filename> [<filename>...]
+
+By default, only .md files can be updated. The --force flag bypasses this restriction.
+
+If the provided filename is a directory, all files in that directory (recursively)
+that have a TOC comment will be updated.
 
 If the provided filename contains a TOC comment line, the Table of
 contents will be put there, replacing the existing one if it exists.
@@ -56,6 +62,64 @@ TOC comment line to index all headings:
 EOF
 }
 
+# TOC_LOC_REGEX is a regex for finding a TOC comment.
+TOC_LOC_REGEX='^[[:space:]]*<\!--[[:space:]]*TOC.*-->'
+
+# Calls the update_toc function on multiple files or directories.
+# Usage: update_toc "<filename or directory>" [<filename or directory> ...]
+# See __update_toc_usage for details.
+update_tocs () {
+  local filenames useforce filesdone filename isdone filedone
+  filenames=()
+  while [[ "$#" -gt '0' ]]; do
+    if [[ "$1" == '--force' ]]; then
+      useforce='YES'
+    elif [[ -d "$1" ]]; then
+      filenames+=( $( grep -rl "$TOC_LOC_REGEX" "$( sed 's/\/$//' <<< "$1" )" 2> /dev/null | sort ) )
+    elif [[ -f "$1" ]]; then
+      filenames+=( "$1" )
+    else
+      printf 'Unknown argument: [%s]\n' "$1"
+    fi
+    shift
+  done
+
+  filesdone=()
+  for filename in "${filenames[@]}"; do
+    # Only do .md files.
+    # This prevents unwanted stuff if launched like:  scripts/update-toc.sh x/*
+    # The "x/*" would get expanded in the shell before getting to this script and would include all files.
+    if [[ -z "$useforce" ]] && ! grep -q "\.md$" 2> /dev/null <<< "$filename"; then
+      printf 'Skipping [%s] because it is not a .md file.\n' "$filename"
+      continue
+    fi
+    # Only do a file once.
+    isdone=''
+    for filedone in "${filesdone[@]}"; do
+      if [[ "$filename" == "$filedone" ]]; then
+        isdone='YES'
+        break
+      fi
+    done
+    if [[ -n "$isdone" ]]; then
+      printf 'Skipping [%s] because it is a duplicate.\n' "$filename"
+      continue
+    fi
+    # Do it!
+    printf 'Updating TOC in [%s] ... ' "$filename"
+    update_toc "$filename"
+    printf 'done\n'
+    filesdone+=( "$filename" )
+  done
+
+  if [[ "${#filesdone[@]}" -eq '0' ]]; then
+    printf 'No files were updated.\n'
+    return 0
+  fi
+
+  return 0
+}
+
 # Updates (or adds) a TOC in a markdown file.
 # Usage: update_toc "<filename>"
 # See __update_toc_usage for details.
@@ -69,9 +133,8 @@ update_toc () {
     return 1
   fi
 
-  local toc_loc_regex has_toc_loc has_heading_two tempfile line toc_params toc_included in_old_toc
-  toc_loc_regex="^[[:space:]]*<\!--[[:space:]]*TOC.*-->"
-  has_toc_loc="$( grep -q "$toc_loc_regex" "$filename" && printf 'YES' )"
+  local has_toc_loc has_heading_two tempfile line toc_params toc_included in_old_toc
+  has_toc_loc="$( grep -q "$TOC_LOC_REGEX" "$filename" && printf 'YES' )"
   has_heading_two="$( grep -q '^##' "$filename" && printf 'YES' )"
 
   tempfile="$( mktemp -t "$( sed 's/\//-/g' <<< 'x/metadata/spec/03_messages.md' )" )"
@@ -88,12 +151,12 @@ update_toc () {
     if [[ -n "$in_old_toc" ]] && ! grep -q "^[[:space:]]*- \[" <<< "$line"; then
       in_old_toc=''
     fi
-    if [[ -n "$has_toc_loc" ]] && grep -q "$toc_loc_regex" <<< "$line"; then
+    if [[ -n "$has_toc_loc" ]] && grep -q "$TOC_LOC_REGEX" <<< "$line"; then
       # Get just the TOC comment piece,
       # replace all non-digits with spaces, trim leading and trailing spaces.
       # Expected result examples: "", "3", "1 3"
       toc_params="$(
-        grep -o "$toc_loc_regex" <<< "$line" \
+        grep -o "$TOC_LOC_REGEX" <<< "$line" \
         | sed -E 's/[^[:digit:]]+/ /g; s/^[[:space:]]+//; s/[[:space:]]+$//;'
       )"
 
@@ -131,33 +194,33 @@ __source_generate_toc () {
   source "$source_file"
 }
 
-if [[ "$update_toc_sourced" == 'YES' ]]; then
-  __source_generate_toc || return $?
-else
-  __source_generate_toc || exit $?
-fi
-
 # If not sourced, do the stuff!
 if [[ "$update_toc_sourced" != 'YES' ]]; then
+  # Print help if no args are given.
   if [[ "$#" -eq 0 ]]; then
     __update_toc_usage
     exit 0
   fi
-
+  # Print help if any of the args are -h, or --help (or h, --h, help, or -help)
   for a in "$@"; do
-    if [[ "$a" == '-h' || "$a" == '--help' || "$a" == "help" ]]; then
+    if [[ "$a" =~ ^-?-?h(elp)?$ ]]; then
       __update_toc_usage
       exit 0
     fi
   done
 
-  update_toc "$@"
+  # Pull in the generate_toc function.
+  __source_generate_toc || exit $?
+
+  # Finally, Do the stuff!
+  update_tocs "$@"
   exit $?
 fi
 
-# It was sourced, clean up some environment stuff.
+# It was sourced, do some clean up and also source the generate_toc file so that function's available too.
 unset update_toc_sourced
 unset -f __update_toc_usage
+__source_generate_toc || return $?
 unset -f __source_generate_toc
 
 return 0

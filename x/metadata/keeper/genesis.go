@@ -49,7 +49,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 			if err != nil {
 				panic(err)
 			}
-			err = k.ImportLocatorRecord(ctx, addr, s.LocatorUri)
+			err = k.ImportOSLocatorRecord(ctx, addr, s.LocatorUri)
 			if err != nil {
 				panic(err)
 			}
@@ -124,7 +124,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 	}
 
 	// os locator records
-	if err := k.IterateLocators(ctx, appendToObjectLocatorRecords); err != nil {
+	if err := k.IterateOSLocators(ctx, appendToObjectLocatorRecords); err != nil {
 		panic(err)
 	}
 

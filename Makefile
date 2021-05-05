@@ -27,6 +27,10 @@ ifeq (,$(VERSION))
   endif
 endif
 
+GOLANGCI_LINT=$(shell which golangci-lint)
+ifeq ("$(wildcard $(GOLANGCI_LINT))","")
+    GOLANGCI_LINT = $(BINDIR)/golangci-lint
+endif
 
 GO := go
 
@@ -178,7 +182,7 @@ build-release-zip: build-release-bin
 	  zip -r $(RELEASE_ZIP_NAME) bin/ && \
 	cd ..
 
-.PHONY: bulid-release-proto
+.PHONY: build-release-proto
 build-release-proto:
 	scripts/protoball.sh $(RELEASE_PROTO)
 
@@ -201,7 +205,7 @@ go.sum: go.mod
 
 # look into .golangci.yml for enabling / disabling linters
 lint:
-	$(BINDIR)/golangci-lint run
+	$(GOLANGCI_LINT) run
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" | xargs gofmt -d -s
 	$(GO) mod verify
 
@@ -226,7 +230,10 @@ statik:
 linkify:
 	python ./scripts/linkify.py CHANGELOG.md
 
-.PHONY: go-mod-cache go.sum lint clean format check-built statik linkify
+update-tocs:
+	scripts/update-toc.sh x
+
+.PHONY: go-mod-cache go.sum lint clean format check-built statik linkify update-tocs
 
 
 ##############################

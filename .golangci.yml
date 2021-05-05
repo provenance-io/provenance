@@ -52,6 +52,9 @@ issues:
     - text: "don't use an underscore in package name"
       linters:
         - golint
+    - text: "don't use underscores in Go names; const (TxEndpoint|TLCategory|TLType|TLAction)_"
+      linters:
+        - golint
     - text: "ST1003:"
       linters:
         - stylecheck

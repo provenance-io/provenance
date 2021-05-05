@@ -85,7 +85,7 @@ generate_toc () {
   | awk -F "~" \
       '{
           gsub(/#/,"  ",$1);
-          gsub(/[^[:alnum:]_]/,"-",$3);
+          gsub(/[^[:alnum:]_]+/,"-",$3);
           print $1 "- [" $2 "](#" tolower($3) ")";
         }'
 }
