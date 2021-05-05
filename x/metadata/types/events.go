@@ -18,6 +18,8 @@ type TelemetryAction string
 const (
 	// TKObject is the telemetry key for an object stored on-chain in the metadata module.
 	TKObject string = "stored-object"
+	// TKObjectAction is the telemetry key for an action taken on the chain.
+	TKObjectAction string = "object-action"
 
 	// TLCategory is a string name for labels defining an object category.
 	TLCategory               string            = "category"
@@ -59,22 +61,29 @@ func (t TelemetryAction) AsLabel() metrics.Label {
 
 // GetIncObjFunc creates a function that will call telemetry.IncrCounterWithLabels for counting metadata module chain objects.
 func GetIncObjFunc(objType TelemetryObjectType, action TelemetryAction) func() {
-	var val float32 = -1 // Default is for action == TLAction_Deleted
+	val := 0 // Default is for action == TLAction_Updated
 	if action == TLAction_Created {
 		val = 1
-	} else if action == TLAction_Updated {
-		val = 0
+	} else if action == TLAction_Deleted {
+		val = -1
 	}
 	cat := TLCategory_OSLocator // Default is for objType == TLType_OSLocator
-	if objType == TLType_Scope || objType == TLType_Session || objType == TLType_Record {
+	if objType == TLType_Record || objType == TLType_Session || objType == TLType_Scope {
 		cat = TLCategory_Entry
-	} else if objType == TLType_ScopeSpec || objType == TLType_ContractSpec || objType == TLType_RecordSpec {
+	} else if objType == TLType_RecordSpec || objType == TLType_ContractSpec || objType == TLType_ScopeSpec {
 		cat = TLCategory_Specification
 	}
 	return func() {
+		if val != 0 {
+			telemetry.IncrCounterWithLabels(
+				[]string{ModuleName, TKObject},
+				float32(val),
+				[]metrics.Label{cat.AsLabel(), objType.AsLabel()},
+			)
+		}
 		telemetry.IncrCounterWithLabels(
-			[]string{ModuleName, TKObject},
-			val,
+			[]string{ModuleName, TKObjectAction},
+			1,
 			[]metrics.Label{cat.AsLabel(), objType.AsLabel(), action.AsLabel()},
 		)
 	}
