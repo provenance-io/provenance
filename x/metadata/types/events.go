@@ -84,11 +84,12 @@ func GetIncObjFunc(objType TelemetryObjectType, action TelemetryAction) func() {
 type TxEndpoint string
 
 const (
-	TxEndpoint_WriteScope  TxEndpoint = "WriteScope"
-	TxEndpoint_DeleteScope TxEndpoint = "DeleteScope"
-
+	TxEndpoint_WriteScope            TxEndpoint = "WriteScope"
+	TxEndpoint_DeleteScope           TxEndpoint = "DeleteScope"
 	TxEndpoint_AddScopeDataAccess    TxEndpoint = "AddScopeDataAccess"
 	TxEndpoint_DeleteScopeDataAccess TxEndpoint = "DeleteScopeDataAccess"
+	TxEndpoint_AddScopeOwner         TxEndpoint = "AddScopeOwner"
+	TxEndpoint_DeleteScopeOwner      TxEndpoint = "DeleteScopeOwner"
 
 	TxEndpoint_WriteSession TxEndpoint = "WriteSession"
 

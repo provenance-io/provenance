@@ -1202,6 +1202,14 @@ func NewMsgDeleteScopeDataAccessResponse() *MsgDeleteScopeDataAccessResponse {
 	return &MsgDeleteScopeDataAccessResponse{}
 }
 
+func NewMsgAddScopeOwnerResponse() *MsgAddScopeOwnerResponse {
+	return &MsgAddScopeOwnerResponse{}
+}
+
+func NewMsgDeleteScopeOwnerResponse() *MsgDeleteScopeOwnerResponse {
+	return &MsgDeleteScopeOwnerResponse{}
+}
+
 func NewMsgWriteSessionResponse(sessionID MetadataAddress) *MsgWriteSessionResponse {
 	return &MsgWriteSessionResponse{
 		SessionIdInfo: GetSessionIDInfo(sessionID),

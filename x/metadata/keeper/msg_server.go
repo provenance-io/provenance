@@ -118,6 +118,7 @@ func (k msgServer) AddScopeOwner(
 	goCtx context.Context,
 	msg *types.MsgAddScopeOwnerRequest,
 ) (*types.MsgAddScopeOwnerResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "AddScopeOwner")
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if err := msg.ValidateBasic(); err != nil {
@@ -141,21 +142,15 @@ func (k msgServer) AddScopeOwner(
 
 	k.SetScope(ctx, proposed)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
-		),
-	)
-
-	return &types.MsgAddScopeOwnerResponse{}, nil
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_AddScopeOwner, msg.GetSigners()))
+	return types.NewMsgAddScopeOwnerResponse(), nil
 }
 
 func (k msgServer) DeleteScopeOwner(
 	goCtx context.Context,
 	msg *types.MsgDeleteScopeOwnerRequest,
 ) (*types.MsgDeleteScopeOwnerResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteScopeOwner")
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if err := msg.ValidateBasic(); err != nil {
@@ -179,15 +174,8 @@ func (k msgServer) DeleteScopeOwner(
 
 	k.SetScope(ctx, existing)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
-		),
-	)
-
-	return &types.MsgDeleteScopeOwnerResponse{}, nil
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteScopeOwner, msg.GetSigners()))
+	return types.NewMsgDeleteScopeOwnerResponse(), nil
 }
 
 func (k msgServer) WriteSession(
