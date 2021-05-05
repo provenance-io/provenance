@@ -69,7 +69,7 @@ func (s *Scope) ValidateBasic() error {
 
 func (s Scope) ValidateOwnersBasic() error {
 	if err := ValidatePartiesBasic(s.Owners); err != nil {
-		return err
+		return fmt.Errorf("invalid scope owners: %w", err)
 	}
 	return nil
 }
