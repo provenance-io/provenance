@@ -84,7 +84,7 @@ jobs:
       - name: Install deps
         run: |
           sudo apt-get update
-          sudo apt-get install libleveldb-dev
+          sudo apt-get install -y libleveldb-dev
       - name: Build linux binary
         run: |
           make VERSION=${{ needs.build_init.outputs.version }} build-release-zip
