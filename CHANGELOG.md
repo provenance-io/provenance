@@ -41,6 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add typed events and telemetry metrics to attribute module [#86](https://github.com/provenance-io/provenance/issues/86)
 * Add rpc and cli support for adding/updating/removing owners on a `Scope` [#283](https://github.com/provenance-io/provenance/issues/283)
 * Add transaction and query time measurements to marker module [#284](https://github.com/provenance-io/provenance/issues/284)
+* Upgrade handler included that sets denom metadata for `hash` bond denom [#294](https://github.com/provenance-io/provenance/issues/294)
 * Upgrade wasmd to v0.16.0 [#291](https://github.com/provenance-io/provenance/issues/291)
 * Add params query endpoint to the marker module cli [#271](https://github.com/provenance-io/provenance/issues/271)
 
