@@ -58,12 +58,12 @@ func TestWriteScopeValidation(t *testing.T) {
 	)
 	var msg = NewMsgWriteScopeRequest(*scope, []string{"invalid"})
 	err := msg.ValidateBasic()
-	require.EqualError(t, err, "invalid owner on scope: decoding bech32 failed: invalid index of 1")
+	require.EqualError(t, err, "invalid scope owners: invalid party address [data_owner]: decoding bech32 failed: invalid index of 1")
 	require.Panics(t, func() { msg.GetSigners() }, "panics due to invalid addresses")
 
 	err = msg.Scope.ValidateBasic()
 	require.Error(t, err, "invalid addresses")
-	require.Equal(t, "invalid owner on scope: decoding bech32 failed: invalid index of 1", err.Error())
+	require.Equal(t, "invalid scope owners: invalid party address [data_owner]: decoding bech32 failed: invalid index of 1", err.Error())
 
 	msg.Scope = *NewScope(
 		ScopeMetadataAddress(uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")),
@@ -74,7 +74,7 @@ func TestWriteScopeValidation(t *testing.T) {
 	)
 	err = msg.Scope.ValidateBasic()
 	require.Error(t, err, "no owners")
-	require.Equal(t, "scope must have at least one owner", err.Error())
+	require.Equal(t, "invalid scope owners: at least one party is required", err.Error())
 
 	msg.Scope = *NewScope(
 		ScopeMetadataAddress(uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")),
