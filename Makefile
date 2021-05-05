@@ -11,8 +11,6 @@ BUILDDIR ?= $(CURDIR)/build
 LEDGER_ENABLED ?= true
 WITH_CLEVELDB ?= yes
 
-LEVELDB_PATH = $(shell brew --prefix leveldb 2>/dev/null || echo "$(HOME)/Cellar/leveldb/1.22/include")
-
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 BRANCH_PRETTY := $(subst /,-,$(BRANCH))
 TM_VERSION := $(shell go list -m github.com/tendermint/tendermint | sed 's:.* ::') # grab everything after the space in "github.com/tendermint/tendermint v0.34.7"
@@ -73,20 +71,22 @@ ifeq ($(LEDGER_ENABLED),true)
 endif
 
 ### CGO Settings
-CGO_CFLAGS =
-
 ifeq ($(UNAME_S),Darwin)
   # osx linker settings
-  CGO_LDFLAGS = "-Wl,-rpath,@loader_path/."
+  CGO_LDFLAGS = -Wl,-rpath,@loader_path/.
 else ifeq ($(UNAME_S),Linux)
   # linux liner settings
-  CGO_LDFLAGS = "-Wl,-rpath,\$$ORIGIN"
+  CGO_LDFLAGS = -Wl,-rpath,\$$ORIGIN
 endif
 
 # cleveldb linker settings
 ifeq ($(WITH_CLEVELDB),yes)
-  CGO_CFLAGS  += -I$(LEVELDB_PATH)/include
-  CGO_LDFLAGS += -L$(LEVELDB_PATH)/lib
+  ifeq ($(UNAME_S),Darwin)
+    LEVELDB_PATH = $(shell brew --prefix leveldb 2>/dev/null || echo "$(HOME)/Cellar/leveldb/1.22/include")
+    CGO_CFLAGS   = -I$(LEVELDB_PATH)/include
+    CGO_LDFLAGS += -L$(LEVELDB_PATH)/lib
+  else ifeq ($(UNAME_S),Linux)
+  endif
 endif
 
 
@@ -123,11 +123,11 @@ all: build format lint test
 
 # Install puts the binaries in the local environment path.
 install: go.sum
-	CGO_LDFLAGS=$(CGO_LDFLAGS) CGO_CFLAGS=$(CGO_CFLAGS) $(GO) install -mod=readonly $(BUILD_FLAGS) ./cmd/provenanced
+	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) install -mod=readonly $(BUILD_FLAGS) ./cmd/provenanced
 
 build: go.sum
 	mkdir -p $(BUILDDIR)
-	CGO_LDFLAGS=$(CGO_LDFLAGS) CGO_CFLAGS=$(CGO_CFLAGS) $(GO) build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./cmd/provenanced
+	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./cmd/provenanced
 
 build-linux: go.sum
 	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build
