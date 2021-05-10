@@ -1,4 +1,4 @@
-package io.provenance.metadataaddress
+package io.provenance
 
 import io.provenance.kbech32.Bech32
 import io.provenance.kbech32.Bech32Data
