@@ -10,15 +10,14 @@ import java.util.UUID
 // 2) cd x/metadata/spec/examples/kotlin
 // 3) ./gradlew test
 //
-// If you're having trouble running the tests in IntelliJ:
-// 1) Open the Run/Debug Configurations (Run -> Edit Configurations).
-// 2) Add a new "Gradle" configuration:
-//     - Name: MetadataAddressTest
-//     - Gradle project: kotlin
-//     - Tasks: :test
-//     - Arguments: --tests "io.provenance.MetadataAddressTest"
+// If you opened this file and see a bunch of red:
+// 1) Open the x/metadata/spec/examples/kotlin/build.gradle.kts file
+// 2) It should have a banner at the top about code insight.
+// 3) Click the "Link Gradle Project" link on the right end of that banner.
+// 4) Navigate to and select that same x/metadata/spec/examples/kotlin/build.gradle.kts file.
+// 5) Wait for the loading/indexing to finish.
 //
-// If you run into problems, please document (in here) how you fixed them.
+// If you run into other problems, please document (in here) how you fixed them.
 
 class MetadataAddressTest {
 
