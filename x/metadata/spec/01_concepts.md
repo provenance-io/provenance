@@ -9,7 +9,7 @@ Additionally, several indexes are created to help with linking and iterating ove
   - [Entries](#entries)
   - [Specifications](#specifications)
   - [Metadata Addresses](#metadata-addresses)
-    - [MetadataAddress Example Implementations:](#metadataaddress-example-implementations-)
+    - [MetadataAddress Example Implementations:](#metadataaddress-example-implementations)
     - [MetadataAddress General Guidelines](#metadataaddress-general-guidelines)
   - [Indexes](#indexes)
 
@@ -34,10 +34,10 @@ The addresses for the different messages have specific formats that help facilit
 All addresses start with a single byte that identifies the type, and are followed by 16 bytes commonly called a UUID.
 Some address types contain other elements too.
 
-### MetadataAddress Example Implementations:
+### MetadataAddress Example Implementations
 
-* Go: [address.go](#TODO)
-* Kotlin: [MetadataAddress.kt](#TODO)
+* Go: [address.go](https://github.com/provenance-io/provenance/blob/main/x/metadata/types/address.go)
+* Kotlin: [MetadataAddress.kt](https://github.com/provenance-io/provenance/blob/x/metadata/spec/examples/kotlin/src/main/kotlin/MetadataAddress.kt)
 * Javascript: TODO
 
 ### MetadataAddress General Guidelines
