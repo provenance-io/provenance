@@ -36,8 +36,8 @@ Some address types contain other elements too.
 
 ### MetadataAddress Example Implementations
 
-* Go: [address.go](https://github.com/provenance-io/provenance/blob/main/x/metadata/types/address.go)
-* Kotlin: [MetadataAddress.kt](https://github.com/provenance-io/provenance/blob/x/metadata/spec/examples/kotlin/src/main/kotlin/MetadataAddress.kt)
+* Go: [address.go](https://github.com/provenance-io/provenance/blob/main/x/metadata/spec/examples/go/metadata_address.go)
+* Kotlin: [MetadataAddress.kt](https://github.com/provenance-io/provenance/blob/main/x/metadata/spec/examples/kotlin/src/main/kotlin/MetadataAddress.kt)
 * Javascript: TODO
 
 ### MetadataAddress General Guidelines
