@@ -1471,5 +1471,4 @@ func (s *AddressTestSuite) TestGenerateExamples() {
 	s.Assert().True(true)
 }
 
-
 // TODO: GetDetails tests.
