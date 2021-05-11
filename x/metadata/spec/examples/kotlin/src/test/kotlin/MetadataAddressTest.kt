@@ -52,7 +52,7 @@ class MetadataAddressTest {
         val expectedPrimaryUuid = scopeUuid
         val expectedSecondaryBytes = byteArrayOf()
 
-        val actualAddr = MetadataAddress.scopeAddress(scopeUuid)
+        val actualAddr = MetadataAddress.forScope(scopeUuid)
         val actualId = actualAddr.toString()
         val actualKey = actualAddr.getKey()
         val actualPrefix = actualAddr.getPrefix()
@@ -77,7 +77,7 @@ class MetadataAddressTest {
         val expectedPrimaryUuid = scopeUuid
         val expectedSecondaryBytes = uuidAsByteArray(sessionUuid)
 
-        val actualAddr = MetadataAddress.sessionAddress(scopeUuid, sessionUuid)
+        val actualAddr = MetadataAddress.forSession(scopeUuid, sessionUuid)
         val actualId = actualAddr.toString()
         val actualKey = actualAddr.getKey()
         val actualPrefix = actualAddr.getPrefix()
@@ -102,7 +102,7 @@ class MetadataAddressTest {
         val expectedPrimaryUuid = scopeUuid
         val expectedSecondaryBytes = recordNameHashedBytes
 
-        val actualAddr = MetadataAddress.recordAddress(scopeUuid, recordName)
+        val actualAddr = MetadataAddress.forRecord(scopeUuid, recordName)
         val actualId = actualAddr.toString()
         val actualKey = actualAddr.getKey()
         val actualPrefix = actualAddr.getPrefix()
@@ -127,7 +127,7 @@ class MetadataAddressTest {
         val expectedPrimaryUuid = scopeSpecUuid
         val expectedSecondaryBytes = byteArrayOf()
 
-        val actualAddr = MetadataAddress.scopeSpecificationAddress(scopeSpecUuid)
+        val actualAddr = MetadataAddress.forScopeSpecification(scopeSpecUuid)
         val actualId = actualAddr.toString()
         val actualKey = actualAddr.getKey()
         val actualPrefix = actualAddr.getPrefix()
@@ -152,7 +152,7 @@ class MetadataAddressTest {
         val expectedPrimaryUuid = contractSpecUuid
         val expectedSecondaryBytes = byteArrayOf()
 
-        val actualAddr = MetadataAddress.contractSpecificationAddress(contractSpecUuid)
+        val actualAddr = MetadataAddress.forContractSpecification(contractSpecUuid)
         val actualId = actualAddr.toString()
         val actualKey = actualAddr.getKey()
         val actualPrefix = actualAddr.getPrefix()
@@ -177,7 +177,7 @@ class MetadataAddressTest {
         val expectedPrimaryUuid = contractSpecUuid
         val expectedSecondaryBytes = recordNameHashedBytes
 
-        val actualAddr = MetadataAddress.recordSpecificationAddress(contractSpecUuid, recordName)
+        val actualAddr = MetadataAddress.forRecordSpecification(contractSpecUuid, recordName)
         val actualId = actualAddr.toString()
         val actualKey = actualAddr.getKey()
         val actualPrefix = actualAddr.getPrefix()

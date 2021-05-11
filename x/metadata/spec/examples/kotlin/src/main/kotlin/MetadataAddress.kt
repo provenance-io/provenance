@@ -27,15 +27,15 @@ const val KEY_RECORD_SPECIFICATION: Byte = 0x05
 data class MetadataAddress internal constructor(val bytes: ByteArray) {
     companion object {
         /** Create a MetadataAddress for a Scope. */
-        fun scopeAddress(scopeUuid: UUID) =
+        fun forScope(scopeUuid: UUID) =
             MetadataAddress(byteArrayOf(KEY_SCOPE).plus(uuidAsByteArray(scopeUuid)))
 
         /** Create a MetadataAddress for a Session. */
-        fun sessionAddress(scopeUuid: UUID, sessionUuid: UUID) =
+        fun forSession(scopeUuid: UUID, sessionUuid: UUID) =
             MetadataAddress(byteArrayOf(KEY_SESSION).plus(uuidAsByteArray(scopeUuid)).plus(uuidAsByteArray(sessionUuid)))
 
         /** Create a MetadataAddress for a Record. */
-        fun recordAddress(scopeUuid: UUID, recordName: String): MetadataAddress {
+        fun forRecord(scopeUuid: UUID, recordName: String): MetadataAddress {
             if (recordName.isBlank()) {
                 throw IllegalArgumentException("Invalid recordName: cannot be empty or blank.")
             }
@@ -43,16 +43,16 @@ data class MetadataAddress internal constructor(val bytes: ByteArray) {
         }
 
         /** Create a MetadataAddress for a Scope Specification. */
-        fun scopeSpecificationAddress(scopeSpecUuid: UUID) =
+        fun forScopeSpecification(scopeSpecUuid: UUID) =
             MetadataAddress(byteArrayOf(KEY_SCOPE_SPECIFICATION).plus(uuidAsByteArray(scopeSpecUuid)))
 
 
         /** Create a MetadataAddress for a Contract Specification. */
-        fun contractSpecificationAddress(contractSpecUuid: UUID) =
+        fun forContractSpecification(contractSpecUuid: UUID) =
             MetadataAddress(byteArrayOf(KEY_CONTRACT_SPECIFICATION).plus(uuidAsByteArray(contractSpecUuid)))
 
         /** Create a MetadataAddress for a Record Specification. */
-        fun recordSpecificationAddress(contractSpecUuid: UUID, recordSpecName: String): MetadataAddress {
+        fun forRecordSpecification(contractSpecUuid: UUID, recordSpecName: String): MetadataAddress {
             if (recordSpecName.isBlank()) {
                 throw IllegalArgumentException("Invalid recordSpecName: cannot be empty or blank.")
             }
