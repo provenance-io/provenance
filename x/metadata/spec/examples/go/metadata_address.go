@@ -26,7 +26,7 @@ const (
 	KeyRecordSpecification   = byte(0x05)
 )
 
-// MetadataAddress is a blockchain compliant address based on UUIDs
+// MetadataAddress is a type that helps create ids for the various types objects stored by the metadata module.
 type MetadataAddress []byte
 
 // MetadataAddressForScope creates a MetadataAddress instance for the given scope by its uuid
@@ -120,14 +120,9 @@ func (m MetadataAddress) Bytes() []byte {
 	return m
 }
 
-// Empty returns true if this is nil or has no bytes.
-func (m MetadataAddress) Empty() bool {
-	return bytes.Equal(m, MetadataAddress{})
-}
-
 // String implements the stringer interface and encodes as a bech32.
 func (m MetadataAddress) String() string {
-	if m.Empty() {
+	if len(m) == 0 {
 		return ""
 	}
 	bech32Addr, err := bech32.ConvertAndEncode(getPrefixFromKey(m[0]), m)
