@@ -9,7 +9,7 @@ Additionally, several indexes are created to help with linking and iterating ove
   - [Entries](#entries)
   - [Specifications](#specifications)
   - [Metadata Addresses](#metadata-addresses)
-    - [MetadataAddress Example Implementations:](#metadataaddress-example-implementations)
+    - [MetadataAddress Example Implementations](#metadataaddress-example-implementations)
     - [MetadataAddress General Guidelines](#metadataaddress-general-guidelines)
   - [Indexes](#indexes)
 
