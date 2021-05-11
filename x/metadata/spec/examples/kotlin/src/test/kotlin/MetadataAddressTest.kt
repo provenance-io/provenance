@@ -3,21 +3,8 @@ package io.provenance
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import java.nio.ByteBuffer
 import java.util.UUID
-
-// To Run these tests on the command line:
-// 1) Start at the root of the repo.
-// 2) cd x/metadata/spec/examples/kotlin
-// 3) ./gradlew test
-//
-// If you opened this file and see a bunch of red:
-// 1) Open the x/metadata/spec/examples/kotlin/build.gradle.kts file
-// 2) It should have a banner at the top about code insight.
-// 3) Click the "Link Gradle Project" link on the right end of that banner.
-// 4) Navigate to and select that same x/metadata/spec/examples/kotlin/build.gradle.kts file.
-// 5) Wait for the loading/indexing to finish.
-//
-// If you run into other problems, please document (in here) how you fixed them.
 
 class MetadataAddressTest {
 
@@ -46,6 +33,15 @@ class MetadataAddressTest {
     private val contractSpecUuid: UUID = UUID.fromString(contractSpecUuidString)
 
     private fun byteArrayOfInts(vararg ints: Int) = ByteArray(ints.size) { pos -> ints[pos].toByte() }
+
+    // Copy/Pasted out of MetadataAddress.kt so that it can be private in there.
+    /** Converts a UUID to a ByteArray. */
+    private fun uuidAsByteArray(uuid: UUID): ByteArray {
+        val b = ByteBuffer.wrap(ByteArray(16))
+        b.putLong(uuid.mostSignificantBits)
+        b.putLong(uuid.leastSignificantBits)
+        return b.array()
+    }
 
     @Test
     fun scopeId() {
@@ -79,7 +75,7 @@ class MetadataAddressTest {
         val expectedKey = KEY_SESSION
         val expectedPrefix = PREFIX_SESSION
         val expectedPrimaryUuid = scopeUuid
-        val expectedSecondaryBytes = MetadataAddress.uuidAsByteArray(sessionUuid)
+        val expectedSecondaryBytes = uuidAsByteArray(sessionUuid)
 
         val actualAddr = MetadataAddress.sessionAddress(scopeUuid, sessionUuid)
         val actualId = actualAddr.toString()
