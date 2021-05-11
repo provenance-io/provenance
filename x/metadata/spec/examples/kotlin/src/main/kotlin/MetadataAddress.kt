@@ -96,7 +96,7 @@ data class MetadataAddress internal constructor(val bytes: ByteArray) {
             val uuidBytes = ByteArray(16)
             if (data.size >= 16) {
                 data.copyInto(uuidBytes, 0, 0, 16)
-            } else {
+            } else if (data.isNotEmpty()) {
                 data.copyInto(uuidBytes, 0, 0, data.size)
             }
             val bb = ByteBuffer.wrap(uuidBytes)
@@ -188,7 +188,7 @@ data class MetadataAddress internal constructor(val bytes: ByteArray) {
     fun getPrimaryUuid() = byteArrayAsUuid(this.bytes.copyOfRange(1,17))
 
     /** Gets the set of bytes for the secondary part of this MetadataAddress. */
-    fun getSecondaryBytes() = if (this.bytes.size <= 16) byteArrayOf() else bytes.copyOfRange(17, this.bytes.size)
+    fun getSecondaryBytes() = if (this.bytes.size <= 17) byteArrayOf() else bytes.copyOfRange(17, this.bytes.size)
 
     /** returns this MetadataAddress as a bech32 address string, e.g. "scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel" */
     override fun toString() = convertAndEncode(getPrefixFromKey(this.bytes[0]), this.bytes)
