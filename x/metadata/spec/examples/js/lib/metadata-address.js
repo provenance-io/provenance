@@ -102,12 +102,12 @@ function uuidString(bytes) {
  * @return A Uint8Array with 16 elements.
  */
 function getHashedBytes(string) {
-    let sha256Sum = sha256(string);
-    // A sha256 sum is 32 bytes = 256 bits.
-    // That sha256 function returns words that are 32 bits.
-    // We want the info in 8 bit (1 byte) chunks, though.
+    let sha256Sum = sha256(string.trim().toLowerCase());
+    // A sha256 sum is 32 bytes.
+    // That sha256 function returns 8 words that are 4 bytes each.
+    // We want the info in 1 byte chunks, though.
     // For MetadataAddress purposes, we also only care about the first 16 bytes.
-    // 16 bytes * 8 bits/byte / 32 bits/word = 4 words. Each word has 4 bytes.
+    // 16 bytes / 4 bytes/word = 4 words and each word has 4 bytes.
     let bytes = [];
     for (let i = 0; i < 4; i++) {
         bytes.push(
@@ -150,44 +150,41 @@ function getMetadataAddressLibrary() {
      * @returns a string prefix, e.g. "scope".
      */
     function getPrefixFromKey(key) {
-        switch(key) {
-            case KEY_SCOPE:
-                return PREFIX_SCOPE;
-            case KEY_SESSION:
-                return PREFIX_SESSION;
-            case KEY_RECORD:
-                return PREFIX_RECORD;
-            case KEY_SCOPE_SPECIFICATION:
-                return PREFIX_SCOPE_SPECIFICATION;
-            case KEY_CONTRACT_SPECIFICATION:
-                return PREFIX_CONTRACT_SPECIFICATION;
-            case KEY_RECORD_SPECIFICATION:
-                return PREFIX_RECORD_SPECIFICATION;
+        let prefix = key === KEY_SCOPE ? PREFIX_SCOPE
+                   : key === KEY_SESSION ? PREFIX_SESSION
+                   : key === KEY_RECORD ? PREFIX_RECORD
+                   : key === KEY_SCOPE_SPECIFICATION ? PREFIX_SCOPE_SPECIFICATION
+                   : key === KEY_CONTRACT_SPECIFICATION ? PREFIX_CONTRACT_SPECIFICATION
+                   : key === KEY_RECORD_SPECIFICATION ? PREFIX_RECORD_SPECIFICATION
+                   : undefined;
+        if (prefix === undefined) {
+            throw 'Invalid key: [' + key + ']';
         }
-        throw 'Invalid key: [' + key + ']';
+        return prefix;
     }
 
     /**
-     * Get the prefix for a key byte.
-     * @param key the byte in question.
-     * @returns a string prefix, e.g. "scope".
+     * Makes sure the bytes have a valid key and correct length.
+     * @param bytes the array of bytes to validate.
+     * @returns nothing, but might throw an exception.
      */
-    function getExpectedLengthFromKey(key) {
-        switch(key) {
-            case KEY_SCOPE:
-                return 17;
-            case KEY_SESSION:
-                return 33;
-            case KEY_RECORD:
-                return 33;
-            case KEY_SCOPE_SPECIFICATION:
-                return 17;
-            case KEY_CONTRACT_SPECIFICATION:
-                return 17;
-            case KEY_RECORD_SPECIFICATION:
-                return 33;
+    function validateBytes(bytes) {
+        if (bytes == null || bytes.length === 0) {
+            throw 'Invalid bytes: undefined, null, or empty.';
         }
-        throw 'Invalid key: [' + key + ']';
+        let expectedLength = bytes[0] === KEY_SCOPE ? 17
+                           : bytes[0] === KEY_SESSION ? 33
+                           : bytes[0] === KEY_RECORD ? 33
+                           : bytes[0] === KEY_SCOPE_SPECIFICATION ? 17
+                           : bytes[0] === KEY_CONTRACT_SPECIFICATION ? 17
+                           : bytes[0] === KEY_RECORD_SPECIFICATION ? 33
+                           : undefined;
+        if (expectedLength === undefined) {
+            throw 'Invalid key: [' + key + ']';
+        }
+        if (expectedLength !== bytes.length) {
+            throw 'Incorrect data length for type [' + getPrefixFromKey(bytes[0]) + ']: expected [' + expectedLength + '], actual [' + bytes.length + ']';
+        }
     }
 
     /**
@@ -306,14 +303,17 @@ function getMetadataAddressLibrary() {
         let b32 = bech32.decode(bech32Str);
         let hrp = b32.prefix;
         let bytes = bech32.fromWords(b32.words);
+        validateBytes(bytes);
         let prefix = getPrefixFromKey(bytes[0]);
         if (prefix !== hrp) {
             throw 'Incorrect HRP: expected [' + prefix + '], actual [' + hrp + '].';
         }
-        let expectedLength = getExpectedLengthFromKey(bytes[0]);
-        if (expectedLength !== bytes.length) {
-            throw 'Incorrect data length: expected [' + expectedLength + '], actual [' + bytes.length + ']';
-        }
+        return newMetadataAddress(bytes[0], bytes.slice(1,17), bytes.slice(17));
+    }
+
+    /** Creates a MetadataAddress from an array of bytes. */
+    function fromBytes(bytes) {
+        validateBytes(bytes);
         return newMetadataAddress(bytes[0], bytes.slice(1,17), bytes.slice(17));
     }
 
@@ -325,6 +325,7 @@ function getMetadataAddressLibrary() {
         forContractSpecification,
         forRecordSpecification,
         fromBech32,
+        fromBytes,
 
         PREFIX_SCOPE,
         PREFIX_SESSION,

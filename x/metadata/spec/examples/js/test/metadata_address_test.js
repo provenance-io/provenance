@@ -3,15 +3,13 @@ const test = require('ava');
 const MetadataAddress = require('../lib/metadata-address');
 
 // IntelliJ can't yet handle ava tests, and will tell you to run them on the command line.
-// If you don't have the `ava` command in your path, you'll have to use the full path.
-// From the root of this repo:
-//   $ x/metadata/spec/examples/js/node_modules/.bin/ava
-// If that's not there, you probably need to have node install the modules (they're ignored by git).
+// Additionally, if run from the root of the repo, undesired js files might get attention.
+// It's best to run ava from the root of this js example.
 // From the root of this repo:
 //   $ cd x/metadata/spec/examples/js
-//   $ npm install
-// Then you can run the test from there with:
 //   $ node_modules/.bin/ava
+// If that doesn't exist, you might need to:
+//   $ npm install
 
 // These strings come from the output of x/metadata/types/address_test.go TestGenerateExamples().
 
@@ -80,12 +78,15 @@ test('scopeId', t => {
     let actualPrimaryUuid = actualAddr.primaryUuid;
     let actualSecondaryBytes = actualAddr.secondaryBytes;
 
+    let addrFromBytes = MetadataAddress.fromBytes(actualAddr.bytes);
+
     t.deepEqual(expectedKey, actualKey, "key")
     t.deepEqual(expectedPrefix, actualPrefix, "prefix")
     t.deepEqual(expectedPrimaryUuid, actualPrimaryUuid, "primary UUID")
     t.deepEqual(expectedSecondaryBytes, actualSecondaryBytes, "secondary bytes")
     t.deepEqual(expectedId, actualId, "as bech32 string")
     t.assert(expectedAddr.equals(actualAddr), "whole metadata address")
+    t.assert(expectedAddr.equals(addrFromBytes), "address from bytes")
 });
 
 test('sessionId', t => {
@@ -103,12 +104,15 @@ test('sessionId', t => {
     let actualPrimaryUuid = actualAddr.primaryUuid;
     let actualSecondaryBytes = uuidString(actualAddr.secondaryBytes);
 
+    let addrFromBytes = MetadataAddress.fromBytes(actualAddr.bytes);
+
     t.deepEqual(expectedKey, actualKey, "key")
     t.deepEqual(expectedPrefix, actualPrefix, "prefix")
     t.deepEqual(expectedPrimaryUuid, actualPrimaryUuid, "primary UUID")
     t.deepEqual(expectedSecondaryBytes, actualSecondaryBytes, "secondary bytes")
     t.deepEqual(expectedId, actualId, "as bech32 string")
     t.assert(expectedAddr.equals(actualAddr), "whole metadata address")
+    t.assert(expectedAddr.equals(addrFromBytes), "address from bytes")
 });
 
 test('recordId', t => {
@@ -126,12 +130,15 @@ test('recordId', t => {
     let actualPrimaryUuid = actualAddr.primaryUuid;
     let actualSecondaryBytes = actualAddr.secondaryBytes;
 
+    let addrFromBytes = MetadataAddress.fromBytes(actualAddr.bytes);
+
     t.deepEqual(expectedKey, actualKey, "key")
     t.deepEqual(expectedPrefix, actualPrefix, "prefix")
     t.deepEqual(expectedPrimaryUuid, actualPrimaryUuid, "primary UUID")
     t.deepEqual(expectedSecondaryBytes, actualSecondaryBytes, "secondary bytes")
     t.deepEqual(expectedId, actualId, "as bech32 string")
     t.assert(expectedAddr.equals(actualAddr), "whole metadata address")
+    t.assert(expectedAddr.equals(addrFromBytes), "address from bytes")
 });
 
 test('scopeSpecId', t => {
@@ -149,12 +156,15 @@ test('scopeSpecId', t => {
     let actualPrimaryUuid = actualAddr.primaryUuid;
     let actualSecondaryBytes = actualAddr.secondaryBytes;
 
+    let addrFromBytes = MetadataAddress.fromBytes(actualAddr.bytes);
+
     t.deepEqual(expectedKey, actualKey, "key")
     t.deepEqual(expectedPrefix, actualPrefix, "prefix")
     t.deepEqual(expectedPrimaryUuid, actualPrimaryUuid, "primary UUID")
     t.deepEqual(expectedSecondaryBytes, actualSecondaryBytes, "secondary bytes")
     t.deepEqual(expectedId, actualId, "as bech32 string")
     t.assert(expectedAddr.equals(actualAddr), "whole metadata address")
+    t.assert(expectedAddr.equals(addrFromBytes), "address from bytes")
 });
 
 test('contractSpecId', t => {
@@ -172,12 +182,15 @@ test('contractSpecId', t => {
     let actualPrimaryUuid = actualAddr.primaryUuid;
     let actualSecondaryBytes = actualAddr.secondaryBytes;
 
+    let addrFromBytes = MetadataAddress.fromBytes(actualAddr.bytes);
+
     t.deepEqual(expectedKey, actualKey, "key")
     t.deepEqual(expectedPrefix, actualPrefix, "prefix")
     t.deepEqual(expectedPrimaryUuid, actualPrimaryUuid, "primary UUID")
     t.deepEqual(expectedSecondaryBytes, actualSecondaryBytes, "secondary bytes")
     t.deepEqual(expectedId, actualId, "as bech32 string")
     t.assert(expectedAddr.equals(actualAddr), "whole metadata address")
+    t.assert(expectedAddr.equals(addrFromBytes), "address from bytes")
 });
 
 test('recordSpecId', t => {
@@ -195,10 +208,13 @@ test('recordSpecId', t => {
     let actualPrimaryUuid = actualAddr.primaryUuid;
     let actualSecondaryBytes = actualAddr.secondaryBytes;
 
+    let addrFromBytes = MetadataAddress.fromBytes(actualAddr.bytes);
+
     t.deepEqual(expectedKey, actualKey, "key")
     t.deepEqual(expectedPrefix, actualPrefix, "prefix")
     t.deepEqual(expectedPrimaryUuid, actualPrimaryUuid, "primary UUID")
     t.deepEqual(expectedSecondaryBytes, actualSecondaryBytes, "secondary bytes")
     t.deepEqual(expectedId, actualId, "as bech32 string")
     t.assert(expectedAddr.equals(actualAddr), "whole metadata address")
+    t.assert(expectedAddr.equals(addrFromBytes), "address from bytes")
 });
