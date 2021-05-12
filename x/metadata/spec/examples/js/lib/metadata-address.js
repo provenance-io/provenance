@@ -93,7 +93,7 @@ function uuidString(bytes) {
             retval = retval + "-";
         }
     }
-    return retval.toLocaleLowerCase();
+    return retval.toLowerCase();
 }
 
 /**
