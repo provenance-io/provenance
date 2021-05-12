@@ -72,16 +72,21 @@ func MetadataAddressFromBech32(address string) (MetadataAddress, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(bz) == 0 {
-		return nil, fmt.Errorf("no bytes found in metadata address")
+	err = validateBytes(bz)
+	if err != nil {
+		return nil, err
 	}
 	expectedHrp := getPrefixFromKey(bz[0])
 	if hrp != expectedHrp {
 		return nil, fmt.Errorf("incorrect hrp: expected %s, actual %s", expectedHrp, hrp)
 	}
-	expectedLength := getExpectedLengthFromKey(bz[0])
-	if expectedLength != len(bz) {
-		return nil, fmt.Errorf("incorrect data length for %s address: expected %d, actual %d", hrp, expectedLength, len(bz))
+	return bz, nil
+}
+
+func MetadataAddressFromBytes(bz []byte) (MetadataAddress, error) {
+	err := validateBytes(bz)
+	if err != nil {
+		return nil, err
 	}
 	return bz, nil
 }
@@ -206,22 +211,30 @@ func getPrefixFromKey(key byte) string {
 	}
 }
 
-// getExpectedLengthFromKey gets the expected length of an address with the provided key byte.
-func getExpectedLengthFromKey(key byte) int {
-	switch key {
-	case KeyScope:
-		return 17
-	case KeySession:
-		return 33
-	case KeyRecord:
-		return 33
-	case KeyScopeSpecification:
-		return 17
-	case KeyContractSpecification:
-		return 17
-	case KeyRecordSpecification:
-		return 33
-	default:
-		panic(fmt.Errorf("invalid key: %d", key))
+// validateBytes makes sure the provided bytes have a correct key and length.
+func validateBytes(bz []byte) error {
+	if len(bz) == 0 {
+		return fmt.Errorf("no bytes found in metadata address")
 	}
+	expectedLength := 0
+	switch bz[0] {
+	case KeyScope:
+		expectedLength = 17
+	case KeySession:
+		expectedLength = 33
+	case KeyRecord:
+		expectedLength = 33
+	case KeyScopeSpecification:
+		expectedLength = 17
+	case KeyContractSpecification:
+		expectedLength = 17
+	case KeyRecordSpecification:
+		expectedLength = 33
+	default:
+		return fmt.Errorf("invalid key: %d", bz[0])
+	}
+	if expectedLength != len(bz) {
+		return fmt.Errorf("incorrect data length for %s address: expected %d, actual %d", getPrefixFromKey(bz[0]), expectedLength, len(bz))
+	}
+	return nil
 }

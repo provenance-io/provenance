@@ -67,6 +67,14 @@ func mustGetMetadataAddressFromBech32(str string) MetadataAddress {
 	return retval
 }
 
+func mustGetMetadataAddressFromBytes(bz []byte) MetadataAddress {
+	retval, err := MetadataAddressFromBytes(bz)
+	if err != nil {
+		panic(err)
+	}
+	return retval
+}
+
 func (s MetadataAddressTestSuite) TestScopeID() {
 	expectedAddr := mustGetMetadataAddressFromBech32(s.scopeIDStr)
 	expectedID := s.scopeIDStr
@@ -82,12 +90,15 @@ func (s MetadataAddressTestSuite) TestScopeID() {
 	actualPrimaryUuid := actualAddr.GetPrimaryUUID()
 	actualSecondaryBytes := actualAddr.GetSecondaryBytes()
 
+	addrFromBytes := mustGetMetadataAddressFromBytes(actualAddr.Bytes())
+
 	s.Assert().Equal(expectedKey, actualKey, "key")
 	s.Assert().Equal(expectedPrefix, actualPrefix, "prefix")
 	s.Assert().Equal(expectedPrimaryUUID, actualPrimaryUuid, "primary uuid")
 	s.Assert().Equal(expectedSecondaryBytes, actualSecondaryBytes, "secondary bytes")
 	s.Assert().Equal(expectedID, actualId, "as bech32 strings")
 	s.Assert().Equal(expectedAddr, actualAddr, "whole metadata address")
+	s.Assert().Equal(expectedAddr, addrFromBytes, "address from bytes")
 	s.Assert().True(expectedAddr.Equals(actualAddr), "%s.Equals(%s)", expectedAddr, actualAddr)
 }
 
@@ -106,12 +117,15 @@ func (s MetadataAddressTestSuite) TestSessionID() {
 	actualPrimaryUuid := actualAddr.GetPrimaryUUID()
 	actualSecondaryBytes := actualAddr.GetSecondaryBytes()
 
+	addrFromBytes := mustGetMetadataAddressFromBytes(actualAddr.Bytes())
+
 	s.Assert().Equal(expectedKey, actualKey, "key")
 	s.Assert().Equal(expectedPrefix, actualPrefix, "prefix")
 	s.Assert().Equal(expectedPrimaryUUID, actualPrimaryUuid, "primary uuid")
 	s.Assert().Equal(expectedSecondaryBytes, actualSecondaryBytes, "secondary bytes")
 	s.Assert().Equal(expectedID, actualId, "as bech32 strings")
 	s.Assert().Equal(expectedAddr, actualAddr, "whole metadata address")
+	s.Assert().Equal(expectedAddr, addrFromBytes, "address from bytes")
 	s.Assert().True(expectedAddr.Equals(actualAddr), "%s.Equals(%s)", expectedAddr, actualAddr)
 }
 
@@ -130,12 +144,15 @@ func (s MetadataAddressTestSuite) TestRecordID() {
 	actualPrimaryUuid := actualAddr.GetPrimaryUUID()
 	actualSecondaryBytes := actualAddr.GetSecondaryBytes()
 
+	addrFromBytes := mustGetMetadataAddressFromBytes(actualAddr.Bytes())
+
 	s.Assert().Equal(expectedKey, actualKey, "key")
 	s.Assert().Equal(expectedPrefix, actualPrefix, "prefix")
 	s.Assert().Equal(expectedPrimaryUUID, actualPrimaryUuid, "primary uuid")
 	s.Assert().Equal(expectedSecondaryBytes, actualSecondaryBytes, "secondary bytes")
 	s.Assert().Equal(expectedID, actualId, "as bech32 strings")
 	s.Assert().Equal(expectedAddr, actualAddr, "whole metadata address")
+	s.Assert().Equal(expectedAddr, addrFromBytes, "address from bytes")
 	s.Assert().True(expectedAddr.Equals(actualAddr), "%s.Equals(%s)", expectedAddr, actualAddr)
 }
 
@@ -154,12 +171,15 @@ func (s MetadataAddressTestSuite) TestScopeSpecID() {
 	actualPrimaryUuid := actualAddr.GetPrimaryUUID()
 	actualSecondaryBytes := actualAddr.GetSecondaryBytes()
 
+	addrFromBytes := mustGetMetadataAddressFromBytes(actualAddr.Bytes())
+
 	s.Assert().Equal(expectedKey, actualKey, "key")
 	s.Assert().Equal(expectedPrefix, actualPrefix, "prefix")
 	s.Assert().Equal(expectedPrimaryUUID, actualPrimaryUuid, "primary uuid")
 	s.Assert().Equal(expectedSecondaryBytes, actualSecondaryBytes, "secondary bytes")
 	s.Assert().Equal(expectedID, actualId, "as bech32 strings")
 	s.Assert().Equal(expectedAddr, actualAddr, "whole metadata address")
+	s.Assert().Equal(expectedAddr, addrFromBytes, "address from bytes")
 	s.Assert().True(expectedAddr.Equals(actualAddr), "%s.Equals(%s)", expectedAddr, actualAddr)
 }
 
@@ -178,12 +198,15 @@ func (s MetadataAddressTestSuite) TestContractSpecID() {
 	actualPrimaryUuid := actualAddr.GetPrimaryUUID()
 	actualSecondaryBytes := actualAddr.GetSecondaryBytes()
 
+	addrFromBytes := mustGetMetadataAddressFromBytes(actualAddr.Bytes())
+
 	s.Assert().Equal(expectedKey, actualKey, "key")
 	s.Assert().Equal(expectedPrefix, actualPrefix, "prefix")
 	s.Assert().Equal(expectedPrimaryUUID, actualPrimaryUuid, "primary uuid")
 	s.Assert().Equal(expectedSecondaryBytes, actualSecondaryBytes, "secondary bytes")
 	s.Assert().Equal(expectedID, actualId, "as bech32 strings")
 	s.Assert().Equal(expectedAddr, actualAddr, "whole metadata address")
+	s.Assert().Equal(expectedAddr, addrFromBytes, "address from bytes")
 	s.Assert().True(expectedAddr.Equals(actualAddr), "%s.Equals(%s)", expectedAddr, actualAddr)
 }
 
@@ -202,11 +225,14 @@ func (s MetadataAddressTestSuite) TestRecordSpecID() {
 	actualPrimaryUuid := actualAddr.GetPrimaryUUID()
 	actualSecondaryBytes := actualAddr.GetSecondaryBytes()
 
+	addrFromBytes := mustGetMetadataAddressFromBytes(actualAddr.Bytes())
+
 	s.Assert().Equal(expectedKey, actualKey, "key")
 	s.Assert().Equal(expectedPrefix, actualPrefix, "prefix")
 	s.Assert().Equal(expectedPrimaryUUID, actualPrimaryUuid, "primary uuid")
 	s.Assert().Equal(expectedSecondaryBytes, actualSecondaryBytes, "secondary bytes")
 	s.Assert().Equal(expectedID, actualId, "as bech32 strings")
 	s.Assert().Equal(expectedAddr, actualAddr, "whole metadata address")
+	s.Assert().Equal(expectedAddr, addrFromBytes, "address from bytes")
 	s.Assert().True(expectedAddr.Equals(actualAddr), "%s.Equals(%s)", expectedAddr, actualAddr)
 }
