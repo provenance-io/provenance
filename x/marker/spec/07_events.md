@@ -15,7 +15,6 @@ The marker module emits the following events:
   - [Burn](#burn)
   - [Withdraw](#withdraw)
   - [Transfer](#transfer)
-  - [Withdraw Asset](#withdraw-asset)
 
 
 
