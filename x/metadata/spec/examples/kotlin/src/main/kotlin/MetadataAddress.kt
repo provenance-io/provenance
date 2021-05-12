@@ -61,11 +61,11 @@ data class MetadataAddress internal constructor(val bytes: ByteArray) {
         /** Create a MetadataAddress object from a bech32 address representation of a MetadataAddress. */
         fun fromBech32(bech32Value: String): MetadataAddress {
             val (hrp, data) = decodeAndConvert(bech32Value)
+            validateBytes(data)
             val prefix = getPrefixFromKey(data[0])
             if (hrp != prefix) {
                 throw IllegalArgumentException("Incorrect HRP: Expected ${prefix}, Actual: ${hrp}.")
             }
-            validateBytes(data)
             return MetadataAddress(data)
         }
 
