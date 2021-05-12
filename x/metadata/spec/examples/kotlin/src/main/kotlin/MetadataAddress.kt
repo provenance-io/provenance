@@ -1,8 +1,5 @@
 package io.provenance
 
-import io.provenance.kbech32.Bech32
-import io.provenance.kbech32.Bech32Data
-import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 import java.security.MessageDigest
 import java.util.UUID
@@ -60,7 +57,7 @@ data class MetadataAddress internal constructor(val bytes: ByteArray) {
 
         /** Create a MetadataAddress object from a bech32 address representation of a MetadataAddress. */
         fun fromBech32(bech32Value: String): MetadataAddress {
-            val (hrp, data) = decodeAndConvert(bech32Value)
+            val (hrp, data) = Bech32.decode(bech32Value)
             validateBytes(data)
             val prefix = getPrefixFromKey(data[0])
             if (hrp != prefix) {
@@ -132,60 +129,6 @@ data class MetadataAddress internal constructor(val bytes: ByteArray) {
         /** Hashes a string and gets the bytes desired for a MetadataAddress. */
         private fun asHashedBytes(str: String) =
             MessageDigest.getInstance("SHA-256").digest(str.trim().toLowerCase().toByteArray()).copyOfRange(0, 16)
-
-        /**
-         * Converts from a base64 encoded ByteArray to base32 encoded ByteArray and then to bech32 address string.
-         */
-        private fun convertAndEncode(humanReadablePart: String, dataBase64: ByteArray) =
-            Bech32.encode(humanReadablePart, convertBits(dataBase64, 8, 5, true))
-
-        /**
-         * Decodes a bech32 encoded string and converts to base64 encoded bytes.
-         * Note: Even though this returns an object named "Bech32Data" the data is actual base64 encoded.
-         */
-        private fun decodeAndConvert(bech32: String): Bech32Data {
-            val (hrp, dataBase32) = Bech32.decode(bech32)
-            val dataBase64 = convertBits(dataBase32, 5, 8, false)
-            return Bech32Data(hrp, dataBase64)
-        }
-
-        // convertBits Taken from [Bitcoinj SegwitAddress Java implementation](https://github.com/bitcoinj/bitcoinj/blob/31c7e5fbceb9884cb02d2dabc755009caa2d613e/core/src/main/java/org/bitcoinj/core/SegwitAddress.java)
-        /**
-         * converts a ByteArray where each byte is encoding fromBits bits,
-         * to a ByteArray where each byte is encoding toBits bits.
-         */
-        private fun convertBits(data: ByteArray, fromBits: Int, toBits: Int, pad: Boolean): ByteArray {
-            if (fromBits < 1 || fromBits > 8 || toBits < 1 || toBits > 8) {
-                throw IllegalArgumentException("only bit groups between 1 and 8 allowed")
-            }
-
-            var acc = 0
-            var bits = 0
-            val out = ByteArrayOutputStream(64)
-            val maxv = (1 shl toBits) - 1
-            val maxAcc = (1 shl (fromBits + toBits - 1)) - 1
-
-            for (b in data) {
-                val value = b.toInt() and 0xff
-                if ((value ushr fromBits) != 0) {
-                    throw IllegalArgumentException(String.format("Input value '%X' exceeds '%d' bit size", value, fromBits))
-                }
-                acc = ((acc shl fromBits) or value) and maxAcc
-                bits += fromBits
-                while (bits >= toBits) {
-                    bits -= toBits
-                    out.write((acc ushr bits) and maxv)
-                }
-            }
-            if (pad) {
-                if (bits > 0) {
-                    out.write((acc shl (toBits - bits)) and maxv)
-                }
-            } else if (bits >= fromBits || ((acc shl (toBits - bits)) and maxv) != 0) {
-                throw IllegalArgumentException("Could not convert bits, invalid padding")
-            }
-            return out.toByteArray()
-        }
     }
 
     /** Gets the key byte for this MetadataAddress. */
@@ -201,7 +144,7 @@ data class MetadataAddress internal constructor(val bytes: ByteArray) {
     fun getSecondaryBytes() = if (this.bytes.size <= 17) byteArrayOf() else bytes.copyOfRange(17, this.bytes.size)
 
     /** returns this MetadataAddress as a bech32 address string, e.g. "scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel" */
-    override fun toString() = convertAndEncode(getPrefixFromKey(this.bytes[0]), this.bytes)
+    override fun toString() = Bech32.encode(getPrefixFromKey(this.bytes[0]), this.bytes)
 
     /** hashCode implementation for a MetadataAddress. */
     override fun hashCode() = this.bytes.contentHashCode()
