@@ -15,7 +15,7 @@ function isAnArray(thing) {
         return false;
     }
     // Object.prototype.toString.call(thing) will return something like "[object Uint8Array]".
-    // We If the last thing ends in "Array" then close enough. Gotta include the ']' too though.
+    // If the last thing ends in "Array" then close enough. Gotta include the ']' too though.
     return Array.isArray(thing) || /Array]$/.test(Object.prototype.toString.call(thing));
 
 }
