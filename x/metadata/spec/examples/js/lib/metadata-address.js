@@ -103,9 +103,11 @@ function uuidString(bytes) {
  */
 function getHashedBytes(string) {
     let sha256Sum = sha256(string);
-    // Each word is 32 bits, but we want them as 8 bits.
-    // A sha256 sum is 32 bytes, so there ends up being 4 words.
-    // For MetadataAddress purposes, we only care about the first 16 bytes or 2 words.
+    // A sha256 sum is 32 bytes = 256 bits.
+    // That sha256 function returns words that are 32 bits.
+    // We want the info in 8 bit (1 byte) chunks, though.
+    // For MetadataAddress purposes, we also only care about the first 16 bytes.
+    // 16 bytes * 8 bits/byte / 32 bits/word = 4 words. Each word has 4 bytes.
     let bytes = [];
     for (let i = 0; i < 4; i++) {
         bytes.push(
