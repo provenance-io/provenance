@@ -59,12 +59,15 @@ class MetadataAddressTest {
         val actualPrimaryUuid = actualAddr.getPrimaryUuid()
         val actualSecondaryBytes = actualAddr.getSecondaryBytes()
 
+        val addrFromBytes = MetadataAddress.fromBytes(actualAddr.bytes)
+
         assertEquals(expectedKey, actualKey, "key")
         assertEquals(expectedPrefix, actualPrefix, "prefix")
         assertEquals(expectedPrimaryUuid, actualPrimaryUuid, "primary uuid")
         assertArrayEquals(expectedSecondaryBytes, actualSecondaryBytes, "secondary bytes")
         assertEquals(expectedId, actualId, "as bech32 strings")
         assertEquals(expectedAddr, actualAddr, "whole metadata address")
+        assertEquals(expectedAddr, addrFromBytes, "address from bytes")
         assertEquals(expectedAddr.hashCode(), actualAddr.hashCode(), "hash codes")
     }
 
@@ -84,12 +87,15 @@ class MetadataAddressTest {
         val actualPrimaryUuid = actualAddr.getPrimaryUuid()
         val actualSecondaryBytes = actualAddr.getSecondaryBytes()
 
+        val addrFromBytes = MetadataAddress.fromBytes(actualAddr.bytes)
+
         assertEquals(expectedKey, actualKey, "key")
         assertEquals(expectedPrefix, actualPrefix, "prefix")
         assertEquals(expectedPrimaryUuid, actualPrimaryUuid, "primary uuid")
         assertArrayEquals(expectedSecondaryBytes, actualSecondaryBytes, "secondary bytes")
         assertEquals(expectedId, actualId, "as bech32 strings")
         assertEquals(expectedAddr, actualAddr, "whole metadata address")
+        assertEquals(expectedAddr, addrFromBytes, "address from bytes")
         assertEquals(expectedAddr.hashCode(), actualAddr.hashCode(), "hash codes")
     }
 
@@ -109,12 +115,15 @@ class MetadataAddressTest {
         val actualPrimaryUuid = actualAddr.getPrimaryUuid()
         val actualSecondaryBytes = actualAddr.getSecondaryBytes()
 
+        val addrFromBytes = MetadataAddress.fromBytes(actualAddr.bytes)
+
         assertEquals(expectedKey, actualKey, "key")
         assertEquals(expectedPrefix, actualPrefix, "prefix")
         assertEquals(expectedPrimaryUuid, actualPrimaryUuid, "primary uuid")
         assertArrayEquals(expectedSecondaryBytes, actualSecondaryBytes, "secondary bytes")
         assertEquals(expectedId, actualId, "as bech32 strings")
         assertEquals(expectedAddr, actualAddr, "whole metadata address")
+        assertEquals(expectedAddr, addrFromBytes, "address from bytes")
         assertEquals(expectedAddr.hashCode(), actualAddr.hashCode(), "hash codes")
     }
 
@@ -134,12 +143,15 @@ class MetadataAddressTest {
         val actualPrimaryUuid = actualAddr.getPrimaryUuid()
         val actualSecondaryBytes = actualAddr.getSecondaryBytes()
 
+        val addrFromBytes = MetadataAddress.fromBytes(actualAddr.bytes)
+
         assertEquals(expectedKey, actualKey, "key")
         assertEquals(expectedPrefix, actualPrefix, "prefix")
         assertEquals(expectedPrimaryUuid, actualPrimaryUuid, "primary uuid")
         assertArrayEquals(expectedSecondaryBytes, actualSecondaryBytes, "secondary bytes")
         assertEquals(expectedId, actualId, "as bech32 strings")
         assertEquals(expectedAddr, actualAddr, "whole metadata address")
+        assertEquals(expectedAddr, addrFromBytes, "address from bytes")
         assertEquals(expectedAddr.hashCode(), actualAddr.hashCode(), "hash codes")
     }
 
@@ -159,12 +171,15 @@ class MetadataAddressTest {
         val actualPrimaryUuid = actualAddr.getPrimaryUuid()
         val actualSecondaryBytes = actualAddr.getSecondaryBytes()
 
+        val addrFromBytes = MetadataAddress.fromBytes(actualAddr.bytes)
+
         assertEquals(expectedKey, actualKey, "key")
         assertEquals(expectedPrefix, actualPrefix, "prefix")
         assertEquals(expectedPrimaryUuid, actualPrimaryUuid, "primary uuid")
         assertArrayEquals(expectedSecondaryBytes, actualSecondaryBytes, "secondary bytes")
         assertEquals(expectedId, actualId, "as bech32 strings")
         assertEquals(expectedAddr, actualAddr, "whole metadata address")
+        assertEquals(expectedAddr, addrFromBytes, "address from bytes")
         assertEquals(expectedAddr.hashCode(), actualAddr.hashCode(), "hash codes")
     }
 
@@ -184,12 +199,15 @@ class MetadataAddressTest {
         val actualPrimaryUuid = actualAddr.getPrimaryUuid()
         val actualSecondaryBytes = actualAddr.getSecondaryBytes()
 
+        val addrFromBytes = MetadataAddress.fromBytes(actualAddr.bytes)
+
         assertEquals(expectedKey, actualKey, "key")
         assertEquals(expectedPrefix, actualPrefix, "prefix")
         assertEquals(expectedPrimaryUuid, actualPrimaryUuid, "primary uuid")
         assertArrayEquals(expectedSecondaryBytes, actualSecondaryBytes, "secondary bytes")
         assertEquals(expectedId, actualId, "as bech32 strings")
         assertEquals(expectedAddr, actualAddr, "whole metadata address")
+        assertEquals(expectedAddr, addrFromBytes, "address from bytes")
         assertEquals(expectedAddr.hashCode(), actualAddr.hashCode(), "hash codes")
     }
 }

@@ -46,7 +46,6 @@ data class MetadataAddress internal constructor(val bytes: ByteArray) {
         fun forScopeSpecification(scopeSpecUuid: UUID) =
             MetadataAddress(byteArrayOf(KEY_SCOPE_SPECIFICATION).plus(uuidAsByteArray(scopeSpecUuid)))
 
-
         /** Create a MetadataAddress for a Contract Specification. */
         fun forContractSpecification(contractSpecUuid: UUID) =
             MetadataAddress(byteArrayOf(KEY_CONTRACT_SPECIFICATION).plus(uuidAsByteArray(contractSpecUuid)))
@@ -66,7 +65,33 @@ data class MetadataAddress internal constructor(val bytes: ByteArray) {
             if (hrp != prefix) {
                 throw IllegalArgumentException("Incorrect HRP: Expected ${prefix}, Actual: ${hrp}.")
             }
-            val expectedLength = when (data[0]) {
+            validateBytes(data)
+            return MetadataAddress(data)
+        }
+
+        /** Create a MetadataAddress from a ByteArray. */
+        fun fromBytes(bytes: ByteArray): MetadataAddress {
+            validateBytes(bytes)
+            return MetadataAddress(bytes)
+        }
+
+        /** Get the prefix that corresponds to the provided key Byte. */
+        private fun getPrefixFromKey(key: Byte) =
+            when (key) {
+                KEY_SCOPE -> PREFIX_SCOPE
+                KEY_SESSION -> PREFIX_SESSION
+                KEY_RECORD -> PREFIX_RECORD
+                KEY_SCOPE_SPECIFICATION -> PREFIX_SCOPE_SPECIFICATION
+                KEY_CONTRACT_SPECIFICATION -> PREFIX_CONTRACT_SPECIFICATION
+                KEY_RECORD_SPECIFICATION -> PREFIX_RECORD_SPECIFICATION
+                else -> {
+                    throw IllegalArgumentException("Invalid key: $key")
+                }
+            }
+
+        /** Checks that the data has a correct key and length. Throws IllegalArgumentException if not. */
+        private fun validateBytes(bytes: ByteArray) {
+            val expectedLength = when (bytes[0]) {
                 KEY_SCOPE -> 17
                 KEY_SESSION -> 33
                 KEY_RECORD -> 33
@@ -74,13 +99,12 @@ data class MetadataAddress internal constructor(val bytes: ByteArray) {
                 KEY_CONTRACT_SPECIFICATION -> 17
                 KEY_RECORD_SPECIFICATION -> 33
                 else -> {
-                    throw IllegalArgumentException("Invalid first byte: ${data[0]}")
+                    throw IllegalArgumentException("Invalid key: ${bytes[0]}")
                 }
             }
-            if (expectedLength != data.size) {
-                throw IllegalArgumentException("Incorrect data length for type ${hrp}: Expected ${expectedLength}, Actual: ${data.size}.")
+            if (expectedLength != bytes.size) {
+                throw IllegalArgumentException("Incorrect data length for type ${getPrefixFromKey(bytes[0])}: Expected ${expectedLength}, Actual: ${bytes.size}.")
             }
-            return MetadataAddress(data)
         }
 
         /** Converts a UUID to a ByteArray. */
@@ -108,20 +132,6 @@ data class MetadataAddress internal constructor(val bytes: ByteArray) {
         /** Hashes a string and gets the bytes desired for a MetadataAddress. */
         private fun asHashedBytes(str: String) =
             MessageDigest.getInstance("SHA-256").digest(str.trim().toLowerCase().toByteArray()).copyOfRange(0, 16)
-
-        /** Get the prefix that corresponds to the provided key Byte. */
-        private fun getPrefixFromKey(key: Byte) =
-            when (key) {
-                KEY_SCOPE -> PREFIX_SCOPE
-                KEY_SESSION -> PREFIX_SESSION
-                KEY_RECORD -> PREFIX_RECORD
-                KEY_SCOPE_SPECIFICATION -> PREFIX_SCOPE_SPECIFICATION
-                KEY_CONTRACT_SPECIFICATION -> PREFIX_CONTRACT_SPECIFICATION
-                KEY_RECORD_SPECIFICATION -> PREFIX_RECORD_SPECIFICATION
-                else -> {
-                    throw IllegalArgumentException("Invalid key: $key")
-                }
-            }
 
         /**
          * Converts from a base64 encoded ByteArray to base32 encoded ByteArray and then to bech32 address string.
