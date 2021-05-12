@@ -2,9 +2,7 @@ package io.provenance
 
 import java.io.ByteArrayOutputStream
 
-/**
- * Bech32 Data encoding instance containing data for encoding as well as a human readable prefix
- */
+/** Data involved with a Bech32 address */
 data class Bech32Data(val hrp: String, val data: ByteArray) {
 
     /**
@@ -48,9 +46,7 @@ data class Bech32Data(val hrp: String, val data: ByteArray) {
     }
 }
 
-/**
- * BIP173 compliant processing functions for handling Bech32 encoding and decoding.
- */
+/** BIP173 compliant processing functions for handling Bech32 encoding and decoding. */
 class Bech32 {
     companion object {
         private const val CHECKSUM_SIZE = 6
@@ -62,9 +58,7 @@ class Bech32 {
         private const val charset = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
         private val gen = intArrayOf(0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3)
 
-        /**
-         * Decodes a Bech32 String
-         */
+        /** Decodes a Bech32 String */
         fun decode(bech32: String): Bech32Data {
             require(bech32.length in MIN_VALID_LENGTH..MAX_VALID_LENGTH) { "invalid bech32 string length" }
             require(bech32.toCharArray().none { c -> c.toInt() < MIN_VALID_CODEPOINT || c.toInt() > MAX_VALID_CODEPOINT })
@@ -97,9 +91,7 @@ class Bech32 {
         fun encode(hrp: String, eightBitData: ByteArray) =
             encodeFiveBitData(hrp, convertBits(eightBitData, 8, 5, true))
 
-        /**
-         * Encodes data 5-bit bytes (data) with a given human readable portion (hrp) into a bech32 string.
-         */
+        /** Encodes 5-bit bytes (fiveBitData) with a given human readable portion (hrp) into a bech32 string. */
         private fun encodeFiveBitData(hrp: String, fiveBitData: ByteArray): String {
             return (fiveBitData.plus(checksum(hrp, fiveBitData.toTypedArray()))
                 .map { b -> charset[b.toInt()] }).joinToString("", hrp + "1")
@@ -140,9 +132,7 @@ class Bech32 {
             return out.toByteArray()
         }
 
-        /**
-         * Calculates a bech32 checksum based on BIP 173 specification
-         */
+        /** Calculates a bech32 checksum based on BIP 173 specification */
         private fun checksum(hrp: String, data: Array<Byte>): ByteArray {
             val values = expandHrp(hrp)
                 .plus(data.map { d -> d.toInt() })
@@ -155,18 +145,14 @@ class Bech32 {
             }.toByteArray()
         }
 
-        /**
-         * Expands the human readable prefix per BIP173 for Checksum encoding
-         */
+        /** Expands the human readable prefix per BIP173 for Checksum encoding */
         private fun expandHrp(hrp: String) =
             hrp.map { c -> c.toInt() shr 5 }
                 .plus(0)
                 .plus(hrp.map { c -> c.toInt() and 31 })
                 .toIntArray()
 
-        /**
-         * Polynomial division function for checksum calculation.  For details see BIP173
-         */
+        /** Polynomial division function for checksum calculation.  For details see BIP173 */
         private fun polymod(values: IntArray): Int {
             var chk = 1
             return values.map { v ->
