@@ -167,6 +167,8 @@ func (s *SessionKeeperTestSuite) TestMetadataValidateSessionUpdate() {
 	partiesInvolved := []types.PartyType{types.PartyType_PARTY_TYPE_AFFILIATE}
 	contractSpec := types.NewContractSpecification(s.contractSpecID, types.NewDescription("name", "desc", "url", "icon"), []string{s.user1}, partiesInvolved, &types.ContractSpecification_Hash{"hash"}, "processname")
 	s.app.MetadataKeeper.SetContractSpecification(s.ctx, *contractSpec)
+	scopeSpec := types.NewScopeSpecification(s.scopeSpecID, nil, []string{s.user1}, partiesInvolved, []types.MetadataAddress{s.contractSpecID})
+	s.app.MetadataKeeper.SetScopeSpecification(s.ctx, *scopeSpec)
 
 	cases := map[string]struct {
 		existing *types.Session
