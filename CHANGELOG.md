@@ -38,6 +38,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Add Kotlin and Javascript examples for Metadata Addresses [#301](https://github.com/provenance-io/provenance/issues/301)
 
+### Bug Fixes
+
+* Prevent Record specs and Contract specs from being deleted while in use. [#290](https://github.com/provenance-io/provenance/issues/290)
+
 ## [v1.3.0](https://github.com/provenance-io/provenance/releases/tag/v1.3.0) - 2021-05-06
 
 ### Features
