@@ -138,6 +138,21 @@ func (k Keeper) ValidateSessionUpdate(ctx sdk.Context, existing *types.Session, 
 		return fmt.Errorf("cannot find contract specification %s", proposed.SpecificationId)
 	}
 
+	scopeSpec, found := k.GetScopeSpecification(ctx, scope.SpecificationId)
+	if !found {
+		return fmt.Errorf("scope spec not found with id %s", scope.SpecificationId)
+	}
+	scopeSpecHasContractSpec := false
+	for _, cSpecId := range scopeSpec.ContractSpecIds {
+		if cSpecId.Equals(proposed.SpecificationId) {
+			scopeSpecHasContractSpec = true
+			break
+		}
+	}
+	if !scopeSpecHasContractSpec {
+		return fmt.Errorf("contract spec %s not listed in scope spec %s", proposed.SpecificationId, scopeSpec.SpecificationId)
+	}
+
 	if len(proposed.GetName()) == 0 && existing == nil {
 		proposed.Name = contractSpec.ClassName
 	}
