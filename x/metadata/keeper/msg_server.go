@@ -191,7 +191,7 @@ func (k msgServer) WriteSession(
 		existing = &e
 		existingAudit = existing.Audit
 	}
-	if err := k.ValidateSessionUpdate(ctx, existing, msg.Session, msg.Signers); err != nil {
+	if err := k.ValidateSessionUpdate(ctx, existing, &msg.Session, msg.Signers); err != nil {
 		return nil, err
 	}
 
