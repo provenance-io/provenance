@@ -38,6 +38,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Add Kotlin and Javascript examples for Metadata Addresses [#301](https://github.com/provenance-io/provenance/issues/301)
 
+### Bug Fixes
+
+* When writing a session, make sure the scope spec of the containing scope, contains the session's contract spec.
+
 ## [v1.3.0](https://github.com/provenance-io/provenance/releases/tag/v1.3.0) - 2021-05-06
 
 ### Features
