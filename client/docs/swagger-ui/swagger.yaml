@@ -26103,6 +26103,12 @@ definitions:
 
               was set, its value is undefined otherwise
     description: QueryScanResponse is the response type for the Query/Attribute method.
+  provenance.attribute.v1.MsgAddAttributeResponse:
+    type: object
+    description: MsgAddAttributeResponse defines the Msg/Vote response type.
+  provenance.attribute.v1.MsgDeleteAttributeResponse:
+    type: object
+    description: MsgDeleteAttributeResponse defines the Msg/Vote response type.
   cosmos.bank.v1beta1.DenomUnit:
     type: object
     properties:
@@ -26893,6 +26899,55 @@ definitions:
     description: >-
       QuerySupplyResponse is the response type for the Query/MarkerSupply
       method.
+  provenance.marker.v1.MarkerType:
+    type: string
+    enum:
+      - MARKER_TYPE_UNSPECIFIED
+      - MARKER_TYPE_COIN
+      - MARKER_TYPE_RESTRICTED
+    default: MARKER_TYPE_UNSPECIFIED
+    description: >-
+      - MARKER_TYPE_UNSPECIFIED: MARKER_TYPE_UNSPECIFIED is an invalid/unknown
+      marker type.
+       - MARKER_TYPE_COIN: MARKER_TYPE_COIN is a marker that represents a standard fungible coin (default).
+       - MARKER_TYPE_RESTRICTED: MARKER_TYPE_RESTRICTED is a marker that represents a denom with send_enabled = false.
+    title: MarkerType defines the types of marker
+  provenance.marker.v1.MsgActivateResponse:
+    type: object
+    title: MsgActivateResponse defines the Msg/Activate response type
+  provenance.marker.v1.MsgAddAccessResponse:
+    type: object
+    title: MsgAddAccessResponse defines the Msg/AddAccess response type
+  provenance.marker.v1.MsgAddMarkerResponse:
+    type: object
+    title: MsgAddMarkerResponse defines the Msg/AddMarker response type
+  provenance.marker.v1.MsgBurnResponse:
+    type: object
+    title: MsgBurnResponse defines the Msg/Burn response type
+  provenance.marker.v1.MsgCancelResponse:
+    type: object
+    title: MsgCancelResponse defines the Msg/Cancel response type
+  provenance.marker.v1.MsgDeleteAccessResponse:
+    type: object
+    title: MsgDeleteAccessResponse defines the Msg/DeleteAccess response type
+  provenance.marker.v1.MsgDeleteResponse:
+    type: object
+    title: MsgDeleteResponse defines the Msg/Delete response type
+  provenance.marker.v1.MsgFinalizeResponse:
+    type: object
+    title: MsgFinalizeResponse defines the Msg/Finalize response type
+  provenance.marker.v1.MsgMintResponse:
+    type: object
+    title: MsgMintResponse defines the Msg/Mint response type
+  provenance.marker.v1.MsgSetDenomMetadataResponse:
+    type: object
+    title: MsgSetDenomMetadataResponse defines the Msg/SetDenomMetadata response type
+  provenance.marker.v1.MsgTransferResponse:
+    type: object
+    title: MsgTransferResponse defines the Msg/Transfer response type
+  provenance.marker.v1.MsgWithdrawResponse:
+    type: object
+    title: MsgWithdrawResponse defines the Msg/Withdraw response type
   provenance.metadata.v1.AuditFields:
     type: object
     properties:
@@ -34339,6 +34394,3194 @@ definitions:
     description: >-
       ValueOwnershipResponse is the response type for the Query/ValueOwnership
       RPC method.
+  provenance.metadata.v1.MsgAddScopeDataAccessResponse:
+    type: object
+    title: >-
+      MsgAddScopeDataAccessResponse is the response for adding data access
+      AccAddress to scope
+  provenance.metadata.v1.MsgAddScopeOwnerResponse:
+    type: object
+    title: >-
+      MsgAddScopeOwnerResponse is the response for adding owner AccAddresses to
+      scope
+  provenance.metadata.v1.MsgBindOSLocatorResponse:
+    type: object
+    properties:
+      locator:
+        type: object
+        properties:
+          owner:
+            type: string
+            title: account address the endpoint is owned by
+          locator_uri:
+            type: string
+            title: locator endpoint uri
+        description: >-
+          Defines an Locator object stored on chain, which represents a owner(
+          blockchain address) associated with a endpoint
+
+          uri for it's associated object store.
+    description: >-
+      MsgBindOSLocatorResponse is the response type for the Msg/BindOSLocator
+      RPC method.
+  provenance.metadata.v1.MsgDeleteContractSpecificationResponse:
+    type: object
+    description: >-
+      MsgDeleteContractSpecificationResponse is the response type for the
+      Msg/DeleteContractSpecification RPC method.
+  provenance.metadata.v1.MsgDeleteOSLocatorResponse:
+    type: object
+    properties:
+      locator:
+        type: object
+        properties:
+          owner:
+            type: string
+            title: account address the endpoint is owned by
+          locator_uri:
+            type: string
+            title: locator endpoint uri
+        description: >-
+          Defines an Locator object stored on chain, which represents a owner(
+          blockchain address) associated with a endpoint
+
+          uri for it's associated object store.
+    description: >-
+      MsgDeleteOSLocatorResponse is the response type for the
+      Msg/DeleteOSLocator RPC method.
+  provenance.metadata.v1.MsgDeleteRecordResponse:
+    type: object
+    description: >-
+      MsgDeleteRecordResponse is the response type for the Msg/DeleteRecord RPC
+      method.
+  provenance.metadata.v1.MsgDeleteRecordSpecificationResponse:
+    type: object
+    description: >-
+      MsgDeleteRecordSpecificationResponse is the response type for the
+      Msg/DeleteRecordSpecification RPC method.
+  provenance.metadata.v1.MsgDeleteScopeDataAccessResponse:
+    type: object
+    title: >-
+      MsgDeleteScopeDataAccessResponse is the response from removing data access
+      AccAddress to scope
+  provenance.metadata.v1.MsgDeleteScopeOwnerResponse:
+    type: object
+    title: >-
+      MsgDeleteScopeOwnerResponse is the response from removing owner AccAddress
+      to scope
+  provenance.metadata.v1.MsgDeleteScopeResponse:
+    type: object
+    description: >-
+      MsgDeleteScopeResponse is the response type for the Msg/DeleteScope RPC
+      method.
+  provenance.metadata.v1.MsgDeleteScopeSpecificationResponse:
+    type: object
+    description: >-
+      MsgDeleteScopeSpecificationResponse is the response type for the
+      Msg/DeleteScopeSpecification RPC method.
+  provenance.metadata.v1.MsgModifyOSLocatorResponse:
+    type: object
+    properties:
+      locator:
+        type: object
+        properties:
+          owner:
+            type: string
+            title: account address the endpoint is owned by
+          locator_uri:
+            type: string
+            title: locator endpoint uri
+        description: >-
+          Defines an Locator object stored on chain, which represents a owner(
+          blockchain address) associated with a endpoint
+
+          uri for it's associated object store.
+    description: >-
+      MsgModifyOSLocatorResponse is the response type for the
+      Msg/ModifyOSLocator RPC method.
+  provenance.metadata.v1.MsgP8eMemorializeContractResponse:
+    type: object
+    properties:
+      scope_id_info:
+        description: >-
+          scope_id_info contains information about the id/address of the scope
+          that was added or updated.
+        type: object
+        properties:
+          scope_id:
+            type: string
+            format: byte
+            description: scope_id is the raw bytes of the scope address.
+          scope_id_prefix:
+            type: string
+            format: byte
+            description: scope_id_prefix is the prefix portion of the scope_id.
+          scope_id_scope_uuid:
+            type: string
+            format: byte
+            description: scope_id_scope_uuid is the scope_uuid portion of the scope_id.
+          scope_addr:
+            type: string
+            description: scope_addr is the bech32 string version of the scope_id.
+          scope_uuid:
+            type: string
+            description: scope_uuid is the uuid hex string of the scope_id_scope_uuid.
+      session_id_info:
+        description: >-
+          session_id_info contains information about the id/address of the
+          session that was added or updated.
+        type: object
+        properties:
+          session_id:
+            type: string
+            format: byte
+            description: session_id is the raw bytes of the session address.
+          session_id_prefix:
+            type: string
+            format: byte
+            description: session_id_prefix is the prefix portion of the session_id.
+          session_id_scope_uuid:
+            type: string
+            format: byte
+            description: session_id_scope_uuid is the scope_uuid portion of the session_id.
+          session_id_session_uuid:
+            type: string
+            format: byte
+            description: >-
+              session_id_session_uuid is the session_uuid portion of the
+              session_id.
+          session_addr:
+            type: string
+            description: session_addr is the bech32 string version of the session_id.
+          session_uuid:
+            type: string
+            description: >-
+              session_uuid is the uuid hex string of the
+              session_id_session_uuid.
+          scope_id_info:
+            description: >-
+              scope_id_info is information about the scope id referenced in the
+              session_id.
+            type: object
+            properties:
+              scope_id:
+                type: string
+                format: byte
+                description: scope_id is the raw bytes of the scope address.
+              scope_id_prefix:
+                type: string
+                format: byte
+                description: scope_id_prefix is the prefix portion of the scope_id.
+              scope_id_scope_uuid:
+                type: string
+                format: byte
+                description: scope_id_scope_uuid is the scope_uuid portion of the scope_id.
+              scope_addr:
+                type: string
+                description: scope_addr is the bech32 string version of the scope_id.
+              scope_uuid:
+                type: string
+                description: scope_uuid is the uuid hex string of the scope_id_scope_uuid.
+      record_id_infos:
+        type: array
+        items:
+          type: object
+          properties:
+            record_id:
+              type: string
+              format: byte
+              description: record_id is the raw bytes of the record address.
+            record_id_prefix:
+              type: string
+              format: byte
+              description: record_id_prefix is the prefix portion of the record_id.
+            record_id_scope_uuid:
+              type: string
+              format: byte
+              description: record_id_scope_uuid is the scope_uuid portion of the record_id.
+            record_id_hashed_name:
+              type: string
+              format: byte
+              description: >-
+                record_id_hashed_name is the hashed name portion of the
+                record_id.
+            record_addr:
+              type: string
+              description: record_addr is the bech32 string version of the record_id.
+            scope_id_info:
+              description: >-
+                scope_id_info is information about the scope id referenced in
+                the record_id.
+              type: object
+              properties:
+                scope_id:
+                  type: string
+                  format: byte
+                  description: scope_id is the raw bytes of the scope address.
+                scope_id_prefix:
+                  type: string
+                  format: byte
+                  description: scope_id_prefix is the prefix portion of the scope_id.
+                scope_id_scope_uuid:
+                  type: string
+                  format: byte
+                  description: >-
+                    scope_id_scope_uuid is the scope_uuid portion of the
+                    scope_id.
+                scope_addr:
+                  type: string
+                  description: scope_addr is the bech32 string version of the scope_id.
+                scope_uuid:
+                  type: string
+                  description: >-
+                    scope_uuid is the uuid hex string of the
+                    scope_id_scope_uuid.
+          description: RecordIdInfo contains various info regarding a record id.
+        description: >-
+          record_id_infos contains information about the ids/addresses of the
+          records that were added or updated.
+    description: >-
+      MsgP8eMemorializeContractResponse is the response type for the
+      Msg/P8eMemorializeContract RPC method.
+  provenance.metadata.v1.MsgWriteContractSpecificationResponse:
+    type: object
+    properties:
+      contract_spec_id_info:
+        description: >-
+          contract_spec_id_info contains information about the id/address of the
+          contract specification that was added or
+
+          updated.
+        type: object
+        properties:
+          contract_spec_id:
+            type: string
+            format: byte
+            description: >-
+              contract_spec_id is the raw bytes of the contract specification
+              address.
+          contract_spec_id_prefix:
+            type: string
+            format: byte
+            description: >-
+              contract_spec_id_prefix is the prefix portion of the
+              contract_spec_id.
+          contract_spec_id_contract_spec_uuid:
+            type: string
+            format: byte
+            description: >-
+              contract_spec_id_contract_spec_uuid is the contract_spec_uuid
+              portion of the contract_spec_id.
+          contract_spec_addr:
+            type: string
+            description: >-
+              contract_spec_addr is the bech32 string version of the
+              contract_spec_id.
+          contract_spec_uuid:
+            type: string
+            description: >-
+              contract_spec_uuid is the uuid hex string of the
+              contract_spec_id_contract_spec_uuid.
+    description: >-
+      MsgWriteContractSpecificationResponse is the response type for the
+      Msg/WriteContractSpecification RPC method.
+  provenance.metadata.v1.MsgWriteP8eContractSpecResponse:
+    type: object
+    properties:
+      contract_spec_id_info:
+        description: >-
+          contract_spec_id_info contains information about the id/address of the
+          contract specification that was added or
+
+          updated.
+        type: object
+        properties:
+          contract_spec_id:
+            type: string
+            format: byte
+            description: >-
+              contract_spec_id is the raw bytes of the contract specification
+              address.
+          contract_spec_id_prefix:
+            type: string
+            format: byte
+            description: >-
+              contract_spec_id_prefix is the prefix portion of the
+              contract_spec_id.
+          contract_spec_id_contract_spec_uuid:
+            type: string
+            format: byte
+            description: >-
+              contract_spec_id_contract_spec_uuid is the contract_spec_uuid
+              portion of the contract_spec_id.
+          contract_spec_addr:
+            type: string
+            description: >-
+              contract_spec_addr is the bech32 string version of the
+              contract_spec_id.
+          contract_spec_uuid:
+            type: string
+            description: >-
+              contract_spec_uuid is the uuid hex string of the
+              contract_spec_id_contract_spec_uuid.
+      record_spec_id_infos:
+        type: array
+        items:
+          type: object
+          properties:
+            record_spec_id:
+              type: string
+              format: byte
+              description: >-
+                record_spec_id is the raw bytes of the record specification
+                address.
+            record_spec_id_prefix:
+              type: string
+              format: byte
+              description: >-
+                record_spec_id_prefix is the prefix portion of the
+                record_spec_id.
+            record_spec_id_contract_spec_uuid:
+              type: string
+              format: byte
+              description: >-
+                record_spec_id_contract_spec_uuid is the contract_spec_uuid
+                portion of the record_spec_id.
+            record_spec_id_hashed_name:
+              type: string
+              format: byte
+              description: >-
+                record_spec_id_hashed_name is the hashed name portion of the
+                record_spec_id.
+            record_spec_addr:
+              type: string
+              description: >-
+                record_spec_addr is the bech32 string version of the
+                record_spec_id.
+            contract_spec_id_info:
+              description: >-
+                contract_spec_id_info is information about the contract spec id
+                referenced in the record_spec_id.
+              type: object
+              properties:
+                contract_spec_id:
+                  type: string
+                  format: byte
+                  description: >-
+                    contract_spec_id is the raw bytes of the contract
+                    specification address.
+                contract_spec_id_prefix:
+                  type: string
+                  format: byte
+                  description: >-
+                    contract_spec_id_prefix is the prefix portion of the
+                    contract_spec_id.
+                contract_spec_id_contract_spec_uuid:
+                  type: string
+                  format: byte
+                  description: >-
+                    contract_spec_id_contract_spec_uuid is the
+                    contract_spec_uuid portion of the contract_spec_id.
+                contract_spec_addr:
+                  type: string
+                  description: >-
+                    contract_spec_addr is the bech32 string version of the
+                    contract_spec_id.
+                contract_spec_uuid:
+                  type: string
+                  description: >-
+                    contract_spec_uuid is the uuid hex string of the
+                    contract_spec_id_contract_spec_uuid.
+          description: >-
+            RecordSpecIdInfo contains various info regarding a record
+            specification id.
+        description: >-
+          record_spec_id_infos contains information about the ids/addresses of
+          the record specifications that were added or
+
+          updated.
+    description: >-
+      MsgWriteP8eContractSpecResponse is the response type for the
+      Msg/WriteP8eContractSpec RPC method.
+  provenance.metadata.v1.MsgWriteRecordResponse:
+    type: object
+    properties:
+      record_id_info:
+        type: object
+        properties:
+          record_id:
+            type: string
+            format: byte
+            description: record_id is the raw bytes of the record address.
+          record_id_prefix:
+            type: string
+            format: byte
+            description: record_id_prefix is the prefix portion of the record_id.
+          record_id_scope_uuid:
+            type: string
+            format: byte
+            description: record_id_scope_uuid is the scope_uuid portion of the record_id.
+          record_id_hashed_name:
+            type: string
+            format: byte
+            description: record_id_hashed_name is the hashed name portion of the record_id.
+          record_addr:
+            type: string
+            description: record_addr is the bech32 string version of the record_id.
+          scope_id_info:
+            description: >-
+              scope_id_info is information about the scope id referenced in the
+              record_id.
+            type: object
+            properties:
+              scope_id:
+                type: string
+                format: byte
+                description: scope_id is the raw bytes of the scope address.
+              scope_id_prefix:
+                type: string
+                format: byte
+                description: scope_id_prefix is the prefix portion of the scope_id.
+              scope_id_scope_uuid:
+                type: string
+                format: byte
+                description: scope_id_scope_uuid is the scope_uuid portion of the scope_id.
+              scope_addr:
+                type: string
+                description: scope_addr is the bech32 string version of the scope_id.
+              scope_uuid:
+                type: string
+                description: scope_uuid is the uuid hex string of the scope_id_scope_uuid.
+        description: RecordIdInfo contains various info regarding a record id.
+    description: >-
+      MsgWriteRecordResponse is the response type for the Msg/WriteRecord RPC
+      method.
+  provenance.metadata.v1.MsgWriteRecordSpecificationResponse:
+    type: object
+    properties:
+      record_spec_id_info:
+        type: object
+        properties:
+          record_spec_id:
+            type: string
+            format: byte
+            description: >-
+              record_spec_id is the raw bytes of the record specification
+              address.
+          record_spec_id_prefix:
+            type: string
+            format: byte
+            description: record_spec_id_prefix is the prefix portion of the record_spec_id.
+          record_spec_id_contract_spec_uuid:
+            type: string
+            format: byte
+            description: >-
+              record_spec_id_contract_spec_uuid is the contract_spec_uuid
+              portion of the record_spec_id.
+          record_spec_id_hashed_name:
+            type: string
+            format: byte
+            description: >-
+              record_spec_id_hashed_name is the hashed name portion of the
+              record_spec_id.
+          record_spec_addr:
+            type: string
+            description: >-
+              record_spec_addr is the bech32 string version of the
+              record_spec_id.
+          contract_spec_id_info:
+            description: >-
+              contract_spec_id_info is information about the contract spec id
+              referenced in the record_spec_id.
+            type: object
+            properties:
+              contract_spec_id:
+                type: string
+                format: byte
+                description: >-
+                  contract_spec_id is the raw bytes of the contract
+                  specification address.
+              contract_spec_id_prefix:
+                type: string
+                format: byte
+                description: >-
+                  contract_spec_id_prefix is the prefix portion of the
+                  contract_spec_id.
+              contract_spec_id_contract_spec_uuid:
+                type: string
+                format: byte
+                description: >-
+                  contract_spec_id_contract_spec_uuid is the contract_spec_uuid
+                  portion of the contract_spec_id.
+              contract_spec_addr:
+                type: string
+                description: >-
+                  contract_spec_addr is the bech32 string version of the
+                  contract_spec_id.
+              contract_spec_uuid:
+                type: string
+                description: >-
+                  contract_spec_uuid is the uuid hex string of the
+                  contract_spec_id_contract_spec_uuid.
+        description: >-
+          RecordSpecIdInfo contains various info regarding a record
+          specification id.
+    description: >-
+      MsgWriteRecordSpecificationResponse is the response type for the
+      Msg/WriteRecordSpecification RPC method.
+  provenance.metadata.v1.MsgWriteScopeResponse:
+    type: object
+    properties:
+      scope_id_info:
+        description: >-
+          scope_id_info contains information about the id/address of the scope
+          that was added or updated.
+        type: object
+        properties:
+          scope_id:
+            type: string
+            format: byte
+            description: scope_id is the raw bytes of the scope address.
+          scope_id_prefix:
+            type: string
+            format: byte
+            description: scope_id_prefix is the prefix portion of the scope_id.
+          scope_id_scope_uuid:
+            type: string
+            format: byte
+            description: scope_id_scope_uuid is the scope_uuid portion of the scope_id.
+          scope_addr:
+            type: string
+            description: scope_addr is the bech32 string version of the scope_id.
+          scope_uuid:
+            type: string
+            description: scope_uuid is the uuid hex string of the scope_id_scope_uuid.
+    description: >-
+      MsgWriteScopeResponse is the response type for the Msg/WriteScope RPC
+      method.
+  provenance.metadata.v1.MsgWriteScopeSpecificationResponse:
+    type: object
+    properties:
+      scope_spec_id_info:
+        description: >-
+          scope_spec_id_info contains information about the id/address of the
+          scope specification that was added or updated.
+        type: object
+        properties:
+          scope_spec_id:
+            type: string
+            format: byte
+            description: scope_spec_id is the raw bytes of the scope specification address.
+          scope_spec_id_prefix:
+            type: string
+            format: byte
+            description: scope_spec_id_prefix is the prefix portion of the scope_spec_id.
+          scope_spec_id_scope_spec_uuid:
+            type: string
+            format: byte
+            description: >-
+              scope_spec_id_scope_spec_uuid is the scope_spec_uuid portion of
+              the scope_spec_id.
+          scope_spec_addr:
+            type: string
+            description: scope_spec_addr is the bech32 string version of the scope_spec_id.
+          scope_spec_uuid:
+            type: string
+            description: >-
+              scope_spec_uuid is the uuid hex string of the
+              scope_spec_id_scope_spec_uuid.
+    description: >-
+      MsgWriteScopeSpecificationResponse is the response type for the
+      Msg/WriteScopeSpecification RPC method.
+  provenance.metadata.v1.MsgWriteSessionResponse:
+    type: object
+    properties:
+      session_id_info:
+        description: >-
+          session_id_info contains information about the id/address of the
+          session that was added or updated.
+        type: object
+        properties:
+          session_id:
+            type: string
+            format: byte
+            description: session_id is the raw bytes of the session address.
+          session_id_prefix:
+            type: string
+            format: byte
+            description: session_id_prefix is the prefix portion of the session_id.
+          session_id_scope_uuid:
+            type: string
+            format: byte
+            description: session_id_scope_uuid is the scope_uuid portion of the session_id.
+          session_id_session_uuid:
+            type: string
+            format: byte
+            description: >-
+              session_id_session_uuid is the session_uuid portion of the
+              session_id.
+          session_addr:
+            type: string
+            description: session_addr is the bech32 string version of the session_id.
+          session_uuid:
+            type: string
+            description: >-
+              session_uuid is the uuid hex string of the
+              session_id_session_uuid.
+          scope_id_info:
+            description: >-
+              scope_id_info is information about the scope id referenced in the
+              session_id.
+            type: object
+            properties:
+              scope_id:
+                type: string
+                format: byte
+                description: scope_id is the raw bytes of the scope address.
+              scope_id_prefix:
+                type: string
+                format: byte
+                description: scope_id_prefix is the prefix portion of the scope_id.
+              scope_id_scope_uuid:
+                type: string
+                format: byte
+                description: scope_id_scope_uuid is the scope_uuid portion of the scope_id.
+              scope_addr:
+                type: string
+                description: scope_addr is the bech32 string version of the scope_id.
+              scope_uuid:
+                type: string
+                description: scope_uuid is the uuid hex string of the scope_id_scope_uuid.
+    description: >-
+      MsgWriteSessionResponse is the response type for the Msg/WriteSession RPC
+      method.
+  provenance.metadata.v1.SessionIdComponents:
+    type: object
+    properties:
+      scope_uuid:
+        type: string
+        title: >-
+          scope_uuid is the uuid string for the scope, e.g.
+          "91978ba2-5f35-459a-86a7-feca1b0512e0"
+      scope_addr:
+        type: string
+        title: >-
+          scope_addr is the bech32 address string for the scope, g.g.
+          "scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"
+      session_uuid:
+        type: string
+        title: >-
+          session_uuid is a uuid string for identifying this session, e.g.
+          "5803f8bc-6067-4eb5-951f-2121671c2ec0"
+    description: >-
+      SessionIDComponents contains fields for the components that make up a
+      session id.
+  provenance.metadata.v1.p8e.Condition:
+    type: object
+    properties:
+      condition_name:
+        type: string
+      result:
+        type: object
+        properties:
+          output:
+            type: object
+            properties:
+              name:
+                type: string
+              hash:
+                type: string
+              classname:
+                type: string
+              ancestor:
+                type: object
+                properties:
+                  scope_uuid:
+                    title: |-
+                      [Req] [Scope.uuid]
+                      Scope ID
+                    type: object
+                    properties:
+                      value:
+                        type: string
+                  group_uuid:
+                    title: |-
+                      [Opt] [RecordGroup.group_uuid]
+                      require record to be within a specific group
+                    type: object
+                    properties:
+                      value:
+                        type: string
+                  hash:
+                    type: string
+                    title: >-
+                      [Opt] [Record.result_hash]
+
+                      specify a specific record inside a scope (and group) by
+                      result-hash
+                  name:
+                    type: string
+                    title: |-
+                      [Opt] [Record.result_name]
+                      specify a result-name of a record within a scope
+          result:
+            type: string
+            enum:
+              - RESULT_TYPE_UNKNOWN
+              - RESULT_TYPE_PASS
+              - RESULT_TYPE_SKIP
+              - RESULT_TYPE_FAIL
+            default: RESULT_TYPE_UNKNOWN
+            description: ' - RESULT_TYPE_SKIP: Couldn''t process the condition/consideration due to missing facts being generated by other considerations.'
+          recorded_at:
+            type: object
+            properties:
+              seconds:
+                type: string
+                format: int64
+                title: Represents seconds of UTC time since Unix epoch
+              nanos:
+                type: integer
+                format: int32
+                description: Non-negative fractions of a second at nanosecond resolution.
+            description: >-
+              A Timestamp represents a point in time using values relative to
+              the epoch.
+          error_message:
+            type: string
+  provenance.metadata.v1.p8e.ConditionSpec:
+    type: object
+    properties:
+      func_name:
+        type: string
+      input_specs:
+        type: array
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+            resource_location:
+              type: object
+              properties:
+                ref:
+                  type: object
+                  properties:
+                    scope_uuid:
+                      title: |-
+                        [Req] [Scope.uuid]
+                        Scope ID
+                      type: object
+                      properties:
+                        value:
+                          type: string
+                    group_uuid:
+                      title: |-
+                        [Opt] [RecordGroup.group_uuid]
+                        require record to be within a specific group
+                      type: object
+                      properties:
+                        value:
+                          type: string
+                    hash:
+                      type: string
+                      title: >-
+                        [Opt] [Record.result_hash]
+
+                        specify a specific record inside a scope (and group) by
+                        result-hash
+                    name:
+                      type: string
+                      title: |-
+                        [Opt] [Record.result_name]
+                        specify a result-name of a record within a scope
+                classname:
+                  type: string
+            signature:
+              type: object
+              properties:
+                algo:
+                  type: string
+                  title: Signature Detail
+                provider:
+                  type: string
+                signature:
+                  type: string
+                signer:
+                  title: Identity of signer
+                  type: object
+                  properties:
+                    signing_public_key:
+                      type: object
+                      properties:
+                        public_key_bytes:
+                          type: string
+                          format: byte
+                        type:
+                          type: string
+                          enum:
+                            - ELLIPTIC
+                          default: ELLIPTIC
+                        curve:
+                          type: string
+                          enum:
+                            - SECP256K1
+                            - P256
+                          default: SECP256K1
+                    encryption_public_key:
+                      type: object
+                      properties:
+                        public_key_bytes:
+                          type: string
+                          format: byte
+                        type:
+                          type: string
+                          enum:
+                            - ELLIPTIC
+                          default: ELLIPTIC
+                        curve:
+                          type: string
+                          enum:
+                            - SECP256K1
+                            - P256
+                          default: SECP256K1
+            type:
+              type: string
+              enum:
+                - DEFINITION_SPEC_TYPE_UNKNOWN
+                - DEFINITION_SPEC_TYPE_PROPOSED
+                - DEFINITION_SPEC_TYPE_FACT
+                - DEFINITION_SPEC_TYPE_FACT_LIST
+              default: DEFINITION_SPEC_TYPE_UNKNOWN
+      output_spec:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              name:
+                type: string
+              resource_location:
+                type: object
+                properties:
+                  ref:
+                    type: object
+                    properties:
+                      scope_uuid:
+                        title: |-
+                          [Req] [Scope.uuid]
+                          Scope ID
+                        type: object
+                        properties:
+                          value:
+                            type: string
+                      group_uuid:
+                        title: |-
+                          [Opt] [RecordGroup.group_uuid]
+                          require record to be within a specific group
+                        type: object
+                        properties:
+                          value:
+                            type: string
+                      hash:
+                        type: string
+                        title: >-
+                          [Opt] [Record.result_hash]
+
+                          specify a specific record inside a scope (and group)
+                          by result-hash
+                      name:
+                        type: string
+                        title: |-
+                          [Opt] [Record.result_name]
+                          specify a result-name of a record within a scope
+                  classname:
+                    type: string
+              signature:
+                type: object
+                properties:
+                  algo:
+                    type: string
+                    title: Signature Detail
+                  provider:
+                    type: string
+                  signature:
+                    type: string
+                  signer:
+                    title: Identity of signer
+                    type: object
+                    properties:
+                      signing_public_key:
+                        type: object
+                        properties:
+                          public_key_bytes:
+                            type: string
+                            format: byte
+                          type:
+                            type: string
+                            enum:
+                              - ELLIPTIC
+                            default: ELLIPTIC
+                          curve:
+                            type: string
+                            enum:
+                              - SECP256K1
+                              - P256
+                            default: SECP256K1
+                      encryption_public_key:
+                        type: object
+                        properties:
+                          public_key_bytes:
+                            type: string
+                            format: byte
+                          type:
+                            type: string
+                            enum:
+                              - ELLIPTIC
+                            default: ELLIPTIC
+                          curve:
+                            type: string
+                            enum:
+                              - SECP256K1
+                              - P256
+                            default: SECP256K1
+              type:
+                type: string
+                enum:
+                  - DEFINITION_SPEC_TYPE_UNKNOWN
+                  - DEFINITION_SPEC_TYPE_PROPOSED
+                  - DEFINITION_SPEC_TYPE_FACT
+                  - DEFINITION_SPEC_TYPE_FACT_LIST
+                default: DEFINITION_SPEC_TYPE_UNKNOWN
+  provenance.metadata.v1.p8e.Consideration:
+    type: object
+    properties:
+      consideration_name:
+        type: string
+      inputs:
+        type: array
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+            hash:
+              type: string
+            classname:
+              type: string
+            ancestor:
+              type: object
+              properties:
+                scope_uuid:
+                  title: |-
+                    [Req] [Scope.uuid]
+                    Scope ID
+                  type: object
+                  properties:
+                    value:
+                      type: string
+                group_uuid:
+                  title: |-
+                    [Opt] [RecordGroup.group_uuid]
+                    require record to be within a specific group
+                  type: object
+                  properties:
+                    value:
+                      type: string
+                hash:
+                  type: string
+                  title: >-
+                    [Opt] [Record.result_hash]
+
+                    specify a specific record inside a scope (and group) by
+                    result-hash
+                name:
+                  type: string
+                  title: |-
+                    [Opt] [Record.result_name]
+                    specify a result-name of a record within a scope
+        title: >-
+          Data pushed to a consideration that will ultimately match the
+          output_spec of the consideration
+      result:
+        type: object
+        properties:
+          output:
+            type: object
+            properties:
+              name:
+                type: string
+              hash:
+                type: string
+              classname:
+                type: string
+              ancestor:
+                type: object
+                properties:
+                  scope_uuid:
+                    title: |-
+                      [Req] [Scope.uuid]
+                      Scope ID
+                    type: object
+                    properties:
+                      value:
+                        type: string
+                  group_uuid:
+                    title: |-
+                      [Opt] [RecordGroup.group_uuid]
+                      require record to be within a specific group
+                    type: object
+                    properties:
+                      value:
+                        type: string
+                  hash:
+                    type: string
+                    title: >-
+                      [Opt] [Record.result_hash]
+
+                      specify a specific record inside a scope (and group) by
+                      result-hash
+                  name:
+                    type: string
+                    title: |-
+                      [Opt] [Record.result_name]
+                      specify a result-name of a record within a scope
+          result:
+            type: string
+            enum:
+              - RESULT_TYPE_UNKNOWN
+              - RESULT_TYPE_PASS
+              - RESULT_TYPE_SKIP
+              - RESULT_TYPE_FAIL
+            default: RESULT_TYPE_UNKNOWN
+            description: ' - RESULT_TYPE_SKIP: Couldn''t process the condition/consideration due to missing facts being generated by other considerations.'
+          recorded_at:
+            type: object
+            properties:
+              seconds:
+                type: string
+                format: int64
+                title: Represents seconds of UTC time since Unix epoch
+              nanos:
+                type: integer
+                format: int32
+                description: Non-negative fractions of a second at nanosecond resolution.
+            description: >-
+              A Timestamp represents a point in time using values relative to
+              the epoch.
+          error_message:
+            type: string
+  provenance.metadata.v1.p8e.ConsiderationSpec:
+    type: object
+    properties:
+      func_name:
+        type: string
+      responsible_party:
+        title: Invoking party
+        type: string
+        enum:
+          - PARTY_TYPE_UNKNOWN
+          - PARTY_TYPE_ORIGINATOR
+          - PARTY_TYPE_SERVICER
+          - PARTY_TYPE_INVESTOR
+          - PARTY_TYPE_CUSTODIAN
+          - PARTY_TYPE_OWNER
+          - PARTY_TYPE_AFFILIATE
+          - PARTY_TYPE_OMNIBUS
+          - PARTY_TYPE_PROVENANCE
+          - PARTY_TYPE_MARKER
+        default: PARTY_TYPE_UNKNOWN
+      input_specs:
+        type: array
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+            resource_location:
+              type: object
+              properties:
+                ref:
+                  type: object
+                  properties:
+                    scope_uuid:
+                      title: |-
+                        [Req] [Scope.uuid]
+                        Scope ID
+                      type: object
+                      properties:
+                        value:
+                          type: string
+                    group_uuid:
+                      title: |-
+                        [Opt] [RecordGroup.group_uuid]
+                        require record to be within a specific group
+                      type: object
+                      properties:
+                        value:
+                          type: string
+                    hash:
+                      type: string
+                      title: >-
+                        [Opt] [Record.result_hash]
+
+                        specify a specific record inside a scope (and group) by
+                        result-hash
+                    name:
+                      type: string
+                      title: |-
+                        [Opt] [Record.result_name]
+                        specify a result-name of a record within a scope
+                classname:
+                  type: string
+            signature:
+              type: object
+              properties:
+                algo:
+                  type: string
+                  title: Signature Detail
+                provider:
+                  type: string
+                signature:
+                  type: string
+                signer:
+                  title: Identity of signer
+                  type: object
+                  properties:
+                    signing_public_key:
+                      type: object
+                      properties:
+                        public_key_bytes:
+                          type: string
+                          format: byte
+                        type:
+                          type: string
+                          enum:
+                            - ELLIPTIC
+                          default: ELLIPTIC
+                        curve:
+                          type: string
+                          enum:
+                            - SECP256K1
+                            - P256
+                          default: SECP256K1
+                    encryption_public_key:
+                      type: object
+                      properties:
+                        public_key_bytes:
+                          type: string
+                          format: byte
+                        type:
+                          type: string
+                          enum:
+                            - ELLIPTIC
+                          default: ELLIPTIC
+                        curve:
+                          type: string
+                          enum:
+                            - SECP256K1
+                            - P256
+                          default: SECP256K1
+            type:
+              type: string
+              enum:
+                - DEFINITION_SPEC_TYPE_UNKNOWN
+                - DEFINITION_SPEC_TYPE_PROPOSED
+                - DEFINITION_SPEC_TYPE_FACT
+                - DEFINITION_SPEC_TYPE_FACT_LIST
+              default: DEFINITION_SPEC_TYPE_UNKNOWN
+      output_spec:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              name:
+                type: string
+              resource_location:
+                type: object
+                properties:
+                  ref:
+                    type: object
+                    properties:
+                      scope_uuid:
+                        title: |-
+                          [Req] [Scope.uuid]
+                          Scope ID
+                        type: object
+                        properties:
+                          value:
+                            type: string
+                      group_uuid:
+                        title: |-
+                          [Opt] [RecordGroup.group_uuid]
+                          require record to be within a specific group
+                        type: object
+                        properties:
+                          value:
+                            type: string
+                      hash:
+                        type: string
+                        title: >-
+                          [Opt] [Record.result_hash]
+
+                          specify a specific record inside a scope (and group)
+                          by result-hash
+                      name:
+                        type: string
+                        title: |-
+                          [Opt] [Record.result_name]
+                          specify a result-name of a record within a scope
+                  classname:
+                    type: string
+              signature:
+                type: object
+                properties:
+                  algo:
+                    type: string
+                    title: Signature Detail
+                  provider:
+                    type: string
+                  signature:
+                    type: string
+                  signer:
+                    title: Identity of signer
+                    type: object
+                    properties:
+                      signing_public_key:
+                        type: object
+                        properties:
+                          public_key_bytes:
+                            type: string
+                            format: byte
+                          type:
+                            type: string
+                            enum:
+                              - ELLIPTIC
+                            default: ELLIPTIC
+                          curve:
+                            type: string
+                            enum:
+                              - SECP256K1
+                              - P256
+                            default: SECP256K1
+                      encryption_public_key:
+                        type: object
+                        properties:
+                          public_key_bytes:
+                            type: string
+                            format: byte
+                          type:
+                            type: string
+                            enum:
+                              - ELLIPTIC
+                            default: ELLIPTIC
+                          curve:
+                            type: string
+                            enum:
+                              - SECP256K1
+                              - P256
+                            default: SECP256K1
+              type:
+                type: string
+                enum:
+                  - DEFINITION_SPEC_TYPE_UNKNOWN
+                  - DEFINITION_SPEC_TYPE_PROPOSED
+                  - DEFINITION_SPEC_TYPE_FACT
+                  - DEFINITION_SPEC_TYPE_FACT_LIST
+                default: DEFINITION_SPEC_TYPE_UNKNOWN
+  provenance.metadata.v1.p8e.Contract:
+    type: object
+    properties:
+      definition:
+        type: object
+        properties:
+          name:
+            type: string
+          resource_location:
+            type: object
+            properties:
+              ref:
+                type: object
+                properties:
+                  scope_uuid:
+                    title: |-
+                      [Req] [Scope.uuid]
+                      Scope ID
+                    type: object
+                    properties:
+                      value:
+                        type: string
+                  group_uuid:
+                    title: |-
+                      [Opt] [RecordGroup.group_uuid]
+                      require record to be within a specific group
+                    type: object
+                    properties:
+                      value:
+                        type: string
+                  hash:
+                    type: string
+                    title: >-
+                      [Opt] [Record.result_hash]
+
+                      specify a specific record inside a scope (and group) by
+                      result-hash
+                  name:
+                    type: string
+                    title: |-
+                      [Opt] [Record.result_name]
+                      specify a result-name of a record within a scope
+              classname:
+                type: string
+          signature:
+            type: object
+            properties:
+              algo:
+                type: string
+                title: Signature Detail
+              provider:
+                type: string
+              signature:
+                type: string
+              signer:
+                title: Identity of signer
+                type: object
+                properties:
+                  signing_public_key:
+                    type: object
+                    properties:
+                      public_key_bytes:
+                        type: string
+                        format: byte
+                      type:
+                        type: string
+                        enum:
+                          - ELLIPTIC
+                        default: ELLIPTIC
+                      curve:
+                        type: string
+                        enum:
+                          - SECP256K1
+                          - P256
+                        default: SECP256K1
+                  encryption_public_key:
+                    type: object
+                    properties:
+                      public_key_bytes:
+                        type: string
+                        format: byte
+                      type:
+                        type: string
+                        enum:
+                          - ELLIPTIC
+                        default: ELLIPTIC
+                      curve:
+                        type: string
+                        enum:
+                          - SECP256K1
+                          - P256
+                        default: SECP256K1
+          type:
+            type: string
+            enum:
+              - DEFINITION_SPEC_TYPE_UNKNOWN
+              - DEFINITION_SPEC_TYPE_PROPOSED
+              - DEFINITION_SPEC_TYPE_FACT
+              - DEFINITION_SPEC_TYPE_FACT_LIST
+            default: DEFINITION_SPEC_TYPE_UNKNOWN
+      spec:
+        title: Points to the proto for the contractSpec
+        type: object
+        properties:
+          name:
+            type: string
+          data_location:
+            type: object
+            properties:
+              ref:
+                type: object
+                properties:
+                  scope_uuid:
+                    title: |-
+                      [Req] [Scope.uuid]
+                      Scope ID
+                    type: object
+                    properties:
+                      value:
+                        type: string
+                  group_uuid:
+                    title: |-
+                      [Opt] [RecordGroup.group_uuid]
+                      require record to be within a specific group
+                    type: object
+                    properties:
+                      value:
+                        type: string
+                  hash:
+                    type: string
+                    title: >-
+                      [Opt] [Record.result_hash]
+
+                      specify a specific record inside a scope (and group) by
+                      result-hash
+                  name:
+                    type: string
+                    title: |-
+                      [Opt] [Record.result_name]
+                      specify a result-name of a record within a scope
+              classname:
+                type: string
+      invoker:
+        title: Invoker of this contract
+        type: object
+        properties:
+          signing_public_key:
+            type: object
+            properties:
+              public_key_bytes:
+                type: string
+                format: byte
+              type:
+                type: string
+                enum:
+                  - ELLIPTIC
+                default: ELLIPTIC
+              curve:
+                type: string
+                enum:
+                  - SECP256K1
+                  - P256
+                default: SECP256K1
+          encryption_public_key:
+            type: object
+            properties:
+              public_key_bytes:
+                type: string
+                format: byte
+              type:
+                type: string
+                enum:
+                  - ELLIPTIC
+                default: ELLIPTIC
+              curve:
+                type: string
+                enum:
+                  - SECP256K1
+                  - P256
+                default: SECP256K1
+      inputs:
+        type: array
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+            data_location:
+              type: object
+              properties:
+                ref:
+                  type: object
+                  properties:
+                    scope_uuid:
+                      title: |-
+                        [Req] [Scope.uuid]
+                        Scope ID
+                      type: object
+                      properties:
+                        value:
+                          type: string
+                    group_uuid:
+                      title: |-
+                        [Opt] [RecordGroup.group_uuid]
+                        require record to be within a specific group
+                      type: object
+                      properties:
+                        value:
+                          type: string
+                    hash:
+                      type: string
+                      title: >-
+                        [Opt] [Record.result_hash]
+
+                        specify a specific record inside a scope (and group) by
+                        result-hash
+                    name:
+                      type: string
+                      title: |-
+                        [Opt] [Record.result_name]
+                        specify a result-name of a record within a scope
+                classname:
+                  type: string
+        description: |-
+          Constructor arguments.
+          These are always the output of a previously recorded consideration.
+      conditions:
+        type: array
+        items:
+          type: object
+          properties:
+            condition_name:
+              type: string
+            result:
+              type: object
+              properties:
+                output:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    hash:
+                      type: string
+                    classname:
+                      type: string
+                    ancestor:
+                      type: object
+                      properties:
+                        scope_uuid:
+                          title: |-
+                            [Req] [Scope.uuid]
+                            Scope ID
+                          type: object
+                          properties:
+                            value:
+                              type: string
+                        group_uuid:
+                          title: |-
+                            [Opt] [RecordGroup.group_uuid]
+                            require record to be within a specific group
+                          type: object
+                          properties:
+                            value:
+                              type: string
+                        hash:
+                          type: string
+                          title: >-
+                            [Opt] [Record.result_hash]
+
+                            specify a specific record inside a scope (and group)
+                            by result-hash
+                        name:
+                          type: string
+                          title: |-
+                            [Opt] [Record.result_name]
+                            specify a result-name of a record within a scope
+                result:
+                  type: string
+                  enum:
+                    - RESULT_TYPE_UNKNOWN
+                    - RESULT_TYPE_PASS
+                    - RESULT_TYPE_SKIP
+                    - RESULT_TYPE_FAIL
+                  default: RESULT_TYPE_UNKNOWN
+                  description: ' - RESULT_TYPE_SKIP: Couldn''t process the condition/consideration due to missing facts being generated by other considerations.'
+                recorded_at:
+                  type: object
+                  properties:
+                    seconds:
+                      type: string
+                      format: int64
+                      title: Represents seconds of UTC time since Unix epoch
+                    nanos:
+                      type: integer
+                      format: int32
+                      description: >-
+                        Non-negative fractions of a second at nanosecond
+                        resolution.
+                  description: >-
+                    A Timestamp represents a point in time using values relative
+                    to the epoch.
+                error_message:
+                  type: string
+        description: conditions is a deprecated field that is not used at all anymore.
+      considerations:
+        type: array
+        items:
+          type: object
+          properties:
+            consideration_name:
+              type: string
+            inputs:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  hash:
+                    type: string
+                  classname:
+                    type: string
+                  ancestor:
+                    type: object
+                    properties:
+                      scope_uuid:
+                        title: |-
+                          [Req] [Scope.uuid]
+                          Scope ID
+                        type: object
+                        properties:
+                          value:
+                            type: string
+                      group_uuid:
+                        title: |-
+                          [Opt] [RecordGroup.group_uuid]
+                          require record to be within a specific group
+                        type: object
+                        properties:
+                          value:
+                            type: string
+                      hash:
+                        type: string
+                        title: >-
+                          [Opt] [Record.result_hash]
+
+                          specify a specific record inside a scope (and group)
+                          by result-hash
+                      name:
+                        type: string
+                        title: |-
+                          [Opt] [Record.result_name]
+                          specify a result-name of a record within a scope
+              title: >-
+                Data pushed to a consideration that will ultimately match the
+                output_spec of the consideration
+            result:
+              type: object
+              properties:
+                output:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    hash:
+                      type: string
+                    classname:
+                      type: string
+                    ancestor:
+                      type: object
+                      properties:
+                        scope_uuid:
+                          title: |-
+                            [Req] [Scope.uuid]
+                            Scope ID
+                          type: object
+                          properties:
+                            value:
+                              type: string
+                        group_uuid:
+                          title: |-
+                            [Opt] [RecordGroup.group_uuid]
+                            require record to be within a specific group
+                          type: object
+                          properties:
+                            value:
+                              type: string
+                        hash:
+                          type: string
+                          title: >-
+                            [Opt] [Record.result_hash]
+
+                            specify a specific record inside a scope (and group)
+                            by result-hash
+                        name:
+                          type: string
+                          title: |-
+                            [Opt] [Record.result_name]
+                            specify a result-name of a record within a scope
+                result:
+                  type: string
+                  enum:
+                    - RESULT_TYPE_UNKNOWN
+                    - RESULT_TYPE_PASS
+                    - RESULT_TYPE_SKIP
+                    - RESULT_TYPE_FAIL
+                  default: RESULT_TYPE_UNKNOWN
+                  description: ' - RESULT_TYPE_SKIP: Couldn''t process the condition/consideration due to missing facts being generated by other considerations.'
+                recorded_at:
+                  type: object
+                  properties:
+                    seconds:
+                      type: string
+                      format: int64
+                      title: Represents seconds of UTC time since Unix epoch
+                    nanos:
+                      type: integer
+                      format: int32
+                      description: >-
+                        Non-negative fractions of a second at nanosecond
+                        resolution.
+                  description: >-
+                    A Timestamp represents a point in time using values relative
+                    to the epoch.
+                error_message:
+                  type: string
+      recitals:
+        type: array
+        items:
+          type: object
+          properties:
+            signer_role:
+              type: string
+              enum:
+                - PARTY_TYPE_UNKNOWN
+                - PARTY_TYPE_ORIGINATOR
+                - PARTY_TYPE_SERVICER
+                - PARTY_TYPE_INVESTOR
+                - PARTY_TYPE_CUSTODIAN
+                - PARTY_TYPE_OWNER
+                - PARTY_TYPE_AFFILIATE
+                - PARTY_TYPE_OMNIBUS
+                - PARTY_TYPE_PROVENANCE
+                - PARTY_TYPE_MARKER
+              default: PARTY_TYPE_UNKNOWN
+            signer:
+              type: object
+              properties:
+                signing_public_key:
+                  type: object
+                  properties:
+                    public_key_bytes:
+                      type: string
+                      format: byte
+                    type:
+                      type: string
+                      enum:
+                        - ELLIPTIC
+                      default: ELLIPTIC
+                    curve:
+                      type: string
+                      enum:
+                        - SECP256K1
+                        - P256
+                      default: SECP256K1
+                encryption_public_key:
+                  type: object
+                  properties:
+                    public_key_bytes:
+                      type: string
+                      format: byte
+                    type:
+                      type: string
+                      enum:
+                        - ELLIPTIC
+                      default: ELLIPTIC
+                    curve:
+                      type: string
+                      enum:
+                        - SECP256K1
+                        - P256
+                      default: SECP256K1
+            address:
+              type: string
+              format: byte
+      times_executed:
+        type: integer
+        format: int32
+      start_time:
+        type: object
+        properties:
+          seconds:
+            type: string
+            format: int64
+            title: Represents seconds of UTC time since Unix epoch
+          nanos:
+            type: integer
+            format: int32
+            description: Non-negative fractions of a second at nanosecond resolution.
+        description: >-
+          A Timestamp represents a point in time using values relative to the
+          epoch.
+        title: This is only set once when the contract is initially executed
+      context:
+        type: string
+        format: byte
+  provenance.metadata.v1.p8e.ContractSpec:
+    type: object
+    properties:
+      definition:
+        type: object
+        properties:
+          name:
+            type: string
+          resource_location:
+            type: object
+            properties:
+              ref:
+                type: object
+                properties:
+                  scope_uuid:
+                    title: |-
+                      [Req] [Scope.uuid]
+                      Scope ID
+                    type: object
+                    properties:
+                      value:
+                        type: string
+                  group_uuid:
+                    title: |-
+                      [Opt] [RecordGroup.group_uuid]
+                      require record to be within a specific group
+                    type: object
+                    properties:
+                      value:
+                        type: string
+                  hash:
+                    type: string
+                    title: >-
+                      [Opt] [Record.result_hash]
+
+                      specify a specific record inside a scope (and group) by
+                      result-hash
+                  name:
+                    type: string
+                    title: |-
+                      [Opt] [Record.result_name]
+                      specify a result-name of a record within a scope
+              classname:
+                type: string
+          signature:
+            type: object
+            properties:
+              algo:
+                type: string
+                title: Signature Detail
+              provider:
+                type: string
+              signature:
+                type: string
+              signer:
+                title: Identity of signer
+                type: object
+                properties:
+                  signing_public_key:
+                    type: object
+                    properties:
+                      public_key_bytes:
+                        type: string
+                        format: byte
+                      type:
+                        type: string
+                        enum:
+                          - ELLIPTIC
+                        default: ELLIPTIC
+                      curve:
+                        type: string
+                        enum:
+                          - SECP256K1
+                          - P256
+                        default: SECP256K1
+                  encryption_public_key:
+                    type: object
+                    properties:
+                      public_key_bytes:
+                        type: string
+                        format: byte
+                      type:
+                        type: string
+                        enum:
+                          - ELLIPTIC
+                        default: ELLIPTIC
+                      curve:
+                        type: string
+                        enum:
+                          - SECP256K1
+                          - P256
+                        default: SECP256K1
+          type:
+            type: string
+            enum:
+              - DEFINITION_SPEC_TYPE_UNKNOWN
+              - DEFINITION_SPEC_TYPE_PROPOSED
+              - DEFINITION_SPEC_TYPE_FACT
+              - DEFINITION_SPEC_TYPE_FACT_LIST
+            default: DEFINITION_SPEC_TYPE_UNKNOWN
+      input_specs:
+        type: array
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+            resource_location:
+              type: object
+              properties:
+                ref:
+                  type: object
+                  properties:
+                    scope_uuid:
+                      title: |-
+                        [Req] [Scope.uuid]
+                        Scope ID
+                      type: object
+                      properties:
+                        value:
+                          type: string
+                    group_uuid:
+                      title: |-
+                        [Opt] [RecordGroup.group_uuid]
+                        require record to be within a specific group
+                      type: object
+                      properties:
+                        value:
+                          type: string
+                    hash:
+                      type: string
+                      title: >-
+                        [Opt] [Record.result_hash]
+
+                        specify a specific record inside a scope (and group) by
+                        result-hash
+                    name:
+                      type: string
+                      title: |-
+                        [Opt] [Record.result_name]
+                        specify a result-name of a record within a scope
+                classname:
+                  type: string
+            signature:
+              type: object
+              properties:
+                algo:
+                  type: string
+                  title: Signature Detail
+                provider:
+                  type: string
+                signature:
+                  type: string
+                signer:
+                  title: Identity of signer
+                  type: object
+                  properties:
+                    signing_public_key:
+                      type: object
+                      properties:
+                        public_key_bytes:
+                          type: string
+                          format: byte
+                        type:
+                          type: string
+                          enum:
+                            - ELLIPTIC
+                          default: ELLIPTIC
+                        curve:
+                          type: string
+                          enum:
+                            - SECP256K1
+                            - P256
+                          default: SECP256K1
+                    encryption_public_key:
+                      type: object
+                      properties:
+                        public_key_bytes:
+                          type: string
+                          format: byte
+                        type:
+                          type: string
+                          enum:
+                            - ELLIPTIC
+                          default: ELLIPTIC
+                        curve:
+                          type: string
+                          enum:
+                            - SECP256K1
+                            - P256
+                          default: SECP256K1
+            type:
+              type: string
+              enum:
+                - DEFINITION_SPEC_TYPE_UNKNOWN
+                - DEFINITION_SPEC_TYPE_PROPOSED
+                - DEFINITION_SPEC_TYPE_FACT
+                - DEFINITION_SPEC_TYPE_FACT_LIST
+              default: DEFINITION_SPEC_TYPE_UNKNOWN
+      parties_involved:
+        type: array
+        items:
+          type: string
+          enum:
+            - PARTY_TYPE_UNKNOWN
+            - PARTY_TYPE_ORIGINATOR
+            - PARTY_TYPE_SERVICER
+            - PARTY_TYPE_INVESTOR
+            - PARTY_TYPE_CUSTODIAN
+            - PARTY_TYPE_OWNER
+            - PARTY_TYPE_AFFILIATE
+            - PARTY_TYPE_OMNIBUS
+            - PARTY_TYPE_PROVENANCE
+            - PARTY_TYPE_MARKER
+          default: PARTY_TYPE_UNKNOWN
+      condition_specs:
+        type: array
+        items:
+          type: object
+          properties:
+            func_name:
+              type: string
+            input_specs:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  resource_location:
+                    type: object
+                    properties:
+                      ref:
+                        type: object
+                        properties:
+                          scope_uuid:
+                            title: |-
+                              [Req] [Scope.uuid]
+                              Scope ID
+                            type: object
+                            properties:
+                              value:
+                                type: string
+                          group_uuid:
+                            title: |-
+                              [Opt] [RecordGroup.group_uuid]
+                              require record to be within a specific group
+                            type: object
+                            properties:
+                              value:
+                                type: string
+                          hash:
+                            type: string
+                            title: >-
+                              [Opt] [Record.result_hash]
+
+                              specify a specific record inside a scope (and
+                              group) by result-hash
+                          name:
+                            type: string
+                            title: |-
+                              [Opt] [Record.result_name]
+                              specify a result-name of a record within a scope
+                      classname:
+                        type: string
+                  signature:
+                    type: object
+                    properties:
+                      algo:
+                        type: string
+                        title: Signature Detail
+                      provider:
+                        type: string
+                      signature:
+                        type: string
+                      signer:
+                        title: Identity of signer
+                        type: object
+                        properties:
+                          signing_public_key:
+                            type: object
+                            properties:
+                              public_key_bytes:
+                                type: string
+                                format: byte
+                              type:
+                                type: string
+                                enum:
+                                  - ELLIPTIC
+                                default: ELLIPTIC
+                              curve:
+                                type: string
+                                enum:
+                                  - SECP256K1
+                                  - P256
+                                default: SECP256K1
+                          encryption_public_key:
+                            type: object
+                            properties:
+                              public_key_bytes:
+                                type: string
+                                format: byte
+                              type:
+                                type: string
+                                enum:
+                                  - ELLIPTIC
+                                default: ELLIPTIC
+                              curve:
+                                type: string
+                                enum:
+                                  - SECP256K1
+                                  - P256
+                                default: SECP256K1
+                  type:
+                    type: string
+                    enum:
+                      - DEFINITION_SPEC_TYPE_UNKNOWN
+                      - DEFINITION_SPEC_TYPE_PROPOSED
+                      - DEFINITION_SPEC_TYPE_FACT
+                      - DEFINITION_SPEC_TYPE_FACT_LIST
+                    default: DEFINITION_SPEC_TYPE_UNKNOWN
+            output_spec:
+              type: object
+              properties:
+                spec:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    resource_location:
+                      type: object
+                      properties:
+                        ref:
+                          type: object
+                          properties:
+                            scope_uuid:
+                              title: |-
+                                [Req] [Scope.uuid]
+                                Scope ID
+                              type: object
+                              properties:
+                                value:
+                                  type: string
+                            group_uuid:
+                              title: |-
+                                [Opt] [RecordGroup.group_uuid]
+                                require record to be within a specific group
+                              type: object
+                              properties:
+                                value:
+                                  type: string
+                            hash:
+                              type: string
+                              title: >-
+                                [Opt] [Record.result_hash]
+
+                                specify a specific record inside a scope (and
+                                group) by result-hash
+                            name:
+                              type: string
+                              title: |-
+                                [Opt] [Record.result_name]
+                                specify a result-name of a record within a scope
+                        classname:
+                          type: string
+                    signature:
+                      type: object
+                      properties:
+                        algo:
+                          type: string
+                          title: Signature Detail
+                        provider:
+                          type: string
+                        signature:
+                          type: string
+                        signer:
+                          title: Identity of signer
+                          type: object
+                          properties:
+                            signing_public_key:
+                              type: object
+                              properties:
+                                public_key_bytes:
+                                  type: string
+                                  format: byte
+                                type:
+                                  type: string
+                                  enum:
+                                    - ELLIPTIC
+                                  default: ELLIPTIC
+                                curve:
+                                  type: string
+                                  enum:
+                                    - SECP256K1
+                                    - P256
+                                  default: SECP256K1
+                            encryption_public_key:
+                              type: object
+                              properties:
+                                public_key_bytes:
+                                  type: string
+                                  format: byte
+                                type:
+                                  type: string
+                                  enum:
+                                    - ELLIPTIC
+                                  default: ELLIPTIC
+                                curve:
+                                  type: string
+                                  enum:
+                                    - SECP256K1
+                                    - P256
+                                  default: SECP256K1
+                    type:
+                      type: string
+                      enum:
+                        - DEFINITION_SPEC_TYPE_UNKNOWN
+                        - DEFINITION_SPEC_TYPE_PROPOSED
+                        - DEFINITION_SPEC_TYPE_FACT
+                        - DEFINITION_SPEC_TYPE_FACT_LIST
+                      default: DEFINITION_SPEC_TYPE_UNKNOWN
+      consideration_specs:
+        type: array
+        items:
+          type: object
+          properties:
+            func_name:
+              type: string
+            responsible_party:
+              title: Invoking party
+              type: string
+              enum:
+                - PARTY_TYPE_UNKNOWN
+                - PARTY_TYPE_ORIGINATOR
+                - PARTY_TYPE_SERVICER
+                - PARTY_TYPE_INVESTOR
+                - PARTY_TYPE_CUSTODIAN
+                - PARTY_TYPE_OWNER
+                - PARTY_TYPE_AFFILIATE
+                - PARTY_TYPE_OMNIBUS
+                - PARTY_TYPE_PROVENANCE
+                - PARTY_TYPE_MARKER
+              default: PARTY_TYPE_UNKNOWN
+            input_specs:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  resource_location:
+                    type: object
+                    properties:
+                      ref:
+                        type: object
+                        properties:
+                          scope_uuid:
+                            title: |-
+                              [Req] [Scope.uuid]
+                              Scope ID
+                            type: object
+                            properties:
+                              value:
+                                type: string
+                          group_uuid:
+                            title: |-
+                              [Opt] [RecordGroup.group_uuid]
+                              require record to be within a specific group
+                            type: object
+                            properties:
+                              value:
+                                type: string
+                          hash:
+                            type: string
+                            title: >-
+                              [Opt] [Record.result_hash]
+
+                              specify a specific record inside a scope (and
+                              group) by result-hash
+                          name:
+                            type: string
+                            title: |-
+                              [Opt] [Record.result_name]
+                              specify a result-name of a record within a scope
+                      classname:
+                        type: string
+                  signature:
+                    type: object
+                    properties:
+                      algo:
+                        type: string
+                        title: Signature Detail
+                      provider:
+                        type: string
+                      signature:
+                        type: string
+                      signer:
+                        title: Identity of signer
+                        type: object
+                        properties:
+                          signing_public_key:
+                            type: object
+                            properties:
+                              public_key_bytes:
+                                type: string
+                                format: byte
+                              type:
+                                type: string
+                                enum:
+                                  - ELLIPTIC
+                                default: ELLIPTIC
+                              curve:
+                                type: string
+                                enum:
+                                  - SECP256K1
+                                  - P256
+                                default: SECP256K1
+                          encryption_public_key:
+                            type: object
+                            properties:
+                              public_key_bytes:
+                                type: string
+                                format: byte
+                              type:
+                                type: string
+                                enum:
+                                  - ELLIPTIC
+                                default: ELLIPTIC
+                              curve:
+                                type: string
+                                enum:
+                                  - SECP256K1
+                                  - P256
+                                default: SECP256K1
+                  type:
+                    type: string
+                    enum:
+                      - DEFINITION_SPEC_TYPE_UNKNOWN
+                      - DEFINITION_SPEC_TYPE_PROPOSED
+                      - DEFINITION_SPEC_TYPE_FACT
+                      - DEFINITION_SPEC_TYPE_FACT_LIST
+                    default: DEFINITION_SPEC_TYPE_UNKNOWN
+            output_spec:
+              type: object
+              properties:
+                spec:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    resource_location:
+                      type: object
+                      properties:
+                        ref:
+                          type: object
+                          properties:
+                            scope_uuid:
+                              title: |-
+                                [Req] [Scope.uuid]
+                                Scope ID
+                              type: object
+                              properties:
+                                value:
+                                  type: string
+                            group_uuid:
+                              title: |-
+                                [Opt] [RecordGroup.group_uuid]
+                                require record to be within a specific group
+                              type: object
+                              properties:
+                                value:
+                                  type: string
+                            hash:
+                              type: string
+                              title: >-
+                                [Opt] [Record.result_hash]
+
+                                specify a specific record inside a scope (and
+                                group) by result-hash
+                            name:
+                              type: string
+                              title: |-
+                                [Opt] [Record.result_name]
+                                specify a result-name of a record within a scope
+                        classname:
+                          type: string
+                    signature:
+                      type: object
+                      properties:
+                        algo:
+                          type: string
+                          title: Signature Detail
+                        provider:
+                          type: string
+                        signature:
+                          type: string
+                        signer:
+                          title: Identity of signer
+                          type: object
+                          properties:
+                            signing_public_key:
+                              type: object
+                              properties:
+                                public_key_bytes:
+                                  type: string
+                                  format: byte
+                                type:
+                                  type: string
+                                  enum:
+                                    - ELLIPTIC
+                                  default: ELLIPTIC
+                                curve:
+                                  type: string
+                                  enum:
+                                    - SECP256K1
+                                    - P256
+                                  default: SECP256K1
+                            encryption_public_key:
+                              type: object
+                              properties:
+                                public_key_bytes:
+                                  type: string
+                                  format: byte
+                                type:
+                                  type: string
+                                  enum:
+                                    - ELLIPTIC
+                                  default: ELLIPTIC
+                                curve:
+                                  type: string
+                                  enum:
+                                    - SECP256K1
+                                    - P256
+                                  default: SECP256K1
+                    type:
+                      type: string
+                      enum:
+                        - DEFINITION_SPEC_TYPE_UNKNOWN
+                        - DEFINITION_SPEC_TYPE_PROPOSED
+                        - DEFINITION_SPEC_TYPE_FACT
+                        - DEFINITION_SPEC_TYPE_FACT_LIST
+                      default: DEFINITION_SPEC_TYPE_UNKNOWN
+  provenance.metadata.v1.p8e.DefinitionSpec:
+    type: object
+    properties:
+      name:
+        type: string
+      resource_location:
+        type: object
+        properties:
+          ref:
+            type: object
+            properties:
+              scope_uuid:
+                title: |-
+                  [Req] [Scope.uuid]
+                  Scope ID
+                type: object
+                properties:
+                  value:
+                    type: string
+              group_uuid:
+                title: |-
+                  [Opt] [RecordGroup.group_uuid]
+                  require record to be within a specific group
+                type: object
+                properties:
+                  value:
+                    type: string
+              hash:
+                type: string
+                title: >-
+                  [Opt] [Record.result_hash]
+
+                  specify a specific record inside a scope (and group) by
+                  result-hash
+              name:
+                type: string
+                title: |-
+                  [Opt] [Record.result_name]
+                  specify a result-name of a record within a scope
+          classname:
+            type: string
+      signature:
+        type: object
+        properties:
+          algo:
+            type: string
+            title: Signature Detail
+          provider:
+            type: string
+          signature:
+            type: string
+          signer:
+            title: Identity of signer
+            type: object
+            properties:
+              signing_public_key:
+                type: object
+                properties:
+                  public_key_bytes:
+                    type: string
+                    format: byte
+                  type:
+                    type: string
+                    enum:
+                      - ELLIPTIC
+                    default: ELLIPTIC
+                  curve:
+                    type: string
+                    enum:
+                      - SECP256K1
+                      - P256
+                    default: SECP256K1
+              encryption_public_key:
+                type: object
+                properties:
+                  public_key_bytes:
+                    type: string
+                    format: byte
+                  type:
+                    type: string
+                    enum:
+                      - ELLIPTIC
+                    default: ELLIPTIC
+                  curve:
+                    type: string
+                    enum:
+                      - SECP256K1
+                      - P256
+                    default: SECP256K1
+      type:
+        type: string
+        enum:
+          - DEFINITION_SPEC_TYPE_UNKNOWN
+          - DEFINITION_SPEC_TYPE_PROPOSED
+          - DEFINITION_SPEC_TYPE_FACT
+          - DEFINITION_SPEC_TYPE_FACT_LIST
+        default: DEFINITION_SPEC_TYPE_UNKNOWN
+  provenance.metadata.v1.p8e.DefinitionSpecType:
+    type: string
+    enum:
+      - DEFINITION_SPEC_TYPE_UNKNOWN
+      - DEFINITION_SPEC_TYPE_PROPOSED
+      - DEFINITION_SPEC_TYPE_FACT
+      - DEFINITION_SPEC_TYPE_FACT_LIST
+    default: DEFINITION_SPEC_TYPE_UNKNOWN
+  provenance.metadata.v1.p8e.ExecutionResult:
+    type: object
+    properties:
+      output:
+        type: object
+        properties:
+          name:
+            type: string
+          hash:
+            type: string
+          classname:
+            type: string
+          ancestor:
+            type: object
+            properties:
+              scope_uuid:
+                title: |-
+                  [Req] [Scope.uuid]
+                  Scope ID
+                type: object
+                properties:
+                  value:
+                    type: string
+              group_uuid:
+                title: |-
+                  [Opt] [RecordGroup.group_uuid]
+                  require record to be within a specific group
+                type: object
+                properties:
+                  value:
+                    type: string
+              hash:
+                type: string
+                title: >-
+                  [Opt] [Record.result_hash]
+
+                  specify a specific record inside a scope (and group) by
+                  result-hash
+              name:
+                type: string
+                title: |-
+                  [Opt] [Record.result_name]
+                  specify a result-name of a record within a scope
+      result:
+        type: string
+        enum:
+          - RESULT_TYPE_UNKNOWN
+          - RESULT_TYPE_PASS
+          - RESULT_TYPE_SKIP
+          - RESULT_TYPE_FAIL
+        default: RESULT_TYPE_UNKNOWN
+        description: ' - RESULT_TYPE_SKIP: Couldn''t process the condition/consideration due to missing facts being generated by other considerations.'
+      recorded_at:
+        type: object
+        properties:
+          seconds:
+            type: string
+            format: int64
+            title: Represents seconds of UTC time since Unix epoch
+          nanos:
+            type: integer
+            format: int32
+            description: Non-negative fractions of a second at nanosecond resolution.
+        description: >-
+          A Timestamp represents a point in time using values relative to the
+          epoch.
+      error_message:
+        type: string
+  provenance.metadata.v1.p8e.ExecutionResultType:
+    type: string
+    enum:
+      - RESULT_TYPE_UNKNOWN
+      - RESULT_TYPE_PASS
+      - RESULT_TYPE_SKIP
+      - RESULT_TYPE_FAIL
+    default: RESULT_TYPE_UNKNOWN
+    description: ' - RESULT_TYPE_SKIP: Couldn''t process the condition/consideration due to missing facts being generated by other considerations.'
+  provenance.metadata.v1.p8e.Fact:
+    type: object
+    properties:
+      name:
+        type: string
+      data_location:
+        type: object
+        properties:
+          ref:
+            type: object
+            properties:
+              scope_uuid:
+                title: |-
+                  [Req] [Scope.uuid]
+                  Scope ID
+                type: object
+                properties:
+                  value:
+                    type: string
+              group_uuid:
+                title: |-
+                  [Opt] [RecordGroup.group_uuid]
+                  require record to be within a specific group
+                type: object
+                properties:
+                  value:
+                    type: string
+              hash:
+                type: string
+                title: >-
+                  [Opt] [Record.result_hash]
+
+                  specify a specific record inside a scope (and group) by
+                  result-hash
+              name:
+                type: string
+                title: |-
+                  [Opt] [Record.result_name]
+                  specify a result-name of a record within a scope
+          classname:
+            type: string
+  provenance.metadata.v1.p8e.Location:
+    type: object
+    properties:
+      ref:
+        type: object
+        properties:
+          scope_uuid:
+            title: |-
+              [Req] [Scope.uuid]
+              Scope ID
+            type: object
+            properties:
+              value:
+                type: string
+          group_uuid:
+            title: |-
+              [Opt] [RecordGroup.group_uuid]
+              require record to be within a specific group
+            type: object
+            properties:
+              value:
+                type: string
+          hash:
+            type: string
+            title: >-
+              [Opt] [Record.result_hash]
+
+              specify a specific record inside a scope (and group) by
+              result-hash
+          name:
+            type: string
+            title: |-
+              [Opt] [Record.result_name]
+              specify a result-name of a record within a scope
+      classname:
+        type: string
+  provenance.metadata.v1.p8e.OutputSpec:
+    type: object
+    properties:
+      spec:
+        type: object
+        properties:
+          name:
+            type: string
+          resource_location:
+            type: object
+            properties:
+              ref:
+                type: object
+                properties:
+                  scope_uuid:
+                    title: |-
+                      [Req] [Scope.uuid]
+                      Scope ID
+                    type: object
+                    properties:
+                      value:
+                        type: string
+                  group_uuid:
+                    title: |-
+                      [Opt] [RecordGroup.group_uuid]
+                      require record to be within a specific group
+                    type: object
+                    properties:
+                      value:
+                        type: string
+                  hash:
+                    type: string
+                    title: >-
+                      [Opt] [Record.result_hash]
+
+                      specify a specific record inside a scope (and group) by
+                      result-hash
+                  name:
+                    type: string
+                    title: |-
+                      [Opt] [Record.result_name]
+                      specify a result-name of a record within a scope
+              classname:
+                type: string
+          signature:
+            type: object
+            properties:
+              algo:
+                type: string
+                title: Signature Detail
+              provider:
+                type: string
+              signature:
+                type: string
+              signer:
+                title: Identity of signer
+                type: object
+                properties:
+                  signing_public_key:
+                    type: object
+                    properties:
+                      public_key_bytes:
+                        type: string
+                        format: byte
+                      type:
+                        type: string
+                        enum:
+                          - ELLIPTIC
+                        default: ELLIPTIC
+                      curve:
+                        type: string
+                        enum:
+                          - SECP256K1
+                          - P256
+                        default: SECP256K1
+                  encryption_public_key:
+                    type: object
+                    properties:
+                      public_key_bytes:
+                        type: string
+                        format: byte
+                      type:
+                        type: string
+                        enum:
+                          - ELLIPTIC
+                        default: ELLIPTIC
+                      curve:
+                        type: string
+                        enum:
+                          - SECP256K1
+                          - P256
+                        default: SECP256K1
+          type:
+            type: string
+            enum:
+              - DEFINITION_SPEC_TYPE_UNKNOWN
+              - DEFINITION_SPEC_TYPE_PROPOSED
+              - DEFINITION_SPEC_TYPE_FACT
+              - DEFINITION_SPEC_TYPE_FACT_LIST
+            default: DEFINITION_SPEC_TYPE_UNKNOWN
+  provenance.metadata.v1.p8e.PartyType:
+    type: string
+    enum:
+      - PARTY_TYPE_UNKNOWN
+      - PARTY_TYPE_ORIGINATOR
+      - PARTY_TYPE_SERVICER
+      - PARTY_TYPE_INVESTOR
+      - PARTY_TYPE_CUSTODIAN
+      - PARTY_TYPE_OWNER
+      - PARTY_TYPE_AFFILIATE
+      - PARTY_TYPE_OMNIBUS
+      - PARTY_TYPE_PROVENANCE
+      - PARTY_TYPE_MARKER
+    default: PARTY_TYPE_UNKNOWN
+  provenance.metadata.v1.p8e.ProposedFact:
+    type: object
+    properties:
+      name:
+        type: string
+      hash:
+        type: string
+      classname:
+        type: string
+      ancestor:
+        type: object
+        properties:
+          scope_uuid:
+            title: |-
+              [Req] [Scope.uuid]
+              Scope ID
+            type: object
+            properties:
+              value:
+                type: string
+          group_uuid:
+            title: |-
+              [Opt] [RecordGroup.group_uuid]
+              require record to be within a specific group
+            type: object
+            properties:
+              value:
+                type: string
+          hash:
+            type: string
+            title: >-
+              [Opt] [Record.result_hash]
+
+              specify a specific record inside a scope (and group) by
+              result-hash
+          name:
+            type: string
+            title: |-
+              [Opt] [Record.result_name]
+              specify a result-name of a record within a scope
+  provenance.metadata.v1.p8e.ProvenanceReference:
+    type: object
+    properties:
+      scope_uuid:
+        title: |-
+          [Req] [Scope.uuid]
+          Scope ID
+        type: object
+        properties:
+          value:
+            type: string
+      group_uuid:
+        title: |-
+          [Opt] [RecordGroup.group_uuid]
+          require record to be within a specific group
+        type: object
+        properties:
+          value:
+            type: string
+      hash:
+        type: string
+        title: |-
+          [Opt] [Record.result_hash]
+          specify a specific record inside a scope (and group) by result-hash
+      name:
+        type: string
+        title: |-
+          [Opt] [Record.result_name]
+          specify a result-name of a record within a scope
+  provenance.metadata.v1.p8e.PublicKey:
+    type: object
+    properties:
+      public_key_bytes:
+        type: string
+        format: byte
+      type:
+        type: string
+        enum:
+          - ELLIPTIC
+        default: ELLIPTIC
+      curve:
+        type: string
+        enum:
+          - SECP256K1
+          - P256
+        default: SECP256K1
+  provenance.metadata.v1.p8e.PublicKeyCurve:
+    type: string
+    enum:
+      - SECP256K1
+      - P256
+    default: SECP256K1
+  provenance.metadata.v1.p8e.PublicKeyType:
+    type: string
+    enum:
+      - ELLIPTIC
+    default: ELLIPTIC
+  provenance.metadata.v1.p8e.Recital:
+    type: object
+    properties:
+      signer_role:
+        type: string
+        enum:
+          - PARTY_TYPE_UNKNOWN
+          - PARTY_TYPE_ORIGINATOR
+          - PARTY_TYPE_SERVICER
+          - PARTY_TYPE_INVESTOR
+          - PARTY_TYPE_CUSTODIAN
+          - PARTY_TYPE_OWNER
+          - PARTY_TYPE_AFFILIATE
+          - PARTY_TYPE_OMNIBUS
+          - PARTY_TYPE_PROVENANCE
+          - PARTY_TYPE_MARKER
+        default: PARTY_TYPE_UNKNOWN
+      signer:
+        type: object
+        properties:
+          signing_public_key:
+            type: object
+            properties:
+              public_key_bytes:
+                type: string
+                format: byte
+              type:
+                type: string
+                enum:
+                  - ELLIPTIC
+                default: ELLIPTIC
+              curve:
+                type: string
+                enum:
+                  - SECP256K1
+                  - P256
+                default: SECP256K1
+          encryption_public_key:
+            type: object
+            properties:
+              public_key_bytes:
+                type: string
+                format: byte
+              type:
+                type: string
+                enum:
+                  - ELLIPTIC
+                default: ELLIPTIC
+              curve:
+                type: string
+                enum:
+                  - SECP256K1
+                  - P256
+                default: SECP256K1
+      address:
+        type: string
+        format: byte
+  provenance.metadata.v1.p8e.Recitals:
+    type: object
+    properties:
+      parties:
+        type: array
+        items:
+          type: object
+          properties:
+            signer_role:
+              type: string
+              enum:
+                - PARTY_TYPE_UNKNOWN
+                - PARTY_TYPE_ORIGINATOR
+                - PARTY_TYPE_SERVICER
+                - PARTY_TYPE_INVESTOR
+                - PARTY_TYPE_CUSTODIAN
+                - PARTY_TYPE_OWNER
+                - PARTY_TYPE_AFFILIATE
+                - PARTY_TYPE_OMNIBUS
+                - PARTY_TYPE_PROVENANCE
+                - PARTY_TYPE_MARKER
+              default: PARTY_TYPE_UNKNOWN
+            signer:
+              type: object
+              properties:
+                signing_public_key:
+                  type: object
+                  properties:
+                    public_key_bytes:
+                      type: string
+                      format: byte
+                    type:
+                      type: string
+                      enum:
+                        - ELLIPTIC
+                      default: ELLIPTIC
+                    curve:
+                      type: string
+                      enum:
+                        - SECP256K1
+                        - P256
+                      default: SECP256K1
+                encryption_public_key:
+                  type: object
+                  properties:
+                    public_key_bytes:
+                      type: string
+                      format: byte
+                    type:
+                      type: string
+                      enum:
+                        - ELLIPTIC
+                      default: ELLIPTIC
+                    curve:
+                      type: string
+                      enum:
+                        - SECP256K1
+                        - P256
+                      default: SECP256K1
+            address:
+              type: string
+              format: byte
+  provenance.metadata.v1.p8e.Signature:
+    type: object
+    properties:
+      algo:
+        type: string
+        title: Signature Detail
+      provider:
+        type: string
+      signature:
+        type: string
+      signer:
+        title: Identity of signer
+        type: object
+        properties:
+          signing_public_key:
+            type: object
+            properties:
+              public_key_bytes:
+                type: string
+                format: byte
+              type:
+                type: string
+                enum:
+                  - ELLIPTIC
+                default: ELLIPTIC
+              curve:
+                type: string
+                enum:
+                  - SECP256K1
+                  - P256
+                default: SECP256K1
+          encryption_public_key:
+            type: object
+            properties:
+              public_key_bytes:
+                type: string
+                format: byte
+              type:
+                type: string
+                enum:
+                  - ELLIPTIC
+                default: ELLIPTIC
+              curve:
+                type: string
+                enum:
+                  - SECP256K1
+                  - P256
+                default: SECP256K1
+  provenance.metadata.v1.p8e.SignatureSet:
+    type: object
+    properties:
+      signatures:
+        type: array
+        items:
+          type: object
+          properties:
+            algo:
+              type: string
+              title: Signature Detail
+            provider:
+              type: string
+            signature:
+              type: string
+            signer:
+              title: Identity of signer
+              type: object
+              properties:
+                signing_public_key:
+                  type: object
+                  properties:
+                    public_key_bytes:
+                      type: string
+                      format: byte
+                    type:
+                      type: string
+                      enum:
+                        - ELLIPTIC
+                      default: ELLIPTIC
+                    curve:
+                      type: string
+                      enum:
+                        - SECP256K1
+                        - P256
+                      default: SECP256K1
+                encryption_public_key:
+                  type: object
+                  properties:
+                    public_key_bytes:
+                      type: string
+                      format: byte
+                    type:
+                      type: string
+                      enum:
+                        - ELLIPTIC
+                      default: ELLIPTIC
+                    curve:
+                      type: string
+                      enum:
+                        - SECP256K1
+                        - P256
+                      default: SECP256K1
+  provenance.metadata.v1.p8e.SigningAndEncryptionPublicKeys:
+    type: object
+    properties:
+      signing_public_key:
+        type: object
+        properties:
+          public_key_bytes:
+            type: string
+            format: byte
+          type:
+            type: string
+            enum:
+              - ELLIPTIC
+            default: ELLIPTIC
+          curve:
+            type: string
+            enum:
+              - SECP256K1
+              - P256
+            default: SECP256K1
+      encryption_public_key:
+        type: object
+        properties:
+          public_key_bytes:
+            type: string
+            format: byte
+          type:
+            type: string
+            enum:
+              - ELLIPTIC
+            default: ELLIPTIC
+          curve:
+            type: string
+            enum:
+              - SECP256K1
+              - P256
+            default: SECP256K1
+  provenance.metadata.v1.p8e.Timestamp:
+    type: object
+    properties:
+      seconds:
+        type: string
+        format: int64
+        title: Represents seconds of UTC time since Unix epoch
+      nanos:
+        type: integer
+        format: int32
+        description: Non-negative fractions of a second at nanosecond resolution.
+    description: A Timestamp represents a point in time using values relative to the epoch.
+  provenance.metadata.v1.p8e.UUID:
+    type: object
+    properties:
+      value:
+        type: string
   provenance.name.v1.Params:
     type: object
     properties:
@@ -34421,3 +37664,24 @@ definitions:
     description: >-
       QueryReverseLookupResponse is the response type for the Query/Resolve
       method.
+  provenance.name.v1.MsgBindNameResponse:
+    type: object
+    description: MsgBindNameResponse defines the Msg/BindName response type.
+  provenance.name.v1.MsgDeleteNameResponse:
+    type: object
+    description: MsgDeleteNameResponse defines the Msg/DeleteName response type.
+  provenance.name.v1.NameRecord:
+    type: object
+    properties:
+      name:
+        type: string
+        title: The bound name
+      address:
+        type: string
+        description: The address the name resolved to.
+      restricted:
+        type: boolean
+        description: Whether owner signature is required to add sub-names.
+    title: >-
+      NameRecord is a structure used to bind ownership of a name hierarchy to a
+      collection of addresses
