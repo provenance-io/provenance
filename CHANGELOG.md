@@ -34,6 +34,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Bug Fixes
+
+* Remove broken gauge on attribute module. Fixes prometheus metrics [#315](https://github.com/provenance-io/provenance/issues/315)
 ### Improvements
 
 * Add Kotlin and Javascript examples for Metadata Addresses [#301](https://github.com/provenance-io/provenance/issues/301)
