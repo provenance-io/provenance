@@ -370,6 +370,10 @@ proto-all: proto-tools proto-gen proto-lint proto-check-breaking proto-format pr
 
 proto-gen:
 	@./scripts/protocgen.sh
+	@if [ -n "$(shell git diff --compact-summary main proto/)" ]; then \
+		echo 'Once finished making proto changes, please also update the swagger docs:'; \
+		echo '  make update-swagger-docs'; \
+	fi
 
 proto-format:
 	find ./ -not -path "*/third_party/*" -name *.proto -exec clang-format -i {} \;
