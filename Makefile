@@ -5,10 +5,6 @@ PACKAGES               := $(shell go list ./... 2>/dev/null || true)
 PACKAGES_NOSIMULATION  := $(filter-out %/simulation%,$(PACKAGES))
 PACKAGES_SIMULATION    := $(filter     %/simulation%,$(PACKAGES))
 
-LEVELDB_PATH = $(shell brew --prefix leveldb 2>/dev/null || echo "$(HOME)/Cellar/leveldb/1.22/include")
-CGO_CFLAGS   = -I$(LEVELDB_PATH)/include
-CGO_LDFLAGS  = "-L$(LEVELDB_PATH)/lib -Wl,-rpath,\$$ORIGIN"
-
 BINDIR ?= $(GOPATH)/bin
 BUILDDIR ?= $(CURDIR)/build
 
@@ -16,6 +12,7 @@ LEDGER_ENABLED ?= true
 WITH_CLEVELDB ?= yes
 
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+BRANCH_PRETTY := $(subst /,-,$(BRANCH))
 TM_VERSION := $(shell go list -m github.com/tendermint/tendermint | sed 's:.* ::') # grab everything after the space in "github.com/tendermint/tendermint v0.34.7"
 COMMIT := $(shell git log -1 --format='%h')
 # don't override user values
@@ -23,7 +20,7 @@ ifeq (,$(VERSION))
   VERSION := $(shell git describe --exact-match 2>/dev/null)
   # if VERSION is empty, then populate it with branch's name and raw commit hash
   ifeq (,$(VERSION))
-    VERSION := $(BRANCH)-$(COMMIT)
+    VERSION := $(BRANCH_PRETTY)-$(COMMIT)
   endif
 endif
 
@@ -38,10 +35,8 @@ HTTPS_GIT := https://github.com/provenance-io/provenance.git
 DOCKER := $(shell which docker)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 
-
 # The below include contains the tools target.
 include contrib/devtools/Makefile
-
 
 ##############################
 # Build Flags/Tags
@@ -74,6 +69,27 @@ ifeq ($(LEDGER_ENABLED),true)
     endif
   endif
 endif
+
+### CGO Settings
+ifeq ($(UNAME_S),Darwin)
+  # osx linker settings
+  CGO_LDFLAGS = -Wl,-rpath,@loader_path/.
+else ifeq ($(UNAME_S),Linux)
+  # linux liner settings
+  CGO_LDFLAGS = -Wl,-rpath,\$$ORIGIN
+endif
+
+# cleveldb linker settings
+ifeq ($(WITH_CLEVELDB),yes)
+  ifeq ($(UNAME_S),Darwin)
+    LEVELDB_PATH = $(shell brew --prefix leveldb 2>/dev/null || echo "$(HOME)/Cellar/leveldb/1.22/include")
+    CGO_CFLAGS   = -I$(LEVELDB_PATH)/include
+    CGO_LDFLAGS += -L$(LEVELDB_PATH)/lib
+  else ifeq ($(UNAME_S),Linux)
+    # Intentionally left blank to leave it up to already installed libraries.
+  endif
+endif
+
 
 build_tags += $(BUILD_TAGS)
 build_tags := $(strip $(build_tags))
@@ -108,11 +124,11 @@ all: build format lint test
 
 # Install puts the binaries in the local environment path.
 install: go.sum
-	CGO_LDFLAGS=$(CGO_LDFLAGS) CGO_CFLAGS=$(CGO_CFLAGS) $(GO) install -mod=readonly $(BUILD_FLAGS) ./cmd/provenanced
+	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) install -mod=readonly $(BUILD_FLAGS) ./cmd/provenanced
 
 build: go.sum
 	mkdir -p $(BUILDDIR)
-	CGO_LDFLAGS=$(CGO_LDFLAGS) CGO_CFLAGS=$(CGO_CFLAGS) $(GO) build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./cmd/provenanced
+	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./cmd/provenanced
 
 build-linux: go.sum
 	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build
@@ -141,13 +157,31 @@ run: check-built run-config;
 # Release artifacts and plan #
 ##############################
 
+LIBWASMVM := libwasmvm
+
 RELEASE_BIN=$(BUILDDIR)/bin
 RELEASE_PROTO_NAME=protos-$(VERSION).zip
 RELEASE_PROTO=$(BUILDDIR)/$(RELEASE_PROTO_NAME)
 RELEASE_PLAN=$(BUILDDIR)/plan-$(VERSION).json
 RELEASE_CHECKSUM_NAME=sha256sum.txt
 RELEASE_CHECKSUM=$(BUILDDIR)/$(RELEASE_CHECKSUM_NAME)
-RELEASE_ZIP_NAME=provenance-linux-amd64-$(VERSION).zip
+
+UNAME_S = $(shell uname -s | tr '[A-Z]' '[a-z]')
+ifeq ($(UNAME_S),darwin)
+    LIBWASMVM := $(LIBWASMVM).dylib
+else ifeq ($(UNAME_S),linux)
+    LIBWASMVM := $(LIBWASMVM).so
+endif
+
+UNAME_M = $(shell uname -m)
+ifeq ($(UNAME_M),x86_64)
+	ARCH=amd64
+endif
+
+RELEASE_WASM=$(RELEASE_BIN)/$(LIBWASMVM)
+RELEASE_PIO=$(RELEASE_BIN)/provenanced
+RELEASE_ZIP_BASE=provenance-$(UNAME_S)-$(ARCH)
+RELEASE_ZIP_NAME=$(RELEASE_ZIP_BASE)-$(VERSION).zip
 RELEASE_ZIP=$(BUILDDIR)/$(RELEASE_ZIP_NAME)
 
 .PHONY: build-release-clean
@@ -155,39 +189,58 @@ build-release-clean:
 	rm -rf $(RELEASE_BIN) $(RELEASE_PLAN) $(RELEASE_CHECKSUM) $(RELEASE_ZIP)
 
 .PHONY: build-release-checksum
-build-release-checksum: build-release-zip
+build-release-checksum: $(RELEASE_CHECKSUM)
+
+$(RELEASE_CHECKSUM):
 	cd $(BUILDDIR) && \
-	  shasum -a 256 $(RELEASE_ZIP_NAME) > $(RELEASE_CHECKSUM) && \
+	  shasum -a 256 *.zip  > $(RELEASE_CHECKSUM) && \
 	cd ..
 
 .PHONY: build-release-plan
-build-release-plan: build-release-zip build-release-checksum
-	cd $(BUILDDIR) && \
-	  sum="$(firstword $(shell cat $(RELEASE_CHECKSUM)))" && \
-	  echo "sum=$$sum" && \
-	  echo "{\"binaries\":{\"linux/amd64\":\"https://github.com/provenance-io/provenance/releases/download/$(VERSION)/$(RELEASE_ZIP_NAME)?checksum=sha256:$$sum\"}}" > $(RELEASE_PLAN) && \
-	cd ..
+build-release-plan: $(RELEASE_PLAN)
+
+$(RELEASE_PLAN): $(RELEASE_CHECKSUM)
+	scripts/release-plan $(RELEASE_CHECKSUM) $(VERSION) > $(RELEASE_PLAN)
+
+.PHONY: build-release-libwasm
+build-release-libwasm: $(RELEASE_WASM)
+
+$(RELEASE_WASM): $(RELEASE_BIN)
+	go mod vendor && \
+	cp vendor/github.com/CosmWasm/wasmvm/api/$(LIBWASMVM) $(RELEASE_BIN)
 
 .PHONY: build-release-bin
-build-release-bin: build
-	go mod vendor && \
-	mkdir -p $(RELEASE_BIN) && \
+build-release-bin: $(RELEASE_PIO)
+
+$(RELEASE_PIO): $(BUILDDIR)/provenanced $(RELEASE_BIN)
 	cp $(BUILDDIR)/provenanced $(RELEASE_BIN) && \
-	cp vendor/github.com/CosmWasm/wasmvm/api/libwasmvm.so $(RELEASE_BIN) && \
-	chmod +x $(RELEASE_BIN)/provenanced
+	chmod +x $(RELEASE_PIO)
+
+$(BUILDDIR)/provenanced:
+	$(MAKE) build
 
 .PHONY: build-release-zip
-build-release-zip: build-release-bin
+build-release-zip: $(RELEASE_ZIP)
+
+$(RELEASE_ZIP): $(RELEASE_PIO) $(RELEASE_WASM)
 	cd $(BUILDDIR) && \
-	  zip -r $(RELEASE_ZIP_NAME) bin/ && \
+	  zip -u $(RELEASE_ZIP_NAME) bin/$(LIBWASMVM) bin/provenanced && \
 	cd ..
 
-.PHONY: build-release-proto
+# gon packages the zip wrong. need bin/provenanced and bin/libwasmvm
+.PHONY: build-release-rezip
+build-release-rezip: ZIP_FROM = $(BUILDDIR)/$(RELEASE_ZIP_BASE).zip
+build-release-rezip: ZIP_TO   = $(BUILDDIR)/$(RELEASE_ZIP_NAME)
+build-release-rezip:
+	scripts/fix-gon-zip $(ZIP_FROM) && \
+		mv -v $(ZIP_FROM) $(ZIP_TO)
+
+.PHONY: bulid-release-proto
 build-release-proto:
 	scripts/protoball.sh $(RELEASE_PROTO)
 
-.PHONY: build-release
-build-release: build-release-zip build-release-plan build-release-proto
+$(RELEASE_BIN):
+	mkdir -p $(RELEASE_BIN)
 
 ##############################
 # Tools / Dependencies

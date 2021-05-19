@@ -1432,4 +1432,43 @@ func (s *AddressTestSuite) TestFormat() {
 	}
 }
 
+func (s *AddressTestSuite) TestGenerateExamples() {
+	// This "test" doesn't actually test anything. It just generates some output that's helpful
+	// for validating other MetadataAddress implementations.
+
+	scopeUUIDString := "91978ba2-5f35-459a-86a7-feca1b0512e0"
+	sessionUUIDString := "5803f8bc-6067-4eb5-951f-2121671c2ec0"
+	scopeSpecUUIDString := "dc83ea70-eacd-40fe-9adf-1cf6148bf8a2"
+	contractSpecUUIDString := "def6bc0a-c9dd-4874-948f-5206e6060a84"
+	recordName := "recordname"
+
+	scopeUUID := uuid.MustParse(scopeUUIDString)
+	sessionUUID := uuid.MustParse(sessionUUIDString)
+	scopeSpecUUID := uuid.MustParse(scopeSpecUUIDString)
+	contractSpecUUID := uuid.MustParse(contractSpecUUIDString)
+
+	scopeId := ScopeMetadataAddress(scopeUUID)
+	sessionId := SessionMetadataAddress(scopeUUID, sessionUUID)
+	recordId := RecordMetadataAddress(scopeUUID, recordName)
+	scopeSpecId := ScopeSpecMetadataAddress(scopeSpecUUID)
+	contractSpecId := ContractSpecMetadataAddress(contractSpecUUID)
+	recordSpecId := RecordSpecMetadataAddress(contractSpecUUID, recordName)
+	recordNameBytes, _ := recordId.NameHash()
+
+	fmt.Printf("        scope uuid: \"%s\"\n", scopeUUIDString)
+	fmt.Printf("      session uuid: \"%s\"\n", sessionUUIDString)
+	fmt.Printf("   scope spec uuid: \"%s\"\n", scopeSpecUUIDString)
+	fmt.Printf("contract spec uuid: \"%s\"\n", contractSpecUUIDString)
+	fmt.Printf("       record name: \"%s\"\n", recordName)
+	fmt.Printf("hashed record name bytes: %v\n", recordNameBytes)
+	fmt.Printf("       scope id: \"%s\"\n", scopeId)
+	fmt.Printf("     session id: \"%s\"\n", sessionId)
+	fmt.Printf("      record id: \"%s\"\n", recordId)
+	fmt.Printf("  scope spec id: \"%s\"\n", scopeSpecId)
+	fmt.Printf("contrat spec id: \"%s\"\n", contractSpecId)
+	fmt.Printf(" record spec id: \"%s\"\n", recordSpecId)
+
+	s.Assert().True(true)
+}
+
 // TODO: GetDetails tests.

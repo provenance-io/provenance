@@ -1,0 +1,13 @@
+{
+	"source": ["./build/bin/provenanced", "./build/bin/libwasmvm.dylib"],
+	"bundle_id": "io.provenance",
+	"apple_id": {
+		"password": "@env:AC_PASSWORD"
+	},
+	"sign": {
+		"application_identity": "Developer ID Application: FIGURE TECHNOLOGIES INC."
+	},
+	"zip": {
+		"output_path": "./build/provenance-darwin-amd64.zip"
+	}
+}
