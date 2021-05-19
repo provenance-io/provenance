@@ -34,6 +34,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Bug Fixes
+
+* Remove broken gauge on attribute module. Fixes prometheus metrics [#315](https://github.com/provenance-io/provenance/issues/315)
+
 ## [v1.3.0](https://github.com/provenance-io/provenance/releases/tag/v1.3.0) - 2021-05-06
 
 ### Features
