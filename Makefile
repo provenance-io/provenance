@@ -366,7 +366,7 @@ localnet-stop:
 ##############################
 # Proto -> golang compilation
 ##############################
-proto-all: proto-tools proto-gen proto-lint proto-check-breaking proto-swagger-gen proto-format protoc-gen-gocosmos protoc-gen-grpc-gateway
+proto-all: proto-tools proto-gen proto-lint proto-check-breaking proto-format protoc-gen-gocosmos protoc-gen-grpc-gateway
 
 proto-gen:
 	@./scripts/protocgen.sh
@@ -377,9 +377,6 @@ proto-format:
 # This generates the SDK's custom wrapper for google.protobuf.Any. It should only be run manually when needed
 proto-gen-any:
 	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace tendermintdev/sdk-proto-gen sh ./scripts/protocgen-any.sh
-
-proto-swagger-gen:
-	@./scripts/protoc-swagger-gen.sh
 
 proto-lint:
 	@$(DOCKER_BUF) lint --error-format=json
@@ -466,7 +463,7 @@ proto-update-deps:
 	@tail -n+4 $(CONFIO_TYPES)/proofs.proto.orig >> $(CONFIO_TYPES)/proofs.proto
 	@rm $(CONFIO_TYPES)/proofs.proto.orig
 
-.PHONY: proto-all proto-gen proto-format proto-gen-any proto-swagger-gen proto-lint proto-check-breaking
+.PHONY: proto-all proto-gen proto-format proto-gen-any proto-lint proto-check-breaking
 .PHONY: proto-update-deps
 
 
@@ -474,6 +471,7 @@ proto-update-deps:
 ### Docs
 ##############################
 update-swagger-docs: statik
+	./scripts/protoc-swagger-gen.sh
 	$(BINDIR)/statik -src=client/docs/swagger-ui -dest=client/docs -f -m
 	@if [ -n "$(git status --porcelain)" ]; then \
         echo "Swagger docs are out of sync";\
