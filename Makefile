@@ -366,7 +366,7 @@ localnet-stop:
 ##############################
 # Proto -> golang compilation
 ##############################
-proto-all: proto-tools proto-gen proto-lint proto-check-breaking proto-format protoc-gen-gocosmos protoc-gen-grpc-gateway
+proto-all: proto-tools proto-format proto-lint proto-gen proto-check-breaking
 
 proto-gen:
 	@./scripts/protocgen.sh
