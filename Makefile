@@ -473,11 +473,5 @@ proto-update-deps:
 update-swagger-docs: statik
 	./scripts/protoc-swagger-gen.sh
 	$(BINDIR)/statik -src=client/docs/swagger-ui -dest=client/docs -f -m
-	@if [ -n "$(git status --porcelain)" ]; then \
-        echo "Swagger docs are out of sync";\
-        exit 1;\
-    else \
-    	echo "Swagger docs are in sync";\
-    fi
 
 .PHONY: update-swagger-docs
