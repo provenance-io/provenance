@@ -47,6 +47,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add Kotlin and Javascript examples for Metadata Addresses [#301](https://github.com/provenance-io/provenance/issues/301)
 * Updated swagger docs [PR 313](https://github.com/provenance-io/provenance/pull/313)
 * Fix swagger docs [PR 317](https://github.com/provenance-io/provenance/pull/317)
+* Updated default min-gas-prices to reflect provenance network nhash economics [#310](https://github.com/provenance-io/provenance/pull/310)
 
 ## [v1.3.0](https://github.com/provenance-io/provenance/releases/tag/v1.3.0) - 2021-05-06
 
