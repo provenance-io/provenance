@@ -90,7 +90,7 @@ Name Hash (hex): %s
 Excess (hex): %s
 `, addrDetails.Prefix, addrDetails.PrimaryUUID, addrDetails.SecondaryUUID, addrDetails.NameHashHex, addrDetails.ExcessHex)
 			}
-			_, cmdErr := fmt.Fprintf(cmd.OutOrStdout(), toOut)
+			_, cmdErr := fmt.Fprint(cmd.OutOrStdout(), toOut)
 			return cmdErr
 		},
 	}
