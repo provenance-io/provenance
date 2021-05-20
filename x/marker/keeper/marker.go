@@ -301,7 +301,7 @@ func (k Keeper) AdjustCirculation(ctx sdk.Context, marker types.MarkerAccountI, 
 
 	if desiredSupply.Amount.GT(currentSupply) { // not enough coin in circulation, mint more.
 		offset := sdk.NewCoin(marker.GetDenom(), desiredSupply.Amount.Sub(currentSupply))
-		ctx.Logger().Error(
+		ctx.Logger().Info(
 			fmt.Sprintf("Current %s supply is NOT at the required amount, minting %s to required supply level",
 				marker.GetDenom(), offset))
 		if err := k.bankKeeper.MintCoins(ctx, types.CoinPoolName, sdk.NewCoins(offset)); err != nil {
@@ -314,7 +314,7 @@ func (k Keeper) AdjustCirculation(ctx sdk.Context, marker types.MarkerAccountI, 
 		}
 	} else if desiredSupply.Amount.LT(currentSupply) { // too much coin in circulation, attempt to burn from marker account.
 		offset := sdk.NewCoin(marker.GetDenom(), currentSupply.Sub(desiredSupply.Amount))
-		ctx.Logger().Error(
+		ctx.Logger().Info(
 			fmt.Sprintf("Current %s supply is NOT at the required amount, burning %s to required supply level",
 				marker.GetDenom(), offset))
 		if err := k.bankKeeper.SendCoinsFromAccountToModule(

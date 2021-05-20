@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * Remove broken gauge on attribute module. Fixes prometheus metrics [#315](https://github.com/provenance-io/provenance/issues/315)
+* Correct logging levels for marker mint/burn requests [#318](https://github.com/provenance-io/provenance/issues/318)
 
 ### Improvements
 
