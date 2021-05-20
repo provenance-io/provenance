@@ -32,74 +32,59 @@ func AddMetaAddressCmd() *cobra.Command {
 // AddMetaAddressDecoder returns metadata address parser cobra Command.
 func AddMetaAddressDecoder() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "decode [metaaddress]",
+		Use:     "decode address",
 		Aliases: []string{"d"},
-		Short:   "Decode MetaAddress and display associate IDs and types",
-		Args:    cobra.ExactArgs(2),
+		Short:   "Decode MetadataAddress and display associate IDs and types",
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			addr, parseErr := types.MetadataAddressFromBech32(args[1])
+			addr, parseErr := types.MetadataAddressFromBech32(args[0])
 			if parseErr != nil {
 				return parseErr
 			}
-			if addr.IsScopeAddress() {
-				scopeUUID, err := addr.ScopeUUID()
-				if err != nil {
-					return err
-				}
-
-				fmt.Fprintf(cmd.OutOrStdout(), `Type: Scope
-
+			addrDetails := addr.GetDetails()
+			var toOut string
+			switch {
+			case addr.IsScopeAddress():
+				toOut = fmt.Sprintf(`Type: Scope
 Scope UUID: %s
-`, scopeUUID)
-			}
-			if addr.IsSessionAddress() {
-				scopeUUID, err := addr.ScopeUUID()
-				if err != nil {
-					return err
-				}
-				scopeID := types.ScopeMetadataAddress(scopeUUID)
-				sessionUUID, err := addr.SessionUUID()
-				if err != nil {
-					return err
-				}
-				fmt.Fprintf(cmd.OutOrStdout(), `Type: Session
-
+`, addrDetails.PrimaryUUID)
+			case addr.IsSessionAddress():
+				toOut = fmt.Sprintf(`Type: Session
 Scope Id: %s
 Scope UUID: %s
 Session UUID: %s
-`, scopeID, scopeUUID, sessionUUID)
-			}
-			if addr.IsRecordAddress() {
-				scopeUUID, _ := addr.ScopeUUID()
-				scopeID := types.ScopeMetadataAddress(scopeUUID)
-				fmt.Fprintf(cmd.OutOrStdout(), `Type: Record
-
+`, addrDetails.ParentAddress, addrDetails.PrimaryUUID, addrDetails.SecondaryUUID)
+			case addr.IsRecordAddress():
+				toOut = fmt.Sprintf(`Type: Record
 Scope Id: %s
 Scope UUID: %s
-`, scopeID, scopeUUID.String())
-			}
-			if addr.IsContractSpecificationAddress() {
-				contractSpecUUID, err := addr.ContractSpecUUID()
-				if err != nil {
-					return err
-				}
-
-				fmt.Fprintf(cmd.OutOrStdout(), `Type: Contract Specification
-
-Contract Specification UUID: %s
-`, contractSpecUUID)
-			}
-			if addr.IsScopeSpecificationAddress() {
-				scopeSpecUUID, err := addr.PrimaryUUID()
-				if err != nil {
-					return err
-				}
-				fmt.Fprintf(cmd.OutOrStdout(), `Type: Scope Specification
-
+Name Hash (hex): %s
+`, addrDetails.ParentAddress, addrDetails.PrimaryUUID, addrDetails.NameHashHex)
+			case addr.IsScopeSpecificationAddress():
+				toOut = fmt.Sprintf(`Type: Scope Specification
 Scope Specification UUID: %s
-`, scopeSpecUUID)
+`, addrDetails.PrimaryUUID)
+			case addr.IsContractSpecificationAddress():
+				toOut = fmt.Sprintf(`Type: Contract Specification
+Contract Specification UUID: %s
+`, addrDetails.PrimaryUUID)
+			case addr.IsRecordSpecificationAddress():
+				toOut = fmt.Sprintf(`Type: Record Specification
+Contract Specification Id: %s
+Contract Specification UUID: %s
+Name Hash (hex): %s
+`, addrDetails.ParentAddress, addrDetails.PrimaryUUID, addrDetails.NameHashHex)
+			default:
+				toOut = fmt.Sprintf(`Type: UNKNOWN
+prefix: %s
+primary UUID: %s
+secondary UUID: %s
+Name Hash (hex): %s
+Excess (hex): %s
+`, addrDetails.Prefix, addrDetails.PrimaryUUID, addrDetails.SecondaryUUID, addrDetails.NameHashHex, addrDetails.ExcessHex)
 			}
-			return nil
+			_, cmdErr := fmt.Fprintf(cmd.OutOrStdout(), toOut)
+			return cmdErr
 		},
 	}
 	return cmd
