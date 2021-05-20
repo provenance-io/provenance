@@ -127,16 +127,23 @@ This type requires the third argument to be a UUID: session`, cmdStart),
 			if err != nil {
 				return err
 			}
-			uuidOrNameArg := args[2]
+			var uuidOrNameArg string
+			argsLen := len(args)
+			if argsLen == 3 {
+				uuidOrNameArg = strings.TrimSpace(args[2])
+				if len(uuidOrNameArg) == 0 {
+					argsLen -= 1
+				}
+			}
 			var addr types.MetadataAddress
 			switch addrType {
 			case "scope":
-				if len(args) != 2 {
+				if argsLen != 2 {
 					return fmt.Errorf("too many arguments for %s address encoder", addrType)
 				}
 				addr = types.ScopeMetadataAddress(primaryUUID)
 			case "session":
-				if len(args) != 3 {
+				if argsLen != 3 {
 					return fmt.Errorf("not enough arguments for %s address encoder", addrType)
 				}
 				secondaryUUID, err := uuid.Parse(uuidOrNameArg)
@@ -145,27 +152,27 @@ This type requires the third argument to be a UUID: session`, cmdStart),
 				}
 				addr = types.SessionMetadataAddress(primaryUUID, secondaryUUID)
 			case "record":
-				if len(args) != 3 {
+				if argsLen != 3 {
 					return fmt.Errorf("not enough arguments for %s address encoder", addrType)
 				}
 				addr = types.RecordMetadataAddress(primaryUUID, uuidOrNameArg)
 			case "scopespecification", "scopespec":
-				if len(args) != 2 {
+				if argsLen != 2 {
 					return fmt.Errorf("too many arguments for %s address encoder", "scope-specification")
 				}
 				addr = types.ScopeSpecMetadataAddress(primaryUUID)
 			case "contractspecification", "contractspec", "cspec":
-				if len(args) != 2 {
+				if argsLen != 2 {
 					return fmt.Errorf("too many arguments for %s address encoder", "contract-specification")
 				}
 				addr = types.ContractSpecMetadataAddress(primaryUUID)
 			case "recordspecification", "recordspec", "recspec":
-				if len(args) != 3 {
+				if argsLen != 3 {
 					return fmt.Errorf("not enough arguments for %s address encoder", "record-specification")
 				}
-				addr = types.RecordMetadataAddress(primaryUUID, uuidOrNameArg)
+				addr = types.RecordSpecMetadataAddress(primaryUUID, uuidOrNameArg)
 			default:
-				return fmt.Errorf("unknown type: %s, Supported types: scope session record scope-specification contract-specification record-specification", addrType)
+				return fmt.Errorf("unknown type: %s, Supported types: scope session record scope-specification contract-specification record-specification", args[0])
 			}
 			_, cmdErr := fmt.Fprintf(cmd.OutOrStdout(), "%s\n", addr)
 			return cmdErr
