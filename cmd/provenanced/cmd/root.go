@@ -87,6 +87,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	overwriteFlagDefaults(rootCmd, map[string]string{
 		flags.FlagChainID:        ChainID,
 		flags.FlagKeyringBackend: "test",
+		server.FlagMinGasPrices:  "1905" + app.DefaultFeeDenom,
 		// Override default value for coin-type to match our mainnet value.
 		CoinTypeFlag: fmt.Sprint(app.CoinTypeMainNet),
 	})
@@ -231,6 +232,25 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 	snapshotStore, err := snapshots.NewStore(snapshotDB, snapshotDir)
 	if err != nil {
 		panic(err)
+	}
+
+	// Validate min-gas-price is a single coin.  If mainnet then must be "nhash" and have a value greater than one.
+	if fee, err := sdk.ParseCoinNormalized(cast.ToString(appOpts.Get(server.FlagMinGasPrices))); err == nil {
+		if int(sdk.GetConfig().GetCoinType()) == app.CoinTypeMainNet {
+			// require the fee denom to match the bond denom on mainnet
+			if fee.Denom != app.DefaultBondDenom {
+				panic(fmt.Errorf("Invalid fee denom, must be: %s", app.DefaultBondDenom))
+			}
+			// prevent the use of exceptionally small gas amounts that are typical defaults (i.e. 0.0025nhash)
+			if fee.Amount.LTE(sdk.OneInt()) {
+				panic("min-gas-price must be greater than 1.")
+			}
+		}
+	} else {
+		// panic if there was a parse error (for example more than one coin was passed in for required fee).
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	return app.New(
