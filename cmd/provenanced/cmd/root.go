@@ -239,11 +239,11 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		if int(sdk.GetConfig().GetCoinType()) == app.CoinTypeMainNet {
 			// require the fee denom to match the bond denom on mainnet
 			if fee.Denom != app.DefaultBondDenom {
-				panic(fmt.Errorf("Invalid fee denom, must be: %s", app.DefaultBondDenom))
+				panic(fmt.Errorf("Invalid min-gas-price fee denom, must be: %s", app.DefaultBondDenom))
 			}
 			// prevent the use of exceptionally small gas amounts that are typical defaults (i.e. 0.0025nhash)
 			if fee.Amount.LTE(sdk.OneInt()) {
-				panic("min-gas-price must be greater than 1.")
+				panic(fmt.Errorf("min-gas-price must be greater than 1%s.", app.DefaultBondDenom))
 			}
 		}
 	} else {
