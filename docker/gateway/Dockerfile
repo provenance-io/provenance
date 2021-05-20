@@ -3,6 +3,7 @@ WORKDIR /go/src/github.com/provenance-io/provenance
 
 RUN apt-get update && apt-get upgrade -y && apt-get install -y libleveldb-dev
 
+COPY client/ ./client/
 COPY app/ ./app/
 COPY go.* ./
 COPY cmd/ ./cmd/
