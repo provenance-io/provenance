@@ -73,23 +73,23 @@ func TestMetaaddressTestSuite(t *testing.T) {
 func (s MetaaddressTestSuite) TestAddMetaAddressDecoder() {
 	command := cmd.AddMetaAddressDecoder()
 
-	tests := []struct{
+	tests := []struct {
 		name     string
 		args     []string
 		inResult []string
 		err      string
 	}{
 		{
-			name:     "valid scope",
-			args:     []string{s.scopeIDStr},
+			name: "valid scope",
+			args: []string{s.scopeIDStr},
 			inResult: []string{
 				"Type: Scope",
 				fmt.Sprintf("Scope UUID: %s", s.scopeUUIDStr),
 			},
 		},
 		{
-			name:     "valid session",
-			args:     []string{s.sessionIDStr},
+			name: "valid session",
+			args: []string{s.sessionIDStr},
 			inResult: []string{
 				"Type: Session",
 				fmt.Sprintf("Scope Id: %s", s.scopeIDStr),
@@ -98,8 +98,8 @@ func (s MetaaddressTestSuite) TestAddMetaAddressDecoder() {
 			},
 		},
 		{
-			name:     "valid record",
-			args:     []string{s.recordIDStr},
+			name: "valid record",
+			args: []string{s.recordIDStr},
 			inResult: []string{
 				"Type: Record",
 				fmt.Sprintf("Scope Id: %s", s.scopeIDStr),
@@ -108,24 +108,24 @@ func (s MetaaddressTestSuite) TestAddMetaAddressDecoder() {
 			},
 		},
 		{
-			name:     "valid scope specification",
-			args:     []string{s.scopeSpecIDStr},
+			name: "valid scope specification",
+			args: []string{s.scopeSpecIDStr},
 			inResult: []string{
 				"Type: Scope Specification",
 				fmt.Sprintf("Scope Specification UUID: %s", s.scopeSpecUUIDStr),
 			},
 		},
 		{
-			name:     "valid contract specification",
-			args:     []string{s.contractSpecIDStr},
+			name: "valid contract specification",
+			args: []string{s.contractSpecIDStr},
 			inResult: []string{
 				"Type: Contract Specification",
 				fmt.Sprintf("Contract Specification UUID: %s", s.contractSpecUUIDStr),
 			},
 		},
 		{
-			name:     "valid record specification",
-			args:     []string{s.recordSpecIDStr},
+			name: "valid record specification",
+			args: []string{s.recordSpecIDStr},
 			inResult: []string{
 				"Type: Record Specification",
 				fmt.Sprintf("Contract Specification Id: %s", s.contractSpecIDStr),
@@ -134,19 +134,19 @@ func (s MetaaddressTestSuite) TestAddMetaAddressDecoder() {
 			},
 		},
 		{
-			name:     "no args",
-			args:     []string{},
-			err:      "accepts 1 arg(s), received 0",
+			name: "no args",
+			args: []string{},
+			err:  "accepts 1 arg(s), received 0",
 		},
 		{
-			name:     "two args",
-			args:     []string{s.scopeIDStr, s.sessionIDStr},
-			err:      "accepts 1 arg(s), received 2",
+			name: "two args",
+			args: []string{s.scopeIDStr, s.sessionIDStr},
+			err:  "accepts 1 arg(s), received 2",
 		},
 		{
-			name:     "invalid address",
-			args:     []string{s.scopeIDStr + "bad"},
-			err:      "decoding bech32 failed: failed converting data to bytes: invalid character not part of charset: 98",
+			name: "invalid address",
+			args: []string{s.scopeIDStr + "bad"},
+			err:  "decoding bech32 failed: failed converting data to bytes: invalid character not part of charset: 98",
 		},
 	}
 
@@ -174,7 +174,7 @@ func (s MetaaddressTestSuite) TestAddMetaAddressDecoder() {
 func (s MetaaddressTestSuite) TestAddMetaAddressEncoder() {
 	command := cmd.AddMetaAddressEncoder()
 
-	tests := []struct{
+	tests := []struct {
 		name     string
 		args     []string
 		inResult []string
@@ -182,29 +182,29 @@ func (s MetaaddressTestSuite) TestAddMetaAddressEncoder() {
 	}{
 		// Generic invalid cases
 		{
-			name:     "no args",
-			args:     []string{},
-			err:      "accepts between 2 and 3 arg(s), received 0",
+			name: "no args",
+			args: []string{},
+			err:  "accepts between 2 and 3 arg(s), received 0",
 		},
 		{
-			name:     "one arg",
-			args:     []string{"one"},
-			err:      "accepts between 2 and 3 arg(s), received 1",
+			name: "one arg",
+			args: []string{"one"},
+			err:  "accepts between 2 and 3 arg(s), received 1",
 		},
 		{
-			name:     "four args",
-			args:     []string{"one", "two", "three", "four"},
-			err:      "accepts between 2 and 3 arg(s), received 4",
+			name: "four args",
+			args: []string{"one", "two", "three", "four"},
+			err:  "accepts between 2 and 3 arg(s), received 4",
 		},
 		{
-			name:     "invalid primary uuid",
-			args:     []string{"scope", "not-a-uuid"},
-			err:      "invalid UUID length: 10",
+			name: "invalid primary uuid",
+			args: []string{"scope", "not-a-uuid"},
+			err:  "invalid UUID length: 10",
 		},
 		{
-			name:     "invalid type",
-			args:     []string{"not-a-type", s.scopeUUIDStr},
-			err:      fmt.Sprintf("unknown type: %s, Supported types: scope session record scope-specification contract-specification record-specification", "not-a-type"),
+			name: "invalid type",
+			args: []string{"not-a-type", s.scopeUUIDStr},
+			err:  fmt.Sprintf("unknown type: %s, Supported types: scope session record scope-specification contract-specification record-specification", "not-a-type"),
 		},
 		// Scope cases
 		{
@@ -218,9 +218,9 @@ func (s MetaaddressTestSuite) TestAddMetaAddressEncoder() {
 			inResult: []string{s.scopeIDStr},
 		},
 		{
-			name:     "scope invalid has extra param",
-			args:     []string{"scope", s.scopeUUIDStr, "bad-arg"},
-			err:      "too many arguments for scope address encoder",
+			name: "scope invalid has extra param",
+			args: []string{"scope", s.scopeUUIDStr, "bad-arg"},
+			err:  "too many arguments for scope address encoder",
 		},
 		// Session cases
 		{
@@ -234,14 +234,14 @@ func (s MetaaddressTestSuite) TestAddMetaAddressEncoder() {
 			inResult: []string{s.sessionIDStr},
 		},
 		{
-			name:     "session invalid missing param",
-			args:     []string{"session", s.scopeUUIDStr},
-			err:      "not enough arguments for session address encoder",
+			name: "session invalid missing param",
+			args: []string{"session", s.scopeUUIDStr},
+			err:  "not enough arguments for session address encoder",
 		},
 		{
-			name:     "session invalid second uuid",
-			args:     []string{"session", s.scopeUUIDStr, "bad-arg"},
-			err:      "invalid UUID length: 7",
+			name: "session invalid second uuid",
+			args: []string{"session", s.scopeUUIDStr, "bad-arg"},
+			err:  "invalid UUID length: 7",
 		},
 		// Record cases
 		{
@@ -255,14 +255,14 @@ func (s MetaaddressTestSuite) TestAddMetaAddressEncoder() {
 			inResult: []string{s.recordIDStr},
 		},
 		{
-			name:     "record invalid missing param",
-			args:     []string{"record", s.scopeUUIDStr},
-			err:      "not enough arguments for record address encoder",
+			name: "record invalid missing param",
+			args: []string{"record", s.scopeUUIDStr},
+			err:  "not enough arguments for record address encoder",
 		},
 		{
-			name:     "record invalid empty name param",
-			args:     []string{"record", s.scopeUUIDStr, ""},
-			err:      "not enough arguments for record address encoder",
+			name: "record invalid empty name param",
+			args: []string{"record", s.scopeUUIDStr, ""},
+			err:  "not enough arguments for record address encoder",
 		},
 		// Scope Specification cases
 		{
@@ -286,9 +286,9 @@ func (s MetaaddressTestSuite) TestAddMetaAddressEncoder() {
 			inResult: []string{s.scopeSpecIDStr},
 		},
 		{
-			name:     "scope-specification invalid has extra param",
-			args:     []string{"scope-specification", s.scopeSpecUUIDStr, "bad-arg"},
-			err:      "too many arguments for scope-specification address encoder",
+			name: "scope-specification invalid has extra param",
+			args: []string{"scope-specification", s.scopeSpecUUIDStr, "bad-arg"},
+			err:  "too many arguments for scope-specification address encoder",
 		},
 		// Contract Specification cases
 		{
@@ -317,9 +317,9 @@ func (s MetaaddressTestSuite) TestAddMetaAddressEncoder() {
 			inResult: []string{s.contractSpecIDStr},
 		},
 		{
-			name:     "contract-specification invalid has extra param",
-			args:     []string{"contract-specification", s.contractSpecUUIDStr, "bad-arg"},
-			err:      "too many arguments for contract-specification address encoder",
+			name: "contract-specification invalid has extra param",
+			args: []string{"contract-specification", s.contractSpecUUIDStr, "bad-arg"},
+			err:  "too many arguments for contract-specification address encoder",
 		},
 		// Record Specification cases
 		{
@@ -353,14 +353,14 @@ func (s MetaaddressTestSuite) TestAddMetaAddressEncoder() {
 			inResult: []string{s.recordSpecIDStr},
 		},
 		{
-			name:     "record-specification invalid missing param",
-			args:     []string{"record-specification", s.contractSpecUUIDStr},
-			err:      "not enough arguments for record-specification address encoder",
+			name: "record-specification invalid missing param",
+			args: []string{"record-specification", s.contractSpecUUIDStr},
+			err:  "not enough arguments for record-specification address encoder",
 		},
 		{
-			name:     "record-specification invalid empty name param",
-			args:     []string{"record-specification", s.contractSpecUUIDStr, ""},
-			err:      "not enough arguments for record-specification address encoder",
+			name: "record-specification invalid empty name param",
+			args: []string{"record-specification", s.contractSpecUUIDStr, ""},
+			err:  "not enough arguments for record-specification address encoder",
 		},
 	}
 
