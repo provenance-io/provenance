@@ -132,7 +132,7 @@ This type requires the third argument to be a UUID: session`, cmdStart),
 			if argsLen == 3 {
 				uuidOrNameArg = strings.TrimSpace(args[2])
 				if len(uuidOrNameArg) == 0 {
-					argsLen -= 1
+					argsLen--
 				}
 			}
 			var addr types.MetadataAddress
