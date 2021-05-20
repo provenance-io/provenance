@@ -12,13 +12,16 @@ Mention whether you follow Semantic Versioning.
 Usage:
 
 Change log entries are to be added to the Unreleased section under the
-appropriate stanza (see below). Each entry should ideally include a tag and
-the Github issue reference in the following format:
+appropriate stanza (see below). Each entry should ideally include a message and either
+an issue number or pull request number using one of these formats:
 
-* (<tag>) \#<issue-number> message
+* message #<issue-number>
 
-The issue numbers will later be link-ified during the release process so you do
-not have to worry about including a link manually, but you can if you wish.
+If there is no issue number, you can add a reference to a Pull Request like this:
+* message PR<pull-request-number>
+
+The issue numbers and pull request numbers will later be link-ified during the release process
+so you do not have to worry about including a link manually, but you can if you wish.
 
 Types of changes (Stanzas):
 
@@ -37,10 +40,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * Remove broken gauge on attribute module. Fixes prometheus metrics [#315](https://github.com/provenance-io/provenance/issues/315)
+
 ### Improvements
 
 * Add Kotlin and Javascript examples for Metadata Addresses [#301](https://github.com/provenance-io/provenance/issues/301)
-* Updated swagger docs
+* Updated swagger docs [PR 313](https://github.com/provenance-io/provenance/pull/313)
+* Fix swagger docs [PR 317](https://github.com/provenance-io/provenance/pull/317)
 
 ## [v1.3.0](https://github.com/provenance-io/provenance/releases/tag/v1.3.0) - 2021-05-06
 
@@ -290,6 +295,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 This is the intial beta release for the first Provenance public TESTNET.  This release is not intended for any type of
 production or reliable development as extensive work is still in progress to migrate the private network functionality
 into the public network.
+
 ### Features
 
 * Initial port of private Provenance blockchain modules `name`, `attribute`, and `marker` from v0.39.x Cosmos SDK chain
