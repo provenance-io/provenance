@@ -695,8 +695,12 @@ func (ma MetadataAddress) GetDetails() MetadataAddressDetails {
 	// Set the prefix info if we've got anything at all.
 	if len(addr) >= 1 {
 		retval.AddressPrefix = addr[0:1]
-		// If there's an error, we'll still get an empty string and we don't really care about the error.
-		retval.Prefix, _ = addr.Prefix()
+		prefix, err := addr.Prefix()
+		if err != nil {
+			// If there's an error, convert the prefix bytes to hex
+			prefix = hex.EncodeToString(retval.AddressPrefix)
+		}
+		retval.Prefix = prefix
 	}
 	// Every type has a primary uuid as the 16 bytes after the prefix.
 	// So if those exist, get set the primary uuid info.
