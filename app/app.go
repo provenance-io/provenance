@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	_ "github.com/provenance-io/provenance/client/docs/statik" // registers swagger-ui files with statik
+	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/statesync"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -122,7 +124,7 @@ const (
 	// DefaultFeeDenom is the denomination of coin to use for fees
 	DefaultFeeDenom = "nhash" // nano-hash
 	// DefaultReDnmString is the allowed denom regex expression
-	DefaultReDnmString = `[a-zA-Z][a-zA-Z0-9\-\.]{2,127}`
+	DefaultReDnmString = `[a-zA-Z][a-zA-Z0-9/\-\.]{2,127}`
 )
 
 var (
@@ -574,7 +576,7 @@ func New(
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetAnteHandler(
-		ante.NewAnteHandler(
+		antewrapper.NewAnteHandler(
 			app.AccountKeeper, app.BankKeeper, ante.DefaultSigVerificationGasConsumer,
 			encodingConfig.TxConfig.SignModeHandler(),
 		),

@@ -424,7 +424,7 @@ Note, though, that the record key is constructed in a way that automatically ind
 
 An object store locator indicates the location of off-chain data.
 
-### Object Store Locator Keys
+#### Object Store Locator Keys
 
 Byte Array Length: `21`
 
@@ -433,7 +433,7 @@ Byte Array Length: `21`
 | 0          | `0x16`
 | 1-20       | The 20 bytes of the owner address.
 
-### Object Store Locator Values
+#### Object Store Locator Values
 
 +++ https://github.com/provenance-io/provenance/blob/main/proto/provenance/metadata/v1/objectstore.proto#L9-L16
 
@@ -448,6 +448,6 @@ message ObjectStoreLocator {
 }
 ```
 
-### Object Store Locator Indexes
+#### Object Store Locator Indexes
 
 There are no extra indexes involving object store locators.

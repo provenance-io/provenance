@@ -373,6 +373,15 @@ func TestAccountKeeperMintBurnCoins(t *testing.T) {
 	// succeeds on a cancelled marker (no-op)
 	require.NoError(t, app.MarkerKeeper.CancelMarker(ctx, user, "testcoin"))
 
+	// Set an escrow balance
+	app.BankKeeper.SetBalance(ctx, addr, sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt()))
+	// Fails because there are coins in escrow.
+	require.Error(t, app.MarkerKeeper.DeleteMarker(ctx, user, "testcoin"))
+
+	// Remove escrow balance
+	app.BankKeeper.SetBalance(ctx, addr, sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()))
+
+	// Succeeds because the bond denom coin was removed.
 	require.NoError(t, app.MarkerKeeper.DeleteMarker(ctx, user, "testcoin"))
 
 	// none, marker has been deleted

@@ -1,46 +1,61 @@
 {
-    "swagger": "2.0",
-    "info": {
-      "title": "Provenance Blockchain",
-      "description": "Provenance Blockchain Node Application",
-      "version": "1.0.0"
+  "swagger": "2.0",
+  "info": {
+    "title": "Provenance Blockchain",
+    "description": "Provenance Blockchain Node Application",
+    "version": "1.0.0"
+  },
+  "apis": [
+    {
+      "url": "./client/docs/swagger_legacy.yaml",
+      "dereference": {
+        "circular": "ignore"
+      }
     },
-    "apis": [
-      {
-        "url": "./client/docs/swagger_legacy.yaml",
-        "dereference": {
-          "circular": "ignore"
-        }
-      },
-      {
-        "url": "./tmp-swagger-gen/provenance/attribute/v1/query.swagger.json",
-        "operationIds": {
-          "rename": {
-            "Params": "AttributeParams"
-          }
-        }
-      },      {
-        "url": "./tmp-swagger-gen/provenance/marker/v1/query.swagger.json",
-        "operationIds": {
-          "rename": {
-            "Params": "MarkerParams"
-          }
-        }
-      },      {
-        "url": "./tmp-swagger-gen/provenance/metadata/v1/query.swagger.json",
-        "operationIds": {
-          "rename": {
-            "Params": "MetadataParams"
-          }
-        }
-      },      {
-        "url": "./tmp-swagger-gen/provenance/name/v1/query.swagger.json",
-        "operationIds": {
-          "rename": {
-            "Params": "NameParams"
-          }
+    {
+      "url": "./tmp-swagger-gen/provenance/attribute/v1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "AttributeParams"
         }
       }
-    ]
-  }
+    },
+    {
+      "url": "./tmp-swagger-gen/provenance/attribute/v1/tx.swagger.json"
+    },
+    {
+      "url": "./tmp-swagger-gen/provenance/marker/v1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "MarkerParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/provenance/marker/v1/tx.swagger.json"
+    },
+    {
+      "url": "./tmp-swagger-gen/provenance/metadata/v1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "MetadataParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/provenance/metadata/v1/tx.swagger.json"
+    },
+    {
+      "url": "./tmp-swagger-gen/provenance/name/v1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "NameParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/provenance/name/v1/tx.swagger.json"
+    }
+  ]
+}
   

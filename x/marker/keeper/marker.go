@@ -301,7 +301,7 @@ func (k Keeper) AdjustCirculation(ctx sdk.Context, marker types.MarkerAccountI, 
 
 	if desiredSupply.Amount.GT(currentSupply) { // not enough coin in circulation, mint more.
 		offset := sdk.NewCoin(marker.GetDenom(), desiredSupply.Amount.Sub(currentSupply))
-		ctx.Logger().Error(
+		ctx.Logger().Info(
 			fmt.Sprintf("Current %s supply is NOT at the required amount, minting %s to required supply level",
 				marker.GetDenom(), offset))
 		if err := k.bankKeeper.MintCoins(ctx, types.CoinPoolName, sdk.NewCoins(offset)); err != nil {
@@ -314,7 +314,7 @@ func (k Keeper) AdjustCirculation(ctx sdk.Context, marker types.MarkerAccountI, 
 		}
 	} else if desiredSupply.Amount.LT(currentSupply) { // too much coin in circulation, attempt to burn from marker account.
 		offset := sdk.NewCoin(marker.GetDenom(), currentSupply.Sub(desiredSupply.Amount))
-		ctx.Logger().Error(
+		ctx.Logger().Info(
 			fmt.Sprintf("Current %s supply is NOT at the required amount, burning %s to required supply level",
 				marker.GetDenom(), offset))
 		if err := k.bankKeeper.SendCoinsFromAccountToModule(
@@ -570,8 +570,8 @@ func (k Keeper) DeleteMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 
 	// require full supply of coin for marker to be contained within the marker account (no outstanding delegations)
 	totalSupply := k.bankKeeper.GetSupply(ctx).GetTotal().AmountOf(denom)
-	escrow := k.bankKeeper.GetBalance(ctx, m.GetAddress(), m.GetDenom())
-	inCirculation := totalSupply.Sub(escrow.Amount)
+	escrow := k.bankKeeper.GetAllBalances(ctx, m.GetAddress())
+	inCirculation := totalSupply.Sub(escrow.AmountOf(denom))
 	if inCirculation.GT(sdk.ZeroInt()) {
 		return fmt.Errorf("cannot delete marker with %d minted coin in circulation out of %d total."+
 			" ensure marker account holds the entire supply of %s", inCirculation, totalSupply, denom)
@@ -580,6 +580,11 @@ func (k Keeper) DeleteMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 	err = k.DecreaseSupply(ctx, m, sdk.NewCoin(denom, totalSupply))
 	if err != nil {
 		return fmt.Errorf("could not decrease marker supply %s: %s", denom, err)
+	}
+
+	escrow = k.bankKeeper.GetAllBalances(ctx, m.GetAddress())
+	if !escrow.IsZero() {
+		return fmt.Errorf("can not destroy marker due to balances in escrow: %s", escrow)
 	}
 
 	// get the updated state of the marker afer supply burn...
