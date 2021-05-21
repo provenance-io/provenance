@@ -9,6 +9,8 @@ Additionally, several indexes are created to help with linking and iterating ove
   - [Entries](#entries)
   - [Specifications](#specifications)
   - [Metadata Addresses](#metadata-addresses)
+    - [MetadataAddress Example Implementations](#metadataaddress-example-implementations)
+    - [MetadataAddress General Guidelines](#metadataaddress-general-guidelines)
   - [Indexes](#indexes)
 
 
@@ -31,6 +33,14 @@ As strings, they should be represented using the bech32 address format.
 The addresses for the different messages have specific formats that help facilitate grouping and indexing.
 All addresses start with a single byte that identifies the type, and are followed by 16 bytes commonly called a UUID.
 Some address types contain other elements too.
+
+### MetadataAddress Example Implementations
+
+* Go: [address.go](https://github.com/provenance-io/provenance/blob/main/x/metadata/spec/examples/go/metadata_address.go)
+* Kotlin: [MetadataAddress.kt](https://github.com/provenance-io/provenance/blob/main/x/metadata/spec/examples/kotlin/src/main/kotlin/MetadataAddress.kt)
+* Javascript: [metadata-address.js](https://github.com/provenance-io/provenance/blob/main/x/metadata/spec/examples/js/lib/metadata-address.js)
+
+### MetadataAddress General Guidelines
 
 * As strings, the metadata addresses are represented using the bech32 address format.
 * The `*IdInfo` messages defined in `metadata.proto` (e.g. `RecordIdInfo`) are used in response messages and contain a breakdown of a metadata address.

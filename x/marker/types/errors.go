@@ -11,4 +11,5 @@ var (
 	ErrDuplicateAccessEntry    = sdkerrors.Register(ModuleName, 4, "access list contains duplicate entry")
 	ErrInvalidMarkerStatus     = sdkerrors.Register(ModuleName, 5, "invalid marker status")
 	ErrAccessTypeNotGranted    = sdkerrors.Register(ModuleName, 6, "access type not granted")
+	ErrMarkerNotFound          = sdkerrors.Register(ModuleName, 7, "marker not found")
 )
