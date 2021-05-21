@@ -33,21 +33,21 @@ type AddressTestSuite struct {
 
 func (s *AddressTestSuite) SetupTest() {
 	s.scopeUUIDstr = "8d80b25a-c089-4446-956e-5d08cfe3e1a5"
-	s.scopeUUID   = uuid.MustParse(s.scopeUUIDstr)
+	s.scopeUUID = uuid.MustParse(s.scopeUUIDstr)
 	s.sessionUUIDstr = "c25c7bd4-c639-4367-a842-f64fa5fccc19"
 	s.sessionUUID = uuid.MustParse(s.sessionUUIDstr)
 
-	s.scopeHex      = "008D80B25AC0894446956E5D08CFE3E1A5"
-	s.scopeBech32   = "scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp"
+	s.scopeHex = "008D80B25AC0894446956E5D08CFE3E1A5"
+	s.scopeBech32 = "scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp"
 	s.sessionBech32 = "session1qxxcpvj6czy5g354dews3nlruxjuyhrm6nrrjsm84pp0vna9lnxpjewp6kf"
-	s.recordBech32  = "record1q2xcpvj6czy5g354dews3nlruxjelpkssxyyclt9ngh74gx9ttgp27gt8kl"
+	s.recordBech32 = "record1q2xcpvj6czy5g354dews3nlruxjelpkssxyyclt9ngh74gx9ttgp27gt8kl"
 }
 
 func TestAddressTestSuite(t *testing.T) {
 	suite.Run(t, new(AddressTestSuite))
 }
 
-func (s *AddressTestSuite) requireBech32String (typeCode []byte, data []byte) string {
+func (s *AddressTestSuite) requireBech32String(typeCode []byte, data []byte) string {
 	hrp, err := MetadataAddress{typeCode[0]}.Prefix()
 	s.Require().NoError(err, "getPrefix error")
 	addr := append([]byte{typeCode[0]}, data...)
@@ -63,12 +63,12 @@ func (s *AddressTestSuite) TestLegacySha512HashToAddress() {
 	testHash31 := base64.StdEncoding.EncodeToString(testHashBytes[:31])
 
 	tests := []struct {
-		name string
-		typeBytes []byte
-		hash string
-		expectedAddr string
+		name          string
+		typeBytes     []byte
+		hash          string
+		expectedAddr  string
 		expectedError string
-	} {
+	}{
 		{
 			"empty typeBytes",
 			[]byte{},
@@ -280,10 +280,10 @@ func (s *AddressTestSuite) TestCompare() {
 	ma11 := MetadataAddress("11")
 	ma22 := MetadataAddress("22")
 
-	tests := []struct{
-		name string
-		base MetadataAddress
-		arg MetadataAddress
+	tests := []struct {
+		name     string
+		base     MetadataAddress
+		arg      MetadataAddress
 		expected int
 	}{
 		{"maEmpty v maEmpty", maEmpty, maEmpty, 0},
@@ -341,10 +341,10 @@ func (s *AddressTestSuite) TestMetadataAddressIteratorPrefix() {
 
 	scopeSpecID := ScopeSpecMetadataAddress(s.scopeUUID)
 	bz, err = scopeSpecID.ScopeSessionIteratorPrefix()
-	assert.EqualError(t, err,  "this metadata address does not contain a scope uuid", "scope spec id ScopeSessionIteratorPrefix error message")
+	assert.EqualError(t, err, "this metadata address does not contain a scope uuid", "scope spec id ScopeSessionIteratorPrefix error message")
 	assert.Equal(t, []byte{}, bz, "scope spec id ScopeSessionIteratorPrefix value")
 	bz, err = scopeSpecID.ScopeRecordIteratorPrefix()
-	assert.EqualError(t, err,  "this metadata address does not contain a scope uuid", "scope spec id ScopeRecordIteratorPrefix error message")
+	assert.EqualError(t, err, "this metadata address does not contain a scope uuid", "scope spec id ScopeRecordIteratorPrefix error message")
 	assert.Equal(t, []byte{}, bz, "scope spec id ScopeRecordIteratorPrefix value")
 
 	scopeID := ScopeMetadataAddress(s.scopeUUID)
@@ -589,11 +589,11 @@ func (s *AddressTestSuite) TestMetadataAddressTypeTestFuncs() {
 
 func (s *AddressTestSuite) TestPrefix() {
 	tests := []struct {
-		name string
-		addr MetadataAddress
-		expectedValue string
-		expectedError string
-		expectAnyError bool    // set to true if you expect an error, but don't care what the error string is.
+		name           string
+		addr           MetadataAddress
+		expectedValue  string
+		expectedError  string
+		expectAnyError bool // set to true if you expect an error, but don't care what the error string is.
 	}{
 		{
 			"scope",
@@ -719,11 +719,11 @@ func (s *AddressTestSuite) TestPrimaryUUID() {
 	recordSpecPrimaryUUID := uuid.New()
 
 	tests := []struct {
-		name string
-		id MetadataAddress
+		name          string
+		id            MetadataAddress
 		expectedValue uuid.UUID
 		expectedError string
-	} {
+	}{
 		{
 			"scope",
 			ScopeMetadataAddress(scopePrimaryUUID),
@@ -797,11 +797,11 @@ func (s *AddressTestSuite) TestSecondaryUUID() {
 	sessionSecondaryUUID := uuid.New()
 
 	tests := []struct {
-		name string
-		id MetadataAddress
+		name          string
+		id            MetadataAddress
 		expectedValue uuid.UUID
 		expectedError string
-	} {
+	}{
 		{
 			"scope",
 			ScopeMetadataAddress(uuid.New()),
@@ -878,11 +878,11 @@ func (s *AddressTestSuite) TestNameHash() {
 	recordSpecNameHash := sha256.Sum256([]byte(recordSpecName))
 
 	tests := []struct {
-		name string
-		id MetadataAddress
+		name          string
+		id            MetadataAddress
 		expectedValue []byte
 		expectedError string
-	} {
+	}{
 		{
 			"scope",
 			ScopeMetadataAddress(uuid.New()),
@@ -962,9 +962,9 @@ func (s *AddressTestSuite) TestScopeAddressConverters() {
 	recordSpecID := RecordSpecMetadataAddress(randomUUID, "the downard spiral")
 
 	tests := []struct {
-		name string
-		baseID MetadataAddress
-		expectedID MetadataAddress
+		name          string
+		baseID        MetadataAddress
+		expectedID    MetadataAddress
 		expectedError string
 	}{
 		{
@@ -1018,6 +1018,18 @@ func (s *AddressTestSuite) TestScopeAddressConverters() {
 				assert.EqualError(t, err, test.expectedError, "%s AsScopeAddress expected err", test.name)
 			}
 		})
+		s.T().Run(fmt.Sprintf("%s MustGetAsScopeAddress", test.name), func(t *testing.T) {
+			if len(test.expectedError) == 0 {
+				assert.NotPanics(t, func() {
+					actualID := test.baseID.MustGetAsScopeAddress()
+					assert.Equal(t, test.expectedID, actualID, "%s MustGetAsScopeAddress value", test.name)
+				}, "%s MustGetAsScopeAddress unexpected panic", test.name)
+			} else {
+				assert.PanicsWithError(t, test.expectedError, func() {
+					_ = test.baseID.MustGetAsScopeAddress()
+				}, "%s MustGetAsScopeAddress expected panic", test.name)
+			}
+		})
 	}
 }
 
@@ -1032,9 +1044,9 @@ func (s *AddressTestSuite) TestSessionAddressConverters() {
 	recordSpecID := RecordSpecMetadataAddress(randomUUID, "smile")
 
 	tests := []struct {
-		name string
-		baseID MetadataAddress
-		expectedID MetadataAddress
+		name          string
+		baseID        MetadataAddress
+		expectedID    MetadataAddress
 		expectedError string
 	}{
 		{
@@ -1109,9 +1121,9 @@ func (s *AddressTestSuite) TestRecordAddressConverters() {
 	}
 
 	tests := []struct {
-		name string
-		baseID MetadataAddress
-		expectedID MetadataAddress
+		name          string
+		baseID        MetadataAddress
+		expectedID    MetadataAddress
 		expectedError string
 	}{
 		{
@@ -1166,6 +1178,18 @@ func (s *AddressTestSuite) TestRecordAddressConverters() {
 					assert.EqualError(t, err, test.expectedError, "%s AsRecordAddress expected err", test.name)
 				}
 			})
+			s.T().Run(fmt.Sprintf("%s MustGetAsRecordAddress(\"%s\")", test.name, rName), func(t *testing.T) {
+				if len(test.expectedError) == 0 {
+					assert.NotPanics(t, func() {
+						actualID := test.baseID.MustGetAsRecordAddress(rName)
+						assert.Equal(t, test.expectedID, actualID, "%s MustGetAsRecordAddress value", test.name)
+					}, "%s MustGetAsRecordAddress unexpected panic", test.name)
+				} else {
+					assert.PanicsWithError(t, test.expectedError, func() {
+						_ = test.baseID.MustGetAsRecordAddress(rName)
+					}, "%s MustGetAsRecordAddress expected panic", test.name)
+				}
+			})
 		}
 	}
 }
@@ -1188,9 +1212,9 @@ func (s *AddressTestSuite) TestRecordSpecAddressConverters() {
 	}
 
 	tests := []struct {
-		name string
-		baseID MetadataAddress
-		expectedID MetadataAddress
+		name          string
+		baseID        MetadataAddress
+		expectedID    MetadataAddress
 		expectedError string
 	}{
 		{
@@ -1260,9 +1284,9 @@ func (s *AddressTestSuite) TestContractSpecAddressConverters() {
 	recordSpecID := RecordSpecMetadataAddress(randomUUID, "with teeth")
 
 	tests := []struct {
-		name string
-		baseID MetadataAddress
-		expectedID MetadataAddress
+		name          string
+		baseID        MetadataAddress
+		expectedID    MetadataAddress
 		expectedError string
 	}{
 		{
@@ -1317,6 +1341,18 @@ func (s *AddressTestSuite) TestContractSpecAddressConverters() {
 				assert.EqualError(t, err, test.expectedError, "%s AsContractSpecAddress expected err", test.name)
 			}
 		})
+		s.T().Run(fmt.Sprintf("%s MustGetAsContractSpecAddress", test.name), func(t *testing.T) {
+			if len(test.expectedError) == 0 {
+				assert.NotPanics(t, func() {
+					actualID := test.baseID.MustGetAsContractSpecAddress()
+					assert.Equal(t, test.expectedID, actualID, "%s MustGetAsContractSpecAddress value", test.name)
+				}, "%s MustGetAsContractSpecAddress unexpected panic", test.name)
+			} else {
+				assert.PanicsWithError(t, test.expectedError, func() {
+					_ = test.baseID.MustGetAsContractSpecAddress()
+				}, "%s MustGetAsContractSpecAddress expected panic", test.name)
+			}
+		})
 	}
 }
 
@@ -1325,9 +1361,9 @@ func (s *AddressTestSuite) TestFormat() {
 	emptyID := MetadataAddress{}
 
 	tests := []struct {
-		name string
-		id MetadataAddress
-		format string
+		name     string
+		id       MetadataAddress
+		format   string
 		expected string
 	}{
 		{
@@ -1394,6 +1430,45 @@ func (s *AddressTestSuite) TestFormat() {
 			assert.Equal(t, test.expected, actual, test.name)
 		})
 	}
+}
+
+func (s *AddressTestSuite) TestGenerateExamples() {
+	// This "test" doesn't actually test anything. It just generates some output that's helpful
+	// for validating other MetadataAddress implementations.
+
+	scopeUUIDString := "91978ba2-5f35-459a-86a7-feca1b0512e0"
+	sessionUUIDString := "5803f8bc-6067-4eb5-951f-2121671c2ec0"
+	scopeSpecUUIDString := "dc83ea70-eacd-40fe-9adf-1cf6148bf8a2"
+	contractSpecUUIDString := "def6bc0a-c9dd-4874-948f-5206e6060a84"
+	recordName := "recordname"
+
+	scopeUUID := uuid.MustParse(scopeUUIDString)
+	sessionUUID := uuid.MustParse(sessionUUIDString)
+	scopeSpecUUID := uuid.MustParse(scopeSpecUUIDString)
+	contractSpecUUID := uuid.MustParse(contractSpecUUIDString)
+
+	scopeId := ScopeMetadataAddress(scopeUUID)
+	sessionId := SessionMetadataAddress(scopeUUID, sessionUUID)
+	recordId := RecordMetadataAddress(scopeUUID, recordName)
+	scopeSpecId := ScopeSpecMetadataAddress(scopeSpecUUID)
+	contractSpecId := ContractSpecMetadataAddress(contractSpecUUID)
+	recordSpecId := RecordSpecMetadataAddress(contractSpecUUID, recordName)
+	recordNameBytes, _ := recordId.NameHash()
+
+	fmt.Printf("        scope uuid: \"%s\"\n", scopeUUIDString)
+	fmt.Printf("      session uuid: \"%s\"\n", sessionUUIDString)
+	fmt.Printf("   scope spec uuid: \"%s\"\n", scopeSpecUUIDString)
+	fmt.Printf("contract spec uuid: \"%s\"\n", contractSpecUUIDString)
+	fmt.Printf("       record name: \"%s\"\n", recordName)
+	fmt.Printf("hashed record name bytes: %v\n", recordNameBytes)
+	fmt.Printf("       scope id: \"%s\"\n", scopeId)
+	fmt.Printf("     session id: \"%s\"\n", sessionId)
+	fmt.Printf("      record id: \"%s\"\n", recordId)
+	fmt.Printf("  scope spec id: \"%s\"\n", scopeSpecId)
+	fmt.Printf("contrat spec id: \"%s\"\n", contractSpecId)
+	fmt.Printf(" record spec id: \"%s\"\n", recordSpecId)
+
+	s.Assert().True(true)
 }
 
 // TODO: GetDetails tests.

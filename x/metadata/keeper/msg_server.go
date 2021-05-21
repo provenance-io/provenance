@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -28,6 +30,7 @@ func (k msgServer) WriteScope(
 	goCtx context.Context,
 	msg *types.MsgWriteScopeRequest,
 ) (*types.MsgWriteScopeResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "WriteScope")
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	existing, _ := k.GetScope(ctx, msg.Scope.ScopeId)
@@ -37,23 +40,15 @@ func (k msgServer) WriteScope(
 
 	k.SetScope(ctx, msg.Scope)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
-		),
-	)
-
-	return &types.MsgWriteScopeResponse{
-		ScopeIdInfo: types.GetScopeIDInfo(msg.Scope.ScopeId),
-	}, nil
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteScope, msg.GetSigners()))
+	return types.NewMsgWriteScopeResponse(msg.Scope.ScopeId), nil
 }
 
 func (k msgServer) DeleteScope(
 	goCtx context.Context,
 	msg *types.MsgDeleteScopeRequest,
 ) (*types.MsgDeleteScopeResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteScope")
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	existing, found := k.GetScope(ctx, msg.ScopeId)
@@ -67,20 +62,15 @@ func (k msgServer) DeleteScope(
 
 	k.RemoveScope(ctx, msg.ScopeId)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(types.AttributeKeyScopeID, string(msg.ScopeId)),
-		),
-	)
-
-	return &types.MsgDeleteScopeResponse{}, nil
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteScope, msg.GetSigners()))
+	return types.NewMsgDeleteScopeResponse(), nil
 }
 
 func (k msgServer) AddScopeDataAccess(
 	goCtx context.Context,
 	msg *types.MsgAddScopeDataAccessRequest,
 ) (*types.MsgAddScopeDataAccessResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "AddScopeDataAccess")
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	existing, found := k.GetScope(ctx, msg.ScopeId)
@@ -96,21 +86,15 @@ func (k msgServer) AddScopeDataAccess(
 
 	k.SetScope(ctx, existing)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
-		),
-	)
-
-	return &types.MsgAddScopeDataAccessResponse{}, nil
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_AddScopeDataAccess, msg.GetSigners()))
+	return types.NewMsgAddScopeDataAccessResponse(), nil
 }
 
 func (k msgServer) DeleteScopeDataAccess(
 	goCtx context.Context,
 	msg *types.MsgDeleteScopeDataAccessRequest,
 ) (*types.MsgDeleteScopeDataAccessResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteScopeDataAccess")
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	existing, found := k.GetScope(ctx, msg.ScopeId)
@@ -126,21 +110,15 @@ func (k msgServer) DeleteScopeDataAccess(
 
 	k.SetScope(ctx, existing)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
-		),
-	)
-
-	return &types.MsgDeleteScopeDataAccessResponse{}, nil
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteScopeDataAccess, msg.GetSigners()))
+	return types.NewMsgDeleteScopeDataAccessResponse(), nil
 }
 
 func (k msgServer) AddScopeOwner(
 	goCtx context.Context,
 	msg *types.MsgAddScopeOwnerRequest,
 ) (*types.MsgAddScopeOwnerResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "AddScopeOwner")
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if err := msg.ValidateBasic(); err != nil {
@@ -164,21 +142,15 @@ func (k msgServer) AddScopeOwner(
 
 	k.SetScope(ctx, proposed)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
-		),
-	)
-
-	return &types.MsgAddScopeOwnerResponse{}, nil
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_AddScopeOwner, msg.GetSigners()))
+	return types.NewMsgAddScopeOwnerResponse(), nil
 }
 
 func (k msgServer) DeleteScopeOwner(
 	goCtx context.Context,
 	msg *types.MsgDeleteScopeOwnerRequest,
 ) (*types.MsgDeleteScopeOwnerResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteScopeOwner")
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if err := msg.ValidateBasic(); err != nil {
@@ -202,21 +174,15 @@ func (k msgServer) DeleteScopeOwner(
 
 	k.SetScope(ctx, existing)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
-		),
-	)
-
-	return &types.MsgDeleteScopeOwnerResponse{}, nil
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteScopeOwner, msg.GetSigners()))
+	return types.NewMsgDeleteScopeOwnerResponse(), nil
 }
 
 func (k msgServer) WriteSession(
 	goCtx context.Context,
 	msg *types.MsgWriteSessionRequest,
 ) (*types.MsgWriteSessionResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "WriteSession")
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	var existing *types.Session = nil
@@ -233,23 +199,15 @@ func (k msgServer) WriteSession(
 
 	k.SetSession(ctx, msg.Session)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
-		),
-	)
-
-	return &types.MsgWriteSessionResponse{
-		SessionIdInfo: types.GetSessionIDInfo(msg.Session.SessionId),
-	}, nil
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteSession, msg.GetSigners()))
+	return types.NewMsgWriteSessionResponse(msg.Session.SessionId), nil
 }
 
 func (k msgServer) WriteRecord(
 	goCtx context.Context,
 	msg *types.MsgWriteRecordRequest,
 ) (*types.MsgWriteRecordResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "WriteRecord")
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	scopeUUID, err := msg.Record.SessionId.ScopeUUID()
@@ -269,23 +227,15 @@ func (k msgServer) WriteRecord(
 
 	k.SetRecord(ctx, msg.Record)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
-		),
-	)
-
-	return &types.MsgWriteRecordResponse{
-		RecordIdInfo: types.GetRecordIDInfo(recordID),
-	}, nil
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteRecord, msg.GetSigners()))
+	return types.NewMsgWriteRecordResponse(recordID), nil
 }
 
 func (k msgServer) DeleteRecord(
 	goCtx context.Context,
 	msg *types.MsgDeleteRecordRequest,
 ) (*types.MsgDeleteRecordResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteRecord")
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	existing, _ := k.GetRecord(ctx, msg.RecordId)
@@ -295,21 +245,15 @@ func (k msgServer) DeleteRecord(
 
 	k.RemoveRecord(ctx, msg.RecordId)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
-		),
-	)
-
-	return &types.MsgDeleteRecordResponse{}, nil
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteRecord, msg.GetSigners()))
+	return types.NewMsgDeleteRecordResponse(), nil
 }
 
 func (k msgServer) WriteScopeSpecification(
 	goCtx context.Context,
 	msg *types.MsgWriteScopeSpecificationRequest,
 ) (*types.MsgWriteScopeSpecificationResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "WriteScopeSpecification")
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	var existing *types.ScopeSpecification = nil
@@ -325,23 +269,15 @@ func (k msgServer) WriteScopeSpecification(
 
 	k.SetScopeSpecification(ctx, msg.Specification)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
-		),
-	)
-
-	return &types.MsgWriteScopeSpecificationResponse{
-		ScopeSpecIdInfo: types.GetScopeSpecIDInfo(msg.Specification.SpecificationId),
-	}, nil
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteScopeSpecification, msg.GetSigners()))
+	return types.NewMsgWriteScopeSpecificationResponse(msg.Specification.SpecificationId), nil
 }
 
 func (k msgServer) DeleteScopeSpecification(
 	goCtx context.Context,
 	msg *types.MsgDeleteScopeSpecificationRequest,
 ) (*types.MsgDeleteScopeSpecificationResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteScopeSpecification")
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	existing, found := k.GetScopeSpecification(ctx, msg.SpecificationId)
@@ -356,21 +292,15 @@ func (k msgServer) DeleteScopeSpecification(
 		return nil, fmt.Errorf("cannot delete scope specification with id %s: %w", msg.SpecificationId, err)
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
-		),
-	)
-
-	return &types.MsgDeleteScopeSpecificationResponse{}, nil
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteScopeSpecification, msg.GetSigners()))
+	return types.NewMsgDeleteScopeSpecificationResponse(), nil
 }
 
 func (k msgServer) WriteContractSpecification(
 	goCtx context.Context,
 	msg *types.MsgWriteContractSpecificationRequest,
 ) (*types.MsgWriteContractSpecificationResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "WriteContractSpecification")
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	var existing *types.ContractSpecification = nil
@@ -386,23 +316,15 @@ func (k msgServer) WriteContractSpecification(
 
 	k.SetContractSpecification(ctx, msg.Specification)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
-		),
-	)
-
-	return &types.MsgWriteContractSpecificationResponse{
-		ContractSpecIdInfo: types.GetContractSpecIDInfo(msg.Specification.SpecificationId),
-	}, nil
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteContractSpecification, msg.GetSigners()))
+	return types.NewMsgWriteContractSpecificationResponse(msg.Specification.SpecificationId), nil
 }
 
 func (k msgServer) DeleteContractSpecification(
 	goCtx context.Context,
 	msg *types.MsgDeleteContractSpecificationRequest,
 ) (*types.MsgDeleteContractSpecificationResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteContractSpecification")
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	existing, found := k.GetContractSpecification(ctx, msg.SpecificationId)
@@ -442,21 +364,15 @@ func (k msgServer) DeleteContractSpecification(
 		return nil, fmt.Errorf("cannot delete contract specification with id %s: %w", msg.SpecificationId, err)
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
-		),
-	)
-
-	return &types.MsgDeleteContractSpecificationResponse{}, nil
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteContractSpecification, msg.GetSigners()))
+	return types.NewMsgDeleteContractSpecificationResponse(), nil
 }
 
 func (k msgServer) WriteRecordSpecification(
 	goCtx context.Context,
 	msg *types.MsgWriteRecordSpecificationRequest,
 ) (*types.MsgWriteRecordSpecificationResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "WriteRecordSpecification")
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	contractSpecID, err := msg.Specification.SpecificationId.AsContractSpecAddress()
@@ -483,23 +399,15 @@ func (k msgServer) WriteRecordSpecification(
 
 	k.SetRecordSpecification(ctx, msg.Specification)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
-		),
-	)
-
-	return &types.MsgWriteRecordSpecificationResponse{
-		RecordSpecIdInfo: types.GetRecordSpecIDInfo(msg.Specification.SpecificationId),
-	}, nil
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteRecordSpecification, msg.GetSigners()))
+	return types.NewMsgWriteRecordSpecificationResponse(msg.Specification.SpecificationId), nil
 }
 
 func (k msgServer) DeleteRecordSpecification(
 	goCtx context.Context,
 	msg *types.MsgDeleteRecordSpecificationRequest,
 ) (*types.MsgDeleteRecordSpecificationResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteRecordSpecification")
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	_, found := k.GetRecordSpecification(ctx, msg.SpecificationId)
@@ -523,21 +431,15 @@ func (k msgServer) DeleteRecordSpecification(
 		return nil, fmt.Errorf("cannot delete record specification with id %s: %w", msg.SpecificationId, err)
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
-		),
-	)
-
-	return &types.MsgDeleteRecordSpecificationResponse{}, nil
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteRecordSpecification, msg.GetSigners()))
+	return types.NewMsgDeleteRecordSpecificationResponse(), nil
 }
 
 func (k msgServer) WriteP8EContractSpec(
 	goCtx context.Context,
 	msg *types.MsgWriteP8EContractSpecRequest,
 ) (*types.MsgWriteP8EContractSpecResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "WriteP8EContractSpec")
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	proposed, newrecords, err := types.ConvertP8eContractSpec(&msg.Contractspec, msg.Signers)
@@ -559,7 +461,7 @@ func (k msgServer) WriteP8EContractSpec(
 
 	k.SetContractSpecification(ctx, proposed)
 
-	recSpecIDInfos := make([]*types.RecordSpecIdInfo, len(newrecords))
+	recSpecIDs := make([]types.MetadataAddress, len(newrecords))
 	for i, proposedRecord := range newrecords {
 		var existing *types.RecordSpecification = nil
 		if e, found := k.GetRecordSpecification(ctx, proposedRecord.SpecificationId); found {
@@ -570,27 +472,18 @@ func (k msgServer) WriteP8EContractSpec(
 		}
 
 		k.SetRecordSpecification(ctx, proposedRecord)
-		recSpecIDInfos[i] = types.GetRecordSpecIDInfo(proposedRecord.SpecificationId)
+		recSpecIDs[i] = proposedRecord.SpecificationId
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, strings.Join(msg.Signers, ",")),
-		),
-	)
-
-	return &types.MsgWriteP8EContractSpecResponse{
-		ContractSpecIdInfo: types.GetContractSpecIDInfo(proposed.SpecificationId),
-		RecordSpecIdInfos:  recSpecIDInfos,
-	}, nil
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteP8eContractSpec, msg.GetSigners()))
+	return types.NewMsgWriteP8EContractSpecResponse(proposed.SpecificationId, recSpecIDs...), nil
 }
 
 func (k msgServer) P8EMemorializeContract(
 	goCtx context.Context,
 	msg *types.MsgP8EMemorializeContractRequest,
 ) (*types.MsgP8EMemorializeContractResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "P8EMemorializeContract")
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	p8EData, err := types.ConvertP8eMemorializeContractRequest(msg)
@@ -628,22 +521,15 @@ func (k msgServer) P8EMemorializeContract(
 		recordIDInfos[i] = recordResp.RecordIdInfo
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Invoker),
-		),
-	)
-
-	return &types.MsgP8EMemorializeContractResponse{
-		ScopeIdInfo:   scopeResp.ScopeIdInfo,
-		SessionIdInfo: sessionResp.SessionIdInfo,
-		RecordIdInfos: recordIDInfos,
-	}, nil
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_P8eMemorializeContract, msg.GetSigners()))
+	return types.NewMsgP8EMemorializeContractResponse(scopeResp.ScopeIdInfo, sessionResp.SessionIdInfo, recordIDInfos), nil
 }
 
-func (k msgServer) BindOSLocator(goCtx context.Context, msg *types.MsgBindOSLocatorRequest) (*types.MsgBindOSLocatorResponse, error) {
+func (k msgServer) BindOSLocator(
+	goCtx context.Context,
+	msg *types.MsgBindOSLocatorRequest,
+) (*types.MsgBindOSLocatorResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "BindOSLocator")
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// Validate
 	if err := msg.ValidateBasic(); err != nil {
@@ -660,91 +546,80 @@ func (k msgServer) BindOSLocator(goCtx context.Context, msg *types.MsgBindOSLoca
 	}
 
 	// Bind owner to URI
-	if err := k.Keeper.SetOSLocatorRecord(ctx, address, msg.Locator.LocatorUri); err != nil {
+	if err := k.Keeper.SetOSLocator(ctx, address, msg.Locator.LocatorUri); err != nil {
 		ctx.Logger().Error("unable to bind name", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
-	// Emit event and return
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeOsLocatorCreated,
-			sdk.NewAttribute(types.AttributeKeyOSLocatorAddress, msg.Locator.Owner),
-			sdk.NewAttribute(types.AttributeKeyOSLocatorURI, msg.Locator.LocatorUri),
-		),
-	)
 
-	return &types.MsgBindOSLocatorResponse{}, nil
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_BindOSLocator, msg.GetSigners()))
+	return types.NewMsgBindOSLocatorResponse(msg.Locator), nil
 }
 
-func (k msgServer) DeleteOSLocator(ctx context.Context, msg *types.MsgDeleteOSLocatorRequest) (*types.MsgDeleteOSLocatorResponse, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
+func (k msgServer) DeleteOSLocator(
+	goCtx context.Context,
+	msg *types.MsgDeleteOSLocatorRequest,
+) (*types.MsgDeleteOSLocatorResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteOSLocator")
+	ctx := sdk.UnwrapSDKContext(goCtx)
 	// Validate
 	if err := msg.ValidateBasic(); err != nil {
-		sdkCtx.Logger().Error("unable to validate message", "err", err)
+		ctx.Logger().Error("unable to validate message", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	// already valid address, checked in ValidateBasic
 	ownerAddr, _ := sdk.AccAddressFromBech32(msg.Locator.Owner)
 
-	if !k.Keeper.OSLocatorExists(sdkCtx, ownerAddr) {
-		sdkCtx.Logger().Error("Address not already bound to an URI", "owner", msg.Locator.Owner)
+	if !k.Keeper.OSLocatorExists(ctx, ownerAddr) {
+		ctx.Logger().Error("Address not already bound to an URI", "owner", msg.Locator.Owner)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, types.ErrOSLocatorAlreadyBound.Error())
 	}
 
-	if !k.Keeper.VerifyCorrectOwner(sdkCtx, ownerAddr) {
-		sdkCtx.Logger().Error("msg sender cannot delete os locator", "owner", ownerAddr)
+	if !k.Keeper.VerifyCorrectOwner(ctx, ownerAddr) {
+		ctx.Logger().Error("msg sender cannot delete os locator", "owner", ownerAddr)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "msg sender cannot delete os locator.")
 	}
 
 	// Delete
-	if err := k.Keeper.DeleteRecord(sdkCtx, ownerAddr); err != nil {
-		sdkCtx.Logger().Error("error deleting name", "err", err)
+	if err := k.Keeper.RemoveOSLocator(ctx, ownerAddr); err != nil {
+		ctx.Logger().Error("error deleting name", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
-	// Emit event and return
-	sdkCtx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeOsLocatorDeleted,
-			sdk.NewAttribute(types.AttributeKeyOSLocatorAddress, msg.Locator.Owner),
-			sdk.NewAttribute(types.AttributeKeyOSLocatorURI, msg.Locator.LocatorUri),
-		),
-	)
-	return &types.MsgDeleteOSLocatorResponse{Locator: msg.Locator}, nil
+
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteOSLocator, msg.GetSigners()))
+	return types.NewMsgDeleteOSLocatorResponse(msg.Locator), nil
 }
 
-func (k msgServer) ModifyOSLocator(ctx context.Context, msg *types.MsgModifyOSLocatorRequest) (*types.MsgModifyOSLocatorResponse, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
+func (k msgServer) ModifyOSLocator(
+	goCtx context.Context,
+	msg *types.MsgModifyOSLocatorRequest,
+) (*types.MsgModifyOSLocatorResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "ModifyOSLocator")
+	ctx := sdk.UnwrapSDKContext(goCtx)
 	// Validate
 	if err := msg.ValidateBasic(); err != nil {
-		sdkCtx.Logger().Error("unable to validate message", "err", err)
+		ctx.Logger().Error("unable to validate message", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	// already valid address, checked in ValidateBasic
 	ownerAddr, _ := sdk.AccAddressFromBech32(msg.Locator.Owner)
 
-	if !k.Keeper.OSLocatorExists(sdkCtx, ownerAddr) {
-		sdkCtx.Logger().Error("Address not already bound to an URI", "owner", msg.Locator.Owner)
+	if !k.Keeper.OSLocatorExists(ctx, ownerAddr) {
+		ctx.Logger().Error("Address not already bound to an URI", "owner", msg.Locator.Owner)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, types.ErrOSLocatorAlreadyBound.Error())
 	}
 
-	if !k.Keeper.VerifyCorrectOwner(sdkCtx, ownerAddr) {
-		sdkCtx.Logger().Error("msg sender cannot modify os locator", "owner", ownerAddr)
+	if !k.Keeper.VerifyCorrectOwner(ctx, ownerAddr) {
+		ctx.Logger().Error("msg sender cannot modify os locator", "owner", ownerAddr)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "msg sender cannot delete os locator.")
 	}
 	// Modify
-	if err := k.Keeper.ModifyRecord(sdkCtx, ownerAddr, msg.Locator.LocatorUri); err != nil {
-		sdkCtx.Logger().Error("error deleting name", "err", err)
+	if err := k.Keeper.ModifyOSLocator(ctx, ownerAddr, msg.Locator.LocatorUri); err != nil {
+		ctx.Logger().Error("error deleting name", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
-	// Emit event and return
-	sdkCtx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeOsLocatorModified,
-			sdk.NewAttribute(types.AttributeKeyOSLocatorAddress, msg.Locator.Owner),
-			sdk.NewAttribute(types.AttributeKeyOSLocatorURI, msg.Locator.LocatorUri),
-		),
-	)
-	return &types.MsgModifyOSLocatorResponse{Locator: msg.Locator}, nil
+
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_ModifyOSLocator, msg.GetSigners()))
+	return types.NewMsgModifyOSLocatorResponse(msg.Locator), nil
 }

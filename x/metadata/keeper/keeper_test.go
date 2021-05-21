@@ -465,7 +465,7 @@ func (s *KeeperTestSuite) TestAddOSLocator() {
 		acc1 := s.app.AccountKeeper.GetAccount(s.ctx, s.user3Addr)
 		s.Require().NotNil(acc1)
 		// create os locator with ^^ account
-		err := s.app.MetadataKeeper.SetOSLocatorRecord(s.ctx, s.user3Addr, "https://bob.com/alice")
+		err := s.app.MetadataKeeper.SetOSLocator(s.ctx, s.user3Addr, "https://bob.com/alice")
 		s.Require().Empty(err)
 		r, found := s.app.MetadataKeeper.GetOsLocatorRecord(s.ctx, s.user1Addr)
 		s.Require().NotEmpty(r)
@@ -474,7 +474,7 @@ func (s *KeeperTestSuite) TestAddOSLocator() {
 
 	s.Run("add os locator account does not exist.", func() {
 		// create account and check default values
-		err := s.app.MetadataKeeper.SetOSLocatorRecord(s.ctx, sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()), "https://bob.com/alice")
+		err := s.app.MetadataKeeper.SetOSLocator(s.ctx, sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()), "https://bob.com/alice")
 		s.Require().NotEmpty(err)
 	})
 
@@ -492,7 +492,7 @@ func (s *KeeperTestSuite) TestAddOSLocator() {
 		acc1 := s.app.AccountKeeper.GetAccount(s.ctx, user4Addr)
 		s.Require().NotNil(acc1)
 		// create os locator with ^^ account
-		err := s.app.MetadataKeeper.SetOSLocatorRecord(s.ctx, user4Addr, "foo.com")
+		err := s.app.MetadataKeeper.SetOSLocator(s.ctx, user4Addr, "foo.com")
 		s.Require().NotEmpty(err)
 		r, found := s.app.MetadataKeeper.GetOsLocatorRecord(s.ctx, user4Addr)
 		s.Require().Empty(r)
@@ -503,7 +503,7 @@ func (s *KeeperTestSuite) TestAddOSLocator() {
 func (s *KeeperTestSuite) TestModifyOSLocator() {
 	s.Run("modify os locator", func() {
 		// modify os locator
-		err := s.app.MetadataKeeper.ModifyRecord(s.ctx, s.user1Addr, "https://bob.com/alice")
+		err := s.app.MetadataKeeper.ModifyOSLocator(s.ctx, s.user1Addr, "https://bob.com/alice")
 		s.Require().Empty(err)
 		r, found := s.app.MetadataKeeper.GetOsLocatorRecord(s.ctx, s.user1Addr)
 		s.Require().NotEmpty(r)
@@ -512,13 +512,13 @@ func (s *KeeperTestSuite) TestModifyOSLocator() {
 	})
 	s.Run("modify os locator invalid uri", func() {
 		// modify os locator
-		err := s.app.MetadataKeeper.ModifyRecord(s.ctx, s.user1Addr, "://bob.com/alice")
+		err := s.app.MetadataKeeper.ModifyOSLocator(s.ctx, s.user1Addr, "://bob.com/alice")
 		s.Require().NotEmpty(err)
 	})
 
 	s.Run("modify os locator invalid uri length", func() {
 		// modify os locator
-		err := s.app.MetadataKeeper.ModifyRecord(s.ctx, s.user1Addr, "https://www.google.com/search?q=long+url+example&oq=long+uril+&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8")
+		err := s.app.MetadataKeeper.ModifyOSLocator(s.ctx, s.user1Addr, "https://www.google.com/search?q=long+url+example&oq=long+uril+&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8&aqs=chrome.1.69i57j0i13l9.4447j0j15&sourceid=chrome&ie=UTF-8")
 		s.Require().NotEmpty(err)
 		s.Require().Equal("uri length greater than allowed", err.Error())
 	})
@@ -527,7 +527,7 @@ func (s *KeeperTestSuite) TestModifyOSLocator() {
 func (s *KeeperTestSuite) TestDeleteOSLocator() {
 	s.Run("delete os locator", func() {
 		// modify os locator
-		err := s.app.MetadataKeeper.DeleteRecord(s.ctx, s.user1Addr)
+		err := s.app.MetadataKeeper.RemoveOSLocator(s.ctx, s.user1Addr)
 		s.Require().Empty(err)
 		r, found := s.app.MetadataKeeper.GetOsLocatorRecord(s.ctx, s.user1Addr)
 		s.Require().Empty(r)

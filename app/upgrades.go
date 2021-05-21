@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -40,7 +41,32 @@ var handlers = map[string]appUpgrade{
 	},
 	"v1.1.1":   {},
 	"amaranth": {}, // associated with v1.2.x upgrades in testnet, mainnet
-
+	"bluetiful": {
+		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) {
+			// Force default denom metadata for the bond denom
+			app.BankKeeper.SetDenomMetaData(ctx, banktypes.Metadata{
+				Description: "Hash is the staking token of the Provenance Blockchain",
+				Base:        "nhash",
+				Display:     "hash",
+				DenomUnits: []*banktypes.DenomUnit{
+					{
+						Denom:    "nhash",
+						Exponent: 0,
+						Aliases:  []string{},
+					},
+					{
+						Denom:    "hash",
+						Exponent: 9,
+						Aliases:  []string{},
+					},
+				},
+			})
+			// Force default unrestricted denom for markers to limit min length of 8 and allow ['.','-'] as separators.
+			app.MarkerKeeper.SetParams(ctx, markertypes.Params{
+				UnrestrictedDenomRegex: `[a-zA-Z][a-zA-Z0-9\-\.]{7,64}`,
+			})
+		},
+	},
 	// TODO - Add new upgrade definitions here.
 }
 

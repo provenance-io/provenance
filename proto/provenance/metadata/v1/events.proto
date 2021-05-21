@@ -1,0 +1,177 @@
+syntax = "proto3";
+package provenance.metadata.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/metadata/types";
+
+option java_package        = "io.provenance.metadata.v1";
+option java_multiple_files = true;
+
+// EventTxCompleted is an event message indicating that a TX has completed.
+message EventTxCompleted {
+  // module is the module the TX belongs to.
+  string module = 1;
+  // endpoint is the rpc endpoint that was just completed.
+  string endpoint = 2;
+  // signers are the bech32 address strings of the signers of this TX.
+  repeated string signers = 3;
+}
+
+// EventScopeCreated is an event message indicating a scope has been created.
+message EventScopeCreated {
+  // scope_addr is the bech32 address string of the scope id that was created.
+  string scope_addr = 1;
+}
+
+// EventScopeUpdated is an event message indicating a scope has been updated.
+message EventScopeUpdated {
+  // scope_addr is the bech32 address string of the scope id that was updated.
+  string scope_addr = 1;
+}
+
+// EventScopeDeleted is an event message indicating a scope has been deleted.
+message EventScopeDeleted {
+  // scope_addr is the bech32 address string of the scope id that was deleted.
+  string scope_addr = 1;
+}
+
+// EventSessionCreated is an event message indicating a session has been created.
+message EventSessionCreated {
+  // session_addr is the bech32 address string of the session id that was created.
+  string session_addr = 1;
+  // scope_addr is the bech32 address string of the scope id this session belongs to.
+  string scope_addr = 2;
+}
+
+// EventSessionUpdated is an event message indicating a session has been updated.
+message EventSessionUpdated {
+  // session_addr is the bech32 address string of the session id that was updated.
+  string session_addr = 1;
+  // scope_addr is the bech32 address string of the scope id this session belongs to.
+  string scope_addr = 2;
+}
+
+// EventSessionDeleted is an event message indicating a session has been deleted.
+message EventSessionDeleted {
+  // session_addr is the bech32 address string of the session id that was deleted.
+  string session_addr = 1;
+  // scope_addr is the bech32 address string of the scope id this session belongs to.
+  string scope_addr = 2;
+}
+
+// EventRecordCreated is an event message indicating a record has been created.
+message EventRecordCreated {
+  // record_addr is the bech32 address string of the record id that was created.
+  string record_addr = 1;
+  // session_addr is the bech32 address string of the session id this record belongs to.
+  string session_addr = 2;
+  // scope_addr is the bech32 address string of the scope id this record belongs to.
+  string scope_addr = 3;
+}
+
+// EventRecordUpdated is an event message indicating a record has been updated.
+message EventRecordUpdated {
+  // record_addr is the bech32 address string of the record id that was updated.
+  string record_addr = 1;
+  // session_addr is the bech32 address string of the session id this record belongs to.
+  string session_addr = 2;
+  // scope_addr is the bech32 address string of the scope id this record belongs to.
+  string scope_addr = 3;
+}
+
+// EventRecordDeleted is an event message indicating a record has been deleted.
+message EventRecordDeleted {
+  // record is the bech32 address string of the record id that was deleted.
+  string record_addr = 1;
+  // scope_addr is the bech32 address string of the scope id this record belonged to.
+  string scope_addr = 3;
+}
+
+// EventScopeSpecificationCreated is an event message indicating a scope specification has been created.
+message EventScopeSpecificationCreated {
+  // scope_specification_addr is the bech32 address string of the specification id of the scope specification that was
+  // created.
+  string scope_specification_addr = 1;
+}
+
+// EventScopeSpecificationUpdated is an event message indicating a scope specification has been updated.
+message EventScopeSpecificationUpdated {
+  // scope_specification_addr is the bech32 address string of the specification id of the scope specification that was
+  // updated.
+  string scope_specification_addr = 1;
+}
+
+// EventScopeSpecificationDeleted is an event message indicating a scope specification has been deleted.
+message EventScopeSpecificationDeleted {
+  // scope_specification_addr is the bech32 address string of the specification id of the scope specification that was
+  // deleted.
+  string scope_specification_addr = 1;
+}
+
+// EventContractSpecificationCreated is an event message indicating a contract specification has been created.
+message EventContractSpecificationCreated {
+  // contract_specification_addr is the bech32 address string of the specification id of the contract specification that
+  // was created.
+  string contract_specification_addr = 1;
+}
+
+// EventContractSpecificationUpdated is an event message indicating a contract specification has been updated.
+message EventContractSpecificationUpdated {
+  // contract_specification_addr is the bech32 address string of the specification id of the contract specification that
+  // was updated.
+  string contract_specification_addr = 1;
+}
+
+// EventContractSpecificationDeleted is an event message indicating a contract specification has been deleted.
+message EventContractSpecificationDeleted {
+  // contract_specification_addr is the bech32 address string of the specification id of the contract specification that
+  // was deleted.
+  string contract_specification_addr = 1;
+}
+
+// EventRecordSpecificationCreated is an event message indicating a record specification has been created.
+message EventRecordSpecificationCreated {
+  // record_specification_addr is the bech32 address string of the specification id of the record specification that was
+  // created.
+  string record_specification_addr = 1;
+  // contract_specification_addr is the bech32 address string of the contract specification id this record specification
+  // belongs to.
+  string contract_specification_addr = 2;
+}
+
+// EventRecordSpecificationUpdated is an event message indicating a record specification has been updated.
+message EventRecordSpecificationUpdated {
+  // record_specification_addr is the bech32 address string of the specification id of the record specification that was
+  // updated.
+  string record_specification_addr = 1;
+  // contract_specification_addr is the bech32 address string of the contract specification id this record specification
+  // belongs to.
+  string contract_specification_addr = 2;
+}
+
+// EventRecordSpecificationDeleted is an event message indicating a record specification has been deleted.
+message EventRecordSpecificationDeleted {
+  // record_specification_addr is the bech32 address string of the specification id of the record specification that was
+  // deleted.
+  string record_specification_addr = 1;
+  // contract_specification_addr is the bech32 address string of the contract specification id this record specification
+  // belongs to.
+  string contract_specification_addr = 2;
+}
+
+// EventOSLocatorCreated is an event message indicating an object store locator has been created.
+message EventOSLocatorCreated {
+  // owner is the owner in the object store locator that was created.
+  string owner = 1;
+}
+
+// EventOSLocatorUpdated is an event message indicating an object store locator has been updated.
+message EventOSLocatorUpdated {
+  // owner is the owner in the object store locator that was updated.
+  string owner = 1;
+}
+
+// EventOSLocatorDeleted is an event message indicating an object store locator has been deleted.
+message EventOSLocatorDeleted {
+  // owner is the owner in the object store locator that was deleted.
+  string owner = 1;
+}
