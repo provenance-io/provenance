@@ -164,7 +164,6 @@ func accountForDenomOrAddress(ctx sdk.Context, keeper Keeper, lookup string) (ty
 	// try to parse the argument as an address, if this fails try as a denom string.
 	if addr, addrErr = sdk.AccAddressFromBech32(lookup); addrErr != nil {
 		account, err = keeper.GetMarkerByDenom(ctx, lookup)
-		// if we error on get by denom, ensure we also capture the fail to parse as an address
 	} else {
 		account, err = keeper.GetMarker(ctx, addr)
 	}
