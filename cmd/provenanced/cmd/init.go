@@ -103,7 +103,7 @@ func InitCmd(
 	cmd.Flags().String(cli.HomeFlag, defaultNodeHome, "node's home directory")
 	cmd.Flags().BoolP(FlagOverwrite, "o", false, "overwrite the genesis.json file")
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
-	cmd.Flags().String(server.FlagMinGasPrices, fmt.Sprintf("0.025%s", app.DefaultFeeDenom), "Minimum gas prices to accept for transactions")
+	cmd.Flags().String(server.FlagMinGasPrices, fmt.Sprintf("1905%s", app.DefaultFeeDenom), "Minimum gas prices to accept for transactions")
 	cmd.Flags().BoolP(FlagRecover, "r", false, "interactive key recovery from mnemonic")
 	return cmd
 }

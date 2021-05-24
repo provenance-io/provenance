@@ -259,7 +259,7 @@ go.sum: go.mod
 # look into .golangci.yml for enabling / disabling linters
 lint:
 	$(GOLANGCI_LINT) run
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" | xargs gofmt -d -s
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "./client/*" -not -path "*.git*" -not -path "*.pb.go" | xargs gofmt -d -s
 	$(GO) mod verify
 
 clean:
