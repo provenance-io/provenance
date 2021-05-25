@@ -249,7 +249,10 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 	} else {
 		// panic if there was a parse error (for example more than one coin was passed in for required fee).
 		if err != nil {
-			panic(err)
+			panic(fmt.Errorf("invalid min-gas-price value, expected single decimal coin value such as '0.0025%s', got '%s';\n\n %w",
+				app.DefaultFeeDenom,
+				appOpts.Get(server.FlagMinGasPrices),
+				err))
 		}
 	}
 
