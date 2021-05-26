@@ -244,6 +244,26 @@ func (k Keeper) EmitEvent(ctx sdk.Context, event proto.Message) {
 	}
 }
 
+// unionUnique gets a union of the provided sets of strings without any duplicates.
+func (k Keeper) unionNoDups(sets ...[]string) []string {
+	retval := []string{}
+	for _, s := range sets {
+		for _, v := range s {
+			f := false
+			for _, r := range retval {
+				if r == v {
+					f = true
+					break
+				}
+			}
+			if !f {
+				retval = append(retval, v)
+			}
+		}
+	}
+	return retval
+}
+
 func (k Keeper) checkValidURI(uri string, ctx sdk.Context) (*url.URL, error) {
 	urlToPersist, err := url.Parse(uri)
 	if err != nil {
