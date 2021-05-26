@@ -539,7 +539,7 @@ func (s *KeeperTestSuite) TestDeleteOSLocator() {
 
 func (s *KeeperTestSuite) TestUnionDistinct() {
 	tests := []struct {
-		name string
+		name   string
 		inputs [][]string
 		output []string
 	}{
@@ -555,42 +555,42 @@ func (s *KeeperTestSuite) TestUnionDistinct() {
 		},
 		{
 			"two dup sets in single entries out",
-			[][]string{{"a", "b", "c"},{"a", "b", "c"}},
+			[][]string{{"a", "b", "c"}, {"a", "b", "c"}},
 			[]string{"a", "b", "c"},
 		},
 		{
 			"unique sets in combined for out",
-			[][]string{{"a", "b", "c"},{"d", "e"}},
+			[][]string{{"a", "b", "c"}, {"d", "e"}},
 			[]string{"a", "b", "c", "d", "e"},
 		},
 		{
 			"empty set filled set in combined for out",
-			[][]string{{},{"a", "b", "c"}},
+			[][]string{{}, {"a", "b", "c"}},
 			[]string{"a", "b", "c"},
 		},
 		{
 			"filled set empty set in combined for out",
-			[][]string{{"a", "b", "c"},{}},
+			[][]string{{"a", "b", "c"}, {}},
 			[]string{"a", "b", "c"},
 		},
 		{
 			"two sets with one common entry in combined correctly for out",
-			[][]string{{"a", "b", "c"},{"d", "a", "e"}},
+			[][]string{{"a", "b", "c"}, {"d", "a", "e"}},
 			[]string{"a", "b", "c", "d", "e"},
 		},
 		{
 			"set with one entry and set with two entries in combined correctly for out",
-			[][]string{{"a"},{"a", "b"}},
+			[][]string{{"a"}, {"a", "b"}},
 			[]string{"a", "b"},
 		},
 		{
 			"set with two entries set with one entry in combined correctly for out",
-			[][]string{{"a", "b"},{"a"}},
+			[][]string{{"a", "b"}, {"a"}},
 			[]string{"a", "b"},
 		},
 		{
 			"set with dups and set with two entries in combined correctly for out",
-			[][]string{{"a", "a"},{"a", "b"}},
+			[][]string{{"a", "a"}, {"a", "b"}},
 			[]string{"a", "b"},
 		},
 	}
