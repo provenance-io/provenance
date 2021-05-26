@@ -245,7 +245,7 @@ func (k Keeper) EmitEvent(ctx sdk.Context, event proto.Message) {
 }
 
 // unionUnique gets a union of the provided sets of strings without any duplicates.
-func (k Keeper) unionNoDups(sets ...[]string) []string {
+func (k Keeper) UnionDistinct(sets ...[]string) []string {
 	retval := []string{}
 	for _, s := range sets {
 		for _, v := range s {
