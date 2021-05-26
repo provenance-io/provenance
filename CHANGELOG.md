@@ -37,6 +37,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Bug Fixes
+
+* P8EMemorializeContract: preserve some Scope fields if the scope already exists [PR 336](https://github.com/provenance-io/provenance/pull/336)
 
 ## [v1.3.1](https://github.com/provenance-io/provenance/releases/tag/v1.3.1) - 2021-05-21
 
