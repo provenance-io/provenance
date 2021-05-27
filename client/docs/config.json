@@ -3,11 +3,11 @@
   "info": {
     "title": "Provenance Blockchain",
     "description": "Provenance Blockchain Node Application",
-    "version": "1.0.0"
+    "version": "1.3.1"
   },
   "apis": [
     {
-      "url": "./client/docs/swagger_legacy.yaml",
+      "url": "./client/docs/swagger_third_party.yaml",
       "dereference": {
         "circular": "ignore"
       }
@@ -27,7 +27,8 @@
       "url": "./tmp-swagger-gen/provenance/marker/v1/query.swagger.json",
       "operationIds": {
         "rename": {
-          "Params": "MarkerParams"
+          "Params": "MarkerParams",
+          "DenomMetadata": "MarkerDenomMetadata"
         }
       }
     },
@@ -58,4 +59,4 @@
     }
   ]
 }
-  
+

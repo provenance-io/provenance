@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"sort"
 	"testing"
 
 	simapp "github.com/provenance-io/provenance/app"
@@ -534,4 +535,72 @@ func (s *KeeperTestSuite) TestDeleteOSLocator() {
 		s.Require().False(found)
 
 	})
+}
+
+func (s *KeeperTestSuite) TestUnionDistinct() {
+	tests := []struct {
+		name   string
+		inputs [][]string
+		output []string
+	}{
+		{
+			"empty in empty out",
+			[][]string{},
+			[]string{},
+		},
+		{
+			"one set in same set out",
+			[][]string{{"a", "b", "c"}},
+			[]string{"a", "b", "c"},
+		},
+		{
+			"two dup sets in single entries out",
+			[][]string{{"a", "b", "c"}, {"a", "b", "c"}},
+			[]string{"a", "b", "c"},
+		},
+		{
+			"unique sets in combined for out",
+			[][]string{{"a", "b", "c"}, {"d", "e"}},
+			[]string{"a", "b", "c", "d", "e"},
+		},
+		{
+			"empty set filled set in combined for out",
+			[][]string{{}, {"a", "b", "c"}},
+			[]string{"a", "b", "c"},
+		},
+		{
+			"filled set empty set in combined for out",
+			[][]string{{"a", "b", "c"}, {}},
+			[]string{"a", "b", "c"},
+		},
+		{
+			"two sets with one common entry in combined correctly for out",
+			[][]string{{"a", "b", "c"}, {"d", "a", "e"}},
+			[]string{"a", "b", "c", "d", "e"},
+		},
+		{
+			"set with one entry and set with two entries in combined correctly for out",
+			[][]string{{"a"}, {"a", "b"}},
+			[]string{"a", "b"},
+		},
+		{
+			"set with two entries set with one entry in combined correctly for out",
+			[][]string{{"a", "b"}, {"a"}},
+			[]string{"a", "b"},
+		},
+		{
+			"set with dups and set with two entries in combined correctly for out",
+			[][]string{{"a", "a"}, {"a", "b"}},
+			[]string{"a", "b"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.T().Run(tc.name, func(t *testing.T) {
+			output := s.app.MetadataKeeper.UnionDistinct(tc.inputs...)
+			sort.Strings(output)
+			sort.Strings(tc.output)
+			assert.Equal(t, tc.output, output)
+		})
+	}
 }
