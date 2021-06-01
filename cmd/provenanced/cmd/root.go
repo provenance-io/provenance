@@ -326,7 +326,7 @@ func overwriteFlagDefaults(c *cobra.Command, defaults map[string]string) {
 
 func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) {
 	defer func() {
-		recover()
+		recover() // nolint:errcheck
 	}()
 
 	cmd.Flags().VisitAll(func(f *pflag.Flag) {
@@ -352,5 +352,5 @@ func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) 
 		}
 	})
 
-	return
+	return err
 }
