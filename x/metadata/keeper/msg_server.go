@@ -491,6 +491,15 @@ func (k msgServer) P8EMemorializeContract(
 		return nil, err
 	}
 
+	existingScope, found := k.GetScope(ctx, p8EData.Scope.ScopeId)
+	if found {
+		// We don't want to update the scope's owners or value owner.
+		p8EData.Scope.Owners = existingScope.Owners
+		p8EData.Scope.ValueOwnerAddress = existingScope.ValueOwnerAddress
+		// We only want to add to the data access list.
+		p8EData.Scope.DataAccess = k.UnionDistinct(existingScope.DataAccess, p8EData.Scope.DataAccess)
+	}
+
 	scopeResp, err := k.WriteScope(goCtx, &types.MsgWriteScopeRequest{
 		Scope:   *p8EData.Scope,
 		Signers: p8EData.Signers,
