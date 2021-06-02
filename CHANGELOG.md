@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * ENV config support, SDK v0.42.5 update [#320](https://github.com/provenance-io/provenance/issues/320)
+* Upgrade handler set version name to `citrine` [#339](https://github.com/provenance-io/provenance/issues/339)
 
 ### Bug Fixes
 
