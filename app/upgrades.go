@@ -67,6 +67,7 @@ var handlers = map[string]appUpgrade{
 			})
 		},
 	},
+	"citrine": {},
 	// TODO - Add new upgrade definitions here.
 }
 
