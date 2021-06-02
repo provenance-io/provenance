@@ -99,6 +99,7 @@ jobs:
       - build_linux
     name: Create Release
     steps:
+      - uses: actions/checkout@v2
       - name: Create release ${{ needs.build_init.outputs.version }}
         uses: actions/create-release@v1
         id: create_release
