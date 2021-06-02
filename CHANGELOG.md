@@ -37,10 +37,19 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Features
+
+* ENV config support, SDK v0.42.5 update [#320](https://github.com/provenance-io/provenance/issues/320)
+
 ### Bug Fixes
 
 * P8EMemorializeContract: preserve some Scope fields if the scope already exists [PR 336](https://github.com/provenance-io/provenance/pull/336)
+* Set default standard err/out for `provenanced` commands [PR 337](https://github.com/provenance-io/provenance/pull/337)
+* Fix for invalid help text permissions list on marker access grant command [PR 337](https://github.com/provenance-io/provenance/pull/337)
 
+###  Improvements
+
+* Informative error message for `min-gas-prices` invalid config panic on startup [#333](https://github.com/provenance-io/provenance/issues/333)
 ## [v1.3.1](https://github.com/provenance-io/provenance/releases/tag/v1.3.1) - 2021-05-21
 
 ### Bug Fixes

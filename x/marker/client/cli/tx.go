@@ -277,7 +277,7 @@ func GetCmdAddAccess() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Grant administrative access to a marker.  From Address must have appropriate
 existing access.  Permissions are appended to any existing access grant.  Valid permissions
-are one of [mint, burn, deposit, withdraw, delete, grant].
+are one of [mint, burn, deposit, withdraw, delete, admin, transfer].
 
 Example:
 $ %s tx marker grant pb1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj coindenom burn --from mykey
