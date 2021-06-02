@@ -48,7 +48,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Fix for invalid help text permissions list on marker access grant command [PR 337](https://github.com/provenance-io/provenance/pull/337)
 * When writing a session, make sure the scope spec of the containing scope, contains the session's contract spec. [#322](https://github.com/provenance-io/provenance/issues/322)
 
-
 ###  Improvements
 
 * Informative error message for `min-gas-prices` invalid config panic on startup [#333](https://github.com/provenance-io/provenance/issues/333)
