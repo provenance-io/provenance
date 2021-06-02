@@ -51,6 +51,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ###  Improvements
 
 * Informative error message for `min-gas-prices` invalid config panic on startup [#333](https://github.com/provenance-io/provenance/issues/333)
+* Update marker event documentation to match typed event namespaces [#304](https://github.com/provenance-io/provenance/issues/304)
 
 
 ## [v1.3.1](https://github.com/provenance-io/provenance/releases/tag/v1.3.1) - 2021-05-21
