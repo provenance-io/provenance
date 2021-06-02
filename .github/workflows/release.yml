@@ -107,10 +107,9 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
-          draft: true
-          prerelease: true
-          # body_path: RELEASE_CHANGELOG.md
-          body: Testing
+          draft: false
+          prerelease: false
+          body_path: RELEASE_CHANGELOG.md
     outputs:
       release_url: ${{ steps.create_release.outputs.upload_url }}
 
