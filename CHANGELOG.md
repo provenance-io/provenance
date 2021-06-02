@@ -46,10 +46,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * P8EMemorializeContract: preserve some Scope fields if the scope already exists [PR 336](https://github.com/provenance-io/provenance/pull/336)
 * Set default standard err/out for `provenanced` commands [PR 337](https://github.com/provenance-io/provenance/pull/337)
 * Fix for invalid help text permissions list on marker access grant command [PR 337](https://github.com/provenance-io/provenance/pull/337)
+* When writing a session, make sure the scope spec of the containing scope, contains the session's contract spec. [#322](https://github.com/provenance-io/provenance/issues/322)
 
 ###  Improvements
 
 * Informative error message for `min-gas-prices` invalid config panic on startup [#333](https://github.com/provenance-io/provenance/issues/333)
+
+
 ## [v1.3.1](https://github.com/provenance-io/provenance/releases/tag/v1.3.1) - 2021-05-21
 
 ### Bug Fixes
@@ -65,6 +68,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Fix swagger docs [PR 317](https://github.com/provenance-io/provenance/pull/317)
 * Updated default min-gas-prices to reflect provenance network nhash economics [#310](https://github.com/provenance-io/provenance/pull/310)
 * Improved marker error message when marker is not found [#325](https://github.com/provenance-io/provenance/issues/325)
+
 
 ## [v1.3.0](https://github.com/provenance-io/provenance/releases/tag/v1.3.0) - 2021-05-06
 

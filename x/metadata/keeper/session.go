@@ -104,7 +104,7 @@ func (k Keeper) IterateSessions(ctx sdk.Context, scopeID types.MetadataAddress, 
 
 // ValidateSessionUpdate checks the current session and the proposed session to determine if the the proposed changes are valid
 // based on the existing state
-func (k Keeper) ValidateSessionUpdate(ctx sdk.Context, existing *types.Session, proposed types.Session, signers []string) error {
+func (k Keeper) ValidateSessionUpdate(ctx sdk.Context, existing, proposed *types.Session, signers []string) error {
 	if err := proposed.ValidateBasic(); err != nil {
 		return err
 	}
@@ -136,6 +136,21 @@ func (k Keeper) ValidateSessionUpdate(ctx sdk.Context, existing *types.Session, 
 	contractSpec, found := k.GetContractSpecification(ctx, proposed.SpecificationId)
 	if !found {
 		return fmt.Errorf("cannot find contract specification %s", proposed.SpecificationId)
+	}
+
+	scopeSpec, found := k.GetScopeSpecification(ctx, scope.SpecificationId)
+	if !found {
+		return fmt.Errorf("scope spec not found with id %s", scope.SpecificationId)
+	}
+	scopeSpecHasContractSpec := false
+	for _, cSpecID := range scopeSpec.ContractSpecIds {
+		if cSpecID.Equals(proposed.SpecificationId) {
+			scopeSpecHasContractSpec = true
+			break
+		}
+	}
+	if !scopeSpecHasContractSpec {
+		return fmt.Errorf("contract spec %s not listed in scope spec %s", proposed.SpecificationId, scopeSpec.SpecificationId)
 	}
 
 	if len(proposed.GetName()) == 0 && existing == nil {

@@ -107,7 +107,7 @@ func (s MetadataHandlerTestSuite) TestWriteSession() {
 	scopeUUID := uuid.New()
 	scope := types.Scope{
 		ScopeId:         types.ScopeMetadataAddress(scopeUUID),
-		SpecificationId: nil,
+		SpecificationId: sSpec.SpecificationId,
 		Owners: []types.Party{{
 			Address: s.user1,
 			Role:    types.PartyType_PARTY_TYPE_OWNER,
