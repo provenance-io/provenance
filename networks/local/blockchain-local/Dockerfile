@@ -31,7 +31,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/
 
 # Requires a mounted volume with the config in it.
-VOLUME [ /provenance ]
+VOLUME [ "/provenance" ]
 WORKDIR /provenance
 EXPOSE 26656 26657 1317 9090
 
