@@ -38,11 +38,7 @@ is the first and primary user of the Provenance Blockchain.
 [lint-badge]: https://github.com/provenance-io/provenance/workflows/Lint/badge.svg
 [provenance]: https://provenance.io/#overview
 
-The Public Provenance blockchain is under active development.  While the modules in this blockchain are based on implementations
-from the private [Figure Technologies](https://figure.com) blockchain launched in 2018 there are still breaking API changes expected
-especially related to the transition to Cosmos SDK v040 and GRPC.  
-
-WARNING: Versions prior to the launch of mainnet and the associated `1.0.0` version should be considered unstable and API changes expected.
+The Provenance networks are based on work from the private [Figure Technologies](https://figure.com) blockchain launched in 2018.
 
 ## Quick Start
 
@@ -51,14 +47,9 @@ is a useful starting point.
 
 Developers can use a local checkout and the make targets `make run` and `make localnet-start` to run a local development network.
 
-Note: Requires [Go 1.15+](https://golang.org/dl/)
+Note: Requires [Go 1.16+](https://golang.org/dl/)
 
 
-## Testnet
+## Active Networks
 
-An alpha version of the Provenance network [testnet](https://github.com/provenance-io/testnet) with limited participation 
-was launch in January 2021.
-
-## Mainnet
-
-A public mainnet launch for the public Provenance blockchain is set for the end of Q2 2021.
+There are two active public Provenance networks, [testnet](https://github.com/provenance-io/testnet) and [mainnet](https://github.com/provenance-io/mainnet).
