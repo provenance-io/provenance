@@ -13,6 +13,7 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/google/uuid"
+
 	simappparams "github.com/provenance-io/provenance/app/params"
 
 	keeper "github.com/provenance-io/provenance/x/attribute/keeper"
@@ -60,7 +61,7 @@ func WeightedOperations(
 	}
 }
 
-// SimulateMsgAddAttribute will add an attribute under and account with a random type.
+// SimulateMsgAddAttribute will add an attribute under an account with a random type.
 func SimulateMsgAddAttribute(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
@@ -100,8 +101,6 @@ func SimulateMsgDeleteAttribute(k keeper.Keeper, ak authkeeper.AccountKeeperI, b
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		//simAccount, _ := simtypes.RandomAcc(r, accs)
-
 		var attributes []types.Attribute
 		if err := k.IterateRecords(ctx, types.AttributeKeyPrefix, func(attribute types.Attribute) error {
 			attributes = append(attributes, attribute)
@@ -120,8 +119,8 @@ func SimulateMsgDeleteAttribute(k keeper.Keeper, ak authkeeper.AccountKeeperI, b
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgDeleteAttribute, "name record for existing attributes not found"), nil, err
 		}
-		simAccount, _ := simtypes.FindAccount(accs, mustGetAddress(nr.Address))
 
+		simAccount, _ := simtypes.FindAccount(accs, mustGetAddress(nr.Address))
 		msg := types.NewMsgDeleteAttributeRequest(mustGetAddress(randomAttribute.Address), mustGetAddress(nr.Address), randomAttribute.Name)
 
 		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg)
