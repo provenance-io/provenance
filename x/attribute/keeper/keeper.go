@@ -160,17 +160,17 @@ func (k Keeper) SetAttribute(
 }
 
 // Removes attributes under the given account. The attribute name must resolve to the given owner address.
-func (k Keeper) DeleteAttribute(ctx sdk.Context, acc sdk.AccAddress, name string, owner sdk.AccAddress) error {
+func (k Keeper) DeleteAttribute(ctx sdk.Context, acc sdk.AccAddress, name string, value *[]byte, owner sdk.AccAddress) error {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "delete")
-	// Verify an account exists for the given owner address
+
 	if ownerAcc := k.authKeeper.GetAccount(ctx, owner); ownerAcc == nil {
 		return fmt.Errorf("no account found for owner address \"%s\"", owner.String())
 	}
-	// Verify name resolves to owner
+
 	if !k.nameKeeper.ResolvesTo(ctx, name, owner) {
 		return fmt.Errorf("\"%s\" does not resolve to address \"%s\"", name, owner.String())
 	}
-	// Delete all keys that match the name prefix
+
 	store := ctx.KVStore(k.storeKey)
 	it := sdk.KVStorePrefixIterator(store, types.AccountAttributesNameKeyPrefix(acc, name))
 	var count int
@@ -179,8 +179,8 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, acc sdk.AccAddress, name string
 		if err := k.cdc.UnmarshalBinaryBare(it.Value(), &attr); err != nil {
 			return err
 		}
-		// Only delete exact matches
-		if attr.Name == name {
+
+		if attr.Name == name && (value == nil || bytes.Equal(*value, attr.Value)) {
 			count++
 			store.Delete(it.Key())
 

@@ -144,7 +144,7 @@ func (msg MsgDeleteAttributeWithValueRequest) ValidateBasic() error {
 	if strings.TrimSpace(msg.Name) == "" {
 		return fmt.Errorf("empty name")
 	}
-	if strings.TrimSpace(msg.Value) == "" {
+	if len(msg.Value) == 0 {
 		return fmt.Errorf("empty value")
 	}
 	if len(msg.Account) == 0 {
