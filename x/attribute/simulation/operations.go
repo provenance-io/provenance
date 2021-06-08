@@ -45,7 +45,7 @@ func WeightedOperations(
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgDeleteAttribute, &weightMsgDeleteAttribute, nil,
 		func(_ *rand.Rand) {
-			weightMsgDeleteAttribute = simappparams.DefaultWeightMsgDeleteAttriubte
+			weightMsgDeleteAttribute = simappparams.DefaultWeightMsgDeleteAttribute
 		},
 	)
 
@@ -66,8 +66,6 @@ func SimulateMsgAddAttribute(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk b
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		//		simAccount, _ := simtypes.RandomAcc(r, accs)
-
 		var records []nametypes.NameRecord
 		if err := nk.IterateRecords(ctx, nametypes.NameKeyPrefix, func(record nametypes.NameRecord) error {
 			records = append(records, record)

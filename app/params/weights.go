@@ -25,6 +25,6 @@ const (
 	DefaultWeightMsgDeleteName          int = 5
 	DefaultWeightCreateRootNameProposal int = 5
 
-	DefaultWeightMsgDeleteAttriubte int = 5
+	DefaultWeightMsgDeleteAttribute int = 5
 	DefaultWeightMsgAddAttribute    int = 15
 )

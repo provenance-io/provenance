@@ -50,8 +50,8 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		opMsgRoute string
 		opMsgName  string
 	}{
-		{simappparams.DefaultWeightMsgBindName, types.ModuleName, types.TypeMsgAddAttribute},
-		{simappparams.DefaultWeightMsgDeleteName, types.ModuleName, types.TypeMsgDeleteAttribute},
+		{simappparams.DefaultWeightMsgAddAttribute, types.ModuleName, types.TypeMsgAddAttribute},
+		{simappparams.DefaultWeightMsgDeleteAttribute, types.ModuleName, types.TypeMsgDeleteAttribute},
 	}
 
 	for i, w := range weightesOps {
@@ -119,6 +119,9 @@ func (suite *SimTestSuite) TestSimulateMsgDeleteAttribute() {
 
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal(types.TypeMsgDeleteAttribute, msg.Type())
+	suite.Require().Equal("example.provenance", msg.Name)
+	suite.Require().Equal(accounts[0].Address.String(), msg.Owner)
+	suite.Require().Equal(accounts[1].Address.String(), msg.Account)
 	suite.Require().Equal(types.ModuleName, msg.Route())
 	suite.Require().Len(futureOperations, 0)
 }
