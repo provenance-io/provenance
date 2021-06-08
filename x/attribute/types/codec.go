@@ -12,6 +12,7 @@ import (
 // account module.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgAddAttributeRequest{}, "provenance/attribute/MsgAddAttributeRequest", nil)
+	cdc.RegisterConcrete(&MsgUpdateAttributeRequest{}, "provenance/attribute/MsgUpdateAttributeRequest", nil)
 	cdc.RegisterConcrete(&MsgDeleteAttributeRequest{}, "provenance/attribute/MsgDeleteAttributeRequest", nil)
 	cdc.RegisterConcrete(&MsgDeleteAttributeWithValueRequest{}, "provenance/attribute/MsgDeleteAttributeWithValueRequest", nil)
 }
@@ -19,6 +20,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgAddAttributeRequest{},
+		&MsgUpdateAttributeRequest{},
 		&MsgDeleteAttributeRequest{},
 		&MsgDeleteAttributeWithValueRequest{},
 	)

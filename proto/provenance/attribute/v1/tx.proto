@@ -44,6 +44,33 @@ message MsgAddAttributeRequest {
 // MsgAddAttributeResponse defines the Msg/Vote response type.
 message MsgAddAttributeResponse {}
 
+// MsgUpdateAttributeRequest defines an sdk.Msg type that is used to update an existing attribute to an account
+// Attributes may only be set in an account by the account that the attribute name resolves to.
+message MsgUpdateAttributeRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  // The attribute name.
+  string name = 1;
+  // The original attribute value.
+  bytes original_value = 2;
+  // The update attribute value.
+  bytes update_value = 3;
+  // The original attribute value type.
+  AttributeType original_attribute_type = 4;
+  // The update attribute value type.
+  AttributeType update_attribute_type = 5;
+  // The account to add the attribute to.
+  string account = 6;
+  // The address that the name must resolve to.
+  string owner = 7;
+}
+
+// MsgUpdateAttributeResponse defines the Msg/Vote response type.
+message MsgUpdateAttributeResponse {}
+
 // MsgDeleteAttributeRequest defines a message to delete an attribute from an account
 // Attributes may only be remove from an account by the account that the attribute name resolves to.
 message MsgDeleteAttributeRequest {
