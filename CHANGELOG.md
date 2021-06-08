@@ -37,12 +37,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-* None
+* Bump `wasmd` to v0.17.0 [#345](https://github.com/provenance-io/provenance/issues/345)
 
 ## [v1.4.1](https://github.com/provenance-io/provenance/releases/tag/v1.4.1) - 2021-06-02
 
 * Updated github binary release workflow.  No code changes from 1.4.0.
-
 
 ## [v1.4.0](https://github.com/provenance-io/provenance/releases/tag/v1.4.0) - 2021-06-02
 
