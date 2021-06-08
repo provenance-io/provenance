@@ -13,12 +13,14 @@ import (
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgAddAttributeRequest{}, "provenance/attribute/MsgAddAttributeRequest", nil)
 	cdc.RegisterConcrete(&MsgDeleteAttributeRequest{}, "provenance/attribute/MsgDeleteAttributeRequest", nil)
+	cdc.RegisterConcrete(&MsgDeleteAttributeWithValueRequest{}, "provenance/attribute/MsgDeleteAttributeWithValueRequest", nil)
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgAddAttributeRequest{},
 		&MsgDeleteAttributeRequest{},
+		&MsgDeleteAttributeWithValueRequest{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

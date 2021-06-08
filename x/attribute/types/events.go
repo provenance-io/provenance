@@ -16,6 +16,8 @@ const (
 	EventTelemetryKeyDelete string = "delete"
 	// EventTelemetryLabelName name telemetry metrics label
 	EventTelemetryLabelName string = "name"
+	// EventTelemetryLabelName name telemetry metrics label
+	EventTelemetryLabelValue string = "value"
 	// EventTelemetryLabelType type telemetry metrics label
 	EventTelemetryLabelType string = "type"
 	// EventTelemetryLabelOwner owner telemetry metrics label

@@ -125,3 +125,60 @@ func (msg MsgDeleteAttributeRequest) GetSigners() []sdk.AccAddress {
 	}
 	return []sdk.AccAddress{addr}
 }
+
+// NewMsgDeleteAttributeWithValueRequest creates a new add attribute message
+func NewMsgDeleteAttributeWithValueRequest(account sdk.AccAddress, owner sdk.AccAddress, name string) *MsgDeleteAttributeRequest { // nolint:interfacer
+	return &MsgDeleteAttributeRequest{Account: account.String(), Name: strings.ToLower(strings.TrimSpace(name)), Owner: owner.String()}
+}
+
+// Route returns the name of the module.
+func (msg MsgDeleteAttributeWithValueRequest) Route() string {
+	return ModuleName
+}
+
+// Type returns the message action.
+func (msg MsgDeleteAttributeWithValueRequest) Type() string { return TypeMsgDeleteAttribute }
+
+// ValidateBasic runs stateless validation checks on the message.
+func (msg MsgDeleteAttributeWithValueRequest) ValidateBasic() error {
+	if strings.TrimSpace(msg.Name) == "" {
+		return fmt.Errorf("empty name")
+	}
+	if strings.TrimSpace(msg.Value) == "" {
+		return fmt.Errorf("empty value")
+	}
+	if len(msg.Account) == 0 {
+		return fmt.Errorf("empty account address")
+	}
+	if _, err := sdk.AccAddressFromBech32(msg.Account); err != nil {
+		return err
+	}
+	if len(msg.Owner) == 0 {
+		return fmt.Errorf("empty owner address")
+	}
+	if _, err := sdk.AccAddressFromBech32(msg.Owner); err != nil {
+		return err
+	}
+	return nil
+}
+
+// String implements stringer interface
+func (msg MsgDeleteAttributeWithValueRequest) String() string {
+	out, _ := yaml.Marshal(msg)
+	return string(out)
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgDeleteAttributeWithValueRequest) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// GetSigners indicates that the message must have been signed by the name owner.
+func (msg MsgDeleteAttributeWithValueRequest) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Owner)
+	if err != nil {
+		panic(fmt.Errorf("invalid owner value on message: %w", err))
+	}
+	return []sdk.AccAddress{addr}
+}

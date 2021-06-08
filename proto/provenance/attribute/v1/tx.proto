@@ -16,6 +16,9 @@ service Msg {
 
   // DeleteAttribute defines a method to verify a particular invariance.
   rpc DeleteAttribute(MsgDeleteAttributeRequest) returns (MsgDeleteAttributeResponse);
+
+  // DeleteAttribute defines a method to verify a particular invariance.
+  rpc DeleteAttributeWithValue(MsgDeleteAttributeWithValueRequest) returns (MsgDeleteAttributeWithValueResponse);
 }
 
 // MsgAddAttributeRequest defines an sdk.Msg type that is used to add a new attribute to an account
@@ -59,3 +62,24 @@ message MsgDeleteAttributeRequest {
 
 // MsgDeleteAttributeResponse defines the Msg/Vote response type.
 message MsgDeleteAttributeResponse {}
+
+// MsgDeleteAttributeWithValueRequest defines a message to delete an attribute with matching name and value from an
+// account Attributes may only be remove from an account by the account that the attribute name resolves to.
+message MsgDeleteAttributeWithValueRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  // The attribute name.
+  string name = 1;
+  // The attribute value.
+  bytes value = 2;
+  // The account to add the attribute to.
+  string account = 3;
+  // The address that the name must resolve to.
+  string owner = 4;
+}
+
+// MsgDeleteAttributeWithValueResponse defines the Msg/Vote response type.
+message MsgDeleteAttributeWithValueResponse {}
