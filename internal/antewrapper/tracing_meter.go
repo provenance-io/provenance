@@ -64,7 +64,6 @@ func (g *tracingGasMeter) ConsumeGas(amount sdkgas.Gas, descriptor string) {
 	g.calls[descriptor] = cur + 1
 
 	telemetry.IncrCounterWithLabels([]string{"tx", "gas", "consumed"}, float32(amount), []metrics.Label{telemetry.NewLabel("purpose", descriptor)})
-	g.log.Debug(fmt.Sprintf("TracingGasMeter: [%s]: %d", descriptor, amount))
 
 	g.base.ConsumeGas(amount, descriptor)
 }
