@@ -113,13 +113,17 @@ func SimulateMsgDeleteAttribute(k keeper.Keeper, ak authkeeper.AccountKeeperI, b
 
 		randomAttribute := attributes[r.Intn(len(attributes))]
 
+		// the name associated with this attribute may no longer exist so use the attribute account as a backup account for "owner"
+		var ownerAddress string
 		nr, err := nk.GetRecordByName(ctx, randomAttribute.Name)
-		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgDeleteAttribute, "name record for existing attributes not found"), nil, err
+		if err == nil {
+			ownerAddress = nr.Address
+		} else {
+			ownerAddress = randomAttribute.Address
 		}
 
-		simAccount, _ := simtypes.FindAccount(accs, mustGetAddress(nr.Address))
-		msg := types.NewMsgDeleteAttributeRequest(mustGetAddress(randomAttribute.Address), mustGetAddress(nr.Address), randomAttribute.Name)
+		simAccount, _ := simtypes.FindAccount(accs, mustGetAddress(ownerAddress))
+		msg := types.NewMsgDeleteAttributeRequest(mustGetAddress(randomAttribute.Address), mustGetAddress(ownerAddress), randomAttribute.Name)
 
 		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg)
 	}
