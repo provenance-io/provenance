@@ -17,4 +17,5 @@ type NameKeeper interface {
 	ResolvesTo(ctx sdk.Context, name string, addr sdk.AccAddress) bool
 	Normalize(ctx sdk.Context, name string) (string, error)
 	GetRecordByName(ctx sdk.Context, name string) (record *nametypes.NameRecord, err error)
+	NameExists(ctx sdk.Context, name string) bool
 }

@@ -112,7 +112,7 @@ func (k Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle Handler) e
 
 // Stores an attribute under the given account. The attribute name must resolve to the given owner address.
 func (k Keeper) SetAttribute(
-	ctx sdk.Context, acc sdk.AccAddress, attr types.Attribute, owner sdk.AccAddress,
+	ctx sdk.Context, attr types.Attribute, owner sdk.AccAddress,
 ) error {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "set")
 
@@ -147,7 +147,11 @@ func (k Keeper) SetAttribute(
 	if err != nil {
 		return err
 	}
-	key := types.AccountAttributeKey(acc, attr)
+	addr, err := sdk.AccAddressFromBech32(attr.Address)
+	if err != nil {
+		return err
+	}
+	key := types.AccountAttributeKey(addr, attr)
 	store := ctx.KVStore(k.storeKey)
 	store.Set(key, bz)
 
@@ -168,7 +172,10 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, acc sdk.AccAddress, name string
 	}
 	// Verify name resolves to owner
 	if !k.nameKeeper.ResolvesTo(ctx, name, owner) {
-		return fmt.Errorf("\"%s\" does not resolve to address \"%s\"", name, owner.String())
+		if k.nameKeeper.NameExists(ctx, name) {
+			return fmt.Errorf("\"%s\" does not resolve to address \"%s\"", name, owner.String())
+		}
+		// else name does not exist (anymore) so we can't enforce permission check on delete here, proceed.
 	}
 	// Delete all keys that match the name prefix
 	store := ctx.KVStore(k.storeKey)

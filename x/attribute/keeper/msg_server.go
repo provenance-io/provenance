@@ -32,17 +32,12 @@ func (k msgServer) AddAttribute(goCtx context.Context, msg *types.MsgAddAttribut
 		Value:         msg.Value,
 	}
 
-	accountAddr, err := sdk.AccAddressFromBech32(msg.Account)
-	if err != nil {
-		return nil, err
-	}
-
 	ownerAddr, err := sdk.AccAddressFromBech32(msg.Owner)
 	if err != nil {
 		return nil, err
 	}
 
-	err = k.Keeper.SetAttribute(ctx, accountAddr, attrib, ownerAddr)
+	err = k.Keeper.SetAttribute(ctx, attrib, ownerAddr)
 	if err != nil {
 		return nil, err
 	}

@@ -13,6 +13,7 @@ import (
 	"github.com/provenance-io/provenance/x/attribute/keeper"
 	"github.com/provenance-io/provenance/x/attribute/simulation"
 	"github.com/provenance-io/provenance/x/attribute/types"
+	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -20,6 +21,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -32,7 +35,9 @@ var (
 )
 
 // AppModuleBasic contains non-dependent elements for the attribute module.
-type AppModuleBasic struct{}
+type AppModuleBasic struct {
+	cdc codec.Marshaler
+}
 
 // Name returns the module name.
 func (AppModuleBasic) Name() string {
@@ -93,11 +98,22 @@ func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 type AppModule struct {
 	AppModuleBasic
 	keeper keeper.Keeper
+	ak     authkeeper.AccountKeeperI
+	bk     bankkeeper.ViewKeeper
+	nk     namekeeper.Keeper
 }
 
 // NewAppModule creates a new AppModule Object
-func NewAppModule(k keeper.Keeper) AppModule {
-	return AppModule{AppModuleBasic: AppModuleBasic{}, keeper: k}
+func NewAppModule(
+	cdc codec.Marshaler, keeper keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper,
+) AppModule {
+	return AppModule{
+		AppModuleBasic: AppModuleBasic{cdc: cdc},
+		keeper:         keeper,
+		ak:             ak,
+		bk:             bk,
+		nk:             nk,
+	}
 }
 
 // Name returns the module name.
@@ -173,14 +189,13 @@ func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 }
 
 // RegisterStoreDecoder registers a decoder for attribute module's types
-func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
-	// sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
+func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
 // WeightedOperations returns the all the attribute module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	// return simulation.WeightedOperations(
-	//	simState.AppParams, simState.Cdc, am.keeper, simState.Contents,
-	// )
-	return []simtypes.WeightedOperation{}
+	return simulation.WeightedOperations(
+		simState.AppParams, simState.Cdc, am.keeper, am.ak, am.bk, am.nk,
+	)
 }

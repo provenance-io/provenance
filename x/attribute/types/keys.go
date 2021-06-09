@@ -73,8 +73,12 @@ func GetNameKeyBytes(name string) []byte {
 // For example, the name "id.sso.provenance.io" will become "io.provenance.sso.id",
 // which allows us to easily scan all account attributes under "io.provenance.sso".
 func reverse(name string) string {
-	if strings.TrimSpace(name) == "" || !strings.Contains(name, ".") {
+	if strings.TrimSpace(name) == "" {
 		return ""
+	}
+	// check if there is nothing to reverse (root name)
+	if !strings.Contains(name, ".") {
+		return name
 	}
 	comps := strings.Split(name, ".")
 	for i := len(comps)/2 - 1; i >= 0; i-- {

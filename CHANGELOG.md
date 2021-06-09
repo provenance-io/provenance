@@ -37,7 +37,19 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### API Breaking
+
+* Redundant account parameter was removed from Attribute module SetAttribute API. [PR 348](https://github.com/provenance-io/provenance/pull/348)
+
+### Bug Fixes
+
+* Attribute module allows removal of orphan attributes, attributes against root names [PR 348](https://github.com/provenance-io/provenance/pull/348)
+
+### Improvements
+
 * Bump `wasmd` to v0.17.0 [#345](https://github.com/provenance-io/provenance/issues/345)
+* Attribute module simulation support [#25](https://github.com/provenance-io/provenance/issues/25)
+
 
 ## [v1.4.1](https://github.com/provenance-io/provenance/releases/tag/v1.4.1) - 2021-06-02
 

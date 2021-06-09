@@ -13,9 +13,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/suite"
+
 	"github.com/provenance-io/provenance/x/attribute/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
-	"github.com/stretchr/testify/suite"
 )
 
 type KeeperLegacyTestSuite struct {
@@ -31,6 +32,10 @@ type KeeperLegacyTestSuite struct {
 	pubkey2   cryptotypes.PubKey
 	user2     string
 	user2Addr sdk.AccAddress
+
+	pubkey3   cryptotypes.PubKey
+	user3     string
+	user3Addr sdk.AccAddress
 }
 
 func TestKeeperLegacyTestSuite(t *testing.T) {
@@ -51,6 +56,10 @@ func (s *KeeperLegacyTestSuite) SetupTest() {
 	s.user2Addr = sdk.AccAddress(s.pubkey2.Address())
 	s.user2 = s.user2Addr.String()
 
+	s.pubkey3 = secp256k1.GenPrivKey().PubKey()
+	s.user3Addr = sdk.AccAddress(s.pubkey3.Address())
+	s.user3 = s.user3Addr.String()
+
 	var nameData nametypes.GenesisState
 	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("attribute", s.user1Addr, false))
 	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("old.attribute", s.user1Addr, false))
@@ -65,6 +74,7 @@ func (s *KeeperLegacyTestSuite) SetupTest() {
 	params.MaxValueLength = 10
 	app.AttributeKeeper.SetParams(ctx, params)
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
+	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user3Addr))
 
 	var attributeData types.GenesisState
 	attributeData.Attributes = append(attributeData.Attributes, types.Attribute{
@@ -130,10 +140,22 @@ func (s *KeeperLegacyTestSuite) TestSetAttribute() {
 				Address:       s.user1,
 				AttributeType: types.AttributeType_String,
 			},
-			accAddr:   s.user2Addr,
+			accAddr:   s.user1Addr,
 			ownerAddr: s.user2Addr,
 			wantErr:   true,
 			errorMsg:  fmt.Sprintf("no account found for owner address \"%s\"", s.user2),
+		},
+		"should fail with owner does not match": {
+			attr: types.Attribute{
+				Name:          "old.attribute",
+				Value:         []byte("0123456789"),
+				Address:       s.user1,
+				AttributeType: types.AttributeType_String,
+			},
+			accAddr:   s.user1Addr,
+			ownerAddr: s.user3Addr,
+			wantErr:   true,
+			errorMsg:  fmt.Sprintf("\"old.attribute\" does not resolve to address \"%s\"", s.user3),
 		},
 		"should fail unable to normalize segment length too short": {
 			attr: types.Attribute{
@@ -142,7 +164,7 @@ func (s *KeeperLegacyTestSuite) TestSetAttribute() {
 				Address:       s.user1,
 				AttributeType: types.AttributeType_String,
 			},
-			accAddr:   s.user2Addr,
+			accAddr:   s.user1Addr,
 			ownerAddr: s.user2Addr,
 			wantErr:   true,
 			errorMsg:  "unable to normalize attribute name \"example.cant.normalize.me\": segment of name is too short",
@@ -164,7 +186,7 @@ func (s *KeeperLegacyTestSuite) TestSetAttribute() {
 		tc := tc
 
 		s.Run(n, func() {
-			err := s.app.AttributeKeeper.SetAttribute(s.ctx, tc.accAddr, tc.attr, tc.ownerAddr)
+			err := s.app.AttributeKeeper.SetAttribute(s.ctx, tc.attr, tc.ownerAddr)
 			if tc.wantErr {
 				s.Error(err)
 				s.Equal(tc.errorMsg, err.Error())
@@ -185,19 +207,26 @@ func (s *KeeperLegacyTestSuite) TestDeleteAttribute() {
 		wantErr   bool
 		errorMsg  string
 	}{
-		"should fail to delete, cant resolve name wrong owner": {
+		"should fail to delete, invalid owner account": {
 			name:      "old.example.attribute",
 			accAddr:   s.user1Addr,
 			ownerAddr: s.user2Addr,
 			wantErr:   true,
 			errorMsg:  fmt.Sprintf("no account found for owner address \"%s\"", s.user2Addr),
 		},
-		"should fail to delete, cant resolve unknown name": {
+		"should process request for non-existant name, fail with no records": {
 			name:      "dne",
 			accAddr:   s.user1Addr,
 			ownerAddr: s.user1Addr,
 			wantErr:   true,
-			errorMsg:  fmt.Sprintf("\"dne\" does not resolve to address \"%s\"", s.user1Addr),
+			errorMsg:  "no keys deleted with name dne",
+		},
+		"should fail to delete attribute, wrong owner address": {
+			name:      "old.attribute",
+			accAddr:   s.user1Addr,
+			ownerAddr: s.user3Addr,
+			wantErr:   true,
+			errorMsg:  fmt.Sprintf("\"old.attribute\" does not resolve to address \"%s\"", s.user3Addr),
 		},
 		"should successfully delete attribute": {
 			name:      "old.attribute",
@@ -291,7 +320,7 @@ func (s *KeeperLegacyTestSuite) TestIterateRecord() {
 			Address:       s.user1,
 			AttributeType: types.AttributeType_String,
 		}
-		s.app.AttributeKeeper.SetAttribute(s.ctx, s.user1Addr, attr, s.user1Addr)
+		s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr)
 
 		records := []types.Attribute{}
 		// Callback func that adds records to genesis state.
