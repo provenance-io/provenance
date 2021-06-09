@@ -12,9 +12,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/suite"
+
 	"github.com/provenance-io/provenance/x/attribute/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
-	"github.com/stretchr/testify/suite"
 )
 
 type KeeperTestSuite struct {
@@ -165,7 +166,12 @@ func (s *KeeperTestSuite) TestDeleteAttribute() {
 		Address:       s.user1,
 		AttributeType: types.AttributeType_String,
 	}
-	s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr)
+	s.NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
+
+	// Create a name, make an attribute under it, then remove the name leaving an orphan attribute.
+	s.NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "deleted", s.user1Addr, false), "name record should save successfully")
+	s.NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, types.NewAttribute("deleted", s.user1Addr, types.AttributeType_String, []byte("test")), s.user1Addr), "should save successfully")
+	s.NoError(s.app.NameKeeper.DeleteRecord(s.ctx, "deleted"), "name record should be removed successfully")
 
 	cases := map[string]struct {
 		name      string
@@ -180,11 +186,18 @@ func (s *KeeperTestSuite) TestDeleteAttribute() {
 			wantErr:   true,
 			errorMsg:  fmt.Sprintf("no account found for owner address \"%s\"", s.user2Addr),
 		},
-		"should fail to delete, cant resolve unknown name": {
+		"no keys will be deleted with unknown name": {
 			name:      "dne",
 			ownerAddr: s.user1Addr,
 			wantErr:   true,
-			errorMsg:  fmt.Sprintf("\"dne\" does not resolve to address \"%s\"", s.user1Addr),
+			errorMsg:  "no keys deleted with name dne",
+		},
+		"attribute will be removed without error when name has been removed": {
+			name:      "deleted",
+			accAddr:   s.user1Addr,
+			ownerAddr: s.user1Addr,
+			wantErr:   false,
+			errorMsg:  "",
 		},
 		"should successfully delete attribute": {
 			name:      "example.attribute",
@@ -221,8 +234,7 @@ func (s *KeeperTestSuite) TestGetAllAttributes() {
 		Address:       s.user1,
 		AttributeType: types.AttributeType_String,
 	}
-	s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr)
-
+	s.NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
 	attributes, err = s.app.AttributeKeeper.GetAllAttributes(s.ctx, s.user1Addr)
 	s.NoError(err)
 	s.Equal(attr.Name, attributes[0].Name)
@@ -238,8 +250,7 @@ func (s *KeeperTestSuite) TestGetAttributesByName() {
 		Address:       s.user1,
 		AttributeType: types.AttributeType_String,
 	}
-	s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr)
-
+	s.NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
 	_, err := s.app.AttributeKeeper.GetAttributes(s.ctx, s.user1Addr, "blah")
 	s.Error(err)
 	s.Equal("no address bound to name", err.Error())
@@ -280,8 +291,7 @@ func (s *KeeperTestSuite) TestIterateRecord() {
 			Address:       s.user1,
 			AttributeType: types.AttributeType_String,
 		}
-		s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr)
-
+		s.NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
 		records := []types.Attribute{}
 		// Callback func that adds records to genesis state.
 		appendToRecords := func(record types.Attribute) error {
