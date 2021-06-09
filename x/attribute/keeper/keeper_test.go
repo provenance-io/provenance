@@ -175,6 +175,11 @@ func (s *KeeperTestSuite) TestDeleteAttribute() {
 	}
 	s.app.AttributeKeeper.SetAttribute(s.ctx, s.user1Addr, attr, s.user1Addr)
 
+	// Create a name, make an attribute under it, then remove the name leaving an orphan attribute.
+	s.app.NameKeeper.SetNameRecord(s.ctx, "deleted", s.user1Addr, false)
+	s.app.AttributeKeeper.SetAttribute(s.ctx, s.user1Addr, types.NewAttribute("deleted", s.user1Addr, types.AttributeType_String, []byte("test")), s.user1Addr)
+	s.app.NameKeeper.DeleteRecord(s.ctx, "deleted")
+
 	cases := map[string]struct {
 		name      string
 		accAddr   sdk.AccAddress
@@ -189,12 +194,19 @@ func (s *KeeperTestSuite) TestDeleteAttribute() {
 			wantErr:   true,
 			errorMsg:  fmt.Sprintf("no account found for owner address \"%s\"", s.user2Addr),
 		},
-		"should fail to delete, cant resolve unknown name": {
+		"no keys will be deleted with unknown name": {
 			name:      "dne",
 			accAddr:   s.user1Addr,
 			ownerAddr: s.user1Addr,
 			wantErr:   true,
-			errorMsg:  fmt.Sprintf("\"dne\" does not resolve to address \"%s\"", s.user1Addr),
+			errorMsg:  "no keys deleted with name dne",
+		},
+		"attribute will be removed without error when name has been removed": {
+			name:      "deleted",
+			accAddr:   s.user1Addr,
+			ownerAddr: s.user1Addr,
+			wantErr:   false,
+			errorMsg:  "",
 		},
 		"should successfully delete attribute": {
 			name:      "example.attribute",

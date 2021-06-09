@@ -193,12 +193,12 @@ func (s *KeeperLegacyTestSuite) TestDeleteAttribute() {
 			wantErr:   true,
 			errorMsg:  fmt.Sprintf("no account found for owner address \"%s\"", s.user2Addr),
 		},
-		"should fail to delete, cant resolve unknown name": {
+		"should process request for non-existant name, fail with no records": {
 			name:      "dne",
 			accAddr:   s.user1Addr,
 			ownerAddr: s.user1Addr,
 			wantErr:   true,
-			errorMsg:  fmt.Sprintf("\"dne\" does not resolve to address \"%s\"", s.user1Addr),
+			errorMsg:  "no keys deleted with name dne",
 		},
 		"should successfully delete attribute": {
 			name:      "old.attribute",
