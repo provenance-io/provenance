@@ -70,7 +70,6 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 
 	cases := map[string]struct {
 		attr      types.Attribute
-		accAddr   sdk.AccAddress
 		ownerAddr sdk.AccAddress
 		wantErr   bool
 		errorMsg  string
@@ -82,7 +81,6 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 				Address:       s.user1,
 				AttributeType: types.AttributeType_String,
 			},
-			accAddr:   s.user1Addr,
 			ownerAddr: s.user1Addr,
 			wantErr:   false,
 			errorMsg:  "",
@@ -94,7 +92,6 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 				Address:       s.user1,
 				AttributeType: types.AttributeType_String,
 			},
-			accAddr:   s.user1Addr,
 			ownerAddr: s.user1Addr,
 			wantErr:   true,
 			errorMsg:  "invalid name: empty",
@@ -106,7 +103,6 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 				Address:       s.user1,
 				AttributeType: types.AttributeType_String,
 			},
-			accAddr:   s.user1Addr,
 			ownerAddr: s.user1Addr,
 			wantErr:   true,
 			errorMsg:  "attribute value length of 11 exceeds max length 10",
@@ -118,7 +114,6 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 				Address:       s.user1,
 				AttributeType: types.AttributeType_String,
 			},
-			accAddr:   s.user2Addr,
 			ownerAddr: s.user2Addr,
 			wantErr:   true,
 			errorMsg:  fmt.Sprintf("no account found for owner address \"%s\"", s.user2),
@@ -130,7 +125,6 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 				Address:       s.user1,
 				AttributeType: types.AttributeType_String,
 			},
-			accAddr:   s.user2Addr,
 			ownerAddr: s.user2Addr,
 			wantErr:   true,
 			errorMsg:  "unable to normalize attribute name \"example.cant.normalize.me\": segment of name is too short",
@@ -142,7 +136,6 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 				Address:       s.user1,
 				AttributeType: types.AttributeType_String,
 			},
-			accAddr:   s.user1Addr,
 			ownerAddr: s.user1Addr,
 			wantErr:   true,
 			errorMsg:  fmt.Sprintf("\"example.not.found\" does not resolve to address \"%s\"", s.user1),
@@ -152,7 +145,7 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 		tc := tc
 
 		s.Run(n, func() {
-			err := s.app.AttributeKeeper.SetAttribute(s.ctx, tc.accAddr, tc.attr, tc.ownerAddr)
+			err := s.app.AttributeKeeper.SetAttribute(s.ctx, tc.attr, tc.ownerAddr)
 			if tc.wantErr {
 				s.Error(err)
 				s.Equal(tc.errorMsg, err.Error())
@@ -172,7 +165,7 @@ func (s *KeeperTestSuite) TestDeleteAttribute() {
 		Address:       s.user1,
 		AttributeType: types.AttributeType_String,
 	}
-	s.app.AttributeKeeper.SetAttribute(s.ctx, s.user1Addr, attr, s.user1Addr)
+	s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr)
 
 	cases := map[string]struct {
 		name      string
@@ -183,21 +176,18 @@ func (s *KeeperTestSuite) TestDeleteAttribute() {
 	}{
 		"should fail to delete, cant resolve name wrong owner": {
 			name:      "example.attribute",
-			accAddr:   s.user1Addr,
 			ownerAddr: s.user2Addr,
 			wantErr:   true,
 			errorMsg:  fmt.Sprintf("no account found for owner address \"%s\"", s.user2Addr),
 		},
 		"should fail to delete, cant resolve unknown name": {
 			name:      "dne",
-			accAddr:   s.user1Addr,
 			ownerAddr: s.user1Addr,
 			wantErr:   true,
 			errorMsg:  fmt.Sprintf("\"dne\" does not resolve to address \"%s\"", s.user1Addr),
 		},
 		"should successfully delete attribute": {
 			name:      "example.attribute",
-			accAddr:   s.user1Addr,
 			ownerAddr: s.user1Addr,
 			wantErr:   false,
 			errorMsg:  "",
@@ -231,7 +221,7 @@ func (s *KeeperTestSuite) TestGetAllAttributes() {
 		Address:       s.user1,
 		AttributeType: types.AttributeType_String,
 	}
-	s.app.AttributeKeeper.SetAttribute(s.ctx, s.user1Addr, attr, s.user1Addr)
+	s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr)
 
 	attributes, err = s.app.AttributeKeeper.GetAllAttributes(s.ctx, s.user1Addr)
 	s.NoError(err)
@@ -248,7 +238,7 @@ func (s *KeeperTestSuite) TestGetAttributesByName() {
 		Address:       s.user1,
 		AttributeType: types.AttributeType_String,
 	}
-	s.app.AttributeKeeper.SetAttribute(s.ctx, s.user1Addr, attr, s.user1Addr)
+	s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr)
 
 	_, err := s.app.AttributeKeeper.GetAttributes(s.ctx, s.user1Addr, "blah")
 	s.Error(err)
@@ -290,7 +280,7 @@ func (s *KeeperTestSuite) TestIterateRecord() {
 			Address:       s.user1,
 			AttributeType: types.AttributeType_String,
 		}
-		s.app.AttributeKeeper.SetAttribute(s.ctx, s.user1Addr, attr, s.user1Addr)
+		s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr)
 
 		records := []types.Attribute{}
 		// Callback func that adds records to genesis state.

@@ -112,12 +112,17 @@ func (k Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle Handler) e
 
 // Stores an attribute under the given account. The attribute name must resolve to the given owner address.
 func (k Keeper) SetAttribute(
-	ctx sdk.Context, acc sdk.AccAddress, attr types.Attribute, owner sdk.AccAddress,
+	ctx sdk.Context, attr types.Attribute, owner sdk.AccAddress,
 ) error {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "set")
 
+	accountAddress, err := sdk.AccAddressFromBech32(attr.Address)
+	if err != nil {
+		return err
+	}
+
 	// Ensure attribute is valid
-	if err := attr.ValidateBasic(); err != nil {
+	if err = attr.ValidateBasic(); err != nil {
 		return err
 	}
 
@@ -127,8 +132,6 @@ func (k Keeper) SetAttribute(
 		return fmt.Errorf("attribute value length of %v exceeds max length %v", len(attr.Value), maxLength)
 	}
 
-	// Ensure name is stored in normalized format.
-	var err error
 	normalizedName, err := k.nameKeeper.Normalize(ctx, attr.Name)
 	if err != nil {
 		return fmt.Errorf("unable to normalize attribute name \"%s\": %w", attr.Name, err)
@@ -147,7 +150,7 @@ func (k Keeper) SetAttribute(
 	if err != nil {
 		return err
 	}
-	key := types.AccountAttributeKey(acc, attr)
+	key := types.AccountAttributeKey(accountAddress, attr)
 	store := ctx.KVStore(k.storeKey)
 	store.Set(key, bz)
 
@@ -159,8 +162,86 @@ func (k Keeper) SetAttribute(
 	return nil
 }
 
-// Removes attributes under the given account. The attribute name must resolve to the given owner address.
+func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribute, updateAttribute types.Attribute, owner sdk.AccAddress,
+) error {
+
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "update")
+
+	accountAddress, err := sdk.AccAddressFromBech32(originalAttribute.Address)
+	if err != nil {
+		return err
+	}
+
+	if err = originalAttribute.ValidateBasic(); err != nil {
+		return err
+	}
+
+	if err := updateAttribute.ValidateBasic(); err != nil {
+		return err
+	}
+
+	maxLength := k.GetMaxValueLength(ctx)
+	if int(maxLength) < len(updateAttribute.Value) {
+		return fmt.Errorf("update attribute value length of %v exceeds max length %v", len(updateAttribute.Value), maxLength)
+	}
+
+	normalizedName, err := k.nameKeeper.Normalize(ctx, updateAttribute.Name)
+	if err != nil {
+		return fmt.Errorf("unable to normalize attribute name \"%s\": %w", updateAttribute.Name, err)
+	}
+
+	updateAttribute.Name = normalizedName
+
+	if ownerAcc := k.authKeeper.GetAccount(ctx, owner); ownerAcc == nil {
+		return fmt.Errorf("no account found for owner address \"%s\"", owner.String())
+	}
+
+	if !k.nameKeeper.ResolvesTo(ctx, updateAttribute.Name, owner) {
+		return fmt.Errorf("\"%s\" does not resolve to address \"%s\"", updateAttribute.Name, owner.String())
+	}
+
+	store := ctx.KVStore(k.storeKey)
+	it := sdk.KVStorePrefixIterator(store, types.AccountAttributesNameKeyPrefix(accountAddress, originalAttribute.Name))
+	var found bool
+	for ; it.Valid(); it.Next() {
+		attr := types.Attribute{}
+		if err := k.cdc.UnmarshalBinaryBare(it.Value(), &attr); err != nil {
+			return err
+		}
+
+		if attr.Name == updateAttribute.Name && bytes.Equal(attr.Value, originalAttribute.Value) {
+			found = true
+			store.Delete(it.Key())
+
+			bz, err := k.cdc.MarshalBinaryBare(&attr)
+			if err != nil {
+				return err
+			}
+			updatedKey := types.AccountAttributeKey(accountAddress, updateAttribute)
+			store.Set(updatedKey, bz)
+
+			attributeUpdateEvent := types.NewEventAttributeUpdate(originalAttribute, updateAttribute, owner.String())
+			if err := ctx.EventManager().EmitTypedEvent(attributeUpdateEvent); err != nil {
+				return err
+			}
+			break
+		}
+	}
+	if !found {
+		errorMessage := "no attributes updated"
+		ctx.Logger().Error(errorMessage, "name", originalAttribute.Name, "value", string(originalAttribute.Value))
+		return fmt.Errorf("%s with name %s and value %s", errorMessage, originalAttribute.Name, string(originalAttribute.Value))
+	}
+	return nil
+}
+
+// Removes attributes under the given account. The attribute name and value if given must resolve to the given owner address.
 func (k Keeper) DeleteAttribute(ctx sdk.Context, acc sdk.AccAddress, name string, value *[]byte, owner sdk.AccAddress) error {
+	var deleteWithValue bool
+	if value == nil {
+		deleteWithValue = true
+	}
+
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "delete")
 
 	if ownerAcc := k.authKeeper.GetAccount(ctx, owner); ownerAcc == nil {
@@ -180,13 +261,20 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, acc sdk.AccAddress, name string
 			return err
 		}
 
-		if attr.Name == name && (value == nil || bytes.Equal(*value, attr.Value)) {
+		if attr.Name == name && (deleteWithValue || bytes.Equal(*value, attr.Value)) {
 			count++
 			store.Delete(it.Key())
 
-			attributeDeleteEvent := types.NewEventAttributeDelete(name, acc.String(), owner.String())
-			if err := ctx.EventManager().EmitTypedEvent(attributeDeleteEvent); err != nil {
-				return err
+			if !deleteWithValue {
+				deleteEvent := types.NewEventAttributeDelete(name, acc.String(), owner.String())
+				if err := ctx.EventManager().EmitTypedEvent(deleteEvent); err != nil {
+					return err
+				}
+			} else {
+				deleteEvent := types.NewEventAttributeDeleteWithValue(name, string(*value), acc.String(), owner.String())
+				if err := ctx.EventManager().EmitTypedEvent(deleteEvent); err != nil {
+					return err
+				}
 			}
 		}
 	}

@@ -14,6 +14,9 @@ service Msg {
   // AddAttribute defines a method to verify a particular invariance.
   rpc AddAttribute(MsgAddAttributeRequest) returns (MsgAddAttributeResponse);
 
+  // UpdateAttribute defines a method to verify a particular invariance.
+  rpc UpdateAttribute(MsgUpdateAttributeRequest) returns (MsgUpdateAttributeResponse);
+
   // DeleteAttribute defines a method to verify a particular invariance.
   rpc DeleteAttribute(MsgDeleteAttributeRequest) returns (MsgDeleteAttributeResponse);
 
