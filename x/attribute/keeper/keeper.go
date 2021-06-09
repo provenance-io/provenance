@@ -162,9 +162,9 @@ func (k Keeper) SetAttribute(
 	return nil
 }
 
+// Updates an attribute under the given account. The attribute name must resolve to the given owner address and value must resolve to an existing attribute.
 func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribute, updateAttribute types.Attribute, owner sdk.AccAddress,
 ) error {
-
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "update")
 
 	accountAddress, err := sdk.AccAddressFromBech32(originalAttribute.Address)
@@ -176,7 +176,7 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 		return err
 	}
 
-	if err := updateAttribute.ValidateBasic(); err != nil {
+	if err = updateAttribute.ValidateBasic(); err != nil {
 		return err
 	}
 
