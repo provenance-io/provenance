@@ -239,7 +239,7 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 // Removes attributes under the given account. The attribute name and value if given must resolve to the given owner address.
 func (k Keeper) DeleteAttribute(ctx sdk.Context, acc sdk.AccAddress, name string, value *[]byte, owner sdk.AccAddress) error {
 	var deleteWithValue bool
-	if value == nil {
+	if value != nil {
 		deleteWithValue = true
 	}
 
@@ -265,7 +265,7 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, acc sdk.AccAddress, name string
 			return err
 		}
 
-		if attr.Name == name && (deleteWithValue || bytes.Equal(*value, attr.Value)) {
+		if attr.Name == name && (!deleteWithValue || bytes.Equal(*value, attr.Value)) {
 			count++
 			store.Delete(it.Key())
 

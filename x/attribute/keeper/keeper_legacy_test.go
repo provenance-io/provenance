@@ -147,7 +147,6 @@ func (s *KeeperLegacyTestSuite) TestSetAttribute() {
 				Address:       s.user1,
 				AttributeType: types.AttributeType_String,
 			},
-			accAddr:   s.user1Addr,
 			ownerAddr: s.user3Addr,
 			wantErr:   true,
 			errorMsg:  fmt.Sprintf("\"old.attribute\" does not resolve to address \"%s\"", s.user3),

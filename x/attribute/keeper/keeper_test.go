@@ -201,6 +201,7 @@ func (s *KeeperTestSuite) TestDeleteAttribute() {
 		},
 		"should successfully delete attribute": {
 			name:      "example.attribute",
+			accAddr:   s.user1Addr,
 			ownerAddr: s.user1Addr,
 			wantErr:   false,
 			errorMsg:  "",
