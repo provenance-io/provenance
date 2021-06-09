@@ -104,7 +104,7 @@ func (suite *SimTestSuite) TestSimulateMsgDeleteAttribute() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 3)
 	suite.app.NameKeeper.SetNameRecord(suite.ctx, "example.provenance", accounts[0].Address, false)
-	suite.app.AttributeKeeper.SetAttribute(suite.ctx, accounts[1].Address, types.NewAttribute("example.provenance", accounts[1].Address, types.AttributeType_String, []byte("test")), accounts[0].Address)
+	suite.app.AttributeKeeper.SetAttribute(suite.ctx, types.NewAttribute("example.provenance", accounts[1].Address, types.AttributeType_String, []byte("test")), accounts[0].Address)
 
 	// begin a new block
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
