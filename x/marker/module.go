@@ -182,7 +182,7 @@ func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes
 
 // RandomizedParams creates randomized marker param changes for the simulator.
 func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	return []simtypes.ParamChange{} // simulation.ParamChanges(r)
+	return simulation.ParamChanges(r)
 }
 
 // RegisterStoreDecoder registers a decoder for marker module's types
