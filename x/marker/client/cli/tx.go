@@ -360,7 +360,7 @@ func GetCmdWithdrawCoins() *cobra.Command {
 			if len(args) == 3 {
 				recipientAddr, err = sdk.AccAddressFromBech32(args[2])
 				if err != nil {
-					return sdkErrors.Wrapf(err, "invalid recipient address %s", args[0])
+					return sdkErrors.Wrapf(err, "invalid recipient address %s", args[2])
 				}
 			}
 			msg := types.NewMsgWithdrawRequest(callerAddr, recipientAddr, denom, coins)
@@ -368,5 +368,41 @@ func GetCmdWithdrawCoins() *cobra.Command {
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// Transfer handles a message to send coins from one account to another
+func NewTransferCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "transfer [from] [to] [coins]",
+		Short: "Transfer coins from on account to another",
+		Args:  cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			from, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return sdkErrors.Wrapf(err, "invalid from address %s", args[0])
+			}
+			to, err := sdk.AccAddressFromBech32(args[1])
+			if err != nil {
+				return sdkErrors.Wrapf(err, "invalid recipient address %s", args[1])
+			}
+			coins, err := sdk.ParseCoinsNormalized(args[3])
+			if err != nil {
+				return sdkErrors.Wrapf(sdkErrors.ErrInvalidCoins, "invalid coin %s", args[2])
+			}
+			if len(coins) != 1 {
+				return fmt.Errorf("invalid coin %s", args[3])
+			}
+			msg := types.NewMsgTransferRequest(clientCtx.GetFromAddress(), to, from, coins[0])
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
 	return cmd
 }
