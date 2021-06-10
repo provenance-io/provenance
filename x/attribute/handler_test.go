@@ -125,6 +125,63 @@ func (s HandlerTestSuite) TestMsgAddAttributeRequest() {
 	s.runTests(cases)
 }
 
+func (s HandlerTestSuite) TestMsgUpdateAttributeRequest() {
+	testAttr := types.Attribute{
+		Address:       s.user1,
+		Name:          "example.name",
+		Value:         []byte("value"),
+		AttributeType: types.AttributeType_String,
+	}
+	var attrData types.GenesisState
+	attrData.Attributes = append(attrData.Attributes, testAttr)
+	attrData.Params.MaxValueLength = 100
+	s.app.AttributeKeeper.InitGenesis(s.ctx, &attrData)
+
+	cases := []CommonTest{
+		{
+			"should successfully update attribute",
+			types.NewMsgUpdateAttributeRequest(s.user1Addr,
+				s.user1Addr, "example.name", []byte("value"), []byte("1"), types.AttributeType_String, types.AttributeType_Int),
+			[]string{s.user1},
+			"",
+			types.NewEventAttributeUpdate(
+				testAttr,
+				types.Attribute{
+					Address:       s.user1,
+					Name:          "example.name",
+					Value:         []byte("1"),
+					AttributeType: types.AttributeType_Int,
+				},
+				s.user1),
+		},
+	}
+	s.runTests(cases)
+}
+
+func (s HandlerTestSuite) TestMsgDeleteAttributeWithValueRequest() {
+	testAttr := types.Attribute{
+		Address:       s.user1,
+		Name:          "example.name",
+		Value:         []byte("value"),
+		AttributeType: types.AttributeType_String,
+	}
+	var attrData types.GenesisState
+	attrData.Attributes = append(attrData.Attributes, testAttr)
+	attrData.Params.MaxValueLength = 100
+	s.app.AttributeKeeper.InitGenesis(s.ctx, &attrData)
+
+	cases := []CommonTest{
+		{
+			"should successfully delete attribute with value",
+			types.NewMsgDeleteAttributeWithValueRequest(s.user1Addr, s.user1Addr, "example.name", []byte("value")),
+			[]string{s.user1},
+			"",
+			types.NewEventAttributeDeleteWithValue("example.name", string([]byte("value")), s.user1, s.user1),
+		},
+	}
+	s.runTests(cases)
+}
+
 func (s HandlerTestSuite) TestMsgDeleteAttributeRequest() {
 	testAttr := types.Attribute{
 		Address:       s.user1,
