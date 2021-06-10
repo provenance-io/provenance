@@ -25,8 +25,8 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgDeleteAttributeRequest:
 			res, err := msgServer.DeleteAttribute(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgDeleteAttributeWithValueRequest:
-			res, err := msgServer.DeleteAttributeWithValue(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgDeleteDistinctAttributeRequest:
+			res, err := msgServer.DeleteDistinctAttribute(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 		default:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized attribute message type: %T", msg)

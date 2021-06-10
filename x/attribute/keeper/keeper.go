@@ -241,13 +241,13 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 }
 
 // Removes attributes under the given account. The attribute name and value if given must resolve to the given owner address.
-func (k Keeper) DeleteAttribute(ctx sdk.Context, acc sdk.AccAddress, name string, value *[]byte, owner sdk.AccAddress) error {
+func (k Keeper) DeleteAttribute(ctx sdk.Context, acc sdk.AccAddress, name string, value *[]byte, attrType *types.AttributeType, owner sdk.AccAddress) error {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "delete")
+
 	var deleteWithValue bool
 	if value != nil {
 		deleteWithValue = true
 	}
-
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "delete")
 
 	if ownerAcc := k.authKeeper.GetAccount(ctx, owner); ownerAcc == nil {
 		return fmt.Errorf("no account found for owner address \"%s\"", owner.String())

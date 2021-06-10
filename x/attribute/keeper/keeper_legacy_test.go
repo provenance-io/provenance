@@ -232,7 +232,7 @@ func (s *KeeperLegacyTestSuite) TestDeleteAttribute() {
 		tc := tc
 
 		s.Run(n, func() {
-			err := s.app.AttributeKeeper.DeleteAttribute(s.ctx, tc.accAddr, tc.name, nil, tc.ownerAddr)
+			err := s.app.AttributeKeeper.DeleteAttribute(s.ctx, tc.accAddr, tc.name, nil, nil, tc.ownerAddr)
 			if tc.wantErr {
 				s.Error(err)
 				s.Equal(tc.errorMsg, err.Error())

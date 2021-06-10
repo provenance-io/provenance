@@ -398,7 +398,7 @@ func (s *KeeperTestSuite) TestDeleteAttribute() {
 		tc := tc
 
 		s.Run(n, func() {
-			err := s.app.AttributeKeeper.DeleteAttribute(s.ctx, tc.accAddr, tc.name, nil, tc.ownerAddr)
+			err := s.app.AttributeKeeper.DeleteAttribute(s.ctx, tc.accAddr, tc.name, nil, nil, tc.ownerAddr)
 			if tc.wantErr {
 				s.Error(err)
 				s.Equal(tc.errorMsg, err.Error())
@@ -407,7 +407,84 @@ func (s *KeeperTestSuite) TestDeleteAttribute() {
 			}
 		})
 	}
+}
 
+func (s *KeeperTestSuite) TestDeleteAttributeWithValue() {
+
+	attr := types.Attribute{
+		Name:          "example.attribute",
+		Value:         []byte("123456789"),
+		Address:       s.user1,
+		AttributeType: types.AttributeType_String,
+	}
+	attrInt := types.Attribute{
+		Name:          "example.attribute",
+		Value:         []byte("123456789"),
+		Address:       s.user1,
+		AttributeType: types.AttributeType_Int,
+	}
+	attrValue := types.Attribute{
+		Name:          "example.attribute",
+		Value:         []byte("diff value"),
+		Address:       s.user1,
+		AttributeType: types.AttributeType_String,
+	}
+	s.NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
+	s.NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attrInt, s.user1Addr), "should save successfully")
+	s.NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attrValue, s.user1Addr), "should save successfully")
+
+	cases := []struct {
+		testName  string
+		name      string
+		value     []byte
+		attrType  types.AttributeType
+		accAddr   sdk.AccAddress
+		ownerAddr sdk.AccAddress
+		wantErr   bool
+		errorMsg  string
+	}{
+		{
+			testName:  "should fail to delete, cant resolve name wrong owner",
+			name:      "example.attribute",
+			value:     []byte("123456789"),
+			attrType:  types.AttributeType_String,
+			ownerAddr: s.user2Addr,
+			wantErr:   true,
+			errorMsg:  fmt.Sprintf("no account found for owner address \"%s\"", s.user2Addr),
+		},
+		{
+			testName:  "no keys will be deleted with unknown name",
+			name:      "dne",
+			value:     []byte("123456789"),
+			attrType:  types.AttributeType_String,
+			ownerAddr: s.user1Addr,
+			wantErr:   true,
+			errorMsg:  "no keys deleted with name dne",
+		},
+		{
+			testName:  "should successfully delete attribute",
+			name:      "example.attribute",
+			attrType:  types.AttributeType_String,
+			value:     []byte("123456789"),
+			accAddr:   s.user1Addr,
+			ownerAddr: s.user1Addr,
+			wantErr:   false,
+			errorMsg:  "",
+		},
+	}
+	for _, tc := range cases {
+		tc := tc
+
+		s.Run(tc.testName, func() {
+			err := s.app.AttributeKeeper.DeleteAttribute(s.ctx, tc.accAddr, tc.name, &tc.value, &tc.attrType, tc.ownerAddr)
+			if tc.wantErr {
+				s.Error(err)
+				s.Equal(tc.errorMsg, err.Error())
+			} else {
+				s.NoError(err)
+			}
+		})
+	}
 }
 
 func (s *KeeperTestSuite) TestGetAllAttributes() {

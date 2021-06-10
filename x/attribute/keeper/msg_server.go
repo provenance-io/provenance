@@ -133,7 +133,7 @@ func (k msgServer) DeleteAttribute(goCtx context.Context, msg *types.MsgDeleteAt
 		return nil, err
 	}
 
-	err = k.Keeper.DeleteAttribute(ctx, accountAddr, msg.Name, nil, ownerAddr)
+	err = k.Keeper.DeleteAttribute(ctx, accountAddr, msg.Name, nil, nil, ownerAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +161,7 @@ func (k msgServer) DeleteAttribute(goCtx context.Context, msg *types.MsgDeleteAt
 	return &types.MsgDeleteAttributeResponse{}, nil
 }
 
-func (k msgServer) DeleteAttributeWithValue(goCtx context.Context, msg *types.MsgDeleteAttributeWithValueRequest) (*types.MsgDeleteAttributeWithValueResponse, error) {
+func (k msgServer) DeleteDistinctAttribute(goCtx context.Context, msg *types.MsgDeleteDistinctAttributeRequest) (*types.MsgDeleteDistinctAttributeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	accountAddr, err := sdk.AccAddressFromBech32(msg.Account)
@@ -174,7 +174,7 @@ func (k msgServer) DeleteAttributeWithValue(goCtx context.Context, msg *types.Ms
 		return nil, err
 	}
 
-	err = k.Keeper.DeleteAttribute(ctx, accountAddr, msg.Name, &msg.Value, ownerAddr)
+	err = k.Keeper.DeleteAttribute(ctx, accountAddr, msg.Name, &msg.Value, &msg.AttributeType, ownerAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -200,5 +200,5 @@ func (k msgServer) DeleteAttributeWithValue(goCtx context.Context, msg *types.Ms
 		),
 	)
 
-	return &types.MsgDeleteAttributeWithValueResponse{}, nil
+	return &types.MsgDeleteDistinctAttributeResponse{}, nil
 }

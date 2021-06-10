@@ -14,7 +14,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgAddAttributeRequest{}, "provenance/attribute/MsgAddAttributeRequest", nil)
 	cdc.RegisterConcrete(&MsgUpdateAttributeRequest{}, "provenance/attribute/MsgUpdateAttributeRequest", nil)
 	cdc.RegisterConcrete(&MsgDeleteAttributeRequest{}, "provenance/attribute/MsgDeleteAttributeRequest", nil)
-	cdc.RegisterConcrete(&MsgDeleteAttributeWithValueRequest{}, "provenance/attribute/MsgDeleteAttributeWithValueRequest", nil)
+	cdc.RegisterConcrete(&MsgDeleteDistinctAttributeRequest{}, "provenance/attribute/MsgDeleteDistinctAttributeRequest", nil)
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
@@ -22,7 +22,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgAddAttributeRequest{},
 		&MsgUpdateAttributeRequest{},
 		&MsgDeleteAttributeRequest{},
-		&MsgDeleteAttributeWithValueRequest{},
+		&MsgDeleteDistinctAttributeRequest{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

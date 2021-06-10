@@ -20,8 +20,8 @@ service Msg {
   // DeleteAttribute defines a method to verify a particular invariance.
   rpc DeleteAttribute(MsgDeleteAttributeRequest) returns (MsgDeleteAttributeResponse);
 
-  // DeleteAttribute defines a method to verify a particular invariance.
-  rpc DeleteAttributeWithValue(MsgDeleteAttributeWithValueRequest) returns (MsgDeleteAttributeWithValueResponse);
+  // DeleteDistinctAttribute defines a method to verify a particular invariance.
+  rpc DeleteDistinctAttribute(MsgDeleteDistinctAttributeRequest) returns (MsgDeleteDistinctAttributeResponse);
 }
 
 // MsgAddAttributeRequest defines an sdk.Msg type that is used to add a new attribute to an account
@@ -93,9 +93,9 @@ message MsgDeleteAttributeRequest {
 // MsgDeleteAttributeResponse defines the Msg/Vote response type.
 message MsgDeleteAttributeResponse {}
 
-// MsgDeleteAttributeWithValueRequest defines a message to delete an attribute with matching name and value from an
-// account Attributes may only be remove from an account by the account that the attribute name resolves to.
-message MsgDeleteAttributeWithValueRequest {
+// MsgDeleteDistinctAttributeRequest defines a message to delete an attribute with matching name, value, and type from
+// an account Attributes may only be remove from an account by the account that the attribute name resolves to.
+message MsgDeleteDistinctAttributeRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
@@ -105,11 +105,13 @@ message MsgDeleteAttributeWithValueRequest {
   string name = 1;
   // The attribute value.
   bytes value = 2;
+  // The attribute value type.
+  AttributeType attribute_type = 3;
   // The account to add the attribute to.
-  string account = 3;
+  string account = 4;
   // The address that the name must resolve to.
-  string owner = 4;
+  string owner = 5;
 }
 
-// MsgDeleteAttributeWithValueResponse defines the Msg/Vote response type.
-message MsgDeleteAttributeWithValueResponse {}
+// MsgDeleteDistinctAttributeResponse defines the Msg/Vote response type.
+message MsgDeleteDistinctAttributeResponse {}

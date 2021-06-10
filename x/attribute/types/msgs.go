@@ -20,7 +20,7 @@ var (
 	_ sdk.Msg = &MsgAddAttributeRequest{}
 	_ sdk.Msg = &MsgUpdateAttributeRequest{}
 	_ sdk.Msg = &MsgDeleteAttributeRequest{}
-	_ sdk.Msg = &MsgDeleteAttributeWithValueRequest{}
+	_ sdk.Msg = &MsgDeleteDistinctAttributeRequest{}
 )
 
 // NewMsgAddAttributeRequest creates a new add attribute message
@@ -192,25 +192,34 @@ func (msg MsgDeleteAttributeRequest) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgDeleteAttributeWithValueRequest creates a new add attribute message
-func NewMsgDeleteAttributeWithValueRequest(account sdk.AccAddress, owner sdk.AccAddress, name string, value []byte) *MsgDeleteAttributeWithValueRequest { // nolint:interfacer
-	return &MsgDeleteAttributeWithValueRequest{Account: account.String(), Name: strings.ToLower(strings.TrimSpace(name)), Owner: owner.String(), Value: value}
+func NewMsgDeleteAttributeWithValueRequest(account sdk.AccAddress, owner sdk.AccAddress, name string, value []byte, attrType AttributeType) *MsgDeleteDistinctAttributeRequest { // nolint:interfacer
+	return &MsgDeleteDistinctAttributeRequest{
+		Account:       account.String(),
+		Name:          strings.ToLower(strings.TrimSpace(name)),
+		Owner:         owner.String(),
+		Value:         value,
+		AttributeType: attrType,
+	}
 }
 
 // Route returns the name of the module.
-func (msg MsgDeleteAttributeWithValueRequest) Route() string {
+func (msg MsgDeleteDistinctAttributeRequest) Route() string {
 	return ModuleName
 }
 
 // Type returns the message action.
-func (msg MsgDeleteAttributeWithValueRequest) Type() string { return TypeMsgDeleteAttribute }
+func (msg MsgDeleteDistinctAttributeRequest) Type() string { return TypeMsgDeleteAttribute }
 
 // ValidateBasic runs stateless validation checks on the message.
-func (msg MsgDeleteAttributeWithValueRequest) ValidateBasic() error {
+func (msg MsgDeleteDistinctAttributeRequest) ValidateBasic() error {
 	if strings.TrimSpace(msg.Name) == "" {
 		return fmt.Errorf("empty name")
 	}
 	if len(msg.Value) == 0 {
 		return fmt.Errorf("empty value")
+	}
+	if msg.AttributeType == AttributeType_Unspecified {
+		return fmt.Errorf("unspecified attribute type")
 	}
 	if len(msg.Account) == 0 {
 		return fmt.Errorf("empty account address")
@@ -228,19 +237,19 @@ func (msg MsgDeleteAttributeWithValueRequest) ValidateBasic() error {
 }
 
 // String implements stringer interface
-func (msg MsgDeleteAttributeWithValueRequest) String() string {
+func (msg MsgDeleteDistinctAttributeRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
 // GetSignBytes encodes the message for signing
-func (msg MsgDeleteAttributeWithValueRequest) GetSignBytes() []byte {
+func (msg MsgDeleteDistinctAttributeRequest) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
 // GetSigners indicates that the message must have been signed by the name owner.
-func (msg MsgDeleteAttributeWithValueRequest) GetSigners() []sdk.AccAddress {
+func (msg MsgDeleteDistinctAttributeRequest) GetSigners() []sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.Owner)
 	if err != nil {
 		panic(fmt.Errorf("invalid owner value on message: %w", err))
