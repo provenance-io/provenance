@@ -240,13 +240,13 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 	return nil
 }
 
-// Removes attributes under the given account. The attribute name and value if given must resolve to the given owner address.
-func (k Keeper) DeleteAttribute(ctx sdk.Context, acc sdk.AccAddress, name string, value *[]byte, attrType *types.AttributeType, owner sdk.AccAddress) error {
+// Removes attributes under the given account.
+func (k Keeper) DeleteAttribute(ctx sdk.Context, acc sdk.AccAddress, name string, value *[]byte, owner sdk.AccAddress) error {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "delete")
 
-	var deleteWithValue bool
-	if value != nil && attrType != nil {
-		deleteWithValue = true
+	var deleteDistinct bool
+	if *value != nil {
+		deleteDistinct = true
 	}
 
 	if ownerAcc := k.authKeeper.GetAccount(ctx, owner); ownerAcc == nil {
@@ -269,25 +269,28 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, acc sdk.AccAddress, name string
 			return err
 		}
 
-		if attr.Name == name && (!deleteWithValue || bytes.Equal(*value, attr.Value)) {
+		if attr.Name == name && (!deleteDistinct || bytes.Equal(*value, attr.Value)) {
 			count++
 			store.Delete(it.Key())
 
-			if !deleteWithValue {
+			if !deleteDistinct {
 				deleteEvent := types.NewEventAttributeDelete(name, acc.String(), owner.String())
 				if err := ctx.EventManager().EmitTypedEvent(deleteEvent); err != nil {
 					return err
 				}
 			} else {
-				deleteEvent := types.NewEventDistinctAttributeDelete(name, string(*value), *attrType, acc.String(), owner.String())
+				deleteEvent := types.NewEventDistinctAttributeDelete(name, string(*value), acc.String(), owner.String())
 				if err := ctx.EventManager().EmitTypedEvent(deleteEvent); err != nil {
 					return err
 				}
 			}
 		}
 	}
-	if count == 0 {
-		errm := "no keys deleted"
+	errm := "no keys deleted"
+	if count == 0 && deleteDistinct {
+		ctx.Logger().Error(errm, "name", name, "value")
+		return fmt.Errorf("%s with name %s value %s", errm, name, string(*value))
+	} else if count == 0 && !deleteDistinct {
 		ctx.Logger().Error(errm, "name", name)
 		return fmt.Errorf("%s with name %s", errm, name)
 	}

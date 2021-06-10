@@ -192,13 +192,12 @@ func (msg MsgDeleteAttributeRequest) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgDeleteDistinctAttributeRequest deletes a attribute with specific value and type
-func NewMsgDeleteDistinctAttributeRequest(account sdk.AccAddress, owner sdk.AccAddress, name string, value []byte, attrType AttributeType) *MsgDeleteDistinctAttributeRequest { // nolint:interfacer
+func NewMsgDeleteDistinctAttributeRequest(account sdk.AccAddress, owner sdk.AccAddress, name string, value []byte) *MsgDeleteDistinctAttributeRequest { // nolint:interfacer
 	return &MsgDeleteDistinctAttributeRequest{
-		Account:       account.String(),
-		Name:          strings.ToLower(strings.TrimSpace(name)),
-		Owner:         owner.String(),
-		Value:         value,
-		AttributeType: attrType,
+		Account: account.String(),
+		Name:    strings.ToLower(strings.TrimSpace(name)),
+		Owner:   owner.String(),
+		Value:   value,
 	}
 }
 
@@ -217,9 +216,6 @@ func (msg MsgDeleteDistinctAttributeRequest) ValidateBasic() error {
 	}
 	if len(msg.Value) == 0 {
 		return fmt.Errorf("empty value")
-	}
-	if msg.AttributeType == AttributeType_Unspecified {
-		return fmt.Errorf("unspecified attribute type")
 	}
 	if len(msg.Account) == 0 {
 		return fmt.Errorf("empty account address")

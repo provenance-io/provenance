@@ -62,12 +62,11 @@ func NewEventAttributeDelete(name string, account string, owner string) *EventAt
 	}
 }
 
-func NewEventDistinctAttributeDelete(name string, value string, attrType AttributeType, account string, owner string) *EventAttributeDistinctDelete {
+func NewEventDistinctAttributeDelete(name string, value string, account string, owner string) *EventAttributeDistinctDelete {
 	return &EventAttributeDistinctDelete{
-		Name:          name,
-		Value:         value,
-		AttributeType: attrType.String(),
-		Owner:         owner,
-		Account:       account,
+		Name:    name,
+		Value:   value,
+		Owner:   owner,
+		Account: account,
 	}
 }

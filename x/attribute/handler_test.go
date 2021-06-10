@@ -177,10 +177,10 @@ func (s HandlerTestSuite) TestMsgDistinctDeleteAttributeRequest() {
 	cases := []CommonTest{
 		{
 			"should successfully delete attribute with value",
-			types.NewMsgDeleteDistinctAttributeRequest(s.user1Addr, s.user1Addr, "example.name", []byte("value"), types.AttributeType_String),
+			types.NewMsgDeleteDistinctAttributeRequest(s.user1Addr, s.user1Addr, "example.name", []byte("value")),
 			[]string{s.user1},
 			"",
-			types.NewEventDistinctAttributeDelete("example.name", string([]byte("value")), types.AttributeType_String, s.user1, s.user1),
+			types.NewEventDistinctAttributeDelete("example.name", string([]byte("value")), s.user1, s.user1),
 		},
 	}
 	s.runTests(cases)

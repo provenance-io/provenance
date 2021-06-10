@@ -133,7 +133,7 @@ func (k msgServer) DeleteAttribute(goCtx context.Context, msg *types.MsgDeleteAt
 		return nil, err
 	}
 
-	err = k.Keeper.DeleteAttribute(ctx, accountAddr, msg.Name, nil, nil, ownerAddr)
+	err = k.Keeper.DeleteAttribute(ctx, accountAddr, msg.Name, nil, ownerAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -174,7 +174,7 @@ func (k msgServer) DeleteDistinctAttribute(goCtx context.Context, msg *types.Msg
 		return nil, err
 	}
 
-	err = k.Keeper.DeleteAttribute(ctx, accountAddr, msg.Name, &msg.Value, &msg.AttributeType, ownerAddr)
+	err = k.Keeper.DeleteAttribute(ctx, accountAddr, msg.Name, &msg.Value, ownerAddr)
 	if err != nil {
 		return nil, err
 	}

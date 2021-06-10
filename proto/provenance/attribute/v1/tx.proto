@@ -105,12 +105,10 @@ message MsgDeleteDistinctAttributeRequest {
   string name = 1;
   // The attribute value.
   bytes value = 2;
-  // The attribute value type.
-  AttributeType attribute_type = 3;
   // The account to add the attribute to.
-  string account = 4;
+  string account = 3;
   // The address that the name must resolve to.
-  string owner = 5;
+  string owner = 4;
 }
 
 // MsgDeleteDistinctAttributeResponse defines the Msg/Vote response type.
