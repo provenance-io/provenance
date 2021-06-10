@@ -245,7 +245,7 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, acc sdk.AccAddress, name string
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "delete")
 
 	var deleteDistinct bool
-	if *value != nil {
+	if value != nil {
 		deleteDistinct = true
 	}
 
