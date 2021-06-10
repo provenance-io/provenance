@@ -16,8 +16,8 @@ const (
 	EventTelemetryKeyUpdate string = "update"
 	// EventTelemetryKeyDelete delete telemetry metrics key
 	EventTelemetryKeyDelete string = "delete"
-	// EventTelemetryKeyDeleteWithValue delete telemetry metrics key
-	EventTelemetryKeyDeleteWithValue string = "delete_with_value"
+	// EventTelemetryKeyDistinctDelete delete telemetry metrics key
+	EventTelemetryKeyDistinctDelete string = "distinct_delete"
 	// EventTelemetryLabelName name telemetry metrics label
 	EventTelemetryLabelName string = "name"
 	// EventTelemetryLabelName name telemetry metrics label
@@ -62,11 +62,12 @@ func NewEventAttributeDelete(name string, account string, owner string) *EventAt
 	}
 }
 
-func NewEventAttributeDeleteWithValue(name string, value string, account string, owner string) *EventAttributeDeleteWithValue {
-	return &EventAttributeDeleteWithValue{
-		Name:    name,
-		Value:   value,
-		Owner:   owner,
-		Account: account,
+func NewEventDistinctAttributeDelete(name string, value string, attrType AttributeType, account string, owner string) *EventAttributeDistinctDelete {
+	return &EventAttributeDistinctDelete{
+		Name:          name,
+		Value:         value,
+		AttributeType: attrType.String(),
+		Owner:         owner,
+		Account:       account,
 	}
 }

@@ -181,7 +181,7 @@ func (k msgServer) DeleteDistinctAttribute(goCtx context.Context, msg *types.Msg
 
 	defer func() {
 		telemetry.IncrCounterWithLabels(
-			[]string{types.ModuleName, types.EventTelemetryKeyDeleteWithValue},
+			[]string{types.ModuleName, types.EventTelemetryKeyDistinctDelete},
 			1,
 			[]metrics.Label{
 				telemetry.NewLabel(types.EventTelemetryLabelName, msg.Name),

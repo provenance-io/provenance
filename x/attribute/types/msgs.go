@@ -137,7 +137,7 @@ func (msg MsgUpdateAttributeRequest) String() string {
 	return string(out)
 }
 
-// NewMsgDeleteAttributeRequest creates a new add attribute message
+// NewMsgDeleteAttributeRequest deletes all attributes with specific name
 func NewMsgDeleteAttributeRequest(account sdk.AccAddress, owner sdk.AccAddress, name string) *MsgDeleteAttributeRequest { // nolint:interfacer
 	return &MsgDeleteAttributeRequest{Account: account.String(), Name: strings.ToLower(strings.TrimSpace(name)), Owner: owner.String()}
 }
@@ -191,8 +191,8 @@ func (msg MsgDeleteAttributeRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-// NewMsgDeleteAttributeWithValueRequest creates a new add attribute message
-func NewMsgDeleteAttributeWithValueRequest(account sdk.AccAddress, owner sdk.AccAddress, name string, value []byte, attrType AttributeType) *MsgDeleteDistinctAttributeRequest { // nolint:interfacer
+// NewMsgDeleteDistinctAttributeRequest deletes a attribute with specific value and type
+func NewMsgDeleteDistinctAttributeRequest(account sdk.AccAddress, owner sdk.AccAddress, name string, value []byte, attrType AttributeType) *MsgDeleteDistinctAttributeRequest { // nolint:interfacer
 	return &MsgDeleteDistinctAttributeRequest{
 		Account:       account.String(),
 		Name:          strings.ToLower(strings.TrimSpace(name)),

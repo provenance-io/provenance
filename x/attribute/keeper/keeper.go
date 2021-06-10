@@ -245,7 +245,7 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, acc sdk.AccAddress, name string
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "delete")
 
 	var deleteWithValue bool
-	if value != nil {
+	if value != nil && attrType != nil {
 		deleteWithValue = true
 	}
 
@@ -279,7 +279,7 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, acc sdk.AccAddress, name string
 					return err
 				}
 			} else {
-				deleteEvent := types.NewEventAttributeDeleteWithValue(name, string(*value), acc.String(), owner.String())
+				deleteEvent := types.NewEventDistinctAttributeDelete(name, string(*value), *attrType, acc.String(), owner.String())
 				if err := ctx.EventManager().EmitTypedEvent(deleteEvent); err != nil {
 					return err
 				}

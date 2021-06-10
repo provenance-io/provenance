@@ -77,10 +77,11 @@ message EventAttributeDelete {
   string owner   = 3;
 }
 
-// EventAttributeDeleteWithValue event emitted when attribute is deleted with matching value
-message EventAttributeDeleteWithValue {
-  string name    = 1;
-  string value   = 2;
-  string account = 3;
-  string owner   = 4;
+// EventAttributeDistinctDelete event emitted when attribute is deleted with matching value
+message EventAttributeDistinctDelete {
+  string name           = 1;
+  string value          = 2;
+  string attribute_type = 3;
+  string account        = 4;
+  string owner          = 5;
 }
