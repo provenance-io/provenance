@@ -59,7 +59,6 @@ func NewAddAccountAttributeCmd() *cobra.Command {
 			value, err := encodeAttributeValue(valueString, attributeType)
 			if err != nil {
 				return fmt.Errorf("error encoding value %s to type %s : %v", valueString, attributeType.String(), err)
-
 			}
 
 			msg := types.NewMsgAddAttributeRequest(

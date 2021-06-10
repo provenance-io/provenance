@@ -659,6 +659,23 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeTxCommands() {
 			true, &sdk.TxResponse{}, 0,
 		},
 		{
+			"fail to update attribute, validate basic fail",
+			cli.NewUpdateAccountAttributeCmd(),
+			[]string{
+				"updatetest.attribute",
+				s.testnet.Validators[0].Address.String(),
+				"string",
+				"test value",
+				"init",
+				"nan",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, &sdk.TxResponse{}, 0,
+		},
+		{
 			"successful update of attribute",
 			cli.NewUpdateAccountAttributeCmd(),
 			[]string{
@@ -709,7 +726,7 @@ func (s *IntegrationTestSuite) TestDeleteDistinctAccountAttributeTxCommands() {
 			"bind a new attribute name for delete testing",
 			namecli.GetBindNameCmd(),
 			[]string{
-				"deletetest",
+				"distinct",
 				s.testnet.Validators[0].Address.String(),
 				"attribute",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -723,7 +740,7 @@ func (s *IntegrationTestSuite) TestDeleteDistinctAccountAttributeTxCommands() {
 			"add new attribute for delete testing",
 			cli.NewAddAccountAttributeCmd(),
 			[]string{
-				"deletetest.attribute",
+				"distinct.attribute",
 				s.testnet.Validators[0].Address.String(),
 				"string",
 				"test value",
@@ -737,7 +754,7 @@ func (s *IntegrationTestSuite) TestDeleteDistinctAccountAttributeTxCommands() {
 		{"delete distinct attribute, should fail incorrect address",
 			cli.NewDeleteDistinctAccountAttributeCmd(),
 			[]string{
-				"deletetest.attribute",
+				"distinct.attribute",
 				"not-a-address",
 				"string",
 				"test value",
@@ -751,7 +768,7 @@ func (s *IntegrationTestSuite) TestDeleteDistinctAccountAttributeTxCommands() {
 		{"delete distinct attribute, should fail incorrect type",
 			cli.NewDeleteDistinctAccountAttributeCmd(),
 			[]string{
-				"deletetest.attribute",
+				"distinct.attribute",
 				s.testnet.Validators[0].Address.String(),
 				"invalid",
 				"test value",
@@ -765,7 +782,7 @@ func (s *IntegrationTestSuite) TestDeleteDistinctAccountAttributeTxCommands() {
 		{"delete distinct attribute, should successfully delete",
 			cli.NewDeleteDistinctAccountAttributeCmd(),
 			[]string{
-				"deletetest.attribute",
+				"distinct.attribute",
 				s.testnet.Validators[0].Address.String(),
 				"string",
 				"test value",
