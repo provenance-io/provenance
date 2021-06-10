@@ -50,3 +50,56 @@ func TestMsgAddAttribute(t *testing.T) {
 		}
 	}
 }
+
+// test ValidateBasic for TestMsgUpdateAttribute
+func TestMsgUpdateAttribute(t *testing.T) {
+	tests := []struct {
+		account, owner sdk.AccAddress
+		name           string
+		originalValue  []byte
+		originalType   AttributeType
+		updateValue    []byte
+		updateType     AttributeType
+		expectPass     bool
+		expectedError  string
+	}{
+		{addrs[0], addrs[1], "example", []byte("original"), AttributeType_String, []byte("update"), AttributeType_Bytes, true, ""},
+		{nil, addrs[1], "example", []byte("original"), AttributeType_String, []byte("update"), AttributeType_Bytes, false, ""},
+		{addrs[0], nil, "example", []byte(""), AttributeType_String, []byte("update"), AttributeType_Bytes, false, ""},
+	}
+
+	for _, tc := range tests {
+		msg := NewMsgUpdateAttributeRequest(tc.account, tc.owner, tc.name, tc.originalValue, tc.updateValue, tc.originalType, tc.updateType)
+
+		if tc.expectPass {
+			require.NoError(t, msg.ValidateBasic(), "test: %v", tc)
+		} else {
+			require.Error(t, msg.ValidateBasic(), "test: %v", tc)
+		}
+	}
+}
+
+// test ValidateBasic for TestMsgDeleteDistinctAttribute
+func TestMsgDeleteDistinctAttribute(t *testing.T) {
+	tests := []struct {
+		account, owner sdk.AccAddress
+		name           string
+		value          []byte
+		attrType       AttributeType
+		expectPass     bool
+	}{
+		{addrs[0], addrs[1], "example", []byte("original"), AttributeType_String, true},
+		{nil, addrs[1], "example", []byte("original"), AttributeType_String, false},
+		{addrs[0], nil, "example", []byte(""), AttributeType_String, false},
+	}
+
+	for _, tc := range tests {
+		msg := NewMsgDeleteDistinctAttributeRequest(tc.account, tc.owner, tc.name, tc.value)
+
+		if tc.expectPass {
+			require.NoError(t, msg.ValidateBasic(), "test: %v", tc)
+		} else {
+			require.Error(t, msg.ValidateBasic(), "test: %v", tc)
+		}
+	}
+}
