@@ -181,6 +181,10 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 		return err
 	}
 
+	if updateAttribute.Name != originalAttribute.Name {
+		return fmt.Errorf("update and original names must match %s : %s", originalAttribute.Name, updateAttribute.Name)
+	}
+
 	maxLength := k.GetMaxValueLength(ctx)
 	if int(maxLength) < len(updateAttribute.Value) {
 		return fmt.Errorf("update attribute value length of %v exceeds max length %v", len(updateAttribute.Value), maxLength)
@@ -210,7 +214,7 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 			return err
 		}
 
-		if attr.Name == updateAttribute.Name && bytes.Equal(attr.Value, originalAttribute.Value) {
+		if attr.Name == updateAttribute.Name && bytes.Equal(attr.Value, originalAttribute.Value) && attr.AttributeType == originalAttribute.AttributeType {
 			found = true
 			store.Delete(it.Key())
 
@@ -231,7 +235,7 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 	if !found {
 		errorMessage := "no attributes updated"
 		ctx.Logger().Error(errorMessage, "name", originalAttribute.Name, "value", string(originalAttribute.Value))
-		return fmt.Errorf("%s with name %s and value %s", errorMessage, originalAttribute.Name, string(originalAttribute.Value))
+		return fmt.Errorf("%s with name \"%s\" : value \"%s\" : type: %s", errorMessage, originalAttribute.Name, string(originalAttribute.Value), originalAttribute.AttributeType.String())
 	}
 	return nil
 }

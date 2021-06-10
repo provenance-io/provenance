@@ -158,6 +158,193 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 
 }
 
+func (s *KeeperTestSuite) TestUpdateAttribute() {
+
+	attr := types.Attribute{
+		Name:          "example.attribute",
+		Value:         []byte("my-value"),
+		AttributeType: types.AttributeType_String,
+		Address:       s.user1,
+	}
+	s.NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
+
+	cases := map[string]struct {
+		origAttr   types.Attribute
+		updateAttr types.Attribute
+		ownerAddr  sdk.AccAddress
+		wantErr    bool
+		errorMsg   string
+	}{
+		// "should fail to update attribute, validatebasic original attr": {
+		// 	origAttr: types.Attribute{
+		// 		Name:          "",
+		// 		Value:         []byte("my-value"),
+		// 		Address:       s.user1,
+		// 		AttributeType: types.AttributeType_String,
+		// 	},
+		// 	updateAttr: types.Attribute{
+		// 		Name:          "example.attribute",
+		// 		Value:         []byte("10"),
+		// 		Address:       s.user1,
+		// 		AttributeType: types.AttributeType_Int,
+		// 	},
+		// 	ownerAddr: s.user1Addr,
+		// 	wantErr:   true,
+		// 	errorMsg:  "invalid name: empty",
+		// },
+		// "should fail to update attribute, validatebasic update attr": {
+		// 	origAttr: types.Attribute{
+		// 		Name:          "example.attribute",
+		// 		Value:         []byte("my-value"),
+		// 		Address:       s.user1,
+		// 		AttributeType: types.AttributeType_String,
+		// 	},
+		// 	updateAttr: types.Attribute{
+		// 		Name:          "",
+		// 		Value:         []byte("10"),
+		// 		Address:       s.user1,
+		// 		AttributeType: types.AttributeType_Int,
+		// 	},
+		// 	ownerAddr: s.user1Addr,
+		// 	wantErr:   true,
+		// 	errorMsg:  "invalid name: empty",
+		// },
+		// "should fail to update attribute, names mismatch": {
+		// 	origAttr: types.Attribute{
+		// 		Name:          "example.attribute",
+		// 		Value:         []byte("my-value"),
+		// 		Address:       s.user1,
+		// 		AttributeType: types.AttributeType_String,
+		// 	},
+		// 	updateAttr: types.Attribute{
+		// 		Name:          "example.not.same.as.orig",
+		// 		Value:         []byte("10"),
+		// 		Address:       s.user1,
+		// 		AttributeType: types.AttributeType_Int,
+		// 	},
+		// 	ownerAddr: s.user1Addr,
+		// 	wantErr:   true,
+		// 	errorMsg:  "update and original names must match example.attribute : example.not.same.as.orig",
+		// },
+		// "should fail to update attribute, length too long": {
+		// 	origAttr: types.Attribute{
+		// 		Name:          "example.attribute",
+		// 		Value:         []byte("my-value"),
+		// 		Address:       s.user1,
+		// 		AttributeType: types.AttributeType_String,
+		// 	},
+		// 	updateAttr: types.Attribute{
+		// 		Name:          "example.attribute",
+		// 		Value:         []byte("0123456789123"),
+		// 		Address:       s.user1,
+		// 		AttributeType: types.AttributeType_String,
+		// 	},
+		// 	ownerAddr: s.user1Addr,
+		// 	wantErr:   true,
+		// 	errorMsg:  "update attribute value length of 13 exceeds max length 10",
+		// },
+		// "should fail to update attribute, unable to find owner": {
+		// 	origAttr: types.Attribute{
+		// 		Name:          "example.attribute",
+		// 		Value:         []byte("my-value"),
+		// 		Address:       s.user1,
+		// 		AttributeType: types.AttributeType_String,
+		// 	},
+		// 	updateAttr: types.Attribute{
+		// 		Name:          "example.attribute",
+		// 		Value:         []byte("new string"),
+		// 		Address:       s.user1,
+		// 		AttributeType: types.AttributeType_String,
+		// 	},
+		// 	ownerAddr: s.user2Addr,
+		// 	wantErr:   true,
+		// 	errorMsg:  fmt.Sprintf("no account found for owner address \"%s\"", s.user2Addr),
+		// },
+		// "should fail to update attribute, unable to resolve name": {
+		// 	origAttr: types.Attribute{
+		// 		Name:          "example.not.found",
+		// 		Value:         []byte("my-value"),
+		// 		Address:       s.user1,
+		// 		AttributeType: types.AttributeType_String,
+		// 	},
+		// 	updateAttr: types.Attribute{
+		// 		Name:          "example.not.found",
+		// 		Value:         []byte("new value"),
+		// 		Address:       s.user1,
+		// 		AttributeType: types.AttributeType_String,
+		// 	},
+		// 	ownerAddr: s.user1Addr,
+		// 	wantErr:   true,
+		// 	errorMsg:  fmt.Sprintf("\"example.not.found\" does not resolve to address \"%s\"", s.user1Addr),
+		// },
+		// "should fail to update attribute, to find original, no original value match": {
+		// 	origAttr: types.Attribute{
+		// 		Name:          "example.attribute",
+		// 		Value:         []byte("not original value"),
+		// 		Address:       s.user1,
+		// 		AttributeType: types.AttributeType_String,
+		// 	},
+		// 	updateAttr: types.Attribute{
+		// 		Name:          "example.attribute",
+		// 		Value:         []byte("0123456789"),
+		// 		Address:       s.user1,
+		// 		AttributeType: types.AttributeType_String,
+		// 	},
+		// 	ownerAddr: s.user1Addr,
+		// 	wantErr:   true,
+		// 	errorMsg:  "no attributes updated with name \"example.attribute\" : value \"not original value\" : type: ATTRIBUTE_TYPE_STRING",
+		// },
+		// "should fail to update attribute, to find original, no original attribute type match": {
+		// 	origAttr: types.Attribute{
+		// 		Name:          "example.attribute",
+		// 		Value:         []byte("my-value"),
+		// 		Address:       s.user1,
+		// 		AttributeType: types.AttributeType_Bytes,
+		// 	},
+		// 	updateAttr: types.Attribute{
+		// 		Name:          "example.attribute",
+		// 		Value:         []byte("0123456789"),
+		// 		Address:       s.user1,
+		// 		AttributeType: types.AttributeType_String,
+		// 	},
+		// 	ownerAddr: s.user1Addr,
+		// 	wantErr:   true,
+		// 	errorMsg:  "no attributes updated with name \"example.attribute\" : value \"my-value\" : type: ATTRIBUTE_TYPE_BYTES",
+		// },
+		"should successfully update attribute": {
+			origAttr: types.Attribute{
+				Name:          "example.attribute",
+				Value:         []byte("my-value"),
+				Address:       s.user1,
+				AttributeType: types.AttributeType_String,
+			},
+			updateAttr: types.Attribute{
+				Name:          "example.attribute",
+				Value:         []byte("10"),
+				Address:       s.user1,
+				AttributeType: types.AttributeType_Int,
+			},
+			ownerAddr: s.user1Addr,
+			wantErr:   false,
+			errorMsg:  "",
+		},
+	}
+	for n, tc := range cases {
+		tc := tc
+
+		s.Run(n, func() {
+			err := s.app.AttributeKeeper.UpdateAttribute(s.ctx, tc.origAttr, tc.updateAttr, tc.ownerAddr)
+			if tc.wantErr {
+				s.Error(err)
+				s.Equal(tc.errorMsg, err.Error())
+			} else {
+				s.NoError(err)
+			}
+		})
+	}
+
+}
+
 func (s *KeeperTestSuite) TestDeleteAttribute() {
 
 	attr := types.Attribute{
