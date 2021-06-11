@@ -12,7 +12,7 @@ const (
 	TypeMsgAddAttribute             = "add_attribute"
 	TypeMsgUpdateAttribute          = "update_attribute"
 	TypeMsgDeleteAttribute          = "delete_attribute"
-	TypeMsgDeleteAttributeWithValue = "delete_attribute_with_value"
+	TypeMsgDeleteAttributeWithValue = "delete_distinct_attribute"
 )
 
 // Compile time interface checks.

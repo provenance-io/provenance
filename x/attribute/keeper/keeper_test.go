@@ -168,14 +168,16 @@ func (s *KeeperTestSuite) TestUpdateAttribute() {
 	}
 	s.NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
 
-	cases := map[string]struct {
+	cases := []struct {
+		name       string
 		origAttr   types.Attribute
 		updateAttr types.Attribute
 		ownerAddr  sdk.AccAddress
 		wantErr    bool
 		errorMsg   string
 	}{
-		"should fail to update attribute, validatebasic original attr": {
+		{
+			name: "should fail to update attribute, validatebasic original attr",
 			origAttr: types.Attribute{
 				Name:          "",
 				Value:         []byte("my-value"),
@@ -191,8 +193,8 @@ func (s *KeeperTestSuite) TestUpdateAttribute() {
 			ownerAddr: s.user1Addr,
 			wantErr:   true,
 			errorMsg:  "invalid name: empty",
-		},
-		"should fail to update attribute, validatebasic update attr": {
+		}, {
+			name: "should fail to update attribute, validatebasic update attr",
 			origAttr: types.Attribute{
 				Name:          "example.attribute",
 				Value:         []byte("my-value"),
@@ -209,7 +211,8 @@ func (s *KeeperTestSuite) TestUpdateAttribute() {
 			wantErr:   true,
 			errorMsg:  "invalid name: empty",
 		},
-		"should fail to update attribute, names mismatch": {
+		{
+			name: "should fail to update attribute, names mismatch",
 			origAttr: types.Attribute{
 				Name:          "example.attribute",
 				Value:         []byte("my-value"),
@@ -226,7 +229,8 @@ func (s *KeeperTestSuite) TestUpdateAttribute() {
 			wantErr:   true,
 			errorMsg:  "update and original names must match example.attribute : example.not.same.as.orig",
 		},
-		"should fail to update attribute, length too long": {
+		{
+			name: "should fail to update attribute, length too long",
 			origAttr: types.Attribute{
 				Name:          "example.attribute",
 				Value:         []byte("my-value"),
@@ -243,7 +247,8 @@ func (s *KeeperTestSuite) TestUpdateAttribute() {
 			wantErr:   true,
 			errorMsg:  "update attribute value length of 13 exceeds max length 10",
 		},
-		"should fail to update attribute, unable to find owner": {
+		{
+			name: "should fail to update attribute, unable to find owner",
 			origAttr: types.Attribute{
 				Name:          "example.attribute",
 				Value:         []byte("my-value"),
@@ -260,7 +265,8 @@ func (s *KeeperTestSuite) TestUpdateAttribute() {
 			wantErr:   true,
 			errorMsg:  fmt.Sprintf("no account found for owner address \"%s\"", s.user2Addr),
 		},
-		"should fail to update attribute, unable to resolve name": {
+		{
+			name: "should fail to update attribute, unable to resolve name",
 			origAttr: types.Attribute{
 				Name:          "example.not.found",
 				Value:         []byte("my-value"),
@@ -277,7 +283,8 @@ func (s *KeeperTestSuite) TestUpdateAttribute() {
 			wantErr:   true,
 			errorMsg:  fmt.Sprintf("\"example.not.found\" does not resolve to address \"%s\"", s.user1Addr),
 		},
-		"should fail to update attribute, to find original, no original value match": {
+		{
+			name: "should fail to update attribute, to find original, no original value match",
 			origAttr: types.Attribute{
 				Name:          "example.attribute",
 				Value:         []byte("not original value"),
@@ -294,7 +301,8 @@ func (s *KeeperTestSuite) TestUpdateAttribute() {
 			wantErr:   true,
 			errorMsg:  "no attributes updated with name \"example.attribute\" : value \"not original value\" : type: ATTRIBUTE_TYPE_STRING",
 		},
-		"should fail to update attribute, to find original, no original attribute type match": {
+		{
+			name: "should fail to update attribute, to find original, no original attribute type match",
 			origAttr: types.Attribute{
 				Name:          "example.attribute",
 				Value:         []byte("my-value"),
@@ -311,7 +319,8 @@ func (s *KeeperTestSuite) TestUpdateAttribute() {
 			wantErr:   true,
 			errorMsg:  "no attributes updated with name \"example.attribute\" : value \"my-value\" : type: ATTRIBUTE_TYPE_BYTES",
 		},
-		"should successfully update attribute": {
+		{
+			name: "should successfully update attribute",
 			origAttr: types.Attribute{
 				Name:          "example.attribute",
 				Value:         []byte("my-value"),
@@ -329,10 +338,10 @@ func (s *KeeperTestSuite) TestUpdateAttribute() {
 			errorMsg:  "",
 		},
 	}
-	for n, tc := range cases {
+	for _, tc := range cases {
 		tc := tc
 
-		s.Run(n, func() {
+		s.Run(tc.name, func() {
 			err := s.app.AttributeKeeper.UpdateAttribute(s.ctx, tc.origAttr, tc.updateAttr, tc.ownerAddr)
 			if tc.wantErr {
 				s.Error(err)

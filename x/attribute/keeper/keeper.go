@@ -180,11 +180,6 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 	if err = updateAttribute.ValidateBasic(); err != nil {
 		return err
 	}
-
-	if updateAttribute.Name != originalAttribute.Name {
-		return fmt.Errorf("update and original names must match %s : %s", originalAttribute.Name, updateAttribute.Name)
-	}
-
 	maxLength := k.GetMaxValueLength(ctx)
 	if int(maxLength) < len(updateAttribute.Value) {
 		return fmt.Errorf("update attribute value length of %v exceeds max length %v", len(updateAttribute.Value), maxLength)
@@ -193,6 +188,15 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 	normalizedName, err := k.nameKeeper.Normalize(ctx, updateAttribute.Name)
 	if err != nil {
 		return fmt.Errorf("unable to normalize attribute name \"%s\": %w", updateAttribute.Name, err)
+	}
+
+	normalizedOrigName, err := k.nameKeeper.Normalize(ctx, originalAttribute.Name)
+	if err != nil {
+		return fmt.Errorf("unable to normalize attribute name \"%s\": %w", originalAttribute.Name, err)
+	}
+
+	if normalizedName != normalizedOrigName {
+		return fmt.Errorf("update and original names must match %s : %s", normalizedName, normalizedOrigName)
 	}
 
 	updateAttribute.Name = normalizedName
@@ -206,7 +210,7 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 	}
 
 	store := ctx.KVStore(k.storeKey)
-	it := sdk.KVStorePrefixIterator(store, types.AccountAttributesNameKeyPrefix(accountAddress, originalAttribute.Name))
+	it := sdk.KVStorePrefixIterator(store, types.AccountAttributesNameKeyPrefix(accountAddress, normalizedOrigName))
 	var found bool
 	for ; it.Valid(); it.Next() {
 		attr := types.Attribute{}
@@ -218,7 +222,7 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 			found = true
 			store.Delete(it.Key())
 
-			bz, err := k.cdc.MarshalBinaryBare(&attr)
+			bz, err := k.cdc.MarshalBinaryBare(&updateAttribute)
 			if err != nil {
 				return err
 			}
