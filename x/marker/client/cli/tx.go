@@ -408,7 +408,7 @@ func GetNewTransferCmd() *cobra.Command {
 				return sdkErrors.Wrapf(sdkErrors.ErrInvalidCoins, "invalid coin %s", args[2])
 			}
 			if len(coins) != 1 {
-				return fmt.Errorf("invalid coin %s", args[2])
+				return sdkErrors.Wrapf(sdkErrors.ErrInvalidCoins, "invalid coin %s", args[2])
 			}
 			msg := types.NewMsgTransferRequest(clientCtx.GetFromAddress(), from, to, coins[0])
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
