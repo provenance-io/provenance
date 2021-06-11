@@ -220,14 +220,14 @@ func (s *KeeperTestSuite) TestUpdateAttribute() {
 				AttributeType: types.AttributeType_String,
 			},
 			updateAttr: types.Attribute{
-				Name:          "example.not.same.as.orig",
+				Name:          "example.noteq",
 				Value:         []byte("10"),
 				Address:       s.user1,
 				AttributeType: types.AttributeType_Int,
 			},
 			ownerAddr: s.user1Addr,
 			wantErr:   true,
-			errorMsg:  "update and original names must match example.attribute : example.not.same.as.orig",
+			errorMsg:  "update and original names must match example.noteq : example.attribute",
 		},
 		{
 			name: "should fail to update attribute, length too long",
