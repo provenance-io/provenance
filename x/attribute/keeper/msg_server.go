@@ -111,7 +111,7 @@ func (k msgServer) UpdateAttribute(goCtx context.Context, msg *types.MsgUpdateAt
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			types.EventTypeAttributeAdded,
+			types.EventTelemetryKeyUpdate,
 			sdk.NewAttribute(types.AttributeKeyNameAttribute, msg.Name),
 			sdk.NewAttribute(types.AttributeKeyAccountAddress, msg.Account),
 		),

@@ -51,7 +51,9 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		opMsgName  string
 	}{
 		{simappparams.DefaultWeightMsgAddAttribute, types.ModuleName, types.TypeMsgAddAttribute},
+		{simappparams.DefaultWeightMsgUpdateAttribute, types.ModuleName, types.TypeMsgUpdateAttribute},
 		{simappparams.DefaultWeightMsgDeleteAttribute, types.ModuleName, types.TypeMsgDeleteAttribute},
+		{simappparams.DefaultWeightMsgDeleteDistinctAttribute, types.ModuleName, types.TypeMsgDeleteDistinctAttribute},
 	}
 
 	for i, w := range weightesOps {
@@ -97,6 +99,35 @@ func (suite *SimTestSuite) TestSimulateMsgAddAttribute() {
 	suite.Require().Len(futureOperations, 0)
 }
 
+func (suite *SimTestSuite) TestSimulateMsgUpdateAttribute() {
+
+	// setup 3 accounts
+	s := rand.NewSource(1)
+	r := rand.New(s)
+	accounts := suite.getTestingAccounts(r, 3)
+	suite.app.NameKeeper.SetNameRecord(suite.ctx, "example.provenance", accounts[0].Address, false)
+	suite.app.AttributeKeeper.SetAttribute(suite.ctx, types.NewAttribute("example.provenance", accounts[1].Address, types.AttributeType_String, []byte("test")), accounts[0].Address)
+
+	// begin a new block
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
+
+	// execute operation
+	op := simulation.SimulateMsgUpdateAttribute(suite.app.AttributeKeeper, suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.NameKeeper)
+	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
+	suite.Require().NoError(err)
+
+	var msg types.MsgUpdateAttributeRequest
+	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+
+	suite.Require().True(operationMsg.OK)
+	suite.Require().Equal(types.TypeMsgUpdateAttribute, msg.Type())
+	suite.Require().Equal("example.provenance", msg.Name)
+	suite.Require().Equal(accounts[0].Address.String(), msg.Owner)
+	suite.Require().Equal(accounts[1].Address.String(), msg.Account)
+	suite.Require().Equal(types.ModuleName, msg.Route())
+	suite.Require().Len(futureOperations, 0)
+}
+
 func (suite *SimTestSuite) TestSimulateMsgDeleteAttribute() {
 
 	// setup 3 accounts
@@ -119,6 +150,35 @@ func (suite *SimTestSuite) TestSimulateMsgDeleteAttribute() {
 
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal(types.TypeMsgDeleteAttribute, msg.Type())
+	suite.Require().Equal("example.provenance", msg.Name)
+	suite.Require().Equal(accounts[0].Address.String(), msg.Owner)
+	suite.Require().Equal(accounts[1].Address.String(), msg.Account)
+	suite.Require().Equal(types.ModuleName, msg.Route())
+	suite.Require().Len(futureOperations, 0)
+}
+
+func (suite *SimTestSuite) TestSimulateMsgDeleteDistinctAttribute() {
+
+	// setup 3 accounts
+	s := rand.NewSource(1)
+	r := rand.New(s)
+	accounts := suite.getTestingAccounts(r, 3)
+	suite.app.NameKeeper.SetNameRecord(suite.ctx, "example.provenance", accounts[0].Address, false)
+	suite.app.AttributeKeeper.SetAttribute(suite.ctx, types.NewAttribute("example.provenance", accounts[1].Address, types.AttributeType_String, []byte("test")), accounts[0].Address)
+
+	// begin a new block
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
+
+	// execute operation
+	op := simulation.SimulateMsgDeleteDistinctAttribute(suite.app.AttributeKeeper, suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.NameKeeper)
+	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
+	suite.Require().NoError(err)
+
+	var msg types.MsgDeleteDistinctAttributeRequest
+	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+
+	suite.Require().True(operationMsg.OK)
+	suite.Require().Equal(types.TypeMsgDeleteDistinctAttribute, msg.Type())
 	suite.Require().Equal("example.provenance", msg.Name)
 	suite.Require().Equal(accounts[0].Address.String(), msg.Owner)
 	suite.Require().Equal(accounts[1].Address.String(), msg.Account)

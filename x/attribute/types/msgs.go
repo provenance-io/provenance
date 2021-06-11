@@ -9,10 +9,10 @@ import (
 )
 
 const (
-	TypeMsgAddAttribute             = "add_attribute"
-	TypeMsgUpdateAttribute          = "update_attribute"
-	TypeMsgDeleteAttribute          = "delete_attribute"
-	TypeMsgDeleteAttributeWithValue = "delete_distinct_attribute"
+	TypeMsgAddAttribute            = "add_attribute"
+	TypeMsgUpdateAttribute         = "update_attribute"
+	TypeMsgDeleteAttribute         = "delete_attribute"
+	TypeMsgDeleteDistinctAttribute = "delete_distinct_attribute"
 )
 
 // Compile time interface checks.
@@ -95,7 +95,7 @@ func (msg MsgUpdateAttributeRequest) Route() string {
 }
 
 // Type returns the message action.
-func (msg MsgUpdateAttributeRequest) Type() string { return TypeMsgAddAttribute }
+func (msg MsgUpdateAttributeRequest) Type() string { return TypeMsgUpdateAttribute }
 
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgUpdateAttributeRequest) ValidateBasic() error {
@@ -207,7 +207,7 @@ func (msg MsgDeleteDistinctAttributeRequest) Route() string {
 }
 
 // Type returns the message action.
-func (msg MsgDeleteDistinctAttributeRequest) Type() string { return TypeMsgDeleteAttribute }
+func (msg MsgDeleteDistinctAttributeRequest) Type() string { return TypeMsgDeleteDistinctAttribute }
 
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgDeleteDistinctAttributeRequest) ValidateBasic() error {
