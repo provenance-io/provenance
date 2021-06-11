@@ -1,6 +1,7 @@
 package cli_test
 
 import (
+	"encoding/base64"
 	"fmt"
 	"strings"
 	"testing"
@@ -510,7 +511,7 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 				"txtest.attribute",
 				s.testnet.Validators[0].Address.String(),
 				"proto",
-				string(protoAttr),
+				base64.StdEncoding.EncodeToString(protoAttr),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),

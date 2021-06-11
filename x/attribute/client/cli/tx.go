@@ -135,7 +135,7 @@ func NewUpdateAccountAttributeCmd() *cobra.Command {
 
 func encodeAttributeValue(value string, attrType types.AttributeType) ([]byte, error) {
 	var encodedValue []byte
-	if attrType == types.AttributeType_Bytes {
+	if attrType == types.AttributeType_Bytes || attrType == types.AttributeType_Proto {
 		var err error
 		if encodedValue, err = base64.StdEncoding.DecodeString(value); err != nil {
 			return nil, err

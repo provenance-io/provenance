@@ -1,5 +1,7 @@
 package types
 
+import "encoding/base64"
+
 const (
 	// The type of event generated when account attributes are added.
 	EventTypeAttributeAdded string = "account_attribute_added"
@@ -35,7 +37,7 @@ const (
 func NewEventAttributeAdd(attribute Attribute, owner string) *EventAttributeAdd {
 	return &EventAttributeAdd{
 		Name:    attribute.Name,
-		Value:   string(attribute.GetValue()),
+		Value:   base64.StdEncoding.EncodeToString(attribute.GetValue()),
 		Type:    attribute.AttributeType.String(),
 		Account: attribute.Address,
 		Owner:   owner,
@@ -45,9 +47,9 @@ func NewEventAttributeAdd(attribute Attribute, owner string) *EventAttributeAdd 
 func NewEventAttributeUpdate(originalAttribute Attribute, updateAttribute Attribute, owner string) *EventAttributeUpdate {
 	return &EventAttributeUpdate{
 		Name:          originalAttribute.Name,
-		OriginalValue: string(originalAttribute.GetValue()),
+		OriginalValue: base64.StdEncoding.EncodeToString(originalAttribute.GetValue()),
 		OriginalType:  originalAttribute.AttributeType.String(),
-		UpdateValue:   string(updateAttribute.GetValue()),
+		UpdateValue:   base64.StdEncoding.EncodeToString(updateAttribute.GetValue()),
 		UpdateType:    updateAttribute.AttributeType.String(),
 		Account:       originalAttribute.Address,
 		Owner:         owner,
