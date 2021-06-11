@@ -388,7 +388,7 @@ func GetNewTransferCmd() *cobra.Command {
 
 		Use:     "transfer [from] [to] [coins]",
 		Aliases: []string{"t"},
-		Short:   "Transfer coins from on account to another",
+		Short:   "Transfer coins from one account to another",
 		Args:    cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
