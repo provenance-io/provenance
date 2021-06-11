@@ -37,9 +37,10 @@ func NewTxCmd() *cobra.Command {
 //  NewAddAccountAttributeCmd creates a command for adding an account attributes.
 func NewAddAccountAttributeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add [name] [address] [type] [value]",
-		Short: "Add an account attribute to the provenance blockchain",
-		Args:  cobra.ExactArgs(4),
+		Use:     "add [name] [address] [type] [value]",
+		Aliases: []string{"a"},
+		Short:   "Add an account attribute to the provenance blockchain",
+		Args:    cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -80,9 +81,10 @@ func NewAddAccountAttributeCmd() *cobra.Command {
 //  NewUpdateAccountAttributeCmd creates a command for adding an account attributes.
 func NewUpdateAccountAttributeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add [name] [address] [original-type] [original-value] [update-type] [update-value]",
-		Short: "Update an account attribute on the provenance blockchain",
-		Args:  cobra.ExactArgs(6),
+		Use:     "update [name] [address] [original-type] [original-value] [update-type] [update-value]",
+		Aliases: []string{"u"},
+		Short:   "Update an account attribute on the provenance blockchain",
+		Args:    cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -147,9 +149,10 @@ func encodeAttributeValue(value string, attrType types.AttributeType) ([]byte, e
 // NewDeleteDistinctAccountAttributeCmd creates a command for removing account attributes with specific name value.
 func NewDeleteDistinctAccountAttributeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete [name] [address] [type] [value]",
-		Short: "Delete an account attribute with specific name and value the provenance blockchain",
-		Args:  cobra.ExactArgs(4),
+		Use:     "delete-distinct [name] [address] [type] [value]",
+		Aliases: []string{"dd"},
+		Short:   "Delete an account attribute with specific name and value the provenance blockchain",
+		Args:    cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -181,9 +184,10 @@ func NewDeleteDistinctAccountAttributeCmd() *cobra.Command {
 // NewDeleteAccountAttributeCmd creates a command for removing account attributes.
 func NewDeleteAccountAttributeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete [name] [address]",
-		Short: "Delete an account attribute from the provenance blockchain",
-		Args:  cobra.ExactArgs(2),
+		Use:     "delete [name] [address]",
+		Aliases: []string{"d"},
+		Short:   "Delete an account attribute from the provenance blockchain",
+		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
