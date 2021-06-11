@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Features
+
+* Add `update` and `delete-distinct` attributes to `attribute` module [#314](https://github.com/provenance-io/provenance/issues/314)
+
 ### API Breaking
 
 * Redundant account parameter was removed from Attribute module SetAttribute API. [PR 348](https://github.com/provenance-io/provenance/pull/348)
