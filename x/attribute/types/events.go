@@ -5,8 +5,12 @@ import "encoding/base64"
 const (
 	// The type of event generated when account attributes are added.
 	EventTypeAttributeAdded string = "account_attribute_added"
+	// The type of event generated when account attributes are updated.
+	EventTypeAttributeUpdated string = "account_attribute_updated"
 	// The type of event generated when account attributes are removed.
 	EventTypeAttributeDeleted string = "account_attribute_deleted"
+	// The type of event generated when a distinct account attribute is deleted.
+	EventTypeAttributeDistinctDeleted string = "account_attribute_distinct_deleted"
 
 	AttributeKeyAttribute      string = "attribute"
 	AttributeKeyNameAttribute  string = "attribute_name"
