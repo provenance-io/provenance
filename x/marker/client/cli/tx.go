@@ -41,6 +41,7 @@ func NewTxCmd() *cobra.Command {
 		GetCmdAddAccess(),
 		GetCmdDeleteAccess(),
 		GetCmdWithdrawCoins(),
+		GetNewTransferCmd(),
 		GetCmdAddMarker(),
 	)
 	return txCmd
@@ -49,9 +50,10 @@ func NewTxCmd() *cobra.Command {
 // GetCmdAddMarker implements the create marker command
 func GetCmdAddMarker() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "new [coin]",
-		Args:  cobra.ExactArgs(1),
-		Short: "Create a new marker",
+		Use:     "new [coin]",
+		Aliases: []string{"n"},
+		Args:    cobra.ExactArgs(1),
+		Short:   "Create a new marker",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Creates a new marker in the Proposed state managed by the from address
 with the given supply amount and denomination provided in the coin argument
@@ -104,9 +106,10 @@ $ %s tx marker new 1000hotdogcoin --%s=COIN --%s=false --%s=false --from=mykey
 // GetCmdMint implements the mint additional supply for marker command.
 func GetCmdMint() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "mint [coin]",
-		Args:  cobra.ExactArgs(1),
-		Short: "Mint coins against the marker",
+		Use:     "mint [coin]",
+		Aliases: []string{"m"},
+		Args:    cobra.ExactArgs(1),
+		Short:   "Mint coins against the marker",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Mints coins of the marker's denomination and places them
 in the marker's account under escrow.  Caller must possess the mint permission and 
@@ -137,9 +140,10 @@ $ %s tx marker mint 1000hotdogcoin --from mykey
 // GetCmdBurn implements the burn coin supply from marker command.
 func GetCmdBurn() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "burn [coin]",
-		Args:  cobra.ExactArgs(1),
-		Short: "Burn coins from the marker",
+		Use:     "burn [coin]",
+		Aliases: []string{"b"},
+		Args:    cobra.ExactArgs(1),
+		Short:   "Burn coins from the marker",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Burns the number of coins specified from the marker associated
 with the coin's denomination.  Only coins held in the marker's account may be burned.  Caller
@@ -171,9 +175,10 @@ $ %s tx marker burn 1000hotdogcoin --from mykey
 // GetCmdFinalize implements the finalize marker command.
 func GetCmdFinalize() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "finalize [denom]",
-		Args:  cobra.ExactArgs(1),
-		Short: "Finalize the marker account",
+		Use:     "finalize [denom]",
+		Aliases: []string{"f"},
+		Args:    cobra.ExactArgs(1),
+		Short:   "Finalize the marker account",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Finalize a marker identified by the given denomination. Only
 the marker manager may finalize a marker.  Once finalized callers who have been assigned
@@ -200,9 +205,10 @@ $ %s tx marker finalize hotdogcoin --from mykey
 // GetCmdActivate implements the activate marker command.
 func GetCmdActivate() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "activate [denom]",
-		Args:  cobra.ExactArgs(1),
-		Short: "Activate the marker account",
+		Use:     "activate [denom]",
+		Aliases: []string{"a"},
+		Args:    cobra.ExactArgs(1),
+		Short:   "Activate the marker account",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Activate a marker identified by the given denomination. Only
 the marker manager may activate a marker.  Once activated any total supply less than the
@@ -229,9 +235,10 @@ $ %s tx marker activate hotdogcoin --from mykey
 // GetCmdCancel implements the cancel marker command.
 func GetCmdCancel() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "cancel [denom]",
-		Args:  cobra.ExactArgs(1),
-		Short: "Cancel the marker account",
+		Use:     "cancel [denom]",
+		Aliases: []string{"c"},
+		Args:    cobra.ExactArgs(1),
+		Short:   "Cancel the marker account",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -250,9 +257,10 @@ func GetCmdCancel() *cobra.Command {
 // GetCmdDelete implements the destroy marker command.
 func GetCmdDelete() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "destroy [denom]",
-		Args:  cobra.ExactArgs(1),
-		Short: "Mark the marker for deletion",
+		Use:     "destroy [denom]",
+		Aliases: []string{"d"},
+		Args:    cobra.ExactArgs(1),
+		Short:   "Mark the marker for deletion",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -271,9 +279,10 @@ func GetCmdDelete() *cobra.Command {
 // GetCmdAddAccess implements the delegate access to a marker command.
 func GetCmdAddAccess() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "grant [address] [denom] [permission]",
-		Args:  cobra.ExactArgs(3),
-		Short: "Grant access to a marker for the address coins from the marker",
+		Use:     "grant [address] [denom] [permission]",
+		Aliases: []string{"g"},
+		Args:    cobra.ExactArgs(3),
+		Short:   "Grant access to a marker for the address coins from the marker",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Grant administrative access to a marker.  From Address must have appropriate
 existing access.  Permissions are appended to any existing access grant.  Valid permissions
@@ -308,9 +317,10 @@ $ %s tx marker grant pb1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj coindenom burn --
 // GetCmdDeleteAccess implements the revoke administrative access for a marker command.
 func GetCmdDeleteAccess() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "revoke [address] [denom]",
-		Args:  cobra.ExactArgs(2),
-		Short: "Revoke all access to a marker for the address",
+		Use:     "revoke [address] [denom]",
+		Aliases: []string{"r"},
+		Args:    cobra.ExactArgs(2),
+		Short:   "Revoke all access to a marker for the address",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Revoke all administrative access to a marker for given access.
 From Address must have appropriate existing access.
@@ -340,9 +350,10 @@ $ %s tx marker revoke pb1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj coindenom --from
 // GetCmdWithdrawCoins implements the withdraw coins from escrow command.
 func GetCmdWithdrawCoins() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "withdraw [marker-denom] [coins] [(optional) recipient address]",
-		Args:  cobra.RangeArgs(2, 3),
-		Short: "Withdraw coins from the marker.",
+		Use:     "withdraw [marker-denom] [coins] [(optional) recipient address]",
+		Aliases: []string{"w"},
+		Args:    cobra.RangeArgs(2, 3),
+		Short:   "Withdraw coins from the marker.",
 		Long: "Withdraw coins from the marker escrow account.  Must be called by a user with the appropriate permissions. " +
 			"If the recipient is not provided then the withdrawn amount is deposited in the caller's account.",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -360,7 +371,7 @@ func GetCmdWithdrawCoins() *cobra.Command {
 			if len(args) == 3 {
 				recipientAddr, err = sdk.AccAddressFromBech32(args[2])
 				if err != nil {
-					return sdkErrors.Wrapf(err, "invalid recipient address %s", args[0])
+					return sdkErrors.Wrapf(err, "invalid recipient address %s", args[2])
 				}
 			}
 			msg := types.NewMsgWithdrawRequest(callerAddr, recipientAddr, denom, coins)
@@ -368,5 +379,43 @@ func GetCmdWithdrawCoins() *cobra.Command {
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// Transfer handles a message to send coins from one account to another
+func GetNewTransferCmd() *cobra.Command {
+	cmd := &cobra.Command{
+
+		Use:     "transfer [from] [to] [coins]",
+		Aliases: []string{"t"},
+		Short:   "Transfer coins from one account to another",
+		Args:    cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			from, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return sdkErrors.Wrapf(err, "invalid from address %s", args[0])
+			}
+			to, err := sdk.AccAddressFromBech32(args[1])
+			if err != nil {
+				return sdkErrors.Wrapf(err, "invalid recipient address %s", args[1])
+			}
+			coins, err := sdk.ParseCoinsNormalized(args[2])
+			if err != nil {
+				return sdkErrors.Wrapf(sdkErrors.ErrInvalidCoins, "invalid coin %s", args[2])
+			}
+			if len(coins) != 1 {
+				return sdkErrors.Wrapf(sdkErrors.ErrInvalidCoins, "invalid coin %s", args[2])
+			}
+			msg := types.NewMsgTransferRequest(clientCtx.GetFromAddress(), from, to, coins[0])
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
 	return cmd
 }

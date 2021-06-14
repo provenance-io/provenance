@@ -53,6 +53,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Bump `wasmd` to v0.17.0 [#345](https://github.com/provenance-io/provenance/issues/345)
 * Attribute module simulation support [#25](https://github.com/provenance-io/provenance/issues/25)
+* Add transfer cli command to `marker` module [#264](https://github.com/provenance-io/provenance/issues/264)
 
 
 ## [v1.4.1](https://github.com/provenance-io/provenance/releases/tag/v1.4.1) - 2021-06-02
