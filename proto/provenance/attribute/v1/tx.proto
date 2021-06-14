@@ -14,8 +14,14 @@ service Msg {
   // AddAttribute defines a method to verify a particular invariance.
   rpc AddAttribute(MsgAddAttributeRequest) returns (MsgAddAttributeResponse);
 
+  // UpdateAttribute defines a method to verify a particular invariance.
+  rpc UpdateAttribute(MsgUpdateAttributeRequest) returns (MsgUpdateAttributeResponse);
+
   // DeleteAttribute defines a method to verify a particular invariance.
   rpc DeleteAttribute(MsgDeleteAttributeRequest) returns (MsgDeleteAttributeResponse);
+
+  // DeleteDistinctAttribute defines a method to verify a particular invariance.
+  rpc DeleteDistinctAttribute(MsgDeleteDistinctAttributeRequest) returns (MsgDeleteDistinctAttributeResponse);
 }
 
 // MsgAddAttributeRequest defines an sdk.Msg type that is used to add a new attribute to an account
@@ -41,6 +47,33 @@ message MsgAddAttributeRequest {
 // MsgAddAttributeResponse defines the Msg/Vote response type.
 message MsgAddAttributeResponse {}
 
+// MsgUpdateAttributeRequest defines an sdk.Msg type that is used to update an existing attribute to an account
+// Attributes may only be set in an account by the account that the attribute name resolves to.
+message MsgUpdateAttributeRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  // The attribute name.
+  string name = 1;
+  // The original attribute value.
+  bytes original_value = 2;
+  // The update attribute value.
+  bytes update_value = 3;
+  // The original attribute value type.
+  AttributeType original_attribute_type = 4;
+  // The update attribute value type.
+  AttributeType update_attribute_type = 5;
+  // The account to add the attribute to.
+  string account = 6;
+  // The address that the name must resolve to.
+  string owner = 7;
+}
+
+// MsgUpdateAttributeResponse defines the Msg/Vote response type.
+message MsgUpdateAttributeResponse {}
+
 // MsgDeleteAttributeRequest defines a message to delete an attribute from an account
 // Attributes may only be remove from an account by the account that the attribute name resolves to.
 message MsgDeleteAttributeRequest {
@@ -59,3 +92,24 @@ message MsgDeleteAttributeRequest {
 
 // MsgDeleteAttributeResponse defines the Msg/Vote response type.
 message MsgDeleteAttributeResponse {}
+
+// MsgDeleteDistinctAttributeRequest defines a message to delete an attribute with matching name, value, and type from
+// an account Attributes may only be remove from an account by the account that the attribute name resolves to.
+message MsgDeleteDistinctAttributeRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  // The attribute name.
+  string name = 1;
+  // The attribute value.
+  bytes value = 2;
+  // The account to add the attribute to.
+  string account = 3;
+  // The address that the name must resolve to.
+  string owner = 4;
+}
+
+// MsgDeleteDistinctAttributeResponse defines the Msg/Vote response type.
+message MsgDeleteDistinctAttributeResponse {}

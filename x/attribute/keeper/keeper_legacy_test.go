@@ -92,7 +92,6 @@ func (s *KeeperLegacyTestSuite) TestSetAttribute() {
 
 	cases := map[string]struct {
 		attr      types.Attribute
-		accAddr   sdk.AccAddress
 		ownerAddr sdk.AccAddress
 		wantErr   bool
 		errorMsg  string
@@ -104,7 +103,6 @@ func (s *KeeperLegacyTestSuite) TestSetAttribute() {
 				Address:       s.user1,
 				AttributeType: types.AttributeType_String,
 			},
-			accAddr:   s.user1Addr,
 			ownerAddr: s.user1Addr,
 			wantErr:   false,
 			errorMsg:  "",
@@ -116,7 +114,6 @@ func (s *KeeperLegacyTestSuite) TestSetAttribute() {
 				Address:       s.user1,
 				AttributeType: types.AttributeType_String,
 			},
-			accAddr:   s.user1Addr,
 			ownerAddr: s.user1Addr,
 			wantErr:   true,
 			errorMsg:  "invalid name: empty",
@@ -128,7 +125,6 @@ func (s *KeeperLegacyTestSuite) TestSetAttribute() {
 				Address:       s.user1,
 				AttributeType: types.AttributeType_String,
 			},
-			accAddr:   s.user1Addr,
 			ownerAddr: s.user1Addr,
 			wantErr:   true,
 			errorMsg:  "attribute value length of 11 exceeds max length 10",
@@ -140,7 +136,6 @@ func (s *KeeperLegacyTestSuite) TestSetAttribute() {
 				Address:       s.user1,
 				AttributeType: types.AttributeType_String,
 			},
-			accAddr:   s.user1Addr,
 			ownerAddr: s.user2Addr,
 			wantErr:   true,
 			errorMsg:  fmt.Sprintf("no account found for owner address \"%s\"", s.user2),
@@ -152,7 +147,6 @@ func (s *KeeperLegacyTestSuite) TestSetAttribute() {
 				Address:       s.user1,
 				AttributeType: types.AttributeType_String,
 			},
-			accAddr:   s.user1Addr,
 			ownerAddr: s.user3Addr,
 			wantErr:   true,
 			errorMsg:  fmt.Sprintf("\"old.attribute\" does not resolve to address \"%s\"", s.user3),
@@ -164,7 +158,6 @@ func (s *KeeperLegacyTestSuite) TestSetAttribute() {
 				Address:       s.user1,
 				AttributeType: types.AttributeType_String,
 			},
-			accAddr:   s.user1Addr,
 			ownerAddr: s.user2Addr,
 			wantErr:   true,
 			errorMsg:  "unable to normalize attribute name \"example.cant.normalize.me\": segment of name is too short",
@@ -176,7 +169,6 @@ func (s *KeeperLegacyTestSuite) TestSetAttribute() {
 				Address:       s.user1,
 				AttributeType: types.AttributeType_String,
 			},
-			accAddr:   s.user1Addr,
 			ownerAddr: s.user1Addr,
 			wantErr:   true,
 			errorMsg:  fmt.Sprintf("\"example.not.found\" does not resolve to address \"%s\"", s.user1),
@@ -240,7 +232,7 @@ func (s *KeeperLegacyTestSuite) TestDeleteAttribute() {
 		tc := tc
 
 		s.Run(n, func() {
-			err := s.app.AttributeKeeper.DeleteAttribute(s.ctx, tc.accAddr, tc.name, tc.ownerAddr)
+			err := s.app.AttributeKeeper.DeleteAttribute(s.ctx, tc.accAddr, tc.name, nil, tc.ownerAddr)
 			if tc.wantErr {
 				s.Error(err)
 				s.Equal(tc.errorMsg, err.Error())
