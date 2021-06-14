@@ -101,6 +101,16 @@ func (keeper Keeper) SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAdd
 	}
 	indexKey := append(addrPrefix, key...) // [0x04] :: [addr-bytes] :: [name-key-bytes]
 	store.Set(indexKey, bz)
+
+	nameBoundEvent := types.EventNameBound{
+		Address: record.Address,
+		Name:    name,
+	}
+
+	if err := ctx.EventManager().EmitTypedEvent(&nameBoundEvent); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -193,6 +203,16 @@ func (keeper Keeper) DeleteRecord(ctx sdk.Context, name string) error {
 	if store.Has(indexKey) {
 		store.Delete(indexKey)
 	}
+
+	nameUnboundEvent := types.EventNameUnbound{
+		Address: record.Address,
+		Name:    name,
+	}
+
+	if err := ctx.EventManager().EmitTypedEvent(&nameUnboundEvent); err != nil {
+		return err
+	}
+
 	return nil
 }
 
