@@ -51,6 +51,9 @@ func NewTxCmd() *cobra.Command {
 		WriteContractSpecificationCmd(),
 		RemoveContractSpecificationCmd(),
 
+		AddContractSpecToScopeSpecCmd(),
+		RemoveContractSpecFromScopeSpecCmd(),
+
 		WriteRecordSpecificationCmd(),
 		RemoveRecordSpecificationCmd(),
 
@@ -476,6 +479,45 @@ icon-url           - address to a image to be used as an icon (optional, can onl
 			}
 
 			msg := types.NewMsgWriteContractSpecificationRequest(contractSpecification, signers)
+			err = msg.ValidateBasic()
+			if err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	addSignerFlagCmd(cmd)
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// AddContractSpecToScopeSpecCmd creates an add contract spec to scope spec command
+func AddContractSpecToScopeSpecCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "add-contract-spec-to-scope-spec contract-specification-id scope-specification-id",
+		Short: "Add an existing contract specification to a scope specification",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			contractSpecID, err := types.MetadataAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+			scopeSpecID, err := types.MetadataAddressFromBech32(args[1])
+			if err != nil {
+				return err
+			}
+
+			signers, err := parseSigners(cmd, &clientCtx)
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgAddContractSpecToScopeSpecRequest(contractSpecID, scopeSpecID, signers)
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err
@@ -1027,6 +1069,45 @@ func RemoveContractSpecificationCmd() *cobra.Command {
 		},
 	}
 
+	addSignerFlagCmd(cmd)
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// RemoveContractSpecFromScopeSpecCmd removes a contract spec from scope spec command
+func RemoveContractSpecFromScopeSpecCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "remove-contract-spec-to-scope-spec contract-specification-id scope-specification-id",
+		Short: "Remove an existing contract specification from a scope specification",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			contractSpecID, err := types.MetadataAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+			scopeSpecID, err := types.MetadataAddressFromBech32(args[1])
+			if err != nil {
+				return err
+			}
+
+			signers, err := parseSigners(cmd, &clientCtx)
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgDeleteContractSpecFromScopeSpecRequest(contractSpecID, scopeSpecID, signers)
+			err = msg.ValidateBasic()
+			if err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
 	addSignerFlagCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 
