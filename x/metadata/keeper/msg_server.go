@@ -391,7 +391,7 @@ func (k msgServer) AddContractSpecToScopeSpec(
 
 	for _, cSpecID := range scopeSpec.ContractSpecIds {
 		if cSpecID.Equals(msg.ContractSpecificationId) {
-			return nil, fmt.Errorf("scope already contains contract spec %s", msg.ContractSpecificationId)
+			return nil, fmt.Errorf("scope spec %s already contains contract spec %s", msg.ScopeSpecificationId, msg.ContractSpecificationId)
 		}
 	}
 
