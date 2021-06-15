@@ -72,26 +72,6 @@ func (s msgServer) BindName(goCtx context.Context, msg *types.MsgBindNameRequest
 		ctx.Logger().Error("unable to bind name", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
-	// create event.
-	nameBoundEvent := types.EventNameBound{
-		Address: msg.Record.Address,
-		Name:    name,
-	}
-
-	// before name of the event was `types.EventTypeNameBound` == name_bound
-	// because proto message format's do not encourage _ like convention
-	// but prefer CamelCase for message name, NameBound
-	// https://developers.google.com/protocol-buffers/docs/style
-	// Use CamelCase (with an initial capital) for message names – for example, SongServerRequest.
-	// Use underscore_separated_names for field names (including oneof field and extension names) – for example, song_name.
-
-	// Emit event and return
-
-	// Sample event:
-	// [{"events":[{"type":"message","attributes":[{"key":"action","value":"bind_name"},{"key":"sender","value":"tp13ulywwfe7v38y0vetsqayccsgzexh6zq38h3d4"}]},{"type":"provenance.name.v1.EventNameBound","attributes":[{"key":"address","value":"\"tp13ulywwfe7v38y0vetsqayccsgzexh6zq38h3d4\""},{"key":"name","value":"\"sc1.pb\""}]},{"type":"transfer","attributes":[{"key":"recipient","value":"tp17xpfvakm2amg962yls6f84z3kell8c5l2udfyt"},{"key":"sender","value":"tp13ulywwfe7v38y0vetsqayccsgzexh6zq38h3d4"},{"key":"amount","value":"2000nhash"}]}]}]
-	if err := ctx.EventManager().EmitTypedEvent(&nameBoundEvent); err != nil {
-		return nil, err
-	}
 
 	// key: modulename+name+bind
 	defer func() {
@@ -101,6 +81,14 @@ func (s msgServer) BindName(goCtx context.Context, msg *types.MsgBindNameRequest
 			[]metrics.Label{telemetry.NewLabel("name", name), telemetry.NewLabel("address", msg.Record.Address)},
 		)
 	}()
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeNameBound,
+			sdk.NewAttribute(types.KeyAttributeAddress, msg.Record.Address),
+			sdk.NewAttribute(types.KeyAttributeName, msg.Record.Name),
+		),
+	)
 
 	return &types.MsgBindNameResponse{}, nil
 }
@@ -141,16 +129,6 @@ func (s msgServer) DeleteName(goCtx context.Context, msg *types.MsgDeleteNameReq
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	// create name unbound event.
-	nameUnboundEvent := types.EventNameUnbound{
-		Address: msg.Record.Address,
-		Name:    name,
-	}
-	// Emit event and return
-	if err := ctx.EventManager().EmitTypedEvent(&nameUnboundEvent); err != nil {
-		return nil, err
-	}
-
 	// key: modulename+name+unbind
 	defer func() {
 		telemetry.IncrCounterWithLabels(
@@ -159,6 +137,14 @@ func (s msgServer) DeleteName(goCtx context.Context, msg *types.MsgDeleteNameReq
 			[]metrics.Label{telemetry.NewLabel("name", name), telemetry.NewLabel("address", msg.Record.Address)},
 		)
 	}()
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeNameUnbound,
+			sdk.NewAttribute(types.KeyAttributeAddress, msg.Record.Address),
+			sdk.NewAttribute(types.KeyAttributeName, msg.Record.Name),
+		),
+	)
 
 	return &types.MsgDeleteNameResponse{}, nil
 }
