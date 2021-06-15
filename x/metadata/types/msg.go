@@ -13,26 +13,28 @@ import (
 )
 
 const (
-	TypeMsgWriteScopeRequest                  = "write_scope_request"
-	TypeMsgDeleteScopeRequest                 = "delete_scope_request"
-	TypeMsgAddScopeDataAccessRequest          = "add_scope_data_access_request"
-	TypeMsgDeleteScopeDataAccessRequest       = "delete_scope_data_access_request"
-	TypeMsgAddScopeOwnerRequest               = "add_scope_owner_request"
-	TypeMsgDeleteScopeOwnerRequest            = "delete_scope_owner_request"
-	TypeMsgWriteSessionRequest                = "write_session_request"
-	TypeMsgWriteRecordRequest                 = "write_record_request"
-	TypeMsgDeleteRecordRequest                = "delete_record_request"
-	TypeMsgWriteScopeSpecificationRequest     = "write_scope_specification_request"
-	TypeMsgDeleteScopeSpecificationRequest    = "delete_scope_specification_request"
-	TypeMsgWriteContractSpecificationRequest  = "write_contract_specification_request"
-	TypeMsgDeleteContractSpecificationRequest = "delete_contract_specification_request"
-	TypeMsgWriteRecordSpecificationRequest    = "write_record_specification_request"
-	TypeMsgDeleteRecordSpecificationRequest   = "delete_record_specification_request"
-	TypeMsgWriteP8EContractSpecRequest        = "write_p8e_contract_spec_request"
-	TypeMsgP8eMemorializeContractRequest      = "p8e_memorialize_contract_request"
-	TypeMsgBindOSLocatorRequest               = "write_os_locator_request"
-	TypeMsgDeleteOSLocatorRequest             = "delete_os_locator_request"
-	TypeMsgModifyOSLocatorRequest             = "modify_os_locator_request"
+	TypeMsgWriteScopeRequest                      = "write_scope_request"
+	TypeMsgDeleteScopeRequest                     = "delete_scope_request"
+	TypeMsgAddScopeDataAccessRequest              = "add_scope_data_access_request"
+	TypeMsgDeleteScopeDataAccessRequest           = "delete_scope_data_access_request"
+	TypeMsgAddScopeOwnerRequest                   = "add_scope_owner_request"
+	TypeMsgDeleteScopeOwnerRequest                = "delete_scope_owner_request"
+	TypeMsgWriteSessionRequest                    = "write_session_request"
+	TypeMsgWriteRecordRequest                     = "write_record_request"
+	TypeMsgDeleteRecordRequest                    = "delete_record_request"
+	TypeMsgWriteScopeSpecificationRequest         = "write_scope_specification_request"
+	TypeMsgDeleteScopeSpecificationRequest        = "delete_scope_specification_request"
+	TypeMsgWriteContractSpecificationRequest      = "write_contract_specification_request"
+	TypeMsgDeleteContractSpecificationRequest     = "delete_contract_specification_request"
+	TypeMsgAddContractSpecToScopeSpecRequest      = "add_contract_spec_to_scope_spec_request"
+	TypeMsgDeleteContractSpecFromScopeSpecRequest = "delete_contract_spec_from_scope_spec_request"
+	TypeMsgWriteRecordSpecificationRequest        = "write_record_specification_request"
+	TypeMsgDeleteRecordSpecificationRequest       = "delete_record_specification_request"
+	TypeMsgWriteP8EContractSpecRequest            = "write_p8e_contract_spec_request"
+	TypeMsgP8eMemorializeContractRequest          = "p8e_memorialize_contract_request"
+	TypeMsgBindOSLocatorRequest                   = "write_os_locator_request"
+	TypeMsgDeleteOSLocatorRequest                 = "delete_os_locator_request"
+	TypeMsgModifyOSLocatorRequest                 = "modify_os_locator_request"
 )
 
 // Compile time interface checks.
@@ -50,6 +52,8 @@ var (
 	_ sdk.Msg = &MsgDeleteScopeSpecificationRequest{}
 	_ sdk.Msg = &MsgWriteContractSpecificationRequest{}
 	_ sdk.Msg = &MsgDeleteContractSpecificationRequest{}
+	_ sdk.Msg = &MsgAddContractSpecToScopeSpecRequest{}
+	_ sdk.Msg = &MsgDeleteContractSpecFromScopeSpecRequest{}
 	_ sdk.Msg = &MsgWriteRecordSpecificationRequest{}
 	_ sdk.Msg = &MsgDeleteRecordSpecificationRequest{}
 	_ sdk.Msg = &MsgBindOSLocatorRequest{}
@@ -871,6 +875,86 @@ func (msg MsgDeleteContractSpecificationRequest) ValidateBasic() error {
 	return nil
 }
 
+// ------------------  MsgAddContractSpecToScopeSpecRequest  ------------------
+
+// NewMsgAddContractSpecToScopeSpecRequest creates a new msg instance
+func NewMsgAddContractSpecToScopeSpecRequest(contractSpecID MetadataAddress, scopeSpecID MetadataAddress, signers []string) *MsgAddContractSpecToScopeSpecRequest {
+	return &MsgAddContractSpecToScopeSpecRequest{ContractSpecificationId: contractSpecID, ScopeSpecificationId: scopeSpecID, Signers: signers}
+}
+
+func (msg MsgAddContractSpecToScopeSpecRequest) String() string {
+	out, _ := yaml.Marshal(msg)
+	return string(out)
+}
+
+// Route returns the module route
+func (msg MsgAddContractSpecToScopeSpecRequest) Route() string {
+	return ModuleName
+}
+
+// Type returns the type name for this msg
+func (msg MsgAddContractSpecToScopeSpecRequest) Type() string {
+	return TypeMsgAddContractSpecToScopeSpecRequest
+}
+
+// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
+func (msg MsgAddContractSpecToScopeSpecRequest) GetSigners() []sdk.AccAddress {
+	return stringsToAccAddresses(msg.Signers)
+}
+
+// GetSignBytes gets the bytes for the message signer to sign on
+func (msg MsgAddContractSpecToScopeSpecRequest) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// ValidateBasic performs a quick validity check
+func (msg *MsgAddContractSpecToScopeSpecRequest) ValidateBasic() error {
+	if len(msg.Signers) < 1 {
+		return fmt.Errorf("at least one signer is required")
+	}
+	return nil
+}
+
+// ------------------  MsgDeleteContractSpecFromScopeSpecRequest  ------------------
+
+// NewMsgDeleteContractSpecFromScopeSpecRequest creates a new msg instance
+func NewMsgDeleteContractSpecFromScopeSpecRequest(contractSpecID MetadataAddress, scopeSpecID MetadataAddress, signers []string) *MsgDeleteContractSpecFromScopeSpecRequest {
+	return &MsgDeleteContractSpecFromScopeSpecRequest{ContractSpecificationId: contractSpecID, ScopeSpecificationId: scopeSpecID, Signers: signers}
+}
+
+func (msg MsgDeleteContractSpecFromScopeSpecRequest) String() string {
+	out, _ := yaml.Marshal(msg)
+	return string(out)
+}
+
+// Route returns the module route
+func (msg MsgDeleteContractSpecFromScopeSpecRequest) Route() string {
+	return ModuleName
+}
+
+// Type returns the type name for this msg
+func (msg MsgDeleteContractSpecFromScopeSpecRequest) Type() string {
+	return TypeMsgDeleteContractSpecFromScopeSpecRequest
+}
+
+// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
+func (msg MsgDeleteContractSpecFromScopeSpecRequest) GetSigners() []sdk.AccAddress {
+	return stringsToAccAddresses(msg.Signers)
+}
+
+// GetSignBytes gets the bytes for the message signer to sign on
+func (msg MsgDeleteContractSpecFromScopeSpecRequest) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// ValidateBasic performs a quick validity check
+func (msg MsgDeleteContractSpecFromScopeSpecRequest) ValidateBasic() error {
+	if len(msg.Signers) < 1 {
+		return fmt.Errorf("at least one signer is required")
+	}
+	return nil
+}
+
 // ------------------  MsgWriteRecordSpecificationRequest  ------------------
 
 // NewMsgAddRecordSpecificationRequest creates a new msg instance
@@ -1244,6 +1328,14 @@ func NewMsgWriteContractSpecificationResponse(contractSpecID MetadataAddress) *M
 
 func NewMsgDeleteContractSpecificationResponse() *MsgDeleteContractSpecificationResponse {
 	return &MsgDeleteContractSpecificationResponse{}
+}
+
+func NewMsgAddContractSpecToScopeSpecResponse() *MsgAddContractSpecToScopeSpecResponse {
+	return &MsgAddContractSpecToScopeSpecResponse{}
+}
+
+func NewMsgDeleteContractSpecFromScopeSpecResponse() *MsgDeleteContractSpecFromScopeSpecResponse {
+	return &MsgDeleteContractSpecFromScopeSpecResponse{}
 }
 
 func NewMsgWriteRecordSpecificationResponse(recordSpecID MetadataAddress) *MsgWriteRecordSpecificationResponse {

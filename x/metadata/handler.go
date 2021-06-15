@@ -57,6 +57,12 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgDeleteContractSpecificationRequest:
 			res, err := msgServer.DeleteContractSpecification(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
+		case *types.MsgAddContractSpecToScopeSpecRequest:
+			res, err := msgServer.AddContractSpecToScopeSpec(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+		case *types.MsgDeleteContractSpecFromScopeSpecRequest:
+			res, err := msgServer.DeleteContractSpecFromScopeSpec(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 		case *types.MsgWriteRecordSpecificationRequest:
 			res, err := msgServer.WriteRecordSpecification(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)

@@ -368,6 +368,20 @@ func (k msgServer) DeleteContractSpecification(
 	return types.NewMsgDeleteContractSpecificationResponse(), nil
 }
 
+func (k msgServer) AddContractSpecToScopeSpec(
+	goCtx context.Context,
+	msg *types.MsgAddContractSpecToScopeSpecRequest,
+) (*types.MsgAddContractSpecToScopeSpecResponse, error) {
+	return types.NewMsgAddContractSpecToScopeSpecResponse(), nil
+}
+
+func (k msgServer) DeleteContractSpecFromScopeSpec(
+	goCtx context.Context,
+	msg *types.MsgDeleteContractSpecFromScopeSpecRequest,
+) (*types.MsgDeleteContractSpecFromScopeSpecResponse, error) {
+	return types.NewMsgDeleteContractSpecFromScopeSpecResponse(), nil
+}
+
 func (k msgServer) WriteRecordSpecification(
 	goCtx context.Context,
 	msg *types.MsgWriteRecordSpecificationRequest,
