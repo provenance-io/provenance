@@ -54,7 +54,7 @@ type Keeper struct {
 	cdc codec.BinaryMarshaler
 }
 
-// NewKeeper returns a metadata keeper. It handles:
+// NewKeeper returns a marker keeper. It handles:
 // - managing MarkerAccounts
 // - enforcing permissions for marker creation/deletion/management
 //
