@@ -16,15 +16,22 @@ const (
 	DefaultWeightMsgDelegate                    int = 100
 	DefaultWeightMsgUndelegate                  int = 100
 	DefaultWeightMsgBeginRedelegate             int = 100
-
-	DefaultWeightCommunitySpendProposal int = 5
-	DefaultWeightTextProposal           int = 5
-	DefaultWeightParamChangeProposal    int = 5
-
+	DefaultWeightCommunitySpendProposal         int = 5
+	DefaultWeightTextProposal                   int = 5
+	DefaultWeightParamChangeProposal            int = 5
+	// Name
 	DefaultWeightMsgBindName            int = 10
 	DefaultWeightMsgDeleteName          int = 5
 	DefaultWeightCreateRootNameProposal int = 5
-
+	// Attribute
 	DefaultWeightMsgDeleteAttribute int = 5
 	DefaultWeightMsgAddAttribute    int = 15
+	// Marker
+	DefaultWeightAddMarkerProposalContent           int = 5
+	DefaultWeightSupplyIncreaseProposalContent      int = 5
+	DefaultWeightSupplyDecreaseProposalContent      int = 5
+	DefaultWeightSetAdministratorProposalContent    int = 5
+	DefaultWeightRemoveAdministratorProposalContent int = 5
+	DefaultWeightChangeStatusProposalContent        int = 5
+	DefaultWeightMsgAddMarker                       int = 50
 )
