@@ -10,6 +10,9 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+// The maximum querier result size allowed, ~10MB.
+const maxQueryResultSize = (10 << 20) - 1
+
 // Querier describes behavior for provenance smart contract query support.
 type Querier func(ctx sdk.Context, query json.RawMessage, version string) ([]byte, error)
 
@@ -57,6 +60,11 @@ func customPlugins(registry *QuerierRegistry) wasm.CustomQuerier {
 		if err != nil {
 			ctx.Logger().Error("failed to execute query", "err", err)
 			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		}
+		if len(bz) > maxQueryResultSize {
+			errm := "query result size limit exceeded"
+			ctx.Logger().Error(errm, "maxQueryResultSize", maxQueryResultSize)
+			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, errm)
 		}
 		if !json.Valid(bz) {
 			ctx.Logger().Error("invalid querier JSON", "route", req.Route)
