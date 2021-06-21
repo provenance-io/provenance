@@ -4,6 +4,7 @@ package wasm
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/provenance-io/provenance/internal/provwasm"
 	"github.com/provenance-io/provenance/x/metadata/keeper"
@@ -16,13 +17,33 @@ import (
 // Only one query field should be set.
 type MetadataQueryParams struct {
 	// Get a scope by ID.
-	Get *GetScopeParams `json:"get_scope,omitempty"`
+	GetScope *GetScopeParams `json:"get_scope,omitempty"`
+	// Get sessions by scope ID and name (optional).
+	GetSessions *GetSessionsParams `json:"get_sessions,omitempty"`
+	// Get records by scope ID and name (optional).
+	GetRecords *GetRecordsParams `json:"get_records,omitempty"`
 }
 
 // GetScopeParams are the inputs for a scope query.
 type GetScopeParams struct {
 	// The bech32 address of the scope we want to get.
 	ScopeID string `json:"scope_id"`
+}
+
+// GetSessionsParams are the inputs for a session query.
+type GetSessionsParams struct {
+	// The bech32 address of the scope we want to get sessions for.
+	ScopeID string `json:"scope_id"`
+	// The optional session name.
+	Name string `json:"name,omitempty"`
+}
+
+// GetRecordsParams are the inputs for a records query.
+type GetRecordsParams struct {
+	// The bech32 address of the scope we want to get records for.
+	ScopeID string `json:"scope_id"`
+	// The optional session name.
+	Name string `json:"name,omitempty"`
 }
 
 // Querier returns a smart contract querier for the metadata module.
@@ -39,8 +60,12 @@ func Querier(keeper keeper.Keeper) provwasm.Querier {
 			return nil, fmt.Errorf("wasm: nil metadata query params")
 		}
 		switch {
-		case params.Get != nil:
-			return params.Get.Run(ctx, keeper)
+		case params.GetScope != nil:
+			return params.GetScope.Run(ctx, keeper)
+		case params.GetSessions != nil:
+			return params.GetSessions.Run(ctx, keeper)
+		case params.GetRecords != nil:
+			return params.GetRecords.Run(ctx, keeper)
 		default:
 			return nil, fmt.Errorf("wasm: invalid metadata query: %s", string(query))
 		}
@@ -59,4 +84,34 @@ func (params *GetScopeParams) Run(ctx sdk.Context, keeper keeper.Keeper) ([]byte
 
 	}
 	return createScopeResponse(scope)
+}
+
+// Run gets sessions by scope ID and name (optional)
+func (params *GetSessionsParams) Run(ctx sdk.Context, keeper keeper.Keeper) ([]byte, error) {
+	scopeID, err := types.MetadataAddressFromBech32(params.ScopeID)
+	if err != nil {
+		return nil, fmt.Errorf("wasm: invalid scope ID: %w", err)
+	}
+	name := strings.TrimSpace(params.Name)
+	var sessions []types.Session
+	keeper.IterateSessions(ctx, scopeID, func(s types.Session) bool {
+		if name == "" || s.Name == name {
+			sessions = append(sessions, s)
+		}
+		return false
+	})
+	return createSessionsResponse(sessions)
+}
+
+// Run gets records by scope ID and name (optional)
+func (params *GetRecordsParams) Run(ctx sdk.Context, keeper keeper.Keeper) ([]byte, error) {
+	scopeID, err := types.MetadataAddressFromBech32(params.ScopeID)
+	if err != nil {
+		return nil, fmt.Errorf("wasm: invalid scope ID: %w", err)
+	}
+	records, err := keeper.GetRecords(ctx, scopeID, strings.TrimSpace(params.Name))
+	if err != nil {
+		return nil, fmt.Errorf("wasm: unable to get scope records: %w", err)
+	}
+	return createRecordsResponse(records)
 }
