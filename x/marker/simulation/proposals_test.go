@@ -38,8 +38,8 @@ func TestProposalContents(t *testing.T) {
 
 	content := w0.ContentSimulatorFn()(r, ctx, accounts)
 
-	require.Equal(t, "MIJMOXcnQfyzeOcbWwNbeHVIkPZBSpYuLyYggwexjxusrBqDOTtGTOWeLrQKjLxzIivHSlcxgdXhhuTSkuxKGLwQvuyNhYFmBZHe", content.GetDescription())
-	require.Equal(t, "UzXPFGkqEG", content.GetTitle())
+	require.Equal(t, "eAerqyNEUz", content.GetDescription())
+	require.Equal(t, "GkqEG", content.GetTitle())
 
 	require.Equal(t, "marker", content.ProposalRoute())
 	require.Equal(t, "AddMarker", content.ProposalType())

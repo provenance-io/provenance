@@ -289,6 +289,16 @@ func (k Keeper) BurnCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 	return nil
 }
 
+// Returns the current supply in network according to the bank module for the given marker
+func (k Keeper) CurrentCirculation(ctx sdk.Context, marker types.MarkerAccountI) sdk.Int {
+	return k.bankKeeper.GetSupply(ctx).GetTotal().AmountOf(marker.GetDenom())
+}
+
+// Retures the current escrow balance for the marker base account
+func (k Keeper) CurrentEscrow(ctx sdk.Context, marker types.MarkerAccountI) sdk.Coins {
+	return k.bankKeeper.GetAllBalances(ctx, marker.GetAddress())
+}
+
 // AdjustCirculation will mint/burn coin if required to ensure desired supply matches amount in circulation
 func (k Keeper) AdjustCirculation(ctx sdk.Context, marker types.MarkerAccountI, desiredSupply sdk.Coin) error {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "adjust_circulation")

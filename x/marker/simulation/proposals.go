@@ -69,14 +69,14 @@ func SimulateCreateAddMarkerProposalContent(k keeper.Keeper) simtypes.ContentSim
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 
 		return types.NewAddMarkerProposal(
-			simtypes.RandStringOfLength(r, 10),  // title
-			simtypes.RandStringOfLength(r, 100), // description
+			simtypes.RandStringOfLength(r, 5),  // title
+			simtypes.RandStringOfLength(r, 10), // description
 			randomUnrestrictedDenom(r, k.GetUnrestrictedDenomRegex(ctx)),
-			sdk.NewInt(r.Int63()),         // initial supply
-			simAccount.Address,            // manager
-			types.StatusActive,            // status
-			types.MarkerType(r.Intn(1)+1), // coin or restricted_coin
-			randomAccessGrants(r, accs),
+			sdk.NewInt(int64(r.Int31())),    // initial supply
+			simAccount.Address,              // manager
+			types.MarkerStatus(r.Intn(2)+1), // initial status (proposed, finalized, active)
+			types.MarkerType(r.Intn(1)+1),   // coin or restricted_coin
+			[]types.AccessGrant{{Address: simAccount.Address.String(), Permissions: randomAccessTypes(r)}},
 			r.Intn(1) > 0, // fixed supply
 			r.Intn(1) > 0, // allow gov
 		)
@@ -92,6 +92,9 @@ func SimulateCreateSupplyIncreaseProposalContent(k keeper.Keeper) simtypes.Conte
 			dest = acc.Address.String()
 		}
 		m := randomMarker(r, ctx, k)
+		if m == nil || !m.HasGovernanceEnabled() || m.GetStatus() > types.StatusActive {
+			return nil
+		}
 		return types.NewSupplyIncreaseProposal(
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 100),
@@ -105,11 +108,14 @@ func SimulateCreateSupplyIncreaseProposalContent(k keeper.Keeper) simtypes.Conte
 func SimulateCreateSupplyDecreaseProposalContent(k keeper.Keeper) simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
 		m := randomMarker(r, ctx, k)
-		burn := sdk.NewCoin(m.GetDenom(), sdk.NewInt(r.Int63()))
-		if m.GetSupply().Amount.GT(sdk.ZeroInt()) {
-			burn.Amount = simtypes.RandomAmount(r, m.GetSupply().Amount)
-
+		if m == nil || !m.HasGovernanceEnabled() || m.GetStatus() > types.StatusActive {
+			return nil
 		}
+		currentSupply := k.CurrentEscrow(ctx, m).AmountOf(m.GetDenom())
+		if currentSupply.LT(sdk.OneInt()) {
+			return nil
+		}
+		burn := sdk.NewCoin(m.GetDenom(), simtypes.RandomAmount(r, currentSupply))
 		return types.NewSupplyDecreaseProposal(
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 100),
@@ -122,12 +128,14 @@ func SimulateCreateSupplyDecreaseProposalContent(k keeper.Keeper) simtypes.Conte
 func SimulateCreateSetAdministratorProposalContent(k keeper.Keeper) simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
 		m := randomMarker(r, ctx, k)
-
+		if m == nil || !m.HasGovernanceEnabled() {
+			return nil
+		}
 		return types.NewSetAdministratorProposal(
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 100),
 			m.GetDenom(),
-			randomAccessGrants(r, accs),
+			randomAccessGrants(r, accs, 2),
 		)
 	}
 }
@@ -137,7 +145,9 @@ func SimulateCreateRemoveAdministratorProposalContent(k keeper.Keeper) simtypes.
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		m := randomMarker(r, ctx, k)
-
+		if m == nil || !m.HasGovernanceEnabled() {
+			return nil
+		}
 		return types.NewRemoveAdministratorProposal(
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 100),
@@ -151,12 +161,14 @@ func SimulateCreateRemoveAdministratorProposalContent(k keeper.Keeper) simtypes.
 func SimulateCreateChangeStatusProposalContent(k keeper.Keeper) simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
 		m := randomMarker(r, ctx, k)
-
+		if m == nil || !m.HasGovernanceEnabled() || m.GetStatus() > types.StatusCancelled {
+			return nil
+		}
 		return types.NewChangeStatusProposal(
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 100),
 			m.GetDenom(),
-			types.MarkerStatus(r.Intn(6)+1),
+			types.MarkerStatus(m.GetStatus()+1),
 		)
 	}
 }

@@ -23,24 +23,18 @@ import (
 const (
 	OpWeightMsgAddMarker    = "op_weight_msg_add_marker"
 	OpWeightMsgDeleteMarker = "op_weight_msg_delete_marker"
+	OpWeightMsgChangeStatus = "op_weight_msg_change_status"
+	OpWeightMsgAddAccess    = "op_weight_msg_add_access"
+	OpWeightMsgMintMarker   = "op_weight_msg_mint_marker"
+	OpWeightMsgBurnMarker   = "op_weight_msg_burn_marker"
 )
 
 /*
-Finalize
-Activate
-Cancel
-Delete
-
 
 AddAccess
 DeleteAccess
 
 Withdraw
-AddMarker
-	Finalize
-	Activate
-	Cancel
-	Delete
 
 Mint
 Burn
@@ -54,19 +48,41 @@ func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONMarshaler, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper,
 ) simulation.WeightedOperations {
 	var (
-		weightMsgBindName int
+		weightMsgAddMarker    int
+		weightMsgChangeStatus int
+		weightMsgAddAccess    int
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgAddMarker, &weightMsgBindName, nil,
+	appParams.GetOrGenerate(cdc, OpWeightMsgAddMarker, &weightMsgAddMarker, nil,
 		func(_ *rand.Rand) {
-			weightMsgBindName = simappparams.DefaultWeightMsgAddMarker
+			weightMsgAddMarker = simappparams.DefaultWeightMsgAddMarker
+		},
+	)
+
+	appParams.GetOrGenerate(cdc, OpWeightMsgChangeStatus, &weightMsgChangeStatus, nil,
+		func(_ *rand.Rand) {
+			weightMsgChangeStatus = simappparams.DefaultWeightMsgChangeStatus
+		},
+	)
+
+	appParams.GetOrGenerate(cdc, OpWeightMsgAddAccess, &weightMsgAddAccess, nil,
+		func(_ *rand.Rand) {
+			weightMsgAddAccess = simappparams.DefaultWeightMsgAddAccess
 		},
 	)
 
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
-			weightMsgBindName,
+			weightMsgAddMarker,
 			SimulateMsgAddMarker(k, ak, bk),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgChangeStatus,
+			SimulateMsgChangeStatus(k, ak, bk),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgAddAccess,
+			SimulateMsgAddAccess(k, ak, bk),
 		),
 	}
 }
@@ -78,10 +94,10 @@ func SimulateMsgAddMarker(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bank
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		mgrAccount, _ := simtypes.RandomAcc(r, accs)
-
+		denom := randomUnrestrictedDenom(r, k.GetUnrestrictedDenomRegex(ctx))
 		msg := types.NewMsgAddMarkerRequest(
-			randomUnrestrictedDenom(r, k.GetUnrestrictedDenomRegex(ctx)),
-			sdk.NewInt(r.Int63()),
+			denom,
+			sdk.NewInt(int64(r.Int31())),
 			simAccount.Address,
 			mgrAccount.Address,
 			types.MarkerType(r.Intn(1)+1), // coin or restricted_coin
@@ -89,7 +105,70 @@ func SimulateMsgAddMarker(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bank
 			r.Intn(1) > 0,                 // allow gov
 		)
 
-		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg)
+		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, nil)
+	}
+}
+
+func SimulateMsgChangeStatus(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		m := randomMarker(r, ctx, k)
+		if m == nil {
+			return simtypes.NoOpMsg(types.ModuleName, "ChangeStatus", "unable to get marker for status change"), nil, nil
+		}
+		var simAccount simtypes.Account
+		var found bool
+		var msg sdk.Msg
+		switch m.GetStatus() {
+		// 50% chance of (re-)issuing a finalize or a 50/50 chance to cancel/activate.
+		case types.StatusProposed, types.StatusFinalized:
+			if r.Intn(10) < 5 {
+				msg = types.NewMsgFinalizeRequest(m.GetDenom(), m.GetManager())
+			} else if r.Intn(10) < 5 {
+				msg = types.NewMsgCancelRequest(m.GetDenom(), simAccount.Address)
+			} else {
+				msg = types.NewMsgActivateRequest(m.GetDenom(), m.GetManager())
+			}
+			simAccount, found = simtypes.FindAccount(accs, m.GetManager())
+			if !found {
+				return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "manager account does not exist"), nil, nil
+			}
+		case types.StatusActive:
+			accounts := m.AddressListForPermission(types.Access_Delete)
+			if len(accounts) < 1 {
+				return simtypes.NoOpMsg(types.ModuleName, types.TypeCancelRequest, "no account has cancel access"), nil, nil
+			}
+			simAccount, _ = simtypes.FindAccount(accs, accounts[0])
+			msg = types.NewMsgCancelRequest(m.GetDenom(), simAccount.Address)
+		case types.StatusCancelled:
+			accounts := m.AddressListForPermission(types.Access_Delete)
+			if len(accounts) < 1 {
+				return simtypes.NoOpMsg(types.ModuleName, types.TypeDeleteRequest, "no account has delete access"), nil, nil
+			}
+			simAccount, _ = simtypes.FindAccount(accs, accounts[0])
+			msg = types.NewMsgDeleteRequest(m.GetDenom(), simAccount.Address)
+		}
+
+		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, nil)
+	}
+}
+
+func SimulateMsgAddAccess(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		simAccount, _ := simtypes.RandomAcc(r, accs)
+		m := randomMarker(r, ctx, k)
+		if m == nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeAddAccessRequest, "unable to get marker for access change"), nil, nil
+		}
+		if !m.GetManager().Equals(sdk.AccAddress{}) {
+			simAccount, _ = simtypes.FindAccount(accs, m.GetManager())
+		}
+		grants := randomAccessGrants(r, accs, 100)
+		msg := types.NewMsgAddAccessRequest(m.GetDenom(), simAccount.Address, grants[0])
+		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, nil)
 	}
 }
 
@@ -104,6 +183,7 @@ func Dispatch(
 	from simtypes.Account,
 	chainID string,
 	msg sdk.Msg,
+	futures []simtypes.FutureOperation,
 ) (
 	simtypes.OperationMsg,
 	[]simtypes.FutureOperation,
@@ -137,7 +217,7 @@ func Dispatch(
 		return simtypes.NoOpMsg(types.ModuleName, msg.Type(), err.Error()), nil, nil
 	}
 
-	return simtypes.NewOperationMsg(msg, true, ""), nil, nil
+	return simtypes.NewOperationMsg(msg, true, ""), futures, nil
 }
 
 func randomUnrestrictedDenom(r *rand.Rand, unrestrictedDenomExp string) string {
@@ -152,15 +232,30 @@ func randomUnrestrictedDenom(r *rand.Rand, unrestrictedDenomExp string) string {
 	return simtypes.RandStringOfLength(r, int(r.Int63n(max-min)+min))
 }
 
-func randomAccessGrants(r *rand.Rand, accs []simtypes.Account) (grants []types.AccessGrant) {
+// build
+func randomAccessGrants(r *rand.Rand, accs []simtypes.Account, limit int) (grants []types.AccessGrant) {
 	// select random number of accounts ...
-	count := r.Intn(len(accs))
-	for i := 0; i < count; i++ {
-		simaccount, _ := simtypes.RandomAcc(r, accs)
+	for i := 0; i < len(accs); i++ {
+		if r.Intn(10) < 3 {
+			continue
+		}
+		if i >= limit {
+			return
+		}
 		// for each of the accounts selected .. add a random set of permissions.
-		grants = append(grants, *types.NewAccessGrant(simaccount.Address, types.AccessListByNames("mint, burn")))
+		grants = append(grants, *types.NewAccessGrant(accs[i].Address, randomAccessTypes(r)))
 	}
-	// mint, burn, deposit, withdraw, delete, admin, transfer
+	return
+}
+
+// builds a list of access rights with a 50:50 chance of including each one
+func randomAccessTypes(r *rand.Rand) (result []types.Access) {
+	access := []string{"mint", "burn", "deposit", "withdraw", "delete", "admin", "transfer"}
+	for i := 0; i < len(access); i++ {
+		if r.Intn(10) < 4 {
+			result = append(result, types.AccessByName(access[i]))
+		}
+	}
 	return
 }
 
@@ -170,6 +265,9 @@ func randomMarker(r *rand.Rand, ctx sdk.Context, k keeper.Keeper) types.MarkerAc
 		markers = append(markers, marker)
 		return false
 	})
+	if len(markers) == 0 {
+		return nil
+	}
 	idx := r.Intn(len(markers))
 	return markers[idx]
 }

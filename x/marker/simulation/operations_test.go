@@ -35,7 +35,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	cdc := suite.app.AppCodec()
 	appParams := make(simtypes.AppParams)
 
-	weightesOps := simulation.WeightedOperations(appParams, cdc, suite.app.MarkerKeeper,
+	weightedOps := simulation.WeightedOperations(appParams, cdc, suite.app.MarkerKeeper,
 		suite.app.AccountKeeper, suite.app.BankKeeper,
 	)
 
@@ -50,9 +50,11 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		opMsgName  string
 	}{
 		{simappparams.DefaultWeightMsgAddMarker, types.ModuleName, types.TypeAddMarkerRequest},
+		{simappparams.DefaultWeightMsgChangeStatus, types.ModuleName, types.ProposalTypeChangeStatus},
+		{simappparams.DefaultWeightMsgAddAccess, types.ModuleName, types.TypeAddAccessRequest},
 	}
 
-	for i, w := range weightesOps {
+	for i, w := range weightedOps {
 		operationMsg, _, _ := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, "")
 		// the following checks are very much dependent from the ordering of the output given
 		// by WeightedOperations. if the ordering in WeightedOperations changes some tests

@@ -25,7 +25,7 @@ func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
 	return []simtypes.ParamChange{
 		simulation.NewSimParamChange(types.ModuleName, keyMaxTotalSupply,
 			func(r *rand.Rand) string {
-				return fmt.Sprintf("%d", GenMaxTotalSupply(r))
+				return fmt.Sprintf("\"%d\"", GenMaxTotalSupply(r))
 			},
 		),
 		simulation.NewSimParamChange(types.ModuleName, keyEnableGovernance,
@@ -36,8 +36,7 @@ func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
 
 		simulation.NewSimParamChange(types.ModuleName, keyUnrestrictedDenomRegex,
 			func(r *rand.Rand) string {
-				return GenUnrestrictedDenomRegex(r)
-
+				return fmt.Sprintf("\"%s\"", GenUnrestrictedDenomRegex(r))
 			},
 		),
 	}

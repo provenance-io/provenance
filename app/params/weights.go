@@ -33,5 +33,9 @@ const (
 	DefaultWeightSetAdministratorProposalContent    int = 5
 	DefaultWeightRemoveAdministratorProposalContent int = 5
 	DefaultWeightChangeStatusProposalContent        int = 5
-	DefaultWeightMsgAddMarker                       int = 50
+	DefaultWeightMsgAddMarker                       int = 100
+	DefaultWeightMsgChangeStatus                    int = 10
+	DefaultWeightMsgAddAccess                       int = 10
+	DefaultWeightMsgMintMarker                      int = 67
+	DefaultWeightMsgBurnMarker                      int = 67
 )

@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"math/rand"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/provenance-io/provenance/x/marker/types"
 )
@@ -31,9 +33,9 @@ func GenEnableGovernance(r *rand.Rand) bool {
 
 // GenUnrestrictedDenomRegex returns a randomized length focused string for the unrestriced denom validation expression
 func GenUnrestrictedDenomRegex(r *rand.Rand) string {
-	min := r.Int31n(62) + 2
+	min := r.Int31n(16) + 2
 	max := r.Int31n(64-min) + min
-	return fmt.Sprintf(`[a-zA-Z][a-zA-Z0-9\-\.]{%d,%d}`, min, max)
+	return fmt.Sprintf(`[a-zA-Z][a-zA-Z0-9\\-\\.]{%d,%d}`, min, max)
 }
 
 // RandomizedGenState generates a random GenesisState for marker
@@ -62,7 +64,24 @@ func RandomizedGenState(simState *module.SimulationState) {
 			EnableGovernance:       enableGovernance,
 			UnrestrictedDenomRegex: unrestrictedDenomRegex,
 		},
-		Markers: []types.MarkerAccount{},
+		Markers: []types.MarkerAccount{
+			{
+				BaseAccount: &authtypes.BaseAccount{
+					Address: types.MustGetMarkerAddress(sdk.DefaultBondDenom).String(),
+				},
+				AccessControl: []types.AccessGrant{
+					{
+						Address:     simState.Accounts[0].Address.String(),
+						Permissions: types.AccessListByNames("mint,burn,delete,admin"),
+					},
+				},
+				Status:                 types.StatusActive,
+				Denom:                  sdk.DefaultBondDenom,
+				MarkerType:             types.MarkerType_Coin,
+				SupplyFixed:            false,
+				AllowGovernanceControl: true,
+			},
+		},
 	}
 
 	bz, err := json.MarshalIndent(&markerGenesis, "", " ")
