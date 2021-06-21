@@ -47,6 +47,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* Value owner changes are independent of scope owner signature requirements after transfer [#347](https://github.com/provenance-io/provenance/issues/347)
 * Attribute module allows removal of orphan attributes, attributes against root names [PR 348](https://github.com/provenance-io/provenance/pull/348)
 
 ### Improvements
