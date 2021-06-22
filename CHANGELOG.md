@@ -39,6 +39,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* Update Cosmos SDK to 0.42.6 with Tendermint 0.34.11.
+  * Refund gas support added to gas meter trace
+  * `ibc-transfer` now contains an `escrow-address` command for querying current escrow balances
 * Add `update` and `delete-distinct` attributes to `attribute` module [#314](https://github.com/provenance-io/provenance/issues/314)
 
 ### API Breaking
