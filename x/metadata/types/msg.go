@@ -909,6 +909,12 @@ func (msg MsgAddContractSpecToScopeSpecRequest) GetSignBytes() []byte {
 
 // ValidateBasic performs a quick validity check
 func (msg *MsgAddContractSpecToScopeSpecRequest) ValidateBasic() error {
+	if !msg.ContractSpecificationId.IsContractSpecificationAddress() {
+		return fmt.Errorf("address is not a contract specification id: %s", msg.ContractSpecificationId.String())
+	}
+	if !msg.ScopeSpecificationId.IsScopeSpecificationAddress() {
+		return fmt.Errorf("address is not a scope specification id: %s", msg.ScopeSpecificationId.String())
+	}
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
@@ -949,6 +955,12 @@ func (msg MsgDeleteContractSpecFromScopeSpecRequest) GetSignBytes() []byte {
 
 // ValidateBasic performs a quick validity check
 func (msg MsgDeleteContractSpecFromScopeSpecRequest) ValidateBasic() error {
+	if !msg.ContractSpecificationId.IsContractSpecificationAddress() {
+		return fmt.Errorf("address is not a contract specification id: %s", msg.ContractSpecificationId.String())
+	}
+	if !msg.ScopeSpecificationId.IsScopeSpecificationAddress() {
+		return fmt.Errorf("address is not a scope specification id: %s", msg.ScopeSpecificationId.String())
+	}
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}

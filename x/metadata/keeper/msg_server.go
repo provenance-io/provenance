@@ -374,13 +374,11 @@ func (k msgServer) AddContractSpecToScopeSpec(
 ) (*types.MsgAddContractSpecToScopeSpecResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "AddContractSpecToScopeSpec")
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	contractSpec, found := k.GetContractSpecification(ctx, msg.ContractSpecificationId)
+	_, found := k.GetContractSpecification(ctx, msg.ContractSpecificationId)
 	if !found {
 		return nil, fmt.Errorf("contract specification not found with id %s", msg.ContractSpecificationId)
 	}
-	if err := k.ValidateAllOwnersAreSigners(contractSpec.OwnerAddresses, msg.Signers); err != nil {
-		return nil, err
-	}
+
 	scopeSpec, found := k.GetScopeSpecification(ctx, msg.ScopeSpecificationId)
 	if !found {
 		return nil, fmt.Errorf("scope specification not found with id %s", msg.ScopeSpecificationId)
@@ -408,12 +406,9 @@ func (k msgServer) DeleteContractSpecFromScopeSpec(
 ) (*types.MsgDeleteContractSpecFromScopeSpecResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteContractSpecFromScopeSpec")
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	contractSpec, found := k.GetContractSpecification(ctx, msg.ContractSpecificationId)
+	_, found := k.GetContractSpecification(ctx, msg.ContractSpecificationId)
 	if !found {
 		return nil, fmt.Errorf("contract specification not found with id %s", msg.ContractSpecificationId)
-	}
-	if err := k.ValidateAllOwnersAreSigners(contractSpec.OwnerAddresses, msg.Signers); err != nil {
-		return nil, err
 	}
 
 	scopeSpec, found := k.GetScopeSpecification(ctx, msg.ScopeSpecificationId)
