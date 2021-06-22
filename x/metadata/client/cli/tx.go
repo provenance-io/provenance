@@ -505,11 +505,11 @@ func AddContractSpecToScopeSpecCmd() *cobra.Command {
 			}
 			contractSpecID, err := types.MetadataAddressFromBech32(args[0])
 			if err != nil {
-				return err
+				return fmt.Errorf("invalid contract specification id : %v", err)
 			}
 			scopeSpecID, err := types.MetadataAddressFromBech32(args[1])
 			if err != nil {
-				return err
+				return fmt.Errorf("invalid scope specification id : %v", err)
 			}
 
 			signers, err := parseSigners(cmd, &clientCtx)
@@ -1088,11 +1088,11 @@ func RemoveContractSpecFromScopeSpecCmd() *cobra.Command {
 			}
 			contractSpecID, err := types.MetadataAddressFromBech32(args[0])
 			if err != nil {
-				return err
+				return fmt.Errorf("invalid contract specification id : %v", err)
 			}
 			scopeSpecID, err := types.MetadataAddressFromBech32(args[1])
 			if err != nil {
-				return err
+				return fmt.Errorf("invalid scope specification id : %v", err)
 			}
 
 			signers, err := parseSigners(cmd, &clientCtx)
