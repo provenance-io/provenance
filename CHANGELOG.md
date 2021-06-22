@@ -40,6 +40,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * Add `update` and `delete-distinct` attributes to `attribute` module [#314](https://github.com/provenance-io/provenance/issues/314)
+* Add support to `metadata` module for adding and removing contract specifications to scope specification [#302](https://github.com/provenance-io/provenance/issues/302)
+  * Added `MsgAddContractSpecToScopeSpecRequest`and `MsgDeleteContractSpecFromScopeSpecRequest` messages for adding/removing
+  * Added cli commands for adding/removing
 
 ### API Breaking
 
