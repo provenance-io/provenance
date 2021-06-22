@@ -2167,7 +2167,7 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationScopeSpecAddRemoveTxC
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			true,
-			"invalid contract specification id : decoding bech32 failed: invalid index of 1",
+			"invalid contract specification id : invalid-contract-specid",
 			&sdk.TxResponse{},
 			0,
 		},
