@@ -9,7 +9,7 @@ import (
 )
 
 // These are the Go struct that map to the Rust smart contract types defined by the provwasm JSON schema.
-// The types in this file were generated using quicktype.io.
+// The types in this file were generated using quicktype.io and slightly modified.
 
 // Scope is a root reference for a collection of records owned by one or more parties.
 type Scope struct {
@@ -158,143 +158,213 @@ const (
 	ResultStatusUnspecified ResultStatus = "unspecified"
 )
 
-// A helper function for converting metadata module scope types into provwasm query response types.
-func createScopeResponse(input types.Scope) ([]byte, error) {
-	scopeID, err := stringifyAddress(input.ScopeId)
+// A slightly modified, non-panicing version of MetadataAddress.String(). Empty addresses cause panics during
+// deserialization on the provwasm side. This is due to Addr not having a default impl. So we fail the query
+// on the blockchain side instead.
+func bech32Address(ma types.MetadataAddress) (string, error) {
+	if ma.Empty() { // cause a query failure for addresses we expect to be non-empty.
+		return "", fmt.Errorf("wasm: empty metadata address")
+	}
+	hrp, err := types.VerifyMetadataAddressFormat(ma)
+	if err != nil {
+		return "", fmt.Errorf("wasm: %w", err)
+	}
+	bech32Addr, err := bech32.ConvertAndEncode(hrp, ma.Bytes())
+	if err != nil {
+		return "", fmt.Errorf("wasm: %w", err)
+	}
+	return bech32Addr, nil
+}
+
+// Convert a scope into provwasm JSON format.
+func createScopeResponse(baseType types.Scope) ([]byte, error) {
+	scopeID, err := bech32Address(baseType.ScopeId)
 	if err != nil {
 		return nil, err
 	}
-	specID, err := stringifyAddress(input.SpecificationId)
+	specificationID, err := bech32Address(baseType.SpecificationId)
 	if err != nil {
 		return nil, err
 	}
 	scope := &Scope{
 		ScopeID:           scopeID,
-		SpecificationID:   specID,
-		ValueOwnerAddress: input.ValueOwnerAddress,
+		SpecificationID:   specificationID,
+		ValueOwnerAddress: baseType.ValueOwnerAddress,
+		DataAccess:        baseType.DataAccess,
+		Owners:            make([]*Party, len(baseType.Owners)),
 	}
-	for _, da := range input.DataAccess {
-		scope.DataAccess = append(scope.DataAccess, da)
-	}
-	for _, o := range input.Owners {
-		scope.Owners = append(scope.Owners, createParty(o))
+	for i, o := range baseType.Owners {
+		scope.Owners[i] = createParty(o)
 	}
 	bz, err := json.Marshal(scope)
 	if err != nil {
-		return nil, fmt.Errorf("wasm: marshal response failed: %w", err)
+		return nil, fmt.Errorf("wasm: marshal scope failed: %w", err)
 	}
 	return bz, nil
 }
 
-// A helper function for converting metadata module session types into provwasm query response types.
-func createSessionsResponse(input []types.Session) ([]byte, error) {
-	ss := &Sessions{}
-	for _, s := range input {
-		sessionID, err := stringifyAddress(s.SessionId)
-		if err != nil {
-			return nil, err
-		}
-		specID, err := stringifyAddress(s.SpecificationId)
-		if err != nil {
-			return nil, err
-		}
-		session := &Session{
-			SessionID:       sessionID,
-			SpecificationID: specID,
-			Name:            s.Name,
-			Context:         append([]byte{}, s.Context...),
-		}
-		for _, p := range s.Parties {
-			session.Parties = append(session.Parties, createParty(p))
-		}
-		ss.Sessions = append(ss.Sessions, session)
+// Convert a slice of sessions into provwasm JSON format.
+func createSessionsResponse(baseTypeSlice []types.Session) ([]byte, error) {
+	sessions := &Sessions{
+		Sessions: make([]*Session, len(baseTypeSlice)),
 	}
-	bz, err := json.Marshal(ss)
+	for i, baseType := range baseTypeSlice {
+		session, err := createSession(baseType)
+		if err != nil {
+			return nil, err
+		}
+		sessions.Sessions[i] = session
+	}
+	bz, err := json.Marshal(sessions)
 	if err != nil {
-		return nil, fmt.Errorf("wasm: marshal response failed: %w", err)
+		return nil, fmt.Errorf("wasm: marshal sessions failed: %w", err)
 	}
 	return bz, nil
 }
 
-// A helper function for converting metadata module record types into provwasm query response types.
-func createRecordsResponse(input []*types.Record) ([]byte, error) {
-	rs := &Records{}
-	for _, r := range input {
-		sessionID, err := stringifyAddress(r.SessionId)
-		if err != nil {
-			return nil, err
-		}
-		specID, err := stringifyAddress(r.SpecificationId)
-		if err != nil {
-			return nil, err
-		}
-		process, err := createProcess(r.Process)
-		if err != nil {
-			return nil, err
-		}
-		record := &Record{
-			SessionID:       sessionID,
-			SpecificationID: specID,
-			Name:            r.Name,
-			Process:         process,
-		}
-		for _, i := range r.Inputs {
-			source, err := createSource(i)
-			if err != nil {
-				return nil, err
-			}
-			ri := &RecordInput{
-				Name:     i.Name,
-				TypeName: i.TypeName,
-				Source:   source,
-				Status:   createRecordInputStatus(i.Status),
-			}
-			record.Inputs = append(record.Inputs, ri)
-		}
-		for _, o := range r.Outputs {
-			ro := &RecordOutput{
-				Hash:   o.Hash,
-				Status: createResultStatus(o.Status),
-			}
-			record.Outputs = append(record.Outputs, ro)
-		}
-		rs.Records = append(rs.Records, record)
-	}
-	bz, err := json.Marshal(rs)
+// Convert a session into its provwasm type.
+func createSession(baseType types.Session) (*Session, error) {
+	sessionID, err := bech32Address(baseType.SessionId)
 	if err != nil {
-		return nil, fmt.Errorf("wasm: marshal response failed: %w", err)
+		return nil, err
+	}
+	specificationID, err := bech32Address(baseType.SpecificationId)
+	if err != nil {
+		return nil, err
+	}
+	session := &Session{
+		SessionID:       sessionID,
+		SpecificationID: specificationID,
+		Name:            baseType.Name,
+		Context:         baseType.Context,
+		Parties:         make([]*Party, len(baseType.Parties)),
+	}
+	for i, p := range baseType.Parties {
+		session.Parties[i] = createParty(p)
+	}
+	return session, nil
+}
+
+// Convert a slice of records into provwasm JSON format.
+func createRecordsResponse(baseTypeSlice []*types.Record) ([]byte, error) {
+	records := &Records{
+		Records: make([]*Record, len(baseTypeSlice)),
+	}
+	for i, baseType := range baseTypeSlice {
+		record, err := createRecord(baseType)
+		if err != nil {
+			return nil, err
+		}
+		records.Records[i] = record
+	}
+	bz, err := json.Marshal(records)
+	if err != nil {
+		return nil, fmt.Errorf("wasm: marshal records failed: %w", err)
 	}
 	return bz, nil
 }
 
-// A non-panicing version of MetadataAddress.String(). We don't want query panics in smart contracts.
-// Just return the error, providing more info to the provwasm side.
-func stringifyAddress(ma types.MetadataAddress) (string, error) {
-	if ma.Empty() {
-		return "", fmt.Errorf("wasm: empty metadata address")
-	}
-	hrp, err := types.VerifyMetadataAddressFormat(ma)
+// Convert a record into its provwasm type.
+func createRecord(baseType *types.Record) (*Record, error) {
+	sessionID, err := bech32Address(baseType.SessionId)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	bech32Addr, err := bech32.ConvertAndEncode(hrp, ma.Bytes())
+	specID, err := bech32Address(baseType.SpecificationId)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return bech32Addr, nil
+	process, err := createProcess(baseType.Process)
+	if err != nil {
+		return nil, err
+	}
+	record := &Record{
+		SessionID:       sessionID,
+		SpecificationID: specID,
+		Name:            baseType.Name,
+		Process:         process,
+		Inputs:          make([]*RecordInput, len(baseType.Inputs)),
+		Outputs:         make([]*RecordOutput, len(baseType.Outputs)),
+	}
+	for i, in := range baseType.Inputs {
+		input, err := createRecordInput(in)
+		if err != nil {
+			return nil, err
+		}
+		record.Inputs[i] = input
+	}
+	for i, out := range baseType.Outputs {
+		record.Outputs[i] = &RecordOutput{
+			Hash:   out.Hash,
+			Status: createResultStatus(out.Status),
+		}
+	}
+	return record, nil
+}
+
+// Convert a process to its provwasm type.
+func createProcess(baseType types.Process) (*Process, error) {
+	address := baseType.GetAddress()
+	hash := baseType.GetHash()
+	processID := &ProcessID{}
+	switch {
+	case address != "":
+		processID.Address = &ProcessIDAddress{Address: address}
+	case hash != "":
+		processID.Hash = &ProcessIDHash{Hash: hash}
+	default:
+		return nil, fmt.Errorf("wasm: address or hash must be defined for a process id")
+	}
+	return &Process{
+		ProcessID: processID,
+		Name:      baseType.Name,
+		Method:    baseType.Method,
+	}, nil
+}
+
+// Convert a record input into its provwasm type.
+func createRecordInput(baseType types.RecordInput) (*RecordInput, error) {
+	source, err := createSource(baseType)
+	if err != nil {
+		return nil, err
+	}
+	return &RecordInput{
+		Name:     baseType.Name,
+		TypeName: baseType.TypeName,
+		Source:   source,
+		Status:   createRecordInputStatus(baseType.Status),
+	}, nil
+}
+
+// Convert a record input source to its provwasm type.
+func createSource(baseType types.RecordInput) (*RecordInputSource, error) {
+	source := &RecordInputSource{}
+	if s, ok := baseType.GetSource().(*types.RecordInput_Hash); ok {
+		source.Hash = &RecordInputSourceHash{Hash: s.Hash}
+		return source, nil
+	}
+	if s, ok := baseType.GetSource().(*types.RecordInput_RecordId); ok {
+		recordID, err := bech32Address(s.RecordId)
+		if err != nil {
+			return nil, err
+		}
+		source.Record = &RecordInputSourceRecord{RecordID: recordID}
+		return source, nil
+	}
+	return nil, fmt.Errorf("wasm: hash or record id must be defined for a source")
 }
 
 // Convert a party to its provwasm type.
-func createParty(input types.Party) *Party {
+func createParty(baseType types.Party) *Party {
 	return &Party{
-		Address: input.Address,
-		Role:    createRole(input.Role),
+		Address: baseType.Address,
+		Role:    createRole(baseType.Role),
 	}
 }
 
 // Convert a party type to its provwasm type.
-func createRole(input types.PartyType) PartyType {
-	switch input {
+func createRole(baseType types.PartyType) PartyType {
+	switch baseType {
 	case types.PartyType_PARTY_TYPE_ORIGINATOR:
 		return PartyTypeOriginator
 	case types.PartyType_PARTY_TYPE_SERVICER:
@@ -316,47 +386,9 @@ func createRole(input types.PartyType) PartyType {
 	}
 }
 
-// Convert a process to its provwasm type.
-func createProcess(input types.Process) (*Process, error) {
-	address := input.GetAddress()
-	hash := input.GetHash()
-	processID := &ProcessID{}
-	switch {
-	case address != "":
-		processID.Address = &ProcessIDAddress{Address: address}
-	case hash != "":
-		processID.Hash = &ProcessIDHash{Hash: hash}
-	default:
-		return nil, fmt.Errorf("wasm: address or hash must be defined for a process id")
-	}
-	return &Process{
-		ProcessID: processID,
-		Name:      input.Name,
-		Method:    input.Method,
-	}, nil
-}
-
-// Convert a source to its provwasm type.
-func createSource(input types.RecordInput) (*RecordInputSource, error) {
-	source := &RecordInputSource{}
-	if s, ok := input.GetSource().(*types.RecordInput_Hash); ok {
-		source.Hash = &RecordInputSourceHash{Hash: s.Hash}
-		return source, nil
-	}
-	if s, ok := input.GetSource().(*types.RecordInput_RecordId); ok {
-		recordID, err := stringifyAddress(s.RecordId)
-		if err != nil {
-			return nil, err
-		}
-		source.Record = &RecordInputSourceRecord{RecordID: recordID}
-		return source, nil
-	}
-	return nil, fmt.Errorf("wasm: hash or record id must be defined for a source")
-}
-
 // Convert a record input status to its provwasm type.
-func createRecordInputStatus(input types.RecordInputStatus) InputStatus {
-	switch input {
+func createRecordInputStatus(baseType types.RecordInputStatus) InputStatus {
+	switch baseType {
 	case types.RecordInputStatus_Proposed:
 		return InputStatusProposed
 	case types.RecordInputStatus_Record:
@@ -367,8 +399,8 @@ func createRecordInputStatus(input types.RecordInputStatus) InputStatus {
 }
 
 // Convert a result status to its provwasm type.
-func createResultStatus(input types.ResultStatus) ResultStatus {
-	switch input {
+func createResultStatus(baseType types.ResultStatus) ResultStatus {
+	switch baseType {
 	case types.ResultStatus_RESULT_STATUS_PASS:
 		return ResultStatusPass
 	case types.ResultStatus_RESULT_STATUS_FAIL:

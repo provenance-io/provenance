@@ -42,7 +42,7 @@ type GetSessionsParams struct {
 type GetRecordsParams struct {
 	// The bech32 address of the scope we want to get records for.
 	ScopeID string `json:"scope_id"`
-	// The optional session name.
+	// The optional record name.
 	Name string `json:"name,omitempty"`
 }
 
