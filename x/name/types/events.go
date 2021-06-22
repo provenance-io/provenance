@@ -11,3 +11,17 @@ const (
 	// KeyAttributeAddress is the key for an address.
 	KeyAttributeAddress string = "address"
 )
+
+func NewEventNameBound(address string, name string) *EventNameBound {
+	return &EventNameBound{
+		Address: address,
+		Name:    name,
+	}
+}
+
+func NewEventNameUnbound(address string, name string) *EventNameUnbound {
+	return &EventNameUnbound{
+		Address: address,
+		Name:    name,
+	}
+}

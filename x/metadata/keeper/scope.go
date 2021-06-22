@@ -193,6 +193,7 @@ func (k Keeper) indexScope(ctx sdk.Context, scope types.Scope) {
 // ValidateScopeUpdate checks the current scope and the proposed scope to determine if the the proposed changes are valid
 // based on the existing state
 func (k Keeper) ValidateScopeUpdate(ctx sdk.Context, existing, proposed types.Scope, signers []string) error {
+	scopeChanging := false
 	if err := proposed.ValidateBasic(); err != nil {
 		return err
 	}
@@ -202,6 +203,22 @@ func (k Keeper) ValidateScopeUpdate(ctx sdk.Context, existing, proposed types.Sc
 		if !proposed.ScopeId.Equals(existing.ScopeId) {
 			return fmt.Errorf("cannot update scope identifier. expected %s, got %s", existing.ScopeId, proposed.ScopeId)
 		}
+	}
+
+	// Check for specification update
+	if !proposed.SpecificationId.Equals(existing.SpecificationId) {
+		scopeChanging = true
+	}
+
+	// Check for owner update
+	if !scopeChanging && !types.EqualParties(existing.Owners, proposed.Owners) {
+		scopeChanging = true
+	}
+
+	// Check if entries in data access were modified.
+	if !scopeChanging && len(existing.DataAccess) != len(proposed.DataAccess) ||
+		len(FindMissing(existing.DataAccess, proposed.DataAccess)) > 0 {
+		scopeChanging = true
 	}
 
 	if err := proposed.SpecificationId.Validate(); err != nil {
@@ -219,11 +236,10 @@ func (k Keeper) ValidateScopeUpdate(ctx sdk.Context, existing, proposed types.Sc
 		return err
 	}
 
-	// Validate any changes to the ValueOwner property.
+	// capture a list of required signatures for proposed changes.
 	requiredSignatures := []string{}
-	for _, p := range existing.Owners {
-		requiredSignatures = append(requiredSignatures, p.Address)
-	}
+
+	// Validate any changes to the ValueOwner property (value owner changes do not count as a typical scope change).
 	if existing.ValueOwnerAddress != proposed.ValueOwnerAddress {
 		// existing value is being changed,
 		if len(existing.ValueOwnerAddress) > 0 {
@@ -235,6 +251,9 @@ func (k Keeper) ValidateScopeUpdate(ctx sdk.Context, existing, proposed types.Sc
 				// not a marker so require a signature from the existing value owner for this change.
 				requiredSignatures = append(requiredSignatures, existing.ValueOwnerAddress)
 			}
+		} else {
+			// existing value owner was not set and new value does not match so flag as a scope change.
+			scopeChanging = true
 		}
 		// check for a marker account because they have restrictions on adding scopes to them.
 		if len(proposed.ValueOwnerAddress) > 0 {
@@ -244,6 +263,12 @@ func (k Keeper) ValidateScopeUpdate(ctx sdk.Context, existing, proposed types.Sc
 				}
 			}
 			// not a marker account, don't care who this new address is...
+		}
+	}
+
+	if scopeChanging {
+		for _, p := range existing.Owners {
+			requiredSignatures = append(requiredSignatures, p.Address)
 		}
 	}
 

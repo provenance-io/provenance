@@ -19,6 +19,11 @@ var (
 	specTestPubHex, _ = hex.DecodeString(specTestHexString)
 	specTestAddr      = sdk.AccAddress(specTestPubHex)
 	specTestBech32    = specTestAddr.String() // cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck
+
+	specTest2HexString = "120359A88C1ACD69505FD0C584E837021E848B89"
+	specTest2PubHex, _ = hex.DecodeString(specTest2HexString)
+	specTest2Addr      = sdk.AccAddress(specTest2PubHex)
+	specTest2Bech32    = specTest2Addr.String() // cosmos1zgp4n2yvrtxkj5zl6rzcf6phqg0gfzuf3v08r4
 )
 
 type SpecificationTestSuite struct {
@@ -1308,4 +1313,153 @@ icon_url: https://provenance.io/ico.png
 	actual := description.String()
 	// fmt.Printf("Actual:\n%s\n-----\n", actual)
 	require.Equal(s.T(), expected, actual)
+}
+
+func (s *SpecificationTestSuite) TestEqualParties() {
+	tests := []struct {
+		name     string
+		a        []Party
+		b        []Party
+		expected bool
+	}{
+		{
+			"empty are equal",
+			[]Party{},
+			[]Party{},
+			true,
+		},
+		{
+			"not equal",
+			[]Party{
+				{
+					Address: specTestBech32,
+					Role:    PartyType_PARTY_TYPE_OWNER,
+				},
+			},
+			[]Party{},
+			false,
+		},
+		{
+			"not equal",
+			[]Party{},
+			[]Party{
+				{
+					Address: specTestBech32,
+					Role:    PartyType_PARTY_TYPE_OWNER,
+				},
+			},
+			false,
+		},
+		{
+			"equal single party",
+			[]Party{
+				{
+					Address: specTestBech32,
+					Role:    PartyType_PARTY_TYPE_OWNER,
+				},
+			},
+			[]Party{
+				{
+					Address: specTestBech32,
+					Role:    PartyType_PARTY_TYPE_OWNER,
+				},
+			},
+			true,
+		},
+		{
+			"not equal single party differing roles",
+			[]Party{
+				{
+					Address: specTestBech32,
+					Role:    PartyType_PARTY_TYPE_OWNER,
+				},
+			},
+			[]Party{
+				{
+					Address: specTestBech32,
+					Role:    PartyType_PARTY_TYPE_AFFILIATE,
+				},
+			},
+			false,
+		},
+		{
+			"equal two parties",
+			[]Party{
+				{
+					Address: specTest2Bech32,
+					Role:    PartyType_PARTY_TYPE_OWNER,
+				},
+				{
+					Address: specTestBech32,
+					Role:    PartyType_PARTY_TYPE_AFFILIATE,
+				},
+			},
+			[]Party{
+				{
+					Address: specTest2Bech32,
+					Role:    PartyType_PARTY_TYPE_OWNER,
+				},
+				{
+					Address: specTestBech32,
+					Role:    PartyType_PARTY_TYPE_AFFILIATE,
+				},
+			},
+			true,
+		},
+		{
+			"equal two parties out of order",
+			[]Party{
+				{
+					Address: specTestBech32,
+					Role:    PartyType_PARTY_TYPE_AFFILIATE,
+				},
+				{
+					Address: specTest2Bech32,
+					Role:    PartyType_PARTY_TYPE_OWNER,
+				},
+			},
+			[]Party{
+				{
+					Address: specTest2Bech32,
+					Role:    PartyType_PARTY_TYPE_OWNER,
+				},
+				{
+					Address: specTestBech32,
+					Role:    PartyType_PARTY_TYPE_AFFILIATE,
+				},
+			},
+			true,
+		},
+		{
+			"two parties not equal",
+			[]Party{
+				{
+					Address: specTest2Bech32,
+					Role:    PartyType_PARTY_TYPE_AFFILIATE,
+				},
+				{
+					Address: specTestBech32,
+					Role:    PartyType_PARTY_TYPE_OWNER,
+				},
+			},
+			[]Party{
+				{
+					Address: specTest2Bech32,
+					Role:    PartyType_PARTY_TYPE_OWNER,
+				},
+				{
+					Address: specTest2Bech32,
+					Role:    PartyType_PARTY_TYPE_AFFILIATE,
+				},
+			},
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		s.T().Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.expected, EqualParties(tt.a, tt.b))
+		})
+	}
 }

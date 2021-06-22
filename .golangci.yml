@@ -11,8 +11,6 @@ linters:
     - depguard
     - dogsled
     - errcheck
-    # - funlen
-    # - gocyclo
     - goconst
     - gocritic
     - gofmt
@@ -22,13 +20,11 @@ linters:
     - gosimple
     - govet
     - ineffassign
-    # - interfacer / disabled until 1.36 is available due to bugs for binarymarshaller that can't be muted with nolintlint
-    # - lll
-    - maligned
+  
     - misspell
     - nakedret
     - prealloc
-    - scopelint
+    - exportloopref
     - staticcheck
     - structcheck
     - stylecheck
@@ -58,6 +54,11 @@ issues:
     - text: "ST1003:"
       linters:
         - stylecheck
+    # removed due to the upstream legacy amino deprecation while still required for ledger signing
+    # TODO: Restore this check when Amino support is removed.
+    - text: "SA1019:"
+      linters:
+        - staticcheck
   max-issues-per-linter: 10000
   max-same-issues: 10000
 
@@ -77,15 +78,7 @@ linters-settings:
   #   min-complexity: 15
   dogsled:
     max-blank-identifiers: 3
-  # lll:
-  #   line-length: 120
-  # funlen:
-  #   lines: 100
-  #   statements: 50
-  # nakedret:
-  #   max-func-lines: 50
-  maligned:
-    suggest-new: true
+
   misspell:
     locale: US
     ignore-words:

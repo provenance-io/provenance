@@ -45,6 +45,11 @@ func (g *tracingGasMeter) GasConsumed() sdkgas.Gas {
 	return g.base.GasConsumed()
 }
 
+// RefundGas refunds an amount of gas
+func (g *tracingGasMeter) RefundGas(amount uint64, descriptor string) {
+	g.base.RefundGas(amount, descriptor)
+}
+
 // GasConsumedToLimit will report the actual consumption or the meter limit, whichever is less.
 func (g *tracingGasMeter) GasConsumedToLimit() sdkgas.Gas {
 	return g.base.GasConsumedToLimit()
