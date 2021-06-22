@@ -457,7 +457,8 @@ message MsgDeleteContractSpecFromScopeSpecRequest {
   repeated string signers = 3;
 }
 
-// MsgDeleteContractSpecFromScopeSpecResponse is the response type for the Msg/WriteContractSpecification RPC method.
+// MsgDeleteContractSpecFromScopeSpecResponse is the response type for the Msg/DeleteContractSpecFromScopeSpec RPC
+// method.
 message MsgDeleteContractSpecFromScopeSpecResponse {}
 
 // MsgDeleteContractSpecificationRequest is the request type for the Msg/DeleteContractSpecification RPC method.

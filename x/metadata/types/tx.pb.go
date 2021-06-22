@@ -1275,7 +1275,8 @@ func (m *MsgDeleteContractSpecFromScopeSpecRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgDeleteContractSpecFromScopeSpecRequest proto.InternalMessageInfo
 
-// MsgDeleteContractSpecFromScopeSpecResponse is the response type for the Msg/WriteContractSpecification RPC method.
+// MsgDeleteContractSpecFromScopeSpecResponse is the response type for the Msg/DeleteContractSpecFromScopeSpec RPC
+// method.
 type MsgDeleteContractSpecFromScopeSpecResponse struct {
 }
 

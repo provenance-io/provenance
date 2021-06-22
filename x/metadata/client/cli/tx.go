@@ -495,9 +495,10 @@ icon-url           - address to a image to be used as an icon (optional, can onl
 // AddContractSpecToScopeSpecCmd creates an add contract spec to scope spec command
 func AddContractSpecToScopeSpecCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-contract-spec-to-scope-spec contract-specification-id scope-specification-id",
-		Short: "Add an existing contract specification to a scope specification",
-		Args:  cobra.ExactArgs(2),
+		Use:     "add-contract-spec-to-scope-spec contract-specification-id scope-specification-id",
+		Short:   "Add an existing contract specification to a scope specification",
+		Aliases: []string{"acstss"},
+		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -1078,9 +1079,10 @@ func RemoveContractSpecificationCmd() *cobra.Command {
 // RemoveContractSpecFromScopeSpecCmd removes a contract spec from scope spec command
 func RemoveContractSpecFromScopeSpecCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "remove-contract-spec-to-scope-spec contract-specification-id scope-specification-id",
-		Short: "Remove an existing contract specification from a scope specification",
-		Args:  cobra.ExactArgs(2),
+		Use:     "remove-contract-spec-to-scope-spec contract-specification-id scope-specification-id",
+		Short:   "Remove an existing contract specification from a scope specification",
+		Aliases: []string{"rcsfss"},
+		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
