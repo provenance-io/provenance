@@ -172,6 +172,177 @@ func (s MetadataHandlerTestSuite) TestWriteSession() {
 	}
 }
 
+func (s MetadataHandlerTestSuite) TestAddContractSpecToScopeSpec() {
+	cSpec := types.ContractSpecification{
+		SpecificationId: types.ContractSpecMetadataAddress(uuid.New()),
+		Description:     nil,
+		OwnerAddresses:  []string{s.user1},
+		PartiesInvolved: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+		Source:          types.NewContractSpecificationSourceHash("somesource"),
+		ClassName:       "someclass",
+	}
+	s.app.MetadataKeeper.SetContractSpecification(s.ctx, cSpec)
+	sSpec := types.ScopeSpecification{
+		SpecificationId: types.ScopeSpecMetadataAddress(uuid.New()),
+		Description:     nil,
+		OwnerAddresses:  []string{s.user1},
+		PartiesInvolved: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+		ContractSpecIds: []types.MetadataAddress{cSpec.SpecificationId},
+	}
+	s.app.MetadataKeeper.SetScopeSpecification(s.ctx, sSpec)
+
+	cSpec2 := types.ContractSpecification{
+		SpecificationId: types.ContractSpecMetadataAddress(uuid.New()),
+		Description:     nil,
+		OwnerAddresses:  []string{s.user1},
+		PartiesInvolved: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+		Source:          types.NewContractSpecificationSourceHash("somesource"),
+		ClassName:       "someclass",
+	}
+	s.app.MetadataKeeper.SetContractSpecification(s.ctx, cSpec2)
+
+	unknownContractSpecId := types.ContractSpecMetadataAddress(uuid.New())
+	unknownScopeSpecId := types.ScopeSpecMetadataAddress(uuid.New())
+
+	cases := []struct {
+		name           string
+		contractSpecId types.MetadataAddress
+		scopeSpecId    types.MetadataAddress
+		signers        []string
+		errorMsg       string
+	}{
+		{
+			"fail to add contract spec, cannot find contract spec",
+			unknownContractSpecId,
+			sSpec.SpecificationId,
+			[]string{s.user1},
+			fmt.Sprintf("contract specification not found with id %s", unknownContractSpecId),
+		},
+		{
+			"fail to add contract spec, cannot find scope spec",
+			cSpec2.SpecificationId,
+			unknownScopeSpecId,
+			[]string{s.user1},
+			fmt.Sprintf("scope specification not found with id %s", unknownScopeSpecId),
+		},
+		{
+			"fail to add contract spec, scope spec already has contract spec",
+			cSpec.SpecificationId,
+			sSpec.SpecificationId,
+			[]string{s.user1},
+			fmt.Sprintf("scope spec %s already contains contract spec %s", sSpec.SpecificationId, cSpec.SpecificationId),
+		},
+		{
+			"should successfully add contract spec to scope spec",
+			cSpec2.SpecificationId,
+			sSpec.SpecificationId,
+			[]string{s.user1},
+			"",
+		},
+	}
+
+	for _, tc := range cases {
+		s.T().Run(tc.name, func(t *testing.T) {
+			msg := types.MsgAddContractSpecToScopeSpecRequest{
+				ContractSpecificationId: tc.contractSpecId,
+				ScopeSpecificationId:    tc.scopeSpecId,
+				Signers:                 tc.signers,
+			}
+			_, err := s.handler(s.ctx, &msg)
+			if len(tc.errorMsg) > 0 {
+				assert.EqualError(t, err, tc.errorMsg)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func (s MetadataHandlerTestSuite) TestDeleteContractSpecFromScopeSpec() {
+	cSpec := types.ContractSpecification{
+		SpecificationId: types.ContractSpecMetadataAddress(uuid.New()),
+		Description:     nil,
+		OwnerAddresses:  []string{s.user1},
+		PartiesInvolved: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+		Source:          types.NewContractSpecificationSourceHash("somesource"),
+		ClassName:       "someclass",
+	}
+	s.app.MetadataKeeper.SetContractSpecification(s.ctx, cSpec)
+	cSpec2 := types.ContractSpecification{
+		SpecificationId: types.ContractSpecMetadataAddress(uuid.New()),
+		Description:     nil,
+		OwnerAddresses:  []string{s.user1},
+		PartiesInvolved: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+		Source:          types.NewContractSpecificationSourceHash("somesource"),
+		ClassName:       "someclass",
+	}
+	s.app.MetadataKeeper.SetContractSpecification(s.ctx, cSpec2)
+	sSpec := types.ScopeSpecification{
+		SpecificationId: types.ScopeSpecMetadataAddress(uuid.New()),
+		Description:     nil,
+		OwnerAddresses:  []string{s.user1},
+		PartiesInvolved: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+		ContractSpecIds: []types.MetadataAddress{cSpec.SpecificationId, cSpec2.SpecificationId},
+	}
+	s.app.MetadataKeeper.SetScopeSpecification(s.ctx, sSpec)
+
+	unknownContractSpecId := types.ContractSpecMetadataAddress(uuid.New())
+	unknownScopeSpecId := types.ScopeSpecMetadataAddress(uuid.New())
+
+	cases := []struct {
+		name           string
+		contractSpecId types.MetadataAddress
+		scopeSpecId    types.MetadataAddress
+		signers        []string
+		errorMsg       string
+	}{
+		{
+			"fail to delete contract spec from scope spec, cannot find contract spec",
+			unknownContractSpecId,
+			sSpec.SpecificationId,
+			[]string{s.user1},
+			fmt.Sprintf("contract specification not found with id %s", unknownContractSpecId),
+		},
+		{
+			"fail to delete contract spec from scope spec, cannot find scope spec",
+			cSpec2.SpecificationId,
+			unknownScopeSpecId,
+			[]string{s.user1},
+			fmt.Sprintf("scope specification not found with id %s", unknownScopeSpecId),
+		},
+		{
+			"should succeed to add contract spec to scope spec",
+			cSpec2.SpecificationId,
+			sSpec.SpecificationId,
+			[]string{s.user1},
+			"",
+		},
+		{
+			"fail to delete contract spec from scope spec, scope spec does not contain contract spec",
+			cSpec2.SpecificationId,
+			sSpec.SpecificationId,
+			[]string{s.user1},
+			fmt.Sprintf("contract specification %s not found on scope specification id %s", cSpec2.SpecificationId, sSpec.SpecificationId),
+		},
+	}
+
+	for _, tc := range cases {
+		s.T().Run(tc.name, func(t *testing.T) {
+			msg := types.MsgDeleteContractSpecFromScopeSpecRequest{
+				ContractSpecificationId: tc.contractSpecId,
+				ScopeSpecificationId:    tc.scopeSpecId,
+				Signers:                 tc.signers,
+			}
+			_, err := s.handler(s.ctx, &msg)
+			if len(tc.errorMsg) > 0 {
+				assert.EqualError(t, err, tc.errorMsg)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
 // TODO: AddRecord tests
 // TODO: DeleteRecord tests
 // TODO: AddScopeSpecification tests
