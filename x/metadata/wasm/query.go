@@ -79,7 +79,6 @@ func (params *GetScopeParams) Run(ctx sdk.Context, keeper keeper.Keeper) ([]byte
 	scope, found := keeper.GetScope(ctx, scopeID)
 	if !found {
 		return nil, fmt.Errorf("wasm: scope not found: %s", params.ScopeID)
-
 	}
 	return createScopeResponse(scope)
 }
@@ -91,10 +90,13 @@ func (params *GetSessionsParams) Run(ctx sdk.Context, keeper keeper.Keeper) ([]b
 		return nil, fmt.Errorf("wasm: invalid scope ID: %w", err)
 	}
 	var sessions []types.Session
-	keeper.IterateSessions(ctx, scopeID, func(s types.Session) bool {
+	err = keeper.IterateSessions(ctx, scopeID, func(s types.Session) bool {
 		sessions = append(sessions, s)
 		return false
 	})
+	if err != nil {
+		return nil, fmt.Errorf("wasm: %w", err)
+	}
 	return createSessionsResponse(sessions)
 }
 
