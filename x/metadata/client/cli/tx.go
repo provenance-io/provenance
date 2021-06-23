@@ -1079,7 +1079,7 @@ func RemoveContractSpecificationCmd() *cobra.Command {
 // RemoveContractSpecFromScopeSpecCmd removes a contract spec from scope spec command
 func RemoveContractSpecFromScopeSpecCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "remove-contract-spec-to-scope-spec contract-specification-id scope-specification-id",
+		Use:     "remove-contract-spec-from-scope-spec contract-specification-id scope-specification-id",
 		Short:   "Remove an existing contract specification from a scope specification",
 		Aliases: []string{"rcsfss"},
 		Args:    cobra.ExactArgs(2),
