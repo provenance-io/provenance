@@ -34,8 +34,6 @@ type GetScopeParams struct {
 type GetSessionsParams struct {
 	// The bech32 address of the scope we want to get sessions for.
 	ScopeID string `json:"scope_id"`
-	// The optional session name.
-	Name string `json:"name,omitempty"`
 }
 
 // GetRecordsParams are the inputs for a records query.
@@ -92,12 +90,9 @@ func (params *GetSessionsParams) Run(ctx sdk.Context, keeper keeper.Keeper) ([]b
 	if err != nil {
 		return nil, fmt.Errorf("wasm: invalid scope ID: %w", err)
 	}
-	name := strings.TrimSpace(params.Name)
 	var sessions []types.Session
 	keeper.IterateSessions(ctx, scopeID, func(s types.Session) bool {
-		if name == "" || s.Name == name {
-			sessions = append(sessions, s)
-		}
+		sessions = append(sessions, s)
 		return false
 	})
 	return createSessionsResponse(sessions)

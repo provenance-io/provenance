@@ -351,10 +351,16 @@ docker-build: vendor
 docker-build-local: vendor
 	docker build --tag provenance-io/blockchain-local -f networks/local/blockchain-local/Dockerfile .
 
-# Run a 4-node testnet locally (replace docker-build with docker-build local for better speed)
-localnet-start: localnet-stop docker-build-local
+# Generate config files for a 4-node localnet
+localnet-generate: localnet-stop docker-build-local
 	@if ! [ -f build/node0/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-local testnet --v 4 -o . --starting-ip-address 192.168.20.2 --keyring-backend=test --chain-id=chain-local ; fi
+
+# Run a 4-node testnet locally
+localnet-up:
 	docker-compose -f networks/local/docker-compose.yml --project-directory ./ up -d
+
+# Run a 4-node testnet locally (replace docker-build with docker-build local for better speed)
+localnet-start: localnet-generate localnet-up
 
 # Stop testnet
 localnet-stop:

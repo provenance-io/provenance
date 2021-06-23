@@ -158,9 +158,8 @@ const (
 	ResultStatusUnspecified ResultStatus = "unspecified"
 )
 
-// A slightly modified, non-panicing version of MetadataAddress.String(). Empty addresses cause panics during
-// deserialization on the provwasm side. This is due to Addr not having a default impl. So we fail the query
-// on the blockchain side instead.
+// A slightly modified, non-panicing version of MetadataAddress.String(). Panics across FFI
+// boundaries can crash the chain, so just fail the query.
 func bech32Address(ma types.MetadataAddress) (string, error) {
 	if ma.Empty() { // cause a query failure for addresses we expect to be non-empty.
 		return "", fmt.Errorf("wasm: empty metadata address")
