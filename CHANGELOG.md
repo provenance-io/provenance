@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * Add `update` and `delete-distinct` attributes to `attribute` module [#314](https://github.com/provenance-io/provenance/issues/314)
+* Add smart contract query support to the `metadata` module [#65](https://github.com/provenance-io/provenance/issues/65)
 
 ### API Breaking
 
