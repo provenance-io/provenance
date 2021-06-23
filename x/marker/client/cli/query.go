@@ -165,7 +165,7 @@ func MarkerCmd() *cobra.Command {
 				return err
 			}
 			queryClient := types.NewQueryClient(clientCtx)
-			id := strings.ToLower(strings.TrimSpace(args[0]))
+			id := strings.TrimSpace(args[0])
 
 			var response *types.QueryMarkerResponse
 			if response, err = queryClient.Marker(
