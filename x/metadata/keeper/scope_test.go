@@ -197,15 +197,29 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdate() {
 		{
 			name:     "missing existing owner signer on update fails",
 			existing: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
-			proposed: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
+			proposed: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, ""),
+			signers:  []string{s.user2},
+			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1),
+		},
+		{
+			name:     "missing existing owner signer on update fails",
+			existing: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
+			proposed: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user2), []string{}, ""),
 			signers:  []string{s.user2},
 			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1),
 		},
 		{
 			name:     "no error when update includes existing owner signer",
 			existing: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
-			proposed: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
+			proposed: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, ""),
 			signers:  []string{s.user1},
+			errorMsg: "",
+		},
+		{
+			name:     "no error when there are no updates regardless of signatures",
+			existing: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
+			proposed: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
+			signers:  []string{},
 			errorMsg: "",
 		},
 		{
@@ -214,6 +228,13 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdate() {
 			proposed: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1),
 			signers:  []string{s.user1},
 			errorMsg: "",
+		},
+		{
+			name:     "setting value owner when unset requires current owner signature",
+			existing: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
+			proposed: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1),
+			signers:  []string{},
+			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1),
 		},
 		{
 			name:     "setting value owner to user does not require their signature",

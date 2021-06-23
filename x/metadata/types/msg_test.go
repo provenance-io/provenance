@@ -322,6 +322,98 @@ func TestDeleteScopeOwnerValidateBasic(t *testing.T) {
 	}
 }
 
+func TestMsgAddContractSpecToScopeSpecRequestValidateBasic(t *testing.T) {
+	contractSpecID := ContractSpecMetadataAddress(uuid.New())
+	scopeSpecID := ScopeSpecMetadataAddress(uuid.New())
+
+	cases := map[string]struct {
+		msg      *MsgAddContractSpecToScopeSpecRequest
+		wantErr  bool
+		errorMsg string
+	}{
+		"should fail to validate basic, incorrect contract spec id type": {
+			NewMsgAddContractSpecToScopeSpecRequest(scopeSpecID, scopeSpecID, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			true,
+			fmt.Sprintf("address is not a contract specification id: %v", scopeSpecID.String()),
+		},
+		"should fail to validate basic, incorrect scope spec id type": {
+			NewMsgAddContractSpecToScopeSpecRequest(contractSpecID, contractSpecID, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			true,
+			fmt.Sprintf("address is not a scope specification id: %v", contractSpecID.String()),
+		},
+		"should fail to validate basic, requires at least one signer": {
+			NewMsgAddContractSpecToScopeSpecRequest(contractSpecID, scopeSpecID, []string{}),
+			true,
+			"at least one signer is required",
+		},
+		"should successfully validate basic": {
+			NewMsgAddContractSpecToScopeSpecRequest(contractSpecID, scopeSpecID, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			false,
+			"",
+		},
+	}
+
+	for n, tc := range cases {
+		tc := tc
+
+		t.Run(n, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.wantErr {
+				require.Error(t, err)
+				require.Equal(t, tc.errorMsg, err.Error())
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestMsgDeleteContractSpecFromScopeSpecRequestValidateBasic(t *testing.T) {
+	contractSpecID := ContractSpecMetadataAddress(uuid.New())
+	scopeSpecID := ScopeSpecMetadataAddress(uuid.New())
+
+	cases := map[string]struct {
+		msg      *MsgDeleteContractSpecFromScopeSpecRequest
+		wantErr  bool
+		errorMsg string
+	}{
+		"should fail to validate basic, incorrect contract spec id type": {
+			NewMsgDeleteContractSpecFromScopeSpecRequest(scopeSpecID, scopeSpecID, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			true,
+			fmt.Sprintf("address is not a contract specification id: %v", scopeSpecID.String()),
+		},
+		"should fail to validate basic, incorrect scope spec id type": {
+			NewMsgDeleteContractSpecFromScopeSpecRequest(contractSpecID, contractSpecID, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			true,
+			fmt.Sprintf("address is not a scope specification id: %v", contractSpecID.String()),
+		},
+		"should fail to validate basic, requires at least one signer": {
+			NewMsgDeleteContractSpecFromScopeSpecRequest(contractSpecID, scopeSpecID, []string{}),
+			true,
+			"at least one signer is required",
+		},
+		"should successfully validate basic": {
+			NewMsgDeleteContractSpecFromScopeSpecRequest(contractSpecID, scopeSpecID, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			false,
+			"",
+		},
+	}
+
+	for n, tc := range cases {
+		tc := tc
+
+		t.Run(n, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.wantErr {
+				require.Error(t, err)
+				require.Equal(t, tc.errorMsg, err.Error())
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
 func TestWriteP8eContractSpecValidation(t *testing.T) {
 
 	validInputSpec := p8e.DefinitionSpec{

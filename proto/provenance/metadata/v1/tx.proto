@@ -53,6 +53,12 @@ service Msg {
   rpc DeleteContractSpecification(MsgDeleteContractSpecificationRequest)
       returns (MsgDeleteContractSpecificationResponse);
 
+  // AddContractSpecToScopeSpec adds contract specification to a scope specification.
+  rpc AddContractSpecToScopeSpec(MsgAddContractSpecToScopeSpecRequest) returns (MsgAddContractSpecToScopeSpecResponse);
+  // DeleteContractSpecFromScopeSpec deletes a contract specification from a scope specification.
+  rpc DeleteContractSpecFromScopeSpec(MsgDeleteContractSpecFromScopeSpecRequest)
+      returns (MsgDeleteContractSpecFromScopeSpecResponse);
+
   // WriteRecordSpecification adds or updates a record specification.
   rpc WriteRecordSpecification(MsgWriteRecordSpecificationRequest) returns (MsgWriteRecordSpecificationResponse);
   // DeleteRecordSpecification deletes a record specification.
@@ -401,6 +407,59 @@ message MsgWriteContractSpecificationResponse {
   // updated.
   ContractSpecIdInfo contract_spec_id_info = 1 [(gogoproto.moretags) = "yaml:\"contract_spec_id_info\""];
 }
+
+// MsgAddContractSpecToScopeSpecRequest is the request type for the Msg/AddContractSpecToScopeSpec RPC method.
+message MsgAddContractSpecToScopeSpecRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  // MetadataAddress for the contract specification to add.
+  bytes contract_specification_id = 1 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customtype) = "MetadataAddress",
+    (gogoproto.moretags)   = "yaml:\"specification_id\""
+  ];
+
+  // MetadataAddress for the scope specification to add contract specification to.
+  bytes scope_specification_id = 2 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customtype) = "MetadataAddress",
+    (gogoproto.moretags)   = "yaml:\"specification_id\""
+  ];
+  repeated string signers = 3;
+}
+
+// MsgAddContractSpecToScopeSpecResponse is the response type for the Msg/AddContractSpecToScopeSpec RPC method.
+message MsgAddContractSpecToScopeSpecResponse {}
+
+// MsgDeleteContractSpecFromScopeSpecRequest is the request type for the Msg/DeleteContractSpecFromScopeSpec RPC method.
+message MsgDeleteContractSpecFromScopeSpecRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  // MetadataAddress for the contract specification to add.
+  bytes contract_specification_id = 1 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customtype) = "MetadataAddress",
+    (gogoproto.moretags)   = "yaml:\"specification_id\""
+  ];
+
+  // MetadataAddress for the scope specification to add contract specification to.
+  bytes scope_specification_id = 2 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customtype) = "MetadataAddress",
+    (gogoproto.moretags)   = "yaml:\"specification_id\""
+  ];
+  repeated string signers = 3;
+}
+
+// MsgDeleteContractSpecFromScopeSpecResponse is the response type for the Msg/DeleteContractSpecFromScopeSpec RPC
+// method.
+message MsgDeleteContractSpecFromScopeSpecResponse {}
 
 // MsgDeleteContractSpecificationRequest is the request type for the Msg/DeleteContractSpecification RPC method.
 message MsgDeleteContractSpecificationRequest {

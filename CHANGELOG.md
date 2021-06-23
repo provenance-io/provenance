@@ -39,7 +39,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* Update Cosmos SDK to 0.42.6 with Tendermint 0.34.11.
+  * Refund gas support added to gas meter trace
+  * `ibc-transfer` now contains an `escrow-address` command for querying current escrow balances
 * Add `update` and `delete-distinct` attributes to `attribute` module [#314](https://github.com/provenance-io/provenance/issues/314)
+* Add support to `metadata` module for adding and removing contract specifications to scope specification [#302](https://github.com/provenance-io/provenance/issues/302)
+  * Added `MsgAddContractSpecToScopeSpecRequest`and `MsgDeleteContractSpecFromScopeSpecRequest` messages for adding/removing
+  * Added cli commands for adding/removing
 * Add smart contract query support to the `metadata` module [#65](https://github.com/provenance-io/provenance/issues/65)
 
 ### API Breaking
@@ -48,6 +54,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* Value owner changes are independent of scope owner signature requirements after transfer [#347](https://github.com/provenance-io/provenance/issues/347)
 * Attribute module allows removal of orphan attributes, attributes against root names [PR 348](https://github.com/provenance-io/provenance/pull/348)
 
 ### Improvements

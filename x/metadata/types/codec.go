@@ -25,6 +25,8 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgDeleteScopeSpecificationRequest{}, "provenance/metadata/DeleteScopeSpecificationRequest", nil)
 	cdc.RegisterConcrete(&MsgWriteContractSpecificationRequest{}, "provenance/metadata/WriteContractSpecificationRequest", nil)
 	cdc.RegisterConcrete(&MsgDeleteContractSpecificationRequest{}, "provenance/metadata/DeleteContractSpecificationRequest", nil)
+	cdc.RegisterConcrete(&MsgAddContractSpecToScopeSpecRequest{}, "provenance/metadata/AddContractSpecToScopeSpecRequest", nil)
+	cdc.RegisterConcrete(&MsgDeleteContractSpecFromScopeSpecRequest{}, "provenance/metadata/DeleteContractSpecFromScopeSpecRequest", nil)
 	cdc.RegisterConcrete(&MsgWriteRecordSpecificationRequest{}, "provenance/metadata/WriteRecordSpecificationRequest", nil)
 	cdc.RegisterConcrete(&MsgDeleteRecordSpecificationRequest{}, "provenance/metadata/DeleteRecordSpecificationRequest", nil)
 
@@ -53,6 +55,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgDeleteScopeSpecificationRequest{},
 		&MsgWriteContractSpecificationRequest{},
 		&MsgDeleteContractSpecificationRequest{},
+		&MsgAddContractSpecToScopeSpecRequest{},
+		&MsgDeleteContractSpecFromScopeSpecRequest{},
 		&MsgWriteRecordSpecificationRequest{},
 		&MsgDeleteRecordSpecificationRequest{},
 
