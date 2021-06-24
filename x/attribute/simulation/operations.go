@@ -32,7 +32,7 @@ const (
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
-	appParams simtypes.AppParams, cdc codec.JSONMarshaler, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper,
+	appParams simtypes.AppParams, cdc codec.JSONCodec, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper,
 ) simulation.WeightedOperations {
 	var (
 		weightMsgAddAttribute            int
@@ -114,7 +114,7 @@ func SimulateMsgAddAttribute(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk b
 			getRandomValueOfType(r, t),
 		)
 
-		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg)
+		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, msg.Type())
 	}
 }
 
@@ -158,7 +158,7 @@ func SimulateMsgUpdateAttribute(k keeper.Keeper, ak authkeeper.AccountKeeperI, b
 			t,
 		)
 
-		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg)
+		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, msg.Type())
 	}
 }
 
@@ -193,7 +193,7 @@ func SimulateMsgDeleteAttribute(k keeper.Keeper, ak authkeeper.AccountKeeperI, b
 		simAccount, _ := simtypes.FindAccount(accs, mustGetAddress(ownerAddress))
 		msg := types.NewMsgDeleteAttributeRequest(mustGetAddress(randomAttribute.Address), mustGetAddress(ownerAddress), randomAttribute.Name)
 
-		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg)
+		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, msg.Type())
 	}
 }
 
@@ -228,7 +228,7 @@ func SimulateMsgDeleteDistinctAttribute(k keeper.Keeper, ak authkeeper.AccountKe
 		simAccount, _ := simtypes.FindAccount(accs, mustGetAddress(ownerAddress))
 		msg := types.NewMsgDeleteDistinctAttributeRequest(mustGetAddress(randomAttribute.Address), mustGetAddress(ownerAddress), randomAttribute.Name, randomAttribute.Value)
 
-		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg)
+		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, msg.Type())
 	}
 }
 
@@ -274,6 +274,7 @@ func Dispatch(
 	from simtypes.Account,
 	chainID string,
 	msg sdk.Msg,
+	msgType string,
 ) (
 	simtypes.OperationMsg,
 	[]simtypes.FutureOperation,
@@ -284,7 +285,7 @@ func Dispatch(
 
 	fees, err := simtypes.RandomFees(r, ctx, spendable)
 	if err != nil {
-		return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate fees"), nil, err
+		return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to generate fees"), nil, err
 	}
 
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig
@@ -299,12 +300,12 @@ func Dispatch(
 		from.PrivKey,
 	)
 	if err != nil {
-		return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
+		return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to generate mock tx"), nil, err
 	}
 
 	_, _, err = app.Deliver(txGen.TxEncoder(), tx)
 	if err != nil {
-		return simtypes.NoOpMsg(types.ModuleName, msg.Type(), err.Error()), nil, nil
+		return simtypes.NoOpMsg(types.ModuleName, msgType, err.Error()), nil, nil
 	}
 
 	return simtypes.NewOperationMsg(msg, true, ""), nil, nil

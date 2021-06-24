@@ -359,7 +359,7 @@ func importAttributeLegacy(ctx sdk.Context, attr types.Attribute, app *app.App) 
 		return fmt.Errorf("unable to normalize attribute name \"%s\": %w", attr.Name, err)
 	}
 	// Store the sanitized account attribute
-	bz, err := types.ModuleCdc.MarshalBinaryBare(&attr)
+	bz, err := types.ModuleCdc.Marshal(&attr)
 	if err != nil {
 		return err
 	}

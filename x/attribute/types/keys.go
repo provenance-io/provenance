@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
 const (
@@ -26,7 +27,7 @@ var (
 	// Legacy amino encoded objects use this key prefix
 	AttributeKeyPrefixAmino = []byte{0x00}
 	AttributeKeyPrefix      = []byte{0x01}
-	AttributeKeyLength      = 1 + sdk.AddrLen + 32 + 32 // prefix length + address + name-hash + value-hash
+	AttributeKeyLength      = 1 + address.MaxAddrLen + 32 + 32 // prefix length + address + name-hash + value-hash
 )
 
 // AccountAttributeKey creates a key for an account attribute
@@ -52,9 +53,9 @@ func SplitAccountAttributeKey(key []byte) (addr sdk.AccAddress, nameID []byte, v
 		panic(fmt.Sprintf("unexpected key length (%d ≠ %d)", len(key), AttributeKeyLength))
 	}
 	// first byte is key prefix for AttributeKey
-	addr = sdk.AccAddress(key[1 : sdk.AddrLen+1])
-	nameID = key[1+sdk.AddrLen : sdk.AddrLen+32]
-	valueID = key[1+sdk.AddrLen+32 : 1+sdk.AddrLen+64]
+	addr = sdk.AccAddress(key[1 : address.MaxAddrLen+1])
+	nameID = key[1+address.MaxAddrLen : address.MaxAddrLen+32]
+	valueID = key[1+address.MaxAddrLen+32 : 1+address.MaxAddrLen+64]
 	return
 }
 

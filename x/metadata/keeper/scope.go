@@ -17,7 +17,7 @@ func (k Keeper) IterateScopes(ctx sdk.Context, handler func(types.Scope) (stop b
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var scope types.Scope
-		k.cdc.MustUnmarshalBinaryBare(it.Value(), &scope)
+		k.cdc.MustUnmarshal(it.Value(), &scope)
 		if handler(scope) {
 			break
 		}
@@ -73,14 +73,14 @@ func (k Keeper) GetScope(ctx sdk.Context, id types.MetadataAddress) (scope types
 	if b == nil {
 		return types.Scope{}, false
 	}
-	k.cdc.MustUnmarshalBinaryBare(b, &scope)
+	k.cdc.MustUnmarshal(b, &scope)
 	return scope, true
 }
 
 // SetScope stores a scope in the module kv store.
 func (k Keeper) SetScope(ctx sdk.Context, scope types.Scope) {
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinaryBare(&scope)
+	b := k.cdc.MustMarshal(&scope)
 
 	var event proto.Message = types.NewEventScopeCreated(scope.ScopeId)
 	action := types.TLAction_Created
@@ -89,7 +89,7 @@ func (k Keeper) SetScope(ctx sdk.Context, scope types.Scope) {
 		action = types.TLAction_Updated
 		if oldScopeBytes := store.Get(scope.ScopeId); oldScopeBytes != nil {
 			var oldScope types.Scope
-			if err := k.cdc.UnmarshalBinaryBare(oldScopeBytes, &oldScope); err == nil {
+			if err := k.cdc.Unmarshal(oldScopeBytes, &oldScope); err == nil {
 				k.clearScopeIndex(ctx, oldScope)
 			}
 		}

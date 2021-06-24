@@ -24,7 +24,7 @@ func (k Keeper) GetRecord(ctx sdk.Context, id types.MetadataAddress) (record typ
 	if b == nil {
 		return types.Record{}, false
 	}
-	k.cdc.MustUnmarshalBinaryBare(b, &record)
+	k.cdc.MustUnmarshal(b, &record)
 	return record, true
 }
 
@@ -57,7 +57,7 @@ func (k Keeper) GetRecords(ctx sdk.Context, scopeAddress types.MetadataAddress, 
 // SetRecord stores a record in the module kv store.
 func (k Keeper) SetRecord(ctx sdk.Context, record types.Record) {
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinaryBare(&record)
+	b := k.cdc.MustMarshal(&record)
 
 	recordID := record.SessionId.MustGetAsRecordAddress(record.Name)
 
@@ -104,7 +104,7 @@ func (k Keeper) IterateRecords(ctx sdk.Context, scopeID types.MetadataAddress, h
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var record types.Record
-		err = k.cdc.UnmarshalBinaryBare(it.Value(), &record)
+		err = k.cdc.Unmarshal(it.Value(), &record)
 		if err != nil {
 			k.Logger(ctx).Error("could not unmarshal record", "address", it.Key(), "error", err)
 		} else if handler(record) {

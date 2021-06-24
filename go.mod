@@ -6,8 +6,9 @@ require (
 	github.com/CosmWasm/wasmd v0.17.0
 	github.com/armon/go-metrics v0.3.8
 	github.com/btcsuite/btcd v0.21.0-beta
-	github.com/cosmos/cosmos-sdk v0.42.6
+	github.com/cosmos/cosmos-sdk v0.43.0-beta1
 	github.com/cosmos/go-bip39 v1.0.0
+	github.com/cosmos/ibc-go v1.0.0-beta1
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.2
 	github.com/google/uuid v1.1.2
@@ -16,7 +17,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/regen-network/cosmos-proto v0.3.1
-	github.com/rs/zerolog v1.21.0
+	github.com/rs/zerolog v1.22.0
 	github.com/spf13/cast v1.3.1
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/pflag v1.0.5
@@ -34,3 +35,5 @@ require (
 replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+
+replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.18.0-alpha1

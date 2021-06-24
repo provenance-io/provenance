@@ -31,7 +31,7 @@ func (nrs NameRecords) Contains(name string) bool {
 }
 
 // GetGenesisStateFromAppState returns x/name GenesisState given raw application genesis state.
-func GetGenesisStateFromAppState(cdc codec.Marshaler, appState map[string]json.RawMessage) *GenesisState {
+func GetGenesisStateFromAppState(cdc codec.Codec, appState map[string]json.RawMessage) *GenesisState {
 	var genesisState GenesisState
 	if appState[ModuleName] != nil {
 		cdc.MustUnmarshalJSON(appState[ModuleName], &genesisState)

@@ -2,10 +2,11 @@ package keeper_test
 
 import (
 	"fmt"
+	"testing"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/provenance-io/provenance/x/metadata/types"
-	"testing"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"gopkg.in/yaml.v2"
@@ -265,7 +266,7 @@ func SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAddress, restrict b
 	if err = record.ValidateBasic(); err != nil {
 		return err
 	}
-	bz, err := types.ModuleCdc.MarshalBinaryBare(&record)
+	bz, err := types.ModuleCdc.Marshal(&record)
 	if err != nil {
 		return err
 	}

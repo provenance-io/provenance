@@ -56,7 +56,7 @@ func queryScope(ctx sdk.Context, path []string, _ abci.RequestQuery, k Keeper, l
 	if !found {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, "scope does not exist")
 	}
-	scopeBytes, err := k.cdc.MarshalBinaryBare(&scope)
+	scopeBytes, err := k.cdc.Marshal(&scope)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}

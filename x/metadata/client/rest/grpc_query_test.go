@@ -3,10 +3,11 @@ package rest_test
 import (
 	b64 "encoding/base64"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/types/query"
-	"google.golang.org/genproto/googleapis/rpc/status"
 	"strings"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/types/query"
+	"google.golang.org/genproto/googleapis/rpc/status"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -168,7 +169,7 @@ func (suite *IntegrationGRPCTestSuite) TestGRPCQueries() {
 			false,
 			&metadatatypes.QueryParamsResponse{},
 			&metadatatypes.QueryParamsResponse{
-				Params: metadatatypes.DefaultParams(),
+				Params:  metadatatypes.DefaultParams(),
 				Request: &metadatatypes.QueryParamsRequest{},
 			},
 		},
@@ -182,8 +183,8 @@ func (suite *IntegrationGRPCTestSuite) TestGRPCQueries() {
 			&metadatatypes.ScopeResponse{},
 			&metadatatypes.ScopeResponse{
 				Scope: &metadatatypes.ScopeWrapper{
-					Scope: &suite.scope,
-					ScopeIdInfo: types.GetScopeIDInfo(suite.scopeID),
+					Scope:           &suite.scope,
+					ScopeIdInfo:     types.GetScopeIDInfo(suite.scopeID),
 					ScopeSpecIdInfo: types.GetScopeSpecIDInfo(suite.specID),
 				},
 				Request: &metadatatypes.ScopeRequest{ScopeId: suite.scopeUUID.String()},
@@ -208,7 +209,7 @@ func (suite *IntegrationGRPCTestSuite) TestGRPCQueries() {
 			false,
 			&metadatatypes.OSLocatorParamsResponse{},
 			&metadatatypes.OSLocatorParamsResponse{
-				Params: metadatatypes.DefaultOSLocatorParams(),
+				Params:  metadatatypes.DefaultOSLocatorParams(),
 				Request: &metadatatypes.OSLocatorParamsRequest{},
 			},
 		},
@@ -274,7 +275,6 @@ func (suite *IntegrationGRPCTestSuite) TestGRPCQueries() {
 				},
 			},
 		},
-
 	}
 
 	for _, tc := range testCases {
@@ -283,7 +283,7 @@ func (suite *IntegrationGRPCTestSuite) TestGRPCQueries() {
 		suite.Run(tc.name, func() {
 			resp, err := sdktestutil.GetRequestWithHeaders(tc.url, tc.headers)
 			suite.Require().NoError(err)
-			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType)
+			err = val.ClientCtx.JSONCodec.UnmarshalJSON(resp, tc.respType)
 			if tc.expErr {
 				suite.Require().Error(err)
 			} else {
@@ -332,12 +332,12 @@ func (suite *IntegrationGRPCTestSuite) TestAllOSLocator() {
 		suite.Run(tc.name, func() {
 			resp, err := sdktestutil.GetRequestWithHeaders(tc.url, tc.headers)
 			suite.Require().NoError(err, "GetRequestWithHeaders err")
-			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType)
+			err = val.ClientCtx.JSONCodec.UnmarshalJSON(resp, tc.respType)
 			if tc.expErr {
 				suite.Require().Error(err, "UnmarshalJSON expected error")
 			} else {
 				suite.Require().NoError(err, "UnmarshalJSON unexpected error")
-				suite.Require().True( strings.Contains(fmt.Sprint(tc.respType),fmt.Sprint(tc.expected)))
+				suite.Require().True(strings.Contains(fmt.Sprint(tc.respType), fmt.Sprint(tc.expected)))
 			}
 		})
 	}
