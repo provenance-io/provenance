@@ -45,6 +45,7 @@ func (g *tracingGasMeter) GasConsumed() sdkgas.Gas {
 	return g.base.GasConsumed()
 }
 
+// TODO: this was in their main branch and v0.42.6...not in the  v0.43.0-beta1, check next RC if exists
 // // RefundGas refunds an amount of gas
 // func (g *tracingGasMeter) RefundGas(amount uint64, descriptor string) {
 // 	g.base.RefundGas(amount, descriptor)

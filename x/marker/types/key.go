@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/tendermint/tendermint/crypto"
 )
 
@@ -56,5 +57,5 @@ func MarkerStoreKey(addr sdk.AccAddress) []byte {
 
 // SplitMarkerStoreKey returns an account address given a store key
 func SplitMarkerStoreKey(key []byte) sdk.AccAddress {
-	return sdk.AccAddress(key[1 : sdk.AddrLen+1])
+	return sdk.AccAddress(key[1 : address.MaxAddrLen+1])
 }
