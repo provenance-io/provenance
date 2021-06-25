@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"fmt"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -147,7 +148,7 @@ func Dispatch(
 
 	fees, err := simtypes.RandomFees(r, ctx, spendable)
 	if err != nil {
-		return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate fees"), nil, err
+		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to generate fees"), nil, err
 	}
 
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig
@@ -162,13 +163,13 @@ func Dispatch(
 		from.PrivKey,
 	)
 	if err != nil {
-		return simtypes.NoOpMsg(types.ModuleName, fmt.sprintf("%T", msg), "unable to generate mock tx"), nil, err
+		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to generate mock tx"), nil, err
 	}
 
 	_, _, err = app.Deliver(txGen.TxEncoder(), tx)
 	if err != nil {
-		return simtypes.NoOpMsg(types.ModuleName, fmt.sprintf("%T", msg), err.Error()), nil, nil
+		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), err.Error()), nil, nil
 	}
 
-	return simtypes.NewOperationMsg(msg, true, ""), nil, nil
+	return simtypes.NewOperationMsg(msg, true, "", &codec.ProtoCodec{}), nil, nil
 }
