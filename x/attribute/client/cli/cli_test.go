@@ -367,7 +367,7 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 1,
+			true, &sdk.TxResponse{}, 1,
 		},
 		{
 			"set attribute, valid json",
@@ -397,7 +397,7 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 1,
+			true, &sdk.TxResponse{}, 1,
 		},
 		{
 			"set attribute, valid uuid",
@@ -427,7 +427,7 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 1,
+			true, &sdk.TxResponse{}, 1,
 		},
 		{
 			"set attribute, valid float",
@@ -457,7 +457,7 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 1,
+			true, &sdk.TxResponse{}, 1,
 		},
 		{
 			"set attribute, valid uri",
@@ -487,7 +487,7 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 1,
+			true, &sdk.TxResponse{}, 1,
 		},
 		{
 			"set attribute, valid bytes",
