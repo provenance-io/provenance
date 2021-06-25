@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
@@ -11,12 +12,12 @@ import (
 )
 
 var (
-	noopHandler = func(ctx sdk.Context, plan upgradetypes.Plan) {
+	noopHandler = func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) {
 		ctx.Logger().Info("Applying no-op upgrade plan for release " + plan.Name)
 	}
 )
 
-type appUpgradeHandler = func(*App, sdk.Context, upgradetypes.Plan)
+type appUpgradeHandler = func(*App, sdk.Context, upgradetypes.Plan, module.VersionMap)
 
 type appUpgrade struct {
 	Added   []string
@@ -78,10 +79,10 @@ func InstallCustomUpgradeHandlers(app *App) {
 		// If the handler has been defined, add it here, otherwise, use no-op.
 		var handler upgradetypes.UpgradeHandler
 		if upgrade.Handler == nil {
-			handler = noopHandler
+			handler, _ = noopHandler
 		} else {
 			ref := upgrade
-			handler = func(ctx sdk.Context, plan upgradetypes.Plan) {
+			handler, _ = func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) {
 				ref.Handler(app, ctx, plan)
 			}
 		}
