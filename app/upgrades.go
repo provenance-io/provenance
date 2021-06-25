@@ -12,12 +12,13 @@ import (
 )
 
 var (
-	noopHandler = func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) {
+	noopHandler = func(ctx sdk.Context, plan upgradetypes.Plan, versionMap module.VersionMap) (module.VersionMap, error) {
 		ctx.Logger().Info("Applying no-op upgrade plan for release " + plan.Name)
+		return versionMap, nil
 	}
 )
 
-type appUpgradeHandler = func(*App, sdk.Context, upgradetypes.Plan, module.VersionMap)
+type appUpgradeHandler = func(*App, sdk.Context, upgradetypes.Plan)
 
 type appUpgrade struct {
 	Added   []string
@@ -79,11 +80,12 @@ func InstallCustomUpgradeHandlers(app *App) {
 		// If the handler has been defined, add it here, otherwise, use no-op.
 		var handler upgradetypes.UpgradeHandler
 		if upgrade.Handler == nil {
-			handler, _ = noopHandler
+			handler = noopHandler
 		} else {
 			ref := upgrade
-			handler, _ = func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) {
+			handler = func(ctx sdk.Context, plan upgradetypes.Plan, versionMap module.VersionMap) (module.VersionMap, error) {
 				ref.Handler(app, ctx, plan)
+				return app.UpgradeKeeper.GetModuleVersionMap(ctx), nil
 			}
 		}
 		app.UpgradeKeeper.SetUpgradeHandler(name, handler)

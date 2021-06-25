@@ -78,7 +78,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			if err := client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
 				return err
 			}
-			if err := server.InterceptConfigsPreRunHandler(cmd); err != nil {
+			if err := server.InterceptConfigsPreRunHandler(cmd, "", nil); err != nil {
 				return err
 			}
 			if err := bindFlags("PIO", cmd, server.GetServerContextFromCmd(cmd).Viper); err != nil {

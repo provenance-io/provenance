@@ -373,12 +373,12 @@ func TestAccountKeeperMintBurnCoins(t *testing.T) {
 	require.NoError(t, app.MarkerKeeper.CancelMarker(ctx, user, "testcoin"))
 
 	// Set an escrow balance
-	// app.BankKeeper.SetBalance(ctx, addr, sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt()))
+	simapp.FundAccount(app, ctx, addr, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())))
 	// Fails because there are coins in escrow.
 	require.Error(t, app.MarkerKeeper.DeleteMarker(ctx, user, "testcoin"))
 
 	// Remove escrow balance
-	// app.BankKeeper.SetBalance(ctx, addr, sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()))
+	simapp.FundAccount(app, ctx, addr, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt())))
 
 	// Succeeds because the bond denom coin was removed.
 	require.NoError(t, app.MarkerKeeper.DeleteMarker(ctx, user, "testcoin"))
@@ -443,12 +443,13 @@ func TestAccountInsufficientExisting(t *testing.T) {
 	user := sdk.AccAddress(pubkey.Address())
 
 	// setup an existing account with an existing balance (and matching supply)
-	//existingSupply := sdk.NewCoin("testcoin", sdk.NewInt(10000))
+	existingSupply := sdk.NewCoin("testcoin", sdk.NewInt(10000))
 	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 0))
-	// TODO : v0.43.0 doesn't expose these methods...
-	// app.BankKeeper.SetBalance(ctx, user, existingSupply)
+
+	simapp.FundAccount(app, ctx, user, sdk.NewCoins(existingSupply))
+
 	//prevSupply := app.BankKeeper.GetSupply(ctx, "testcoin")
-	// app.BankKeeper.SetSupply(ctx, banktypes.NewSupply(prevSupply.Amount.Add(existingSupply.Amount)))
+	//app.BankKeeper.SetSupply(ctx, banktypes.NewSupply(prevSupply.Amount.Add(existingSupply.Amount)))
 
 	// create account and check default values
 	mac := types.NewEmptyMarkerAccount("testcoin", user.String(), []types.AccessGrant{*types.NewAccessGrant(user,
