@@ -32,6 +32,7 @@ var (
 	_ govtypes.Content = &SetAdministratorProposal{}
 	_ govtypes.Content = &RemoveAdministratorProposal{}
 	_ govtypes.Content = &ChangeStatusProposal{}
+	_ govtypes.Content = &WithdrawEscrowProposal{}
 )
 
 func init() {
@@ -88,7 +89,7 @@ func (amp AddMarkerProposal) ValidateBasic() error {
 	}
 	// A proposed marker must have a manager assigned to allow updates to be made by the caller.
 	if len(amp.Manager) == 0 && amp.Status == StatusProposed {
-		return fmt.Errorf("marker manage cannot be empty when creating a proposed marker")
+		return fmt.Errorf("marker manager cannot be empty when creating a proposed marker")
 	}
 	testCoin := sdk.Coin{
 		Denom:  amp.Amount.Denom,
