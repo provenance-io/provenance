@@ -39,7 +39,7 @@ message SupplyIncreaseProposal {
   string                   description = 2;
   cosmos.base.v1beta1.Coin amount      = 3
       [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
-  string target_adddress = 4; // an optional target address for the minted coin from this request
+  string target_address = 4; // an optional target address for the minted coin from this request
 }
 
 // SupplyDecreaseProposal defines a governance proposal to administer a marker and decrease the total supply through
@@ -99,5 +99,5 @@ message WithdrawEscrowProposal {
   string   denom                           = 3;
   repeated cosmos.base.v1beta1.Coin amount = 4
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-  string target_adddress = 5;
+  string target_address = 5;
 }

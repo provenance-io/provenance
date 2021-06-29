@@ -132,7 +132,7 @@ type SupplyIncreaseProposal struct {
 	Title         string                                  `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
 	Description   string                                  `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
 	Amount        github_com_cosmos_cosmos_sdk_types.Coin `protobuf:"bytes,3,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Coin" json:"amount"`
-	TargetAddress string                                  `protobuf:"bytes,4,opt,name=target_adddress,json=targetAddress,proto3" json:"target_adddress,omitempty"`
+	TargetAddress string                                  `protobuf:"bytes,4,opt,name=target_address,json=targetAddress,proto3" json:"target_address,omitempty"`
 }
 
 func (m *SupplyIncreaseProposal) Reset()      { *m = SupplyIncreaseProposal{} }
@@ -454,7 +454,7 @@ type WithdrawEscrowProposal struct {
 	Description   string                                   `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
 	Denom         string                                   `protobuf:"bytes,3,opt,name=denom,proto3" json:"denom,omitempty"`
 	Amount        github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,4,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
-	TargetAddress string                                   `protobuf:"bytes,5,opt,name=target_adddress,json=targetAddress,proto3" json:"target_adddress,omitempty"`
+	TargetAddress string                                   `protobuf:"bytes,5,opt,name=target_address,json=targetAddress,proto3" json:"target_address,omitempty"`
 }
 
 func (m *WithdrawEscrowProposal) Reset()      { *m = WithdrawEscrowProposal{} }
