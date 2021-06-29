@@ -51,6 +51,9 @@ func init() {
 
 	govtypes.RegisterProposalType(ProposalTypeChangeStatus)
 	govtypes.RegisterProposalTypeCodec(ChangeStatusProposal{}, "provenance/marker/ChangeStatusProposal")
+
+	govtypes.RegisterProposalType(ProposalTypeWithdrawEscrow)
+	govtypes.RegisterProposalTypeCodec(WithdrawEscrowProposal{}, "provenance/marker/WithdrawEscrowProposal")
 }
 
 // NewAddMarkerProposal creates a new proposal
@@ -258,5 +261,5 @@ func (wep WithdrawEscrowProposal) String() string {
   Title:       %s
   Description: %s
   Withdraw %s and transfer to %s
-`, wep.Denom, wep.Title, wep.Description, wep.Amount, wep.TargetAdddress)
+`, wep.Denom, wep.Title, wep.Description, wep.Amount, wep.TargetAddress)
 }
