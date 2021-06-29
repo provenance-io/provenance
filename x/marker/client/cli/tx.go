@@ -68,9 +68,9 @@ $ %s tx marker proposal AddMarker "path/to/proposal.json" 1000%s --from mykey
 Where proposal.json contains:
 
 {
-  "Title": "Test Proposal",
-  "Description": "My awesome proposal",
-  "Denom": "denomstring"
+  "title": "Test Proposal",
+  "description": "My awesome proposal",
+  "denom": "denomstring"
   // additional properties based on type here
 }
 
@@ -78,32 +78,32 @@ Where proposal.json contains:
 Valid Proposal Types (and associated parameters):
 
 - AddMarker
-	"Amount": 100,
-	"Manager": "pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk", 
-	"Status": "active", // [proposed, finalized, active]
-	"MarkerType": "COIN", // COIN, RESTRICTED
-	"AccessList": "", 
-	"SupplyFixed": true, 
-	"AllowGovernanceControl": true, 
+	"amount": 100,
+	"manager": "pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk", 
+	"status": "active", // [proposed, finalized, active]
+	"marker_type": "COIN", // COIN, RESTRICTED
+	"access_list": [ {"address":"pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk", "permissions": [1,2,3]} ], 
+	"supply_fixed": true, 
+	"allow_governance_control": true, 
 
 - IncreaseSupply
-	"Amount": 100
+	"amount": {"denom":"coin", "amount":"10"}
 
 - DecreaseSupply
-	"Amount": 100
+	"amount": {"denom":"coin", "amount":"10"}
 
 - SetAdministrator
-	"Access": []AccessGrant
+	"access": [{"address":"pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk", "permissions": [1,2,3]}]
 
 - RemoveAdministrator
-	"RemovedAddress": []string
+	"removed_address": ["pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk"]
 
 - ChangeStatus
-	"Status": "active" // [proposed, finalized, active, cancelled, destroyed]
+	"new_status": "MARKER_STATUS_ACTIVE" // [finalized, active, cancelled, destroyed]
 
 - WithdrawEscrow
-	"Amount": "100hotdog"
-	"Target": "pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk"
+	"amount": "100coin"
+	"target_address": "pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk"
 
 `,
 				version.AppName, sdk.DefaultBondDenom,
