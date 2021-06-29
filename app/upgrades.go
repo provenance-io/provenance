@@ -73,7 +73,7 @@ var handlers = map[string]appUpgrade{
 	"desert":  {},
 	"eigengrau": {
 		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) {
-
+			app.AttributeKeeper.ConvertAddressLength(ctx)
 		},
 	},
 	// TODO - Add new upgrade definitions here.

@@ -12,7 +12,7 @@ func (k Keeper) ConvertAddressLength(ctx sdk.Context) []types.Attribute {
 		attrs = append(attrs, attr)
 		return nil
 	}
-	if err := k.IterateRecords(ctx, types.AttributeKeyPrefix, appendToRecords); err != nil {
+	if err := k.IterateRecords(ctx, types.AttributeKeyPrefixLegacy, appendToRecords); err != nil {
 		panic(err)
 	}
 	for _, record := range attrs {
