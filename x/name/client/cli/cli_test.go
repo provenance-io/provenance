@@ -219,7 +219,7 @@ func (s *IntegrationTestSuite) TestGetBindNameCommand() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 1,
+			true, &sdk.TxResponse{}, 1,
 		},
 		{
 			"should fail to bind name to root name that does exist",

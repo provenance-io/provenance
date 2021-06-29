@@ -71,6 +71,11 @@ var handlers = map[string]appUpgrade{
 	},
 	"citrine": {},
 	"desert":  {},
+	"eigengrau": {
+		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) {
+
+		},
+	},
 	// TODO - Add new upgrade definitions here.
 }
 

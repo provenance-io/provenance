@@ -128,6 +128,8 @@ const (
 	DefaultFeeDenom = "nhash" // nano-hash
 	// DefaultReDnmString is the allowed denom regex expression
 	DefaultReDnmString = `[a-zA-Z][a-zA-Z0-9/\-\.]{2,127}`
+	// DefaultReDnmString is the allowed denom regex expression
+	AddrLength = 32
 )
 
 var (

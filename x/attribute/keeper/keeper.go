@@ -348,3 +348,36 @@ func (k Keeper) importAttribute(ctx sdk.Context, attr types.Attribute) error {
 	store.Set(key, bz)
 	return nil
 }
+
+// A genesis helper that imports attribute state without owner checks.
+func (k Keeper) updateAttributeAddressLength(ctx sdk.Context, attr types.Attribute) error {
+
+	legacyAddr, err := sdk.AccAddressFromBech32(attr.Address)
+	if err != nil {
+		return err
+	}
+
+	updatedAddr := types.ConvertLegacyAddressLength(legacyAddr.Bytes())
+	attr.Address = sdk.AccAddress(updatedAddr).String()
+	if err := attr.ValidateBasic(); err != nil {
+		return err
+	}
+
+	if strings.TrimSpace(attr.Address) == "" {
+		return fmt.Errorf("unable to import attribute with empty address")
+	}
+	// Ensure name is stored in normalized format.
+	if attr.Name, err = k.nameKeeper.Normalize(ctx, attr.Name); err != nil {
+		return fmt.Errorf("unable to normalize attribute name \"%s\": %w", attr.Name, err)
+	}
+	// Store the sanitized account attribute
+	bz, err := k.cdc.Marshal(&attr)
+	if err != nil {
+		return err
+	}
+	key := types.AccountAttributeKey(legacyAddr, attr)
+	store := ctx.KVStore(k.storeKey)
+	store.Set(key, bz)
+	store.Delete(legacyAddr)
+	return nil
+}
