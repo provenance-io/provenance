@@ -357,7 +357,9 @@ func (k Keeper) updateAttributeAddressLength(ctx sdk.Context, attr types.Attribu
 		return err
 	}
 
-	updatedAddr := types.ConvertLegacyAddressLength(legacyAddr.Bytes())
+	legacyKey := types.AccountAttributeKeyLegacy(legacyAddr.Bytes(), attr)
+	padding := make([]byte, 12)
+	updatedAddr := append(legacyAddr.Bytes(), padding...)
 	attr.Address = sdk.AccAddress(updatedAddr).String()
 	if err := attr.ValidateBasic(); err != nil {
 		return err
@@ -375,9 +377,9 @@ func (k Keeper) updateAttributeAddressLength(ctx sdk.Context, attr types.Attribu
 	if err != nil {
 		return err
 	}
-	key := types.AccountAttributeKey(legacyAddr, attr)
+	key := types.AccountAttributeKey(updatedAddr, attr)
 	store := ctx.KVStore(k.storeKey)
 	store.Set(key, bz)
-	store.Delete(legacyAddr)
+	store.Delete(legacyKey)
 	return nil
 }

@@ -27,12 +27,3 @@ func TestAttributeNameProcessing(t *testing.T) {
 	require.Equal(t, "root", reverse("root"), "a root name reversed is a root name")
 	require.Equal(t, "root.domain.sub", reverse("sub.domain.root"), "a domain name can be reversed correctly")
 }
-
-func TestConvertLegacyAddressLength(t *testing.T) {
-	key := AccountAttributeKey(addr, Attribute{Name: "test.attribute", AttributeType: AttributeType_String, Value: []byte("test")})
-	convertedKey := ConvertLegacyAddressLength(key)
-	require.Equal(t, 97, len(convertedKey))
-	require.Equal(t, key[0:21], convertedKey[0:21])
-	require.Equal(t, make([]byte, 12), convertedKey[21:33])
-	require.Equal(t, key[21:], convertedKey[33:])
-}

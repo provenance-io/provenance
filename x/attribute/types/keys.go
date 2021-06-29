@@ -24,17 +24,32 @@ const (
 
 var (
 	// Legacy amino encoded objects use this key prefix
-	AttributeKeyPrefixAmino  = []byte{0x00}
-	AttributeKeyPrefixLegacy = []byte{0x01} // prefix for keys with address length 20 < v0.43
-	AttributeKeyPrefix       = []byte{0x02}
-	AttributeKeyLengthLegacy = 1 + 20 + 32 + 32 // prefix length + address (20) + name-hash + value-hash
-	AttributeKeyLength       = 1 + 32 + 32 + 32 // prefix length + address (32) + name-hash + value-hash
+	AttributeKeyPrefixAmino   = []byte{0x00}
+	AttributeKeyPrefixLegacy  = []byte{0x01} // prefix for keys with address length 20 < v0.43
+	AttributeKeyPrefix        = []byte{0x02}
+	AttributeAddrLengthLegacy = 20
+	AttributeAddrLength       = 32
+	AttributeKeyLengthLegacy  = 1 + AttributeAddrLengthLegacy + 32 + 32 // prefix length + address (20) + name-hash + value-hash
+	AttributeKeyLength        = 1 + AttributeAddrLength + 32 + 32       // prefix length + address (32) + name-hash + value-hash
 
 )
 
 // AccountAttributeKey creates a key for an account attribute
 func AccountAttributeKey(acc sdk.AccAddress, attr Attribute) []byte {
+	if len(acc.Bytes()) != AttributeAddrLength {
+		panic(fmt.Sprintf("unexpected key length (%d ≠ %d)", len(acc.Bytes()), AttributeAddrLength))
+	}
 	key := append(AttributeKeyPrefix, acc.Bytes()...)
+	key = append(key, GetNameKeyBytes(attr.Name)...)
+	return append(key, attr.Hash()...)
+}
+
+// AccountAttributeKeyLegacy creates a key for an account attribute
+func AccountAttributeKeyLegacy(acc sdk.AccAddress, attr Attribute) []byte {
+	if len(acc.Bytes()) != AttributeAddrLengthLegacy {
+		panic(fmt.Sprintf("unexpected key length (%d ≠ %d)", len(acc.Bytes()), AttributeKeyLengthLegacy))
+	}
+	key := append(AttributeKeyPrefixLegacy, acc.Bytes()...)
 	key = append(key, GetNameKeyBytes(attr.Name)...)
 	return append(key, attr.Hash()...)
 }
@@ -55,21 +70,10 @@ func SplitAccountAttributeKey(key []byte) (addr sdk.AccAddress, nameID []byte, v
 		panic(fmt.Sprintf("unexpected key length (%d ≠ %d)", len(key), AttributeKeyLength))
 	}
 	// first byte is key prefix for AttributeKey
-	addr = sdk.AccAddress(key[1 : 32+1])
-	nameID = key[1+32 : 32+32]
-	valueID = key[1+32+32 : 1+32+64]
+	addr = sdk.AccAddress(key[1 : AttributeAddrLength+1])
+	nameID = key[1+AttributeAddrLength : 64]
+	valueID = key[1+AttributeAddrLength+32 : 1+AttributeAddrLength+64]
 	return
-}
-
-func ConvertLegacyAddressLength(legacyAddress []byte) []byte {
-	if len(legacyAddress) != 85 {
-		panic(fmt.Sprintf("unexpected key length (%d ≠ 85)", len(legacyAddress)))
-	}
-	converted := []byte{}
-	converted = append(converted, legacyAddress[0:21]...)
-	converted = append(converted, make([]byte, 12)...) // Add padding at end of address a
-	converted = append(converted, legacyAddress[21:]...)
-	return converted
 }
 
 // GetNameKeyBytes returns a set of bytes that uniquely identifies the given name
