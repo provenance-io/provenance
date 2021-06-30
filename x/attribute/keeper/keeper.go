@@ -349,8 +349,8 @@ func (k Keeper) importAttribute(ctx sdk.Context, attr types.Attribute) error {
 	return nil
 }
 
-// A genesis helper that imports attribute state without owner checks.
-func (k Keeper) updateAttributeAddressLength(ctx sdk.Context, attr types.Attribute) error {
+// Updates an attribute that has length 20 address to a 32 bit address
+func (k Keeper) UpdateAttributeAddressLength(ctx sdk.Context, attr types.Attribute) error {
 
 	legacyAddr, err := sdk.AccAddressFromBech32(attr.Address)
 	if err != nil {
