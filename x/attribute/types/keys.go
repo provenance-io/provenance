@@ -24,13 +24,10 @@ const (
 
 var (
 	// Legacy amino encoded objects use this key prefix
-	AttributeKeyPrefixAmino   = []byte{0x00}
-	AttributeKeyPrefixLegacy  = []byte{0x01} // prefix for keys with address length 20 < v0.43
-	AttributeKeyPrefix        = []byte{0x02}
-	AttributeAddrLengthLegacy = 20
-	AttributeAddrLength       = 32
-	AttributeKeyLengthLegacy  = 1 + AttributeAddrLengthLegacy + 32 + 32 // prefix length + address (20) + name-hash + value-hash
-	AttributeKeyLength        = 1 + AttributeAddrLength + 32 + 32       // prefix length + address (32) + name-hash + value-hash
+	AttributeKeyPrefixAmino = []byte{0x00}
+	AttributeKeyPrefix      = []byte{0x02}
+	AttributeAddrLength     = 32
+	AttributeKeyLength      = 1 + AttributeAddrLength + 32 + 32 // prefix length + address (32) + name-hash + value-hash
 
 )
 
@@ -40,16 +37,6 @@ func AccountAttributeKey(acc sdk.AccAddress, attr Attribute) []byte {
 		panic(fmt.Sprintf("unexpected key length (%d ≠ %d)", len(acc.Bytes()), AttributeAddrLength))
 	}
 	key := append(AttributeKeyPrefix, acc.Bytes()...)
-	key = append(key, GetNameKeyBytes(attr.Name)...)
-	return append(key, attr.Hash()...)
-}
-
-// AccountAttributeKeyLegacy creates a key for an account attribute
-func AccountAttributeKeyLegacy(acc sdk.AccAddress, attr Attribute) []byte {
-	if len(acc.Bytes()) != AttributeAddrLengthLegacy {
-		panic(fmt.Sprintf("unexpected key length (%d ≠ %d)", len(acc.Bytes()), AttributeKeyLengthLegacy))
-	}
-	key := append(AttributeKeyPrefixLegacy, acc.Bytes()...)
 	key = append(key, GetNameKeyBytes(attr.Name)...)
 	return append(key, attr.Hash()...)
 }

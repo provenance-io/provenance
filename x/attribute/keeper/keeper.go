@@ -349,19 +349,13 @@ func (k Keeper) importAttribute(ctx sdk.Context, attr types.Attribute) error {
 	return nil
 }
 
-// Updates an attribute that has length 20 address to a 32 bit address
-func (k Keeper) UpdateAttributeAddressLength(ctx sdk.Context, attr types.Attribute) error {
+// Updates an Attributes address and removes old attribute from keystore
+func (k Keeper) UpdateAddributeAddress(ctx sdk.Context, attr types.Attribute, updatedAddress sdk.AccAddress, previousKey []byte) error {
 
-	legacyAddr, err := sdk.AccAddressFromBech32(attr.Address)
+	attr.Address = updatedAddress.String()
+
+	err := attr.ValidateBasic()
 	if err != nil {
-		return err
-	}
-
-	legacyKey := types.AccountAttributeKeyLegacy(legacyAddr.Bytes(), attr)
-	padding := make([]byte, 12)
-	updatedAddr := append(legacyAddr.Bytes(), padding...)
-	attr.Address = sdk.AccAddress(updatedAddr).String()
-	if err := attr.ValidateBasic(); err != nil {
 		return err
 	}
 
@@ -369,17 +363,19 @@ func (k Keeper) UpdateAttributeAddressLength(ctx sdk.Context, attr types.Attribu
 		return fmt.Errorf("unable to import attribute with empty address")
 	}
 	// Ensure name is stored in normalized format.
-	if attr.Name, err = k.nameKeeper.Normalize(ctx, attr.Name); err != nil {
+	attr.Name, err = k.nameKeeper.Normalize(ctx, attr.Name)
+	if err != nil {
 		return fmt.Errorf("unable to normalize attribute name \"%s\": %w", attr.Name, err)
 	}
+
 	// Store the sanitized account attribute
 	bz, err := k.cdc.Marshal(&attr)
 	if err != nil {
 		return err
 	}
-	key := types.AccountAttributeKey(updatedAddr, attr)
+	updatedKey := types.AccountAttributeKey(updatedAddress, attr)
 	store := ctx.KVStore(k.storeKey)
-	store.Set(key, bz)
-	store.Delete(legacyKey)
+	store.Set(updatedKey, bz)
+	store.Delete(previousKey)
 	return nil
 }

@@ -35,8 +35,10 @@ type IntegrationTestSuite struct {
 	cfg     testnet.Config
 	testnet *testnet.Network
 
-	accountAddr sdk.AccAddress
-	accountKey  *secp256r1.PrivKey
+	accountAddr  sdk.AccAddress
+	accountKey   *secp256r1.PrivKey
+	account2Addr sdk.AccAddress
+	account2Key  *secp256r1.PrivKey
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
@@ -45,6 +47,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	addr, err := sdk.AccAddressFromHex(s.accountKey.PubKey().Address().String())
 	s.Require().NoError(err)
 	s.accountAddr = addr
+	privKey, _ = secp256r1.GenPrivKey()
+	s.account2Key = privKey
+	addr, err = sdk.AccAddressFromHex(s.account2Key.PubKey().Address().String())
+	s.Require().NoError(err)
+	s.account2Addr = addr
 	s.T().Log("setting up integration test suite")
 
 	cfg := testutil.DefaultTestNetworkConfig()
@@ -322,7 +329,7 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 			cli.NewAddAccountAttributeCmd(),
 			[]string{
 				"txtest.attribute",
-				s.accountAddr.String(),
+				s.account2Addr.String(),
 				"string",
 				"test value",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -352,7 +359,7 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 			cli.NewAddAccountAttributeCmd(),
 			[]string{
 				"txtest.attribute",
-				s.accountAddr.String(),
+				s.account2Addr.String(),
 				"blah",
 				"3.14159",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -367,7 +374,7 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 			cli.NewAddAccountAttributeCmd(),
 			[]string{
 				"txtest.attribute",
-				s.accountAddr.String(),
+				s.account2Addr.String(),
 				"bytes",
 				"3.14159",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -426,7 +433,7 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeTxCommands() {
 			cli.NewAddAccountAttributeCmd(),
 			[]string{
 				"updatetest.attribute",
-				s.accountAddr.String(),
+				s.account2Addr.String(),
 				"string",
 				"test value",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -458,7 +465,7 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeTxCommands() {
 			cli.NewUpdateAccountAttributeCmd(),
 			[]string{
 				"updatetest.attribute",
-				s.accountAddr.String(),
+				s.account2Addr.String(),
 				"invalid",
 				"test value",
 				"int",
@@ -475,7 +482,7 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeTxCommands() {
 			cli.NewUpdateAccountAttributeCmd(),
 			[]string{
 				"updatetest.attribute",
-				s.accountAddr.String(),
+				s.account2Addr.String(),
 				"string",
 				"test value",
 				"invalid",
@@ -492,7 +499,7 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeTxCommands() {
 			cli.NewUpdateAccountAttributeCmd(),
 			[]string{
 				"updatetest.attribute",
-				s.accountAddr.String(),
+				s.account2Addr.String(),
 				"string",
 				"test value",
 				"init",
@@ -509,7 +516,7 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeTxCommands() {
 			cli.NewUpdateAccountAttributeCmd(),
 			[]string{
 				"updatetest.attribute",
-				s.accountAddr.String(),
+				s.account2Addr.String(),
 				"string",
 				"test value",
 				"int",
@@ -570,7 +577,7 @@ func (s *IntegrationTestSuite) TestDeleteDistinctAccountAttributeTxCommands() {
 			cli.NewAddAccountAttributeCmd(),
 			[]string{
 				"distinct.attribute",
-				s.accountAddr.String(),
+				s.account2Addr.String(),
 				"string",
 				"test value",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -598,7 +605,7 @@ func (s *IntegrationTestSuite) TestDeleteDistinctAccountAttributeTxCommands() {
 			cli.NewDeleteDistinctAccountAttributeCmd(),
 			[]string{
 				"distinct.attribute",
-				s.accountAddr.String(),
+				s.account2Addr.String(),
 				"invalid",
 				"test value",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -612,7 +619,7 @@ func (s *IntegrationTestSuite) TestDeleteDistinctAccountAttributeTxCommands() {
 			cli.NewDeleteDistinctAccountAttributeCmd(),
 			[]string{
 				"distinct.attribute",
-				s.accountAddr.String(),
+				s.account2Addr.String(),
 				"string",
 				"test value",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -671,7 +678,7 @@ func (s *IntegrationTestSuite) TestDeleteAccountAttributeTxCommands() {
 			cli.NewAddAccountAttributeCmd(),
 			[]string{
 				"deletetest.attribute",
-				s.accountAddr.String(),
+				s.account2Addr.String(),
 				"string",
 				"test value",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -685,7 +692,7 @@ func (s *IntegrationTestSuite) TestDeleteAccountAttributeTxCommands() {
 			cli.NewDeleteAccountAttributeCmd(),
 			[]string{
 				"deletetest.attribute",
-				s.accountAddr.String(),
+				s.account2Addr.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -697,7 +704,7 @@ func (s *IntegrationTestSuite) TestDeleteAccountAttributeTxCommands() {
 			cli.NewDeleteAccountAttributeCmd(),
 			[]string{
 				"deletetest.attribute",
-				s.accountAddr.String(),
+				s.account2Addr.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),

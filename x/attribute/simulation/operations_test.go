@@ -1,6 +1,7 @@
 package simulation_test
 
 import (
+	"fmt"
 	"math/rand"
 	"testing"
 
@@ -8,6 +9,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
@@ -87,10 +89,10 @@ func (suite *SimTestSuite) TestSimulateMsgAddAttribute() {
 
 	var msg types.MsgAddAttributeRequest
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
-
+	fmt.Println(msg.Account)
 	suite.Require().True(operationMsg.OK)
-	suite.Require().Equal("cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Account)
-	suite.Require().Equal("cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Owner)
+	suite.Require().Equal(accounts[0].Address.String(), msg.Account)
+	suite.Require().Equal(accounts[0].Address.String(), msg.Owner)
 	suite.Require().Equal("example.provenance", msg.Name)
 	suite.Require().Equal(types.AttributeType_Uri, msg.AttributeType)
 	suite.Require().Equal([]byte("http://www.example.com/"), msg.Value)
@@ -163,8 +165,13 @@ func (suite *SimTestSuite) TestSimulateMsgDeleteDistinctAttribute() {
 	s := rand.NewSource(1)
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 3)
+
+	// generate attr address
+	privKey, _ := secp256r1.GenPrivKey()
+	attrAddr, _ := sdk.AccAddressFromHex(privKey.PubKey().Address().String())
+
 	suite.app.NameKeeper.SetNameRecord(suite.ctx, "example.provenance", accounts[0].Address, false)
-	suite.app.AttributeKeeper.SetAttribute(suite.ctx, types.NewAttribute("example.provenance", accounts[1].Address, types.AttributeType_String, []byte("test")), accounts[0].Address)
+	suite.app.AttributeKeeper.SetAttribute(suite.ctx, types.NewAttribute("example.provenance", attrAddr, types.AttributeType_String, []byte("test")), accounts[0].Address)
 
 	// begin a new block
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
@@ -181,15 +188,15 @@ func (suite *SimTestSuite) TestSimulateMsgDeleteDistinctAttribute() {
 	suite.Require().Equal(types.TypeMsgDeleteDistinctAttribute, msg.Type())
 	suite.Require().Equal("example.provenance", msg.Name)
 	suite.Require().Equal(accounts[0].Address.String(), msg.Owner)
-	suite.Require().Equal(accounts[1].Address.String(), msg.Account)
+	suite.Require().Equal(attrAddr.String(), msg.Account)
 	suite.Require().Equal(types.ModuleName, msg.Route())
 	suite.Require().Len(futureOperations, 0)
 }
 
 func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
-	accounts := simtypes.RandomAccounts(r, n)
+	accounts := RandomAccounts(r, n)
 
-	initAmt := sdk.TokensFromConsensusPower(200, app.DefaultPowerReduction)
+	initAmt := sdk.TokensFromConsensusPower(300, sdk.DefaultPowerReduction)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
 
 	// add coins to the accounts
@@ -202,6 +209,25 @@ func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Ac
 	}
 
 	return accounts
+}
+
+// RandomAccounts generates n random accounts
+func RandomAccounts(r *rand.Rand, n int) []simtypes.Account {
+	accs := make([]simtypes.Account, n)
+
+	for i := 0; i < n; i++ {
+		// don't need that much entropy for simulation
+		privkeySeed := make([]byte, 15)
+		r.Read(privkeySeed)
+
+		accs[i].PrivKey, _ = secp256r1.GenPrivKey()
+		accs[i].PubKey = accs[i].PrivKey.PubKey()
+		accs[i].Address = sdk.AccAddress(accs[i].PubKey.Address())
+
+		// accs[i].ConsKey = ed25519.GenPrivKeyFromSecret(privkeySeed)
+	}
+
+	return accs
 }
 
 func TestSimTestSuite(t *testing.T) {

@@ -8,7 +8,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	migratev42 "github.com/provenance-io/provenance/x/attribute/legacy/v42"
+	legacyv042 "github.com/provenance-io/provenance/x/attribute/legacy/v042"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -74,7 +74,7 @@ var handlers = map[string]appUpgrade{
 	"desert":  {},
 	"eigengrau": {
 		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) {
-			migratev42.MigrateAddressLength(app.AttributeKeeper, ctx)
+			legacyv042.MigrateAddressLength(app.AttributeKeeper, ctx)
 		},
 	},
 	// TODO - Add new upgrade definitions here.

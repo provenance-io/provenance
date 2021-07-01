@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
 	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,11 +31,12 @@ type IntegrationTestSuite struct {
 	testnet *testnet.Network
 
 	accountAddr sdk.AccAddress
-	accountKey  *secp256k1.PrivKey
+	accountKey  *secp256r1.PrivKey
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
-	s.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
+	privKey, _ := secp256r1.GenPrivKey()
+	s.accountKey = privKey
 	addr, err := sdk.AccAddressFromHex(s.accountKey.PubKey().Address().String())
 	s.Require().NoError(err)
 	s.accountAddr = addr
