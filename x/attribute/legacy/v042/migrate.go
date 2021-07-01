@@ -21,9 +21,16 @@ func MigrateAddressLength(attrKeeper keeper.Keeper, ctx sdk.Context) {
 			panic(err)
 		}
 		legacyKey := AccountAttributeKeyLegacy(legacyAddr, legacyAttribute)
-		padding := make([]byte, 12)
-		updatedAddr := append(legacyAddr.Bytes(), padding...)
-		updateAccAddr := sdk.AccAddress(updatedAddr)
-		attrKeeper.UpdateAddributeAddress(ctx, legacyAttribute, updateAccAddr, legacyKey)
+		updateAccAddr := ConvertLegacyAddress(legacyAddr)
+		err = attrKeeper.UpdateAddributeAddress(ctx, legacyAttribute, updateAccAddr, legacyKey)
+		if err != nil {
+			panic(err)
+		}
 	}
+}
+
+func ConvertLegacyAddress(legacyAddr sdk.AccAddress) sdk.AccAddress {
+	padding := make([]byte, 12)
+	updatedAddr := append(legacyAddr.Bytes(), padding...)
+	return sdk.AccAddress(updatedAddr)
 }
