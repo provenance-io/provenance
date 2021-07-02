@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
@@ -37,6 +38,7 @@ type IntegrationTestSuite struct {
 
 	accountAddr  sdk.AccAddress
 	accountKey   *secp256r1.PrivKey
+	accountStr   string
 	account2Addr sdk.AccAddress
 	account2Key  *secp256r1.PrivKey
 }
@@ -47,6 +49,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	addr, err := sdk.AccAddressFromHex(s.accountKey.PubKey().Address().String())
 	s.Require().NoError(err)
 	s.accountAddr = addr
+	s.accountStr = addr.String()
 	privKey, _ = secp256r1.GenPrivKey()
 	s.account2Key = privKey
 	addr, err = sdk.AccAddressFromHex(s.account2Key.PubKey().Address().String())
@@ -74,12 +77,27 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	var authData authtypes.GenesisState
 	s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[authtypes.ModuleName], &authData))
 	genAccount, err := codectypes.NewAnyWithValue(&authtypes.BaseAccount{
-		Address:       s.accountAddr.String(),
+		Address:       s.accountStr,
 		AccountNumber: 1,
 		Sequence:      0,
 	})
 	s.Require().NoError(err)
 	authData.Accounts = append(authData.Accounts, genAccount)
+	authDataBz, err := cfg.Codec.MarshalJSON(&authData)
+	s.Require().NoError(err)
+	genesisState[authtypes.ModuleName] = authDataBz
+
+	balances := sdk.NewCoins(
+		sdk.NewCoin(cfg.BondDenom, cfg.AccountTokens),
+	)
+	var bankData banktypes.GenesisState
+	s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[banktypes.ModuleName], &bankData))
+	genBank := banktypes.Balance{Address: s.accountStr, Coins: balances.Sort()}
+	s.Require().NoError(err)
+	bankData.Balances = append(bankData.Balances, genBank)
+	bankDataBz, err := cfg.Codec.MarshalJSON(&bankData)
+	s.Require().NoError(err)
+	genesisState[banktypes.ModuleName] = bankDataBz
 
 	// Configure Genesis data for attribute module
 	var attributeData attributetypes.GenesisState
@@ -315,9 +333,9 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 			namecli.GetBindNameCmd(),
 			[]string{
 				"txtest",
-				s.testnet.Validators[0].Address.String(),
+				s.accountAddr.String(),
 				"attribute",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddr.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -332,7 +350,7 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 				s.account2Addr.String(),
 				"string",
 				"test value",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddr.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -347,7 +365,7 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 				"invalidbech32",
 				"string",
 				"test value",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddr.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -362,7 +380,7 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 				s.account2Addr.String(),
 				"blah",
 				"3.14159",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddr.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -377,7 +395,7 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 				s.account2Addr.String(),
 				"bytes",
 				"3.14159",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddr.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),

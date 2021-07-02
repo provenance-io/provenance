@@ -1,7 +1,6 @@
 package simulation_test
 
 import (
-	"fmt"
 	"math/rand"
 	"testing"
 
@@ -89,7 +88,6 @@ func (suite *SimTestSuite) TestSimulateMsgAddAttribute() {
 
 	var msg types.MsgAddAttributeRequest
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
-	fmt.Println(msg.Account)
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal(accounts[0].Address.String(), msg.Account)
 	suite.Require().Equal(accounts[0].Address.String(), msg.Owner)
@@ -196,14 +194,13 @@ func (suite *SimTestSuite) TestSimulateMsgDeleteDistinctAttribute() {
 func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
 	accounts := RandomAccounts(r, n)
 
-	initAmt := sdk.TokensFromConsensusPower(300, sdk.DefaultPowerReduction)
+	initAmt := sdk.TokensFromConsensusPower(200, sdk.DefaultPowerReduction)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
 
 	// add coins to the accounts
 	for _, account := range accounts {
 		acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, account.Address)
 		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
-		app.FundAccount(suite.app, suite.ctx, account.Address, initCoins)
 		err := app.FundAccount(suite.app, suite.ctx, account.Address, initCoins)
 		suite.Require().NoError(err)
 	}

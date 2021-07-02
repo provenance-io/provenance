@@ -74,7 +74,7 @@ func (keeper Keeper) SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAdd
 	if name, err = keeper.Normalize(ctx, name); err != nil {
 		return err
 	}
-	if err = sdk.VerifyAddressFormat(addr); err != nil {
+	if err = types.ValidateAddress(addr); err != nil {
 		return sdkerrors.Wrap(types.ErrInvalidAddress, err.Error())
 	}
 	key, err := types.GetNameKeyPrefix(name)

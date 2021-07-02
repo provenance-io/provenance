@@ -9,7 +9,7 @@ import (
 
 	"github.com/provenance-io/provenance/app"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
@@ -40,12 +40,15 @@ func (s *KeeperTestSuite) SetupTest() {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	s.app = app
 	s.ctx = ctx
-
-	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
+	privKey, err := secp256r1.GenPrivKey()
+	s.Require().NoError(err)
+	s.pubkey1 = privKey.PubKey()
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
 	s.user1 = s.user1Addr.String()
 
-	s.pubkey2 = secp256k1.GenPrivKey().PubKey()
+	privKey, err = secp256r1.GenPrivKey()
+	s.Require().NoError(err)
+	s.pubkey2 = privKey.PubKey()
 	s.user2Addr = sdk.AccAddress(s.pubkey2.Address())
 	s.user2 = s.user2Addr.String()
 
@@ -176,7 +179,7 @@ func (s *KeeperTestSuite) TestSetName() {
 			recordRestrict: true,
 			accAddr:        sdk.AccAddress{},
 			wantErr:        true,
-			errorMsg:       "incorrect address length (expected: 20, actual: 0): invalid account address",
+			errorMsg:       "unexpected key length (0 ≠ 32): invalid account address",
 		},
 		"name already bound": {
 			recordName:     "name",

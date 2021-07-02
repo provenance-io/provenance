@@ -140,11 +140,11 @@ func (s *MigrateTestSuite) TestMigrateTestSuite() {
 	}
 }
 
-func (s *MigrateTestSuite) TestConvertLegacyAddress() {
-	padding := make([]byte, 12)
-	acc, _ := sdk.AccAddressFromBech32(s.attributes[0].Address)
-	convertedLegacyAddr := v042.ConvertLegacyAddress(acc)
-	s.Assert().Equal(32, len(convertedLegacyAddr))
-	s.Assert().Equal(acc.Bytes()[:20], convertedLegacyAddr.Bytes()[:20])
-	s.Assert().Equal(padding, convertedLegacyAddr.Bytes()[20:])
-}
+// func (s *MigrateTestSuite) TestConvertLegacyAddress() {
+// 	padding := make([]byte, 12)
+// 	acc, _ := sdk.AccAddressFromBech32(s.attributes[0].Address)
+// 	convertedLegacyAddr := v042.ConvertLegacyAddress(acc)
+// 	s.Assert().Equal(32, len(convertedLegacyAddr))
+// 	s.Assert().Equal(acc.Bytes()[:20], convertedLegacyAddr.Bytes()[:20])
+// 	s.Assert().Equal(padding, convertedLegacyAddr.Bytes()[20:])
+// }

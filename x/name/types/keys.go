@@ -32,7 +32,9 @@ var (
 	// NameKeyPrefix is a prefix added to keys for adding/querying names.
 	NameKeyPrefix = []byte{0x03}
 	// AddressKeyPrefix is a prefix added to keys for indexing name records by address.
-	AddressKeyPrefix = []byte{0x04}
+	AddressKeyPrefix = []byte{0x05}
+	// AddressLength is the length of name address
+	AddressLength = 32
 )
 
 // GetNameKeyPrefix converts a name into key format.
@@ -79,4 +81,14 @@ func GetAddressKeyPrefix(address sdk.AccAddress) (key []byte, err error) {
 		key = append(key, address.Bytes()...)
 	}
 	return
+}
+
+func ValidateAddress(address sdk.AccAddress) error {
+	if len(address.Bytes()) != AddressLength {
+		return fmt.Errorf("unexpected key length (%d ≠ %d)", len(address.Bytes()), AddressLength)
+	}
+	if err := sdk.VerifyAddressFormat(address); err != nil {
+		return err
+	}
+	return nil
 }

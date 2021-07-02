@@ -18,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/provenance-io/provenance/app"
 	provenanceapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/app/params"
 )
@@ -52,9 +51,9 @@ func DefaultTestNetworkConfig() network.Config {
 		NumValidators:     4,
 		BondDenom:         sdk.DefaultBondDenom, // we use the SDK bond denom here, at least until the entire genesis is rewritten to match bond denom
 		MinGasPrices:      fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom),
-		AccountTokens:     sdk.TokensFromConsensusPower(1000, app.DefaultPowerReduction),
-		StakingTokens:     sdk.TokensFromConsensusPower(500, app.DefaultPowerReduction),
-		BondedTokens:      sdk.TokensFromConsensusPower(100, app.DefaultPowerReduction),
+		AccountTokens:     sdk.TokensFromConsensusPower(1000, provenanceapp.DefaultPowerReduction),
+		StakingTokens:     sdk.TokensFromConsensusPower(500, provenanceapp.DefaultPowerReduction),
+		BondedTokens:      sdk.TokensFromConsensusPower(100, provenanceapp.DefaultPowerReduction),
 		PruningStrategy:   storetypes.PruningOptionNothing,
 		CleanupDir:        true,
 		SigningAlgo:       string(hd.Secp256k1Type),

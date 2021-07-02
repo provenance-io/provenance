@@ -99,7 +99,6 @@ func InstallCustomUpgradeHandlers(app *App) {
 			ref := upgrade
 			handler = func(ctx sdk.Context, plan upgradetypes.Plan, versionMap module.VersionMap) (module.VersionMap, error) {
 				return ref.Handler(app, ctx, plan)
-
 			}
 		}
 		app.UpgradeKeeper.SetUpgradeHandler(name, handler)

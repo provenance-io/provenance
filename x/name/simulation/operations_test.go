@@ -4,6 +4,8 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
+
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -86,8 +88,8 @@ func (suite *SimTestSuite) TestSimulateMsgBindName() {
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	suite.Require().True(operationMsg.OK)
-	suite.Require().Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Record.Address)
-	suite.Require().Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Parent.Address)
+	suite.Require().Equal(accounts[2].Address.String(), msg.Record.Address)
+	suite.Require().Equal(accounts[2].Address.String(), msg.Parent.Address)
 	suite.Require().Equal(types.TypeMsgBindNameRequest, msg.Type())
 	suite.Require().Equal(types.ModuleName, msg.Route())
 	suite.Require().Len(futureOperations, 0)
@@ -115,7 +117,7 @@ func (suite *SimTestSuite) TestSimulateMsgDeleteName() {
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	suite.Require().True(operationMsg.OK)
-	suite.Require().Equal("cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Record.Address)
+	suite.Require().Equal(accounts[0].Address.String(), msg.Record.Address)
 	suite.Require().Equal("deleteme", msg.Record.Name)
 	suite.Require().Equal(types.TypeMsgDeleteNameRequest, msg.Type())
 	suite.Require().Equal(types.ModuleName, msg.Route())
@@ -123,20 +125,41 @@ func (suite *SimTestSuite) TestSimulateMsgDeleteName() {
 }
 
 func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
-	accounts := simtypes.RandomAccounts(r, n)
+	accounts := RandomAccounts(r, n)
 
-	initAmt := sdk.TokensFromConsensusPower(200, app.DefaultPowerReduction)
+	initAmt := sdk.TokensFromConsensusPower(200, sdk.DefaultPowerReduction)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
 
 	// add coins to the accounts
 	for _, account := range accounts {
 		acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, account.Address)
 		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
-		err := app.FundModuleAccount(suite.app, suite.ctx, account.Address.String(), initCoins)
+		err := app.FundAccount(suite.app, suite.ctx, account.Address, initCoins)
 		suite.Require().NoError(err)
 	}
 
 	return accounts
+}
+
+// RandomAccounts generates n random accounts
+func RandomAccounts(r *rand.Rand, n int) []simtypes.Account {
+	accs := make([]simtypes.Account, n)
+
+	for i := 0; i < n; i++ {
+		// don't need that much entropy for simulation
+		privkeySeed := make([]byte, 15)
+		r.Read(privkeySeed)
+
+		// TODO generate address with seed
+		privKey, _ := secp256r1.GenPrivKey()
+		accs[i].PrivKey = privKey
+		accs[i].PubKey = accs[i].PrivKey.PubKey()
+		accs[i].Address = sdk.AccAddress(accs[i].PubKey.Address())
+
+		// accs[i].ConsKey = ed25519.GenPrivKeyFromSecret(privkeySeed)
+	}
+
+	return accs
 }
 
 func TestSimTestSuite(t *testing.T) {
