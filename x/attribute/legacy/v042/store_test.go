@@ -118,7 +118,7 @@ func importAttributeLegacy(ctx sdk.Context, attr types.Attribute, app *app.App) 
 }
 
 func (s *MigrateTestSuite) TestMigrateTestSuite() {
-	v042.MigrateAddressLength(s.app.AttributeKeeper, s.ctx)
+	v042.MigrateAddressLength(s.ctx, s.app.GetKey("attribute"), types.ModuleCdc)
 	store := s.ctx.KVStore(s.app.GetKey(types.ModuleName))
 	for _, attr := range s.attributes {
 		// Should have removed attribute at legacy key

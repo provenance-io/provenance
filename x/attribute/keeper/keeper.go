@@ -348,34 +348,3 @@ func (k Keeper) importAttribute(ctx sdk.Context, attr types.Attribute) error {
 	store.Set(key, bz)
 	return nil
 }
-
-// Updates an Attributes address and removes old attribute from keystore
-func (k Keeper) UpdateAddributeAddress(ctx sdk.Context, attr types.Attribute, updatedAddress sdk.AccAddress, previousKey []byte) error {
-
-	attr.Address = updatedAddress.String()
-
-	err := attr.ValidateBasic()
-	if err != nil {
-		return err
-	}
-
-	if strings.TrimSpace(attr.Address) == "" {
-		return fmt.Errorf("unable to import attribute with empty address")
-	}
-	// Ensure name is stored in normalized format.
-	attr.Name, err = k.nameKeeper.Normalize(ctx, attr.Name)
-	if err != nil {
-		return fmt.Errorf("unable to normalize attribute name \"%s\": %w", attr.Name, err)
-	}
-
-	// Store the sanitized account attribute
-	bz, err := k.cdc.Marshal(&attr)
-	if err != nil {
-		return err
-	}
-	updatedKey := types.AccountAttributeKey(updatedAddress, attr)
-	store := ctx.KVStore(k.storeKey)
-	store.Set(updatedKey, bz)
-	store.Delete(previousKey)
-	return nil
-}
