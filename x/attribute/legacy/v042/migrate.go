@@ -6,7 +6,7 @@ import (
 	"github.com/provenance-io/provenance/x/attribute/types"
 )
 
-func MigrateAddressLength(attrKeeper keeper.Keeper, ctx sdk.Context) {
+func MigrateAddressLength(ctx sdk.Context, attrKeeper keeper.Keeper) error {
 	attrs := make([]types.Attribute, 0)
 	appendToRecords := func(attr types.Attribute) error {
 		attrs = append(attrs, attr)
@@ -27,6 +27,7 @@ func MigrateAddressLength(attrKeeper keeper.Keeper, ctx sdk.Context) {
 			panic(err)
 		}
 	}
+	return nil
 }
 
 func ConvertLegacyAddress(legacyAddr sdk.AccAddress) sdk.AccAddress {

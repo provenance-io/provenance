@@ -8,7 +8,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	legacyv042 "github.com/provenance-io/provenance/x/attribute/legacy/v042"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -19,7 +18,7 @@ var (
 	}
 )
 
-type appUpgradeHandler = func(*App, sdk.Context, upgradetypes.Plan)
+type appUpgradeHandler = func(*App, sdk.Context, upgradetypes.Plan) (module.VersionMap, error)
 
 type appUpgrade struct {
 	Added   []string
@@ -31,21 +30,23 @@ type appUpgrade struct {
 var handlers = map[string]appUpgrade{
 	"v0.2.0": {},
 	"v0.2.1": {
-		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) {
+		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
 			app.MarkerKeeper.SetParams(ctx, markertypes.DefaultParams())
+			return app.UpgradeKeeper.GetModuleVersionMap(ctx), nil
 		},
 	},
 	"v0.3.0": {},
 	"v1.0.0": {
-		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) {
+		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
 			app.NameKeeper.ConvertLegacyAmino(ctx)
 			app.AttributeKeeper.ConvertLegacyAmino(ctx)
+			return app.UpgradeKeeper.GetModuleVersionMap(ctx), nil
 		},
 	},
 	"v1.1.1":   {},
 	"amaranth": {}, // associated with v1.2.x upgrades in testnet, mainnet
 	"bluetiful": {
-		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) {
+		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
 			// Force default denom metadata for the bond denom
 			app.BankKeeper.SetDenomMetaData(ctx, banktypes.Metadata{
 				Description: "Hash is the staking token of the Provenance Blockchain",
@@ -68,13 +69,20 @@ var handlers = map[string]appUpgrade{
 			app.MarkerKeeper.SetParams(ctx, markertypes.Params{
 				UnrestrictedDenomRegex: `[a-zA-Z][a-zA-Z0-9\-\.]{7,64}`,
 			})
+			return app.UpgradeKeeper.GetModuleVersionMap(ctx), nil
 		},
 	},
 	"citrine": {},
 	"desert":  {},
 	"eigengrau": {
-		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) {
-			legacyv042.MigrateAddressLength(app.AttributeKeeper, ctx)
+		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
+			fromVM := map[string]uint64{
+				"attribute": 1,
+				"marker":    1,
+				"metadata":  1,
+				"name":      1,
+			}
+			return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 		},
 	},
 	// TODO - Add new upgrade definitions here.
@@ -90,8 +98,8 @@ func InstallCustomUpgradeHandlers(app *App) {
 		} else {
 			ref := upgrade
 			handler = func(ctx sdk.Context, plan upgradetypes.Plan, versionMap module.VersionMap) (module.VersionMap, error) {
-				ref.Handler(app, ctx, plan)
-				return app.UpgradeKeeper.GetModuleVersionMap(ctx), nil
+				return ref.Handler(app, ctx, plan)
+
 			}
 		}
 		app.UpgradeKeeper.SetUpgradeHandler(name, handler)
