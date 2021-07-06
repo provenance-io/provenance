@@ -13,6 +13,8 @@ message ObjectStoreLocator {
   string owner = 1;
   // locator endpoint uri
   string locator_uri = 2;
+  // owners encryption key address
+  string encryption_key = 3;
 }
 
 // Params defines the parameters for the metadata-locator module methods.

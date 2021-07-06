@@ -3842,6 +3842,7 @@ uri for it's associated object store.
 | ----- | ---- | ----- | ----------- |
 | `owner` | [string](#string) |  | account address the endpoint is owned by |
 | `locator_uri` | [string](#string) |  | locator endpoint uri |
+| `encryption_key` | [string](#string) |  | owners encryption key address |
 
 
 
