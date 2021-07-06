@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"strings"
+
 	"github.com/provenance-io/provenance/x/metadata/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -49,7 +51,11 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 			if err != nil {
 				panic(err)
 			}
-			err = k.ImportOSLocatorRecord(ctx, addr, s.LocatorUri)
+			encryptionKey := sdk.AccAddress{}
+			if strings.TrimSpace(s.EncryptionKey) != "" {
+				encryptionKey, _ = sdk.AccAddressFromBech32(s.EncryptionKey)
+			}
+			err = k.ImportOSLocatorRecord(ctx, addr, encryptionKey, s.LocatorUri)
 			if err != nil {
 				panic(err)
 			}

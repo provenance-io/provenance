@@ -3,10 +3,11 @@ package rest_test
 import (
 	b64 "encoding/base64"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/types/query"
-	"google.golang.org/genproto/googleapis/rpc/status"
 	"strings"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/types/query"
+	"google.golang.org/genproto/googleapis/rpc/status"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -111,11 +112,11 @@ func (suite *IntegrationGRPCTestSuite) SetupSuite() {
 	// add os locator
 	suite.ownerAddr = suite.accountAddr
 	suite.uri = "http://foo.com"
-	suite.objectLocator = metadatatypes.NewOSLocatorRecord(suite.ownerAddr, suite.uri)
+	suite.objectLocator = metadatatypes.NewOSLocatorRecord(suite.ownerAddr, sdk.AccAddress{}, suite.uri)
 
 	suite.ownerAddr1 = suite.user1Addr
 	suite.uri1 = "http://bar.com"
-	suite.objectLocator1 = metadatatypes.NewOSLocatorRecord(suite.ownerAddr1, suite.uri1)
+	suite.objectLocator1 = metadatatypes.NewOSLocatorRecord(suite.ownerAddr1, suite.ownerAddr, suite.uri1)
 
 	var metadataData metadatatypes.GenesisState
 	metadataData.Params = metadatatypes.DefaultParams()
@@ -168,7 +169,7 @@ func (suite *IntegrationGRPCTestSuite) TestGRPCQueries() {
 			false,
 			&metadatatypes.QueryParamsResponse{},
 			&metadatatypes.QueryParamsResponse{
-				Params: metadatatypes.DefaultParams(),
+				Params:  metadatatypes.DefaultParams(),
 				Request: &metadatatypes.QueryParamsRequest{},
 			},
 		},
@@ -182,8 +183,8 @@ func (suite *IntegrationGRPCTestSuite) TestGRPCQueries() {
 			&metadatatypes.ScopeResponse{},
 			&metadatatypes.ScopeResponse{
 				Scope: &metadatatypes.ScopeWrapper{
-					Scope: &suite.scope,
-					ScopeIdInfo: types.GetScopeIDInfo(suite.scopeID),
+					Scope:           &suite.scope,
+					ScopeIdInfo:     types.GetScopeIDInfo(suite.scopeID),
 					ScopeSpecIdInfo: types.GetScopeSpecIDInfo(suite.specID),
 				},
 				Request: &metadatatypes.ScopeRequest{ScopeId: suite.scopeUUID.String()},
@@ -208,7 +209,7 @@ func (suite *IntegrationGRPCTestSuite) TestGRPCQueries() {
 			false,
 			&metadatatypes.OSLocatorParamsResponse{},
 			&metadatatypes.OSLocatorParamsResponse{
-				Params: metadatatypes.DefaultOSLocatorParams(),
+				Params:  metadatatypes.DefaultOSLocatorParams(),
 				Request: &metadatatypes.OSLocatorParamsRequest{},
 			},
 		},
@@ -255,7 +256,7 @@ func (suite *IntegrationGRPCTestSuite) TestGRPCQueries() {
 		},
 		{
 			"Get os locator's for given scope.",
-			// only way i could get around http url parse isseus for rest
+			// only way i could get around http url parse issues for rest
 			// This encodes/decodes using a URL-compatible base64
 			// format.
 			fmt.Sprintf("%s/provenance/metadata/v1/locator/scope/%s", baseURL, suite.scopeUUID),
@@ -266,15 +267,15 @@ func (suite *IntegrationGRPCTestSuite) TestGRPCQueries() {
 			&metadatatypes.OSLocatorsByScopeResponse{},
 			&metadatatypes.OSLocatorsByScopeResponse{
 				Locators: []metadatatypes.ObjectStoreLocator{{
-					Owner:      suite.ownerAddr1.String(),
-					LocatorUri: suite.uri1,
+					Owner:         suite.ownerAddr1.String(),
+					LocatorUri:    suite.uri1,
+					EncryptionKey: suite.ownerAddr.String(),
 				}},
 				Request: &metadatatypes.OSLocatorsByScopeRequest{
 					ScopeId: suite.scopeUUID.String(),
 				},
 			},
 		},
-
 	}
 
 	for _, tc := range testCases {
@@ -320,8 +321,9 @@ func (suite *IntegrationGRPCTestSuite) TestAllOSLocator() {
 			&metadatatypes.OSAllLocatorsResponse{},
 			&metadatatypes.OSAllLocatorsResponse{
 				Locators: []metadatatypes.ObjectStoreLocator{{
-					Owner:      suite.ownerAddr1.String(),
-					LocatorUri: suite.uri1,
+					Owner:         suite.ownerAddr1.String(),
+					EncryptionKey: suite.ownerAddr.String(),
+					LocatorUri:    suite.uri1,
 				}},
 			},
 		},
@@ -337,7 +339,7 @@ func (suite *IntegrationGRPCTestSuite) TestAllOSLocator() {
 				suite.Require().Error(err, "UnmarshalJSON expected error")
 			} else {
 				suite.Require().NoError(err, "UnmarshalJSON unexpected error")
-				suite.Require().True( strings.Contains(fmt.Sprint(tc.respType),fmt.Sprint(tc.expected)))
+				suite.Require().True(strings.Contains(fmt.Sprint(tc.respType), fmt.Sprint(tc.expected)))
 			}
 		})
 	}
