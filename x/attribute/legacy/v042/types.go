@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/provenance-io/provenance/x/attribute/types"
 )
 
@@ -18,7 +19,7 @@ func AccountAttributeKeyLegacy(acc sdk.AccAddress, attr types.Attribute) []byte 
 	if len(acc.Bytes()) != AttributeAddrLengthLegacy {
 		panic(fmt.Sprintf("unexpected key length (%d ≠ %d)", len(acc.Bytes()), AttributeKeyPrefixLegacy))
 	}
-	key := append(AttributeKeyPrefixLegacy, acc.Bytes()...)
+	key := append(AttributeKeyPrefixLegacy, address.MustLengthPrefix(acc.Bytes())...)
 	key = append(key, types.GetNameKeyBytes(attr.Name)...)
 	return append(key, attr.Hash()...)
 }

@@ -18,6 +18,7 @@ import (
 
 	v042 "github.com/provenance-io/provenance/x/attribute/legacy/v042"
 	"github.com/provenance-io/provenance/x/attribute/types"
+	namev042 "github.com/provenance-io/provenance/x/name/legacy/v042"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
@@ -64,8 +65,6 @@ func (s *MigrateTestSuite) SetupTest() {
 	nameData.Params.MinSegmentLength = 3
 	nameData.Params.MaxSegmentLength = 12
 
-	app.NameKeeper.InitGenesis(ctx, nameData)
-
 	var attrData types.GenesisState
 	attrData.Params.MaxValueLength = 20
 	attrData.Attributes = append(attrData.Attributes, types.Attribute{Address: s.user1, AttributeType: types.AttributeType_String, Value: []byte("first"), Name: "example.attribute"})
@@ -74,6 +73,47 @@ func (s *MigrateTestSuite) SetupTest() {
 	s.attributes = attrData.Attributes
 	InitGenesisLegacy(ctx, &attrData, app)
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
+}
+
+// InitGenesisLegacy creates the initial genesis state for the name module. ONLY FOR TESTING.
+func InitGenesisNameLegacy(ctx sdk.Context, data *nametypes.GenesisState, app *app.App) {
+	for _, attr := range data.Bindings {
+		if err := importNameLegacy(ctx, attr, app); err != nil {
+			panic(err)
+		}
+	}
+}
+
+// A genesis helper that imports name state without owner checks.ONLY FOR TESTING.
+func importNameLegacy(ctx sdk.Context, record nametypes.NameRecord, app *app.App) error {
+	key, err := nametypes.GetNameKeyPrefix(record.Name)
+	if err != nil {
+		return err
+	}
+	store := ctx.KVStore(app.GetKey(types.ModuleName))
+	if store.Has(key) {
+		return nametypes.ErrNameAlreadyBound
+	}
+	if err = record.ValidateBasic(); err != nil {
+		return err
+	}
+	bz, err := types.ModuleCdc.Marshal(&record)
+	if err != nil {
+		return err
+	}
+	store.Set(key, bz)
+	addr, err := sdk.AccAddressFromBech32(record.Address)
+	if err != nil {
+		return err
+	}
+	// Now index by address
+	addrPrefix, err := namev042.GetAddressKeyPrefixLegacy(addr)
+	if err != nil {
+		return err
+	}
+	indexKey := append(addrPrefix, key...) // [0x04] :: [addr-bytes] :: [name-key-bytes]
+	store.Set(indexKey, bz)
+	return nil
 }
 
 // InitGenesisLegacy creates the initial genesis state for the attribute module. ONLY FOR TESTING.
