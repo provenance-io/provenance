@@ -24,8 +24,6 @@ var (
 	AddrLengthLegacy = 20
 	// ScopeSpecScopeCacheKeyPrefix for scope to scope specification cache lookup
 	ScopeSpecScopeCacheKeyPrefix = []byte{0x11}
-	// ContractSpecScopeSpecCacheKeyPrefix for scope spec lookup by contract spec
-	ContractSpecScopeSpecCacheKeyPrefix = []byte{0x14}
 	// OSLocatorAddressKeyPrefix is the key for OSLocator Record by address
 	OSLocatorAddressKeyPrefix = []byte{0x21}
 )
@@ -37,14 +35,6 @@ func GetOSLocatorKeyLegacy(addr sdk.AccAddress) []byte {
 	}
 	return append(OSLocatorAddressKeyPrefixLegacy, addr.Bytes()...)
 }
-
-// // GetOSLocatorKey returns a store key for an object store locator entry
-// func GetAddressScopeCacheKeyLegacy(addr sdk.AccAddress) []byte {
-// 	if len(addr.Bytes()) != AddrLengthLegacy {
-// 		panic(fmt.Sprintf("unexpected key length (%d ≠ %d)", len(addr.Bytes()), AddrLengthLegacy))
-// 	}
-// 	return append(OSLocatorAddressKeyPrefixLegacy, addr.Bytes()...)
-// }
 
 // GetAddressScopeCacheIteratorPrefix returns an iterator prefix for all scope cache entries assigned to a given address
 func GetAddressScopeCacheIteratorPrefixLegacy(addr sdk.AccAddress) []byte {
@@ -86,22 +76,12 @@ func GetAddressScopeSpecCacheKeyLegacy(addr sdk.AccAddress, scopeSpecID types.Me
 	return append(GetAddressScopeSpecCacheIteratorPrefixLegacy(addr), scopeSpecID.Bytes()...)
 }
 
-// GetContractSpecScopeSpecCacheIteratorPrefix returns an iterator prefix for all scope spec cache entries assigned to a given contract spec
-func GetContractSpecScopeSpecCacheIteratorPrefixLegacy(contractSpecID types.MetadataAddress) []byte {
-	return append(ContractSpecScopeSpecCacheKeyPrefix, contractSpecID.Bytes()...)
-}
-
-// GetContractSpecScopeSpecCacheKey returns the store key for a contract spec + scope spec cache entry
-func GetContractSpecScopeSpecCacheKeyLegacy(contractSpecID types.MetadataAddress, scopeSpecID types.MetadataAddress) []byte {
-	return append(GetContractSpecScopeSpecCacheIteratorPrefixLegacy(contractSpecID), scopeSpecID.Bytes()...)
-}
-
 // GetAddressContractSpecCacheIteratorPrefix returns an iterator prefix for all contract spec cache entries assigned to a given address
 func GetAddressContractSpecCacheIteratorPrefixLegacy(addr sdk.AccAddress) []byte {
 	return append(AddressContractSpecCacheKeyPrefixLegacy, address.MustLengthPrefix(addr.Bytes())...)
 }
 
-// GetAddressContractSpecCacheKey returns the store key for an address + contract spec cache entry
-func GetAddressContractSpecCacheKey(addr sdk.AccAddress, contractSpecID types.MetadataAddress) []byte {
+// GetAddressContractSpecCacheKeyLegacy returns the store key for an address + contract spec cache entry
+func GetAddressContractSpecCacheKeyLegacy(addr sdk.AccAddress, contractSpecID types.MetadataAddress) []byte {
 	return append(GetAddressContractSpecCacheIteratorPrefixLegacy(addr), contractSpecID.Bytes()...)
 }

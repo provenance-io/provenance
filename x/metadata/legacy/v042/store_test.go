@@ -33,8 +33,10 @@ type MigrateTestSuite struct {
 	user2     string
 	user2Addr sdk.AccAddress
 
-	osLocators       []types.ObjectStoreLocator
-	scopeMetaaddress []types.MetadataAddress
+	osLocators            []types.ObjectStoreLocator
+	scopeMetaaddrs        []types.MetadataAddress
+	scopeSpecMetaaddrs    []types.MetadataAddress
+	contractSpecMetaaddrs []types.MetadataAddress
 }
 
 func TestMigrateTestSuite(t *testing.T) {
@@ -61,11 +63,23 @@ func (s *MigrateTestSuite) SetupTest() {
 	}
 	s.osLocators = osLocators
 
-	scopeMetadataAddresses := []types.MetadataAddress{
+	scopeMetadataAddrs := []types.MetadataAddress{
 		types.ScopeMetadataAddress(uuid.New()),
 		types.ScopeMetadataAddress(uuid.New()),
 	}
-	s.scopeMetaaddress = scopeMetadataAddresses
+	s.scopeMetaaddrs = scopeMetadataAddrs
+
+	scopeSpecMetaaddrs := []types.MetadataAddress{
+		types.ScopeSpecMetadataAddress(uuid.New()),
+		types.ScopeSpecMetadataAddress(uuid.New()),
+	}
+	s.scopeSpecMetaaddrs = scopeSpecMetaaddrs
+
+	contractSpecMetaaddrs := []types.MetadataAddress{
+		types.ScopeSpecMetadataAddress(uuid.New()),
+		types.ScopeSpecMetadataAddress(uuid.New()),
+	}
+	s.contractSpecMetaaddrs = contractSpecMetaaddrs
 
 	var metadataData types.GenesisState
 	metadataData.ObjectStoreLocators = append(metadataData.ObjectStoreLocators, osLocators...)
@@ -86,8 +100,18 @@ func (s *MigrateTestSuite) InitGenesisLegacy(ctx sdk.Context, data *types.Genesi
 		}
 		store.Set(key, bz)
 	}
-	store.Set(v042.GetAddressScopeCacheKeyLegacy(s.user1Addr, s.scopeMetaaddress[0]), []byte{0x01})
-	store.Set(v042.GetAddressScopeCacheKeyLegacy(s.user2Addr, s.scopeMetaaddress[1]), []byte{0x01})
+	store.Set(v042.GetAddressScopeCacheKeyLegacy(s.user1Addr, s.scopeMetaaddrs[0]), []byte{0x01})
+	store.Set(v042.GetAddressScopeCacheKeyLegacy(s.user2Addr, s.scopeMetaaddrs[1]), []byte{0x01})
+
+	store.Set(v042.GetValueOwnerScopeCacheKeyLegacy(s.user1Addr, s.scopeMetaaddrs[0]), []byte{0x01})
+	store.Set(v042.GetValueOwnerScopeCacheKeyLegacy(s.user2Addr, s.scopeMetaaddrs[1]), []byte{0x01})
+
+	store.Set(v042.GetAddressScopeSpecCacheKeyLegacy(s.user1Addr, s.scopeSpecMetaaddrs[0]), []byte{0x01})
+	store.Set(v042.GetAddressScopeSpecCacheKeyLegacy(s.user2Addr, s.scopeSpecMetaaddrs[1]), []byte{0x01})
+
+	store.Set(v042.GetAddressContractSpecCacheKeyLegacy(s.user1Addr, s.contractSpecMetaaddrs[0]), []byte{0x01})
+	store.Set(v042.GetAddressContractSpecCacheKeyLegacy(s.user2Addr, s.contractSpecMetaaddrs[1]), []byte{0x01})
+
 	return nil
 }
 
@@ -104,6 +128,9 @@ func (s *MigrateTestSuite) TestMigrateOSLocatorKeys() {
 
 		// Should find object store locator from updated key
 		key = types.GetOSLocatorKey(acc)
+		s.Assert().Equal(types.OSLocatorAddressKeyPrefix, key[0:1])
+		s.Assert().Equal([]byte{byte(20)}, key[1:2])
+		s.Assert().Equal(20, len(key[2:]))
 		result = store.Get(key)
 		s.Assert().NotNil(result)
 		var resultOSLocator types.ObjectStoreLocator
@@ -117,26 +144,110 @@ func (s *MigrateTestSuite) TestMigrateAddressScopeCacheKey() {
 	err := v042.MigrateAddressScopeCacheKey(s.ctx, s.app.GetKey("metadata"), types.ModuleCdc)
 	s.Assert().NoError(err)
 	store := s.ctx.KVStore(s.app.GetKey(types.ModuleName))
-	key := v042.GetAddressScopeCacheKeyLegacy(s.user1Addr, s.scopeMetaaddress[0])
+	key := v042.GetAddressScopeCacheKeyLegacy(s.user1Addr, s.scopeMetaaddrs[0])
 	result := store.Get(key)
 	s.Assert().Nil(result)
-	key = v042.GetAddressScopeCacheKeyLegacy(s.user2Addr, s.scopeMetaaddress[1])
+	key = v042.GetAddressScopeCacheKeyLegacy(s.user2Addr, s.scopeMetaaddrs[1])
 	result = store.Get(key)
 	s.Assert().Nil(result)
 
 	// Should find cache key with new v043 key
-	key = types.GetAddressScopeCacheKey(s.user1Addr, s.scopeMetaaddress[0])
+	key = types.GetAddressScopeCacheKey(s.user1Addr, s.scopeMetaaddrs[0])
 	s.Assert().Equal(types.AddressScopeCacheKeyPrefix, key[0:1])
 	s.Assert().Equal([]byte{byte(20)}, key[1:2])
 	s.Assert().Equal(s.user1Addr.Bytes(), key[2:22])
-	s.Assert().Equal(s.scopeMetaaddress[0].Bytes(), key[22:])
+	s.Assert().Equal(s.scopeMetaaddrs[0].Bytes(), key[22:])
 	result = store.Get(key)
 	s.Assert().NotNil(result)
-	key = types.GetAddressScopeCacheKey(s.user2Addr, s.scopeMetaaddress[1])
+	key = types.GetAddressScopeCacheKey(s.user2Addr, s.scopeMetaaddrs[1])
 	s.Assert().Equal(types.AddressScopeCacheKeyPrefix, key[0:1])
 	s.Assert().Equal([]byte{byte(20)}, key[1:2])
 	s.Assert().Equal(s.user2Addr.Bytes(), key[2:22])
-	s.Assert().Equal(s.scopeMetaaddress[1].Bytes(), key[22:])
+	s.Assert().Equal(s.scopeMetaaddrs[1].Bytes(), key[22:])
+	result = store.Get(key)
+	s.Assert().NotNil(result)
+}
+
+func (s *MigrateTestSuite) TestMigrateValueOwnerScopeCacheKey() {
+	err := v042.MigrateValueOwnerScopeCacheKey(s.ctx, s.app.GetKey("metadata"), types.ModuleCdc)
+	s.Assert().NoError(err)
+	store := s.ctx.KVStore(s.app.GetKey(types.ModuleName))
+	key := v042.GetValueOwnerScopeCacheKeyLegacy(s.user1Addr, s.scopeMetaaddrs[0])
+	result := store.Get(key)
+	s.Assert().Nil(result)
+	key = v042.GetValueOwnerScopeCacheKeyLegacy(s.user2Addr, s.scopeMetaaddrs[1])
+	result = store.Get(key)
+	s.Assert().Nil(result)
+
+	// Should find cache key with new v043 key
+	key = types.GetValueOwnerScopeCacheKey(s.user1Addr, s.scopeMetaaddrs[0])
+	s.Assert().Equal(types.ValueOwnerScopeCacheKeyPrefix, key[0:1])
+	s.Assert().Equal([]byte{byte(20)}, key[1:2])
+	s.Assert().Equal(s.user1Addr.Bytes(), key[2:22])
+	s.Assert().Equal(s.scopeMetaaddrs[0].Bytes(), key[22:])
+	result = store.Get(key)
+	s.Assert().NotNil(result)
+	key = types.GetValueOwnerScopeCacheKey(s.user2Addr, s.scopeMetaaddrs[1])
+	s.Assert().Equal(types.ValueOwnerScopeCacheKeyPrefix, key[0:1])
+	s.Assert().Equal([]byte{byte(20)}, key[1:2])
+	s.Assert().Equal(s.user2Addr.Bytes(), key[2:22])
+	s.Assert().Equal(s.scopeMetaaddrs[1].Bytes(), key[22:])
+	result = store.Get(key)
+	s.Assert().NotNil(result)
+}
+
+func (s *MigrateTestSuite) TestMigrateAddressScopeSpecCacheKey() {
+	err := v042.MigrateAddressScopeSpecCacheKey(s.ctx, s.app.GetKey("metadata"), types.ModuleCdc)
+	s.Assert().NoError(err)
+	store := s.ctx.KVStore(s.app.GetKey(types.ModuleName))
+	key := v042.GetAddressScopeSpecCacheKeyLegacy(s.user1Addr, s.scopeSpecMetaaddrs[0])
+	result := store.Get(key)
+	s.Assert().Nil(result)
+	key = v042.GetAddressScopeSpecCacheKeyLegacy(s.user2Addr, s.scopeSpecMetaaddrs[1])
+	result = store.Get(key)
+	s.Assert().Nil(result)
+
+	// Should find cache key with new v043 key
+	key = types.GetAddressScopeSpecCacheKey(s.user1Addr, s.scopeSpecMetaaddrs[0])
+	s.Assert().Equal(types.AddressScopeSpecCacheKeyPrefix, key[0:1])
+	s.Assert().Equal([]byte{byte(20)}, key[1:2])
+	s.Assert().Equal(s.user1Addr.Bytes(), key[2:22])
+	s.Assert().Equal(s.scopeSpecMetaaddrs[0].Bytes(), key[22:])
+	result = store.Get(key)
+	s.Assert().NotNil(result)
+	key = types.GetAddressScopeSpecCacheKey(s.user2Addr, s.scopeSpecMetaaddrs[1])
+	s.Assert().Equal(types.AddressScopeSpecCacheKeyPrefix, key[0:1])
+	s.Assert().Equal([]byte{byte(20)}, key[1:2])
+	s.Assert().Equal(s.user2Addr.Bytes(), key[2:22])
+	s.Assert().Equal(s.scopeSpecMetaaddrs[1].Bytes(), key[22:])
+	result = store.Get(key)
+	s.Assert().NotNil(result)
+}
+
+func (s *MigrateTestSuite) TestMigrateAddressContractSpecCacheKey() {
+	err := v042.MigrateAddressContractSpecCacheKey(s.ctx, s.app.GetKey("metadata"), types.ModuleCdc)
+	s.Assert().NoError(err)
+	store := s.ctx.KVStore(s.app.GetKey(types.ModuleName))
+	key := v042.GetAddressContractSpecCacheKeyLegacy(s.user1Addr, s.contractSpecMetaaddrs[0])
+	result := store.Get(key)
+	s.Assert().Nil(result)
+	key = v042.GetAddressContractSpecCacheKeyLegacy(s.user2Addr, s.contractSpecMetaaddrs[1])
+	result = store.Get(key)
+	s.Assert().Nil(result)
+
+	// Should find cache key with new v043 key
+	key = types.GetAddressContractSpecCacheKey(s.user1Addr, s.contractSpecMetaaddrs[0])
+	s.Assert().Equal(types.AddressContractSpecCacheKeyPrefix, key[0:1])
+	s.Assert().Equal([]byte{byte(20)}, key[1:2])
+	s.Assert().Equal(s.user1Addr.Bytes(), key[2:22])
+	s.Assert().Equal(s.contractSpecMetaaddrs[0].Bytes(), key[22:])
+	result = store.Get(key)
+	s.Assert().NotNil(result)
+	key = types.GetAddressContractSpecCacheKey(s.user2Addr, s.contractSpecMetaaddrs[1])
+	s.Assert().Equal(types.AddressContractSpecCacheKeyPrefix, key[0:1])
+	s.Assert().Equal([]byte{byte(20)}, key[1:2])
+	s.Assert().Equal(s.user2Addr.Bytes(), key[2:22])
+	s.Assert().Equal(s.contractSpecMetaaddrs[1].Bytes(), key[22:])
 	result = store.Get(key)
 	s.Assert().NotNil(result)
 }

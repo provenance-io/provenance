@@ -8,7 +8,23 @@ import (
 )
 
 func MigrateAddresses(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec) error {
-	return MigrateOSLocatorKeys(ctx, storeKey, cdc)
+	err := MigrateOSLocatorKeys(ctx, storeKey, cdc)
+	if err != nil {
+		return err
+	}
+	err = MigrateAddressScopeCacheKey(ctx, storeKey, cdc)
+	if err != nil {
+		return err
+	}
+	err = MigrateValueOwnerScopeCacheKey(ctx, storeKey, cdc)
+	if err != nil {
+		return err
+	}
+	err = MigrateAddressScopeSpecCacheKey(ctx, storeKey, cdc)
+	if err != nil {
+		return err
+	}
+	return MigrateAddressContractSpecCacheKey(ctx, storeKey, cdc)
 }
 
 func MigrateOSLocatorKeys(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec) error {
@@ -56,7 +72,7 @@ func MigrateAddressScopeCacheKey(ctx sdk.Context, storeKey sdk.StoreKey, cdc cod
 		newStoreKey := types.GetAddressScopeCacheIteratorPrefix(legacyAddress)
 		metaaddress := oldStoreIter.Key()[21:]
 
-		store.Set(append(newStoreKey, metaaddress...), []byte{0x01})
+		store.Set(append(newStoreKey, metaaddress...), oldStoreIter.Value())
 		oldStore.Delete(oldStoreIter.Key())
 	}
 
@@ -77,7 +93,7 @@ func MigrateValueOwnerScopeCacheKey(ctx sdk.Context, storeKey sdk.StoreKey, cdc 
 		newStoreKey := types.GetValueOwnerScopeCacheIteratorPrefix(legacyAddress)
 		metaaddress := oldStoreIter.Key()[21:]
 
-		store.Set(append(newStoreKey, metaaddress...), []byte{0x01})
+		store.Set(append(newStoreKey, metaaddress...), oldStoreIter.Value())
 		oldStore.Delete(oldStoreIter.Key())
 	}
 
@@ -98,7 +114,7 @@ func MigrateAddressScopeSpecCacheKey(ctx sdk.Context, storeKey sdk.StoreKey, cdc
 		newStoreKey := types.GetAddressScopeSpecCacheIteratorPrefix(legacyAddress)
 		metaaddress := oldStoreIter.Key()[21:]
 
-		store.Set(append(newStoreKey, metaaddress...), []byte{0x01})
+		store.Set(append(newStoreKey, metaaddress...), oldStoreIter.Value())
 		oldStore.Delete(oldStoreIter.Key())
 	}
 
@@ -119,7 +135,7 @@ func MigrateAddressContractSpecCacheKey(ctx sdk.Context, storeKey sdk.StoreKey, 
 		newStoreKey := types.GetAddressContractSpecCacheIteratorPrefix(legacyAddress)
 		metaaddress := oldStoreIter.Key()[21:]
 
-		store.Set(append(newStoreKey, metaaddress...), []byte{0x01})
+		store.Set(append(newStoreKey, metaaddress...), oldStoreIter.Value())
 		oldStore.Delete(oldStoreIter.Key())
 	}
 
