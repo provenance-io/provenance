@@ -55,10 +55,12 @@ type IntegrationGRPCTestSuite struct {
 
 	objectLocator metadatatypes.ObjectStoreLocator
 	ownerAddr     sdk.AccAddress
+	encryptionKey sdk.AccAddress
 	uri           string
 
 	objectLocator1 metadatatypes.ObjectStoreLocator
 	ownerAddr1     sdk.AccAddress
+	encryptionKey1 sdk.AccAddress
 	uri1           string
 }
 
@@ -112,11 +114,13 @@ func (suite *IntegrationGRPCTestSuite) SetupSuite() {
 	// add os locator
 	suite.ownerAddr = suite.accountAddr
 	suite.uri = "http://foo.com"
-	suite.objectLocator = metadatatypes.NewOSLocatorRecord(suite.ownerAddr, sdk.AccAddress{}, suite.uri)
+	suite.encryptionKey = sdk.AccAddress{}
+	suite.objectLocator = metadatatypes.NewOSLocatorRecord(suite.ownerAddr, suite.encryptionKey, suite.uri)
 
 	suite.ownerAddr1 = suite.user1Addr
 	suite.uri1 = "http://bar.com"
-	suite.objectLocator1 = metadatatypes.NewOSLocatorRecord(suite.ownerAddr1, suite.ownerAddr, suite.uri1)
+	suite.encryptionKey1 = suite.ownerAddr
+	suite.objectLocator1 = metadatatypes.NewOSLocatorRecord(suite.ownerAddr1, suite.encryptionKey1, suite.uri1)
 
 	var metadataData metadatatypes.GenesisState
 	metadataData.Params = metadatatypes.DefaultParams()
@@ -240,9 +244,10 @@ func (suite *IntegrationGRPCTestSuite) TestGRPCQueries() {
 			false,
 			&metadatatypes.OSLocatorsByURIResponse{},
 			&metadatatypes.OSLocatorsByURIResponse{
-				Locators: []metadatatypes.ObjectStoreLocator{metadatatypes.ObjectStoreLocator{
-					Owner:      suite.ownerAddr.String(),
-					LocatorUri: suite.uri,
+				Locators: []metadatatypes.ObjectStoreLocator{{
+					Owner:         suite.ownerAddr.String(),
+					LocatorUri:    suite.uri,
+					EncryptionKey: suite.encryptionKey.String(),
 				}},
 				Request: &metadatatypes.OSLocatorsByURIRequest{
 					Uri:        b64.StdEncoding.EncodeToString([]byte(suite.uri)),
@@ -269,7 +274,7 @@ func (suite *IntegrationGRPCTestSuite) TestGRPCQueries() {
 				Locators: []metadatatypes.ObjectStoreLocator{{
 					Owner:         suite.ownerAddr1.String(),
 					LocatorUri:    suite.uri1,
-					EncryptionKey: suite.ownerAddr.String(),
+					EncryptionKey: suite.encryptionKey1.String(),
 				}},
 				Request: &metadatatypes.OSLocatorsByScopeRequest{
 					ScopeId: suite.scopeUUID.String(),
@@ -322,7 +327,7 @@ func (suite *IntegrationGRPCTestSuite) TestAllOSLocator() {
 			&metadatatypes.OSAllLocatorsResponse{
 				Locators: []metadatatypes.ObjectStoreLocator{{
 					Owner:         suite.ownerAddr1.String(),
-					EncryptionKey: suite.ownerAddr.String(),
+					EncryptionKey: suite.encryptionKey1.String(),
 					LocatorUri:    suite.uri1,
 				}},
 			},

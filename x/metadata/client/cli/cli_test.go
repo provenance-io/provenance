@@ -96,10 +96,12 @@ type IntegrationCLITestSuite struct {
 	//os locator's
 	objectLocator metadatatypes.ObjectStoreLocator
 	ownerAddr     sdk.AccAddress
+	encryptionKey sdk.AccAddress
 	uri           string
 
 	objectLocator1 metadatatypes.ObjectStoreLocator
 	ownerAddr1     sdk.AccAddress
+	encryptionKey1 sdk.AccAddress
 	uri1           string
 }
 
@@ -357,11 +359,13 @@ type_name: recordtypename`,
 	// add os locator
 	s.ownerAddr = s.user1Addr
 	s.uri = "http://foo.com"
-	s.objectLocator = metadatatypes.NewOSLocatorRecord(s.ownerAddr, sdk.AccAddress{}, s.uri)
+	s.encryptionKey = sdk.AccAddress{}
+	s.objectLocator = metadatatypes.NewOSLocatorRecord(s.ownerAddr, s.encryptionKey, s.uri)
 
 	s.ownerAddr1 = s.user2Addr
+	s.encryptionKey1 = s.user1Addr
 	s.uri1 = "http://bar.com"
-	s.objectLocator1 = metadatatypes.NewOSLocatorRecord(s.ownerAddr1, s.user1Addr, s.uri1)
+	s.objectLocator1 = metadatatypes.NewOSLocatorRecord(s.ownerAddr1, s.encryptionKey1, s.uri1)
 
 	var metadataData metadatatypes.GenesisState
 	s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[metadatatypes.ModuleName], &metadataData))
