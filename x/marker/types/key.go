@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/tendermint/tendermint/crypto"
 )
 
@@ -28,10 +29,8 @@ const (
 )
 
 var (
-	// MarkerAddressLength is the length of the marker address
-	MarkerAddressLength = 20
 	// MarkerStoreKeyPrefix prefix for marker-address reference (improves iterator performance over auth accounts)
-	MarkerStoreKeyPrefix = []byte{0x01}
+	MarkerStoreKeyPrefix = []byte{0x02}
 )
 
 // MarkerAddress returns the module account address for the given denomination
@@ -53,10 +52,10 @@ func MustGetMarkerAddress(denom string) sdk.AccAddress {
 
 // MarkerStoreKey turn an address to key used to get it from the account store
 func MarkerStoreKey(addr sdk.AccAddress) []byte {
-	return append(MarkerStoreKeyPrefix, addr.Bytes()...)
+	return append(MarkerStoreKeyPrefix, address.MustLengthPrefix(addr.Bytes())...)
 }
 
-// SplitMarkerStoreKey returns an account address given a store key
+// SplitMarkerStoreKey returns an account address given a store key, uses the length prefix to determine length of AccAddress
 func SplitMarkerStoreKey(key []byte) sdk.AccAddress {
-	return sdk.AccAddress(key[1 : MarkerAddressLength+1])
+	return sdk.AccAddress(key[2 : key[1]+2])
 }
