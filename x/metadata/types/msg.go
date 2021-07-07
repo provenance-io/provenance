@@ -1129,7 +1129,7 @@ func (msg MsgBindOSLocatorRequest) Type() string {
 }
 
 func (msg MsgBindOSLocatorRequest) ValidateBasic() error {
-	err := ValidateOSLocatorObj(msg.Locator.Owner, msg.Locator.LocatorUri)
+	err := ValidateOSLocatorObj(msg.Locator.Owner, msg.Locator.EncryptionKey, msg.Locator.LocatorUri)
 	if err != nil {
 		return err
 	}
@@ -1160,7 +1160,7 @@ func (msg MsgDeleteOSLocatorRequest) Type() string {
 }
 
 func (msg MsgDeleteOSLocatorRequest) ValidateBasic() error {
-	err := ValidateOSLocatorObj(msg.Locator.Owner, msg.Locator.LocatorUri)
+	err := ValidateOSLocatorObj(msg.Locator.Owner, msg.Locator.EncryptionKey, msg.Locator.LocatorUri)
 	if err != nil {
 		return err
 	}
@@ -1182,7 +1182,7 @@ func (msg MsgDeleteOSLocatorRequest) GetSigners() []sdk.AccAddress {
 }
 
 // ValidateOSLocatorObj Validates OSLocatorObj data
-func ValidateOSLocatorObj(ownerAddr string, uri string) error {
+func ValidateOSLocatorObj(ownerAddr, encryptionKey string, uri string) error {
 	if strings.TrimSpace(ownerAddr) == "" {
 		return fmt.Errorf("owner address cannot be empty")
 	}
@@ -1199,6 +1199,13 @@ func ValidateOSLocatorObj(ownerAddr string, uri string) error {
 	if _, err := url.Parse(uri); err != nil {
 		return fmt.Errorf("failed to add locator for a given"+
 			" owner address, invalid uri: %s", uri)
+	}
+
+	if strings.TrimSpace(encryptionKey) != "" {
+		if _, err := sdk.AccAddressFromBech32(encryptionKey); err != nil {
+			return fmt.Errorf("failed to add locator for a given owner address: %s,"+
+				" invalid encryption key address: %s", ownerAddr, encryptionKey)
+		}
 	}
 	return nil
 }
@@ -1220,7 +1227,7 @@ func (msg MsgModifyOSLocatorRequest) Type() string {
 }
 
 func (msg MsgModifyOSLocatorRequest) ValidateBasic() error {
-	err := ValidateOSLocatorObj(msg.Locator.Owner, msg.Locator.LocatorUri)
+	err := ValidateOSLocatorObj(msg.Locator.Owner, msg.Locator.EncryptionKey, msg.Locator.LocatorUri)
 	if err != nil {
 		return err
 	}

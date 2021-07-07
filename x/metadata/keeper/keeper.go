@@ -100,7 +100,7 @@ type MetadataKeeperI interface {
 	// return if OSLocator exists for a given owner addr
 	OSLocatorExists(ctx sdk.Context, ownerAddr sdk.AccAddress) bool
 	// add OSLocator instance
-	SetOSLocator(ctx sdk.Context, ownerAddr sdk.AccAddress, uri string) error
+	SetOSLocator(ctx sdk.Context, ownerAddr, encryptionKey sdk.AccAddress, uri string) error
 	// get OS locator by scope UUID.
 	GetOSLocatorByScope(ctx sdk.Context, scopeID string) ([]types.ObjectStoreLocator, error)
 }
