@@ -4,8 +4,6 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
-
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -125,7 +123,7 @@ func (suite *SimTestSuite) TestSimulateMsgDeleteName() {
 }
 
 func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
-	accounts := RandomAccounts(r, n)
+	accounts := simtypes.RandomAccounts(r, n)
 
 	initAmt := sdk.TokensFromConsensusPower(200, sdk.DefaultPowerReduction)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
@@ -139,27 +137,6 @@ func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Ac
 	}
 
 	return accounts
-}
-
-// RandomAccounts generates n random accounts
-func RandomAccounts(r *rand.Rand, n int) []simtypes.Account {
-	accs := make([]simtypes.Account, n)
-
-	for i := 0; i < n; i++ {
-		// don't need that much entropy for simulation
-		privkeySeed := make([]byte, 15)
-		r.Read(privkeySeed)
-
-		// TODO generate address with seed
-		privKey, _ := secp256r1.GenPrivKey()
-		accs[i].PrivKey = privKey
-		accs[i].PubKey = accs[i].PrivKey.PubKey()
-		accs[i].Address = sdk.AccAddress(accs[i].PubKey.Address())
-
-		// accs[i].ConsKey = ed25519.GenPrivKeyFromSecret(privkeySeed)
-	}
-
-	return accs
 }
 
 func TestSimTestSuite(t *testing.T) {
