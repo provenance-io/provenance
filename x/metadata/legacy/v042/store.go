@@ -116,7 +116,7 @@ func MigrateAddressContractSpecCacheKey(ctx sdk.Context, storeKey sdk.StoreKey, 
 		addr := oldStoreIter.Key()[1:21]
 		legacyAddress := sdk.AccAddress(addr)
 
-		newStoreKey := types.GetAddressScopeSpecCacheIteratorPrefix(legacyAddress)
+		newStoreKey := types.GetAddressContractSpecCacheIteratorPrefix(legacyAddress)
 		metaaddress := oldStoreIter.Key()[21:]
 
 		store.Set(append(newStoreKey, metaaddress...), []byte{0x01})
