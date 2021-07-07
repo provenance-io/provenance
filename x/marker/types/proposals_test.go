@@ -17,7 +17,7 @@ func TestProposalAddMarker_Format(t *testing.T) {
 
 	err := m.ValidateBasic()
 	require.Error(t, err)
-	require.EqualValues(t, fmt.Errorf("marker manage cannot be empty when creating a proposed marker"), err)
+	require.EqualValues(t, fmt.Errorf("marker manager cannot be empty when creating a proposed marker"), err)
 
 	m.Status = StatusUndefined
 	require.Error(t, m.ValidateBasic())

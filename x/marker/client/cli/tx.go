@@ -1,8 +1,11 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
+
+	"io/ioutil"
 
 	"github.com/provenance-io/provenance/x/marker/types"
 
@@ -12,6 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/spf13/cobra"
 )
@@ -43,8 +47,119 @@ func NewTxCmd() *cobra.Command {
 		GetCmdWithdrawCoins(),
 		GetNewTransferCmd(),
 		GetCmdAddMarker(),
+		GetCmdMarkerProposal(),
 	)
 	return txCmd
+}
+
+// GetCmdMarkerProposal returns a cmd for creating/submitting marker governance proposals
+func GetCmdMarkerProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "proposal [type] [proposal-file] [deposit]",
+		Args:  cobra.ExactArgs(3),
+		Short: "Submit a marker proposal along with an initial deposit",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Submit a marker proposal along with an initial deposit.
+Proposal title, description, deposit, and marker proposal params must be set in a provided JSON file.
+
+Example:
+$ %s tx marker proposal AddMarker "path/to/proposal.json" 1000%s --from mykey
+
+Where proposal.json contains:
+
+{
+  "title": "Test Proposal",
+  "description": "My awesome proposal",
+  "denom": "denomstring"
+  // additional properties based on type here
+}
+
+
+Valid Proposal Types (and associated parameters):
+
+- AddMarker
+	"amount": 100,
+	"manager": "pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk", 
+	"status": "active", // [proposed, finalized, active]
+	"marker_type": "COIN", // COIN, RESTRICTED
+	"access_list": [ {"address":"pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk", "permissions": [1,2,3]} ], 
+	"supply_fixed": true, 
+	"allow_governance_control": true, 
+
+- IncreaseSupply
+	"amount": {"denom":"coin", "amount":"10"}
+
+- DecreaseSupply
+	"amount": {"denom":"coin", "amount":"10"}
+
+- SetAdministrator
+	"access": [{"address":"pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk", "permissions": [1,2,3]}]
+
+- RemoveAdministrator
+	"removed_address": ["pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk"]
+
+- ChangeStatus
+	"new_status": "MARKER_STATUS_ACTIVE" // [finalized, active, cancelled, destroyed]
+
+- WithdrawEscrow
+	"amount": "100coin"
+	"target_address": "pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk"
+
+`,
+				version.AppName, sdk.DefaultBondDenom,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			contents, err := ioutil.ReadFile(args[1])
+			if err != nil {
+				return err
+			}
+
+			var proposal govtypes.Content
+
+			switch args[0] {
+			case types.ProposalTypeAddMarker:
+				proposal = &types.AddMarkerProposal{}
+			case types.ProposalTypeIncreaseSupply:
+				proposal = &types.SupplyIncreaseProposal{}
+			case types.ProposalTypeDecreaseSupply:
+				proposal = &types.SupplyDecreaseProposal{}
+			case types.ProposalTypeSetAdministrator:
+				proposal = &types.SetAdministratorProposal{}
+			case types.ProposalTypeRemoveAdministrator:
+				proposal = &types.RemoveAdministratorProposal{}
+			case types.ProposalTypeChangeStatus:
+				proposal = &types.ChangeStatusProposal{}
+			case types.ProposalTypeWithdrawEscrow:
+				proposal = &types.WithdrawEscrowProposal{}
+			default:
+				return fmt.Errorf("unknown proposal type %s", args[0])
+			}
+			err = json.Unmarshal(contents, proposal)
+			if err != nil {
+				return err
+			}
+
+			deposit, err := sdk.ParseCoinsNormalized(args[2])
+			if err != nil {
+				return err
+			}
+
+			callerAddr := clientCtx.GetFromAddress()
+			msg, err := govtypes.NewMsgSubmitProposal(proposal, deposit, callerAddr)
+			if err != nil {
+				return fmt.Errorf("invalid governance proposal. Error: %s", err)
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
 }
 
 // GetCmdAddMarker implements the create marker command

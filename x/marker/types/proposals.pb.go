@@ -129,10 +129,10 @@ func (m *AddMarkerProposal) GetAllowGovernanceControl() bool {
 // SupplyIncreaseProposal defines a governance proposal to administer a marker and increase total supply of the marker
 // through minting coin and placing it within the marker or assigning it directly to an account
 type SupplyIncreaseProposal struct {
-	Title          string                                  `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	Description    string                                  `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	Amount         github_com_cosmos_cosmos_sdk_types.Coin `protobuf:"bytes,3,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Coin" json:"amount"`
-	TargetAdddress string                                  `protobuf:"bytes,4,opt,name=target_adddress,json=targetAdddress,proto3" json:"target_adddress,omitempty"`
+	Title         string                                  `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Description   string                                  `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	Amount        github_com_cosmos_cosmos_sdk_types.Coin `protobuf:"bytes,3,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Coin" json:"amount"`
+	TargetAddress string                                  `protobuf:"bytes,4,opt,name=target_address,json=targetAddress,proto3" json:"target_address,omitempty"`
 }
 
 func (m *SupplyIncreaseProposal) Reset()      { *m = SupplyIncreaseProposal{} }
@@ -181,9 +181,9 @@ func (m *SupplyIncreaseProposal) GetDescription() string {
 	return ""
 }
 
-func (m *SupplyIncreaseProposal) GetTargetAdddress() string {
+func (m *SupplyIncreaseProposal) GetTargetAddress() string {
 	if m != nil {
-		return m.TargetAdddress
+		return m.TargetAddress
 	}
 	return ""
 }
@@ -450,11 +450,11 @@ func (m *ChangeStatusProposal) GetNewStatus() MarkerStatus {
 
 // WithdrawEscrowProposal defines a governance proposal to withdraw escrow coins from a marker
 type WithdrawEscrowProposal struct {
-	Title          string                                   `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	Description    string                                   `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	Denom          string                                   `protobuf:"bytes,3,opt,name=denom,proto3" json:"denom,omitempty"`
-	Amount         github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,4,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
-	TargetAdddress string                                   `protobuf:"bytes,5,opt,name=target_adddress,json=targetAdddress,proto3" json:"target_adddress,omitempty"`
+	Title         string                                   `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Description   string                                   `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	Denom         string                                   `protobuf:"bytes,3,opt,name=denom,proto3" json:"denom,omitempty"`
+	Amount        github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,4,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
+	TargetAddress string                                   `protobuf:"bytes,5,opt,name=target_address,json=targetAddress,proto3" json:"target_address,omitempty"`
 }
 
 func (m *WithdrawEscrowProposal) Reset()      { *m = WithdrawEscrowProposal{} }
@@ -517,9 +517,9 @@ func (m *WithdrawEscrowProposal) GetAmount() github_com_cosmos_cosmos_sdk_types.
 	return nil
 }
 
-func (m *WithdrawEscrowProposal) GetTargetAdddress() string {
+func (m *WithdrawEscrowProposal) GetTargetAddress() string {
 	if m != nil {
-		return m.TargetAdddress
+		return m.TargetAddress
 	}
 	return ""
 }
@@ -667,7 +667,7 @@ func (this *SupplyIncreaseProposal) Equal(that interface{}) bool {
 	if !this.Amount.Equal(that1.Amount) {
 		return false
 	}
-	if this.TargetAdddress != that1.TargetAdddress {
+	if this.TargetAddress != that1.TargetAddress {
 		return false
 	}
 	return true
@@ -847,7 +847,7 @@ func (this *WithdrawEscrowProposal) Equal(that interface{}) bool {
 			return false
 		}
 	}
-	if this.TargetAdddress != that1.TargetAdddress {
+	if this.TargetAddress != that1.TargetAddress {
 		return false
 	}
 	return true
@@ -970,10 +970,10 @@ func (m *SupplyIncreaseProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	_ = i
 	var l int
 	_ = l
-	if len(m.TargetAdddress) > 0 {
-		i -= len(m.TargetAdddress)
-		copy(dAtA[i:], m.TargetAdddress)
-		i = encodeVarintProposals(dAtA, i, uint64(len(m.TargetAdddress)))
+	if len(m.TargetAddress) > 0 {
+		i -= len(m.TargetAddress)
+		copy(dAtA[i:], m.TargetAddress)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.TargetAddress)))
 		i--
 		dAtA[i] = 0x22
 	}
@@ -1231,10 +1231,10 @@ func (m *WithdrawEscrowProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	_ = i
 	var l int
 	_ = l
-	if len(m.TargetAdddress) > 0 {
-		i -= len(m.TargetAdddress)
-		copy(dAtA[i:], m.TargetAdddress)
-		i = encodeVarintProposals(dAtA, i, uint64(len(m.TargetAdddress)))
+	if len(m.TargetAddress) > 0 {
+		i -= len(m.TargetAddress)
+		copy(dAtA[i:], m.TargetAddress)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.TargetAddress)))
 		i--
 		dAtA[i] = 0x2a
 	}
@@ -1344,7 +1344,7 @@ func (m *SupplyIncreaseProposal) Size() (n int) {
 	}
 	l = m.Amount.Size()
 	n += 1 + l + sovProposals(uint64(l))
-	l = len(m.TargetAdddress)
+	l = len(m.TargetAddress)
 	if l > 0 {
 		n += 1 + l + sovProposals(uint64(l))
 	}
@@ -1472,7 +1472,7 @@ func (m *WithdrawEscrowProposal) Size() (n int) {
 			n += 1 + l + sovProposals(uint64(l))
 		}
 	}
-	l = len(m.TargetAdddress)
+	l = len(m.TargetAddress)
 	if l > 0 {
 		n += 1 + l + sovProposals(uint64(l))
 	}
@@ -1904,7 +1904,7 @@ func (m *SupplyIncreaseProposal) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TargetAdddress", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field TargetAddress", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1932,7 +1932,7 @@ func (m *SupplyIncreaseProposal) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.TargetAdddress = string(dAtA[iNdEx:postIndex])
+			m.TargetAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -2786,7 +2786,7 @@ func (m *WithdrawEscrowProposal) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 5:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TargetAdddress", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field TargetAddress", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -2814,7 +2814,7 @@ func (m *WithdrawEscrowProposal) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.TargetAdddress = string(dAtA[iNdEx:postIndex])
+			m.TargetAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

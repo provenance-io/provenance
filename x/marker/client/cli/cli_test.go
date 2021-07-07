@@ -2,6 +2,8 @@ package cli_test
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
 	"strings"
 	"testing"
 
@@ -80,8 +82,21 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		},
 		{
 			BaseAccount: &authtypes.BaseAccount{
-				Address:       markertypes.MustGetMarkerAddress(cfg.BondDenom).String(),
+				Address:       markertypes.MustGetMarkerAddress("propcoin").String(),
 				AccountNumber: 120,
+				Sequence:      0,
+			},
+			Status:                 markertypes.StatusActive,
+			SupplyFixed:            true,
+			MarkerType:             markertypes.MarkerType_Coin,
+			AllowGovernanceControl: true,
+			Supply:                 sdk.NewInt(1000),
+			Denom:                  "propcoin",
+		},
+		{
+			BaseAccount: &authtypes.BaseAccount{
+				Address:       markertypes.MustGetMarkerAddress(cfg.BondDenom).String(),
+				AccountNumber: 130,
 				Sequence:      0,
 			},
 			Status:                 markertypes.StatusActive,
@@ -516,6 +531,131 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			}
 		})
 	}
+}
+
+func (s *IntegrationTestSuite) TestMarkerTxGovProposals() {
+	testCases := []struct {
+		name         string
+		proposaltype string
+		proposal     string
+		expectErr    bool
+		respType     proto.Message
+		expectedCode uint32
+	}{
+		{
+			"invalid proposal type",
+			"Invalid",
+			"",
+			true, &sdk.TxResponse{}, 0,
+		},
+		{
+			"invalid proposal json",
+			"Invalid",
+			`{"title":"test add marker","description"`,
+			true, &sdk.TxResponse{}, 0,
+		},
+		{
+			"add marker proposal",
+			"AddMarker",
+			fmt.Sprintf(`{"title":"test add marker","description":"description","manager":"%s",
+			"amount":{"denom":"testpropmarker","amount":"1"},"status":"MARKER_STATUS_ACTIVE","marker_type":1,
+			"supply_fixed":true,"allow_governance_control":true}`, s.testnet.Validators[0].Address.String()),
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"mint marker proposal",
+			"IncreaseSupply",
+			fmt.Sprintf(`{"title":"test mint marker","description":"description","manager":"%s",
+			"amount":{"denom":"propcoin","amount":"10"}}`, s.testnet.Validators[0].Address.String()),
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"burn marker proposal",
+			"DecreaseSupply",
+			fmt.Sprintf(`{"title":"test burn marker","description":"description","manager":"%s",
+			"amount":{"denom":"propcoin","amount":"10"}}`, s.testnet.Validators[0].Address.String()),
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"change status marker proposal",
+			"ChangeStatus",
+			`{"title":"test change marker status","description":"description","denom":"propcoin",
+			"new_status":"MARKER_STATUS_CANCELLED"}`,
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"add admin marker proposal",
+			"SetAdministrator",
+			fmt.Sprintf(`{"title":"test add admin to marker","description":"description",
+			"denom":"propcoin","access":[{"address":"%s", "permissions": [1,2,3,4,5,6]}]}`,
+				s.testnet.Validators[0].Address.String()),
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"remove admin marker proposal",
+			"RemoveAdministrator",
+			fmt.Sprintf(`{"title":"test remove marker admin","description":"description",
+			"denom":"propcoin","removed_address":["%s"]}`,
+				s.testnet.Validators[0].Address.String()),
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"withdraw escrow marker proposal",
+			"WithdrawEscrow",
+			fmt.Sprintf(`{"title":"test withdraw marker","description":"description","target_address":"%s",
+			"denom":"%s", "amount":[{"denom":"%s","amount":"1"}]}`, s.testnet.Validators[0].Address.String(),
+				s.cfg.BondDenom, s.cfg.BondDenom),
+			false, &sdk.TxResponse{}, 0x5, // request is good, NSF on account though
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			p, err := ioutil.TempFile("", "*")
+			tmpFile := p.Name()
+
+			s.Require().NoError(err)
+			_, err = p.WriteString(tc.proposal)
+			s.Require().NoError(err)
+			s.Require().NoError(p.Sync())
+			s.Require().NoError(p.Close())
+
+			args := []string{
+				tc.proposaltype,
+				tmpFile,
+				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			}
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, markercli.GetCmdMarkerProposal(), args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				println(out.String())
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, txResp.Logs.String())
+			}
+
+			s.Require().NoError(os.Remove(tmpFile))
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestMarkerGetTxCmd() {
+	s.Run("marker cli tx commands not nil", func() {
+		tx := markercli.NewTxCmd()
+		s.Require().NotNil(tx)
+		s.Require().Equal(len(tx.Commands()), 12)
+		s.Require().Equal(tx.Use, markertypes.ModuleName)
+		s.Require().Equal(tx.Short, "Transaction commands for the marker module")
+	})
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

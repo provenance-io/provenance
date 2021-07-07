@@ -39,7 +39,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
-* Update Cosmos SDK to 0.42.6 with Tendermint 0.34.11.
+* Marker governance proposal are supported in cli [#367](https://github.com/provenance-io/provenance/issues/367)
+
+### Bug Fixes
+
+* Marker Withdraw Escrow Proposal type is properly registered [#367](https://github.com/provenance-io/provenance/issues/367)
+  * Target Address field spelling error corrected in Withdraw Escrow and Increase Supply Governance Proposals.
+
+## [v1.5.0](https://github.com/provenance-io/provenance/releases/tag/v1.5.0) - 2021-06-23
+
+### Features
+
+* Update Cosmos SDK to 0.42.6 with Tendermint 0.34.11 [#355](https://github.com/provenance-io/provenance/issues/355)
   * Refund gas support added to gas meter trace
   * `ibc-transfer` now contains an `escrow-address` command for querying current escrow balances
 * Add `update` and `delete-distinct` attributes to `attribute` module [#314](https://github.com/provenance-io/provenance/issues/314)
