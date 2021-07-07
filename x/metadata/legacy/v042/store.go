@@ -42,31 +42,86 @@ func MigrateOSLocatorKeys(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.Bina
 	return nil
 }
 
-// func MigrateAddressScopeCacheKeys(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec) error {
-// 	store := ctx.KVStore(storeKey)
-// 	oldStore := prefix.NewStore(store, AddressScopeCacheKeyPrefixLegacy)
+func MigrateAddressScopeCacheKey(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec) error {
+	store := ctx.KVStore(storeKey)
+	oldStore := prefix.NewStore(store, AddressScopeCacheKeyPrefixLegacy)
 
-// 	oldStoreIter := oldStore.Iterator(nil, nil)
-// 	defer oldStoreIter.Close()
+	oldStoreIter := oldStore.Iterator(nil, nil)
+	defer oldStoreIter.Close()
 
-// 	for ; oldStoreIter.Valid(); oldStoreIter.Next() {
-// 		legacyAddr := oldStoreIter.Key()[0:20]
-// 		scopeId := oldStoreIter.Key()[21:]
-// 		err := sdk.VerifyAddressFormat(legacyAddr)
-// 		if err == nil {
-// 			return err
-// 		}
-// 		accAddress := sdk.AccAddress(legacyAddr)
+	for ; oldStoreIter.Valid(); oldStoreIter.Next() {
+		addr := oldStoreIter.Key()[1:21]
+		legacyAddress := sdk.AccAddress(addr)
 
-// 		newStoreKey := types.GetAddressScopeCacheKey(accAddress)
+		newStoreKey := types.GetAddressScopeCacheIteratorPrefix(legacyAddress)
+		metaaddress := oldStoreIter.Key()[21:]
 
-// 		bz, err := cdc.Marshal(&osLocator)
-// 		if err != nil {
-// 			return err
-// 		}
+		store.Set(append(newStoreKey, metaaddress...), []byte{0x01})
+		oldStore.Delete(oldStoreIter.Key())
+	}
 
-// 		store.Set(newStoreKey, bz)
-// 		oldStore.Delete(oldStoreIter.Key())
-// 	}
-// 	return nil
-// }
+	return nil
+}
+
+func MigrateValueOwnerScopeCacheKey(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec) error {
+	store := ctx.KVStore(storeKey)
+	oldStore := prefix.NewStore(store, ValueOwnerScopeCacheKeyPrefixLegacy)
+
+	oldStoreIter := oldStore.Iterator(nil, nil)
+	defer oldStoreIter.Close()
+
+	for ; oldStoreIter.Valid(); oldStoreIter.Next() {
+		addr := oldStoreIter.Key()[1:21]
+		legacyAddress := sdk.AccAddress(addr)
+
+		newStoreKey := types.GetValueOwnerScopeCacheIteratorPrefix(legacyAddress)
+		metaaddress := oldStoreIter.Key()[21:]
+
+		store.Set(append(newStoreKey, metaaddress...), []byte{0x01})
+		oldStore.Delete(oldStoreIter.Key())
+	}
+
+	return nil
+}
+
+func MigrateAddressScopeSpecCacheKey(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec) error {
+	store := ctx.KVStore(storeKey)
+	oldStore := prefix.NewStore(store, AddressScopeSpecCacheKeyPrefixLegacy)
+
+	oldStoreIter := oldStore.Iterator(nil, nil)
+	defer oldStoreIter.Close()
+
+	for ; oldStoreIter.Valid(); oldStoreIter.Next() {
+		addr := oldStoreIter.Key()[1:21]
+		legacyAddress := sdk.AccAddress(addr)
+
+		newStoreKey := types.GetAddressScopeSpecCacheIteratorPrefix(legacyAddress)
+		metaaddress := oldStoreIter.Key()[21:]
+
+		store.Set(append(newStoreKey, metaaddress...), []byte{0x01})
+		oldStore.Delete(oldStoreIter.Key())
+	}
+
+	return nil
+}
+
+func MigrateAddressContractSpecCacheKey(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec) error {
+	store := ctx.KVStore(storeKey)
+	oldStore := prefix.NewStore(store, AddressContractSpecCacheKeyPrefixLegacy)
+
+	oldStoreIter := oldStore.Iterator(nil, nil)
+	defer oldStoreIter.Close()
+
+	for ; oldStoreIter.Valid(); oldStoreIter.Next() {
+		addr := oldStoreIter.Key()[1:21]
+		legacyAddress := sdk.AccAddress(addr)
+
+		newStoreKey := types.GetAddressScopeSpecCacheIteratorPrefix(legacyAddress)
+		metaaddress := oldStoreIter.Key()[21:]
+
+		store.Set(append(newStoreKey, metaaddress...), []byte{0x01})
+		oldStore.Delete(oldStoreIter.Key())
+	}
+
+	return nil
+}

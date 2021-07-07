@@ -179,7 +179,7 @@ func (s *KeeperTestSuite) TestSetName() {
 			recordRestrict: true,
 			accAddr:        sdk.AccAddress{},
 			wantErr:        true,
-			errorMsg:       "unexpected key length (0 ≠ 32): invalid account address",
+			errorMsg:       "addresses cannot be empty: unknown address: invalid account address",
 		},
 		"name already bound": {
 			recordName:     "name",

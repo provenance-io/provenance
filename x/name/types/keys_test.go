@@ -6,18 +6,22 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 )
 
 type NameKeyTestSuite struct {
-	addr sdk.AccAddress
+	addr1 sdk.AccAddress
+	addr2 sdk.AccAddress
 	suite.Suite
 }
 
 func TestNameKeySuite(t *testing.T) {
 	s := new(NameKeyTestSuite)
-	s.addr = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	s.addr1 = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	privKey, _ := secp256r1.GenPrivKey()
+	s.addr2 = sdk.AccAddress(privKey.PubKey().Address())
 	suite.Run(t, s)
 }
 
@@ -30,19 +34,19 @@ func (s *NameKeyTestSuite) TestNameKeyPrefix() {
 	}{
 		"valid two-part": {
 			"name.domain",
-			mustHexDecode("0569e54bac206cf0d1dc5a11c9ae404c5f15a1b75456327e2dba1a8182e507e23a"),
+			mustHexDecode("0369e54bac206cf0d1dc5a11c9ae404c5f15a1b75456327e2dba1a8182e507e23a"),
 			false,
 			"",
 		},
 		"valid single": {
 			"domain",
-			mustHexDecode("05f2ff83860a4dc203988ed1a22ba1f21237f04abdbd0c4c951103cfbed121de78"),
+			mustHexDecode("03f2ff83860a4dc203988ed1a22ba1f21237f04abdbd0c4c951103cfbed121de78"),
 			false,
 			"",
 		},
 		"valid multi-part": {
 			"first.second.third.fourth.fifth.sixth.seventh.eighth.ninth.tenth",
-			mustHexDecode("0519f8e4495c302135434642f853698172ef1f167400d04c12864f9cdf539fbaba"),
+			mustHexDecode("0319f8e4495c302135434642f853698172ef1f167400d04c12864f9cdf539fbaba"),
 			false,
 			"",
 		},
@@ -84,18 +88,25 @@ func (s *NameKeyTestSuite) TestNameKeyPrefix() {
 			} else {
 				s.NoError(err)
 			}
-			println(hex.EncodeToString(key))
 			s.Equal(tc.key, key)
 		})
 	}
 }
 
 func (s *NameKeyTestSuite) TestAddressKeyPrefix() {
-	key, err := GetAddressKeyPrefix(s.addr)
-	s.Require().NoError(err)
+	key, err := GetAddressKeyPrefix(s.addr1)
+	s.Assert().NoError(err)
 	// check for address prefix
-	s.Require().Equal("06", hex.EncodeToString(key[0:1]))
-	s.Require().Equal(AddressKeyPrefix, key[0:1])
+	s.Assert().Equal("05", hex.EncodeToString(key[0:1]))
+	s.Assert().Equal(byte(20), key[1:2][0], "should be the length of key 20 for secp256k1")
+	s.Assert().Equal(AddressKeyPrefix, key[0:1])
+
+	key, err = GetAddressKeyPrefix(s.addr2)
+	s.Assert().NoError(err)
+	// check for address prefix
+	s.Assert().Equal("05", hex.EncodeToString(key[0:1]))
+	s.Assert().Equal(byte(32), key[1:2][0], "should be the length of key 32 for secp256r1")
+	s.Assert().Equal(AddressKeyPrefix, key[0:1])
 }
 
 func mustHexDecode(h string) []byte {
