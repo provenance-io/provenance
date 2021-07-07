@@ -25,9 +25,7 @@ func MigrateAddressLength(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.Bina
 			return err
 		}
 
-		updatedAddress := ConvertLegacyAddress(legacyAddress)
-		attribute.Address = updatedAddress.String()
-		newStoreKey := types.AccountAttributeKey(updatedAddress, attribute)
+		newStoreKey := types.AccountAttributeKey(legacyAddress, attribute)
 
 		bz, err := cdc.Marshal(&attribute)
 		if err != nil {
@@ -38,10 +36,4 @@ func MigrateAddressLength(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.Bina
 		oldStore.Delete(oldStoreIter.Key())
 	}
 	return nil
-}
-
-func ConvertLegacyAddress(legacyAddr sdk.AccAddress) sdk.AccAddress {
-	padding := make([]byte, 12)
-	updatedAddr := append(legacyAddr.Bytes(), padding...)
-	return sdk.AccAddress(updatedAddr)
 }

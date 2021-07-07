@@ -41,11 +41,11 @@ func MigrateAddressLength(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.Bina
 		}
 		updatedAddress := ConvertLegacyNameAddress(legacyAddress)
 		nameRecord.Address = updatedAddress.String()
-		updateAddressKey, err := types.GetAddressKeyPrefix(updatedAddress)
+		updateAddress, err := types.GetAddressKeyPrefix(updatedAddress)
 		if err != nil {
 			return err
 		}
-		updatedKey := append(updateAddressKey, nameKey...)
+		updatedKey := append(updateAddress, nameKey...)
 		if err != nil {
 			return err
 		}

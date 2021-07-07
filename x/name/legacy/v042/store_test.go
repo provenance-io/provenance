@@ -67,47 +67,38 @@ func (s *MigrateTestSuite) SetupTest() {
 	nameData.Params.MinSegmentLength = 3
 	nameData.Params.MaxSegmentLength = 12
 
-	InitGenesisLegacy(ctx, &nameData, app)
+	err := InitGenesisLegacy(ctx, &nameData, app)
+	s.Require().NoError(err)
 }
 
-// InitGenesisLegacy creates the initial genesis state for the name module. ONLY FOR TESTING.
-func InitGenesisLegacy(ctx sdk.Context, data *types.GenesisState, app *app.App) {
+// InitGenesisLegacy creates the initial genesis state for the name module with legacy keys ( < v043)
+func InitGenesisLegacy(ctx sdk.Context, data *types.GenesisState, app *app.App) error {
 	for _, attr := range data.Bindings {
-		if err := importNameLegacy(ctx, attr, app); err != nil {
-			panic(err)
+		key, err := types.GetNameKeyPrefix(attr.Name)
+		if err != nil {
+			return err
 		}
-	}
-}
+		store := ctx.KVStore(app.GetKey(types.ModuleName))
+		if err = attr.ValidateBasic(); err != nil {
+			return err
+		}
+		bz, err := types.ModuleCdc.Marshal(&attr)
+		if err != nil {
+			return err
+		}
+		store.Set(key, bz)
+		addr, err := sdk.AccAddressFromBech32(attr.Address)
+		if err != nil {
+			return err
+		}
 
-// A genesis helper that imports name state without owner checks.ONLY FOR TESTING.
-func importNameLegacy(ctx sdk.Context, record types.NameRecord, app *app.App) error {
-	key, err := types.GetNameKeyPrefix(record.Name)
-	if err != nil {
-		return err
+		addrPrefix, err := v042.GetAddressKeyPrefixLegacy(addr)
+		if err != nil {
+			return err
+		}
+		indexKey := append(addrPrefix, key...)
+		store.Set(indexKey, bz)
 	}
-	store := ctx.KVStore(app.GetKey(types.ModuleName))
-	if store.Has(key) {
-		return types.ErrNameAlreadyBound
-	}
-	if err = record.ValidateBasic(); err != nil {
-		return err
-	}
-	bz, err := types.ModuleCdc.Marshal(&record)
-	if err != nil {
-		return err
-	}
-	store.Set(key, bz)
-	addr, err := sdk.AccAddressFromBech32(record.Address)
-	if err != nil {
-		return err
-	}
-	// Now index by address
-	addrPrefix, err := v042.GetAddressKeyPrefixLegacy(addr)
-	if err != nil {
-		return err
-	}
-	indexKey := append(addrPrefix, key...) // [0x04] :: [addr-bytes] :: [name-key-bytes]
-	store.Set(indexKey, bz)
 	return nil
 }
 

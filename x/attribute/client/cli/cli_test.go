@@ -27,7 +27,7 @@ import (
 	namecli "github.com/provenance-io/provenance/x/name/client/cli"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 )
 
 type IntegrationTestSuite struct {
@@ -36,25 +36,27 @@ type IntegrationTestSuite struct {
 	cfg     testnet.Config
 	testnet *testnet.Network
 
-	accountAddr  sdk.AccAddress
-	accountKey   *secp256r1.PrivKey
-	accountStr   string
+	accountAddr sdk.AccAddress
+	accountKey  *secp256k1.PrivKey
+	accountStr  string
+
 	account2Addr sdk.AccAddress
-	account2Key  *secp256r1.PrivKey
+	account2Key  *secp256k1.PrivKey
+	account2Str  string
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
-	privKey, _ := secp256r1.GenPrivKey()
-	s.accountKey = privKey
+	s.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
 	addr, err := sdk.AccAddressFromHex(s.accountKey.PubKey().Address().String())
 	s.Require().NoError(err)
 	s.accountAddr = addr
 	s.accountStr = addr.String()
-	privKey, _ = secp256r1.GenPrivKey()
-	s.account2Key = privKey
+
+	s.account2Key = secp256k1.GenPrivKeyFromSecret([]byte("acc3"))
 	addr, err = sdk.AccAddressFromHex(s.account2Key.PubKey().Address().String())
 	s.Require().NoError(err)
 	s.account2Addr = addr
+	s.account2Str = addr.String()
 	s.T().Log("setting up integration test suite")
 
 	cfg := testutil.DefaultTestNetworkConfig()
@@ -333,9 +335,9 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 			namecli.GetBindNameCmd(),
 			[]string{
 				"txtest",
-				s.accountAddr.String(),
+				s.testnet.Validators[0].Address.String(),
 				"attribute",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddr.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -347,10 +349,10 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 			cli.NewAddAccountAttributeCmd(),
 			[]string{
 				"txtest.attribute",
-				s.account2Addr.String(),
+				s.testnet.Validators[0].Address.String(),
 				"string",
 				"test value",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddr.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -365,7 +367,7 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 				"invalidbech32",
 				"string",
 				"test value",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddr.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -380,7 +382,7 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 				s.account2Addr.String(),
 				"blah",
 				"3.14159",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddr.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -392,10 +394,10 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 			cli.NewAddAccountAttributeCmd(),
 			[]string{
 				"txtest.attribute",
-				s.account2Addr.String(),
+				s.testnet.Validators[0].Address.String(),
 				"bytes",
 				"3.14159",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddr.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
