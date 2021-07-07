@@ -15,12 +15,6 @@ var (
 	NameAddressLengthLegacy = 20
 )
 
-func ConvertLegacyNameAddress(legacyAddr sdk.AccAddress) sdk.AccAddress {
-	padding := make([]byte, 12)
-	updatedAddr := append(legacyAddr.Bytes(), padding...)
-	return sdk.AccAddress(updatedAddr)
-}
-
 // GetAddressKeyPrefix returns a store key for a name record address
 func GetAddressKeyPrefixLegacy(address sdk.AccAddress) (key []byte, err error) {
 	err = ValidateAddress(address)

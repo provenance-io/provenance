@@ -116,26 +116,14 @@ func (s *MigrateTestSuite) TestMigrateTestSuite() {
 		s.Assert().Nil(result)
 
 		// Should find attribute with updated key
-		newAddr := v042.ConvertLegacyNameAddress(acc)
-		key, err = types.GetAddressKeyPrefix(newAddr)
+		key, err = types.GetAddressKeyPrefix(acc)
 		s.Assert().NoError(err)
 		newKey := append(key, nameKey...)
 		result = store.Get(newKey)
 		s.Assert().NotNil(result)
 		var resultRecord types.NameRecord
 		err = types.ModuleCdc.Unmarshal(result, &resultRecord)
-		name.Address = newAddr.String()
 		s.Assert().NoError(err)
 		s.Assert().Equal(name, resultRecord, "address key record should equal new record")
-
-		//should find attribute with same name key, but updated address
-		key, err = types.GetNameKeyPrefix(name.Name)
-		s.Assert().NoError(err)
-		result = store.Get(key)
-		err = types.ModuleCdc.Unmarshal(result, &resultRecord)
-		name.Address = newAddr.String()
-		s.Assert().NoError(err)
-		s.Assert().Equal(name, resultRecord, "name key record should have updated address")
-
 	}
 }
