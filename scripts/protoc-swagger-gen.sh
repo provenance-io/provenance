@@ -15,25 +15,24 @@ for dir in $proto_dirs; do
   query_file=$(find "${dir}" -maxdepth 1 -name 'query.proto')
   if [[ -n "$query_file" ]]; then
     [[ -n "$verbose" ]] && printf 'Generating swagger file for [%s].\n' "$query_file"
-    protoc  \
+    buf protoc  \
     -I "proto" \
     -I "third_party/proto" \
     "$query_file" \
-    --swagger_out ./tmp-swagger-gen \
-    --swagger_opt logtostderr=true --swagger_opt fqn_for_swagger_name=true --swagger_opt simple_operation_ids=true
+    --swagger_out=./tmp-swagger-gen \
+    --swagger_opt=logtostderr=true --swagger_opt=fqn_for_swagger_name=true --swagger_opt=simple_operation_ids=true
   fi
   # generate swagger files for the transactions.
   tx_file=$(find "${dir}" -maxdepth 1 -name 'tx.proto')
   if [[ -n "$tx_file" ]]; then
     [[ -n "$verbose" ]] && printf 'Generating swagger file for [%s].\n' "$tx_file"
-    protoc  \
+    buf protoc  \
     -I "proto" \
     -I "third_party/proto" \
     "$tx_file" \
-    --swagger_out ./tmp-swagger-gen \
-    --swagger_opt logtostderr=true --swagger_opt fqn_for_swagger_name=true --swagger_opt simple_operation_ids=true
+    --swagger_out=./tmp-swagger-gen \
+    --swagger_opt=logtostderr=true --swagger_opt=fqn_for_swagger_name=true --swagger_opt=simple_operation_ids=true
   fi
-
 done
 
 [[ -n "$verbose" ]] && printf 'Combining swagger files.\n'

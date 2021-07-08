@@ -58,8 +58,8 @@ func (s *MigrateTestSuite) SetupTest() {
 	s.user2 = s.user2Addr.String()
 
 	osLocators := []types.ObjectStoreLocator{
-		types.NewOSLocatorRecord(s.user1Addr, "http://migration.test.user1.com"),
-		types.NewOSLocatorRecord(s.user2Addr, "http://migration.test.user2.com"),
+		types.NewOSLocatorRecord(s.user1Addr, sdk.AccAddress("encryptionKey1"), "http://migration.test.user1.com"),
+		types.NewOSLocatorRecord(s.user2Addr, sdk.AccAddress("encryptionKey2"), "http://migration.test.user2.com"),
 	}
 	s.osLocators = osLocators
 

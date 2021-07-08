@@ -619,15 +619,18 @@ func (k msgServer) BindOSLocator(
 	}
 
 	// already valid address, checked in ValidateBasic
-	address, _ := sdk.AccAddressFromBech32(msg.Locator.Owner)
-
-	if k.Keeper.OSLocatorExists(ctx, address) {
+	ownerAddress, _ := sdk.AccAddressFromBech32(msg.Locator.Owner)
+	encryptionKey := sdk.AccAddress{}
+	if strings.TrimSpace(msg.Locator.EncryptionKey) != "" {
+		encryptionKey, _ = sdk.AccAddressFromBech32(msg.Locator.EncryptionKey)
+	}
+	if k.Keeper.OSLocatorExists(ctx, ownerAddress) {
 		ctx.Logger().Error("Address already bound to an URI", "owner", msg.Locator.Owner)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, types.ErrOSLocatorAlreadyBound.Error())
 	}
 
 	// Bind owner to URI
-	if err := k.Keeper.SetOSLocator(ctx, address, msg.Locator.LocatorUri); err != nil {
+	if err := k.Keeper.SetOSLocator(ctx, ownerAddress, encryptionKey, msg.Locator.LocatorUri); err != nil {
 		ctx.Logger().Error("unable to bind name", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
@@ -683,8 +686,12 @@ func (k msgServer) ModifyOSLocator(
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	// already valid address, checked in ValidateBasic
+	// already valid address(es), checked in ValidateBasic
 	ownerAddr, _ := sdk.AccAddressFromBech32(msg.Locator.Owner)
+	encryptionKey := sdk.AccAddress{}
+	if strings.TrimSpace(msg.Locator.EncryptionKey) != "" {
+		encryptionKey, _ = sdk.AccAddressFromBech32(msg.Locator.EncryptionKey)
+	}
 
 	if !k.Keeper.OSLocatorExists(ctx, ownerAddr) {
 		ctx.Logger().Error("Address not already bound to an URI", "owner", msg.Locator.Owner)
@@ -696,7 +703,7 @@ func (k msgServer) ModifyOSLocator(
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "msg sender cannot delete os locator.")
 	}
 	// Modify
-	if err := k.Keeper.ModifyOSLocator(ctx, ownerAddr, msg.Locator.LocatorUri); err != nil {
+	if err := k.Keeper.ModifyOSLocator(ctx, ownerAddr, encryptionKey, msg.Locator.LocatorUri); err != nil {
 		ctx.Logger().Error("error deleting name", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
