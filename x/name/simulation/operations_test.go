@@ -86,8 +86,8 @@ func (suite *SimTestSuite) TestSimulateMsgBindName() {
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	suite.Require().True(operationMsg.OK)
-	suite.Require().Equal(accounts[2].Address.String(), msg.Record.Address)
-	suite.Require().Equal(accounts[2].Address.String(), msg.Parent.Address)
+	suite.Require().Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Record.Address)
+	suite.Require().Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Parent.Address)
 	suite.Require().Equal(types.TypeMsgBindNameRequest, msg.Type())
 	suite.Require().Equal(types.ModuleName, msg.Route())
 	suite.Require().Len(futureOperations, 0)
@@ -115,7 +115,7 @@ func (suite *SimTestSuite) TestSimulateMsgDeleteName() {
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	suite.Require().True(operationMsg.OK)
-	suite.Require().Equal(accounts[0].Address.String(), msg.Record.Address)
+	suite.Require().Equal("cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Record.Address)
 	suite.Require().Equal("deleteme", msg.Record.Name)
 	suite.Require().Equal(types.TypeMsgDeleteNameRequest, msg.Type())
 	suite.Require().Equal(types.ModuleName, msg.Route())
