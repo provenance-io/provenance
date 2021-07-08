@@ -19,7 +19,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 	}
 }
 
-// ExportGenesis exports the current keeper state of the s module.
+// ExportGenesis exports the current keeper state of the attribute module.
 func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 	attrs := make([]types.Attribute, 0)
 	params := k.GetParams(ctx)

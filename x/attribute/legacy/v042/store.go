@@ -20,12 +20,12 @@ func MigrateAddressLength(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.Bina
 		if err != nil {
 			return err
 		}
-		legacyAddress, err := sdk.AccAddressFromBech32(attribute.Address)
+		attrAddress, err := sdk.AccAddressFromBech32(attribute.Address)
 		if err != nil {
 			return err
 		}
 
-		newStoreKey := types.AccountAttributeKey(legacyAddress, attribute)
+		newStoreKey := types.AccountAttributeKey(attrAddress, attribute)
 
 		bz, err := cdc.Marshal(&attribute)
 		if err != nil {
