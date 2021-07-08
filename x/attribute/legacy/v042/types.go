@@ -12,7 +12,7 @@ var (
 	AttributeAddrLengthLegacy = 20
 )
 
-// AccountAttributeKeyLegacy creates a key for an account attribute
+// AccountAttributeKeyLegacy creates a legacy key for an account attribute
 func AccountAttributeKeyLegacy(acc sdk.AccAddress, attr types.Attribute) []byte {
 	if len(acc.Bytes()) != AttributeAddrLengthLegacy {
 		panic(fmt.Sprintf("unexpected key length (%d ≠ %d)", len(acc.Bytes()), AttributeKeyPrefixLegacy))
