@@ -7,8 +7,6 @@ import (
 )
 
 var (
-	// AddressKeyPrefix is a prefix added to keys for indexing name records by address.
-	AddressNamePrefix = []byte{0x03}
 	// AddressKeyPrefixLegacy is a prefix added to keys for indexing name records by address.
 	AddressKeyPrefixLegacy = []byte{0x04}
 	// NameAddressLengthLegacy is the legacy length of pre v043 address
