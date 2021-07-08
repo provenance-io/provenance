@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/tendermint/tendermint/crypto/secp256k1"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -35,6 +35,7 @@ type IntegrationTestSuite struct {
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
+	s.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
 	addr, err := sdk.AccAddressFromHex(s.accountKey.PubKey().Address().String())
 	s.Require().NoError(err)
 	s.accountAddr = addr
@@ -144,11 +145,8 @@ func (s *IntegrationTestSuite) TestResolveNameCommand() {
 }
 
 func (s *IntegrationTestSuite) TestReverseLookupCommand() {
-	accountKey := secp256k1.GenPrivKey()
-	addr, err := sdk.AccAddressFromHex(accountKey.PubKey().Address().String())
-	s.Require().NoError(err)
-	s.accountAddr = addr
-
+	accountKey := secp256k1.GenPrivKeyFromSecret([]byte("nobindinginthisaccount"))
+	addr, _ := sdk.AccAddressFromHex(accountKey.PubKey().Address().String())
 	testCases := []struct {
 		name           string
 		args           []string
