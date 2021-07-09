@@ -37585,6 +37585,9 @@ paths:
                     locator_uri:
                       type: string
                       title: locator endpoint uri
+                    encryption_key:
+                      type: string
+                      title: owners encryption key address
                   description: >-
                     Defines an Locator object stored on chain, which represents
                     a owner( blockchain address) associated with a endpoint
@@ -37651,6 +37654,9 @@ paths:
                     locator_uri:
                       type: string
                       title: locator endpoint uri
+                    encryption_key:
+                      type: string
+                      title: owners encryption key address
                   description: >-
                     Defines an Locator object stored on chain, which represents
                     a owner( blockchain address) associated with a endpoint
@@ -37836,6 +37842,9 @@ paths:
                   locator_uri:
                     type: string
                     title: locator endpoint uri
+                  encryption_key:
+                    type: string
+                    title: owners encryption key address
                 description: >-
                   Defines an Locator object stored on chain, which represents a
                   owner( blockchain address) associated with a endpoint
@@ -37900,6 +37909,9 @@ paths:
                     locator_uri:
                       type: string
                       title: locator endpoint uri
+                    encryption_key:
+                      type: string
+                      title: owners encryption key address
                   description: >-
                     Defines an Locator object stored on chain, which represents
                     a owner( blockchain address) associated with a endpoint
@@ -73605,6 +73617,9 @@ definitions:
             locator_uri:
               type: string
               title: locator endpoint uri
+            encryption_key:
+              type: string
+              title: owners encryption key address
           description: >-
             Defines an Locator object stored on chain, which represents a owner(
             blockchain address) associated with a endpoint
@@ -73734,6 +73749,9 @@ definitions:
           locator_uri:
             type: string
             title: locator endpoint uri
+          encryption_key:
+            type: string
+            title: owners encryption key address
         description: >-
           Defines an Locator object stored on chain, which represents a owner(
           blockchain address) associated with a endpoint
@@ -73768,6 +73786,9 @@ definitions:
             locator_uri:
               type: string
               title: locator endpoint uri
+            encryption_key:
+              type: string
+              title: owners encryption key address
           description: >-
             Defines an Locator object stored on chain, which represents a owner(
             blockchain address) associated with a endpoint
@@ -73851,6 +73872,9 @@ definitions:
             locator_uri:
               type: string
               title: locator endpoint uri
+            encryption_key:
+              type: string
+              title: owners encryption key address
           description: >-
             Defines an Locator object stored on chain, which represents a owner(
             blockchain address) associated with a endpoint
@@ -73945,6 +73969,9 @@ definitions:
       locator_uri:
         type: string
         title: locator endpoint uri
+      encryption_key:
+        type: string
+        title: owners encryption key address
     description: >-
       Defines an Locator object stored on chain, which represents a owner(
       blockchain address) associated with a endpoint
@@ -80134,6 +80161,9 @@ definitions:
           locator_uri:
             type: string
             title: locator endpoint uri
+          encryption_key:
+            type: string
+            title: owners encryption key address
         description: >-
           Defines an Locator object stored on chain, which represents a owner(
           blockchain address) associated with a endpoint
@@ -80166,6 +80196,9 @@ definitions:
           locator_uri:
             type: string
             title: locator endpoint uri
+          encryption_key:
+            type: string
+            title: owners encryption key address
         description: >-
           Defines an Locator object stored on chain, which represents a owner(
           blockchain address) associated with a endpoint
@@ -80216,6 +80249,9 @@ definitions:
           locator_uri:
             type: string
             title: locator endpoint uri
+          encryption_key:
+            type: string
+            title: owners encryption key address
         description: >-
           Defines an Locator object stored on chain, which represents a owner(
           blockchain address) associated with a endpoint

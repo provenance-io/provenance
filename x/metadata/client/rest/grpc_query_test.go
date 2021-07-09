@@ -289,7 +289,7 @@ func (suite *IntegrationGRPCTestSuite) TestGRPCQueries() {
 		suite.Run(tc.name, func() {
 			resp, err := sdktestutil.GetRequestWithHeaders(tc.url, tc.headers)
 			suite.Require().NoError(err)
-			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType)
+			err = val.ClientCtx.JSONCodec.UnmarshalJSON(resp, tc.respType)
 			if tc.expErr {
 				suite.Require().Error(err)
 			} else {
@@ -339,7 +339,7 @@ func (suite *IntegrationGRPCTestSuite) TestAllOSLocator() {
 		suite.Run(tc.name, func() {
 			resp, err := sdktestutil.GetRequestWithHeaders(tc.url, tc.headers)
 			suite.Require().NoError(err, "GetRequestWithHeaders err")
-			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType)
+			err = val.ClientCtx.JSONCodec.UnmarshalJSON(resp, tc.respType)
 			if tc.expErr {
 				suite.Require().Error(err, "UnmarshalJSON expected error")
 			} else {

@@ -33,7 +33,7 @@ type Keeper struct {
 	storeKey sdk.StoreKey
 
 	// The codec codec for binary encoding/decoding.
-	cdc codec.BinaryMarshaler
+	cdc codec.BinaryCodec
 }
 
 // NewKeeper returns an attribute keeper. It handles:
@@ -43,7 +43,7 @@ type Keeper struct {
 //
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
-	cdc codec.BinaryMarshaler, key sdk.StoreKey, paramSpace paramtypes.Subspace,
+	cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Subspace,
 	authKeeper types.AccountKeeper, nameKeeper types.NameKeeper,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
@@ -95,11 +95,11 @@ func (k Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle Handler) e
 		record := types.Attribute{}
 		// get proto objects for legacy prefix with legacy amino codec.
 		if bytes.Equal(types.AttributeKeyPrefixAmino, prefix) {
-			if err := types.ModuleCdc.UnmarshalBinaryBare(iterator.Value(), &record); err != nil {
+			if err := types.ModuleCdc.Unmarshal(iterator.Value(), &record); err != nil {
 				return err
 			}
 		} else {
-			if err := k.cdc.UnmarshalBinaryBare(iterator.Value(), &record); err != nil {
+			if err := k.cdc.Unmarshal(iterator.Value(), &record); err != nil {
 				return err
 			}
 		}
@@ -141,7 +141,7 @@ func (k Keeper) SetAttribute(
 		return fmt.Errorf("\"%s\" does not resolve to address \"%s\"", attr.Name, owner.String())
 	}
 	// Store the sanitized account attribute
-	bz, err := k.cdc.MarshalBinaryBare(&attr)
+	bz, err := k.cdc.Marshal(&attr)
 	if err != nil {
 		return err
 	}
@@ -214,7 +214,7 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 	var found bool
 	for ; it.Valid(); it.Next() {
 		attr := types.Attribute{}
-		if err := k.cdc.UnmarshalBinaryBare(it.Value(), &attr); err != nil {
+		if err := k.cdc.Unmarshal(it.Value(), &attr); err != nil {
 			return err
 		}
 
@@ -222,7 +222,7 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 			found = true
 			store.Delete(it.Key())
 
-			bz, err := k.cdc.MarshalBinaryBare(&updateAttribute)
+			bz, err := k.cdc.Marshal(&updateAttribute)
 			if err != nil {
 				return err
 			}
@@ -269,7 +269,7 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, acc sdk.AccAddress, name string
 	var count int
 	for ; it.Valid(); it.Next() {
 		attr := types.Attribute{}
-		if err := k.cdc.UnmarshalBinaryBare(it.Value(), &attr); err != nil {
+		if err := k.cdc.Unmarshal(it.Value(), &attr); err != nil {
 			return err
 		}
 
@@ -310,7 +310,7 @@ func (k Keeper) prefixScan(ctx sdk.Context, prefix []byte, f namePred) (attrs []
 	it := sdk.KVStorePrefixIterator(store, prefix)
 	for ; it.Valid(); it.Next() {
 		attr := types.Attribute{}
-		if err = k.cdc.UnmarshalBinaryBare(it.Value(), &attr); err != nil {
+		if err = k.cdc.Unmarshal(it.Value(), &attr); err != nil {
 			return
 		}
 		if f(attr.Name) {
@@ -339,7 +339,7 @@ func (k Keeper) importAttribute(ctx sdk.Context, attr types.Attribute) error {
 		return fmt.Errorf("unable to normalize attribute name \"%s\": %w", attr.Name, err)
 	}
 	// Store the sanitized account attribute
-	bz, err := k.cdc.MarshalBinaryBare(&attr)
+	bz, err := k.cdc.Marshal(&attr)
 	if err != nil {
 		return err
 	}

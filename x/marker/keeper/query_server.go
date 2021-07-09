@@ -162,7 +162,7 @@ func (k Keeper) DenomMetadata(c context.Context, req *types.QueryDenomMetadataRe
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	metadata := k.bankKeeper.GetDenomMetaData(ctx, req.Denom)
+	metadata, _ := k.bankKeeper.GetDenomMetaData(ctx, req.Denom)
 
 	return &types.QueryDenomMetadataResponse{Metadata: metadata}, nil
 }

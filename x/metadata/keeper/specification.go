@@ -16,7 +16,7 @@ func (k Keeper) IterateRecordSpecs(ctx sdk.Context, handler func(specification t
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var recordSpec types.RecordSpecification
-		err := k.cdc.UnmarshalBinaryBare(it.Value(), &recordSpec)
+		err := k.cdc.Unmarshal(it.Value(), &recordSpec)
 		if err != nil {
 			return err
 		}
@@ -96,14 +96,14 @@ func (k Keeper) GetRecordSpecification(ctx sdk.Context, recordSpecID types.Metad
 	if b == nil {
 		return types.RecordSpecification{}, false
 	}
-	k.cdc.MustUnmarshalBinaryBare(b, &spec)
+	k.cdc.MustUnmarshal(b, &spec)
 	return spec, true
 }
 
 // SetRecordSpecification stores a record specification in the module kv store.
 func (k Keeper) SetRecordSpecification(ctx sdk.Context, spec types.RecordSpecification) {
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinaryBare(&spec)
+	b := k.cdc.MustMarshal(&spec)
 
 	var event proto.Message = types.NewEventRecordSpecificationCreated(spec.SpecificationId)
 	action := types.TLAction_Created
@@ -170,7 +170,7 @@ func (k Keeper) IterateContractSpecs(ctx sdk.Context, handler func(specification
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var contractSpec types.ContractSpecification
-		err := k.cdc.UnmarshalBinaryBare(it.Value(), &contractSpec)
+		err := k.cdc.Unmarshal(it.Value(), &contractSpec)
 		if err != nil {
 			return err
 		}
@@ -209,14 +209,14 @@ func (k Keeper) GetContractSpecification(ctx sdk.Context, contractSpecID types.M
 	if b == nil {
 		return types.ContractSpecification{}, false
 	}
-	k.cdc.MustUnmarshalBinaryBare(b, &spec)
+	k.cdc.MustUnmarshal(b, &spec)
 	return spec, true
 }
 
 // SetContractSpecification stores a contract specification in the module kv store.
 func (k Keeper) SetContractSpecification(ctx sdk.Context, spec types.ContractSpecification) {
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinaryBare(&spec)
+	b := k.cdc.MustMarshal(&spec)
 
 	var event proto.Message = types.NewEventContractSpecificationCreated(spec.SpecificationId)
 	action := types.TLAction_Created
@@ -225,7 +225,7 @@ func (k Keeper) SetContractSpecification(ctx sdk.Context, spec types.ContractSpe
 		action = types.TLAction_Updated
 		if oldBytes := store.Get(spec.SpecificationId); oldBytes != nil {
 			var oldSpec types.ContractSpecification
-			if err := k.cdc.UnmarshalBinaryBare(oldBytes, &oldSpec); err == nil {
+			if err := k.cdc.Unmarshal(oldBytes, &oldSpec); err == nil {
 				k.clearContractSpecificationIndex(ctx, oldSpec)
 			}
 		}
@@ -332,7 +332,7 @@ func (k Keeper) IterateScopeSpecs(ctx sdk.Context, handler func(specification ty
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var scopeSpec types.ScopeSpecification
-		err := k.cdc.UnmarshalBinaryBare(it.Value(), &scopeSpec)
+		err := k.cdc.Unmarshal(it.Value(), &scopeSpec)
 		if err != nil {
 			return err
 		}
@@ -389,14 +389,14 @@ func (k Keeper) GetScopeSpecification(ctx sdk.Context, scopeSpecID types.Metadat
 	if b == nil {
 		return types.ScopeSpecification{}, false
 	}
-	k.cdc.MustUnmarshalBinaryBare(b, &spec)
+	k.cdc.MustUnmarshal(b, &spec)
 	return spec, true
 }
 
 // SetScopeSpecification stores a scope specification in the module kv store.
 func (k Keeper) SetScopeSpecification(ctx sdk.Context, spec types.ScopeSpecification) {
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinaryBare(&spec)
+	b := k.cdc.MustMarshal(&spec)
 
 	var event proto.Message = types.NewEventScopeSpecificationCreated(spec.SpecificationId)
 	action := types.TLAction_Created
@@ -405,7 +405,7 @@ func (k Keeper) SetScopeSpecification(ctx sdk.Context, spec types.ScopeSpecifica
 		action = types.TLAction_Updated
 		if oldBytes := store.Get(spec.SpecificationId); oldBytes != nil {
 			var oldSpec types.ScopeSpecification
-			if err := k.cdc.UnmarshalBinaryBare(oldBytes, &oldSpec); err == nil {
+			if err := k.cdc.Unmarshal(oldBytes, &oldSpec); err == nil {
 				k.clearScopeSpecificationIndex(ctx, oldSpec)
 			}
 		}

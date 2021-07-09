@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
 const (
@@ -32,7 +33,7 @@ var (
 	// NameKeyPrefix is a prefix added to keys for adding/querying names.
 	NameKeyPrefix = []byte{0x03}
 	// AddressKeyPrefix is a prefix added to keys for indexing name records by address.
-	AddressKeyPrefix = []byte{0x04}
+	AddressKeyPrefix = []byte{0x05}
 )
 
 // GetNameKeyPrefix converts a name into key format.
@@ -72,11 +73,18 @@ func getNamePrefixByType(name string, key []byte) ([]byte, error) {
 }
 
 // GetAddressKeyPrefix returns a store key for a name record address
-func GetAddressKeyPrefix(address sdk.AccAddress) (key []byte, err error) {
-	err = sdk.VerifyAddressFormat(address.Bytes())
+func GetAddressKeyPrefix(addr sdk.AccAddress) (key []byte, err error) {
+	err = sdk.VerifyAddressFormat(addr.Bytes())
 	if err == nil {
 		key = AddressKeyPrefix
-		key = append(key, address.Bytes()...)
+		key = append(key, address.MustLengthPrefix(addr.Bytes())...)
 	}
 	return
+}
+
+func ValidateAddress(address sdk.AccAddress) error {
+	if err := sdk.VerifyAddressFormat(address); err != nil {
+		return err
+	}
+	return nil
 }

@@ -293,8 +293,7 @@ func (k Keeper) BurnCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 func (k Keeper) AdjustCirculation(ctx sdk.Context, marker types.MarkerAccountI, desiredSupply sdk.Coin) error {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "adjust_circulation")
 
-	currentSupply := k.bankKeeper.GetSupply(ctx).GetTotal().AmountOf(marker.GetDenom())
-
+	currentSupply := k.bankKeeper.GetSupply(ctx, marker.GetDenom()).Amount
 	if desiredSupply.Denom != marker.GetDenom() {
 		return fmt.Errorf("invalid denom for desired supply")
 	}
@@ -334,7 +333,7 @@ func (k Keeper) AdjustCirculation(ctx sdk.Context, marker types.MarkerAccountI, 
 func (k Keeper) IncreaseSupply(ctx sdk.Context, marker types.MarkerAccountI, coin sdk.Coin) error {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "increase_supply")
 
-	inCirculation := sdk.NewCoin(marker.GetDenom(), k.bankKeeper.GetSupply(ctx).GetTotal().AmountOf(marker.GetDenom()))
+	inCirculation := sdk.NewCoin(marker.GetDenom(), k.bankKeeper.GetSupply(ctx, marker.GetDenom()).Amount)
 	total := inCirculation.Add(coin)
 	maxAllowed := k.GetParams(ctx).MaxTotalSupply
 	if total.Amount.Uint64() > maxAllowed {
@@ -357,7 +356,7 @@ func (k Keeper) IncreaseSupply(ctx sdk.Context, marker types.MarkerAccountI, coi
 func (k Keeper) DecreaseSupply(ctx sdk.Context, marker types.MarkerAccountI, coin sdk.Coin) error {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "decrease_supply")
 
-	inCirculation := sdk.NewCoin(marker.GetDenom(), k.bankKeeper.GetSupply(ctx).GetTotal().AmountOf(marker.GetDenom()))
+	inCirculation := sdk.NewCoin(marker.GetDenom(), k.bankKeeper.GetSupply(ctx, marker.GetDenom()).Amount)
 
 	// Ensure the request will not send the total supply below zero
 	if inCirculation.IsLT(coin) {
@@ -415,7 +414,7 @@ func (k Keeper) FinalizeMarker(ctx sdk.Context, caller sdk.Address, denom string
 	supplyRequest := m.GetSupply()
 
 	// Any pre-existing coin amounts for our denom need to be removed from our amount to mint
-	preexistingCoin := sdk.NewCoin(m.GetDenom(), k.bankKeeper.GetSupply(ctx).GetTotal().AmountOf(m.GetDenom()))
+	preexistingCoin := sdk.NewCoin(m.GetDenom(), k.bankKeeper.GetSupply(ctx, m.GetDenom()).Amount)
 
 	// If the requested total is less than the existing total, the supply invariant would halt the chain if activated
 	if supplyRequest.IsLT(preexistingCoin) {
@@ -472,7 +471,7 @@ func (k Keeper) ActivateMarker(ctx sdk.Context, caller sdk.Address, denom string
 	supplyRequest := m.GetSupply()
 
 	// Any pre-existing coin amounts for our denom need to be removed from our amount to mint
-	preexistingCoin := sdk.NewCoin(m.GetDenom(), k.bankKeeper.GetSupply(ctx).GetTotal().AmountOf(m.GetDenom()))
+	preexistingCoin := sdk.NewCoin(m.GetDenom(), k.bankKeeper.GetSupply(ctx, m.GetDenom()).Amount)
 
 	// If the requested total is less than the existing total, the supply invariant would halt the chain if activated
 	if supplyRequest.IsLT(preexistingCoin) {
@@ -518,7 +517,7 @@ func (k Keeper) CancelMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 			return fmt.Errorf("%s does not have %s on %s markeraccount", caller, types.Access_Delete, m.GetDenom())
 		}
 		// for finalized/active we need to ensure the full coin supply has been recalled as it will all be burned.
-		totalSupply := k.bankKeeper.GetSupply(ctx).GetTotal().AmountOf(denom)
+		totalSupply := k.bankKeeper.GetSupply(ctx, m.GetDenom()).Amount
 		escrow := k.bankKeeper.GetBalance(ctx, m.GetAddress(), m.GetDenom())
 		inCirculation := totalSupply.Sub(escrow.Amount)
 		if inCirculation.GT(sdk.ZeroInt()) {
@@ -569,7 +568,7 @@ func (k Keeper) DeleteMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 	}
 
 	// require full supply of coin for marker to be contained within the marker account (no outstanding delegations)
-	totalSupply := k.bankKeeper.GetSupply(ctx).GetTotal().AmountOf(denom)
+	totalSupply := k.bankKeeper.GetSupply(ctx, denom).Amount
 	escrow := k.bankKeeper.GetAllBalances(ctx, m.GetAddress())
 	inCirculation := totalSupply.Sub(escrow.AmountOf(denom))
 	if inCirculation.GT(sdk.ZeroInt()) {
@@ -658,7 +657,7 @@ func (k Keeper) SetMarkerDenomMetadata(ctx sdk.Context, metadata banktypes.Metad
 	}
 
 	var existing *banktypes.Metadata
-	if e := k.bankKeeper.GetDenomMetaData(ctx, metadata.Base); len(e.Base) > 0 {
+	if e, _ := k.bankKeeper.GetDenomMetaData(ctx, metadata.Base); len(e.Base) > 0 {
 		existing = &e
 	}
 
@@ -696,7 +695,7 @@ func (k Keeper) accountControlsAllSupply(ctx sdk.Context, caller sdk.AccAddress,
 // getCurrentSendEnabledStatus returns true is the denom will support sending with the bank, either as
 // the default send enable or a specific record.
 func (k Keeper) getCurrentSendEnabledStatus(ctx sdk.Context, denom string) bool {
-	return k.bankKeeper.SendEnabledCoin(ctx, sdk.NewCoin(denom, sdk.ZeroInt()))
+	return k.bankKeeper.IsSendEnabledCoin(ctx, sdk.NewCoin(denom, sdk.ZeroInt()))
 }
 
 // ensureSendEnabledStatus checks to see if the configuration of SendEnabled for the current network matches

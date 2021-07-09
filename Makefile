@@ -372,7 +372,7 @@ localnet-stop:
 ##############################
 # Proto -> golang compilation
 ##############################
-proto-all: proto-tools proto-format proto-lint proto-gen proto-check-breaking
+proto-all: proto-tools proto-format proto-lint proto-gen proto-check-breaking proto-swagger-gen
 
 containerProtoVer=v0.2
 containerProtoImage=tendermintdev/sdk-proto-gen:$(containerProtoVer)

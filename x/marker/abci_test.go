@@ -33,12 +33,12 @@ func TestBeginBlocker(t *testing.T) {
 	app.MarkerKeeper.SetMarker(ctx, testmint)
 
 	// Initial supply of testmint must be zero.
-	require.Equal(t, app.BankKeeper.GetSupply(ctx).GetTotal().AmountOf("testmint"), sdk.NewInt(0))
+	require.Equal(t, app.BankKeeper.GetSupply(ctx, "testmint").Amount, sdk.NewInt(0))
 
 	marker.BeginBlocker(ctx, abci.RequestBeginBlock{}, app.MarkerKeeper, app.BankKeeper)
 
 	// Post begin block the supply must be 100
-	require.Equal(t, app.BankKeeper.GetSupply(ctx).GetTotal().AmountOf("testmint"), sdk.NewInt(100))
+	require.Equal(t, app.BankKeeper.GetSupply(ctx, "testmint").Amount, sdk.NewInt(100))
 
 	// Reset supply to a lower level
 	testmint.Supply = sdk.NewInt(50)
@@ -47,7 +47,7 @@ func TestBeginBlocker(t *testing.T) {
 	marker.BeginBlocker(ctx, abci.RequestBeginBlock{}, app.MarkerKeeper, app.BankKeeper)
 
 	// Post begin block the supply must be 0
-	require.Equal(t, app.BankKeeper.GetSupply(ctx).GetTotal().AmountOf("testmint"), sdk.NewInt(50))
+	require.Equal(t, app.BankKeeper.GetSupply(ctx, "testmint").Amount, sdk.NewInt(50))
 
 	// Cancel marker and zero out supply
 	testmint.Status = types.StatusDestroyed

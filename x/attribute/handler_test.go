@@ -30,10 +30,6 @@ type HandlerTestSuite struct {
 	pubkey1   cryptotypes.PubKey
 	user1     string
 	user1Addr sdk.AccAddress
-
-	pubkey2   cryptotypes.PubKey
-	user2     string
-	user2Addr sdk.AccAddress
 }
 
 func (s *HandlerTestSuite) SetupTest() {
@@ -44,10 +40,6 @@ func (s *HandlerTestSuite) SetupTest() {
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
 	s.user1 = s.user1Addr.String()
-
-	s.pubkey2 = secp256k1.GenPrivKey().PubKey()
-	s.user2Addr = sdk.AccAddress(s.pubkey2.Address())
-	s.user2 = s.user2Addr.String()
 
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
 

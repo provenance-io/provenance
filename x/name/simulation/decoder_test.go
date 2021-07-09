@@ -22,8 +22,8 @@ func TestDecodeStore(t *testing.T) {
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{
-			{Key: types.NameKeyPrefix, Value: cdc.MustMarshalBinaryBare(&testNameRecord)},
-			{Key: types.AddressKeyPrefix, Value: cdc.MustMarshalBinaryBare(&testNameRecord)},
+			{Key: types.NameKeyPrefix, Value: cdc.MustMarshal(&testNameRecord)},
+			{Key: types.AddressKeyPrefix, Value: cdc.MustMarshal(&testNameRecord)},
 			{Key: []byte{0x99}, Value: []byte{0x99}},
 		},
 	}

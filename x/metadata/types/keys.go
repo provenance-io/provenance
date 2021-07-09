@@ -2,6 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
 const (
@@ -72,26 +73,26 @@ var (
 	RecordSpecificationKeyPrefix = []byte{0x05}
 
 	// AddressScopeCacheKeyPrefix for scope to address cache lookup
-	AddressScopeCacheKeyPrefix = []byte{0x10}
+	AddressScopeCacheKeyPrefix = []byte{0x17}
 	// ScopeSpecScopeCacheKeyPrefix for scope to scope specification cache lookup
 	ScopeSpecScopeCacheKeyPrefix = []byte{0x11}
 	// ValueOwnerScopeCacheKeyPrefix for scope to value owner address cache lookup
-	ValueOwnerScopeCacheKeyPrefix = []byte{0x12}
+	ValueOwnerScopeCacheKeyPrefix = []byte{0x18}
 
 	// AddressScopeSpecCacheKeyPrefix for scope spec lookup by address
-	AddressScopeSpecCacheKeyPrefix = []byte{0x13}
+	AddressScopeSpecCacheKeyPrefix = []byte{0x19}
 	// ContractSpecScopeSpecCacheKeyPrefix for scope spec lookup by contract spec
 	ContractSpecScopeSpecCacheKeyPrefix = []byte{0x14}
 	// AddressContractSpecCacheKeyPrefix for contract spec lookup by address
-	AddressContractSpecCacheKeyPrefix = []byte{0x15}
+	AddressContractSpecCacheKeyPrefix = []byte{0x20}
 
 	// OSLocatorAddressKeyPrefix is the key for OSLocator Record by address
-	OSLocatorAddressKeyPrefix = []byte{0x16}
+	OSLocatorAddressKeyPrefix = []byte{0x21}
 )
 
 // GetAddressScopeCacheIteratorPrefix returns an iterator prefix for all scope cache entries assigned to a given address
 func GetAddressScopeCacheIteratorPrefix(addr sdk.AccAddress) []byte {
-	return append(AddressScopeCacheKeyPrefix, addr.Bytes()...)
+	return append(AddressScopeCacheKeyPrefix, address.MustLengthPrefix(addr.Bytes())...)
 }
 
 // GetAddressScopeCacheKey returns the store key for an address cache entry
@@ -111,7 +112,7 @@ func GetScopeSpecScopeCacheKey(scopeSpecID MetadataAddress, scopeID MetadataAddr
 
 // GetValueOwnerScopeCacheIteratorPrefix returns an iterator prefix for all scope cache entries assigned to a given address
 func GetValueOwnerScopeCacheIteratorPrefix(addr sdk.AccAddress) []byte {
-	return append(ValueOwnerScopeCacheKeyPrefix, addr.Bytes()...)
+	return append(ValueOwnerScopeCacheKeyPrefix, address.MustLengthPrefix(addr.Bytes())...)
 }
 
 // GetValueOwnerScopeCacheKey returns the store key for an address cache entry
@@ -121,7 +122,7 @@ func GetValueOwnerScopeCacheKey(addr sdk.AccAddress, scopeID MetadataAddress) []
 
 // GetAddressScopeSpecCacheIteratorPrefix returns an iterator prefix for all scope spec cache entries assigned to a given address
 func GetAddressScopeSpecCacheIteratorPrefix(addr sdk.AccAddress) []byte {
-	return append(AddressScopeSpecCacheKeyPrefix, addr.Bytes()...)
+	return append(AddressScopeSpecCacheKeyPrefix, address.MustLengthPrefix(addr.Bytes())...)
 }
 
 // GetAddressScopeSpecCacheKey returns the store key for an address + scope spec cache entry
@@ -141,7 +142,7 @@ func GetContractSpecScopeSpecCacheKey(contractSpecID MetadataAddress, scopeSpecI
 
 // GetAddressContractSpecCacheIteratorPrefix returns an iterator prefix for all contract spec cache entries assigned to a given address
 func GetAddressContractSpecCacheIteratorPrefix(addr sdk.AccAddress) []byte {
-	return append(AddressContractSpecCacheKeyPrefix, addr.Bytes()...)
+	return append(AddressContractSpecCacheKeyPrefix, address.MustLengthPrefix(addr.Bytes())...)
 }
 
 // GetAddressContractSpecCacheKey returns the store key for an address + contract spec cache entry
@@ -150,6 +151,6 @@ func GetAddressContractSpecCacheKey(addr sdk.AccAddress, contractSpecID Metadata
 }
 
 // GetOSLocatorKey returns a store key for an object store locator entry
-func GetOSLocatorKey(address sdk.AccAddress) []byte {
-	return append(OSLocatorAddressKeyPrefix, address.Bytes()...)
+func GetOSLocatorKey(addr sdk.AccAddress) []byte {
+	return append(OSLocatorAddressKeyPrefix, address.MustLengthPrefix(addr.Bytes())...)
 }
