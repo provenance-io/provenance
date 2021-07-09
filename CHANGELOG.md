@@ -46,6 +46,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Marker Withdraw Escrow Proposal type is properly registered [#367](https://github.com/provenance-io/provenance/issues/367)
   * Target Address field spelling error corrected in Withdraw Escrow and Increase Supply Governance Proposals.
 
+### Improvements
+
+* Updated to Cosmos SDK Release v0.43  (#154)
 ## [v1.5.0](https://github.com/provenance-io/provenance/releases/tag/v1.5.0) - 2021-06-23
 
 ### Features
