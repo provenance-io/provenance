@@ -40,7 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * Marker governance proposal are supported in cli [#367](https://github.com/provenance-io/provenance/issues/367)
-* Add query ability to get sessions by record [#212](https://github.com/provenance-io/provenance/issues/212)
+* Add ability to query metadata sessions by record [#212](https://github.com/provenance-io/provenance/issues/212)
 
 ### Bug Fixes
 
