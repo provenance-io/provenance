@@ -39908,6 +39908,847 @@ paths:
           format: boolean
       tags:
         - Query
+  '/provenance/metadata/v1/record/{record_addr}/session':
+    get:
+      summary: Sessions searches for sessions.
+      description: >-
+        The scope_id can either be scope uuid, e.g.
+        91978ba2-5f35-459a-86a7-feca1b0512e0 or a scope address, e.g.
+
+        scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel. Similarly, the session_id can
+        either be a uuid or session address, e.g.
+
+        session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr. The
+        record_addr, if provided, must be a
+
+        bech32 record address, e.g.
+        record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3.
+
+
+        * If only a scope_id is provided, all sessions in that scope are
+        returned.
+
+        * If only a session_id is provided, it must be an address, and that
+        single session is returned.
+
+        * If the session_id is a uuid, then either a scope_id or record_addr
+        must also be provided, and that single session
+
+        is returned.
+
+        * If only a record_addr is provided, the session containing that record
+        will be returned.
+
+        * If a record_name is provided then either a scope_id, session_id as an
+        address, or record_addr must also be
+
+        provided, and the session containing that record will be returned.
+
+
+        A bad request is returned if:
+
+        * The session_id is a uuid and is provided without a scope_id or
+        record_addr.
+
+        * A record_name is provided without any way to identify the scope (e.g.
+        a scope_id, a session_id as an address, or
+
+        a record_addr).
+
+        * Two or more of scope_id, session_id as an address, and record_addr are
+        provided and don't all refer to the same
+
+        scope.
+
+        * A record_addr (or scope and record_name) is provided with a session_id
+        and that session does not contain such a
+
+        record.
+
+        * A record_addr and record_name are both provided, but reference
+        different records.
+
+
+        By default, the scope and records are not included.
+
+        Set include_scope and/or include_records to true to include the scope
+        and/or records.
+      operationId: Sessions4
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              scope:
+                description: >-
+                  scope is the wrapped scope that holds these sessions (if
+                  requested).
+                type: object
+                properties:
+                  scope:
+                    description: scope is the on-chain scope message.
+                    type: object
+                    properties:
+                      scope_id:
+                        type: string
+                        format: byte
+                        title: >-
+                          Unique ID for this scope.  Implements sdk.Address
+                          interface for use where addresses are required in
+                          Cosmos
+                      specification_id:
+                        type: string
+                        format: byte
+                        title: >-
+                          the scope specification that contains the
+                          specifications for data elements allowed within this
+                          scope
+                      owners:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            address:
+                              type: string
+                              title: address of the account (on chain)
+                            role:
+                              type: string
+                              enum:
+                                - PARTY_TYPE_UNSPECIFIED
+                                - PARTY_TYPE_ORIGINATOR
+                                - PARTY_TYPE_SERVICER
+                                - PARTY_TYPE_INVESTOR
+                                - PARTY_TYPE_CUSTODIAN
+                                - PARTY_TYPE_OWNER
+                                - PARTY_TYPE_AFFILIATE
+                                - PARTY_TYPE_OMNIBUS
+                                - PARTY_TYPE_PROVENANCE
+                              default: PARTY_TYPE_UNSPECIFIED
+                              description: >-
+                                - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED
+                                is an error condition
+                                 - PARTY_TYPE_ORIGINATOR: PARTY_TYPE_ORIGINATOR is an asset originator
+                                 - PARTY_TYPE_SERVICER: PARTY_TYPE_SERVICER provides debt servicing functions
+                                 - PARTY_TYPE_INVESTOR: PARTY_TYPE_INVESTOR is a generic investor
+                                 - PARTY_TYPE_CUSTODIAN: PARTY_TYPE_CUSTODIAN is an entity that provides custodian services for assets
+                                 - PARTY_TYPE_OWNER: PARTY_TYPE_OWNER indicates this party is an owner of the item
+                                 - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
+                                 - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
+                                 - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                              title: >-
+                                PartyType are the different roles parties on a
+                                contract may use
+                          title: >-
+                            A Party is an address with/in a given role
+                            associated with a contract
+                        description: >-
+                          These parties represent top level owners of the
+                          records within.  These parties must sign any requests
+                          that modify
+
+                          the data within the scope.  These addresses are in
+                          union with parties listed on the sessions.
+                      data_access:
+                        type: array
+                        items:
+                          type: string
+                        description: >-
+                          Addessses in this list are authorized to recieve
+                          off-chain data associated with this scope.
+                      value_owner_address:
+                        type: string
+                        description: >-
+                          An address that controls the value associated with
+                          this scope.  Standard blockchain accounts and marker
+                          accounts
+
+                          are supported for this value.  This attribute may only
+                          be changed by the entity indicated once it is set.
+                  scope_id_info:
+                    description: >-
+                      scope_id_info contains information about the id/address of
+                      the scope.
+                    type: object
+                    properties:
+                      scope_id:
+                        type: string
+                        format: byte
+                        description: scope_id is the raw bytes of the scope address.
+                      scope_id_prefix:
+                        type: string
+                        format: byte
+                        description: scope_id_prefix is the prefix portion of the scope_id.
+                      scope_id_scope_uuid:
+                        type: string
+                        format: byte
+                        description: >-
+                          scope_id_scope_uuid is the scope_uuid portion of the
+                          scope_id.
+                      scope_addr:
+                        type: string
+                        description: >-
+                          scope_addr is the bech32 string version of the
+                          scope_id.
+                      scope_uuid:
+                        type: string
+                        description: >-
+                          scope_uuid is the uuid hex string of the
+                          scope_id_scope_uuid.
+                  scope_spec_id_info:
+                    description: >-
+                      scope_spec_id_info contains information about the
+                      id/address of the scope specification.
+                    type: object
+                    properties:
+                      scope_spec_id:
+                        type: string
+                        format: byte
+                        description: >-
+                          scope_spec_id is the raw bytes of the scope
+                          specification address.
+                      scope_spec_id_prefix:
+                        type: string
+                        format: byte
+                        description: >-
+                          scope_spec_id_prefix is the prefix portion of the
+                          scope_spec_id.
+                      scope_spec_id_scope_spec_uuid:
+                        type: string
+                        format: byte
+                        description: >-
+                          scope_spec_id_scope_spec_uuid is the scope_spec_uuid
+                          portion of the scope_spec_id.
+                      scope_spec_addr:
+                        type: string
+                        description: >-
+                          scope_spec_addr is the bech32 string version of the
+                          scope_spec_id.
+                      scope_spec_uuid:
+                        type: string
+                        description: >-
+                          scope_spec_uuid is the uuid hex string of the
+                          scope_spec_id_scope_spec_uuid.
+              sessions:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    session:
+                      description: session is the on-chain session message.
+                      type: object
+                      properties:
+                        session_id:
+                          type: string
+                          format: byte
+                        specification_id:
+                          type: string
+                          format: byte
+                          description: >-
+                            unique id of the contract specification that was
+                            used to create this session.
+                        parties:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              address:
+                                type: string
+                                title: address of the account (on chain)
+                              role:
+                                type: string
+                                enum:
+                                  - PARTY_TYPE_UNSPECIFIED
+                                  - PARTY_TYPE_ORIGINATOR
+                                  - PARTY_TYPE_SERVICER
+                                  - PARTY_TYPE_INVESTOR
+                                  - PARTY_TYPE_CUSTODIAN
+                                  - PARTY_TYPE_OWNER
+                                  - PARTY_TYPE_AFFILIATE
+                                  - PARTY_TYPE_OMNIBUS
+                                  - PARTY_TYPE_PROVENANCE
+                                default: PARTY_TYPE_UNSPECIFIED
+                                description: >-
+                                  - PARTY_TYPE_UNSPECIFIED:
+                                  PARTY_TYPE_UNSPECIFIED is an error condition
+                                   - PARTY_TYPE_ORIGINATOR: PARTY_TYPE_ORIGINATOR is an asset originator
+                                   - PARTY_TYPE_SERVICER: PARTY_TYPE_SERVICER provides debt servicing functions
+                                   - PARTY_TYPE_INVESTOR: PARTY_TYPE_INVESTOR is a generic investor
+                                   - PARTY_TYPE_CUSTODIAN: PARTY_TYPE_CUSTODIAN is an entity that provides custodian services for assets
+                                   - PARTY_TYPE_OWNER: PARTY_TYPE_OWNER indicates this party is an owner of the item
+                                   - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
+                                   - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
+                                   - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                                title: >-
+                                  PartyType are the different roles parties on a
+                                  contract may use
+                            title: >-
+                              A Party is an address with/in a given role
+                              associated with a contract
+                          title: >-
+                            parties is the set of identities that signed this
+                            contract
+                        name:
+                          type: string
+                          title: >-
+                            name to associate with this session execution
+                            context, typically classname
+                        context:
+                          type: string
+                          format: byte
+                          description: >-
+                            context is a field for storing client specific data
+                            associated with a session.
+                        audit:
+                          description: >-
+                            Created by, updated by, timestamps, version number,
+                            and related info.
+                          type: object
+                          properties:
+                            created_date:
+                              type: string
+                              format: date-time
+                              title: the date/time when this entry was created
+                            created_by:
+                              type: string
+                              title: >-
+                                the address of the account that created this
+                                record
+                            updated_date:
+                              type: string
+                              format: date-time
+                              title: the date/time when this entry was last updated
+                            updated_by:
+                              type: string
+                              title: >-
+                                the address of the account that modified this
+                                record
+                            version:
+                              type: integer
+                              format: int64
+                              title: >-
+                                an optional version number that is incremented
+                                with each update
+                            message:
+                              type: string
+                              title: >-
+                                an optional message associated with the
+                                creation/update event
+                          title: >-
+                            AuditFields capture information about the last
+                            account to make modifications and when they were
+                            made
+                      title: >-
+                        A Session is created for an execution context against a
+                        specific specification instance
+                    session_id_info:
+                      description: >-
+                        session_id_info contains information about the
+                        id/address of the session.
+                      type: object
+                      properties:
+                        session_id:
+                          type: string
+                          format: byte
+                          description: session_id is the raw bytes of the session address.
+                        session_id_prefix:
+                          type: string
+                          format: byte
+                          description: >-
+                            session_id_prefix is the prefix portion of the
+                            session_id.
+                        session_id_scope_uuid:
+                          type: string
+                          format: byte
+                          description: >-
+                            session_id_scope_uuid is the scope_uuid portion of
+                            the session_id.
+                        session_id_session_uuid:
+                          type: string
+                          format: byte
+                          description: >-
+                            session_id_session_uuid is the session_uuid portion
+                            of the session_id.
+                        session_addr:
+                          type: string
+                          description: >-
+                            session_addr is the bech32 string version of the
+                            session_id.
+                        session_uuid:
+                          type: string
+                          description: >-
+                            session_uuid is the uuid hex string of the
+                            session_id_session_uuid.
+                        scope_id_info:
+                          description: >-
+                            scope_id_info is information about the scope id
+                            referenced in the session_id.
+                          type: object
+                          properties:
+                            scope_id:
+                              type: string
+                              format: byte
+                              description: scope_id is the raw bytes of the scope address.
+                            scope_id_prefix:
+                              type: string
+                              format: byte
+                              description: >-
+                                scope_id_prefix is the prefix portion of the
+                                scope_id.
+                            scope_id_scope_uuid:
+                              type: string
+                              format: byte
+                              description: >-
+                                scope_id_scope_uuid is the scope_uuid portion of
+                                the scope_id.
+                            scope_addr:
+                              type: string
+                              description: >-
+                                scope_addr is the bech32 string version of the
+                                scope_id.
+                            scope_uuid:
+                              type: string
+                              description: >-
+                                scope_uuid is the uuid hex string of the
+                                scope_id_scope_uuid.
+                    contract_spec_id_info:
+                      description: >-
+                        contract_spec_id_info contains information about the
+                        id/address of the contract specification.
+                      type: object
+                      properties:
+                        contract_spec_id:
+                          type: string
+                          format: byte
+                          description: >-
+                            contract_spec_id is the raw bytes of the contract
+                            specification address.
+                        contract_spec_id_prefix:
+                          type: string
+                          format: byte
+                          description: >-
+                            contract_spec_id_prefix is the prefix portion of the
+                            contract_spec_id.
+                        contract_spec_id_contract_spec_uuid:
+                          type: string
+                          format: byte
+                          description: >-
+                            contract_spec_id_contract_spec_uuid is the
+                            contract_spec_uuid portion of the contract_spec_id.
+                        contract_spec_addr:
+                          type: string
+                          description: >-
+                            contract_spec_addr is the bech32 string version of
+                            the contract_spec_id.
+                        contract_spec_uuid:
+                          type: string
+                          description: >-
+                            contract_spec_uuid is the uuid hex string of the
+                            contract_spec_id_contract_spec_uuid.
+                  description: >-
+                    SessionWrapper contains a single session and some extra
+                    identifiers for it.
+                description: sessions is any number of wrapped session results.
+              records:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    record:
+                      description: record is the on-chain record message.
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          title: >-
+                            name/identifier for this record.  Value must be
+                            unique within the scope.  Also known as a Fact name
+                        session_id:
+                          type: string
+                          format: byte
+                          title: >-
+                            id of the session context that was used to create
+                            this record (use with filtered kvprefix iterator)
+                        process:
+                          title: >-
+                            process contain information used to uniquely
+                            identify an execution on or off chain that generated
+                            this record
+                          type: object
+                          properties:
+                            address:
+                              type: string
+                              title: >-
+                                the address of a smart contract used for this
+                                process
+                            hash:
+                              type: string
+                              title: the hash of an off-chain process used
+                            name:
+                              type: string
+                              title: >-
+                                a name associated with the process (type_name,
+                                classname or smart contract common name)
+                            method:
+                              type: string
+                              title: >-
+                                method is a name or reference to a specific
+                                operation (method) within a class/contract that
+                                was invoked
+                        inputs:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              name:
+                                type: string
+                                description: >-
+                                  Name value included to link back to the
+                                  definition spec.
+                              record_id:
+                                type: string
+                                format: byte
+                                title: >-
+                                  the address of a record on chain (For
+                                  Established Records)
+                              hash:
+                                type: string
+                                title: >-
+                                  the hash of an off-chain piece of information
+                                  (For Proposed Records)
+                              type_name:
+                                type: string
+                                title: from proposed fact structure to unmarshal
+                              status:
+                                title: >-
+                                  Indicates if this input was a recorded fact on
+                                  chain or just a given hashed input
+                                type: string
+                                enum:
+                                  - RECORD_INPUT_STATUS_UNSPECIFIED
+                                  - RECORD_INPUT_STATUS_PROPOSED
+                                  - RECORD_INPUT_STATUS_RECORD
+                                default: RECORD_INPUT_STATUS_UNSPECIFIED
+                                description: >-
+                                  - RECORD_INPUT_STATUS_UNSPECIFIED:
+                                  RECORD_INPUT_STATUS_UNSPECIFIED indicates an
+                                  invalid/unknown input type
+                                   - RECORD_INPUT_STATUS_PROPOSED: RECORD_INPUT_STATUS_PROPOSED indicates this input was an arbitrary piece of data that was hashed
+                                   - RECORD_INPUT_STATUS_RECORD: RECORD_INPUT_STATUS_RECORD indicates this input is a reference to a previously recorded fact on blockchain
+                            title: Tracks the inputs used to establish this record
+                          title: >-
+                            inputs used with the process to achieve the output
+                            on this record
+                        outputs:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              hash:
+                                type: string
+                                title: >-
+                                  Hash of the data output that was
+                                  output/generated for this record
+                              status:
+                                title: >-
+                                  Status of the process execution associated
+                                  with this output indicating success,failure,
+                                  or pending
+                                type: string
+                                enum:
+                                  - RESULT_STATUS_UNSPECIFIED
+                                  - RESULT_STATUS_PASS
+                                  - RESULT_STATUS_SKIP
+                                  - RESULT_STATUS_FAIL
+                                default: RESULT_STATUS_UNSPECIFIED
+                                description: >-
+                                  - RESULT_STATUS_UNSPECIFIED:
+                                  RESULT_STATUS_UNSPECIFIED indicates an unset
+                                  condition
+                                   - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successfult
+                                   - RESULT_STATUS_SKIP: RESULT_STATUS_SKIP indicates condition/consideration was skipped due to missing inputs or delayed execution
+                                   - RESULT_STATUS_FAIL: RESULT_STATUS_FAIL indicates the execution of the condition/consideration failed.
+                            title: >-
+                              RecordOutput encapsulates the output of a process
+                              recorded on chain
+                          title: >-
+                            output(s) is the results of executing the process on
+                            the given process indicated in this record
+                        specification_id:
+                          type: string
+                          format: byte
+                          description: >-
+                            specification_id is the id of the record
+                            specification that was used to create this record.
+                      title: >-
+                        A record (of fact) is attached to a session or each
+                        consideration output from a contract
+                    record_id_info:
+                      description: >-
+                        record_id_info contains information about the id/address
+                        of the record.
+                      type: object
+                      properties:
+                        record_id:
+                          type: string
+                          format: byte
+                          description: record_id is the raw bytes of the record address.
+                        record_id_prefix:
+                          type: string
+                          format: byte
+                          description: >-
+                            record_id_prefix is the prefix portion of the
+                            record_id.
+                        record_id_scope_uuid:
+                          type: string
+                          format: byte
+                          description: >-
+                            record_id_scope_uuid is the scope_uuid portion of
+                            the record_id.
+                        record_id_hashed_name:
+                          type: string
+                          format: byte
+                          description: >-
+                            record_id_hashed_name is the hashed name portion of
+                            the record_id.
+                        record_addr:
+                          type: string
+                          description: >-
+                            record_addr is the bech32 string version of the
+                            record_id.
+                        scope_id_info:
+                          description: >-
+                            scope_id_info is information about the scope id
+                            referenced in the record_id.
+                          type: object
+                          properties:
+                            scope_id:
+                              type: string
+                              format: byte
+                              description: scope_id is the raw bytes of the scope address.
+                            scope_id_prefix:
+                              type: string
+                              format: byte
+                              description: >-
+                                scope_id_prefix is the prefix portion of the
+                                scope_id.
+                            scope_id_scope_uuid:
+                              type: string
+                              format: byte
+                              description: >-
+                                scope_id_scope_uuid is the scope_uuid portion of
+                                the scope_id.
+                            scope_addr:
+                              type: string
+                              description: >-
+                                scope_addr is the bech32 string version of the
+                                scope_id.
+                            scope_uuid:
+                              type: string
+                              description: >-
+                                scope_uuid is the uuid hex string of the
+                                scope_id_scope_uuid.
+                    record_spec_id_info:
+                      description: >-
+                        record_spec_id_info contains information about the
+                        id/address of the record specification.
+                      type: object
+                      properties:
+                        record_spec_id:
+                          type: string
+                          format: byte
+                          description: >-
+                            record_spec_id is the raw bytes of the record
+                            specification address.
+                        record_spec_id_prefix:
+                          type: string
+                          format: byte
+                          description: >-
+                            record_spec_id_prefix is the prefix portion of the
+                            record_spec_id.
+                        record_spec_id_contract_spec_uuid:
+                          type: string
+                          format: byte
+                          description: >-
+                            record_spec_id_contract_spec_uuid is the
+                            contract_spec_uuid portion of the record_spec_id.
+                        record_spec_id_hashed_name:
+                          type: string
+                          format: byte
+                          description: >-
+                            record_spec_id_hashed_name is the hashed name
+                            portion of the record_spec_id.
+                        record_spec_addr:
+                          type: string
+                          description: >-
+                            record_spec_addr is the bech32 string version of the
+                            record_spec_id.
+                        contract_spec_id_info:
+                          description: >-
+                            contract_spec_id_info is information about the
+                            contract spec id referenced in the record_spec_id.
+                          type: object
+                          properties:
+                            contract_spec_id:
+                              type: string
+                              format: byte
+                              description: >-
+                                contract_spec_id is the raw bytes of the
+                                contract specification address.
+                            contract_spec_id_prefix:
+                              type: string
+                              format: byte
+                              description: >-
+                                contract_spec_id_prefix is the prefix portion of
+                                the contract_spec_id.
+                            contract_spec_id_contract_spec_uuid:
+                              type: string
+                              format: byte
+                              description: >-
+                                contract_spec_id_contract_spec_uuid is the
+                                contract_spec_uuid portion of the
+                                contract_spec_id.
+                            contract_spec_addr:
+                              type: string
+                              description: >-
+                                contract_spec_addr is the bech32 string version
+                                of the contract_spec_id.
+                            contract_spec_uuid:
+                              type: string
+                              description: >-
+                                contract_spec_uuid is the uuid hex string of the
+                                contract_spec_id_contract_spec_uuid.
+                  description: >-
+                    RecordWrapper contains a single record and some extra
+                    identifiers for it.
+                description: >-
+                  records is any number of wrapped records contained in these
+                  sessions (if requested).
+              request:
+                description: request is a copy of the request that generated these results.
+                type: object
+                properties:
+                  scope_id:
+                    type: string
+                    description: >-
+                      scope_id can either be a uuid, e.g.
+                      91978ba2-5f35-459a-86a7-feca1b0512e0 or a bech32 scope
+                      address, e.g.
+
+                      scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel.
+                  session_id:
+                    type: string
+                    description: >-
+                      session_id can either be a uuid, e.g.
+                      5803f8bc-6067-4eb5-951f-2121671c2ec0 or a bech32 session
+                      address, e.g.
+
+                      session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr.
+                      This can only be a uuid if a scope_id is also
+
+                      provided.
+                  record_addr:
+                    type: string
+                    description: >-
+                      record_addr is a bech32 record address, e.g.
+                      record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3.
+                  record_name:
+                    type: string
+                    description: >-
+                      record_name is the name of the record to find the session
+                      for in the provided scope.
+                  include_scope:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_scope is a flag for whether or not the scope
+                      containing these sessions should be included.
+                  include_records:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_records is a flag for whether or not the records
+                      in these sessions should be included.
+            description: >-
+              SessionsResponse is the response type for the Query/Sessions RPC
+              method.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: record_addr
+          description: >-
+            record_addr is a bech32 record address, e.g.
+            record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3.
+          in: path
+          required: true
+          type: string
+        - name: scope_id
+          description: >-
+            scope_id can either be a uuid, e.g.
+            91978ba2-5f35-459a-86a7-feca1b0512e0 or a bech32 scope address, e.g.
+
+            scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel.
+          in: query
+          required: false
+          type: string
+        - name: session_id
+          description: >-
+            session_id can either be a uuid, e.g.
+            5803f8bc-6067-4eb5-951f-2121671c2ec0 or a bech32 session address,
+            e.g.
+
+            session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr.
+            This can only be a uuid if a scope_id is also
+
+            provided.
+          in: query
+          required: false
+          type: string
+        - name: record_name
+          description: >-
+            record_name is the name of the record to find the session for in the
+            provided scope.
+          in: query
+          required: false
+          type: string
+        - name: include_scope
+          description: >-
+            include_scope is a flag for whether or not the scope containing
+            these sessions should be included.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: include_records
+          description: >-
+            include_records is a flag for whether or not the records in these
+            sessions should be included.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+      tags:
+        - Query
   /provenance/metadata/v1/records/all:
     get:
       summary: RecordsAll retrieves all records.
@@ -42582,6 +43423,847 @@ paths:
           format: boolean
       tags:
         - Query
+  '/provenance/metadata/v1/scope/{scope_id}/record/{record_name}/session':
+    get:
+      summary: Sessions searches for sessions.
+      description: >-
+        The scope_id can either be scope uuid, e.g.
+        91978ba2-5f35-459a-86a7-feca1b0512e0 or a scope address, e.g.
+
+        scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel. Similarly, the session_id can
+        either be a uuid or session address, e.g.
+
+        session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr. The
+        record_addr, if provided, must be a
+
+        bech32 record address, e.g.
+        record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3.
+
+
+        * If only a scope_id is provided, all sessions in that scope are
+        returned.
+
+        * If only a session_id is provided, it must be an address, and that
+        single session is returned.
+
+        * If the session_id is a uuid, then either a scope_id or record_addr
+        must also be provided, and that single session
+
+        is returned.
+
+        * If only a record_addr is provided, the session containing that record
+        will be returned.
+
+        * If a record_name is provided then either a scope_id, session_id as an
+        address, or record_addr must also be
+
+        provided, and the session containing that record will be returned.
+
+
+        A bad request is returned if:
+
+        * The session_id is a uuid and is provided without a scope_id or
+        record_addr.
+
+        * A record_name is provided without any way to identify the scope (e.g.
+        a scope_id, a session_id as an address, or
+
+        a record_addr).
+
+        * Two or more of scope_id, session_id as an address, and record_addr are
+        provided and don't all refer to the same
+
+        scope.
+
+        * A record_addr (or scope and record_name) is provided with a session_id
+        and that session does not contain such a
+
+        record.
+
+        * A record_addr and record_name are both provided, but reference
+        different records.
+
+
+        By default, the scope and records are not included.
+
+        Set include_scope and/or include_records to true to include the scope
+        and/or records.
+      operationId: Sessions5
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              scope:
+                description: >-
+                  scope is the wrapped scope that holds these sessions (if
+                  requested).
+                type: object
+                properties:
+                  scope:
+                    description: scope is the on-chain scope message.
+                    type: object
+                    properties:
+                      scope_id:
+                        type: string
+                        format: byte
+                        title: >-
+                          Unique ID for this scope.  Implements sdk.Address
+                          interface for use where addresses are required in
+                          Cosmos
+                      specification_id:
+                        type: string
+                        format: byte
+                        title: >-
+                          the scope specification that contains the
+                          specifications for data elements allowed within this
+                          scope
+                      owners:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            address:
+                              type: string
+                              title: address of the account (on chain)
+                            role:
+                              type: string
+                              enum:
+                                - PARTY_TYPE_UNSPECIFIED
+                                - PARTY_TYPE_ORIGINATOR
+                                - PARTY_TYPE_SERVICER
+                                - PARTY_TYPE_INVESTOR
+                                - PARTY_TYPE_CUSTODIAN
+                                - PARTY_TYPE_OWNER
+                                - PARTY_TYPE_AFFILIATE
+                                - PARTY_TYPE_OMNIBUS
+                                - PARTY_TYPE_PROVENANCE
+                              default: PARTY_TYPE_UNSPECIFIED
+                              description: >-
+                                - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED
+                                is an error condition
+                                 - PARTY_TYPE_ORIGINATOR: PARTY_TYPE_ORIGINATOR is an asset originator
+                                 - PARTY_TYPE_SERVICER: PARTY_TYPE_SERVICER provides debt servicing functions
+                                 - PARTY_TYPE_INVESTOR: PARTY_TYPE_INVESTOR is a generic investor
+                                 - PARTY_TYPE_CUSTODIAN: PARTY_TYPE_CUSTODIAN is an entity that provides custodian services for assets
+                                 - PARTY_TYPE_OWNER: PARTY_TYPE_OWNER indicates this party is an owner of the item
+                                 - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
+                                 - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
+                                 - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                              title: >-
+                                PartyType are the different roles parties on a
+                                contract may use
+                          title: >-
+                            A Party is an address with/in a given role
+                            associated with a contract
+                        description: >-
+                          These parties represent top level owners of the
+                          records within.  These parties must sign any requests
+                          that modify
+
+                          the data within the scope.  These addresses are in
+                          union with parties listed on the sessions.
+                      data_access:
+                        type: array
+                        items:
+                          type: string
+                        description: >-
+                          Addessses in this list are authorized to recieve
+                          off-chain data associated with this scope.
+                      value_owner_address:
+                        type: string
+                        description: >-
+                          An address that controls the value associated with
+                          this scope.  Standard blockchain accounts and marker
+                          accounts
+
+                          are supported for this value.  This attribute may only
+                          be changed by the entity indicated once it is set.
+                  scope_id_info:
+                    description: >-
+                      scope_id_info contains information about the id/address of
+                      the scope.
+                    type: object
+                    properties:
+                      scope_id:
+                        type: string
+                        format: byte
+                        description: scope_id is the raw bytes of the scope address.
+                      scope_id_prefix:
+                        type: string
+                        format: byte
+                        description: scope_id_prefix is the prefix portion of the scope_id.
+                      scope_id_scope_uuid:
+                        type: string
+                        format: byte
+                        description: >-
+                          scope_id_scope_uuid is the scope_uuid portion of the
+                          scope_id.
+                      scope_addr:
+                        type: string
+                        description: >-
+                          scope_addr is the bech32 string version of the
+                          scope_id.
+                      scope_uuid:
+                        type: string
+                        description: >-
+                          scope_uuid is the uuid hex string of the
+                          scope_id_scope_uuid.
+                  scope_spec_id_info:
+                    description: >-
+                      scope_spec_id_info contains information about the
+                      id/address of the scope specification.
+                    type: object
+                    properties:
+                      scope_spec_id:
+                        type: string
+                        format: byte
+                        description: >-
+                          scope_spec_id is the raw bytes of the scope
+                          specification address.
+                      scope_spec_id_prefix:
+                        type: string
+                        format: byte
+                        description: >-
+                          scope_spec_id_prefix is the prefix portion of the
+                          scope_spec_id.
+                      scope_spec_id_scope_spec_uuid:
+                        type: string
+                        format: byte
+                        description: >-
+                          scope_spec_id_scope_spec_uuid is the scope_spec_uuid
+                          portion of the scope_spec_id.
+                      scope_spec_addr:
+                        type: string
+                        description: >-
+                          scope_spec_addr is the bech32 string version of the
+                          scope_spec_id.
+                      scope_spec_uuid:
+                        type: string
+                        description: >-
+                          scope_spec_uuid is the uuid hex string of the
+                          scope_spec_id_scope_spec_uuid.
+              sessions:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    session:
+                      description: session is the on-chain session message.
+                      type: object
+                      properties:
+                        session_id:
+                          type: string
+                          format: byte
+                        specification_id:
+                          type: string
+                          format: byte
+                          description: >-
+                            unique id of the contract specification that was
+                            used to create this session.
+                        parties:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              address:
+                                type: string
+                                title: address of the account (on chain)
+                              role:
+                                type: string
+                                enum:
+                                  - PARTY_TYPE_UNSPECIFIED
+                                  - PARTY_TYPE_ORIGINATOR
+                                  - PARTY_TYPE_SERVICER
+                                  - PARTY_TYPE_INVESTOR
+                                  - PARTY_TYPE_CUSTODIAN
+                                  - PARTY_TYPE_OWNER
+                                  - PARTY_TYPE_AFFILIATE
+                                  - PARTY_TYPE_OMNIBUS
+                                  - PARTY_TYPE_PROVENANCE
+                                default: PARTY_TYPE_UNSPECIFIED
+                                description: >-
+                                  - PARTY_TYPE_UNSPECIFIED:
+                                  PARTY_TYPE_UNSPECIFIED is an error condition
+                                   - PARTY_TYPE_ORIGINATOR: PARTY_TYPE_ORIGINATOR is an asset originator
+                                   - PARTY_TYPE_SERVICER: PARTY_TYPE_SERVICER provides debt servicing functions
+                                   - PARTY_TYPE_INVESTOR: PARTY_TYPE_INVESTOR is a generic investor
+                                   - PARTY_TYPE_CUSTODIAN: PARTY_TYPE_CUSTODIAN is an entity that provides custodian services for assets
+                                   - PARTY_TYPE_OWNER: PARTY_TYPE_OWNER indicates this party is an owner of the item
+                                   - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
+                                   - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
+                                   - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                                title: >-
+                                  PartyType are the different roles parties on a
+                                  contract may use
+                            title: >-
+                              A Party is an address with/in a given role
+                              associated with a contract
+                          title: >-
+                            parties is the set of identities that signed this
+                            contract
+                        name:
+                          type: string
+                          title: >-
+                            name to associate with this session execution
+                            context, typically classname
+                        context:
+                          type: string
+                          format: byte
+                          description: >-
+                            context is a field for storing client specific data
+                            associated with a session.
+                        audit:
+                          description: >-
+                            Created by, updated by, timestamps, version number,
+                            and related info.
+                          type: object
+                          properties:
+                            created_date:
+                              type: string
+                              format: date-time
+                              title: the date/time when this entry was created
+                            created_by:
+                              type: string
+                              title: >-
+                                the address of the account that created this
+                                record
+                            updated_date:
+                              type: string
+                              format: date-time
+                              title: the date/time when this entry was last updated
+                            updated_by:
+                              type: string
+                              title: >-
+                                the address of the account that modified this
+                                record
+                            version:
+                              type: integer
+                              format: int64
+                              title: >-
+                                an optional version number that is incremented
+                                with each update
+                            message:
+                              type: string
+                              title: >-
+                                an optional message associated with the
+                                creation/update event
+                          title: >-
+                            AuditFields capture information about the last
+                            account to make modifications and when they were
+                            made
+                      title: >-
+                        A Session is created for an execution context against a
+                        specific specification instance
+                    session_id_info:
+                      description: >-
+                        session_id_info contains information about the
+                        id/address of the session.
+                      type: object
+                      properties:
+                        session_id:
+                          type: string
+                          format: byte
+                          description: session_id is the raw bytes of the session address.
+                        session_id_prefix:
+                          type: string
+                          format: byte
+                          description: >-
+                            session_id_prefix is the prefix portion of the
+                            session_id.
+                        session_id_scope_uuid:
+                          type: string
+                          format: byte
+                          description: >-
+                            session_id_scope_uuid is the scope_uuid portion of
+                            the session_id.
+                        session_id_session_uuid:
+                          type: string
+                          format: byte
+                          description: >-
+                            session_id_session_uuid is the session_uuid portion
+                            of the session_id.
+                        session_addr:
+                          type: string
+                          description: >-
+                            session_addr is the bech32 string version of the
+                            session_id.
+                        session_uuid:
+                          type: string
+                          description: >-
+                            session_uuid is the uuid hex string of the
+                            session_id_session_uuid.
+                        scope_id_info:
+                          description: >-
+                            scope_id_info is information about the scope id
+                            referenced in the session_id.
+                          type: object
+                          properties:
+                            scope_id:
+                              type: string
+                              format: byte
+                              description: scope_id is the raw bytes of the scope address.
+                            scope_id_prefix:
+                              type: string
+                              format: byte
+                              description: >-
+                                scope_id_prefix is the prefix portion of the
+                                scope_id.
+                            scope_id_scope_uuid:
+                              type: string
+                              format: byte
+                              description: >-
+                                scope_id_scope_uuid is the scope_uuid portion of
+                                the scope_id.
+                            scope_addr:
+                              type: string
+                              description: >-
+                                scope_addr is the bech32 string version of the
+                                scope_id.
+                            scope_uuid:
+                              type: string
+                              description: >-
+                                scope_uuid is the uuid hex string of the
+                                scope_id_scope_uuid.
+                    contract_spec_id_info:
+                      description: >-
+                        contract_spec_id_info contains information about the
+                        id/address of the contract specification.
+                      type: object
+                      properties:
+                        contract_spec_id:
+                          type: string
+                          format: byte
+                          description: >-
+                            contract_spec_id is the raw bytes of the contract
+                            specification address.
+                        contract_spec_id_prefix:
+                          type: string
+                          format: byte
+                          description: >-
+                            contract_spec_id_prefix is the prefix portion of the
+                            contract_spec_id.
+                        contract_spec_id_contract_spec_uuid:
+                          type: string
+                          format: byte
+                          description: >-
+                            contract_spec_id_contract_spec_uuid is the
+                            contract_spec_uuid portion of the contract_spec_id.
+                        contract_spec_addr:
+                          type: string
+                          description: >-
+                            contract_spec_addr is the bech32 string version of
+                            the contract_spec_id.
+                        contract_spec_uuid:
+                          type: string
+                          description: >-
+                            contract_spec_uuid is the uuid hex string of the
+                            contract_spec_id_contract_spec_uuid.
+                  description: >-
+                    SessionWrapper contains a single session and some extra
+                    identifiers for it.
+                description: sessions is any number of wrapped session results.
+              records:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    record:
+                      description: record is the on-chain record message.
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          title: >-
+                            name/identifier for this record.  Value must be
+                            unique within the scope.  Also known as a Fact name
+                        session_id:
+                          type: string
+                          format: byte
+                          title: >-
+                            id of the session context that was used to create
+                            this record (use with filtered kvprefix iterator)
+                        process:
+                          title: >-
+                            process contain information used to uniquely
+                            identify an execution on or off chain that generated
+                            this record
+                          type: object
+                          properties:
+                            address:
+                              type: string
+                              title: >-
+                                the address of a smart contract used for this
+                                process
+                            hash:
+                              type: string
+                              title: the hash of an off-chain process used
+                            name:
+                              type: string
+                              title: >-
+                                a name associated with the process (type_name,
+                                classname or smart contract common name)
+                            method:
+                              type: string
+                              title: >-
+                                method is a name or reference to a specific
+                                operation (method) within a class/contract that
+                                was invoked
+                        inputs:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              name:
+                                type: string
+                                description: >-
+                                  Name value included to link back to the
+                                  definition spec.
+                              record_id:
+                                type: string
+                                format: byte
+                                title: >-
+                                  the address of a record on chain (For
+                                  Established Records)
+                              hash:
+                                type: string
+                                title: >-
+                                  the hash of an off-chain piece of information
+                                  (For Proposed Records)
+                              type_name:
+                                type: string
+                                title: from proposed fact structure to unmarshal
+                              status:
+                                title: >-
+                                  Indicates if this input was a recorded fact on
+                                  chain or just a given hashed input
+                                type: string
+                                enum:
+                                  - RECORD_INPUT_STATUS_UNSPECIFIED
+                                  - RECORD_INPUT_STATUS_PROPOSED
+                                  - RECORD_INPUT_STATUS_RECORD
+                                default: RECORD_INPUT_STATUS_UNSPECIFIED
+                                description: >-
+                                  - RECORD_INPUT_STATUS_UNSPECIFIED:
+                                  RECORD_INPUT_STATUS_UNSPECIFIED indicates an
+                                  invalid/unknown input type
+                                   - RECORD_INPUT_STATUS_PROPOSED: RECORD_INPUT_STATUS_PROPOSED indicates this input was an arbitrary piece of data that was hashed
+                                   - RECORD_INPUT_STATUS_RECORD: RECORD_INPUT_STATUS_RECORD indicates this input is a reference to a previously recorded fact on blockchain
+                            title: Tracks the inputs used to establish this record
+                          title: >-
+                            inputs used with the process to achieve the output
+                            on this record
+                        outputs:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              hash:
+                                type: string
+                                title: >-
+                                  Hash of the data output that was
+                                  output/generated for this record
+                              status:
+                                title: >-
+                                  Status of the process execution associated
+                                  with this output indicating success,failure,
+                                  or pending
+                                type: string
+                                enum:
+                                  - RESULT_STATUS_UNSPECIFIED
+                                  - RESULT_STATUS_PASS
+                                  - RESULT_STATUS_SKIP
+                                  - RESULT_STATUS_FAIL
+                                default: RESULT_STATUS_UNSPECIFIED
+                                description: >-
+                                  - RESULT_STATUS_UNSPECIFIED:
+                                  RESULT_STATUS_UNSPECIFIED indicates an unset
+                                  condition
+                                   - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successfult
+                                   - RESULT_STATUS_SKIP: RESULT_STATUS_SKIP indicates condition/consideration was skipped due to missing inputs or delayed execution
+                                   - RESULT_STATUS_FAIL: RESULT_STATUS_FAIL indicates the execution of the condition/consideration failed.
+                            title: >-
+                              RecordOutput encapsulates the output of a process
+                              recorded on chain
+                          title: >-
+                            output(s) is the results of executing the process on
+                            the given process indicated in this record
+                        specification_id:
+                          type: string
+                          format: byte
+                          description: >-
+                            specification_id is the id of the record
+                            specification that was used to create this record.
+                      title: >-
+                        A record (of fact) is attached to a session or each
+                        consideration output from a contract
+                    record_id_info:
+                      description: >-
+                        record_id_info contains information about the id/address
+                        of the record.
+                      type: object
+                      properties:
+                        record_id:
+                          type: string
+                          format: byte
+                          description: record_id is the raw bytes of the record address.
+                        record_id_prefix:
+                          type: string
+                          format: byte
+                          description: >-
+                            record_id_prefix is the prefix portion of the
+                            record_id.
+                        record_id_scope_uuid:
+                          type: string
+                          format: byte
+                          description: >-
+                            record_id_scope_uuid is the scope_uuid portion of
+                            the record_id.
+                        record_id_hashed_name:
+                          type: string
+                          format: byte
+                          description: >-
+                            record_id_hashed_name is the hashed name portion of
+                            the record_id.
+                        record_addr:
+                          type: string
+                          description: >-
+                            record_addr is the bech32 string version of the
+                            record_id.
+                        scope_id_info:
+                          description: >-
+                            scope_id_info is information about the scope id
+                            referenced in the record_id.
+                          type: object
+                          properties:
+                            scope_id:
+                              type: string
+                              format: byte
+                              description: scope_id is the raw bytes of the scope address.
+                            scope_id_prefix:
+                              type: string
+                              format: byte
+                              description: >-
+                                scope_id_prefix is the prefix portion of the
+                                scope_id.
+                            scope_id_scope_uuid:
+                              type: string
+                              format: byte
+                              description: >-
+                                scope_id_scope_uuid is the scope_uuid portion of
+                                the scope_id.
+                            scope_addr:
+                              type: string
+                              description: >-
+                                scope_addr is the bech32 string version of the
+                                scope_id.
+                            scope_uuid:
+                              type: string
+                              description: >-
+                                scope_uuid is the uuid hex string of the
+                                scope_id_scope_uuid.
+                    record_spec_id_info:
+                      description: >-
+                        record_spec_id_info contains information about the
+                        id/address of the record specification.
+                      type: object
+                      properties:
+                        record_spec_id:
+                          type: string
+                          format: byte
+                          description: >-
+                            record_spec_id is the raw bytes of the record
+                            specification address.
+                        record_spec_id_prefix:
+                          type: string
+                          format: byte
+                          description: >-
+                            record_spec_id_prefix is the prefix portion of the
+                            record_spec_id.
+                        record_spec_id_contract_spec_uuid:
+                          type: string
+                          format: byte
+                          description: >-
+                            record_spec_id_contract_spec_uuid is the
+                            contract_spec_uuid portion of the record_spec_id.
+                        record_spec_id_hashed_name:
+                          type: string
+                          format: byte
+                          description: >-
+                            record_spec_id_hashed_name is the hashed name
+                            portion of the record_spec_id.
+                        record_spec_addr:
+                          type: string
+                          description: >-
+                            record_spec_addr is the bech32 string version of the
+                            record_spec_id.
+                        contract_spec_id_info:
+                          description: >-
+                            contract_spec_id_info is information about the
+                            contract spec id referenced in the record_spec_id.
+                          type: object
+                          properties:
+                            contract_spec_id:
+                              type: string
+                              format: byte
+                              description: >-
+                                contract_spec_id is the raw bytes of the
+                                contract specification address.
+                            contract_spec_id_prefix:
+                              type: string
+                              format: byte
+                              description: >-
+                                contract_spec_id_prefix is the prefix portion of
+                                the contract_spec_id.
+                            contract_spec_id_contract_spec_uuid:
+                              type: string
+                              format: byte
+                              description: >-
+                                contract_spec_id_contract_spec_uuid is the
+                                contract_spec_uuid portion of the
+                                contract_spec_id.
+                            contract_spec_addr:
+                              type: string
+                              description: >-
+                                contract_spec_addr is the bech32 string version
+                                of the contract_spec_id.
+                            contract_spec_uuid:
+                              type: string
+                              description: >-
+                                contract_spec_uuid is the uuid hex string of the
+                                contract_spec_id_contract_spec_uuid.
+                  description: >-
+                    RecordWrapper contains a single record and some extra
+                    identifiers for it.
+                description: >-
+                  records is any number of wrapped records contained in these
+                  sessions (if requested).
+              request:
+                description: request is a copy of the request that generated these results.
+                type: object
+                properties:
+                  scope_id:
+                    type: string
+                    description: >-
+                      scope_id can either be a uuid, e.g.
+                      91978ba2-5f35-459a-86a7-feca1b0512e0 or a bech32 scope
+                      address, e.g.
+
+                      scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel.
+                  session_id:
+                    type: string
+                    description: >-
+                      session_id can either be a uuid, e.g.
+                      5803f8bc-6067-4eb5-951f-2121671c2ec0 or a bech32 session
+                      address, e.g.
+
+                      session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr.
+                      This can only be a uuid if a scope_id is also
+
+                      provided.
+                  record_addr:
+                    type: string
+                    description: >-
+                      record_addr is a bech32 record address, e.g.
+                      record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3.
+                  record_name:
+                    type: string
+                    description: >-
+                      record_name is the name of the record to find the session
+                      for in the provided scope.
+                  include_scope:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_scope is a flag for whether or not the scope
+                      containing these sessions should be included.
+                  include_records:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_records is a flag for whether or not the records
+                      in these sessions should be included.
+            description: >-
+              SessionsResponse is the response type for the Query/Sessions RPC
+              method.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: scope_id
+          description: >-
+            scope_id can either be a uuid, e.g.
+            91978ba2-5f35-459a-86a7-feca1b0512e0 or a bech32 scope address, e.g.
+
+            scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel.
+          in: path
+          required: true
+          type: string
+        - name: record_name
+          description: >-
+            record_name is the name of the record to find the session for in the
+            provided scope.
+          in: path
+          required: true
+          type: string
+        - name: session_id
+          description: >-
+            session_id can either be a uuid, e.g.
+            5803f8bc-6067-4eb5-951f-2121671c2ec0 or a bech32 session address,
+            e.g.
+
+            session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr.
+            This can only be a uuid if a scope_id is also
+
+            provided.
+          in: query
+          required: false
+          type: string
+        - name: record_addr
+          description: >-
+            record_addr is a bech32 record address, e.g.
+            record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3.
+          in: query
+          required: false
+          type: string
+        - name: include_scope
+          description: >-
+            include_scope is a flag for whether or not the scope containing
+            these sessions should be included.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: include_records
+          description: >-
+            include_records is a flag for whether or not the records in these
+            sessions should be included.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+      tags:
+        - Query
   '/provenance/metadata/v1/scope/{scope_id}/records':
     get:
       summary: Records searches for records.
@@ -43414,7 +45096,11 @@ paths:
         scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel. Similarly, the session_id can
         either be a uuid or session address, e.g.
 
-        session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr.
+        session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr. The
+        record_addr, if provided, must be a
+
+        bech32 record address, e.g.
+        record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3.
 
 
         * If only a scope_id is provided, all sessions in that scope are
@@ -43423,10 +45109,42 @@ paths:
         * If only a session_id is provided, it must be an address, and that
         single session is returned.
 
-        * If both are provided, that single session is returned.
+        * If the session_id is a uuid, then either a scope_id or record_addr
+        must also be provided, and that single session
 
-        * If both scope_id and session_id are addresses, and they don't refer to
-        the same scope, a bad request is returned.
+        is returned.
+
+        * If only a record_addr is provided, the session containing that record
+        will be returned.
+
+        * If a record_name is provided then either a scope_id, session_id as an
+        address, or record_addr must also be
+
+        provided, and the session containing that record will be returned.
+
+
+        A bad request is returned if:
+
+        * The session_id is a uuid and is provided without a scope_id or
+        record_addr.
+
+        * A record_name is provided without any way to identify the scope (e.g.
+        a scope_id, a session_id as an address, or
+
+        a record_addr).
+
+        * Two or more of scope_id, session_id as an address, and record_addr are
+        provided and don't all refer to the same
+
+        scope.
+
+        * A record_addr (or scope and record_name) is provided with a session_id
+        and that session does not contain such a
+
+        record.
+
+        * A record_addr and record_name are both provided, but reference
+        different records.
 
 
         By default, the scope and records are not included.
@@ -44107,6 +45825,16 @@ paths:
                       This can only be a uuid if a scope_id is also
 
                       provided.
+                  record_addr:
+                    type: string
+                    description: >-
+                      record_addr is a bech32 record address, e.g.
+                      record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3.
+                  record_name:
+                    type: string
+                    description: >-
+                      record_name is the name of the record to find the session
+                      for in the provided scope.
                   include_scope:
                     type: boolean
                     format: boolean
@@ -44166,6 +45894,20 @@ paths:
             provided.
           in: path
           required: true
+          type: string
+        - name: record_addr
+          description: >-
+            record_addr is a bech32 record address, e.g.
+            record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3.
+          in: query
+          required: false
+          type: string
+        - name: record_name
+          description: >-
+            record_name is the name of the record to find the session for in the
+            provided scope.
+          in: query
+          required: false
           type: string
         - name: include_scope
           description: >-
@@ -45839,7 +47581,11 @@ paths:
         scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel. Similarly, the session_id can
         either be a uuid or session address, e.g.
 
-        session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr.
+        session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr. The
+        record_addr, if provided, must be a
+
+        bech32 record address, e.g.
+        record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3.
 
 
         * If only a scope_id is provided, all sessions in that scope are
@@ -45848,10 +47594,42 @@ paths:
         * If only a session_id is provided, it must be an address, and that
         single session is returned.
 
-        * If both are provided, that single session is returned.
+        * If the session_id is a uuid, then either a scope_id or record_addr
+        must also be provided, and that single session
 
-        * If both scope_id and session_id are addresses, and they don't refer to
-        the same scope, a bad request is returned.
+        is returned.
+
+        * If only a record_addr is provided, the session containing that record
+        will be returned.
+
+        * If a record_name is provided then either a scope_id, session_id as an
+        address, or record_addr must also be
+
+        provided, and the session containing that record will be returned.
+
+
+        A bad request is returned if:
+
+        * The session_id is a uuid and is provided without a scope_id or
+        record_addr.
+
+        * A record_name is provided without any way to identify the scope (e.g.
+        a scope_id, a session_id as an address, or
+
+        a record_addr).
+
+        * Two or more of scope_id, session_id as an address, and record_addr are
+        provided and don't all refer to the same
+
+        scope.
+
+        * A record_addr (or scope and record_name) is provided with a session_id
+        and that session does not contain such a
+
+        record.
+
+        * A record_addr and record_name are both provided, but reference
+        different records.
 
 
         By default, the scope and records are not included.
@@ -46532,6 +48310,16 @@ paths:
                       This can only be a uuid if a scope_id is also
 
                       provided.
+                  record_addr:
+                    type: string
+                    description: >-
+                      record_addr is a bech32 record address, e.g.
+                      record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3.
+                  record_name:
+                    type: string
+                    description: >-
+                      record_name is the name of the record to find the session
+                      for in the provided scope.
                   include_scope:
                     type: boolean
                     format: boolean
@@ -46589,6 +48377,20 @@ paths:
             This can only be a uuid if a scope_id is also
 
             provided.
+          in: query
+          required: false
+          type: string
+        - name: record_addr
+          description: >-
+            record_addr is a bech32 record address, e.g.
+            record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3.
+          in: query
+          required: false
+          type: string
+        - name: record_name
+          description: >-
+            record_name is the name of the record to find the session for in the
+            provided scope.
           in: query
           required: false
           type: string
@@ -48193,7 +49995,11 @@ paths:
         scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel. Similarly, the session_id can
         either be a uuid or session address, e.g.
 
-        session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr.
+        session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr. The
+        record_addr, if provided, must be a
+
+        bech32 record address, e.g.
+        record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3.
 
 
         * If only a scope_id is provided, all sessions in that scope are
@@ -48202,10 +50008,42 @@ paths:
         * If only a session_id is provided, it must be an address, and that
         single session is returned.
 
-        * If both are provided, that single session is returned.
+        * If the session_id is a uuid, then either a scope_id or record_addr
+        must also be provided, and that single session
 
-        * If both scope_id and session_id are addresses, and they don't refer to
-        the same scope, a bad request is returned.
+        is returned.
+
+        * If only a record_addr is provided, the session containing that record
+        will be returned.
+
+        * If a record_name is provided then either a scope_id, session_id as an
+        address, or record_addr must also be
+
+        provided, and the session containing that record will be returned.
+
+
+        A bad request is returned if:
+
+        * The session_id is a uuid and is provided without a scope_id or
+        record_addr.
+
+        * A record_name is provided without any way to identify the scope (e.g.
+        a scope_id, a session_id as an address, or
+
+        a record_addr).
+
+        * Two or more of scope_id, session_id as an address, and record_addr are
+        provided and don't all refer to the same
+
+        scope.
+
+        * A record_addr (or scope and record_name) is provided with a session_id
+        and that session does not contain such a
+
+        record.
+
+        * A record_addr and record_name are both provided, but reference
+        different records.
 
 
         By default, the scope and records are not included.
@@ -48886,6 +50724,16 @@ paths:
                       This can only be a uuid if a scope_id is also
 
                       provided.
+                  record_addr:
+                    type: string
+                    description: >-
+                      record_addr is a bech32 record address, e.g.
+                      record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3.
+                  record_name:
+                    type: string
+                    description: >-
+                      record_name is the name of the record to find the session
+                      for in the provided scope.
                   include_scope:
                     type: boolean
                     format: boolean
@@ -48943,6 +50791,20 @@ paths:
             91978ba2-5f35-459a-86a7-feca1b0512e0 or a bech32 scope address, e.g.
 
             scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel.
+          in: query
+          required: false
+          type: string
+        - name: record_addr
+          description: >-
+            record_addr is a bech32 record address, e.g.
+            record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3.
+          in: query
+          required: false
+          type: string
+        - name: record_name
+          description: >-
+            record_name is the name of the record to find the session for in the
+            provided scope.
           in: query
           required: false
           type: string
@@ -79337,6 +81199,16 @@ definitions:
           This can only be a uuid if a scope_id is also
 
           provided.
+      record_addr:
+        type: string
+        description: >-
+          record_addr is a bech32 record address, e.g.
+          record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3.
+      record_name:
+        type: string
+        description: >-
+          record_name is the name of the record to find the session for in the
+          provided scope.
       include_scope:
         type: boolean
         format: boolean
@@ -79978,6 +81850,16 @@ definitions:
               This can only be a uuid if a scope_id is also
 
               provided.
+          record_addr:
+            type: string
+            description: >-
+              record_addr is a bech32 record address, e.g.
+              record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3.
+          record_name:
+            type: string
+            description: >-
+              record_name is the name of the record to find the session for in
+              the provided scope.
           include_scope:
             type: boolean
             format: boolean
