@@ -94,16 +94,30 @@ The only input to this query is pagination information.
 The `Sessions` query gets sessions.
 
 ### Request
-+++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L292-L306
++++ https://github.com/provenance-io/provenance/blob/12e927800df502d0625de77b7fb2051632eecd22/proto/provenance/metadata/v1/query.proto#L308-L326
 
 The `scope_id` can either be scope uuid, e.g. `91978ba2-5f35-459a-86a7-feca1b0512e0` or a scope address, e.g.
 `scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel`. Similarly, the `session_id` can either be a uuid or session address, e.g.
-`session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr`.
+`session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr`. The `record_addr`, if provided, must be a
+bech32 record address, e.g. `record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3`.
 
 * If only a `scope_id` is provided, all sessions in that scope are returned.
 * If only a `session_id` is provided, it must be an address, and that single session is returned.
-* If both are provided, that single session is returned.
-* If both `scope_id` and `session_id` are addresses, and they don't refer to the same scope, a bad request is returned.
+* If the `session_id` is a uuid, then either a `scope_id` or `record_addr` must also be provided, and that single session
+is returned.
+* If only a `record_addr` is provided, the session containing that record will be returned.
+* If a `record_name` is provided then either a `scope_id`, `session_id` as an address, or `record_addr` must also be
+provided, and the session containing that record will be returned.
+
+A bad request is returned if:
+* The `session_id` is a uuid and is provided without a `scope_id` or `record_addr`.
+* A `record_name` is provided without any way to identify the scope (e.g. a `scope_id`, a `session_id` as an address, or
+a `record_addr`).
+* Two or more of `scope_id`, `session_id` as an address, and `record_addr` are provided and don't all refer to the same
+scope.
+* A `record_addr` (or `scope_id` and `record_name`) is provided with a `session_id` and that session does not contain such
+a record.
+* A `record_addr` and `record_name` are both provided, but reference different records.
 
 By default, the scope and records are not included.
 Set `include_scope` and/or `include_records` to true to include the scope and/or records.

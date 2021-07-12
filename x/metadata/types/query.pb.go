@@ -3141,8 +3141,8 @@ type QueryClient interface {
 	// a record_addr).
 	// * Two or more of scope_id, session_id as an address, and record_addr are provided and don't all refer to the same
 	// scope.
-	// * A record_addr (or scope and record_name) is provided with a session_id and that session does not contain such a
-	// record.
+	// * A record_addr (or scope_id and record_name) is provided with a session_id and that session does not contain such
+	// a record.
 	// * A record_addr and record_name are both provided, but reference different records.
 	//
 	// By default, the scope and records are not included.
@@ -3464,8 +3464,8 @@ type QueryServer interface {
 	// a record_addr).
 	// * Two or more of scope_id, session_id as an address, and record_addr are provided and don't all refer to the same
 	// scope.
-	// * A record_addr (or scope and record_name) is provided with a session_id and that session does not contain such a
-	// record.
+	// * A record_addr (or scope_id and record_name) is provided with a session_id and that session does not contain such
+	// a record.
 	// * A record_addr and record_name are both provided, but reference different records.
 	//
 	// By default, the scope and records are not included.

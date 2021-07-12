@@ -39960,10 +39960,10 @@ paths:
 
         scope.
 
-        * A record_addr (or scope and record_name) is provided with a session_id
-        and that session does not contain such a
+        * A record_addr (or scope_id and record_name) is provided with a
+        session_id and that session does not contain such
 
-        record.
+        a record.
 
         * A record_addr and record_name are both provided, but reference
         different records.
@@ -43475,10 +43475,10 @@ paths:
 
         scope.
 
-        * A record_addr (or scope and record_name) is provided with a session_id
-        and that session does not contain such a
+        * A record_addr (or scope_id and record_name) is provided with a
+        session_id and that session does not contain such
 
-        record.
+        a record.
 
         * A record_addr and record_name are both provided, but reference
         different records.
@@ -45138,10 +45138,10 @@ paths:
 
         scope.
 
-        * A record_addr (or scope and record_name) is provided with a session_id
-        and that session does not contain such a
+        * A record_addr (or scope_id and record_name) is provided with a
+        session_id and that session does not contain such
 
-        record.
+        a record.
 
         * A record_addr and record_name are both provided, but reference
         different records.
@@ -47623,10 +47623,10 @@ paths:
 
         scope.
 
-        * A record_addr (or scope and record_name) is provided with a session_id
-        and that session does not contain such a
+        * A record_addr (or scope_id and record_name) is provided with a
+        session_id and that session does not contain such
 
-        record.
+        a record.
 
         * A record_addr and record_name are both provided, but reference
         different records.
@@ -50037,10 +50037,10 @@ paths:
 
         scope.
 
-        * A record_addr (or scope and record_name) is provided with a session_id
-        and that session does not contain such a
+        * A record_addr (or scope_id and record_name) is provided with a
+        session_id and that session does not contain such
 
-        record.
+        a record.
 
         * A record_addr and record_name are both provided, but reference
         different records.
