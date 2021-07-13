@@ -172,7 +172,7 @@ func (k msgServer) DeleteScopeOwner(
 		return nil, err
 	}
 
-	k.SetScope(ctx, existing)
+	k.SetScope(ctx, proposed)
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteScopeOwner, msg.GetSigners()))
 	return types.NewMsgDeleteScopeOwnerResponse(), nil
