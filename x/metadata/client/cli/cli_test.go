@@ -769,6 +769,7 @@ func (s *IntegrationCLITestSuite) TestGetMetadataSessionCmd() {
 	cmd := cli.GetMetadataSessionCmd()
 
 	indentedSessionText := indent(s.sessionAsText, 4)
+	notAUsedUUID := uuid.New()
 
 	testCases := []queryCmdTestCase{
 		{
@@ -832,16 +833,136 @@ func (s *IntegrationCLITestSuite) TestGetMetadataSessionCmd() {
 			[]string{s.sessionAsJson},
 		},
 		{
-			"session from scope uuid ad session uuid as text",
+			"session from scope uuid and session uuid as text",
 			[]string{s.scopeUUID.String(), s.sessionUUID.String(), s.asText},
 			"",
 			[]string{indentedSessionText},
 		},
 		{
-			"scope uuid exists but session uuid does not exist",
+			"scope uuid and session uuid but scope does not exist",
+			[]string{notAUsedUUID.String(), s.sessionUUID.String()},
+			"",
+			[]string{"session:", "session: null"},
+		},
+		{
+			"scope uuid and session uuid and scope exists but session uuid does not exist",
 			[]string{s.scopeUUID.String(), "5803f8bc-6067-4eb5-951f-2121671c2ec0"},
 			"",
 			[]string{"session:", "session: null"},
+		},
+		{
+			"session from scope id and session uuid as text",
+			[]string{s.scopeID.String(), s.sessionUUID.String(), s.asText},
+			"",
+			[]string{indentedSessionText},
+		},
+		{
+			"session from scope id and session uuid as json",
+			[]string{s.scopeID.String(), s.sessionUUID.String(), s.asJson},
+			"",
+			[]string{s.sessionAsJson},
+		},
+		{
+			"scope id and session uuid but scope id does not exist",
+			[]string{metadatatypes.ScopeMetadataAddress(notAUsedUUID).String(), s.sessionUUID.String(), s.asText},
+			"",
+			[]string{"session:", "session: null"},
+		},
+		{
+			"scope id and session uuid and scope id exists but session uuid does not",
+			[]string{s.scopeID.String(), notAUsedUUID.String(), s.asText},
+			"",
+			[]string{"session:", "session: null"},
+		},
+		{
+			"session from scope id and record name as text",
+			[]string{s.scopeID.String(), s.recordName, s.asText},
+			"",
+			[]string{indentedSessionText},
+		},
+		{
+			"session from scope id and record name as json",
+			[]string{s.scopeID.String(), s.recordName, s.asJson},
+			"",
+			[]string{s.sessionAsJson},
+		},
+		{
+			"scope id and record name but scope id does not exist",
+			[]string{metadatatypes.ScopeMetadataAddress(notAUsedUUID).String(), s.recordName},
+			fmt.Sprintf("rpc error: code = InvalidArgument desc = record %s does not exist: invalid request",
+				metadatatypes.RecordMetadataAddress(notAUsedUUID, s.recordName)),
+			[]string{},
+		},
+		{
+			"scope id and record name and scope id exists but record does not",
+			[]string{s.scopeID.String(), "not-a-record-name-that-exists"},
+			fmt.Sprintf("rpc error: code = InvalidArgument desc = record %s does not exist: invalid request",
+				metadatatypes.RecordMetadataAddress(s.scopeUUID, "not-a-record-name-that-exists")),
+			[]string{},
+		},
+		{
+			"session from scope uuid and record name as text",
+			[]string{s.scopeUUID.String(), s.recordName, s.asText},
+			"",
+			[]string{indentedSessionText},
+		},
+		{
+			"session from scope uuid and record name as json",
+			[]string{s.scopeUUID.String(), s.recordName, s.asJson},
+			"",
+			[]string{s.sessionAsJson},
+		},
+		{
+			"scope uuid and record name but scope uuid does not exist",
+			[]string{notAUsedUUID.String(), s.recordName},
+			fmt.Sprintf("rpc error: code = InvalidArgument desc = record %s does not exist: invalid request",
+				metadatatypes.RecordMetadataAddress(notAUsedUUID, s.recordName)),
+			[]string{},
+		},
+		{
+			"scope uuid and record name and scope uuid exists but record does not",
+			[]string{s.scopeUUID.String(), "not-a-record"},
+			fmt.Sprintf("rpc error: code = InvalidArgument desc = record %s does not exist: invalid request",
+				metadatatypes.RecordMetadataAddress(s.scopeUUID, "not-a-record")),
+			[]string{},
+		},
+		{
+			"session from record id as text",
+			[]string{s.recordID.String(), s.asText},
+			"",
+			[]string{indentedSessionText},
+		},
+		{
+			"session from record id as json",
+			[]string{s.recordID.String(), s.asJson},
+			"",
+			[]string{s.sessionAsJson},
+		},
+		{
+			"record id but scope does not exist",
+			[]string{metadatatypes.RecordMetadataAddress(notAUsedUUID, s.recordName).String()},
+			fmt.Sprintf("rpc error: code = InvalidArgument desc = record %s does not exist: invalid request",
+				metadatatypes.RecordMetadataAddress(notAUsedUUID, s.recordName)),
+			[]string{},
+		},
+		{
+			"record id in existing scope but record does not exist",
+			[]string{metadatatypes.RecordMetadataAddress(s.scopeUUID, "not-a-record-name").String()},
+			fmt.Sprintf("rpc error: code = InvalidArgument desc = record %s does not exist: invalid request",
+				metadatatypes.RecordMetadataAddress(s.scopeUUID, "not-a-record-name")),
+			[]string{},
+		},
+		{
+			"sessions all as text",
+			[]string{"all", s.asText},
+			"",
+			[]string{indentedSessionText},
+		},
+		{
+			"sessions all as json",
+			[]string{"all", s.asJson},
+			"",
+			[]string{s.sessionAsJson},
 		},
 		{
 			"bad prefix",
@@ -853,12 +974,6 @@ func (s *IntegrationCLITestSuite) TestGetMetadataSessionCmd() {
 			"bad arg 1",
 			[]string{"bad"},
 			"rpc error: code = InvalidArgument desc = could not parse [bad] into either a scope address (decoding bech32 failed: invalid bech32 string length 3) or uuid (invalid UUID length: 3): invalid request",
-			[]string{},
-		},
-		{
-			"good arg 1, bad arg 2",
-			[]string{s.scopeUUID.String(), "still-bad"},
-			"rpc error: code = InvalidArgument desc = could not parse [still-bad] into either a session address (decoding bech32 failed: invalid index of 1) or uuid (invalid UUID length: 9): invalid request",
 			[]string{},
 		},
 		{
