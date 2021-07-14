@@ -499,6 +499,82 @@ func (s MetadataHandlerTestSuite) TestAddAndDeleteScopeOwners() {
 			}
 		})
 	}
+
+	s.T().Run("owner actually deleted and added", func(t *testing.T) {
+		addrOriginator := "cosmos1rr4d0eu62pgt4edw38d2ev27798pfhdhm39zct"
+		addrServicer := "cosmos1a7mmtar5ke5fxk5gn00dlag0zfmdkmhapmugk7"
+		scopeA := types.Scope{
+			ScopeId:           types.ScopeMetadataAddress(uuid.New()),
+			SpecificationId:   types.ScopeSpecMetadataAddress(uuid.New()),
+			DataAccess:        []string{addrOriginator, addrServicer},
+			ValueOwnerAddress: addrServicer,
+			Owners: []types.Party{
+				{
+					Address: addrOriginator,
+					Role: types.PartyType_PARTY_TYPE_ORIGINATOR,
+				},
+				{
+					Address: addrServicer,
+					Role: types.PartyType_PARTY_TYPE_SERVICER,
+				},
+			},
+		}
+
+		scopeSpecA := types.ScopeSpecification{
+			SpecificationId: scopeA.SpecificationId,
+			Description:     &types.Description{
+				Name:        "com.figure.origination.loan",
+				Description: "Figure loan origination",
+			},
+			OwnerAddresses:  []string{"cosmos1q8n4v4m0hm8v0a7n697nwtpzhfsz3f4d40lnsu"},
+			PartiesInvolved: []types.PartyType{types.PartyType_PARTY_TYPE_ORIGINATOR},
+			ContractSpecIds: nil,
+		}
+
+		s.app.MetadataKeeper.SetScope(s.ctx, scopeA)
+		s.app.MetadataKeeper.SetScopeSpecification(s.ctx, scopeSpecA)
+
+		msgDel := types.NewMsgDeleteScopeOwnerRequest(
+			scopeA.ScopeId,
+			[]string{addrServicer},
+			[]string{addrOriginator, addrServicer},
+		)
+
+		_, errDel := s.handler(s.ctx, msgDel)
+		require.NoError(t, errDel, "Failed to make DeleteScopeOwnerRequest call")
+
+		scopeB, foundB := s.app.MetadataKeeper.GetScope(s.ctx, scopeA.ScopeId)
+		require.Truef(t, foundB, "Scope %s not found after DeleteScopeOwnerRequest call.", scopeA.ScopeId)
+
+		assert.Equal(t, scopeA.ScopeId, scopeB.ScopeId, "del ScopeId")
+		assert.Equal(t, scopeA.SpecificationId, scopeB.SpecificationId, "del SpecificationId")
+		assert.Equal(t, scopeA.DataAccess, scopeB.DataAccess, "del DataAccess")
+		assert.Equal(t, scopeA.ValueOwnerAddress, scopeB.ValueOwnerAddress, "del ValueOwnerAddress")
+		assert.Equal(t, scopeA.Owners[0:1], scopeB.Owners, "del Owners")
+
+		// Stop test if it's already failed.
+		if t.Failed() {
+			t.FailNow()
+		}
+
+		msgAdd := types.NewMsgAddScopeOwnerRequest(
+			scopeA.ScopeId,
+			[]types.Party{{addrServicer, types.PartyType_PARTY_TYPE_SERVICER}},
+			[]string{addrOriginator},
+		)
+
+		_, errAdd := s.handler(s.ctx, msgAdd)
+		require.NoError(t, errAdd, "Failed to make DeleteScopeOwnerRequest call")
+
+		scopeC, foundC := s.app.MetadataKeeper.GetScope(s.ctx, scopeA.ScopeId)
+		require.Truef(t, foundC, "Scope %s not found after AddScopeOwnerRequest call.", scopeA.ScopeId)
+
+		assert.Equal(t, scopeA.ScopeId, scopeC.ScopeId, "add ScopeId")
+		assert.Equal(t, scopeA.SpecificationId, scopeC.SpecificationId, "add SpecificationId")
+		assert.Equal(t, scopeA.DataAccess, scopeC.DataAccess, "add DataAccess")
+		assert.Equal(t, scopeA.ValueOwnerAddress, scopeC.ValueOwnerAddress, "add ValueOwnerAddress")
+		assert.Equal(t, scopeA.Owners, scopeC.Owners, "add Owners")
+	})
 }
 
 func (s MetadataHandlerTestSuite) TestAddAndDeleteScopeDataAccess() {
@@ -587,4 +663,76 @@ func (s MetadataHandlerTestSuite) TestAddAndDeleteScopeDataAccess() {
 			}
 		})
 	}
+
+	s.T().Run("data access actually deleted and added", func(t *testing.T) {
+		addrOriginator := "cosmos1rr4d0eu62pgt4edw38d2ev27798pfhdhm39zct"
+		addrServicer := "cosmos1a7mmtar5ke5fxk5gn00dlag0zfmdkmhapmugk7"
+		scopeA := types.Scope{
+			ScopeId:           types.ScopeMetadataAddress(uuid.New()),
+			SpecificationId:   types.ScopeSpecMetadataAddress(uuid.New()),
+			DataAccess:        []string{addrOriginator, addrServicer},
+			ValueOwnerAddress: addrServicer,
+			Owners: []types.Party{
+				{
+					Address: addrOriginator,
+					Role: types.PartyType_PARTY_TYPE_ORIGINATOR,
+				},
+			},
+		}
+
+		scopeSpecA := types.ScopeSpecification{
+			SpecificationId: scopeA.SpecificationId,
+			Description:     &types.Description{
+				Name:        "com.figure.origination.loan",
+				Description: "Figure loan origination",
+			},
+			OwnerAddresses:  []string{"cosmos1q8n4v4m0hm8v0a7n697nwtpzhfsz3f4d40lnsu"},
+			PartiesInvolved: []types.PartyType{types.PartyType_PARTY_TYPE_ORIGINATOR},
+			ContractSpecIds: nil,
+		}
+
+		s.app.MetadataKeeper.SetScope(s.ctx, scopeA)
+		s.app.MetadataKeeper.SetScopeSpecification(s.ctx, scopeSpecA)
+
+		msgDel := types.NewMsgDeleteScopeDataAccessRequest(
+			scopeA.ScopeId,
+			[]string{addrServicer},
+			[]string{addrOriginator},
+		)
+
+		_, errDel := s.handler(s.ctx, msgDel)
+		require.NoError(t, errDel, "Failed to make DeleteScopeDataAccessRequest call")
+
+		scopeB, foundB := s.app.MetadataKeeper.GetScope(s.ctx, scopeA.ScopeId)
+		require.Truef(t, foundB, "Scope %s not found after DeleteScopeOwnerRequest call.", scopeA.ScopeId)
+
+		assert.Equal(t, scopeA.ScopeId, scopeB.ScopeId, "del ScopeId")
+		assert.Equal(t, scopeA.SpecificationId, scopeB.SpecificationId, "del SpecificationId")
+		assert.Equal(t, scopeA.DataAccess[0:1], scopeB.DataAccess, "del DataAccess")
+		assert.Equal(t, scopeA.ValueOwnerAddress, scopeB.ValueOwnerAddress, "del ValueOwnerAddress")
+		assert.Equal(t, scopeA.Owners, scopeB.Owners, "del Owners")
+
+		// Stop test if it's already failed.
+		if t.Failed() {
+			t.FailNow()
+		}
+
+		msgAdd := types.NewMsgAddScopeDataAccessRequest(
+			scopeA.ScopeId,
+			[]string{addrServicer},
+			[]string{addrOriginator},
+		)
+
+		_, errAdd := s.handler(s.ctx, msgAdd)
+		require.NoError(t, errAdd, "Failed to make AddScopeDataAccessRequest call")
+
+		scopeC, foundC := s.app.MetadataKeeper.GetScope(s.ctx, scopeA.ScopeId)
+		require.Truef(t, foundC, "Scope %s not found after AddScopeOwnerRequest call.", scopeA.ScopeId)
+
+		assert.Equal(t, scopeA.ScopeId, scopeC.ScopeId, "add ScopeId")
+		assert.Equal(t, scopeA.SpecificationId, scopeC.SpecificationId, "add SpecificationId")
+		assert.Equal(t, scopeA.DataAccess, scopeC.DataAccess, "add DataAccess")
+		assert.Equal(t, scopeA.ValueOwnerAddress, scopeC.ValueOwnerAddress, "add ValueOwnerAddress")
+		assert.Equal(t, scopeA.Owners, scopeC.Owners, "add Owners")
+	})
 }

@@ -46,6 +46,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Marker Withdraw Escrow Proposal type is properly registered [#367](https://github.com/provenance-io/provenance/issues/367)
   * Target Address field spelling error corrected in Withdraw Escrow and Increase Supply Governance Proposals.
+* Fix DeleteScopeOwner endpoint to store the correct scope [PR 377](https://github.com/provenance-io/provenance/pull/377)
 
 ### Improvements
 
