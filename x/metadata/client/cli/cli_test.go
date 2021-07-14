@@ -458,10 +458,13 @@ type queryCmdTestCase struct {
 	expectedInOutput []string
 }
 
-func runQueryCmdTestCases(s *IntegrationCLITestSuite, cmd *cobra.Command, testCases []queryCmdTestCase) {
+func runQueryCmdTestCases(s *IntegrationCLITestSuite, cmdGen func() *cobra.Command, testCases []queryCmdTestCase) {
+	// Providing the command using a generator (cmdGen), we get a new instance of the cmd each time, and the flags won't
+	// carry over between tests on the same command.
 	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
 			clientCtx := s.testnet.Validators[0].ClientCtx
+			cmd := cmdGen()
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if len(tc.expectedError) > 0 {
 				actualError := ""
@@ -489,7 +492,7 @@ func runQueryCmdTestCases(s *IntegrationCLITestSuite, cmd *cobra.Command, testCa
 }
 
 func (s *IntegrationCLITestSuite) TestGetMetadataParamsCmd() {
-	cmd := cli.GetMetadataParamsCmd()
+	cmd := func() *cobra.Command { return cli.GetMetadataParamsCmd() }
 
 	testCases := []queryCmdTestCase{
 		{
@@ -534,7 +537,7 @@ func (s *IntegrationCLITestSuite) TestGetMetadataParamsCmd() {
 }
 
 func (s *IntegrationCLITestSuite) TestGetMetadataByIDCmd() {
-	cmd := cli.GetMetadataByIDCmd()
+	cmd := func() *cobra.Command { return cli.GetMetadataByIDCmd() }
 
 	testCases := []queryCmdTestCase{
 		{
@@ -683,7 +686,7 @@ func (s *IntegrationCLITestSuite) TestGetMetadataByIDCmd() {
 // TODO: GetMetadataGetAllCmd
 
 func (s *IntegrationCLITestSuite) TestGetMetadataScopeCmd() {
-	cmd := cli.GetMetadataScopeCmd()
+	cmd := func() *cobra.Command { return cli.GetMetadataScopeCmd() }
 
 	indentedScopeText := indent(s.scopeAsText, 4)
 
@@ -766,7 +769,7 @@ func (s *IntegrationCLITestSuite) TestGetMetadataScopeCmd() {
 }
 
 func (s *IntegrationCLITestSuite) TestGetMetadataSessionCmd() {
-	cmd := cli.GetMetadataSessionCmd()
+	cmd := func() *cobra.Command { return cli.GetMetadataSessionCmd() }
 
 	indentedSessionText := indent(s.sessionAsText, 4)
 	notAUsedUUID := uuid.New()
@@ -864,13 +867,13 @@ func (s *IntegrationCLITestSuite) TestGetMetadataSessionCmd() {
 		},
 		{
 			"scope id and session uuid but scope id does not exist",
-			[]string{metadatatypes.ScopeMetadataAddress(notAUsedUUID).String(), s.sessionUUID.String(), s.asText},
+			[]string{metadatatypes.ScopeMetadataAddress(notAUsedUUID).String(), s.sessionUUID.String()},
 			"",
 			[]string{"session:", "session: null"},
 		},
 		{
 			"scope id and session uuid and scope id exists but session uuid does not",
-			[]string{s.scopeID.String(), notAUsedUUID.String(), s.asText},
+			[]string{s.scopeID.String(), notAUsedUUID.String()},
 			"",
 			[]string{"session:", "session: null"},
 		},
@@ -994,7 +997,7 @@ func (s *IntegrationCLITestSuite) TestGetMetadataSessionCmd() {
 }
 
 func (s *IntegrationCLITestSuite) TestGetMetadataRecordCmd() {
-	cmd := cli.GetMetadataRecordCmd()
+	cmd := func() *cobra.Command { return cli.GetMetadataRecordCmd() }
 
 	testCases := []queryCmdTestCase{
 		{
@@ -1123,7 +1126,7 @@ func (s *IntegrationCLITestSuite) TestGetMetadataRecordCmd() {
 }
 
 func (s *IntegrationCLITestSuite) TestGetMetadataScopeSpecCmd() {
-	cmd := cli.GetMetadataScopeSpecCmd()
+	cmd := func() *cobra.Command { return cli.GetMetadataScopeSpecCmd() }
 
 	testCases := []queryCmdTestCase{
 		{
@@ -1192,7 +1195,7 @@ func (s *IntegrationCLITestSuite) TestGetMetadataScopeSpecCmd() {
 }
 
 func (s *IntegrationCLITestSuite) TestGetMetadataContractSpecCmd() {
-	cmd := cli.GetMetadataContractSpecCmd()
+	cmd := func() *cobra.Command { return cli.GetMetadataContractSpecCmd() }
 
 	testCases := []queryCmdTestCase{
 		{
@@ -1279,7 +1282,7 @@ func (s *IntegrationCLITestSuite) TestGetMetadataContractSpecCmd() {
 }
 
 func (s *IntegrationCLITestSuite) TestGetMetadataRecordSpecCmd() {
-	cmd := cli.GetMetadataRecordSpecCmd()
+	cmd := func() *cobra.Command { return cli.GetMetadataRecordSpecCmd() }
 
 	testCases := []queryCmdTestCase{
 		{
@@ -1384,7 +1387,7 @@ func (s *IntegrationCLITestSuite) TestGetMetadataRecordSpecCmd() {
 }
 
 func (s *IntegrationCLITestSuite) TestGetOwnershipCmd() {
-	cmd := cli.GetOwnershipCmd()
+	cmd := func() *cobra.Command { return cli.GetOwnershipCmd() }
 
 	newUser := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()
 
@@ -1443,7 +1446,7 @@ func (s *IntegrationCLITestSuite) TestGetOwnershipCmd() {
 }
 
 func (s *IntegrationCLITestSuite) TestGetValueOwnershipCmd() {
-	cmd := cli.GetValueOwnershipCmd()
+	cmd := func() *cobra.Command { return cli.GetValueOwnershipCmd() }
 
 	paginationText := `pagination:
   next_key: null
@@ -1494,7 +1497,7 @@ func (s *IntegrationCLITestSuite) TestGetValueOwnershipCmd() {
 }
 
 func (s *IntegrationCLITestSuite) TestGetOSLocatorCmd() {
-	cmd := cli.GetOSLocatorCmd()
+	cmd := func() *cobra.Command { return cli.GetOSLocatorCmd() }
 
 	testCases := []queryCmdTestCase{
 		{
