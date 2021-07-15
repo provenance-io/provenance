@@ -14,6 +14,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	simapp "github.com/provenance-io/provenance/app"
@@ -189,42 +191,67 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		app.MetadataKeeper.SetSession(ctx, *session)
 	}
 
-	_, err := queryClient.Sessions(gocontext.Background(), &types.SessionsRequest{})
-	s.EqualError(err, "rpc error: code = InvalidArgument desc = empty request parameters")
+	s.T().Run("nil request", func(t *testing.T) {
+		_, err := queryClient.Sessions(gocontext.Background(), nil)
+		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = empty request")
+	})
 
-	_, err = queryClient.Sessions(gocontext.Background(), &types.SessionsRequest{ScopeId: "6332c1a4-foo1-bare-895b-invalid65cb6"})
-	s.EqualError(err, "rpc error: code = InvalidArgument desc = could not parse [6332c1a4-foo1-bare-895b-invalid65cb6] into either a scope address (decoding bech32 failed: failed converting data to bytes: invalid character not part of charset: 45) or uuid (invalid UUID format)")
+	s.T().Run("empty request", func(t *testing.T) {
+		_, err := queryClient.Sessions(gocontext.Background(), &types.SessionsRequest{})
+		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = empty request parameters")
+	})
 
-	_, err = queryClient.Sessions(gocontext.Background(), &types.SessionsRequest{ScopeId: "invalidbech32"})
-	s.EqualError(err, "rpc error: code = InvalidArgument desc = could not parse [invalidbech32] into either a scope address (decoding bech32 failed: invalid index of 1) or uuid (invalid UUID length: 13)")
+	s.T().Run("invalid scope id as uuid", func(t *testing.T) {
+		_, err := queryClient.Sessions(gocontext.Background(), &types.SessionsRequest{ScopeId: "6332c1a4-foo1-bare-895b-invalid65cb6"})
+		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = could not parse [6332c1a4-foo1-bare-895b-invalid65cb6] into either a scope address (decoding bech32 failed: failed converting data to bytes: invalid character not part of charset: 45) or uuid (invalid UUID format)")
+	})
 
-	_, err = queryClient.Sessions(gocontext.Background(), &types.SessionsRequest{ScopeId: scopeUUID.String(), SessionId: "6332c1a4-foo1-bare-895b-invalid65cb6"})
-	s.EqualError(err, "rpc error: code = InvalidArgument desc = could not parse [6332c1a4-foo1-bare-895b-invalid65cb6] into either a session address (decoding bech32 failed: failed converting data to bytes: invalid character not part of charset: 45) or uuid (invalid UUID format)")
+	s.T().Run("invalid scope id as other", func(t *testing.T) {
+		_, err := queryClient.Sessions(gocontext.Background(), &types.SessionsRequest{ScopeId: "invalidbech32"})
+		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = could not parse [invalidbech32] into either a scope address (decoding bech32 failed: invalid index of 1) or uuid (invalid UUID length: 13)")
+	})
 
-	_, err = queryClient.Sessions(gocontext.Background(), &types.SessionsRequest{ScopeId: scopeID.String(), SessionId: "invalidbech32"})
-	s.EqualError(err, "rpc error: code = InvalidArgument desc = could not parse [invalidbech32] into either a session address (decoding bech32 failed: invalid index of 1) or uuid (invalid UUID length: 13)")
+	s.T().Run("scope id as uuid invalid session id as uuid", func(t *testing.T) {
+		_, err := queryClient.Sessions(gocontext.Background(), &types.SessionsRequest{ScopeId: scopeUUID.String(), SessionId: "6332c1a4-foo1-bare-895b-invalid65cb6"})
+		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = could not parse [6332c1a4-foo1-bare-895b-invalid65cb6] into either a session address (decoding bech32 failed: failed converting data to bytes: invalid character not part of charset: 45) or uuid (invalid UUID format)")
+	})
+
+	s.T().Run("scope id as addr invalid session id as other", func(t *testing.T) {
+		_, err := queryClient.Sessions(gocontext.Background(), &types.SessionsRequest{ScopeId: scopeID.String(), SessionId: "invalidbech32"})
+		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = could not parse [invalidbech32] into either a session address (decoding bech32 failed: invalid index of 1) or uuid (invalid UUID length: 13)")
+	})
 
 	// TODO: expand this to test new features/failures of the Sessions query.
 
-	sc, err := queryClient.Sessions(gocontext.Background(), &types.SessionsRequest{ScopeId: scopeUUID.String()})
-	s.NoError(err)
-	s.Equal(10, len(sc.Sessions), "should be 10 sessions in set for session context query by scope uuid")
-	s.Equal(scopeID.String(), sc.Sessions[0].SessionIdInfo.ScopeIdInfo.ScopeAddr)
+	s.T().Run("scope id as uuid", func(t *testing.T) {
+		sr, err := queryClient.Sessions(gocontext.Background(), &types.SessionsRequest{ScopeId: scopeUUID.String()})
+		require.NoError(t, err)
+		assert.Equal(t, 10, len(sr.Sessions), "should be 10 sessions in set for session context query by scope uuid")
+		assert.Equal(t, scopeID.String(), sr.Sessions[0].SessionIdInfo.ScopeIdInfo.ScopeAddr)
+	})
 
-	sc, err = queryClient.Sessions(gocontext.Background(), &types.SessionsRequest{ScopeId: scopeUUID.String(), SessionId: sessionUUID.String()})
-	s.NoError(err)
-	s.Equal(1, len(sc.Sessions), "should be 1 session in set for session context query by scope uuid and session uuid")
-	s.Equal(scopeID.String(), sc.Sessions[0].SessionIdInfo.ScopeIdInfo.ScopeAddr)
-	s.Equal(sessionID.String(), sc.Sessions[0].SessionIdInfo.SessionAddr)
+	s.T().Run("scope id as uuid session id as uuid", func(t *testing.T) {
+		sr, err := queryClient.Sessions(gocontext.Background(), &types.SessionsRequest{ScopeId: scopeUUID.String(), SessionId: sessionUUID.String()})
+		require.NoError(t, err)
+		assert.Equal(t, 1, len(sr.Sessions), "should be 1 session in set for session context query by scope uuid and session uuid")
+		assert.Equal(t, scopeID.String(), sr.Sessions[0].SessionIdInfo.ScopeIdInfo.ScopeAddr)
+		assert.Equal(t, sessionID.String(), sr.Sessions[0].SessionIdInfo.SessionAddr)
+	})
 
-	scrs, err := queryClient.Sessions(gocontext.Background(), &types.SessionsRequest{ScopeId: scopeID.String()})
-	s.Equal(10, len(scrs.Sessions), "should be 10 sessions in set for session context query by scope uuid")
-	s.Equal(scopeID.String(), scrs.Sessions[0].SessionIdInfo.ScopeIdInfo.ScopeAddr)
+	s.T().Run("scope id as address", func(t *testing.T) {
+		sr, err := queryClient.Sessions(gocontext.Background(), &types.SessionsRequest{ScopeId: scopeID.String()})
+		require.NoError(t, err)
+		assert.Equal(t, 10, len(sr.Sessions), "should be 10 sessions in set for session context query by scope uuid")
+		assert.Equal(t, scopeID.String(), sr.Sessions[0].SessionIdInfo.ScopeIdInfo.ScopeAddr)
+	})
 
-	scrs, err = queryClient.Sessions(gocontext.Background(), &types.SessionsRequest{ScopeId: scopeID.String(), SessionId: sessionID.String()})
-	s.Equal(1, len(scrs.Sessions), "should be 1 sessions in set for session context query by scope id and session id")
-	s.Equal(scopeID.String(), scrs.Sessions[0].SessionIdInfo.ScopeIdInfo.ScopeAddr)
-	s.Equal(sessionID.String(), scrs.Sessions[0].SessionIdInfo.SessionAddr)
+	s.T().Run("scope id as address session id as address", func(t *testing.T) {
+		sr, err := queryClient.Sessions(gocontext.Background(), &types.SessionsRequest{ScopeId: scopeID.String(), SessionId: sessionID.String()})
+		require.NoError(t, err)
+		assert.Equal(t, 1, len(sr.Sessions), "should be 1 sessions in set for session context query by scope id and session id")
+		assert.Equal(t, scopeID.String(), sr.Sessions[0].SessionIdInfo.ScopeIdInfo.ScopeAddr)
+		assert.Equal(t, sessionID.String(), sr.Sessions[0].SessionIdInfo.SessionAddr)
+	})
 }
 
 // TODO: SessionsAll tests
