@@ -94,15 +94,21 @@ type IntegrationCLITestSuite struct {
 	recordSpecAsText string
 
 	//os locator's
-	objectLocator metadatatypes.ObjectStoreLocator
-	ownerAddr     sdk.AccAddress
-	encryptionKey sdk.AccAddress
-	uri           string
-
 	objectLocator1 metadatatypes.ObjectStoreLocator
 	ownerAddr1     sdk.AccAddress
 	encryptionKey1 sdk.AccAddress
 	uri1           string
+
+	objectLocator1AsText string
+	objectLocator1AsJson string
+
+	objectLocator2 metadatatypes.ObjectStoreLocator
+	ownerAddr2     sdk.AccAddress
+	encryptionKey2 sdk.AccAddress
+	uri2           string
+
+	objectLocator2AsText string
+	objectLocator2AsJson string
 }
 
 func ownerPartyList(addresses ...string) []metadatatypes.Party {
@@ -356,16 +362,39 @@ type_name: recordtypename`,
 	)
 
 	//os locators
-	// add os locator
-	s.ownerAddr = s.user1Addr
-	s.uri = "http://foo.com"
-	s.encryptionKey = sdk.AccAddress{}
-	s.objectLocator = metadatatypes.NewOSLocatorRecord(s.ownerAddr, s.encryptionKey, s.uri)
-
-	s.ownerAddr1 = s.user2Addr
-	s.encryptionKey1 = s.user1Addr
-	s.uri1 = "http://bar.com"
+	locAsText := func(loc metadatatypes.ObjectStoreLocator) string {
+		eKey := loc.EncryptionKey
+		if len(eKey) == 0 {
+			eKey = "\"\""
+		}
+		return fmt.Sprintf(`encryption_key: %s
+locator_uri: %s
+owner: %s`,
+			eKey,
+			loc.LocatorUri,
+			loc.Owner,
+		)
+	}
+	locAsJson := func(loc metadatatypes.ObjectStoreLocator) string {
+		return fmt.Sprintf("{\"owner\":\"%s\",\"locator_uri\":\"%s\",\"encryption_key\":\"%s\"}",
+			loc.Owner,
+			loc.LocatorUri,
+			loc.EncryptionKey,
+		)
+	}
+	s.ownerAddr1 = s.user1Addr
+	s.encryptionKey1 = sdk.AccAddress{}
+	s.uri1 = "http://foo.com"
 	s.objectLocator1 = metadatatypes.NewOSLocatorRecord(s.ownerAddr1, s.encryptionKey1, s.uri1)
+	s.objectLocator1AsText = locAsText(s.objectLocator1)
+	s.objectLocator1AsJson = locAsJson(s.objectLocator1)
+
+	s.ownerAddr2 = s.user2Addr
+	s.encryptionKey2 = s.user1Addr
+	s.uri2 = "http://bar.com"
+	s.objectLocator2 = metadatatypes.NewOSLocatorRecord(s.ownerAddr2, s.encryptionKey2, s.uri2)
+	s.objectLocator2AsText = locAsText(s.objectLocator2)
+	s.objectLocator2AsJson = locAsJson(s.objectLocator2)
 
 	var metadataData metadatatypes.GenesisState
 	s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[metadatatypes.ModuleName], &metadataData))
@@ -375,7 +404,7 @@ type_name: recordtypename`,
 	metadataData.ScopeSpecifications = append(metadataData.ScopeSpecifications, s.scopeSpec)
 	metadataData.ContractSpecifications = append(metadataData.ContractSpecifications, s.contractSpec)
 	metadataData.RecordSpecifications = append(metadataData.RecordSpecifications, s.recordSpec)
-	metadataData.ObjectStoreLocators = append(metadataData.ObjectStoreLocators, s.objectLocator, s.objectLocator1)
+	metadataData.ObjectStoreLocators = append(metadataData.ObjectStoreLocators, s.objectLocator1, s.objectLocator2)
 	metadataDataBz, err := cfg.Codec.MarshalJSON(&metadataData)
 	s.Require().NoError(err)
 	genesisState[metadatatypes.ModuleName] = metadataDataBz
@@ -421,7 +450,7 @@ func indent(str string, spaces int) string {
 	lines := strings.Split(str, "\n")
 	maxI := len(lines) - 1
 	s := strings.Repeat(" ", spaces)
-	for i, l := range strings.Split(str, "\n") {
+	for i, l := range lines {
 		sb.WriteString(s)
 		sb.WriteString(l)
 		if i != maxI {
@@ -447,6 +476,27 @@ func yamlListEntry(str string) string {
 		}
 	}
 	return sb.String()
+}
+
+func alternateCase(str string, startUpper bool) string {
+	// A-Z -> 65-90
+	// a-z -> 97-122
+	ms := 0	// aka modShift
+	if (startUpper) {
+		ms = 1
+	}
+	var r strings.Builder
+	for i, c := range str {
+		switch {
+		case (i + ms) % 2 == 0 && c >= 65 && c <= 90:
+			r.WriteByte(byte(c+32))
+		case (i + ms) % 2 == 1 && c >= 97 && c <= 122:
+			r.WriteByte(byte(c-32))
+		default:
+			r.WriteByte(byte(c))
+		}
+	}
+	return r.String()
 }
 
 // ---------- query cmd tests ----------
@@ -479,7 +529,7 @@ func runQueryCmdTestCases(s *IntegrationCLITestSuite, cmdGen func() *cobra.Comma
 				// If you're bored, maybe try swapping back to see if things have been fixed.
 				//require.Equal(t, tc.expectedError, actualError, "expected error")
 			} else {
-				require.NoError(t, err, "unexpected error")
+				require.NoErrorf(t, err, "unexpected error: %w", err)
 			}
 			if err == nil {
 				result := strings.TrimSpace(out.String())
@@ -683,7 +733,134 @@ func (s *IntegrationCLITestSuite) TestGetMetadataByIDCmd() {
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
-// TODO: GetMetadataGetAllCmd
+func (s *IntegrationCLITestSuite) TestGetMetadataGetAllCmd() {
+	cmd := func() *cobra.Command { return cli.GetMetadataGetAllCmd() }
+
+	indentedScopeText := indent(s.scopeAsText, 4)
+	indentedSessionText := indent(s.sessionAsText, 4)
+	indentedRecordText := indent(s.recordAsText, 4)
+	indentedScopeSpecText := indent(s.scopeSpecAsText, 4)
+	indentedContractSpecText := indent(s.contractSpecAsText, 4)
+	indentedRecordSpecText := indent(s.recordSpecAsText, 4)
+	indentedOSLoc1Text := yamlListEntry(s.objectLocator1AsText)
+	indentedOSLoc2Text := yamlListEntry(s.objectLocator2AsText)
+
+	testCases := []queryCmdTestCase{}
+
+	testName := func(base string, basei int, namei int, name string, suffix string) string {
+		return fmt.Sprintf("all %s %03d %s %s", base, basei*4+namei+1, name, suffix)
+	}
+	addTestCases := func(bases []string, asText []string, asJson []string) {
+		for bi, base := range bases {
+			for ni, name := range []string{base, strings.ToUpper(base), alternateCase(base, true), alternateCase(base, false)} {
+				testCases = append(testCases,
+					queryCmdTestCase{
+						testName(bases[0], bi, ni, name, "as text"),
+						[]string{name, s.asText},
+						"",
+						asText,
+					},
+					queryCmdTestCase{
+						testName(bases[0], bi, ni, name, "as json"),
+						[]string{name, s.asJson},
+						"",
+						asJson,
+					},
+				)
+			}
+		}
+	}
+	makeSpecInputs := func(bases ...string) []string {
+		r := make([]string, 0, len(bases)*8)
+		for _, b := range bases {
+			for _, e := range []string{"specs", "spec", "specifications", "specification"} {
+				for _, d := range []string{"", "-", " "} {
+					r = append(r, b+d+e)
+				}
+			}
+		}
+		return r
+	}
+
+	addTestCases([]string{"scopes", "scope"}, []string{indentedScopeText}, []string{s.scopeAsJson})
+	addTestCases([]string{"sessions", "session", "sess"}, []string{indentedSessionText}, []string{s.sessionAsJson})
+	addTestCases([]string{"records", "record", "recs", "rec"}, []string{indentedRecordText}, []string{s.recordAsJson})
+	addTestCases(makeSpecInputs("scope"), []string{indentedScopeSpecText}, []string{s.scopeSpecAsJson})
+	testCases = append(testCases,
+		queryCmdTestCase{
+			"all scopespecs spaced args 1 scope specs as text",
+			[]string{"scope", "specs", s.asText},
+			"",
+			[]string{indentedScopeSpecText},
+		},
+		queryCmdTestCase{
+			"all scopespecs spaced args 2 scope specification as json",
+			[]string{"scope", "specification", s.asJson},
+			"",
+			[]string{s.scopeSpecAsJson},
+		},
+		queryCmdTestCase{
+			"all scopespecs spaced args 3 scop espec as json",
+			[]string{"scop", "espec", s.asJson},
+			"",
+			[]string{s.scopeSpecAsJson},
+		},
+	)
+
+	cSpecInputs := makeSpecInputs("contract")
+	cSpecInputs = append(cSpecInputs, "cspecs", "cspec", "c-specs", "c-spec", "c specs", "c spec")
+	addTestCases(cSpecInputs, []string{indentedContractSpecText}, []string{s.contractSpecAsJson})
+	testCases = append(testCases,
+		queryCmdTestCase{
+			"all contractspecs spaced args 1 contract specs as text",
+			[]string{"contract", "specs", s.asText},
+			"",
+			[]string{indentedContractSpecText},
+		},
+		queryCmdTestCase{
+			"all contractspecs spaced args 2 contract specification as json",
+			[]string{"contract", "specification", s.asJson},
+			"",
+			[]string{s.contractSpecAsJson},
+		},
+		queryCmdTestCase{
+			"all contractspecs spaced args 3 cs pec as json",
+			[]string{"cs", "pec", s.asJson},
+			"",
+			[]string{s.contractSpecAsJson},
+		},
+	)
+
+	addTestCases(makeSpecInputs("record", "rec"), []string{indentedRecordSpecText}, []string{s.recordSpecAsJson})
+	testCases = append(testCases,
+		queryCmdTestCase{
+			"all recordspecs spaced args 1 record specs as text",
+			[]string{"record", "specs", s.asText},
+			"",
+			[]string{indentedRecordSpecText},
+		},
+		queryCmdTestCase{
+			"all recordspecs spaced args 2 record specification as json",
+			[]string{"record", "specification", s.asJson},
+			"",
+			[]string{s.recordSpecAsJson},
+		},
+		queryCmdTestCase{
+			"all recordspecs spaced args 3 recor dspec as json",
+			[]string{"recor", "dspec", s.asJson},
+			"",
+			[]string{s.recordSpecAsJson},
+		},
+	)
+
+	addTestCases(
+		[]string{"locators", "locator", "locs", "loc"},
+		[]string{indentedOSLoc1Text, indentedOSLoc2Text},
+		[]string{s.objectLocator1AsJson, s.objectLocator2AsJson},
+	)
+
+	runQueryCmdTestCases(s, cmd, testCases)
+}
 
 func (s *IntegrationCLITestSuite) TestGetMetadataScopeCmd() {
 	cmd := func() *cobra.Command { return cli.GetMetadataScopeCmd() }
