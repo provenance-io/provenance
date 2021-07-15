@@ -489,17 +489,17 @@ func yamlListEntry(str string) string {
 func alternateCase(str string, startUpper bool) string {
 	// A-Z -> 65-90
 	// a-z -> 97-122
-	ms := 0	// aka modShift
-	if (startUpper) {
+	ms := 0 // aka modShift
+	if startUpper {
 		ms = 1
 	}
 	var r strings.Builder
 	for i, c := range str {
 		switch {
-		case (i + ms) % 2 == 0 && c >= 65 && c <= 90:
-			r.WriteByte(byte(c+32))
-		case (i + ms) % 2 == 1 && c >= 97 && c <= 122:
-			r.WriteByte(byte(c-32))
+		case (i+ms)%2 == 0 && c >= 65 && c <= 90:
+			r.WriteByte(byte(c + 32))
+		case (i+ms)%2 == 1 && c >= 97 && c <= 122:
+			r.WriteByte(byte(c - 32))
 		default:
 			r.WriteByte(byte(c))
 		}
@@ -1741,7 +1741,7 @@ func (s *IntegrationCLITestSuite) TestGetOSLocatorCmd() {
 			"all as json",
 			[]string{"all", s.asJson},
 			"",
-			[]string{s.objectLocator1AsJson,s.objectLocator2AsJson},
+			[]string{s.objectLocator1AsJson, s.objectLocator2AsJson},
 		},
 		{
 			"by owner locator 1 as text",
