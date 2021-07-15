@@ -52,6 +52,10 @@ type IntegrationCLITestSuite struct {
 	user2     string
 	user2Addr sdk.AccAddress
 
+	pubkeyOther   cryptotypes.PubKey
+	userOther     string
+	userOtherAddr sdk.AccAddress
+
 	scope     metadatatypes.Scope
 	scopeUUID uuid.UUID
 	scopeID   metadatatypes.MetadataAddress
@@ -146,6 +150,10 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.pubkey2 = secp256k1.GenPrivKey().PubKey()
 	s.user2Addr = sdk.AccAddress(s.pubkey2.Address())
 	s.user2 = s.user2Addr.String()
+
+	s.pubkeyOther = secp256k1.GenPrivKey().PubKey()
+	s.userOtherAddr = sdk.AccAddress(s.pubkeyOther.Address())
+	s.userOther = s.userOtherAddr.String()
 
 	s.scopeUUID = uuid.New()
 	s.sessionUUID = uuid.New()
@@ -1676,16 +1684,140 @@ func (s *IntegrationCLITestSuite) TestGetValueOwnershipCmd() {
 func (s *IntegrationCLITestSuite) TestGetOSLocatorCmd() {
 	cmd := func() *cobra.Command { return cli.GetOSLocatorCmd() }
 
+	indentedLocator1Text := indent(s.objectLocator1AsText, 2)
+	indentedLocator2Text := indent(s.objectLocator2AsText, 2)
+	listEntryLocator1 := yamlListEntry(s.objectLocator1AsText)
+	listEntryLocator2 := yamlListEntry(s.objectLocator2AsText)
+	unknownUUID := uuid.New()
+
 	testCases := []queryCmdTestCase{
 		{
-			"get os locator by owner",
-			[]string{s.user1Addr.String(), s.asJson},
+			"params as text",
+			[]string{"params", s.asText},
 			"",
 			[]string{
-				fmt.Sprintf("\"owner\":\"%s\"", s.user1Addr.String()),
-				"\"encryption_key\":\"\"",
-				fmt.Sprintf("\"locator_uri\":\"%s\"", "http://foo.com"),
+				"params:",
+				fmt.Sprintf("max_uri_length: %d", metadatatypes.DefaultMaxURILength),
 			},
+		},
+		{
+			"params as json",
+			[]string{"params", s.asJson},
+			"",
+			[]string{
+				"\"params\":{",
+				fmt.Sprintf("\"max_uri_length\":%d", metadatatypes.DefaultMaxURILength),
+			},
+		},
+		{
+			"all as text",
+			[]string{"all", s.asText},
+			"",
+			[]string{listEntryLocator1, listEntryLocator2},
+		},
+		{
+			"all as json",
+			[]string{"all", s.asJson},
+			"",
+			[]string{s.objectLocator1AsJson,s.objectLocator2AsJson},
+		},
+		{
+			"by owner locator 1 as text",
+			[]string{s.user1Addr.String(), s.asText},
+			"",
+			[]string{indentedLocator1Text},
+		},
+		{
+			"by owner locator 1 as json",
+			[]string{s.user1Addr.String(), s.asJson},
+			"",
+			[]string{s.objectLocator1AsJson},
+		},
+		{
+			"by owner locator 2 as text",
+			[]string{s.user2Addr.String(), s.asText},
+			"",
+			[]string{indentedLocator2Text},
+		},
+		{
+			"by owner locator 2 as json",
+			[]string{s.user2Addr.String(), s.asJson},
+			"",
+			[]string{s.objectLocator2AsJson},
+		},
+		{
+			"by owner unknown owner",
+			[]string{s.userOtherAddr.String()},
+			"rpc error: code = InvalidArgument desc = no locator bound to address: invalid request",
+			[]string{""},
+		},
+		{
+			"by scope id as text",
+			[]string{s.scopeID.String(), s.asText},
+			"",
+			[]string{listEntryLocator1},
+		},
+		{
+			"by scope id as json",
+			[]string{s.scopeID.String(), s.asJson},
+			"",
+			[]string{s.objectLocator1AsJson},
+		},
+		{
+			"by scope id unknown scope id",
+			[]string{metadatatypes.ScopeMetadataAddress(unknownUUID).String()},
+			fmt.Sprintf("rpc error: code = InvalidArgument desc = rpc error: code = InvalidArgument desc = scope [%s] not found: invalid request",
+				metadatatypes.ScopeMetadataAddress(unknownUUID)),
+			[]string{s.objectLocator1AsJson},
+		},
+		{
+			"by scope uuid as text",
+			[]string{s.scopeUUID.String(), s.asText},
+			"",
+			[]string{listEntryLocator1},
+		},
+		{
+			"by scope uuid as json",
+			[]string{s.scopeUUID.String(), s.asJson},
+			"",
+			[]string{s.objectLocator1AsJson},
+		},
+		{
+			"by scope uuid unknown scope uuid",
+			[]string{unknownUUID.String()},
+			fmt.Sprintf("rpc error: code = InvalidArgument desc = rpc error: code = InvalidArgument desc = scope [%s] not found: invalid request",
+				unknownUUID),
+			[]string{s.objectLocator1AsJson},
+		},
+		{
+			"by uri locator 1 as text",
+			[]string{s.uri1, s.asText},
+			"",
+			[]string{listEntryLocator1},
+		},
+		{
+			"by uri locator 1 as json",
+			[]string{s.uri1, s.asJson},
+			"",
+			[]string{s.objectLocator1AsJson},
+		},
+		{
+			"by uri locator 2 as text",
+			[]string{s.uri2, s.asText},
+			"",
+			[]string{listEntryLocator2},
+		},
+		{
+			"by uri locator 2 as json",
+			[]string{s.uri2, s.asJson},
+			"",
+			[]string{s.objectLocator2AsJson},
+		},
+		{
+			"by uri unknown uri",
+			[]string{"http://not-an-entry.corn"},
+			"rpc error: code = InvalidArgument desc = No records found.: invalid request",
+			[]string{},
 		},
 	}
 
