@@ -1735,7 +1735,7 @@ func runTxCmdTestCases(s *IntegrationCLITestSuite, testCases []txCmdTestCase) {
 	}
 }
 
-func (s *IntegrationCLITestSuite) TestMetadataScopeTxCommands() {
+func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 
 	scopeID := metadatatypes.ScopeMetadataAddress(uuid.New()).String()
 	scopeSpecID := metadatatypes.ScopeSpecMetadataAddress(uuid.New()).String()
