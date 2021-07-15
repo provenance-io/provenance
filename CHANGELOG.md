@@ -37,6 +37,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+* Just an entry to make something different from main so things will kick off.
+
 ### Features
 
 * Marker governance proposal are supported in cli [#367](https://github.com/provenance-io/provenance/issues/367)
