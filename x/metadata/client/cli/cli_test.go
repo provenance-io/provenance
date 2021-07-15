@@ -537,7 +537,7 @@ func runQueryCmdTestCases(s *IntegrationCLITestSuite, cmdGen func() *cobra.Comma
 				// If you're bored, maybe try swapping back to see if things have been fixed.
 				//require.Equal(t, tc.expectedError, actualError, "expected error")
 			} else {
-				require.NoErrorf(t, err, "unexpected error: %w", err)
+				require.NoErrorf(t, err, "unexpected error: %s", err)
 			}
 			if err == nil {
 				result := strings.TrimSpace(out.String())
@@ -793,6 +793,7 @@ func (s *IntegrationCLITestSuite) TestGetMetadataGetAllCmd() {
 	addTestCases([]string{"scopes", "scope"}, []string{indentedScopeText}, []string{s.scopeAsJson})
 	addTestCases([]string{"sessions", "session", "sess"}, []string{indentedSessionText}, []string{s.sessionAsJson})
 	addTestCases([]string{"records", "record", "recs", "rec"}, []string{indentedRecordText}, []string{s.recordAsJson})
+
 	addTestCases(makeSpecInputs("scope"), []string{indentedScopeSpecText}, []string{s.scopeSpecAsJson})
 	testCases = append(testCases,
 		queryCmdTestCase{
@@ -865,6 +866,27 @@ func (s *IntegrationCLITestSuite) TestGetMetadataGetAllCmd() {
 		[]string{"locators", "locator", "locs", "loc"},
 		[]string{indentedOSLoc1Text, indentedOSLoc2Text},
 		[]string{s.objectLocator1AsJson, s.objectLocator2AsJson},
+	)
+
+	testCases = append(testCases,
+		queryCmdTestCase{
+			"unknown type",
+			[]string{"scoops"},
+			"unknown entry type: scoops",
+			[]string{},
+		},
+		queryCmdTestCase{
+			"unknown type many args",
+			[]string{"r", "e", "d", "o", "r", "k", "   ", "sp", "o", "rk"},
+			"unknown entry type: redorksporks",
+			[]string{},
+		},
+		queryCmdTestCase{
+			"no args",
+			[]string{},
+			"requires at least 1 arg(s), only received 0",
+			[]string{},
+		},
 	)
 
 	runQueryCmdTestCases(s, cmd, testCases)
