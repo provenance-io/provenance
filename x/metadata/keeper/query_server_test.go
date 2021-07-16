@@ -182,158 +182,194 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 	app.MetadataKeeper.SetSession(ctx, *session)
 	for i := 0; i < 9; i++ {
 		sID := types.SessionMetadataAddress(scopeUUID, uuid.New())
-		session := types.NewSession("name", sID, cSpecID, []types.Party{
+		sess := types.NewSession("name", sID, cSpecID, []types.Party{
 			{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: types.PartyType_PARTY_TYPE_AFFILIATE}},
 			&types.AuditFields{CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", CreatedDate: time.Now(),
 				UpdatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", UpdatedDate: time.Now(),
 				Message: "message",
 			})
-		app.MetadataKeeper.SetSession(ctx, *session)
+		app.MetadataKeeper.SetSession(ctx, *sess)
 	}
 
-	// Note: Cannot do a "nil request" test because the cosmos-sdk queryClient stuff panics first.
-	// s.T().Run("nil request", func(t *testing.T) {
-	// 	_, err := queryClient.Sessions(gocontext.Background(), nil)
-	// 	assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = empty request")
-	// })
+	pInt := func(i int) *int {
+		return &i
+	}
 
-	s.T().Run("empty request", func(t *testing.T) {
-		_, err := queryClient.Sessions(gocontext.Background(), &types.SessionsRequest{})
-		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = empty request parameters")
-	})
+	testCases := []struct{
+		name      string
+		req       *types.SessionsRequest
+		err       string
+		count     *int
+		scopeID   types.MetadataAddress
+		sessionID types.MetadataAddress
+	}{
+		// Note: Cannot do a "nil request" test because the cosmos-sdk queryClient stuff panics first.
+		// {
+		// 	name: "nil request",
+		// 	req:  nil,
+		// 	err:  "rpc error: code = InvalidArgument desc = empty request",
+		// },
+		{
+			name: "empty request",
+			req:  &types.SessionsRequest{},
+			err:  "rpc error: code = InvalidArgument desc = empty request parameters",
+		},
 
-	s.T().Run("only scope id invalid - error", func(t *testing.T) {
-		_, err := queryClient.Sessions(gocontext.Background(), &types.SessionsRequest{ScopeId: "6332c1a4-foo1-bare-895b-invalid65cb6"})
-		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = could not parse [6332c1a4-foo1-bare-895b-invalid65cb6] into either a scope address (decoding bech32 failed: failed converting data to bytes: invalid character not part of charset: 45) or uuid (invalid UUID format)")
-	})
+		{
+			name: "only scope id invalid - error",
+			req:  &types.SessionsRequest{ScopeId: "6332c1a4-foo1-bare-895b-invalid65cb6"},
+			err:  "rpc error: code = InvalidArgument desc = could not parse [6332c1a4-foo1-bare-895b-invalid65cb6] into either a scope address (decoding bech32 failed: failed converting data to bytes: invalid character not part of charset: 45) or uuid (invalid UUID format)",
+		},
+		// TODO: only scope id as uuid not found - error
+		{
+			name:    "only scope id as uuid exists - results",
+			req:     &types.SessionsRequest{ScopeId: scopeUUID.String()},
+			count:   pInt(10),
+			scopeID: scopeID,
+		},
+		// TODO: only scope id as addr not found - error
+		{
+			name:    "only scope id as addr exists - results",
+			req:     &types.SessionsRequest{ScopeId: scopeID.String()},
+			count:   pInt(10),
+			scopeID: scopeID,
+		},
 
-	// TODO: only scope id as uuid not found - error
+		// TODO: only session id invalid - error
+		// TODO: only session id as uuid not found - error
+		// TODO: only session id as uuid exists - error
+		// TODO: only session id as addr not found - error
+		// TODO: only session id as addr wrong scope - error
+		// TODO: only session id as addr exists - result
 
-	s.T().Run("only scope id as uuid exists - results", func(t *testing.T) {
-		sr, err := queryClient.Sessions(gocontext.Background(), &types.SessionsRequest{ScopeId: scopeUUID.String()})
-		require.NoError(t, err)
-		assert.Equal(t, 10, len(sr.Sessions), "should be 10 sessions in set for session context query by scope uuid")
-		assert.Equal(t, scopeID.String(), sr.Sessions[0].SessionIdInfo.ScopeIdInfo.ScopeAddr)
-	})
+		// TODO: only record addr invalid - error
+		// TODO: only record addr not found - error
+		// TODO: only record addr exists - result
 
-	// TODO: only scope id as addr not found - error
+		// TODO: only record name wrong - error
+		// TODO: only record name not found - error
+		// TODO: only record name exists - error
 
-	s.T().Run("only scope id as addr exists - results", func(t *testing.T) {
-		sr, err := queryClient.Sessions(gocontext.Background(), &types.SessionsRequest{ScopeId: scopeID.String()})
-		require.NoError(t, err)
-		assert.Equal(t, 10, len(sr.Sessions), "should be 10 sessions in set for session context query by scope uuid")
-		assert.Equal(t, scopeID.String(), sr.Sessions[0].SessionIdInfo.ScopeIdInfo.ScopeAddr)
-	})
+		// TODO: scope id invalid session id ok - error
+		{
+			name: "scope id as uuid exists session id invalid - error",
+			req:  &types.SessionsRequest{ScopeId: scopeUUID.String(), SessionId: "invalidSessionID"},
+			err:  "rpc error: code = InvalidArgument desc = could not parse [invalidSessionID] into either a session address (decoding bech32 failed: string not all lowercase or all uppercase) or uuid (invalid UUID length: 16)",
+		},
+		{
+			name: "scope id as addr exists session id invalid - error",
+			req:  &types.SessionsRequest{ScopeId: scopeID.String(), SessionId: "invalidSessionID"},
+			err:  "rpc error: code = InvalidArgument desc = could not parse [invalidSessionID] into either a session address (decoding bech32 failed: string not all lowercase or all uppercase) or uuid (invalid UUID length: 16)",
+		},
+		// TODO: scope id as uuid exists session id as addr wrong scope - error
+		// TODO: scope id as addr exists session id as addr wrong scope - error
+		// TODO: scope id as uuid exists session id as uuid not found - error
+		// TODO: scope id as addr exists session id as uuid not found - error
+		{
+			name:      "scope id as uuid exists session id as uuid exists - result",
+			req:       &types.SessionsRequest{ScopeId: scopeUUID.String(), SessionId: sessionUUID.String()},
+			count:     pInt(1),
+			scopeID:   scopeID,
+			sessionID: sessionID,
+		},
+		// TODO: scope id as addr exists session id as uuid exists - result
+		// TODO: scope id as uuid exists session id as addr exists - result
+		{
+			name:      "scope id as addr exists session id as addr exists - result",
+			req:       &types.SessionsRequest{ScopeId: scopeID.String(), SessionId: sessionID.String()},
+			count:     pInt(1),
+			scopeID:   scopeID,
+			sessionID: sessionID,
+		},
 
-	// TODO: only session id invalid - error
-	// TODO: only session id as uuid not found - error
-	// TODO: only session id as uuid exists - error
-	// TODO: only session id as addr not found - error
-	// TODO: only session id as addr wrong scope - error
-	// TODO: only session id as addr exists - result
+		// TODO: scope id invalid record addr ok - error
+		// TODO: scope id exists record addr invalid - error
+		// TODO: scope id exists record addr wrong scope - error
+		// TODO: scope id exists record addr exists - result
 
-	// TODO: only record addr invalid - error
-	// TODO: only record addr not found - error
-	// TODO: only record addr exists - result
+		// TODO: scope id invalid record name ok - error
+		// TODO: scope id as uuid not found record name ok - error
+		// TODO: scope id as addr not found record name ok - error
+		// TODO: scope id as uuid exists record name not found - error
+		// TODO: scope id as addr exists record name not found - error
+		// TODO: scope id as uuid exists record name exists - result
+		// TODO: scope id as addr exists record name exists - result
 
-	// TODO: only record name wrong - error
-	// TODO: only record name not found - error
-	// TODO: only record name exists - error
+		// TODO: session id invalid record addr ok - error
+		// TODO: session id exists record addr invalid - error
+		// TODO: session id exists record addr wrong scope - error
+		// TODO: session id exists record addr wrong session - error
+		// TODO: session id exists record addr exists - result
 
-	// TODO: scope id invalid session id ok - error
+		// TODO: session id invalid record name ok - error
+		// TODO: session id as uuid record name ok - error
+		// TODO: session id as addr not found record name ok - error
+		// TODO: session id as addr exists record name not found - error
+		// TODO: session id as addr exists record name wrong session - error
+		// TODO: session id as addr exists record name exists - result
 
-	s.T().Run("scope id as uuid exists session id invalid - error", func(t *testing.T) {
-		_, err := queryClient.Sessions(gocontext.Background(), &types.SessionsRequest{ScopeId: scopeUUID.String(), SessionId: "invalidSessionID"})
-		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = could not parse [invalidSessionID] into either a session address (decoding bech32 failed: string not all lowercase or all uppercase) or uuid (invalid UUID length: 16)")
-	})
+		// TODO: record addr invalid record name ok - error
+		// TODO: record addr exists record name wrong - error
+		// TODO: record addr exists record name matches - result
 
-	s.T().Run("scope id as addr exists session id invalid - error", func(t *testing.T) {
-		_, err := queryClient.Sessions(gocontext.Background(), &types.SessionsRequest{ScopeId: scopeID.String(), SessionId: "invalidSessionID"})
-		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = could not parse [invalidSessionID] into either a session address (decoding bech32 failed: string not all lowercase or all uppercase) or uuid (invalid UUID length: 16)")
-	})
+		// TODO: scope id invalid session id ok record addr ok - error
+		// TODO: scope id exists session id invalid record addr ok - error
+		// TODO: scope id exists session id exists record addr invalid - error
+		// TODO: scope id wrong scope session id exists record addr exists - error
+		// TODO: scope id exists session id exists record addr exists - result
 
-	// TODO: scope id as uuid exists session id as addr wrong scope - error
-	// TODO: scope id as addr exists session id as addr wrong scope - error
-	// TODO: scope id as uuid exists session id as uuid not found - error
-	// TODO: scope id as addr exists session id as uuid not found - error
+		// TODO: scope id invalid session id ok record name ok - error
+		// TODO: scope id exists session id invalid record name ok - error
+		// TODO: scope id exists session id exists record name not found - error
+		// TODO: scope id exists session id exists record name exists - result
 
-	s.T().Run("scope id as uuid exists session id as uuid exists - result", func(t *testing.T) {
-		sr, err := queryClient.Sessions(gocontext.Background(), &types.SessionsRequest{ScopeId: scopeUUID.String(), SessionId: sessionUUID.String()})
-		require.NoError(t, err)
-		assert.Equal(t, 1, len(sr.Sessions), "should be 1 session in set for session context query by scope uuid and session uuid")
-		assert.Equal(t, scopeID.String(), sr.Sessions[0].SessionIdInfo.ScopeIdInfo.ScopeAddr)
-		assert.Equal(t, sessionID.String(), sr.Sessions[0].SessionIdInfo.SessionAddr)
-	})
+		// TODO: scope id invalid record addr ok record name ok - error
+		// TODO: scope id exists record addr invalid record name ok - error
+		// TODO: scope id exists record addr exists record name wrong - error
+		// TODO: scope id exists record addr wrong scope record name ok - error
+		// TODO: scope id exists record addr exists record name matches - result
 
-	// TODO: scope id as addr exists session id as uuid exists - result
-	// TODO: scope id as uuid exists session id as addr exists - result
+		// TODO: session id invalid record addr ok record name ok - error
+		// TODO: session id exists record addr invalid record name ok - error
+		// TODO: session id exists record addr wrong scope record name ok - error
+		// TODO: session id exists record addr wrong session record name ok - error
+		// TODO: session id exists record addr exists record name ok - result
 
-	s.T().Run("scope id as addr exists session id as addr exists - result", func(t *testing.T) {
-		sr, err := queryClient.Sessions(gocontext.Background(), &types.SessionsRequest{ScopeId: scopeID.String(), SessionId: sessionID.String()})
-		require.NoError(t, err)
-		assert.Equal(t, 1, len(sr.Sessions), "should be 1 sessions in set for session context query by scope id and session id")
-		assert.Equal(t, scopeID.String(), sr.Sessions[0].SessionIdInfo.ScopeIdInfo.ScopeAddr)
-		assert.Equal(t, sessionID.String(), sr.Sessions[0].SessionIdInfo.SessionAddr)
-	})
+		// TODO: scope id invalid session id ok record addr ok record name ok - error
+		// TODO: scope id exists session id invalid record addr ok record name ok - error
+		// TODO: scope id exists session id exists record addr invalid record name ok - error
+		// TODO: scope id exists session id exists record addr exists record name wrong - error
+		// TODO: scope id exists session id exists record addr exists record name matches - result
+	}
 
-	// TODO: scope id invalid record addr ok - error
-	// TODO: scope id exists record addr invalid - error
-	// TODO: scope id exists record addr wrong scope - error
-	// TODO: scope id exists record addr exists - result
-
-	// TODO: scope id invalid record name ok - error
-	// TODO: scope id as uuid not found record name ok - error
-	// TODO: scope id as addr not found record name ok - error
-	// TODO: scope id as uuid exists record name not found - error
-	// TODO: scope id as addr exists record name not found - error
-	// TODO: scope id as uuid exists record name exists - result
-	// TODO: scope id as addr exists record name exists - result
-
-	// TODO: session id invalid record addr ok - error
-	// TODO: session id exists record addr invalid - error
-	// TODO: session id exists record addr wrong scope - error
-	// TODO: session id exists record addr wrong session - error
-	// TODO: session id exists record addr exists - result
-
-	// TODO: session id invalid record name ok - error
-	// TODO: session id as uuid record name ok - error
-	// TODO: session id as addr not found record name ok - error
-	// TODO: session id as addr exists record name not found - error
-	// TODO: session id as addr exists record name wrong session - error
-	// TODO: session id as addr exists record name exists - result
-
-	// TODO: record addr invalid record name ok - error
-	// TODO: record addr exists record name wrong - error
-	// TODO: record addr exists record name matches - result
-
-	// TODO: scope id invalid session id ok record addr ok - error
-	// TODO: scope id exists session id invalid record addr ok - error
-	// TODO: scope id exists session id exists record addr invalid - error
-	// TODO: scope id wrong scope session id exists record addr exists - error
-	// TODO: scope id exists session id exists record addr exists - result
-
-	// TODO: scope id invalid session id ok record name ok - error
-	// TODO: scope id exists session id invalid record name ok - error
-	// TODO: scope id exists session id exists record name not found - error
-	// TODO: scope id exists session id exists record name exists - result
-
-	// TODO: scope id invalid record addr ok record name ok - error
-	// TODO: scope id exists record addr invalid record name ok - error
-	// TODO: scope id exists record addr exists record name wrong - error
-	// TODO: scope id exists record addr wrong scope record name ok - error
-	// TODO: scope id exists record addr exists record name matches - result
-
-	// TODO: session id invalid record addr ok record name ok - error
-	// TODO: session id exists record addr invalid record name ok - error
-	// TODO: session id exists record addr wrong scope record name ok - error
-	// TODO: session id exists record addr wrong session record name ok - error
-	// TODO: session id exists record addr exists record name ok - result
-
-	// TODO: scope id invalid session id ok record addr ok record name ok - error
-	// TODO: scope id exists session id invalid record addr ok record name ok - error
-	// TODO: scope id exists session id exists record addr invalid record name ok - error
-	// TODO: scope id exists session id exists record addr exists record name wrong - error
-	// TODO: scope id exists session id exists record addr exists record name matches - result
+	for _, tc := range testCases {
+		s.T().Run(tc.name, func(t *testing.T) {
+			sr, err := queryClient.Sessions(gocontext.Background(), tc.req)
+			if len(tc.err) > 0 {
+				assert.EqualError(t, err, tc.err, "expected error")
+			} else {
+				require.NoError(t, err, "unexpected error: %s", err)
+			}
+			if tc.count != nil || len(tc.scopeID) > 0 || len(tc.sessionID) > 0 {
+				require.NotNil(t, sr, "result of Sessions query")
+				if tc.count != nil {
+					assert.Equal(t, *tc.count, len(sr.Sessions), "number of sessions found")
+				} else {
+					require.Greater(t, 0, len(sr.Sessions), "at least one session result expected")
+				}
+				if len(tc.scopeID) > 0 {
+					for i, x := range sr.Sessions {
+						assert.Equalf(t, tc.scopeID, x.SessionIdInfo.ScopeIdInfo.ScopeId, "scope id of result.Sessions[%d]", i)
+					}
+				}
+				if len(tc.sessionID) > 0 {
+					for i, x := range sr.Sessions {
+						assert.Equalf(t, tc.sessionID, x.SessionIdInfo.SessionId, "session id of result.Sessions[%d]", i)
+					}
+				}
+			}
+		})
+	}
 }
 
 // TODO: SessionsAll tests
