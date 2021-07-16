@@ -467,7 +467,7 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		{
 			name: "session id invalid record addr ok - error",
 			req:  &types.SessionsRequest{SessionId: "lol-nope-notASessionId", RecordAddr: s.recordID.String()},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [lol-nope-notASessionId] into a session address: decoding bech32 failed: string not all lowercase or all uppercase",
+			err:  "rpc error: code = InvalidArgument desc = could not parse [lol-nope-notASessionId] into either a session address (decoding bech32 failed: string not all lowercase or all uppercase) or uuid (invalid UUID length: 22)",
 		},
 		{
 			name: "session id exists record addr invalid - error",
@@ -477,7 +477,7 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		{
 			name: "session id exists record addr wrong scope - error",
 			req:  &types.SessionsRequest{SessionId: s.sessionID.String(), RecordAddr: types.RecordMetadataAddress(unknownUUID, s.recordName).String()},
-			err:  fmt.Sprintf("rpc error: code = InvalidArgument desc = session %s and record %s are not associated with the same scope", s.sessionID, types.RecordMetadataAddress(unknownUUID, s.recordName)),
+			err:  fmt.Sprintf("rpc error: code = InvalidArgument desc = session %s is not in scope %s", s.sessionID, types.ScopeMetadataAddress(unknownUUID)),
 		},
 		{
 			name: "session id exists record addr wrong session - error",
@@ -492,8 +492,6 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 			sessionID: s.sessionID,
 		},
 		{
-			// TODO: Fix this one.
-			// Currently getting the error "rpc error: code = InvalidArgument desc = could not parse [db510a6b-3be2-4d57-9140-37115e78f534] into a session address: decoding bech32 failed: checksum failed. Expected ya4ktm, got 78f534."
 			name:      "session id as uuid exists record addr exists - result",
 			req:       &types.SessionsRequest{SessionId: s.sessionUUID.String(), RecordAddr: s.recordID.String()},
 			count:     &one,

@@ -211,7 +211,11 @@ func (k Keeper) Sessions(c context.Context, req *types.SessionsRequest) (*types.
 	}
 	if len(req.SessionId) > 0 {
 		var err error
-		sessionAddr, err = ParseSessionID(req.ScopeId, req.SessionId)
+		scopeIDForParsing := req.ScopeId
+		if len(scopeIDForParsing) == 0 && !scopeAddr.Empty() {
+			scopeIDForParsing = scopeAddr.String()
+		}
+		sessionAddr, err = ParseSessionID(scopeIDForParsing, req.SessionId)
 		if err != nil {
 			return &retval, status.Error(codes.InvalidArgument, err.Error())
 		}
