@@ -191,6 +191,8 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		app.MetadataKeeper.SetSession(ctx, *sess)
 	}
 
+	unknownUUID := uuid.New()
+
 	pInt := func(i int) *int {
 		return &i
 	}
@@ -220,14 +222,22 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 			req:  &types.SessionsRequest{ScopeId: "6332c1a4-foo1-bare-895b-invalid65cb6"},
 			err:  "rpc error: code = InvalidArgument desc = could not parse [6332c1a4-foo1-bare-895b-invalid65cb6] into either a scope address (decoding bech32 failed: failed converting data to bytes: invalid character not part of charset: 45) or uuid (invalid UUID format)",
 		},
-		// TODO: only scope id as uuid not found - error
+		{
+			name:  "only scope id as uuid not found - empty",
+			req:   &types.SessionsRequest{ScopeId: unknownUUID.String()},
+			count: pInt(0),
+		},
 		{
 			name:    "only scope id as uuid exists - results",
 			req:     &types.SessionsRequest{ScopeId: scopeUUID.String()},
 			count:   pInt(10),
 			scopeID: scopeID,
 		},
-		// TODO: only scope id as addr not found - error
+		{
+			name:  "only scope id as addr not found - empty",
+			req:   &types.SessionsRequest{ScopeId: types.ScopeMetadataAddress(unknownUUID).String()},
+			count: pInt(0),
+		},
 		{
 			name:    "only scope id as addr exists - results",
 			req:     &types.SessionsRequest{ScopeId: scopeID.String()},
@@ -236,19 +246,15 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		},
 
 		// TODO: only session id invalid - error
-		// TODO: only session id as uuid not found - error
-		// TODO: only session id as uuid exists - error
-		// TODO: only session id as addr not found - error
-		// TODO: only session id as addr wrong scope - error
+		// TODO: only session id as uuid - error
+		// TODO: only session id as addr not found - empty
 		// TODO: only session id as addr exists - result
 
 		// TODO: only record addr invalid - error
 		// TODO: only record addr not found - error
 		// TODO: only record addr exists - result
 
-		// TODO: only record name wrong - error
-		// TODO: only record name not found - error
-		// TODO: only record name exists - error
+		// TODO: only record name - error
 
 		// TODO: scope id invalid session id ok - error
 		{
@@ -263,8 +269,8 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		},
 		// TODO: scope id as uuid exists session id as addr wrong scope - error
 		// TODO: scope id as addr exists session id as addr wrong scope - error
-		// TODO: scope id as uuid exists session id as uuid not found - error
-		// TODO: scope id as addr exists session id as uuid not found - error
+		// TODO: scope id as uuid exists session id as uuid not found - empty
+		// TODO: scope id as addr exists session id as uuid not found - empty
 		{
 			name:      "scope id as uuid exists session id as uuid exists - result",
 			req:       &types.SessionsRequest{ScopeId: scopeUUID.String(), SessionId: sessionUUID.String()},
