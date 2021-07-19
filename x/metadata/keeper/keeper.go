@@ -100,7 +100,7 @@ type MetadataKeeperI interface {
 	// return if OSLocator exists for a given owner addr
 	OSLocatorExists(ctx sdk.Context, ownerAddr sdk.AccAddress) bool
 	// add OSLocator instance
-	SetOSLocator(ctx sdk.Context, ownerAddr sdk.AccAddress, uri string) error
+	SetOSLocator(ctx sdk.Context, ownerAddr, encryptionKey sdk.AccAddress, uri string) error
 	// get OS locator by scope UUID.
 	GetOSLocatorByScope(ctx sdk.Context, scopeID string) ([]types.ObjectStoreLocator, error)
 }
@@ -109,7 +109,7 @@ type MetadataKeeperI interface {
 type Keeper struct {
 	// Key to access the key-value store from sdk.Context
 	storeKey   sdk.StoreKey
-	cdc        codec.BinaryMarshaler
+	cdc        codec.BinaryCodec
 	paramSpace paramtypes.Subspace
 
 	// To check if accounts exist and set public keys.
@@ -118,7 +118,7 @@ type Keeper struct {
 
 // NewKeeper creates new instances of the metadata Keeper.
 func NewKeeper(
-	cdc codec.BinaryMarshaler, key sdk.StoreKey, paramSpace paramtypes.Subspace,
+	cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Subspace,
 	authKeeper authkeeper.AccountKeeper,
 ) Keeper {
 	// set KeyTable if it has not already been set

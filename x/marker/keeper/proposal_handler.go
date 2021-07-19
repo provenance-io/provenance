@@ -93,8 +93,8 @@ func HandleSupplyIncreaseProposal(ctx sdk.Context, k Keeper, c *types.SupplyIncr
 	logger.Info("marker total supply increased", "marker", c.Amount.Denom, "amount", c.Amount.Amount.String())
 
 	// If a target address for minted coins is given then send them there.
-	if len(c.TargetAdddress) > 0 {
-		recipient, err := sdk.AccAddressFromBech32(c.TargetAdddress)
+	if len(c.TargetAddress) > 0 {
+		recipient, err := sdk.AccAddressFromBech32(c.TargetAddress)
 		if err != nil {
 			return err
 		}
@@ -104,7 +104,7 @@ func HandleSupplyIncreaseProposal(ctx sdk.Context, k Keeper, c *types.SupplyIncr
 			return err
 		}
 
-		logger.Info("transferred escrowed coin from marker", "marker", c.Amount.Denom, "amount", c.Amount.String(), "recipient", c.TargetAdddress)
+		logger.Info("transferred escrowed coin from marker", "marker", c.Amount.Denom, "amount", c.Amount.String(), "recipient", c.TargetAddress)
 	}
 
 	return nil
@@ -281,7 +281,7 @@ func HandleWithdrawEscrowProposal(ctx sdk.Context, k Keeper, c *types.WithdrawEs
 		return fmt.Errorf("%s marker does not allow governance control", c.Denom)
 	}
 
-	recipient, err := sdk.AccAddressFromBech32(c.TargetAdddress)
+	recipient, err := sdk.AccAddressFromBech32(c.TargetAddress)
 	if err != nil {
 		return err
 	}
@@ -292,7 +292,7 @@ func HandleWithdrawEscrowProposal(ctx sdk.Context, k Keeper, c *types.WithdrawEs
 	}
 
 	logger := k.Logger(ctx)
-	logger.Info("transferred escrowed coin from marker", "marker", c.Denom, "amount", c.Amount.String(), "recipient", c.TargetAdddress)
+	logger.Info("transferred escrowed coin from marker", "marker", c.Denom, "amount", c.Amount.String(), "recipient", c.TargetAddress)
 
 	return nil
 }

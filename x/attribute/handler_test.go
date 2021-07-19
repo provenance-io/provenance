@@ -30,10 +30,6 @@ type HandlerTestSuite struct {
 	pubkey1   cryptotypes.PubKey
 	user1     string
 	user1Addr sdk.AccAddress
-
-	pubkey2   cryptotypes.PubKey
-	user2     string
-	user2Addr sdk.AccAddress
 }
 
 func (s *HandlerTestSuite) SetupTest() {
@@ -44,10 +40,6 @@ func (s *HandlerTestSuite) SetupTest() {
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
 	s.user1 = s.user1Addr.String()
-
-	s.pubkey2 = secp256k1.GenPrivKey().PubKey()
-	s.user2Addr = sdk.AccAddress(s.pubkey2.Address())
-	s.user2 = s.user2Addr.String()
 
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
 
@@ -120,6 +112,67 @@ func (s HandlerTestSuite) TestMsgAddAttributeRequest() {
 					AttributeType: types.AttributeType_String,
 				},
 				s.user1),
+		},
+	}
+	s.runTests(cases)
+}
+
+func (s HandlerTestSuite) TestMsgUpdateAttributeRequest() {
+	testAttr := types.Attribute{
+		Address:       s.user1,
+		Name:          "example.name",
+		Value:         []byte("value"),
+		AttributeType: types.AttributeType_String,
+	}
+	var attrData types.GenesisState
+	attrData.Attributes = append(attrData.Attributes, testAttr)
+	attrData.Params.MaxValueLength = 100
+	s.app.AttributeKeeper.InitGenesis(s.ctx, &attrData)
+
+	cases := []CommonTest{
+		{
+			"should successfully update attribute",
+			types.NewMsgUpdateAttributeRequest(
+				s.user1Addr,
+				s.user1Addr, "example.name",
+				[]byte("value"), []byte("1"),
+				types.AttributeType_String,
+				types.AttributeType_Int),
+			[]string{s.user1},
+			"",
+			types.NewEventAttributeUpdate(
+				testAttr,
+				types.Attribute{
+					Address:       s.user1,
+					Name:          "example.name",
+					Value:         []byte("1"),
+					AttributeType: types.AttributeType_Int,
+				},
+				s.user1),
+		},
+	}
+	s.runTests(cases)
+}
+
+func (s HandlerTestSuite) TestMsgDistinctDeleteAttributeRequest() {
+	testAttr := types.Attribute{
+		Address:       s.user1,
+		Name:          "example.name",
+		Value:         []byte("value"),
+		AttributeType: types.AttributeType_String,
+	}
+	var attrData types.GenesisState
+	attrData.Attributes = append(attrData.Attributes, testAttr)
+	attrData.Params.MaxValueLength = 100
+	s.app.AttributeKeeper.InitGenesis(s.ctx, &attrData)
+
+	cases := []CommonTest{
+		{
+			"should successfully delete attribute with value",
+			types.NewMsgDeleteDistinctAttributeRequest(s.user1Addr, s.user1Addr, "example.name", []byte("value")),
+			[]string{s.user1},
+			"",
+			types.NewEventDistinctAttributeDelete("example.name", string([]byte("value")), s.user1, s.user1),
 		},
 	}
 	s.runTests(cases)

@@ -23,7 +23,7 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper, 
 		// Supply checks are only done against active markers with a fixed supply.
 		if record.GetStatus() == types.StatusActive && record.HasFixedSupply() {
 			requiredSupply := record.GetSupply()
-			currentSupply := getCurrentSupply(ctx, record.GetDenom(), bk)
+			currentSupply := bk.GetSupply(ctx, record.GetDenom())
 
 			// If the current amount of marker coin in circulation doesn't match configured supply, make adjustments
 			if !requiredSupply.IsEqual(currentSupply) {
@@ -52,15 +52,4 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper, 
 	if err != nil {
 		panic(err)
 	}
-}
-
-// Iterator over all coins and find the any matching our target marker denom, add their amounts to the returned total.
-func getCurrentSupply(ctx sdk.Context, denom string, bk bankkeeper.Keeper) sdk.Coin {
-	sup := bk.GetSupply(ctx)
-	for _, coin := range sup.GetTotal() {
-		if coin.Denom == denom {
-			return coin
-		}
-	}
-	return sdk.NewInt64Coin(denom, 0)
 }

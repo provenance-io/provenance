@@ -29,7 +29,7 @@ type Keeper struct {
 	storeKey sdk.StoreKey
 
 	// The codec codec for binary encoding/decoding.
-	cdc codec.BinaryMarshaler
+	cdc codec.BinaryCodec
 }
 
 // NewKeeper returns a name keeper. It handles:
@@ -38,7 +38,7 @@ type Keeper struct {
 //
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
-	cdc codec.BinaryMarshaler,
+	cdc codec.BinaryCodec,
 	key sdk.StoreKey,
 	paramSpace paramtypes.Subspace,
 ) Keeper {
@@ -74,7 +74,7 @@ func (keeper Keeper) SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAdd
 	if name, err = keeper.Normalize(ctx, name); err != nil {
 		return err
 	}
-	if err = sdk.VerifyAddressFormat(addr); err != nil {
+	if err = types.ValidateAddress(addr); err != nil {
 		return sdkerrors.Wrap(types.ErrInvalidAddress, err.Error())
 	}
 	key, err := types.GetNameKeyPrefix(name)
@@ -89,7 +89,7 @@ func (keeper Keeper) SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAdd
 	if err = record.ValidateBasic(); err != nil {
 		return err
 	}
-	bz, err := keeper.cdc.MarshalBinaryBare(&record)
+	bz, err := keeper.cdc.Marshal(&record)
 	if err != nil {
 		return err
 	}
@@ -101,6 +101,13 @@ func (keeper Keeper) SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAdd
 	}
 	indexKey := append(addrPrefix, key...) // [0x04] :: [addr-bytes] :: [name-key-bytes]
 	store.Set(indexKey, bz)
+
+	nameBoundEvent := types.NewEventNameBound(record.Address, name)
+
+	if err := ctx.EventManager().EmitTypedEvent(nameBoundEvent); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -129,7 +136,7 @@ func getNameRecord(ctx sdk.Context, keeper Keeper, key []byte) (record *types.Na
 	}
 	bz := store.Get(key)
 	record = &types.NameRecord{}
-	err = keeper.cdc.UnmarshalBinaryBare(bz, record)
+	err = keeper.cdc.Unmarshal(bz, record)
 	return record, err
 }
 
@@ -193,6 +200,13 @@ func (keeper Keeper) DeleteRecord(ctx sdk.Context, name string) error {
 	if store.Has(indexKey) {
 		store.Delete(indexKey)
 	}
+
+	nameUnboundEvent := types.NewEventNameUnbound(record.Address, name)
+
+	if err := ctx.EventManager().EmitTypedEvent(nameUnboundEvent); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -207,11 +221,11 @@ func (keeper Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle Handl
 		record := types.NameRecord{}
 		// get proto objects for legacy prefix with legacy amino codec.
 		if bytes.Equal(prefix, types.NameKeyPrefixAmino) {
-			if err := types.ModuleCdc.UnmarshalBinaryBare(iterator.Value(), &record); err != nil {
+			if err := types.ModuleCdc.Unmarshal(iterator.Value(), &record); err != nil {
 				return err
 			}
 		} else {
-			if err := keeper.cdc.UnmarshalBinaryBare(iterator.Value(), &record); err != nil {
+			if err := keeper.cdc.Unmarshal(iterator.Value(), &record); err != nil {
 				return err
 			}
 		}

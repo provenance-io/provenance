@@ -43,13 +43,13 @@ func CreateTxFactory(t *testing.T) tx.Factory {
 	var from2 = "test_key2"
 	var from3 = "test_key3"
 
-	acc1, _, err := kr.NewMnemonic(from1, keyring.English, path, hd.Secp256k1)
+	acc1, _, err := kr.NewMnemonic(from1, keyring.English, path, "", hd.Secp256k1)
 	requireT.NoError(err)
 
-	acc2, _, err := kr.NewMnemonic(from2, keyring.English, path, hd.Secp256k1)
+	acc2, _, err := kr.NewMnemonic(from2, keyring.English, path, "", hd.Secp256k1)
 	requireT.NoError(err)
 
-	acc3, _, err := kr.NewMnemonic(from3, keyring.English, path, hd.Secp256k1)
+	acc3, _, err := kr.NewMnemonic(from3, keyring.English, path, "", hd.Secp256k1)
 	requireT.NoError(err)
 
 	pubKey1 := acc1.GetPubKey()

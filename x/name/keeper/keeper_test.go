@@ -40,7 +40,6 @@ func (s *KeeperTestSuite) SetupTest() {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	s.app = app
 	s.ctx = ctx
-
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
 	s.user1 = s.user1Addr.String()
@@ -176,7 +175,7 @@ func (s *KeeperTestSuite) TestSetName() {
 			recordRestrict: true,
 			accAddr:        sdk.AccAddress{},
 			wantErr:        true,
-			errorMsg:       "incorrect address length (expected: 20, actual: 0): invalid account address",
+			errorMsg:       "addresses cannot be empty: unknown address: invalid account address",
 		},
 		"name already bound": {
 			recordName:     "name",

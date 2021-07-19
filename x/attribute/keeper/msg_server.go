@@ -66,6 +66,60 @@ func (k msgServer) AddAttribute(goCtx context.Context, msg *types.MsgAddAttribut
 	return &types.MsgAddAttributeResponse{}, nil
 }
 
+func (k msgServer) UpdateAttribute(goCtx context.Context, msg *types.MsgUpdateAttributeRequest) (*types.MsgUpdateAttributeResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	originalAttribute := types.Attribute{
+		Address:       msg.Account,
+		Name:          msg.Name,
+		AttributeType: msg.OriginalAttributeType,
+		Value:         msg.OriginalValue,
+	}
+
+	updateAttribute := types.Attribute{
+		Address:       msg.Account,
+		Name:          msg.Name,
+		AttributeType: msg.UpdateAttributeType,
+		Value:         msg.UpdateValue,
+	}
+
+	ownerAddr, err := sdk.AccAddressFromBech32(msg.Owner)
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.Keeper.UpdateAttribute(ctx, originalAttribute, updateAttribute, ownerAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, types.EventTelemetryKeyUpdate},
+			1,
+			[]metrics.Label{
+				telemetry.NewLabel(types.EventTelemetryLabelName, msg.Name),
+				telemetry.NewLabel(types.EventTelemetryLabelValue, string(msg.OriginalValue)),
+				telemetry.NewLabel(types.EventTelemetryLabelType, msg.OriginalAttributeType.String()),
+				telemetry.NewLabel(types.EventTelemetryLabelValue, string(msg.UpdateValue)),
+				telemetry.NewLabel(types.EventTelemetryLabelType, msg.UpdateAttributeType.String()),
+				telemetry.NewLabel(types.EventTelemetryLabelAccount, msg.Account),
+				telemetry.NewLabel(types.EventTelemetryLabelOwner, msg.Owner),
+			},
+		)
+	}()
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeAttributeUpdated,
+			sdk.NewAttribute(types.AttributeKeyNameAttribute, msg.Name),
+			sdk.NewAttribute(types.AttributeKeyAccountAddress, msg.Account),
+		),
+	)
+
+	return &types.MsgUpdateAttributeResponse{}, nil
+}
+
 func (k msgServer) DeleteAttribute(goCtx context.Context, msg *types.MsgDeleteAttributeRequest) (*types.MsgDeleteAttributeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -79,7 +133,7 @@ func (k msgServer) DeleteAttribute(goCtx context.Context, msg *types.MsgDeleteAt
 		return nil, err
 	}
 
-	err = k.Keeper.DeleteAttribute(ctx, accountAddr, msg.Name, ownerAddr)
+	err = k.Keeper.DeleteAttribute(ctx, accountAddr, msg.Name, nil, ownerAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -105,4 +159,46 @@ func (k msgServer) DeleteAttribute(goCtx context.Context, msg *types.MsgDeleteAt
 	)
 
 	return &types.MsgDeleteAttributeResponse{}, nil
+}
+
+func (k msgServer) DeleteDistinctAttribute(goCtx context.Context, msg *types.MsgDeleteDistinctAttributeRequest) (*types.MsgDeleteDistinctAttributeResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	accountAddr, err := sdk.AccAddressFromBech32(msg.Account)
+	if err != nil {
+		return nil, err
+	}
+
+	ownerAddr, err := sdk.AccAddressFromBech32(msg.Owner)
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.Keeper.DeleteAttribute(ctx, accountAddr, msg.Name, &msg.Value, ownerAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, types.EventTelemetryKeyDistinctDelete},
+			1,
+			[]metrics.Label{
+				telemetry.NewLabel(types.EventTelemetryLabelName, msg.Name),
+				telemetry.NewLabel(types.EventTelemetryLabelValue, string(msg.Value)),
+				telemetry.NewLabel(types.EventTelemetryLabelAccount, msg.Account),
+				telemetry.NewLabel(types.EventTelemetryLabelOwner, msg.Owner),
+			},
+		)
+	}()
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeAttributeDistinctDeleted,
+			sdk.NewAttribute(types.AttributeKeyNameAttribute, msg.Name),
+			sdk.NewAttribute(types.AttributeKeyAccountAddress, msg.Account),
+		),
+	)
+
+	return &types.MsgDeleteDistinctAttributeResponse{}, nil
 }

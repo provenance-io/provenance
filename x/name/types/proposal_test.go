@@ -36,6 +36,7 @@ type IntegrationTestSuite struct {
 
 func (s *IntegrationTestSuite) TestParamChangeVariations() {
 	addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	longAddr := make([]byte, 256)
 	testCases := []struct {
 		name        string
 		title       string
@@ -49,8 +50,8 @@ func (s *IntegrationTestSuite) TestParamChangeVariations() {
 		{"valid proposal", "test title", "test description", "root", addr, false, nil},
 		{"invalid name", "test title", "test description", "sub.root", addr, false, ErrNameContainsSegments},
 		{"invalid empty name", "test title", "test description", "", addr, false, ErrInvalidLengthName},
-		{"invalid addr", "test title", "test description", "root", sdk.AccAddress("invalid"), false, ErrInvalidAddress},
-		{"invalid gov base proposal", "", "test description", "root", sdk.AccAddress("invalid"), false, fmt.Errorf("proposal title cannot be blank: invalid proposal content")},
+		{"invalid addr", "test title", "test description", "root", sdk.AccAddress(longAddr), false, ErrInvalidAddress},
+		{"invalid gov base proposal", "", "test description", "root", addr, false, fmt.Errorf("proposal title cannot be blank: invalid proposal content")},
 	}
 
 	for _, tc := range testCases {

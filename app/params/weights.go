@@ -24,8 +24,10 @@ const (
 	DefaultWeightMsgDeleteName          int = 5
 	DefaultWeightCreateRootNameProposal int = 5
 	// Attribute
-	DefaultWeightMsgDeleteAttribute int = 5
-	DefaultWeightMsgAddAttribute    int = 15
+	DefaultWeightMsgAddAttribute            int = 15
+	DefaultWeightMsgUpdateAttribute         int = 5
+	DefaultWeightMsgDeleteAttribute         int = 5
+	DefaultWeightMsgDeleteDistinctAttribute int = 5
 	// Marker
 	DefaultWeightAddMarkerProposalContent           int = 5
 	DefaultWeightSupplyIncreaseProposalContent      int = 5

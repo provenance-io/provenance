@@ -59,9 +59,29 @@ message EventAttributeAdd {
   string owner   = 5;
 }
 
+// EventAttributeUpdate event emitted when attribute is updated
+message EventAttributeUpdate {
+  string name           = 1;
+  string original_value = 2;
+  string original_type  = 3;
+  string update_value   = 4;
+  string update_type    = 5;
+  string account        = 6;
+  string owner          = 7;
+}
+
 // EventAttributeDelete event emitted when attribute is deleted
 message EventAttributeDelete {
   string name    = 1;
   string account = 2;
   string owner   = 3;
+}
+
+// EventAttributeDistinctDelete event emitted when attribute is deleted with matching value
+message EventAttributeDistinctDelete {
+  string name           = 1;
+  string value          = 2;
+  string attribute_type = 3;
+  string account        = 4;
+  string owner          = 5;
 }

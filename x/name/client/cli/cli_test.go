@@ -9,10 +9,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
@@ -147,7 +147,6 @@ func (s *IntegrationTestSuite) TestResolveNameCommand() {
 func (s *IntegrationTestSuite) TestReverseLookupCommand() {
 	accountKey := secp256k1.GenPrivKeyFromSecret([]byte("nobindinginthisaccount"))
 	addr, _ := sdk.AccAddressFromHex(accountKey.PubKey().Address().String())
-
 	testCases := []struct {
 		name           string
 		args           []string
@@ -219,7 +218,7 @@ func (s *IntegrationTestSuite) TestGetBindNameCommand() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 1,
+			true, &sdk.TxResponse{}, 1,
 		},
 		{
 			"should fail to bind name to root name that does exist",
@@ -244,7 +243,7 @@ func (s *IntegrationTestSuite) TestGetBindNameCommand() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
 			}
@@ -318,7 +317,7 @@ func (s *IntegrationTestSuite) TestGetDeleteNameCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
 			}

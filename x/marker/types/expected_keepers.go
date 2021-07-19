@@ -3,7 +3,6 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -43,8 +42,7 @@ type BankKeeper interface {
 	BlockedAddr(addr sdk.AccAddress) bool
 
 	// Keeper ---------
-	GetSupply(ctx sdk.Context) exported.SupplyI
-	SetSupply(ctx sdk.Context, supply exported.SupplyI)
+	GetSupply(ctx sdk.Context, denom string) sdk.Coin
 
 	GetDenomMetaData(ctx sdk.Context, denom string) types.Metadata
 	SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metadata)

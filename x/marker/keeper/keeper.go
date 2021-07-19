@@ -51,7 +51,7 @@ type Keeper struct {
 	storeKey sdk.StoreKey
 
 	// The codec codec for binary encoding/decoding.
-	cdc codec.BinaryMarshaler
+	cdc codec.BinaryCodec
 }
 
 // NewKeeper returns a marker keeper. It handles:
@@ -60,7 +60,7 @@ type Keeper struct {
 //
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
-	cdc codec.BinaryMarshaler,
+	cdc codec.BinaryCodec,
 	key sdk.StoreKey,
 	paramSpace paramtypes.Subspace,
 	authKeeper authkeeper.AccountKeeper,

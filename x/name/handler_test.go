@@ -1,10 +1,14 @@
 package name_test
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/golang/protobuf/proto"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -13,8 +17,8 @@ import (
 	"github.com/provenance-io/provenance/x/name"
 	"github.com/provenance-io/provenance/x/name/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 func TestInvalidMsg(t *testing.T) {
@@ -29,6 +33,17 @@ func TestInvalidMsg(t *testing.T) {
 	require.True(t, strings.Contains(log, "unrecognized name message type"))
 }
 
+func containsMessage(result *sdk.Result, msg proto.Message) bool {
+	events := result.GetEvents().ToABCIEvents()
+	for _, event := range events {
+		typeEvent, _ := sdk.ParseTypedEvent(event)
+		if assert.ObjectsAreEqual(msg, typeEvent) {
+			return true
+		}
+	}
+	return false
+}
+
 //  create name record
 func TestCreateName(t *testing.T) {
 	priv1 := secp256k1.GenPrivKey()
@@ -40,16 +55,13 @@ func TestCreateName(t *testing.T) {
 		name          string
 		expectedError error
 		msg           *nametypes.MsgBindNameRequest
-		expectedEvent *nametypes.EventNameBound
+		expectedEvent proto.Message
 	}{
 		{
 			name:          "create name record",
 			msg:           nametypes.NewMsgBindNameRequest(nametypes.NewNameRecord("new", addr2, false), nametypes.NewNameRecord("example.name", addr1, false)),
 			expectedError: nil,
-			expectedEvent: &nametypes.EventNameBound{
-				Address: addr2.String(),
-				Name:    "new.example.name",
-			},
+			expectedEvent: nametypes.NewEventNameBound(addr2.String(), "new.example.name"),
 		},
 		{
 			name:          "create bad name record",
@@ -87,9 +99,8 @@ func TestCreateName(t *testing.T) {
 				require.NoError(t, err)
 			}
 			if tc.expectedEvent != nil {
-				require.Equal(t, 1, len(response.GetEvents().ToABCIEvents()))
-				msg1, _ := sdk.ParseTypedEvent(response.GetEvents().ToABCIEvents()[0])
-				require.Equal(t, tc.expectedEvent, msg1)
+				result := containsMessage(response, tc.expectedEvent)
+				require.True(t, result, fmt.Sprintf("Expected typed event was not found: %v", tc.expectedEvent))
 			}
 		})
 	}
@@ -104,16 +115,13 @@ func TestDeleteName(t *testing.T) {
 		name          string
 		expectedError error
 		msg           *nametypes.MsgDeleteNameRequest
-		expectedEvent *nametypes.EventNameUnbound
+		expectedEvent proto.Message
 	}{
 		{
 			name:          "delete name record",
 			msg:           nametypes.NewMsgDeleteNameRequest(nametypes.NewNameRecord("example.name", addr1, false)),
 			expectedError: nil,
-			expectedEvent: &nametypes.EventNameUnbound{
-				Address: addr1.String(),
-				Name:    "example.name",
-			},
+			expectedEvent: nametypes.NewEventNameUnbound(addr1.String(), "example.name"),
 		},
 		{
 			name:          "create bad name record",
@@ -151,9 +159,8 @@ func TestDeleteName(t *testing.T) {
 				require.NoError(t, err)
 			}
 			if tc.expectedEvent != nil {
-				require.Equal(t, 1, len(response.GetEvents().ToABCIEvents()))
-				msg1, _ := sdk.ParseTypedEvent(response.GetEvents().ToABCIEvents()[0])
-				require.Equal(t, tc.expectedEvent, msg1)
+				result := containsMessage(response, tc.expectedEvent)
+				require.True(t, result, fmt.Sprintf("Expected typed event was not found: %v", tc.expectedEvent))
 			}
 		})
 	}

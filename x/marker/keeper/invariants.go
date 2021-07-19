@@ -33,7 +33,7 @@ func supplyInvariant(mk Keeper, bk bankkeeper.Keeper) sdk.Invariant {
 			// Invariant checks are only done against active markers.
 			if record.GetStatus() == types.StatusActive && record.HasFixedSupply() {
 				requiredSupply := record.GetSupply()
-				currentSupply := getCurrentSupply(ctx, requiredSupply.Denom, bk)
+				currentSupply := bk.GetSupply(ctx, requiredSupply.Denom)
 
 				// Just log the supply status
 				if !requiredSupply.IsEqual(currentSupply) {
@@ -57,15 +57,4 @@ func supplyInvariant(mk Keeper, bk bankkeeper.Keeper) sdk.Invariant {
 
 		return statusMessage, isBroken
 	}
-}
-
-// Iterator over all coins and find the any matching our target marker denom, add their amounts to the returned total.
-func getCurrentSupply(ctx sdk.Context, denom string, bk bankkeeper.Keeper) sdk.Coin {
-	sup := bk.GetSupply(ctx)
-	for _, coin := range sup.GetTotal() {
-		if coin.Denom == denom {
-			return coin
-		}
-	}
-	return sdk.NewInt64Coin(denom, 0)
 }

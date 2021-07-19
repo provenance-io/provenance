@@ -19,11 +19,17 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgAddAttributeRequest:
 			res, err := msgServer.AddAttribute(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
+		case *types.MsgUpdateAttributeRequest:
+			res, err := msgServer.UpdateAttribute(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 		case *types.MsgDeleteAttributeRequest:
 			res, err := msgServer.DeleteAttribute(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
+		case *types.MsgDeleteDistinctAttributeRequest:
+			res, err := msgServer.DeleteDistinctAttribute(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 		default:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized attribute message type: %T", msg)
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", types.ModuleName, msg)
 		}
 	}
 }

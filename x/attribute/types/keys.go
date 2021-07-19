@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
 const (
@@ -25,37 +26,25 @@ const (
 var (
 	// Legacy amino encoded objects use this key prefix
 	AttributeKeyPrefixAmino = []byte{0x00}
-	AttributeKeyPrefix      = []byte{0x01}
-	AttributeKeyLength      = 1 + sdk.AddrLen + 32 + 32 // prefix length + address + name-hash + value-hash
+	AttributeKeyPrefix      = []byte{0x02}
 )
 
 // AccountAttributeKey creates a key for an account attribute
 func AccountAttributeKey(acc sdk.AccAddress, attr Attribute) []byte {
-	key := append(AttributeKeyPrefix, acc.Bytes()...)
+	key := append(AttributeKeyPrefix, address.MustLengthPrefix(acc.Bytes())...)
 	key = append(key, GetNameKeyBytes(attr.Name)...)
 	return append(key, attr.Hash()...)
 }
 
 // AccountAttributesKeyPrefix returns a prefix key for all attributes on an account
 func AccountAttributesKeyPrefix(acc sdk.AccAddress) []byte {
-	return append(AttributeKeyPrefix, acc.Bytes()...)
+	return append(AttributeKeyPrefix, address.MustLengthPrefix(acc.Bytes())...)
 }
 
 // AccountAttributesNameKeyPrefix returns a prefix key for all attributes with a given name on an account
 func AccountAttributesNameKeyPrefix(acc sdk.AccAddress, attributeName string) []byte {
-	key := append(AttributeKeyPrefix, acc.Bytes()...)
+	key := append(AttributeKeyPrefix, address.MustLengthPrefix(acc.Bytes())...)
 	return append(key, GetNameKeyBytes(attributeName)...)
-}
-
-func SplitAccountAttributeKey(key []byte) (addr sdk.AccAddress, nameID []byte, valueID []byte) {
-	if len(key) != AttributeKeyLength {
-		panic(fmt.Sprintf("unexpected key length (%d ≠ %d)", len(key), AttributeKeyLength))
-	}
-	// first byte is key prefix for AttributeKey
-	addr = sdk.AccAddress(key[1 : sdk.AddrLen+1])
-	nameID = key[1+sdk.AddrLen : sdk.AddrLen+32]
-	valueID = key[1+sdk.AddrLen+32 : 1+sdk.AddrLen+64]
-	return
 }
 
 // GetNameKeyBytes returns a set of bytes that uniquely identifies the given name

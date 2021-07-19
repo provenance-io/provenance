@@ -100,7 +100,7 @@ func (msg MsgAddMarkerRequest) ValidateBasic() error {
 	}
 	// A proposed marker must have a manager assigned to allow updates to be made by the caller.
 	if len(msg.Manager) == 0 && msg.Status == StatusProposed {
-		return fmt.Errorf("marker manage cannot be empty when creating a proposed marker")
+		return fmt.Errorf("marker manager cannot be empty when creating a proposed marker")
 	}
 	if msg.Status != StatusFinalized && msg.Status != StatusProposed {
 		return fmt.Errorf("marker can only be created with a Proposed or Finalized status")

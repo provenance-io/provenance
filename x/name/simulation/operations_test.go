@@ -125,14 +125,14 @@ func (suite *SimTestSuite) TestSimulateMsgDeleteName() {
 func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
 	accounts := simtypes.RandomAccounts(r, n)
 
-	initAmt := sdk.TokensFromConsensusPower(200)
+	initAmt := sdk.TokensFromConsensusPower(200, sdk.DefaultPowerReduction)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
 
 	// add coins to the accounts
 	for _, account := range accounts {
 		acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, account.Address)
 		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
-		err := suite.app.BankKeeper.SetBalances(suite.ctx, account.Address, initCoins)
+		err := app.FundAccount(suite.app, suite.ctx, account.Address, initCoins)
 		suite.Require().NoError(err)
 	}
 

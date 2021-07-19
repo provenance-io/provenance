@@ -210,7 +210,7 @@ func InitTestnet(
 		genBalances = append(genBalances, banktypes.Balance{Address: addr.String(), Coins: coins.Sort()})
 		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 0, 0))
 
-		valTokens := sdk.TokensFromConsensusPower(100)
+		valTokens := sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction)
 		createValMsg, _ := stakingtypes.NewMsgCreateValidator(
 			sdk.ValAddress(addr),
 			valPubKeys[i],
@@ -291,11 +291,11 @@ func initGenFiles(
 	genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance,
 	genMarkers []markertypes.MarkerAccount, genFiles []string, numValidators int,
 ) error {
-	appGenState := mbm.DefaultGenesis(clientCtx.JSONMarshaler)
+	appGenState := mbm.DefaultGenesis(clientCtx.JSONCodec)
 
 	// set the accounts in the genesis state
 	var authGenState authtypes.GenesisState
-	clientCtx.JSONMarshaler.MustUnmarshalJSON(appGenState[authtypes.ModuleName], &authGenState)
+	clientCtx.JSONCodec.MustUnmarshalJSON(appGenState[authtypes.ModuleName], &authGenState)
 
 	accounts, err := authtypes.PackAccounts(genAccounts)
 	if err != nil {
@@ -303,14 +303,14 @@ func initGenFiles(
 	}
 
 	authGenState.Accounts = accounts
-	appGenState[authtypes.ModuleName] = clientCtx.JSONMarshaler.MustMarshalJSON(&authGenState)
+	appGenState[authtypes.ModuleName] = clientCtx.JSONCodec.MustMarshalJSON(&authGenState)
 
 	// PROVENANCE SPECIFIC CONFIG
 	// ----------------------------------------
 
 	// set the balances in the genesis state
 	var bankGenState banktypes.GenesisState
-	clientCtx.JSONMarshaler.MustUnmarshalJSON(appGenState[banktypes.ModuleName], &bankGenState)
+	clientCtx.JSONCodec.MustUnmarshalJSON(appGenState[banktypes.ModuleName], &bankGenState)
 
 	bankGenState.Balances = genBalances
 	nhashDenomUnit := banktypes.DenomUnit{
@@ -333,51 +333,51 @@ func initGenFiles(
 		DenomUnits:  denomUnits,
 	}
 	bankGenState.DenomMetadata = []banktypes.Metadata{denomMetadata}
-	appGenState[banktypes.ModuleName] = clientCtx.JSONMarshaler.MustMarshalJSON(&bankGenState)
+	appGenState[banktypes.ModuleName] = clientCtx.JSONCodec.MustMarshalJSON(&bankGenState)
 
 	// Set the staking denom
 	var stakeGenState stakingtypes.GenesisState
-	clientCtx.JSONMarshaler.MustUnmarshalJSON(appGenState[stakingtypes.ModuleName], &stakeGenState)
+	clientCtx.JSONCodec.MustUnmarshalJSON(appGenState[stakingtypes.ModuleName], &stakeGenState)
 	stakeGenState.Params.BondDenom = app.DefaultBondDenom
-	appGenState[stakingtypes.ModuleName] = clientCtx.JSONMarshaler.MustMarshalJSON(&stakeGenState)
+	appGenState[stakingtypes.ModuleName] = clientCtx.JSONCodec.MustMarshalJSON(&stakeGenState)
 
 	// Set the crisis denom
 	var crisisGenState crisistypes.GenesisState
-	clientCtx.JSONMarshaler.MustUnmarshalJSON(appGenState[crisistypes.ModuleName], &crisisGenState)
+	clientCtx.JSONCodec.MustUnmarshalJSON(appGenState[crisistypes.ModuleName], &crisisGenState)
 	crisisGenState.ConstantFee.Denom = app.DefaultBondDenom
-	appGenState[crisistypes.ModuleName] = clientCtx.JSONMarshaler.MustMarshalJSON(&crisisGenState)
+	appGenState[crisistypes.ModuleName] = clientCtx.JSONCodec.MustMarshalJSON(&crisisGenState)
 
 	// Set the gov depost denom
 	var govGenState govtypes.GenesisState
-	clientCtx.JSONMarshaler.MustUnmarshalJSON(appGenState[govtypes.ModuleName], &govGenState)
+	clientCtx.JSONCodec.MustUnmarshalJSON(appGenState[govtypes.ModuleName], &govGenState)
 	govGenState.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(app.DefaultBondDenom, sdk.NewInt(10000000)))
-	appGenState[govtypes.ModuleName] = clientCtx.JSONMarshaler.MustMarshalJSON(&govGenState)
+	appGenState[govtypes.ModuleName] = clientCtx.JSONCodec.MustMarshalJSON(&govGenState)
 
 	// Set the mint module parameters to stop inflation on the BondDenom.
 	var mintGenState minttypes.GenesisState
-	clientCtx.JSONMarshaler.MustUnmarshalJSON(appGenState[minttypes.ModuleName], &mintGenState)
+	clientCtx.JSONCodec.MustUnmarshalJSON(appGenState[minttypes.ModuleName], &mintGenState)
 	mintGenState.Params.MintDenom = app.DefaultBondDenom
 	mintGenState.Minter.AnnualProvisions = sdk.ZeroDec()
 	mintGenState.Minter.Inflation = sdk.ZeroDec()
 	mintGenState.Params.InflationMax = sdk.ZeroDec()
 	mintGenState.Params.InflationMin = sdk.ZeroDec()
-	appGenState[minttypes.ModuleName] = clientCtx.JSONMarshaler.MustMarshalJSON(&mintGenState)
+	appGenState[minttypes.ModuleName] = clientCtx.JSONCodec.MustMarshalJSON(&mintGenState)
 
 	// Set the root names
 	var nameGenState nametypes.GenesisState
-	clientCtx.JSONMarshaler.MustUnmarshalJSON(appGenState[nametypes.ModuleName], &nameGenState)
+	clientCtx.JSONCodec.MustUnmarshalJSON(appGenState[nametypes.ModuleName], &nameGenState)
 	// create the four root example domains
 	nameGenState.Bindings = append(nameGenState.Bindings, nametypes.NewNameRecord("pb", genAccounts[0].GetAddress(), true))
 	nameGenState.Bindings = append(nameGenState.Bindings, nametypes.NewNameRecord("io", genAccounts[0].GetAddress(), true))
 	nameGenState.Bindings = append(nameGenState.Bindings, nametypes.NewNameRecord("pio", genAccounts[0].GetAddress(), false))
 	nameGenState.Bindings = append(nameGenState.Bindings, nametypes.NewNameRecord("provenance", genAccounts[0].GetAddress(), false))
-	appGenState[nametypes.ModuleName] = clientCtx.JSONMarshaler.MustMarshalJSON(&nameGenState)
+	appGenState[nametypes.ModuleName] = clientCtx.JSONCodec.MustMarshalJSON(&nameGenState)
 
 	// set markers
 	var markerGenState markertypes.GenesisState
-	clientCtx.JSONMarshaler.MustUnmarshalJSON(appGenState[markertypes.ModuleName], &markerGenState)
+	clientCtx.JSONCodec.MustUnmarshalJSON(appGenState[markertypes.ModuleName], &markerGenState)
 	markerGenState.Markers = genMarkers
-	appGenState[markertypes.ModuleName] = clientCtx.JSONMarshaler.MustMarshalJSON(&markerGenState)
+	appGenState[markertypes.ModuleName] = clientCtx.JSONCodec.MustMarshalJSON(&markerGenState)
 
 	// END OF PROVENANCE SPECIFIC CONFIG
 	// --------------------------------------------
@@ -426,7 +426,7 @@ func collectGenFiles(
 			return err
 		}
 
-		nodeAppState, err := genutil.GenAppStateFromConfig(clientCtx.JSONMarshaler, clientCtx.TxConfig, nodeConfig, initCfg, *genDoc, genBalIterator)
+		nodeAppState, err := genutil.GenAppStateFromConfig(clientCtx.JSONCodec, clientCtx.TxConfig, nodeConfig, initCfg, *genDoc, genBalIterator)
 		if err != nil {
 			return err
 		}

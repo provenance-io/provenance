@@ -20,12 +20,11 @@ func accAddressFromBech32(t *testing.T, addrStr string) sdk.AccAddress {
 }
 
 func creator(t *testing.T) *authtypes.BaseAccount {
-	addr := accAddressFromBech32(t, "tp1xwtmpgsz89ft07p07kqtnzawynx2dt60qapdjv")
+	addr := accAddressFromBech32(t, "cosmos184kae0avnncs5vnfzfj4tertwppnp0pyn0yy03")
 	return authtypes.NewBaseAccount(addr, nil, 0, 0)
 }
 
 func TestNewEmptyMarkerValidate(t *testing.T) {
-	sdk.GetConfig().SetBech32PrefixForAccount("tp", "tppub")
 	creatorAddr := accAddressFromBech32(t, creator(t).Address)
 	m := NewEmptyMarkerAccount(
 		"test",
@@ -92,9 +91,10 @@ func TestNewEmptyMarkerValidate(t *testing.T) {
 }
 
 func TestNewMarkerValidate(t *testing.T) {
-	sdk.GetConfig().SetBech32PrefixForAccount("tp", "tppub")
 	manager := MustGetMarkerAddress("manager")
-	baseAcc := authtypes.NewBaseAccount(MustGetMarkerAddress("test"), nil, 0, 0)
+	mAddr := MustGetMarkerAddress("test")
+	fmt.Printf("Marker address: %s", mAddr)
+	baseAcc := authtypes.NewBaseAccount(mAddr, nil, 0, 0)
 	tests := []struct {
 		name   string
 		acc    authtypes.GenesisAccount

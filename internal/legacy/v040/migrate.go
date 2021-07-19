@@ -34,10 +34,10 @@ import (
 
 	captypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
-	ibcxfertypes "github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types"
-	ibchost "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
-	ibcexported "github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
-	ibccoretypes "github.com/cosmos/cosmos-sdk/x/ibc/core/types"
+	ibcxfertypes "github.com/cosmos/ibc-go/modules/apps/transfer/types"
+	ibchost "github.com/cosmos/ibc-go/modules/core/24-host"
+	ibcexported "github.com/cosmos/ibc-go/modules/core/exported"
+	ibccoretypes "github.com/cosmos/ibc-go/modules/core/types"
 
 	v039attribute "github.com/provenance-io/provenance/x/attribute/legacy/v039"
 	v040attribute "github.com/provenance-io/provenance/x/attribute/legacy/v040"
@@ -68,7 +68,7 @@ func Migrate(appState v040gentypes.AppMap, clientCtx client.Context) v040gentype
 	v036params.RegisterLegacyAminoCodec(v039Codec)
 	v038upgrade.RegisterLegacyAminoCodec(v039Codec)
 
-	v040Codec := clientCtx.JSONMarshaler
+	v040Codec := clientCtx.JSONCodec
 
 	if appState[v038bank.ModuleName] != nil {
 		// unmarshal relative source genesis application state

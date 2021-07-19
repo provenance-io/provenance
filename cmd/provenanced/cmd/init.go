@@ -88,7 +88,7 @@ func InitCmd(
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			cdc := clientCtx.JSONMarshaler
+			cdc := clientCtx.JSONCodec
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
@@ -112,7 +112,7 @@ func InitCmd(
 func Init(
 	cmd *cobra.Command,
 	config *tmconfig.Config,
-	cdc codec.JSONMarshaler,
+	cdc codec.JSONCodec,
 	mbm module.BasicManager,
 	chainID,
 	minGasPrices string,
@@ -150,7 +150,7 @@ func Init(
 	return nil
 }
 
-func initGenFile(cdc codec.JSONMarshaler, mbm module.BasicManager, moniker, chainID, nodeID string, genFile string) error {
+func initGenFile(cdc codec.JSONCodec, mbm module.BasicManager, moniker, chainID, nodeID string, genFile string) error {
 	appGenState := mbm.DefaultGenesis(cdc)
 	// Set the mint parameters
 	var mintGenState minttypes.GenesisState

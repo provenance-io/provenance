@@ -172,7 +172,7 @@ func (k msgServer) DeleteScopeOwner(
 		return nil, err
 	}
 
-	k.SetScope(ctx, existing)
+	k.SetScope(ctx, proposed)
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteScopeOwner, msg.GetSigners()))
 	return types.NewMsgDeleteScopeOwnerResponse(), nil
@@ -368,6 +368,78 @@ func (k msgServer) DeleteContractSpecification(
 	return types.NewMsgDeleteContractSpecificationResponse(), nil
 }
 
+func (k msgServer) AddContractSpecToScopeSpec(
+	goCtx context.Context,
+	msg *types.MsgAddContractSpecToScopeSpecRequest,
+) (*types.MsgAddContractSpecToScopeSpecResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "AddContractSpecToScopeSpec")
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	_, found := k.GetContractSpecification(ctx, msg.ContractSpecificationId)
+	if !found {
+		return nil, fmt.Errorf("contract specification not found with id %s", msg.ContractSpecificationId)
+	}
+
+	scopeSpec, found := k.GetScopeSpecification(ctx, msg.ScopeSpecificationId)
+	if !found {
+		return nil, fmt.Errorf("scope specification not found with id %s", msg.ScopeSpecificationId)
+	}
+	if err := k.ValidateAllOwnersAreSigners(scopeSpec.OwnerAddresses, msg.Signers); err != nil {
+		return nil, err
+	}
+
+	for _, cSpecID := range scopeSpec.ContractSpecIds {
+		if cSpecID.Equals(msg.ContractSpecificationId) {
+			return nil, fmt.Errorf("scope spec %s already contains contract spec %s", msg.ScopeSpecificationId, msg.ContractSpecificationId)
+		}
+	}
+
+	scopeSpec.ContractSpecIds = append(scopeSpec.ContractSpecIds, msg.ContractSpecificationId)
+	k.SetScopeSpecification(ctx, scopeSpec)
+
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_AddContractSpecToScopeSpec, msg.GetSigners()))
+	return types.NewMsgAddContractSpecToScopeSpecResponse(), nil
+}
+
+func (k msgServer) DeleteContractSpecFromScopeSpec(
+	goCtx context.Context,
+	msg *types.MsgDeleteContractSpecFromScopeSpecRequest,
+) (*types.MsgDeleteContractSpecFromScopeSpecResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteContractSpecFromScopeSpec")
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	_, found := k.GetContractSpecification(ctx, msg.ContractSpecificationId)
+	if !found {
+		return nil, fmt.Errorf("contract specification not found with id %s", msg.ContractSpecificationId)
+	}
+
+	scopeSpec, found := k.GetScopeSpecification(ctx, msg.ScopeSpecificationId)
+	if !found {
+		return nil, fmt.Errorf("scope specification not found with id %s", msg.ScopeSpecificationId)
+	}
+	if err := k.ValidateAllOwnersAreSigners(scopeSpec.OwnerAddresses, msg.Signers); err != nil {
+		return nil, err
+	}
+
+	updateContractSpecIds := []types.MetadataAddress{}
+	found = false
+	for _, cSpecID := range scopeSpec.ContractSpecIds {
+		if !cSpecID.Equals(msg.ContractSpecificationId) {
+			updateContractSpecIds = append(updateContractSpecIds, cSpecID)
+		} else {
+			found = true
+		}
+	}
+	if !found {
+		return nil, fmt.Errorf("contract specification %s not found on scope specification id %s", msg.ContractSpecificationId, msg.ScopeSpecificationId)
+	}
+
+	scopeSpec.ContractSpecIds = updateContractSpecIds
+	k.SetScopeSpecification(ctx, scopeSpec)
+
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteContractSpecFromScopeSpec, msg.GetSigners()))
+
+	return types.NewMsgDeleteContractSpecFromScopeSpecResponse(), nil
+}
+
 func (k msgServer) WriteRecordSpecification(
 	goCtx context.Context,
 	msg *types.MsgWriteRecordSpecificationRequest,
@@ -547,15 +619,18 @@ func (k msgServer) BindOSLocator(
 	}
 
 	// already valid address, checked in ValidateBasic
-	address, _ := sdk.AccAddressFromBech32(msg.Locator.Owner)
-
-	if k.Keeper.OSLocatorExists(ctx, address) {
+	ownerAddress, _ := sdk.AccAddressFromBech32(msg.Locator.Owner)
+	encryptionKey := sdk.AccAddress{}
+	if strings.TrimSpace(msg.Locator.EncryptionKey) != "" {
+		encryptionKey, _ = sdk.AccAddressFromBech32(msg.Locator.EncryptionKey)
+	}
+	if k.Keeper.OSLocatorExists(ctx, ownerAddress) {
 		ctx.Logger().Error("Address already bound to an URI", "owner", msg.Locator.Owner)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, types.ErrOSLocatorAlreadyBound.Error())
 	}
 
 	// Bind owner to URI
-	if err := k.Keeper.SetOSLocator(ctx, address, msg.Locator.LocatorUri); err != nil {
+	if err := k.Keeper.SetOSLocator(ctx, ownerAddress, encryptionKey, msg.Locator.LocatorUri); err != nil {
 		ctx.Logger().Error("unable to bind name", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
@@ -611,8 +686,12 @@ func (k msgServer) ModifyOSLocator(
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	// already valid address, checked in ValidateBasic
+	// already valid address(es), checked in ValidateBasic
 	ownerAddr, _ := sdk.AccAddressFromBech32(msg.Locator.Owner)
+	encryptionKey := sdk.AccAddress{}
+	if strings.TrimSpace(msg.Locator.EncryptionKey) != "" {
+		encryptionKey, _ = sdk.AccAddressFromBech32(msg.Locator.EncryptionKey)
+	}
 
 	if !k.Keeper.OSLocatorExists(ctx, ownerAddr) {
 		ctx.Logger().Error("Address not already bound to an URI", "owner", msg.Locator.Owner)
@@ -624,7 +703,7 @@ func (k msgServer) ModifyOSLocator(
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "msg sender cannot delete os locator.")
 	}
 	// Modify
-	if err := k.Keeper.ModifyOSLocator(ctx, ownerAddr, msg.Locator.LocatorUri); err != nil {
+	if err := k.Keeper.ModifyOSLocator(ctx, ownerAddr, encryptionKey, msg.Locator.LocatorUri); err != nil {
 		ctx.Logger().Error("error deleting name", "err", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}

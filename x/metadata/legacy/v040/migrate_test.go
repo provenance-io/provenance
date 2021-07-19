@@ -221,13 +221,13 @@ func TestMigrate(t *testing.T) {
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).
 		WithLegacyAmino(encodingConfig.Amino).
-		WithJSONMarshaler(encodingConfig.Marshaler)
+		WithJSONCodec(encodingConfig.Marshaler)
 
 	var v39ContractSpec v039metadata.ContractSpec
-	clientCtx.JSONMarshaler.UnmarshalJSON([]byte(exampleV39Spec), &v39ContractSpec)
+	clientCtx.JSONCodec.UnmarshalJSON([]byte(exampleV39Spec), &v39ContractSpec)
 
 	var v39Scope v039metadata.Scope
-	clientCtx.JSONMarshaler.UnmarshalJSON([]byte(exampleV39Scope), &v39Scope)
+	clientCtx.JSONCodec.UnmarshalJSON([]byte(exampleV39Scope), &v39Scope)
 
 	gs := v039metadata.GenesisState{
 		ScopeRecords:   []v039metadata.Scope{v39Scope},
@@ -367,7 +367,7 @@ func TestMigrate(t *testing.T) {
     }
   ]
 }`
-	bz, err := clientCtx.JSONMarshaler.MarshalJSON(migrated)
+	bz, err := clientCtx.JSONCodec.MarshalJSON(migrated)
 	require.NoError(t, err)
 
 	// Indent the JSON bz correctly.

@@ -33454,7 +33454,7 @@ paths:
               QueryScanResponse is the response type for the Query/Attribute
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -33534,6 +33534,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/provenance/attribute/v1/attribute/{account}/{name}':
@@ -33611,7 +33612,7 @@ paths:
               QueryAttributeResponse is the response type for the
               Query/Attribute method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -33689,6 +33690,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/provenance/attribute/v1/attributes/{account}':
@@ -33766,7 +33768,7 @@ paths:
               QueryAttributesResponse is the response type for the
               Query/Attribute method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -33839,6 +33841,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   /provenance/attribute/v1/params:
@@ -33863,7 +33866,7 @@ paths:
               QueryParamsResponse is the response type for the Query/Params RPC
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -33943,7 +33946,7 @@ paths:
               QueryAccessResponse is the response type for the
               Query/MarkerAccess method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -34348,7 +34351,7 @@ paths:
               QueryAllMarkersResponse is the response type for the
               Query/AllMarkers method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -34605,6 +34608,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/provenance/marker/v1/detail/{id}':
@@ -34792,7 +34796,7 @@ paths:
               QueryMarkerResponse is the response type for the Query/Marker
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -35019,7 +35023,7 @@ paths:
               QueryEscrowResponse is the response type for the
               Query/MarkerEscrow method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -35286,7 +35290,7 @@ paths:
               QueryDenomMetadataResponse is the response type for the
               Query/DenomMetadata
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -35543,7 +35547,7 @@ paths:
               QueryHoldingResponse is the response type for the
               Query/MarkerHolders method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -35783,6 +35787,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   /provenance/marker/v1/params:
@@ -35807,6 +35812,7 @@ paths:
                       with
                   enable_governance:
                     type: boolean
+                    format: boolean
                     description: >-
                       indicates if governance based controls of markers is
                       allowed.
@@ -35822,7 +35828,7 @@ paths:
               QueryParamsResponse is the response type for the Query/Params RPC
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -36041,7 +36047,7 @@ paths:
               QuerySupplyResponse is the response type for the
               Query/MarkerSupply method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -36598,6 +36604,7 @@ paths:
                       recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44.
                   include_record_specs:
                     type: boolean
+                    format: boolean
                     description: >-
                       include_record_specs is a flag for whether or not the
                       record specifications in this contract specification
@@ -36608,7 +36615,7 @@ paths:
               ContractSpecificationResponse is the response type for the
               Query/ContractSpecification RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -36653,6 +36660,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/provenance/metadata/v1/contractspec/{specification_id}/recordspec/{name}':
@@ -36877,7 +36885,7 @@ paths:
               RecordSpecificationResponse is the response type for the
               Query/RecordSpecification RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -37172,7 +37180,7 @@ paths:
 
               Query/RecordSpecificationsForContractSpecification RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -37393,6 +37401,7 @@ paths:
                           each app.
                       count_total:
                         type: boolean
+                        format: boolean
                         description: >-
                           count_total is set to true  to indicate that the
                           result set should include
@@ -37433,7 +37442,7 @@ paths:
               ContractSpecificationsAllResponse is the response type for the
               Query/ContractSpecificationsAll RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -37501,6 +37510,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   /provenance/metadata/v1/locator/params:
@@ -37529,7 +37539,7 @@ paths:
               OSLocatorParamsResponse is the response type for the
               Query/OSLocatorParams RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -37575,6 +37585,9 @@ paths:
                     locator_uri:
                       type: string
                       title: locator endpoint uri
+                    encryption_key:
+                      type: string
+                      title: owners encryption key address
                   description: >-
                     Defines an Locator object stored on chain, which represents
                     a owner( blockchain address) associated with a endpoint
@@ -37590,7 +37603,7 @@ paths:
               OSLocatorsByScopeResponse is the response type for the
               Query/OSLocatorsByScope RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -37641,6 +37654,9 @@ paths:
                     locator_uri:
                       type: string
                       title: locator endpoint uri
+                    encryption_key:
+                      type: string
+                      title: owners encryption key address
                   description: >-
                     Defines an Locator object stored on chain, which represents
                     a owner( blockchain address) associated with a endpoint
@@ -37691,6 +37707,7 @@ paths:
                           each app.
                       count_total:
                         type: boolean
+                        format: boolean
                         description: >-
                           count_total is set to true  to indicate that the
                           result set should include
@@ -37731,7 +37748,7 @@ paths:
               OSLocatorsByURIResponse is the response type for the
               Query/OSLocatorsByURI RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -37803,6 +37820,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/provenance/metadata/v1/locator/{owner}':
@@ -37824,6 +37842,9 @@ paths:
                   locator_uri:
                     type: string
                     title: locator endpoint uri
+                  encryption_key:
+                    type: string
+                    title: owners encryption key address
                 description: >-
                   Defines an Locator object stored on chain, which represents a
                   owner( blockchain address) associated with a endpoint
@@ -37839,7 +37860,7 @@ paths:
               OSLocatorResponse is the response type for the Query/OSLocator RPC
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -37888,6 +37909,9 @@ paths:
                     locator_uri:
                       type: string
                       title: locator endpoint uri
+                    encryption_key:
+                      type: string
+                      title: owners encryption key address
                   description: >-
                     Defines an Locator object stored on chain, which represents
                     a owner( blockchain address) associated with a endpoint
@@ -37936,6 +37960,7 @@ paths:
                           each app.
                       count_total:
                         type: boolean
+                        format: boolean
                         description: >-
                           count_total is set to true  to indicate that the
                           result set should include
@@ -37976,7 +38001,7 @@ paths:
               OSAllLocatorsResponse is the response type for the
               Query/OSAllLocators RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -38044,6 +38069,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/provenance/metadata/v1/ownership/{address}':
@@ -38108,6 +38134,7 @@ paths:
                           each app.
                       count_total:
                         type: boolean
+                        format: boolean
                         description: >-
                           count_total is set to true  to indicate that the
                           result set should include
@@ -38148,7 +38175,7 @@ paths:
               OwnershipResponse is the response type for the Query/Ownership RPC
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -38220,6 +38247,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   /provenance/metadata/v1/params:
@@ -38242,7 +38270,7 @@ paths:
               QueryParamsResponse is the response type for the Query/Params RPC
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -38999,11 +39027,13 @@ paths:
                     title: name is the name of the record to look for
                   include_scope:
                     type: boolean
+                    format: boolean
                     description: >-
                       include_scope is a flag for whether or not the scope
                       containing these records should be included.
                   include_sessions:
                     type: boolean
+                    format: boolean
                     description: >-
                       include_sessions is a flag for whether or not the sessions
                       containing these records should be included.
@@ -39011,7 +39041,7 @@ paths:
               RecordsResponse is the response type for the Query/Records RPC
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -39074,6 +39104,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
         - name: include_sessions
           description: >-
             include_sessions is a flag for whether or not the sessions
@@ -39081,6 +39112,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/provenance/metadata/v1/record/{record_addr}/scope':
@@ -39801,17 +39833,19 @@ paths:
                       record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3.
                   include_sessions:
                     type: boolean
+                    format: boolean
                     description: >-
                       include_sessions is a flag for whether or not the sessions
                       in the scope should be included.
                   include_records:
                     type: boolean
+                    format: boolean
                     description: >-
                       include_records is a flag for whether or not the records
                       in the scope should be included.
             description: ScopeResponse is the response type for the Query/Scope RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -39863,6 +39897,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
         - name: include_records
           description: >-
             include_records is a flag for whether or not the records in the
@@ -39870,6 +39905,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   /provenance/metadata/v1/records/all:
@@ -40198,6 +40234,7 @@ paths:
                           each app.
                       count_total:
                         type: boolean
+                        format: boolean
                         description: >-
                           count_total is set to true  to indicate that the
                           result set should include
@@ -40238,7 +40275,7 @@ paths:
               RecordsAllResponse is the response type for the Query/RecordsAll
               RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -40306,6 +40343,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/provenance/metadata/v1/recordspec/{specification_id}':
@@ -40530,7 +40568,7 @@ paths:
               RecordSpecificationResponse is the response type for the
               Query/RecordSpecification RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -40817,6 +40855,7 @@ paths:
                           each app.
                       count_total:
                         type: boolean
+                        format: boolean
                         description: >-
                           count_total is set to true  to indicate that the
                           result set should include
@@ -40857,7 +40896,7 @@ paths:
               RecordSpecificationsAllResponse is the response type for the
               Query/RecordSpecificationsAll RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -40925,6 +40964,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/provenance/metadata/v1/scope/{scope_id}':
@@ -41645,17 +41685,19 @@ paths:
                       record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3.
                   include_sessions:
                     type: boolean
+                    format: boolean
                     description: >-
                       include_sessions is a flag for whether or not the sessions
                       in the scope should be included.
                   include_records:
                     type: boolean
+                    format: boolean
                     description: >-
                       include_records is a flag for whether or not the records
                       in the scope should be included.
             description: ScopeResponse is the response type for the Query/Scope RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -41707,6 +41749,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
         - name: include_records
           description: >-
             include_records is a flag for whether or not the records in the
@@ -41714,6 +41757,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/provenance/metadata/v1/scope/{scope_id}/record/{name}':
@@ -42450,11 +42494,13 @@ paths:
                     title: name is the name of the record to look for
                   include_scope:
                     type: boolean
+                    format: boolean
                     description: >-
                       include_scope is a flag for whether or not the scope
                       containing these records should be included.
                   include_sessions:
                     type: boolean
+                    format: boolean
                     description: >-
                       include_sessions is a flag for whether or not the sessions
                       containing these records should be included.
@@ -42462,7 +42508,7 @@ paths:
               RecordsResponse is the response type for the Query/Records RPC
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -42525,6 +42571,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
         - name: include_sessions
           description: >-
             include_sessions is a flag for whether or not the sessions
@@ -42532,6 +42579,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/provenance/metadata/v1/scope/{scope_id}/records':
@@ -43268,11 +43316,13 @@ paths:
                     title: name is the name of the record to look for
                   include_scope:
                     type: boolean
+                    format: boolean
                     description: >-
                       include_scope is a flag for whether or not the scope
                       containing these records should be included.
                   include_sessions:
                     type: boolean
+                    format: boolean
                     description: >-
                       include_sessions is a flag for whether or not the sessions
                       containing these records should be included.
@@ -43280,7 +43330,7 @@ paths:
               RecordsResponse is the response type for the Query/Records RPC
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -43343,6 +43393,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
         - name: include_sessions
           description: >-
             include_sessions is a flag for whether or not the sessions
@@ -43350,6 +43401,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/provenance/metadata/v1/scope/{scope_id}/session/{session_id}':
@@ -44057,11 +44109,13 @@ paths:
                       provided.
                   include_scope:
                     type: boolean
+                    format: boolean
                     description: >-
                       include_scope is a flag for whether or not the scope
                       containing these sessions should be included.
                   include_records:
                     type: boolean
+                    format: boolean
                     description: >-
                       include_records is a flag for whether or not the records
                       in these sessions should be included.
@@ -44069,7 +44123,7 @@ paths:
               SessionsResponse is the response type for the Query/Sessions RPC
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -44120,6 +44174,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
         - name: include_records
           description: >-
             include_records is a flag for whether or not the records in these
@@ -44127,6 +44182,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/provenance/metadata/v1/scope/{scope_id}/session/{session_id}/record/{name}':
@@ -44863,11 +44919,13 @@ paths:
                     title: name is the name of the record to look for
                   include_scope:
                     type: boolean
+                    format: boolean
                     description: >-
                       include_scope is a flag for whether or not the scope
                       containing these records should be included.
                   include_sessions:
                     type: boolean
+                    format: boolean
                     description: >-
                       include_sessions is a flag for whether or not the sessions
                       containing these records should be included.
@@ -44875,7 +44933,7 @@ paths:
               RecordsResponse is the response type for the Query/Records RPC
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -44938,6 +44996,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
         - name: include_sessions
           description: >-
             include_sessions is a flag for whether or not the sessions
@@ -44945,6 +45004,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/provenance/metadata/v1/scope/{scope_id}/session/{session_id}/records':
@@ -45681,11 +45741,13 @@ paths:
                     title: name is the name of the record to look for
                   include_scope:
                     type: boolean
+                    format: boolean
                     description: >-
                       include_scope is a flag for whether or not the scope
                       containing these records should be included.
                   include_sessions:
                     type: boolean
+                    format: boolean
                     description: >-
                       include_sessions is a flag for whether or not the sessions
                       containing these records should be included.
@@ -45693,7 +45755,7 @@ paths:
               RecordsResponse is the response type for the Query/Records RPC
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -45756,6 +45818,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
         - name: include_sessions
           description: >-
             include_sessions is a flag for whether or not the sessions
@@ -45763,6 +45826,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/provenance/metadata/v1/scope/{scope_id}/sessions':
@@ -46470,11 +46534,13 @@ paths:
                       provided.
                   include_scope:
                     type: boolean
+                    format: boolean
                     description: >-
                       include_scope is a flag for whether or not the scope
                       containing these sessions should be included.
                   include_records:
                     type: boolean
+                    format: boolean
                     description: >-
                       include_records is a flag for whether or not the records
                       in these sessions should be included.
@@ -46482,7 +46548,7 @@ paths:
               SessionsResponse is the response type for the Query/Sessions RPC
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -46533,6 +46599,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
         - name: include_records
           description: >-
             include_records is a flag for whether or not the records in these
@@ -46540,6 +46607,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   /provenance/metadata/v1/scopes/all:
@@ -46748,6 +46816,7 @@ paths:
                           each app.
                       count_total:
                         type: boolean
+                        format: boolean
                         description: >-
                           count_total is set to true  to indicate that the
                           result set should include
@@ -46788,7 +46857,7 @@ paths:
               ScopesAllResponse is the response type for the Query/ScopesAll RPC
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -46856,6 +46925,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/provenance/metadata/v1/scopespec/{specification_id}':
@@ -47004,7 +47074,7 @@ paths:
               ScopeSpecificationResponse is the response type for the
               Query/ScopeSpecification RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -47208,6 +47278,7 @@ paths:
                           each app.
                       count_total:
                         type: boolean
+                        format: boolean
                         description: >-
                           count_total is set to true  to indicate that the
                           result set should include
@@ -47248,7 +47319,7 @@ paths:
               ScopeSpecificationsAllResponse is the response type for the
               Query/ScopeSpecificationsAll RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -47316,6 +47387,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/provenance/metadata/v1/session/{session_addr}/scope':
@@ -48036,17 +48108,19 @@ paths:
                       record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3.
                   include_sessions:
                     type: boolean
+                    format: boolean
                     description: >-
                       include_sessions is a flag for whether or not the sessions
                       in the scope should be included.
                   include_records:
                     type: boolean
+                    format: boolean
                     description: >-
                       include_records is a flag for whether or not the records
                       in the scope should be included.
             description: ScopeResponse is the response type for the Query/Scope RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -48098,6 +48172,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
         - name: include_records
           description: >-
             include_records is a flag for whether or not the records in the
@@ -48105,6 +48180,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/provenance/metadata/v1/session/{session_id}':
@@ -48812,11 +48888,13 @@ paths:
                       provided.
                   include_scope:
                     type: boolean
+                    format: boolean
                     description: >-
                       include_scope is a flag for whether or not the scope
                       containing these sessions should be included.
                   include_records:
                     type: boolean
+                    format: boolean
                     description: >-
                       include_records is a flag for whether or not the records
                       in these sessions should be included.
@@ -48824,7 +48902,7 @@ paths:
               SessionsResponse is the response type for the Query/Sessions RPC
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -48875,6 +48953,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
         - name: include_records
           description: >-
             include_records is a flag for whether or not the records in these
@@ -48882,6 +48961,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/provenance/metadata/v1/session/{session_id}/record/{name}':
@@ -49618,11 +49698,13 @@ paths:
                     title: name is the name of the record to look for
                   include_scope:
                     type: boolean
+                    format: boolean
                     description: >-
                       include_scope is a flag for whether or not the scope
                       containing these records should be included.
                   include_sessions:
                     type: boolean
+                    format: boolean
                     description: >-
                       include_sessions is a flag for whether or not the sessions
                       containing these records should be included.
@@ -49630,7 +49712,7 @@ paths:
               RecordsResponse is the response type for the Query/Records RPC
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -49693,6 +49775,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
         - name: include_sessions
           description: >-
             include_sessions is a flag for whether or not the sessions
@@ -49700,6 +49783,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/provenance/metadata/v1/session/{session_id}/records':
@@ -50436,11 +50520,13 @@ paths:
                     title: name is the name of the record to look for
                   include_scope:
                     type: boolean
+                    format: boolean
                     description: >-
                       include_scope is a flag for whether or not the scope
                       containing these records should be included.
                   include_sessions:
                     type: boolean
+                    format: boolean
                     description: >-
                       include_sessions is a flag for whether or not the sessions
                       containing these records should be included.
@@ -50448,7 +50534,7 @@ paths:
               RecordsResponse is the response type for the Query/Records RPC
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -50511,6 +50597,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
         - name: include_sessions
           description: >-
             include_sessions is a flag for whether or not the sessions
@@ -50518,6 +50605,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   /provenance/metadata/v1/sessions/all:
@@ -50793,6 +50881,7 @@ paths:
                           each app.
                       count_total:
                         type: boolean
+                        format: boolean
                         description: >-
                           count_total is set to true  to indicate that the
                           result set should include
@@ -50833,7 +50922,7 @@ paths:
               SessionsAllResponse is the response type for the Query/SessionsAll
               RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -50901,6 +50990,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/provenance/metadata/v1/valueownership/{address}':
@@ -50965,6 +51055,7 @@ paths:
                           each app.
                       count_total:
                         type: boolean
+                        format: boolean
                         description: >-
                           count_total is set to true  to indicate that the
                           result set should include
@@ -51005,7 +51096,7 @@ paths:
               ValueOwnershipResponse is the response type for the
               Query/ValueOwnership RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -51077,6 +51168,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/provenance/name/v1/lookup/{address}':
@@ -51116,7 +51208,7 @@ paths:
               QueryReverseLookupResponse is the response type for the
               Query/Resolve method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -51189,6 +51281,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   /provenance/name/v1/params:
@@ -51221,12 +51314,13 @@ paths:
                       `foo.bar.baz` would be 3
                   allow_unrestricted_names:
                     type: boolean
+                    format: boolean
                     title: determines if unrestricted name keys are allowed or not
             description: >-
               QueryParamsResponse is the response type for the Query/Params RPC
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -51266,7 +51360,7 @@ paths:
               QueryResolveResponse is the response type for the Query/Resolve
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -53428,6 +53522,7 @@ definitions:
           key
 
           is set.
+        format: boolean
     description: |-
       message SomeRequest {
                Foo some_parameter = 1;
@@ -71789,6 +71884,12 @@ definitions:
   provenance.attribute.v1.MsgDeleteAttributeResponse:
     type: object
     description: MsgDeleteAttributeResponse defines the Msg/Vote response type.
+  provenance.attribute.v1.MsgDeleteDistinctAttributeResponse:
+    type: object
+    description: MsgDeleteDistinctAttributeResponse defines the Msg/Vote response type.
+  provenance.attribute.v1.MsgUpdateAttributeResponse:
+    type: object
+    description: MsgUpdateAttributeResponse defines the Msg/Vote response type.
   provenance.marker.v1.Access:
     type: string
     enum:
@@ -71908,6 +72009,7 @@ definitions:
         title: maximum amount of supply to allow a marker to be created with
       enable_governance:
         type: boolean
+        format: boolean
         description: indicates if governance based controls of markers is allowed.
       unrestricted_denom_regex:
         type: string
@@ -72459,6 +72561,7 @@ definitions:
             title: maximum amount of supply to allow a marker to be created with
           enable_governance:
             type: boolean
+            format: boolean
             description: indicates if governance based controls of markers is allowed.
           unrestricted_denom_regex:
             type: string
@@ -72686,6 +72789,7 @@ definitions:
           recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44.
       include_record_specs:
         type: boolean
+        format: boolean
         description: >-
           include_record_specs is a flag for whether or not the record
           specifications in this contract specification should
@@ -73011,6 +73115,7 @@ definitions:
               recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44.
           include_record_specs:
             type: boolean
+            format: boolean
             description: >-
               include_record_specs is a flag for whether or not the record
               specifications in this contract specification should
@@ -73169,6 +73274,7 @@ definitions:
               If left empty it will default to a value to be set by each app.
           count_total:
             type: boolean
+            format: boolean
             description: >-
               count_total is set to true  to indicate that the result set should
               include
@@ -73351,6 +73457,7 @@ definitions:
                   app.
               count_total:
                 type: boolean
+                format: boolean
                 description: >-
                   count_total is set to true  to indicate that the result set
                   should include
@@ -73478,6 +73585,7 @@ definitions:
               If left empty it will default to a value to be set by each app.
           count_total:
             type: boolean
+            format: boolean
             description: >-
               count_total is set to true  to indicate that the result set should
               include
@@ -73509,6 +73617,9 @@ definitions:
             locator_uri:
               type: string
               title: locator endpoint uri
+            encryption_key:
+              type: string
+              title: owners encryption key address
           description: >-
             Defines an Locator object stored on chain, which represents a owner(
             blockchain address) associated with a endpoint
@@ -73554,6 +73665,7 @@ definitions:
                   app.
               count_total:
                 type: boolean
+                format: boolean
                 description: >-
                   count_total is set to true  to indicate that the result set
                   should include
@@ -73637,6 +73749,9 @@ definitions:
           locator_uri:
             type: string
             title: locator endpoint uri
+          encryption_key:
+            type: string
+            title: owners encryption key address
         description: >-
           Defines an Locator object stored on chain, which represents a owner(
           blockchain address) associated with a endpoint
@@ -73671,6 +73786,9 @@ definitions:
             locator_uri:
               type: string
               title: locator endpoint uri
+            encryption_key:
+              type: string
+              title: owners encryption key address
           description: >-
             Defines an Locator object stored on chain, which represents a owner(
             blockchain address) associated with a endpoint
@@ -73722,6 +73840,7 @@ definitions:
               If left empty it will default to a value to be set by each app.
           count_total:
             type: boolean
+            format: boolean
             description: >-
               count_total is set to true  to indicate that the result set should
               include
@@ -73753,6 +73872,9 @@ definitions:
             locator_uri:
               type: string
               title: locator endpoint uri
+            encryption_key:
+              type: string
+              title: owners encryption key address
           description: >-
             Defines an Locator object stored on chain, which represents a owner(
             blockchain address) associated with a endpoint
@@ -73800,6 +73922,7 @@ definitions:
                   app.
               count_total:
                 type: boolean
+                format: boolean
                 description: >-
                   count_total is set to true  to indicate that the result set
                   should include
@@ -73846,6 +73969,9 @@ definitions:
       locator_uri:
         type: string
         title: locator endpoint uri
+      encryption_key:
+        type: string
+        title: owners encryption key address
     description: >-
       Defines an Locator object stored on chain, which represents a owner(
       blockchain address) associated with a endpoint
@@ -73888,6 +74014,7 @@ definitions:
               If left empty it will default to a value to be set by each app.
           count_total:
             type: boolean
+            format: boolean
             description: >-
               count_total is set to true  to indicate that the result set should
               include
@@ -73953,6 +74080,7 @@ definitions:
                   app.
               count_total:
                 type: boolean
+                format: boolean
                 description: >-
                   count_total is set to true  to indicate that the result set
                   should include
@@ -74903,6 +75031,7 @@ definitions:
               If left empty it will default to a value to be set by each app.
           count_total:
             type: boolean
+            format: boolean
             description: >-
               count_total is set to true  to indicate that the result set should
               include
@@ -75140,6 +75269,7 @@ definitions:
                   app.
               count_total:
                 type: boolean
+                format: boolean
                 description: >-
                   count_total is set to true  to indicate that the result set
                   should include
@@ -75682,6 +75812,7 @@ definitions:
               If left empty it will default to a value to be set by each app.
           count_total:
             type: boolean
+            format: boolean
             description: >-
               count_total is set to true  to indicate that the result set should
               include
@@ -75998,6 +76129,7 @@ definitions:
                   app.
               count_total:
                 type: boolean
+                format: boolean
                 description: >-
                   count_total is set to true  to indicate that the result set
                   should include
@@ -76065,11 +76197,13 @@ definitions:
         title: name is the name of the record to look for
       include_scope:
         type: boolean
+        format: boolean
         description: >-
           include_scope is a flag for whether or not the scope containing these
           records should be included.
       include_sessions:
         type: boolean
+        format: boolean
         description: >-
           include_sessions is a flag for whether or not the sessions containing
           these records should be included.
@@ -76712,11 +76846,13 @@ definitions:
             title: name is the name of the record to look for
           include_scope:
             type: boolean
+            format: boolean
             description: >-
               include_scope is a flag for whether or not the scope containing
               these records should be included.
           include_sessions:
             type: boolean
+            format: boolean
             description: >-
               include_sessions is a flag for whether or not the sessions
               containing these records should be included.
@@ -76855,11 +76991,13 @@ definitions:
           record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3.
       include_sessions:
         type: boolean
+        format: boolean
         description: >-
           include_sessions is a flag for whether or not the sessions in the
           scope should be included.
       include_records:
         type: boolean
+        format: boolean
         description: >-
           include_records is a flag for whether or not the records in the scope
           should be included.
@@ -77494,11 +77632,13 @@ definitions:
               record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3.
           include_sessions:
             type: boolean
+            format: boolean
             description: >-
               include_sessions is a flag for whether or not the sessions in the
               scope should be included.
           include_records:
             type: boolean
+            format: boolean
             description: >-
               include_records is a flag for whether or not the records in the
               scope should be included.
@@ -77878,6 +78018,7 @@ definitions:
               If left empty it will default to a value to be set by each app.
           count_total:
             type: boolean
+            format: boolean
             description: >-
               count_total is set to true  to indicate that the result set should
               include
@@ -78053,6 +78194,7 @@ definitions:
                   app.
               count_total:
                 type: boolean
+                format: boolean
                 description: >-
                   count_total is set to true  to indicate that the result set
                   should include
@@ -78254,6 +78396,7 @@ definitions:
               If left empty it will default to a value to be set by each app.
           count_total:
             type: boolean
+            format: boolean
             description: >-
               count_total is set to true  to indicate that the result set should
               include
@@ -78456,6 +78599,7 @@ definitions:
                   app.
               count_total:
                 type: boolean
+                format: boolean
                 description: >-
                   count_total is set to true  to indicate that the result set
                   should include
@@ -78869,6 +79013,7 @@ definitions:
               If left empty it will default to a value to be set by each app.
           count_total:
             type: boolean
+            format: boolean
             description: >-
               count_total is set to true  to indicate that the result set should
               include
@@ -79134,6 +79279,7 @@ definitions:
                   app.
               count_total:
                 type: boolean
+                format: boolean
                 description: >-
                   count_total is set to true  to indicate that the result set
                   should include
@@ -79193,11 +79339,13 @@ definitions:
           provided.
       include_scope:
         type: boolean
+        format: boolean
         description: >-
           include_scope is a flag for whether or not the scope containing these
           sessions should be included.
       include_records:
         type: boolean
+        format: boolean
         description: >-
           include_records is a flag for whether or not the records in these
           sessions should be included.
@@ -79832,11 +79980,13 @@ definitions:
               provided.
           include_scope:
             type: boolean
+            format: boolean
             description: >-
               include_scope is a flag for whether or not the scope containing
               these sessions should be included.
           include_records:
             type: boolean
+            format: boolean
             description: >-
               include_records is a flag for whether or not the records in these
               sessions should be included.
@@ -79878,6 +80028,7 @@ definitions:
               If left empty it will default to a value to be set by each app.
           count_total:
             type: boolean
+            format: boolean
             description: >-
               count_total is set to true  to indicate that the result set should
               include
@@ -79945,6 +80096,7 @@ definitions:
                   app.
               count_total:
                 type: boolean
+                format: boolean
                 description: >-
                   count_total is set to true  to indicate that the result set
                   should include
@@ -79982,6 +80134,11 @@ definitions:
     description: >-
       ValueOwnershipResponse is the response type for the Query/ValueOwnership
       RPC method.
+  provenance.metadata.v1.MsgAddContractSpecToScopeSpecResponse:
+    type: object
+    description: >-
+      MsgAddContractSpecToScopeSpecResponse is the response type for the
+      Msg/AddContractSpecToScopeSpec RPC method.
   provenance.metadata.v1.MsgAddScopeDataAccessResponse:
     type: object
     title: >-
@@ -80004,6 +80161,9 @@ definitions:
           locator_uri:
             type: string
             title: locator endpoint uri
+          encryption_key:
+            type: string
+            title: owners encryption key address
         description: >-
           Defines an Locator object stored on chain, which represents a owner(
           blockchain address) associated with a endpoint
@@ -80012,6 +80172,13 @@ definitions:
     description: >-
       MsgBindOSLocatorResponse is the response type for the Msg/BindOSLocator
       RPC method.
+  provenance.metadata.v1.MsgDeleteContractSpecFromScopeSpecResponse:
+    type: object
+    description: >-
+      MsgDeleteContractSpecFromScopeSpecResponse is the response type for the
+      Msg/DeleteContractSpecFromScopeSpec RPC
+
+      method.
   provenance.metadata.v1.MsgDeleteContractSpecificationResponse:
     type: object
     description: >-
@@ -80029,6 +80196,9 @@ definitions:
           locator_uri:
             type: string
             title: locator endpoint uri
+          encryption_key:
+            type: string
+            title: owners encryption key address
         description: >-
           Defines an Locator object stored on chain, which represents a owner(
           blockchain address) associated with a endpoint
@@ -80079,6 +80249,9 @@ definitions:
           locator_uri:
             type: string
             title: locator endpoint uri
+          encryption_key:
+            type: string
+            title: owners encryption key address
         description: >-
           Defines an Locator object stored on chain, which represents a owner(
           blockchain address) associated with a endpoint
@@ -83189,6 +83362,7 @@ definitions:
           would be 3
       allow_unrestricted_names:
         type: boolean
+        format: boolean
         title: determines if unrestricted name keys are allowed or not
     description: Params defines the set of params for the name module.
   provenance.name.v1.QueryParamsResponse:
@@ -83214,6 +83388,7 @@ definitions:
               would be 3
           allow_unrestricted_names:
             type: boolean
+            format: boolean
             title: determines if unrestricted name keys are allowed or not
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
   provenance.name.v1.QueryResolveResponse:
@@ -83269,6 +83444,7 @@ definitions:
         description: The address the name resolved to.
       restricted:
         type: boolean
+        format: boolean
         description: Whether owner signature is required to add sub-names.
     title: >-
       NameRecord is a structure used to bind ownership of a name hierarchy to a

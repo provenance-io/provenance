@@ -57,6 +57,12 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgDeleteContractSpecificationRequest:
 			res, err := msgServer.DeleteContractSpecification(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
+		case *types.MsgAddContractSpecToScopeSpecRequest:
+			res, err := msgServer.AddContractSpecToScopeSpec(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+		case *types.MsgDeleteContractSpecFromScopeSpecRequest:
+			res, err := msgServer.DeleteContractSpecFromScopeSpec(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 		case *types.MsgWriteRecordSpecificationRequest:
 			res, err := msgServer.WriteRecordSpecification(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
@@ -82,7 +88,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			return sdk.WrapServiceResult(ctx, res, err)
 
 		default:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown message type: %v", msg.Type())
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", types.ModuleName, msg)
 		}
 	}
 }

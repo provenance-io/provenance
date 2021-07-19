@@ -16,7 +16,7 @@ func (k Keeper) GetOsLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddress) (o
 	if b == nil {
 		return types.ObjectStoreLocator{}, false
 	}
-	err := k.cdc.UnmarshalBinaryBare(b, &osLocator)
+	err := k.cdc.Unmarshal(b, &osLocator)
 	if err != nil {
 		ctx.Logger().Error("failed to unmarshal locator", "err", err)
 		return types.ObjectStoreLocator{}, false
@@ -34,7 +34,7 @@ func (k Keeper) OSLocatorExists(ctx sdk.Context, ownerAddr sdk.AccAddress) bool 
 // SetOSLocator binds an OS Locator to an address in the kvstore.
 // An error is returned if no account exists for the address.
 // An error is returned if an OS Locator already exists for the address.
-func (k Keeper) SetOSLocator(ctx sdk.Context, ownerAddr sdk.AccAddress, uri string) error {
+func (k Keeper) SetOSLocator(ctx sdk.Context, ownerAddr, encryptionKey sdk.AccAddress, uri string) error {
 	urlToPersist, err := k.checkValidURI(uri, ctx)
 	if err != nil {
 		return err
@@ -47,8 +47,9 @@ func (k Keeper) SetOSLocator(ctx sdk.Context, ownerAddr sdk.AccAddress, uri stri
 	if store.Has(key) {
 		return types.ErrOSLocatorAlreadyBound
 	}
-	record := types.NewOSLocatorRecord(ownerAddr, urlToPersist.String())
-	bz, err := k.cdc.MarshalBinaryBare(&record)
+
+	record := types.NewOSLocatorRecord(ownerAddr, encryptionKey, urlToPersist.String())
+	bz, err := k.cdc.Marshal(&record)
 	if err != nil {
 		return err
 	}
@@ -69,7 +70,7 @@ func (k Keeper) IterateOSLocators(ctx sdk.Context, cb func(account types.ObjectS
 
 	for ; it.Valid(); it.Next() {
 		record := types.ObjectStoreLocator{}
-		if err := k.cdc.UnmarshalBinaryBare(it.Value(), &record); err != nil {
+		if err := k.cdc.Unmarshal(it.Value(), &record); err != nil {
 			return err
 		}
 		if cb(record) {
@@ -128,7 +129,7 @@ func (k Keeper) RemoveOSLocator(ctx sdk.Context, ownerAddr sdk.AccAddress) error
 }
 
 // ModifyOSLocator updates an existing os locator entry in the kvstore, returns an error if it doesn't exist.
-func (k Keeper) ModifyOSLocator(ctx sdk.Context, ownerAddr sdk.AccAddress, uri string) error {
+func (k Keeper) ModifyOSLocator(ctx sdk.Context, ownerAddr, encryptionKey sdk.AccAddress, uri string) error {
 	urlToPersist, err := k.checkValidURI(uri, ctx)
 	if err != nil {
 		return err
@@ -138,8 +139,9 @@ func (k Keeper) ModifyOSLocator(ctx sdk.Context, ownerAddr sdk.AccAddress, uri s
 	if !store.Has(key) {
 		return types.ErrAddressNotBound
 	}
-	record := types.NewOSLocatorRecord(ownerAddr, urlToPersist.String())
-	bz, err := k.cdc.MarshalBinaryBare(&record)
+
+	record := types.NewOSLocatorRecord(ownerAddr, encryptionKey, urlToPersist.String())
+	bz, err := k.cdc.Marshal(&record)
 	if err != nil {
 		return err
 	}
@@ -153,14 +155,15 @@ func (k Keeper) ModifyOSLocator(ctx sdk.Context, ownerAddr sdk.AccAddress, uri s
 // Different from SetOSLocator in that there is less validation here.
 // The uri format is not checked, and the owner address account is not looked up.
 // This also does not emit any events.
-func (k Keeper) ImportOSLocatorRecord(ctx sdk.Context, ownerAddr sdk.AccAddress, uri string) error {
+func (k Keeper) ImportOSLocatorRecord(ctx sdk.Context, ownerAddr, encryptionKey sdk.AccAddress, uri string) error {
 	key := types.GetOSLocatorKey(ownerAddr)
 	store := ctx.KVStore(k.storeKey)
 	if store.Has(key) {
 		return types.ErrOSLocatorAlreadyBound
 	}
-	record := types.NewOSLocatorRecord(ownerAddr, uri)
-	bz, err := k.cdc.MarshalBinaryBare(&record)
+
+	record := types.NewOSLocatorRecord(ownerAddr, encryptionKey, uri)
+	bz, err := k.cdc.Marshal(&record)
 	if err != nil {
 		return err
 	}

@@ -158,6 +158,202 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 
 }
 
+func (s *KeeperTestSuite) TestUpdateAttribute() {
+
+	attr := types.Attribute{
+		Name:          "example.attribute",
+		Value:         []byte("my-value"),
+		AttributeType: types.AttributeType_String,
+		Address:       s.user1,
+	}
+	s.NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
+
+	cases := []struct {
+		name       string
+		origAttr   types.Attribute
+		updateAttr types.Attribute
+		ownerAddr  sdk.AccAddress
+		wantErr    bool
+		errorMsg   string
+	}{
+		{
+			name: "should fail to update attribute, validatebasic original attr",
+			origAttr: types.Attribute{
+				Name:          "",
+				Value:         []byte("my-value"),
+				Address:       s.user1,
+				AttributeType: types.AttributeType_String,
+			},
+			updateAttr: types.Attribute{
+				Name:          "example.attribute",
+				Value:         []byte("10"),
+				Address:       s.user1,
+				AttributeType: types.AttributeType_Int,
+			},
+			ownerAddr: s.user1Addr,
+			wantErr:   true,
+			errorMsg:  "invalid name: empty",
+		}, {
+			name: "should fail to update attribute, validatebasic update attr",
+			origAttr: types.Attribute{
+				Name:          "example.attribute",
+				Value:         []byte("my-value"),
+				Address:       s.user1,
+				AttributeType: types.AttributeType_String,
+			},
+			updateAttr: types.Attribute{
+				Name:          "",
+				Value:         []byte("10"),
+				Address:       s.user1,
+				AttributeType: types.AttributeType_Int,
+			},
+			ownerAddr: s.user1Addr,
+			wantErr:   true,
+			errorMsg:  "invalid name: empty",
+		},
+		{
+			name: "should fail to update attribute, names mismatch",
+			origAttr: types.Attribute{
+				Name:          "example.attribute",
+				Value:         []byte("my-value"),
+				Address:       s.user1,
+				AttributeType: types.AttributeType_String,
+			},
+			updateAttr: types.Attribute{
+				Name:          "example.noteq",
+				Value:         []byte("10"),
+				Address:       s.user1,
+				AttributeType: types.AttributeType_Int,
+			},
+			ownerAddr: s.user1Addr,
+			wantErr:   true,
+			errorMsg:  "update and original names must match example.noteq : example.attribute",
+		},
+		{
+			name: "should fail to update attribute, length too long",
+			origAttr: types.Attribute{
+				Name:          "example.attribute",
+				Value:         []byte("my-value"),
+				Address:       s.user1,
+				AttributeType: types.AttributeType_String,
+			},
+			updateAttr: types.Attribute{
+				Name:          "example.attribute",
+				Value:         []byte("0123456789123"),
+				Address:       s.user1,
+				AttributeType: types.AttributeType_String,
+			},
+			ownerAddr: s.user1Addr,
+			wantErr:   true,
+			errorMsg:  "update attribute value length of 13 exceeds max length 10",
+		},
+		{
+			name: "should fail to update attribute, unable to find owner",
+			origAttr: types.Attribute{
+				Name:          "example.attribute",
+				Value:         []byte("my-value"),
+				Address:       s.user1,
+				AttributeType: types.AttributeType_String,
+			},
+			updateAttr: types.Attribute{
+				Name:          "example.attribute",
+				Value:         []byte("new string"),
+				Address:       s.user1,
+				AttributeType: types.AttributeType_String,
+			},
+			ownerAddr: s.user2Addr,
+			wantErr:   true,
+			errorMsg:  fmt.Sprintf("no account found for owner address \"%s\"", s.user2Addr),
+		},
+		{
+			name: "should fail to update attribute, unable to resolve name",
+			origAttr: types.Attribute{
+				Name:          "example.not.found",
+				Value:         []byte("my-value"),
+				Address:       s.user1,
+				AttributeType: types.AttributeType_String,
+			},
+			updateAttr: types.Attribute{
+				Name:          "example.not.found",
+				Value:         []byte("new value"),
+				Address:       s.user1,
+				AttributeType: types.AttributeType_String,
+			},
+			ownerAddr: s.user1Addr,
+			wantErr:   true,
+			errorMsg:  fmt.Sprintf("\"example.not.found\" does not resolve to address \"%s\"", s.user1Addr),
+		},
+		{
+			name: "should fail to update attribute, to find original, no original value match",
+			origAttr: types.Attribute{
+				Name:          "example.attribute",
+				Value:         []byte("not original value"),
+				Address:       s.user1,
+				AttributeType: types.AttributeType_String,
+			},
+			updateAttr: types.Attribute{
+				Name:          "example.attribute",
+				Value:         []byte("0123456789"),
+				Address:       s.user1,
+				AttributeType: types.AttributeType_String,
+			},
+			ownerAddr: s.user1Addr,
+			wantErr:   true,
+			errorMsg:  "no attributes updated with name \"example.attribute\" : value \"not original value\" : type: ATTRIBUTE_TYPE_STRING",
+		},
+		{
+			name: "should fail to update attribute, to find original, no original attribute type match",
+			origAttr: types.Attribute{
+				Name:          "example.attribute",
+				Value:         []byte("my-value"),
+				Address:       s.user1,
+				AttributeType: types.AttributeType_Bytes,
+			},
+			updateAttr: types.Attribute{
+				Name:          "example.attribute",
+				Value:         []byte("0123456789"),
+				Address:       s.user1,
+				AttributeType: types.AttributeType_String,
+			},
+			ownerAddr: s.user1Addr,
+			wantErr:   true,
+			errorMsg:  "no attributes updated with name \"example.attribute\" : value \"my-value\" : type: ATTRIBUTE_TYPE_BYTES",
+		},
+		{
+			name: "should successfully update attribute",
+			origAttr: types.Attribute{
+				Name:          "example.attribute",
+				Value:         []byte("my-value"),
+				Address:       s.user1,
+				AttributeType: types.AttributeType_String,
+			},
+			updateAttr: types.Attribute{
+				Name:          "example.attribute",
+				Value:         []byte("10"),
+				Address:       s.user1,
+				AttributeType: types.AttributeType_Int,
+			},
+			ownerAddr: s.user1Addr,
+			wantErr:   false,
+			errorMsg:  "",
+		},
+	}
+	for _, tc := range cases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			err := s.app.AttributeKeeper.UpdateAttribute(s.ctx, tc.origAttr, tc.updateAttr, tc.ownerAddr)
+			if tc.wantErr {
+				s.Error(err)
+				s.Equal(tc.errorMsg, err.Error())
+			} else {
+				s.NoError(err)
+			}
+		})
+	}
+
+}
+
 func (s *KeeperTestSuite) TestDeleteAttribute() {
 
 	attr := types.Attribute{
@@ -182,14 +378,12 @@ func (s *KeeperTestSuite) TestDeleteAttribute() {
 	}{
 		"should fail to delete, cant resolve name wrong owner": {
 			name:      "example.attribute",
-			accAddr:   s.user1Addr,
 			ownerAddr: s.user2Addr,
 			wantErr:   true,
 			errorMsg:  fmt.Sprintf("no account found for owner address \"%s\"", s.user2Addr),
 		},
 		"no keys will be deleted with unknown name": {
 			name:      "dne",
-			accAddr:   s.user1Addr,
 			ownerAddr: s.user1Addr,
 			wantErr:   true,
 			errorMsg:  "no keys deleted with name dne",
@@ -213,7 +407,7 @@ func (s *KeeperTestSuite) TestDeleteAttribute() {
 		tc := tc
 
 		s.Run(n, func() {
-			err := s.app.AttributeKeeper.DeleteAttribute(s.ctx, tc.accAddr, tc.name, tc.ownerAddr)
+			err := s.app.AttributeKeeper.DeleteAttribute(s.ctx, tc.accAddr, tc.name, nil, tc.ownerAddr)
 			if tc.wantErr {
 				s.Error(err)
 				s.Equal(tc.errorMsg, err.Error())
@@ -222,7 +416,92 @@ func (s *KeeperTestSuite) TestDeleteAttribute() {
 			}
 		})
 	}
+}
 
+func (s *KeeperTestSuite) TestDeleteDistinctAttribute() {
+
+	attr := types.Attribute{
+		Name:          "example.attribute",
+		Value:         []byte("123456789"),
+		Address:       s.user1,
+		AttributeType: types.AttributeType_String,
+	}
+	attrValue := types.Attribute{
+		Name:          "example.attribute",
+		Value:         []byte("diff value"),
+		Address:       s.user1,
+		AttributeType: types.AttributeType_String,
+	}
+	s.NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
+	s.NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attrValue, s.user1Addr), "should save successfully")
+
+	cases := []struct {
+		testName  string
+		name      string
+		value     []byte
+		attrType  types.AttributeType
+		accAddr   sdk.AccAddress
+		ownerAddr sdk.AccAddress
+		wantErr   bool
+		errorMsg  string
+	}{
+		{
+			testName:  "should fail to delete, cant resolve name wrong owner",
+			name:      "example.attribute",
+			value:     []byte("123456789"),
+			ownerAddr: s.user2Addr,
+			wantErr:   true,
+			errorMsg:  fmt.Sprintf("no account found for owner address \"%s\"", s.user2Addr),
+		},
+		{
+			testName:  "no keys will be deleted with unknown name",
+			name:      "dne",
+			value:     []byte("123456789"),
+			ownerAddr: s.user1Addr,
+			wantErr:   true,
+			errorMsg:  "no keys deleted with name dne value 123456789",
+		},
+		{
+			testName:  "should successfully delete attribute",
+			name:      "example.attribute",
+			value:     []byte("123456789"),
+			accAddr:   s.user1Addr,
+			ownerAddr: s.user1Addr,
+			wantErr:   false,
+			errorMsg:  "",
+		},
+		{
+			testName:  "should fail to delete attribute, was already deleted",
+			name:      "example.attribute",
+			value:     []byte("123456789"),
+			accAddr:   s.user1Addr,
+			ownerAddr: s.user1Addr,
+			wantErr:   true,
+			errorMsg:  "no keys deleted with name example.attribute value 123456789",
+		},
+		{
+			testName:  "should successfully delete attribute, with same key but different value",
+			name:      "example.attribute",
+			value:     []byte("diff value"),
+			accAddr:   s.user1Addr,
+			ownerAddr: s.user1Addr,
+			wantErr:   false,
+			errorMsg:  "",
+		},
+	}
+	for _, tc := range cases {
+		tc := tc
+
+		s.Run(tc.testName, func() {
+			err := s.app.AttributeKeeper.DeleteAttribute(s.ctx, tc.accAddr, tc.name, &tc.value, tc.ownerAddr)
+			if tc.wantErr {
+				s.Error(err)
+				s.Equal(tc.errorMsg, err.Error())
+			} else {
+				s.NoError(err)
+			}
+		})
+	}
 }
 
 func (s *KeeperTestSuite) TestGetAllAttributes() {
@@ -238,7 +517,6 @@ func (s *KeeperTestSuite) TestGetAllAttributes() {
 		AttributeType: types.AttributeType_String,
 	}
 	s.NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
-
 	attributes, err = s.app.AttributeKeeper.GetAllAttributes(s.ctx, s.user1Addr)
 	s.NoError(err)
 	s.Equal(attr.Name, attributes[0].Name)
@@ -255,7 +533,6 @@ func (s *KeeperTestSuite) TestGetAttributesByName() {
 		AttributeType: types.AttributeType_String,
 	}
 	s.NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
-
 	_, err := s.app.AttributeKeeper.GetAttributes(s.ctx, s.user1Addr, "blah")
 	s.Error(err)
 	s.Equal("no address bound to name", err.Error())
@@ -297,7 +574,6 @@ func (s *KeeperTestSuite) TestIterateRecord() {
 			AttributeType: types.AttributeType_String,
 		}
 		s.NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
-
 		records := []types.Attribute{}
 		// Callback func that adds records to genesis state.
 		appendToRecords := func(record types.Attribute) error {

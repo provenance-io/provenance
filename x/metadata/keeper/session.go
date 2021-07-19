@@ -20,14 +20,14 @@ func (k Keeper) GetSession(ctx sdk.Context, id types.MetadataAddress) (session t
 	if b == nil {
 		return types.Session{}, false
 	}
-	k.cdc.MustUnmarshalBinaryBare(b, &session)
+	k.cdc.MustUnmarshal(b, &session)
 	return session, true
 }
 
 // SetSession stores a session in the module kv store.
 func (k Keeper) SetSession(ctx sdk.Context, session types.Session) {
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinaryBare(&session)
+	b := k.cdc.MustMarshal(&session)
 
 	var event proto.Message = types.NewEventSessionCreated(session.SessionId)
 	action := types.TLAction_Created
@@ -92,7 +92,7 @@ func (k Keeper) IterateSessions(ctx sdk.Context, scopeID types.MetadataAddress, 
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var session types.Session
-		err = k.cdc.UnmarshalBinaryBare(it.Value(), &session)
+		err = k.cdc.Unmarshal(it.Value(), &session)
 		if err != nil {
 			k.Logger(ctx).Error("could not unmarshal session", "address", it.Key(), "error", err)
 		} else if handler(session) {

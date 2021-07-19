@@ -96,10 +96,12 @@ type IntegrationCLITestSuite struct {
 	//os locator's
 	objectLocator metadatatypes.ObjectStoreLocator
 	ownerAddr     sdk.AccAddress
+	encryptionKey sdk.AccAddress
 	uri           string
 
 	objectLocator1 metadatatypes.ObjectStoreLocator
 	ownerAddr1     sdk.AccAddress
+	encryptionKey1 sdk.AccAddress
 	uri1           string
 }
 
@@ -357,11 +359,13 @@ type_name: recordtypename`,
 	// add os locator
 	s.ownerAddr = s.user1Addr
 	s.uri = "http://foo.com"
-	s.objectLocator = metadatatypes.NewOSLocatorRecord(s.ownerAddr, s.uri)
+	s.encryptionKey = sdk.AccAddress{}
+	s.objectLocator = metadatatypes.NewOSLocatorRecord(s.ownerAddr, s.encryptionKey, s.uri)
 
 	s.ownerAddr1 = s.user2Addr
+	s.encryptionKey1 = s.user1Addr
 	s.uri1 = "http://bar.com"
-	s.objectLocator1 = metadatatypes.NewOSLocatorRecord(s.ownerAddr1, s.uri1)
+	s.objectLocator1 = metadatatypes.NewOSLocatorRecord(s.ownerAddr1, s.encryptionKey1, s.uri1)
 
 	var metadataData metadatatypes.GenesisState
 	s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[metadatatypes.ModuleName], &metadataData))
@@ -1384,7 +1388,8 @@ func (s *IntegrationCLITestSuite) TestGetOSLocatorCmd() {
 			"",
 			[]string{
 				fmt.Sprintf("\"owner\":\"%s\"", s.user1Addr.String()),
-				fmt.Sprintf("\"locator_uri\":\"%s\"}", "http://foo.com"),
+				"\"encryption_key\":\"\"",
+				fmt.Sprintf("\"locator_uri\":\"%s\"", "http://foo.com"),
 			},
 		},
 	}
@@ -1419,7 +1424,7 @@ func runTxCmdTestCases(s *IntegrationCLITestSuite, testCases []txCmdTestCase) {
 			} else {
 				require.NoError(t, err, "%s unexpected error", cmdName)
 
-				umErr := clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType)
+				umErr := clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType)
 				require.NoError(t, umErr, "%s UnmarshalJSON error", cmdName)
 
 				txResp := tc.respType.(*sdk.TxResponse)
@@ -2033,6 +2038,213 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationTxCommands() {
 	runTxCmdTestCases(s, testCases)
 }
 
+func (s *IntegrationCLITestSuite) TestContractSpecificationScopeSpecAddRemoveTxCommands() {
+	addCommand := cli.AddContractSpecToScopeSpecCmd()
+	removeCommand := cli.RemoveContractSpecFromScopeSpecCmd()
+	contractSpecUUID := uuid.New()
+	specificationID := metadatatypes.ContractSpecMetadataAddress(contractSpecUUID)
+	scopeSpecID := metadatatypes.ScopeSpecMetadataAddress(uuid.New())
+
+	testCases := []txCmdTestCase{
+		{
+			"should successfully add contract specification for test initialization",
+			cli.WriteContractSpecificationCmd(),
+			[]string{
+				specificationID.String(),
+				s.testnet.Validators[0].Address.String(),
+				"owner",
+				"hashvalue",
+				"`myclassname`",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false,
+			"",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"should successfully add scope specification for test setup",
+			cli.WriteScopeSpecificationCmd(),
+			[]string{
+				scopeSpecID.String(),
+				s.testnet.Validators[0].Address.String(),
+				"owner",
+				s.contractSpecID.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, "", &sdk.TxResponse{}, 0,
+		},
+		{
+			"should fail to add contract spec to scope spec, invalid contract spec id",
+			addCommand,
+			[]string{
+				"invalid-contract-specid",
+				scopeSpecID.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true,
+			"invalid contract specification id : invalid-contract-specid",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"should fail to add contract spec to scope spec, not a contract spec id",
+			addCommand,
+			[]string{
+				scopeSpecID.String(),
+				scopeSpecID.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true,
+			fmt.Sprintf("invalid contract specification id : %s", scopeSpecID.String()),
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"should fail to add contract spec to scope spec, invalid scope spec id",
+			addCommand,
+			[]string{
+				specificationID.String(),
+				"invalid-scope-spec-id",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true,
+			"invalid scope specification id : invalid-scope-spec-id",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"should fail to add contract spec to scope spec, not a scope spec",
+			addCommand,
+			[]string{
+				specificationID.String(),
+				specificationID.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true,
+			fmt.Sprintf("invalid scope specification id : %s", specificationID.String()),
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"should successfully add contract spec to scope spec",
+			addCommand,
+			[]string{
+				specificationID.String(),
+				scopeSpecID.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false,
+			"",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"should fail to remove contract spec to scope spec, invalid contract spec id",
+			removeCommand,
+			[]string{
+				"invalid-contract-specid",
+				scopeSpecID.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true,
+			"invalid contract specification id : invalid-contract-specid",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"should fail to remove contract spec to scope spec, not a contract spec id",
+			removeCommand,
+			[]string{
+				scopeSpecID.String(),
+				scopeSpecID.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true,
+			fmt.Sprintf("invalid contract specification id : %s", scopeSpecID.String()),
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"should fail to remove contract spec to scope spec, invalid scope spec id",
+			removeCommand,
+			[]string{
+				specificationID.String(),
+				"invalid-scope-spec-id",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true,
+			"invalid scope specification id : invalid-scope-spec-id",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"should fail to remove contract spec to scope spec, not a scope spec id",
+			removeCommand,
+			[]string{
+				specificationID.String(),
+				specificationID.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true,
+			fmt.Sprintf("invalid scope specification id : %s", specificationID.String()),
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"should successfully remove contract spec to scope spec",
+			removeCommand,
+			[]string{
+				specificationID.String(),
+				scopeSpecID.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false,
+			"",
+			&sdk.TxResponse{},
+			0,
+		},
+	}
+
+	runTxCmdTestCases(s, testCases)
+}
+
 func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 	cmd := cli.WriteRecordSpecificationCmd()
 	addConractSpecCmd := cli.WriteContractSpecificationCmd()
@@ -2538,7 +2750,7 @@ func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
 	)
 	require.NoError(s.T(), err, "adding base scope")
 	scopeResp := sdk.TxResponse{}
-	umErr := ctx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &scopeResp)
+	umErr := ctx.JSONCodec.UnmarshalJSON(out.Bytes(), &scopeResp)
 	require.NoError(s.T(), umErr, "%s UnmarshalJSON error", writeScopeCmd.Name())
 	if scopeResp.Code != 0 {
 		s.T().Logf("write-scope response code is not 0.\ntx response:\n%v\n", scopeResp)

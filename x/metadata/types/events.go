@@ -111,6 +111,9 @@ const (
 	TxEndpoint_WriteContractSpecification  TxEndpoint = "WriteContractSpecification"
 	TxEndpoint_DeleteContractSpecification TxEndpoint = "DeleteContractSpecification"
 
+	TxEndpoint_AddContractSpecToScopeSpec      TxEndpoint = "AddContractSpecToScopeSpec"
+	TxEndpoint_DeleteContractSpecFromScopeSpec TxEndpoint = "DeleteContractSpecFromScopeSpec"
+
 	TxEndpoint_WriteRecordSpecification  TxEndpoint = "WriteRecordSpecification"
 	TxEndpoint_DeleteRecordSpecification TxEndpoint = "DeleteRecordSpecification"
 
