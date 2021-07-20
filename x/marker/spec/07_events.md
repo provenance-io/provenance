@@ -178,6 +178,8 @@ Fires when the denom metadata is set for a marker
 | EventMarkerSetDenomMetadata   | MetadataBase          | {marker's denom string}     |
 | EventMarkerSetDenomMetadata   | MetadataDescription   | {description string}        |
 | EventMarkerSetDenomMetadata   | MetadataDisplay       | {denom string}              |
+| EventMarkerSetDenomMetadata   | MetadataName          | {name string}               |
+| EventMarkerSetDenomMetadata   | MetadataSymbol        | {symbol string}             |
 | EventMarkerSetDenomMetadata   | MetadataDenomUnits    | {array of  denom units}     |
 | EventMarkerSetDenomMetadata   | Administrator         | {admin account address}     |
 

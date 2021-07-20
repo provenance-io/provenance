@@ -137,9 +137,9 @@ func NewEventMarkerTransfer(amount string, denom string, administrator string, t
 	}
 }
 
-func NewEventMarkerSetDenomMetadata(base string, description string, display string, denomUnits []*banktypes.DenomUnit, administrator string) *EventMarkerSetDenomMetadata {
-	metadataDenomUnits := make([]*EventDenomUnit, len(denomUnits))
-	for i, du := range denomUnits {
+func NewEventMarkerSetDenomMetadata(metadata banktypes.Metadata, administrator string) *EventMarkerSetDenomMetadata {
+	metadataDenomUnits := make([]*EventDenomUnit, len(metadata.DenomUnits))
+	for i, du := range metadata.DenomUnits {
 		denomUnit := EventDenomUnit{
 			Denom:    du.Denom,
 			Exponent: fmt.Sprint(du.Exponent),
@@ -148,10 +148,12 @@ func NewEventMarkerSetDenomMetadata(base string, description string, display str
 		metadataDenomUnits[i] = &denomUnit
 	}
 	return &EventMarkerSetDenomMetadata{
-		MetadataBase:        base,
-		MetadataDescription: description,
-		MetadataDisplay:     display,
+		MetadataBase:        metadata.Base,
+		MetadataDescription: metadata.Description,
+		MetadataDisplay:     metadata.Display,
 		MetadataDenomUnits:  metadataDenomUnits,
+		MetadataName:        metadata.Name,
+		MetadataSymbol:      metadata.Symbol,
 		Administrator:       administrator,
 	}
 }

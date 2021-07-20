@@ -35283,6 +35283,16 @@ paths:
                     description: |-
                       display indicates the suggested denom that should be
                       displayed in clients.
+                  name:
+                    type: string
+                    title: 'name defines the name of the token (eg: Cosmos Atom)'
+                  symbol:
+                    type: string
+                    description: >-
+                      symbol is the token symbol usually shown on exchanges (eg:
+                      ATOM). This can
+
+                      be the same as the display.
                 description: |-
                   Metadata represents a struct that describes
                   a basic token.
@@ -55045,6 +55055,16 @@ definitions:
         description: |-
           display indicates the suggested denom that should be
           displayed in clients.
+      name:
+        type: string
+        title: 'name defines the name of the token (eg: Cosmos Atom)'
+      symbol:
+        type: string
+        description: >-
+          symbol is the token symbol usually shown on exchanges (eg: ATOM). This
+          can
+
+          be the same as the display.
     description: |-
       Metadata represents a struct that describes
       a basic token.
@@ -74168,6 +74188,16 @@ definitions:
             description: |-
               display indicates the suggested denom that should be
               displayed in clients.
+          name:
+            type: string
+            title: 'name defines the name of the token (eg: Cosmos Atom)'
+          symbol:
+            type: string
+            description: >-
+              symbol is the token symbol usually shown on exchanges (eg: ATOM).
+              This can
+
+              be the same as the display.
         description: |-
           Metadata represents a struct that describes
           a basic token.
