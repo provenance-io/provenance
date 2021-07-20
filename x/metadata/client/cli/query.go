@@ -119,7 +119,7 @@ func GetMetadataByIDCmd() *cobra.Command {
 			case types.PrefixScope:
 				return outputScope(cmd, id.String(), "", "")
 			case types.PrefixSession:
-				return outputSessions(cmd, "", id.String())
+				return outputSessions(cmd, "", id.String(), "", "")
 			case types.PrefixRecord:
 				return outputRecords(cmd, id.String(), "", "", "")
 			case types.PrefixScopeSpecification:
@@ -245,21 +245,27 @@ func GetMetadataScopeCmd() *cobra.Command {
 // GetMetadataSessionCmd returns the command handler for metadata session querying.
 func GetMetadataSessionCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "session {session_id|{scope_id|scope_uuid} [session_uuid]|\"all\"}",
+		Use:     "session {session_id|{scope_id|scope_uuid} [session_uuid|record_name]|record_id|\"all\"}",
 		Aliases: []string{"se", "sessions"},
 		Short:   "Query the current metadata for sessions",
 		Long: fmt.Sprintf(`%[1]s session {session_id} - gets the session with the given id.
 %[1]s session {scope_id} - gets the list of sessions associated with a scope.
 %[1]s session {scope_id} {session_uuid} - gets a session with the given scope and session uuid.
+%[1]s session {scope_id} {record_name} - gets the session in the given scope containing the given record.
 %[1]s session {scope_uuid} - gets the list of sessions associated with a scope.
 %[1]s session {scope_uuid} {session_uuid} - gets a session with the given scope uuid and session uuid.
+%[1]s session {scope_uuid} {record_name} - gets the session in the given scope containing the given record.
+%[1]s session {record_id} - gets the session containing the given record.
 %[1]s session all - gets all sessions.`, cmdStart),
 		Args: cobra.RangeArgs(1, 2),
 		Example: fmt.Sprintf(`%[1]s session session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr
 %[1]s session scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel
 %[1]s session scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel 5803f8bc-6067-4eb5-951f-2121671c2ec0
+%[1]s session scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel recordname
 %[1]s session 91978ba2-5f35-459a-86a7-feca1b0512e0
 %[1]s session 91978ba2-5f35-459a-86a7-feca1b0512e0 5803f8bc-6067-4eb5-951f-2121671c2ec0
+%[1]s session 91978ba2-5f35-459a-86a7-feca1b0512e0 recordname
+%[1]s session record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3
 %[1]s session all`, cmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			arg0 := strings.TrimSpace(args[0])
@@ -267,13 +273,24 @@ func GetMetadataSessionCmd() *cobra.Command {
 				return outputSessionsAll(cmd)
 			}
 			if len(args) == 2 {
-				return outputSessions(cmd, arg0, strings.TrimSpace(args[1]))
+				arg1 := strings.TrimSpace(args[1])
+				if sessionUUID, err := uuid.Parse(arg1); err == nil {
+					return outputSessions(cmd, arg0, sessionUUID.String(), "", "")
+				}
+				return outputSessions(cmd, arg0, "", "", arg1)
 			}
 			id, idErr := types.MetadataAddressFromBech32(arg0)
-			if idErr == nil && id.IsSessionAddress() {
-				return outputSessions(cmd, "", id.String())
+			if idErr == nil {
+				switch {
+				case id.IsScopeAddress():
+					return outputSessions(cmd, id.String(), "", "", "")
+				case id.IsSessionAddress():
+					return outputSessions(cmd, "", id.String(), "", "")
+				case id.IsRecordAddress():
+					return outputSessions(cmd, "", "", id.String(), "")
+				}
 			}
-			return outputSessions(cmd, arg0, "")
+			return outputSessions(cmd, arg0, "", "", "")
 		},
 	}
 
@@ -631,7 +648,7 @@ func outputScopesAll(cmd *cobra.Command) error {
 }
 
 // outputSessions calls the Sessions query and outputs the response.
-func outputSessions(cmd *cobra.Command, scopeID string, sessionID string) error {
+func outputSessions(cmd *cobra.Command, scopeID, sessionID, recordID, recordName string) error {
 	clientCtx, err := client.GetClientQueryContext(cmd)
 	if err != nil {
 		return err
@@ -640,6 +657,8 @@ func outputSessions(cmd *cobra.Command, scopeID string, sessionID string) error 
 	req := types.SessionsRequest{
 		ScopeId:        scopeID,
 		SessionId:      sessionID,
+		RecordAddr:     recordID,
+		RecordName:     recordName,
 		IncludeScope:   includeScope,
 		IncludeRecords: includeRecords,
 	}
