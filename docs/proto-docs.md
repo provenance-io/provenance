@@ -46,6 +46,9 @@
   
     - [Access](#provenance.marker.v1.Access)
   
+- [provenance/marker/v1/authz.proto](#provenance/marker/v1/authz.proto)
+    - [MarkerTransferAuthorization](#provenance.marker.v1.MarkerTransferAuthorization)
+  
 - [provenance/marker/v1/marker.proto](#provenance/marker/v1/marker.proto)
     - [EventDenomUnit](#provenance.marker.v1.EventDenomUnit)
     - [EventMarkerAccess](#provenance.marker.v1.EventMarkerAccess)
@@ -938,6 +941,38 @@ Access defines the different types of permissions that a marker supports grantin
 | ACCESS_ADMIN | 6 | ACCESS_ADMIN is the ability to add access grants for accounts to the list of marker permissions. |
 | ACCESS_TRANSFER | 7 | ACCESS_TRANSFER is the ability to invoke a send operation using the marker module to facilitate exchange. This capability is useful when the marker denomination has "send enabled = false" preventing normal bank transfer |
 
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/marker/v1/authz.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/marker/v1/authz.proto
+
+
+
+<a name="provenance.marker.v1.MarkerTransferAuthorization"></a>
+
+### MarkerTransferAuthorization
+MarkerTransferAuthorization allows the grantee to transfer up to transfer_limit coins from
+the granter's account.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `transfer_limit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+
+
+
+
+
+ <!-- end messages -->
 
  <!-- end enums -->
 

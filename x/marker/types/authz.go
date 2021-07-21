@@ -1,0 +1,52 @@
+package types
+
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authz "github.com/cosmos/cosmos-sdk/x/authz"
+)
+
+var (
+	_ authz.Authorization = &MarkerTransferAuthorization{}
+)
+
+// NewSendAuthorization creates a new SendAuthorization object.
+func NewSendAuthorization(transferLimit sdk.Coins) *MarkerTransferAuthorization {
+	return &MarkerTransferAuthorization{
+		TransferLimit: transferLimit,
+	}
+}
+
+// MsgTypeURL implements Authorization.MsgTypeURL.
+func (a MarkerTransferAuthorization) MsgTypeURL() string {
+	return sdk.MsgTypeURL(&MsgTransferRequest{})
+}
+
+// Accept implements Authorization.Accept.
+func (authorization MarkerTransferAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptResponse, error) {
+	switch msg := msg.(type) {
+	case *MsgTransferRequest:
+		limitLeft, isNegative := authorization.TransferLimit.SafeSub(sdk.NewCoins(msg.Amount))
+		if isNegative {
+			return authz.AcceptResponse{}, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "requested amount is more than spend limit")
+		}
+		if limitLeft.IsZero() {
+			return authz.AcceptResponse{Accept: true, Delete: true}, nil
+		}
+
+		return authz.AcceptResponse{Accept: true, Delete: false, Updated: &MarkerTransferAuthorization{TransferLimit: limitLeft}}, nil
+	default:
+		return authz.AcceptResponse{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "type mismatch")
+	}
+}
+
+// ValidateBasic implements Authorization.ValidateBasic.
+func (authorization MarkerTransferAuthorization) ValidateBasic() error {
+	if authorization.TransferLimit == nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "spend limit cannot be nil")
+	}
+	if !authorization.TransferLimit.IsAllPositive() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "spend limit cannot be negitive")
+	}
+	return nil
+}

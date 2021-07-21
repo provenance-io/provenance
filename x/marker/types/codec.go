@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -70,6 +71,11 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&WithdrawEscrowProposal{},
 	)
 
+	registry.RegisterImplementations(
+		(*authz.Authorization)(nil),
+		&MarkerTransferAuthorization{},
+	)
+
 	registry.RegisterInterface(
 		"provenance.marker.v1.MarkerAccount",
 		(*MarkerAccountI)(nil),
@@ -93,6 +99,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		(*AccessGrantI)(nil),
 		&AccessGrant{},
 	)
+
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 
