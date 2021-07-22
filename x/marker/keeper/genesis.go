@@ -40,18 +40,21 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 	markers := make([]types.MarkerAccount, 0)
 
 	appendToMarkers := func(marker types.MarkerAccountI) bool {
-		markers = append(markers, *types.NewMarkerAccount(
-			&authtypes.BaseAccount{
+		markers = append(markers, types.MarkerAccount{
+			BaseAccount: &authtypes.BaseAccount{
 				Address:       marker.GetAddress().String(),
 				AccountNumber: marker.GetAccountNumber(),
 				Sequence:      0,
 			},
-			marker.GetSupply(),
-			marker.GetManager(),
-			marker.GetAccessList(),
-			marker.GetStatus(),
-			marker.GetMarkerType(),
-		))
+			Manager:                marker.GetManager().String(),
+			AccessControl:          marker.GetAccessList(),
+			Status:                 marker.GetStatus(),
+			Denom:                  marker.GetDenom(),
+			Supply:                 marker.GetSupply().Amount,
+			MarkerType:             marker.GetMarkerType(),
+			SupplyFixed:            marker.HasFixedSupply(),
+			AllowGovernanceControl: marker.HasGovernanceEnabled(),
+		})
 		return false
 	}
 
