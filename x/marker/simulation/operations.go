@@ -126,10 +126,12 @@ func SimulateMsgChangeStatus(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk b
 		case types.StatusProposed, types.StatusFinalized:
 			if r.Intn(10) < 5 {
 				msg = types.NewMsgFinalizeRequest(m.GetDenom(), m.GetManager())
-			} else if r.Intn(10) < 5 {
-				msg = types.NewMsgCancelRequest(m.GetDenom(), simAccount.Address)
 			} else {
-				msg = types.NewMsgActivateRequest(m.GetDenom(), m.GetManager())
+				if r.Intn(10) < 5 {
+					msg = types.NewMsgCancelRequest(m.GetDenom(), simAccount.Address)
+				} else {
+					msg = types.NewMsgActivateRequest(m.GetDenom(), m.GetManager())
+				}
 			}
 			simAccount, found = simtypes.FindAccount(accs, m.GetManager())
 			if !found {
