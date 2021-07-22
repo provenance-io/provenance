@@ -30,10 +30,14 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 		for i := range data.Markers {
 			// marker base account may already exist and have an account number assigned
 			if exists := k.authKeeper.GetAccount(ctx, data.Markers[i].GetAddress()); exists != nil {
-				data.Markers[i].SetAccountNumber(exists.GetAccountNumber())
+				if err := data.Markers[i].SetAccountNumber(exists.GetAccountNumber()); err != nil {
+					panic(err)
+				}
 			} else {
 				// no existing account reference so take next account number.
-				data.Markers[i].SetAccountNumber(k.authKeeper.GetNextAccountNumber(ctx))
+				if err := data.Markers[i].SetAccountNumber(k.authKeeper.GetNextAccountNumber(ctx)); err != nil {
+					panic(err)
+				}
 			}
 			k.SetMarker(ctx, &data.Markers[i])
 		}
