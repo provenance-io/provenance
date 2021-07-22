@@ -274,6 +274,7 @@ func randomMarker(r *rand.Rand, ctx sdk.Context, k keeper.Keeper) types.MarkerAc
 	idx := r.Intn(len(markers))
 	return markers[idx]
 }
+
 func randomInt63(r *rand.Rand, max int64) (result int64) {
 	if max == 0 {
 		return 0
