@@ -5069,6 +5069,8 @@ SessionsRequest is the request type for the Query/Sessions RPC method.
 | ----- | ---- | ----- | ----------- |
 | `scope_id` | [string](#string) |  | scope_id can either be a uuid, e.g. 91978ba2-5f35-459a-86a7-feca1b0512e0 or a bech32 scope address, e.g. scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel. |
 | `session_id` | [string](#string) |  | session_id can either be a uuid, e.g. 5803f8bc-6067-4eb5-951f-2121671c2ec0 or a bech32 session address, e.g. session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr. This can only be a uuid if a scope_id is also provided. |
+| `record_addr` | [string](#string) |  | record_addr is a bech32 record address, e.g. record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3. |
+| `record_name` | [string](#string) |  | record_name is the name of the record to find the session for in the provided scope. |
 | `include_scope` | [bool](#bool) |  | include_scope is a flag for whether or not the scope containing these sessions should be included. |
 | `include_records` | [bool](#bool) |  | include_records is a flag for whether or not the records in these sessions should be included. |
 
@@ -5154,11 +5156,13 @@ By default, sessions and records are not included. Set include_sessions and/or i
 | `ScopesAll` | [ScopesAllRequest](#provenance.metadata.v1.ScopesAllRequest) | [ScopesAllResponse](#provenance.metadata.v1.ScopesAllResponse) | ScopesAll retrieves all scopes. | GET|/provenance/metadata/v1/scopes/all|
 | `Sessions` | [SessionsRequest](#provenance.metadata.v1.SessionsRequest) | [SessionsResponse](#provenance.metadata.v1.SessionsResponse) | Sessions searches for sessions.
 
-The scope_id can either be scope uuid, e.g. 91978ba2-5f35-459a-86a7-feca1b0512e0 or a scope address, e.g. scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel. Similarly, the session_id can either be a uuid or session address, e.g. session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr.
+The scope_id can either be scope uuid, e.g. 91978ba2-5f35-459a-86a7-feca1b0512e0 or a scope address, e.g. scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel. Similarly, the session_id can either be a uuid or session address, e.g. session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr. The record_addr, if provided, must be a bech32 record address, e.g. record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3.
 
-* If only a scope_id is provided, all sessions in that scope are returned. * If only a session_id is provided, it must be an address, and that single session is returned. * If both are provided, that single session is returned. * If both scope_id and session_id are addresses, and they don't refer to the same scope, a bad request is returned.
+* If only a scope_id is provided, all sessions in that scope are returned. * If only a session_id is provided, it must be an address, and that single session is returned. * If the session_id is a uuid, then either a scope_id or record_addr must also be provided, and that single session is returned. * If only a record_addr is provided, the session containing that record will be returned. * If a record_name is provided then either a scope_id, session_id as an address, or record_addr must also be provided, and the session containing that record will be returned.
 
-By default, the scope and records are not included. Set include_scope and/or include_records to true to include the scope and/or records. | GET|/provenance/metadata/v1/session/{session_id}GET|/provenance/metadata/v1/scope/{scope_id}/sessionsGET|/provenance/metadata/v1/scope/{scope_id}/session/{session_id}|
+A bad request is returned if: * The session_id is a uuid and is provided without a scope_id or record_addr. * A record_name is provided without any way to identify the scope (e.g. a scope_id, a session_id as an address, or a record_addr). * Two or more of scope_id, session_id as an address, and record_addr are provided and don't all refer to the same scope. * A record_addr (or scope_id and record_name) is provided with a session_id and that session does not contain such a record. * A record_addr and record_name are both provided, but reference different records.
+
+By default, the scope and records are not included. Set include_scope and/or include_records to true to include the scope and/or records. | GET|/provenance/metadata/v1/session/{session_id}GET|/provenance/metadata/v1/scope/{scope_id}/sessionsGET|/provenance/metadata/v1/scope/{scope_id}/session/{session_id}GET|/provenance/metadata/v1/record/{record_addr}/sessionGET|/provenance/metadata/v1/scope/{scope_id}/record/{record_name}/session|
 | `SessionsAll` | [SessionsAllRequest](#provenance.metadata.v1.SessionsAllRequest) | [SessionsAllResponse](#provenance.metadata.v1.SessionsAllResponse) | SessionsAll retrieves all sessions. | GET|/provenance/metadata/v1/sessions/all|
 | `Records` | [RecordsRequest](#provenance.metadata.v1.RecordsRequest) | [RecordsResponse](#provenance.metadata.v1.RecordsResponse) | Records searches for records.
 

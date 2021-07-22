@@ -187,7 +187,7 @@ func (k Keeper) Sessions(c context.Context, req *types.SessionsRequest) (*types.
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	var sessionAddr, scopeAddr types.MetadataAddress
+	var scopeAddr, sessionAddr, recordAddr types.MetadataAddress
 
 	if len(req.ScopeId) > 0 {
 		var err error
@@ -196,15 +196,72 @@ func (k Keeper) Sessions(c context.Context, req *types.SessionsRequest) (*types.
 			return &retval, status.Error(codes.InvalidArgument, err.Error())
 		}
 	}
-	if len(req.SessionId) > 0 {
+	if len(req.RecordAddr) > 0 {
 		var err error
-		sessionAddr, err = ParseSessionID(req.ScopeId, req.SessionId)
+		recordAddr, err = ParseRecordAddr(req.RecordAddr)
 		if err != nil {
 			return &retval, status.Error(codes.InvalidArgument, err.Error())
 		}
+		scopeAddr2 := recordAddr.MustGetAsScopeAddress()
 		if scopeAddr.Empty() {
-			// ParseSessionID returns an error if this wouldn't work. So we know we're safe here.
-			scopeAddr = sessionAddr.MustGetAsScopeAddress()
+			scopeAddr = scopeAddr2
+		} else if !scopeAddr.Equals(scopeAddr2) {
+			return &retval, status.Errorf(codes.InvalidArgument, "record %s is not part of scope %s", recordAddr, scopeAddr)
+		}
+	}
+	if len(req.SessionId) > 0 {
+		var err error
+		scopeIDForParsing := req.ScopeId
+		if len(scopeIDForParsing) == 0 && !scopeAddr.Empty() {
+			scopeIDForParsing = scopeAddr.String()
+		}
+		sessionAddr, err = ParseSessionID(scopeIDForParsing, req.SessionId)
+		if err != nil {
+			return &retval, status.Error(codes.InvalidArgument, err.Error())
+		}
+		// ParseSessionID ensures that this will not return an error.
+		scopeAddr2 := sessionAddr.MustGetAsScopeAddress()
+		switch {
+		case !recordAddr.Empty():
+			// This assumes that we have checked and set scopeAddr while processing the recordAddr.
+			scopeAddr3 := recordAddr.MustGetAsScopeAddress()
+			if !scopeAddr2.Equals(scopeAddr3) {
+				return &retval, status.Errorf(codes.InvalidArgument, "session %s and record %s are not associated with the same scope", sessionAddr, recordAddr)
+			}
+		case scopeAddr.Empty():
+			scopeAddr = scopeAddr2
+		case !scopeAddr.Equals(scopeAddr2):
+			return &retval, status.Errorf(codes.InvalidArgument, "session %s is not part of scope %s", recordAddr, scopeAddr)
+		}
+	}
+	if len(req.RecordName) > 0 {
+		if scopeAddr.Empty() {
+			// assumes scopeAddr is set previously while parsing other input.
+			return &retval, status.Error(codes.InvalidArgument, "a scope is required to look up sessions by record name")
+		}
+		// We know that scopeAddr is legit, and that we have a name. So this won't give an error.
+		recordAddr2 := scopeAddr.MustGetAsRecordAddress(req.RecordName)
+		if recordAddr.Empty() {
+			recordAddr = recordAddr2
+		} else if !recordAddr.Equals(recordAddr2) {
+			return &retval, status.Errorf(codes.InvalidArgument, "record %s does not have name %s", recordAddr, req.RecordName)
+		}
+	}
+
+	// If a record was identified in the search, we need to get it and either use it to set the sessionAddr,
+	// or make sure the provided sessionAddr matches what the record has.
+	if !recordAddr.Empty() {
+		record, found := k.GetRecord(ctx, recordAddr)
+		switch {
+		case !found:
+			return &retval, status.Errorf(codes.InvalidArgument, "record %s does not exist", recordAddr)
+		case !sessionAddr.Empty():
+			if !sessionAddr.Equals(record.SessionId) {
+				return &retval, status.Errorf(codes.InvalidArgument, "record %s belongs to session %s (not %s)",
+					recordAddr, record.SessionId, sessionAddr)
+			}
+		default:
+			sessionAddr = record.SessionId
 		}
 	}
 
