@@ -98,7 +98,7 @@ func SimulateMsgAddMarker(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bank
 		denom := randomUnrestrictedDenom(r, k.GetUnrestrictedDenomRegex(ctx))
 		msg := types.NewMsgAddMarkerRequest(
 			denom,
-			sdk.NewInt(r.Int63n(int64(k.GetMaxTotalSupply(ctx)))),
+			sdk.NewIntFromUint64(randomUint64(r, k.GetMaxTotalSupply(ctx))),
 			simAccount.Address,
 			mgrAccount.Address,
 			types.MarkerType(r.Intn(1)+1), // coin or restricted_coin
@@ -273,4 +273,14 @@ func randomMarker(r *rand.Rand, ctx sdk.Context, k keeper.Keeper) types.MarkerAc
 	}
 	idx := r.Intn(len(markers))
 	return markers[idx]
+}
+
+func randomUint64(r *rand.Rand, max uint64) (result uint64) {
+	for {
+		result = r.Uint64()
+		if result < max {
+			break
+		}
+	}
+	return
 }

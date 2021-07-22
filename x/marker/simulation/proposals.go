@@ -72,7 +72,7 @@ func SimulateCreateAddMarkerProposalContent(k keeper.Keeper) simtypes.ContentSim
 			simtypes.RandStringOfLength(r, 5),  // title
 			simtypes.RandStringOfLength(r, 10), // description
 			randomUnrestrictedDenom(r, k.GetUnrestrictedDenomRegex(ctx)),
-			sdk.NewInt(int64(r.Int31())),    // initial supply
+			sdk.NewIntFromUint64(randomUint64(r, k.GetMaxTotalSupply(ctx))), // initial supply
 			simAccount.Address,              // manager
 			types.MarkerStatus(r.Intn(2)+1), // initial status (proposed, finalized, active)
 			types.MarkerType(r.Intn(1)+1),   // coin or restricted_coin
@@ -98,7 +98,7 @@ func SimulateCreateSupplyIncreaseProposalContent(k keeper.Keeper) simtypes.Conte
 		return types.NewSupplyIncreaseProposal(
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 100),
-			sdk.NewCoin(m.GetDenom(), sdk.NewInt(r.Int63())),
+			sdk.NewCoin(m.GetDenom(), sdk.NewIntFromUint64(randomUint64(r, k.GetMaxTotalSupply(ctx)-k.CurrentCirculation(ctx, m).Uint64()))),
 			dest,
 		)
 	}
