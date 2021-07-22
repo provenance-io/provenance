@@ -347,7 +347,7 @@ func (k Keeper) IncreaseSupply(ctx sdk.Context, marker types.MarkerAccountI, coi
 	total := inCirculation.Add(coin)
 	maxAllowed := k.GetParams(ctx).MaxTotalSupply
 	if total.Amount.Uint64() > maxAllowed {
-		return fmt.Errorf("requested supply %d exceeds maximum allowed value %d", total.Amount, maxAllowed)
+		return fmt.Errorf("requested supply %d exceeds maximum allowed value %d", total.Amount.Uint64(), maxAllowed)
 	}
 
 	// If the marker has a fixed supply then adjust the supply to match the new total
