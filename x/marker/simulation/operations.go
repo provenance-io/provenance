@@ -232,7 +232,7 @@ func randomUnrestrictedDenom(r *rand.Rand, unrestrictedDenomExp string) string {
 	min, _ := strconv.ParseInt(matches[1], 10, 32)
 	max, _ := strconv.ParseInt(matches[2], 10, 32)
 
-	return simtypes.RandStringOfLength(r, int(r.Int63n(max-min)+min))
+	return simtypes.RandStringOfLength(r, int(randomInt63(r, max-min)+min))
 }
 
 // build
@@ -274,8 +274,17 @@ func randomMarker(r *rand.Rand, ctx sdk.Context, k keeper.Keeper) types.MarkerAc
 	idx := r.Intn(len(markers))
 	return markers[idx]
 }
+func randomInt63(r *rand.Rand, max int64) (result int64) {
+	if max == 0 {
+		return 0
+	}
+	return r.Int63n(max)
+}
 
 func randomUint64(r *rand.Rand, max uint64) (result uint64) {
+	if max == 0 {
+		return 0
+	}
 	for {
 		result = r.Uint64()
 		if result < max {
