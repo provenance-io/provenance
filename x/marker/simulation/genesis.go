@@ -31,7 +31,7 @@ func GenEnableGovernance(r *rand.Rand) bool {
 	return r.Int63n(101) <= 50 // 50% chance of unrestricted names being enabled
 }
 
-// GenUnrestrictedDenomRegex returns a randomized length focused string for the unrestriced denom validation expression
+// GenUnrestrictedDenomRegex returns a randomized length focused string for the unrestricted denom validation expression
 func GenUnrestrictedDenomRegex(r *rand.Rand) string {
 	min := r.Int31n(16) + 2
 	max := r.Int31n(64-min) + min
@@ -59,7 +59,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 	)
 
 	markerGenesis := types.GenesisState{
-		Params: types.Params{ //types.DefaultParams(),
+		Params: types.Params{
 			MaxTotalSupply:         maxTotalSupply,
 			EnableGovernance:       enableGovernance,
 			UnrestrictedDenomRegex: unrestrictedDenomRegex,

@@ -51,9 +51,9 @@ func DefaultTestNetworkConfig() network.Config {
 		NumValidators:     4,
 		BondDenom:         sdk.DefaultBondDenom, // we use the SDK bond denom here, at least until the entire genesis is rewritten to match bond denom
 		MinGasPrices:      fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom),
-		AccountTokens:     sdk.TokensFromConsensusPower(1000, provenanceapp.DefaultPowerReduction),
-		StakingTokens:     sdk.TokensFromConsensusPower(500, provenanceapp.DefaultPowerReduction),
-		BondedTokens:      sdk.TokensFromConsensusPower(100, provenanceapp.DefaultPowerReduction),
+		AccountTokens:     sdk.TokensFromConsensusPower(1000000, sdk.DefaultPowerReduction),
+		StakingTokens:     sdk.TokensFromConsensusPower(500, sdk.DefaultPowerReduction),
+		BondedTokens:      sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction),
 		PruningStrategy:   storetypes.PruningOptionNothing,
 		CleanupDir:        true,
 		SigningAlgo:       string(hd.Secp256k1Type),

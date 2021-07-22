@@ -1,6 +1,7 @@
 package app
 
 import (
+	"encoding/json"
 	"io"
 	"net/http"
 	"os"
@@ -11,8 +12,6 @@ import (
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/statesync"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
@@ -21,12 +20,15 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -47,6 +49,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+
+	"github.com/cosmos/cosmos-sdk/x/authz"
+	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
+	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
@@ -59,6 +65,7 @@ import (
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
+	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
@@ -82,6 +89,8 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+
+	// IBC
 	transfer "github.com/cosmos/ibc-go/modules/apps/transfer"
 	ibctransferkeeper "github.com/cosmos/ibc-go/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/modules/apps/transfer/types"
@@ -90,9 +99,8 @@ import (
 	porttypes "github.com/cosmos/ibc-go/modules/core/05-port/types"
 	ibchost "github.com/cosmos/ibc-go/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/modules/core/keeper"
-	tmjson "github.com/tendermint/tendermint/libs/json"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	// PROVENANCE
 	appparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/x/marker"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
@@ -159,18 +167,25 @@ var (
 		staking.AppModuleBasic{},
 		mint.AppModuleBasic{},
 		distr.AppModuleBasic{},
-		gov.NewAppModuleBasic(append(wasmclient.ProposalHandlers,
-			paramsclient.ProposalHandler, distrclient.ProposalHandler, upgradeclient.ProposalHandler,
-			upgradeclient.CancelProposalHandler)...,
+		gov.NewAppModuleBasic(append(
+			wasmclient.ProposalHandlers,
+			paramsclient.ProposalHandler,
+			distrclient.ProposalHandler,
+			upgradeclient.ProposalHandler,
+			upgradeclient.CancelProposalHandler,
+		)...,
 		),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
 		slashing.AppModuleBasic{},
-		ibc.AppModuleBasic{},
+		feegrantmodule.AppModuleBasic{},
 		upgrade.AppModuleBasic{},
 		evidence.AppModuleBasic{},
-		transfer.AppModuleBasic{},
+		authzmodule.AppModuleBasic{},
 		vesting.AppModuleBasic{},
+
+		ibc.AppModuleBasic{},
+		transfer.AppModuleBasic{},
 
 		marker.AppModuleBasic{},
 		attribute.AppModuleBasic{},
@@ -187,9 +202,11 @@ var (
 		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:            {authtypes.Burner},
-		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
-		markertypes.ModuleName:         {authtypes.Minter, authtypes.Burner},
-		wasm.ModuleName:                {authtypes.Burner},
+
+		ibctransfertypes.ModuleName: {authtypes.Minter, authtypes.Burner},
+
+		markertypes.ModuleName: {authtypes.Minter, authtypes.Burner},
+		wasm.ModuleName:        {authtypes.Burner},
 	}
 )
 
@@ -217,7 +234,7 @@ type App struct {
 
 	appName string
 
-	cdc               *codec.LegacyAmino
+	legacyAmino       *codec.LegacyAmino
 	appCodec          codec.Codec
 	interfaceRegistry types.InterfaceRegistry
 
@@ -240,10 +257,12 @@ type App struct {
 	CrisisKeeper     crisiskeeper.Keeper
 	UpgradeKeeper    upgradekeeper.Keeper
 	ParamsKeeper     paramskeeper.Keeper
-	IBCKeeper        *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
+	AuthzKeeper      authzkeeper.Keeper
 	EvidenceKeeper   evidencekeeper.Keeper
-	TransferKeeper   ibctransferkeeper.Keeper
-	FeegrantKeeper   ante.FeegrantKeeper
+	FeeGrantKeeper   feegrantkeeper.Keeper
+
+	IBCKeeper      *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
+	TransferKeeper ibctransferkeeper.Keeper
 
 	MarkerKeeper    markerkeeper.Keeper
 	MetadataKeeper  metadatakeeper.Keeper
@@ -258,11 +277,11 @@ type App struct {
 	// the module manager
 	mm *module.Manager
 
-	// module configurator
-	configurator module.Configurator
-
 	// simulation manager
 	sm *module.SimulationManager
+
+	// module configurator
+	configurator module.Configurator
 }
 
 // New returns a reference to an initialized Provenance Blockchain App.
@@ -272,7 +291,7 @@ func New(
 	appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
 	appCodec := encodingConfig.Marshaler
-	cdc := encodingConfig.Amino
+	legacyAmino := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 
 	bApp := baseapp.NewBaseApp(appName, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
@@ -284,8 +303,12 @@ func New(
 	keys := sdk.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
-		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
-		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey, feegrant.StoreKey,
+		govtypes.StoreKey, paramstypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
+		evidencetypes.StoreKey, capabilitytypes.StoreKey,
+		authzkeeper.StoreKey,
+
+		ibchost.StoreKey,
+		ibctransfertypes.StoreKey,
 
 		metadatatypes.StoreKey,
 		markertypes.StoreKey,
@@ -299,7 +322,7 @@ func New(
 	app := &App{
 		BaseApp:           bApp,
 		appName:           appName,
-		cdc:               cdc,
+		legacyAmino:       legacyAmino,
 		appCodec:          appCodec,
 		interfaceRegistry: interfaceRegistry,
 		invCheckPeriod:    invCheckPeriod,
@@ -311,7 +334,7 @@ func New(
 	// Register helpers for state-sync status.
 	statesync.RegisterSyncStatus()
 
-	app.ParamsKeeper = initParamsKeeper(appCodec, cdc, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
+	app.ParamsKeeper = initParamsKeeper(appCodec, legacyAmino, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
 
 	// set the BaseApp's parameter store
 	bApp.SetParamStore(app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramskeeper.ConsensusParamsKeyTable()))
@@ -348,6 +371,8 @@ func New(
 	app.CrisisKeeper = crisiskeeper.NewKeeper(
 		app.GetSubspace(crisistypes.ModuleName), invCheckPeriod, app.BankKeeper, authtypes.FeeCollectorName,
 	)
+
+	app.FeeGrantKeeper = feegrantkeeper.NewKeeper(appCodec, keys[feegrant.StoreKey], app.AccountKeeper)
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath, app.BaseApp)
 
 	// register the staking hooks
@@ -355,6 +380,8 @@ func New(
 	app.StakingKeeper = *stakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
 	)
+
+	app.AuthzKeeper = authzkeeper.NewKeeper(keys[authzkeeper.StoreKey], appCodec, app.BaseApp.MsgServiceRouter())
 
 	app.MetadataKeeper = metadatakeeper.NewKeeper(
 		appCodec, keys[metadatatypes.StoreKey], app.GetSubspace(metadatatypes.ModuleName), app.AccountKeeper,
@@ -371,8 +398,6 @@ func New(
 	app.AttributeKeeper = attributekeeper.NewKeeper(
 		appCodec, keys[attributetypes.StoreKey], app.GetSubspace(attributetypes.ModuleName), app.AccountKeeper, app.NameKeeper,
 	)
-
-	app.FeegrantKeeper = feegrantkeeper.NewKeeper(appCodec, keys[feegrant.StoreKey], app.AccountKeeper)
 
 	// Create IBC Keeper
 	app.IBCKeeper = ibckeeper.NewKeeper(
@@ -486,22 +511,26 @@ func New(
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
 		crisis.NewAppModule(&app.CrisisKeeper, skipGenesisInvariants),
+		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
 		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
 		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper),
 		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
+		upgrade.NewAppModule(app.UpgradeKeeper),
+		evidence.NewAppModule(app.EvidenceKeeper),
+		params.NewAppModule(app.ParamsKeeper),
+		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 
+		// PROVENANCE
 		metadata.NewAppModule(appCodec, app.MetadataKeeper, app.AccountKeeper),
 		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper),
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),
 		attribute.NewAppModule(appCodec, app.AttributeKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper),
 
-		upgrade.NewAppModule(app.UpgradeKeeper),
-		evidence.NewAppModule(app.EvidenceKeeper),
+		// IBC
 		ibc.NewAppModule(app.IBCKeeper),
-		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
 	)
 
@@ -541,13 +570,17 @@ func New(
 		govtypes.ModuleName,
 		minttypes.ModuleName,
 		crisistypes.ModuleName,
+		genutiltypes.ModuleName,
+		evidencetypes.ModuleName,
+		authz.ModuleName,
+		feegrant.ModuleName,
+
 		markertypes.ModuleName,
 		nametypes.ModuleName,
 		attributetypes.ModuleName,
 		metadatatypes.ModuleName,
+
 		ibchost.ModuleName,
-		genutiltypes.ModuleName,
-		evidencetypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		// wasm after ibc transfer
 		wasm.ModuleName,
@@ -562,11 +595,15 @@ func New(
 		auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts),
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
+		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
 		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
 		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper),
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
+		params.NewAppModule(app.ParamsKeeper),
+		evidence.NewAppModule(app.EvidenceKeeper),
+		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 
 		metadata.NewAppModule(appCodec, app.MetadataKeeper, app.AccountKeeper),
 		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper),
@@ -574,8 +611,6 @@ func New(
 		attribute.NewAppModule(appCodec, app.AttributeKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper),
 
-		params.NewAppModule(app.ParamsKeeper),
-		evidence.NewAppModule(app.EvidenceKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
 		transferModule,
 	)
@@ -590,15 +625,19 @@ func New(
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
-	app.SetAnteHandler(
-		antewrapper.NewAnteHandler(
-			app.AccountKeeper,
-			app.BankKeeper,
-			ante.DefaultSigVerificationGasConsumer,
-			encodingConfig.TxConfig.SignModeHandler(),
-			app.FeegrantKeeper,
-		),
-	)
+	anteHandler, err := antewrapper.NewAnteHandler(
+		ante.HandlerOptions{
+			AccountKeeper:   app.AccountKeeper,
+			BankKeeper:      app.BankKeeper,
+			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
+			FeegrantKeeper:  app.FeeGrantKeeper,
+			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+		})
+	if err != nil {
+		panic(err)
+	}
+
+	app.SetAnteHandler(anteHandler)
 	app.SetEndBlocker(app.EndBlocker)
 
 	// -- TODO: Add upgrade plans for each release here
@@ -666,9 +705,10 @@ func (app *App) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.Respo
 // InitChainer application update at chain initialization
 func (app *App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	var genesisState GenesisState
-	if err := tmjson.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
+	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
 	}
+	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
 	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)
 }
 
@@ -692,7 +732,7 @@ func (app *App) ModuleAccountAddrs() map[string]bool {
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
 func (app *App) LegacyAmino() *codec.LegacyAmino {
-	return app.cdc
+	return app.legacyAmino
 }
 
 // AppCodec returns Provenance's app codec.

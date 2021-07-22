@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"fmt"
 	"math/rand"
 	"regexp"
 	"strconv"
@@ -45,7 +46,7 @@ SetDenomMetadata
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
-	appParams simtypes.AppParams, cdc codec.JSONMarshaler, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper,
+	appParams simtypes.AppParams, cdc codec.JSONCodec, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper,
 ) simulation.WeightedOperations {
 	var (
 		weightMsgAddMarker    int
@@ -132,7 +133,7 @@ func SimulateMsgChangeStatus(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk b
 			}
 			simAccount, found = simtypes.FindAccount(accs, m.GetManager())
 			if !found {
-				return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "manager account does not exist"), nil, nil
+				return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "manager account does not exist"), nil, nil
 			}
 		case types.StatusActive:
 			accounts := m.AddressListForPermission(types.Access_Delete)
@@ -194,7 +195,7 @@ func Dispatch(
 
 	fees, err := simtypes.RandomFees(r, ctx, spendable)
 	if err != nil {
-		return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate fees"), nil, err
+		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to generate fees"), nil, err
 	}
 
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig
@@ -209,15 +210,15 @@ func Dispatch(
 		from.PrivKey,
 	)
 	if err != nil {
-		return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
+		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to generate mock tx"), nil, err
 	}
 
 	_, _, err = app.Deliver(txGen.TxEncoder(), tx)
 	if err != nil {
-		return simtypes.NoOpMsg(types.ModuleName, msg.Type(), err.Error()), nil, nil
+		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), err.Error()), nil, nil
 	}
 
-	return simtypes.NewOperationMsg(msg, true, ""), futures, nil
+	return simtypes.NewOperationMsg(msg, true, "", &codec.ProtoCodec{}), futures, nil
 }
 
 func randomUnrestrictedDenom(r *rand.Rand, unrestrictedDenomExp string) string {

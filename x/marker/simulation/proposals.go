@@ -168,7 +168,7 @@ func SimulateCreateChangeStatusProposalContent(k keeper.Keeper) simtypes.Content
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 100),
 			m.GetDenom(),
-			types.MarkerStatus(m.GetStatus()+1),
+			m.GetStatus()+1,
 		)
 	}
 }

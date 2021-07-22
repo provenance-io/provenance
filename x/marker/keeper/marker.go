@@ -291,7 +291,7 @@ func (k Keeper) BurnCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 
 // Returns the current supply in network according to the bank module for the given marker
 func (k Keeper) CurrentCirculation(ctx sdk.Context, marker types.MarkerAccountI) sdk.Int {
-	return k.bankKeeper.GetSupply(ctx).GetTotal().AmountOf(marker.GetDenom())
+	return k.bankKeeper.GetSupply(ctx, marker.GetDenom()).Amount
 }
 
 // Retures the current escrow balance for the marker base account
