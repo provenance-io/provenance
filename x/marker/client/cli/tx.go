@@ -616,7 +616,7 @@ Examples:
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
-	cmd.Flags().String(FlagTransferLimit, "", "Transfer limit an account is allowed to tranfer on granter's behalf")
+	cmd.Flags().String(FlagTransferLimit, "", "The total amount an account is allowed to tranfer on granter's behalf")
 	cmd.Flags().Int64(FlagExpiration, time.Now().AddDate(1, 0, 0).Unix(), "The Unix timestamp. Default is one year.")
 	return cmd
 }
