@@ -1152,6 +1152,8 @@ EventMarkerSetDenomMetadata event emitted when metadata is set on marker with de
 | `metadata_display` | [string](#string) |  |  |
 | `metadata_denom_units` | [EventDenomUnit](#provenance.marker.v1.EventDenomUnit) | repeated |  |
 | `administrator` | [string](#string) |  |  |
+| `metadata_name` | [string](#string) |  |  |
+| `metadata_symbol` | [string](#string) |  |  |
 
 
 

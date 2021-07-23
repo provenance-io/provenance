@@ -76,6 +76,35 @@ var handlers = map[string]appUpgrade{
 	"desert":  {},
 	"eigengrau": {
 		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
+			nhashName := "Hash"
+			nhashSymbol := "HASH"
+			nhash, found := app.BankKeeper.GetDenomMetaData(ctx, "nhash")
+			if found {
+				nhash.Name = nhashName
+				nhash.Symbol = nhashSymbol
+			} else {
+				nhash = banktypes.Metadata{
+					Description: "Hash is the staking token of the Provenance Blockchain",
+					Base:        "nhash",
+					Display:     "hash",
+					Name:        nhashName,
+					Symbol:      nhashSymbol,
+					DenomUnits: []*banktypes.DenomUnit{
+						{
+							Denom:    "nhash",
+							Exponent: 0,
+							Aliases:  []string{},
+						},
+						{
+							Denom:    "hash",
+							Exponent: 9,
+							Aliases:  []string{},
+						},
+					},
+				}
+			}
+			app.BankKeeper.SetDenomMetaData(ctx, nhash)
+
 			fromVM := map[string]uint64{
 				"attribute": 1,
 				"marker":    1,
