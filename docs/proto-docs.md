@@ -75,6 +75,7 @@
     - [ChangeStatusProposal](#provenance.marker.v1.ChangeStatusProposal)
     - [RemoveAdministratorProposal](#provenance.marker.v1.RemoveAdministratorProposal)
     - [SetAdministratorProposal](#provenance.marker.v1.SetAdministratorProposal)
+    - [SetDenomMetadataProposal](#provenance.marker.v1.SetDenomMetadataProposal)
     - [SupplyDecreaseProposal](#provenance.marker.v1.SupplyDecreaseProposal)
     - [SupplyIncreaseProposal](#provenance.marker.v1.SupplyIncreaseProposal)
     - [WithdrawEscrowProposal](#provenance.marker.v1.WithdrawEscrowProposal)
@@ -1384,6 +1385,24 @@ access on the marker
 | `description` | [string](#string) |  |  |
 | `denom` | [string](#string) |  |  |
 | `access` | [AccessGrant](#provenance.marker.v1.AccessGrant) | repeated |  |
+
+
+
+
+
+
+<a name="provenance.marker.v1.SetDenomMetadataProposal"></a>
+
+### SetDenomMetadataProposal
+SetDenomMetadataProposal defines a governance proposal to set the metadata for a denom
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `title` | [string](#string) |  |  |
+| `description` | [string](#string) |  |  |
+| `denom` | [string](#string) |  |  |
+| `metadata` | [cosmos.bank.v1beta1.Metadata](#cosmos.bank.v1beta1.Metadata) |  |  |
 
 
 
