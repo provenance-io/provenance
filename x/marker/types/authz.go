@@ -23,10 +23,10 @@ func (a MarkerTransferAuthorization) MsgTypeURL() string {
 }
 
 // Accept implements Authorization.Accept.
-func (authorization MarkerTransferAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptResponse, error) {
+func (a MarkerTransferAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptResponse, error) {
 	switch msg := msg.(type) {
 	case *MsgTransferRequest:
-		limitLeft, isNegative := authorization.TransferLimit.SafeSub(sdk.NewCoins(msg.Amount))
+		limitLeft, isNegative := a.TransferLimit.SafeSub(sdk.NewCoins(msg.Amount))
 		if isNegative {
 			return authz.AcceptResponse{}, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "requested amount is more than spend limit")
 		}
@@ -41,11 +41,11 @@ func (authorization MarkerTransferAuthorization) Accept(ctx sdk.Context, msg sdk
 }
 
 // ValidateBasic implements Authorization.ValidateBasic.
-func (authorization MarkerTransferAuthorization) ValidateBasic() error {
-	if authorization.TransferLimit == nil {
+func (a MarkerTransferAuthorization) ValidateBasic() error {
+	if a.TransferLimit == nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "spend limit cannot be nil")
 	}
-	if !authorization.TransferLimit.IsAllPositive() {
+	if !a.TransferLimit.IsAllPositive() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "spend limit cannot be negitive")
 	}
 	return nil

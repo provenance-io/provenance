@@ -28,6 +28,7 @@ const (
 	FlagAllowGovernanceControl = "allowGovernanceControl"
 	FlagTransferLimit          = "transfer-limit"
 	FlagExpiration             = "expiration"
+	FlagGranter                = "granter"
 )
 
 // NewTxCmd returns the top-level command for marker CLI transactions.
@@ -53,6 +54,7 @@ func NewTxCmd() *cobra.Command {
 		GetCmdAddMarker(),
 		GetCmdMarkerProposal(),
 		GetCmdGrantAuthorization(),
+		GetCmdRevokeAuthorization(),
 	)
 	return txCmd
 }
@@ -530,11 +532,26 @@ func GetNewTransferCmd() *cobra.Command {
 			if len(coins) != 1 {
 				return sdkErrors.Wrapf(sdkErrors.ErrInvalidCoins, "invalid coin %s", args[2])
 			}
-			msg := types.NewMsgTransferRequest(clientCtx.GetFromAddress(), from, to, coins[0])
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+
+			authzGranter, err := cmd.Flags().GetString(FlagGranter)
+			if err != nil {
+				return sdkErrors.Wrapf(err, "error retrieving granter for authz transfer")
+			}
+			if authzGranter != "" {
+				granter, err := sdk.AccAddressFromBech32(args[0])
+				if err != nil {
+					return sdkErrors.Wrapf(err, "invalid from address %s", args[0])
+				}
+				transfer := types.NewMsgTransferRequest(granter, from, to, coins[0])
+				msg := authz.NewMsgExec(clientCtx.GetFromAddress(), []sdk.Msg{transfer})
+				return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+			} else {
+				msg := types.NewMsgTransferRequest(clientCtx.GetFromAddress(), from, to, coins[0])
+				return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			}
 		},
 	}
-
+	cmd.Flags().String(FlagGranter, "", "When specified the transfer command will be executed on behalf of the granter")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -542,16 +559,17 @@ func GetNewTransferCmd() *cobra.Command {
 
 func GetCmdGrantAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "grant <grantee> <authorization_type> ",
-		Short: "Grant authorization to an address",
+		Use:     "grant-authz [grantee] [authorization_type]",
+		Aliases: []string{"ga"},
+		Args:    cobra.ExactArgs(2),
+		Short:   "Grant authorization to an address",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`grant authorization to an address to execute a transaction on your behalf:
+			fmt.Sprintf(`grant authorization to an address to execute an authorization type [transfer]:
 
 Examples:
- $ %s tx marker grant tp1skjw.. transfer 100nhash --transfer-limit=1000nhash 
+ $ %s tx marker grant-authz tp1skjw.. transfer 100nhash --transfer-limit=1000nhash 
 	`, version.AppName),
 		),
-		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -582,7 +600,7 @@ Examples:
 				}
 
 				if !spendLimit.IsAllPositive() {
-					return fmt.Errorf("spend-limit should be greater than zero")
+					return fmt.Errorf("transfer-limit should be greater than zero")
 				}
 
 				authorization = types.NewMarkerTransferAuthorization(spendLimit)
@@ -601,5 +619,49 @@ Examples:
 	flags.AddTxFlagsToCmd(cmd)
 	cmd.Flags().String(FlagTransferLimit, "", "TransferLimit for Marker Transfer Authorization, coin and denom")
 	cmd.Flags().Int64(FlagExpiration, time.Now().AddDate(1, 0, 0).Unix(), "The Unix timestamp. Default is one year.")
+	return cmd
+}
+
+func GetCmdRevokeAuthorization() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "revoke-authz [grantee] [authorization_type]",
+		Short:   "Revoke authorization to an address",
+		Aliases: []string{"ra"},
+		Args:    cobra.ExactArgs(2),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`revoke authorization to a grantee address for authorization type [transfer]
+
+Examples:
+ $ %s tx marker revoke-authz tp1skjw.. transfer  
+	`, version.AppName),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			grantee, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			var action string
+			switch args[1] {
+			case "transfer":
+				action = types.MarkerTransferAuthorization{}.MsgTypeURL()
+			default:
+				return fmt.Errorf("invalid action type, %s", args[1])
+			}
+
+			msg := authz.NewMsgRevoke(clientCtx.GetFromAddress(), grantee, action)
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
