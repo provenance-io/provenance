@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"io/ioutil"
 
@@ -15,6 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/spf13/cobra"
@@ -24,6 +26,8 @@ const (
 	FlagType                   = "type"
 	FlagSupplyFixed            = "supplyFixed"
 	FlagAllowGovernanceControl = "allowGovernanceControl"
+	FlagTransferLimit          = "transfer-limit"
+	FlagExpiration             = "expiration"
 )
 
 // NewTxCmd returns the top-level command for marker CLI transactions.
@@ -48,6 +52,7 @@ func NewTxCmd() *cobra.Command {
 		GetNewTransferCmd(),
 		GetCmdAddMarker(),
 		GetCmdMarkerProposal(),
+		GetCmdGrantAuthorization(),
 	)
 	return txCmd
 }
@@ -532,5 +537,69 @@ func GetNewTransferCmd() *cobra.Command {
 
 	flags.AddTxFlagsToCmd(cmd)
 
+	return cmd
+}
+
+func GetCmdGrantAuthorization() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "grant <grantee> <authorization_type> ",
+		Short: "Grant authorization to an address",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`grant authorization to an address to execute a transaction on your behalf:
+
+Examples:
+ $ %s tx marker grant tp1skjw.. transfer 100nhash --transfer-limit=1000nhash 
+	`, version.AppName),
+		),
+		Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			grantee, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			exp, err := cmd.Flags().GetInt64(FlagExpiration)
+			if err != nil {
+				return err
+			}
+
+			var authorization authz.Authorization
+			switch args[1] {
+			case "transfer":
+				limit, err := cmd.Flags().GetString(FlagTransferLimit)
+				if err != nil {
+					return err
+				}
+
+				spendLimit, err := sdk.ParseCoinsNormalized(limit)
+				if err != nil {
+					return err
+				}
+
+				if !spendLimit.IsAllPositive() {
+					return fmt.Errorf("spend-limit should be greater than zero")
+				}
+
+				authorization = types.NewMarkerTransferAuthorization(spendLimit)
+			default:
+				return fmt.Errorf("invalid authorization type, %s", args[1])
+			}
+
+			msg, err := authz.NewMsgGrant(clientCtx.GetFromAddress(), grantee, authorization, time.Unix(exp, 0))
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	cmd.Flags().String(FlagTransferLimit, "", "TransferLimit for Marker Transfer Authorization, coin and denom")
+	cmd.Flags().Int64(FlagExpiration, time.Now().AddDate(1, 0, 0).Unix(), "The Unix timestamp. Default is one year.")
 	return cmd
 }

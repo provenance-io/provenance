@@ -30,9 +30,9 @@ import (
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	cfg     testnet.Config
-	testnet *testnet.Network
-
+	cfg         testnet.Config
+	testnet     *testnet.Network
+	keyringPath string
 	accountAddr sdk.AccAddress
 	accountKey  *secp256k1.PrivKey
 }
@@ -47,7 +47,17 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	cfg := testutil.DefaultTestNetworkConfig()
 
 	genesisState := cfg.GenesisState
-	cfg.NumValidators = 1
+	cfg.NumValidators = 2
+
+	// var authData authtypes.GenesisState
+	// s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[authtypes.ModuleName], &authData))
+	// baseAccount := authtypes.NewBaseAccount(s.accountAddr, nil, 10, 2)
+	// genAccount, err := codectypes.NewAnyWithValue(baseAccount)
+	// s.Require().NoError(err)
+	// authData.Accounts = append(authData.Accounts, genAccount)
+	// authDataBz, err := cfg.Codec.MarshalJSON(&authData)
+	// s.Require().NoError(err)
+	// genesisState[authtypes.ModuleName] = authDataBz
 
 	// Configure Genesis data for marker module
 	var markerData markertypes.GenesisState
@@ -237,6 +247,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 		expectErr    bool
 		respType     proto.Message
 		expectedCode uint32
+		validator    uint32
 	}{
 		{
 			"create a new marker",
@@ -251,7 +262,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			false, &sdk.TxResponse{}, 0, 0,
 		},
 		{
 			"create a new marker with dashes and periods",
@@ -266,7 +277,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			false, &sdk.TxResponse{}, 0, 0,
 		},
 		{
 			"fail to create add marker, incorrect allow governance value",
@@ -281,7 +292,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, &sdk.TxResponse{}, 0,
+			true, &sdk.TxResponse{}, 0, 0,
 		},
 		{
 			"fail to create add marker, incorrect supply fixed value",
@@ -296,7 +307,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, &sdk.TxResponse{}, 0,
+			true, &sdk.TxResponse{}, 0, 0,
 		},
 		{
 			"add single access",
@@ -310,7 +321,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			false, &sdk.TxResponse{}, 0, 0,
 		},
 		{
 			"add multiple access",
@@ -324,7 +335,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			false, &sdk.TxResponse{}, 0, 0,
 		},
 		{
 			"mint supply",
@@ -336,7 +347,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			false, &sdk.TxResponse{}, 0, 0,
 		},
 		{
 			"burn supply",
@@ -348,7 +359,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			false, &sdk.TxResponse{}, 0, 0,
 		},
 		{
 			"finalize",
@@ -360,7 +371,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			false, &sdk.TxResponse{}, 0, 0,
 		},
 		{
 			"activate",
@@ -372,7 +383,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			false, &sdk.TxResponse{}, 0, 0,
 		},
 		{
 			"withdraw, fail to parse coins",
@@ -385,7 +396,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, &sdk.TxResponse{}, 0,
+			true, &sdk.TxResponse{}, 0, 0,
 		},
 		{
 			"withdraw, fail to parse recipient address",
@@ -399,7 +410,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, &sdk.TxResponse{}, 0,
+			true, &sdk.TxResponse{}, 0, 0,
 		},
 		{
 			"withdraw, successful withdraw to a recipient",
@@ -413,7 +424,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			false, &sdk.TxResponse{}, 0, 0,
 		},
 		{
 			"withdraw, successful withdraw to caller's account",
@@ -426,7 +437,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			false, &sdk.TxResponse{}, 0, 0,
 		},
 		{
 			"transfer, fail to transfer invalid from address",
@@ -440,7 +451,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, &sdk.TxResponse{}, 0,
+			true, &sdk.TxResponse{}, 0, 0,
 		},
 		{
 			"transfer, fail to transfer invalid to address",
@@ -454,7 +465,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, &sdk.TxResponse{}, 0,
+			true, &sdk.TxResponse{}, 0, 0,
 		},
 		{
 			"transfer, fail to transfer invalid coin parse",
@@ -468,7 +479,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, &sdk.TxResponse{}, 0,
+			true, &sdk.TxResponse{}, 0, 0,
 		},
 		{
 			"transfer, fail to transfer invalid coin count",
@@ -482,7 +493,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, &sdk.TxResponse{}, 0,
+			true, &sdk.TxResponse{}, 0, 0,
 		},
 		{
 			"transfer, successfully transfer",
@@ -496,7 +507,35 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			false, &sdk.TxResponse{}, 0, 0,
+		},
+		{
+			"add authz to marker transfer",
+			markercli.GetCmdGrantAuthorization(),
+			[]string{
+				s.testnet.Validators[1].Address.String(),
+				"transfer",
+				fmt.Sprintf("--%s=%s", markercli.FlagTransferLimit, "10hotdog"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0, 0,
+		},
+		{
+			"transfer, grantee successfully transfer",
+			markercli.GetNewTransferCmd(),
+			[]string{
+				s.testnet.Validators[0].Address.String(),
+				s.accountAddr.String(),
+				"100hotdog",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[1].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0, 1,
 		},
 		{
 			"remove access",
@@ -509,7 +548,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			false, &sdk.TxResponse{}, 0, 0,
 		},
 	}
 
@@ -517,7 +556,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			clientCtx := s.testnet.Validators[0].ClientCtx
+			clientCtx := s.testnet.Validators[tc.validator].ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
 			if tc.expectErr {
