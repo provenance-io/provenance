@@ -1401,7 +1401,6 @@ SetDenomMetadataProposal defines a governance proposal to set the metadata for a
 | ----- | ---- | ----- | ----------- |
 | `title` | [string](#string) |  |  |
 | `description` | [string](#string) |  |  |
-| `denom` | [string](#string) |  |  |
 | `metadata` | [cosmos.bank.v1beta1.Metadata](#cosmos.bank.v1beta1.Metadata) |  |  |
 
 
