@@ -6,11 +6,14 @@ import (
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	sdkcodec "github.com/cosmos/cosmos-sdk/codec/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 // ExportAppStateAndValidators exports the state of the application for a genesis
@@ -30,6 +33,26 @@ func (app *App) ExportAppStateAndValidators(
 	}
 
 	genState := app.mm.ExportGenesis(ctx, app.appCodec)
+
+	// filter out marker accounts from auth module export
+	if genState[auth.ModuleName] != nil {
+		var authGenState auth.GenesisState
+		app.appCodec.MustUnmarshalJSON(genState[auth.ModuleName], &authGenState)
+		var regular = make([]*sdkcodec.Any, 0)
+		for _, acct := range authGenState.Accounts {
+			if acct.TypeUrl == "/provenance.marker.v1.MarkerAccount" {
+				regular = append(regular, sdkcodec.UnsafePackAny(
+					acct.GetCachedValue().(*markertypes.MarkerAccount).BaseAccount))
+			} else {
+				regular = append(regular, acct)
+			}
+		}
+
+		authGenState.Accounts = regular
+		delete(genState, auth.ModuleName)
+		genState[auth.ModuleName] = app.appCodec.MustMarshalJSON(&authGenState)
+	}
+
 	appState, err := json.MarshalIndent(genState, "", "  ")
 	if err != nil {
 		return servertypes.ExportedApp{}, err

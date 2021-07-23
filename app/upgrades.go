@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	ibcconnectiontypes "github.com/cosmos/ibc-go/modules/core/03-connection/types"
 
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
@@ -76,6 +77,8 @@ var handlers = map[string]appUpgrade{
 	"desert":  {},
 	"eigengrau": {
 		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
+			app.IBCKeeper.ConnectionKeeper.SetParams(ctx, ibcconnectiontypes.DefaultParams())
+
 			nhashName := "Hash"
 			nhashSymbol := "HASH"
 			nhash, found := app.BankKeeper.GetDenomMetaData(ctx, "nhash")
@@ -106,6 +109,7 @@ var handlers = map[string]appUpgrade{
 			app.BankKeeper.SetDenomMetaData(ctx, nhash)
 
 			fromVM := map[string]uint64{
+				"ibc":       1,
 				"attribute": 1,
 				"marker":    1,
 				"metadata":  1,

@@ -7,10 +7,10 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	simapp "github.com/provenance-io/provenance/app"
+	simappparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/x/name/keeper"
 	"github.com/provenance-io/provenance/x/name/simulation"
 	"github.com/provenance-io/provenance/x/name/types"
@@ -34,7 +34,7 @@ func TestProposalContents(t *testing.T) {
 
 	// tests w0 interface:
 	require.Equal(t, simulation.OpWeightSubmitCreateRootNameProposal, w0.AppParamsKey())
-	require.Equal(t, simappparams.DefaultWeightTextProposal, w0.DefaultWeight())
+	require.Equal(t, simappparams.DefaultWeightCreateRootNameProposal, w0.DefaultWeight())
 
 	content := w0.ContentSimulatorFn()(r, ctx, accounts)
 
