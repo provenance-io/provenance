@@ -178,6 +178,8 @@ message EventMarkerSetDenomMetadata {
   string                  metadata_display     = 3;
   repeated EventDenomUnit metadata_denom_units = 4;
   string                  administrator        = 5;
+  string                  metadata_name        = 6;
+  string                  metadata_symbol      = 7;
 }
 
 // EventDenomUnit denom units for set denom metadata event
