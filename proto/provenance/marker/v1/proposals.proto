@@ -105,7 +105,6 @@ message WithdrawEscrowProposal {
 
 // SetDenomMetadataProposal defines a governance proposal to set the metadata for a denom
 message SetDenomMetadataProposal {
-  option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
   string                       title       = 1;
