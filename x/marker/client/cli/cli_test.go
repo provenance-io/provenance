@@ -149,7 +149,7 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
 				"testcoin",
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq","pub_key":null,"account_number":"7","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"testcoin","supply":"1000","marker_type":"MARKER_TYPE_COIN","supply_fixed":true,"allow_governance_control":false}}`,
+			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq","pub_key":null,"account_number":"8","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"testcoin","supply":"1000","marker_type":"MARKER_TYPE_COIN","supply_fixed":true,"allow_governance_control":false}}`,
 		},
 		{
 			"get testcoin marker test",
@@ -163,7 +163,7 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
   access_control: []
   allow_governance_control: false
   base_account:
-    account_number: "7"
+    account_number: "8"
     address: cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq
     pub_key: null
     sequence: "0"
@@ -183,13 +183,13 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
 			"",
 		},
 		{
-			"get restricted  coin marker",
+			"get restricted coin marker",
 			markercli.MarkerCmd(),
 			[]string{
 				"lockedcoin",
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos16437wt0xtqtuw0pn4vt8rlf8gr2plz2det0mt2","pub_key":null,"account_number":"8","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"lockedcoin","supply":"1000","marker_type":"MARKER_TYPE_RESTRICTED","supply_fixed":true,"allow_governance_control":false}}`,
+			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos16437wt0xtqtuw0pn4vt8rlf8gr2plz2det0mt2","pub_key":null,"account_number":"9","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"lockedcoin","supply":"1000","marker_type":"MARKER_TYPE_RESTRICTED","supply_fixed":true,"allow_governance_control":false}}`,
 		},
 		{
 			"query access",
@@ -526,7 +526,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code)
+				s.Require().Equal(tc.expectedCode, txResp.Code, fmt.Sprintf("Response from error: %s", out.String()))
 			}
 		})
 	}
@@ -546,7 +546,7 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 			"authz test setup, create a new marker",
 			markercli.GetCmdAddMarker(),
 			[]string{
-				"1000hotdog",
+				"1000authzhotdog",
 				fmt.Sprintf("--%s=%s", markercli.FlagType, "RESTRICTED"),
 				fmt.Sprintf("--%s=%s", markercli.FlagSupplyFixed, "true"),
 				fmt.Sprintf("--%s=%s", markercli.FlagAllowGovernanceControl, "true"),
@@ -562,7 +562,7 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 			markercli.GetCmdAddAccess(),
 			[]string{
 				s.testnet.Validators[0].Address.String(),
-				"hotdog",
+				"authzhotdog",
 				"admin,mint,burn,transfer,withdraw",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -575,7 +575,7 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 			"authz test setup, mint supply",
 			markercli.GetCmdMint(),
 			[]string{
-				"100hotdog",
+				"100authzhotdog",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -587,7 +587,7 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 			"authz test setup, finalize",
 			markercli.GetCmdFinalize(),
 			[]string{
-				"hotdog",
+				"authzhotdog",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -599,7 +599,7 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 			"authz test setup, activate",
 			markercli.GetCmdActivate(),
 			[]string{
-				"hotdog",
+				"authzhotdog",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -611,8 +611,8 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 			"authz test setup, withdraw to granter's account",
 			markercli.GetCmdWithdrawCoins(),
 			[]string{
-				"hotdog",
-				"200hotdog",
+				"authzhotdog",
+				"200authzhotdog",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -626,7 +626,7 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 			[]string{
 				s.testnet.Validators[1].Address.String(),
 				"transfer",
-				fmt.Sprintf("--%s=%s", markercli.FlagTransferLimit, "10hotdog"),
+				fmt.Sprintf("--%s=%s", markercli.FlagTransferLimit, "10authzhotdog"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -640,7 +640,7 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 			[]string{
 				s.testnet.Validators[0].Address.String(),
 				s.accountAddr.String(),
-				"9hotdog",
+				"9authzhotdog",
 				fmt.Sprintf("--%s=%s", flags.FlagNode, s.testnet.Validators[0].RPCAddress),
 				fmt.Sprintf("--%s=%s", markercli.FlagGranter, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[1].Address.String()),
@@ -656,7 +656,7 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 			[]string{
 				s.testnet.Validators[0].Address.String(),
 				s.accountAddr.String(),
-				"2hotdog",
+				"2authzhotdog",
 				fmt.Sprintf("--%s=%s", flags.FlagNode, s.testnet.Validators[0].RPCAddress),
 				fmt.Sprintf("--%s=%s", markercli.FlagGranter, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[1].Address.String()),
@@ -821,7 +821,6 @@ func (s *IntegrationTestSuite) TestMarkerTxGovProposals() {
 			} else {
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-				println(out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, txResp.Logs.String())
 			}
