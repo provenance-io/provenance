@@ -545,10 +545,9 @@ func GetNewTransferCmd() *cobra.Command {
 				transfer := types.NewMsgTransferRequest(granter, from, to, coins[0])
 				msg := authz.NewMsgExec(clientCtx.GetFromAddress(), []sdk.Msg{transfer})
 				return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
-			} else {
-				msg := types.NewMsgTransferRequest(clientCtx.GetFromAddress(), from, to, coins[0])
-				return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 			}
+			msg := types.NewMsgTransferRequest(clientCtx.GetFromAddress(), from, to, coins[0])
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 	cmd.Flags().String(FlagGranter, "", "When specified the transfer command will be executed on behalf of the granter")
@@ -589,14 +588,14 @@ Examples:
 			var authorization authz.Authorization
 			switch args[1] {
 			case "transfer":
-				limit, err := cmd.Flags().GetString(FlagTransferLimit)
-				if err != nil {
-					return err
+				limit, terr := cmd.Flags().GetString(FlagTransferLimit)
+				if terr != nil {
+					return terr
 				}
 
-				spendLimit, err := sdk.ParseCoinsNormalized(limit)
-				if err != nil {
-					return err
+				spendLimit, terr := sdk.ParseCoinsNormalized(limit)
+				if terr != nil {
+					return terr
 				}
 
 				if !spendLimit.IsAllPositive() {
