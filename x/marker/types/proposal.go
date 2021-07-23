@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -270,6 +271,13 @@ func (wep WithdrawEscrowProposal) String() string {
 `, wep.Denom, wep.Title, wep.Description, wep.Amount, wep.TargetAddress)
 }
 
+func NewSetDenomMetadataProposal(title, description string, metadata banktypes.Metadata) *SetDenomMetadataProposal {
+	return &SetDenomMetadataProposal{
+		Title:       title,
+		Description: description,
+		Metadata:    metadata,
+	}
+}
 // Implements Proposal Interface
 
 func (sdmdp SetDenomMetadataProposal) ProposalRoute() string { return RouterKey }
