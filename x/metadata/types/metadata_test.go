@@ -37,7 +37,6 @@ type MetadataTypesTestSuite struct {
 	scopeSpecID    MetadataAddress
 	contractSpecID MetadataAddress
 	recordSpecID   MetadataAddress
-
 }
 
 func (s *MetadataTypesTestSuite) SetupTest() {
@@ -49,12 +48,12 @@ func (s *MetadataTypesTestSuite) SetupTest() {
 	s.recordName = "recordname"
 
 	// Hard coded ids generated previously using the hard coded id components.
-	s.scopeIDStr        = "scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"
-	s.sessionIDStr      = "session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr"
-	s.recordIDStr       = "record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3"
-	s.scopeSpecIDStr    = "scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"
+	s.scopeIDStr = "scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"
+	s.sessionIDStr = "session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr"
+	s.recordIDStr = "record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3"
+	s.scopeSpecIDStr = "scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"
 	s.contractSpecIDStr = "contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn"
-	s.recordSpecIDStr   = "recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44"
+	s.recordSpecIDStr = "recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44"
 
 	// Parsed uuid strings.
 	s.scopeUUID = uuid.MustParse(s.scopeUUIDStr)
@@ -90,7 +89,7 @@ func (s *MetadataTypesTestSuite) TestGetScopeIDInfo() {
 		assert.Equal(t, "", info.ScopeUuid, "ScopeUuid")
 	})
 
-	s.T().Run("scope id, everything populated", func(t *testing.T){
+	s.T().Run("scope id, everything populated", func(t *testing.T) {
 		info := GetScopeIDInfo(s.scopeID)
 		require.NotNil(t, info, "GetScopeIDInfo result")
 		assert.Equal(t, s.scopeID, info.ScopeId, "ScopeId")
@@ -182,7 +181,7 @@ func (s *MetadataTypesTestSuite) TestGetScopeSpecIDInfo() {
 		assert.Equal(t, "", info.ScopeSpecUuid, "ScopeSpecUuid")
 	})
 
-	s.T().Run("scope spec id, everything populated", func(t *testing.T){
+	s.T().Run("scope spec id, everything populated", func(t *testing.T) {
 		info := GetScopeSpecIDInfo(s.scopeSpecID)
 		require.NotNil(t, info, "GetScopeSpecIDInfo result")
 		assert.Equal(t, s.scopeSpecID, info.ScopeSpecId, "ScopeSpecId")
@@ -204,7 +203,7 @@ func (s *MetadataTypesTestSuite) TestGetContractSpecIDInfo() {
 		assert.Equal(t, "", info.ContractSpecUuid, "ContractSpecUuid")
 	})
 
-	s.T().Run("contract spec id, everything populated", func(t *testing.T){
+	s.T().Run("contract spec id, everything populated", func(t *testing.T) {
 		info := GetContractSpecIDInfo(s.contractSpecID)
 		require.NotNil(t, info, "GetContractSpecIDInfo result")
 		assert.Equal(t, s.contractSpecID, info.ContractSpecId, "ContractSpecId")

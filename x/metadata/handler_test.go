@@ -511,18 +511,18 @@ func (s MetadataHandlerTestSuite) TestAddAndDeleteScopeOwners() {
 			Owners: []types.Party{
 				{
 					Address: addrOriginator,
-					Role: types.PartyType_PARTY_TYPE_ORIGINATOR,
+					Role:    types.PartyType_PARTY_TYPE_ORIGINATOR,
 				},
 				{
 					Address: addrServicer,
-					Role: types.PartyType_PARTY_TYPE_SERVICER,
+					Role:    types.PartyType_PARTY_TYPE_SERVICER,
 				},
 			},
 		}
 
 		scopeSpecA := types.ScopeSpecification{
 			SpecificationId: scopeA.SpecificationId,
-			Description:     &types.Description{
+			Description: &types.Description{
 				Name:        "com.figure.origination.loan",
 				Description: "Figure loan origination",
 			},
@@ -675,14 +675,14 @@ func (s MetadataHandlerTestSuite) TestAddAndDeleteScopeDataAccess() {
 			Owners: []types.Party{
 				{
 					Address: addrOriginator,
-					Role: types.PartyType_PARTY_TYPE_ORIGINATOR,
+					Role:    types.PartyType_PARTY_TYPE_ORIGINATOR,
 				},
 			},
 		}
 
 		scopeSpecA := types.ScopeSpecification{
 			SpecificationId: scopeA.SpecificationId,
-			Description:     &types.Description{
+			Description: &types.Description{
 				Name:        "com.figure.origination.loan",
 				Description: "Figure loan origination",
 			},
