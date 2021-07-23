@@ -39,9 +39,8 @@ test-sim-multi-seed-short: runsim
 
 test-sim-benchmark-invariants:
 	@echo "Running simulation invariant benchmarks..."
-	@go test -mod=readonly $(SIMAPP) -benchmem -bench=BenchmarkInvariants -run=^$ \
-	-Enabled=true -NumBlocks=1000 -BlockSize=200 \
-	-Period=1 -Commit=true -Seed=57 -v -timeout 24h
+	@go test -mod=readonly -run=^$$ $(SIMAPP) -benchmem -bench=BenchmarkInvariants \
+	-Enabled=true -NumBlocks=1000 -BlockSize=200 -Period=1 -Commit=true -Seed=57 -v -timeout 24h
 
 .PHONY: \
 test-sim-nondeterminism \
