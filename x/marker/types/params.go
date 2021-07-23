@@ -127,6 +127,5 @@ func validateRegexParam(i interface{}) error {
 		return fmt.Errorf("invalid parameter, validation regex must not contain anchors ^,$")
 	}
 	_, err := regexp.Compile(fmt.Sprintf(`^%s$`, exp))
-
 	return err
 }

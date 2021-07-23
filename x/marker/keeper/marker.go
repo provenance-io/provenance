@@ -289,6 +289,16 @@ func (k Keeper) BurnCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 	return nil
 }
 
+// Returns the current supply in network according to the bank module for the given marker
+func (k Keeper) CurrentCirculation(ctx sdk.Context, marker types.MarkerAccountI) sdk.Int {
+	return k.bankKeeper.GetSupply(ctx, marker.GetDenom()).Amount
+}
+
+// Retures the current escrow balance for the marker base account
+func (k Keeper) CurrentEscrow(ctx sdk.Context, marker types.MarkerAccountI) sdk.Coins {
+	return k.bankKeeper.GetAllBalances(ctx, marker.GetAddress())
+}
+
 // AdjustCirculation will mint/burn coin if required to ensure desired supply matches amount in circulation
 func (k Keeper) AdjustCirculation(ctx sdk.Context, marker types.MarkerAccountI, desiredSupply sdk.Coin) error {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "adjust_circulation")
@@ -337,7 +347,7 @@ func (k Keeper) IncreaseSupply(ctx sdk.Context, marker types.MarkerAccountI, coi
 	total := inCirculation.Add(coin)
 	maxAllowed := k.GetParams(ctx).MaxTotalSupply
 	if total.Amount.Uint64() > maxAllowed {
-		return fmt.Errorf("requested supply %d exceeds maximum allowed value %d", total.Amount, maxAllowed)
+		return fmt.Errorf("requested supply %d exceeds maximum allowed value %d", total.Amount.Uint64(), maxAllowed)
 	}
 
 	// If the marker has a fixed supply then adjust the supply to match the new total

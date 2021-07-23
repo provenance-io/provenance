@@ -45,16 +45,23 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add authz support to Marker module transfer `MarkerTransferAuthorization` [#265](https://github.com/provenance-io/provenance/issues/265)
   * Add authz grant/revoke command to `marker` cli
   * Add `granter` flag to `marker` transfer command to execute transfer with authz
+* Add authz and feegrant modules
 
 ### Bug Fixes
 
 * Marker Withdraw Escrow Proposal type is properly registered [#367](https://github.com/provenance-io/provenance/issues/367)
   * Target Address field spelling error corrected in Withdraw Escrow and Increase Supply Governance Proposals.
 * Fix DeleteScopeOwner endpoint to store the correct scope [PR 377](https://github.com/provenance-io/provenance/pull/377)
+* Marker module import/export issues  [PR384](https://github.com/provenance-io/provenance/pull/384)
+  * Add missing marker attributes to state export
+  * Fix account numbering issues with marker accounts and auth module accounts during import
+  * Export marker accounts as a base account entry and a separate marker module record
+  * Add Marker module governance proposals, genesis, and marker operations to simulation testing [#94](https://github.com/provenance-io/provenance/issues/94)
 
 ### Improvements
 
 * Updated to Cosmos SDK Release v0.43  [#154](https://github.com/provenance-io/provenance/issues/154)
+* Updated to IBC-Go Module v1.0.0
 
 ## [v1.5.0](https://github.com/provenance-io/provenance/releases/tag/v1.5.0) - 2021-06-23
 
