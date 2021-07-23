@@ -623,9 +623,9 @@ func (s *P8eTestSuite) TestConvertP8eMemorializeContractRequest() {
 				Invoker: s.user1,
 			},
 			P8EData{
-				Scope:      nil, // TODO
-				Session:    nil, // TODO
-				RecordReqs: nil, // TODO
+				Scope:      nil,        // TODO
+				Session:    nil,        // TODO
+				RecordReqs: nil,        // TODO
 				Signers:    []string{}, // TODO
 			},
 			"",
