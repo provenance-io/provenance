@@ -679,10 +679,7 @@ func (k Keeper) SetMarkerDenomMetadata(ctx sdk.Context, metadata banktypes.Metad
 	k.bankKeeper.SetDenomMetaData(ctx, metadata)
 
 	markerSetDenomMetaEvent := types.NewEventMarkerSetDenomMetadata(
-		metadata.Base,
-		metadata.Description,
-		metadata.Display,
-		metadata.DenomUnits,
+		metadata,
 		caller.String(),
 	)
 	if err := ctx.EventManager().EmitTypedEvent(markerSetDenomMetaEvent); err != nil {
