@@ -169,7 +169,7 @@ func TestProposalTypeSetDenomMetadataProposal_Format(t *testing.T) {
 			Display:     "testmdd",
 			Name:        "Test Metadata",
 			Symbol:      "TMD",
-			DenomUnits:  []*banktypes.DenomUnit{
+			DenomUnits: []*banktypes.DenomUnit{
 				{
 					Denom:    "testmd",
 					Exponent: 0,

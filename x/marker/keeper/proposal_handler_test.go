@@ -45,9 +45,9 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 func (s *IntegrationTestSuite) TestMarkerProposals() {
 
 	testCases := []struct {
-		name    string
-		prop    govtypes.Content
-		err     error
+		name string
+		prop govtypes.Content
+		err  error
 	}{
 		// ADD MARKER PROPOSALS
 		{
@@ -233,7 +233,7 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 					Display:     "badchar",
 					Name:        "Bad Char",
 					Symbol:      "BC",
-					DenomUnits:  []*banktypes.DenomUnit{
+					DenomUnits: []*banktypes.DenomUnit{
 						{
 							Denom:    "bad$char",
 							Exponent: 0,
@@ -253,7 +253,7 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 					Display:     "doesnotexist",
 					Name:        "Does Not Exist",
 					Symbol:      "DNE",
-					DenomUnits:  []*banktypes.DenomUnit{
+					DenomUnits: []*banktypes.DenomUnit{
 						{
 							Denom:    "doesnotexist",
 							Exponent: 0,
@@ -273,7 +273,7 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 					Display:     "testnogov",
 					Name:        "Test No Governance",
 					Symbol:      "TNG",
-					DenomUnits:  []*banktypes.DenomUnit{
+					DenomUnits: []*banktypes.DenomUnit{
 						{
 							Denom:    "testnogov",
 							Exponent: 0,
@@ -293,7 +293,7 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 					Display:     "test1",
 					Name:        "Test One",
 					Symbol:      "TONE",
-					DenomUnits:  []*banktypes.DenomUnit{
+					DenomUnits: []*banktypes.DenomUnit{
 						{
 							Denom:    "test1",
 							Exponent: 0,

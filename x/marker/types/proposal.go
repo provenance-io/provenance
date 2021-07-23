@@ -278,13 +278,14 @@ func NewSetDenomMetadataProposal(title, description string, metadata banktypes.M
 		Metadata:    metadata,
 	}
 }
+
 // Implements Proposal Interface
 
 func (sdmdp SetDenomMetadataProposal) ProposalRoute() string { return RouterKey }
 func (sdmdp SetDenomMetadataProposal) ProposalType() string  { return ProposalTypeSetDenomMetadata }
 func (sdmdp SetDenomMetadataProposal) ValidateBasic() error {
 	if err := sdmdp.Metadata.Validate(); err != nil {
-		return sdkerrors.Wrap(govtypes.ErrInvalidProposalContent, "invalid metadata: " + err.Error())
+		return sdkerrors.Wrap(govtypes.ErrInvalidProposalContent, "invalid metadata: "+err.Error())
 	}
 	return govtypes.ValidateAbstract(&sdmdp)
 }
