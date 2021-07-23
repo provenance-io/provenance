@@ -290,7 +290,7 @@ func (sdmdp SetDenomMetadataProposal) ValidateBasic() error {
 }
 
 func (sdmdp SetDenomMetadataProposal) String() string {
-	return fmt.Sprintf(`MarkerAccount Withdraw Escrow Proposal:
+	return fmt.Sprintf(`Set Denom Metadata Proposal:
   Marker:      %s
   Title:       %s
   Description: %s
