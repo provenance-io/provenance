@@ -364,7 +364,7 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 			proposed:         types.NewRecord("not-a-match", sessionID, *process, []types.RecordInput{}, []types.RecordOutput{}, s.recordSpecID),
 			signers:          []string{s.user1},
 			partiesInvolved:  ownerPartyList(s.user1),
-			errorMsg:        "the Name field of records cannot be changed",
+			errorMsg:         "the Name field of records cannot be changed",
 		},
 		"original session id not found": {
 			existing:         types.NewRecord(s.recordName, randomSessionID, *process, []types.RecordInput{}, []types.RecordOutput{}, s.recordSpecID),

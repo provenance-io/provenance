@@ -157,7 +157,7 @@ func (s *SpecKeeperTestSuite) TestGetSetRemoveRecordSpecification() {
 
 	s.app.MetadataKeeper.SetRecordSpecification(s.ctx, *newSpec)
 
-	spec2, found2 := s.app.MetadataKeeper.GetRecordSpecification(s.ctx,recSpecID)
+	spec2, found2 := s.app.MetadataKeeper.GetRecordSpecification(s.ctx, recSpecID)
 	s.True(found2, "get record spec should return true after it has been saved")
 	s.NotNil(spec2, "get record spec should always return a non-nil record spec")
 	s.Equal(recSpecID, spec2.SpecificationId, "2: get record spec should return a spec containing id provided")
@@ -198,12 +198,12 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecs() {
 				types.NewInputSpecification(
 					fmt.Sprintf("input name [%d] 1", i),
 					fmt.Sprintf("type name [%d] 1", i),
-					types.NewInputSpecificationSourceHash(fmt.Sprintf("source hash [%d] 1", i),),
+					types.NewInputSpecificationSourceHash(fmt.Sprintf("source hash [%d] 1", i)),
 				),
 				types.NewInputSpecification(
 					fmt.Sprintf("input name [%d] 2", i),
 					fmt.Sprintf("type name [%d] 2", i),
-					types.NewInputSpecificationSourceHash(fmt.Sprintf("source hash [%d] 2", i),),
+					types.NewInputSpecificationSourceHash(fmt.Sprintf("source hash [%d] 2", i)),
 				),
 				types.NewInputSpecification(
 					fmt.Sprintf("input name [%d] 3", i),
@@ -799,7 +799,7 @@ func (s *SpecKeeperTestSuite) TestValidateRecordSpecUpdate() {
 				types.RecordSpecMetadataAddress(s.contractSpecUUID1, "name"),
 				"name",
 				[]*types.InputSpecification{},
-				"",   // should cause error if ValidateBasic called on it
+				"", // should cause error if ValidateBasic called on it
 				types.DefinitionType_DEFINITION_TYPE_RECORD,
 				[]types.PartyType{types.PartyType_PARTY_TYPE_SERVICER},
 			),
@@ -819,7 +819,7 @@ func (s *SpecKeeperTestSuite) TestValidateRecordSpecUpdate() {
 				types.RecordSpecMetadataAddress(s.contractSpecUUID1, "foo"),
 				"foo",
 				[]*types.InputSpecification{},
-				"",   // should cause error if ValidateBasic called on it
+				"", // should cause error if ValidateBasic called on it
 				types.DefinitionType_DEFINITION_TYPE_RECORD,
 				[]types.PartyType{types.PartyType_PARTY_TYPE_SERVICER},
 			),
