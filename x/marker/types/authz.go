@@ -10,7 +10,7 @@ var (
 	_ authz.Authorization = &MarkerTransferAuthorization{}
 )
 
-// NewMarkerTransferAuthorization creates a new SendAuthorization object.
+// NewMarkerTransferAuthorization creates a new MarkerTransferAuthorization object.
 func NewMarkerTransferAuthorization(transferLimit sdk.Coins) *MarkerTransferAuthorization {
 	return &MarkerTransferAuthorization{
 		TransferLimit: transferLimit,

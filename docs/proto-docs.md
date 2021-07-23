@@ -960,13 +960,13 @@ Access defines the different types of permissions that a marker supports grantin
 <a name="provenance.marker.v1.MarkerTransferAuthorization"></a>
 
 ### MarkerTransferAuthorization
-MarkerTransferAuthorization allows the grantee to transfer up to transfer_limit coins from
-the granter's account.
+MarkerTransferAuthorization gives the grantee permissions to execute
+a marker transfer on behalf of the granter's account.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `transfer_limit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+| `transfer_limit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | transfer_limit is the total amount the grantee can transfer |
 
 
 

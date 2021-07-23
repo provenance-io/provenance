@@ -26,9 +26,10 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// MarkerTransferAuthorization allows the grantee to transfer up to transfer_limit coins from
-// the granter's account.
+// MarkerTransferAuthorization gives the grantee permissions to execute
+// a marker transfer on behalf of the granter's account.
 type MarkerTransferAuthorization struct {
+	// transfer_limit is the total amount the grantee can transfer
 	TransferLimit github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=transfer_limit,json=transferLimit,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"transfer_limit"`
 }
 

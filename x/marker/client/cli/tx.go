@@ -566,7 +566,7 @@ func GetCmdGrantAuthorization() *cobra.Command {
 			fmt.Sprintf(`grant authorization to an address to execute an authorization type [transfer]:
 
 Examples:
- $ %s tx marker grant-authz tp1skjw.. transfer 100nhash --transfer-limit=1000nhash 
+ $ %s tx marker grant-authz tp1skjw.. transfer --transfer-limit=1000nhash 
 	`, version.AppName),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -616,7 +616,7 @@ Examples:
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
-	cmd.Flags().String(FlagTransferLimit, "", "TransferLimit for Marker Transfer Authorization, coin and denom")
+	cmd.Flags().String(FlagTransferLimit, "", "Transfer limit an account is allowed to tranfer on granter's behalf")
 	cmd.Flags().Int64(FlagExpiration, time.Now().AddDate(1, 0, 0).Unix(), "The Unix timestamp. Default is one year.")
 	return cmd
 }

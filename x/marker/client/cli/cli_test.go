@@ -30,9 +30,9 @@ import (
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	cfg         testnet.Config
-	testnet     *testnet.Network
-	keyringPath string
+	cfg     testnet.Config
+	testnet *testnet.Network
+
 	accountAddr sdk.AccAddress
 	accountKey  *secp256k1.PrivKey
 }
