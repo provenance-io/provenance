@@ -23,10 +23,12 @@ func TestValidateMaxURILengthI(t *testing.T) {
 
 func TestOSParamKeyTable(t *testing.T) {
 	keyTable := OSParamKeyTable()
-	require.Panics(t, func() { keyTable.RegisterType(paramtypes.NewParamSetPair(ParamStoreKeyMaxValueLength, "5000", validateMaxURILength)) })
+	require.Panics(t, func() {
+		keyTable.RegisterType(paramtypes.NewParamSetPair(ParamStoreKeyMaxValueLength, "5000", validateMaxURILength))
+	})
 }
 
-func TestDefault(t *testing.T){
+func TestDefault(t *testing.T) {
 	metadataData := DefaultOSLocatorParams()
 	require.Equal(t, 2048, int(metadataData.MaxUriLength))
 }
