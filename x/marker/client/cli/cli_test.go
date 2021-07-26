@@ -14,8 +14,10 @@ import (
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
@@ -30,24 +32,63 @@ import (
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	cfg     testnet.Config
-	testnet *testnet.Network
-
-	accountAddr sdk.AccAddress
-	accountKey  *secp256k1.PrivKey
+	cfg          testnet.Config
+	testnet      *testnet.Network
+	keyring      keyring.Keyring
+	keyringDir   string
+	accountAddr1 sdk.AccAddress
+	accountAddr2 sdk.AccAddress
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
-	s.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
-	addr, err := sdk.AccAddressFromHex(s.accountKey.PubKey().Address().String())
-	s.Require().NoError(err)
-	s.accountAddr = addr
 	s.T().Log("setting up integration test suite")
 
 	cfg := testutil.DefaultTestNetworkConfig()
 
 	genesisState := cfg.GenesisState
-	cfg.NumValidators = 2
+	cfg.NumValidators = 1
+
+	// Create keyrings for user accounts
+	path := hd.CreateHDPath(118, 0, 0).String()
+	s.keyringDir = s.T().TempDir()
+	kr, err := keyring.New(s.T().Name(), "test", s.keyringDir, nil)
+	s.Require().NoError(err)
+	s.keyring = kr
+	info, _, err := kr.NewMnemonic("test_key1", keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	s.Require().NoError(err)
+	s.accountAddr1 = info.GetAddress()
+	info, _, err = kr.NewMnemonic("test_key2", keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	s.Require().NoError(err)
+	s.accountAddr2 = info.GetAddress()
+
+	// Configure Genesis auth data for adding test accounts
+	var genAccounts []authtypes.GenesisAccount
+	var authData authtypes.GenesisState
+	authData.Params = authtypes.DefaultParams()
+	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.accountAddr1, nil, 3, 0))
+	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.accountAddr2, nil, 3, 0))
+	accounts, err := authtypes.PackAccounts(genAccounts)
+	s.Require().NoError(err)
+	authData.Accounts = accounts
+	authDataBz, err := cfg.Codec.MarshalJSON(&authData)
+	s.Require().NoError(err)
+	genesisState[authtypes.ModuleName] = authDataBz
+
+	// Configure Genesis bank data for test accounts
+	var genBalances []banktypes.Balance
+	genBalances = append(genBalances, banktypes.Balance{Address: s.accountAddr1.String(), Coins: sdk.NewCoins(
+		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
+		sdk.NewCoin("authzhotdog", sdk.NewInt(100)),
+	).Sort()})
+	genBalances = append(genBalances, banktypes.Balance{Address: s.accountAddr2.String(), Coins: sdk.NewCoins(
+		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
+	).Sort()})
+	var bankGenState banktypes.GenesisState
+	bankGenState.Params = banktypes.DefaultParams()
+	bankGenState.Balances = genBalances
+	bankDataBz, err := cfg.Codec.MarshalJSON(&bankGenState)
+	s.Require().NoError(err)
+	genesisState[banktypes.ModuleName] = bankDataBz
 
 	// Configure Genesis data for marker module
 	var markerData markertypes.GenesisState
@@ -106,6 +147,20 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			Supply:                 cfg.BondedTokens.Mul(sdk.NewInt(int64(cfg.NumValidators))),
 			Denom:                  cfg.BondDenom,
 		},
+		{
+			BaseAccount: &authtypes.BaseAccount{
+				Address:       markertypes.MustGetMarkerAddress("authzhotdog").String(),
+				AccountNumber: 140,
+				Sequence:      0,
+			},
+			Status:                 markertypes.StatusActive,
+			SupplyFixed:            true,
+			MarkerType:             markertypes.MarkerType_RestrictedCoin,
+			AllowGovernanceControl: false,
+			Supply:                 sdk.NewInt(1000),
+			Denom:                  "authzhotdog",
+			AccessControl:          []markertypes.AccessGrant{*markertypes.NewAccessGrant(s.accountAddr1, []markertypes.Access{markertypes.Access_Transfer, markertypes.Access_Admin})},
+		},
 	}
 	markerDataBz, err := cfg.Codec.MarshalJSON(&markerData)
 	s.Require().NoError(err)
@@ -149,7 +204,7 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
 				"testcoin",
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq","pub_key":null,"account_number":"8","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"testcoin","supply":"1000","marker_type":"MARKER_TYPE_COIN","supply_fixed":true,"allow_governance_control":false}}`,
+			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq","pub_key":null,"account_number":"9","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"testcoin","supply":"1000","marker_type":"MARKER_TYPE_COIN","supply_fixed":true,"allow_governance_control":false}}`,
 		},
 		{
 			"get testcoin marker test",
@@ -163,7 +218,7 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
   access_control: []
   allow_governance_control: false
   base_account:
-    account_number: "8"
+    account_number: "9"
     address: cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq
     pub_key: null
     sequence: "0"
@@ -189,7 +244,7 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
 				"lockedcoin",
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos16437wt0xtqtuw0pn4vt8rlf8gr2plz2det0mt2","pub_key":null,"account_number":"9","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"lockedcoin","supply":"1000","marker_type":"MARKER_TYPE_RESTRICTED","supply_fixed":true,"allow_governance_control":false}}`,
+			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos16437wt0xtqtuw0pn4vt8rlf8gr2plz2det0mt2","pub_key":null,"account_number":"10","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"lockedcoin","supply":"1000","marker_type":"MARKER_TYPE_RESTRICTED","supply_fixed":true,"allow_governance_control":false}}`,
 		},
 		{
 			"query access",
@@ -407,7 +462,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			[]string{
 				"hotdog",
 				"40hotdog",
-				s.accountAddr.String(),
+				s.accountAddr1.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -460,7 +515,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			"transfer, fail to transfer invalid coin parse",
 			markercli.GetNewTransferCmd(),
 			[]string{
-				s.accountAddr.String(),
+				s.accountAddr1.String(),
 				s.testnet.Validators[0].Address.String(),
 				"hotdog",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -474,7 +529,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			"transfer, fail to transfer invalid coin count",
 			markercli.GetNewTransferCmd(),
 			[]string{
-				s.accountAddr.String(),
+				s.accountAddr1.String(),
 				s.testnet.Validators[0].Address.String(),
 				"100hotdog,200koinz",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -489,7 +544,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			markercli.GetNewTransferCmd(),
 			[]string{
 				s.testnet.Validators[0].Address.String(),
-				s.accountAddr.String(),
+				s.accountAddr1.String(),
 				"100hotdog",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -526,7 +581,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code, fmt.Sprintf("Response from error: %s", out.String()))
+				s.Require().Equal(tc.expectedCode, txResp.Code)
 			}
 		})
 	}
@@ -540,160 +595,78 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 		expectErr    bool
 		respType     proto.Message
 		expectedCode uint32
-		validator    uint32
 	}{
-		{
-			"authz test setup, create a new marker",
-			markercli.GetCmdAddMarker(),
-			[]string{
-				"1000authzhotdog",
-				fmt.Sprintf("--%s=%s", markercli.FlagType, "RESTRICTED"),
-				fmt.Sprintf("--%s=%s", markercli.FlagSupplyFixed, "true"),
-				fmt.Sprintf("--%s=%s", markercli.FlagAllowGovernanceControl, "true"),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			false, &sdk.TxResponse{}, 0, 0,
-		},
-		{
-			"authz test setup, add multiple access",
-			markercli.GetCmdAddAccess(),
-			[]string{
-				s.testnet.Validators[0].Address.String(),
-				"authzhotdog",
-				"admin,mint,burn,transfer,withdraw",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			false, &sdk.TxResponse{}, 0, 0,
-		},
-		{
-			"authz test setup, mint supply",
-			markercli.GetCmdMint(),
-			[]string{
-				"100authzhotdog",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			false, &sdk.TxResponse{}, 0, 0,
-		},
-		{
-			"authz test setup, finalize",
-			markercli.GetCmdFinalize(),
-			[]string{
-				"authzhotdog",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			false, &sdk.TxResponse{}, 0, 0,
-		},
-		{
-			"authz test setup, activate",
-			markercli.GetCmdActivate(),
-			[]string{
-				"authzhotdog",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			false, &sdk.TxResponse{}, 0, 0,
-		},
-		{
-			"authz test setup, withdraw to granter's account",
-			markercli.GetCmdWithdrawCoins(),
-			[]string{
-				"authzhotdog",
-				"200authzhotdog",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			false, &sdk.TxResponse{}, 0, 0,
-		},
 		{
 			"grant authz transfer permissions to grantee",
 			markercli.GetCmdGrantAuthorization(),
 			[]string{
-				s.testnet.Validators[1].Address.String(),
+				s.accountAddr2.String(),
 				"transfer",
 				fmt.Sprintf("--%s=%s", markercli.FlagTransferLimit, "10authzhotdog"),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddr1.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0, 0,
+			false, &sdk.TxResponse{}, 0,
 		},
 		{
 			"grantee transfer successfully",
 			markercli.GetNewTransferCmd(),
 			[]string{
-				s.testnet.Validators[0].Address.String(),
-				s.accountAddr.String(),
+				s.accountAddr1.String(),
+				s.accountAddr2.String(),
 				"9authzhotdog",
-				fmt.Sprintf("--%s=%s", flags.FlagNode, s.testnet.Validators[0].RPCAddress),
-				fmt.Sprintf("--%s=%s", markercli.FlagGranter, s.testnet.Validators[0].Address.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[1].Address.String()),
+				fmt.Sprintf("--%s=%s", markercli.FlagGranter, s.accountAddr1.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddr2.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0, 1,
+			false, &sdk.TxResponse{}, 0,
 		},
 		{
 			"grantee failure to transfer over spending limit",
 			markercli.GetNewTransferCmd(),
 			[]string{
-				s.testnet.Validators[0].Address.String(),
-				s.accountAddr.String(),
+				s.accountAddr1.String(),
+				s.accountAddr2.String(),
 				"2authzhotdog",
-				fmt.Sprintf("--%s=%s", flags.FlagNode, s.testnet.Validators[0].RPCAddress),
-				fmt.Sprintf("--%s=%s", markercli.FlagGranter, s.testnet.Validators[0].Address.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[1].Address.String()),
+				fmt.Sprintf("--%s=%s", markercli.FlagGranter, s.accountAddr1.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddr2.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 5, 1,
+			false, &sdk.TxResponse{}, 5,
 		},
 		{
 			"revoke authz transfer from grantee",
 			markercli.GetCmdRevokeAuthorization(),
 			[]string{
-				s.testnet.Validators[1].Address.String(),
+				s.accountAddr2.String(),
 				"transfer",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddr1.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0, 0,
+			false, &sdk.TxResponse{}, 0,
 		},
 		{
 			"grantee should fail to transfer due to revoked authz",
 			markercli.GetNewTransferCmd(),
 			[]string{
-				s.testnet.Validators[0].Address.String(),
-				s.accountAddr.String(),
+				s.accountAddr1.String(),
+				s.accountAddr2.String(),
 				"1hotdog",
-				fmt.Sprintf("--%s=%s", flags.FlagNode, s.testnet.Validators[0].RPCAddress),
-				fmt.Sprintf("--%s=%s", markercli.FlagGranter, s.testnet.Validators[0].Address.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[1].Address.String()),
+				fmt.Sprintf("--%s=%s", markercli.FlagGranter, s.accountAddr1.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddr2.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 4, 1,
+			false, &sdk.TxResponse{}, 4,
 		},
 	}
 
@@ -701,8 +674,7 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			clientCtx := s.testnet.Validators[tc.validator].ClientCtx
-
+			clientCtx := s.testnet.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
