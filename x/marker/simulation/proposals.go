@@ -190,6 +190,7 @@ func SimulateSetDenomMetadataProposalContent(k keeper.Keeper) simtypes.ContentSi
 		}
 
 		// Create 1 to 4 denom unit entries with 0 to 2 aliases.
+		display := m.GetDenom()
 		denomUnits := make([]*banktypes.DenomUnit, r.Intn(4)+1)
 		for di := range denomUnits {
 			du := banktypes.DenomUnit{
@@ -208,6 +209,10 @@ func SimulateSetDenomMetadataProposalContent(k keeper.Keeper) simtypes.ContentSi
 			for ai := range du.Aliases {
 				du.Aliases[ai] = simtypes.RandStringOfLength(r, 20)
 			}
+			// Randomly decide to use this one as the display
+			if r.Intn(4) == 0 {
+				display = du.Denom
+			}
 			denomUnits[di] = &du
 		}
 
@@ -217,7 +222,7 @@ func SimulateSetDenomMetadataProposalContent(k keeper.Keeper) simtypes.ContentSi
 			banktypes.Metadata{
 				Description: simtypes.RandStringOfLength(r, 100),
 				Base:        m.GetDenom(),
-				Display:     simtypes.RandStringOfLength(r, 20),
+				Display:     display,
 				Name:        simtypes.RandStringOfLength(r, 20),
 				Symbol:      simtypes.RandStringOfLength(r, 5),
 				DenomUnits:  denomUnits,
