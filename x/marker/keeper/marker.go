@@ -629,9 +629,25 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 	if !m.AddressHasAccess(admin, types.Access_Transfer) {
 		return fmt.Errorf("%s is not allowed to broker transfers", admin.String())
 	}
+	if !from.Equals(admin) {
+		if !m.AddressHasAccess(from, types.Access_Transfer) {
+			return fmt.Errorf("%s is not allowed to broker transfers", admin.String())
+		}
+		var hasAuthority bool
+		markerAuth := types.MarkerTransferAuthorization{}
+		for _, auth := range k.authzKeeper.GetAuthorizations(ctx, admin, from) {
+			if auth.MsgTypeURL() == markerAuth.MsgTypeURL() {
+				hasAuthority = true
+			}
+		}
+		if !hasAuthority {
+			return fmt.Errorf("%s account has not been granted authority to broker transfers from %s account", admin, from)
+		}
+	}
 	if k.bankKeeper.BlockedAddr(to) {
 		return fmt.Errorf("%s is not allowed to receive funds", to)
 	}
+
 	// send the coins between accounts (does not check send_enabled on coin denom)
 	if err = k.bankKeeper.SendCoins(ctx, from, to, sdk.NewCoins(amount)); err != nil {
 		return err

@@ -32,12 +32,26 @@ import (
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	cfg          testnet.Config
-	testnet      *testnet.Network
-	keyring      keyring.Keyring
-	keyringDir   string
-	accountAddr1 sdk.AccAddress
-	accountAddr2 sdk.AccAddress
+	cfg              testnet.Config
+	testnet          *testnet.Network
+	keyring          keyring.Keyring
+	keyringDir       string
+	accountAddresses []sdk.AccAddress
+}
+
+func (s *IntegrationTestSuite) GenerateAccountsWithKeyrings(number int) {
+	path := hd.CreateHDPath(118, 0, 0).String()
+	s.keyringDir = s.T().TempDir()
+	kr, err := keyring.New(s.T().Name(), "test", s.keyringDir, nil)
+	s.Require().NoError(err)
+	s.keyring = kr
+	for i := 0; i < number; i++ {
+		keyId := fmt.Sprintf("test_key%v", i)
+		info, _, err := kr.NewMnemonic(keyId, keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+		s.Require().NoError(err)
+		s.accountAddresses = append(s.accountAddresses, info.GetAddress())
+
+	}
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
@@ -47,26 +61,16 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	genesisState := cfg.GenesisState
 	cfg.NumValidators = 1
-
-	// Create keyrings for user accounts
-	path := hd.CreateHDPath(118, 0, 0).String()
-	s.keyringDir = s.T().TempDir()
-	kr, err := keyring.New(s.T().Name(), "test", s.keyringDir, nil)
-	s.Require().NoError(err)
-	s.keyring = kr
-	info, _, err := kr.NewMnemonic("test_key1", keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-	s.Require().NoError(err)
-	s.accountAddr1 = info.GetAddress()
-	info, _, err = kr.NewMnemonic("test_key2", keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-	s.Require().NoError(err)
-	s.accountAddr2 = info.GetAddress()
+	s.GenerateAccountsWithKeyrings(4)
 
 	// Configure Genesis auth data for adding test accounts
 	var genAccounts []authtypes.GenesisAccount
 	var authData authtypes.GenesisState
 	authData.Params = authtypes.DefaultParams()
-	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.accountAddr1, nil, 3, 0))
-	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.accountAddr2, nil, 3, 0))
+	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.accountAddresses[0], nil, 3, 0))
+	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.accountAddresses[1], nil, 4, 0))
+	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.accountAddresses[2], nil, 5, 0))
+	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.accountAddresses[3], nil, 6, 0))
 	accounts, err := authtypes.PackAccounts(genAccounts)
 	s.Require().NoError(err)
 	authData.Accounts = accounts
@@ -76,11 +80,17 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	// Configure Genesis bank data for test accounts
 	var genBalances []banktypes.Balance
-	genBalances = append(genBalances, banktypes.Balance{Address: s.accountAddr1.String(), Coins: sdk.NewCoins(
+	genBalances = append(genBalances, banktypes.Balance{Address: s.accountAddresses[0].String(), Coins: sdk.NewCoins(
 		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
 		sdk.NewCoin("authzhotdog", sdk.NewInt(100)),
 	).Sort()})
-	genBalances = append(genBalances, banktypes.Balance{Address: s.accountAddr2.String(), Coins: sdk.NewCoins(
+	genBalances = append(genBalances, banktypes.Balance{Address: s.accountAddresses[1].String(), Coins: sdk.NewCoins(
+		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
+	).Sort()})
+	genBalances = append(genBalances, banktypes.Balance{Address: s.accountAddresses[2].String(), Coins: sdk.NewCoins(
+		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
+	).Sort()})
+	genBalances = append(genBalances, banktypes.Balance{Address: s.accountAddresses[3].String(), Coins: sdk.NewCoins(
 		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
 	).Sort()})
 	var bankGenState banktypes.GenesisState
@@ -159,7 +169,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			AllowGovernanceControl: false,
 			Supply:                 sdk.NewInt(1000),
 			Denom:                  "authzhotdog",
-			AccessControl:          []markertypes.AccessGrant{*markertypes.NewAccessGrant(s.accountAddr1, []markertypes.Access{markertypes.Access_Transfer, markertypes.Access_Admin})},
+			AccessControl: []markertypes.AccessGrant{
+				*markertypes.NewAccessGrant(s.accountAddresses[0], []markertypes.Access{markertypes.Access_Transfer, markertypes.Access_Admin}),
+				*markertypes.NewAccessGrant(s.accountAddresses[1], []markertypes.Access{markertypes.Access_Transfer, markertypes.Access_Admin}),
+				*markertypes.NewAccessGrant(s.accountAddresses[2], []markertypes.Access{markertypes.Access_Transfer, markertypes.Access_Admin}),
+			},
 		},
 	}
 	markerDataBz, err := cfg.Codec.MarshalJSON(&markerData)
@@ -204,7 +218,7 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
 				"testcoin",
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq","pub_key":null,"account_number":"9","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"testcoin","supply":"1000","marker_type":"MARKER_TYPE_COIN","supply_fixed":true,"allow_governance_control":false}}`,
+			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq","pub_key":null,"account_number":"11","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"testcoin","supply":"1000","marker_type":"MARKER_TYPE_COIN","supply_fixed":true,"allow_governance_control":false}}`,
 		},
 		{
 			"get testcoin marker test",
@@ -218,7 +232,7 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
   access_control: []
   allow_governance_control: false
   base_account:
-    account_number: "9"
+    account_number: "11"
     address: cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq
     pub_key: null
     sequence: "0"
@@ -244,7 +258,7 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
 				"lockedcoin",
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos16437wt0xtqtuw0pn4vt8rlf8gr2plz2det0mt2","pub_key":null,"account_number":"10","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"lockedcoin","supply":"1000","marker_type":"MARKER_TYPE_RESTRICTED","supply_fixed":true,"allow_governance_control":false}}`,
+			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos16437wt0xtqtuw0pn4vt8rlf8gr2plz2det0mt2","pub_key":null,"account_number":"12","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"lockedcoin","supply":"1000","marker_type":"MARKER_TYPE_RESTRICTED","supply_fixed":true,"allow_governance_control":false}}`,
 		},
 		{
 			"query access",
@@ -462,7 +476,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			[]string{
 				"hotdog",
 				"40hotdog",
-				s.accountAddr1.String(),
+				s.accountAddresses[0].String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -515,7 +529,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			"transfer, fail to transfer invalid coin parse",
 			markercli.GetNewTransferCmd(),
 			[]string{
-				s.accountAddr1.String(),
+				s.accountAddresses[0].String(),
 				s.testnet.Validators[0].Address.String(),
 				"hotdog",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -529,7 +543,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			"transfer, fail to transfer invalid coin count",
 			markercli.GetNewTransferCmd(),
 			[]string{
-				s.accountAddr1.String(),
+				s.accountAddresses[0].String(),
 				s.testnet.Validators[0].Address.String(),
 				"100hotdog,200koinz",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -544,7 +558,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			markercli.GetNewTransferCmd(),
 			[]string{
 				s.testnet.Validators[0].Address.String(),
-				s.accountAddr1.String(),
+				s.accountAddresses[0].String(),
 				"100hotdog",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -600,10 +614,10 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 			"grant authz transfer permissions to grantee",
 			markercli.GetCmdGrantAuthorization(),
 			[]string{
-				s.accountAddr2.String(),
+				s.accountAddresses[1].String(),
 				"transfer",
 				fmt.Sprintf("--%s=%s", markercli.FlagTransferLimit, "10authzhotdog"),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddr1.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -611,14 +625,70 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 			false, &sdk.TxResponse{}, 0,
 		},
 		{
+			"grant authz transfer permissions to grantee",
+			markercli.GetCmdGrantAuthorization(),
+			[]string{
+				s.accountAddresses[0].String(),
+				"transfer",
+				fmt.Sprintf("--%s=%s", markercli.FlagTransferLimit, "10authzhotdog"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"signer granted authority, transfer successfully",
+			markercli.GetNewTransferCmd(),
+			[]string{
+				s.accountAddresses[0].String(),
+				s.accountAddresses[1].String(),
+				"9authzhotdog",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"signer not granted authority, transfer failed",
+			markercli.GetNewTransferCmd(),
+			[]string{
+				s.accountAddresses[2].String(),
+				s.accountAddresses[1].String(),
+				"9authzhotdog",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 1,
+		},
+		{
+			"from account does not have transfer access, transfer fail",
+			markercli.GetNewTransferCmd(),
+			[]string{
+				s.accountAddresses[3].String(),
+				s.accountAddresses[1].String(),
+				"9authzhotdog",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[2].String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 1,
+		},
+		{
 			"grantee transfer successfully",
 			markercli.GetNewTransferCmd(),
 			[]string{
-				s.accountAddr1.String(),
-				s.accountAddr2.String(),
+				s.accountAddresses[0].String(),
+				s.accountAddresses[1].String(),
 				"9authzhotdog",
-				fmt.Sprintf("--%s=%s", markercli.FlagGranter, s.accountAddr1.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddr2.String()),
+				fmt.Sprintf("--%s=%s", markercli.FlagGranter, s.accountAddresses[0].String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -629,11 +699,11 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 			"grantee failure to transfer over spending limit",
 			markercli.GetNewTransferCmd(),
 			[]string{
-				s.accountAddr1.String(),
-				s.accountAddr2.String(),
+				s.accountAddresses[0].String(),
+				s.accountAddresses[1].String(),
 				"2authzhotdog",
-				fmt.Sprintf("--%s=%s", markercli.FlagGranter, s.accountAddr1.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddr2.String()),
+				fmt.Sprintf("--%s=%s", markercli.FlagGranter, s.accountAddresses[0].String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -644,9 +714,9 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 			"revoke authz transfer from grantee",
 			markercli.GetCmdRevokeAuthorization(),
 			[]string{
-				s.accountAddr2.String(),
+				s.accountAddresses[1].String(),
 				"transfer",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddr1.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -657,11 +727,11 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 			"grantee should fail to transfer due to revoked authz",
 			markercli.GetNewTransferCmd(),
 			[]string{
-				s.accountAddr1.String(),
-				s.accountAddr2.String(),
+				s.accountAddresses[0].String(),
+				s.accountAddresses[1].String(),
 				"1hotdog",
-				fmt.Sprintf("--%s=%s", markercli.FlagGranter, s.accountAddr1.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddr2.String()),
+				fmt.Sprintf("--%s=%s", markercli.FlagGranter, s.accountAddresses[0].String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
