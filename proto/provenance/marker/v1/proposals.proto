@@ -2,6 +2,7 @@ syntax = "proto3";
 package provenance.marker.v1;
 
 import "gogoproto/gogo.proto";
+import "cosmos/bank/v1beta1/bank.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "provenance/marker/v1/marker.proto";
 import "provenance/marker/v1/accessgrant.proto";
@@ -100,4 +101,14 @@ message WithdrawEscrowProposal {
   repeated cosmos.base.v1beta1.Coin amount = 4
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
   string target_address = 5;
+}
+
+// SetDenomMetadataProposal defines a governance proposal to set the metadata for a denom
+message SetDenomMetadataProposal {
+  option (gogoproto.goproto_stringer) = false;
+
+  string                       title       = 1;
+  string                       description = 2;
+  cosmos.bank.v1beta1.Metadata metadata    = 3
+      [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/x/bank/types.Metadata"];
 }

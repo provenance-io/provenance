@@ -68,6 +68,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&RemoveAdministratorProposal{},
 		&ChangeStatusProposal{},
 		&WithdrawEscrowProposal{},
+		&SetDenomMetadataProposal{},
 	)
 
 	registry.RegisterInterface(

@@ -296,3 +296,26 @@ func HandleWithdrawEscrowProposal(ctx sdk.Context, k Keeper, c *types.WithdrawEs
 
 	return nil
 }
+
+// HandleSetDenomMetadataProposal handles a Set Denom Metadata governance proposal request
+func HandleSetDenomMetadataProposal(ctx sdk.Context, k Keeper, c *types.SetDenomMetadataProposal) error {
+	addr, err := types.MarkerAddress(c.Metadata.Base)
+	if err != nil {
+		return err
+	}
+	m, err := k.GetMarker(ctx, addr)
+	if err != nil {
+		return err
+	}
+	if m == nil {
+		return fmt.Errorf("%s marker does not exist", c.Metadata.Base)
+	}
+	if !m.HasGovernanceEnabled() {
+		return fmt.Errorf("%s marker does not allow governance control", c.Metadata.Base)
+	}
+
+	k.bankKeeper.SetDenomMetaData(ctx, c.Metadata)
+
+	k.Logger(ctx).Info("denom metadata set for marker", "marker", c.Metadata.Base, "denom metadata", c.Metadata.String())
+	return nil
+}

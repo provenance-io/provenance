@@ -81,6 +81,8 @@ func NewProposalHandler(k keeper.Keeper) govtypes.Handler {
 			return keeper.HandleChangeStatusProposal(ctx, k, c)
 		case *types.WithdrawEscrowProposal:
 			return keeper.HandleWithdrawEscrowProposal(ctx, k, c)
+		case *types.SetDenomMetadataProposal:
+			return keeper.HandleSetDenomMetadataProposal(ctx, k, c)
 		default:
 			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized marker proposal content type: %T", c)
 		}

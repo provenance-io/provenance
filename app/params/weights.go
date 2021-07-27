@@ -35,6 +35,7 @@ const (
 	DefaultWeightSetAdministratorProposalContent    int = 5
 	DefaultWeightRemoveAdministratorProposalContent int = 5
 	DefaultWeightChangeStatusProposalContent        int = 5
+	DefaultWeightSetDenomMetadataProposalContent    int = 5
 	DefaultWeightMsgAddMarker                       int = 100
 	DefaultWeightMsgChangeStatus                    int = 10
 	DefaultWeightMsgAddAccess                       int = 10
