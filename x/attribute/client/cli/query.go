@@ -221,6 +221,6 @@ func withPageKeyDecoded(flagSet *flag.FlagSet) *flag.FlagSet {
 	if err != nil {
 		panic(err.Error())
 	}
-	flagSet.Set(flags.FlagPageKey, string(raw))
+	_ = flagSet.Set(flags.FlagPageKey, string(raw))
 	return flagSet
 }
