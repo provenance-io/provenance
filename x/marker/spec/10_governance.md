@@ -6,12 +6,13 @@ issue change requests through passing a governance proposal.
 
 <!-- TOC 2 2 -->
   - [Add Marker Proposal](#add-marker-proposal)
-  - [SupplyIncrease Proposal](#supplyincrease-proposal)
-  - [SupplyDecrease Proposal](#supplydecrease-proposal)
-  - [SetAdministrator Proposal](#setadministrator-proposal)
-  - [RemoveAdministrator Proposal](#removeadministrator-proposal)
-  - [ChangeStatus Proposal](#changestatus-proposal)
-  - [WithdrawEscrow Proposal](#withdrawescrow-proposal)
+  - [Supply Increase Proposal](#supply-increase-proposal)
+  - [Supply Decrease Proposal](#supply-decrease-proposal)
+  - [Set Administrator Proposal](#set-administrator-proposal)
+  - [Remove Administrator Proposal](#remove-administrator-proposal)
+  - [Change Status Proposal](#change-status-proposal)
+  - [Withdraw Escrow Proposal](#withdraw-escrow-proposal)
+  - [Set Denom Metadata Proposal](#set-denom-metadata-proposal)
 
 
 
@@ -38,7 +39,7 @@ This request is expected to fail if:
     it is not possible to burn sufficient coin to make the requested supply match actual supply
 - The mint operation fails for any reason (see bank module)
 
-## SupplyIncrease Proposal
+## Supply Increase Proposal
 
 SupplyIncreaseProposal defines a governance proposal to administer a marker and increase total supply of the marker
 through minting coin and placing it within the marker or assigning it directly to an account.
@@ -49,7 +50,7 @@ This request is expected to fail if:
 - The governance proposal format (title, description, etc) is invalid
 - The requested supply exceeds the configuration parameter for `MaxTotalSupply`
 
-## SupplyDecrease Proposal
+## Supply Decrease Proposal
 
 SupplyDecreaseProposal defines a governance proposal to administer a marker and decrease the total supply through
 burning coin held within the marker
@@ -65,7 +66,7 @@ This request is expected to fail if:
 The chain will panic and halt if:
 - The bank burn operation fails for any reason (see bank module)
 
-## SetAdministrator Proposal
+## Set Administrator Proposal
 
 SetAdministratorProposal defines a governance proposal to administer a marker and set administrators with specific
 access on the marker
@@ -78,7 +79,7 @@ This request is expected to fail if:
 - Marker does not allow governance control (`AllowGovernanceControl`)
 - Any of the access grants are invalid
 
-## RemoveAdministrator Proposal
+## Remove Administrator Proposal
 
 RemoveAdministratorProposal defines a governance proposal to administer a marker and remove all permissions for a
 given address
@@ -91,7 +92,7 @@ This request is expected to fail if:
 - Marker does not allow governance control (`AllowGovernanceControl`)
 - The address to be removed is not present
 
-## ChangeStatus Proposal
+## Change Status Proposal
 
 ChangeStatusProposal defines a governance proposal to administer a marker to change its status
 
@@ -106,7 +107,7 @@ This request is expected to fail if:
   - The supply of the marker is greater than zero and the amount held by the marker account does not equal this value
     resulting in the failure to burn all remaining supply.
 
-## WithdrawEscrow Proposal
+## Withdraw Escrow Proposal
 
 WithdrawEscrowProposal defines a governance proposal to withdraw escrow coins from a marker
 
@@ -116,3 +117,13 @@ This request is expected to fail if:
 - The governance proposal format (title, description, etc) is invalid
 - Marker does not allow governance control (`AllowGovernanceControl`)
 - The marker account is not holding sufficient assets to cover the requested withdraw amounts.
+
+## Set Denom Metadata Proposal
+
+SetDenomMetadataProposal defines a governance proposal to set the metadata for a denom.
+
++++ https://github.com/provenance-io/provenance/blob/16b632ed180ba29933a9a26a439325b498c40122/proto/provenance/marker/v1/proposals.proto#L107-L114
+
+This request is expected to fail if:
+- The governance proposal format (title, description, etc) is invalid
+- Marker does not allow governance control (`AllowGovernanceControl`)
