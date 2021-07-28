@@ -418,7 +418,6 @@ owner: %s`,
 	s.Require().NoError(err)
 	genesisState[metadatatypes.ModuleName] = metadataDataBz
 
-	// adding to auth genesis does not work due to cosmos sdk overwritting it
 	var authData authtypes.GenesisState
 	s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[authtypes.ModuleName], &authData))
 	genAccount, err := codectypes.NewAnyWithValue(authtypes.NewBaseAccount(s.accountAddr, s.accountKey.PubKey(), 1, 1))
@@ -446,12 +445,11 @@ owner: %s`,
 	_, err = s.testnet.WaitForHeight(1)
 	s.Require().NoError(err)
 
-	// Add the user1 and user2 keys to the keyring.
-	// Note: They don't have any coin ("stake"), so they still can't actually successfully sign TXs, but hey, it's progress.
-	err = s.testnet.Validators[0].ClientCtx.Keyring.ImportPrivKey(s.user1, crypto.EncryptArmorPrivKey(privkey1, "password1", "secp256k1"), "password1")
-	s.Require().NoError(err)
-	err = s.testnet.Validators[0].ClientCtx.Keyring.ImportPrivKey(s.user2, crypto.EncryptArmorPrivKey(privkey2, "password2", "secp256k1"), "password2")
-	s.Require().NoError(err)
+	// Add the account and user1 and user2 keys to the keyring.
+	// Note: They user1 and user2 don't have any coin ("stake"), so they still can't actually successfully sign TXs, but hey, it's progress.
+	s.Require().NoError(s.testnet.Validators[0].ClientCtx.Keyring.ImportPrivKey(s.accountAddr.String(), crypto.EncryptArmorPrivKey(s.accountKey, "pasSword0", "secp256k1"), "pasSword0"), "adding s.accountKey to keyring")
+	s.Require().NoError(s.testnet.Validators[0].ClientCtx.Keyring.ImportPrivKey(s.user1, crypto.EncryptArmorPrivKey(privkey1, "passWord1", "secp256k1"), "passWord1"), "adding privkey1 to keyring")
+	s.Require().NoError(s.testnet.Validators[0].ClientCtx.Keyring.ImportPrivKey(s.user2, crypto.EncryptArmorPrivKey(privkey2, "passwOrd2", "secp256k1"), "passwOrd2"), "adding privkey2 to keyring")
 }
 
 func (s *IntegrationCLITestSuite) TearDownSuite() {
