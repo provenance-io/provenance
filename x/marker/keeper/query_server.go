@@ -87,6 +87,7 @@ func (k Keeper) Holding(c context.Context, req *types.QueryHoldingRequest) (*typ
 		pageRequest = &query.PageRequest{}
 	}
 
+	// TODO: Refactor for full pagination support. See also query.FilteredPaginate.
 	balances := k.GetAllMarkerHolders(ctx, marker.GetDenom())
 	limit := pageRequest.Limit
 	if limit == 0 {
