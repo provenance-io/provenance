@@ -630,7 +630,8 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 		return fmt.Errorf("%s is not allowed to broker transfers", admin.String())
 	}
 	if !admin.Equals(from) {
-		if err := k.authzHandler(ctx, admin, from, amount); err != nil {
+		err = k.authzHandler(ctx, admin, from, amount)
+		if err != nil {
 			return err
 		}
 	}
@@ -670,14 +671,11 @@ func (k Keeper) authzHandler(ctx sdk.Context, admin sdk.AccAddress, from sdk.Acc
 	if accept.Accept {
 		limitLeft, _ := authorization.(*types.MarkerTransferAuthorization).DecreaseTransferLimit(amount)
 		if limitLeft.IsZero() {
-			k.authzKeeper.DeleteGrant(ctx, admin, from, markerAuth.MsgTypeURL())
-		} else {
-			k.authzKeeper.SaveGrant(ctx, admin, from, &types.MarkerTransferAuthorization{TransferLimit: limitLeft}, expireTime)
+			return k.authzKeeper.DeleteGrant(ctx, admin, from, markerAuth.MsgTypeURL())
 		}
-	} else {
-		return fmt.Errorf("authorization was not accepted for %s", admin)
+		return k.authzKeeper.SaveGrant(ctx, admin, from, &types.MarkerTransferAuthorization{TransferLimit: limitLeft}, expireTime)
 	}
-	return nil
+	return fmt.Errorf("authorization was not accepted for %s", admin)
 }
 
 // SetMarkerDenomMetadata updates the denom metadata records for the current marker.
