@@ -33535,6 +33535,14 @@ paths:
           required: false
           type: boolean
           format: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
       tags:
         - Query
   '/provenance/attribute/v1/attribute/{account}/{name}':
@@ -33691,6 +33699,14 @@ paths:
           required: false
           type: boolean
           format: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
       tags:
         - Query
   '/provenance/attribute/v1/attributes/{account}':
@@ -33838,6 +33854,14 @@ paths:
             when key
 
             is set.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
           in: query
           required: false
           type: boolean
@@ -34605,6 +34629,14 @@ paths:
             when key
 
             is set.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
           in: query
           required: false
           type: boolean
@@ -35794,6 +35826,14 @@ paths:
             when key
 
             is set.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
           in: query
           required: false
           type: boolean
@@ -37423,6 +37463,12 @@ paths:
                           is ignored when key
 
                           is set.
+                      reverse:
+                        type: boolean
+                        format: boolean
+                        description: >-
+                          reverse is set to true if results are to be returned
+                          in the descending order.
                     title: >-
                       PageRequest is to be embedded in gRPC request messages for
                       efficient
@@ -37517,6 +37563,14 @@ paths:
             when key
 
             is set.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
           in: query
           required: false
           type: boolean
@@ -37729,6 +37783,12 @@ paths:
                           is ignored when key
 
                           is set.
+                      reverse:
+                        type: boolean
+                        format: boolean
+                        description: >-
+                          reverse is set to true if results are to be returned
+                          in the descending order.
                     title: >-
                       PageRequest is to be embedded in gRPC request messages for
                       efficient
@@ -37827,6 +37887,14 @@ paths:
             when key
 
             is set.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
           in: query
           required: false
           type: boolean
@@ -37982,6 +38050,12 @@ paths:
                           is ignored when key
 
                           is set.
+                      reverse:
+                        type: boolean
+                        format: boolean
+                        description: >-
+                          reverse is set to true if results are to be returned
+                          in the descending order.
                     title: >-
                       PageRequest is to be embedded in gRPC request messages for
                       efficient
@@ -38080,6 +38154,14 @@ paths:
           required: false
           type: boolean
           format: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
       tags:
         - Query
   '/provenance/metadata/v1/ownership/{address}':
@@ -38156,6 +38238,12 @@ paths:
                           is ignored when key
 
                           is set.
+                      reverse:
+                        type: boolean
+                        format: boolean
+                        description: >-
+                          reverse is set to true if results are to be returned
+                          in the descending order.
                     title: >-
                       PageRequest is to be embedded in gRPC request messages for
                       efficient
@@ -38254,6 +38342,14 @@ paths:
             when key
 
             is set.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
           in: query
           required: false
           type: boolean
@@ -41097,6 +41193,12 @@ paths:
                           is ignored when key
 
                           is set.
+                      reverse:
+                        type: boolean
+                        format: boolean
+                        description: >-
+                          reverse is set to true if results are to be returned
+                          in the descending order.
                     title: >-
                       PageRequest is to be embedded in gRPC request messages for
                       efficient
@@ -41191,6 +41293,14 @@ paths:
             when key
 
             is set.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
           in: query
           required: false
           type: boolean
@@ -41718,6 +41828,12 @@ paths:
                           is ignored when key
 
                           is set.
+                      reverse:
+                        type: boolean
+                        format: boolean
+                        description: >-
+                          reverse is set to true if results are to be returned
+                          in the descending order.
                     title: >-
                       PageRequest is to be embedded in gRPC request messages for
                       efficient
@@ -41812,6 +41928,14 @@ paths:
             when key
 
             is set.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
           in: query
           required: false
           type: boolean
@@ -48640,6 +48764,12 @@ paths:
                           is ignored when key
 
                           is set.
+                      reverse:
+                        type: boolean
+                        format: boolean
+                        description: >-
+                          reverse is set to true if results are to be returned
+                          in the descending order.
                     title: >-
                       PageRequest is to be embedded in gRPC request messages for
                       efficient
@@ -48734,6 +48864,14 @@ paths:
             when key
 
             is set.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
           in: query
           required: false
           type: boolean
@@ -49102,6 +49240,12 @@ paths:
                           is ignored when key
 
                           is set.
+                      reverse:
+                        type: boolean
+                        format: boolean
+                        description: >-
+                          reverse is set to true if results are to be returned
+                          in the descending order.
                     title: >-
                       PageRequest is to be embedded in gRPC request messages for
                       efficient
@@ -49196,6 +49340,14 @@ paths:
             when key
 
             is set.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
           in: query
           required: false
           type: boolean
@@ -52765,6 +52917,12 @@ paths:
                           is ignored when key
 
                           is set.
+                      reverse:
+                        type: boolean
+                        format: boolean
+                        description: >-
+                          reverse is set to true if results are to be returned
+                          in the descending order.
                     title: >-
                       PageRequest is to be embedded in gRPC request messages for
                       efficient
@@ -52863,6 +53021,14 @@ paths:
           required: false
           type: boolean
           format: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
       tags:
         - Query
   '/provenance/metadata/v1/valueownership/{address}':
@@ -52939,6 +53105,12 @@ paths:
                           is ignored when key
 
                           is set.
+                      reverse:
+                        type: boolean
+                        format: boolean
+                        description: >-
+                          reverse is set to true if results are to be returned
+                          in the descending order.
                     title: >-
                       PageRequest is to be embedded in gRPC request messages for
                       efficient
@@ -53037,6 +53209,14 @@ paths:
             when key
 
             is set.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
           in: query
           required: false
           type: boolean
@@ -53150,6 +53330,14 @@ paths:
             when key
 
             is set.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
           in: query
           required: false
           type: boolean
@@ -55405,6 +55593,12 @@ definitions:
 
           is set.
         format: boolean
+      reverse:
+        type: boolean
+        format: boolean
+        description: >-
+          reverse is set to true if results are to be returned in the descending
+          order.
     description: |-
       message SomeRequest {
                Foo some_parameter = 1;
@@ -75178,6 +75372,12 @@ definitions:
               when key
 
               is set.
+          reverse:
+            type: boolean
+            format: boolean
+            description: >-
+              reverse is set to true if results are to be returned in the
+              descending order.
         title: |-
           PageRequest is to be embedded in gRPC request messages for efficient
           pagination. Ex:
@@ -75361,6 +75561,12 @@ definitions:
                   ignored when key
 
                   is set.
+              reverse:
+                type: boolean
+                format: boolean
+                description: >-
+                  reverse is set to true if results are to be returned in the
+                  descending order.
             title: >-
               PageRequest is to be embedded in gRPC request messages for
               efficient
@@ -75489,6 +75695,12 @@ definitions:
               when key
 
               is set.
+          reverse:
+            type: boolean
+            format: boolean
+            description: >-
+              reverse is set to true if results are to be returned in the
+              descending order.
         title: |-
           PageRequest is to be embedded in gRPC request messages for efficient
           pagination. Ex:
@@ -75569,6 +75781,12 @@ definitions:
                   ignored when key
 
                   is set.
+              reverse:
+                type: boolean
+                format: boolean
+                description: >-
+                  reverse is set to true if results are to be returned in the
+                  descending order.
             title: >-
               PageRequest is to be embedded in gRPC request messages for
               efficient
@@ -75744,6 +75962,12 @@ definitions:
               when key
 
               is set.
+          reverse:
+            type: boolean
+            format: boolean
+            description: >-
+              reverse is set to true if results are to be returned in the
+              descending order.
         title: |-
           PageRequest is to be embedded in gRPC request messages for efficient
           pagination. Ex:
@@ -75826,6 +76050,12 @@ definitions:
                   ignored when key
 
                   is set.
+              reverse:
+                type: boolean
+                format: boolean
+                description: >-
+                  reverse is set to true if results are to be returned in the
+                  descending order.
             title: >-
               PageRequest is to be embedded in gRPC request messages for
               efficient
@@ -75918,6 +76148,12 @@ definitions:
               when key
 
               is set.
+          reverse:
+            type: boolean
+            format: boolean
+            description: >-
+              reverse is set to true if results are to be returned in the
+              descending order.
         title: |-
           PageRequest is to be embedded in gRPC request messages for efficient
           pagination. Ex:
@@ -75984,6 +76220,12 @@ definitions:
                   ignored when key
 
                   is set.
+              reverse:
+                type: boolean
+                format: boolean
+                description: >-
+                  reverse is set to true if results are to be returned in the
+                  descending order.
             title: >-
               PageRequest is to be embedded in gRPC request messages for
               efficient
@@ -76935,6 +77177,12 @@ definitions:
               when key
 
               is set.
+          reverse:
+            type: boolean
+            format: boolean
+            description: >-
+              reverse is set to true if results are to be returned in the
+              descending order.
         title: |-
           PageRequest is to be embedded in gRPC request messages for efficient
           pagination. Ex:
@@ -77173,6 +77421,12 @@ definitions:
                   ignored when key
 
                   is set.
+              reverse:
+                type: boolean
+                format: boolean
+                description: >-
+                  reverse is set to true if results are to be returned in the
+                  descending order.
             title: >-
               PageRequest is to be embedded in gRPC request messages for
               efficient
@@ -77716,6 +77970,12 @@ definitions:
               when key
 
               is set.
+          reverse:
+            type: boolean
+            format: boolean
+            description: >-
+              reverse is set to true if results are to be returned in the
+              descending order.
         title: |-
           PageRequest is to be embedded in gRPC request messages for efficient
           pagination. Ex:
@@ -78033,6 +78293,12 @@ definitions:
                   ignored when key
 
                   is set.
+              reverse:
+                type: boolean
+                format: boolean
+                description: >-
+                  reverse is set to true if results are to be returned in the
+                  descending order.
             title: >-
               PageRequest is to be embedded in gRPC request messages for
               efficient
@@ -79922,6 +80188,12 @@ definitions:
               when key
 
               is set.
+          reverse:
+            type: boolean
+            format: boolean
+            description: >-
+              reverse is set to true if results are to be returned in the
+              descending order.
         title: |-
           PageRequest is to be embedded in gRPC request messages for efficient
           pagination. Ex:
@@ -80098,6 +80370,12 @@ definitions:
                   ignored when key
 
                   is set.
+              reverse:
+                type: boolean
+                format: boolean
+                description: >-
+                  reverse is set to true if results are to be returned in the
+                  descending order.
             title: >-
               PageRequest is to be embedded in gRPC request messages for
               efficient
@@ -80300,6 +80578,12 @@ definitions:
               when key
 
               is set.
+          reverse:
+            type: boolean
+            format: boolean
+            description: >-
+              reverse is set to true if results are to be returned in the
+              descending order.
         title: |-
           PageRequest is to be embedded in gRPC request messages for efficient
           pagination. Ex:
@@ -80503,6 +80787,12 @@ definitions:
                   ignored when key
 
                   is set.
+              reverse:
+                type: boolean
+                format: boolean
+                description: >-
+                  reverse is set to true if results are to be returned in the
+                  descending order.
             title: >-
               PageRequest is to be embedded in gRPC request messages for
               efficient
@@ -80917,6 +81207,12 @@ definitions:
               when key
 
               is set.
+          reverse:
+            type: boolean
+            format: boolean
+            description: >-
+              reverse is set to true if results are to be returned in the
+              descending order.
         title: |-
           PageRequest is to be embedded in gRPC request messages for efficient
           pagination. Ex:
@@ -81183,6 +81479,12 @@ definitions:
                   ignored when key
 
                   is set.
+              reverse:
+                type: boolean
+                format: boolean
+                description: >-
+                  reverse is set to true if results are to be returned in the
+                  descending order.
             title: >-
               PageRequest is to be embedded in gRPC request messages for
               efficient
@@ -81952,6 +82254,12 @@ definitions:
               when key
 
               is set.
+          reverse:
+            type: boolean
+            format: boolean
+            description: >-
+              reverse is set to true if results are to be returned in the
+              descending order.
         title: |-
           PageRequest is to be embedded in gRPC request messages for efficient
           pagination. Ex:
@@ -82020,6 +82328,12 @@ definitions:
                   ignored when key
 
                   is set.
+              reverse:
+                type: boolean
+                format: boolean
+                description: >-
+                  reverse is set to true if results are to be returned in the
+                  descending order.
             title: >-
               PageRequest is to be embedded in gRPC request messages for
               efficient
