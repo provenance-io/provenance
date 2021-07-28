@@ -157,3 +157,32 @@ $ %s query name loopup pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk --page=2 --limi
 
 	return cmd
 }
+
+// RosettaCommand is used to test the Rosetta api integration
+func RosettaCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "rosetta",
+		Short: "spin up a rosetta server",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(``,
+				version.AppName, version.AppName,
+			)),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.Params(context.Background(), &types.QueryParamsRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(&res.Params)
+		},
+	}
+
+	return cmd
+}

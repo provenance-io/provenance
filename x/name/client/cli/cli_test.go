@@ -34,6 +34,7 @@ type IntegrationTestSuite struct {
 	accountKey  *secp256k1.PrivKey
 }
 
+// Here are some integration tests to add Rosetta to?
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
 	addr, err := sdk.AccAddressFromHex(s.accountKey.PubKey().Address().String())
@@ -324,6 +325,34 @@ func (s *IntegrationTestSuite) TestGetDeleteNameCmd() {
 		})
 	}
 }
+
+func (s *IntegrationTestSuite) TestRosetta() {
+	testCases := []struct {
+		name           string
+		args           []string
+		expectedOutput string
+	}{
+		{
+			"Test Rossetta",
+			[]string{"--testnet"},
+			"", // no idea what this will be yet
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := namecli.RosettaCommand()
+			clientCtx := s.testnet.Validators[0].ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
+		})
+	}
+}
+
 
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
