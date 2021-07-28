@@ -1605,7 +1605,7 @@ func (s *IntegrationCLITestSuite) TestGetOwnershipCmd() {
 
 	paginationText := `pagination:
   next_key: null
-  total: "1"
+  total: "0"
 `
 	scopeUUIDsText := fmt.Sprintf(`scope_uuids:
 - %s`,
@@ -1619,7 +1619,7 @@ func (s *IntegrationCLITestSuite) TestGetOwnershipCmd() {
 			"",
 			[]string{
 				fmt.Sprintf("\"scope_uuids\":[\"%s\"]", s.scopeUUID),
-				"\"pagination\":{\"next_key\":null,\"total\":\"1\"}",
+				"\"pagination\":{\"next_key\":null,\"total\":\"0\"}",
 			},
 		},
 		{
@@ -1662,7 +1662,7 @@ func (s *IntegrationCLITestSuite) TestGetValueOwnershipCmd() {
 
 	paginationText := `pagination:
   next_key: null
-  total: "1"
+  total: "0"
 `
 	scopeUUIDsText := fmt.Sprintf(`scope_uuids:
 - %s`,
@@ -1676,7 +1676,7 @@ func (s *IntegrationCLITestSuite) TestGetValueOwnershipCmd() {
 			"",
 			[]string{
 				fmt.Sprintf("\"scope_uuids\":[\"%s\"]", s.scopeUUID),
-				"\"pagination\":{\"next_key\":null,\"total\":\"1\"}",
+				"\"pagination\":{\"next_key\":null,\"total\":\"0\"}",
 			},
 		},
 		{
