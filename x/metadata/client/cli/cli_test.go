@@ -17,16 +17,15 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/provenance-io/provenance/testutil"
-
 	"github.com/provenance-io/provenance/x/metadata/client/cli"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
@@ -143,11 +142,13 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	genesisState := cfg.GenesisState
 	cfg.NumValidators = 1
 
-	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
+	privkey1 := secp256k1.GenPrivKey()
+	s.pubkey1 = privkey1.PubKey()
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
 	s.user1 = s.user1Addr.String()
 
-	s.pubkey2 = secp256k1.GenPrivKey().PubKey()
+	privkey2 := secp256k1.GenPrivKey()
+	s.pubkey2 = privkey2.PubKey()
 	s.user2Addr = sdk.AccAddress(s.pubkey2.Address())
 	s.user2 = s.user2Addr.String()
 
@@ -440,10 +441,16 @@ owner: %s`,
 
 	s.cfg = cfg
 
-	// TODO: This is overwritting some of our genesis states https://github.com/provenance-io/provenance/issues/81
 	s.testnet = testnet.New(s.T(), cfg)
 
 	_, err = s.testnet.WaitForHeight(1)
+	s.Require().NoError(err)
+
+	// Add the user1 and user2 keys to the keyring.
+	// Note: They don't have any coin ("stake"), so they still can't actually successfully sign TXs, but hey, it's progress.
+	err = s.testnet.Validators[0].ClientCtx.Keyring.ImportPrivKey(s.user1, crypto.EncryptArmorPrivKey(privkey1, "password1", "secp256k1"), "password1")
+	s.Require().NoError(err)
+	err = s.testnet.Validators[0].ClientCtx.Keyring.ImportPrivKey(s.user2, crypto.EncryptArmorPrivKey(privkey2, "password2", "secp256k1"), "password2")
 	s.Require().NoError(err)
 }
 
