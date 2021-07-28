@@ -28,7 +28,6 @@ import (
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	namecli "github.com/provenance-io/provenance/x/name/client/cli"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
-
 )
 
 type IntegrationTestSuite struct {
@@ -797,7 +796,7 @@ func (s *IntegrationTestSuite) TestPaginationWithPageKey() {
 	// 48 comes from the number of attributes on account 3 that end with the character '7' (500/10 - "seven" - "seventeen").
 	pageSize := 35
 	pageCount := s.accAttrCount / pageSize
-	if s.accAttrCount % pageSize != 0 {
+	if s.accAttrCount%pageSize != 0 {
 		pageCount++
 	}
 	asJson := fmt.Sprintf("--%s=json", tmcli.OutputFlag)
@@ -892,7 +891,7 @@ func (s *IntegrationTestSuite) TestPaginationWithPageKey() {
 
 		expectedCount := 48
 		pc := expectedCount / pageSize
-		if expectedCount % pageSize != 0 {
+		if expectedCount%pageSize != 0 {
 			pc++
 		}
 
@@ -1058,6 +1057,7 @@ func toWritten(i int) string {
 // attrSorter implements sort.Interface for []Attribute
 // Sorts by .Name then .AttributeType then .Value, then .Address.
 type attrSorter []attributetypes.Attribute
+
 func (a attrSorter) Len() int {
 	return len(a)
 }
@@ -1085,8 +1085,6 @@ func (a attrSorter) Less(i, j int) bool {
 	// Then by Address.
 	return a[i].Address < a[j].Address
 }
-
-
 
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))

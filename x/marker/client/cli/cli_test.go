@@ -118,14 +118,14 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			markertypes.MarkerAccount{
 				BaseAccount: &authtypes.BaseAccount{
 					Address:       markertypes.MustGetMarkerAddress(denom).String(),
-					AccountNumber: uint64(i*10),
+					AccountNumber: uint64(i * 10),
 					Sequence:      0,
 				},
 				Status:                 markertypes.StatusActive,
 				SupplyFixed:            false,
 				MarkerType:             markertypes.MarkerType_Coin,
 				AllowGovernanceControl: true,
-				Supply:                 sdk.NewInt(int64(i*100000)),
+				Supply:                 sdk.NewInt(int64(i * 100000)),
 				Denom:                  denom,
 			},
 		)
@@ -685,7 +685,7 @@ func (s *IntegrationTestSuite) TestPaginationWithPageKey() {
 	// Choosing page size = 7 because it's a) not the default, b) doesn't evenly divide 20.
 	pageSize := 7
 	pageCount := s.markerCount / pageSize
-	if s.markerCount % pageSize != 0 {
+	if s.markerCount%pageSize != 0 {
 		pageCount++
 	}
 	asJson := fmt.Sprintf("--%s=json", tmcli.OutputFlag)
@@ -813,6 +813,7 @@ func toWritten(i int) string {
 // markerSorter implements sort.Interface for []MarkerAccount
 // Sorts by .Denom only.
 type markerSorter []markertypes.MarkerAccount
+
 func (a markerSorter) Len() int {
 	return len(a)
 }

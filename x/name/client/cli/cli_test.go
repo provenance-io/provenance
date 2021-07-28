@@ -343,7 +343,7 @@ func (s *IntegrationTestSuite) TestPaginationWithPageKey() {
 	// Choosing page size = 13 because it's a) not the default, b) doesn't evenly divide 50.
 	pageSize := 13
 	pageCount := s.acc2NameCount / pageSize
-	if s.acc2NameCount % pageSize != 0 {
+	if s.acc2NameCount%pageSize != 0 {
 		pageCount++
 	}
 	asJson := fmt.Sprintf("--%s=json", tmcli.OutputFlag)
