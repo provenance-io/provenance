@@ -1851,8 +1851,6 @@ func (s *IntegrationCLITestSuite) TestGetOSLocatorCmd() {
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
-// TODO: Add some pagination tests similar to TestPaginationWithPageKey() in the other module cli tests.
-
 // ---------- tx cmd tests ----------
 
 type txCmdTestCase struct {
