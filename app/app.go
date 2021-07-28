@@ -141,18 +141,7 @@ const (
 
 var (
 	// DefaultNodeHome default home directories for the application daemon
-	DefaultNodeHome = func(appName string) string {
-		home := os.ExpandEnv("$PIO_HOME")
-
-		if strings.TrimSpace(home) == "" {
-			configDir, err := os.UserConfigDir()
-			if err != nil {
-				panic(err)
-			}
-			home = filepath.Join(configDir, "Provenance")
-		}
-		return home
-	}
+	DefaultNodeHome string
 
 	// DefaultPowerReduction pio specific value for power reduction for TokensFromConsensusPower
 	DefaultPowerReduction = sdk.NewIntFromUint64(1000000000)
@@ -285,6 +274,18 @@ type App struct {
 
 	// module configurator
 	configurator module.Configurator
+}
+
+func init() {
+	DefaultNodeHome = os.ExpandEnv("$PIO_HOME")
+
+	if strings.TrimSpace(DefaultNodeHome) == "" {
+		configDir, err := os.UserConfigDir()
+		if err != nil {
+			panic(err)
+		}
+		DefaultNodeHome = filepath.Join(configDir, "Provenance")
+	}
 }
 
 // New returns a reference to an initialized Provenance Blockchain App.
