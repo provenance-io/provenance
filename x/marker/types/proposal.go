@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -23,6 +24,8 @@ const (
 	ProposalTypeChangeStatus string = "ChangeStatus"
 	// ProposalTypeWithdrawEscrow is a proposal to withdraw coins from marker escrow and transfer to a specified account
 	ProposalTypeWithdrawEscrow string = "WithdrawEscrow"
+	// ProposalTypeSetDenomMetadata is a proposal to set denom metatdata.
+	ProposalTypeSetDenomMetadata string = "SetDenomMetadata"
 )
 
 var (
@@ -33,6 +36,7 @@ var (
 	_ govtypes.Content = &RemoveAdministratorProposal{}
 	_ govtypes.Content = &ChangeStatusProposal{}
 	_ govtypes.Content = &WithdrawEscrowProposal{}
+	_ govtypes.Content = &SetDenomMetadataProposal{}
 )
 
 func init() {
@@ -54,6 +58,9 @@ func init() {
 
 	govtypes.RegisterProposalType(ProposalTypeWithdrawEscrow)
 	govtypes.RegisterProposalTypeCodec(WithdrawEscrowProposal{}, "provenance/marker/WithdrawEscrowProposal")
+
+	govtypes.RegisterProposalType(ProposalTypeSetDenomMetadata)
+	govtypes.RegisterProposalTypeCodec(SetDenomMetadataProposal{}, "provenance/marker/SetDenomMetadataProposal")
 }
 
 // NewAddMarkerProposal creates a new proposal
@@ -262,4 +269,32 @@ func (wep WithdrawEscrowProposal) String() string {
   Description: %s
   Withdraw %s and transfer to %s
 `, wep.Denom, wep.Title, wep.Description, wep.Amount, wep.TargetAddress)
+}
+
+func NewSetDenomMetadataProposal(title, description string, metadata banktypes.Metadata) *SetDenomMetadataProposal {
+	return &SetDenomMetadataProposal{
+		Title:       title,
+		Description: description,
+		Metadata:    metadata,
+	}
+}
+
+// Implements Proposal Interface
+
+func (sdmdp SetDenomMetadataProposal) ProposalRoute() string { return RouterKey }
+func (sdmdp SetDenomMetadataProposal) ProposalType() string  { return ProposalTypeSetDenomMetadata }
+func (sdmdp SetDenomMetadataProposal) ValidateBasic() error {
+	if err := sdmdp.Metadata.Validate(); err != nil {
+		return sdkerrors.Wrap(govtypes.ErrInvalidProposalContent, "invalid metadata: "+err.Error())
+	}
+	return govtypes.ValidateAbstract(&sdmdp)
+}
+
+func (sdmdp SetDenomMetadataProposal) String() string {
+	return fmt.Sprintf(`Set Denom Metadata Proposal:
+  Marker:      %s
+  Title:       %s
+  Description: %s
+  Metadata:    %s
+`, sdmdp.Metadata.Base, sdmdp.Title, sdmdp.Description, sdmdp.Metadata.String())
 }

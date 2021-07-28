@@ -112,6 +112,18 @@ Valid Proposal Types (and associated parameters):
 	"amount": "100coin"
 	"target_address": "pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk"
 
+- SetDenomMetadata
+	"metadata": {
+		"description": "description text",
+		"base": "basedenom",
+		"display": "displaydenom",
+		"name": "Denom Name",
+		"symbol": "DSYMB",
+		"denom_units": [
+			{"denom":"basedenom","exponent":0,"aliases":[]},
+			{"denom":"otherdenomunit","exponent":9,"aliases":[]}
+		]
+	}
 `,
 				version.AppName, sdk.DefaultBondDenom,
 			),
@@ -144,6 +156,8 @@ Valid Proposal Types (and associated parameters):
 				proposal = &types.ChangeStatusProposal{}
 			case types.ProposalTypeWithdrawEscrow:
 				proposal = &types.WithdrawEscrowProposal{}
+			case types.ProposalTypeSetDenomMetadata:
+				proposal = &types.SetDenomMetadataProposal{}
 			default:
 				return fmt.Errorf("unknown proposal type %s", args[0])
 			}

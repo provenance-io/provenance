@@ -28,7 +28,7 @@ func TestProposalContents(t *testing.T) {
 
 	// execute ProposalContents function
 	weightedProposalContent := simulation.ProposalContents(keeper.NewKeeper(app.AppCodec(), app.GetKey(types.ModuleName), app.GetSubspace(types.ModuleName), app.AccountKeeper, app.BankKeeper, app.AuthzKeeper))
-	require.Len(t, weightedProposalContent, 6)
+	require.Len(t, weightedProposalContent, 7)
 
 	w0 := weightedProposalContent[0]
 

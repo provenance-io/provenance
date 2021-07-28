@@ -45,7 +45,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add authz support to Marker module transfer `MarkerTransferAuthorization` [#265](https://github.com/provenance-io/provenance/issues/265)
   * Add authz grant/revoke command to `marker` cli
   * Add `granter` flag to `marker` transfer command to execute transfer with authz
-* Add authz and feegrant modules
+* Add authz and feegrant modules [PR 384](https://github.com/provenance-io/provenance/pull/384)
+* Add Marker governance proposal for setting denom metadata [#369](https://github.com/provenance-io/provenance/issues/369)
 
 ### Bug Fixes
 
@@ -62,6 +63,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Updated to Cosmos SDK Release v0.43  [#154](https://github.com/provenance-io/provenance/issues/154)
 * Updated to IBC-Go Module v1.0.0
+* Updated log message for circulation adjustment [#381](https://github.com/provenance-io/provenance/issues/381)
+* Updated third party proto files to pull from cosmos 0.43 [#391](https://github.com/provenance-io/provenance/issues/391)
 
 ## [v1.5.0](https://github.com/provenance-io/provenance/releases/tag/v1.5.0) - 2021-06-23
 
