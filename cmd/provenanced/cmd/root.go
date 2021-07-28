@@ -6,14 +6,12 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
-
-	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 
 	"github.com/provenance-io/provenance/app/params"
+	"github.com/provenance-io/provenance/cmd/provenanced/config"
 
 	"github.com/rs/zerolog"
 	"github.com/spf13/cast"
@@ -59,14 +57,15 @@ var ChainID string
 func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	encodingConfig := app.MakeEncodingConfig()
 	initClientCtx := client.Context{}.
-		WithJSONCodec(encodingConfig.Marshaler).
+		WithCodec(encodingConfig.Marshaler).
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).
 		WithLegacyAmino(encodingConfig.Amino).
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
 		WithBroadcastMode(flags.BroadcastBlock).
-		WithHomeDir(app.DefaultNodeHome)
+		WithHomeDir(app.DefaultNodeHome).
+		WithViper("PIO")
 	sdk.SetCoinDenomRegex(app.SdkCoinDenomRegex)
 	rootCmd := &cobra.Command{
 		Use:   "provenanced",
@@ -75,13 +74,16 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			cmd.SetOut(cmd.OutOrStdout())
 			cmd.SetErr(cmd.ErrOrStderr())
 
-			if err := client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
+			initClientCtx = client.ReadHomeFlag(initClientCtx, cmd)
+
+			var err error
+			if initClientCtx, err = config.ReadFromClientConfig(initClientCtx); err != nil {
 				return err
 			}
-			if err := server.InterceptConfigsPreRunHandler(cmd, "", nil); err != nil {
+			if err = client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
 				return err
 			}
-			if err := bindFlags("PIO", cmd, server.GetServerContextFromCmd(cmd).Viper); err != nil {
+			if err = config.InterceptConfigsPreRunHandler(cmd, "", nil); err != nil {
 				return err
 			}
 			// set app context based on initialized EnvTypeFlag
@@ -135,10 +137,11 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		tmcli.NewCompletionCmd(rootCmd, true),
 		testnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
+		ClientConfigCmd(),
 		AddMetaAddressCmd(),
 	)
 
-	server.AddCommands(rootCmd, app.DefaultNodeHome, newApp, createSimappAndExport, addModuleInitFlags)
+	server.AddCommands(rootCmd, app.DefaultNodeHome, newApp, createAppAndExport, addModuleInitFlags)
 
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
@@ -281,7 +284,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 	)
 }
 
-func createSimappAndExport(
+func createAppAndExport(
 	logger log.Logger,
 	db dbm.DB,
 	traceStore io.Writer,
@@ -322,35 +325,4 @@ func overwriteFlagDefaults(c *cobra.Command, defaults map[string]string) {
 	for _, c := range c.Commands() {
 		overwriteFlagDefaults(c, defaults)
 	}
-}
-
-func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) {
-	defer func() {
-		recover() // nolint:errcheck
-	}()
-
-	cmd.Flags().VisitAll(func(f *pflag.Flag) {
-		// Environment variables can't have dashes in them, so bind them to their equivalent
-		// keys with underscores, e.g. --favorite-color to STING_FAVORITE_COLOR
-		err = v.BindEnv(f.Name, fmt.Sprintf("%s_%s", basename, strings.ToUpper(strings.ReplaceAll(f.Name, "-", "_"))))
-		if err != nil {
-			panic(err)
-		}
-
-		err = v.BindPFlag(f.Name, f)
-		if err != nil {
-			panic(err)
-		}
-
-		// Apply the viper config value to the flag when the flag is not set and viper has a value
-		if !f.Changed && v.IsSet(f.Name) {
-			val := v.Get(f.Name)
-			err = cmd.Flags().Set(f.Name, fmt.Sprintf("%v", val))
-			if err != nil {
-				panic(err)
-			}
-		}
-	})
-
-	return err
 }
