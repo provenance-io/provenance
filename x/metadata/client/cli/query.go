@@ -768,10 +768,14 @@ func outputOwnership(cmd *cobra.Command, address string) error {
 	if err != nil {
 		return err
 	}
+	pageReq, e := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+	if e != nil {
+		return e
+	}
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.Ownership(
 		context.Background(),
-		&types.OwnershipRequest{Address: address},
+		&types.OwnershipRequest{Address: address, Pagination: pageReq},
 	)
 	if err != nil {
 		return err
@@ -790,10 +794,14 @@ func outputValueOwnership(cmd *cobra.Command, address string) error {
 	if err != nil {
 		return err
 	}
+	pageReq, e := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+	if e != nil {
+		return e
+	}
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.ValueOwnership(
 		context.Background(),
-		&types.ValueOwnershipRequest{Address: address},
+		&types.ValueOwnershipRequest{Address: address, Pagination: pageReq},
 	)
 	if err != nil {
 		return err
@@ -1032,10 +1040,14 @@ func outputOSLocatorsByURI(cmd *cobra.Command, uri string) error {
 	if err != nil {
 		return err
 	}
+	pageReq, e := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+	if e != nil {
+		return e
+	}
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.OSLocatorsByURI(
 		context.Background(),
-		&types.OSLocatorsByURIRequest{Uri: uri},
+		&types.OSLocatorsByURIRequest{Uri: uri, Pagination: pageReq},
 	)
 	if err != nil {
 		return err
