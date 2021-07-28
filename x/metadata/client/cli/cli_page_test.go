@@ -410,14 +410,13 @@ func (s *IntegrationCLIPageTestSuite) TestSetupTeardown() {
 	s.Assert().True(true, "this should be true")
 }
 
-// TODO: Add some pagination tests similar to TestPaginationWithPageKey() in the other module cli tests.
-// ScopesAllRequest - outputScopesAll: GetMetadataGetAllCmd all scopes, GetMetadataScopeCmd scope all
-// SessionsAllRequest - outputSessionsAll: GetMetadataGetAllCmd all sessions, GetMetadataSessionCmd session all
-// RecordsAllRequest - outputRecordsAll: GetMetadataGetAllCmd all records, GetMetadataRecordCmd record all
-// ScopeSpecificationsAllRequest - outputScopeSpecsAll: GetMetadataGetAllCmd all scopespecs, GetMetadataScopeSpecCmd scopespec all
-// ContractSpecificationsAllRequest - outputContractSpecsAll: GetMetadataGetAllCmd all contractspecs, GetMetadataContractSpecCmd contractspec all
-// RecordSpecificationsAllRequest - outputRecordSpecsAll: GetMetadataGetAllCmd all recordspecs, GetMetadataRecordSpecCmd recordspec all
-// OSLocatorsByURIRequest - outputOSLocatorsByURI: GetOSLocatorCmd locator uri
-// OSAllLocatorsRequest - outputOSLocatorsAll: GetMetadataGetAllCmd all locators, GetOSLocatorCmd locator all
-// OwnershipRequest - outputOwnership: GetOwnershipCmd owner address
-// ValueOwnershipRequest - outputValueOwnership: GetValueOwnershipCmd valueowner address
+// TODO: ScopesAllRequest - outputScopesAll: GetMetadataGetAllCmd all scopes, GetMetadataScopeCmd scope all
+// TODO: SessionsAllRequest - outputSessionsAll: GetMetadataGetAllCmd all sessions, GetMetadataSessionCmd session all
+// TODO: RecordsAllRequest - outputRecordsAll: GetMetadataGetAllCmd all records, GetMetadataRecordCmd record all
+// TODO: ScopeSpecificationsAllRequest - outputScopeSpecsAll: GetMetadataGetAllCmd all scopespecs, GetMetadataScopeSpecCmd scopespec all
+// TODO: ContractSpecificationsAllRequest - outputContractSpecsAll: GetMetadataGetAllCmd all contractspecs, GetMetadataContractSpecCmd contractspec all
+// TODO: RecordSpecificationsAllRequest - outputRecordSpecsAll: GetMetadataGetAllCmd all recordspecs, GetMetadataRecordSpecCmd recordspec all
+// TODO: OSLocatorsByURIRequest - outputOSLocatorsByURI: GetOSLocatorCmd locator uri
+// TODO: OSAllLocatorsRequest - outputOSLocatorsAll: GetMetadataGetAllCmd all locators, GetOSLocatorCmd locator all
+// TODO: OwnershipRequest - outputOwnership: GetOwnershipCmd owner address
+// TODO: ValueOwnershipRequest - outputValueOwnership: GetValueOwnershipCmd valueowner address
