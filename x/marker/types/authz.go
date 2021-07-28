@@ -26,15 +26,18 @@ func (a MarkerTransferAuthorization) MsgTypeURL() string {
 func (a MarkerTransferAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptResponse, error) {
 	switch msg := msg.(type) {
 	case *MsgTransferRequest:
-		limitLeft, isNegative := a.TransferLimit.SafeSub(sdk.NewCoins(msg.Amount))
+		limitLeft, isNegative := a.DecreaseTransferLimit(msg.Amount)
 		if isNegative {
 			return authz.AcceptResponse{}, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "requested amount is more than spend limit")
+		} else if msg.Administrator != "" && msg.Administrator == msg.FromAddress {
+			shouldDelete := false
+			if limitLeft.IsZero() {
+				shouldDelete = true
+			}
+			return authz.AcceptResponse{Accept: true, Delete: shouldDelete, Updated: &MarkerTransferAuthorization{TransferLimit: limitLeft}}, nil
 		}
-		if limitLeft.IsZero() {
-			return authz.AcceptResponse{Accept: true, Delete: true}, nil
-		}
-
-		return authz.AcceptResponse{Accept: true, Delete: false, Updated: &MarkerTransferAuthorization{TransferLimit: limitLeft}}, nil
+		// does not return and an updated transfer limit, this is handled in marker module
+		return authz.AcceptResponse{Accept: true, Delete: false, Updated: &MarkerTransferAuthorization{TransferLimit: a.TransferLimit}}, nil
 	default:
 		return authz.AcceptResponse{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "type mismatch")
 	}
@@ -49,4 +52,9 @@ func (a MarkerTransferAuthorization) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "spend limit cannot be negitive")
 	}
 	return nil
+}
+
+// DecreaseTransferLimit will return the decreased transfer limit and if it is negative
+func (a MarkerTransferAuthorization) DecreaseTransferLimit(amount sdk.Coin) (sdk.Coins, bool) {
+	return a.TransferLimit.SafeSub(sdk.NewCoins(amount))
 }

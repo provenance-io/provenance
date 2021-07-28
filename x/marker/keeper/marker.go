@@ -629,19 +629,9 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 	if !m.AddressHasAccess(admin, types.Access_Transfer) {
 		return fmt.Errorf("%s is not allowed to broker transfers", admin.String())
 	}
-	if !from.Equals(admin) {
-		if !m.AddressHasAccess(from, types.Access_Transfer) {
-			return fmt.Errorf("%s is not allowed to broker transfers", admin.String())
-		}
-		var hasAuthority bool
-		markerAuth := types.MarkerTransferAuthorization{}
-		for _, auth := range k.authzKeeper.GetAuthorizations(ctx, admin, from) {
-			if auth.MsgTypeURL() == markerAuth.MsgTypeURL() {
-				hasAuthority = true
-			}
-		}
-		if !hasAuthority {
-			return fmt.Errorf("%s account has not been granted authority to broker transfers from %s account", admin, from)
+	if !admin.Equals(from) {
+		if err := k.authzHandler(ctx, admin, from, amount); err != nil {
+			return err
 		}
 	}
 	if k.bankKeeper.BlockedAddr(to) {
@@ -664,6 +654,29 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 		return err
 	}
 
+	return nil
+}
+
+func (k Keeper) authzHandler(ctx sdk.Context, admin sdk.AccAddress, from sdk.AccAddress, amount sdk.Coin) error {
+	markerAuth := types.MarkerTransferAuthorization{}
+	authorization, expireTime := k.authzKeeper.GetCleanAuthorization(ctx, admin, from, markerAuth.MsgTypeURL())
+	if authorization == nil {
+		return fmt.Errorf("%s account has not been granted authority to withdraw from %s account", admin, from)
+	}
+	accept, err := authorization.Accept(ctx, &types.MsgTransferRequest{Amount: amount})
+	if err != nil {
+		return err
+	}
+	if accept.Accept {
+		limitLeft, _ := authorization.(*types.MarkerTransferAuthorization).DecreaseTransferLimit(amount)
+		if limitLeft.IsZero() {
+			k.authzKeeper.DeleteGrant(ctx, admin, from, markerAuth.MsgTypeURL())
+		} else {
+			k.authzKeeper.SaveGrant(ctx, admin, from, &types.MarkerTransferAuthorization{TransferLimit: limitLeft}, expireTime)
+		}
+	} else {
+		return fmt.Errorf("authorization was not accepted for %s", admin)
+	}
 	return nil
 }
 

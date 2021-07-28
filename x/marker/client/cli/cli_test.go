@@ -86,6 +86,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	).Sort()})
 	genBalances = append(genBalances, banktypes.Balance{Address: s.accountAddresses[1].String(), Coins: sdk.NewCoins(
 		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
+		sdk.NewCoin("authzhotdog", sdk.NewInt(100)),
 	).Sort()})
 	genBalances = append(genBalances, banktypes.Balance{Address: s.accountAddresses[2].String(), Coins: sdk.NewCoins(
 		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
@@ -611,7 +612,7 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 		expectedCode uint32
 	}{
 		{
-			"grant authz transfer permissions to grantee",
+			"grant authz transfer permissions to account 1 for account 0 tranfer limit of 10",
 			markercli.GetCmdGrantAuthorization(),
 			[]string{
 				s.accountAddresses[1].String(),
@@ -625,12 +626,12 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 			false, &sdk.TxResponse{}, 0,
 		},
 		{
-			"grant authz transfer permissions to grantee",
+			"grant authz transfer permissions to account 0 for account 1 transfer limit 20",
 			markercli.GetCmdGrantAuthorization(),
 			[]string{
 				s.accountAddresses[0].String(),
 				"transfer",
-				fmt.Sprintf("--%s=%s", markercli.FlagTransferLimit, "10authzhotdog"),
+				fmt.Sprintf("--%s=%s", markercli.FlagTransferLimit, "20authzhotdog"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -639,12 +640,13 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 			false, &sdk.TxResponse{}, 0,
 		},
 		{
-			"signer granted authority, transfer successfully",
+			"authz exec successfully, account 1 sent marker transfer as account 0",
 			markercli.GetNewTransferCmd(),
 			[]string{
 				s.accountAddresses[0].String(),
 				s.accountAddresses[1].String(),
-				"9authzhotdog",
+				"5authzhotdog",
+				fmt.Sprintf("--%s=%s", markercli.FlagGranter, s.accountAddresses[0].String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -653,7 +655,35 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 			false, &sdk.TxResponse{}, 0,
 		},
 		{
-			"signer not granted authority, transfer failed",
+			"marker transfer successful, account 1 as grantee and account 0 as granter",
+			markercli.GetNewTransferCmd(),
+			[]string{
+				s.accountAddresses[0].String(),
+				s.accountAddresses[1].String(),
+				"4authzhotdog",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"marker transfer failed,  account 1 over transfer limit",
+			markercli.GetNewTransferCmd(),
+			[]string{
+				s.accountAddresses[0].String(),
+				s.accountAddresses[1].String(),
+				"2authzhotdog",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 5,
+		},
+		{
+			"marker transfer failed, account 1 not granted rights by account 2",
 			markercli.GetNewTransferCmd(),
 			[]string{
 				s.accountAddresses[2].String(),
@@ -667,48 +697,18 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 			false, &sdk.TxResponse{}, 1,
 		},
 		{
-			"from account does not have transfer access, transfer fail",
+			"grantee successful transfer, removed from auth for reaching transfer limit",
 			markercli.GetNewTransferCmd(),
 			[]string{
-				s.accountAddresses[3].String(),
 				s.accountAddresses[1].String(),
-				"9authzhotdog",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[2].String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			false, &sdk.TxResponse{}, 1,
-		},
-		{
-			"grantee transfer successfully",
-			markercli.GetNewTransferCmd(),
-			[]string{
 				s.accountAddresses[0].String(),
-				s.accountAddresses[1].String(),
-				"9authzhotdog",
-				fmt.Sprintf("--%s=%s", markercli.FlagGranter, s.accountAddresses[0].String()),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
+				"20authzhotdog",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			false, &sdk.TxResponse{}, 0,
-		},
-		{
-			"grantee failure to transfer over spending limit",
-			markercli.GetNewTransferCmd(),
-			[]string{
-				s.accountAddresses[0].String(),
-				s.accountAddresses[1].String(),
-				"2authzhotdog",
-				fmt.Sprintf("--%s=%s", markercli.FlagGranter, s.accountAddresses[0].String()),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			false, &sdk.TxResponse{}, 5,
 		},
 		{
 			"revoke authz transfer from grantee",
@@ -724,19 +724,18 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 			false, &sdk.TxResponse{}, 0,
 		},
 		{
-			"grantee should fail to transfer due to revoked authz",
+			"transfer should fail, due to account 1's revoked access",
 			markercli.GetNewTransferCmd(),
 			[]string{
 				s.accountAddresses[0].String(),
 				s.accountAddresses[1].String(),
 				"1hotdog",
-				fmt.Sprintf("--%s=%s", markercli.FlagGranter, s.accountAddresses[0].String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 4,
+			false, &sdk.TxResponse{}, 1,
 		},
 	}
 
