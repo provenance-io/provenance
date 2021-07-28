@@ -110,8 +110,11 @@ func AllMarkersCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().Uint32(flags.FlagPage, 1, "Query a specific page of paginated results")
-	cmd.Flags().Uint32(flags.FlagLimit, 200, "Query number of results per page returned")
+	flags.AddPaginationFlagsToCmd(cmd, "markers")
+	err := cmd.Flags().Lookup(flags.FlagLimit).Value.Set("200")
+	if err != nil {
+		panic(err.Error())
+	}
 	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }
