@@ -10,6 +10,8 @@ option java_multiple_files = true;
 
 // Params defines the set of params for the name module.
 message Params {
+  option deprecated = true;
+
   // maximum length of name segment to allow
   uint32 max_segment_length = 1;
   // minimum length of name segment to allow
@@ -23,6 +25,7 @@ message Params {
 // NameRecord is a structure used to bind ownership of a name hierarchy to a collection of addresses
 message NameRecord {
   option (gogoproto.goproto_stringer) = false;
+  option deprecated = true;
 
   // The bound name
   string name = 1;
@@ -36,6 +39,7 @@ message NameRecord {
 // that is controlled by a given owner and optionally restricted to the owner
 // for the sole creation of sub names.
 message CreateRootNameProposal {
+  option deprecated = true;
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = false;
@@ -49,12 +53,14 @@ message CreateRootNameProposal {
 
 // Event emitted when name is bound.
 message EventNameBound {
+  option deprecated = true;
   string address = 1;
   string name    = 2;
 }
 
 // Event emitted when name is unbound.
 message EventNameUnbound {
+  option deprecated = true;
   string address = 1;
   string name    = 2;
 }
