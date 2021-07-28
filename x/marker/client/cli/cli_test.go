@@ -1,6 +1,7 @@
 package cli_test
 
 import (
+	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -9,20 +10,20 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	sdktypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/provenance-io/provenance/testutil"
-
 	markercli "github.com/provenance-io/provenance/x/marker/client/cli"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
@@ -35,6 +36,8 @@ type IntegrationTestSuite struct {
 
 	accountAddr sdk.AccAddress
 	accountKey  *secp256k1.PrivKey
+
+	markerCount int
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
@@ -48,6 +51,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	genesisState := cfg.GenesisState
 	cfg.NumValidators = 1
+
+	s.markerCount = 20
 
 	// Configure Genesis data for marker module
 	var markerData markertypes.GenesisState
@@ -106,6 +111,24 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			Supply:                 cfg.BondedTokens.Mul(sdk.NewInt(int64(cfg.NumValidators))),
 			Denom:                  cfg.BondDenom,
 		},
+	}
+	for i := len(markerData.Markers) + 1; i < s.markerCount; i++ {
+		denom := toWritten(i)
+		markerData.Markers = append(markerData.Markers,
+			markertypes.MarkerAccount{
+				BaseAccount: &authtypes.BaseAccount{
+					Address:       markertypes.MustGetMarkerAddress(denom).String(),
+					AccountNumber: uint64(i*10),
+					Sequence:      0,
+				},
+				Status:                 markertypes.StatusActive,
+				SupplyFixed:            false,
+				MarkerType:             markertypes.MarkerType_Coin,
+				AllowGovernanceControl: true,
+				Supply:                 sdk.NewInt(int64(i*100000)),
+				Denom:                  denom,
+			},
+		)
 	}
 	markerDataBz, err := cfg.Codec.MarshalJSON(&markerData)
 	s.Require().NoError(err)
@@ -658,6 +681,159 @@ func (s *IntegrationTestSuite) TestMarkerGetTxCmd() {
 	})
 }
 
+func (s *IntegrationTestSuite) TestPaginationWithPageKey() {
+	// Choosing page size = 7 because it's a) not the default, b) doesn't evenly divide 20.
+	pageSize := 7
+	pageCount := s.markerCount / pageSize
+	if s.markerCount % pageSize != 0 {
+		pageCount++
+	}
+	asJson := fmt.Sprintf("--%s=json", tmcli.OutputFlag)
+	pageSizeArg := fmt.Sprintf("--limit=%d", pageSize)
+	var pageKeyArg = func(nextKey string) string {
+		return fmt.Sprintf("--page-key=%s", nextKey)
+	}
+
+	s.T().Run("AllMarkersCmd", func(t *testing.T) {
+		results := make([]markertypes.MarkerAccount, 0, s.markerCount)
+		var nextKey string
+
+		// Only using the page variable here for error messages, not for the CLI args since that'll mess with the --page-key being tested.
+		for page := 1; page <= pageCount; page++ {
+			args := []string{pageSizeArg, asJson}
+			if page != 1 {
+				args = append(args, pageKeyArg(nextKey))
+			}
+			iterID := fmt.Sprintf("page %d/%d, args: %v", page, pageCount, args)
+			cmd := markercli.AllMarkersCmd()
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			require.NoErrorf(t, err, "cmd error %s", iterID)
+			var result markertypes.QueryAllMarkersResponse
+			merr := s.cfg.Codec.UnmarshalJSON(out.Bytes(), &result)
+			require.NoErrorf(t, merr, "unmarshal error %s", iterID)
+			resultMarkerCount := len(result.Markers)
+			if page != pageCount {
+				require.Equalf(t, pageSize, resultMarkerCount, "page result count %s", iterID)
+				require.NotEmptyf(t, result.Pagination.NextKey, "pagination next key %s", iterID)
+			} else {
+				require.GreaterOrEqualf(t, pageSize, resultMarkerCount, "last page result count %s", iterID)
+			}
+			results = appendMarkers(results, result.Markers...)
+			nextKey = base64.StdEncoding.EncodeToString(result.Pagination.NextKey)
+		}
+	})
+
+	// The AllHoldersCmd uses the --limit and --offset args, but not the --page-key one.
+	// So it's not tested here.
+}
+
+// toWritten converts an integer to a written string version.
+// Originally, this was the full written string, e.g. 38 => "thirtyEight" but that ended up being too long for
+// an attribute name segment, so it got trimmed down, e.g. 115 => "onehun15".
+func toWritten(i int) string {
+	if i < 0 || i > 999 {
+		panic("cannot convert negative numbers or numbers larger than 999 to written string")
+	}
+	switch i {
+	case 0:
+		return "zero"
+	case 1:
+		return "one"
+	case 2:
+		return "two"
+	case 3:
+		return "three"
+	case 4:
+		return "four"
+	case 5:
+		return "five"
+	case 6:
+		return "six"
+	case 7:
+		return "seven"
+	case 8:
+		return "eight"
+	case 9:
+		return "nine"
+	case 10:
+		return "ten"
+	case 11:
+		return "eleven"
+	case 12:
+		return "twelve"
+	case 13:
+		return "thirteen"
+	case 14:
+		return "fourteen"
+	case 15:
+		return "fifteen"
+	case 16:
+		return "sixteen"
+	case 17:
+		return "seventeen"
+	case 18:
+		return "eighteen"
+	case 19:
+		return "nineteen"
+	case 20:
+		return "twenty"
+	case 30:
+		return "thirty"
+	case 40:
+		return "forty"
+	case 50:
+		return "fifty"
+	case 60:
+		return "sixty"
+	case 70:
+		return "seventy"
+	case 80:
+		return "eighty"
+	case 90:
+		return "ninety"
+	default:
+		var r int
+		var l string
+		switch {
+		case i < 100:
+			r = i % 10
+			l = toWritten(i - r)
+		default:
+			r = i % 100
+			l = toWritten(i/100) + "hun"
+		}
+		if r == 0 {
+			return l
+		}
+		return l + fmt.Sprintf("%d", r)
+	}
+}
+
+// markerSorter implements sort.Interface for []MarkerAccount
+// Sorts by .Denom only.
+type markerSorter []markertypes.MarkerAccount
+func (a markerSorter) Len() int {
+	return len(a)
+}
+func (a markerSorter) Swap(i, j int) {
+	a[i], a[j] = a[j], a[i]
+}
+func (a markerSorter) Less(i, j int) bool {
+	return a[i].Denom < a[j].Denom
+}
+
+func appendMarkers(a []markertypes.MarkerAccount, toAdd ...*sdktypes.Any) []markertypes.MarkerAccount {
+	for _, n := range toAdd {
+		var ma markertypes.MarkerAccount
+		err := ma.Unmarshal(n.Value)
+		if err != nil {
+			panic(err.Error())
+		}
+		a = append(a, ma)
+	}
+	return a
+}
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
 }
