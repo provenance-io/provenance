@@ -113,6 +113,15 @@ func ReverseLookupCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "lookup [address]",
 		Short: "Reverse lookup of all names bound to a given address",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Perform a reverse lookup query for all names associated with a given address:
+
+Example:
+$ %s query name loopup pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
+$ %s query name loopup pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk --page=2 --limit=100
+`,
+				version.AppName, version.AppName,
+			)),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -154,10 +163,6 @@ func RosettaCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rosetta",
 		Short: "spin up a rosetta server",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(``,
-				version.AppName, version.AppName,
-			)),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
