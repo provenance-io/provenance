@@ -117,7 +117,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			Denom:                  cfg.BondDenom,
 		},
 	}
-	for i := len(markerData.Markers) + 1; i < s.markerCount; i++ {
+	for i := len(markerData.Markers); i < s.markerCount; i++ {
 		denom := toWritten(i)
 		markerData.Markers = append(markerData.Markers,
 			markertypes.MarkerAccount{
@@ -804,6 +804,21 @@ func (s *IntegrationTestSuite) TestMarkerGetTxCmd() {
 
 func (s *IntegrationTestSuite) TestPaginationWithPageKey() {
 	asJson := fmt.Sprintf("--%s=json", tmcli.OutputFlag)
+
+	// Because other tests might have run before this and added markers,
+	// the s.markerCount variable isn't necessarily how many markers exist right now.
+	// So we'll do a quick AllMarkersCmd query to count them all for us.
+	cout, cerr := clitestutil.ExecTestCLICmd(
+		s.testnet.Validators[0].ClientCtx,
+		markercli.AllMarkersCmd(),
+		[]string{limitArg(1), asJson, "--count-total"},
+	)
+	s.Require().NoError(cerr, "count marker cmd error")
+	var cresult markertypes.QueryAllMarkersResponse
+	merr := s.cfg.Codec.UnmarshalJSON(cout.Bytes(), &cresult)
+	s.Require().NoError(merr, "count marker unmarshal error")
+	s.Require().Greater(cresult.Pagination.Total, uint64(0), "count markers pagination total")
+	s.markerCount = int(cresult.Pagination.Total)
 
 	s.T().Run("AllMarkersCmd", func(t *testing.T) {
 		// Choosing page size = 7 because it a) isn't the default, b) doesn't evenly divide 20.
