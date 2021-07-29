@@ -44,7 +44,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add Name and Symbol Cosmos features to Marker Metadata [#372](https://github.com/provenance-io/provenance/issues/372)
 * Add authz support to Marker module transfer `MarkerTransferAuthorization` [#265](https://github.com/provenance-io/provenance/issues/265)
   * Add authz grant/revoke command to `marker` cli
-  * Add `granter` flag to `marker` transfer command to execute transfer with authz
 * Add authz and feegrant modules [PR 384](https://github.com/provenance-io/provenance/pull/384)
 * Add Marker governance proposal for setting denom metadata [#369](https://github.com/provenance-io/provenance/issues/369)
 

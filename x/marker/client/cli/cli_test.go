@@ -640,21 +640,6 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 			false, &sdk.TxResponse{}, 0,
 		},
 		{
-			"authz exec successfully, account 1 sent marker transfer as account 0",
-			markercli.GetNewTransferCmd(),
-			[]string{
-				s.accountAddresses[0].String(),
-				s.accountAddresses[1].String(),
-				"5authzhotdog",
-				fmt.Sprintf("--%s=%s", markercli.FlagGranter, s.accountAddresses[0].String()),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			false, &sdk.TxResponse{}, 0,
-		},
-		{
 			"marker transfer successful, account 1 as grantee and account 0 as granter",
 			markercli.GetNewTransferCmd(),
 			[]string{
@@ -674,7 +659,7 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 			[]string{
 				s.accountAddresses[0].String(),
 				s.accountAddresses[1].String(),
-				"2authzhotdog",
+				"7authzhotdog",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),

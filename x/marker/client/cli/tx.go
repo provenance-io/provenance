@@ -28,7 +28,6 @@ const (
 	FlagAllowGovernanceControl = "allowGovernanceControl"
 	FlagTransferLimit          = "transfer-limit"
 	FlagExpiration             = "expiration"
-	FlagGranter                = "granter"
 )
 
 // NewTxCmd returns the top-level command for marker CLI transactions.
@@ -546,25 +545,10 @@ func GetNewTransferCmd() *cobra.Command {
 			if len(coins) != 1 {
 				return sdkErrors.Wrapf(sdkErrors.ErrInvalidCoins, "invalid coin %s", args[2])
 			}
-
-			authzGranter, err := cmd.Flags().GetString(FlagGranter)
-			if err != nil {
-				return sdkErrors.Wrapf(err, "error retrieving granter for authz transfer")
-			}
-			if authzGranter != "" {
-				granter, err := sdk.AccAddressFromBech32(args[0])
-				if err != nil {
-					return sdkErrors.Wrapf(err, "invalid from address %s", args[0])
-				}
-				transfer := types.NewMsgTransferRequest(granter, from, to, coins[0])
-				msg := authz.NewMsgExec(clientCtx.GetFromAddress(), []sdk.Msg{transfer})
-				return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
-			}
 			msg := types.NewMsgTransferRequest(clientCtx.GetFromAddress(), from, to, coins[0])
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-	cmd.Flags().String(FlagGranter, "", "When specified the transfer command will be executed on behalf of the granter")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
