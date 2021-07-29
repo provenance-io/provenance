@@ -6,6 +6,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
@@ -44,6 +45,9 @@ type Keeper struct {
 	// To check whether accounts exist for addresses.
 	authKeeper authkeeper.AccountKeeper
 
+	// To check whether accounts exist for addresses.
+	authzKeeper authzkeeper.Keeper
+
 	// To handle movement of coin between accounts and check total supply
 	bankKeeper bankkeeper.Keeper
 
@@ -65,17 +69,19 @@ func NewKeeper(
 	paramSpace paramtypes.Subspace,
 	authKeeper authkeeper.AccountKeeper,
 	bankKeeper bankkeeper.Keeper,
+	authzKeeper authzkeeper.Keeper,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 
 	return Keeper{
-		paramSpace: paramSpace,
-		authKeeper: authKeeper,
-		bankKeeper: bankKeeper,
-		storeKey:   key,
-		cdc:        cdc,
+		paramSpace:  paramSpace,
+		authKeeper:  authKeeper,
+		authzKeeper: authzKeeper,
+		bankKeeper:  bankKeeper,
+		storeKey:    key,
+		cdc:         cdc,
 	}
 }
 
