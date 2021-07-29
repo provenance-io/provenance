@@ -15,15 +15,16 @@ import (
 
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/crypto"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/x/metadata/client/cli"
@@ -33,27 +34,27 @@ import (
 type IntegrationCLITestSuite struct {
 	suite.Suite
 
-	cfg     testnet.Config
-	testnet *testnet.Network
+	cfg              testnet.Config
+	testnet          *testnet.Network
+	keyring          keyring.Keyring
+	keyringDir       string
+	keyringAccounts  []keyring.Info
 
 	asJson         string
 	asText         string
 	includeRequest string
 
-	accountAddr sdk.AccAddress
-	accountKey  *secp256k1.PrivKey
+	accountAddr    sdk.AccAddress
+	accountAddrStr string
 
-	pubkey1   cryptotypes.PubKey
-	user1     string
-	user1Addr sdk.AccAddress
+	user1Addr    sdk.AccAddress
+	user1AddrStr string
 
-	pubkey2   cryptotypes.PubKey
-	user2     string
-	user2Addr sdk.AccAddress
+	user2Addr    sdk.AccAddress
+	user2AddrStr string
 
-	pubkeyOther   cryptotypes.PubKey
-	userOther     string
 	userOtherAddr sdk.AccAddress
+	userOtherStr  string
 
 	scope     metadatatypes.Scope
 	scopeUUID uuid.UUID
@@ -96,7 +97,6 @@ type IntegrationCLITestSuite struct {
 	recordSpecAsJson string
 	recordSpecAsText string
 
-	//os locator's
 	objectLocator1 metadatatypes.ObjectStoreLocator
 	ownerAddr1     sdk.AccAddress
 	encryptionKey1 sdk.AccAddress
@@ -119,34 +119,66 @@ func TestIntegrationCLITestSuite(t *testing.T) {
 }
 
 func (s *IntegrationCLITestSuite) SetupSuite() {
-	s.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
-	addr, err := sdk.AccAddressFromHex(s.accountKey.PubKey().Address().String())
-	s.Require().NoError(err)
-	s.accountAddr = addr
 	s.T().Log("setting up integration test suite")
 
 	cfg := testutil.DefaultTestNetworkConfig()
+	cfg.NumValidators = 1
+	genesisState := cfg.GenesisState
+	s.generateAccountsWithKeyrings(3)
+
+	// An account
+	s.accountAddr = s.keyringAccounts[0].GetAddress()
+	s.accountAddrStr = s.accountAddr.String()
+
+	// A user account
+	s.user1Addr = s.keyringAccounts[1].GetAddress()
+	s.user1AddrStr = s.user1Addr.String()
+
+	// A second user account
+	s.user2Addr = s.keyringAccounts[2].GetAddress()
+	s.user2AddrStr = s.user2Addr.String()
+
+	// An account that isn't known
+	s.userOtherAddr = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	s.userOtherStr = s.userOtherAddr.String()
+
+	// Configure Genesis auth data for adding test accounts
+	var genAccounts []authtypes.GenesisAccount
+	var authData authtypes.GenesisState
+	authData.Params = authtypes.DefaultParams()
+	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.accountAddr, nil, 3, 0))
+	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.user1Addr, nil, 4, 0))
+	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.user2Addr, nil, 5, 0))
+	accounts, err := authtypes.PackAccounts(genAccounts)
+	s.Require().NoError(err)
+	authData.Accounts = accounts
+	authDataBz, err := cfg.Codec.MarshalJSON(&authData)
+	s.Require().NoError(err)
+	genesisState[authtypes.ModuleName] = authDataBz
+
+	// Configure Genesis bank data for test accounts
+	var genBalances []banktypes.Balance
+	genBalances = append(genBalances, banktypes.Balance{Address: s.accountAddrStr, Coins: sdk.NewCoins(
+		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
+		sdk.NewCoin("authzhotdog", sdk.NewInt(100)),
+	).Sort()})
+	genBalances = append(genBalances, banktypes.Balance{Address: s.user1AddrStr, Coins: sdk.NewCoins(
+		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
+		sdk.NewCoin("authzhotdog", sdk.NewInt(100)),
+	).Sort()})
+	genBalances = append(genBalances, banktypes.Balance{Address: s.user2AddrStr, Coins: sdk.NewCoins(
+		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
+	).Sort()})
+	var bankGenState banktypes.GenesisState
+	bankGenState.Params = banktypes.DefaultParams()
+	bankGenState.Balances = genBalances
+	bankDataBz, err := cfg.Codec.MarshalJSON(&bankGenState)
+	s.Require().NoError(err)
+	genesisState[banktypes.ModuleName] = bankDataBz
 
 	s.asJson = fmt.Sprintf("--%s=json", tmcli.OutputFlag)
 	s.asText = fmt.Sprintf("--%s=text", tmcli.OutputFlag)
 	s.includeRequest = "--include-request"
-
-	genesisState := cfg.GenesisState
-	cfg.NumValidators = 1
-
-	privkey1 := secp256k1.GenPrivKey()
-	s.pubkey1 = privkey1.PubKey()
-	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
-	s.user1 = s.user1Addr.String()
-
-	privkey2 := secp256k1.GenPrivKey()
-	s.pubkey2 = privkey2.PubKey()
-	s.user2Addr = sdk.AccAddress(s.pubkey2.Address())
-	s.user2 = s.user2Addr.String()
-
-	s.pubkeyOther = secp256k1.GenPrivKey().PubKey()
-	s.userOtherAddr = sdk.AccAddress(s.pubkeyOther.Address())
-	s.userOther = s.userOtherAddr.String()
 
 	s.scopeUUID = uuid.New()
 	s.sessionUUID = uuid.New()
@@ -164,19 +196,19 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.scope = *metadatatypes.NewScope(
 		s.scopeID,
 		s.scopeSpecID,
-		ownerPartyList(s.user1),
-		[]string{s.user1},
-		s.user2,
+		ownerPartyList(s.user1AddrStr),
+		[]string{s.user1AddrStr},
+		s.user2AddrStr,
 	)
 
 	s.session = *metadatatypes.NewSession(
 		"unit test session",
 		s.sessionID,
 		s.contractSpecID,
-		ownerPartyList(s.user1),
+		ownerPartyList(s.user1AddrStr),
 		&metadatatypes.AuditFields{
 			CreatedDate: time.Time{},
-			CreatedBy:   s.user1,
+			CreatedBy:   s.user1AddrStr,
 			UpdatedDate: time.Time{},
 			UpdatedBy:   "",
 			Version:     0,
@@ -212,7 +244,7 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.scopeSpec = *metadatatypes.NewScopeSpecification(
 		s.scopeSpecID,
 		nil,
-		[]string{s.user1},
+		[]string{s.user1AddrStr},
 		[]metadatatypes.PartyType{metadatatypes.PartyType_PARTY_TYPE_OWNER},
 		[]metadatatypes.MetadataAddress{s.contractSpecID},
 	)
@@ -220,7 +252,7 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.contractSpec = *metadatatypes.NewContractSpecification(
 		s.contractSpecID,
 		nil,
-		[]string{s.user1},
+		[]string{s.user1AddrStr},
 		[]metadatatypes.PartyType{metadatatypes.PartyType_PARTY_TYPE_OWNER},
 		metadatatypes.NewContractSpecificationSourceHash("notreallyasourcehash"),
 		"contractclassname",
@@ -244,9 +276,9 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.scopeAsJson = fmt.Sprintf("{\"scope_id\":\"%s\",\"specification_id\":\"%s\",\"owners\":[{\"address\":\"%s\",\"role\":\"PARTY_TYPE_OWNER\"}],\"data_access\":[\"%s\"],\"value_owner_address\":\"%s\"}",
 		s.scopeID,
 		s.scopeSpecID,
-		s.user1,
-		s.user1,
-		s.user2,
+		s.user1AddrStr,
+		s.user1AddrStr,
+		s.user2AddrStr,
 	)
 	s.scopeAsText = fmt.Sprintf(`data_access:
 - %s
@@ -256,18 +288,18 @@ owners:
 scope_id: %s
 specification_id: %s
 value_owner_address: %s`,
-		s.user1,
-		s.user1,
+		s.user1AddrStr,
+		s.user1AddrStr,
 		s.scopeID,
 		s.scopeSpecID,
-		s.user2,
+		s.user2AddrStr,
 	)
 
 	s.sessionAsJson = fmt.Sprintf("{\"session_id\":\"%s\",\"specification_id\":\"%s\",\"parties\":[{\"address\":\"%s\",\"role\":\"PARTY_TYPE_OWNER\"}],\"name\":\"unit test session\",\"context\":null,\"audit\":{\"created_date\":\"0001-01-01T00:00:00Z\",\"created_by\":\"%s\",\"updated_date\":\"0001-01-01T00:00:00Z\",\"updated_by\":\"\",\"version\":0,\"message\":\"unit testing\"}}",
 		s.sessionID,
 		s.contractSpecID,
-		s.user1,
-		s.user1,
+		s.user1AddrStr,
+		s.user1AddrStr,
 	)
 	s.sessionAsText = fmt.Sprintf(`audit:
   created_by: %s
@@ -283,8 +315,8 @@ parties:
   role: PARTY_TYPE_OWNER
 session_id: %s
 specification_id: %s`,
-		s.user1,
-		s.user1,
+		s.user1AddrStr,
+		s.user1AddrStr,
 		s.sessionID,
 		s.contractSpecID,
 	)
@@ -314,7 +346,7 @@ specification_id: %s`,
 
 	s.scopeSpecAsJson = fmt.Sprintf("{\"specification_id\":\"%s\",\"description\":null,\"owner_addresses\":[\"%s\"],\"parties_involved\":[\"PARTY_TYPE_OWNER\"],\"contract_spec_ids\":[\"%s\"]}",
 		s.scopeSpecID,
-		s.user1,
+		s.user1AddrStr,
 		s.contractSpecID,
 	)
 	s.scopeSpecAsText = fmt.Sprintf(`contract_spec_ids:
@@ -326,13 +358,13 @@ parties_involved:
 - PARTY_TYPE_OWNER
 specification_id: %s`,
 		s.contractSpecID,
-		s.user1,
+		s.user1AddrStr,
 		s.scopeSpecID,
 	)
 
 	s.contractSpecAsJson = fmt.Sprintf("{\"specification_id\":\"%s\",\"description\":null,\"owner_addresses\":[\"%s\"],\"parties_involved\":[\"PARTY_TYPE_OWNER\"],\"hash\":\"notreallyasourcehash\",\"class_name\":\"contractclassname\"}",
 		s.contractSpecID,
-		s.user1,
+		s.user1AddrStr,
 	)
 	s.contractSpecAsText = fmt.Sprintf(`class_name: contractclassname
 description: null
@@ -342,7 +374,7 @@ owner_addresses:
 parties_involved:
 - PARTY_TYPE_OWNER
 specification_id: %s`,
-		s.user1,
+		s.user1AddrStr,
 		s.contractSpecID,
 	)
 
@@ -410,44 +442,33 @@ owner: %s`,
 	s.Require().NoError(err)
 	genesisState[metadatatypes.ModuleName] = metadataDataBz
 
-	var authData authtypes.GenesisState
-	s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[authtypes.ModuleName], &authData))
-	genAccount, err := codectypes.NewAnyWithValue(authtypes.NewBaseAccount(s.accountAddr, s.accountKey.PubKey(), 1, 1))
-	s.Require().NoError(err)
-	authData.Accounts = append(authData.Accounts, genAccount)
-
-	user1Account, err := codectypes.NewAnyWithValue(authtypes.NewBaseAccount(s.user1Addr, s.pubkey1, 2, 2))
-	s.Require().NoError(err)
-	authData.Accounts = append(authData.Accounts, user1Account)
-
-	user2Account, err := codectypes.NewAnyWithValue(authtypes.NewBaseAccount(s.user2Addr, s.pubkey2, 3, 3))
-	s.Require().NoError(err)
-	authData.Accounts = append(authData.Accounts, user2Account)
-
-	authDataBz, err := cfg.Codec.MarshalJSON(&authData)
-	s.Require().NoError(err)
-	genesisState[authtypes.ModuleName] = authDataBz
-
 	cfg.GenesisState = genesisState
 
 	s.cfg = cfg
-
 	s.testnet = testnet.New(s.T(), cfg)
 
 	_, err = s.testnet.WaitForHeight(1)
 	s.Require().NoError(err)
-
-	// Add the account and user1 and user2 keys to the keyring.
-	// Note: They user1 and user2 don't have any coin ("stake"), so they still can't actually successfully sign TXs, but hey, it's progress.
-	s.Require().NoError(s.testnet.Validators[0].ClientCtx.Keyring.ImportPrivKey(s.accountAddr.String(), crypto.EncryptArmorPrivKey(s.accountKey, "pasSword0", "secp256k1"), "pasSword0"), "adding s.accountKey to keyring")
-	s.Require().NoError(s.testnet.Validators[0].ClientCtx.Keyring.ImportPrivKey(s.user1, crypto.EncryptArmorPrivKey(privkey1, "passWord1", "secp256k1"), "passWord1"), "adding privkey1 to keyring")
-	s.Require().NoError(s.testnet.Validators[0].ClientCtx.Keyring.ImportPrivKey(s.user2, crypto.EncryptArmorPrivKey(privkey2, "passwOrd2", "secp256k1"), "passwOrd2"), "adding privkey2 to keyring")
 }
 
 func (s *IntegrationCLITestSuite) TearDownSuite() {
 	s.testnet.WaitForNextBlock()
 	s.T().Log("tearing down integration test suite")
 	s.testnet.Cleanup()
+}
+
+func (s *IntegrationCLITestSuite) generateAccountsWithKeyrings(number int) {
+	path := hd.CreateHDPath(118, 0, 0).String()
+	s.keyringDir = s.T().TempDir()
+	kr, err := keyring.New(s.T().Name(), "test", s.keyringDir, nil)
+	s.Require().NoError(err, "keyring creation")
+	s.keyring = kr
+	for i := 0; i < number; i++ {
+		keyId := fmt.Sprintf("test_key%v", i)
+		info, _, err := kr.NewMnemonic(keyId, keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+		s.Require().NoError(err, "key creation")
+		s.keyringAccounts = append(s.keyringAccounts, info)
+	}
 }
 
 func ownerPartyList(addresses ...string) []metadatatypes.Party {
@@ -512,6 +533,14 @@ func alternateCase(str string, startUpper bool) string {
 	return r.String()
 }
 
+func (s *IntegrationCLITestSuite) getClientCtx() client.Context {
+	return s.getClientCtxWithoutKeyring().WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
+}
+
+func (s *IntegrationCLITestSuite) getClientCtxWithoutKeyring() client.Context {
+	return s.testnet.Validators[0].ClientCtx
+}
+
 // ---------- query cmd tests ----------
 
 type queryCmdTestCase struct {
@@ -526,7 +555,7 @@ func runQueryCmdTestCases(s *IntegrationCLITestSuite, cmdGen func() *cobra.Comma
 	// carry over between tests on the same command.
 	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
-			clientCtx := s.testnet.Validators[0].ClientCtx
+			clientCtx := s.getClientCtxWithoutKeyring()
 			cmd := cmdGen()
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if len(tc.expectedError) > 0 {
@@ -1615,7 +1644,7 @@ func (s *IntegrationCLITestSuite) TestGetOwnershipCmd() {
 	testCases := []queryCmdTestCase{
 		{
 			"scopes as json",
-			[]string{s.user1, s.asJson},
+			[]string{s.user1AddrStr, s.asJson},
 			"",
 			[]string{
 				fmt.Sprintf("\"scope_uuids\":[\"%s\"]", s.scopeUUID),
@@ -1624,13 +1653,13 @@ func (s *IntegrationCLITestSuite) TestGetOwnershipCmd() {
 		},
 		{
 			"scopes as text",
-			[]string{s.user1, s.asText},
+			[]string{s.user1AddrStr, s.asText},
 			"",
 			[]string{scopeUUIDsText, paginationText},
 		},
 		{
 			"scope through value owner",
-			[]string{s.user2},
+			[]string{s.user2AddrStr},
 			"",
 			[]string{scopeUUIDsText},
 		},
@@ -1642,7 +1671,7 @@ func (s *IntegrationCLITestSuite) TestGetOwnershipCmd() {
 		},
 		{
 			"two args",
-			[]string{s.user1, s.user2},
+			[]string{s.user1AddrStr, s.user2AddrStr},
 			"accepts 1 arg(s), received 2",
 			[]string{},
 		},
@@ -1672,7 +1701,7 @@ func (s *IntegrationCLITestSuite) TestGetValueOwnershipCmd() {
 	testCases := []queryCmdTestCase{
 		{
 			"as json",
-			[]string{s.user2, s.asJson},
+			[]string{s.user2AddrStr, s.asJson},
 			"",
 			[]string{
 				fmt.Sprintf("\"scope_uuids\":[\"%s\"]", s.scopeUUID),
@@ -1681,19 +1710,19 @@ func (s *IntegrationCLITestSuite) TestGetValueOwnershipCmd() {
 		},
 		{
 			"as text",
-			[]string{s.user2, s.asText},
+			[]string{s.user2AddrStr, s.asText},
 			"",
 			[]string{scopeUUIDsText, paginationText},
 		},
 		{
 			"no result",
-			[]string{s.user1},
+			[]string{s.user1AddrStr},
 			"",
 			[]string{"scope_uuids: []", "total: \"0\""},
 		},
 		{
 			"two args",
-			[]string{s.user1, s.user2},
+			[]string{s.user1AddrStr, s.user2AddrStr},
 			"accepts 1 arg(s), received 2",
 			[]string{},
 		},
@@ -1750,25 +1779,25 @@ func (s *IntegrationCLITestSuite) TestGetOSLocatorCmd() {
 		},
 		{
 			"by owner locator 1 as text",
-			[]string{s.user1Addr.String(), s.asText},
+			[]string{s.user1AddrStr, s.asText},
 			"",
 			[]string{indentedLocator1Text},
 		},
 		{
 			"by owner locator 1 as json",
-			[]string{s.user1Addr.String(), s.asJson},
+			[]string{s.user1AddrStr, s.asJson},
 			"",
 			[]string{s.objectLocator1AsJson},
 		},
 		{
 			"by owner locator 2 as text",
-			[]string{s.user2Addr.String(), s.asText},
+			[]string{s.user2AddrStr, s.asText},
 			"",
 			[]string{indentedLocator2Text},
 		},
 		{
 			"by owner locator 2 as json",
-			[]string{s.user2Addr.String(), s.asJson},
+			[]string{s.user2AddrStr, s.asJson},
 			"",
 			[]string{s.objectLocator2AsJson},
 		},
@@ -1868,7 +1897,7 @@ func runTxCmdTestCases(s *IntegrationCLITestSuite, testCases []txCmdTestCase) {
 		tc := tc
 		s.T().Run(tc.name, func(t *testing.T) {
 			cmdName := tc.cmd.Name()
-			clientCtx := s.testnet.Validators[0].ClientCtx
+			clientCtx := s.getClientCtx()
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
 
 			if len(tc.expectErrMsg) > 0 {
@@ -1904,10 +1933,10 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 			cli.WriteScopeSpecificationCmd(),
 			[]string{
 				scopeSpecID,
-				s.testnet.Validators[0].Address.String(),
+				s.accountAddrStr,
 				"owner",
 				s.contractSpecID.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -1920,10 +1949,10 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 			[]string{
 				scopeID,
 				scopeSpecID,
-				s.testnet.Validators[0].Address.String(),
-				s.testnet.Validators[0].Address.String(),
-				s.testnet.Validators[0].Address.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				s.accountAddrStr,
+				s.accountAddrStr,
+				s.accountAddrStr,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -1936,11 +1965,11 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 			[]string{
 				metadatatypes.ScopeMetadataAddress(uuid.New()).String(),
 				scopeSpecID,
-				s.user1,
-				s.user1,
-				s.user1,
-				fmt.Sprintf("--%s=%s", cli.FlagSigners, s.testnet.Validators[0].Address.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				s.user1AddrStr,
+				s.user1AddrStr,
+				s.user1AddrStr,
+				fmt.Sprintf("--%s=%s", cli.FlagSigners, s.accountAddrStr),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -1953,10 +1982,10 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 			[]string{
 				"not-a-uuid",
 				metadatatypes.ScopeSpecMetadataAddress(uuid.New()).String(),
-				s.user1,
-				s.user1,
-				s.user1,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				s.user1AddrStr,
+				s.user1AddrStr,
+				s.user1AddrStr,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -1969,10 +1998,10 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 			[]string{
 				metadatatypes.ScopeMetadataAddress(uuid.New()).String(),
 				"not-a-uuid",
-				s.user1,
-				s.user1,
-				s.user1,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				s.user1AddrStr,
+				s.user1AddrStr,
+				s.user1AddrStr,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -1986,9 +2015,9 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				metadatatypes.ScopeMetadataAddress(uuid.New()).String(),
 				metadatatypes.ScopeSpecMetadataAddress(uuid.New()).String(),
 				"incorrect1,incorrect2",
-				s.user1,
-				s.user1,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				s.user1AddrStr,
+				s.user1AddrStr,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2000,7 +2029,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 			cli.RemoveScopeCmd(),
 			[]string{
 				"not-valid",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2013,8 +2042,8 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 			[]string{
 				"add",
 				"not-valid",
-				s.user2,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				s.user2AddrStr,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2027,8 +2056,8 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 			[]string{
 				"notaddorremove",
 				scopeID,
-				s.user2,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				s.user2AddrStr,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2041,8 +2070,8 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 			[]string{
 				"add",
 				scopeSpecID,
-				s.user2,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				s.user2AddrStr,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2056,7 +2085,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				"add",
 				scopeID,
 				"notauser",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2069,8 +2098,8 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 			[]string{
 				"add",
 				scopeID,
-				s.user1,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				s.user1AddrStr,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2083,8 +2112,8 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 			[]string{
 				"remove",
 				scopeID,
-				s.user1,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				s.user1AddrStr,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2098,8 +2127,8 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 			[]string{
 				"add",
 				"not-valid",
-				s.user2,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				s.user2AddrStr,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2112,8 +2141,8 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 			[]string{
 				"notaddorremove",
 				scopeID,
-				s.user2,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				s.user2AddrStr,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2126,8 +2155,8 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 			[]string{
 				"add",
 				scopeSpecID,
-				s.user2,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				s.user2AddrStr,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2141,7 +2170,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				"add",
 				scopeID,
 				"notauser",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2153,7 +2182,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 			cli.RemoveScopeCmd(),
 			[]string{
 				scopeID,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2165,7 +2194,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 			cli.RemoveScopeCmd(),
 			[]string{
 				scopeID,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2187,10 +2216,10 @@ func (s *IntegrationCLITestSuite) TestScopeSpecificationTxCommands() {
 			addCommand,
 			[]string{
 				specID.String(),
-				s.testnet.Validators[0].Address.String(),
+				s.accountAddrStr,
 				"owner",
 				s.contractSpecID.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2202,14 +2231,14 @@ func (s *IntegrationCLITestSuite) TestScopeSpecificationTxCommands() {
 			addCommand,
 			[]string{
 				specID.String(),
-				s.testnet.Validators[0].Address.String(),
+				s.accountAddrStr,
 				"owner",
 				s.contractSpecID.String(),
 				"description-name",
 				"description",
 				"http://www.blockchain.com/",
 				"http://www.blockchain.com/icon.png",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2221,10 +2250,10 @@ func (s *IntegrationCLITestSuite) TestScopeSpecificationTxCommands() {
 			addCommand,
 			[]string{
 				"invalid",
-				s.testnet.Validators[0].Address.String(),
+				s.accountAddrStr,
 				"owner",
 				s.contractSpecID.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2236,10 +2265,10 @@ func (s *IntegrationCLITestSuite) TestScopeSpecificationTxCommands() {
 			addCommand,
 			[]string{
 				specID.String(),
-				s.testnet.Validators[0].Address.String(),
+				s.accountAddrStr,
 				"owner",
 				specID.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2251,7 +2280,7 @@ func (s *IntegrationCLITestSuite) TestScopeSpecificationTxCommands() {
 			removeCommand,
 			[]string{
 				"notvalid",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2263,7 +2292,7 @@ func (s *IntegrationCLITestSuite) TestScopeSpecificationTxCommands() {
 			removeCommand,
 			[]string{
 				specID.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2275,7 +2304,7 @@ func (s *IntegrationCLITestSuite) TestScopeSpecificationTxCommands() {
 			removeCommand,
 			[]string{
 				specID.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2296,9 +2325,9 @@ func (s *IntegrationCLITestSuite) TestAddObjectLocatorCmd() {
 			"Should successfully add os locator",
 			cli.BindOsLocatorCmd(),
 			[]string{
-				s.testnet.Validators[0].Address.String(),
+				s.accountAddrStr,
 				userURI,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2309,9 +2338,9 @@ func (s *IntegrationCLITestSuite) TestAddObjectLocatorCmd() {
 			"Should successfully Modify os locator",
 			cli.ModifyOsLocatorCmd(),
 			[]string{
-				s.testnet.Validators[0].Address.String(),
+				s.accountAddrStr,
 				userURIMod,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2322,9 +2351,9 @@ func (s *IntegrationCLITestSuite) TestAddObjectLocatorCmd() {
 			"Should successfully delete os locator",
 			cli.RemoveOsLocatorCmd(),
 			[]string{
-				s.testnet.Validators[0].Address.String(),
+				s.accountAddrStr,
 				userURIMod,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2347,11 +2376,11 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationTxCommands() {
 			addCommand,
 			[]string{
 				specificationID.String(),
-				s.testnet.Validators[0].Address.String(),
+				s.accountAddrStr,
 				"owner",
 				"hashvalue",
 				"`myclassname`",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2366,12 +2395,12 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationTxCommands() {
 			addCommand,
 			[]string{
 				specificationID.String(),
-				s.testnet.Validators[0].Address.String(),
+				s.accountAddrStr,
 				"owner",
 				"hashvalue",
 				"`myclassname`",
-				fmt.Sprintf("--%s=%s", cli.FlagSigners, s.testnet.Validators[0].Address.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", cli.FlagSigners, s.accountAddrStr),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2386,11 +2415,11 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationTxCommands() {
 			addCommand,
 			[]string{
 				specificationID.String(),
-				s.testnet.Validators[0].Address.String(),
+				s.accountAddrStr,
 				"owner",
 				specificationID.String(),
 				"myclassname",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2405,7 +2434,7 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationTxCommands() {
 			addCommand,
 			[]string{
 				specificationID.String(),
-				s.testnet.Validators[0].Address.String(),
+				s.accountAddrStr,
 				"owner",
 				"hashvalue",
 				"myclassname",
@@ -2413,7 +2442,7 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationTxCommands() {
 				"description",
 				"http://www.blockchain.com/",
 				"http://www.blockchain.com/icon.png",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2428,7 +2457,7 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationTxCommands() {
 			removeCommand,
 			[]string{
 				specificationID.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2443,11 +2472,11 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationTxCommands() {
 			addCommand,
 			[]string{
 				"invalid-spec-id",
-				s.testnet.Validators[0].Address.String(),
+				s.accountAddrStr,
 				"owner",
 				"hashvalue",
 				"myclassname",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2462,7 +2491,7 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationTxCommands() {
 			removeCommand,
 			[]string{
 				"not-a-id",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2477,7 +2506,7 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationTxCommands() {
 			removeCommand,
 			[]string{
 				specificationID.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2505,11 +2534,11 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationScopeSpecAddRemoveTxC
 			cli.WriteContractSpecificationCmd(),
 			[]string{
 				specificationID.String(),
-				s.testnet.Validators[0].Address.String(),
+				s.accountAddrStr,
 				"owner",
 				"hashvalue",
 				"`myclassname`",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2524,10 +2553,10 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationScopeSpecAddRemoveTxC
 			cli.WriteScopeSpecificationCmd(),
 			[]string{
 				scopeSpecID.String(),
-				s.testnet.Validators[0].Address.String(),
+				s.accountAddrStr,
 				"owner",
 				s.contractSpecID.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2540,7 +2569,7 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationScopeSpecAddRemoveTxC
 			[]string{
 				"invalid-contract-specid",
 				scopeSpecID.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2556,7 +2585,7 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationScopeSpecAddRemoveTxC
 			[]string{
 				scopeSpecID.String(),
 				scopeSpecID.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2572,7 +2601,7 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationScopeSpecAddRemoveTxC
 			[]string{
 				specificationID.String(),
 				"invalid-scope-spec-id",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2588,7 +2617,7 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationScopeSpecAddRemoveTxC
 			[]string{
 				specificationID.String(),
 				specificationID.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2604,7 +2633,7 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationScopeSpecAddRemoveTxC
 			[]string{
 				specificationID.String(),
 				scopeSpecID.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2620,7 +2649,7 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationScopeSpecAddRemoveTxC
 			[]string{
 				"invalid-contract-specid",
 				scopeSpecID.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2636,7 +2665,7 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationScopeSpecAddRemoveTxC
 			[]string{
 				scopeSpecID.String(),
 				scopeSpecID.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2652,7 +2681,7 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationScopeSpecAddRemoveTxC
 			[]string{
 				specificationID.String(),
 				"invalid-scope-spec-id",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2668,7 +2697,7 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationScopeSpecAddRemoveTxC
 			[]string{
 				specificationID.String(),
 				specificationID.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2684,7 +2713,7 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationScopeSpecAddRemoveTxC
 			[]string{
 				specificationID.String(),
 				scopeSpecID.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2713,11 +2742,11 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 			addConractSpecCmd,
 			[]string{
 				contractSpecID.String(),
-				s.testnet.Validators[0].Address.String(),
+				s.accountAddrStr,
 				"owner",
 				"hashvalue",
 				"`myclassname`",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2737,7 +2766,7 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				"typename",
 				"record",
 				"responsibleparties",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2756,7 +2785,7 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				"typename",
 				"record_list",
 				"responsibleparties",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2775,7 +2804,7 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				"typename",
 				"record",
 				"responsibleparties",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2794,7 +2823,7 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				"typename",
 				"record",
 				"responsibleparties",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2813,7 +2842,7 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				"typename",
 				"incorrect",
 				"responsibleparties",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2833,7 +2862,7 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				"record",
 				"responsibleparties",
 				fmt.Sprintf("--%s=%s", cli.FlagSigners, "incorrect-signer-format"),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2847,7 +2876,7 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 			deleteRecordSpecCmd,
 			[]string{
 				"incorrect-id",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2861,7 +2890,7 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 			deleteRecordSpecCmd,
 			[]string{
 				contractSpecID.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2875,8 +2904,8 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 			deleteRecordSpecCmd,
 			[]string{
 				specificationID.String(),
-				fmt.Sprintf("--%s=%s", cli.FlagSigners, s.testnet.Validators[0].Address.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", cli.FlagSigners, s.accountAddrStr),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2890,8 +2919,8 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 			deleteRecordSpecCmd,
 			[]string{
 				specificationID.String(),
-				fmt.Sprintf("--%s=%s", cli.FlagSigners, s.testnet.Validators[0].Address.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", cli.FlagSigners, s.accountAddrStr),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -2906,7 +2935,7 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 }
 
 func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
-	userAddress := s.testnet.Validators[0].Address.String()
+	userAddress := s.accountAddrStr
 	addRecordCmd := cli.WriteRecordCmd()
 	scopeSpecID := metadatatypes.ScopeSpecMetadataAddress(uuid.New())
 	scopeUUID := uuid.New()
@@ -2981,7 +3010,7 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 				"typename",
 				"record",
 				"responsibleparties",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -3002,7 +3031,7 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 				"outputhashvalue,pass",
 				fmt.Sprintf("%s,owner;%s,originator", userAddress, userAddress),
 				contractSpecID.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -3024,7 +3053,7 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 				"outputhashvalue,pass",
 				fmt.Sprintf("%s,owner;%s,originator", userAddress, userAddress),
 				contractSpecID.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -3045,7 +3074,7 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 				"outputhashvalue,pass",
 				fmt.Sprintf("%s,owner;%s,originator", userAddress, userAddress),
 				contractSpecID.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -3066,7 +3095,7 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 				"outputhashvalue,pass",
 				fmt.Sprintf("%s,owner;%s,originator", userAddress, userAddress),
 				contractSpecID.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -3087,7 +3116,7 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 				"outputhashvalue,pass",
 				fmt.Sprintf("%s,owner;%s,originator", userAddress, userAddress),
 				contractSpecID.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -3108,7 +3137,7 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 				"outputhashvalue",
 				fmt.Sprintf("%s,owner;%s,originator", userAddress, userAddress),
 				contractSpecID.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -3129,7 +3158,7 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 				"outputhashvalue,pass",
 				fmt.Sprintf("%s;%s", userAddress, userAddress),
 				contractSpecID.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -3150,7 +3179,7 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 				"outputhashvalue,pass",
 				fmt.Sprintf("%s,owner;%s,originator", userAddress, userAddress),
 				scopeID.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -3164,7 +3193,7 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 			cli.RemoveRecordCmd(),
 			[]string{
 				recordId.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -3180,13 +3209,13 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
 	cmd := cli.WriteSessionCmd()
 
-	owner := s.testnet.Validators[0].Address.String()
-	sender := s.testnet.Validators[0].Address.String()
+	owner := s.accountAddrStr
+	sender := s.accountAddrStr
 	scopeUUID := uuid.New()
 	scopeID := metadatatypes.ScopeMetadataAddress(scopeUUID)
 
 	writeScopeCmd := cli.WriteScopeCmd()
-	ctx := s.testnet.Validators[0].ClientCtx
+	ctx := s.getClientCtx()
 	out, err := clitestutil.ExecTestCLICmd(
 		ctx,
 		writeScopeCmd,
