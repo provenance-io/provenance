@@ -11,7 +11,7 @@ import (
 // Default constants
 const (
 	chainID        = ""
-	keyringBackend = ""
+	keyringBackend = "test"
 	output         = "text"
 	node           = "tcp://localhost:26657"
 	broadcastMode  = "block"
