@@ -141,18 +141,7 @@ const (
 
 var (
 	// DefaultNodeHome default home directories for the application daemon
-	DefaultNodeHome = func(appName string) string {
-		home := os.ExpandEnv("$PIO_HOME")
-
-		if strings.TrimSpace(home) == "" {
-			configDir, err := os.UserConfigDir()
-			if err != nil {
-				panic(err)
-			}
-			home = filepath.Join(configDir, "Provenance")
-		}
-		return home
-	}
+	DefaultNodeHome string
 
 	// DefaultPowerReduction pio specific value for power reduction for TokensFromConsensusPower
 	DefaultPowerReduction = sdk.NewIntFromUint64(1000000000)
@@ -235,8 +224,6 @@ func SdkCoinDenomRegex() string {
 type App struct {
 	*baseapp.BaseApp
 
-	appName string
-
 	legacyAmino       *codec.LegacyAmino
 	appCodec          codec.Codec
 	interfaceRegistry types.InterfaceRegistry
@@ -287,9 +274,21 @@ type App struct {
 	configurator module.Configurator
 }
 
+func init() {
+	DefaultNodeHome = os.ExpandEnv("$PIO_HOME")
+
+	if strings.TrimSpace(DefaultNodeHome) == "" {
+		configDir, err := os.UserConfigDir()
+		if err != nil {
+			panic(err)
+		}
+		DefaultNodeHome = filepath.Join(configDir, "Provenance")
+	}
+}
+
 // New returns a reference to an initialized Provenance Blockchain App.
 func New(
-	appName string, logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, skipUpgradeHeights map[int64]bool,
+	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, skipUpgradeHeights map[int64]bool,
 	homePath string, invCheckPeriod uint, encodingConfig appparams.EncodingConfig,
 	appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
@@ -297,7 +296,7 @@ func New(
 	legacyAmino := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 
-	bApp := baseapp.NewBaseApp(appName, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
+	bApp := baseapp.NewBaseApp("provenanced", logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
@@ -324,7 +323,6 @@ func New(
 
 	app := &App{
 		BaseApp:           bApp,
-		appName:           appName,
 		legacyAmino:       legacyAmino,
 		appCodec:          appCodec,
 		interfaceRegistry: interfaceRegistry,

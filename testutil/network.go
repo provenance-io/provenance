@@ -25,7 +25,7 @@ import (
 // NewAppConstructor returns a new provenanceapp AppConstructor
 func NewAppConstructor(encodingCfg params.EncodingConfig) network.AppConstructor {
 	return func(val network.Validator) servertypes.Application {
-		return provenanceapp.New("",
+		return provenanceapp.New(
 			val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
 			encodingCfg,
 			sdksim.EmptyAppOptions{},
