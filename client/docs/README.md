@@ -14,10 +14,20 @@ In order to have the Swagger UI available on your node, it must be turned on in 
     1.  Find the `API Configuration` section.
     1.  In that section, change `enable = false` to `enable = true`.
     1.  Also in that section, change `swagger = false` to `swagger = true`.
-1.  Start the node:
+1. Regenerate the swagger files:
+    ```bash
+    > make update-swagger-docs
+    ```
+1. Rebuild provenance: 
+   ```bash
+   > make build
+   ```
+1. Start the node:
     ```bash
     > make run
     ```
+1. If you are refreshing the browser, hard refresh:
+    `cmd` + `shift` + `r`
 
 ## Location
 
