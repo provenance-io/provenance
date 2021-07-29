@@ -3,6 +3,7 @@ package cli_test
 import (
 	"encoding/base64"
 	"fmt"
+	"sort"
 	"strings"
 	"testing"
 
@@ -36,6 +37,10 @@ type IntegrationTestSuite struct {
 	account2Addr  sdk.AccAddress
 	account2Key   *secp256k1.PrivKey
 	acc2NameCount int
+}
+
+func TestIntegrationTestSuite(t *testing.T) {
+	suite.Run(t, new(IntegrationTestSuite))
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
@@ -84,6 +89,96 @@ func (s *IntegrationTestSuite) SetupSuite() {
 func (s *IntegrationTestSuite) TearDownSuite() {
 	s.T().Log("tearing down integration test suite")
 	s.testnet.Cleanup()
+}
+
+// toWritten converts an integer to a written string version.
+// Originally, this was the full written string, e.g. 38 => "thirtyEight" but that ended up being too long for
+// an attribute name segment, so it got trimmed down, e.g. 115 => "onehun15".
+func toWritten(i int) string {
+	if i < 0 || i > 999 {
+		panic("cannot convert negative numbers or numbers larger than 999 to written string")
+	}
+	switch i {
+	case 0:
+		return "zero"
+	case 1:
+		return "one"
+	case 2:
+		return "two"
+	case 3:
+		return "three"
+	case 4:
+		return "four"
+	case 5:
+		return "five"
+	case 6:
+		return "six"
+	case 7:
+		return "seven"
+	case 8:
+		return "eight"
+	case 9:
+		return "nine"
+	case 10:
+		return "ten"
+	case 11:
+		return "eleven"
+	case 12:
+		return "twelve"
+	case 13:
+		return "thirteen"
+	case 14:
+		return "fourteen"
+	case 15:
+		return "fifteen"
+	case 16:
+		return "sixteen"
+	case 17:
+		return "seventeen"
+	case 18:
+		return "eighteen"
+	case 19:
+		return "nineteen"
+	case 20:
+		return "twenty"
+	case 30:
+		return "thirty"
+	case 40:
+		return "forty"
+	case 50:
+		return "fifty"
+	case 60:
+		return "sixty"
+	case 70:
+		return "seventy"
+	case 80:
+		return "eighty"
+	case 90:
+		return "ninety"
+	default:
+		var r int
+		var l string
+		switch {
+		case i < 100:
+			r = i % 10
+			l = toWritten(i - r)
+		default:
+			r = i % 100
+			l = toWritten(i/100) + "hun"
+		}
+		if r == 0 {
+			return l
+		}
+		return l + "." + fmt.Sprintf("%d", r)
+	}
+}
+
+func limitArg(pageSize int) string {
+	return fmt.Sprintf("--limit=%d", pageSize)
+}
+
+func pageKeyArg(nextKey string) string {
+	return fmt.Sprintf("--page-key=%s", nextKey)
 }
 
 func (s *IntegrationTestSuite) TestGetNameParamsCmd() {
@@ -340,20 +435,19 @@ func (s *IntegrationTestSuite) TestGetDeleteNameCmd() {
 }
 
 func (s *IntegrationTestSuite) TestPaginationWithPageKey() {
-	// Choosing page size = 13 because it's a) not the default, b) doesn't evenly divide 50.
-	pageSize := 13
-	pageCount := s.acc2NameCount / pageSize
-	if s.acc2NameCount%pageSize != 0 {
-		pageCount++
-	}
 	asJson := fmt.Sprintf("--%s=json", tmcli.OutputFlag)
-	pageSizeArg := fmt.Sprintf("--limit=%d", pageSize)
-	var pageKeyArg = func(nextKey string) string {
-		return fmt.Sprintf("--page-key=%s", nextKey)
-	}
 
 	s.T().Run("ReverseLookupCommand", func(t *testing.T) {
-		results := make([]string, 0, s.acc2NameCount)
+		// Choosing page size = 13 because it a) isn't the default, b) doesn't evenly divide 50.
+		pageSize := 13
+		expectedCount := s.acc2NameCount
+		pageCount := expectedCount / pageSize
+		if expectedCount%pageSize != 0 {
+			pageCount++
+		}
+		pageSizeArg := limitArg(pageSize)
+
+		results := make([]string, 0, expectedCount)
 		var nextKey string
 
 		// Only using the page variable here for error messages, not for the CLI args since that'll mess with the --page-key being tested.
@@ -376,95 +470,19 @@ func (s *IntegrationTestSuite) TestPaginationWithPageKey() {
 				require.NotEmptyf(t, result.Pagination.NextKey, "pagination next key %s", iterID)
 			} else {
 				require.GreaterOrEqualf(t, pageSize, resultNameCount, "last page result count %s", iterID)
+				require.Emptyf(t, result.Pagination.NextKey, "pagination next key %s", iterID)
 			}
 			results = append(results, result.Name...)
 			nextKey = base64.StdEncoding.EncodeToString(result.Pagination.NextKey)
 		}
+
+		// This can fail if the --page-key isn't encoded/decoded correctly resulting in an unexpected jump forward in the actual list.
+		require.Equal(t, expectedCount, len(results), "total count of names returned")
+		// Make sure none of the results are duplicates.
+		// That can happen if the --page-key isn't encoded/decoded correctly resulting in an unexpected jump backward in the actual list.
+		sort.Strings(results)
+		for i := 1; i < len(results); i++ {
+			require.NotEqual(t, results[i-1], results[i], "no two names should be equal here")
+		}
 	})
-}
-
-// toWritten converts an integer to a written string version.
-// Originally, this was the full written string, e.g. 38 => "thirtyEight" but that ended up being too long for
-// an attribute name segment, so it got trimmed down, e.g. 115 => "onehun15".
-func toWritten(i int) string {
-	if i < 0 || i > 999 {
-		panic("cannot convert negative numbers or numbers larger than 999 to written string")
-	}
-	switch i {
-	case 0:
-		return "zero"
-	case 1:
-		return "one"
-	case 2:
-		return "two"
-	case 3:
-		return "three"
-	case 4:
-		return "four"
-	case 5:
-		return "five"
-	case 6:
-		return "six"
-	case 7:
-		return "seven"
-	case 8:
-		return "eight"
-	case 9:
-		return "nine"
-	case 10:
-		return "ten"
-	case 11:
-		return "eleven"
-	case 12:
-		return "twelve"
-	case 13:
-		return "thirteen"
-	case 14:
-		return "fourteen"
-	case 15:
-		return "fifteen"
-	case 16:
-		return "sixteen"
-	case 17:
-		return "seventeen"
-	case 18:
-		return "eighteen"
-	case 19:
-		return "nineteen"
-	case 20:
-		return "twenty"
-	case 30:
-		return "thirty"
-	case 40:
-		return "forty"
-	case 50:
-		return "fifty"
-	case 60:
-		return "sixty"
-	case 70:
-		return "seventy"
-	case 80:
-		return "eighty"
-	case 90:
-		return "ninety"
-	default:
-		var r int
-		var l string
-		switch {
-		case i < 100:
-			r = i % 10
-			l = toWritten(i - r)
-		default:
-			r = i % 100
-			l = toWritten(i/100) + "hun"
-		}
-		if r == 0 {
-			return l
-		}
-		return l + "." + fmt.Sprintf("%d", r)
-	}
-}
-
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
 }

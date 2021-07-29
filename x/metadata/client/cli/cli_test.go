@@ -114,14 +114,6 @@ type IntegrationCLITestSuite struct {
 	objectLocator2AsJson string
 }
 
-func ownerPartyList(addresses ...string) []metadatatypes.Party {
-	retval := make([]metadatatypes.Party, len(addresses))
-	for i, addr := range addresses {
-		retval[i] = metadatatypes.Party{Address: addr, Role: metadatatypes.PartyType_PARTY_TYPE_OWNER}
-	}
-	return retval
-}
-
 func TestIntegrationCLITestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationCLITestSuite))
 }
@@ -456,6 +448,14 @@ func (s *IntegrationCLITestSuite) TearDownSuite() {
 	s.testnet.WaitForNextBlock()
 	s.T().Log("tearing down integration test suite")
 	s.testnet.Cleanup()
+}
+
+func ownerPartyList(addresses ...string) []metadatatypes.Party {
+	retval := make([]metadatatypes.Party, len(addresses))
+	for i, addr := range addresses {
+		retval[i] = metadatatypes.Party{Address: addr, Role: metadatatypes.PartyType_PARTY_TYPE_OWNER}
+	}
+	return retval
 }
 
 func indent(str string, spaces int) string {

@@ -13,8 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	tmcli "github.com/tendermint/tendermint/libs/cli"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -79,7 +77,7 @@ func (s *IntegrationCLIPageTestSuite) SetupSuite() {
 	s.Require().NoError(err, "getting user1Addr from s.user1Key")
 	s.user1AddrStr = s.user1Addr.String()
 
-	s.asJson = fmt.Sprintf("--%s=json", tmcli.OutputFlag)
+	s.asJson = "--output=json"
 
 	var metadataData metadatatypes.GenesisState
 	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[metadatatypes.ModuleName], &metadataData), "unmarshalling JSON metadataData")
@@ -402,6 +400,14 @@ func toWritten(i int) string {
 // Regex for finding any non period character followed by an upper-case letter.
 var reUpperLetter = regexp.MustCompile(`[^.][[:upper:]]`)
 
+func limitArg(pageSize int) string {
+	return fmt.Sprintf("--limit=%d", pageSize)
+}
+
+func pageKeyArg(nextKey string) string {
+	return fmt.Sprintf("--page-key=%s", nextKey)
+}
+
 // Convert a camel-case string to a class string by putting a period before each upper-case letter
 // and then lower-casing the whole thing.
 func toClassName(str string) string {
@@ -492,17 +498,9 @@ func (a recordSpecSorter) Less(i, j int) bool {
 	return a[i].SpecificationId.Compare(a[j].SpecificationId) < 0
 }
 
-func limitArg(pageSize int) string {
-	return fmt.Sprintf("--limit=%d", pageSize)
-}
-
-func pageKeyArg(nextKey string) string {
-	return fmt.Sprintf("--page-key=%s", nextKey)
-}
-
 func (s *IntegrationCLIPageTestSuite) TestScopesPagination() {
 	s.T().Run("GetMetadataGetAllCmd scopes", func(t *testing.T) {
-		// Choosing page size = 43 because a) it's not the default, b) doesn't evenly divide 100.
+		// Choosing page size = 43 because it a) isn't the default, b) doesn't evenly divide 100.
 		pageSize := 43
 		expectedCount := s.scopeCount
 		pageCount := expectedCount / pageSize
@@ -553,7 +551,7 @@ func (s *IntegrationCLIPageTestSuite) TestScopesPagination() {
 	})
 
 	s.T().Run("GetMetadataScopeCmd all", func(t *testing.T) {
-		// Choosing page size = 43 because a) it's not the default, b) doesn't evenly divide 100.
+		// Choosing page size = 43 because it a) isn't the default, b) doesn't evenly divide 100.
 		pageSize := 43
 		expectedCount := s.scopeCount
 		pageCount := expectedCount / pageSize
@@ -604,7 +602,7 @@ func (s *IntegrationCLIPageTestSuite) TestScopesPagination() {
 	})
 
 	s.T().Run("GetOwnershipCmd account", func(t *testing.T) {
-		// Choosing page size = 17 because a) it's not the default, b) doesn't evenly divide 80.
+		// Choosing page size = 17 because it a) isn't the default, b) doesn't evenly divide 80.
 		pageSize := 17
 		expectedCount := s.accountScopesOwned
 		pageCount := expectedCount / pageSize
@@ -653,7 +651,7 @@ func (s *IntegrationCLIPageTestSuite) TestScopesPagination() {
 	})
 
 	s.T().Run("GetOwnershipCmd user1", func(t *testing.T) {
-		// Choosing page size = 17 because a) it's not the default, b) doesn't evenly divide 60.
+		// Choosing page size = 17 because it a) isn't the default, b) doesn't evenly divide 60.
 		pageSize := 17
 		expectedCount := s.user1ScopesOwned
 		pageCount := expectedCount / pageSize
@@ -702,7 +700,7 @@ func (s *IntegrationCLIPageTestSuite) TestScopesPagination() {
 	})
 
 	s.T().Run("GetValueOwnershipCmd account", func(t *testing.T) {
-		// Choosing page size = 17 because a) it's not the default, b) doesn't evenly divide 40.
+		// Choosing page size = 17 because it a) isn't the default, b) doesn't evenly divide 40.
 		pageSize := 17
 		expectedCount := s.accountScopesValueOwned
 		pageCount := expectedCount / pageSize
@@ -751,7 +749,7 @@ func (s *IntegrationCLIPageTestSuite) TestScopesPagination() {
 	})
 
 	s.T().Run("GetValueOwnershipCmd user1", func(t *testing.T) {
-		// Choosing page size = 17 because a) it's not the default, b) doesn't evenly divide 60.
+		// Choosing page size = 17 because it a) isn't the default, b) doesn't evenly divide 60.
 		pageSize := 17
 		expectedCount := s.user1ScopesValueOwned
 		pageCount := expectedCount / pageSize
@@ -802,7 +800,7 @@ func (s *IntegrationCLIPageTestSuite) TestScopesPagination() {
 
 func (s *IntegrationCLIPageTestSuite) TestSessionsPagination() {
 	s.T().Run("GetMetadataGetAllCmd sessions", func(t *testing.T) {
-		// Choosing page size = 57 because a) it's not the default, b) doesn't evenly divide 200.
+		// Choosing page size = 57 because it a) isn't the default, b) doesn't evenly divide 200.
 		pageSize := 57
 		expectedCount := s.sessionCount
 		pageCount := expectedCount / pageSize
@@ -853,7 +851,7 @@ func (s *IntegrationCLIPageTestSuite) TestSessionsPagination() {
 	})
 
 	s.T().Run("GetMetadataSessionCmd all", func(t *testing.T) {
-		// Choosing page size = 57 because a) it's not the default, b) doesn't evenly divide 200.
+		// Choosing page size = 57 because it a) isn't the default, b) doesn't evenly divide 200.
 		pageSize := 57
 		expectedCount := s.sessionCount
 		pageCount := expectedCount / pageSize
@@ -906,7 +904,7 @@ func (s *IntegrationCLIPageTestSuite) TestSessionsPagination() {
 
 func (s *IntegrationCLIPageTestSuite) TestRecordsPagination() {
 	s.T().Run("GetMetadataGetAllCmd records", func(t *testing.T) {
-		// Choosing page size = 73 because a) it's not the default, b) doesn't evenly divide 400.
+		// Choosing page size = 73 because it a) isn't the default, b) doesn't evenly divide 400.
 		pageSize := 73
 		expectedCount := s.recordCount
 		pageCount := expectedCount / pageSize
@@ -957,7 +955,7 @@ func (s *IntegrationCLIPageTestSuite) TestRecordsPagination() {
 	})
 
 	s.T().Run("GetMetadataRecordCmd all", func(t *testing.T) {
-		// Choosing page size = 73 because a) it's not the default, b) doesn't evenly divide 400.
+		// Choosing page size = 73 because it a) isn't the default, b) doesn't evenly divide 400.
 		pageSize := 73
 		expectedCount := s.recordCount
 		pageCount := expectedCount / pageSize
@@ -1010,7 +1008,7 @@ func (s *IntegrationCLIPageTestSuite) TestRecordsPagination() {
 
 func (s *IntegrationCLIPageTestSuite) TestScopeSpecsPagination() {
 	s.T().Run("GetMetadataGetAllCmd scopespecs", func(t *testing.T) {
-		// Choosing page size = 3 because a) it's not the default, b) doesn't evenly divide 20.
+		// Choosing page size = 3 because it a) isn't the default, b) doesn't evenly divide 20.
 		pageSize := 3
 		expectedCount := s.scopeSpecCount
 		pageCount := expectedCount / pageSize
@@ -1061,7 +1059,7 @@ func (s *IntegrationCLIPageTestSuite) TestScopeSpecsPagination() {
 	})
 
 	s.T().Run("GetMetadataScopeSpecCmd all", func(t *testing.T) {
-		// Choosing page size = 3 because a) it's not the default, b) doesn't evenly divide 20.
+		// Choosing page size = 3 because it a) isn't the default, b) doesn't evenly divide 20.
 		pageSize := 3
 		expectedCount := s.scopeSpecCount
 		pageCount := expectedCount / pageSize
@@ -1114,7 +1112,7 @@ func (s *IntegrationCLIPageTestSuite) TestScopeSpecsPagination() {
 
 func (s *IntegrationCLIPageTestSuite) TestContractSpecsPagination() {
 	s.T().Run("GetMetadataGetAllCmd contractspecs", func(t *testing.T) {
-		// Choosing page size = 3 because a) it's not the default, b) doesn't evenly divide 20.
+		// Choosing page size = 3 because it a) isn't the default, b) doesn't evenly divide 20.
 		pageSize := 3
 		expectedCount := s.contractSpecCount
 		pageCount := expectedCount / pageSize
@@ -1165,7 +1163,7 @@ func (s *IntegrationCLIPageTestSuite) TestContractSpecsPagination() {
 	})
 
 	s.T().Run("GetMetadataContractSpecCmd all", func(t *testing.T) {
-		// Choosing page size = 3 because a) it's not the default, b) doesn't evenly divide 20.
+		// Choosing page size = 3 because it a) isn't the default, b) doesn't evenly divide 20.
 		pageSize := 3
 		expectedCount := s.contractSpecCount
 		pageCount := expectedCount / pageSize
@@ -1218,7 +1216,7 @@ func (s *IntegrationCLIPageTestSuite) TestContractSpecsPagination() {
 
 func (s *IntegrationCLIPageTestSuite) TestRecordSpecsPagination() {
 	s.T().Run("GetMetadataGetAllCmd recordspecs", func(t *testing.T) {
-		// Choosing page size = 7 because a) it's not the default, b) doesn't evenly divide 40.
+		// Choosing page size = 7 because it a) isn't the default, b) doesn't evenly divide 40.
 		pageSize := 7
 		expectedCount := s.recordSpecCount
 		pageCount := expectedCount / pageSize
@@ -1269,8 +1267,8 @@ func (s *IntegrationCLIPageTestSuite) TestRecordSpecsPagination() {
 	})
 
 	s.T().Run("GetMetadataRecordSpecCmd all", func(t *testing.T) {
-		// Choosing page size = 3 because a) it's not the default, b) doesn't evenly divide 20.
-		pageSize := 3
+		// Choosing page size = 7 because it a) isn't the default, b) doesn't evenly divide 40.
+		pageSize := 7
 		expectedCount := s.recordSpecCount
 		pageCount := expectedCount / pageSize
 		if expectedCount%pageSize != 0 {
