@@ -1,0 +1,19 @@
+package provenance.marker.v1;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/provenance-io/provenance/x/marker/types";
+option java_package        = "io.provenance.marker.v1";
+option java_multiple_files = true;
+
+// MarkerTransferAuthorization gives the grantee permissions to execute
+// a marker transfer on behalf of the granter's account.
+message MarkerTransferAuthorization {
+    option (cosmos_proto.implements_interface) = "Authorization";
+
+    // transfer_limit is the total amount the grantee can transfer
+    repeated cosmos.base.v1beta1.Coin transfer_limit = 1
+    [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}
