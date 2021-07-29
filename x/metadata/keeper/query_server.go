@@ -938,7 +938,7 @@ func (k Keeper) OSLocatorsByURI(ctx context.Context, request *types.OSLocatorsBy
 		return false
 	}
 
-	// TODO: Refactor OSLocatorsByURI for full pagination support. See also query.FilteredPaginate.
+	// TODO: Refactor OSLocatorsByURI for full pagination support. https://github.com/provenance-io/provenance/issues/401
 	if err := k.IterateOSLocators(ctxSDK, appendToRecords); err != nil {
 		return &retval, err
 	}
@@ -1015,7 +1015,7 @@ func (k Keeper) OSAllLocators(ctx context.Context, request *types.OSAllLocatorsR
 		return false
 	}
 
-	// TODO: Refactor OSAllLocators for full pagination support. See also query.FilteredPaginate.
+	// TODO: Refactor OSAllLocators for full pagination support. https://github.com/provenance-io/provenance/issues/402
 	if err := k.IterateOSLocators(ctxSDK, appendToRecords); err != nil {
 		return &retval, err
 	}

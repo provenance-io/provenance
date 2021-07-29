@@ -1324,6 +1324,6 @@ func (s *IntegrationCLIPageTestSuite) TestRecordSpecsPagination() {
 	})
 }
 
-// TODO: Add pagination test of GetOSLocatorCmd [uri] once metadata/keeper/query_server.go#OSLocatorsByURI is fixed.
-// TODO: Add pagination test of GetOSLocatorCmd "all" once metadata/keeper/query_server.go#OSAllLocators is fixed.
-// TODO: Add pagination test of GetMetadataGetAllCmd "locators" once metadata/keeper/query_server.go#OSAllLocators is fixed.
+// TODO: Add pagination test of GetOSLocatorCmd [uri] once metadata/keeper/query_server.go#OSLocatorsByURI is fixed: https://github.com/provenance-io/provenance/issues/401
+// TODO: Add pagination test of GetOSLocatorCmd "all" once metadata/keeper/query_server.go#OSAllLocators is fixed: https://github.com/provenance-io/provenance/issues/402
+// TODO: Add pagination test of GetMetadataGetAllCmd "locators" once metadata/keeper/query_server.go#OSAllLocators is fixed: https://github.com/provenance-io/provenance/issues/402
