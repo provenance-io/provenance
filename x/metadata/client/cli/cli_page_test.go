@@ -1324,6 +1324,6 @@ func (s *IntegrationCLIPageTestSuite) TestRecordSpecsPagination() {
 	})
 }
 
-// These don't properly use the pagination stuff.
-// TODO: OSLocatorsByURIRequest - outputOSLocatorsByURI: GetOSLocatorCmd locator uri
-// TODO: OSAllLocatorsRequest - outputOSLocatorsAll: GetMetadataGetAllCmd all locators, GetOSLocatorCmd locator all
+// TODO: Add pagination test of GetOSLocatorCmd [uri] once metadata/keeper/query_server.go#OSLocatorsByURI is fixed.
+// TODO: Add pagination test of GetOSLocatorCmd "all" once metadata/keeper/query_server.go#OSAllLocators is fixed.
+// TODO: Add pagination test of GetMetadataGetAllCmd "locators" once metadata/keeper/query_server.go#OSAllLocators is fixed.

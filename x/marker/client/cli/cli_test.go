@@ -871,4 +871,5 @@ func (s *IntegrationTestSuite) TestPaginationWithPageKey() {
 
 	// The AllHoldersCmd uses the --limit and --offset args, but not the --page-key one.
 	// So it's not tested here.
+	// TODO: Add pagination test of AllHoldersCmd [denom] once marker/keeper/query_server.go#Holding is fixed.
 }
