@@ -272,6 +272,7 @@ func pageKeyArg(nextKey string) string {
 // attrSorter implements sort.Interface for []Attribute
 // Sorts by .Name then .AttributeType then .Value, then .Address.
 type attrSorter []attributetypes.Attribute
+
 func (a attrSorter) Len() int {
 	return len(a)
 }

@@ -248,6 +248,7 @@ func pageKeyArg(nextKey string) string {
 // markerSorter implements sort.Interface for []MarkerAccount
 // Sorts by .Denom only.
 type markerSorter []markertypes.MarkerAccount
+
 func (a markerSorter) Len() int {
 	return len(a)
 }

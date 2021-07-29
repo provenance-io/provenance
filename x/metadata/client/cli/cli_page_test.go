@@ -419,6 +419,7 @@ func toClassName(str string) string {
 // scopeSorter implements sort.Interface for []metadatatypes.Scope
 // Sorts by .ScopeId
 type scopeSorter []metadatatypes.Scope
+
 func (a scopeSorter) Len() int {
 	return len(a)
 }
@@ -432,6 +433,7 @@ func (a scopeSorter) Less(i, j int) bool {
 // sessionSorter implements sort.Interface for []metadatatypes.Session
 // Sorts by .SessionId
 type sessionSorter []metadatatypes.Session
+
 func (a sessionSorter) Len() int {
 	return len(a)
 }
@@ -445,6 +447,7 @@ func (a sessionSorter) Less(i, j int) bool {
 // recordSorter implements sort.Interface for []metadatatypes.Record
 // Sorts by .SessionId then by .Name
 type recordSorter []metadatatypes.Record
+
 func (a recordSorter) Len() int {
 	return len(a)
 }
@@ -462,6 +465,7 @@ func (a recordSorter) Less(i, j int) bool {
 // scopeSpecSorter implements sort.Interface for []metadatatypes.ScopeSpecification
 // Sorts by .SpecificationId
 type scopeSpecSorter []metadatatypes.ScopeSpecification
+
 func (a scopeSpecSorter) Len() int {
 	return len(a)
 }
@@ -475,6 +479,7 @@ func (a scopeSpecSorter) Less(i, j int) bool {
 // contractSpecSorter implements sort.Interface for []metadatatypes.ContractSpecification
 // Sorts by .SpecificationId
 type contractSpecSorter []metadatatypes.ContractSpecification
+
 func (a contractSpecSorter) Len() int {
 	return len(a)
 }
@@ -488,6 +493,7 @@ func (a contractSpecSorter) Less(i, j int) bool {
 // recordSpecSorter implements sort.Interface for []metadatatypes.RecordSpecification
 // Sorts by .SpecificationId
 type recordSpecSorter []metadatatypes.RecordSpecification
+
 func (a recordSpecSorter) Len() int {
 	return len(a)
 }
