@@ -34,11 +34,11 @@ import (
 type IntegrationCLITestSuite struct {
 	suite.Suite
 
-	cfg              testnet.Config
-	testnet          *testnet.Network
-	keyring          keyring.Keyring
-	keyringDir       string
-	keyringAccounts  []keyring.Info
+	cfg             testnet.Config
+	testnet         *testnet.Network
+	keyring         keyring.Keyring
+	keyringDir      string
+	keyringAccounts []keyring.Info
 
 	asJson         string
 	asText         string
