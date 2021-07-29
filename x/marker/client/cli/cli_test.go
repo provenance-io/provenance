@@ -20,7 +20,6 @@ import (
 	sdktypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -40,9 +39,6 @@ type IntegrationTestSuite struct {
 	keyring          keyring.Keyring
 	keyringDir       string
 	accountAddresses []sdk.AccAddress
-
-	accountAddr sdk.AccAddress
-	accountKey  *secp256k1.PrivKey
 
 	markerCount int
 }
