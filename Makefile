@@ -492,8 +492,7 @@ proto-update-deps:
 ##############################
 ### Docs
 ##############################
-update-swagger-docs: statik
-	make proto-swagger-gen
+update-swagger-docs: statik proto-swagger-gen
 	$(BINDIR)/statik -src=client/docs/swagger-ui -dest=client/docs -f -m
 
 .PHONY: update-swagger-docs
