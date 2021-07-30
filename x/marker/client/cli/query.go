@@ -2,10 +2,12 @@ package cli
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
+	flag "github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -82,7 +84,7 @@ func AllMarkersCmd() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			pageReq, err := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
 			if err != nil {
 				return err
 			}
@@ -108,8 +110,11 @@ func AllMarkersCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().Uint32(flags.FlagPage, 1, "Query a specific page of paginated results")
-	cmd.Flags().Uint32(flags.FlagLimit, 200, "Query number of results per page returned")
+	flags.AddPaginationFlagsToCmd(cmd, "markers")
+	err := cmd.Flags().Lookup(flags.FlagLimit).Value.Set("200")
+	if err != nil {
+		panic(err.Error())
+	}
 	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }
@@ -128,7 +133,7 @@ func AllHoldersCmd() *cobra.Command {
 			}
 			id := strings.ToLower(strings.TrimSpace(args[0]))
 			queryClient := types.NewQueryClient(clientCtx)
-			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			pageReq, err := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
 			if err != nil {
 				return err
 			}
@@ -267,4 +272,18 @@ func MarkerSupplyCmd() *cobra.Command {
 	}
 	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
+}
+
+// sdk ReadPageRequest expects binary but we encoded to base64 in our marshaller
+func withPageKeyDecoded(flagSet *flag.FlagSet) *flag.FlagSet {
+	encoded, err := flagSet.GetString(flags.FlagPageKey)
+	if err != nil {
+		panic(err.Error())
+	}
+	raw, err := base64.StdEncoding.DecodeString(encoded)
+	if err != nil {
+		panic(err.Error())
+	}
+	_ = flagSet.Set(flags.FlagPageKey, string(raw))
+	return flagSet
 }

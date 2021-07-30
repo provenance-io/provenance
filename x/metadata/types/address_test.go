@@ -1100,6 +1100,18 @@ func (s *AddressTestSuite) TestSessionAddressConverters() {
 				assert.EqualError(t, err, test.expectedError, "%s AsSessionAddress expected err", test.name)
 			}
 		})
+		s.T().Run(fmt.Sprintf("%s MustGetAsSessionAddress", test.name), func(t *testing.T) {
+			if len(test.expectedError) == 0 {
+				assert.NotPanics(t, func() {
+					actualID := test.baseID.MustGetAsSessionAddress(randomUUID2)
+					assert.Equal(t, test.expectedID, actualID, "%s MustGetAsSessionAddress value", test.name)
+				}, "%s MustGetAsSessionAddress unexpected panic", test.name)
+			} else {
+				assert.PanicsWithError(t, test.expectedError, func() {
+					_ = test.baseID.MustGetAsSessionAddress(randomUUID2)
+				}, "%s MustGetAsSessionAddress expected panic", test.name)
+			}
+		})
 	}
 }
 
@@ -1268,6 +1280,18 @@ func (s *AddressTestSuite) TestRecordSpecAddressConverters() {
 					assert.Equal(t, test.expectedID, actualID, "%s AsRecordSpecAddress value", test.name)
 				} else {
 					assert.EqualError(t, err, test.expectedError, "%s AsRecordSpecAddress expected err", test.name)
+				}
+			})
+			s.T().Run(fmt.Sprintf("%s MustGetAsRecordSpecAddress(\"%s\")", test.name, rName), func(t *testing.T) {
+				if len(test.expectedError) == 0 {
+					assert.NotPanics(t, func() {
+						actualID := test.baseID.MustGetAsRecordSpecAddress(rName)
+						assert.Equal(t, test.expectedID, actualID, "%s MustGetAsRecordSpecAddress value", test.name)
+					}, "%s MustGetAsRecordSpecAddress unexpected panic", test.name)
+				} else {
+					assert.PanicsWithError(t, test.expectedError, func() {
+						_ = test.baseID.MustGetAsRecordSpecAddress(rName)
+					}, "%s MustGetAsRecordSpecAddress expected panic", test.name)
 				}
 			})
 		}
