@@ -335,8 +335,9 @@ func (k Keeper) importAttribute(ctx sdk.Context, attr types.Attribute) error {
 		return err
 	}
 	// Ensure name is stored in normalized format.
+	attrNameOrig := attr.Name
 	if attr.Name, err = k.nameKeeper.Normalize(ctx, attr.Name); err != nil {
-		return fmt.Errorf("unable to normalize attribute name \"%s\": %w", attr.Name, err)
+		return fmt.Errorf("unable to normalize attribute name \"%s\": %w", attrNameOrig, err)
 	}
 	// Store the sanitized account attribute
 	bz, err := k.cdc.Marshal(&attr)

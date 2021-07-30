@@ -1,28 +1,32 @@
 package cli_test
 
 import (
+	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"sort"
 	"strings"
 	"testing"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
+	sdktypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/provenance-io/provenance/testutil"
-
 	markercli "github.com/provenance-io/provenance/x/marker/client/cli"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
@@ -30,24 +34,81 @@ import (
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	cfg     testnet.Config
-	testnet *testnet.Network
+	cfg              testnet.Config
+	testnet          *testnet.Network
+	keyring          keyring.Keyring
+	keyringDir       string
+	accountAddresses []sdk.AccAddress
 
-	accountAddr sdk.AccAddress
-	accountKey  *secp256k1.PrivKey
+	markerCount int
+}
+
+func (s *IntegrationTestSuite) GenerateAccountsWithKeyrings(number int) {
+	path := hd.CreateHDPath(118, 0, 0).String()
+	s.keyringDir = s.T().TempDir()
+	kr, err := keyring.New(s.T().Name(), "test", s.keyringDir, nil)
+	s.Require().NoError(err)
+	s.keyring = kr
+	for i := 0; i < number; i++ {
+		keyId := fmt.Sprintf("test_key%v", i)
+		info, _, err := kr.NewMnemonic(keyId, keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+		s.Require().NoError(err)
+		s.accountAddresses = append(s.accountAddresses, info.GetAddress())
+	}
+}
+
+func TestIntegrationTestSuite(t *testing.T) {
+	suite.Run(t, new(IntegrationTestSuite))
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
-	s.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
-	addr, err := sdk.AccAddressFromHex(s.accountKey.PubKey().Address().String())
-	s.Require().NoError(err)
-	s.accountAddr = addr
 	s.T().Log("setting up integration test suite")
 
 	cfg := testutil.DefaultTestNetworkConfig()
 
 	genesisState := cfg.GenesisState
 	cfg.NumValidators = 1
+	s.GenerateAccountsWithKeyrings(4)
+
+	// Configure Genesis auth data for adding test accounts
+	var genAccounts []authtypes.GenesisAccount
+	var authData authtypes.GenesisState
+	authData.Params = authtypes.DefaultParams()
+	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.accountAddresses[0], nil, 3, 0))
+	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.accountAddresses[1], nil, 4, 0))
+	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.accountAddresses[2], nil, 5, 0))
+	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.accountAddresses[3], nil, 6, 0))
+	accounts, err := authtypes.PackAccounts(genAccounts)
+	s.Require().NoError(err)
+	authData.Accounts = accounts
+	authDataBz, err := cfg.Codec.MarshalJSON(&authData)
+	s.Require().NoError(err)
+	genesisState[authtypes.ModuleName] = authDataBz
+
+	// Configure Genesis bank data for test accounts
+	var genBalances []banktypes.Balance
+	genBalances = append(genBalances, banktypes.Balance{Address: s.accountAddresses[0].String(), Coins: sdk.NewCoins(
+		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
+		sdk.NewCoin("authzhotdog", sdk.NewInt(100)),
+	).Sort()})
+	genBalances = append(genBalances, banktypes.Balance{Address: s.accountAddresses[1].String(), Coins: sdk.NewCoins(
+		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
+		sdk.NewCoin("authzhotdog", sdk.NewInt(100)),
+	).Sort()})
+	genBalances = append(genBalances, banktypes.Balance{Address: s.accountAddresses[2].String(), Coins: sdk.NewCoins(
+		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
+	).Sort()})
+	genBalances = append(genBalances, banktypes.Balance{Address: s.accountAddresses[3].String(), Coins: sdk.NewCoins(
+		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
+	).Sort()})
+	var bankGenState banktypes.GenesisState
+	bankGenState.Params = banktypes.DefaultParams()
+	bankGenState.Balances = genBalances
+	bankDataBz, err := cfg.Codec.MarshalJSON(&bankGenState)
+	s.Require().NoError(err)
+	genesisState[banktypes.ModuleName] = bankDataBz
+
+	s.markerCount = 20
 
 	// Configure Genesis data for marker module
 	var markerData markertypes.GenesisState
@@ -106,6 +167,42 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			Supply:                 cfg.BondedTokens.Mul(sdk.NewInt(int64(cfg.NumValidators))),
 			Denom:                  cfg.BondDenom,
 		},
+		{
+			BaseAccount: &authtypes.BaseAccount{
+				Address:       markertypes.MustGetMarkerAddress("authzhotdog").String(),
+				AccountNumber: 140,
+				Sequence:      0,
+			},
+			Status:                 markertypes.StatusActive,
+			SupplyFixed:            true,
+			MarkerType:             markertypes.MarkerType_RestrictedCoin,
+			AllowGovernanceControl: false,
+			Supply:                 sdk.NewInt(1000),
+			Denom:                  "authzhotdog",
+			AccessControl: []markertypes.AccessGrant{
+				*markertypes.NewAccessGrant(s.accountAddresses[0], []markertypes.Access{markertypes.Access_Transfer, markertypes.Access_Admin}),
+				*markertypes.NewAccessGrant(s.accountAddresses[1], []markertypes.Access{markertypes.Access_Transfer, markertypes.Access_Admin}),
+				*markertypes.NewAccessGrant(s.accountAddresses[2], []markertypes.Access{markertypes.Access_Transfer, markertypes.Access_Admin}),
+			},
+		},
+	}
+	for i := len(markerData.Markers); i < s.markerCount; i++ {
+		denom := toWritten(i)
+		markerData.Markers = append(markerData.Markers,
+			markertypes.MarkerAccount{
+				BaseAccount: &authtypes.BaseAccount{
+					Address:       markertypes.MustGetMarkerAddress(denom).String(),
+					AccountNumber: uint64(i * 10),
+					Sequence:      0,
+				},
+				Status:                 markertypes.StatusActive,
+				SupplyFixed:            false,
+				MarkerType:             markertypes.MarkerType_Coin,
+				AllowGovernanceControl: true,
+				Supply:                 sdk.NewInt(int64(i * 100000)),
+				Denom:                  denom,
+			},
+		)
 	}
 	markerDataBz, err := cfg.Codec.MarshalJSON(&markerData)
 	s.Require().NoError(err)
@@ -125,6 +222,122 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.testnet.WaitForNextBlock()
 	s.T().Log("tearing down integration test suite")
 	s.testnet.Cleanup()
+}
+
+// toWritten converts an integer to a written string version.
+// Originally, this was the full written string, e.g. 38 => "thirtyEight" but that ended up being too long for
+// an attribute name segment, so it got trimmed down, e.g. 115 => "onehun15".
+func toWritten(i int) string {
+	if i < 0 || i > 999 {
+		panic("cannot convert negative numbers or numbers larger than 999 to written string")
+	}
+	switch i {
+	case 0:
+		return "zero"
+	case 1:
+		return "one"
+	case 2:
+		return "two"
+	case 3:
+		return "three"
+	case 4:
+		return "four"
+	case 5:
+		return "five"
+	case 6:
+		return "six"
+	case 7:
+		return "seven"
+	case 8:
+		return "eight"
+	case 9:
+		return "nine"
+	case 10:
+		return "ten"
+	case 11:
+		return "eleven"
+	case 12:
+		return "twelve"
+	case 13:
+		return "thirteen"
+	case 14:
+		return "fourteen"
+	case 15:
+		return "fifteen"
+	case 16:
+		return "sixteen"
+	case 17:
+		return "seventeen"
+	case 18:
+		return "eighteen"
+	case 19:
+		return "nineteen"
+	case 20:
+		return "twenty"
+	case 30:
+		return "thirty"
+	case 40:
+		return "forty"
+	case 50:
+		return "fifty"
+	case 60:
+		return "sixty"
+	case 70:
+		return "seventy"
+	case 80:
+		return "eighty"
+	case 90:
+		return "ninety"
+	default:
+		var r int
+		var l string
+		switch {
+		case i < 100:
+			r = i % 10
+			l = toWritten(i - r)
+		default:
+			r = i % 100
+			l = toWritten(i/100) + "hun"
+		}
+		if r == 0 {
+			return l
+		}
+		return l + fmt.Sprintf("%d", r)
+	}
+}
+
+func limitArg(pageSize int) string {
+	return fmt.Sprintf("--limit=%d", pageSize)
+}
+
+func pageKeyArg(nextKey string) string {
+	return fmt.Sprintf("--page-key=%s", nextKey)
+}
+
+// markerSorter implements sort.Interface for []MarkerAccount
+// Sorts by .Denom only.
+type markerSorter []markertypes.MarkerAccount
+
+func (a markerSorter) Len() int {
+	return len(a)
+}
+func (a markerSorter) Swap(i, j int) {
+	a[i], a[j] = a[j], a[i]
+}
+func (a markerSorter) Less(i, j int) bool {
+	return a[i].Denom < a[j].Denom
+}
+
+func appendMarkers(a []markertypes.MarkerAccount, toAdd ...*sdktypes.Any) []markertypes.MarkerAccount {
+	for _, n := range toAdd {
+		var ma markertypes.MarkerAccount
+		err := ma.Unmarshal(n.Value)
+		if err != nil {
+			panic(err.Error())
+		}
+		a = append(a, ma)
+	}
+	return a
 }
 
 func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
@@ -149,7 +362,7 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
 				"testcoin",
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq","pub_key":null,"account_number":"7","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"testcoin","supply":"1000","marker_type":"MARKER_TYPE_COIN","supply_fixed":true,"allow_governance_control":false}}`,
+			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq","pub_key":null,"account_number":"11","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"testcoin","supply":"1000","marker_type":"MARKER_TYPE_COIN","supply_fixed":true,"allow_governance_control":false}}`,
 		},
 		{
 			"get testcoin marker test",
@@ -163,7 +376,7 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
   access_control: []
   allow_governance_control: false
   base_account:
-    account_number: "7"
+    account_number: "11"
     address: cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq
     pub_key: null
     sequence: "0"
@@ -183,13 +396,13 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
 			"",
 		},
 		{
-			"get restricted  coin marker",
+			"get restricted coin marker",
 			markercli.MarkerCmd(),
 			[]string{
 				"lockedcoin",
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos16437wt0xtqtuw0pn4vt8rlf8gr2plz2det0mt2","pub_key":null,"account_number":"8","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"lockedcoin","supply":"1000","marker_type":"MARKER_TYPE_RESTRICTED","supply_fixed":true,"allow_governance_control":false}}`,
+			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos16437wt0xtqtuw0pn4vt8rlf8gr2plz2det0mt2","pub_key":null,"account_number":"12","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"lockedcoin","supply":"1000","marker_type":"MARKER_TYPE_RESTRICTED","supply_fixed":true,"allow_governance_control":false}}`,
 		},
 		{
 			"query access",
@@ -407,7 +620,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			[]string{
 				"hotdog",
 				"40hotdog",
-				s.accountAddr.String(),
+				s.accountAddresses[0].String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -460,7 +673,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			"transfer, fail to transfer invalid coin parse",
 			markercli.GetNewTransferCmd(),
 			[]string{
-				s.accountAddr.String(),
+				s.accountAddresses[0].String(),
 				s.testnet.Validators[0].Address.String(),
 				"hotdog",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -474,7 +687,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			"transfer, fail to transfer invalid coin count",
 			markercli.GetNewTransferCmd(),
 			[]string{
-				s.accountAddr.String(),
+				s.accountAddresses[0].String(),
 				s.testnet.Validators[0].Address.String(),
 				"100hotdog,200koinz",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -489,7 +702,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			markercli.GetNewTransferCmd(),
 			[]string{
 				s.testnet.Validators[0].Address.String(),
-				s.accountAddr.String(),
+				s.accountAddresses[0].String(),
 				"100hotdog",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -525,7 +738,146 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			} else {
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-				println(out.String())
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
+	testCases := []struct {
+		name         string
+		cmd          *cobra.Command
+		args         []string
+		expectErr    bool
+		respType     proto.Message
+		expectedCode uint32
+	}{
+		{
+			"grant authz transfer permissions to account 1 for account 0 tranfer limit of 10",
+			markercli.GetCmdGrantAuthorization(),
+			[]string{
+				s.accountAddresses[1].String(),
+				"transfer",
+				fmt.Sprintf("--%s=%s", markercli.FlagTransferLimit, "10authzhotdog"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"grant authz transfer permissions to account 0 for account 1 transfer limit 20",
+			markercli.GetCmdGrantAuthorization(),
+			[]string{
+				s.accountAddresses[0].String(),
+				"transfer",
+				fmt.Sprintf("--%s=%s", markercli.FlagTransferLimit, "20authzhotdog"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"marker transfer successful, account 1 as grantee and account 0 as granter",
+			markercli.GetNewTransferCmd(),
+			[]string{
+				s.accountAddresses[0].String(),
+				s.accountAddresses[1].String(),
+				"4authzhotdog",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"marker transfer failed,  account 1 over transfer limit",
+			markercli.GetNewTransferCmd(),
+			[]string{
+				s.accountAddresses[0].String(),
+				s.accountAddresses[1].String(),
+				"7authzhotdog",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 5,
+		},
+		{
+			"marker transfer failed, account 1 not granted rights by account 2",
+			markercli.GetNewTransferCmd(),
+			[]string{
+				s.accountAddresses[2].String(),
+				s.accountAddresses[1].String(),
+				"9authzhotdog",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 1,
+		},
+		{
+			"grantee successful transfer, removed from auth for reaching transfer limit",
+			markercli.GetNewTransferCmd(),
+			[]string{
+				s.accountAddresses[1].String(),
+				s.accountAddresses[0].String(),
+				"20authzhotdog",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"revoke authz transfer from grantee",
+			markercli.GetCmdRevokeAuthorization(),
+			[]string{
+				s.accountAddresses[1].String(),
+				"transfer",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"transfer should fail, due to account 1's revoked access",
+			markercli.GetNewTransferCmd(),
+			[]string{
+				s.accountAddresses[0].String(),
+				s.accountAddresses[1].String(),
+				"1hotdog",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 1,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			clientCtx := s.testnet.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
 			}
@@ -638,7 +990,6 @@ func (s *IntegrationTestSuite) TestMarkerTxGovProposals() {
 			} else {
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-				println(out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, txResp.Logs.String())
 			}
@@ -652,12 +1003,78 @@ func (s *IntegrationTestSuite) TestMarkerGetTxCmd() {
 	s.Run("marker cli tx commands not nil", func() {
 		tx := markercli.NewTxCmd()
 		s.Require().NotNil(tx)
-		s.Require().Equal(len(tx.Commands()), 12)
+		s.Require().Equal(len(tx.Commands()), 14)
 		s.Require().Equal(tx.Use, markertypes.ModuleName)
 		s.Require().Equal(tx.Short, "Transaction commands for the marker module")
 	})
 }
 
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
+func (s *IntegrationTestSuite) TestPaginationWithPageKey() {
+	asJson := fmt.Sprintf("--%s=json", tmcli.OutputFlag)
+
+	// Because other tests might have run before this and added markers,
+	// the s.markerCount variable isn't necessarily how many markers exist right now.
+	// So we'll do a quick AllMarkersCmd query to count them all for us.
+	cout, cerr := clitestutil.ExecTestCLICmd(
+		s.testnet.Validators[0].ClientCtx,
+		markercli.AllMarkersCmd(),
+		[]string{limitArg(1), asJson, "--count-total"},
+	)
+	s.Require().NoError(cerr, "count marker cmd error")
+	var cresult markertypes.QueryAllMarkersResponse
+	merr := s.cfg.Codec.UnmarshalJSON(cout.Bytes(), &cresult)
+	s.Require().NoError(merr, "count marker unmarshal error")
+	s.Require().Greater(cresult.Pagination.Total, uint64(0), "count markers pagination total")
+	s.markerCount = int(cresult.Pagination.Total)
+
+	s.T().Run("AllMarkersCmd", func(t *testing.T) {
+		// Choosing page size = 7 because it a) isn't the default, b) doesn't evenly divide 20.
+		pageSize := 7
+		expectedCount := s.markerCount
+		pageCount := expectedCount / pageSize
+		if expectedCount%pageSize != 0 {
+			pageCount++
+		}
+		pageSizeArg := limitArg(pageSize)
+
+		results := make([]markertypes.MarkerAccount, 0, expectedCount)
+		var nextKey string
+
+		// Only using the page variable here for error messages, not for the CLI args since that'll mess with the --page-key being tested.
+		for page := 1; page <= pageCount; page++ {
+			args := []string{pageSizeArg, asJson}
+			if page != 1 {
+				args = append(args, pageKeyArg(nextKey))
+			}
+			iterID := fmt.Sprintf("page %d/%d, args: %v", page, pageCount, args)
+			cmd := markercli.AllMarkersCmd()
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			require.NoErrorf(t, err, "cmd error %s", iterID)
+			var result markertypes.QueryAllMarkersResponse
+			merr := s.cfg.Codec.UnmarshalJSON(out.Bytes(), &result)
+			require.NoErrorf(t, merr, "unmarshal error %s", iterID)
+			resultMarkerCount := len(result.Markers)
+			if page != pageCount {
+				require.Equalf(t, pageSize, resultMarkerCount, "page result count %s", iterID)
+				require.NotEmptyf(t, result.Pagination.NextKey, "pagination next key %s", iterID)
+			} else {
+				require.GreaterOrEqualf(t, pageSize, resultMarkerCount, "last page result count %s", iterID)
+				require.Emptyf(t, result.Pagination.NextKey, "pagination next key %s", iterID)
+			}
+			results = appendMarkers(results, result.Markers...)
+			nextKey = base64.StdEncoding.EncodeToString(result.Pagination.NextKey)
+		}
+
+		// This can fail if the --page-key isn't encoded/decoded correctly resulting in an unexpected jump forward in the actual list.
+		require.Equal(t, expectedCount, len(results), "total count of markers returned")
+		// Make sure none of the results are duplicates.
+		// That can happen if the --page-key isn't encoded/decoded correctly resulting in an unexpected jump backward in the actual list.
+		sort.Sort(markerSorter(results))
+		for i := 1; i < len(results); i++ {
+			require.NotEqual(t, results[i-1], results[i], "no two markers should be equal here")
+		}
+	})
+
+	// TODO: Add pagination test of AllHoldersCmd [denom] once marker/keeper/query_server.go#Holding is fixed: https://github.com/provenance-io/provenance/issues/400
 }

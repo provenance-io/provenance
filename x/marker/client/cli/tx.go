@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"io/ioutil"
 
@@ -15,6 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/spf13/cobra"
@@ -24,6 +26,8 @@ const (
 	FlagType                   = "type"
 	FlagSupplyFixed            = "supplyFixed"
 	FlagAllowGovernanceControl = "allowGovernanceControl"
+	FlagTransferLimit          = "transfer-limit"
+	FlagExpiration             = "expiration"
 )
 
 // NewTxCmd returns the top-level command for marker CLI transactions.
@@ -48,6 +52,8 @@ func NewTxCmd() *cobra.Command {
 		GetNewTransferCmd(),
 		GetCmdAddMarker(),
 		GetCmdMarkerProposal(),
+		GetCmdGrantAuthorization(),
+		GetCmdRevokeAuthorization(),
 	)
 	return txCmd
 }
@@ -543,8 +549,116 @@ func GetNewTransferCmd() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-
 	flags.AddTxFlagsToCmd(cmd)
 
+	return cmd
+}
+
+func GetCmdGrantAuthorization() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "grant-authz [grantee] [authorization_type]",
+		Aliases: []string{"ga"},
+		Args:    cobra.ExactArgs(2),
+		Short:   "Grant authorization to an address",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`grant authorization to an address to execute an authorization type [transfer]:
+
+Examples:
+ $ %s tx marker grant-authz tp1skjw.. transfer --transfer-limit=1000nhash 
+	`, version.AppName),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			grantee, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			exp, err := cmd.Flags().GetInt64(FlagExpiration)
+			if err != nil {
+				return err
+			}
+
+			var authorization authz.Authorization
+			switch args[1] {
+			case "transfer":
+				limit, terr := cmd.Flags().GetString(FlagTransferLimit)
+				if terr != nil {
+					return terr
+				}
+
+				spendLimit, terr := sdk.ParseCoinsNormalized(limit)
+				if terr != nil {
+					return terr
+				}
+
+				if !spendLimit.IsAllPositive() {
+					return fmt.Errorf("transfer-limit should be greater than zero")
+				}
+
+				authorization = types.NewMarkerTransferAuthorization(spendLimit)
+			default:
+				return fmt.Errorf("invalid authorization type, %s", args[1])
+			}
+
+			msg, err := authz.NewMsgGrant(clientCtx.GetFromAddress(), grantee, authorization, time.Unix(exp, 0))
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	cmd.Flags().String(FlagTransferLimit, "", "The total amount an account is allowed to tranfer on granter's behalf")
+	cmd.Flags().Int64(FlagExpiration, time.Now().AddDate(1, 0, 0).Unix(), "The Unix timestamp. Default is one year.")
+	return cmd
+}
+
+func GetCmdRevokeAuthorization() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "revoke-authz [grantee] [authorization_type]",
+		Short:   "Revoke authorization to an address",
+		Aliases: []string{"ra"},
+		Args:    cobra.ExactArgs(2),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`revoke authorization to a grantee address for authorization type [transfer]
+
+Examples:
+ $ %s tx marker revoke-authz tp1skjw.. transfer  
+	`, version.AppName),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			grantee, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			var action string
+			switch args[1] {
+			case "transfer":
+				action = types.MarkerTransferAuthorization{}.MsgTypeURL()
+			default:
+				return fmt.Errorf("invalid action type, %s", args[1])
+			}
+
+			msg := authz.NewMsgRevoke(clientCtx.GetFromAddress(), grantee, action)
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }

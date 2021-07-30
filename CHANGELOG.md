@@ -42,8 +42,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Marker governance proposal are supported in cli [#367](https://github.com/provenance-io/provenance/issues/367)
 * Add ability to query metadata sessions by record [#212](https://github.com/provenance-io/provenance/issues/212)
 * Add Name and Symbol Cosmos features to Marker Metadata [#372](https://github.com/provenance-io/provenance/issues/372)
+* Add authz support to Marker module transfer `MarkerTransferAuthorization` [#265](https://github.com/provenance-io/provenance/issues/265)
+  * Add authz grant/revoke command to `marker` cli
 * Add authz and feegrant modules [PR 384](https://github.com/provenance-io/provenance/pull/384)
 * Add Marker governance proposal for setting denom metadata [#369](https://github.com/provenance-io/provenance/issues/369)
+* Add `config` command to cli for client configuration [#394](https://github.com/provenance-io/provenance/issues/394)
 
 ### Bug Fixes
 
@@ -55,6 +58,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * Fix account numbering issues with marker accounts and auth module accounts during import
   * Export marker accounts as a base account entry and a separate marker module record
   * Add Marker module governance proposals, genesis, and marker operations to simulation testing [#94](https://github.com/provenance-io/provenance/issues/94)
+* Fix an encoding issue with the `--page-key` CLI arguments used in paged queries [#332](https://github.com/provenance-io/provenance/issues/332)
 
 ### Improvements
 
@@ -62,6 +66,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Updated to IBC-Go Module v1.0.0
 * Updated log message for circulation adjustment [#381](https://github.com/provenance-io/provenance/issues/381)
 * Updated third party proto files to pull from cosmos 0.43 [#391](https://github.com/provenance-io/provenance/issues/391)
+* Removed legacy api endpoints [#380](https://github.com/provenance-io/provenance/issues/380)
 
 ## [v1.5.0](https://github.com/provenance-io/provenance/releases/tag/v1.5.0) - 2021-06-23
 

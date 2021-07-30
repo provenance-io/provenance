@@ -43,6 +43,9 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
+	"github.com/cosmos/cosmos-sdk/x/authz"
+	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
+	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -50,9 +53,6 @@ import (
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 
-	"github.com/cosmos/cosmos-sdk/x/authz"
-	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
-	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
@@ -141,18 +141,7 @@ const (
 
 var (
 	// DefaultNodeHome default home directories for the application daemon
-	DefaultNodeHome = func(appName string) string {
-		home := os.ExpandEnv("$PIO_HOME")
-
-		if strings.TrimSpace(home) == "" {
-			configDir, err := os.UserConfigDir()
-			if err != nil {
-				panic(err)
-			}
-			home = filepath.Join(configDir, "Provenance")
-		}
-		return home
-	}
+	DefaultNodeHome string
 
 	// DefaultPowerReduction pio specific value for power reduction for TokensFromConsensusPower
 	DefaultPowerReduction = sdk.NewIntFromUint64(1000000000)
@@ -235,8 +224,6 @@ func SdkCoinDenomRegex() string {
 type App struct {
 	*baseapp.BaseApp
 
-	appName string
-
 	legacyAmino       *codec.LegacyAmino
 	appCodec          codec.Codec
 	interfaceRegistry types.InterfaceRegistry
@@ -287,9 +274,21 @@ type App struct {
 	configurator module.Configurator
 }
 
+func init() {
+	DefaultNodeHome = os.ExpandEnv("$PIO_HOME")
+
+	if strings.TrimSpace(DefaultNodeHome) == "" {
+		configDir, err := os.UserConfigDir()
+		if err != nil {
+			panic(err)
+		}
+		DefaultNodeHome = filepath.Join(configDir, "Provenance")
+	}
+}
+
 // New returns a reference to an initialized Provenance Blockchain App.
 func New(
-	appName string, logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, skipUpgradeHeights map[int64]bool,
+	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, skipUpgradeHeights map[int64]bool,
 	homePath string, invCheckPeriod uint, encodingConfig appparams.EncodingConfig,
 	appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
@@ -297,7 +296,7 @@ func New(
 	legacyAmino := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 
-	bApp := baseapp.NewBaseApp(appName, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
+	bApp := baseapp.NewBaseApp("provenanced", logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
@@ -324,7 +323,6 @@ func New(
 
 	app := &App{
 		BaseApp:           bApp,
-		appName:           appName,
 		legacyAmino:       legacyAmino,
 		appCodec:          appCodec,
 		interfaceRegistry: interfaceRegistry,
@@ -354,6 +352,7 @@ func New(
 	app.AccountKeeper = authkeeper.NewAccountKeeper(
 		appCodec, keys[authtypes.StoreKey], app.GetSubspace(authtypes.ModuleName), authtypes.ProtoBaseAccount, maccPerms,
 	)
+
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec, keys[banktypes.StoreKey], app.AccountKeeper, app.GetSubspace(banktypes.ModuleName), app.ModuleAccountAddrs(),
 	)
@@ -384,14 +383,16 @@ func New(
 		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
 	)
 
-	app.AuthzKeeper = authzkeeper.NewKeeper(keys[authzkeeper.StoreKey], appCodec, app.BaseApp.MsgServiceRouter())
+	app.AuthzKeeper = authzkeeper.NewKeeper(
+		keys[authzkeeper.StoreKey], appCodec, app.BaseApp.MsgServiceRouter(),
+	)
 
 	app.MetadataKeeper = metadatakeeper.NewKeeper(
 		appCodec, keys[metadatatypes.StoreKey], app.GetSubspace(metadatatypes.ModuleName), app.AccountKeeper,
 	)
 
 	app.MarkerKeeper = markerkeeper.NewKeeper(
-		appCodec, keys[markertypes.StoreKey], app.GetSubspace(markertypes.ModuleName), app.AccountKeeper, app.BankKeeper,
+		appCodec, keys[markertypes.StoreKey], app.GetSubspace(markertypes.ModuleName), app.AccountKeeper, app.BankKeeper, app.AuthzKeeper,
 	)
 
 	app.NameKeeper = namekeeper.NewKeeper(
@@ -584,6 +585,7 @@ func New(
 		metadatatypes.ModuleName,
 
 		ibchost.ModuleName,
+
 		ibctransfertypes.ModuleName,
 		// wasm after ibc transfer
 		wasm.ModuleName,

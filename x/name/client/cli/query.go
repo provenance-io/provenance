@@ -2,10 +2,12 @@ package cli
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
+	flag "github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -130,7 +132,7 @@ $ %s query name loopup pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk --page=2 --limi
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			pageReq, err := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
 			if err != nil {
 				return err
 			}
@@ -158,27 +160,16 @@ $ %s query name loopup pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk --page=2 --limi
 	return cmd
 }
 
-// RosettaCommand is used to test the Rosetta api integration
-func RosettaCommand() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "rosetta",
-		Short: "spin up a rosetta server",
-		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.Params(context.Background(), &types.QueryParamsRequest{})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(&res.Params)
-		},
+// sdk ReadPageRequest expects binary but we encoded to base64 in our marshaller
+func withPageKeyDecoded(flagSet *flag.FlagSet) *flag.FlagSet {
+	encoded, err := flagSet.GetString(flags.FlagPageKey)
+	if err != nil {
+		panic(err.Error())
 	}
-
-	return cmd
+	raw, err := base64.StdEncoding.DecodeString(encoded)
+	if err != nil {
+		panic(err.Error())
+	}
+	_ = flagSet.Set(flags.FlagPageKey, string(raw))
+	return flagSet
 }

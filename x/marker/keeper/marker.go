@@ -629,9 +629,16 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 	if !m.AddressHasAccess(admin, types.Access_Transfer) {
 		return fmt.Errorf("%s is not allowed to broker transfers", admin.String())
 	}
+	if !admin.Equals(from) {
+		err = k.authzHandler(ctx, admin, from, amount)
+		if err != nil {
+			return err
+		}
+	}
 	if k.bankKeeper.BlockedAddr(to) {
 		return fmt.Errorf("%s is not allowed to receive funds", to)
 	}
+
 	// send the coins between accounts (does not check send_enabled on coin denom)
 	if err = k.bankKeeper.SendCoins(ctx, from, to, sdk.NewCoins(amount)); err != nil {
 		return err
@@ -649,6 +656,26 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 	}
 
 	return nil
+}
+
+func (k Keeper) authzHandler(ctx sdk.Context, admin sdk.AccAddress, from sdk.AccAddress, amount sdk.Coin) error {
+	markerAuth := types.MarkerTransferAuthorization{}
+	authorization, expireTime := k.authzKeeper.GetCleanAuthorization(ctx, admin, from, markerAuth.MsgTypeURL())
+	if authorization == nil {
+		return fmt.Errorf("%s account has not been granted authority to withdraw from %s account", admin, from)
+	}
+	accept, err := authorization.Accept(ctx, &types.MsgTransferRequest{Amount: amount})
+	if err != nil {
+		return err
+	}
+	if accept.Accept {
+		limitLeft, _ := authorization.(*types.MarkerTransferAuthorization).DecreaseTransferLimit(amount)
+		if limitLeft.IsZero() {
+			return k.authzKeeper.DeleteGrant(ctx, admin, from, markerAuth.MsgTypeURL())
+		}
+		return k.authzKeeper.SaveGrant(ctx, admin, from, &types.MarkerTransferAuthorization{TransferLimit: limitLeft}, expireTime)
+	}
+	return fmt.Errorf("authorization was not accepted for %s", admin)
 }
 
 // SetMarkerDenomMetadata updates the denom metadata records for the current marker.
