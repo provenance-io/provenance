@@ -2,12 +2,14 @@ package cli
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"regexp"
 	"strings"
 
 	"github.com/spf13/cobra"
+	flag "github.com/spf13/pflag"
 
 	"github.com/google/uuid"
 
@@ -627,7 +629,7 @@ func outputScopesAll(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequest(cmd.Flags())
+	pageReq, e := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
 	if e != nil {
 		return e
 	}
@@ -685,7 +687,7 @@ func outputSessionsAll(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequest(cmd.Flags())
+	pageReq, e := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
 	if e != nil {
 		return e
 	}
@@ -740,7 +742,7 @@ func outputRecordsAll(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequest(cmd.Flags())
+	pageReq, e := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
 	if e != nil {
 		return e
 	}
@@ -766,10 +768,14 @@ func outputOwnership(cmd *cobra.Command, address string) error {
 	if err != nil {
 		return err
 	}
+	pageReq, e := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+	if e != nil {
+		return e
+	}
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.Ownership(
 		context.Background(),
-		&types.OwnershipRequest{Address: address},
+		&types.OwnershipRequest{Address: address, Pagination: pageReq},
 	)
 	if err != nil {
 		return err
@@ -788,10 +794,14 @@ func outputValueOwnership(cmd *cobra.Command, address string) error {
 	if err != nil {
 		return err
 	}
+	pageReq, e := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+	if e != nil {
+		return e
+	}
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.ValueOwnership(
 		context.Background(),
-		&types.ValueOwnershipRequest{Address: address},
+		&types.ValueOwnershipRequest{Address: address, Pagination: pageReq},
 	)
 	if err != nil {
 		return err
@@ -834,7 +844,7 @@ func outputScopeSpecsAll(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequest(cmd.Flags())
+	pageReq, e := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
 	if e != nil {
 		return e
 	}
@@ -885,7 +895,7 @@ func outputContractSpecsAll(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequest(cmd.Flags())
+	pageReq, e := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
 	if e != nil {
 		return e
 	}
@@ -960,7 +970,7 @@ func outputRecordSpecsAll(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequest(cmd.Flags())
+	pageReq, e := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
 	if e != nil {
 		return e
 	}
@@ -1030,10 +1040,14 @@ func outputOSLocatorsByURI(cmd *cobra.Command, uri string) error {
 	if err != nil {
 		return err
 	}
+	pageReq, e := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+	if e != nil {
+		return e
+	}
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.OSLocatorsByURI(
 		context.Background(),
-		&types.OSLocatorsByURIRequest{Uri: uri},
+		&types.OSLocatorsByURIRequest{Uri: uri, Pagination: pageReq},
 	)
 	if err != nil {
 		return err
@@ -1074,7 +1088,7 @@ func outputOSLocatorsAll(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequest(cmd.Flags())
+	pageReq, e := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
 	if e != nil {
 		return e
 	}
@@ -1135,4 +1149,18 @@ func addIncludeRecordSpecsFlag(cmd *cobra.Command) {
 // The flag value is tied to the includeRequest variable.
 func addIncludeRequestFlag(cmd *cobra.Command) {
 	cmd.Flags().BoolVar(&includeRequest, "include-request", false, "include the query request in the output")
+}
+
+// sdk ReadPageRequest expects binary but we encoded to base64 in our marshaller
+func withPageKeyDecoded(flagSet *flag.FlagSet) *flag.FlagSet {
+	encoded, err := flagSet.GetString(flags.FlagPageKey)
+	if err != nil {
+		panic(err.Error())
+	}
+	raw, err := base64.StdEncoding.DecodeString(encoded)
+	if err != nil {
+		panic(err.Error())
+	}
+	_ = flagSet.Set(flags.FlagPageKey, string(raw))
+	return flagSet
 }

@@ -489,6 +489,16 @@ func (ma MetadataAddress) AsSessionAddress(sessionUUID uuid.UUID) (MetadataAddre
 	return SessionMetadataAddress(scopeUUID, sessionUUID), nil
 }
 
+// MustGetAsSessionAddress returns the MetadataAddress for a session using the scope UUID within the current context and the provided session UUID.
+// This is the same as AsSessionAddress except it panics on error.
+func (ma MetadataAddress) MustGetAsSessionAddress(sessionUUID uuid.UUID) MetadataAddress {
+	retval, err := ma.AsSessionAddress(sessionUUID)
+	if err != nil {
+		panic(err)
+	}
+	return retval
+}
+
 // AsRecordAddress returns the MetadataAddress for a record using the scope UUID within the current context and the provided name
 func (ma MetadataAddress) AsRecordAddress(name string) (MetadataAddress, error) {
 	scopeUUID, err := ma.ScopeUUID()
@@ -518,6 +528,16 @@ func (ma MetadataAddress) AsRecordSpecAddress(name string) (MetadataAddress, err
 		return MetadataAddress{}, err
 	}
 	return RecordSpecMetadataAddress(contractSpecUUID, name), nil
+}
+
+// MustGetAsRecordSpecAddress returns the MetadataAddress for a record spec using the contract spec UUID within the current context and the provided name
+// This is the same as AsRecordSpecAddress except it panics on error.
+func (ma MetadataAddress) MustGetAsRecordSpecAddress(name string) MetadataAddress {
+	retval, err := ma.AsRecordSpecAddress(name)
+	if err != nil {
+		panic(err)
+	}
+	return retval
 }
 
 // AsContractSpecAddress returns the MetadataAddress for a contract spec using the contract spec UUID within the current context
