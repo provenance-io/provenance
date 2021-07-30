@@ -122,10 +122,12 @@ func Init(
 	}
 	// Get bip39 mnemonic
 	var mnemonic string
-	recover, _ := cmd.Flags().GetBool(FlagRecover)
-	if recover {
+	var recover string
+	_ = recover
+	if r, _ := cmd.Flags().GetBool(FlagRecover); r {
 		inBuf := bufio.NewReader(cmd.InOrStdin())
-		mnemonic, err := input.GetString("Enter your bip39 mnemonic", inBuf)
+		var err error
+		mnemonic, err = input.GetString("Enter your bip39 mnemonic", inBuf)
 		if err != nil {
 			return err
 		}
@@ -143,7 +145,7 @@ func Init(
 	if !viper.GetBool(FlagOverwrite) && tmos.FileExists(genFile) {
 		return fmt.Errorf("genesis.json file already exists: %v", genFile)
 	}
-	if err := initGenFile(cdc, mbm, config.Moniker, chainID, nodeID, genFile); err != nil {
+	if err = initGenFile(cdc, mbm, config.Moniker, chainID, nodeID, genFile); err != nil {
 		return err
 	}
 	tmconfig.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
@@ -185,7 +187,7 @@ func initGenFile(cdc codec.JSONCodec, mbm module.BasicManager, moniker, chainID,
 	}
 
 	genDoc := &types.GenesisDoc{}
-	if _, err := os.Stat(genFile); err != nil {
+	if _, err = os.Stat(genFile); err != nil {
 		if !os.IsNotExist(err) {
 			return err
 		}
