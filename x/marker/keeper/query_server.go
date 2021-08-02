@@ -87,6 +87,7 @@ func (k Keeper) Holding(c context.Context, req *types.QueryHoldingRequest) (*typ
 		pageRequest = &query.PageRequest{}
 	}
 
+	// TODO: Refactor Holding for full pagination support. https://github.com/provenance-io/provenance/issues/400
 	balances := k.GetAllMarkerHolders(ctx, marker.GetDenom())
 	limit := pageRequest.Limit
 	if limit == 0 {
