@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
 	"github.com/golang/protobuf/proto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -48,7 +49,7 @@ func containsMessage(result *sdk.Result, msg proto.Message) bool {
 func TestCreateName(t *testing.T) {
 	priv1 := secp256k1.GenPrivKey()
 	addr1 := sdk.AccAddress(priv1.PubKey().Address())
-	priv2 := secp256k1.GenPrivKey()
+	priv2, _ := secp256r1.GenPrivKey()
 	addr2 := sdk.AccAddress(priv2.PubKey().Address())
 
 	tests := []struct {
