@@ -122,8 +122,6 @@ func Init(
 	}
 	// Get bip39 mnemonic
 	var mnemonic string
-	var recover string
-	_ = recover
 	if r, _ := cmd.Flags().GetBool(FlagRecover); r {
 		inBuf := bufio.NewReader(cmd.InOrStdin())
 		var err error
