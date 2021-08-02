@@ -9,6 +9,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -47,11 +48,13 @@ func (s *MetadataHandlerTestSuite) SetupTest() {
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
 	s.user1 = s.user1Addr.String()
 
-	s.pubkey2 = secp256k1.GenPrivKey().PubKey()
+	privKey, _ := secp256r1.GenPrivKey()
+	s.pubkey2 = privKey.PubKey()
 	s.user2Addr = sdk.AccAddress(s.pubkey2.Address())
 	s.user2 = s.user2Addr.String()
 
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
+	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user2Addr))
 }
 
 func TestMetadataHandlerTestSuite(t *testing.T) {
