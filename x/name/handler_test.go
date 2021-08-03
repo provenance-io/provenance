@@ -5,8 +5,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
 	"github.com/golang/protobuf/proto"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -48,7 +49,7 @@ func containsMessage(result *sdk.Result, msg proto.Message) bool {
 func TestCreateName(t *testing.T) {
 	priv1 := secp256k1.GenPrivKey()
 	addr1 := sdk.AccAddress(priv1.PubKey().Address())
-	priv2 := secp256k1.GenPrivKey()
+	priv2, _ := secp256r1.GenPrivKey()
 	addr2 := sdk.AccAddress(priv2.PubKey().Address())
 
 	tests := []struct {
@@ -73,7 +74,10 @@ func TestCreateName(t *testing.T) {
 	acc1 := &authtypes.BaseAccount{
 		Address: addr1.String(),
 	}
-	accs := authtypes.GenesisAccounts{acc1}
+	acc2 := &authtypes.BaseAccount{
+		Address: addr2.String(),
+	}
+	accs := authtypes.GenesisAccounts{acc1, acc2}
 	app := simapp.SetupWithGenesisAccounts(accs)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
