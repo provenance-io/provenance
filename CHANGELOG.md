@@ -67,6 +67,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Updated log message for circulation adjustment [#381](https://github.com/provenance-io/provenance/issues/381)
 * Updated third party proto files to pull from cosmos 0.43 [#391](https://github.com/provenance-io/provenance/issues/391)
 * Removed legacy api endpoints [#380](https://github.com/provenance-io/provenance/issues/380)
+* Removed v039 and v040 migrations [#374](https://github.com/provenance-io/provenance/issues/374)
 
 ## [v1.5.0](https://github.com/provenance-io/provenance/releases/tag/v1.5.0) - 2021-06-23
 
