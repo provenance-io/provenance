@@ -1,10 +1,25 @@
-I wonder if we can run the rosetta docker images in cosmos?
+# rosetta
 
+This directory contains the files required to run the rosetta CI. It builds `provenanced` based on the current codebase.
 
-```bash
-provenanced rosetta  --blockchain="provenance" --network="testing" --tendermint="localhost:26657" --grpc="localhost:9090" --addr=":8080" --home ./build/run/provenanced
-```
+## docker-compose.yaml
 
-```bash
-./bin/rosetta-cli check:construction --configuration-file ./code/provenance/client/rosetta/default.json
-```
+Builds:
+
+- provenanced, with prefixed data directory, keys etc. This is required to test historical balances.
+- faucet is required so we can test construction API, it was literally impossible to put there a deterministic address to request funds for
+- rosetta is the rosetta node used by rosetta-cli to interact with the cosmos-sdk app
+- test_rosetta in the Makefile runs the rosetta-cli test against construction API and data API
+
+## configuration
+
+Contains the required files to set up rosetta cli and make it work against its workflows
+
+## node
+
+Contains the files for a deterministic network, with fixed keys and some actions on there, to test parsing of msgs and historical balances.
+
+## Notes
+
+- Keyring password is 12345678
+- data.sh creates node data, it's required in case consensus breaking changes are made to quickly recreate replicable node data for rosetta

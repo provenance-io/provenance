@@ -496,3 +496,8 @@ update-swagger-docs: statik proto-swagger-gen
 	$(BINDIR)/statik -src=client/docs/swagger-ui -dest=client/docs -f -m
 
 .PHONY: update-swagger-docs
+
+test-rosetta:
+	docker build -t rosetta-ci:latest -f client/rosetta/node/Dockerfile .
+	docker-compose -f client/rosetta/docker-compose.yaml up --abort-on-container-exit --exit-code-from test_rosetta --build
+.PHONY: test-rosetta
