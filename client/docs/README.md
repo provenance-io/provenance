@@ -6,7 +6,7 @@ This readme contains information related to the Swagger UI for Provenance.
 
 In order to have the Swagger UI available on your node, it must be turned on in the config.
 
-1.  If the file `build/run/provenanced/config/app.toml` does not yet exist run this command:
+1.  If the file `build/run/provenanced/configuration/app.toml` does not yet exist run this command:
     ```bash
     > make build run-config
     ``` 

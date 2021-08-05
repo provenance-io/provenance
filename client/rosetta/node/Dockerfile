@@ -42,7 +42,7 @@ COPY --from=build /go/bin/provenanced /usr/bin/provenanced
 
 ENV PIO_HOME=/home/provenance
 WORKDIR /rosetta
-COPY ./client/rosetta/config ./
+COPY ./client/rosetta/configuration ./
 RUN chmod +x run_tests.sh
 RUN chmod +x send_funds.sh
 RUN chmod +x faucet.py
