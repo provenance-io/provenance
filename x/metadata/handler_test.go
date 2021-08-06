@@ -766,7 +766,7 @@ func (s MetadataHandlerTestSuite) TestIssue412WriteScopeOptionalField() {
 		msg := types.MsgWriteScopeSpecificationRequest{
 			Specification: types.ScopeSpecification{
 				SpecificationId: specID,
-				Description:     &types.Description{
+				Description: &types.Description{
 					Name:        "io.p8e.contracts.examplekotlin.helloWorld",
 					Description: "A generic scope that allows for a lot of example hello world contracts.",
 				},
@@ -774,8 +774,8 @@ func (s MetadataHandlerTestSuite) TestIssue412WriteScopeOptionalField() {
 				PartiesInvolved: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				ContractSpecIds: nil,
 			},
-			Signers:       []string{ownerAddress},
-			SpecUuid:      "",
+			Signers:  []string{ownerAddress},
+			SpecUuid: "",
 		}
 		res, err := s.handler(s.ctx, &msg)
 		assert.NoError(t, err)
@@ -786,7 +786,7 @@ func (s MetadataHandlerTestSuite) TestIssue412WriteScopeOptionalField() {
 		msg := types.MsgWriteScopeSpecificationRequest{
 			Specification: types.ScopeSpecification{
 				SpecificationId: nil,
-				Description:     &types.Description{
+				Description: &types.Description{
 					Name:        "io.p8e.contracts.examplekotlin.helloWorld",
 					Description: "A generic scope that allows for a lot of example hello world contracts.",
 				},
@@ -794,8 +794,8 @@ func (s MetadataHandlerTestSuite) TestIssue412WriteScopeOptionalField() {
 				PartiesInvolved: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				ContractSpecIds: nil,
 			},
-			Signers:       []string{ownerAddress},
-			SpecUuid:      specUUIDStr,
+			Signers:  []string{ownerAddress},
+			SpecUuid: specUUIDStr,
 		}
 		res, err := s.handler(s.ctx, &msg)
 		assert.NoError(t, err)
@@ -806,7 +806,7 @@ func (s MetadataHandlerTestSuite) TestIssue412WriteScopeOptionalField() {
 		msg := types.MsgWriteScopeSpecificationRequest{
 			Specification: types.ScopeSpecification{
 				SpecificationId: specID,
-				Description:     &types.Description{
+				Description: &types.Description{
 					Name:        "io.p8e.contracts.examplekotlin.helloWorld",
 					Description: "A generic scope that allows for a lot of example hello world contracts.",
 				},
@@ -814,8 +814,8 @@ func (s MetadataHandlerTestSuite) TestIssue412WriteScopeOptionalField() {
 				PartiesInvolved: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				ContractSpecIds: nil,
 			},
-			Signers:       []string{ownerAddress},
-			SpecUuid:      specUUIDStr,
+			Signers:  []string{ownerAddress},
+			SpecUuid: specUUIDStr,
 		}
 		res, err := s.handler(s.ctx, &msg)
 		assert.NoError(t, err)
