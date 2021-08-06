@@ -34,19 +34,19 @@ func NewCreateRootNameProposal(title, description, name string, owner sdk.AccAdd
 }
 
 // GetTitle returns the title of a community pool spend proposal.
-func (crnp *CreateRootNameProposal) GetTitle() string { return crnp.Title }
+func (crnp CreateRootNameProposal) GetTitle() string { return crnp.Title }
 
 // GetDescription returns the description of a community pool spend proposal.
-func (crnp *CreateRootNameProposal) GetDescription() string { return crnp.Description }
+func (crnp CreateRootNameProposal) GetDescription() string { return crnp.Description }
 
 // ProposalRoute returns the routing key of a community pool spend proposal.
-func (crnp *CreateRootNameProposal) ProposalRoute() string { return RouterKey }
+func (crnp CreateRootNameProposal) ProposalRoute() string { return RouterKey }
 
 // ProposalType returns the type of a community pool spend proposal.
-func (crnp *CreateRootNameProposal) ProposalType() string { return ProposalTypeCreateRootName }
+func (crnp CreateRootNameProposal) ProposalType() string { return ProposalTypeCreateRootName }
 
 // ValidateBasic runs basic stateless validity checks
-func (crnp *CreateRootNameProposal) ValidateBasic() error {
+func (crnp CreateRootNameProposal) ValidateBasic() error {
 	err := govtypes.ValidateAbstract(crnp)
 	if err != nil {
 		return err
