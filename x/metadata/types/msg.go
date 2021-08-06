@@ -118,7 +118,7 @@ func (msg MsgWriteScopeRequest) GetSignBytes() []byte {
 }
 
 // ValidateBasic performs a quick validity check
-func (msg *MsgWriteScopeRequest) ValidateBasic() error {
+func (msg MsgWriteScopeRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
@@ -244,7 +244,7 @@ func (msg MsgAddScopeDataAccessRequest) GetSignBytes() []byte {
 }
 
 // ValidateBasic performs a quick validity check
-func (msg *MsgAddScopeDataAccessRequest) ValidateBasic() error {
+func (msg MsgAddScopeDataAccessRequest) ValidateBasic() error {
 	if !msg.ScopeId.IsScopeAddress() {
 		return fmt.Errorf("address is not a scope id: %v", msg.ScopeId.String())
 	}
@@ -300,7 +300,7 @@ func (msg MsgDeleteScopeDataAccessRequest) GetSignBytes() []byte {
 }
 
 // ValidateBasic performs a quick validity check
-func (msg *MsgDeleteScopeDataAccessRequest) ValidateBasic() error {
+func (msg MsgDeleteScopeDataAccessRequest) ValidateBasic() error {
 	if !msg.ScopeId.IsScopeAddress() {
 		return fmt.Errorf("address is not a scope id: %v", msg.ScopeId.String())
 	}
@@ -356,7 +356,7 @@ func (msg MsgAddScopeOwnerRequest) GetSignBytes() []byte {
 }
 
 // ValidateBasic performs a quick validity check
-func (msg *MsgAddScopeOwnerRequest) ValidateBasic() error {
+func (msg MsgAddScopeOwnerRequest) ValidateBasic() error {
 	if !msg.ScopeId.IsScopeAddress() {
 		return fmt.Errorf("address is not a scope id: %v", msg.ScopeId.String())
 	}
@@ -406,7 +406,7 @@ func (msg MsgDeleteScopeOwnerRequest) GetSignBytes() []byte {
 }
 
 // ValidateBasic performs a quick validity check
-func (msg *MsgDeleteScopeOwnerRequest) ValidateBasic() error {
+func (msg MsgDeleteScopeOwnerRequest) ValidateBasic() error {
 	if !msg.ScopeId.IsScopeAddress() {
 		return fmt.Errorf("address is not a scope id: %v", msg.ScopeId.String())
 	}
@@ -458,7 +458,7 @@ func (msg MsgWriteSessionRequest) GetSignBytes() []byte {
 }
 
 // ValidateBasic performs a quick validity check
-func (msg *MsgWriteSessionRequest) ValidateBasic() error {
+func (msg MsgWriteSessionRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
@@ -535,7 +535,7 @@ func (msg MsgWriteRecordRequest) GetSignBytes() []byte {
 }
 
 // ValidateBasic performs a quick validity check
-func (msg *MsgWriteRecordRequest) ValidateBasic() error {
+func (msg MsgWriteRecordRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
@@ -655,7 +655,7 @@ func (msg MsgWriteScopeSpecificationRequest) GetSignBytes() []byte {
 }
 
 // ValidateBasic performs a quick validity check
-func (msg *MsgWriteScopeSpecificationRequest) ValidateBasic() error {
+func (msg MsgWriteScopeSpecificationRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
@@ -805,7 +805,7 @@ func (msg MsgWriteContractSpecificationRequest) GetSignBytes() []byte {
 }
 
 // ValidateBasic performs a quick validity check
-func (msg *MsgWriteContractSpecificationRequest) ValidateBasic() error {
+func (msg MsgWriteContractSpecificationRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
@@ -908,7 +908,7 @@ func (msg MsgAddContractSpecToScopeSpecRequest) GetSignBytes() []byte {
 }
 
 // ValidateBasic performs a quick validity check
-func (msg *MsgAddContractSpecToScopeSpecRequest) ValidateBasic() error {
+func (msg MsgAddContractSpecToScopeSpecRequest) ValidateBasic() error {
 	if !msg.ContractSpecificationId.IsContractSpecificationAddress() {
 		return fmt.Errorf("address is not a contract specification id: %s", msg.ContractSpecificationId.String())
 	}
@@ -1000,7 +1000,7 @@ func (msg MsgWriteRecordSpecificationRequest) GetSignBytes() []byte {
 }
 
 // ValidateBasic performs a quick validity check
-func (msg *MsgWriteRecordSpecificationRequest) ValidateBasic() error {
+func (msg MsgWriteRecordSpecificationRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
