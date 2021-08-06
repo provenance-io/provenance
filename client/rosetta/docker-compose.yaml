@@ -3,7 +3,11 @@ version: "3.3"
 services:
   provenanced:
     image: rosetta-ci:latest
-    command: ["provenanced", "start", "--pruning", "nothing", "--grpc-web.enable", "true", "--grpc-web.address", "0.0.0.0:9091"]
+    command: [
+        "provenanced",
+        "start",
+        "--home", "/test/run/provenanced",
+    ]
     ports:
       - 9090:9090
       - 26657:26657
@@ -22,7 +26,7 @@ services:
       "--tendermint", "cosmos:26657",
       "--grpc", "cosmos:9090",
       "--addr", ":8080",
-      "--home", "./build/run/provenanced",
+      "--home", "/test/run/provenanced",
     ]
     ports:
       - 8080:8080
@@ -38,5 +42,5 @@ services:
     image: tendermintdev/rosetta-cli:v0.6.7
     volumes:
       - ./configuration:/rosetta/config:z
-    command: ["./configuration/run_tests.sh"]
+    command: ["./config/run_tests.sh"]
     working_dir: /rosetta

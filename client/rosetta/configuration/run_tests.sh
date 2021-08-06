@@ -7,6 +7,7 @@ wait_for_rosetta() {
 }
 
 echo "waiting for rosetta instance to be up"
+echo "hello world!"
 wait_for_rosetta
 
 echo "checking data API"

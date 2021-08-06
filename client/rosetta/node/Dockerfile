@@ -17,28 +17,49 @@ COPY .git/ ./.git/
 COPY contrib/ ./contrib/
 COPY Makefile sims.mk ./
 
+
 # Build the binaries
-ENV VERSION=$VERSION
-RUN make install
-RUN make build
-RUN make run-config
+RUN go build -mod vendor \
+    -tags cleveldb \
+    -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/version.Name=Provenance-Blockchain' \
+    -o /go/bin/ ./cmd/...
+RUN echo "Completed go build"
+
+RUN go install ./cmd/provenanced
+
+RUN echo "Initializing provenance"
+# Initialize everything for provenance to run
+WORKDIR /test
+RUN provenanced -t --home ./run/provenanced init --chain-id=testing testing
+RUN provenanced -t --home ./run/provenanced keys add validator --keyring-backend test
+RUN provenanced -t --home ./run/provenanced add-genesis-root-name validator pio --keyring-backend test
+RUN provenanced -t --home ./run/provenanced add-genesis-root-name validator pb --restrict=false --keyring-backend test
+RUN provenanced -t --home ./run/provenanced add-genesis-root-name validator io --restrict --keyring-backend test
+RUN provenanced -t --home ./run/provenanced add-genesis-root-name validator provenance --keyring-backend test
+RUN provenanced -t --home ./run/provenanced add-genesis-account validator 100000000000000000000nhash --keyring-backend test
+RUN provenanced -t --home ./run/provenanced gentx validator 1000000000000000nhash --keyring-backend test --chain-id=testing
+RUN provenanced -t --home ./run/provenanced add-genesis-marker 100000000000000000000nhash --manager validator --access mint,burn,admin,withdraw,deposit --activate --keyring-backend test
+RUN provenanced -t --home ./run/provenanced collect-gentxs
+
+# lets see what is inside of there?
+RUN ls /test/run/provenanced > tmpfile.txt ; cat tmpfile.txt
 
 FROM alpine
-RUN apk add gcc libc-dev python3 --no-cache
+RUN apk add gcc libc-dev python3 bash --no-cache
 
 ENV PATH=$PATH:/bin
 
-###
-FROM debian:buster-slim as run
+# Requires a mounted volume with the config in it.
+VOLUME [ "/provenance" ]
+WORKDIR /provenance
+EXPOSE 26656 26657 1317 9090
 
-RUN apt-get update && \
-    apt-get upgrade -y && \
-    apt-get install -y curl jq libleveldb-dev && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/
-
+RUN echo "Copying files from build"
 COPY --from=build /go/src/github.com/provenance-io/provenance/vendor/github.com/CosmWasm/wasmvm/api/libwasmvm.so /lib/x86_64-linux-gnu/libwasmvm.so
 COPY --from=build /go/bin/provenanced /usr/bin/provenanced
+COPY --from=build /test/run/provenanced /test/run/provenanced
+
+RUN echo "Finished copying files from build"
 
 ENV PIO_HOME=/home/provenance
 WORKDIR /rosetta
@@ -47,10 +68,6 @@ RUN chmod +x run_tests.sh
 RUN chmod +x send_funds.sh
 RUN chmod +x faucet.py
 
-#COPY --from=build /node/root /root/
-#WORKDIR /root/.provenance
-
 RUN chmod -R 0777 ./
 
 EXPOSE 9090 26656 26657
-CMD ["/usr/bin/provenanced"]
