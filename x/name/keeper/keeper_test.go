@@ -59,6 +59,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	app.NameKeeper.InitGenesis(ctx, nameData)
 
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
+	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user2Addr))
 }
 
 func (s *KeeperTestSuite) TestSetup() {
@@ -273,4 +274,11 @@ func (s *KeeperTestSuite) TestIterateRecord() {
 		s.Require().Equal(2, len(records))
 	})
 
+}
+
+func (s *KeeperTestSuite) TestSecp256r1KeyAlgo() {
+	s.Run("should successfully add name for account with secp256r1 key", func() {
+		err := s.app.NameKeeper.SetNameRecord(s.ctx, "secp256r1.name", s.user2Addr, true)
+		s.NoError(err)
+	})
 }

@@ -9,6 +9,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -47,11 +48,13 @@ func (s *MetadataHandlerTestSuite) SetupTest() {
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
 	s.user1 = s.user1Addr.String()
 
-	s.pubkey2 = secp256k1.GenPrivKey().PubKey()
+	privKey, _ := secp256r1.GenPrivKey()
+	s.pubkey2 = privKey.PubKey()
 	s.user2Addr = sdk.AccAddress(s.pubkey2.Address())
 	s.user2 = s.user2Addr.String()
 
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
+	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user2Addr))
 }
 
 func TestMetadataHandlerTestSuite(t *testing.T) {
@@ -734,5 +737,88 @@ func (s MetadataHandlerTestSuite) TestAddAndDeleteScopeDataAccess() {
 		assert.Equal(t, scopeA.DataAccess, scopeC.DataAccess, "add DataAccess")
 		assert.Equal(t, scopeA.ValueOwnerAddress, scopeC.ValueOwnerAddress, "add ValueOwnerAddress")
 		assert.Equal(t, scopeA.Owners, scopeC.Owners, "add Owners")
+	})
+}
+
+func (s MetadataHandlerTestSuite) TestIssue412WriteScopeOptionalField() {
+	ownerAddress := "cosmos1vz99nyd2er8myeugsr4xm5duwhulhp5ae4dvpa"
+	specIDStr := "scopespec1qjkyp28sldx5r9ueaxqc5adrc5wszy6nsh"
+	specUUIDStr := "ac40a8f0-fb4d-4197-99e9-818a75a3c51d"
+	specID, specIDErr := types.MetadataAddressFromBech32(specIDStr)
+	require.NoError(s.T(), specIDErr, "converting scopeIDStr to a metadata address")
+
+	s.T().Run("Ensure ID and UUID strings match", func(t *testing.T) {
+		specIDFromID, e1 := types.MetadataAddressFromBech32(specIDStr)
+		require.NoError(t, e1, "specIDFromIDStr")
+		specUUIDFromID, e2 := specIDFromID.ScopeSpecUUID()
+		require.NoError(t, e2, "specUUIDActualStr")
+		specUUIDStrActual := specUUIDFromID.String()
+		assert.Equal(t, specUUIDStr, specUUIDStrActual, "UUID strings")
+
+		specIDFFromUUID := types.ScopeSpecMetadataAddress(uuid.MustParse(specUUIDStr))
+		specIDStrActual := specIDFFromUUID.String()
+		assert.Equal(t, specIDStr, specIDStrActual, "ID strings")
+
+		assert.Equal(t, specIDFromID, specIDFFromUUID, "scope spec ids")
+	})
+
+	s.T().Run("Setting scope spec with just a spec ID", func(t *testing.T) {
+		msg := types.MsgWriteScopeSpecificationRequest{
+			Specification: types.ScopeSpecification{
+				SpecificationId: specID,
+				Description: &types.Description{
+					Name:        "io.p8e.contracts.examplekotlin.helloWorld",
+					Description: "A generic scope that allows for a lot of example hello world contracts.",
+				},
+				OwnerAddresses:  []string{ownerAddress},
+				PartiesInvolved: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				ContractSpecIds: nil,
+			},
+			Signers:  []string{ownerAddress},
+			SpecUuid: "",
+		}
+		res, err := s.handler(s.ctx, &msg)
+		assert.NoError(t, err)
+		assert.NotNil(t, 0, res)
+	})
+
+	s.T().Run("Setting scope spec with just a UUID", func(t *testing.T) {
+		msg := types.MsgWriteScopeSpecificationRequest{
+			Specification: types.ScopeSpecification{
+				SpecificationId: nil,
+				Description: &types.Description{
+					Name:        "io.p8e.contracts.examplekotlin.helloWorld",
+					Description: "A generic scope that allows for a lot of example hello world contracts.",
+				},
+				OwnerAddresses:  []string{ownerAddress},
+				PartiesInvolved: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				ContractSpecIds: nil,
+			},
+			Signers:  []string{ownerAddress},
+			SpecUuid: specUUIDStr,
+		}
+		res, err := s.handler(s.ctx, &msg)
+		assert.NoError(t, err)
+		assert.NotNil(t, 0, res)
+	})
+
+	s.T().Run("Setting scope spec with matching ID and UUID", func(t *testing.T) {
+		msg := types.MsgWriteScopeSpecificationRequest{
+			Specification: types.ScopeSpecification{
+				SpecificationId: specID,
+				Description: &types.Description{
+					Name:        "io.p8e.contracts.examplekotlin.helloWorld",
+					Description: "A generic scope that allows for a lot of example hello world contracts.",
+				},
+				OwnerAddresses:  []string{ownerAddress},
+				PartiesInvolved: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				ContractSpecIds: nil,
+			},
+			Signers:  []string{ownerAddress},
+			SpecUuid: specUUIDStr,
+		}
+		res, err := s.handler(s.ctx, &msg)
+		assert.NoError(t, err)
+		assert.NotNil(t, 0, res)
 	})
 }
