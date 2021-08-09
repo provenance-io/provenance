@@ -7,6 +7,9 @@ services:
         "provenanced",
         "start",
         "--home", "/test/run/provenanced",
+        "-t",
+        "--grpc-web.enable", "true",
+        "--grpc-web.address", "0.0.0.0:9091",
     ]
     ports:
       - 9090:9090
@@ -23,8 +26,8 @@ services:
       "rosetta",
       "--blockchain", "provenanced",
       "--network", "testing",
-      "--tendermint", "cosmos:26657",
-      "--grpc", "cosmos:9090",
+      "--tendermint", "provenanced:26657",
+      "--grpc", "provenanced:9090",
       "--addr", ":8080",
       "--home", "/test/run/provenanced",
     ]
