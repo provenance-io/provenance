@@ -1,7 +1,7 @@
 version: "3.3"
 
 services:
-  provenanced:
+  provenance:
     image: rosetta-ci:latest
     command: [
         "provenanced",
@@ -19,16 +19,17 @@ services:
 
   rosetta:
     image: rosetta-ci:latest
-    volumes:
-      - ./build:/rosetta/build:z
+#    volumes:
+#      - ./build:/rosetta/build:z
     command: [
       "provenanced",
       "rosetta",
-      "--blockchain", "provenanced",
+      "--blockchain", "provenance",
       "--network", "testing",
-      "--tendermint", "provenanced:26657",
-      "--grpc", "provenanced:9090",
+      "--tendermint", "provenance:26657",
+      "--grpc", "provenance:9090",
       "--addr", ":8080",
+      "--testnet", "true",
       "--home", "/test/run/provenanced",
     ]
     ports:

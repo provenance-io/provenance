@@ -685,7 +685,7 @@ func New(
 		// Note that since this reads from the store, we can only perform it when
 		// `loadLatest` is set to true.
 		ctx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
-		app.CapabilityKeeper.InitializeAndSeal(ctx)
+		app.CapabilityKeeper.InitMemStore(ctx) //InitializeAndSeal(ctx)
 	}
 
 	app.ScopedIBCKeeper = scopedIBCKeeper
