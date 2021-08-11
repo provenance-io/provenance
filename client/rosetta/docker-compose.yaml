@@ -1,26 +1,32 @@
-version: "3.3"
+version: "3"
 
 services:
   provenance:
     image: rosetta-ci:latest
     command: [
         "provenanced",
-        "start",
-        "--home", "/test/run/provenanced",
         "-t",
-        "--grpc-web.enable", "true",
-        "--grpc-web.address", "0.0.0.0:9091",
+        "--home", "/test/run/provenanced",
+        "start",
+        "--pruning", "nothing",
     ]
-    ports:
-      - 9090:9090
-      - 26657:26657
-    logging:
-      driver: "none"
+#    ports:
+#      - "9090:9090"
+#      - "26656-26657:26656-26657"
+#      - "1317:1317"
+    expose:
+      - "9090"
+      - "26656-26657"
+      - "1317"
+    environment:
+      - ID=0
+      - LOG=${LOG:-provenanced.log}
+      - PIO_HOME=/provenance
+    volumes:
+        - ./build:/provenance:Z
 
   rosetta:
     image: rosetta-ci:latest
-#    volumes:
-#      - ./build:/rosetta/build:z
     command: [
       "provenanced",
       "rosetta",
@@ -33,14 +39,14 @@ services:
       "--home", "/test/run/provenanced",
     ]
     ports:
-      - 8080:8080
+      - "8080:8080"
 
   faucet:
     image: rosetta-ci:latest
     working_dir: /rosetta
     command: ["python3", "faucet.py"]
     expose:
-      - 8080
+      - "8080"
 
   test_rosetta:
     image: tendermintdev/rosetta-cli:v0.6.7

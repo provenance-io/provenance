@@ -499,7 +499,5 @@ update-swagger-docs: statik proto-swagger-gen
 
 test-rosetta:
 	docker build -t rosetta-ci:latest -f client/rosetta/node/Dockerfile .
-	# -f networks/local/blockchain-local/Dockerfile .
-    # -f client/rosetta/node/Dockerfile .
 	docker-compose -f client/rosetta/docker-compose.yaml up --abort-on-container-exit --exit-code-from test_rosetta --build
 .PHONY: test-rosetta

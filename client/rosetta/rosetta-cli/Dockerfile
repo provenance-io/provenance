@@ -18,11 +18,11 @@ ENV PATH=$PATH:/bin
 
 COPY --from=build /rosetta/rosetta-cli /bin/rosetta-cli
 
-FROM debian:buster-slim as run
-
-RUN apt-get update && \
-    apt-get upgrade -y && \
-    apt-get install -y curl jq libleveldb-dev && \
-    apt-get install python3 && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/
+#FROM debian:buster-slim as run
+#
+#RUN apt-get update && \
+#    apt-get upgrade -y && \
+#    apt-get install -y curl jq libleveldb-dev && \
+#    apt-get install python3 && \
+#    apt-get clean && \
+#    rm -rf /var/lib/apt/lists/
