@@ -82,7 +82,7 @@ jobs:
       - uses: actions/setup-go@v2.1.3
         with:
           go-version: 1.16
-      - uses: technote-space/get-diff-action@v4
+      - uses: technote-space/get-diff-action@v5
         with:
           PATTERNS: |
             **/**.go
@@ -112,7 +112,7 @@ jobs:
         with:
           # CodeCov requires fetch-depth > 1
           fetch-depth: 2      
-      - uses: technote-space/get-diff-action@v4
+      - uses: technote-space/get-diff-action@v5
         with:
           PATTERNS: |
             **/**.go
@@ -167,7 +167,7 @@ jobs:
       - uses: actions/setup-go@v2.1.3
         with:
           go-version: 1.16
-      - uses: technote-space/get-diff-action@v4
+      - uses: technote-space/get-diff-action@v5
         with:
           PATTERNS: |
             **/**.go
