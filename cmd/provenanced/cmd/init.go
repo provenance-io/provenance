@@ -96,13 +96,16 @@ func InitCmd(
 			config.Moniker = args[0]
 			config.SetRoot(clientCtx.HomeDir)
 			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
-			minGasPrices := viper.GetString(server.FlagMinGasPrices)
-			return Init(cmd, config, cdc, mbm, chainID, minGasPrices)
+			return Init(cmd, config, cdc, mbm, chainID)
 		},
 	}
 	cmd.Flags().String(cli.HomeFlag, defaultNodeHome, "node's home directory")
 	cmd.Flags().BoolP(FlagOverwrite, "o", false, "overwrite the genesis.json file")
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
+	// It looks like we're not paying attention to this --minimum-gas-prices flag, but we are.
+	// Viper sees the flag and uses it when creating the app.config file.
+	// That file is created (if it doesn't yet exist) as part of the cobra pre-run handler stuff.
+	// See cmd/provenanced/config/server.go#interceptConfigs.
 	cmd.Flags().String(server.FlagMinGasPrices, fmt.Sprintf("1905%s", app.DefaultFeeDenom), "Minimum gas prices to accept for transactions")
 	cmd.Flags().BoolP(FlagRecover, "r", false, "interactive key recovery from mnemonic")
 	return cmd
@@ -114,8 +117,7 @@ func Init(
 	config *tmconfig.Config,
 	cdc codec.JSONCodec,
 	mbm module.BasicManager,
-	chainID,
-	minGasPrices string,
+	chainID string,
 ) error {
 	if chainID == "" {
 		chainID = "provenance-chain-" + tmrand.NewRand().Str(6)
