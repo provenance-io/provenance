@@ -3,7 +3,7 @@
     "blockchain": "provenance",
     "network": "testing"
   },
-  "online_url": "http://localhost:8080",
+  "online_url": "http://0.0.0.0:8080",
   "data_directory": "",
   "http_timeout": 300,
   "max_retries": 5,
@@ -13,7 +13,7 @@
   "tip_delay": 60,
   "log_configuration": true,
   "construction": {
-    "offline_url": "http://localhost:8080",
+    "offline_url": "http://0.0.0.0:8080",
     "max_offline_connections": 0,
     "stale_depth": 0,
     "broadcast_limit": 0,

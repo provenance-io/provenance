@@ -29,16 +29,19 @@ RUN echo "Completed go build"
 RUN echo "Initializing provenance"
 # Initialize everything for provenance to run
 WORKDIR /test
-RUN provenanced -t --home ./run/provenanced init --chain-id=testing testing
-RUN provenanced -t --home ./run/provenanced keys add validator --keyring-backend test
-RUN provenanced -t --home ./run/provenanced add-genesis-root-name validator pio --keyring-backend test
-RUN provenanced -t --home ./run/provenanced add-genesis-root-name validator pb --restrict=false --keyring-backend test
-RUN provenanced -t --home ./run/provenanced add-genesis-root-name validator io --restrict --keyring-backend test
-RUN provenanced -t --home ./run/provenanced add-genesis-root-name validator provenance --keyring-backend test
-RUN provenanced -t --home ./run/provenanced add-genesis-account validator 100000000000000000000nhash --keyring-backend test
-RUN provenanced -t --home ./run/provenanced gentx validator 1000000000000000nhash --keyring-backend test --chain-id=testing
-RUN provenanced -t --home ./run/provenanced add-genesis-marker 100000000000000000000nhash --manager validator --access mint,burn,admin,withdraw,deposit --activate --keyring-backend test
-RUN provenanced -t --home ./run/provenanced collect-gentxs
+#COPY ./build/run/provenanced /test/run/provenanced
+COPY client/rosetta/build/run/provenanced ./run/provenanced
+
+#RUN provenanced -t --home ./run/provenanced init --chain-id=testing testing
+#RUN provenanced -t --home ./run/provenanced keys add validator --keyring-backend test
+#RUN provenanced -t --home ./run/provenanced add-genesis-root-name validator pio --keyring-backend test
+#RUN provenanced -t --home ./run/provenanced add-genesis-root-name validator pb --restrict=false --keyring-backend test
+#RUN provenanced -t --home ./run/provenanced add-genesis-root-name validator io --restrict --keyring-backend test
+#RUN provenanced -t --home ./run/provenanced add-genesis-root-name validator provenance --keyring-backend test
+#RUN provenanced -t --home ./run/provenanced add-genesis-account validator 100000000000000000000nhash --keyring-backend test
+#RUN provenanced -t --home ./run/provenanced gentx validator 1000000000000000nhash --keyring-backend test --chain-id=testing
+#RUN provenanced -t --home ./run/provenanced add-genesis-marker 100000000000000000000nhash --manager validator --access mint,burn,admin,withdraw,deposit --activate --keyring-backend test
+#RUN provenanced -t --home ./run/provenanced collect-gentxs
 
 #FROM alpine
 #RUN apk add gcc libc-dev python3 --no-cache

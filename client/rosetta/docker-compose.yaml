@@ -10,20 +10,10 @@ services:
         "start",
         "--pruning", "nothing",
     ]
-#    ports:
-#      - "9090:9090"
-#      - "26656-26657:26656-26657"
-#      - "1317:1317"
-    expose:
-      - "9090"
-      - "26656-26657"
-      - "1317"
-    environment:
-      - ID=0
-      - LOG=${LOG:-provenanced.log}
-      - PIO_HOME=/provenance
-    volumes:
-        - ./build:/provenance:Z
+    ports:
+      - 9090:9090
+      - 26656-26657:26656-26657
+      - 1317:1317
 
   rosetta:
     image: rosetta-ci:latest
@@ -39,14 +29,16 @@ services:
       "--home", "/test/run/provenanced",
     ]
     ports:
-      - "8080:8080"
+      - 8080:8080
+    depends_on:
+      - "provenance"
 
   faucet:
     image: rosetta-ci:latest
     working_dir: /rosetta
     command: ["python3", "faucet.py"]
     expose:
-      - "8080"
+      - 8080
 
   test_rosetta:
     image: tendermintdev/rosetta-cli:v0.6.7

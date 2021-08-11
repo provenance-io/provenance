@@ -2,6 +2,9 @@ name: Rosetta
 # Rosetta runs rosetta-cli to verify that provenance still meets the Rosetta api
 on:
   pull_request:
+  push:
+      branches:
+        - main
 
 jobs:
   rosetta:
