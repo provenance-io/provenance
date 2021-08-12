@@ -6,7 +6,7 @@ services:
     image: rosetta-ci:latest
     command: [
         "provenanced",
-#        "-t",
+        "-t",
         "--home", "/testrosetta/node0",
         "start",
         "--pruning", "nothing",
@@ -16,6 +16,8 @@ services:
       - 9090:9090
       - 26656-26657:26656-26657
       - 1317:1317
+    logging:
+      driver: "none"
 
   rosetta:
     container_name: rosetta

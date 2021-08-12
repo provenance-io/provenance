@@ -30,7 +30,8 @@ RUN echo "Initializing provenance"
 
 # Initialize everything for provenance to run
 WORKDIR /testrosetta
-RUN provenanced testnet --v 1 -o . --starting-ip-address 0.0.0.0 --keyring-backend=test --chain-id=chain-local
+RUN provenanced testnet -t --v 1 -o . --starting-ip-address 0.0.0.0 --keyring-backend=test --chain-id=chain-local
+RUN provenanced -t keys add fd --keyring-backend=test
 
 ###
 FROM debian:buster-slim

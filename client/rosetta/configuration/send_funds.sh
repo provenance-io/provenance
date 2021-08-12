@@ -1,5 +1,5 @@
 #!/bin/sh
 
 set -e
-addr=$(simd keys show fd -a --keyring-backend=test)
-echo "12345678" | provenanced tx bank send "$addr" "$1" 100stake --chain-id="testing" --node tcp://api.provenance.io:26657 --yes --keyring-backend=test
+addr=$(provenanced -t keys show fd -a --keyring-backend=test)
+echo "12345678" | provenanced -t tx bank send "$addr" "$1" 100nhash --chain-id="testing" --node tcp://provenance:26657 --yes --keyring-backend=test

@@ -15,8 +15,8 @@ provenanced init provenanced --chain-id testing
 # create accounts
 provenanced keys add fd --keyring-backend=test
 
-addr=$(provenanced keys show fd -a --keyring-backend=test)
-val_addr=$(provenanced keys show fd  --keyring-backend=test --bech val -a)
+addr=$(provenanced -t keys show fd -a --keyring-backend=test)
+val_addr=$(provenanced -t keys show fd  --keyring-backend=test --bech val -a)
 
 # give the accounts some money
 provenanced add-genesis-account "$addr" 1000000000000stake --keyring-backend=test
@@ -45,7 +45,7 @@ sleep 10
 
 # send transaction to deterministic address
 echo sending transaction with addr $addr
-provenanced tx bank send "$addr" cosmos19g9cm8ymzchq2qkcdv3zgqtwayj9asv3hjv5u5 100stake --yes --keyring-backend=test --broadcast-mode=block --chain-id=testing
+provenanced tx bank send "$addr" cosmos19g9cm8ymzchq2qkcdv3zgqtwayj9asv3hjv5u5 100nhash --yes --keyring-backend=test --broadcast-mode=block --chain-id=testing
 
 sleep 10
 
