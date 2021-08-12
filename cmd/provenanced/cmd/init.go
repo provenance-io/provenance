@@ -13,6 +13,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/provenance-io/provenance/app"
+	clientconf "github.com/provenance-io/provenance/cmd/provenanced/config"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -132,6 +133,18 @@ func Init(
 	configFile := filepath.Join(config.RootDir, "config", "config.toml")
 	tmconfig.WriteConfigFile(configFile, config)
 	mustFprintf(cmd.OutOrStdout(), "Tendermint config file updated: %s\n", configFile)
+
+	clientConfigFile := filepath.Join(config.RootDir, "config", "client.toml")
+	clientConfig, crerr := clientconf.GetClientConfig(clientConfigFile, client.GetClientContextFromCmd(cmd).Viper)
+	if crerr != nil {
+		return fmt.Errorf("couldn't get client config: %v", crerr)
+	}
+	clientConfig.ChainID = chainID
+	clientConfig.Node = config.RPC.ListenAddress
+	if cwerr := clientconf.WriteConfigToFile(clientConfigFile, clientConfig); cwerr != nil {
+		return fmt.Errorf("could not write client config to the file: %v", cwerr)
+	}
+	mustFprintf(cmd.OutOrStdout(), "Client config file updated: %s\n", clientConfigFile)
 
 	return nil
 }
