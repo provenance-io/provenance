@@ -131,7 +131,7 @@ func Init(
 
 	configFile := filepath.Join(config.RootDir, "config", "config.toml")
 	tmconfig.WriteConfigFile(configFile, config)
-	mustFprintf(cmd.OutOrStdout(), "Tendermint config file created: %s\n", configFile)
+	mustFprintf(cmd.OutOrStdout(), "Tendermint config file updated: %s\n", configFile)
 
 	return nil
 }
