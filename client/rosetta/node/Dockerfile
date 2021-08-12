@@ -27,42 +27,10 @@ RUN go build -mod vendor \
 RUN echo "Completed go build"
 
 RUN echo "Initializing provenance"
+
 # Initialize everything for provenance to run
-#WORKDIR /test
-#COPY ./build/run/provenanced /test/run/provenanced
-#COPY client/rosetta/build/run/provenanced ./run/provenanced
-
-#RUN provenanced -t --home ./run/provenanced init --chain-id=testing testing
-#RUN provenanced -t --home ./run/provenanced keys add validator --keyring-backend test
-#RUN provenanced -t --home ./run/provenanced add-genesis-root-name validator pio --keyring-backend test
-#RUN provenanced -t --home ./run/provenanced add-genesis-root-name validator pb --restrict=false --keyring-backend test
-#RUN provenanced -t --home ./run/provenanced add-genesis-root-name validator io --restrict --keyring-backend test
-#RUN provenanced -t --home ./run/provenanced add-genesis-root-name validator provenance --keyring-backend test
-#RUN provenanced -t --home ./run/provenanced add-genesis-account validator 100000000000000000000nhash --keyring-backend test
-#RUN provenanced -t --home ./run/provenanced gentx validator 1000000000000000nhash --keyring-backend test --chain-id=testing
-#RUN provenanced -t --home ./run/provenanced add-genesis-marker 100000000000000000000nhash --manager validator --access mint,burn,admin,withdraw,deposit --activate --keyring-backend test
-#RUN provenanced -t --home ./run/provenanced collect-gentxs
-
-#FROM alpine
-#RUN apk add gcc libc-dev python3 --no-cache
-#
-#ENV PATH=$PATH:/bin
-#
-#COPY --from=build /go/src/github.com/provenance-io/provenance/vendor/github.com/CosmWasm/wasmvm/api/libwasmvm.so /lib/x86_64-linux-gnu/libwasmvm.so
-#COPY --from=build /go/bin/provenanced /usr/bin/provenanced
-#COPY --from=build /test/run/provenanced /test/run/provenanced
-#
-#WORKDIR /rosetta
-#COPY ./client/rosetta/configuration ./
-#RUN chmod +x run_tests.sh
-#RUN chmod +x send_funds.sh
-#RUN chmod +x faucet.py
-#
-##COPY --from=build /node/root /root/
-##WORKDIR /root/.provenance
-##
-#RUN chmod -R 0777 ./
-
+WORKDIR /testrosetta
+RUN provenanced testnet --v 1 -o . --starting-ip-address 0.0.0.0 --keyring-backend=test --chain-id=chain-local
 
 ###
 FROM debian:buster-slim
@@ -78,17 +46,8 @@ RUN apt-get update && \
 # Source binaries from the build above
 COPY --from=build /go/src/github.com/provenance-io/provenance/vendor/github.com/CosmWasm/wasmvm/api/libwasmvm.so /lib/x86_64-linux-gnu/libwasmvm.so
 COPY --from=build /go/bin/provenanced /usr/bin/provenanced
-#COPY --from=build /test/run/provenanced /test/run/provenanced
+COPY --from=build /testrosetta /testrosetta
 
-# Requires a mounted volume with the config in it.
-VOLUME [ "/provenance" ]
-WORKDIR /provenance
-EXPOSE 26656 26657 1317 9090
-
-ENV PATH=$PATH:/bin
-ENV PIO_HOME=/home/provenance
-
-VOLUME [ "/config"]
 WORKDIR /rosetta
 COPY ./client/rosetta/configuration ./
 RUN chmod +x run_tests.sh
@@ -96,3 +55,11 @@ RUN chmod +x send_funds.sh
 RUN chmod +x faucet.py
 
 RUN chmod -R 0777 ./
+
+# Requires a mounted volume with the config in it.
+VOLUME [ "/provenance" ]
+WORKDIR /provenance
+EXPOSE 26656 26657 1317 9090
+
+ENV PATH=$PATH:/bin
+ENV PIO_HOME="/provenance/testrosetta"

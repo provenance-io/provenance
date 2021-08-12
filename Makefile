@@ -498,7 +498,6 @@ update-swagger-docs: statik proto-swagger-gen
 .PHONY: update-swagger-docs
 
 test-rosetta:
-	#docker run --rm -v $(CURDIR)/build:/rosetta:Z rosetta-ci:latest testnet --v 1 -o . --starting-ip-address 0.0.0.0 --keyring-backend=test --chain-id=chain-local
 	docker build -t rosetta-ci:latest -f client/rosetta/node/Dockerfile .
 	docker-compose -f client/rosetta/docker-compose.yaml --project-directory ./ up --abort-on-container-exit --exit-code-from test_rosetta --build
 .PHONY: test-rosetta

@@ -13,5 +13,5 @@ echo "checking data API"
 rosetta-cli check:data --configuration-file ./config/rosetta.json
 
 echo "checking construction API"
-rosetta-cli check:construction --configuration-file ./config/rosetta.json
+#rosetta-cli check:construction --configuration-file ./config/rosetta.json
 

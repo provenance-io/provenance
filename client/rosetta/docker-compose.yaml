@@ -2,22 +2,23 @@ version: "3"
 
 services:
   provenance:
+    container_name: provenance
     image: rosetta-ci:latest
     command: [
         "provenanced",
-        "-t",
-        "--home", "/provenance/testrosetta",
+#        "-t",
+        "--home", "/testrosetta/node0",
         "start",
         "--pruning", "nothing",
+        "--rpc.laddr", "tcp://0.0.0.0:26657"
     ]
-    volumes:
-      - ./build:/provenance:Z
     ports:
       - 9090:9090
       - 26656-26657:26656-26657
       - 1317:1317
 
   rosetta:
+    container_name: rosetta
     image: rosetta-ci:latest
     command: [
       "provenanced",
@@ -28,14 +29,12 @@ services:
       "--grpc", "provenance:9090",
       "--addr", ":8080",
       "--testnet", "true",
-      "--home", "/provenance/testrosetta",
+      "--home", "/testrosetta/node0",
     ]
     ports:
       - 8080:8080
-    volumes:
-      - ./build:/provenance:Z
     depends_on:
-      - "provenance"
+      - provenance
 
   faucet:
     image: rosetta-ci:latest
@@ -43,10 +42,14 @@ services:
     command: ["python3", "faucet.py"]
     expose:
       - 8080
+    depends_on:
+      - rosetta
 
   test_rosetta:
     image: tendermintdev/rosetta-cli:v0.6.7
     volumes:
-      - ./configuration:/rosetta/config:z
+      - ./client/rosetta/configuration:/rosetta/config:z
     command: ["./config/run_tests.sh"]
     working_dir: /rosetta
+    depends_on:
+      - rosetta
