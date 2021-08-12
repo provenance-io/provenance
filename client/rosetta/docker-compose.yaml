@@ -6,10 +6,12 @@ services:
     command: [
         "provenanced",
         "-t",
-        "--home", "/test/run/provenanced",
+        "--home", "/provenance/testrosetta",
         "start",
         "--pruning", "nothing",
     ]
+    volumes:
+      - ./build:/provenance:Z
     ports:
       - 9090:9090
       - 26656-26657:26656-26657
@@ -26,10 +28,12 @@ services:
       "--grpc", "provenance:9090",
       "--addr", ":8080",
       "--testnet", "true",
-      "--home", "/test/run/provenanced",
+      "--home", "/provenance/testrosetta",
     ]
     ports:
       - 8080:8080
+    volumes:
+      - ./build:/provenance:Z
     depends_on:
       - "provenance"
 

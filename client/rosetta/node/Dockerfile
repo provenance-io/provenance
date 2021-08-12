@@ -28,9 +28,9 @@ RUN echo "Completed go build"
 
 RUN echo "Initializing provenance"
 # Initialize everything for provenance to run
-WORKDIR /test
+#WORKDIR /test
 #COPY ./build/run/provenanced /test/run/provenanced
-COPY client/rosetta/build/run/provenanced ./run/provenanced
+#COPY client/rosetta/build/run/provenanced ./run/provenanced
 
 #RUN provenanced -t --home ./run/provenanced init --chain-id=testing testing
 #RUN provenanced -t --home ./run/provenanced keys add validator --keyring-backend test
@@ -78,11 +78,17 @@ RUN apt-get update && \
 # Source binaries from the build above
 COPY --from=build /go/src/github.com/provenance-io/provenance/vendor/github.com/CosmWasm/wasmvm/api/libwasmvm.so /lib/x86_64-linux-gnu/libwasmvm.so
 COPY --from=build /go/bin/provenanced /usr/bin/provenanced
-COPY --from=build /test/run/provenanced /test/run/provenanced
+#COPY --from=build /test/run/provenanced /test/run/provenanced
+
+# Requires a mounted volume with the config in it.
+VOLUME [ "/provenance" ]
+WORKDIR /provenance
+EXPOSE 26656 26657 1317 9090
 
 ENV PATH=$PATH:/bin
 ENV PIO_HOME=/home/provenance
 
+VOLUME [ "/config"]
 WORKDIR /rosetta
 COPY ./client/rosetta/configuration ./
 RUN chmod +x run_tests.sh
