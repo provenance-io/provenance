@@ -31,7 +31,13 @@ RUN echo "Initializing provenance"
 # Initialize everything for provenance to run
 WORKDIR /testrosetta
 RUN provenanced testnet -t --v 1 -o . --starting-ip-address 0.0.0.0 --keyring-backend=test --chain-id=chain-local
+
+# generate some data for the config
 RUN provenanced -t keys add fd --keyring-backend=test
+RUN addr=$(provenanced -t keys show fd -a --keyring-backend=test)
+RUN echo "$addr"
+RUN provenanced -t add-genesis-account "$addr" 1000000000000nhash --keyring-backend=test
+RUN provenanced -t gentx fd 10000000nhash --chain-id testing --keyring-backend=test
 
 ###
 FROM debian:buster-slim
