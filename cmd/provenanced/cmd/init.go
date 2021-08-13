@@ -141,9 +141,7 @@ func Init(
 	}
 	clientConfig.ChainID = chainID
 	clientConfig.Node = config.RPC.ListenAddress
-	if cwerr := clientconf.WriteConfigToFile(clientConfigFile, clientConfig); cwerr != nil {
-		return fmt.Errorf("could not write client config to the file: %v", cwerr)
-	}
+	clientconf.WriteConfigToFile(clientConfigFile, clientConfig)
 	mustFprintf(cmd.OutOrStdout(), "Client config file updated: %s\n", clientConfigFile)
 
 	return nil

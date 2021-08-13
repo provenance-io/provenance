@@ -57,14 +57,12 @@ func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 	conf := defaultClientConfig()
 
 	// if client.toml file does not exist we create it and write default ClientConfig values into it.
-	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
+	if _, ferr := os.Stat(configFilePath); os.IsNotExist(ferr) {
 		if err := ensureConfigPath(configPath); err != nil {
 			return ctx, fmt.Errorf("couldn't make client config: %v", err)
 		}
 
-		if err := WriteConfigToFile(configFilePath, conf); err != nil {
-			return ctx, fmt.Errorf("could not write client config to the file: %v", err)
-		}
+		WriteConfigToFile(configFilePath, conf)
 	}
 
 	conf, err := GetClientConfig(configPath, ctx.Viper)
@@ -84,13 +82,13 @@ func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 	ctx = ctx.WithKeyring(keyring)
 
 	// https://github.com/cosmos/cosmos-sdk/issues/8986
-	client, err := client.NewClientFromNode(conf.Node)
+	clnt, err := client.NewClientFromNode(conf.Node)
 	if err != nil {
 		return ctx, fmt.Errorf("couldn't get client from nodeURI: %v", err)
 	}
 
 	ctx = ctx.WithNodeURI(conf.Node).
-		WithClient(client).
+		WithClient(clnt).
 		WithBroadcastMode(conf.BroadcastMode)
 
 	return ctx, nil

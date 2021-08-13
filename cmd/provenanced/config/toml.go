@@ -2,11 +2,12 @@ package config
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 	"text/template"
 
 	"github.com/spf13/viper"
+
+	tmos "github.com/tendermint/tendermint/libs/os"
 )
 
 const defaultConfigTemplate = `# This is a TOML config file.
@@ -28,22 +29,26 @@ node = "{{ .Node }}"
 broadcast-mode = "{{ .BroadcastMode }}"
 `
 
+var configTemplate *template.Template
+
+func init() {
+	var err error
+	tmpl := template.New("clientConfigFileTemplate")
+	if configTemplate, err = tmpl.Parse(defaultConfigTemplate); err != nil {
+		panic(err)
+	}
+}
+
 // writeConfigToFile parses defaultConfigTemplate, renders config using the template and writes it to
 // configFilePath.
-func WriteConfigToFile(configFilePath string, config *ClientConfig) error {
+func WriteConfigToFile(configFilePath string, config *ClientConfig) {
 	var buffer bytes.Buffer
 
-	tmpl := template.New("clientConfigFileTemplate")
-	configTemplate, err := tmpl.Parse(defaultConfigTemplate)
-	if err != nil {
-		return err
-	}
-
 	if err := configTemplate.Execute(&buffer, config); err != nil {
-		return err
+		panic(err)
 	}
 
-	return ioutil.WriteFile(configFilePath, buffer.Bytes(), 0600)
+	tmos.MustWriteFile(configFilePath, buffer.Bytes(), 0644)
 }
 
 // ensureConfigPath creates a directory configPath if it does not exist
