@@ -51,17 +51,18 @@ func getFieldValueMapValue(valIn reflect.Value, fillNilsWithZero bool) map[strin
 		key, squash := getFieldName(field)
 		fVal := deref(objVal.Field(i), fillNilsWithZero)
 		fKind := fVal.Kind()
-		if fKind == reflect.Ptr && fVal.IsNil() {
+		switch {
+		case fKind == reflect.Ptr && fVal.IsNil():
 			keys[key] = fVal
-		} else if squash {
+		case squash:
 			for k, v := range getFieldValueMapValue(fVal, fillNilsWithZero) {
 				keys[k] = v
 			}
-		} else if fKind == reflect.Struct {
+		case fKind == reflect.Struct:
 			for subkey, subval := range getFieldValueMapValue(fVal, fillNilsWithZero) {
 				keys[key+"."+subkey] = subval
 			}
-		} else {
+		default:
 			keys[key] = fVal
 		}
 	}
@@ -81,7 +82,7 @@ func getFieldName(field reflect.StructField) (string, bool) {
 			if len(tag[:index]) > 0 {
 				name = tag[:index]
 			}
-			squash = strings.Index(tag[index+1:], "squash") != -1
+			squash = strings.Contains(tag[index+1:], "squash")
 		} else {
 			name = tag
 		}
