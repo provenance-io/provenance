@@ -27,6 +27,7 @@ func ClientConfigCmd() *cobra.Command {
 		Short: "Get or Set configuration values",
 		RunE:  runConfigCmd,
 	}
+	// TODO: add Long: and possibly Example:
 	return cmd
 }
 
@@ -279,6 +280,7 @@ func getStringFromValue(v reflect.Value) string {
 // Assuming the value came from GetFieldValueMap, this will actually be updating the
 // value in the config object provided to that function.
 func setValueFromString(fieldName string, fieldVal reflect.Value, strVal string) error {
+	// TODO: Check for one of the special fields and handle them appropriately.
 	switch fieldVal.Kind() {
 	case reflect.String:
 		fieldVal.SetString(strVal)
@@ -293,4 +295,5 @@ func setValueFromString(fieldName string, fieldVal reflect.Value, strVal string)
 	default:
 		return fmt.Errorf("field %s cannot be set because setting values of type %s has not yet been set up", fieldName, fieldVal.Kind())
 	}
+	// TODO: Figure out what all kinds need to be handled here, and add them.
 }
