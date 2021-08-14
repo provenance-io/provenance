@@ -3,6 +3,7 @@ bin/
 .gradle/
 build/
 config/
+!cmd/provenanced/config/
 data/
 .idea/
 *.swp
