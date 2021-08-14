@@ -63,32 +63,34 @@ func runConfigGetCmd(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("couldn't get client config: %v", ccerr)
 	}
 
+	configPath := filepath.Join(client.GetClientContextFromCmd(cmd).HomeDir, "config")
+
 	if len(args) == 0 {
 		args = append(args, "all")
 	}
 	for _, key := range args {
 		switch key {
 		case "all":
-			cmd.Println("App Config")
-			cmd.Println("----------")
+			cmd.Println("App Config: ", filepath.Join(configPath, "app.toml"))
+			cmd.Println("---------------")
 			cmd.Println(getFieldMapString(appFields))
-			cmd.Println("Tendermint Config")
-			cmd.Println("-----------------")
+			cmd.Println("Tendermint Config: ", filepath.Join(configPath, "config.toml"))
+			cmd.Println("----------------------")
 			cmd.Println(getFieldMapString(tmFields))
-			cmd.Println("Client Config")
-			cmd.Println("-------------")
+			cmd.Println("Client Config: ", filepath.Join(configPath, "client.toml"))
+			cmd.Println("------------------")
 			cmd.Println(getFieldMapString(clientFields))
 		case "app":
-			cmd.Println("App Config")
-			cmd.Println("----------")
+			cmd.Println("App Config: ", filepath.Join(configPath, "app.toml"))
+			cmd.Println("---------------")
 			cmd.Println(getFieldMapString(appFields))
 		case "config", "tendermint", "tm":
-			cmd.Println("Tendermint Config")
-			cmd.Println("-----------------")
+			cmd.Println("Tendermint Config: ", filepath.Join(configPath, "config.toml"))
+			cmd.Println("----------------------")
 			cmd.Println(getFieldMapString(tmFields))
 		case "client":
-			cmd.Println("Client Config")
-			cmd.Println("-------------")
+			cmd.Println("Client Config: ", filepath.Join(configPath, "client.toml"))
+			cmd.Println("------------------")
 			cmd.Println(getFieldMapString(clientFields))
 		default:
 			v, ok := appFields[key]
@@ -158,7 +160,27 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) error {
 		} else {
 			err := setValueFromString(key, v, vals[i])
 			if err != nil {
-				cmd.Printf("Error setting key %s: %s", key, err.Error())
+				cmd.Printf("Error setting key %s: %v", key, err)
+				issueFound = true
+			}
+		}
+	}
+	if !issueFound {
+		if appUpdated {
+			if err := appConfig.ValidateBasic(); err != nil {
+				cmd.Printf("App config validation error: %v\n", err)
+				issueFound = true
+			}
+		}
+		if tmUpdated {
+			if err := tmConfig.ValidateBasic(); err != nil {
+				cmd.Printf("Tendermint config validation error: %v\n", err)
+				issueFound = true
+			}
+		}
+		if clientUpdated {
+			if err := clientConfig.ValidateBasic(); err != nil {
+				cmd.Printf("Client config validation error: %v\n", err)
 				issueFound = true
 			}
 		}
@@ -188,7 +210,7 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) error {
 // getTmConfig gets the tendermint configuration.
 func getAppConfigAndMap(cmd *cobra.Command) (*serverconfig.Config, map[string]reflect.Value, error) {
 	v := server.GetServerContextFromCmd(cmd).Viper
-	var conf *serverconfig.Config
+	conf := serverconfig.DefaultConfig()
 	if err := v.Unmarshal(conf); err != nil {
 		return nil, nil, err
 	}
@@ -204,7 +226,7 @@ func getAppConfigAndMap(cmd *cobra.Command) (*serverconfig.Config, map[string]re
 // getTmConfig gets the tendermint configuration.
 func getTmConfigAndMap(cmd *cobra.Command) (*tmconfig.Config, map[string]reflect.Value, error) {
 	v := server.GetServerContextFromCmd(cmd).Viper
-	var conf *tmconfig.Config
+	conf := tmconfig.DefaultConfig()
 	if err := v.Unmarshal(conf); err != nil {
 		return nil, nil, err
 	}
@@ -220,7 +242,7 @@ func getTmConfigAndMap(cmd *cobra.Command) (*tmconfig.Config, map[string]reflect
 
 func getClientConfigAndMap(cmd *cobra.Command) (*provconfig.ClientConfig, map[string]reflect.Value, error) {
 	v := client.GetClientContextFromCmd(cmd).Viper
-	var conf *provconfig.ClientConfig
+	conf := provconfig.DefaultClientConfig()
 	if err := v.Unmarshal(conf); err != nil {
 		return nil, nil, err
 	}
@@ -230,11 +252,20 @@ func getClientConfigAndMap(cmd *cobra.Command) (*provconfig.ClientConfig, map[st
 
 // getFieldMapString gets a multi-line string with all the keys and values in the provided map.
 func getFieldMapString(m map[string]reflect.Value) string {
-	keys := make([]string, 0, len(m))
+	baseKeys := []string{}
+	subKeys := []string{}
 	for k := range m {
-		keys = append(keys, k)
+		if strings.Contains(k, ".") {
+			subKeys = append(subKeys, k)
+		} else {
+			baseKeys = append(baseKeys, k)
+		}
 	}
-	sort.Strings(keys)
+	sort.Strings(baseKeys)
+	sort.Strings(subKeys)
+	keys := make([]string, 0, len(m))
+	keys = append(keys, baseKeys...)
+	keys = append(keys, subKeys...)
 	var sb strings.Builder
 	for _, k := range keys {
 		sb.WriteString(getKVString(k, m[k]))
