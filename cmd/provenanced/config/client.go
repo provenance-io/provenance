@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -25,8 +26,8 @@ type ClientConfig struct {
 	BroadcastMode  string `mapstructure:"broadcast-mode" json:"broadcast-mode"`
 }
 
-// defaultClientConfig returns the reference to ClientConfig with default values.
-func defaultClientConfig() *ClientConfig {
+// DefaultClientConfig returns the reference to ClientConfig with default values.
+func DefaultClientConfig() *ClientConfig {
 	return &ClientConfig{chainID, keyringBackend, output, node, broadcastMode}
 }
 
@@ -50,11 +51,30 @@ func (c *ClientConfig) SetBroadcastMode(broadcastMode string) {
 	c.BroadcastMode = broadcastMode
 }
 
+func (c ClientConfig) ValidateBasic() error {
+	switch c.KeyringBackend {
+	case "os", "file", "kwallet", "pass", "test", "memory":
+	default:
+		return errors.New("unknown keyring-backend (must be one of 'os', 'file', 'kwallet', 'pass', 'test', 'memory')")
+	}
+	switch c.Output {
+	case "text", "json":
+	default:
+		return errors.New("unknown output (must be 'text' or 'json')")
+	}
+	switch c.BroadcastMode {
+	case "sync", "async", "block":
+	default:
+		return errors.New("unknown broadcast-mode (must be one of 'sync' 'async' 'block')")
+	}
+	return nil
+}
+
 // ReadFromClientConfig reads values from client.toml file and updates them in client Context
 func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 	configPath := filepath.Join(ctx.HomeDir, "config")
 	configFilePath := filepath.Join(configPath, "client.toml")
-	conf := defaultClientConfig()
+	conf := DefaultClientConfig()
 
 	// if client.toml file does not exist we create it and write default ClientConfig values into it.
 	if _, ferr := os.Stat(configFilePath); os.IsNotExist(ferr) {
