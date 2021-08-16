@@ -54,7 +54,7 @@ Get all configuration values: %[1]s get all
 Get specific configuration values: %[1]s get <key1> [<key2> ...]
     The key values can be specific.
         e.g. %[1]s get telemetry.service-name moniker.
-    Or they can be parent field names, e.g. "api" or "consensus".
+    Or they can be parent field names
         e.g. %[1]s get api consensus
     Or they can be a type of config file:
         "cosmos", "app" -> app.toml configuration values.
@@ -65,7 +65,7 @@ Get specific configuration values: %[1]s get <key1> [<key2> ...]
             e.g. %[1]s get client
     Or they can be the word "all" to get all configuration values.
         e.g. %[1]s get all
-    If no keys are provided, all keys will be retrieved.
+    If no keys are provided, all configuration values will be retrieved.
 
 Set a config value: %[1]s set <key> <value>
     The key must be specific, e.g. "telemetry.service-name", or "moniker".
