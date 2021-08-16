@@ -97,8 +97,9 @@ When getting or setting a single key, the "get" or "set" can be omitted.
 }
 
 // runConfigCmd desides whether getting or setting is desired, and takes the appropriate action.
-// The first return value is any error encountered.
-// The second return value is whether or not to include help with the output of an error.
+// The first return value is whether or not to include help with the output of an error.
+// This will only ever be true if an error is also returned.
+// The second return value is any error encountered.
 func runConfigCmd(cmd *cobra.Command, args []string) (bool, error) {
 	if len(args) > 0 {
 		switch args[0] {
@@ -118,8 +119,9 @@ func runConfigCmd(cmd *cobra.Command, args []string) (bool, error) {
 }
 
 // runConfigGetCmd gets requested values and outputs them.
-// The first return value is any error encountered.
-// The second return value is whether or not to include help with the output of an error.
+// The first return value is whether or not to include help with the output of an error.
+// This will only ever be true if an error is also returned.
+// The second return value is any error encountered.
 func runConfigGetCmd(cmd *cobra.Command, args []string) (bool, error) {
 	_, appFields, acerr := getAppConfigAndMap(cmd)
 	if acerr != nil {
@@ -191,8 +193,9 @@ func runConfigGetCmd(cmd *cobra.Command, args []string) (bool, error) {
 }
 
 // runConfigSetCmd sets values as provided.
-// The first return value is any error encountered.
-// The second return value is whether or not to include help with the output of an error.
+// The first return value is whether or not to include help with the output of an error.
+// This will only ever be true if an error is also returned.
+// The second return value is any error encountered.
 func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
 	appConfig, appFields, acerr := getAppConfigAndMap(cmd)
 	if acerr != nil {
