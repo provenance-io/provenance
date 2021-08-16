@@ -26,16 +26,19 @@ const entryNotFound = -1
 
 var configCmdStart = fmt.Sprintf("%s config", version.AppName)
 
+// updatedValue is a struct holding information about config values that are being updated.
 type updatedValue struct {
 	Key   string
 	Was   string
 	IsNow string
 }
 
+// Update updates the base updatedValue given information in the provided newerInfo.
 func (u *updatedValue) Update(newerInfo updatedValue) {
 	u.IsNow = newerInfo.IsNow
 }
 
+// String converts an updatedValue to a string.
 func (u updatedValue) String() string {
 	return fmt.Sprintf("%s Was: %s, Is Now: %s", u.Key, u.Was, u.IsNow)
 }
@@ -594,6 +597,7 @@ func getFieldMapString(m map[string]reflect.Value) string {
 	return sb.String()
 }
 
+// getSortedKeys gets the keys of the provided map and sorts them using sortKeys.
 func getSortedKeys(m map[string]reflect.Value) []string {
 	keys := make([]string, 0, len(m))
 	for k := range m {
@@ -602,6 +606,8 @@ func getSortedKeys(m map[string]reflect.Value) []string {
 	return sortKeys(keys)
 }
 
+// sortKeys sorts the provided keys slice.
+// Base keys are put first and sorted alphabetically followed by keys in sub-configs sorted alphabetically.
 func sortKeys(keys []string) []string {
 	baseKeys := []string{}
 	subKeys := []string{}
@@ -636,6 +642,7 @@ func addOrUpdateInfo(all map[string]*updatedValue, info updatedValue) {
 	}
 }
 
+// getUpdatedFieldMapString gets a multi-line string with info about all the keys and values updated.
 func getUpdatedFieldMapString(updates map[string]*updatedValue) string {
 	keys := make([]string, 0, len(updates))
 	for k := range updates {
