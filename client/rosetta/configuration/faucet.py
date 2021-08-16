@@ -10,7 +10,6 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         try:
             content_len = int(self.headers.get('Content-Length'))
             addr = self.rfile.read(content_len).decode("utf-8")
-            print("sending funds to " + addr)
             subprocess.call(['sh', './send_funds.sh', addr])
             self.send_response(200)
             self.end_headers()
