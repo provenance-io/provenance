@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -50,11 +51,13 @@ func (s *HandlerTestSuite) SetupTest() {
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
 	s.user1 = s.user1Addr.String()
 
-	s.pubkey2 = secp256k1.GenPrivKey().PubKey()
+	privKey, _ := secp256r1.GenPrivKey()
+	s.pubkey2 = privKey.PubKey()
 	s.user2Addr = sdk.AccAddress(s.pubkey2.Address())
 	s.user2 = s.user2Addr.String()
 
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
+	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user2Addr))
 }
 
 func TestHandlerTestSuite(t *testing.T) {
@@ -183,7 +186,7 @@ func (s HandlerTestSuite) TestMsgAddAccessRequest() {
 		{
 			"setup new marker for test",
 			types.NewMsgAddMarkerRequest("hotdog", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
-			[]string{s.user1},
+			[]string{s.user2},
 			"",
 			nil,
 		},
@@ -191,21 +194,21 @@ func (s HandlerTestSuite) TestMsgAddAccessRequest() {
 			"should successfully grant access to marker",
 			types.NewMsgAddAccessRequest("hotdog", s.user1Addr, accessMintGrant),
 
-			[]string{s.user1},
+			[]string{s.user2},
 			"",
 			types.NewEventMarkerAddAccess(&accessMintGrant, "hotdog", s.user1),
 		},
 		{
 			"should fail to ADD access to marker, validate basic fails",
 			types.NewMsgAddAccessRequest("hotdog", s.user1Addr, accessInvalidGrant),
-			[]string{s.user1},
+			[]string{s.user2},
 			"invalid access type: invalid request",
 			nil,
 		},
 		{
 			"should fail to ADD access to marker, keeper AddAccess failure",
 			types.NewMsgAddAccessRequest("hotdog", s.user2Addr, accessMintGrant),
-			[]string{s.user1},
+			[]string{s.user2},
 			fmt.Sprintf("updates to pending marker hotdog can only be made by %s: unauthorized", s.user1),
 			nil,
 		},

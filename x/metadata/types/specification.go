@@ -56,7 +56,7 @@ func NewScopeSpecification(
 }
 
 // ValidateBasic performs basic format checking of data in a ScopeSpecification
-func (s *ScopeSpecification) ValidateBasic() error {
+func (s ScopeSpecification) ValidateBasic() error {
 	prefix, err := VerifyMetadataAddressFormat(s.SpecificationId)
 	if err != nil {
 		return fmt.Errorf("invalid scope specification id: %w", err)
@@ -130,7 +130,7 @@ func NewContractSpecificationSourceHash(hash string) *ContractSpecification_Hash
 }
 
 // ValidateBasic performs basic format checking of data in a ContractSpecification
-func (s *ContractSpecification) ValidateBasic() error {
+func (s ContractSpecification) ValidateBasic() error {
 	prefix, err := VerifyMetadataAddressFormat(s.SpecificationId)
 	if err != nil {
 		return fmt.Errorf("invalid contract specification id: %w", err)
@@ -207,7 +207,7 @@ func NewRecordSpecification(
 }
 
 // ValidateBasic performs basic format checking of data in a RecordSpecification
-func (s *RecordSpecification) ValidateBasic() error {
+func (s RecordSpecification) ValidateBasic() error {
 	prefix, err := VerifyMetadataAddressFormat(s.SpecificationId)
 	if err != nil {
 		return fmt.Errorf("invalid record specification id: %w", err)
@@ -282,7 +282,7 @@ func NewInputSpecificationSourceHash(hash string) *InputSpecification_Hash {
 }
 
 // ValidateBasic performs basic format checking of data in a InputSpecification
-func (s *InputSpecification) ValidateBasic() error {
+func (s InputSpecification) ValidateBasic() error {
 	if len(s.Name) == 0 {
 		return errors.New("input specification name cannot be empty")
 	}
@@ -341,7 +341,7 @@ func NewDescription(name, description, websiteURL, iconURL string) *Description 
 // e.g. If the name field is invalid in this description, and the path provided is "ScopeSpecification.Description",
 // the error message will contain "ScopeSpecification.Description.Name" and the problem.
 // Provide "" if there is no context you wish to provide.
-func (d *Description) ValidateBasic(path string) error {
+func (d Description) ValidateBasic(path string) error {
 	if len(d.Name) == 0 {
 		return fmt.Errorf("description %s cannot be empty", makeFieldString(path, "Name"))
 	}

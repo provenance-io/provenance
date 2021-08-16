@@ -236,7 +236,7 @@ Byte Array Length: `17`
 
 | Byte range | Description
 |------------|---
-| 0          | `0x03`
+| 0          | `0x04`
 | 1-16       | UUID of this scope specification
 
 * Field Name: `ScopeSpecification.specification_id`
@@ -308,7 +308,7 @@ Byte Array Length: `17`
 
 | Byte range | Description
 |------------|---
-| 0          | `0x04`
+| 0          | `0x03`
 | 1-16       | UUID of this contract specification
 
 * Field Name: `ContractSpecification.specification_id`

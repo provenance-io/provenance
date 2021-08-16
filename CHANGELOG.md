@@ -59,6 +59,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * Export marker accounts as a base account entry and a separate marker module record
   * Add Marker module governance proposals, genesis, and marker operations to simulation testing [#94](https://github.com/provenance-io/provenance/issues/94)
 * Fix an encoding issue with the `--page-key` CLI arguments used in paged queries [#332](https://github.com/provenance-io/provenance/issues/332)
+* Fix handling of optional fields in Metadata Write messages [#412](https://github.com/provenance-io/provenance/issues/412)
 
 ### Improvements
 
@@ -67,6 +68,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Updated log message for circulation adjustment [#381](https://github.com/provenance-io/provenance/issues/381)
 * Updated third party proto files to pull from cosmos 0.43 [#391](https://github.com/provenance-io/provenance/issues/391)
 * Removed legacy api endpoints [#380](https://github.com/provenance-io/provenance/issues/380)
+* Removed v039 and v040 migrations [#374](https://github.com/provenance-io/provenance/issues/374)
 
 ## [v1.5.0](https://github.com/provenance-io/provenance/releases/tag/v1.5.0) - 2021-06-23
 

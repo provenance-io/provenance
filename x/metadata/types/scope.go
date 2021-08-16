@@ -34,7 +34,7 @@ func NewScope(
 }
 
 // ValidateBasic performs basic format checking of data within a scope
-func (s *Scope) ValidateBasic() error {
+func (s Scope) ValidateBasic() error {
 	prefix, err := VerifyMetadataAddressFormat(s.ScopeId)
 	if err != nil {
 		return err
@@ -208,7 +208,7 @@ func NewSession(name string, sessionID, contractSpecification MetadataAddress, p
 }
 
 // ValidateBasic performs basic format checking of data within a scope
-func (s *Session) ValidateBasic() error {
+func (s Session) ValidateBasic() error {
 	prefix, err := VerifyMetadataAddressFormat(s.SessionId)
 	if err != nil {
 		return err

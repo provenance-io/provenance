@@ -33,6 +33,9 @@ func (k msgServer) WriteScope(
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "WriteScope")
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
+	msg.ConvertOptionalFields()
+
 	existing, _ := k.GetScope(ctx, msg.Scope.ScopeId)
 	if err := k.ValidateScopeUpdate(ctx, existing, msg.Scope, msg.Signers); err != nil {
 		return nil, err
@@ -185,6 +188,9 @@ func (k msgServer) WriteSession(
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "WriteSession")
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
+	msg.ConvertOptionalFields()
+
 	var existing *types.Session = nil
 	var existingAudit *types.AuditFields = nil
 	if e, found := k.GetSession(ctx, msg.Session.SessionId); found {
@@ -209,6 +215,9 @@ func (k msgServer) WriteRecord(
 ) (*types.MsgWriteRecordResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "WriteRecord")
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
+	msg.ConvertOptionalFields()
 
 	scopeUUID, err := msg.Record.SessionId.ScopeUUID()
 	if err != nil {
@@ -256,6 +265,9 @@ func (k msgServer) WriteScopeSpecification(
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "WriteScopeSpecification")
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
+	msg.ConvertOptionalFields()
+
 	var existing *types.ScopeSpecification = nil
 	if e, found := k.GetScopeSpecification(ctx, msg.Specification.SpecificationId); found {
 		existing = &e
@@ -302,6 +314,9 @@ func (k msgServer) WriteContractSpecification(
 ) (*types.MsgWriteContractSpecificationResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "WriteContractSpecification")
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
+	msg.ConvertOptionalFields()
 
 	var existing *types.ContractSpecification = nil
 	if e, found := k.GetContractSpecification(ctx, msg.Specification.SpecificationId); found {
@@ -446,6 +461,9 @@ func (k msgServer) WriteRecordSpecification(
 ) (*types.MsgWriteRecordSpecificationResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "WriteRecordSpecification")
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
+	msg.ConvertOptionalFields()
 
 	contractSpecID, err := msg.Specification.SpecificationId.AsContractSpecAddress()
 	if err != nil {
