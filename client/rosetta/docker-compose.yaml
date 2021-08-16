@@ -10,14 +10,15 @@ services:
         "--home", "/testrosetta/node0",
         "start",
         "--pruning", "nothing",
-#        "--rpc.laddr", "tcp://0.0.0.0:26657"
+        "--rpc.laddr", "tcp://0.0.0.0:26657",
+        "--minimum-gas-prices", "0.0025nhash",
     ]
     ports:
       - 9090:9090
       - 26656-26657:26656-26657
       - 1317:1317
-#    logging:
-#      driver: "none"
+    logging:
+      driver: "none"
 
   rosetta:
     container_name: rosetta
@@ -42,7 +43,7 @@ services:
   faucet:
     image: rosetta-ci:latest
     working_dir: /rosetta
-    command: ["python3", "faucet.py"]
+    command: ["python3","-u", "faucet.py"]
     expose:
       - 8080
     depends_on:

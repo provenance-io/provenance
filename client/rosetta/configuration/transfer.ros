@@ -53,14 +53,14 @@ transfer(3){
     currency = {"symbol":"nhash", "decimals":0};
     sender = find_balance({
       "minimum_balance":{
-        "value": "100",
+        "value": "100000000000",
         "currency": {{currency}}
       }
     });
     acc_identifier = {{sender.account_identifier}};
     sender_address = {{acc_identifier.address}};
     // Set the recipient_amount as some value <= sender.balance-max_fee
-    max_fee = "0";
+    max_fee = "1000";
     fee_amount = "1";
     fee_value = 0 - {{fee_amount}};
     available_amount = {{sender.balance.value}} - {{max_fee}};
@@ -93,12 +93,12 @@ transfer(3){
             }
           ],
           "from_address": {{sender_address}},
-           "to_address": {{recipient_address}}
+          "to_address": {{recipient_address}}
         }
       }
     ];
     transfer.preprocess_metadata = {
-        "gas_price": "1905nhash",
+        "gas_price": "1000nhash",
         "gas_limit": 250000
     };
   }

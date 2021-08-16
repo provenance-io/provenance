@@ -1,3 +1,5 @@
+# Delete this
+
 FROM golang:1.15-alpine as build
 
 RUN apk add git gcc libc-dev bash --no-cache
