@@ -125,7 +125,7 @@ func runConfigGetCmd(cmd *cobra.Command, args []string) (error, bool) {
 	if len(args) == 0 {
 		args = append(args, "all")
 	}
-	unknownKeyCount := 0
+	unknownKeyMap := map[string]reflect.Value{}
 	toOutput := map[string]reflect.Value{}
 	for _, key := range args {
 		switch key {
@@ -154,8 +154,7 @@ func runConfigGetCmd(cmd *cobra.Command, args []string) (error, bool) {
 		default:
 			entries := findEntries(key, appFields, tmFields, clientFields)
 			if len(entries) == 0 {
-				cmd.Printf("Configuration key %s does not exist.\n", key)
-				unknownKeyCount++
+				unknownKeyMap[key] = reflect.Value{}
 			} else {
 				for k, v := range entries {
 					toOutput[k] = v
@@ -166,12 +165,13 @@ func runConfigGetCmd(cmd *cobra.Command, args []string) (error, bool) {
 	if len(toOutput) > 0 {
 		cmd.Println(getFieldMapString(toOutput))
 	}
-	if unknownKeyCount > 0 {
+	if len(unknownKeyMap) > 0 {
+		unknownKeys := getSortedKeys(unknownKeyMap)
 		s := "s"
-		if unknownKeyCount == 1 {
+		if len(unknownKeys) == 1 {
 			s = ""
 		}
-		return fmt.Errorf("%d configuration key%s not found", unknownKeyCount, s), false
+		return fmt.Errorf("%d configuration key%s not found: %s", len(unknownKeys), s, strings.Join(unknownKeys, ", ")), false
 	}
 	return nil, false
 }
@@ -383,6 +383,16 @@ func findEntries(key string, maps ...map[string]reflect.Value) map[string]reflec
 
 // getFieldMapString gets a multi-line string with all the keys and values in the provided map.
 func getFieldMapString(m map[string]reflect.Value) string {
+	keys := getSortedKeys(m)
+	var sb strings.Builder
+	for _, k := range keys {
+		sb.WriteString(getKVString(k, m[k]))
+		sb.WriteByte('\n')
+	}
+	return sb.String()
+}
+
+func getSortedKeys(m map[string]reflect.Value) []string {
 	baseKeys := []string{}
 	subKeys := []string{}
 	for k := range m {
@@ -397,12 +407,7 @@ func getFieldMapString(m map[string]reflect.Value) string {
 	keys := make([]string, 0, len(m))
 	keys = append(keys, baseKeys...)
 	keys = append(keys, subKeys...)
-	var sb strings.Builder
-	for _, k := range keys {
-		sb.WriteString(getKVString(k, m[k]))
-		sb.WriteByte('\n')
-	}
-	return sb.String()
+	return keys
 }
 
 // getKVString gets a string associating a key and value.
