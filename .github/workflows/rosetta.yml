@@ -12,5 +12,8 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@master
+      - name: Go mod vendor
+          run: |
+            go mod vendor
       - name: rosetta
         run: make test-rosetta
