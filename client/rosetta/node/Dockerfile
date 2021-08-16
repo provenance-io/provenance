@@ -30,14 +30,21 @@ RUN echo "Initializing provenance"
 
 # Initialize everything for provenance to run
 WORKDIR /testrosetta
-RUN provenanced testnet -t --v 1 -o . --starting-ip-address 0.0.0.0 --keyring-backend=test --chain-id=chain-local
+RUN provenanced testnet -t --v 1 -o . --starting-ip-address=0.0.0.0 --keyring-backend=test --chain-id=chain-local
 
-# generate some data for the config
-RUN provenanced -t keys add fd --keyring-backend=test
-RUN addr=$(provenanced -t keys show fd -a --keyring-backend=test)
-RUN echo "$addr"
-RUN provenanced -t add-genesis-account "$addr" 1000000000000nhash --keyring-backend=test
-RUN provenanced -t gentx fd 10000000nhash --chain-id testing --keyring-backend=test
+#RUN mkdir node0
+
+#RUN provenanced init provenanced --chain-id=chain-local --home=/testrosetta/node0
+##
+### generate some data for the config
+#RUN provenanced -t keys add testUser --keyring-backend=test --home=/testrosetta/node0
+#RUN provenanced -t add-genesis-account testUser 1000000000000nhash --keyring-backend=test --home=/testrosetta/node0
+#RUN provenanced gentx testUser 10000000nhash --chain-id=chain-local --keyring-backend=test -t --home=/testrosetta/node0
+### --generate-only
+#RUN provenanced -t collect-gentxs --home=/testrosetta/node0
+
+# not sure if I should run this...
+#RUN sed -i 's/127.0.0.1:26657/0.0.0.0:26657/g' /testrosetta/node0/config/config.toml
 
 ###
 FROM debian:buster-slim
