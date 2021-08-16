@@ -22,6 +22,20 @@ import (
 	tmconfig "github.com/tendermint/tendermint/config"
 )
 
+type updatedValue struct {
+	Key   string
+	Was   string
+	IsNow string
+}
+
+func (u *updatedValue) Update(newerInfo updatedValue) {
+	u.IsNow = newerInfo.IsNow
+}
+
+func (u updatedValue) String() string {
+	return fmt.Sprintf("%s Was: %s, Is Now: %s", u.Key, u.Was, u.IsNow)
+}
+
 const entryNotFound = -1
 
 var configCmdStart = fmt.Sprintf("%s config", version.AppName)
@@ -207,7 +221,9 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (error, bool) {
 		vals[i] = args[i*2+1]
 	}
 	issueFound := false
-	appUpdated, tmUpdated, clientUpdated := false, false, false
+	appUpdates := map[string]*updatedValue{}
+	tmUpdates := map[string]*updatedValue{}
+	clientUpdates := map[string]*updatedValue{}
 	configPath := filepath.Join(client.GetClientContextFromCmd(cmd).HomeDir, "config")
 	for i, key := range keys {
 		// Bug: As of Cosmos 0.43 (and 2021-08-16), the app config's index-events configuration value isn't properly marshaled into the config.
@@ -231,37 +247,43 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (error, bool) {
 		if foundIn == entryNotFound {
 			cmd.Printf("Configuration key %s does not exist.\n", key)
 			issueFound = true
-		} else {
-			err := setValueFromString(key, v, vals[i])
-			if err != nil {
-				cmd.Printf("Error setting key %s: %v\n", key, err)
-				issueFound = true
-			} else {
-				switch foundIn {
-				case 0:
-					appUpdated = true
-				case 1:
-					tmUpdated = true
-				case 2:
-					clientUpdated = true
-				}
-			}
+			continue
+		}
+		was := getStringFromValue(v)
+		err := setValueFromString(key, v, vals[i])
+		if err != nil {
+			cmd.Printf("Error setting key %s: %v\n", key, err)
+			issueFound = true
+			continue
+		}
+		info := updatedValue{
+			Key:   key,
+			Was:   was,
+			IsNow: getStringFromValue(v),
+		}
+		switch foundIn {
+		case 0:
+			addOrUpdateInfo(appUpdates, info)
+		case 1:
+			addOrUpdateInfo(tmUpdates, info)
+		case 2:
+			addOrUpdateInfo(clientUpdates, info)
 		}
 	}
 	if !issueFound {
-		if appUpdated {
+		if len(appUpdates) > 0 {
 			if err := appConfig.ValidateBasic(); err != nil {
 				cmd.Printf("App config validation error: %v\n", err)
 				issueFound = true
 			}
 		}
-		if tmUpdated {
+		if len(tmUpdates) > 0 {
 			if err := tmConfig.ValidateBasic(); err != nil {
 				cmd.Printf("Tendermint config validation error: %v\n", err)
 				issueFound = true
 			}
 		}
-		if clientUpdated {
+		if len(clientUpdates) > 0 {
 			if err := clientConfig.ValidateBasic(); err != nil {
 				cmd.Printf("Client config validation error: %v\n", err)
 				issueFound = true
@@ -271,20 +293,23 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (error, bool) {
 	if issueFound {
 		return errors.New("one or more issues encountered; no configuration values have been updated"), false
 	}
-	if appUpdated {
+	if len(appUpdates) > 0 {
 		configFilename := filepath.Join(configPath, "app.toml")
 		serverconfig.WriteConfigFile(configFilename, appConfig)
 		cmd.Printf("App config updated: %s\n", configFilename)
+		cmd.Println(getUpdatedFieldMapString(appUpdates))
 	}
-	if tmUpdated {
+	if len(tmUpdates) > 0 {
 		configFilename := filepath.Join(configPath, "config.toml")
 		tmconfig.WriteConfigFile(configFilename, tmConfig)
 		cmd.Printf("Tendermint config updated: %s\n", configFilename)
+		cmd.Println(getUpdatedFieldMapString(tmUpdates))
 	}
-	if clientUpdated {
+	if len(clientUpdates) > 0 {
 		configFilename := filepath.Join(configPath, "client.toml")
 		provconfig.WriteConfigToFile(configFilename, clientConfig)
 		cmd.Printf("Client config updated: %s\n", configFilename)
+		cmd.Println(getUpdatedFieldMapString(clientUpdates))
 	}
 	return nil, false
 }
@@ -379,40 +404,6 @@ func findEntries(key string, maps ...map[string]reflect.Value) map[string]reflec
 		}
 	}
 	return rv
-}
-
-// getFieldMapString gets a multi-line string with all the keys and values in the provided map.
-func getFieldMapString(m map[string]reflect.Value) string {
-	keys := getSortedKeys(m)
-	var sb strings.Builder
-	for _, k := range keys {
-		sb.WriteString(getKVString(k, m[k]))
-		sb.WriteByte('\n')
-	}
-	return sb.String()
-}
-
-func getSortedKeys(m map[string]reflect.Value) []string {
-	baseKeys := []string{}
-	subKeys := []string{}
-	for k := range m {
-		if strings.Contains(k, ".") {
-			subKeys = append(subKeys, k)
-		} else {
-			baseKeys = append(baseKeys, k)
-		}
-	}
-	sort.Strings(baseKeys)
-	sort.Strings(subKeys)
-	keys := make([]string, 0, len(m))
-	keys = append(keys, baseKeys...)
-	keys = append(keys, subKeys...)
-	return keys
-}
-
-// getKVString gets a string associating a key and value.
-func getKVString(k string, v reflect.Value) string {
-	return fmt.Sprintf("%s=%s", k, getStringFromValue(v))
 }
 
 // getStringFromValue gets a string of the given value.
@@ -587,4 +578,73 @@ func setValueFromString(fieldName string, fieldVal reflect.Value, strVal string)
 		}
 	}
 	return fmt.Errorf("field %s cannot be set because setting values of type %s has not yet been set up", fieldName, fieldVal.Type())
+}
+
+// getFieldMapString gets a multi-line string with all the keys and values in the provided map.
+func getFieldMapString(m map[string]reflect.Value) string {
+	keys := getSortedKeys(m)
+	var sb strings.Builder
+	for _, k := range keys {
+		sb.WriteString(getKVString(k, m[k]))
+		sb.WriteByte('\n')
+	}
+	return sb.String()
+}
+
+func getSortedKeys(m map[string]reflect.Value) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return sortKeys(keys)
+}
+
+func sortKeys(keys []string) []string {
+	baseKeys := []string{}
+	subKeys := []string{}
+	for _, k := range keys {
+		if strings.Contains(k, ".") {
+			subKeys = append(subKeys, k)
+		} else {
+			baseKeys = append(baseKeys, k)
+		}
+	}
+	sort.Strings(baseKeys)
+	sort.Strings(subKeys)
+	for i, k := range baseKeys {
+		keys[i] = k
+	}
+	for i, k := range subKeys {
+		keys[i+len(baseKeys)] = k
+	}
+	return keys
+}
+
+// getKVString gets a string associating a key and value.
+func getKVString(k string, v reflect.Value) string {
+	return fmt.Sprintf("%s=%s", k, getStringFromValue(v))
+}
+
+// addOrUpdateInfo adds the provided info to the map if it's ot already there (by Key).
+// Or if it's already there, updates the existing entry.
+func addOrUpdateInfo(all map[string]*updatedValue, info updatedValue) {
+	if inf, ok := all[info.Key]; ok {
+		inf.Update(info)
+	} else {
+		all[info.Key] = &info
+	}
+}
+
+func getUpdatedFieldMapString(updates map[string]*updatedValue) string {
+	keys := make([]string, 0, len(updates))
+	for k := range updates {
+		keys = append(keys, k)
+	}
+	keys = sortKeys(keys)
+	var sb strings.Builder
+	for _, key := range keys {
+		sb.WriteString(updates[key].String())
+		sb.WriteByte('\n')
+	}
+	return sb.String()
 }
