@@ -17,25 +17,75 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
+	"github.com/cosmos/cosmos-sdk/version"
 
 	tmconfig "github.com/tendermint/tendermint/config"
 )
 
 const entryNotFound = -1
 
+var configCmdStart = fmt.Sprintf("%s config", version.AppName)
+
 // Cmd returns a CLI command to interactively create an application CLI
 // config file.
 func ClientConfigCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "config [<key> [value]] | get {client|app|config|all|<key1> [<key2> ...]} | set <key1> <value1> [<key2> <value2> ...]",
+		Use:   "config get <key1> [<key2> ...] | set <key1> <value1> [<key2> <value2> ...] | [<key> [<value>]]",
 		Short: "Get or Set configuration values",
-		RunE:  runConfigCmd,
+		Long: fmt.Sprintf(`Get or Set configuration values.
+
+Get all configuration values: %[1]s get all
+                          or: %[1]s get
+                     or even: %[1]s
+Get specific configuration values: %[1]s get <key1> [<key2> ...]
+    The key values can be specific.
+        e.g. %[1]s get telemetry.service-name moniker.
+    Or they can be parent field names, e.g. "api" or "consensus".
+        e.g. %[1]s get api consensus
+    Or they can be a type of config file:
+        "cosmos", "app" -> app.toml configuration values.
+            e.g. %[1]s get app
+        "tendermint", "tm", "config" -> config.toml configuration values.
+            e.g. %[1]s get tm
+        "client" -> client.toml configuration values.
+            e.g. %[1]s get client
+    Or they can be the word "all" to get all configuration values.
+        e.g. %[1]s get all
+    If no keys are provided, all keys will be retrieved.
+
+Set a config value: %[1]s set <key> <value>
+    The key must be specific, e.g. "telemetry.service-name", or "moniker".
+    The value must be provided as a single argument. Make sure to quote it appropriately for your system.
+    e.g. %[1]s set output json
+Set multiple config values %[1]s set <key1> <value1> <key2> <value2> [<key3> <value3> ...]
+    Simply provide multiple key/value pairs as alternating arguments.
+    e.g. %[1]s set api.enable true api.swagger true
+
+When getting or setting a single key, the "get" or "set" can be omitted.
+    e.g. %[1]s output
+    and  %[1]s output json
+`, configCmdStart),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Note: If this RunE returns an error, the usage information is displayed.
+			//       That ends up being kind of annoying in most cases in here.
+			//       So only return the error when extra help is desired.
+			err, showHelp := runConfigCmd(cmd, args)
+			if err != nil {
+				if showHelp {
+					return err
+				}
+				cmd.Printf("Error: %v\n", err)
+			}
+			return nil
+		},
 	}
-	// TODO: add Long: and possibly Example:
 	return cmd
 }
 
-func runConfigCmd(cmd *cobra.Command, args []string) error {
+// runConfigCmd desides whether getting or setting is desired, and takes the appropriate action.
+// The first return value is any error encountered.
+// The second return value is whether or not to include help with the output of an error.
+func runConfigCmd(cmd *cobra.Command, args []string) (error, bool) {
 	if len(args) > 0 {
 		switch args[0] {
 		case "get":
@@ -50,21 +100,24 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 	case 2:
 		return runConfigSetCmd(cmd, args)
 	}
-	return errors.New("when more than two arguments are provided, the first must either be \"get\" or \"set\"")
+	return errors.New("when more than two arguments are provided, the first must either be \"get\" or \"set\""), true
 }
 
-func runConfigGetCmd(cmd *cobra.Command, args []string) error {
+// runConfigGetCmd gets requested values and outputs them.
+// The first return value is any error encountered.
+// The second return value is whether or not to include help with the output of an error.
+func runConfigGetCmd(cmd *cobra.Command, args []string) (error, bool) {
 	_, appFields, acerr := getAppConfigAndMap(cmd)
 	if acerr != nil {
-		return fmt.Errorf("couldn't get app config: %v", acerr)
+		return fmt.Errorf("couldn't get app config: %v", acerr), false
 	}
 	_, tmFields, tmcerr := getTmConfigAndMap(cmd)
 	if tmcerr != nil {
-		return fmt.Errorf("couldn't get tendermint config: %v", tmcerr)
+		return fmt.Errorf("couldn't get tendermint config: %v", tmcerr), false
 	}
 	_, clientFields, ccerr := getClientConfigAndMap(cmd)
 	if ccerr != nil {
-		return fmt.Errorf("couldn't get client config: %v", ccerr)
+		return fmt.Errorf("couldn't get client config: %v", ccerr), false
 	}
 
 	configPath := filepath.Join(client.GetClientContextFromCmd(cmd).HomeDir, "config")
@@ -72,6 +125,7 @@ func runConfigGetCmd(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		args = append(args, "all")
 	}
+	unknownKeyCount := 0
 	toOutput := map[string]reflect.Value{}
 	for _, key := range args {
 		switch key {
@@ -85,7 +139,7 @@ func runConfigGetCmd(cmd *cobra.Command, args []string) error {
 			cmd.Println("Client Config: ", filepath.Join(configPath, "client.toml"))
 			cmd.Println("------------------")
 			cmd.Println(getFieldMapString(clientFields))
-		case "app":
+		case "app", "cosmos":
 			cmd.Println("App Config: ", filepath.Join(configPath, "app.toml"))
 			cmd.Println("---------------")
 			cmd.Println(getFieldMapString(appFields))
@@ -101,6 +155,7 @@ func runConfigGetCmd(cmd *cobra.Command, args []string) error {
 			entries := findEntries(key, appFields, tmFields, clientFields)
 			if len(entries) == 0 {
 				cmd.Printf("Configuration key %s does not exist.\n", key)
+				unknownKeyCount++
 			} else {
 				for k, v := range entries {
 					toOutput[k] = v
@@ -111,28 +166,38 @@ func runConfigGetCmd(cmd *cobra.Command, args []string) error {
 	if len(toOutput) > 0 {
 		cmd.Println(getFieldMapString(toOutput))
 	}
-	return nil
+	if unknownKeyCount > 0 {
+		s := "s"
+		if unknownKeyCount == 1 {
+			s = ""
+		}
+		return fmt.Errorf("%d configuration key%s not found", unknownKeyCount, s), false
+	}
+	return nil, false
 }
 
-func runConfigSetCmd(cmd *cobra.Command, args []string) error {
+// runConfigSetCmd sets values as provided.
+// The first return value is any error encountered.
+// The second return value is whether or not to include help with the output of an error.
+func runConfigSetCmd(cmd *cobra.Command, args []string) (error, bool) {
 	appConfig, appFields, acerr := getAppConfigAndMap(cmd)
 	if acerr != nil {
-		return fmt.Errorf("couldn't get app config: %v", acerr)
+		return fmt.Errorf("couldn't get app config: %v", acerr), false
 	}
 	tmConfig, tmFields, tmcerr := getTmConfigAndMap(cmd)
 	if tmcerr != nil {
-		return fmt.Errorf("couldn't get tendermint config: %v", tmcerr)
+		return fmt.Errorf("couldn't get tendermint config: %v", tmcerr), false
 	}
 	clientConfig, clientFields, ccerr := getClientConfigAndMap(cmd)
 	if ccerr != nil {
-		return fmt.Errorf("couldn't get client config: %v", ccerr)
+		return fmt.Errorf("couldn't get client config: %v", ccerr), false
 	}
 
 	if len(args) == 0 {
-		return errors.New("no key/value pairs provided")
+		return errors.New("no key/value pairs provided"), true
 	}
 	if len(args)%2 != 0 {
-		return errors.New("an even number of arguments are required when setting values")
+		return errors.New("an even number of arguments are required when setting values"), true
 	}
 	keyCount := len(args) / 2
 	keys := make([]string, keyCount)
@@ -145,7 +210,7 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) error {
 	appUpdated, tmUpdated, clientUpdated := false, false, false
 	configPath := filepath.Join(client.GetClientContextFromCmd(cmd).HomeDir, "config")
 	for i, key := range keys {
-		// Bug: As of Cosmos 0.43 (and 2021-08-16), the app config's index-events configuration value isn't properly marshalled into the config.
+		// Bug: As of Cosmos 0.43 (and 2021-08-16), the app config's index-events configuration value isn't properly marshaled into the config.
 		// For example,
 		//   appConfig.IndexEvents = []string{"a", "b"}
 		//   serverconfig.WriteConfigFile(filename, appConfig)
@@ -204,7 +269,7 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) error {
 		}
 	}
 	if issueFound {
-		return errors.New("one or more issues encountered; no configuration values have been updated")
+		return errors.New("one or more issues encountered; no configuration values have been updated"), false
 	}
 	if appUpdated {
 		configFilename := filepath.Join(configPath, "app.toml")
@@ -221,10 +286,10 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) error {
 		provconfig.WriteConfigToFile(configFilename, clientConfig)
 		cmd.Printf("Client config updated: %s\n", configFilename)
 	}
-	return nil
+	return nil, false
 }
 
-// getTmConfig gets the tendermint configuration.
+// getAppConfigAndMap gets the app/cosmos configuration object and related string->value map.
 func getAppConfigAndMap(cmd *cobra.Command) (*serverconfig.Config, map[string]reflect.Value, error) {
 	v := server.GetServerContextFromCmd(cmd).Viper
 	conf := serverconfig.DefaultConfig()
@@ -236,7 +301,7 @@ func getAppConfigAndMap(cmd *cobra.Command) (*serverconfig.Config, map[string]re
 	return conf, fields, nil
 }
 
-// getTmConfig gets the tendermint configuration.
+// getTmConfigAndMap gets the tendermint/config configuration object and related string->value map.
 func getTmConfigAndMap(cmd *cobra.Command) (*tmconfig.Config, map[string]reflect.Value, error) {
 	v := server.GetServerContextFromCmd(cmd).Viper
 	conf := tmconfig.DefaultConfig()
@@ -261,6 +326,7 @@ func getTmConfigAndMap(cmd *cobra.Command) (*tmconfig.Config, map[string]reflect
 	return conf, fields, nil
 }
 
+// getClientConfigAndMap gets the client configuration object and related string->value map.
 func getClientConfigAndMap(cmd *cobra.Command) (*provconfig.ClientConfig, map[string]reflect.Value, error) {
 	v := client.GetClientContextFromCmd(cmd).Viper
 	conf := provconfig.DefaultClientConfig()
@@ -302,7 +368,7 @@ func findEntries(key string, maps ...map[string]reflect.Value) map[string]reflec
 			rv[key] = v
 			return rv
 		}
-		baseKey+="."
+		baseKey += "."
 	}
 	baseKeyLen := len(baseKey)
 	for _, m := range maps {
