@@ -13,12 +13,6 @@ COPY internal/ ./internal/
 COPY x/ ./x/
 COPY vendor/ ./vendor/
 
-### Not sure if we need these copys or not?
-COPY testutil/ ./testutil/
-COPY .git/ ./.git/
-COPY contrib/ ./contrib/
-COPY Makefile sims.mk ./
-
 # Build the binaries
 RUN go build -mod vendor \
     -tags cleveldb \
@@ -55,11 +49,6 @@ RUN chmod +x send_funds.sh
 RUN chmod +x faucet.py
 
 RUN chmod -R 0777 ./
-
-## Requires a mounted volume with the config in it.
-#VOLUME [ "/provenance" ]
-#WORKDIR /provenance
-#EXPOSE 26656 26657 1317 9090
 
 ENV PATH=$PATH:/bin
 ENV PIO_HOME="/provenance/testrosetta"
