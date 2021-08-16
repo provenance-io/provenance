@@ -22,6 +22,10 @@ import (
 	tmconfig "github.com/tendermint/tendermint/config"
 )
 
+const entryNotFound = -1
+
+var configCmdStart = fmt.Sprintf("%s config", version.AppName)
+
 type updatedValue struct {
 	Key   string
 	Was   string
@@ -35,10 +39,6 @@ func (u *updatedValue) Update(newerInfo updatedValue) {
 func (u updatedValue) String() string {
 	return fmt.Sprintf("%s Was: %s, Is Now: %s", u.Key, u.Was, u.IsNow)
 }
-
-const entryNotFound = -1
-
-var configCmdStart = fmt.Sprintf("%s config", version.AppName)
 
 // Cmd returns a CLI command to interactively create an application CLI
 // config file.
@@ -83,7 +83,7 @@ When getting or setting a single key, the "get" or "set" can be omitted.
 			// Note: If this RunE returns an error, the usage information is displayed.
 			//       That ends up being kind of annoying in most cases in here.
 			//       So only return the error when extra help is desired.
-			err, showHelp := runConfigCmd(cmd, args)
+			showHelp, err := runConfigCmd(cmd, args)
 			if err != nil {
 				if showHelp {
 					return err
@@ -99,7 +99,7 @@ When getting or setting a single key, the "get" or "set" can be omitted.
 // runConfigCmd desides whether getting or setting is desired, and takes the appropriate action.
 // The first return value is any error encountered.
 // The second return value is whether or not to include help with the output of an error.
-func runConfigCmd(cmd *cobra.Command, args []string) (error, bool) {
+func runConfigCmd(cmd *cobra.Command, args []string) (bool, error) {
 	if len(args) > 0 {
 		switch args[0] {
 		case "get":
@@ -114,24 +114,24 @@ func runConfigCmd(cmd *cobra.Command, args []string) (error, bool) {
 	case 2:
 		return runConfigSetCmd(cmd, args)
 	}
-	return errors.New("when more than two arguments are provided, the first must either be \"get\" or \"set\""), true
+	return true, errors.New("when more than two arguments are provided, the first must either be \"get\" or \"set\"")
 }
 
 // runConfigGetCmd gets requested values and outputs them.
 // The first return value is any error encountered.
 // The second return value is whether or not to include help with the output of an error.
-func runConfigGetCmd(cmd *cobra.Command, args []string) (error, bool) {
+func runConfigGetCmd(cmd *cobra.Command, args []string) (bool, error) {
 	_, appFields, acerr := getAppConfigAndMap(cmd)
 	if acerr != nil {
-		return fmt.Errorf("couldn't get app config: %v", acerr), false
+		return false, fmt.Errorf("couldn't get app config: %v", acerr)
 	}
 	_, tmFields, tmcerr := getTmConfigAndMap(cmd)
 	if tmcerr != nil {
-		return fmt.Errorf("couldn't get tendermint config: %v", tmcerr), false
+		return false, fmt.Errorf("couldn't get tendermint config: %v", tmcerr)
 	}
 	_, clientFields, ccerr := getClientConfigAndMap(cmd)
 	if ccerr != nil {
-		return fmt.Errorf("couldn't get client config: %v", ccerr), false
+		return false, fmt.Errorf("couldn't get client config: %v", ccerr)
 	}
 
 	configPath := filepath.Join(client.GetClientContextFromCmd(cmd).HomeDir, "config")
@@ -185,33 +185,33 @@ func runConfigGetCmd(cmd *cobra.Command, args []string) (error, bool) {
 		if len(unknownKeys) == 1 {
 			s = ""
 		}
-		return fmt.Errorf("%d configuration key%s not found: %s", len(unknownKeys), s, strings.Join(unknownKeys, ", ")), false
+		return false, fmt.Errorf("%d configuration key%s not found: %s", len(unknownKeys), s, strings.Join(unknownKeys, ", "))
 	}
-	return nil, false
+	return false, nil
 }
 
 // runConfigSetCmd sets values as provided.
 // The first return value is any error encountered.
 // The second return value is whether or not to include help with the output of an error.
-func runConfigSetCmd(cmd *cobra.Command, args []string) (error, bool) {
+func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
 	appConfig, appFields, acerr := getAppConfigAndMap(cmd)
 	if acerr != nil {
-		return fmt.Errorf("couldn't get app config: %v", acerr), false
+		return false, fmt.Errorf("couldn't get app config: %v", acerr)
 	}
 	tmConfig, tmFields, tmcerr := getTmConfigAndMap(cmd)
 	if tmcerr != nil {
-		return fmt.Errorf("couldn't get tendermint config: %v", tmcerr), false
+		return false, fmt.Errorf("couldn't get tendermint config: %v", tmcerr)
 	}
 	clientConfig, clientFields, ccerr := getClientConfigAndMap(cmd)
 	if ccerr != nil {
-		return fmt.Errorf("couldn't get client config: %v", ccerr), false
+		return false, fmt.Errorf("couldn't get client config: %v", ccerr)
 	}
 
 	if len(args) == 0 {
-		return errors.New("no key/value pairs provided"), true
+		return true, errors.New("no key/value pairs provided")
 	}
 	if len(args)%2 != 0 {
-		return errors.New("an even number of arguments are required when setting values"), true
+		return true, errors.New("an even number of arguments are required when setting values")
 	}
 	keyCount := len(args) / 2
 	keys := make([]string, keyCount)
@@ -291,7 +291,7 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (error, bool) {
 		}
 	}
 	if issueFound {
-		return errors.New("one or more issues encountered; no configuration values have been updated"), false
+		return false, errors.New("one or more issues encountered; no configuration values have been updated")
 	}
 	if len(appUpdates) > 0 {
 		configFilename := filepath.Join(configPath, "app.toml")
@@ -311,7 +311,7 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (error, bool) {
 		cmd.Printf("Client config updated: %s\n", configFilename)
 		cmd.Println(getUpdatedFieldMapString(clientUpdates))
 	}
-	return nil, false
+	return false, nil
 }
 
 // getAppConfigAndMap gets the app/cosmos configuration object and related string->value map.
@@ -611,9 +611,7 @@ func sortKeys(keys []string) []string {
 	}
 	sort.Strings(baseKeys)
 	sort.Strings(subKeys)
-	for i, k := range baseKeys {
-		keys[i] = k
-	}
+	copy(keys, baseKeys)
 	for i, k := range subKeys {
 		keys[i+len(baseKeys)] = k
 	}
