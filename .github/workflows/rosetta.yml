@@ -1,0 +1,19 @@
+name: Rosetta
+# Rosetta runs rosetta-cli to verify that provenance still meets the Rosetta api
+on:
+  pull_request:
+  push:
+      branches:
+        - main
+
+jobs:
+  rosetta:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@master
+      - name: Go mod vendor
+        run: |
+          go mod vendor
+      - name: rosetta
+        run: make test-rosetta
