@@ -23,8 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 )
 
@@ -35,22 +33,22 @@ type ConfigTestSuite struct {
 	Context *context.Context
 }
 
-func (s *ConfigTestSuite) SetupTest() {
-	var err error
+func (s *ConfigTestSuite) SetupSuite() {
 	s.Home = s.T().TempDir()
 	tmConfig, err := genutiltest.CreateDefaultTendermintConfig(s.Home)
 	s.Require().NoError(err, "creating default tendermint config")
 
-	tMbm := module.NewBasicManager(genutil.AppModuleBasic{})
+	rootCmdInitArgs := []string{"--testnet", "--home", s.Home, "init", "--chain-id", "config-testing", "config-testing"}
+	rootCmd, _ := cmd.NewRootCmd()
+	rootCmd.SetArgs(rootCmdInitArgs)
+	err = cmd.Execute(rootCmd)
+	s.Require().NoError(err, "unexpected error calling root command with args: %s", rootCmdInitArgs)
+
 	logger := log.NewNopLogger()
-	appCodec := simapp.MakeTestEncodingConfig().Marshaler
-
-	err = genutiltest.ExecInitCmd(tMbm, s.Home, appCodec)
-	s.Require().NoError(err, "calling init command")
-
 	serverCtx := server.NewContext(viper.New(), tmConfig, logger)
 	serverCtx.Viper.Set(server.FlagMinGasPrices, fmt.Sprintf("1905%s", app.DefaultFeeDenom))
 
+	appCodec := simapp.MakeTestEncodingConfig().Marshaler
 	clientCtx := client.Context{}.WithCodec(appCodec).WithHomeDir(s.Home).WithViper("")
 	clientCtx, err = provconfig.ReadFromClientConfig(clientCtx)
 	s.Require().NoError(err, "setting up client context")
@@ -120,49 +118,7 @@ func (s *ConfigTestSuite) TestConfigBadArgs() {
 	}
 }
 
-func (s *ConfigTestSuite) TestConfigSetValidation() {
-	tests := []struct {
-		name string
-		args []string
-		out  string
-	}{
-		{
-			name: "set app fails validation",
-			args: []string{"set", "minimum-gas-prices", ""},
-			out:  `App config validation error: set min gas price in app.toml or flag or env variable: error in app.toml [cosmos/cosmos-sdk@v0.43.0/types/errors/errors.go:269]`,
-		},
-		{
-			name: "set tendermint fails validation",
-			args: []string{"set", "log_format", "crazy"},
-			out:  `Tendermint config validation error: unknown log_format (must be 'plain' or 'json')`,
-		},
-		{
-			name: "set client fails validation",
-			args: []string{"set", "output", "csv"},
-			out:  `Client config validation error: unknown output (must be 'text' or 'json')`,
-		},
-	}
-
-	for _, tc := range tests {
-		s.T().Run(tc.name, func(t *testing.T) {
-			expected := fmt.Sprintf("%s\n%s\n",
-				tc.out,
-				"Error: one or more issues encountered; no configuration values have been updated")
-			b := bytes.NewBufferString("")
-			command := cmd.ConfigCmd()
-			command.SetArgs(tc.args)
-			command.SetOut(b)
-			err := command.ExecuteContext(*s.Context)
-			require.NoError(t, err, "%s %s unexpected error executing command", command.Name(), tc.args)
-			out, rerr := ioutil.ReadAll(b)
-			require.NoError(t, rerr, "%s %s unexpected error reading output", command.Name(), tc.args)
-			outStr := string(out)
-			assert.Equal(t, expected, outStr, "%s %s output", command.Name(), tc.args)
-		})
-	}
-}
-
-func (s *ConfigTestSuite) TestConfigGetAll() {
+func (s *ConfigTestSuite) TestConfigCmdGet() {
 	command := cmd.ConfigCmd()
 
 	command.SetArgs([]string{})
@@ -199,9 +155,9 @@ func (s *ConfigTestSuite) TestConfigGetAll() {
 		// Client config header all the entries.
 		{"client header", regexp.MustCompile(`(?m)^Client Config: .*/config/client.toml$`)},
 		{"client broadcast-mode", regexp.MustCompile(`(?m)^broadcast-mode="block"$`)},
-		{"client chain-id", regexp.MustCompile(`(?m)^chain-id=""$`)},
+		{"client chain-id", regexp.MustCompile(`(?m)^chain-id="config-testing"$`)},
 		{"client keyring-backend", regexp.MustCompile(`(?m)^keyring-backend="test"$`)},
-		{"client node", regexp.MustCompile(`(?m)^node="tcp://localhost:26657"$`)},
+		{"client node", regexp.MustCompile(`(?m)^node="tcp://127.0.0.1:26657"$`)},
 		{"client output", regexp.MustCompile(`(?m)^output="text"$`)},
 	}
 
@@ -331,8 +287,8 @@ func (s *ConfigTestSuite) TestConfigGetMulti() {
 			name: "two from each",
 			keys: []string{"rpc.cors_allowed_origins", "pruning", "node", "rosetta.offline", "chain-id", "priv_validator_state_file"},
 			expected: buildExpected(
-				`chain-id=""`,
-				`node="tcp://localhost:26657"`,
+				`chain-id="config-testing"`,
+				`node="tcp://127.0.0.1:26657"`,
 				`priv_validator_state_file="data/priv_validator_state.json"`,
 				`pruning="default"`,
 				`rosetta.offline=false`,
@@ -398,6 +354,48 @@ func (s *ConfigTestSuite) TestConfigGetMulti() {
 		outStr := string(out)
 		assert.Equal(t, expected, outStr, "%s %s - output", command.Name(), args)
 	})
+}
+
+func (s *ConfigTestSuite) TestConfigSetValidation() {
+	tests := []struct {
+		name string
+		args []string
+		out  string
+	}{
+		{
+			name: "set app fails validation",
+			args: []string{"set", "minimum-gas-prices", ""},
+			out:  `App config validation error: set min gas price in app.toml or flag or env variable: error in app.toml [cosmos/cosmos-sdk@v0.43.0/types/errors/errors.go:269]`,
+		},
+		{
+			name: "set tendermint fails validation",
+			args: []string{"set", "log_format", "crazy"},
+			out:  `Tendermint config validation error: unknown log_format (must be 'plain' or 'json')`,
+		},
+		{
+			name: "set client fails validation",
+			args: []string{"set", "output", "csv"},
+			out:  `Client config validation error: unknown output (must be 'text' or 'json')`,
+		},
+	}
+
+	for _, tc := range tests {
+		s.T().Run(tc.name, func(t *testing.T) {
+			expected := fmt.Sprintf("%s\n%s\n",
+				tc.out,
+				"Error: one or more issues encountered; no configuration values have been updated")
+			b := bytes.NewBufferString("")
+			command := cmd.ConfigCmd()
+			command.SetArgs(tc.args)
+			command.SetOut(b)
+			err := command.ExecuteContext(*s.Context)
+			require.NoError(t, err, "%s %s unexpected error executing command", command.Name(), tc.args)
+			out, rerr := ioutil.ReadAll(b)
+			require.NoError(t, rerr, "%s %s unexpected error reading output", command.Name(), tc.args)
+			outStr := string(out)
+			assert.Equal(t, expected, outStr, "%s %s output", command.Name(), tc.args)
+		})
+	}
 }
 
 func (s *ConfigTestSuite) TestConfigCmdSet() {
@@ -478,14 +476,14 @@ func (s *ConfigTestSuite) TestConfigCmdSet() {
 		// Client fields
 		{
 			name:    "chain-id",
-			oldVal:  `""`,
+			oldVal:  `"config-testing"`,
 			newVal:  `"new-chain"`,
 			toMatch: []*regexp.Regexp{reClientConfigUpdated},
 		},
 		{
 			name:    "node",
-			oldVal:  `"tcp://localhost:26657"`,
-			newVal:  `"tcp://127.0.0.1:26657"`,
+			oldVal:  `"tcp://127.0.0.1:26657"`,
+			newVal:  `"tcp://localhost:26657"`,
 			toMatch: []*regexp.Regexp{reClientConfigUpdated},
 		},
 		{
@@ -583,15 +581,15 @@ func (s *ConfigTestSuite) TestConfigSetMulti() {
 		},
 		{
 			name: "two client entries",
-			args: []string{"set", "node", "tcp://127.0.0.1:26657", "output", "json"},
+			args: []string{"set", "node", "tcp://localhost:26657", "output", "json"},
 			out: buildExpected(
 				s.makeClientConfigUpdateLine(),
-				s.makeKeyUpdatedLine("node", `"tcp://localhost:26657"`, `"tcp://127.0.0.1:26657"`),
+				s.makeKeyUpdatedLine("node", `"tcp://127.0.0.1:26657"`, `"tcp://localhost:26657"`),
 				s.makeKeyUpdatedLine("output", `"text"`, `"json"`)),
 		},
 		{
 			name: "two of each",
-			args: []string{"set", "consensus.timeout_commit", "950ms", "api.enable", "true", "telemetry.service-name", "blocky", "node", "tcp://127.0.0.1:26657", "output", "json", "log_format", "json"},
+			args: []string{"set", "consensus.timeout_commit", "950ms", "api.enable", "true", "telemetry.service-name", "blocky", "node", "tcp://localhost:26657", "output", "json", "log_format", "json"},
 			out: buildExpected(
 				s.makeAppConfigUpdateLine(),
 				s.makeKeyUpdatedLine("api.enable", "false", "true"),
@@ -602,7 +600,7 @@ func (s *ConfigTestSuite) TestConfigSetMulti() {
 				s.makeKeyUpdatedLine("consensus.timeout_commit", `"1s"`, `"950ms"`),
 				"",
 				s.makeClientConfigUpdateLine(),
-				s.makeKeyUpdatedLine("node", `"tcp://localhost:26657"`, `"tcp://127.0.0.1:26657"`),
+				s.makeKeyUpdatedLine("node", `"tcp://127.0.0.1:26657"`, `"tcp://localhost:26657"`),
 				s.makeKeyUpdatedLine("output", `"text"`, `"json"`)),
 		},
 	}
