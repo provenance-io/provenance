@@ -1,7 +1,6 @@
-# This docker file builds a test image using binaries built locally.
-# Use `make docker-build-local` to build or `make localnet-start` to
-# start the test network and `make localnet-stop` to stop it.
 FROM golang:1.16-buster as build
+ARG VERSION
+
 WORKDIR /go/src/github.com/provenance-io/provenance
 ENV GOPRIVATE=github.com/provenance-io
 RUN apt-get update && apt-get upgrade -y && apt-get install -y libleveldb-dev
@@ -19,6 +18,13 @@ RUN go build -mod vendor \
     -tags cleveldb \
     -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/version.Name=Provenance-Blockchain' \
     -o /go/bin/ ./cmd/...
+RUN echo "Completed go build"
+
+RUN echo "Initializing provenance"
+
+# Initialize provenance to run with the default node configuration
+WORKDIR /testrosetta
+RUN provenanced testnet -t --v 1 -o . --starting-ip-address=0.0.0.0 --keyring-backend=test --chain-id=chain-local
 
 ###
 FROM debian:buster-slim
@@ -28,19 +34,21 @@ RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y curl jq libleveldb-dev && \
     apt-get clean && \
+    apt-get install -y python3 && \
     rm -rf /var/lib/apt/lists/
-
-# Requires a mounted volume with the config in it.
-VOLUME [ "/provenance" ]
-WORKDIR /provenance
-EXPOSE 26656 26657 1317 9090
 
 # Source binaries from the build above
 COPY --from=build /go/src/github.com/provenance-io/provenance/vendor/github.com/CosmWasm/wasmvm/api/libwasmvm.so /lib/x86_64-linux-gnu/libwasmvm.so
 COPY --from=build /go/bin/provenanced /usr/bin/provenanced
+COPY --from=build /testrosetta /testrosetta
 
-ENTRYPOINT ["/usr/bin/entrypoint.sh"]
-CMD ["start"]
-STOPSIGNAL SIGTERM
+WORKDIR /rosetta
+COPY ./client/rosetta/configuration ./
+RUN chmod +x run_tests.sh
+RUN chmod +x send_funds.sh
+RUN chmod +x faucet.py
 
-COPY networks/local/blockchain-local/entrypoint.sh /usr/bin/entrypoint.sh
+RUN chmod -R 0777 ./
+
+ENV PATH=$PATH:/bin
+ENV PIO_HOME="/provenance/testrosetta"
