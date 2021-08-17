@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 )
@@ -103,8 +104,8 @@ func SIPrefixFromString(str string) (SIPrefix, error) {
 		return val, nil
 	}
 	// Check if it's an enum int32 value that was converted to a string (because why not?).
-	if exp, err := strconv.Atoi(str); err == nil {
-		return SIPrefixFromExponent(exp)
+	if exp, err := strconv.ParseInt(str, 10, 32); err == nil {
+		return SIPrefixFromExponent(int(exp))
 	}
 	// Give up.
 	return invalidSIPrefix, fmt.Errorf("could not convert string [%s] to a SIPrefix value", str)
@@ -123,6 +124,9 @@ func MustGetSIPrefixFromExponent(exp int) SIPrefix {
 // SIPrefixFromExponent attempts to convert an integer exponent into a SIPrefix enum entry.
 // Example inputs: 12, -9
 func SIPrefixFromExponent(exp int) (SIPrefix, error) {
+	if exp < math.MinInt32 || exp > math.MaxInt32 {
+		return invalidSIPrefix, fmt.Errorf("exponent [%d] out of bounds for int32", exp)
+	}
 	p := SIPrefix(exp)
 	if p.IsValid() {
 		return p, nil
