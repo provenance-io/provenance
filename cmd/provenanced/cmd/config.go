@@ -45,7 +45,7 @@ func (u updatedValue) String() string {
 
 // Cmd returns a CLI command to interactively create an application CLI
 // config file.
-func ClientConfigCmd() *cobra.Command {
+func ConfigCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config get <key1> [<key2> ...] | set <key1> <value1> [<key2> <value2> ...] | [<key> [<value>]]",
 		Short: "Get or Set configuration values",
