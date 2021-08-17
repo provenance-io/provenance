@@ -1,4 +1,4 @@
-FROM golang:1.15-buster as build
+FROM golang:1.16-buster as build
 ARG VERSION
 
 WORKDIR /go/src/github.com/provenance-io/provenance
