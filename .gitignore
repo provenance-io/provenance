@@ -31,9 +31,9 @@ profile.iml
 profile.ipr
 profile.iws
 /.datastore
-.idea/
 *.iml
-.history/
+*.ipr
+*.iws
 
 # Tools make target marker
 tools-stamp
