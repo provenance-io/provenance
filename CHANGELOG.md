@@ -47,7 +47,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add authz and feegrant modules [PR 384](https://github.com/provenance-io/provenance/pull/384)
 * Add Marker governance proposal for setting denom metadata [#369](https://github.com/provenance-io/provenance/issues/369)
 * Add `config` command to cli for client configuration [#394](https://github.com/provenance-io/provenance/issues/394)
-* Updated `provenanced init` for easier testnet support [#403](https://github.com/provenance-io/provenance/issues/403)
+* Enhanced `provenanced config` [#403](https://github.com/provenance-io/provenance/issues/403)
+  * Allow for setting and getting any configuration field (not just client)
+  * Allow for setting and getting multiple configuration fields in a single invocation.
 
 ### Bug Fixes
 
@@ -61,6 +63,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * Add Marker module governance proposals, genesis, and marker operations to simulation testing [#94](https://github.com/provenance-io/provenance/issues/94)
 * Fix an encoding issue with the `--page-key` CLI arguments used in paged queries [#332](https://github.com/provenance-io/provenance/issues/332)
 * Fix handling of optional fields in Metadata Write messages [#412](https://github.com/provenance-io/provenance/issues/412)
+* Correct an error message that was providing an illegal amount of gas as an example [#425](https://github.com/provenance-io/provenance/issues/425)
 
 ### Improvements
 
@@ -70,6 +73,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Updated third party proto files to pull from cosmos 0.43 [#391](https://github.com/provenance-io/provenance/issues/391)
 * Removed legacy api endpoints [#380](https://github.com/provenance-io/provenance/issues/380)
 * Removed v039 and v040 migrations [#374](https://github.com/provenance-io/provenance/issues/374)
+* Updated `provenanced init` for better testnet support and defaults [#403](https://github.com/provenance-io/provenance/issues/403)
 
 ## [v1.5.0](https://github.com/provenance-io/provenance/releases/tag/v1.5.0) - 2021-06-23
 
