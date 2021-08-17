@@ -1,6 +1,6 @@
 module github.com/provenance-io/provenance
 
-go 1.15
+go 1.16
 
 require (
 	github.com/CosmWasm/wasmd v0.17.0
@@ -36,4 +36,4 @@ replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.18.0-alpha.provenance.2
+replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.19.0-alpha

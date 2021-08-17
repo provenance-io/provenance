@@ -47,6 +47,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add authz and feegrant modules [PR 384](https://github.com/provenance-io/provenance/pull/384)
 * Add Marker governance proposal for setting denom metadata [#369](https://github.com/provenance-io/provenance/issues/369)
 * Add `config` command to cli for client configuration [#394](https://github.com/provenance-io/provenance/issues/394)
+* Add updated wasmd for Cosmos 0.43 [#409](https://github.com/provenance-io/provenance/issues/409)
 
 ### Bug Fixes
 
