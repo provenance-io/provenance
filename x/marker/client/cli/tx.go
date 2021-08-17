@@ -194,8 +194,8 @@ func GetCmdAddMarker() *cobra.Command {
 with the given supply amount and denomination provided in the coin argument
 
 Example:
-$ %s tx marker new 1000hotdogcoin --%s=false --%s=false --from=mykey`,
-FlagType, FlagSupplyFixed, FlagAllowGovernanceControl)),
+$ %s tx marker new 1000hotdogcoin --%s=false --%s=false --from=mykey
+`, FlagType, FlagSupplyFixed, FlagAllowGovernanceControl)),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
