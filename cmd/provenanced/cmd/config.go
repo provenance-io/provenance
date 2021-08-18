@@ -22,53 +22,77 @@ import (
 	tmconfig "github.com/tendermint/tendermint/config"
 )
 
-const entryNotFound = -1
+const (
+	entryNotFound      = -1
+	appConfFilename    = "app.toml"
+	tmConfFilename     = "tm.toml"
+	clientConfFilename = "client.toml"
+	configSubDir       = "config"
+)
 
 var configCmdStart = fmt.Sprintf("%s config", version.AppName)
 
-// updatedValue is a struct holding information about config values that are being updated.
-type updatedValue struct {
+// updatedField is a struct holding information about a config field that has been updated.
+type updatedField struct {
 	Key   string
 	Was   string
 	IsNow string
 }
 
-// Update updates the base updatedValue given information in the provided newerInfo.
-func (u *updatedValue) Update(newerInfo updatedValue) {
+// Update updates the base updatedField given information in the provided newerInfo.
+func (u *updatedField) Update(newerInfo updatedField) {
 	u.IsNow = newerInfo.IsNow
 }
 
-// String converts an updatedValue to a string.
-func (u updatedValue) String() string {
+// String converts an updatedField to a string similar to using %#v but a little cleaner.
+func (u updatedField) String() string {
+	return fmt.Sprintf(`updatedField{Key:%s, Was:%s, IsNow:%s}`, u.Key, u.Was, u.IsNow)
+}
+
+// StringAsUpdate creates a string from this updatedField indicating a change has being made.
+func (u updatedField) StringAsUpdate() string {
 	return fmt.Sprintf("%s Was: %s, Is Now: %s", u.Key, u.Was, u.IsNow)
 }
 
-// Cmd returns a CLI command to interactively create an application CLI
-// config file.
+// StringAsDefault creates a string from this updatedField identifying the Was as a default.
+func (u updatedField) StringAsDefault() string {
+	return fmt.Sprintf("%s=%s (default=%s)", u.Key, u.IsNow, u.Was)
+}
+
+// AddToOrUpdateIn adds this updatedField to the provided map if it's not already there (by Key).
+// If it's already there, the map's existing entry is updated with info in this updatedField.
+func (u updatedField) AddToOrUpdateIn(all map[string]*updatedField) {
+	if inf, ok := all[u.Key]; ok {
+		inf.Update(u)
+	} else {
+		all[u.Key] = &u
+	}
+}
+
+// ConfigCmd returns a CLI command to update config files.
 func ConfigCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config get <key1> [<key2> ...] | set <key1> <value1> [<key2> <value2> ...] | [<key> [<value>]]",
 		Short: "Get or Set configuration values",
 		Long: fmt.Sprintf(`Get or Set configuration values.
 
-Get all configuration values: %[1]s get all
-                          or: %[1]s get
-                     or even: %[1]s
-Get specific configuration values: %[1]s get <key1> [<key2> ...]
+Get configuration values: %[1]s get <key1> [<key2> ...]
     The key values can be specific.
         e.g. %[1]s get telemetry.service-name moniker.
     Or they can be parent field names
         e.g. %[1]s get api consensus
     Or they can be a type of config file:
-        "cosmos", "app" -> app.toml configuration values.
+        "cosmos", "app" -> %[2]s configuration values.
             e.g. %[1]s get app
-        "tendermint", "tm", "config" -> config.toml configuration values.
+        "tendermint", "tm", "config" -> %[3]s configuration values.
             e.g. %[1]s get tm
-        "client" -> client.toml configuration values.
+        "client" -> %[4]s configuration values.
             e.g. %[1]s get client
     Or they can be the word "all" to get all configuration values.
         e.g. %[1]s get all
-    If no keys are provided, all configuration values will be retrieved.
+    Or they can be the word "changed" to get all configuration values that are different from defaults.
+        e.g. %[1]s get changed
+    If no keys are provided, values changed from the defaults are retrieved.
 
 Set a config value: %[1]s set <key> <value>
     The key must be specific, e.g. "telemetry.service-name", or "moniker".
@@ -81,7 +105,10 @@ Set multiple config values %[1]s set <key1> <value1> <key2> <value2> [<key3> <va
 When getting or setting a single key, the "get" or "set" can be omitted.
     e.g. %[1]s output
     and  %[1]s output json
-`, configCmdStart),
+
+If no arguments are provided, default behavior is to get all values changed from the defaults.
+
+`, configCmdStart, appConfFilename, tmConfFilename, clientConfFilename),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Note: If this RunE returns an error, the usage information is displayed.
 			//       That ends up being kind of annoying in most cases in here.
@@ -139,37 +166,65 @@ func runConfigGetCmd(cmd *cobra.Command, args []string) (bool, error) {
 		return false, fmt.Errorf("couldn't get client config: %v", ccerr)
 	}
 
-	configPath := filepath.Join(client.GetClientContextFromCmd(cmd).HomeDir, "config")
+	configPath := getConfigDir(cmd)
 
 	if len(args) == 0 {
-		args = append(args, "all")
+		args = append(args, "changed")
 	}
+	hadGroup := false
 	unknownKeyMap := map[string]reflect.Value{}
 	toOutput := map[string]reflect.Value{}
 	for _, key := range args {
 		switch key {
 		case "all":
-			cmd.Println("App Config: ", filepath.Join(configPath, "app.toml"))
-			cmd.Println("---------------")
-			cmd.Println(getFieldMapString(appFields))
-			cmd.Println("Tendermint Config: ", filepath.Join(configPath, "config.toml"))
-			cmd.Println("----------------------")
-			cmd.Println(getFieldMapString(tmFields))
-			cmd.Println("Client Config: ", filepath.Join(configPath, "client.toml"))
-			cmd.Println("------------------")
-			cmd.Println(getFieldMapString(clientFields))
+			hadGroup = true
+			cmd.Println(makeAppConfigHeader(configPath, ""))
+			cmd.Println(makeFieldMapString(appFields))
+
+			cmd.Println(makeTmConfigHeader(configPath, ""))
+			cmd.Println(makeFieldMapString(tmFields))
+
+			cmd.Println(makeClientConfigHeader(configPath, ""))
+			cmd.Println(makeFieldMapString(clientFields))
 		case "app", "cosmos":
-			cmd.Println("App Config: ", filepath.Join(configPath, "app.toml"))
-			cmd.Println("---------------")
-			cmd.Println(getFieldMapString(appFields))
+			hadGroup = true
+			cmd.Println(makeAppConfigHeader(configPath, ""))
+			cmd.Println(makeFieldMapString(appFields))
 		case "config", "tendermint", "tm":
-			cmd.Println("Tendermint Config: ", filepath.Join(configPath, "config.toml"))
-			cmd.Println("----------------------")
-			cmd.Println(getFieldMapString(tmFields))
+			hadGroup = true
+			cmd.Println(makeTmConfigHeader(configPath, ""))
+			cmd.Println(makeFieldMapString(tmFields))
 		case "client":
-			cmd.Println("Client Config: ", filepath.Join(configPath, "client.toml"))
-			cmd.Println("------------------")
-			cmd.Println(getFieldMapString(clientFields))
+			hadGroup = true
+			cmd.Println(makeClientConfigHeader(configPath, ""))
+			cmd.Println(makeFieldMapString(clientFields))
+		case "changed", "changes":
+			hadGroup = true
+			allDefaults := getAllConfigDefaults()
+			appDiffs := getFieldMapChanges(appFields, allDefaults)
+			tmDiffs := getFieldMapChanges(tmFields, allDefaults)
+			clientDiffs := getFieldMapChanges(clientFields, allDefaults)
+
+			cmd.Println(makeAppConfigHeader(configPath, "Differences from Defaults"))
+			if len(appDiffs) > 0 {
+				cmd.Println(makeUpdatedFieldMapString(appDiffs, updatedField.StringAsDefault))
+			} else {
+				cmd.Println("All app config values equal the default config values.")
+			}
+
+			cmd.Println(makeTmConfigHeader(configPath, "Differences from Defaults"))
+			if len(tmDiffs) > 0 {
+				cmd.Println(makeUpdatedFieldMapString(tmDiffs, updatedField.StringAsDefault))
+			} else {
+				cmd.Println("All tendermint config values equal the default config values.")
+			}
+
+			cmd.Println(makeClientConfigHeader(configPath, "Differences from Defaults"))
+			if len(clientDiffs) > 0 {
+				cmd.Println(makeUpdatedFieldMapString(clientDiffs, updatedField.StringAsDefault))
+			} else {
+				cmd.Println("All client config values equal the default config values.")
+			}
 		default:
 			entries := findEntries(key, appFields, tmFields, clientFields)
 			if len(entries) == 0 {
@@ -182,7 +237,10 @@ func runConfigGetCmd(cmd *cobra.Command, args []string) (bool, error) {
 		}
 	}
 	if len(toOutput) > 0 {
-		cmd.Println(getFieldMapString(toOutput))
+		if hadGroup {
+			cmd.Println(makeSectionHeaderString("Specifically Requested Entries", "", ""))
+		}
+		cmd.Println(makeFieldMapString(toOutput))
 	}
 	if len(unknownKeyMap) > 0 {
 		unknownKeys := getSortedKeys(unknownKeyMap)
@@ -227,10 +285,10 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
 		vals[i] = args[i*2+1]
 	}
 	issueFound := false
-	appUpdates := map[string]*updatedValue{}
-	tmUpdates := map[string]*updatedValue{}
-	clientUpdates := map[string]*updatedValue{}
-	configPath := filepath.Join(client.GetClientContextFromCmd(cmd).HomeDir, "config")
+	appUpdates := map[string]*updatedField{}
+	tmUpdates := map[string]*updatedField{}
+	clientUpdates := map[string]*updatedField{}
+	configPath := getConfigDir(cmd)
 	for i, key := range keys {
 		// Bug: As of Cosmos 0.43 (and 2021-08-16), the app config's index-events configuration value isn't properly marshaled into the config.
 		// For example,
@@ -245,7 +303,7 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
 		// So for now, if someone requests the setting of that field, return an error with some helpful info.
 		if key == "index-events" {
 			cmd.Printf("The index-events list cannot be set with this command. It can be manually updated in %s\n",
-				filepath.Join(configPath, "app.toml"))
+				filepath.Join(configPath, appConfFilename))
 			issueFound = true
 			continue
 		}
@@ -262,18 +320,18 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
 			issueFound = true
 			continue
 		}
-		info := updatedValue{
+		info := updatedField{
 			Key:   key,
 			Was:   was,
 			IsNow: getStringFromValue(v),
 		}
 		switch foundIn {
 		case 0:
-			addOrUpdateInfo(appUpdates, info)
+			info.AddToOrUpdateIn(appUpdates)
 		case 1:
-			addOrUpdateInfo(tmUpdates, info)
+			info.AddToOrUpdateIn(tmUpdates)
 		case 2:
-			addOrUpdateInfo(clientUpdates, info)
+			info.AddToOrUpdateIn(clientUpdates)
 		}
 	}
 	if !issueFound {
@@ -300,24 +358,25 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
 		return false, errors.New("one or more issues encountered; no configuration values have been updated")
 	}
 	if len(appUpdates) > 0 {
-		configFilename := filepath.Join(configPath, "app.toml")
-		serverconfig.WriteConfigFile(configFilename, appConfig)
-		cmd.Printf("App config updated: %s\n", configFilename)
-		cmd.Println(getUpdatedFieldMapString(appUpdates))
+		serverconfig.WriteConfigFile(filepath.Join(configPath, appConfFilename), appConfig)
+		cmd.Println(makeAppConfigHeader(configPath, "Updated"))
+		cmd.Println(makeUpdatedFieldMapString(appUpdates, updatedField.StringAsUpdate))
 	}
 	if len(tmUpdates) > 0 {
-		configFilename := filepath.Join(configPath, "config.toml")
-		tmconfig.WriteConfigFile(configFilename, tmConfig)
-		cmd.Printf("Tendermint config updated: %s\n", configFilename)
-		cmd.Println(getUpdatedFieldMapString(tmUpdates))
+		tmconfig.WriteConfigFile(filepath.Join(configPath, tmConfFilename), tmConfig)
+		cmd.Println(makeTmConfigHeader(configPath, "Updated"))
+		cmd.Println(makeUpdatedFieldMapString(tmUpdates, updatedField.StringAsUpdate))
 	}
 	if len(clientUpdates) > 0 {
-		configFilename := filepath.Join(configPath, "client.toml")
-		provconfig.WriteConfigToFile(configFilename, clientConfig)
-		cmd.Printf("Client config updated: %s\n", configFilename)
-		cmd.Println(getUpdatedFieldMapString(clientUpdates))
+		provconfig.WriteConfigToFile(filepath.Join(configPath, clientConfFilename), clientConfig)
+		cmd.Println(makeClientConfigHeader(configPath, "Updated"))
+		cmd.Println(makeUpdatedFieldMapString(clientUpdates, updatedField.StringAsUpdate))
 	}
 	return false, nil
+}
+
+func getConfigDir(cmd *cobra.Command) string {
+	return filepath.Join(client.GetClientContextFromCmd(cmd).HomeDir, configSubDir)
 }
 
 // getAppConfigAndMap gets the app/cosmos configuration object and related string->value map.
@@ -328,7 +387,6 @@ func getAppConfigAndMap(cmd *cobra.Command) (*serverconfig.Config, map[string]re
 		return nil, nil, err
 	}
 	fields := provconfig.GetFieldValueMap(conf, true)
-
 	return conf, fields, nil
 }
 
@@ -340,21 +398,27 @@ func getTmConfigAndMap(cmd *cobra.Command) (*tmconfig.Config, map[string]reflect
 		return nil, nil, err
 	}
 	fields := provconfig.GetFieldValueMap(conf, true)
-	// There are several fields in this map that don't correspond to entries in the config files.
-	// This info is accurate in Cosmos SDK 0.43 (on 2021-08-16).
-	// None of the "home" keys have entries in the config files:
-	// "home", "consensus.home", "mempool.home", "p2p.home", "rpc.home"
-	// There are several "p2p.test_" fields that should be ignored too.
-	// "p2p.test_dial_fail", "p2p.test_fuzz",
-	// "p2p.test_fuzz_config.*" ("maxdelay", "mode", "probdropconn", "probdroprw", "probsleep")
+	removeUndesirableTmConfigEntries(fields)
+	return conf, fields, nil
+}
+
+// removeUndesirableTmConfigEntries deletes some keys from the provided fields map that we don't want included.
+// The provided map is altered during this call. It is also returned from this func.
+// There are several fields in the tendermint config struct that don't correspond to entries in the config files.
+// None of the "home" keys have entries in the config files:
+// "home", "consensus.home", "mempool.home", "p2p.home", "rpc.home"
+// There are several "p2p.test_" fields that should be ignored too.
+// "p2p.test_dial_fail", "p2p.test_fuzz",
+// "p2p.test_fuzz_config.*" ("maxdelay", "mode", "probdropconn", "probdroprw", "probsleep")
+// This info is accurate in Cosmos SDK 0.43 (on 2021-08-16).
+func removeUndesirableTmConfigEntries(fields map[string]reflect.Value) map[string]reflect.Value {
 	delete(fields, "home")
 	for k := range fields {
 		if (len(k) > 5 && k[len(k)-5:] == ".home") || (len(k) > 9 && k[:9] == "p2p.test_") {
 			delete(fields, k)
 		}
 	}
-
-	return conf, fields, nil
+	return fields
 }
 
 // getClientConfigAndMap gets the client configuration object and related string->value map.
@@ -366,6 +430,26 @@ func getClientConfigAndMap(cmd *cobra.Command) (*provconfig.ClientConfig, map[st
 	}
 	fields := provconfig.GetFieldValueMap(conf, true)
 	return conf, fields, nil
+}
+
+// getAllConfigDefaults gets a field map from the defaults of all the configs.
+func getAllConfigDefaults() map[string]reflect.Value {
+	return combineConfigMaps(
+		provconfig.GetFieldValueMap(serverconfig.DefaultConfig(), false),
+		removeUndesirableTmConfigEntries(provconfig.GetFieldValueMap(tmconfig.DefaultConfig(), false)),
+		provconfig.GetFieldValueMap(provconfig.DefaultClientConfig(), false),
+	)
+}
+
+// combineConfigMaps flattens the provided field maps into a single field map.
+func combineConfigMaps(maps ...map[string]reflect.Value) map[string]reflect.Value {
+	rv := map[string]reflect.Value{}
+	for _, m := range maps {
+		for k, v := range m {
+			rv[k] = v
+		}
+	}
+	return rv
 }
 
 // findEntry gets the entry with the given key in one of the provided maps.
@@ -410,6 +494,26 @@ func findEntries(key string, maps ...map[string]reflect.Value) map[string]reflec
 		}
 	}
 	return rv
+}
+
+// getFieldMapChanges gets an updated field map with changes between two field maps.
+// If the key doesn't exist in both maps, the entry is ignored.
+func getFieldMapChanges(isNowMap map[string]reflect.Value, wasMap map[string]reflect.Value) map[string]*updatedField {
+	changes := map[string]*updatedField{}
+	for key, isNowVal := range isNowMap {
+		isNow := getStringFromValue(isNowVal)
+		if wasVal, ok := wasMap[key]; ok {
+			was := getStringFromValue(wasVal)
+			if isNow != was {
+				changes[key] = &updatedField{
+					Key:   key,
+					Was:   was,
+					IsNow: isNow,
+				}
+			}
+		}
+	}
+	return changes
 }
 
 // getStringFromValue gets a string of the given value.
@@ -548,7 +652,7 @@ func setValueFromString(fieldName string, fieldVal reflect.Value, strVal string)
 	case reflect.Slice:
 		switch fieldVal.Type().Elem().Kind() {
 		case reflect.String:
-			val := []string{}
+			var val []string
 			if len(strVal) > 0 {
 				err := json.Unmarshal([]byte(strVal), &val)
 				if err != nil {
@@ -559,7 +663,7 @@ func setValueFromString(fieldName string, fieldVal reflect.Value, strVal string)
 			return nil
 		case reflect.Slice:
 			if fieldVal.Type().Elem().Elem().Kind() == reflect.String {
-				val := [][]string{}
+				var val [][]string
 				if len(strVal) > 0 {
 					err := json.Unmarshal([]byte(strVal), &val)
 					if err != nil {
@@ -586,12 +690,30 @@ func setValueFromString(fieldName string, fieldVal reflect.Value, strVal string)
 	return fmt.Errorf("field %s cannot be set because setting values of type %s has not yet been set up", fieldName, fieldVal.Type())
 }
 
-// getFieldMapString gets a multi-line string with all the keys and values in the provided map.
-func getFieldMapString(m map[string]reflect.Value) string {
+// makeFieldMapString makes a multi-line string with all the keys and values in the provided map.
+func makeFieldMapString(m map[string]reflect.Value) string {
 	keys := getSortedKeys(m)
 	var sb strings.Builder
 	for _, k := range keys {
-		sb.WriteString(getKVString(k, m[k]))
+		sb.WriteString(k)
+		sb.WriteByte('=')
+		sb.WriteString(getStringFromValue(m[k]))
+		sb.WriteByte('\n')
+	}
+	return sb.String()
+}
+
+// makeUpdatedFieldMapString makes a multi-line string of the given updated field map.
+// The provided stringer function is used to convert each map value to a string.
+func makeUpdatedFieldMapString(m map[string]*updatedField, stringer func(v updatedField) string) string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	keys = sortKeys(keys)
+	var sb strings.Builder
+	for _, key := range keys {
+		sb.WriteString(stringer(*m[key]))
 		sb.WriteByte('\n')
 	}
 	return sb.String()
@@ -609,8 +731,8 @@ func getSortedKeys(m map[string]reflect.Value) []string {
 // sortKeys sorts the provided keys slice.
 // Base keys are put first and sorted alphabetically followed by keys in sub-configs sorted alphabetically.
 func sortKeys(keys []string) []string {
-	baseKeys := []string{}
-	subKeys := []string{}
+	var baseKeys []string
+	var subKeys []string
 	for _, k := range keys {
 		if strings.Contains(k, ".") {
 			subKeys = append(subKeys, k)
@@ -627,32 +749,37 @@ func sortKeys(keys []string) []string {
 	return keys
 }
 
-// getKVString gets a string associating a key and value.
-func getKVString(k string, v reflect.Value) string {
-	return fmt.Sprintf("%s=%s", k, getStringFromValue(v))
-}
-
-// addOrUpdateInfo adds the provided info to the map if it's ot already there (by Key).
-// Or if it's already there, updates the existing entry.
-func addOrUpdateInfo(all map[string]*updatedValue, info updatedValue) {
-	if inf, ok := all[info.Key]; ok {
-		inf.Update(info)
-	} else {
-		all[info.Key] = &info
-	}
-}
-
-// getUpdatedFieldMapString gets a multi-line string with info about all the keys and values updated.
-func getUpdatedFieldMapString(updates map[string]*updatedValue) string {
-	keys := make([]string, 0, len(updates))
-	for k := range updates {
-		keys = append(keys, k)
-	}
-	keys = sortKeys(keys)
+// makeSectionHeaderString creates a string to use as a section header in output.
+func makeSectionHeaderString(lead, addedLead, filename string) string {
 	var sb strings.Builder
-	for _, key := range keys {
-		sb.WriteString(updates[key].String())
-		sb.WriteByte('\n')
+	sb.WriteString(lead)
+	if len(addedLead) > 0 {
+		sb.WriteByte(' ')
+		sb.WriteString(addedLead)
 	}
+	sb.WriteByte(':')
+	hr := strings.Repeat("-", sb.Len())
+	if len(filename) > 0 {
+		sb.WriteByte(' ')
+		sb.WriteString(filename)
+		hr += "-----"
+	}
+	sb.WriteByte('\n')
+	sb.WriteString(hr)
 	return sb.String()
+}
+
+// makeAppConfigHeader creates a section header string for app config stuff.
+func makeAppConfigHeader(configPath, addedLead string) string {
+	return makeSectionHeaderString("App Config", addedLead, filepath.Join(configPath, appConfFilename))
+}
+
+// makeTmConfigHeader creates a section header string for tendermint config stuff.
+func makeTmConfigHeader(configPath, addedLead string) string {
+	return makeSectionHeaderString("Tendermint Config", addedLead, filepath.Join(configPath, tmConfFilename))
+}
+
+// makeClientConfigHeader creates a section header string for client config stuff.
+func makeClientConfigHeader(configPath, addedLead string) string {
+	return makeSectionHeaderString("Client Config", addedLead, filepath.Join(configPath, clientConfFilename))
 }
