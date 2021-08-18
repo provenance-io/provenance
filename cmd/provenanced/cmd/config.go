@@ -25,7 +25,7 @@ import (
 const (
 	entryNotFound      = -1
 	appConfFilename    = "app.toml"
-	tmConfFilename     = "tm.toml"
+	tmConfFilename     = "config.toml"
 	clientConfFilename = "client.toml"
 	configSubDir       = "config"
 )
