@@ -478,6 +478,7 @@ func runConfigChangedCmd(cmd *cobra.Command, args []string) (bool, error) {
 			cmd.Println(makeUpdatedFieldMapString(appDiffs, updatedField.StringAsDefault))
 		} else {
 			cmd.Println("All app config values equal the default config values.")
+			cmd.Println("")
 		}
 	}
 
@@ -487,6 +488,7 @@ func runConfigChangedCmd(cmd *cobra.Command, args []string) (bool, error) {
 			cmd.Println(makeUpdatedFieldMapString(tmDiffs, updatedField.StringAsDefault))
 		} else {
 			cmd.Println("All tendermint config values equal the default config values.")
+			cmd.Println("")
 		}
 	}
 
@@ -496,6 +498,7 @@ func runConfigChangedCmd(cmd *cobra.Command, args []string) (bool, error) {
 			cmd.Println(makeUpdatedFieldMapString(clientDiffs, updatedField.StringAsDefault))
 		} else {
 			cmd.Println("All client config values equal the default config values.")
+			cmd.Println("")
 		}
 	}
 
