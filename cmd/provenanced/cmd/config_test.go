@@ -33,6 +33,14 @@ type ConfigTestSuite struct {
 
 	Home    string
 	Context *context.Context
+
+	HeaderStrApp    string
+	HeaderStrTM     string
+	HeaderStrClient string
+
+	BaseFNApp    string
+	BaseFNTM     string
+	baseFNClient string
 }
 
 func (s *ConfigTestSuite) SetupTest() {
@@ -57,22 +65,46 @@ func (s *ConfigTestSuite) SetupTest() {
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 	s.Context = &ctx
+
+	s.HeaderStrApp = "App"
+	s.HeaderStrTM = "Tendermint"
+	s.HeaderStrClient = "Client"
+
+	s.BaseFNApp = "app.toml"
+	s.BaseFNTM = "config.toml"
+	s.baseFNClient = "client.toml"
+}
+
+func (s ConfigTestSuite) makeConfigHeaderLine(t, fn string) string {
+	return fmt.Sprintf("%s Config: %s/config/%s", t, s.Home, fn)
+}
+
+func (s ConfigTestSuite) makeAppConfigHeaderLines() string {
+	return s.makeConfigHeaderLine(s.HeaderStrApp, s.BaseFNApp) + "\n----------------"
+}
+
+func (s ConfigTestSuite) makeTMConfigHeaderLines() string {
+	return s.makeConfigHeaderLine(s.HeaderStrTM, s.BaseFNTM) + "\n-----------------------"
+}
+
+func (s ConfigTestSuite) makeClientConfigHeaderLines() string {
+	return s.makeConfigHeaderLine(s.HeaderStrClient, s.baseFNClient) + "\n-------------------"
 }
 
 func (s ConfigTestSuite) makeConfigUpdatedLine(t, f string) string {
-	return fmt.Sprintf("%s config updated: %s/config/%s.toml", t, s.Home, f)
+	return fmt.Sprintf("%s Config Updated: %s/config/%s", t, s.Home, f)
 }
 
-func (s ConfigTestSuite) makeAppConfigUpdateLine() string {
-	return s.makeConfigUpdatedLine("App", "app")
+func (s ConfigTestSuite) makeAppConfigUpdateLines() string {
+	return s.makeConfigUpdatedLine(s.HeaderStrApp, s.BaseFNApp) + "\n------------------------"
 }
 
-func (s ConfigTestSuite) makeTMConfigUpdateLine() string {
-	return s.makeConfigUpdatedLine("Tendermint", "config")
+func (s ConfigTestSuite) makeTMConfigUpdateLines() string {
+	return s.makeConfigUpdatedLine(s.HeaderStrTM, s.BaseFNTM) + "\n-------------------------------"
 }
 
-func (s ConfigTestSuite) makeClientConfigUpdateLine() string {
-	return s.makeConfigUpdatedLine("Client", "client")
+func (s ConfigTestSuite) makeClientConfigUpdateLines() string {
+	return s.makeConfigUpdatedLine(s.HeaderStrClient, s.baseFNClient) + "\n---------------------------"
 }
 
 func (s ConfigTestSuite) makeKeyUpdatedLine(key, oldVal, newVal string) string {
@@ -121,7 +153,7 @@ func (s *ConfigTestSuite) TestConfigBadArgs() {
 func (s *ConfigTestSuite) TestConfigCmdGet() {
 	command := cmd.ConfigCmd()
 
-	command.SetArgs([]string{})
+	command.SetArgs([]string{"get"})
 	b := bytes.NewBufferString("")
 	command.SetOut(b)
 	err := command.ExecuteContext(*s.Context)
@@ -137,7 +169,7 @@ func (s *ConfigTestSuite) TestConfigCmdGet() {
 		re   *regexp.Regexp
 	}{
 		// App config header and a few entries.
-		{"app header", regexp.MustCompile(`(?m)^App Config: .*/config/app\.toml$`)},
+		{"app header", regexp.MustCompile(`(?m)^App Config: .*/config/`+s.BaseFNApp+`$`)},
 		{"app halt-height", regexp.MustCompile(`(?m)^halt-height=0$`)},
 		{"app api.swagger", regexp.MustCompile(`(?m)^api.swagger=false$`)},
 		{"app grpc.address", regexp.MustCompile(`(?m)^grpc.address="0.0.0.0:9090"$`)},
@@ -145,7 +177,7 @@ func (s *ConfigTestSuite) TestConfigCmdGet() {
 		{"app rosetta.enable", regexp.MustCompile(`(?m)^rosetta.enable=false$`)},
 
 		// Tendermint header and a few entries.
-		{"tendermint header", regexp.MustCompile(`(?m)^Tendermint Config: .*/config/config.toml$`)},
+		{"tendermint header", regexp.MustCompile(`(?m)^Tendermint Config: .*/config/`+s.BaseFNTM+`$`)},
 		{"tendermint fast_sync", regexp.MustCompile(`(?m)^fast_sync=true$`)},
 		{"tendermint consensus.timeout_commit", regexp.MustCompile(`(?m)^consensus.timeout_commit="1s"$`)},
 		{"tendermint mempool.size", regexp.MustCompile(`(?m)^mempool.size=5000$`)},
@@ -153,7 +185,7 @@ func (s *ConfigTestSuite) TestConfigCmdGet() {
 		{"tendermint p2p.recv_rate", regexp.MustCompile(`(?m)^p2p.recv_rate=5120000$`)},
 
 		// Client config header all the entries.
-		{"client header", regexp.MustCompile(`(?m)^Client Config: .*/config/client.toml$`)},
+		{"client header", regexp.MustCompile(`(?m)^Client Config: .*/config/`+s.baseFNClient+`$`)},
 		{"client broadcast-mode", regexp.MustCompile(`(?m)^broadcast-mode="block"$`)},
 		{"client chain-id", regexp.MustCompile(`(?m)^chain-id=""$`)},
 		{"client keyring-backend", regexp.MustCompile(`(?m)^keyring-backend="test"$`)},
@@ -168,34 +200,19 @@ func (s *ConfigTestSuite) TestConfigCmdGet() {
 		})
 	}
 
-	sameOutTests := []struct {
-		name string
-		args []string
-	}{
-		{
-			name: "with just arg get",
-			args: []string{"get"},
-		},
-		{
-			name: "with args get all",
-			args: []string{"get", "all"},
-		},
-	}
-
-	for _, tc := range sameOutTests {
-		s.T().Run(tc.name, func(t *testing.T) {
-			command2 := cmd.ConfigCmd()
-			command2.SetArgs(tc.args)
-			b2 := bytes.NewBufferString("")
-			command2.SetOut(b2)
-			err2 := command2.ExecuteContext(*s.Context)
-			require.NoError(t, err2, "%s - unexpected error executing command", command2.Name())
-			out2, err2 := ioutil.ReadAll(b2)
-			require.NoError(t, err2, "%s - unexpected error reading command output", command2.Name())
-			out2Str := string(out2)
-			require.Equal(t, outStr, out2Str, "output of no-args vs output of %s", tc.args)
-		})
-	}
+	s.T().Run("with args get all", func(t *testing.T) {
+		command2 := cmd.ConfigCmd()
+		args := []string{"get", "all"}
+		command2.SetArgs(args)
+		b2 := bytes.NewBufferString("")
+		command2.SetOut(b2)
+		err2 := command2.ExecuteContext(*s.Context)
+		require.NoError(t, err2, "%s - unexpected error executing command", command2.Name())
+		out2, err2 := ioutil.ReadAll(b2)
+		require.NoError(t, err2, "%s - unexpected error reading command output", command2.Name())
+		out2Str := string(out2)
+		require.Equal(t, outStr, out2Str, "output of no-args vs output of %s", args)
+	})
 
 	inOutTests := []struct {
 		name string
@@ -263,6 +280,7 @@ func (s *ConfigTestSuite) TestConfigGetMulti() {
 			name: "three app config keys",
 			keys: []string{"min-retain-blocks", "rosetta.retries", "grpc.address"},
 			expected: buildExpected(
+				s.makeAppConfigHeaderLines(),
 				`min-retain-blocks=0`,
 				`grpc.address="0.0.0.0:9090"`,
 				`rosetta.retries=3`),
@@ -271,6 +289,7 @@ func (s *ConfigTestSuite) TestConfigGetMulti() {
 			name: "three tendermint config keys",
 			keys: []string{"p2p.send_rate", "genesis_file", "consensus.timeout_propose"},
 			expected: buildExpected(
+				s.makeTMConfigHeaderLines(),
 				`genesis_file="config/genesis.json"`,
 				`consensus.timeout_propose="3s"`,
 				`p2p.send_rate=5120000`),
@@ -279,6 +298,7 @@ func (s *ConfigTestSuite) TestConfigGetMulti() {
 			name: "three client config keys",
 			keys: []string{"keyring-backend", "broadcast-mode", "output"},
 			expected: buildExpected(
+				s.makeClientConfigHeaderLines(),
 				`broadcast-mode="block"`,
 				`keyring-backend="test"`,
 				`output="text"`),
@@ -287,12 +307,17 @@ func (s *ConfigTestSuite) TestConfigGetMulti() {
 			name: "two from each",
 			keys: []string{"rpc.cors_allowed_origins", "pruning", "node", "rosetta.offline", "chain-id", "priv_validator_state_file"},
 			expected: buildExpected(
-				`chain-id=""`,
-				`node="tcp://localhost:26657"`,
-				`priv_validator_state_file="data/priv_validator_state.json"`,
+				s.makeAppConfigHeaderLines(),
 				`pruning="default"`,
 				`rosetta.offline=false`,
-				`rpc.cors_allowed_origins=[]`),
+				"",
+				s.makeTMConfigHeaderLines(),
+				`priv_validator_state_file="data/priv_validator_state.json"`,
+				`rpc.cors_allowed_origins=[]`,
+				"",
+				s.makeClientConfigHeaderLines(),
+				`chain-id=""`,
+				`node="tcp://localhost:26657"`),
 		},
 	}
 
@@ -317,9 +342,12 @@ func (s *ConfigTestSuite) TestConfigGetMulti() {
 	s.T().Run("three found two missing", func(t *testing.T) {
 		expectedError := "2 configuration keys not found: bananas, pears"
 		expected := buildExpected(
-			`output="text"`,
+			s.makeAppConfigHeaderLines(),
 			`api.enable=false`,
 			`api.swagger=false`,
+			"",
+			s.makeClientConfigHeaderLines(),
+			`output="text"`,
 		) + "Error: " + expectedError + "\n"
 		args := []string{"get", "bananas", "api.enable", "pears", "api.swagger", "output"}
 		b := bytes.NewBufferString("")
@@ -338,8 +366,11 @@ func (s *ConfigTestSuite) TestConfigGetMulti() {
 	s.T().Run("two found one missing", func(t *testing.T) {
 		expectedError := "1 configuration key not found: cannot.find.me"
 		expected := buildExpected(
-			`consensus.create_empty_blocks_interval="0s"`,
+			s.makeAppConfigHeaderLines(),
 			`grpc.enable=true`,
+			"",
+			s.makeTMConfigHeaderLines(),
+			`consensus.create_empty_blocks_interval="0s"`,
 		) + "Error: " + expectedError + "\n"
 		args := []string{"get", "cannot.find.me", "consensus.create_empty_blocks_interval", "grpc.enable"}
 		b := bytes.NewBufferString("")
@@ -399,9 +430,9 @@ func (s *ConfigTestSuite) TestConfigSetValidation() {
 }
 
 func (s *ConfigTestSuite) TestConfigCmdSet() {
-	reAppConfigUpdated := regexp.MustCompile(`(?m)^App config updated: .*/config/app\.toml$`)
-	reTmConfigUpdated := regexp.MustCompile(`(?m)^Tendermint config updated: .*/config/config\.toml$`)
-	reClientConfigUpdated := regexp.MustCompile(`(?m)^Client config updated: .*/config/client\.toml$`)
+	reAppConfigUpdated := regexp.MustCompile(`(?m)^App Config Updated: .*/config/`+s.BaseFNApp+`$`)
+	reTMConfigUpdated := regexp.MustCompile(`(?m)^Tendermint Config Updated: .*/config/`+s.BaseFNTM+`$`)
+	reClientConfigUpdated := regexp.MustCompile(`(?m)^Client Config Updated: .*/config/`+s.baseFNClient+`$`)
 
 	positiveTests := []struct {
 		name    string
@@ -446,31 +477,31 @@ func (s *ConfigTestSuite) TestConfigCmdSet() {
 			name:    "filter_peers",
 			oldVal:  `false`,
 			newVal:  `true`,
-			toMatch: []*regexp.Regexp{reTmConfigUpdated},
+			toMatch: []*regexp.Regexp{reTMConfigUpdated},
 		},
 		{
 			name:    "proxy_app",
 			oldVal:  `"tcp://127.0.0.1:26658"`,
 			newVal:  `"tcp://localhost:26658"`,
-			toMatch: []*regexp.Regexp{reTmConfigUpdated},
+			toMatch: []*regexp.Regexp{reTMConfigUpdated},
 		},
 		{
 			name:    "consensus.timeout_commit",
 			oldVal:  `"1s"`,
 			newVal:  `"2s"`,
-			toMatch: []*regexp.Regexp{reTmConfigUpdated},
+			toMatch: []*regexp.Regexp{reTMConfigUpdated},
 		},
 		{
 			name:    "mempool.cache_size",
 			oldVal:  `10000`,
 			newVal:  `10005`,
-			toMatch: []*regexp.Regexp{reTmConfigUpdated},
+			toMatch: []*regexp.Regexp{reTMConfigUpdated},
 		},
 		{
 			name:    "rpc.cors_allowed_methods",
 			oldVal:  `["HEAD", "GET", "POST"]`,
 			newVal:  `["POST", "HEAD", "GET"]`,
-			toMatch: []*regexp.Regexp{reTmConfigUpdated},
+			toMatch: []*regexp.Regexp{reTMConfigUpdated},
 		},
 
 		// Client fields
@@ -567,7 +598,7 @@ func (s *ConfigTestSuite) TestConfigSetMulti() {
 			name: "two app entries",
 			args: []string{"set", "api.enable", "true", "telemetry.service-name", "blocky"},
 			out: buildExpected(
-				s.makeAppConfigUpdateLine(),
+				s.makeAppConfigUpdateLines(),
 				s.makeKeyUpdatedLine("api.enable", "false", "true"),
 				s.makeKeyUpdatedLine("telemetry.service-name", `""`, `"blocky"`)),
 		},
@@ -575,7 +606,7 @@ func (s *ConfigTestSuite) TestConfigSetMulti() {
 			name: "two tendermint entries",
 			args: []string{"set", "log_format", "json", "consensus.timeout_commit", "950ms"},
 			out: buildExpected(
-				s.makeTMConfigUpdateLine(),
+				s.makeTMConfigUpdateLines(),
 				s.makeKeyUpdatedLine("log_format", `"plain"`, `"json"`),
 				s.makeKeyUpdatedLine("consensus.timeout_commit", `"1s"`, `"950ms"`)),
 		},
@@ -583,7 +614,7 @@ func (s *ConfigTestSuite) TestConfigSetMulti() {
 			name: "two client entries",
 			args: []string{"set", "node", "tcp://127.0.0.1:26657", "output", "json"},
 			out: buildExpected(
-				s.makeClientConfigUpdateLine(),
+				s.makeClientConfigUpdateLines(),
 				s.makeKeyUpdatedLine("node", `"tcp://localhost:26657"`, `"tcp://127.0.0.1:26657"`),
 				s.makeKeyUpdatedLine("output", `"text"`, `"json"`)),
 		},
@@ -591,15 +622,15 @@ func (s *ConfigTestSuite) TestConfigSetMulti() {
 			name: "two of each",
 			args: []string{"set", "consensus.timeout_commit", "950ms", "api.enable", "true", "telemetry.service-name", "blocky", "node", "tcp://127.0.0.1:26657", "output", "json", "log_format", "json"},
 			out: buildExpected(
-				s.makeAppConfigUpdateLine(),
+				s.makeAppConfigUpdateLines(),
 				s.makeKeyUpdatedLine("api.enable", "false", "true"),
 				s.makeKeyUpdatedLine("telemetry.service-name", `""`, `"blocky"`),
 				"",
-				s.makeTMConfigUpdateLine(),
+				s.makeTMConfigUpdateLines(),
 				s.makeKeyUpdatedLine("log_format", `"plain"`, `"json"`),
 				s.makeKeyUpdatedLine("consensus.timeout_commit", `"1s"`, `"950ms"`),
 				"",
-				s.makeClientConfigUpdateLine(),
+				s.makeClientConfigUpdateLines(),
 				s.makeKeyUpdatedLine("node", `"tcp://localhost:26657"`, `"tcp://127.0.0.1:26657"`),
 				s.makeKeyUpdatedLine("output", `"text"`, `"json"`)),
 		},
