@@ -197,7 +197,7 @@ func (s *ConfigTestSuite) TestConfigCmdGet() {
 		re   *regexp.Regexp
 	}{
 		// App config header and a few entries.
-		{"app header", regexp.MustCompile(`(?m)^App Config: .*/config/`+s.BaseFNApp+`$`)},
+		{"app header", regexp.MustCompile(`(?m)^App Config: .*/config/` + s.BaseFNApp + `$`)},
 		{"app halt-height", regexp.MustCompile(`(?m)^halt-height=0$`)},
 		{"app api.swagger", regexp.MustCompile(`(?m)^api.swagger=false$`)},
 		{"app grpc.address", regexp.MustCompile(`(?m)^grpc.address="0.0.0.0:9090"$`)},
@@ -205,7 +205,7 @@ func (s *ConfigTestSuite) TestConfigCmdGet() {
 		{"app rosetta.enable", regexp.MustCompile(`(?m)^rosetta.enable=false$`)},
 
 		// Tendermint header and a few entries.
-		{"tendermint header", regexp.MustCompile(`(?m)^Tendermint Config: .*/config/`+s.BaseFNTM+`$`)},
+		{"tendermint header", regexp.MustCompile(`(?m)^Tendermint Config: .*/config/` + s.BaseFNTM + `$`)},
 		{"tendermint fast_sync", regexp.MustCompile(`(?m)^fast_sync=true$`)},
 		{"tendermint consensus.timeout_commit", regexp.MustCompile(`(?m)^consensus.timeout_commit="1s"$`)},
 		{"tendermint mempool.size", regexp.MustCompile(`(?m)^mempool.size=5000$`)},
@@ -213,7 +213,7 @@ func (s *ConfigTestSuite) TestConfigCmdGet() {
 		{"tendermint p2p.recv_rate", regexp.MustCompile(`(?m)^p2p.recv_rate=5120000$`)},
 
 		// Client config header all the entries.
-		{"client header", regexp.MustCompile(`(?m)^Client Config: .*/config/`+s.baseFNClient+`$`)},
+		{"client header", regexp.MustCompile(`(?m)^Client Config: .*/config/` + s.baseFNClient + `$`)},
 		{"client broadcast-mode", regexp.MustCompile(`(?m)^broadcast-mode="block"$`)},
 		{"client chain-id", regexp.MustCompile(`(?m)^chain-id=""$`)},
 		{"client keyring-backend", regexp.MustCompile(`(?m)^keyring-backend="test"$`)},
@@ -455,7 +455,7 @@ func (s *ConfigTestSuite) TestConfigChanged() {
 		{
 			name: "changed output",
 			args: []string{"changed", "output"},
-			out:  s.makeMultiLine(
+			out: s.makeMultiLine(
 				s.makeClientDiffHeaderLines(),
 				`output="text" (same as default)`,
 				"",
@@ -521,9 +521,9 @@ func (s *ConfigTestSuite) TestConfigSetValidation() {
 }
 
 func (s *ConfigTestSuite) TestConfigCmdSet() {
-	reAppConfigUpdated := regexp.MustCompile(`(?m)^App Config Updated: .*/config/`+s.BaseFNApp+`$`)
-	reTMConfigUpdated := regexp.MustCompile(`(?m)^Tendermint Config Updated: .*/config/`+s.BaseFNTM+`$`)
-	reClientConfigUpdated := regexp.MustCompile(`(?m)^Client Config Updated: .*/config/`+s.baseFNClient+`$`)
+	reAppConfigUpdated := regexp.MustCompile(`(?m)^App Config Updated: .*/config/` + s.BaseFNApp + `$`)
+	reTMConfigUpdated := regexp.MustCompile(`(?m)^Tendermint Config Updated: .*/config/` + s.BaseFNTM + `$`)
+	reClientConfigUpdated := regexp.MustCompile(`(?m)^Client Config Updated: .*/config/` + s.baseFNClient + `$`)
 
 	positiveTests := []struct {
 		name    string
