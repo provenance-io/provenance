@@ -56,7 +56,15 @@ func (u updatedField) StringAsUpdate() string {
 
 // StringAsDefault creates a string from this updatedField identifying the Was as a default.
 func (u updatedField) StringAsDefault() string {
+	if !u.HasDiff() {
+		return fmt.Sprintf("%s=%s (same as default)", u.Key, u.IsNow)
+	}
 	return fmt.Sprintf("%s=%s (default=%s)", u.Key, u.IsNow, u.Was)
+}
+
+// HasDiff returns true if IsNow and Was have different values.
+func (u updatedField) HasDiff() bool {
+	return u.IsNow != u.Was
 }
 
 // AddToOrUpdateIn adds this updatedField to the provided map if it's not already there (by Key).
@@ -72,11 +80,11 @@ func (u updatedField) AddToOrUpdateIn(all map[string]*updatedField) {
 // ConfigCmd returns a CLI command to update config files.
 func ConfigCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "config get <key1> [<key2> ...] | set <key1> <value1> [<key2> <value2> ...] | [<key> [<value>]]",
+		Use:   "config get [<key1> [<key2> ...]] | set <key1> <value1> [<key2> <value2> ...] | changed [<key1> [<key2>...] | [<key> [<value>]]",
 		Short: "Get or Set configuration values",
 		Long: fmt.Sprintf(`Get or Set configuration values.
 
-Get configuration values: %[1]s get <key1> [<key2> ...]
+Get configuration values: %[1]s get [<key1> [<key2> ...]]
     The key values can be specific.
         e.g. %[1]s get telemetry.service-name moniker.
     Or they can be parent field names
@@ -90,15 +98,13 @@ Get configuration values: %[1]s get <key1> [<key2> ...]
             e.g. %[1]s get client
     Or they can be the word "all" to get all configuration values.
         e.g. %[1]s get all
-    Or they can be the word "changed" to get all configuration values that are different from defaults.
-        e.g. %[1]s get changed
-    If no keys are provided, values changed from the defaults are retrieved.
+    If no keys are provided, all values are retrieved.
 
 Set a config value: %[1]s set <key> <value>
     The key must be specific, e.g. "telemetry.service-name", or "moniker".
     The value must be provided as a single argument. Make sure to quote it appropriately for your system.
     e.g. %[1]s set output json
-Set multiple config values %[1]s set <key1> <value1> <key2> <value2> [<key3> <value3> ...]
+Set multiple config values %[1]s set <key1> <value1> [<key2> <value2> ...]
     Simply provide multiple key/value pairs as alternating arguments.
     e.g. %[1]s set api.enable true api.swagger true
 
@@ -106,7 +112,15 @@ When getting or setting a single key, the "get" or "set" can be omitted.
     e.g. %[1]s output
     and  %[1]s output json
 
-If no arguments are provided, default behavior is to get all values changed from the defaults.
+Get just the configuration entries that are not default values: %[1]s changed [<key1> [<key2> ...]]
+    The same key values can be used here as with the %[1]s get.
+    e.g. %[1]s changed all
+    e.g. %[1]s changed client
+    e.g. %[1]s changed telemetry.service-name moniker
+    Current and default values are both included in the output.
+    If no keys are provided, all non-default values are retrieved.
+
+If no arguments are provided, default behavior is the same as %[1]s changed all
 
 `, configCmdStart, appConfFilename, tmConfFilename, clientConfFilename),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -137,10 +151,14 @@ func runConfigCmd(cmd *cobra.Command, args []string) (bool, error) {
 			return runConfigGetCmd(cmd, args[1:])
 		case "set":
 			return runConfigSetCmd(cmd, args[1:])
+		case "changed":
+			return runConfigChangedCmd(cmd, args[1:])
 		}
 	}
 	switch len(args) {
-	case 0, 1:
+	case 0:
+		return runConfigChangedCmd(cmd, args)
+	case 1:
 		return runConfigGetCmd(cmd, args)
 	case 2:
 		return runConfigSetCmd(cmd, args)
@@ -169,7 +187,7 @@ func runConfigGetCmd(cmd *cobra.Command, args []string) (bool, error) {
 	configPath := getConfigDir(cmd)
 
 	if len(args) == 0 {
-		args = append(args, "changed")
+		args = append(args, "all")
 	}
 	hadGroup := false
 	unknownKeyMap := map[string]reflect.Value{}
@@ -198,35 +216,8 @@ func runConfigGetCmd(cmd *cobra.Command, args []string) (bool, error) {
 			hadGroup = true
 			cmd.Println(makeClientConfigHeader(configPath, ""))
 			cmd.Println(makeFieldMapString(clientFields))
-		case "changed", "changes":
-			hadGroup = true
-			allDefaults := getAllConfigDefaults()
-			appDiffs := getFieldMapChanges(appFields, allDefaults)
-			tmDiffs := getFieldMapChanges(tmFields, allDefaults)
-			clientDiffs := getFieldMapChanges(clientFields, allDefaults)
-
-			cmd.Println(makeAppConfigHeader(configPath, "Differences from Defaults"))
-			if len(appDiffs) > 0 {
-				cmd.Println(makeUpdatedFieldMapString(appDiffs, updatedField.StringAsDefault))
-			} else {
-				cmd.Println("All app config values equal the default config values.")
-			}
-
-			cmd.Println(makeTmConfigHeader(configPath, "Differences from Defaults"))
-			if len(tmDiffs) > 0 {
-				cmd.Println(makeUpdatedFieldMapString(tmDiffs, updatedField.StringAsDefault))
-			} else {
-				cmd.Println("All tendermint config values equal the default config values.")
-			}
-
-			cmd.Println(makeClientConfigHeader(configPath, "Differences from Defaults"))
-			if len(clientDiffs) > 0 {
-				cmd.Println(makeUpdatedFieldMapString(clientDiffs, updatedField.StringAsDefault))
-			} else {
-				cmd.Println("All client config values equal the default config values.")
-			}
 		default:
-			entries := findEntries(key, appFields, tmFields, clientFields)
+			entries, _ := findEntries(key, appFields, tmFields, clientFields)
 			if len(entries) == 0 {
 				unknownKeyMap[key] = reflect.Value{}
 			} else {
@@ -375,6 +366,131 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
 	return false, nil
 }
 
+// runConfigChangedCmd gets values that have changed from their defaults.
+// The first return value is whether or not to include help with the output of an error.
+// This will only ever be true if an error is also returned.
+// The second return value is any error encountered.
+func runConfigChangedCmd(cmd *cobra.Command, args []string) (bool, error) {
+	_, appFields, acerr := getAppConfigAndMap(cmd)
+	if acerr != nil {
+		return false, fmt.Errorf("couldn't get app config: %v", acerr)
+	}
+	_, tmFields, tmcerr := getTmConfigAndMap(cmd)
+	if tmcerr != nil {
+		return false, fmt.Errorf("couldn't get tendermint config: %v", tmcerr)
+	}
+	_, clientFields, ccerr := getClientConfigAndMap(cmd)
+	if ccerr != nil {
+		return false, fmt.Errorf("couldn't get client config: %v", ccerr)
+	}
+
+	if len(args) == 0 {
+		args = append(args, "all")
+	}
+
+	allDefaults := getAllConfigDefaults()
+	configPath := getConfigDir(cmd)
+	showApp, showTm, showClient := false, false, false
+	appDiffs := map[string]*updatedField{}
+	tmDiffs := map[string]*updatedField{}
+	clientDiffs := map[string]*updatedField{}
+	unknownKeyMap := map[string]reflect.Value{}
+	for _, key := range args {
+		switch key {
+		case "all":
+			showApp, showTm, showClient = true, true, true
+			for k, v := range getFieldMapChanges(appFields, allDefaults) {
+				appDiffs[k] = v
+			}
+			for k, v := range getFieldMapChanges(tmFields, allDefaults) {
+				tmDiffs[k] = v
+			}
+			for k, v := range getFieldMapChanges(clientFields, allDefaults) {
+				clientDiffs[k] = v
+			}
+		case "app", "cosmos":
+			showApp = true
+			for k, v := range getFieldMapChanges(appFields, allDefaults) {
+				appDiffs[k] = v
+			}
+		case "config", "tendermint", "tm":
+			showTm = true
+			for k, v := range getFieldMapChanges(tmFields, allDefaults) {
+				tmDiffs[k] = v
+			}
+		case "client":
+			showClient = true
+			for k, v := range getFieldMapChanges(clientFields, allDefaults) {
+				clientDiffs[k] = v
+			}
+		default:
+			entries, foundIn := findEntries(key, appFields, tmFields, clientFields)
+			switch foundIn {
+			case 0:
+				showApp = true
+				for k, v := range entries {
+					if uf, ok := makeUpdatedField(k, v, allDefaults); ok {
+						appDiffs[k] = &uf
+					}
+				}
+			case 1:
+				showTm = true
+				for k, v := range entries {
+					if uf, ok := makeUpdatedField(k, v, allDefaults); ok {
+						tmDiffs[k] = &uf
+					}
+				}
+			case 2:
+				showClient = true
+				for k, v := range entries {
+					if uf, ok := makeUpdatedField(k, v, allDefaults); ok {
+						clientDiffs[k] = &uf
+					}
+				}
+			default:
+				unknownKeyMap[key] = reflect.Value{}
+			}
+		}
+	}
+
+	if showApp {
+		cmd.Println(makeAppConfigHeader(configPath, "Differences from Defaults"))
+		if len(appDiffs) > 0 {
+			cmd.Println(makeUpdatedFieldMapString(appDiffs, updatedField.StringAsDefault))
+		} else {
+			cmd.Println("All app config values equal the default config values.")
+		}
+	}
+
+	if showTm {
+		cmd.Println(makeTmConfigHeader(configPath, "Differences from Defaults"))
+		if len(tmDiffs) > 0 {
+			cmd.Println(makeUpdatedFieldMapString(tmDiffs, updatedField.StringAsDefault))
+		} else {
+			cmd.Println("All tendermint config values equal the default config values.")
+		}
+	}
+
+	if showClient {
+		cmd.Println(makeClientConfigHeader(configPath, "Differences from Defaults"))
+		if len(clientDiffs) > 0 {
+			cmd.Println(makeUpdatedFieldMapString(clientDiffs, updatedField.StringAsDefault))
+		} else {
+			cmd.Println("All client config values equal the default config values.")
+		}
+	}
+
+	if len(unknownKeyMap) > 0 {
+		unknownKeys := getSortedKeys(unknownKeyMap)
+		s := "s"
+		if len(unknownKeys) == 1 {
+			s = ""
+		}
+		return false, fmt.Errorf("%d configuration key%s not found: %s", len(unknownKeys), s, strings.Join(unknownKeys, ", "))
+	}
+	return false, nil
+}
+
 func getConfigDir(cmd *cobra.Command) string {
 	return filepath.Join(client.GetClientContextFromCmd(cmd).HomeDir, configSubDir)
 }
@@ -472,28 +588,33 @@ func findEntry(key string, maps ...map[string]reflect.Value) (reflect.Value, int
 // Providing "consensus." will bypass the exact key lookup, and return all fields that start with "consensus.".
 // Providing "consensus" will look first for a field specifically called "consensus",
 // then, if/when not found, will return all fields that start with "consensus.".
-func findEntries(key string, maps ...map[string]reflect.Value) map[string]reflect.Value {
+// The second return value is the index of the provided map that the entries were found in (starting with 0).
+// If it's equal to entryNotFound, no entries were found.
+func findEntries(key string, maps ...map[string]reflect.Value) (map[string]reflect.Value, int) {
 	rv := map[string]reflect.Value{}
 	baseKey := key
 	if len(key) == 0 {
-		return rv
+		return rv, entryNotFound
 	}
 	if key[len(key)-1:] != "." {
 		if v, i := findEntry(key, maps...); i != entryNotFound {
 			rv[key] = v
-			return rv
+			return rv, i
 		}
 		baseKey += "."
 	}
 	baseKeyLen := len(baseKey)
-	for _, m := range maps {
+	for i, m := range maps {
 		for k, v := range m {
 			if len(k) > baseKeyLen && k[:baseKeyLen] == baseKey {
 				rv[k] = v
 			}
 		}
+		if len(rv) > 0 {
+			return rv, i
+		}
 	}
-	return rv
+	return rv, entryNotFound
 }
 
 // getFieldMapChanges gets an updated field map with changes between two field maps.
@@ -501,19 +622,28 @@ func findEntries(key string, maps ...map[string]reflect.Value) map[string]reflec
 func getFieldMapChanges(isNowMap map[string]reflect.Value, wasMap map[string]reflect.Value) map[string]*updatedField {
 	changes := map[string]*updatedField{}
 	for key, isNowVal := range isNowMap {
-		isNow := getStringFromValue(isNowVal)
-		if wasVal, ok := wasMap[key]; ok {
-			was := getStringFromValue(wasVal)
-			if isNow != was {
-				changes[key] = &updatedField{
-					Key:   key,
-					Was:   was,
-					IsNow: isNow,
-				}
-			}
+		uf, ok := makeUpdatedField(key, isNowVal, wasMap)
+		if ok && uf.HasDiff() {
+			changes[key] = &uf
 		}
 	}
 	return changes
+}
+
+// makeUpdatedField makes an updatedField with available information.
+// The new updatedField will have its key and IsNow set from the provided arguments.
+// If the wasMap contains the key, the Was value will be set and the second return argument will be true.
+// If the wasMap does not contain the key, the second return argument will be false.
+func makeUpdatedField(key string, isNowVal reflect.Value, wasMap map[string]reflect.Value) (updatedField, bool) {
+	rv := updatedField{
+		Key:   key,
+		IsNow: getStringFromValue(isNowVal),
+	}
+	if wasVal, ok := wasMap[key]; ok {
+		rv.Was = getStringFromValue(wasVal)
+		return rv, true
+	}
+	return rv, false
 }
 
 // getStringFromValue gets a string of the given value.
