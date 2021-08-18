@@ -75,6 +75,14 @@ func (s *ConfigTestSuite) SetupTest() {
 	s.baseFNClient = "client.toml"
 }
 
+func TestConfigTestSuite(t *testing.T) {
+	suite.Run(t, new(ConfigTestSuite))
+}
+
+//
+// Test setup above. Test helpers below.
+//
+
 func (s ConfigTestSuite) makeConfigHeaderLine(t, fn string) string {
 	return fmt.Sprintf("%s Config: %s/config/%s", t, s.Home, fn)
 }
@@ -91,8 +99,8 @@ func (s ConfigTestSuite) makeClientConfigHeaderLines() string {
 	return s.makeConfigHeaderLine(s.HeaderStrClient, s.baseFNClient) + "\n-------------------"
 }
 
-func (s ConfigTestSuite) makeConfigUpdatedLine(t, f string) string {
-	return fmt.Sprintf("%s Config Updated: %s/config/%s", t, s.Home, f)
+func (s ConfigTestSuite) makeConfigUpdatedLine(t, fn string) string {
+	return fmt.Sprintf("%s Config Updated: %s/config/%s", t, s.Home, fn)
 }
 
 func (s ConfigTestSuite) makeAppConfigUpdateLines() string {
@@ -107,13 +115,33 @@ func (s ConfigTestSuite) makeClientConfigUpdateLines() string {
 	return s.makeConfigUpdatedLine(s.HeaderStrClient, s.baseFNClient) + "\n---------------------------"
 }
 
+func (s ConfigTestSuite) makeConfigDiffHeaderLine(t, fn string) string {
+	return fmt.Sprintf("%s Config Differences from Defaults: %s/config/%s", t, s.Home, fn)
+}
+
+func (s ConfigTestSuite) makeAppDiffHeaderLines() string {
+	return s.makeConfigDiffHeaderLine(s.HeaderStrApp, s.BaseFNApp) + "\n------------------------------------------"
+}
+
+func (s ConfigTestSuite) makeTMDiffHeaderLines() string {
+	return s.makeConfigDiffHeaderLine(s.HeaderStrTM, s.BaseFNTM) + "\n-------------------------------------------------"
+}
+
+func (s ConfigTestSuite) makeClientDiffHeaderLines() string {
+	return s.makeConfigDiffHeaderLine(s.HeaderStrClient, s.baseFNClient) + "\n---------------------------------------------"
+}
+
+func (s ConfigTestSuite) makeMultiLine(lines ...string) string {
+	return strings.Join(lines, "\n") + "\n"
+}
+
 func (s ConfigTestSuite) makeKeyUpdatedLine(key, oldVal, newVal string) string {
 	return fmt.Sprintf("%s Was: %s, Is Now: %s", key, oldVal, newVal)
 }
 
-func TestConfigTestSuite(t *testing.T) {
-	suite.Run(t, new(ConfigTestSuite))
-}
+//
+// Test helpers above. Tests below.
+//
 
 func (s *ConfigTestSuite) TestConfigBadArgs() {
 	tests := []struct {
@@ -261,16 +289,6 @@ func (s *ConfigTestSuite) TestConfigCmdGet() {
 }
 
 func (s *ConfigTestSuite) TestConfigGetMulti() {
-	buildExpected := func(lines ...string) string {
-		var sb strings.Builder
-		for _, line := range lines {
-			sb.WriteString(line)
-			sb.WriteByte('\n')
-		}
-		sb.WriteByte('\n')
-		return sb.String()
-	}
-
 	tests := []struct {
 		name     string
 		keys     []string
@@ -279,34 +297,37 @@ func (s *ConfigTestSuite) TestConfigGetMulti() {
 		{
 			name: "three app config keys",
 			keys: []string{"min-retain-blocks", "rosetta.retries", "grpc.address"},
-			expected: buildExpected(
+			expected: s.makeMultiLine(
 				s.makeAppConfigHeaderLines(),
 				`min-retain-blocks=0`,
 				`grpc.address="0.0.0.0:9090"`,
-				`rosetta.retries=3`),
+				`rosetta.retries=3`,
+				""),
 		},
 		{
 			name: "three tendermint config keys",
 			keys: []string{"p2p.send_rate", "genesis_file", "consensus.timeout_propose"},
-			expected: buildExpected(
+			expected: s.makeMultiLine(
 				s.makeTMConfigHeaderLines(),
 				`genesis_file="config/genesis.json"`,
 				`consensus.timeout_propose="3s"`,
-				`p2p.send_rate=5120000`),
+				`p2p.send_rate=5120000`,
+				""),
 		},
 		{
 			name: "three client config keys",
 			keys: []string{"keyring-backend", "broadcast-mode", "output"},
-			expected: buildExpected(
+			expected: s.makeMultiLine(
 				s.makeClientConfigHeaderLines(),
 				`broadcast-mode="block"`,
 				`keyring-backend="test"`,
-				`output="text"`),
+				`output="text"`,
+				""),
 		},
 		{
 			name: "two from each",
 			keys: []string{"rpc.cors_allowed_origins", "pruning", "node", "rosetta.offline", "chain-id", "priv_validator_state_file"},
-			expected: buildExpected(
+			expected: s.makeMultiLine(
 				s.makeAppConfigHeaderLines(),
 				`pruning="default"`,
 				`rosetta.offline=false`,
@@ -317,7 +338,8 @@ func (s *ConfigTestSuite) TestConfigGetMulti() {
 				"",
 				s.makeClientConfigHeaderLines(),
 				`chain-id=""`,
-				`node="tcp://localhost:26657"`),
+				`node="tcp://localhost:26657"`,
+				""),
 		},
 	}
 
@@ -341,13 +363,14 @@ func (s *ConfigTestSuite) TestConfigGetMulti() {
 
 	s.T().Run("three found two missing", func(t *testing.T) {
 		expectedError := "2 configuration keys not found: bananas, pears"
-		expected := buildExpected(
+		expected := s.makeMultiLine(
 			s.makeAppConfigHeaderLines(),
 			`api.enable=false`,
 			`api.swagger=false`,
 			"",
 			s.makeClientConfigHeaderLines(),
 			`output="text"`,
+			"",
 		) + "Error: " + expectedError + "\n"
 		args := []string{"get", "bananas", "api.enable", "pears", "api.swagger", "output"}
 		b := bytes.NewBufferString("")
@@ -365,12 +388,13 @@ func (s *ConfigTestSuite) TestConfigGetMulti() {
 
 	s.T().Run("two found one missing", func(t *testing.T) {
 		expectedError := "1 configuration key not found: cannot.find.me"
-		expected := buildExpected(
+		expected := s.makeMultiLine(
 			s.makeAppConfigHeaderLines(),
 			`grpc.enable=true`,
 			"",
 			s.makeTMConfigHeaderLines(),
 			`consensus.create_empty_blocks_interval="0s"`,
+			"",
 		) + "Error: " + expectedError + "\n"
 		args := []string{"get", "cannot.find.me", "consensus.create_empty_blocks_interval", "grpc.enable"}
 		b := bytes.NewBufferString("")
@@ -385,6 +409,73 @@ func (s *ConfigTestSuite) TestConfigGetMulti() {
 		outStr := string(out)
 		assert.Equal(t, expected, outStr, "%s %s - output", command.Name(), args)
 	})
+}
+
+func (s *ConfigTestSuite) TestConfigChanged() {
+	allEqual := func(t string) string {
+		return fmt.Sprintf("All %s config values equal the default config values.", t)
+	}
+	expectedAppOutLines := []string{
+		s.makeAppDiffHeaderLines(),
+		`minimum-gas-prices="1905nhash" (default="")`,
+		"",
+	}
+	expectedTMOutLines := []string{
+		s.makeTMDiffHeaderLines(),
+		allEqual("tendermint"),
+		"",
+	}
+	expectedClientOutLines := []string{
+		s.makeClientDiffHeaderLines(),
+		allEqual("client"),
+		"",
+	}
+	expectedAllOutLines := []string{}
+	expectedAllOutLines = append(expectedAllOutLines, expectedAppOutLines...)
+	expectedAllOutLines = append(expectedAllOutLines, expectedTMOutLines...)
+	expectedAllOutLines = append(expectedAllOutLines, expectedClientOutLines...)
+	expectedAppOut := s.makeMultiLine(expectedAppOutLines...)
+	expectedTMOut := s.makeMultiLine(expectedTMOutLines...)
+	expectedClientOut := s.makeMultiLine(expectedClientOutLines...)
+	expectedAll := s.makeMultiLine(expectedAllOutLines...)
+
+	equalAllTests := []struct {
+		name string
+		args []string
+		out  string
+	}{
+		{"changed", []string{"changed"}, expectedAll},
+		{"changed all", []string{"changed", "all"}, expectedAll},
+		{"changed app", []string{"changed", "app"}, expectedAppOut},
+		{"changed cosmos", []string{"changed", "cosmos"}, expectedAppOut},
+		{"changed config", []string{"changed", "config"}, expectedTMOut},
+		{"changed tm", []string{"changed", "tm"}, expectedTMOut},
+		{"changed tendermint", []string{"changed", "tendermint"}, expectedTMOut},
+		{"changed client", []string{"changed", "client"}, expectedClientOut},
+		{
+			name: "changed output",
+			args: []string{"changed", "output"},
+			out:  s.makeMultiLine(
+				s.makeClientDiffHeaderLines(),
+				`output="text" (same as default)`,
+				"",
+			),
+		},
+	}
+	for _, tc := range equalAllTests {
+		s.T().Run(tc.name, func(t *testing.T) {
+			b := bytes.NewBufferString("")
+			command := cmd.ConfigCmd()
+			command.SetArgs(tc.args)
+			command.SetOut(b)
+			err := command.ExecuteContext(*s.Context)
+			require.NoError(t, err, "%s %s - unexpected error executing command", command.Name(), tc.args)
+			out, err := ioutil.ReadAll(b)
+			require.NoError(t, err, "%s %s - unexpected error reading command output", command.Name(), tc.args)
+			outStr := string(out)
+			assert.Equal(t, tc.out, outStr, "%s %s - output", command.Name(), tc.args)
+		})
+	}
 }
 
 func (s *ConfigTestSuite) TestConfigSetValidation() {
@@ -579,16 +670,6 @@ func (s *ConfigTestSuite) TestConfigCmdSet() {
 }
 
 func (s *ConfigTestSuite) TestConfigSetMulti() {
-	buildExpected := func(lines ...string) string {
-		var sb strings.Builder
-		for _, line := range lines {
-			sb.WriteString(line)
-			sb.WriteByte('\n')
-		}
-		sb.WriteByte('\n')
-		return sb.String()
-	}
-
 	tests := []struct {
 		name string
 		args []string
@@ -597,31 +678,34 @@ func (s *ConfigTestSuite) TestConfigSetMulti() {
 		{
 			name: "two app entries",
 			args: []string{"set", "api.enable", "true", "telemetry.service-name", "blocky"},
-			out: buildExpected(
+			out: s.makeMultiLine(
 				s.makeAppConfigUpdateLines(),
 				s.makeKeyUpdatedLine("api.enable", "false", "true"),
-				s.makeKeyUpdatedLine("telemetry.service-name", `""`, `"blocky"`)),
+				s.makeKeyUpdatedLine("telemetry.service-name", `""`, `"blocky"`),
+				""),
 		},
 		{
 			name: "two tendermint entries",
 			args: []string{"set", "log_format", "json", "consensus.timeout_commit", "950ms"},
-			out: buildExpected(
+			out: s.makeMultiLine(
 				s.makeTMConfigUpdateLines(),
 				s.makeKeyUpdatedLine("log_format", `"plain"`, `"json"`),
-				s.makeKeyUpdatedLine("consensus.timeout_commit", `"1s"`, `"950ms"`)),
+				s.makeKeyUpdatedLine("consensus.timeout_commit", `"1s"`, `"950ms"`),
+				""),
 		},
 		{
 			name: "two client entries",
 			args: []string{"set", "node", "tcp://127.0.0.1:26657", "output", "json"},
-			out: buildExpected(
+			out: s.makeMultiLine(
 				s.makeClientConfigUpdateLines(),
 				s.makeKeyUpdatedLine("node", `"tcp://localhost:26657"`, `"tcp://127.0.0.1:26657"`),
-				s.makeKeyUpdatedLine("output", `"text"`, `"json"`)),
+				s.makeKeyUpdatedLine("output", `"text"`, `"json"`),
+				""),
 		},
 		{
 			name: "two of each",
 			args: []string{"set", "consensus.timeout_commit", "950ms", "api.enable", "true", "telemetry.service-name", "blocky", "node", "tcp://127.0.0.1:26657", "output", "json", "log_format", "json"},
-			out: buildExpected(
+			out: s.makeMultiLine(
 				s.makeAppConfigUpdateLines(),
 				s.makeKeyUpdatedLine("api.enable", "false", "true"),
 				s.makeKeyUpdatedLine("telemetry.service-name", `""`, `"blocky"`),
@@ -632,7 +716,8 @@ func (s *ConfigTestSuite) TestConfigSetMulti() {
 				"",
 				s.makeClientConfigUpdateLines(),
 				s.makeKeyUpdatedLine("node", `"tcp://localhost:26657"`, `"tcp://127.0.0.1:26657"`),
-				s.makeKeyUpdatedLine("output", `"text"`, `"json"`)),
+				s.makeKeyUpdatedLine("output", `"text"`, `"json"`),
+				""),
 		},
 	}
 
