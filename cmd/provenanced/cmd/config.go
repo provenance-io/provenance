@@ -184,54 +184,72 @@ func runConfigGetCmd(cmd *cobra.Command, args []string) (bool, error) {
 		return false, fmt.Errorf("couldn't get client config: %v", ccerr)
 	}
 
-	configPath := getConfigDir(cmd)
-
 	if len(args) == 0 {
 		args = append(args, "all")
 	}
-	hadGroup := false
+
+	appToOutput := map[string]reflect.Value{}
+	tmToOutput := map[string]reflect.Value{}
+	clientToOutput := map[string]reflect.Value{}
 	unknownKeyMap := map[string]reflect.Value{}
-	toOutput := map[string]reflect.Value{}
 	for _, key := range args {
 		switch key {
 		case "all":
-			hadGroup = true
-			cmd.Println(makeAppConfigHeader(configPath, ""))
-			cmd.Println(makeFieldMapString(appFields))
-
-			cmd.Println(makeTmConfigHeader(configPath, ""))
-			cmd.Println(makeFieldMapString(tmFields))
-
-			cmd.Println(makeClientConfigHeader(configPath, ""))
-			cmd.Println(makeFieldMapString(clientFields))
+			for k, v := range appFields {
+				appToOutput[k] = v
+			}
+			for k, v := range tmFields {
+				tmToOutput[k] = v
+			}
+			for k, v := range clientFields {
+				clientToOutput[k] = v
+			}
 		case "app", "cosmos":
-			hadGroup = true
-			cmd.Println(makeAppConfigHeader(configPath, ""))
-			cmd.Println(makeFieldMapString(appFields))
+			for k, v := range appFields {
+				appToOutput[k] = v
+			}
 		case "config", "tendermint", "tm":
-			hadGroup = true
-			cmd.Println(makeTmConfigHeader(configPath, ""))
-			cmd.Println(makeFieldMapString(tmFields))
+			for k, v := range tmFields {
+				tmToOutput[k] = v
+			}
 		case "client":
-			hadGroup = true
-			cmd.Println(makeClientConfigHeader(configPath, ""))
-			cmd.Println(makeFieldMapString(clientFields))
+			for k, v := range clientFields {
+				clientToOutput[k] = v
+			}
 		default:
-			entries, _ := findEntries(key, appFields, tmFields, clientFields)
-			if len(entries) == 0 {
-				unknownKeyMap[key] = reflect.Value{}
-			} else {
+			entries, foundIn := findEntries(key, appFields, tmFields, clientFields)
+			switch foundIn {
+			case 0:
 				for k, v := range entries {
-					toOutput[k] = v
+					appToOutput[k] = v
 				}
+			case 1:
+				for k, v := range entries {
+					tmToOutput[k] = v
+				}
+			case 2:
+				for k, v := range entries {
+					clientToOutput[k] = v
+				}
+			default:
+				unknownKeyMap[key] = reflect.Value{}
 			}
 		}
 	}
-	if len(toOutput) > 0 {
-		if hadGroup {
-			cmd.Println(makeSectionHeaderString("Specifically Requested Entries", "", ""))
-		}
-		cmd.Println(makeFieldMapString(toOutput))
+
+	configPath := getConfigDir(cmd)
+
+	if len(appToOutput) > 0 {
+		cmd.Println(makeAppConfigHeader(configPath, ""))
+		cmd.Println(makeFieldMapString(appToOutput))
+	}
+	if len(tmToOutput) > 0 {
+		cmd.Println(makeTmConfigHeader(configPath, ""))
+		cmd.Println(makeFieldMapString(tmToOutput))
+	}
+	if len(clientToOutput) > 0 {
+		cmd.Println(makeClientConfigHeader(configPath, ""))
+		cmd.Println(makeFieldMapString(clientToOutput))
 	}
 	if len(unknownKeyMap) > 0 {
 		unknownKeys := getSortedKeys(unknownKeyMap)
@@ -389,7 +407,6 @@ func runConfigChangedCmd(cmd *cobra.Command, args []string) (bool, error) {
 	}
 
 	allDefaults := getAllConfigDefaults()
-	configPath := getConfigDir(cmd)
 	showApp, showTm, showClient := false, false, false
 	appDiffs := map[string]*updatedField{}
 	tmDiffs := map[string]*updatedField{}
@@ -452,6 +469,8 @@ func runConfigChangedCmd(cmd *cobra.Command, args []string) (bool, error) {
 			}
 		}
 	}
+
+	configPath := getConfigDir(cmd)
 
 	if showApp {
 		cmd.Println(makeAppConfigHeader(configPath, "Differences from Defaults"))
