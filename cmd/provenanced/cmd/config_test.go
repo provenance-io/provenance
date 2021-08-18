@@ -23,6 +23,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 )
 
@@ -33,22 +35,20 @@ type ConfigTestSuite struct {
 	Context *context.Context
 }
 
-func (s *ConfigTestSuite) SetupSuite() {
+func (s *ConfigTestSuite) SetupTest() {
 	s.Home = s.T().TempDir()
 	tmConfig, err := genutiltest.CreateDefaultTendermintConfig(s.Home)
 	s.Require().NoError(err, "creating default tendermint config")
 
-	rootCmdInitArgs := []string{"--testnet", "--home", s.Home, "init", "--chain-id", "config-testing", "config-testing"}
-	rootCmd, _ := cmd.NewRootCmd()
-	rootCmd.SetArgs(rootCmdInitArgs)
-	err = cmd.Execute(rootCmd)
-	s.Require().NoError(err, "unexpected error calling root command with args: %s", rootCmdInitArgs)
+	tMbm := module.NewBasicManager(genutil.AppModuleBasic{})
+	appCodec := simapp.MakeTestEncodingConfig().Marshaler
+	err = genutiltest.ExecInitCmd(tMbm, s.Home, appCodec)
+	s.Require().NoError(err, "unexpected error calling genutiltest init command")
 
 	logger := log.NewNopLogger()
 	serverCtx := server.NewContext(viper.New(), tmConfig, logger)
 	serverCtx.Viper.Set(server.FlagMinGasPrices, fmt.Sprintf("1905%s", app.DefaultFeeDenom))
 
-	appCodec := simapp.MakeTestEncodingConfig().Marshaler
 	clientCtx := client.Context{}.WithCodec(appCodec).WithHomeDir(s.Home).WithViper("")
 	clientCtx, err = provconfig.ReadFromClientConfig(clientCtx)
 	s.Require().NoError(err, "setting up client context")
@@ -155,9 +155,9 @@ func (s *ConfigTestSuite) TestConfigCmdGet() {
 		// Client config header all the entries.
 		{"client header", regexp.MustCompile(`(?m)^Client Config: .*/config/client.toml$`)},
 		{"client broadcast-mode", regexp.MustCompile(`(?m)^broadcast-mode="block"$`)},
-		{"client chain-id", regexp.MustCompile(`(?m)^chain-id="config-testing"$`)},
+		{"client chain-id", regexp.MustCompile(`(?m)^chain-id=""$`)},
 		{"client keyring-backend", regexp.MustCompile(`(?m)^keyring-backend="test"$`)},
-		{"client node", regexp.MustCompile(`(?m)^node="tcp://127.0.0.1:26657"$`)},
+		{"client node", regexp.MustCompile(`(?m)^node="tcp://localhost:26657"$`)},
 		{"client output", regexp.MustCompile(`(?m)^output="text"$`)},
 	}
 
@@ -287,8 +287,8 @@ func (s *ConfigTestSuite) TestConfigGetMulti() {
 			name: "two from each",
 			keys: []string{"rpc.cors_allowed_origins", "pruning", "node", "rosetta.offline", "chain-id", "priv_validator_state_file"},
 			expected: buildExpected(
-				`chain-id="config-testing"`,
-				`node="tcp://127.0.0.1:26657"`,
+				`chain-id=""`,
+				`node="tcp://localhost:26657"`,
 				`priv_validator_state_file="data/priv_validator_state.json"`,
 				`pruning="default"`,
 				`rosetta.offline=false`,
@@ -476,14 +476,14 @@ func (s *ConfigTestSuite) TestConfigCmdSet() {
 		// Client fields
 		{
 			name:    "chain-id",
-			oldVal:  `"config-testing"`,
+			oldVal:  `""`,
 			newVal:  `"new-chain"`,
 			toMatch: []*regexp.Regexp{reClientConfigUpdated},
 		},
 		{
 			name:    "node",
-			oldVal:  `"tcp://127.0.0.1:26657"`,
-			newVal:  `"tcp://localhost:26657"`,
+			oldVal:  `"tcp://localhost:26657"`,
+			newVal:  `"tcp://127.0.0.1:26657"`,
 			toMatch: []*regexp.Regexp{reClientConfigUpdated},
 		},
 		{
@@ -581,15 +581,15 @@ func (s *ConfigTestSuite) TestConfigSetMulti() {
 		},
 		{
 			name: "two client entries",
-			args: []string{"set", "node", "tcp://localhost:26657", "output", "json"},
+			args: []string{"set", "node", "tcp://127.0.0.1:26657", "output", "json"},
 			out: buildExpected(
 				s.makeClientConfigUpdateLine(),
-				s.makeKeyUpdatedLine("node", `"tcp://127.0.0.1:26657"`, `"tcp://localhost:26657"`),
+				s.makeKeyUpdatedLine("node", `"tcp://localhost:26657"`, `"tcp://127.0.0.1:26657"`),
 				s.makeKeyUpdatedLine("output", `"text"`, `"json"`)),
 		},
 		{
 			name: "two of each",
-			args: []string{"set", "consensus.timeout_commit", "950ms", "api.enable", "true", "telemetry.service-name", "blocky", "node", "tcp://localhost:26657", "output", "json", "log_format", "json"},
+			args: []string{"set", "consensus.timeout_commit", "950ms", "api.enable", "true", "telemetry.service-name", "blocky", "node", "tcp://127.0.0.1:26657", "output", "json", "log_format", "json"},
 			out: buildExpected(
 				s.makeAppConfigUpdateLine(),
 				s.makeKeyUpdatedLine("api.enable", "false", "true"),
@@ -600,7 +600,7 @@ func (s *ConfigTestSuite) TestConfigSetMulti() {
 				s.makeKeyUpdatedLine("consensus.timeout_commit", `"1s"`, `"950ms"`),
 				"",
 				s.makeClientConfigUpdateLine(),
-				s.makeKeyUpdatedLine("node", `"tcp://127.0.0.1:26657"`, `"tcp://localhost:26657"`),
+				s.makeKeyUpdatedLine("node", `"tcp://localhost:26657"`, `"tcp://127.0.0.1:26657"`),
 				s.makeKeyUpdatedLine("output", `"text"`, `"json"`)),
 		},
 	}
