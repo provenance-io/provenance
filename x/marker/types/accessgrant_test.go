@@ -91,6 +91,30 @@ func TestAccessByString(t *testing.T) {
 	}
 }
 
+func TestAccessOneOf(t *testing.T) {
+	cases := []struct {
+		name        string
+		permission  Access
+		permissions AccessList
+		expectPass  bool
+	}{
+		{"no permissions", Access_Burn, AccessList{}, false},
+		{"valid permission single", Access_Mint, AccessList{Access_Mint}, true},
+		{"invalid permission single", Access_Mint, AccessList{Access_Burn}, false},
+		{"valid permission many", Access_Mint, AccessList{Access_Mint, Access_Deposit, Access_Admin}, true},
+		{"invalid permission many", Access_Unknown, AccessList{Access_Mint, Access_Deposit}, false},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.expectPass != IsAccessOneOf(tc.permission, tc.permissions...) {
+				require.Fail(t, "failed %s", tc.name)
+			}
+		})
+	}
+}
+
 func TestValidatePermissions(t *testing.T) {
 	cases := []struct {
 		name        string

@@ -185,6 +185,19 @@ func (ag AccessGrant) String() string {
 	return fmt.Sprintf("AccessGrant: %s [%s]", ag.Address, result)
 }
 
+// IsAccessOneOf returns true if the specified Access right is any of the provided options.
+func IsAccessOneOf(right Access, rights ...Access) bool {
+	if len(rights) == 0 {
+		return false
+	}
+	for _, r := range rights {
+		if right == r {
+			return true
+		}
+	}
+	return false
+}
+
 // Validate checks to see that the access list only contains valid entries and no duplicates
 func validateAccess(accessList AccessList) error {
 	// Empty list can't have invalid entries
