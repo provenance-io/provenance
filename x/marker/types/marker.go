@@ -154,7 +154,7 @@ func (ma MarkerAccount) Validate() error {
 	if !ma.BaseAccount.GetAddress().Equals(markerAddress) {
 		return fmt.Errorf("address %s cannot be derived from the marker denom '%s'", ma.Address, ma.Denom)
 	}
-	if err := ValidateGrants(ma.AccessControl...); err != nil {
+	if err := ValidateGrantsForMarkerType(ma.MarkerType, ma.AccessControl...); err != nil {
 		return fmt.Errorf("invalid access privileges granted: %w", err)
 	}
 	selfGrant := GrantsForAddress(ma.GetAddress(), ma.AccessControl...).GetAccessList()
@@ -165,6 +165,33 @@ func (ma MarkerAccount) Validate() error {
 		return fmt.Errorf("marker can not be self managed")
 	}
 	return ma.BaseAccount.Validate()
+}
+
+// ValidateGrantsForMarkerType checks a collection of grants and returns any errors encountered or nil
+func ValidateGrantsForMarkerType(markerType MarkerType, grants ...AccessGrant) error {
+	for _, grant := range grants {
+		for _, access := range grant.Permissions {
+			switch markerType {
+			case MarkerType_Coin:
+				{
+					if !IsAccessOneOf(access, Access_Admin, Access_Burn, Access_Delete, Access_Deposit, Access_Mint, Access_Withdraw) {
+						return fmt.Errorf("%v is not supported for marker type %v", access, markerType)
+					}
+				}
+			// Restricted Coins also support Transfer access
+			case MarkerType_RestrictedCoin:
+				{
+					if !IsAccessOneOf(access, Access_Admin, Access_Burn, Access_Delete, Access_Deposit, Access_Mint, Access_Withdraw, Access_Transfer) {
+						return fmt.Errorf("%v is not supported for marker type %v", access, markerType)
+					}
+				}
+			default:
+				return fmt.Errorf("cannot validate access grants for unsupported marker type %s", markerType.String())
+
+			}
+		}
+	}
+	return ValidateGrants(grants...)
 }
 
 // GetPubKey implements authtypes.Account (but there are no public keys associated with the account for signing)
