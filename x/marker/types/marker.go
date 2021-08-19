@@ -187,7 +187,6 @@ func ValidateGrantsForMarkerType(markerType MarkerType, grants ...AccessGrant) e
 				}
 			default:
 				return fmt.Errorf("cannot validate access grants for unsupported marker type %s", markerType.String())
-
 			}
 		}
 	}

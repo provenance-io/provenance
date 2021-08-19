@@ -36,7 +36,7 @@ func MigrateMarkerPermissions(ctx sdk.Context, k MarkerKeeperI) error {
 				var accessList []types.AccessGrant
 				for _, ac := range m.AccessControl {
 					if ac.HasAccess(types.Access_Transfer) {
-						if err := ac.RemoveAccess(types.Access_Transfer); err != nil {
+						if err = ac.RemoveAccess(types.Access_Transfer); err != nil {
 							return true // stop iterating
 						}
 					}

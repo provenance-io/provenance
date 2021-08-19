@@ -64,6 +64,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Fix handling of optional fields in Metadata Write messages [#412](https://github.com/provenance-io/provenance/issues/412)
 * Fix cli marker new example is incorrect [#415](https://github.com/provenance-io/provenance/issues/415)
 
+### API Breaking
+
+* Fix for missing validation for marker permissions according to marker type.  Markers of type COIN can no longer have
+  the Transfer permission assigned.  Existing permission entries on Coin type markers of type Transfer are removed 
+  during migration [#428](https://github.com/provenance-io/provenance/issues/428)
+
 ### Improvements
 
 * Updated to Cosmos SDK Release v0.43  [#154](https://github.com/provenance-io/provenance/issues/154)
