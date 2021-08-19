@@ -108,7 +108,7 @@ func TestAccessOneOf(t *testing.T) {
 	for _, tc := range cases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			if tc.expectPass != IsAccessOneOf(tc.permission, tc.permissions...) {
+			if tc.expectPass != tc.permission.IsOneOf(tc.permissions...) {
 				require.Fail(t, "failed %s", tc.name)
 			}
 		})

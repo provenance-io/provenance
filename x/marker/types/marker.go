@@ -174,14 +174,14 @@ func ValidateGrantsForMarkerType(markerType MarkerType, grants ...AccessGrant) e
 			switch markerType {
 			case MarkerType_Coin:
 				{
-					if !IsAccessOneOf(access, Access_Admin, Access_Burn, Access_Delete, Access_Deposit, Access_Mint, Access_Withdraw) {
+					if !access.IsOneOf(Access_Admin, Access_Burn, Access_Delete, Access_Deposit, Access_Mint, Access_Withdraw) {
 						return fmt.Errorf("%v is not supported for marker type %v", access, markerType)
 					}
 				}
 			// Restricted Coins also support Transfer access
 			case MarkerType_RestrictedCoin:
 				{
-					if !IsAccessOneOf(access, Access_Admin, Access_Burn, Access_Delete, Access_Deposit, Access_Mint, Access_Withdraw, Access_Transfer) {
+					if !access.IsOneOf(Access_Admin, Access_Burn, Access_Delete, Access_Deposit, Access_Mint, Access_Withdraw, Access_Transfer) {
 						return fmt.Errorf("%v is not supported for marker type %v", access, markerType)
 					}
 				}

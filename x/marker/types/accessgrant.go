@@ -185,8 +185,8 @@ func (ag AccessGrant) String() string {
 	return fmt.Sprintf("AccessGrant: %s [%s]", ag.Address, result)
 }
 
-// IsAccessOneOf returns true if the specified Access right is any of the provided options.
-func IsAccessOneOf(right Access, rights ...Access) bool {
+// IsOneOf returns true if the specified Access right is any of the provided options.
+func (right Access) IsOneOf(rights ...Access) bool {
 	if len(rights) == 0 {
 		return false
 	}
