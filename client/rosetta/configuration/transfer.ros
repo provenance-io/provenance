@@ -14,7 +14,7 @@ request_funds(1){
     address = {{account_identifier.address}};
     idk = http_request({
       "method": "POST",
-      "url": "http:\/\/faucet:8000",
+      "url": "http:\/\/localhost:8000",
       "timeout": 10,
       "body": {{random_account.account_identifier.address}}
     });
@@ -60,7 +60,7 @@ transfer(3){
     acc_identifier = {{sender.account_identifier}};
     sender_address = {{acc_identifier.address}};
     // Set the recipient_amount as some value <= sender.balance-max_fee
-    max_fee = "1000";
+    max_fee = "1000000";
     fee_amount = "1";
     fee_value = 0 - {{fee_amount}};
     available_amount = {{sender.balance.value}} - {{max_fee}};
@@ -98,7 +98,7 @@ transfer(3){
       }
     ];
     transfer.preprocess_metadata = {
-        "gas_price": "1000nhash",
+        "gas_price": "4762500000nhash",
         "gas_limit": 250000
     };
   }
