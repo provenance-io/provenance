@@ -9,7 +9,6 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/provenance-io/provenance/app"
-	simapp "github.com/provenance-io/provenance/app"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
@@ -40,7 +39,7 @@ func TestMigrateTestSuite(t *testing.T) {
 }
 
 func (s *MigrateTestSuite) SetupTest() {
-	app := simapp.Setup(false)
+	app := app.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	s.app = app
 	s.ctx = ctx
@@ -53,8 +52,9 @@ func (s *MigrateTestSuite) SetupTest() {
 	s.user2Addr = sdk.AccAddress(s.pubkey2.Address())
 	s.user2 = s.user2Addr.String()
 	markers := []types.MarkerAccount{
-		{Denom: "nhash"},
-		{Denom: "atom"},
+		{Denom: "nhash", MarkerType: types.MarkerType_Coin, AccessControl: []types.AccessGrant{{Address: s.user1, Permissions: types.AccessListByNames("mint,burn")}}},
+		{Denom: "atom", MarkerType: types.MarkerType_Coin, AccessControl: []types.AccessGrant{{Address: s.user1, Permissions: types.AccessListByNames("mint,burn,transfer")}}},
+		{Denom: "security", MarkerType: types.MarkerType_RestrictedCoin, AccessControl: []types.AccessGrant{{Address: s.user1, Permissions: types.AccessListByNames("mint,burn,transfer")}}},
 	}
 	s.markers = markers
 	err := s.InitGenesisLegacy(ctx, app)
@@ -92,5 +92,46 @@ func (s *MigrateTestSuite) TestMigrateMarkerAddressKeys() {
 		result = store.Get(key)
 		s.Assert().NotNil(result)
 		s.Assert().Equal(acc.Bytes(), result)
+	}
+}
+
+func (s *MigrateTestSuite) TestMigrateMarkerPermissions() {
+	k := MockKeeper{markers: s.markers}
+	err := v042.MigrateMarkerPermissions(s.ctx, k)
+	s.Require().NoError(err)
+
+	for _, marker := range k.markers {
+		m := &marker
+		switch marker.MarkerType {
+		case types.MarkerType_Coin:
+			s.Assert().Len(m.AddressListForPermission(types.Access_Transfer), 0, "expect no addresses with transfer permission on coins")
+		case types.MarkerType_RestrictedCoin:
+			s.Assert().Len(m.AddressListForPermission(types.Access_Transfer), 1, "expect one address with transfer permission on coins")
+		default:
+			s.Require().Fail("unknown type")
+		}
+	}
+}
+
+type MockKeeper struct {
+	markers []types.MarkerAccount
+}
+
+func (k MockKeeper) SetMarker(_ sdk.Context, m types.MarkerAccountI) {
+	updated := m.Clone()
+	for i, a := range k.markers {
+		if a.Denom == updated.Denom {
+			k.markers[i] = *updated
+		} else {
+			k.markers[i] = a
+		}
+	}
+}
+
+func (k MockKeeper) IterateMarkers(_ sdk.Context, step func(types.MarkerAccountI) bool) {
+	for i := range k.markers {
+		if step(&k.markers[i]) {
+			break
+		}
 	}
 }

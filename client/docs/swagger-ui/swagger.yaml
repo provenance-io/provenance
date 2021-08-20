@@ -27723,9 +27723,8 @@ paths:
                           deletion
                            - ACCESS_ADMIN: ACCESS_ADMIN is the ability to add access grants for accounts to the list of marker permissions.
                            - ACCESS_TRANSFER: ACCESS_TRANSFER is the ability to invoke a send operation using the marker module to facilitate exchange.
-                          This capability is useful when the marker denomination
-                          has "send enabled = false" preventing normal bank
-                          transfer
+                          This access right is only supported on RESTRICTED
+                          markers.
                   description: >-
                     AccessGrant associates a colelction of permisssions with an
                     address for delegated marker account control.
@@ -67755,8 +67754,7 @@ definitions:
       access also allows cancelled markers to be marked for deletion
        - ACCESS_ADMIN: ACCESS_ADMIN is the ability to add access grants for accounts to the list of marker permissions.
        - ACCESS_TRANSFER: ACCESS_TRANSFER is the ability to invoke a send operation using the marker module to facilitate exchange.
-      This capability is useful when the marker denomination has "send enabled =
-      false" preventing normal bank transfer
+      This access right is only supported on RESTRICTED markers.
   provenance.marker.v1.AccessGrant:
     type: object
     properties:
@@ -67790,8 +67788,7 @@ definitions:
             access also allows cancelled markers to be marked for deletion
              - ACCESS_ADMIN: ACCESS_ADMIN is the ability to add access grants for accounts to the list of marker permissions.
              - ACCESS_TRANSFER: ACCESS_TRANSFER is the ability to invoke a send operation using the marker module to facilitate exchange.
-            This capability is useful when the marker denomination has "send
-            enabled = false" preventing normal bank transfer
+            This access right is only supported on RESTRICTED markers.
     description: >-
       AccessGrant associates a colelction of permisssions with an address for
       delegated marker account control.
@@ -67897,8 +67894,7 @@ definitions:
                   access also allows cancelled markers to be marked for deletion
                    - ACCESS_ADMIN: ACCESS_ADMIN is the ability to add access grants for accounts to the list of marker permissions.
                    - ACCESS_TRANSFER: ACCESS_TRANSFER is the ability to invoke a send operation using the marker module to facilitate exchange.
-                  This capability is useful when the marker denomination has
-                  "send enabled = false" preventing normal bank transfer
+                  This access right is only supported on RESTRICTED markers.
           description: >-
             AccessGrant associates a colelction of permisssions with an address
             for delegated marker account control.

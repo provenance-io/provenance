@@ -125,13 +125,27 @@ func TestNewMarkerValidate(t *testing.T) {
 			NewMarkerAccount(baseAcc, sdk.NewCoin("test", sdk.OneInt()), manager,
 				[]AccessGrant{{Address: MustGetMarkerAddress("foo").String(),
 					Permissions: []Access{Access_Unknown}}}, StatusProposed, MarkerType_Coin),
-			fmt.Errorf("invalid access privileges granted: invalid access type"),
+			fmt.Errorf("invalid access privileges granted: ACCESS_UNSPECIFIED is not supported for marker type MARKER_TYPE_COIN"),
+		},
+		{
+			"invalid restricted marker account permissions",
+			NewMarkerAccount(baseAcc, sdk.NewCoin("test", sdk.OneInt()), manager,
+				[]AccessGrant{{Address: MustGetMarkerAddress("foo").String(),
+					Permissions: []Access{Access_Unknown}}}, StatusProposed, MarkerType_RestrictedCoin),
+			fmt.Errorf("invalid access privileges granted: ACCESS_UNSPECIFIED is not supported for marker type MARKER_TYPE_RESTRICTED"),
 		},
 		{
 			"marker account permissions assigned to self",
 			NewMarkerAccount(baseAcc, sdk.NewCoin("test", sdk.OneInt()), manager, []AccessGrant{{Address: baseAcc.Address,
 				Permissions: []Access{Access_Mint, Access_Admin}}}, StatusProposed, MarkerType_Coin),
 			fmt.Errorf("permissions cannot be granted to 'test' marker account: [ACCESS_MINT ACCESS_ADMIN]"),
+		},
+		{
+			"invalid marker account permissions for type",
+			NewMarkerAccount(baseAcc, sdk.NewCoin("test", sdk.OneInt()), manager,
+				[]AccessGrant{{Address: MustGetMarkerAddress("foo").String(),
+					Permissions: []Access{Access_Mint, Access_Admin, Access_Transfer}}}, StatusActive, MarkerType_Coin),
+			fmt.Errorf("invalid access privileges granted: ACCESS_TRANSFER is not supported for marker type MARKER_TYPE_COIN"),
 		},
 		{
 			"valid marker account",
