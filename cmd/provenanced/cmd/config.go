@@ -249,10 +249,10 @@ func runConfigGetCmd(cmd *cobra.Command, args []string) (bool, error) {
 		args = append(args, "all")
 	}
 
-	appToOutput := map[string]reflect.Value{}
-	tmToOutput := map[string]reflect.Value{}
-	clientToOutput := map[string]reflect.Value{}
-	unknownKeyMap := map[string]reflect.Value{}
+	appToOutput := provconfig.FieldValueMap{}
+	tmToOutput := provconfig.FieldValueMap{}
+	clientToOutput := provconfig.FieldValueMap{}
+	unknownKeyMap := provconfig.FieldValueMap{}
 	for _, key := range args {
 		switch key {
 		case "all":
@@ -469,7 +469,7 @@ func runConfigChangedCmd(cmd *cobra.Command, args []string) (bool, error) {
 	appDiffs := map[string]*updatedField{}
 	tmDiffs := map[string]*updatedField{}
 	clientDiffs := map[string]*updatedField{}
-	unknownKeyMap := map[string]reflect.Value{}
+	unknownKeyMap := provconfig.FieldValueMap{}
 	for _, key := range args {
 		switch key {
 		case "all":
@@ -583,7 +583,7 @@ func runConfigUnpackCmd(cmd *cobra.Command) error {
 // Maps are searched in the order provided and the first match is returned.
 // The second return value is the index of the provided map that the entry was found in (starting with 0).
 // If it's equal to entryNotFound, the entry wasn't found.
-func findEntry(key string, maps ...map[string]reflect.Value) (reflect.Value, int) {
+func findEntry(key string, maps ...provconfig.FieldValueMap) (reflect.Value, int) {
 	for i, m := range maps {
 		if v, ok := m[key]; ok {
 			return v, i
@@ -601,8 +601,8 @@ func findEntry(key string, maps ...map[string]reflect.Value) (reflect.Value, int
 // then, if/when not found, will return all fields that start with "consensus.".
 // The second return value is the index of the provided map that the entries were found in (starting with 0).
 // If it's equal to entryNotFound, no entries were found.
-func findEntries(key string, maps ...map[string]reflect.Value) (map[string]reflect.Value, int) {
-	rv := map[string]reflect.Value{}
+func findEntries(key string, maps ...provconfig.FieldValueMap) (provconfig.FieldValueMap, int) {
+	rv := provconfig.FieldValueMap{}
 	baseKey := key
 	if len(key) == 0 {
 		return rv, entryNotFound
@@ -630,7 +630,7 @@ func findEntries(key string, maps ...map[string]reflect.Value) (map[string]refle
 
 // getFieldMapChanges gets an updated field map with changes between two field maps.
 // If the key doesn't exist in both maps, the entry is ignored.
-func getFieldMapChanges(isNowMap map[string]reflect.Value, wasMap map[string]reflect.Value) map[string]*updatedField {
+func getFieldMapChanges(isNowMap provconfig.FieldValueMap, wasMap provconfig.FieldValueMap) map[string]*updatedField {
 	changes := map[string]*updatedField{}
 	for key, isNowVal := range isNowMap {
 		uf, ok := makeUpdatedField(key, isNowVal, wasMap)
@@ -645,7 +645,7 @@ func getFieldMapChanges(isNowMap map[string]reflect.Value, wasMap map[string]ref
 // The new updatedField will have its key and IsNow set from the provided arguments.
 // If the wasMap contains the key, the Was value will be set and the second return argument will be true.
 // If the wasMap does not contain the key, the second return argument will be false.
-func makeUpdatedField(key string, isNowVal reflect.Value, wasMap map[string]reflect.Value) (updatedField, bool) {
+func makeUpdatedField(key string, isNowVal reflect.Value, wasMap provconfig.FieldValueMap) (updatedField, bool) {
 	rv := updatedField{
 		Key:   key,
 		IsNow: getStringFromValue(isNowVal),
@@ -832,7 +832,7 @@ func setValueFromString(fieldName string, fieldVal reflect.Value, strVal string)
 }
 
 // makeFieldMapString makes a multi-line string with all the keys and values in the provided map.
-func makeFieldMapString(m map[string]reflect.Value) string {
+func makeFieldMapString(m provconfig.FieldValueMap) string {
 	keys := getSortedKeys(m)
 	var sb strings.Builder
 	for _, k := range keys {
@@ -861,7 +861,7 @@ func makeUpdatedFieldMapString(m map[string]*updatedField, stringer func(v updat
 }
 
 // getSortedKeys gets the keys of the provided map and sorts them using sortKeys.
-func getSortedKeys(m map[string]reflect.Value) []string {
+func getSortedKeys(m provconfig.FieldValueMap) []string {
 	keys := make([]string, 0, len(m))
 	for k := range m {
 		keys = append(keys, k)

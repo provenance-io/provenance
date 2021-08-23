@@ -5,6 +5,9 @@ import (
 	"strings"
 )
 
+// FieldValueMap maps field names to reflect.Value objects.
+type FieldValueMap map[string]reflect.Value
+
 // GetFieldValueMap gets a map of string field names to reflect.Value objects for a given object.
 // An empty map is returned if the provided obj is nil, or isn't either a struct or pointer chain to a struct.
 // Substruct fields will have the parent struct's field name and substruct field name separated by a period.
@@ -22,9 +25,9 @@ import (
 //    E.g. With { Foo: (*Bar)(nil) }, there will be an entry for "foo".
 //    Substructures that are not nill will still not have an entry though; they'll have entries for sub-fields still.
 //    E.g. With { Foo: (*Bar)(nil), Ban: { Ana: "banana" } will have entries for "foo" and "ban.ana", but not "ban" (it isn't nil).
-func GetFieldValueMap(obj interface{}, fillNilsWithZero bool) map[string]reflect.Value {
+func GetFieldValueMap(obj interface{}, fillNilsWithZero bool) FieldValueMap {
 	if obj == nil {
-		return map[string]reflect.Value{}
+		return FieldValueMap{}
 	}
 	return getFieldValueMapValue(reflect.ValueOf(obj), fillNilsWithZero)
 }
@@ -32,8 +35,8 @@ func GetFieldValueMap(obj interface{}, fillNilsWithZero bool) map[string]reflect
 // getFieldValueMapValue does all the heavy lifting for getFieldValueMap.
 // Most of the time, you'll want to use getFieldValueMap instead of this.
 // This operates using reflect.Value objects instead of interface{}.
-func getFieldValueMapValue(valIn reflect.Value, fillNilsWithZero bool) map[string]reflect.Value {
-	keys := map[string]reflect.Value{}
+func getFieldValueMapValue(valIn reflect.Value, fillNilsWithZero bool) FieldValueMap {
+	keys := FieldValueMap{}
 	objVal := deref(valIn, fillNilsWithZero)
 	objType := objVal.Type()
 	objBaseKind := objType.Kind()

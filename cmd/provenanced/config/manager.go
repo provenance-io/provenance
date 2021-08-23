@@ -2,14 +2,15 @@ package config
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
-	tmconfig "github.com/tendermint/tendermint/config"
-	"os"
-	"reflect"
 
 	"github.com/spf13/cobra"
+
+	tmconfig "github.com/tendermint/tendermint/config"
 )
 
 func PackConfig(cmd *cobra.Command) error {
@@ -31,7 +32,7 @@ func PackConfig(cmd *cobra.Command) error {
 }
 
 // GetAppConfigAndMap gets the app/cosmos configuration object and related string->value map.
-func GetAppConfigAndMap(cmd *cobra.Command) (*serverconfig.Config, map[string]reflect.Value, error) {
+func GetAppConfigAndMap(cmd *cobra.Command) (*serverconfig.Config, FieldValueMap, error) {
 	v := server.GetServerContextFromCmd(cmd).Viper
 	conf := serverconfig.DefaultConfig()
 	if err := v.Unmarshal(conf); err != nil {
@@ -42,7 +43,7 @@ func GetAppConfigAndMap(cmd *cobra.Command) (*serverconfig.Config, map[string]re
 }
 
 // GetTmConfigAndMap gets the tendermint/config configuration object and related string->value map.
-func GetTmConfigAndMap(cmd *cobra.Command) (*tmconfig.Config, map[string]reflect.Value, error) {
+func GetTmConfigAndMap(cmd *cobra.Command) (*tmconfig.Config, FieldValueMap, error) {
 	v := server.GetServerContextFromCmd(cmd).Viper
 	conf := tmconfig.DefaultConfig()
 	if err := v.Unmarshal(conf); err != nil {
@@ -62,7 +63,7 @@ func GetTmConfigAndMap(cmd *cobra.Command) (*tmconfig.Config, map[string]reflect
 // "p2p.test_dial_fail", "p2p.test_fuzz",
 // "p2p.test_fuzz_config.*" ("maxdelay", "mode", "probdropconn", "probdroprw", "probsleep")
 // This info is accurate in Cosmos SDK 0.43 (on 2021-08-16).
-func removeUndesirableTmConfigEntries(fields map[string]reflect.Value) map[string]reflect.Value {
+func removeUndesirableTmConfigEntries(fields FieldValueMap) FieldValueMap {
 	delete(fields, "home")
 	for k := range fields {
 		if (len(k) > 5 && k[len(k)-5:] == ".home") || (len(k) > 9 && k[:9] == "p2p.test_") {
@@ -73,7 +74,7 @@ func removeUndesirableTmConfigEntries(fields map[string]reflect.Value) map[strin
 }
 
 // GetClientConfigAndMap gets the client configuration object and related string->value map.
-func GetClientConfigAndMap(cmd *cobra.Command) (*ClientConfig, map[string]reflect.Value, error) {
+func GetClientConfigAndMap(cmd *cobra.Command) (*ClientConfig, FieldValueMap, error) {
 	v := client.GetClientContextFromCmd(cmd).Viper
 	conf := DefaultClientConfig()
 	if err := v.Unmarshal(conf); err != nil {
@@ -84,13 +85,13 @@ func GetClientConfigAndMap(cmd *cobra.Command) (*ClientConfig, map[string]reflec
 }
 
 // GetAllConfigDefaults gets a field map from the defaults of all the configs.
-func GetAllConfigDefaults() map[string]reflect.Value {
-	defaultMaps := []map[string]reflect.Value{
+func GetAllConfigDefaults() FieldValueMap {
+	defaultMaps := []FieldValueMap{
 		GetFieldValueMap(serverconfig.DefaultConfig(), false),
 		removeUndesirableTmConfigEntries(GetFieldValueMap(tmconfig.DefaultConfig(), false)),
 		GetFieldValueMap(DefaultClientConfig(), false),
 	}
-	rv := map[string]reflect.Value{}
+	rv := FieldValueMap{}
 	for _, m := range defaultMaps {
 		for k, v := range m {
 			rv[k] = v
