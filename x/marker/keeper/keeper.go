@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+
 	"github.com/tendermint/tendermint/libs/log"
 
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -151,8 +152,12 @@ func (k Keeper) ConvertUsdfToRestricted(ctx sdk.Context) {
 	k.IterateMarkers(ctx, func(record types.MarkerAccountI) bool {
 		if record.GetDenom() == "usdf.c" {
 			m := record.(*types.MarkerAccount)
-			m.SetMarkerTypeForUSDF()
-			//stop after usdf.c is found
+			err := m.SetMarkerTypeForUSDF()
+
+			if err != nil {
+				panic(fmt.Errorf("cannot set marker type for usdf.c"))
+			}
+			// stop after usdf.c is found
 			return true
 		}
 		return false

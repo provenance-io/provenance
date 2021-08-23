@@ -29,7 +29,7 @@ type MarkerAccountI interface {
 	GetDenom() string
 	GetManager() sdk.AccAddress
 	GetMarkerType() MarkerType
-	// Only usdf.c specific code because it was incorrectly set as non-restrcited COIN
+	// Only usdf.c specific code because it was incorrectly set as non-restricted COIN
 	// **** Remove after 1.6 *****
 	SetMarkerTypeForUSDF() error
 
