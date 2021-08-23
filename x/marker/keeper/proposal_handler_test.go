@@ -55,6 +55,11 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 			nil,
 		},
 		{
+			"add marker - valid",
+			markertypes.NewAddMarkerProposal("title", "description", "testrestricted", sdk.NewInt(100), sdk.AccAddress{}, markertypes.StatusActive, markertypes.MarkerType_RestrictedCoin, []markertypes.AccessGrant{}, true, true),
+			nil,
+		},
+		{
 			"add marker - valid no governance",
 			markertypes.NewAddMarkerProposal("title", "description", "testnogov", sdk.NewInt(100), sdk.AccAddress{}, markertypes.StatusActive, markertypes.MarkerType_Coin, []markertypes.AccessGrant{}, true, false),
 			false,
@@ -221,9 +226,19 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 			fmt.Errorf("test marker does not exist"),
 		},
 		{
+			"add access - transfer only on restricted",
+			markertypes.NewSetAdministratorProposal("title", "description", "test1", []markertypes.AccessGrant{{Address: s.accountAddr.String(), Permissions: markertypes.AccessListByNames("mint, burn, transfer")}}),
+			fmt.Errorf("invalid access privileges granted: ACCESS_TRANSFER is not supported for marker type MARKER_TYPE_COIN"),
+		},
+		{
 			"add access - valid",
 			markertypes.NewSetAdministratorProposal("title", "description", "test1", []markertypes.AccessGrant{{Address: s.accountAddr.String(), Permissions: markertypes.AccessListByNames("mint, burn")}}),
 			false,
+			nil,
+		},
+		{
+			"add access - valid restricted",
+			markertypes.NewSetAdministratorProposal("title", "description", "testrestricted", []markertypes.AccessGrant{{Address: s.accountAddr.String(), Permissions: markertypes.AccessListByNames("mint, burn, transfer")}}),
 			nil,
 		},
 
