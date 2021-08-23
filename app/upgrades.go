@@ -69,6 +69,11 @@ var handlers = map[string]appUpgrade{
 	},
 	"citrine": {},
 	"desert":  {},
+	"usdf.c-hotfix": {
+		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) {
+			app.MarkerKeeper.ConvertUsdfToRestricted(ctx)
+		},
+	},
 	// TODO - Add new upgrade definitions here.
 }
 

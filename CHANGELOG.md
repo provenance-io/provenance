@@ -37,11 +37,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-## [v1.5.1](https://github.com/provenance-io/provenance/releases/tag/v1.5.1) - 2021-08-23
+## [v1.6.0](https://github.com/provenance-io/provenance/releases/tag/v1.6.0) - 2021-08-23
 
 ### Bug Fixes
 
-* Fix for creating non-coin type markers through governance addmarker proposals [#
+* Fix for creating non-coin type markers through governance addmarker proposals [#431](https://github.com/provenance-io/provenance/issues/431)
+* Upgrade handler migrates usdf.c to the right marker_type.
 
 ## [v1.5.0](https://github.com/provenance-io/provenance/releases/tag/v1.5.0) - 2021-06-23
 
