@@ -110,7 +110,16 @@ func ConfigGetCmd() *cobra.Command {
     If no keys are provided, all values are retrieved.
 
 `, configCmdStart, provconfig.AppConfFilename, provconfig.TmConfFilename, provconfig.ClientConfFilename),
-		RunE: runConfigGetCmd,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			err := runConfigGetCmd(cmd, args)
+			// Note: If a RunE returns an error, the usage information is displayed.
+			//       That ends up being kind of annoying with this command.
+			//       So just output the error and still return nil.
+			if err != nil {
+				cmd.Printf("Error: %v\n", err)
+			}
+			return nil
+		},
 	}
 	return cmd
 }
@@ -174,7 +183,16 @@ Get just the configuration entries that are not default values: %[1]s changed [<
     If no keys are provided, all non-default values are retrieved.
 
 `, configCmdStart, provconfig.AppConfFilename, provconfig.TmConfFilename, provconfig.ClientConfFilename),
-		RunE: runConfigChangedCmd,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			err := runConfigChangedCmd(cmd, args)
+			// Note: If a RunE returns an error, the usage information is displayed.
+			//       That ends up being kind of annoying with this command.
+			//       So just output the error and still return nil.
+			if err != nil {
+				cmd.Printf("Error: %v\n", err)
+			}
+			return nil
+		},
 	}
 	return cmd
 }
