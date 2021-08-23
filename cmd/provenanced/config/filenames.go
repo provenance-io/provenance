@@ -1,9 +1,10 @@
 package config
 
 import (
+	"path/filepath"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
-	"path/filepath"
 )
 
 const (
@@ -14,9 +15,9 @@ const (
 	// ConfigSubDir is the subdirectory of HOME that contains the configuration files.
 	ConfigSubDir = "config"
 	// AppConfFilename is the filename of the app/cosmos configuration file.
-	AppConfFilename    = "app.toml"
+	AppConfFilename = "app.toml"
 	// TmConfFilename is the filename of the tendermint configuration file.
-	TmConfFilename     = "config.toml"
+	TmConfFilename = "config.toml"
 	// ClientConfFilename is the filename of the client configuration file.
 	ClientConfFilename = "client.toml"
 

@@ -110,10 +110,7 @@ func ConfigGetCmd() *cobra.Command {
     If no keys are provided, all values are retrieved.
 
 `, configCmdStart, provconfig.AppConfFilename, provconfig.TmConfFilename, provconfig.ClientConfFilename),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			showHelp, err := runConfigGetCmd(cmd, args)
-			return handleNoShowHelp(cmd, showHelp, err)
-		},
+		RunE: runConfigGetCmd,
 	}
 	return cmd
 }
@@ -136,7 +133,16 @@ Set multiple config values %[1]s set <key1> <value1> [<key2> <value2> ...]
 `, configCmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			showHelp, err := runConfigSetCmd(cmd, args)
-			return handleNoShowHelp(cmd, showHelp, err)
+			// Note: If a RunE returns an error, the usage information is displayed.
+			//       That ends up being kind of annoying in most cases in here.
+			//       So only return the error when extra help is desired.
+			if err != nil {
+				if showHelp {
+					return err
+				}
+				cmd.Printf("Error: %v\n", err)
+			}
+			return nil
 		},
 	}
 	return cmd
@@ -168,10 +174,7 @@ Get just the configuration entries that are not default values: %[1]s changed [<
     If no keys are provided, all non-default values are retrieved.
 
 `, configCmdStart, provconfig.AppConfFilename, provconfig.TmConfFilename, provconfig.ClientConfFilename),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			showHelp, err := runConfigChangedCmd(cmd, args)
-			return handleNoShowHelp(cmd, showHelp, err)
-		},
+		RunE: runConfigChangedCmd,
 	}
 	return cmd
 }
@@ -211,35 +214,22 @@ Default values are filled in appropriately.
 	return cmd
 }
 
-func handleNoShowHelp(cmd *cobra.Command, showHelp bool, err error) error {
-	// Note: If a RunE returns an error, the usage information is displayed.
-	//       That ends up being kind of annoying in most cases in here.
-	//       So only return the error when extra help is desired.
-	if err != nil {
-		if showHelp {
-			return err
-		}
-		cmd.Printf("Error: %v\n", err)
-	}
-	return nil
-}
-
 // runConfigGetCmd gets requested values and outputs them.
 // The first return value is whether or not to include help with the output of an error.
 // This will only ever be true if an error is also returned.
 // The second return value is any error encountered.
-func runConfigGetCmd(cmd *cobra.Command, args []string) (bool, error) {
+func runConfigGetCmd(cmd *cobra.Command, args []string) error {
 	_, appFields, acerr := provconfig.GetAppConfigAndMap(cmd)
 	if acerr != nil {
-		return false, fmt.Errorf("couldn't get app config: %v", acerr)
+		return fmt.Errorf("couldn't get app config: %v", acerr)
 	}
 	_, tmFields, tmcerr := provconfig.GetTmConfigAndMap(cmd)
 	if tmcerr != nil {
-		return false, fmt.Errorf("couldn't get tendermint config: %v", tmcerr)
+		return fmt.Errorf("couldn't get tendermint config: %v", tmcerr)
 	}
 	_, clientFields, ccerr := provconfig.GetClientConfigAndMap(cmd)
 	if ccerr != nil {
-		return false, fmt.Errorf("couldn't get client config: %v", ccerr)
+		return fmt.Errorf("couldn't get client config: %v", ccerr)
 	}
 
 	if len(args) == 0 {
@@ -313,9 +303,9 @@ func runConfigGetCmd(cmd *cobra.Command, args []string) (bool, error) {
 		if len(unknownKeys) == 1 {
 			s = ""
 		}
-		return false, fmt.Errorf("%d configuration key%s not found: %s", len(unknownKeys), s, strings.Join(unknownKeys, ", "))
+		return fmt.Errorf("%d configuration key%s not found: %s", len(unknownKeys), s, strings.Join(unknownKeys, ", "))
 	}
-	return false, nil
+	return nil
 }
 
 // runConfigSetCmd sets values as provided.
@@ -451,18 +441,18 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
 // The first return value is whether or not to include help with the output of an error.
 // This will only ever be true if an error is also returned.
 // The second return value is any error encountered.
-func runConfigChangedCmd(cmd *cobra.Command, args []string) (bool, error) {
+func runConfigChangedCmd(cmd *cobra.Command, args []string) error {
 	_, appFields, acerr := provconfig.GetAppConfigAndMap(cmd)
 	if acerr != nil {
-		return false, fmt.Errorf("couldn't get app config: %v", acerr)
+		return fmt.Errorf("couldn't get app config: %v", acerr)
 	}
 	_, tmFields, tmcerr := provconfig.GetTmConfigAndMap(cmd)
 	if tmcerr != nil {
-		return false, fmt.Errorf("couldn't get tendermint config: %v", tmcerr)
+		return fmt.Errorf("couldn't get tendermint config: %v", tmcerr)
 	}
 	_, clientFields, ccerr := provconfig.GetClientConfigAndMap(cmd)
 	if ccerr != nil {
-		return false, fmt.Errorf("couldn't get client config: %v", ccerr)
+		return fmt.Errorf("couldn't get client config: %v", ccerr)
 	}
 
 	if len(args) == 0 {
@@ -569,9 +559,9 @@ func runConfigChangedCmd(cmd *cobra.Command, args []string) (bool, error) {
 		if len(unknownKeys) == 1 {
 			s = ""
 		}
-		return false, fmt.Errorf("%d configuration key%s not found: %s", len(unknownKeys), s, strings.Join(unknownKeys, ", "))
+		return fmt.Errorf("%d configuration key%s not found: %s", len(unknownKeys), s, strings.Join(unknownKeys, ", "))
 	}
-	return false, nil
+	return nil
 }
 
 func runConfigPackCmd(cmd *cobra.Command) error {

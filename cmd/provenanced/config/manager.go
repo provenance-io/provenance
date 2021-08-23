@@ -99,5 +99,3 @@ func GetAllConfigDefaults() FieldValueMap {
 	}
 	return rv
 }
-
-
