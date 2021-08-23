@@ -14,7 +14,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/version"
 
@@ -189,9 +188,9 @@ func ConfigPackCmd() *cobra.Command {
 Combines the %[2]s, %[3]s, and %[4]s files into %[1]s.
 
 `, provconfig.PackedConfFilename, provconfig.AppConfFilename, provconfig.TmConfFilename, provconfig.ClientConfFilename),
+		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO: Write the RunE for ConfigPackCmd.
-			return fmt.Errorf("not implemented")
+			return runConfigPackCmd(cmd)
 		},
 	}
 	return cmd
@@ -207,9 +206,9 @@ Splits the %[1]s file into %[2]s, %[3]s, and %[4]s.
 Default values are filled in appropriately.
 
 `, provconfig.PackedConfFilename, provconfig.AppConfFilename, provconfig.TmConfFilename, provconfig.ClientConfFilename),
+		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO: Write the RunE for ConfigUnpackCmd.
-			return fmt.Errorf("not implemented")
+			return runConfigUnpackCmd(cmd)
 		},
 	}
 	return cmd
@@ -233,15 +232,15 @@ func handleNoShowHelp(cmd *cobra.Command, showHelp bool, err error) error {
 // This will only ever be true if an error is also returned.
 // The second return value is any error encountered.
 func runConfigGetCmd(cmd *cobra.Command, args []string) (bool, error) {
-	_, appFields, acerr := getAppConfigAndMap(cmd)
+	_, appFields, acerr := provconfig.GetAppConfigAndMap(cmd)
 	if acerr != nil {
 		return false, fmt.Errorf("couldn't get app config: %v", acerr)
 	}
-	_, tmFields, tmcerr := getTmConfigAndMap(cmd)
+	_, tmFields, tmcerr := provconfig.GetTmConfigAndMap(cmd)
 	if tmcerr != nil {
 		return false, fmt.Errorf("couldn't get tendermint config: %v", tmcerr)
 	}
-	_, clientFields, ccerr := getClientConfigAndMap(cmd)
+	_, clientFields, ccerr := provconfig.GetClientConfigAndMap(cmd)
 	if ccerr != nil {
 		return false, fmt.Errorf("couldn't get client config: %v", ccerr)
 	}
@@ -327,15 +326,15 @@ func runConfigGetCmd(cmd *cobra.Command, args []string) (bool, error) {
 // This will only ever be true if an error is also returned.
 // The second return value is any error encountered.
 func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
-	appConfig, appFields, acerr := getAppConfigAndMap(cmd)
+	appConfig, appFields, acerr := provconfig.GetAppConfigAndMap(cmd)
 	if acerr != nil {
 		return false, fmt.Errorf("couldn't get app config: %v", acerr)
 	}
-	tmConfig, tmFields, tmcerr := getTmConfigAndMap(cmd)
+	tmConfig, tmFields, tmcerr := provconfig.GetTmConfigAndMap(cmd)
 	if tmcerr != nil {
 		return false, fmt.Errorf("couldn't get tendermint config: %v", tmcerr)
 	}
-	clientConfig, clientFields, ccerr := getClientConfigAndMap(cmd)
+	clientConfig, clientFields, ccerr := provconfig.GetClientConfigAndMap(cmd)
 	if ccerr != nil {
 		return false, fmt.Errorf("couldn't get client config: %v", ccerr)
 	}
@@ -448,15 +447,15 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
 // This will only ever be true if an error is also returned.
 // The second return value is any error encountered.
 func runConfigChangedCmd(cmd *cobra.Command, args []string) (bool, error) {
-	_, appFields, acerr := getAppConfigAndMap(cmd)
+	_, appFields, acerr := provconfig.GetAppConfigAndMap(cmd)
 	if acerr != nil {
 		return false, fmt.Errorf("couldn't get app config: %v", acerr)
 	}
-	_, tmFields, tmcerr := getTmConfigAndMap(cmd)
+	_, tmFields, tmcerr := provconfig.GetTmConfigAndMap(cmd)
 	if tmcerr != nil {
 		return false, fmt.Errorf("couldn't get tendermint config: %v", tmcerr)
 	}
-	_, clientFields, ccerr := getClientConfigAndMap(cmd)
+	_, clientFields, ccerr := provconfig.GetClientConfigAndMap(cmd)
 	if ccerr != nil {
 		return false, fmt.Errorf("couldn't get client config: %v", ccerr)
 	}
@@ -465,7 +464,7 @@ func runConfigChangedCmd(cmd *cobra.Command, args []string) (bool, error) {
 		args = append(args, "all")
 	}
 
-	allDefaults := getAllConfigDefaults()
+	allDefaults := provconfig.GetAllConfigDefaults()
 	showApp, showTm, showClient := false, false, false
 	appDiffs := map[string]*updatedField{}
 	tmDiffs := map[string]*updatedField{}
@@ -570,77 +569,14 @@ func runConfigChangedCmd(cmd *cobra.Command, args []string) (bool, error) {
 	return false, nil
 }
 
-// getAppConfigAndMap gets the app/cosmos configuration object and related string->value map.
-func getAppConfigAndMap(cmd *cobra.Command) (*serverconfig.Config, map[string]reflect.Value, error) {
-	v := server.GetServerContextFromCmd(cmd).Viper
-	conf := serverconfig.DefaultConfig()
-	if err := v.Unmarshal(conf); err != nil {
-		return nil, nil, err
-	}
-	fields := provconfig.GetFieldValueMap(conf, true)
-	return conf, fields, nil
+func runConfigPackCmd(cmd *cobra.Command) error {
+	// TODO: Write runConfigPackCmd
+	return fmt.Errorf("not implemented")
 }
 
-// getTmConfigAndMap gets the tendermint/config configuration object and related string->value map.
-func getTmConfigAndMap(cmd *cobra.Command) (*tmconfig.Config, map[string]reflect.Value, error) {
-	v := server.GetServerContextFromCmd(cmd).Viper
-	conf := tmconfig.DefaultConfig()
-	if err := v.Unmarshal(conf); err != nil {
-		return nil, nil, err
-	}
-	fields := provconfig.GetFieldValueMap(conf, true)
-	removeUndesirableTmConfigEntries(fields)
-	return conf, fields, nil
-}
-
-// removeUndesirableTmConfigEntries deletes some keys from the provided fields map that we don't want included.
-// The provided map is altered during this call. It is also returned from this func.
-// There are several fields in the tendermint config struct that don't correspond to entries in the config files.
-// None of the "home" keys have entries in the config files:
-// "home", "consensus.home", "mempool.home", "p2p.home", "rpc.home"
-// There are several "p2p.test_" fields that should be ignored too.
-// "p2p.test_dial_fail", "p2p.test_fuzz",
-// "p2p.test_fuzz_config.*" ("maxdelay", "mode", "probdropconn", "probdroprw", "probsleep")
-// This info is accurate in Cosmos SDK 0.43 (on 2021-08-16).
-func removeUndesirableTmConfigEntries(fields map[string]reflect.Value) map[string]reflect.Value {
-	delete(fields, "home")
-	for k := range fields {
-		if (len(k) > 5 && k[len(k)-5:] == ".home") || (len(k) > 9 && k[:9] == "p2p.test_") {
-			delete(fields, k)
-		}
-	}
-	return fields
-}
-
-// getClientConfigAndMap gets the client configuration object and related string->value map.
-func getClientConfigAndMap(cmd *cobra.Command) (*provconfig.ClientConfig, map[string]reflect.Value, error) {
-	v := client.GetClientContextFromCmd(cmd).Viper
-	conf := provconfig.DefaultClientConfig()
-	if err := v.Unmarshal(conf); err != nil {
-		return nil, nil, err
-	}
-	fields := provconfig.GetFieldValueMap(conf, true)
-	return conf, fields, nil
-}
-
-// getAllConfigDefaults gets a field map from the defaults of all the configs.
-func getAllConfigDefaults() map[string]reflect.Value {
-	return combineConfigMaps(
-		provconfig.GetFieldValueMap(serverconfig.DefaultConfig(), false),
-		removeUndesirableTmConfigEntries(provconfig.GetFieldValueMap(tmconfig.DefaultConfig(), false)),
-		provconfig.GetFieldValueMap(provconfig.DefaultClientConfig(), false),
-	)
-}
-
-// combineConfigMaps flattens the provided field maps into a single field map.
-func combineConfigMaps(maps ...map[string]reflect.Value) map[string]reflect.Value {
-	rv := map[string]reflect.Value{}
-	for _, m := range maps {
-		for k, v := range m {
-			rv[k] = v
-		}
-	}
-	return rv
+func runConfigUnpackCmd(cmd *cobra.Command) error {
+	// TODO: Write runConfigUnpackCmd
+	return fmt.Errorf("not implemented")
 }
 
 // findEntry gets the entry with the given key in one of the provided maps.
