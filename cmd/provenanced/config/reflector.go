@@ -1,12 +1,104 @@
 package config
 
 import (
+	"encoding/json"
+	"fmt"
 	"reflect"
+	"sort"
+	"strconv"
 	"strings"
+	"time"
 )
 
 // FieldValueMap maps field names to reflect.Value objects.
 type FieldValueMap map[string]reflect.Value
+
+// Has checks if the provided key exists in this FieldValueMap.
+func (m FieldValueMap) Has(key string) bool {
+	_, ok := m[key]
+	return ok
+}
+
+// GetSortedKeys gets the keys of this FieldValueMap and sorts them using SortKeys.
+func (m FieldValueMap) GetSortedKeys() []string {
+	rv := make([]string, 0, len(m))
+	for k := range m {
+		rv = append(rv, k)
+	}
+	return SortKeys(rv)
+}
+
+// FindEntries looks for entries in this map that match the provided key.
+// First, if the key doesn't end in a period, an exact entry match is looked for.
+// If such an entry is found, only that entry will be returned.
+// If no such entry is found, a period is added to the end of the key (if not already there).
+// E.g. Providing "filter_peers" will get just the "filter_peers" entry.
+// Providing "consensus." will bypass the exact key lookup, and return all fields that start with "consensus.".
+// Providing "consensus" will look first for a field specifically called "consensus",
+// then, if/when not found, will return all fields that start with "consensus.".
+// Then, all entries with keys that start with the desired key are returned.
+// The second return value indicates whether or not anything was found.
+func (m FieldValueMap) FindEntries(key string) (FieldValueMap, bool) {
+	rv := FieldValueMap{}
+	if len(key) == 0 {
+		return rv, false
+	}
+	if key[len(key)-1:] != "." {
+		if val, ok := m[key]; ok {
+			rv[key] = val
+			return rv, true
+		}
+		key += "."
+	}
+	keylen := len(key)
+	for k, v := range m {
+		if len(k) > keylen && k[:keylen] == key {
+			rv[k] = v
+		}
+	}
+	return rv, len(rv) > 0
+}
+
+// GetStringOf gets a string representation of the value with the given key.
+// If the key doesn't exist in this FieldValueMap, an empty string is returned.
+func (m FieldValueMap) GetStringOf(key string) string {
+	if v, ok := m[key]; ok {
+		return GetStringFromValue(v)
+	}
+	return ""
+}
+
+// SetFromString sets a value from the provided string.
+// The string is converted appropriately for the underlying value type.
+// Assuming the value came from GetFieldValueMap, this will actually be updating the
+// value in the config object provided to that function.
+func (m FieldValueMap) SetFromString(key, valueStr string) error {
+	if v, ok := m[key]; ok {
+		return setValueFromString(key, v, valueStr)
+	}
+	return fmt.Errorf("no field found for key: %s", key)
+}
+
+// SortKeys sorts the provided keys slice.
+// Base keys are put first and sorted alphabetically followed by keys in sub-configs sorted alphabetically.
+func SortKeys(keys []string) []string {
+	var baseKeys []string
+	var subKeys []string
+	for _, k := range keys {
+		if strings.Contains(k, ".") {
+			subKeys = append(subKeys, k)
+		} else {
+			baseKeys = append(baseKeys, k)
+		}
+	}
+	sort.Strings(baseKeys)
+	sort.Strings(subKeys)
+	copy(keys, baseKeys)
+	for i, k := range subKeys {
+		keys[i+len(baseKeys)] = k
+	}
+	return keys
+}
 
 // GetFieldValueMap gets a map of string field names to reflect.Value objects for a given object.
 // An empty map is returned if the provided obj is nil, or isn't either a struct or pointer chain to a struct.
@@ -114,4 +206,178 @@ func deref(v reflect.Value, fillNilsWithZero bool) reflect.Value {
 		}
 	}
 	return v
+}
+
+// GetStringFromValue gets a string of the given value.
+// This creates strings that are more in line with what the values look like in the config files.
+// For slices and arrays, it turns into `["a", "b", "c"]`.
+// For strings, it turns into `"a"`.
+// For anything else, it just uses fmt %v.
+// This wasn't designed with the following kinds in mind:
+//    Invalid, Chan, Func, Interface, Map, Ptr, Struct, or UnsafePointer.
+func GetStringFromValue(v reflect.Value) string {
+	switch v.Kind() {
+	case reflect.Slice, reflect.Array:
+		var sb strings.Builder
+		sb.WriteByte('[')
+		for i := 0; i < v.Len(); i++ {
+			if i > 0 {
+				sb.WriteString(", ")
+			}
+			sb.WriteString(GetStringFromValue(v.Index(i)))
+		}
+		sb.WriteByte(']')
+		return sb.String()
+	case reflect.String:
+		return fmt.Sprintf("\"%v\"", v)
+	case reflect.Int64:
+		if v.Type().String() == "time.Duration" {
+			return fmt.Sprintf("\"%v\"", v)
+		}
+		return fmt.Sprintf("%v", v)
+	default:
+		return fmt.Sprintf("%v", v)
+	}
+}
+
+// setValueFromString sets a value from the provided string.
+// The string is converted appropriately for the underlying value type.
+// Assuming the value came from GetFieldValueMap, this will actually be updating the
+// value in the config object provided to that function.
+func setValueFromString(fieldName string, fieldVal reflect.Value, strVal string) error {
+	switch fieldVal.Kind() {
+	case reflect.String:
+		fieldVal.SetString(strVal)
+		return nil
+	case reflect.Bool:
+		b, err := strconv.ParseBool(strVal)
+		if err != nil {
+			return err
+		}
+		fieldVal.SetBool(b)
+		return nil
+	case reflect.Int:
+		i, err := strconv.Atoi(strVal)
+		if err != nil {
+			return err
+		}
+		fieldVal.SetInt(int64(i))
+		return nil
+	case reflect.Int64:
+		if fieldVal.Type().String() == "time.Duration" {
+			i, err := time.ParseDuration(strVal)
+			if err != nil {
+				return err
+			}
+			fieldVal.SetInt(int64(i))
+			return nil
+		}
+		i, err := strconv.ParseInt(strVal, 10, 64)
+		if err != nil {
+			return err
+		}
+		fieldVal.SetInt(i)
+		return nil
+	case reflect.Int32:
+		i, err := strconv.ParseInt(strVal, 10, 32)
+		if err != nil {
+			return err
+		}
+		fieldVal.SetInt(i)
+		return nil
+	case reflect.Int16:
+		i, err := strconv.ParseInt(strVal, 10, 16)
+		if err != nil {
+			return err
+		}
+		fieldVal.SetInt(i)
+		return nil
+	case reflect.Int8:
+		i, err := strconv.ParseInt(strVal, 10, 8)
+		if err != nil {
+			return err
+		}
+		fieldVal.SetInt(i)
+		return nil
+	case reflect.Uint, reflect.Uint64:
+		ui, err := strconv.ParseUint(strVal, 10, 64)
+		if err != nil {
+			return err
+		}
+		fieldVal.SetUint(ui)
+		return nil
+	case reflect.Uint32:
+		ui, err := strconv.ParseUint(strVal, 10, 32)
+		if err != nil {
+			return err
+		}
+		fieldVal.SetUint(ui)
+		return nil
+	case reflect.Uint16:
+		ui, err := strconv.ParseUint(strVal, 10, 16)
+		if err != nil {
+			return err
+		}
+		fieldVal.SetUint(ui)
+		return nil
+	case reflect.Uint8:
+		ui, err := strconv.ParseUint(strVal, 10, 8)
+		if err != nil {
+			return err
+		}
+		fieldVal.SetUint(ui)
+		return nil
+	case reflect.Float64:
+		f, err := strconv.ParseFloat(strVal, 64)
+		if err != nil {
+			return err
+		}
+		fieldVal.SetFloat(f)
+		return nil
+	case reflect.Float32:
+		f, err := strconv.ParseFloat(strVal, 32)
+		if err != nil {
+			return err
+		}
+		fieldVal.SetFloat(f)
+		return nil
+	case reflect.Slice:
+		switch fieldVal.Type().Elem().Kind() {
+		case reflect.String:
+			var val []string
+			if len(strVal) > 0 {
+				err := json.Unmarshal([]byte(strVal), &val)
+				if err != nil {
+					return err
+				}
+			}
+			fieldVal.Set(reflect.ValueOf(val))
+			return nil
+		case reflect.Slice:
+			if fieldVal.Type().Elem().Elem().Kind() == reflect.String {
+				var val [][]string
+				if len(strVal) > 0 {
+					err := json.Unmarshal([]byte(strVal), &val)
+					if err != nil {
+						return err
+					}
+				}
+				if fieldName == "telemetry.global-labels" {
+					// The Cosmos config ValidateBasic doesn't do this checking (as of Cosmos 0.43, 2021-08-16).
+					// If the length of a sub-slice is 0 or 1, you get a panic:
+					//   panic: template: appConfigFileTemplate:95:26: executing "appConfigFileTemplate" at <index $v 1>: error calling index: reflect: slice index out of range
+					// If the length of a sub-slice is greater than 2, everything after the first two ends up getting chopped off.
+					// e.g. trying to set it to '[["a","b","c"]]' will actually end up just setting it to '[["a","b"]]'.
+					for i, s := range val {
+						if len(s) != 2 {
+							return fmt.Errorf("invalid %s: sub-arrays must have length 2, but the sub-array at index %d has length %d", fieldName, i, len(s))
+						}
+					}
+				}
+				fieldVal.Set(reflect.ValueOf(val))
+				return nil
+			}
+		}
+	}
+	return fmt.Errorf("field %s cannot be set because setting values of type %s has not yet been set up", fieldName, fieldVal.Type())
 }

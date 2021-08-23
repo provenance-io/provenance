@@ -1,21 +1,18 @@
 package cmd
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
-	"sort"
-	"strconv"
 	"strings"
-	"time"
 
 	provconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
-	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/version"
+
+	"github.com/spf13/cobra"
 
 	tmconfig "github.com/tendermint/tendermint/config"
 )
@@ -311,7 +308,7 @@ func runConfigGetCmd(cmd *cobra.Command, args []string) (bool, error) {
 		cmd.Println(makeFieldMapString(clientToOutput))
 	}
 	if len(unknownKeyMap) > 0 {
-		unknownKeys := getSortedKeys(unknownKeyMap)
+		unknownKeys := unknownKeyMap.GetSortedKeys()
 		s := "s"
 		if len(unknownKeys) == 1 {
 			s = ""
@@ -374,14 +371,22 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
 			issueFound = true
 			continue
 		}
-		v, foundIn := findEntry(key, appFields, tmFields, clientFields)
+		var confMap provconfig.FieldValueMap
+		foundIn := entryNotFound
+		for fvmi, fvm := range []provconfig.FieldValueMap{appFields, tmFields, clientFields} {
+			if fvm.Has(key) {
+				confMap = fvm
+				foundIn = fvmi
+				break
+			}
+		}
 		if foundIn == entryNotFound {
 			cmd.Printf("Configuration key %s does not exist.\n", key)
 			issueFound = true
 			continue
 		}
-		was := getStringFromValue(v)
-		err := setValueFromString(key, v, vals[i])
+		was := confMap.GetStringOf(key)
+		err := confMap.SetFromString(key, vals[i])
 		if err != nil {
 			cmd.Printf("Error setting key %s: %v\n", key, err)
 			issueFound = true
@@ -390,7 +395,7 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
 		info := updatedField{
 			Key:   key,
 			Was:   was,
-			IsNow: getStringFromValue(v),
+			IsNow: confMap.GetStringOf(key),
 		}
 		switch foundIn {
 		case 0:
@@ -559,7 +564,7 @@ func runConfigChangedCmd(cmd *cobra.Command, args []string) (bool, error) {
 	}
 
 	if len(unknownKeyMap) > 0 {
-		unknownKeys := getSortedKeys(unknownKeyMap)
+		unknownKeys := unknownKeyMap.GetSortedKeys()
 		s := "s"
 		if len(unknownKeys) == 1 {
 			s = ""
@@ -579,53 +584,19 @@ func runConfigUnpackCmd(cmd *cobra.Command) error {
 	return fmt.Errorf("not implemented")
 }
 
-// findEntry gets the entry with the given key in one of the provided maps.
-// Maps are searched in the order provided and the first match is returned.
-// The second return value is the index of the provided map that the entry was found in (starting with 0).
-// If it's equal to entryNotFound, the entry wasn't found.
-func findEntry(key string, maps ...provconfig.FieldValueMap) (reflect.Value, int) {
-	for i, m := range maps {
-		if v, ok := m[key]; ok {
-			return v, i
-		}
-	}
-	return reflect.Value{}, entryNotFound
-}
-
-// findEntries gets entries that match a given key from the provided maps.
+// findEntries gets all entries that match a given key from the provided maps.
 // If the key doesn't end in a period, findEntry is used first to find an exact match.
 // If an exact match isn't found, a period is appended to the key (unless already there) and sub-entry matches are looked for.
-// E.g. Providing "filter_peers" will get just the "filter_peers" entry.
-// Providing "consensus." will bypass the exact key lookup, and return all fields that start with "consensus.".
-// Providing "consensus" will look first for a field specifically called "consensus",
-// then, if/when not found, will return all fields that start with "consensus.".
+// Maps are searched in the order provided and results are returned when they're first found.
 // The second return value is the index of the provided map that the entries were found in (starting with 0).
 // If it's equal to entryNotFound, no entries were found.
 func findEntries(key string, maps ...provconfig.FieldValueMap) (provconfig.FieldValueMap, int) {
-	rv := provconfig.FieldValueMap{}
-	baseKey := key
-	if len(key) == 0 {
-		return rv, entryNotFound
-	}
-	if key[len(key)-1:] != "." {
-		if v, i := findEntry(key, maps...); i != entryNotFound {
-			rv[key] = v
-			return rv, i
-		}
-		baseKey += "."
-	}
-	baseKeyLen := len(baseKey)
 	for i, m := range maps {
-		for k, v := range m {
-			if len(k) > baseKeyLen && k[:baseKeyLen] == baseKey {
-				rv[k] = v
-			}
-		}
-		if len(rv) > 0 {
-			return rv, i
+		if fvm, ok := m.FindEntries(key); ok {
+			return fvm, i
 		}
 	}
-	return rv, entryNotFound
+	return provconfig.FieldValueMap{}, entryNotFound
 }
 
 // getFieldMapChanges gets an updated field map with changes between two field maps.
@@ -648,197 +619,23 @@ func getFieldMapChanges(isNowMap provconfig.FieldValueMap, wasMap provconfig.Fie
 func makeUpdatedField(key string, isNowVal reflect.Value, wasMap provconfig.FieldValueMap) (updatedField, bool) {
 	rv := updatedField{
 		Key:   key,
-		IsNow: getStringFromValue(isNowVal),
+		IsNow: provconfig.GetStringFromValue(isNowVal),
 	}
 	if wasVal, ok := wasMap[key]; ok {
-		rv.Was = getStringFromValue(wasVal)
+		rv.Was = provconfig.GetStringFromValue(wasVal)
 		return rv, true
 	}
 	return rv, false
 }
 
-// getStringFromValue gets a string of the given value.
-// This creates strings that are more in line with what the values look like in the config files.
-// For slices and arrays, it turns into `["a", "b", "c"]`.
-// For strings, it turns into `"a"`.
-// For anything else, it just uses fmt %v.
-// This wasn't designed with the following kinds in mind:
-//    Invalid, Chan, Func, Interface, Map, Ptr, Struct, or UnsafePointer.
-func getStringFromValue(v reflect.Value) string {
-	switch v.Kind() {
-	case reflect.Slice, reflect.Array:
-		var sb strings.Builder
-		sb.WriteByte('[')
-		for i := 0; i < v.Len(); i++ {
-			if i > 0 {
-				sb.WriteString(", ")
-			}
-			sb.WriteString(getStringFromValue(v.Index(i)))
-		}
-		sb.WriteByte(']')
-		return sb.String()
-	case reflect.String:
-		return fmt.Sprintf("\"%v\"", v)
-	case reflect.Int64:
-		if v.Type().String() == "time.Duration" {
-			return fmt.Sprintf("\"%v\"", v)
-		}
-		return fmt.Sprintf("%v", v)
-	default:
-		return fmt.Sprintf("%v", v)
-	}
-}
-
-// setValueFromString sets a value from the provided string.
-// The string is converted appropriately for the underlying value type.
-// Assuming the value came from GetFieldValueMap, this will actually be updating the
-// value in the config object provided to that function.
-func setValueFromString(fieldName string, fieldVal reflect.Value, strVal string) error {
-	switch fieldVal.Kind() {
-	case reflect.String:
-		fieldVal.SetString(strVal)
-		return nil
-	case reflect.Bool:
-		b, err := strconv.ParseBool(strVal)
-		if err != nil {
-			return err
-		}
-		fieldVal.SetBool(b)
-		return nil
-	case reflect.Int:
-		i, err := strconv.Atoi(strVal)
-		if err != nil {
-			return err
-		}
-		fieldVal.SetInt(int64(i))
-		return nil
-	case reflect.Int64:
-		if fieldVal.Type().String() == "time.Duration" {
-			i, err := time.ParseDuration(strVal)
-			if err != nil {
-				return err
-			}
-			fieldVal.SetInt(int64(i))
-			return nil
-		}
-		i, err := strconv.ParseInt(strVal, 10, 64)
-		if err != nil {
-			return err
-		}
-		fieldVal.SetInt(i)
-		return nil
-	case reflect.Int32:
-		i, err := strconv.ParseInt(strVal, 10, 32)
-		if err != nil {
-			return err
-		}
-		fieldVal.SetInt(i)
-		return nil
-	case reflect.Int16:
-		i, err := strconv.ParseInt(strVal, 10, 16)
-		if err != nil {
-			return err
-		}
-		fieldVal.SetInt(i)
-		return nil
-	case reflect.Int8:
-		i, err := strconv.ParseInt(strVal, 10, 8)
-		if err != nil {
-			return err
-		}
-		fieldVal.SetInt(i)
-		return nil
-	case reflect.Uint, reflect.Uint64:
-		ui, err := strconv.ParseUint(strVal, 10, 64)
-		if err != nil {
-			return err
-		}
-		fieldVal.SetUint(ui)
-		return nil
-	case reflect.Uint32:
-		ui, err := strconv.ParseUint(strVal, 10, 32)
-		if err != nil {
-			return err
-		}
-		fieldVal.SetUint(ui)
-		return nil
-	case reflect.Uint16:
-		ui, err := strconv.ParseUint(strVal, 10, 16)
-		if err != nil {
-			return err
-		}
-		fieldVal.SetUint(ui)
-		return nil
-	case reflect.Uint8:
-		ui, err := strconv.ParseUint(strVal, 10, 8)
-		if err != nil {
-			return err
-		}
-		fieldVal.SetUint(ui)
-		return nil
-	case reflect.Float64:
-		f, err := strconv.ParseFloat(strVal, 64)
-		if err != nil {
-			return err
-		}
-		fieldVal.SetFloat(f)
-		return nil
-	case reflect.Float32:
-		f, err := strconv.ParseFloat(strVal, 32)
-		if err != nil {
-			return err
-		}
-		fieldVal.SetFloat(f)
-		return nil
-	case reflect.Slice:
-		switch fieldVal.Type().Elem().Kind() {
-		case reflect.String:
-			var val []string
-			if len(strVal) > 0 {
-				err := json.Unmarshal([]byte(strVal), &val)
-				if err != nil {
-					return err
-				}
-			}
-			fieldVal.Set(reflect.ValueOf(val))
-			return nil
-		case reflect.Slice:
-			if fieldVal.Type().Elem().Elem().Kind() == reflect.String {
-				var val [][]string
-				if len(strVal) > 0 {
-					err := json.Unmarshal([]byte(strVal), &val)
-					if err != nil {
-						return err
-					}
-				}
-				if fieldName == "telemetry.global-labels" {
-					// The Cosmos config ValidateBasic doesn't do this checking (as of Cosmos 0.43, 2021-08-16).
-					// If the length of a sub-slice is 0 or 1, you get a panic:
-					//   panic: template: appConfigFileTemplate:95:26: executing "appConfigFileTemplate" at <index $v 1>: error calling index: reflect: slice index out of range
-					// If the length of a sub-slice is greater than 2, everything after the first two ends up getting chopped off.
-					// e.g. trying to set it to '[["a","b","c"]]' will actually end up just setting it to '[["a","b"]]'.
-					for i, s := range val {
-						if len(s) != 2 {
-							return fmt.Errorf("invalid %s: sub-arrays must have length 2, but the sub-array at index %d has %d", fieldName, i, len(s))
-						}
-					}
-				}
-				fieldVal.Set(reflect.ValueOf(val))
-				return nil
-			}
-		}
-	}
-	return fmt.Errorf("field %s cannot be set because setting values of type %s has not yet been set up", fieldName, fieldVal.Type())
-}
-
 // makeFieldMapString makes a multi-line string with all the keys and values in the provided map.
 func makeFieldMapString(m provconfig.FieldValueMap) string {
-	keys := getSortedKeys(m)
+	keys := m.GetSortedKeys()
 	var sb strings.Builder
 	for _, k := range keys {
 		sb.WriteString(k)
 		sb.WriteByte('=')
-		sb.WriteString(getStringFromValue(m[k]))
+		sb.WriteString(m.GetStringOf(k))
 		sb.WriteByte('\n')
 	}
 	return sb.String()
@@ -851,43 +648,13 @@ func makeUpdatedFieldMapString(m map[string]*updatedField, stringer func(v updat
 	for k := range m {
 		keys = append(keys, k)
 	}
-	keys = sortKeys(keys)
+	keys = provconfig.SortKeys(keys)
 	var sb strings.Builder
 	for _, key := range keys {
 		sb.WriteString(stringer(*m[key]))
 		sb.WriteByte('\n')
 	}
 	return sb.String()
-}
-
-// getSortedKeys gets the keys of the provided map and sorts them using sortKeys.
-func getSortedKeys(m provconfig.FieldValueMap) []string {
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	return sortKeys(keys)
-}
-
-// sortKeys sorts the provided keys slice.
-// Base keys are put first and sorted alphabetically followed by keys in sub-configs sorted alphabetically.
-func sortKeys(keys []string) []string {
-	var baseKeys []string
-	var subKeys []string
-	for _, k := range keys {
-		if strings.Contains(k, ".") {
-			subKeys = append(subKeys, k)
-		} else {
-			baseKeys = append(baseKeys, k)
-		}
-	}
-	sort.Strings(baseKeys)
-	sort.Strings(subKeys)
-	copy(keys, baseKeys)
-	for i, k := range subKeys {
-		keys[i+len(baseKeys)] = k
-	}
-	return keys
 }
 
 // makeSectionHeaderString creates a string to use as a section header in output.
