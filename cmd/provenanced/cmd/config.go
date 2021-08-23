@@ -76,11 +76,28 @@ func (u updatedField) AddToOrUpdateIn(all map[string]*updatedField) {
 // ConfigCmd returns a CLI command to update config files.
 func ConfigCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "config get [<key1> [<key2> ...]] | set <key1> <value1> [<key2> <value2> ...] | changed [<key1> [<key2>...] | [<key> [<value>]]",
-		Short: "Get or Set configuration values",
-		Long: fmt.Sprintf(`Get or Set configuration values.
+		Use:                        "config",
+		Aliases:                    []string{"conf"},
+		Short:                      "Manage configuration values",
+		SuggestionsMinimumDistance: 2,
+		RunE:                       client.ValidateCmd,
+	}
+	cmd.AddCommand(
+		ConfigGetCmd(),
+		ConfigSetCmd(),
+		ConfigChangedCmd(),
+		ConfigPackCmd(),
+		ConfigUnpackCmd(),
+	)
+	return cmd
+}
 
-Get configuration values: %[1]s get [<key1> [<key2> ...]]
+func ConfigGetCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "get [<key1> [<key2> ...]]",
+		Short: "Get configuration values",
+		Long: fmt.Sprintf(`Get configuration values.
+
     The key values can be specific.
         e.g. %[1]s get telemetry.service-name moniker.
     Or they can be parent field names
@@ -96,70 +113,119 @@ Get configuration values: %[1]s get [<key1> [<key2> ...]]
         e.g. %[1]s get all
     If no keys are provided, all values are retrieved.
 
-Set a config value: %[1]s set <key> <value>
-    The key must be specific, e.g. "telemetry.service-name", or "moniker".
-    The value must be provided as a single argument. Make sure to quote it appropriately for your system.
-    e.g. %[1]s set output json
-Set multiple config values %[1]s set <key1> <value1> [<key2> <value2> ...]
-    Simply provide multiple key/value pairs as alternating arguments.
-    e.g. %[1]s set api.enable true api.swagger true
-
-When getting or setting a single key, the "get" or "set" can be omitted.
-    e.g. %[1]s output
-    and  %[1]s output json
-
-Get just the configuration entries that are not default values: %[1]s changed [<key1> [<key2> ...]]
-    The same key values can be used here as with the %[1]s get.
-    e.g. %[1]s changed all
-    e.g. %[1]s changed client
-    e.g. %[1]s changed telemetry.service-name moniker
-    Current and default values are both included in the output.
-    If no keys are provided, all non-default values are retrieved.
-
-If no arguments are provided, default behavior is the same as %[1]s changed all
-
 `, configCmdStart, provconfig.AppConfFilename, provconfig.TmConfFilename, provconfig.ClientConfFilename),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// Note: If this RunE returns an error, the usage information is displayed.
-			//       That ends up being kind of annoying in most cases in here.
-			//       So only return the error when extra help is desired.
-			showHelp, err := runConfigCmd(cmd, args)
-			if err != nil {
-				if showHelp {
-					return err
-				}
-				cmd.Printf("Error: %v\n", err)
-			}
-			return nil
+			showHelp, err := runConfigGetCmd(cmd, args)
+			return handleNoShowHelp(cmd, showHelp, err)
 		},
 	}
 	return cmd
 }
 
-// runConfigCmd desides whether getting or setting is desired, and takes the appropriate action.
-// The first return value is whether or not to include help with the output of an error.
-// This will only ever be true if an error is also returned.
-// The second return value is any error encountered.
-func runConfigCmd(cmd *cobra.Command, args []string) (bool, error) {
-	if len(args) > 0 {
-		switch args[0] {
-		case "get":
-			return runConfigGetCmd(cmd, args[1:])
-		case "set":
-			return runConfigSetCmd(cmd, args[1:])
-		case "changed":
-			return runConfigChangedCmd(cmd, args[1:])
+func ConfigSetCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "set <key1> <value1> [<key2> <value2> ...]",
+		Short: "Set configuration values",
+		Long: fmt.Sprintf(`Set configuration values.
+
+Set a config value: %[1]s set <key> <value>
+    The key must be specific, e.g. "telemetry.service-name", or "moniker".
+    The value must be provided as a single, separate argument.
+    e.g. %[1]s set output json
+
+Set multiple config values %[1]s set <key1> <value1> [<key2> <value2> ...]
+    Simply provide multiple key/value pairs as alternating arguments.
+    e.g. %[1]s set api.enable true api.swagger true
+
+`, configCmdStart),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			showHelp, err := runConfigSetCmd(cmd, args)
+			return handleNoShowHelp(cmd, showHelp, err)
+		},
+	}
+	return cmd
+}
+
+func ConfigChangedCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "changed [<key1> [<key2>...]",
+		Short: "Get configuration values that are different from their default.",
+		Long: fmt.Sprintf(`Get configuration values that are different from their default.
+
+Get just the configuration entries that are not default values: %[1]s changed [<key1> [<key2> ...]]
+    The key values can be specific.
+        e.g. %[1]s get telemetry.service-name moniker.
+        Specific keys that are provided that are equal to default values will still be included in output,
+            but they will be noted as such.
+    Or they can be parent field names
+        e.g. %[1]s get api consensus
+    Or they can be a type of config file:
+        "cosmos", "app" -> %[2]s configuration values.
+            e.g. %[1]s get app
+        "tendermint", "tm", "config" -> %[3]s configuration values.
+            e.g. %[1]s get tm
+        "client" -> %[4]s configuration values.
+            e.g. %[1]s get client
+    Or they can be the word "all" to get all configuration values.
+        e.g. %[1]s get all
+    Current and default values are both included in the output.
+    If no keys are provided, all non-default values are retrieved.
+
+`, configCmdStart, provconfig.AppConfFilename, provconfig.TmConfFilename, provconfig.ClientConfFilename),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			showHelp, err := runConfigChangedCmd(cmd, args)
+			return handleNoShowHelp(cmd, showHelp, err)
+		},
+	}
+	return cmd
+}
+
+func ConfigPackCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "pack",
+		Short: "Unpack configuration into a single config file",
+		Long: fmt.Sprintf(`Unpack configuration into a single config file
+
+Combines the %[2]s, %[3]s, and %[4]s files into %[1]s.
+
+`, provconfig.PackedConfFilename, provconfig.AppConfFilename, provconfig.TmConfFilename, provconfig.ClientConfFilename),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// TODO: Write the RunE for ConfigPackCmd.
+			return fmt.Errorf("not implemented")
+		},
+	}
+	return cmd
+}
+
+func ConfigUnpackCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "unpack",
+		Short: "Unpack configuration into separate config files",
+		Long: fmt.Sprintf(`Unpack configuration into separate config files.
+
+Splits the %[1]s file into %[2]s, %[3]s, and %[4]s.
+Default values are filled in appropriately.
+
+`, provconfig.PackedConfFilename, provconfig.AppConfFilename, provconfig.TmConfFilename, provconfig.ClientConfFilename),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// TODO: Write the RunE for ConfigUnpackCmd.
+			return fmt.Errorf("not implemented")
+		},
+	}
+	return cmd
+}
+
+func handleNoShowHelp(cmd *cobra.Command, showHelp bool, err error) error {
+	// Note: If a RunE returns an error, the usage information is displayed.
+	//       That ends up being kind of annoying in most cases in here.
+	//       So only return the error when extra help is desired.
+	if err != nil {
+		if showHelp {
+			return err
 		}
+		cmd.Printf("Error: %v\n", err)
 	}
-	switch len(args) {
-	case 0:
-		return runConfigChangedCmd(cmd, args)
-	case 1:
-		return runConfigGetCmd(cmd, args)
-	case 2:
-		return runConfigSetCmd(cmd, args)
-	}
-	return true, errors.New("when more than two arguments are provided, the first must either be \"get\" or \"set\"")
+	return nil
 }
 
 // runConfigGetCmd gets requested values and outputs them.

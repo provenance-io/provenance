@@ -150,11 +150,6 @@ func (s *ConfigTestSuite) TestConfigBadArgs() {
 		err  string
 	}{
 		{
-			name: "too many args without get or set",
-			args: []string{"one", "two", "three"},
-			err:  `when more than two arguments are provided, the first must either be "get" or "set"`,
-		},
-		{
 			name: "set with nothing else",
 			args: []string{"set"},
 			err:  "no key/value pairs provided",
@@ -629,25 +624,6 @@ func (s *ConfigTestSuite) TestConfigCmdSet() {
 	}
 
 	for _, tc := range positiveTests {
-		s.T().Run(tc.name+" (without set arg)", func(t *testing.T) {
-			expectedInOut := s.makeKeyUpdatedLine(tc.name, tc.oldVal, tc.newVal)
-			args := []string{tc.name, strings.Trim(tc.newVal, "\"")}
-			command := cmd.ConfigCmd()
-			command.SetArgs(args)
-			b := bytes.NewBufferString("")
-			command.SetOut(b)
-			err := command.ExecuteContext(*s.Context)
-			require.NoError(t, err, "%s %s - unexpected error in execution", command.Name(), args)
-			out, rerr := ioutil.ReadAll(b)
-			require.NoError(t, rerr, "%s %s - unexpected error in reading", command.Name(), args)
-			outStr := string(out)
-			for _, re := range tc.toMatch {
-				isMatch := re.Match(out)
-				assert.True(t, isMatch, "`%s` matching:\n%s", re.String(), outStr)
-			}
-			assert.Contains(t, outStr, expectedInOut, "update line")
-		})
-
 		s.T().Run(tc.name+" (with set arg)", func(t *testing.T) {
 			expectedInOut := s.makeKeyUpdatedLine(tc.name, tc.oldVal, tc.newVal)
 			args := []string{"set", tc.name, strings.Trim(tc.newVal, "\"")}
