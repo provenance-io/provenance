@@ -55,6 +55,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* Fix for creating non-coin type markers through governance addmarker proposals [#431](https://github.com/provenance-io/provenance/issues/431)
 * Marker Withdraw Escrow Proposal type is properly registered [#367](https://github.com/provenance-io/provenance/issues/367)
   * Target Address field spelling error corrected in Withdraw Escrow and Increase Supply Governance Proposals.
 * Fix DeleteScopeOwner endpoint to store the correct scope [PR 377](https://github.com/provenance-io/provenance/pull/377)
@@ -67,6 +68,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Fix handling of optional fields in Metadata Write messages [#412](https://github.com/provenance-io/provenance/issues/412)
 * Fix cli marker new example is incorrect [#415](https://github.com/provenance-io/provenance/issues/415)
 * Correct an error message that was providing an illegal amount of gas as an example [#425](https://github.com/provenance-io/provenance/issues/425)
+
+### API Breaking
+
+* Fix for missing validation for marker permissions according to marker type.  Markers of type COIN can no longer have
+  the Transfer permission assigned.  Existing permission entries on Coin type markers of type Transfer are removed 
+  during migration [#428](https://github.com/provenance-io/provenance/issues/428)
 
 ### Improvements
 

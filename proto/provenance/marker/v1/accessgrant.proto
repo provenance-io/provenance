@@ -41,6 +41,6 @@ enum Access {
   // ACCESS_ADMIN is the ability to add access grants for accounts to the list of marker permissions.
   ACCESS_ADMIN = 6 [(gogoproto.enumvalue_customname) = "Admin"];
   // ACCESS_TRANSFER is the ability to invoke a send operation using the marker module to facilitate exchange.
-  // This capability is useful when the marker denomination has "send enabled = false" preventing normal bank transfer
+  // This access right is only supported on RESTRICTED markers.
   ACCESS_TRANSFER = 7 [(gogoproto.enumvalue_customname) = "Transfer"];
 }

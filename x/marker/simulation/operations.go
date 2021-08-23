@@ -253,7 +253,7 @@ func randomAccessGrants(r *rand.Rand, accs []simtypes.Account, limit int) (grant
 
 // builds a list of access rights with a 50:50 chance of including each one
 func randomAccessTypes(r *rand.Rand) (result []types.Access) {
-	access := []string{"mint", "burn", "deposit", "withdraw", "delete", "admin", "transfer"}
+	access := []string{"mint", "burn", "deposit", "withdraw", "delete", "admin"}
 	for i := 0; i < len(access); i++ {
 		if r.Intn(10) < 4 {
 			result = append(result, types.AccessByName(access[i]))

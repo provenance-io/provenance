@@ -26,6 +26,7 @@ func HandleAddMarkerProposal(ctx sdk.Context, k Keeper, c *types.AddMarkerPropos
 	newMarker := types.NewEmptyMarkerAccount(c.Amount.Denom, c.Manager, c.AccessList)
 	newMarker.AllowGovernanceControl = c.AllowGovernanceControl
 	newMarker.SupplyFixed = c.SupplyFixed
+	newMarker.MarkerType = c.MarkerType
 
 	if err := newMarker.SetSupply(c.Amount); err != nil {
 		return err
