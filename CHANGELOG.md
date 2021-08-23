@@ -37,6 +37,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+## [v1.5.1](https://github.com/provenance-io/provenance/releases/tag/v1.5.1) - 2021-08-23
+
+### Bug Fixes
+
+* Fix for creating non-coin type markers through governance addmarker proposals [#
+
 ## [v1.5.0](https://github.com/provenance-io/provenance/releases/tag/v1.5.0) - 2021-06-23
 
 ### Features

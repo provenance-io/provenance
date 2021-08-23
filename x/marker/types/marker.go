@@ -29,6 +29,9 @@ type MarkerAccountI interface {
 	GetDenom() string
 	GetManager() sdk.AccAddress
 	GetMarkerType() MarkerType
+	// Only usdf.c specific code because it was incorrectly set as non-restrcited COIN
+	// **** Remove after 1.6 *****
+	SetMarkerTypeForUSDF() error
 
 	GetStatus() MarkerStatus
 	SetStatus(MarkerStatus) error
@@ -204,6 +207,18 @@ func (ma *MarkerAccount) SetStatus(status MarkerStatus) error {
 // GetMarkerType returns the type of the marker account.
 func (ma MarkerAccount) GetMarkerType() MarkerType {
 	return ma.MarkerType
+}
+
+func (ma MarkerAccount) SetMarkerTypeForUSDF() error {
+	if ma.Denom != "usdf.c" {
+		return fmt.Errorf("marker type cannot be changed for anything other than usdf.c")
+	}
+	if ma.MarkerType == MarkerType_Coin {
+		// Always change marker type to Restricted, if already restricted no-op
+		ma.MarkerType = MarkerType_RestrictedCoin
+	}
+
+	return nil
 }
 
 // GetAddress returns the address of the marker account.
