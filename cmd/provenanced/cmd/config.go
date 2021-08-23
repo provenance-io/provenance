@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"path/filepath"
 	"reflect"
 	"sort"
 	"strconv"
@@ -23,11 +22,8 @@ import (
 )
 
 const (
-	entryNotFound      = -1
-	appConfFilename    = "app.toml"
-	tmConfFilename     = "config.toml"
-	clientConfFilename = "client.toml"
-	configSubDir       = "config"
+	// entryNotFound is a magic index value that indicates a thing wasn't found (and so no index is applicable).
+	entryNotFound = -1
 )
 
 var configCmdStart = fmt.Sprintf("%s config", version.AppName)
@@ -122,7 +118,7 @@ Get just the configuration entries that are not default values: %[1]s changed [<
 
 If no arguments are provided, default behavior is the same as %[1]s changed all
 
-`, configCmdStart, appConfFilename, tmConfFilename, clientConfFilename),
+`, configCmdStart, provconfig.AppConfFilename, provconfig.TmConfFilename, provconfig.ClientConfFilename),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Note: If this RunE returns an error, the usage information is displayed.
 			//       That ends up being kind of annoying in most cases in here.
@@ -237,18 +233,16 @@ func runConfigGetCmd(cmd *cobra.Command, args []string) (bool, error) {
 		}
 	}
 
-	configPath := getConfigDir(cmd)
-
 	if len(appToOutput) > 0 {
-		cmd.Println(makeAppConfigHeader(configPath, ""))
+		cmd.Println(makeAppConfigHeader(cmd, ""))
 		cmd.Println(makeFieldMapString(appToOutput))
 	}
 	if len(tmToOutput) > 0 {
-		cmd.Println(makeTmConfigHeader(configPath, ""))
+		cmd.Println(makeTmConfigHeader(cmd, ""))
 		cmd.Println(makeFieldMapString(tmToOutput))
 	}
 	if len(clientToOutput) > 0 {
-		cmd.Println(makeClientConfigHeader(configPath, ""))
+		cmd.Println(makeClientConfigHeader(cmd, ""))
 		cmd.Println(makeFieldMapString(clientToOutput))
 	}
 	if len(unknownKeyMap) > 0 {
@@ -297,7 +291,6 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
 	appUpdates := map[string]*updatedField{}
 	tmUpdates := map[string]*updatedField{}
 	clientUpdates := map[string]*updatedField{}
-	configPath := getConfigDir(cmd)
 	for i, key := range keys {
 		// Bug: As of Cosmos 0.43 (and 2021-08-16), the app config's index-events configuration value isn't properly marshaled into the config.
 		// For example,
@@ -312,7 +305,7 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
 		// So for now, if someone requests the setting of that field, return an error with some helpful info.
 		if key == "index-events" {
 			cmd.Printf("The index-events list cannot be set with this command. It can be manually updated in %s\n",
-				filepath.Join(configPath, appConfFilename))
+				provconfig.GetFullPathToAppConf(cmd))
 			issueFound = true
 			continue
 		}
@@ -367,18 +360,18 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
 		return false, errors.New("one or more issues encountered; no configuration values have been updated")
 	}
 	if len(appUpdates) > 0 {
-		serverconfig.WriteConfigFile(filepath.Join(configPath, appConfFilename), appConfig)
-		cmd.Println(makeAppConfigHeader(configPath, "Updated"))
+		serverconfig.WriteConfigFile(provconfig.GetFullPathToAppConf(cmd), appConfig)
+		cmd.Println(makeAppConfigHeader(cmd, "Updated"))
 		cmd.Println(makeUpdatedFieldMapString(appUpdates, updatedField.StringAsUpdate))
 	}
 	if len(tmUpdates) > 0 {
-		tmconfig.WriteConfigFile(filepath.Join(configPath, tmConfFilename), tmConfig)
-		cmd.Println(makeTmConfigHeader(configPath, "Updated"))
+		tmconfig.WriteConfigFile(provconfig.GetFullPathToTmConf(cmd), tmConfig)
+		cmd.Println(makeTmConfigHeader(cmd, "Updated"))
 		cmd.Println(makeUpdatedFieldMapString(tmUpdates, updatedField.StringAsUpdate))
 	}
 	if len(clientUpdates) > 0 {
-		provconfig.WriteConfigToFile(filepath.Join(configPath, clientConfFilename), clientConfig)
-		cmd.Println(makeClientConfigHeader(configPath, "Updated"))
+		provconfig.WriteConfigToFile(provconfig.GetFullPathToClientConf(cmd), clientConfig)
+		cmd.Println(makeClientConfigHeader(cmd, "Updated"))
 		cmd.Println(makeUpdatedFieldMapString(clientUpdates, updatedField.StringAsUpdate))
 	}
 	return false, nil
@@ -470,10 +463,8 @@ func runConfigChangedCmd(cmd *cobra.Command, args []string) (bool, error) {
 		}
 	}
 
-	configPath := getConfigDir(cmd)
-
 	if showApp {
-		cmd.Println(makeAppConfigHeader(configPath, "Differences from Defaults"))
+		cmd.Println(makeAppConfigHeader(cmd, "Differences from Defaults"))
 		if len(appDiffs) > 0 {
 			cmd.Println(makeUpdatedFieldMapString(appDiffs, updatedField.StringAsDefault))
 		} else {
@@ -483,7 +474,7 @@ func runConfigChangedCmd(cmd *cobra.Command, args []string) (bool, error) {
 	}
 
 	if showTm {
-		cmd.Println(makeTmConfigHeader(configPath, "Differences from Defaults"))
+		cmd.Println(makeTmConfigHeader(cmd, "Differences from Defaults"))
 		if len(tmDiffs) > 0 {
 			cmd.Println(makeUpdatedFieldMapString(tmDiffs, updatedField.StringAsDefault))
 		} else {
@@ -493,7 +484,7 @@ func runConfigChangedCmd(cmd *cobra.Command, args []string) (bool, error) {
 	}
 
 	if showClient {
-		cmd.Println(makeClientConfigHeader(configPath, "Differences from Defaults"))
+		cmd.Println(makeClientConfigHeader(cmd, "Differences from Defaults"))
 		if len(clientDiffs) > 0 {
 			cmd.Println(makeUpdatedFieldMapString(clientDiffs, updatedField.StringAsDefault))
 		} else {
@@ -511,10 +502,6 @@ func runConfigChangedCmd(cmd *cobra.Command, args []string) (bool, error) {
 		return false, fmt.Errorf("%d configuration key%s not found: %s", len(unknownKeys), s, strings.Join(unknownKeys, ", "))
 	}
 	return false, nil
-}
-
-func getConfigDir(cmd *cobra.Command) string {
-	return filepath.Join(client.GetClientContextFromCmd(cmd).HomeDir, configSubDir)
 }
 
 // getAppConfigAndMap gets the app/cosmos configuration object and related string->value map.
@@ -922,16 +909,16 @@ func makeSectionHeaderString(lead, addedLead, filename string) string {
 }
 
 // makeAppConfigHeader creates a section header string for app config stuff.
-func makeAppConfigHeader(configPath, addedLead string) string {
-	return makeSectionHeaderString("App Config", addedLead, filepath.Join(configPath, appConfFilename))
+func makeAppConfigHeader(c *cobra.Command, addedLead string) string {
+	return makeSectionHeaderString("App Config", addedLead, provconfig.GetFullPathToAppConf(c))
 }
 
 // makeTmConfigHeader creates a section header string for tendermint config stuff.
-func makeTmConfigHeader(configPath, addedLead string) string {
-	return makeSectionHeaderString("Tendermint Config", addedLead, filepath.Join(configPath, tmConfFilename))
+func makeTmConfigHeader(c *cobra.Command, addedLead string) string {
+	return makeSectionHeaderString("Tendermint Config", addedLead, provconfig.GetFullPathToTmConf(c))
 }
 
 // makeClientConfigHeader creates a section header string for client config stuff.
-func makeClientConfigHeader(configPath, addedLead string) string {
-	return makeSectionHeaderString("Client Config", addedLead, filepath.Join(configPath, clientConfFilename))
+func makeClientConfigHeader(c *cobra.Command, addedLead string) string {
+	return makeSectionHeaderString("Client Config", addedLead, provconfig.GetFullPathToClientConf(c))
 }
