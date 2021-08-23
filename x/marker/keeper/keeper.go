@@ -149,19 +149,21 @@ func (k Keeper) IterateMarkers(ctx sdk.Context, cb func(marker types.MarkerAccou
 }
 
 func (k Keeper) ConvertUsdfToRestricted(ctx sdk.Context) {
-	k.IterateMarkers(ctx, func(record types.MarkerAccountI) bool {
-		if record.GetDenom() == "usdf.c" {
-			m := record.(*types.MarkerAccount)
-			err := m.SetMarkerTypeForUSDF()
+	markerAddress := types.MustGetMarkerAddress("usdf.c")
 
-			if err != nil {
-				panic(fmt.Errorf("cannot set marker type for usdf.c"))
-			}
-			// stop after usdf.c is found
-			return true
-		}
-		return false
-	})
+	m, err := k.GetMarker(ctx, markerAddress)
+
+	if err != nil {
+		panic(fmt.Errorf("cannot set marker type for usdf.c"))
+	}
+	errFromSet := m.SetMarkerTypeForUSDF()
+
+	if errFromSet != nil {
+		panic(fmt.Errorf("cannot set marker type for usdf.c"))
+	}
+
+	// record status as restricted
+	k.SetMarker(ctx, m)
 }
 
 // GetEscrow returns the balances of all coins held in escrow in the marker

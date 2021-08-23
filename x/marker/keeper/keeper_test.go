@@ -128,6 +128,89 @@ func TestAccountKeeperReader(t *testing.T) {
 	require.EqualValues(t, count, 1)
 }
 
+func TestKeeperUsdfMigrate(t *testing.T) {
+	//app, ctx := createTestApp(true)
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	addr := types.MustGetMarkerAddress("usdf.c")
+	user := testUserAddress("test")
+	// create account and check default values
+	mac := types.NewEmptyMarkerAccount(
+		"usdf.c",
+		user.String(),
+		[]types.AccessGrant{*types.NewAccessGrant(user, []types.Access{types.Access_Mint})})
+
+	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
+
+	m, err := app.MarkerKeeper.GetMarkerByDenom(ctx, "usdf.c")
+	require.NoError(t, err)
+	require.NotNil(t, m)
+	require.EqualValues(t, m.GetDenom(), "usdf.c")
+	require.EqualValues(t, m.GetAddress(), addr)
+
+	m, err = app.MarkerKeeper.GetMarker(ctx, addr)
+	require.NoError(t, err)
+	require.NotNil(t, m)
+	require.EqualValues(t, m.GetDenom(), "usdf.c")
+	require.EqualValues(t, m.GetAddress(), addr)
+	require.EqualValues(t, m.GetMarkerType(), types.MarkerType_Coin)
+
+	count := 0
+	app.MarkerKeeper.IterateMarkers(ctx, func(record types.MarkerAccountI) bool {
+		require.EqualValues(t, record.GetDenom(), "usdf.c")
+		count++
+		return false
+	})
+	require.EqualValues(t, count, 1)
+	app.MarkerKeeper.ConvertUsdfToRestricted(ctx)
+	m, err = app.MarkerKeeper.GetMarker(ctx, addr)
+	require.NoError(t, err)
+	require.NotNil(t, m)
+	require.EqualValues(t, m.GetDenom(), "usdf.c")
+	require.EqualValues(t, m.GetAddress(), addr)
+	require.EqualValues(t, m.GetMarkerType(), types.MarkerType_RestrictedCoin)
+}
+
+func TestUsdfPanic(t *testing.T) {
+	//app, ctx := createTestApp(true)
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	addr := types.MustGetMarkerAddress("testcoin")
+	user := testUserAddress("test")
+	// create account and check default values
+	mac := types.NewEmptyMarkerAccount(
+		"testcoin",
+		user.String(),
+		[]types.AccessGrant{*types.NewAccessGrant(user, []types.Access{types.Access_Mint})})
+
+	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
+
+	m, err := app.MarkerKeeper.GetMarkerByDenom(ctx, "testcoin")
+	require.NoError(t, err)
+	require.NotNil(t, m)
+	require.EqualValues(t, m.GetDenom(), "testcoin")
+	require.EqualValues(t, m.GetAddress(), addr)
+
+	m, err = app.MarkerKeeper.GetMarker(ctx, addr)
+	require.NoError(t, err)
+	require.NotNil(t, m)
+	require.EqualValues(t, m.GetDenom(), "testcoin")
+	require.EqualValues(t, m.GetAddress(), addr)
+
+	count := 0
+	app.MarkerKeeper.IterateMarkers(ctx, func(record types.MarkerAccountI) bool {
+		require.EqualValues(t, record.GetDenom(), "testcoin")
+		count++
+		return false
+	})
+	require.EqualValues(t, count, 1)
+
+	require.Panics(t, func() {app.MarkerKeeper.ConvertUsdfToRestricted(ctx)},"ConvertUsdfToRestricted expected panic")
+}
+
+
 // nolint:funlen
 func TestAccountKeeperManageAccess(t *testing.T) {
 	//app, ctx := createTestApp(true)

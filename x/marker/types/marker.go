@@ -209,7 +209,7 @@ func (ma MarkerAccount) GetMarkerType() MarkerType {
 	return ma.MarkerType
 }
 
-func (ma MarkerAccount) SetMarkerTypeForUSDF() error {
+func (ma *MarkerAccount) SetMarkerTypeForUSDF() error {
 	if ma.Denom != "usdf.c" {
 		return fmt.Errorf("marker type cannot be changed for anything other than usdf.c")
 	}
