@@ -153,10 +153,12 @@ func (k Keeper) IterateMarkers(ctx sdk.Context, cb func(marker types.MarkerAccou
 
 func (k Keeper) ConvertUsdfToRestricted(ctx sdk.Context) {
 	m, err := k.GetMarkerByDenom(ctx, usdfConstant)
+	// GetMarkerByDenom returns error if not found
+	// not sure if printing helps, but probably ok.
 	if err != nil {
-		panic(fmt.Errorf("cannot set marker type for %s", usdfConstant))
-	}
-	if m != nil {
+		fmt.Println(err)
+		fmt.Printf("%s marker not found. \n", usdfConstant)
+	} else if m != nil {
 		errFromSet := m.SetMarkerTypeForUSDF()
 
 		if errFromSet != nil {
@@ -165,9 +167,6 @@ func (k Keeper) ConvertUsdfToRestricted(ctx sdk.Context) {
 
 		// record status as restricted
 		k.SetMarker(ctx, m)
-	} else {
-		// lof marker not found
-		fmt.Printf("%s marker not found.", usdfConstant)
 	}
 }
 

@@ -207,9 +207,8 @@ func TestUsdfNoPanic(t *testing.T) {
 	})
 	require.EqualValues(t, count, 1)
 
-	require.NotPanics(t, func() {app.MarkerKeeper.ConvertUsdfToRestricted(ctx)},"ConvertUsdfToRestricted not expected panic")
+	require.NotPanics(t, func() { app.MarkerKeeper.ConvertUsdfToRestricted(ctx) }, "ConvertUsdfToRestricted not expected panic")
 }
-
 
 // nolint:funlen
 func TestAccountKeeperManageAccess(t *testing.T) {
