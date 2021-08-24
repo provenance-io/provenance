@@ -487,8 +487,7 @@ func runConfigChangedCmd(cmd *cobra.Command, args []string) error {
 
 // runConfigPackCmd combines the toml config files into a single config json file.
 func runConfigPackCmd(cmd *cobra.Command) error {
-	// TODO: Write runConfigPackCmd
-	return fmt.Errorf("not implemented")
+	return provconfig.PackConfig(cmd)
 }
 
 // runConfigUnpackCmd converts a single config json file into the individual toml files.
