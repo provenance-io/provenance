@@ -149,13 +149,6 @@ func TestKeeperUsdfMigrate(t *testing.T) {
 	require.EqualValues(t, m.GetDenom(), "usdf.c")
 	require.EqualValues(t, m.GetAddress(), addr)
 
-	m, err = app.MarkerKeeper.GetMarker(ctx, addr)
-	require.NoError(t, err)
-	require.NotNil(t, m)
-	require.EqualValues(t, m.GetDenom(), "usdf.c")
-	require.EqualValues(t, m.GetAddress(), addr)
-	require.EqualValues(t, m.GetMarkerType(), types.MarkerType_Coin)
-
 	app.MarkerKeeper.ConvertUsdfToRestricted(ctx)
 	m, err = app.MarkerKeeper.GetMarker(ctx, addr)
 	require.NoError(t, err)
@@ -185,20 +178,6 @@ func TestUsdfNoPanic(t *testing.T) {
 	require.NotNil(t, m)
 	require.EqualValues(t, m.GetDenom(), "testcoin")
 	require.EqualValues(t, m.GetAddress(), addr)
-
-	m, err = app.MarkerKeeper.GetMarker(ctx, addr)
-	require.NoError(t, err)
-	require.NotNil(t, m)
-	require.EqualValues(t, m.GetDenom(), "testcoin")
-	require.EqualValues(t, m.GetAddress(), addr)
-
-	count := 0
-	app.MarkerKeeper.IterateMarkers(ctx, func(record types.MarkerAccountI) bool {
-		require.EqualValues(t, record.GetDenom(), "testcoin")
-		count++
-		return false
-	})
-	require.EqualValues(t, count, 1)
 
 	require.NotPanics(t, func() { app.MarkerKeeper.ConvertUsdfToRestricted(ctx) }, "ConvertUsdfToRestricted not expected panic")
 }
