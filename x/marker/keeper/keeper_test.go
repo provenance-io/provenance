@@ -172,7 +172,7 @@ func TestKeeperUsdfMigrate(t *testing.T) {
 	require.EqualValues(t, m.GetMarkerType(), types.MarkerType_RestrictedCoin)
 }
 
-func TestUsdfPanic(t *testing.T) {
+func TestUsdfNoPanic(t *testing.T) {
 	//app, ctx := createTestApp(true)
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
@@ -207,7 +207,7 @@ func TestUsdfPanic(t *testing.T) {
 	})
 	require.EqualValues(t, count, 1)
 
-	require.Panics(t, func() {app.MarkerKeeper.ConvertUsdfToRestricted(ctx)},"ConvertUsdfToRestricted expected panic")
+	require.NotPanics(t, func() {app.MarkerKeeper.ConvertUsdfToRestricted(ctx)},"ConvertUsdfToRestricted not expected panic")
 }
 
 

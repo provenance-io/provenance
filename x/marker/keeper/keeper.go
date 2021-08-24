@@ -15,6 +15,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// usdf.c delete after 1..0
+const usdfConstant = "usdf.c"
+
 // Handler is a handler function for use with IterateRecords.
 type Handler func(record types.MarkerAccountI) error
 
@@ -149,21 +152,23 @@ func (k Keeper) IterateMarkers(ctx sdk.Context, cb func(marker types.MarkerAccou
 }
 
 func (k Keeper) ConvertUsdfToRestricted(ctx sdk.Context) {
-	markerAddress := types.MustGetMarkerAddress("usdf.c")
-
-	m, err := k.GetMarker(ctx, markerAddress)
-
+	m, err := k.GetMarkerByDenom(ctx, usdfConstant)
 	if err != nil {
-		panic(fmt.Errorf("cannot set marker type for usdf.c"))
+		panic(fmt.Errorf("cannot set marker type for %s", usdfConstant))
 	}
-	errFromSet := m.SetMarkerTypeForUSDF()
+	if m != nil {
+		errFromSet := m.SetMarkerTypeForUSDF()
 
-	if errFromSet != nil {
-		panic(fmt.Errorf("cannot set marker type for usdf.c"))
+		if errFromSet != nil {
+			panic(fmt.Errorf("cannot set marker type for %s", usdfConstant))
+		}
+
+		// record status as restricted
+		k.SetMarker(ctx, m)
+	} else {
+		// lof marker not found
+		fmt.Printf("%s marker not found.", usdfConstant)
 	}
-
-	// record status as restricted
-	k.SetMarker(ctx, m)
 }
 
 // GetEscrow returns the balances of all coins held in escrow in the marker
