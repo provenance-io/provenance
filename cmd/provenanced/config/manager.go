@@ -23,32 +23,32 @@ func PackConfig(cmd *cobra.Command) error {
 		GetFullPathToClientConf(cmd),
 	}
 	allCurrent := FieldValueMap{}
-	if _, confMap, err := GetAppConfigAndMap(cmd); err != nil {
-		return err
-	} else {
+	if _, confMap, err := GetAppConfigAndMap(cmd); err == nil {
 		allCurrent.AddEntriesFrom(confMap)
+	} else {
+		return err
 	}
-	if _, confMap, err := GetTmConfigAndMap(cmd); err != nil {
-		return err
-	} else {
+	if _, confMap, err := GetTmConfigAndMap(cmd); err == nil {
 		allCurrent.AddEntriesFrom(confMap)
+	} else {
+		return err
 	}
-	if _, confMap, err := GetClientConfigAndMap(cmd); err != nil {
-		return err
-	} else {
+	if _, confMap, err := GetClientConfigAndMap(cmd); err == nil {
 		allCurrent.AddEntriesFrom(confMap)
+	} else {
+		return err
 	}
 	allDefaults := GetAllConfigDefaults()
 	packed := map[string]string{}
 	for key, info := range MakeUpdatedFieldMap(allDefaults, allCurrent, true) {
 		packed[key] = unquote(info.IsNow)
 	}
-	prettyJson, err := json.MarshalIndent(packed, "", "  ")
+	prettyJSON, err := json.MarshalIndent(packed, "", "  ")
 	if err != nil {
 		return err
 	}
-	cmd.Printf("Packed config:\n%s\n", prettyJson)
-	err = os.WriteFile(packedFile, prettyJson, 0644)
+	cmd.Printf("Packed config:\n%s\n", prettyJSON)
+	err = os.WriteFile(packedFile, prettyJSON, 0644)
 	if err != nil {
 		return err
 	}
@@ -61,7 +61,7 @@ func PackConfig(cmd *cobra.Command) error {
 		}
 	}
 	if hadRmErr {
-		return fmt.Errorf("One or more config files could not be removed.")
+		return fmt.Errorf("one or more config files could not be removed")
 	}
 	return nil
 }
@@ -92,7 +92,7 @@ func UnpackConfig(cmd *cobra.Command) error {
 	SaveTmConfig(cmd, tmConfig)
 	SaveClientConfig(cmd, clientConfig)
 	if rmErr := os.Remove(GetFullPathToPackedConf(cmd)); rmErr != nil && !os.IsNotExist(rmErr) {
-		return fmt.Errorf("could not remove packed config file: %v\n", rmErr)
+		return fmt.Errorf("could not remove packed config file: %v", rmErr)
 	}
 	return nil
 }
