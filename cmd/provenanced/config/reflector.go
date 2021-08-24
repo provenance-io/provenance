@@ -368,9 +368,11 @@ func (m FieldValueMap) SetToNil(key string) {
 
 // AddEntriesFrom Add all entries from the provided map into this map.
 // If the same key exists in both maps, the value from the one provided will overwrite the one in this map.
-func (m FieldValueMap) AddEntriesFrom(m2 FieldValueMap) {
-	for k, v := range m2 {
-		m[k] = v
+func (m FieldValueMap) AddEntriesFrom(maps ...FieldValueMap) {
+	for _, m2 := range maps {
+		for k, v := range m2 {
+			m[k] = v
+		}
 	}
 }
 
@@ -466,9 +468,11 @@ func (m UpdatedFieldMap) AddOrUpdateEntry(info *UpdatedField) {
 }
 
 // AddOrUpdateEntriesFrom applies AddOrUpdateEntry on this map using each entry in the provided map.
-func (m UpdatedFieldMap) AddOrUpdateEntriesFrom(m2 UpdatedFieldMap) {
-	for _, info := range m2 {
-		m.AddOrUpdateEntry(info)
+func (m UpdatedFieldMap) AddOrUpdateEntriesFrom(maps ...UpdatedFieldMap) {
+	for _, m2 := range maps {
+		for _, info := range m2 {
+			m.AddOrUpdateEntry(info)
+		}
 	}
 }
 

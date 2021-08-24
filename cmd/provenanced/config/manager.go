@@ -16,85 +16,36 @@ import (
 
 // PackConfig generates and saves the packed config file then removes the individual config files.
 func PackConfig(cmd *cobra.Command) error {
-	packedFile := GetFullPathToPackedConf(cmd)
-	configFiles := []string{
-		GetFullPathToAppConf(cmd),
-		GetFullPathToTmConf(cmd),
-		GetFullPathToClientConf(cmd),
-	}
-	allCurrent := FieldValueMap{}
-	if _, confMap, err := GetAppConfigAndMap(cmd); err == nil {
-		allCurrent.AddEntriesFrom(confMap)
-	} else {
-		return err
-	}
-	if _, confMap, err := GetTmConfigAndMap(cmd); err == nil {
-		allCurrent.AddEntriesFrom(confMap)
-	} else {
-		return err
-	}
-	if _, confMap, err := GetClientConfigAndMap(cmd); err == nil {
-		allCurrent.AddEntriesFrom(confMap)
-	} else {
-		return err
-	}
-	allDefaults := GetAllConfigDefaults()
-	packed := map[string]string{}
-	for key, info := range MakeUpdatedFieldMap(allDefaults, allCurrent, true) {
-		packed[key] = unquote(info.IsNow)
-	}
-	prettyJSON, err := json.MarshalIndent(packed, "", "  ")
-	if err != nil {
-		return err
-	}
-	cmd.Printf("Packed config:\n%s\n", prettyJSON)
-	err = os.WriteFile(packedFile, prettyJSON, 0644)
-	if err != nil {
-		return err
-	}
-	cmd.Printf("Saved to: %s\n", packedFile)
-	hadRmErr := false
-	for _, f := range configFiles {
-		if rmErr := os.Remove(f); rmErr != nil && !os.IsNotExist(rmErr) {
-			hadRmErr = true
-			cmd.Printf("Error removing file: %v\n", rmErr)
-		}
-	}
-	if hadRmErr {
-		return fmt.Errorf("one or more config files could not be removed")
-	}
-	return nil
-}
-
-// unquote removes a leading and trailing double quote if they're both there.
-func unquote(str string) string {
-	if len(str) >= 2 && str[0] == '"' && str[len(str)-1] == '"' {
-		return str[1 : len(str)-1]
-	}
-	return str
+	generateAndWritePackedConfig(cmd, nil, nil, nil, true)
+	err := deleteUnpackedConfig(cmd, true)
+	return err
 }
 
 // UnpackConfig generates the saves the individual config files and removes the packed config file.
 func UnpackConfig(cmd *cobra.Command) error {
 	appConfig, _, appConfErr := GetAppConfigAndMap(cmd)
 	if appConfErr != nil {
-		return fmt.Errorf("couldn't get app config values: %v", appConfErr)
+		return fmt.Errorf("could not get app config values: %v", appConfErr)
 	}
 	tmConfig, _, tmConfErr := GetTmConfigAndMap(cmd)
 	if tmConfErr != nil {
-		return fmt.Errorf("couldn't get tendermint config values: %v", tmConfErr)
+		return fmt.Errorf("could not get tendermint config values: %v", tmConfErr)
 	}
 	clientConfig, _, clientConfErr := GetClientConfigAndMap(cmd)
 	if clientConfErr != nil {
-		return fmt.Errorf("couldn't get client config values: %v", clientConfErr)
+		return fmt.Errorf("could not get client config values: %v", clientConfErr)
 	}
-	SaveAppConfig(cmd, appConfig)
-	SaveTmConfig(cmd, tmConfig)
-	SaveClientConfig(cmd, clientConfig)
-	if rmErr := os.Remove(GetFullPathToPackedConf(cmd)); rmErr != nil && !os.IsNotExist(rmErr) {
-		return fmt.Errorf("could not remove packed config file: %v", rmErr)
-	}
-	return nil
+	writeUnpackedConfig(cmd, appConfig, tmConfig, clientConfig, true)
+	err := deletePackedConfig(cmd, true)
+	return err
+}
+
+// IsPacked checks to see if we're using a packed config or not.
+// returns true if using the packed config.
+// returns false if using the unpacked multiple config files.
+func IsPacked(cmd *cobra.Command) bool {
+	_, err := os.Stat(GetFullPathToPackedConf(cmd))
+	return err == nil
 }
 
 // GetAppConfigAndMap gets the app/cosmos configuration object and related string->value map.
@@ -106,12 +57,6 @@ func GetAppConfigAndMap(cmd *cobra.Command) (*serverconfig.Config, FieldValueMap
 	}
 	fields := MakeFieldValueMap(conf, true)
 	return conf, fields, nil
-}
-
-// SaveAppConfig saves the app/cosmos config as needed.
-// Panics if something goes wrong.
-func SaveAppConfig(cmd *cobra.Command, appConfig *serverconfig.Config) {
-	serverconfig.WriteConfigFile(GetFullPathToAppConf(cmd), appConfig)
 }
 
 // GetTmConfigAndMap gets the tendermint/config configuration object and related string->value map.
@@ -145,12 +90,6 @@ func removeUndesirableTmConfigEntries(fields FieldValueMap) FieldValueMap {
 	return fields
 }
 
-// SaveTmConfig saves the tendermint config as needed.
-// Panics if something goes wrong.
-func SaveTmConfig(cmd *cobra.Command, tmConfig *tmconfig.Config) {
-	tmconfig.WriteConfigFile(GetFullPathToTmConf(cmd), tmConfig)
-}
-
 // GetClientConfigAndMap gets the client configuration object and related string->value map.
 func GetClientConfigAndMap(cmd *cobra.Command) (*ClientConfig, FieldValueMap, error) {
 	v := client.GetClientContextFromCmd(cmd).Viper
@@ -162,22 +101,182 @@ func GetClientConfigAndMap(cmd *cobra.Command) (*ClientConfig, FieldValueMap, er
 	return conf, fields, nil
 }
 
-// SaveClientConfig saves the client config as needed.
-// Panics if something goes wrong.
-func SaveClientConfig(cmd *cobra.Command, clientConfig *ClientConfig) {
-	WriteConfigToFile(GetFullPathToClientConf(cmd), clientConfig)
-}
-
 // GetAllConfigDefaults gets a field map from the defaults of all the configs.
 func GetAllConfigDefaults() FieldValueMap {
-	defaultMaps := []FieldValueMap{
+	rv := FieldValueMap{}
+	rv.AddEntriesFrom(
 		MakeFieldValueMap(serverconfig.DefaultConfig(), false),
 		removeUndesirableTmConfigEntries(MakeFieldValueMap(tmconfig.DefaultConfig(), false)),
 		MakeFieldValueMap(DefaultClientConfig(), false),
-	}
-	rv := FieldValueMap{}
-	for _, m := range defaultMaps {
-		rv.AddEntriesFrom(m)
-	}
+	)
 	return rv
+}
+
+// SaveConfig saves the configs to files.
+// If the config is packed, any nil configs provided will extracted from the cmd.
+// If the config is unpacked, only the configs provided will be written.
+// Any errors encountered will result in a panic.
+func SaveConfig(cmd *cobra.Command, appConfig *serverconfig.Config, tmConfig *tmconfig.Config, clientConfig *ClientConfig, verbose bool) {
+	if IsPacked(cmd) {
+		generateAndWritePackedConfig(cmd, appConfig, tmConfig, clientConfig, verbose)
+	} else {
+		writeUnpackedConfig(cmd, appConfig, tmConfig, clientConfig, verbose)
+	}
+}
+
+// writeUnpackedConfig writes the provided configs to their files.
+// Any config parameter provided as nil will be skipped.
+// Any errors encountered will result in a panic.
+func writeUnpackedConfig(cmd *cobra.Command, appConfig *serverconfig.Config, tmConfig *tmconfig.Config, clientConfig *ClientConfig, verbose bool) {
+	if appConfig != nil {
+		confFile := GetFullPathToAppConf(cmd)
+		if verbose {
+			cmd.Printf("Writing app config to: %s ... ", confFile)
+		}
+		serverconfig.WriteConfigFile(confFile, appConfig)
+		if verbose {
+			cmd.Printf("Done.\n")
+		}
+	}
+	if tmConfig != nil {
+		confFile := GetFullPathToTmConf(cmd)
+		if verbose {
+			cmd.Printf("Writing tendermint config to: %s ... ", confFile)
+		}
+		tmconfig.WriteConfigFile(confFile, tmConfig)
+		if verbose {
+			cmd.Printf("Done.\n")
+		}
+	}
+	if clientConfig != nil {
+		confFile := GetFullPathToClientConf(cmd)
+		if verbose {
+			cmd.Printf("Writing client config to: %s ... ", confFile)
+		}
+		WriteConfigToFile(confFile, clientConfig)
+		if verbose {
+			cmd.Printf("Done.\n")
+		}
+	}
+}
+
+// deleteUnpackedConfig deletes all the unpacked config files.
+// An attempt will be made to remove each file before returning.
+// The error returned might reflect multiple failures to delete.
+// Any files that don't exist, are ignored.
+func deleteUnpackedConfig(cmd *cobra.Command, verbose bool) error {
+	configFiles := []string{
+		GetFullPathToAppConf(cmd),
+		GetFullPathToTmConf(cmd),
+		GetFullPathToClientConf(cmd),
+	}
+	var rvErr error
+	for _, f := range configFiles {
+		err := deleteConfigFile(cmd, f, verbose)
+		if err != nil {
+			if rvErr == nil {
+				rvErr = err
+			} else {
+				rvErr = fmt.Errorf("%v\n%v", rvErr, err)
+			}
+		}
+	}
+	if rvErr != nil {
+		rvErr = fmt.Errorf("one or more unpacked config files could not be removed\n%v", rvErr)
+	}
+	return rvErr
+}
+
+// generateAndWritePackedConfig generates the contents of the packed config file and saves it.
+// Any config parameter provided as nil will be retrieved from the cmd.
+// Any errors encountered will result in a panic.
+func generateAndWritePackedConfig(cmd *cobra.Command, appConfig *serverconfig.Config, tmConfig *tmconfig.Config, clientConfig *ClientConfig, verbose bool) {
+	var appConfMap, tmConfMap, clientConfMap FieldValueMap
+	if appConfig == nil {
+		var err error
+		_, appConfMap, err = GetAppConfigAndMap(cmd)
+		if err != nil {
+			panic(fmt.Errorf("could not extract app config values: %v", err))
+		}
+	} else {
+		appConfMap = MakeFieldValueMap(appConfig, false)
+	}
+	if tmConfig == nil {
+		var err error
+		_, tmConfMap, err = GetTmConfigAndMap(cmd)
+		if err != nil {
+			panic(fmt.Errorf("could not extract tm config values: %v", err))
+		}
+	} else {
+		tmConfMap = MakeFieldValueMap(tmConfig, false)
+	}
+	if clientConfig == nil {
+		var err error
+		_, clientConfMap, err = GetClientConfigAndMap(cmd)
+		if err != nil {
+			panic(fmt.Errorf("could not extract client config values: %v", err))
+		}
+	} else {
+		clientConfMap = MakeFieldValueMap(clientConfig, false)
+	}
+	allConf := FieldValueMap{}
+	allConf.AddEntriesFrom(appConfMap, tmConfMap, clientConfMap)
+	defaultConf := GetAllConfigDefaults()
+	packed := map[string]string{}
+	for key, info := range MakeUpdatedFieldMap(defaultConf, allConf, true) {
+		packed[key] = unquote(info.IsNow)
+	}
+	packedJSON, err := json.MarshalIndent(packed, "", "  ")
+	if err != nil {
+		panic(err)
+	}
+	if verbose {
+		cmd.Printf("Packed config:\n%s\n", packedJSON)
+	}
+	packedFile := GetFullPathToPackedConf(cmd)
+	err = os.WriteFile(packedFile, packedJSON, 0644)
+	if err != nil {
+		panic(err)
+	}
+	if verbose {
+		cmd.Printf("Packed config file saved: %s\n", packedFile)
+	}
+}
+
+// deletePackedConfig deletes the packed config file.
+func deletePackedConfig(cmd *cobra.Command, verbose bool) error {
+	return deleteConfigFile(cmd, GetFullPathToPackedConf(cmd), verbose)
+}
+
+// deleteConfigFile deletes a file assuming it's a config file.
+func deleteConfigFile(cmd *cobra.Command, filePath string, verbose bool) error {
+	if verbose {
+		cmd.Printf("Deleting config file: %s ... ", filePath)
+	}
+	err := os.Remove(filePath)
+	switch {
+	case err == nil:
+		if verbose {
+			cmd.Printf("Done.\n")
+		}
+	case os.IsNotExist(err):
+		if verbose {
+			cmd.Print("Does not exist.\n")
+		}
+	default:
+		if verbose {
+			cmd.Printf("Error.\n")
+		}
+		cmd.PrintErrf("Error removing file: %v\n", err)
+		return err
+	}
+	return nil
+}
+
+// unquote removes a leading and trailing double quote if they're both there.
+func unquote(str string) string {
+	if len(str) >= 2 && str[0] == '"' && str[len(str)-1] == '"' {
+		return str[1 : len(str)-1]
+	}
+	return str
 }
