@@ -3,7 +3,6 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"reflect"
 	"strings"
 
 	provconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
@@ -23,51 +22,6 @@ const (
 )
 
 var configCmdStart = fmt.Sprintf("%s config", version.AppName)
-
-// updatedField is a struct holding information about a config field that has been updated.
-type updatedField struct {
-	Key   string
-	Was   string
-	IsNow string
-}
-
-// Update updates the base updatedField given information in the provided newerInfo.
-func (u *updatedField) Update(newerInfo updatedField) {
-	u.IsNow = newerInfo.IsNow
-}
-
-// String converts an updatedField to a string similar to using %#v but a little cleaner.
-func (u updatedField) String() string {
-	return fmt.Sprintf(`updatedField{Key:%s, Was:%s, IsNow:%s}`, u.Key, u.Was, u.IsNow)
-}
-
-// StringAsUpdate creates a string from this updatedField indicating a change has being made.
-func (u updatedField) StringAsUpdate() string {
-	return fmt.Sprintf("%s Was: %s, Is Now: %s", u.Key, u.Was, u.IsNow)
-}
-
-// StringAsDefault creates a string from this updatedField identifying the Was as a default.
-func (u updatedField) StringAsDefault() string {
-	if !u.HasDiff() {
-		return fmt.Sprintf("%s=%s (same as default)", u.Key, u.IsNow)
-	}
-	return fmt.Sprintf("%s=%s (default=%s)", u.Key, u.IsNow, u.Was)
-}
-
-// HasDiff returns true if IsNow and Was have different values.
-func (u updatedField) HasDiff() bool {
-	return u.IsNow != u.Was
-}
-
-// AddToOrUpdateIn adds this updatedField to the provided map if it's not already there (by Key).
-// If it's already there, the map's existing entry is updated with info in this updatedField.
-func (u updatedField) AddToOrUpdateIn(all map[string]*updatedField) {
-	if inf, ok := all[u.Key]; ok {
-		inf.Update(u)
-	} else {
-		all[u.Key] = &u
-	}
-}
 
 // ConfigCmd returns a CLI command to update config files.
 func ConfigCmd() *cobra.Command {
@@ -233,9 +187,6 @@ Default values are filled in appropriately.
 }
 
 // runConfigGetCmd gets requested values and outputs them.
-// The first return value is whether or not to include help with the output of an error.
-// This will only ever be true if an error is also returned.
-// The second return value is any error encountered.
 func runConfigGetCmd(cmd *cobra.Command, args []string) error {
 	_, appFields, acerr := provconfig.GetAppConfigAndMap(cmd)
 	if acerr != nil {
@@ -261,44 +212,26 @@ func runConfigGetCmd(cmd *cobra.Command, args []string) error {
 	for _, key := range args {
 		switch key {
 		case "all":
-			for k, v := range appFields {
-				appToOutput[k] = v
-			}
-			for k, v := range tmFields {
-				tmToOutput[k] = v
-			}
-			for k, v := range clientFields {
-				clientToOutput[k] = v
-			}
+			appToOutput.AddEntriesFrom(appFields)
+			tmToOutput.AddEntriesFrom(tmFields)
+			clientToOutput.AddEntriesFrom(clientFields)
 		case "app", "cosmos":
-			for k, v := range appFields {
-				appToOutput[k] = v
-			}
+			appToOutput.AddEntriesFrom(appFields)
 		case "config", "tendermint", "tm":
-			for k, v := range tmFields {
-				tmToOutput[k] = v
-			}
+			tmToOutput.AddEntriesFrom(tmFields)
 		case "client":
-			for k, v := range clientFields {
-				clientToOutput[k] = v
-			}
+			clientToOutput.AddEntriesFrom(clientFields)
 		default:
 			entries, foundIn := findEntries(key, appFields, tmFields, clientFields)
 			switch foundIn {
 			case 0:
-				for k, v := range entries {
-					appToOutput[k] = v
-				}
+				appToOutput.AddEntriesFrom(entries)
 			case 1:
-				for k, v := range entries {
-					tmToOutput[k] = v
-				}
+				tmToOutput.AddEntriesFrom(entries)
 			case 2:
-				for k, v := range entries {
-					clientToOutput[k] = v
-				}
+				clientToOutput.AddEntriesFrom(entries)
 			default:
-				unknownKeyMap[key] = reflect.Value{}
+				unknownKeyMap.SetToNil(key)
 			}
 		}
 	}
@@ -358,9 +291,9 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
 		vals[i] = args[i*2+1]
 	}
 	issueFound := false
-	appUpdates := map[string]*updatedField{}
-	tmUpdates := map[string]*updatedField{}
-	clientUpdates := map[string]*updatedField{}
+	appUpdates := provconfig.UpdatedFieldMap{}
+	tmUpdates := provconfig.UpdatedFieldMap{}
+	clientUpdates := provconfig.UpdatedFieldMap{}
 	for i, key := range keys {
 		// Bug: As of Cosmos 0.43 (and 2021-08-16), the app config's index-events configuration value isn't properly marshaled into the config.
 		// For example,
@@ -400,18 +333,14 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
 			issueFound = true
 			continue
 		}
-		info := updatedField{
-			Key:   key,
-			Was:   was,
-			IsNow: confMap.GetStringOf(key),
-		}
+		isNow := confMap.GetStringOf(key)
 		switch foundIn {
 		case 0:
-			info.AddToOrUpdateIn(appUpdates)
+			appUpdates.AddOrUpdate(key, was, isNow)
 		case 1:
-			info.AddToOrUpdateIn(tmUpdates)
+			tmUpdates.AddOrUpdate(key, was, isNow)
 		case 2:
-			info.AddToOrUpdateIn(clientUpdates)
+			clientUpdates.AddOrUpdate(key, was, isNow)
 		}
 	}
 	if !issueFound {
@@ -440,25 +369,22 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
 	if len(appUpdates) > 0 {
 		serverconfig.WriteConfigFile(provconfig.GetFullPathToAppConf(cmd), appConfig)
 		cmd.Println(makeAppConfigHeader(cmd, "Updated"))
-		cmd.Println(makeUpdatedFieldMapString(appUpdates, updatedField.StringAsUpdate))
+		cmd.Println(makeUpdatedFieldMapString(appUpdates, provconfig.UpdatedField.StringAsUpdate))
 	}
 	if len(tmUpdates) > 0 {
 		tmconfig.WriteConfigFile(provconfig.GetFullPathToTmConf(cmd), tmConfig)
 		cmd.Println(makeTmConfigHeader(cmd, "Updated"))
-		cmd.Println(makeUpdatedFieldMapString(tmUpdates, updatedField.StringAsUpdate))
+		cmd.Println(makeUpdatedFieldMapString(tmUpdates, provconfig.UpdatedField.StringAsUpdate))
 	}
 	if len(clientUpdates) > 0 {
 		provconfig.WriteConfigToFile(provconfig.GetFullPathToClientConf(cmd), clientConfig)
 		cmd.Println(makeClientConfigHeader(cmd, "Updated"))
-		cmd.Println(makeUpdatedFieldMapString(clientUpdates, updatedField.StringAsUpdate))
+		cmd.Println(makeUpdatedFieldMapString(clientUpdates, provconfig.UpdatedField.StringAsUpdate))
 	}
 	return false, nil
 }
 
 // runConfigChangedCmd gets values that have changed from their defaults.
-// The first return value is whether or not to include help with the output of an error.
-// This will only ever be true if an error is also returned.
-// The second return value is any error encountered.
 func runConfigChangedCmd(cmd *cobra.Command, args []string) error {
 	_, appFields, acerr := provconfig.GetAppConfigAndMap(cmd)
 	if acerr != nil {
@@ -479,64 +405,41 @@ func runConfigChangedCmd(cmd *cobra.Command, args []string) error {
 
 	allDefaults := provconfig.GetAllConfigDefaults()
 	showApp, showTm, showClient := false, false, false
-	appDiffs := map[string]*updatedField{}
-	tmDiffs := map[string]*updatedField{}
-	clientDiffs := map[string]*updatedField{}
+	appDiffs := provconfig.UpdatedFieldMap{}
+	tmDiffs := provconfig.UpdatedFieldMap{}
+	clientDiffs := provconfig.UpdatedFieldMap{}
 	unknownKeyMap := provconfig.FieldValueMap{}
 	for _, key := range args {
 		switch key {
 		case "all":
 			showApp, showTm, showClient = true, true, true
-			for k, v := range getFieldMapChanges(appFields, allDefaults) {
-				appDiffs[k] = v
-			}
-			for k, v := range getFieldMapChanges(tmFields, allDefaults) {
-				tmDiffs[k] = v
-			}
-			for k, v := range getFieldMapChanges(clientFields, allDefaults) {
-				clientDiffs[k] = v
-			}
+			appDiffs.AddOrUpdateEntriesFrom(provconfig.MakeUpdatedFieldMap(allDefaults, appFields, true))
+			tmDiffs.AddOrUpdateEntriesFrom(provconfig.MakeUpdatedFieldMap(allDefaults, tmFields, true))
+			clientDiffs.AddOrUpdateEntriesFrom(provconfig.MakeUpdatedFieldMap(allDefaults, clientFields, true))
 		case "app", "cosmos":
 			showApp = true
-			for k, v := range getFieldMapChanges(appFields, allDefaults) {
-				appDiffs[k] = v
-			}
+			appDiffs.AddOrUpdateEntriesFrom(provconfig.MakeUpdatedFieldMap(allDefaults, appFields, true))
 		case "config", "tendermint", "tm":
 			showTm = true
-			for k, v := range getFieldMapChanges(tmFields, allDefaults) {
-				tmDiffs[k] = v
-			}
+			tmDiffs.AddOrUpdateEntriesFrom(provconfig.MakeUpdatedFieldMap(allDefaults, tmFields, true))
 		case "client":
 			showClient = true
-			for k, v := range getFieldMapChanges(clientFields, allDefaults) {
-				clientDiffs[k] = v
-			}
+			clientDiffs.AddOrUpdateEntriesFrom(provconfig.MakeUpdatedFieldMap(allDefaults, clientFields, true))
 		default:
 			entries, foundIn := findEntries(key, appFields, tmFields, clientFields)
+			changes := provconfig.MakeUpdatedFieldMap(allDefaults, entries, false)
 			switch foundIn {
 			case 0:
 				showApp = true
-				for k, v := range entries {
-					if uf, ok := makeUpdatedField(k, v, allDefaults); ok {
-						appDiffs[k] = &uf
-					}
-				}
+				appDiffs.AddOrUpdateEntriesFrom(changes)
 			case 1:
 				showTm = true
-				for k, v := range entries {
-					if uf, ok := makeUpdatedField(k, v, allDefaults); ok {
-						tmDiffs[k] = &uf
-					}
-				}
+				tmDiffs.AddOrUpdateEntriesFrom(changes)
 			case 2:
 				showClient = true
-				for k, v := range entries {
-					if uf, ok := makeUpdatedField(k, v, allDefaults); ok {
-						clientDiffs[k] = &uf
-					}
-				}
+				clientDiffs.AddOrUpdateEntriesFrom(changes)
 			default:
-				unknownKeyMap[key] = reflect.Value{}
+				unknownKeyMap.SetToNil(key)
 			}
 		}
 	}
@@ -544,7 +447,7 @@ func runConfigChangedCmd(cmd *cobra.Command, args []string) error {
 	if showApp {
 		cmd.Println(makeAppConfigHeader(cmd, "Differences from Defaults"))
 		if len(appDiffs) > 0 {
-			cmd.Println(makeUpdatedFieldMapString(appDiffs, updatedField.StringAsDefault))
+			cmd.Println(makeUpdatedFieldMapString(appDiffs, provconfig.UpdatedField.StringAsDefault))
 		} else {
 			cmd.Println("All app config values equal the default config values.")
 			cmd.Println("")
@@ -554,7 +457,7 @@ func runConfigChangedCmd(cmd *cobra.Command, args []string) error {
 	if showTm {
 		cmd.Println(makeTmConfigHeader(cmd, "Differences from Defaults"))
 		if len(tmDiffs) > 0 {
-			cmd.Println(makeUpdatedFieldMapString(tmDiffs, updatedField.StringAsDefault))
+			cmd.Println(makeUpdatedFieldMapString(tmDiffs, provconfig.UpdatedField.StringAsDefault))
 		} else {
 			cmd.Println("All tendermint config values equal the default config values.")
 			cmd.Println("")
@@ -564,7 +467,7 @@ func runConfigChangedCmd(cmd *cobra.Command, args []string) error {
 	if showClient {
 		cmd.Println(makeClientConfigHeader(cmd, "Differences from Defaults"))
 		if len(clientDiffs) > 0 {
-			cmd.Println(makeUpdatedFieldMapString(clientDiffs, updatedField.StringAsDefault))
+			cmd.Println(makeUpdatedFieldMapString(clientDiffs, provconfig.UpdatedField.StringAsDefault))
 		} else {
 			cmd.Println("All client config values equal the default config values.")
 			cmd.Println("")
@@ -582,11 +485,13 @@ func runConfigChangedCmd(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// runConfigPackCmd combines the toml config files into a single config json file.
 func runConfigPackCmd(cmd *cobra.Command) error {
 	// TODO: Write runConfigPackCmd
 	return fmt.Errorf("not implemented")
 }
 
+// runConfigUnpackCmd converts a single config json file into the individual toml files.
 func runConfigUnpackCmd(cmd *cobra.Command) error {
 	// TODO: Write runConfigUnpackCmd
 	return fmt.Errorf("not implemented")
@@ -607,35 +512,6 @@ func findEntries(key string, maps ...provconfig.FieldValueMap) (provconfig.Field
 	return provconfig.FieldValueMap{}, entryNotFound
 }
 
-// getFieldMapChanges gets an updated field map with changes between two field maps.
-// If the key doesn't exist in both maps, the entry is ignored.
-func getFieldMapChanges(isNowMap provconfig.FieldValueMap, wasMap provconfig.FieldValueMap) map[string]*updatedField {
-	changes := map[string]*updatedField{}
-	for key, isNowVal := range isNowMap {
-		uf, ok := makeUpdatedField(key, isNowVal, wasMap)
-		if ok && uf.HasDiff() {
-			changes[key] = &uf
-		}
-	}
-	return changes
-}
-
-// makeUpdatedField makes an updatedField with available information.
-// The new updatedField will have its key and IsNow set from the provided arguments.
-// If the wasMap contains the key, the Was value will be set and the second return argument will be true.
-// If the wasMap does not contain the key, the second return argument will be false.
-func makeUpdatedField(key string, isNowVal reflect.Value, wasMap provconfig.FieldValueMap) (updatedField, bool) {
-	rv := updatedField{
-		Key:   key,
-		IsNow: provconfig.GetStringFromValue(isNowVal),
-	}
-	if wasVal, ok := wasMap[key]; ok {
-		rv.Was = provconfig.GetStringFromValue(wasVal)
-		return rv, true
-	}
-	return rv, false
-}
-
 // makeFieldMapString makes a multi-line string with all the keys and values in the provided map.
 func makeFieldMapString(m provconfig.FieldValueMap) string {
 	keys := m.GetSortedKeys()
@@ -651,12 +527,8 @@ func makeFieldMapString(m provconfig.FieldValueMap) string {
 
 // makeUpdatedFieldMapString makes a multi-line string of the given updated field map.
 // The provided stringer function is used to convert each map value to a string.
-func makeUpdatedFieldMapString(m map[string]*updatedField, stringer func(v updatedField) string) string {
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	keys = provconfig.SortKeys(keys)
+func makeUpdatedFieldMapString(m provconfig.UpdatedFieldMap, stringer func(v provconfig.UpdatedField) string) string {
+	keys := m.GetSortedKeys()
 	var sb strings.Builder
 	for _, key := range keys {
 		sb.WriteString(stringer(*m[key]))

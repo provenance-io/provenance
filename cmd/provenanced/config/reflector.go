@@ -13,94 +13,7 @@ import (
 // FieldValueMap maps field names to reflect.Value objects.
 type FieldValueMap map[string]reflect.Value
 
-// Has checks if the provided key exists in this FieldValueMap.
-func (m FieldValueMap) Has(key string) bool {
-	_, ok := m[key]
-	return ok
-}
-
-// GetSortedKeys gets the keys of this FieldValueMap and sorts them using SortKeys.
-func (m FieldValueMap) GetSortedKeys() []string {
-	rv := make([]string, 0, len(m))
-	for k := range m {
-		rv = append(rv, k)
-	}
-	return SortKeys(rv)
-}
-
-// FindEntries looks for entries in this map that match the provided key.
-// First, if the key doesn't end in a period, an exact entry match is looked for.
-// If such an entry is found, only that entry will be returned.
-// If no such entry is found, a period is added to the end of the key (if not already there).
-// E.g. Providing "filter_peers" will get just the "filter_peers" entry.
-// Providing "consensus." will bypass the exact key lookup, and return all fields that start with "consensus.".
-// Providing "consensus" will look first for a field specifically called "consensus",
-// then, if/when not found, will return all fields that start with "consensus.".
-// Then, all entries with keys that start with the desired key are returned.
-// The second return value indicates whether or not anything was found.
-func (m FieldValueMap) FindEntries(key string) (FieldValueMap, bool) {
-	rv := FieldValueMap{}
-	if len(key) == 0 {
-		return rv, false
-	}
-	if key[len(key)-1:] != "." {
-		if val, ok := m[key]; ok {
-			rv[key] = val
-			return rv, true
-		}
-		key += "."
-	}
-	keylen := len(key)
-	for k, v := range m {
-		if len(k) > keylen && k[:keylen] == key {
-			rv[k] = v
-		}
-	}
-	return rv, len(rv) > 0
-}
-
-// GetStringOf gets a string representation of the value with the given key.
-// If the key doesn't exist in this FieldValueMap, an empty string is returned.
-func (m FieldValueMap) GetStringOf(key string) string {
-	if v, ok := m[key]; ok {
-		return GetStringFromValue(v)
-	}
-	return ""
-}
-
-// SetFromString sets a value from the provided string.
-// The string is converted appropriately for the underlying value type.
-// Assuming the value came from GetFieldValueMap, this will actually be updating the
-// value in the config object provided to that function.
-func (m FieldValueMap) SetFromString(key, valueStr string) error {
-	if v, ok := m[key]; ok {
-		return setValueFromString(key, v, valueStr)
-	}
-	return fmt.Errorf("no field found for key: %s", key)
-}
-
-// SortKeys sorts the provided keys slice.
-// Base keys are put first and sorted alphabetically followed by keys in sub-configs sorted alphabetically.
-func SortKeys(keys []string) []string {
-	var baseKeys []string
-	var subKeys []string
-	for _, k := range keys {
-		if strings.Contains(k, ".") {
-			subKeys = append(subKeys, k)
-		} else {
-			baseKeys = append(baseKeys, k)
-		}
-	}
-	sort.Strings(baseKeys)
-	sort.Strings(subKeys)
-	copy(keys, baseKeys)
-	for i, k := range subKeys {
-		keys[i+len(baseKeys)] = k
-	}
-	return keys
-}
-
-// GetFieldValueMap gets a map of string field names to reflect.Value objects for a given object.
+// MakeFieldValueMap gets a map of string field names to reflect.Value objects for a given object.
 // An empty map is returned if the provided obj is nil, or isn't either a struct or pointer chain to a struct.
 // Substruct fields will have the parent struct's field name and substruct field name separated by a period.
 // E.g. This struct { Foo { Bar: "foobar" } }, will have an entry for "foo.bar".
@@ -117,17 +30,17 @@ func SortKeys(keys []string) []string {
 //    E.g. With { Foo: (*Bar)(nil) }, there will be an entry for "foo".
 //    Substructures that are not nill will still not have an entry though; they'll have entries for sub-fields still.
 //    E.g. With { Foo: (*Bar)(nil), Ban: { Ana: "banana" } will have entries for "foo" and "ban.ana", but not "ban" (it isn't nil).
-func GetFieldValueMap(obj interface{}, fillNilsWithZero bool) FieldValueMap {
+func MakeFieldValueMap(obj interface{}, fillNilsWithZero bool) FieldValueMap {
 	if obj == nil {
 		return FieldValueMap{}
 	}
-	return getFieldValueMapValue(reflect.ValueOf(obj), fillNilsWithZero)
+	return getFieldValueMap(reflect.ValueOf(obj), fillNilsWithZero)
 }
 
-// getFieldValueMapValue does all the heavy lifting for getFieldValueMap.
+// getFieldValueMap does all the heavy lifting for getFieldValueMap.
 // Most of the time, you'll want to use getFieldValueMap instead of this.
 // This operates using reflect.Value objects instead of interface{}.
-func getFieldValueMapValue(valIn reflect.Value, fillNilsWithZero bool) FieldValueMap {
+func getFieldValueMap(valIn reflect.Value, fillNilsWithZero bool) FieldValueMap {
 	keys := FieldValueMap{}
 	objVal := deref(valIn, fillNilsWithZero)
 	objType := objVal.Type()
@@ -150,11 +63,11 @@ func getFieldValueMapValue(valIn reflect.Value, fillNilsWithZero bool) FieldValu
 		case fKind == reflect.Ptr && fVal.IsNil():
 			keys[key] = fVal
 		case squash:
-			for k, v := range getFieldValueMapValue(fVal, fillNilsWithZero) {
+			for k, v := range getFieldValueMap(fVal, fillNilsWithZero) {
 				keys[k] = v
 			}
 		case fKind == reflect.Struct:
-			for subkey, subval := range getFieldValueMapValue(fVal, fillNilsWithZero) {
+			for subkey, subval := range getFieldValueMap(fVal, fillNilsWithZero) {
 				keys[key+"."+subkey] = subval
 			}
 		default:
@@ -208,6 +121,61 @@ func deref(v reflect.Value, fillNilsWithZero bool) reflect.Value {
 	return v
 }
 
+// Has checks if the provided key exists in this FieldValueMap.
+func (m FieldValueMap) Has(key string) bool {
+	_, ok := m[key]
+	return ok
+}
+
+// GetSortedKeys gets the keys of this FieldValueMap and sorts them using SortKeys.
+func (m FieldValueMap) GetSortedKeys() []string {
+	rv := make([]string, 0, len(m))
+	for k := range m {
+		rv = append(rv, k)
+	}
+	return sortKeys(rv)
+}
+
+// FindEntries looks for entries in this map that match the provided key.
+// First, if the key doesn't end in a period, an exact entry match is looked for.
+// If such an entry is found, only that entry will be returned.
+// If no such entry is found, a period is added to the end of the key (if not already there).
+// E.g. Providing "filter_peers" will get just the "filter_peers" entry.
+// Providing "consensus." will bypass the exact key lookup, and return all fields that start with "consensus.".
+// Providing "consensus" will look first for a field specifically called "consensus",
+// then, if/when not found, will return all fields that start with "consensus.".
+// Then, all entries with keys that start with the desired key are returned.
+// The second return value indicates whether or not anything was found.
+func (m FieldValueMap) FindEntries(key string) (FieldValueMap, bool) {
+	rv := FieldValueMap{}
+	if len(key) == 0 {
+		return rv, false
+	}
+	if key[len(key)-1:] != "." {
+		if val, ok := m[key]; ok {
+			rv[key] = val
+			return rv, true
+		}
+		key += "."
+	}
+	keylen := len(key)
+	for k, v := range m {
+		if len(k) > keylen && k[:keylen] == key {
+			rv[k] = v
+		}
+	}
+	return rv, len(rv) > 0
+}
+
+// GetStringOf gets a string representation of the value with the given key.
+// If the key doesn't exist in this FieldValueMap, an empty string is returned.
+func (m FieldValueMap) GetStringOf(key string) string {
+	if v, ok := m[key]; ok {
+		return GetStringFromValue(v)
+	}
+	return ""
+}
+
 // GetStringFromValue gets a string of the given value.
 // This creates strings that are more in line with what the values look like in the config files.
 // For slices and arrays, it turns into `["a", "b", "c"]`.
@@ -240,9 +208,20 @@ func GetStringFromValue(v reflect.Value) string {
 	}
 }
 
+// SetFromString sets a value from the provided string.
+// The string is converted appropriately for the underlying value type.
+// Assuming the value came from MakeFieldValueMap, this will actually be updating the
+// value in the config object provided to that function.
+func (m FieldValueMap) SetFromString(key, valueStr string) error {
+	if v, ok := m[key]; ok {
+		return setValueFromString(key, v, valueStr)
+	}
+	return fmt.Errorf("no field found for key: %s", key)
+}
+
 // setValueFromString sets a value from the provided string.
 // The string is converted appropriately for the underlying value type.
-// Assuming the value came from GetFieldValueMap, this will actually be updating the
+// Assuming the value came from MakeFieldValueMap, this will actually be updating the
 // value in the config object provided to that function.
 func setValueFromString(fieldName string, fieldVal reflect.Value, strVal string) error {
 	switch fieldVal.Kind() {
@@ -380,4 +359,146 @@ func setValueFromString(fieldName string, fieldVal reflect.Value, strVal string)
 		}
 	}
 	return fmt.Errorf("field %s cannot be set because setting values of type %s has not yet been set up", fieldName, fieldVal.Type())
+}
+
+// SetToNil sets the given key to a nil value.
+func (m FieldValueMap) SetToNil(key string) {
+	m[key] = reflect.Value{}
+}
+
+// AddEntriesFrom Add all entries from the provided map into this map.
+// If the same key exists in both maps, the value from the one provided will overwrite the one in this map.
+func (m FieldValueMap) AddEntriesFrom(m2 FieldValueMap) {
+	for k, v := range m2 {
+		m[k] = v
+	}
+}
+
+// UpdatedField is a struct holding information about a config field that has been updated.
+type UpdatedField struct {
+	Key   string
+	Was   string
+	IsNow string
+}
+
+// MakeUpdatedField creates an UpdateField with the given key getting the values from each provided map.
+// If either one of the maps doesn't have the key, the second returned value will be false.
+func MakeUpdatedField(key string, wasMap, isNowMap FieldValueMap) (UpdatedField, bool) {
+	rv := UpdatedField{
+		Key: key,
+	}
+	wasVal, wasFound := wasMap[key]
+	if wasFound {
+		rv.Was = GetStringFromValue(wasVal)
+	}
+	isNowVal, isNowFound := isNowMap[key]
+	if isNowFound {
+		rv.IsNow = GetStringFromValue(isNowVal)
+	}
+	return rv, isNowFound && wasFound
+}
+
+// Update updates the base UpdatedField given information in the provided newerInfo.
+func (u *UpdatedField) Update(newerInfo UpdatedField) {
+	u.IsNow = newerInfo.IsNow
+}
+
+// String converts an UpdatedField to a string similar to using %#v but a little cleaner.
+func (u UpdatedField) String() string {
+	return fmt.Sprintf(`UpdatedField{Key:%s, Was:%s, IsNow:%s}`, u.Key, u.Was, u.IsNow)
+}
+
+// StringAsUpdate creates a string from this UpdatedField indicating a change has being made.
+func (u UpdatedField) StringAsUpdate() string {
+	return fmt.Sprintf("%s Was: %s, Is Now: %s", u.Key, u.Was, u.IsNow)
+}
+
+// StringAsDefault creates a string from this UpdatedField identifying the Was as a default.
+func (u UpdatedField) StringAsDefault() string {
+	if !u.HasDiff() {
+		return fmt.Sprintf("%s=%s (same as default)", u.Key, u.IsNow)
+	}
+	return fmt.Sprintf("%s=%s (default=%s)", u.Key, u.IsNow, u.Was)
+}
+
+// HasDiff returns true if IsNow and Was have different values.
+func (u UpdatedField) HasDiff() bool {
+	return u.IsNow != u.Was
+}
+
+// UpdatedFieldMap maps field names to UpdatedField references.
+type UpdatedFieldMap map[string]*UpdatedField
+
+// MakeUpdatedFieldMap creates an UpdatedFieldMap with fields that exist in both provided FieldValueMap objects.
+// Set onlyChanged to true to further limit fields to only those with differences.
+func MakeUpdatedFieldMap(wasMap, isNowMap FieldValueMap, onlyChanged bool) UpdatedFieldMap {
+	rv := UpdatedFieldMap{}
+	for key := range isNowMap {
+		uf, ok := MakeUpdatedField(key, wasMap, isNowMap)
+		if ok && (!onlyChanged || uf.HasDiff()) {
+			rv[key] = &uf
+		}
+	}
+	return rv
+}
+
+// AddOrUpdate adds or updates an entry in this map using the provided info.
+// If the key isn't in this map yet, the entry is added.
+// Otherwise UpdatedField.Update us called on the existing entry.
+func (m UpdatedFieldMap) AddOrUpdate(key, was, isNow string) {
+	info := UpdatedField{
+		Key:   key,
+		Was:   was,
+		IsNow: isNow,
+	}
+	m.AddOrUpdateEntry(&info)
+}
+
+// AddOrUpdateEntry adds or updates an entry in this map using the provided info.
+// If the key isn't in this map yet, the entry is added.
+// Otherwise UpdatedField.Update us called on the existing entry.
+func (m UpdatedFieldMap) AddOrUpdateEntry(info *UpdatedField) {
+	if uf, ok := m[info.Key]; ok {
+		uf.Update(*info)
+	} else {
+		m[info.Key] = info
+	}
+}
+
+// AddOrUpdateEntriesFrom applies AddOrUpdateEntry on this map using each entry in the provided map.
+func (m UpdatedFieldMap) AddOrUpdateEntriesFrom(m2 UpdatedFieldMap) {
+	for _, info := range m2 {
+		m.AddOrUpdateEntry(info)
+	}
+}
+
+// GetSortedKeys gets the keys of this UpdatedFieldMap and sorts them using SortKeys.
+func (m UpdatedFieldMap) GetSortedKeys() []string {
+	rv := make([]string, 0, len(m))
+	for k := range m {
+		rv = append(rv, k)
+	}
+	return sortKeys(rv)
+}
+
+// SortKeys sorts the provided keys slice.
+// Base keys are put first and sorted alphabetically
+// followed by keys in sub-configs sorted alphabetically.
+func sortKeys(keys []string) []string {
+	var baseKeys []string
+	var subKeys []string
+	for _, k := range keys {
+		if strings.Contains(k, ".") {
+			subKeys = append(subKeys, k)
+		} else {
+			baseKeys = append(baseKeys, k)
+		}
+	}
+	sort.Strings(baseKeys)
+	sort.Strings(subKeys)
+	copy(keys, baseKeys)
+	for i, k := range subKeys {
+		keys[i+len(baseKeys)] = k
+	}
+	return keys
 }

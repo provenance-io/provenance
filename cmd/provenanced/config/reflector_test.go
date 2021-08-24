@@ -85,7 +85,7 @@ func noPanic(f func(t *testing.T)) func(t *testing.T) {
 
 func (s ReflectorTestSuit) TestGetFieldValueMapWithFill() {
 	thing := DefaultMainThing()
-	thingMap := GetFieldValueMap(&thing, true)
+	thingMap := MakeFieldValueMap(&thing, true)
 
 	s.T().Run("main-sub-thing does not exist", noPanic(func(t *testing.T) {
 		// main-sub-thing should not exist because it's a struct, only it's sub-fields should have entries.
@@ -171,7 +171,7 @@ func (s ReflectorTestSuit) TestGetFieldValueMapNoFillWithValue() {
 		AString:     aString,
 		SomeStrings: someStrings,
 	}
-	thingMap := GetFieldValueMap(&thing, true)
+	thingMap := MakeFieldValueMap(&thing, true)
 
 	s.T().Run("psthing2.a-string exists", noPanic(func(t *testing.T) {
 		key := "psthing2.a-string"
@@ -204,7 +204,7 @@ func (s ReflectorTestSuit) TestGetFieldValueMapNoFillWithValue() {
 
 func (s ReflectorTestSuit) TestGetFieldValueMapBaseFieldsNoFill() {
 	thing := DefaultMainThing()
-	thingMap := GetFieldValueMap(&thing, false)
+	thingMap := MakeFieldValueMap(&thing, false)
 
 	s.T().Run("main-sub-thing does not exist", noPanic(func(t *testing.T) {
 		// main-sub-thing shouldn't exist because it's a struct, only it's sub-fields should have entries.
@@ -252,7 +252,7 @@ func (s ReflectorTestSuit) TestGetFieldValueMapBaseFieldsNoFill() {
 
 func (s ReflectorTestSuit) TestGetFieldValueMapSquashedFields() {
 	thing := DefaultMainThing()
-	thingMap := GetFieldValueMap(&thing, false)
+	thingMap := MakeFieldValueMap(&thing, false)
 
 	s.T().Run("squashedthing does not exist", noPanic(func(t *testing.T) {
 		// squashedthing shouldn't exist because it's squashed (fields look like main fields)
@@ -304,7 +304,7 @@ func (s ReflectorTestSuit) TestGetFieldValueMapSquashedFields() {
 
 func (s ReflectorTestSuit) TestGetFieldValueMapSubFields() {
 	thing := DefaultMainThing()
-	thingMap := GetFieldValueMap(&thing, false)
+	thingMap := MakeFieldValueMap(&thing, false)
 
 	s.T().Run("main-sub-thing.anint exists", noPanic(func(t *testing.T) {
 		key := "main-sub-thing.anint"

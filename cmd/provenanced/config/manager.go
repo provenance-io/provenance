@@ -38,7 +38,7 @@ func GetAppConfigAndMap(cmd *cobra.Command) (*serverconfig.Config, FieldValueMap
 	if err := v.Unmarshal(conf); err != nil {
 		return nil, nil, err
 	}
-	fields := GetFieldValueMap(conf, true)
+	fields := MakeFieldValueMap(conf, true)
 	return conf, fields, nil
 }
 
@@ -49,7 +49,7 @@ func GetTmConfigAndMap(cmd *cobra.Command) (*tmconfig.Config, FieldValueMap, err
 	if err := v.Unmarshal(conf); err != nil {
 		return nil, nil, err
 	}
-	fields := GetFieldValueMap(conf, true)
+	fields := MakeFieldValueMap(conf, true)
 	removeUndesirableTmConfigEntries(fields)
 	return conf, fields, nil
 }
@@ -80,22 +80,20 @@ func GetClientConfigAndMap(cmd *cobra.Command) (*ClientConfig, FieldValueMap, er
 	if err := v.Unmarshal(conf); err != nil {
 		return nil, nil, err
 	}
-	fields := GetFieldValueMap(conf, true)
+	fields := MakeFieldValueMap(conf, true)
 	return conf, fields, nil
 }
 
 // GetAllConfigDefaults gets a field map from the defaults of all the configs.
 func GetAllConfigDefaults() FieldValueMap {
 	defaultMaps := []FieldValueMap{
-		GetFieldValueMap(serverconfig.DefaultConfig(), false),
-		removeUndesirableTmConfigEntries(GetFieldValueMap(tmconfig.DefaultConfig(), false)),
-		GetFieldValueMap(DefaultClientConfig(), false),
+		MakeFieldValueMap(serverconfig.DefaultConfig(), false),
+		removeUndesirableTmConfigEntries(MakeFieldValueMap(tmconfig.DefaultConfig(), false)),
+		MakeFieldValueMap(DefaultClientConfig(), false),
 	}
 	rv := FieldValueMap{}
 	for _, m := range defaultMaps {
-		for k, v := range m {
-			rv[k] = v
-		}
+		rv.AddEntriesFrom(m)
 	}
 	return rv
 }
