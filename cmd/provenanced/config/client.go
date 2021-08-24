@@ -72,6 +72,7 @@ func (c ClientConfig) ValidateBasic() error {
 
 // ReadFromClientConfig reads values from client.toml file and updates them in client Context
 func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
+	// TODO: Overhaul ReadFromClientConfig. Split out context setup and config loading.
 	configPath := filepath.Join(ctx.HomeDir, "config")
 	configFilePath := filepath.Join(configPath, "client.toml")
 	conf := DefaultClientConfig()

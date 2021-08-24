@@ -39,8 +39,8 @@ func init() {
 	}
 }
 
-// writeConfigToFile parses defaultConfigTemplate, renders config using the template and writes it to
-// configFilePath.
+// WriteConfigToFile creates the file contents using a template and the provided config
+// then writes the contents to the provided configFilePath.
 func WriteConfigToFile(configFilePath string, config *ClientConfig) {
 	var buffer bytes.Buffer
 
@@ -53,11 +53,13 @@ func WriteConfigToFile(configFilePath string, config *ClientConfig) {
 
 // ensureConfigPath creates a directory configPath if it does not exist
 func ensureConfigPath(configPath string) error {
+	// TODO: Remove ensureConfigPath. Shouldn't be needed after the overhaul of ReadFromClientConfig.
 	return os.MkdirAll(configPath, os.ModePerm)
 }
 
 // GetClientConfig reads values from client.toml file and unmarshalls them into ClientConfig
 func GetClientConfig(configPath string, v *viper.Viper) (*ClientConfig, error) {
+	// TODO: Remove GetClientConfig in favor of stuff in the config manager.
 	v.AddConfigPath(configPath)
 	v.SetConfigName("client")
 	v.SetConfigType("toml")
