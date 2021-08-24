@@ -156,13 +156,6 @@ func TestKeeperUsdfMigrate(t *testing.T) {
 	require.EqualValues(t, m.GetAddress(), addr)
 	require.EqualValues(t, m.GetMarkerType(), types.MarkerType_Coin)
 
-	count := 0
-	app.MarkerKeeper.IterateMarkers(ctx, func(record types.MarkerAccountI) bool {
-		require.EqualValues(t, record.GetDenom(), "usdf.c")
-		count++
-		return false
-	})
-	require.EqualValues(t, count, 1)
 	app.MarkerKeeper.ConvertUsdfToRestricted(ctx)
 	m, err = app.MarkerKeeper.GetMarker(ctx, addr)
 	require.NoError(t, err)
