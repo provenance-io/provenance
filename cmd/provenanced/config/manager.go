@@ -14,15 +14,13 @@ import (
 	tmconfig "github.com/tendermint/tendermint/config"
 )
 
+// PackConfig generates and saves the packed config file then removes the individual config files.
 func PackConfig(cmd *cobra.Command) error {
 	packedFile := GetFullPathToPackedConf(cmd)
 	configFiles := []string{
 		GetFullPathToAppConf(cmd),
 		GetFullPathToTmConf(cmd),
 		GetFullPathToClientConf(cmd),
-	}
-	if _, err := os.Stat(packedFile); err == nil || !os.IsNotExist(err) {
-		return fmt.Errorf("config is already packed: %s", packedFile)
 	}
 	allCurrent := FieldValueMap{}
 	if _, confMap, err := GetAppConfigAndMap(cmd); err != nil {
@@ -76,6 +74,29 @@ func unquote(str string) string {
 	return str
 }
 
+// UnpackConfig generates the saves the individual config files and removes the packed config file.
+func UnpackConfig(cmd *cobra.Command) error {
+	appConfig, _, appConfErr := GetAppConfigAndMap(cmd)
+	if appConfErr != nil {
+		return fmt.Errorf("couldn't get app config values: %v", appConfErr)
+	}
+	tmConfig, _, tmConfErr := GetTmConfigAndMap(cmd)
+	if tmConfErr != nil {
+		return fmt.Errorf("couldn't get tendermint config values: %v", tmConfErr)
+	}
+	clientConfig, _, clientConfErr := GetClientConfigAndMap(cmd)
+	if clientConfErr != nil {
+		return fmt.Errorf("couldn't get client config values: %v", clientConfErr)
+	}
+	SaveAppConfig(cmd, appConfig)
+	SaveTmConfig(cmd, tmConfig)
+	SaveClientConfig(cmd, clientConfig)
+	if rmErr := os.Remove(GetFullPathToPackedConf(cmd)); rmErr != nil && !os.IsNotExist(rmErr) {
+		return fmt.Errorf("could not remove packed config file: %v\n", rmErr)
+	}
+	return nil
+}
+
 // GetAppConfigAndMap gets the app/cosmos configuration object and related string->value map.
 func GetAppConfigAndMap(cmd *cobra.Command) (*serverconfig.Config, FieldValueMap, error) {
 	v := server.GetServerContextFromCmd(cmd).Viper
@@ -85,6 +106,12 @@ func GetAppConfigAndMap(cmd *cobra.Command) (*serverconfig.Config, FieldValueMap
 	}
 	fields := MakeFieldValueMap(conf, true)
 	return conf, fields, nil
+}
+
+// SaveAppConfig saves the app/cosmos config as needed.
+// Panics if something goes wrong.
+func SaveAppConfig(cmd *cobra.Command, appConfig *serverconfig.Config) {
+	serverconfig.WriteConfigFile(GetFullPathToAppConf(cmd), appConfig)
 }
 
 // GetTmConfigAndMap gets the tendermint/config configuration object and related string->value map.
@@ -118,6 +145,12 @@ func removeUndesirableTmConfigEntries(fields FieldValueMap) FieldValueMap {
 	return fields
 }
 
+// SaveTmConfig saves the tendermint config as needed.
+// Panics if something goes wrong.
+func SaveTmConfig(cmd *cobra.Command, tmConfig *tmconfig.Config) {
+	tmconfig.WriteConfigFile(GetFullPathToTmConf(cmd), tmConfig)
+}
+
 // GetClientConfigAndMap gets the client configuration object and related string->value map.
 func GetClientConfigAndMap(cmd *cobra.Command) (*ClientConfig, FieldValueMap, error) {
 	v := client.GetClientContextFromCmd(cmd).Viper
@@ -127,6 +160,12 @@ func GetClientConfigAndMap(cmd *cobra.Command) (*ClientConfig, FieldValueMap, er
 	}
 	fields := MakeFieldValueMap(conf, true)
 	return conf, fields, nil
+}
+
+// SaveClientConfig saves the client config as needed.
+// Panics if something goes wrong.
+func SaveClientConfig(cmd *cobra.Command, clientConfig *ClientConfig) {
+	WriteConfigToFile(GetFullPathToClientConf(cmd), clientConfig)
 }
 
 // GetAllConfigDefaults gets a field map from the defaults of all the configs.

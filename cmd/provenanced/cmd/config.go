@@ -8,12 +8,9 @@ import (
 	provconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/version"
 
 	"github.com/spf13/cobra"
-
-	tmconfig "github.com/tendermint/tendermint/config"
 )
 
 const (
@@ -367,17 +364,17 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
 		return false, errors.New("one or more issues encountered; no configuration values have been updated")
 	}
 	if len(appUpdates) > 0 {
-		serverconfig.WriteConfigFile(provconfig.GetFullPathToAppConf(cmd), appConfig)
+		provconfig.SaveAppConfig(cmd, appConfig)
 		cmd.Println(makeAppConfigHeader(cmd, "Updated"))
 		cmd.Println(makeUpdatedFieldMapString(appUpdates, provconfig.UpdatedField.StringAsUpdate))
 	}
 	if len(tmUpdates) > 0 {
-		tmconfig.WriteConfigFile(provconfig.GetFullPathToTmConf(cmd), tmConfig)
+		provconfig.SaveTmConfig(cmd, tmConfig)
 		cmd.Println(makeTmConfigHeader(cmd, "Updated"))
 		cmd.Println(makeUpdatedFieldMapString(tmUpdates, provconfig.UpdatedField.StringAsUpdate))
 	}
 	if len(clientUpdates) > 0 {
-		provconfig.WriteConfigToFile(provconfig.GetFullPathToClientConf(cmd), clientConfig)
+		provconfig.SaveClientConfig(cmd, clientConfig)
 		cmd.Println(makeClientConfigHeader(cmd, "Updated"))
 		cmd.Println(makeUpdatedFieldMapString(clientUpdates, provconfig.UpdatedField.StringAsUpdate))
 	}
@@ -492,8 +489,7 @@ func runConfigPackCmd(cmd *cobra.Command) error {
 
 // runConfigUnpackCmd converts a single config json file into the individual toml files.
 func runConfigUnpackCmd(cmd *cobra.Command) error {
-	// TODO: Write runConfigUnpackCmd
-	return fmt.Errorf("not implemented")
+	return provconfig.UnpackConfig(cmd)
 }
 
 // findEntries gets all entries that match a given key from the provided maps.
