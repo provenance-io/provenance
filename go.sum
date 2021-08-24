@@ -683,6 +683,8 @@ github.com/provenance-io/wasmd v0.18.0-alpha.provenance.2 h1:wc6l06+1TkQZTZmXhMO
 github.com/provenance-io/wasmd v0.18.0-alpha.provenance.2/go.mod h1:yoEUQBJxJHkmeMlUYxp39N8223KBzJudC/Iu15XSGCo=
 github.com/provenance-io/wasmd v0.19.0-alpha h1:Doip14QUzelmrGXI+DKobZcMM5rGI4qYAnThSk8WUn8=
 github.com/provenance-io/wasmd v0.19.0-alpha/go.mod h1:VsnQhhBhCcWBX4uHgKLuemzfW1JdsYTpNfQUVl2fhKU=
+github.com/provenance-io/wasmd v0.19.0 h1:3XGw94KhaDLLPWYzFK4JcMuMm1HjxeDR9O9x1LakP6o=
+github.com/provenance-io/wasmd v0.19.0/go.mod h1:2EAWTAe6HL0kd3ror/LfnNPeieCjNAsMqhHhnh5Pvzg=
 github.com/rakyll/statik v0.1.7 h1:OF3QCZUuyPxuGEP7B4ypUa7sB/iHtqOTDYZXGM8KOdQ=
 github.com/rakyll/statik v0.1.7/go.mod h1:AlZONWzMtEnMs7W4e/1LURLiI49pIMmp6V9Unghqrcc=
 github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a/go.mod h1:bCqnVzQkZxMG4s8nGwiZ5l3QUCyqpo9Y+/ZMZ9VjZe4=
