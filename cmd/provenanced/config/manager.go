@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -15,20 +16,64 @@ import (
 
 func PackConfig(cmd *cobra.Command) error {
 	packedFile := GetFullPathToPackedConf(cmd)
-	if _, err := os.Stat(packedFile); os.IsNotExist(err) {
-		return fmt.Errorf("config is already packed: %s", packedFile)
-	}
 	configFiles := []string{
 		GetFullPathToAppConf(cmd),
 		GetFullPathToTmConf(cmd),
 		GetFullPathToClientConf(cmd),
 	}
+	if _, err := os.Stat(packedFile); err == nil || !os.IsNotExist(err) {
+		return fmt.Errorf("config is already packed: %s", packedFile)
+	}
+	allCurrent := FieldValueMap{}
+	if _, confMap, err := GetAppConfigAndMap(cmd); err != nil {
+		return err
+	} else {
+		allCurrent.AddEntriesFrom(confMap)
+	}
+	if _, confMap, err := GetTmConfigAndMap(cmd); err != nil {
+		return err
+	} else {
+		allCurrent.AddEntriesFrom(confMap)
+	}
+	if _, confMap, err := GetClientConfigAndMap(cmd); err != nil {
+		return err
+	} else {
+		allCurrent.AddEntriesFrom(confMap)
+	}
+	allDefaults := GetAllConfigDefaults()
+	packed := map[string]string{}
+	for key, info := range MakeUpdatedFieldMap(allDefaults, allCurrent, true) {
+		packed[key] = unquote(info.IsNow)
+	}
+	prettyJson, err := json.MarshalIndent(packed, "", "  ")
+	if err != nil {
+		return err
+	}
+	cmd.Printf("Packed config:\n%s\n", prettyJson)
+	err = os.WriteFile(packedFile, prettyJson, 0644)
+	if err != nil {
+		return err
+	}
+	cmd.Printf("Saved to: %s\n", packedFile)
+	hadRmErr := false
 	for _, f := range configFiles {
-		if _, err := os.Stat(f); os.IsNotExist(err) {
-			return fmt.Errorf("cannot pack config because a config file is missing: %s", f)
+		if rmErr := os.Remove(f); rmErr != nil && !os.IsNotExist(rmErr) {
+			hadRmErr = true
+			cmd.Printf("Error removing file: %v\n", rmErr)
 		}
 	}
-	return fmt.Errorf("not implemented")
+	if hadRmErr {
+		return fmt.Errorf("One or more config files could not be removed.")
+	}
+	return nil
+}
+
+// unquote removes a leading and trailing double quote if they're both there.
+func unquote(str string) string {
+	if len(str) >= 2 && str[0] == '"' && str[len(str)-1] == '"' {
+		return str[1 : len(str)-1]
+	}
+	return str
 }
 
 // GetAppConfigAndMap gets the app/cosmos configuration object and related string->value map.
