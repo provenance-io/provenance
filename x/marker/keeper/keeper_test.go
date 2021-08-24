@@ -162,23 +162,6 @@ func TestUsdfNoPanic(t *testing.T) {
 	//app, ctx := createTestApp(true)
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
-	addr := types.MustGetMarkerAddress("testcoin")
-	user := testUserAddress("test")
-	// create account and check default values
-	mac := types.NewEmptyMarkerAccount(
-		"testcoin",
-		user.String(),
-		[]types.AccessGrant{*types.NewAccessGrant(user, []types.Access{types.Access_Mint})})
-
-	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
-
-	m, err := app.MarkerKeeper.GetMarkerByDenom(ctx, "testcoin")
-	require.NoError(t, err)
-	require.NotNil(t, m)
-	require.EqualValues(t, m.GetDenom(), "testcoin")
-	require.EqualValues(t, m.GetAddress(), addr)
-
 	require.NotPanics(t, func() { app.MarkerKeeper.ConvertUsdfToRestricted(ctx) }, "ConvertUsdfToRestricted not expected panic")
 }
 
