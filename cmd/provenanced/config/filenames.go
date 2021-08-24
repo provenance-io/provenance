@@ -24,7 +24,7 @@ const (
 	// This one is in our full control but it's still probably not a good idea to change it.
 
 	// PackedConfFilename is the filename of the packed (non-defaults) file.
-	PackedConfFilename = "non-defaults.json"
+	PackedConfFilename = "packed-conf.json"
 )
 
 // GetHomeDir gets the home directory from the provided cobra command.
