@@ -15,6 +15,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// usdf.c delete after 1..0
+const usdfConstant = "usdf.c"
+
 // Handler is a handler function for use with IterateRecords.
 type Handler func(record types.MarkerAccountI) error
 
@@ -145,6 +148,25 @@ func (k Keeper) IterateMarkers(ctx sdk.Context, cb func(marker types.MarkerAccou
 		if cb(ma) {
 			break
 		}
+	}
+}
+
+func (k Keeper) ConvertUsdfToRestricted(ctx sdk.Context) {
+	m, err := k.GetMarkerByDenom(ctx, usdfConstant)
+	// GetMarkerByDenom returns error if not found
+	// not sure if printing helps, but probably ok.
+	if err != nil {
+		fmt.Println(err)
+		fmt.Printf("%s marker not found. \n", usdfConstant)
+	} else if m != nil {
+		errFromSet := m.SetMarkerTypeForUSDF()
+
+		if errFromSet != nil {
+			panic(fmt.Errorf("cannot set marker type for %s", usdfConstant))
+		}
+
+		// record status as restricted
+		k.SetMarker(ctx, m)
 	}
 }
 

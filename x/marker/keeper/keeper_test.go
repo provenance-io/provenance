@@ -128,6 +128,45 @@ func TestAccountKeeperReader(t *testing.T) {
 	require.EqualValues(t, count, 1)
 }
 
+func TestKeeperUsdfMigrate(t *testing.T) {
+	//app, ctx := createTestApp(true)
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	addr := types.MustGetMarkerAddress("usdf.c")
+	user := testUserAddress("test")
+	// create account and check default values
+	mac := types.NewEmptyMarkerAccount(
+		"usdf.c",
+		user.String(),
+		[]types.AccessGrant{*types.NewAccessGrant(user, []types.Access{types.Access_Mint})})
+
+	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
+
+	m, err := app.MarkerKeeper.GetMarkerByDenom(ctx, "usdf.c")
+	require.NoError(t, err)
+	require.NotNil(t, m)
+	require.EqualValues(t, m.GetDenom(), "usdf.c")
+	require.EqualValues(t, m.GetAddress(), addr)
+	require.EqualValues(t, m.GetMarkerType(), types.MarkerType_Coin)
+
+
+	app.MarkerKeeper.ConvertUsdfToRestricted(ctx)
+	m, err = app.MarkerKeeper.GetMarker(ctx, addr)
+	require.NoError(t, err)
+	require.NotNil(t, m)
+	require.EqualValues(t, m.GetDenom(), "usdf.c")
+	require.EqualValues(t, m.GetAddress(), addr)
+	require.EqualValues(t, m.GetMarkerType(), types.MarkerType_RestrictedCoin)
+}
+
+func TestUsdfNoPanic(t *testing.T) {
+	//app, ctx := createTestApp(true)
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	require.NotPanics(t, func() { app.MarkerKeeper.ConvertUsdfToRestricted(ctx) }, "ConvertUsdfToRestricted not expected panic")
+}
+
 // nolint:funlen
 func TestAccountKeeperManageAccess(t *testing.T) {
 	//app, ctx := createTestApp(true)
