@@ -75,8 +75,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Updated to Cosmos SDK Release v0.43  [#154](https://github.com/provenance-io/provenance/issues/154)
 * Updated wasmd for Cosmos SDK Release v0.43 [#409](https://github.com/provenance-io/provenance/issues/409)
-  * Cosmos cosmos-sdk v0.43.0 [RELEASE_NOTES](https://github.com/cosmos/cosmos-sdk/blob/v0.43.0/RELEASE_NOTES.md)
-  * Cosmos ibc-go v1.0.0 [CHANGELOG](https://github.com/cosmos/ibc-go/blob/v1.0.0/CHANGELOG.md)
   * CosmWasm wasmvm v0.16.0 [CHANGELOG](https://github.com/CosmWasm/wasmvm/blob/v0.16.0/CHANGELOG.md) 
   * CosmWasm cosmwasm v0.16.0 [CHANGELOG](https://github.com/CosmWasm/cosmwasm/blob/v0.16.0/CHANGELOG.md)
 * Updated to IBC-Go Module v1.0.0
