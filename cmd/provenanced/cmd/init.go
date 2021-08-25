@@ -63,8 +63,8 @@ func InitCmd(mbm module.BasicManager) *cobra.Command {
 
 // Init initializes genesis and config files.
 func Init(
-	cmd     *cobra.Command,
-	mbm     module.BasicManager,
+	cmd *cobra.Command,
+	mbm module.BasicManager,
 	moniker string,
 ) error {
 	chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
@@ -111,7 +111,6 @@ func Init(
 	var mnemonic string
 	if doRecover {
 		inBuf := bufio.NewReader(cmd.InOrStdin())
-		var err error
 		mnemonic, err = input.GetString("Enter your bip39 mnemonic", inBuf)
 		if err != nil {
 			return err
@@ -150,7 +149,7 @@ func createAndExportGenesisFile(
 ) error {
 	minDeposit := int64(1000000000000)  // 1,000,000,000,000
 	downtimeJailDurationStr := "86400s" // 1 day
-	maxGas := int64(60000000) // 60,000,000
+	maxGas := int64(60000000)           // 60,000,000
 	if isTestnet {
 		cmd.Printf("Using testnet defaults\n")
 		minDeposit = 10000000            // 10,000,000

@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/client"
 )
 
