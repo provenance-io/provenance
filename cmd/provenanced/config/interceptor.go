@@ -41,7 +41,7 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
 	// The result of client.GetClientContextFromCmd(cmd) is not a pointer.
 	// Since I'm just getting the Viper pointer from it (for now), I'm not
 	// pulling the context into its own variable.
-	// I'd just have to call it again later anyway.
+	// I'd just have to call it again later anyway because deeper stuff will probably update it.
 	vpr := client.GetClientContextFromCmd(cmd).Viper
 
 	// And now, set up Viper a little more.
@@ -67,7 +67,6 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
 
 	// Create a new Server context with the same viper as the client context, a default config, and the just defined logger.
 	serverCtx := server.NewContext(vpr, tmcfg.DefaultConfig(), serverLogger)
-	// The server context is provided as a pointer so we should be okay to just set it up here and keep defining it.
 	if err := server.SetCmdServerContext(cmd, serverCtx); err != nil {
 		return err
 	}

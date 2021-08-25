@@ -365,7 +365,10 @@ func loadUnpackedConfig(cmd *cobra.Command) error {
 	// Load the tendermint config if it exists, or else defaults.
 	switch _, err := os.Stat(tmConfFile); {
 	case os.IsNotExist(err):
-		addFieldMapToViper(vpr, MakeFieldValueMap(tmconfig.DefaultConfig(), false))
+		lerr := addFieldMapToViper(vpr, MakeFieldValueMap(tmconfig.DefaultConfig(), false))
+		if lerr != nil {
+			return fmt.Errorf("tendermint config file load error: %v", lerr)
+		}
 	case err != nil:
 		return fmt.Errorf("tendermint config file stat error: %v", err)
 	default:
@@ -379,21 +382,27 @@ func loadUnpackedConfig(cmd *cobra.Command) error {
 	// Load the app/cosmos config if it exists, or else defaults.
 	switch _, err := os.Stat(appConfFile); {
 	case os.IsNotExist(err):
-		addFieldMapToViper(vpr, MakeFieldValueMap(serverconfig.DefaultConfig(), false))
+		lerr := addFieldMapToViper(vpr, MakeFieldValueMap(serverconfig.DefaultConfig(), false))
+		if lerr != nil {
+			return fmt.Errorf("app config load error: %v", lerr)
+		}
 	case err != nil:
-		return fmt.Errorf("cosmos config file stat error: %v", err)
+		return fmt.Errorf("app config file stat error: %v", err)
 	default:
 		vpr.SetConfigFile(appConfFile)
 		merr := vpr.MergeInConfig()
 		if merr != nil {
-			return fmt.Errorf("cosmos config file merge error: %v", merr)
+			return fmt.Errorf("app config file merge error: %v", merr)
 		}
 	}
 
 	// Load the client config if it exists, or else defaults.
 	switch _, err := os.Stat(clientConfFile); {
 	case os.IsNotExist(err):
-		addFieldMapToViper(vpr, MakeFieldValueMap(DefaultClientConfig(), false))
+		lerr := addFieldMapToViper(vpr, MakeFieldValueMap(DefaultClientConfig(), false))
+		if lerr != nil {
+			return fmt.Errorf("client config file load error: %v", lerr)
+		}
 	case err != nil:
 		return fmt.Errorf("client config file stat error: %v", err)
 	default:
@@ -468,19 +477,25 @@ func loadPackedConfig(cmd *cobra.Command) error {
 	// and a set value takes precedence over flags. So I guess defaults are what we go with.
 	// The server and client should both have the same viper, so we only need the one.
 	vpr := server.GetServerContextFromCmd(cmd).Viper
-	addFieldMapToViper(vpr, tmConfigMap)
-	addFieldMapToViper(vpr, appConfigMap)
-	addFieldMapToViper(vpr, clientConfigMap)
+	if lerr := addFieldMapToViper(vpr, tmConfigMap); lerr != nil {
+		return fmt.Errorf("tendermint packed config load error: %v", lerr)
+	}
+	if lerr := addFieldMapToViper(vpr, appConfigMap); lerr != nil {
+		return fmt.Errorf("app packed config load error: %v", lerr)
+	}
+	if lerr := addFieldMapToViper(vpr, clientConfigMap); lerr != nil {
+		return fmt.Errorf("client packed config load error: %v", lerr)
+	}
 
 	return applyConfigsToContexts(cmd)
 }
 
-func addFieldMapToViper(vpr *viper.Viper, fvmap FieldValueMap) {
+func addFieldMapToViper(vpr *viper.Viper, fvmap FieldValueMap) error {
+	configMap := make(map[string]interface{})
 	for k, v := range fvmap {
-		if vpr.Get(k) == nil {
-			vpr.SetDefault(k, v.Interface())
-		}
+		configMap[k] = v.Interface()
 	}
+	return vpr.MergeConfigMap(configMap)
 }
 
 func applyConfigsToContexts(cmd *cobra.Command) error {
