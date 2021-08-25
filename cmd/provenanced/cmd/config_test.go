@@ -56,7 +56,7 @@ func (s *ConfigTestSuite) SetupTest() {
 	s.Require().NoError(err, "creating default tendermint config")
 	logger := log.NewNopLogger()
 	serverCtx := server.NewContext(viper.New(), tmConfig, logger)
-	serverCtx.Viper.Set(server.FlagMinGasPrices, fmt.Sprintf("1905%s", app.DefaultFeeDenom))
+	serverCtx.Viper.Set(server.FlagMinGasPrices, app.DefaultMinGasPrices)
 
 	clientConfig := provconfig.DefaultClientConfig()
 	clientConfig.ChainID = "TODO"
@@ -417,7 +417,7 @@ func (s *ConfigTestSuite) TestConfigChanged() {
 	}
 	expectedAppOutLines := []string{
 		s.makeAppDiffHeaderLines(),
-		`minimum-gas-prices="1905nhash" (default="")`,
+		fmt.Sprintf(`minimum-gas-prices="%s" (default="")`, app.DefaultMinGasPrices),
 		"",
 	}
 	expectedTMOutLines := []string{

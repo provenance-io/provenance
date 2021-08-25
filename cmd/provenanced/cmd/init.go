@@ -76,7 +76,7 @@ func InitCmd(
 	// Viper sees the flag and uses it when creating the app.config file.
 	// That file is created (if it doesn't yet exist) as part of the cobra pre-run handler stuff.
 	// See cmd/provenanced/config/server.go#interceptConfigs.
-	cmd.Flags().String(server.FlagMinGasPrices, fmt.Sprintf("1905%s", app.DefaultFeeDenom), "Minimum gas prices to accept for transactions")
+	cmd.Flags().String(server.FlagMinGasPrices, app.DefaultMinGasPrices, "Minimum gas prices to accept for transactions")
 	return cmd
 }
 
