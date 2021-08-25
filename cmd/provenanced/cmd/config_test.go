@@ -45,20 +45,25 @@ type ConfigTestSuite struct {
 
 func (s *ConfigTestSuite) SetupTest() {
 	s.Home = s.T().TempDir()
-	tmConfig, err := genutiltest.CreateDefaultTendermintConfig(s.Home)
-	s.Require().NoError(err, "creating default tendermint config")
+	s.T().Logf("%s Home: %s", s.T().Name(), s.Home)
 
 	tMbm := module.NewBasicManager(genutil.AppModuleBasic{})
 	appCodec := simapp.MakeTestEncodingConfig().Marshaler
-	err = genutiltest.ExecInitCmd(tMbm, s.Home, appCodec)
-	s.Require().NoError(err, "unexpected error calling genutiltest init command")
+	err := genutiltest.ExecInitCmd(tMbm, s.Home, appCodec)
+	s.Require().NoError(err, "genutiltest init command")
 
+	tmConfig, err := genutiltest.CreateDefaultTendermintConfig(s.Home)
+	s.Require().NoError(err, "creating default tendermint config")
 	logger := log.NewNopLogger()
 	serverCtx := server.NewContext(viper.New(), tmConfig, logger)
 	serverCtx.Viper.Set(server.FlagMinGasPrices, fmt.Sprintf("1905%s", app.DefaultFeeDenom))
 
-	clientCtx := client.Context{}.WithCodec(appCodec).WithHomeDir(s.Home).WithViper("")
-	clientCtx, err = provconfig.ReadFromClientConfig(clientCtx)
+	clientConfig := provconfig.DefaultClientConfig()
+	clientConfig.ChainID = "TODO"
+	clientConfig.Node = "TODO"
+	clientCtx := client.Context{}.WithCodec(appCodec).WithHomeDir(s.Home)
+	clientCtx.Viper = serverCtx.Viper
+	clientCtx, err = provconfig.ApplyClientConfigToContext(clientCtx, *clientConfig)
 	s.Require().NoError(err, "setting up client context")
 
 	ctx := context.Background()
