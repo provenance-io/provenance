@@ -198,15 +198,15 @@ Default values are filled in appropriately.
 
 // runConfigGetCmd gets requested values and outputs them.
 func runConfigGetCmd(cmd *cobra.Command, args []string) error {
-	_, appFields, acerr := provconfig.GetAppConfigAndMap(cmd)
+	_, appFields, acerr := provconfig.ExtractAppConfigAndMap(cmd)
 	if acerr != nil {
 		return fmt.Errorf("could not get app config fields: %v", acerr)
 	}
-	_, tmFields, tmcerr := provconfig.GetTmConfigAndMap(cmd)
+	_, tmFields, tmcerr := provconfig.ExtractTmConfigAndMap(cmd)
 	if tmcerr != nil {
 		return fmt.Errorf("could not get tendermint config fields: %v", tmcerr)
 	}
-	_, clientFields, ccerr := provconfig.GetClientConfigAndMap(cmd)
+	_, clientFields, ccerr := provconfig.ExtractClientConfigAndMap(cmd)
 	if ccerr != nil {
 		return fmt.Errorf("could not get client config fields: %v", ccerr)
 	}
@@ -277,15 +277,15 @@ func runConfigGetCmd(cmd *cobra.Command, args []string) error {
 // This will only ever be true if an error is also returned.
 // The second return value is any error encountered.
 func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
-	appConfig, appFields, acerr := provconfig.GetAppConfigAndMap(cmd)
+	appConfig, appFields, acerr := provconfig.ExtractAppConfigAndMap(cmd)
 	if acerr != nil {
 		return false, fmt.Errorf("couldn't get app config: %v", acerr)
 	}
-	tmConfig, tmFields, tmcerr := provconfig.GetTmConfigAndMap(cmd)
+	tmConfig, tmFields, tmcerr := provconfig.ExtractTmConfigAndMap(cmd)
 	if tmcerr != nil {
 		return false, fmt.Errorf("couldn't get tendermint config: %v", tmcerr)
 	}
-	clientConfig, clientFields, ccerr := provconfig.GetClientConfigAndMap(cmd)
+	clientConfig, clientFields, ccerr := provconfig.ExtractClientConfigAndMap(cmd)
 	if ccerr != nil {
 		return false, fmt.Errorf("couldn't get client config: %v", ccerr)
 	}
@@ -379,7 +379,7 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
 	if issueFound {
 		return false, errors.New("one or more issues encountered; no configuration values have been updated")
 	}
-	// If a certain config hasn't been changed, we want to provide it as nil to the SaveConfig func.
+	// If a certain config hasn't been changed, we want to provide it as nil to the SaveConfigs func.
 	if len(appUpdates) == 0 {
 		appConfig = nil
 	}
@@ -389,7 +389,7 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
 	if len(clientUpdates) == 0 {
 		clientConfig = nil
 	}
-	provconfig.SaveConfig(cmd, appConfig, tmConfig, clientConfig, false)
+	provconfig.SaveConfigs(cmd, appConfig, tmConfig, clientConfig, false)
 	isPacked := provconfig.IsPacked(cmd)
 	if len(appUpdates) > 0 {
 		cmd.Println(makeAppConfigHeader(cmd, addedLeadUpdated, isPacked))
@@ -411,15 +411,15 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
 
 // runConfigChangedCmd gets values that have changed from their defaults.
 func runConfigChangedCmd(cmd *cobra.Command, args []string) error {
-	_, appFields, acerr := provconfig.GetAppConfigAndMap(cmd)
+	_, appFields, acerr := provconfig.ExtractAppConfigAndMap(cmd)
 	if acerr != nil {
 		return fmt.Errorf("couldn't get app config: %v", acerr)
 	}
-	_, tmFields, tmcerr := provconfig.GetTmConfigAndMap(cmd)
+	_, tmFields, tmcerr := provconfig.ExtractTmConfigAndMap(cmd)
 	if tmcerr != nil {
 		return fmt.Errorf("couldn't get tendermint config: %v", tmcerr)
 	}
-	_, clientFields, ccerr := provconfig.GetClientConfigAndMap(cmd)
+	_, clientFields, ccerr := provconfig.ExtractClientConfigAndMap(cmd)
 	if ccerr != nil {
 		return fmt.Errorf("couldn't get client config: %v", ccerr)
 	}

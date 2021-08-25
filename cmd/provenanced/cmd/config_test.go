@@ -63,7 +63,7 @@ func (s *ConfigTestSuite) SetupTest() {
 	clientConfig.Node = "TODO"
 	clientCtx := client.Context{}.WithCodec(appCodec).WithHomeDir(s.Home)
 	clientCtx.Viper = serverCtx.Viper
-	clientCtx, err = provconfig.ApplyClientConfigToContext(clientCtx, *clientConfig)
+	clientCtx, err = provconfig.ApplyClientConfigToContext(clientCtx, clientConfig)
 	s.Require().NoError(err, "setting up client context")
 
 	ctx := context.Background()

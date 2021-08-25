@@ -77,13 +77,6 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
 		return err
 	}
 
-	// Get the client config and then set it again, this time using the Handler func
-	// because that one updates some stuff based on flags.
-	clientCtx := client.GetClientContextFromCmd(cmd)
-	if err := client.SetCmdClientContextHandler(clientCtx, cmd); err != nil {
-		return err
-	}
-
 	return nil
 }
 

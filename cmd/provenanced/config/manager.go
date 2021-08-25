@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
-
-	"github.com/spf13/cobra"
 
 	tmconfig "github.com/tendermint/tendermint/config"
 )
@@ -23,15 +24,15 @@ func PackConfig(cmd *cobra.Command) error {
 
 // UnpackConfig generates the saves the individual config files and removes the packed config file.
 func UnpackConfig(cmd *cobra.Command) error {
-	appConfig, _, appConfErr := GetAppConfigAndMap(cmd)
+	appConfig, appConfErr := ExtractAppConfig(cmd)
 	if appConfErr != nil {
 		return fmt.Errorf("could not get app config values: %v", appConfErr)
 	}
-	tmConfig, _, tmConfErr := GetTmConfigAndMap(cmd)
+	tmConfig, tmConfErr := ExtractTmConfig(cmd)
 	if tmConfErr != nil {
 		return fmt.Errorf("could not get tendermint config values: %v", tmConfErr)
 	}
-	clientConfig, _, clientConfErr := GetClientConfigAndMap(cmd)
+	clientConfig, clientConfErr := ExtractClientConfig(cmd)
 	if clientConfErr != nil {
 		return fmt.Errorf("could not get client config values: %v", clientConfErr)
 	}
@@ -48,22 +49,41 @@ func IsPacked(cmd *cobra.Command) bool {
 	return err == nil
 }
 
-// GetAppConfigAndMap gets the app/cosmos configuration object and related string->value map.
-func GetAppConfigAndMap(cmd *cobra.Command) (*serverconfig.Config, FieldValueMap, error) {
+// ExtractAppConfig creates an app/cosmos config from the command context.
+func ExtractAppConfig(cmd *cobra.Command) (*serverconfig.Config, error) {
 	v := server.GetServerContextFromCmd(cmd).Viper
 	conf := serverconfig.DefaultConfig()
 	if err := v.Unmarshal(conf); err != nil {
+		return nil, fmt.Errorf("error extracting app config: %v", err)
+	}
+	return conf, nil
+}
+
+// ExtractAppConfigAndMap from the command context, creates an app/cosmos config and related string->value map.
+func ExtractAppConfigAndMap(cmd *cobra.Command) (*serverconfig.Config, FieldValueMap, error) {
+	conf, err := ExtractAppConfig(cmd)
+	if err != nil {
 		return nil, nil, err
 	}
 	fields := MakeFieldValueMap(conf, true)
 	return conf, fields, nil
 }
 
-// GetTmConfigAndMap gets the tendermint/config configuration object and related string->value map.
-func GetTmConfigAndMap(cmd *cobra.Command) (*tmconfig.Config, FieldValueMap, error) {
+// ExtractTmConfig creates a tendermint config from the command context.
+func ExtractTmConfig(cmd *cobra.Command) (*tmconfig.Config, error) {
 	v := server.GetServerContextFromCmd(cmd).Viper
 	conf := tmconfig.DefaultConfig()
 	if err := v.Unmarshal(conf); err != nil {
+		return nil, fmt.Errorf("error extracting tendermint config: %v", err)
+	}
+	conf.SetRoot(GetHomeDir(cmd))
+	return conf, nil
+}
+
+// ExtractTmConfigAndMap from the command context, creates a tendermint config and related string->value map.
+func ExtractTmConfigAndMap(cmd *cobra.Command) (*tmconfig.Config, FieldValueMap, error) {
+	conf, err := ExtractTmConfig(cmd)
+	if err != nil {
 		return nil, nil, err
 	}
 	fields := MakeFieldValueMap(conf, true)
@@ -90,11 +110,20 @@ func removeUndesirableTmConfigEntries(fields FieldValueMap) FieldValueMap {
 	return fields
 }
 
-// GetClientConfigAndMap gets the client configuration object and related string->value map.
-func GetClientConfigAndMap(cmd *cobra.Command) (*ClientConfig, FieldValueMap, error) {
+// ExtractClientConfig creates a client config from the command context.
+func ExtractClientConfig(cmd *cobra.Command) (*ClientConfig, error) {
 	v := client.GetClientContextFromCmd(cmd).Viper
 	conf := DefaultClientConfig()
 	if err := v.Unmarshal(conf); err != nil {
+		return nil, fmt.Errorf("error extracting client config: %v", err)
+	}
+	return conf, nil
+}
+
+// ExtractClientConfigAndMap from the command context, creates a client config and related string->value map.
+func ExtractClientConfigAndMap(cmd *cobra.Command) (*ClientConfig, FieldValueMap, error) {
+	conf, err := ExtractClientConfig(cmd)
+	if err != nil {
 		return nil, nil, err
 	}
 	fields := MakeFieldValueMap(conf, true)
@@ -112,11 +141,17 @@ func GetAllConfigDefaults() FieldValueMap {
 	return rv
 }
 
-// SaveConfig saves the configs to files.
+// SaveConfigs saves the configs to files.
 // If the config is packed, any nil configs provided will extracted from the cmd.
 // If the config is unpacked, only the configs provided will be written.
 // Any errors encountered will result in a panic.
-func SaveConfig(cmd *cobra.Command, appConfig *serverconfig.Config, tmConfig *tmconfig.Config, clientConfig *ClientConfig, verbose bool) {
+func SaveConfigs(
+	cmd *cobra.Command,
+	appConfig *serverconfig.Config,
+	tmConfig *tmconfig.Config,
+	clientConfig *ClientConfig,
+	verbose bool,
+) {
 	if IsPacked(cmd) {
 		generateAndWritePackedConfig(cmd, appConfig, tmConfig, clientConfig, verbose)
 	} else {
@@ -127,7 +162,14 @@ func SaveConfig(cmd *cobra.Command, appConfig *serverconfig.Config, tmConfig *tm
 // writeUnpackedConfig writes the provided configs to their files.
 // Any config parameter provided as nil will be skipped.
 // Any errors encountered will result in a panic.
-func writeUnpackedConfig(cmd *cobra.Command, appConfig *serverconfig.Config, tmConfig *tmconfig.Config, clientConfig *ClientConfig, verbose bool) {
+func writeUnpackedConfig(
+	cmd *cobra.Command,
+	appConfig *serverconfig.Config,
+	tmConfig *tmconfig.Config,
+	clientConfig *ClientConfig,
+	verbose bool,
+) {
+	mustEnsureConfigDir(cmd)
 	if appConfig != nil {
 		confFile := GetFullPathToAppConf(cmd)
 		if verbose {
@@ -186,11 +228,18 @@ func deleteUnpackedConfig(cmd *cobra.Command, verbose bool) error {
 // generateAndWritePackedConfig generates the contents of the packed config file and saves it.
 // Any config parameter provided as nil will be retrieved from the cmd.
 // Any errors encountered will result in a panic.
-func generateAndWritePackedConfig(cmd *cobra.Command, appConfig *serverconfig.Config, tmConfig *tmconfig.Config, clientConfig *ClientConfig, verbose bool) {
+func generateAndWritePackedConfig(
+	cmd *cobra.Command,
+	appConfig *serverconfig.Config,
+	tmConfig *tmconfig.Config,
+	clientConfig *ClientConfig,
+	verbose bool,
+) {
+	mustEnsureConfigDir(cmd)
 	var appConfMap, tmConfMap, clientConfMap FieldValueMap
 	if appConfig == nil {
 		var err error
-		_, appConfMap, err = GetAppConfigAndMap(cmd)
+		_, appConfMap, err = ExtractAppConfigAndMap(cmd)
 		if err != nil {
 			panic(fmt.Errorf("could not extract app config values: %v", err))
 		}
@@ -199,7 +248,7 @@ func generateAndWritePackedConfig(cmd *cobra.Command, appConfig *serverconfig.Co
 	}
 	if tmConfig == nil {
 		var err error
-		_, tmConfMap, err = GetTmConfigAndMap(cmd)
+		_, tmConfMap, err = ExtractTmConfigAndMap(cmd)
 		if err != nil {
 			panic(fmt.Errorf("could not extract tm config values: %v", err))
 		}
@@ -208,7 +257,7 @@ func generateAndWritePackedConfig(cmd *cobra.Command, appConfig *serverconfig.Co
 	}
 	if clientConfig == nil {
 		var err error
-		_, clientConfMap, err = GetClientConfigAndMap(cmd)
+		_, clientConfMap, err = ExtractClientConfigAndMap(cmd)
 		if err != nil {
 			panic(fmt.Errorf("could not extract client config values: %v", err))
 		}
@@ -269,6 +318,25 @@ func deleteConfigFile(cmd *cobra.Command, filePath string, verbose bool) error {
 	return nil
 }
 
+// EnsureConfigDir ensures the given directory exists, creating it if necessary.
+// Errors if the config directory doesn't exist and cannot be created (e.g. because of permissions).
+// Errors if the path already exists as a non-directory.
+func EnsureConfigDir(cmd *cobra.Command) error {
+	dir := GetFullPathToConfigDir(cmd)
+	err := os.MkdirAll(dir, os.ModePerm)
+	if err != nil {
+		return fmt.Errorf("could not create directory %q: %w", dir, err)
+	}
+	return nil
+}
+
+// mustEnsureConfigDir is the same as EnsureConfigDir except panics on error.
+func mustEnsureConfigDir(cmd *cobra.Command) {
+	if err := EnsureConfigDir(cmd); err != nil {
+		panic(err)
+	}
+}
+
 // unquote removes a leading and trailing double quote if they're both there.
 func unquote(str string) string {
 	if len(str) >= 2 && str[0] == '"' && str[len(str)-1] == '"' {
@@ -294,30 +362,24 @@ func loadUnpackedConfig(cmd *cobra.Command) error {
 	// Both the server context and client context should be using the same Viper, so this is good for both.
 	vpr := server.GetServerContextFromCmd(cmd).Viper
 
-	// Load the tendermint defaults and config if it exists.
-	for k, v := range MakeFieldValueMap(tmconfig.DefaultConfig(), false) {
-		vpr.SetDefault(k, v.Interface())
-	}
+	// Load the tendermint config if it exists, or else defaults.
 	switch _, err := os.Stat(tmConfFile); {
 	case os.IsNotExist(err):
-		// App/cosmos config file doesn't exist. Do nothing. Just let it use the defaults.
+		addFieldMapToViper(vpr, MakeFieldValueMap(tmconfig.DefaultConfig(), false))
 	case err != nil:
 		return fmt.Errorf("tendermint config file stat error: %v", err)
 	default:
 		vpr.SetConfigFile(tmConfFile)
-		rerr := vpr.ReadInConfig()
+		rerr := vpr.MergeInConfig()
 		if rerr != nil {
 			return fmt.Errorf("tendermint config file read error: %v", rerr)
 		}
 	}
 
-	// Load the app/cosmos defaults and config if it exists.
-	for k, v := range MakeFieldValueMap(serverconfig.DefaultConfig(), false) {
-		vpr.SetDefault(k, v.Interface())
-	}
+	// Load the app/cosmos config if it exists, or else defaults.
 	switch _, err := os.Stat(appConfFile); {
 	case os.IsNotExist(err):
-		// App/cosmos config file doesn't exist. Do nothing. Just let it use the defaults.
+		addFieldMapToViper(vpr, MakeFieldValueMap(serverconfig.DefaultConfig(), false))
 	case err != nil:
 		return fmt.Errorf("cosmos config file stat error: %v", err)
 	default:
@@ -328,18 +390,15 @@ func loadUnpackedConfig(cmd *cobra.Command) error {
 		}
 	}
 
-	// Load the client defaults and config if it exists.
-	for k, v := range MakeFieldValueMap(DefaultClientConfig(), false) {
-		vpr.SetDefault(k, v.Interface())
-	}
+	// Load the client config if it exists, or else defaults.
 	switch _, err := os.Stat(clientConfFile); {
 	case os.IsNotExist(err):
-		// Client config file doesn't exist. Do nothing. Just let it use the defaults.
+		addFieldMapToViper(vpr, MakeFieldValueMap(DefaultClientConfig(), false))
 	case err != nil:
 		return fmt.Errorf("client config file stat error: %v", err)
 	default:
 		vpr.SetConfigFile(clientConfFile)
-		rerr := vpr.ReadInConfig()
+		rerr := vpr.MergeInConfig()
 		if rerr != nil {
 			return fmt.Errorf("client config file read error: %v", rerr)
 		}
@@ -409,26 +468,28 @@ func loadPackedConfig(cmd *cobra.Command) error {
 	// and a set value takes precedence over flags. So I guess defaults are what we go with.
 	// The server and client should both have the same viper, so we only need the one.
 	vpr := server.GetServerContextFromCmd(cmd).Viper
-	for k, v := range tmConfigMap {
-		vpr.SetDefault(k, v.Interface())
-	}
-	for k, v := range appConfigMap {
-		vpr.SetDefault(k, v.Interface())
-	}
-	for k, v := range clientConfigMap {
-		vpr.SetDefault(k, v.Interface())
-	}
+	addFieldMapToViper(vpr, tmConfigMap)
+	addFieldMapToViper(vpr, appConfigMap)
+	addFieldMapToViper(vpr, clientConfigMap)
 
 	return applyConfigsToContexts(cmd)
 }
 
+func addFieldMapToViper(vpr *viper.Viper, fvmap FieldValueMap) {
+	for k, v := range fvmap {
+		if vpr.Get(k) == nil {
+			vpr.SetDefault(k, v.Interface())
+		}
+	}
+}
+
 func applyConfigsToContexts(cmd *cobra.Command) error {
 	var err error
-	// Apply what the client viper now has to the client context.
+	// Apply what viper now has to the client context.
 	clientCtx := client.GetClientContextFromCmd(cmd)
-	clientConfig := ClientConfig{}
-	if err = clientCtx.Viper.Unmarshal(&clientConfig); err != nil {
-		return fmt.Errorf("could not unmarshal client viper config: %v", err)
+	clientConfig, err := ExtractClientConfig(cmd)
+	if err != nil {
+		return err
 	}
 	if clientCtx, err = ApplyClientConfigToContext(clientCtx, clientConfig); err != nil {
 		return fmt.Errorf("could not apply client config to client context: %v", err)
@@ -437,11 +498,13 @@ func applyConfigsToContexts(cmd *cobra.Command) error {
 		return fmt.Errorf("could not update client context on command: %v", err)
 	}
 
-	// Set the server's context config to what Viper has now.
+	// Set the server context's config to what Viper has now.
 	serverCtx := server.GetServerContextFromCmd(cmd)
-	if err = serverCtx.Viper.Unmarshal(serverCtx.Config); err != nil {
-		return fmt.Errorf("could not unmarshal server viper config back into context: %v", err)
+	tmConfig, err := ExtractTmConfig(cmd)
+	if err != nil {
+		return err
 	}
+	serverCtx.Config = tmConfig
 	serverCtx.Config.SetRoot(clientCtx.HomeDir)
 
 	return nil

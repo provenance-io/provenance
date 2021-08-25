@@ -2,10 +2,7 @@ package config
 
 import (
 	"bytes"
-	"os"
 	"text/template"
-
-	"github.com/spf13/viper"
 
 	tmos "github.com/tendermint/tendermint/libs/os"
 )
@@ -49,29 +46,4 @@ func WriteConfigToFile(configFilePath string, config *ClientConfig) {
 	}
 
 	tmos.MustWriteFile(configFilePath, buffer.Bytes(), 0644)
-}
-
-// ensureConfigPath creates a directory configPath if it does not exist
-func ensureConfigPath(configPath string) error {
-	// TODO: Remove ensureConfigPath. Shouldn't be needed after the overhaul of ReadFromClientConfig.
-	return os.MkdirAll(configPath, os.ModePerm)
-}
-
-// GetClientConfig reads values from client.toml file and unmarshalls them into ClientConfig
-func GetClientConfig(configPath string, v *viper.Viper) (*ClientConfig, error) {
-	// TODO: Remove GetClientConfig in favor of stuff in the config manager.
-	v.AddConfigPath(configPath)
-	v.SetConfigName("client")
-	v.SetConfigType("toml")
-
-	if err := v.ReadInConfig(); err != nil {
-		return nil, err
-	}
-
-	conf := new(ClientConfig)
-	if err := v.Unmarshal(conf); err != nil {
-		return nil, err
-	}
-
-	return conf, nil
 }

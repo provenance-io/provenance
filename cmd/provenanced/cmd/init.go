@@ -5,9 +5,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/pkg/errors"
@@ -17,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
@@ -29,9 +26,8 @@ import (
 	"github.com/cosmos/go-bip39"
 
 	"github.com/provenance-io/provenance/app"
-	clientconf "github.com/provenance-io/provenance/cmd/provenanced/config"
+	provconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
 
-	tmconfig "github.com/tendermint/tendermint/config"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	"github.com/tendermint/tendermint/types"
@@ -45,64 +41,73 @@ const (
 	FlagRecover = "recover"
 )
 
-// InitCmd generates genesis config.
-func InitCmd(
-	mbm module.BasicManager,
-	defaultNodeHome string,
-) *cobra.Command {
+// InitCmd Creates a command for generating genesis and config files.
+func InitCmd(mbm module.BasicManager) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init [moniker]",
 		Short: "Initialize files for a provenance daemon node",
 		Long:  `Initialize validators's and node's configuration files.`,
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			cdc := clientCtx.Codec
-
-			serverCtx := server.GetServerContextFromCmd(cmd)
-			config := serverCtx.Config
-			config.SetRoot(clientCtx.HomeDir)
-			config.Moniker = args[0]
-
-			return Init(cmd, cdc, mbm, config)
+			if len(args[0]) == 0 {
+				return fmt.Errorf("no moniker provided")
+			}
+			return Init(cmd, mbm, args[0])
 		},
 	}
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
 	cmd.Flags().BoolP(FlagRecover, "r", false, "interactive key recovery from mnemonic")
 	cmd.Flags().BoolP(FlagOverwrite, "o", false, "overwrite the genesis.json file")
-	// It looks like we're not paying attention to this --minimum-gas-prices flag, but we are.
-	// Viper sees the flag and uses it when creating the app.config file.
-	// That file is created (if it doesn't yet exist) as part of the cobra pre-run handler stuff.
-	// See cmd/provenanced/config/server.go#interceptConfigs.
-	cmd.Flags().String(server.FlagMinGasPrices, app.DefaultMinGasPrices, "Minimum gas prices to accept for transactions")
 	return cmd
 }
 
-// Init initializes genesis config.
+// Init initializes genesis and config files.
 func Init(
-	cmd *cobra.Command,
-	cdc codec.JSONCodec,
-	mbm module.BasicManager,
-	config *tmconfig.Config,
+	cmd     *cobra.Command,
+	mbm     module.BasicManager,
+	moniker string,
 ) error {
-	serverCtx := server.GetServerContextFromCmd(cmd)
 	chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
-	isTestnet := serverCtx.Viper.GetBool(EnvTypeFlag)
+	isTestnet, _ := cmd.Flags().GetBool(EnvTypeFlag)
 	doRecover, _ := cmd.Flags().GetBool(FlagRecover)
-	doOverwrite := serverCtx.Viper.GetBool(FlagOverwrite)
+	doOverwrite, _ := cmd.Flags().GetBool(FlagOverwrite)
 
-	genFile := config.GenesisFile()
+	if err := provconfig.EnsureConfigDir(cmd); err != nil {
+		return err
+	}
+
+	// Get the current configs. This will just be all defaults if the files don't exist.
+	appConfig, err := provconfig.ExtractAppConfig(cmd)
+	if err != nil {
+		return err
+	}
+	tmConfig, err := provconfig.ExtractTmConfig(cmd)
+	if err != nil {
+		return err
+	}
+	clientConfig, err := provconfig.ExtractClientConfig(cmd)
+	if err != nil {
+		return err
+	}
+
+	// Stop now if the genesis file already exists and an overwrite wasn't requested.
+	genFile := tmConfig.GenesisFile()
 	if !doOverwrite && tmos.FileExists(genFile) {
 		return fmt.Errorf("genesis file already exists: %v", genFile)
 	}
 
+	// Set a few things in the configs.
+	if len(appConfig.MinGasPrices) == 0 {
+		appConfig.MinGasPrices = app.DefaultMinGasPrices
+	}
+	tmConfig.Moniker = moniker
 	if len(chainID) == 0 {
 		chainID = "provenance-chain-" + tmrand.NewRand().Str(6)
+		cmd.Printf("chain id: %s\n", chainID)
 	}
+	clientConfig.ChainID = chainID
 
-	mustFprintf(cmd.OutOrStdout(), "chain id: %s\n", chainID)
-
-	// Get bip39 mnemonic
+	// Gather the bip39 mnemonic if a recover was requested.
 	var mnemonic string
 	if doRecover {
 		inBuf := bufio.NewReader(cmd.InOrStdin())
@@ -117,35 +122,26 @@ func Init(
 		}
 	}
 
-	nodeID, _, err := genutil.InitializeNodeValidatorFilesFromMnemonic(config, mnemonic)
+	// Create and write the node validator files (node_key.json and priv_validator_key.json).
+	nodeID, _, err := genutil.InitializeNodeValidatorFilesFromMnemonic(tmConfig, mnemonic)
 	if err != nil {
 		return err
 	}
+	cmd.Printf("node id: %s\n", nodeID)
+	clientConfig.Node = tmConfig.RPC.ListenAddress
 
-	mustFprintf(cmd.OutOrStdout(), "node id: %s\n", nodeID)
-
-	if err = initGenFile(cmd, cdc, mbm, isTestnet, chainID, genFile); err != nil {
+	// Create and write the genenis file.
+	if err = createAndExportGenesisFile(cmd, client.GetClientContextFromCmd(cmd).Codec, mbm, isTestnet, chainID, genFile); err != nil {
 		return err
 	}
-
-	configFile := filepath.Join(config.RootDir, "config", "config.toml")
-	tmconfig.WriteConfigFile(configFile, config)
-	mustFprintf(cmd.OutOrStdout(), "Tendermint config file updated: %s\n", configFile)
-
-	clientConfigFile := filepath.Join(config.RootDir, "config", "client.toml")
-	clientConfig, crerr := clientconf.GetClientConfig(clientConfigFile, client.GetClientContextFromCmd(cmd).Viper)
-	if crerr != nil {
-		return fmt.Errorf("couldn't get client config: %v", crerr)
-	}
-	clientConfig.ChainID = chainID
-	clientConfig.Node = config.RPC.ListenAddress
-	clientconf.WriteConfigToFile(clientConfigFile, clientConfig)
-	mustFprintf(cmd.OutOrStdout(), "Client config file updated: %s\n", clientConfigFile)
+	// Save the configs.
+	provconfig.SaveConfigs(cmd, appConfig, tmConfig, clientConfig, true)
 
 	return nil
 }
 
-func initGenFile(
+// createAndExportGenesisFile creates and writes the genesis file.
+func createAndExportGenesisFile(
 	cmd *cobra.Command,
 	cdc codec.JSONCodec,
 	mbm module.BasicManager,
@@ -154,16 +150,14 @@ func initGenFile(
 ) error {
 	minDeposit := int64(1000000000000)  // 1,000,000,000,000
 	downtimeJailDurationStr := "86400s" // 1 day
-	maxValidators := uint32(20)
 	maxGas := int64(60000000) // 60,000,000
 	if isTestnet {
-		mustFprintf(cmd.OutOrStdout(), "Using testnet defaults\n")
+		cmd.Printf("Using testnet defaults\n")
 		minDeposit = 10000000            // 10,000,000
 		downtimeJailDurationStr = "600s" // 10 minutes
-		maxValidators = 100
 		maxGas = -1
 	} else {
-		mustFprintf(cmd.OutOrStdout(), "Using mainnet defaults\n")
+		cmd.Printf("Using mainnet defaults\n")
 	}
 
 	downtimeJailDuration, err := time.ParseDuration(downtimeJailDurationStr)
@@ -235,7 +229,7 @@ func initGenFile(
 		moduleName := stakingtypes.ModuleName
 		var stakingGenState stakingtypes.GenesisState
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &stakingGenState)
-		stakingGenState.Params.MaxValidators = maxValidators
+		stakingGenState.Params.MaxValidators = 100
 		appGenState[moduleName] = cdc.MustMarshalJSON(&stakingGenState)
 	}
 
@@ -259,22 +253,15 @@ func initGenFile(
 	genDoc.ChainID = chainID
 	genDoc.AppState = appState
 	genDoc.Validators = nil
-	genDoc.ConsensusParams = types.DefaultConsensusParams()
+	if genDoc.ConsensusParams == nil {
+		genDoc.ConsensusParams = types.DefaultConsensusParams()
+	}
 	genDoc.ConsensusParams.Block.MaxGas = maxGas
 
 	if err = genutil.ExportGenesisFile(genDoc, genFile); err != nil {
 		return errors.Wrap(err, "Failed to export gensis file")
 	}
 
-	mustFprintf(cmd.OutOrStdout(), "Genesis file created: %s\n", genFile)
+	cmd.Printf("Genesis file created: %s\n", genFile)
 	return err
-}
-
-// mustFprintf same as fmt.Fprintf but panics on error.
-func mustFprintf(w io.Writer, format string, a ...interface{}) int {
-	r, err := fmt.Fprintf(w, format, a...)
-	if err != nil {
-		panic(err)
-	}
-	return r
 }
