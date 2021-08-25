@@ -289,12 +289,14 @@ func LoadConfigFromFiles(cmd *cobra.Command) error {
 func loadUnpackedConfig(cmd *cobra.Command) error {
 	appConfFile := GetFullPathToAppConf(cmd)
 	tmConfFile := GetFullPathToTmConf(cmd)
-	serverCtx := server.GetServerContextFromCmd(cmd)
-	serverViper := serverCtx.Viper
+	clientConfFile := GetFullPathToClientConf(cmd)
+
+	// Both the server context and client context should be using the same Viper, so this is good for both.
+	vpr := server.GetServerContextFromCmd(cmd).Viper
 
 	// Load the tendermint defaults and config if it exists.
 	for k, v := range MakeFieldValueMap(tmconfig.DefaultConfig(), false) {
-		serverViper.SetDefault(k, v.Interface())
+		vpr.SetDefault(k, v.Interface())
 	}
 	switch _, err := os.Stat(tmConfFile); {
 	case os.IsNotExist(err):
@@ -302,8 +304,8 @@ func loadUnpackedConfig(cmd *cobra.Command) error {
 	case err != nil:
 		return fmt.Errorf("tendermint config file stat error: %v", err)
 	default:
-		serverViper.SetConfigFile(tmConfFile)
-		rerr := serverViper.ReadInConfig()
+		vpr.SetConfigFile(tmConfFile)
+		rerr := vpr.ReadInConfig()
 		if rerr != nil {
 			return fmt.Errorf("tendermint config file read error: %v", rerr)
 		}
@@ -311,7 +313,7 @@ func loadUnpackedConfig(cmd *cobra.Command) error {
 
 	// Load the app/cosmos defaults and config if it exists.
 	for k, v := range MakeFieldValueMap(serverconfig.DefaultConfig(), false) {
-		serverViper.SetDefault(k, v.Interface())
+		vpr.SetDefault(k, v.Interface())
 	}
 	switch _, err := os.Stat(appConfFile); {
 	case os.IsNotExist(err):
@@ -319,20 +321,16 @@ func loadUnpackedConfig(cmd *cobra.Command) error {
 	case err != nil:
 		return fmt.Errorf("cosmos config file stat error: %v", err)
 	default:
-		serverViper.SetConfigFile(appConfFile)
-		merr := serverViper.MergeInConfig()
+		vpr.SetConfigFile(appConfFile)
+		merr := vpr.MergeInConfig()
 		if merr != nil {
 			return fmt.Errorf("cosmos config file merge error: %v", merr)
 		}
 	}
 
-	clientConfFile := GetFullPathToClientConf(cmd)
-	clientCtx := client.GetClientContextFromCmd(cmd)
-	clientViper := clientCtx.Viper
-
 	// Load the client defaults and config if it exists.
 	for k, v := range MakeFieldValueMap(DefaultClientConfig(), false) {
-		clientViper.SetDefault(k, v.Interface())
+		vpr.SetDefault(k, v.Interface())
 	}
 	switch _, err := os.Stat(clientConfFile); {
 	case os.IsNotExist(err):
@@ -340,14 +338,14 @@ func loadUnpackedConfig(cmd *cobra.Command) error {
 	case err != nil:
 		return fmt.Errorf("client config file stat error: %v", err)
 	default:
-		clientViper.SetConfigFile(clientConfFile)
-		rerr := clientViper.ReadInConfig()
+		vpr.SetConfigFile(clientConfFile)
+		rerr := vpr.ReadInConfig()
 		if rerr != nil {
 			return fmt.Errorf("client config file read error: %v", rerr)
 		}
 	}
 
-	return nil
+	return applyConfigsToContexts(cmd)
 }
 
 // loadPackedConfig attempts to read the packed config and applies it to the appropriate contexts.
@@ -373,7 +371,7 @@ func loadPackedConfig(cmd *cobra.Command) error {
 	tmConfigMap := MakeFieldValueMap(tmconfig.DefaultConfig(), false)
 	clientConfigMap := MakeFieldValueMap(DefaultClientConfig(), false)
 
-	// Apply the packed config differences to the defaults.
+	// Apply the packed config entries to the defaults.
 	var rvErr error
 	for k, v := range packedConf {
 		found := false
@@ -406,22 +404,45 @@ func loadPackedConfig(cmd *cobra.Command) error {
 		return fmt.Errorf("one or more fields in the packed config could not be set\n%s", rvErr)
 	}
 
-	// Set the tendermint and cosmos config defaults.
-	serverCtx := server.GetServerContextFromCmd(cmd)
-	serverViper := serverCtx.Viper
+	// Set the config values as defaults in viper.
+	// Viper doesn't really have a way to directly set a config value,
+	// and a set value takes precedence over flags. So I guess defaults are what we go with.
+	// The server and client should both have the same viper, so we only need the one.
+	vpr := server.GetServerContextFromCmd(cmd).Viper
 	for k, v := range tmConfigMap {
-		serverViper.SetDefault(k, v.Interface())
+		vpr.SetDefault(k, v.Interface())
 	}
 	for k, v := range appConfigMap {
-		serverViper.SetDefault(k, v.Interface())
+		vpr.SetDefault(k, v.Interface())
+	}
+	for k, v := range clientConfigMap {
+		vpr.SetDefault(k, v.Interface())
 	}
 
-	// Set the client config defaults.
+	return applyConfigsToContexts(cmd)
+}
+
+func applyConfigsToContexts(cmd *cobra.Command) error {
+	var err error
+	// Apply what the client viper now has to the client context.
 	clientCtx := client.GetClientContextFromCmd(cmd)
-	clientViper := clientCtx.Viper
-	for k, v := range clientConfigMap {
-		clientViper.SetDefault(k, v.Interface())
+	clientConfig := ClientConfig{}
+	if err = clientCtx.Viper.Unmarshal(clientConfig); err != nil {
+		return fmt.Errorf("could not unmarshal client viper config: %v", err)
 	}
+	if clientCtx, err = ApplyClientConfigToContext(clientCtx, clientConfig); err != nil {
+		return fmt.Errorf("could not apply client config to client context: %v", err)
+	}
+	if err = client.SetCmdClientContextHandler(clientCtx, cmd); err != nil {
+		return fmt.Errorf("could not update client context on command: %v", err)
+	}
+
+	// Set the server's context config to what Viper has now.
+	serverCtx := server.GetServerContextFromCmd(cmd)
+	if err = serverCtx.Viper.Unmarshal(serverCtx.Config); err != nil {
+		return fmt.Errorf("could not unmarshal server viper config back into context: %v", err)
+	}
+	serverCtx.Config.SetRoot(clientCtx.HomeDir)
 
 	return nil
 }

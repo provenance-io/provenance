@@ -70,6 +70,33 @@ func (c ClientConfig) ValidateBasic() error {
 	return nil
 }
 
+// ApplyClientConfigToContext returns a client context after having the client config values applied to it.
+func ApplyClientConfigToContext(ctx client.Context, config ClientConfig) (client.Context, error) {
+	// we need to update KeyringDir field on Client Context first cause it is used in NewKeyringFromBackend
+	ctx = ctx.WithOutputFormat(config.Output).
+		WithChainID(config.ChainID).
+		WithKeyringDir(ctx.HomeDir)
+
+	keyring, krerr := client.NewKeyringFromBackend(ctx, config.KeyringBackend)
+	if krerr != nil {
+		return ctx, fmt.Errorf("couldn't get key ring: %v", krerr)
+	}
+
+	ctx = ctx.WithKeyring(keyring)
+
+	// https://github.com/cosmos/cosmos-sdk/issues/8986
+	clnt, nerr := client.NewClientFromNode(config.Node)
+	if nerr != nil {
+		return ctx, fmt.Errorf("couldn't get client from nodeURI: %v", nerr)
+	}
+
+	ctx = ctx.WithNodeURI(config.Node).
+		WithClient(clnt).
+		WithBroadcastMode(config.BroadcastMode)
+
+	return ctx, nil
+}
+
 // ReadFromClientConfig reads values from client.toml file and updates them in client Context
 func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 	// TODO: Overhaul ReadFromClientConfig. Split out context setup and config loading.

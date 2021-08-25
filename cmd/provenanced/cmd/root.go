@@ -74,17 +74,13 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			cmd.SetErr(cmd.ErrOrStderr())
 
 			initClientCtx = client.ReadHomeFlag(initClientCtx, cmd)
+			if err := client.SetCmdClientContext(cmd, initClientCtx); err != nil {
+				return err
+			}
+			if err := config.InterceptConfigsPreRunHandler(cmd); err != nil {
+				return err
+			}
 
-			var err error
-			if initClientCtx, err = config.ReadFromClientConfig(initClientCtx); err != nil {
-				return err
-			}
-			if err = client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
-				return err
-			}
-			if err = config.InterceptConfigsPreRunHandler(cmd, "", nil); err != nil {
-				return err
-			}
 			// set app context based on initialized EnvTypeFlag
 			testnet := server.GetServerContextFromCmd(cmd).Viper.GetBool(EnvTypeFlag)
 			app.SetConfig(testnet)

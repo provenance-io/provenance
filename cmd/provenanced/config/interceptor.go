@@ -4,20 +4,18 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
-	"time"
-
-	"github.com/spf13/viper"
 
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
+
 	tmcfg "github.com/tendermint/tendermint/config"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
-	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 )
 
 // InterceptConfigsPreRunHandler performs a pre-run function for the root daemon
@@ -32,141 +30,85 @@ import (
 // to Viper.
 // NOTE: This function is duplicated here from the SDK due to forced override of ENV
 // prefix using the binary name which breaks provenanced configuration.
-func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate string, customAppConfig interface{}) error {
-	serverCtx := server.NewDefaultContext()
 
-	// Configure the viper instance
-	if err := serverCtx.Viper.BindPFlags(cmd.Flags()); err != nil {
-		return err
-	}
-	if err := serverCtx.Viper.BindPFlags(cmd.PersistentFlags()); err != nil {
-		return err
-	}
-	serverCtx.Viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
-	serverCtx.Viper.AutomaticEnv()
+// InterceptConfigsPreRunHandler performs a pre-run function for all commands.
+// It will finish setting up the client context and create the server context.
+// It will create a Viper literal and the configs will be read and parsed or created from defaults.
+// The viper literal is used to read and parse configurations. Command handlers can
+// fetch the server or client contexts to get the Tendermint, App/Cosmos, or Client
+// configurations, or to get access to viper.
+func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
+	// The result of client.GetClientContextFromCmd(cmd) is not a pointer.
+	// Since I'm just getting the Viper pointer from it (for now), I'm not
+	// pulling the context into its own variable.
+	// I'd just have to call it again later anyway.
+	vpr := client.GetClientContextFromCmd(cmd).Viper
 
-	// intercept configuration files, using both Viper instances separately
-	config, err := interceptConfigs(serverCtx.Viper, customAppConfigTemplate, customAppConfig)
-	if err != nil {
-		return err
-	}
-
-	// return value is a tendermint configuration object
-	serverCtx.Config = config
-	if err = bindFlags(cmd, serverCtx.Viper); err != nil {
+	// And now, set up Viper a little more.
+	if err := bindFlagsAndEnv(cmd, vpr); err != nil {
 		return err
 	}
 
+	// Create the logger that we'll want for the new server context
 	var logWriter io.Writer
-	if strings.ToLower(serverCtx.Viper.GetString(flags.FlagLogFormat)) == tmcfg.LogFormatPlain {
+	if strings.ToLower(vpr.GetString(flags.FlagLogFormat)) == tmcfg.LogFormatPlain {
 		logWriter = zerolog.ConsoleWriter{Out: os.Stderr}
 	} else {
 		logWriter = os.Stderr
 	}
 
-	logLvlStr := serverCtx.Viper.GetString(flags.FlagLogLevel)
-	logLvl, err := zerolog.ParseLevel(logLvlStr)
-	if err != nil {
-		return fmt.Errorf("failed to parse log level (%s): %w", logLvlStr, err)
+	logLvlStr := vpr.GetString(flags.FlagLogLevel)
+	logLvl, perr := zerolog.ParseLevel(logLvlStr)
+	if perr != nil {
+		return fmt.Errorf("failed to parse log level (%s): %w", logLvlStr, perr)
 	}
 
-	serverCtx.Logger = server.ZeroLogWrapper{Logger: zerolog.New(logWriter).Level(logLvl).With().Timestamp().Logger()}
+	serverLogger := server.ZeroLogWrapper{Logger: zerolog.New(logWriter).Level(logLvl).With().Timestamp().Logger()}
 
-	return server.SetCmdServerContext(cmd, serverCtx)
-}
-
-// interceptConfigs parses and updates a Tendermint configuration file or
-// creates a new one and saves it. It also parses and saves the application
-// configuration file. The Tendermint configuration file is parsed given a root
-// Viper object, whereas the application is parsed with the private package-aware
-// viperCfg object.
-func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customConfig interface{}) (*tmcfg.Config, error) {
-	rootDir := rootViper.GetString(flags.FlagHome)
-	configPath := filepath.Join(rootDir, "config")
-	tmCfgFile := filepath.Join(configPath, "config.toml")
-
-	conf := tmcfg.DefaultConfig()
-
-	switch _, err := os.Stat(tmCfgFile); {
-	case os.IsNotExist(err):
-		tmcfg.EnsureRoot(rootDir)
-
-		if err = conf.ValidateBasic(); err != nil {
-			return nil, fmt.Errorf("error in config file: %v", err)
-		}
-
-		conf.RPC.PprofListenAddress = "localhost:6060"
-		conf.Consensus.TimeoutCommit = 4 * time.Second
-		tmcfg.WriteConfigFile(tmCfgFile, conf)
-
-	case err != nil:
-		return nil, err
-
-	default:
-		rootViper.SetConfigType("toml")
-		rootViper.SetConfigName("config")
-		rootViper.AddConfigPath(configPath)
-
-		if err := rootViper.ReadInConfig(); err != nil {
-			return nil, fmt.Errorf("failed to read in %s: %w", tmCfgFile, err)
-		}
+	// Create a new Server context with the same viper as the client context, a default config, and the just defined logger.
+	serverCtx := server.NewContext(vpr, tmcfg.DefaultConfig(), serverLogger)
+	// The server context is provided as a pointer so we should be okay to just set it up here and keep defining it.
+	if err := server.SetCmdServerContext(cmd, serverCtx); err != nil {
+		return err
 	}
 
-	// Read into the configuration whatever data the viper instance has for it.
-	// This may come from the configuration file above but also any of the other
-	// sources viper uses.
-	if err := rootViper.Unmarshal(conf); err != nil {
-		return nil, err
+	// Read the configs into viper and the contexts.
+	if err := LoadConfigFromFiles(cmd); err != nil {
+		return err
 	}
 
-	conf.SetRoot(rootDir)
-
-	appCfgFilePath := filepath.Join(configPath, "app.toml")
-	if _, err := os.Stat(appCfgFilePath); os.IsNotExist(err) {
-		if customAppTemplate != "" {
-			serverconfig.SetConfigTemplate(customAppTemplate)
-
-			if err = rootViper.Unmarshal(&customConfig); err != nil {
-				return nil, fmt.Errorf("failed to parse %s: %w", appCfgFilePath, err)
-			}
-
-			serverconfig.WriteConfigFile(appCfgFilePath, customConfig)
-		} else {
-			appConf, err := serverconfig.ParseConfig(rootViper)
-			if err != nil {
-				return nil, fmt.Errorf("failed to parse %s: %w", appCfgFilePath, err)
-			}
-
-			serverconfig.WriteConfigFile(appCfgFilePath, appConf)
-		}
+	// Get the client config and then set it again, this time using the Handler func
+	// because that one updates some stuff based on flags.
+	clientCtx := client.GetClientContextFromCmd(cmd)
+	if err := client.SetCmdClientContextHandler(clientCtx, cmd); err != nil {
+		return err
 	}
 
-	rootViper.SetConfigType("toml")
-	rootViper.SetConfigName("app")
-	rootViper.AddConfigPath(configPath)
-
-	if err := rootViper.MergeInConfig(); err != nil {
-		return nil, fmt.Errorf("failed to merge configuration: %w", err)
-	}
-
-	return conf, nil
+	return nil
 }
 
 // Binds viper flags using the PIO ENV prefix.
-func bindFlags(cmd *cobra.Command, v *viper.Viper) (err error) {
+func bindFlagsAndEnv(cmd *cobra.Command, v *viper.Viper) (err error) {
 	defer func() {
 		recover() // nolint:errcheck
 	}()
 
+	replacer := strings.NewReplacer(".", "_", "-", "_")
+
+	v.SetEnvKeyReplacer(replacer)
+	v.AutomaticEnv()
+
+	if err = v.BindPFlags(cmd.Flags()); err != nil {
+		return err
+	}
+	if err = v.BindPFlags(cmd.PersistentFlags()); err != nil {
+		return err
+	}
+
 	cmd.Flags().VisitAll(func(f *pflag.Flag) {
 		// Environment variables can't have dashes in them, so bind them to their equivalent
-		// keys with underscores, e.g. --favorite-color to STING_FAVORITE_COLOR
-		err = v.BindEnv(f.Name, fmt.Sprintf("PIO_%s", strings.ToUpper(strings.ReplaceAll(f.Name, "-", "_"))))
-		if err != nil {
-			panic(err)
-		}
-
-		err = v.BindPFlag(f.Name, f)
+		// keys with underscores, e.g. --favorite-color to PIO_FAVORITE_COLOR
+		err = v.BindEnv(f.Name, "PIO_"+strings.ToUpper(replacer.Replace(f.Name)))
 		if err != nil {
 			panic(err)
 		}
@@ -182,4 +124,9 @@ func bindFlags(cmd *cobra.Command, v *viper.Viper) (err error) {
 	})
 
 	return err
+}
+
+// NewDefaultReplacer creates a new strings.Replacer using some default replacements.
+func NewDefaultReplacer() *strings.Replacer {
+	return strings.NewReplacer(".", "_", "-", "_")
 }
