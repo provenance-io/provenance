@@ -68,12 +68,15 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### API Breaking
 
 * Fix for missing validation for marker permissions according to marker type.  Markers of type COIN can no longer have
-  the Transfer permission assigned.  Existing permission entries on Coin type markers of type Transfer are removed 
+  the Transfer permission assigned.  Existing permission entries on Coin type markers of type Transfer are removed
   during migration [#428](https://github.com/provenance-io/provenance/issues/428)
 
 ### Improvements
 
 * Updated to Cosmos SDK Release v0.43  [#154](https://github.com/provenance-io/provenance/issues/154)
+* Updated wasmd for Cosmos SDK Release v0.43 [#409](https://github.com/provenance-io/provenance/issues/409)
+  * CosmWasm wasmvm v0.16.0 [CHANGELOG](https://github.com/CosmWasm/wasmvm/blob/v0.16.0/CHANGELOG.md) 
+  * CosmWasm cosmwasm v0.16.0 [CHANGELOG](https://github.com/CosmWasm/cosmwasm/blob/v0.16.0/CHANGELOG.md)
 * Updated to IBC-Go Module v1.0.0
 * Updated log message for circulation adjustment [#381](https://github.com/provenance-io/provenance/issues/381)
 * Updated third party proto files to pull from cosmos 0.43 [#391](https://github.com/provenance-io/provenance/issues/391)
