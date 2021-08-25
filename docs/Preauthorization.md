@@ -3,7 +3,7 @@
 In Provenance a user can pre-authorize another user to transfer a restricted coin, with a specified limit, from their account to any other account.  This authorization can be revoked or modified at a later date.  Also, this ability is only allowed on restricted coins, so the base coin, hash, does not have the ability to do this.
 
 ### Overview of how to do this
-In order to grant authorization for a user to transfer restricted coin, a user can take advantage of the `grant-authz` command on the `marker` module.  `provenanced tx marker grant-authz --help` can be used in order to view all of the possible flags and inputs.  However, in order for it to run, it is necessary to give this command the address of the user that will be pre-authorized to conduct transfers, they type of action that is pre-authorized which in this case is `transfer`, a transfer-limit, and an address to sign the transaction with using the --from flag.
+In order to grant authorization for a user to transfer restricted coin, a user can take advantage of the `grant-authz` command on the marker module.  `provenanced tx marker grant-authz --help` can be used in order to view all of the possible flags and inputs.  However, in order for it to run, it is necessary to give this command the address of the user that will be pre-authorized to conduct transfers, the type of action that is pre-authorized which in this case is `transfer`, a transfer-limit, and an address to sign the transaction with using the --from flag.
 
 If a user wants to change the amount that the other account can transfer they can run the same command again with the different amount which will reset the transfer limit to the amount specified.
 
@@ -18,7 +18,7 @@ All of this can be tested and demonstrated on a local node with the following st
 Run the following commands in your terminal to start a clean local build:
 
 ```bash 
-make clean ; make build ; make run-config ; make run
+make clean build run
 ```
 
 In a separate terminal after the node is running do the following to add users to test pre-authorization:
