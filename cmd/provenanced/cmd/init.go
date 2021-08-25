@@ -11,10 +11,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-
-	"github.com/provenance-io/provenance/app"
-	clientconf "github.com/provenance-io/provenance/cmd/provenanced/config"
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -31,12 +28,13 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/go-bip39"
 
+	"github.com/provenance-io/provenance/app"
+	clientconf "github.com/provenance-io/provenance/cmd/provenanced/config"
+
 	tmconfig "github.com/tendermint/tendermint/config"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	"github.com/tendermint/tendermint/types"
-
-	"github.com/spf13/cobra"
 )
 
 const (
@@ -158,14 +156,12 @@ func initGenFile(
 	downtimeJailDurationStr := "86400s" // 1 day
 	maxValidators := uint32(20)
 	maxGas := int64(60000000) // 60,000,000
-	unrestrictedDenomRegex := `[a-zA-Z][a-zA-Z0-9\-\.]{7,64}`
 	if isTestnet {
 		mustFprintf(cmd.OutOrStdout(), "Using testnet defaults\n")
 		minDeposit = 10000000            // 10,000,000
 		downtimeJailDurationStr = "600s" // 10 minutes
 		maxValidators = 100
 		maxGas = -1
-		unrestrictedDenomRegex = `[a-zA-Z][a-zA-Z0-9\-\.]{2,64}`
 	} else {
 		mustFprintf(cmd.OutOrStdout(), "Using mainnet defaults\n")
 	}
@@ -241,15 +237,6 @@ func initGenFile(
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &stakingGenState)
 		stakingGenState.Params.MaxValidators = maxValidators
 		appGenState[moduleName] = cdc.MustMarshalJSON(&stakingGenState)
-	}
-
-	// Set the marker unrestricted denom regex
-	{
-		moduleName := markertypes.ModuleName
-		var markerGenState markertypes.GenesisState
-		cdc.MustUnmarshalJSON(appGenState[moduleName], &markerGenState)
-		markerGenState.Params.UnrestrictedDenomRegex = unrestrictedDenomRegex
-		appGenState[moduleName] = cdc.MustMarshalJSON(&markerGenState)
 	}
 
 	appState, err := json.MarshalIndent(appGenState, "", "")
