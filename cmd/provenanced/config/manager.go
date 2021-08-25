@@ -427,7 +427,7 @@ func applyConfigsToContexts(cmd *cobra.Command) error {
 	// Apply what the client viper now has to the client context.
 	clientCtx := client.GetClientContextFromCmd(cmd)
 	clientConfig := ClientConfig{}
-	if err = clientCtx.Viper.Unmarshal(clientConfig); err != nil {
+	if err = clientCtx.Viper.Unmarshal(&clientConfig); err != nil {
 		return fmt.Errorf("could not unmarshal client viper config: %v", err)
 	}
 	if clientCtx, err = ApplyClientConfigToContext(clientCtx, clientConfig); err != nil {
