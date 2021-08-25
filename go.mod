@@ -8,7 +8,7 @@ require (
 	github.com/btcsuite/btcd v0.22.0-beta
 	github.com/cosmos/cosmos-sdk v0.43.0
 	github.com/cosmos/go-bip39 v1.0.0
-	github.com/cosmos/ibc-go v1.0.0
+	github.com/cosmos/ibc-go v1.0.1
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.2
 	github.com/google/uuid v1.1.2
