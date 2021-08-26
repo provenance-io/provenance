@@ -50,8 +50,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add updated wasmd for Cosmos 0.43 [#409](https://github.com/provenance-io/provenance/issues/409)
 * Add Rosetta support and automated testing [#365](https://github.com/provenance-io/provenance/issues/365)
 * Update `config` command [#403](https://github.com/provenance-io/provenance/issues/403)
-  * Allow for setting and getting any configuration field (not just client)
-  * Allow for setting and getting multiple configuration fields in a single invocation.
+  * Get and set any configuration field.
+  * Get or set multiple configuration fields in a single invocation.
+  * Easily identify fields with changed (non-default) values.
+  * Pack the configs into a single json file with only changed (non-default) values.
+  * Unpack the config back into the multiple config files (that also have documentation in them).
 
 ### Bug Fixes
 
