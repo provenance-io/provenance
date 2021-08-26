@@ -46,6 +46,7 @@ func ConfigCmd() *cobra.Command {
 	return cmd
 }
 
+// ConfigGetCmd returns a CLI command to get config values.
 func ConfigGetCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get [<key1> [<key2> ...]]",
@@ -67,6 +68,8 @@ func ConfigGetCmd() *cobra.Command {
         e.g. %[1]s get all
     If no keys are provided, all values are retrieved.
 
+    Displayed values will reflect settings defined through environment variables.
+
 `, configCmdStart, provconfig.AppConfFilename, provconfig.TmConfFilename, provconfig.ClientConfFilename),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := runConfigGetCmd(cmd, args)
@@ -82,6 +85,7 @@ func ConfigGetCmd() *cobra.Command {
 	return cmd
 }
 
+// ConfigSetCmd returns a CLI command to set config values.
 func ConfigSetCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "set <key1> <value1> [<key2> <value2> ...]",
@@ -115,6 +119,7 @@ Set multiple config values %[1]s set <key1> <value1> [<key2> <value2> ...]
 	return cmd
 }
 
+// ConfigChangedCmd returns a CLI command to get config values different from their defaults.
 func ConfigChangedCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "changed [<key1> [<key2>...]",
@@ -140,6 +145,8 @@ Get just the configuration entries that are not default values: %[1]s changed [<
     Current and default values are both included in the output.
     If no keys are provided, all non-default values are retrieved.
 
+    Displayed values will reflect settings defined through environment variables.
+
 `, configCmdStart, provconfig.AppConfFilename, provconfig.TmConfFilename, provconfig.ClientConfFilename),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := runConfigChangedCmd(cmd, args)
@@ -155,6 +162,7 @@ Get just the configuration entries that are not default values: %[1]s changed [<
 	return cmd
 }
 
+// ConfigPackCmd returns a CLI command for creating a single packed json config file.
 func ConfigPackCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "pack",
@@ -162,6 +170,8 @@ func ConfigPackCmd() *cobra.Command {
 		Long: fmt.Sprintf(`Unpack configuration into a single config file
 
 Combines the %[2]s, %[3]s, and %[4]s files into %[1]s.
+Settings defined through environment variables will be included in the packed file.
+Settings that are their default value will not be included.
 
 `, provconfig.PackedConfFilename, provconfig.AppConfFilename, provconfig.TmConfFilename, provconfig.ClientConfFilename),
 		Args: cobra.ExactArgs(0),
@@ -172,6 +182,7 @@ Combines the %[2]s, %[3]s, and %[4]s files into %[1]s.
 	return cmd
 }
 
+// ConfigUnpackCmd returns a CLI command for creating the several config toml files.
 func ConfigUnpackCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unpack",
@@ -179,6 +190,7 @@ func ConfigUnpackCmd() *cobra.Command {
 		Long: fmt.Sprintf(`Unpack configuration into separate config files.
 
 Splits the %[1]s file into %[2]s, %[3]s, and %[4]s.
+Settings defined through environment variables will be included in the unpacked files.
 Default values are filled in appropriately.
 
 `, provconfig.PackedConfFilename, provconfig.AppConfFilename, provconfig.TmConfFilename, provconfig.ClientConfFilename),
