@@ -3,6 +3,7 @@ package cmd_test
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"regexp"
@@ -715,20 +716,20 @@ func (s *ConfigTestSuite) TestConfigSetMulti() {
 		{
 			name: "two of each",
 			args: []string{"set",
-				"consensus.timeout_commit", "950ms",
-				"api.enable", "true",
-				"telemetry.service-name", "blocky",
+				"consensus.timeout_commit", "951ms",
+				"api.swagger", "true",
+				"telemetry.service-name", "blocky2",
 				"node", "tcp://localhost:26657",
 				"output", "text",
 				"log_format", "plain"},
 			out: s.makeMultiLine(
 				s.makeAppConfigUpdateLines(),
-				s.makeKeyUpdatedLine("api.enable", "false", "true"),
-				s.makeKeyUpdatedLine("telemetry.service-name", `""`, `"blocky"`),
+				s.makeKeyUpdatedLine("api.swagger", "false", "true"),
+				s.makeKeyUpdatedLine("telemetry.service-name", `"blocky"`, `"blocky2"`),
 				"",
 				s.makeTMConfigUpdateLines(),
 				s.makeKeyUpdatedLine("log_format", `"json"`, `"plain"`),
-				s.makeKeyUpdatedLine("consensus.timeout_commit", `"1s"`, `"950ms"`),
+				s.makeKeyUpdatedLine("consensus.timeout_commit", `"950ms"`, `"951ms"`),
 				"",
 				s.makeClientConfigUpdateLines(),
 				s.makeKeyUpdatedLine("node", `"tcp://127.0.0.1:26657"`, `"tcp://localhost:26657"`),
@@ -750,4 +751,64 @@ func (s *ConfigTestSuite) TestConfigSetMulti() {
 			assert.Equal(t, tc.out, outStr, "%s %s output", configCmd.Name(), tc.args)
 		})
 	}
+}
+
+func (s *ConfigTestSuite) TestPackUnpack() {
+	s.T().Run("pack", func(t *testing.T) {
+		expectedPacked := map[string]string{
+			"minimum-gas-prices": "1905nhash",
+		}
+		expectedPackedJSON, jerr := json.MarshalIndent(expectedPacked, "", "  ")
+		require.NoError(t, jerr, "making expected json")
+		expectedPackedJSONStr := string(expectedPackedJSON)
+		configCmd := s.getConfigCmd()
+		args := []string{"pack"}
+		configCmd.SetArgs(args)
+		b := applyMockIOOutErr(configCmd)
+		err := configCmd.Execute()
+		require.NoError(t, err, "%s %s - unexpected error in execution", configCmd.Name(), args)
+		out, rerr := ioutil.ReadAll(b)
+		require.NoError(t, rerr, "%s %s - unexpected error in reading", configCmd.Name(), args)
+		outStr := string(out)
+
+		assert.Contains(t, outStr, expectedPackedJSONStr, "packed json")
+		packedFile := provconfig.GetFullPathToPackedConf(configCmd)
+
+		assert.Contains(t, outStr, packedFile, "packed filename")
+		assert.True(t, provconfig.FileExists(packedFile), "file exists: packed")
+		appFile := provconfig.GetFullPathToAppConf(configCmd)
+		assert.Contains(t, outStr, appFile, "app filename")
+		assert.False(t, provconfig.FileExists(appFile), "file exists: app")
+		tmFile := provconfig.GetFullPathToAppConf(configCmd)
+		assert.Contains(t, outStr, tmFile, "tendermint filename")
+		assert.False(t, provconfig.FileExists(tmFile), "file exists: tenderming")
+		clientFile := provconfig.GetFullPathToAppConf(configCmd)
+		assert.Contains(t, outStr, clientFile, "client filename")
+		assert.False(t, provconfig.FileExists(clientFile), "file exists: client")
+	})
+
+	s.T().Run("unpack", func(t *testing.T) {
+		configCmd := s.getConfigCmd()
+		args := []string{"unpack"}
+		configCmd.SetArgs(args)
+		b := applyMockIOOutErr(configCmd)
+		err := configCmd.Execute()
+		require.NoError(t, err, "%s %s - unexpected error in execution", configCmd.Name(), args)
+		out, rerr := ioutil.ReadAll(b)
+		require.NoError(t, rerr, "%s %s - unexpected error in reading", configCmd.Name(), args)
+		outStr := string(out)
+
+		packedFile := provconfig.GetFullPathToPackedConf(configCmd)
+		assert.Contains(t, outStr, packedFile, "packed filename")
+		assert.False(t, provconfig.FileExists(packedFile), "file exists: packed")
+		appFile := provconfig.GetFullPathToAppConf(configCmd)
+		assert.Contains(t, outStr, appFile, "app filename")
+		assert.True(t, provconfig.FileExists(appFile), "file exists: app")
+		tmFile := provconfig.GetFullPathToAppConf(configCmd)
+		assert.Contains(t, outStr, tmFile, "tendermint filename")
+		assert.True(t, provconfig.FileExists(tmFile), "file exists: tenderming")
+		clientFile := provconfig.GetFullPathToAppConf(configCmd)
+		assert.Contains(t, outStr, clientFile, "client filename")
+		assert.True(t, provconfig.FileExists(clientFile), "file exists: client")
+	})
 }
