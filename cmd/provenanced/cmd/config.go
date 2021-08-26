@@ -17,12 +17,6 @@ const (
 	// entryNotFound is a magic index value that indicates a thing wasn't found (and so no index is applicable).
 	entryNotFound = -1
 
-	// appConfigLead is a string used at the start of an output header for an app config section.
-	appConfigLead = "App Config"
-	// tmConfigLead is a string used at the start of an output header for a tendermint config section.
-	tmConfigLead = "Tendermint Config"
-	// clientConfigLead is a string used at the start of an output header for a client config section.
-	clientConfigLead = "Client Config"
 	// addedLeadUpdated is an added lead for a header to indicate that the section represents updates.
 	addedLeadUpdated = "Updated"
 	// addedLeadChanged is an added lead for a header to indicate that the section represents values different from their defaults.
@@ -245,15 +239,15 @@ func runConfigGetCmd(cmd *cobra.Command, args []string) error {
 	}
 	isPacked := provconfig.IsPacked(cmd)
 	if len(appToOutput) > 0 {
-		cmd.Println(makeAppConfigHeader(cmd, "", isPacked))
+		cmd.Println(makeAppConfigHeader(cmd, "", isPacked).String())
 		cmd.Println(makeFieldMapString(appToOutput))
 	}
 	if len(tmToOutput) > 0 {
-		cmd.Println(makeTmConfigHeader(cmd, "", isPacked))
+		cmd.Println(makeTmConfigHeader(cmd, "", isPacked).String())
 		cmd.Println(makeFieldMapString(tmToOutput))
 	}
 	if len(clientToOutput) > 0 {
-		cmd.Println(makeClientConfigHeader(cmd, "", isPacked))
+		cmd.Println(makeClientConfigHeader(cmd, "", isPacked).String())
 		cmd.Println(makeFieldMapString(clientToOutput))
 	}
 	if isPacked && (len(appToOutput) > 0 || len(tmToOutput) > 0 || len(clientToOutput) > 0) {
@@ -390,15 +384,15 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
 	provconfig.SaveConfigs(cmd, appConfig, tmConfig, clientConfig, false)
 	isPacked := provconfig.IsPacked(cmd)
 	if len(appUpdates) > 0 {
-		cmd.Println(makeAppConfigHeader(cmd, addedLeadUpdated, isPacked))
+		cmd.Println(makeAppConfigHeader(cmd, addedLeadUpdated, isPacked).WithoutEnv().String())
 		cmd.Println(makeUpdatedFieldMapString(appUpdates, provconfig.UpdatedField.StringAsUpdate))
 	}
 	if len(tmUpdates) > 0 {
-		cmd.Println(makeTmConfigHeader(cmd, addedLeadUpdated, isPacked))
+		cmd.Println(makeTmConfigHeader(cmd, addedLeadUpdated, isPacked).WithoutEnv().String())
 		cmd.Println(makeUpdatedFieldMapString(tmUpdates, provconfig.UpdatedField.StringAsUpdate))
 	}
 	if len(clientUpdates) > 0 {
-		cmd.Println(makeClientConfigHeader(cmd, addedLeadUpdated, isPacked))
+		cmd.Println(makeClientConfigHeader(cmd, addedLeadUpdated, isPacked).WithoutEnv().String())
 		cmd.Println(makeUpdatedFieldMapString(clientUpdates, provconfig.UpdatedField.StringAsUpdate))
 	}
 	if isPacked && (len(appUpdates) > 0 || len(tmUpdates) > 0 || len(clientUpdates) > 0) {
@@ -470,7 +464,7 @@ func runConfigChangedCmd(cmd *cobra.Command, args []string) error {
 	isPacked := provconfig.IsPacked(cmd)
 
 	if showApp {
-		cmd.Println(makeAppConfigHeader(cmd, addedLeadChanged, isPacked))
+		cmd.Println(makeAppConfigHeader(cmd, addedLeadChanged, isPacked).String())
 		if len(appDiffs) > 0 {
 			cmd.Println(makeUpdatedFieldMapString(appDiffs, provconfig.UpdatedField.StringAsDefault))
 		} else {
@@ -480,7 +474,7 @@ func runConfigChangedCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	if showTm {
-		cmd.Println(makeTmConfigHeader(cmd, addedLeadChanged, isPacked))
+		cmd.Println(makeTmConfigHeader(cmd, addedLeadChanged, isPacked).String())
 		if len(tmDiffs) > 0 {
 			cmd.Println(makeUpdatedFieldMapString(tmDiffs, provconfig.UpdatedField.StringAsDefault))
 		} else {
@@ -490,7 +484,7 @@ func runConfigChangedCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	if showClient {
-		cmd.Println(makeClientConfigHeader(cmd, addedLeadChanged, isPacked))
+		cmd.Println(makeClientConfigHeader(cmd, addedLeadChanged, isPacked).String())
 		if len(clientDiffs) > 0 {
 			cmd.Println(makeUpdatedFieldMapString(clientDiffs, provconfig.UpdatedField.StringAsDefault))
 		} else {
@@ -564,27 +558,44 @@ func makeUpdatedFieldMapString(m provconfig.UpdatedFieldMap, stringer func(v pro
 	return sb.String()
 }
 
-// makeSectionHeaderString creates a string to use as a section header in output.
-func makeSectionHeaderString(lead, addedLead, filename string, isPacked bool) string {
+// sectionHeader is a struct holding several options for section header strings.
+type sectionHeader struct {
+	lead      string
+	addedLead string
+	filename  string
+	isPacked  bool
+	env       bool
+}
+
+// WithoutEnv sets env to false returning itself.
+func (s *sectionHeader) WithoutEnv() *sectionHeader {
+	s.env = false
+	return s
+}
+
+// Create the section header string desired.
+func (s sectionHeader) String() string {
 	var sb strings.Builder
-	sb.WriteString(lead)
-	if len(addedLead) > 0 {
+	sb.WriteString(s.lead)
+	if len(s.addedLead) > 0 {
 		sb.WriteByte(' ')
-		sb.WriteString(addedLead)
+		sb.WriteString(s.addedLead)
 	}
 	sb.WriteByte(':')
 	hr := strings.Repeat("-", sb.Len())
-	if len(filename) > 0 {
+	if len(s.filename) > 0 {
 		sb.WriteByte(' ')
 		switch {
-		case isPacked:
+		case s.isPacked:
 			sb.WriteString("(packed)")
-		case !provconfig.FileExists(filename):
+		case !provconfig.FileExists(s.filename):
 			sb.WriteString("(defaults)")
 		default:
-			sb.WriteString(filename)
+			sb.WriteString(s.filename)
 		}
-		sb.WriteString(" (or env)")
+		if s.env {
+			sb.WriteString(" (or env)")
+		}
 		hr += "-----"
 	}
 	sb.WriteByte('\n')
@@ -593,18 +604,36 @@ func makeSectionHeaderString(lead, addedLead, filename string, isPacked bool) st
 }
 
 // makeAppConfigHeader creates a section header string for app config stuff.
-func makeAppConfigHeader(cmd *cobra.Command, addedLead string, isPacked bool) string {
-	return makeSectionHeaderString(appConfigLead, addedLead, provconfig.GetFullPathToAppConf(cmd), isPacked)
+func makeAppConfigHeader(cmd *cobra.Command, addedLead string, isPacked bool) *sectionHeader {
+	return &sectionHeader{
+		lead:      "App Config",
+		addedLead: addedLead,
+		filename:  provconfig.GetFullPathToAppConf(cmd),
+		isPacked:  isPacked,
+		env:       true,
+	}
 }
 
 // makeTmConfigHeader creates a section header string for tendermint config stuff.
-func makeTmConfigHeader(cmd *cobra.Command, addedLead string, isPacked bool) string {
-	return makeSectionHeaderString(tmConfigLead, addedLead, provconfig.GetFullPathToTmConf(cmd), isPacked)
+func makeTmConfigHeader(cmd *cobra.Command, addedLead string, isPacked bool) *sectionHeader {
+	return &sectionHeader{
+		lead:      "Tendermint Config",
+		addedLead: addedLead,
+		filename:  provconfig.GetFullPathToTmConf(cmd),
+		isPacked:  isPacked,
+		env:       true,
+	}
 }
 
 // makeClientConfigHeader creates a section header string for client config stuff.
-func makeClientConfigHeader(cmd *cobra.Command, addedLead string, isPacked bool) string {
-	return makeSectionHeaderString(clientConfigLead, addedLead, provconfig.GetFullPathToClientConf(cmd), isPacked)
+func makeClientConfigHeader(cmd *cobra.Command, addedLead string, isPacked bool) *sectionHeader {
+	return &sectionHeader{
+		lead:      "Client Config",
+		addedLead: addedLead,
+		filename:  provconfig.GetFullPathToClientConf(cmd),
+		isPacked:  isPacked,
+		env:       true,
+	}
 }
 
 // makeConfigIsPackedLine creates a line indicating that the config is packed (and where to find it).
