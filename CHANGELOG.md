@@ -78,11 +78,19 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Updated wasmd for Cosmos SDK Release v0.43 [#409](https://github.com/provenance-io/provenance/issues/409)
   * CosmWasm wasmvm v0.16.0 [CHANGELOG](https://github.com/CosmWasm/wasmvm/blob/v0.16.0/CHANGELOG.md) 
   * CosmWasm cosmwasm v0.16.0 [CHANGELOG](https://github.com/CosmWasm/cosmwasm/blob/v0.16.0/CHANGELOG.md)
-* Updated to IBC-Go Module v1.0.0
+* Updated to IBC-Go Module v1.0.1 [PR 445](https://github.com/provenance-io/provenance/pull/445)
 * Updated log message for circulation adjustment [#381](https://github.com/provenance-io/provenance/issues/381)
 * Updated third party proto files to pull from cosmos 0.43 [#391](https://github.com/provenance-io/provenance/issues/391)
 * Removed legacy api endpoints [#380](https://github.com/provenance-io/provenance/issues/380)
 * Removed v039 and v040 migrations [#374](https://github.com/provenance-io/provenance/issues/374)
+* Dependency Version Updates
+  * Build/CI - cache [PR 420](https://github.com/provenance-io/provenance/pull/420), workflow clean up 
+  [PR 417](https://github.com/provenance-io/provenance/pull/417), diff action [PR 418](https://github.com/provenance-io/provenance/pull/418)
+  code coverage [PR 416](https://github.com/provenance-io/provenance/pull/416) and [PR 439](https://github.com/provenance-io/provenance/pull/439),
+  setup go [PR 419](https://github.com/provenance-io/provenance/pull/419), [PR 451](https://github.com/provenance-io/provenance/pull/451)
+  * Google UUID 1.3.0 [PR 446](https://github.com/provenance-io/provenance/pull/446)
+  * GRPC 1.3.0 [PR 443](https://github.com/provenance-io/provenance/pull/443)
+  * cast 1.4.1 [PR 442](https://github.com/provenance-io/provenance/pull/442)
 
 ## [v1.5.0](https://github.com/provenance-io/provenance/releases/tag/v1.5.0) - 2021-06-23
 
