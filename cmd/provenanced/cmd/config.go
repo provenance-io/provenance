@@ -8,9 +8,11 @@ import (
 	provconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/version"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 const (
@@ -269,6 +271,21 @@ func runConfigGetCmd(cmd *cobra.Command, args []string) error {
 // This will only ever be true if an error is also returned.
 // The second return value is any error encountered.
 func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
+	// Warning: This wipes out all the viper setup stuff up to this point.
+	// It needs to be done so that just the file values or defaults are loaded
+	// without considering environment variables.
+	clientCtx := client.GetClientContextFromCmd(cmd)
+	clientCtx.Viper = viper.New()
+	server.GetServerContextFromCmd(cmd).Viper = clientCtx.Viper
+	if err := client.SetCmdClientContext(cmd, clientCtx); err != nil {
+		return false, err
+	}
+
+	// Now that we have a clean viper, load the config from files again.
+	if err := provconfig.LoadConfigFromFiles(cmd); err != nil {
+		return false, err
+	}
+
 	appConfig, appFields, acerr := provconfig.ExtractAppConfigAndMap(cmd)
 	if acerr != nil {
 		return false, fmt.Errorf("couldn't get app config: %v", acerr)
