@@ -9,30 +9,31 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/simapp"
+
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/cmd/provenanced/cmd"
 	provconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
 
+	tmconfig "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/log"
-
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
-	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 )
 
 type ConfigTestSuite struct {
 	suite.Suite
 
-	Home    string
-	Context *context.Context
+	Home          string
+	ClientContext *client.Context
+	ServerContext *server.Context
+	Context       *context.Context
 
 	HeaderStrApp    string
 	HeaderStrTM     string
@@ -47,28 +48,19 @@ func (s *ConfigTestSuite) SetupTest() {
 	s.Home = s.T().TempDir()
 	s.T().Logf("%s Home: %s", s.T().Name(), s.Home)
 
-	tMbm := module.NewBasicManager(genutil.AppModuleBasic{})
-	appCodec := simapp.MakeTestEncodingConfig().Marshaler
-	err := genutiltest.ExecInitCmd(tMbm, s.Home, appCodec)
-	s.Require().NoError(err, "genutiltest init command")
-
-	tmConfig, err := genutiltest.CreateDefaultTendermintConfig(s.Home)
-	s.Require().NoError(err, "creating default tendermint config")
-	logger := log.NewNopLogger()
-	serverCtx := server.NewContext(viper.New(), tmConfig, logger)
-	serverCtx.Viper.Set(server.FlagMinGasPrices, app.DefaultMinGasPrices)
-
-	clientConfig := provconfig.DefaultClientConfig()
-	clientConfig.ChainID = "TODO"
-	clientConfig.Node = "TODO"
-	clientCtx := client.Context{}.WithCodec(appCodec).WithHomeDir(s.Home)
-	clientCtx.Viper = serverCtx.Viper
-	clientCtx, err = provconfig.ApplyClientConfigToContext(clientCtx, clientConfig)
-	s.Require().NoError(err, "setting up client context")
+	encodingConfig := simapp.MakeTestEncodingConfig()
+	clientCtx := client.Context{}.
+		WithCodec(encodingConfig.Marshaler).
+		WithHomeDir(s.Home)
+	clientCtx.Viper = viper.New()
+	serverCtx := server.NewContext(clientCtx.Viper, tmconfig.DefaultConfig(), log.NewNopLogger())
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
+
+	s.ClientContext = &clientCtx
+	s.ServerContext = serverCtx
 	s.Context = &ctx
 
 	s.HeaderStrApp = "App"
@@ -78,6 +70,8 @@ func (s *ConfigTestSuite) SetupTest() {
 	s.BaseFNApp = "app.toml"
 	s.BaseFNTM = "config.toml"
 	s.baseFNClient = "client.toml"
+
+	s.ensureConfigFiles()
 }
 
 func TestConfigTestSuite(t *testing.T) {
@@ -88,8 +82,40 @@ func TestConfigTestSuite(t *testing.T) {
 // Test setup above. Test helpers below.
 //
 
+func (s ConfigTestSuite) getConfigCmd() *cobra.Command {
+	// What I really need here is a cobra.Command
+	// that already has a context.
+	// So I'm going to call --help on the config command
+	// while setting the context and getting the command back.
+	configCmd := cmd.ConfigCmd()
+	configCmd.SetArgs([]string{"--help"})
+	applyMockIODiscardOutErr(configCmd)
+	configCmd, err := configCmd.ExecuteContextC(*s.Context)
+	s.Require().NoError(err, "root help command to set context")
+	// Now this should work to load the defaults (or files) into the cmd.
+	s.Require().NoError(
+		provconfig.LoadConfigFromFiles(configCmd),
+		"loading config from files",
+	)
+	return configCmd
+}
+
+func (s ConfigTestSuite) ensureConfigFiles() {
+	configCmd := s.getConfigCmd()
+	// Extract the individual config objects.
+	appConfig, aerr := provconfig.ExtractAppConfig(configCmd)
+	s.Require().NoError(aerr, "extracting app config")
+	tmConfig, terr := provconfig.ExtractTmConfig(configCmd)
+	s.Require().NoError(terr, "extracting tendermint config")
+	clientConfig, cerr := provconfig.ExtractClientConfig(configCmd)
+	s.Require().NoError(cerr, "extracting client config")
+	appConfig.MinGasPrices = app.DefaultMinGasPrices
+	// And then save them.
+	provconfig.SaveConfigs(configCmd, appConfig, tmConfig, clientConfig, false)
+}
+
 func (s ConfigTestSuite) makeConfigHeaderLine(t, fn string) string {
-	return fmt.Sprintf("%s Config: %s/config/%s", t, s.Home, fn)
+	return fmt.Sprintf("%s Config: %s/config/%s (or env)", t, s.Home, fn)
 }
 
 func (s ConfigTestSuite) makeAppConfigHeaderLines() string {
@@ -121,7 +147,7 @@ func (s ConfigTestSuite) makeClientConfigUpdateLines() string {
 }
 
 func (s ConfigTestSuite) makeConfigDiffHeaderLine(t, fn string) string {
-	return fmt.Sprintf("%s Config Differences from Defaults: %s/config/%s", t, s.Home, fn)
+	return fmt.Sprintf("%s Config Differences from Defaults: %s/config/%s (or env)", t, s.Home, fn)
 }
 
 func (s ConfigTestSuite) makeAppDiffHeaderLines() string {
@@ -142,6 +168,20 @@ func (s ConfigTestSuite) makeMultiLine(lines ...string) string {
 
 func (s ConfigTestSuite) makeKeyUpdatedLine(key, oldVal, newVal string) string {
 	return fmt.Sprintf("%s Was: %s, Is Now: %s", key, oldVal, newVal)
+}
+
+func applyMockIODiscardOutErr(c *cobra.Command) *bytes.Buffer {
+	b := bytes.NewBufferString("")
+	c.SetOut(ioutil.Discard)
+	c.SetErr(ioutil.Discard)
+	return b
+}
+
+func applyMockIOOutErr(c *cobra.Command) *bytes.Buffer {
+	b := bytes.NewBufferString("")
+	c.SetOut(b)
+	c.SetErr(b)
+	return b
 }
 
 //
@@ -168,26 +208,23 @@ func (s *ConfigTestSuite) TestConfigBadArgs() {
 
 	for _, tc := range tests {
 		s.T().Run(tc.name, func(t *testing.T) {
-			b := bytes.NewBufferString("")
-			command := cmd.ConfigCmd()
-			command.SetArgs(tc.args)
-			command.SetOut(b)
-			err := command.ExecuteContext(*s.Context)
-			require.EqualError(t, err, tc.err, "%s %s expected error executing command", command.Name(), tc.args)
+			configCmd := s.getConfigCmd()
+			configCmd.SetArgs(tc.args)
+			err := configCmd.Execute()
+			require.EqualError(t, err, tc.err, "%s %s expected error executing configCmd", configCmd.Name(), tc.args)
 		})
 	}
 }
 
 func (s *ConfigTestSuite) TestConfigCmdGet() {
-	command := cmd.ConfigCmd()
+	configCmd := s.getConfigCmd()
 
-	command.SetArgs([]string{"get"})
-	b := bytes.NewBufferString("")
-	command.SetOut(b)
-	err := command.ExecuteContext(*s.Context)
-	s.Require().NoError(err, "%s - unexpected error executing command", command.Name())
+	configCmd.SetArgs([]string{"get"})
+	b := applyMockIOOutErr(configCmd)
+	err := configCmd.Execute()
+	s.Require().NoError(err, "%s - unexpected error executing configCmd", configCmd.Name())
 	out, err := ioutil.ReadAll(b)
-	s.Require().NoError(err, "%s - unexpected error reading command output", command.Name())
+	s.Require().NoError(err, "%s - unexpected error reading configCmd output", configCmd.Name())
 	outStr := string(out)
 
 	// Only spot-checking instead of checking the entire 100+ lines exactly because I don't want this to needlessly break
@@ -197,7 +234,7 @@ func (s *ConfigTestSuite) TestConfigCmdGet() {
 		re   *regexp.Regexp
 	}{
 		// App config header and a few entries.
-		{"app header", regexp.MustCompile(`(?m)^App Config: .*/config/` + s.BaseFNApp + `$`)},
+		{"app header", regexp.MustCompile(`(?m)^App Config: .*/config/` + s.BaseFNApp + ` \(or env\)$`)},
 		{"app halt-height", regexp.MustCompile(`(?m)^halt-height=0$`)},
 		{"app api.swagger", regexp.MustCompile(`(?m)^api.swagger=false$`)},
 		{"app grpc.address", regexp.MustCompile(`(?m)^grpc.address="0.0.0.0:9090"$`)},
@@ -205,7 +242,7 @@ func (s *ConfigTestSuite) TestConfigCmdGet() {
 		{"app rosetta.enable", regexp.MustCompile(`(?m)^rosetta.enable=false$`)},
 
 		// Tendermint header and a few entries.
-		{"tendermint header", regexp.MustCompile(`(?m)^Tendermint Config: .*/config/` + s.BaseFNTM + `$`)},
+		{"tendermint header", regexp.MustCompile(`(?m)^Tendermint Config: .*/config/` + s.BaseFNTM + ` \(or env\)$`)},
 		{"tendermint fast_sync", regexp.MustCompile(`(?m)^fast_sync=true$`)},
 		{"tendermint consensus.timeout_commit", regexp.MustCompile(`(?m)^consensus.timeout_commit="1s"$`)},
 		{"tendermint mempool.size", regexp.MustCompile(`(?m)^mempool.size=5000$`)},
@@ -213,7 +250,7 @@ func (s *ConfigTestSuite) TestConfigCmdGet() {
 		{"tendermint p2p.recv_rate", regexp.MustCompile(`(?m)^p2p.recv_rate=5120000$`)},
 
 		// Client config header all the entries.
-		{"client header", regexp.MustCompile(`(?m)^Client Config: .*/config/` + s.baseFNClient + `$`)},
+		{"client header", regexp.MustCompile(`(?m)^Client Config: .*/config/` + s.baseFNClient + ` \(or env\)$`)},
 		{"client broadcast-mode", regexp.MustCompile(`(?m)^broadcast-mode="block"$`)},
 		{"client chain-id", regexp.MustCompile(`(?m)^chain-id=""$`)},
 		{"client keyring-backend", regexp.MustCompile(`(?m)^keyring-backend="test"$`)},
@@ -229,15 +266,14 @@ func (s *ConfigTestSuite) TestConfigCmdGet() {
 	}
 
 	s.T().Run("with args get all", func(t *testing.T) {
-		command2 := cmd.ConfigCmd()
+		configCmd2 := s.getConfigCmd()
 		args := []string{"get", "all"}
-		command2.SetArgs(args)
-		b2 := bytes.NewBufferString("")
-		command2.SetOut(b2)
-		err2 := command2.ExecuteContext(*s.Context)
-		require.NoError(t, err2, "%s - unexpected error executing command", command2.Name())
+		configCmd2.SetArgs(args)
+		b2 := applyMockIOOutErr(configCmd2)
+		err2 := configCmd2.Execute()
+		require.NoError(t, err2, "%s - unexpected error executing configCmd", configCmd2.Name())
 		out2, err2 := ioutil.ReadAll(b2)
-		require.NoError(t, err2, "%s - unexpected error reading command output", command2.Name())
+		require.NoError(t, err2, "%s - unexpected error reading configCmd output", configCmd2.Name())
 		out2Str := string(out2)
 		require.Equal(t, outStr, out2Str, "output of no-args vs output of %s", args)
 	})
@@ -274,16 +310,15 @@ func (s *ConfigTestSuite) TestConfigCmdGet() {
 
 	for _, tc := range inOutTests {
 		s.T().Run(tc.name, func(t *testing.T) {
-			command2 := cmd.ConfigCmd()
-			command2.SetArgs(tc.args)
-			b2 := bytes.NewBufferString("")
-			command2.SetOut(b2)
-			err2 := command2.ExecuteContext(*s.Context)
-			require.NoError(t, err2, "%s - unexpected error executing command", command2.Name())
-			out2, err2 := ioutil.ReadAll(b2)
-			require.NoError(t, err2, "%s - unexpected error reading command output", command2.Name())
-			out2Str := string(out2)
-			require.Contains(t, outStr, out2Str, "output of no-args vs output of %s", tc.args)
+			configCmd3 := s.getConfigCmd()
+			configCmd3.SetArgs(tc.args)
+			b3 := applyMockIOOutErr(configCmd3)
+			err3 := configCmd3.Execute()
+			require.NoError(t, err3, "%s - unexpected error executing configCmd", configCmd3.Name())
+			out3, rerr3 := ioutil.ReadAll(b3)
+			require.NoError(t, rerr3, "%s - unexpected error reading configCmd output", configCmd3.Name())
+			out3Str := string(out3)
+			require.Contains(t, outStr, out3Str, "output of no-args vs output of %s", tc.args)
 		})
 	}
 }
@@ -347,17 +382,16 @@ func (s *ConfigTestSuite) TestConfigGetMulti() {
 		s.T().Run(tc.name, func(t *testing.T) {
 			args := []string{"get"}
 			args = append(args, tc.keys...)
-			b := bytes.NewBufferString("")
 
-			command := cmd.ConfigCmd()
-			command.SetArgs(args)
-			command.SetOut(b)
-			err := command.ExecuteContext(*s.Context)
-			require.NoError(t, err, "%s %s - unexpected error executing command", command.Name(), args)
+			configCmd := s.getConfigCmd()
+			configCmd.SetArgs(args)
+			b := applyMockIOOutErr(configCmd)
+			err := configCmd.Execute()
+			require.NoError(t, err, "%s %s - unexpected error executing configCmd", configCmd.Name(), args)
 			out, err := ioutil.ReadAll(b)
-			require.NoError(t, err, "%s %s - unexpected error reading command output", command.Name(), args)
+			require.NoError(t, err, "%s %s - unexpected error reading configCmd output", configCmd.Name(), args)
 			outStr := string(out)
-			assert.Equal(t, tc.expected, outStr, "%s %s - output", command.Name(), args)
+			assert.Equal(t, tc.expected, outStr, "%s %s - output", configCmd.Name(), args)
 		})
 	}
 
@@ -373,17 +407,16 @@ func (s *ConfigTestSuite) TestConfigGetMulti() {
 			"",
 		) + "Error: " + expectedError + "\n"
 		args := []string{"get", "bananas", "api.enable", "pears", "api.swagger", "output"}
-		b := bytes.NewBufferString("")
 
-		command := cmd.ConfigCmd()
-		command.SetArgs(args)
-		command.SetOut(b)
-		err := command.ExecuteContext(*s.Context)
-		require.NoError(t, err, "%s %s - expected error executing command", command.Name(), args)
+		configCmd := s.getConfigCmd()
+		configCmd.SetArgs(args)
+		b := applyMockIOOutErr(configCmd)
+		err := configCmd.Execute()
+		require.NoError(t, err, "%s %s - expected error executing configCmd", configCmd.Name(), args)
 		out, err := ioutil.ReadAll(b)
-		require.NoError(t, err, "%s %s - unexpected error reading command output", command.Name(), args)
+		require.NoError(t, err, "%s %s - unexpected error reading configCmd output", configCmd.Name(), args)
 		outStr := string(out)
-		assert.Equal(t, expected, outStr, "%s %s - output", command.Name(), args)
+		assert.Equal(t, expected, outStr, "%s %s - output", configCmd.Name(), args)
 	})
 
 	s.T().Run("two found one missing", func(t *testing.T) {
@@ -397,17 +430,16 @@ func (s *ConfigTestSuite) TestConfigGetMulti() {
 			"",
 		) + "Error: " + expectedError + "\n"
 		args := []string{"get", "cannot.find.me", "consensus.create_empty_blocks_interval", "grpc.enable"}
-		b := bytes.NewBufferString("")
 
-		command := cmd.ConfigCmd()
-		command.SetArgs(args)
-		command.SetOut(b)
-		err := command.ExecuteContext(*s.Context)
-		require.NoError(t, err, "%s %s - expected error executing command", command.Name(), args)
+		configCmd := s.getConfigCmd()
+		configCmd.SetArgs(args)
+		b := applyMockIOOutErr(configCmd)
+		err := configCmd.Execute()
+		require.NoError(t, err, "%s %s - expected error executing configCmd", configCmd.Name(), args)
 		out, err := ioutil.ReadAll(b)
-		require.NoError(t, err, "%s %s - unexpected error reading command output", command.Name(), args)
+		require.NoError(t, err, "%s %s - unexpected error reading configCmd output", configCmd.Name(), args)
 		outStr := string(out)
-		assert.Equal(t, expected, outStr, "%s %s - output", command.Name(), args)
+		assert.Equal(t, expected, outStr, "%s %s - output", configCmd.Name(), args)
 	})
 }
 
@@ -464,16 +496,15 @@ func (s *ConfigTestSuite) TestConfigChanged() {
 	}
 	for _, tc := range equalAllTests {
 		s.T().Run(tc.name, func(t *testing.T) {
-			b := bytes.NewBufferString("")
-			command := cmd.ConfigCmd()
-			command.SetArgs(tc.args)
-			command.SetOut(b)
-			err := command.ExecuteContext(*s.Context)
-			require.NoError(t, err, "%s %s - unexpected error executing command", command.Name(), tc.args)
+			configCmd := s.getConfigCmd()
+			configCmd.SetArgs(tc.args)
+			b := applyMockIOOutErr(configCmd)
+			err := configCmd.Execute()
+			require.NoError(t, err, "%s %s - unexpected error executing configCmd", configCmd.Name(), tc.args)
 			out, err := ioutil.ReadAll(b)
-			require.NoError(t, err, "%s %s - unexpected error reading command output", command.Name(), tc.args)
+			require.NoError(t, err, "%s %s - unexpected error reading configCmd output", configCmd.Name(), tc.args)
 			outStr := string(out)
-			assert.Equal(t, tc.out, outStr, "%s %s - output", command.Name(), tc.args)
+			assert.Equal(t, tc.out, outStr, "%s %s - output", configCmd.Name(), tc.args)
 		})
 	}
 }
@@ -506,16 +537,15 @@ func (s *ConfigTestSuite) TestConfigSetValidation() {
 			expected := fmt.Sprintf("%s\n%s\n",
 				tc.out,
 				"Error: one or more issues encountered; no configuration values have been updated")
-			b := bytes.NewBufferString("")
-			command := cmd.ConfigCmd()
-			command.SetArgs(tc.args)
-			command.SetOut(b)
-			err := command.ExecuteContext(*s.Context)
-			require.NoError(t, err, "%s %s unexpected error executing command", command.Name(), tc.args)
+			configCmd := s.getConfigCmd()
+			configCmd.SetArgs(tc.args)
+			b := applyMockIOOutErr(configCmd)
+			err := configCmd.Execute()
+			require.NoError(t, err, "%s %s unexpected error executing configCmd", configCmd.Name(), tc.args)
 			out, rerr := ioutil.ReadAll(b)
-			require.NoError(t, rerr, "%s %s unexpected error reading output", command.Name(), tc.args)
+			require.NoError(t, rerr, "%s %s unexpected error reading output", configCmd.Name(), tc.args)
 			outStr := string(out)
-			assert.Equal(t, expected, outStr, "%s %s output", command.Name(), tc.args)
+			assert.Equal(t, expected, outStr, "%s %s output", configCmd.Name(), tc.args)
 		})
 	}
 }
@@ -632,14 +662,13 @@ func (s *ConfigTestSuite) TestConfigCmdSet() {
 		s.T().Run(tc.name+" (with set arg)", func(t *testing.T) {
 			expectedInOut := s.makeKeyUpdatedLine(tc.name, tc.oldVal, tc.newVal)
 			args := []string{"set", tc.name, strings.Trim(tc.newVal, "\"")}
-			command := cmd.ConfigCmd()
-			command.SetArgs(args)
-			b := bytes.NewBufferString("")
-			command.SetOut(b)
-			err := command.ExecuteContext(*s.Context)
-			require.NoError(t, err, "%s %s - unexpected error in execution", command.Name(), args)
+			configCmd := s.getConfigCmd()
+			configCmd.SetArgs(args)
+			b := applyMockIOOutErr(configCmd)
+			err := configCmd.Execute()
+			require.NoError(t, err, "%s %s - unexpected error in execution", configCmd.Name(), args)
 			out, rerr := ioutil.ReadAll(b)
-			require.NoError(t, rerr, "%s %s - unexpected error in reading", command.Name(), args)
+			require.NoError(t, rerr, "%s %s - unexpected error in reading", configCmd.Name(), args)
 			outStr := string(out)
 			for _, re := range tc.toMatch {
 				isMatch := re.Match(out)
@@ -685,35 +714,40 @@ func (s *ConfigTestSuite) TestConfigSetMulti() {
 		},
 		{
 			name: "two of each",
-			args: []string{"set", "consensus.timeout_commit", "950ms", "api.enable", "true", "telemetry.service-name", "blocky", "node", "tcp://127.0.0.1:26657", "output", "json", "log_format", "json"},
+			args: []string{"set",
+				"consensus.timeout_commit", "950ms",
+				"api.enable", "true",
+				"telemetry.service-name", "blocky",
+				"node", "tcp://localhost:26657",
+				"output", "text",
+				"log_format", "plain"},
 			out: s.makeMultiLine(
 				s.makeAppConfigUpdateLines(),
 				s.makeKeyUpdatedLine("api.enable", "false", "true"),
 				s.makeKeyUpdatedLine("telemetry.service-name", `""`, `"blocky"`),
 				"",
 				s.makeTMConfigUpdateLines(),
-				s.makeKeyUpdatedLine("log_format", `"plain"`, `"json"`),
+				s.makeKeyUpdatedLine("log_format", `"json"`, `"plain"`),
 				s.makeKeyUpdatedLine("consensus.timeout_commit", `"1s"`, `"950ms"`),
 				"",
 				s.makeClientConfigUpdateLines(),
-				s.makeKeyUpdatedLine("node", `"tcp://localhost:26657"`, `"tcp://127.0.0.1:26657"`),
-				s.makeKeyUpdatedLine("output", `"text"`, `"json"`),
+				s.makeKeyUpdatedLine("node", `"tcp://127.0.0.1:26657"`, `"tcp://localhost:26657"`),
+				s.makeKeyUpdatedLine("output", `"json"`, `"text"`),
 				""),
 		},
 	}
 
 	for _, tc := range tests {
 		s.T().Run(tc.name, func(t *testing.T) {
-			b := bytes.NewBufferString("")
-			command := cmd.ConfigCmd()
-			command.SetArgs(tc.args)
-			command.SetOut(b)
-			err := command.ExecuteContext(*s.Context)
-			require.NoError(t, err, "%s %s - unexpected error in execution", command.Name(), tc.args)
+			configCmd := s.getConfigCmd()
+			configCmd.SetArgs(tc.args)
+			b := applyMockIOOutErr(configCmd)
+			err := configCmd.Execute()
+			require.NoError(t, err, "%s %s - unexpected error in execution", configCmd.Name(), tc.args)
 			out, rerr := ioutil.ReadAll(b)
-			require.NoError(t, rerr, "%s %s - unexpected error in reading", command.Name(), tc.args)
+			require.NoError(t, rerr, "%s %s - unexpected error in reading", configCmd.Name(), tc.args)
 			outStr := string(out)
-			assert.Equal(t, tc.out, outStr, "%s %s output", command.Name(), tc.args)
+			assert.Equal(t, tc.out, outStr, "%s %s output", configCmd.Name(), tc.args)
 		})
 	}
 }
