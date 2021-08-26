@@ -45,7 +45,14 @@ func UnpackConfig(cmd *cobra.Command) error {
 // returns true if using the packed config.
 // returns false if using the unpacked multiple config files.
 func IsPacked(cmd *cobra.Command) bool {
-	_, err := os.Stat(GetFullPathToPackedConf(cmd))
+	return FileExists(GetFullPathToPackedConf(cmd))
+}
+
+// FileExists returns true if there is no error getting stat info of the file.
+// Even returns false if os.IsNotExist(err) is false.
+// I.e. if the file exists but isn't readable, this will still return false.
+func FileExists(fullFilePath string) bool {
+	_, err := os.Stat(fullFilePath)
 	return err == nil
 }
 

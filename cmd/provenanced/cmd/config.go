@@ -23,8 +23,6 @@ const (
 	tmConfigLead = "Tendermint Config"
 	// clientConfigLead is a string used at the start of an output header for a client config section.
 	clientConfigLead = "Client Config"
-	// packedIndicator is a string used in headers to indicate that a config is packed.
-	packedIndicator = "(packed)"
 	// addedLeadUpdated is an added lead for a header to indicate that the section represents updates.
 	addedLeadUpdated = "Updated"
 	// addedLeadChanged is an added lead for a header to indicate that the section represents values different from their defaults.
@@ -567,7 +565,7 @@ func makeUpdatedFieldMapString(m provconfig.UpdatedFieldMap, stringer func(v pro
 }
 
 // makeSectionHeaderString creates a string to use as a section header in output.
-func makeSectionHeaderString(lead, addedLead, filename string) string {
+func makeSectionHeaderString(lead, addedLead, filename string, isPacked bool) string {
 	var sb strings.Builder
 	sb.WriteString(lead)
 	if len(addedLead) > 0 {
@@ -578,7 +576,15 @@ func makeSectionHeaderString(lead, addedLead, filename string) string {
 	hr := strings.Repeat("-", sb.Len())
 	if len(filename) > 0 {
 		sb.WriteByte(' ')
-		sb.WriteString(filename)
+		switch {
+		case isPacked:
+			sb.WriteString("(packed)")
+		case !provconfig.FileExists(filename):
+			sb.WriteString("(defaults)")
+		default:
+			sb.WriteString(filename)
+		}
+		sb.WriteString(" (or env)")
 		hr += "-----"
 	}
 	sb.WriteByte('\n')
@@ -588,26 +594,17 @@ func makeSectionHeaderString(lead, addedLead, filename string) string {
 
 // makeAppConfigHeader creates a section header string for app config stuff.
 func makeAppConfigHeader(cmd *cobra.Command, addedLead string, isPacked bool) string {
-	if isPacked {
-		return makeSectionHeaderString(appConfigLead, addedLead, packedIndicator)
-	}
-	return makeSectionHeaderString(appConfigLead, addedLead, provconfig.GetFullPathToAppConf(cmd))
+	return makeSectionHeaderString(appConfigLead, addedLead, provconfig.GetFullPathToAppConf(cmd), isPacked)
 }
 
 // makeTmConfigHeader creates a section header string for tendermint config stuff.
 func makeTmConfigHeader(cmd *cobra.Command, addedLead string, isPacked bool) string {
-	if isPacked {
-		return makeSectionHeaderString(tmConfigLead, addedLead, packedIndicator)
-	}
-	return makeSectionHeaderString(tmConfigLead, addedLead, provconfig.GetFullPathToTmConf(cmd))
+	return makeSectionHeaderString(tmConfigLead, addedLead, provconfig.GetFullPathToTmConf(cmd), isPacked)
 }
 
 // makeClientConfigHeader creates a section header string for client config stuff.
 func makeClientConfigHeader(cmd *cobra.Command, addedLead string, isPacked bool) string {
-	if isPacked {
-		return makeSectionHeaderString(clientConfigLead, addedLead, packedIndicator)
-	}
-	return makeSectionHeaderString(clientConfigLead, addedLead, provconfig.GetFullPathToClientConf(cmd))
+	return makeSectionHeaderString(clientConfigLead, addedLead, provconfig.GetFullPathToClientConf(cmd), isPacked)
 }
 
 // makeConfigIsPackedLine creates a line indicating that the config is packed (and where to find it).
