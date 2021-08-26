@@ -168,7 +168,7 @@ func SaveConfigs(
 
 // writeUnpackedConfig writes the provided configs to their files.
 // Any config parameter provided as nil will be skipped.
-// Any errors encountered will result in a panic.
+// Any errors encountered will result in a panic or exit.
 func writeUnpackedConfig(
 	cmd *cobra.Command,
 	appConfig *serverconfig.Config,
