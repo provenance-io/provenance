@@ -4,7 +4,6 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -62,7 +61,7 @@ var handlers = map[string]appUpgrade{
 			}
 			app.BankKeeper.SetDenomMetaData(ctx, nhash)
 
-			if types.GetConfig().GetBech32AccountAddrPrefix() == AccountAddressPrefixTestNet {
+			if sdk.GetConfig().GetBech32AccountAddrPrefix() == AccountAddressPrefixTestNet {
 				s, ok := app.ParamsKeeper.GetSubspace(wasmtypes.DefaultParamspace)
 				if !ok {
 					panic("could not get wasm module parameter configuration")
