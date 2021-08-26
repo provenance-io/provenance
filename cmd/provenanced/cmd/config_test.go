@@ -92,7 +92,7 @@ func (s ConfigTestSuite) getConfigCmd() *cobra.Command {
 	configCmd.SetArgs([]string{"--help"})
 	applyMockIODiscardOutErr(configCmd)
 	configCmd, err := configCmd.ExecuteContextC(*s.Context)
-	s.Require().NoError(err, "root help command to set context")
+	s.Require().NoError(err, "config help command to set context")
 	// Now this should work to load the defaults (or files) into the cmd.
 	s.Require().NoError(
 		provconfig.LoadConfigFromFiles(configCmd),
