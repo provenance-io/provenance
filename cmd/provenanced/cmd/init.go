@@ -27,6 +27,7 @@ import (
 
 	"github.com/provenance-io/provenance/app"
 	provconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
 	tmos "github.com/tendermint/tendermint/libs/os"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
@@ -230,6 +231,18 @@ func createAndExportGenesisFile(
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &stakingGenState)
 		stakingGenState.Params.MaxValidators = 100
 		appGenState[moduleName] = cdc.MustMarshalJSON(&stakingGenState)
+	}
+
+	// [a-zA-Z][a-zA-Z0-9\-\.]{7,64}
+	// Set the marker unrestricted denom regex.
+	// This is different from DefaultUnrestrictedDenomRegex.
+	// That variable isn't updated because then the default test denom/bond ("stake") doesn't pass and all sorts of tests needs fixing.
+	{
+		moduleName := markertypes.ModuleName
+		var markerGenState markertypes.GenesisState
+		cdc.MustUnmarshalJSON(appGenState[moduleName], &markerGenState)
+		markerGenState.Params.UnrestrictedDenomRegex = `[a-zA-Z][a-zA-Z0-9\-\.]{7,64}`
+		appGenState[moduleName] = cdc.MustMarshalJSON(&markerGenState)
 	}
 
 	appState, err := json.MarshalIndent(appGenState, "", "")
