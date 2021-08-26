@@ -37,8 +37,8 @@ func MakeFieldValueMap(obj interface{}, fillNilsWithZero bool) FieldValueMap {
 	return getFieldValueMap(reflect.ValueOf(obj), fillNilsWithZero)
 }
 
-// getFieldValueMap does all the heavy lifting for getFieldValueMap.
-// Most of the time, you'll want to use getFieldValueMap instead of this.
+// getFieldValueMap does all the heavy lifting for MakeFieldValueMap.
+// Most of the time, you'll want to use MakeFieldValueMap instead of this.
 // This operates using reflect.Value objects instead of interface{}.
 func getFieldValueMap(valIn reflect.Value, fillNilsWithZero bool) FieldValueMap {
 	keys := FieldValueMap{}
@@ -79,7 +79,7 @@ func getFieldValueMap(valIn reflect.Value, fillNilsWithZero bool) FieldValueMap 
 
 // getFieldName gets the field name and whether or not it needs a squashing.
 // The name returned will always be all lowercase.
-// If there is a mapstructure tag, an the name in there isn't "" or "-", then that name is used.
+// If there is a mapstructure tag, and the name in there isn't "" or "-", then that name is used.
 // Otherwise, field.Name is used.
 // A field needs squashing only if requested in the mapstruct tag for the field.
 func getFieldName(field reflect.StructField) (string, bool) {
@@ -127,7 +127,7 @@ func (m FieldValueMap) Has(key string) bool {
 	return ok
 }
 
-// GetSortedKeys gets the keys of this FieldValueMap and sorts them using SortKeys.
+// GetSortedKeys gets the keys of this FieldValueMap and sorts them using sortKeys.
 func (m FieldValueMap) GetSortedKeys() []string {
 	rv := make([]string, 0, len(m))
 	for k := range m {
@@ -476,7 +476,7 @@ func (m UpdatedFieldMap) AddOrUpdateEntriesFrom(maps ...UpdatedFieldMap) {
 	}
 }
 
-// GetSortedKeys gets the keys of this UpdatedFieldMap and sorts them using SortKeys.
+// GetSortedKeys gets the keys of this UpdatedFieldMap and sorts them using sortKeys.
 func (m UpdatedFieldMap) GetSortedKeys() []string {
 	rv := make([]string, 0, len(m))
 	for k := range m {
@@ -485,7 +485,7 @@ func (m UpdatedFieldMap) GetSortedKeys() []string {
 	return sortKeys(rv)
 }
 
-// SortKeys sorts the provided keys slice.
+// sortKeys sorts the provided keys slice.
 // Base keys are put first and sorted alphabetically
 // followed by keys in sub-configs sorted alphabetically.
 func sortKeys(keys []string) []string {
