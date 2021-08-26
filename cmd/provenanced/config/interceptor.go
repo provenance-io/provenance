@@ -18,19 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 )
 
-// InterceptConfigsPreRunHandler performs a pre-run function for the root daemon
-// application command. It will create a Viper literal and a default server
-// Context. The server Tendermint configuration will either be read and parsed
-// or created and saved to disk, where the server Context is updated to reflect
-// the Tendermint configuration. It takes custom app config template and config
-// settings to create a custom Tendermint configuration. If the custom template
-// is empty, it uses default-template provided by the server. The Viper literal
-// is used to read and parse the application configuration. Command handlers can
-// fetch the server Context to get the Tendermint configuration or to get access
-// to Viper.
-// NOTE: This function is duplicated here from the SDK due to forced override of ENV
-// prefix using the binary name which breaks provenanced configuration.
-
 // InterceptConfigsPreRunHandler performs a pre-run function for all commands.
 // It will finish setting up the client context and create the server context.
 // It will create a Viper literal and the configs will be read and parsed or created from defaults.
@@ -116,9 +103,4 @@ func bindFlagsAndEnv(cmd *cobra.Command, v *viper.Viper) (err error) {
 	})
 
 	return err
-}
-
-// NewDefaultReplacer creates a new strings.Replacer using some default replacements.
-func NewDefaultReplacer() *strings.Replacer {
-	return strings.NewReplacer(".", "_", "-", "_")
 }
