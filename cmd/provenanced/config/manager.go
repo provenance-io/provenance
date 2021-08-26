@@ -286,6 +286,7 @@ func generateAndWritePackedConfig(
 		cmd.Printf("Packed config:\n%s\n", packedJSON)
 	}
 	packedFile := GetFullPathToPackedConf(cmd)
+	//nolint:gosec // The config files written by all the other stuff have these same permissions.
 	err = os.WriteFile(packedFile, packedJSON, 0644)
 	if err != nil {
 		panic(err)
