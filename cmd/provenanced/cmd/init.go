@@ -233,10 +233,10 @@ func createAndExportGenesisFile(
 		appGenState[moduleName] = cdc.MustMarshalJSON(&stakingGenState)
 	}
 
-	// [a-zA-Z][a-zA-Z0-9\-\.]{7,64}
 	// Set the marker unrestricted denom regex.
 	// This is different from DefaultUnrestrictedDenomRegex.
-	// That variable isn't updated because then the default test denom/bond ("stake") doesn't pass and all sorts of tests needs fixing.
+	// That variable isn't updated because then the default test denom/bond ("stake")
+	// doesn't pass and all sorts of tests needs fixing.
 	{
 		moduleName := markertypes.ModuleName
 		var markerGenState markertypes.GenesisState
