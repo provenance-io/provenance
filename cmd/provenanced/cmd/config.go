@@ -329,23 +329,6 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
 	tmUpdates := provconfig.UpdatedFieldMap{}
 	clientUpdates := provconfig.UpdatedFieldMap{}
 	for i, key := range keys {
-		// Bug: As of Cosmos 0.43 (and 2021-08-16), the app config's index-events configuration value isn't properly marshaled into the config.
-		// For example,
-		//   appConfig.IndexEvents = []string{"a", "b"}
-		//   serverconfig.WriteConfigFile(filename, appConfig)
-		// works without error but the configuration file will have
-		//   index-events = [a b]
-		// instead of what is needed:
-		//   index-events = ["a", "b"]
-		// This results in that config file being invalid and no longer loadable:
-		//   failed to merge configuration: While parsing config: (61, 17): no value can start with a
-		// So for now, if someone requests the setting of that field, return an error with some helpful info.
-		if key == "index-events" {
-			cmd.Printf("The index-events list cannot be set with this command. It can be manually updated in %s\n",
-				provconfig.GetFullPathToAppConf(cmd))
-			issueFound = true
-			continue
-		}
 		var confMap provconfig.FieldValueMap
 		foundIn := entryNotFound
 		for fvmi, fvm := range []provconfig.FieldValueMap{appFields, tmFields, clientFields} {
