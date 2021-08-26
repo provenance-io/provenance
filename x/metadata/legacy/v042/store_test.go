@@ -116,7 +116,7 @@ func (s *MigrateTestSuite) InitGenesisLegacy(ctx sdk.Context, data *types.Genesi
 }
 
 func (s *MigrateTestSuite) TestMigrateOSLocatorKeys() {
-	err := v042.MigrateOSLocatorKeys(s.ctx, s.app.GetKey("metadata"), types.ModuleCdc)
+	err := v042.MigrateOSLocatorKeys(s.ctx, s.app.GetKey("metadata"))
 	s.Assert().NoError(err)
 	store := s.ctx.KVStore(s.app.GetKey(types.ModuleName))
 	for _, locator := range s.osLocators {
@@ -141,7 +141,7 @@ func (s *MigrateTestSuite) TestMigrateOSLocatorKeys() {
 }
 
 func (s *MigrateTestSuite) TestMigrateAddressScopeCacheKey() {
-	err := v042.MigrateAddressScopeCacheKey(s.ctx, s.app.GetKey("metadata"), types.ModuleCdc)
+	err := v042.MigrateAddressScopeCacheKey(s.ctx, s.app.GetKey("metadata"))
 	s.Assert().NoError(err)
 	store := s.ctx.KVStore(s.app.GetKey(types.ModuleName))
 	key := v042.GetAddressScopeCacheKeyLegacy(s.user1Addr, s.scopeMetaaddrs[0])
@@ -169,7 +169,7 @@ func (s *MigrateTestSuite) TestMigrateAddressScopeCacheKey() {
 }
 
 func (s *MigrateTestSuite) TestMigrateValueOwnerScopeCacheKey() {
-	err := v042.MigrateValueOwnerScopeCacheKey(s.ctx, s.app.GetKey("metadata"), types.ModuleCdc)
+	err := v042.MigrateValueOwnerScopeCacheKey(s.ctx, s.app.GetKey("metadata"))
 	s.Assert().NoError(err)
 	store := s.ctx.KVStore(s.app.GetKey(types.ModuleName))
 	key := v042.GetValueOwnerScopeCacheKeyLegacy(s.user1Addr, s.scopeMetaaddrs[0])
@@ -197,7 +197,7 @@ func (s *MigrateTestSuite) TestMigrateValueOwnerScopeCacheKey() {
 }
 
 func (s *MigrateTestSuite) TestMigrateAddressScopeSpecCacheKey() {
-	err := v042.MigrateAddressScopeSpecCacheKey(s.ctx, s.app.GetKey("metadata"), types.ModuleCdc)
+	err := v042.MigrateAddressScopeSpecCacheKey(s.ctx, s.app.GetKey("metadata"))
 	s.Assert().NoError(err)
 	store := s.ctx.KVStore(s.app.GetKey(types.ModuleName))
 	key := v042.GetAddressScopeSpecCacheKeyLegacy(s.user1Addr, s.scopeSpecMetaaddrs[0])
@@ -225,7 +225,7 @@ func (s *MigrateTestSuite) TestMigrateAddressScopeSpecCacheKey() {
 }
 
 func (s *MigrateTestSuite) TestMigrateAddressContractSpecCacheKey() {
-	err := v042.MigrateAddressContractSpecCacheKey(s.ctx, s.app.GetKey("metadata"), types.ModuleCdc)
+	err := v042.MigrateAddressContractSpecCacheKey(s.ctx, s.app.GetKey("metadata"))
 	s.Assert().NoError(err)
 	store := s.ctx.KVStore(s.app.GetKey(types.ModuleName))
 	key := v042.GetAddressContractSpecCacheKeyLegacy(s.user1Addr, s.contractSpecMetaaddrs[0])

@@ -17,5 +17,6 @@ func NewMigrator(keeper Keeper) Migrator {
 
 // Migrate1to2 migrates from version 1 to 2.
 func (m *Migrator) Migrate1to2(ctx sdk.Context) error {
-	return v042.MigrateAddressLength(ctx, m.keeper.storeKey, m.keeper.cdc)
+	ctx.Logger().Info("Migrating Name Module from Version 1 to 2")
+	return v042.MigrateAddresses(ctx, m.keeper.storeKey)
 }

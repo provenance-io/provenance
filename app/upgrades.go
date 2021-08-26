@@ -68,7 +68,29 @@ var handlers = map[string]appUpgrade{
 			s.Set(ctx, wasmtypes.ParamStoreKeyUploadAccess, wasmtypes.AccessTypeNobody.With(sdk.AccAddress{}))
 
 			fromVM := map[string]uint64{
-				"ibc":       1,
+				"auth":         1,
+				"authz":        1,
+				"bank":         1,
+				"capability":   1,
+				"crisis":       1,
+				"distribution": 1,
+				"evidence":     1,
+				"feegrant":     1,
+				"genutil":      1,
+				"gov":          1,
+				"ibc":          1,
+				"mint":         1,
+				"params":       1,
+				"slashing":     1,
+				"staking":      1,
+				"transfer":     1,
+				"upgrade":      1,
+				"vesting":      1,
+
+				// cosmwasm module
+				"wasm": 1,
+
+				// provenance modules
 				"attribute": 1,
 				"marker":    1,
 				"metadata":  1,
