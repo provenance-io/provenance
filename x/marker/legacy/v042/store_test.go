@@ -74,7 +74,7 @@ func (s *MigrateTestSuite) InitGenesisLegacy(ctx sdk.Context, app *app.App) erro
 }
 
 func (s *MigrateTestSuite) TestMigrateMarkerAddressKeys() {
-	err := v042.MigrateMarkerAddressKeys(s.ctx, s.app.GetKey(types.ModuleName), types.ModuleCdc)
+	err := v042.MigrateMarkerAddressKeys(s.ctx, s.app.GetKey(types.ModuleName))
 	s.Assert().NoError(err)
 	store := s.ctx.KVStore(s.app.GetKey(types.ModuleName))
 	for _, marker := range s.markers {

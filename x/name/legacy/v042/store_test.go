@@ -103,7 +103,7 @@ func InitGenesisLegacy(ctx sdk.Context, data *types.GenesisState, app *app.App) 
 }
 
 func (s *MigrateTestSuite) TestMigrateTestSuite() {
-	v042.MigrateAddresses(s.ctx, s.app.GetKey("name"), types.ModuleCdc)
+	v042.MigrateAddresses(s.ctx, s.app.GetKey("name"))
 	store := s.ctx.KVStore(s.app.GetKey(types.ModuleName))
 	for _, name := range s.names {
 		// Should have removed attribute at legacy key
