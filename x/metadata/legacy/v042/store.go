@@ -1,33 +1,32 @@
 package v042
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
-func MigrateAddresses(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec) error {
-	err := MigrateOSLocatorKeys(ctx, storeKey, cdc)
+func MigrateAddresses(ctx sdk.Context, storeKey sdk.StoreKey) error {
+	err := MigrateOSLocatorKeys(ctx, storeKey)
 	if err != nil {
 		return err
 	}
-	err = MigrateAddressScopeCacheKey(ctx, storeKey, cdc)
+	err = MigrateAddressScopeCacheKey(ctx, storeKey)
 	if err != nil {
 		return err
 	}
-	err = MigrateValueOwnerScopeCacheKey(ctx, storeKey, cdc)
+	err = MigrateValueOwnerScopeCacheKey(ctx, storeKey)
 	if err != nil {
 		return err
 	}
-	err = MigrateAddressScopeSpecCacheKey(ctx, storeKey, cdc)
+	err = MigrateAddressScopeSpecCacheKey(ctx, storeKey)
 	if err != nil {
 		return err
 	}
-	return MigrateAddressContractSpecCacheKey(ctx, storeKey, cdc)
+	return MigrateAddressContractSpecCacheKey(ctx, storeKey)
 }
 
-func MigrateOSLocatorKeys(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec) error {
+func MigrateOSLocatorKeys(ctx sdk.Context, storeKey sdk.StoreKey) error {
 	store := ctx.KVStore(storeKey)
 	oldStore := prefix.NewStore(store, OSLocatorAddressKeyPrefixLegacy)
 
@@ -36,7 +35,7 @@ func MigrateOSLocatorKeys(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.Bina
 
 	for ; oldStoreIter.Valid(); oldStoreIter.Next() {
 		var osLocator types.ObjectStoreLocator
-		err := cdc.UnmarshalInterface(oldStoreIter.Value(), &osLocator)
+		err := types.ModuleCdc.UnmarshalInterface(oldStoreIter.Value(), &osLocator)
 		if err != nil {
 			return err
 		}
@@ -47,7 +46,7 @@ func MigrateOSLocatorKeys(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.Bina
 
 		newStoreKey := types.GetOSLocatorKey(legacyAddress)
 
-		bz, err := cdc.Marshal(&osLocator)
+		bz, err := types.ModuleCdc.Marshal(&osLocator)
 		if err != nil {
 			return err
 		}
@@ -58,7 +57,7 @@ func MigrateOSLocatorKeys(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.Bina
 	return nil
 }
 
-func MigrateAddressScopeCacheKey(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec) error {
+func MigrateAddressScopeCacheKey(ctx sdk.Context, storeKey sdk.StoreKey) error {
 	store := ctx.KVStore(storeKey)
 	oldStore := prefix.NewStore(store, AddressScopeCacheKeyPrefixLegacy)
 
@@ -79,7 +78,7 @@ func MigrateAddressScopeCacheKey(ctx sdk.Context, storeKey sdk.StoreKey, cdc cod
 	return nil
 }
 
-func MigrateValueOwnerScopeCacheKey(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec) error {
+func MigrateValueOwnerScopeCacheKey(ctx sdk.Context, storeKey sdk.StoreKey) error {
 	store := ctx.KVStore(storeKey)
 	oldStore := prefix.NewStore(store, ValueOwnerScopeCacheKeyPrefixLegacy)
 
@@ -100,7 +99,7 @@ func MigrateValueOwnerScopeCacheKey(ctx sdk.Context, storeKey sdk.StoreKey, cdc 
 	return nil
 }
 
-func MigrateAddressScopeSpecCacheKey(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec) error {
+func MigrateAddressScopeSpecCacheKey(ctx sdk.Context, storeKey sdk.StoreKey) error {
 	store := ctx.KVStore(storeKey)
 	oldStore := prefix.NewStore(store, AddressScopeSpecCacheKeyPrefixLegacy)
 
@@ -121,7 +120,7 @@ func MigrateAddressScopeSpecCacheKey(ctx sdk.Context, storeKey sdk.StoreKey, cdc
 	return nil
 }
 
-func MigrateAddressContractSpecCacheKey(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec) error {
+func MigrateAddressContractSpecCacheKey(ctx sdk.Context, storeKey sdk.StoreKey) error {
 	store := ctx.KVStore(storeKey)
 	oldStore := prefix.NewStore(store, AddressContractSpecCacheKeyPrefixLegacy)
 
