@@ -47,7 +47,7 @@ is a useful starting point.
 
 Developers can use a local checkout and the make targets `make run` and `make localnet-start` to run a local development network.
 
-Note: Requires [Go 1.16+](https://golang.org/dl/)
+Note: Requires [Go 1.17+](https://golang.org/dl/)
 
 
 ## Active Networks
