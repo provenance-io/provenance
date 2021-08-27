@@ -1,13 +1,12 @@
 package v042
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
-func MigrateMarkerAddressKeys(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec) error {
+func MigrateMarkerAddressKeys(ctx sdk.Context, storeKey sdk.StoreKey) error {
 	store := ctx.KVStore(storeKey)
 	oldStore := prefix.NewStore(store, MarkerStoreKeyPrefixLegacy)
 

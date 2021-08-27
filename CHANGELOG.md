@@ -49,6 +49,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add `config` command to cli for client configuration [#394](https://github.com/provenance-io/provenance/issues/394)
 * Add updated wasmd for Cosmos 0.43 [#409](https://github.com/provenance-io/provenance/issues/409)
 * Add Rosetta support and automated testing [#365](https://github.com/provenance-io/provenance/issues/365)
+* Update wasm parameters to only allow smart contracts to be uploaded with gov proposal [#440](https://github.com/provenance-io/provenance/issues/440)
 
 ### Bug Fixes
 
@@ -75,7 +76,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Updated to Cosmos SDK Release v0.43  [#154](https://github.com/provenance-io/provenance/issues/154)
 * Updated wasmd for Cosmos SDK Release v0.43 [#409](https://github.com/provenance-io/provenance/issues/409)
-  * CosmWasm wasmvm v0.16.0 [CHANGELOG](https://github.com/CosmWasm/wasmvm/blob/v0.16.0/CHANGELOG.md) 
+  * CosmWasm wasmvm v0.16.0 [CHANGELOG](https://github.com/CosmWasm/wasmvm/blob/v0.16.0/CHANGELOG.md)
   * CosmWasm cosmwasm v0.16.0 [CHANGELOG](https://github.com/CosmWasm/cosmwasm/blob/v0.16.0/CHANGELOG.md)
 * Updated to IBC-Go Module v1.0.1 [PR 445](https://github.com/provenance-io/provenance/pull/445)
 * Updated log message for circulation adjustment [#381](https://github.com/provenance-io/provenance/issues/381)
