@@ -1,17 +1,12 @@
 package v042
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/name/types"
 )
 
-func MigrateAddresses(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec) error {
-	return MigrateAddressLength(ctx, storeKey, cdc)
-}
-
-func MigrateAddressLength(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec) error {
+func MigrateAddresses(ctx sdk.Context, storeKey sdk.StoreKey) error {
 	store := ctx.KVStore(storeKey)
 	oldStore := prefix.NewStore(store, AddressKeyPrefixLegacy)
 
@@ -20,7 +15,7 @@ func MigrateAddressLength(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.Bina
 
 	for ; oldStoreIter.Valid(); oldStoreIter.Next() {
 		var nameRecord types.NameRecord
-		err := cdc.UnmarshalInterface(oldStoreIter.Value(), &nameRecord)
+		err := types.ModuleCdc.UnmarshalInterface(oldStoreIter.Value(), &nameRecord)
 		if err != nil {
 			return err
 		}

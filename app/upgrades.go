@@ -1,6 +1,7 @@
 package app
 
 import (
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -8,8 +9,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	ibcconnectiontypes "github.com/cosmos/ibc-go/modules/core/03-connection/types"
-
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 var (
@@ -29,52 +28,6 @@ type appUpgrade struct {
 }
 
 var handlers = map[string]appUpgrade{
-	"v0.2.0": {},
-	"v0.2.1": {
-		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
-			app.MarkerKeeper.SetParams(ctx, markertypes.DefaultParams())
-			return app.UpgradeKeeper.GetModuleVersionMap(ctx), nil
-		},
-	},
-	"v0.3.0": {},
-	"v1.0.0": {
-		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
-			app.NameKeeper.ConvertLegacyAmino(ctx)
-			app.AttributeKeeper.ConvertLegacyAmino(ctx)
-			return app.UpgradeKeeper.GetModuleVersionMap(ctx), nil
-		},
-	},
-	"v1.1.1":   {},
-	"amaranth": {}, // associated with v1.2.x upgrades in testnet, mainnet
-	"bluetiful": {
-		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
-			// Force default denom metadata for the bond denom
-			app.BankKeeper.SetDenomMetaData(ctx, banktypes.Metadata{
-				Description: "Hash is the staking token of the Provenance Blockchain",
-				Base:        "nhash",
-				Display:     "hash",
-				DenomUnits: []*banktypes.DenomUnit{
-					{
-						Denom:    "nhash",
-						Exponent: 0,
-						Aliases:  []string{},
-					},
-					{
-						Denom:    "hash",
-						Exponent: 9,
-						Aliases:  []string{},
-					},
-				},
-			})
-			// Force default unrestricted denom for markers to limit min length of 8 and allow ['.','-'] as separators.
-			app.MarkerKeeper.SetParams(ctx, markertypes.Params{
-				UnrestrictedDenomRegex: `[a-zA-Z][a-zA-Z0-9\-\.]{7,64}`,
-			})
-			return app.UpgradeKeeper.GetModuleVersionMap(ctx), nil
-		},
-	},
-	"citrine": {},
-	"desert":  {},
 	"eigengrau": {
 		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
 			app.IBCKeeper.ConnectionKeeper.SetParams(ctx, ibcconnectiontypes.DefaultParams())
@@ -108,8 +61,38 @@ var handlers = map[string]appUpgrade{
 			}
 			app.BankKeeper.SetDenomMetaData(ctx, nhash)
 
+			if sdk.GetConfig().GetBech32AccountAddrPrefix() == AccountAddressPrefixTestNet {
+				s, ok := app.ParamsKeeper.GetSubspace(wasmtypes.DefaultParamspace)
+				if !ok {
+					panic("could not get wasm module parameter configuration")
+				}
+				s.Set(ctx, wasmtypes.ParamStoreKeyUploadAccess, wasmtypes.AccessTypeNobody.With(sdk.AccAddress{}))
+			}
+
 			fromVM := map[string]uint64{
-				"ibc":       1,
+				"auth":         1,
+				"authz":        1,
+				"bank":         1,
+				"capability":   1,
+				"crisis":       1,
+				"distribution": 1,
+				"evidence":     1,
+				"feegrant":     1,
+				"genutil":      1,
+				"gov":          1,
+				"ibc":          1,
+				"mint":         1,
+				"params":       1,
+				"slashing":     1,
+				"staking":      1,
+				"transfer":     1,
+				"upgrade":      1,
+				"vesting":      1,
+
+				// cosmwasm module
+				"wasm": 1,
+
+				// provenance modules
 				"attribute": 1,
 				"marker":    1,
 				"metadata":  1,
