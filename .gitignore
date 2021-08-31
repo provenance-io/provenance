@@ -43,3 +43,6 @@ proto-tools-stamp
 
 #emacs tmp files
 .#*
+
+#direnv setup
+.envrc
