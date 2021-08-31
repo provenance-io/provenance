@@ -77,7 +77,7 @@ func ApplyClientConfigToContext(ctx client.Context, config *ClientConfig) (clien
 
 	keyring, krerr := client.NewKeyringFromBackend(ctx, config.KeyringBackend)
 	if krerr != nil {
-		return ctx, fmt.Errorf("couldn't get key ring: %v", krerr)
+		return ctx, fmt.Errorf("couldn't get key ring backend %s: %v", config.KeyringBackend, krerr)
 	}
 
 	ctx = ctx.WithKeyring(keyring)

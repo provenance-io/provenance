@@ -551,7 +551,11 @@ func applyConfigsToContexts(cmd *cobra.Command) error {
 		return err
 	}
 	if clientCtx, err = ApplyClientConfigToContext(clientCtx, clientConfig); err != nil {
-		return fmt.Errorf("could not apply client config to client context: %v", err)
+		f := GetFullPathToClientConf(cmd)
+		if IsPacked(cmd) {
+			f = GetFullPathToPackedConf(cmd)
+		}
+		return fmt.Errorf("could not apply client config %s to client context - it may need to be updated manually: %v", f, err)
 	}
 	if err = client.SetCmdClientContextHandler(clientCtx, cmd); err != nil {
 		return fmt.Errorf("could not update client context on command: %v", err)
