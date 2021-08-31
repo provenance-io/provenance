@@ -35,7 +35,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	vestingcli "github.com/cosmos/cosmos-sdk/x/auth/vesting/client/cli"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
@@ -76,17 +75,13 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			cmd.SetErr(cmd.ErrOrStderr())
 
 			initClientCtx = client.ReadHomeFlag(initClientCtx, cmd)
+			if err := client.SetCmdClientContext(cmd, initClientCtx); err != nil {
+				return err
+			}
+			if err := config.InterceptConfigsPreRunHandler(cmd); err != nil {
+				return err
+			}
 
-			var err error
-			if initClientCtx, err = config.ReadFromClientConfig(initClientCtx); err != nil {
-				return err
-			}
-			if err = client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
-				return err
-			}
-			if err = config.InterceptConfigsPreRunHandler(cmd, "", nil); err != nil {
-				return err
-			}
 			// set app context based on initialized EnvTypeFlag
 			testnet := server.GetServerContextFromCmd(cmd).Viper.GetBool(EnvTypeFlag)
 			app.SetConfig(testnet)
@@ -97,7 +92,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	overwriteFlagDefaults(rootCmd, map[string]string{
 		flags.FlagChainID:        ChainID,
 		flags.FlagKeyringBackend: "test",
-		server.FlagMinGasPrices:  "1905" + app.DefaultFeeDenom,
+		server.FlagMinGasPrices:  app.DefaultMinGasPrices,
 		// Override default value for coin-type to match our mainnet value.
 		CoinTypeFlag: fmt.Sprint(app.CoinTypeMainNet),
 	})
@@ -127,7 +122,7 @@ func Execute(rootCmd *cobra.Command) error {
 
 func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 	rootCmd.AddCommand(
-		InitCmd(app.ModuleBasics, app.DefaultNodeHome),
+		InitCmd(app.ModuleBasics),
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
 		genutilcli.GenTxCmd(app.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
 		genutilcli.ValidateGenesisCmd(app.ModuleBasics),
@@ -137,7 +132,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		tmcli.NewCompletionCmd(rootCmd, true),
 		testnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
-		ClientConfigCmd(),
+		ConfigCmd(),
 		AddMetaAddressCmd(),
 	)
 
@@ -202,7 +197,6 @@ func txCommand() *cobra.Command {
 		authcmd.GetEncodeCommand(),
 		authcmd.GetDecodeCommand(),
 		flags.LineBreak,
-		vestingcli.GetTxCmd(),
 	)
 
 	app.ModuleBasics.AddTxCommands(cmd)
@@ -260,8 +254,8 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 	} else {
 		// panic if there was a parse error (for example more than one coin was passed in for required fee).
 		if err != nil {
-			panic(fmt.Errorf("invalid min-gas-price value, expected single decimal coin value such as '0.0025%s', got '%s';\n\n %w",
-				app.DefaultFeeDenom,
+			panic(fmt.Errorf("invalid min-gas-price value, expected single decimal coin value such as '%s', got '%s';\n\n %w",
+				app.DefaultMinGasPrices,
 				appOpts.Get(server.FlagMinGasPrices),
 				err))
 		}

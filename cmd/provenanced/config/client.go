@@ -1,9 +1,8 @@
 package config
 
 import (
+	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
 
 	"github.com/cosmos/cosmos-sdk/client"
 )
@@ -25,8 +24,8 @@ type ClientConfig struct {
 	BroadcastMode  string `mapstructure:"broadcast-mode" json:"broadcast-mode"`
 }
 
-// defaultClientConfig returns the reference to ClientConfig with default values.
-func defaultClientConfig() *ClientConfig {
+// DefaultClientConfig returns the reference to ClientConfig with default values.
+func DefaultClientConfig() *ClientConfig {
 	return &ClientConfig{chainID, keyringBackend, output, node, broadcastMode}
 }
 
@@ -50,48 +49,48 @@ func (c *ClientConfig) SetBroadcastMode(broadcastMode string) {
 	c.BroadcastMode = broadcastMode
 }
 
-// ReadFromClientConfig reads values from client.toml file and updates them in client Context
-func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
-	configPath := filepath.Join(ctx.HomeDir, "config")
-	configFilePath := filepath.Join(configPath, "client.toml")
-	conf := defaultClientConfig()
-
-	// if config.toml file does not exist we create it and write default ClientConfig values into it.
-	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
-		if err := ensureConfigPath(configPath); err != nil {
-			return ctx, fmt.Errorf("couldn't make client config: %v", err)
-		}
-
-		if err := WriteConfigToFile(configFilePath, conf); err != nil {
-			return ctx, fmt.Errorf("could not write client config to the file: %v", err)
-		}
+func (c ClientConfig) ValidateBasic() error {
+	switch c.KeyringBackend {
+	case "os", "file", "kwallet", "pass", "test", "memory":
+	default:
+		return errors.New("unknown keyring-backend (must be one of 'os', 'file', 'kwallet', 'pass', 'test', 'memory')")
 	}
-
-	conf, err := GetClientConfig(configPath, ctx.Viper)
-	if err != nil {
-		return ctx, fmt.Errorf("couldn't get client config: %v", err)
+	switch c.Output {
+	case "text", "json":
+	default:
+		return errors.New("unknown output (must be 'text' or 'json')")
 	}
+	switch c.BroadcastMode {
+	case "sync", "async", "block":
+	default:
+		return errors.New("unknown broadcast-mode (must be one of 'sync' 'async' 'block')")
+	}
+	return nil
+}
+
+// ApplyClientConfigToContext returns a client context after having the client config values applied to it.
+func ApplyClientConfigToContext(ctx client.Context, config *ClientConfig) (client.Context, error) {
 	// we need to update KeyringDir field on Client Context first cause it is used in NewKeyringFromBackend
-	ctx = ctx.WithOutputFormat(conf.Output).
-		WithChainID(conf.ChainID).
+	ctx = ctx.WithOutputFormat(config.Output).
+		WithChainID(config.ChainID).
 		WithKeyringDir(ctx.HomeDir)
 
-	keyring, err := client.NewKeyringFromBackend(ctx, conf.KeyringBackend)
-	if err != nil {
-		return ctx, fmt.Errorf("couldn't get key ring: %v", err)
+	keyring, krerr := client.NewKeyringFromBackend(ctx, config.KeyringBackend)
+	if krerr != nil {
+		return ctx, fmt.Errorf("couldn't get key ring backend %s: %v", config.KeyringBackend, krerr)
 	}
 
 	ctx = ctx.WithKeyring(keyring)
 
 	// https://github.com/cosmos/cosmos-sdk/issues/8986
-	client, err := client.NewClientFromNode(conf.Node)
-	if err != nil {
-		return ctx, fmt.Errorf("couldn't get client from nodeURI: %v", err)
+	clnt, nerr := client.NewClientFromNode(config.Node)
+	if nerr != nil {
+		return ctx, fmt.Errorf("couldn't get client from nodeURI: %v", nerr)
 	}
 
-	ctx = ctx.WithNodeURI(conf.Node).
-		WithClient(client).
-		WithBroadcastMode(conf.BroadcastMode)
+	ctx = ctx.WithNodeURI(config.Node).
+		WithClient(clnt).
+		WithBroadcastMode(config.BroadcastMode)
 
 	return ctx, nil
 }

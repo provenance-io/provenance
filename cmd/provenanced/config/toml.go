@@ -2,11 +2,9 @@ package config
 
 import (
 	"bytes"
-	"io/ioutil"
-	"os"
 	"text/template"
 
-	"github.com/spf13/viper"
+	tmos "github.com/tendermint/tendermint/libs/os"
 )
 
 const defaultConfigTemplate = `# This is a TOML config file.
@@ -28,43 +26,24 @@ node = "{{ .Node }}"
 broadcast-mode = "{{ .BroadcastMode }}"
 `
 
-// writeConfigToFile parses defaultConfigTemplate, renders config using the template and writes it to
-// configFilePath.
-func WriteConfigToFile(configFilePath string, config *ClientConfig) error {
+var configTemplate *template.Template
+
+func init() {
+	var err error
+	tmpl := template.New("clientConfigFileTemplate")
+	if configTemplate, err = tmpl.Parse(defaultConfigTemplate); err != nil {
+		panic(err)
+	}
+}
+
+// WriteConfigToFile creates the file contents using a template and the provided config
+// then writes the contents to the provided configFilePath.
+func WriteConfigToFile(configFilePath string, config *ClientConfig) {
 	var buffer bytes.Buffer
 
-	tmpl := template.New("clientConfigFileTemplate")
-	configTemplate, err := tmpl.Parse(defaultConfigTemplate)
-	if err != nil {
-		return err
-	}
-
 	if err := configTemplate.Execute(&buffer, config); err != nil {
-		return err
+		panic(err)
 	}
 
-	return ioutil.WriteFile(configFilePath, buffer.Bytes(), 0600)
-}
-
-// ensureConfigPath creates a directory configPath if it does not exist
-func ensureConfigPath(configPath string) error {
-	return os.MkdirAll(configPath, os.ModePerm)
-}
-
-// GetClientConfig reads values from client.toml file and unmarshalls them into ClientConfig
-func GetClientConfig(configPath string, v *viper.Viper) (*ClientConfig, error) {
-	v.AddConfigPath(configPath)
-	v.SetConfigName("client")
-	v.SetConfigType("toml")
-
-	if err := v.ReadInConfig(); err != nil {
-		return nil, err
-	}
-
-	conf := new(ClientConfig)
-	if err := v.Unmarshal(conf); err != nil {
-		return nil, err
-	}
-
-	return conf, nil
+	tmos.MustWriteFile(configFilePath, buffer.Bytes(), 0644)
 }

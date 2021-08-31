@@ -51,6 +51,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add updated wasmd for Cosmos 0.43 [#409](https://github.com/provenance-io/provenance/issues/409)
 * Add Rosetta support and automated testing [#365](https://github.com/provenance-io/provenance/issues/365)
 * Update wasm parameters to only allow smart contracts to be uploaded with gov proposal [#440](https://github.com/provenance-io/provenance/issues/440)
+* Update `config` command [#403](https://github.com/provenance-io/provenance/issues/403)
+  * Get and set any configuration field.
+  * Get or set multiple configuration fields in a single invocation.
+  * Easily identify fields with changed (non-default) values.
+  * Pack the configs into a single json file with only changed (non-default) values.
+  * Unpack the config back into the multiple config files (that also have documentation in them).
 
 ### Bug Fixes
 
@@ -67,6 +73,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Fix handling of optional fields in Metadata Write messages [#412](https://github.com/provenance-io/provenance/issues/412)
 * Fix cli marker new example is incorrect [#415](https://github.com/provenance-io/provenance/issues/415)
 * Fix home directory setup for app export [#457](https://github.com/provenance-io/provenance/issues/457)
+* Correct an error message that was providing an illegal amount of gas as an example [#425](https://github.com/provenance-io/provenance/issues/425)
 
 ### API Breaking
 
@@ -94,6 +101,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * Google UUID 1.3.0 [PR 446](https://github.com/provenance-io/provenance/pull/446)
   * GRPC 1.3.0 [PR 443](https://github.com/provenance-io/provenance/pull/443)
   * cast 1.4.1 [PR 442](https://github.com/provenance-io/provenance/pull/442)
+* Updated `provenanced init` for better testnet support and defaults [#403](https://github.com/provenance-io/provenance/issues/403)
 
 ## [v1.5.0](https://github.com/provenance-io/provenance/releases/tag/v1.5.0) - 2021-06-23
 
