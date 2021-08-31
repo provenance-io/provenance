@@ -72,6 +72,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Fix an encoding issue with the `--page-key` CLI arguments used in paged queries [#332](https://github.com/provenance-io/provenance/issues/332)
 * Fix handling of optional fields in Metadata Write messages [#412](https://github.com/provenance-io/provenance/issues/412)
 * Fix cli marker new example is incorrect [#415](https://github.com/provenance-io/provenance/issues/415)
+* Fix home directory setup for app export [#457](https://github.com/provenance-io/provenance/issues/457)
 * Correct an error message that was providing an illegal amount of gas as an example [#425](https://github.com/provenance-io/provenance/issues/425)
 
 ### API Breaking
