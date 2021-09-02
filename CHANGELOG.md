@@ -83,6 +83,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* Updated to Cosmos SDK Release v0.44 [#463](https://github.com/provenance-io/provenance/issues/463)
 * Updated to go 1.17 [#454](https://github.com/provenance-io/provenance/issues/454)
 * Updated to Cosmos SDK Release v0.43  [#154](https://github.com/provenance-io/provenance/issues/154)
 * Updated wasmd for Cosmos SDK Release v0.43 [#409](https://github.com/provenance-io/provenance/issues/409)
