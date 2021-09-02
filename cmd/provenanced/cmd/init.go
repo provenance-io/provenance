@@ -206,7 +206,7 @@ func createAndExportGenesisFile(
 		appGenState[moduleName] = cdc.MustMarshalJSON(&crisisGenState)
 	}
 
-	// Set the gov depost denom
+	// Set the gov deposit denom
 	{
 		moduleName := govtypes.ModuleName
 		var govGenState govtypes.GenesisState
