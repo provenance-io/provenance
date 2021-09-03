@@ -37,6 +37,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+## [v1.7.0](https://github.com/provenance-io/provenance/releases/tag/v1.7.0) - 2021-09-03
 ### Features
 
 * Marker governance proposal are supported in cli [#367](https://github.com/provenance-io/provenance/issues/367)
@@ -104,6 +105,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * cast 1.4.1 [PR 442](https://github.com/provenance-io/provenance/pull/442)
 * Updated `provenanced init` for better testnet support and defaults [#403](https://github.com/provenance-io/provenance/issues/403)
 * Fixed some example address to use the appropriate prefix [#453](https://github.com/provenance-io/provenance/issues/453)
+
+## [v1.6.0](https://github.com/provenance-io/provenance/releases/tag/v1.6.0) - 2021-08-23
+
+### Bug Fixes
+
+* Fix for creating non-coin type markers through governance addmarker proposals [#431](https://github.com/provenance-io/provenance/issues/431)
+* Upgrade handler migrates usdf.c to the right marker_type.
 
 ## [v1.5.0](https://github.com/provenance-io/provenance/releases/tag/v1.5.0) - 2021-06-23
 
