@@ -27,7 +27,7 @@ jobs:
         run: echo "::set-output name=version::${GITHUB_REF##*/}"
     outputs:
       version: ${{ steps.version.outputs.version }}
-      go_version: "1.15"
+      go_version: "1.17"
 
   build_osx:
     runs-on: macos-latest
