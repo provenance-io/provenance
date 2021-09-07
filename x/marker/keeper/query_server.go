@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -11,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/provenance-io/provenance/x/marker/types"
 )
@@ -81,32 +81,39 @@ func (k Keeper) Holding(c context.Context, req *types.QueryHoldingRequest) (*typ
 	if err != nil {
 		return nil, err
 	}
-	pageRequest := req.Pagination
-	// if the PageRequest is nil, use default PageRequest
-	if pageRequest == nil {
-		pageRequest = &query.PageRequest{}
-	}
 
-	// TODO: Refactor Holding for full pagination support. https://github.com/provenance-io/provenance/issues/400
-	balances := k.GetAllMarkerHolders(ctx, marker.GetDenom())
-	limit := pageRequest.Limit
-	if limit == 0 {
-		limit = defaultLimit
-	}
-	end := pageRequest.Offset + limit
-	totalResults := uint64(len(balances))
-
-	if pageRequest.Offset > totalResults {
-		return nil, fmt.Errorf("invalid offset")
-	}
-
-	if end > totalResults {
-		end = totalResults
+	denom := marker.GetDenom()
+	balancesStore := prefix.NewStore(ctx.KVStore(k.bankKeeperStoreKey), banktypes.BalancesPrefix)
+	var balances []types.Balance
+	pageRes, perr := query.FilteredPaginate(balancesStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		var coin sdk.Coin
+		if cerr := k.cdc.Unmarshal(value, &coin); cerr != nil {
+			return false, cerr
+		}
+		if coin.Denom != denom || coin.Amount.IsZero() {
+			return false, nil
+		}
+		if accumulate {
+			address, aerr := banktypes.AddressFromBalancesStore(key)
+			if aerr != nil {
+				k.Logger(ctx).With("key", key, "err", aerr).Error("failed to get address from balances store")
+				return true, aerr
+			}
+			balances = append(balances,
+				types.Balance{
+					Address: address.String(),
+					Coins:   sdk.NewCoins(coin),
+				})
+		}
+		return true, nil
+	})
+	if perr != nil {
+		return nil, perr
 	}
 
 	return &types.QueryHoldingResponse{
-		Balances:   balances[pageRequest.Offset:end],
-		Pagination: &query.PageResponse{Total: totalResults},
+		Balances:   balances,
+		Pagination: pageRes,
 	}, nil
 }
 
