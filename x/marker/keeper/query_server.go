@@ -15,8 +15,6 @@ import (
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
-const defaultLimit = 100
-
 var _ types.QueryServer = Keeper{}
 
 // Params queries params of distribution module
