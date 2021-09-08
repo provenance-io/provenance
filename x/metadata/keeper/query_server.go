@@ -910,7 +910,6 @@ func (k Keeper) OSLocator(c context.Context, request *types.OSLocatorRequest) (*
 func (k Keeper) OSLocatorsByURI(ctx context.Context, request *types.OSLocatorsByURIRequest) (*types.OSLocatorsByURIResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "OSLocatorsByURI")
 	retval := types.OSLocatorsByURIResponse{Request: request}
-
 	if request == nil {
 		return &retval, status.Error(codes.InvalidArgument, "empty request")
 	}
