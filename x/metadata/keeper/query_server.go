@@ -973,55 +973,24 @@ func (k Keeper) OSLocatorsByScope(ctx context.Context, request *types.OSLocators
 
 func (k Keeper) OSAllLocators(ctx context.Context, request *types.OSAllLocatorsRequest) (*types.OSAllLocatorsResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "OSAllLocators")
-	if request == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
 	retval := types.OSAllLocatorsResponse{Request: request}
-
-	ctxSDK := sdk.UnwrapSDKContext(ctx)
-
-	// Return value data structure.
-	var records []types.ObjectStoreLocator
-	// Handler that adds records if account address matches.
-	appendToRecords := func(record types.ObjectStoreLocator) bool {
-		records = append(records, record)
-		// have to get all the uri associated with an address..imo..check
-		return false
+	if request == nil {
+		return &retval, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	// TODO: Refactor OSAllLocators for full pagination support. https://github.com/provenance-io/provenance/issues/402
-	if err := k.IterateOSLocators(ctxSDK, appendToRecords); err != nil {
+	osLocatorStore := prefix.NewStore(sdk.UnwrapSDKContext(ctx).KVStore(k.storeKey), types.OSLocatorAddressKeyPrefix)
+	var err error
+	retval.Pagination, err = query.Paginate(osLocatorStore, request.Pagination, func(key []byte, value []byte) error {
+		record := types.ObjectStoreLocator{}
+		if rerr := k.cdc.Unmarshal(value, &record); rerr != nil {
+			return rerr
+		}
+		retval.Locators = append(retval.Locators, record)
+		return nil
+	})
+	if err != nil {
 		return &retval, err
 	}
-	if records == nil {
-		return &retval, types.ErrNoRecordsFound
-	}
-	uniqueRecords := uniqueRecords(records)
-
-	pageRequest := request.Pagination
-	// if the PageRequest is nil, use default PageRequest
-	if pageRequest == nil {
-		pageRequest = &query.PageRequest{}
-	}
-
-	limit := pageRequest.Limit
-	if limit == 0 {
-		limit = defaultLimit
-	}
-	end := pageRequest.Offset + limit
-	totalResults := uint64(len(uniqueRecords))
-
-	if pageRequest.Offset > totalResults {
-		return &retval, fmt.Errorf("invalid offset")
-	}
-
-	if end > totalResults {
-		end = totalResults
-	}
-
-	retval.Locators = uniqueRecords[pageRequest.Offset:end]
-	retval.Pagination = &query.PageResponse{Total: totalResults}
 
 	return &retval, nil
 }
