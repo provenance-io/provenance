@@ -944,7 +944,9 @@ func (k Keeper) OSLocatorsByURI(ctx context.Context, request *types.OSLocatorsBy
 	if err != nil {
 		return &retval, err
 	}
-
+	if len(retval.Locators) == 0 {
+		return &retval, types.ErrNoRecordsFound
+	}
 	return &retval, nil
 }
 
@@ -990,7 +992,9 @@ func (k Keeper) OSAllLocators(ctx context.Context, request *types.OSAllLocatorsR
 	if err != nil {
 		return &retval, err
 	}
-
+	if len(retval.Locators) == 0 {
+		return &retval, types.ErrNoRecordsFound
+	}
 	return &retval, nil
 }
 
