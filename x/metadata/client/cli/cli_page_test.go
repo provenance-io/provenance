@@ -42,6 +42,8 @@ type IntegrationCLIPageTestSuite struct {
 	user1Addr    sdk.AccAddress
 	user1AddrStr string
 
+	osLocatorURI string
+
 	scopeSpecCount    int
 	contractSpecCount int
 	recordSpecCount   int
@@ -49,6 +51,7 @@ type IntegrationCLIPageTestSuite struct {
 	sessionCount      int
 	recordCount       int
 	osLocatorCount    int
+	osLocatorURICount int
 
 	accountScopesOwned      int
 	user1ScopesOwned        int
@@ -257,6 +260,8 @@ func (s *IntegrationCLIPageTestSuite) SetupSuite() {
 	// Create 60 Object Store Locators
 	// i % 3 == 0 or 1: 40 of them with a unique URI
 	// i % 3 == 2: 20 of them with the URI https://provenance.io/
+	s.osLocatorURI = "https://provenance.io/"
+	s.osLocatorURICount = 0
 	for i := 0; i < 60; i++ {
 		addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()
 		osl := metadatatypes.ObjectStoreLocator{
@@ -268,7 +273,8 @@ func (s *IntegrationCLIPageTestSuite) SetupSuite() {
 		case 0, 1:
 			osl.LocatorUri = fmt.Sprintf("http://%s.corn", toClassName(toWritten(i)))
 		case 2:
-			osl.LocatorUri = "https://provenance.io/"
+			osl.LocatorUri = s.osLocatorURI
+			s.osLocatorURICount++
 		}
 		metadataData.ObjectStoreLocators = append(metadataData.ObjectStoreLocators, osl)
 	}
@@ -502,6 +508,20 @@ func (a recordSpecSorter) Swap(i, j int) {
 }
 func (a recordSpecSorter) Less(i, j int) bool {
 	return a[i].SpecificationId.Compare(a[j].SpecificationId) < 0
+}
+
+// recordSpecSorter implements sort.Interface for []metadatatypes.RecordSpecification
+// Sorts by .SpecificationId
+type osLocatorSorter []metadatatypes.ObjectStoreLocator
+
+func (a osLocatorSorter) Len() int {
+	return len(a)
+}
+func (a osLocatorSorter) Swap(i, j int) {
+	a[i], a[j] = a[j], a[i]
+}
+func (a osLocatorSorter) Less(i, j int) bool {
+	return a[i].Owner < a[j].Owner
 }
 
 func (s *IntegrationCLIPageTestSuite) TestScopesPagination() {
@@ -1324,6 +1344,151 @@ func (s *IntegrationCLIPageTestSuite) TestRecordSpecsPagination() {
 	})
 }
 
-// TODO: Add pagination test of GetOSLocatorCmd [uri] once metadata/keeper/query_server.go#OSLocatorsByURI is fixed: https://github.com/provenance-io/provenance/issues/401
-// TODO: Add pagination test of GetOSLocatorCmd "all" once metadata/keeper/query_server.go#OSAllLocators is fixed: https://github.com/provenance-io/provenance/issues/402
-// TODO: Add pagination test of GetMetadataGetAllCmd "locators" once metadata/keeper/query_server.go#OSAllLocators is fixed: https://github.com/provenance-io/provenance/issues/402
+func (s *IntegrationCLIPageTestSuite) TestOSLocatorPagination() {
+	s.T().Run("GetMetadataGetAllCmd locators", func(t *testing.T) {
+		// Choosing page size = 7 because it a) isn't the default, b) doesn't evenly divide 60.
+		pageSize := 7
+		expectedCount := s.osLocatorCount
+		pageCount := expectedCount / pageSize
+		if expectedCount%pageSize != 0 {
+			pageCount++
+		}
+		pageSizeArg := limitArg(pageSize)
+
+		results := make([]metadatatypes.ObjectStoreLocator, 0, expectedCount)
+		var nextKey string
+
+		// Only using the page variable here for error messages, not for the CLI args since that'll mess with the --page-key being tested.
+		for page := 1; page <= pageCount; page++ {
+			args := []string{"locators", pageSizeArg, s.asJson}
+			if page != 1 {
+				args = append(args, pageKeyArg(nextKey))
+			}
+			iterID := fmt.Sprintf("page %d/%d, args: %v", page, pageCount, args)
+			cmd := mdcli.GetMetadataGetAllCmd()
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			require.NoErrorf(t, err, "cmd error %s", iterID)
+			var result metadatatypes.OSAllLocatorsResponse
+			merr := s.cfg.Codec.UnmarshalJSON(out.Bytes(), &result)
+			require.NoErrorf(t, merr, "unmarshal error %s", iterID)
+			resultAttrCount := len(result.Locators)
+			if page != pageCount {
+				require.Equalf(t, pageSize, resultAttrCount, "page result count %s", iterID)
+				require.NotEmptyf(t, result.Pagination.NextKey, "pagination next key %s", iterID)
+			} else {
+				require.GreaterOrEqualf(t, pageSize, resultAttrCount, "last page result count %s", iterID)
+				require.Emptyf(t, result.Pagination.NextKey, "pagination next key %s", iterID)
+			}
+			results = append(results, result.Locators...)
+			nextKey = base64.StdEncoding.EncodeToString(result.Pagination.NextKey)
+		}
+
+		// This can fail if the --page-key isn't encoded/decoded correctly resulting in an unexpected jump forward in the actual list.
+		require.Equal(t, expectedCount, len(results), "total count of object store locators returned")
+		// Make sure none of the results are duplicates.
+		// That can happen if the --page-key isn't encoded/decoded correctly resulting in an unexpected jump backward in the actual list.
+		sort.Sort(osLocatorSorter(results))
+		for i := 1; i < len(results); i++ {
+			require.NotEqual(t, results[i-1], results[i], "no two object store locators should be equal here")
+		}
+	})
+
+	s.T().Run("GetOSLocatorCmd all", func(t *testing.T) {
+		// Choosing page size = 7 because it a) isn't the default, b) doesn't evenly divide 60.
+		pageSize := 7
+		expectedCount := s.osLocatorCount
+		pageCount := expectedCount / pageSize
+		if expectedCount%pageSize != 0 {
+			pageCount++
+		}
+		pageSizeArg := limitArg(pageSize)
+
+		results := make([]metadatatypes.ObjectStoreLocator, 0, expectedCount)
+		var nextKey string
+
+		// Only using the page variable here for error messages, not for the CLI args since that'll mess with the --page-key being tested.
+		for page := 1; page <= pageCount; page++ {
+			args := []string{"all", pageSizeArg, s.asJson}
+			if page != 1 {
+				args = append(args, pageKeyArg(nextKey))
+			}
+			iterID := fmt.Sprintf("page %d/%d, args: %v", page, pageCount, args)
+			cmd := mdcli.GetOSLocatorCmd()
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			require.NoErrorf(t, err, "cmd error %s", iterID)
+			var result metadatatypes.OSAllLocatorsResponse
+			merr := s.cfg.Codec.UnmarshalJSON(out.Bytes(), &result)
+			require.NoErrorf(t, merr, "unmarshal error %s", iterID)
+			resultAttrCount := len(result.Locators)
+			if page != pageCount {
+				require.Equalf(t, pageSize, resultAttrCount, "page result count %s", iterID)
+				require.NotEmptyf(t, result.Pagination.NextKey, "pagination next key %s", iterID)
+			} else {
+				require.GreaterOrEqualf(t, pageSize, resultAttrCount, "last page result count %s", iterID)
+				require.Emptyf(t, result.Pagination.NextKey, "pagination next key %s", iterID)
+			}
+			results = append(results, result.Locators...)
+			nextKey = base64.StdEncoding.EncodeToString(result.Pagination.NextKey)
+		}
+
+		// This can fail if the --page-key isn't encoded/decoded correctly resulting in an unexpected jump forward in the actual list.
+		require.Equal(t, expectedCount, len(results), "total count of object store locators returned")
+		// Make sure none of the results are duplicates.
+		// That can happen if the --page-key isn't encoded/decoded correctly resulting in an unexpected jump backward in the actual list.
+		sort.Sort(osLocatorSorter(results))
+		for i := 1; i < len(results); i++ {
+			require.NotEqual(t, results[i-1], results[i], "no two object store locators should be equal here")
+		}
+	})
+
+	s.T().Run("GetOSLocatorCmd uri", func(t *testing.T) {
+		// Choosing page size = 8 because it a) isn't the default, b) doesn't evenly divide 20.
+		pageSize := 8
+		expectedCount := s.osLocatorURICount
+		pageCount := expectedCount / pageSize
+		if expectedCount%pageSize != 0 {
+			pageCount++
+		}
+		pageSizeArg := limitArg(pageSize)
+
+		results := make([]metadatatypes.ObjectStoreLocator, 0, expectedCount)
+		var nextKey string
+
+		// Only using the page variable here for error messages, not for the CLI args since that'll mess with the --page-key being tested.
+		for page := 1; page <= pageCount; page++ {
+			args := []string{s.osLocatorURI, pageSizeArg, s.asJson}
+			if page != 1 {
+				args = append(args, pageKeyArg(nextKey))
+			}
+			iterID := fmt.Sprintf("page %d/%d, args: %v", page, pageCount, args)
+			cmd := mdcli.GetOSLocatorCmd()
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			require.NoErrorf(t, err, "cmd error %s", iterID)
+			var result metadatatypes.OSAllLocatorsResponse
+			merr := s.cfg.Codec.UnmarshalJSON(out.Bytes(), &result)
+			require.NoErrorf(t, merr, "unmarshal error %s", iterID)
+			resultAttrCount := len(result.Locators)
+			if page != pageCount {
+				require.Equalf(t, pageSize, resultAttrCount, "page result count %s", iterID)
+				require.NotEmptyf(t, result.Pagination.NextKey, "pagination next key %s", iterID)
+			} else {
+				require.GreaterOrEqualf(t, pageSize, resultAttrCount, "last page result count %s", iterID)
+				require.Emptyf(t, result.Pagination.NextKey, "pagination next key %s", iterID)
+			}
+			results = append(results, result.Locators...)
+			nextKey = base64.StdEncoding.EncodeToString(result.Pagination.NextKey)
+		}
+
+		// This can fail if the --page-key isn't encoded/decoded correctly resulting in an unexpected jump forward in the actual list.
+		require.Equal(t, expectedCount, len(results), "total count of object store locators returned")
+		// Make sure none of the results are duplicates.
+		// That can happen if the --page-key isn't encoded/decoded correctly resulting in an unexpected jump backward in the actual list.
+		sort.Sort(osLocatorSorter(results))
+		for i := 1; i < len(results); i++ {
+			require.NotEqual(t, results[i-1], results[i], "no two object store locators should be equal here")
+		}
+	})
+}
