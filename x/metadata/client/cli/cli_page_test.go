@@ -510,8 +510,8 @@ func (a recordSpecSorter) Less(i, j int) bool {
 	return a[i].SpecificationId.Compare(a[j].SpecificationId) < 0
 }
 
-// recordSpecSorter implements sort.Interface for []metadatatypes.RecordSpecification
-// Sorts by .SpecificationId
+// osLocatorSorter implements sort.Interface for []metadatatypes.ObjectStoreLocator
+// Sorts by .Owner
 type osLocatorSorter []metadatatypes.ObjectStoreLocator
 
 func (a osLocatorSorter) Len() int {
