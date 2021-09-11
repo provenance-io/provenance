@@ -75,8 +75,8 @@ message Scope {
 #### Scope Indexes
 
 Scopes by owner:
-* Type byte: `0x10`
-* Part 1: All bytes of the owner address
+* Type byte: `0x17`
+* Part 1: The owner address (length byte then value bytes)
 * Part 2: All bytes of the scope key
 
 <!-- This index also appears in the section for scope specification indexes. They must stay the same. -->
@@ -86,8 +86,8 @@ Scopes by Scope Specification:
 * Part 2: All bytes of the scope key
 
 Scopes by value owner:
-* Type byte: `0x12`
-* Part 1: All bytes of the value owner address
+* Type byte: `0x18`
+* Part 1: The value owner address (length byte then value bytes)
 * Part 2: All bytes of the scope key
 
 
@@ -276,8 +276,8 @@ message ScopeSpecification {
 #### Scope Specification Indexes
 
 Scope specifications by owner:
-* Type byte: `0x13`
-* Part 1: All bytes of the owner address
+* Type byte: `0x19`
+* Part 1: The owner address (length byte then value bytes)
 * Part 2: All bytes of the scope specification key
 
 <!-- This index also appears in the section for contract specification indexes.  They must stay the same. -->
@@ -352,8 +352,8 @@ message ContractSpecification {
 #### Contract Specification Indexes
 
 Contract specifications by owner:
-* Type byte: `0x15`
-* Part 1: All bytes of the owner address
+* Type byte: `0x20`
+* Part 1: The owner address (length byte then value bytes)
 * Part 2: All bytes of the contract specification key
 
 <!-- This index also appears in the section for scope specification indexes. They must stay the same. -->
@@ -428,10 +428,11 @@ An object store locator indicates the location of off-chain data.
 
 Byte Array Length: `21`
 
-| Byte range | Description
-|------------|---
-| 0          | `0x16`
-| 1-20       | The 20 bytes of the owner address.
+| Byte range   | Description
+|--------------|---
+| 0            | `0x21`
+| 1            | Owner address length, either `0x14` (20) or `0x20` (32)
+| 2-(21 or 33) | The bytes of the owner address.
 
 #### Object Store Locator Values
 
