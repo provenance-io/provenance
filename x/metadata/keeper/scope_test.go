@@ -283,7 +283,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdate() {
 			existing: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user2),
 			proposed: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1),
 			signers:  []string{s.user1},
-			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", s.user2),
+			errorMsg: fmt.Sprintf("missing signature from existing value owner %s", s.user2),
 		},
 		{
 			name:     "unsetting all fields on a scope should be successful",
