@@ -151,13 +151,6 @@ func (k Keeper) ValidateRecordUpdate(
 		if !existing.SpecificationId.Empty() && !proposed.SpecificationId.Empty() && !existing.SpecificationId.Equals(proposed.SpecificationId) {
 			return fmt.Errorf("the SpecificationId of records cannot be changed")
 		}
-		// Get the existing output hashes as both a slice and a map counting occurrences.
-		existingOutputHashes := make([]string, len(existing.Outputs))
-		existingOutputHashMap := map[string]int{}
-		for i, o := range existing.Outputs {
-			existingOutputHashes[i] = o.Hash
-			existingOutputHashMap[o.Hash]++
-		}
 	}
 
 	scopeID, scopeIDErr := proposed.SessionId.AsScopeAddress()
