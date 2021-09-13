@@ -282,11 +282,30 @@ func (k Keeper) ValidateScopeUpdate(ctx sdk.Context, existing, proposed types.Sc
 // ValidateScopeRemove checks the current scope and the proposed removal scope to determine if the the proposed remove is valid
 // based on the existing state
 func (k Keeper) ValidateScopeRemove(ctx sdk.Context, scopeID types.MetadataAddress, signers []string) error {
+	if len(scopeID) == 0 {
+		return fmt.Errorf("scope id cannot be empty", scopeID)
+	}
 	existing, found := k.GetScope(ctx, scopeID)
 	if !found {
 		return fmt.Errorf("scope not found with id %s", scopeID)
 	}
-	if err := k.ValidateAllPartiesAreSigners(existing.Owners, signers); err != nil {
+
+	requiredSignatures := []string{}
+	for _, p := range existing.Owners {
+		requiredSignatures = append(requiredSignatures, p.Address)
+	}
+	if len(existing.ValueOwnerAddress) > 0 {
+		if k.AccountIsMarker(ctx, existing.ValueOwnerAddress) {
+			if !k.HasSignerWithMarkerValueAuthority(ctx, existing.ValueOwnerAddress, signers, markertypes.Access_Withdraw) {
+				return fmt.Errorf("missing signature for %s with authority to withdraw/remove existing value owner", existing.ValueOwnerAddress)
+			}
+		} else {
+			// not a marker so require a signature from the existing value owner for this change.
+			requiredSignatures = append(requiredSignatures, existing.ValueOwnerAddress)
+		}
+	}
+
+	if err := k.ValidateAllOwnersAreSigners(requiredSignatures, signers); err != nil {
 		return err
 	}
 
