@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -643,4 +644,117 @@ func (s *ScopeTestSuite) TestMetadataAuditUpdate() {
 	s.Equal(blockTime, result.UpdatedDate)
 	s.Equal("updater", result.UpdatedBy)
 	s.Equal("", result.Message)
+}
+
+func (s *ScopeTestSuite) TestEqualParties() {
+	tests := []struct {
+		name     string
+		p1       []Party
+		p2       []Party
+		expected bool
+	}{
+		{
+			name:     "empty sets",
+			p1:       []Party{},
+			p2:       []Party{},
+			expected: true,
+		},
+		{
+			name:     "one party in each that is equal",
+			p1:       []Party{{"abc", 3}},
+			p2:       []Party{{"abc", 3}},
+			expected: true,
+		},
+		{
+			name:     "one party in each different addresses",
+			p1:       []Party{{"abc", 3}},
+			p2:       []Party{{"abcd", 3}},
+			expected: false,
+		},
+		{
+			name:     "one party in each different roles",
+			p1:       []Party{{"abc", 3}},
+			p2:       []Party{{"abc", 4}},
+			expected: false,
+		},
+		{
+			name:     "both have 3 equal elements in same order",
+			p1:       []Party{{"abc", 3}, {"def", 4}, {"ghi", 5}},
+			p2:       []Party{{"abc", 3}, {"def", 4}, {"ghi", 5}},
+			expected: true,
+		},
+		{
+			name:     "both have 3 equal elements in different order",
+			p1:       []Party{{"abc", 3}, {"def", 4}, {"ghi", 5}},
+			p2:       []Party{{"def", 4}, {"ghi", 5}, {"abc", 3}},
+			expected: true,
+		},
+		{
+			name:     "one missing from p1",
+			p1:       []Party{{"abc", 3}, {"ghi", 5}},
+			p2:       []Party{{"abc", 3}, {"def", 4}, {"ghi", 5}},
+			expected: false,
+		},
+		{
+			name:     "one missing from p2",
+			p1:       []Party{{"abc", 3}, {"def", 4}, {"ghi", 5}},
+			p2:       []Party{{"abc", 3}, {"ghi", 5}},
+			expected: false,
+		},
+		{
+			name:     "aab vs abb",
+			p1:       []Party{{"aaa", 3}, {"aaa", 3}, {"bbb", 5}},
+			p2:       []Party{{"aaa", 3}, {"bbb", 5}, {"bbb", 5}},
+			expected: false,
+		},
+		{
+			name:     "aab vs ab",
+			p1:       []Party{{"aaa", 3}, {"aaa", 3}, {"bbb", 5}},
+			p2:       []Party{{"aaa", 3}, {"bbb", 5}},
+			expected: false,
+		},
+		{
+			name:     "abb vs ab",
+			p1:       []Party{{"aaa", 3}, {"bbb", 5}, {"bbb", 5}},
+			p2:       []Party{{"aaa", 3}, {"bbb", 5}},
+			expected: false,
+		},
+		{
+			name:     "aab vs aba",
+			p1:       []Party{{"aaa", 3}, {"aaa", 3}, {"bbb", 5}},
+			p2:       []Party{{"aaa", 3}, {"bbb", 5}, {"aaa", 3}},
+			expected: true,
+		},
+		{
+			name:     "aaa vs bbb",
+			p1:       []Party{{"aaa", 3}, {"aaa", 3}, {"aaa", 3}},
+			p2:       []Party{{"bbb", 5}, {"bbb", 5}, {"bbb", 5}},
+			expected: false,
+		},
+		{
+			name:     "2 equal and 1 diff addr",
+			p1:       []Party{{"aaa", 3}, {"aaa", 3}, {"aaa", 3}},
+			p2:       []Party{{"aaa", 3}, {"aaa", 3}, {"bbb", 3}},
+			expected: false,
+		},
+		{
+			name:     "2 equal and 1 diff role",
+			p1:       []Party{{"aaa", 3}, {"aaa", 3}, {"aaa", 3}},
+			p2:       []Party{{"aaa", 4}, {"aaa", 3}, {"aaa", 3}},
+			expected: false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.T().Run(tc.name, func(t *testing.T) {
+			// copy the two slices so we can later make sure the ones provided didn't change.
+			op1 := append(make([]Party, 0, len(tc.p1)), tc.p1...)
+			op2 := append(make([]Party, 0, len(tc.p2)), tc.p2...)
+			// Do the thing.
+			actual := EqualParties(tc.p1, tc.p2)
+			assert.Equal(t, tc.expected, actual, "result")
+			assert.Equal(t, op1, tc.p1, "p1")
+			assert.Equal(t, op2, tc.p2, "p2")
+		})
+	}
 }
