@@ -1,7 +1,9 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
 
@@ -244,7 +246,7 @@ func (k Keeper) ValidateScopeUpdate(ctx sdk.Context, existing, proposed types.Sc
 // based on the existing state
 func (k Keeper) ValidateScopeRemove(ctx sdk.Context, scopeID types.MetadataAddress, signers []string) error {
 	if len(scopeID) == 0 {
-		return fmt.Errorf("scope id cannot be empty", scopeID)
+		return errors.New("scope id cannot be empty")
 	}
 	existing, found := k.GetScope(ctx, scopeID)
 	if !found {
