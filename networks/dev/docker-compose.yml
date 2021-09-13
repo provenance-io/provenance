@@ -1,0 +1,29 @@
+version: '3'
+
+services:
+  dev-node:
+    container_name: dev-node
+    image: "provenance-io/blockchain-dev"
+    ports:
+      - "26656-26657:26656-26657"
+      - "1317:1317"
+      - "9090:9090"
+    environment:
+      - ID=dev
+      - LOG=${LOG:-provenanced.log}
+      - PIO_HOME=/provenance
+    volumes:
+      - ./build:/provenance:Z
+
+    networks:
+      devnet:
+        ipv4_address: 192.168.21.2
+
+networks:
+  devnet:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      -
+        subnet: 192.168.21.0/24
