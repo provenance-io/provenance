@@ -3,6 +3,7 @@ package types
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -31,6 +32,14 @@ func NewScope(
 		DataAccess:        dataAccess,
 		ValueOwnerAddress: valueOwner,
 	}
+}
+
+func (s Scope) Equals(t Scope) bool {
+	return s.ScopeId.Equals(t.ScopeId) &&
+		s.SpecificationId.Equals(t.SpecificationId) &&
+		EqualParties(s.Owners, t.Owners) &&
+		equalStringSets(s.DataAccess, t.DataAccess) &&
+		s.ValueOwnerAddress == t.ValueOwnerAddress
 }
 
 // ValidateBasic performs basic format checking of data within a scope
@@ -479,6 +488,58 @@ func (p Party) String() string {
 	return fmt.Sprintf("%s - %s", p.Address, p.Role)
 }
 
+// Equals returns true if this party is equal to the provided party.
 func (p Party) Equals(p2 Party) bool {
 	return p.Address == p2.Address && p.Role == p2.Role
+}
+
+// partySorter implements sort.Interface for []Party
+// Sorts by .Address strings then .Role (as int32 values)
+type partySorter []Party
+
+func (a partySorter) Len() int {
+	return len(a)
+}
+func (a partySorter) Swap(i, j int) {
+	a[i], a[j] = a[j], a[i]
+}
+func (a partySorter) Less(i, j int) bool {
+	if a[i].Address != a[j].Address {
+		return a[i].Address < a[j].Address
+	}
+	return a[i].Role < a[j].Role
+}
+
+// EqualParties returns true if the two provided sets of parties contain the same entries.
+func EqualParties(p1, p2 []Party) bool {
+	if len(p1) != len(p2) {
+		return false
+	}
+	p1c := p1
+	p2c := p2
+	sort.Sort(partySorter(p1c))
+	sort.Sort(partySorter(p2c))
+	for i := range p1c {
+		if !p1c[i].Equals(p2c[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+// equalStringSets returns true if the two provided sets of strings contain the same entries.
+func equalStringSets(s1, s2 []string) bool {
+	if len(s1) != len(s2) {
+		return false
+	}
+	s1c := s1
+	s2c := s2
+	sort.Strings(s1c)
+	sort.Strings(s2c)
+	for i := range s1c {
+		if s1c[i] != s2c[i] {
+			return false
+		}
+	}
+	return true
 }
