@@ -59,7 +59,7 @@ func (k msgServer) DeleteScope(
 		return nil, fmt.Errorf("scope not found with id %s", msg.ScopeId)
 	}
 	// validate that all fields can be unset with the given list of signers
-	if err := k.ValidateScopeRemove(ctx, existing, types.Scope{ScopeId: msg.ScopeId}, msg.Signers); err != nil {
+	if err := k.ValidateScopeRemove(ctx, existing, msg.Signers); err != nil {
 		return nil, err
 	}
 

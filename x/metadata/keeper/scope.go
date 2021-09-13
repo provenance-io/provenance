@@ -281,13 +281,9 @@ func (k Keeper) ValidateScopeUpdate(ctx sdk.Context, existing, proposed types.Sc
 
 // ValidateScopeRemove checks the current scope and the proposed removal scope to determine if the the proposed remove is valid
 // based on the existing state
-func (k Keeper) ValidateScopeRemove(ctx sdk.Context, existing, proposed types.Scope, signers []string) error {
-	// IDs must match
-	if len(existing.ScopeId) > 0 {
-		if !proposed.ScopeId.Equals(existing.ScopeId) {
-			return fmt.Errorf("cannot update scope identifier. expected %s, got %s", existing.ScopeId, proposed.ScopeId)
-		}
-	}
+func (k Keeper) ValidateScopeRemove(ctx sdk.Context, existing types.Scope, signers []string) error {
+
+
 	if err := k.ValidateAllPartiesAreSigners(existing.Owners, signers); err != nil {
 		return err
 	}
