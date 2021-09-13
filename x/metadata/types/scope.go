@@ -532,8 +532,8 @@ func equalStringSets(s1, s2 []string) bool {
 	if len(s1) != len(s2) {
 		return false
 	}
-	s1c := s1
-	s2c := s2
+	s1c := append(make([]string, 0, len(s1)), s1...)
+	s2c := append(make([]string, 0, len(s2)), s2...)
 	sort.Strings(s1c)
 	sort.Strings(s2c)
 	for i := range s1c {
