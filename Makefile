@@ -366,7 +366,27 @@ localnet-start: localnet-generate localnet-up
 localnet-stop:
 	docker-compose -f networks/local/docker-compose.yml --project-directory ./ down
 
-.PHONY: docker-build-local localnet-start localnet-stop
+# Quick build using devnet environment and go platform target options.
+docker-build-dev: vendor
+	docker build --tag provenance-io/blockchain-dev -f networks/dev/blockchain-dev/Dockerfile .
+
+
+# Generate config files for a single node devnet
+devnet-generate: devnet-stop docker-build-dev
+	@if ! [ -f build/nodedev/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-dev testnet --v 1 -o . --starting-ip-address 192.168.21.2 --keyring-backend=test --chain-id=chain-dev ; fi
+
+# Run a single node devnet locally
+devnet-up:
+	docker-compose -f networks/dev/docker-compose.yml --project-directory ./ up -d
+
+# Run a single node devnet locally (replace docker-build with docker-build local for better speed)
+devnet-start: devnet-generate devnet-up
+
+# Stop devnet
+devnet-stop:
+	docker-compose -f networks/dev/docker-compose.yml --project-directory ./ down
+
+.PHONY: docker-build-local localnet-start localnet-stop docker-build-dev devnet-start devnet-stop
 
 
 ##############################

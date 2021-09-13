@@ -39,7 +39,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* Add a single node docker based development environment [#311](https://github.com/provenance-io/provenance/issues/311)
+  * Add make targets `devnet-start` and `devnet-stop`
+  * Add `networks/dev/mnemonics` for adding accounts to development environment
 * When deleting a scope, require the same permissions as when updating it [#473](https://github.com/provenance-io/provenance/issues/473)
+
+### Improvements
+
+* Updated some of the documentation of Metadata type bytes (prefixes) [#474](https://github.com/provenance-io/provenance/issues/474)
 
 ### Bug Fixes
 
