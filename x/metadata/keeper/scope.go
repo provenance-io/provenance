@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -248,20 +247,12 @@ func (k Keeper) ValidateScopeUpdate(ctx sdk.Context, existing, proposed types.Sc
 
 // ValidateScopeRemove checks the current scope and the proposed removal scope to determine if the the proposed remove is valid
 // based on the existing state
-func (k Keeper) ValidateScopeRemove(ctx sdk.Context, scopeID types.MetadataAddress, signers []string) error {
-	if len(scopeID) == 0 {
-		return errors.New("scope id cannot be empty")
-	}
-	existing, found := k.GetScope(ctx, scopeID)
-	if !found {
-		return fmt.Errorf("scope not found with id %s", scopeID)
-	}
-
-	if err := k.ValidateAllPartiesAreSigners(existing.Owners, signers); err != nil {
+func (k Keeper) ValidateScopeRemove(ctx sdk.Context, scope types.Scope, signers []string) error {
+	if err := k.ValidateAllPartiesAreSigners(scope.Owners, signers); err != nil {
 		return err
 	}
 
-	if err := k.validateScopeUpdateValueOwner(ctx, existing.ValueOwnerAddress, "", signers); err != nil {
+	if err := k.validateScopeUpdateValueOwner(ctx, scope.ValueOwnerAddress, "", signers); err != nil {
 		return err
 	}
 
