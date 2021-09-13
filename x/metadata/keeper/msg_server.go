@@ -54,12 +54,8 @@ func (k msgServer) DeleteScope(
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteScope")
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	existing, found := k.GetScope(ctx, msg.ScopeId)
-	if !found {
-		return nil, fmt.Errorf("scope not found with id %s", msg.ScopeId)
-	}
 	// validate that all fields can be unset with the given list of signers
-	if err := k.ValidateScopeRemove(ctx, existing, msg.Signers); err != nil {
+	if err := k.ValidateScopeRemove(ctx, msg.ScopeId, msg.Signers); err != nil {
 		return nil, err
 	}
 

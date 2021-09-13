@@ -281,9 +281,11 @@ func (k Keeper) ValidateScopeUpdate(ctx sdk.Context, existing, proposed types.Sc
 
 // ValidateScopeRemove checks the current scope and the proposed removal scope to determine if the the proposed remove is valid
 // based on the existing state
-func (k Keeper) ValidateScopeRemove(ctx sdk.Context, existing types.Scope, signers []string) error {
-
-
+func (k Keeper) ValidateScopeRemove(ctx sdk.Context, scopeID types.MetadataAddress, signers []string) error {
+	existing, found := k.GetScope(ctx, scopeID)
+	if !found {
+		return fmt.Errorf("scope not found with id %s", scopeID)
+	}
 	if err := k.ValidateAllPartiesAreSigners(existing.Owners, signers); err != nil {
 		return err
 	}
