@@ -229,7 +229,11 @@ func (k Keeper) ValidateScopeUpdate(ctx sdk.Context, existing, proposed types.Sc
 			proposedCopy.ValueOwnerAddress = existing.ValueOwnerAddress
 		}
 		if !existing.Equals(proposedCopy) {
-			if err := k.ValidateAllPartiesAreSigners(existing.Owners, signers); err != nil {
+			existingOwners := make([]string, len(existing.Owners))
+			for i, o := range existing.Owners {
+				existingOwners[i] = o.Address
+			}
+			if err := k.ValidateAllOwnersAreSigners(existingOwners, signers); err != nil {
 				return err
 			}
 		}
@@ -285,7 +289,7 @@ func (k Keeper) validateScopeUpdateValueOwner(ctx sdk.Context, existing, propose
 				}
 			}
 			if !found {
-				return fmt.Errorf("missing signature for value owner %s", existing)
+				return fmt.Errorf("missing signature from existing value owner %s", existing)
 			}
 		}
 	}
