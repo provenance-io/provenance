@@ -515,8 +515,8 @@ func EqualParties(p1, p2 []Party) bool {
 	if len(p1) != len(p2) {
 		return false
 	}
-	p1c := p1
-	p2c := p2
+	p1c := append(make([]Party, 0, len(p1)), p1...)
+	p2c := append(make([]Party, 0, len(p2)), p2...)
 	sort.Sort(partySorter(p1c))
 	sort.Sort(partySorter(p2c))
 	for i := range p1c {
