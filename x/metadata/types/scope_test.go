@@ -758,3 +758,104 @@ func (s *ScopeTestSuite) TestEqualParties() {
 		})
 	}
 }
+
+func (s *ScopeTestSuite) TestEqualStringSets() {
+	tests := []struct {
+		name     string
+		p1       []string
+		p2       []string
+		expected bool
+	}{
+		{
+			name:     "empty sets",
+			p1:       []string{},
+			p2:       []string{},
+			expected: true,
+		},
+		{
+			name:     "one in each same",
+			p1:       []string{"abc"},
+			p2:       []string{"abc"},
+			expected: true,
+		},
+		{
+			name:     "one in each different",
+			p1:       []string{"abc"},
+			p2:       []string{"abcd"},
+			expected: false,
+		},
+		{
+			name:     "both have 3 equal elements in same order",
+			p1:       []string{"abc", "def", "ghi"},
+			p2:       []string{"abc", "def", "ghi"},
+			expected: true,
+		},
+		{
+			name:     "both have 3 equal elements in different order",
+			p1:       []string{"abc", "def", "ghi"},
+			p2:       []string{"def", "ghi", "abc"},
+			expected: true,
+		},
+		{
+			name:     "one missing from p1",
+			p1:       []string{"abc", "ghi"},
+			p2:       []string{"abc", "def", "ghi"},
+			expected: false,
+		},
+		{
+			name:     "one missing from p2",
+			p1:       []string{"abc", "def", "ghi"},
+			p2:       []string{"abc", "ghi"},
+			expected: false,
+		},
+		{
+			name:     "aab vs abb",
+			p1:       []string{"aaa", "aaa", "bbb"},
+			p2:       []string{"aaa", "bbb", "bbb"},
+			expected: false,
+		},
+		{
+			name:     "aab vs ab",
+			p1:       []string{"aaa", "aaa", "bbb"},
+			p2:       []string{"aaa", "bbb"},
+			expected: false,
+		},
+		{
+			name:     "abb vs ab",
+			p1:       []string{"aaa", "bbb", "bbb"},
+			p2:       []string{"aaa", "bbb"},
+			expected: false,
+		},
+		{
+			name:     "aab vs aba",
+			p1:       []string{"aaa", "aaa", "bbb"},
+			p2:       []string{"aaa", "bbb", "aaa"},
+			expected: true,
+		},
+		{
+			name:     "aaa vs bbb",
+			p1:       []string{"aaa", "aaa", "aaa"},
+			p2:       []string{"bbb", "bbb", "bbb"},
+			expected: false,
+		},
+		{
+			name:     "2 equal and 1 diff",
+			p1:       []string{"aaa", "aaa", "aaa"},
+			p2:       []string{"aaa", "aaa", "bbb"},
+			expected: false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.T().Run(tc.name, func(t *testing.T) {
+			// copy the two slices so we can later make sure the ones provided didn't change.
+			op1 := append(make([]string, 0, len(tc.p1)), tc.p1...)
+			op2 := append(make([]string, 0, len(tc.p2)), tc.p2...)
+			// Do the thing.
+			actual := equalStringSets(tc.p1, tc.p2)
+			assert.Equal(t, tc.expected, actual, "result")
+			assert.Equal(t, op1, tc.p1, "p1")
+			assert.Equal(t, op2, tc.p2, "p2")
+		})
+	}
+}
