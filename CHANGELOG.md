@@ -37,6 +37,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Features
+
+* Add a single node docker based development environment [#311](https://github.com/provenance-io/provenance/issues/311)
+  * Add make targets `devnet-start` and `devnet-stop`
+  * Add `networks/dev/mnemonics` for adding accounts to development environment
+
 ### Bug Fixes
 * Removed some unneeded code from the persistent record update validation [#471](https://github.com/provenance-io/provenance/issues/471)
 
