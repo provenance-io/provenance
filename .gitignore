@@ -3,6 +3,7 @@ bin/
 .gradle/
 build/
 config/
+!cmd/provenanced/config/
 data/
 .idea/
 *.swp
@@ -42,3 +43,6 @@ proto-tools-stamp
 
 #emacs tmp files
 .#*
+
+#direnv setup
+.envrc

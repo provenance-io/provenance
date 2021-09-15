@@ -552,13 +552,13 @@ context           - a base64 encoded string of the bytes that represent the sess
 		Example: fmt.Sprintf(`$ %[1]s tx metadata write-session \
 91978ba2-5f35-459a-86a7-feca1b0512e0 5803f8bc-6067-4eb5-951f-2121671c2ec0 \
 contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn \
-cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck,owner \
+pb1sh49f6ze3vn7cdl2amh2gnc70z5mten3dpvr42,owner \
 io.p8e.contracts.example.HelloWorldContract
 
 $ %[1]s tx metadata write-session \
 session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr \
 contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn \
-cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck,owner \
+pb1sh49f6ze3vn7cdl2amh2gnc70z5mten3dpvr42,owner \
 io.p8e.contracts.example.HelloWorldContract \
 github.com/provenance-io/provenance/x/metadata/types/p8e.UUID \
 ChFIRUxMTyBQUk9WRU5BTkNFIQ==`, version.AppName),

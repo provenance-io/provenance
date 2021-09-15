@@ -475,7 +475,7 @@ func GetOwnershipCmd() *cobra.Command {
 		Short:   "Query the current metadata for entries owned by an address",
 		Long:    fmt.Sprintf(`%[1]s owner {address} - gets a list of scope uuids owned by the provided address.`, cmdStart),
 		Args:    cobra.ExactArgs(1),
-		Example: fmt.Sprintf(`%[1]s owner cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck`, cmdStart),
+		Example: fmt.Sprintf(`%[1]s owner pb1sh49f6ze3vn7cdl2amh2gnc70z5mten3dpvr42`, cmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			address := strings.TrimSpace(args[0])
 			if len(address) == 0 {
@@ -500,7 +500,7 @@ func GetValueOwnershipCmd() *cobra.Command {
 		Short:   "Query the current metadata for scopes with the provided address as the value owner",
 		Long:    fmt.Sprintf(`%[1]s valueowner {address} - gets a list of scope uuids value-owned by the provided address.`, cmdStart),
 		Args:    cobra.ExactArgs(1),
-		Example: fmt.Sprintf(`%[1]s valueowner cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck`, cmdStart),
+		Example: fmt.Sprintf(`%[1]s valueowner pb1sh49f6ze3vn7cdl2amh2gnc70z5mten3dpvr42`, cmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			address := strings.TrimSpace(args[0])
 			if len(address) == 0 {
@@ -530,7 +530,7 @@ func GetOSLocatorCmd() *cobra.Command {
 %[1]s locator params - gets the object store locator params.
 %[1]s locator all - gets all object store locators.`, cmdStart),
 		Args: cobra.ExactArgs(1),
-		Example: fmt.Sprintf(`%[1]s locator cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck
+		Example: fmt.Sprintf(`%[1]s locator pb1sh49f6ze3vn7cdl2amh2gnc70z5mten3dpvr42
 %[1]s locator scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel
 %[1]s locator 91978ba2-5f35-459a-86a7-feca1b0512e0
 %[1]s locator https://provenance.io/

@@ -37,13 +37,30 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Improvements
+
+* Updated some of the documentation of Metadata type bytes (prefixes) [#474](https://github.com/provenance-io/provenance/issues/474)
+
+### Features
+
+* Add a single node docker based development environment [#311](https://github.com/provenance-io/provenance/issues/311)
+  * Add make targets `devnet-start` and `devnet-stop`
+  * Add `networks/dev/mnemonics` for adding accounts to development environment
+
+### Bug Fixes
+
+* Removed some unneeded code from the persistent record update validation [#471](https://github.com/provenance-io/provenance/issues/471)
+
+
+## [v1.7.0](https://github.com/provenance-io/provenance/releases/tag/v1.7.0) - 2021-09-03
+
 ### Features
 
 * Marker governance proposal are supported in cli [#367](https://github.com/provenance-io/provenance/issues/367)
 * Add ability to query metadata sessions by record [#212](https://github.com/provenance-io/provenance/issues/212)
 * Add Name and Symbol Cosmos features to Marker Metadata [#372](https://github.com/provenance-io/provenance/issues/372)
 * Add authz support to Marker module transfer `MarkerTransferAuthorization` [#265](https://github.com/provenance-io/provenance/issues/265)
-  * Add authz grant/revoke command to `marker` cli 
+  * Add authz grant/revoke command to `marker` cli
   * Add documentation around how to grant/revoke authz [#449](https://github.com/provenance-io/provenance/issues/449)
 * Add authz and feegrant modules [PR 384](https://github.com/provenance-io/provenance/pull/384)
 * Add Marker governance proposal for setting denom metadata [#369](https://github.com/provenance-io/provenance/issues/369)
@@ -51,6 +68,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add updated wasmd for Cosmos 0.43 [#409](https://github.com/provenance-io/provenance/issues/409)
 * Add Rosetta support and automated testing [#365](https://github.com/provenance-io/provenance/issues/365)
 * Update wasm parameters to only allow smart contracts to be uploaded with gov proposal [#440](https://github.com/provenance-io/provenance/issues/440)
+* Update `config` command [#403](https://github.com/provenance-io/provenance/issues/403)
+  * Get and set any configuration field.
+  * Get or set multiple configuration fields in a single invocation.
+  * Easily identify fields with changed (non-default) values.
+  * Pack the configs into a single json file with only changed (non-default) values.
+  * Unpack the config back into the multiple config files (that also have documentation in them).
 
 ### Bug Fixes
 
@@ -66,6 +89,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Fix an encoding issue with the `--page-key` CLI arguments used in paged queries [#332](https://github.com/provenance-io/provenance/issues/332)
 * Fix handling of optional fields in Metadata Write messages [#412](https://github.com/provenance-io/provenance/issues/412)
 * Fix cli marker new example is incorrect [#415](https://github.com/provenance-io/provenance/issues/415)
+* Fix home directory setup for app export [#457](https://github.com/provenance-io/provenance/issues/457)
+* Correct an error message that was providing an illegal amount of gas as an example [#425](https://github.com/provenance-io/provenance/issues/425)
 
 ### API Breaking
 
@@ -75,8 +100,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* Updated to Cosmos SDK Release v0.44 to resolve security issues in v0.43 [#463](https://github.com/provenance-io/provenance/issues/463)
+  * Updated to Cosmos SDK Release v0.43  [#154](https://github.com/provenance-io/provenance/issues/154)
 * Updated to go 1.17 [#454](https://github.com/provenance-io/provenance/issues/454)
-* Updated to Cosmos SDK Release v0.43  [#154](https://github.com/provenance-io/provenance/issues/154)
 * Updated wasmd for Cosmos SDK Release v0.43 [#409](https://github.com/provenance-io/provenance/issues/409)
   * CosmWasm wasmvm v0.16.0 [CHANGELOG](https://github.com/CosmWasm/wasmvm/blob/v0.16.0/CHANGELOG.md)
   * CosmWasm cosmwasm v0.16.0 [CHANGELOG](https://github.com/CosmWasm/cosmwasm/blob/v0.16.0/CHANGELOG.md)
@@ -86,13 +112,22 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Removed legacy api endpoints [#380](https://github.com/provenance-io/provenance/issues/380)
 * Removed v039 and v040 migrations [#374](https://github.com/provenance-io/provenance/issues/374)
 * Dependency Version Updates
-  * Build/CI - cache [PR 420](https://github.com/provenance-io/provenance/pull/420), workflow clean up 
+  * Build/CI - cache [PR 420](https://github.com/provenance-io/provenance/pull/420), workflow clean up
   [PR 417](https://github.com/provenance-io/provenance/pull/417), diff action [PR 418](https://github.com/provenance-io/provenance/pull/418)
   code coverage [PR 416](https://github.com/provenance-io/provenance/pull/416) and [PR 439](https://github.com/provenance-io/provenance/pull/439),
   setup go [PR 419](https://github.com/provenance-io/provenance/pull/419), [PR 451](https://github.com/provenance-io/provenance/pull/451)
   * Google UUID 1.3.0 [PR 446](https://github.com/provenance-io/provenance/pull/446)
   * GRPC 1.3.0 [PR 443](https://github.com/provenance-io/provenance/pull/443)
   * cast 1.4.1 [PR 442](https://github.com/provenance-io/provenance/pull/442)
+* Updated `provenanced init` for better testnet support and defaults [#403](https://github.com/provenance-io/provenance/issues/403)
+* Fixed some example address to use the appropriate prefix [#453](https://github.com/provenance-io/provenance/issues/453)
+
+## [v1.6.0](https://github.com/provenance-io/provenance/releases/tag/v1.6.0) - 2021-08-23
+
+### Bug Fixes
+
+* Fix for creating non-coin type markers through governance addmarker proposals [#431](https://github.com/provenance-io/provenance/issues/431)
+* Upgrade handler migrates usdf.c to the right marker_type.
 
 ## [v1.5.0](https://github.com/provenance-io/provenance/releases/tag/v1.5.0) - 2021-06-23
 

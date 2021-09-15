@@ -61,7 +61,7 @@ var handlers = map[string]appUpgrade{
 			}
 			app.BankKeeper.SetDenomMetaData(ctx, nhash)
 
-			if sdk.GetConfig().GetBech32AccountAddrPrefix() == AccountAddressPrefixTestNet {
+			if sdk.GetConfig().GetBech32AccountAddrPrefix() == AccountAddressPrefixMainNet {
 				s, ok := app.ParamsKeeper.GetSubspace(wasmtypes.DefaultParamspace)
 				if !ok {
 					panic("could not get wasm module parameter configuration")
