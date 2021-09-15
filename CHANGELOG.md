@@ -69,6 +69,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add a single node docker based development environment [#311](https://github.com/provenance-io/provenance/issues/311)
   * Add make targets `devnet-start` and `devnet-stop`
   * Add `networks/dev/mnemonics` for adding accounts to development environment
+* Add `bank` and `authz` module query `proto` files required by `grpcurl` [#482](https://github.com/provenance-io/provenance/issues/482)
 
 ### Improvements
 
