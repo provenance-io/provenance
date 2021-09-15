@@ -68,9 +68,6 @@ func GetCmdMarkerProposal() *cobra.Command {
 			fmt.Sprintf(`Submit a marker proposal along with an initial deposit.
 Proposal title, description, deposit, and marker proposal params must be set in a provided JSON file.
 
-Example:
-$ %s tx marker proposal AddMarker "path/to/proposal.json" 1000%s --from mykey
-
 Where proposal.json contains:
 
 {
@@ -124,9 +121,9 @@ Valid Proposal Types (and associated parameters):
 		]
 	}
 `,
-				version.AppName, sdk.DefaultBondDenom,
 			),
 		),
+		Example: fmt.Sprintf(`$ %s tx marker proposal AddMarker "path/to/proposal.json" 1000%s --from mykey`, version.AppName, sdk.DefaultBondDenom),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -192,10 +189,9 @@ func GetCmdAddMarker() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Creates a new marker in the Proposed state managed by the from address
 with the given supply amount and denomination provided in the coin argument
-
-Example:
-$ %s tx marker new 1000hotdogcoin --%s=false --%s=false --from=mykey
-`, FlagType, FlagSupplyFixed, FlagAllowGovernanceControl)),
+`)),
+		Example: strings.TrimSpace(
+			fmt.Sprintf(`$ %s tx marker new 1000hotdogcoin --%s=false --%s=false --from=mykey`, FlagType, FlagSupplyFixed, FlagAllowGovernanceControl)),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -248,11 +244,9 @@ func GetCmdMint() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Mints coins of the marker's denomination and places them
 in the marker's account under escrow.  Caller must possess the mint permission and 
-marker must be in the active status.
-
-Example:
-$ %s tx marker mint 1000hotdogcoin --from mykey
-`, version.AppName)),
+marker must be in the active status.`)),
+		Example: strings.TrimSpace(
+			fmt.Sprintf(`$ %s tx marker mint 1000hotdogcoin --from mykey`, version.AppName)),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -283,11 +277,9 @@ func GetCmdBurn() *cobra.Command {
 			fmt.Sprintf(`Burns the number of coins specified from the marker associated
 with the coin's denomination.  Only coins held in the marker's account may be burned.  Caller
 must possess the burn permission.  Use the bank send operation to transfer coin into the marker
-for burning.  Marker must be in the active status to burn coin.
-
-Example:
-$ %s tx marker burn 1000hotdogcoin --from mykey
-`, version.AppName)),
+for burning.  Marker must be in the active status to burn coin.`)),
+		Example: strings.TrimSpace(
+			fmt.Sprintf(`$ %s tx marker burn 1000hotdogcoin --from mykey`, version.AppName)),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -317,11 +309,9 @@ func GetCmdFinalize() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Finalize a marker identified by the given denomination. Only
 the marker manager may finalize a marker.  Once finalized callers who have been assigned
-permission may perform mint,burn, or grant operations.  Only the manager may activate the marker.
-
-Example:
-$ %s tx marker finalize hotdogcoin --from mykey
-`, version.AppName)),
+permission may perform mint,burn, or grant operations.  Only the manager may activate the marker.`)),
+		Example: strings.TrimSpace(
+			fmt.Sprintf(`$ %s tx marker finalize hotdogcoin --from mykey`, version.AppName)),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -347,11 +337,9 @@ func GetCmdActivate() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Activate a marker identified by the given denomination. Only
 the marker manager may activate a marker.  Once activated any total supply less than the
-amount in circulation will be minted.  Invariant checks will be enforced.
-
-Example:
-$ %s tx marker activate hotdogcoin --from mykey
-`, version.AppName)),
+amount in circulation will be minted.  Invariant checks will be enforced.`)),
+		Example: strings.TrimSpace(
+			fmt.Sprintf(`$ %s tx marker activate hotdogcoin --from mykey`, version.AppName)),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -421,11 +409,9 @@ func GetCmdAddAccess() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Grant administrative access to a marker.  From Address must have appropriate
 existing access.  Permissions are appended to any existing access grant.  Valid permissions
-are one of [mint, burn, deposit, withdraw, delete, admin, transfer].
-
-Example:
-$ %s tx marker grant pb1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj coindenom burn --from mykey
-`, version.AppName)),
+are one of [mint, burn, deposit, withdraw, delete, admin, transfer].`)),
+		Example: strings.TrimSpace(
+			fmt.Sprintf(`$ %s tx marker grant pb1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj coindenom burn --from mykey`, version.AppName)),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -458,11 +444,9 @@ func GetCmdDeleteAccess() *cobra.Command {
 		Short:   "Revoke all access to a marker for the address",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Revoke all administrative access to a marker for given access.
-From Address must have appropriate existing access.
-
-Example:
-$ %s tx marker revoke pb1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj coindenom --from mykey
-`, version.AppName)),
+From Address must have appropriate existing access.`)),
+		Example: strings.TrimSpace(
+			fmt.Sprintf(`$ %s tx marker revoke pb1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj coindenom --from mykey`, version.AppName)),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -561,12 +545,9 @@ func GetCmdGrantAuthorization() *cobra.Command {
 		Args:    cobra.ExactArgs(2),
 		Short:   "Grant authorization to an address",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`grant authorization to an address to execute an authorization type [transfer]:
-
-Examples:
- $ %s tx marker grant-authz tp1skjw.. transfer --transfer-limit=1000nhash 
-	`, version.AppName),
-		),
+			fmt.Sprintf(`grant authorization to an address to execute an authorization type [transfer]`)),
+		Example: strings.TrimSpace(
+			fmt.Sprintf(`$ %s tx marker grant-authz tp1skjw.. transfer --transfer-limit=1000nhash`, version.AppName)),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -626,12 +607,9 @@ func GetCmdRevokeAuthorization() *cobra.Command {
 		Aliases: []string{"ra"},
 		Args:    cobra.ExactArgs(2),
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`revoke authorization to a grantee address for authorization type [transfer]
-
-Examples:
- $ %s tx marker revoke-authz tp1skjw.. transfer  
-	`, version.AppName),
-		),
+			fmt.Sprintf(`revoke authorization to a grantee address for authorization type [transfer]`)),
+		Example: strings.TrimSpace(
+			fmt.Sprintf(`$ %s tx marker revoke-authz tp1skjw.. transfer`, version.AppName)),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {

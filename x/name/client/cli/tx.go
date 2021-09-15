@@ -40,14 +40,8 @@ func GetBindNameCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "bind [name] [address] [root]",
 		Short: "Bind a name to an address under the given root name in the provenance blockchain",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Bind a name under an existing name in the provenance blockchain:
-
-Example:
-$ %s tx name bind sample pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk root.example
-`,
-				version.AppName,
-			)),
+		Example: strings.TrimSpace(
+			fmt.Sprintf(`$ %s tx name bind sample pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk root.example`, version.AppName)),
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)

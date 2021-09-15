@@ -43,13 +43,8 @@ func QueryParamsCmd() *cobra.Command {
 		Use:   "params",
 		Short: "Query the current marker parameters",
 		Args:  cobra.NoArgs,
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query the current marker module parameters:
-
-$ %s query marker params
-`,
-				version.AppName,
-			)),
+		Example: strings.TrimSpace(
+			fmt.Sprintf(`$ %s query marker params`, version.AppName)),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
