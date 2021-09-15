@@ -43,10 +43,11 @@ func GetAttributeParamsCmd() *cobra.Command {
 		Short: "Query the current name parameters",
 		Args:  cobra.NoArgs,
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query the current attribute module parameters:
-
-$ %s query attribute params
-`,
+			fmt.Sprintf(`Query the current attribute module parameters`)),
+		Example: strings.TrimSpace(
+			fmt.Sprintf(`
+				$ %s query attribute params
+				`,
 				version.AppName,
 			)),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -76,12 +77,12 @@ func GetAccountAttributeCmd() *cobra.Command {
 		Use:   "get [address] [name]",
 		Short: "Get account attributes by name",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query for all attributes on account with a given name:
-
-Example:
-$ %s query attribute get pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk attrib.name
-$ %s query attribute get pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk attrib.name --page=2 --limit=100
-`,
+			fmt.Sprintf(`Query for all attributes on account with a given name`)),
+		Example: strings.TrimSpace(
+			fmt.Sprintf(`
+				$ %s query attribute get pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk attrib.name
+				$ %s query attribute get pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk attrib.name --page=2 --limit=100
+				`,
 				version.AppName, version.AppName,
 			)),
 		Args: cobra.ExactArgs(2),
@@ -124,12 +125,11 @@ func ListAccountAttributesCmd() *cobra.Command {
 		Use:   "list [address]",
 		Short: "Get all account attributes",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query for all attributes on account with a given name:
-
-Example:
-$ %s query attribute list pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
-$ %s query attribute list pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk --page=2 --limit=100
-`,
+			fmt.Sprintf(`Query for all attributes on account with a given name`)),
+		Example: strings.TrimSpace(
+			fmt.Sprintf(`$ %s query attribute list pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
+				$ %s query attribute list pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk --page=2 --limit=100
+				`,
 				version.AppName, version.AppName,
 			)),
 		Args: cobra.ExactArgs(1),
@@ -170,12 +170,12 @@ func ScanAccountAttributesCmd() *cobra.Command {
 		Use:   "scan [address] [suffix]",
 		Short: "Scan account attributes by name suffix",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query for all attributes on account with a given name:
-
-Example:
-$ %s query attribute scan pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk name.suffix
-$ %s query attribute scan pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk name.suffix --page=2 --limit=100
-`,
+			fmt.Sprintf(`Query for all attributes on account with a given name`)),
+		Example: strings.TrimSpace(
+			fmt.Sprintf(`
+				$ %s query attribute scan pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk name.suffix
+				$ %s query attribute scan pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk name.suffix --page=2 --limit=100
+				`,
 				version.AppName, version.AppName,
 			)),
 		Args: cobra.ExactArgs(2),
