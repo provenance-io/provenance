@@ -118,7 +118,7 @@ func (s *ConfigManagerTestSuite) TestManagerWriteAppConfigWithIndexEventsThenRea
 	s.Require().Equal(appConfig.IndexEvents, appConfig2.IndexEvents, "index events before/after")
 }
 
-func (s *ConfigManagerTestSuite) TestPackedConfigCosmosLoadNoGlobalLabels() {
+func (s *ConfigManagerTestSuite) TestPackedConfigCosmosLoadDefaults() {
 	dCmd := s.makeDummyCmd()
 
 	appConfig := serverconfig.DefaultConfig()
@@ -130,11 +130,12 @@ func (s *ConfigManagerTestSuite) TestPackedConfigCosmosLoadNoGlobalLabels() {
 	ctx := client.GetClientContextFromCmd(dCmd)
 	vpr := ctx.Viper
 	s.Require().NotPanics(func() {
-		serverconfig.GetConfig(vpr)
+		appConfig2 := serverconfig.GetConfig(vpr)
+		s.Assert().Equal(*appConfig, appConfig2)
 	})
 }
 
-func (s *ConfigManagerTestSuite) TestPackedConfigCosmosLoadWithGlobalLabels() {
+func (s *ConfigManagerTestSuite) TestPackedConfigCosmosLoadGlobalLabels() {
 	dCmd := s.makeDummyCmd()
 
 	appConfig := serverconfig.DefaultConfig()
@@ -148,6 +149,7 @@ func (s *ConfigManagerTestSuite) TestPackedConfigCosmosLoadWithGlobalLabels() {
 	ctx := client.GetClientContextFromCmd(dCmd)
 	vpr := ctx.Viper
 	s.Require().NotPanics(func() {
-		serverconfig.GetConfig(vpr)
+		appConfig2 := serverconfig.GetConfig(vpr)
+		s.Assert().Equal(appConfig.Telemetry.GlobalLabels, appConfig2.Telemetry.GlobalLabels)
 	})
 }
