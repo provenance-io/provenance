@@ -7,7 +7,7 @@ import (
 )
 
 func MigrateMarkerAddressKeys(ctx sdk.Context, storeKey sdk.StoreKey) error {
-	ctx.Logger().Info("Migrating Marker Module Markers")
+	ctx.Logger().Info("Migrating Marker Module Markers (1/2)")
 	store := ctx.KVStore(storeKey)
 	oldStore := prefix.NewStore(store, MarkerStoreKeyPrefixLegacy)
 
@@ -26,7 +26,7 @@ func MigrateMarkerAddressKeys(ctx sdk.Context, storeKey sdk.StoreKey) error {
 // MigrateMarkerPermissions inspects existing COIN markers for grants of Access_Transfer and removes the invalid
 // grant to prevent validation errors with the strict access validation updates in 1.6.0
 func MigrateMarkerPermissions(ctx sdk.Context, k MarkerKeeperI) error {
-	ctx.Logger().Info("Migrating Marker Module Marker Permissions")
+	ctx.Logger().Info("Migrating Marker Module Marker Permissions (2/2)")
 	var err error
 	k.IterateMarkers(ctx, func(marker types.MarkerAccountI) (stop bool) {
 		if marker.GetMarkerType() == types.MarkerType_Coin {

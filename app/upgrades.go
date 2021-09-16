@@ -103,7 +103,7 @@ var handlers = map[string]appUpgrade{
 				"metadata":  1,
 				"name":      1,
 			}
-			ctx.Logger().Info("NOTICE: Starting large migration on all modules for cosmos-sdk v0.44.0.  This will take a significant amount of time to complete.")
+			ctx.Logger().Info("NOTICE: Starting large migration on all modules for cosmos-sdk v0.44.0.  This will take a significant amount of time to complete.  Do not restart node.")
 			return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 		},
 	},
