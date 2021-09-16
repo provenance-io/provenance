@@ -539,6 +539,25 @@ func addFieldMapToViper(vpr *viper.Viper, fvmap FieldValueMap) error {
 	for k, v := range fvmap {
 		configMap[k] = v.Interface()
 	}
+	// The telemetry.global-labels field in the app config struct is a `[][]string`.
+	// But in serverconfig.GetConfig, it expects viper to return it as a `[]interface{}`.
+	// Then each element of that is expected to also be a `[]interface{}`.
+	// So we need to convert that field before adding it to viper.
+	if gli, hasGL := configMap["telemetry.global-labels"]; hasGL {
+		newv := make([]interface{}, 0)
+		if gli != nil {
+			if gl, ok := gli.([][]string); ok {
+				for _, p := range gl {
+					var newp []interface{}
+					for _, k := range p {
+						newp = append(newp, k)
+					}
+					newv = append(newv, newp)
+				}
+			}
+		}
+		configMap["telemetry.global-labels"] = newv
+	}
 	return vpr.MergeConfigMap(configMap)
 }
 
