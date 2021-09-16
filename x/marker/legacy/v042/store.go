@@ -31,7 +31,7 @@ func MigrateMarkerPermissions(ctx sdk.Context, k MarkerKeeperI) error {
 			invalid := marker.AddressListForPermission(types.Access_Transfer)
 			// invalid permission grants exist, remediation required
 			if len(invalid) > 0 {
-				m := marker.Clone()
+				m := marker.(*types.MarkerAccount)
 				var accessList []types.AccessGrant
 				for _, ac := range m.AccessControl {
 					if ac.HasAccess(types.Access_Transfer) {
