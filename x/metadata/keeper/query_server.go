@@ -909,13 +909,11 @@ func (k Keeper) OSLocator(c context.Context, request *types.OSLocatorRequest) (*
 
 func (k Keeper) OSLocatorsByURI(ctx context.Context, request *types.OSLocatorsByURIRequest) (*types.OSLocatorsByURIResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "OSLocatorsByURI")
+	retval := types.OSLocatorsByURIResponse{Request: request}
 	if request == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
+		return &retval, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	retval := types.OSLocatorsByURIResponse{Request: request}
-
-	ctxSDK := sdk.UnwrapSDKContext(ctx)
 	var sDec []byte
 	// rest request send in base64 encoded uri, using a URL-compatible base64 format.
 	if IsBase64(request.Uri) {
@@ -927,50 +925,28 @@ func (k Keeper) OSLocatorsByURI(ctx context.Context, request *types.OSLocatorsBy
 	if err != nil {
 		return &retval, err
 	}
-	// Return value data structure.
-	var records []types.ObjectStoreLocator
-	// Handler that adds records if account address matches.
-	appendToRecords := func(record types.ObjectStoreLocator) bool {
-		if record.LocatorUri == uri.String() {
-			records = append(records, record)
-			// have to get all the uri associated with an address..imo..check
-		}
-		return false
-	}
+	uriStr := uri.String()
 
-	// TODO: Refactor OSLocatorsByURI for full pagination support. https://github.com/provenance-io/provenance/issues/401
-	if err := k.IterateOSLocators(ctxSDK, appendToRecords); err != nil {
+	osLocatorStore := prefix.NewStore(sdk.UnwrapSDKContext(ctx).KVStore(k.storeKey), types.OSLocatorAddressKeyPrefix)
+	retval.Pagination, err = query.FilteredPaginate(osLocatorStore, request.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		record := types.ObjectStoreLocator{}
+		if rerr := k.cdc.Unmarshal(value, &record); rerr != nil {
+			return false, rerr
+		}
+		if record.LocatorUri != uriStr {
+			return false, nil
+		}
+		if accumulate {
+			retval.Locators = append(retval.Locators, record)
+		}
+		return true, nil
+	})
+	if err != nil {
 		return &retval, err
 	}
-	if records == nil {
+	if len(retval.Locators) == 0 {
 		return &retval, types.ErrNoRecordsFound
 	}
-	uniqueRecords := uniqueRecords(records)
-
-	pageRequest := request.Pagination
-	// if the PageRequest is nil, use default PageRequest
-	if pageRequest == nil {
-		pageRequest = &query.PageRequest{}
-	}
-
-	limit := pageRequest.Limit
-	if limit == 0 {
-		limit = defaultLimit
-	}
-	end := pageRequest.Offset + limit
-	totalResults := uint64(len(uniqueRecords))
-
-	if pageRequest.Offset > totalResults {
-		return &retval, fmt.Errorf("invalid offset")
-	}
-
-	if end > totalResults {
-		end = totalResults
-	}
-
-	retval.Locators = uniqueRecords[pageRequest.Offset:end]
-	retval.Pagination = &query.PageResponse{Total: totalResults}
-
 	return &retval, nil
 }
 
@@ -998,56 +974,27 @@ func (k Keeper) OSLocatorsByScope(ctx context.Context, request *types.OSLocators
 
 func (k Keeper) OSAllLocators(ctx context.Context, request *types.OSAllLocatorsRequest) (*types.OSAllLocatorsResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "OSAllLocators")
-	if request == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
 	retval := types.OSAllLocatorsResponse{Request: request}
-
-	ctxSDK := sdk.UnwrapSDKContext(ctx)
-
-	// Return value data structure.
-	var records []types.ObjectStoreLocator
-	// Handler that adds records if account address matches.
-	appendToRecords := func(record types.ObjectStoreLocator) bool {
-		records = append(records, record)
-		// have to get all the uri associated with an address..imo..check
-		return false
+	if request == nil {
+		return &retval, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	// TODO: Refactor OSAllLocators for full pagination support. https://github.com/provenance-io/provenance/issues/402
-	if err := k.IterateOSLocators(ctxSDK, appendToRecords); err != nil {
+	osLocatorStore := prefix.NewStore(sdk.UnwrapSDKContext(ctx).KVStore(k.storeKey), types.OSLocatorAddressKeyPrefix)
+	var err error
+	retval.Pagination, err = query.Paginate(osLocatorStore, request.Pagination, func(key []byte, value []byte) error {
+		record := types.ObjectStoreLocator{}
+		if rerr := k.cdc.Unmarshal(value, &record); rerr != nil {
+			return rerr
+		}
+		retval.Locators = append(retval.Locators, record)
+		return nil
+	})
+	if err != nil {
 		return &retval, err
 	}
-	if records == nil {
+	if len(retval.Locators) == 0 {
 		return &retval, types.ErrNoRecordsFound
 	}
-	uniqueRecords := uniqueRecords(records)
-
-	pageRequest := request.Pagination
-	// if the PageRequest is nil, use default PageRequest
-	if pageRequest == nil {
-		pageRequest = &query.PageRequest{}
-	}
-
-	limit := pageRequest.Limit
-	if limit == 0 {
-		limit = defaultLimit
-	}
-	end := pageRequest.Offset + limit
-	totalResults := uint64(len(uniqueRecords))
-
-	if pageRequest.Offset > totalResults {
-		return &retval, fmt.Errorf("invalid offset")
-	}
-
-	if end > totalResults {
-		end = totalResults
-	}
-
-	retval.Locators = uniqueRecords[pageRequest.Offset:end]
-	retval.Pagination = &query.PageResponse{Total: totalResults}
-
 	return &retval, nil
 }
 
