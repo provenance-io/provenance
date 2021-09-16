@@ -7,23 +7,29 @@ import (
 )
 
 func MigrateAddresses(ctx sdk.Context, storeKey sdk.StoreKey) error {
+	ctx.Logger().Info("Migrating Metadata OSLocators")
 	err := MigrateOSLocatorKeys(ctx, storeKey)
 	if err != nil {
 		return err
 	}
+	ctx.Logger().Info("Migrating Metadata Scopes")
 	err = MigrateAddressScopeCacheKey(ctx, storeKey)
 	if err != nil {
 		return err
 	}
+	ctx.Logger().Info("Migrating Metadata Value Owner Scopes")
 	err = MigrateValueOwnerScopeCacheKey(ctx, storeKey)
 	if err != nil {
 		return err
 	}
+	ctx.Logger().Info("Migrating Metadata Scope Specs")
 	err = MigrateAddressScopeSpecCacheKey(ctx, storeKey)
 	if err != nil {
 		return err
 	}
-	return MigrateAddressContractSpecCacheKey(ctx, storeKey)
+	ctx.Logger().Info("Migrating Metadata Contract Specs")
+	err = MigrateAddressContractSpecCacheKey(ctx, storeKey)
+	return err
 }
 
 func MigrateOSLocatorKeys(ctx sdk.Context, storeKey sdk.StoreKey) error {

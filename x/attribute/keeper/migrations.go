@@ -18,5 +18,7 @@ func NewMigrator(keeper Keeper) Migrator {
 // Migrate1to2 migrates from version 1 to 2 to convert attribute keys from 20 to 32 length
 func (m *Migrator) Migrate1to2(ctx sdk.Context) error {
 	ctx.Logger().Info("Migrating Attribute Module from Version 1 to 2")
-	return v042.MigrateAddressLength(ctx, m.keeper.storeKey)
+	err := v042.MigrateAddressLength(ctx, m.keeper.storeKey)
+	ctx.Logger().Info("Finished Migrating Attribute Module from Version 1 to 2")
+	return err
 }
