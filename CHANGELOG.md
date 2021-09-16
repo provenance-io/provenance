@@ -37,20 +37,21 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-### Improvements
-
-* Updated some of the documentation of Metadata type bytes (prefixes) [#474](https://github.com/provenance-io/provenance/issues/474)
-
 ### Features
 
 * Add a single node docker based development environment [#311](https://github.com/provenance-io/provenance/issues/311)
   * Add make targets `devnet-start` and `devnet-stop`
   * Add `networks/dev/mnemonics` for adding accounts to development environment
 
+### Improvements
+
+* Updated some of the documentation of Metadata type bytes (prefixes) [#474](https://github.com/provenance-io/provenance/issues/474)
+* Update the Metadata OSLocatorsByURI query to fully utilize pagination fields [#401](https://github.com/provenance-io/provenance/issues/401)
+* Update the Metadata OSAllLocators query to fully utilize pagination fields [#402](https://github.com/provenance-io/provenance/issues/402)
+
 ### Bug Fixes
 
 * Removed some unneeded code from the persistent record update validation [#471](https://github.com/provenance-io/provenance/issues/471)
-
 
 ## [v1.7.0](https://github.com/provenance-io/provenance/releases/tag/v1.7.0) - 2021-09-03
 
