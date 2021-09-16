@@ -47,6 +47,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Updated some of the documentation of Metadata type bytes (prefixes) [#474](https://github.com/provenance-io/provenance/issues/474)
 * Update the Marker Holding query to fully utilize pagination fields [#400](https://github.com/provenance-io/provenance/issues/400)
+* Update the Metadata OSLocatorsByURI query to fully utilize pagination fields [#401](https://github.com/provenance-io/provenance/issues/401)
+* Update the Metadata OSAllLocators query to fully utilize pagination fields [#402](https://github.com/provenance-io/provenance/issues/402)
 
 ### Bug Fixes
 
