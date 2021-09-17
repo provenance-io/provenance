@@ -1,6 +1,8 @@
 package v042
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/marker/types"
@@ -33,7 +35,11 @@ func MigrateMarkerPermissions(ctx sdk.Context, k MarkerKeeperI) error {
 			invalid := marker.AddressListForPermission(types.Access_Transfer)
 			// invalid permission grants exist, remediation required
 			if len(invalid) > 0 {
-				m := marker.(*types.MarkerAccount)
+				m, ok := marker.(*types.MarkerAccount)
+				if !ok {
+					err = fmt.Errorf("unable to cast IMarkerAccount to MarkerAccount: %v", marker)
+					return true
+				}
 				var accessList []types.AccessGrant
 				for _, ac := range m.AccessControl {
 					if ac.HasAccess(types.Access_Transfer) {
