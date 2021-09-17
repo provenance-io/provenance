@@ -240,7 +240,7 @@ func (k Keeper) MintCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 		if err = m.SetSupply(total); err != nil {
 			return err
 		}
-		if err := m.Validate(); err != nil {
+		if err = m.Validate(); err != nil {
 			return err
 		}
 		k.SetMarker(ctx, m)
@@ -283,7 +283,7 @@ func (k Keeper) BurnCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 		if err = m.SetSupply(total); err != nil {
 			return err
 		}
-		if err := m.Validate(); err != nil {
+		if err = m.Validate(); err != nil {
 			return err
 		}
 		k.SetMarker(ctx, m)
