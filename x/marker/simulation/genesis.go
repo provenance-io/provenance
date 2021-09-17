@@ -19,6 +19,7 @@ const (
 	MaxTotalSupply         = "max_total_supply"
 	EnableGovernance       = "enable_governance"
 	UnrestrictedDenomRegex = "unresticted_denom_regex"
+	MaxCoinSupply          = "max_coin_supply"
 )
 
 // GenMaxTotalSupply randomized Maximum amount of supply to allow for markers
@@ -36,6 +37,11 @@ func GenUnrestrictedDenomRegex(r *rand.Rand) string {
 	min := r.Int31n(16) + 3
 	max := r.Int31n(64-min) + min
 	return fmt.Sprintf(`[a-zA-Z][a-zA-Z0-9\\-\\.]{%d,%d}`, min, max)
+}
+
+// GenMaxCoinSupply randomized Maximum amount of supply to allow for markers
+func GenMaxCoinSupply(r *rand.Rand) sdk.Int {
+	return sdk.NewInt(r.Int63())
 }
 
 // RandomizedGenState generates a random GenesisState for marker
@@ -58,11 +64,18 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { unrestrictedDenomRegex = GenUnrestrictedDenomRegex(r) },
 	)
 
+	var maxCoinSupply sdk.Int
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, MaxCoinSupply, &maxCoinSupply, simState.Rand,
+		func(r *rand.Rand) { maxCoinSupply = GenMaxCoinSupply(r) },
+	)
+
 	markerGenesis := types.GenesisState{
 		Params: types.Params{
 			MaxTotalSupply:         maxTotalSupply,
 			EnableGovernance:       enableGovernance,
 			UnrestrictedDenomRegex: unrestrictedDenomRegex,
+			MaxCoinSupply:          maxCoinSupply,
 		},
 		Markers: []types.MarkerAccount{
 			{

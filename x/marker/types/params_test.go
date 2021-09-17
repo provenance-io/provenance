@@ -1,6 +1,7 @@
 package types
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"regexp"
 	"testing"
 
@@ -16,11 +17,12 @@ func TestDefaultParams(t *testing.T) {
 	require.Equal(t, DefaultUnrestrictedDenomRegex, p.UnrestrictedDenomRegex)
 	require.Equal(t, DefaultEnableGovernance, p.EnableGovernance)
 	require.Equal(t, uint64(DefaultMaxTotalSupply), p.MaxTotalSupply)
+	require.Equal(t, sdk.NewInt(DefaultMaxCoinSupply), p.MaxCoinSupply)
 
-	require.True(t, p.Equal(NewParams(DefaultMaxTotalSupply, DefaultEnableGovernance, DefaultUnrestrictedDenomRegex)))
-	require.False(t, p.Equal(NewParams(1000, DefaultEnableGovernance, DefaultUnrestrictedDenomRegex)))
-	require.False(t, p.Equal(NewParams(DefaultMaxTotalSupply, false, DefaultUnrestrictedDenomRegex)))
-	require.False(t, p.Equal(NewParams(DefaultMaxTotalSupply, DefaultEnableGovernance, "a-z")))
+	require.True(t, p.Equal(NewParams(DefaultMaxTotalSupply, DefaultEnableGovernance, DefaultUnrestrictedDenomRegex, sdk.NewInt(DefaultMaxCoinSupply))))
+	require.False(t, p.Equal(NewParams(1000, DefaultEnableGovernance, DefaultUnrestrictedDenomRegex, sdk.NewInt(DefaultMaxCoinSupply))))
+	require.False(t, p.Equal(NewParams(DefaultMaxTotalSupply, false, DefaultUnrestrictedDenomRegex, sdk.NewInt(DefaultMaxCoinSupply))))
+	require.False(t, p.Equal(NewParams(DefaultMaxTotalSupply, DefaultEnableGovernance, "a-z", sdk.NewInt(DefaultMaxCoinSupply))))
 	require.False(t, p.Equal(nil))
 
 	var p2 *Params
