@@ -28,8 +28,7 @@ func MigrateAddresses(ctx sdk.Context, storeKey sdk.StoreKey) error {
 		return err
 	}
 	ctx.Logger().Info("Migrating Metadata Contract Specs (5/5)")
-	err = MigrateAddressContractSpecCacheKey(ctx, storeKey)
-	return err
+	return MigrateAddressContractSpecCacheKey(ctx, storeKey)
 }
 
 func MigrateOSLocatorKeys(ctx sdk.Context, storeKey sdk.StoreKey) error {
