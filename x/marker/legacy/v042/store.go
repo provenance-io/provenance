@@ -37,7 +37,7 @@ func MigrateMarkerPermissions(ctx sdk.Context, k MarkerKeeperI) error {
 			if len(invalid) > 0 {
 				m, ok := marker.(*types.MarkerAccount)
 				if !ok {
-					err = fmt.Errorf("unable to cast IMarkerAccount to MarkerAccount: %v", marker)
+					err = fmt.Errorf("unable to cast MarkerAccountI to MarkerAccount: %v", marker)
 					return true
 				}
 				var accessList []types.AccessGrant
