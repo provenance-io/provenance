@@ -72,6 +72,9 @@ func (k Keeper) AddMarkerAccount(ctx sdk.Context, marker types.MarkerAccountI) e
 	// set base account number
 	marker = k.NewMarker(ctx, marker)
 
+	if err := marker.Validate(); err != nil {
+		return err
+	}
 	k.SetMarker(ctx, marker)
 
 	markerAddEvent := types.NewEventMarkerAdd(
@@ -116,6 +119,9 @@ func (k Keeper) AddAccess(
 		if err = m.GrantAccess(grant); err != nil {
 			return fmt.Errorf("access grant failed: %w", err)
 		}
+		if err := m.Validate(); err != nil {
+			return err
+		}
 		k.SetMarker(ctx, m)
 	// Undefined, Cancelled, Destroyed -- no modifications are supported in these states
 	default:
@@ -155,6 +161,9 @@ func (k Keeper) RemoveAccess(ctx sdk.Context, caller sdk.AccAddress, denom strin
 		}
 		if err = m.RevokeAccess(remove); err != nil {
 			return fmt.Errorf("access grant failed: %w", err)
+		}
+		if err := m.Validate(); err != nil {
+			return err
 		}
 		k.SetMarker(ctx, m)
 	// Undefined, Cancelled, Destroyed -- no modifications are supported in these states
@@ -231,6 +240,9 @@ func (k Keeper) MintCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 		if err = m.SetSupply(total); err != nil {
 			return err
 		}
+		if err = m.Validate(); err != nil {
+			return err
+		}
 		k.SetMarker(ctx, m)
 	case m.GetStatus() != types.StatusActive:
 		return fmt.Errorf("cannot mint coin for a marker that is not in Active status")
@@ -269,6 +281,9 @@ func (k Keeper) BurnCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 	case m.GetStatus() == types.StatusProposed || m.GetStatus() == types.StatusFinalized:
 		total := m.GetSupply().Sub(coin)
 		if err = m.SetSupply(total); err != nil {
+			return err
+		}
+		if err = m.Validate(); err != nil {
 			return err
 		}
 		k.SetMarker(ctx, m)
@@ -356,7 +371,9 @@ func (k Keeper) IncreaseSupply(ctx sdk.Context, marker types.MarkerAccountI, coi
 		if err := marker.SetSupply(total); err != nil {
 			return err
 		}
-		// save the updated marker
+		if err := marker.Validate(); err != nil {
+			return err
+		}
 		k.SetMarker(ctx, marker)
 	}
 
@@ -382,6 +399,9 @@ func (k Keeper) DecreaseSupply(ctx sdk.Context, marker types.MarkerAccountI, coi
 	inCirculation = inCirculation.Sub(coin)
 	if marker.HasFixedSupply() {
 		if err := marker.SetSupply(inCirculation); err != nil {
+			return err
+		}
+		if err := marker.Validate(); err != nil {
 			return err
 		}
 		// Finalize supply update in marker record
@@ -437,7 +457,9 @@ func (k Keeper) FinalizeMarker(ctx sdk.Context, caller sdk.Address, denom string
 	if err = m.SetStatus(types.StatusFinalized); err != nil {
 		return fmt.Errorf("could not transition marker account state to finalized: %w", err)
 	}
-
+	if err := m.Validate(); err != nil {
+		return err
+	}
 	// record status as finalized.
 	k.SetMarker(ctx, m)
 
@@ -500,7 +522,9 @@ func (k Keeper) ActivateMarker(ctx sdk.Context, caller sdk.Address, denom string
 	if err = m.SetStatus(types.StatusActive); err != nil {
 		return fmt.Errorf("could not set marker status to active: %w", err)
 	}
-
+	if err := m.Validate(); err != nil {
+		return err
+	}
 	// record status as active
 	k.SetMarker(ctx, m)
 
@@ -547,6 +571,9 @@ func (k Keeper) CancelMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 	}
 	if err = m.SetStatus(types.StatusCancelled); err != nil {
 		return fmt.Errorf("could not update marker status: %w", err)
+	}
+	if err := m.Validate(); err != nil {
+		return err
 	}
 	k.SetMarker(ctx, m)
 
@@ -604,6 +631,9 @@ func (k Keeper) DeleteMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 	}
 	if err = m.SetStatus(types.StatusDestroyed); err != nil {
 		return fmt.Errorf("could not update marker status: %w", err)
+	}
+	if err := m.Validate(); err != nil {
+		return err
 	}
 	k.SetMarker(ctx, m)
 
