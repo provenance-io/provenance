@@ -29636,6 +29636,11 @@ paths:
 
                       requests are only subject to platform coin validation
                       denom expression)
+                  max_coin_supply:
+                    type: string
+                    title: >-
+                      maximum amount of supply to allow a marker to be created
+                      with
             description: >-
               QueryParamsResponse is the response type for the Query/Params RPC
               method.
@@ -67855,6 +67860,9 @@ definitions:
 
           requests are only subject to platform coin validation denom
           expression)
+      max_coin_supply:
+        type: string
+        title: maximum amount of supply to allow a marker to be created with
     description: Params defines the set of params for the account module.
   provenance.marker.v1.QueryAccessResponse:
     type: object
@@ -68416,6 +68424,9 @@ definitions:
 
               requests are only subject to platform coin validation denom
               expression)
+          max_coin_supply:
+            type: string
+            title: maximum amount of supply to allow a marker to be created with
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
   provenance.marker.v1.QuerySupplyResponse:
     type: object

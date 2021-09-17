@@ -15,6 +15,7 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 		MaxTotalSupply:         k.GetMaxTotalSupply(ctx),
 		EnableGovernance:       k.GetEnableGovernance(ctx),
 		UnrestrictedDenomRegex: k.GetUnrestrictedDenomRegex(ctx),
+		MaxCoinSupply: 			k.GetMaxCoinSupply(ctx),
 	}
 }
 
@@ -66,4 +67,13 @@ func (k Keeper) ValidateUnrestictedDenom(ctx sdk.Context, denom string) error {
 		return fmt.Errorf("invalid denom [%s] (fails unrestricted marker denom validation %s)", denom, exp)
 	}
 	return nil
+}
+
+// GetMaxCoinSupply return the current parameter value for the max allowed total supply (or default if unset)
+func (k Keeper) GetMaxCoinSupply(ctx sdk.Context) (max sdk.Int) {
+	max = sdk.NewInt(types.DefaultMaxCoinSupply)
+	if k.paramSpace.Has(ctx, types.ParamStoreKeyMaxCoinSupply) {
+		k.paramSpace.Get(ctx, types.ParamStoreKeyMaxCoinSupply, &max)
+	}
+	return
 }

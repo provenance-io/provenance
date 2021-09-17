@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"regexp"
 
 	yaml "gopkg.in/yaml.v2"
@@ -16,6 +17,7 @@ const (
 	DefaultMaxTotalSupply = uint64(100000000000)
 	// DefaultUnrestrictedDenomRegex is a regex that denoms created by normal requests must pass.
 	DefaultUnrestrictedDenomRegex = `[a-zA-Z][a-zA-Z0-9\-\.]{2,64}`
+	DefaultMaxCoinSupply = 100000000000
 )
 
 var (
@@ -25,6 +27,8 @@ var (
 	ParamStoreKeyMaxTotalSupply = []byte("MaxTotalSupply")
 	// ParamStoreKeyUnrestrictedDenomRegex is the validation regex for validating denoms supplied by users.
 	ParamStoreKeyUnrestrictedDenomRegex = []byte("UnrestrictedDenomRegex")
+	// ParamStoreKeyMaxCoinSupply is maximum supply to allow a marker to create
+	ParamStoreKeyMaxCoinSupply = []byte("MaxCoinSupply")
 )
 
 // ParamKeyTable for marker module
@@ -37,11 +41,13 @@ func NewParams(
 	maxTotalSupply uint64,
 	enableGovernance bool,
 	unrestrictedDenomRegex string,
+	maxCoinSupply sdk.Int,
 ) Params {
 	return Params{
 		EnableGovernance:       enableGovernance,
 		MaxTotalSupply:         maxTotalSupply,
 		UnrestrictedDenomRegex: unrestrictedDenomRegex,
+		MaxCoinSupply: 			maxCoinSupply,
 	}
 }
 
@@ -49,8 +55,9 @@ func NewParams(
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(ParamStoreKeyEnableGovernance, &p.EnableGovernance, validateEnableGovernance),
-		paramtypes.NewParamSetPair(ParamStoreKeyMaxTotalSupply, &p.MaxTotalSupply, validateIntParam),
+		paramtypes.NewParamSetPair(ParamStoreKeyMaxTotalSupply, &p.MaxTotalSupply, validateUint64Param),
 		paramtypes.NewParamSetPair(ParamStoreKeyUnrestrictedDenomRegex, &p.UnrestrictedDenomRegex, validateRegexParam),
+		paramtypes.NewParamSetPair(ParamStoreKeyMaxCoinSupply, &p.MaxCoinSupply, validateIntParam),
 	}
 }
 
@@ -60,6 +67,7 @@ func DefaultParams() Params {
 		DefaultMaxTotalSupply,
 		DefaultEnableGovernance,
 		DefaultUnrestrictedDenomRegex,
+		sdk.NewInt(DefaultMaxCoinSupply),
 	)
 }
 
@@ -98,11 +106,23 @@ func (p *Params) Equal(that interface{}) bool {
 	if p.UnrestrictedDenomRegex != that1.UnrestrictedDenomRegex {
 		return false
 	}
+	if p.MaxCoinSupply != that1.MaxCoinSupply {
+		return false
+	}
 	return true
 }
 
-func validateIntParam(i interface{}) error {
+func validateUint64Param(i interface{}) error {
 	_, ok := i.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	return nil
+}
+
+func validateIntParam(i interface{}) error {
+	_, ok := i.(sdk.Int)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}

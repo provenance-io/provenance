@@ -878,7 +878,7 @@ Access defines the different types of permissions that a marker supports grantin
 | ACCESS_WITHDRAW | 4 | ACCESS_WITHDRAW is the ability to remove marker references to this marker in from metadata/scopes or transfer coin from this marker account to another account. |
 | ACCESS_DELETE | 5 | ACCESS_DELETE is the ability to move a proposed, finalized or active marker into the cancelled state. This access also allows cancelled markers to be marked for deletion |
 | ACCESS_ADMIN | 6 | ACCESS_ADMIN is the ability to add access grants for accounts to the list of marker permissions. |
-| ACCESS_TRANSFER | 7 | ACCESS_TRANSFER is the ability to invoke a send operation using the marker module to facilitate exchange. This capability is useful when the marker denomination has "send enabled = false" preventing normal bank transfer |
+| ACCESS_TRANSFER | 7 | ACCESS_TRANSFER is the ability to invoke a send operation using the marker module to facilitate exchange. This access right is only supported on RESTRICTED markers. |
 
 
  <!-- end enums -->
@@ -1204,6 +1204,7 @@ Params defines the set of params for the account module.
 | `max_total_supply` | [uint64](#uint64) |  | maximum amount of supply to allow a marker to be created with |
 | `enable_governance` | [bool](#bool) |  | indicates if governance based controls of markers is allowed. |
 | `unrestricted_denom_regex` | [string](#string) |  | a regular expression used to validate marker denom values from normal create requests (governance requests are only subject to platform coin validation denom expression) |
+| `max_coin_supply` | [string](#string) |  | maximum amount of supply to allow a marker to be created with |
 
 
 

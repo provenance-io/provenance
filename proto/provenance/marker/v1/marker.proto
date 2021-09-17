@@ -22,6 +22,9 @@ message Params {
   // a regular expression used to validate marker denom values from normal create requests (governance
   // requests are only subject to platform coin validation denom expression)
   string unrestricted_denom_regex = 3;
+  // maximum amount of supply to allow a marker to be created with
+  string max_coin_supply = 4
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
 // MarkerAccount holds the marker configuration information in addition to a base account structure.
