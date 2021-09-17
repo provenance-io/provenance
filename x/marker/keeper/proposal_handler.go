@@ -80,6 +80,9 @@ func HandleSupplyIncreaseProposal(ctx sdk.Context, k Keeper, c *types.SupplyIncr
 		if err = m.SetSupply(total); err != nil {
 			return err
 		}
+		if err := m.Validate(); err != nil {
+			return err
+		}
 		k.SetMarker(ctx, m)
 		logger.Info("marker configured supply increased", "marker", c.Amount.Denom, "amount", c.Amount.Amount.String())
 		return nil
