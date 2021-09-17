@@ -42,8 +42,6 @@ func GetAttributeParamsCmd() *cobra.Command {
 		Use:   "params",
 		Short: "Query the current name parameters",
 		Args:  cobra.NoArgs,
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query the current attribute module parameters`)),
 		Example: strings.TrimSpace(
 			fmt.Sprintf(`
 				$ %s query attribute params
@@ -76,8 +74,6 @@ func GetAccountAttributeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get [address] [name]",
 		Short: "Get account attributes by name",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query for all attributes on account with a given name`)),
 		Example: strings.TrimSpace(
 			fmt.Sprintf(`
 				$ %s query attribute get pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk attrib.name
@@ -124,8 +120,6 @@ func ListAccountAttributesCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list [address]",
 		Short: "Get all account attributes",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query for all attributes on account with a given name`)),
 		Example: strings.TrimSpace(
 			fmt.Sprintf(`$ %s query attribute list pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 				$ %s query attribute list pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk --page=2 --limit=100
@@ -169,8 +163,6 @@ func ScanAccountAttributesCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "scan [address] [suffix]",
 		Short: "Scan account attributes by name suffix",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query for all attributes on account with a given name`)),
 		Example: strings.TrimSpace(
 			fmt.Sprintf(`
 				$ %s query attribute scan pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk name.suffix

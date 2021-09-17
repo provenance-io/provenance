@@ -186,10 +186,9 @@ func GetCmdAddMarker() *cobra.Command {
 		Aliases: []string{"n"},
 		Args:    cobra.ExactArgs(1),
 		Short:   "Create a new marker",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Creates a new marker in the Proposed state managed by the from address
+		Long: strings.TrimSpace(`Creates a new marker in the Proposed state managed by the from address
 with the given supply amount and denomination provided in the coin argument
-`)),
+`),
 		Example: strings.TrimSpace(
 			fmt.Sprintf(`$ %s tx marker new 1000hotdogcoin --%s=false --%s=false --from=mykey`, FlagType, FlagSupplyFixed, FlagAllowGovernanceControl)),
 		RunE: func(cmd *cobra.Command, args []string) error {

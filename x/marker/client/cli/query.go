@@ -71,6 +71,8 @@ func AllMarkersCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list [status, optional]",
 		Short: "List all marker registrations on the Provenance Blockchain",
+		Example: strings.TrimSpace(
+			fmt.Sprintf(`$ %s query marker list`, version.AppName)),
 		Args:  cobra.RangeArgs(0, 1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -116,6 +118,8 @@ func AllHoldersCmd() *cobra.Command {
 		Use:     "holding [denom]",
 		Aliases: []string{"hold", "holder"},
 		Short:   "List all accounts holding the given marker on the Provenance Blockchain",
+		Example: strings.TrimSpace(
+			fmt.Sprintf(`$ %s query marker holding hash`, version.AppName)),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
