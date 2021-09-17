@@ -56,6 +56,7 @@ func (s *ConfigManagerTestSuite) makeDummyCmd() *cobra.Command {
 	}
 	dummyCmd.SetOut(ioutil.Discard)
 	dummyCmd.SetErr(ioutil.Discard)
+	dummyCmd.SetArgs([]string{})
 	var err error
 	dummyCmd, err = dummyCmd.ExecuteContextC(ctx)
 	s.Require().NoError(err, "dummy command execution")
@@ -115,4 +116,40 @@ func (s *ConfigManagerTestSuite) TestManagerWriteAppConfigWithIndexEventsThenRea
 	appConfig2, err2 := ExtractAppConfig(dCmd)
 	s.Require().NoError(err2, "extracging app config")
 	s.Require().Equal(appConfig.IndexEvents, appConfig2.IndexEvents, "index events before/after")
+}
+
+func (s *ConfigManagerTestSuite) TestPackedConfigCosmosLoadDefaults() {
+	dCmd := s.makeDummyCmd()
+
+	appConfig := serverconfig.DefaultConfig()
+	tmConfig := tmconfig.DefaultConfig()
+	clientConfig := DefaultClientConfig()
+	generateAndWritePackedConfig(dCmd, appConfig, tmConfig, clientConfig, false)
+	s.Require().NoError(loadPackedConfig(dCmd))
+
+	ctx := client.GetClientContextFromCmd(dCmd)
+	vpr := ctx.Viper
+	s.Require().NotPanics(func() {
+		appConfig2 := serverconfig.GetConfig(vpr)
+		s.Assert().Equal(*appConfig, appConfig2)
+	})
+}
+
+func (s *ConfigManagerTestSuite) TestPackedConfigCosmosLoadGlobalLabels() {
+	dCmd := s.makeDummyCmd()
+
+	appConfig := serverconfig.DefaultConfig()
+	appConfig.Telemetry.GlobalLabels = append(appConfig.Telemetry.GlobalLabels, []string{"key1", "value1"})
+	appConfig.Telemetry.GlobalLabels = append(appConfig.Telemetry.GlobalLabels, []string{"key2", "value2"})
+	tmConfig := tmconfig.DefaultConfig()
+	clientConfig := DefaultClientConfig()
+	generateAndWritePackedConfig(dCmd, appConfig, tmConfig, clientConfig, false)
+	s.Require().NoError(loadPackedConfig(dCmd))
+
+	ctx := client.GetClientContextFromCmd(dCmd)
+	vpr := ctx.Viper
+	s.Require().NotPanics(func() {
+		appConfig2 := serverconfig.GetConfig(vpr)
+		s.Assert().Equal(appConfig.Telemetry.GlobalLabels, appConfig2.Telemetry.GlobalLabels)
+	})
 }

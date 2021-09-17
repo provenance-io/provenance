@@ -51,6 +51,9 @@ type Keeper struct {
 	// To handle movement of coin between accounts and check total supply
 	bankKeeper bankkeeper.Keeper
 
+	// For access to bank keeper storage outside what their keeper provides.
+	bankKeeperStoreKey sdk.StoreKey
+
 	// Key to access the key-value store from sdk.Context.
 	storeKey sdk.StoreKey
 
@@ -70,18 +73,20 @@ func NewKeeper(
 	authKeeper authkeeper.AccountKeeper,
 	bankKeeper bankkeeper.Keeper,
 	authzKeeper authzkeeper.Keeper,
+	bankKey sdk.StoreKey,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 
 	return Keeper{
-		paramSpace:  paramSpace,
-		authKeeper:  authKeeper,
-		authzKeeper: authzKeeper,
-		bankKeeper:  bankKeeper,
-		storeKey:    key,
-		cdc:         cdc,
+		paramSpace:         paramSpace,
+		authKeeper:         authKeeper,
+		authzKeeper:        authzKeeper,
+		bankKeeper:         bankKeeper,
+		storeKey:           key,
+		bankKeeperStoreKey: bankKey,
+		cdc:                cdc,
 	}
 }
 
