@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Bug Fixes
+
+* Fix marker permissions migration and add panic on `eigengrau` upgrade [#484](https://github.com/provenance-io/provenance/issues/484)
+
 ## [v1.7.0](https://github.com/provenance-io/provenance/releases/tag/v1.7.0) - 2021-09-03
 ### Features
 

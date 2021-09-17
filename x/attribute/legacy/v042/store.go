@@ -11,6 +11,7 @@ func MigrateAddressLength(ctx sdk.Context, storeKey sdk.StoreKey) error {
 	oldStore := prefix.NewStore(store, AttributeKeyPrefixLegacy)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
+
 	defer oldStoreIter.Close()
 
 	for ; oldStoreIter.Valid(); oldStoreIter.Next() {

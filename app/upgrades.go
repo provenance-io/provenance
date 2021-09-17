@@ -30,6 +30,11 @@ type appUpgrade struct {
 var handlers = map[string]appUpgrade{
 	"eigengrau": {
 		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
+			panic("Upgrade height for eigengrau must be skipped.  Use `--unsafe-skip-upgrades <height>` flag to skip upgrade")
+		},
+	},
+	"feldgrau": {
+		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
 			app.IBCKeeper.ConnectionKeeper.SetParams(ctx, ibcconnectiontypes.DefaultParams())
 
 			nhashName := "Hash"
@@ -98,6 +103,7 @@ var handlers = map[string]appUpgrade{
 				"metadata":  1,
 				"name":      1,
 			}
+			ctx.Logger().Info("NOTICE: Starting large migration on all modules for cosmos-sdk v0.44.0.  This will take a significant amount of time to complete.  Do not restart node.")
 			return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 		},
 	},
