@@ -265,9 +265,10 @@ func (k Keeper) validateScopeUpdateValueOwner(ctx sdk.Context, existing, propose
 		return nil
 	}
 	if len(existing) > 0 {
-		if k.AccountIsMarker(ctx, existing) {
+		isMarker, hasAuth := k.IsMarkerAndHasAuthority(ctx, existing, signers, markertypes.Access_Withdraw)
+		if isMarker {
 			// If the existing is a marker, make sure a signer has withdraw authority on it.
-			if !k.HasSignerWithMarkerValueAuthority(ctx, existing, signers, markertypes.Access_Withdraw) {
+			if !hasAuth {
 				return fmt.Errorf("missing signature for %s with authority to withdraw/remove existing value owner", existing)
 			}
 		} else {
@@ -285,11 +286,10 @@ func (k Keeper) validateScopeUpdateValueOwner(ctx sdk.Context, existing, propose
 		}
 	}
 	if len(proposed) > 0 {
+		isMarker, hasAuth := k.IsMarkerAndHasAuthority(ctx, proposed, signers, markertypes.Access_Deposit)
 		// If the proposed is a marker, make sure a signer has deposit authority on it.
-		if k.AccountIsMarker(ctx, proposed) {
-			if !k.HasSignerWithMarkerValueAuthority(ctx, proposed, signers, markertypes.Access_Deposit) {
-				return fmt.Errorf("no signatures present with authority to add scope to marker %s", proposed)
-			}
+		if isMarker && !hasAuth {
+			return fmt.Errorf("no signatures present with authority to add scope to marker %s", proposed)
 		}
 		// If it's not a marker, we don't really care what it's being set to.
 	}
