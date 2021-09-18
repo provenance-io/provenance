@@ -209,7 +209,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		},
 	}
 	for i := len(markerData.Markers); i < s.markerCount; i++ {
-		denom := toWritten(i+1)
+		denom := toWritten(i + 1)
 		markerData.Markers = append(markerData.Markers,
 			markertypes.MarkerAccount{
 				BaseAccount: &authtypes.BaseAccount{
