@@ -54,11 +54,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Update the Marker Holding query to fully utilize pagination fields [#400](https://github.com/provenance-io/provenance/issues/400)
 * Update the Metadata OSLocatorsByURI query to fully utilize pagination fields [#401](https://github.com/provenance-io/provenance/issues/401)
 * Update the Metadata OSAllLocators query to fully utilize pagination fields [#402](https://github.com/provenance-io/provenance/issues/402)
+* Validate `marker` before setting it to prevent panics [#491](https://github.com/provenance-io/provenance/issues/491)
 
 ### Bug Fixes
 
 * Removed some unneeded code from the persistent record update validation [#471](https://github.com/provenance-io/provenance/issues/471)
 * Fixed packed config loading bug [#487](https://github.com/provenance-io/provenance/issues/487)
+* Fixed marker with more than uint64 causes panic [#489](https://github.com/provenance-io/provenance/issues/489)
 
 ## [v1.7.0](https://github.com/provenance-io/provenance/releases/tag/v1.7.0) - 2021-09-03
 
