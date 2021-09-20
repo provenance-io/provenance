@@ -42,8 +42,7 @@ func QueryParamsCmd() *cobra.Command {
 		Use:   "params",
 		Short: "Query the current name parameters",
 		Args:  cobra.NoArgs,
-		Example: strings.TrimSpace(
-			fmt.Sprintf(`$ %s query name params`, version.AppName)),
+		Example: fmt.Sprintf(`$ %s query name params`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -70,8 +69,7 @@ func ResolveNameCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "resolve [name]",
 		Short: "Resolve the address for a name",
-		Example: strings.TrimSpace(
-			fmt.Sprintf(`$ %s query name resolve attrib.name`, version.AppName)),
+		Example: fmt.Sprintf(`$ %s query name resolve attrib.name`, version.AppName),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -104,10 +102,9 @@ func ReverseLookupCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "lookup [address]",
 		Short: "Reverse lookup of all names bound to a given address",
-		Example: strings.TrimSpace(
-			fmt.Sprintf(`$ %s query name loopup pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
-$ %s query name loopup pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk --page=2 --limit=100
-`, version.AppName, version.AppName)),
+		Example: fmt.Sprintf(`$ %[1]s query name loopup pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
+$ %[1]s query name loopup pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk --page=2 --limit=100
+`, version.AppName),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)

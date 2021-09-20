@@ -40,8 +40,7 @@ func GetBindNameCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "bind [name] [address] [root]",
 		Short: "Bind a name to an address under the given root name in the provenance blockchain",
-		Example: strings.TrimSpace(
-			fmt.Sprintf(`$ %s tx name bind sample pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk root.example`, version.AppName)),
+		Example: fmt.Sprintf(`$ %s tx name bind sample pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk root.example`, version.AppName),
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -78,6 +77,7 @@ func GetDeleteNameCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete [name]",
 		Short: "Delete a bound name from the provenance blockchain",
+		Example: fmt.Sprintf(`$ %s tx name delete sample`, version.AppName),
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
