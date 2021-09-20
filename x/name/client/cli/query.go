@@ -39,9 +39,9 @@ func GetQueryCmd() *cobra.Command {
 // QueryParamsCmd returns the command handler for name parameter querying.
 func QueryParamsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "params",
-		Short: "Query the current name parameters",
-		Args:  cobra.NoArgs,
+		Use:     "params",
+		Short:   "Query the current name parameters",
+		Args:    cobra.NoArgs,
 		Example: fmt.Sprintf(`$ %s query name params`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -67,10 +67,10 @@ func QueryParamsCmd() *cobra.Command {
 // ResolveNameCommand returns the command handler for resolving the address for a given name.
 func ResolveNameCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "resolve [name]",
-		Short: "Resolve the address for a name",
+		Use:     "resolve [name]",
+		Short:   "Resolve the address for a name",
 		Example: fmt.Sprintf(`$ %s query name resolve attrib.name`, version.AppName),
-		Args: cobra.ExactArgs(1),
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
