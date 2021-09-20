@@ -189,8 +189,7 @@ func GetCmdAddMarker() *cobra.Command {
 		Long: strings.TrimSpace(`Creates a new marker in the Proposed state managed by the from address
 with the given supply amount and denomination provided in the coin argument
 `),
-		Example: strings.TrimSpace(
-			fmt.Sprintf(`$ %s tx marker new 1000hotdogcoin --%s=false --%s=false --from=mykey`, FlagType, FlagSupplyFixed, FlagAllowGovernanceControl)),
+		Example: fmt.Sprintf(`$ %s tx marker new 1000hotdogcoin --%s=false --%s=false --from=mykey`, FlagType, FlagSupplyFixed, FlagAllowGovernanceControl),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -244,8 +243,7 @@ func GetCmdMint() *cobra.Command {
 			fmt.Sprintf(`Mints coins of the marker's denomination and places them
 in the marker's account under escrow.  Caller must possess the mint permission and 
 marker must be in the active status.`)),
-		Example: strings.TrimSpace(
-			fmt.Sprintf(`$ %s tx marker mint 1000hotdogcoin --from mykey`, version.AppName)),
+		Example: fmt.Sprintf(`$ %s tx marker mint 1000hotdogcoin --from mykey`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -277,8 +275,7 @@ func GetCmdBurn() *cobra.Command {
 with the coin's denomination.  Only coins held in the marker's account may be burned.  Caller
 must possess the burn permission.  Use the bank send operation to transfer coin into the marker
 for burning.  Marker must be in the active status to burn coin.`)),
-		Example: strings.TrimSpace(
-			fmt.Sprintf(`$ %s tx marker burn 1000hotdogcoin --from mykey`, version.AppName)),
+		Example: fmt.Sprintf(`$ %s tx marker burn 1000hotdogcoin --from mykey`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -309,8 +306,7 @@ func GetCmdFinalize() *cobra.Command {
 			fmt.Sprintf(`Finalize a marker identified by the given denomination. Only
 the marker manager may finalize a marker.  Once finalized callers who have been assigned
 permission may perform mint,burn, or grant operations.  Only the manager may activate the marker.`)),
-		Example: strings.TrimSpace(
-			fmt.Sprintf(`$ %s tx marker finalize hotdogcoin --from mykey`, version.AppName)),
+		Example: fmt.Sprintf(`$ %s tx marker finalize hotdogcoin --from mykey`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
