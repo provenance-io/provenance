@@ -55,6 +55,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Removed some unneeded code from the persistent record update validation [#471](https://github.com/provenance-io/provenance/issues/471)
 * Fixed packed config loading bug [#487](https://github.com/provenance-io/provenance/issues/487)
+* Fixed marker with more than uint64 causes panic [#489](https://github.com/provenance-io/provenance/issues/489)
 
 ## [v1.7.0](https://github.com/provenance-io/provenance/releases/tag/v1.7.0) - 2021-09-03
 
