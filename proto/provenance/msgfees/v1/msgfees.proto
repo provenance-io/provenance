@@ -1,0 +1,38 @@
+syntax = "proto3";
+package provenance.msgfees.v1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/auth/v1beta1/auth.proto";
+import "cosmos_proto/cosmos.proto";
+import "google/protobuf/any.proto";
+
+option go_package = "github.com/provenance-io/provenance/x/msgfee/types";
+option java_package = "io.provenance.msgfee.v1";
+option java_multiple_files = true;
+
+// Params defines the set of params for the msgfees module.
+message Params {
+    option (gogoproto.equal) = false;
+    option (gogoproto.goproto_stringer) = false;
+    // indicates if governance based controls of msgFees is allowed.
+    bool enable_governance = 1;
+}
+
+message MsgFees {
+    google.protobuf.Any msg = 1 [(cosmos_proto.accepts_interface) = "sdk.Msg"];
+    //can pay in any Coin( basically a Denom and Amount, Amount can be zero)
+    repeated cosmos.base.v1beta1.Coin min_additional_fee = 2[
+                                                            (gogoproto.nullable)     = false,
+                                                            (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+                                                            (gogoproto.moretags)     = "yaml:\"min_additional_fee\""
+                                                            ];
+
+    //  Fee rate, based on Gas used.
+    bytes fee_rate = 3 [
+                       (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+                       (gogoproto.nullable)   = false,
+                       (gogoproto.jsontag)    = "fee_rate,omitempty"
+                       ];
+}
+
+

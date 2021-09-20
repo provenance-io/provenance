@@ -1,0 +1,55 @@
+syntax = "proto3";
+package provenance.marker.v1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "provenance/marker/v1/accessgrant.proto";
+
+option go_package = "github.com/provenance-io/provenance/x/msgfees/types";
+option java_package = "io.provenance.marker.v1";
+option java_multiple_files = true;
+
+// Query defines the gRPC querier service for marker module.
+service Query {
+    // Params queries the parameters for x/msgfees
+    rpc Params (QueryParamsRequest) returns (QueryParamsResponse) {
+        option (google.api.http).get = "/provenance/msgfees/v1/params";
+    }
+
+    rpc QueryAllMsgFees (QueryMsgsWithAdditionalFeesRequest) returns (QueryMsgsWithAdditionalFeesResponse) {
+        option (google.api.http).get = "/provenance/msgfees/v1/params";
+    }
+
+}
+
+// QueryParamsRequest is the request type for the Query/Params RPC method.
+message QueryParamsRequest {
+}
+
+// QueryParamsResponse is the response type for the Query/Params RPC method.
+message QueryParamsResponse {
+    // params defines the parameters of the module.
+    Params params = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryMsgsWithAdditionalFeesRequest queries all Msg which have fees associated with them.
+message QueryMsgsWithAdditionalFeesRequest {
+}
+
+// QueryMsgsWithAdditionalFeesResponse
+message QueryMsgsWithAdditionalFeeResponse {
+    // msg to add Fee for.
+    google.protobuf.Any msg = 1 [(cosmos_proto.accepts_interface) = "sdk.Msg"];
+
+    //min fee to be taken in different coins
+    repeated cosmos.base.v1beta1.Coin min_additional_fee = 2 [(gogoproto.nullable) = false,
+                                                             (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.moretags) = "yaml:\"min_additional_fee\""];
+
+    //  Fee rate
+    bytes fee_rate = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false, (gogoproto.jsontag) = "fee_rate,omitempty"];
+
+}
+
+message QueryMsgsWithAdditionalFeesResponse {
+    repeated QueryMsgsWithAdditionalFeesRequest = 1;
+}
