@@ -1,12 +1,15 @@
 syntax = "proto3";
-package provenance.marker.v1;
+package provenance.msgfees.v1;
 
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
-import "provenance/marker/v1/accessgrant.proto";
+import "google/api/annotations.proto";
+import "provenance/msgfees/v1/msgfees.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/provenance-io/provenance/x/msgfees/types";
-option java_package = "io.provenance.marker.v1";
+option java_package = "io.provenance.msgfees.v1";
 option java_multiple_files = true;
 
 // Query defines the gRPC querier service for marker module.
@@ -16,7 +19,8 @@ service Query {
         option (google.api.http).get = "/provenance/msgfees/v1/params";
     }
 
-    rpc QueryAllMsgFees (QueryMsgsWithAdditionalFeesRequest) returns (QueryMsgsWithAdditionalFeesResponse) {
+    // Query all Msgs which have fees associated with them.
+    rpc QueryAllMsgFees (QueryMsgsWithAdditionalFeesRequest) returns (QueryAllMsgFeesResponse) {
         option (google.api.http).get = "/provenance/msgfees/v1/params";
     }
 
@@ -38,18 +42,11 @@ message QueryMsgsWithAdditionalFeesRequest {
 
 // QueryMsgsWithAdditionalFeesResponse
 message QueryMsgsWithAdditionalFeeResponse {
-    // msg to add Fee for.
-    google.protobuf.Any msg = 1 [(cosmos_proto.accepts_interface) = "sdk.Msg"];
-
-    //min fee to be taken in different coins
-    repeated cosmos.base.v1beta1.Coin min_additional_fee = 2 [(gogoproto.nullable) = false,
-                                                             (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.moretags) = "yaml:\"min_additional_fee\""];
-
-    //  Fee rate
-    bytes fee_rate = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false, (gogoproto.jsontag) = "fee_rate,omitempty"];
-
+    // msg with fees associated with it.
+    MsgFees msg_fees = 1;
 }
 
-message QueryMsgsWithAdditionalFeesResponse {
-    repeated QueryMsgsWithAdditionalFeesRequest = 1;
+// response for querying all msg's with fees associated with them
+message QueryAllMsgFeesResponse {
+    repeated QueryMsgsWithAdditionalFeeResponse query_msgs_withadditional_fee_response = 1;
 }

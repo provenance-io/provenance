@@ -5,9 +5,11 @@ import "gogoproto/gogo.proto";
 import "cosmos/auth/v1beta1/auth.proto";
 import "cosmos_proto/cosmos.proto";
 import "google/protobuf/any.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/provenance-io/provenance/x/msgfee/types";
-option java_package = "io.provenance.msgfee.v1";
+option go_package = "github.com/provenance-io/provenance/x/msgfees/types";
+option java_package = "io.provenance.msgfees.v1";
 option java_multiple_files = true;
 
 // Params defines the set of params for the msgfees module.
@@ -18,6 +20,10 @@ message Params {
     bool enable_governance = 1;
 }
 
+// MsgFees is the core of what gets stored on the blockchain
+// it consists of two parts
+// 1. minimum additional fees(can be of any denom)
+// 2. Fee rate which is proportional to the gas charged for processing that message.
 message MsgFees {
     google.protobuf.Any msg = 1 [(cosmos_proto.accepts_interface) = "sdk.Msg"];
     //can pay in any Coin( basically a Denom and Amount, Amount can be zero)

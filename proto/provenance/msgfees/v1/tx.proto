@@ -5,6 +5,11 @@ import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/bank/v1beta1/bank.proto";
 import "provenance/msgfees/v1/msgfees.proto";
+import "cosmos_proto/cosmos.proto";
+import "google/api/annotations.proto";
+import "cosmos/tx/v1beta1/tx.proto";
+import "google/protobuf/any.proto";
+
 option go_package = "github.com/provenance-io/provenance/x/msgfees/types";
 
 option java_package = "io.provenance.msgfees.v1";
@@ -13,6 +18,7 @@ option java_multiple_files = true;
 // Service defines a gRPC service for interacting with transactions.
 service Msg {
 
+    // create fee for an associated Msg (repeated)
     rpc CreateFeeForMsg(CreateFeeForMsgRequest) returns (CreateFeeForMsgResponse) {
 
 }
@@ -39,19 +45,14 @@ message CalculateMsgBasedFeesResponse {
     repeated cosmos.base.v1beta1.Coin fee_amount = 1 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 
+// create fee for msg's (repeated)
 message CreateFeeForMsgRequest {
     // msg to add Fee for.
-    repeated MsgFees msgFees = 1;
+    repeated MsgFees msg_fees = 1;
 }
 
+// response for CreateFeeForMsg
 message CreateFeeForMsgResponse {
     // msg to add Fee for.
-    google.protobuf.Any msg = 1 [(cosmos_proto.accepts_interface) = "sdk.Msg"];
-
-    //  Fee rate
-    bytes fee_rate = 2 [
-                       (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-                       (gogoproto.nullable)   = false,
-                       (gogoproto.jsontag)    = "feerate,omitempty"
-                       ];
+    repeated MsgFees msg_fees = 1;
 }
