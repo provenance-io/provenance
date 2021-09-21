@@ -42,6 +42,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * Ensure marker state transition validation does not panic [#492](https://github.com/provenance-io/provenance/issues/492)
+* Verify go version on `make build` [#483](https://github.com/provenance-io/provenance/issues/483)
 
 ### Bug Fixes
 
