@@ -40,24 +40,24 @@ const (
 //
 // - 0x05<session_specification_key_bytes><record_spec_name_hash>: RecordSpecification
 //
-// - 0x16<owner_address>: ObjectStoreLocator
+// - 0x21<owner_address>: ObjectStoreLocator
 //
 // These keys are used for indexing and more specific iteration.
 // These keys are handled using the stuff in this file.
 // The "..._address" parts are all bytes of an Account Address.
 // The "..._id" parts are all bytes of a MetadataAddress
 //
-// - 0x10<party_address><scope_key_bytes>: 0x01
+// - 0x17<party_address><scope_key_bytes>: 0x01
 //
 // - 0x11<scope_spec_id><scope_id>: 0x01
 //
-// - 0x12<value_owner_address><scope_id>: 0x01
+// - 0x18<value_owner_address><scope_id>: 0x01
 //
-// - 0x13<owner_address><scope_spec_id>: 0x01
+// - 0x19<owner_address><scope_spec_id>: 0x01
 //
 // - 0x14<contract_spec_id><scope_spec_id>: 0x01
 //
-// - 0x15<owner_address><contract_spec_id>: 0x01
+// - 0x20<owner_address><contract_spec_id>: 0x01
 var (
 	// ScopeKeyPrefix is the key for scope records in metadata store
 	ScopeKeyPrefix = []byte{0x00}
