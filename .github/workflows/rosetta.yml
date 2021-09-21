@@ -9,7 +9,7 @@ on:
 jobs:
   rosetta:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@master
       - name: Go mod vendor
