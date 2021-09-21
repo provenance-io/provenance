@@ -71,6 +71,13 @@ func ConfigGetCmd() *cobra.Command {
     Displayed values will reflect settings defined through environment variables.
 
 `, configCmdStart, provconfig.AppConfFilename, provconfig.TmConfFilename, provconfig.ClientConfFilename),
+		Example: fmt.Sprintf(`$ %[1]s get telemetry.service-name moniker \
+$ %[1]s get api consensus \
+$ %[1]s get app \
+$ %[1]s get tm \
+$ %[1]s get client \
+$ %[1]s get all \
+			`, configCmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := runConfigGetCmd(cmd, args)
 			// Note: If a RunE returns an error, the usage information is displayed.
@@ -88,7 +95,7 @@ func ConfigGetCmd() *cobra.Command {
 // ConfigSetCmd returns a CLI command to set config values.
 func ConfigSetCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "set <key1> <value1> [<key2> <value2> ...]",
+		Use:   "set [key1] [value1] [[<key2> <value2> ...]]",
 		Short: "Set configuration values",
 		Long: fmt.Sprintf(`Set configuration values.
 
@@ -101,6 +108,9 @@ Set multiple config values %[1]s set <key1> <value1> [<key2> <value2> ...]
     Simply provide multiple key/value pairs as alternating arguments.
     e.g. %[1]s set api.enable true api.swagger true
 
+`, configCmdStart),
+		Example: fmt.Sprintf(`$ %[1]s set output json \
+$ %[1]s set api.enable true api.swagger true
 `, configCmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			showHelp, err := runConfigSetCmd(cmd, args)
@@ -122,7 +132,7 @@ Set multiple config values %[1]s set <key1> <value1> [<key2> <value2> ...]
 // ConfigChangedCmd returns a CLI command to get config values different from their defaults.
 func ConfigChangedCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "changed [<key1> [<key2>...]",
+		Use:   "changed [[key1] [[key2]...]",
 		Short: "Get configuration values that are different from their default.",
 		Long: fmt.Sprintf(`Get configuration values that are different from their default.
 
@@ -148,6 +158,7 @@ Get just the configuration entries that are not default values: %[1]s changed [<
     Displayed values will reflect settings defined through environment variables.
 
 `, configCmdStart, provconfig.AppConfFilename, provconfig.TmConfFilename, provconfig.ClientConfFilename),
+		Example: fmt.Sprintf(`$ `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := runConfigChangedCmd(cmd, args)
 			// Note: If a RunE returns an error, the usage information is displayed.

@@ -39,9 +39,10 @@ func AddMetaAddressCmd() *cobra.Command {
 // AddMetaAddressDecoder returns metadata address parser cobra Command.
 func AddMetaAddressDecoder() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "decode address",
+		Use:     "decode [address]",
 		Aliases: []string{"d"},
 		Short:   "Decode MetadataAddress and display associate IDs and types",
+		Example: fmt.Sprintf("%[1]s decode scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel", cmdStart),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			addr, parseErr := types.MetadataAddressFromBech32(args[0])
@@ -100,7 +101,7 @@ Excess (hex): %s
 // AddMetaAddressEncoder returns metadata address encoder cobra Command.
 func AddMetaAddressEncoder() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "encode type uuid [uuid|name]",
+		Use:   "encode [type] [uuid] [uuid|name]",
 		Short: "Encodes metadata uuids to bech32 address for specific type",
 		Long: fmt.Sprintf(`Encodes metadata uuids to bech32 address for specific type.
 

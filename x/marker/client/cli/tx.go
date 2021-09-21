@@ -531,7 +531,7 @@ func GetCmdGrantAuthorization() *cobra.Command {
 		Aliases: []string{"ga"},
 		Args:    cobra.ExactArgs(2),
 		Short:   "Grant authorization to an address",
-		Long: strings.TrimSpace(`grant authorization to an address to execute an authorization type [transfer]`),
+		Long:    strings.TrimSpace(`grant authorization to an address to execute an authorization type [transfer]`),
 		Example: fmt.Sprintf(`$ %s tx marker grant-authz tp1skjw.. transfer --transfer-limit=1000nhash`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -591,7 +591,7 @@ func GetCmdRevokeAuthorization() *cobra.Command {
 		Short:   "Revoke authorization to an address",
 		Aliases: []string{"ra"},
 		Args:    cobra.ExactArgs(2),
-		Long: strings.TrimSpace(`revoke authorization to a grantee address for authorization type [transfer]`),
+		Long:    strings.TrimSpace(`revoke authorization to a grantee address for authorization type [transfer]`),
 		Example: fmt.Sprintf(`$ %s tx marker revoke-authz tp1skjw.. transfer`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
