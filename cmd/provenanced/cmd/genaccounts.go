@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/version"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -50,6 +51,7 @@ the account address or key name and a list of initial coins. If a key name is gi
 the address will be looked up in the local Keybase. The list of initial tokens must
 contain valid denominations. Accounts may optionally be supplied with vesting parameters.
 `,
+		Example: fmt.Sprintf(`$ %[1]s add-genesis-account mykey 10000000hash`, version.AppName),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
@@ -214,6 +216,7 @@ func AddRootDomainAccountCmd(defaultNodeHome string) *cobra.Command {
 	the address will be looked up in the local Keybase.  The restricted flag can optionally be
 	included to lock or unlock an entry to child names.
 	`,
+		Example: fmt.Sprintf(`$ %[1]s add-genesis-root-name mykey rootname`, version.AppName),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
@@ -304,16 +307,7 @@ a marker account is activated any unassigned marker supply must be provided as e
 a manager address assigned that can activate the marker after genesis.  Activated markers will have supply invariants
 enforced immediately.  An optional type flag can be provided or the default of COIN will be used.
 `,
-		/*
-		   1000coindenom
-
-		   --manager address_or_key_name
-		   --access [perm,perm,perm]
-		   --escrow [coin][,[coin]]
-		   --type [marker type/default 'COIN']
-		   --finalize or --activate
-		   --type marker_type
-		*/
+		Example: fmt.Sprintf(`$ %[1]s add-genesis-marker 1000000000funcoins --manager validator --access withdraw --escrow 100funcoins --finalize --type COIN`, version.AppName),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)

@@ -158,7 +158,8 @@ Get just the configuration entries that are not default values: %[1]s changed [<
     Displayed values will reflect settings defined through environment variables.
 
 `, configCmdStart, provconfig.AppConfFilename, provconfig.TmConfFilename, provconfig.ClientConfFilename),
-		Example: fmt.Sprintf(`$ `),
+		Example: fmt.Sprintf(`$ %[1]s changed \
+$ %[1]s changed telemetry.service-name`, configCmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := runConfigChangedCmd(cmd, args)
 			// Note: If a RunE returns an error, the usage information is displayed.
@@ -185,6 +186,7 @@ Settings defined through environment variables will be included in the packed fi
 Settings that are their default value will not be included.
 
 `, provconfig.PackedConfFilename, provconfig.AppConfFilename, provconfig.TmConfFilename, provconfig.ClientConfFilename),
+		Example: fmt.Sprintf(`$ %[1]s pack`, configCmdStart),
 		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runConfigPackCmd(cmd)
@@ -205,6 +207,7 @@ Settings defined through environment variables will be included in the unpacked 
 Default values are filled in appropriately.
 
 `, provconfig.PackedConfFilename, provconfig.AppConfFilename, provconfig.TmConfFilename, provconfig.ClientConfFilename),
+		Example: fmt.Sprintf(`$ %[1]s unpack`, configCmdStart),
 		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runConfigUnpackCmd(cmd)
