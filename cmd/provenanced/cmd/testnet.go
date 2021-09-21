@@ -6,10 +6,11 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/version"
 	"net"
 	"os"
 	"path/filepath"
+
+	"github.com/cosmos/cosmos-sdk/version"
 
 	"github.com/spf13/cobra"
 	tmconfig "github.com/tendermint/tendermint/config"

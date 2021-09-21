@@ -3,8 +3,9 @@ package cli
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/version"
 	"strings"
+
+	"github.com/cosmos/cosmos-sdk/version"
 
 	"github.com/spf13/cobra"
 

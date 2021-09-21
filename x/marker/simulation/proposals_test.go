@@ -1,9 +1,10 @@
 package simulation_test
 
 import (
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"math/rand"
 	"testing"
+
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"

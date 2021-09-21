@@ -187,7 +187,7 @@ Settings that are their default value will not be included.
 
 `, provconfig.PackedConfFilename, provconfig.AppConfFilename, provconfig.TmConfFilename, provconfig.ClientConfFilename),
 		Example: fmt.Sprintf(`$ %[1]s pack`, configCmdStart),
-		Args: cobra.ExactArgs(0),
+		Args:    cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runConfigPackCmd(cmd)
 		},
@@ -208,7 +208,7 @@ Default values are filled in appropriately.
 
 `, provconfig.PackedConfFilename, provconfig.AppConfFilename, provconfig.TmConfFilename, provconfig.ClientConfFilename),
 		Example: fmt.Sprintf(`$ %[1]s unpack`, configCmdStart),
-		Args: cobra.ExactArgs(0),
+		Args:    cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runConfigUnpackCmd(cmd)
 		},

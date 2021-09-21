@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/types/bech32"
+
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 

@@ -2,11 +2,12 @@ package types
 
 import (
 	"crypto/sha256"
+	"testing"
+
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"testing"
 )
 
 type MetadataTypesTestSuite struct {

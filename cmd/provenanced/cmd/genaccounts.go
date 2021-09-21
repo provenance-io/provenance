@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/version"
 	"strings"
+
+	"github.com/cosmos/cosmos-sdk/version"
 
 	"github.com/spf13/cobra"
 
@@ -52,7 +53,7 @@ the address will be looked up in the local Keybase. The list of initial tokens m
 contain valid denominations. Accounts may optionally be supplied with vesting parameters.
 `,
 		Example: fmt.Sprintf(`$ %[1]s add-genesis-account mykey 10000000hash`, version.AppName),
-		Args: cobra.ExactArgs(2),
+		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			depCdc := clientCtx.JSONCodec
@@ -217,7 +218,7 @@ func AddRootDomainAccountCmd(defaultNodeHome string) *cobra.Command {
 	included to lock or unlock an entry to child names.
 	`,
 		Example: fmt.Sprintf(`$ %[1]s add-genesis-root-name mykey rootname`, version.AppName),
-		Args: cobra.ExactArgs(2),
+		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			depCdc := clientCtx.JSONCodec
@@ -308,7 +309,7 @@ a manager address assigned that can activate the marker after genesis.  Activate
 enforced immediately.  An optional type flag can be provided or the default of COIN will be used.
 `,
 		Example: fmt.Sprintf(`$ %[1]s add-genesis-marker 1000000000funcoins --manager validator --access withdraw --escrow 100funcoins --finalize --type COIN`, version.AppName),
-		Args: cobra.ExactArgs(1),
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			depCdc := clientCtx.JSONCodec

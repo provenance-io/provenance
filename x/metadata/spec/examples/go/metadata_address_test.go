@@ -1,9 +1,10 @@
 package provenance
 
 import (
+	"testing"
+
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
-	"testing"
 )
 
 type MetadataAddressTestSuite struct {
