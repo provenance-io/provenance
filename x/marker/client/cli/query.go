@@ -43,13 +43,8 @@ func QueryParamsCmd() *cobra.Command {
 		Use:   "params",
 		Short: "Query the current marker parameters",
 		Args:  cobra.NoArgs,
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query the current marker module parameters:
-
-$ %s query marker params
-`,
-				version.AppName,
-			)),
+		Example: strings.TrimSpace(
+			fmt.Sprintf(`$ %s query marker params`, version.AppName)),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -76,7 +71,9 @@ func AllMarkersCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list [status, optional]",
 		Short: "List all marker registrations on the Provenance Blockchain",
-		Args:  cobra.RangeArgs(0, 1),
+		Example: strings.TrimSpace(
+			fmt.Sprintf(`$ %s query marker list`, version.AppName)),
+		Args: cobra.RangeArgs(0, 1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -121,7 +118,9 @@ func AllHoldersCmd() *cobra.Command {
 		Use:     "holding [denom]",
 		Aliases: []string{"hold", "holder"},
 		Short:   "List all accounts holding the given marker on the Provenance Blockchain",
-		Args:    cobra.ExactArgs(1),
+		Example: strings.TrimSpace(
+			fmt.Sprintf(`$ %s query marker holding nhash`, version.AppName)),
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -156,9 +155,11 @@ func AllHoldersCmd() *cobra.Command {
 // MarkerCmd is the CLI command for querying marker module registrations.
 func MarkerCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get [address|denom]",
-		Short: "Get marker details",
-		Args:  cobra.ExactArgs(1),
+		Use:     "get [address|denom]",
+		Short:   "Get marker details",
+		Long:    `Note: the address is for the base_account of the denom should you choose to use the address rather than the denom name`,
+		Example: fmt.Sprintf(`$ %s query marker get "nhash"`, version.AppName),
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -185,9 +186,10 @@ func MarkerCmd() *cobra.Command {
 // MarkerAccessCmd is the CLI command for querying marker access list.
 func MarkerAccessCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "grants [address|denom]",
-		Short: "Get access grants defined for marker",
-		Args:  cobra.ExactArgs(1),
+		Use:     "grants [address|denom]",
+		Short:   "Get access grants defined for marker",
+		Example: fmt.Sprintf(`$ %s query marker grants "nhash"`, version.AppName),
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -214,9 +216,10 @@ func MarkerAccessCmd() *cobra.Command {
 // MarkerEscrowCmd is the CLI command for querying marker module registrations.
 func MarkerEscrowCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "escrow [address|denom]",
-		Short: "Get coins in escrow by marker",
-		Args:  cobra.ExactArgs(1),
+		Use:     "escrow [address|denom]",
+		Short:   "Get coins in escrow by marker",
+		Example: fmt.Sprintf(`$ %s query marker escrow "nhash"`, version.AppName),
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -243,9 +246,10 @@ func MarkerEscrowCmd() *cobra.Command {
 // MarkerSupplyCmd is the CLI command for querying marker module registrations.
 func MarkerSupplyCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "supply [address|denom]",
-		Short: "Get total supply for marker",
-		Args:  cobra.ExactArgs(1),
+		Use:     "supply [address|denom]",
+		Short:   "Get total supply for marker",
+		Example: fmt.Sprintf(`$ %s query marker supply "nhash"`, version.AppName),
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {

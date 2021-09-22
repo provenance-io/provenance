@@ -42,6 +42,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * Ensure marker state transition validation does not panic [#492](https://github.com/provenance-io/provenance/issues/492)
+* Refactor Examples for cobra cli commands to have examples [#399](https://github.com/provenance-io/provenance/issues/399)
 
 ### Bug Fixes
 

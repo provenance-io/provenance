@@ -38,17 +38,10 @@ func NewTxCmd() *cobra.Command {
 // GetBindNameCmd is the CLI command for binding a name to an address.
 func GetBindNameCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "bind [name] [address] [root]",
-		Short: "Bind a name to an address under the given root name in the provenance blockchain",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Bind a name under an existing name in the provenance blockchain:
-
-Example:
-$ %s tx name bind sample pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk root.example
-`,
-				version.AppName,
-			)),
-		Args: cobra.ExactArgs(3),
+		Use:     "bind [name] [address] [root]",
+		Short:   "Bind a name to an address under the given root name in the provenance blockchain",
+		Example: fmt.Sprintf(`$ %s tx name bind sample pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk root.example`, version.AppName),
+		Args:    cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -82,9 +75,10 @@ $ %s tx name bind sample pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk root.example
 // GetDeleteNameCmd is the CLI command for deleting a bound name.
 func GetDeleteNameCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete [name]",
-		Short: "Delete a bound name from the provenance blockchain",
-		Args:  cobra.ExactArgs(1),
+		Use:     "delete [name]",
+		Short:   "Delete a bound name from the provenance blockchain",
+		Example: fmt.Sprintf(`$ %s tx name delete sample`, version.AppName),
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
