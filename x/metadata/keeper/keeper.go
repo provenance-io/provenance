@@ -11,8 +11,9 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/gogo/protobuf/proto"
-	"github.com/provenance-io/provenance/x/metadata/types"
 	"github.com/tendermint/tendermint/libs/log"
+
+	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
 // MetadataKeeperI is the internal state api for the metadata module.

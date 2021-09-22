@@ -12,8 +12,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	nametypes "github.com/provenance-io/provenance/x/name/types"
 	"github.com/stretchr/testify/suite"
+
+	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
 type KeeperTestSuite struct {

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	v042 "github.com/provenance-io/provenance/x/name/legacy/v042"
 )
 
