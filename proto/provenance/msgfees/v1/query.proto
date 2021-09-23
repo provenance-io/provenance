@@ -8,45 +8,42 @@ import "provenance/msgfees/v1/msgfees.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/provenance-io/provenance/x/msgfees/types";
-option java_package = "io.provenance.msgfees.v1";
+option go_package          = "github.com/provenance-io/provenance/x/msgfees/types";
+option java_package        = "io.provenance.msgfees.v1";
 option java_multiple_files = true;
 
 // Query defines the gRPC querier service for marker module.
 service Query {
-    // Params queries the parameters for x/msgfees
-    rpc Params (QueryParamsRequest) returns (QueryParamsResponse) {
-        option (google.api.http).get = "/provenance/msgfees/v1/params";
-    }
+  // Params queries the parameters for x/msgfees
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/provenance/msgfees/v1/params";
+  }
 
-    // Query all Msgs which have fees associated with them.
-    rpc QueryAllMsgFees (QueryMsgsWithAdditionalFeesRequest) returns (QueryAllMsgFeesResponse) {
-        option (google.api.http).get = "/provenance/msgfees/v1/params";
-    }
-
+  // Query all Msgs which have fees associated with them.
+  rpc QueryAllMsgFees(QueryMsgsWithAdditionalFeesRequest) returns (QueryAllMsgFeesResponse) {
+    option (google.api.http).get = "/provenance/msgfees/v1/params";
+  }
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
-message QueryParamsRequest {
-}
+message QueryParamsRequest {}
 
 // QueryParamsResponse is the response type for the Query/Params RPC method.
 message QueryParamsResponse {
-    // params defines the parameters of the module.
-    Params params = 1 [(gogoproto.nullable) = false];
+  // params defines the parameters of the module.
+  Params params = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryMsgsWithAdditionalFeesRequest queries all Msg which have fees associated with them.
-message QueryMsgsWithAdditionalFeesRequest {
-}
+message QueryMsgsWithAdditionalFeesRequest {}
 
 // QueryMsgsWithAdditionalFeesResponse
 message QueryMsgsWithAdditionalFeeResponse {
-    // msg with fees associated with it.
-    MsgFees msg_fees = 1;
+  // msg with fees associated with it.
+  MsgFees msg_fees = 1;
 }
 
 // response for querying all msg's with fees associated with them
 message QueryAllMsgFeesResponse {
-    repeated QueryMsgsWithAdditionalFeeResponse query_msgs_withadditional_fee_response = 1;
+  repeated QueryMsgsWithAdditionalFeeResponse query_msgs_withadditional_fee_response = 1;
 }
