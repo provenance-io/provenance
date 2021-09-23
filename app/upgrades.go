@@ -21,10 +21,10 @@ var (
 type appUpgradeHandler = func(*App, sdk.Context, upgradetypes.Plan) (module.VersionMap, error)
 
 type appUpgrade struct {
-	Added   []string
-	Deleted []string
-	Renamed []storetypes.StoreRename
-	Handler appUpgradeHandler
+	Added   []string `json:"added"`
+	Deleted []string `json:"deleted"`
+	Renamed []storetypes.StoreRename `json:"renamed"`
+	Handler appUpgradeHandler `json:"-"`
 }
 
 var handlers = map[string]appUpgrade{
