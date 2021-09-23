@@ -7,8 +7,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/google/uuid"
-	p8e "github.com/provenance-io/provenance/x/metadata/types/p8e"
 	"github.com/stretchr/testify/require"
+
+	p8e "github.com/provenance-io/provenance/x/metadata/types/p8e"
 )
 
 func ownerPartyList(addresses ...string) []Party {

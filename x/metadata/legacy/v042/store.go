@@ -3,26 +3,32 @@ package v042
 import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
 func MigrateAddresses(ctx sdk.Context, storeKey sdk.StoreKey) error {
+	ctx.Logger().Info("Migrating Metadata OSLocators (1/5)")
 	err := MigrateOSLocatorKeys(ctx, storeKey)
 	if err != nil {
 		return err
 	}
+	ctx.Logger().Info("Migrating Metadata Scopes (2/5)")
 	err = MigrateAddressScopeCacheKey(ctx, storeKey)
 	if err != nil {
 		return err
 	}
+	ctx.Logger().Info("Migrating Metadata Value Owner Scopes (3/5)")
 	err = MigrateValueOwnerScopeCacheKey(ctx, storeKey)
 	if err != nil {
 		return err
 	}
+	ctx.Logger().Info("Migrating Metadata Scope Specs (4/5)")
 	err = MigrateAddressScopeSpecCacheKey(ctx, storeKey)
 	if err != nil {
 		return err
 	}
+	ctx.Logger().Info("Migrating Metadata Contract Specs (5/5)")
 	return MigrateAddressContractSpecCacheKey(ctx, storeKey)
 }
 

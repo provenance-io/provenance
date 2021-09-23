@@ -159,6 +159,13 @@ func GetMetadataGetAllCmd() *cobra.Command {
 %[1]s all contractspecs - gets all contract specifications.
 %[1]s all recordspecs - gets all record specifications.
 %[1]s all locators - gets all object store locators.`, cmdStart),
+		Example: fmt.Sprintf(`%[1]s all scopes
+%[1]s all sessions
+%[1]s all records
+%[1]s all scopespecs
+%[1]s all contractspecs
+%[1]s all recordspecs
+%[1]s all locators`, cmdStart),
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Smash all the args together. We only want a single "word" anyway.
@@ -370,10 +377,10 @@ func GetMetadataScopeSpecCmd() *cobra.Command {
 		Long: fmt.Sprintf(`%[1]s scopespec {scope_spec_id} - gets the scope specification for that a given id.
 %[1]s scopespec {scope_spec_uuid} - gets the scope specification for a given uuid.
 %[1]s scopespec all - gets all the scope specifications.`, cmdStart),
-		Args: cobra.ExactArgs(1),
 		Example: fmt.Sprintf(`%[1]s scopespec scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m
 %[1]s scopespec dc83ea70-eacd-40fe-9adf-1cf6148bf8a2
 %[1]s scopespec all`, cmdStart),
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			arg0 := strings.TrimSpace(args[0])
 			if arg0 == all {

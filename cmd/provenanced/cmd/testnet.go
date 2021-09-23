@@ -10,6 +10,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/cosmos/cosmos-sdk/version"
+
 	"github.com/spf13/cobra"
 	tmconfig "github.com/tendermint/tendermint/config"
 	tmos "github.com/tendermint/tendermint/libs/os"
@@ -58,10 +60,8 @@ func testnetCmd(mbm module.BasicManager, genBalIterator banktypes.GenesisBalance
 necessary files (private validator, genesis, config, etc.).
 
 Note, strict routability for addresses is turned off in the config file.
-
-Example:
-	provenanced testnet --v 4 --output-dir ./output --starting-ip-address 192.168.20.2
 	`,
+		Example: fmt.Sprintf(`%[1]s testnet --v 4 --output-dir ./output --starting-ip-address 192.168.20.2`, version.AppName),
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 

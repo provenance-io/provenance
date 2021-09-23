@@ -285,7 +285,7 @@ func (s *ScopeTestSuite) TestScopeRemoveOwners() {
 			"",
 		},
 		{
-			"should fail to remove any non-existant owner",
+			"should fail to remove any non-existent owner",
 			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), user1Owner, []string{"addr1"}, ""),
 			[]string{"notanowner"},
 			user1Owner,
