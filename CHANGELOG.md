@@ -37,9 +37,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Features
+
 ### Improvements
 
+* Add `bank` and `authz` module query `proto` files required by `grpcurl` [#482](https://github.com/provenance-io/provenance/issues/482)
 * Update github actions to always run required tests [#508](https://github.com/provenance-io/provenance/issues/508)
+
+### Bug Fixes
 
 ## [v1.7.2](https://github.com/provenance-io/provenance/releases/tag/v1.7.2) - 2021-09-27
 
