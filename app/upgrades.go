@@ -29,6 +29,11 @@ type appUpgrade struct {
 	Handler appUpgradeHandler
 }
 
+type moduleUpgradeVersion struct {
+	ModuleName  string
+	FromVersion uint64
+}
+
 var handlers = map[string]appUpgrade{
 	"eigengrau": {
 		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
@@ -76,66 +81,66 @@ var handlers = map[string]appUpgrade{
 				s.Set(ctx, wasmtypes.ParamStoreKeyUploadAccess, wasmtypes.AccessTypeNobody.With(sdk.AccAddress{}))
 			}
 
-			migrationOrder := []string{
+			orderedMigration := []moduleUpgradeVersion{
+				// new modules that need to run init genesis
+				{"authz", 0},
+				{"feegrant", 0},
+
 				// x/auth’s migrations depends on x/bank (delegations etc).
 				// This causes cases where running auth migration before bank’s would produce
-				/// a different app state hash than running bank’s before auth’s
-				"bank",
-				"auth",
+				// a different app state hash than running bank’s before auth’s
+				{"bank", 1},
+				{"auth", 1},
 
-				"authz",
-				"capability",
-				"crisis",
-				"distribution",
-				"evidence",
-				"feegrant",
-				"genutil",
-				"gov",
-				"ibc",
-				"mint",
-				"params",
-				"slashing",
-				"staking",
-				"transfer",
-				"upgrade",
-				"vesting",
+				// order doesn't matter
+				{"capability", 1},
+				{"crisis", 1},
+				{"distribution", 1},
+				{"evidence", 1},
+				{"feegrant", 1},
+				{"genutil", 1},
+				{"gov", 1},
+				{"ibc", 1},
+				{"mint", 1},
+				{"params", 1},
+				{"slashing", 1},
+				{"staking", 1},
+				{"transfer", 1},
+				{"upgrade", 1},
+				{"vesting", 1},
 
 				// cosmwasm module
-				"wasm",
+				{"wasm", 1},
 
 				// provenance modules
-				"attribute",
-				"marker",
-				"metadata",
-				"name",
+				{"attribute", 1},
+				{"marker", 1},
+				{"metadata", 1},
+				{"name", 1},
 			}
-
 			ctx.Logger().Info("NOTICE: Starting large migration on all modules for cosmos-sdk v0.44.0.  This will take a significant amount of time to complete.  Do not restart node.")
-			ctx.Logger().Info("Starting all module migrations in order: %v", migrationOrder)
-			// NOTE: cosmos-sdk used a map to run migrations, but order does matter.  This will assure they are executed in order
-			updatedVersionMap := make(module.VersionMap)
-			for _, moduleName := range migrationOrder {
-				partialVersionMap := make(module.VersionMap)
-				if moduleName == "authz" || moduleName == "feegrant" {
-					// we want new modules to execute init genesis
-					partialVersionMap[moduleName] = 0
-				} else {
-					// modules that start at from version 1
-					partialVersionMap[moduleName] = 1
-				}
-				ctx.Logger().Info("Run migration on module %s from starting version %v", moduleName, partialVersionMap[moduleName])
-				versionMap, err := app.mm.RunMigrations(ctx, app.configurator, partialVersionMap)
-				if err != nil {
-					return nil, err
-				}
-				updatedVersionMap[moduleName] = versionMap[moduleName]
-			}
-			ctx.Logger().Info("Finished running all module migrations. Final versions: %v", updatedVersionMap)
-			return updatedVersionMap, nil
+			return RunOrderedMigrations(app, ctx, orderedMigration)
 		},
 		Added: []string{authz.ModuleName, feegrant.ModuleName},
 	},
 	// TODO - Add new upgrade definitions here.
+}
+
+func RunOrderedMigrations(app *App, ctx sdk.Context, migrationOrder []moduleUpgradeVersion) (module.VersionMap, error) {
+	ctx.Logger().Info("Starting all module migrations in order: %v", migrationOrder)
+	updatedVersionMap := make(module.VersionMap)
+	for _, moduleAndVersion := range migrationOrder {
+		partialVersionMap := make(module.VersionMap)
+		partialVersionMap[moduleAndVersion.ModuleName] = moduleAndVersion.FromVersion
+		ctx.Logger().Info("Run migration on module %s from starting version %v", moduleAndVersion, partialVersionMap[moduleAndVersion.ModuleName])
+		migratedVersionMap, err := app.mm.RunMigrations(ctx, app.configurator, partialVersionMap)
+		if err != nil {
+			return nil, err
+		}
+		updatedVersionMap[moduleAndVersion.ModuleName] = migratedVersionMap[moduleAndVersion.ModuleName]
+	}
+	ctx.Logger().Info("Finished running all module migrations. Final versions: %v", updatedVersionMap)
+	return updatedVersionMap, nil
 }
 
 func InstallCustomUpgradeHandlers(app *App) {
