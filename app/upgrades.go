@@ -1,6 +1,8 @@
 package app
 
 import (
+	"fmt"
+
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -82,9 +84,6 @@ var handlers = map[string]appUpgrade{
 			}
 
 			orderedMigration := []moduleUpgradeVersion{
-				// new modules that need to run init genesis
-				{"authz", 0},
-				{"feegrant", 0},
 
 				// x/auth’s migrations depends on x/bank (delegations etc).
 				// This causes cases where running auth migration before bank’s would produce
@@ -109,6 +108,10 @@ var handlers = map[string]appUpgrade{
 				{"upgrade", 1},
 				{"vesting", 1},
 
+				// new modules that need to run init genesis
+				{"authz", 0},
+				{"feegrant", 0},
+
 				// cosmwasm module
 				{"wasm", 1},
 
@@ -126,20 +129,22 @@ var handlers = map[string]appUpgrade{
 	// TODO - Add new upgrade definitions here.
 }
 
+// NOTE: We needed to modify the behavior of the cosmos-sdk's migrations.  Order DOES matter in some cases and their migration uses a map and not a list.
+// This does not guarantee order in the migration process. i.e., The x/bank module needs to run before the x/auth module for version 1 to 2
 func RunOrderedMigrations(app *App, ctx sdk.Context, migrationOrder []moduleUpgradeVersion) (module.VersionMap, error) {
-	ctx.Logger().Info("Starting all module migrations in order: %v", migrationOrder)
+	ctx.Logger().Info(fmt.Sprintf("Starting all module migrations in order: %v", migrationOrder))
 	updatedVersionMap := make(module.VersionMap)
 	for _, moduleAndVersion := range migrationOrder {
 		partialVersionMap := make(module.VersionMap)
 		partialVersionMap[moduleAndVersion.ModuleName] = moduleAndVersion.FromVersion
-		ctx.Logger().Info("Run migration on module %s from starting version %v", moduleAndVersion, partialVersionMap[moduleAndVersion.ModuleName])
+		ctx.Logger().Info(fmt.Sprintf("Run migration on module %v from starting version %v", moduleAndVersion.ModuleName, partialVersionMap[moduleAndVersion.ModuleName]))
 		migratedVersionMap, err := app.mm.RunMigrations(ctx, app.configurator, partialVersionMap)
 		if err != nil {
 			return nil, err
 		}
 		updatedVersionMap[moduleAndVersion.ModuleName] = migratedVersionMap[moduleAndVersion.ModuleName]
 	}
-	ctx.Logger().Info("Finished running all module migrations. Final versions: %v", updatedVersionMap)
+	ctx.Logger().Info(fmt.Sprintf("Finished running all module migrations. Final versions: %v", updatedVersionMap))
 	return updatedVersionMap, nil
 }
 
