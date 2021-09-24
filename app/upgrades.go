@@ -78,16 +78,14 @@ var handlers = map[string]appUpgrade{
 
 			fromVM := map[string]uint64{
 
-				// start from genesis on new modules
-				"authz":    0,
-				"feegrant": 0,
-
 				"auth":         1,
+				"authz":        1,
 				"bank":         1,
 				"capability":   1,
 				"crisis":       1,
 				"distribution": 1,
 				"evidence":     1,
+				"feegrant":     1,
 				"genutil":      1,
 				"gov":          1,
 				"ibc":          1,
@@ -109,6 +107,20 @@ var handlers = map[string]appUpgrade{
 				"name":      1,
 			}
 			ctx.Logger().Info("NOTICE: Starting large migration on all modules for cosmos-sdk v0.44.0.  This will take a significant amount of time to complete.  Do not restart node.")
+			return app.mm.RunMigrations(ctx, app.configurator, fromVM)
+		},
+	},
+	"feldtestnet-hotfix": {
+		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
+
+			// get all the latest versions of modules
+			// that were already migrated on testnet
+			fromVM := app.mm.GetVersionMap()
+
+			// override versions for the two modules to fix to reset and run initGenesis
+			fromVM[authz.ModuleName] = 0
+			fromVM[feegrant.ModuleName] = 0
+
 			return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 		},
 		Added: []string{authz.ModuleName, feegrant.ModuleName},
