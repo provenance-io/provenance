@@ -138,7 +138,20 @@ func RunOrderedMigrations(app *App, ctx sdk.Context, migrationOrder []moduleUpgr
 		partialVersionMap := make(module.VersionMap)
 		partialVersionMap[moduleAndVersion.ModuleName] = moduleAndVersion.FromVersion
 		ctx.Logger().Info(fmt.Sprintf("Run migration on module %v from starting version %v", moduleAndVersion.ModuleName, partialVersionMap[moduleAndVersion.ModuleName]))
-		migratedVersionMap, err := app.mm.RunMigrations(ctx, app.configurator, partialVersionMap)
+		mm := make(map[string]module.AppModule)
+		if moduleAndVersion.FromVersion > 0 {
+			mm[moduleAndVersion.ModuleName] = app.mm.Modules[moduleAndVersion.ModuleName]
+		}
+		// create a special filtered module manager so we can control the library internal initialization process
+		// that uses a non-deterministic map.  The following still has a map but with only one element at a time.
+		mgr := module.Manager{
+			Modules:            mm,
+			OrderBeginBlockers: app.mm.OrderBeginBlockers,
+			OrderEndBlockers:   app.mm.OrderEndBlockers,
+			OrderExportGenesis: app.mm.OrderExportGenesis,
+			OrderInitGenesis:   app.mm.OrderInitGenesis,
+		}
+		migratedVersionMap, err := mgr.RunMigrations(ctx, app.configurator, partialVersionMap)
 		if err != nil {
 			return nil, err
 		}
