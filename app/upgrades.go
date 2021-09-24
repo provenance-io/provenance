@@ -96,7 +96,6 @@ var handlers = map[string]appUpgrade{
 				{"crisis", 1},
 				{"distribution", 1},
 				{"evidence", 1},
-				{"feegrant", 1},
 				{"genutil", 1},
 				{"gov", 1},
 				{"ibc", 1},
