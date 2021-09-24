@@ -6,7 +6,9 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	ibcconnectiontypes "github.com/cosmos/ibc-go/modules/core/03-connection/types"
 )
@@ -75,14 +77,17 @@ var handlers = map[string]appUpgrade{
 			}
 
 			fromVM := map[string]uint64{
+
+				// start from genesis on new modules
+				"authz":    0,
+				"feegrant": 0,
+
 				"auth":         1,
-				"authz":        1,
 				"bank":         1,
 				"capability":   1,
 				"crisis":       1,
 				"distribution": 1,
 				"evidence":     1,
-				"feegrant":     1,
 				"genutil":      1,
 				"gov":          1,
 				"ibc":          1,
@@ -106,6 +111,7 @@ var handlers = map[string]appUpgrade{
 			ctx.Logger().Info("NOTICE: Starting large migration on all modules for cosmos-sdk v0.44.0.  This will take a significant amount of time to complete.  Do not restart node.")
 			return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 		},
+		Added: []string{authz.ModuleName, feegrant.ModuleName}
 	},
 	// TODO - Add new upgrade definitions here.
 }
