@@ -76,106 +76,62 @@ var handlers = map[string]appUpgrade{
 				s.Set(ctx, wasmtypes.ParamStoreKeyUploadAccess, wasmtypes.AccessTypeNobody.With(sdk.AccAddress{}))
 			}
 
-			fromVM := map[string]uint64{
+			migrationOrder := []string{
+				// x/auth’s migrations depends on x/bank (delegations etc).
+				// This causes cases where running auth migration before bank’s would produce
+				/// a different app state hash than running bank’s before auth’s
+				"bank",
+				"auth",
 
-				"auth":         1,
-				"authz":        1,
-				"bank":         1,
-				"capability":   1,
-				"crisis":       1,
-				"distribution": 1,
-				"evidence":     1,
-				"feegrant":     1,
-				"genutil":      1,
-				"gov":          1,
-				"ibc":          1,
-				"mint":         1,
-				"params":       1,
-				"slashing":     1,
-				"staking":      1,
-				"transfer":     1,
-				"upgrade":      1,
-				"vesting":      1,
+				"authz",
+				"capability",
+				"crisis",
+				"distribution",
+				"evidence",
+				"feegrant",
+				"genutil",
+				"gov",
+				"ibc",
+				"mint",
+				"params",
+				"slashing",
+				"staking",
+				"transfer",
+				"upgrade",
+				"vesting",
 
 				// cosmwasm module
-				"wasm": 1,
+				"wasm",
 
 				// provenance modules
-				"attribute": 1,
-				"marker":    1,
-				"metadata":  1,
-				"name":      1,
+				"attribute",
+				"marker",
+				"metadata",
+				"name",
 			}
-			ctx.Logger().Info("NOTICE: Starting large migration on all modules for cosmos-sdk v0.44.0.  This will take a significant amount of time to complete.  Do not restart node.")
-			return app.mm.RunMigrations(ctx, app.configurator, fromVM)
-		},
-	},
-	"feldtestnet-hotfix": {
-		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
-
-			// get all the latest versions of modules
-			// that were already migrated on testnet
-			fromVM := app.mm.GetVersionMap()
-
-			// override versions for the two modules to fix to reset and run initGenesis
-			fromVM[authz.ModuleName] = 0
-			fromVM[feegrant.ModuleName] = 0
-
-			return app.mm.RunMigrations(ctx, app.configurator, fromVM)
-		},
-		Added: []string{authz.ModuleName, feegrant.ModuleName},
-	},
-	"feldgrau-2": {
-		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
-			app.IBCKeeper.ConnectionKeeper.SetParams(ctx, ibcconnectiontypes.DefaultParams())
-
-			nhashName := "Hash"
-			nhashSymbol := "HASH"
-			nhash, found := app.BankKeeper.GetDenomMetaData(ctx, "nhash")
-			if found {
-				nhash.Name = nhashName
-				nhash.Symbol = nhashSymbol
-			} else {
-				nhash = banktypes.Metadata{
-					Description: "Hash is the staking token of the Provenance Blockchain",
-					Base:        "nhash",
-					Display:     "hash",
-					Name:        nhashName,
-					Symbol:      nhashSymbol,
-					DenomUnits: []*banktypes.DenomUnit{
-						{
-							Denom:    "nhash",
-							Exponent: 0,
-							Aliases:  []string{},
-						},
-						{
-							Denom:    "hash",
-							Exponent: 9,
-							Aliases:  []string{},
-						},
-					},
-				}
-			}
-			app.BankKeeper.SetDenomMetaData(ctx, nhash)
-
-			if sdk.GetConfig().GetBech32AccountAddrPrefix() == AccountAddressPrefixMainNet {
-				s, ok := app.ParamsKeeper.GetSubspace(wasmtypes.DefaultParamspace)
-				if !ok {
-					panic("could not get wasm module parameter configuration")
-				}
-				s.Set(ctx, wasmtypes.ParamStoreKeyUploadAccess, wasmtypes.AccessTypeNobody.With(sdk.AccAddress{}))
-			}
-
-			fromVM := make(map[string]uint64)
-			for moduleName := range app.mm.Modules {
-				fromVM[moduleName] = 1
-			}
-			// override versions for _new_ modules as to not skip InitGenesis
-			fromVM[authz.ModuleName] = 0
-			fromVM[feegrant.ModuleName] = 0
 
 			ctx.Logger().Info("NOTICE: Starting large migration on all modules for cosmos-sdk v0.44.0.  This will take a significant amount of time to complete.  Do not restart node.")
-			return app.mm.RunMigrations(ctx, app.configurator, fromVM)
+			ctx.Logger().Info("Starting all module migrations in order: %v", migrationOrder)
+			// NOTE: cosmos-sdk used a map to run migrations, but order does matter.  This will assure they are executed in order
+			updatedVersionMap := make(module.VersionMap)
+			for _, moduleName := range migrationOrder {
+				partialVersionMap := make(module.VersionMap)
+				if moduleName == "authz" || moduleName == "feegrant" {
+					// we want new modules to execute init genesis
+					partialVersionMap[moduleName] = 0
+				} else {
+					// modules that start at from version 1
+					partialVersionMap[moduleName] = 1
+				}
+				ctx.Logger().Info("Run migration on module %s from starting version %v", moduleName, partialVersionMap[moduleName])
+				versionMap, err := app.mm.RunMigrations(ctx, app.configurator, partialVersionMap)
+				if err != nil {
+					return nil, err
+				}
+				updatedVersionMap[moduleName] = versionMap[moduleName]
+			}
+			ctx.Logger().Info("Finished running all module migrations. Final versions: %v", updatedVersionMap)
+			return updatedVersionMap, nil
 		},
 		Added: []string{authz.ModuleName, feegrant.ModuleName},
 	},
