@@ -111,7 +111,61 @@ var handlers = map[string]appUpgrade{
 			ctx.Logger().Info("NOTICE: Starting large migration on all modules for cosmos-sdk v0.44.0.  This will take a significant amount of time to complete.  Do not restart node.")
 			return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 		},
-		Added: []string{authz.ModuleName, feegrant.ModuleName}
+		Added: []string{authz.ModuleName, feegrant.ModuleName},
+	},
+	"feldgrau-2": {
+		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
+			app.IBCKeeper.ConnectionKeeper.SetParams(ctx, ibcconnectiontypes.DefaultParams())
+
+			nhashName := "Hash"
+			nhashSymbol := "HASH"
+			nhash, found := app.BankKeeper.GetDenomMetaData(ctx, "nhash")
+			if found {
+				nhash.Name = nhashName
+				nhash.Symbol = nhashSymbol
+			} else {
+				nhash = banktypes.Metadata{
+					Description: "Hash is the staking token of the Provenance Blockchain",
+					Base:        "nhash",
+					Display:     "hash",
+					Name:        nhashName,
+					Symbol:      nhashSymbol,
+					DenomUnits: []*banktypes.DenomUnit{
+						{
+							Denom:    "nhash",
+							Exponent: 0,
+							Aliases:  []string{},
+						},
+						{
+							Denom:    "hash",
+							Exponent: 9,
+							Aliases:  []string{},
+						},
+					},
+				}
+			}
+			app.BankKeeper.SetDenomMetaData(ctx, nhash)
+
+			if sdk.GetConfig().GetBech32AccountAddrPrefix() == AccountAddressPrefixMainNet {
+				s, ok := app.ParamsKeeper.GetSubspace(wasmtypes.DefaultParamspace)
+				if !ok {
+					panic("could not get wasm module parameter configuration")
+				}
+				s.Set(ctx, wasmtypes.ParamStoreKeyUploadAccess, wasmtypes.AccessTypeNobody.With(sdk.AccAddress{}))
+			}
+
+			fromVM := make(map[string]uint64)
+			for moduleName := range app.mm.Modules {
+				fromVM[moduleName] = 1
+			}
+			// override versions for _new_ modules as to not skip InitGenesis
+			fromVM[authz.ModuleName] = 0
+			fromVM[feegrant.ModuleName] = 0
+
+			ctx.Logger().Info("NOTICE: Starting large migration on all modules for cosmos-sdk v0.44.0.  This will take a significant amount of time to complete.  Do not restart node.")
+			return app.mm.RunMigrations(ctx, app.configurator, fromVM)
+		},
+		Added: []string{authz.ModuleName, feegrant.ModuleName},
 	},
 	// TODO - Add new upgrade definitions here.
 }
