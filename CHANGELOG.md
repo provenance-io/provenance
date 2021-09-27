@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Bug Fixes
+
+* Fix for non-deterministic upgrades in cosmos sdk [#505](https://github.com/provenance-io/provenance/issues/505)
+
 ## [v1.7.1](https://github.com/provenance-io/provenance/releases/tag/v1.7.1) - 2021-09-20
 
 ### Improvements
