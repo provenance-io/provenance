@@ -23,3 +23,4 @@ func (r GasTracerContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 
 	return next(newCtx, tx, simulate)
 }
+
