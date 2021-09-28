@@ -8,7 +8,7 @@ require (
 	github.com/btcsuite/btcd v0.22.0-beta
 	github.com/cosmos/cosmos-sdk v0.44.0
 	github.com/cosmos/go-bip39 v1.0.0
-	github.com/cosmos/ibc-go v1.0.1
+	github.com/cosmos/ibc-go v1.2.0
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.2
 	github.com/google/uuid v1.3.0
@@ -23,7 +23,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.8.1
 	github.com/stretchr/testify v1.7.0
-	github.com/tendermint/tendermint v0.34.12
+	github.com/tendermint/tendermint v0.34.13
 	github.com/tendermint/tm-db v0.6.4
 	google.golang.org/genproto v0.0.0-20210602131652-f16073e35f0c
 	google.golang.org/grpc v1.40.0
@@ -114,8 +114,8 @@ require (
 	github.com/zondax/hid v0.9.0 // indirect
 	go.etcd.io/bbolt v1.3.5 // indirect
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad // indirect
-	golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d // indirect
-	golang.org/x/sys v0.0.0-20210809222454-d867a43fc93e // indirect
+	golang.org/x/net v0.0.0-20210903162142-ad29c8ab022f // indirect
+	golang.org/x/sys v0.0.0-20210903071746-97244b99971b // indirect
 	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1 // indirect
 	golang.org/x/text v0.3.6 // indirect
 	gopkg.in/ini.v1 v1.62.0 // indirect
