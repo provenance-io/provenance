@@ -4,9 +4,7 @@ name: Tests / Code Coverage
 on:
   pull_request:
     paths:
-      - "**.go"
-      - "go.mod"
-      - "go.sum"
+      - "test.txt"
   push:
     branches:
       - main
