@@ -1,6 +1,7 @@
 name: Tests / Code Coverage
 #  Tests / Code Coverage workflow runs unit tests and uploads a code coverage report
-#  This workflow is run on pushes to master & every Pull Request as test-race is a required check
+#  This workflow is run on pushes to master & every Pull Request,
+# if no *.go, go.mod or go.sum file is changed it will pass without running as these are required checks
 on:
   pull_request:
   push:
