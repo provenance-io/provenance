@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package provenance.msgfees.v1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/bank/v1beta1/bank.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "provenance/marker/v1/marker.proto";
+import "provenance/marker/v1/accessgrant.proto";
+import "google/protobuf/any.proto";
+import "cosmos/tx/v1beta1/tx.proto";
+import "cosmos_proto/cosmos.proto";
+
+option go_package = "github.com/provenance-io/provenance/x/msgfees/types";
+
+option java_package        = "io.provenance.msgfees.v1";
+option java_multiple_files = true;
+
+// AddMarkerProposal defines defines a governance proposal to create a new marker
+message AddAdditionalMsgFeesProposal {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  string title       = 1;
+  string description = 2;
+
+  cosmos.base.v1beta1.Coin amount = 3
+      [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
+
+  google.protobuf.Any msg = 4 [(cosmos_proto.accepts_interface) = "sdk.Msg"];
+
+  repeated cosmos.base.v1beta1.Coin min_additional_fee = 5 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags)     = "yaml:\"min_additional_fee\""
+  ];
+
+  //  Fee rate, based on Gas used.
+  bytes fee_rate = 6 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false,
+    (gogoproto.jsontag)    = "fee_rate,omitempty"
+  ];
+}

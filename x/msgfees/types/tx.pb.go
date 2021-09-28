@@ -279,6 +279,7 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
 	// create fee for an associated Msg (repeated)
+	// TODO : this goes away i think in prod because MsgFees can only be created by Gov
 	CreateFeeForMsg(ctx context.Context, in *CreateFeeForMsgRequest, opts ...grpc.CallOption) (*CreateFeeForMsgResponse, error)
 	// CalculateMsgBasedFees simulates executing a transaction for estimating gas usage.
 	CalculateMsgBasedFees(ctx context.Context, in *CalculateMsgBasedRequest, opts ...grpc.CallOption) (*CalculateMsgBasedFeesResponse, error)
@@ -313,6 +314,7 @@ func (c *msgClient) CalculateMsgBasedFees(ctx context.Context, in *CalculateMsgB
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// create fee for an associated Msg (repeated)
+	// TODO : this goes away i think in prod because MsgFees can only be created by Gov
 	CreateFeeForMsg(context.Context, *CreateFeeForMsgRequest) (*CreateFeeForMsgResponse, error)
 	// CalculateMsgBasedFees simulates executing a transaction for estimating gas usage.
 	CalculateMsgBasedFees(context.Context, *CalculateMsgBasedRequest) (*CalculateMsgBasedFeesResponse, error)

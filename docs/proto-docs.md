@@ -332,6 +332,9 @@
     - [MsgFees](#provenance.msgfees.v1.MsgFees)
     - [Params](#provenance.msgfees.v1.Params)
   
+- [provenance/msgfees/v1/proposals.proto](#provenance/msgfees/v1/proposals.proto)
+    - [AddAdditionalMsgFeesProposal](#provenance.msgfees.v1.AddAdditionalMsgFeesProposal)
+  
 - [provenance/msgfees/v1/query.proto](#provenance/msgfees/v1/query.proto)
     - [QueryAllMsgFeesResponse](#provenance.msgfees.v1.QueryAllMsgFeesResponse)
     - [QueryMsgsWithAdditionalFeeResponse](#provenance.msgfees.v1.QueryMsgsWithAdditionalFeeResponse)
@@ -5165,6 +5168,42 @@ Params defines the set of params for the msgfees module.
 
 
 
+<a name="provenance/msgfees/v1/proposals.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/msgfees/v1/proposals.proto
+
+
+
+<a name="provenance.msgfees.v1.AddAdditionalMsgFeesProposal"></a>
+
+### AddAdditionalMsgFeesProposal
+AddMarkerProposal defines defines a governance proposal to create a new marker
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `title` | [string](#string) |  |  |
+| `description` | [string](#string) |  |  |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `msg` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `min_additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+| `fee_rate` | [bytes](#bytes) |  | Fee rate, based on Gas used. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
 <a name="provenance/msgfees/v1/query.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -5339,7 +5378,7 @@ Service defines a gRPC service for interacting with transactions.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `CreateFeeForMsg` | [CreateFeeForMsgRequest](#provenance.msgfees.v1.CreateFeeForMsgRequest) | [CreateFeeForMsgResponse](#provenance.msgfees.v1.CreateFeeForMsgResponse) | create fee for an associated Msg (repeated) | |
+| `CreateFeeForMsg` | [CreateFeeForMsgRequest](#provenance.msgfees.v1.CreateFeeForMsgRequest) | [CreateFeeForMsgResponse](#provenance.msgfees.v1.CreateFeeForMsgResponse) | create fee for an associated Msg (repeated) TODO : this goes away i think in prod because MsgFees can only be created by Gov | |
 | `CalculateMsgBasedFees` | [CalculateMsgBasedRequest](#provenance.msgfees.v1.CalculateMsgBasedRequest) | [CalculateMsgBasedFeesResponse](#provenance.msgfees.v1.CalculateMsgBasedFeesResponse) | CalculateMsgBasedFees simulates executing a transaction for estimating gas usage. | POST|/provenance/tx/v1/calculate_msg_fees|
 
  <!-- end services -->

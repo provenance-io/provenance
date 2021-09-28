@@ -19,6 +19,7 @@ option java_multiple_files = true;
 service Msg {
 
   // create fee for an associated Msg (repeated)
+  // TODO : this goes away i think in prod because MsgFees can only be created by Gov
   rpc CreateFeeForMsg(CreateFeeForMsgRequest) returns (CreateFeeForMsgResponse) {}
   // CalculateMsgBasedFees simulates executing a transaction for estimating gas usage.
   rpc CalculateMsgBasedFees(CalculateMsgBasedRequest) returns (CalculateMsgBasedFeesResponse) {
