@@ -8,8 +8,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/google/uuid"
-	"github.com/provenance-io/provenance/x/metadata/types/p8e"
 	yaml "gopkg.in/yaml.v2"
+
+	"github.com/provenance-io/provenance/x/metadata/types/p8e"
 )
 
 const (
