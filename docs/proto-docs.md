@@ -345,10 +345,10 @@
     - [Query](#provenance.msgfees.v1.Query)
   
 - [provenance/msgfees/v1/tx.proto](#provenance/msgfees/v1/tx.proto)
+    - [CalculateFeePerMsgRequest](#provenance.msgfees.v1.CalculateFeePerMsgRequest)
     - [CalculateMsgBasedFeesResponse](#provenance.msgfees.v1.CalculateMsgBasedFeesResponse)
-    - [CalculateMsgBasedRequest](#provenance.msgfees.v1.CalculateMsgBasedRequest)
-    - [CreateFeeForMsgRequest](#provenance.msgfees.v1.CreateFeeForMsgRequest)
-    - [CreateFeeForMsgResponse](#provenance.msgfees.v1.CreateFeeForMsgResponse)
+    - [CreateAdditionalFeeForMsgTypeResponse](#provenance.msgfees.v1.CreateAdditionalFeeForMsgTypeResponse)
+    - [MsgAddFeeForMsgTypeRequest](#provenance.msgfees.v1.MsgAddFeeForMsgTypeRequest)
   
     - [Msg](#provenance.msgfees.v1.Msg)
   
@@ -5303,6 +5303,22 @@ Query defines the gRPC querier service for marker module.
 
 
 
+<a name="provenance.msgfees.v1.CalculateFeePerMsgRequest"></a>
+
+### CalculateFeePerMsgRequest
+ComputeMsgBasedRequest is the request type for the Msg.CalculateMsgBasedFees
+RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `tx` | [cosmos.tx.v1beta1.Tx](#cosmos.tx.v1beta1.Tx) |  | tx is the transaction to simulate. |
+
+
+
+
+
+
 <a name="provenance.msgfees.v1.CalculateMsgBasedFeesResponse"></a>
 
 ### CalculateMsgBasedFeesResponse
@@ -5319,26 +5335,10 @@ RPC method.
 
 
 
-<a name="provenance.msgfees.v1.CalculateMsgBasedRequest"></a>
+<a name="provenance.msgfees.v1.CreateAdditionalFeeForMsgTypeResponse"></a>
 
-### CalculateMsgBasedRequest
-ComputeMsgBasedRequest is the request type for the Msg.CalculateMsgBasedFees
-RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `tx` | [cosmos.tx.v1beta1.Tx](#cosmos.tx.v1beta1.Tx) |  | tx is the transaction to simulate. |
-
-
-
-
-
-
-<a name="provenance.msgfees.v1.CreateFeeForMsgRequest"></a>
-
-### CreateFeeForMsgRequest
-create fee for msg's (repeated)
+### CreateAdditionalFeeForMsgTypeResponse
+response for CreateFeeForMsg
 
 
 | Field | Type | Label | Description |
@@ -5350,10 +5350,10 @@ create fee for msg's (repeated)
 
 
 
-<a name="provenance.msgfees.v1.CreateFeeForMsgResponse"></a>
+<a name="provenance.msgfees.v1.MsgAddFeeForMsgTypeRequest"></a>
 
-### CreateFeeForMsgResponse
-response for CreateFeeForMsg
+### MsgAddFeeForMsgTypeRequest
+create fee for msg's (repeated)
 
 
 | Field | Type | Label | Description |
@@ -5378,8 +5378,8 @@ Service defines a gRPC service for interacting with transactions.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `CreateFeeForMsg` | [CreateFeeForMsgRequest](#provenance.msgfees.v1.CreateFeeForMsgRequest) | [CreateFeeForMsgResponse](#provenance.msgfees.v1.CreateFeeForMsgResponse) | create fee for an associated Msg (repeated) TODO : this goes away i think in prod because MsgFees can only be created by Gov | |
-| `CalculateMsgBasedFees` | [CalculateMsgBasedRequest](#provenance.msgfees.v1.CalculateMsgBasedRequest) | [CalculateMsgBasedFeesResponse](#provenance.msgfees.v1.CalculateMsgBasedFeesResponse) | CalculateMsgBasedFees simulates executing a transaction for estimating gas usage. | POST|/provenance/tx/v1/calculate_msg_fees|
+| `CreateAdditionalFeeForMsgType` | [MsgAddFeeForMsgTypeRequest](#provenance.msgfees.v1.MsgAddFeeForMsgTypeRequest) | [CreateAdditionalFeeForMsgTypeResponse](#provenance.msgfees.v1.CreateAdditionalFeeForMsgTypeResponse) | create fee for an associated Msg (repeated) TODO : this goes away i think in prod because MsgFees can only be created by Gov | |
+| `CalculateMsgBasedFees` | [CalculateFeePerMsgRequest](#provenance.msgfees.v1.CalculateFeePerMsgRequest) | [CalculateMsgBasedFeesResponse](#provenance.msgfees.v1.CalculateMsgBasedFeesResponse) | CalculateMsgBasedFees simulates executing a transaction for estimating gas usage. | POST|/provenance/tx/v1/calculate_msg_fees|
 
  <!-- end services -->
 

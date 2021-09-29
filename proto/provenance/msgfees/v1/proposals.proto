@@ -18,8 +18,7 @@ option java_multiple_files = true;
 
 // AddMarkerProposal defines defines a governance proposal to create a new marker
 message AddAdditionalMsgFeesProposal {
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.equal) = true;
 
   string title       = 1;
   string description = 2;

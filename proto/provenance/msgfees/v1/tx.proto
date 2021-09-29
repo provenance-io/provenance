@@ -20,9 +20,9 @@ service Msg {
 
   // create fee for an associated Msg (repeated)
   // TODO : this goes away i think in prod because MsgFees can only be created by Gov
-  rpc CreateFeeForMsg(CreateFeeForMsgRequest) returns (CreateFeeForMsgResponse) {}
+  rpc CreateAdditionalFeeForMsgType(MsgAddFeeForMsgTypeRequest) returns (CreateAdditionalFeeForMsgTypeResponse) {}
   // CalculateMsgBasedFees simulates executing a transaction for estimating gas usage.
-  rpc CalculateMsgBasedFees(CalculateMsgBasedRequest) returns (CalculateMsgBasedFeesResponse) {
+  rpc CalculateMsgBasedFees(CalculateFeePerMsgRequest) returns (CalculateMsgBasedFeesResponse) {
     option (google.api.http) = {
       post: "/provenance/tx/v1/calculate_msg_fees"
       body: "*"
@@ -32,7 +32,7 @@ service Msg {
 
 // ComputeMsgBasedRequest is the request type for the Msg.CalculateMsgBasedFees
 // RPC method.
-message CalculateMsgBasedRequest {
+message CalculateFeePerMsgRequest {
   // tx is the transaction to simulate.
   cosmos.tx.v1beta1.Tx tx = 1;
 }
@@ -46,13 +46,13 @@ message CalculateMsgBasedFeesResponse {
 }
 
 // create fee for msg's (repeated)
-message CreateFeeForMsgRequest {
+message MsgAddFeeForMsgTypeRequest {
   // msg to add Fee for.
   repeated MsgFees msg_fees = 1;
 }
 
 // response for CreateFeeForMsg
-message CreateFeeForMsgResponse {
+message CreateAdditionalFeeForMsgTypeResponse {
   // msg to add Fee for.
   repeated MsgFees msg_fees = 1;
 }

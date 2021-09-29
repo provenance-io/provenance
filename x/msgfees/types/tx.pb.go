@@ -37,23 +37,23 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // ComputeMsgBasedRequest is the request type for the Msg.CalculateMsgBasedFees
 // RPC method.
-type CalculateMsgBasedRequest struct {
+type CalculateFeePerMsgRequest struct {
 	// tx is the transaction to simulate.
 	Tx *tx.Tx `protobuf:"bytes,1,opt,name=tx,proto3" json:"tx,omitempty"`
 }
 
-func (m *CalculateMsgBasedRequest) Reset()         { *m = CalculateMsgBasedRequest{} }
-func (m *CalculateMsgBasedRequest) String() string { return proto.CompactTextString(m) }
-func (*CalculateMsgBasedRequest) ProtoMessage()    {}
-func (*CalculateMsgBasedRequest) Descriptor() ([]byte, []int) {
+func (m *CalculateFeePerMsgRequest) Reset()         { *m = CalculateFeePerMsgRequest{} }
+func (m *CalculateFeePerMsgRequest) String() string { return proto.CompactTextString(m) }
+func (*CalculateFeePerMsgRequest) ProtoMessage()    {}
+func (*CalculateFeePerMsgRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_4c6bb65eaf858b5f, []int{0}
 }
-func (m *CalculateMsgBasedRequest) XXX_Unmarshal(b []byte) error {
+func (m *CalculateFeePerMsgRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *CalculateMsgBasedRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *CalculateFeePerMsgRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_CalculateMsgBasedRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_CalculateFeePerMsgRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -63,19 +63,19 @@ func (m *CalculateMsgBasedRequest) XXX_Marshal(b []byte, deterministic bool) ([]
 		return b[:n], nil
 	}
 }
-func (m *CalculateMsgBasedRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_CalculateMsgBasedRequest.Merge(m, src)
+func (m *CalculateFeePerMsgRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CalculateFeePerMsgRequest.Merge(m, src)
 }
-func (m *CalculateMsgBasedRequest) XXX_Size() int {
+func (m *CalculateFeePerMsgRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *CalculateMsgBasedRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_CalculateMsgBasedRequest.DiscardUnknown(m)
+func (m *CalculateFeePerMsgRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_CalculateFeePerMsgRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_CalculateMsgBasedRequest proto.InternalMessageInfo
+var xxx_messageInfo_CalculateFeePerMsgRequest proto.InternalMessageInfo
 
-func (m *CalculateMsgBasedRequest) GetTx() *tx.Tx {
+func (m *CalculateFeePerMsgRequest) GetTx() *tx.Tx {
 	if m != nil {
 		return m.Tx
 	}
@@ -130,23 +130,23 @@ func (m *CalculateMsgBasedFeesResponse) GetFeeAmount() github_com_cosmos_cosmos_
 }
 
 // create fee for msg's (repeated)
-type CreateFeeForMsgRequest struct {
+type MsgAddFeeForMsgTypeRequest struct {
 	// msg to add Fee for.
 	MsgFees []*MsgFees `protobuf:"bytes,1,rep,name=msg_fees,json=msgFees,proto3" json:"msg_fees,omitempty"`
 }
 
-func (m *CreateFeeForMsgRequest) Reset()         { *m = CreateFeeForMsgRequest{} }
-func (m *CreateFeeForMsgRequest) String() string { return proto.CompactTextString(m) }
-func (*CreateFeeForMsgRequest) ProtoMessage()    {}
-func (*CreateFeeForMsgRequest) Descriptor() ([]byte, []int) {
+func (m *MsgAddFeeForMsgTypeRequest) Reset()         { *m = MsgAddFeeForMsgTypeRequest{} }
+func (m *MsgAddFeeForMsgTypeRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgAddFeeForMsgTypeRequest) ProtoMessage()    {}
+func (*MsgAddFeeForMsgTypeRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_4c6bb65eaf858b5f, []int{2}
 }
-func (m *CreateFeeForMsgRequest) XXX_Unmarshal(b []byte) error {
+func (m *MsgAddFeeForMsgTypeRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *CreateFeeForMsgRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgAddFeeForMsgTypeRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_CreateFeeForMsgRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgAddFeeForMsgTypeRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -156,19 +156,19 @@ func (m *CreateFeeForMsgRequest) XXX_Marshal(b []byte, deterministic bool) ([]by
 		return b[:n], nil
 	}
 }
-func (m *CreateFeeForMsgRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_CreateFeeForMsgRequest.Merge(m, src)
+func (m *MsgAddFeeForMsgTypeRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAddFeeForMsgTypeRequest.Merge(m, src)
 }
-func (m *CreateFeeForMsgRequest) XXX_Size() int {
+func (m *MsgAddFeeForMsgTypeRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *CreateFeeForMsgRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_CreateFeeForMsgRequest.DiscardUnknown(m)
+func (m *MsgAddFeeForMsgTypeRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAddFeeForMsgTypeRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_CreateFeeForMsgRequest proto.InternalMessageInfo
+var xxx_messageInfo_MsgAddFeeForMsgTypeRequest proto.InternalMessageInfo
 
-func (m *CreateFeeForMsgRequest) GetMsgFees() []*MsgFees {
+func (m *MsgAddFeeForMsgTypeRequest) GetMsgFees() []*MsgFees {
 	if m != nil {
 		return m.MsgFees
 	}
@@ -176,23 +176,23 @@ func (m *CreateFeeForMsgRequest) GetMsgFees() []*MsgFees {
 }
 
 // response for CreateFeeForMsg
-type CreateFeeForMsgResponse struct {
+type CreateAdditionalFeeForMsgTypeResponse struct {
 	// msg to add Fee for.
 	MsgFees []*MsgFees `protobuf:"bytes,1,rep,name=msg_fees,json=msgFees,proto3" json:"msg_fees,omitempty"`
 }
 
-func (m *CreateFeeForMsgResponse) Reset()         { *m = CreateFeeForMsgResponse{} }
-func (m *CreateFeeForMsgResponse) String() string { return proto.CompactTextString(m) }
-func (*CreateFeeForMsgResponse) ProtoMessage()    {}
-func (*CreateFeeForMsgResponse) Descriptor() ([]byte, []int) {
+func (m *CreateAdditionalFeeForMsgTypeResponse) Reset()         { *m = CreateAdditionalFeeForMsgTypeResponse{} }
+func (m *CreateAdditionalFeeForMsgTypeResponse) String() string { return proto.CompactTextString(m) }
+func (*CreateAdditionalFeeForMsgTypeResponse) ProtoMessage()    {}
+func (*CreateAdditionalFeeForMsgTypeResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_4c6bb65eaf858b5f, []int{3}
 }
-func (m *CreateFeeForMsgResponse) XXX_Unmarshal(b []byte) error {
+func (m *CreateAdditionalFeeForMsgTypeResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *CreateFeeForMsgResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *CreateAdditionalFeeForMsgTypeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_CreateFeeForMsgResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_CreateAdditionalFeeForMsgTypeResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -202,19 +202,19 @@ func (m *CreateFeeForMsgResponse) XXX_Marshal(b []byte, deterministic bool) ([]b
 		return b[:n], nil
 	}
 }
-func (m *CreateFeeForMsgResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_CreateFeeForMsgResponse.Merge(m, src)
+func (m *CreateAdditionalFeeForMsgTypeResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CreateAdditionalFeeForMsgTypeResponse.Merge(m, src)
 }
-func (m *CreateFeeForMsgResponse) XXX_Size() int {
+func (m *CreateAdditionalFeeForMsgTypeResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *CreateFeeForMsgResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_CreateFeeForMsgResponse.DiscardUnknown(m)
+func (m *CreateAdditionalFeeForMsgTypeResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_CreateAdditionalFeeForMsgTypeResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_CreateFeeForMsgResponse proto.InternalMessageInfo
+var xxx_messageInfo_CreateAdditionalFeeForMsgTypeResponse proto.InternalMessageInfo
 
-func (m *CreateFeeForMsgResponse) GetMsgFees() []*MsgFees {
+func (m *CreateAdditionalFeeForMsgTypeResponse) GetMsgFees() []*MsgFees {
 	if m != nil {
 		return m.MsgFees
 	}
@@ -222,48 +222,49 @@ func (m *CreateFeeForMsgResponse) GetMsgFees() []*MsgFees {
 }
 
 func init() {
-	proto.RegisterType((*CalculateMsgBasedRequest)(nil), "provenance.msgfees.v1.CalculateMsgBasedRequest")
+	proto.RegisterType((*CalculateFeePerMsgRequest)(nil), "provenance.msgfees.v1.CalculateFeePerMsgRequest")
 	proto.RegisterType((*CalculateMsgBasedFeesResponse)(nil), "provenance.msgfees.v1.CalculateMsgBasedFeesResponse")
-	proto.RegisterType((*CreateFeeForMsgRequest)(nil), "provenance.msgfees.v1.CreateFeeForMsgRequest")
-	proto.RegisterType((*CreateFeeForMsgResponse)(nil), "provenance.msgfees.v1.CreateFeeForMsgResponse")
+	proto.RegisterType((*MsgAddFeeForMsgTypeRequest)(nil), "provenance.msgfees.v1.MsgAddFeeForMsgTypeRequest")
+	proto.RegisterType((*CreateAdditionalFeeForMsgTypeResponse)(nil), "provenance.msgfees.v1.CreateAdditionalFeeForMsgTypeResponse")
 }
 
 func init() { proto.RegisterFile("provenance/msgfees/v1/tx.proto", fileDescriptor_4c6bb65eaf858b5f) }
 
 var fileDescriptor_4c6bb65eaf858b5f = []byte{
-	// 507 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x93, 0xcf, 0x8b, 0xd3, 0x40,
-	0x14, 0xc7, 0x33, 0x5d, 0xf0, 0xc7, 0xec, 0x41, 0x08, 0x56, 0xdb, 0xa0, 0xd9, 0x25, 0x2a, 0x54,
-	0xa1, 0x33, 0xb6, 0xeb, 0x45, 0x6f, 0xdb, 0x42, 0x6f, 0x05, 0xa9, 0x7b, 0xf2, 0x52, 0x26, 0xd9,
-	0xd7, 0x31, 0x6e, 0x33, 0x13, 0x33, 0x93, 0x92, 0xbd, 0x7a, 0xf5, 0x22, 0xf8, 0x5f, 0xe8, 0xc1,
-	0x7f, 0x63, 0x8f, 0x0b, 0x5e, 0x3c, 0xa9, 0xb4, 0xfe, 0x21, 0xd2, 0x64, 0xd2, 0x2d, 0x36, 0x85,
-	0xb2, 0xa7, 0x64, 0xf8, 0xbe, 0xf7, 0x79, 0xdf, 0xf7, 0xe6, 0x0d, 0x76, 0xe3, 0x44, 0xce, 0x40,
-	0x30, 0x11, 0x00, 0x8d, 0x14, 0x9f, 0x00, 0x28, 0x3a, 0xeb, 0x50, 0x9d, 0x91, 0x38, 0x91, 0x5a,
-	0xda, 0xf5, 0x2b, 0x9d, 0x18, 0x9d, 0xcc, 0x3a, 0xce, 0x5d, 0x2e, 0xb9, 0xcc, 0x23, 0xe8, 0xf2,
-	0xaf, 0x08, 0x76, 0xdc, 0x40, 0xaa, 0x48, 0x2a, 0xea, 0x33, 0x05, 0x74, 0xd6, 0xf1, 0x41, 0xb3,
-	0x0e, 0x0d, 0x64, 0x28, 0x36, 0x74, 0x71, 0xb6, 0xd2, 0x97, 0x07, 0xa3, 0x3f, 0xaa, 0x36, 0x53,
-	0xd6, 0x2d, 0x82, 0x9a, 0x05, 0x64, 0x5c, 0x54, 0x2f, 0x0e, 0x46, 0x7a, 0xc0, 0xa5, 0xe4, 0x53,
-	0xa0, 0x2c, 0x0e, 0x29, 0x13, 0x42, 0x6a, 0xa6, 0x43, 0x29, 0x4a, 0xd5, 0x31, 0xd5, 0x75, 0xb6,
-	0xaa, 0x5d, 0xb6, 0xe9, 0x34, 0x4d, 0x66, 0x7e, 0xf2, 0xd3, 0x09, 0x65, 0xe2, 0xbc, 0x90, 0xbc,
-	0x63, 0xdc, 0xe8, 0xb3, 0x69, 0x90, 0x4e, 0x99, 0x86, 0xa1, 0xe2, 0x3d, 0xa6, 0xe0, 0x74, 0x04,
-	0x1f, 0x52, 0x50, 0xda, 0x7e, 0x82, 0x6b, 0x3a, 0x6b, 0xa0, 0x43, 0xd4, 0xda, 0xef, 0xd6, 0x89,
-	0xf1, 0xa2, 0x33, 0x62, 0xf8, 0xe4, 0x24, 0x1b, 0xd5, 0x74, 0xe6, 0x7d, 0x42, 0xf8, 0xe1, 0x06,
-	0x63, 0x00, 0xa0, 0x46, 0xa0, 0x62, 0x29, 0x14, 0xd8, 0xef, 0x31, 0x9e, 0x00, 0x8c, 0x59, 0x24,
-	0x53, 0xa1, 0x1b, 0xe8, 0x70, 0xaf, 0xb5, 0xdf, 0x6d, 0x96, 0xc0, 0xe5, 0x38, 0x57, 0xc8, 0xbe,
-	0x0c, 0x45, 0xef, 0xf9, 0xc5, 0xaf, 0x03, 0xeb, 0xeb, 0xef, 0x83, 0x16, 0x0f, 0xf5, 0xbb, 0xd4,
-	0x27, 0x81, 0x8c, 0xcc, 0x24, 0xcc, 0xa7, 0xad, 0x4e, 0xcf, 0xa8, 0x3e, 0x8f, 0x41, 0xe5, 0x09,
-	0x6a, 0x74, 0x7b, 0x02, 0x70, 0x9c, 0xd3, 0xbd, 0x37, 0xf8, 0x5e, 0x3f, 0x01, 0xa6, 0x61, 0x00,
-	0x30, 0x90, 0xc9, 0x50, 0xf1, 0xb2, 0x9d, 0x97, 0xf8, 0x56, 0xa4, 0xf8, 0x78, 0x39, 0x6c, 0xe3,
-	0xc1, 0x25, 0x95, 0xf7, 0x4f, 0x86, 0x8a, 0xe7, 0xfe, 0x6f, 0x46, 0xc5, 0x8f, 0x77, 0x82, 0xef,
-	0x6f, 0x40, 0x4d, 0x6f, 0xd7, 0xa7, 0x76, 0xbf, 0xd5, 0xf0, 0xde, 0x50, 0x71, 0x3b, 0xc1, 0x77,
-	0xfe, 0xa3, 0xdb, 0xed, 0x2d, 0x8c, 0xea, 0xd6, 0x1c, 0xb2, 0x6b, 0x78, 0x61, 0xda, 0xb3, 0xec,
-	0xef, 0x08, 0xd7, 0x2b, 0x2f, 0xcd, 0xa6, 0xdb, 0x58, 0x5b, 0xd6, 0xc4, 0x79, 0xb1, 0x6b, 0xc2,
-	0xfa, 0x4e, 0x78, 0xf4, 0xe3, 0x8f, 0xbf, 0x5f, 0x6a, 0x4f, 0xbd, 0xc7, 0x74, 0xed, 0x59, 0xe4,
-	0xcb, 0x4b, 0x83, 0x32, 0x71, 0x5c, 0x4e, 0xf6, 0x15, 0x7a, 0xd6, 0x0b, 0x2f, 0xe6, 0x2e, 0xba,
-	0x9c, 0xbb, 0xe8, 0xcf, 0xdc, 0x45, 0x9f, 0x17, 0xae, 0x75, 0xb9, 0x70, 0xad, 0x9f, 0x0b, 0xd7,
-	0xc2, 0x8d, 0x50, 0x56, 0x5b, 0x78, 0x8d, 0xde, 0x1e, 0xad, 0xed, 0xd0, 0x55, 0x4c, 0x3b, 0x94,
-	0xeb, 0x65, 0xb3, 0xd5, 0x7b, 0xcc, 0x97, 0xca, 0xbf, 0x91, 0xbf, 0x8d, 0xa3, 0x7f, 0x01, 0x00,
-	0x00, 0xff, 0xff, 0x4a, 0x5d, 0x98, 0x08, 0x3f, 0x04, 0x00, 0x00,
+	// 528 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x53, 0xc1, 0x8b, 0xd3, 0x4e,
+	0x14, 0xee, 0x74, 0xe1, 0xf7, 0xd3, 0xd9, 0x5b, 0xb0, 0xd0, 0x06, 0xcd, 0x2e, 0xd1, 0x85, 0x2a,
+	0x6c, 0x66, 0xdb, 0xf5, 0xa2, 0x78, 0x69, 0x0b, 0xbd, 0x15, 0x96, 0xb2, 0x20, 0x78, 0x29, 0x93,
+	0xe4, 0x75, 0x8c, 0xdb, 0xcc, 0xc4, 0xce, 0xa4, 0xa4, 0x57, 0xaf, 0x5e, 0x44, 0xff, 0x0b, 0x4f,
+	0xfe, 0x19, 0x7b, 0x11, 0x16, 0xbc, 0x78, 0x52, 0x69, 0xfd, 0x43, 0x24, 0xc9, 0x24, 0x5b, 0x34,
+	0x51, 0xf1, 0x94, 0x19, 0xbe, 0xf7, 0xbe, 0xef, 0x7d, 0x2f, 0xdf, 0x60, 0x2b, 0x5a, 0x8a, 0x15,
+	0x70, 0xca, 0x3d, 0x20, 0xa1, 0x64, 0x73, 0x00, 0x49, 0x56, 0x3d, 0xa2, 0x12, 0x27, 0x5a, 0x0a,
+	0x25, 0x8c, 0xd6, 0x35, 0xee, 0x68, 0xdc, 0x59, 0xf5, 0xcc, 0x5b, 0x4c, 0x30, 0x91, 0x55, 0x90,
+	0xf4, 0x94, 0x17, 0x9b, 0x96, 0x27, 0x64, 0x28, 0x24, 0x71, 0xa9, 0x04, 0xb2, 0xea, 0xb9, 0xa0,
+	0x68, 0x8f, 0x78, 0x22, 0xe0, 0xbf, 0xe0, 0xfc, 0xa2, 0xc4, 0xd3, 0x8b, 0xc6, 0xef, 0x56, 0x0f,
+	0x53, 0xe8, 0xe6, 0x45, 0x9d, 0x9c, 0x64, 0x96, 0xab, 0xe7, 0x17, 0x0d, 0xdd, 0x66, 0x42, 0xb0,
+	0x05, 0x10, 0x1a, 0x05, 0x84, 0x72, 0x2e, 0x14, 0x55, 0x81, 0xe0, 0x05, 0x6a, 0x6a, 0x75, 0x95,
+	0x94, 0xda, 0x85, 0x4d, 0xb3, 0xa3, 0x3b, 0xb3, 0x9b, 0x1b, 0xcf, 0x09, 0xe5, 0xeb, 0x1c, 0xb2,
+	0x87, 0xb8, 0x33, 0xa2, 0x0b, 0x2f, 0x5e, 0x50, 0x05, 0x63, 0x80, 0x33, 0x58, 0x4e, 0x24, 0x9b,
+	0xc2, 0xcb, 0x18, 0xa4, 0x32, 0x8e, 0x70, 0x53, 0x25, 0x6d, 0x74, 0x88, 0xba, 0xfb, 0xfd, 0x96,
+	0xa3, 0x87, 0x51, 0x89, 0xa3, 0x05, 0x9c, 0xf3, 0x64, 0xda, 0x54, 0x89, 0xfd, 0x1a, 0xe1, 0x3b,
+	0x25, 0xc9, 0x44, 0xb2, 0x21, 0x95, 0xe0, 0x8f, 0x01, 0xe4, 0x14, 0x64, 0x24, 0xb8, 0x04, 0xe3,
+	0x05, 0xc6, 0x73, 0x80, 0x19, 0x0d, 0x45, 0xcc, 0x55, 0x1b, 0x1d, 0xee, 0x75, 0xf7, 0xfb, 0x9d,
+	0x82, 0x30, 0xdd, 0x67, 0x49, 0x39, 0x12, 0x01, 0x1f, 0x9e, 0x5c, 0x7e, 0x39, 0x68, 0xbc, 0xff,
+	0x7a, 0xd0, 0x65, 0x81, 0x7a, 0x1e, 0xbb, 0x8e, 0x27, 0x42, 0xbd, 0x0a, 0xfd, 0x39, 0x96, 0xfe,
+	0x05, 0x51, 0xeb, 0x08, 0x64, 0xd6, 0x20, 0xa7, 0x37, 0xe7, 0x00, 0x83, 0x8c, 0xdd, 0x7e, 0x8a,
+	0xcd, 0x89, 0x64, 0x03, 0x3f, 0x9d, 0x60, 0x2c, 0x52, 0x3b, 0xe7, 0xeb, 0x08, 0x0a, 0x4b, 0x8f,
+	0xf0, 0x8d, 0x50, 0xb2, 0x59, 0xba, 0x71, 0x3d, 0x87, 0xe5, 0x54, 0x86, 0xc0, 0x99, 0x48, 0x96,
+	0x79, 0xf8, 0x3f, 0xcc, 0x0f, 0xb6, 0x8b, 0x8f, 0x46, 0x4b, 0xa0, 0x0a, 0x06, 0xbe, 0x1f, 0xa4,
+	0xab, 0xa7, 0x8b, 0x9f, 0x24, 0xb4, 0xdb, 0x7f, 0xd7, 0xe8, 0x7f, 0x6c, 0xe2, 0xbd, 0x89, 0x64,
+	0xc6, 0xdb, 0x74, 0xa5, 0xbf, 0x13, 0x33, 0x7a, 0xf5, 0x94, 0x35, 0xde, 0xcd, 0x27, 0x35, 0x2d,
+	0x7f, 0xe5, 0xca, 0x6e, 0x18, 0x1f, 0x10, 0x6e, 0x55, 0xfe, 0x67, 0xe3, 0xa4, 0x8e, 0xb9, 0x2e,
+	0x5a, 0xe6, 0xc3, 0x3f, 0x75, 0x54, 0xe5, 0xc8, 0x26, 0xaf, 0x3e, 0x7d, 0x7f, 0xd7, 0xbc, 0x6f,
+	0xdf, 0x23, 0x3b, 0x6f, 0x29, 0x4b, 0x3c, 0xf1, 0x8a, 0xc6, 0x59, 0xb1, 0xfb, 0xc7, 0xe8, 0xc1,
+	0x30, 0xb8, 0xdc, 0x58, 0xe8, 0x6a, 0x63, 0xa1, 0x6f, 0x1b, 0x0b, 0xbd, 0xd9, 0x5a, 0x8d, 0xab,
+	0xad, 0xd5, 0xf8, 0xbc, 0xb5, 0x1a, 0xb8, 0x1d, 0x88, 0xea, 0x11, 0xce, 0xd0, 0xb3, 0xd3, 0x9d,
+	0xdc, 0x5d, 0xd7, 0x1c, 0x07, 0x62, 0x57, 0x36, 0x29, 0x1f, 0x71, 0x16, 0x44, 0xf7, 0xbf, 0xec,
+	0x41, 0x9d, 0xfe, 0x08, 0x00, 0x00, 0xff, 0xff, 0x9f, 0x13, 0xb2, 0xc2, 0x74, 0x04, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -280,9 +281,9 @@ const _ = grpc.SupportPackageIsVersion4
 type MsgClient interface {
 	// create fee for an associated Msg (repeated)
 	// TODO : this goes away i think in prod because MsgFees can only be created by Gov
-	CreateFeeForMsg(ctx context.Context, in *CreateFeeForMsgRequest, opts ...grpc.CallOption) (*CreateFeeForMsgResponse, error)
+	CreateAdditionalFeeForMsgType(ctx context.Context, in *MsgAddFeeForMsgTypeRequest, opts ...grpc.CallOption) (*CreateAdditionalFeeForMsgTypeResponse, error)
 	// CalculateMsgBasedFees simulates executing a transaction for estimating gas usage.
-	CalculateMsgBasedFees(ctx context.Context, in *CalculateMsgBasedRequest, opts ...grpc.CallOption) (*CalculateMsgBasedFeesResponse, error)
+	CalculateMsgBasedFees(ctx context.Context, in *CalculateFeePerMsgRequest, opts ...grpc.CallOption) (*CalculateMsgBasedFeesResponse, error)
 }
 
 type msgClient struct {
@@ -293,16 +294,16 @@ func NewMsgClient(cc grpc1.ClientConn) MsgClient {
 	return &msgClient{cc}
 }
 
-func (c *msgClient) CreateFeeForMsg(ctx context.Context, in *CreateFeeForMsgRequest, opts ...grpc.CallOption) (*CreateFeeForMsgResponse, error) {
-	out := new(CreateFeeForMsgResponse)
-	err := c.cc.Invoke(ctx, "/provenance.msgfees.v1.Msg/CreateFeeForMsg", in, out, opts...)
+func (c *msgClient) CreateAdditionalFeeForMsgType(ctx context.Context, in *MsgAddFeeForMsgTypeRequest, opts ...grpc.CallOption) (*CreateAdditionalFeeForMsgTypeResponse, error) {
+	out := new(CreateAdditionalFeeForMsgTypeResponse)
+	err := c.cc.Invoke(ctx, "/provenance.msgfees.v1.Msg/CreateAdditionalFeeForMsgType", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) CalculateMsgBasedFees(ctx context.Context, in *CalculateMsgBasedRequest, opts ...grpc.CallOption) (*CalculateMsgBasedFeesResponse, error) {
+func (c *msgClient) CalculateMsgBasedFees(ctx context.Context, in *CalculateFeePerMsgRequest, opts ...grpc.CallOption) (*CalculateMsgBasedFeesResponse, error) {
 	out := new(CalculateMsgBasedFeesResponse)
 	err := c.cc.Invoke(ctx, "/provenance.msgfees.v1.Msg/CalculateMsgBasedFees", in, out, opts...)
 	if err != nil {
@@ -315,19 +316,19 @@ func (c *msgClient) CalculateMsgBasedFees(ctx context.Context, in *CalculateMsgB
 type MsgServer interface {
 	// create fee for an associated Msg (repeated)
 	// TODO : this goes away i think in prod because MsgFees can only be created by Gov
-	CreateFeeForMsg(context.Context, *CreateFeeForMsgRequest) (*CreateFeeForMsgResponse, error)
+	CreateAdditionalFeeForMsgType(context.Context, *MsgAddFeeForMsgTypeRequest) (*CreateAdditionalFeeForMsgTypeResponse, error)
 	// CalculateMsgBasedFees simulates executing a transaction for estimating gas usage.
-	CalculateMsgBasedFees(context.Context, *CalculateMsgBasedRequest) (*CalculateMsgBasedFeesResponse, error)
+	CalculateMsgBasedFees(context.Context, *CalculateFeePerMsgRequest) (*CalculateMsgBasedFeesResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
 type UnimplementedMsgServer struct {
 }
 
-func (*UnimplementedMsgServer) CreateFeeForMsg(ctx context.Context, req *CreateFeeForMsgRequest) (*CreateFeeForMsgResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateFeeForMsg not implemented")
+func (*UnimplementedMsgServer) CreateAdditionalFeeForMsgType(ctx context.Context, req *MsgAddFeeForMsgTypeRequest) (*CreateAdditionalFeeForMsgTypeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateAdditionalFeeForMsgType not implemented")
 }
-func (*UnimplementedMsgServer) CalculateMsgBasedFees(ctx context.Context, req *CalculateMsgBasedRequest) (*CalculateMsgBasedFeesResponse, error) {
+func (*UnimplementedMsgServer) CalculateMsgBasedFees(ctx context.Context, req *CalculateFeePerMsgRequest) (*CalculateMsgBasedFeesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CalculateMsgBasedFees not implemented")
 }
 
@@ -335,26 +336,26 @@ func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
 	s.RegisterService(&_Msg_serviceDesc, srv)
 }
 
-func _Msg_CreateFeeForMsg_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateFeeForMsgRequest)
+func _Msg_CreateAdditionalFeeForMsgType_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgAddFeeForMsgTypeRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).CreateFeeForMsg(ctx, in)
+		return srv.(MsgServer).CreateAdditionalFeeForMsgType(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.msgfees.v1.Msg/CreateFeeForMsg",
+		FullMethod: "/provenance.msgfees.v1.Msg/CreateAdditionalFeeForMsgType",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).CreateFeeForMsg(ctx, req.(*CreateFeeForMsgRequest))
+		return srv.(MsgServer).CreateAdditionalFeeForMsgType(ctx, req.(*MsgAddFeeForMsgTypeRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Msg_CalculateMsgBasedFees_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CalculateMsgBasedRequest)
+	in := new(CalculateFeePerMsgRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -366,7 +367,7 @@ func _Msg_CalculateMsgBasedFees_Handler(srv interface{}, ctx context.Context, de
 		FullMethod: "/provenance.msgfees.v1.Msg/CalculateMsgBasedFees",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).CalculateMsgBasedFees(ctx, req.(*CalculateMsgBasedRequest))
+		return srv.(MsgServer).CalculateMsgBasedFees(ctx, req.(*CalculateFeePerMsgRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -376,8 +377,8 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "CreateFeeForMsg",
-			Handler:    _Msg_CreateFeeForMsg_Handler,
+			MethodName: "CreateAdditionalFeeForMsgType",
+			Handler:    _Msg_CreateAdditionalFeeForMsgType_Handler,
 		},
 		{
 			MethodName: "CalculateMsgBasedFees",
@@ -388,7 +389,7 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 	Metadata: "provenance/msgfees/v1/tx.proto",
 }
 
-func (m *CalculateMsgBasedRequest) Marshal() (dAtA []byte, err error) {
+func (m *CalculateFeePerMsgRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -398,12 +399,12 @@ func (m *CalculateMsgBasedRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *CalculateMsgBasedRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *CalculateFeePerMsgRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *CalculateMsgBasedRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *CalculateFeePerMsgRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -460,7 +461,7 @@ func (m *CalculateMsgBasedFeesResponse) MarshalToSizedBuffer(dAtA []byte) (int, 
 	return len(dAtA) - i, nil
 }
 
-func (m *CreateFeeForMsgRequest) Marshal() (dAtA []byte, err error) {
+func (m *MsgAddFeeForMsgTypeRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -470,12 +471,12 @@ func (m *CreateFeeForMsgRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *CreateFeeForMsgRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgAddFeeForMsgTypeRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *CreateFeeForMsgRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgAddFeeForMsgTypeRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -497,7 +498,7 @@ func (m *CreateFeeForMsgRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	return len(dAtA) - i, nil
 }
 
-func (m *CreateFeeForMsgResponse) Marshal() (dAtA []byte, err error) {
+func (m *CreateAdditionalFeeForMsgTypeResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -507,12 +508,12 @@ func (m *CreateFeeForMsgResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *CreateFeeForMsgResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *CreateAdditionalFeeForMsgTypeResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *CreateFeeForMsgResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *CreateAdditionalFeeForMsgTypeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -545,7 +546,7 @@ func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *CalculateMsgBasedRequest) Size() (n int) {
+func (m *CalculateFeePerMsgRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -573,7 +574,7 @@ func (m *CalculateMsgBasedFeesResponse) Size() (n int) {
 	return n
 }
 
-func (m *CreateFeeForMsgRequest) Size() (n int) {
+func (m *MsgAddFeeForMsgTypeRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -588,7 +589,7 @@ func (m *CreateFeeForMsgRequest) Size() (n int) {
 	return n
 }
 
-func (m *CreateFeeForMsgResponse) Size() (n int) {
+func (m *CreateAdditionalFeeForMsgTypeResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -609,7 +610,7 @@ func sovTx(x uint64) (n int) {
 func sozTx(x uint64) (n int) {
 	return sovTx(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *CalculateMsgBasedRequest) Unmarshal(dAtA []byte) error {
+func (m *CalculateFeePerMsgRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -632,10 +633,10 @@ func (m *CalculateMsgBasedRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: CalculateMsgBasedRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: CalculateFeePerMsgRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: CalculateMsgBasedRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: CalculateFeePerMsgRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -779,7 +780,7 @@ func (m *CalculateMsgBasedFeesResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *CreateFeeForMsgRequest) Unmarshal(dAtA []byte) error {
+func (m *MsgAddFeeForMsgTypeRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -802,10 +803,10 @@ func (m *CreateFeeForMsgRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: CreateFeeForMsgRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgAddFeeForMsgTypeRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: CreateFeeForMsgRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgAddFeeForMsgTypeRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -863,7 +864,7 @@ func (m *CreateFeeForMsgRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *CreateFeeForMsgResponse) Unmarshal(dAtA []byte) error {
+func (m *CreateAdditionalFeeForMsgTypeResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -886,10 +887,10 @@ func (m *CreateFeeForMsgResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: CreateFeeForMsgResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: CreateAdditionalFeeForMsgTypeResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: CreateFeeForMsgResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: CreateAdditionalFeeForMsgTypeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
