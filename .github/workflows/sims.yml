@@ -3,6 +3,10 @@ name: Sims
 # This workflow will run on all Pull Requests, if a .go, .mod or .sum file have been changed
 on:
   pull_request:
+    paths:
+      - "**.go"
+      - "go.mod"
+      - "go.sum"
   push:
     branches:
       - main
