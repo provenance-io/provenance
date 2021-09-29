@@ -39,7 +39,30 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* Updated some of the documentation of Metadata type bytes (prefixes) [#474](https://github.com/provenance-io/provenance/issues/474)
+* Update github actions to always run required tests [#508](https://github.com/provenance-io/provenance/issues/508)
+
+## [v1.7.2](https://github.com/provenance-io/provenance/releases/tag/v1.7.2) - 2021-09-27
+
+### Bug Fixes
+
+* Fix for non-deterministic upgrades in cosmos sdk [#505](https://github.com/provenance-io/provenance/issues/505)
+
+
+## [v1.7.1](https://github.com/provenance-io/provenance/releases/tag/v1.7.1) - 2021-09-20
+
+### Improvements
+
+* Ensure marker state transition validation does not panic [#492](https://github.com/provenance-io/provenance/issues/492)
+* Refactor Examples for cobra cli commands to have examples [#399](https://github.com/provenance-io/provenance/issues/399)
+* Verify go version on `make build` [#483](https://github.com/provenance-io/provenance/issues/483)
+
+### Bug Fixes
+
+* Fix marker permissions migration and add panic on `eigengrau` upgrade [#484](https://github.com/provenance-io/provenance/issues/484)
+* Fixed marker with more than uint64 causes panic [#489](https://github.com/provenance-io/provenance/issues/489)
+* Fixed issue with rosetta tests timing out occasionally, because the timeout was too short [#500](https://github.com/provenance-io/provenance/issues/500)
+
+## [v1.7.0](https://github.com/provenance-io/provenance/releases/tag/v1.7.0) - 2021-09-03
 
 ### Features
 
@@ -47,10 +70,19 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * Add make targets `devnet-start` and `devnet-stop`
   * Add `networks/dev/mnemonics` for adding accounts to development environment
 
+### Improvements
+
+* Updated some of the documentation of Metadata type bytes (prefixes) [#474](https://github.com/provenance-io/provenance/issues/474)
+* Update the Marker Holding query to fully utilize pagination fields [#400](https://github.com/provenance-io/provenance/issues/400)
+* Update the Metadata OSLocatorsByURI query to fully utilize pagination fields [#401](https://github.com/provenance-io/provenance/issues/401)
+* Update the Metadata OSAllLocators query to fully utilize pagination fields [#402](https://github.com/provenance-io/provenance/issues/402)
+* Validate `marker` before setting it to prevent panics [#491](https://github.com/provenance-io/provenance/issues/491)
+
 ### Bug Fixes
 
 * Removed some unneeded code from the persistent record update validation [#471](https://github.com/provenance-io/provenance/issues/471)
-
+* Fixed packed config loading bug [#487](https://github.com/provenance-io/provenance/issues/487)
+* Fixed marker with more than uint64 causes panic [#489](https://github.com/provenance-io/provenance/issues/489)
 
 ## [v1.7.0](https://github.com/provenance-io/provenance/releases/tag/v1.7.0) - 2021-09-03
 

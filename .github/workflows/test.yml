@@ -1,12 +1,9 @@
 name: Tests / Code Coverage
 #  Tests / Code Coverage workflow runs unit tests and uploads a code coverage report
-#  This workflow is run on pushes to master & every Pull Requests where a .go, .mod, .sum have been changed
+#  This workflow is run on pushes to master & every Pull Request,
+#  if no *.go, go.mod or go.sum file is changed it will pass without running as these are required checks
 on:
   pull_request:
-    paths:
-      - "**.go"
-      - "go.mod"
-      - "go.sum"
   push:
     branches:
       - main
@@ -149,7 +146,7 @@ jobs:
             sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
           done
         if: env.GIT_DIFF
-      - uses: codecov/codecov-action@v2.0.3
+      - uses: codecov/codecov-action@v2.1.0
         with:
           file: ./coverage.txt
         if: env.GIT_DIFF

@@ -7,9 +7,10 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/stretchr/testify/suite"
-	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/google/uuid"

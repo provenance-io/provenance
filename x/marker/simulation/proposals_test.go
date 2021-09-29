@@ -4,6 +4,8 @@ import (
 	"math/rand"
 	"testing"
 
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -27,7 +29,7 @@ func TestProposalContents(t *testing.T) {
 	accounts := simtypes.RandomAccounts(r, 3)
 
 	// execute ProposalContents function
-	weightedProposalContent := simulation.ProposalContents(keeper.NewKeeper(app.AppCodec(), app.GetKey(types.ModuleName), app.GetSubspace(types.ModuleName), app.AccountKeeper, app.BankKeeper, app.AuthzKeeper))
+	weightedProposalContent := simulation.ProposalContents(keeper.NewKeeper(app.AppCodec(), app.GetKey(types.ModuleName), app.GetSubspace(types.ModuleName), app.AccountKeeper, app.BankKeeper, app.AuthzKeeper, app.GetKey(banktypes.StoreKey)))
 	require.Len(t, weightedProposalContent, 7)
 
 	w0 := weightedProposalContent[0]

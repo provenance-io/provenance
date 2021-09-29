@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/server"
+
 	"github.com/provenance-io/provenance/cmd/provenanced/cmd"
 )
 

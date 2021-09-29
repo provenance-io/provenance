@@ -40,6 +40,8 @@ type IntegrationTestSuite struct {
 	keyringDir       string
 	accountAddresses []sdk.AccAddress
 
+	holderDenom string
+	holderCount int
 	markerCount int
 }
 
@@ -85,21 +87,28 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 	genesisState[authtypes.ModuleName] = authDataBz
 
+	s.holderDenom = "hodlercoin"
+	s.holderCount = 4
+
 	// Configure Genesis bank data for test accounts
 	var genBalances []banktypes.Balance
 	genBalances = append(genBalances, banktypes.Balance{Address: s.accountAddresses[0].String(), Coins: sdk.NewCoins(
 		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
 		sdk.NewCoin("authzhotdog", sdk.NewInt(100)),
+		sdk.NewCoin(s.holderDenom, sdk.NewInt(123)),
 	).Sort()})
 	genBalances = append(genBalances, banktypes.Balance{Address: s.accountAddresses[1].String(), Coins: sdk.NewCoins(
 		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
 		sdk.NewCoin("authzhotdog", sdk.NewInt(100)),
+		sdk.NewCoin(s.holderDenom, sdk.NewInt(234)),
 	).Sort()})
 	genBalances = append(genBalances, banktypes.Balance{Address: s.accountAddresses[2].String(), Coins: sdk.NewCoins(
 		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
+		sdk.NewCoin(s.holderDenom, sdk.NewInt(345)),
 	).Sort()})
 	genBalances = append(genBalances, banktypes.Balance{Address: s.accountAddresses[3].String(), Coins: sdk.NewCoins(
 		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
+		sdk.NewCoin(s.holderDenom, sdk.NewInt(456)),
 	).Sort()})
 	var bankGenState banktypes.GenesisState
 	bankGenState.Params = banktypes.DefaultParams()
@@ -185,9 +194,22 @@ func (s *IntegrationTestSuite) SetupSuite() {
 				*markertypes.NewAccessGrant(s.accountAddresses[2], []markertypes.Access{markertypes.Access_Transfer, markertypes.Access_Admin}),
 			},
 		},
+		{
+			BaseAccount: &authtypes.BaseAccount{
+				Address:       markertypes.MustGetMarkerAddress("hodlercoin").String(),
+				AccountNumber: 150,
+				Sequence:      0,
+			},
+			Status:                 markertypes.StatusActive,
+			SupplyFixed:            false,
+			MarkerType:             markertypes.MarkerType_RestrictedCoin,
+			AllowGovernanceControl: false,
+			Supply:                 sdk.NewInt(3000),
+			Denom:                  "hodlercoin",
+		},
 	}
 	for i := len(markerData.Markers); i < s.markerCount; i++ {
-		denom := toWritten(i)
+		denom := toWritten(i + 1)
 		markerData.Markers = append(markerData.Markers,
 			markertypes.MarkerAccount{
 				BaseAccount: &authtypes.BaseAccount{
@@ -326,6 +348,23 @@ func (a markerSorter) Swap(i, j int) {
 }
 func (a markerSorter) Less(i, j int) bool {
 	return a[i].Denom < a[j].Denom
+}
+
+// balanceSorter implements sort.Interface for []Balance
+// Sorts by .Address, then .Coins length.
+type balanceSorter []markertypes.Balance
+
+func (a balanceSorter) Len() int {
+	return len(a)
+}
+func (a balanceSorter) Swap(i, j int) {
+	a[i], a[j] = a[j], a[i]
+}
+func (a balanceSorter) Less(i, j int) bool {
+	if a[i].Address != a[j].Address {
+		return a[i].Address < a[j].Address
+	}
+	return len(a[i].Coins) < len(a[j].Coins)
 }
 
 func appendMarkers(a []markertypes.MarkerAccount, toAdd ...*sdktypes.Any) []markertypes.MarkerAccount {
@@ -1022,8 +1061,8 @@ func (s *IntegrationTestSuite) TestPaginationWithPageKey() {
 	)
 	s.Require().NoError(cerr, "count marker cmd error")
 	var cresult markertypes.QueryAllMarkersResponse
-	merr := s.cfg.Codec.UnmarshalJSON(cout.Bytes(), &cresult)
-	s.Require().NoError(merr, "count marker unmarshal error")
+	mmerr := s.cfg.Codec.UnmarshalJSON(cout.Bytes(), &cresult)
+	s.Require().NoError(mmerr, "count marker unmarshal error")
 	s.Require().Greater(cresult.Pagination.Total, uint64(0), "count markers pagination total")
 	s.markerCount = int(cresult.Pagination.Total)
 
@@ -1076,5 +1115,52 @@ func (s *IntegrationTestSuite) TestPaginationWithPageKey() {
 		}
 	})
 
-	// TODO: Add pagination test of AllHoldersCmd [denom] once marker/keeper/query_server.go#Holding is fixed: https://github.com/provenance-io/provenance/issues/400
+	s.T().Run("AllHoldersCmd denom", func(t *testing.T) {
+		// Choosing page size = 3 because it a) isn't the default, b) doesn't evenly divide 4.
+		pageSize := 3
+		expectedCount := s.holderCount
+		pageCount := expectedCount / pageSize
+		if expectedCount%pageSize != 0 {
+			pageCount++
+		}
+		pageSizeArg := limitArg(pageSize)
+
+		results := make([]markertypes.Balance, 0, expectedCount)
+		var nextKey string
+
+		// Only using the page variable here for error messages, not for the CLI args since that'll mess with the --page-key being tested.
+		for page := 1; page <= pageCount; page++ {
+			args := []string{s.holderDenom, pageSizeArg, asJson}
+			if page != 1 {
+				args = append(args, pageKeyArg(nextKey))
+			}
+			iterID := fmt.Sprintf("page %d/%d, args: %v", page, pageCount, args)
+			cmd := markercli.AllHoldersCmd()
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			require.NoErrorf(t, err, "cmd error %s", iterID)
+			var result markertypes.QueryHoldingResponse
+			merr := s.cfg.Codec.UnmarshalJSON(out.Bytes(), &result)
+			require.NoErrorf(t, merr, "unmarshal error %s", iterID)
+			resultCount := len(result.Balances)
+			if page != pageCount {
+				require.Equalf(t, pageSize, resultCount, "page result count %s", iterID)
+				require.NotEmptyf(t, result.Pagination.NextKey, "pagination next key %s", iterID)
+			} else {
+				require.GreaterOrEqualf(t, pageSize, resultCount, "last page result count %s", iterID)
+				require.Emptyf(t, result.Pagination.NextKey, "pagination next key %s", iterID)
+			}
+			results = append(results, result.Balances...)
+			nextKey = base64.StdEncoding.EncodeToString(result.Pagination.NextKey)
+		}
+
+		// This can fail if the --page-key isn't encoded/decoded correctly resulting in an unexpected jump forward in the actual list.
+		require.Equal(t, expectedCount, len(results), "total count of balances returned")
+		// Make sure none of the results are duplicates.
+		// That can happen if the --page-key isn't encoded/decoded correctly resulting in an unexpected jump backward in the actual list.
+		sort.Sort(balanceSorter(results))
+		for i := 1; i < len(results); i++ {
+			require.NotEqual(t, results[i-1], results[i], "no two balances should be equal here")
+		}
+	})
 }

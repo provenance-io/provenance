@@ -3,6 +3,7 @@ package v042
 import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/provenance-io/provenance/x/attribute/types"
 )
 
@@ -11,6 +12,7 @@ func MigrateAddressLength(ctx sdk.Context, storeKey sdk.StoreKey) error {
 	oldStore := prefix.NewStore(store, AttributeKeyPrefixLegacy)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
+
 	defer oldStoreIter.Close()
 
 	for ; oldStoreIter.Valid(); oldStoreIter.Next() {
