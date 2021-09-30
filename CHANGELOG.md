@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+# Bug Fixes 
+
+* Update Cosmos SDK to 0.44.1 with IAVL 0.17 to resolve locking issues in queries.
+
 ## [v1.7.2](https://github.com/provenance-io/provenance/releases/tag/v1.7.2) - 2021-09-27
 
 ### Bug Fixes
