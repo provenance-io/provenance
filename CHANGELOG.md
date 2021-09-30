@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Improvements
+
+* Update github actions to always run required tests [#508](https://github.com/provenance-io/provenance/issues/508)
+
 ### Bug Fixes
 
 * Fix logger config being ignored [PR 510](https://github.com/provenance-io/provenance/pull/510)
