@@ -5,10 +5,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
-const (
-	TypeMsgAddFeeForMsgTypeRequest            = "add_fee_per_msg"
-)
-
 // Compile time interface checks.
 var (
 	_ sdk.Msg = &MsgAddFeeForMsgTypeRequest{}
