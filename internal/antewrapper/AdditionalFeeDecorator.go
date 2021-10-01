@@ -18,7 +18,7 @@ import (
 // If fee is high enough or not CheckTx, then call next AnteHandler
 // CONTRACT: Tx must implement FeeTx to use AdditionalFeeDecorator
 type AdditionalFeeDecorator struct {
-	FeeKeeper k.AdditionalFeeKeeper
+	FeeKeeper k.MsgBasedFeeKeeperI
 }
 
 
@@ -116,7 +116,7 @@ func DeductFees(bankKeeper types.BankKeeper, ctx sdk.Context, acc types.AccountI
 
 
 // FilterMsgAndComputeTax computes the stability tax on MsgSend and MsgMultiSend.
-func FilterMsgAndComputeTax(ctx sdk.Context, tk k.AdditionalFeeKeeper, msgs ...sdk.Msg) sdk.Coins {
+func FilterMsgAndComputeTax(ctx sdk.Context, tk k.MsgBasedFeeKeeperI, msgs ...sdk.Msg) sdk.Coins {
 	taxes := sdk.Coins{}
 	for _, msg := range msgs {
 		switch msg := msg.(type) {
@@ -141,7 +141,7 @@ func FilterMsgAndComputeTax(ctx sdk.Context, tk k.AdditionalFeeKeeper, msgs ...s
 	return taxes
 }
 // computes the fees
-func computeFees(ctx sdk.Context, tk k.AdditionalFeeKeeper, principal sdk.Coins) sdk.Coins {
+func computeFees(ctx sdk.Context, tk k.MsgBasedFeeKeeperI, principal sdk.Coins) sdk.Coins {
 
 	return nil
 }

@@ -6,10 +6,11 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/provenance-io/provenance/x/msgfees/types"
 	"github.com/tendermint/tendermint/libs/log"
+	"github.com/gogo/protobuf/proto"
 )
 
-// AdditionalFeeKeeperI Fee keeper calculates the additional fees to be charged
-type AdditionalFeeKeeperI interface {
+// MsgBasedFeeKeeperI Fee keeper calculates the additional fees to be charged
+type MsgBasedFeeKeeperI interface {
 	GetFeeRate(ctx sdk.Context) (feeRate sdk.Dec)
 }
 
@@ -44,4 +45,12 @@ func NewKeeper(
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
+}
+
+// SetMsgBasedFeeSchedule sets the additional fee schedule for a Msg
+func (k Keeper) SetMsgBasedFeeSchedule(ctx sdk.Context, msgBasedFees types.MsgFees) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshal(&msgBasedFees)
+	proto.MessageName(msgBasedFees.Msg)
+	store.Set(types.GetMsgBasedFeeKey(proto.MessageName(msgBasedFees.Msg)), bz)
 }
