@@ -30,29 +30,28 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// AddMarkerProposal defines defines a governance proposal to create a new marker
-type AddAdditionalMsgFeesProposal struct {
-	Title            string                                   `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	Description      string                                   `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	Amount           github_com_cosmos_cosmos_sdk_types.Coin  `protobuf:"bytes,3,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Coin" json:"amount"`
-	Msg              *types1.Any                              `protobuf:"bytes,4,opt,name=msg,proto3" json:"msg,omitempty"`
-	MinAdditionalFee github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,5,rep,name=min_additional_fee,json=minAdditionalFee,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"min_additional_fee" yaml:"min_additional_fee"`
+// AddMsgBasedFeesProposal defines a governance proposal to add additional msg fees
+type AddMsgBasedFeesProposal struct {
+	Title       string                                   `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Description string                                   `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	Amount      github_com_cosmos_cosmos_sdk_types.Coin  `protobuf:"bytes,3,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Coin" json:"amount"`
+	Msg         *types1.Any                              `protobuf:"bytes,4,opt,name=msg,proto3" json:"msg,omitempty"`
+	MinFee      github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,5,rep,name=min_fee,json=minFee,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"min_fee" yaml:"min_fee"`
 	//  Fee rate, based on Gas used.
 	FeeRate github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,6,opt,name=fee_rate,json=feeRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"fee_rate,omitempty"`
 }
 
-func (m *AddAdditionalMsgFeesProposal) Reset()         { *m = AddAdditionalMsgFeesProposal{} }
-func (m *AddAdditionalMsgFeesProposal) String() string { return proto.CompactTextString(m) }
-func (*AddAdditionalMsgFeesProposal) ProtoMessage()    {}
-func (*AddAdditionalMsgFeesProposal) Descriptor() ([]byte, []int) {
+func (m *AddMsgBasedFeesProposal) Reset()      { *m = AddMsgBasedFeesProposal{} }
+func (*AddMsgBasedFeesProposal) ProtoMessage() {}
+func (*AddMsgBasedFeesProposal) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a2e168825d6c34a4, []int{0}
 }
-func (m *AddAdditionalMsgFeesProposal) XXX_Unmarshal(b []byte) error {
+func (m *AddMsgBasedFeesProposal) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *AddAdditionalMsgFeesProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *AddMsgBasedFeesProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_AddAdditionalMsgFeesProposal.Marshal(b, m, deterministic)
+		return xxx_messageInfo_AddMsgBasedFeesProposal.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -62,48 +61,181 @@ func (m *AddAdditionalMsgFeesProposal) XXX_Marshal(b []byte, deterministic bool)
 		return b[:n], nil
 	}
 }
-func (m *AddAdditionalMsgFeesProposal) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AddAdditionalMsgFeesProposal.Merge(m, src)
+func (m *AddMsgBasedFeesProposal) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AddMsgBasedFeesProposal.Merge(m, src)
 }
-func (m *AddAdditionalMsgFeesProposal) XXX_Size() int {
+func (m *AddMsgBasedFeesProposal) XXX_Size() int {
 	return m.Size()
 }
-func (m *AddAdditionalMsgFeesProposal) XXX_DiscardUnknown() {
-	xxx_messageInfo_AddAdditionalMsgFeesProposal.DiscardUnknown(m)
+func (m *AddMsgBasedFeesProposal) XXX_DiscardUnknown() {
+	xxx_messageInfo_AddMsgBasedFeesProposal.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_AddAdditionalMsgFeesProposal proto.InternalMessageInfo
+var xxx_messageInfo_AddMsgBasedFeesProposal proto.InternalMessageInfo
 
-func (m *AddAdditionalMsgFeesProposal) GetTitle() string {
+func (m *AddMsgBasedFeesProposal) GetTitle() string {
 	if m != nil {
 		return m.Title
 	}
 	return ""
 }
 
-func (m *AddAdditionalMsgFeesProposal) GetDescription() string {
+func (m *AddMsgBasedFeesProposal) GetDescription() string {
 	if m != nil {
 		return m.Description
 	}
 	return ""
 }
 
-func (m *AddAdditionalMsgFeesProposal) GetMsg() *types1.Any {
+func (m *AddMsgBasedFeesProposal) GetMsg() *types1.Any {
 	if m != nil {
 		return m.Msg
 	}
 	return nil
 }
 
-func (m *AddAdditionalMsgFeesProposal) GetMinAdditionalFee() github_com_cosmos_cosmos_sdk_types.Coins {
+func (m *AddMsgBasedFeesProposal) GetMinFee() github_com_cosmos_cosmos_sdk_types.Coins {
 	if m != nil {
-		return m.MinAdditionalFee
+		return m.MinFee
+	}
+	return nil
+}
+
+// UpdateMsgBasedFeesProposal defines a governance proposal to update a current msg based fees
+type UpdateMsgBasedFeesProposal struct {
+	Title       string                                   `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Description string                                   `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	Amount      github_com_cosmos_cosmos_sdk_types.Coin  `protobuf:"bytes,3,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Coin" json:"amount"`
+	Msg         *types1.Any                              `protobuf:"bytes,4,opt,name=msg,proto3" json:"msg,omitempty"`
+	MinFee      github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,5,rep,name=min_fee,json=minFee,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"min_fee" yaml:"min_fee"`
+	//  Fee rate, based on Gas used.
+	FeeRate github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,6,opt,name=fee_rate,json=feeRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"fee_rate,omitempty"`
+}
+
+func (m *UpdateMsgBasedFeesProposal) Reset()      { *m = UpdateMsgBasedFeesProposal{} }
+func (*UpdateMsgBasedFeesProposal) ProtoMessage() {}
+func (*UpdateMsgBasedFeesProposal) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a2e168825d6c34a4, []int{1}
+}
+func (m *UpdateMsgBasedFeesProposal) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *UpdateMsgBasedFeesProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_UpdateMsgBasedFeesProposal.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *UpdateMsgBasedFeesProposal) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UpdateMsgBasedFeesProposal.Merge(m, src)
+}
+func (m *UpdateMsgBasedFeesProposal) XXX_Size() int {
+	return m.Size()
+}
+func (m *UpdateMsgBasedFeesProposal) XXX_DiscardUnknown() {
+	xxx_messageInfo_UpdateMsgBasedFeesProposal.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_UpdateMsgBasedFeesProposal proto.InternalMessageInfo
+
+func (m *UpdateMsgBasedFeesProposal) GetTitle() string {
+	if m != nil {
+		return m.Title
+	}
+	return ""
+}
+
+func (m *UpdateMsgBasedFeesProposal) GetDescription() string {
+	if m != nil {
+		return m.Description
+	}
+	return ""
+}
+
+func (m *UpdateMsgBasedFeesProposal) GetMsg() *types1.Any {
+	if m != nil {
+		return m.Msg
+	}
+	return nil
+}
+
+func (m *UpdateMsgBasedFeesProposal) GetMinFee() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.MinFee
+	}
+	return nil
+}
+
+// RemoveMsgBasedFeesProposal defines a governance proposal to delete a current msg based fees
+type RemoveMsgBasedFeesProposal struct {
+	Title       string      `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Description string      `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	Msg         *types1.Any `protobuf:"bytes,3,opt,name=msg,proto3" json:"msg,omitempty"`
+}
+
+func (m *RemoveMsgBasedFeesProposal) Reset()      { *m = RemoveMsgBasedFeesProposal{} }
+func (*RemoveMsgBasedFeesProposal) ProtoMessage() {}
+func (*RemoveMsgBasedFeesProposal) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a2e168825d6c34a4, []int{2}
+}
+func (m *RemoveMsgBasedFeesProposal) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *RemoveMsgBasedFeesProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_RemoveMsgBasedFeesProposal.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *RemoveMsgBasedFeesProposal) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RemoveMsgBasedFeesProposal.Merge(m, src)
+}
+func (m *RemoveMsgBasedFeesProposal) XXX_Size() int {
+	return m.Size()
+}
+func (m *RemoveMsgBasedFeesProposal) XXX_DiscardUnknown() {
+	xxx_messageInfo_RemoveMsgBasedFeesProposal.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RemoveMsgBasedFeesProposal proto.InternalMessageInfo
+
+func (m *RemoveMsgBasedFeesProposal) GetTitle() string {
+	if m != nil {
+		return m.Title
+	}
+	return ""
+}
+
+func (m *RemoveMsgBasedFeesProposal) GetDescription() string {
+	if m != nil {
+		return m.Description
+	}
+	return ""
+}
+
+func (m *RemoveMsgBasedFeesProposal) GetMsg() *types1.Any {
+	if m != nil {
+		return m.Msg
 	}
 	return nil
 }
 
 func init() {
-	proto.RegisterType((*AddAdditionalMsgFeesProposal)(nil), "provenance.msgfees.v1.AddAdditionalMsgFeesProposal")
+	proto.RegisterType((*AddMsgBasedFeesProposal)(nil), "provenance.msgfees.v1.AddMsgBasedFeesProposal")
+	proto.RegisterType((*UpdateMsgBasedFeesProposal)(nil), "provenance.msgfees.v1.UpdateMsgBasedFeesProposal")
+	proto.RegisterType((*RemoveMsgBasedFeesProposal)(nil), "provenance.msgfees.v1.RemoveMsgBasedFeesProposal")
 }
 
 func init() {
@@ -111,49 +243,52 @@ func init() {
 }
 
 var fileDescriptor_a2e168825d6c34a4 = []byte{
-	// 512 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x93, 0x3f, 0x8f, 0xd3, 0x30,
-	0x18, 0xc6, 0x1b, 0x7a, 0x7f, 0x20, 0x65, 0x40, 0x51, 0x91, 0xd2, 0x0a, 0x25, 0xa5, 0x12, 0x47,
-	0x07, 0x6a, 0xab, 0x74, 0xbb, 0xad, 0xe5, 0x74, 0x5b, 0xa5, 0x53, 0x46, 0x96, 0xca, 0x49, 0xde,
-	0x1a, 0xab, 0xb5, 0x1d, 0xc5, 0x6e, 0xd5, 0x7c, 0x0b, 0x26, 0x66, 0x66, 0x66, 0x3e, 0xc4, 0x89,
-	0xe9, 0x46, 0xc4, 0x50, 0x50, 0xbb, 0x20, 0x16, 0x24, 0x3e, 0x01, 0x4a, 0xe2, 0xfe, 0x91, 0x8a,
-	0xd0, 0x4d, 0xf1, 0x9b, 0xe7, 0xf1, 0xeb, 0xdf, 0xfb, 0x24, 0xb6, 0x5f, 0x24, 0xa9, 0x5c, 0x80,
-	0x20, 0x22, 0x02, 0xcc, 0x15, 0x9d, 0x00, 0x28, 0xbc, 0xe8, 0xe1, 0x24, 0x95, 0x89, 0x54, 0x64,
-	0xa6, 0x50, 0x92, 0x4a, 0x2d, 0x9d, 0xa7, 0x7b, 0x1b, 0x32, 0x36, 0xb4, 0xe8, 0x35, 0xeb, 0x54,
-	0x52, 0x59, 0x38, 0x70, 0xbe, 0x2a, 0xcd, 0x4d, 0x2f, 0x92, 0x8a, 0x4b, 0x85, 0x43, 0x22, 0xa6,
-	0x78, 0xd1, 0x0b, 0x41, 0x93, 0x5e, 0x51, 0x1c, 0xe9, 0x0a, 0x76, 0x7a, 0x24, 0x99, 0x30, 0xfa,
-	0xf3, 0x43, 0x26, 0x92, 0x4e, 0x21, 0xcd, 0x91, 0xca, 0x95, 0xb1, 0x5c, 0xfc, 0xd3, 0x42, 0xa2,
-	0x08, 0x94, 0xa2, 0x29, 0x11, 0xda, 0xf8, 0x1a, 0x54, 0x4a, 0x3a, 0x03, 0x5c, 0x54, 0xe1, 0x7c,
-	0x82, 0x89, 0xc8, 0x8c, 0xd4, 0x34, 0x14, 0x7a, 0xb9, 0x63, 0xd0, 0xcb, 0xed, 0xb6, 0x52, 0x1b,
-	0x97, 0xa3, 0x95, 0x45, 0x29, 0xb5, 0x7f, 0x57, 0xed, 0x67, 0x83, 0x38, 0x1e, 0xc4, 0x31, 0xd3,
-	0x4c, 0x0a, 0x32, 0x1b, 0x29, 0x7a, 0x0d, 0xa0, 0x6e, 0x4c, 0x62, 0x4e, 0xdd, 0x3e, 0xd5, 0x4c,
-	0xcf, 0xc0, 0xb5, 0x5a, 0x56, 0xe7, 0x51, 0x50, 0x16, 0x4e, 0xcb, 0xae, 0xc5, 0xa0, 0xa2, 0x94,
-	0x25, 0xf9, 0x2e, 0xf7, 0x41, 0xa1, 0x1d, 0xbe, 0x72, 0x42, 0xfb, 0x8c, 0x70, 0x39, 0x17, 0xda,
-	0xad, 0xb6, 0xac, 0x4e, 0xed, 0x75, 0x03, 0x99, 0x73, 0xf3, 0x98, 0x90, 0x41, 0x44, 0x6f, 0x24,
-	0x13, 0x43, 0x7c, 0xbb, 0xf2, 0x2b, 0xdf, 0x56, 0xfe, 0x4b, 0xca, 0xf4, 0xbb, 0x79, 0x88, 0x22,
-	0xc9, 0x0d, 0xa4, 0x79, 0x74, 0x55, 0x3c, 0xc5, 0x3a, 0x4b, 0x40, 0x15, 0x1b, 0x02, 0xd3, 0xd9,
-	0xe9, 0xdb, 0x55, 0xae, 0xa8, 0x7b, 0x52, 0x1c, 0x50, 0x47, 0x65, 0x38, 0x68, 0x1b, 0x0e, 0x1a,
-	0x88, 0x6c, 0x58, 0xfb, 0xf2, 0xb9, 0x7b, 0xae, 0xe2, 0x29, 0x1a, 0x29, 0x1a, 0xe4, 0x6e, 0xe7,
-	0x83, 0x65, 0x3b, 0x9c, 0x89, 0x31, 0xd9, 0x8d, 0x3c, 0x9e, 0x00, 0xb8, 0xa7, 0xad, 0xea, 0xff,
-	0x29, 0x47, 0x39, 0xe5, 0x9f, 0x95, 0xdf, 0xc8, 0x08, 0x9f, 0x5d, 0xb6, 0x8f, 0x5b, 0xb4, 0x3f,
-	0x7d, 0xf7, 0x3b, 0xf7, 0x1c, 0x41, 0x05, 0x4f, 0x38, 0x13, 0xfb, 0xd4, 0xaf, 0x01, 0x9c, 0xb1,
-	0xfd, 0x70, 0x02, 0x30, 0x4e, 0x89, 0x06, 0xf7, 0xac, 0x65, 0x75, 0x1e, 0x0f, 0xaf, 0x4c, 0x30,
-	0x17, 0xf7, 0xe8, 0x7a, 0x05, 0xd1, 0xaf, 0x95, 0xef, 0x6c, 0x3b, 0xbc, 0x92, 0x9c, 0x69, 0xe0,
-	0x89, 0xce, 0x82, 0xf3, 0x09, 0x40, 0x40, 0x34, 0x5c, 0x9e, 0xfc, 0xfc, 0xe8, 0x5b, 0x43, 0x76,
-	0xbb, 0xf6, 0xac, 0xbb, 0xb5, 0x67, 0xfd, 0x58, 0x7b, 0xd6, 0xfb, 0x8d, 0x57, 0xb9, 0xdb, 0x78,
-	0x95, 0xaf, 0x1b, 0xaf, 0x62, 0xbb, 0xac, 0xf8, 0xe5, 0x8f, 0x2f, 0xc6, 0x8d, 0xf5, 0xb6, 0x7f,
-	0x80, 0xb0, 0xf7, 0x74, 0x99, 0x3c, 0xa8, 0xf0, 0x72, 0x77, 0xe7, 0x0a, 0xa6, 0xf0, 0xac, 0xf8,
-	0x14, 0xfd, 0xbf, 0x01, 0x00, 0x00, 0xff, 0xff, 0x70, 0x71, 0x03, 0xc2, 0x96, 0x03, 0x00, 0x00,
+	// 545 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x94, 0x4f, 0x8b, 0xd3, 0x4e,
+	0x18, 0xc7, 0x9b, 0x5f, 0x7e, 0xdb, 0xae, 0xa9, 0x78, 0x08, 0x15, 0xb3, 0x3d, 0x24, 0xb5, 0xe0,
+	0xda, 0x83, 0x9d, 0xa1, 0xf6, 0xb6, 0xb7, 0x8d, 0xcb, 0xde, 0x16, 0x96, 0x80, 0x17, 0x2f, 0x65,
+	0x92, 0x3c, 0x8d, 0x43, 0x3b, 0x33, 0x21, 0x33, 0x0d, 0xed, 0xbb, 0x10, 0xbc, 0x78, 0xdc, 0xb3,
+	0x67, 0x5f, 0xc4, 0x22, 0x08, 0x3d, 0x8a, 0x87, 0x2a, 0xed, 0x45, 0x3c, 0xfa, 0x0a, 0xa4, 0xc9,
+	0xf4, 0x0f, 0xac, 0xc8, 0x0a, 0x9e, 0xc4, 0x53, 0xe6, 0xc9, 0xf7, 0x3b, 0x33, 0x9f, 0xf9, 0x3e,
+	0xf0, 0x58, 0x8f, 0xd2, 0x4c, 0xe4, 0xc0, 0x09, 0x8f, 0x00, 0x33, 0x99, 0x0c, 0x01, 0x24, 0xce,
+	0x7b, 0x38, 0xcd, 0x44, 0x2a, 0x24, 0x19, 0x4b, 0x94, 0x66, 0x42, 0x09, 0xfb, 0xfe, 0xce, 0x86,
+	0xb4, 0x0d, 0xe5, 0xbd, 0x66, 0x23, 0x11, 0x89, 0x28, 0x1c, 0x78, 0xbd, 0x2a, 0xcd, 0x4d, 0x37,
+	0x12, 0x92, 0x09, 0x89, 0x43, 0xc2, 0x47, 0x38, 0xef, 0x85, 0xa0, 0x48, 0xaf, 0x28, 0x6e, 0xe8,
+	0x12, 0xb6, 0x7a, 0x24, 0x28, 0xd7, 0xfa, 0xc3, 0x7d, 0x26, 0x92, 0x8d, 0x20, 0x5b, 0x23, 0x95,
+	0x2b, 0x6d, 0x39, 0xfe, 0xa9, 0x85, 0x44, 0x11, 0x48, 0x99, 0x64, 0x84, 0x2b, 0xed, 0x3b, 0x4a,
+	0x84, 0x48, 0xc6, 0x80, 0x8b, 0x2a, 0x9c, 0x0c, 0x31, 0xe1, 0x33, 0x2d, 0x35, 0x35, 0x85, 0x9a,
+	0x6e, 0x19, 0xd4, 0x74, 0xb3, 0xad, 0xd4, 0x06, 0xe5, 0xd3, 0xca, 0xa2, 0x94, 0xda, 0x1f, 0x4c,
+	0xeb, 0xc1, 0x69, 0x1c, 0x5f, 0xc8, 0xc4, 0x27, 0x12, 0xe2, 0x73, 0x00, 0x79, 0xa9, 0xc3, 0xb2,
+	0x1b, 0xd6, 0x81, 0xa2, 0x6a, 0x0c, 0x8e, 0xd1, 0x32, 0x3a, 0x77, 0x82, 0xb2, 0xb0, 0x5b, 0x56,
+	0x3d, 0x06, 0x19, 0x65, 0x34, 0x55, 0x54, 0x70, 0xe7, 0xbf, 0x42, 0xdb, 0xff, 0x65, 0x87, 0x56,
+	0x95, 0x30, 0x31, 0xe1, 0xca, 0x31, 0x5b, 0x46, 0xa7, 0xfe, 0xf4, 0x08, 0xe9, 0x2b, 0xd7, 0x09,
+	0x21, 0x4d, 0x87, 0x9e, 0x09, 0xca, 0x7d, 0x7c, 0xbd, 0xf0, 0x2a, 0x9f, 0x16, 0xde, 0xe3, 0x84,
+	0xaa, 0x97, 0x93, 0x10, 0x45, 0x82, 0x69, 0x3e, 0xfd, 0xe9, 0xca, 0x78, 0x84, 0xd5, 0x2c, 0x05,
+	0x59, 0x6c, 0x08, 0xf4, 0xc9, 0x76, 0xdf, 0x32, 0x99, 0x4c, 0x9c, 0xff, 0x8b, 0x0b, 0x1a, 0xa8,
+	0xcc, 0x05, 0x6d, 0x72, 0x41, 0xa7, 0x7c, 0xe6, 0xd7, 0xdf, 0xbf, 0xeb, 0xd6, 0x64, 0x3c, 0x42,
+	0x17, 0x32, 0x09, 0xd6, 0x6e, 0x3b, 0xb7, 0x6a, 0x8c, 0xf2, 0xc1, 0x10, 0xc0, 0x39, 0x68, 0x99,
+	0xbf, 0x26, 0xf3, 0xd7, 0x64, 0xdf, 0x17, 0xde, 0xbd, 0x19, 0x61, 0xe3, 0x93, 0xb6, 0xde, 0xd7,
+	0x7e, 0xfb, 0xd9, 0xeb, 0xdc, 0x92, 0x55, 0x06, 0x55, 0x46, 0xf9, 0x39, 0x80, 0x3d, 0xb0, 0x0e,
+	0x87, 0x00, 0x83, 0x8c, 0x28, 0x70, 0xaa, 0x2d, 0xa3, 0x73, 0xd7, 0x3f, 0xd3, 0xef, 0x3e, 0xbe,
+	0xc5, 0x59, 0x67, 0x10, 0x7d, 0x5b, 0x78, 0xf6, 0xe6, 0x84, 0x27, 0x82, 0x51, 0x05, 0x2c, 0x55,
+	0xb3, 0xa0, 0x36, 0x04, 0x08, 0x88, 0x82, 0x93, 0xc3, 0x37, 0x57, 0x5e, 0xe5, 0xeb, 0x95, 0x67,
+	0xb4, 0xe7, 0xa6, 0xd5, 0x7c, 0x9e, 0xc6, 0x44, 0xc1, 0xbf, 0x96, 0xfe, 0x25, 0x2d, 0x7d, 0x6d,
+	0x58, 0xcd, 0x00, 0x98, 0xc8, 0xff, 0x6c, 0x4b, 0x75, 0xdc, 0xe6, 0xef, 0xc4, 0xbd, 0xa3, 0xf2,
+	0xe9, 0xf5, 0xd2, 0x35, 0xe6, 0x4b, 0xd7, 0xf8, 0xb2, 0x74, 0x8d, 0x57, 0x2b, 0xb7, 0x32, 0x5f,
+	0xb9, 0x95, 0x8f, 0x2b, 0xb7, 0x62, 0x39, 0xb4, 0x98, 0x9c, 0x37, 0xe7, 0xeb, 0xa5, 0xf1, 0xa2,
+	0xbf, 0x17, 0xce, 0xce, 0xd3, 0xa5, 0x62, 0xaf, 0xc2, 0xd3, 0xed, 0xe8, 0x2e, 0xd2, 0x0a, 0xab,
+	0x05, 0x54, 0xff, 0x47, 0x00, 0x00, 0x00, 0xff, 0xff, 0x11, 0xa2, 0x74, 0x0c, 0xdd, 0x05, 0x00,
+	0x00,
 }
 
-func (this *AddAdditionalMsgFeesProposal) Equal(that interface{}) bool {
+func (this *AddMsgBasedFeesProposal) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
 	}
 
-	that1, ok := that.(*AddAdditionalMsgFeesProposal)
+	that1, ok := that.(*AddMsgBasedFeesProposal)
 	if !ok {
-		that2, ok := that.(AddAdditionalMsgFeesProposal)
+		that2, ok := that.(AddMsgBasedFeesProposal)
 		if ok {
 			that1 = &that2
 		} else {
@@ -177,11 +312,11 @@ func (this *AddAdditionalMsgFeesProposal) Equal(that interface{}) bool {
 	if !this.Msg.Equal(that1.Msg) {
 		return false
 	}
-	if len(this.MinAdditionalFee) != len(that1.MinAdditionalFee) {
+	if len(this.MinFee) != len(that1.MinFee) {
 		return false
 	}
-	for i := range this.MinAdditionalFee {
-		if !this.MinAdditionalFee[i].Equal(&that1.MinAdditionalFee[i]) {
+	for i := range this.MinFee {
+		if !this.MinFee[i].Equal(&that1.MinFee[i]) {
 			return false
 		}
 	}
@@ -190,7 +325,81 @@ func (this *AddAdditionalMsgFeesProposal) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (m *AddAdditionalMsgFeesProposal) Marshal() (dAtA []byte, err error) {
+func (this *UpdateMsgBasedFeesProposal) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*UpdateMsgBasedFeesProposal)
+	if !ok {
+		that2, ok := that.(UpdateMsgBasedFeesProposal)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.Title != that1.Title {
+		return false
+	}
+	if this.Description != that1.Description {
+		return false
+	}
+	if !this.Amount.Equal(that1.Amount) {
+		return false
+	}
+	if !this.Msg.Equal(that1.Msg) {
+		return false
+	}
+	if len(this.MinFee) != len(that1.MinFee) {
+		return false
+	}
+	for i := range this.MinFee {
+		if !this.MinFee[i].Equal(&that1.MinFee[i]) {
+			return false
+		}
+	}
+	if !this.FeeRate.Equal(that1.FeeRate) {
+		return false
+	}
+	return true
+}
+func (this *RemoveMsgBasedFeesProposal) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*RemoveMsgBasedFeesProposal)
+	if !ok {
+		that2, ok := that.(RemoveMsgBasedFeesProposal)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.Title != that1.Title {
+		return false
+	}
+	if this.Description != that1.Description {
+		return false
+	}
+	if !this.Msg.Equal(that1.Msg) {
+		return false
+	}
+	return true
+}
+func (m *AddMsgBasedFeesProposal) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -200,12 +409,12 @@ func (m *AddAdditionalMsgFeesProposal) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *AddAdditionalMsgFeesProposal) MarshalTo(dAtA []byte) (int, error) {
+func (m *AddMsgBasedFeesProposal) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *AddAdditionalMsgFeesProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *AddMsgBasedFeesProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -220,10 +429,10 @@ func (m *AddAdditionalMsgFeesProposal) MarshalToSizedBuffer(dAtA []byte) (int, e
 	}
 	i--
 	dAtA[i] = 0x32
-	if len(m.MinAdditionalFee) > 0 {
-		for iNdEx := len(m.MinAdditionalFee) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.MinFee) > 0 {
+		for iNdEx := len(m.MinFee) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.MinAdditionalFee[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.MinFee[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -273,6 +482,138 @@ func (m *AddAdditionalMsgFeesProposal) MarshalToSizedBuffer(dAtA []byte) (int, e
 	return len(dAtA) - i, nil
 }
 
+func (m *UpdateMsgBasedFeesProposal) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *UpdateMsgBasedFeesProposal) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *UpdateMsgBasedFeesProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size := m.FeeRate.Size()
+		i -= size
+		if _, err := m.FeeRate.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintProposals(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x32
+	if len(m.MinFee) > 0 {
+		for iNdEx := len(m.MinFee) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.MinFee[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintProposals(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x2a
+		}
+	}
+	if m.Msg != nil {
+		{
+			size, err := m.Msg.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintProposals(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x22
+	}
+	{
+		size := m.Amount.Size()
+		i -= size
+		if _, err := m.Amount.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintProposals(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	if len(m.Description) > 0 {
+		i -= len(m.Description)
+		copy(dAtA[i:], m.Description)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.Description)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Title) > 0 {
+		i -= len(m.Title)
+		copy(dAtA[i:], m.Title)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.Title)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *RemoveMsgBasedFeesProposal) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RemoveMsgBasedFeesProposal) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *RemoveMsgBasedFeesProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Msg != nil {
+		{
+			size, err := m.Msg.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintProposals(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Description) > 0 {
+		i -= len(m.Description)
+		copy(dAtA[i:], m.Description)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.Description)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Title) > 0 {
+		i -= len(m.Title)
+		copy(dAtA[i:], m.Title)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.Title)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintProposals(dAtA []byte, offset int, v uint64) int {
 	offset -= sovProposals(v)
 	base := offset
@@ -284,7 +625,7 @@ func encodeVarintProposals(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *AddAdditionalMsgFeesProposal) Size() (n int) {
+func (m *AddMsgBasedFeesProposal) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -304,8 +645,8 @@ func (m *AddAdditionalMsgFeesProposal) Size() (n int) {
 		l = m.Msg.Size()
 		n += 1 + l + sovProposals(uint64(l))
 	}
-	if len(m.MinAdditionalFee) > 0 {
-		for _, e := range m.MinAdditionalFee {
+	if len(m.MinFee) > 0 {
+		for _, e := range m.MinFee {
 			l = e.Size()
 			n += 1 + l + sovProposals(uint64(l))
 		}
@@ -315,13 +656,65 @@ func (m *AddAdditionalMsgFeesProposal) Size() (n int) {
 	return n
 }
 
+func (m *UpdateMsgBasedFeesProposal) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Title)
+	if l > 0 {
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	l = len(m.Description)
+	if l > 0 {
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	l = m.Amount.Size()
+	n += 1 + l + sovProposals(uint64(l))
+	if m.Msg != nil {
+		l = m.Msg.Size()
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	if len(m.MinFee) > 0 {
+		for _, e := range m.MinFee {
+			l = e.Size()
+			n += 1 + l + sovProposals(uint64(l))
+		}
+	}
+	l = m.FeeRate.Size()
+	n += 1 + l + sovProposals(uint64(l))
+	return n
+}
+
+func (m *RemoveMsgBasedFeesProposal) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Title)
+	if l > 0 {
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	l = len(m.Description)
+	if l > 0 {
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	if m.Msg != nil {
+		l = m.Msg.Size()
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	return n
+}
+
 func sovProposals(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozProposals(x uint64) (n int) {
 	return sovProposals(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *AddAdditionalMsgFeesProposal) Unmarshal(dAtA []byte) error {
+func (m *AddMsgBasedFeesProposal) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -344,10 +737,10 @@ func (m *AddAdditionalMsgFeesProposal) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: AddAdditionalMsgFeesProposal: wiretype end group for non-group")
+			return fmt.Errorf("proto: AddMsgBasedFeesProposal: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AddAdditionalMsgFeesProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: AddMsgBasedFeesProposal: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -485,7 +878,7 @@ func (m *AddAdditionalMsgFeesProposal) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 5:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MinAdditionalFee", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field MinFee", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -512,8 +905,8 @@ func (m *AddAdditionalMsgFeesProposal) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.MinAdditionalFee = append(m.MinAdditionalFee, types.Coin{})
-			if err := m.MinAdditionalFee[len(m.MinAdditionalFee)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.MinFee = append(m.MinFee, types.Coin{})
+			if err := m.MinFee[len(m.MinFee)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -547,6 +940,406 @@ func (m *AddAdditionalMsgFeesProposal) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.FeeRate.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipProposals(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *UpdateMsgBasedFeesProposal) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowProposals
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: UpdateMsgBasedFeesProposal: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: UpdateMsgBasedFeesProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Title = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Description", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Description = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Amount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Msg", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Msg == nil {
+				m.Msg = &types1.Any{}
+			}
+			if err := m.Msg.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MinFee", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MinFee = append(m.MinFee, types.Coin{})
+			if err := m.MinFee[len(m.MinFee)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FeeRate", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.FeeRate.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipProposals(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RemoveMsgBasedFeesProposal) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowProposals
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RemoveMsgBasedFeesProposal: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RemoveMsgBasedFeesProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Title = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Description", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Description = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Msg", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Msg == nil {
+				m.Msg = &types1.Any{}
+			}
+			if err := m.Msg.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
