@@ -37,8 +37,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Features
+
 ### Improvements
 
+* Add `bank` and `authz` module query `proto` files required by `grpcurl` [#482](https://github.com/provenance-io/provenance/issues/482)
 * Update github actions to always run required tests [#508](https://github.com/provenance-io/provenance/issues/508)
 
 ### Bug Fixes
@@ -46,12 +49,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Fix logger config being ignored [PR 510](https://github.com/provenance-io/provenance/pull/510)
 
 
-
 ## [v1.7.3](https://github.com/provenance-io/provenance/releases/tag/v1.7.3) - 2021-09-30
-# Bug Fixes
+
+### Bug Fixes
 
 * Update Cosmos SDK to 0.44.1 with IAVL 0.17 to resolve locking issues in queries.
 * Fix logger config being ignored [PR 510](https://github.com/provenance-io/provenance/pull/510)
+
 
 ## [v1.7.2](https://github.com/provenance-io/provenance/releases/tag/v1.7.2) - 2021-09-27
 
