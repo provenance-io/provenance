@@ -21,27 +21,27 @@ func (k Keeper) IsMarkerAndHasAuthority(ctx sdk.Context, address string, signers
 	addr, err := sdk.AccAddressFromBech32(address)
 	// if the value owner is invalid then it is not possible to have any authority for it. e.g. value owner is empty.
 	if err != nil {
-		return
+		return false, false
 	}
 
 	acc := k.authKeeper.GetAccount(ctx, addr)
 	if acc == nil {
-		return
+		return false, false
 	}
 
 	// Convert over to the actual underlying marker type, or not.
 	marker, isMarker := acc.(*markertypes.MarkerAccount)
-	if isMarker {
-		for _, signer := range signers {
-			saddr, serr := sdk.AccAddressFromBech32(signer)
-			// If the signer address is okay, check it for the role. If it checks out, they've got auth and we're done.
-			if serr == nil && marker.AddressHasAccess(saddr, role) {
-				hasAuth = true
-				break
-			}
+	if !isMarker {
+		return false, false
+	}
+	for _, signer := range signers {
+		saddr, serr := sdk.AccAddressFromBech32(signer)
+		// If the signer address is okay, check it for the role. If it checks out, they've got auth and we're done.
+		if serr == nil && marker.AddressHasAccess(saddr, role) {
+			return true, true
 		}
 	}
-	return
+	return true, false
 }
 
 // ValidateRawSignature takes a given message and verifies the signature instance is valid
