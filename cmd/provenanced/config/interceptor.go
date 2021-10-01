@@ -2,19 +2,15 @@ package config
 
 import (
 	"fmt"
-	"io"
-	"os"
 	"strings"
 
-	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	tmcfg "github.com/tendermint/tendermint/config"
+	tmconfig "github.com/tendermint/tendermint/config"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 )
 
@@ -36,24 +32,8 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
 		return err
 	}
 
-	// Create the logger that we'll want for the new server context
-	var logWriter io.Writer
-	if strings.ToLower(vpr.GetString(flags.FlagLogFormat)) == tmcfg.LogFormatPlain {
-		logWriter = zerolog.ConsoleWriter{Out: os.Stderr}
-	} else {
-		logWriter = os.Stderr
-	}
-
-	logLvlStr := vpr.GetString(flags.FlagLogLevel)
-	logLvl, perr := zerolog.ParseLevel(logLvlStr)
-	if perr != nil {
-		return fmt.Errorf("failed to parse log level (%s): %w", logLvlStr, perr)
-	}
-
-	serverLogger := server.ZeroLogWrapper{Logger: zerolog.New(logWriter).Level(logLvl).With().Timestamp().Logger()}
-
-	// Create a new Server context with the same viper as the client context, a default config, and the just defined logger.
-	serverCtx := server.NewContext(vpr, tmcfg.DefaultConfig(), serverLogger)
+	// Create a new Server context with the same viper as the client context, a default config, and no logger.
+	serverCtx := server.NewContext(vpr, tmconfig.DefaultConfig(), nil)
 	if err := server.SetCmdServerContext(cmd, serverCtx); err != nil {
 		return err
 	}
