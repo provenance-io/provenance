@@ -30,7 +30,7 @@ service Msg {
   }
 }
 
-// ComputeMsgBasedRequest is the request type for the Msg.CalculateMsgBasedFees
+// CalculateFeePerMsgRequest is the request type for the Msg.CalculateMsgBasedFees
 // RPC method.
 message CalculateFeePerMsgRequest {
   // tx is the transaction to simulate.

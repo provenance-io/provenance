@@ -16,9 +16,10 @@ option go_package = "github.com/provenance-io/provenance/x/msgfees/types";
 option java_package        = "io.provenance.msgfees.v1";
 option java_multiple_files = true;
 
-// AddMarkerProposal defines defines a governance proposal to create a new marker
-message AddAdditionalMsgFeesProposal {
-  option (gogoproto.equal) = true;
+// AddMsgBasedFeesProposal defines a governance proposal to add additional msg fees
+message AddMsgBasedFeesProposal {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
 
   string title       = 1;
   string description = 2;
@@ -28,10 +29,10 @@ message AddAdditionalMsgFeesProposal {
 
   google.protobuf.Any msg = 4 [(cosmos_proto.accepts_interface) = "sdk.Msg"];
 
-  repeated cosmos.base.v1beta1.Coin min_additional_fee = 5 [
+  repeated cosmos.base.v1beta1.Coin min_fee = 5 [
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (gogoproto.moretags)     = "yaml:\"min_additional_fee\""
+    (gogoproto.moretags)     = "yaml:\"min_fee\""
   ];
 
   //  Fee rate, based on Gas used.
@@ -40,4 +41,42 @@ message AddAdditionalMsgFeesProposal {
     (gogoproto.nullable)   = false,
     (gogoproto.jsontag)    = "fee_rate,omitempty"
   ];
+}
+
+// UpdateMsgBasedFeesProposal defines a governance proposal to update a current msg based fees
+message UpdateMsgBasedFeesProposal {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  string title       = 1;
+  string description = 2;
+
+  cosmos.base.v1beta1.Coin amount = 3
+      [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
+
+  google.protobuf.Any msg = 4 [(cosmos_proto.accepts_interface) = "sdk.Msg"];
+
+  repeated cosmos.base.v1beta1.Coin min_fee = 5 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags)     = "yaml:\"min_fee\""
+  ];
+
+  //  Fee rate, based on Gas used.
+  bytes fee_rate = 6 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false,
+    (gogoproto.jsontag)    = "fee_rate,omitempty"
+  ];
+}
+
+// RemoveMsgBasedFeesProposal defines a governance proposal to delete a current msg based fees
+message RemoveMsgBasedFeesProposal {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  string title       = 1;
+  string description = 2;
+
+  google.protobuf.Any msg = 3 [(cosmos_proto.accepts_interface) = "sdk.Msg"];
 }

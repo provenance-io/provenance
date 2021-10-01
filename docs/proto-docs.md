@@ -333,7 +333,9 @@
     - [Params](#provenance.msgfees.v1.Params)
   
 - [provenance/msgfees/v1/proposals.proto](#provenance/msgfees/v1/proposals.proto)
-    - [AddAdditionalMsgFeesProposal](#provenance.msgfees.v1.AddAdditionalMsgFeesProposal)
+    - [AddMsgBasedFeesProposal](#provenance.msgfees.v1.AddMsgBasedFeesProposal)
+    - [RemoveMsgBasedFeesProposal](#provenance.msgfees.v1.RemoveMsgBasedFeesProposal)
+    - [UpdateMsgBasedFeesProposal](#provenance.msgfees.v1.UpdateMsgBasedFeesProposal)
   
 - [provenance/msgfees/v1/query.proto](#provenance/msgfees/v1/query.proto)
     - [QueryAllMsgFeesResponse](#provenance.msgfees.v1.QueryAllMsgFeesResponse)
@@ -5175,10 +5177,10 @@ Params defines the set of params for the msgfees module.
 
 
 
-<a name="provenance.msgfees.v1.AddAdditionalMsgFeesProposal"></a>
+<a name="provenance.msgfees.v1.AddMsgBasedFeesProposal"></a>
 
-### AddAdditionalMsgFeesProposal
-AddMarkerProposal defines defines a governance proposal to create a new marker
+### AddMsgBasedFeesProposal
+AddMsgBasedFeesProposal defines a governance proposal to add additional msg fees
 
 
 | Field | Type | Label | Description |
@@ -5187,7 +5189,44 @@ AddMarkerProposal defines defines a governance proposal to create a new marker
 | `description` | [string](#string) |  |  |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `msg` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-| `min_additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+| `min_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+| `fee_rate` | [bytes](#bytes) |  | Fee rate, based on Gas used. |
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.RemoveMsgBasedFeesProposal"></a>
+
+### RemoveMsgBasedFeesProposal
+RemoveMsgBasedFeesProposal defines a governance proposal to delete a current msg based fees
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `title` | [string](#string) |  |  |
+| `description` | [string](#string) |  |  |
+| `msg` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.UpdateMsgBasedFeesProposal"></a>
+
+### UpdateMsgBasedFeesProposal
+UpdateMsgBasedFeesProposal defines a governance proposal to update a current msg based fees
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `title` | [string](#string) |  |  |
+| `description` | [string](#string) |  |  |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `msg` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `min_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 | `fee_rate` | [bytes](#bytes) |  | Fee rate, based on Gas used. |
 
 
@@ -5229,7 +5268,7 @@ response for querying all msg's with fees associated with them
 <a name="provenance.msgfees.v1.QueryMsgsWithAdditionalFeeResponse"></a>
 
 ### QueryMsgsWithAdditionalFeeResponse
-QueryMsgsWithAdditionalFeesResponse
+QueryMsgsWithAdditionalFeeResponse
 
 
 | Field | Type | Label | Description |
@@ -5306,7 +5345,7 @@ Query defines the gRPC querier service for marker module.
 <a name="provenance.msgfees.v1.CalculateFeePerMsgRequest"></a>
 
 ### CalculateFeePerMsgRequest
-ComputeMsgBasedRequest is the request type for the Msg.CalculateMsgBasedFees
+CalculateFeePerMsgRequest is the request type for the Msg.CalculateMsgBasedFees
 RPC method.
 
 
