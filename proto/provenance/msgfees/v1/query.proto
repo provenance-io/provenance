@@ -37,7 +37,7 @@ message QueryParamsResponse {
 // QueryMsgsWithAdditionalFeesRequest queries all Msg which have fees associated with them.
 message QueryMsgsWithAdditionalFeesRequest {}
 
-// QueryMsgsWithAdditionalFeesResponse
+// QueryMsgsWithAdditionalFeeResponse
 message QueryMsgsWithAdditionalFeeResponse {
   // msg with fees associated with it.
   MsgFees msg_fees = 1;

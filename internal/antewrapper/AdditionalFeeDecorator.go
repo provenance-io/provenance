@@ -2,6 +2,7 @@ package antewrapper
 
 import (
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -12,7 +13,7 @@ import (
 
 // AdditionalFeeDecorator will check if the transaction's fee is at least as large
 // as tax + additional minimum gasFee (defined in msgfeeskeeper)
-// and record addiional fee proceeds to msgfees module to track additional fee proceeds.
+// and record additional fee proceeds to msgfees module to track additional fee proceeds.
 // If fee is too low, decorator returns error and tx is rejected from mempool.
 // Note this only applies when ctx.CheckTx = true
 // If fee is high enough or not CheckTx, then call next AnteHandler
@@ -20,7 +21,6 @@ import (
 type AdditionalFeeDecorator struct {
 	FeeKeeper k.AdditionalFeeKeeper
 }
-
 
 // AnteHandle handles msg tax fee checking
 func (afd AdditionalFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
@@ -40,7 +40,7 @@ func (afd AdditionalFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulat
 
 		// Mempool fee validation
 		// No fee validation for oracle txs
-		if ctx.IsCheckTx()  {
+		if ctx.IsCheckTx() {
 			if err := EnsureSufficientMempoolFees(ctx, gas, feeCoins, fees); err != nil {
 				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, err.Error())
 			}
@@ -62,8 +62,6 @@ func (afd AdditionalFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulat
 
 	return next(ctx, tx, simulate)
 }
-
-
 
 // EnsureSufficientMempoolFees verifies that the given transaction has supplied
 // enough fees(gas + stability) to cover a proposer's minimum fees. A result object is returned
@@ -114,7 +112,6 @@ func DeductFees(bankKeeper types.BankKeeper, ctx sdk.Context, acc types.AccountI
 	return nil
 }
 
-
 // FilterMsgAndComputeTax computes the stability tax on MsgSend and MsgMultiSend.
 func FilterMsgAndComputeTax(ctx sdk.Context, tk k.AdditionalFeeKeeper, msgs ...sdk.Msg) sdk.Coins {
 	taxes := sdk.Coins{}
@@ -140,6 +137,7 @@ func FilterMsgAndComputeTax(ctx sdk.Context, tk k.AdditionalFeeKeeper, msgs ...s
 
 	return taxes
 }
+
 // computes the fees
 func computeFees(ctx sdk.Context, tk k.AdditionalFeeKeeper, principal sdk.Coins) sdk.Coins {
 

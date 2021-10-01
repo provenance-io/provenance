@@ -152,7 +152,7 @@ func (m *QueryMsgsWithAdditionalFeesRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryMsgsWithAdditionalFeesRequest proto.InternalMessageInfo
 
-// QueryMsgsWithAdditionalFeesResponse
+// QueryMsgsWithAdditionalFeeResponse
 type QueryMsgsWithAdditionalFeeResponse struct {
 	// msg with fees associated with it.
 	MsgFees *MsgFees `protobuf:"bytes,1,opt,name=msg_fees,json=msgFees,proto3" json:"msg_fees,omitempty"`

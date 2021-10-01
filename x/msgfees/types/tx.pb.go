@@ -35,7 +35,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// ComputeMsgBasedRequest is the request type for the Msg.CalculateMsgBasedFees
+// CalculateFeePerMsgRequest is the request type for the Msg.CalculateMsgBasedFees
 // RPC method.
 type CalculateFeePerMsgRequest struct {
 	// tx is the transaction to simulate.
