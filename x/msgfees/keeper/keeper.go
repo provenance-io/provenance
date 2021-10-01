@@ -3,10 +3,11 @@ package keeper
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/gogo/protobuf/proto"
 	"github.com/provenance-io/provenance/x/msgfees/types"
 	"github.com/tendermint/tendermint/libs/log"
-	"github.com/gogo/protobuf/proto"
 )
 
 // MsgBasedFeeKeeperI Fee keeper calculates the additional fees to be charged
@@ -53,4 +54,20 @@ func (k Keeper) SetMsgBasedFeeSchedule(ctx sdk.Context, msgBasedFees types.MsgFe
 	bz := k.cdc.MustMarshal(&msgBasedFees)
 	proto.MessageName(msgBasedFees.Msg)
 	store.Set(types.GetMsgBasedFeeKey(proto.MessageName(msgBasedFees.Msg)), bz)
+}
+
+func (k Keeper) GetMsgBasedFeeSchedule(ctx sdk.Context, msgType string) (*types.MsgFees, error) {
+	store := ctx.KVStore(k.storeKey)
+	key := types.GetMsgBasedFeeKey(msgType)
+	bz := store.Get(key)
+	if len(bz) == 0 {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "msg-based-fees not found")
+	}
+
+	var msgBasedFee types.MsgFees
+	if err := k.cdc.Unmarshal(bz, &msgBasedFee); err != nil {
+		return nil, err
+	}
+
+	return &msgBasedFee, nil
 }

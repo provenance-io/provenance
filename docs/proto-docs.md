@@ -349,8 +349,8 @@
 - [provenance/msgfees/v1/tx.proto](#provenance/msgfees/v1/tx.proto)
     - [CalculateFeePerMsgRequest](#provenance.msgfees.v1.CalculateFeePerMsgRequest)
     - [CalculateMsgBasedFeesResponse](#provenance.msgfees.v1.CalculateMsgBasedFeesResponse)
-    - [CreateAdditionalFeeForMsgTypeResponse](#provenance.msgfees.v1.CreateAdditionalFeeForMsgTypeResponse)
-    - [MsgAddFeeForMsgTypeRequest](#provenance.msgfees.v1.MsgAddFeeForMsgTypeRequest)
+    - [CreateMsgBasedFeeRequest](#provenance.msgfees.v1.CreateMsgBasedFeeRequest)
+    - [CreateMsgBasedFeeResponse](#provenance.msgfees.v1.CreateMsgBasedFeeResponse)
   
     - [Msg](#provenance.msgfees.v1.Msg)
   
@@ -5374,10 +5374,10 @@ RPC method.
 
 
 
-<a name="provenance.msgfees.v1.CreateAdditionalFeeForMsgTypeResponse"></a>
+<a name="provenance.msgfees.v1.CreateMsgBasedFeeRequest"></a>
 
-### CreateAdditionalFeeForMsgTypeResponse
-response for CreateFeeForMsg
+### CreateMsgBasedFeeRequest
+create fee for msg's (repeated)
 
 
 | Field | Type | Label | Description |
@@ -5389,10 +5389,10 @@ response for CreateFeeForMsg
 
 
 
-<a name="provenance.msgfees.v1.MsgAddFeeForMsgTypeRequest"></a>
+<a name="provenance.msgfees.v1.CreateMsgBasedFeeResponse"></a>
 
-### MsgAddFeeForMsgTypeRequest
-create fee for msg's (repeated)
+### CreateMsgBasedFeeResponse
+response for CreateFeeForMsg
 
 
 | Field | Type | Label | Description |
@@ -5417,7 +5417,7 @@ Service defines a gRPC service for interacting with transactions.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `CreateAdditionalFeeForMsgType` | [MsgAddFeeForMsgTypeRequest](#provenance.msgfees.v1.MsgAddFeeForMsgTypeRequest) | [CreateAdditionalFeeForMsgTypeResponse](#provenance.msgfees.v1.CreateAdditionalFeeForMsgTypeResponse) | create fee for an associated Msg (repeated) TODO : this goes away i think in prod because MsgFees can only be created by Gov | |
+| `CreateMsgBasedFee` | [CreateMsgBasedFeeRequest](#provenance.msgfees.v1.CreateMsgBasedFeeRequest) | [CreateMsgBasedFeeResponse](#provenance.msgfees.v1.CreateMsgBasedFeeResponse) | create fee for an associated Msg (repeated) TODO : this goes away i think in prod because MsgFees can only be created by Gov | |
 | `CalculateMsgBasedFees` | [CalculateFeePerMsgRequest](#provenance.msgfees.v1.CalculateFeePerMsgRequest) | [CalculateMsgBasedFeesResponse](#provenance.msgfees.v1.CalculateMsgBasedFeesResponse) | CalculateMsgBasedFees simulates executing a transaction for estimating gas usage. | POST|/provenance/tx/v1/calculate_msg_fees|
 
  <!-- end services -->

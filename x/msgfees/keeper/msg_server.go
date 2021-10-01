@@ -10,7 +10,7 @@ type msgServer struct {
 	Keeper
 }
 
-func (m msgServer) CreateAdditionalFeeForMsgType(ctx context.Context, request *types.MsgAddFeeForMsgTypeRequest) (*types.CreateAdditionalFeeForMsgTypeResponse, error) {
+func (m msgServer) CreateMsgBasedFee(ctx context.Context, request *types.CreateMsgBasedFeeRequest) (*types.CreateMsgBasedFeeResponse, error) {
 	panic("implement me")
 }
 

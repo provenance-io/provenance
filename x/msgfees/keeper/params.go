@@ -1,15 +1,15 @@
 package keeper
 
-
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/msgfees/types"
 )
+
 // GetParams returns the total set of distribution parameters.
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	return types.Params{
-		EnableGovernance:       k.GetEnableGovernance(ctx),
+		EnableGovernance: k.GetEnableGovernance(ctx),
 	}
 }
 

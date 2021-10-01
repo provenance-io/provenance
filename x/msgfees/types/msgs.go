@@ -7,29 +7,26 @@ import (
 
 // Compile time interface checks.
 var (
-	_ sdk.Msg = &MsgAddFeeForMsgTypeRequest{}
-	_ legacytx.LegacyMsg = &MsgAddFeeForMsgTypeRequest{} // For amino support.
+	_ sdk.Msg            = &CreateMsgBasedFeeRequest{}
+	_ legacytx.LegacyMsg = &CreateMsgBasedFeeRequest{} // For amino support.
 )
 
-
-func (m *MsgAddFeeForMsgTypeRequest) ValidateBasic() error {
+func (m *CreateMsgBasedFeeRequest) ValidateBasic() error {
 	panic("implement me")
 }
 
-func (m *MsgAddFeeForMsgTypeRequest) GetSigners() []sdk.AccAddress {
+func (m *CreateMsgBasedFeeRequest) GetSigners() []sdk.AccAddress {
 	panic("implement me")
 }
 
 // GetSignBytes encodes the message for signing
-func (msg *MsgAddFeeForMsgTypeRequest) GetSignBytes() []byte {
+func (msg *CreateMsgBasedFeeRequest) GetSignBytes() []byte {
 	panic("implement me")
 }
 
-
-func (m *MsgAddFeeForMsgTypeRequest) Type() string {
+func (m *CreateMsgBasedFeeRequest) Type() string {
 	panic("implement me")
 }
-
 
 // Route implements Msg
-func (msg *MsgAddFeeForMsgTypeRequest) Route() string { return ModuleName }
+func (msg *CreateMsgBasedFeeRequest) Route() string { return ModuleName }

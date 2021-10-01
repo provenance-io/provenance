@@ -11,9 +11,8 @@ import (
 // double check
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
-
 	registry.RegisterImplementations((*sdk.Msg)(nil),
-		&MsgAddFeeForMsgTypeRequest{},
+		&CreateMsgBasedFeeRequest{},
 	)
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&CalculateFeePerMsgRequest{},
@@ -23,7 +22,6 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 }
 
 var (
-	amino     = codec.NewLegacyAmino()
 	// moving to protoCodec since this is a new module and should not use the
 	// amino codec..someone to double verify
 	ModuleCdc = codec.NewProtoCodec(cdctypes.NewInterfaceRegistry())

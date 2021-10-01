@@ -140,6 +140,5 @@ func FilterMsgAndComputeTax(ctx sdk.Context, tk k.MsgBasedFeeKeeperI, msgs ...sd
 
 // computes the fees
 func computeFees(ctx sdk.Context, tk k.MsgBasedFeeKeeperI, principal sdk.Coins) sdk.Coins {
-
 	return nil
 }

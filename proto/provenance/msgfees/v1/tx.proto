@@ -20,7 +20,7 @@ service Msg {
 
   // create fee for an associated Msg (repeated)
   // TODO : this goes away i think in prod because MsgFees can only be created by Gov
-  rpc CreateAdditionalFeeForMsgType(MsgAddFeeForMsgTypeRequest) returns (CreateAdditionalFeeForMsgTypeResponse) {}
+  rpc CreateMsgBasedFee(CreateMsgBasedFeeRequest) returns (CreateMsgBasedFeeResponse) {}
   // CalculateMsgBasedFees simulates executing a transaction for estimating gas usage.
   rpc CalculateMsgBasedFees(CalculateFeePerMsgRequest) returns (CalculateMsgBasedFeesResponse) {
     option (google.api.http) = {
@@ -46,13 +46,13 @@ message CalculateMsgBasedFeesResponse {
 }
 
 // create fee for msg's (repeated)
-message MsgAddFeeForMsgTypeRequest {
+message CreateMsgBasedFeeRequest {
   // msg to add Fee for.
   repeated MsgFees msg_fees = 1;
 }
 
 // response for CreateFeeForMsg
-message CreateAdditionalFeeForMsgTypeResponse {
+message CreateMsgBasedFeeResponse {
   // msg to add Fee for.
   repeated MsgFees msg_fees = 1;
 }

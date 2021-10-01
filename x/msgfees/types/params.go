@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+
 	yaml "gopkg.in/yaml.v2"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -27,7 +28,7 @@ func NewParams(
 	enableGovernance bool,
 ) Params {
 	return Params{
-		EnableGovernance:       enableGovernance,
+		EnableGovernance: enableGovernance,
 	}
 }
 
@@ -84,4 +85,3 @@ func validateEnableGovernance(i interface{}) error {
 	}
 	return nil
 }
-
