@@ -3,17 +3,20 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
+	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	tmconfig "github.com/tendermint/tendermint/config"
+
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
-
-	tmconfig "github.com/tendermint/tendermint/config"
 )
 
 // PackConfig generates and saves the packed config file then removes the individual config files.
@@ -588,6 +591,24 @@ func applyConfigsToContexts(cmd *cobra.Command) error {
 	}
 	serverCtx.Config = tmConfig
 	serverCtx.Config.SetRoot(clientCtx.HomeDir)
+
+	// Set the server context's logger using what Viper has now.
+	var logWriter io.Writer
+	switch logFmt := serverCtx.Viper.GetString(flags.FlagLogFormat); strings.ToLower(logFmt) {
+	case tmconfig.LogFormatPlain:
+		logWriter = zerolog.ConsoleWriter{Out: os.Stderr}
+	case tmconfig.LogFormatJSON:
+		logWriter = os.Stderr
+	default:
+		return fmt.Errorf("unknown log format: %s", logFmt)
+	}
+	logLvlStr := serverCtx.Viper.GetString(flags.FlagLogLevel)
+	logLvl, perr := zerolog.ParseLevel(strings.ToLower(logLvlStr))
+	if perr != nil {
+		return fmt.Errorf("failed to parse log level (%s): %w", logLvlStr, perr)
+	}
+	logger := zerolog.New(logWriter).Level(logLvl).With().Timestamp().Logger()
+	serverCtx.Logger = server.ZeroLogWrapper{Logger: logger}
 
 	return nil
 }
