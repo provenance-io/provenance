@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -54,12 +55,15 @@ func (k msgServer) DeleteScope(
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteScope")
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	if len(msg.ScopeId) == 0 {
+		return nil, errors.New("scope id cannot be empty")
+	}
 	existing, found := k.GetScope(ctx, msg.ScopeId)
 	if !found {
 		return nil, fmt.Errorf("scope not found with id %s", msg.ScopeId)
 	}
-	// validate that all fields can be unset with the given list of signers
-	if err := k.ValidateScopeRemove(ctx, existing, types.Scope{ScopeId: msg.ScopeId}, msg.Signers); err != nil {
+
+	if err := k.ValidateScopeRemove(ctx, existing, msg.Signers); err != nil {
 		return nil, err
 	}
 

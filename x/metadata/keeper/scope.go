@@ -193,7 +193,6 @@ func (k Keeper) indexScope(ctx sdk.Context, scope types.Scope) {
 // ValidateScopeUpdate checks the current scope and the proposed scope to determine if the the proposed changes are valid
 // based on the existing state
 func (k Keeper) ValidateScopeUpdate(ctx sdk.Context, existing, proposed types.Scope, signers []string) error {
-	scopeChanging := false
 	if err := proposed.ValidateBasic(); err != nil {
 		return err
 	}
@@ -203,22 +202,6 @@ func (k Keeper) ValidateScopeUpdate(ctx sdk.Context, existing, proposed types.Sc
 		if !proposed.ScopeId.Equals(existing.ScopeId) {
 			return fmt.Errorf("cannot update scope identifier. expected %s, got %s", existing.ScopeId, proposed.ScopeId)
 		}
-	}
-
-	// Check for specification update
-	if !proposed.SpecificationId.Equals(existing.SpecificationId) {
-		scopeChanging = true
-	}
-
-	// Check for owner update
-	if !scopeChanging && !types.EqualParties(existing.Owners, proposed.Owners) {
-		scopeChanging = true
-	}
-
-	// Check if entries in data access were modified.
-	if !scopeChanging && len(existing.DataAccess) != len(proposed.DataAccess) ||
-		len(FindMissing(existing.DataAccess, proposed.DataAccess)) > 0 {
-		scopeChanging = true
 	}
 
 	if err := proposed.SpecificationId.Validate(); err != nil {
@@ -236,43 +219,26 @@ func (k Keeper) ValidateScopeUpdate(ctx sdk.Context, existing, proposed types.Sc
 		return err
 	}
 
-	// capture a list of required signatures for proposed changes.
-	requiredSignatures := []string{}
-
-	// Validate any changes to the ValueOwner property (value owner changes do not count as a typical scope change).
-	if existing.ValueOwnerAddress != proposed.ValueOwnerAddress {
-		// existing value is being changed,
+	if len(existing.Owners) > 0 {
+		// Existing owners are not required to sign when the ONLY change is from one value owner to another.
+		// If the value owner wasn't previously set, and is being set now, existing owners must sign.
+		// If anything else is changing, the existing owners must sign.
+		proposedCopy := proposed
 		if len(existing.ValueOwnerAddress) > 0 {
-			if k.AccountIsMarker(ctx, existing.ValueOwnerAddress) {
-				if !k.HasSignerWithMarkerValueAuthority(ctx, existing.ValueOwnerAddress, signers, markertypes.Access_Withdraw) {
-					return fmt.Errorf("missing signature for %s with authority to withdraw/remove existing value owner", existing.ValueOwnerAddress)
-				}
-			} else {
-				// not a marker so require a signature from the existing value owner for this change.
-				requiredSignatures = append(requiredSignatures, existing.ValueOwnerAddress)
-			}
-		} else {
-			// existing value owner was not set and new value does not match so flag as a scope change.
-			scopeChanging = true
+			proposedCopy.ValueOwnerAddress = existing.ValueOwnerAddress
 		}
-		// check for a marker account because they have restrictions on adding scopes to them.
-		if len(proposed.ValueOwnerAddress) > 0 {
-			if k.AccountIsMarker(ctx, proposed.ValueOwnerAddress) {
-				if !k.HasSignerWithMarkerValueAuthority(ctx, proposed.ValueOwnerAddress, signers, markertypes.Access_Deposit) {
-					return fmt.Errorf("no signatures present with authority to add scope to marker %s", proposed.ValueOwnerAddress)
-				}
+		if !existing.Equals(proposedCopy) {
+			existingOwners := make([]string, len(existing.Owners))
+			for i, o := range existing.Owners {
+				existingOwners[i] = o.Address
 			}
-			// not a marker account, don't care who this new address is...
+			if err := k.ValidateAllOwnersAreSigners(existingOwners, signers); err != nil {
+				return err
+			}
 		}
 	}
 
-	if scopeChanging {
-		for _, p := range existing.Owners {
-			requiredSignatures = append(requiredSignatures, p.Address)
-		}
-	}
-
-	if err := k.ValidateAllOwnersAreSigners(requiredSignatures, signers); err != nil {
+	if err := k.validateScopeUpdateValueOwner(ctx, existing.ValueOwnerAddress, proposed.ValueOwnerAddress, signers); err != nil {
 		return err
 	}
 
@@ -281,17 +247,52 @@ func (k Keeper) ValidateScopeUpdate(ctx sdk.Context, existing, proposed types.Sc
 
 // ValidateScopeRemove checks the current scope and the proposed removal scope to determine if the the proposed remove is valid
 // based on the existing state
-func (k Keeper) ValidateScopeRemove(ctx sdk.Context, existing, proposed types.Scope, signers []string) error {
-	// IDs must match
-	if len(existing.ScopeId) > 0 {
-		if !proposed.ScopeId.Equals(existing.ScopeId) {
-			return fmt.Errorf("cannot update scope identifier. expected %s, got %s", existing.ScopeId, proposed.ScopeId)
-		}
-	}
-	if err := k.ValidateAllPartiesAreSigners(existing.Owners, signers); err != nil {
+func (k Keeper) ValidateScopeRemove(ctx sdk.Context, scope types.Scope, signers []string) error {
+	if err := k.ValidateAllPartiesAreSigners(scope.Owners, signers); err != nil {
 		return err
 	}
 
+	if err := k.validateScopeUpdateValueOwner(ctx, scope.ValueOwnerAddress, "", signers); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (k Keeper) validateScopeUpdateValueOwner(ctx sdk.Context, existing, proposed string, signers []string) error {
+	// If they're the same, we don't need to do anything.
+	if existing == proposed {
+		return nil
+	}
+	if len(existing) > 0 {
+		isMarker, hasAuth := k.IsMarkerAndHasAuthority(ctx, existing, signers, markertypes.Access_Withdraw)
+		if isMarker {
+			// If the existing is a marker, make sure a signer has withdraw authority on it.
+			if !hasAuth {
+				return fmt.Errorf("missing signature for %s with authority to withdraw/remove existing value owner", existing)
+			}
+		} else {
+			// If the existing isn't a marker, make sure they're one of the signers.
+			found := false
+			for _, signer := range signers {
+				if existing == signer {
+					found = true
+					break
+				}
+			}
+			if !found {
+				return fmt.Errorf("missing signature from existing value owner %s", existing)
+			}
+		}
+	}
+	if len(proposed) > 0 {
+		isMarker, hasAuth := k.IsMarkerAndHasAuthority(ctx, proposed, signers, markertypes.Access_Deposit)
+		// If the proposed is a marker, make sure a signer has deposit authority on it.
+		if isMarker && !hasAuth {
+			return fmt.Errorf("no signatures present with authority to add scope to marker %s", proposed)
+		}
+		// If it's not a marker, we don't really care what it's being set to.
+	}
 	return nil
 }
 

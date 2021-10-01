@@ -33,6 +33,14 @@ func NewScope(
 	}
 }
 
+func (s Scope) Equals(t Scope) bool {
+	return s.ScopeId.Equals(t.ScopeId) &&
+		s.SpecificationId.Equals(t.SpecificationId) &&
+		EqualParties(s.Owners, t.Owners) &&
+		equivalentDataAssessors(s.DataAccess, t.DataAccess) &&
+		s.ValueOwnerAddress == t.ValueOwnerAddress
+}
+
 // ValidateBasic performs basic format checking of data within a scope
 func (s Scope) ValidateBasic() error {
 	prefix, err := VerifyMetadataAddressFormat(s.ScopeId)
@@ -479,6 +487,48 @@ func (p Party) String() string {
 	return fmt.Sprintf("%s - %s", p.Address, p.Role)
 }
 
+// Equals returns true if this party is equal to the provided party.
 func (p Party) Equals(p2 Party) bool {
 	return p.Address == p2.Address && p.Role == p2.Role
+}
+
+// EqualParties returns true if the two provided sets of parties contain the same entries.
+// This assumes that duplicates are not allowed in a party set.
+func EqualParties(p1, p2 []Party) bool {
+	if len(p1) != len(p2) {
+		return false
+	}
+p1Loop:
+	for _, p1p := range p1 {
+		for _, p2p := range p2 {
+			if p1p.Equals(p2p) {
+				continue p1Loop
+			}
+		}
+		return false
+	}
+	return true
+}
+
+// equivalentDataAssessors returns true if all the entries in s1 are in s2, and vice versa.
+func equivalentDataAssessors(s1, s2 []string) bool {
+s1Loop:
+	for _, s1s := range s1 {
+		for _, s2s := range s2 {
+			if s1s == s2s {
+				continue s1Loop
+			}
+		}
+		return false
+	}
+s2Loop:
+	for _, s2s := range s2 {
+		for _, s1s := range s1 {
+			if s1s == s2s {
+				continue s2Loop
+			}
+		}
+		return false
+	}
+	return true
 }
