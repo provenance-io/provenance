@@ -702,45 +702,27 @@ func (s *ScopeTestSuite) TestEqualParties() {
 			expected: false,
 		},
 		{
-			name:     "aab vs abb",
-			p1:       []Party{{"aaa", 3}, {"aaa", 3}, {"bbb", 5}},
-			p2:       []Party{{"aaa", 3}, {"bbb", 5}, {"bbb", 5}},
-			expected: false,
-		},
-		{
-			name:     "aab vs ab",
-			p1:       []Party{{"aaa", 3}, {"aaa", 3}, {"bbb", 5}},
-			p2:       []Party{{"aaa", 3}, {"bbb", 5}},
-			expected: false,
-		},
-		{
-			name:     "abb vs ab",
-			p1:       []Party{{"aaa", 3}, {"bbb", 5}, {"bbb", 5}},
-			p2:       []Party{{"aaa", 3}, {"bbb", 5}},
-			expected: false,
-		},
-		{
-			name:     "aab vs aba",
-			p1:       []Party{{"aaa", 3}, {"aaa", 3}, {"bbb", 5}},
-			p2:       []Party{{"aaa", 3}, {"bbb", 5}, {"aaa", 3}},
+			name:     "two equal parties reverse order",
+			p1:       []Party{{"aaa", 3}, {"bbb", 5}},
+			p2:       []Party{{"bbb", 5}, {"aaa", 3}},
 			expected: true,
 		},
 		{
-			name:     "aaa vs bbb",
-			p1:       []Party{{"aaa", 3}, {"aaa", 3}, {"aaa", 3}},
-			p2:       []Party{{"bbb", 5}, {"bbb", 5}, {"bbb", 5}},
+			name:     "three equal parties random order",
+			p1:       []Party{{"aaa", 3}, {"bbb", 5}, {"ccc", 4}},
+			p2:       []Party{{"bbb", 5}, {"ccc", 4}, {"aaa", 3}},
+			expected: true,
+		},
+		{
+			name:     "1 equal and 1 diff addr",
+			p1:       []Party{{"aaa", 3}, {"bba", 4}},
+			p2:       []Party{{"aaa", 3}, {"bbb", 4}},
 			expected: false,
 		},
 		{
-			name:     "2 equal and 1 diff addr",
-			p1:       []Party{{"aaa", 3}, {"aaa", 3}, {"aaa", 3}},
-			p2:       []Party{{"aaa", 3}, {"aaa", 3}, {"bbb", 3}},
-			expected: false,
-		},
-		{
-			name:     "2 equal and 1 diff role",
-			p1:       []Party{{"aaa", 3}, {"aaa", 3}, {"aaa", 3}},
-			p2:       []Party{{"aaa", 4}, {"aaa", 3}, {"aaa", 3}},
+			name:     "1 equal and 1 diff role",
+			p1:       []Party{{"aaa", 3}, {"bbb", 3}},
+			p2:       []Party{{"aaa", 4}, {"bbb", 3}},
 			expected: false,
 		},
 	}
@@ -759,7 +741,7 @@ func (s *ScopeTestSuite) TestEqualParties() {
 	}
 }
 
-func (s *ScopeTestSuite) TestEqualStringSets() {
+func (s *ScopeTestSuite) TestEquivalentDataAssessors() {
 	tests := []struct {
 		name     string
 		p1       []string
@@ -812,19 +794,19 @@ func (s *ScopeTestSuite) TestEqualStringSets() {
 			name:     "aab vs abb",
 			p1:       []string{"aaa", "aaa", "bbb"},
 			p2:       []string{"aaa", "bbb", "bbb"},
-			expected: false,
+			expected: true,
 		},
 		{
 			name:     "aab vs ab",
 			p1:       []string{"aaa", "aaa", "bbb"},
 			p2:       []string{"aaa", "bbb"},
-			expected: false,
+			expected: true,
 		},
 		{
 			name:     "abb vs ab",
 			p1:       []string{"aaa", "bbb", "bbb"},
 			p2:       []string{"aaa", "bbb"},
-			expected: false,
+			expected: true,
 		},
 		{
 			name:     "aab vs aba",
@@ -852,7 +834,7 @@ func (s *ScopeTestSuite) TestEqualStringSets() {
 			op1 := append(make([]string, 0, len(tc.p1)), tc.p1...)
 			op2 := append(make([]string, 0, len(tc.p2)), tc.p2...)
 			// Do the thing.
-			actual := equalStringSets(tc.p1, tc.p2)
+			actual := equivalentDataAssessors(tc.p1, tc.p2)
 			assert.Equal(t, tc.expected, actual, "result")
 			assert.Equal(t, op1, tc.p1, "p1")
 			assert.Equal(t, op2, tc.p2, "p2")

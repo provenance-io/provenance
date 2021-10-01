@@ -3,7 +3,6 @@ package types
 import (
 	"errors"
 	"fmt"
-	"sort"
 	"strings"
 	"time"
 
@@ -38,7 +37,7 @@ func (s Scope) Equals(t Scope) bool {
 	return s.ScopeId.Equals(t.ScopeId) &&
 		s.SpecificationId.Equals(t.SpecificationId) &&
 		EqualParties(s.Owners, t.Owners) &&
-		equalStringSets(s.DataAccess, t.DataAccess) &&
+		equivalentDataAssessors(s.DataAccess, t.DataAccess) &&
 		s.ValueOwnerAddress == t.ValueOwnerAddress
 }
 
@@ -493,53 +492,43 @@ func (p Party) Equals(p2 Party) bool {
 	return p.Address == p2.Address && p.Role == p2.Role
 }
 
-// partySorter implements sort.Interface for []Party
-// Sorts by .Address strings then .Role (as int32 values)
-type partySorter []Party
-
-func (a partySorter) Len() int {
-	return len(a)
-}
-func (a partySorter) Swap(i, j int) {
-	a[i], a[j] = a[j], a[i]
-}
-func (a partySorter) Less(i, j int) bool {
-	if a[i].Address != a[j].Address {
-		return a[i].Address < a[j].Address
-	}
-	return a[i].Role < a[j].Role
-}
-
 // EqualParties returns true if the two provided sets of parties contain the same entries.
+// This assumes that duplicates are not allowed in a party set.
 func EqualParties(p1, p2 []Party) bool {
 	if len(p1) != len(p2) {
 		return false
 	}
-	p1c := append(make([]Party, 0, len(p1)), p1...)
-	p2c := append(make([]Party, 0, len(p2)), p2...)
-	sort.Sort(partySorter(p1c))
-	sort.Sort(partySorter(p2c))
-	for i := range p1c {
-		if !p1c[i].Equals(p2c[i]) {
-			return false
+p1Loop:
+	for _, p1p := range p1 {
+		for _, p2p := range p2 {
+			if p1p.Equals(p2p) {
+				continue p1Loop
+			}
 		}
+		return false
 	}
 	return true
 }
 
-// equalStringSets returns true if the two provided sets of strings contain the same entries.
-func equalStringSets(s1, s2 []string) bool {
-	if len(s1) != len(s2) {
+// equivalentDataAssessors returns true if all the entries in s1 are in s2, and vice versa.
+func equivalentDataAssessors(s1, s2 []string) bool {
+s1Loop:
+	for _, s1s := range s1 {
+		for _, s2s := range s2 {
+			if s1s == s2s {
+				continue s1Loop
+			}
+		}
 		return false
 	}
-	s1c := append(make([]string, 0, len(s1)), s1...)
-	s2c := append(make([]string, 0, len(s2)), s2...)
-	sort.Strings(s1c)
-	sort.Strings(s2c)
-	for i := range s1c {
-		if s1c[i] != s2c[i] {
-			return false
+s2Loop:
+	for _, s2s := range s2 {
+		for _, s1s := range s1 {
+			if s1s == s2s {
+				continue s2Loop
+			}
 		}
+		return false
 	}
 	return true
 }
