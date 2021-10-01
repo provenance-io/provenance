@@ -3,18 +3,19 @@ package keeper
 import (
 	"context"
 
-	"github.com/armon/go-metrics"
-
-	"github.com/cosmos/cosmos-sdk/telemetry"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	"github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 type msgServer struct {
 	Keeper
+}
+
+func (m msgServer) CreateAdditionalFeeForMsgType(ctx context.Context, request *types.MsgAddFeeForMsgTypeRequest) (*types.CreateAdditionalFeeForMsgTypeResponse, error) {
+	panic("implement me")
+}
+
+func (m msgServer) CalculateMsgBasedFees(ctx context.Context, request *types.CalculateFeePerMsgRequest) (*types.CalculateMsgBasedFeesResponse, error) {
+	panic("implement me")
 }
 
 // NewMsgServerImpl returns an implementation of the msgfees MsgServer interface
