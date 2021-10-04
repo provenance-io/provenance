@@ -1,4 +1,4 @@
-package marker
+package msgfees
 
 import (
 	"context"
@@ -8,11 +8,11 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
-	"github.com/provenance-io/provenance/x/marker/client/cli"
-	"github.com/provenance-io/provenance/x/marker/client/rest"
-	"github.com/provenance-io/provenance/x/marker/keeper"
-	"github.com/provenance-io/provenance/x/marker/simulation"
-	"github.com/provenance-io/provenance/x/marker/types"
+	"github.com/provenance-io/provenance/x/msgfees/client/cli"
+	// "github.com/provenance-io/provenance/x/msgfees/client/rest"
+	"github.com/provenance-io/provenance/x/msgfees/keeper"
+	// "github.com/provenance-io/provenance/x/msgfees/simulation"
+	"github.com/provenance-io/provenance/x/msgfees/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -114,12 +114,12 @@ func (AppModule) Name() string {
 	return types.ModuleName
 }
 
-// Route returns the message routing key for the marker module.
+// Route returns the message routing key for the msgfees module.
 func (am AppModule) Route() sdk.Route {
 	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
 }
 
-// RegisterInvariants ensures the total supply in bankKeeper matches amount declared as total in marker configuration
+// RegisterInvariants ensures the total supply in bankKeeper matches amount declared as total in msgfees configuration
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	keeper.RegisterInvariants(ir, am.keeper, am.bankKeeper)
 }
@@ -175,28 +175,28 @@ func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.Validato
 
 // AppModuleSimulation functions
 
-// GenerateGenesisState creates a randomized GenState of the marker module.
+// GenerateGenesisState creates a randomized GenState of the msgfees module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
 }
 
-// ProposalContents returns all the marker content functions used to
-// simulate marker governance proposals.
+// ProposalContents returns all the msgfees content functions used to
+// simulate msgfees governance proposals.
 func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
 	return simulation.ProposalContents(am.keeper)
 }
 
-// RandomizedParams creates randomized marker param changes for the simulator.
+// RandomizedParams creates randomized msgfees param changes for the simulator.
 func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 	return simulation.ParamChanges(r)
 }
 
-// RegisterStoreDecoder registers a decoder for marker module's types
+// RegisterStoreDecoder registers a decoder for msgfees module's types
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 	// sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
-// WeightedOperations returns the all the marker module operations with their respective weights.
+// WeightedOperations returns the all the msgfees module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations(
 		simState.AppParams, simState.Cdc, am.keeper, am.accountKeeper, am.bankKeeper,
