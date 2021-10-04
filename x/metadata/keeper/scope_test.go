@@ -18,6 +18,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -283,7 +284,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdate() {
 			existing: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user2),
 			proposed: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1),
 			signers:  []string{s.user1},
-			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", s.user2),
+			errorMsg: fmt.Sprintf("missing signature from existing value owner %s", s.user2),
 		},
 		{
 			name:     "unsetting all fields on a scope should be successful",
@@ -320,7 +321,168 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdate() {
 	}
 }
 
-// TODO: ValidateScopeRemove tests
+func (s ScopeKeeperTestSuite) TestValidateScopeRemove() {
+	markerDenom := "testcoins2"
+	markerAddr := markertypes.MustGetMarkerAddress(markerDenom).String()
+	err := s.app.MarkerKeeper.AddMarkerAccount(s.ctx, &markertypes.MarkerAccount{
+		BaseAccount: &authtypes.BaseAccount{
+			Address:       markerAddr,
+			AccountNumber: 24,
+		},
+		AccessControl: []markertypes.AccessGrant{
+			{
+				Address:     s.user1,
+				Permissions: markertypes.AccessListByNames("deposit,withdraw"),
+			},
+		},
+		Denom:      markerDenom,
+		Supply:     sdk.NewInt(1000),
+		MarkerType: markertypes.MarkerType_Coin,
+		Status:     markertypes.StatusActive,
+	})
+	s.NoError(err)
+
+	scopeNoValueOwner := types.Scope{
+		ScopeId:           types.ScopeMetadataAddress(uuid.New()),
+		SpecificationId:   types.ScopeSpecMetadataAddress(uuid.New()),
+		Owners:            ownerPartyList(s.user1, s.user2),
+		DataAccess:        nil,
+		ValueOwnerAddress: "",
+	}
+
+	scopeMarkerValueOwner := types.Scope{
+		ScopeId:           types.ScopeMetadataAddress(uuid.New()),
+		SpecificationId:   types.ScopeSpecMetadataAddress(uuid.New()),
+		Owners:            ownerPartyList(s.user2),
+		DataAccess:        nil,
+		ValueOwnerAddress: markerAddr,
+	}
+
+	scopeUserValueOwner := types.Scope{
+		ScopeId:           types.ScopeMetadataAddress(uuid.New()),
+		SpecificationId:   types.ScopeSpecMetadataAddress(uuid.New()),
+		Owners:            ownerPartyList(s.user2),
+		DataAccess:        nil,
+		ValueOwnerAddress: s.user1,
+	}
+
+	missing1Sig := func(addr string) string {
+		return fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", addr)
+	}
+
+	missing2Sigs := func(addr1, addr2 string) string {
+		return fmt.Sprintf("missing signatures from [%s (PARTY_TYPE_OWNER) %s (PARTY_TYPE_OWNER)]", addr1, addr2)
+	}
+
+	tests := []struct {
+		name     string
+		scope    types.Scope
+		signers  []string
+		expected string
+	}{
+		{
+			name:     "no value owner all signers",
+			scope:    scopeNoValueOwner,
+			signers:  []string{s.user1, s.user2},
+			expected: "",
+		},
+		{
+			name:     "no value owner all signers reversed",
+			scope:    scopeNoValueOwner,
+			signers:  []string{s.user1, s.user2},
+			expected: "",
+		},
+		{
+			name:     "no value owner extra signer",
+			scope:    scopeNoValueOwner,
+			signers:  []string{s.user1, s.user2, s.user3},
+			expected: "",
+		},
+		{
+			name:     "no value owner missing signer 1",
+			scope:    scopeNoValueOwner,
+			signers:  []string{s.user2},
+			expected: missing1Sig(s.user1),
+		},
+		{
+			name:     "no value owner missing signer 2",
+			scope:    scopeNoValueOwner,
+			signers:  []string{s.user1},
+			expected: missing1Sig(s.user2),
+		},
+		{
+			name:     "no value owner no signers",
+			scope:    scopeNoValueOwner,
+			signers:  []string{},
+			expected: missing2Sigs(s.user1, s.user2),
+		},
+		{
+			name:     "no value owner wrong signer",
+			scope:    scopeNoValueOwner,
+			signers:  []string{s.user3},
+			expected: missing2Sigs(s.user1, s.user2),
+		},
+		{
+			name:     "marker value owner signed by owner and user with auth",
+			scope:    scopeMarkerValueOwner,
+			signers:  []string{s.user1, s.user2},
+			expected: "",
+		},
+		{
+			name:     "marker value owner signed by owner and user with auth reversed",
+			scope:    scopeMarkerValueOwner,
+			signers:  []string{s.user2, s.user1},
+			expected: "",
+		},
+		{
+			name:     "marker value owner not signed by owner",
+			scope:    scopeMarkerValueOwner,
+			signers:  []string{s.user1},
+			expected: missing1Sig(s.user2),
+		},
+		{
+			name:     "marker value owner not signed by user with auth",
+			scope:    scopeMarkerValueOwner,
+			signers:  []string{s.user2},
+			expected: fmt.Sprintf("missing signature for %s with authority to withdraw/remove existing value owner", markerAddr),
+		},
+		{
+			name:     "user value owner signed by owner and value owner",
+			scope:    scopeUserValueOwner,
+			signers:  []string{s.user1, s.user2},
+			expected: "",
+		},
+		{
+			name:     "user value owner signed by owner and value owner reversed",
+			scope:    scopeUserValueOwner,
+			signers:  []string{s.user2, s.user1},
+			expected: "",
+		},
+		{
+			name:     "user value owner not signed by owner",
+			scope:    scopeUserValueOwner,
+			signers:  []string{s.user1},
+			expected: missing1Sig(s.user2),
+		},
+		{
+			name:     "user value owner not signed by value owner",
+			scope:    scopeUserValueOwner,
+			signers:  []string{s.user2},
+			expected: fmt.Sprintf("missing signature from existing value owner %s", s.user1),
+		},
+	}
+
+	for _, tc := range tests {
+		s.T().Run(tc.name, func(t *testing.T) {
+			actual := s.app.MetadataKeeper.ValidateScopeRemove(s.ctx, tc.scope, tc.signers)
+			if len(tc.expected) > 0 {
+				require.EqualError(t, actual, tc.expected)
+			} else {
+				require.NoError(t, actual)
+			}
+		})
+	}
+}
 
 func (s *ScopeKeeperTestSuite) TestValidateScopeAddDataAccess() {
 	scope := *types.NewScope(s.scopeID, types.ScopeSpecMetadataAddress(s.scopeUUID), ownerPartyList(s.user1), []string{s.user1}, s.user1)
