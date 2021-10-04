@@ -41,6 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Add `bank` and `authz` module query `proto` files required by `grpcurl` [#482](https://github.com/provenance-io/provenance/issues/482)
 * Update github actions to always run required tests [#508](https://github.com/provenance-io/provenance/issues/508)
+* Update devnet to simplify the container and make it easier to run ad-hoc `provenanced` commands in it [PR 521](https://github.com/provenance-io/provenance/pull/521)
 
 ### Bug Fixes
 
