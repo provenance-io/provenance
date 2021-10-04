@@ -106,6 +106,7 @@ import (
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	markerwasm "github.com/provenance-io/provenance/x/marker/wasm"
+	msgbasedfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 
 	"github.com/provenance-io/provenance/x/attribute"
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
@@ -114,6 +115,7 @@ import (
 
 	"github.com/provenance-io/provenance/x/name"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
+	msgfeekeeper "github.com/provenance-io/provenance/x/msgfees/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 	namewasm "github.com/provenance-io/provenance/x/name/wasm"
 
@@ -251,6 +253,8 @@ type App struct {
 	AuthzKeeper      authzkeeper.Keeper
 	EvidenceKeeper   evidencekeeper.Keeper
 	FeeGrantKeeper   feegrantkeeper.Keeper
+	// msg based fees
+	MsgBasedFeeKeeper msgfeekeeper.Keeper
 
 	IBCKeeper      *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	TransferKeeper ibctransferkeeper.Keeper
@@ -380,6 +384,11 @@ func New(
 
 	app.FeeGrantKeeper = feegrantkeeper.NewKeeper(appCodec, keys[feegrant.StoreKey], app.AccountKeeper)
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath, app.BaseApp)
+
+	// msgbased fee keeper initialization.
+	app.MsgBasedFeeKeeper = msgfeekeeper.NewKeeper(
+		appCodec, keys[msgbasedfeestypes.StoreKey], app.GetSubspace(nametypes.ModuleName), authtypes.FeeCollectorName,
+	)
 
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
