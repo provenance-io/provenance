@@ -23,6 +23,8 @@ type Keeper struct {
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 }
 
+
+
 // NewKeeper returns a AdditionalFeeKeeper. It handles:
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
@@ -48,6 +50,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
+
 // SetMsgBasedFeeSchedule sets the additional fee schedule for a Msg
 func (k Keeper) SetMsgBasedFeeSchedule(ctx sdk.Context, msgBasedFees types.MsgFees) {
 	store := ctx.KVStore(k.storeKey)
@@ -71,3 +74,26 @@ func (k Keeper) GetMsgBasedFeeSchedule(ctx sdk.Context, msgType string) (*types.
 
 	return &msgBasedFee, nil
 }
+
+type Handler func(record types.MsgFees) (stop bool)
+
+// IterateMarkers  iterates all markers with the given handler function.
+func (k Keeper) IterateMsgFees(ctx sdk.Context, handle func(msgFees types.MsgFees) (stop bool)) error {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.MsgBasedFeeKeyPrefix)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		record := types.MsgFees{}
+		if err := k.cdc.Unmarshal(iterator.Value(), &record); err != nil {
+			return err
+		}
+		if handle(record) {
+			break
+		}
+	}
+	return nil
+}
+
+
+

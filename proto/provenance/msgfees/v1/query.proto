@@ -7,6 +7,7 @@ import "google/api/annotations.proto";
 import "provenance/msgfees/v1/msgfees.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
 
 option go_package          = "github.com/provenance-io/provenance/x/msgfees/types";
 option java_package        = "io.provenance.msgfees.v1";
@@ -35,15 +36,15 @@ message QueryParamsResponse {
 }
 
 // QueryMsgsWithAdditionalFeesRequest queries all Msg which have fees associated with them.
-message QueryMsgsWithAdditionalFeesRequest {}
-
-// QueryMsgsWithAdditionalFeeResponse
-message QueryMsgsWithAdditionalFeeResponse {
-  // msg with fees associated with it.
-  MsgFees msg_fees = 1;
+message QueryMsgsWithAdditionalFeesRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
+
 
 // response for querying all msg's with fees associated with them
 message QueryAllMsgFeesResponse {
-  repeated QueryMsgsWithAdditionalFeeResponse query_msgs_withadditional_fee_response = 1;
+  repeated MsgFees msg_fees = 1;
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

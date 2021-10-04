@@ -339,7 +339,6 @@
   
 - [provenance/msgfees/v1/query.proto](#provenance/msgfees/v1/query.proto)
     - [QueryAllMsgFeesResponse](#provenance.msgfees.v1.QueryAllMsgFeesResponse)
-    - [QueryMsgsWithAdditionalFeeResponse](#provenance.msgfees.v1.QueryMsgsWithAdditionalFeeResponse)
     - [QueryMsgsWithAdditionalFeesRequest](#provenance.msgfees.v1.QueryMsgsWithAdditionalFeesRequest)
     - [QueryParamsRequest](#provenance.msgfees.v1.QueryParamsRequest)
     - [QueryParamsResponse](#provenance.msgfees.v1.QueryParamsResponse)
@@ -5258,22 +5257,8 @@ response for querying all msg's with fees associated with them
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `query_msgs_withadditional_fee_response` | [QueryMsgsWithAdditionalFeeResponse](#provenance.msgfees.v1.QueryMsgsWithAdditionalFeeResponse) | repeated |  |
-
-
-
-
-
-
-<a name="provenance.msgfees.v1.QueryMsgsWithAdditionalFeeResponse"></a>
-
-### QueryMsgsWithAdditionalFeeResponse
-QueryMsgsWithAdditionalFeeResponse
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `msg_fees` | [MsgFees](#provenance.msgfees.v1.MsgFees) |  | msg with fees associated with it. |
+| `msg_fees` | [MsgFees](#provenance.msgfees.v1.MsgFees) | repeated |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an optional pagination for the request. |
 
 
 
@@ -5284,6 +5269,11 @@ QueryMsgsWithAdditionalFeeResponse
 
 ### QueryMsgsWithAdditionalFeesRequest
 QueryMsgsWithAdditionalFeesRequest queries all Msg which have fees associated with them.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
 
 
 
