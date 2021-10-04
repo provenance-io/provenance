@@ -2,15 +2,14 @@ package keeper_test
 
 import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	simapp "github.com/provenance-io/provenance/app"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/msgfees/types"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
 	"testing"
-	"time"
 )
 
 type TestSuite struct {
@@ -24,9 +23,8 @@ type TestSuite struct {
 
 var bankSendAuthMsgType = banktypes.SendAuthorization{}.MsgTypeURL()
 
-
 func (s *TestSuite) SetupTest() {
-	app := simapp.Setup( false)
+	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	now := tmtime.Now()
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
@@ -41,20 +39,13 @@ func (s *TestSuite) SetupTest() {
 	s.addrs = simapp.AddTestAddrsIncremental(app, ctx, 3, sdk.NewInt(30000000))
 }
 
-
 func (s *TestSuite) TestKeeper() {
-	app, ctx, addrs := s.app, s.ctx, s.addrs
-
-	granterAddr := addrs[0]
-	granteeAddr := addrs[1]
-	//recipientAddr := addrs[2]
+	app, ctx, _ := s.app, s.ctx, s.addrs
 
 	s.T().Log("verify that creating msg fee for type works")
-	authorization, expiration := app.AuthzKeeper.GetCleanAuthorization(ctx, granteeAddr, granterAddr, bankSendAuthMsgType)
-	s.Require().Nil(authorization)
-	s.Require().Equal(expiration, time.Time{})
-	now := s.ctx.BlockHeader().Time
-	s.Require().NotNil(now)
+	msgFee, err := app.MsgBasedFeeKeeper.GetMsgBasedFeeSchedule(ctx, bankSendAuthMsgType)
+	s.Require().Nil(msgFee)
+	s.Require().Nil(err)
 }
 
 func TestTestSuite(t *testing.T) {
