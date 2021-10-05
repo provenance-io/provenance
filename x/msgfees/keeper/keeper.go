@@ -5,7 +5,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/gogo/protobuf/proto"
 	"github.com/provenance-io/provenance/x/msgfees/types"
 	"github.com/tendermint/tendermint/libs/log"
 )
@@ -56,8 +55,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 func (k Keeper) SetMsgBasedFeeSchedule(ctx sdk.Context, msgBasedFees types.MsgFees) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&msgBasedFees)
-	proto.MessageName(msgBasedFees.Msg)
-	store.Set(types.GetMsgBasedFeeKey(proto.MessageName(msgBasedFees.Msg)), bz)
+	store.Set(types.GetMsgBasedFeeKey(msgBasedFees.MsgTypeUrl), bz)
 }
 
 func (k Keeper) GetMsgBasedFeeSchedule(ctx sdk.Context, msgType string) (*types.MsgFees, error) {

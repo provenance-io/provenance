@@ -1,10 +1,5 @@
 package types
 
-import (
-	"github.com/cosmos/cosmos-sdk/codec/types"
-)
-
-var _ types.UnpackInterfacesMessage = &GenesisState{}
 
 // NewGenesisState creates new GenesisState object
 func NewGenesisState(entries []MsgFees) *GenesisState {
@@ -21,15 +16,5 @@ func ValidateGenesis(data GenesisState) error {
 // DefaultGenesisState returns default state for feegrant module.
 func DefaultGenesisState() *GenesisState {
 	return &GenesisState{}
-}
-
-func (data *GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
-	for _, a := range data.MsgFees {
-		err := a.UnpackInterfaces(unpacker)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 

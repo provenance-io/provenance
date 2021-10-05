@@ -46,6 +46,7 @@ func (s *TestSuite) TestKeeper() {
 	msgFee, err := app.MsgBasedFeeKeeper.GetMsgBasedFeeSchedule(ctx, bankSendAuthMsgType)
 	s.Require().Nil(msgFee)
 	s.Require().NotNil(err)
+
 }
 
 
