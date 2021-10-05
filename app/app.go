@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"github.com/provenance-io/provenance/x/msgfees"
 	"io"
 	"net/http"
 	"os"
@@ -102,18 +103,18 @@ import (
 
 	// PROVENANCE
 	appparams "github.com/provenance-io/provenance/app/params"
-	"github.com/provenance-io/provenance/x/marker"
-	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
-	markerwasm "github.com/provenance-io/provenance/x/marker/wasm"
-	msgbasedfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
-
 	"github.com/provenance-io/provenance/x/attribute"
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	attributewasm "github.com/provenance-io/provenance/x/attribute/wasm"
-
+	"github.com/provenance-io/provenance/x/marker"
+	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	markerwasm "github.com/provenance-io/provenance/x/marker/wasm"
 	msgfeekeeper "github.com/provenance-io/provenance/x/msgfees/keeper"
+	msgfeesmodule "github.com/provenance-io/provenance/x/msgfees/module"
+	msgbasedfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
+
 	"github.com/provenance-io/provenance/x/name"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
@@ -160,6 +161,7 @@ var (
 		staking.AppModuleBasic{},
 		mint.AppModuleBasic{},
 		distr.AppModuleBasic{},
+		// TODO add msgfee gov module here
 		gov.NewAppModuleBasic(append(
 			wasmclient.ProposalHandlers,
 			paramsclient.ProposalHandler,
@@ -187,6 +189,7 @@ var (
 		name.AppModuleBasic{},
 		metadata.AppModuleBasic{},
 		wasm.AppModuleBasic{},
+		msgfeesmodule.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -488,7 +491,8 @@ func New(
 		AddRoute(ibchost.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
 		AddRoute(wasm.RouterKey, wasm.NewWasmProposalHandler(app.WasmKeeper, wasm.EnableAllProposals)).
 		AddRoute(nametypes.ModuleName, name.NewProposalHandler(app.NameKeeper)).
-		AddRoute(markertypes.ModuleName, marker.NewProposalHandler(app.MarkerKeeper))
+		AddRoute(markertypes.ModuleName, marker.NewProposalHandler(app.MarkerKeeper)).
+		AddRoute(msgbasedfeestypes.ModuleName, msgfees.NewProposalHandler(app.MsgBasedFeeKeeper))
 	app.GovKeeper = govkeeper.NewKeeper(
 		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
 		&stakingKeeper, govRouter,
@@ -544,6 +548,7 @@ func New(
 		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper),
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),
 		attribute.NewAppModule(appCodec, app.AttributeKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
+		msgfeesmodule.NewAppModule(appCodec, app.MsgBasedFeeKeeper, app.interfaceRegistry),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper),
 
 		// IBC

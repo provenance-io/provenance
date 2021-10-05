@@ -9,7 +9,9 @@ import (
 // Compile time interface checks.
 var (
 	_ sdk.Msg            = &CreateMsgBasedFeeRequest{}
+	_ sdk.Msg            = &CalculateFeePerMsgRequest{}
 	_ legacytx.LegacyMsg = &CreateMsgBasedFeeRequest{} // For amino support.
+	_ legacytx.LegacyMsg = &CalculateFeePerMsgRequest{} // For amino support.
 )
 
 func (m *CreateMsgBasedFeeRequest) ValidateBasic() error {
@@ -38,3 +40,23 @@ func (msg MsgFees) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	return unpacker.UnpackAny(msg.Msg,&msgfees)
 }
 
+
+func (m *CalculateFeePerMsgRequest) ValidateBasic() error {
+	panic("implement me")
+}
+
+func (m *CalculateFeePerMsgRequest) GetSigners() []sdk.AccAddress {
+	panic("implement me")
+}
+
+func (m *CalculateFeePerMsgRequest) GetSignBytes() []byte {
+	panic("implement me")
+}
+
+func (m *CalculateFeePerMsgRequest) Route() string {
+	panic("implement me")
+}
+
+func (m *CalculateFeePerMsgRequest) Type() string {
+	panic("implement me")
+}
