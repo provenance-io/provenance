@@ -10,13 +10,14 @@ type msgServer struct {
 	Keeper
 }
 
-func (m msgServer) CreateMsgBasedFee(ctx context.Context, request *types.CreateMsgBasedFeeRequest) (*types.CreateMsgBasedFeeResponse, error) {
+func (k Keeper) CreateMsgBasedFee(ctx context.Context, request *types.CreateMsgBasedFeeRequest) (*types.CreateMsgBasedFeeResponse, error) {
 	panic("implement me")
 }
 
-func (m msgServer) CalculateMsgBasedFees(ctx context.Context, request *types.CalculateFeePerMsgRequest) (*types.CalculateMsgBasedFeesResponse, error) {
+func (k Keeper) CalculateMsgBasedFees(ctx context.Context, request *types.CalculateFeePerMsgRequest) (*types.CalculateMsgBasedFeesResponse, error) {
 	panic("implement me")
 }
+
 
 // NewMsgServerImpl returns an implementation of the msgfees MsgServer interface
 // for the provided Keeper.

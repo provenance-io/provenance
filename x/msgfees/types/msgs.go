@@ -1,6 +1,7 @@
 package types
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
@@ -30,3 +31,10 @@ func (m *CreateMsgBasedFeeRequest) Type() string {
 
 // Route implements Msg
 func (msg *CreateMsgBasedFeeRequest) Route() string { return ModuleName }
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (msg MsgFees) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	var msgfees MsgFees
+	return unpacker.UnpackAny(msg.Msg,&msgfees)
+}
+

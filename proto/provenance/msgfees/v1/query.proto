@@ -41,7 +41,6 @@ message QueryMsgsWithAdditionalFeesRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
-
 // response for querying all msg's with fees associated with them
 message QueryAllMsgFeesResponse {
   repeated MsgFees msg_fees = 1;

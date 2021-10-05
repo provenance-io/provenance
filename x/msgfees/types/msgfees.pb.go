@@ -541,6 +541,7 @@ func (m *MsgFees) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func skipMsgfees(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0

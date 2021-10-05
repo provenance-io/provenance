@@ -332,6 +332,9 @@
     - [MsgFees](#provenance.msgfees.v1.MsgFees)
     - [Params](#provenance.msgfees.v1.Params)
   
+- [provenance/msgfees/v1/genesis.proto](#provenance/msgfees/v1/genesis.proto)
+    - [GenesisState](#provenance.msgfees.v1.GenesisState)
+  
 - [provenance/msgfees/v1/proposals.proto](#provenance/msgfees/v1/proposals.proto)
     - [AddMsgBasedFeesProposal](#provenance.msgfees.v1.AddMsgBasedFeesProposal)
     - [RemoveMsgBasedFeesProposal](#provenance.msgfees.v1.RemoveMsgBasedFeesProposal)
@@ -5154,6 +5157,37 @@ Params defines the set of params for the msgfees module.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `enable_governance` | [bool](#bool) |  | indicates if governance based controls of msgFees is allowed. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/msgfees/v1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/msgfees/v1/genesis.proto
+
+
+
+<a name="provenance.msgfees.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState contains a set of msg based fees, persisted from the store
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_fees` | [MsgFees](#provenance.msgfees.v1.MsgFees) | repeated |  |
 
 
 

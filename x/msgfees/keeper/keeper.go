@@ -10,6 +10,9 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 )
 
+// StoreKey is the store key string for authz
+const StoreKey = types.ModuleName
+
 // MsgBasedFeeKeeperI Fee keeper calculates the additional fees to be charged
 type MsgBasedFeeKeeperI interface {
 	GetFeeRate(ctx sdk.Context) (feeRate sdk.Dec)
@@ -22,8 +25,6 @@ type Keeper struct {
 	paramSpace       paramtypes.Subspace
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 }
-
-
 
 // NewKeeper returns a AdditionalFeeKeeper. It handles:
 // CONTRACT: the parameter Subspace must have the param key table already initialized
@@ -93,6 +94,17 @@ func (k Keeper) IterateMsgFees(ctx sdk.Context, handle func(msgFees types.MsgFee
 		}
 	}
 	return nil
+}
+
+// ExportGenesis returns a GenesisState for a given context.
+func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
+	//TODO Implement me
+	return nil
+}
+
+// InitGenesis new authz genesis
+func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
+	//TODO Implement me
 }
 
 

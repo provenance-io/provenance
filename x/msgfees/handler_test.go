@@ -1,4 +1,4 @@
-package marker_test
+package msgfees_test
 
 import (
 	"fmt"
