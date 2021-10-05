@@ -2,12 +2,13 @@ package app
 
 import (
 	"encoding/json"
-	"github.com/provenance-io/provenance/x/msgfees"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/provenance-io/provenance/x/msgfees"
 
 	_ "github.com/provenance-io/provenance/client/docs/statik" // registers swagger-ui files with statik
 	"github.com/provenance-io/provenance/internal/antewrapper"
@@ -324,6 +325,7 @@ func New(
 		markertypes.StoreKey,
 		attributetypes.StoreKey,
 		nametypes.StoreKey,
+		msgbasedfeestypes.StoreKey,
 		wasm.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -390,7 +392,7 @@ func New(
 
 	// msgbased fee keeper initialization.
 	app.MsgBasedFeeKeeper = msgfeekeeper.NewKeeper(
-		appCodec, keys[msgbasedfeestypes.StoreKey], app.GetSubspace(nametypes.ModuleName), authtypes.FeeCollectorName,
+		appCodec, keys[msgbasedfeestypes.StoreKey], app.GetSubspace(msgbasedfeestypes.ModuleName), authtypes.FeeCollectorName,
 	)
 
 	// register the staking hooks
@@ -602,6 +604,7 @@ func New(
 		nametypes.ModuleName,
 		attributetypes.ModuleName,
 		metadatatypes.ModuleName,
+		msgbasedfeestypes.ModuleName,
 
 		ibchost.ModuleName,
 
@@ -633,6 +636,7 @@ func New(
 		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper),
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),
 		attribute.NewAppModule(appCodec, app.AttributeKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
+		msgfeesmodule.NewAppModule(appCodec, app.MsgBasedFeeKeeper, app.interfaceRegistry),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper),
 
 		ibc.NewAppModule(app.IBCKeeper),
@@ -865,6 +869,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(markertypes.ModuleName)
 	paramsKeeper.Subspace(nametypes.ModuleName)
 	paramsKeeper.Subspace(attributetypes.ModuleName)
+	paramsKeeper.Subspace(msgbasedfeestypes.ModuleName)
 	paramsKeeper.Subspace(wasm.ModuleName)
 
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
