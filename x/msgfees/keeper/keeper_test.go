@@ -45,8 +45,9 @@ func (s *TestSuite) TestKeeper() {
 	s.T().Log("verify that creating msg fee for type works")
 	msgFee, err := app.MsgBasedFeeKeeper.GetMsgBasedFeeSchedule(ctx, bankSendAuthMsgType)
 	s.Require().Nil(msgFee)
-	s.Require().Nil(err)
+	s.Require().NotNil(err)
 }
+
 
 func TestTestSuite(t *testing.T) {
 	suite.Run(t, new(TestSuite))
