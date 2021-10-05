@@ -46,7 +46,14 @@ func (s *TestSuite) TestKeeper() {
 	msgFee, err := app.MsgBasedFeeKeeper.GetMsgBasedFeeSchedule(ctx, bankSendAuthMsgType)
 	s.Require().Nil(msgFee)
 	s.Require().NotNil(err)
+	newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
+	feerate := sdk.NewDec(4)
+	msgFeeToCreate := types.NewMsgFees(bankSendAuthMsgType,newCoins,feerate)
+	app.MsgBasedFeeKeeper.SetMsgBasedFeeSchedule(ctx, msgFeeToCreate)
 
+	msgFee, err = app.MsgBasedFeeKeeper.GetMsgBasedFeeSchedule(ctx, bankSendAuthMsgType)
+	s.Require().NotNil(msgFee)
+	s.Require().Nil(err)
 }
 
 

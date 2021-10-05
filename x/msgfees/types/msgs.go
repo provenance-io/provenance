@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
+
 )
 
 // Compile time interface checks.
@@ -14,6 +15,11 @@ var (
 	_ legacytx.LegacyMsg = &CalculateFeePerMsgRequest{} // For amino support.
 )
 
+func NewMsgFees(msgTypeURL string, minFeeRate sdk.Coins, feeRate sdk.Dec) MsgFees {
+	return MsgFees{
+		MsgTypeUrl: msgTypeURL, MinAdditionalFee: minFeeRate, FeeRate: feeRate,
+	}
+}
 func (msg *CreateMsgBasedFeeRequest) ValidateBasic() error {
 	panic("implement me")
 }

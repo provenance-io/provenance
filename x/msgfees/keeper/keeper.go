@@ -76,7 +76,7 @@ func (k Keeper) GetMsgBasedFeeSchedule(ctx sdk.Context, msgType string) (*types.
 
 type Handler func(record types.MsgFees) (stop bool)
 
-// IterateMarkers  iterates all markers with the given handler function.
+// IterateMsgFees  iterates all msg fees with the given handler function.
 func (k Keeper) IterateMsgFees(ctx sdk.Context, handle func(msgFees types.MsgFees) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.MsgBasedFeeKeyPrefix)
