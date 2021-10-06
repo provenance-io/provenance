@@ -79,7 +79,7 @@ func (ambfp AddMsgBasedFeesProposal) String() string {
 	Msg:         %s
 	MinFee:      %s
 	FeeRate:     %s
-  `, ambfp.Title, ambfp.Description, ambfp.Amount, ambfp.Msg, ambfp.MinFee, ambfp.FeeRate))
+`, ambfp.Title, ambfp.Description, ambfp.Amount, ambfp.Msg.GetTypeUrl(), ambfp.MinFee, ambfp.FeeRate))
 	return b.String()
 }
 
@@ -114,7 +114,7 @@ func (umbfp UpdateMsgBasedFeesProposal) ValidateBasic() error {
 		return ErrInvalidCoinAmount
 	}
 
-	if umbfp.MinFee.Empty() && umbfp.FeeRate.IsZero() {
+	if (umbfp.MinFee.Empty() || umbfp.MinFee.IsAllPositive()) && umbfp.FeeRate.IsZero() {
 		return ErrInvalidFee
 	}
 
@@ -130,7 +130,7 @@ func (umbfp UpdateMsgBasedFeesProposal) String() string {
 	Msg:         %s
 	MinFee:      %s
 	FeeRate:     %s
-  `, umbfp.Title, umbfp.Description, umbfp.Amount, umbfp.Msg, umbfp.MinFee, umbfp.FeeRate))
+`, umbfp.Title, umbfp.Description, umbfp.Amount, umbfp.Msg.GetTypeUrl(), umbfp.MinFee, umbfp.FeeRate))
 	return b.String()
 }
 
@@ -160,10 +160,10 @@ func (rmbfp RemoveMsgBasedFeesProposal) ValidateBasic() error {
 
 func (rmbfp RemoveMsgBasedFeesProposal) String() string {
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Community Pool Spend Proposal:
+	b.WriteString(fmt.Sprintf(`Remove Msg Based Fees Proposal:
   Title:       %s
   Description: %s
   Msg:         %s
-`, rmbfp.Title, rmbfp.Description, rmbfp.Msg))
+`, rmbfp.Title, rmbfp.Description, rmbfp.Msg.GetTypeUrl()))
 	return b.String()
 }
