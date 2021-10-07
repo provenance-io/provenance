@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	authzKeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/gogo/protobuf/proto"
 	"github.com/tendermint/tendermint/libs/log"
@@ -115,12 +116,16 @@ type Keeper struct {
 
 	// To check if accounts exist and set public keys.
 	authKeeper authkeeper.AccountKeeper
+
+	// To check granter grantee authorization of messages.
+	authzKeeper authzKeeper.Keeper
 }
 
 // NewKeeper creates new instances of the metadata Keeper.
 func NewKeeper(
 	cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Subspace,
 	authKeeper authkeeper.AccountKeeper,
+	authzKeeper authzKeeper.Keeper,
 ) Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
@@ -131,6 +136,7 @@ func NewKeeper(
 		cdc:        cdc,
 		paramSpace: paramSpace,
 		authKeeper: authKeeper,
+		authzKeeper: authzKeeper,
 	}
 }
 
@@ -190,6 +196,113 @@ func (k Keeper) ValidateAllPartiesAreSigners(parties []types.Party, signers []st
 		}
 		return fmt.Errorf("missing signature%s from %v", pluralEnding(len(missing)), missingWithRoles)
 	}
+	return nil
+}
+
+func (k Keeper) getMessageTypeURLs(msgTypeURL string) []string {
+	urls := []string{}
+
+	switch msgTypeURL {
+	case types.TypeMsgURLWriteScopeRequest:
+		urls = append(urls, msgTypeURL)
+	case types.TypeMsgURLDeleteScopeRequest:
+		urls = append(urls, msgTypeURL)
+		// ---- Primary Data Management -----
+	case types.TypeMsgURLAddScopeDataAccessRequest:
+		urls = append(urls, msgTypeURL, types.TypeMsgURLWriteScopeRequest)
+	case types.TypeMsgURLDeleteScopeDataAccessRequest:
+		urls = append(urls, msgTypeURL, types.TypeMsgURLWriteScopeRequest)
+	case types.TypeMsgURLAddScopeOwnerRequest:
+		urls = append(urls, msgTypeURL, types.TypeMsgURLWriteScopeRequest)
+	case types.TypeMsgURLDeleteScopeOwnerRequest:
+		urls = append(urls, msgTypeURL, types.TypeMsgURLWriteScopeRequest)
+		// ----
+	case types.TypeMsgURLWriteSessionRequest:
+		urls = append(urls, msgTypeURL)
+	case types.TypeMsgURLWriteRecordRequest:
+		urls = append(urls, msgTypeURL, types.TypeMsgURLWriteSessionRequest)
+	case types.TypeMsgURLDeleteRecordRequest:
+		urls = append(urls, msgTypeURL)
+	case types.TypeMsgURLWriteScopeSpecificationRequest:
+		urls = append(urls, msgTypeURL)
+	case types.TypeMsgURLDeleteScopeSpecificationRequest:
+		urls = append(urls, msgTypeURL)
+	case types.TypeMsgURLWriteContractSpecificationRequest:
+		urls = append(urls, msgTypeURL)
+	case types.TypeMsgURLDeleteContractSpecificationRequest:
+		urls = append(urls, msgTypeURL)
+		// ---- Specification Management -----
+	case types.TypeMsgURLAddContractSpecToScopeSpecRequest:
+		urls = append(urls, msgTypeURL, types.TypeMsgURLWriteScopeSpecificationRequest)
+	case types.TypeMsgURLDeleteContractSpecFromScopeSpecRequest:
+		urls = append(urls, msgTypeURL, types.TypeMsgURLWriteScopeSpecificationRequest)
+	case types.TypeMsgURLWriteRecordSpecificationRequest:
+		urls = append(urls, msgTypeURL, types.TypeMsgURLWriteContractSpecificationRequest)
+	case types.TypeMsgURLDeleteRecordSpecificationRequest:
+		urls = append(urls, msgTypeURL, types.TypeMsgURLDeleteContractSpecificationRequest)
+		// ----
+	case types.TypeMsgURLBindOSLocatorRequest:
+		urls = append(urls, msgTypeURL)
+	case types.TypeMsgURLDeleteOSLocatorRequest:
+		urls = append(urls, msgTypeURL)
+	case types.TypeMsgURLModifyOSLocatorRequest:
+		urls = append(urls, msgTypeURL)
+	case types.TypeMsgURLWriteP8eContractSpecRequest:
+		urls = append(urls, msgTypeURL)
+	case types.TypeMsgURLP8eMemorializeContractRequest:
+		urls = append(urls, msgTypeURL)
+	}
+	return urls
+}
+
+// ValidateAllPartiesAreSignersWithAuthz validate all parties are signers
+func (k Keeper) ValidateAllPartiesAreSignersWithAuthz(ctx sdk.Context, parties []types.Party, signers []string, msgTypeURL string) error {
+	addresses := make([]string, len(parties))
+	for i, party := range parties {
+		addresses[i] = party.Address
+	}
+
+	missing := FindMissing(addresses, signers)
+	stillMissing := []string{}
+
+	for _, miss := range missing {
+		// loop through all the signers
+		found := false
+		for _, signer := range signers {
+			granter := types.StringToAccAddress(miss)
+			grantee := types.StringToAccAddress(signer)
+
+			// return as a list this message type and its parent
+			// type if it is a message belonging to a hierarchy
+			msgTypeURLs := k.getMessageTypeURLs(msgTypeURL)
+
+			for _, msgType := range msgTypeURLs {
+				authz, _ := k.authzKeeper .GetCleanAuthorization(ctx, grantee, granter, msgType)
+				if authz != nil {
+					found = true
+					break
+				}
+			}
+		}
+
+		if !found {
+			stillMissing = append(stillMissing, miss)
+		}
+	}
+
+	if len(stillMissing) > 0 {
+		missingWithRoles := make([]string, len(missing))
+		for i, addr := range stillMissing {
+			for _, party := range parties {
+				if addr == party.Address {
+					missingWithRoles[i] = fmt.Sprintf("%s (%s)", addr, party.Role.String())
+					break
+				}
+			}
+		}
+		return fmt.Errorf("missing signature%s from %v", pluralEnding(len(missing)), missingWithRoles)
+	}
+
 	return nil
 }
 

@@ -162,26 +162,31 @@ func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSigners() {
 	cases := map[string]struct {
 		owners   []types.Party
 		signers  []string
+		msgTypeURL string
 		errorMsg string
 	}{
 		"no owners - no signers": {
 			owners:   []types.Party{},
 			signers:  []string{},
+			msgTypeURL: "",
 			errorMsg: "",
 		},
 		"one owner - is signer": {
 			owners:   []types.Party{{Address: "signer1", Role: types.PartyType_PARTY_TYPE_OWNER}},
 			signers:  []string{"signer1"},
+			msgTypeURL: "",
 			errorMsg: "",
 		},
 		"one owner - is one of two signers": {
 			owners:   []types.Party{{Address: "signer1", Role: types.PartyType_PARTY_TYPE_OWNER}},
 			signers:  []string{"signer1", "signer2"},
+			msgTypeURL: "",
 			errorMsg: "",
 		},
 		"one owner - is not one of two signers": {
 			owners:   []types.Party{{Address: "missingowner", Role: types.PartyType_PARTY_TYPE_OWNER}},
 			signers:  []string{"signer1", "signer2"},
+			msgTypeURL: "",
 			errorMsg: "missing signature from [missingowner (PARTY_TYPE_OWNER)]",
 		},
 		"two owners - both are signers": {
@@ -189,6 +194,7 @@ func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSigners() {
 				{Address: "owner1", Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: "owner2", Role: types.PartyType_PARTY_TYPE_OWNER}},
 			signers:  []string{"owner2", "owner1"},
+			msgTypeURL: "",
 			errorMsg: "",
 		},
 		"two owners - only one is signer": {
@@ -196,6 +202,7 @@ func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSigners() {
 				{Address: "owner1", Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: "missingowner", Role: types.PartyType_PARTY_TYPE_OWNER}},
 			signers:  []string{"owner2", "owner1"},
+			msgTypeURL: "",
 			errorMsg: "missing signature from [missingowner (PARTY_TYPE_OWNER)]",
 		},
 		"two parties - one owner one other - only owner is signer": {
@@ -203,6 +210,7 @@ func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSigners() {
 				{Address: "owner", Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: "affiliate", Role: types.PartyType_PARTY_TYPE_AFFILIATE}},
 			signers:  []string{"owner"},
+			msgTypeURL: "",
 			errorMsg: "missing signature from [affiliate (PARTY_TYPE_AFFILIATE)]",
 		},
 		"two parties - one owner one other - only other is signer": {
@@ -210,13 +218,15 @@ func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSigners() {
 				{Address: "owner", Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: "affiliate", Role: types.PartyType_PARTY_TYPE_AFFILIATE}},
 			signers:  []string{"affiliate"},
+			msgTypeURL: "",
 			errorMsg: "missing signature from [owner (PARTY_TYPE_OWNER)]",
 		},
 	}
 
 	for n, tc := range cases {
 		s.T().Run(n, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidateAllPartiesAreSigners(tc.owners, tc.signers)
+			//err := s.app.MetadataKeeper.ValidateAllPartiesAreSigners(tc.owners, tc.signers)
+			err := s.app.MetadataKeeper.ValidateAllPartiesAreSignersWithAuthz(s.ctx, tc.owners, tc.signers, tc.msgTypeURL)
 			if len(tc.errorMsg) == 0 {
 				assert.NoError(t, err, "%s unexpected error", n)
 			} else {

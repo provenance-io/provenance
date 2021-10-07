@@ -63,7 +63,7 @@ func (k msgServer) DeleteScope(
 		return nil, fmt.Errorf("scope not found with id %s", msg.ScopeId)
 	}
 
-	if err := k.ValidateScopeRemove(ctx, existing, msg.Signers); err != nil {
+	if err := k.ValidateScopeRemove(ctx, existing, msg.Signers, msg.MsgTypeURL()); err != nil {
 		return nil, err
 	}
 
@@ -85,7 +85,7 @@ func (k msgServer) AddScopeDataAccess(
 		return nil, fmt.Errorf("scope not found with id %s", msg.ScopeId)
 	}
 
-	if err := k.ValidateScopeAddDataAccess(ctx, msg.DataAccess, existing, msg.Signers); err != nil {
+	if err := k.ValidateScopeAddDataAccess(ctx, msg.DataAccess, existing, msg.Signers, msg.MsgTypeURL()); err != nil {
 		return nil, err
 	}
 
@@ -109,7 +109,7 @@ func (k msgServer) DeleteScopeDataAccess(
 		return nil, fmt.Errorf("scope not found with id %s", msg.ScopeId)
 	}
 
-	if err := k.ValidateScopeDeleteDataAccess(ctx, msg.DataAccess, existing, msg.Signers); err != nil {
+	if err := k.ValidateScopeDeleteDataAccess(ctx, msg.DataAccess, existing, msg.Signers, msg.MsgTypeURL()); err != nil {
 		return nil, err
 	}
 
@@ -143,7 +143,7 @@ func (k msgServer) AddScopeOwner(
 		return nil, addErr
 	}
 
-	if err := k.ValidateScopeUpdateOwners(ctx, existing, proposed, msg.Signers); err != nil {
+	if err := k.ValidateScopeUpdateOwners(ctx, existing, proposed, msg.Signers, msg.MsgTypeURL()); err != nil {
 		return nil, err
 	}
 
@@ -175,7 +175,7 @@ func (k msgServer) DeleteScopeOwner(
 		return nil, rmErr
 	}
 
-	if err := k.ValidateScopeUpdateOwners(ctx, existing, proposed, msg.Signers); err != nil {
+	if err := k.ValidateScopeUpdateOwners(ctx, existing, proposed, msg.Signers, msg.MsgTypeURL()); err != nil {
 		return nil, err
 	}
 
@@ -201,7 +201,7 @@ func (k msgServer) WriteSession(
 		existing = &e
 		existingAudit = existing.Audit
 	}
-	if err := k.ValidateSessionUpdate(ctx, existing, &msg.Session, msg.Signers); err != nil {
+	if err := k.ValidateSessionUpdate(ctx, existing, &msg.Session, msg.Signers, msg.MsgTypeURL()); err != nil {
 		return nil, err
 	}
 
@@ -234,7 +234,7 @@ func (k msgServer) WriteRecord(
 	if e, found := k.GetRecord(ctx, recordID); found {
 		existing = &e
 	}
-	if err := k.ValidateRecordUpdate(ctx, existing, &msg.Record, msg.Signers, msg.Parties); err != nil {
+	if err := k.ValidateRecordUpdate(ctx, existing, &msg.Record, msg.Signers, msg.Parties, msg.MsgTypeURL()); err != nil {
 		return nil, err
 	}
 
@@ -252,7 +252,7 @@ func (k msgServer) DeleteRecord(
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	existing, _ := k.GetRecord(ctx, msg.RecordId)
-	if err := k.ValidateRecordRemove(ctx, existing, msg.RecordId, msg.Signers); err != nil {
+	if err := k.ValidateRecordRemove(ctx, existing, msg.RecordId, msg.Signers, msg.MsgTypeURL()); err != nil {
 		return nil, err
 	}
 

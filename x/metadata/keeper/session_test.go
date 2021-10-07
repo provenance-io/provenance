@@ -174,6 +174,7 @@ func (s *SessionKeeperTestSuite) TestMetadataValidateSessionUpdate() {
 		existing *types.Session
 		proposed *types.Session
 		signers  []string
+		msgTypeURL string
 		wantErr  bool
 		errorMsg string
 	}{
@@ -181,6 +182,7 @@ func (s *SessionKeeperTestSuite) TestMetadataValidateSessionUpdate() {
 			existing: nil,
 			proposed: &types.Session{},
 			signers:  []string{s.user1},
+			msgTypeURL: "",
 			wantErr:  true,
 			errorMsg: "address is empty",
 		},
@@ -188,6 +190,7 @@ func (s *SessionKeeperTestSuite) TestMetadataValidateSessionUpdate() {
 			existing: validSession,
 			proposed: validSession,
 			signers:  []string{s.user1},
+			msgTypeURL: "",
 			wantErr:  false,
 			errorMsg: "",
 		},
@@ -195,6 +198,7 @@ func (s *SessionKeeperTestSuite) TestMetadataValidateSessionUpdate() {
 			existing: validSessionWithAudit,
 			proposed: validSession,
 			signers:  []string{s.user1},
+			msgTypeURL: "",
 			wantErr:  false,
 			errorMsg: "",
 		},
@@ -202,6 +206,7 @@ func (s *SessionKeeperTestSuite) TestMetadataValidateSessionUpdate() {
 			existing: validSession,
 			proposed: validSessionWithAudit,
 			signers:  []string{s.user1},
+			msgTypeURL: "",
 			wantErr:  true,
 			errorMsg: "attempt to modify audit fields, modification not allowed",
 		},
@@ -209,6 +214,7 @@ func (s *SessionKeeperTestSuite) TestMetadataValidateSessionUpdate() {
 			existing: validSessionWithAudit,
 			proposed: validSessionWithAudit,
 			signers:  []string{s.user1},
+			msgTypeURL: "",
 			wantErr:  false,
 			errorMsg: "",
 		},
@@ -216,6 +222,7 @@ func (s *SessionKeeperTestSuite) TestMetadataValidateSessionUpdate() {
 			existing: validSession,
 			proposed: invalidIDSession,
 			signers:  []string{s.user1},
+			msgTypeURL: "",
 			wantErr:  true,
 			errorMsg: fmt.Sprintf("cannot update session identifier. expected %s, got %s", validSession.SessionId, invalidIDSession.SessionId),
 		},
@@ -223,6 +230,7 @@ func (s *SessionKeeperTestSuite) TestMetadataValidateSessionUpdate() {
 			existing: invalidIDSession,
 			proposed: invalidIDSession,
 			signers:  []string{s.user1},
+			msgTypeURL: "",
 			wantErr:  true,
 			errorMsg: fmt.Sprintf("scope not found for scope id %s", types.ScopeMetadataAddress(invalidScopeUUID)),
 		},
@@ -230,6 +238,7 @@ func (s *SessionKeeperTestSuite) TestMetadataValidateSessionUpdate() {
 			existing: validSession,
 			proposed: invalidContractID,
 			signers:  []string{s.user1},
+			msgTypeURL: "",
 			wantErr:  true,
 			errorMsg: fmt.Sprintf("cannot update specification identifier. expected %s, got %s",
 				validSession.SpecificationId, invalidContractID.SpecificationId),
@@ -238,6 +247,7 @@ func (s *SessionKeeperTestSuite) TestMetadataValidateSessionUpdate() {
 			existing: nil,
 			proposed: invalidContractID,
 			signers:  []string{s.user1},
+			msgTypeURL: "",
 			wantErr:  true,
 			errorMsg: fmt.Sprintf("cannot find contract specification %s", invalidContractID.SpecificationId),
 		},
@@ -245,6 +255,7 @@ func (s *SessionKeeperTestSuite) TestMetadataValidateSessionUpdate() {
 			existing: validSession,
 			proposed: invalidPartiesSession,
 			signers:  []string{s.user1},
+			msgTypeURL: "",
 			wantErr:  true,
 			errorMsg: "missing required party type [PARTY_TYPE_AFFILIATE] from parties",
 		},
@@ -252,6 +263,7 @@ func (s *SessionKeeperTestSuite) TestMetadataValidateSessionUpdate() {
 			existing: validSession,
 			proposed: validSession,
 			signers:  []string{"unknown signer"},
+			msgTypeURL: "",
 			wantErr:  true,
 			errorMsg: fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user1),
 		},
@@ -259,6 +271,7 @@ func (s *SessionKeeperTestSuite) TestMetadataValidateSessionUpdate() {
 			existing: validSessionWithAudit,
 			proposed: types.NewSession("", s.sessionID, s.contractSpecID, parties, &types.AuditFields{CreatedDate: auditTime, CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Version: 1, Message: "fault"}),
 			signers:  []string{s.user1},
+			msgTypeURL: "",
 			wantErr:  true,
 			errorMsg: "proposed name to existing session must not be empty",
 		},
@@ -266,6 +279,7 @@ func (s *SessionKeeperTestSuite) TestMetadataValidateSessionUpdate() {
 			existing: validSessionWithAudit,
 			proposed: types.NewSession("processname", s.sessionID, s.contractSpecID, parties, &types.AuditFields{CreatedDate: auditTime, CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Version: 1, Message: "fault"}),
 			signers:  []string{s.user1},
+			msgTypeURL: "",
 			wantErr:  true,
 			errorMsg: "attempt to modify message audit field, modification not allowed",
 		},
@@ -273,6 +287,7 @@ func (s *SessionKeeperTestSuite) TestMetadataValidateSessionUpdate() {
 			existing: validSessionWithAudit,
 			proposed: types.NewSession("processname", s.sessionID, s.contractSpecID, parties, &types.AuditFields{CreatedDate: auditTime, CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Version: 2}),
 			signers:  []string{s.user1},
+			msgTypeURL: "",
 			wantErr:  true,
 			errorMsg: "attempt to modify version audit field, modification not allowed",
 		},
@@ -280,6 +295,7 @@ func (s *SessionKeeperTestSuite) TestMetadataValidateSessionUpdate() {
 			existing: validSessionWithAudit,
 			proposed: types.NewSession("processname", s.sessionID, s.contractSpecID, parties, &types.AuditFields{CreatedDate: auditTime, CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Version: 1, UpdatedDate: time.Now()}),
 			signers:  []string{s.user1},
+			msgTypeURL: "",
 			wantErr:  true,
 			errorMsg: "attempt to modify updated-date audit field, modification not allowed",
 		},
@@ -287,6 +303,7 @@ func (s *SessionKeeperTestSuite) TestMetadataValidateSessionUpdate() {
 			existing: validSessionWithAudit,
 			proposed: types.NewSession("processname", s.sessionID, s.contractSpecID, parties, &types.AuditFields{CreatedDate: auditTime, CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Version: 1, UpdatedBy: "fault"}),
 			signers:  []string{s.user1},
+			msgTypeURL: "",
 			wantErr:  true,
 			errorMsg: "attempt to modify updated-by audit field, modification not allowed",
 		},
@@ -294,6 +311,7 @@ func (s *SessionKeeperTestSuite) TestMetadataValidateSessionUpdate() {
 			existing: validSessionWithAudit,
 			proposed: types.NewSession("processname", s.sessionID, s.contractSpecID, parties, &types.AuditFields{CreatedDate: auditTime, CreatedBy: "fault", Version: 1, UpdatedBy: "fault"}),
 			signers:  []string{s.user1},
+			msgTypeURL: "",
 			wantErr:  true,
 			errorMsg: "attempt to modify created-by audit field, modification not allowed",
 		},
@@ -301,6 +319,7 @@ func (s *SessionKeeperTestSuite) TestMetadataValidateSessionUpdate() {
 			existing: validSessionWithAudit,
 			proposed: types.NewSession("processname", s.sessionID, s.contractSpecID, parties, &types.AuditFields{CreatedDate: time.Now(), CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Version: 1}),
 			signers:  []string{s.user1},
+			msgTypeURL: "",
 			wantErr:  true,
 			errorMsg: "attempt to modify created-date audit field, modification not allowed",
 		},
@@ -310,7 +329,7 @@ func (s *SessionKeeperTestSuite) TestMetadataValidateSessionUpdate() {
 		tc := tc
 
 		s.Run(n, func() {
-			err := s.app.MetadataKeeper.ValidateSessionUpdate(s.ctx, tc.existing, tc.proposed, tc.signers)
+			err := s.app.MetadataKeeper.ValidateSessionUpdate(s.ctx, tc.existing, tc.proposed, tc.signers, tc.msgTypeURL)
 			if tc.wantErr {
 				s.Error(err)
 				s.Equal(tc.errorMsg, err.Error())
