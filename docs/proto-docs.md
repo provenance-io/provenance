@@ -5406,7 +5406,8 @@ create fee for msg's (repeated)
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `msg_fees` | [MsgFees](#provenance.msgfees.v1.MsgFees) | repeated | msg to add Fee for. |
+| `from_address` | [string](#string) |  |  |
+| `msg_fees` | [MsgFees](#provenance.msgfees.v1.MsgFees) |  | msg to add Fee for. |
 
 
 
@@ -5421,7 +5422,7 @@ response for CreateFeeForMsg
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `msg_fees` | [MsgFees](#provenance.msgfees.v1.MsgFees) | repeated | msg to add Fee for. |
+| `msg_fees` | [MsgFees](#provenance.msgfees.v1.MsgFees) |  | msg to add Fee for. |
 
 
 

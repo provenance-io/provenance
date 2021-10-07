@@ -47,12 +47,13 @@ message CalculateMsgBasedFeesResponse {
 
 // create fee for msg's (repeated)
 message CreateMsgBasedFeeRequest {
+  string from_address = 1;
   // msg to add Fee for.
-  repeated MsgFees msg_fees = 1;
+  MsgFees msg_fees = 2;
 }
 
 // response for CreateFeeForMsg
 message CreateMsgBasedFeeResponse {
   // msg to add Fee for.
-  repeated MsgFees msg_fees = 1;
+  MsgFees msg_fees = 1;
 }

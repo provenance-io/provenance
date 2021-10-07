@@ -4,9 +4,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
-
 )
 
+const (
+	TypeCreateMsgBasedFeeRequest = "createmsgbasedfee"
+)
 // Compile time interface checks.
 var (
 	_ sdk.Msg            = &CreateMsgBasedFeeRequest{}
@@ -20,12 +22,29 @@ func NewMsgFees(msgTypeURL string, minFeeRate sdk.Coins, feeRate sdk.Dec) MsgFee
 		MsgTypeUrl: msgTypeURL, MinAdditionalFee: minFeeRate, FeeRate: feeRate,
 	}
 }
+
 func (msg *CreateMsgBasedFeeRequest) ValidateBasic() error {
-	panic("implement me")
+	if msg.MsgFees == nil {
+		return ErrEmptyMsgType
+	}
+
+	if msg.MsgFees.MinAdditionalFee.Empty() && msg.MsgFees.FeeRate.IsZero() {
+		return ErrInvalidFee
+	}
+
+	if !msg.MsgFees.MinAdditionalFee.Empty() && len(msg.MsgFees.MinAdditionalFee) > 0 {
+		msg.MsgFees.MinAdditionalFee.Validate()
+	}
+
+	return nil
 }
 
 func (msg *CreateMsgBasedFeeRequest) GetSigners() []sdk.AccAddress {
-	panic("implement me")
+	addr, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
 }
 
 // GetSignBytes encodes the message for signing
@@ -34,7 +53,7 @@ func (msg *CreateMsgBasedFeeRequest) GetSignBytes() []byte {
 }
 
 func (msg *CreateMsgBasedFeeRequest) Type() string {
-	panic("implement me")
+	return TypeCreateMsgBasedFeeRequest
 }
 
 // Route implements Msg
