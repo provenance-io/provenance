@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -70,6 +71,3 @@ func (k msgServer) CalculateMsgBasedFees(goCtx context.Context, request *types.C
 		additionalFees,
 	}, nil
 }
-
-
-
