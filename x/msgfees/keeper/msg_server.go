@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -29,7 +30,7 @@ func (k msgServer) CreateMsgBasedFee(goCtx context.Context, request *types.Creat
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	existing, err := k.GetMsgBasedFeeSchedule(ctx, request.GetMsgFees().MsgTypeUrl)
+	existing, err := k.GetMsgBasedFee(ctx, request.GetMsgFees().MsgTypeUrl)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
@@ -37,7 +38,7 @@ func (k msgServer) CreateMsgBasedFee(goCtx context.Context, request *types.Creat
 		return nil, sdkerrors.Wrap(types.ErrMsgFeeAlreadyExists, err.Error())
 	}
 
-	k.SetMsgBasedFeeSchedule(ctx, *request.MsgFees)
+	k.SetMsgBasedFee(ctx, *request.MsgFees)
 
 	return &types.CreateMsgBasedFeeResponse{
 		MsgFees: request.MsgFees,
@@ -47,6 +48,3 @@ func (k msgServer) CreateMsgBasedFee(goCtx context.Context, request *types.Creat
 func (k msgServer) CalculateMsgBasedFees(ctx context.Context, request *types.CalculateFeePerMsgRequest) (*types.CalculateMsgBasedFeesResponse, error) {
 	panic("implement me")
 }
-
-
-
