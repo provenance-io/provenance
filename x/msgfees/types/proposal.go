@@ -64,7 +64,7 @@ func (ambfp AddMsgBasedFeeProposal) ValidateBasic() error {
 		return ErrInvalidCoinAmount
 	}
 
-	if ambfp.MinFee.Empty() && ambfp.FeeRate.IsZero() {
+	if (ambfp.MinFee.Empty() || !ambfp.MinFee.IsValid()) && ambfp.FeeRate.IsZero() {
 		return ErrInvalidFee
 	}
 
@@ -72,13 +72,13 @@ func (ambfp AddMsgBasedFeeProposal) ValidateBasic() error {
 }
 func (ambfp AddMsgBasedFeeProposal) String() string {
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Add Msg Based Fees Proposal:
-	Title:       %s
-	Description: %s
-	Amount:      %s
-	Msg:         %s
-	MinFee:      %s
-	FeeRate:     %s
+	b.WriteString(fmt.Sprintf(`Add Msg Based Fee Proposal:
+  Title:       %s
+  Description: %s
+  Amount:      %s
+  Msg:         %s
+  MinFee:      %s
+  FeeRate:     %s
 `, ambfp.Title, ambfp.Description, ambfp.Amount, ambfp.Msg.GetTypeUrl(), ambfp.MinFee, ambfp.FeeRate))
 	return b.String()
 }
@@ -114,7 +114,7 @@ func (umbfp UpdateMsgBasedFeeProposal) ValidateBasic() error {
 		return ErrInvalidCoinAmount
 	}
 
-	if (umbfp.MinFee.Empty() || umbfp.MinFee.IsAllPositive()) && umbfp.FeeRate.IsZero() {
+	if (umbfp.MinFee.Empty() || !umbfp.MinFee.IsValid()) && umbfp.FeeRate.IsZero() {
 		return ErrInvalidFee
 	}
 
@@ -123,13 +123,13 @@ func (umbfp UpdateMsgBasedFeeProposal) ValidateBasic() error {
 
 func (umbfp UpdateMsgBasedFeeProposal) String() string {
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Update Msg Based Fees Proposal:
-	Title:       %s
-	Description: %s
-	Amount:      %s
-	Msg:         %s
-	MinFee:      %s
-	FeeRate:     %s
+	b.WriteString(fmt.Sprintf(`Update Msg Based Fee Proposal:
+  Title:       %s
+  Description: %s
+  Amount:      %s
+  Msg:         %s
+  MinFee:      %s
+  FeeRate:     %s
 `, umbfp.Title, umbfp.Description, umbfp.Amount, umbfp.Msg.GetTypeUrl(), umbfp.MinFee, umbfp.FeeRate))
 	return b.String()
 }
@@ -160,7 +160,7 @@ func (rmbfp RemoveMsgBasedFeeProposal) ValidateBasic() error {
 
 func (rmbfp RemoveMsgBasedFeeProposal) String() string {
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Remove Msg Based Fees Proposal:
+	b.WriteString(fmt.Sprintf(`Remove Msg Based Fee Proposal:
   Title:       %s
   Description: %s
   Msg:         %s

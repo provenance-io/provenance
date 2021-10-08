@@ -33,13 +33,13 @@ func (s *MsgFeesProposalTestSuite) TestAddMsgBasedFeeProposalType() {
 	s.Require().NoError(err)
 	m := NewAddMsgBasedFeeProposal("title", "description", sdk.NewCoin("hotdog", sdk.NewInt(10)), msgType, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(10))), sdk.OneDec())
 	s.Assert().Equal(
-		`Add Msg Based Fees Proposal:
-	Title:       title
-	Description: description
-	Amount:      10hotdog
-	Msg:         /provenance.metadata.v1.MsgWriteRecordRequest
-	MinFee:      10hotdog
-	FeeRate:     1.000000000000000000
+		`Add Msg Based Fee Proposal:
+  Title:       title
+  Description: description
+  Amount:      10hotdog
+  Msg:         /provenance.metadata.v1.MsgWriteRecordRequest
+  MinFee:      10hotdog
+  FeeRate:     1.000000000000000000
 `, m.String())
 
 	tests := []struct {
@@ -72,6 +72,7 @@ func (s *MsgFeesProposalTestSuite) TestAddMsgBasedFeeProposalType() {
 	for _, tc := range tests {
 		s.T().Run(tc.name, func(t *testing.T) {
 			err = tc.proposal.ValidateBasic()
+			s.Require().NotNil(err)
 			s.Assert().Equal(tc.expectedErr, err.Error())
 		})
 	}
@@ -84,13 +85,13 @@ func (s *MsgFeesProposalTestSuite) TestUpdateMsgBasedFeeProposalType() {
 	s.Require().NoError(err)
 	m := NewUpdateMsgBasedFeeProposal("title", "description", sdk.NewCoin("hotdog", sdk.NewInt(10)), msgType, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(10))), sdk.OneDec())
 	s.Assert().Equal(
-		`Update Msg Based Fees Proposal:
-	Title:       title
-	Description: description
-	Amount:      10hotdog
-	Msg:         /provenance.metadata.v1.MsgWriteRecordRequest
-	MinFee:      10hotdog
-	FeeRate:     1.000000000000000000
+		`Update Msg Based Fee Proposal:
+  Title:       title
+  Description: description
+  Amount:      10hotdog
+  Msg:         /provenance.metadata.v1.MsgWriteRecordRequest
+  MinFee:      10hotdog
+  FeeRate:     1.000000000000000000
 `, m.String())
 
 	tests := []struct {
@@ -136,10 +137,10 @@ func (s *MsgFeesProposalTestSuite) TestRemoveMsgBasedFeeProposalType() {
 	s.Require().NoError(err)
 	m := NewRemoveMsgBasedFeeProposal("title", "description", msgType)
 	s.Assert().Equal(
-		`Remove Msg Based Fees Proposal:
-	Title:       title
-	Description: description
-	Msg:         /provenance.metadata.v1.MsgWriteRecordRequest
+		`Remove Msg Based Fee Proposal:
+  Title:       title
+  Description: description
+  Msg:         /provenance.metadata.v1.MsgWriteRecordRequest
 `, m.String())
 
 	err = m.ValidateBasic()
@@ -152,5 +153,5 @@ func (s *MsgFeesProposalTestSuite) TestRemoveMsgBasedFeeProposalType() {
 	m.Msg = msgType
 	m.Description = ""
 	err = m.ValidateBasic()
-	s.Assert().Equal("", err.Error())
+	s.Assert().Equal("proposal description cannot be blank: invalid proposal content", err.Error())
 }
