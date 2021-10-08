@@ -3,9 +3,10 @@ package msgfees
 import (
 	"context"
 	"encoding/json"
+	"math/rand"
+
 	"github.com/provenance-io/provenance/x/msgfees/client/cli"
 	"github.com/provenance-io/provenance/x/msgfees/keeper"
-	"math/rand"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -90,12 +91,12 @@ func (AppModuleBasic) GetTxCmd() *cobra.Command {
 // AppModule implements the sdk.AppModule interface
 type AppModule struct {
 	AppModuleBasic
-	keeper        keeper.Keeper
-	registry      cdctypes.InterfaceRegistry
+	keeper   keeper.Keeper
+	registry cdctypes.InterfaceRegistry
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper,registry cdctypes.InterfaceRegistry) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, registry cdctypes.InterfaceRegistry) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
@@ -160,7 +161,7 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 
 // GenerateGenesisState creates a randomized GenState of the msgfees module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	//simulation.RandomizedGenState(simState)
+	// simulation.RandomizedGenState(simState)
 }
 
 // ProposalContents returns all the msgfees content functions used to
@@ -176,14 +177,14 @@ func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 
 // RegisterStoreDecoder registers a decoder for msgfees module's types
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	//TODO add simulation
-	//sdr[keeper.StoreKey] = simulation.NewDecodeStore(am.cdc)
+	// TODO add simulation
+	// sdr[keeper.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	//TODO add simulation
-	//return simulation.WeightedOperations(
+	// TODO add simulation
+	// return simulation.WeightedOperations(
 	//	simState.AppParams, simState.Cdc,
 	//	am.keeper, am.cdc,
 	//)

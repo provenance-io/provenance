@@ -34,7 +34,9 @@ func (msg *CreateMsgBasedFeeRequest) ValidateBasic() error {
 	}
 
 	if !msg.MsgBasedFee.MinAdditionalFee.IsZero() {
-		msg.MsgBasedFee.MinAdditionalFee.Validate()
+		if err := msg.MsgBasedFee.MinAdditionalFee.Validate(); err == nil {
+			return err
+		}
 	}
 
 	return nil
@@ -61,7 +63,7 @@ func (msg *CreateMsgBasedFeeRequest) Type() string {
 func (msg *CreateMsgBasedFeeRequest) Route() string { return ModuleName }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-//func (msg MsgBasedFee) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+// func (msg MsgBasedFee) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 //	var msgfees MsgBasedFee
 //	return unpacker.UnpackAny(msg.Msg,&msgfees)
 //}
@@ -70,7 +72,7 @@ func (msg *CalculateFeePerMsgRequest) ValidateBasic() error {
 	panic("implement me")
 }
 
-func (m *CalculateFeePerMsgRequest) GetSigners() []sdk.AccAddress {
+func (msg *CalculateFeePerMsgRequest) GetSigners() []sdk.AccAddress {
 	panic("implement me")
 }
 

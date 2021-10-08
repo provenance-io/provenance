@@ -62,6 +62,11 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 			msgfeestypes.ErrMsgFeeAlreadyExists,
 		},
 		{
+			"add msgfees - invalid - validate basic fail",
+			msgfeestypes.NewAddMsgBasedFeeProposal("title add", "description", sdk.NewCoin("hotdog", sdk.NewInt(10)), writeScopeRequest, sdk.NewCoin("hotdog", sdk.NewInt(0)), sdk.ZeroDec()),
+			msgfeestypes.ErrInvalidFee,
+		},
+		{
 			"update msgfees - valid",
 			msgfeestypes.NewUpdateMsgBasedFeeProposal("title update", "description", sdk.NewCoin("hotdog", sdk.NewInt(10)), writeRecordRequest, sdk.NewCoin("hotdog", sdk.NewInt(10)), sdk.OneDec()),
 			nil,
@@ -72,6 +77,11 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 			msgfeestypes.ErrMsgFeeDoesNotExist,
 		},
 		{
+			"update msgfees - invalid - validate basic fail",
+			msgfeestypes.NewUpdateMsgBasedFeeProposal("title update", "description", sdk.NewCoin("hotdog", sdk.NewInt(10)), writeRecordRequest, sdk.NewCoin("hotdog", sdk.NewInt(0)), sdk.ZeroDec()),
+			msgfeestypes.ErrInvalidFee,
+		},
+		{
 			"remove msgfees - valid",
 			msgfeestypes.NewRemoveMsgBasedFeeProposal("title remove", "description", writeRecordRequest),
 			nil,
@@ -80,6 +90,11 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 			"remove msgfees - invalid - cannot remove a non-existing msgbasedfee",
 			msgfeestypes.NewRemoveMsgBasedFeeProposal("title remove", "description", writeRecordRequest),
 			msgfeestypes.ErrMsgFeeDoesNotExist,
+		},
+		{
+			"remove msgfees - invalid - validate basic fail",
+			msgfeestypes.NewRemoveMsgBasedFeeProposal("title remove", "description", nil),
+			msgfeestypes.ErrEmptyMsgType,
 		},
 	}
 

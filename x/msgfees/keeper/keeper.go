@@ -109,11 +109,11 @@ func (k Keeper) IterateMsgBasedFees(ctx sdk.Context, handle func(msgFees types.M
 
 // ExportGenesis returns a GenesisState for a given context.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-	//TODO Implement me
+	// TODO Implement me
 	return nil
 }
 
 // InitGenesis new msgfees genesis
 func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
-	//TODO Implement me
+	// TODO Implement me
 }

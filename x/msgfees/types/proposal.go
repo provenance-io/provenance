@@ -42,7 +42,6 @@ func NewAddMsgBasedFeeProposal(
 	msg *types.Any,
 	minFee sdk.Coin,
 	feeRate sdk.Dec) *AddMsgBasedFeeProposal {
-
 	return &AddMsgBasedFeeProposal{
 		Title:       title,
 		Description: description,
@@ -90,7 +89,6 @@ func NewUpdateMsgBasedFeeProposal(
 	msg *types.Any,
 	minFee sdk.Coin,
 	feeRate sdk.Dec) *UpdateMsgBasedFeeProposal {
-
 	return &UpdateMsgBasedFeeProposal{
 		Title:       title,
 		Description: description,
@@ -139,7 +137,6 @@ func NewRemoveMsgBasedFeeProposal(
 	description string,
 	msg *types.Any,
 ) *RemoveMsgBasedFeeProposal {
-
 	return &RemoveMsgBasedFeeProposal{
 		Title:       title,
 		Description: description,
