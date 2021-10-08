@@ -89,8 +89,8 @@ func (k Keeper) RemoveMsgBasedFee(ctx sdk.Context, msgType string) error {
 
 type Handler func(record types.MsgBasedFee) (stop bool)
 
-// IterateMsgBasedFee  iterates all msg fees with the given handler function.
-func (k Keeper) IterateMsgBasedFee(ctx sdk.Context, handle func(msgFees types.MsgBasedFee) (stop bool)) error {
+// IterateMsgBasedFees  iterates all msg fees with the given handler function.
+func (k Keeper) IterateMsgBasedFees(ctx sdk.Context, handle func(msgFees types.MsgBasedFee) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.MsgBasedFeeKeyPrefix)
 

@@ -45,7 +45,7 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 	}{
 		{
 			"add msgfees - valid",
-			msgfeestypes.NewAddMsgBasedFeeProposal("title", "description", sdk.NewCoin("hotdog", sdk.NewInt(10)), nil, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(10))), sdk.OneDec()),
+			msgfeestypes.NewAddMsgBasedFeeProposal("title", "description", sdk.NewCoin("hotdog", sdk.NewInt(10)), nil, sdk.NewCoin("hotdog", sdk.NewInt(10)), sdk.OneDec()),
 			nil,
 		},
 	}

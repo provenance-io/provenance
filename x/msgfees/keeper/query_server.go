@@ -21,7 +21,7 @@ func (k Keeper) Params(ctx context.Context, request *types.QueryParamsRequest) (
 	return &types.QueryParamsResponse{Params: params}, nil
 }
 
-func (k Keeper) QueryAllMsgBasedFees(c context.Context, req *types.QueryMsgsWithAdditionalFeesRequest) (*types.QueryAllMsgBasedFeesResponse, error) {
+func (k Keeper) QueryAllMsgBasedFees(c context.Context, req *types.QueryAllMsgBasedFeesRequest) (*types.QueryAllMsgBasedFeesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -45,5 +45,5 @@ func (k Keeper) QueryAllMsgBasedFees(c context.Context, req *types.QueryMsgsWith
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryAllMsgBasedFeesResponse{MsgFees: msgFees, Pagination: pageRes}, nil
+	return &types.QueryAllMsgBasedFeesResponse{MsgBasedFees: msgFees, Pagination: pageRes}, nil
 }

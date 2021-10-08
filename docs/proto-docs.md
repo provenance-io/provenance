@@ -341,8 +341,8 @@
     - [UpdateMsgBasedFeeProposal](#provenance.msgfees.v1.UpdateMsgBasedFeeProposal)
   
 - [provenance/msgfees/v1/query.proto](#provenance/msgfees/v1/query.proto)
+    - [QueryAllMsgBasedFeesRequest](#provenance.msgfees.v1.QueryAllMsgBasedFeesRequest)
     - [QueryAllMsgBasedFeesResponse](#provenance.msgfees.v1.QueryAllMsgBasedFeesResponse)
-    - [QueryMsgsWithAdditionalFeesRequest](#provenance.msgfees.v1.QueryMsgsWithAdditionalFeesRequest)
     - [QueryParamsRequest](#provenance.msgfees.v1.QueryParamsRequest)
     - [QueryParamsResponse](#provenance.msgfees.v1.QueryParamsResponse)
   
@@ -5131,7 +5131,7 @@ Msg defines the Metadata Msg service.
 <a name="provenance.msgfees.v1.MsgBasedFee"></a>
 
 ### MsgBasedFee
-MsgFees is the core of what gets stored on the blockchain
+MsgBasedFee is the core of what gets stored on the blockchain
 it consists of two parts
 1. minimum additional fees(can be of any denom)
 2. Fee rate which is proportional to the gas charged for processing that message.
@@ -5140,7 +5140,7 @@ it consists of two parts
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `msg_type_url` | [string](#string) |  |  |
-| `min_additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | can pay in any Coin( basically a Denom and Amount, Amount can be zero) |
+| `min_additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | can pay in any Coin( basically a Denom and Amount, Amount can be zero) |
 | `fee_rate` | [bytes](#bytes) |  | Fee rate, based on Gas used. |
 
 
@@ -5222,7 +5222,7 @@ AddMsgBasedFeeProposal defines a governance proposal to add additional msg based
 | `description` | [string](#string) |  |  |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `msg` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-| `min_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+| `min_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `fee_rate` | [bytes](#bytes) |  | Fee rate, based on Gas used. |
 
 
@@ -5259,7 +5259,7 @@ UpdateMsgBasedFeeProposal defines a governance proposal to update a current msg 
 | `description` | [string](#string) |  |  |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `msg` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-| `min_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+| `min_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `fee_rate` | [bytes](#bytes) |  | Fee rate, based on Gas used. |
 
 
@@ -5283,6 +5283,21 @@ UpdateMsgBasedFeeProposal defines a governance proposal to update a current msg 
 
 
 
+<a name="provenance.msgfees.v1.QueryAllMsgBasedFeesRequest"></a>
+
+### QueryAllMsgBasedFeesRequest
+QueryAllMsgBasedFeesRequest queries all Msg which have fees associated with them.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
 <a name="provenance.msgfees.v1.QueryAllMsgBasedFeesResponse"></a>
 
 ### QueryAllMsgBasedFeesResponse
@@ -5291,23 +5306,8 @@ response for querying all msg's with fees associated with them
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `msg_fees` | [MsgBasedFee](#provenance.msgfees.v1.MsgBasedFee) | repeated |  |
+| `msg_based_fees` | [MsgBasedFee](#provenance.msgfees.v1.MsgBasedFee) | repeated |  |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an optional pagination for the request. |
-
-
-
-
-
-
-<a name="provenance.msgfees.v1.QueryMsgsWithAdditionalFeesRequest"></a>
-
-### QueryMsgsWithAdditionalFeesRequest
-QueryMsgsWithAdditionalFeesRequest queries all Msg which have fees associated with them.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
 
 
 
@@ -5353,7 +5353,7 @@ Query defines the gRPC querier service for marker module.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `Params` | [QueryParamsRequest](#provenance.msgfees.v1.QueryParamsRequest) | [QueryParamsResponse](#provenance.msgfees.v1.QueryParamsResponse) | Params queries the parameters for x/msgfees | GET|/provenance/msgfees/v1/params|
-| `QueryAllMsgBasedFees` | [QueryMsgsWithAdditionalFeesRequest](#provenance.msgfees.v1.QueryMsgsWithAdditionalFeesRequest) | [QueryAllMsgBasedFeesResponse](#provenance.msgfees.v1.QueryAllMsgBasedFeesResponse) | Query all Msgs which have fees associated with them. | GET|/provenance/msgfees/v1/params|
+| `QueryAllMsgBasedFees` | [QueryAllMsgBasedFeesRequest](#provenance.msgfees.v1.QueryAllMsgBasedFeesRequest) | [QueryAllMsgBasedFeesResponse](#provenance.msgfees.v1.QueryAllMsgBasedFeesResponse) | Query all Msgs which have fees associated with them. | GET|/provenance/msgfees/v1/params|
 
  <!-- end services -->
 
@@ -5417,7 +5417,7 @@ create fee for msg's (repeated)
 <a name="provenance.msgfees.v1.CreateMsgBasedFeeResponse"></a>
 
 ### CreateMsgBasedFeeResponse
-response for CreateFeeForMsg
+response for CreateMsgBasedFeeRequest
 
 
 | Field | Type | Label | Description |

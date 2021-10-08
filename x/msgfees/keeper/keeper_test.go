@@ -47,9 +47,9 @@ func (s *TestSuite) TestKeeper() {
 	msgFee, err := app.MsgBasedFeeKeeper.GetMsgBasedFee(ctx, bankSendAuthMsgType)
 	s.Require().Nil(msgFee)
 	s.Require().Nil(err)
-	newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
+	newCoin := sdk.NewInt64Coin("steak", 100)
 	feerate := sdk.NewDec(4)
-	msgFeeToCreate := types.NewMsgBasedFee(bankSendAuthMsgType, newCoins, feerate)
+	msgFeeToCreate := types.NewMsgBasedFee(bankSendAuthMsgType, newCoin, feerate)
 	app.MsgBasedFeeKeeper.SetMsgBasedFee(ctx, msgFeeToCreate)
 
 	msgFee, err = app.MsgBasedFeeKeeper.GetMsgBasedFee(ctx, bankSendAuthMsgType)
@@ -66,7 +66,6 @@ func (s *TestSuite) TestKeeper() {
 	msgFee, err = app.MsgBasedFeeKeeper.GetMsgBasedFee(ctx, bankSendAuthMsgType)
 	s.Require().Nil(msgFee)
 	s.Require().Nil(err)
-	s.Require().Equal(bankSendAuthMsgType, msgFee.MsgTypeUrl)
 
 	err = app.MsgBasedFeeKeeper.RemoveMsgBasedFee(ctx, "does-not-exist")
 	s.Require().ErrorIs(err, types.ErrMsgFeeDoesNotExist)

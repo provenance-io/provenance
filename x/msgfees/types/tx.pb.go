@@ -183,7 +183,7 @@ func (m *CreateMsgBasedFeeRequest) GetMsgBasedFee() *MsgBasedFee {
 	return nil
 }
 
-// response for CreateFeeForMsg
+// response for CreateMsgBasedFeeRequest
 type CreateMsgBasedFeeResponse struct {
 	// msg to add Fee for.
 	MsgBasedFee *MsgBasedFee `protobuf:"bytes,1,opt,name=msg_based_fee,json=msgBasedFee,proto3" json:"msg_based_fee,omitempty"`

@@ -45,6 +45,29 @@ func (k msgServer) CreateMsgBasedFee(goCtx context.Context, request *types.Creat
 	}, nil
 }
 
-func (k msgServer) CalculateMsgBasedFees(ctx context.Context, request *types.CalculateFeePerMsgRequest) (*types.CalculateMsgBasedFeesResponse, error) {
-	panic("implement me")
+func (k msgServer) CalculateMsgBasedFees(goCtx context.Context, request *types.CalculateFeePerMsgRequest) (*types.CalculateMsgBasedFeesResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	//get the msg fee
+	msgs := request.Tx.GetMsgs()
+
+	additionalFees := sdk.Coins{}
+
+	for _, msg := range msgs {
+		typeUrl := sdk.MsgTypeURL(msg)
+		msgFees, err := k.GetMsgBasedFee(ctx, typeUrl)
+		if err != nil {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		}
+
+		if msgFees == nil {
+			continue
+		}
+		if msgFees.MinAdditionalFee.IsPositive() {
+			additionalFees = additionalFees.Add(sdk.NewCoin(msgFees.MinAdditionalFee.Denom, msgFees.MinAdditionalFee.Amount))
+		}
+	}
+
+	return &types.CalculateMsgBasedFeesResponse{
+		additionalFees,
+	}, nil
 }

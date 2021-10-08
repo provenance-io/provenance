@@ -29,7 +29,7 @@ message AddMsgBasedFeeProposal {
 
   google.protobuf.Any msg = 4 [(cosmos_proto.accepts_interface) = "sdk.Msg"];
 
-  repeated cosmos.base.v1beta1.Coin min_fee = 5 [
+  cosmos.base.v1beta1.Coin min_fee = 5 [
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags)     = "yaml:\"min_fee\""
@@ -56,7 +56,7 @@ message UpdateMsgBasedFeeProposal {
 
   google.protobuf.Any msg = 4 [(cosmos_proto.accepts_interface) = "sdk.Msg"];
 
-  repeated cosmos.base.v1beta1.Coin min_fee = 5 [
+  cosmos.base.v1beta1.Coin min_fee = 5 [
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags)     = "yaml:\"min_fee\""
