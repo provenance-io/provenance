@@ -5,10 +5,14 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	msgfeeskeeper "github.com/provenance-io/provenance/x/msgfees/keeper"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 
@@ -26,10 +30,10 @@ type IntegrationTestSuite struct {
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
-	// s.app = provenance.Setup(false)
-	// s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
-	// s.k = msgfeeskeeper.NewKeeper(s.app.AppCodec(), s.app.GetKey(msgfeestypes.ModuleName), s.app.GetSubspace(msgfeestypes.ModuleName), "")
-	// s.accountAddr = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	s.app = provenance.Setup(false)
+	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.k = msgfeeskeeper.NewKeeper(s.app.AppCodec(), s.app.GetKey(msgfeestypes.ModuleName), s.app.GetSubspace(msgfeestypes.ModuleName), "")
+	s.accountAddr = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -37,6 +41,10 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func (s *IntegrationTestSuite) TestMarkerProposals() {
+	writeRecordRequest, err := cdctypes.NewAnyWithValue(&metadatatypes.MsgWriteRecordRequest{})
+	s.Require().NoError(err)
+	writeScopeRequest, err := cdctypes.NewAnyWithValue(&metadatatypes.MsgWriteScopeRequest{})
+	s.Require().NoError(err)
 
 	testCases := []struct {
 		name string
@@ -45,8 +53,33 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 	}{
 		{
 			"add msgfees - valid",
-			msgfeestypes.NewAddMsgBasedFeeProposal("title", "description", sdk.NewCoin("hotdog", sdk.NewInt(10)), nil, sdk.NewCoin("hotdog", sdk.NewInt(10)), sdk.OneDec()),
+			msgfeestypes.NewAddMsgBasedFeeProposal("title add", "description", sdk.NewCoin("hotdog", sdk.NewInt(10)), writeRecordRequest, sdk.NewCoin("hotdog", sdk.NewInt(10)), sdk.OneDec()),
 			nil,
+		},
+		{
+			"add msgfees - invalid - cannot add when the same msgbasedfee exists",
+			msgfeestypes.NewAddMsgBasedFeeProposal("title add", "description", sdk.NewCoin("hotdog", sdk.NewInt(10)), writeRecordRequest, sdk.NewCoin("hotdog", sdk.NewInt(10)), sdk.OneDec()),
+			msgfeestypes.ErrMsgFeeAlreadyExists,
+		},
+		{
+			"update msgfees - valid",
+			msgfeestypes.NewUpdateMsgBasedFeeProposal("title update", "description", sdk.NewCoin("hotdog", sdk.NewInt(10)), writeRecordRequest, sdk.NewCoin("hotdog", sdk.NewInt(10)), sdk.OneDec()),
+			nil,
+		},
+		{
+			"update msgfees - invalid - cannot update a non-existing msgbasedfee",
+			msgfeestypes.NewUpdateMsgBasedFeeProposal("title update", "description", sdk.NewCoin("hotdog", sdk.NewInt(10)), writeScopeRequest, sdk.NewCoin("hotdog", sdk.NewInt(10)), sdk.OneDec()),
+			msgfeestypes.ErrMsgFeeDoesNotExist,
+		},
+		{
+			"remove msgfees - valid",
+			msgfeestypes.NewRemoveMsgBasedFeeProposal("title remove", "description", writeRecordRequest),
+			nil,
+		},
+		{
+			"remove msgfees - invalid - cannot remove a non-existing msgbasedfee",
+			msgfeestypes.NewRemoveMsgBasedFeeProposal("title remove", "description", writeRecordRequest),
+			msgfeestypes.ErrMsgFeeDoesNotExist,
 		},
 	}
 
