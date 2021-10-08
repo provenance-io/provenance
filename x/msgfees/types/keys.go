@@ -1,9 +1,5 @@
 package types
 
-import (
-	"github.com/cosmos/cosmos-sdk/types/address"
-)
-
 const (
 	// ModuleName defines the module name
 	ModuleName = "msgfees"
@@ -23,7 +19,7 @@ const (
 
 // GetMsgBasedFeeKey Takes in MsgName
 func GetMsgBasedFeeKey(p string) []byte {
-	return append(MsgBasedFeeKeyPrefix, address.MustLengthPrefix([]byte(p))...)
+	return append(MsgBasedFeeKeyPrefix, []byte(p)...)
 }
 
 var (
