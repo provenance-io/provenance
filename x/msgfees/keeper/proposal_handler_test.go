@@ -45,7 +45,7 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 	}{
 		{
 			"add msgfees - valid",
-			msgfeestypes.NewAddMsgBasedFeesProposal("title", "description", sdk.NewCoin("hotdog", sdk.NewInt(10)), nil, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(10))), sdk.OneDec()),
+			msgfeestypes.NewAddMsgBasedFeeProposal("title", "description", sdk.NewCoin("hotdog", sdk.NewInt(10)), nil, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(10))), sdk.OneDec()),
 			nil,
 		},
 	}
@@ -57,12 +57,12 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 
 			var err error
 			switch c := tc.prop.(type) {
-			case *msgfeestypes.AddMsgBasedFeesProposal:
-				err = msgfeeskeeper.HandleAddMsgBasedFeesProposal(s.ctx, s.k, c)
-			case *msgfeestypes.UpdateMsgBasedFeesProposal:
-				err = msgfeeskeeper.HandleUpdateMsgBasedFeesProposal(s.ctx, s.k, c)
-			case *msgfeestypes.RemoveMsgBasedFeesProposal:
-				err = msgfeeskeeper.HandleRemoveMsgBasedFeesProposal(s.ctx, s.k, c)
+			case *msgfeestypes.AddMsgBasedFeeProposal:
+				err = msgfeeskeeper.HandleAddMsgBasedFeeProposal(s.ctx, s.k, c)
+			case *msgfeestypes.UpdateMsgBasedFeeProposal:
+				err = msgfeeskeeper.HandleUpdateMsgBasedFeeProposal(s.ctx, s.k, c)
+			case *msgfeestypes.RemoveMsgBasedFeeProposal:
+				err = msgfeeskeeper.HandleRemoveMsgBasedFeeProposal(s.ctx, s.k, c)
 			default:
 				panic("invalid proposal type")
 			}

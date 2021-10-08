@@ -1,10 +1,9 @@
 package types
 
-
 // NewGenesisState creates new GenesisState object
-func NewGenesisState(entries []MsgFees) *GenesisState {
+func NewGenesisState(entries []MsgBasedFee) *GenesisState {
 	return &GenesisState{
-		MsgFees: entries,
+		MsgBasedFees: entries,
 	}
 }
 
@@ -17,4 +16,3 @@ func ValidateGenesis(data GenesisState) error {
 func DefaultGenesisState() *GenesisState {
 	return &GenesisState{}
 }
-

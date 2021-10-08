@@ -6,8 +6,8 @@ import (
 	"github.com/provenance-io/provenance/x/msgfees/types"
 )
 
-// HandleAddMsgBasedFeesProposal handles an Add msg based fees governance proposal request
-func HandleAddMsgBasedFeesProposal(ctx sdk.Context, k Keeper, proposal *types.AddMsgBasedFeesProposal) error {
+// HandleAddMsgBasedFeeProposal handles an Add msg based fees governance proposal request
+func HandleAddMsgBasedFeeProposal(ctx sdk.Context, k Keeper, proposal *types.AddMsgBasedFeeProposal) error {
 	if err := proposal.ValidateBasic(); err != nil {
 		return err
 	}
@@ -20,15 +20,15 @@ func HandleAddMsgBasedFeesProposal(ctx sdk.Context, k Keeper, proposal *types.Ad
 		return types.ErrMsgFeeAlreadyExists
 	}
 
-	msgFees := types.NewMsgFees(proposal.Msg.GetTypeUrl(), proposal.MinFee, proposal.FeeRate)
+	msgFees := types.NewMsgBasedFee(proposal.Msg.GetTypeUrl(), proposal.MinFee, proposal.FeeRate)
 
 	k.SetMsgBasedFee(ctx, msgFees)
 
 	return nil
 }
 
-// HandleUpdateMsgBasedFeesProposal handles an Update of an existing msg based fees governance proposal request
-func HandleUpdateMsgBasedFeesProposal(ctx sdk.Context, k Keeper, proposal *types.UpdateMsgBasedFeesProposal) error {
+// HandleUpdateMsgBasedFeeProposal handles an Update of an existing msg based fees governance proposal request
+func HandleUpdateMsgBasedFeeProposal(ctx sdk.Context, k Keeper, proposal *types.UpdateMsgBasedFeeProposal) error {
 	if err := proposal.ValidateBasic(); err != nil {
 		return err
 	}
@@ -41,15 +41,15 @@ func HandleUpdateMsgBasedFeesProposal(ctx sdk.Context, k Keeper, proposal *types
 		return types.ErrMsgFeeDoesNotExist
 	}
 
-	msgFees := types.NewMsgFees(proposal.Msg.GetTypeUrl(), proposal.MinFee, proposal.FeeRate)
+	msgFees := types.NewMsgBasedFee(proposal.Msg.GetTypeUrl(), proposal.MinFee, proposal.FeeRate)
 
 	k.SetMsgBasedFee(ctx, msgFees)
 
 	return nil
 }
 
-// HandleRemoveMsgBasedFeesProposal handles an Remove of an existing msg based fees governance proposal request
-func HandleRemoveMsgBasedFeesProposal(ctx sdk.Context, k Keeper, proposal *types.RemoveMsgBasedFeesProposal) error {
+// HandleRemoveMsgBasedFeeProposal handles an Remove of an existing msg based fees governance proposal request
+func HandleRemoveMsgBasedFeeProposal(ctx sdk.Context, k Keeper, proposal *types.RemoveMsgBasedFeeProposal) error {
 	if err := proposal.ValidateBasic(); err != nil {
 		return err
 	}

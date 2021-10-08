@@ -30,7 +30,7 @@ func (k msgServer) CreateMsgBasedFee(goCtx context.Context, request *types.Creat
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	existing, err := k.GetMsgBasedFee(ctx, request.GetMsgFees().MsgTypeUrl)
+	existing, err := k.GetMsgBasedFee(ctx, request.GetMsgBasedFee().MsgTypeUrl)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
@@ -38,10 +38,10 @@ func (k msgServer) CreateMsgBasedFee(goCtx context.Context, request *types.Creat
 		return nil, sdkerrors.Wrap(types.ErrMsgFeeAlreadyExists, err.Error())
 	}
 
-	k.SetMsgBasedFee(ctx, *request.MsgFees)
+	k.SetMsgBasedFee(ctx, *request.MsgBasedFee)
 
 	return &types.CreateMsgBasedFeeResponse{
-		MsgFees: request.MsgFees,
+		MsgBasedFee: request.MsgBasedFee,
 	}, nil
 }
 

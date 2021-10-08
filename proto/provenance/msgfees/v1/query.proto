@@ -21,7 +21,7 @@ service Query {
   }
 
   // Query all Msgs which have fees associated with them.
-  rpc QueryAllMsgFees(QueryMsgsWithAdditionalFeesRequest) returns (QueryAllMsgFeesResponse) {
+  rpc QueryAllMsgBasedFees(QueryAllMsgBasedFeesRequest) returns (QueryAllMsgBasedFeesResponse) {
     option (google.api.http).get = "/provenance/msgfees/v1/params";
   }
 }
@@ -35,15 +35,15 @@ message QueryParamsResponse {
   Params params = 1 [(gogoproto.nullable) = false];
 }
 
-// QueryMsgsWithAdditionalFeesRequest queries all Msg which have fees associated with them.
-message QueryMsgsWithAdditionalFeesRequest {
+// QueryAllMsgBasedFeesRequest queries all Msg which have fees associated with them.
+message QueryAllMsgBasedFeesRequest {
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 // response for querying all msg's with fees associated with them
-message QueryAllMsgFeesResponse {
-  repeated MsgFees msg_fees = 1;
+message QueryAllMsgBasedFeesResponse {
+  repeated MsgBasedFee msg_fees = 1;
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

@@ -21,7 +21,7 @@ import (
 func NewTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        types.ModuleName,
-		Aliases:                    []string{"mf", "mfees"},
+		Aliases:                    []string{"mf", "mfees", "mbf"},
 		Short:                      "Transaction commands for the msgfees module",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
@@ -60,12 +60,12 @@ Proposal title, description, deposit, and marker proposal params must be set in 
 			var proposal govtypes.Content
 
 			switch args[0] {
-			case types.ProposalTypeAddMsgBasedFees:
-				proposal = &types.AddMsgBasedFeesProposal{}
-			case types.ProposalTypeUpdateMsgBasedFees:
-				proposal = &types.UpdateMsgBasedFeesProposal{}
-			case types.ProposalTypeRemoveMsgBasedFees:
-				proposal = &types.RemoveMsgBasedFeesProposal{}
+			case types.ProposalTypeAddMsgBasedFee:
+				proposal = &types.AddMsgBasedFeeProposal{}
+			case types.ProposalTypeUpdateMsgBasedFee:
+				proposal = &types.UpdateMsgBasedFeeProposal{}
+			case types.ProposalTypeRemoveMsgBasedFee:
+				proposal = &types.RemoveMsgBasedFeeProposal{}
 			default:
 				return fmt.Errorf("unknown proposal type %s", args[0])
 			}

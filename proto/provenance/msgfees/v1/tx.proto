@@ -24,7 +24,7 @@ service Msg {
   // CalculateMsgBasedFees simulates executing a transaction for estimating gas usage.
   rpc CalculateMsgBasedFees(CalculateFeePerMsgRequest) returns (CalculateMsgBasedFeesResponse) {
     option (google.api.http) = {
-      post: "/provenance/tx/v1/calculate_msg_fees"
+      post: "/provenance/tx/v1/calculate_msg_based_fee"
       body: "*"
     };
   }
@@ -49,11 +49,11 @@ message CalculateMsgBasedFeesResponse {
 message CreateMsgBasedFeeRequest {
   string from_address = 1;
   // msg to add Fee for.
-  MsgFees msg_fees = 2;
+  MsgBasedFee msg_based_fee = 2;
 }
 
-// response for CreateFeeForMsg
+// response for CreateMsgBasedFeeRequest
 message CreateMsgBasedFeeResponse {
   // msg to add Fee for.
-  MsgFees msg_fees = 1;
+  MsgBasedFee msg_based_fee = 1;
 }

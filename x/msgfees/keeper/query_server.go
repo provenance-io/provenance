@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -20,17 +21,17 @@ func (k Keeper) Params(ctx context.Context, request *types.QueryParamsRequest) (
 	return &types.QueryParamsResponse{Params: params}, nil
 }
 
-func (k Keeper) QueryAllMsgFees(c context.Context, req *types.QueryMsgsWithAdditionalFeesRequest) (*types.QueryAllMsgFeesResponse, error) {
+func (k Keeper) QueryAllMsgBasedFees(c context.Context, req *types.QueryMsgsWithAdditionalFeesRequest) (*types.QueryAllMsgBasedFeesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	var msgFees []*types.MsgFees
+	var msgFees []*types.MsgBasedFee
 	store := ctx.KVStore(k.storeKey)
 	msgFeeStore := prefix.NewStore(store, types.MsgBasedFeeKeyPrefix)
 	pageRes, err := query.Paginate(msgFeeStore, req.Pagination, func(key []byte, value []byte) error {
-		var msgFee types.MsgFees
+		var msgFee types.MsgBasedFee
 
 		if err := k.cdc.Unmarshal(value, &msgFee); err != nil {
 			return err
@@ -44,5 +45,5 @@ func (k Keeper) QueryAllMsgFees(c context.Context, req *types.QueryMsgsWithAddit
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryAllMsgFeesResponse{MsgFees: msgFees, Pagination: pageRes}, nil
+	return &types.QueryAllMsgBasedFeesResponse{MsgFees: msgFees, Pagination: pageRes}, nil
 }

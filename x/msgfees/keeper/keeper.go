@@ -50,13 +50,14 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // SetMsgBasedFee sets the additional fee schedule for a Msg
-func (k Keeper) SetMsgBasedFee(ctx sdk.Context, msgBasedFees types.MsgFees) {
+func (k Keeper) SetMsgBasedFee(ctx sdk.Context, msgBasedFees types.MsgBasedFee) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&msgBasedFees)
 	store.Set(types.GetMsgBasedFeeKey(msgBasedFees.MsgTypeUrl), bz)
 }
 
-func (k Keeper) GetMsgBasedFee(ctx sdk.Context, msgType string) (*types.MsgFees, error) {
+// GetMsgBasedFee returns a MsgBasedFee for the msg type if it exists nil if it does not
+func (k Keeper) GetMsgBasedFee(ctx sdk.Context, msgType string) (*types.MsgBasedFee, error) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetMsgBasedFeeKey(msgType)
 	bz := store.Get(key)
@@ -64,7 +65,7 @@ func (k Keeper) GetMsgBasedFee(ctx sdk.Context, msgType string) (*types.MsgFees,
 		return nil, nil
 	}
 
-	var msgBasedFee types.MsgFees
+	var msgBasedFee types.MsgBasedFee
 	if err := k.cdc.Unmarshal(bz, &msgBasedFee); err != nil {
 		return nil, err
 	}
@@ -72,6 +73,7 @@ func (k Keeper) GetMsgBasedFee(ctx sdk.Context, msgType string) (*types.MsgFees,
 	return &msgBasedFee, nil
 }
 
+// RemoveMsgBasedFee removes MsgBasedFee or returns an error if it does not exist
 func (k Keeper) RemoveMsgBasedFee(ctx sdk.Context, msgType string) error {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetMsgBasedFeeKey(msgType)
@@ -85,16 +87,16 @@ func (k Keeper) RemoveMsgBasedFee(ctx sdk.Context, msgType string) error {
 	return nil
 }
 
-type Handler func(record types.MsgFees) (stop bool)
+type Handler func(record types.MsgBasedFee) (stop bool)
 
-// IterateMsgFees  iterates all msg fees with the given handler function.
-func (k Keeper) IterateMsgFees(ctx sdk.Context, handle func(msgFees types.MsgFees) (stop bool)) error {
+// IterateMsgBasedFee  iterates all msg fees with the given handler function.
+func (k Keeper) IterateMsgBasedFee(ctx sdk.Context, handle func(msgFees types.MsgBasedFee) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.MsgBasedFeeKeyPrefix)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		record := types.MsgFees{}
+		record := types.MsgBasedFee{}
 		if err := k.cdc.Unmarshal(iterator.Value(), &record); err != nil {
 			return err
 		}

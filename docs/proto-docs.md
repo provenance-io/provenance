@@ -329,19 +329,19 @@
     - [Msg](#provenance.metadata.v1.Msg)
   
 - [provenance/msgfees/v1/msgfees.proto](#provenance/msgfees/v1/msgfees.proto)
-    - [MsgFees](#provenance.msgfees.v1.MsgFees)
+    - [MsgBasedFee](#provenance.msgfees.v1.MsgBasedFee)
     - [Params](#provenance.msgfees.v1.Params)
   
 - [provenance/msgfees/v1/genesis.proto](#provenance/msgfees/v1/genesis.proto)
     - [GenesisState](#provenance.msgfees.v1.GenesisState)
   
 - [provenance/msgfees/v1/proposals.proto](#provenance/msgfees/v1/proposals.proto)
-    - [AddMsgBasedFeesProposal](#provenance.msgfees.v1.AddMsgBasedFeesProposal)
-    - [RemoveMsgBasedFeesProposal](#provenance.msgfees.v1.RemoveMsgBasedFeesProposal)
-    - [UpdateMsgBasedFeesProposal](#provenance.msgfees.v1.UpdateMsgBasedFeesProposal)
+    - [AddMsgBasedFeeProposal](#provenance.msgfees.v1.AddMsgBasedFeeProposal)
+    - [RemoveMsgBasedFeeProposal](#provenance.msgfees.v1.RemoveMsgBasedFeeProposal)
+    - [UpdateMsgBasedFeeProposal](#provenance.msgfees.v1.UpdateMsgBasedFeeProposal)
   
 - [provenance/msgfees/v1/query.proto](#provenance/msgfees/v1/query.proto)
-    - [QueryAllMsgFeesResponse](#provenance.msgfees.v1.QueryAllMsgFeesResponse)
+    - [QueryAllMsgBasedFeesResponse](#provenance.msgfees.v1.QueryAllMsgBasedFeesResponse)
     - [QueryMsgsWithAdditionalFeesRequest](#provenance.msgfees.v1.QueryMsgsWithAdditionalFeesRequest)
     - [QueryParamsRequest](#provenance.msgfees.v1.QueryParamsRequest)
     - [QueryParamsResponse](#provenance.msgfees.v1.QueryParamsResponse)
@@ -5128,9 +5128,9 @@ Msg defines the Metadata Msg service.
 
 
 
-<a name="provenance.msgfees.v1.MsgFees"></a>
+<a name="provenance.msgfees.v1.MsgBasedFee"></a>
 
-### MsgFees
+### MsgBasedFee
 MsgFees is the core of what gets stored on the blockchain
 it consists of two parts
 1. minimum additional fees(can be of any denom)
@@ -5187,7 +5187,7 @@ GenesisState contains a set of msg based fees, persisted from the store
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `msg_fees` | [MsgFees](#provenance.msgfees.v1.MsgFees) | repeated |  |
+| `msg_based_fees` | [MsgBasedFee](#provenance.msgfees.v1.MsgBasedFee) | repeated |  |
 
 
 
@@ -5210,10 +5210,10 @@ GenesisState contains a set of msg based fees, persisted from the store
 
 
 
-<a name="provenance.msgfees.v1.AddMsgBasedFeesProposal"></a>
+<a name="provenance.msgfees.v1.AddMsgBasedFeeProposal"></a>
 
-### AddMsgBasedFeesProposal
-AddMsgBasedFeesProposal defines a governance proposal to add additional msg fees
+### AddMsgBasedFeeProposal
+AddMsgBasedFeeProposal defines a governance proposal to add additional msg based fee
 
 
 | Field | Type | Label | Description |
@@ -5230,10 +5230,10 @@ AddMsgBasedFeesProposal defines a governance proposal to add additional msg fees
 
 
 
-<a name="provenance.msgfees.v1.RemoveMsgBasedFeesProposal"></a>
+<a name="provenance.msgfees.v1.RemoveMsgBasedFeeProposal"></a>
 
-### RemoveMsgBasedFeesProposal
-RemoveMsgBasedFeesProposal defines a governance proposal to delete a current msg based fees
+### RemoveMsgBasedFeeProposal
+RemoveMsgBasedFeeProposal defines a governance proposal to delete a current msg based fee
 
 
 | Field | Type | Label | Description |
@@ -5247,10 +5247,10 @@ RemoveMsgBasedFeesProposal defines a governance proposal to delete a current msg
 
 
 
-<a name="provenance.msgfees.v1.UpdateMsgBasedFeesProposal"></a>
+<a name="provenance.msgfees.v1.UpdateMsgBasedFeeProposal"></a>
 
-### UpdateMsgBasedFeesProposal
-UpdateMsgBasedFeesProposal defines a governance proposal to update a current msg based fees
+### UpdateMsgBasedFeeProposal
+UpdateMsgBasedFeeProposal defines a governance proposal to update a current msg based fee
 
 
 | Field | Type | Label | Description |
@@ -5283,15 +5283,15 @@ UpdateMsgBasedFeesProposal defines a governance proposal to update a current msg
 
 
 
-<a name="provenance.msgfees.v1.QueryAllMsgFeesResponse"></a>
+<a name="provenance.msgfees.v1.QueryAllMsgBasedFeesResponse"></a>
 
-### QueryAllMsgFeesResponse
+### QueryAllMsgBasedFeesResponse
 response for querying all msg's with fees associated with them
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `msg_fees` | [MsgFees](#provenance.msgfees.v1.MsgFees) | repeated |  |
+| `msg_fees` | [MsgBasedFee](#provenance.msgfees.v1.MsgBasedFee) | repeated |  |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an optional pagination for the request. |
 
 
@@ -5353,7 +5353,7 @@ Query defines the gRPC querier service for marker module.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `Params` | [QueryParamsRequest](#provenance.msgfees.v1.QueryParamsRequest) | [QueryParamsResponse](#provenance.msgfees.v1.QueryParamsResponse) | Params queries the parameters for x/msgfees | GET|/provenance/msgfees/v1/params|
-| `QueryAllMsgFees` | [QueryMsgsWithAdditionalFeesRequest](#provenance.msgfees.v1.QueryMsgsWithAdditionalFeesRequest) | [QueryAllMsgFeesResponse](#provenance.msgfees.v1.QueryAllMsgFeesResponse) | Query all Msgs which have fees associated with them. | GET|/provenance/msgfees/v1/params|
+| `QueryAllMsgBasedFees` | [QueryMsgsWithAdditionalFeesRequest](#provenance.msgfees.v1.QueryMsgsWithAdditionalFeesRequest) | [QueryAllMsgBasedFeesResponse](#provenance.msgfees.v1.QueryAllMsgBasedFeesResponse) | Query all Msgs which have fees associated with them. | GET|/provenance/msgfees/v1/params|
 
  <!-- end services -->
 
@@ -5407,7 +5407,7 @@ create fee for msg's (repeated)
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `from_address` | [string](#string) |  |  |
-| `msg_fees` | [MsgFees](#provenance.msgfees.v1.MsgFees) |  | msg to add Fee for. |
+| `msg_based_fee` | [MsgBasedFee](#provenance.msgfees.v1.MsgBasedFee) |  | msg to add Fee for. |
 
 
 
@@ -5422,7 +5422,7 @@ response for CreateFeeForMsg
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `msg_fees` | [MsgFees](#provenance.msgfees.v1.MsgFees) |  | msg to add Fee for. |
+| `msg_based_fee` | [MsgBasedFee](#provenance.msgfees.v1.MsgBasedFee) |  | msg to add Fee for. |
 
 
 
@@ -5443,7 +5443,7 @@ Service defines a gRPC service for interacting with transactions.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `CreateMsgBasedFee` | [CreateMsgBasedFeeRequest](#provenance.msgfees.v1.CreateMsgBasedFeeRequest) | [CreateMsgBasedFeeResponse](#provenance.msgfees.v1.CreateMsgBasedFeeResponse) | create fee for an associated Msg (repeated) TODO : this goes away i think in prod because MsgFees can only be created by Gov | |
-| `CalculateMsgBasedFees` | [CalculateFeePerMsgRequest](#provenance.msgfees.v1.CalculateFeePerMsgRequest) | [CalculateMsgBasedFeesResponse](#provenance.msgfees.v1.CalculateMsgBasedFeesResponse) | CalculateMsgBasedFees simulates executing a transaction for estimating gas usage. | POST|/provenance/tx/v1/calculate_msg_fees|
+| `CalculateMsgBasedFees` | [CalculateFeePerMsgRequest](#provenance.msgfees.v1.CalculateFeePerMsgRequest) | [CalculateMsgBasedFeesResponse](#provenance.msgfees.v1.CalculateMsgBasedFeesResponse) | CalculateMsgBasedFees simulates executing a transaction for estimating gas usage. | POST|/provenance/tx/v1/calculate_msg_based_fee|
 
  <!-- end services -->
 

@@ -30,8 +30,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// AddMsgBasedFeesProposal defines a governance proposal to add additional msg fees
-type AddMsgBasedFeesProposal struct {
+// AddMsgBasedFeeProposal defines a governance proposal to add additional msg based fee
+type AddMsgBasedFeeProposal struct {
 	Title       string                                   `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
 	Description string                                   `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
 	Amount      github_com_cosmos_cosmos_sdk_types.Coin  `protobuf:"bytes,3,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Coin" json:"amount"`
@@ -41,17 +41,17 @@ type AddMsgBasedFeesProposal struct {
 	FeeRate github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,6,opt,name=fee_rate,json=feeRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"fee_rate,omitempty"`
 }
 
-func (m *AddMsgBasedFeesProposal) Reset()      { *m = AddMsgBasedFeesProposal{} }
-func (*AddMsgBasedFeesProposal) ProtoMessage() {}
-func (*AddMsgBasedFeesProposal) Descriptor() ([]byte, []int) {
+func (m *AddMsgBasedFeeProposal) Reset()      { *m = AddMsgBasedFeeProposal{} }
+func (*AddMsgBasedFeeProposal) ProtoMessage() {}
+func (*AddMsgBasedFeeProposal) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a2e168825d6c34a4, []int{0}
 }
-func (m *AddMsgBasedFeesProposal) XXX_Unmarshal(b []byte) error {
+func (m *AddMsgBasedFeeProposal) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *AddMsgBasedFeesProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *AddMsgBasedFeeProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_AddMsgBasedFeesProposal.Marshal(b, m, deterministic)
+		return xxx_messageInfo_AddMsgBasedFeeProposal.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -61,48 +61,48 @@ func (m *AddMsgBasedFeesProposal) XXX_Marshal(b []byte, deterministic bool) ([]b
 		return b[:n], nil
 	}
 }
-func (m *AddMsgBasedFeesProposal) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AddMsgBasedFeesProposal.Merge(m, src)
+func (m *AddMsgBasedFeeProposal) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AddMsgBasedFeeProposal.Merge(m, src)
 }
-func (m *AddMsgBasedFeesProposal) XXX_Size() int {
+func (m *AddMsgBasedFeeProposal) XXX_Size() int {
 	return m.Size()
 }
-func (m *AddMsgBasedFeesProposal) XXX_DiscardUnknown() {
-	xxx_messageInfo_AddMsgBasedFeesProposal.DiscardUnknown(m)
+func (m *AddMsgBasedFeeProposal) XXX_DiscardUnknown() {
+	xxx_messageInfo_AddMsgBasedFeeProposal.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_AddMsgBasedFeesProposal proto.InternalMessageInfo
+var xxx_messageInfo_AddMsgBasedFeeProposal proto.InternalMessageInfo
 
-func (m *AddMsgBasedFeesProposal) GetTitle() string {
+func (m *AddMsgBasedFeeProposal) GetTitle() string {
 	if m != nil {
 		return m.Title
 	}
 	return ""
 }
 
-func (m *AddMsgBasedFeesProposal) GetDescription() string {
+func (m *AddMsgBasedFeeProposal) GetDescription() string {
 	if m != nil {
 		return m.Description
 	}
 	return ""
 }
 
-func (m *AddMsgBasedFeesProposal) GetMsg() *types1.Any {
+func (m *AddMsgBasedFeeProposal) GetMsg() *types1.Any {
 	if m != nil {
 		return m.Msg
 	}
 	return nil
 }
 
-func (m *AddMsgBasedFeesProposal) GetMinFee() github_com_cosmos_cosmos_sdk_types.Coins {
+func (m *AddMsgBasedFeeProposal) GetMinFee() github_com_cosmos_cosmos_sdk_types.Coins {
 	if m != nil {
 		return m.MinFee
 	}
 	return nil
 }
 
-// UpdateMsgBasedFeesProposal defines a governance proposal to update a current msg based fees
-type UpdateMsgBasedFeesProposal struct {
+// UpdateMsgBasedFeeProposal defines a governance proposal to update a current msg based fee
+type UpdateMsgBasedFeeProposal struct {
 	Title       string                                   `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
 	Description string                                   `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
 	Amount      github_com_cosmos_cosmos_sdk_types.Coin  `protobuf:"bytes,3,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Coin" json:"amount"`
@@ -112,17 +112,17 @@ type UpdateMsgBasedFeesProposal struct {
 	FeeRate github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,6,opt,name=fee_rate,json=feeRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"fee_rate,omitempty"`
 }
 
-func (m *UpdateMsgBasedFeesProposal) Reset()      { *m = UpdateMsgBasedFeesProposal{} }
-func (*UpdateMsgBasedFeesProposal) ProtoMessage() {}
-func (*UpdateMsgBasedFeesProposal) Descriptor() ([]byte, []int) {
+func (m *UpdateMsgBasedFeeProposal) Reset()      { *m = UpdateMsgBasedFeeProposal{} }
+func (*UpdateMsgBasedFeeProposal) ProtoMessage() {}
+func (*UpdateMsgBasedFeeProposal) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a2e168825d6c34a4, []int{1}
 }
-func (m *UpdateMsgBasedFeesProposal) XXX_Unmarshal(b []byte) error {
+func (m *UpdateMsgBasedFeeProposal) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *UpdateMsgBasedFeesProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *UpdateMsgBasedFeeProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_UpdateMsgBasedFeesProposal.Marshal(b, m, deterministic)
+		return xxx_messageInfo_UpdateMsgBasedFeeProposal.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -132,64 +132,64 @@ func (m *UpdateMsgBasedFeesProposal) XXX_Marshal(b []byte, deterministic bool) (
 		return b[:n], nil
 	}
 }
-func (m *UpdateMsgBasedFeesProposal) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_UpdateMsgBasedFeesProposal.Merge(m, src)
+func (m *UpdateMsgBasedFeeProposal) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UpdateMsgBasedFeeProposal.Merge(m, src)
 }
-func (m *UpdateMsgBasedFeesProposal) XXX_Size() int {
+func (m *UpdateMsgBasedFeeProposal) XXX_Size() int {
 	return m.Size()
 }
-func (m *UpdateMsgBasedFeesProposal) XXX_DiscardUnknown() {
-	xxx_messageInfo_UpdateMsgBasedFeesProposal.DiscardUnknown(m)
+func (m *UpdateMsgBasedFeeProposal) XXX_DiscardUnknown() {
+	xxx_messageInfo_UpdateMsgBasedFeeProposal.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_UpdateMsgBasedFeesProposal proto.InternalMessageInfo
+var xxx_messageInfo_UpdateMsgBasedFeeProposal proto.InternalMessageInfo
 
-func (m *UpdateMsgBasedFeesProposal) GetTitle() string {
+func (m *UpdateMsgBasedFeeProposal) GetTitle() string {
 	if m != nil {
 		return m.Title
 	}
 	return ""
 }
 
-func (m *UpdateMsgBasedFeesProposal) GetDescription() string {
+func (m *UpdateMsgBasedFeeProposal) GetDescription() string {
 	if m != nil {
 		return m.Description
 	}
 	return ""
 }
 
-func (m *UpdateMsgBasedFeesProposal) GetMsg() *types1.Any {
+func (m *UpdateMsgBasedFeeProposal) GetMsg() *types1.Any {
 	if m != nil {
 		return m.Msg
 	}
 	return nil
 }
 
-func (m *UpdateMsgBasedFeesProposal) GetMinFee() github_com_cosmos_cosmos_sdk_types.Coins {
+func (m *UpdateMsgBasedFeeProposal) GetMinFee() github_com_cosmos_cosmos_sdk_types.Coins {
 	if m != nil {
 		return m.MinFee
 	}
 	return nil
 }
 
-// RemoveMsgBasedFeesProposal defines a governance proposal to delete a current msg based fees
-type RemoveMsgBasedFeesProposal struct {
+// RemoveMsgBasedFeeProposal defines a governance proposal to delete a current msg based fee
+type RemoveMsgBasedFeeProposal struct {
 	Title       string      `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
 	Description string      `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
 	Msg         *types1.Any `protobuf:"bytes,3,opt,name=msg,proto3" json:"msg,omitempty"`
 }
 
-func (m *RemoveMsgBasedFeesProposal) Reset()      { *m = RemoveMsgBasedFeesProposal{} }
-func (*RemoveMsgBasedFeesProposal) ProtoMessage() {}
-func (*RemoveMsgBasedFeesProposal) Descriptor() ([]byte, []int) {
+func (m *RemoveMsgBasedFeeProposal) Reset()      { *m = RemoveMsgBasedFeeProposal{} }
+func (*RemoveMsgBasedFeeProposal) ProtoMessage() {}
+func (*RemoveMsgBasedFeeProposal) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a2e168825d6c34a4, []int{2}
 }
-func (m *RemoveMsgBasedFeesProposal) XXX_Unmarshal(b []byte) error {
+func (m *RemoveMsgBasedFeeProposal) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *RemoveMsgBasedFeesProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *RemoveMsgBasedFeeProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_RemoveMsgBasedFeesProposal.Marshal(b, m, deterministic)
+		return xxx_messageInfo_RemoveMsgBasedFeeProposal.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -199,33 +199,33 @@ func (m *RemoveMsgBasedFeesProposal) XXX_Marshal(b []byte, deterministic bool) (
 		return b[:n], nil
 	}
 }
-func (m *RemoveMsgBasedFeesProposal) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_RemoveMsgBasedFeesProposal.Merge(m, src)
+func (m *RemoveMsgBasedFeeProposal) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RemoveMsgBasedFeeProposal.Merge(m, src)
 }
-func (m *RemoveMsgBasedFeesProposal) XXX_Size() int {
+func (m *RemoveMsgBasedFeeProposal) XXX_Size() int {
 	return m.Size()
 }
-func (m *RemoveMsgBasedFeesProposal) XXX_DiscardUnknown() {
-	xxx_messageInfo_RemoveMsgBasedFeesProposal.DiscardUnknown(m)
+func (m *RemoveMsgBasedFeeProposal) XXX_DiscardUnknown() {
+	xxx_messageInfo_RemoveMsgBasedFeeProposal.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_RemoveMsgBasedFeesProposal proto.InternalMessageInfo
+var xxx_messageInfo_RemoveMsgBasedFeeProposal proto.InternalMessageInfo
 
-func (m *RemoveMsgBasedFeesProposal) GetTitle() string {
+func (m *RemoveMsgBasedFeeProposal) GetTitle() string {
 	if m != nil {
 		return m.Title
 	}
 	return ""
 }
 
-func (m *RemoveMsgBasedFeesProposal) GetDescription() string {
+func (m *RemoveMsgBasedFeeProposal) GetDescription() string {
 	if m != nil {
 		return m.Description
 	}
 	return ""
 }
 
-func (m *RemoveMsgBasedFeesProposal) GetMsg() *types1.Any {
+func (m *RemoveMsgBasedFeeProposal) GetMsg() *types1.Any {
 	if m != nil {
 		return m.Msg
 	}
@@ -233,9 +233,9 @@ func (m *RemoveMsgBasedFeesProposal) GetMsg() *types1.Any {
 }
 
 func init() {
-	proto.RegisterType((*AddMsgBasedFeesProposal)(nil), "provenance.msgfees.v1.AddMsgBasedFeesProposal")
-	proto.RegisterType((*UpdateMsgBasedFeesProposal)(nil), "provenance.msgfees.v1.UpdateMsgBasedFeesProposal")
-	proto.RegisterType((*RemoveMsgBasedFeesProposal)(nil), "provenance.msgfees.v1.RemoveMsgBasedFeesProposal")
+	proto.RegisterType((*AddMsgBasedFeeProposal)(nil), "provenance.msgfees.v1.AddMsgBasedFeeProposal")
+	proto.RegisterType((*UpdateMsgBasedFeeProposal)(nil), "provenance.msgfees.v1.UpdateMsgBasedFeeProposal")
+	proto.RegisterType((*RemoveMsgBasedFeeProposal)(nil), "provenance.msgfees.v1.RemoveMsgBasedFeeProposal")
 }
 
 func init() {
@@ -243,52 +243,51 @@ func init() {
 }
 
 var fileDescriptor_a2e168825d6c34a4 = []byte{
-	// 545 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x94, 0x4f, 0x8b, 0xd3, 0x4e,
-	0x18, 0xc7, 0x9b, 0x5f, 0x7e, 0xdb, 0xae, 0xa9, 0x78, 0x08, 0x15, 0xb3, 0x3d, 0x24, 0xb5, 0xe0,
-	0xda, 0x83, 0x9d, 0xa1, 0xf6, 0xb6, 0xb7, 0x8d, 0xcb, 0xde, 0x16, 0x96, 0x80, 0x17, 0x2f, 0x65,
-	0x92, 0x3c, 0x8d, 0x43, 0x3b, 0x33, 0x21, 0x33, 0x0d, 0xed, 0xbb, 0x10, 0xbc, 0x78, 0xdc, 0xb3,
-	0x67, 0x5f, 0xc4, 0x22, 0x08, 0x3d, 0x8a, 0x87, 0x2a, 0xed, 0x45, 0x3c, 0xfa, 0x0a, 0xa4, 0xc9,
-	0xf4, 0x0f, 0xac, 0xc8, 0x0a, 0x9e, 0xc4, 0x53, 0xe6, 0xc9, 0xf7, 0x3b, 0x33, 0x9f, 0xf9, 0x3e,
-	0xf0, 0x58, 0x8f, 0xd2, 0x4c, 0xe4, 0xc0, 0x09, 0x8f, 0x00, 0x33, 0x99, 0x0c, 0x01, 0x24, 0xce,
-	0x7b, 0x38, 0xcd, 0x44, 0x2a, 0x24, 0x19, 0x4b, 0x94, 0x66, 0x42, 0x09, 0xfb, 0xfe, 0xce, 0x86,
-	0xb4, 0x0d, 0xe5, 0xbd, 0x66, 0x23, 0x11, 0x89, 0x28, 0x1c, 0x78, 0xbd, 0x2a, 0xcd, 0x4d, 0x37,
-	0x12, 0x92, 0x09, 0x89, 0x43, 0xc2, 0x47, 0x38, 0xef, 0x85, 0xa0, 0x48, 0xaf, 0x28, 0x6e, 0xe8,
-	0x12, 0xb6, 0x7a, 0x24, 0x28, 0xd7, 0xfa, 0xc3, 0x7d, 0x26, 0x92, 0x8d, 0x20, 0x5b, 0x23, 0x95,
-	0x2b, 0x6d, 0x39, 0xfe, 0xa9, 0x85, 0x44, 0x11, 0x48, 0x99, 0x64, 0x84, 0x2b, 0xed, 0x3b, 0x4a,
-	0x84, 0x48, 0xc6, 0x80, 0x8b, 0x2a, 0x9c, 0x0c, 0x31, 0xe1, 0x33, 0x2d, 0x35, 0x35, 0x85, 0x9a,
-	0x6e, 0x19, 0xd4, 0x74, 0xb3, 0xad, 0xd4, 0x06, 0xe5, 0xd3, 0xca, 0xa2, 0x94, 0xda, 0x1f, 0x4c,
-	0xeb, 0xc1, 0x69, 0x1c, 0x5f, 0xc8, 0xc4, 0x27, 0x12, 0xe2, 0x73, 0x00, 0x79, 0xa9, 0xc3, 0xb2,
-	0x1b, 0xd6, 0x81, 0xa2, 0x6a, 0x0c, 0x8e, 0xd1, 0x32, 0x3a, 0x77, 0x82, 0xb2, 0xb0, 0x5b, 0x56,
-	0x3d, 0x06, 0x19, 0x65, 0x34, 0x55, 0x54, 0x70, 0xe7, 0xbf, 0x42, 0xdb, 0xff, 0x65, 0x87, 0x56,
-	0x95, 0x30, 0x31, 0xe1, 0xca, 0x31, 0x5b, 0x46, 0xa7, 0xfe, 0xf4, 0x08, 0xe9, 0x2b, 0xd7, 0x09,
-	0x21, 0x4d, 0x87, 0x9e, 0x09, 0xca, 0x7d, 0x7c, 0xbd, 0xf0, 0x2a, 0x9f, 0x16, 0xde, 0xe3, 0x84,
-	0xaa, 0x97, 0x93, 0x10, 0x45, 0x82, 0x69, 0x3e, 0xfd, 0xe9, 0xca, 0x78, 0x84, 0xd5, 0x2c, 0x05,
-	0x59, 0x6c, 0x08, 0xf4, 0xc9, 0x76, 0xdf, 0x32, 0x99, 0x4c, 0x9c, 0xff, 0x8b, 0x0b, 0x1a, 0xa8,
-	0xcc, 0x05, 0x6d, 0x72, 0x41, 0xa7, 0x7c, 0xe6, 0xd7, 0xdf, 0xbf, 0xeb, 0xd6, 0x64, 0x3c, 0x42,
-	0x17, 0x32, 0x09, 0xd6, 0x6e, 0x3b, 0xb7, 0x6a, 0x8c, 0xf2, 0xc1, 0x10, 0xc0, 0x39, 0x68, 0x99,
-	0xbf, 0x26, 0xf3, 0xd7, 0x64, 0xdf, 0x17, 0xde, 0xbd, 0x19, 0x61, 0xe3, 0x93, 0xb6, 0xde, 0xd7,
-	0x7e, 0xfb, 0xd9, 0xeb, 0xdc, 0x92, 0x55, 0x06, 0x55, 0x46, 0xf9, 0x39, 0x80, 0x3d, 0xb0, 0x0e,
-	0x87, 0x00, 0x83, 0x8c, 0x28, 0x70, 0xaa, 0x2d, 0xa3, 0x73, 0xd7, 0x3f, 0xd3, 0xef, 0x3e, 0xbe,
-	0xc5, 0x59, 0x67, 0x10, 0x7d, 0x5b, 0x78, 0xf6, 0xe6, 0x84, 0x27, 0x82, 0x51, 0x05, 0x2c, 0x55,
-	0xb3, 0xa0, 0x36, 0x04, 0x08, 0x88, 0x82, 0x93, 0xc3, 0x37, 0x57, 0x5e, 0xe5, 0xeb, 0x95, 0x67,
-	0xb4, 0xe7, 0xa6, 0xd5, 0x7c, 0x9e, 0xc6, 0x44, 0xc1, 0xbf, 0x96, 0xfe, 0x25, 0x2d, 0x7d, 0x6d,
-	0x58, 0xcd, 0x00, 0x98, 0xc8, 0xff, 0x6c, 0x4b, 0x75, 0xdc, 0xe6, 0xef, 0xc4, 0xbd, 0xa3, 0xf2,
-	0xe9, 0xf5, 0xd2, 0x35, 0xe6, 0x4b, 0xd7, 0xf8, 0xb2, 0x74, 0x8d, 0x57, 0x2b, 0xb7, 0x32, 0x5f,
-	0xb9, 0x95, 0x8f, 0x2b, 0xb7, 0x62, 0x39, 0xb4, 0x98, 0x9c, 0x37, 0xe7, 0xeb, 0xa5, 0xf1, 0xa2,
-	0xbf, 0x17, 0xce, 0xce, 0xd3, 0xa5, 0x62, 0xaf, 0xc2, 0xd3, 0xed, 0xe8, 0x2e, 0xd2, 0x0a, 0xab,
-	0x05, 0x54, 0xff, 0x47, 0x00, 0x00, 0x00, 0xff, 0xff, 0x11, 0xa2, 0x74, 0x0c, 0xdd, 0x05, 0x00,
-	0x00,
+	// 543 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x94, 0x4f, 0x8b, 0xd3, 0x40,
+	0x18, 0xc6, 0x1b, 0xe3, 0x76, 0xd7, 0x54, 0x3c, 0x84, 0x2a, 0x69, 0x0f, 0x49, 0x2d, 0xb8, 0xf6,
+	0x60, 0x67, 0xa8, 0xbd, 0xed, 0x6d, 0xe3, 0xb2, 0xb7, 0x85, 0x25, 0xe0, 0xc5, 0x4b, 0x99, 0x24,
+	0x6f, 0xe3, 0xd0, 0xce, 0x4c, 0xc8, 0x4c, 0x43, 0xfb, 0x2d, 0xc4, 0x93, 0xc7, 0x3d, 0x7b, 0xf6,
+	0x43, 0x2c, 0x22, 0xb8, 0x47, 0xf1, 0x50, 0xa5, 0xbd, 0x88, 0x47, 0x3f, 0x81, 0x34, 0x99, 0xfe,
+	0x81, 0x15, 0x59, 0xc1, 0x93, 0x78, 0xca, 0xbc, 0x79, 0x9e, 0x99, 0xf9, 0xcd, 0xf3, 0xc2, 0x6b,
+	0x3d, 0x4a, 0x33, 0x91, 0x03, 0x27, 0x3c, 0x02, 0xcc, 0x64, 0x32, 0x04, 0x90, 0x38, 0xef, 0xe1,
+	0x34, 0x13, 0xa9, 0x90, 0x64, 0x2c, 0x51, 0x9a, 0x09, 0x25, 0xec, 0xfb, 0x5b, 0x1b, 0xd2, 0x36,
+	0x94, 0xf7, 0x9a, 0xf5, 0x44, 0x24, 0xa2, 0x70, 0xe0, 0xd5, 0xaa, 0x34, 0x37, 0xdd, 0x48, 0x48,
+	0x26, 0x24, 0x0e, 0x09, 0x1f, 0xe1, 0xbc, 0x17, 0x82, 0x22, 0xbd, 0xa2, 0xb8, 0xa6, 0x4b, 0xd8,
+	0xe8, 0x91, 0xa0, 0x5c, 0xeb, 0x0f, 0x77, 0x99, 0x48, 0x36, 0x82, 0x6c, 0x85, 0x54, 0xae, 0xb4,
+	0xe5, 0xf0, 0x97, 0x16, 0x12, 0x45, 0x20, 0x65, 0x92, 0x11, 0xae, 0xb4, 0xaf, 0x91, 0x08, 0x91,
+	0x8c, 0x01, 0x17, 0x55, 0x38, 0x19, 0x62, 0xc2, 0x67, 0x5a, 0x6a, 0x6a, 0x0a, 0x35, 0xdd, 0x30,
+	0xa8, 0xe9, 0x7a, 0x5b, 0xa9, 0x0d, 0xca, 0xa7, 0x95, 0x45, 0x29, 0xb5, 0x3f, 0x98, 0xd6, 0x83,
+	0xe3, 0x38, 0x3e, 0x93, 0x89, 0x4f, 0x24, 0xc4, 0xa7, 0x00, 0xe7, 0x3a, 0x2b, 0xbb, 0x6e, 0xed,
+	0x29, 0xaa, 0xc6, 0xe0, 0x18, 0x2d, 0xa3, 0x73, 0x27, 0x28, 0x0b, 0xbb, 0x65, 0xd5, 0x62, 0x90,
+	0x51, 0x46, 0x53, 0x45, 0x05, 0x77, 0x6e, 0x15, 0xda, 0xee, 0x2f, 0x3b, 0xb4, 0xaa, 0x84, 0x89,
+	0x09, 0x57, 0x8e, 0xd9, 0x32, 0x3a, 0xb5, 0xa7, 0x0d, 0xa4, 0x6f, 0x5c, 0x05, 0x84, 0x34, 0x1c,
+	0x7a, 0x26, 0x28, 0xf7, 0xf1, 0xe5, 0xdc, 0xab, 0x7c, 0x9e, 0x7b, 0x8f, 0x13, 0xaa, 0x5e, 0x4e,
+	0x42, 0x14, 0x09, 0xa6, 0xf1, 0xf4, 0xa7, 0x2b, 0xe3, 0x11, 0x56, 0xb3, 0x14, 0x64, 0xb1, 0x21,
+	0xd0, 0x27, 0xdb, 0x7d, 0xcb, 0x64, 0x32, 0x71, 0x6e, 0x17, 0x17, 0xd4, 0x51, 0x19, 0x0b, 0x5a,
+	0xc7, 0x82, 0x8e, 0xf9, 0xcc, 0xaf, 0xbd, 0x7f, 0xd7, 0xdd, 0x97, 0xf1, 0x08, 0x9d, 0xc9, 0x24,
+	0x58, 0xb9, 0xed, 0xdc, 0xda, 0x67, 0x94, 0x0f, 0x86, 0x00, 0xce, 0x5e, 0xcb, 0xfc, 0x3d, 0x99,
+	0xbf, 0x22, 0xfb, 0x31, 0xf7, 0xee, 0xcd, 0x08, 0x1b, 0x1f, 0xb5, 0xf5, 0xbe, 0xf6, 0xdb, 0x2f,
+	0x5e, 0xe7, 0x86, 0xac, 0x32, 0xa8, 0x32, 0xca, 0x4f, 0x01, 0xec, 0x81, 0x75, 0x30, 0x04, 0x18,
+	0x64, 0x44, 0x81, 0x53, 0x6d, 0x19, 0x9d, 0xbb, 0xfe, 0x89, 0x7e, 0xf7, 0xe1, 0x0d, 0xce, 0x3a,
+	0x81, 0xe8, 0xfb, 0xdc, 0xb3, 0xd7, 0x27, 0x3c, 0x11, 0x8c, 0x2a, 0x60, 0xa9, 0x9a, 0x05, 0xfb,
+	0x43, 0x80, 0x80, 0x28, 0x38, 0x3a, 0x78, 0x73, 0xe1, 0x55, 0xbe, 0x5d, 0x78, 0x46, 0xfb, 0xa3,
+	0x69, 0x35, 0x9e, 0xa7, 0x31, 0x51, 0xf0, 0xbf, 0xa3, 0xff, 0x46, 0x47, 0x5f, 0x1b, 0x56, 0x23,
+	0x00, 0x26, 0xf2, 0xbf, 0xda, 0x51, 0x9d, 0xb6, 0xf9, 0x27, 0x69, 0x6f, 0xa1, 0x7c, 0x7a, 0xb9,
+	0x70, 0x8d, 0xab, 0x85, 0x6b, 0x7c, 0x5d, 0xb8, 0xc6, 0xab, 0xa5, 0x5b, 0xb9, 0x5a, 0xba, 0x95,
+	0x4f, 0x4b, 0xb7, 0x62, 0x39, 0xb4, 0x18, 0x9b, 0xd7, 0x87, 0xeb, 0xb9, 0xf1, 0xa2, 0xbf, 0x93,
+	0xcd, 0xd6, 0xd3, 0xa5, 0x62, 0xa7, 0xc2, 0xd3, 0xcd, 0xdc, 0x2e, 0xc2, 0x0a, 0xab, 0x05, 0x54,
+	0xff, 0x67, 0x00, 0x00, 0x00, 0xff, 0xff, 0x5c, 0x33, 0x23, 0xda, 0xda, 0x05, 0x00, 0x00,
 }
 
-func (this *AddMsgBasedFeesProposal) Equal(that interface{}) bool {
+func (this *AddMsgBasedFeeProposal) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
 	}
 
-	that1, ok := that.(*AddMsgBasedFeesProposal)
+	that1, ok := that.(*AddMsgBasedFeeProposal)
 	if !ok {
-		that2, ok := that.(AddMsgBasedFeesProposal)
+		that2, ok := that.(AddMsgBasedFeeProposal)
 		if ok {
 			that1 = &that2
 		} else {
@@ -325,14 +324,14 @@ func (this *AddMsgBasedFeesProposal) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (this *UpdateMsgBasedFeesProposal) Equal(that interface{}) bool {
+func (this *UpdateMsgBasedFeeProposal) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
 	}
 
-	that1, ok := that.(*UpdateMsgBasedFeesProposal)
+	that1, ok := that.(*UpdateMsgBasedFeeProposal)
 	if !ok {
-		that2, ok := that.(UpdateMsgBasedFeesProposal)
+		that2, ok := that.(UpdateMsgBasedFeeProposal)
 		if ok {
 			that1 = &that2
 		} else {
@@ -369,14 +368,14 @@ func (this *UpdateMsgBasedFeesProposal) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (this *RemoveMsgBasedFeesProposal) Equal(that interface{}) bool {
+func (this *RemoveMsgBasedFeeProposal) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
 	}
 
-	that1, ok := that.(*RemoveMsgBasedFeesProposal)
+	that1, ok := that.(*RemoveMsgBasedFeeProposal)
 	if !ok {
-		that2, ok := that.(RemoveMsgBasedFeesProposal)
+		that2, ok := that.(RemoveMsgBasedFeeProposal)
 		if ok {
 			that1 = &that2
 		} else {
@@ -399,7 +398,7 @@ func (this *RemoveMsgBasedFeesProposal) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (m *AddMsgBasedFeesProposal) Marshal() (dAtA []byte, err error) {
+func (m *AddMsgBasedFeeProposal) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -409,12 +408,12 @@ func (m *AddMsgBasedFeesProposal) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *AddMsgBasedFeesProposal) MarshalTo(dAtA []byte) (int, error) {
+func (m *AddMsgBasedFeeProposal) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *AddMsgBasedFeesProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *AddMsgBasedFeeProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -482,7 +481,7 @@ func (m *AddMsgBasedFeesProposal) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	return len(dAtA) - i, nil
 }
 
-func (m *UpdateMsgBasedFeesProposal) Marshal() (dAtA []byte, err error) {
+func (m *UpdateMsgBasedFeeProposal) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -492,12 +491,12 @@ func (m *UpdateMsgBasedFeesProposal) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *UpdateMsgBasedFeesProposal) MarshalTo(dAtA []byte) (int, error) {
+func (m *UpdateMsgBasedFeeProposal) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *UpdateMsgBasedFeesProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *UpdateMsgBasedFeeProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -565,7 +564,7 @@ func (m *UpdateMsgBasedFeesProposal) MarshalToSizedBuffer(dAtA []byte) (int, err
 	return len(dAtA) - i, nil
 }
 
-func (m *RemoveMsgBasedFeesProposal) Marshal() (dAtA []byte, err error) {
+func (m *RemoveMsgBasedFeeProposal) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -575,12 +574,12 @@ func (m *RemoveMsgBasedFeesProposal) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *RemoveMsgBasedFeesProposal) MarshalTo(dAtA []byte) (int, error) {
+func (m *RemoveMsgBasedFeeProposal) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *RemoveMsgBasedFeesProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *RemoveMsgBasedFeeProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -625,7 +624,7 @@ func encodeVarintProposals(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *AddMsgBasedFeesProposal) Size() (n int) {
+func (m *AddMsgBasedFeeProposal) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -656,7 +655,7 @@ func (m *AddMsgBasedFeesProposal) Size() (n int) {
 	return n
 }
 
-func (m *UpdateMsgBasedFeesProposal) Size() (n int) {
+func (m *UpdateMsgBasedFeeProposal) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -687,7 +686,7 @@ func (m *UpdateMsgBasedFeesProposal) Size() (n int) {
 	return n
 }
 
-func (m *RemoveMsgBasedFeesProposal) Size() (n int) {
+func (m *RemoveMsgBasedFeeProposal) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -714,7 +713,7 @@ func sovProposals(x uint64) (n int) {
 func sozProposals(x uint64) (n int) {
 	return sovProposals(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *AddMsgBasedFeesProposal) Unmarshal(dAtA []byte) error {
+func (m *AddMsgBasedFeeProposal) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -737,10 +736,10 @@ func (m *AddMsgBasedFeesProposal) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: AddMsgBasedFeesProposal: wiretype end group for non-group")
+			return fmt.Errorf("proto: AddMsgBasedFeeProposal: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AddMsgBasedFeesProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: AddMsgBasedFeeProposal: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -964,7 +963,7 @@ func (m *AddMsgBasedFeesProposal) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *UpdateMsgBasedFeesProposal) Unmarshal(dAtA []byte) error {
+func (m *UpdateMsgBasedFeeProposal) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -987,10 +986,10 @@ func (m *UpdateMsgBasedFeesProposal) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: UpdateMsgBasedFeesProposal: wiretype end group for non-group")
+			return fmt.Errorf("proto: UpdateMsgBasedFeeProposal: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: UpdateMsgBasedFeesProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: UpdateMsgBasedFeeProposal: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1214,7 +1213,7 @@ func (m *UpdateMsgBasedFeesProposal) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *RemoveMsgBasedFeesProposal) Unmarshal(dAtA []byte) error {
+func (m *RemoveMsgBasedFeeProposal) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1237,10 +1236,10 @@ func (m *RemoveMsgBasedFeesProposal) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: RemoveMsgBasedFeesProposal: wiretype end group for non-group")
+			return fmt.Errorf("proto: RemoveMsgBasedFeeProposal: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: RemoveMsgBasedFeesProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: RemoveMsgBasedFeeProposal: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

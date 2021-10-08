@@ -10,5 +10,5 @@ option java_multiple_files = true;
 
 // GenesisState contains a set of msg based fees, persisted from the store
 message GenesisState {
-  repeated MsgFees msg_fees = 1 [(gogoproto.nullable) = false];
+  repeated MsgBasedFee msg_based_fees = 1 [(gogoproto.nullable) = false];
 }

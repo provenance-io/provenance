@@ -9,31 +9,32 @@ import (
 const (
 	TypeCreateMsgBasedFeeRequest = "createmsgbasedfee"
 )
+
 // Compile time interface checks.
 var (
 	_ sdk.Msg            = &CreateMsgBasedFeeRequest{}
 	_ sdk.Msg            = &CalculateFeePerMsgRequest{}
-	_ legacytx.LegacyMsg = &CreateMsgBasedFeeRequest{} // For amino support.
+	_ legacytx.LegacyMsg = &CreateMsgBasedFeeRequest{}  // For amino support.
 	_ legacytx.LegacyMsg = &CalculateFeePerMsgRequest{} // For amino support.
 )
 
-func NewMsgFees(msgTypeURL string, minFeeRate sdk.Coins, feeRate sdk.Dec) MsgFees {
-	return MsgFees{
+func NewMsgBasedFee(msgTypeURL string, minFeeRate sdk.Coins, feeRate sdk.Dec) MsgBasedFee {
+	return MsgBasedFee{
 		MsgTypeUrl: msgTypeURL, MinAdditionalFee: minFeeRate, FeeRate: feeRate,
 	}
 }
 
 func (msg *CreateMsgBasedFeeRequest) ValidateBasic() error {
-	if msg.MsgFees == nil {
+	if msg.MsgBasedFee == nil {
 		return ErrEmptyMsgType
 	}
 
-	if msg.MsgFees.MinAdditionalFee.Empty() && msg.MsgFees.FeeRate.IsZero() {
+	if msg.MsgBasedFee.MinAdditionalFee.Empty() && msg.MsgBasedFee.FeeRate.IsZero() {
 		return ErrInvalidFee
 	}
 
-	if !msg.MsgFees.MinAdditionalFee.Empty() && len(msg.MsgFees.MinAdditionalFee) > 0 {
-		msg.MsgFees.MinAdditionalFee.Validate()
+	if !msg.MsgBasedFee.MinAdditionalFee.Empty() && len(msg.MsgBasedFee.MinAdditionalFee) > 0 {
+		msg.MsgBasedFee.MinAdditionalFee.Validate()
 	}
 
 	return nil
@@ -60,11 +61,10 @@ func (msg *CreateMsgBasedFeeRequest) Type() string {
 func (msg *CreateMsgBasedFeeRequest) Route() string { return ModuleName }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-//func (msg MsgFees) UnpackInterfaces(unpacker types.AnyUnpacker) error {
-//	var msgfees MsgFees
+//func (msg MsgBasedFee) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+//	var msgfees MsgBasedFee
 //	return unpacker.UnpackAny(msg.Msg,&msgfees)
 //}
-
 
 func (msg *CalculateFeePerMsgRequest) ValidateBasic() error {
 	panic("implement me")

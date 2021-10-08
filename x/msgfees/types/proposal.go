@@ -10,40 +10,40 @@ import (
 )
 
 const (
-	// ProposalTypeAddMsgBasedFees to add a new msg based fees
-	ProposalTypeAddMsgBasedFees string = "AddMsgBasedFees"
-	// ProposalTypeUpdateMsgBasedFees to update an existing msg based fees
-	ProposalTypeUpdateMsgBasedFees string = "UpdateMsgBasedFees"
-	// ProposalTypeRemoveMsgBasedFees to remove an existing msg based fees
-	ProposalTypeRemoveMsgBasedFees string = "RemoveMsgBasedFees"
+	// ProposalTypeAddMsgBasedFee to add a new msg based fee
+	ProposalTypeAddMsgBasedFee string = "AddMsgBasedFee"
+	// ProposalTypeUpdateMsgBasedFee to update an existing msg based fee
+	ProposalTypeUpdateMsgBasedFee string = "UpdateMsgBasedFee"
+	// ProposalTypeRemoveMsgBasedFee to remove an existing msg based fee
+	ProposalTypeRemoveMsgBasedFee string = "RemoveMsgBasedFee"
 )
 
 var (
-	_ govtypes.Content = &AddMsgBasedFeesProposal{}
-	_ govtypes.Content = &UpdateMsgBasedFeesProposal{}
-	_ govtypes.Content = &RemoveMsgBasedFeesProposal{}
+	_ govtypes.Content = &AddMsgBasedFeeProposal{}
+	_ govtypes.Content = &UpdateMsgBasedFeeProposal{}
+	_ govtypes.Content = &RemoveMsgBasedFeeProposal{}
 )
 
 func init() {
-	govtypes.RegisterProposalType(ProposalTypeAddMsgBasedFees)
-	govtypes.RegisterProposalTypeCodec(AddMsgBasedFeesProposal{}, "provenance/msgfees/AddMsgBasedFeesProposal")
+	govtypes.RegisterProposalType(ProposalTypeAddMsgBasedFee)
+	govtypes.RegisterProposalTypeCodec(AddMsgBasedFeeProposal{}, "provenance/msgfees/AddMsgBasedFeeProposal")
 
-	govtypes.RegisterProposalType(ProposalTypeUpdateMsgBasedFees)
-	govtypes.RegisterProposalTypeCodec(UpdateMsgBasedFeesProposal{}, "provenance/msgfees/UpdateMsgBasedFeesProposal")
+	govtypes.RegisterProposalType(ProposalTypeUpdateMsgBasedFee)
+	govtypes.RegisterProposalTypeCodec(UpdateMsgBasedFeeProposal{}, "provenance/msgfees/UpdateMsgBasedFeeProposal")
 
-	govtypes.RegisterProposalType(ProposalTypeRemoveMsgBasedFees)
-	govtypes.RegisterProposalTypeCodec(RemoveMsgBasedFeesProposal{}, "provenance/msgfees/RemoveMsgBasedFeesProposal")
+	govtypes.RegisterProposalType(ProposalTypeRemoveMsgBasedFee)
+	govtypes.RegisterProposalTypeCodec(RemoveMsgBasedFeeProposal{}, "provenance/msgfees/RemoveMsgBasedFeeProposal")
 }
 
-func NewAddMsgBasedFeesProposal(
+func NewAddMsgBasedFeeProposal(
 	title string,
 	description string,
 	amount sdk.Coin,
 	msg *types.Any,
 	minFee sdk.Coins,
-	feeRate sdk.Dec) *AddMsgBasedFeesProposal {
+	feeRate sdk.Dec) *AddMsgBasedFeeProposal {
 
-	return &AddMsgBasedFeesProposal{
+	return &AddMsgBasedFeeProposal{
 		Title:       title,
 		Description: description,
 		Amount:      amount,
@@ -53,9 +53,9 @@ func NewAddMsgBasedFeesProposal(
 	}
 }
 
-func (ambfp AddMsgBasedFeesProposal) ProposalRoute() string { return RouterKey }
-func (ambfp AddMsgBasedFeesProposal) ProposalType() string  { return ProposalTypeAddMsgBasedFees }
-func (ambfp AddMsgBasedFeesProposal) ValidateBasic() error {
+func (ambfp AddMsgBasedFeeProposal) ProposalRoute() string { return RouterKey }
+func (ambfp AddMsgBasedFeeProposal) ProposalType() string  { return ProposalTypeAddMsgBasedFee }
+func (ambfp AddMsgBasedFeeProposal) ValidateBasic() error {
 	if ambfp.Msg == nil {
 		return ErrEmptyMsgType
 	}
@@ -70,7 +70,7 @@ func (ambfp AddMsgBasedFeesProposal) ValidateBasic() error {
 
 	return govtypes.ValidateAbstract(&ambfp)
 }
-func (ambfp AddMsgBasedFeesProposal) String() string {
+func (ambfp AddMsgBasedFeeProposal) String() string {
 	var b strings.Builder
 	b.WriteString(fmt.Sprintf(`Add Msg Based Fees Proposal:
 	Title:       %s
@@ -83,15 +83,15 @@ func (ambfp AddMsgBasedFeesProposal) String() string {
 	return b.String()
 }
 
-func NewUpdateMsgBasedFeesProposal(
+func NewUpdateMsgBasedFeeProposal(
 	title string,
 	description string,
 	amount sdk.Coin,
 	msg *types.Any,
 	minFee sdk.Coins,
-	feeRate sdk.Dec) *UpdateMsgBasedFeesProposal {
+	feeRate sdk.Dec) *UpdateMsgBasedFeeProposal {
 
-	return &UpdateMsgBasedFeesProposal{
+	return &UpdateMsgBasedFeeProposal{
 		Title:       title,
 		Description: description,
 		Amount:      amount,
@@ -101,11 +101,11 @@ func NewUpdateMsgBasedFeesProposal(
 	}
 }
 
-func (umbfp UpdateMsgBasedFeesProposal) ProposalRoute() string { return RouterKey }
+func (umbfp UpdateMsgBasedFeeProposal) ProposalRoute() string { return RouterKey }
 
-func (umbfp UpdateMsgBasedFeesProposal) ProposalType() string { return ProposalTypeUpdateMsgBasedFees }
+func (umbfp UpdateMsgBasedFeeProposal) ProposalType() string { return ProposalTypeUpdateMsgBasedFee }
 
-func (umbfp UpdateMsgBasedFeesProposal) ValidateBasic() error {
+func (umbfp UpdateMsgBasedFeeProposal) ValidateBasic() error {
 	if umbfp.Msg == nil {
 		return ErrEmptyMsgType
 	}
@@ -121,7 +121,7 @@ func (umbfp UpdateMsgBasedFeesProposal) ValidateBasic() error {
 	return govtypes.ValidateAbstract(&umbfp)
 }
 
-func (umbfp UpdateMsgBasedFeesProposal) String() string {
+func (umbfp UpdateMsgBasedFeeProposal) String() string {
 	var b strings.Builder
 	b.WriteString(fmt.Sprintf(`Update Msg Based Fees Proposal:
 	Title:       %s
@@ -134,31 +134,31 @@ func (umbfp UpdateMsgBasedFeesProposal) String() string {
 	return b.String()
 }
 
-func NewRemoveMsgBasedFeesProposal(
+func NewRemoveMsgBasedFeeProposal(
 	title string,
 	description string,
 	msg *types.Any,
-) *RemoveMsgBasedFeesProposal {
+) *RemoveMsgBasedFeeProposal {
 
-	return &RemoveMsgBasedFeesProposal{
+	return &RemoveMsgBasedFeeProposal{
 		Title:       title,
 		Description: description,
 		Msg:         msg,
 	}
 }
 
-func (rmbfp RemoveMsgBasedFeesProposal) ProposalRoute() string { return RouterKey }
+func (rmbfp RemoveMsgBasedFeeProposal) ProposalRoute() string { return RouterKey }
 
-func (rmbfp RemoveMsgBasedFeesProposal) ProposalType() string { return ProposalTypeRemoveMsgBasedFees }
+func (rmbfp RemoveMsgBasedFeeProposal) ProposalType() string { return ProposalTypeRemoveMsgBasedFee }
 
-func (rmbfp RemoveMsgBasedFeesProposal) ValidateBasic() error {
+func (rmbfp RemoveMsgBasedFeeProposal) ValidateBasic() error {
 	if rmbfp.Msg == nil {
 		return ErrEmptyMsgType
 	}
 	return govtypes.ValidateAbstract(&rmbfp)
 }
 
-func (rmbfp RemoveMsgBasedFeesProposal) String() string {
+func (rmbfp RemoveMsgBasedFeeProposal) String() string {
 	var b strings.Builder
 	b.WriteString(fmt.Sprintf(`Remove Msg Based Fees Proposal:
   Title:       %s
