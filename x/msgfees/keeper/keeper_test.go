@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -9,7 +11,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
-	"testing"
 )
 
 type TestSuite struct {
@@ -45,10 +46,10 @@ func (s *TestSuite) TestKeeper() {
 	s.T().Log("verify that creating msg fee for type works")
 	msgFee, err := app.MsgBasedFeeKeeper.GetMsgBasedFeeSchedule(ctx, bankSendAuthMsgType)
 	s.Require().Nil(msgFee)
-	s.Require().NotNil(err)
+	s.Require().Nil(err)
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
 	feerate := sdk.NewDec(4)
-	msgFeeToCreate := types.NewMsgFees(bankSendAuthMsgType,newCoins,feerate)
+	msgFeeToCreate := types.NewMsgFees(bankSendAuthMsgType, newCoins, feerate)
 	app.MsgBasedFeeKeeper.SetMsgBasedFeeSchedule(ctx, msgFeeToCreate)
 
 	msgFee, err = app.MsgBasedFeeKeeper.GetMsgBasedFeeSchedule(ctx, bankSendAuthMsgType)
@@ -56,7 +57,6 @@ func (s *TestSuite) TestKeeper() {
 	s.Require().Nil(err)
 	s.Require().Equal(bankSendAuthMsgType, msgFee.MsgTypeUrl)
 }
-
 
 func TestTestSuite(t *testing.T) {
 	suite.Run(t, new(TestSuite))

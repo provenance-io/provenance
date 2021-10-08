@@ -3,7 +3,6 @@ package keeper
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/provenance-io/provenance/x/msgfees/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -50,20 +49,19 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
-
-// SetMsgBasedFeeSchedule sets the additional fee schedule for a Msg
-func (k Keeper) SetMsgBasedFeeSchedule(ctx sdk.Context, msgBasedFees types.MsgFees) {
+// SetMsgBasedFee sets the additional fee schedule for a Msg
+func (k Keeper) SetMsgBasedFee(ctx sdk.Context, msgBasedFees types.MsgFees) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&msgBasedFees)
 	store.Set(types.GetMsgBasedFeeKey(msgBasedFees.MsgTypeUrl), bz)
 }
 
-func (k Keeper) GetMsgBasedFeeSchedule(ctx sdk.Context, msgType string) (*types.MsgFees, error) {
+func (k Keeper) GetMsgBasedFee(ctx sdk.Context, msgType string) (*types.MsgFees, error) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetMsgBasedFeeKey(msgType)
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "msg-based-fees not found")
+		return nil, nil
 	}
 
 	var msgBasedFee types.MsgFees
@@ -72,6 +70,19 @@ func (k Keeper) GetMsgBasedFeeSchedule(ctx sdk.Context, msgType string) (*types.
 	}
 
 	return &msgBasedFee, nil
+}
+
+func (k Keeper) RemoveMsgBasedFee(ctx sdk.Context, msgType string) error {
+	store := ctx.KVStore(k.storeKey)
+	key := types.GetMsgBasedFeeKey(msgType)
+	bz := store.Get(key)
+	if len(bz) == 0 {
+		return types.ErrMsgFeeDoesNotExist
+	}
+
+	store.Delete(key)
+
+	return nil
 }
 
 type Handler func(record types.MsgFees) (stop bool)
@@ -100,10 +111,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	return nil
 }
 
-// InitGenesis new authz genesis
+// InitGenesis new msgfees genesis
 func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 	//TODO Implement me
 }
-
-
-
