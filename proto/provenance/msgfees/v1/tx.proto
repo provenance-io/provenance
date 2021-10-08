@@ -49,11 +49,11 @@ message CalculateMsgBasedFeesResponse {
 message CreateMsgBasedFeeRequest {
   string from_address = 1;
   // msg to add Fee for.
-  MsgFees msg_fees = 2;
+  MsgBasedFee msg_fees = 2;
 }
 
 // response for CreateFeeForMsg
 message CreateMsgBasedFeeResponse {
   // msg to add Fee for.
-  MsgFees msg_fees = 1;
+  MsgBasedFee msg_fees = 1;
 }

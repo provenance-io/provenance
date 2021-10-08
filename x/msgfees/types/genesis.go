@@ -2,7 +2,7 @@ package types
 
 
 // NewGenesisState creates new GenesisState object
-func NewGenesisState(entries []MsgFees) *GenesisState {
+func NewGenesisState(entries []MsgBasedFee) *GenesisState {
 	return &GenesisState{
 		MsgFees: entries,
 	}

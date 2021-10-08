@@ -329,7 +329,7 @@
     - [Msg](#provenance.metadata.v1.Msg)
   
 - [provenance/msgfees/v1/msgfees.proto](#provenance/msgfees/v1/msgfees.proto)
-    - [MsgFees](#provenance.msgfees.v1.MsgFees)
+    - [MsgBasedFee](#provenance.msgfees.v1.MsgBasedFee)
     - [Params](#provenance.msgfees.v1.Params)
   
 - [provenance/msgfees/v1/genesis.proto](#provenance/msgfees/v1/genesis.proto)
@@ -5128,9 +5128,9 @@ Msg defines the Metadata Msg service.
 
 
 
-<a name="provenance.msgfees.v1.MsgFees"></a>
+<a name="provenance.msgfees.v1.MsgBasedFee"></a>
 
-### MsgFees
+### MsgBasedFee
 MsgFees is the core of what gets stored on the blockchain
 it consists of two parts
 1. minimum additional fees(can be of any denom)
@@ -5140,7 +5140,7 @@ it consists of two parts
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `msg_type_url` | [string](#string) |  |  |
-| `min_additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | can pay in any Coin( basically a Denom and Amount, Amount can be zero) |
+| `min_additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | can pay in any Coin( basically a Denom and Amount, Amount can be zero) |
 | `fee_rate` | [bytes](#bytes) |  | Fee rate, based on Gas used. |
 
 
@@ -5187,7 +5187,7 @@ GenesisState contains a set of msg based fees, persisted from the store
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `msg_fees` | [MsgFees](#provenance.msgfees.v1.MsgFees) | repeated |  |
+| `msg_fees` | [MsgBasedFee](#provenance.msgfees.v1.MsgBasedFee) | repeated |  |
 
 
 
@@ -5222,7 +5222,7 @@ AddMsgBasedFeesProposal defines a governance proposal to add additional msg fees
 | `description` | [string](#string) |  |  |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `msg` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-| `min_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+| `min_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `fee_rate` | [bytes](#bytes) |  | Fee rate, based on Gas used. |
 
 
@@ -5259,7 +5259,7 @@ UpdateMsgBasedFeesProposal defines a governance proposal to update a current msg
 | `description` | [string](#string) |  |  |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `msg` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-| `min_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+| `min_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `fee_rate` | [bytes](#bytes) |  | Fee rate, based on Gas used. |
 
 
@@ -5291,7 +5291,7 @@ response for querying all msg's with fees associated with them
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `msg_fees` | [MsgFees](#provenance.msgfees.v1.MsgFees) | repeated |  |
+| `msg_fees` | [MsgBasedFee](#provenance.msgfees.v1.MsgBasedFee) | repeated |  |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an optional pagination for the request. |
 
 
@@ -5407,7 +5407,7 @@ create fee for msg's (repeated)
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `from_address` | [string](#string) |  |  |
-| `msg_fees` | [MsgFees](#provenance.msgfees.v1.MsgFees) |  | msg to add Fee for. |
+| `msg_fees` | [MsgBasedFee](#provenance.msgfees.v1.MsgBasedFee) |  | msg to add Fee for. |
 
 
 
@@ -5422,7 +5422,7 @@ response for CreateFeeForMsg
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `msg_fees` | [MsgFees](#provenance.msgfees.v1.MsgFees) |  | msg to add Fee for. |
+| `msg_fees` | [MsgBasedFee](#provenance.msgfees.v1.MsgBasedFee) |  | msg to add Fee for. |
 
 
 

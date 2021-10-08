@@ -26,11 +26,11 @@ func (k Keeper) QueryAllMsgFees(c context.Context, req *types.QueryMsgsWithAddit
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	var msgFees []*types.MsgFees
+	var msgFees []*types.MsgBasedFee
 	store := ctx.KVStore(k.storeKey)
 	msgFeeStore := prefix.NewStore(store, types.MsgBasedFeeKeyPrefix)
 	pageRes, err := query.Paginate(msgFeeStore, req.Pagination, func(key []byte, value []byte) error {
-		var msgFee types.MsgFees
+		var msgFee types.MsgBasedFee
 
 		if err := k.cdc.Unmarshal(value, &msgFee); err != nil {
 			return err

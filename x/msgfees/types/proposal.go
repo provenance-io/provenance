@@ -40,7 +40,7 @@ func NewAddMsgBasedFeesProposal(
 	description string,
 	amount sdk.Coin,
 	msg *types.Any,
-	minFee sdk.Coins,
+	minFee sdk.Coin,
 	feeRate sdk.Dec) *AddMsgBasedFeesProposal {
 
 	return &AddMsgBasedFeesProposal{
@@ -64,7 +64,7 @@ func (ambfp AddMsgBasedFeesProposal) ValidateBasic() error {
 		return ErrInvalidCoinAmount
 	}
 
-	if ambfp.MinFee.Empty() && ambfp.FeeRate.IsZero() {
+	if ambfp.MinFee.IsValid() && ambfp.FeeRate.IsZero() {
 		return ErrInvalidFee
 	}
 
@@ -88,7 +88,7 @@ func NewUpdateMsgBasedFeesProposal(
 	description string,
 	amount sdk.Coin,
 	msg *types.Any,
-	minFee sdk.Coins,
+	minFee sdk.Coin,
 	feeRate sdk.Dec) *UpdateMsgBasedFeesProposal {
 
 	return &UpdateMsgBasedFeesProposal{
@@ -114,7 +114,7 @@ func (umbfp UpdateMsgBasedFeesProposal) ValidateBasic() error {
 		return ErrInvalidCoinAmount
 	}
 
-	if (umbfp.MinFee.Empty() || umbfp.MinFee.IsAllPositive()) && umbfp.FeeRate.IsZero() {
+	if (umbfp.MinFee.IsValid() || umbfp.MinFee.IsPositive()) && umbfp.FeeRate.IsZero() {
 		return ErrInvalidFee
 	}
 
