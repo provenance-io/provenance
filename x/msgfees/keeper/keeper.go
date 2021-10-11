@@ -11,11 +11,6 @@ import (
 // StoreKey is the store key string for authz
 const StoreKey = types.ModuleName
 
-// MsgBasedFeeKeeperI Fee keeper calculates the additional fees to be charged
-type MsgBasedFeeKeeperI interface {
-	GetFeeRate(ctx sdk.Context) (feeRate sdk.Dec)
-}
-
 // Keeper of the Additional fee store
 type Keeper struct {
 	storeKey         sdk.StoreKey

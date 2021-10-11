@@ -654,11 +654,12 @@ func New(
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 	anteHandler, err := antewrapper.NewAnteHandler(
-		ante.HandlerOptions{
+		antewrapper.HandlerOptions{
 			AccountKeeper:   app.AccountKeeper,
 			BankKeeper:      app.BankKeeper,
 			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
 			FeegrantKeeper:  app.FeeGrantKeeper,
+			MsgBasedFeeKeeper: app.MsgBasedFeeKeeper,
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		})
 	if err != nil {

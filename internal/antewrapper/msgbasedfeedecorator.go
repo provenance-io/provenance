@@ -2,41 +2,46 @@ package antewrapper
 
 import (
 	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/authz"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
+	cosmosauthtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	k "github.com/provenance-io/provenance/x/msgfees/keeper"
 )
 
-// AdditionalFeeDecorator will check if the transaction's fee is at least as large
+// MsgBasedFeeDecorator will check if the transaction's fee is at least as large
 // as tax + additional minimum gasFee (defined in msgfeeskeeper)
 // and record additional fee proceeds to msgfees module to track additional fee proceeds.
 // If fee is too low, decorator returns error and tx is rejected from mempool.
 // Note this only applies when ctx.CheckTx = true
 // If fee is high enough or not CheckTx, then call next AnteHandler
-// CONTRACT: Tx must implement FeeTx to use AdditionalFeeDecorator
-type AdditionalFeeDecorator struct {
-	FeeKeeper k.MsgBasedFeeKeeperI
+// CONTRACT: Tx must implement FeeTx to use MsgBasedFeeDecorator
+type MsgBasedFeeDecorator struct {
+	msgBasedFeeKeeper MsgBasedFeeKeeper
+}
+
+func NewMsgBasedFeeDecorator(bankKeeper cosmosauthtypes.BankKeeper, accountKeeper cosmosante.AccountKeeper, feegrantKeeper cosmosante.FeegrantKeeper, keeper MsgBasedFeeKeeper) MsgBasedFeeDecorator {
+	return MsgBasedFeeDecorator{
+		keeper,
+	}
 }
 
 // AnteHandle handles msg tax fee checking
-func (afd AdditionalFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+func (afd MsgBasedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	// has to be FeeTx type
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
+	ctx.Logger().Info("NOTICE: here in Addition Msg Fee Handler {}",ctx.GasMeter().GasConsumed())
 	feeCoins := feeTx.GetFee()
 	gas := feeTx.GetGas()
 	msgs := feeTx.GetMsgs()
 
 	if !simulate {
 		// Compute taxes
-		fees := FilterMsgAndComputeTax(ctx, afd.FeeKeeper, msgs...)
+		fees, _ := FilterMsgAndComputeTax(ctx, afd.msgBasedFeeKeeper, msgs...)
 
 		// Mempool fee validation
 		// No fee validation for oracle txs
@@ -97,48 +102,35 @@ func EnsureSufficientMempoolFees(ctx sdk.Context, gas uint64, feeCoins sdk.Coins
 	return nil
 }
 
-// DeductFees deducts additional fees from the given account.
-// same as deduct fees for now.
-func DeductFees(bankKeeper types.BankKeeper, ctx sdk.Context, acc types.AccountI, fees sdk.Coins) error {
-	if !fees.IsValid() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
-	}
 
-	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.FeeCollectorName, fees)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
-	}
-
-	return nil
-}
 
 // FilterMsgAndComputeTax computes the stability tax on MsgSend and MsgMultiSend.
-func FilterMsgAndComputeTax(ctx sdk.Context, tk k.MsgBasedFeeKeeperI, msgs ...sdk.Msg) sdk.Coins {
+func FilterMsgAndComputeTax(ctx sdk.Context, mbfk MsgBasedFeeKeeper, msgs ...sdk.Msg) (sdk.Coins, error) {
 	taxes := sdk.Coins{}
+	// get the msg fee
+
+	additionalFees := sdk.Coins{}
+
 	for _, msg := range msgs {
-		switch msg := msg.(type) {
-		case *banktypes.MsgSend:
-			taxes = taxes.Add(computeFees(ctx, tk, msg.Amount)...)
+		typeURL := sdk.MsgTypeURL(msg)
+		msgFees, err := mbfk.GetMsgBasedFee(ctx, typeURL)
+		if err != nil {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		}
 
-		case *banktypes.MsgMultiSend:
-			for _, input := range msg.Inputs {
-				taxes = taxes.Add(computeFees(ctx, tk, input.Coins)...)
-			}
-
-		case *authz.MsgExec:
-			messages, err := msg.GetMessages()
-			if err != nil {
-				panic(err)
-			}
-
-			taxes = taxes.Add(FilterMsgAndComputeTax(ctx, tk, messages...)...)
+		if msgFees == nil {
+			continue
+		}
+		if msgFees.MinAdditionalFee.IsPositive() {
+			additionalFees = additionalFees.Add(sdk.NewCoin(msgFees.MinAdditionalFee.Denom, msgFees.MinAdditionalFee.Amount))
 		}
 	}
 
-	return taxes
+
+	return taxes, nil
 }
 
 // computes the fees
-func computeFees(ctx sdk.Context, tk k.MsgBasedFeeKeeperI, principal sdk.Coins) sdk.Coins {
+func computeFees(ctx sdk.Context, tk k.Keeper, principal sdk.Coins) sdk.Coins {
 	return nil
 }
