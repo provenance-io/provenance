@@ -160,7 +160,7 @@ func (k Keeper) RemoveAccess(ctx sdk.Context, caller sdk.AccAddress, denom strin
 			return fmt.Errorf("updates to pending marker %s can only be made by %s", m.GetDenom(), mgr.String())
 		}
 		if err = m.RevokeAccess(remove); err != nil {
-			return fmt.Errorf("access grant failed: %w", err)
+			return fmt.Errorf("access revoke failed: %w", err)
 		}
 		if err := m.Validate(); err != nil {
 			return err
@@ -288,7 +288,7 @@ func (k Keeper) BurnCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 		}
 		k.SetMarker(ctx, m)
 	case m.GetStatus() != types.StatusActive:
-		return fmt.Errorf("cannot mint coin for a marker that is not in Active status")
+		return fmt.Errorf("cannot burn coin for a marker that is not in Active status")
 	default:
 		err = k.DecreaseSupply(ctx, m, coin)
 		if err != nil {
@@ -417,7 +417,7 @@ func (k Keeper) DecreaseSupply(ctx sdk.Context, marker types.MarkerAccountI, coi
 }
 
 // FinalizeMarker sets the state of the marker to finalized, mints the associated supply, assigns the minted coin to
-// the marker accounts, and transitions the state to active if successful
+// the marker accounts, and if successful emits an EventMarkerFinalize event to transition the state to active
 func (k Keeper) FinalizeMarker(ctx sdk.Context, caller sdk.Address, denom string) error {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "finalize")
 
@@ -460,9 +460,9 @@ func (k Keeper) FinalizeMarker(ctx sdk.Context, caller sdk.Address, denom string
 	if err := m.Validate(); err != nil {
 		return err
 	}
-	// record status as finalized.
 	k.SetMarker(ctx, m)
 
+	// record status as finalized.
 	markerFinalizeEvent := types.NewEventMarkerFinalize(denom, caller.String())
 	if err := ctx.EventManager().EmitTypedEvent(markerFinalizeEvent); err != nil {
 		return err
@@ -482,7 +482,7 @@ func (k Keeper) ActivateMarker(ctx sdk.Context, caller sdk.Address, denom string
 	}
 	// Only the manger can activate a marker
 	if !m.GetManager().Equals(caller) {
-		return fmt.Errorf("%s does not have permission to finalize %s markeraccount", caller, m.GetDenom())
+		return fmt.Errorf("%s does not have permission to activate %s markeraccount", caller, m.GetDenom())
 	}
 
 	// must be in finalized state ... mint required supply amounts.
