@@ -6,7 +6,7 @@ require (
 	github.com/CosmWasm/wasmd v0.17.0
 	github.com/armon/go-metrics v0.3.9
 	github.com/btcsuite/btcd v0.22.0-beta
-	github.com/cosmos/cosmos-sdk v0.44.1
+	github.com/cosmos/cosmos-sdk v0.44.2
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/ibc-go v1.2.0
 	github.com/gogo/protobuf v1.3.3
