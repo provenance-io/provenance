@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/version"
 
 	"github.com/provenance-io/provenance/x/msgfees/types"
 
@@ -46,15 +47,16 @@ func NewTxCmd() *cobra.Command {
 
 func GetCmdMsgBasedFeesProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "proposal [type] [title] [description] [deposit]",
+		Use:   "proposal [add|update|remove] [title] [description] [deposit]",
 		Args:  cobra.ExactArgs(4),
-		Short: "Submit a marker proposal along with an initial deposit",
+		Short: "Submit a msg based fee proposal along with an initial deposit",
 		Long: strings.TrimSpace(`Submit a msg fees proposal along with an initial deposit.
-Proposal title, description, deposit, and marker proposal params must be set in a provided JSON file.
-
-`,
-		),
-		Example: "TODO",
+For add, update, and removal of msg based fees amount and min fee and/or rate fee must be set.
+`),
+		Example: fmt.Sprintf(`$ %[1]s tx msgfees add "adding" "adding MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --amount 99nhash --min-fee=612nhash --fee-rate=1234
+$ %[1]s tx msgfees update "updating" "updating MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --amount 99nhash --min-fee=612000nhash --fee-rate=123400
+$ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest
+`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
