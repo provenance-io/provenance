@@ -1,9 +1,9 @@
 package cli
 
 import (
-	"encoding/json"
+	"errors"
 	"fmt"
-	"io/ioutil"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -14,8 +14,17 @@ import (
 
 	"github.com/provenance-io/provenance/x/msgfees/types"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+)
+
+// Flag names and values
+const (
+	FlagFeeRate = "fee-rate"
+	FlagMinFee  = "min-fee"
+	FlagMsgType = "msg-type"
+	FlagAmount  = "amount"
 )
 
 func NewTxCmd() *cobra.Command {
@@ -37,8 +46,8 @@ func NewTxCmd() *cobra.Command {
 
 func GetCmdMsgBasedFeesProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "proposal [type] [proposal-file] [deposit]",
-		Args:  cobra.ExactArgs(3),
+		Use:   "proposal [type] [title] [description] [deposit]",
+		Args:  cobra.ExactArgs(4),
 		Short: "Submit a marker proposal along with an initial deposit",
 		Long: strings.TrimSpace(`Submit a msg fees proposal along with an initial deposit.
 Proposal title, description, deposit, and marker proposal params must be set in a provided JSON file.
@@ -52,29 +61,103 @@ Proposal title, description, deposit, and marker proposal params must be set in 
 				return err
 			}
 
-			contents, err := ioutil.ReadFile(args[1])
+			proposalType := args[0]
+
+			msgType, err := cmd.Flags().GetString(FlagMsgType)
 			if err != nil {
 				return err
+			}
+
+			feeMsg, err := clientCtx.InterfaceRegistry.Resolve(msgType)
+			if err != nil {
+				return err
+			}
+
+			_, ok := feeMsg.(sdk.Msg)
+			if !ok {
+				return fmt.Errorf("Message type is not a sdk message: %v", msgType)
+			}
+
+			anyMsg, err := codectypes.NewAnyWithValue(feeMsg)
+			if err != nil {
+				return err
+			}
+
+			var amount sdk.Coin
+			var minFee sdk.Coin
+			var feeRate sdk.Dec
+			if proposalType != "remove" {
+
+				amountArg, err := cmd.Flags().GetString(FlagAmount)
+				if err != nil || amountArg == "" {
+					return errors.New("amount must be set")
+				}
+				amount, err = sdk.ParseCoinNormalized(amountArg)
+				if err != nil {
+					return err
+				}
+
+				minFeeArg, err := cmd.Flags().GetString(FlagMinFee)
+				if err != nil {
+					return err
+				}
+				if minFeeArg != "" {
+					minFee, err = sdk.ParseCoinNormalized(minFeeArg)
+					if err != nil {
+						return err
+					}
+				}
+
+				feeRateArg, err := cmd.Flags().GetString(FlagFeeRate)
+				if err != nil {
+					return err
+				}
+				if feeRateArg != "" {
+					decInt, err := strconv.ParseInt(feeRateArg, 10, 64)
+					if err != nil {
+						return err
+					}
+					feeRate = sdk.NewDec(decInt)
+					if err != nil {
+						return err
+					}
+				} else {
+					feeRate = sdk.ZeroDec()
+				}
 			}
 
 			var proposal govtypes.Content
 
 			switch args[0] {
-			case types.ProposalTypeAddMsgBasedFee:
-				proposal = &types.AddMsgBasedFeeProposal{}
-			case types.ProposalTypeUpdateMsgBasedFee:
-				proposal = &types.UpdateMsgBasedFeeProposal{}
-			case types.ProposalTypeRemoveMsgBasedFee:
-				proposal = &types.RemoveMsgBasedFeeProposal{}
+			case "add":
+				proposal = &types.AddMsgBasedFeeProposal{
+					Title:       args[1],
+					Description: args[2],
+					Msg:         anyMsg,
+					Amount:      amount,
+					FeeRate:     feeRate,
+					MinFee:      minFee,
+				}
+			case "update":
+				proposal = &types.UpdateMsgBasedFeeProposal{
+					Title:       args[1],
+					Description: args[2],
+					Msg:         anyMsg,
+					Amount:      amount,
+					FeeRate:     feeRate,
+					MinFee:      minFee,
+				}
+			case "remove":
+				proposal = &types.RemoveMsgBasedFeeProposal{
+					Title:       args[1],
+					Description: args[2],
+					Msg:         anyMsg,
+				}
 			default:
 				return fmt.Errorf("unknown proposal type %s", args[0])
 			}
-			err = json.Unmarshal(contents, proposal)
-			if err != nil {
-				return err
-			}
 
-			deposit, err := sdk.ParseCoinsNormalized(args[2])
+			deposit, err := sdk.ParseCoinsNormalized(args[3])
 			if err != nil {
 				return err
 			}
@@ -88,5 +171,9 @@ Proposal title, description, deposit, and marker proposal params must be set in 
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
+	cmd.Flags().String(FlagMsgType, "", "proto type url for msg type")
+	cmd.Flags().String(FlagAmount, "", "amount for msg based fee")
+	cmd.Flags().String(FlagMinFee, "", "min fee rate for msg based fee")
+	cmd.Flags().String(FlagFeeRate, "", "fee rate for msg based fee")
 	return cmd
 }
