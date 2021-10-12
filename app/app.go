@@ -619,7 +619,8 @@ func New(
 		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper),
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),
 		attribute.NewAppModule(appCodec, app.AttributeKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
-		provwasm.NewProvwasmWrapper(wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper)),
+		//wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper),
+		provwasm.NewProvwasmWrapper(appCodec, &app.WasmKeeper, app.StakingKeeper),
 
 		ibc.NewAppModule(app.IBCKeeper),
 		transferModule,
