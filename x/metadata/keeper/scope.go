@@ -192,7 +192,13 @@ func (k Keeper) indexScope(ctx sdk.Context, scope types.Scope) {
 
 // ValidateScopeUpdate checks the current scope and the proposed scope to determine if the the proposed changes are valid
 // based on the existing state
-func (k Keeper) ValidateScopeUpdate(ctx sdk.Context, existing, proposed types.Scope, signers []string) error {
+func (k Keeper) ValidateScopeUpdate(
+	ctx sdk.Context,
+	existing,
+	proposed types.Scope,
+	signers []string,
+	msgTypeURL string,
+) error {
 	if err := proposed.ValidateBasic(); err != nil {
 		return err
 	}
@@ -228,11 +234,7 @@ func (k Keeper) ValidateScopeUpdate(ctx sdk.Context, existing, proposed types.Sc
 			proposedCopy.ValueOwnerAddress = existing.ValueOwnerAddress
 		}
 		if !existing.Equals(proposedCopy) {
-			existingOwners := make([]string, len(existing.Owners))
-			for i, o := range existing.Owners {
-				existingOwners[i] = o.Address
-			}
-			if err := k.ValidateAllOwnersAreSigners(existingOwners, signers); err != nil {
+			if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, existing.Owners, signers, msgTypeURL); err != nil {
 				return err
 			}
 		}
@@ -251,9 +253,6 @@ func (k Keeper) ValidateScopeRemove(ctx sdk.Context, scope types.Scope, signers 
 	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, scope.Owners, signers, msgTypeURL); err != nil {
 		return err
 	}
-	//if err := k.ValidateAllPartiesAreSigners(scope.Owners, signers); err != nil {
-	//	return err
-	//}
 
 	if err := k.validateScopeUpdateValueOwner(ctx, scope.ValueOwnerAddress, "", signers); err != nil {
 		return err

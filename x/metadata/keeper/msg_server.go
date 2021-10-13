@@ -38,7 +38,7 @@ func (k msgServer) WriteScope(
 	msg.ConvertOptionalFields()
 
 	existing, _ := k.GetScope(ctx, msg.Scope.ScopeId)
-	if err := k.ValidateScopeUpdate(ctx, existing, msg.Scope, msg.Signers); err != nil {
+	if err := k.ValidateScopeUpdate(ctx, existing, msg.Scope, msg.Signers, msg.MsgTypeURL()); err != nil {
 		return nil, err
 	}
 
@@ -275,7 +275,7 @@ func (k msgServer) WriteScopeSpecification(
 	var existing *types.ScopeSpecification = nil
 	if e, found := k.GetScopeSpecification(ctx, msg.Specification.SpecificationId); found {
 		existing = &e
-		if err := k.ValidateAllOwnersAreSigners(existing.OwnerAddresses, msg.Signers); err != nil {
+		if err := k.ValidateAllOwnersAreSignersWithAuthz(ctx, existing.OwnerAddresses, msg.Signers, msg.MsgTypeURL()); err != nil {
 			return nil, err
 		}
 	}
@@ -300,7 +300,7 @@ func (k msgServer) DeleteScopeSpecification(
 	if !found {
 		return nil, fmt.Errorf("scope specification not found with id %s", msg.SpecificationId)
 	}
-	if err := k.ValidateAllOwnersAreSigners(existing.OwnerAddresses, msg.Signers); err != nil {
+	if err := k.ValidateAllOwnersAreSignersWithAuthz(ctx, existing.OwnerAddresses, msg.Signers, msg.MsgTypeURL()); err != nil {
 		return nil, err
 	}
 
@@ -325,7 +325,7 @@ func (k msgServer) WriteContractSpecification(
 	var existing *types.ContractSpecification = nil
 	if e, found := k.GetContractSpecification(ctx, msg.Specification.SpecificationId); found {
 		existing = &e
-		if err := k.ValidateAllOwnersAreSigners(existing.OwnerAddresses, msg.Signers); err != nil {
+		if err := k.ValidateAllOwnersAreSignersWithAuthz(ctx, existing.OwnerAddresses, msg.Signers, msg.MsgTypeURL()); err != nil {
 			return nil, err
 		}
 	}
@@ -350,7 +350,7 @@ func (k msgServer) DeleteContractSpecification(
 	if !found {
 		return nil, fmt.Errorf("contract specification not found with id %s", msg.SpecificationId)
 	}
-	if err := k.ValidateAllOwnersAreSigners(existing.OwnerAddresses, msg.Signers); err != nil {
+	if err := k.ValidateAllOwnersAreSignersWithAuthz(ctx, existing.OwnerAddresses, msg.Signers, msg.MsgTypeURL()); err != nil {
 		return nil, err
 	}
 
@@ -402,7 +402,7 @@ func (k msgServer) AddContractSpecToScopeSpec(
 	if !found {
 		return nil, fmt.Errorf("scope specification not found with id %s", msg.ScopeSpecificationId)
 	}
-	if err := k.ValidateAllOwnersAreSigners(scopeSpec.OwnerAddresses, msg.Signers); err != nil {
+	if err := k.ValidateAllOwnersAreSignersWithAuthz(ctx, scopeSpec.OwnerAddresses, msg.Signers, msg.MsgTypeURL()); err != nil {
 		return nil, err
 	}
 
@@ -434,7 +434,7 @@ func (k msgServer) DeleteContractSpecFromScopeSpec(
 	if !found {
 		return nil, fmt.Errorf("scope specification not found with id %s", msg.ScopeSpecificationId)
 	}
-	if err := k.ValidateAllOwnersAreSigners(scopeSpec.OwnerAddresses, msg.Signers); err != nil {
+	if err := k.ValidateAllOwnersAreSignersWithAuthz(ctx, scopeSpec.OwnerAddresses, msg.Signers, msg.MsgTypeURL()); err != nil {
 		return nil, err
 	}
 
@@ -479,7 +479,7 @@ func (k msgServer) WriteRecordSpecification(
 		return nil, fmt.Errorf("contract specification not found with id %s (uuid %s) required for adding or updating record specification with id %s",
 			contractSpecID, contractSpecUUID, msg.Specification.SpecificationId)
 	}
-	if err := k.ValidateAllOwnersAreSigners(contractSpec.OwnerAddresses, msg.Signers); err != nil {
+	if err := k.ValidateAllOwnersAreSignersWithAuthz(ctx, contractSpec.OwnerAddresses, msg.Signers, msg.MsgTypeURL()); err != nil {
 		return nil, err
 	}
 
@@ -517,7 +517,7 @@ func (k msgServer) DeleteRecordSpecification(
 		return nil, fmt.Errorf("contract specification not found with id %s required for deleting record specification with id %s",
 			contractSpecID, msg.SpecificationId)
 	}
-	if err := k.ValidateAllOwnersAreSigners(contractSpec.OwnerAddresses, msg.Signers); err != nil {
+	if err := k.ValidateAllOwnersAreSignersWithAuthz(ctx, contractSpec.OwnerAddresses, msg.Signers, msg.MsgTypeURL()); err != nil {
 		return nil, err
 	}
 
@@ -544,7 +544,7 @@ func (k msgServer) WriteP8EContractSpec(
 	var existing *types.ContractSpecification = nil
 	if e, found := k.GetContractSpecification(ctx, proposed.SpecificationId); found {
 		existing = &e
-		if err := k.ValidateAllOwnersAreSigners(existing.OwnerAddresses, msg.Signers); err != nil {
+		if err := k.ValidateAllOwnersAreSignersWithAuthz(ctx, existing.OwnerAddresses, msg.Signers, msg.MsgTypeURL()); err != nil {
 			return nil, err
 		}
 	}

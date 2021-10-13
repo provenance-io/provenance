@@ -162,31 +162,26 @@ func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSigners() {
 	cases := map[string]struct {
 		owners   []types.Party
 		signers  []string
-		msgTypeURL string
 		errorMsg string
 	}{
 		"no owners - no signers": {
 			owners:   []types.Party{},
 			signers:  []string{},
-			msgTypeURL: "",
 			errorMsg: "",
 		},
 		"one owner - is signer": {
 			owners:   []types.Party{{Address: "signer1", Role: types.PartyType_PARTY_TYPE_OWNER}},
 			signers:  []string{"signer1"},
-			msgTypeURL: "",
 			errorMsg: "",
 		},
 		"one owner - is one of two signers": {
 			owners:   []types.Party{{Address: "signer1", Role: types.PartyType_PARTY_TYPE_OWNER}},
 			signers:  []string{"signer1", "signer2"},
-			msgTypeURL: "",
 			errorMsg: "",
 		},
 		"one owner - is not one of two signers": {
 			owners:   []types.Party{{Address: "missingowner", Role: types.PartyType_PARTY_TYPE_OWNER}},
 			signers:  []string{"signer1", "signer2"},
-			msgTypeURL: "",
 			errorMsg: "missing signature from [missingowner (PARTY_TYPE_OWNER)]",
 		},
 		"two owners - both are signers": {
@@ -194,7 +189,6 @@ func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSigners() {
 				{Address: "owner1", Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: "owner2", Role: types.PartyType_PARTY_TYPE_OWNER}},
 			signers:  []string{"owner2", "owner1"},
-			msgTypeURL: "",
 			errorMsg: "",
 		},
 		"two owners - only one is signer": {
@@ -202,7 +196,6 @@ func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSigners() {
 				{Address: "owner1", Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: "missingowner", Role: types.PartyType_PARTY_TYPE_OWNER}},
 			signers:  []string{"owner2", "owner1"},
-			msgTypeURL: "",
 			errorMsg: "missing signature from [missingowner (PARTY_TYPE_OWNER)]",
 		},
 		"two parties - one owner one other - only owner is signer": {
@@ -210,7 +203,6 @@ func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSigners() {
 				{Address: "owner", Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: "affiliate", Role: types.PartyType_PARTY_TYPE_AFFILIATE}},
 			signers:  []string{"owner"},
-			msgTypeURL: "",
 			errorMsg: "missing signature from [affiliate (PARTY_TYPE_AFFILIATE)]",
 		},
 		"two parties - one owner one other - only other is signer": {
@@ -218,15 +210,20 @@ func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSigners() {
 				{Address: "owner", Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: "affiliate", Role: types.PartyType_PARTY_TYPE_AFFILIATE}},
 			signers:  []string{"affiliate"},
-			msgTypeURL: "",
 			errorMsg: "missing signature from [owner (PARTY_TYPE_OWNER)]",
 		},
+
+		// TODO: Implement authz test cases
+		//1. A missing signature that has an authz grant for it.
+		//2. Same thing, but without the authz grant.
+		//3. A missing signature on a special case message type (e.g. TypeMsgURLAddScopeDataAccessRequest) with a grant for that specific message type.
+		//4. Same thing, but the grant is for the parent type (e.g. TypeMsgURLWriteScopeRequest).
+		//5. Same thing, but there isn’t a grant.
 	}
 
 	for n, tc := range cases {
 		s.T().Run(n, func(t *testing.T) {
-			//err := s.app.MetadataKeeper.ValidateAllPartiesAreSigners(tc.owners, tc.signers)
-			err := s.app.MetadataKeeper.ValidateAllPartiesAreSignersWithAuthz(s.ctx, tc.owners, tc.signers, tc.msgTypeURL)
+			err := s.app.MetadataKeeper.ValidateAllPartiesAreSignersWithAuthz(s.ctx, tc.owners, tc.signers, "")
 			if len(tc.errorMsg) == 0 {
 				assert.NoError(t, err, "%s unexpected error", n)
 			} else {
@@ -303,7 +300,7 @@ func (s *KeeperTestSuite) TestValidateAllOwnersAreSigners() {
 
 	for n, tc := range tests {
 		s.T().Run(n, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidateAllOwnersAreSigners(tc.owners, tc.signers)
+			err := s.app.MetadataKeeper.ValidateAllOwnersAreSignersWithAuthz(s.ctx, tc.owners, tc.signers, "")
 			if len(tc.errorMsg) == 0 {
 				assert.NoError(t, err, "ValidateAllOwnersAreSigners unexpected error")
 			} else {
@@ -619,4 +616,15 @@ func (s *KeeperTestSuite) TestUnionDistinct() {
 			assert.Equal(t, tc.output, output)
 		})
 	}
+}
+
+// We are only unit testing message type hierarchy. Therefore, it does not need to run and a KeeperTestSuite
+func TestGetMsgTypeURLs(t *testing.T) {
+	// TODO: Unit test message type hierarchy.
+	//		 When a message type URL is passed in check that a list is returned with
+	//		 itself and the parent message type URL if it belongs to a hierarchy message.
+	//		 For example: passing in "/provenance.metadata.v1.MsgAddScopeDataAccessRequest"
+	//		 should return a list containing
+	//		 ["/provenance.metadata.v1.MsgAddScopeDataAccessRequest", "/provenance.metadata.v1.MsgWriteScopeRequest"]
+	assert.Fail(t, "Implement message type hierarchy test cases")
 }
