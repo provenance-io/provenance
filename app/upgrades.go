@@ -2,7 +2,6 @@ package app
 
 import (
 	"fmt"
-
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -13,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	ibcconnectiontypes "github.com/cosmos/ibc-go/modules/core/03-connection/types"
+	"github.com/provenance-io/provenance/internal/piobaseapp"
 )
 
 var (
@@ -176,7 +176,7 @@ func InstallCustomUpgradeHandlers(app *App) {
 }
 
 // CustomUpgradeStoreLoader provides upgrade handlers for store and application module upgrades at specified versions
-func CustomUpgradeStoreLoader(app *App, info storetypes.UpgradeInfo) baseapp.StoreLoader {
+func CustomUpgradeStoreLoader(app *App, info storetypes.UpgradeInfo) piobaseapp.StoreLoader {
 	// Current upgrade info is empty or we are at the wrong height, skip this.
 	if info.Name == "" || info.Height-1 != app.LastBlockHeight() {
 		return nil
@@ -207,7 +207,7 @@ func CustomUpgradeStoreLoader(app *App, info storetypes.UpgradeInfo) baseapp.Sto
 				"upgrade.deleted", upgrade.Deleted,
 				"upgrade.renamed", upgrade.Renamed,
 			)
-			return upgradetypes.UpgradeStoreLoader(info.Height, &storeUpgrades)
+			return UpgradeStoreLoader(info.Height, &storeUpgrades)
 		}
 	}
 	return nil
@@ -216,3 +216,20 @@ func CustomUpgradeStoreLoader(app *App, info storetypes.UpgradeInfo) baseapp.Sto
 func isEmptyUpgrade(upgrades storetypes.StoreUpgrades) bool {
 	return len(upgrades.Renamed) == 0 && len(upgrades.Deleted) == 0 && len(upgrades.Added) == 0
 }
+
+// UpgradeStoreLoader is used to prepare baseapp with a fixed StoreLoader
+// pattern. This is useful for custom upgrade loading logic.
+func UpgradeStoreLoader(upgradeHeight int64, storeUpgrades *storetypes.StoreUpgrades) piobaseapp.StoreLoader {
+	return func(ms sdk.CommitMultiStore) error {
+		if upgradeHeight == ms.LastCommitID().Version+1 {
+			// Check if the current commit version and upgrade height matches
+			if len(storeUpgrades.Renamed) > 0 || len(storeUpgrades.Deleted) > 0 || len(storeUpgrades.Added) > 0 {
+				return ms.LoadLatestVersionAndUpgrade(storeUpgrades)
+			}
+		}
+
+		// Otherwise load default store loader
+		return baseapp.DefaultStoreLoader(ms)
+	}
+}
+

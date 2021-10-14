@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"github.com/provenance-io/provenance/internal/piobaseapp"
 	"io"
 	"net/http"
 	"os"
@@ -229,7 +230,7 @@ func SdkCoinDenomRegex() string {
 // They are exported for convenience in creating helper functions, as object
 // capabilities aren't needed for testing.
 type App struct {
-	*baseapp.BaseApp
+	*piobaseapp.BaseApp
 
 	legacyAmino       *codec.LegacyAmino
 	appCodec          codec.Codec
@@ -299,13 +300,13 @@ func init() {
 func New(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, skipUpgradeHeights map[int64]bool,
 	homePath string, invCheckPeriod uint, encodingConfig appparams.EncodingConfig,
-	appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
+	appOpts servertypes.AppOptions, baseAppOptions ...func(*piobaseapp.BaseApp),
 ) *App {
 	appCodec := encodingConfig.Marshaler
 	legacyAmino := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 
-	bApp := baseapp.NewBaseApp("provenanced", logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
+	bApp := piobaseapp.NewBaseApp("provenanced", logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)

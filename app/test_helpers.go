@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	simappparams "github.com/provenance-io/provenance/app/params"
 	"strconv"
 	"testing"
 	"time"
@@ -52,7 +53,9 @@ var DefaultConsensusParams = &abci.ConsensusParams{
 		},
 	},
 }
-
+func EncodingConfig() simappparams.EncodingConfig {
+	return MakeEncodingConfig()
+}
 func setup(withGenesis bool, invCheckPeriod uint) (*App, GenesisState) {
 	db := dbm.NewMemDB()
 	encCdc := MakeEncodingConfig()
