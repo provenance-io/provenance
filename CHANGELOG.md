@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * Add `bank` and `authz` module query `proto` files required by `grpcurl` [#482](https://github.com/provenance-io/provenance/issues/482)
+* Fix typeos in marker log statements [#502](https://github.com/provenance-io/provenance/issues/502)
 
 ### Bug Fixes
 
