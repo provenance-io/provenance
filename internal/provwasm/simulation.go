@@ -1,12 +1,14 @@
 package provwasm
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmsim "github.com/CosmWasm/wasmd/x/wasm/simulation"
 	"github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"io/ioutil"
 
 	//"fmt"
 	//"github.com/CosmWasm/wasmd/x/wasm/types"
@@ -34,15 +36,14 @@ func NewProvwasmWrapper(cdc codec.Codec, keeper *wasm.Keeper, validatorSetSource
 
 // GenerateGenesisState creates a randomized GenState of the wasm module.
 func (pw ProvwasmWrapper) GenerateGenesisState(input *module.SimulationState) {
-	pw.wasm.GenerateGenesisState(input)
+	//pw.wasm.GenerateGenesisState(input)
 	fmt.Println("asdf - GenerateGenesisState for provwasm")
 	params := wasmsim.RandomParams(input.Rand)
 	contracts := make([]types.Contract, 1)
-	codes := make([]types.Code, 1)
 	//var contractInfo types.ContractInfo
 	contractInfo := types.ContractInfo {
 		// CodeID is the reference to the stored Wasm code
-		0,
+		1,
 		// Creator address who initially instantiated the contract
 		//Creator string `protobuf:"bytes,2,opt,name=creator,proto3" json:"creator,omitempty"
 		input.Accounts[0].Address.String(),
@@ -65,16 +66,36 @@ func (pw ProvwasmWrapper) GenerateGenesisState(input *module.SimulationState) {
 		nil,
 	}
 
+	//var codeBytes []byte
+
+	codeBytes, err := ioutil.ReadFile("/Users/fredkneeland/code/provenance/tutorial.wasm") // b has type []byte
+	if err != nil {
+		panic("failed to read file")
+	}
+
+	fmt.Println("asdf")
+	fmt.Println(codeBytes)
+
+	// TODO: how do I get the code bytes from file?
+
+	hash := sha256.Sum256(codeBytes)
+	fmt.Println("Hash: ")
+	fmt.Println(hash)
+
 	// okay... how do I get these from the tutorial.wasm file?
-	var codeInfo types.CodeInfo
+	codeInfo := types.CodeInfo{
+		CodeHash: hash[:],
+		Creator:  input.Accounts[0].Address.String(),
+		InstantiateConfig: types.AccessConfig{
+			Permission: types.AccessTypeEverybody,
+		},
+	}
 
-
-	var codeBytes []byte
-
+	codes := make([]types.Code, 1)
 	codes[0] = types.Code{
 		// Code struct encompasses CodeInfo and CodeBytes
 		//CodeID    uint64   `protobuf:"varint,1,opt,name=code_id,json=codeId,proto3" json:"code_id,omitempty"`
-		0,
+		1,
 		//CodeInfo  CodeInfo `protobuf:"bytes,2,opt,name=code_info,json=codeInfo,proto3" json:"code_info"`
 		codeInfo,
 		//CodeBytes []byte   `protobuf:"bytes,3,opt,name=code_bytes,json=codeBytes,proto3" json:"code_bytes,omitempty"`
@@ -94,11 +115,13 @@ func (pw ProvwasmWrapper) GenerateGenesisState(input *module.SimulationState) {
 		Params:    params,
 		Codes:     codes,
 		Contracts: contracts, // TODO: add contract specific code here
-		Sequences: nil,
+		Sequences: []types.Sequence{
+			{IDKey: types.KeyLastCodeID, Value: 1},
+		},
 		GenMsgs:   nil,
 	}
 
-	_, err := input.Cdc.MarshalJSON(&wasmGenesis)
+	_, err = input.Cdc.MarshalJSON(&wasmGenesis)
 	if err != nil {
 		panic(err)
 	}
