@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	msgfeeskeeper "github.com/provenance-io/provenance/x/msgfees/keeper"
 	"io/ioutil"
 	"math/rand"
 	"os"
@@ -83,7 +84,7 @@ func newBaseApp(name string, options ...func(*BaseApp)) *BaseApp {
 	db := dbm.NewMemDB()
 	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
-	return NewBaseApp(name, logger, db, testTxDecoder(codec), options...)
+	return NewBaseApp(name, logger, db, testTxDecoder(codec),msgfeeskeeper.Keeper{}, options...)
 }
 
 func registerTestCodec(cdc *codec.LegacyAmino) {
@@ -209,7 +210,7 @@ func TestLoadVersion(t *testing.T) {
 	pruningOpt := SetPruning(store.PruneNothing)
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := NewBaseApp(name, logger, db, nil, pruningOpt)
+	app := NewBaseApp(name, logger, db, nil, msgfeeskeeper.Keeper{},pruningOpt)
 
 	// make a cap key and mount the store
 	err := app.LoadLatestVersion() // needed to make stores non-nil
@@ -236,7 +237,7 @@ func TestLoadVersion(t *testing.T) {
 	commitID2 := sdk.CommitID{Version: 2, Hash: res.Data}
 
 	// reload with LoadLatestVersion
-	app = NewBaseApp(name, logger, db, nil, pruningOpt)
+	app = NewBaseApp(name, logger, db, nil, msgfeeskeeper.Keeper{}, pruningOpt)
 	app.MountStores()
 	err = app.LoadLatestVersion()
 	require.Nil(t, err)
@@ -244,7 +245,7 @@ func TestLoadVersion(t *testing.T) {
 
 	// reload with LoadVersion, see if you can commit the same block and get
 	// the same result
-	app = NewBaseApp(name, logger, db, nil, pruningOpt)
+	app = NewBaseApp(name, logger, db, nil, msgfeeskeeper.Keeper{},pruningOpt)
 	err = app.LoadVersion(1)
 	require.Nil(t, err)
 	testLoadVersionHelper(t, app, int64(1), commitID1)
@@ -323,7 +324,7 @@ func TestSetLoader(t *testing.T) {
 			if tc.setLoader != nil {
 				opts = append(opts, tc.setLoader)
 			}
-			app := NewBaseApp(t.Name(), defaultLogger(), db, nil, opts...)
+			app := NewBaseApp(t.Name(), defaultLogger(), db, nil, msgfeeskeeper.Keeper{},opts...)
 			app.MountStores(sdk.NewKVStoreKey(tc.loadStoreKey))
 			err := app.LoadLatestVersion()
 			require.Nil(t, err)
@@ -345,7 +346,7 @@ func TestVersionSetterGetter(t *testing.T) {
 	pruningOpt := SetPruning(store.PruneDefault)
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := NewBaseApp(name, logger, db, nil, pruningOpt)
+	app := NewBaseApp(name, logger, db, nil, msgfeeskeeper.Keeper{}, pruningOpt)
 
 	require.Equal(t, "", app.Version())
 	res := app.Query(abci.RequestQuery{Path: "app/version"})
@@ -365,7 +366,7 @@ func TestLoadVersionInvalid(t *testing.T) {
 	pruningOpt := SetPruning(store.PruneNothing)
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := NewBaseApp(name, logger, db, nil, pruningOpt)
+	app := NewBaseApp(name, logger, db, nil, msgfeeskeeper.Keeper{},pruningOpt)
 
 	err := app.LoadLatestVersion()
 	require.Nil(t, err)
@@ -380,7 +381,7 @@ func TestLoadVersionInvalid(t *testing.T) {
 	commitID1 := sdk.CommitID{Version: 1, Hash: res.Data}
 
 	// create a new app with the stores mounted under the same cap key
-	app = NewBaseApp(name, logger, db, nil, pruningOpt)
+	app = NewBaseApp(name, logger, db, nil, msgfeeskeeper.Keeper{},pruningOpt)
 
 	// require we can load the latest version
 	err = app.LoadVersion(1)
@@ -402,7 +403,7 @@ func TestLoadVersionPruning(t *testing.T) {
 	pruningOpt := SetPruning(pruningOptions)
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := NewBaseApp(name, logger, db, nil, pruningOpt)
+	app := NewBaseApp(name, logger, db, nil, msgfeeskeeper.Keeper{}, pruningOpt)
 
 	// make a cap key and mount the store
 	capKey := sdk.NewKVStoreKey("key1")
@@ -440,7 +441,7 @@ func TestLoadVersionPruning(t *testing.T) {
 	}
 
 	// reload with LoadLatestVersion, check it loads last version
-	app = NewBaseApp(name, logger, db, nil, pruningOpt)
+	app = NewBaseApp(name, logger, db, nil, msgfeeskeeper.Keeper{},pruningOpt)
 	app.MountStores(capKey)
 
 	err = app.LoadLatestVersion()
@@ -458,7 +459,7 @@ func testLoadVersionHelper(t *testing.T, app *BaseApp, expectedHeight int64, exp
 func TestOptionFunction(t *testing.T) {
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
-	bap := NewBaseApp("starting name", logger, db, nil, testChangeNameHelper("new name"))
+	bap := NewBaseApp("starting name", logger, db, nil,msgfeeskeeper.Keeper{}, testChangeNameHelper("new name"))
 	require.Equal(t, bap.name, "new name", "BaseApp should have had name changed via option function")
 }
 
@@ -556,7 +557,7 @@ func TestInitChainer(t *testing.T) {
 	// we can reload the same  app later
 	db := dbm.NewMemDB()
 	logger := defaultLogger()
-	app := NewBaseApp(name, logger, db, nil)
+	app := NewBaseApp(name, logger, db, nil,msgfeeskeeper.Keeper{},)
 	capKey := sdk.NewKVStoreKey("main")
 	capKey2 := sdk.NewKVStoreKey("key2")
 	app.MountStores(capKey, capKey2)
@@ -611,7 +612,7 @@ func TestInitChainer(t *testing.T) {
 	require.Equal(t, value, res.Value)
 
 	// reload app
-	app = NewBaseApp(name, logger, db, nil)
+	app = NewBaseApp(name, logger, db, nil,msgfeeskeeper.Keeper{},)
 	app.SetInitChainer(initChainer)
 	app.MountStores(capKey, capKey2)
 	err = app.LoadLatestVersion() // needed to make stores non-nil
@@ -635,7 +636,7 @@ func TestInitChain_WithInitialHeight(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
 	logger := defaultLogger()
-	app := NewBaseApp(name, logger, db, nil)
+	app := NewBaseApp(name, logger, db, nil, msgfeeskeeper.Keeper{},)
 
 	app.InitChain(
 		abci.RequestInitChain{
@@ -651,7 +652,7 @@ func TestBeginBlock_WithInitialHeight(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
 	logger := defaultLogger()
-	app := NewBaseApp(name, logger, db, nil)
+	app := NewBaseApp(name, logger, db, nil, msgfeeskeeper.Keeper{},)
 
 	app.InitChain(
 		abci.RequestInitChain{
@@ -2019,7 +2020,7 @@ func TestBaseApp_EndBlock(t *testing.T) {
 		},
 	}
 
-	app := NewBaseApp(name, logger, db, nil)
+	app := NewBaseApp(name, logger, db, nil,msgfeeskeeper.Keeper{},)
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 	app.InitChain(abci.RequestInitChain{
 		ConsensusParams: cp,

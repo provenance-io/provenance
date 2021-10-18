@@ -44,6 +44,10 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
+func (k Keeper)GetFeeCollectorName() string  {
+	return k.feeCollectorName
+}
+
 // SetMsgBasedFee sets the additional fee schedule for a Msg
 func (k Keeper) SetMsgBasedFee(ctx sdk.Context, msgBasedFees types.MsgBasedFee) {
 	store := ctx.KVStore(k.storeKey)

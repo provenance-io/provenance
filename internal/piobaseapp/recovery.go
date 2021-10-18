@@ -18,6 +18,8 @@ type RecoveryHandler func(recoveryObj interface{}) error
 // returns (nil, error) if recoveryObj was processed and middleware chain processing should be stopped.
 type recoveryMiddleware func(recoveryObj interface{}) (recoveryMiddleware, error)
 
+type recoveryAdditionalFeeMiddleware func(recoveryObj interface{}) (recoveryAdditionalFeeMiddleware, error)
+
 // processRecovery processes recoveryMiddleware chain for recovery() object.
 // Chain processing stops on non-nil error or when chain is processed.
 func processRecovery(recoveryObj interface{}, middleware recoveryMiddleware) error {
@@ -62,6 +64,7 @@ func newOutOfGasRecoveryMiddleware(gasWanted uint64, ctx sdk.Context, next recov
 
 	return newRecoveryMiddleware(handler, next)
 }
+
 
 // newDefaultRecoveryMiddleware creates a default (last in chain) recovery middleware for app.runTx method.
 func newDefaultRecoveryMiddleware() recoveryMiddleware {

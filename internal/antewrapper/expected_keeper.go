@@ -8,5 +8,6 @@ import (
 // MsgBasedFeeKeeper for additional msg fees.
 type MsgBasedFeeKeeper interface {
   GetMsgBasedFee(ctx sdk.Context, msgType string) (*types.MsgBasedFee, error)
+  GetFeeCollectorName() string
 }
 

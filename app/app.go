@@ -305,13 +305,6 @@ func New(
 	appCodec := encodingConfig.Marshaler
 	legacyAmino := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
-
-	bApp := piobaseapp.NewBaseApp("provenanced", logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
-	bApp.SetCommitMultiStoreTracer(traceStore)
-	bApp.SetVersion(version.Version)
-	bApp.SetInterfaceRegistry(interfaceRegistry)
-	sdk.SetCoinDenomRegex(SdkCoinDenomRegex)
-
 	keys := sdk.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
@@ -330,6 +323,28 @@ func New(
 		wasm.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
+	pk := initParamsKeeper(appCodec, legacyAmino, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
+	subspaceMsgBasedFee,_ := pk.GetSubspace(msgbasedfeestypes.ModuleName)
+	fk := msgfeekeeper.NewKeeper(
+		appCodec, keys[msgbasedfeestypes.StoreKey], subspaceMsgBasedFee, authtypes.FeeCollectorName,
+	)
+	subspaceAccount,_ := pk.GetSubspace(authtypes.ModuleName)
+	ak := authkeeper.NewAccountKeeper(
+		appCodec, keys[authtypes.StoreKey], subspaceAccount, authtypes.ProtoBaseAccount, maccPerms,
+	)
+
+	subspaceBank,_ := pk.GetSubspace(banktypes.ModuleName)
+
+	bk := bankkeeper.NewBaseKeeper(
+		appCodec, keys[banktypes.StoreKey], ak, subspaceBank, ModuleAccountAddrs(),
+	)
+	bApp := piobaseapp.NewBaseApp("provenanced", logger, db, encodingConfig.TxConfig.TxDecoder(),fk,bk,ak, baseAppOptions...)
+	bApp.SetCommitMultiStoreTracer(traceStore)
+	bApp.SetVersion(version.Version)
+	bApp.SetInterfaceRegistry(interfaceRegistry)
+	sdk.SetCoinDenomRegex(SdkCoinDenomRegex)
+
+
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
 
 	app := &App{
@@ -346,7 +361,7 @@ func New(
 	// Register helpers for state-sync status.
 	statesync.RegisterSyncStatus()
 
-	app.ParamsKeeper = initParamsKeeper(appCodec, legacyAmino, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
+	app.ParamsKeeper = pk
 
 	// set the BaseApp's parameter store
 	bApp.SetParamStore(app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramskeeper.ConsensusParamsKeyTable()))
@@ -363,13 +378,10 @@ func New(
 	app.CapabilityKeeper.Seal()
 
 	// add keepers
-	app.AccountKeeper = authkeeper.NewAccountKeeper(
-		appCodec, keys[authtypes.StoreKey], app.GetSubspace(authtypes.ModuleName), authtypes.ProtoBaseAccount, maccPerms,
-	)
+	app.AccountKeeper = ak
 
-	app.BankKeeper = bankkeeper.NewBaseKeeper(
-		appCodec, keys[banktypes.StoreKey], app.AccountKeeper, app.GetSubspace(banktypes.ModuleName), app.ModuleAccountAddrs(),
-	)
+	app.BankKeeper = bk
+
 	stakingKeeper := stakingkeeper.NewKeeper(
 		appCodec, keys[stakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName),
 	)
@@ -379,7 +391,7 @@ func New(
 	)
 	app.DistrKeeper = distrkeeper.NewKeeper(
 		appCodec, keys[distrtypes.StoreKey], app.GetSubspace(distrtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
-		&stakingKeeper, authtypes.FeeCollectorName, app.ModuleAccountAddrs(),
+		&stakingKeeper, authtypes.FeeCollectorName, ModuleAccountAddrs(),
 	)
 	app.SlashingKeeper = slashingkeeper.NewKeeper(
 		appCodec, keys[slashingtypes.StoreKey], &stakingKeeper, app.GetSubspace(slashingtypes.ModuleName),
@@ -392,9 +404,7 @@ func New(
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath, app.BaseApp)
 
 	// msgbased fee keeper initialization.
-	app.MsgBasedFeeKeeper = msgfeekeeper.NewKeeper(
-		appCodec, keys[msgbasedfeestypes.StoreKey], app.GetSubspace(msgbasedfeestypes.ModuleName), authtypes.FeeCollectorName,
-	)
+	app.MsgBasedFeeKeeper = fk
 
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
@@ -738,13 +748,18 @@ func (app *App) LoadHeight(height int64) error {
 }
 
 // ModuleAccountAddrs returns all the app's module account addresses.
-func (app *App) ModuleAccountAddrs() map[string]bool {
+func  ModuleAccountAddrs() map[string]bool {
 	modAccAddrs := make(map[string]bool)
 	for acc := range maccPerms {
 		modAccAddrs[authtypes.NewModuleAddress(acc).String()] = true
 	}
 
 	return modAccAddrs
+}
+
+// ModuleAccountAddrs returns all the app's module account addresses.
+func (app *App) ModuleAccountAddrs() map[string]bool {
+	return ModuleAccountAddrs()
 }
 
 // LegacyAmino returns SimApp's amino codec.

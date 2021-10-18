@@ -6,7 +6,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	cosmosauthtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	k "github.com/provenance-io/provenance/x/msgfees/keeper"
 )
 
 // MsgBasedFeeDecorator will check if the transaction's fee is at least as large
@@ -64,6 +63,7 @@ func (afd MsgBasedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 			// maybe record additional fees charged.
 		}
 	}
+
 
 	return next(ctx, tx, simulate)
 }
@@ -124,13 +124,25 @@ func FilterMsgAndComputeTax(ctx sdk.Context, mbfk MsgBasedFeeKeeper, msgs ...sdk
 		if msgFees.MinAdditionalFee.IsPositive() {
 			additionalFees = additionalFees.Add(sdk.NewCoin(msgFees.MinAdditionalFee.Denom, msgFees.MinAdditionalFee.Amount))
 		}
+
 	}
 
 
 	return taxes, nil
 }
 
-// computes the fees
-func computeFees(ctx sdk.Context, tk k.Keeper, principal sdk.Coins) sdk.Coins {
+
+
+// DeductFees deducts fees from the given account.
+func DeductFees(bankKeeper cosmosauthtypes.BankKeeper, ctx sdk.Context, acc cosmosauthtypes.AccountI,mbfk MsgBasedFeeKeeper, fees sdk.Coins) error {
+	if !fees.IsValid() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
+	}
+
+	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), mbfk.GetFeeCollectorName(), fees)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+	}
+
 	return nil
 }
