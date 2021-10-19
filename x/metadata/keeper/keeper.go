@@ -132,10 +132,10 @@ func NewKeeper(
 		paramSpace = paramSpace.WithKeyTable(types.OSParamKeyTable())
 	}
 	return Keeper{
-		storeKey:   key,
-		cdc:        cdc,
-		paramSpace: paramSpace,
-		authKeeper: authKeeper,
+		storeKey:    key,
+		cdc:         cdc,
+		paramSpace:  paramSpace,
+		authKeeper:  authKeeper,
 		authzKeeper: authzKeeper,
 	}
 }

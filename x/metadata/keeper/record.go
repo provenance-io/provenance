@@ -145,9 +145,6 @@ func (k Keeper) ValidateRecordUpdate(
 			if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, session.Parties, signers, msgTypeURL); err != nil {
 				return fmt.Errorf("missing signer from original session %s: %w", session.SessionId, err)
 			}
-			//if err := k.ValidateAllPartiesAreSigners(session.Parties, signers); err != nil {
-			//	return fmt.Errorf("missing signer from original session %s: %w", session.SessionId, err)
-			//}
 		}
 		// The existing specification id might be empty for old stuff.
 		// And for now, we'll allow the proposed specification id to be missing and set it appropriately below.
@@ -177,9 +174,6 @@ func (k Keeper) ValidateRecordUpdate(
 	if signErr := k.ValidateAllPartiesAreSignersWithAuthz(ctx, session.Parties, signers, msgTypeURL); signErr != nil {
 		return signErr
 	}
-	//if signErr := k.ValidateAllPartiesAreSigners(session.Parties, signers); signErr != nil {
-	//	return signErr
-	//}
 
 	// Get the record specification
 	contractSpecUUID, cSpecUUIDErr := session.SpecificationId.ContractSpecUUID()
@@ -318,14 +312,8 @@ func (k Keeper) ValidateRecordRemove(
 	if !recordID.Equals(proposedID) {
 		return fmt.Errorf("cannot remove record. expected %s, got %s", recordID, proposedID)
 	}
-
 	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, scope.Owners, signers, msgTypeURL); err != nil {
 		return err
 	}
-
-	//if err := k.ValidateAllPartiesAreSigners(scope.Owners, signers); err != nil {
-	//	return err
-	//}
-
 	return nil
 }

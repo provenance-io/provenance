@@ -171,54 +171,57 @@ func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSigners() {
 		msgTypeURL string
 		errorMsg   string
 	}{
-		//"no owners - no signers": {
-		//	owners:   []types.Party{},
-		//	signers:  []string{},
-		//	errorMsg: "",
-		//},
-		//"one owner - is signer": {
-		//	owners:   []types.Party{{Address: "signer1", Role: types.PartyType_PARTY_TYPE_OWNER}},
-		//	signers:  []string{"signer1"},
-		//	errorMsg: "",
-		//},
-		//"one owner - is one of two signers": {
-		//	owners:   []types.Party{{Address: "signer1", Role: types.PartyType_PARTY_TYPE_OWNER}},
-		//	signers:  []string{"signer1", "signer2"},
-		//	errorMsg: "",
-		//},
-		//"one owner - is not one of two signers": {
-		//	owners:   []types.Party{{Address: "missingowner", Role: types.PartyType_PARTY_TYPE_OWNER}},
-		//	signers:  []string{"signer1", "signer2"},
-		//	errorMsg: "missing signature from [missingowner (PARTY_TYPE_OWNER)]",
-		//},
-		//"two owners - both are signers": {
-		//	owners: []types.Party{
-		//		{Address: "owner1", Role: types.PartyType_PARTY_TYPE_OWNER},
-		//		{Address: "owner2", Role: types.PartyType_PARTY_TYPE_OWNER}},
-		//	signers:  []string{"owner2", "owner1"},
-		//	errorMsg: "",
-		//},
-		//"two owners - only one is signer": {
-		//	owners: []types.Party{
-		//		{Address: "owner1", Role: types.PartyType_PARTY_TYPE_OWNER},
-		//		{Address: "missingowner", Role: types.PartyType_PARTY_TYPE_OWNER}},
-		//	signers:  []string{"owner2", "owner1"},
-		//	errorMsg: "missing signature from [missingowner (PARTY_TYPE_OWNER)]",
-		//},
-		//"two parties - one owner one other - only owner is signer": {
-		//	owners: []types.Party{
-		//		{Address: "owner", Role: types.PartyType_PARTY_TYPE_OWNER},
-		//		{Address: "affiliate", Role: types.PartyType_PARTY_TYPE_AFFILIATE}},
-		//	signers:  []string{"owner"},
-		//	errorMsg: "missing signature from [affiliate (PARTY_TYPE_AFFILIATE)]",
-		//},
-		//"two parties - one owner one other - only other is signer": {
-		//	owners: []types.Party{
-		//		{Address: "owner", Role: types.PartyType_PARTY_TYPE_OWNER},
-		//		{Address: "affiliate", Role: types.PartyType_PARTY_TYPE_AFFILIATE}},
-		//	signers:  []string{"affiliate"},
-		//	errorMsg: "missing signature from [owner (PARTY_TYPE_OWNER)]",
-		//},
+		/*
+		"no owners - no signers": {
+			owners:   []types.Party{},
+			signers:  []string{},
+			errorMsg: "",
+		},
+		"one owner - is signer": {
+			owners:   []types.Party{{Address: "signer1", Role: types.PartyType_PARTY_TYPE_OWNER}},
+			signers:  []string{"signer1"},
+			errorMsg: "",
+		},
+		"one owner - is one of two signers": {
+			owners:   []types.Party{{Address: "signer1", Role: types.PartyType_PARTY_TYPE_OWNER}},
+			signers:  []string{"signer1", "signer2"},
+			errorMsg: "",
+		},
+		"one owner - is not one of two signers": {
+			owners:   []types.Party{{Address: "missingowner", Role: types.PartyType_PARTY_TYPE_OWNER}},
+			signers:  []string{"signer1", "signer2"},
+			errorMsg: "missing signature from [missingowner (PARTY_TYPE_OWNER)]",
+		},
+		"two owners - both are signers": {
+			owners: []types.Party{
+				{Address: "owner1", Role: types.PartyType_PARTY_TYPE_OWNER},
+				{Address: "owner2", Role: types.PartyType_PARTY_TYPE_OWNER}},
+			signers:  []string{"owner2", "owner1"},
+			errorMsg: "",
+		},
+		"two owners - only one is signer": {
+			owners: []types.Party{
+				{Address: "owner1", Role: types.PartyType_PARTY_TYPE_OWNER},
+				{Address: "missingowner", Role: types.PartyType_PARTY_TYPE_OWNER}},
+			signers:  []string{"owner2", "owner1"},
+			errorMsg: "missing signature from [missingowner (PARTY_TYPE_OWNER)]",
+		},
+		"two parties - one owner one other - only owner is signer": {
+			owners: []types.Party{
+				{Address: "owner", Role: types.PartyType_PARTY_TYPE_OWNER},
+				{Address: "affiliate", Role: types.PartyType_PARTY_TYPE_AFFILIATE}},
+			signers:  []string{"owner"},
+			errorMsg: "missing signature from [affiliate (PARTY_TYPE_AFFILIATE)]",
+		},
+		"two parties - one owner one other - only other is signer": {
+			owners: []types.Party{
+				{Address: "owner", Role: types.PartyType_PARTY_TYPE_OWNER},
+				{Address: "affiliate", Role: types.PartyType_PARTY_TYPE_AFFILIATE}},
+			signers:  []string{"affiliate"},
+			errorMsg: "missing signature from [owner (PARTY_TYPE_OWNER)]",
+		},
+		 */
+
 		"two parties - one missing signature with authz grant - two signers": {
 			owners: []types.Party{
 				{Address: signer1, Role: types.PartyType_PARTY_TYPE_OWNER},

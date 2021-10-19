@@ -164,9 +164,6 @@ func (k Keeper) ValidateSessionUpdate(ctx sdk.Context, existing, proposed *types
 	if err = k.ValidateAllPartiesAreSignersWithAuthz(ctx, scope.Owners, signers, msgTypeURL); err != nil {
 		return err
 	}
-	//if err = k.ValidateAllPartiesAreSigners(scope.Owners, signers); err != nil {
-	//	return err
-	//}
 
 	if existing != nil {
 		if err = k.ValidateAuditUpdate(ctx, existing.Audit, proposed.Audit); err != nil {

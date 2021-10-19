@@ -325,9 +325,6 @@ func (k Keeper) ValidateScopeAddDataAccess(
 	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, existing.Owners, signers, msgTypeURL); err != nil {
 		return err
 	}
-	//if err := k.ValidateAllPartiesAreSigners(existing.Owners, signers); err != nil {
-	//	return err
-	//}
 
 	return nil
 }
@@ -363,9 +360,6 @@ func (k Keeper) ValidateScopeDeleteDataAccess(
 	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, existing.Owners, signers, msgTypeURL); err != nil {
 		return err
 	}
-	//if err := k.ValidateAllPartiesAreSigners(existing.Owners, signers); err != nil {
-	//	return err
-	//}
 
 	return nil
 }
@@ -377,7 +371,7 @@ func (k Keeper) ValidateScopeUpdateOwners(
 	proposed types.Scope,
 	signers []string,
 	msgTypeURL string,
-)error {
+) error {
 	if err := proposed.ValidateOwnersBasic(); err != nil {
 		return err
 	}
@@ -389,14 +383,9 @@ func (k Keeper) ValidateScopeUpdateOwners(
 	if err := k.ValidateScopeOwners(proposed.Owners, scopeSpec); err != nil {
 		return err
 	}
-
-	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx ,existing.Owners, signers, msgTypeURL); err != nil {
+	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, existing.Owners, signers, msgTypeURL); err != nil {
 		return err
 	}
-	//if err := k.ValidateAllPartiesAreSigners(existing.Owners, signers); err != nil {
-	//	return err
-	//}
-
 	return nil
 }
 
