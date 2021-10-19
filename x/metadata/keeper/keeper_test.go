@@ -2,8 +2,10 @@ package keeper_test
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	"sort"
 	"testing"
+	"time"
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/metadata/keeper"
@@ -159,71 +161,140 @@ func (s *KeeperTestSuite) TestValidatePartiesInvolved() {
 
 func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSigners() {
 
-	cases := map[string]struct {
-		owners   []types.Party
-		signers  []string
-		errorMsg string
-	}{
-		"no owners - no signers": {
-			owners:   []types.Party{},
-			signers:  []string{},
-			errorMsg: "",
-		},
-		"one owner - is signer": {
-			owners:   []types.Party{{Address: "signer1", Role: types.PartyType_PARTY_TYPE_OWNER}},
-			signers:  []string{"signer1"},
-			errorMsg: "",
-		},
-		"one owner - is one of two signers": {
-			owners:   []types.Party{{Address: "signer1", Role: types.PartyType_PARTY_TYPE_OWNER}},
-			signers:  []string{"signer1", "signer2"},
-			errorMsg: "",
-		},
-		"one owner - is not one of two signers": {
-			owners:   []types.Party{{Address: "missingowner", Role: types.PartyType_PARTY_TYPE_OWNER}},
-			signers:  []string{"signer1", "signer2"},
-			errorMsg: "missing signature from [missingowner (PARTY_TYPE_OWNER)]",
-		},
-		"two owners - both are signers": {
-			owners: []types.Party{
-				{Address: "owner1", Role: types.PartyType_PARTY_TYPE_OWNER},
-				{Address: "owner2", Role: types.PartyType_PARTY_TYPE_OWNER}},
-			signers:  []string{"owner2", "owner1"},
-			errorMsg: "",
-		},
-		"two owners - only one is signer": {
-			owners: []types.Party{
-				{Address: "owner1", Role: types.PartyType_PARTY_TYPE_OWNER},
-				{Address: "missingowner", Role: types.PartyType_PARTY_TYPE_OWNER}},
-			signers:  []string{"owner2", "owner1"},
-			errorMsg: "missing signature from [missingowner (PARTY_TYPE_OWNER)]",
-		},
-		"two parties - one owner one other - only owner is signer": {
-			owners: []types.Party{
-				{Address: "owner", Role: types.PartyType_PARTY_TYPE_OWNER},
-				{Address: "affiliate", Role: types.PartyType_PARTY_TYPE_AFFILIATE}},
-			signers:  []string{"owner"},
-			errorMsg: "missing signature from [affiliate (PARTY_TYPE_AFFILIATE)]",
-		},
-		"two parties - one owner one other - only other is signer": {
-			owners: []types.Party{
-				{Address: "owner", Role: types.PartyType_PARTY_TYPE_OWNER},
-				{Address: "affiliate", Role: types.PartyType_PARTY_TYPE_AFFILIATE}},
-			signers:  []string{"affiliate"},
-			errorMsg: "missing signature from [owner (PARTY_TYPE_OWNER)]",
-		},
+	signer1 := "cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3"
+	signer2 := "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"
+	signer3 := "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"
 
-		// TODO: Implement authz test cases
-		//1. A missing signature that has an authz grant for it.
-		//2. Same thing, but without the authz grant.
-		//3. A missing signature on a special case message type (e.g. TypeMsgURLAddScopeDataAccessRequest) with a grant for that specific message type.
-		//4. Same thing, but the grant is for the parent type (e.g. TypeMsgURLWriteScopeRequest).
-		//5. Same thing, but there isn’t a grant.
+	cases := map[string]struct {
+		owners     []types.Party
+		signers    []string
+		msgTypeURL string
+		errorMsg   string
+	}{
+		//"no owners - no signers": {
+		//	owners:   []types.Party{},
+		//	signers:  []string{},
+		//	errorMsg: "",
+		//},
+		//"one owner - is signer": {
+		//	owners:   []types.Party{{Address: "signer1", Role: types.PartyType_PARTY_TYPE_OWNER}},
+		//	signers:  []string{"signer1"},
+		//	errorMsg: "",
+		//},
+		//"one owner - is one of two signers": {
+		//	owners:   []types.Party{{Address: "signer1", Role: types.PartyType_PARTY_TYPE_OWNER}},
+		//	signers:  []string{"signer1", "signer2"},
+		//	errorMsg: "",
+		//},
+		//"one owner - is not one of two signers": {
+		//	owners:   []types.Party{{Address: "missingowner", Role: types.PartyType_PARTY_TYPE_OWNER}},
+		//	signers:  []string{"signer1", "signer2"},
+		//	errorMsg: "missing signature from [missingowner (PARTY_TYPE_OWNER)]",
+		//},
+		//"two owners - both are signers": {
+		//	owners: []types.Party{
+		//		{Address: "owner1", Role: types.PartyType_PARTY_TYPE_OWNER},
+		//		{Address: "owner2", Role: types.PartyType_PARTY_TYPE_OWNER}},
+		//	signers:  []string{"owner2", "owner1"},
+		//	errorMsg: "",
+		//},
+		//"two owners - only one is signer": {
+		//	owners: []types.Party{
+		//		{Address: "owner1", Role: types.PartyType_PARTY_TYPE_OWNER},
+		//		{Address: "missingowner", Role: types.PartyType_PARTY_TYPE_OWNER}},
+		//	signers:  []string{"owner2", "owner1"},
+		//	errorMsg: "missing signature from [missingowner (PARTY_TYPE_OWNER)]",
+		//},
+		//"two parties - one owner one other - only owner is signer": {
+		//	owners: []types.Party{
+		//		{Address: "owner", Role: types.PartyType_PARTY_TYPE_OWNER},
+		//		{Address: "affiliate", Role: types.PartyType_PARTY_TYPE_AFFILIATE}},
+		//	signers:  []string{"owner"},
+		//	errorMsg: "missing signature from [affiliate (PARTY_TYPE_AFFILIATE)]",
+		//},
+		//"two parties - one owner one other - only other is signer": {
+		//	owners: []types.Party{
+		//		{Address: "owner", Role: types.PartyType_PARTY_TYPE_OWNER},
+		//		{Address: "affiliate", Role: types.PartyType_PARTY_TYPE_AFFILIATE}},
+		//	signers:  []string{"affiliate"},
+		//	errorMsg: "missing signature from [owner (PARTY_TYPE_OWNER)]",
+		//},
+		"two parties - one missing signature with authz grant - two signers": {
+			owners: []types.Party{
+				{Address: signer1, Role: types.PartyType_PARTY_TYPE_OWNER},
+				{Address: signer2, Role: types.PartyType_PARTY_TYPE_OWNER},
+				{Address: signer3, Role: types.PartyType_PARTY_TYPE_OWNER}}, // grantee of singer 1
+			signers:  []string{signer2, signer3},
+			msgTypeURL: types.TypeURLMsgWriteScopeRequest,
+			errorMsg: "",
+		},
+		"two parties - one missing signature without authz grant - one signer": {
+			owners: []types.Party{
+				{Address: signer2, Role: types.PartyType_PARTY_TYPE_OWNER},
+				{Address: signer3, Role: types.PartyType_PARTY_TYPE_OWNER}},
+			signers:  []string{signer2},
+			msgTypeURL: types.TypeURLMsgWriteScopeRequest,
+			errorMsg: fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", signer3),
+		},
+		"two parties - one missing signature with a special case message type - authz grant - two signers": {
+			owners: []types.Party{
+				{Address: signer1, Role: types.PartyType_PARTY_TYPE_OWNER},
+				{Address: signer2, Role: types.PartyType_PARTY_TYPE_OWNER},
+				{Address: signer3, Role: types.PartyType_PARTY_TYPE_OWNER}}, // grantee of singer 2
+			signers:  []string{signer1, signer3},
+			msgTypeURL: types.TypeURLMsgAddScopeDataAccessRequest,
+			errorMsg: "",
+		},
+		"two parties - one missing signature with a special case message type - authz grant on parent message type - two signers": {
+			owners: []types.Party{
+				{Address: signer1, Role: types.PartyType_PARTY_TYPE_OWNER},
+				{Address: signer2, Role: types.PartyType_PARTY_TYPE_OWNER},
+				{Address: signer3, Role: types.PartyType_PARTY_TYPE_OWNER}}, // grantee of singer 2
+			signers:  []string{signer1, signer3},
+			msgTypeURL: types.TypeURLMsgAddContractSpecToScopeSpecRequest,
+			errorMsg: "",
+		},
+		"two parties - one missing signature with a special case message type without authz grant - one signer": {
+			owners: []types.Party{
+				{Address: signer2, Role: types.PartyType_PARTY_TYPE_OWNER},
+				{Address: signer3, Role: types.PartyType_PARTY_TYPE_OWNER}},
+			signers:  []string{signer3},
+			msgTypeURL: types.TypeURLMsgDeleteRecordRequest,
+			errorMsg: fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", signer2),
+		},
 	}
 
+	// Add a few authorizations
+
+	// A missing signature with an authz grant on MsgAddScopeOwnerRequest
+	now := s.ctx.BlockHeader().Time
+	s.Require().NotNil(now)
+	granter := types.MustAccAddressFromBech32(signer1)
+	grantee := types.MustAccAddressFromBech32(signer3)
+	a := authz.NewGenericAuthorization(types.TypeURLMsgWriteScopeRequest)
+	err := s.app.AuthzKeeper.SaveGrant(s.ctx, grantee, granter, a, now.Add(time.Hour))
+	s.Require().NoError(err)
+
+	// A missing signature on a special case message type with an authz grant on that type.
+	// Add (a child msg type) TypeURLMsgAddScopeDataAccessRequest  (of a parent) TypeURLMsgWriteScopeRequest
+	granter = types.MustAccAddressFromBech32(signer2)
+	grantee = types.MustAccAddressFromBech32(signer3)
+	a = authz.NewGenericAuthorization(types.TypeURLMsgAddScopeDataAccessRequest)
+	err = s.app.AuthzKeeper.SaveGrant(s.ctx, grantee, granter, a, now.Add(time.Hour))
+	s.Require().NoError(err)
+
+	// A missing signature on a special case message type with an authz grant on its parent type.
+	// Add grant on the parent type of TypeURLMsgAddContractSpecToScopeSpecRequest.
+	granter = types.MustAccAddressFromBech32(signer2)
+	grantee = types.MustAccAddressFromBech32(signer3)
+	a = authz.NewGenericAuthorization(types.TypeURLMsgWriteScopeSpecificationRequest)
+	err = s.app.AuthzKeeper.SaveGrant(s.ctx, grantee, granter, a, now.Add(time.Hour))
+	s.Require().NoError(err)
+
+	// Test cases
 	for n, tc := range cases {
 		s.T().Run(n, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidateAllPartiesAreSignersWithAuthz(s.ctx, tc.owners, tc.signers, "")
+			err := s.app.MetadataKeeper.ValidateAllPartiesAreSignersWithAuthz(s.ctx, tc.owners, tc.signers, tc.msgTypeURL)
 			if len(tc.errorMsg) == 0 {
 				assert.NoError(t, err, "%s unexpected error", n)
 			} else {
