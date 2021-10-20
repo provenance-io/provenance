@@ -47,9 +47,9 @@ func TestGasMeter(t *testing.T) {
 		require.Equal(t, meter.GasConsumed(), meter.Limit()+1, "sdkgas.Gas consumption not match limit+1")
 		meter2 := NewTracingMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100))
 		meter2.ConsumeGas(sdkgas.Gas(50), "consume half max")
-		require.Equalf(t, "TracingGasMeter:\n  limit: 100\n  consumed: 50", meter2.String(), "expect string output to match")
+		require.Equalf(t, "tracingGasMeter:\n  limit: 100\n  consumed: 50", meter2.String(), "expect string output to match")
 		meter2.RefundGas(uint64(20), "refund")
-		require.Equalf(t, "TracingGasMeter:\n  limit: 100\n  consumed: 30", meter2.String(), "expect string output to match")
+		require.Equalf(t, "tracingGasMeter:\n  limit: 100\n  consumed: 30", meter2.String(), "expect string output to match")
 		require.Panics(t, func() { meter2.ConsumeGas(sdkgas.Gas(70)+2, "panic") })
 	}
 }

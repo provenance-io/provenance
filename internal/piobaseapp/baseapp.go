@@ -6,7 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/provenance-io/provenance/internal/antewrapper"
 	"reflect"
 	"strings"
 
@@ -707,11 +706,9 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 }
 
 func (app *BaseApp) chargeFees(ctx sdk.Context) {
-	if len(ctx.TxBytes()) != 0 {
+	if ctx.TxBytes() != nil && len(ctx.TxBytes()) != 0 {
 		ctx.Logger().Info("NOTICE: In chargeFees()")
-		originalGasMeter := ctx.GasMeter().(*antewrapper.TracingGasMeter)
-		gasMeter := *originalGasMeter
-		gasMeter2 := &gasMeter
+		originalGasMeter := ctx.GasMeter()
 		// eat up the gas cost for charging fees.
 		ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
 
@@ -723,40 +720,38 @@ func (app *BaseApp) chargeFees(ctx sdk.Context) {
 		msgs = tx.GetMsgs()
 		// cast to FeeTx
 		feeTx, ok := tx.(sdk.FeeTx)
+		// only charge additional fee if of type FeeTx since it should give fee payer.
+		// for provenace should be a FeeTx since antehandler should enforce it, but
+		// not adding complexity here
+		if ok {
+			feePayer := feeTx.FeePayer()
+			deductFeesFrom := feePayer
 
-		feePayer := feeTx.FeePayer()
+			// TODO if feegranter set deduct fee from feegranter account.
+			// this works with only when feegrant enabled.
 
-		deductFeesFrom := feePayer
-
-		// TODO if feegranter set deduct fee from feegranter account.
-		// this works with only when feegrant enabled.
-
-		deductFeesFromAcc := app.ak.GetAccount(ctx, deductFeesFrom)
-		if deductFeesFromAcc == nil {
-			panic("fee payer address: %s does not exist")
-		}
-
-		if !ok {
-			ctx.Logger().Error("unable to convert to FeeTx type", "err", err)
-		}
-
-		for _, msg := range msgs {
-			ctx.Logger().Info(fmt.Sprintf("The message type in defer block for fee charging : %s", sdk.MsgTypeURL(msg)))
-			msgFees, err := app.msgBasedFeeKeeper.GetMsgBasedFee(ctx, sdk.MsgTypeURL(msg))
-			if err != nil {
-				// do nothing for now
-				ctx.Logger().Error("unable to get message fees", "err", err)
+			deductFeesFromAcc := app.ak.GetAccount(ctx, deductFeesFrom)
+			if deductFeesFromAcc == nil {
+				panic("fee payer address: %s does not exist")
 			}
-			if msgFees != nil {
-				ctx.Logger().Info("Retrieved a msg based fee.")
-				app.msgBasedFeeKeeper.DeductFees(app.bankKeeper, ctx, deductFeesFromAcc, sdk.Coins{sdk.NewInt64Coin("nhash", 55555)})
-			}
-			// TODO remove this but just for testing
-			app.msgBasedFeeKeeper.DeductFees(app.bankKeeper, ctx, deductFeesFromAcc, sdk.Coins{sdk.NewInt64Coin("nhash", 55555)})
-		}
-		//set back the original gasMeter
-		ctx.WithGasMeter(gasMeter2)
 
+			for _, msg := range msgs {
+				ctx.Logger().Info(fmt.Sprintf("The message type in defer block for fee charging : %s", sdk.MsgTypeURL(msg)))
+				msgFees, err := app.msgBasedFeeKeeper.GetMsgBasedFee(ctx, sdk.MsgTypeURL(msg))
+				if err != nil {
+					// do nothing for now
+					ctx.Logger().Error("unable to get message fees", "err", err)
+				}
+				if msgFees != nil {
+					ctx.Logger().Info("Retrieved a msg based fee.")
+					app.msgBasedFeeKeeper.DeductFees(app.bankKeeper, ctx, deductFeesFromAcc, sdk.Coins{sdk.NewInt64Coin("nhash", 55555)})
+				}
+				// TODO remove this but just for testing
+				//app.msgBasedFeeKeeper.DeductFees(app.bankKeeper, ctx, deductFeesFromAcc, sdk.Coins{sdk.NewInt64Coin("nhash", 55555)})
+			}
+			//set back the original gasMeter
+			ctx.WithGasMeter(originalGasMeter)
+		}
 	}
 }
 

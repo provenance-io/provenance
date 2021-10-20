@@ -2,7 +2,6 @@ package piobaseapp
 
 import (
 	"fmt"
-	msgfeeskeeper "github.com/provenance-io/provenance/x/msgfees/keeper"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -17,7 +16,7 @@ func TestGetBlockRentionHeight(t *testing.T) {
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
 	name := t.Name()
-
+	fk, ak, bk := getKeepers()
 	testCases := map[string]struct {
 		bapp         *BaseApp
 		maxAgeBlocks int64
@@ -25,20 +24,20 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		expected     int64
 	}{
 		"defaults": {
-			bapp:         NewBaseApp(name, logger, db, nil,msgfeeskeeper.Keeper{},),
+			bapp:         NewBaseApp(name, logger, db, nil, fk, bk, ak),
 			maxAgeBlocks: 0,
 			commitHeight: 499000,
 			expected:     0,
 		},
 		"pruning unbonding time only": {
-			bapp:         NewBaseApp(name, logger, db, nil,msgfeeskeeper.Keeper{}, SetMinRetainBlocks(1)),
+			bapp:         NewBaseApp(name, logger, db, nil, fk, bk, ak, SetMinRetainBlocks(1)),
 			maxAgeBlocks: 362880,
 			commitHeight: 499000,
 			expected:     136120,
 		},
 		"pruning iavl snapshot only": {
 			bapp: NewBaseApp(
-				name, logger, db, nil,msgfeeskeeper.Keeper{},
+				name, logger, db, nil, fk, bk, ak,
 				SetPruning(sdk.PruningOptions{KeepEvery: 10000}),
 				SetMinRetainBlocks(1),
 			),
@@ -48,7 +47,7 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		},
 		"pruning state sync snapshot only": {
 			bapp: NewBaseApp(
-				name, logger, db, nil,msgfeeskeeper.Keeper{},
+				name, logger, db, nil, fk, bk, ak,
 				SetSnapshotInterval(50000),
 				SetSnapshotKeepRecent(3),
 				SetMinRetainBlocks(1),
@@ -59,7 +58,7 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		},
 		"pruning min retention only": {
 			bapp: NewBaseApp(
-				name, logger, db, nil,msgfeeskeeper.Keeper{},
+				name, logger, db, nil, fk, bk, ak,
 				SetMinRetainBlocks(400000),
 			),
 			maxAgeBlocks: 0,
@@ -68,7 +67,7 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		},
 		"pruning all conditions": {
 			bapp: NewBaseApp(
-				name, logger, db, nil,msgfeeskeeper.Keeper{},
+				name, logger, db, nil, fk, bk, ak,
 				SetPruning(sdk.PruningOptions{KeepEvery: 10000}),
 				SetMinRetainBlocks(400000),
 				SetSnapshotInterval(50000), SetSnapshotKeepRecent(3),
@@ -79,7 +78,7 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		},
 		"no pruning due to no persisted state": {
 			bapp: NewBaseApp(
-				name, logger, db, nil,msgfeeskeeper.Keeper{},
+				name, logger, db, nil, fk, bk, ak,
 				SetPruning(sdk.PruningOptions{KeepEvery: 10000}),
 				SetMinRetainBlocks(400000),
 				SetSnapshotInterval(50000), SetSnapshotKeepRecent(3),
@@ -90,7 +89,7 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		},
 		"disable pruning": {
 			bapp: NewBaseApp(
-				name, logger, db, nil,msgfeeskeeper.Keeper{},
+				name, logger, db, nil, fk, bk, ak,
 				SetPruning(sdk.PruningOptions{KeepEvery: 10000}),
 				SetMinRetainBlocks(0),
 				SetSnapshotInterval(50000), SetSnapshotKeepRecent(3),
@@ -123,11 +122,11 @@ func TestGetBlockRentionHeight(t *testing.T) {
 // See issue https://github.com/cosmos/cosmos-sdk/issues/7662.
 func TestBaseAppCreateQueryContextRejectsNegativeHeights(t *testing.T) {
 	t.Parallel()
-
+	fk, ak, bk := getKeepers()
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := NewBaseApp(name, logger, db, nil, msgfeeskeeper.Keeper{},)
+	app := NewBaseApp(name, logger, db, nil, fk, bk, ak)
 
 	proves := []bool{
 		false, true,

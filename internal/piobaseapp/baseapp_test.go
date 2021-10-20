@@ -5,7 +5,33 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	msgfeeskeeper "github.com/provenance-io/provenance/x/msgfees/keeper"
+	"github.com/CosmWasm/wasmd/x/wasm"
+	simapp "github.com/cosmos/cosmos-sdk/simapp/params"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/modules/apps/transfer/types"
+	ibchost "github.com/cosmos/ibc-go/modules/core/24-host"
+	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
+	msgfeekeeper "github.com/provenance-io/provenance/x/msgfees/keeper"
+	msgbasedfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
+	nametypes "github.com/provenance-io/provenance/x/name/types"
 	"io/ioutil"
 	"math/rand"
 	"os"
@@ -36,6 +62,33 @@ import (
 var (
 	capKey1 = sdk.NewKVStoreKey("key1")
 	capKey2 = sdk.NewKVStoreKey("key2")
+	keys = sdk.NewKVStoreKeys(
+		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
+		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
+		govtypes.StoreKey, paramstypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
+		evidencetypes.StoreKey, capabilitytypes.StoreKey,
+		authzkeeper.StoreKey,
+
+		ibchost.StoreKey,
+		ibctransfertypes.StoreKey,
+
+		metadatatypes.StoreKey,
+		markertypes.StoreKey,
+		attributetypes.StoreKey,
+		nametypes.StoreKey,
+		msgbasedfeestypes.StoreKey,
+		wasm.StoreKey,
+	)
+
+	// module account permissions
+	maccPerms = map[string][]string{
+		authtypes.FeeCollectorName:     nil,
+		distrtypes.ModuleName:          nil,
+		minttypes.ModuleName:           {authtypes.Minter},
+		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:            {authtypes.Burner},
+	}
 )
 
 type paramStore struct {
@@ -80,12 +133,72 @@ func defaultLogger() log.Logger {
 }
 
 func newBaseApp(name string, options ...func(*BaseApp)) *BaseApp {
+	fk, ak, bk := getKeepers()
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
 	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
-	return NewBaseApp(name, logger, db, testTxDecoder(codec),msgfeeskeeper.Keeper{}, options...)
+	return NewBaseApp(name, logger, db, testTxDecoder(codec), fk, bk, ak, options...)
 }
+
+func getKeepers() (msgfeekeeper.Keeper, authkeeper.AccountKeeper, bankkeeper.BaseKeeper) {
+	encodingConfig := simapp.MakeTestEncodingConfig()
+	appCodec := encodingConfig.Marshaler
+
+	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
+	legacyAmino := encodingConfig.Amino
+	pk := initParamsKeeper(appCodec, legacyAmino, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
+	subspaceMsgBasedFee, _ := pk.GetSubspace(msgbasedfeestypes.ModuleName)
+	fk := msgfeekeeper.NewKeeper(
+		appCodec, keys[msgbasedfeestypes.StoreKey], subspaceMsgBasedFee, authtypes.FeeCollectorName,
+	)
+	subspaceAccount, _ := pk.GetSubspace(authtypes.ModuleName)
+	ak := authkeeper.NewAccountKeeper(
+		appCodec, keys[authtypes.StoreKey], subspaceAccount, authtypes.ProtoBaseAccount, maccPerms,
+	)
+
+	subspaceBank, _ := pk.GetSubspace(banktypes.ModuleName)
+	bk := bankkeeper.NewBaseKeeper(
+		appCodec, keys[banktypes.StoreKey], ak, subspaceBank, ModuleAccountAddrs(),
+	)
+	return fk, ak, bk
+}
+
+func  ModuleAccountAddrs() map[string]bool {
+	modAccAddrs := make(map[string]bool)
+	for acc := range maccPerms {
+		modAccAddrs[authtypes.NewModuleAddress(acc).String()] = true
+	}
+
+	return modAccAddrs
+}
+
+// initParamsKeeper init params keeper and its subspaces
+func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey sdk.StoreKey) paramskeeper.Keeper {
+	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, key, tkey)
+
+	paramsKeeper.Subspace(authtypes.ModuleName)
+	paramsKeeper.Subspace(banktypes.ModuleName)
+	paramsKeeper.Subspace(stakingtypes.ModuleName)
+	paramsKeeper.Subspace(minttypes.ModuleName)
+	paramsKeeper.Subspace(distrtypes.ModuleName)
+	paramsKeeper.Subspace(slashingtypes.ModuleName)
+	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govtypes.ParamKeyTable())
+	paramsKeeper.Subspace(crisistypes.ModuleName)
+
+	paramsKeeper.Subspace(metadatatypes.ModuleName)
+	paramsKeeper.Subspace(markertypes.ModuleName)
+	paramsKeeper.Subspace(nametypes.ModuleName)
+	paramsKeeper.Subspace(attributetypes.ModuleName)
+	paramsKeeper.Subspace(msgbasedfeestypes.ModuleName)
+	paramsKeeper.Subspace(wasm.ModuleName)
+
+	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
+	paramsKeeper.Subspace(ibchost.ModuleName)
+
+	return paramsKeeper
+}
+
 
 func registerTestCodec(cdc *codec.LegacyAmino) {
 	// register Tx, Msg
@@ -210,7 +323,8 @@ func TestLoadVersion(t *testing.T) {
 	pruningOpt := SetPruning(store.PruneNothing)
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := NewBaseApp(name, logger, db, nil, msgfeeskeeper.Keeper{},pruningOpt)
+	fk, ak, bk := getKeepers()
+	app := NewBaseApp(name, logger, db, nil, fk, bk, ak, pruningOpt)
 
 	// make a cap key and mount the store
 	err := app.LoadLatestVersion() // needed to make stores non-nil
@@ -237,7 +351,7 @@ func TestLoadVersion(t *testing.T) {
 	commitID2 := sdk.CommitID{Version: 2, Hash: res.Data}
 
 	// reload with LoadLatestVersion
-	app = NewBaseApp(name, logger, db, nil, msgfeeskeeper.Keeper{}, pruningOpt)
+	app = NewBaseApp(name, logger, db, nil, fk, bk, ak, pruningOpt)
 	app.MountStores()
 	err = app.LoadLatestVersion()
 	require.Nil(t, err)
@@ -245,7 +359,7 @@ func TestLoadVersion(t *testing.T) {
 
 	// reload with LoadVersion, see if you can commit the same block and get
 	// the same result
-	app = NewBaseApp(name, logger, db, nil, msgfeeskeeper.Keeper{},pruningOpt)
+	app = NewBaseApp(name, logger, db, nil, fk, bk, ak,pruningOpt)
 	err = app.LoadVersion(1)
 	require.Nil(t, err)
 	testLoadVersionHelper(t, app, int64(1), commitID1)
@@ -293,6 +407,7 @@ func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte
 // Test that we can make commits and then reload old versions.
 // Test that LoadLatestVersion actually does.
 func TestSetLoader(t *testing.T) {
+	fk, ak, bk := getKeepers()
 	cases := map[string]struct {
 		setLoader    func(*BaseApp)
 		origStoreKey string
@@ -324,7 +439,7 @@ func TestSetLoader(t *testing.T) {
 			if tc.setLoader != nil {
 				opts = append(opts, tc.setLoader)
 			}
-			app := NewBaseApp(t.Name(), defaultLogger(), db, nil, msgfeeskeeper.Keeper{},opts...)
+			app := NewBaseApp(t.Name(), defaultLogger(), db, nil, fk, bk, ak,opts...)
 			app.MountStores(sdk.NewKVStoreKey(tc.loadStoreKey))
 			err := app.LoadLatestVersion()
 			require.Nil(t, err)
@@ -342,11 +457,12 @@ func TestSetLoader(t *testing.T) {
 }
 
 func TestVersionSetterGetter(t *testing.T) {
+	fk, ak, bk := getKeepers()
 	logger := defaultLogger()
 	pruningOpt := SetPruning(store.PruneDefault)
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := NewBaseApp(name, logger, db, nil, msgfeeskeeper.Keeper{}, pruningOpt)
+	app := NewBaseApp(name, logger, db, nil, fk, bk, ak, pruningOpt)
 
 	require.Equal(t, "", app.Version())
 	res := app.Query(abci.RequestQuery{Path: "app/version"})
@@ -362,11 +478,12 @@ func TestVersionSetterGetter(t *testing.T) {
 }
 
 func TestLoadVersionInvalid(t *testing.T) {
+	fk, ak, bk := getKeepers()
 	logger := log.NewNopLogger()
 	pruningOpt := SetPruning(store.PruneNothing)
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := NewBaseApp(name, logger, db, nil, msgfeeskeeper.Keeper{},pruningOpt)
+	app := NewBaseApp(name, logger, db, nil, fk, bk, ak,pruningOpt)
 
 	err := app.LoadLatestVersion()
 	require.Nil(t, err)
@@ -381,7 +498,7 @@ func TestLoadVersionInvalid(t *testing.T) {
 	commitID1 := sdk.CommitID{Version: 1, Hash: res.Data}
 
 	// create a new app with the stores mounted under the same cap key
-	app = NewBaseApp(name, logger, db, nil, msgfeeskeeper.Keeper{},pruningOpt)
+	app = NewBaseApp(name, logger, db, nil, fk, bk, ak, pruningOpt)
 
 	// require we can load the latest version
 	err = app.LoadVersion(1)
@@ -394,6 +511,7 @@ func TestLoadVersionInvalid(t *testing.T) {
 }
 
 func TestLoadVersionPruning(t *testing.T) {
+	fk, ak, bk := getKeepers()
 	logger := log.NewNopLogger()
 	pruningOptions := store.PruningOptions{
 		KeepRecent: 2,
@@ -403,7 +521,7 @@ func TestLoadVersionPruning(t *testing.T) {
 	pruningOpt := SetPruning(pruningOptions)
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := NewBaseApp(name, logger, db, nil, msgfeeskeeper.Keeper{}, pruningOpt)
+	app := NewBaseApp(name, logger, db, nil, fk, bk, ak, pruningOpt)
 
 	// make a cap key and mount the store
 	capKey := sdk.NewKVStoreKey("key1")
@@ -441,7 +559,7 @@ func TestLoadVersionPruning(t *testing.T) {
 	}
 
 	// reload with LoadLatestVersion, check it loads last version
-	app = NewBaseApp(name, logger, db, nil, msgfeeskeeper.Keeper{},pruningOpt)
+	app = NewBaseApp(name, logger, db, nil, fk, bk, ak, pruningOpt)
 	app.MountStores(capKey)
 
 	err = app.LoadLatestVersion()
@@ -457,9 +575,10 @@ func testLoadVersionHelper(t *testing.T, app *BaseApp, expectedHeight int64, exp
 }
 
 func TestOptionFunction(t *testing.T) {
+	fk, ak, bk := getKeepers()
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
-	bap := NewBaseApp("starting name", logger, db, nil,msgfeeskeeper.Keeper{}, testChangeNameHelper("new name"))
+	bap := NewBaseApp("starting name", logger, db, nil, fk, bk, ak, testChangeNameHelper("new name"))
 	require.Equal(t, bap.name, "new name", "BaseApp should have had name changed via option function")
 }
 
@@ -552,12 +671,14 @@ func TestSetMinGasPrices(t *testing.T) {
 }
 
 func TestInitChainer(t *testing.T) {
+	fk, ak, bk := getKeepers()
+
 	name := t.Name()
 	// keep the db and logger ourselves so
 	// we can reload the same  app later
 	db := dbm.NewMemDB()
 	logger := defaultLogger()
-	app := NewBaseApp(name, logger, db, nil,msgfeeskeeper.Keeper{},)
+	app := NewBaseApp(name, logger, db, nil, fk, bk, ak)
 	capKey := sdk.NewKVStoreKey("main")
 	capKey2 := sdk.NewKVStoreKey("key2")
 	app.MountStores(capKey, capKey2)
@@ -612,7 +733,7 @@ func TestInitChainer(t *testing.T) {
 	require.Equal(t, value, res.Value)
 
 	// reload app
-	app = NewBaseApp(name, logger, db, nil,msgfeeskeeper.Keeper{},)
+	app = NewBaseApp(name, logger, db, nil, fk, bk, ak,)
 	app.SetInitChainer(initChainer)
 	app.MountStores(capKey, capKey2)
 	err = app.LoadLatestVersion() // needed to make stores non-nil
@@ -633,10 +754,12 @@ func TestInitChainer(t *testing.T) {
 }
 
 func TestInitChain_WithInitialHeight(t *testing.T) {
+	fk, ak, bk := getKeepers()
+
 	name := t.Name()
 	db := dbm.NewMemDB()
 	logger := defaultLogger()
-	app := NewBaseApp(name, logger, db, nil, msgfeeskeeper.Keeper{},)
+	app := NewBaseApp(name, logger, db, nil, fk, bk, ak,)
 
 	app.InitChain(
 		abci.RequestInitChain{
@@ -649,10 +772,11 @@ func TestInitChain_WithInitialHeight(t *testing.T) {
 }
 
 func TestBeginBlock_WithInitialHeight(t *testing.T) {
+	fk, ak, bk := getKeepers()
 	name := t.Name()
 	db := dbm.NewMemDB()
 	logger := defaultLogger()
-	app := NewBaseApp(name, logger, db, nil, msgfeeskeeper.Keeper{},)
+	app := NewBaseApp(name, logger, db, nil, fk, bk, ak)
 
 	app.InitChain(
 		abci.RequestInitChain{
@@ -2010,6 +2134,8 @@ func TestWithRouter(t *testing.T) {
 }
 
 func TestBaseApp_EndBlock(t *testing.T) {
+	fk, ak, bk := getKeepers()
+
 	db := dbm.NewMemDB()
 	name := t.Name()
 	logger := defaultLogger()
@@ -2020,7 +2146,7 @@ func TestBaseApp_EndBlock(t *testing.T) {
 		},
 	}
 
-	app := NewBaseApp(name, logger, db, nil,msgfeeskeeper.Keeper{},)
+	app := NewBaseApp(name, logger, db, nil, fk, bk, ak,)
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 	app.InitChain(abci.RequestInitChain{
 		ConsensusParams: cp,

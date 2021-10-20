@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
-type TracingGasMeter struct {
+type tracingGasMeter struct {
 	// a context logger reference for info/debug output
 	log log.Logger
 	// the gas meter being wrapped
@@ -23,7 +23,7 @@ type TracingGasMeter struct {
 
 // NewTracingMeterWrapper returns a reference to a new tracing gas meter that will track calls to the base gas meter
 func NewTracingMeterWrapper(logger log.Logger, baseMeter sdkgas.GasMeter) sdkgas.GasMeter {
-	return &TracingGasMeter{
+	return &tracingGasMeter{
 		log:   logger,
 		base:  baseMeter,
 		used:  make(map[string]uint64),
@@ -31,11 +31,11 @@ func NewTracingMeterWrapper(logger log.Logger, baseMeter sdkgas.GasMeter) sdkgas
 	}
 }
 
-var _ sdkgas.GasMeter = &TracingGasMeter{}
+var _ sdkgas.GasMeter = &tracingGasMeter{}
 
 // GasConsumed reports the amount of gas consumed at Log.Info level
-func (g *TracingGasMeter) GasConsumed() sdkgas.Gas {
-	usage := "TracingGasMeter:\n  Purpose"
+func (g *tracingGasMeter) GasConsumed() sdkgas.Gas {
+	usage := "tracingGasMeter:\n  Purpose"
 	for i, d := range g.used {
 		usage = fmt.Sprintf("%s\n   - %s (x%d) = %d", usage, i, g.calls[i], d)
 	}
@@ -46,22 +46,22 @@ func (g *TracingGasMeter) GasConsumed() sdkgas.Gas {
 }
 
 // RefundGas refunds an amount of gas
-func (g *TracingGasMeter) RefundGas(amount uint64, descriptor string) {
+func (g *tracingGasMeter) RefundGas(amount uint64, descriptor string) {
 	g.base.RefundGas(amount, descriptor)
 }
 
 // GasConsumedToLimit will report the actual consumption or the meter limit, whichever is less.
-func (g *TracingGasMeter) GasConsumedToLimit() sdkgas.Gas {
+func (g *tracingGasMeter) GasConsumedToLimit() sdkgas.Gas {
 	return g.base.GasConsumedToLimit()
 }
 
 // Limit for amount of gas that can be consumed (if zero then unlimited)
-func (g *TracingGasMeter) Limit() sdkgas.Gas {
+func (g *tracingGasMeter) Limit() sdkgas.Gas {
 	return g.base.Limit()
 }
 
 // ConsumeGas increments the amount of gas used on the meter associated with a given purpose.
-func (g *TracingGasMeter) ConsumeGas(amount sdkgas.Gas, descriptor string) {
+func (g *tracingGasMeter) ConsumeGas(amount sdkgas.Gas, descriptor string) {
 	cur := g.used[descriptor]
 	g.used[descriptor] = cur + amount
 
@@ -74,21 +74,16 @@ func (g *TracingGasMeter) ConsumeGas(amount sdkgas.Gas, descriptor string) {
 }
 
 // IsPastLimit indicates consumption has passed the limit (if any)
-func (g *TracingGasMeter) IsPastLimit() bool {
+func (g *tracingGasMeter) IsPastLimit() bool {
 	return g.base.IsPastLimit()
 }
 
 // IsOutOfGas indicates the gas meter has tracked consumption at or above the limit
-func (g *TracingGasMeter) IsOutOfGas() bool {
+func (g *tracingGasMeter) IsOutOfGas() bool {
 	return g.base.IsOutOfGas()
 }
 
 // String implements stringer interface
-func (g *TracingGasMeter) String() string {
-	return fmt.Sprintf("TracingGasMeter:\n  limit: %d\n  consumed: %d", g.base.Limit(), g.base.GasConsumed())
-}
-
-
-func (g *TracingGasMeter) Base() *sdkgas.GasMeter {
-	return &g.base
+func (g *tracingGasMeter) String() string {
+	return fmt.Sprintf("tracingGasMeter:\n  limit: %d\n  consumed: %d", g.base.Limit(), g.base.GasConsumed())
 }
