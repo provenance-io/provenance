@@ -750,7 +750,7 @@ func (app *BaseApp) chargeFees(ctx sdk.Context) {
 				//app.msgBasedFeeKeeper.DeductFees(app.bankKeeper, ctx, deductFeesFromAcc, sdk.Coins{sdk.NewInt64Coin("nhash", 55555)})
 			}
 			//set back the original gasMeter
-			ctx.WithGasMeter(originalGasMeter)
+			ctx = ctx.WithGasMeter(originalGasMeter)
 		}
 	}
 }
