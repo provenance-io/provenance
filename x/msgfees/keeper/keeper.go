@@ -3,6 +3,8 @@ package keeper
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	cosmosauthtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/provenance-io/provenance/x/msgfees/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -106,6 +108,21 @@ func (k Keeper) IterateMsgBasedFees(ctx sdk.Context, handle func(msgFees types.M
 	return nil
 }
 
+// DeductFees deducts fees from the given account, the only reason it exists is that the
+func (k Keeper) DeductFees(bankKeeper cosmosauthtypes.BankKeeper, ctx sdk.Context, acc cosmosauthtypes.AccountI, fees sdk.Coins) error {
+	ctx.Logger().Info("NOTICE: In DeductFees:" + ctx.GasMeter().String())
+	if !fees.IsValid() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
+	}
+
+	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), k.feeCollectorName, fees)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+	}
+	ctx.Logger().Info("NOTICE: End of DeductFees:" + ctx.GasMeter().String())
+	return nil
+}
+
 // ExportGenesis returns a GenesisState for a given context.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	// TODO Implement me
@@ -116,3 +133,4 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 	// TODO Implement me
 }
+
