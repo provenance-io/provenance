@@ -709,8 +709,8 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 func (app *BaseApp) chargeFees(ctx sdk.Context) {
 	if len(ctx.TxBytes()) != 0 {
 		ctx.Logger().Info("NOTICE: In chargeFees()")
-		originalGasMeter:= ctx.GasMeter().(*antewrapper.TracingGasMeter)
-		gasMeter:=*originalGasMeter
+		originalGasMeter := ctx.GasMeter().(*antewrapper.TracingGasMeter)
+		gasMeter := *originalGasMeter
 		gasMeter2 := &gasMeter
 		// eat up the gas cost for charging fees.
 		ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
@@ -731,24 +731,14 @@ func (app *BaseApp) chargeFees(ctx sdk.Context) {
 		// TODO if feegranter set deduct fee from feegranter account.
 		// this works with only when feegrant enabled.
 
-
 		deductFeesFromAcc := app.ak.GetAccount(ctx, deductFeesFrom)
 		if deductFeesFromAcc == nil {
-			panic( "fee payer address: %s does not exist")
+			panic("fee payer address: %s does not exist")
 		}
 
 		if !ok {
 			ctx.Logger().Error("unable to convert to FeeTx type", "err", err)
 		}
-
-		//originalBaseGasMeter := ctx.GasMeter().(*antewrapper.TracingGasMeter)
-		//originalBaseGasMeter1 := originalBaseGasMeter.Base()
-		//originalBaseGasMeter2 := &originalBaseGasMeter1
-
-
-		// refund some gas here so that, the deduct fee tx absolutely goes through
-		// (basically this resets the gas meter)
-		//ctx.GasMeter().RefundGas(50000,"for running bank tx")
 
 		for _, msg := range msgs {
 			ctx.Logger().Info(fmt.Sprintf("The message type in defer block for fee charging : %s", sdk.MsgTypeURL(msg)))
@@ -759,10 +749,10 @@ func (app *BaseApp) chargeFees(ctx sdk.Context) {
 			}
 			if msgFees != nil {
 				ctx.Logger().Info("Retrieved a msg based fee.")
-				app.msgBasedFeeKeeper.DeductFees(app.bankKeeper,ctx,deductFeesFromAcc,sdk.Coins{sdk.NewInt64Coin("nhash", 55555)})
+				app.msgBasedFeeKeeper.DeductFees(app.bankKeeper, ctx, deductFeesFromAcc, sdk.Coins{sdk.NewInt64Coin("nhash", 55555)})
 			}
 			// TODO remove this but just for testing
-			app.msgBasedFeeKeeper.DeductFees(app.bankKeeper,ctx,deductFeesFromAcc,sdk.Coins{sdk.NewInt64Coin("nhash", 55555)})
+			app.msgBasedFeeKeeper.DeductFees(app.bankKeeper, ctx, deductFeesFromAcc, sdk.Coins{sdk.NewInt64Coin("nhash", 55555)})
 		}
 		//set back the original gasMeter
 		ctx.WithGasMeter(gasMeter2)
