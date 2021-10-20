@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	"github.com/provenance-io/provenance/internal/antewrapper"
 	"reflect"
 	"strings"
 
@@ -625,7 +626,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 			ctx.BlockGasMeter().ConsumeGas(
 				ctx.GasMeter().GasConsumedToLimit(), "block gas meter",
 			)
-
+			ctx.Logger().Info("NOTICE: Before gas check in defer()")
 			if ctx.BlockGasMeter().GasConsumed() < startingGas {
 				panic(sdk.ErrorGasOverflow{Descriptor: "tx gas summation"})
 			}
@@ -707,7 +708,13 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 
 func (app *BaseApp) chargeFees(ctx sdk.Context) {
 	if len(ctx.TxBytes()) != 0 {
-		ctx.Logger().Info("NOTICE: In defer function to charge fee")
+		ctx.Logger().Info("NOTICE: In chargeFees()")
+		originalGasMeter:= ctx.GasMeter().(*antewrapper.TracingGasMeter)
+		gasMeter:=*originalGasMeter
+		gasMeter2 := &gasMeter
+		// eat up the gas cost for charging fees.
+		ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+
 		var msgs []sdk.Msg
 		tx, err := app.txDecoder(ctx.TxBytes())
 		if err != nil {
@@ -734,15 +741,15 @@ func (app *BaseApp) chargeFees(ctx sdk.Context) {
 			ctx.Logger().Error("unable to convert to FeeTx type", "err", err)
 		}
 
-		ctx.Logger().Info("deduct fee from"+deductFeesFromAcc.GetAddress().String() )
+		//originalBaseGasMeter := ctx.GasMeter().(*antewrapper.TracingGasMeter)
+		//originalBaseGasMeter1 := originalBaseGasMeter.Base()
+		//originalBaseGasMeter2 := &originalBaseGasMeter1
+
+
 		// refund some gas here so that, the deduct fee tx absolutely goes through
 		// (basically this resets the gas meter)
-		//gasConsumedToThisPoint := ctx.GasMeter().GasConsumed()
-		// refund some gas here so that, the deduct fee tx absolutely(witnout doubt) goes through
-		// (basically)
-		ctx.GasMeter().RefundGas(50000,"for running bank tx")
+		//ctx.GasMeter().RefundGas(50000,"for running bank tx")
 
-		//newCtx := ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
 		for _, msg := range msgs {
 			ctx.Logger().Info(fmt.Sprintf("The message type in defer block for fee charging : %s", sdk.MsgTypeURL(msg)))
 			msgFees, err := app.msgBasedFeeKeeper.GetMsgBasedFee(ctx, sdk.MsgTypeURL(msg))
@@ -757,6 +764,8 @@ func (app *BaseApp) chargeFees(ctx sdk.Context) {
 			// TODO remove this but just for testing
 			app.msgBasedFeeKeeper.DeductFees(app.bankKeeper,ctx,deductFeesFromAcc,sdk.Coins{sdk.NewInt64Coin("nhash", 55555)})
 		}
+		//set back the original gasMeter
+		ctx.WithGasMeter(gasMeter2)
 
 	}
 }

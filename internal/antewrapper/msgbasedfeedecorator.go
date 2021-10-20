@@ -33,7 +33,7 @@ func (afd MsgBasedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
-	ctx.Logger().Info("NOTICE: here in Addition Msg Fee Handler {}",ctx.GasMeter().GasConsumed())
+	ctx.Logger().Info("NOTICE: here in MsgBasedFeeDecorator {}",ctx.GasMeter().GasConsumed())
 	feeCoins := feeTx.GetFee()
 	gas := feeTx.GetGas()
 	msgs := feeTx.GetMsgs()
