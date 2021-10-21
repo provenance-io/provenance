@@ -385,7 +385,7 @@ localnet-stop:
 
 # Quick build using devnet environment and go platform target options.
 docker-build-dev: vendor
-	docker build --tag provenance-io/blockchain-dev -f networks/dev/blockchain-dev/Dockerfile .
+	docker build --tag provenance-io/blockchain-dev -f networks/dev/blockchain-dev/Dockerfile --build-arg hd_path=${HD_PATH} .
 
 # Generate config files for a single node devnet
 devnet-generate: devnet-stop docker-build-dev

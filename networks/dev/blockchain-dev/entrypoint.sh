@@ -18,7 +18,10 @@ if ! [ -f ${PIO_HOME}/config/genesis.json ]; then
     do
       key_name=$(basename $f .txt)
       echo "Adding account $key_name from mnemonic file $f with 100000000000000000000nhash"
-      "${BINARY}" -t --home "${PIO_HOME}" keys add $key_name --recover --keyring-backend test < $f  
+      if [ -z "${HD_PATH}" ];
+        then "${BINARY}" -t --home "${PIO_HOME}" keys add $key_name --recover --keyring-backend test < $f;
+        else "${BINARY}" -t --home "${PIO_HOME}" keys add $key_name --hd-path $HD_PATH --recover --keyring-backend test < $f;
+      fi  
       "${BINARY}" -t --home "${PIO_HOME}" add-genesis-account $key_name 100000000000000000000nhash --keyring-backend test
       let num_accounts=num_accounts+1
   done

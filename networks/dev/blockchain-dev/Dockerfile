@@ -41,6 +41,9 @@ COPY --from=build /go/bin/provenanced /usr/bin/provenanced
 
 COPY networks/dev/mnemonics/ /mnemonics/
 
+ARG hd_path
+ENV HD_PATH=$hd_path
+
 ENTRYPOINT ["/usr/bin/entrypoint.sh"]
 CMD ["start"]
 STOPSIGNAL SIGTERM
