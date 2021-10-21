@@ -233,7 +233,13 @@ func (k Keeper) ValidateAllOwnersAreSignersWithAuthz(
 	msgTypeURL string,
 ) error {
 	missing := FindMissing(existingOwners, signers)
-	stillMissing := k.checkAuthzForMissing(ctx, missing, signers, msgTypeURL)
+	stillMissing := missing
+	// Authz grants rights to address on specific message types.
+	// If no message type URL is provided, skip the Authz check.
+	if len(msgTypeURL) > 0 {
+		stillMissing = k.checkAuthzForMissing(ctx, missing, signers, msgTypeURL)
+	}
+
 	switch len(stillMissing) {
 	case 0:
 		return nil
@@ -252,7 +258,12 @@ func (k Keeper) ValidateAllPartiesAreSignersWithAuthz(ctx sdk.Context, parties [
 	}
 
 	missing := FindMissing(addresses, signers)
-	stillMissing := k.checkAuthzForMissing(ctx, missing, signers, msgTypeURL)
+	stillMissing := missing
+	// Authz grants rights to address on specific message types.
+	// If no message type URL is provided, skip the Authz check.
+	if len(msgTypeURL) > 0 {
+		stillMissing = k.checkAuthzForMissing(ctx, missing, signers, msgTypeURL)
+	}
 
 	if len(stillMissing) > 0 {
 		missingWithRoles := make([]string, len(missing))
