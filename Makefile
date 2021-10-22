@@ -387,10 +387,9 @@ localnet-stop:
 docker-build-dev: vendor
 	docker build --tag provenance-io/blockchain-dev -f networks/dev/blockchain-dev/Dockerfile .
 
-
 # Generate config files for a single node devnet
 devnet-generate: devnet-stop docker-build-dev
-	@if ! [ -f build/nodedev/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-dev testnet --v 1 -o . --starting-ip-address 192.168.21.2 --keyring-backend=test --chain-id=chain-dev ; fi
+	docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-dev keys list
 
 # Run a single node devnet locally
 devnet-up:
