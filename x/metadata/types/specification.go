@@ -375,28 +375,6 @@ func (x PartyType) IsValid() bool {
 	return ok
 }
 
-// EqualParties returns true if the two lists of parties are exact matches
-func EqualParties(x, y []Party) bool {
-	if len(x) != len(y) {
-		return false
-	}
-	areEqual := true
-	for _, source := range x {
-		found := false
-		for _, dest := range y {
-			if source.Address == dest.Address && source.Role == dest.Role {
-				found = true
-				break // match found, continue with next source item to check
-			}
-		}
-		if !found {
-			areEqual = false
-			break // no need to check further
-		}
-	}
-	return areEqual
-}
-
 // validateURLBasic - Helper function to check if a url string is superficially valid.
 // The path and fieldName parameters are combined using makeFieldString for error messages.
 func validateURLBasic(url string, required bool, path string, fieldName string) error {

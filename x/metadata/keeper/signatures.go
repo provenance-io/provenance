@@ -13,53 +13,35 @@ import (
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
-// AccountIsMarker determines if account is marker
-func (k Keeper) AccountIsMarker(ctx sdk.Context, address string) bool {
+// IsMarkerAndHasAuthority checks that the address is a marker addr and that one of the signers has the given role.
+// First return boolean is whether or not address a marker address.
+// Second return boolean is whether or not one of the signers has the given role on that marker.
+// If the first return boolean is false, they'll both be false.
+func (k Keeper) IsMarkerAndHasAuthority(ctx sdk.Context, address string, signers []string, role markertypes.Access) (isMarker bool, hasAuth bool) {
 	addr, err := sdk.AccAddressFromBech32(address)
 	// if the value owner is invalid then it is not possible to have any authority for it. e.g. value owner is empty.
 	if err != nil {
-		return false
+		return false, false
 	}
 
-	mac := k.authKeeper.GetAccount(ctx, addr)
-	if mac == nil {
-		return false
-	}
-
-	// Convert over to the actual underlying marker type, or not.
-	_, isMarker := mac.(*markertypes.MarkerAccount)
-
-	return isMarker
-}
-
-// HasSignerWithMarkerValueAuthority checks the list of signers for any that have the requested role.
-func (k Keeper) HasSignerWithMarkerValueAuthority(ctx sdk.Context, valueOwner string, signers []string, role markertypes.Access) bool {
-	valueOwnerAddr, err := sdk.AccAddressFromBech32(valueOwner)
-	// if the value owner is invalid then it is not possible to have any authority for it. e.g. value owner is empty.
-	if err != nil {
-		return false
-	}
-
-	mac := k.authKeeper.GetAccount(ctx, valueOwnerAddr)
-	if mac == nil {
-		return false
+	acc := k.authKeeper.GetAccount(ctx, addr)
+	if acc == nil {
+		return false, false
 	}
 
 	// Convert over to the actual underlying marker type, or not.
-	macc, isMarker := mac.(*markertypes.MarkerAccount)
-	if isMarker {
-		for _, signer := range signers {
-			address, err := sdk.AccAddressFromBech32(signer)
-			if err != nil {
-				continue // invalid address, loop to next.
-			}
-			// since this is a marker, check for the role and return true if found.
-			if macc.AddressHasAccess(address, role) {
-				return true
-			}
+	marker, isMarker := acc.(*markertypes.MarkerAccount)
+	if !isMarker {
+		return false, false
+	}
+	for _, signer := range signers {
+		saddr, serr := sdk.AccAddressFromBech32(signer)
+		// If the signer address is okay, check it for the role. If it checks out, they've got auth and we're done.
+		if serr == nil && marker.AddressHasAccess(saddr, role) {
+			return true, true
 		}
 	}
-	return false
+	return true, false
 }
 
 // ValidateRawSignature takes a given message and verifies the signature instance is valid
