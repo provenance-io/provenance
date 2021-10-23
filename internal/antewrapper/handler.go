@@ -7,6 +7,7 @@ import (
 	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	msgbasedfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 // HandlerOptions are the options required for constructing a default SDK AnteHandler.
@@ -14,7 +15,7 @@ type HandlerOptions struct {
 	AccountKeeper   cosmosante.AccountKeeper
 	BankKeeper      types.BankKeeper
 	FeegrantKeeper       cosmosante.FeegrantKeeper
-	MsgBasedFeeKeeper MsgBasedFeeKeeper
+	MsgBasedFeeKeeper msgbasedfeetypes.MsgBasedFeeKeeper
 	SignModeHandler      authsigning.SignModeHandler
 	SigGasConsumer  func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
 }

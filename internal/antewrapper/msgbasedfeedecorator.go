@@ -6,6 +6,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	cosmosauthtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	msgbasedfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 // MsgBasedFeeDecorator will check if the transaction's fee is at least as large
@@ -16,10 +17,10 @@ import (
 // If fee is high enough or not CheckTx, then call next AnteHandler
 // CONTRACT: Tx must implement FeeTx to use MsgBasedFeeDecorator
 type MsgBasedFeeDecorator struct {
-	msgBasedFeeKeeper MsgBasedFeeKeeper
+	msgBasedFeeKeeper msgbasedfeetypes.MsgBasedFeeKeeper
 }
 
-func NewMsgBasedFeeDecorator(bankKeeper cosmosauthtypes.BankKeeper, accountKeeper cosmosante.AccountKeeper, feegrantKeeper cosmosante.FeegrantKeeper, keeper MsgBasedFeeKeeper) MsgBasedFeeDecorator {
+func NewMsgBasedFeeDecorator(bankKeeper cosmosauthtypes.BankKeeper, accountKeeper cosmosante.AccountKeeper, feegrantKeeper cosmosante.FeegrantKeeper, keeper msgbasedfeetypes.MsgBasedFeeKeeper) MsgBasedFeeDecorator {
 	return MsgBasedFeeDecorator{
 		keeper,
 	}
@@ -105,7 +106,7 @@ func EnsureSufficientMempoolFees(ctx sdk.Context, gas uint64, feeCoins sdk.Coins
 
 
 // FilterMsgAndComputeTax computes the stability tax on MsgSend and MsgMultiSend.
-func FilterMsgAndComputeTax(ctx sdk.Context, mbfk MsgBasedFeeKeeper, msgs ...sdk.Msg) (sdk.Coins, error) {
+func FilterMsgAndComputeTax(ctx sdk.Context, mbfk msgbasedfeetypes.MsgBasedFeeKeeper, msgs ...sdk.Msg) (sdk.Coins, error) {
 	taxes := sdk.Coins{}
 	// get the msg fee
 

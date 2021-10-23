@@ -707,7 +707,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 
 func (app *BaseApp) chargeFees(ctx sdk.Context) {
 	if ctx.TxBytes() != nil && len(ctx.TxBytes()) != 0 {
-		ctx.Logger().Info("NOTICE: In chargeFees()")
+		ctx.Logger().Debug("NOTICE: In chargeFees()")
 		originalGasMeter := ctx.GasMeter()
 		// eat up the gas cost for charging fees.
 		ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
@@ -715,7 +715,7 @@ func (app *BaseApp) chargeFees(ctx sdk.Context) {
 		var msgs []sdk.Msg
 		tx, err := app.txDecoder(ctx.TxBytes())
 		if err != nil {
-			ctx.Logger().Error("unable to get tx msg", "err", err)
+			panic(fmt.Errorf("error in chargeFees() while getting txBytes: %w", err))
 		}
 		msgs = tx.GetMsgs()
 		// cast to FeeTx
