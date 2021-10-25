@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmsim "github.com/CosmWasm/wasmd/x/wasm/simulation"
 	"github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"io/ioutil"
@@ -38,9 +37,14 @@ func NewProvwasmWrapper(cdc codec.Codec, keeper *wasm.Keeper, validatorSetSource
 func (pw ProvwasmWrapper) GenerateGenesisState(input *module.SimulationState) {
 	//pw.wasm.GenerateGenesisState(input)
 	fmt.Println("asdf - GenerateGenesisState for provwasm")
-	params := wasmsim.RandomParams(input.Rand)
+	//params := wasmsim.RandomParams(input.Rand)
 	contracts := make([]types.Contract, 1)
 	//var contractInfo types.ContractInfo
+
+	// get this working!
+	myCodeInfo := wasmTypes.CodeInfoFixture(wasmTypes.WithSHA256CodeHash(wasmCode))
+
+
 	contractInfo := types.ContractInfo {
 		// CodeID is the reference to the stored Wasm code
 		1,
@@ -95,14 +99,14 @@ func (pw ProvwasmWrapper) GenerateGenesisState(input *module.SimulationState) {
 	codes[0] = types.Code{
 		// Code struct encompasses CodeInfo and CodeBytes
 		//CodeID    uint64   `protobuf:"varint,1,opt,name=code_id,json=codeId,proto3" json:"code_id,omitempty"`
-		1,
+		CodeID: 1,
 		//CodeInfo  CodeInfo `protobuf:"bytes,2,opt,name=code_info,json=codeInfo,proto3" json:"code_info"`
-		codeInfo,
+		CodeInfo: codeInfo,
 		//CodeBytes []byte   `protobuf:"bytes,3,opt,name=code_bytes,json=codeBytes,proto3" json:"code_bytes,omitempty"`
-		codeBytes,
+		CodeBytes: codeBytes,
 		// Pinned to wasmvm cache
 		//Pinned bool `protobuf:"varint,4,opt,name=pinned,proto3" json:"pinned,omitempty"`
-		false,
+		//,
 	}
 
 	//state := make([]types.Model{}, 1)
@@ -112,11 +116,12 @@ func (pw ProvwasmWrapper) GenerateGenesisState(input *module.SimulationState) {
 		ContractInfo:    contractInfo,
 	}
 	wasmGenesis := types.GenesisState{
-		Params:    params,
+		Params:    types.DefaultParams(),
 		Codes:     codes,
 		Contracts: contracts, // TODO: add contract specific code here
 		Sequences: []types.Sequence{
-			{IDKey: types.KeyLastCodeID, Value: 1},
+			{IDKey: types.KeyLastCodeID, Value: 10},
+			{IDKey: types.KeyLastInstanceID, Value: 1},
 		},
 		GenMsgs:   nil,
 	}
@@ -135,9 +140,9 @@ func (ProvwasmWrapper) ProposalContents(simState module.SimulationState) []simty
 }
 
 // RandomizedParams creates randomized bank param changes for the simulator.
-func (am ProvwasmWrapper) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
+func (pw ProvwasmWrapper) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 
-	return am.wasm.RandomizedParams(r)
+	return pw.wasm.RandomizedParams(r)
 
 	//params := wasmsim.RandomParams(r)
 	//return []simtypes.ParamChange{
@@ -164,10 +169,10 @@ func (am ProvwasmWrapper) RandomizedParams(r *rand.Rand) []simtypes.ParamChange 
 }
 
 // RegisterStoreDecoder registers a decoder for supply module's types
-func (am ProvwasmWrapper) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (pw ProvwasmWrapper) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
-func (am ProvwasmWrapper) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
+func (pw ProvwasmWrapper) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return nil
 }
