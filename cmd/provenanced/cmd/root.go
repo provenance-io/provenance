@@ -320,6 +320,9 @@ func createAppAndExport(
 func overwriteFlagDefaults(c *cobra.Command, defaults map[string]string) {
 	set := func(s *pflag.FlagSet, key, val string) {
 		if f := s.Lookup(key); f != nil {
+			if f.Changed {
+				return
+			}
 			f.DefValue = val
 			if err := f.Value.Set(val); err != nil {
 				panic(err)
