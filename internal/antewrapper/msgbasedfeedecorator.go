@@ -2,6 +2,7 @@ package antewrapper
 
 import (
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -34,7 +35,7 @@ func (afd MsgBasedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
-	ctx.Logger().Info("NOTICE: here in MsgBasedFeeDecorator {}",ctx.GasMeter().GasConsumed())
+	ctx.Logger().Info("NOTICE: here in MsgBasedFeeDecorator {}", ctx.GasMeter().GasConsumed())
 	feeCoins := feeTx.GetFee()
 	gas := feeTx.GetGas()
 	msgs := feeTx.GetMsgs()
@@ -64,7 +65,6 @@ func (afd MsgBasedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 			// maybe record additional fees charged.
 		}
 	}
-
 
 	return next(ctx, tx, simulate)
 }
@@ -103,8 +103,6 @@ func EnsureSufficientMempoolFees(ctx sdk.Context, gas uint64, feeCoins sdk.Coins
 	return nil
 }
 
-
-
 // FilterMsgAndComputeTax computes the stability tax on MsgSend and MsgMultiSend.
 func FilterMsgAndComputeTax(ctx sdk.Context, mbfk msgbasedfeetypes.MsgBasedFeeKeeper, msgs ...sdk.Msg) (sdk.Coins, error) {
 	taxes := sdk.Coins{}
@@ -122,12 +120,11 @@ func FilterMsgAndComputeTax(ctx sdk.Context, mbfk msgbasedfeetypes.MsgBasedFeeKe
 		if msgFees == nil {
 			continue
 		}
-		if msgFees.MinAdditionalFee.IsPositive() {
-			additionalFees = additionalFees.Add(sdk.NewCoin(msgFees.MinAdditionalFee.Denom, msgFees.MinAdditionalFee.Amount))
+		if msgFees.AdditionalFee.IsPositive() {
+			additionalFees = additionalFees.Add(sdk.NewCoin(msgFees.AdditionalFee.Denom, msgFees.AdditionalFee.Amount))
 		}
 
 	}
-
 
 	return taxes, nil
 }

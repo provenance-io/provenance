@@ -18,9 +18,9 @@ var (
 	_ legacytx.LegacyMsg = &CalculateFeePerMsgRequest{} // For amino support.
 )
 
-func NewMsgBasedFee(msgTypeURL string, minFeeRate sdk.Coin, feeRate sdk.Dec) MsgBasedFee {
+func NewMsgBasedFee(msgTypeURL string, additionalFee sdk.Coin) MsgBasedFee {
 	return MsgBasedFee{
-		MsgTypeUrl: msgTypeURL, MinAdditionalFee: minFeeRate, FeeRate: feeRate,
+		MsgTypeUrl: msgTypeURL, AdditionalFee: additionalFee,
 	}
 }
 
@@ -29,14 +29,11 @@ func (msg *CreateMsgBasedFeeRequest) ValidateBasic() error {
 		return ErrEmptyMsgType
 	}
 
-	if msg.MsgBasedFee.MinAdditionalFee.IsZero() && msg.MsgBasedFee.FeeRate.IsZero() {
+	if msg.MsgBasedFee.AdditionalFee.IsZero() {
 		return ErrInvalidFee
 	}
-
-	if !msg.MsgBasedFee.MinAdditionalFee.IsZero() {
-		if err := msg.MsgBasedFee.MinAdditionalFee.Validate(); err == nil {
-			return err
-		}
+	if err := msg.MsgBasedFee.AdditionalFee.Validate(); err == nil {
+		return err
 	}
 
 	return nil

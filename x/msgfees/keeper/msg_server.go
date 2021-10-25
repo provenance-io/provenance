@@ -62,8 +62,8 @@ func (k msgServer) CalculateMsgBasedFees(goCtx context.Context, request *types.C
 		if msgFees == nil {
 			continue
 		}
-		if msgFees.MinAdditionalFee.IsPositive() {
-			additionalFees = additionalFees.Add(sdk.NewCoin(msgFees.MinAdditionalFee.Denom, msgFees.MinAdditionalFee.Amount))
+		if msgFees.AdditionalFee.IsPositive() {
+			additionalFees = additionalFees.Add(sdk.NewCoin(msgFees.AdditionalFee.Denom, msgFees.AdditionalFee.Amount))
 		}
 	}
 
