@@ -1,9 +1,14 @@
 package provwasm
 
 import (
+	"fmt"
 	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	"io/ioutil"
 	"math/rand"
@@ -12,18 +17,24 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	namesim "github.com/provenance-io/provenance/x/name/simulation"
+	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
 type ProvwasmWrapper struct {
 	cdc codec.Codec
 	wasm module.AppModuleSimulation
+	ak authkeeper.AccountKeeperI
+	bk bankkeeper.ViewKeeper
 }
 
-func NewProvwasmWrapper(cdc codec.Codec, keeper *wasm.Keeper, validatorSetSource keeper.ValidatorSetSource) *ProvwasmWrapper {
+func NewProvwasmWrapper(cdc codec.Codec, keeper *wasm.Keeper, validatorSetSource keeper.ValidatorSetSource, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper) *ProvwasmWrapper {
 
 	return &ProvwasmWrapper{
 		cdc: cdc,
 		wasm: wasm.NewAppModule(cdc, keeper, validatorSetSource),
+		ak: ak,
+		bk: bk,
 	}
 }
 
@@ -89,6 +100,41 @@ func (pw ProvwasmWrapper) WeightedOperations(simState module.SimulationState) []
 
 
 	// I will need the separate accounts all created and with necessary gas fees as well as the necessary currency created?  I may want to use a different smart contract... lol
+	r := rand.New(rand.NewSource(1))
+	accounts := simtypes.RandomAccounts(r, 3)
+	customer := accounts[0]
+	merchant := accounts[1]
+	feebucket := accounts[2]
 
-	return nil
+	fmt.Println(customer)
+	fmt.Println(merchant)
+	fmt.Println(feebucket)
+
+	return []simtypes.WeightedOperation{
+		simulation.NewWeightedOperation(
+			1,
+			SimulateMsgBindName(pw.ak, pw.bk, customer),
+		),
+	}
+}
+
+// SimulateMsgBindName will bind a NAME under an existing name using a 40% probability of restricting it.
+func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, acc simtypes.Account) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		msg := nametypes.NewMsgBindNameRequest(
+			nametypes.NewNameRecord(
+				"sc",
+				acc.Address,
+				true),
+			nametypes.NewNameRecord(
+				"pb",
+				acc.Address,
+				false))
+
+		panic("Hello world!!!!!")
+
+		return namesim.Dispatch(r, app, ctx, ak, bk, acc, chainID, msg)
+	}
 }
