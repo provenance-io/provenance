@@ -21,10 +21,10 @@ import (
 
 // Flag names and values
 const (
-	FlagFeeRate = "fee-rate"
-	FlagMinFee  = "additional-fee"
-	FlagMsgType = "msg-type"
-	FlagAmount  = "amount"
+	FlagFeeRate       = "fee-rate"
+	FlagMinFee        = "additional-fee"
+	FlagMsgType       = "msg-type"
+	FlagAmount        = "amount"
 )
 
 func NewTxCmd() *cobra.Command {
@@ -85,7 +85,7 @@ $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nha
 			}
 
 			var amount sdk.Coin
-			var minFee sdk.Coin
+			var addFee sdk.Coin
 			if proposalType != "remove" {
 
 				amountArg, err := cmd.Flags().GetString(FlagAmount)
@@ -102,7 +102,7 @@ $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nha
 					return err
 				}
 				if additionalFee != "" {
-					minFee, err = sdk.ParseCoinNormalized(additionalFee)
+					addFee, err = sdk.ParseCoinNormalized(additionalFee)
 					if err != nil {
 						return err
 					}
@@ -118,7 +118,7 @@ $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nha
 					Description:   args[2],
 					Msg:           anyMsg,
 					Amount:        amount,
-					AdditionalFee: minFee,
+					AdditionalFee: addFee,
 				}
 			case "update":
 				proposal = &types.UpdateMsgBasedFeeProposal{
@@ -126,7 +126,7 @@ $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nha
 					Description:   args[2],
 					Msg:           anyMsg,
 					Amount:        amount,
-					AdditionalFee: minFee,
+					AdditionalFee: addFee,
 				}
 			case "remove":
 				proposal = &types.RemoveMsgBasedFeeProposal{

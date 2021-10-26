@@ -5,6 +5,7 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // ignoring RegisterLegacyAminoCodec registers all the necessary types and interfaces for the
@@ -19,6 +20,13 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
+
+	registry.RegisterImplementations(
+		(*govtypes.Content)(nil),
+		&AddMsgBasedFeeProposal{},
+		&UpdateMsgBasedFeeProposal{},
+		&RemoveMsgBasedFeeProposal{},
+	)
 }
 
 var (
