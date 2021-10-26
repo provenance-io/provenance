@@ -168,7 +168,13 @@ func InstallCustomUpgradeHandlers(app *App) {
 		} else {
 			ref := upgrade
 			handler = func(ctx sdk.Context, plan upgradetypes.Plan, versionMap module.VersionMap) (module.VersionMap, error) {
-				return ref.Handler(app, ctx, plan)
+				vM, err := ref.Handler(app, ctx, plan)
+				if err != nil {
+					ctx.Logger().Info(fmt.Sprintf("Failed to upgrade to: %s with err: %v", plan.Name, err))
+				} else {
+					ctx.Logger().Info(fmt.Sprintf("Successfully upgraded to: %s with version map: %v", plan.Name, vM))
+				}
+				return vM, err
 			}
 		}
 		app.UpgradeKeeper.SetUpgradeHandler(name, handler)
