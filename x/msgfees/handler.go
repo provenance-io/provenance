@@ -32,6 +32,10 @@ func NewProposalHandler(k keeper.Keeper) govtypes.Handler {
 		switch c := content.(type) {
 		case *types.AddMsgBasedFeeProposal:
 			return keeper.HandleAddMsgBasedFeeProposal(ctx, k, c)
+		case *types.UpdateMsgBasedFeeProposal:
+			return keeper.HandleUpdateMsgBasedFeeProposal(ctx, k, c)
+		case *types.RemoveMsgBasedFeeProposal:
+			return keeper.HandleRemoveMsgBasedFeeProposal(ctx, k, c)
 		default:
 			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized marker proposal content type: %T", c)
 		}
