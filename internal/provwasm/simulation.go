@@ -1,7 +1,6 @@
 package provwasm
 
 import (
-	"crypto/sha256"
 	"fmt"
 	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -41,34 +40,32 @@ func (pw ProvwasmWrapper) GenerateGenesisState(input *module.SimulationState) {
 	contracts := make([]types.Contract, 1)
 	//var contractInfo types.ContractInfo
 
-	// get this working!
-	myCodeInfo := wasmTypes.CodeInfoFixture(wasmTypes.WithSHA256CodeHash(wasmCode))
 
-
-	contractInfo := types.ContractInfo {
-		// CodeID is the reference to the stored Wasm code
-		1,
-		// Creator address who initially instantiated the contract
-		//Creator string `protobuf:"bytes,2,opt,name=creator,proto3" json:"creator,omitempty"
-		input.Accounts[0].Address.String(),
-		// Admin is an optional address that can execute migrations
-		//Admin string `protobuf:"bytes,3,opt,name=admin,proto3" json:"admin,omitempty"`
-		input.Accounts[0].Address.String(),
-		// Label is optional metadata to be stored with a contract instance.
-		//Label string `protobuf:"bytes,4,opt,name=label,proto3" json:"label,omitempty"`
-		"simple-contract",
-		// Created Tx position when the contract was instantiated.
-		// This data should kept internal and not be exposed via query results. Just
-		// use for sorting
-		//Created   *AbsoluteTxPosition `protobuf:"bytes,5,opt,name=created,proto3" json:"created,omitempty"`
-		nil,
-		//IBCPortID string              `protobuf:"bytes,6,opt,name=ibc_port_id,json=ibcPortId,proto3" json:"ibc_port_id,omitempty"`
-		"IBCPortID",
-		// Extension is an extension point to store custom metadata within the
-		// persistence model.
-		//Extension *types.Any `protobuf:"bytes,7,opt,name=extension,proto3" json:"extension,omitempty"`
-		nil,
-	}
+	contractInfo := types.ContractInfoFixture(func(c *types.ContractInfo) { c.CodeID = 1 }, types.OnlyGenesisFields)
+	//contractInfo := types.ContractInfo {
+	//	// CodeID is the reference to the stored Wasm code
+	//	1,
+	//	// Creator address who initially instantiated the contract
+	//	//Creator string `protobuf:"bytes,2,opt,name=creator,proto3" json:"creator,omitempty"
+	//	input.Accounts[0].Address.String(),
+	//	// Admin is an optional address that can execute migrations
+	//	//Admin string `protobuf:"bytes,3,opt,name=admin,proto3" json:"admin,omitempty"`
+	//	input.Accounts[0].Address.String(),
+	//	// Label is optional metadata to be stored with a contract instance.
+	//	//Label string `protobuf:"bytes,4,opt,name=label,proto3" json:"label,omitempty"`
+	//	"simple-contract",
+	//	// Created Tx position when the contract was instantiated.
+	//	// This data should kept internal and not be exposed via query results. Just
+	//	// use for sorting
+	//	//Created   *AbsoluteTxPosition `protobuf:"bytes,5,opt,name=created,proto3" json:"created,omitempty"`
+	//	nil,
+	//	//IBCPortID string              `protobuf:"bytes,6,opt,name=ibc_port_id,json=ibcPortId,proto3" json:"ibc_port_id,omitempty"`
+	//	"IBCPortID",
+	//	// Extension is an extension point to store custom metadata within the
+	//	// persistence model.
+	//	//Extension *types.Any `protobuf:"bytes,7,opt,name=extension,proto3" json:"extension,omitempty"`
+	//	nil,
+	//}
 
 	//var codeBytes []byte
 
@@ -77,23 +74,11 @@ func (pw ProvwasmWrapper) GenerateGenesisState(input *module.SimulationState) {
 		panic("failed to read file")
 	}
 
+	// get this working!
+	myCodeInfo := types.CodeInfoFixture(types.WithSHA256CodeHash(codeBytes))
+
 	fmt.Println("asdf")
 	fmt.Println(codeBytes)
-
-	// TODO: how do I get the code bytes from file?
-
-	hash := sha256.Sum256(codeBytes)
-	fmt.Println("Hash: ")
-	fmt.Println(hash)
-
-	// okay... how do I get these from the tutorial.wasm file?
-	codeInfo := types.CodeInfo{
-		CodeHash: hash[:],
-		Creator:  input.Accounts[0].Address.String(),
-		InstantiateConfig: types.AccessConfig{
-			Permission: types.AccessTypeEverybody,
-		},
-	}
 
 	codes := make([]types.Code, 1)
 	codes[0] = types.Code{
@@ -101,7 +86,7 @@ func (pw ProvwasmWrapper) GenerateGenesisState(input *module.SimulationState) {
 		//CodeID    uint64   `protobuf:"varint,1,opt,name=code_id,json=codeId,proto3" json:"code_id,omitempty"`
 		CodeID: 1,
 		//CodeInfo  CodeInfo `protobuf:"bytes,2,opt,name=code_info,json=codeInfo,proto3" json:"code_info"`
-		CodeInfo: codeInfo,
+		CodeInfo: myCodeInfo,
 		//CodeBytes []byte   `protobuf:"bytes,3,opt,name=code_bytes,json=codeBytes,proto3" json:"code_bytes,omitempty"`
 		CodeBytes: codeBytes,
 		// Pinned to wasmvm cache
@@ -120,8 +105,8 @@ func (pw ProvwasmWrapper) GenerateGenesisState(input *module.SimulationState) {
 		Codes:     codes,
 		Contracts: contracts, // TODO: add contract specific code here
 		Sequences: []types.Sequence{
-			{IDKey: types.KeyLastCodeID, Value: 10},
-			{IDKey: types.KeyLastInstanceID, Value: 1},
+			{IDKey: types.KeyLastCodeID, Value: 2},
+			{IDKey: types.KeyLastInstanceID, Value: 2},
 		},
 		GenMsgs:   nil,
 	}
