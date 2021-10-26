@@ -40,15 +40,13 @@ func NewAddMsgBasedFeeProposal(
 	description string,
 	amount sdk.Coin,
 	msg *types.Any,
-	minFee sdk.Coin,
-	feeRate sdk.Dec) *AddMsgBasedFeeProposal {
+	additionalFee sdk.Coin) *AddMsgBasedFeeProposal {
 	return &AddMsgBasedFeeProposal{
-		Title:       title,
-		Description: description,
-		Amount:      amount,
-		Msg:         msg,
-		MinFee:      minFee,
-		FeeRate:     feeRate,
+		Title:         title,
+		Description:   description,
+		Amount:        amount,
+		Msg:           msg,
+		AdditionalFee: additionalFee,
 	}
 }
 
@@ -63,7 +61,7 @@ func (ambfp AddMsgBasedFeeProposal) ValidateBasic() error {
 		return ErrInvalidCoinAmount
 	}
 
-	if !ambfp.MinFee.IsPositive() && ambfp.FeeRate.IsZero() {
+	if !ambfp.AdditionalFee.IsPositive() {
 		return ErrInvalidFee
 	}
 
@@ -72,13 +70,12 @@ func (ambfp AddMsgBasedFeeProposal) ValidateBasic() error {
 func (ambfp AddMsgBasedFeeProposal) String() string {
 	var b strings.Builder
 	b.WriteString(fmt.Sprintf(`Add Msg Based Fee Proposal:
-  Title:       %s
-  Description: %s
-  Amount:      %s
-  Msg:         %s
-  MinFee:      %s
-  FeeRate:     %s
-`, ambfp.Title, ambfp.Description, ambfp.Amount, ambfp.Msg.GetTypeUrl(), ambfp.MinFee, ambfp.FeeRate))
+Title:         %s
+Description:   %s
+Amount:        %s
+Msg:           %s
+AdditionalFee: %s
+`, ambfp.Title, ambfp.Description, ambfp.Amount, ambfp.Msg.GetTypeUrl(), ambfp.AdditionalFee))
 	return b.String()
 }
 
@@ -87,15 +84,13 @@ func NewUpdateMsgBasedFeeProposal(
 	description string,
 	amount sdk.Coin,
 	msg *types.Any,
-	minFee sdk.Coin,
-	feeRate sdk.Dec) *UpdateMsgBasedFeeProposal {
+	additionalFee sdk.Coin) *UpdateMsgBasedFeeProposal {
 	return &UpdateMsgBasedFeeProposal{
-		Title:       title,
-		Description: description,
-		Amount:      amount,
-		Msg:         msg,
-		MinFee:      minFee,
-		FeeRate:     feeRate,
+		Title:         title,
+		Description:   description,
+		Amount:        amount,
+		Msg:           msg,
+		AdditionalFee: additionalFee,
 	}
 }
 
@@ -112,7 +107,7 @@ func (umbfp UpdateMsgBasedFeeProposal) ValidateBasic() error {
 		return ErrInvalidCoinAmount
 	}
 
-	if !umbfp.MinFee.IsPositive() && umbfp.FeeRate.IsZero() {
+	if !umbfp.AdditionalFee.IsPositive() {
 		return ErrInvalidFee
 	}
 
@@ -122,13 +117,12 @@ func (umbfp UpdateMsgBasedFeeProposal) ValidateBasic() error {
 func (umbfp UpdateMsgBasedFeeProposal) String() string {
 	var b strings.Builder
 	b.WriteString(fmt.Sprintf(`Update Msg Based Fee Proposal:
-  Title:       %s
-  Description: %s
-  Amount:      %s
-  Msg:         %s
-  MinFee:      %s
-  FeeRate:     %s
-`, umbfp.Title, umbfp.Description, umbfp.Amount, umbfp.Msg.GetTypeUrl(), umbfp.MinFee, umbfp.FeeRate))
+Title:         %s
+Description:   %s
+Amount:        %s
+Msg:           %s
+AdditionalFee: %s
+`, umbfp.Title, umbfp.Description, umbfp.Amount, umbfp.Msg.GetTypeUrl(), umbfp.AdditionalFee))
 	return b.String()
 }
 

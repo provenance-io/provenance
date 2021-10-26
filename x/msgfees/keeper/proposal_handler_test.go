@@ -53,32 +53,32 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 	}{
 		{
 			"add msgfees - valid",
-			msgfeestypes.NewAddMsgBasedFeeProposal("title add", "description", sdk.NewCoin("hotdog", sdk.NewInt(10)), writeRecordRequest, sdk.NewCoin("hotdog", sdk.NewInt(10)), sdk.OneDec()),
+			msgfeestypes.NewAddMsgBasedFeeProposal("title add", "description", sdk.NewCoin("hotdog", sdk.NewInt(10)), writeRecordRequest, sdk.NewCoin("hotdog", sdk.NewInt(10))),
 			nil,
 		},
 		{
 			"add msgfees - invalid - cannot add when the same msgbasedfee exists",
-			msgfeestypes.NewAddMsgBasedFeeProposal("title add", "description", sdk.NewCoin("hotdog", sdk.NewInt(10)), writeRecordRequest, sdk.NewCoin("hotdog", sdk.NewInt(10)), sdk.OneDec()),
+			msgfeestypes.NewAddMsgBasedFeeProposal("title add", "description", sdk.NewCoin("hotdog", sdk.NewInt(10)), writeRecordRequest, sdk.NewCoin("hotdog", sdk.NewInt(10))),
 			msgfeestypes.ErrMsgFeeAlreadyExists,
 		},
 		{
 			"add msgfees - invalid - validate basic fail",
-			msgfeestypes.NewAddMsgBasedFeeProposal("title add", "description", sdk.NewCoin("hotdog", sdk.NewInt(10)), writeScopeRequest, sdk.NewCoin("hotdog", sdk.NewInt(0)), sdk.ZeroDec()),
+			msgfeestypes.NewAddMsgBasedFeeProposal("title add", "description", sdk.NewCoin("hotdog", sdk.NewInt(10)), writeScopeRequest, sdk.NewCoin("hotdog", sdk.NewInt(0))),
 			msgfeestypes.ErrInvalidFee,
 		},
 		{
 			"update msgfees - valid",
-			msgfeestypes.NewUpdateMsgBasedFeeProposal("title update", "description", sdk.NewCoin("hotdog", sdk.NewInt(10)), writeRecordRequest, sdk.NewCoin("hotdog", sdk.NewInt(10)), sdk.OneDec()),
+			msgfeestypes.NewUpdateMsgBasedFeeProposal("title update", "description", sdk.NewCoin("hotdog", sdk.NewInt(10)), writeRecordRequest, sdk.NewCoin("hotdog", sdk.NewInt(10))),
 			nil,
 		},
 		{
 			"update msgfees - invalid - cannot update a non-existing msgbasedfee",
-			msgfeestypes.NewUpdateMsgBasedFeeProposal("title update", "description", sdk.NewCoin("hotdog", sdk.NewInt(10)), writeScopeRequest, sdk.NewCoin("hotdog", sdk.NewInt(10)), sdk.OneDec()),
+			msgfeestypes.NewUpdateMsgBasedFeeProposal("title update", "description", sdk.NewCoin("hotdog", sdk.NewInt(10)), writeScopeRequest, sdk.NewCoin("hotdog", sdk.NewInt(10))),
 			msgfeestypes.ErrMsgFeeDoesNotExist,
 		},
 		{
 			"update msgfees - invalid - validate basic fail",
-			msgfeestypes.NewUpdateMsgBasedFeeProposal("title update", "description", sdk.NewCoin("hotdog", sdk.NewInt(10)), writeRecordRequest, sdk.NewCoin("hotdog", sdk.NewInt(0)), sdk.ZeroDec()),
+			msgfeestypes.NewUpdateMsgBasedFeeProposal("title update", "description", sdk.NewCoin("hotdog", sdk.NewInt(10)), writeRecordRequest, sdk.NewCoin("hotdog", sdk.NewInt(0))),
 			msgfeestypes.ErrInvalidFee,
 		},
 		{

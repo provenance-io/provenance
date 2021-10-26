@@ -3,7 +3,6 @@ package cli
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -23,7 +22,7 @@ import (
 // Flag names and values
 const (
 	FlagFeeRate = "fee-rate"
-	FlagMinFee  = "min-fee"
+	FlagMinFee  = "additional-fee"
 	FlagMsgType = "msg-type"
 	FlagAmount  = "amount"
 )
@@ -53,8 +52,8 @@ func GetCmdMsgBasedFeesProposal() *cobra.Command {
 		Long: strings.TrimSpace(`Submit a msg fees proposal along with an initial deposit.
 For add, update, and removal of msg based fees amount and min fee and/or rate fee must be set.
 `),
-		Example: fmt.Sprintf(`$ %[1]s tx msgfees add "adding" "adding MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --amount 99nhash --min-fee=612nhash --fee-rate=1234
-$ %[1]s tx msgfees update "updating" "updating MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --amount 99nhash --min-fee=612000nhash --fee-rate=123400
+		Example: fmt.Sprintf(`$ %[1]s tx msgfees add "adding" "adding MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --amount 99nhash --additional-fee=612nhash
+$ %[1]s tx msgfees update "updating" "updating MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --amount 99nhash --additional-fee=612000nhash 
 $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest
 `, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -87,7 +86,6 @@ $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nha
 
 			var amount sdk.Coin
 			var minFee sdk.Coin
-			var feeRate sdk.Dec
 			if proposalType != "remove" {
 
 				amountArg, err := cmd.Flags().GetString(FlagAmount)
@@ -99,32 +97,15 @@ $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nha
 					return err
 				}
 
-				minFeeArg, err := cmd.Flags().GetString(FlagMinFee)
+				additionalFee, err := cmd.Flags().GetString(FlagMinFee)
 				if err != nil {
 					return err
 				}
-				if minFeeArg != "" {
-					minFee, err = sdk.ParseCoinNormalized(minFeeArg)
+				if additionalFee != "" {
+					minFee, err = sdk.ParseCoinNormalized(additionalFee)
 					if err != nil {
 						return err
 					}
-				}
-
-				feeRateArg, err := cmd.Flags().GetString(FlagFeeRate)
-				if err != nil {
-					return err
-				}
-				if feeRateArg != "" {
-					decInt, err := strconv.ParseInt(feeRateArg, 10, 64)
-					if err != nil {
-						return err
-					}
-					feeRate = sdk.NewDec(decInt)
-					if err != nil {
-						return err
-					}
-				} else {
-					feeRate = sdk.ZeroDec()
 				}
 			}
 
@@ -133,21 +114,19 @@ $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nha
 			switch args[0] {
 			case "add":
 				proposal = &types.AddMsgBasedFeeProposal{
-					Title:       args[1],
-					Description: args[2],
-					Msg:         anyMsg,
-					Amount:      amount,
-					FeeRate:     feeRate,
-					MinFee:      minFee,
+					Title:         args[1],
+					Description:   args[2],
+					Msg:           anyMsg,
+					Amount:        amount,
+					AdditionalFee: minFee,
 				}
 			case "update":
 				proposal = &types.UpdateMsgBasedFeeProposal{
-					Title:       args[1],
-					Description: args[2],
-					Msg:         anyMsg,
-					Amount:      amount,
-					FeeRate:     feeRate,
-					MinFee:      minFee,
+					Title:         args[1],
+					Description:   args[2],
+					Msg:           anyMsg,
+					Amount:        amount,
+					AdditionalFee: minFee,
 				}
 			case "remove":
 				proposal = &types.RemoveMsgBasedFeeProposal{
@@ -175,7 +154,6 @@ $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nha
 	flags.AddTxFlagsToCmd(cmd)
 	cmd.Flags().String(FlagMsgType, "", "proto type url for msg type")
 	cmd.Flags().String(FlagAmount, "", "amount for msg based fee")
-	cmd.Flags().String(FlagMinFee, "", "min fee rate for msg based fee")
-	cmd.Flags().String(FlagFeeRate, "", "fee rate for msg based fee")
+	cmd.Flags().String(FlagMinFee, "", "additional fee for msg based fee")
 	return cmd
 }

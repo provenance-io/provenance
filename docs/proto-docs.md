@@ -5221,8 +5221,7 @@ AddMsgBasedFeeProposal defines a governance proposal to add additional msg based
 | `description` | [string](#string) |  |  |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `msg` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-| `min_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `fee_rate` | [bytes](#bytes) |  | Fee rate, based on Gas used. |
+| `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 
 
 
@@ -5258,8 +5257,7 @@ UpdateMsgBasedFeeProposal defines a governance proposal to update a current msg 
 | `description` | [string](#string) |  |  |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `msg` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-| `min_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `fee_rate` | [bytes](#bytes) |  | Fee rate, based on Gas used. |
+| `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 
 
 

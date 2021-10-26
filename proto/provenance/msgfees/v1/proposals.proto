@@ -29,17 +29,10 @@ message AddMsgBasedFeeProposal {
 
   google.protobuf.Any msg = 4 [(cosmos_proto.accepts_interface) = "sdk.Msg"];
 
-  cosmos.base.v1beta1.Coin min_fee = 5 [
+  cosmos.base.v1beta1.Coin additional_fee = 5 [
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (gogoproto.moretags)     = "yaml:\"min_fee\""
-  ];
-
-  //  Fee rate, based on Gas used.
-  bytes fee_rate = 6 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false,
-    (gogoproto.jsontag)    = "fee_rate,omitempty"
+    (gogoproto.moretags)     = "yaml:\"additional_fee\""
   ];
 }
 
@@ -56,17 +49,10 @@ message UpdateMsgBasedFeeProposal {
 
   google.protobuf.Any msg = 4 [(cosmos_proto.accepts_interface) = "sdk.Msg"];
 
-  cosmos.base.v1beta1.Coin min_fee = 5 [
+  cosmos.base.v1beta1.Coin additional_fee = 5 [
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (gogoproto.moretags)     = "yaml:\"min_fee\""
-  ];
-
-  //  Fee rate, based on Gas used.
-  bytes fee_rate = 6 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false,
-    (gogoproto.jsontag)    = "fee_rate,omitempty"
+    (gogoproto.moretags)     = "yaml:\"additional_fee\""
   ];
 }
 
