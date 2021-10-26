@@ -47,6 +47,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * When deleting a scope, require the same permissions as when updating it [#473](https://github.com/provenance-io/provenance/issues/473)
 
+## [v1.7.5](https://github.com/provenance-io/provenance/releases/tag/v1.7.5) - 2021-10-22
+
+### Improvements
+
+* Update Cosmos SDK to 0.44.3 [PR 536](https://github.com/provenance-io/provenance/pull/536)
+
 ## [v1.7.4](https://github.com/provenance-io/provenance/releases/tag/v1.7.4) - 2021-10-12
 
 ### Improvements
