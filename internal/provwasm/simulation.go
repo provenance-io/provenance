@@ -75,38 +75,20 @@ func (ProvwasmWrapper) ProposalContents(simState module.SimulationState) []simty
 
 // RandomizedParams creates randomized bank param changes for the simulator.
 func (pw ProvwasmWrapper) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-
 	return pw.wasm.RandomizedParams(r)
-
-	//params := wasmsim.RandomParams(r)
-	//return []simtypes.ParamChange{
-	//	simulation.NewSimParamChange(types.ModuleName, string(types.ParamStoreKeyUploadAccess),
-	//		func(r *rand.Rand) string {
-	//			jsonBz, err := am.cdc.MarshalJSON(&params.CodeUploadAccess)
-	//			if err != nil {
-	//				panic(err)
-	//			}
-	//			return string(jsonBz)
-	//		},
-	//	),
-	//	simulation.NewSimParamChange(types.ModuleName, string(types.ParamStoreKeyInstantiateAccess),
-	//		func(r *rand.Rand) string {
-	//			return fmt.Sprintf("%q", params.CodeUploadAccess.Permission.String())
-	//		},
-	//	),
-	//	simulation.NewSimParamChange(types.ModuleName, string(types.ParamStoreKeyMaxWasmCodeSize),
-	//		func(r *rand.Rand) string {
-	//			return fmt.Sprintf(`"%d"`, params.MaxWasmCodeSize)
-	//		},
-	//	),
-	//}
 }
 
 // RegisterStoreDecoder registers a decoder for supply module's types
 func (pw ProvwasmWrapper) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 }
 
-// WeightedOperations returns the all the gov module operations with their respective weights.
+// WeightedOperations returns the all the provwasm operations with their respective weights.
 func (pw ProvwasmWrapper) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
+
+	// Okay... so I probably want to return the basic opperations here??? idk...
+
+
+	// I will need the separate accounts all created and with necessary gas fees as well as the necessary currency created?  I may want to use a different smart contract... lol
+
 	return nil
 }
