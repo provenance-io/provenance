@@ -2,11 +2,10 @@ package antewrapper
 
 import (
 	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
-	cosmosauthtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	msgbasedfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
@@ -19,11 +18,15 @@ import (
 // CONTRACT: Tx must implement FeeTx to use MsgBasedFeeDecorator
 type MsgBasedFeeDecorator struct {
 	msgBasedFeeKeeper msgbasedfeetypes.MsgBasedFeeKeeper
+	bankKeeper        banktypes.Keeper
+	accountKeeper     cosmosante.AccountKeeper
 }
 
-func NewMsgBasedFeeDecorator(bankKeeper cosmosauthtypes.BankKeeper, accountKeeper cosmosante.AccountKeeper, feegrantKeeper cosmosante.FeegrantKeeper, keeper msgbasedfeetypes.MsgBasedFeeKeeper) MsgBasedFeeDecorator {
+func NewMsgBasedFeeDecorator(bankKeeper banktypes.Keeper, accountKeeper cosmosante.AccountKeeper, feegrantKeeper cosmosante.FeegrantKeeper, keeper msgbasedfeetypes.MsgBasedFeeKeeper) MsgBasedFeeDecorator {
 	return MsgBasedFeeDecorator{
 		keeper,
+		bankKeeper,
+		accountKeeper,
 	}
 }
 
@@ -35,47 +38,51 @@ func (afd MsgBasedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
-	ctx.Logger().Info("NOTICE: here in MsgBasedFeeDecorator {}", ctx.GasMeter().GasConsumed())
+	ctx.Logger().Info(fmt.Sprintf("NOTICE: here in MsgBasedFeeDecorator %d", ctx.GasMeter().GasConsumed()))
+
 	feeCoins := feeTx.GetFee()
 	gas := feeTx.GetGas()
 	msgs := feeTx.GetMsgs()
 
-	if !simulate {
-		// Compute taxes
-		fees, _ := FilterMsgAndComputeTax(ctx, afd.msgBasedFeeKeeper, msgs...)
-
-		// Mempool fee validation
-		// No fee validation for oracle txs
-		if ctx.IsCheckTx() {
-			if err := EnsureSufficientMempoolFees(ctx, gas, feeCoins, fees); err != nil {
-				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, err.Error())
-			}
+	// Compute msg additionalFees
+	additionalFees, err := CalculateAdditionalFeesToBePaid(ctx, afd.msgBasedFeeKeeper, msgs...)
+	if err != nil {
+		return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, err.Error())
+	}
+	// mempool fee validation tx
+	// this is because we want to make sure if additional additionalFees in hash then there is enough
+	if ctx.IsCheckTx() {
+		if err := EnsureSufficientMempoolFees(ctx, gas, feeCoins, additionalFees); err != nil {
+			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, err.Error())
 		}
+	}
+	feePayer := feeTx.FeePayer()
+	deductFeesFrom := feePayer
 
-		// Ensure paid fee is enough to cover taxes
-		if _, hasNeg := feeCoins.SafeSub(fees); hasNeg {
-			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s required: %s", feeCoins, fees)
-		}
+	// TODO if feegranter set deduct fee from feegranter account.
+	// this works with only when feegrant enabled.
 
-		// emit event of additional fees
-		// TODO  should we record this in the keeper.
-		if !fees.IsZero() {
-			// emit event.
+	deductFeesFromAcc := afd.accountKeeper.GetAccount(ctx, deductFeesFrom)
+	if deductFeesFromAcc == nil {
+		panic("fee payer address: %s does not exist")
+	}
+	EnsureAccountHasSufficientFees(ctx,gas,feeCoins,additionalFees,afd.bankKeeper,deductFeesFromAcc.GetAddress())
 
-			// maybe record additional fees charged.
-		}
+	// Ensure paid fee is enough to cover taxes
+	if _, hasNeg := feeCoins.SafeSub(additionalFees); hasNeg {
+		return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient additionalFees; got: %s required: %s", feeCoins, additionalFees)
 	}
 
 	return next(ctx, tx, simulate)
 }
 
-// EnsureSufficientMempoolFees verifies that the given transaction has supplied
-// enough fees(gas + stability) to cover a proposer's minimum fees. A result object is returned
+// EnsureSufficientFees verifies that the given transaction has supplied
+// enough fees(gas + additional fees) to cover a proposer's minimum fees. A result object is returned
 // indicating success or failure.
 //
 // Contract: This should only be called during CheckTx as it cannot be part of
 // consensus.
-func EnsureSufficientMempoolFees(ctx sdk.Context, gas uint64, feeCoins sdk.Coins, taxes sdk.Coins) error {
+func EnsureSufficientMempoolFees(ctx sdk.Context, gas uint64, feeCoins sdk.Coins, additionalFees sdk.Coins) error {
 	requiredFees := sdk.Coins{}
 	minGasPrices := ctx.MinGasPrices()
 	if !minGasPrices.IsZero() {
@@ -92,22 +99,43 @@ func EnsureSufficientMempoolFees(ctx sdk.Context, gas uint64, feeCoins sdk.Coins
 
 	// Before checking gas prices, remove taxed from fee
 	var hasNeg bool
-	if feeCoins, hasNeg = feeCoins.SafeSub(taxes); hasNeg {
-		return fmt.Errorf("insufficient fees; got: %q, required: %q = %q(gas) +%q(stability)", feeCoins.Add(taxes...), requiredFees.Add(taxes...), requiredFees, taxes)
+	if feeCoins, hasNeg = feeCoins.SafeSub(additionalFees); hasNeg {
+		return fmt.Errorf("insufficient fees; got: %q, required: %q = %q(gas fees) +%q(additional msg fees)", feeCoins, requiredFees.Add(additionalFees...), requiredFees, additionalFees)
 	}
 
 	if !requiredFees.IsZero() && !feeCoins.IsAnyGTE(requiredFees) {
-		return fmt.Errorf("insufficient fees; got: %q, required: %q = %q(gas) +%q(stability)", feeCoins.Add(taxes...), requiredFees.Add(taxes...), requiredFees, taxes)
+		return fmt.Errorf("insufficient fees; got: %q, required: %q = %q(gas fees) +%q(additional msg fees)", feeCoins, requiredFees.Add(additionalFees...),
+			requiredFees, additionalFees)
 	}
 
 	return nil
 }
 
-// FilterMsgAndComputeTax computes the stability tax on MsgSend and MsgMultiSend.
-func FilterMsgAndComputeTax(ctx sdk.Context, mbfk msgbasedfeetypes.MsgBasedFeeKeeper, msgs ...sdk.Msg) (sdk.Coins, error) {
-	taxes := sdk.Coins{}
-	// get the msg fee
+func EnsureAccountHasSufficientFees(ctx sdk.Context, gas uint64, feeCoins sdk.Coins, additionalFees sdk.Coins, bankKeeper banktypes.Keeper, feePayer sdk.AccAddress) error {
 
+	balancePerCoin := make(sdk.Coins, len(feeCoins))
+
+	for i, fc := range feeCoins {
+		balancePerCoin[i] = bankKeeper.GetBalance(ctx, feePayer, fc.Denom)
+	}
+
+	originalFees := feeCoins
+	// Step 1. Check if fees has enough money to pay additional fees.
+	var hasNeg bool
+	if feeCoins, hasNeg = feeCoins.SafeSub(additionalFees); hasNeg {
+		return fmt.Errorf("insufficient fees; got: %q, required additional fee: %q", feeCoins, additionalFees)
+	}
+	// Step 2: Check if account has enough to pay all fees.
+	if !balancePerCoin.IsZero() && !balancePerCoin.IsAnyGTE(originalFees) {
+		return fmt.Errorf("fee payer account does not have enough balance to pay for %q", feeCoins)
+	}
+
+	return nil
+}
+
+// CalculateAdditionalFeesToBePaid computes the stability tax on MsgSend and MsgMultiSend.
+func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgbasedfeetypes.MsgBasedFeeKeeper, msgs ...sdk.Msg) (sdk.Coins, error) {
+	// get the msg fee
 	additionalFees := sdk.Coins{}
 
 	for _, msg := range msgs {
@@ -126,5 +154,5 @@ func FilterMsgAndComputeTax(ctx sdk.Context, mbfk msgbasedfeetypes.MsgBasedFeeKe
 
 	}
 
-	return taxes, nil
+	return additionalFees, nil
 }

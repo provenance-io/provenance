@@ -7,13 +7,14 @@ import (
 	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	msgbasedfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 // HandlerOptions are the options required for constructing a default SDK AnteHandler.
 type HandlerOptions struct {
 	AccountKeeper   cosmosante.AccountKeeper
-	BankKeeper      types.BankKeeper
+	BankKeeper      banktypes.Keeper
 	FeegrantKeeper       cosmosante.FeegrantKeeper
 	MsgBasedFeeKeeper msgbasedfeetypes.MsgBasedFeeKeeper
 	SignModeHandler      authsigning.SignModeHandler
@@ -47,8 +48,8 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		cosmosante.NewTxTimeoutHeightDecorator(),
 		cosmosante.NewValidateMemoDecorator(options.AccountKeeper),
 		cosmosante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
-		NewMsgBasedFeeDecorator(options.BankKeeper, options.AccountKeeper, options.FeegrantKeeper, options.MsgBasedFeeKeeper),
 		cosmosante.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper),
+		NewMsgBasedFeeDecorator(options.BankKeeper, options.AccountKeeper, options.FeegrantKeeper, options.MsgBasedFeeKeeper),
 		cosmosante.NewSetPubKeyDecorator(options.AccountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
 		cosmosante.NewValidateSigCountDecorator(options.AccountKeeper),
 		cosmosante.NewSigGasConsumeDecorator(options.AccountKeeper, sigGasConsumer),
