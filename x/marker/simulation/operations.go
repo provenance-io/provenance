@@ -198,6 +198,7 @@ func Dispatch(
 
 	fees, err := simtypes.RandomFees(r, ctx, spendable)
 	if err != nil {
+		panic("no fees")
 		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to generate fees"), nil, err
 	}
 
@@ -213,11 +214,13 @@ func Dispatch(
 		from.PrivKey,
 	)
 	if err != nil {
+		panic(err)
 		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to generate mock tx"), nil, err
 	}
 
 	_, _, err = app.Deliver(txGen.TxEncoder(), tx)
 	if err != nil {
+		panic(err)
 		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), err.Error()), nil, nil
 	}
 

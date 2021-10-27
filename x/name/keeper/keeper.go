@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 	"unicode"
 
@@ -244,6 +245,7 @@ func (keeper Keeper) Normalize(ctx sdk.Context, name string) (string, error) {
 		lenComp := uint32(len(comp))
 		isUUID := isValidUUID(comp)
 		if lenComp < keeper.GetMinSegmentLength(ctx) {
+			fmt.Println("lenComp: ", lenComp, " minSegLen: ", keeper.GetMinSegmentLength(ctx))
 			return "", types.ErrNameSegmentTooShort
 		}
 		if lenComp > keeper.GetMaxSegmentLength(ctx) && !isUUID {

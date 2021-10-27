@@ -16,6 +16,11 @@ test-sim-custom-genesis-fast:
 	@go test -mod=readonly $(SIMAPP) -run TestFullAppSimulation -Genesis=${HOME}/.provenanced/config/genesis.json \
 		-Enabled=true -NumBlocks=50 -BlockSize=100 -Commit=true -Seed=99 -Period=5 -v -timeout 24h
 
+test-sim-smart-contracts:
+	@echo "Running smart contract simulation..."
+	@go test -mod=readonly $(SIMAPP) -run TestSmartContracts \
+		-Enabled=true -NumBlocks=50 -BlockSize=100 -Commit=true -Seed=99 -Period=5 -v -timeout 1h
+
 test-sim-import-export: runsim
 	@echo "Running application import/export simulation. This may take several minutes..."
 	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 30 3 TestAppImportExport

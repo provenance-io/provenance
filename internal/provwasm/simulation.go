@@ -9,6 +9,7 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 
 	"io/ioutil"
 	"math/rand"
@@ -17,6 +18,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	markersim "github.com/provenance-io/provenance/x/marker/simulation"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	namesim "github.com/provenance-io/provenance/x/name/simulation"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
@@ -26,15 +29,17 @@ type ProvwasmWrapper struct {
 	wasm module.AppModuleSimulation
 	ak authkeeper.AccountKeeperI
 	bk bankkeeper.ViewKeeper
+	nk namekeeper.Keeper
 }
 
-func NewProvwasmWrapper(cdc codec.Codec, keeper *wasm.Keeper, validatorSetSource keeper.ValidatorSetSource, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper) *ProvwasmWrapper {
+func NewProvwasmWrapper(cdc codec.Codec, keeper *wasm.Keeper, validatorSetSource keeper.ValidatorSetSource, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper) *ProvwasmWrapper {
 
 	return &ProvwasmWrapper{
 		cdc: cdc,
 		wasm: wasm.NewAppModule(cdc, keeper, validatorSetSource),
 		ak: ak,
 		bk: bk,
+		nk: nk,
 	}
 }
 
@@ -95,46 +100,122 @@ func (pw ProvwasmWrapper) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 
 // WeightedOperations returns the all the provwasm operations with their respective weights.
 func (pw ProvwasmWrapper) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-
-	// Okay... so I probably want to return the basic opperations here??? idk...
-
-
-	// I will need the separate accounts all created and with necessary gas fees as well as the necessary currency created?  I may want to use a different smart contract... lol
-	r := rand.New(rand.NewSource(1))
-	accounts := simtypes.RandomAccounts(r, 3)
-	customer := accounts[0]
-	merchant := accounts[1]
-	feebucket := accounts[2]
-
-	fmt.Println(customer)
-	fmt.Println(merchant)
-	fmt.Println(feebucket)
-
+	weight := 10000
+	namecount := 0
+	acount := 0
+	addcount := 0
 	return []simtypes.WeightedOperation{
 		simulation.NewWeightedOperation(
-			1,
-			SimulateMsgBindName(pw.ak, pw.bk, customer),
+			weight,
+			SimulateMsgBindName(pw.ak, pw.bk, pw.nk, &namecount),
+		),
+		simulation.NewWeightedOperation(
+			weight-1,
+			SimulateMsgAddMarker(pw.ak, pw.bk, &addcount),
+		),
+		simulation.NewWeightedOperation(
+			weight-2,
+			SimulateFinalizeOrActivateMarker(pw.ak, pw.bk, &acount),
 		),
 	}
 }
 
 // SimulateMsgBindName will bind a NAME under an existing name using a 40% probability of restricting it.
-func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, acc simtypes.Account) simtypes.Operation {
+func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper, namecount *int) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		if *namecount > 0 {
+			return simtypes.NoOpMsg("provwasm", "", "already bound name"), nil, nil
+		}
+		*namecount = *namecount + 1
+		fmt.Println(namecount)
+		node := accs[0]
+
+		var parent nametypes.NameRecord
+		nk.IterateRecords(ctx, nametypes.NameKeyPrefix, func(record nametypes.NameRecord) error {
+			parent = record
+			return nil
+		})
+
+		if len(parent.Name) == 0 {
+			panic("no records")
+		}
+
+		fmt.Println(parent.Name)
+
+		name := simtypes.RandStringOfLength(r, r.Intn(10)+2)
+		fmt.Println("name:")
+		fmt.Println(name)
+
 		msg := nametypes.NewMsgBindNameRequest(
 			nametypes.NewNameRecord(
-				"sc",
-				acc.Address,
+				//name,
+				"sctwoandthree",
+				node.Address,
 				true),
 			nametypes.NewNameRecord(
-				"pb",
-				acc.Address,
+				parent.Name,
+				//"pb",
+				node.Address,
 				false))
 
-		panic("Hello world!!!!!")
+		return namesim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg)
+	}
+}
 
-		return namesim.Dispatch(r, app, ctx, ak, bk, acc, chainID, msg)
+// SimulateMsgAddMarker will bind a NAME under an existing name using a 40% probability of restricting it.
+func SimulateMsgAddMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, addcount *int) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		if *addcount > 0 {
+			return simtypes.NoOpMsg("provwasm", "", "already added marker"), nil, nil
+		}
+		*addcount = *addcount + 1
+		fmt.Println("-----------------")
+		fmt.Println("Simulate add Marker")
+		fmt.Println("-----------------")
+		node := accs[0]
+		// [a-zA-Z][a-zA-Z0-9\\-\\.]{18,21})
+		denom := "purchasecoineightsss"
+		msg := markertypes.NewMsgAddMarkerRequest(
+			denom,
+			sdk.NewIntFromUint64(1000000000),
+			node.Address,
+			node.Address,
+			markertypes.MarkerType_Coin,
+			true, // fixed supply
+			true, // allow gov
+		)
+
+		return markersim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg, nil)
+	}
+}
+
+func SimulateFinalizeOrActivateMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, markercount *int) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+
+		if *markercount > 1 {
+			return simtypes.NoOpMsg("provwasm", "", "already activated marker"), nil, nil
+		}
+		*markercount = *markercount + 1
+
+		node := accs[0]
+		var msg sdk.Msg
+		if *markercount == 1 {
+			msg = markertypes.NewMsgFinalizeRequest("purchasecoineightsss", node.Address)
+		} else {
+			msg = markertypes.NewMsgActivateRequest("purchasecoineightsss", node.Address)
+		}
+
+		simAccount, found := simtypes.FindAccount(accs, node.Address)
+		if !found {
+			panic("couldn't find manager of sim account")
+		}
+
+		return markersim.Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, nil)
 	}
 }
