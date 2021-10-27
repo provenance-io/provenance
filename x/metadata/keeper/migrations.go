@@ -32,7 +32,7 @@ func (m *Migrator) Migrate1to2(ctx sdk.Context) error {
 func (m *Migrator) Migrate2to3(ctx sdk.Context) error {
 	ctx.Logger().Info("Migrating Metadata Module from Version 2 to 3")
 	steps := []struct {
-		name string
+		name   string
 		runner func() error
 	}{
 		{
