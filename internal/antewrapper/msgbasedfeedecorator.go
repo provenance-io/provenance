@@ -66,7 +66,7 @@ func (afd MsgBasedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 	if deductFeesFromAcc == nil {
 		panic("fee payer address: %s does not exist")
 	}
-	EnsureAccountHasSufficientFees(ctx,gas,feeCoins,additionalFees,afd.bankKeeper,deductFeesFromAcc.GetAddress())
+	EnsureAccountHasSufficientFees(ctx, feeCoins, additionalFees, afd.bankKeeper, deductFeesFromAcc.GetAddress())
 
 	// Ensure paid fee is enough to cover taxes
 	if _, hasNeg := feeCoins.SafeSub(additionalFees); hasNeg {
@@ -111,7 +111,7 @@ func EnsureSufficientMempoolFees(ctx sdk.Context, gas uint64, feeCoins sdk.Coins
 	return nil
 }
 
-func EnsureAccountHasSufficientFees(ctx sdk.Context, gas uint64, feeCoins sdk.Coins, additionalFees sdk.Coins, bankKeeper banktypes.Keeper, feePayer sdk.AccAddress) error {
+func EnsureAccountHasSufficientFees(ctx sdk.Context, feeCoins sdk.Coins, additionalFees sdk.Coins, bankKeeper banktypes.Keeper, feePayer sdk.AccAddress) error {
 
 	balancePerCoin := make(sdk.Coins, len(feeCoins))
 
