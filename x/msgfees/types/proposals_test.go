@@ -31,12 +31,11 @@ func (s *MsgFeesProposalTestSuite) TestAddMsgBasedFeeProposalType() {
 	msgType, err := cdctypes.NewAnyWithValue(&metadatatypes.MsgWriteRecordRequest{})
 
 	s.Require().NoError(err)
-	m := NewAddMsgBasedFeeProposal("title", "description", sdk.NewCoin("hotdog", sdk.NewInt(10)), msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)))
+	m := NewAddMsgBasedFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)))
 	s.Assert().Equal(
 		`Add Msg Based Fee Proposal:
 Title:         title
 Description:   description
-Amount:        10hotdog
 Msg:           /provenance.metadata.v1.MsgWriteRecordRequest
 AdditionalFee: 10hotdog
 `, m.String())
@@ -48,22 +47,17 @@ AdditionalFee: 10hotdog
 	}{
 		{
 			"Empty type error",
-			NewAddMsgBasedFeeProposal("title", "description", sdk.NewCoin("hotdog", sdk.NewInt(10)), nil, sdk.NewCoin("hotdog", sdk.NewInt(10))),
+			NewAddMsgBasedFeeProposal("title", "description", nil, sdk.NewCoin("hotdog", sdk.NewInt(10))),
 			ErrEmptyMsgType.Error(),
 		},
 		{
-			"Invalid amount",
-			NewAddMsgBasedFeeProposal("title", "description", sdk.NewCoin("hotdog", sdk.ZeroInt()), msgType, sdk.NewCoin("hotdog", sdk.NewInt(10))),
-			ErrInvalidCoinAmount.Error(),
-		},
-		{
 			"Invalid fee amounts",
-			NewAddMsgBasedFeeProposal("title", "description", sdk.NewCoin("hotdog", sdk.NewInt(10)), msgType, sdk.NewCoin("hotdog", sdk.NewInt(0))),
+			NewAddMsgBasedFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(0))),
 			ErrInvalidFee.Error(),
 		},
 		{
 			"Invalid proposal details",
-			NewAddMsgBasedFeeProposal("title", "", sdk.NewCoin("hotdog", sdk.NewInt(10)), msgType, sdk.NewCoin("hotdog", sdk.NewInt(10))),
+			NewAddMsgBasedFeeProposal("title", "", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10))),
 			"proposal description cannot be blank: invalid proposal content",
 		},
 	}
@@ -82,12 +76,11 @@ func (s *MsgFeesProposalTestSuite) TestUpdateMsgBasedFeeProposalType() {
 	msgType, err := cdctypes.NewAnyWithValue(&metadatatypes.MsgWriteRecordRequest{})
 
 	s.Require().NoError(err)
-	m := NewUpdateMsgBasedFeeProposal("title", "description", sdk.NewCoin("hotdog", sdk.NewInt(10)), msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)))
+	m := NewUpdateMsgBasedFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)))
 	s.Assert().Equal(
 		`Update Msg Based Fee Proposal:
 Title:         title
 Description:   description
-Amount:        10hotdog
 Msg:           /provenance.metadata.v1.MsgWriteRecordRequest
 AdditionalFee: 10hotdog
 `, m.String())
@@ -99,22 +92,17 @@ AdditionalFee: 10hotdog
 	}{
 		{
 			"Empty type error",
-			NewUpdateMsgBasedFeeProposal("title", "description", sdk.NewCoin("hotdog", sdk.NewInt(10)), nil, sdk.NewCoin("hotdog", sdk.NewInt(10))),
+			NewUpdateMsgBasedFeeProposal("title", "description", nil, sdk.NewCoin("hotdog", sdk.NewInt(10))),
 			ErrEmptyMsgType.Error(),
 		},
 		{
-			"Invalid amount",
-			NewUpdateMsgBasedFeeProposal("title", "description", sdk.NewCoin("hotdog", sdk.ZeroInt()), msgType, sdk.NewCoin("hotdog", sdk.NewInt(10))),
-			ErrInvalidCoinAmount.Error(),
-		},
-		{
 			"Invalid fee amounts",
-			NewUpdateMsgBasedFeeProposal("title", "description", sdk.NewCoin("hotdog", sdk.NewInt(10)), msgType, sdk.NewCoin("hotdog", sdk.NewInt(0))),
+			NewUpdateMsgBasedFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(0))),
 			ErrInvalidFee.Error(),
 		},
 		{
 			"Invalid proposal details",
-			NewUpdateMsgBasedFeeProposal("title", "", sdk.NewCoin("hotdog", sdk.NewInt(10)), msgType, sdk.NewCoin("hotdog", sdk.NewInt(10))),
+			NewUpdateMsgBasedFeeProposal("title", "", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10))),
 			"proposal description cannot be blank: invalid proposal content",
 		},
 	}

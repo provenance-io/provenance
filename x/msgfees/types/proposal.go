@@ -38,13 +38,11 @@ func init() {
 func NewAddMsgBasedFeeProposal(
 	title string,
 	description string,
-	amount sdk.Coin,
 	msg *types.Any,
 	additionalFee sdk.Coin) *AddMsgBasedFeeProposal {
 	return &AddMsgBasedFeeProposal{
 		Title:         title,
 		Description:   description,
-		Amount:        amount,
 		Msg:           msg,
 		AdditionalFee: additionalFee,
 	}
@@ -55,10 +53,6 @@ func (ambfp AddMsgBasedFeeProposal) ProposalType() string  { return ProposalType
 func (ambfp AddMsgBasedFeeProposal) ValidateBasic() error {
 	if ambfp.Msg == nil {
 		return ErrEmptyMsgType
-	}
-
-	if !ambfp.Amount.IsGTE(sdk.NewCoin(ambfp.Amount.Denom, sdk.OneInt())) {
-		return ErrInvalidCoinAmount
 	}
 
 	if !ambfp.AdditionalFee.IsPositive() {
@@ -72,23 +66,20 @@ func (ambfp AddMsgBasedFeeProposal) String() string {
 	b.WriteString(fmt.Sprintf(`Add Msg Based Fee Proposal:
 Title:         %s
 Description:   %s
-Amount:        %s
 Msg:           %s
 AdditionalFee: %s
-`, ambfp.Title, ambfp.Description, ambfp.Amount, ambfp.Msg.GetTypeUrl(), ambfp.AdditionalFee))
+`, ambfp.Title, ambfp.Description, ambfp.Msg.GetTypeUrl(), ambfp.AdditionalFee))
 	return b.String()
 }
 
 func NewUpdateMsgBasedFeeProposal(
 	title string,
 	description string,
-	amount sdk.Coin,
 	msg *types.Any,
 	additionalFee sdk.Coin) *UpdateMsgBasedFeeProposal {
 	return &UpdateMsgBasedFeeProposal{
 		Title:         title,
 		Description:   description,
-		Amount:        amount,
 		Msg:           msg,
 		AdditionalFee: additionalFee,
 	}
@@ -103,10 +94,6 @@ func (umbfp UpdateMsgBasedFeeProposal) ValidateBasic() error {
 		return ErrEmptyMsgType
 	}
 
-	if !umbfp.Amount.IsGTE(sdk.NewCoin(umbfp.Amount.Denom, sdk.OneInt())) {
-		return ErrInvalidCoinAmount
-	}
-
 	if !umbfp.AdditionalFee.IsPositive() {
 		return ErrInvalidFee
 	}
@@ -119,10 +106,9 @@ func (umbfp UpdateMsgBasedFeeProposal) String() string {
 	b.WriteString(fmt.Sprintf(`Update Msg Based Fee Proposal:
 Title:         %s
 Description:   %s
-Amount:        %s
 Msg:           %s
 AdditionalFee: %s
-`, umbfp.Title, umbfp.Description, umbfp.Amount, umbfp.Msg.GetTypeUrl(), umbfp.AdditionalFee))
+`, umbfp.Title, umbfp.Description, umbfp.Msg.GetTypeUrl(), umbfp.AdditionalFee))
 	return b.String()
 }
 

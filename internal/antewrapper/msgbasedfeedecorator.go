@@ -2,6 +2,7 @@ package antewrapper
 
 import (
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -66,7 +67,7 @@ func (afd MsgBasedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 	if deductFeesFromAcc == nil {
 		panic("fee payer address: %s does not exist")
 	}
-	EnsureAccountHasSufficientFees(ctx,gas,feeCoins,additionalFees,afd.bankKeeper,deductFeesFromAcc.GetAddress())
+	EnsureAccountHasSufficientFees(ctx, gas, feeCoins, additionalFees, afd.bankKeeper, deductFeesFromAcc.GetAddress())
 
 	// Ensure paid fee is enough to cover taxes
 	if _, hasNeg := feeCoins.SafeSub(additionalFees); hasNeg {
@@ -155,4 +156,5 @@ func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgbasedfeetypes.MsgB
 	}
 
 	return additionalFees, nil
+
 }
