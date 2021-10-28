@@ -24,12 +24,9 @@ message AddMsgBasedFeeProposal {
   string title       = 1;
   string description = 2;
 
-  cosmos.base.v1beta1.Coin amount = 3
-      [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
+  google.protobuf.Any msg = 3 [(cosmos_proto.accepts_interface) = "sdk.Msg"];
 
-  google.protobuf.Any msg = 4 [(cosmos_proto.accepts_interface) = "sdk.Msg"];
-
-  cosmos.base.v1beta1.Coin additional_fee = 5 [
+  cosmos.base.v1beta1.Coin additional_fee = 4 [
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags)     = "yaml:\"additional_fee\""
@@ -44,12 +41,9 @@ message UpdateMsgBasedFeeProposal {
   string title       = 1;
   string description = 2;
 
-  cosmos.base.v1beta1.Coin amount = 3
-      [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
+  google.protobuf.Any msg = 3 [(cosmos_proto.accepts_interface) = "sdk.Msg"];
 
-  google.protobuf.Any msg = 4 [(cosmos_proto.accepts_interface) = "sdk.Msg"];
-
-  cosmos.base.v1beta1.Coin additional_fee = 5 [
+  cosmos.base.v1beta1.Coin additional_fee = 4 [
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags)     = "yaml:\"additional_fee\""

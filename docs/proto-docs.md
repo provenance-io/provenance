@@ -5219,7 +5219,6 @@ AddMsgBasedFeeProposal defines a governance proposal to add additional msg based
 | ----- | ---- | ----- | ----------- |
 | `title` | [string](#string) |  |  |
 | `description` | [string](#string) |  |  |
-| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `msg` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
 | `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 
@@ -5255,7 +5254,6 @@ UpdateMsgBasedFeeProposal defines a governance proposal to update a current msg 
 | ----- | ---- | ----- | ----------- |
 | `title` | [string](#string) |  |  |
 | `description` | [string](#string) |  |  |
-| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `msg` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
 | `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 
