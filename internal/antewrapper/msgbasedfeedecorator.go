@@ -67,7 +67,11 @@ func (afd MsgBasedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 	if deductFeesFromAcc == nil {
 		panic("fee payer address: %s does not exist")
 	}
-	EnsureAccountHasSufficientFees(ctx, feeCoins, additionalFees, afd.bankKeeper, deductFeesFromAcc.GetAddress(), simulate)
+	if !simulate {
+		if err = EnsureAccountHasSufficientFees(ctx, feeCoins, additionalFees, afd.bankKeeper, deductFeesFromAcc.GetAddress(), simulate); err != nil {
+			return ctx, err
+		}
+	}
 
 	// Ensure paid fee is enough to cover taxes
 	if _, hasNeg := feeCoins.SafeSub(additionalFees); hasNeg {
@@ -122,16 +126,14 @@ func EnsureAccountHasSufficientFees(ctx sdk.Context, feeCoins sdk.Coins, additio
 	}
 
 	originalFees := feeCoins
-	if !simulate {
-		// Step 1. Check if fees has enough money to pay additional fees.
-		var hasNeg bool
-		if feeCoins, hasNeg = feeCoins.SafeSub(additionalFees); hasNeg {
-			return fmt.Errorf("insufficient fees; got: %q, required additional fee: %q", feeCoins, additionalFees)
-		}
-		// Step 2: Check if account has enough to pay all fees.
-		if !balancePerCoin.IsZero() && !balancePerCoin.IsAnyGTE(originalFees) {
-			return fmt.Errorf("fee payer account does not have enough balance to pay for %q", feeCoins)
-		}
+	// Step 1. Check if fees has enough money to pay additional fees.
+	var hasNeg bool
+	if feeCoins, hasNeg = feeCoins.SafeSub(additionalFees); hasNeg {
+		return fmt.Errorf("insufficient fees; got: %q, required additional fee: %q", feeCoins, additionalFees)
+	}
+	// Step 2: Check if account has enough to pay all fees.
+	if !balancePerCoin.IsZero() && !balancePerCoin.IsAnyGTE(originalFees) {
+		return fmt.Errorf("fee payer account does not have enough balance to pay for %q", feeCoins)
 	}
 	return nil
 }
