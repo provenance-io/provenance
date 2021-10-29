@@ -248,7 +248,6 @@ func FindMissingMdAddr(required, entries []types.MetadataAddress) []types.Metada
 	return retval
 }
 
-
 // VerifyCorrectOwner to determines whether the signer resolves to the owner of the OSLocator record.
 func (k Keeper) VerifyCorrectOwner(ctx sdk.Context, ownerAddr sdk.AccAddress) bool { // nolint:interfacer
 	stored, found := k.GetOsLocatorRecord(ctx, ownerAddr)

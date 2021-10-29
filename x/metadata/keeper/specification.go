@@ -260,7 +260,7 @@ func (k Keeper) RemoveContractSpecification(ctx sdk.Context, contractSpecID type
 // contractSpecIndexValues is a struct containing the values used to index a contract specification.
 type contractSpecIndexValues struct {
 	SpecificationID types.MetadataAddress
-	OwnerAddresses []string
+	OwnerAddresses  []string
 }
 
 // getContractSpecIndexValues extracts the values used to index a contract specification.
@@ -530,8 +530,8 @@ func (v scopeSpecIndexValues) IndexKeys() [][]byte {
 			rv = append(rv, types.GetAddressScopeSpecCacheKey(addr, v.SpecificationID))
 		}
 	}
-	for _, specId := range v.ContractSpecIDs {
-		rv = append(rv, types.GetContractSpecScopeSpecCacheKey(specId, v.SpecificationID))
+	for _, specID := range v.ContractSpecIDs {
+		rv = append(rv, types.GetContractSpecScopeSpecCacheKey(specID, v.SpecificationID))
 	}
 	return rv
 }

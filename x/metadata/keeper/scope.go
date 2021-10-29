@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
 
@@ -137,7 +138,7 @@ type scopeIndexValues struct {
 	ScopeID         types.MetadataAddress
 	Addresses       []string
 	ValueOwner      string
-	SpecificationId types.MetadataAddress
+	SpecificationID types.MetadataAddress
 }
 
 // getScopeIndexValues extracts the values used to index a scope.
@@ -148,7 +149,7 @@ func getScopeIndexValues(scope *types.Scope) *scopeIndexValues {
 	rv := scopeIndexValues{
 		ScopeID:         scope.ScopeId,
 		ValueOwner:      scope.ValueOwnerAddress,
-		SpecificationId: scope.SpecificationId,
+		SpecificationID: scope.SpecificationId,
 	}
 	for _, p := range scope.Owners {
 		rv.Addresses = append(rv.Addresses, p.Address)
@@ -174,8 +175,8 @@ func getMissingScopeIndexValues(required, found *scopeIndexValues) scopeIndexVal
 	if required.ValueOwner != found.ValueOwner {
 		rv.ValueOwner = required.ValueOwner
 	}
-	if !required.SpecificationId.Equals(found.SpecificationId) {
-		rv.SpecificationId = required.SpecificationId
+	if !required.SpecificationID.Equals(found.SpecificationID) {
+		rv.SpecificationID = required.SpecificationID
 	}
 	return rv
 }
@@ -196,8 +197,8 @@ func (v scopeIndexValues) IndexKeys() [][]byte {
 			rv = append(rv, types.GetValueOwnerScopeCacheKey(addr, v.ScopeID))
 		}
 	}
-	if !v.SpecificationId.Empty() {
-		rv = append(rv, types.GetScopeSpecScopeCacheKey(v.SpecificationId, v.ScopeID))
+	if !v.SpecificationID.Empty() {
+		rv = append(rv, types.GetScopeSpecScopeCacheKey(v.SpecificationID, v.ScopeID))
 	}
 	return rv
 }
