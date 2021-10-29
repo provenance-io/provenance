@@ -704,3 +704,5 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdateOwners() {
 		})
 	}
 }
+
+// TODO: Write unit tests for scope indexing.

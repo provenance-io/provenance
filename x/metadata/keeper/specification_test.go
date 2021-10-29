@@ -1186,6 +1186,8 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 	}
 }
 
+// TODO: Write unit tests for contract spec indexing.
+
 func (s *SpecKeeperTestSuite) TestGetSetRemoveScopeSpecification() {
 	newSpec := types.NewScopeSpecification(
 		s.scopeSpecID,
@@ -1664,3 +1666,5 @@ func (s *SpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
 	store.Delete(s.contractSpecID1)
 	store.Delete(s.contractSpecID2)
 }
+
+// TODO: Write unit tests for scope spec indexing.
