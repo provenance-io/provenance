@@ -229,6 +229,26 @@ func FindMissing(required []string, entries []string) []string {
 	return retval
 }
 
+// FindMissingMdAddr returns all elements of the required list that are not found in the entries list
+// It is exported only so that it can be unit tested.
+func FindMissingMdAddr(required, entries []types.MetadataAddress) []types.MetadataAddress {
+	retval := []types.MetadataAddress{}
+	for _, req := range required {
+		found := false
+		for _, entry := range entries {
+			if req.Equals(entry) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			retval = append(retval, req)
+		}
+	}
+	return retval
+}
+
+
 // VerifyCorrectOwner to determines whether the signer resolves to the owner of the OSLocator record.
 func (k Keeper) VerifyCorrectOwner(ctx sdk.Context, ownerAddr sdk.AccAddress) bool { // nolint:interfacer
 	stored, found := k.GetOsLocatorRecord(ctx, ownerAddr)
