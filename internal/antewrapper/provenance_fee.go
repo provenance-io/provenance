@@ -39,32 +39,10 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 		panic(fmt.Sprintf("%s module account has not been set", types.FeeCollectorName))
 	}
 
-	fee := feeTx.GetFee()
 	feePayer := feeTx.FeePayer()
 	feeGranter := feeTx.FeeGranter()
 
 	deductFeesFrom := feePayer
-
-	// if feegranter set deduct fee from feegranter account.
-	// this works with only when feegrant enabled.
-	if feeGranter != nil {
-		if dfd.feegrantKeeper == nil {
-			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")
-		} else if !feeGranter.Equals(feePayer) {
-			err := dfd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, fee, tx.GetMsgs())
-
-			if err != nil {
-				return ctx, sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
-			}
-		}
-
-		deductFeesFrom = feeGranter
-	}
-
-	deductFeesFromAcc := dfd.ak.GetAccount(ctx, deductFeesFrom)
-	if deductFeesFromAcc == nil {
-		return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", deductFeesFrom)
-	}
 
 	// deduct the fees
 	if !feeTx.GetFee().IsZero() {
@@ -83,6 +61,28 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", feeToDeduct)
 			}
 		}
+
+		// if feegranter set deduct fee from feegranter account.
+		// this works with only when feegrant enabled.
+		if feeGranter != nil {
+			if dfd.feegrantKeeper == nil {
+				return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")
+			} else if !feeGranter.Equals(feePayer) {
+				err := dfd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, feeToDeduct, tx.GetMsgs())
+
+				if err != nil {
+					return ctx, sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
+				}
+			}
+
+			deductFeesFrom = feeGranter
+		}
+
+		deductFeesFromAcc := dfd.ak.GetAccount(ctx, deductFeesFrom)
+		if deductFeesFromAcc == nil {
+			return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", deductFeesFrom)
+		}
+
 		err = DeductFees(dfd.bankKeeper, ctx, deductFeesFromAcc, feeToDeduct)
 		if err != nil {
 			return ctx, err
