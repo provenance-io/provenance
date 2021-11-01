@@ -20,7 +20,7 @@ type ProvenanceDeductFeeDecorator struct {
 	msgFeeKeeper   msgbasedfeetypes.MsgBasedFeeKeeper
 }
 
-func NewProvenanceDeductFeeDecorator(ak authante.AccountKeeper, bk types.BankKeeper, fk authante.FeegrantKeeper, mbfk msgbasedfeetypes.MsgBasedFeeKeeper) ProvenanceDeductFeeDecorator {
+func NewProvenanceDeductFeeDecorator(ak authante.AccountKeeper, bk types.BankKeeper, fk msgbasedfeetypes.FeegrantKeeper, mbfk msgbasedfeetypes.MsgBasedFeeKeeper) ProvenanceDeductFeeDecorator {
 	return ProvenanceDeductFeeDecorator{
 		ak:             ak,
 		bankKeeper:     bk,

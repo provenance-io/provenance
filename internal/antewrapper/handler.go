@@ -15,7 +15,7 @@ import (
 type HandlerOptions struct {
 	AccountKeeper   cosmosante.AccountKeeper
 	BankKeeper      banktypes.Keeper
-	FeegrantKeeper       cosmosante.FeegrantKeeper
+	FeegrantKeeper       msgbasedfeetypes.FeegrantKeeper
 	MsgBasedFeeKeeper msgbasedfeetypes.MsgBasedFeeKeeper
 	SignModeHandler      authsigning.SignModeHandler
 	SigGasConsumer  func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error

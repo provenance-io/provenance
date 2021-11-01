@@ -28,4 +28,6 @@ type MsgBasedFeeKeeper interface {
 // FeegrantKeeper defines the expected feegrant keeper.
 type FeegrantKeeper interface {
 	GetAllowance(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.AccAddress) (feegrant.FeeAllowanceI, error)
+	UseGrantedFees(ctx sdk.Context, granter, grantee sdk.AccAddress, fee sdk.Coins, msgs []sdk.Msg) error
+
 }
