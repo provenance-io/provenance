@@ -324,26 +324,25 @@ func New(
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	pk := initParamsKeeper(appCodec, legacyAmino, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
-	subspaceMsgBasedFee,_ := pk.GetSubspace(msgbasedfeestypes.ModuleName)
+	subspaceMsgBasedFee, _ := pk.GetSubspace(msgbasedfeestypes.ModuleName)
 	fk := msgfeekeeper.NewKeeper(
 		appCodec, keys[msgbasedfeestypes.StoreKey], subspaceMsgBasedFee, authtypes.FeeCollectorName,
 	)
-	subspaceAccount,_ := pk.GetSubspace(authtypes.ModuleName)
+	subspaceAccount, _ := pk.GetSubspace(authtypes.ModuleName)
 	ak := authkeeper.NewAccountKeeper(
 		appCodec, keys[authtypes.StoreKey], subspaceAccount, authtypes.ProtoBaseAccount, maccPerms,
 	)
 
-	subspaceBank,_ := pk.GetSubspace(banktypes.ModuleName)
+	subspaceBank, _ := pk.GetSubspace(banktypes.ModuleName)
 
 	bk := bankkeeper.NewBaseKeeper(
 		appCodec, keys[banktypes.StoreKey], ak, subspaceBank, ModuleAccountAddrs(),
 	)
-	bApp := piobaseapp.NewBaseApp("provenanced", logger, db, encodingConfig.TxConfig.TxDecoder(),fk,bk,ak, baseAppOptions...)
+	bApp := piobaseapp.NewBaseApp("provenanced", logger, db, encodingConfig.TxConfig.TxDecoder(), fk, bk, ak, baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 	sdk.SetCoinDenomRegex(SdkCoinDenomRegex)
-
 
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
 
@@ -666,12 +665,12 @@ func New(
 	app.SetBeginBlocker(app.BeginBlocker)
 	anteHandler, err := antewrapper.NewAnteHandler(
 		antewrapper.HandlerOptions{
-			AccountKeeper:   app.AccountKeeper,
-			BankKeeper:      app.BankKeeper,
-			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
-			FeegrantKeeper:  app.FeeGrantKeeper,
+			AccountKeeper:     app.AccountKeeper,
+			BankKeeper:        app.BankKeeper,
+			SignModeHandler:   encodingConfig.TxConfig.SignModeHandler(),
+			FeegrantKeeper:    app.FeeGrantKeeper,
 			MsgBasedFeeKeeper: app.MsgBasedFeeKeeper,
-			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+			SigGasConsumer:    ante.DefaultSigVerificationGasConsumer,
 		})
 	if err != nil {
 		panic(err)
@@ -748,7 +747,7 @@ func (app *App) LoadHeight(height int64) error {
 }
 
 // ModuleAccountAddrs returns all the app's module account addresses.
-func  ModuleAccountAddrs() map[string]bool {
+func ModuleAccountAddrs() map[string]bool {
 	modAccAddrs := make(map[string]bool)
 	for acc := range maccPerms {
 		modAccAddrs[authtypes.NewModuleAddress(acc).String()] = true

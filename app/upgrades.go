@@ -232,4 +232,3 @@ func UpgradeStoreLoader(upgradeHeight int64, storeUpgrades *storetypes.StoreUpgr
 		return baseapp.DefaultStoreLoader(ms)
 	}
 }
-

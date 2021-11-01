@@ -46,7 +46,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
-func (k Keeper)GetFeeCollectorName() string  {
+func (k Keeper) GetFeeCollectorName() string {
 	return k.feeCollectorName
 }
 
@@ -133,4 +133,3 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 	// TODO Implement me
 }
-

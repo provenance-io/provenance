@@ -10,4 +10,3 @@ type pioBaseAppKeeperOptions struct {
 	FeegrantKeeper    msgbasedfeetypes.FeegrantKeeper
 	MsgBasedFeeKeeper msgbasedfeetypes.MsgBasedFeeKeeper
 }
-

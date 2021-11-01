@@ -142,8 +142,7 @@ type BaseApp struct { // nolint: maligned
 
 	bankKeeper bankkeeper.Keeper
 
-	ak   keeper.AccountKeeper
-
+	ak keeper.AccountKeeper
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -168,8 +167,8 @@ func NewBaseApp(
 		txDecoder:         txDecoder,
 		fauxMerkleMode:    false,
 		msgBasedFeeKeeper: keeper,
-		bankKeeper: bankKeeper,
-		ak: ak,
+		bankKeeper:        bankKeeper,
+		ak:                ak,
 	}
 
 	for _, option := range options {
@@ -212,6 +211,7 @@ func (app *BaseApp) Trace() bool {
 
 // MsgServiceRouter returns the MsgServiceRouter of a BaseApp.
 func (app *BaseApp) MsgServiceRouter() *baseapp.MsgServiceRouter { return app.msgServiceRouter }
+
 // MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
 // multistore.
 func (app *BaseApp) MountStores(keys ...sdk.StoreKey) {
@@ -614,7 +614,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		gInfo = sdk.GasInfo{GasWanted: gasWanted, GasUsed: ctx.GasMeter().GasConsumed()}
 	}()
 
-
 	// If BlockGasMeter() panics it will be caught by the above recover and will
 	// return an error - in any case BlockGasMeter will consume gas past the limit.
 	//
@@ -700,7 +699,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 			result.Events = append(events.ToABCIEvents(), result.Events...)
 		}
 	}
-
 
 	return gInfo, result, err
 }

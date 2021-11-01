@@ -53,6 +53,7 @@ var DefaultConsensusParams = &abci.ConsensusParams{
 		},
 	},
 }
+
 func EncodingConfig() simappparams.EncodingConfig {
 	return MakeEncodingConfig()
 }

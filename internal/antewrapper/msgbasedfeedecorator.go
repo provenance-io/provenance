@@ -72,7 +72,7 @@ func (afd MsgBasedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 			if afd.feegrantKeeper == nil {
 				return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")
 			} else if !feeGranter.Equals(feePayer) {
-				grant,err := afd.feegrantKeeper.GetAllowance(ctx, feeGranter, feePayer)
+				grant, err := afd.feegrantKeeper.GetAllowance(ctx, feeGranter, feePayer)
 
 				if err != nil {
 					return ctx, sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)

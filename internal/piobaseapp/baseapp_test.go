@@ -62,7 +62,7 @@ import (
 var (
 	capKey1 = sdk.NewKVStoreKey("key1")
 	capKey2 = sdk.NewKVStoreKey("key2")
-	keys = sdk.NewKVStoreKeys(
+	keys    = sdk.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
@@ -164,7 +164,7 @@ func getKeepers() (msgfeekeeper.Keeper, authkeeper.AccountKeeper, bankkeeper.Bas
 	return fk, ak, bk
 }
 
-func  ModuleAccountAddrs() map[string]bool {
+func ModuleAccountAddrs() map[string]bool {
 	modAccAddrs := make(map[string]bool)
 	for acc := range maccPerms {
 		modAccAddrs[authtypes.NewModuleAddress(acc).String()] = true
@@ -198,7 +198,6 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 
 	return paramsKeeper
 }
-
 
 func registerTestCodec(cdc *codec.LegacyAmino) {
 	// register Tx, Msg
@@ -359,7 +358,7 @@ func TestLoadVersion(t *testing.T) {
 
 	// reload with LoadVersion, see if you can commit the same block and get
 	// the same result
-	app = NewBaseApp(name, logger, db, nil, fk, bk, ak,pruningOpt)
+	app = NewBaseApp(name, logger, db, nil, fk, bk, ak, pruningOpt)
 	err = app.LoadVersion(1)
 	require.Nil(t, err)
 	testLoadVersionHelper(t, app, int64(1), commitID1)
@@ -439,7 +438,7 @@ func TestSetLoader(t *testing.T) {
 			if tc.setLoader != nil {
 				opts = append(opts, tc.setLoader)
 			}
-			app := NewBaseApp(t.Name(), defaultLogger(), db, nil, fk, bk, ak,opts...)
+			app := NewBaseApp(t.Name(), defaultLogger(), db, nil, fk, bk, ak, opts...)
 			app.MountStores(sdk.NewKVStoreKey(tc.loadStoreKey))
 			err := app.LoadLatestVersion()
 			require.Nil(t, err)
@@ -483,7 +482,7 @@ func TestLoadVersionInvalid(t *testing.T) {
 	pruningOpt := SetPruning(store.PruneNothing)
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := NewBaseApp(name, logger, db, nil, fk, bk, ak,pruningOpt)
+	app := NewBaseApp(name, logger, db, nil, fk, bk, ak, pruningOpt)
 
 	err := app.LoadLatestVersion()
 	require.Nil(t, err)
@@ -733,7 +732,7 @@ func TestInitChainer(t *testing.T) {
 	require.Equal(t, value, res.Value)
 
 	// reload app
-	app = NewBaseApp(name, logger, db, nil, fk, bk, ak,)
+	app = NewBaseApp(name, logger, db, nil, fk, bk, ak)
 	app.SetInitChainer(initChainer)
 	app.MountStores(capKey, capKey2)
 	err = app.LoadLatestVersion() // needed to make stores non-nil
@@ -759,7 +758,7 @@ func TestInitChain_WithInitialHeight(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
 	logger := defaultLogger()
-	app := NewBaseApp(name, logger, db, nil, fk, bk, ak,)
+	app := NewBaseApp(name, logger, db, nil, fk, bk, ak)
 
 	app.InitChain(
 		abci.RequestInitChain{
@@ -2146,7 +2145,7 @@ func TestBaseApp_EndBlock(t *testing.T) {
 		},
 	}
 
-	app := NewBaseApp(name, logger, db, nil, fk, bk, ak,)
+	app := NewBaseApp(name, logger, db, nil, fk, bk, ak)
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 	app.InitChain(abci.RequestInitChain{
 		ConsensusParams: cp,

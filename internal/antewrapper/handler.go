@@ -13,12 +13,12 @@ import (
 
 // HandlerOptions are the options required for constructing a default SDK AnteHandler.
 type HandlerOptions struct {
-	AccountKeeper   cosmosante.AccountKeeper
-	BankKeeper      banktypes.Keeper
-	FeegrantKeeper       msgbasedfeetypes.FeegrantKeeper
+	AccountKeeper     cosmosante.AccountKeeper
+	BankKeeper        banktypes.Keeper
+	FeegrantKeeper    msgbasedfeetypes.FeegrantKeeper
 	MsgBasedFeeKeeper msgbasedfeetypes.MsgBasedFeeKeeper
-	SignModeHandler      authsigning.SignModeHandler
-	SigGasConsumer  func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
+	SignModeHandler   authsigning.SignModeHandler
+	SigGasConsumer    func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
 }
 
 func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
