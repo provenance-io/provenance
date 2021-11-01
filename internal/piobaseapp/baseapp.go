@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"reflect"
 	"strings"
 
@@ -23,7 +21,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
-	msgfeekeeper "github.com/provenance-io/provenance/x/msgfees/keeper"
 )
 
 const (
@@ -138,11 +135,7 @@ type BaseApp struct { // nolint: maligned
 	// which informs Tendermint what to index. If empty, all events will be indexed.
 	indexEvents map[string]struct{}
 
-	msgBasedFeeKeeper msgfeekeeper.Keeper
-
-	bankKeeper bankkeeper.Keeper
-
-	ak keeper.AccountKeeper
+	keepers PioBaseAppKeeperOptions
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -151,8 +144,7 @@ type BaseApp struct { // nolint: maligned
 //
 // NOTE: The db is used to store the version number for now.
 func NewBaseApp(
-	name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, keeper msgfeekeeper.Keeper,
-	bankKeeper bankkeeper.Keeper, ak keeper.AccountKeeper, options ...func(*BaseApp),
+	name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
 ) *BaseApp {
 	app := &BaseApp{
 		logger:            logger,
@@ -166,9 +158,6 @@ func NewBaseApp(
 		msgServiceRouter:  baseapp.NewMsgServiceRouter(),
 		txDecoder:         txDecoder,
 		fauxMerkleMode:    false,
-		msgBasedFeeKeeper: keeper,
-		bankKeeper:        bankKeeper,
-		ak:                ak,
 	}
 
 	for _, option := range options {
@@ -728,24 +717,24 @@ func (app *BaseApp) chargeFees(ctx sdk.Context) {
 			// TODO if feegranter set deduct fee from feegranter account.
 			// this works with only when feegrant enabled.
 
-			deductFeesFromAcc := app.ak.GetAccount(ctx, deductFeesFrom)
+			deductFeesFromAcc := app.keepers.AccountKeeper.GetAccount(ctx, deductFeesFrom)
 			if deductFeesFromAcc == nil {
 				panic("fee payer address: %s does not exist")
 			}
 
 			for _, msg := range msgs {
 				ctx.Logger().Info(fmt.Sprintf("The message type in defer block for fee charging : %s", sdk.MsgTypeURL(msg)))
-				msgFees, err := app.msgBasedFeeKeeper.GetMsgBasedFee(ctx, sdk.MsgTypeURL(msg))
+				msgFees, err := app.keepers.MsgBasedFeeKeeper.GetMsgBasedFee(ctx, sdk.MsgTypeURL(msg))
 				if err != nil {
 					// do nothing for now
 					ctx.Logger().Error("unable to get message fees", "err", err)
 				}
 				if msgFees != nil {
 					ctx.Logger().Info("Retrieved a msg based fee.")
-					app.msgBasedFeeKeeper.DeductFees(app.bankKeeper, ctx, deductFeesFromAcc, sdk.Coins{sdk.NewInt64Coin("nhash", 55555)})
+					app.keepers.MsgBasedFeeKeeper.DeductFees(app.keepers.BankKeeper, ctx, deductFeesFromAcc, sdk.Coins{msgFees.AdditionalFee})
 				}
 				// TODO remove this but just for testing
-				//app.msgBasedFeeKeeper.DeductFees(app.bankKeeper, ctx, deductFeesFromAcc, sdk.Coins{sdk.NewInt64Coin("nhash", 55555)})
+				app.keepers.MsgBasedFeeKeeper.DeductFees(app.keepers.BankKeeper, ctx, deductFeesFromAcc, sdk.Coins{sdk.NewInt64Coin("nhash", 55555)})
 			}
 			//set back the original gasMeter
 			ctx = ctx.WithGasMeter(originalGasMeter)

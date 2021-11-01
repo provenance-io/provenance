@@ -237,3 +237,11 @@ func (app *BaseApp) SetInterfaceRegistry(registry types.InterfaceRegistry) {
 	app.grpcQueryRouter.SetInterfaceRegistry(registry)
 	app.msgServiceRouter.SetInterfaceRegistry(registry)
 }
+
+func (app *BaseApp) SetKeeperHandler(pioBaseKeeperOpts PioBaseAppKeeperOptions) {
+	if app.sealed {
+		panic("SetAnteHandler() on sealed BaseApp")
+	}
+
+	app.keepers = pioBaseKeeperOpts
+}

@@ -4,7 +4,7 @@ import (
 	msgbasedfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
-type pioBaseAppKeeperOptions struct {
+type PioBaseAppKeeperOptions struct {
 	AccountKeeper     msgbasedfeetypes.AccountKeeper
 	BankKeeper        msgbasedfeetypes.BankKeeper
 	FeegrantKeeper    msgbasedfeetypes.FeegrantKeeper
