@@ -225,8 +225,10 @@ func (k Keeper) SetContractSpecification(ctx sdk.Context, spec types.ContractSpe
 		event = types.NewEventContractSpecificationUpdated(spec.SpecificationId)
 		action = types.TLAction_Updated
 		if oldBytes := store.Get(spec.SpecificationId); oldBytes != nil {
+			oldSpec = &types.ContractSpecification{}
 			if err := k.cdc.Unmarshal(oldBytes, oldSpec); err != nil {
 				k.Logger(ctx).Error("could not unmarshal old contract spec", "err", err, "specId", spec.SpecificationId.String(), "oldBytes", oldBytes)
+				oldSpec = nil
 			}
 		}
 	}
@@ -453,8 +455,10 @@ func (k Keeper) SetScopeSpecification(ctx sdk.Context, spec types.ScopeSpecifica
 		event = types.NewEventScopeSpecificationUpdated(spec.SpecificationId)
 		action = types.TLAction_Updated
 		if oldBytes := store.Get(spec.SpecificationId); oldBytes != nil {
+			oldSpec = &types.ScopeSpecification{}
 			if err := k.cdc.Unmarshal(oldBytes, oldSpec); err != nil {
 				k.Logger(ctx).Error("could not unmarshal old scope spec", "err", err, "specId", spec.SpecificationId.String(), "oldBytes", oldBytes)
+				oldSpec = nil
 			}
 		}
 	}

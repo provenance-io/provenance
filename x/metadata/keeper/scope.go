@@ -89,8 +89,10 @@ func (k Keeper) SetScope(ctx sdk.Context, scope types.Scope) {
 		event = types.NewEventScopeUpdated(scope.ScopeId)
 		action = types.TLAction_Updated
 		if oldScopeBytes := store.Get(scope.ScopeId); oldScopeBytes != nil {
+			oldScope = &types.Scope{}
 			if err := k.cdc.Unmarshal(oldScopeBytes, oldScope); err != nil {
 				k.Logger(ctx).Error("could not unmarshal old scope", "err", err, "scopeId", scope.ScopeId.String(), "oldScopeBytes", oldScopeBytes)
+				oldScope = nil
 			}
 		}
 	}
