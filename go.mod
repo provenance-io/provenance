@@ -127,6 +127,6 @@ replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-//replace github.com/CosmWasm/wasmd => ../wasmd
-
 replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.19.0
+
+replace github.com/cosmos/cosmos-sdk => ../cosmos-sdk

@@ -25,8 +25,8 @@ import (
 )
 
 const (
-	denom = "purchasecoineightsss" // must be a string of length 20
-	name_prefix = "sctwoandthree" // must be a string of length 13
+	denom = "coinfortestingsmartc" // must be a string of length 20
+	namePrefix = "scsnameprefix" // must be a string of length 13
 	label = "tutorial"
 )
 
@@ -143,7 +143,7 @@ func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper,
 
 		msg := nametypes.NewMsgBindNameRequest(
 			nametypes.NewNameRecord(
-				name_prefix,
+				namePrefix,
 				node.Address,
 				true),
 			nametypes.NewNameRecord(
@@ -161,7 +161,7 @@ func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper,
 		future = append(future, simtypes.FutureOperation{Op: SimulateMsgWithdrawRequest(ak, bk, node, customer), BlockHeight: 6})
 		future = append(future, simtypes.FutureOperation{Op: SimulateMsgStoreContract(ak, bk, feebucket), BlockHeight: 6})
 		future = append(future, simtypes.FutureOperation{Op: SimulateMsgInitiateContract(ak, bk, feebucket, merchant, parent.Name), BlockHeight: 7})
-		future = append(future, simtypes.FutureOperation{Op: SimulateMsgExecuteContract(ak, bk, node, customer), BlockHeight: 6})
+		future = append(future, simtypes.FutureOperation{Op: SimulateMsgExecuteContract(ak, bk, node, customer), BlockHeight: 8})
 
 		return op, future, err
 	}
@@ -248,7 +248,7 @@ func SimulateMsgInitiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.Vie
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		m := fmt.Sprintf(`{ "contract_name": "%s.%s.%s", "purchase_denom": "%s", "merchant_address": "%s", "fee_percent": "0.10" }`, label, name_prefix, name, denom, merchant.Address.String())
+		m := fmt.Sprintf(`{ "contract_name": "%s.%s.%s", "purchase_denom": "%s", "merchant_address": "%s", "fee_percent": "0.10" }`, label, namePrefix, name, denom, merchant.Address.String())
 
 		msg := &types.MsgInstantiateContract{
 			Sender: feebucket.Address.String(),
@@ -316,7 +316,7 @@ func Dispatch(
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
-		helpers.DefaultGenTxGas*10,
+		helpers.DefaultGenTxGas*10, // storing a contract requires more gas than most txs
 		chainID,
 		[]uint64{account.GetAccountNumber()},
 		[]uint64{account.GetSequence()},
