@@ -24,6 +24,12 @@ import (
 	"math/rand"
 )
 
+const (
+	denom = "purchasecoineightsss" // must be a string of length 20
+	name_prefix = "sctwoandthree" // must be a string of length 13
+	label = "tutorial"
+)
+
 type ProvwasmWrapper struct {
 	cdc codec.Codec
 	wasm module.AppModuleSimulation
@@ -47,7 +53,7 @@ func NewProvwasmWrapper(cdc codec.Codec, keeper *wasm.Keeper, validatorSetSource
 
 // GenerateGenesisState creates a randomized GenState of the wasm module.
 func (pw ProvwasmWrapper) GenerateGenesisState(input *module.SimulationState) {
-	codeBytes, err := ioutil.ReadFile("/Users/fredkneeland/code/provenance/tutorial.wasm")
+	codeBytes, err := ioutil.ReadFile("./sim_contracts/tutorial.wasm")
 	if err != nil {
 		panic("failed to read file")
 	}
@@ -137,7 +143,7 @@ func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper,
 
 		msg := nametypes.NewMsgBindNameRequest(
 			nametypes.NewNameRecord(
-				"sctwoandthree",
+				name_prefix,
 				node.Address,
 				true),
 			nametypes.NewNameRecord(
@@ -154,7 +160,7 @@ func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper,
 		future = append(future, simtypes.FutureOperation{Op: SimulateFinalizeOrActivateMarker(ak, bk, false, node), BlockHeight: 5})
 		future = append(future, simtypes.FutureOperation{Op: SimulateMsgWithdrawRequest(ak, bk, node, customer), BlockHeight: 6})
 		future = append(future, simtypes.FutureOperation{Op: SimulateMsgStoreContract(ak, bk, feebucket), BlockHeight: 6})
-		future = append(future, simtypes.FutureOperation{Op: SimulateMsgInitiateContract(ak, bk, feebucket, merchant), BlockHeight: 7})
+		future = append(future, simtypes.FutureOperation{Op: SimulateMsgInitiateContract(ak, bk, feebucket, merchant, parent.Name), BlockHeight: 7})
 		future = append(future, simtypes.FutureOperation{Op: SimulateMsgExecuteContract(ak, bk, node, customer), BlockHeight: 6})
 
 		return op, future, err
@@ -166,7 +172,6 @@ func SimulateMsgAddMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		denom := "purchasecoineightsss"
 		msg := markertypes.NewMsgAddMarkerRequest(
 			denom,
 			sdk.NewIntFromUint64(1000000000),
@@ -187,9 +192,9 @@ func SimulateFinalizeOrActivateMarker(ak authkeeper.AccountKeeperI, bk bankkeepe
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		var msg sdk.Msg
 		if finalize {
-			msg = markertypes.NewMsgFinalizeRequest("purchasecoineightsss", node.Address)
+			msg = markertypes.NewMsgFinalizeRequest(denom, node.Address)
 		} else {
-			msg = markertypes.NewMsgActivateRequest("purchasecoineightsss", node.Address)
+			msg = markertypes.NewMsgActivateRequest(denom, node.Address)
 		}
 
 		return markersim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg, nil)
@@ -202,7 +207,7 @@ func SimulateMsgAddAccess(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		accessTypes := []markertypes.Access{markertypes.AccessByName("withdraw")}
 		grant := *markertypes.NewAccessGrant(node.Address, accessTypes)
-		msg := markertypes.NewMsgAddAccessRequest("purchasecoineightsss", node.Address, grant)
+		msg := markertypes.NewMsgAddAccessRequest(denom, node.Address, grant)
 		return markersim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg, nil)
 	}
 }
@@ -212,10 +217,10 @@ func SimulateMsgWithdrawRequest(ak authkeeper.AccountKeeperI, bk bankkeeper.View
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		coins := []sdk.Coin{{
-			"purchasecoineightsss",
+			denom,
 			sdk.NewIntFromUint64(1000000),
 		}}
-		msg := markertypes.NewMsgWithdrawRequest(node.Address, customer.Address, "purchasecoineightsss", coins)
+		msg := markertypes.NewMsgWithdrawRequest(node.Address, customer.Address, denom, coins)
 		return markersim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg, nil)
 	}
 }
@@ -224,7 +229,7 @@ func SimulateMsgStoreContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKe
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		code, err := ioutil.ReadFile("/Users/fredkneeland/code/provenance/tutorial.wasm")
+		code, err := ioutil.ReadFile("./sim_contracts/tutorial.wasm")
 
 		if err != nil {
 			panic(err)
@@ -239,17 +244,17 @@ func SimulateMsgStoreContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKe
 	}
 }
 
-func SimulateMsgInitiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, feebucket, merchant simtypes.Account) simtypes.Operation {
+func SimulateMsgInitiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, feebucket, merchant simtypes.Account, name string) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		m := fmt.Sprintf(`{ "contract_name": "tutorial.sctwoandthree.oamtciwub", "purchase_denom": "purchasecoineightsss", "merchant_address": "%s", "fee_percent": "0.10" }`, merchant.Address.String())
+		m := fmt.Sprintf(`{ "contract_name": "%s.%s.%s", "purchase_denom": "%s", "merchant_address": "%s", "fee_percent": "0.10" }`, label, name_prefix, name, denom, merchant.Address.String())
 
 		msg := &types.MsgInstantiateContract{
 			Sender: feebucket.Address.String(),
 			Admin: feebucket.Address.String(),
 			CodeID: 1,
-			Label: "tutorial",
+			Label: label,
 			Msg: []byte(m),
 		}
 
@@ -261,7 +266,7 @@ func SimulateMsgExecuteContract(ak authkeeper.AccountKeeperI, bk bankkeeper.View
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		amount, err := sdk.ParseCoinsNormalized("100purchasecoineightsss")
+		amount, err := sdk.ParseCoinsNormalized(fmt.Sprintf("100%s", denom))
 
 		if err == nil {
 			panic(err)
