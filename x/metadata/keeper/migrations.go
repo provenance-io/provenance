@@ -75,21 +75,22 @@ func deleteAllIndexes(ctx sdk.Context, storeKey sdk.StoreKey) error {
 	}
 
 	store := ctx.KVStore(storeKey)
-	for _, pf := range prefixes {
-		if err := deleteIndex(store, pf); err != nil {
+	for _, pre := range prefixes {
+		if err := clearStore(prefix.NewStore(store, pre)); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-// deleteIndex deletes all the entries with a given prefix.
-func deleteIndex(store sdk.KVStore, pf []byte) error {
-	pfStore := prefix.NewStore(store, pf)
-	iter := pfStore.Iterator(nil, nil)
-	defer iter.Close()
+// clearStore deletes all the entries in a store.
+func clearStore(store sdk.KVStore) (err error) {
+	iter := store.Iterator(nil, nil)
+	defer func() {
+		err = iter.Close()
+	}()
 	for ; iter.Valid(); iter.Next() {
-		pfStore.Delete(iter.Key())
+		store.Delete(iter.Key())
 	}
 	return nil
 }
