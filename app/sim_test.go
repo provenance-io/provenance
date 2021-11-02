@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -111,7 +112,30 @@ func TestSmartContracts(t *testing.T) {
 	app := New(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, fauxMerkleModeOpt)
 	require.Equal(t, "provenanced", app.Name())
 
+
+
 	fmt.Printf("running provenance full app simulation for smart contracts")
+
+	header := tmproto.Header{Height: app.LastBlockHeight()}
+	ctx := app.NewContext(true, header)
+	ctx = ctx.WithBlockTime(time.Now())
+
+	nano := ctx.BlockTime().UnixNano()
+
+	if nano < 1 {
+
+		fmt.Println(("Block (unix) time must never be empty or negative "))
+		fmt.Println(ctx.BlockTime())
+		fmt.Println(header.Time)
+		fmt.Println(nano)
+		fmt.Println("--------")
+		panic(nano)
+	}
+
+	//ctx := sdk.NewContext(nil, tmproto.Header{Height: app.LastBlockHeight()}, false, logger)
+
+	fmt.Println("ctx: ")
+	fmt.Println(ctx)
 
 	// do we want to just use the weighted operations from the module or do our own stuff afterwards???
 

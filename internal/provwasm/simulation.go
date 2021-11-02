@@ -6,24 +6,22 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	simappparams "github.com/provenance-io/provenance/app/params"
-	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
-
-	"io/ioutil"
-	"math/rand"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	markersim "github.com/provenance-io/provenance/x/marker/simulation"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	namesim "github.com/provenance-io/provenance/x/name/simulation"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
+	"io/ioutil"
+	"math/rand"
 )
 
 type ProvwasmWrapper struct {
@@ -102,38 +100,12 @@ func (pw ProvwasmWrapper) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 
 // WeightedOperations returns the all the provwasm operations with their respective weights.
 func (pw ProvwasmWrapper) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	weight := 10000
 	count := 0
 	return []simtypes.WeightedOperation{
 		simulation.NewWeightedOperation(
-			weight,
+			100,
 			SimulateMsgBindName(pw.ak, pw.bk, pw.nk, &count),
 		),
-		simulation.NewWeightedOperation(
-			weight-1,
-			SimulateMsgAddMarker(pw.ak, pw.bk, &count),
-		),
-		simulation.NewWeightedOperation(
-			weight-2,
-			SimulateFinalizeOrActivateMarker(pw.ak, pw.bk, &count),
-		),
-		simulation.NewWeightedOperation(
-			weight-3,
-			SimulateMsgAddAccess(pw.ak, pw.bk, &count),
-		),
-		simulation.NewWeightedOperation(
-			weight-4,
-			SimulateMsgWithdrawRequest(pw.ak, pw.bk, &count),
-		),
-		//simulation.NewWeightedOperation(
-		//	weight-4,
-		//	SimulateMsgStoreContract(pw.ak, pw.bk, &count),
-		//),
-		simulation.NewWeightedOperation(
-			weight-5,
-			SimulateMsgInitiateContract(pw.ak, pw.bk, &count),
-		),
-
 	}
 }
 
@@ -146,8 +118,12 @@ func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper,
 			return simtypes.NoOpMsg("provwasm", "", "already bound name"), nil, nil
 		}
 		*count = *count + 1
-		fmt.Println(count)
+
+
 		node := accs[0]
+		customer := accs[1]
+		feebucket := accs[2]
+		merchant := accs[3]
 
 		var parent nametypes.NameRecord
 		nk.IterateRecords(ctx, nametypes.NameKeyPrefix, func(record nametypes.NameRecord) error {
@@ -170,24 +146,26 @@ func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper,
 				node.Address,
 				false))
 
-		return namesim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg)
+		op, future, err := namesim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg)
+
+		future = append(future, simtypes.FutureOperation{Op: SimulateMsgAddMarker(ak, bk, node), BlockHeight: 2})
+		future = append(future, simtypes.FutureOperation{Op: SimulateMsgAddAccess(ak, bk, node), BlockHeight: 3})
+		future = append(future, simtypes.FutureOperation{Op: SimulateFinalizeOrActivateMarker(ak, bk, true, node), BlockHeight: 4})
+		future = append(future, simtypes.FutureOperation{Op: SimulateFinalizeOrActivateMarker(ak, bk, false, node), BlockHeight: 5})
+		future = append(future, simtypes.FutureOperation{Op: SimulateMsgWithdrawRequest(ak, bk, node, customer), BlockHeight: 6})
+		future = append(future, simtypes.FutureOperation{Op: SimulateMsgStoreContract(ak, bk, feebucket), BlockHeight: 6})
+		future = append(future, simtypes.FutureOperation{Op: SimulateMsgInitiateContract(ak, bk, feebucket, merchant), BlockHeight: 7})
+		future = append(future, simtypes.FutureOperation{Op: SimulateMsgExecuteContract(ak, bk, node, customer), BlockHeight: 6})
+
+		return op, future, err
 	}
 }
 
 // SimulateMsgAddMarker will bind a NAME under an existing name using a 40% probability of restricting it.
-func SimulateMsgAddMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, count *int) simtypes.Operation {
+func SimulateMsgAddMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, node simtypes.Account) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		if *count != 1 {
-			return simtypes.NoOpMsg("provwasm", "", "already added marker"), nil, nil
-		}
-		*count = *count + 1
-		fmt.Println("-----------------")
-		fmt.Println("Simulate add Marker")
-		fmt.Println("-----------------")
-		node := accs[0]
-		// [a-zA-Z][a-zA-Z0-9\\-\\.]{18,21})
 		denom := "purchasecoineightsss"
 		msg := markertypes.NewMsgAddMarkerRequest(
 			denom,
@@ -203,19 +181,12 @@ func SimulateMsgAddMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper
 	}
 }
 
-func SimulateFinalizeOrActivateMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, count *int) simtypes.Operation {
+func SimulateFinalizeOrActivateMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, finalize bool, node simtypes.Account) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-
-		if *count != 3 && *count != 4 {
-			return simtypes.NoOpMsg("provwasm", "", "already activated marker"), nil, nil
-		}
-		*count = *count + 1
-
-		node := accs[0]
 		var msg sdk.Msg
-		if *count == 4 {
+		if finalize {
 			msg = markertypes.NewMsgFinalizeRequest("purchasecoineightsss", node.Address)
 		} else {
 			msg = markertypes.NewMsgActivateRequest("purchasecoineightsss", node.Address)
@@ -225,17 +196,10 @@ func SimulateFinalizeOrActivateMarker(ak authkeeper.AccountKeeperI, bk bankkeepe
 	}
 }
 
-func SimulateMsgAddAccess(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, count *int) simtypes.Operation {
+func SimulateMsgAddAccess(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, node simtypes.Account) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		if *count != 2 {
-			return simtypes.NoOpMsg("provwasm", "", "already activated marker"), nil, nil
-		}
-		*count = *count + 1
-
-		node := accs[0]
-
 		accessTypes := []markertypes.Access{markertypes.AccessByName("withdraw")}
 		grant := *markertypes.NewAccessGrant(node.Address, accessTypes)
 		msg := markertypes.NewMsgAddAccessRequest("purchasecoineightsss", node.Address, grant)
@@ -243,18 +207,10 @@ func SimulateMsgAddAccess(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper
 	}
 }
 
-func SimulateMsgWithdrawRequest(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, count *int) simtypes.Operation {
+func SimulateMsgWithdrawRequest(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, node simtypes.Account, customer simtypes.Account) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		if *count != 5 {
-			return simtypes.NoOpMsg("provwasm", "", "already activated marker"), nil, nil
-		}
-		*count = *count + 1
-
-		node := accs[0]
-		customer := accs[1]
-
 		coins := []sdk.Coin{{
 			"purchasecoineightsss",
 			sdk.NewIntFromUint64(1000000),
@@ -264,18 +220,10 @@ func SimulateMsgWithdrawRequest(ak authkeeper.AccountKeeperI, bk bankkeeper.View
 	}
 }
 
-// We shouldn't need to store the contract as it is in the Genesis??? Correct???
-func SimulateMsgStoreContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, count *int) simtypes.Operation {
+func SimulateMsgStoreContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, feebucket simtypes.Account) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		if *count != 6 {
-			return simtypes.NoOpMsg("provwasm", "", "already activated marker"), nil, nil
-		}
-		*count = *count + 1
-
-		feebucket := accs[2]
-
 		code, err := ioutil.ReadFile("/Users/fredkneeland/code/provenance/tutorial.wasm")
 
 		if err != nil {
@@ -291,22 +239,10 @@ func SimulateMsgStoreContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKe
 	}
 }
 
-func SimulateMsgInitiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, count *int) simtypes.Operation {
+func SimulateMsgInitiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, feebucket, merchant simtypes.Account) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		fmt.Println("---------------")
-		fmt.Println("Initiate Contract")
-		if *count != 6 {
-			return simtypes.NoOpMsg("provwasm", "", "already activated marker"), nil, nil
-		}
-		*count = *count + 1
-
-		fmt.Println("starting stuffs")
-
-		feebucket := accs[0]
-		merchant := accs[1]
-
 		m := fmt.Sprintf(`{ "contract_name": "tutorial.sctwoandthree.oamtciwub", "purchase_denom": "purchasecoineightsss", "merchant_address": "%s", "fee_percent": "0.10" }`, merchant.Address.String())
 
 		msg := &types.MsgInstantiateContract{
@@ -317,17 +253,35 @@ func SimulateMsgInitiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.Vie
 			Msg: []byte(m),
 		}
 
-		fmt.Println("ready to send Dispatch")
-
-		defer fmt.Println("AFter func")
 		return Dispatch(r, app, ctx, ak, bk, feebucket, chainID, msg, nil)
 	}
 }
 
-// Ideally this would someday live in wasmd
+func SimulateMsgExecuteContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, node simtypes.Account, customer simtypes.Account) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		amount, err := sdk.ParseCoinsNormalized("100purchasecoineightsss")
+
+		if err == nil {
+			panic(err)
+		}
+
+		msg := &types.MsgExecuteContract{
+			Sender: customer.Address.String(),
+			Funds: amount,
+			Contract: node.Address.String(),
+			Msg: []byte("execute"),
+		}
+
+		return Dispatch(r, app, ctx, ak, bk, customer, chainID, msg, nil)
+	}
+}
+
 
 // Dispatch sends an operation to the chain using a given account/funds on account for fees.  Failures on the server side
 // are handled as no-op msg operations with the error string as the status/response.
+// Ideally this would live in wasmd
 func Dispatch(
 	r *rand.Rand,
 	app *baseapp.BaseApp,
@@ -346,22 +300,10 @@ func Dispatch(
 	account := ak.GetAccount(ctx, from.Address)
 	spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-	//fees := make([]sdk.Coin, 0)
-	//
-	//for _, c := range spendable {
-	//	if !c.Amount.IsZero() {
-	//		fees = append(fees, c)
-	//	}
-	//}
-	//
-	//if len(fees) == 0 {
-	//	panic("no fees")
-	//}
-
 	fees, err := simtypes.RandomFees(r, ctx, spendable)
+
 	if err != nil {
 		panic("no fees")
-		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to generate fees"), nil, err
 	}
 
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig
@@ -369,7 +311,7 @@ func Dispatch(
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
-		helpers.DefaultGenTxGas,
+		helpers.DefaultGenTxGas*10,
 		chainID,
 		[]uint64{account.GetAccountNumber()},
 		[]uint64{account.GetSequence()},
@@ -377,13 +319,11 @@ func Dispatch(
 	)
 	if err != nil {
 		panic(err)
-		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to generate mock tx"), nil, err
 	}
 
 	_, _, err = app.Deliver(txGen.TxEncoder(), tx)
 	if err != nil {
 		panic(err)
-		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), err.Error()), nil, nil
 	}
 
 	return simtypes.NewOperationMsg(msg, true, "", &codec.ProtoCodec{}), futures, nil
