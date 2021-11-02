@@ -81,6 +81,22 @@ func TestScopeKeeperTestSuite(t *testing.T) {
 
 // func ownerPartyList defined in keeper_test.go
 
+type user struct {
+	PrivKey cryptotypes.PrivKey
+	PubKey cryptotypes.PubKey
+	Addr   sdk.AccAddress
+	Bech32 string
+}
+
+func randomUser() user {
+	rv := user{}
+	rv.PrivKey = secp256k1.GenPrivKey()
+	rv.PubKey = rv.PrivKey.PubKey()
+	rv.Addr = sdk.AccAddress(rv.PubKey.Address())
+	rv.Bech32 = rv.Addr.String()
+	return rv
+}
+
 func (s *ScopeKeeperTestSuite) TestMetadataScopeGetSet() {
 	scope, found := s.app.MetadataKeeper.GetScope(s.ctx, s.scopeID)
 	s.NotNil(scope)
@@ -705,4 +721,113 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdateOwners() {
 	}
 }
 
-// TODO: Write unit tests for scope indexing.
+func (s *ScopeKeeperTestSuite) TestScopeIndexing() {
+	scopeID := types.ScopeMetadataAddress(uuid.New())
+
+	specIDOrig := types.ScopeSpecMetadataAddress(uuid.New())
+	specIDNew := types.ScopeSpecMetadataAddress(uuid.New())
+
+	constantOwner := randomUser()
+	ownerToAdd := randomUser()
+	ownerToRemove := randomUser()
+	valueOwnerOrig := randomUser()
+	valueOwnerNew := randomUser()
+
+	scope := types.Scope{
+		ScopeId:           scopeID,
+		SpecificationId:   specIDOrig,
+		Owners:            ownerPartyList(constantOwner.Bech32, ownerToRemove.Bech32),
+		DataAccess:        nil,
+		ValueOwnerAddress: valueOwnerOrig.Bech32,
+	}
+
+	store := s.ctx.KVStore(s.app.GetKey(types.ModuleName))
+
+	s.T().Run("1 write new scope", func(t *testing.T) {
+		expectedIndexes := []struct {
+			key []byte
+			name string
+		}{
+			{types.GetAddressScopeCacheKey(constantOwner.Addr, scopeID),"constantOwner address index"},
+			{types.GetAddressScopeCacheKey(ownerToRemove.Addr, scopeID),"ownerToRemove address index"},
+			{types.GetAddressScopeCacheKey(valueOwnerOrig.Addr, scopeID),"valueOwnerOrig address index"},
+
+			{types.GetValueOwnerScopeCacheKey(valueOwnerOrig.Addr, scopeID),"valueOwnerOrig value owner index"},
+
+			{types.GetScopeSpecScopeCacheKey(specIDOrig, scopeID),"specIDOrig spec index"},
+		}
+
+		s.app.MetadataKeeper.SetScope(s.ctx, scope)
+
+		for _, expected := range expectedIndexes {
+			assert.True(t, store.Has(expected.key), expected.name)
+		}
+	})
+
+	newScope := types.Scope{
+		ScopeId:           scopeID,
+		SpecificationId:   specIDNew,
+		Owners:            ownerPartyList(constantOwner.Bech32, ownerToAdd.Bech32),
+		DataAccess:        nil,
+		ValueOwnerAddress: valueOwnerNew.Bech32,
+	}
+	s.T().Run("2 update scope", func(t *testing.T) {
+		expectedIndexes := []struct {
+			key []byte
+			name string
+		}{
+			{types.GetAddressScopeCacheKey(constantOwner.Addr, scopeID),"constantOwner address index"},
+			{types.GetAddressScopeCacheKey(ownerToAdd.Addr, scopeID),"ownerToAdd address index"},
+			{types.GetAddressScopeCacheKey(valueOwnerNew.Addr, scopeID),"valueOwnerNew address index"},
+
+			{types.GetValueOwnerScopeCacheKey(valueOwnerNew.Addr, scopeID),"valueOwnerNew value owner index"},
+
+			{types.GetScopeSpecScopeCacheKey(specIDNew, scopeID),"specIDNew spec index"},
+		}
+		unexpectedIndexes := []struct {
+			key []byte
+			name string
+		}{
+			{types.GetAddressScopeCacheKey(ownerToRemove.Addr, scopeID),"ownerToRemove address index"},
+			{types.GetAddressScopeCacheKey(valueOwnerOrig.Addr, scopeID),"valueOwnerOrig address index"},
+
+			{types.GetValueOwnerScopeCacheKey(valueOwnerOrig.Addr, scopeID),"valueOwnerOrig value owner index"},
+
+			{types.GetScopeSpecScopeCacheKey(specIDOrig, scopeID),"specIDOrig spec index"},
+		}
+
+		s.app.MetadataKeeper.SetScope(s.ctx, newScope)
+
+		for _, expected := range expectedIndexes {
+			assert.True(t, store.Has(expected.key), expected.name)
+		}
+		for _, unexpected := range unexpectedIndexes {
+			assert.False(t, store.Has(unexpected.key), unexpected.name)
+		}
+	})
+
+	s.T().Run("3 delete scope", func(t *testing.T) {
+		unexpectedIndexes := []struct {
+			key []byte
+			name string
+		}{
+			{types.GetAddressScopeCacheKey(constantOwner.Addr, scopeID),"constantOwner address index"},
+			{types.GetAddressScopeCacheKey(ownerToRemove.Addr, scopeID),"ownerToRemove address index"},
+			{types.GetAddressScopeCacheKey(ownerToAdd.Addr, scopeID),"ownerToAdd address index"},
+			{types.GetAddressScopeCacheKey(valueOwnerOrig.Addr, scopeID),"valueOwnerOrig address index"},
+			{types.GetAddressScopeCacheKey(valueOwnerNew.Addr, scopeID),"valueOwnerNew address index"},
+
+			{types.GetValueOwnerScopeCacheKey(valueOwnerOrig.Addr, scopeID),"valueOwnerOrig value owner index"},
+			{types.GetValueOwnerScopeCacheKey(valueOwnerNew.Addr, scopeID),"valueOwnerNew value owner index"},
+
+			{types.GetScopeSpecScopeCacheKey(specIDOrig, scopeID),"specIDOrig spec index"},
+			{types.GetScopeSpecScopeCacheKey(specIDNew, scopeID),"specIDNew spec index"},
+		}
+
+		s.app.MetadataKeeper.RemoveScope(s.ctx, newScope.ScopeId)
+
+		for _, unexpected := range unexpectedIndexes {
+			assert.False(t, store.Has(unexpected.key), unexpected.name)
+		}
+	})
+}
