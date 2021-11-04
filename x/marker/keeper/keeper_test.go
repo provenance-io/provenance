@@ -192,13 +192,11 @@ func TestAccountKeeperManageAccess(t *testing.T) {
 	_, err = app.MarkerKeeper.GetMarker(ctx, addr)
 	require.NoError(t, err)
 
-	// Grant access and check (fails on a Finalized marker without Admin grant)
-	require.Error(t, app.MarkerKeeper.AddAccess(ctx, user1, "testcoin",
+	// Manager can make changes to grants for finalized markers
+	require.NoError(t, app.MarkerKeeper.AddAccess(ctx, user1, "testcoin",
 		types.NewAccessGrant(user2, []types.Access{types.Access_Mint})))
-	// Remove access fails for Finalized Marker without Admin grant
-	require.Error(t, app.MarkerKeeper.RemoveAccess(ctx, user1, "testcoin", user2))
 
-	// Admin can make changes to grants for active markers
+	// Admin can make changes to grants for finalized markers
 	require.NoError(t, app.MarkerKeeper.AddAccess(ctx, admin, "testcoin",
 		types.NewAccessGrant(user2, []types.Access{types.Access_Mint, types.Access_Delete})))
 	_, err = app.MarkerKeeper.GetMarker(ctx, addr)
