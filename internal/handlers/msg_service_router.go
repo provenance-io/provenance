@@ -1,4 +1,4 @@
-package antewrapper
+package handlers
 
 import (
 	"context"
@@ -115,7 +115,7 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 		}
 
 		msr.routes[requestTypeName] = func(ctx sdk.Context, req sdk.Msg) (*sdk.Result, error) {
-			ctx.Logger().Info("Inside the PIO msg service router handler")
+			ctx.Logger().Info(fmt.Sprintf("NOTICE: Inside the PIO msg service router handler msg: %v", sdk.MsgTypeURL(req)))
 			fee, err := msr.msgBasedFeeKeeper.GetMsgBasedFee(ctx, sdk.MsgTypeURL(req))
 			if err != nil {
 				return nil, err

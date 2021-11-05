@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+
 	msgfeehandler "github.com/provenance-io/provenance/internal/handlers"
 
 	"io"
@@ -14,6 +15,7 @@ import (
 
 	_ "github.com/provenance-io/provenance/client/docs/statik" // registers swagger-ui files with statik
 	"github.com/provenance-io/provenance/internal/antewrapper"
+	"github.com/provenance-io/provenance/internal/handlers"
 	"github.com/provenance-io/provenance/internal/statesync"
 
 	"github.com/gorilla/mux"
@@ -308,7 +310,7 @@ func New(
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 
 	bApp := baseapp.NewBaseApp("provenanced", logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
-	bApp.SetMsgServiceRouter(antewrapper.NewPioMsgServiceRouter())
+	bApp.SetMsgServiceRouter(handlers.NewPioMsgServiceRouter())
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
@@ -398,7 +400,7 @@ func New(
 		appCodec, keys[msgbasedfeestypes.StoreKey], app.GetSubspace(msgbasedfeestypes.ModuleName), authtypes.FeeCollectorName,
 	)
 
-	pioMsgBasedRouter := app.MsgServiceRouter().(*antewrapper.PioMsgServiceRouter)
+	pioMsgBasedRouter := app.MsgServiceRouter().(*handlers.PioMsgServiceRouter)
 	pioMsgBasedRouter.SetMsgBasedFeeKeeper(app.MsgBasedFeeKeeper)
 
 	// register the staking hooks
@@ -685,7 +687,6 @@ func New(
 		panic(err)
 	}
 	app.SetMsgFeeHandler(msgfeehandler)
-
 
 	app.SetEndBlocker(app.EndBlocker)
 
