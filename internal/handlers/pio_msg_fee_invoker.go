@@ -3,29 +3,32 @@ package handlers
 import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	msgbasedfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 type MsgBasedFeeInvoker struct {
 	msgBasedFeeKeeper msgbasedfeetypes.MsgBasedFeeKeeper
-	bankKeeper        banktypes.Keeper
-	accountKeeper     cosmosante.AccountKeeper
+	bankKeeper        msgbasedfeetypes.BankKeeper
+	accountKeeper     msgbasedfeetypes.AccountKeeper
 	feegrantKeeper    msgbasedfeetypes.FeegrantKeeper
+	txDecoder         sdk.TxDecoder
 }
 
 // concrete impl of how to charge Msg Based Fees
-func NewMsgBasedFeeInvoker(bankKeeper banktypes.Keeper, accountKeeper cosmosante.AccountKeeper, feegrantKeeper msgbasedfeetypes.FeegrantKeeper, msgBasedFeeKeeper msgbasedfeetypes.MsgBasedFeeKeeper) MsgBasedFeeInvoker {
+func NewMsgBasedFeeInvoker(bankKeeper msgbasedfeetypes.BankKeeper, accountKeeper msgbasedfeetypes.AccountKeeper,
+	feegrantKeeper msgbasedfeetypes.FeegrantKeeper, msgBasedFeeKeeper msgbasedfeetypes.MsgBasedFeeKeeper, decoder sdk.TxDecoder) MsgBasedFeeInvoker {
 	return MsgBasedFeeInvoker{
 		msgBasedFeeKeeper,
 		bankKeeper,
 		accountKeeper,
 		feegrantKeeper,
+		decoder,
 	}
 }
 
 func (afd MsgBasedFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.Coins, err error) {
+	chargedFees := sdk.Coins{}
+
 	if ctx.TxBytes() != nil && len(ctx.TxBytes()) != 0 {
 		ctx.Logger().Debug("NOTICE: In chargeFees()")
 		originalGasMeter := ctx.GasMeter()
@@ -33,11 +36,12 @@ func (afd MsgBasedFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.
 		ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
 
 		var msgs []sdk.Msg
-		tx, err := app.txDecoder(ctx.TxBytes())
+		tx, err := afd.txDecoder(ctx.TxBytes())
 		if err != nil {
 			panic(fmt.Errorf("error in chargeFees() while getting txBytes: %w", err))
 		}
 		msgs = tx.GetMsgs()
+
 		// cast to FeeTx
 		feeTx, ok := tx.(sdk.FeeTx)
 		// only charge additional fee if of type FeeTx since it should give fee payer.
@@ -55,6 +59,8 @@ func (afd MsgBasedFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.
 				panic("fee payer address: %s does not exist")
 			}
 
+			chargedFees = make(sdk.Coins, len(msgs))
+
 			for _, msg := range msgs {
 				ctx.Logger().Info(fmt.Sprintf("The message type in defer block for fee charging : %s", sdk.MsgTypeURL(msg)))
 				msgFees, err := afd.msgBasedFeeKeeper.GetMsgBasedFee(ctx, sdk.MsgTypeURL(msg))
@@ -64,13 +70,17 @@ func (afd MsgBasedFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.
 				}
 				if msgFees != nil {
 					ctx.Logger().Info("Retrieved a msg based fee.")
-					afd.msgBasedFeeKeeper.DeductFees(afd.bankKeeper, ctx, deductFeesFromAcc, sdk.Coins{msgFees.AdditionalFee})
+					if !simulate {
+						afd.msgBasedFeeKeeper.DeductFees(afd.bankKeeper, ctx, deductFeesFromAcc, sdk.Coins{msgFees.AdditionalFee})
+					}
+					chargedFees = sdk.Coins{msgFees.AdditionalFee}
 				}
 				// TODO remove this but just for testing $$$$$$$$$$
-				afd.msgBasedFeeKeeper.DeductFees(afd.bankKeeper, ctx, deductFeesFromAcc, sdk.Coins{sdk.NewInt64Coin("nhash", 55555)})
+				//afd.msgBasedFeeKeeper.DeductFees(afd.bankKeeper, ctx, deductFeesFromAcc, sdk.Coins{sdk.NewInt64Coin("nhash", 55555)})
 			}
 			//set back the original gasMeter
 			ctx = ctx.WithGasMeter(originalGasMeter)
 		}
 	}
+	return chargedFees, nil
 }
