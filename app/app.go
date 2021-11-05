@@ -483,7 +483,7 @@ func New(
 		scopedWasmKeeper,
 		app.TransferKeeper,
 		wasmRouter,
-		nil, // TODO: Fix once wasm accepts interface
+		app.MsgServiceRouter(),
 		app.GRPCQueryRouter(),
 		wasmDir,
 		wasmConfig,
