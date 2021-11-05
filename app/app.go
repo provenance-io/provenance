@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	msgfeehandler "github.com/provenance-io/provenance/internal/handlers"
 
 	"io"
 	"net/http"
@@ -672,6 +673,20 @@ func New(
 	}
 
 	app.SetAnteHandler(anteHandler)
+	msgfeehandler, err := msgfeehandler.NewAdditionalMsgFeeHandler(msgfeehandler.PioBaseAppKeeperOptions{
+		AccountKeeper:     app.AccountKeeper,
+		BankKeeper:        app.BankKeeper,
+		FeegrantKeeper:    app.FeeGrantKeeper,
+		MsgBasedFeeKeeper: app.MsgBasedFeeKeeper,
+		Decoder:           encodingConfig.TxConfig.TxDecoder(),
+	})
+
+	if err != nil {
+		panic(err)
+	}
+	app.SetMsgFeeHandler(msgfeehandler)
+
+
 	app.SetEndBlocker(app.EndBlocker)
 
 	// -- TODO: Add upgrade plans for each release here

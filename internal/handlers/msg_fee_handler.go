@@ -3,7 +3,6 @@ package handlers
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/provenance-io/provenance/app"
 	msgbasedfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
@@ -12,6 +11,7 @@ type PioBaseAppKeeperOptions struct {
 	BankKeeper        msgbasedfeetypes.BankKeeper
 	FeegrantKeeper    msgbasedfeetypes.FeegrantKeeper
 	MsgBasedFeeKeeper msgbasedfeetypes.MsgBasedFeeKeeper
+	Decoder           sdk.TxDecoder
 }
 
 func NewAdditionalMsgFeeHandler(options PioBaseAppKeeperOptions) (sdk.AdditionalMsgFeeHandler, error) {
@@ -32,5 +32,5 @@ func NewAdditionalMsgFeeHandler(options PioBaseAppKeeperOptions) (sdk.Additional
 	}
 
 	return NewMsgBasedFeeInvoker(options.BankKeeper, options.AccountKeeper, options.FeegrantKeeper,
-		options.MsgBasedFeeKeeper, app.MakeEncodingConfig().TxConfig.TxDecoder()).Invoke, nil
+		options.MsgBasedFeeKeeper, options.Decoder).Invoke, nil
 }
