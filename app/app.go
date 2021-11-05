@@ -2,7 +2,7 @@ package app
 
 import (
 	"encoding/json"
-	"github.com/provenance-io/provenance/internal/piobaseapp"
+
 	"io"
 	"net/http"
 	"os"
@@ -230,7 +230,7 @@ func SdkCoinDenomRegex() string {
 // They are exported for convenience in creating helper functions, as object
 // capabilities aren't needed for testing.
 type App struct {
-	*piobaseapp.BaseApp
+	*baseapp.BaseApp
 
 	legacyAmino       *codec.LegacyAmino
 	appCodec          codec.Codec
@@ -300,13 +300,14 @@ func init() {
 func New(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, skipUpgradeHeights map[int64]bool,
 	homePath string, invCheckPeriod uint, encodingConfig appparams.EncodingConfig,
-	appOpts servertypes.AppOptions, baseAppOptions ...func(*piobaseapp.BaseApp),
+	appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
 	appCodec := encodingConfig.Marshaler
 	legacyAmino := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 
-	bApp := piobaseapp.NewBaseApp("provenanced", logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
+	bApp := baseapp.NewBaseApp("provenanced", logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
+	bApp.SetMsgServiceRouter(antewrapper.NewPioMsgServiceRouter())
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
@@ -396,6 +397,9 @@ func New(
 		appCodec, keys[msgbasedfeestypes.StoreKey], app.GetSubspace(msgbasedfeestypes.ModuleName), authtypes.FeeCollectorName,
 	)
 
+	pioMsgBasedRouter := app.MsgServiceRouter().(*antewrapper.PioMsgServiceRouter)
+	pioMsgBasedRouter.SetMsgBasedFeeKeeper(app.MsgBasedFeeKeeper)
+
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
 	app.StakingKeeper = *stakingKeeper.SetHooks(
@@ -476,7 +480,7 @@ func New(
 		scopedWasmKeeper,
 		app.TransferKeeper,
 		wasmRouter,
-		app.MsgServiceRouter(),
+		nil,
 		app.GRPCQueryRouter(),
 		wasmDir,
 		wasmConfig,
@@ -616,7 +620,7 @@ func New(
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
-	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
+	app.configurator = module.NewConfigurator(app.appCodec, app.BaseApp.MsgServiceRouter(), app.GRPCQueryRouter())
 	app.mm.RegisterServices(app.configurator)
 
 	app.sm = module.NewSimulationManager(
@@ -669,13 +673,6 @@ func New(
 
 	app.SetAnteHandler(anteHandler)
 	app.SetEndBlocker(app.EndBlocker)
-	// keeper's for baseapp
-	app.SetKeeperHandler(piobaseapp.PioBaseAppKeeperOptions{
-		AccountKeeper:     app.AccountKeeper,
-		BankKeeper:        app.BankKeeper,
-		FeegrantKeeper:    app.FeeGrantKeeper,
-		MsgBasedFeeKeeper: app.MsgBasedFeeKeeper,
-	})
 
 	// -- TODO: Add upgrade plans for each release here
 	//    NOTE: Do not remove any handlers once deployed
