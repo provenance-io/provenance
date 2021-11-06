@@ -130,4 +130,4 @@ replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alp
 
 replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.19.0-pio-msgbasedfees
 
-replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.44.3-pio
+replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.44.3-pio-msgfees
