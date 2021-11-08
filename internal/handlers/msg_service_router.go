@@ -12,6 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	"github.com/provenance-io/provenance/internal/antewrapper"
 	msgfeekeeper "github.com/provenance-io/provenance/x/msgfees/keeper"
 )
 
@@ -116,6 +117,12 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 
 		msr.routes[requestTypeName] = func(ctx sdk.Context, req sdk.Msg) (*sdk.Result, error) {
 			ctx.Logger().Info(fmt.Sprintf("NOTICE: Inside the PIO msg service router handler msg: %v", sdk.MsgTypeURL(req)))
+
+			_, ok := ctx.GasMeter().(*antewrapper.FeeGasMeter)
+			if !ok {
+				panic("GasMeter is not of type FeeGasMeter")
+			}
+
 			fee, err := msr.msgBasedFeeKeeper.GetMsgBasedFee(ctx, sdk.MsgTypeURL(req))
 			if err != nil {
 				return nil, err

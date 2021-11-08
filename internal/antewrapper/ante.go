@@ -23,3 +23,21 @@ func (r GasTracerContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 
 	return next(newCtx, tx, simulate)
 }
+
+// FeeMeterContextDecorator is an AnteDecorator that wraps the current
+// context gas meter with a msg based fee meter.
+type FeeMeterContextDecorator struct{}
+
+// NewFeeMeterContextDecorator creates a new FeeMeterContextDecorator
+func NewFeeMeterContextDecorator() FeeMeterContextDecorator {
+	return FeeMeterContextDecorator{}
+}
+
+var _ sdk.AnteDecorator = FeeMeterContextDecorator{}
+
+// AnteHandle implements the AnteDecorator.AnteHandle method
+func (r FeeMeterContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+	newCtx = ctx.WithGasMeter(NewFeeTracingMeterWrapper(ctx.Logger(), ctx.GasMeter()))
+
+	return next(newCtx, tx, simulate)
+}

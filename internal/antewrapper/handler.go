@@ -40,8 +40,10 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	}
 
 	decorators := []sdk.AnteDecorator{
-		cosmosante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
-		NewGasTracerContextDecorator(),        // gas meter tracer must follow initial context setup
+		cosmosante.NewSetUpContextDecorator(),
+		// outermost AnteDecorator. SetUpContext must be called first
+		NewGasTracerContextDecorator(),
+		NewFeeMeterContextDecorator(), // gas meter tracer must follow initial context setup
 		cosmosante.NewRejectExtensionOptionsDecorator(),
 		cosmosante.NewMempoolFeeDecorator(),
 		cosmosante.NewValidateBasicDecorator(),
