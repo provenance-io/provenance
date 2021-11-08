@@ -18,8 +18,7 @@ var _ sdk.AnteDecorator = GasTracerContextDecorator{}
 
 // AnteHandle implements the AnteDecorator.AnteHandle method
 func (r GasTracerContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	baseMeter := (ctx.GasMeter()).(sdk.GasMeter)
-	newCtx = ctx.WithGasMeter(NewTracingMeterWrapper(ctx.Logger(), baseMeter))
+	newCtx = ctx.WithGasMeter(NewTracingMeterWrapper(ctx.Logger(), ctx.GasMeter()))
 
 	return next(newCtx, tx, simulate)
 }

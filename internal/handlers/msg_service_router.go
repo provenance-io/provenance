@@ -21,14 +21,16 @@ type PioMsgServiceRouter struct {
 	interfaceRegistry codectypes.InterfaceRegistry
 	routes            map[string]MsgServiceHandler
 	msgBasedFeeKeeper msgfeekeeper.Keeper
+	decoder           sdk.TxDecoder
 }
 
 var _ gogogrpc.Server = &PioMsgServiceRouter{}
 
 // NewMsgServiceRouter creates a new MsgServiceRouter.
-func NewPioMsgServiceRouter() *PioMsgServiceRouter {
+func NewPioMsgServiceRouter(decoder sdk.TxDecoder) *PioMsgServiceRouter {
 	return &PioMsgServiceRouter{
-		routes: map[string]MsgServiceHandler{},
+		routes:  map[string]MsgServiceHandler{},
+		decoder: decoder,
 	}
 }
 
@@ -121,6 +123,17 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 			_, ok := ctx.GasMeter().(*antewrapper.FeeGasMeter)
 			if !ok {
 				panic("GasMeter is not of type FeeGasMeter")
+			}
+
+			tx, err := msr.decoder(ctx.TxBytes())
+			if err != nil {
+				panic(fmt.Errorf("error msg handling while getting txBytes: %w", err))
+			}
+
+			// cast to FeeTx
+			feeTx, ok := tx.(sdk.FeeTx)
+			if feeTx == nil || !ok {
+				panic("could not find fee payer")
 			}
 
 			fee, err := msr.msgBasedFeeKeeper.GetMsgBasedFee(ctx, sdk.MsgTypeURL(req))
