@@ -4,7 +4,7 @@ The `authz` implementation in the `metadata` module checks for granted permissio
 
 A `GenericAuthorization` should be used using the message type URLs now documented in [03_messages.md](03_messages.md).
 
-#### Code
+## Code
 
 Grant:
 ```aspectj
@@ -26,7 +26,7 @@ msgRevoke := authz.NewMsgRevoke(granter, grantee, types.TypeURLMsgWriteScopeRequ
 res, err := s.app.AuthzKeeper.Revoke(s.ctx, msgRevoke)
 ```
 
-#### CLI
+## CLI
 
 Grant:
 ```aspectj
@@ -41,7 +41,7 @@ provenanced tx revoke <grantee> <method-name> --from <granter>
 
 See [GenericAuthorization](https://docs.cosmos.network/master/architecture/adr-030-authz-module.html#genericauthorization) specification for more details.
 
-### Special allowances
+## Special allowances
 
 Some messages in the `metadata` module have hierarchies. A grant on a parent message type will also work for any of 
 its message subtypes, but not the other way around. Therefore, authorizations on these messages are `one way`. 

@@ -448,7 +448,7 @@ This service message is expected to fail if:
 * An object store locator does not exist for the given `owner`.
 
 ---
-### Authz Grants
+## Authz Grants
 
 Authz requires the use of fully qualified message type URLs when applying grants to an address. See [04_authz.md](04_authz.md) for more details.
 
