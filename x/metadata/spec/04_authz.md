@@ -4,6 +4,13 @@ The `authz` implementation in the `metadata` module checks for granted permissio
 
 A `GenericAuthorization` should be used using the message type URLs now documented in [03_messages.md](03_messages.md).
 
+<!-- TOC -->
+  - [Code](#code)
+  - [CLI](#cli)
+  - [Special allowances](#special-allowances)
+
+
+
 ## Code
 
 Grant:
