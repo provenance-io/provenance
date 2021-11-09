@@ -60,13 +60,16 @@ func (k Keeper) AddMarkerAccount(ctx sdk.Context, marker types.MarkerAccountI) e
 		return fmt.Errorf("marker address does not match expected %s for denom %s", markerAddress, marker.GetDenom())
 	}
 
-	// Should not exist yet
-	existing, err := k.GetMarker(ctx, markerAddress)
-	if err != nil {
-		return err
-	}
-	if existing != nil {
-		return fmt.Errorf("marker address already exists for %s", markerAddress)
+	// Should not exist yet (or if exists must not be a marker and must have a zero sequence number)
+	mac := k.authKeeper.GetAccount(ctx, markerAddress)
+	if mac != nil {
+		_, ok := mac.(types.MarkerAccountI)
+		if ok {
+			return fmt.Errorf("marker address already exists for %s", markerAddress)
+		} else if mac.GetSequence() > 0 {
+			// account exists, is not a marker, and has been signed for
+			return fmt.Errorf("account at %s is not a marker account", markerAddress.String())
+		}
 	}
 
 	// set base account number
