@@ -55,7 +55,9 @@ func (afd MsgBasedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 	if !additionalFees.IsZero() {
 		// mempool fee validation tx
 		// this is because we want to make sure if additional additionalFees in hash then there is enough
-		if ctx.IsCheckTx() {
+
+		// TODO check if needed
+		if ctx.IsCheckTx() && !simulate  {
 			if err := EnsureSufficientMempoolFees(ctx, gas, feeCoins, additionalFees); err != nil {
 				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, err.Error())
 			}
@@ -67,7 +69,7 @@ func (afd MsgBasedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 
 		// if feegranter set deduct fee from feegranter account.
 
-		// if feegranter check if grant exists.
+		// if fee granter check if grant exists.
 		if feeGranter != nil {
 			if afd.feegrantKeeper == nil {
 				return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")

@@ -103,8 +103,8 @@ func (g *FeeGasMeter) ConsumeFee(amount sdk.Coin, msgType string) {
 	cur := g.usedFees[msgType]
 	g.usedFees[msgType] = cur.Add(amount)
 }
-
-func (g *FeeGasMeter) feeWanted(amount sdk.Coin, msgType string) {
+// FeeWanted increments the additional fee count based on msgType
+func (g *FeeGasMeter) FeeWanted(amount sdk.Coin, msgType string) {
 	cur := g.feesWanted[msgType]
 	g.feesWanted[msgType] = cur.Add(amount)
 }
