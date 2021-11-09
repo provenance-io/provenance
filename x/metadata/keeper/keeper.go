@@ -191,17 +191,17 @@ func (k Keeper) GetMessageTypeURLs(msgTypeURL string) []string {
 // checkAuthZForMissing checks to see if the missing types.Party have an assigned grantee that can sing on their behalf
 func (k Keeper) checkAuthzForMissing(ctx sdk.Context, addrs []string, signers []string, msgTypeURL string) []string {
 	stillMissing := []string{}
+	// return as a list this message type and its parent
+	// type if it is a message belonging to a hierarchy
+	msgTypeURLs := k.GetMessageTypeURLs(msgTypeURL)
 
 	for _, addr := range addrs {
-		// loop through all the signers
 		found := false
-		for _, signer := range signers {
-			granter := types.MustAccAddressFromBech32(addr)
-			grantee := types.MustAccAddressFromBech32(signer)
+		granter := types.MustAccAddressFromBech32(addr)
 
-			// return as a list this message type and its parent
-			// type if it is a message belonging to a hierarchy
-			msgTypeURLs := k.GetMessageTypeURLs(msgTypeURL)
+		// loop through all the signers
+		for _, signer := range signers {
+			grantee := types.MustAccAddressFromBech32(signer)
 
 			for _, msgType := range msgTypeURLs {
 				authz, _ := k.authzKeeper.GetCleanAuthorization(ctx, grantee, granter, msgType)
