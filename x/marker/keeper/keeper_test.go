@@ -229,8 +229,12 @@ func TestAccountKeeperManageAccess(t *testing.T) {
 	require.NoError(t, err)
 
 	// Manager can make changes to grants for finalized markers
+	require.NoError(t, app.MarkerKeeper.RemoveAccess(ctx, user1, "testcoin", user1))
 	require.NoError(t, app.MarkerKeeper.AddAccess(ctx, user1, "testcoin",
-		types.NewAccessGrant(user2, []types.Access{types.Access_Mint})))
+		types.NewAccessGrant(user1, []types.Access{types.Access_Burn})))
+
+	// Unauthorized user can not manipulate finalized marker grants
+	require.Error(t, app.MarkerKeeper.RemoveAccess(ctx, user2, "testcoin", user1))
 
 	// Admin can make changes to grants for finalized markers
 	require.NoError(t, app.MarkerKeeper.AddAccess(ctx, admin, "testcoin",
