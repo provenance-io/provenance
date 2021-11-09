@@ -66,6 +66,42 @@ func TestAccountMapperGetSet(t *testing.T) {
 	require.Error(t, err, "marker does not exist, should error")
 }
 
+func TestExistingAccounts(t *testing.T) {
+	//app, ctx := createTestApp(true)
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+
+	addr := types.MustGetMarkerAddress("testcoin")
+	pubkey := secp256k1.GenPrivKey().PubKey()
+	user := testUserAddress("testcoin")
+	manager := testUserAddress("manager")
+	existingBalance := sdk.NewCoin("coin", sdk.NewInt(1000))
+
+	// prefund the marker address so an account gets created before the marker does.
+	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 0))
+	simapp.FundAccount(app, ctx, addr, sdk.NewCoins(existingBalance))
+	require.Equal(t, existingBalance, app.BankKeeper.GetBalance(ctx, addr, "coin"), "account balance must be set")
+
+	// Creating a marker over an account with zero sequence is fine.
+	_, err := server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("testcoin", sdk.NewInt(30), user, manager, types.MarkerType_Coin, true, true))
+	require.NoError(t, err, "should allow a marker over existing account that has not signed anything.")
+
+	// existing coin balance must still be present
+	require.Equal(t, existingBalance, app.BankKeeper.GetBalance(ctx, addr, "coin"), "account balances must be preserved")
+
+	// Creating a marker over an existing marker fails.
+	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("testcoin", sdk.NewInt(30), user, manager, types.MarkerType_Coin, true, true))
+	require.Error(t, err, "fails because marker already exists")
+
+	// replace existing test account with a new copy that has a positive sequence number
+	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 10))
+
+	// Creating a marker over an existing account with a positive sequence number fails.
+	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("testcoin", sdk.NewInt(30), user, manager, types.MarkerType_Coin, true, true))
+	require.Error(t, err, "should not allow creation over and existing account with a positive sequence number.")
+}
+
 func TestAccountUnrestrictedDenoms(t *testing.T) {
 	//app, ctx := createTestApp(true)
 	app := simapp.Setup(false)
