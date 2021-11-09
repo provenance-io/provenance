@@ -9,7 +9,7 @@ A `GenericAuthorization` should be used using the message type URLs now document
   - [CLI](#cli)
   - [Special allowances](#special-allowances)
 
-
+---
 
 ## Code
 
