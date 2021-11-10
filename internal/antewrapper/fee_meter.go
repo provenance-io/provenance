@@ -45,13 +45,6 @@ var _ sdkgas.GasMeter = &FeeGasMeter{}
 
 // GasConsumed reports the amount of gas consumed at Log.Info level
 func (g *FeeGasMeter) GasConsumed() sdkgas.Gas {
-	usage := "tracingGasMeter:\n  Purpose"
-	for i, d := range g.used {
-		usage = fmt.Sprintf("%s\n   - %s (x%d) = %d", usage, i, g.calls[i], d)
-	}
-	usage = fmt.Sprintf("%s\n  Total: %d gas", usage, g.base.GasConsumed())
-
-	g.log.Info(usage)
 	return g.base.GasConsumed()
 }
 
@@ -103,6 +96,7 @@ func (g *FeeGasMeter) ConsumeFee(amount sdk.Coin, msgType string) {
 	cur := g.usedFees[msgType]
 	g.usedFees[msgType] = cur.Add(amount)
 }
+
 // FeeWanted increments the additional fee count based on msgType
 func (g *FeeGasMeter) FeeWanted(amount sdk.Coin, msgType string) {
 	cur := g.feesWanted[msgType]
