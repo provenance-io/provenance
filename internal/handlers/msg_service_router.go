@@ -118,9 +118,10 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 		}
 
 		msr.routes[requestTypeName] = func(ctx sdk.Context, req sdk.Msg) (*sdk.Result, error) {
-			ctx.Logger().Info(fmt.Sprintf("NOTICE: Inside the PIO msg service router handler msg: %v", sdk.MsgTypeURL(req)))
+			msgTypeUrl := sdk.MsgTypeURL(req)
+			ctx.Logger().Info(fmt.Sprintf("NOTICE: Inside the PIO msg service router handler msg: %v", msgTypeUrl))
 
-			_, ok := ctx.GasMeter().(*antewrapper.FeeGasMeter)
+			feeGasMeter, ok := ctx.GasMeter().(*antewrapper.FeeGasMeter)
 			if !ok {
 				panic("GasMeter is not of type FeeGasMeter")
 			}
@@ -136,11 +137,14 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 				panic("could not find fee payer")
 			}
 
-			fee, err := msr.msgBasedFeeKeeper.GetMsgBasedFee(ctx, sdk.MsgTypeURL(req))
+			fee, err := msr.msgBasedFeeKeeper.GetMsgBasedFee(ctx, msgTypeUrl)
 			if err != nil {
 				return nil, err
 			}
-			ctx.Logger().Info("Msg Fee: %v", fee)
+			if fee != nil || fee.AdditionalFee.IsPositive() {
+				ctx.Logger().Info(fmt.Sprintf("NOTICE: Msg %v has an additional fee of %v", msgTypeUrl, fee.AdditionalFee))
+				feeGasMeter.ConsumeFee(fee.AdditionalFee, msgTypeUrl)
+			}
 			ctx = ctx.WithEventManager(sdk.NewEventManager())
 			interceptor := func(goCtx context.Context, _ interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 				goCtx = context.WithValue(goCtx, sdk.SdkContextKey, ctx)
