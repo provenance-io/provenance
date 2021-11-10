@@ -251,7 +251,7 @@ func (s *SessionKeeperTestSuite) TestMetadataValidateSessionUpdate() {
 		"invalid session update, missing required signers": {
 			existing: validSession,
 			proposed: validSession,
-			signers:  []string{"unknown signer"},
+			signers:  []string{},
 			wantErr:  true,
 			errorMsg: fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user1),
 		},

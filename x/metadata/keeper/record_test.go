@@ -176,7 +176,7 @@ func (s *RecordKeeperTestSuite) TestValidateRecordRemove() {
 		"Invalid, missing signature": {
 			existing: *record,
 			proposed: recordID,
-			signers:  []string{"no-matchin"},
+			signers:  []string{},
 			wantErr:  true,
 			errorMsg: fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user1),
 		},
