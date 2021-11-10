@@ -31,6 +31,13 @@ message AddMsgBasedFeeProposal {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags)     = "yaml:\"additional_fee\""
   ];
+
+  // gas price if additional fee is being paid in base currency( i.e nhash for now) else can be empty
+  cosmos.base.v1beta1.Coin min_gas_price = 5 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags)     = "yaml:\"min_gas_price\""
+  ];
 }
 
 // UpdateMsgBasedFeeProposal defines a governance proposal to update a current msg based fee
@@ -47,6 +54,13 @@ message UpdateMsgBasedFeeProposal {
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags)     = "yaml:\"additional_fee\""
+  ];
+
+  // gas price if additional fee is being paid in base currency( i.e nhash for now) else can be empty
+  cosmos.base.v1beta1.Coin min_gas_price = 5 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags)     = "yaml:\"min_gas_price\""
   ];
 }
 

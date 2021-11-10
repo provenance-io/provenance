@@ -5134,13 +5134,14 @@ Msg defines the Metadata Msg service.
 MsgBasedFee is the core of what gets stored on the blockchain
 it consists of two parts
 1. minimum additional fees(can be of any denom)
-2. Fee rate which is proportional to the gas charged for processing that message.
+2. min_gas_price if additional fees paid in base currency i.e nhash for now
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `msg_type_url` | [string](#string) |  |  |
 | `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | can pay in any Coin( basically a Denom and Amount, Amount can be zero) |
+| `min_gas_price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | gas price if additional fee is being paid in base currency( i.e nhash for now) else can be empty |
 
 
 
@@ -5221,6 +5222,7 @@ AddMsgBasedFeeProposal defines a governance proposal to add additional msg based
 | `description` | [string](#string) |  |  |
 | `msg` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
 | `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `min_gas_price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | gas price if additional fee is being paid in base currency( i.e nhash for now) else can be empty |
 
 
 
@@ -5256,6 +5258,7 @@ UpdateMsgBasedFeeProposal defines a governance proposal to update a current msg 
 | `description` | [string](#string) |  |  |
 | `msg` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
 | `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `min_gas_price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | gas price if additional fee is being paid in base currency( i.e nhash for now) else can be empty |
 
 
 

@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -32,7 +33,7 @@ type IntegrationTestSuite struct {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.app = provenance.Setup(false)
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
-	s.k = msgfeeskeeper.NewKeeper(s.app.AppCodec(), s.app.GetKey(msgfeestypes.ModuleName), s.app.GetSubspace(msgfeestypes.ModuleName), "")
+	s.k = msgfeeskeeper.NewKeeper(s.app.AppCodec(), s.app.GetKey(msgfeestypes.ModuleName), s.app.GetSubspace(msgfeestypes.ModuleName), "", "nhash")
 	s.accountAddr = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 }
 
@@ -45,6 +46,8 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 	s.Require().NoError(err)
 	writeScopeRequest, err := cdctypes.NewAnyWithValue(&metadatatypes.MsgWriteScopeRequest{})
 	s.Require().NoError(err)
+	createMarkerRequest, err := cdctypes.NewAnyWithValue(&markertypes.MsgAddMarkerRequest{})
+	s.Require().NoError(err)
 
 	testCases := []struct {
 		name string
@@ -54,6 +57,21 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 		{
 			"add msgfees - valid",
 			msgfeestypes.NewAddMsgBasedFeeProposal("title add", "description", writeRecordRequest, sdk.NewCoin("hotdog", sdk.NewInt(10))),
+			nil,
+		},
+		{
+			"add msgfees - invalid, in base fee denom",
+			msgfeestypes.NewAddMsgBasedFeeProposal("title add", "description", createMarkerRequest, sdk.NewCoin("nhash", sdk.NewInt(10))),
+			msgfeestypes.ErrInvalidFeeProposal,
+		},
+		{
+			"add msgfees - valid, in base fee denom but min gas price in diff denom",
+			msgfeestypes.NewAddMsgBasedFeeProposal("title add", "description", createMarkerRequest, sdk.NewCoin("nhash", sdk.NewInt(10)), sdk.NewCoin("hotdog",sdk.NewInt(2))),
+			msgfeestypes.ErrInvalidFeeProposal,
+		},
+		{
+			"add msgfees - valid, in base fee denom",
+			msgfeestypes.NewAddMsgBasedFeeProposal("title add", "description", createMarkerRequest, sdk.NewCoin("nhash", sdk.NewInt(10)), sdk.NewCoin("nhash",sdk.NewInt(2))),
 			nil,
 		},
 		{
@@ -70,6 +88,16 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 			"update msgfees - valid",
 			msgfeestypes.NewUpdateMsgBasedFeeProposal("title update", "description", writeRecordRequest, sdk.NewCoin("hotdog", sdk.NewInt(10))),
 			nil,
+		},
+		{
+			"update msgfees - valid, additional fees in base denom",
+			msgfeestypes.NewUpdateMsgBasedFeeProposal("title update", "description", createMarkerRequest, sdk.NewCoin("nhash", sdk.NewInt(10)), sdk.NewCoin("nhash",sdk.NewInt(2))),
+			nil,
+		},
+		{
+			"update msgfees - valid, additional fees in base denom, min gas price not provided.",
+			msgfeestypes.NewUpdateMsgBasedFeeProposal("title update", "description", createMarkerRequest, sdk.NewCoin("nhash", sdk.NewInt(10))),
+			msgfeestypes.ErrInvalidFeeProposal,
 		},
 		{
 			"update msgfees - invalid - cannot update a non-existing msgbasedfee",

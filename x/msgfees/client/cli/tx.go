@@ -22,6 +22,7 @@ import (
 const (
 	FlagFeeRate = "fee-rate"
 	FlagMinFee  = "additional-fee"
+	FlagMinGasPrice  = "min-gas-price"
 	FlagMsgType = "msg-type"
 )
 
@@ -50,8 +51,10 @@ func GetCmdMsgBasedFeesProposal() *cobra.Command {
 		Long: strings.TrimSpace(`Submit a msg fees proposal along with an initial deposit.
 For add, update, and removal of msg based fees amount and min fee and/or rate fee must be set.
 `),
-		Example: fmt.Sprintf(`$ %[1]s tx msgfees add "adding" "adding MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612nhash
-$ %[1]s tx msgfees update "updating" "updating MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612000nhash 
+		Example: fmt.Sprintf(`$ %[1]s tx msgfees add "adding" "adding MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612nhash --min-gas-price=1905nhash
+$ %[1]s tx msgfees add "adding" "adding MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612usdf.c
+$ %[1]s tx msgfees update "updating" "updating MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612000nhash --min-gas-price=1905nhash
+$ %[1]s tx msgfees update "updating" "updating MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612000usdf.c
 $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest
 `, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -83,6 +86,7 @@ $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nha
 			}
 
 			var addFee sdk.Coin
+			var minGasPriceCoin sdk.Coin
 			if proposalType != "remove" {
 
 				additionalFee, err := cmd.Flags().GetString(FlagMinFee)
@@ -91,6 +95,17 @@ $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nha
 				}
 				if additionalFee != "" {
 					addFee, err = sdk.ParseCoinNormalized(additionalFee)
+					if err != nil {
+						return err
+					}
+				}
+
+				minGasPrice, err := cmd.Flags().GetString(FlagMinGasPrice)
+				if err != nil {
+					return err
+				}
+				if minGasPrice != "" {
+					minGasPriceCoin, err = sdk.ParseCoinNormalized(minGasPrice)
 					if err != nil {
 						return err
 					}
@@ -106,6 +121,7 @@ $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nha
 					Description:   args[2],
 					Msg:           anyMsg,
 					AdditionalFee: addFee,
+					MinGasPrice:   minGasPriceCoin,
 				}
 			case "update":
 				proposal = &types.UpdateMsgBasedFeeProposal{
@@ -113,6 +129,7 @@ $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nha
 					Description:   args[2],
 					Msg:           anyMsg,
 					AdditionalFee: addFee,
+					MinGasPrice:   minGasPriceCoin,
 				}
 			case "remove":
 				proposal = &types.RemoveMsgBasedFeeProposal{
@@ -140,5 +157,6 @@ $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nha
 	flags.AddTxFlagsToCmd(cmd)
 	cmd.Flags().String(FlagMsgType, "", "proto type url for msg type")
 	cmd.Flags().String(FlagMinFee, "", "additional fee for msg based fee")
+	cmd.Flags().String(FlagMinGasPrice, "", "min gas price, if the additional fee is in default gas denom")
 	return cmd
 }

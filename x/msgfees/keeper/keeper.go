@@ -19,6 +19,7 @@ type Keeper struct {
 	cdc              codec.BinaryCodec
 	paramSpace       paramtypes.Subspace
 	feeCollectorName string // name of the FeeCollector ModuleAccount
+	defaultFeeDenom string
 }
 
 // NewKeeper returns a AdditionalFeeKeeper. It handles:
@@ -28,6 +29,7 @@ func NewKeeper(
 	key sdk.StoreKey,
 	paramSpace paramtypes.Subspace,
 	feeCollectorName string,
+	defaultFeeDenom string,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -38,6 +40,7 @@ func NewKeeper(
 		cdc:              cdc,
 		paramSpace:       paramSpace,
 		feeCollectorName: feeCollectorName,
+		defaultFeeDenom:  defaultFeeDenom,
 	}
 }
 
@@ -48,6 +51,10 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 func (k Keeper) GetFeeCollectorName() string {
 	return k.feeCollectorName
+}
+
+func (k Keeper) GetDefaultFeeDenom() string {
+	return k.defaultFeeDenom
 }
 
 // SetMsgBasedFee sets the additional fee schedule for a Msg
