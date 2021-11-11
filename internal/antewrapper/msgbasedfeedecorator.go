@@ -2,7 +2,6 @@ package antewrapper
 
 import (
 	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -33,15 +32,23 @@ func NewMsgBasedFeeDecorator(bankKeeper banktypes.Keeper, accountKeeper cosmosan
 	}
 }
 
-// AnteHandle handles msg tax fee checking
+// AnteHandle handles msg fee checking
+// has two functions ensures,
+// 1. has enough fees to add to Mempool (this involves CheckTx)
+// 2. Makes sure enough fees are present for additional message fees
+// Let z be the Total Fees to be paid
+// Let x be the Base gas Fees to be paid
+// Let y is the additional fees to be paid per MsgType
+// then z = x + y
+// This Fee Decorator makes sure that z is >= to x + y
 func (afd MsgBasedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	// has to be FeeTx type
-	feeTx, ok := tx.(sdk.FeeTx)
-	if !ok {
-		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+	feeTx, err := getFeeTx(ctx, tx)
+
+	if err != nil {
+		return ctx, err
 	}
 
-	ctx.Logger().Info(fmt.Sprintf("NOTICE: here in MsgBasedFeeDecorator %d", ctx.GasMeter().GasConsumed()))
+	ctx.Logger().Debug(fmt.Sprintf("In MsgBasedFeeDecorator %d", ctx.GasMeter().GasConsumed()))
 
 	feeCoins := feeTx.GetFee()
 	gas := feeTx.GetGas()
@@ -56,10 +63,12 @@ func (afd MsgBasedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		// mempool fee validation tx
 		// this is because we want to make sure if additional additionalFees in hash then there is enough
 
-		// TODO check if needed
-		if ctx.IsCheckTx() && !simulate  {
-			if err := EnsureSufficientMempoolFees(ctx, gas, feeCoins, additionalFees); err != nil {
-				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, err.Error())
+		// ensure enough fees to cover mempool fee for base fee + additional fee
+		// This is exact same logic as NewMempoolFeeDecorator except it accounts for additional Fees.
+		if ctx.IsCheckTx() && !simulate {
+			 errFromMempoolCalc := EnsureSufficientMempoolFees(ctx, gas, feeCoins, additionalFees);
+			 if errFromMempoolCalc != nil {
+				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, errFromMempoolCalc.Error())
 			}
 		}
 		feePayer := feeTx.FeePayer()
@@ -67,27 +76,10 @@ func (afd MsgBasedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 
 		deductFeesFrom := feePayer
 
-		// if feegranter set deduct fee from feegranter account.
-
-		// if fee granter check if grant exists.
-		if feeGranter != nil {
-			if afd.feegrantKeeper == nil {
-				return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")
-			} else if !feeGranter.Equals(feePayer) {
-				grant, err := afd.feegrantKeeper.GetAllowance(ctx, feeGranter, feePayer)
-
-				if err != nil {
-					return ctx, sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
-				}
-				if grant == nil {
-					return ctx, sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
-				}
-			}
-
-			deductFeesFrom = feeGranter
+		deductFeesFrom, errorFromFeeGrant := getFeeGranterIfExists(ctx, feeGranter, afd, feePayer, deductFeesFrom)
+		if errorFromFeeGrant!=nil {
+			return ctx, errorFromFeeGrant
 		}
-
-		// this works with only when feegrant enabled.
 
 		deductFeesFromAcc := afd.accountKeeper.GetAccount(ctx, deductFeesFrom)
 		if deductFeesFromAcc == nil {
@@ -101,7 +93,8 @@ func (afd MsgBasedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		}
 
 		if !simulate {
-			if err = EnsureAccountHasSufficientFees(ctx, feeCoins, additionalFees, balancePerCoin); err != nil {
+			if err = EnsureAccountHasSufficientFeesWithAcctBalanceCheck(gas,feeCoins, additionalFees, balancePerCoin,
+				afd.msgBasedFeeKeeper.GetMinGasPrice(ctx),afd.msgBasedFeeKeeper.GetDefaultFeeDenom()); err != nil {
 				return ctx, err
 			}
 		}
@@ -113,6 +106,37 @@ func (afd MsgBasedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		}
 	}
 	return next(ctx, tx, simulate)
+}
+
+func getFeeGranterIfExists(ctx sdk.Context, feeGranter sdk.AccAddress, afd MsgBasedFeeDecorator, feePayer sdk.AccAddress, deductFeesFrom sdk.AccAddress) (sdk.AccAddress, error) {
+	// if feegranter set deduct fee from feegranter account.
+	// if fee granter check if grant exists.
+	if feeGranter != nil {
+		if afd.feegrantKeeper == nil {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")
+		} else if !feeGranter.Equals(feePayer) {
+			grant, err := afd.feegrantKeeper.GetAllowance(ctx, feeGranter, feePayer)
+
+			if err != nil {
+				return nil, sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
+			}
+			if grant == nil {
+				return nil, sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
+			}
+		}
+
+		deductFeesFrom = feeGranter
+	}
+	return deductFeesFrom, nil
+}
+
+func getFeeTx(ctx sdk.Context, tx sdk.Tx) (sdk.FeeTx, error) {
+	// has to be FeeTx type
+	feeTx, ok := tx.(sdk.FeeTx)
+	if !ok {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+	}
+	return feeTx, nil
 }
 
 // EnsureSufficientMempoolFees verifies that the given transaction has supplied
@@ -150,19 +174,40 @@ func EnsureSufficientMempoolFees(ctx sdk.Context, gas uint64, feeCoins sdk.Coins
 	return nil
 }
 
-func EnsureAccountHasSufficientFees(ctx sdk.Context, feeCoins sdk.Coins, additionalFees sdk.Coins,
-	balancePerCoin sdk.Coins) error {
+func EnsureAccountHasSufficientFeesWithAcctBalanceCheck(gas uint64, feeCoins sdk.Coins, additionalFees sdk.Coins,
+	balancePerCoin sdk.Coins, minGasPriceForAdditionalFeeCalc uint32, defaultDenom string) error {
+	err := EnsureAccountHasSufficientFees(gas, feeCoins, additionalFees, minGasPriceForAdditionalFeeCalc, defaultDenom)
+	if err != nil {
+		return err
+	}
+	// Step 3: Check if account has enough to pay all fees.
+	if !balancePerCoin.IsZero() && !balancePerCoin.IsAnyGTE(feeCoins) {
+		return fmt.Errorf("fee payer account does not have enough balance to pay for %q", feeCoins)
+	}
+	return nil
+}
 
-	originalFees := feeCoins
+// EnsureAccountHasSufficientFees to be used by msg_service_router
+func EnsureAccountHasSufficientFees(gas uint64, feeCoins sdk.Coins, additionalFees sdk.Coins,
+	minGasPriceForAdditionalFeeCalc uint32, defaultDenom string) error {
 	// Step 1. Check if fees has enough money to pay additional fees.
 	var hasNeg bool
 	if feeCoins, hasNeg = feeCoins.SafeSub(additionalFees); hasNeg {
 		return fmt.Errorf("insufficient fees; got: %q, required additional fee: %q", feeCoins, additionalFees)
 	}
-	// Step 2: Check if account has enough to pay all fees.
-	if !balancePerCoin.IsZero() && !balancePerCoin.IsAnyGTE(originalFees) {
-		return fmt.Errorf("fee payer account does not have enough balance to pay for %q", feeCoins)
+	// Step 2: check if additional fees in nhash, that base fees and additional fees can be paid
+	// total fees in hash - gas limit * price per gas >= additional fees in hash
+	if containsDenom(additionalFees, defaultDenom) {
+		minGasprice := sdk.NewCoin(defaultDenom, sdk.NewIntFromUint64(uint64(minGasPriceForAdditionalFeeCalc)))
+		// Determine the required fees by multiplying each required minimum gas
+		// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
+		fee := minGasprice.Amount.Mul(sdk.NewIntFromUint64(gas))
+		baseFees := sdk.NewCoin(minGasprice.Denom, fee)
+		if feeCoins, hasNeg = feeCoins.SafeSub(sdk.Coins{baseFees}); hasNeg {
+			return fmt.Errorf("insufficient fees; got: %q, required additional fee: %q", feeCoins, additionalFees)
+		}
 	}
+
 	return nil
 }
 
@@ -184,8 +229,19 @@ func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgbasedfeetypes.MsgB
 		if msgFees.AdditionalFee.IsPositive() {
 			additionalFees = additionalFees.Add(sdk.NewCoin(msgFees.AdditionalFee.Denom, msgFees.AdditionalFee.Amount))
 		}
-
 	}
 
 	return additionalFees, nil
+}
+
+func containsDenom(coins sdk.Coins, denom string) bool {
+	if len(coins) == 0 {
+		return false
+	}
+	amt := coins.AmountOf(denom)
+	if !amt.IsZero() {
+		return true
+	}
+
+	return false
 }

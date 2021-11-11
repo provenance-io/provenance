@@ -19,10 +19,6 @@ func HandleAddMsgBasedFeeProposal(ctx sdk.Context, k Keeper, proposal *types.Add
 		return types.ErrMsgFeeAlreadyExists
 	}
 
-	if proposal.AdditionalFee.Denom == k.GetDefaultFeeDenom() && (proposal.MinGasPrice.IsNil() || proposal.MinGasPrice.IsZero() || !proposal.MinGasPrice.IsValid() || proposal.GetMinGasPrice().Denom != proposal.AdditionalFee.Denom) {
-		return types.ErrInvalidFeeProposal
-	}
-
 	msgFees := types.NewMsgBasedFee(proposal.Msg.GetTypeUrl(), proposal.AdditionalFee)
 
 	k.SetMsgBasedFee(ctx, msgFees)
@@ -42,10 +38,6 @@ func HandleUpdateMsgBasedFeeProposal(ctx sdk.Context, k Keeper, proposal *types.
 	}
 	if existing == nil {
 		return types.ErrMsgFeeDoesNotExist
-	}
-
-	if proposal.AdditionalFee.Denom == k.GetDefaultFeeDenom() && (proposal.MinGasPrice.IsNil() || proposal.MinGasPrice.IsZero() || !proposal.MinGasPrice.IsValid() || proposal.GetMinGasPrice().Denom != proposal.AdditionalFee.Denom) {
-		return types.ErrInvalidFeeProposal
 	}
 
 	msgFees := types.NewMsgBasedFee(proposal.Msg.GetTypeUrl(), proposal.AdditionalFee)

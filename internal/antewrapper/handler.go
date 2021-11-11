@@ -46,11 +46,12 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		NewFeeMeterContextDecorator(), // gas meter tracer must follow initial context setup
 		cosmosante.NewRejectExtensionOptionsDecorator(),
 		cosmosante.NewMempoolFeeDecorator(),
+		// Fee Decorator works to augment NewMempoolFeeDecorator and also check that enough fees are paid
+		NewMsgBasedFeeDecorator(options.BankKeeper, options.AccountKeeper, options.FeegrantKeeper, options.MsgBasedFeeKeeper),
 		cosmosante.NewValidateBasicDecorator(),
 		cosmosante.NewTxTimeoutHeightDecorator(),
 		cosmosante.NewValidateMemoDecorator(options.AccountKeeper),
 		cosmosante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
-		NewMsgBasedFeeDecorator(options.BankKeeper, options.AccountKeeper, options.FeegrantKeeper, options.MsgBasedFeeKeeper),
 		NewProvenanceDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.MsgBasedFeeKeeper),
 		cosmosante.NewSetPubKeyDecorator(options.AccountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
 		cosmosante.NewValidateSigCountDecorator(options.AccountKeeper),

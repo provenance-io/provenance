@@ -88,7 +88,7 @@ func (g *FeeGasMeter) IsOutOfGas() bool {
 
 // String implements stringer interface
 func (g *FeeGasMeter) String() string {
-	return fmt.Sprintf("tracingGasMeter:\n  limit: %d\n  consumed: %d", g.base.Limit(), g.base.GasConsumed())
+	return fmt.Sprintf("feeGasMeter:\n  limit: %d\n  consumed: %d", g.base.Limit(), g.base.GasConsumed())
 }
 
 // ConsumeFee increments the amount of gas used on the meter associated with a given purpose.

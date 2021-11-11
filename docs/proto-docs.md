@@ -5141,7 +5141,6 @@ it consists of two parts
 | ----- | ---- | ----- | ----------- |
 | `msg_type_url` | [string](#string) |  |  |
 | `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | can pay in any Coin( basically a Denom and Amount, Amount can be zero) |
-| `min_gas_price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | gas price if additional fee is being paid in base currency( i.e nhash for now) else can be empty |
 
 
 
@@ -5157,6 +5156,7 @@ Params defines the set of params for the msgfees module.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `enable_governance` | [bool](#bool) |  | indicates if governance based controls of msgFees is allowed. |
+| `min_gas_price` | [int32](#int32) |  |  |
 
 
 
@@ -5222,7 +5222,6 @@ AddMsgBasedFeeProposal defines a governance proposal to add additional msg based
 | `description` | [string](#string) |  |  |
 | `msg` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
 | `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `min_gas_price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | gas price if additional fee is being paid in base currency( i.e nhash for now) else can be empty |
 
 
 
@@ -5258,7 +5257,6 @@ UpdateMsgBasedFeeProposal defines a governance proposal to update a current msg 
 | `description` | [string](#string) |  |  |
 | `msg` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
 | `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `min_gas_price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | gas price if additional fee is being paid in base currency( i.e nhash for now) else can be empty |
 
 
 
