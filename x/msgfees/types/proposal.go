@@ -39,18 +39,12 @@ func NewAddMsgBasedFeeProposal(
 	title string,
 	description string,
 	msg *types.Any,
-	additionalFee sdk.Coin,
-	minGasPrice ...sdk.Coin) *AddMsgBasedFeeProposal {
-	var minGasPriceCoin sdk.Coin
-	if len(minGasPrice) > 0 {
-		minGasPriceCoin = minGasPrice[0]
-	}
+	additionalFee sdk.Coin) *AddMsgBasedFeeProposal {
 	return &AddMsgBasedFeeProposal{
 		Title:         title,
 		Description:   description,
 		Msg:           msg,
 		AdditionalFee: additionalFee,
-		MinGasPrice:   minGasPriceCoin,
 	}
 }
 
@@ -82,18 +76,12 @@ func NewUpdateMsgBasedFeeProposal(
 	title string,
 	description string,
 	msg *types.Any,
-	additionalFee sdk.Coin,
-	minGasPrice ...sdk.Coin) *UpdateMsgBasedFeeProposal {
-	var minGasPriceCoin sdk.Coin
-	if len(minGasPrice) > 0 {
-		minGasPriceCoin = minGasPrice[0]
-	}
+	additionalFee sdk.Coin) *UpdateMsgBasedFeeProposal {
 	return &UpdateMsgBasedFeeProposal{
 		Title:         title,
 		Description:   description,
 		Msg:           msg,
 		AdditionalFee: additionalFee,
-		MinGasPrice:   minGasPriceCoin,
 	}
 }
 
