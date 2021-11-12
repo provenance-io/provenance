@@ -256,7 +256,9 @@ func (keeper Keeper) Normalize(ctx sdk.Context, name string) (string, error) {
 		}
 		comps = append(comps, comp)
 	}
-	if uint32(len(comps)) > keeper.GetMaxNameLevels(ctx) {
+	maxNameLevels := keeper.GetMaxNameLevels(ctx)
+	if uint32(len(comps)) > maxNameLevels {
+		fmt.Println("len comps", len(comps), " maxNameLevels: ", maxNameLevels)
 		return "", types.ErrNameHasTooManySegments
 	}
 	return strings.Join(comps, "."), nil

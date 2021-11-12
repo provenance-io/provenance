@@ -27,7 +27,7 @@ import (
 const (
 	denom = "coinfortestingsmartc" // must be a string of length 20
 	namePrefix = "scsnameprefix" // must be a string of length 13
-	label = "tutorial"
+	label = "tutorials"
 )
 
 type ProvwasmWrapper struct {
@@ -145,12 +145,12 @@ func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper,
 			nametypes.NewNameRecord(
 				namePrefix,
 				node.Address,
-				true),
-			nametypes.NewNameRecord(
-				parent.Name,
-				//"pb",
-				node.Address,
-				false))
+				false),
+			parent)
+			//nametypes.NewNameRecord(
+			//	parent.Name,
+			//	node.Address,
+			//	false))
 
 		op, future, err := namesim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg)
 
@@ -160,7 +160,7 @@ func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper,
 		future = append(future, simtypes.FutureOperation{Op: SimulateFinalizeOrActivateMarker(ak, bk, false, node), BlockHeight: 5})
 		future = append(future, simtypes.FutureOperation{Op: SimulateMsgWithdrawRequest(ak, bk, node, customer), BlockHeight: 6})
 		future = append(future, simtypes.FutureOperation{Op: SimulateMsgStoreContract(ak, bk, feebucket), BlockHeight: 6})
-		future = append(future, simtypes.FutureOperation{Op: SimulateMsgInitiateContract(ak, bk, feebucket, merchant, parent.Name), BlockHeight: 7})
+		future = append(future, simtypes.FutureOperation{Op: SimulateMsgInitiateContract(ak, bk, feebucket, merchant, parent.Name, nk), BlockHeight: 7})
 		future = append(future, simtypes.FutureOperation{Op: SimulateMsgExecuteContract(ak, bk, node, customer), BlockHeight: 8})
 
 		return op, future, err
@@ -244,11 +244,12 @@ func SimulateMsgStoreContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKe
 	}
 }
 
-func SimulateMsgInitiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, feebucket, merchant simtypes.Account, name string) simtypes.Operation {
+func SimulateMsgInitiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, feebucket, merchant simtypes.Account, name string, nk namekeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		m := fmt.Sprintf(`{ "contract_name": "%s.%s.%s", "purchase_denom": "%s", "merchant_address": "%s", "fee_percent": "0.10" }`, label, namePrefix, name, denom, merchant.Address.String())
+		//m := fmt.Sprintf(`{ "contract_name": "%s.%s.%s", "purchase_denom": "%s", "merchant_address": "%s", "fee_percent": "0.10" }`, label, namePrefix, name, denom, merchant.Address.String())
+		m := fmt.Sprintf(`{ "contract_name": "%s.%s", "purchase_denom": "%s", "merchant_address": "%s", "fee_percent": "0.10" }`, label, name, denom, merchant.Address.String())
 
 		msg := &types.MsgInstantiateContract{
 			Sender: feebucket.Address.String(),
