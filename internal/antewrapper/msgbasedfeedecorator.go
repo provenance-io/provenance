@@ -98,12 +98,6 @@ func (afd MsgBasedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 				return ctx, err
 			}
 		}
-
-		// Ensure paid fee is enough to cover taxes
-		if _, hasNeg := feeCoins.SafeSub(additionalFees); hasNeg {
-			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee,
-				"insufficient additionalFees; got: %s required: %s", feeCoins, additionalFees)
-		}
 	}
 	return next(ctx, tx, simulate)
 }

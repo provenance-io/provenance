@@ -94,7 +94,11 @@ func (g *FeeGasMeter) String() string {
 // ConsumeFee increments the amount of gas used on the meter associated with a given purpose.
 func (g *FeeGasMeter) ConsumeFee(amount sdk.Coin, msgType string) {
 	cur := g.usedFees[msgType]
-	g.usedFees[msgType] = cur.Add(amount)
+	if !cur.Amount.IsNil()  {
+		g.usedFees[msgType] = cur.Add(amount)
+	} else {
+		g.usedFees[msgType] = amount
+	}
 }
 
 // FeeWanted increments the additional fee count based on msgType
