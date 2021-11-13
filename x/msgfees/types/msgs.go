@@ -1,13 +1,17 @@
 package types
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
 const (
-	TypeCreateMsgBasedFeeRequest = "createmsgbasedfee"
+	TypeCreateMsgBasedFeeRequest  = "createmsgbasedfee"
+	TypeCalculateFeePerMsgRequest = "calculatefeepermsg"
 )
 
 // Compile time interface checks.
@@ -65,12 +69,21 @@ func (msg *CreateMsgBasedFeeRequest) Route() string { return ModuleName }
 //	return unpacker.UnpackAny(msg.Msg,&msgfees)
 //}
 
+func NewCalculateFeePerMsgRequest(tx tx.Tx) CalculateFeePerMsgRequest {
+	return CalculateFeePerMsgRequest{
+		Tx: &tx,
+	}
+}
+
 func (msg *CalculateFeePerMsgRequest) ValidateBasic() error {
-	panic("implement me")
+	if msg.Tx == nil {
+		return fmt.Errorf("msg transaction cannot be nil")
+	}
+	return nil
 }
 
 func (msg *CalculateFeePerMsgRequest) GetSigners() []sdk.AccAddress {
-	panic("implement me")
+	return []sdk.AccAddress{}
 }
 
 func (msg *CalculateFeePerMsgRequest) GetSignBytes() []byte {
@@ -78,9 +91,9 @@ func (msg *CalculateFeePerMsgRequest) GetSignBytes() []byte {
 }
 
 func (msg *CalculateFeePerMsgRequest) Route() string {
-	panic("implement me")
+	return ModuleName
 }
 
 func (msg *CalculateFeePerMsgRequest) Type() string {
-	panic("implement me")
+	return TypeCalculateFeePerMsgRequest
 }

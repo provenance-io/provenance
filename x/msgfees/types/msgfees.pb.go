@@ -31,8 +31,9 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // Params defines the set of params for the msgfees module.
 type Params struct {
 	// indicates if governance based controls of msgFees is allowed.
-	EnableGovernance bool  `protobuf:"varint,1,opt,name=enable_governance,json=enableGovernance,proto3" json:"enable_governance,omitempty"`
-	MinGasPrice      int32 `protobuf:"varint,2,opt,name=min_gas_price,json=minGasPrice,proto3" json:"min_gas_price,omitempty"`
+	EnableGovernance bool `protobuf:"varint,1,opt,name=enable_governance,json=enableGovernance,proto3" json:"enable_governance,omitempty"`
+	// constant used to calculate fees when gas fees shares denom with msg fee
+	MinGasPrice int32 `protobuf:"varint,2,opt,name=min_gas_price,json=minGasPrice,proto3" json:"min_gas_price,omitempty"`
 }
 
 func (m *Params) Reset()      { *m = Params{} }
@@ -83,8 +84,8 @@ func (m *Params) GetMinGasPrice() int32 {
 
 // MsgBasedFee is the core of what gets stored on the blockchain
 // it consists of two parts
-// 1. minimum additional fees(can be of any denom)
-// 2. min_gas_price if additional fees paid in base currency i.e nhash for now
+// 1. the msg type url, i.e. /cosmos.bank.v1beta1.MsgSend
+// 2. minimum additional fees(can be of any denom)
 type MsgBasedFee struct {
 	MsgTypeUrl string `protobuf:"bytes,1,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
 	// can pay in any Coin( basically a Denom and Amount, Amount can be zero)
