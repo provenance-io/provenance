@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -47,11 +48,20 @@ func (k msgServer) CreateMsgBasedFee(goCtx context.Context, request *types.Creat
 
 func (k msgServer) CalculateMsgBasedFees(goCtx context.Context, request *types.CalculateFeePerMsgRequest) (*types.CalculateMsgBasedFeesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	// get the msg fee
-	msgs := request.Tx.GetMsgs()
 
 	additionalFees := sdk.Coins{}
+	reqTx := *request.Tx
+	txBytes, err := reqTx.Marshal()
+	if err != nil {
+		return nil, fmt.Errorf("tx not of sdk.Tx type")
+	}
+	gasInfo, result, err := k.simulateFunc(txBytes)
+	if err != nil {
+		return nil, err
+	}
+	ctx.Logger().Info("NOTICE: Gas Info: %v Result: %v", gasInfo, result)
 
+	msgs := request.Tx.GetMsgs()
 	for _, msg := range msgs {
 		typeURL := sdk.MsgTypeURL(msg)
 		msgFees, err := k.GetMsgBasedFee(ctx, typeURL)

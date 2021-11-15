@@ -5133,8 +5133,8 @@ Msg defines the Metadata Msg service.
 ### MsgBasedFee
 MsgBasedFee is the core of what gets stored on the blockchain
 it consists of two parts
-1. minimum additional fees(can be of any denom)
-2. min_gas_price if additional fees paid in base currency i.e nhash for now
+1. the msg type url, i.e. /cosmos.bank.v1beta1.MsgSend
+2. minimum additional fees(can be of any denom)
 
 
 | Field | Type | Label | Description |
@@ -5156,7 +5156,7 @@ Params defines the set of params for the msgfees module.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `enable_governance` | [bool](#bool) |  | indicates if governance based controls of msgFees is allowed. |
-| `min_gas_price` | [int32](#int32) |  |  |
+| `min_gas_price` | [int32](#int32) |  | constant used to calculate fees when gas fees shares denom with msg fee |
 
 
 

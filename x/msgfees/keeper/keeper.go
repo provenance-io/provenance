@@ -19,7 +19,8 @@ type Keeper struct {
 	cdc              codec.BinaryCodec
 	paramSpace       paramtypes.Subspace
 	feeCollectorName string // name of the FeeCollector ModuleAccount
-	defaultFeeDenom string
+	defaultFeeDenom  string
+	simulateFunc     func(txBytes []byte) (sdk.GasInfo, *sdk.Result, error)
 }
 
 // NewKeeper returns a AdditionalFeeKeeper. It handles:
@@ -30,6 +31,7 @@ func NewKeeper(
 	paramSpace paramtypes.Subspace,
 	feeCollectorName string,
 	defaultFeeDenom string,
+	simulateFunc func(txBytes []byte) (sdk.GasInfo, *sdk.Result, error),
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -41,6 +43,7 @@ func NewKeeper(
 		paramSpace:       paramSpace,
 		feeCollectorName: feeCollectorName,
 		defaultFeeDenom:  defaultFeeDenom,
+		simulateFunc:     simulateFunc,
 	}
 }
 
@@ -122,6 +125,10 @@ func (k Keeper) IterateMsgBasedFees(ctx sdk.Context, handle func(msgFees types.M
 		}
 	}
 	return nil
+}
+
+func (k Keeper) Simulate(txBytes []byte) (sdk.GasInfo, *sdk.Result, error) {
+	return k.simulateFunc(txBytes)
 }
 
 // DeductFees deducts fees from the given account, the only reason it exists is that the
