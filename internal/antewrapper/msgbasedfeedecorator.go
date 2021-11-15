@@ -170,7 +170,7 @@ func EnsureSufficientMempoolFees(ctx sdk.Context, gas uint64, feeCoins sdk.Coins
 
 func EnsureAccountHasSufficientFeesWithAcctBalanceCheck(gas uint64, feeCoins sdk.Coins, additionalFees sdk.Coins,
 	balancePerCoin sdk.Coins, minGasPriceForAdditionalFeeCalc uint32, defaultDenom string) error {
-	err := EnsureAccountHasSufficientFees(gas, feeCoins, additionalFees, minGasPriceForAdditionalFeeCalc, defaultDenom)
+	err := EnsureSufficientFees(gas, feeCoins, additionalFees, minGasPriceForAdditionalFeeCalc, defaultDenom)
 	if err != nil {
 		return err
 	}
@@ -181,8 +181,8 @@ func EnsureAccountHasSufficientFeesWithAcctBalanceCheck(gas uint64, feeCoins sdk
 	return nil
 }
 
-// EnsureAccountHasSufficientFees to be used by msg_service_router
-func EnsureAccountHasSufficientFees(gas uint64, feeCoins sdk.Coins, additionalFees sdk.Coins,
+// EnsureSufficientFees to be used by msg_service_router
+func EnsureSufficientFees(gas uint64, feeCoins sdk.Coins, additionalFees sdk.Coins,
 	minGasPriceForAdditionalFeeCalc uint32, defaultDenom string) error {
 	// Step 1. Check if fees has enough money to pay additional fees.
 	var hasNeg bool
