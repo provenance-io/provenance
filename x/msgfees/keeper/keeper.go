@@ -70,10 +70,11 @@ func (k Keeper) GetMinGasPrice(ctx sdk.Context) (min uint32) {
 }
 
 // SetMsgBasedFee sets the additional fee schedule for a Msg
-func (k Keeper) SetMsgBasedFee(ctx sdk.Context, msgBasedFees types.MsgBasedFee) {
+func (k Keeper) SetMsgBasedFee(ctx sdk.Context, msgBasedFees types.MsgBasedFee) error {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&msgBasedFees)
 	store.Set(types.GetMsgBasedFeeKey(msgBasedFees.MsgTypeUrl), bz)
+	return nil
 }
 
 // GetMsgBasedFee returns a MsgBasedFee for the msg type if it exists nil if it does not
@@ -146,13 +147,7 @@ func (k Keeper) DeductFees(bankKeeper cosmosauthtypes.BankKeeper, ctx sdk.Contex
 	return nil
 }
 
-// ExportGenesis returns a GenesisState for a given context.
-func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-	// TODO Implement me
-	return nil
-}
-
-// InitGenesis new msgfees genesis
-func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
-	// TODO Implement me
+// SetParams sets the account parameters to the param space.
+func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
+	k.paramSpace.SetParamSet(ctx, &params)
 }

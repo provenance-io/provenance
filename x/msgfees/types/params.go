@@ -17,7 +17,8 @@ const (
 var (
 	// ParamStoreKeyEnableGovernance indicates if governance proposal management of markers is enabled
 	ParamStoreKeyEnableGovernance = []byte("EnableGovernance")
-	// maximum length of name segment to allow
+	// ParamStoreKeyMinGasPrice if msg fees are paid in the same denom as base default gas is paid, then use this to differentiate between base price
+	// and additional fees.
 	ParamStoreKeyMinGasPrice = []byte("MinGasPrice")
 )
 
@@ -29,7 +30,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 // NewParams creates a new parameter object
 func NewParams(
 	enableGovernance bool,
-	minGasPrice int32,
+	minGasPrice uint32,
 ) Params {
 	return Params{
 		EnableGovernance: enableGovernance,
