@@ -21,6 +21,7 @@ type Keeper struct {
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 	defaultFeeDenom  string
 	simulateFunc     func(txBytes []byte) (sdk.GasInfo, *sdk.Result, error)
+	txDecoder        sdk.TxDecoder
 }
 
 // NewKeeper returns a AdditionalFeeKeeper. It handles:
@@ -32,6 +33,7 @@ func NewKeeper(
 	feeCollectorName string,
 	defaultFeeDenom string,
 	simulateFunc func(txBytes []byte) (sdk.GasInfo, *sdk.Result, error),
+	txDecoder sdk.TxDecoder,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -44,6 +46,7 @@ func NewKeeper(
 		feeCollectorName: feeCollectorName,
 		defaultFeeDenom:  defaultFeeDenom,
 		simulateFunc:     simulateFunc,
+		txDecoder:        txDecoder,
 	}
 }
 
@@ -125,10 +128,6 @@ func (k Keeper) IterateMsgBasedFees(ctx sdk.Context, handle func(msgFees types.M
 		}
 	}
 	return nil
-}
-
-func (k Keeper) Simulate(txBytes []byte) (sdk.GasInfo, *sdk.Result, error) {
-	return k.simulateFunc(txBytes)
 }
 
 // DeductFees deducts fees from the given account, the only reason it exists is that the

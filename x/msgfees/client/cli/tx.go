@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/version"
 
 	"github.com/provenance-io/provenance/x/msgfees/types"
@@ -158,15 +157,17 @@ func GetCmdCalculateMsgBasedFees() *cobra.Command {
 				return err
 			}
 
+			// sdk.Tx
 			theTx, err := ReadTxFromFile(clientCtx, args[0])
 			if err != nil {
 				return err
 			}
-			msgTx, ok := theTx.(*txtypes.Tx)
-			if !ok {
-				return fmt.Errorf("failed to convert transaction")
+			txBytes, err := clientCtx.TxConfig.TxEncoder()(theTx)
+			if err != nil {
+				return err
 			}
-			msg := types.NewCalculateFeePerMsgRequest(*msgTx)
+			fromAddress := clientCtx.GetFromAddress()
+			msg := types.NewCalculateFeePerMsgRequest(txBytes, fromAddress.String())
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
 		},
 	}

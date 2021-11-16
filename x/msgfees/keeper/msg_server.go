@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -50,34 +49,35 @@ func (k msgServer) CalculateMsgBasedFees(goCtx context.Context, request *types.C
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	additionalFees := sdk.Coins{}
-	reqTx := *request.Tx
-	txBytes, err := reqTx.Marshal()
+	totalFees := sdk.Coins{}
+	gasInfo, _, err := k.simulateFunc(request.Tx)
 	if err != nil {
-		return nil, fmt.Errorf("tx not of sdk.Tx type")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
-	gasInfo, result, err := k.simulateFunc(txBytes)
-	if err != nil {
-		return nil, err
-	}
-	ctx.Logger().Info("NOTICE: Gas Info: %v Result: %v", gasInfo, result)
+	ctx.Logger().Info("NOTICE: Estimated gas wanted %d", gasInfo.GasUsed)
 
-	msgs := request.Tx.GetMsgs()
+	theTx, err := k.txDecoder(request.Tx)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+	msgs := theTx.GetMsgs()
 	for _, msg := range msgs {
 		typeURL := sdk.MsgTypeURL(msg)
 		msgFees, err := k.GetMsgBasedFee(ctx, typeURL)
 		if err != nil {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 		}
-
 		if msgFees == nil {
 			continue
 		}
 		if msgFees.AdditionalFee.IsPositive() {
+			ctx.Logger().Info("NOTICE: Additional fee found %v : %v", typeURL, msgFees)
 			additionalFees = additionalFees.Add(sdk.NewCoin(msgFees.AdditionalFee.Denom, msgFees.AdditionalFee.Amount))
 		}
 	}
-
 	return &types.CalculateMsgBasedFeesResponse{
-		FeeAmount: additionalFees,
+		AdditionalFees: additionalFees,
+		TotalFees:      totalFees,
+		EstimatedGas:   gasInfo.GasUsed,
 	}, nil
 }

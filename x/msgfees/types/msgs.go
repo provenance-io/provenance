@@ -5,7 +5,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
@@ -63,27 +62,26 @@ func (msg *CreateMsgBasedFeeRequest) Type() string {
 // Route implements Msg
 func (msg *CreateMsgBasedFeeRequest) Route() string { return ModuleName }
 
-// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-// func (msg MsgBasedFee) UnpackInterfaces(unpacker types.AnyUnpacker) error {
-//	var msgfees MsgBasedFee
-//	return unpacker.UnpackAny(msg.Msg,&msgfees)
-//}
-
-func NewCalculateFeePerMsgRequest(tx tx.Tx) CalculateFeePerMsgRequest {
+func NewCalculateFeePerMsgRequest(tx []byte, fromAddress string) CalculateFeePerMsgRequest {
 	return CalculateFeePerMsgRequest{
-		Tx: &tx,
+		Tx:          tx,
+		FromAddress: fromAddress,
 	}
 }
 
 func (msg *CalculateFeePerMsgRequest) ValidateBasic() error {
-	if msg.Tx == nil {
-		return fmt.Errorf("msg transaction cannot be nil")
+	if len(msg.Tx) == 0 {
+		return fmt.Errorf("tx must be defined")
 	}
 	return nil
 }
 
 func (msg *CalculateFeePerMsgRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{}
+	addr, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
 }
 
 func (msg *CalculateFeePerMsgRequest) GetSignBytes() []byte {
