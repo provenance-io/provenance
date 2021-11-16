@@ -67,7 +67,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEn
 		return sdkerrors.Wrapf(err, "failed to unmarshal %s genesis state", msgfees.ModuleName)
 	}
 
-	return msgfees.ValidateGenesis(data)
+	return data.Validate()
 }
 
 // RegisterRESTRoutes registers the REST routes for the msgfee module.

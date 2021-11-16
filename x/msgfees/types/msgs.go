@@ -95,3 +95,18 @@ func (msg *CalculateFeePerMsgRequest) Route() string {
 func (msg *CalculateFeePerMsgRequest) Type() string {
 	return TypeCalculateFeePerMsgRequest
 }
+
+func (msg *MsgBasedFee) ValidateBasic() error {
+	if msg == nil {
+		return ErrEmptyMsgType
+	}
+
+	if msg.AdditionalFee.IsZero() {
+		return ErrInvalidFee
+	}
+	if err := msg.AdditionalFee.Validate(); err == nil {
+		return err
+	}
+
+	return nil
+}

@@ -24,9 +24,6 @@ type FeeGasMeter struct {
 
 	usedFees map[string]sdk.Coin // map of msg fee type url --> fees charged
 
-	feesWanted map[string]sdk.Coin // map of msg fee type url --> fees wanted
-
-	// in passing cases usedFees and feesWanted should match
 }
 
 // NewFeeTracingMeterWrapper returns a reference to a new tracing gas meter that will track calls to the base gas meter
@@ -37,7 +34,6 @@ func NewFeeTracingMeterWrapper(logger log.Logger, baseMeter sdkgas.GasMeter) sdk
 		used:       make(map[string]uint64),
 		calls:      make(map[string]uint64),
 		usedFees:   make(map[string]sdk.Coin),
-		feesWanted: make(map[string]sdk.Coin),
 	}
 }
 
@@ -101,8 +97,16 @@ func (g *FeeGasMeter) ConsumeFee(amount sdk.Coin, msgType string) {
 	}
 }
 
-// FeeWanted increments the additional fee count based on msgType
-func (g *FeeGasMeter) FeeWanted(amount sdk.Coin, msgType string) {
-	cur := g.feesWanted[msgType]
-	g.feesWanted[msgType] = cur.Add(amount)
+func (g *FeeGasMeter) FeeConsumedForType(msgType string) sdk.Coin {
+	return g.usedFees[msgType]
 }
+
+func (g *FeeGasMeter) FeeConsumed() sdk.Coins {
+	consumedFees := sdk.Coins{}
+	consumedFees = make(sdk.Coins, len(g.usedFees))
+	for _, coin := range  g.usedFees {
+		consumedFees.Add(coin)
+	}
+	return consumedFees
+}
+

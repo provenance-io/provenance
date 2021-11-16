@@ -3,7 +3,6 @@ package handlers
 import (
 	"context"
 	"fmt"
-
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	"github.com/gogo/protobuf/proto"
 	"google.golang.org/grpc"
@@ -134,7 +133,7 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 			// cast to FeeTx
 			feeTx, ok := tx.(sdk.FeeTx)
 			if feeTx == nil || !ok {
-				panic("could not find fee payer")
+				panic("only Fee Tx are supported on provenance.")
 			}
 
 			fee, err := msr.msgBasedFeeKeeper.GetMsgBasedFee(ctx, msgTypeUrl)
@@ -142,8 +141,14 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 				return nil, err
 			}
 			if fee != nil && fee.AdditionalFee.IsPositive() {
-				ctx.Logger().Info(fmt.Sprintf("NOTICE: Msg %v has an additional fee of %v", msgTypeUrl, fee.AdditionalFee))
+				ctx.Logger().Debug(fmt.Sprintf("Msg %v has an additional fee of %v", msgTypeUrl, fee.AdditionalFee))
+				if !feeGasMeter.FeeConsumedForType(msgTypeUrl).Amount.IsNil() {
+					antewrapper.EnsureSufficientFees(runtimeGasForMsg(ctx), feeTx.GetFee(), feeGasMeter.FeeConsumed().Add(fee.AdditionalFee),
+					msr.msgBasedFeeKeeper.GetMinGasPrice(ctx), msr.msgBasedFeeKeeper.GetDefaultFeeDenom())
+				}
+
 				feeGasMeter.ConsumeFee(fee.AdditionalFee, msgTypeUrl)
+
 			}
 			ctx = ctx.WithEventManager(sdk.NewEventManager())
 			interceptor := func(goCtx context.Context, _ interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
@@ -175,4 +180,8 @@ func (msr *PioMsgServiceRouter) SetInterfaceRegistry(interfaceRegistry codectype
 func noopDecoder(_ interface{}) error { return nil }
 func noopInterceptor(_ context.Context, _ interface{}, _ *grpc.UnaryServerInfo, _ grpc.UnaryHandler) (interface{}, error) {
 	return nil, nil
+}
+
+func runtimeGasForMsg(ctx sdk.Context) uint64 {
+	return ctx.GasMeter().Limit()
 }

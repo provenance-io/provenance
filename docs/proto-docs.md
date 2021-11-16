@@ -5156,7 +5156,7 @@ Params defines the set of params for the msgfees module.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `enable_governance` | [bool](#bool) |  | indicates if governance based controls of msgFees is allowed. |
-| `min_gas_price` | [int32](#int32) |  | constant used to calculate fees when gas fees shares denom with msg fee |
+| `min_gas_price` | [uint32](#uint32) |  | constant used to calculate fees when gas fees shares denom with msg fee |
 
 
 
@@ -5187,6 +5187,7 @@ GenesisState contains a set of msg based fees, persisted from the store
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `params` | [Params](#provenance.msgfees.v1.Params) |  | params defines all the parameters of the module. |
 | `msg_based_fees` | [MsgBasedFee](#provenance.msgfees.v1.MsgBasedFee) | repeated |  |
 
 
