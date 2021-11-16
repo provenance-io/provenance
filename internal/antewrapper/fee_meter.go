@@ -29,11 +29,11 @@ type FeeGasMeter struct {
 // NewFeeTracingMeterWrapper returns a reference to a new tracing gas meter that will track calls to the base gas meter
 func NewFeeTracingMeterWrapper(logger log.Logger, baseMeter sdkgas.GasMeter) sdkgas.GasMeter {
 	return &FeeGasMeter{
-		log:        logger,
-		base:       baseMeter,
-		used:       make(map[string]uint64),
-		calls:      make(map[string]uint64),
-		usedFees:   make(map[string]sdk.Coin),
+		log:      logger,
+		base:     baseMeter,
+		used:     make(map[string]uint64),
+		calls:    make(map[string]uint64),
+		usedFees: make(map[string]sdk.Coin),
 	}
 }
 
@@ -90,7 +90,7 @@ func (g *FeeGasMeter) String() string {
 // ConsumeFee increments the amount of gas used on the meter associated with a given purpose.
 func (g *FeeGasMeter) ConsumeFee(amount sdk.Coin, msgType string) {
 	cur := g.usedFees[msgType]
-	if !cur.Amount.IsNil()  {
+	if !cur.Amount.IsNil() {
 		g.usedFees[msgType] = cur.Add(amount)
 	} else {
 		g.usedFees[msgType] = amount
@@ -102,11 +102,9 @@ func (g *FeeGasMeter) FeeConsumedForType(msgType string) sdk.Coin {
 }
 
 func (g *FeeGasMeter) FeeConsumed() sdk.Coins {
-	consumedFees := sdk.Coins{}
-	consumedFees = make(sdk.Coins, len(g.usedFees))
-	for _, coin := range  g.usedFees {
+	consumedFees := make(sdk.Coins, len(g.usedFees))
+	for _, coin := range g.usedFees {
 		consumedFees.Add(coin)
 	}
 	return consumedFees
 }
-

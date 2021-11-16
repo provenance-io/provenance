@@ -2,6 +2,7 @@ package antewrapper
 
 import (
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -42,7 +43,7 @@ func NewMsgBasedFeeDecorator(bankKeeper banktypes.Keeper, accountKeeper cosmosan
 // then z = x + y
 // This Fee Decorator makes sure that z is >= to x + y
 func (afd MsgBasedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	feeTx, err := getFeeTx(ctx, tx)
+	feeTx, err := getFeeTx(tx)
 
 	if err != nil {
 		return ctx, err
@@ -66,8 +67,8 @@ func (afd MsgBasedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		// ensure enough fees to cover mempool fee for base fee + additional fee
 		// This is exact same logic as NewMempoolFeeDecorator except it accounts for additional Fees.
 		if ctx.IsCheckTx() && !simulate {
-			 errFromMempoolCalc := EnsureSufficientMempoolFees(ctx, gas, feeCoins, additionalFees);
-			 if errFromMempoolCalc != nil {
+			errFromMempoolCalc := EnsureSufficientMempoolFees(ctx, gas, feeCoins, additionalFees)
+			if errFromMempoolCalc != nil {
 				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, errFromMempoolCalc.Error())
 			}
 		}
@@ -77,14 +78,14 @@ func (afd MsgBasedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		deductFeesFrom := feePayer
 
 		deductFeesFrom, errorFromFeeGrant := getFeeGranterIfExists(ctx, feeGranter, afd, feePayer, deductFeesFrom)
-		if errorFromFeeGrant!=nil {
+		if errorFromFeeGrant != nil {
 			return ctx, errorFromFeeGrant
 		}
 
 		deductFeesFromAcc := afd.accountKeeper.GetAccount(ctx, deductFeesFrom)
 		if deductFeesFromAcc == nil {
-			err := sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", deductFeesFrom)
-			if err!=nil {
+			err = sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", deductFeesFrom)
+			if err != nil {
 				return ctx, err
 			}
 		}
@@ -96,8 +97,8 @@ func (afd MsgBasedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		}
 
 		if !simulate {
-			if err = EnsureAccountHasSufficientFeesWithAcctBalanceCheck(gas,feeCoins, additionalFees, balancePerCoin,
-				afd.msgBasedFeeKeeper.GetMinGasPrice(ctx),afd.msgBasedFeeKeeper.GetDefaultFeeDenom()); err != nil {
+			if err = EnsureAccountHasSufficientFeesWithAcctBalanceCheck(gas, feeCoins, additionalFees, balancePerCoin,
+				afd.msgBasedFeeKeeper.GetMinGasPrice(ctx), afd.msgBasedFeeKeeper.GetDefaultFeeDenom()); err != nil {
 				return ctx, err
 			}
 		}
@@ -127,7 +128,7 @@ func getFeeGranterIfExists(ctx sdk.Context, feeGranter sdk.AccAddress, afd MsgBa
 	return deductFeesFrom, nil
 }
 
-func getFeeTx(ctx sdk.Context, tx sdk.Tx) (sdk.FeeTx, error) {
+func getFeeTx(tx sdk.Tx) (sdk.FeeTx, error) {
 	// has to be FeeTx type
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
@@ -236,9 +237,5 @@ func containsDenom(coins sdk.Coins, denom string) bool {
 		return false
 	}
 	amt := coins.AmountOf(denom)
-	if !amt.IsZero() {
-		return true
-	}
-
-	return false
+	return !amt.IsZero()
 }

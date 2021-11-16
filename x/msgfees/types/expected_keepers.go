@@ -3,7 +3,6 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	cosmosauthtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
@@ -19,15 +18,14 @@ type AccountKeeper interface {
 type BankKeeper interface {
 	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
-
 }
 
 // MsgBasedFeeKeeper for additional msg fees.
 type MsgBasedFeeKeeper interface {
 	GetMsgBasedFee(ctx sdk.Context, msgType string) (*MsgBasedFee, error)
 	GetFeeCollectorName() string
-	DeductFees(bankKeeper cosmosauthtypes.BankKeeper, ctx sdk.Context, acc cosmosauthtypes.AccountI, fees sdk.Coins) error
-    GetDefaultFeeDenom() string
+	DeductFees(bankKeeper authtypes.BankKeeper, ctx sdk.Context, acc authtypes.AccountI, fees sdk.Coins) error
+	GetDefaultFeeDenom() string
 	GetMinGasPrice(ctx sdk.Context) uint32
 }
 

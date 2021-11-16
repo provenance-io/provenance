@@ -3,8 +3,6 @@ package app
 import (
 	"encoding/json"
 
-	msgfeehandler "github.com/provenance-io/provenance/internal/handlers"
-
 	"io"
 	"net/http"
 	"os"
@@ -674,7 +672,7 @@ func New(
 	}
 
 	app.SetAnteHandler(anteHandler)
-	msgfeehandler, err := msgfeehandler.NewAdditionalMsgFeeHandler(msgfeehandler.PioBaseAppKeeperOptions{
+	msgfeehandler, err := piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
 		AccountKeeper:     app.AccountKeeper,
 		BankKeeper:        app.BankKeeper,
 		FeegrantKeeper:    app.FeeGrantKeeper,

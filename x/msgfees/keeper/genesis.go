@@ -7,7 +7,7 @@ import (
 
 // ExportGenesis returns a GenesisState for a given context.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-	msgFees := make([]types.MsgBasedFee,0)
+	msgFees := make([]types.MsgBasedFee, 0)
 	params := k.GetParams(ctx)
 	msgFeeRecords := func(msgFee types.MsgBasedFee) bool {
 		msgFees = append(msgFees, msgFee)

@@ -1,9 +1,9 @@
 package types
 
 // NewGenesisState creates new GenesisState object
-func NewGenesisState(params Params ,entries []MsgBasedFee) *GenesisState {
+func NewGenesisState(params Params, entries []MsgBasedFee) *GenesisState {
 	return &GenesisState{
-		Params: params,
+		Params:       params,
 		MsgBasedFees: entries,
 	}
 }
@@ -21,7 +21,7 @@ func (state GenesisState) Validate() error {
 // DefaultGenesisState returns default state for msgfee module.
 func DefaultGenesisState() *GenesisState {
 	return &GenesisState{
-		Params: DefaultParams(),
+		Params:       DefaultParams(),
 		MsgBasedFees: []MsgBasedFee{},
 	}
 }
