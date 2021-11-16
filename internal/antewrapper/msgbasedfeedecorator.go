@@ -83,7 +83,10 @@ func (afd MsgBasedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 
 		deductFeesFromAcc := afd.accountKeeper.GetAccount(ctx, deductFeesFrom)
 		if deductFeesFromAcc == nil {
-			sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", deductFeesFrom)
+			err := sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", deductFeesFrom)
+			if err!=nil {
+				return ctx, err
+			}
 		}
 
 		// get all the coin balances for the fee payer account

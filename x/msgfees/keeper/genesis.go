@@ -31,5 +31,4 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 			panic(err)
 		}
 	}
-
 }
