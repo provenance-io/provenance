@@ -88,6 +88,10 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			// set app context based on initialized EnvTypeFlag
 			testnet := server.GetServerContextFromCmd(cmd).Viper.GetBool(EnvTypeFlag)
 			app.SetConfig(testnet)
+			overwriteFlagDefaults(cmd, map[string]string{
+				// Override default value for coin-type to match our mainnet or testnet value.
+				CoinTypeFlag: fmt.Sprint(app.CoinType),
+			})
 			return nil
 		},
 	}
@@ -96,8 +100,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		flags.FlagChainID:        ChainID,
 		flags.FlagKeyringBackend: "test",
 		server.FlagMinGasPrices:  app.DefaultMinGasPrices,
-		// Override default value for coin-type to match our mainnet value.
-		CoinTypeFlag: fmt.Sprint(app.CoinTypeMainNet),
+		CoinTypeFlag:             fmt.Sprint(app.CoinTypeMainNet),
 	})
 
 	return rootCmd, encodingConfig
@@ -318,6 +321,9 @@ func createAppAndExport(
 func overwriteFlagDefaults(c *cobra.Command, defaults map[string]string) {
 	set := func(s *pflag.FlagSet, key, val string) {
 		if f := s.Lookup(key); f != nil {
+			if f.Changed {
+				return
+			}
 			f.DefValue = val
 			if err := f.Value.Set(val); err != nil {
 				panic(err)

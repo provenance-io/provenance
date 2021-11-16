@@ -41,10 +41,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Add `bank` and `authz` module query `proto` files required by `grpcurl` [#482](https://github.com/provenance-io/provenance/issues/482)
 * Fix typeos in marker log statements [#502](https://github.com/provenance-io/provenance/issues/502)
-
+* Set default coin type to network default [#534](https://github.com/provenance-io/provenance/issues/534)
+* Add logger to upgrade handler [#507](https://github.com/provenance-io/provenance/issues/507)
+* Allow markers to be created over existing accounts if they are not a marker and have a zero sequence [#520](https://github.com/provenance-io/provenance/issues/520)
 ### Bug Fixes
 
 * When deleting a scope, require the same permissions as when updating it [#473](https://github.com/provenance-io/provenance/issues/473)
+
+## [v1.7.5](https://github.com/provenance-io/provenance/releases/tag/v1.7.5) - 2021-10-22
+
+### Improvements
+
+* Update Cosmos SDK to 0.44.3 [PR 536](https://github.com/provenance-io/provenance/pull/536)
 
 ## [v1.7.4](https://github.com/provenance-io/provenance/releases/tag/v1.7.4) - 2021-10-12
 
