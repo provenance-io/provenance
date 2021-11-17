@@ -103,3 +103,76 @@ func (suite *AnteTestSuite) TestDeductFees() {
 
 	suite.Require().Nil(err, "Tx errored after account has been set with sufficient funds")
 }
+
+func (suite *AnteTestSuite) TestEnsureAdditionalFeesPaid() {
+	// given
+	suite.SetupTest(true)
+	newCoin := sdk.NewInt64Coin("steak", 100)
+	suite.CreateMsgFee(newCoin,&testdata.TestMsg{})
+
+	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
+
+	// keys and addresses
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
+
+	// when
+	// msg and signatures
+	msg := testdata.NewTestMsg(addr1)
+	feeAmount := testdata.NewTestFeeAmount()
+	gasLimit := testdata.NewTestGasLimit()
+	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
+	suite.txBuilder.SetFeeAmount(feeAmount)
+	suite.txBuilder.SetGasLimit(gasLimit)
+
+	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
+	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	suite.Require().NoError(err)
+
+	// then
+	// Set account with insufficient funds (base fee coin insufficient)
+	acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
+	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
+	coins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(10)))
+	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, coins)
+	suite.Require().NoError(err)
+
+	dfd := pioante.NewProvenanceDeductFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper, nil, suite.app.MsgBasedFeeKeeper)
+	antehandler := sdk.ChainAnteDecorators(dfd)
+
+	_, err = antehandler(suite.ctx, tx, false)
+
+	suite.Require().NotNil(err, "Tx did not error when fee payer had insufficient funds")
+
+	// Set account with sufficient funds for base fees and but not additional fess
+	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
+	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(150))))
+	suite.Require().NoError(err)
+
+	_, err = antehandler(suite.ctx, tx, false)
+
+	suite.Require().NotNil(err, "Tx did not error when fee payer had insufficient funds")
+
+	// valid case
+	// set gas fee and msg fees (steak)
+	// Set account with sufficient funds
+	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
+	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, sdk.NewCoins(sdk.NewCoin("steak", sdk.NewInt(100))))
+	suite.Require().NoError(err)
+
+
+	suite.txBuilder.SetFeeAmount(NewTestFeeAmountMultiple())
+	suite.txBuilder.SetGasLimit(gasLimit)
+
+	tx, err = suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	suite.Require().NoError(err)
+
+	_, err = antehandler(suite.ctx, tx, false)
+
+	suite.Require().Nil(err, "Tx did not error when fee payer had insufficient funds")
+}
+
+
+// NewTestFeeAmount is a test fee amount with multiple coins.
+func NewTestFeeAmountMultiple() sdk.Coins {
+	return sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("steak",100))
+}

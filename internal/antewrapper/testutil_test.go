@@ -22,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	simapp "github.com/provenance-io/provenance/app"
+	msgfeetype "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 // TestAccount represents an account used in the tests in x/auth/ante.
@@ -40,6 +41,8 @@ type AnteTestSuite struct {
 	clientCtx   client.Context
 	txBuilder   client.TxBuilder
 }
+
+var testMsgType =sdk.MsgTypeURL(&testdata.TestMsg{})
 
 // returns context and app with params set on account keeper
 func createTestApp(isCheckTx bool) (*simapp.App, sdk.Context) {
@@ -196,6 +199,17 @@ func (suite *AnteTestSuite) RunTestCase(privs []cryptotypes.PrivKey, msgs []sdk.
 	})
 }
 
+
+func (suite *AnteTestSuite) CreateMsgFee(fee sdk.Coin, msgs ...sdk.Msg, ) error {
+	for _, msg := range msgs {
+		msgFeeToCreate := msgfeetype.NewMsgBasedFee(sdk.MsgTypeURL(msg), fee)
+		err := suite.app.MsgBasedFeeKeeper.SetMsgBasedFee(suite.ctx, msgFeeToCreate)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 func TestAnteTestSuite(t *testing.T) {
 	suite.Run(t, new(AnteTestSuite))
 }
