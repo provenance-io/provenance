@@ -74,7 +74,7 @@ $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nha
 
 			_, ok := feeMsg.(sdk.Msg)
 			if !ok {
-				return fmt.Errorf("Message type is not a sdk message: %v", msgType)
+				return fmt.Errorf("message type is not a sdk message: %v", msgType)
 			}
 
 			anyMsg, err := codectypes.NewAnyWithValue(feeMsg)
@@ -84,9 +84,8 @@ $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nha
 
 			var addFee sdk.Coin
 			if proposalType != "remove" {
-
-				additionalFee, err := cmd.Flags().GetString(FlagMinFee)
-				if err != nil {
+				additionalFee, errMinFee := cmd.Flags().GetString(FlagMinFee)
+				if errMinFee != nil {
 					return err
 				}
 				if additionalFee != "" {

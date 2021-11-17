@@ -2,6 +2,7 @@ package antewrapper
 
 import (
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -48,9 +49,9 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 	if !feeTx.GetFee().IsZero() {
 		// Compute msg additionalFees
 		msgs := feeTx.GetMsgs()
-		additionalFees, err := CalculateAdditionalFeesToBePaid(ctx, dfd.msgFeeKeeper, msgs...)
-		if err != nil {
-			//TODO improve this
+		additionalFees, errFromCalculateAdditionalFeesToBePaid := CalculateAdditionalFeesToBePaid(ctx, dfd.msgFeeKeeper, msgs...)
+		if errFromCalculateAdditionalFeesToBePaid != nil {
+			// TODO improve this
 			return ctx, sdkerrors.Wrapf(sdkerrors.ErrNotFound, err.Error())
 		}
 		feeToDeduct := feeTx.GetFee()
@@ -68,7 +69,7 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 			if dfd.feegrantKeeper == nil {
 				return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")
 			} else if !feeGranter.Equals(feePayer) {
-				err := dfd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, feeToDeduct, tx.GetMsgs())
+				err = dfd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, feeToDeduct, tx.GetMsgs())
 
 				if err != nil {
 					return ctx, sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)

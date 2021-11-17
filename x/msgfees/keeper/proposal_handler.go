@@ -21,7 +21,10 @@ func HandleAddMsgBasedFeeProposal(ctx sdk.Context, k Keeper, proposal *types.Add
 
 	msgFees := types.NewMsgBasedFee(proposal.Msg.GetTypeUrl(), proposal.AdditionalFee)
 
-	k.SetMsgBasedFee(ctx, msgFees)
+	err = k.SetMsgBasedFee(ctx, msgFees)
+	if err != nil {
+		return types.ErrInvalidFeeProposal
+	}
 
 	return nil
 }
@@ -42,7 +45,10 @@ func HandleUpdateMsgBasedFeeProposal(ctx sdk.Context, k Keeper, proposal *types.
 
 	msgFees := types.NewMsgBasedFee(proposal.Msg.GetTypeUrl(), proposal.AdditionalFee)
 
-	k.SetMsgBasedFee(ctx, msgFees)
+	err = k.SetMsgBasedFee(ctx, msgFees)
+	if err != nil {
+		return types.ErrInvalidFeeProposal
+	}
 
 	return nil
 }

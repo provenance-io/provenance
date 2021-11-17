@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	msgbasedfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
@@ -14,7 +15,7 @@ type MsgBasedFeeInvoker struct {
 	txDecoder         sdk.TxDecoder
 }
 
-// concrete impl of how to charge Msg Based Fees
+// NewMsgBasedFeeInvoker concrete impl of how to charge Msg Based Fees
 func NewMsgBasedFeeInvoker(bankKeeper msgbasedfeetypes.BankKeeper, accountKeeper msgbasedfeetypes.AccountKeeper,
 	feegrantKeeper msgbasedfeetypes.FeegrantKeeper, msgBasedFeeKeeper msgbasedfeetypes.MsgBasedFeeKeeper, decoder sdk.TxDecoder) MsgBasedFeeInvoker {
 	return MsgBasedFeeInvoker{
@@ -71,14 +72,15 @@ func (afd MsgBasedFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.
 				if msgFees != nil {
 					ctx.Logger().Info("Retrieved a msg based fee.")
 					if !simulate {
-						afd.msgBasedFeeKeeper.DeductFees(afd.bankKeeper, ctx, deductFeesFromAcc, sdk.Coins{msgFees.AdditionalFee})
+						err = afd.msgBasedFeeKeeper.DeductFees(afd.bankKeeper, ctx, deductFeesFromAcc, sdk.Coins{msgFees.AdditionalFee})
+						if err != nil {
+							return nil, err
+						}
 					}
 					chargedFees = sdk.Coins{msgFees.AdditionalFee}
 				}
-				// TODO remove this but just for testing $$$$$$$$$$
-				//afd.msgBasedFeeKeeper.DeductFees(afd.bankKeeper, ctx, deductFeesFromAcc, sdk.Coins{sdk.NewInt64Coin("nhash", 55555)})
 			}
-			//set back the original gasMeter
+			// set back the original gasMeter
 			ctx = ctx.WithGasMeter(originalGasMeter)
 		}
 	}

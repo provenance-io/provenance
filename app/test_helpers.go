@@ -7,10 +7,11 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	simappparams "github.com/provenance-io/provenance/app/params"
 	"strconv"
 	"testing"
 	"time"
+
+	simappparams "github.com/provenance-io/provenance/app/params"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/stretchr/testify/require"

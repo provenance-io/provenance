@@ -11,7 +11,7 @@ import (
 const (
 	// DefaultEnableGovernance (true) indicates that governance proposals are allowed for managing additional fees
 	DefaultEnableGovernance = true
-	DefaultMinGasPrice = 1905
+	DefaultMinGasPrice      = 1905
 )
 
 var (
@@ -34,7 +34,7 @@ func NewParams(
 ) Params {
 	return Params{
 		EnableGovernance: enableGovernance,
-		MinGasPrice: minGasPrice,
+		MinGasPrice:      minGasPrice,
 	}
 }
 

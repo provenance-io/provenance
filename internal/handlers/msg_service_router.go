@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"fmt"
+
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	"github.com/gogo/protobuf/proto"
 	"google.golang.org/grpc"
@@ -117,8 +118,8 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 		}
 
 		msr.routes[requestTypeName] = func(ctx sdk.Context, req sdk.Msg) (*sdk.Result, error) {
-			msgTypeUrl := sdk.MsgTypeURL(req)
-			ctx.Logger().Info(fmt.Sprintf("NOTICE: Inside the PIO msg service router handler msg: %v", msgTypeUrl))
+			msgTypeURL := sdk.MsgTypeURL(req)
+			ctx.Logger().Info(fmt.Sprintf("NOTICE: Inside the PIO msg service router handler msg: %v", msgTypeURL))
 
 			feeGasMeter, ok := ctx.GasMeter().(*antewrapper.FeeGasMeter)
 			if !ok {
@@ -136,19 +137,21 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 				panic("only Fee Tx are supported on provenance.")
 			}
 
-			fee, err := msr.msgBasedFeeKeeper.GetMsgBasedFee(ctx, msgTypeUrl)
+			fee, err := msr.msgBasedFeeKeeper.GetMsgBasedFee(ctx, msgTypeURL)
 			if err != nil {
 				return nil, err
 			}
 			if fee != nil && fee.AdditionalFee.IsPositive() {
-				ctx.Logger().Debug(fmt.Sprintf("Msg %v has an additional fee of %v", msgTypeUrl, fee.AdditionalFee))
-				if !feeGasMeter.FeeConsumedForType(msgTypeUrl).Amount.IsNil() {
-					antewrapper.EnsureSufficientFees(runtimeGasForMsg(ctx), feeTx.GetFee(), feeGasMeter.FeeConsumed().Add(fee.AdditionalFee),
-					msr.msgBasedFeeKeeper.GetMinGasPrice(ctx), msr.msgBasedFeeKeeper.GetDefaultFeeDenom())
+				ctx.Logger().Debug(fmt.Sprintf("Msg %v has an additional fee of %v", msgTypeURL, fee.AdditionalFee))
+				if !feeGasMeter.FeeConsumedForType(msgTypeURL).Amount.IsNil() {
+					err = antewrapper.EnsureSufficientFees(runtimeGasForMsg(ctx), feeTx.GetFee(), feeGasMeter.FeeConsumed().Add(fee.AdditionalFee),
+						msr.msgBasedFeeKeeper.GetMinGasPrice(ctx), msr.msgBasedFeeKeeper.GetDefaultFeeDenom())
+					if err != nil {
+						return nil, err
+					}
 				}
 
-				feeGasMeter.ConsumeFee(fee.AdditionalFee, msgTypeUrl)
-
+				feeGasMeter.ConsumeFee(fee.AdditionalFee, msgTypeURL)
 			}
 			ctx = ctx.WithEventManager(sdk.NewEventManager())
 			interceptor := func(goCtx context.Context, _ interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {

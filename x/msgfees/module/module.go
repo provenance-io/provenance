@@ -3,8 +3,9 @@ package msgfees
 import (
 	"context"
 	"encoding/json"
-	msgfees2 "github.com/provenance-io/provenance/x/msgfees"
 	"math/rand"
+
+	msgfees2 "github.com/provenance-io/provenance/x/msgfees"
 
 	"github.com/provenance-io/provenance/x/msgfees/client/cli"
 	"github.com/provenance-io/provenance/x/msgfees/keeper"
@@ -76,7 +77,9 @@ func (AppModuleBasic) RegisterRESTRoutes(_ sdkclient.Context, _ *mux.Router) {}
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the msgfee module.
 func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *runtime.ServeMux) {
-	msgfees.RegisterQueryHandlerClient(context.Background(), mux, msgfees.NewQueryClient(clientCtx))
+	if err := msgfees.RegisterQueryHandlerClient(context.Background(), mux, msgfees.NewQueryClient(clientCtx)); err != nil {
+		panic(err)
+	}
 }
 
 // GetQueryCmd returns the cli query commands for the msgfees module
