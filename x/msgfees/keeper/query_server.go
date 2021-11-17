@@ -49,7 +49,7 @@ func (k Keeper) QueryAllMsgBasedFees(c context.Context, req *types.QueryAllMsgBa
 	return &types.QueryAllMsgBasedFeesResponse{MsgBasedFees: msgFees, Pagination: pageRes}, nil
 }
 
-func (k Keeper) CalculateMsgBasedFees(goCtx context.Context, request *types.CalculateFeePerMsgRequest) (*types.CalculateMsgBasedFeesResponse, error) {
+func (k Keeper) CalculateTxFees(goCtx context.Context, request *types.CalculateTxFeesRequest) (*types.CalculateTxFeesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	additionalFees := sdk.Coins{}
@@ -81,7 +81,7 @@ func (k Keeper) CalculateMsgBasedFees(goCtx context.Context, request *types.Calc
 	totalFees = totalFees.Add(sdk.NewCoin("nhash", sdk.NewInt(int64(gasInfo.GasUsed)*int64(k.GetMinGasPrice(ctx)))))
 	totalFees = totalFees.Add(additionalFees...)
 
-	return &types.CalculateMsgBasedFeesResponse{
+	return &types.CalculateTxFeesResponse{
 		AdditionalFees: additionalFees,
 		TotalFees:      totalFees,
 		EstimatedGas:   gasInfo.GasUsed,

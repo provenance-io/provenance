@@ -25,8 +25,8 @@ service Query {
     option (google.api.http).get = "/provenance/msgfees/v1/params";
   }
 
-  // CalculateMsgBasedFees simulates executing a transaction for estimating gas usage and additional fees.
-  rpc CalculateMsgBasedFees(CalculateFeePerMsgRequest) returns (CalculateMsgBasedFeesResponse) {
+  // CalculateTxFees simulates executing a transaction for estimating gas usage and additional fees.
+  rpc CalculateTxFees(CalculateTxFeesRequest) returns (CalculateTxFeesResponse) {
     option (google.api.http) = {
       post: "/provenance/tx/v1/calculate_msg_based_fee"
       body: "*"
@@ -56,14 +56,14 @@ message QueryAllMsgBasedFeesResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// CalculateFeePerMsgRequest is the request type for the Query RPC method.
-message CalculateFeePerMsgRequest {
+// CalculateTxFeesRequest is the request type for the Query RPC method.
+message CalculateTxFeesRequest {
   // tx is the transaction to simulate.
   bytes tx = 1;
 }
 
-// CalculateMsgBasedFeesResponse is the response type for the Query RPC method.
-message CalculateMsgBasedFeesResponse {
+// CalculateTxFeesResponse is the response type for the Query RPC method.
+message CalculateTxFeesResponse {
   // additional_fees are the amount of coins to be for addition msg based fees
   repeated cosmos.base.v1beta1.Coin additional_fees = 1
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];

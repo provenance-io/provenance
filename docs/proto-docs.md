@@ -341,8 +341,8 @@
     - [UpdateMsgBasedFeeProposal](#provenance.msgfees.v1.UpdateMsgBasedFeeProposal)
   
 - [provenance/msgfees/v1/query.proto](#provenance/msgfees/v1/query.proto)
-    - [CalculateFeePerMsgRequest](#provenance.msgfees.v1.CalculateFeePerMsgRequest)
-    - [CalculateMsgBasedFeesResponse](#provenance.msgfees.v1.CalculateMsgBasedFeesResponse)
+    - [CalculateTxFeesRequest](#provenance.msgfees.v1.CalculateTxFeesRequest)
+    - [CalculateTxFeesResponse](#provenance.msgfees.v1.CalculateTxFeesResponse)
     - [QueryAllMsgBasedFeesRequest](#provenance.msgfees.v1.QueryAllMsgBasedFeesRequest)
     - [QueryAllMsgBasedFeesResponse](#provenance.msgfees.v1.QueryAllMsgBasedFeesResponse)
     - [QueryParamsRequest](#provenance.msgfees.v1.QueryParamsRequest)
@@ -5280,10 +5280,10 @@ UpdateMsgBasedFeeProposal defines a governance proposal to update a current msg 
 
 
 
-<a name="provenance.msgfees.v1.CalculateFeePerMsgRequest"></a>
+<a name="provenance.msgfees.v1.CalculateTxFeesRequest"></a>
 
-### CalculateFeePerMsgRequest
-CalculateFeePerMsgRequest is the request type for the Query RPC method.
+### CalculateTxFeesRequest
+CalculateTxFeesRequest is the request type for the Query RPC method.
 
 
 | Field | Type | Label | Description |
@@ -5295,10 +5295,10 @@ CalculateFeePerMsgRequest is the request type for the Query RPC method.
 
 
 
-<a name="provenance.msgfees.v1.CalculateMsgBasedFeesResponse"></a>
+<a name="provenance.msgfees.v1.CalculateTxFeesResponse"></a>
 
-### CalculateMsgBasedFeesResponse
-CalculateMsgBasedFeesResponse is the response type for the Query RPC method.
+### CalculateTxFeesResponse
+CalculateTxFeesResponse is the response type for the Query RPC method.
 
 
 | Field | Type | Label | Description |
@@ -5383,7 +5383,7 @@ Query defines the gRPC querier service for marker module.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `Params` | [QueryParamsRequest](#provenance.msgfees.v1.QueryParamsRequest) | [QueryParamsResponse](#provenance.msgfees.v1.QueryParamsResponse) | Params queries the parameters for x/msgfees | GET|/provenance/msgfees/v1/params|
 | `QueryAllMsgBasedFees` | [QueryAllMsgBasedFeesRequest](#provenance.msgfees.v1.QueryAllMsgBasedFeesRequest) | [QueryAllMsgBasedFeesResponse](#provenance.msgfees.v1.QueryAllMsgBasedFeesResponse) | Query all Msgs which have fees associated with them. | GET|/provenance/msgfees/v1/params|
-| `CalculateMsgBasedFees` | [CalculateFeePerMsgRequest](#provenance.msgfees.v1.CalculateFeePerMsgRequest) | [CalculateMsgBasedFeesResponse](#provenance.msgfees.v1.CalculateMsgBasedFeesResponse) | CalculateMsgBasedFees simulates executing a transaction for estimating gas usage and additional fees. | POST|/provenance/tx/v1/calculate_msg_based_fee|
+| `CalculateTxFees` | [CalculateTxFeesRequest](#provenance.msgfees.v1.CalculateTxFeesRequest) | [CalculateTxFeesResponse](#provenance.msgfees.v1.CalculateTxFeesResponse) | CalculateTxFees simulates executing a transaction for estimating gas usage and additional fees. | POST|/provenance/tx/v1/calculate_msg_based_fee|
 
  <!-- end services -->
 
