@@ -341,6 +341,8 @@
     - [UpdateMsgBasedFeeProposal](#provenance.msgfees.v1.UpdateMsgBasedFeeProposal)
   
 - [provenance/msgfees/v1/query.proto](#provenance/msgfees/v1/query.proto)
+    - [CalculateFeePerMsgRequest](#provenance.msgfees.v1.CalculateFeePerMsgRequest)
+    - [CalculateMsgBasedFeesResponse](#provenance.msgfees.v1.CalculateMsgBasedFeesResponse)
     - [QueryAllMsgBasedFeesRequest](#provenance.msgfees.v1.QueryAllMsgBasedFeesRequest)
     - [QueryAllMsgBasedFeesResponse](#provenance.msgfees.v1.QueryAllMsgBasedFeesResponse)
     - [QueryParamsRequest](#provenance.msgfees.v1.QueryParamsRequest)
@@ -349,8 +351,6 @@
     - [Query](#provenance.msgfees.v1.Query)
   
 - [provenance/msgfees/v1/tx.proto](#provenance/msgfees/v1/tx.proto)
-    - [CalculateFeePerMsgRequest](#provenance.msgfees.v1.CalculateFeePerMsgRequest)
-    - [CalculateMsgBasedFeesResponse](#provenance.msgfees.v1.CalculateMsgBasedFeesResponse)
     - [CreateMsgBasedFeeRequest](#provenance.msgfees.v1.CreateMsgBasedFeeRequest)
     - [CreateMsgBasedFeeResponse](#provenance.msgfees.v1.CreateMsgBasedFeeResponse)
   
@@ -5280,6 +5280,38 @@ UpdateMsgBasedFeeProposal defines a governance proposal to update a current msg 
 
 
 
+<a name="provenance.msgfees.v1.CalculateFeePerMsgRequest"></a>
+
+### CalculateFeePerMsgRequest
+CalculateFeePerMsgRequest is the request type for the Query RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `tx` | [bytes](#bytes) |  | tx is the transaction to simulate. |
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.CalculateMsgBasedFeesResponse"></a>
+
+### CalculateMsgBasedFeesResponse
+CalculateMsgBasedFeesResponse is the response type for the Query RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `additional_fees` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | additional_fees are the amount of coins to be for addition msg based fees |
+| `total_fees` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | total_fees are the total amount of fees needed for the transactions (msg based fees + gas fee) note: the gas fee is calculated with the min gas fee param as a constant |
+| `estimated_gas` | [uint64](#uint64) |  | estimated_gas is the amount of gas needed for the transaction |
+
+
+
+
+
+
 <a name="provenance.msgfees.v1.QueryAllMsgBasedFeesRequest"></a>
 
 ### QueryAllMsgBasedFeesRequest
@@ -5351,6 +5383,7 @@ Query defines the gRPC querier service for marker module.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `Params` | [QueryParamsRequest](#provenance.msgfees.v1.QueryParamsRequest) | [QueryParamsResponse](#provenance.msgfees.v1.QueryParamsResponse) | Params queries the parameters for x/msgfees | GET|/provenance/msgfees/v1/params|
 | `QueryAllMsgBasedFees` | [QueryAllMsgBasedFeesRequest](#provenance.msgfees.v1.QueryAllMsgBasedFeesRequest) | [QueryAllMsgBasedFeesResponse](#provenance.msgfees.v1.QueryAllMsgBasedFeesResponse) | Query all Msgs which have fees associated with them. | GET|/provenance/msgfees/v1/params|
+| `CalculateMsgBasedFees` | [CalculateFeePerMsgRequest](#provenance.msgfees.v1.CalculateFeePerMsgRequest) | [CalculateMsgBasedFeesResponse](#provenance.msgfees.v1.CalculateMsgBasedFeesResponse) | CalculateMsgBasedFees simulates executing a transaction for estimating gas usage and additional fees. | POST|/provenance/tx/v1/calculate_msg_based_fee|
 
  <!-- end services -->
 
@@ -5360,41 +5393,6 @@ Query defines the gRPC querier service for marker module.
 <p align="right"><a href="#top">Top</a></p>
 
 ## provenance/msgfees/v1/tx.proto
-
-
-
-<a name="provenance.msgfees.v1.CalculateFeePerMsgRequest"></a>
-
-### CalculateFeePerMsgRequest
-CalculateFeePerMsgRequest is the request type for the Msg.CalculateMsgBasedFees
-RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `from_address` | [string](#string) |  |  |
-| `tx` | [bytes](#bytes) |  | tx is the transaction to simulate. |
-
-
-
-
-
-
-<a name="provenance.msgfees.v1.CalculateMsgBasedFeesResponse"></a>
-
-### CalculateMsgBasedFeesResponse
-CalculateMsgBasedFeesResponse is the response type for the Msg.CalculateMsgBasedFees
-RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `additional_fees` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount is the amount of coins to be paid as a fee |
-| `total_fees` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount is the amount of coins to be paid as a fee |
-| `estimated_gas` | [uint64](#uint64) |  | GasUsed is the amount of gas actually consumed. |
-
-
-
 
 
 
@@ -5443,7 +5441,6 @@ Service defines a gRPC service for interacting with transactions.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `CreateMsgBasedFee` | [CreateMsgBasedFeeRequest](#provenance.msgfees.v1.CreateMsgBasedFeeRequest) | [CreateMsgBasedFeeResponse](#provenance.msgfees.v1.CreateMsgBasedFeeResponse) | create fee for an associated Msg (repeated) TODO : this goes away i think in prod because MsgFees can only be created by Gov | |
-| `CalculateMsgBasedFees` | [CalculateFeePerMsgRequest](#provenance.msgfees.v1.CalculateFeePerMsgRequest) | [CalculateMsgBasedFeesResponse](#provenance.msgfees.v1.CalculateMsgBasedFeesResponse) | CalculateMsgBasedFees simulates executing a transaction for estimating gas usage. | POST|/provenance/tx/v1/calculate_msg_based_fee|
 
  <!-- end services -->
 

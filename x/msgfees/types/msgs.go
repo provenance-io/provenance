@@ -1,24 +1,19 @@
 package types
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
 const (
-	TypeCreateMsgBasedFeeRequest  = "createmsgbasedfee"
-	TypeCalculateFeePerMsgRequest = "calculatefeepermsg"
+	TypeCreateMsgBasedFeeRequest = "createmsgbasedfee"
 )
 
 // Compile time interface checks.
 var (
 	_ sdk.Msg            = &CreateMsgBasedFeeRequest{}
-	_ sdk.Msg            = &CalculateFeePerMsgRequest{}
-	_ legacytx.LegacyMsg = &CreateMsgBasedFeeRequest{}  // For amino support.
-	_ legacytx.LegacyMsg = &CalculateFeePerMsgRequest{} // For amino support.
+	_ legacytx.LegacyMsg = &CreateMsgBasedFeeRequest{} // For amino support.
 )
 
 func NewMsgBasedFee(msgTypeURL string, additionalFee sdk.Coin) MsgBasedFee {
@@ -61,40 +56,6 @@ func (msg *CreateMsgBasedFeeRequest) Type() string {
 
 // Route implements Msg
 func (msg *CreateMsgBasedFeeRequest) Route() string { return ModuleName }
-
-func NewCalculateFeePerMsgRequest(tx []byte, fromAddress string) CalculateFeePerMsgRequest {
-	return CalculateFeePerMsgRequest{
-		Tx:          tx,
-		FromAddress: fromAddress,
-	}
-}
-
-func (msg *CalculateFeePerMsgRequest) ValidateBasic() error {
-	if len(msg.Tx) == 0 {
-		return fmt.Errorf("tx must be defined")
-	}
-	return nil
-}
-
-func (msg *CalculateFeePerMsgRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.FromAddress)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
-}
-
-func (msg *CalculateFeePerMsgRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
-}
-
-func (msg *CalculateFeePerMsgRequest) Route() string {
-	return ModuleName
-}
-
-func (msg *CalculateFeePerMsgRequest) Type() string {
-	return TypeCalculateFeePerMsgRequest
-}
 
 func (msg *MsgBasedFee) ValidateBasic() error {
 	if msg == nil {

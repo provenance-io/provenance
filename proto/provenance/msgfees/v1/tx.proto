@@ -21,36 +21,6 @@ service Msg {
   // create fee for an associated Msg (repeated)
   // TODO : this goes away i think in prod because MsgFees can only be created by Gov
   rpc CreateMsgBasedFee(CreateMsgBasedFeeRequest) returns (CreateMsgBasedFeeResponse) {}
-  // CalculateMsgBasedFees simulates executing a transaction for estimating gas usage.
-  rpc CalculateMsgBasedFees(CalculateFeePerMsgRequest) returns (CalculateMsgBasedFeesResponse) {
-    option (google.api.http) = {
-      post: "/provenance/tx/v1/calculate_msg_based_fee"
-      body: "*"
-    };
-  }
-}
-
-// CalculateFeePerMsgRequest is the request type for the Msg.CalculateMsgBasedFees
-// RPC method.
-message CalculateFeePerMsgRequest {
-  string from_address = 1;
-  // tx is the transaction to simulate.
-  bytes tx = 2;
-}
-
-// CalculateMsgBasedFeesResponse is the response type for the Msg.CalculateMsgBasedFees
-// RPC method.
-message CalculateMsgBasedFeesResponse {
-  // amount is the amount of coins to be paid as a fee
-  repeated cosmos.base.v1beta1.Coin additional_fees = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-    // amount is the amount of coins to be paid as a fee
-    repeated cosmos.base.v1beta1.Coin total_fees = 2
-    [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-
-  // GasUsed is the amount of gas actually consumed.
-  uint64 estimated_gas = 3 [(gogoproto.moretags) = "yaml:\"estimated_gas\""];
-
 }
 
 // create fee for msg's (repeated)

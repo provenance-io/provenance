@@ -31,7 +31,6 @@ message AddMsgBasedFeeProposal {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags)     = "yaml:\"additional_fee\""
   ];
-
 }
 
 // UpdateMsgBasedFeeProposal defines a governance proposal to update a current msg based fee
@@ -49,7 +48,6 @@ message UpdateMsgBasedFeeProposal {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags)     = "yaml:\"additional_fee\""
   ];
-
 }
 
 // RemoveMsgBasedFeeProposal defines a governance proposal to delete a current msg based fee

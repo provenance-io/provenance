@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/provenance-io/provenance/x/msgfees/types"
 	"google.golang.org/grpc/codes"
@@ -46,4 +47,43 @@ func (k Keeper) QueryAllMsgBasedFees(c context.Context, req *types.QueryAllMsgBa
 	}
 
 	return &types.QueryAllMsgBasedFeesResponse{MsgBasedFees: msgFees, Pagination: pageRes}, nil
+}
+
+func (k Keeper) CalculateMsgBasedFees(goCtx context.Context, request *types.CalculateFeePerMsgRequest) (*types.CalculateMsgBasedFeesResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	additionalFees := sdk.Coins{}
+	totalFees := sdk.Coins{}
+	gasInfo, _, err := k.simulateFunc(request.Tx)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
+	theTx, err := k.txDecoder(request.Tx)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+	msgs := theTx.GetMsgs()
+	for _, msg := range msgs {
+		typeURL := sdk.MsgTypeURL(msg)
+		msgFees, err := k.GetMsgBasedFee(ctx, typeURL)
+		if err != nil {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		}
+		if msgFees == nil {
+			continue
+		}
+		if msgFees.AdditionalFee.IsPositive() {
+			additionalFees = additionalFees.Add(sdk.NewCoin(msgFees.AdditionalFee.Denom, msgFees.AdditionalFee.Amount))
+		}
+	}
+
+	totalFees = totalFees.Add(sdk.NewCoin("nhash", sdk.NewInt(int64(gasInfo.GasUsed)*int64(k.GetMinGasPrice(ctx)))))
+	totalFees = totalFees.Add(additionalFees...)
+
+	return &types.CalculateMsgBasedFeesResponse{
+		AdditionalFees: additionalFees,
+		TotalFees:      totalFees,
+		EstimatedGas:   gasInfo.GasUsed,
+	}, nil
 }

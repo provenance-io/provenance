@@ -2,8 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -39,7 +37,6 @@ func NewTxCmd() *cobra.Command {
 
 	txCmd.AddCommand(
 		GetCmdMsgBasedFeesProposal(),
-		GetCmdCalculateMsgBasedFees(),
 	)
 
 	return txCmd
@@ -144,50 +141,4 @@ $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nha
 	cmd.Flags().String(FlagMsgType, "", "proto type url for msg type")
 	cmd.Flags().String(FlagMinFee, "", "additional fee for msg based fee")
 	return cmd
-}
-
-func GetCmdCalculateMsgBasedFees() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "simulate [msg_tx_json_file]",
-		Args:  cobra.ExactArgs(1),
-		Short: "Simulate transaction and return estimated costs with possible msg based fees.",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			// sdk.Tx
-			theTx, err := ReadTxFromFile(clientCtx, args[0])
-			if err != nil {
-				return err
-			}
-			txBytes, err := clientCtx.TxConfig.TxEncoder()(theTx)
-			if err != nil {
-				return err
-			}
-			fromAddress := clientCtx.GetFromAddress()
-			msg := types.NewCalculateFeePerMsgRequest(txBytes, fromAddress.String())
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
-		},
-	}
-	flags.AddTxFlagsToCmd(cmd)
-	return cmd
-}
-
-// Read and decode a StdTx from the given filename.  Can pass "-" to read from stdin.
-func ReadTxFromFile(ctx client.Context, filename string) (tx sdk.Tx, err error) {
-	var bytes []byte
-
-	if filename == "-" {
-		bytes, err = ioutil.ReadAll(os.Stdin)
-	} else {
-		bytes, err = ioutil.ReadFile(filename)
-	}
-
-	if err != nil {
-		return
-	}
-
-	return ctx.TxConfig.TxJSONDecoder()(bytes)
 }
