@@ -18,7 +18,7 @@ const (
 	EnableGovernance       = "enable_governance"
 )
 
-// GenMaxValueLength randomized MaxValueLength
+// GenMinGasPrice randomized MinGasPrice
 func GenMinGasPrice(r *rand.Rand) uint32 {
 	return r.Uint32()
 }

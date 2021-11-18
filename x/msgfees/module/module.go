@@ -173,7 +173,7 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 // ProposalContents returns all the msgfees content functions used to
 // simulate governance proposals.
 func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return nil
+	return simulation.ProposalContents(am.keeper)
 }
 
 // RandomizedParams creates randomized msgfees param changes for the simulator.
@@ -183,14 +183,13 @@ func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 
 // RegisterStoreDecoder registers a decoder for msgfees module's types
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	// TODO add simulation
-	// sdr[keeper.StoreKey] = simulation.NewDecodeStore(am.cdc)
+	sdr[keeper.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	// TODO add simulation
-	// return simulation.WeightedOperations(
+	//return simulation.WeightedOperations(
 	//	simState.AppParams, simState.Cdc,
 	//	am.keeper, am.cdc,
 	//)
