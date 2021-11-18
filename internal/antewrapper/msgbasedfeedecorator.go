@@ -161,7 +161,7 @@ func EnsureSufficientMempoolFees(ctx sdk.Context, gas uint64, feeCoins sdk.Coins
 	// Before checking gas prices, remove taxed from fee
 	var hasNeg bool
 	if feeCoins, hasNeg = feeCoins.SafeSub(additionalFees); hasNeg {
-		return fmt.Errorf("insufficient fees; got: %q, required: %q = %q(gas fees) +%q(additional msg fees)", feeCoins, requiredFees.Add(additionalFees...), requiredFees, additionalFees)
+		return fmt.Errorf("insufficient fees; got: %q, required fees(based on min gas price on node %q): %q = %q(gas fees, based on min gas price on node %q) +%q(additional msg fees)", feeCoins, minGasPrices, requiredFees.Add(additionalFees...), requiredFees, minGasPrices, additionalFees)
 	}
 
 	if !requiredFees.IsZero() && !feeCoins.IsAnyGTE(requiredFees) {
