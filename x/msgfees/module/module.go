@@ -3,6 +3,7 @@ package msgfees
 import (
 	"context"
 	"encoding/json"
+	"github.com/provenance-io/provenance/x/msgfees/simulation"
 	"math/rand"
 
 	msgfees2 "github.com/provenance-io/provenance/x/msgfees"
@@ -166,7 +167,7 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 
 // GenerateGenesisState creates a randomized GenState of the msgfees module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	// simulation.RandomizedGenState(simState)
+	 simulation.RandomizedGenState(simState)
 }
 
 // ProposalContents returns all the msgfees content functions used to
@@ -177,7 +178,7 @@ func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes
 
 // RandomizedParams creates randomized msgfees param changes for the simulator.
 func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	return nil
+	return simulation.ParamChanges(r)
 }
 
 // RegisterStoreDecoder registers a decoder for msgfees module's types
