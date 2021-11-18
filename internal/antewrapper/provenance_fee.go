@@ -54,7 +54,7 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, err.Error())
 		}
 		feeToDeduct := feeTx.GetFee()
-		if additionalFees != nil {
+		if additionalFees != nil && len(additionalFees) >0 {
 			var hasNeg bool
 			feeToDeduct, hasNeg = feeToDeduct.SafeSub(additionalFees)
 			if hasNeg {
