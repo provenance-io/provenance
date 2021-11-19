@@ -5288,7 +5288,7 @@ CalculateTxFeesRequest is the request type for the Query RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `tx` | [bytes](#bytes) |  | tx is the transaction to simulate. |
+| `tx_bytes` | [bytes](#bytes) |  | tx_bytes is the transaction to simulate. |
 
 
 

@@ -54,12 +54,12 @@ func (k Keeper) CalculateTxFees(goCtx context.Context, request *types.CalculateT
 
 	additionalFees := sdk.Coins{}
 	totalFees := sdk.Coins{}
-	gasInfo, _, err := k.simulateFunc(request.Tx)
+	gasInfo, _, err := k.simulateFunc(request.TxBytes)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	theTx, err := k.txDecoder(request.Tx)
+	theTx, err := k.txDecoder(request.TxBytes)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}

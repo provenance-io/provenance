@@ -58,8 +58,8 @@ message QueryAllMsgBasedFeesResponse {
 
 // CalculateTxFeesRequest is the request type for the Query RPC method.
 message CalculateTxFeesRequest {
-  // tx is the transaction to simulate.
-  bytes tx = 1;
+  // tx_bytes is the transaction to simulate.
+  bytes tx_bytes = 1;
 }
 
 // CalculateTxFeesResponse is the response type for the Query RPC method.

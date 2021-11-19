@@ -94,7 +94,7 @@ func GetCmdCalculateMsgBasedFees() *cobra.Command {
 			var response *types.CalculateTxFeesResponse
 			if response, err = queryClient.CalculateTxFees(
 				context.Background(),
-				&types.CalculateTxFeesRequest{Tx: txBytes},
+				&types.CalculateTxFeesRequest{TxBytes: txBytes},
 			); err != nil {
 				fmt.Printf("failed to calculate fees: %s\n", err.Error())
 				return nil
