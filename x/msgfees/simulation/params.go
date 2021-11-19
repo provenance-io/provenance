@@ -4,18 +4,18 @@ package simulation
 
 import (
 	"fmt"
-	"github.com/provenance-io/provenance/x/msgfees/types"
 	"math/rand"
+
+	"github.com/provenance-io/provenance/x/msgfees/types"
 
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-
 )
 
 const (
-	keyMinGasPrice            = "MinGasPrice"
-	keyEnableGovernance       = "EnableGovernance"
+	keyMinGasPrice      = "MinGasPrice"
+	keyEnableGovernance = "EnableGovernance"
 )
 
 // ParamChanges defines the parameters that can be modified by param change proposals
