@@ -5,17 +5,17 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/provenance-io/provenance/x/msgfees/types"
 	"math/rand"
 
-	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/provenance-io/provenance/x/msgfees/types"
 
+	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 // Simulation parameter constants
 const (
-	MinGasPrice = "min_gas_price"
-	EnableGovernance       = "enable_governance"
+	MinGasPrice      = "min_gas_price"
+	EnableGovernance = "enable_governance"
 )
 
 // GenMinGasPrice randomized MinGasPrice
@@ -27,8 +27,6 @@ func GenMinGasPrice(r *rand.Rand) uint32 {
 func GenEnableGovernance(r *rand.Rand) bool {
 	return r.Int63n(101) <= 50 // 50% chance of enablement
 }
-
-
 
 // RandomizedGenState generates a random GenesisState for distribution
 func RandomizedGenState(simState *module.SimulationState) {
@@ -44,18 +42,18 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { enableGovernance = GenEnableGovernance(r) },
 	)
 
-	attributeGenesis := types.GenesisState{
+	msgFeesGenesis := types.GenesisState{
 		Params: types.Params{
-			MinGasPrice: minGasPrice,
+			MinGasPrice:      minGasPrice,
 			EnableGovernance: enableGovernance,
 		},
 		MsgBasedFees: []types.MsgBasedFee{},
 	}
 
-	bz, err := json.MarshalIndent(&attributeGenesis, "", " ")
+	bz, err := json.MarshalIndent(&msgFeesGenesis, "", " ")
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Selected randomly generated attribute parameters:\n%s\n", bz)
-	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&attributeGenesis)
+	fmt.Printf("Selected randomly generated msgfees parameters:\n%s\n", bz)
+	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&msgFeesGenesis)
 }

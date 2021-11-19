@@ -22,3 +22,8 @@ func (k Keeper) GetEnableGovernance(ctx sdk.Context) (enabled bool) {
 	}
 	return
 }
+
+// SetParams sets the account parameters to the param space.
+func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
+	k.paramSpace.SetParamSet(ctx, &params)
+}

@@ -145,8 +145,3 @@ func (k Keeper) DeductFees(bankKeeper cosmosauthtypes.BankKeeper, ctx sdk.Contex
 	ctx.Logger().Info("NOTICE: End of DeductFees:" + ctx.GasMeter().String())
 	return nil
 }
-
-// SetParams sets the account parameters to the param space.
-func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
-	k.paramSpace.SetParamSet(ctx, &params)
-}
