@@ -103,8 +103,14 @@ func (g *FeeGasMeter) FeeConsumedForType(msgType string) sdk.Coin {
 
 func (g *FeeGasMeter) FeeConsumed() sdk.Coins {
 	consumedFees := make(sdk.Coins, len(g.usedFees))
+	var i = 0
 	for _, coin := range g.usedFees {
-		consumedFees.Add(coin)
+		consumedFees[i] = sdk.NewCoin(coin.Denom, coin.Amount)
+		i++
 	}
 	return consumedFees
+}
+
+func (g *FeeGasMeter) FeeConsumedByMsg() map[string]sdk.Coin {
+	return g.usedFees
 }
