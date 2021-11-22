@@ -20,7 +20,7 @@ type Keeper struct {
 	paramSpace       paramtypes.Subspace
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 	defaultFeeDenom  string
-	simulateFunc     func(txBytes []byte) (sdk.GasInfo, *sdk.Result, error)
+	simulateFunc     func(txBytes []byte) (sdk.GasInfo, *sdk.Result, error, sdk.Context)
 	txDecoder        sdk.TxDecoder
 }
 
@@ -32,7 +32,7 @@ func NewKeeper(
 	paramSpace paramtypes.Subspace,
 	feeCollectorName string,
 	defaultFeeDenom string,
-	simulateFunc func(txBytes []byte) (sdk.GasInfo, *sdk.Result, error),
+	simulateFunc func(txBytes []byte) (sdk.GasInfo, *sdk.Result, error, sdk.Context),
 	txDecoder sdk.TxDecoder,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {

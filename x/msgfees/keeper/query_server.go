@@ -2,11 +2,13 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/x/msgfees/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -53,36 +55,25 @@ func (k Keeper) CalculateTxFees(goCtx context.Context, request *types.CalculateT
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	additionalFees := sdk.Coins{}
-	totalFees := sdk.Coins{}
-	gasInfo, _, err := k.simulateFunc(request.TxBytes)
+	gasInfo, _, err, txCtx := k.simulateFunc(request.TxBytes)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	theTx, err := k.txDecoder(request.TxBytes)
+	_, err = k.txDecoder(request.TxBytes)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
-	msgs := theTx.GetMsgs()
-	for _, msg := range msgs {
-		typeURL := sdk.MsgTypeURL(msg)
-		msgFees, err := k.GetMsgBasedFee(ctx, typeURL)
-		if err != nil {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
-		}
-		if msgFees == nil {
-			continue
-		}
-		if msgFees.AdditionalFee.IsPositive() {
-			additionalFees = additionalFees.Add(sdk.NewCoin(msgFees.AdditionalFee.Denom, msgFees.AdditionalFee.Amount))
-		}
-	}
 
-	totalFees = totalFees.Add(sdk.NewCoin("nhash", sdk.NewInt(int64(gasInfo.GasUsed)*int64(k.GetMinGasPrice(ctx)))))
+	gasMeter, ok := txCtx.GasMeter().(*antewrapper.FeeGasMeter)
+	if !ok {
+		return nil, fmt.Errorf("Unable to extract fee gas meter from transaction context")
+	}
+	totalFees := gasMeter.FeeConsumed().Add(sdk.NewCoin("nhash", sdk.NewInt(int64(gasInfo.GasUsed)*int64(k.GetMinGasPrice(ctx)))))
 	totalFees = totalFees.Add(additionalFees...)
 
 	return &types.CalculateTxFeesResponse{
-		AdditionalFees: additionalFees,
+		AdditionalFees: gasMeter.FeeConsumed(),
 		TotalFees:      totalFees,
 		EstimatedGas:   gasInfo.GasUsed,
 	}, nil
