@@ -13,6 +13,8 @@ import (
 // StoreKey is the store key string for authz
 const StoreKey = types.ModuleName
 
+type baseAppSimulate func(txBytes []byte) (sdk.GasInfo, *sdk.Result, error, sdk.Context)
+
 // Keeper of the Additional fee store
 type Keeper struct {
 	storeKey         sdk.StoreKey
@@ -20,7 +22,7 @@ type Keeper struct {
 	paramSpace       paramtypes.Subspace
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 	defaultFeeDenom  string
-	simulateFunc     func(txBytes []byte) (sdk.GasInfo, *sdk.Result, error, sdk.Context)
+	simulateFunc     baseAppSimulate
 	txDecoder        sdk.TxDecoder
 }
 
@@ -32,7 +34,7 @@ func NewKeeper(
 	paramSpace paramtypes.Subspace,
 	feeCollectorName string,
 	defaultFeeDenom string,
-	simulateFunc func(txBytes []byte) (sdk.GasInfo, *sdk.Result, error, sdk.Context),
+	simulateFunc baseAppSimulate,
 	txDecoder sdk.TxDecoder,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
