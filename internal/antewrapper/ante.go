@@ -36,7 +36,6 @@ var _ sdk.AnteDecorator = FeeMeterContextDecorator{}
 
 // AnteHandle implements the AnteDecorator.AnteHandle method
 func (r FeeMeterContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	newCtx = ctx.WithGasMeter(NewFeeTracingMeterWrapper(ctx.Logger(), ctx.GasMeter()))
-
+	newCtx = ctx.WithGasMeter(NewFeeTracingMeterWrapper(ctx.Logger(), ctx.GasMeter(), simulate))
 	return next(newCtx, tx, simulate)
 }

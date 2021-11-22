@@ -24,16 +24,18 @@ type FeeGasMeter struct {
 
 	usedFees map[string]sdk.Coin // map of msg fee type url --> fees charged
 
+	simulate bool
 }
 
 // NewFeeTracingMeterWrapper returns a reference to a new tracing gas meter that will track calls to the base gas meter
-func NewFeeTracingMeterWrapper(logger log.Logger, baseMeter sdkgas.GasMeter) sdkgas.GasMeter {
+func NewFeeTracingMeterWrapper(logger log.Logger, baseMeter sdkgas.GasMeter, isSimulate bool) sdkgas.GasMeter {
 	return &FeeGasMeter{
 		log:      logger,
 		base:     baseMeter,
 		used:     make(map[string]uint64),
 		calls:    make(map[string]uint64),
 		usedFees: make(map[string]sdk.Coin),
+		simulate: isSimulate,
 	}
 }
 
@@ -113,4 +115,8 @@ func (g *FeeGasMeter) FeeConsumed() sdk.Coins {
 
 func (g *FeeGasMeter) FeeConsumedByMsg() map[string]sdk.Coin {
 	return g.usedFees
+}
+
+func (g *FeeGasMeter) IsSimulate() bool {
+	return g.simulate
 }
