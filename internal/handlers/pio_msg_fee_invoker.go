@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/provenance-io/provenance/internal/antewrapper"
 
@@ -55,11 +56,6 @@ func (afd MsgBasedFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.
 		// if fee granter set deduct fee from feegranter account.
 		// this works with only when feegrant enabled.
 
-		deductFeesFromAcc := afd.accountKeeper.GetAccount(ctx, deductFeesFrom)
-		if deductFeesFromAcc == nil {
-			panic("fee payer address: %s does not exist")
-		}
-
 		feeGasMeter, ok := ctx.GasMeter().(*antewrapper.FeeGasMeter)
 		if !ok {
 			panic("GasMeter is not of type FeeGasMeter")
@@ -75,19 +71,26 @@ func (afd MsgBasedFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.
 				if afd.feegrantKeeper == nil {
 					return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")
 				} else if !feeGranter.Equals(feePayer) {
-					err := afd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, chargedFees, tx.GetMsgs())
+					err = afd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, chargedFees, tx.GetMsgs())
 					if err != nil {
 						return nil, sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
 					}
 				}
 				deductFeesFrom = feeGranter
 			}
+			deductFeesFromAcc := afd.accountKeeper.GetAccount(ctx, deductFeesFrom)
+			if deductFeesFromAcc == nil {
+				panic("fee payer address: %s does not exist")
+			}
+
+			ctx.Logger().Debug(fmt.Sprintf("The Fee consumed by message types : %v", feeGasMeter.FeeConsumedByMsg()))
+
+			err = afd.msgBasedFeeKeeper.DeductFees(afd.bankKeeper, ctx, deductFeesFromAcc, chargedFees)
+			if err != nil {
+				return nil, err
+			}
 		}
-		ctx.Logger().Debug(fmt.Sprintf("The Fee consumed by message type : %v", feeGasMeter.FeeConsumedByMsg()))
-		err = afd.msgBasedFeeKeeper.DeductFees(afd.bankKeeper, ctx, deductFeesFromAcc, chargedFees)
-		if err != nil {
-			return nil, err
-		}
+
 		// set back the original gasMeter
 		ctx = ctx.WithGasMeter(originalGasMeter)
 	}

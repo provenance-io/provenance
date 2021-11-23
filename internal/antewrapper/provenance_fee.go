@@ -21,6 +21,12 @@ type ProvenanceDeductFeeDecorator struct {
 	msgFeeKeeper   msgbasedfeetypes.MsgBasedFeeKeeper
 }
 
+// Common event types and attribute keys
+var (
+	AttributeKeyTotalFee      = "totalfee"
+	AttributeKeyAdditionalFee = "additionalfee"
+)
+
 func NewProvenanceDeductFeeDecorator(ak authante.AccountKeeper, bk types.BankKeeper, fk msgbasedfeetypes.FeegrantKeeper, mbfk msgbasedfeetypes.MsgBasedFeeKeeper) ProvenanceDeductFeeDecorator {
 	return ProvenanceDeductFeeDecorator{
 		ak:             ak,
@@ -91,7 +97,13 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 
 	events := sdk.Events{sdk.NewEvent(sdk.EventTypeTx,
 		sdk.NewAttribute(sdk.AttributeKeyFee, feeTx.GetFee().String()),
-	)}
+	),
+		sdk.NewEvent(sdk.EventTypeTx,
+			sdk.NewAttribute(AttributeKeyTotalFee, feeToDeduct.String()),
+		),
+		sdk.NewEvent(sdk.EventTypeTx,
+			sdk.NewAttribute(AttributeKeyAdditionalFee, additionalFees.String()),
+		)}
 	ctx.EventManager().EmitEvents(events)
 
 	return next(ctx, tx, simulate)
