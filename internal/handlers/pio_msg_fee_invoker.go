@@ -34,7 +34,6 @@ func (afd MsgBasedFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.
 	chargedFees := sdk.Coins{}
 
 	if ctx.TxBytes() != nil && len(ctx.TxBytes()) != 0 {
-		ctx.Logger().Debug("In chargeFees()")
 		originalGasMeter := ctx.GasMeter()
 
 		tx, err := afd.txDecoder(ctx.TxBytes())
@@ -58,6 +57,7 @@ func (afd MsgBasedFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.
 
 		feeGasMeter, ok := ctx.GasMeter().(*antewrapper.FeeGasMeter)
 		if !ok {
+			// all provenance tx's should have this set
 			panic("GasMeter is not of type FeeGasMeter")
 		}
 		chargedFees = feeGasMeter.FeeConsumed()
@@ -80,7 +80,7 @@ func (afd MsgBasedFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.
 			}
 			deductFeesFromAcc := afd.accountKeeper.GetAccount(ctx, deductFeesFrom)
 			if deductFeesFromAcc == nil {
-				panic("fee payer address: %s does not exist")
+				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", deductFeesFrom)
 			}
 
 			ctx.Logger().Debug(fmt.Sprintf("The Fee consumed by message types : %v", feeGasMeter.FeeConsumedByMsg()))
