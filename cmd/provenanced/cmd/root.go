@@ -202,6 +202,7 @@ func txCommand() *cobra.Command {
 		authcmd.GetBroadcastCommand(),
 		authcmd.GetEncodeCommand(),
 		authcmd.GetDecodeCommand(),
+		GetCmdPioSimulateTx(),
 		flags.LineBreak,
 	)
 

@@ -119,19 +119,18 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 
 		msr.routes[requestTypeName] = func(ctx sdk.Context, req sdk.Msg) (*sdk.Result, error) {
 			msgTypeURL := sdk.MsgTypeURL(req)
-			ctx.Logger().Info(fmt.Sprintf("NOTICE: Inside the PIO msg service router handler msg: %v", msgTypeURL))
 
 			feeGasMeter, ok := ctx.GasMeter().(*antewrapper.FeeGasMeter)
 			if !ok {
 				panic("GasMeter is not of type FeeGasMeter")
 			}
+			ctx.Logger().Info(fmt.Sprintf("NOTICE: Inside the PIO msg service router handler msg: %v simulation mode: %v", msgTypeURL, feeGasMeter.IsSimulate()))
 
 			tx, err := msr.decoder(ctx.TxBytes())
 			if err != nil {
 				panic(fmt.Errorf("error msg handling while getting txBytes: %w", err))
 			}
 
-			// cast to FeeTx
 			feeTx, ok := tx.(sdk.FeeTx)
 			if feeTx == nil || !ok {
 				panic("only Fee Tx are supported on provenance.")
@@ -142,7 +141,7 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 				return nil, err
 			}
 			if fee != nil && fee.AdditionalFee.IsPositive() {
-				ctx.Logger().Debug(fmt.Sprintf("NOTICE: Msg %v has an additional fee of %v simulation mode: %v", msgTypeURL, fee.AdditionalFee, feeGasMeter.IsSimulate()))
+				ctx.Logger().Debug(fmt.Sprintf("NOTICE: Msg %v has an additional fee of %v ", msgTypeURL, fee.AdditionalFee))
 				if !feeGasMeter.FeeConsumedForType(msgTypeURL).Amount.IsNil() && !feeGasMeter.IsSimulate() {
 					err = antewrapper.EnsureSufficientFees(runtimeGasForMsg(ctx), feeTx.GetFee(), feeGasMeter.FeeConsumed().Add(fee.AdditionalFee),
 						msr.msgBasedFeeKeeper.GetMinGasPrice(ctx), msr.msgBasedFeeKeeper.GetDefaultFeeDenom())
