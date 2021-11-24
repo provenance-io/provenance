@@ -69,7 +69,7 @@ func (k Keeper) CalculateTxFees(goCtx context.Context, request *types.CalculateT
 	if !ok {
 		return nil, fmt.Errorf("unable to extract fee gas meter from transaction context")
 	}
-	totalFees := gasMeter.FeeConsumed().Add(sdk.NewCoin("nhash", sdk.NewInt(int64(gasInfo.GasUsed)*int64(k.GetMinGasPrice(ctx)))))
+	totalFees := gasMeter.FeeConsumed().Add(sdk.NewCoin(txCtx.MinGasPrices().GetDenomByIndex(0), sdk.NewInt(int64(gasInfo.GasUsed)*int64(k.GetMinGasPrice(ctx)))))
 	totalFees = totalFees.Add(additionalFees...)
 
 	return &types.CalculateTxFeesResponse{
