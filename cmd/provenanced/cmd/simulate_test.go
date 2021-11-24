@@ -26,8 +26,6 @@ type SimulateTestSuite struct {
 	cfg     testnet.Config
 	testnet *testnet.Network
 
-	// sendMsgTypeUrl := "/cosmos.bank.v1beta1.MsgSend"
-	// sendMsgAdditionalFee
 	sendMsgTypeUrl       string
 	sendMsgAdditionalFee sdk.Coin
 
@@ -90,6 +88,7 @@ func (s *SimulateTestSuite) TestSimulateCmd() {
 	testCases := []struct {
 		name                   string
 		args                   []string
+		expectedErr            string
 		expectedGas            uint64
 		expectedAdditionalFees sdk.Coins
 		expectedTotalFees      sdk.Coins
