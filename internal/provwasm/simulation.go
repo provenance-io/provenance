@@ -36,13 +36,14 @@ type ProvwasmWrapper struct {
 	ak authkeeper.AccountKeeperI
 	bk bankkeeper.ViewKeeper
 	nk namekeeper.Keeper
+	keeper wasm.Keeper
 }
 
-func NewProvwasmWrapper(cdc codec.Codec, keeper *wasm.Keeper, validatorSetSource keeper.ValidatorSetSource, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper) *ProvwasmWrapper {
+func NewProvwasmWrapper(cdc codec.Codec, keeper wasm.Keeper, validatorSetSource keeper.ValidatorSetSource, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper) *ProvwasmWrapper {
 
 	return &ProvwasmWrapper{
 		cdc: cdc,
-		wasm: wasm.NewAppModule(cdc, keeper, validatorSetSource),
+		wasm: wasm.NewAppModule(cdc, &keeper, validatorSetSource),
 		ak: ak,
 		bk: bk,
 		nk: nk,
@@ -110,13 +111,13 @@ func (pw ProvwasmWrapper) WeightedOperations(simState module.SimulationState) []
 	return []simtypes.WeightedOperation{
 		simulation.NewWeightedOperation(
 			100,
-			SimulateMsgBindName(pw.ak, pw.bk, pw.nk, &count),
+			SimulateMsgBindName(pw.ak, pw.bk, pw.nk, pw.keeper, &count),
 		),
 	}
 }
 
 // SimulateMsgBindName will bind a NAME under an existing name using a 40% probability of restricting it.
-func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper, count *int) simtypes.Operation {
+func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper, keeper wasm.Keeper, count *int) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -127,7 +128,7 @@ func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper,
 
 
 		node := accs[0]
-		customer := accs[1]
+		consumer := accs[1]
 		feebucket := accs[2]
 		merchant := accs[3]
 
@@ -158,10 +159,10 @@ func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper,
 		future = append(future, simtypes.FutureOperation{Op: SimulateMsgAddAccess(ak, bk, node), BlockHeight: 3})
 		future = append(future, simtypes.FutureOperation{Op: SimulateFinalizeOrActivateMarker(ak, bk, true, node), BlockHeight: 4})
 		future = append(future, simtypes.FutureOperation{Op: SimulateFinalizeOrActivateMarker(ak, bk, false, node), BlockHeight: 5})
-		future = append(future, simtypes.FutureOperation{Op: SimulateMsgWithdrawRequest(ak, bk, node, customer), BlockHeight: 6})
+		future = append(future, simtypes.FutureOperation{Op: SimulateMsgWithdrawRequest(ak, bk, node, consumer), BlockHeight: 6})
 		future = append(future, simtypes.FutureOperation{Op: SimulateMsgStoreContract(ak, bk, feebucket), BlockHeight: 6})
 		future = append(future, simtypes.FutureOperation{Op: SimulateMsgInitiateContract(ak, bk, feebucket, merchant, parent.Name, nk), BlockHeight: 7})
-		future = append(future, simtypes.FutureOperation{Op: SimulateMsgExecuteContract(ak, bk, node, customer), BlockHeight: 8})
+		future = append(future, simtypes.FutureOperation{Op: SimulateMsgExecuteContract(ak, bk, keeper, consumer), BlockHeight: 8})
 
 		return op, future, err
 	}
@@ -263,24 +264,38 @@ func SimulateMsgInitiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.Vie
 	}
 }
 
-func SimulateMsgExecuteContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, node simtypes.Account, customer simtypes.Account) simtypes.Operation {
+func SimulateMsgExecuteContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, keeper wasm.Keeper, consumer simtypes.Account) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		amount, err := sdk.ParseCoinsNormalized(fmt.Sprintf("100%s", denom))
 
-		if err == nil {
+		var contractAddr sdk.AccAddress
+		fmt.Println("before iteration:")
+		fmt.Println(keeper)
+		keeper.IterateContractInfo(ctx, func(addr sdk.AccAddress, contract types.ContractInfo) bool {
+			fmt.Println("looping")
+			contractAddr = addr
+			// return true to stop iteration early as we only want first contract
+			return true
+		})
+
+		fmt.Println("hello: ", contractAddr)
+
+		fmt.Println("Hello world!")
+		fmt.Println(err)
+		if err != nil {
 			panic(err)
 		}
 
 		msg := &types.MsgExecuteContract{
-			Sender: customer.Address.String(),
+			Sender: consumer.Address.String(),
 			Funds: amount,
-			Contract: node.Address.String(),
-			Msg: []byte("execute"),
+			Contract: contractAddr.String(),
+			Msg: []byte("{\"purchase\":{\"id\":\"12345\"}}"),
 		}
 
-		return Dispatch(r, app, ctx, ak, bk, customer, chainID, msg, nil)
+		return Dispatch(r, app, ctx, ak, bk, consumer, chainID, msg, nil)
 	}
 }
 

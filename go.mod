@@ -135,4 +135,4 @@ replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 
 replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.19.0
 
-replace github.com/cosmos/cosmos-sdk => ../cosmos-sdk
+replace github.com/cosmos/cosmos-sdk => ../cosmos-sdk // till we get v0.44.4 or later released
