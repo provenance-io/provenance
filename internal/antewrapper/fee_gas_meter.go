@@ -5,11 +5,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/armon/go-metrics"
 	"github.com/tendermint/tendermint/libs/log"
 
 	sdkgas "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
 type FeeGasMeter struct {
@@ -27,8 +25,8 @@ type FeeGasMeter struct {
 	simulate bool
 }
 
-// NewFeeTracingMeterWrapper returns a reference to a new tracing gas meter that will track calls to the base gas meter
-func NewFeeTracingMeterWrapper(logger log.Logger, baseMeter sdkgas.GasMeter, isSimulate bool) sdkgas.GasMeter {
+// NewFeeGasMeterWrapper returns a reference to a new tracing gas meter that will track calls to the base gas meter
+func NewFeeGasMeterWrapper(logger log.Logger, baseMeter sdkgas.GasMeter, isSimulate bool) sdkgas.GasMeter {
 	return &FeeGasMeter{
 		log:      logger,
 		base:     baseMeter,
@@ -63,14 +61,6 @@ func (g *FeeGasMeter) Limit() sdkgas.Gas {
 
 // ConsumeGas increments the amount of gas used on the meter associated with a given purpose.
 func (g *FeeGasMeter) ConsumeGas(amount sdkgas.Gas, descriptor string) {
-	cur := g.used[descriptor]
-	g.used[descriptor] = cur + amount
-
-	cur = g.calls[descriptor]
-	g.calls[descriptor] = cur + 1
-
-	telemetry.IncrCounterWithLabels([]string{"tx", "gas", "consumed"}, float32(amount), []metrics.Label{telemetry.NewLabel("purpose", descriptor)})
-
 	g.base.ConsumeGas(amount, descriptor)
 }
 
@@ -86,10 +76,10 @@ func (g *FeeGasMeter) IsOutOfGas() bool {
 
 // String implements stringer interface
 func (g *FeeGasMeter) String() string {
-	return fmt.Sprintf("feeGasMeter:\n  limit: %d\n  consumed: %d", g.base.Limit(), g.base.GasConsumed())
+	return fmt.Sprintf("feeGasMeter:\n  limit: %d\n  consumed: %d fee consumed: %v", g.base.Limit(), g.base.GasConsumed(), g.FeeConsumed())
 }
 
-// ConsumeFee increments the amount of gas used on the meter associated with a given purpose.
+// ConsumeFee increments the amount of msg fee required by a msg type.
 func (g *FeeGasMeter) ConsumeFee(amount sdk.Coin, msgType string) {
 	cur := g.usedFees[msgType]
 	if !cur.Amount.IsNil() {
@@ -103,6 +93,7 @@ func (g *FeeGasMeter) FeeConsumedForType(msgType string) sdk.Coin {
 	return g.usedFees[msgType]
 }
 
+// FeeConsumed returns total fee consumed in the current fee gas meter, is returned Sorted.
 func (g *FeeGasMeter) FeeConsumed() sdk.Coins {
 	consumedFees := make(sdk.Coins, len(g.usedFees))
 	var i = 0
@@ -110,9 +101,10 @@ func (g *FeeGasMeter) FeeConsumed() sdk.Coins {
 		consumedFees[i] = sdk.NewCoin(coin.Denom, coin.Amount)
 		i++
 	}
-	return consumedFees
+	return consumedFees.Sort()
 }
 
+// FeeConsumedByMsg total fee consumed for a particular MsgType
 func (g *FeeGasMeter) FeeConsumedByMsg() map[string]sdk.Coin {
 	return g.usedFees
 }
