@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+
 	"github.com/provenance-io/provenance/x/attribute/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -9,7 +10,7 @@ import (
 
 // InitGenesis creates the initial genesis state for the attribute module.
 func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
-	ctx.Logger().Info(fmt.Sprintf("Params %v",data.Params))
+	ctx.Logger().Info(fmt.Sprintf("Params %v", data.Params))
 	k.SetParams(ctx, data.Params)
 	if err := data.ValidateBasic(); err != nil {
 		panic(err)

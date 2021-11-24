@@ -21,6 +21,12 @@ type ProvenanceDeductFeeDecorator struct {
 	msgFeeKeeper   msgbasedfeetypes.MsgBasedFeeKeeper
 }
 
+// Common event types and attribute keys
+var (
+	AttributeKeyTotalFee      = "totalfee"
+	AttributeKeyAdditionalFee = "additionalfee"
+)
+
 func NewProvenanceDeductFeeDecorator(ak authante.AccountKeeper, bk types.BankKeeper, fk msgbasedfeetypes.FeegrantKeeper, mbfk msgbasedfeetypes.MsgBasedFeeKeeper) ProvenanceDeductFeeDecorator {
 	return ProvenanceDeductFeeDecorator{
 		ak:             ak,
@@ -46,43 +52,43 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 	deductFeesFrom := feePayer
 
 	// deduct the fees
-	if !feeTx.GetFee().IsZero() {
-		// Compute msg additionalFees
-		msgs := feeTx.GetMsgs()
-		additionalFees, errFromCalculateAdditionalFeesToBePaid := CalculateAdditionalFeesToBePaid(ctx, dfd.msgFeeKeeper, msgs...)
-		if errFromCalculateAdditionalFeesToBePaid != nil {
-			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, err.Error())
+	// Compute msg additionalFees
+	msgs := feeTx.GetMsgs()
+	additionalFees, errFromCalculateAdditionalFeesToBePaid := CalculateAdditionalFeesToBePaid(ctx, dfd.msgFeeKeeper, msgs...)
+	if errFromCalculateAdditionalFeesToBePaid != nil {
+		return ctx, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+	feeToDeduct := feeTx.GetFee()
+	if additionalFees != nil && len(additionalFees) > 0 {
+		var hasNeg bool
+		feeToDeduct, hasNeg = feeToDeduct.SafeSub(additionalFees)
+		if hasNeg {
+			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", feeToDeduct)
 		}
-		feeToDeduct := feeTx.GetFee()
-		if additionalFees != nil && len(additionalFees) >0 {
-			var hasNeg bool
-			feeToDeduct, hasNeg = feeToDeduct.SafeSub(additionalFees)
-			if hasNeg {
-				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", feeToDeduct)
+	}
+
+	// if feegranter set deduct fee from feegranter account.
+	// this works with only when feegrant enabled.
+	if feeGranter != nil {
+		if dfd.feegrantKeeper == nil {
+			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")
+		} else if !feeGranter.Equals(feePayer) {
+			err = dfd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, feeToDeduct, tx.GetMsgs())
+
+			if err != nil {
+				return ctx, sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
 			}
 		}
 
-		// if feegranter set deduct fee from feegranter account.
-		// this works with only when feegrant enabled.
-		if feeGranter != nil {
-			if dfd.feegrantKeeper == nil {
-				return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")
-			} else if !feeGranter.Equals(feePayer) {
-				err = dfd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, feeToDeduct, tx.GetMsgs())
+		deductFeesFrom = feeGranter
+	}
 
-				if err != nil {
-					return ctx, sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
-				}
-			}
-
-			deductFeesFrom = feeGranter
-		}
-
-		deductFeesFromAcc := dfd.ak.GetAccount(ctx, deductFeesFrom)
-		if deductFeesFromAcc == nil {
-			return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", deductFeesFrom)
-		}
-
+	deductFeesFromAcc := dfd.ak.GetAccount(ctx, deductFeesFrom)
+	if deductFeesFromAcc == nil {
+		return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", deductFeesFrom)
+	}
+	// deduct total fees (base fee + additional fee)
+	if !feeToDeduct.IsZero() {
 		err = DeductFees(dfd.bankKeeper, ctx, deductFeesFromAcc, feeToDeduct)
 		if err != nil {
 			return ctx, err
@@ -91,7 +97,13 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 
 	events := sdk.Events{sdk.NewEvent(sdk.EventTypeTx,
 		sdk.NewAttribute(sdk.AttributeKeyFee, feeTx.GetFee().String()),
-	)}
+	),
+		sdk.NewEvent(sdk.EventTypeTx,
+			sdk.NewAttribute(AttributeKeyTotalFee, feeToDeduct.String()),
+		),
+		sdk.NewEvent(sdk.EventTypeTx,
+			sdk.NewAttribute(AttributeKeyAdditionalFee, additionalFees.String()),
+		)}
 	ctx.EventManager().EmitEvents(events)
 
 	return next(ctx, tx, simulate)
