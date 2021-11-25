@@ -1,6 +1,7 @@
 package antewrapper
 
 import (
+	"fmt"
 	sdkgas "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
@@ -61,6 +62,16 @@ func TestFeeGasMeter(t *testing.T) {
 		require.Equalf(t, "feeGasMeter:\n  limit: 100\n  consumed: 30 fee consumed: 1000000nhash", meter2.String(), "expect string output to match")
 		require.Equalf(t,"1000000nhash",meter2.FeeConsumed().String(),"expect string output to match" )
 		require.Panics(t, func() { meter2.ConsumeGas(sdkgas.Gas(70)+2, "panic") })
-
+		meter2.ConsumeFee(sdk.NewCoin("nhash", sdk.NewInt(2000000)),"/cosmos.bank.v1beta1.MsgSend")
+		require.Equalf(t, "feeGasMeter:\n  limit: 100\n  consumed: 102 fee consumed: 3000000nhash", meter2.String(), "expect string output to match")
+		meter2.RefundGas(uint64(20), "refund")
+		require.Equalf(t, "feeGasMeter:\n  limit: 100\n  consumed: 82 fee consumed: 3000000nhash", meter2.String(), "expect string output to match")
+		require.Equalf(t,"3000000nhash",meter2.FeeConsumed().String(),"expect string output to match" )
+		require.Equalf(t,"map[/cosmos.bank.v1beta1.MsgSend:3000000nhash]", fmt.Sprintf("%v", meter2.FeeConsumedByMsg()),"expect string output to match" )
+		meter2.ConsumeFee(sdk.NewCoin("doge", sdk.NewInt(2000000)),"/provenance.marker.v1.MsgAddMarkerRequest")
+		require.Equalf(t,"2000000doge,3000000nhash",meter2.FeeConsumed().String(),"expect string output to match" )
+		require.Equalf(t,"2000000doge",meter2.FeeConsumedForType("/provenance.marker.v1.MsgAddMarkerRequest").String(),"expect string output to match" )
+		require.Equalf(t,"3000000nhash",meter2.FeeConsumedForType("/cosmos.bank.v1beta1.MsgSend").String(),"expect string output to match" )
+		require.Equalf(t,false,meter2.IsSimulate(),"simulate should be false" )
 	}
 }
