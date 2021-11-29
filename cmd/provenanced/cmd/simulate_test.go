@@ -88,7 +88,6 @@ func (s *SimulateTestSuite) TestSimulateCmd() {
 	testCases := []struct {
 		name                   string
 		args                   []string
-		expectedErr            string
 		expectedGas            uint64
 		expectedAdditionalFees sdk.Coins
 		expectedTotalFees      sdk.Coins
