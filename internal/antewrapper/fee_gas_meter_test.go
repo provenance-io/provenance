@@ -11,8 +11,7 @@ import (
 
 func TestFeeGasMeter(t *testing.T) {
 
-	t.Parallel()
-	cases := []struct {
+	casesFeeGas := []struct {
 		limit sdkgas.Gas
 		usage []sdkgas.Gas
 		fees  map[string]sdk.Coin
@@ -25,7 +24,7 @@ func TestFeeGasMeter(t *testing.T) {
 		{65536, []sdkgas.Gas{32768, 32767, 1}, nil},
 	}
 
-	for tcnum, tc := range cases {
+	for tcnum, tc := range casesFeeGas {
 		meter := NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(tc.limit), false).(*FeeGasMeter)
 		used := uint64(0)
 		usedFee := sdk.NewCoins()
