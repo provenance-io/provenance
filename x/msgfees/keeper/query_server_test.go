@@ -42,8 +42,10 @@ type QueryServerTestSuite struct {
 }
 
 func (s *QueryServerTestSuite) SetupTest() {
-	s.app = simapp.Setup(false)
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.app = simapp.Setup(true)
+	s.ctx = s.app.BaseApp.NewContext(true, tmproto.Header{})
+	s.app.AccountKeeper.SetParams(s.ctx, authtypes.DefaultParams())
+	s.app.BankKeeper.SetParams(s.ctx, banktypes.DefaultParams())
 	s.cfg = testutil.DefaultTestNetworkConfig()
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, s.app.MsgBasedFeeKeeper)
@@ -55,14 +57,16 @@ func (s *QueryServerTestSuite) SetupTest() {
 	s.user1 = s.user1Addr.String()
 
 	s.privkey2 = secp256k1.GenPrivKey()
-	s.pubkey2 = s.privkey1.PubKey()
+	s.pubkey2 = s.privkey2.PubKey()
 	s.user2Addr = sdk.AccAddress(s.pubkey2.Address())
 	s.user2 = s.user2Addr.String()
 
-	authParams := authtypes.DefaultParams()
-	s.app.AccountKeeper.SetParams(s.ctx, authParams)
 	s.acct1 = s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr)
+	s.app.AccountKeeper.SetAccount(s.ctx,s.acct1)
 	s.acct2 = s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user2Addr)
+	s.app.AccountKeeper.SetAccount(s.ctx,s.acct2)
+
+	simapp.FundAccount(s.app, s.ctx, s.acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100))))
 
 }
 
@@ -108,7 +112,7 @@ func (s *QueryServerTestSuite) TestCalculateTxFees() {
 		panic(err)
 	}
 
-	theTx.SetMemo("memo")
+	//theTx.SetMemo("memo")
 	theTx.SetFeeAmount(sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1))))
 	theTx.SetGasLimit(uint64(1000000000))
 
@@ -117,6 +121,7 @@ func (s *QueryServerTestSuite) TestCalculateTxFees() {
 	simulate1 = types.CalculateTxFeesRequest{
 		TxBytes: txBytes,
 	}
+	println(s.app.AccountKeeper.GetParams(s.ctx).MaxMemoCharacters)
 	response, err = queryClient.CalculateTxFees(s.ctx.Context(), &simulate1)
 	s.Assert().NoError(err)
 	s.Assert().Nil(response)

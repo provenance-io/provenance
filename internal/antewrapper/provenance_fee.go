@@ -88,7 +88,7 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 		return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", deductFeesFrom)
 	}
 	// deduct total fees (base fee + additional fee)
-	if !feeToDeduct.IsZero() {
+	if !feeToDeduct.IsZero() && !simulate {
 		err = DeductFees(dfd.bankKeeper, ctx, deductFeesFromAcc, feeToDeduct)
 		if err != nil {
 			return ctx, err
