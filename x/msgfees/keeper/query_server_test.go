@@ -62,9 +62,9 @@ func (s *QueryServerTestSuite) SetupTest() {
 	s.user2 = s.user2Addr.String()
 
 	s.acct1 = s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr)
-	s.app.AccountKeeper.SetAccount(s.ctx,s.acct1)
+	s.app.AccountKeeper.SetAccount(s.ctx, s.acct1)
 	s.acct2 = s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user2Addr)
-	s.app.AccountKeeper.SetAccount(s.ctx,s.acct2)
+	s.app.AccountKeeper.SetAccount(s.ctx, s.acct2)
 
 	simapp.FundAccount(s.app, s.ctx, s.acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100))))
 
@@ -119,10 +119,11 @@ func (s *QueryServerTestSuite) TestCalculateTxFees() {
 	txBytes, err := s.cfg.TxConfig.TxEncoder()(theTx.(sdk.Tx))
 	s.Require().NoError(err)
 	simulate1 = types.CalculateTxFeesRequest{
-		TxBytes: txBytes,
+		TxBytes:          txBytes,
+		DefaultBaseDenom: "stake",
 	}
 	println(s.app.AccountKeeper.GetParams(s.ctx).MaxMemoCharacters)
 	response, err = queryClient.CalculateTxFees(s.ctx.Context(), &simulate1)
 	s.Assert().NoError(err)
-	s.Assert().Nil(response)
+	s.Assert().NotNil(response)
 }
