@@ -83,21 +83,16 @@ func TestSimulateTestSuite(t *testing.T) {
 }
 
 func (s *SimulateTestSuite) TestSimulateCmd() {
-
 	signedTx := s.GenerateAndSignSend(s.testnet.Validators[0].Address.String(), s.accountAddr.String(), fmt.Sprintf("3%s", s.cfg.BondDenom))
 	testCases := []struct {
 		name                   string
 		args                   []string
-		expectedGas            uint64
 		expectedAdditionalFees sdk.Coins
-		expectedTotalFees      sdk.Coins
 	}{
 		{
 			"should succeed with additional fees on send in same denom as gas",
-			[]string{signedTx, "-o", "json"},
-			uint64(74362),
+			[]string{signedTx, "-o", "json", "--default-denom", "stake"},
 			sdk.NewCoins(s.sendMsgAdditionalFee),
-			sdk.NewCoins(s.sendMsgAdditionalFee.Add(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(int64(74362)*int64(s.minGasPrice))))),
 		},
 	}
 	for _, tc := range testCases {
@@ -112,9 +107,9 @@ func (s *SimulateTestSuite) TestSimulateCmd() {
 			var result msgfeestypes.CalculateTxFeesResponse
 			err = s.cfg.Codec.UnmarshalJSON(out.Bytes(), &result)
 			s.Require().NoError(err)
-			s.Assert().Equal(tc.expectedGas, result.EstimatedGas)
 			s.Assert().Equal(tc.expectedAdditionalFees, result.AdditionalFees)
-			s.Assert().Equal(tc.expectedTotalFees, result.TotalFees)
+			expectedTotalFees := sdk.NewCoins(s.sendMsgAdditionalFee.Add(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(int64(result.EstimatedGas)*int64(s.minGasPrice)))))
+			s.Assert().Equal(expectedTotalFees, result.TotalFees)
 		})
 	}
 }

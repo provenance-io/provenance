@@ -5289,6 +5289,7 @@ CalculateTxFeesRequest is the request type for the Query RPC method.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `tx_bytes` | [bytes](#bytes) |  | tx_bytes is the transaction to simulate. |
+| `default_base_denom` | [string](#string) |  | default_base_denom is used to set the denom used for gas fees if not set it will default to nhash. |
 
 
 

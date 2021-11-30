@@ -14,6 +14,10 @@ import (
 	"github.com/provenance-io/provenance/x/msgfees/types"
 )
 
+const (
+	flagDefaultDenom = "default-denom"
+)
+
 func GetCmdPioSimulateTx() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "simulate [msg_tx_json_file]",
@@ -35,12 +39,20 @@ func GetCmdPioSimulateTx() *cobra.Command {
 				return err
 			}
 
+			defaultDenom, err := cmd.Flags().GetString(flagDefaultDenom)
+			if err != nil {
+				return err
+			}
+
 			queryClient := types.NewQueryClient(clientCtx)
 
 			var response *types.CalculateTxFeesResponse
 			if response, err = queryClient.CalculateTxFees(
 				context.Background(),
-				&types.CalculateTxFeesRequest{TxBytes: txBytes},
+				&types.CalculateTxFeesRequest{
+					TxBytes:          txBytes,
+					DefaultBaseDenom: defaultDenom,
+				},
 			); err != nil {
 				fmt.Printf("failed to calculate fees: %s\n", err.Error())
 				return nil
@@ -48,6 +60,7 @@ func GetCmdPioSimulateTx() *cobra.Command {
 			return clientCtx.PrintProto(response)
 		},
 	}
+	cmd.Flags().String(flagDefaultDenom, "nhash", "Denom used for gas costs")
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }

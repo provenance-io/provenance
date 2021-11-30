@@ -60,16 +60,15 @@ func (k Keeper) CalculateTxFees(goCtx context.Context, request *types.CalculateT
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	_, err = k.txDecoder(request.TxBytes)
-	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
-	}
-
 	gasMeter, ok := txCtx.GasMeter().(*antewrapper.FeeGasMeter)
 	if !ok {
 		return nil, fmt.Errorf("unable to extract fee gas meter from transaction context")
 	}
-	totalFees := gasMeter.FeeConsumed().Add(sdk.NewCoin(k.defaultFeeDenom, sdk.NewInt(int64(gasInfo.GasUsed)*int64(k.GetMinGasPrice(ctx)))))
+	baseDenom := k.defaultFeeDenom
+	if request.DefaultBaseDenom != "" {
+		baseDenom = request.DefaultBaseDenom
+	}
+	totalFees := gasMeter.FeeConsumed().Add(sdk.NewCoin(baseDenom, sdk.NewInt(int64(gasInfo.GasUsed)*int64(k.GetMinGasPrice(ctx)))))
 	totalFees = totalFees.Add(additionalFees...)
 
 	return &types.CalculateTxFeesResponse{
