@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -39,6 +40,8 @@ type QueryServerTestSuite struct {
 	user2     string
 	user2Addr sdk.AccAddress
 	acct2     authtypes.AccountI
+
+	minGasPrice uint32
 }
 
 func (s *QueryServerTestSuite) SetupTest() {
@@ -50,6 +53,9 @@ func (s *QueryServerTestSuite) SetupTest() {
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, s.app.MsgBasedFeeKeeper)
 	s.queryClient = types.NewQueryClient(queryHelper)
+
+	s.minGasPrice = 10
+	s.app.MsgBasedFeeKeeper.SetParams(s.ctx, types.NewParams(true, s.minGasPrice))
 
 	s.privkey1 = secp256k1.GenPrivKey()
 	s.pubkey1 = s.privkey1.PubKey()
@@ -66,7 +72,7 @@ func (s *QueryServerTestSuite) SetupTest() {
 	s.acct2 = s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user2Addr)
 	s.app.AccountKeeper.SetAccount(s.ctx, s.acct2)
 
-	simapp.FundAccount(s.app, s.ctx, s.acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100))))
+	simapp.FundAccount(s.app, s.ctx, s.acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))))
 
 }
 
@@ -76,16 +82,37 @@ func TestQuerierTestSuite(t *testing.T) {
 
 func (s *QueryServerTestSuite) TestCalculateTxFees() {
 	queryClient := s.queryClient
-	simulate1 := types.CalculateTxFeesRequest{
-		TxBytes: nil,
-	}
-	response, err := queryClient.CalculateTxFees(s.ctx.Context(), &simulate1)
-	s.Assert().Error(err)
-	s.Assert().Nil(response)
-	bankSend := banktypes.NewMsgSend(s.user1Addr, s.user1Addr, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100))))
+	bankSend := banktypes.NewMsgSend(s.user1Addr, s.user1Addr, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))))
 	theTx := s.cfg.TxConfig.NewTxBuilder()
 	theTx.SetMsgs(bankSend)
+	s.signTx(theTx)
 
+	theTx.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1))))
+	theTx.SetGasLimit(uint64(1000000000))
+
+	txBytes, err := s.cfg.TxConfig.TxEncoder()(theTx.(sdk.Tx))
+	s.Require().NoError(err)
+	simulateReq := types.CalculateTxFeesRequest{
+		TxBytes:          txBytes,
+		DefaultBaseDenom: s.cfg.BondDenom,
+	}
+	response, err := queryClient.CalculateTxFees(s.ctx.Context(), &simulateReq)
+	s.Assert().NoError(err)
+	s.Assert().NotNil(response)
+	s.Assert().True(response.AdditionalFees.Empty())
+	expectedTotalFees := sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(int64(response.EstimatedGas)*int64(s.minGasPrice))))
+	s.Assert().Equal(expectedTotalFees, response.TotalFees)
+
+	s.app.MsgBasedFeeKeeper.SetMsgBasedFee(s.ctx, types.NewMsgBasedFee("/cosmos.bank.v1beta1.MsgSend", sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1))))
+	response, err = queryClient.CalculateTxFees(s.ctx.Context(), &simulateReq)
+	s.Assert().NoError(err)
+	s.Assert().NotNil(response)
+	expectedTotalFees = response.AdditionalFees.Add(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(int64(response.EstimatedGas)*int64(s.minGasPrice))))
+	s.Assert().Equal(expectedTotalFees, response.TotalFees)
+	s.Assert().Equal(sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1))), response.AdditionalFees)
+}
+
+func (s *QueryServerTestSuite) signTx(theTx client.TxBuilder) {
 	account1Sig := signing.SignatureV2{
 		PubKey: s.pubkey1,
 		Data: &signing.SingleSignatureData{
@@ -111,19 +138,4 @@ func (s *QueryServerTestSuite) TestCalculateTxFees() {
 	if err != nil {
 		panic(err)
 	}
-
-	//theTx.SetMemo("memo")
-	theTx.SetFeeAmount(sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1))))
-	theTx.SetGasLimit(uint64(1000000000))
-
-	txBytes, err := s.cfg.TxConfig.TxEncoder()(theTx.(sdk.Tx))
-	s.Require().NoError(err)
-	simulate1 = types.CalculateTxFeesRequest{
-		TxBytes:          txBytes,
-		DefaultBaseDenom: "stake",
-	}
-	println(s.app.AccountKeeper.GetParams(s.ctx).MaxMemoCharacters)
-	response, err = queryClient.CalculateTxFees(s.ctx.Context(), &simulate1)
-	s.Assert().NoError(err)
-	s.Assert().NotNil(response)
 }
