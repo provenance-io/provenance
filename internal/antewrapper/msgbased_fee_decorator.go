@@ -10,6 +10,10 @@ import (
 	msgbasedfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
+const (
+	DefaultInsufficientFeeMsg = "insufficient fees; after deducting fees required,got"
+)
+
 // MsgBasedFeeDecorator will check if the transaction's fee is at least as large
 // as tax + additional minimum gasFee (defined in msgfeeskeeper)
 // and record additional fee proceeds to msgfees module to track additional fee proceeds.
@@ -161,11 +165,11 @@ func EnsureSufficientMempoolFees(ctx sdk.Context, gas uint64, feeCoins sdk.Coins
 	// Before checking gas prices, remove taxed from fee
 	var hasNeg bool
 	if feeCoins, hasNeg = feeCoins.SafeSub(additionalFees); hasNeg {
-		return fmt.Errorf("insufficient fees; got: %q, required fees(based on min gas price on node %q): %q = %q(gas fees, based on min gas price on node %q) +%q(additional msg fees)", feeCoins, minGasPrices, requiredFees.Add(additionalFees...), requiredFees, minGasPrices, additionalFees)
+		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, DefaultInsufficientFeeMsg+": %q, required fees(based on min gas price on node %q): %q = %q(gas fees, based on min gas price on node %q) +%q(additional msg fees)", feeCoins, minGasPrices, requiredFees.Add(additionalFees...), requiredFees, minGasPrices, additionalFees)
 	}
 
 	if !requiredFees.IsZero() && !feeCoins.IsAnyGTE(requiredFees) {
-		return fmt.Errorf("insufficient fees; got: %q, required: %q = %q(gas fees) +%q(additional msg fees)", feeCoins, requiredFees.Add(additionalFees...),
+		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, DefaultInsufficientFeeMsg+": %q, required: %q = %q(gas fees) +%q(additional msg fees)", feeCoins, requiredFees.Add(additionalFees...),
 			requiredFees, additionalFees)
 	}
 
@@ -191,7 +195,7 @@ func EnsureSufficientFees(gas uint64, feeCoins sdk.Coins, additionalFees sdk.Coi
 	// Step 1. Check if fees has enough money to pay additional fees.
 	var hasNeg bool
 	if feeCoins, hasNeg = feeCoins.SafeSub(additionalFees); hasNeg {
-		return fmt.Errorf("insufficient fees; got: %q, required additional fee: %q", feeCoins, additionalFees)
+		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, DefaultInsufficientFeeMsg+": %q, required additional fee: %q", feeCoins, additionalFees)
 	}
 	// Step 2: check if additional fees in nhash, that base fees and additional fees can be paid
 	// total fees in hash - gas limit * price per gas >= additional fees in hash
@@ -202,7 +206,7 @@ func EnsureSufficientFees(gas uint64, feeCoins sdk.Coins, additionalFees sdk.Coi
 		fee := minGasprice.Amount.Mul(sdk.NewIntFromUint64(gas))
 		baseFees := sdk.NewCoin(minGasprice.Denom, fee)
 		if feeCoins, hasNeg = feeCoins.SafeSub(sdk.Coins{baseFees}); hasNeg {
-			return fmt.Errorf("insufficient fees; got: %q, required additional fee: %q", feeCoins, additionalFees)
+			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, DefaultInsufficientFeeMsg+": %q, required additional fee: %q", feeCoins, additionalFees)
 		}
 	}
 

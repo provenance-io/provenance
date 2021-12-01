@@ -129,7 +129,7 @@ func (suite *AnteTestSuite) TestEnsureAdditionalFeesPaid() {
 	suite.Require().NoError(err)
 
 	// then
-	// Set account with insufficient funds (base fee coin insufficient)
+	// Set the account with insufficient funds (base fee coin insufficient)
 	acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
 	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
 	coins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(10)))
