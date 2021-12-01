@@ -62,14 +62,14 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 	if additionalFees != nil && len(additionalFees) > 0 {
 		var hasNeg bool
 		feeToDeduct, hasNeg = feeToDeduct.SafeSub(additionalFees)
-		if hasNeg {
+		if hasNeg && !simulate {
 			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", feeToDeduct)
 		}
 	}
 
 	// if feegranter set deduct fee from feegranter account.
 	// this works with only when feegrant enabled.
-	if feeGranter != nil {
+	if feeGranter != nil && !simulate {
 		if dfd.feegrantKeeper == nil {
 			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")
 		} else if !feeGranter.Equals(feePayer) {

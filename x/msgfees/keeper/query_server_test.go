@@ -72,7 +72,7 @@ func (s *QueryServerTestSuite) SetupTest() {
 	s.acct2 = s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user2Addr)
 	s.app.AccountKeeper.SetAccount(s.ctx, s.acct2)
 
-	simapp.FundAccount(s.app, s.ctx, s.acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))))
+	simapp.FundAccount(s.app, s.ctx, s.acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100000))))
 
 }
 
@@ -82,20 +82,10 @@ func TestQuerierTestSuite(t *testing.T) {
 
 func (s *QueryServerTestSuite) TestCalculateTxFees() {
 	queryClient := s.queryClient
-	bankSend := banktypes.NewMsgSend(s.user1Addr, s.user1Addr, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))))
-	theTx := s.cfg.TxConfig.NewTxBuilder()
-	theTx.SetMsgs(bankSend)
-	s.signTx(theTx)
+	bankSend := banktypes.NewMsgSend(s.user1Addr, s.user2Addr, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))))
+	simulateReq := s.createTxFeesRequest(s.pubkey1, s.privkey1, s.acct1, bankSend)
 
-	theTx.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1))))
-	theTx.SetGasLimit(uint64(1000000000))
-
-	txBytes, err := s.cfg.TxConfig.TxEncoder()(theTx.(sdk.Tx))
-	s.Require().NoError(err)
-	simulateReq := types.CalculateTxFeesRequest{
-		TxBytes:          txBytes,
-		DefaultBaseDenom: s.cfg.BondDenom,
-	}
+	// do send without additional fee
 	response, err := queryClient.CalculateTxFees(s.ctx.Context(), &simulateReq)
 	s.Assert().NoError(err)
 	s.Assert().NotNil(response)
@@ -103,38 +93,64 @@ func (s *QueryServerTestSuite) TestCalculateTxFees() {
 	expectedTotalFees := sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(int64(response.EstimatedGas)*int64(s.minGasPrice))))
 	s.Assert().Equal(expectedTotalFees, response.TotalFees)
 
-	s.app.MsgBasedFeeKeeper.SetMsgBasedFee(s.ctx, types.NewMsgBasedFee("/cosmos.bank.v1beta1.MsgSend", sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1))))
+	// do send with an additional fee
+	sendAddFee := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1))
+	s.app.MsgBasedFeeKeeper.SetMsgBasedFee(s.ctx, types.NewMsgBasedFee("/cosmos.bank.v1beta1.MsgSend", sendAddFee))
 	response, err = queryClient.CalculateTxFees(s.ctx.Context(), &simulateReq)
 	s.Assert().NoError(err)
 	s.Assert().NotNil(response)
 	expectedTotalFees = response.AdditionalFees.Add(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(int64(response.EstimatedGas)*int64(s.minGasPrice))))
 	s.Assert().Equal(expectedTotalFees, response.TotalFees)
-	s.Assert().Equal(sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1))), response.AdditionalFees)
+	s.Assert().Equal(sdk.NewCoins(sendAddFee), response.AdditionalFees)
+
+	// do multiple sends in tx with fee
+	bankSend1 := banktypes.NewMsgSend(s.user1Addr, s.user2Addr, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(2))))
+	bankSend2 := banktypes.NewMsgSend(s.user1Addr, s.user2Addr, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(3))))
+	simulateReq = s.createTxFeesRequest(s.pubkey1, s.privkey1, s.acct1, bankSend1, bankSend2)
+
+	response, err = queryClient.CalculateTxFees(s.ctx.Context(), &simulateReq)
+	s.Assert().NoError(err)
+	s.Assert().NotNil(response)
+	expectedTotalFees = response.AdditionalFees.Add(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(int64(response.EstimatedGas)*int64(s.minGasPrice))))
+	s.Assert().Equal(expectedTotalFees, response.TotalFees)
+	s.Assert().Equal(sdk.NewCoins(sdk.NewCoin(sendAddFee.Denom, sendAddFee.Amount.Mul(sdk.NewInt(2)))), response.AdditionalFees)
 }
 
-func (s *QueryServerTestSuite) signTx(theTx client.TxBuilder) {
-	account1Sig := signing.SignatureV2{
-		PubKey: s.pubkey1,
+func (s *QueryServerTestSuite) createTxFeesRequest(pubKey cryptotypes.PubKey, privKey cryptotypes.PrivKey, acct authtypes.AccountI, msgs ...sdk.Msg) types.CalculateTxFeesRequest {
+	theTx := s.cfg.TxConfig.NewTxBuilder()
+	theTx.SetMsgs(msgs...)
+	s.signTx(theTx, pubKey, privKey, acct)
+	txBytes, err := s.cfg.TxConfig.TxEncoder()(theTx.(sdk.Tx))
+	s.Require().NoError(err)
+	return types.CalculateTxFeesRequest{
+		TxBytes:          txBytes,
+		DefaultBaseDenom: s.cfg.BondDenom,
+	}
+}
+
+func (s *QueryServerTestSuite) signTx(theTx client.TxBuilder, pubKey cryptotypes.PubKey, privKey cryptotypes.PrivKey, acct authtypes.AccountI) {
+	accountSig := signing.SignatureV2{
+		PubKey: pubKey,
 		Data: &signing.SingleSignatureData{
 			SignMode: s.cfg.TxConfig.SignModeHandler().DefaultMode(),
 		},
-		Sequence: s.acct1.GetSequence(),
+		Sequence: acct.GetSequence(),
 	}
 	signerData := authsign.SignerData{
 		ChainID:       s.cfg.ChainID,
-		AccountNumber: s.acct1.GetAccountNumber(),
-		Sequence:      s.acct1.GetSequence(),
+		AccountNumber: acct.GetAccountNumber(),
+		Sequence:      acct.GetSequence(),
 	}
 	signBytes, err := s.cfg.TxConfig.SignModeHandler().GetSignBytes(s.cfg.TxConfig.SignModeHandler().DefaultMode(), signerData, theTx.GetTx())
 	if err != nil {
 		panic(err)
 	}
-	sig, err := s.privkey1.Sign(signBytes)
+	sig, err := privKey.Sign(signBytes)
 	if err != nil {
 		panic(err)
 	}
-	account1Sig.Data.(*signing.SingleSignatureData).Signature = sig
-	err = theTx.SetSignatures(account1Sig)
+	accountSig.Data.(*signing.SingleSignatureData).Signature = sig
+	err = theTx.SetSignatures(accountSig)
 	if err != nil {
 		panic(err)
 	}
