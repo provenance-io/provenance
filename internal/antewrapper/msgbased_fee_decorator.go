@@ -148,6 +148,7 @@ func getFeeTx(tx sdk.Tx) (sdk.FeeTx, error) {
 // Contract: This should only be called during CheckTx as it cannot be part of
 // consensus.
 func EnsureSufficientMempoolFees(ctx sdk.Context, gas uint64, feeCoins sdk.Coins, additionalFees sdk.Coins) error {
+	feeCoinsOriginal := feeCoins
 	requiredFees := sdk.Coins{}
 	minGasPrices := ctx.MinGasPrices()
 	if !minGasPrices.IsZero() {
@@ -169,7 +170,7 @@ func EnsureSufficientMempoolFees(ctx sdk.Context, gas uint64, feeCoins sdk.Coins
 	}
 
 	if !requiredFees.IsZero() && !feeCoins.IsAnyGTE(requiredFees) {
-		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, DefaultInsufficientFeeMsg+": %q, required: %q = %q(gas fees) +%q(additional msg fees)", feeCoins, requiredFees.Add(additionalFees...),
+		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "Base Fee(calculated based on min gas price of the node or Tx) and additional fee cannot be paid with fee value passed in "+": %q, required: %q = %q(gas fees) +%q(additional msg fees)", feeCoinsOriginal, requiredFees.Add(additionalFees...),
 			requiredFees, additionalFees)
 	}
 
@@ -183,7 +184,7 @@ func EnsureAccountHasSufficientFeesWithAcctBalanceCheck(gas uint64, feeCoins sdk
 		return err
 	}
 	// Step 3: Check if account has enough to pay all fees.
-	if !balancePerCoin.IsZero() && !balancePerCoin.IsAnyGTE(feeCoins) {
+	if balancePerCoin.IsZero() || !balancePerCoin.IsAnyGTE(feeCoins) {
 		return fmt.Errorf("fee payer account does not have enough balance to pay for %q", feeCoins)
 	}
 	return nil
