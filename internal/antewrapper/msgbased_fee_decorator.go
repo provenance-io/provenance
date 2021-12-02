@@ -169,7 +169,7 @@ func EnsureSufficientMempoolFees(ctx sdk.Context, gas uint64, feeCoins sdk.Coins
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, DefaultInsufficientFeeMsg+": %q, required fees(based on min gas price on node %q): %q = %q(gas fees, based on min gas price on node %q) +%q(additional msg fees)", feeCoins, minGasPrices, requiredFees.Add(additionalFees...), requiredFees, minGasPrices, additionalFees)
 	}
 
-	if !requiredFees.IsZero() && !feeCoins.IsAnyGTE(requiredFees) {
+	if !requiredFees.IsZero() || !feeCoins.IsAnyGTE(requiredFees) {
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "Base Fee(calculated based on min gas price of the node or Tx) and additional fee cannot be paid with fee value passed in "+": %q, required: %q = %q(gas fees) +%q(additional msg fees)", feeCoinsOriginal, requiredFees.Add(additionalFees...),
 			requiredFees, additionalFees)
 	}

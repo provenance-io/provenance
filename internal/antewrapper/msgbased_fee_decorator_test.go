@@ -44,7 +44,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFees() {
 	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 	suite.Require().NoError(err)
 
-	// Set high gas price so standard test fee fails, gas price (1 atom)
+	// Set gas price (1 atom)
 	atomPrice := sdk.NewDecCoinFromDec("atom", sdk.NewDec(1))
 	highGasPrice := []sdk.DecCoin{atomPrice}
 	suite.ctx = suite.ctx.WithMinGasPrices(highGasPrice)
@@ -56,6 +56,55 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFees() {
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NotNil(err, "Decorator should have errored on too low fee for local gasPrice")
 	suite.Require().Contains(err.Error(),"Base Fee(calculated based on min gas price of the node or Tx) and additional fee cannot be paid with fee value passed in : \"100000atom\", required: \"100100atom\" = \"100000atom\"(gas fees) +\"100atom\"(additional msg fees): insufficient fee","got wrong message")
+}
+
+// checkTx true, high min gas price irrespective of additional fees
+func (suite *AnteTestSuite) TestEnsureMempoolHighMinGasPrice() {
+	suite.SetupTest(true) // setup
+	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
+	// create fee in stake
+	newCoin := sdk.NewInt64Coin("atom", 100)
+	err := suite.CreateMsgFee(newCoin, &testdata.TestMsg{})
+	if err != nil {
+		panic(err)
+	}
+
+	// setup NewMsgBasedFeeDecorator
+	app := suite.app
+	mfd := antewrapper.NewMsgBasedFeeDecorator(app.BankKeeper,app.AccountKeeper,app.FeeGrantKeeper,app.MsgBasedFeeKeeper)
+	antehandler := sdk.ChainAnteDecorators(mfd)
+
+	// keys and addresses
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
+	acct1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
+	suite.app.AccountKeeper.SetAccount(suite.ctx, acct1)
+
+	// msg and signatures
+	msg := testdata.NewTestMsg(addr1)
+	//add additional fee
+	feeAmount := sdk.NewCoins(sdk.NewInt64Coin("atom", 100000))
+	gasLimit := testdata.NewTestGasLimit()
+
+	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
+	suite.txBuilder.SetFeeAmount(feeAmount)
+	suite.txBuilder.SetGasLimit(gasLimit)
+
+	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
+	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	suite.Require().NoError(err)
+
+	// Set high gas price so standard test fee fails
+	atomPrice := sdk.NewDecCoinFromDec("atom", sdk.NewDec(20000))
+	highGasPrice := []sdk.DecCoin{atomPrice}
+	suite.ctx = suite.ctx.WithMinGasPrices(highGasPrice)
+
+	// Set IsCheckTx to true
+	suite.ctx = suite.ctx.WithIsCheckTx(true)
+
+	// antehandler errors with insufficient fees
+	_, err = antehandler(suite.ctx, tx, false)
+	suite.Require().NotNil(err, "Decorator should have errored on too low fee for local gasPrice")
+	suite.Require().Contains(err.Error(),"Base Fee(calculated based on min gas price of the node or Tx) and additional fee cannot be paid with fee value passed in : \"100000atom\", required: \"2000000100atom\" = \"2000000000atom\"(gas fees) +\"100atom\"(additional msg fees): insufficient fee","got wrong message")
 }
 
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFeesPass() {
@@ -104,12 +153,12 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFeesPass() {
 
 	simapp.FundAccount(app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100100))))
 	_, err = antehandler(suite.ctx, tx, false)
-	suite.Require().Nil(err, "Decorator should not have errored on fee payer account not having enough balance.")
-
-
+	suite.Require().Nil(err, "Decorator should not have errored.")
 }
 
+func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFeesPassNotCheckTx() {
 
+}
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFees_1() {
 	suite.SetupTest(true) // setup
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
