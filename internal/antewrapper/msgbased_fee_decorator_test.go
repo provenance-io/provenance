@@ -4,6 +4,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/antewrapper"
 )
@@ -112,7 +113,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFeesPass() {
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 	// create fee in stake
 	newCoin := sdk.NewInt64Coin("atom", 100)
-	suite.CreateMsgFee(newCoin,&testdata.TestMsg{})
+	check(suite.CreateMsgFee(newCoin,&testdata.TestMsg{}))
 
 	// setup NewMsgBasedFeeDecorator
 	app := suite.app
@@ -151,7 +152,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFeesPass() {
 	suite.Require().NotNil(err, "Decorator should have errored on fee payer account not having enough balance.")
 	suite.Require().Contains(err.Error(),"fee payer account does not have enough balance to pay for \"100100atom\"","got wrong message")
 
-	simapp.FundAccount(app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100100))))
+	check(simapp.FundAccount(app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100100)))))
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().Nil(err, "Decorator should not have errored.")
 }
@@ -161,7 +162,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFeesPassFeeGrant() {
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 	// create fee in stake
 	newCoin := sdk.NewInt64Coin("atom", 100)
-	suite.CreateMsgFee(newCoin,&testdata.TestMsg{})
+	check(suite.CreateMsgFee(newCoin,&testdata.TestMsg{}))
 
 	// setup NewMsgBasedFeeDecorator
 	app := suite.app
@@ -173,6 +174,11 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFeesPassFeeGrant() {
 	acct1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
 	suite.app.AccountKeeper.SetAccount(suite.ctx, acct1)
 
+	// fee granter account
+	_, _, addr2 := testdata.KeyTestPubAddr()
+	acct2 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr2)
+	suite.app.AccountKeeper.SetAccount(suite.ctx, acct2)
+
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
 	//add additional fee
@@ -182,7 +188,12 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFeesPassFeeGrant() {
 	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
 	suite.txBuilder.SetFeeAmount(feeAmount)
 	suite.txBuilder.SetGasLimit(gasLimit)
-
+	//set fee grant
+	// grant fee allowance from `addr2` to `addr3` (plenty to pay)
+	err := app.FeeGrantKeeper.GrantAllowance(suite.ctx, addr2, addr1, &feegrant.BasicAllowance{
+		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 100100)),
+	})
+	suite.txBuilder.SetFeeGranter(acct2.GetAddress())
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 	suite.Require().NoError(err)
@@ -195,12 +206,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFeesPassFeeGrant() {
 	// Set IsCheckTx to true
 	suite.ctx = suite.ctx.WithIsCheckTx(true)
 
-	// antehandler errors with insufficient fees
-	_, err = antehandler(suite.ctx, tx, false)
-	suite.Require().NotNil(err, "Decorator should have errored on fee payer account not having enough balance.")
-	suite.Require().Contains(err.Error(),"fee payer account does not have enough balance to pay for \"100100atom\"","got wrong message")
-
-	simapp.FundAccount(app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100100))))
+	check(simapp.FundAccount(app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100100)))))
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().Nil(err, "Decorator should not have errored.")
 }
@@ -210,7 +216,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFees_1() {
 	suite.SetupTest(true) // setup
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 	newCoin := sdk.NewInt64Coin("steak", 100)
-	suite.CreateMsgFee(newCoin,&testdata.TestMsg{})
+	check(suite.CreateMsgFee(newCoin,&testdata.TestMsg{}))
 
 	// setup
 	app := suite.app
@@ -296,4 +302,10 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFees_1() {
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().Nil(err, "Decorator should not have errored on fee higher than what the account has")
 
+}
+
+func check(e error) {
+	if e != nil {
+		panic(e)
+	}
 }
