@@ -51,6 +51,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * When deleting a scope, require the same permissions as when updating it [#473](https://github.com/provenance-io/provenance/issues/473)
+* Allow manager to adjust grants on finalized markers [#545](https://github.com/provenance-io/provenance/issues/545)
 
 ## [v1.7.5](https://github.com/provenance-io/provenance/releases/tag/v1.7.5) - 2021-10-22
 
