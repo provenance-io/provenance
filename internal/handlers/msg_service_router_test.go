@@ -6,6 +6,7 @@ import (
 
 	piosimapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/handlers"
+	msgbasedfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -15,7 +16,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -88,42 +91,68 @@ func TestMsgService(t *testing.T) {
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 
 	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(100))))
-	txBuilder := encCfg.TxConfig.NewTxBuilder()
-	txBuilder.SetFeeAmount(testdata.NewTestFeeAmount())
-	txBuilder.SetGasLimit(testdata.NewTestGasLimit())
-	err := txBuilder.SetMsgs(msg)
+	txBytes, err := SignTxAndGetBytes(msg, testdata.NewTestGasLimit(), testdata.NewTestFeeAmount(), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID())
 	require.NoError(t, err)
+	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
+
+	msgbasedFee := msgbasedfeetypes.NewMsgBasedFee(sdk.MsgTypeURL(msg), sdk.NewCoin("hotdog", sdk.NewInt(800)))
+	app.MsgBasedFeeKeeper.SetMsgBasedFee(ctx, msgbasedFee)
+	msg = banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(50))))
+	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("hotdog", 800))
+	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
+
+	txBytes, err = SignTxAndGetBytes(msg, testdata.NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID())
+	require.NoError(t, err)
+	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
+}
+
+func SignTxAndGetBytes(msg sdk.Msg, gaslimit uint64, fees sdk.Coins, encCfg simappparams.EncodingConfig, pubKey types.PubKey, privKey types.PrivKey, acct authtypes.BaseAccount, chainId string) ([]byte, error) {
+	txBuilder := encCfg.TxConfig.NewTxBuilder()
+	txBuilder.SetFeeAmount(fees)
+	txBuilder.SetGasLimit(gaslimit)
+	err := txBuilder.SetMsgs(msg)
+	if err != nil {
+		return nil, err
+	}
 
 	// First round: we gather all the signer infos. We use the "set empty
 	// signature" hack to do that.
 	sigV2 := signing.SignatureV2{
-		PubKey: priv.PubKey(),
+		PubKey: pubKey,
 		Data: &signing.SingleSignatureData{
 			SignMode:  encCfg.TxConfig.SignModeHandler().DefaultMode(),
 			Signature: nil,
 		},
-		Sequence: acct1.Sequence,
+		Sequence: acct.Sequence,
 	}
 
 	err = txBuilder.SetSignatures(sigV2)
-	require.NoError(t, err)
+	if err != nil {
+		return nil, err
+	}
 
 	// Second round: all signer infos are set, so each signer can sign.
 	signerData := authsigning.SignerData{
-		ChainID:       ctx.ChainID(),
-		AccountNumber: acct1.AccountNumber,
-		Sequence:      acct1.Sequence,
+		ChainID:       chainId,
+		AccountNumber: acct.AccountNumber,
+		Sequence:      acct.Sequence,
 	}
 	sigV2, err = tx.SignWithPrivKey(
 		encCfg.TxConfig.SignModeHandler().DefaultMode(), signerData,
-		txBuilder, priv, encCfg.TxConfig, acct1.Sequence)
-	require.NoError(t, err)
+		txBuilder, privKey, encCfg.TxConfig, acct.Sequence)
+	if err != nil {
+		return nil, err
+	}
 	err = txBuilder.SetSignatures(sigV2)
-	require.NoError(t, err)
-
+	if err != nil {
+		return nil, err
+	}
 	// Send the tx to the app
 	txBytes, err := encCfg.TxConfig.TxEncoder()(txBuilder.GetTx())
-	require.NoError(t, err)
-	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
+	if err != nil {
+		return nil, err
+	}
+	return txBytes, nil
 }
