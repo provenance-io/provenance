@@ -15,24 +15,7 @@ import (
 //and this is what sets it apart from MempoolDecorator which has already been run)
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFees() {
 	err, antehandler := setUpApp(suite, true, "atom", 100)
-
-	// keys and addresses
-	priv1, _, addr1 := testdata.KeyTestPubAddr()
-	acct1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
-	suite.app.AccountKeeper.SetAccount(suite.ctx, acct1)
-
-	// msg and signatures
-	msg := testdata.NewTestMsg(addr1)
-	//add additional fee
-	feeAmount := sdk.NewCoins(sdk.NewInt64Coin("atom", 100000))
-	gasLimit := testdata.NewTestGasLimit()
-
-	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
-	suite.txBuilder.SetFeeAmount(feeAmount)
-	suite.txBuilder.SetGasLimit(gasLimit)
-
-	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	tx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
 	suite.Require().NoError(err)
 
 	// Set gas price (1 atom)
@@ -52,26 +35,8 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFees() {
 // checkTx true, high min gas price irrespective of additional fees
 func (suite *AnteTestSuite) TestEnsureMempoolHighMinGasPrice() {
 	err, antehandler := setUpApp(suite, true, "atom", 100)
-
-	// keys and addresses
-	priv1, _, addr1 := testdata.KeyTestPubAddr()
-	acct1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
-	suite.app.AccountKeeper.SetAccount(suite.ctx, acct1)
-
-	// msg and signatures
-	msg := testdata.NewTestMsg(addr1)
-	//add additional fee
-	feeAmount := sdk.NewCoins(sdk.NewInt64Coin("atom", 100000))
-	gasLimit := testdata.NewTestGasLimit()
-
-	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
-	suite.txBuilder.SetFeeAmount(feeAmount)
-	suite.txBuilder.SetGasLimit(gasLimit)
-
-	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	tx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
 	suite.Require().NoError(err)
-
 	// Set high gas price so standard test fee fails
 	atomPrice := sdk.NewDecCoinFromDec("atom", sdk.NewDec(20000))
 	highGasPrice := []sdk.DecCoin{atomPrice}
@@ -88,24 +53,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolHighMinGasPrice() {
 
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFeesPass() {
 	err, antehandler := setUpApp(suite, true, "atom", 100)
-
-	// keys and addresses
-	priv1, _, addr1 := testdata.KeyTestPubAddr()
-	acct1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
-	suite.app.AccountKeeper.SetAccount(suite.ctx, acct1)
-
-	// msg and signatures
-	msg := testdata.NewTestMsg(addr1)
-	//add additional fee
-	feeAmount := sdk.NewCoins(sdk.NewInt64Coin("atom", 100100))
-	gasLimit := testdata.NewTestGasLimit()
-
-	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
-	suite.txBuilder.SetFeeAmount(feeAmount)
-	suite.txBuilder.SetGasLimit(gasLimit)
-
-	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	tx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100100)))
 	suite.Require().NoError(err)
 
 	// Set high gas price so standard test fee fails, gas price (1 atom)
@@ -352,19 +300,48 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFees_6() {
 
 }
 
-
-
 func createTestTx(suite *AnteTestSuite, err error, feeAmount sdk.Coins) (signing.Tx, types.AccountI) {
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 	acct1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
 	suite.app.AccountKeeper.SetAccount(suite.ctx, acct1)
+
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
 	gasLimit := testdata.NewTestGasLimit()
 	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
 	suite.txBuilder.SetFeeAmount(feeAmount)
 	suite.txBuilder.SetGasLimit(gasLimit)
+
+	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
+
+	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	return tx, acct1
+}
+
+func createTestTxFeeGrant(suite *AnteTestSuite, err error, feeAmount sdk.Coins) (signing.Tx, types.AccountI) {
+	// keys and addresses
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
+	acct1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
+	suite.app.AccountKeeper.SetAccount(suite.ctx, acct1)
+
+	// fee granter account
+	_, _, addr2 := testdata.KeyTestPubAddr()
+	acct2 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr2)
+	suite.app.AccountKeeper.SetAccount(suite.ctx, acct2)
+
+	// msg and signatures
+	msg := testdata.NewTestMsg(addr1)
+	gasLimit := testdata.NewTestGasLimit()
+	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
+	suite.txBuilder.SetFeeAmount(feeAmount)
+	suite.txBuilder.SetGasLimit(gasLimit)
+	//set fee grant
+	// grant fee allowance from `addr2` to `addr3` (plenty to pay)
+	err = suite.app.FeeGrantKeeper.GrantAllowance(suite.ctx, addr2, addr1, &feegrant.BasicAllowance{
+		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 100100)),
+	})
+	suite.txBuilder.SetFeeGranter(acct2.GetAddress())
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
