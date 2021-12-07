@@ -3,6 +3,7 @@ package handlers_test
 import (
 	"os"
 	"testing"
+	"time"
 
 	piosimapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/handlers"
@@ -24,6 +25,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -90,29 +92,86 @@ func TestMsgService(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 
+	// tx without a fee associated with msg type
 	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(100))))
-	txBytes, err := SignTxAndGetBytes(msg, testdata.NewTestGasLimit(), testdata.NewTestFeeAmount(), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID())
+	txBytes, err := SignTxAndGetBytes(testdata.NewTestGasLimit(), testdata.NewTestFeeAmount(), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 	require.NoError(t, err)
 	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
 
 	msgbasedFee := msgbasedfeetypes.NewMsgBasedFee(sdk.MsgTypeURL(msg), sdk.NewCoin("hotdog", sdk.NewInt(800)))
 	app.MsgBasedFeeKeeper.SetMsgBasedFee(ctx, msgbasedFee)
+
+	// tx with a fee associated with msg type and account has funds
 	msg = banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(50))))
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("hotdog", 800))
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
-
-	txBytes, err = SignTxAndGetBytes(msg, testdata.NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID())
+	txBytes, err = SignTxAndGetBytes(testdata.NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 	require.NoError(t, err)
 	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
+
 }
 
-func SignTxAndGetBytes(msg sdk.Msg, gaslimit uint64, fees sdk.Coins, encCfg simappparams.EncodingConfig, pubKey types.PubKey, privKey types.PrivKey, acct authtypes.BaseAccount, chainId string) ([]byte, error) {
+func TestMsgServiceAuthz(t *testing.T) {
+	encCfg := simapp.MakeTestEncodingConfig()
+	priv, _, addr := testdata.KeyTestPubAddr()
+	priv2, _, addr2 := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	acct2 := authtypes.NewBaseAccount(addr2, priv2.PubKey(), 1, 0)
+	initBalance := sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(10000)), sdk.NewCoin("atom", sdk.NewInt(1000)))
+	app := piosimapp.SetupWithGenesisAccounts([]authtypes.GenesisAccount{acct1, acct2}, banktypes.Balance{Address: addr.String(), Coins: initBalance}, banktypes.Balance{Address: addr2.String(), Coins: initBalance})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+
+	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(100))))
+	msgbasedFee := msgbasedfeetypes.NewMsgBasedFee(sdk.MsgTypeURL(msg), sdk.NewCoin("hotdog", sdk.NewInt(800)))
+	app.MsgBasedFeeKeeper.SetMsgBasedFee(ctx, msgbasedFee)
+	app.AuthzKeeper.SaveGrant(ctx, addr2, addr, banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewInt64Coin("hotdog", 500))), time.Now().Add(time.Hour))
+
+	// tx authz send message with correct amount of fees associated
+	msgExec := authztypes.NewMsgExec(addr2, []sdk.Msg{msg})
+	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("hotdog", 800))
+	acct2 = app.AccountKeeper.GetAccount(ctx, acct2.GetAddress()).(*authtypes.BaseAccount)
+	txBytes, err := SignTxAndGetBytes(testdata.NewTestGasLimit(), fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), &msgExec)
+	require.NoError(t, err)
+	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
+
+	// tx authz single send message without enough fees associated
+	fees = sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("hotdog", 1))
+	acct2 = app.AccountKeeper.GetAccount(ctx, acct2.GetAddress()).(*authtypes.BaseAccount)
+	txBytes, err = SignTxAndGetBytes(testdata.NewTestGasLimit(), fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), &msgExec)
+	require.NoError(t, err)
+	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.Equal(t, uint32(0xd), res.Code, "res=%+v", res)
+
+	// tx authz with 2 send msgs that will exhaust the fees on the second msg
+	msgExec = authztypes.NewMsgExec(addr2, []sdk.Msg{msg, msg})
+	fees = sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("hotdog", 1000))
+	acct2 = app.AccountKeeper.GetAccount(ctx, acct2.GetAddress()).(*authtypes.BaseAccount)
+	txBytes, err = SignTxAndGetBytes(testdata.NewTestGasLimit(), fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), &msgExec)
+	require.NoError(t, err)
+	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.Equal(t, uint32(0xd), res.Code, "res=%+v", res)
+
+	// tx contains 1 regular send and one send in authz, should fail since authz's send will exhaust supplied fees
+	msgsend := banktypes.NewMsgSend(addr2, addr, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(100))))
+	msgExec = authztypes.NewMsgExec(addr2, []sdk.Msg{msg})
+	fees = sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("hotdog", 1000))
+	acct2 = app.AccountKeeper.GetAccount(ctx, acct2.GetAddress()).(*authtypes.BaseAccount)
+	txBytes, err = SignTxAndGetBytes(testdata.NewTestGasLimit(), fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), msgsend, &msgExec)
+	require.NoError(t, err)
+	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.Equal(t, uint32(0xd), res.Code, "res=%+v", res)
+
+}
+
+func SignTxAndGetBytes(gaslimit uint64, fees sdk.Coins, encCfg simappparams.EncodingConfig, pubKey types.PubKey, privKey types.PrivKey, acct authtypes.BaseAccount, chainId string, msg ...sdk.Msg) ([]byte, error) {
 	txBuilder := encCfg.TxConfig.NewTxBuilder()
 	txBuilder.SetFeeAmount(fees)
 	txBuilder.SetGasLimit(gaslimit)
-	err := txBuilder.SetMsgs(msg)
+	err := txBuilder.SetMsgs(msg...)
 	if err != nil {
 		return nil, err
 	}

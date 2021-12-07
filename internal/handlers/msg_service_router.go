@@ -142,7 +142,7 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 			}
 			if fee != nil && fee.AdditionalFee.IsPositive() {
 				ctx.Logger().Debug(fmt.Sprintf("NOTICE: Msg %v has an additional fee of %v ", msgTypeURL, fee.AdditionalFee))
-				if !feeGasMeter.FeeConsumedForType(msgTypeURL).Amount.IsNil() && !feeGasMeter.IsSimulate() {
+				if !feeGasMeter.IsSimulate() {
 					err = antewrapper.EnsureSufficientFees(runtimeGasForMsg(ctx), feeTx.GetFee(), feeGasMeter.FeeConsumed().Add(fee.AdditionalFee),
 						msr.msgBasedFeeKeeper.GetMinGasPrice(ctx), msr.msgBasedFeeKeeper.GetDefaultFeeDenom())
 					if err != nil {
