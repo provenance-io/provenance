@@ -97,7 +97,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFeesPassFeeGrant() {
 	suite.txBuilder.SetFeeAmount(feeAmount)
 	suite.txBuilder.SetGasLimit(gasLimit)
 	//set fee grant
-	// grant fee allowance from `addr2` to `addr3` (plenty to pay)
+	// grant fee allowance from `addr2` to `addr1` (plenty to pay)
 	err = suite.app.FeeGrantKeeper.GrantAllowance(suite.ctx, addr2, addr1, &feegrant.BasicAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 100100)),
 	})
@@ -114,7 +114,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFeesPassFeeGrant() {
 	// Set IsCheckTx to true
 	suite.ctx = suite.ctx.WithIsCheckTx(true)
 
-	check(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100100)))))
+	check(simapp.FundAccount(suite.app, suite.ctx, acct2.GetAddress(), sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100100)))))
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().Nil(err, "Decorator should not have errored.")
 }
@@ -143,7 +143,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFeesPassFeeGrant_1() {
 	suite.txBuilder.SetFeeAmount(feeAmount)
 	suite.txBuilder.SetGasLimit(gasLimit)
 	//set fee grant
-	// grant fee allowance from `addr1` to `addr2` (plenty to pay)
+	// grant fee allowance from `addr1` to `addr2` // wrong grant
 	err = suite.app.FeeGrantKeeper.GrantAllowance(suite.ctx, addr1, addr2, &feegrant.BasicAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 100100)),
 	})
