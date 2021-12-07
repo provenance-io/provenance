@@ -319,35 +319,6 @@ func createTestTx(suite *AnteTestSuite, err error, feeAmount sdk.Coins) (signing
 	return tx, acct1
 }
 
-func createTestTxFeeGrant(suite *AnteTestSuite, err error, feeAmount sdk.Coins) (signing.Tx, types.AccountI) {
-	// keys and addresses
-	priv1, _, addr1 := testdata.KeyTestPubAddr()
-	acct1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
-	suite.app.AccountKeeper.SetAccount(suite.ctx, acct1)
-
-	// fee granter account
-	_, _, addr2 := testdata.KeyTestPubAddr()
-	acct2 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr2)
-	suite.app.AccountKeeper.SetAccount(suite.ctx, acct2)
-
-	// msg and signatures
-	msg := testdata.NewTestMsg(addr1)
-	gasLimit := testdata.NewTestGasLimit()
-	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
-	suite.txBuilder.SetFeeAmount(feeAmount)
-	suite.txBuilder.SetGasLimit(gasLimit)
-	//set fee grant
-	// grant fee allowance from `addr2` to `addr3` (plenty to pay)
-	err = suite.app.FeeGrantKeeper.GrantAllowance(suite.ctx, addr2, addr1, &feegrant.BasicAllowance{
-		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 100100)),
-	})
-	suite.txBuilder.SetFeeGranter(acct2.GetAddress())
-
-	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
-	return tx, acct1
-}
-
 func setUpApp(suite *AnteTestSuite, checkTx bool, additionalFeeCoinDenom string, additionalFeeCoinAmt int64) (error, sdk.AnteHandler) {
 	suite.SetupTest(checkTx) // setup
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
