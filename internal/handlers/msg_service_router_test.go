@@ -138,7 +138,7 @@ func TestMsgServiceAuthz(t *testing.T) {
 	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
 
-	// tx authz send message without enough fees associated
+	// tx authz single send message without enough fees associated
 	fees = sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("hotdog", 1))
 	acct2 = app.AccountKeeper.GetAccount(ctx, acct2.GetAddress()).(*authtypes.BaseAccount)
 	txBytes, err = SignTxAndGetBytes(testdata.NewTestGasLimit(), fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), &msgExec)
@@ -146,11 +146,21 @@ func TestMsgServiceAuthz(t *testing.T) {
 	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, uint32(0xd), res.Code, "res=%+v", res)
 
-	// tx authz with 2 send message that will exhaust the fees
+	// tx authz with 2 send msgs that will exhaust the fees on the second msg
 	msgExec = authztypes.NewMsgExec(addr2, []sdk.Msg{msg, msg})
 	fees = sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("hotdog", 1000))
 	acct2 = app.AccountKeeper.GetAccount(ctx, acct2.GetAddress()).(*authtypes.BaseAccount)
 	txBytes, err = SignTxAndGetBytes(testdata.NewTestGasLimit(), fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), &msgExec)
+	require.NoError(t, err)
+	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.Equal(t, uint32(0xd), res.Code, "res=%+v", res)
+
+	// tx contains 1 regular send and one send in authz, should fail since authz's send will exhaust supplied fees
+	msgsend := banktypes.NewMsgSend(addr2, addr, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(100))))
+	msgExec = authztypes.NewMsgExec(addr2, []sdk.Msg{msg})
+	fees = sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("hotdog", 1000))
+	acct2 = app.AccountKeeper.GetAccount(ctx, acct2.GetAddress()).(*authtypes.BaseAccount)
+	txBytes, err = SignTxAndGetBytes(testdata.NewTestGasLimit(), fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), msgsend, &msgExec)
 	require.NoError(t, err)
 	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, uint32(0xd), res.Code, "res=%+v", res)
