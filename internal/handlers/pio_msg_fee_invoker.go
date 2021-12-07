@@ -47,7 +47,7 @@ func (afd MsgBasedFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.
 		// for provenance should be a FeeTx since antehandler should enforce it, but
 		// not adding complexity here
 		if !ok {
-			panic("Provenenance only supports feeTx for now")
+			panic("Provenance only supports feeTx for now")
 		}
 		feePayer := feeTx.FeePayer()
 		feeGranter := feeTx.FeeGranter()
