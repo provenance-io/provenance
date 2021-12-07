@@ -23,13 +23,12 @@ import (
 	"testing"
 )
 
-
-func (suite *HandlerTestSuite) TestMsgFeeHandler() {
-	encodingConfig,err := setUpApp(suite, false, "atom", 100)
-	tx,_ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
+func (suite *HandlerTestSuite) TestMsgFeeHandlerNoFeeCharged() {
+	encodingConfig, err := setUpApp(suite, false, "atom", 100)
+	tx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
 
 	// See comment for Check().
-	txEncoder:=encodingConfig.TxConfig.TxEncoder()
+	txEncoder := encodingConfig.TxConfig.TxEncoder()
 	bz, err := txEncoder(tx)
 	if err != nil {
 		panic(err)
@@ -42,17 +41,59 @@ func (suite *HandlerTestSuite) TestMsgFeeHandler() {
 		BankKeeper:        suite.app.BankKeeper,
 		FeegrantKeeper:    suite.app.FeeGrantKeeper,
 		MsgBasedFeeKeeper: suite.app.MsgBasedFeeKeeper,
-		Decoder:            encodingConfig.TxConfig.TxDecoder(),
+		Decoder:           encodingConfig.TxConfig.TxDecoder(),
 	})
 	suite.Require().NoError(err)
-	coins, err := feeChargeFn(suite.ctx,false)
+	coins, err := feeChargeFn(suite.ctx, false)
 	check(err)
 	// fee gas meter has nothing to charge, so nothing should have been charged.
 	suite.Require().True(coins.IsZero())
-
 }
 
-func setUpApp(suite *HandlerTestSuite, checkTx bool, additionalFeeCoinDenom string, additionalFeeCoinAmt int64) (params.EncodingConfig,error) {
+func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeCharged() {
+	encodingConfig, err := setUpApp(suite, false, "atom", 100)
+	tx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
+
+	// See comment for Check().
+	txEncoder := encodingConfig.TxConfig.TxEncoder()
+	bz, err := txEncoder(tx)
+	if err != nil {
+		panic(err)
+	}
+	suite.ctx = suite.ctx.WithTxBytes(bz)
+	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100000), false).(*antewrapper.FeeGasMeter)
+	suite.Require().NotPanics(func() {
+		msgType := sdk.MsgTypeURL(&testdata.TestMsg{})
+		feeGasMeter.ConsumeFee(sdk.NewCoin("nhash", sdk.NewInt(1000000)), msgType)
+	}, "panicked on adding fees")
+	suite.ctx = suite.ctx.WithGasMeter(feeGasMeter)
+	feeChargeFn, err := piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
+		AccountKeeper:     suite.app.AccountKeeper,
+		BankKeeper:        suite.app.BankKeeper,
+		FeegrantKeeper:    suite.app.FeeGrantKeeper,
+		MsgBasedFeeKeeper: suite.app.MsgBasedFeeKeeper,
+		Decoder:           encodingConfig.TxConfig.TxDecoder(),
+	})
+	suite.Require().NoError(err)
+	coins, err := feeChargeFn(suite.ctx, false)
+	suite.Require().Contains(err.Error(), "0nhash is smaller than 1000000nhash: insufficient funds: insufficient funds", "got wrong message")
+	// fee gas meter has nothing to charge, so nothing should have been charged.
+	suite.Require().True(coins.IsZero())
+
+	check(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(900000)))))
+	coins, err = feeChargeFn(suite.ctx, false)
+	suite.Require().Contains(err.Error(), "900000nhash is smaller than 1000000nhash: insufficient funds: insufficient funds", "got wrong message")
+	// fee gas meter has nothing to charge, so nothing should have been charged.
+	suite.Require().True(coins.IsZero())
+
+	check(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(100000)))))
+	coins, err = feeChargeFn(suite.ctx, false)
+	suite.Require().Nil(err, "Got error when should not have.")
+	// fee gas meter has nothing to charge, so nothing should have been charged.
+	suite.Require().True(coins.IsAllGTE(sdk.Coins{sdk.NewCoin("nhash", sdk.NewInt(1000000))}))
+}
+
+func setUpApp(suite *HandlerTestSuite, checkTx bool, additionalFeeCoinDenom string, additionalFeeCoinAmt int64) (params.EncodingConfig, error) {
 	encodingConfig := suite.SetupTest(checkTx) // setup
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 	// create fee in stake
@@ -62,7 +103,7 @@ func setUpApp(suite *HandlerTestSuite, checkTx bool, additionalFeeCoinDenom stri
 		panic(err)
 	}
 
-	return encodingConfig,err
+	return encodingConfig, err
 }
 
 // returns context and app with params set on account keeper
@@ -74,7 +115,7 @@ func createTestApp(isCheckTx bool) (*simapp.App, sdk.Context) {
 	return app, ctx
 }
 
-func createTestTx(suite *HandlerTestSuite, err error,feeAmount sdk.Coins) (xauthsigning.Tx, types.AccountI) {
+func createTestTx(suite *HandlerTestSuite, err error, feeAmount sdk.Coins) (xauthsigning.Tx, types.AccountI) {
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 	acct1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
@@ -183,7 +224,6 @@ func check(e error) {
 		panic(e)
 	}
 }
-
 
 func TestAnteTestSuite(t *testing.T) {
 	suite.Run(t, new(HandlerTestSuite))
