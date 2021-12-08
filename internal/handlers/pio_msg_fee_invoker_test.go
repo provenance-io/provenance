@@ -123,6 +123,31 @@ func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeChargedFeeGranter() {
 	// fee gas meter has nothing to charge, so nothing should have been charged.
 	suite.Require().True(coins.IsAllGTE(sdk.Coins{sdk.NewCoin("nhash", sdk.NewInt(1000000))}))
 }
+
+func (suite *HandlerTestSuite) TestMsgFeeHandlerBadDecoder() {
+	encodingConfig, err := setUpApp(suite, false, "atom", 100)
+	tx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
+
+	// See comment for Check().
+	txEncoder := encodingConfig.TxConfig.TxEncoder()
+	bz, err := txEncoder(tx)
+	if err != nil {
+		panic(err)
+	}
+	suite.ctx = suite.ctx.WithTxBytes(bz)
+	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100), false).(*antewrapper.FeeGasMeter)
+	suite.ctx = suite.ctx.WithGasMeter(feeGasMeter)
+	feeChargeFn, err := piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
+		AccountKeeper:     suite.app.AccountKeeper,
+		BankKeeper:        suite.app.BankKeeper,
+		FeegrantKeeper:    suite.app.FeeGrantKeeper,
+		MsgBasedFeeKeeper: suite.app.MsgBasedFeeKeeper,
+		Decoder:           simappCosmos.MakeTestEncodingConfig().TxConfig.TxDecoder(),
+	})
+	suite.Require().NoError(err)
+	suite.Require().Panics(func() { feeChargeFn(suite.ctx, false)}, "Bad decoder while setting up app.")
+}
+
 func setUpApp(suite *HandlerTestSuite, checkTx bool, additionalFeeCoinDenom string, additionalFeeCoinAmt int64) (params.EncodingConfig, error) {
 	encodingConfig := suite.SetupTest(checkTx) // setup
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()

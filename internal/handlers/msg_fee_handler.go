@@ -31,6 +31,10 @@ func NewAdditionalMsgFeeHandler(options PioBaseAppKeeperOptions) (sdk.Additional
 		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "msgbased fee keeper is required for AdditionalMsgFeeHandler builder")
 	}
 
+	if options.Decoder == nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "Decoder is required for AdditionalMsgFeeHandler builder")
+	}
+
 	return NewMsgBasedFeeInvoker(options.BankKeeper, options.AccountKeeper, options.FeegrantKeeper,
 		options.MsgBasedFeeKeeper, options.Decoder).Invoke, nil
 }
