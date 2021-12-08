@@ -100,9 +100,6 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 	),
 		sdk.NewEvent(sdk.EventTypeTx,
 			sdk.NewAttribute(AttributeKeyTotalFee, feeToDeduct.String()),
-		),
-		sdk.NewEvent(sdk.EventTypeTx,
-			sdk.NewAttribute(AttributeKeyAdditionalFee, additionalFees.String()),
 		)}
 	ctx.EventManager().EmitEvents(events)
 

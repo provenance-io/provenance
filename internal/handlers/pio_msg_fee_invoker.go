@@ -30,8 +30,9 @@ func NewMsgBasedFeeInvoker(bankKeeper msgbasedfeetypes.BankKeeper, accountKeeper
 	}
 }
 
-func (afd MsgBasedFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.Coins, err error) {
+func (afd MsgBasedFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.Coins, evets sdk.Events, err error) {
 	chargedFees := sdk.Coins{}
+	events := sdk.Events{}
 
 	if ctx.TxBytes() != nil && len(ctx.TxBytes()) != 0 {
 		originalGasMeter := ctx.GasMeter()
@@ -69,31 +70,35 @@ func (afd MsgBasedFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.
 			// this works with only when feegrant enabled.
 			if feeGranter != nil {
 				if afd.feegrantKeeper == nil {
-					return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")
+					return nil, nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")
 				} else if !feeGranter.Equals(feePayer) {
 					err = afd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, chargedFees, tx.GetMsgs())
 					if err != nil {
-						return nil, sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
+						return nil, nil, sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
 					}
 				}
 				deductFeesFrom = feeGranter
 			}
 			deductFeesFromAcc := afd.accountKeeper.GetAccount(ctx, deductFeesFrom)
 			if deductFeesFromAcc == nil {
-				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", deductFeesFrom)
+				return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", deductFeesFrom)
 			}
 
 			ctx.Logger().Debug(fmt.Sprintf("The Fee consumed by message types : %v", feeGasMeter.FeeConsumedByMsg()))
 
 			err = afd.msgBasedFeeKeeper.DeductFees(afd.bankKeeper, ctx, deductFeesFromAcc, chargedFees)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
+			events = sdk.Events{
+				sdk.NewEvent(sdk.EventTypeTx,
+					sdk.NewAttribute(antewrapper.AttributeKeyAdditionalFee, chargedFees.String()),
+				)}
 		}
 
 		// set back the original gasMeter
 		ctx = ctx.WithGasMeter(originalGasMeter)
 	}
 
-	return chargedFees, nil
+	return chargedFees, events, nil
 }

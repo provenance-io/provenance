@@ -45,7 +45,7 @@ func (suite *HandlerTestSuite) TestMsgFeeHandlerNoFeeCharged() {
 		Decoder:           encodingConfig.TxConfig.TxDecoder(),
 	})
 	suite.Require().NoError(err)
-	coins, err := feeChargeFn(suite.ctx, false)
+	coins, _, err := feeChargeFn(suite.ctx, false)
 	check(err)
 	// fee gas meter has nothing to charge, so nothing should have been charged.
 	suite.Require().True(coins.IsZero())
@@ -76,19 +76,19 @@ func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeCharged() {
 		Decoder:           encodingConfig.TxConfig.TxDecoder(),
 	})
 	suite.Require().NoError(err)
-	coins, err := feeChargeFn(suite.ctx, false)
+	coins, _, err := feeChargeFn(suite.ctx, false)
 	suite.Require().Contains(err.Error(), "0nhash is smaller than 1000000nhash: insufficient funds: insufficient funds", "got wrong message")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
 	suite.Require().True(coins.IsZero())
 
 	check(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(900000)))))
-	coins, err = feeChargeFn(suite.ctx, false)
+	coins, _, err = feeChargeFn(suite.ctx, false)
 	suite.Require().Contains(err.Error(), "900000nhash is smaller than 1000000nhash: insufficient funds: insufficient funds", "got wrong message")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
 	suite.Require().True(coins.IsZero())
 
 	check(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(100000)))))
-	coins, err = feeChargeFn(suite.ctx, false)
+	coins, _, err = feeChargeFn(suite.ctx, false)
 	suite.Require().Nil(err, "Got error when should not have.")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
 	suite.Require().True(coins.IsAllGTE(sdk.Coins{sdk.NewCoin("nhash", sdk.NewInt(1000000))}))
@@ -118,7 +118,7 @@ func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeChargedFeeGranter() {
 		Decoder:           encodingConfig.TxConfig.TxDecoder(),
 	})
 
-	coins, err := feeChargeFn(suite.ctx, false)
+	coins, _, err := feeChargeFn(suite.ctx, false)
 	suite.Require().Nil(err, "Got error when should not have.")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
 	suite.Require().True(coins.IsAllGTE(sdk.Coins{sdk.NewCoin("nhash", sdk.NewInt(1000000))}))
@@ -145,7 +145,7 @@ func (suite *HandlerTestSuite) TestMsgFeeHandlerBadDecoder() {
 		Decoder:           simappCosmos.MakeTestEncodingConfig().TxConfig.TxDecoder(),
 	})
 	suite.Require().NoError(err)
-	suite.Require().Panics(func() { feeChargeFn(suite.ctx, false)}, "Bad decoder while setting up app.")
+	suite.Require().Panics(func() { feeChargeFn(suite.ctx, false) }, "Bad decoder while setting up app.")
 }
 
 func setUpApp(suite *HandlerTestSuite, checkTx bool, additionalFeeCoinDenom string, additionalFeeCoinAmt int64) (params.EncodingConfig, error) {

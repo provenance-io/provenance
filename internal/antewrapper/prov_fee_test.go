@@ -108,7 +108,7 @@ func (suite *AnteTestSuite) TestEnsureAdditionalFeesPaid() {
 	// given
 	suite.SetupTest(true)
 	newCoin := sdk.NewInt64Coin("steak", 100)
-	suite.CreateMsgFee(newCoin,&testdata.TestMsg{})
+	suite.CreateMsgFee(newCoin, &testdata.TestMsg{})
 
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
@@ -159,7 +159,6 @@ func (suite *AnteTestSuite) TestEnsureAdditionalFeesPaid() {
 	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, sdk.NewCoins(sdk.NewCoin("steak", sdk.NewInt(100))))
 	suite.Require().NoError(err)
 
-
 	suite.txBuilder.SetFeeAmount(NewTestFeeAmountMultiple())
 	suite.txBuilder.SetGasLimit(gasLimit)
 
@@ -171,8 +170,7 @@ func (suite *AnteTestSuite) TestEnsureAdditionalFeesPaid() {
 	suite.Require().Nil(err, "Tx did not error when fee payer had insufficient funds")
 }
 
-
 // NewTestFeeAmount is a test fee amount with multiple coins.
 func NewTestFeeAmountMultiple() sdk.Coins {
-	return sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("steak",100))
+	return sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("steak", 100))
 }

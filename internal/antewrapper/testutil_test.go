@@ -42,7 +42,7 @@ type AnteTestSuite struct {
 	txBuilder   client.TxBuilder
 }
 
-var testMsgType =sdk.MsgTypeURL(&testdata.TestMsg{})
+var testMsgType = sdk.MsgTypeURL(&testdata.TestMsg{})
 
 // returns context and app with params set on account keeper
 func createTestApp(isCheckTx bool) (*simapp.App, sdk.Context) {
@@ -199,8 +199,7 @@ func (suite *AnteTestSuite) RunTestCase(privs []cryptotypes.PrivKey, msgs []sdk.
 	})
 }
 
-
-func (suite *AnteTestSuite) CreateMsgFee(fee sdk.Coin, msgs ...sdk.Msg, ) error {
+func (suite *AnteTestSuite) CreateMsgFee(fee sdk.Coin, msgs ...sdk.Msg) error {
 	for _, msg := range msgs {
 		msgFeeToCreate := msgfeetype.NewMsgBasedFee(sdk.MsgTypeURL(msg), fee)
 		err := suite.app.MsgBasedFeeKeeper.SetMsgBasedFee(suite.ctx, msgFeeToCreate)
