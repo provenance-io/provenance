@@ -116,6 +116,7 @@ func (s *SimulateTestSuite) TestSimulateCmd() {
 
 func (s *SimulateTestSuite) GenerateAndSignSend(from string, to string, coins string) string {
 	tmpDir := s.T().TempDir()
+	s.T().Cleanup(func() { _ = os.RemoveAll(tmpDir) })
 	clientCtx := s.testnet.Validators[0].ClientCtx
 	args := []string{
 		from,
