@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/msgfees/types"
@@ -36,15 +37,15 @@ func HandleAddMsgBasedFeeProposal(ctx sdk.Context, k Keeper, proposal *types.Add
 	return nil
 }
 
-func checkMsgTypeValid(registry codectypes.InterfaceRegistry, msgTypeUrl string) (error) {
-	msgFee, err := registry.Resolve(msgTypeUrl)
+func checkMsgTypeValid(registry codectypes.InterfaceRegistry, msgTypeURL string) error {
+	msgFee, err := registry.Resolve(msgTypeURL)
 	if err != nil {
 		return err
 	}
 
 	_, ok := msgFee.(sdk.Msg)
 	if !ok {
-		return fmt.Errorf("message type is not a sdk message: %v", msgTypeUrl)
+		return fmt.Errorf("message type is not a sdk message: %v", msgTypeURL)
 	}
 	return err
 }
@@ -81,7 +82,9 @@ func HandleRemoveMsgBasedFeeProposal(ctx sdk.Context, k Keeper, proposal *types.
 	if err := proposal.ValidateBasic(); err != nil {
 		return err
 	}
-	err := checkMsgTypeValid(registry, proposal.MsgTypeURL)
+	if err := checkMsgTypeValid(registry, proposal.MsgTypeURL); err != nil {
+		return err
+	}
 	existing, err := k.GetMsgBasedFee(ctx, proposal.MsgTypeURL)
 	if err != nil {
 		return err

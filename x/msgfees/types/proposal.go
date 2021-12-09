@@ -42,7 +42,7 @@ func NewAddMsgBasedFeeProposal(
 	return &AddMsgBasedFeeProposal{
 		Title:         title,
 		Description:   description,
-		MsgTypeURL:           msg,
+		MsgTypeURL:    msg,
 		AdditionalFee: additionalFee,
 	}
 }
@@ -79,7 +79,7 @@ func NewUpdateMsgBasedFeeProposal(
 	return &UpdateMsgBasedFeeProposal{
 		Title:         title,
 		Description:   description,
-		MsgTypeURL:           msg,
+		MsgTypeURL:    msg,
 		AdditionalFee: additionalFee,
 	}
 }
@@ -119,7 +119,7 @@ func NewRemoveMsgBasedFeeProposal(
 	return &RemoveMsgBasedFeeProposal{
 		Title:       title,
 		Description: description,
-		MsgTypeURL:         msg,
+		MsgTypeURL:  msg,
 	}
 }
 

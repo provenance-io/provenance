@@ -4,8 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-
-
 func NewMsgBasedFee(msgTypeURL string, additionalFee sdk.Coin) MsgBasedFee {
 	return MsgBasedFee{
 		MsgTypeUrl: msgTypeURL, AdditionalFee: additionalFee,
