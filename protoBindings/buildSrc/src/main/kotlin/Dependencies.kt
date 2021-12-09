@@ -21,9 +21,10 @@ object PluginIds { // please keep this sorted in sections
     // Rust
     const val ProtobufRustGrpc = "rust.protobuf-rust-grpc"
 
-    // Maven Publishing
+    // Publishing
     const val MavenPublish = "maven-publish"
     const val Signing = "signing"
+    const val NexusPublish = "io.github.gradle-nexus.publish-plugin"
 }
 
 object PluginVersions { // please keep this sorted in sections
@@ -37,6 +38,9 @@ object PluginVersions { // please keep this sorted in sections
     const val GoryLenkoGitProps = "1.5.2"
 
     const val Protobuf = "0.8.17"
+
+    // Publishing
+    const val NexusPublish = "1.1.0"
 }
 
 object Versions {
@@ -50,7 +54,6 @@ object Versions {
     const val Protobuf = "3.19.1"
     const val Grpc = "1.40.1"
     const val KotlinGrpc = "1.2.0"
-
 }
 
 object Libraries {

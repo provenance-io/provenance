@@ -20,6 +20,7 @@ plugins {
     id(PluginIds.ProtobufRustGrpc)
     id(PluginIds.MavenPublish)
     id(PluginIds.Signing)
+    id(PluginIds.NexusPublish) version PluginVersions.NexusPublish
 }
 
 allprojects {
@@ -36,6 +37,19 @@ configurations.all {
     resolutionStrategy {
         cacheDynamicVersionsFor(0, "seconds")
         cacheChangingModulesFor(0, "seconds")
+    }
+}
+
+// Publishing
+nexusPublishing {
+    repositories {
+        sonatype {
+            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
+            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
+            username.set(findProject("ossrhUsername")?.toString() ?: System.getenv("OSSRH_USERNAME"))
+            password.set(findProject("ossrhPassword")?.toString() ?: System.getenv("OSSRH_PASSWORD"))
+            stagingProfileId.set("3180ca260b82a7") // prevents querying for the staging profile id, performance optimization
+        }
     }
 }
 
@@ -76,6 +90,7 @@ subprojects {
         implementation(Libraries.GrpcNetty)
     }
 
+    // Protobuf file source directories
     sourceSets.main {
         val protoDirs = (project.property("protoDirs") as String).split(",")
             .map {
@@ -84,6 +99,7 @@ subprojects {
                     path
                 } else {
                     path = Paths.get(rootProject.projectDir.toString(), path).toString()
+                    // Normalize relative paths. Example: foo/../bar/baz => bar/baz
                     File(path).normalize()
                 }
             }
@@ -99,47 +115,55 @@ subprojects {
         }
     }
 
-//    publishing {
-//        publications {
-//            create<MavenPublication>("mavenJava") {
-//                from(components["java"])
-//
-//                afterEvaluate {
-//                    groupId = project.group.toString()
-//                    artifactId = tasks.jar.get().archiveBaseName.get()
-//                    version = tasks.jar.get().archiveVersion.get()
-//                }
-//
-//                pom {
-//                    name.set("Cosmos Proto Bindings")
-//                    description.set("Protobuf bindings for JVM languages")
-//                    url.set("https://cosmos.network")
-//
-//                    licenses {
-//                        license {
-//                            name.set("The Apache License, Version 2.0")
-//                            url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
-//                        }
-//                    }
-//
-//                    developers {
-//                        developer {
-//                            id.set("egaxhaj-figure")
-//                            name.set("Ergels Gaxhaj")
-//                            email.set("egaxhaj@figure.com")
-//                        }
-//                    }
-//
-//                    scm {
-//                        connection.set("git@github.com:cosmos/cosmos-sdk.git")
-//                        developerConnection.set("git@github.com/cosmos/cosmos-sdk.git")
-//                        url.set("https://github.com/cosmos/cosmos-sdk")
-//                    }
-//                }
-//            }
-//        }
-//        signing {
-//            sign(publishing.publications["mavenJava"])
-//        }
-//    }
+    // Generate sources Jar and Javadocs
+    java {
+        withJavadocJar()
+        withSourcesJar()
+    }
+
+    publishing {
+        publications {
+            create<MavenPublication>("mavenJava") {
+                from(components["java"])
+
+                afterEvaluate {
+                    groupId = project.group.toString()
+                    artifactId = tasks.jar.get().archiveBaseName.get()
+                    version = tasks.jar.get().archiveVersion.get()
+                }
+
+                pom {
+                    name.set("Cosmos Proto Bindings")
+                    description.set("Protobuf bindings for JVM languages")
+                    url.set("https://cosmos.network")
+
+                    licenses {
+                        license {
+                            name.set("The Apache License, Version 2.0")
+                            url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id.set("egaxhaj-figure")
+                            name.set("Ergels Gaxhaj")
+                            email.set("egaxhaj@figure.com")
+                        }
+                    }
+
+                    scm {
+                        connection.set("git@github.com:cosmos/cosmos-sdk.git")
+                        developerConnection.set("git@github.com/cosmos/cosmos-sdk.git")
+                        url.set("https://github.com/cosmos/cosmos-sdk")
+                    }
+                }
+            }
+        }
+
+        signing {
+            sign(publishing.publications["mavenJava"])
+        }
+    }
+
 }

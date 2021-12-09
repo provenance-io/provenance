@@ -1,0 +1,55 @@
+name: On-Demand Publish
+
+on:
+  workflow_dispatch:
+
+jobs:
+  java_build:
+    name: Build and Publish Protobuf bindings for Kotlin and Java
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Version
+        run: |
+          # Strip git prefix from version.
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+
+          # Strip "v" prefix from tag name.
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+
+          # Store version for later use.
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Java Setup
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+          server-id: github
+
+      - name: GPG Setup
+        # if: github.event_name == 'release'
+        env:
+          GPG_KEY: ${{ secrets.OSSRH_GPG_SECRET_KEY }}
+        run: |
+          export GPG_TTY=$(tty)
+          echo -n "$GPG_KEY" | base64 --decode | gpg --batch --import
+          gpg --list-secret-keys --keyid-format LONG
+          echo -n "$GPG_KEY" | base64 --decode > $GITHUB_WORKSPACE/release.gpg
+
+      - name: Build with Gradle
+        run: |
+          ./gradlew clean :kotlin:jar --refresh-dependencies
+          ./gradlew clean :java:jar --refresh-dependencies
+
+      - name: Publish to Maven Central
+        # if: github.event_name == 'release'
+        env:
+          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+          GPG_PASSWORD: ${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}
+        run: |
+          ./gradlew publishToSonatype $(if [ "${{github.event.release.prerelease}}" = "true" ]; then echo 'closeSonatypeStagingRepository'; else echo 'closeAndReleaseSonatypeStagingRepository'; fi) \
+            -Psigning.keyId=B7D30ABE -Psigning.password="${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}" -Psigning.secretKeyRingFile=$GITHUB_WORKSPACE/release.gpg \
+            --info
