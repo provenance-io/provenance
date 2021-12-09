@@ -1,7 +1,10 @@
-name: On-Demand Publish
+name: Protobuf Bindings Publishing
 
-on:
-  workflow_dispatch:
+on: push
+#  pull_request:
+#  push:
+#    branches:
+#      - main
 
 jobs:
   java_build:
