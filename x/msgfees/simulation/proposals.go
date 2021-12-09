@@ -1,9 +1,9 @@
 package simulation
 
 import (
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	simappparams "github.com/provenance-io/provenance/app/params"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -48,20 +48,18 @@ func SimulateCreateAddMsgBasedFeesProposal(k keeper.Keeper) simtypes.ContentSimu
 
 		   msgFeeExists,err := k.GetMsgBasedFee(ctx,sdk.MsgTypeURL(&markertypes.MsgAddMarkerRequest{}))
 		   check(err)
-			addMarkerRequest, err := cdctypes.NewAnyWithValue(&markertypes.MsgAddMarkerRequest{})
-			check(err)
 			if msgFeeExists == nil {
 				return types.NewAddMsgBasedFeeProposal(
 					simtypes.RandStringOfLength(r, 10),
 					simtypes.RandStringOfLength(r, 100),
-					addMarkerRequest,
+					sdk.MsgTypeURL(&banktypes.MsgSend{}),
 					sdk.NewCoin("hotdog", sdk.NewInt(r.Int63n(100000000))),
 				)
 			}else{
 				return types.NewUpdateMsgBasedFeeProposal(
 					simtypes.RandStringOfLength(r, 10),
 					simtypes.RandStringOfLength(r, 100),
-					addMarkerRequest,
+					sdk.MsgTypeURL(&banktypes.MsgSend{}),
 					sdk.NewCoin("hotdog", sdk.NewInt(r.Int63n(100000000))),
 				)
 		}

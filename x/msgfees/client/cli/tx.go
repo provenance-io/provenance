@@ -13,14 +13,12 @@ import (
 
 	"github.com/provenance-io/provenance/x/msgfees/types"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // Flag names and values
 const (
-	FlagFeeRate = "fee-rate"
 	FlagMinFee  = "additional-fee"
 	FlagMsgType = "msg-type"
 )
@@ -67,19 +65,14 @@ $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nha
 				return err
 			}
 
-			feeMsg, err := clientCtx.InterfaceRegistry.Resolve(msgType)
+			msgFee, err := clientCtx.InterfaceRegistry.Resolve(msgType)
 			if err != nil {
 				return err
 			}
 
-			_, ok := feeMsg.(sdk.Msg)
+			_, ok := msgFee.(sdk.Msg)
 			if !ok {
 				return fmt.Errorf("message type is not a sdk message: %v", msgType)
-			}
-
-			anyMsg, err := codectypes.NewAnyWithValue(feeMsg)
-			if err != nil {
-				return err
 			}
 
 			var addFee sdk.Coin
@@ -103,21 +96,21 @@ $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nha
 				proposal = &types.AddMsgBasedFeeProposal{
 					Title:         args[1],
 					Description:   args[2],
-					Msg:           anyMsg,
+					MsgTypeURL:    msgType,
 					AdditionalFee: addFee,
 				}
 			case "update":
 				proposal = &types.UpdateMsgBasedFeeProposal{
 					Title:         args[1],
 					Description:   args[2],
-					Msg:           anyMsg,
+					MsgTypeURL:           msgType,
 					AdditionalFee: addFee,
 				}
 			case "remove":
 				proposal = &types.RemoveMsgBasedFeeProposal{
 					Title:       args[1],
 					Description: args[2],
-					Msg:         anyMsg,
+					MsgTypeURL:         msgType,
 				}
 			default:
 				return fmt.Errorf("unknown proposal type %s", args[0])

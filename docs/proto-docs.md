@@ -5215,7 +5215,7 @@ AddMsgBasedFeeProposal defines a governance proposal to add additional msg based
 | ----- | ---- | ----- | ----------- |
 | `title` | [string](#string) |  |  |
 | `description` | [string](#string) |  |  |
-| `msg` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `msgTypeURL` | [string](#string) |  |  |
 | `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 
 
@@ -5233,7 +5233,7 @@ RemoveMsgBasedFeeProposal defines a governance proposal to delete a current msg 
 | ----- | ---- | ----- | ----------- |
 | `title` | [string](#string) |  |  |
 | `description` | [string](#string) |  |  |
-| `msg` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `msgTypeURL` | [string](#string) |  |  |
 
 
 
@@ -5250,7 +5250,7 @@ UpdateMsgBasedFeeProposal defines a governance proposal to update a current msg 
 | ----- | ---- | ----- | ----------- |
 | `title` | [string](#string) |  |  |
 | `description` | [string](#string) |  |  |
-| `msg` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `msgTypeURL` | [string](#string) |  |  |
 | `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 
 
