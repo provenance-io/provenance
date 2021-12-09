@@ -350,12 +350,6 @@
   
     - [Query](#provenance.msgfees.v1.Query)
   
-- [provenance/msgfees/v1/tx.proto](#provenance/msgfees/v1/tx.proto)
-    - [CreateMsgBasedFeeRequest](#provenance.msgfees.v1.CreateMsgBasedFeeRequest)
-    - [CreateMsgBasedFeeResponse](#provenance.msgfees.v1.CreateMsgBasedFeeResponse)
-  
-    - [Msg](#provenance.msgfees.v1.Msg)
-  
 - [provenance/name/v1/name.proto](#provenance/name/v1/name.proto)
     - [CreateRootNameProposal](#provenance.name.v1.CreateRootNameProposal)
     - [EventNameBound](#provenance.name.v1.EventNameBound)
@@ -5385,63 +5379,6 @@ Query defines the gRPC querier service for marker module.
 | `Params` | [QueryParamsRequest](#provenance.msgfees.v1.QueryParamsRequest) | [QueryParamsResponse](#provenance.msgfees.v1.QueryParamsResponse) | Params queries the parameters for x/msgfees | GET|/provenance/msgfees/v1/params|
 | `QueryAllMsgBasedFees` | [QueryAllMsgBasedFeesRequest](#provenance.msgfees.v1.QueryAllMsgBasedFeesRequest) | [QueryAllMsgBasedFeesResponse](#provenance.msgfees.v1.QueryAllMsgBasedFeesResponse) | Query all Msgs which have fees associated with them. | GET|/provenance/msgfees/v1/params|
 | `CalculateTxFees` | [CalculateTxFeesRequest](#provenance.msgfees.v1.CalculateTxFeesRequest) | [CalculateTxFeesResponse](#provenance.msgfees.v1.CalculateTxFeesResponse) | CalculateTxFees simulates executing a transaction for estimating gas usage and additional fees. | POST|/provenance/tx/v1/calculate_msg_based_fee|
-
- <!-- end services -->
-
-
-
-<a name="provenance/msgfees/v1/tx.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## provenance/msgfees/v1/tx.proto
-
-
-
-<a name="provenance.msgfees.v1.CreateMsgBasedFeeRequest"></a>
-
-### CreateMsgBasedFeeRequest
-create fee for msg's (repeated)
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `from_address` | [string](#string) |  |  |
-| `msg_based_fee` | [MsgBasedFee](#provenance.msgfees.v1.MsgBasedFee) |  | msg to add Fee for. |
-
-
-
-
-
-
-<a name="provenance.msgfees.v1.CreateMsgBasedFeeResponse"></a>
-
-### CreateMsgBasedFeeResponse
-response for CreateMsgBasedFeeRequest
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `msg_based_fee` | [MsgBasedFee](#provenance.msgfees.v1.MsgBasedFee) |  | msg to add Fee for. |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
-
-<a name="provenance.msgfees.v1.Msg"></a>
-
-### Msg
-Service defines a gRPC service for interacting with transactions.
-
-| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
-| ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `CreateMsgBasedFee` | [CreateMsgBasedFeeRequest](#provenance.msgfees.v1.CreateMsgBasedFeeRequest) | [CreateMsgBasedFeeResponse](#provenance.msgfees.v1.CreateMsgBasedFeeResponse) | create fee for an associated Msg (repeated) TODO : this goes away i think in prod because MsgFees can only be created by Gov | |
 
  <!-- end services -->
 

@@ -46,15 +46,31 @@ func ProposalContents(k keeper.Keeper) []simtypes.WeightedProposalContent {
 func SimulateCreateAddMsgBasedFeesProposal(k keeper.Keeper) simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
 
-		addMarkerRequest, err := cdctypes.NewAnyWithValue(&markertypes.MsgAddMarkerRequest{})
-		if err != nil {
-			panic(err)
+		   msgFeeExists,err := k.GetMsgBasedFee(ctx,sdk.MsgTypeURL(&markertypes.MsgAddMarkerRequest{}))
+		   check(err)
+			addMarkerRequest, err := cdctypes.NewAnyWithValue(&markertypes.MsgAddMarkerRequest{})
+			check(err)
+			if msgFeeExists == nil {
+				return types.NewAddMsgBasedFeeProposal(
+					simtypes.RandStringOfLength(r, 10),
+					simtypes.RandStringOfLength(r, 100),
+					addMarkerRequest,
+					sdk.NewCoin("hotdog", sdk.NewInt(r.Int63n(100000000))),
+				)
+			}else{
+				return types.NewUpdateMsgBasedFeeProposal(
+					simtypes.RandStringOfLength(r, 10),
+					simtypes.RandStringOfLength(r, 100),
+					addMarkerRequest,
+					sdk.NewCoin("hotdog", sdk.NewInt(r.Int63n(100000000))),
+				)
 		}
-		return types.NewAddMsgBasedFeeProposal(
-			simtypes.RandStringOfLength(r, 10),
-			simtypes.RandStringOfLength(r, 100),
-			addMarkerRequest,
-			sdk.NewCoin("hotdog", sdk.NewInt(r.Int63n(100000000))),
-		)
+
+	}
+}
+
+func check(err error){
+	if err!=nil{
+		panic(err)
 	}
 }
