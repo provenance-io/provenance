@@ -114,12 +114,12 @@ AdditionalFee: %s
 func NewRemoveMsgBasedFeeProposal(
 	title string,
 	description string,
-	msgTypeUrl string,
+	msgTypeURL string,
 ) *RemoveMsgBasedFeeProposal {
 	return &RemoveMsgBasedFeeProposal{
 		Title:       title,
 		Description: description,
-		MsgTypeUrl:  msgTypeUrl,
+		MsgTypeUrl:  msgTypeURL,
 	}
 }
 
