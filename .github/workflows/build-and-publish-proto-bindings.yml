@@ -1,4 +1,4 @@
-name: Protobuf Bindings Publishing
+name: Protobuf Bindings
 
 on: push
 #  pull_request:
