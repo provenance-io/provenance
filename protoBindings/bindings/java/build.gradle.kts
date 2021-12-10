@@ -6,7 +6,7 @@ import com.google.protobuf.gradle.protobuf
 import com.google.protobuf.gradle.protoc
 
 tasks.jar {
-    baseName = "proto-${project.name}"
+    archiveBaseName.set("proto-${project.name}")
 }
 
 tasks.withType<Javadoc> { enabled = true }

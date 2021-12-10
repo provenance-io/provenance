@@ -7,7 +7,7 @@ import com.google.protobuf.gradle.protoc
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 tasks.jar {
-    baseName = "proto-${project.name}"
+    archiveBaseName.set("proto-${project.name}")
 }
 
 tasks.withType<Javadoc> { enabled = true }

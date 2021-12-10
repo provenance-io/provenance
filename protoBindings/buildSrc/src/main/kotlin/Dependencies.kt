@@ -37,7 +37,7 @@ object PluginVersions { // please keep this sorted in sections
     const val DependencyAnalysis = "0.56.0"
     const val GoryLenkoGitProps = "1.5.2"
 
-    const val Protobuf = "0.8.17"
+    const val Protobuf = "0.8.18"
 
     // Publishing
     const val NexusPublish = "1.1.0"
