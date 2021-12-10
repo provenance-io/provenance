@@ -13,7 +13,6 @@ open class ProtobufRustGrpcTask : DefaultTask() {
      */
     @TaskAction
     fun generateRustGrpc() {
-        throw NotImplementedError(
-            message = "*** :generateRustGrpc is not yet supported! ***")
+
     }
 }
