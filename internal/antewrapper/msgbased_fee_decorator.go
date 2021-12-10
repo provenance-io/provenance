@@ -214,6 +214,21 @@ func EnsureSufficientFees(gas uint64, feeCoins sdk.Coins, additionalFees sdk.Coi
 	return nil
 }
 
+func CalcBaseFee(gas uint64, feeCoins sdk.Coins,
+	minGasPriceForAdditionalFeeCalc uint32, defaultDenom string) (sdk.Coin, error) {
+	minGasprice := sdk.NewCoin(defaultDenom, sdk.NewIntFromUint64(uint64(minGasPriceForAdditionalFeeCalc)))
+	// Determine the required fees by multiplying each required minimum gas
+	// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
+	feeInHash := minGasprice.Amount.Mul(sdk.NewIntFromUint64(gas))
+	feeInHashCoin := sdk.NewCoin(minGasprice.Denom, feeInHash)
+	if _, hasNeg := feeCoins.SafeSub(sdk.Coins{feeInHashCoin}); hasNeg {
+		return sdk.Coin{}, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee,
+			"insufficient fees; cannot pay base gas fee wanted %q ,got"+": %q", feeInHashCoin, feeCoins)
+	}
+
+	return feeInHashCoin, nil
+}
+
 // CalculateAdditionalFeesToBePaid computes the stability tax on MsgSend and MsgMultiSend.
 func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgbasedfeetypes.MsgBasedFeeKeeper, msgs ...sdk.Msg) (sdk.Coins, error) {
 	// get the msg fee
@@ -244,3 +259,5 @@ func containsDenom(coins sdk.Coins, denom string) bool {
 	amt := coins.AmountOf(denom)
 	return !amt.IsZero()
 }
+
+

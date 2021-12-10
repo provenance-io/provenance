@@ -23,7 +23,7 @@ type ProvenanceDeductFeeDecorator struct {
 
 // Common event types and attribute keys
 var (
-	AttributeKeyTotalFee      = "totalfee"
+	AttributeKeyBaseFee       = "basefee"
 	AttributeKeyAdditionalFee = "additionalfee"
 )
 
@@ -38,6 +38,7 @@ func NewProvenanceDeductFeeDecorator(ak authante.AccountKeeper, bk types.BankKee
 
 func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	feeTx, ok := tx.(sdk.FeeTx)
+	feeGasMeter, ok := ctx.GasMeter().(*FeeGasMeter)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
@@ -48,7 +49,7 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 
 	feePayer := feeTx.FeePayer()
 	feeGranter := feeTx.FeeGranter()
-
+	gas := feeTx.GetGas()
 	deductFeesFrom := feePayer
 
 	// deduct the fees
@@ -87,9 +88,16 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 	if deductFeesFromAcc == nil {
 		return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", deductFeesFrom)
 	}
-	// deduct total fees (base fee + additional fee)
+	// for authz/wasmd, decorator here will have no idea what an additional fee is for the submessage is so only take the base denom
+
+	// deduct base fees, only paid in base denom
 	if !feeToDeduct.IsZero() && !simulate {
-		err = DeductFees(dfd.bankKeeper, ctx, deductFeesFromAcc, feeToDeduct)
+		baseFee, errFromCalsFee := CalcBaseFee(gas,feeToDeduct,dfd.msgFeeKeeper.GetMinGasPrice(ctx), dfd.msgFeeKeeper.GetDefaultFeeDenom())
+		if errFromCalsFee!=nil {
+			return ctx,errFromCalsFee
+		}
+		err = DeductFees(dfd.bankKeeper, ctx, deductFeesFromAcc, sdk.Coins{baseFee})
+		feeGasMeter.ConsumeBaseFee(baseFee)
 		if err != nil {
 			return ctx, err
 		}
@@ -97,10 +105,7 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 
 	events := sdk.Events{sdk.NewEvent(sdk.EventTypeTx,
 		sdk.NewAttribute(sdk.AttributeKeyFee, feeTx.GetFee().String()),
-	),
-		sdk.NewEvent(sdk.EventTypeTx,
-			sdk.NewAttribute(AttributeKeyTotalFee, feeToDeduct.String()),
-		)}
+	)}
 	ctx.EventManager().EmitEvents(events)
 
 	return next(ctx, tx, simulate)

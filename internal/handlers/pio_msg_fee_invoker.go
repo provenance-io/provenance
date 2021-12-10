@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"fmt"
-
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/provenance-io/provenance/internal/antewrapper"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -63,30 +63,32 @@ func (afd MsgBasedFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.
 		}
 		chargedFees = feeGasMeter.FeeConsumed()
 
+		// if feegranter set deduct fee from feegranter account.
+		// this works with only when feegrant enabled.
+		if feeGranter != nil {
+			if afd.feegrantKeeper == nil {
+				return nil, nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")
+			} else if !feeGranter.Equals(feePayer) {
+				err = afd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, chargedFees, tx.GetMsgs())
+				if err != nil {
+					return nil, nil, sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
+				}
+			}
+			deductFeesFrom = feeGranter
+		}
+		deductFeesFromAcc := afd.accountKeeper.GetAccount(ctx, deductFeesFrom)
+		if deductFeesFromAcc == nil {
+			return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", deductFeesFrom)
+		}
+
 		if chargedFees != nil && chargedFees.IsValid() && !chargedFees.IsZero() {
 			// eat up the gas cost for charging fees. (This one is on us, Cheers!, mainly because we don't want to fail at this step, imo, but we can remove this is f necessary)
 			ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
-			// if feegranter set deduct fee from feegranter account.
-			// this works with only when feegrant enabled.
-			if feeGranter != nil {
-				if afd.feegrantKeeper == nil {
-					return nil, nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")
-				} else if !feeGranter.Equals(feePayer) {
-					err = afd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, chargedFees, tx.GetMsgs())
-					if err != nil {
-						return nil, nil, sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
-					}
-				}
-				deductFeesFrom = feeGranter
-			}
-			deductFeesFromAcc := afd.accountKeeper.GetAccount(ctx, deductFeesFrom)
-			if deductFeesFromAcc == nil {
-				return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", deductFeesFrom)
-			}
 
 			ctx.Logger().Debug(fmt.Sprintf("The Fee consumed by message types : %v", feeGasMeter.FeeConsumedByMsg()))
 
 			err = afd.msgBasedFeeKeeper.DeductFees(afd.bankKeeper, ctx, deductFeesFromAcc, chargedFees)
+
 			if err != nil {
 				return nil, nil, err
 			}
@@ -95,10 +97,53 @@ func (afd MsgBasedFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.
 					sdk.NewAttribute(antewrapper.AttributeKeyAdditionalFee, chargedFees.String()),
 				)}
 		}
-
+		events, err = SweepUpFees(ctx, feeGasMeter, chargedFees, afd, feeTx, err, deductFeesFromAcc, events)
+		if err != nil {
+			return nil, nil, err
+		}
 		// set back the original gasMeter
 		ctx = ctx.WithGasMeter(originalGasMeter)
 	}
 
 	return chargedFees, events, nil
+}
+
+func SweepUpFees(ctx sdk.Context, feeGasMeter *antewrapper.FeeGasMeter, chargedFees sdk.Coins, afd MsgBasedFeeInvoker, feeTx sdk.FeeTx, err error, deductFeesFromAcc authtypes.AccountI, events sdk.Events) (sdk.Events, error) {
+	consumedBaseFee := sdk.Coins{feeGasMeter.BaseFeeConsumed()}
+	chargedFeesInDefaultDenom := getDenom(chargedFees, afd.msgBasedFeeKeeper.GetDefaultFeeDenom())
+	totalBaseFee := consumedBaseFee.Add(chargedFeesInDefaultDenom)
+
+	sweptUpFee, isNeg := feeTx.GetFee().SafeSub(totalBaseFee)
+	if !isNeg {
+		err = afd.msgBasedFeeKeeper.DeductFees(afd.bankKeeper, ctx, deductFeesFromAcc, sweptUpFee)
+		if err != nil {
+			return nil, err
+		}
+		totalBaseFee = totalBaseFee.Add(sweptUpFee[0])
+	}
+	events = events.AppendEvent(
+		sdk.NewEvent(antewrapper.AttributeKeyBaseFee,
+			sdk.NewAttribute(antewrapper.AttributeKeyAdditionalFee, getDenom(feeTx.GetFee(), afd.msgBasedFeeKeeper.GetDefaultFeeDenom()).String()),
+		))
+
+	//temp event, delete after testing
+	events = events.AppendEvent(
+		sdk.NewEvent("tempbasefee",
+			sdk.NewAttribute(antewrapper.AttributeKeyAdditionalFee, totalBaseFee.String()),
+		))
+	return events, err
+}
+
+func getDenom(coins sdk.Coins, denom string) sdk.Coin {
+	if len(coins) == 0 {
+		return sdk.Coin{}
+	}
+	amt := coins.AmountOf(denom)
+	if !amt.IsZero() {
+		return sdk.Coin{
+			Denom:  denom,
+			Amount: amt,
+		}
+	}
+	return sdk.Coin{}
 }
