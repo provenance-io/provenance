@@ -24,7 +24,7 @@ message AddMsgBasedFeeProposal {
   string title       = 1;
   string description = 2;
 
-  string msgTypeURL = 3;
+  string msg_type_url = 3;
 
   cosmos.base.v1beta1.Coin additional_fee = 4 [
     (gogoproto.nullable)     = false,
@@ -41,7 +41,7 @@ message UpdateMsgBasedFeeProposal {
   string title       = 1;
   string description = 2;
 
-  string msgTypeURL = 3;
+  string msg_type_url = 3;
 
   cosmos.base.v1beta1.Coin additional_fee = 4 [
     (gogoproto.nullable)     = false,
@@ -58,5 +58,5 @@ message RemoveMsgBasedFeeProposal {
   string title       = 1;
   string description = 2;
 
-  string msgTypeURL = 3;
+  string msg_type_url = 3;
 }

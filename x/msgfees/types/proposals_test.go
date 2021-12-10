@@ -3,7 +3,6 @@ package types
 import (
 	"testing"
 
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
@@ -28,9 +27,8 @@ func (s *MsgFeesProposalTestSuite) TearDownSuite() {
 
 func (s *MsgFeesProposalTestSuite) TestAddMsgBasedFeeProposalType() {
 
-	msgType, err := cdctypes.NewAnyWithValue(&metadatatypes.MsgWriteRecordRequest{})
+	msgType := sdk.MsgTypeURL(&metadatatypes.MsgWriteRecordRequest{})
 
-	s.Require().NoError(err)
 	m := NewAddMsgBasedFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)))
 	s.Assert().Equal(
 		`Add Msg Based Fee Proposal:
@@ -47,7 +45,7 @@ AdditionalFee: 10hotdog
 	}{
 		{
 			"Empty type error",
-			NewAddMsgBasedFeeProposal("title", "description", nil, sdk.NewCoin("hotdog", sdk.NewInt(10))),
+			NewAddMsgBasedFeeProposal("title", "description", "", sdk.NewCoin("hotdog", sdk.NewInt(10))),
 			ErrEmptyMsgType.Error(),
 		},
 		{
@@ -64,7 +62,7 @@ AdditionalFee: 10hotdog
 
 	for _, tc := range tests {
 		s.T().Run(tc.name, func(t *testing.T) {
-			err = tc.proposal.ValidateBasic()
+			err := tc.proposal.ValidateBasic()
 			s.Require().NotNil(err)
 			s.Assert().Equal(tc.expectedErr, err.Error())
 		})
@@ -73,9 +71,8 @@ AdditionalFee: 10hotdog
 
 func (s *MsgFeesProposalTestSuite) TestUpdateMsgBasedFeeProposalType() {
 
-	msgType, err := cdctypes.NewAnyWithValue(&metadatatypes.MsgWriteRecordRequest{})
+	msgType := sdk.MsgTypeURL(&metadatatypes.MsgWriteRecordRequest{})
 
-	s.Require().NoError(err)
 	m := NewUpdateMsgBasedFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)))
 	s.Assert().Equal(
 		`Update Msg Based Fee Proposal:
@@ -92,7 +89,7 @@ AdditionalFee: 10hotdog
 	}{
 		{
 			"Empty type error",
-			NewUpdateMsgBasedFeeProposal("title", "description", nil, sdk.NewCoin("hotdog", sdk.NewInt(10))),
+			NewUpdateMsgBasedFeeProposal("title", "description", "", sdk.NewCoin("hotdog", sdk.NewInt(10))),
 			ErrEmptyMsgType.Error(),
 		},
 		{
@@ -109,7 +106,7 @@ AdditionalFee: 10hotdog
 
 	for _, tc := range tests {
 		s.T().Run(tc.name, func(t *testing.T) {
-			err = tc.proposal.ValidateBasic()
+			err := tc.proposal.ValidateBasic()
 			s.Assert().Equal(tc.expectedErr, err.Error())
 		})
 	}
@@ -117,26 +114,24 @@ AdditionalFee: 10hotdog
 }
 
 func (s *MsgFeesProposalTestSuite) TestRemoveMsgBasedFeeProposalType() {
+	msgType := sdk.MsgTypeURL(&metadatatypes.MsgWriteRecordRequest{})
 
-	msgType, err := cdctypes.NewAnyWithValue(&metadatatypes.MsgWriteRecordRequest{})
-
-	s.Require().NoError(err)
 	m := NewRemoveMsgBasedFeeProposal("title", "description", msgType)
 	s.Assert().Equal(
 		`Remove Msg Based Fee Proposal:
   Title:       title
   Description: description
-  Msg:         /provenance.metadata.v1.MsgWriteRecordRequest
+  MsgTypeUrl:         /provenance.metadata.v1.MsgWriteRecordRequest
 `, m.String())
 
-	err = m.ValidateBasic()
+	err := m.ValidateBasic()
 	s.Assert().NoError(err)
 
-	m.Msg = nil
+	m.MsgTypeUrl = ""
 	err = m.ValidateBasic()
 	s.Assert().ErrorIs(err, ErrEmptyMsgType)
 
-	m.Msg = msgType
+	m.MsgTypeUrl = msgType
 	m.Description = ""
 	err = m.ValidateBasic()
 	s.Assert().Equal("proposal description cannot be blank: invalid proposal content", err.Error())

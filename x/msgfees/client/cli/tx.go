@@ -96,21 +96,21 @@ $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nha
 				proposal = &types.AddMsgBasedFeeProposal{
 					Title:         args[1],
 					Description:   args[2],
-					MsgTypeURL:    msgType,
+					MsgTypeUrl:    msgType,
 					AdditionalFee: addFee,
 				}
 			case "update":
 				proposal = &types.UpdateMsgBasedFeeProposal{
 					Title:         args[1],
 					Description:   args[2],
-					MsgTypeURL:    msgType,
+					MsgTypeUrl:    msgType,
 					AdditionalFee: addFee,
 				}
 			case "remove":
 				proposal = &types.RemoveMsgBasedFeeProposal{
 					Title:       args[1],
 					Description: args[2],
-					MsgTypeURL:  msgType,
+					MsgTypeUrl:  msgType,
 				}
 			default:
 				return fmt.Errorf("unknown proposal type %s", args[0])

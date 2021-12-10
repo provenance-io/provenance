@@ -42,7 +42,7 @@ func NewAddMsgBasedFeeProposal(
 	return &AddMsgBasedFeeProposal{
 		Title:         title,
 		Description:   description,
-		MsgTypeURL:    msg,
+		MsgTypeUrl:    msg,
 		AdditionalFee: additionalFee,
 	}
 }
@@ -50,7 +50,7 @@ func NewAddMsgBasedFeeProposal(
 func (ambfp AddMsgBasedFeeProposal) ProposalRoute() string { return RouterKey }
 func (ambfp AddMsgBasedFeeProposal) ProposalType() string  { return ProposalTypeAddMsgBasedFee }
 func (ambfp AddMsgBasedFeeProposal) ValidateBasic() error {
-	if len(ambfp.MsgTypeURL) == 0 {
+	if len(ambfp.MsgTypeUrl) == 0 {
 		return ErrEmptyMsgType
 	}
 
@@ -67,7 +67,7 @@ Title:         %s
 Description:   %s
 Msg:           %s
 AdditionalFee: %s
-`, ambfp.Title, ambfp.Description, ambfp.MsgTypeURL, ambfp.AdditionalFee))
+`, ambfp.Title, ambfp.Description, ambfp.MsgTypeUrl, ambfp.AdditionalFee))
 	return b.String()
 }
 
@@ -79,7 +79,7 @@ func NewUpdateMsgBasedFeeProposal(
 	return &UpdateMsgBasedFeeProposal{
 		Title:         title,
 		Description:   description,
-		MsgTypeURL:    msg,
+		MsgTypeUrl:    msg,
 		AdditionalFee: additionalFee,
 	}
 }
@@ -89,7 +89,7 @@ func (umbfp UpdateMsgBasedFeeProposal) ProposalRoute() string { return RouterKey
 func (umbfp UpdateMsgBasedFeeProposal) ProposalType() string { return ProposalTypeUpdateMsgBasedFee }
 
 func (umbfp UpdateMsgBasedFeeProposal) ValidateBasic() error {
-	if len(umbfp.MsgTypeURL) == 0 {
+	if len(umbfp.MsgTypeUrl) == 0 {
 		return ErrEmptyMsgType
 	}
 
@@ -107,19 +107,19 @@ Title:         %s
 Description:   %s
 Msg:           %s
 AdditionalFee: %s
-`, umbfp.Title, umbfp.Description, umbfp.MsgTypeURL, umbfp.AdditionalFee))
+`, umbfp.Title, umbfp.Description, umbfp.MsgTypeUrl, umbfp.AdditionalFee))
 	return b.String()
 }
 
 func NewRemoveMsgBasedFeeProposal(
 	title string,
 	description string,
-	msg string,
+	msgTypeUrl string,
 ) *RemoveMsgBasedFeeProposal {
 	return &RemoveMsgBasedFeeProposal{
 		Title:       title,
 		Description: description,
-		MsgTypeURL:  msg,
+		MsgTypeUrl:  msgTypeUrl,
 	}
 }
 
@@ -128,7 +128,7 @@ func (rmbfp RemoveMsgBasedFeeProposal) ProposalRoute() string { return RouterKey
 func (rmbfp RemoveMsgBasedFeeProposal) ProposalType() string { return ProposalTypeRemoveMsgBasedFee }
 
 func (rmbfp RemoveMsgBasedFeeProposal) ValidateBasic() error {
-	if len(rmbfp.MsgTypeURL) > 0 {
+	if len(rmbfp.MsgTypeUrl) == 0 {
 		return ErrEmptyMsgType
 	}
 	return govtypes.ValidateAbstract(&rmbfp)
@@ -140,6 +140,6 @@ func (rmbfp RemoveMsgBasedFeeProposal) String() string {
   Title:       %s
   Description: %s
   MsgTypeUrl:         %s
-`, rmbfp.Title, rmbfp.Description, rmbfp.MsgTypeURL))
+`, rmbfp.Title, rmbfp.Description, rmbfp.MsgTypeUrl))
 	return b.String()
 }
