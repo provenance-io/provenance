@@ -43,7 +43,7 @@ jobs:
 
       - name: Build with Gradle
         run: |
-          cd protBindings
+          cd protoBindings
           ./gradlew clean :kotlin:jar --refresh-dependencies
           ./gradlew clean :java:jar --refresh-dependencies
 
