@@ -11,6 +11,9 @@ rootProject.name = "io.provenance"
 File(rootDir, "bindings").walk().filter {
     it.isDirectory && File(it, "build.gradle.kts").isFile
 }.forEach {
-    include(it.name)
-    project(":${it.name}").projectDir = it
+    // ignore rust bindings for now until it is ready.
+    if (it.name != "rust") {
+        include(it.name)
+        project(":${it.name}").projectDir = it
+    }
 }
