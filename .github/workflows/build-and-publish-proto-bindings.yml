@@ -8,7 +8,7 @@ on: push
 
 jobs:
   java_build:
-    name: Build and Publish Protobuf bindings for Kotlin and Java
+    name: Publishing
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -41,20 +41,13 @@ jobs:
           gpg --list-secret-keys --keyid-format LONG
           echo -n "$GPG_KEY" | base64 --decode > $GITHUB_WORKSPACE/release.gpg
 
-      - name: Build with Gradle
-        run: |
-          cd protoBindings
-          ./gradlew clean :kotlin:jar --refresh-dependencies
-          ./gradlew clean :java:jar --refresh-dependencies
-
-      - name: Publish to Maven Central
-        # if: github.event_name == 'release'
+      - name: Build & Publish to Maven Central
         env:
           OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
           OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
           GPG_PASSWORD: ${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}
         run: |
           cd protoBindings
-          ./gradlew publishToSonatype $(if [ "${{github.event.release.prerelease}}" = "true" ]; then echo 'closeSonatypeStagingRepository'; else echo 'closeAndReleaseSonatypeStagingRepository'; fi) \
+          ./gradlew publish $(if [ "${{github.event.release.prerelease}}" = "true" ]; then echo 'closeSonatypeStagingRepository'; else echo 'closeAndReleaseSonatypeStagingRepository'; fi) \
             -Psigning.keyId=B7D30ABE -Psigning.password="${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}" -Psigning.secretKeyRingFile=$GITHUB_WORKSPACE/release.gpg \
             --info
