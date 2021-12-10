@@ -135,4 +135,4 @@ replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 
 replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.19.0
 
-replace github.com/coinbase/rosetta-sdk-go => github.com/coinbase/rosetta-sdk-go v0.7.2
+replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.44.3
