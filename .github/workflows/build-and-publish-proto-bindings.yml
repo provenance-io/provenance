@@ -41,7 +41,7 @@ jobs:
           gpg --list-secret-keys --keyid-format LONG
           echo -n "$GPG_KEY" | base64 --decode > $GITHUB_WORKSPACE/release.gpg
 
-      - name: Build & Publish to Maven Central
+      - name: Build and Publish to Maven Central
         env:
           OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
           OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
