@@ -89,6 +89,7 @@ func (afd MsgBasedFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.
 			baseFeePaidJustForGasTx := sdk.Coins{}
 			// this is mainly for testing, since all pio invokes will have nhash as base denom
 			if !getDenom(feeGasMeter.BaseFeeConsumed(),afd.msgBasedFeeKeeper.GetDefaultFeeDenom()).IsNil() {
+				// for non authz/wasmd calls this will be zero but for wasmd/authz this will have a value.
 				baseFeePaidJustForGasTx, err = baseFeePaidBasedOnGas(feeGasMeter, afd.msgBasedFeeKeeper.GetDefaultFeeDenom(), afd.msgBasedFeeKeeper.GetMinGasPrice(ctx), feeTx.GetGas())
 				if err != nil {
 					return nil, nil, err
@@ -114,7 +115,7 @@ func (afd MsgBasedFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.
 					sdk.NewAttribute(antewrapper.AttributeKeyAdditionalFee, feeGasMeter.FeeConsumed().String()),
 				),
 				sdk.NewEvent(sdk.EventTypeTx,
-					sdk.NewAttribute(antewrapper.AttributeKeyBaseFee, baseFeePaidJustForGasTx.String()),
+					sdk.NewAttribute(antewrapper.AttributeKeyBaseFee, feeGasMeter.BaseFeeConsumed().Add(chargedFees...).Sub(feeGasMeter.FeeConsumed()).String()),
 				)}
 		}
 

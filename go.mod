@@ -129,7 +129,7 @@ replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alp
 
 replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.19.0-pio-msgbasedfees
 
-replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.44.3-pio-msgfees-5
+replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.44.3-pio-msgfees-6
 
 replace github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
 
