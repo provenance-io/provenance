@@ -22,18 +22,22 @@ type FeeGasMeter struct {
 
 	usedFees map[string]sdk.Coin // map of msg fee type url --> fees charged
 
+	// this is the base fee charged in decorator
+	baseFeeCharged sdk.Coins
+
 	simulate bool
 }
 
 // NewFeeGasMeterWrapper returns a reference to a new tracing gas meter that will track calls to the base gas meter
 func NewFeeGasMeterWrapper(logger log.Logger, baseMeter sdkgas.GasMeter, isSimulate bool) sdkgas.GasMeter {
 	return &FeeGasMeter{
-		log:      logger,
-		base:     baseMeter,
-		used:     make(map[string]uint64),
-		calls:    make(map[string]uint64),
-		usedFees: make(map[string]sdk.Coin),
-		simulate: isSimulate,
+		log:            logger,
+		base:           baseMeter,
+		used:           make(map[string]uint64),
+		calls:          make(map[string]uint64),
+		usedFees:       make(map[string]sdk.Coin),
+		baseFeeCharged: sdk.Coins{},
+		simulate:       isSimulate,
 	}
 }
 
@@ -111,4 +115,13 @@ func (g *FeeGasMeter) FeeConsumedByMsg() map[string]sdk.Coin {
 
 func (g *FeeGasMeter) IsSimulate() bool {
 	return g.simulate
+}
+
+func (g *FeeGasMeter) ConsumeBaseFee(amount sdk.Coins) sdk.Coins {
+	g.baseFeeCharged = amount
+	return g.baseFeeCharged
+}
+
+func (g *FeeGasMeter) BaseFeeConsumed() sdk.Coins {
+	return g.baseFeeCharged
 }

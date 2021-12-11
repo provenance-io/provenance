@@ -23,7 +23,7 @@ type ProvenanceDeductFeeDecorator struct {
 
 // Common event types and attribute keys
 var (
-	AttributeKeyTotalFee      = "totalfee"
+	AttributeKeyBaseFee       = "basefee"
 	AttributeKeyAdditionalFee = "additionalfee"
 )
 
@@ -48,6 +48,10 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 
 	feePayer := feeTx.FeePayer()
 	feeGranter := feeTx.FeeGranter()
+	feeGasMeter, ok := ctx.GasMeter().(*FeeGasMeter)
+	if !ok {
+		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "GasMeter not a FeeGasMeter")
+	}
 
 	deductFeesFrom := feePayer
 
@@ -93,14 +97,12 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 		if err != nil {
 			return ctx, err
 		}
+		feeGasMeter.ConsumeBaseFee(feeToDeduct)
 	}
 
 	events := sdk.Events{sdk.NewEvent(sdk.EventTypeTx,
 		sdk.NewAttribute(sdk.AttributeKeyFee, feeTx.GetFee().String()),
-	),
-		sdk.NewEvent(sdk.EventTypeTx,
-			sdk.NewAttribute(AttributeKeyTotalFee, feeToDeduct.String()),
-		)}
+	)}
 	ctx.EventManager().EmitEvents(events)
 
 	return next(ctx, tx, simulate)
