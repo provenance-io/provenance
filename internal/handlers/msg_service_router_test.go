@@ -9,6 +9,7 @@ import (
 	"github.com/provenance-io/provenance/internal/handlers"
 	msgbasedfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -98,6 +99,13 @@ func TestMsgService(t *testing.T) {
 	require.NoError(t, err)
 	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
+	assert.Equal(t, 14, len(res.Events))
+	assert.Equal(t, "tx", res.Events[4].Type)
+	assert.Equal(t, "fee", string(res.Events[4].Attributes[0].Key))
+	assert.Equal(t, "150atom", string(res.Events[4].Attributes[0].Value))
+	assert.Equal(t, "tx", res.Events[5].Type)
+	assert.Equal(t, "totalfee", string(res.Events[5].Attributes[0].Key))
+	assert.Equal(t, "150atom", string(res.Events[5].Attributes[0].Value))
 
 	msgbasedFee := msgbasedfeetypes.NewMsgBasedFee(sdk.MsgTypeURL(msg), sdk.NewCoin("hotdog", sdk.NewInt(800)))
 	app.MsgBasedFeeKeeper.SetMsgBasedFee(ctx, msgbasedFee)
@@ -110,6 +118,20 @@ func TestMsgService(t *testing.T) {
 	require.NoError(t, err)
 	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
+	assert.Equal(t, 15, len(res.Events))
+	assert.Equal(t, "tx", res.Events[4].Type)
+	assert.Equal(t, "fee", string(res.Events[4].Attributes[0].Key))
+	assert.Equal(t, "150atom,800hotdog", string(res.Events[4].Attributes[0].Value))
+	assert.Equal(t, "tx", res.Events[5].Type)
+	assert.Equal(t, "totalfee", string(res.Events[5].Attributes[0].Key))
+	assert.Equal(t, "150atom,800hotdog", string(res.Events[5].Attributes[0].Value))
+	assert.Equal(t, "tx", res.Events[6].Type)
+	assert.Equal(t, "acc_seq", string(res.Events[6].Attributes[0].Key))
+	assert.Equal(t, "tx", res.Events[7].Type)
+	assert.Equal(t, "signature", string(res.Events[7].Attributes[0].Key))
+	assert.Equal(t, "tx", res.Events[8].Type)
+	assert.Equal(t, "additionalfee", string(res.Events[8].Attributes[0].Key))
+	assert.Equal(t, "800hotdog", string(res.Events[8].Attributes[0].Value))
 
 }
 
