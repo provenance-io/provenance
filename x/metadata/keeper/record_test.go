@@ -176,7 +176,7 @@ func (s *RecordKeeperTestSuite) TestValidateRecordRemove() {
 		"Invalid, missing signature": {
 			existing: *record,
 			proposed: recordID,
-			signers:  []string{"no-matchin"},
+			signers:  []string{},
 			wantErr:  true,
 			errorMsg: fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user1),
 		},
@@ -193,7 +193,7 @@ func (s *RecordKeeperTestSuite) TestValidateRecordRemove() {
 		tc := tc
 
 		s.Run(n, func() {
-			err := s.app.MetadataKeeper.ValidateRecordRemove(s.ctx, tc.existing, tc.proposed, tc.signers)
+			err := s.app.MetadataKeeper.ValidateRecordRemove(s.ctx, tc.existing, tc.proposed, tc.signers, types.TypeURLMsgDeleteRecordRequest)
 			if tc.wantErr {
 				s.Error(err)
 				s.Equal(tc.errorMsg, err.Error())
@@ -568,7 +568,7 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 
 	for n, tc := range cases {
 		s.T().Run(n, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidateRecordUpdate(s.ctx, tc.existing, tc.proposed, tc.signers, tc.partiesInvolved)
+			err := s.app.MetadataKeeper.ValidateRecordUpdate(s.ctx, tc.existing, tc.proposed, tc.signers, tc.partiesInvolved, types.TypeURLMsgWriteRecordRequest)
 			if len(tc.errorMsg) != 0 {
 				assert.EqualError(t, err, tc.errorMsg, "ValidateRecordUpdate expected error")
 			} else {

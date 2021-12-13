@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -527,4 +528,47 @@ func TestBindOSLocatorInvalidURI(t *testing.T) {
 
 	err := bindRequestMsg.ValidateBasic()
 	require.Error(t, err)
+}
+
+type MsgTypeURL interface {
+	MsgTypeURL() string
+}
+
+func TestPrintMessageTypeStrings(t *testing.T) {
+	messageTypes := []sdk.Msg {
+		&MsgWriteScopeRequest{},
+		&MsgDeleteScopeRequest{},
+		&MsgAddScopeDataAccessRequest{},
+		&MsgDeleteScopeDataAccessRequest{},
+		&MsgAddScopeOwnerRequest{},
+		&MsgDeleteScopeOwnerRequest{},
+		&MsgWriteSessionRequest{},
+		&MsgWriteRecordRequest{},
+		&MsgDeleteRecordRequest{},
+		&MsgWriteScopeSpecificationRequest{},
+		&MsgDeleteScopeSpecificationRequest{},
+		&MsgWriteContractSpecificationRequest{},
+		&MsgDeleteContractSpecificationRequest{},
+		&MsgAddContractSpecToScopeSpecRequest{},
+		&MsgDeleteContractSpecFromScopeSpecRequest{},
+		&MsgWriteRecordSpecificationRequest{},
+		&MsgDeleteRecordSpecificationRequest{},
+		&MsgBindOSLocatorRequest{},
+		&MsgDeleteOSLocatorRequest{},
+		&MsgModifyOSLocatorRequest{},
+		&MsgWriteP8EContractSpecRequest{},
+		&MsgP8EMemorializeContractRequest{},
+		// add  any new messages here
+	}
+
+	for _, msg := range messageTypes {
+		expected := sdk.MsgTypeURL(msg)
+		// compare to what we currently have in msg.go
+		mtu, ok := msg.(MsgTypeURL)
+		if assert.True(t, ok, "MsgTypeURL function for %s is not defined.", expected) {
+			actual := mtu.MsgTypeURL()
+			assert.Equal(t, expected, actual)
+		}
+		fmt.Println(expected)
+	}
 }
