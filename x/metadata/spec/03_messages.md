@@ -23,6 +23,7 @@ These endpoints, requests, and responses are defined in [tx.proto](https://githu
     - [Msg/BindOSLocator](#msg-bindoslocator)
     - [Msg/DeleteOSLocator](#msg-deleteoslocator)
     - [Msg/ModifyOSLocator](#msg-modifyoslocator)
+  - [Authz Grants](#authz-grants)
   - [Deprecated](#deprecated)
     - [Msg/WriteP8eContractSpec](#msg-writep8econtractspec)
     - [Msg/P8eMemorializeContract](#msg-p8ememorializecontract)
@@ -445,6 +446,35 @@ This service message is expected to fail if:
 * The `uri` is not a valid URI.
 * The `owner` does not match an existing account.
 * An object store locator does not exist for the given `owner`.
+
+---
+## Authz Grants
+
+Authz requires the use of fully qualified message type URLs when applying grants to an address. See [04_authz.md](04_authz.md) for more details.
+
+Fully qualified `metadata` message type URLs:
+- `/provenance.metadata.v1.MsgWriteScopeRequest`
+- `/provenance.metadata.v1.MsgDeleteScopeRequest`
+- `/provenance.metadata.v1.MsgAddScopeDataAccessRequest`
+- `/provenance.metadata.v1.MsgDeleteScopeDataAccessRequest`
+- `/provenance.metadata.v1.MsgAddScopeOwnerRequest`
+- `/provenance.metadata.v1.MsgDeleteScopeOwnerRequest`
+- `/provenance.metadata.v1.MsgWriteSessionRequest`
+- `/provenance.metadata.v1.MsgWriteRecordRequest`
+- `/provenance.metadata.v1.MsgDeleteRecordRequest`
+- `/provenance.metadata.v1.MsgWriteScopeSpecificationRequest`
+- `/provenance.metadata.v1.MsgDeleteScopeSpecificationRequest`
+- `/provenance.metadata.v1.MsgWriteContractSpecificationRequest`
+- `/provenance.metadata.v1.MsgDeleteContractSpecificationRequest`
+- `/provenance.metadata.v1.MsgAddContractSpecToScopeSpecRequest`
+- `/provenance.metadata.v1.MsgDeleteContractSpecFromScopeSpecRequest`
+- `/provenance.metadata.v1.MsgWriteRecordSpecificationRequest`
+- `/provenance.metadata.v1.MsgDeleteRecordSpecificationRequest`
+- `/provenance.metadata.v1.MsgBindOSLocatorRequest`
+- `/provenance.metadata.v1.MsgDeleteOSLocatorRequest`
+- `/provenance.metadata.v1.MsgModifyOSLocatorRequest`
+- `/provenance.metadata.v1.MsgWriteP8eContractSpecRequest`
+- `/provenance.metadata.v1.MsgP8eMemorializeContractRequest`
 
 ---
 ## Deprecated

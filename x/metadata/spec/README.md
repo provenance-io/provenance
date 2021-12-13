@@ -18,9 +18,10 @@ It can be used to record and validate information as well as the processes that 
     - [Record Specifications](02_state.md#record-specifications)
     - [Object Store Locators](02_state.md#object-store-locators)
 1. **[Messages](03_messages.md)**
-1. **[Queries](04_queries.md)**
-1. **[Events](05_events.md)**
-1. **[Telemetry](06_telemetry.md)**
-1. **[Params](07_params.md)**
+1. **[Authz](04_authz.md)**
+1. **[Queries](05_queries.md)**
+1. **[Events](06_events.md)**
+1. **[Telemetry](07_telemetry.md)**
+1. **[Params](08_params.md)**
 
 
