@@ -99,7 +99,11 @@ func (afd MsgBasedFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.
 			}
 
 			var isNeg bool
-			chargedFees, isNeg = chargedFees.SafeSub(baseFeePaidJustForGasTx)
+			chargedFees, isNeg = feeTx.GetFee().SafeSub(baseFeePaidJustForGasTx)
+			if !chargedFees.IsEqual(feeGasMeter.FeeConsumed()){
+				// this extra safecheck, is because we don't know what is in the messages for authz and wasm calls
+				return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "This should never happen, but this indicates fee in gas meter %v, differs from (Total Fee passed in - Fee already consumed) %v",feeGasMeter.FeeConsumed(),chargedFees )
+			}
 			// for e.g if authz paid 900 hotdog and additional message was 800 hotdog, already paid
 			if isNeg {
 				chargedFees = removeNegativeCoins(chargedFees)
@@ -132,11 +136,11 @@ func baseFeePaidBasedOnGas(meter *antewrapper.FeeGasMeter, defaultDenom string, 
 	// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
 	fee := minGasprice.Amount.Mul(sdk.NewIntFromUint64(gas))
 	baseFeesForGas := sdk.NewCoin(minGasprice.Denom, fee)
-	coins, isNeg := meter.BaseFeeConsumed().SafeSub(sdk.Coins{baseFeesForGas})
+	_, isNeg := meter.BaseFeeConsumed().SafeSub(sdk.Coins{baseFeesForGas})
 	if isNeg {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "This should never happen if it passed current ante decorators")
 	}
-	return coins, nil
+	return sdk.Coins{baseFeesForGas}, nil
 }
 
 func getDenom(coins sdk.Coins, denom string) sdk.Coin {
