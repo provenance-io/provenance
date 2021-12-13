@@ -6,6 +6,7 @@ import (
 	"time"
 
 	piosimapp "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/handlers"
 	msgbasedfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 
@@ -103,8 +104,9 @@ func TestMsgService(t *testing.T) {
 	assert.Equal(t, "tx", res.Events[4].Type)
 	assert.Equal(t, "fee", string(res.Events[4].Attributes[0].Key))
 	assert.Equal(t, "150atom", string(res.Events[4].Attributes[0].Value))
-	assert.Equal(t, "tx", res.Events[5].Type)
-	assert.Equal(t, "totalfee", string(res.Events[5].Attributes[0].Key))
+
+	assert.Equal(t, "tx", res.Events[5].Type) // WIP: currently not present, excluded when no additional fees in transaction?
+	assert.Equal(t, antewrapper.AttributeKeyBaseFee, string(res.Events[5].Attributes[0].Key))
 	assert.Equal(t, "150atom", string(res.Events[5].Attributes[0].Value))
 
 	msgbasedFee := msgbasedfeetypes.NewMsgBasedFee(sdk.MsgTypeURL(msg), sdk.NewCoin("hotdog", sdk.NewInt(800)))
@@ -123,15 +125,15 @@ func TestMsgService(t *testing.T) {
 	assert.Equal(t, "fee", string(res.Events[4].Attributes[0].Key))
 	assert.Equal(t, "150atom,800hotdog", string(res.Events[4].Attributes[0].Value))
 	assert.Equal(t, "tx", res.Events[5].Type)
-	assert.Equal(t, "totalfee", string(res.Events[5].Attributes[0].Key))
-	assert.Equal(t, "150atom,800hotdog", string(res.Events[5].Attributes[0].Value))
+	assert.Equal(t, "acc_seq", string(res.Events[5].Attributes[0].Key))
 	assert.Equal(t, "tx", res.Events[6].Type)
-	assert.Equal(t, "acc_seq", string(res.Events[6].Attributes[0].Key))
+	assert.Equal(t, "signature", string(res.Events[6].Attributes[0].Key))
 	assert.Equal(t, "tx", res.Events[7].Type)
-	assert.Equal(t, "signature", string(res.Events[7].Attributes[0].Key))
+	assert.Equal(t, antewrapper.AttributeKeyAdditionalFee, string(res.Events[7].Attributes[0].Key))
+	assert.Equal(t, "800hotdog", string(res.Events[7].Attributes[0].Value))
 	assert.Equal(t, "tx", res.Events[8].Type)
-	assert.Equal(t, "additionalfee", string(res.Events[8].Attributes[0].Key))
-	assert.Equal(t, "800hotdog", string(res.Events[8].Attributes[0].Value))
+	assert.Equal(t, antewrapper.AttributeKeyBaseFee, string(res.Events[8].Attributes[0].Key))
+	assert.Equal(t, "150atom", string(res.Events[8].Attributes[0].Value))
 
 }
 
@@ -159,6 +161,43 @@ func TestMsgServiceAuthz(t *testing.T) {
 	require.NoError(t, err)
 	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
+	assert.Equal(t, 15, len(res.Events))
+	assert.Equal(t, "tx", res.Events[4].Type)
+	assert.Equal(t, "fee", string(res.Events[4].Attributes[0].Key))
+	assert.Equal(t, "150atom,800hotdog", string(res.Events[4].Attributes[0].Value))
+	assert.Equal(t, "tx", res.Events[5].Type)
+	assert.Equal(t, "acc_seq", string(res.Events[5].Attributes[0].Key))
+	assert.Equal(t, "tx", res.Events[6].Type)
+	assert.Equal(t, "signature", string(res.Events[6].Attributes[0].Key))
+	assert.Equal(t, "tx", res.Events[7].Type)
+	assert.Equal(t, antewrapper.AttributeKeyAdditionalFee, string(res.Events[7].Attributes[0].Key))
+	assert.Equal(t, "800hotdog", string(res.Events[7].Attributes[0].Value))
+	assert.Equal(t, "tx", res.Events[8].Type)
+	assert.Equal(t, antewrapper.AttributeKeyBaseFee, string(res.Events[8].Attributes[0].Key))
+	assert.Equal(t, "150atom", string(res.Events[8].Attributes[0].Value))
+
+	// send 2 successful authz messages
+	msgExec = authztypes.NewMsgExec(addr2, []sdk.Msg{msg, msg})
+	fees = sdk.NewCoins(sdk.NewInt64Coin("atom", 300), sdk.NewInt64Coin("hotdog", 1600))
+	acct2 = app.AccountKeeper.GetAccount(ctx, acct2.GetAddress()).(*authtypes.BaseAccount)
+	txBytes, err = SignTxAndGetBytes(testdata.NewTestGasLimit()*2, fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), &msgExec)
+	require.NoError(t, err)
+	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
+	assert.Equal(t, 20, len(res.Events))
+	assert.Equal(t, "tx", res.Events[4].Type)
+	assert.Equal(t, "fee", string(res.Events[4].Attributes[0].Key))
+	assert.Equal(t, "300atom,1600hotdog", string(res.Events[4].Attributes[0].Value))
+	assert.Equal(t, "tx", res.Events[5].Type)
+	assert.Equal(t, "acc_seq", string(res.Events[5].Attributes[0].Key))
+	assert.Equal(t, "tx", res.Events[6].Type)
+	assert.Equal(t, "signature", string(res.Events[6].Attributes[0].Key))
+	assert.Equal(t, "tx", res.Events[7].Type)
+	assert.Equal(t, antewrapper.AttributeKeyAdditionalFee, string(res.Events[7].Attributes[0].Key))
+	assert.Equal(t, "1600hotdog", string(res.Events[7].Attributes[0].Value))
+	assert.Equal(t, "tx", res.Events[8].Type)
+	assert.Equal(t, antewrapper.AttributeKeyBaseFee, string(res.Events[8].Attributes[0].Key))
+	assert.Equal(t, "300atom", string(res.Events[8].Attributes[0].Value))
 
 	// tx authz single send message without enough fees associated
 	fees = sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("hotdog", 1))
