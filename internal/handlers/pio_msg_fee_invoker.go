@@ -86,13 +86,37 @@ func (afd MsgBasedFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.
 
 			ctx.Logger().Debug(fmt.Sprintf("The Fee consumed by message types : %v", feeGasMeter.FeeConsumedByMsg()))
 
-			err = afd.msgBasedFeeKeeper.DeductFees(afd.bankKeeper, ctx, deductFeesFromAcc, chargedFees)
-			if err != nil {
-				return nil, nil, err
+			var baseFeePaidJustForGasTx sdk.Coins
+			// if base denom and additional fee in default base denom (for now nhash)
+			if !getDenom(feeGasMeter.BaseFeeConsumed(), afd.msgBasedFeeKeeper.GetDefaultFeeDenom()).IsNil() && !getDenom(chargedFees, afd.msgBasedFeeKeeper.GetDefaultFeeDenom()).IsNil() {
+				// for non authz/wasmd calls this will be zero but for wasmd/authz this will have a value.
+				baseFeePaidJustForGasTx, err = baseFeePaidBasedOnGas(feeGasMeter, afd.msgBasedFeeKeeper.GetDefaultFeeDenom(), afd.msgBasedFeeKeeper.GetMinGasPrice(ctx), feeTx.GetGas())
+				if err != nil {
+					return nil, nil, err
+				}
+			} else {
+				baseFeePaidJustForGasTx = feeGasMeter.BaseFeeConsumed()
+			}
+
+			var isNeg bool
+			// this sweeps all extra fees too, 1. keeps current behavior
+			chargedFees, isNeg = feeTx.GetFee().SafeSub(baseFeePaidJustForGasTx)
+			// for e.g if authz paid 900 hotdog and additional message was 800 hotdog, already paid
+			if isNeg {
+				chargedFees = removeNegativeCoins(chargedFees)
+			}
+			if len(chargedFees) > 0 {
+				err = afd.msgBasedFeeKeeper.DeductFees(afd.bankKeeper, ctx, deductFeesFromAcc, chargedFees)
+				if err != nil {
+					return nil, nil, err
+				}
 			}
 			events = sdk.Events{
 				sdk.NewEvent(sdk.EventTypeTx,
-					sdk.NewAttribute(antewrapper.AttributeKeyAdditionalFee, chargedFees.String()),
+					sdk.NewAttribute(antewrapper.AttributeKeyAdditionalFee, feeGasMeter.FeeConsumed().String()),
+				),
+				sdk.NewEvent(sdk.EventTypeTx,
+					sdk.NewAttribute(antewrapper.AttributeKeyBaseFee, feeGasMeter.BaseFeeConsumed().Add(chargedFees...).Sub(feeGasMeter.FeeConsumed()).String()),
 				)}
 		}
 
@@ -101,4 +125,47 @@ func (afd MsgBasedFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.
 	}
 
 	return chargedFees, events, nil
+}
+
+func baseFeePaidBasedOnGas(meter *antewrapper.FeeGasMeter, defaultDenom string, minGasPriceForAdditionalFeeCalc uint32, gas uint64) (sdk.Coins, error) {
+	minGasprice := sdk.NewCoin(defaultDenom, sdk.NewIntFromUint64(uint64(minGasPriceForAdditionalFeeCalc)))
+	// Determine the required fees by multiplying each required minimum gas
+	// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
+	fee := minGasprice.Amount.Mul(sdk.NewIntFromUint64(gas))
+	baseFeesForGas := sdk.NewCoin(minGasprice.Denom, fee)
+	_, isNeg := meter.BaseFeeConsumed().SafeSub(sdk.Coins{baseFeesForGas})
+	if isNeg {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "This should never happen if it passed current ante decorators")
+	}
+	return sdk.Coins{baseFeesForGas}, nil
+}
+
+func getDenom(coins sdk.Coins, denom string) sdk.Coin {
+	if len(coins) == 0 {
+		return sdk.Coin{}
+	}
+	amt := coins.AmountOf(denom)
+	if !amt.IsZero() {
+		return sdk.Coin{
+			Denom:  denom,
+			Amount: amt,
+		}
+	}
+	return sdk.Coin{}
+}
+
+// removeNegativeCoins removes all zero coins from the given coin set in-place.
+func removeNegativeCoins(coins sdk.Coins) sdk.Coins {
+	var result []sdk.Coin
+	if len(coins) > 0 {
+		result = make([]sdk.Coin, 0, len(coins)-1)
+	}
+
+	for _, coin := range coins {
+		if !coin.IsNegative() {
+			result = append(result, coin)
+		}
+	}
+
+	return result
 }
