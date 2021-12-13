@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	DefaultInsufficientFeeMsg = "insufficient fees; after deducting fees required,got"
+	DefaultInsufficientFeeMsg = "not enough fees; after deducting fees required,got"
 )
 
 // MsgBasedFeeDecorator will check if the transaction's fee is at least as large
@@ -166,11 +166,11 @@ func EnsureSufficientMempoolFees(ctx sdk.Context, gas uint64, feeCoins sdk.Coins
 	// Before checking gas prices, remove taxed from fee
 	var hasNeg bool
 	if feeCoins, hasNeg = feeCoins.SafeSub(additionalFees); hasNeg {
-		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, DefaultInsufficientFeeMsg+": %q, required fees(based on min gas price on node %q): %q = %q(gas fees, based on min gas price on node %q) +%q(additional msg fees)", feeCoins, minGasPrices, requiredFees.Add(additionalFees...), requiredFees, minGasPrices, additionalFees)
+		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, DefaultInsufficientFeeMsg+": %q, required fees: %q = %q(base-fee) +%q(additional-fees)", feeCoins, requiredFees.Add(additionalFees...), requiredFees, additionalFees)
 	}
 
 	if !requiredFees.IsZero() && !feeCoins.IsAnyGTE(requiredFees) {
-		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "Base Fee(calculated based on min gas price of the node or Tx) and additional fee cannot be paid with fee value passed in "+": %q, required: %q = %q(gas fees) +%q(additional msg fees)", feeCoinsOriginal, requiredFees.Add(additionalFees...),
+		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "Base Fee+additional fee cannot be paid with fee value passed in "+": %q, required: %q = %q(base-fee) +%q(additional-fees)", feeCoinsOriginal, requiredFees.Add(additionalFees...),
 			requiredFees, additionalFees)
 	}
 
