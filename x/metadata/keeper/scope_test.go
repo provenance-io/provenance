@@ -200,14 +200,14 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdate() {
 			existing: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
 			proposed: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, ""),
 			signers:  []string{s.user2},
-			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1),
+			errorMsg: fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user1),
 		},
 		{
 			name:     "missing existing owner signer on update fails",
 			existing: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
 			proposed: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user2), []string{}, ""),
 			signers:  []string{s.user2},
-			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1),
+			errorMsg: fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user1),
 		},
 		{
 			name:     "no error when update includes existing owner signer",
@@ -235,7 +235,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdate() {
 			existing: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
 			proposed: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1),
 			signers:  []string{},
-			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1),
+			errorMsg: fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user1),
 		},
 		{
 			name:     "setting value owner to user does not require their signature",
@@ -311,7 +311,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdate() {
 
 	for _, tc := range cases {
 		s.T().Run(tc.name, func(t *testing.T) {
-			err = s.app.MetadataKeeper.ValidateScopeUpdate(s.ctx, tc.existing, tc.proposed, tc.signers)
+			err = s.app.MetadataKeeper.ValidateScopeUpdate(s.ctx, tc.existing, tc.proposed, tc.signers, types.TypeMsgWriteScopeRequest)
 			if len(tc.errorMsg) > 0 {
 				assert.EqualError(t, err, tc.errorMsg, "ValidateScopeUpdate expected error")
 			} else {
@@ -474,7 +474,7 @@ func (s ScopeKeeperTestSuite) TestValidateScopeRemove() {
 
 	for _, tc := range tests {
 		s.T().Run(tc.name, func(t *testing.T) {
-			actual := s.app.MetadataKeeper.ValidateScopeRemove(s.ctx, tc.scope, tc.signers)
+			actual := s.app.MetadataKeeper.ValidateScopeRemove(s.ctx, tc.scope, tc.signers, types.TypeURLMsgDeleteScopeRequest)
 			if len(tc.expected) > 0 {
 				require.EqualError(t, actual, tc.expected)
 			} else {
@@ -535,7 +535,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeAddDataAccess() {
 		tc := tc
 
 		s.Run(n, func() {
-			err := s.app.MetadataKeeper.ValidateScopeAddDataAccess(s.ctx, tc.dataAccessAddrs, tc.existing, tc.signers)
+			err := s.app.MetadataKeeper.ValidateScopeAddDataAccess(s.ctx, tc.dataAccessAddrs, tc.existing, tc.signers, types.TypeURLMsgAddScopeDataAccessRequest)
 			if tc.wantErr {
 				s.Error(err)
 				s.Equal(tc.errorMsg, err.Error())
@@ -597,7 +597,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeDeleteDataAccess() {
 		tc := tc
 
 		s.Run(n, func() {
-			err := s.app.MetadataKeeper.ValidateScopeDeleteDataAccess(s.ctx, tc.dataAccessAddrs, tc.existing, tc.signers)
+			err := s.app.MetadataKeeper.ValidateScopeDeleteDataAccess(s.ctx, tc.dataAccessAddrs, tc.existing, tc.signers, types.TypeURLMsgDeleteScopeDataAccessRequest)
 			if tc.wantErr {
 				s.Error(err)
 				s.Equal(tc.errorMsg, err.Error())
@@ -695,7 +695,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdateOwners() {
 
 	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidateScopeUpdateOwners(s.ctx, tc.existing, tc.proposed, tc.signers)
+			err := s.app.MetadataKeeper.ValidateScopeUpdateOwners(s.ctx, tc.existing, tc.proposed, tc.signers, types.TypeURLMsgAddScopeOwnerRequest)
 			if len(tc.errorMsg) > 0 {
 				assert.EqualError(t, err, tc.errorMsg, "ValidateScopeUpdateOwners expected error")
 			} else {
