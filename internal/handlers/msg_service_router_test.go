@@ -100,14 +100,10 @@ func TestMsgService(t *testing.T) {
 	require.NoError(t, err)
 	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
-	assert.Equal(t, 14, len(res.Events))
+	assert.Equal(t, 13, len(res.Events))
 	assert.Equal(t, "tx", res.Events[4].Type)
 	assert.Equal(t, "fee", string(res.Events[4].Attributes[0].Key))
 	assert.Equal(t, "150atom", string(res.Events[4].Attributes[0].Value))
-
-	assert.Equal(t, "tx", res.Events[5].Type) // WIP: currently not present, excluded when no additional fees in transaction?
-	assert.Equal(t, antewrapper.AttributeKeyBaseFee, string(res.Events[5].Attributes[0].Key))
-	assert.Equal(t, "150atom", string(res.Events[5].Attributes[0].Value))
 
 	msgbasedFee := msgbasedfeetypes.NewMsgBasedFee(sdk.MsgTypeURL(msg), sdk.NewCoin("hotdog", sdk.NewInt(800)))
 	app.MsgBasedFeeKeeper.SetMsgBasedFee(ctx, msgbasedFee)
