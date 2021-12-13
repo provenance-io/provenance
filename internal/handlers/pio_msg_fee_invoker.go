@@ -86,29 +86,26 @@ func (afd MsgBasedFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.
 
 			ctx.Logger().Debug(fmt.Sprintf("The Fee consumed by message types : %v", feeGasMeter.FeeConsumedByMsg()))
 
-			baseFeePaidJustForGasTx := sdk.Coins{}
-			// this is mainly for testing, since all pio invokes will have nhash as base denom
-			if !getDenom(feeGasMeter.BaseFeeConsumed(),afd.msgBasedFeeKeeper.GetDefaultFeeDenom()).IsNil() {
+			var baseFeePaidJustForGasTx sdk.Coins
+			// if base denom and additional fee in default base denom (for now nhash)
+			if !getDenom(feeGasMeter.BaseFeeConsumed(), afd.msgBasedFeeKeeper.GetDefaultFeeDenom()).IsNil() && !getDenom(chargedFees, afd.msgBasedFeeKeeper.GetDefaultFeeDenom()).IsNil() {
 				// for non authz/wasmd calls this will be zero but for wasmd/authz this will have a value.
 				baseFeePaidJustForGasTx, err = baseFeePaidBasedOnGas(feeGasMeter, afd.msgBasedFeeKeeper.GetDefaultFeeDenom(), afd.msgBasedFeeKeeper.GetMinGasPrice(ctx), feeTx.GetGas())
 				if err != nil {
 					return nil, nil, err
 				}
-			}else{
+			} else {
 				baseFeePaidJustForGasTx = feeGasMeter.BaseFeeConsumed()
 			}
 
 			var isNeg bool
+			// this sweeps all extra fees too, 1. keeps current behavior
 			chargedFees, isNeg = feeTx.GetFee().SafeSub(baseFeePaidJustForGasTx)
-			if !chargedFees.IsEqual(feeGasMeter.FeeConsumed()){
-				// this extra safecheck, is because we don't know what is in the messages for authz and wasm calls
-				return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "This should never happen, but this indicates fee in gas meter %v, differs from (Total Fee passed in - Fee already consumed) %v",feeGasMeter.FeeConsumed(),chargedFees )
-			}
 			// for e.g if authz paid 900 hotdog and additional message was 800 hotdog, already paid
 			if isNeg {
 				chargedFees = removeNegativeCoins(chargedFees)
 			}
-			if len(chargedFees) >0 {
+			if len(chargedFees) > 0 {
 				err = afd.msgBasedFeeKeeper.DeductFees(afd.bankKeeper, ctx, deductFeesFromAcc, chargedFees)
 				if err != nil {
 					return nil, nil, err

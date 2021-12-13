@@ -53,7 +53,7 @@ func (suite *HandlerTestSuite) TestMsgFeeHandlerNoFeeCharged() {
 
 func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeCharged() {
 	encodingConfig, err := setUpApp(suite, false, "atom", 100)
-	tx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
+	tx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000), sdk.NewInt64Coin("nhash", 1000000)))
 
 	// See comment for Check().
 	txEncoder := encodingConfig.TxConfig.TxEncoder()
@@ -66,6 +66,7 @@ func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeCharged() {
 	suite.Require().NotPanics(func() {
 		msgType := sdk.MsgTypeURL(&testdata.TestMsg{})
 		feeGasMeter.ConsumeFee(sdk.NewCoin("nhash", sdk.NewInt(1000000)), msgType)
+		feeGasMeter.ConsumeBaseFee(sdk.Coins{sdk.NewCoin("atom", sdk.NewInt(100000))})
 	}, "panicked on adding fees")
 	suite.ctx = suite.ctx.WithGasMeter(feeGasMeter)
 	feeChargeFn, err := piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
@@ -77,6 +78,7 @@ func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeCharged() {
 	})
 	suite.Require().NoError(err)
 	coins, _, err := feeChargeFn(suite.ctx, false)
+
 	suite.Require().Contains(err.Error(), "0nhash is smaller than 1000000nhash: insufficient funds: insufficient funds", "got wrong message")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
 	suite.Require().True(coins.IsZero())
@@ -95,7 +97,7 @@ func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeCharged() {
 }
 func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeChargedFeeGranter() {
 	encodingConfig, err := setUpApp(suite, false, "atom", 100)
-	tx, _ := createTestTxWithFeeGrant(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
+	tx, _ := createTestTxWithFeeGrant(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000), sdk.NewInt64Coin("nhash", 1000000)))
 
 	// See comment for Check().
 	txEncoder := encodingConfig.TxConfig.TxEncoder()
@@ -108,6 +110,7 @@ func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeChargedFeeGranter() {
 	suite.Require().NotPanics(func() {
 		msgType := sdk.MsgTypeURL(&testdata.TestMsg{})
 		feeGasMeter.ConsumeFee(sdk.NewCoin("nhash", sdk.NewInt(1000000)), msgType)
+		feeGasMeter.ConsumeBaseFee(sdk.Coins{sdk.NewCoin("atom", sdk.NewInt(100000))})
 	}, "panicked on adding fees")
 	suite.ctx = suite.ctx.WithGasMeter(feeGasMeter)
 	feeChargeFn, err := piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{

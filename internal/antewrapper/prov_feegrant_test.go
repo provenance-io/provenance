@@ -34,7 +34,7 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 	dfd := pioante.NewProvenanceDeductFeeDecorator(app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.MsgBasedFeeKeeper)
 
 	// this just tests our handler
-	decorators := []sdk.AnteDecorator{pioante.NewFeeMeterContextDecorator(),dfd}
+	decorators := []sdk.AnteDecorator{pioante.NewFeeMeterContextDecorator(), dfd}
 
 	feeAnteHandler := sdk.ChainAnteDecorators(decorators...)
 

@@ -183,6 +183,33 @@ func TestMsgService(t *testing.T) {
 	assert.Equal(t, "tx", res.Events[8].Type)
 	assert.Equal(t, antewrapper.AttributeKeyBaseFee, string(res.Events[8].Attributes[0].Key))
 	assert.Equal(t, "190500000nhash", string(res.Events[8].Attributes[0].Value))
+
+	msgbasedFee = msgbasedfeetypes.NewMsgBasedFee(sdk.MsgTypeURL(msg), sdk.NewInt64Coin("atom", 100))
+	app.MsgBasedFeeKeeper.SetMsgBasedFee(ctx, msgbasedFee)
+
+	check(simapp.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(290500010)))))
+	// tx with a fee associated with msg type, additional cost is in diff denom(atom) but using default denom, nhash for base fee.
+	msg = banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(50))))
+	fees = sdk.NewCoins(sdk.NewInt64Coin("nhash", 190500010), sdk.NewInt64Coin("atom", 100))
+	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
+	txBytes, err = SignTxAndGetBytes(testdata.NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+	require.NoError(t, err)
+	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
+	assert.Equal(t, 15, len(res.Events))
+	assert.Equal(t, "tx", res.Events[4].Type)
+	assert.Equal(t, "fee", string(res.Events[4].Attributes[0].Key))
+	assert.Equal(t, "100atom,190500010nhash", string(res.Events[4].Attributes[0].Value))
+	assert.Equal(t, "tx", res.Events[5].Type)
+	assert.Equal(t, "acc_seq", string(res.Events[5].Attributes[0].Key))
+	assert.Equal(t, "tx", res.Events[6].Type)
+	assert.Equal(t, "signature", string(res.Events[6].Attributes[0].Key))
+	assert.Equal(t, "tx", res.Events[7].Type)
+	assert.Equal(t, antewrapper.AttributeKeyAdditionalFee, string(res.Events[7].Attributes[0].Key))
+	assert.Equal(t, "100atom", string(res.Events[7].Attributes[0].Value))
+	assert.Equal(t, "tx", res.Events[8].Type)
+	assert.Equal(t, antewrapper.AttributeKeyBaseFee, string(res.Events[8].Attributes[0].Key))
+	assert.Equal(t, "190500010nhash", string(res.Events[8].Attributes[0].Value))
 }
 
 func TestMsgServiceAuthz(t *testing.T) {
