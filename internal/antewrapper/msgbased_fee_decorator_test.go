@@ -29,7 +29,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFees() {
 	// antehandler errors with insufficient fees
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NotNil(err, "Decorator should have errored on too low fee for local gasPrice")
-	suite.Require().Contains(err.Error(), "Base Fee(calculated based on min gas price of the node or Tx) and additional fee cannot be paid with fee value passed in : \"100000atom\", required: \"100100atom\" = \"100000atom\"(gas fees) +\"100atom\"(additional msg fees): insufficient fee", "got wrong message")
+	suite.Require().Contains(err.Error(), "Base Fee+additional fee cannot be paid with fee value passed in : \"100000atom\", required: \"100100atom\" = \"100000atom\"(base-fee) +\"100atom\"(additional-fees): insufficient fee", "got wrong message")
 }
 
 // checkTx true, high min gas price irrespective of additional fees
@@ -48,7 +48,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolHighMinGasPrice() {
 	// antehandler errors with insufficient fees
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NotNil(err, "Decorator should have errored on too low fee for local gasPrice")
-	suite.Require().Contains(err.Error(), "Base Fee(calculated based on min gas price of the node or Tx) and additional fee cannot be paid with fee value passed in : \"100000atom\", required: \"2000000100atom\" = \"2000000000atom\"(gas fees) +\"100atom\"(additional msg fees): insufficient fee", "got wrong message")
+	suite.Require().Contains(err.Error(), "Base Fee+additional fee cannot be paid with fee value passed in : \"100000atom\", required: \"2000000100atom\" = \"2000000000atom\"(base-fee) +\"100atom\"(additional-fees): insufficient fee", "got wrong message")
 }
 
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFeesPass() {
@@ -248,7 +248,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFees_2() {
 
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NotNil(err, "Decorator should not have errored for insufficient additional fee")
-	suite.Require().Contains(err.Error(), "insufficient fees; after deducting fees required,got: \"-100nhash,10000steak\", required additional fee: \"100nhash\"", "wrong error message")
+	suite.Require().Contains(err.Error(), "not enough fees; after deducting fees required,got: \"-100nhash,10000steak\", required additional fee: \"100nhash\"", "wrong error message")
 }
 
 // additional fee denom as default base fee denom, fails because gas passed in * floor gas price (module param) exceeds fess passed in.
@@ -258,7 +258,8 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFees_3() {
 	check(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(10000)))))
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NotNil(err, "Decorator should not have errored for insufficient additional fee")
-	suite.Require().Contains(err.Error(), "insufficient fees; after deducting fees required,got: \"-190490100nhash\", required additional fee: \"100nhash\"", "wrong error message")
+	// TODO revisit this
+	suite.Require().Contains(err.Error(), "not enough fees; after deducting fees required,got: \"-190490100nhash\", required additional fee: \"100nhash\"", "wrong error message")
 }
 
 // additional fee same denom as default base fee denom, fails because of insufficient fee and then passes when enough fee is present.
@@ -282,8 +283,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFees_5() {
 	check(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(190500100)))))
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NotNil(err, "Decorator should not have errored for insufficient additional fee")
-	suite.Require().Contains(err.Error(), "insufficient fees; after deducting fees required,got: \"-100atom,190500200nhash\", required additional fee: \"100atom\"", "wrong error message")
-
+	suite.Require().Contains(err.Error(), "not enough fees; after deducting fees required,got: \"-100atom,190500200nhash\", required additional fee: \"100atom\"", "wrong error message")
 }
 
 // checkTx true, but additional fee not provided
@@ -296,7 +296,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFees_6() {
 	suite.ctx = suite.ctx.WithMinGasPrices(highGasPrice)
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NotNil(err, "Decorator should not have errored for insufficient additional fee")
-	suite.Require().Contains(err.Error(), "insufficient fees; after deducting fees required,got: \"-100atom,190500200nhash\", required fees(based on min gas price on node \"1.000000000000000000nhash\"): \"100atom,100000nhash\" = \"100000nhash\"(gas fees, based on min gas price on node \"1.000000000000000000nhash\") +\"100atom\"(additional msg fees): insufficient fee", "wrong error message")
+	suite.Require().Contains(err.Error(), "not enough fees; after deducting fees required,got: \"-100atom,190500200nhash\", required fees: \"100atom,100000nhash\" = \"100000nhash\"(base-fee) +\"100atom\"(additional-fees): insufficient fee", "wrong error message")
 
 }
 
