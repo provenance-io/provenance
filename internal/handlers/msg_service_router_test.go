@@ -135,6 +135,32 @@ func TestMsgService(t *testing.T) {
 	assert.Equal(t, antewrapper.AttributeKeyBaseFee, string(res.Events[8].Attributes[0].Key))
 	assert.Equal(t, "150atom", string(res.Events[8].Attributes[0].Value))
 
+	msgbasedFee = msgbasedfeetypes.NewMsgBasedFee(sdk.MsgTypeURL(msg), sdk.NewInt64Coin("atom", 10))
+	app.MsgBasedFeeKeeper.SetMsgBasedFee(ctx, msgbasedFee)
+
+	// tx with a fee associated with msg type and account has funds
+	msg = banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(50))))
+	fees = sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
+	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
+	txBytes, err = SignTxAndGetBytes(testdata.NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+	require.NoError(t, err)
+	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
+	assert.Equal(t, 15, len(res.Events))
+	assert.Equal(t, "tx", res.Events[4].Type)
+	assert.Equal(t, "fee", string(res.Events[4].Attributes[0].Key))
+	assert.Equal(t, "150atom", string(res.Events[4].Attributes[0].Value))
+	assert.Equal(t, "tx", res.Events[5].Type)
+	assert.Equal(t, "acc_seq", string(res.Events[5].Attributes[0].Key))
+	assert.Equal(t, "tx", res.Events[6].Type)
+	assert.Equal(t, "signature", string(res.Events[6].Attributes[0].Key))
+	assert.Equal(t, "tx", res.Events[7].Type)
+	assert.Equal(t, antewrapper.AttributeKeyAdditionalFee, string(res.Events[7].Attributes[0].Key))
+	assert.Equal(t, "10atom", string(res.Events[7].Attributes[0].Value))
+	assert.Equal(t, "tx", res.Events[8].Type)
+	assert.Equal(t, antewrapper.AttributeKeyBaseFee, string(res.Events[8].Attributes[0].Key))
+	assert.Equal(t, "140atom", string(res.Events[8].Attributes[0].Value))
+
 }
 
 func TestMsgServiceAuthz(t *testing.T) {
@@ -225,7 +251,46 @@ func TestMsgServiceAuthz(t *testing.T) {
 	require.NoError(t, err)
 	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, uint32(0xd), res.Code, "res=%+v", res)
+}
 
+func TestMsgServiceAuthzAdditionalMsgFeeInDefaultDenom(t *testing.T) {
+	encCfg := simapp.MakeTestEncodingConfig()
+	priv, _, addr := testdata.KeyTestPubAddr()
+	priv2, _, addr2 := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	acct2 := authtypes.NewBaseAccount(addr2, priv2.PubKey(), 1, 0)
+	initBalance := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(1000)))
+	app := piosimapp.SetupWithGenesisAccounts([]authtypes.GenesisAccount{acct1, acct2}, banktypes.Balance{Address: addr.String(), Coins: initBalance}, banktypes.Balance{Address: addr2.String(), Coins: initBalance})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+
+	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100))))
+	msgbasedFee := msgbasedfeetypes.NewMsgBasedFee(sdk.MsgTypeURL(msg), sdk.NewCoin("atom", sdk.NewInt(10)))
+	app.MsgBasedFeeKeeper.SetMsgBasedFee(ctx, msgbasedFee)
+	app.AuthzKeeper.SaveGrant(ctx, addr2, addr, banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewInt64Coin("atom", 500))), time.Now().Add(time.Hour))
+
+	// tx authz send message with correct amount of fees associated
+	msgExec := authztypes.NewMsgExec(addr2, []sdk.Msg{msg})
+	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
+	acct2 = app.AccountKeeper.GetAccount(ctx, acct2.GetAddress()).(*authtypes.BaseAccount)
+	txBytes, err := SignTxAndGetBytes(testdata.NewTestGasLimit(), fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), &msgExec)
+	require.NoError(t, err)
+	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
+	assert.Equal(t, 15, len(res.Events))
+	assert.Equal(t, "tx", res.Events[4].Type)
+	assert.Equal(t, "fee", string(res.Events[4].Attributes[0].Key))
+	assert.Equal(t, "150atom", string(res.Events[4].Attributes[0].Value))
+	assert.Equal(t, "tx", res.Events[5].Type)
+	assert.Equal(t, "acc_seq", string(res.Events[5].Attributes[0].Key))
+	assert.Equal(t, "tx", res.Events[6].Type)
+	assert.Equal(t, "signature", string(res.Events[6].Attributes[0].Key))
+	assert.Equal(t, "tx", res.Events[7].Type)
+	assert.Equal(t, antewrapper.AttributeKeyAdditionalFee, string(res.Events[7].Attributes[0].Key))
+	assert.Equal(t, "10atom", string(res.Events[7].Attributes[0].Value))
+	assert.Equal(t, "tx", res.Events[8].Type)
+	assert.Equal(t, antewrapper.AttributeKeyBaseFee, string(res.Events[8].Attributes[0].Key))
+	assert.Equal(t, "140atom", string(res.Events[8].Attributes[0].Value))
 }
 
 func SignTxAndGetBytes(gaslimit uint64, fees sdk.Coins, encCfg simappparams.EncodingConfig, pubKey types.PubKey, privKey types.PrivKey, acct authtypes.BaseAccount, chainId string, msg ...sdk.Msg) ([]byte, error) {
