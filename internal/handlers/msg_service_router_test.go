@@ -134,7 +134,7 @@ func TestMsgService(t *testing.T) {
 	msgbasedFee = msgbasedfeetypes.NewMsgBasedFee(sdk.MsgTypeURL(msg), sdk.NewInt64Coin("atom", 10))
 	app.MsgBasedFeeKeeper.SetMsgBasedFee(ctx, msgbasedFee)
 
-	// tx with a fee associated with msg type and account has funds
+	// tx with a fee associated with msg type, additional cost is in same base as fee
 	msg = banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(50))))
 	fees = sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
