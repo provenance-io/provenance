@@ -48,6 +48,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Set default coin type to network default [#534](https://github.com/provenance-io/provenance/issues/534)
 * Add logger to upgrade handler [#507](https://github.com/provenance-io/provenance/issues/507)
 * Allow markers to be created over existing accounts if they are not a marker and have a zero sequence [#520](https://github.com/provenance-io/provenance/issues/520)
+* Upgrade Rosetta to v0.7.2 [#560](https://github.com/provenance-io/provenance/issues/560)
 * Removed extraneous Metadata index deletes/rewrites [#543](https://github.com/provenance-io/provenance/issues/543)
 
 ### Bug Fixes
