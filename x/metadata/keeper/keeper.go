@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	authzKeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/gogo/protobuf/proto"
 	"github.com/tendermint/tendermint/libs/log"
@@ -115,22 +116,27 @@ type Keeper struct {
 
 	// To check if accounts exist and set public keys.
 	authKeeper authkeeper.AccountKeeper
+
+	// To check granter grantee authorization of messages.
+	authzKeeper authzKeeper.Keeper
 }
 
 // NewKeeper creates new instances of the metadata Keeper.
 func NewKeeper(
 	cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Subspace,
 	authKeeper authkeeper.AccountKeeper,
+	authzKeeper authzKeeper.Keeper,
 ) Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.OSParamKeyTable())
 	}
 	return Keeper{
-		storeKey:   key,
-		cdc:        cdc,
-		paramSpace: paramSpace,
-		authKeeper: authKeeper,
+		storeKey:    key,
+		cdc:         cdc,
+		paramSpace:  paramSpace,
+		authKeeper:  authKeeper,
+		authzKeeper: authzKeeper,
 	}
 }
 
@@ -158,29 +164,110 @@ func (k Keeper) CreateAccountForKey(ctx sdk.Context, addr sdk.AccAddress, pubKey
 	return nil
 }
 
-// ValidateAllOwnersAreSigners makes sure that all entries in the existingOwners list are contained in the signers list.
-func (k Keeper) ValidateAllOwnersAreSigners(existingOwners []string, signers []string) error {
+// GetMessageTypeURLs return a hierarchical list of message type urls.
+// For example passing in `/provenance.metadata.v1.MsgAddScopeDataAccessRequest` would return a list containing
+// ("/provenance.metadata.v1.MsgAddScopeDataAccessRequest", "/provenance.metadata.v1.MsgWriteScopeRequest")
+func (k Keeper) GetMessageTypeURLs(msgTypeURL string) []string {
+	urls := []string{}
+	if len(msgTypeURL) > 0 {
+		urls = append(urls, msgTypeURL)
+	}
+	switch msgTypeURL {
+	case types.TypeURLMsgAddScopeDataAccessRequest, types.TypeURLMsgDeleteScopeDataAccessRequest,
+		types.TypeURLMsgAddScopeOwnerRequest, types.TypeURLMsgDeleteScopeOwnerRequest:
+		urls = append(urls, types.TypeURLMsgWriteScopeRequest)
+	case types.TypeURLMsgWriteRecordRequest:
+		urls = append(urls, types.TypeURLMsgWriteSessionRequest)
+	case types.TypeURLMsgAddContractSpecToScopeSpecRequest, types.TypeURLMsgDeleteContractSpecFromScopeSpecRequest:
+		urls = append(urls, types.TypeURLMsgWriteScopeSpecificationRequest)
+	case types.TypeURLMsgWriteRecordSpecificationRequest:
+		urls = append(urls, types.TypeURLMsgWriteContractSpecificationRequest)
+	case types.TypeURLMsgDeleteRecordSpecificationRequest:
+		urls = append(urls, types.TypeURLMsgDeleteContractSpecificationRequest)
+	}
+	return urls
+}
+
+// checkAuthZForMissing checks to see if the missing types.Party have an assigned grantee that can sing on their behalf
+func (k Keeper) checkAuthzForMissing(ctx sdk.Context, addrs []string, signers []string, msgTypeURL string) []string {
+	stillMissing := []string{}
+	// return as a list this message type and its parent
+	// type if it is a message belonging to a hierarchy
+	msgTypeURLs := k.GetMessageTypeURLs(msgTypeURL)
+
+	for _, addr := range addrs {
+		found := false
+		granter := types.MustAccAddressFromBech32(addr)
+
+		// loop through all the signers
+		for _, signer := range signers {
+			grantee := types.MustAccAddressFromBech32(signer)
+
+			for _, msgType := range msgTypeURLs {
+				authz, _ := k.authzKeeper.GetCleanAuthorization(ctx, grantee, granter, msgType)
+				if authz != nil {
+					found = true
+					break
+				}
+			}
+
+			if found {
+				break
+			}
+		}
+
+		if !found {
+			stillMissing = append(stillMissing, addr)
+		}
+	}
+
+	return stillMissing
+}
+
+// ValidateAllOwnersAreSignersWithAuthz makes sure that all entries in the existingOwners list
+// are contained in the signers list and checks to see if any missing entries have an assigned grantee
+func (k Keeper) ValidateAllOwnersAreSignersWithAuthz(
+	ctx sdk.Context,
+	existingOwners []string,
+	signers []string,
+	msgTypeURL string,
+) error {
 	missing := FindMissing(existingOwners, signers)
-	switch len(missing) {
+	stillMissing := missing
+	// Authz grants rights to address on specific message types.
+	// If no message type URL is provided, skip the Authz check.
+	if len(msgTypeURL) > 0 {
+		stillMissing = k.checkAuthzForMissing(ctx, missing, signers, msgTypeURL)
+	}
+
+	switch len(stillMissing) {
 	case 0:
 		return nil
 	case 1:
-		return fmt.Errorf("missing signature from existing owner %s; required for update", missing[0])
+		return fmt.Errorf("missing signature from existing owner %s; required for update", stillMissing[0])
 	default:
-		return fmt.Errorf("missing signatures from existing owners %v; required for update", missing)
+		return fmt.Errorf("missing signatures from existing owners %v; required for update", stillMissing)
 	}
 }
 
-// ValidateAllPartiesAreSigners validate all parties are signers
-func (k Keeper) ValidateAllPartiesAreSigners(parties []types.Party, signers []string) error {
+// ValidateAllPartiesAreSignersWithAuthz validate all parties are signers with authz module
+func (k Keeper) ValidateAllPartiesAreSignersWithAuthz(ctx sdk.Context, parties []types.Party, signers []string, msgTypeURL string) error {
 	addresses := make([]string, len(parties))
 	for i, party := range parties {
 		addresses[i] = party.Address
 	}
+
 	missing := FindMissing(addresses, signers)
-	if len(missing) > 0 {
+	stillMissing := missing
+	// Authz grants rights to address on specific message types.
+	// If no message type URL is provided, skip the Authz check.
+	if len(msgTypeURL) > 0 {
+		stillMissing = k.checkAuthzForMissing(ctx, missing, signers, msgTypeURL)
+	}
+
+	if len(stillMissing) > 0 {
 		missingWithRoles := make([]string, len(missing))
-		for i, addr := range missing {
+		for i, addr := range stillMissing {
 			for _, party := range parties {
 				if addr == party.Address {
 					missingWithRoles[i] = fmt.Sprintf("%s (%s)", addr, party.Role.String())
@@ -190,6 +277,7 @@ func (k Keeper) ValidateAllPartiesAreSigners(parties []types.Party, signers []st
 		}
 		return fmt.Errorf("missing signature%s from %v", pluralEnding(len(missing)), missingWithRoles)
 	}
+
 	return nil
 }
 
@@ -218,6 +306,25 @@ func FindMissing(required []string, entries []string) []string {
 		found := false
 		for _, entry := range entries {
 			if req == entry {
+				found = true
+				break
+			}
+		}
+		if !found {
+			retval = append(retval, req)
+		}
+	}
+	return retval
+}
+
+// FindMissingMdAddr returns all elements of the required list that are not found in the entries list
+// It is exported only so that it can be unit tested.
+func FindMissingMdAddr(required, entries []types.MetadataAddress) []types.MetadataAddress {
+	retval := []types.MetadataAddress{}
+	for _, req := range required {
+		found := false
+		for _, entry := range entries {
+			if req.Equals(entry) {
 				found = true
 				break
 			}
