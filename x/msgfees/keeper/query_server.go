@@ -54,7 +54,6 @@ func (k Keeper) QueryAllMsgBasedFees(c context.Context, req *types.QueryAllMsgBa
 func (k Keeper) CalculateTxFees(goCtx context.Context, request *types.CalculateTxFeesRequest) (*types.CalculateTxFeesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	additionalFees := sdk.Coins{}
 	gasInfo, _, err, txCtx := k.simulateFunc(request.TxBytes)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
@@ -69,7 +68,6 @@ func (k Keeper) CalculateTxFees(goCtx context.Context, request *types.CalculateT
 		baseDenom = request.DefaultBaseDenom
 	}
 	totalFees := gasMeter.FeeConsumed().Add(sdk.NewCoin(baseDenom, sdk.NewInt(int64(gasInfo.GasUsed)*int64(k.GetMinGasPrice(ctx)))))
-	totalFees = totalFees.Add(additionalFees...)
 
 	return &types.CalculateTxFeesResponse{
 		AdditionalFees: gasMeter.FeeConsumed(),
