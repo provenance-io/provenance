@@ -98,7 +98,7 @@ func clearStore(store sdk.KVStore) (err error) {
 // reindexScopes indexes all scopes.
 func reindexScopes(ctx sdk.Context, mdKeeper Keeper) error {
 	return mdKeeper.IterateScopes(ctx, func(scope types.Scope) (stop bool) {
-		mdKeeper.indexScope(ctx, scope)
+		mdKeeper.indexScope(ctx, &scope, nil)
 		return false
 	})
 }
@@ -106,7 +106,7 @@ func reindexScopes(ctx sdk.Context, mdKeeper Keeper) error {
 // reindexScopeSpecs indexes all scope specifications.
 func reindexScopeSpecs(ctx sdk.Context, mdKeeper Keeper) error {
 	return mdKeeper.IterateScopeSpecs(ctx, func(spec types.ScopeSpecification) (stop bool) {
-		mdKeeper.indexScopeSpecification(ctx, spec)
+		mdKeeper.indexScopeSpecification(ctx, &spec, nil)
 		return false
 	})
 }
@@ -114,7 +114,7 @@ func reindexScopeSpecs(ctx sdk.Context, mdKeeper Keeper) error {
 // reindexContractSpecs indexes all contract specifications.
 func reindexContractSpecs(ctx sdk.Context, mdKeeper Keeper) error {
 	return mdKeeper.IterateContractSpecs(ctx, func(spec types.ContractSpecification) (stop bool) {
-		mdKeeper.indexContractSpecification(ctx, spec)
+		mdKeeper.indexContractSpecification(ctx, &spec, nil)
 		return false
 	})
 }
