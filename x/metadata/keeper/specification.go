@@ -218,21 +218,23 @@ func (k Keeper) SetContractSpecification(ctx sdk.Context, spec types.ContractSpe
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&spec)
 
+	var oldSpec *types.ContractSpecification
 	var event proto.Message = types.NewEventContractSpecificationCreated(spec.SpecificationId)
 	action := types.TLAction_Created
 	if store.Has(spec.SpecificationId) {
 		event = types.NewEventContractSpecificationUpdated(spec.SpecificationId)
 		action = types.TLAction_Updated
 		if oldBytes := store.Get(spec.SpecificationId); oldBytes != nil {
-			var oldSpec types.ContractSpecification
-			if err := k.cdc.Unmarshal(oldBytes, &oldSpec); err == nil {
-				k.clearContractSpecificationIndex(ctx, oldSpec)
+			oldSpec = &types.ContractSpecification{}
+			if err := k.cdc.Unmarshal(oldBytes, oldSpec); err != nil {
+				k.Logger(ctx).Error("could not unmarshal old contract spec", "err", err, "specId", spec.SpecificationId.String(), "oldBytes", oldBytes)
+				oldSpec = nil
 			}
 		}
 	}
 
 	store.Set(spec.SpecificationId, b)
-	k.indexContractSpecification(ctx, spec)
+	k.indexContractSpecification(ctx, &spec, oldSpec)
 	k.EmitEvent(ctx, event)
 	defer types.GetIncObjFunc(types.TLType_ContractSpec, action)
 }
@@ -250,37 +252,85 @@ func (k Keeper) RemoveContractSpecification(ctx sdk.Context, contractSpecID type
 		return fmt.Errorf("contract specification with id %s not found", contractSpecID)
 	}
 
-	k.clearContractSpecificationIndex(ctx, contractSpec)
+	k.indexContractSpecification(ctx, nil, &contractSpec)
 	store.Delete(contractSpecID)
 	k.EmitEvent(ctx, types.NewEventContractSpecificationDeleted(contractSpecID))
 	defer types.GetIncObjFunc(types.TLType_ContractSpec, types.TLAction_Deleted)
 	return nil
 }
 
-// indexContractSpecification adds all desired indexes for a contract specification.
-func (k Keeper) indexContractSpecification(ctx sdk.Context, spec types.ContractSpecification) {
-	store := ctx.KVStore(k.storeKey)
+// contractSpecIndexValues is a struct containing the values used to index a contract specification.
+type contractSpecIndexValues struct {
+	SpecificationID types.MetadataAddress
+	OwnerAddresses  []string
+}
 
-	// Index all the contract spec owner addresses
-	for _, a := range spec.OwnerAddresses {
-		addr, err := sdk.AccAddressFromBech32(a)
-		if err == nil {
-			store.Set(types.GetAddressContractSpecCacheKey(addr, spec.SpecificationId), []byte{0x01})
-		}
+// getContractSpecIndexValues extracts the values used to index a contract specification.
+func getContractSpecIndexValues(spec *types.ContractSpecification) *contractSpecIndexValues {
+	if spec == nil {
+		return nil
+	}
+	return &contractSpecIndexValues{
+		SpecificationID: spec.SpecificationId,
+		OwnerAddresses:  spec.OwnerAddresses,
 	}
 }
 
-// clearContractSpecificationIndex removes all indexes for the given contract spec.
-// The provided contract spec must be one that is already stored (as opposed to a new one or updated version of one).
-func (k Keeper) clearContractSpecificationIndex(ctx sdk.Context, spec types.ContractSpecification) {
-	store := ctx.KVStore(k.storeKey)
+// getMissingContractSpecIndexValues extracts the index values in the required set that are not in the found set.
+func getMissingContractSpecIndexValues(required, found *contractSpecIndexValues) contractSpecIndexValues {
+	rv := contractSpecIndexValues{}
+	if required == nil {
+		return rv
+	}
+	if found == nil {
+		return *required
+	}
+	rv.SpecificationID = required.SpecificationID
+	rv.OwnerAddresses = FindMissing(required.OwnerAddresses, found.OwnerAddresses)
+	return rv
+}
 
-	// Delete all owner address + contract spec entries
-	for _, a := range spec.OwnerAddresses {
-		addr, err := sdk.AccAddressFromBech32(a)
-		if err == nil {
-			store.Delete(types.GetAddressContractSpecCacheKey(addr, spec.SpecificationId))
+// IndexKeys creates all of the index key byte arrays that this contractSpecIndexValues represents.
+func (v contractSpecIndexValues) IndexKeys() [][]byte {
+	rv := make([][]byte, 0)
+	if v.SpecificationID.Empty() {
+		return rv
+	}
+	for _, addrStr := range v.OwnerAddresses {
+		if addr, err := sdk.AccAddressFromBech32(addrStr); err == nil {
+			rv = append(rv, types.GetAddressContractSpecCacheKey(addr, v.SpecificationID))
 		}
+	}
+	return rv
+}
+
+// indexContractSpecification updates the index entries for a contract specification.
+//
+// When adding a new contract spec:  indexContractSpecification(ctx, spec, nil)
+//
+// When deleting a contract spec:  indexContractSpecification(ctx, nil, spec)
+//
+// When updating a contract spec:  indexContractSpecification(ctx, newSpec, oldSpec)
+//
+// If both newSpec and oldSpec are not nil, it is assumed that they have the same SpecificationId.
+// Failure to meet this assumption will result in strange and bad behavior.
+func (k Keeper) indexContractSpecification(ctx sdk.Context, newSpec, oldSpec *types.ContractSpecification) {
+	if newSpec == nil && oldSpec == nil {
+		return
+	}
+
+	newSpecIndexValues := getContractSpecIndexValues(newSpec)
+	oldSpecIndexValues := getContractSpecIndexValues(oldSpec)
+
+	toAdd := getMissingContractSpecIndexValues(newSpecIndexValues, oldSpecIndexValues)
+	toRemove := getMissingContractSpecIndexValues(oldSpecIndexValues, newSpecIndexValues)
+
+	store := ctx.KVStore(k.storeKey)
+	for _, indexKey := range toAdd.IndexKeys() {
+		store.Set(indexKey, []byte{0x01})
+	}
+	for _, indexKey := range toRemove.IndexKeys() {
+		store.Delete(indexKey)
 	}
 }
 
@@ -398,21 +448,23 @@ func (k Keeper) SetScopeSpecification(ctx sdk.Context, spec types.ScopeSpecifica
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&spec)
 
+	var oldSpec *types.ScopeSpecification
 	var event proto.Message = types.NewEventScopeSpecificationCreated(spec.SpecificationId)
 	action := types.TLAction_Created
 	if store.Has(spec.SpecificationId) {
 		event = types.NewEventScopeSpecificationUpdated(spec.SpecificationId)
 		action = types.TLAction_Updated
 		if oldBytes := store.Get(spec.SpecificationId); oldBytes != nil {
-			var oldSpec types.ScopeSpecification
-			if err := k.cdc.Unmarshal(oldBytes, &oldSpec); err == nil {
-				k.clearScopeSpecificationIndex(ctx, oldSpec)
+			oldSpec = &types.ScopeSpecification{}
+			if err := k.cdc.Unmarshal(oldBytes, oldSpec); err != nil {
+				k.Logger(ctx).Error("could not unmarshal old scope spec", "err", err, "specId", spec.SpecificationId.String(), "oldBytes", oldBytes)
+				oldSpec = nil
 			}
 		}
 	}
 
 	store.Set(spec.SpecificationId, b)
-	k.indexScopeSpecification(ctx, spec)
+	k.indexScopeSpecification(ctx, &spec, oldSpec)
 	k.EmitEvent(ctx, event)
 	defer types.GetIncObjFunc(types.TLType_ScopeSpec, action)
 }
@@ -430,47 +482,91 @@ func (k Keeper) RemoveScopeSpecification(ctx sdk.Context, scopeSpecID types.Meta
 		return fmt.Errorf("scope specification with id %s not found", scopeSpecID)
 	}
 
-	k.clearScopeSpecificationIndex(ctx, scopeSpec)
+	k.indexScopeSpecification(ctx, nil, &scopeSpec)
 	store.Delete(scopeSpecID)
 	k.EmitEvent(ctx, types.NewEventScopeSpecificationDeleted(scopeSpecID))
 	defer types.GetIncObjFunc(types.TLType_ScopeSpec, types.TLAction_Deleted)
 	return nil
 }
 
-// indexScopeSpecification adds all desired indexes for a scope specification.
-func (k Keeper) indexScopeSpecification(ctx sdk.Context, spec types.ScopeSpecification) {
-	store := ctx.KVStore(k.storeKey)
+// scopeSpecIndexValues is a struct containing the values used to index a scope specification.
+type scopeSpecIndexValues struct {
+	SpecificationID types.MetadataAddress
+	OwnerAddresses  []string
+	ContractSpecIDs []types.MetadataAddress
+}
 
-	// Index all the scope spec owner addresses
-	for _, a := range spec.OwnerAddresses {
-		addr, err := sdk.AccAddressFromBech32(a)
-		if err == nil {
-			store.Set(types.GetAddressScopeSpecCacheKey(addr, spec.SpecificationId), []byte{0x01})
-		}
+// getScopeSpecIndexValues extracts the values used to index a scope specification.
+func getScopeSpecIndexValues(spec *types.ScopeSpecification) *scopeSpecIndexValues {
+	if spec == nil {
+		return nil
 	}
-
-	// Index all the contract spec ids
-	for _, contractSpecID := range spec.ContractSpecIds {
-		store.Set(types.GetContractSpecScopeSpecCacheKey(contractSpecID, spec.SpecificationId), []byte{0x01})
+	return &scopeSpecIndexValues{
+		SpecificationID: spec.SpecificationId,
+		OwnerAddresses:  spec.OwnerAddresses,
+		ContractSpecIDs: spec.ContractSpecIds,
 	}
 }
 
-// clearScopeSpecificationIndex removes all indexes for the given scope spec.
-// The provided scope spec must be one that is already stored (as opposed to a new one or updated version of one).
-func (k Keeper) clearScopeSpecificationIndex(ctx sdk.Context, spec types.ScopeSpecification) {
-	store := ctx.KVStore(k.storeKey)
+// getMissingScopeSpecIndexValues extracts the index values in the required set that are not in the found set.
+func getMissingScopeSpecIndexValues(required, found *scopeSpecIndexValues) scopeSpecIndexValues {
+	rv := scopeSpecIndexValues{}
+	if required == nil {
+		return rv
+	}
+	if found == nil {
+		return *required
+	}
+	rv.SpecificationID = required.SpecificationID
+	rv.OwnerAddresses = FindMissing(required.OwnerAddresses, found.OwnerAddresses)
+	rv.ContractSpecIDs = FindMissingMdAddr(required.ContractSpecIDs, found.ContractSpecIDs)
+	return rv
+}
 
-	// Delete all owner address + scope spec entries
-	for _, a := range spec.OwnerAddresses {
-		addr, err := sdk.AccAddressFromBech32(a)
-		if err == nil {
-			store.Delete(types.GetAddressScopeSpecCacheKey(addr, spec.SpecificationId))
+// IndexKeys creates all of the index key byte arrays that this scopeSpecIndexValues represents.
+func (v scopeSpecIndexValues) IndexKeys() [][]byte {
+	rv := make([][]byte, 0)
+	if v.SpecificationID.Empty() {
+		return rv
+	}
+	for _, addrStr := range v.OwnerAddresses {
+		if addr, err := sdk.AccAddressFromBech32(addrStr); err == nil {
+			rv = append(rv, types.GetAddressScopeSpecCacheKey(addr, v.SpecificationID))
 		}
 	}
+	for _, specID := range v.ContractSpecIDs {
+		rv = append(rv, types.GetContractSpecScopeSpecCacheKey(specID, v.SpecificationID))
+	}
+	return rv
+}
 
-	// Delete all contract spec + scope spec entries
-	for _, contractSpecID := range spec.ContractSpecIds {
-		store.Delete(types.GetContractSpecScopeSpecCacheKey(contractSpecID, spec.SpecificationId))
+// indexScopeSpecification updates the index entries for a scope specification.
+//
+// When adding a new scope spec:  indexScopeSpecification(ctx, scope, nil)
+//
+// When deleting a scope spec:  indexScopeSpecification(ctx, nil, scope)
+//
+// When updating a scope spec:  indexScopeSpecification(ctx, newScope, oldScope)
+//
+// If both newSpec and oldSpec are not nil, it is assumed that they have the same SpecificationID.
+// Failure to meet this assumption will result in strange and bad behavior.
+func (k Keeper) indexScopeSpecification(ctx sdk.Context, newSpec, oldSpec *types.ScopeSpecification) {
+	if newSpec == nil && oldSpec == nil {
+		return
+	}
+
+	newSpecIndexValues := getScopeSpecIndexValues(newSpec)
+	oldSpecIndexValues := getScopeSpecIndexValues(oldSpec)
+
+	toAdd := getMissingScopeSpecIndexValues(newSpecIndexValues, oldSpecIndexValues)
+	toRemove := getMissingScopeSpecIndexValues(oldSpecIndexValues, newSpecIndexValues)
+
+	store := ctx.KVStore(k.storeKey)
+	for _, indexKey := range toAdd.IndexKeys() {
+		store.Set(indexKey, []byte{0x01})
+	}
+	for _, indexKey := range toRemove.IndexKeys() {
+		store.Delete(indexKey)
 	}
 }
 

@@ -535,7 +535,7 @@ type MsgTypeURL interface {
 }
 
 func TestPrintMessageTypeStrings(t *testing.T) {
-	messageTypes := []sdk.Msg {
+	messageTypes := []sdk.Msg{
 		&MsgWriteScopeRequest{},
 		&MsgDeleteScopeRequest{},
 		&MsgAddScopeDataAccessRequest{},
