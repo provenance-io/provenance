@@ -2,20 +2,22 @@ package keeper_test
 
 import (
 	"bytes"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"math/rand"
+	"testing"
+
 	"github.com/google/uuid"
-	simapp "github.com/provenance-io/provenance/app"
-	"github.com/provenance-io/provenance/x/metadata/keeper"
-	"github.com/provenance-io/provenance/x/metadata/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+
+	simapp "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/x/metadata/keeper"
+	"github.com/provenance-io/provenance/x/metadata/types"
+
+	"github.com/cosmos/cosmos-sdk/store/prefix"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"math/rand"
-	"testing"
 )
 
 type MigrationsTestSuite struct {
@@ -148,24 +150,6 @@ func isKnownIndex(key []byte, indexes []namedIndex) bool {
 		}
 	}
 	return false
-}
-
-// TODO: Delete this and use the one defined in scope_test.go during merge.
-type user struct {
-	PrivKey cryptotypes.PrivKey
-	PubKey  cryptotypes.PubKey
-	Addr    sdk.AccAddress
-	Bech32  string
-}
-
-// TODO: Delete this and use the one defined in scope_test.go during merge.
-func randomUser() user {
-	rv := user{}
-	rv.PrivKey = secp256k1.GenPrivKey()
-	rv.PubKey = rv.PrivKey.PubKey()
-	rv.Addr = sdk.AccAddress(rv.PubKey.Address())
-	rv.Bech32 = rv.Addr.String()
-	return rv
 }
 
 func (s *MigrationsTestSuite) Test2To3() {
