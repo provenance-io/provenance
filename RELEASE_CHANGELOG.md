@@ -1,4 +1,4 @@
-## [v1.7.6](https://github.com/provenance-io/provenance/releases/tag/v1.7.6) - 2021-10-22
+## [v1.7.6](https://github.com/provenance-io/provenance/releases/tag/v1.7.6) - 2021-12-15
 
 ### Improvements
 
