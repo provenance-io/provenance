@@ -2,8 +2,10 @@ package keeper_test
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	"sort"
 	"testing"
+	"time"
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/metadata/keeper"
@@ -160,63 +162,144 @@ func (s *KeeperTestSuite) TestValidatePartiesInvolved() {
 func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSigners() {
 
 	cases := map[string]struct {
-		owners   []types.Party
-		signers  []string
-		errorMsg string
+		owners     []types.Party
+		signers    []string
+		msgTypeURL string
+		errorMsg   string
 	}{
 		"no owners - no signers": {
-			owners:   []types.Party{},
-			signers:  []string{},
-			errorMsg: "",
+			owners:     []types.Party{},
+			signers:    []string{},
+			msgTypeURL: "",
+			errorMsg:   "",
 		},
 		"one owner - is signer": {
-			owners:   []types.Party{{Address: "signer1", Role: types.PartyType_PARTY_TYPE_OWNER}},
-			signers:  []string{"signer1"},
-			errorMsg: "",
+			owners:     []types.Party{{Address: "signer1", Role: types.PartyType_PARTY_TYPE_OWNER}},
+			signers:    []string{"signer1"},
+			msgTypeURL: "",
+			errorMsg:   "",
 		},
 		"one owner - is one of two signers": {
-			owners:   []types.Party{{Address: "signer1", Role: types.PartyType_PARTY_TYPE_OWNER}},
-			signers:  []string{"signer1", "signer2"},
-			errorMsg: "",
+			owners:     []types.Party{{Address: "signer1", Role: types.PartyType_PARTY_TYPE_OWNER}},
+			signers:    []string{"signer1", "signer2"},
+			msgTypeURL: "",
+			errorMsg:   "",
 		},
 		"one owner - is not one of two signers": {
-			owners:   []types.Party{{Address: "missingowner", Role: types.PartyType_PARTY_TYPE_OWNER}},
-			signers:  []string{"signer1", "signer2"},
-			errorMsg: "missing signature from [missingowner (PARTY_TYPE_OWNER)]",
+			owners:     []types.Party{{Address: "missingowner", Role: types.PartyType_PARTY_TYPE_OWNER}},
+			signers:    []string{"signer1", "signer2"},
+			msgTypeURL: "",
+			errorMsg:   "missing signature from [missingowner (PARTY_TYPE_OWNER)]",
 		},
 		"two owners - both are signers": {
 			owners: []types.Party{
 				{Address: "owner1", Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: "owner2", Role: types.PartyType_PARTY_TYPE_OWNER}},
-			signers:  []string{"owner2", "owner1"},
-			errorMsg: "",
+			msgTypeURL: "",
+			signers:    []string{"owner2", "owner1"},
+			errorMsg:   "",
 		},
 		"two owners - only one is signer": {
 			owners: []types.Party{
 				{Address: "owner1", Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: "missingowner", Role: types.PartyType_PARTY_TYPE_OWNER}},
-			signers:  []string{"owner2", "owner1"},
-			errorMsg: "missing signature from [missingowner (PARTY_TYPE_OWNER)]",
+			signers:    []string{"owner2", "owner1"},
+			msgTypeURL: "",
+			errorMsg:   "missing signature from [missingowner (PARTY_TYPE_OWNER)]",
 		},
 		"two parties - one owner one other - only owner is signer": {
 			owners: []types.Party{
 				{Address: "owner", Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: "affiliate", Role: types.PartyType_PARTY_TYPE_AFFILIATE}},
-			signers:  []string{"owner"},
-			errorMsg: "missing signature from [affiliate (PARTY_TYPE_AFFILIATE)]",
+			signers:    []string{"owner"},
+			msgTypeURL: "",
+			errorMsg:   "missing signature from [affiliate (PARTY_TYPE_AFFILIATE)]",
 		},
 		"two parties - one owner one other - only other is signer": {
 			owners: []types.Party{
 				{Address: "owner", Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: "affiliate", Role: types.PartyType_PARTY_TYPE_AFFILIATE}},
-			signers:  []string{"affiliate"},
-			errorMsg: "missing signature from [owner (PARTY_TYPE_OWNER)]",
+			signers:    []string{"affiliate"},
+			msgTypeURL: "",
+			errorMsg:   "missing signature from [owner (PARTY_TYPE_OWNER)]",
+		},
+		// authz test cases
+		"two parties - one missing signature with authz grant - two signers": {
+			owners: []types.Party{
+				{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER},
+				{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER},
+				{Address: s.user3, Role: types.PartyType_PARTY_TYPE_OWNER}}, // grantee of singer 1
+			signers:    []string{s.user2, s.user3},
+			msgTypeURL: types.TypeURLMsgWriteScopeRequest,
+			errorMsg:   "",
+		},
+		"two parties - one missing signature without authz grant - one signer": {
+			owners: []types.Party{
+				{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER},
+				{Address: s.user3, Role: types.PartyType_PARTY_TYPE_OWNER}},
+			signers:    []string{s.user2},
+			msgTypeURL: types.TypeURLMsgWriteScopeRequest,
+			errorMsg:   fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user3),
+		},
+		"two parties - one missing signature with a special case message type - authz grant - two signers": {
+			owners: []types.Party{
+				{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER},
+				{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER},
+				{Address: s.user3, Role: types.PartyType_PARTY_TYPE_OWNER}}, // grantee of singer 2
+			signers:    []string{s.user1, s.user3},
+			msgTypeURL: types.TypeURLMsgAddScopeDataAccessRequest,
+			errorMsg:   "",
+		},
+		"two parties - one missing signature with a special case message type - authz grant on parent message type - two signers": {
+			owners: []types.Party{
+				{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER},
+				{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER},
+				{Address: s.user3, Role: types.PartyType_PARTY_TYPE_OWNER}}, // grantee of singer 2
+			signers:    []string{s.user1, s.user3},
+			msgTypeURL: types.TypeURLMsgAddContractSpecToScopeSpecRequest,
+			errorMsg:   "",
+		},
+		"two parties - one missing signature with a special case message type without authz grant - one signer": {
+			owners: []types.Party{
+				{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER},
+				{Address: s.user3, Role: types.PartyType_PARTY_TYPE_OWNER}},
+			signers:    []string{s.user3},
+			msgTypeURL: types.TypeURLMsgDeleteRecordRequest,
+			errorMsg:   fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user2),
 		},
 	}
 
+	// Add a few authorizations
+
+	// A missing signature with an authz grant on MsgAddScopeOwnerRequest
+	now := s.ctx.BlockHeader().Time
+	s.Require().NotNil(now)
+	granter := s.user1Addr
+	grantee := s.user3Addr
+	a := authz.NewGenericAuthorization(types.TypeURLMsgWriteScopeRequest)
+	err := s.app.AuthzKeeper.SaveGrant(s.ctx, grantee, granter, a, now.Add(time.Hour))
+	s.Require().NoError(err)
+
+	// A missing signature on a special case message type with an authz grant on that type.
+	// Add (a child msg type) TypeURLMsgAddScopeDataAccessRequest  (of a parent) TypeURLMsgWriteScopeRequest
+	granter = s.user2Addr
+	grantee = s.user3Addr
+	a = authz.NewGenericAuthorization(types.TypeURLMsgAddScopeDataAccessRequest)
+	err = s.app.AuthzKeeper.SaveGrant(s.ctx, grantee, granter, a, now.Add(time.Hour))
+	s.Require().NoError(err)
+
+	// A missing signature on a special case message type with an authz grant on its parent type.
+	// Add grant on the parent type of TypeURLMsgAddContractSpecToScopeSpecRequest.
+	granter = s.user2Addr
+	grantee = s.user3Addr
+	a = authz.NewGenericAuthorization(types.TypeURLMsgWriteScopeSpecificationRequest)
+	err = s.app.AuthzKeeper.SaveGrant(s.ctx, grantee, granter, a, now.Add(time.Hour))
+	s.Require().NoError(err)
+
+	// Test cases
 	for n, tc := range cases {
 		s.T().Run(n, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidateAllPartiesAreSigners(tc.owners, tc.signers)
+			err := s.app.MetadataKeeper.ValidateAllPartiesAreSignersWithAuthz(s.ctx, tc.owners, tc.signers, tc.msgTypeURL)
 			if len(tc.errorMsg) == 0 {
 				assert.NoError(t, err, "%s unexpected error", n)
 			} else {
@@ -227,73 +310,144 @@ func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSigners() {
 }
 
 func (s *KeeperTestSuite) TestValidateAllOwnersAreSigners() {
+
 	tests := map[string]struct {
-		owners   []string
-		signers  []string
-		errorMsg string
+		owners     []string
+		signers    []string
+		msgTypeURL string
+		errorMsg   string
 	}{
 		"Scope Spec with 1 owner: no signers - error": {
-			[]string{s.user1},
-			[]string{},
-			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1),
+			owners:     []string{s.user1},
+			signers:    []string{},
+			msgTypeURL: "",
+			errorMsg:   fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1),
 		},
 		"Scope Spec with 1 owner: not in signers list - error": {
-			[]string{s.user1},
-			[]string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()},
-			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1),
+			owners:     []string{s.user1},
+			signers:    []string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()},
+			msgTypeURL: "",
+			errorMsg:   fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1),
 		},
 		"Scope Spec with 1 owner: in signers list with non-owners - ok": {
-			[]string{s.user1},
-			[]string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), s.user1, sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()},
-			"",
+			owners:     []string{s.user1},
+			signers:    []string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), s.user1, sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()},
+			msgTypeURL: "",
+			errorMsg:   "",
 		},
 		"Scope Spec with 1 owner: only signer in list - ok": {
-			[]string{s.user1},
-			[]string{s.user1},
-			"",
+			owners:     []string{s.user1},
+			signers:    []string{s.user1},
+			msgTypeURL: "",
+			errorMsg:   "",
 		},
 		"Scope Spec with 2 owners: no signers - error": {
-			[]string{s.user1, s.user2},
-			[]string{},
-			fmt.Sprintf("missing signatures from existing owners %v; required for update",
+			owners:     []string{s.user1, s.user2},
+			signers:    []string{},
+			msgTypeURL: "",
+			errorMsg: fmt.Sprintf("missing signatures from existing owners %v; required for update",
 				[]string{s.user1, s.user2}),
 		},
 		"Scope Spec with 2 owners: neither in signers list - error": {
-			[]string{s.user1, s.user2},
-			[]string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()},
-			fmt.Sprintf("missing signatures from existing owners %v; required for update",
+			owners:     []string{s.user1, s.user2},
+			signers:    []string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()},
+			msgTypeURL: "",
+			errorMsg: fmt.Sprintf("missing signatures from existing owners %v; required for update",
 				[]string{s.user1, s.user2}),
 		},
 		"Scope Spec with 2 owners: one in signers list with non-owners - error": {
-			[]string{s.user1, s.user2},
-			[]string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), s.user1, sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()},
-			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user2),
+			owners:     []string{s.user1, s.user2},
+			signers:    []string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), s.user1, sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()},
+			msgTypeURL: "",
+			errorMsg:   fmt.Sprintf("missing signature from existing owner %s; required for update", s.user2),
 		},
 		"Scope Spec with 2 owners: the other in signers list with non-owners - error": {
-			[]string{s.user1, s.user2},
-			[]string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), s.user2, sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()},
-			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1),
+			owners:     []string{s.user1, s.user2},
+			signers:    []string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), s.user2, sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()},
+			msgTypeURL: "",
+			errorMsg:   fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1),
 		},
 		"Scope Spec with 2 owners: both in signers list with non-owners - ok": {
-			[]string{s.user1, s.user2},
-			[]string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), s.user2, sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), s.user1},
-			"",
+			owners:     []string{s.user1, s.user2},
+			signers:    []string{sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), s.user2, sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(), s.user1},
+			msgTypeURL: "",
+			errorMsg:   "",
 		},
 		"Scope Spec with 2 owners: only both in signers list - ok": {
-			[]string{s.user1, s.user2},
-			[]string{s.user1, s.user2},
-			"",
+			owners:     []string{s.user1, s.user2},
+			signers:    []string{s.user1, s.user2},
+			msgTypeURL: "",
+			errorMsg:   "",
 		},
 		"Scope Spec with 2 owners: only both in signers list, opposite order - ok": {
-			[]string{s.user1, s.user2},
-			[]string{s.user2, s.user1},
-			"",
+			owners:     []string{s.user1, s.user2},
+			signers:    []string{s.user2, s.user1},
+			msgTypeURL: "",
+			errorMsg:   "",
+		},
+		// authz test cases
+		"Scope Spec with 2 owners - both in signers list - authz": {
+			owners:     []string{s.user2, s.user3},
+			signers:    []string{s.user2, s.user3},
+			msgTypeURL: types.TypeURLMsgAddScopeDataAccessRequest,
+			errorMsg:   "",
+		},
+		"Scope Spec with 2 owners - one signer - authz - error": {
+			owners:     []string{s.user2, s.user3},
+			signers:    []string{s.user2},
+			msgTypeURL: types.TypeURLMsgWriteScopeRequest,
+			errorMsg:   fmt.Sprintf("missing signature from existing owner %s; required for update", s.user3),
+		},
+		"Scope Spec with 3 owners - one signer with a special case message type - with grant - authz": {
+			owners:     []string{s.user1, s.user2, s.user3},
+			signers:    []string{s.user1, s.user3}, // signer 3 is grantee of singer 2
+			msgTypeURL: types.TypeURLMsgAddScopeDataAccessRequest,
+			errorMsg:   "",
+		},
+		"Scope Spec with 3 owners - two signers with a special case message type - grant on parent of special case message type - authz": {
+			owners:     []string{s.user1, s.user2, s.user3},
+			signers:    []string{s.user1, s.user3}, // signer 3 grantee of signer 2
+			msgTypeURL: types.TypeURLMsgDeleteContractSpecFromScopeSpecRequest,
+			errorMsg:   "",
+		},
+		"Scope Spec with 2 owners - one signer - no grant - authz - error": {
+			owners:     []string{s.user2, s.user3},
+			signers:    []string{s.user3},
+			msgTypeURL: types.TypeURLMsgDeleteRecordRequest,
+			errorMsg:   fmt.Sprintf("missing signature from existing owner %s; required for update", s.user2),
 		},
 	}
 
+	// Add a few authorizations
+
+	// A missing signature with an authz grant on MsgAddScopeOwnerRequest
+	now := s.ctx.BlockHeader().Time
+	s.Require().NotNil(now)
+	granter := s.user1Addr
+	grantee := s.user3Addr
+	a := authz.NewGenericAuthorization(types.TypeURLMsgAddScopeOwnerRequest)
+	err := s.app.AuthzKeeper.SaveGrant(s.ctx, grantee, granter, a, now.Add(time.Hour))
+	s.Require().NoError(err)
+
+	// A missing signature on a special case message type with an authz grant on that type.
+	// Add (a child msg type) TypeURLMsgAddScopeDataAccessRequest  (of a parent) TypeURLMsgWriteScopeRequest
+	granter = s.user2Addr
+	grantee = s.user3Addr
+	a = authz.NewGenericAuthorization(types.TypeURLMsgAddScopeDataAccessRequest)
+	err = s.app.AuthzKeeper.SaveGrant(s.ctx, grantee, granter, a, now.Add(time.Hour))
+	s.Require().NoError(err)
+
+	// A missing signature on a special case message type with an authz grant on its parent type.
+	// Add grant on the parent type of TypeURLMsgAddContractSpecToScopeSpecRequest.
+	granter = s.user2Addr
+	grantee = s.user3Addr
+	a = authz.NewGenericAuthorization(types.TypeURLMsgWriteScopeSpecificationRequest)
+	err = s.app.AuthzKeeper.SaveGrant(s.ctx, grantee, granter, a, now.Add(time.Hour))
+	s.Require().NoError(err)
+
 	for n, tc := range tests {
 		s.T().Run(n, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidateAllOwnersAreSigners(tc.owners, tc.signers)
+			err := s.app.MetadataKeeper.ValidateAllOwnersAreSignersWithAuthz(s.ctx, tc.owners, tc.signers, tc.msgTypeURL)
 			if len(tc.errorMsg) == 0 {
 				assert.NoError(t, err, "ValidateAllOwnersAreSigners unexpected error")
 			} else {
@@ -430,6 +584,152 @@ func (s *KeeperTestSuite) TestFindMissing() {
 		s.T().Run(n, func(t *testing.T) {
 			actual := keeper.FindMissing(tc.required, tc.entries)
 			assert.Equal(t, tc.expected, actual)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestFindMissingMdAddr() {
+	tests := map[string]struct {
+		required []string
+		entries  []string
+		expected []string
+	}{
+		"empty required - empty entries - empty out": {
+			[]string{},
+			[]string{},
+			[]string{},
+		},
+		"empty required - 2 entries - empty out": {
+			[]string{},
+			[]string{"one", "two"},
+			[]string{},
+		},
+		"one required - is only entry - empty out": {
+			[]string{"one"},
+			[]string{"one"},
+			[]string{},
+		},
+		"one required - is first of two entries - empty out": {
+			[]string{"one"},
+			[]string{"one", "two"},
+			[]string{},
+		},
+		"one required - is second of two entries - empty out": {
+			[]string{"one"},
+			[]string{"two", "one"},
+			[]string{},
+		},
+		"one required - empty entries - required out": {
+			[]string{"one"},
+			[]string{},
+			[]string{"one"},
+		},
+		"one required - one other in entries - required out": {
+			[]string{"one"},
+			[]string{"two"},
+			[]string{"one"},
+		},
+		"one required - two other in entries - required out": {
+			[]string{"one"},
+			[]string{"two", "three"},
+			[]string{"one"},
+		},
+		"two required - both in entries - empty out": {
+			[]string{"one", "two"},
+			[]string{"one", "two"},
+			[]string{},
+		},
+		"two required - reversed in entries - empty out": {
+			[]string{"one", "two"},
+			[]string{"two", "one"},
+			[]string{},
+		},
+		"two required - only first in entries - second out": {
+			[]string{"one", "two"},
+			[]string{"one"},
+			[]string{"two"},
+		},
+		"two required - only second in entries - first out": {
+			[]string{"one", "two"},
+			[]string{"two"},
+			[]string{"one"},
+		},
+		"two required - first and other in entries - second out": {
+			[]string{"one", "two"},
+			[]string{"one", "other"},
+			[]string{"two"},
+		},
+		"two required - second and other in entries - first out": {
+			[]string{"one", "two"},
+			[]string{"two", "other"},
+			[]string{"one"},
+		},
+		"two required - empty entries - required out": {
+			[]string{"one", "two"},
+			[]string{},
+			[]string{"one", "two"},
+		},
+		"two required - neither in one entries - required out": {
+			[]string{"one", "two"},
+			[]string{"neither"},
+			[]string{"one", "two"},
+		},
+		"two required - neither in three entries - required out": {
+			[]string{"one", "two"},
+			[]string{"neither", "nor", "nothing"},
+			[]string{"one", "two"},
+		},
+		"two required - first not in three entries 0 - first out": {
+			[]string{"one", "two"},
+			[]string{"two", "nor", "nothing"},
+			[]string{"one"},
+		},
+		"two required - first not in three entries 1 - first out": {
+			[]string{"one", "two"},
+			[]string{"neither", "two", "nothing"},
+			[]string{"one"},
+		},
+		"two required - first not in three entries 2 - first out": {
+			[]string{"one", "two"},
+			[]string{"neither", "nor", "two"},
+			[]string{"one"},
+		},
+		"two required - second not in three entries 0 - second out": {
+			[]string{"one", "two"},
+			[]string{"one", "nor", "nothing"},
+			[]string{"two"},
+		},
+		"two required - second not in three entries 1 - second out": {
+			[]string{"one", "two"},
+			[]string{"neither", "one", "nothing"},
+			[]string{"two"},
+		},
+		"two required - second not in three entries 2 - second out": {
+			[]string{"one", "two"},
+			[]string{"neither", "nor", "one"},
+			[]string{"two"},
+		},
+	}
+
+	// For these tests, we shouldn't need valid metadata addresses.
+	// So just convert the strings into byte arrays and use those
+	// as MetadataAddresses. That way, I can just use the same tests
+	// as the ones from TestFindMissing()
+	stringsToAddrs := func(vals []string) []types.MetadataAddress {
+		rv := make([]types.MetadataAddress, len(vals))
+		for i, val := range vals {
+			rv[i] = types.MetadataAddress(val)
+		}
+		return rv
+	}
+
+	for n, tc := range tests {
+		s.T().Run(n, func(t *testing.T) {
+			required := stringsToAddrs(tc.required)
+			entries := stringsToAddrs(tc.entries)
+			expected := stringsToAddrs(tc.expected)
+			actual := keeper.FindMissingMdAddr(required, entries)
+			assert.Equal(t, expected, actual)
 		})
 	}
 }
@@ -609,4 +909,43 @@ func (s *KeeperTestSuite) TestUnionDistinct() {
 			assert.Equal(t, tc.output, output)
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestGetMsgTypeURLs() {
+
+	expected := []string{types.TypeURLMsgAddScopeDataAccessRequest, types.TypeURLMsgWriteScopeRequest}
+	urls := s.app.MetadataKeeper.GetMessageTypeURLs(types.TypeURLMsgAddScopeDataAccessRequest)
+	assert.Equal(s.T(), expected, urls)
+
+	expected = []string{types.TypeURLMsgDeleteScopeDataAccessRequest, types.TypeURLMsgWriteScopeRequest}
+	urls = s.app.MetadataKeeper.GetMessageTypeURLs(types.TypeURLMsgDeleteScopeDataAccessRequest)
+	assert.Equal(s.T(), expected, urls)
+
+	expected = []string{types.TypeURLMsgDeleteScopeOwnerRequest, types.TypeURLMsgWriteScopeRequest}
+	urls = s.app.MetadataKeeper.GetMessageTypeURLs(types.TypeURLMsgDeleteScopeOwnerRequest)
+	assert.Equal(s.T(), expected, urls)
+
+	expected = []string{types.TypeURLMsgWriteRecordRequest, types.TypeURLMsgWriteSessionRequest}
+	urls = s.app.MetadataKeeper.GetMessageTypeURLs(types.TypeURLMsgWriteRecordRequest)
+	assert.Equal(s.T(), expected, urls)
+
+	expected = []string{types.TypeURLMsgAddContractSpecToScopeSpecRequest, types.TypeURLMsgWriteScopeSpecificationRequest}
+	urls = s.app.MetadataKeeper.GetMessageTypeURLs(types.TypeURLMsgAddContractSpecToScopeSpecRequest)
+	assert.Equal(s.T(), expected, urls)
+
+	expected = []string{types.TypeURLMsgDeleteContractSpecFromScopeSpecRequest, types.TypeURLMsgWriteScopeSpecificationRequest}
+	urls = s.app.MetadataKeeper.GetMessageTypeURLs(types.TypeURLMsgDeleteContractSpecFromScopeSpecRequest)
+	assert.Equal(s.T(), expected, urls)
+
+	expected = []string{types.TypeURLMsgAddContractSpecToScopeSpecRequest, types.TypeURLMsgWriteScopeSpecificationRequest}
+	urls = s.app.MetadataKeeper.GetMessageTypeURLs(types.TypeURLMsgAddContractSpecToScopeSpecRequest)
+	assert.Equal(s.T(), expected, urls)
+
+	expected = []string{types.TypeURLMsgWriteRecordSpecificationRequest, types.TypeURLMsgWriteContractSpecificationRequest}
+	urls = s.app.MetadataKeeper.GetMessageTypeURLs(types.TypeURLMsgWriteRecordSpecificationRequest)
+	assert.Equal(s.T(), expected, urls)
+
+	expected = []string{types.TypeURLMsgDeleteRecordSpecificationRequest, types.TypeURLMsgDeleteContractSpecificationRequest}
+	urls = s.app.MetadataKeeper.GetMessageTypeURLs(types.TypeURLMsgDeleteRecordSpecificationRequest)
+	assert.Equal(s.T(), expected, urls)
 }

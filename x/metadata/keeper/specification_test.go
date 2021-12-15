@@ -15,6 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
@@ -1186,6 +1187,92 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 	}
 }
 
+func (s *SpecKeeperTestSuite) TestContractSpecIndexing() {
+	specID := types.ContractSpecMetadataAddress(uuid.New())
+
+	// randomUser defined in scope_test.go
+	ownerConstant := randomUser()
+	ownerToAdd := randomUser()
+	ownerToRemove := randomUser()
+
+	specV1 := types.ContractSpecification{
+		SpecificationId: specID,
+		Description:     nil,
+		OwnerAddresses:  []string{ownerConstant.Bech32, ownerToRemove.Bech32},
+		PartiesInvolved: nil,
+		Source:          nil,
+		ClassName:       "",
+	}
+	specV2 := types.ContractSpecification{
+		SpecificationId: specID,
+		Description:     nil,
+		OwnerAddresses:  []string{ownerConstant.Bech32, ownerToAdd.Bech32},
+		PartiesInvolved: nil,
+		Source:          nil,
+		ClassName:       "",
+	}
+
+	store := s.ctx.KVStore(s.app.GetKey(types.ModuleName))
+
+	s.T().Run("1 write new contract specification", func(t *testing.T) {
+		expectedIndexes := []struct {
+			key  []byte
+			name string
+		}{
+			{types.GetAddressContractSpecCacheKey(ownerConstant.Addr, specID), "ownerConstant address index"},
+			{types.GetAddressContractSpecCacheKey(ownerToRemove.Addr, specID), "ownerToRemove address index"},
+		}
+
+		s.app.MetadataKeeper.SetContractSpecification(s.ctx, specV1)
+
+		for _, expected := range expectedIndexes {
+			assert.True(t, store.Has(expected.key), expected.name)
+		}
+	})
+
+	s.T().Run("2 update contract specification", func(t *testing.T) {
+		expectedIndexes := []struct {
+			key  []byte
+			name string
+		}{
+			{types.GetAddressContractSpecCacheKey(ownerConstant.Addr, specID), "ownerConstant address index"},
+			{types.GetAddressContractSpecCacheKey(ownerToAdd.Addr, specID), "ownerToAdd address index"},
+		}
+		unexpectedIndexes := []struct {
+			key  []byte
+			name string
+		}{
+			{types.GetAddressContractSpecCacheKey(ownerToRemove.Addr, specID), "ownerToRemove address index"},
+		}
+
+		s.app.MetadataKeeper.SetContractSpecification(s.ctx, specV2)
+
+		for _, expected := range expectedIndexes {
+			assert.True(t, store.Has(expected.key), expected.name)
+		}
+		for _, unexpected := range unexpectedIndexes {
+			assert.False(t, store.Has(unexpected.key), unexpected.name)
+		}
+	})
+
+	s.T().Run("3 delete contract specification", func(t *testing.T) {
+		unexpectedIndexes := []struct {
+			key  []byte
+			name string
+		}{
+			{types.GetAddressContractSpecCacheKey(ownerConstant.Addr, specID), "ownerConstant address index"},
+			{types.GetAddressContractSpecCacheKey(ownerToAdd.Addr, specID), "ownerToAdd address index"},
+			{types.GetAddressContractSpecCacheKey(ownerToRemove.Addr, specID), "ownerToRemove address index"},
+		}
+
+		assert.NoError(t, s.app.MetadataKeeper.RemoveContractSpecification(s.ctx, specID), "removing contract spec")
+
+		for _, unexpected := range unexpectedIndexes {
+			assert.False(t, store.Has(unexpected.key), unexpected.name)
+		}
+	})
+}
+
 func (s *SpecKeeperTestSuite) TestGetSetRemoveScopeSpecification() {
 	newSpec := types.NewScopeSpecification(
 		s.scopeSpecID,
@@ -1663,4 +1750,104 @@ func (s *SpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
 	// So just to be on the safe side...
 	store.Delete(s.contractSpecID1)
 	store.Delete(s.contractSpecID2)
+}
+
+func (s *SpecKeeperTestSuite) TestScopeSpecIndexing() {
+	specID := types.ScopeSpecMetadataAddress(uuid.New())
+
+	// randomUser defined in scope_test.go
+	ownerConstant := randomUser()
+	ownerToAdd := randomUser()
+	ownerToRemove := randomUser()
+
+	cSpecIDConstant := types.ContractSpecMetadataAddress(uuid.New())
+	cSpecIDToAdd := types.ContractSpecMetadataAddress(uuid.New())
+	cSpecIDToRemove := types.ContractSpecMetadataAddress(uuid.New())
+
+	specV1 := types.ScopeSpecification{
+		SpecificationId: specID,
+		Description:     nil,
+		OwnerAddresses:  []string{ownerConstant.Bech32, ownerToRemove.Bech32},
+		PartiesInvolved: nil,
+		ContractSpecIds: []types.MetadataAddress{cSpecIDConstant, cSpecIDToRemove},
+	}
+	specV2 := types.ScopeSpecification{
+		SpecificationId: specID,
+		Description:     nil,
+		OwnerAddresses:  []string{ownerConstant.Bech32, ownerToAdd.Bech32},
+		PartiesInvolved: nil,
+		ContractSpecIds: []types.MetadataAddress{cSpecIDConstant, cSpecIDToAdd},
+	}
+
+	store := s.ctx.KVStore(s.app.GetKey(types.ModuleName))
+
+	s.T().Run("1 write new scope specification", func(t *testing.T) {
+		expectedIndexes := []struct {
+			key  []byte
+			name string
+		}{
+			{types.GetAddressScopeSpecCacheKey(ownerConstant.Addr, specID), "ownerConstant address index"},
+			{types.GetAddressScopeSpecCacheKey(ownerToRemove.Addr, specID), "ownerToRemove address index"},
+
+			{types.GetContractSpecScopeSpecCacheKey(cSpecIDConstant, specID), "cSpecIDConstant contract spec index"},
+			{types.GetContractSpecScopeSpecCacheKey(cSpecIDToRemove, specID), "cSpecIDToRemove contract spec index"},
+		}
+
+		s.app.MetadataKeeper.SetScopeSpecification(s.ctx, specV1)
+
+		for _, expected := range expectedIndexes {
+			assert.True(t, store.Has(expected.key), expected.name)
+		}
+	})
+
+	s.T().Run("2 update scope specification", func(t *testing.T) {
+		expectedIndexes := []struct {
+			key  []byte
+			name string
+		}{
+			{types.GetAddressScopeSpecCacheKey(ownerConstant.Addr, specID), "ownerConstant address index"},
+			{types.GetAddressScopeSpecCacheKey(ownerToAdd.Addr, specID), "ownerToAdd address index"},
+
+			{types.GetContractSpecScopeSpecCacheKey(cSpecIDConstant, specID), "cSpecIDConstant contract spec index"},
+			{types.GetContractSpecScopeSpecCacheKey(cSpecIDToAdd, specID), "cSpecIDToAdd contract spec index"},
+		}
+		unexpectedIndexes := []struct {
+			key  []byte
+			name string
+		}{
+			{types.GetAddressScopeSpecCacheKey(ownerToRemove.Addr, specID), "ownerToRemove address index"},
+
+			{types.GetContractSpecScopeSpecCacheKey(cSpecIDToRemove, specID), "cSpecIDToRemove contract spec index"},
+		}
+
+		s.app.MetadataKeeper.SetScopeSpecification(s.ctx, specV2)
+
+		for _, expected := range expectedIndexes {
+			assert.True(t, store.Has(expected.key), expected.name)
+		}
+		for _, unexpected := range unexpectedIndexes {
+			assert.False(t, store.Has(unexpected.key), unexpected.name)
+		}
+	})
+
+	s.T().Run("3 delete scope specification", func(t *testing.T) {
+		unexpectedIndexes := []struct {
+			key  []byte
+			name string
+		}{
+			{types.GetAddressScopeSpecCacheKey(ownerConstant.Addr, specID), "ownerConstant address index"},
+			{types.GetAddressScopeSpecCacheKey(ownerToAdd.Addr, specID), "ownerToAdd address index"},
+			{types.GetAddressScopeSpecCacheKey(ownerToRemove.Addr, specID), "ownerToRemove address index"},
+
+			{types.GetContractSpecScopeSpecCacheKey(cSpecIDConstant, specID), "cSpecIDConstant contract spec index"},
+			{types.GetContractSpecScopeSpecCacheKey(cSpecIDToAdd, specID), "cSpecIDToAdd contract spec index"},
+			{types.GetContractSpecScopeSpecCacheKey(cSpecIDToRemove, specID), "cSpecIDToRemove contract spec index"},
+		}
+
+		assert.NoError(t, s.app.MetadataKeeper.RemoveScopeSpecification(s.ctx, specID), "removing scope spec")
+
+		for _, unexpected := range unexpectedIndexes {
+			assert.False(t, store.Has(unexpected.key), unexpected.name)
+		}
+	})
 }
