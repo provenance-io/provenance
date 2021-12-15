@@ -63,6 +63,8 @@ message CalculateTxFeesRequest {
   // default_base_denom is used to set the denom used for gas fees
   // if not set it will default to nhash.
   string default_base_denom = 2;
+  // gas_adjustment is the adjustment factor to be multiplied against the estimate returned by the tx simulation
+  float gas_adjustment = 3;
 }
 
 // CalculateTxFeesResponse is the response type for the Query RPC method.

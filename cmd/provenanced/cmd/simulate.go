@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	sdkflags "github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/cobra"
 
@@ -44,6 +45,11 @@ func GetCmdPioSimulateTx() *cobra.Command {
 				return err
 			}
 
+			gasAdustment, err := cmd.Flags().GetFloat64(sdkflags.FlagGasAdjustment)
+			if err != nil {
+				return err
+			}
+
 			queryClient := types.NewQueryClient(clientCtx)
 
 			var response *types.CalculateTxFeesResponse
@@ -52,6 +58,7 @@ func GetCmdPioSimulateTx() *cobra.Command {
 				&types.CalculateTxFeesRequest{
 					TxBytes:          txBytes,
 					DefaultBaseDenom: defaultDenom,
+					GasAdjustment:    float32(gasAdustment),
 				},
 			); err != nil {
 				fmt.Printf("failed to calculate fees: %s\n", err.Error())

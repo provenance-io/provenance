@@ -67,11 +67,14 @@ func (k Keeper) CalculateTxFees(goCtx context.Context, request *types.CalculateT
 	if request.DefaultBaseDenom != "" {
 		baseDenom = request.DefaultBaseDenom
 	}
-	totalFees := gasMeter.FeeConsumed().Add(sdk.NewCoin(baseDenom, sdk.NewInt(int64(gasInfo.GasUsed)*int64(k.GetMinGasPrice(ctx)))))
+
+	minGasPrice := int64(k.GetMinGasPrice(ctx))
+	gasUsed := int64(float64(gasInfo.GasUsed) * float64(request.GasAdjustment))
+	totalFees := gasMeter.FeeConsumed().Add(sdk.NewCoin(baseDenom, sdk.NewInt(gasUsed*minGasPrice)))
 
 	return &types.CalculateTxFeesResponse{
 		AdditionalFees: gasMeter.FeeConsumed(),
 		TotalFees:      totalFees,
-		EstimatedGas:   gasInfo.GasUsed,
+		EstimatedGas:   uint64(gasUsed),
 	}, nil
 }
