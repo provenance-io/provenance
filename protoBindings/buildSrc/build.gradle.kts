@@ -10,13 +10,14 @@ repositories {
 dependencies {
     api("org.apache.commons:commons-compress:1.20")
     api("commons-io:commons-io:2.6")
+    api("org.apache.httpcomponents:httpclient:4.5.12")
 }
 
 gradlePlugin {
     plugins {
-        create("protobuf-rust-grpc") {
-            id = "rust.protobuf-rust-grpc"
-            implementationClass = "rust.ProtobufRustGrpcPlugin"
+        create("downloadProtos") {
+            id = "io.provenance.download-protos"
+            implementationClass = "io.provenance.DownloadProtosPlugin"
         }
     }
 }

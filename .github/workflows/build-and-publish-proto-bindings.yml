@@ -32,7 +32,6 @@ jobs:
           server-id: github
 
       - name: GPG Setup
-        # if: github.event_name == 'release'
         env:
           GPG_KEY: ${{ secrets.OSSRH_GPG_SECRET_KEY }}
         run: |
@@ -48,6 +47,7 @@ jobs:
           GPG_PASSWORD: ${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}
         run: |
           cd protoBindings
+          ./gradlew downloadProtos
           ./gradlew publish $(if [ "${{github.event.release.prerelease}}" = "true" ]; then echo 'closeSonatypeStagingRepository'; else echo 'closeAndReleaseSonatypeStagingRepository'; fi) \
             -Psigning.keyId=B7D30ABE -Psigning.password="${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}" -Psigning.secretKeyRingFile=$GITHUB_WORKSPACE/release.gpg \
             --info
