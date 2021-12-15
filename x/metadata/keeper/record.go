@@ -122,6 +122,7 @@ func (k Keeper) ValidateRecordUpdate(
 	existing, proposed *types.Record,
 	signers []string,
 	partiesInvolved []types.Party,
+	msgTypeURL string,
 ) error {
 	if proposed == nil {
 		return errors.New("missing required proposed record")
@@ -141,7 +142,7 @@ func (k Keeper) ValidateRecordUpdate(
 			if !found {
 				return fmt.Errorf("original session %s not found for existing record", existing.SessionId)
 			}
-			if err := k.ValidateAllPartiesAreSigners(session.Parties, signers); err != nil {
+			if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, session.Parties, signers, msgTypeURL); err != nil {
 				return fmt.Errorf("missing signer from original session %s: %w", session.SessionId, err)
 			}
 		}
@@ -170,7 +171,7 @@ func (k Keeper) ValidateRecordUpdate(
 	}
 
 	// Make sure all the session parties have signed.
-	if signErr := k.ValidateAllPartiesAreSigners(session.Parties, signers); signErr != nil {
+	if signErr := k.ValidateAllPartiesAreSignersWithAuthz(ctx, session.Parties, signers, msgTypeURL); signErr != nil {
 		return signErr
 	}
 
@@ -291,7 +292,13 @@ func (k Keeper) ValidateRecordUpdate(
 
 // ValidateRecordRemove checks the current record and the proposed removal scope to determine if the the proposed remove is valid
 // based on the existing state
-func (k Keeper) ValidateRecordRemove(ctx sdk.Context, existing types.Record, proposedID types.MetadataAddress, signers []string) error {
+func (k Keeper) ValidateRecordRemove(
+	ctx sdk.Context,
+	existing types.Record,
+	proposedID types.MetadataAddress,
+	signers []string,
+	msgTypeURL string,
+) error {
 	scopeUUID, err := existing.SessionId.ScopeUUID()
 	if err != nil {
 		return fmt.Errorf("cannot get scope uuid: %s", err)
@@ -305,10 +312,8 @@ func (k Keeper) ValidateRecordRemove(ctx sdk.Context, existing types.Record, pro
 	if !recordID.Equals(proposedID) {
 		return fmt.Errorf("cannot remove record. expected %s, got %s", recordID, proposedID)
 	}
-
-	if err := k.ValidateAllPartiesAreSigners(scope.Owners, signers); err != nil {
+	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, scope.Owners, signers, msgTypeURL); err != nil {
 		return err
 	}
-
 	return nil
 }
