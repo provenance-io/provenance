@@ -130,7 +130,6 @@ func getFeeGranterIfExists(ctx sdk.Context, feeGranter sdk.AccAddress, afd MsgBa
 }
 
 func getFeeTx(tx sdk.Tx) (sdk.FeeTx, error) {
-	// has to be FeeTx type
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")

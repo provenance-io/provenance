@@ -164,7 +164,6 @@ var (
 		staking.AppModuleBasic{},
 		mint.AppModuleBasic{},
 		distr.AppModuleBasic{},
-		// TODO add msgfee gov module here
 		gov.NewAppModuleBasic(append(
 			wasmclient.ProposalHandlers,
 			paramsclient.ProposalHandler,
@@ -259,7 +258,7 @@ type App struct {
 	AuthzKeeper      authzkeeper.Keeper
 	EvidenceKeeper   evidencekeeper.Keeper
 	FeeGrantKeeper   feegrantkeeper.Keeper
-	// msg based fees
+
 	MsgBasedFeeKeeper msgfeekeeper.Keeper
 
 	IBCKeeper      *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
@@ -393,7 +392,6 @@ func New(
 	app.FeeGrantKeeper = feegrantkeeper.NewKeeper(appCodec, keys[feegrant.StoreKey], app.AccountKeeper)
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath, app.BaseApp)
 
-	// msgbased fee keeper initialization.
 	app.MsgBasedFeeKeeper = msgfeekeeper.NewKeeper(
 		appCodec, keys[msgbasedfeestypes.StoreKey], app.GetSubspace(msgbasedfeestypes.ModuleName), authtypes.FeeCollectorName, DefaultFeeDenom, app.Simulate, encodingConfig.TxConfig.TxDecoder())
 
