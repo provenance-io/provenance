@@ -94,7 +94,7 @@ func (s *QueryServerTestSuite) TestCalculateTxFees() {
 	s.Assert().NotNil(response)
 	s.Assert().True(response.AdditionalFees.Empty())
 	expectedTotalFees := sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(int64(response.EstimatedGas)*int64(s.minGasPrice))))
-	s.Assert().Equal(expectedTotalFees, response.TotalFees)
+	s.Assert().Equal(expectedTotalFees.String(), response.TotalFees.String())
 
 	// do send with an additional fee
 	sendAddFee := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1))
