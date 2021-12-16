@@ -8,7 +8,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	sdkflags "github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/cobra"
 
@@ -45,7 +44,7 @@ func GetCmdPioSimulateTx() *cobra.Command {
 				return err
 			}
 
-			gasAdustment, err := cmd.Flags().GetFloat64(sdkflags.FlagGasAdjustment)
+			gasAdustment, err := cmd.Flags().GetFloat64(flags.FlagGasAdjustment)
 			if err != nil {
 				return err
 			}

@@ -86,7 +86,7 @@ func (afd MsgBasedFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.
 
 			ctx.Logger().Debug(fmt.Sprintf("The Fee consumed by message types : %v", feeGasMeter.FeeConsumedByMsg()))
 
-			baseFeeConsumedAtAnteHandler  := feeGasMeter.BaseFeeConsumed()
+			baseFeeConsumedAtAnteHandler := feeGasMeter.BaseFeeConsumed()
 
 			var isNeg bool
 			// this sweeps all extra fees too, 1. keeps current behavior 2. accounts for priority mempool
