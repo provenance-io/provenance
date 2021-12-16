@@ -42,10 +42,8 @@ func (s *MigrationsTestSuite) SetupTest() {
 
 	s.prefixes = []namedIndex{
 		{"Address Scope", types.AddressScopeCacheKeyPrefix},
-		{"Scope Spec Scope", types.ScopeSpecScopeCacheKeyPrefix},
 		{"Value Owner Scope", types.ValueOwnerScopeCacheKeyPrefix},
 		{"Address Scope Spec", types.AddressScopeSpecCacheKeyPrefix},
-		{"Contract Spec Scope Spec", types.ContractSpecScopeSpecCacheKeyPrefix},
 		{"Address Contract Spec", types.AddressContractSpecCacheKeyPrefix},
 	}
 }
