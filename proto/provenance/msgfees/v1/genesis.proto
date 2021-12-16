@@ -11,6 +11,7 @@ option java_multiple_files = true;
 // GenesisState contains a set of msg based fees, persisted from the store
 message GenesisState {
   // params defines all the parameters of the module.
-  Params               params         = 1 [(gogoproto.nullable) = false];
+  Params params = 1 [(gogoproto.nullable) = false];
+  // msg_based_fees are the additional fees on specific tx msgs
   repeated MsgBasedFee msg_based_fees = 2 [(gogoproto.nullable) = false];
 }

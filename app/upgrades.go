@@ -233,8 +233,6 @@ func UpgradeStoreLoader(upgradeHeight int64, storeUpgrades *storetypes.StoreUpgr
 				return ms.LoadLatestVersionAndUpgrade(storeUpgrades)
 			}
 		}
-
-		// Otherwise load default store loader
 		return baseapp.DefaultStoreLoader(ms)
 	}
 }

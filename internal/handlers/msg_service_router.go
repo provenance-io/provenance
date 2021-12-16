@@ -16,7 +16,7 @@ import (
 	msgfeekeeper "github.com/provenance-io/provenance/x/msgfees/keeper"
 )
 
-// MsgServiceRouter routes fully-qualified Msg service methods to their handler.
+// PioMsgServiceRouter routes fully-qualified Msg service methods to their handler with additional fee processing of msgs.
 type PioMsgServiceRouter struct {
 	interfaceRegistry codectypes.InterfaceRegistry
 	routes            map[string]MsgServiceHandler
@@ -26,7 +26,7 @@ type PioMsgServiceRouter struct {
 
 var _ gogogrpc.Server = &PioMsgServiceRouter{}
 
-// NewMsgServiceRouter creates a new MsgServiceRouter.
+// NewPioMsgServiceRouter creates a new PioMsgServiceRouter.
 func NewPioMsgServiceRouter(decoder sdk.TxDecoder) *PioMsgServiceRouter {
 	return &PioMsgServiceRouter{
 		routes:  map[string]MsgServiceHandler{},
@@ -124,7 +124,6 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 			if !ok {
 				panic("GasMeter is not of type FeeGasMeter")
 			}
-			ctx.Logger().Info(fmt.Sprintf("NOTICE: Inside the PIO msg service router handler msg: %v simulation mode: %v", msgTypeURL, feeGasMeter.IsSimulate()))
 
 			tx, err := msr.decoder(ctx.TxBytes())
 			if err != nil {
@@ -141,7 +140,8 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 				return nil, err
 			}
 			if fee != nil && fee.AdditionalFee.IsPositive() {
-				ctx.Logger().Debug(fmt.Sprintf("NOTICE: Msg %v has an additional fee of %v ", msgTypeURL, fee.AdditionalFee))
+				ctx.Logger().Debug(fmt.Sprintf("Tx Msg %v has an additional fee of %v ", msgTypeURL, fee.AdditionalFee))
+
 				if !feeGasMeter.IsSimulate() {
 					err = antewrapper.EnsureSufficientFees(runtimeGasForMsg(ctx), feeTx.GetFee(), feeGasMeter.FeeConsumed().Add(fee.AdditionalFee),
 						msr.msgBasedFeeKeeper.GetMinGasPrice(ctx), msr.msgBasedFeeKeeper.GetDefaultFeeDenom())

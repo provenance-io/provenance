@@ -3,12 +3,10 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
-	"os"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/spf13/cobra"
 
 	"github.com/provenance-io/provenance/x/msgfees/types"
@@ -28,9 +26,7 @@ func GetCmdPioSimulateTx() *cobra.Command {
 			if err != nil {
 				return err
 			}
-
-			// sdk.Tx
-			theTx, err := ReadTxFromFile(clientCtx, args[0])
+			theTx, err := authclient.ReadTxFromFile(clientCtx, args[0])
 			if err != nil {
 				return err
 			}
@@ -69,21 +65,4 @@ func GetCmdPioSimulateTx() *cobra.Command {
 	cmd.Flags().String(flagDefaultDenom, "nhash", "Denom used for gas costs")
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
-}
-
-// Read and decode a StdTx from the given filename.  Can pass "-" to read from stdin.
-func ReadTxFromFile(ctx client.Context, filename string) (tx sdk.Tx, err error) {
-	var bytes []byte
-
-	if filename == "-" {
-		bytes, err = ioutil.ReadAll(os.Stdin)
-	} else {
-		bytes, err = ioutil.ReadFile(filename)
-	}
-
-	if err != nil {
-		return
-	}
-
-	return ctx.TxConfig.TxJSONDecoder()(bytes)
 }

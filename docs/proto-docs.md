@@ -5134,7 +5134,7 @@ it consists of two parts
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `msg_type_url` | [string](#string) |  |  |
-| `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | can pay in any Coin( basically a Denom and Amount, Amount can be zero) |
+| `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | additional_fee can pay in any Coin( basically a Denom and Amount, Amount can be zero) |
 
 
 
@@ -5182,7 +5182,7 @@ GenesisState contains a set of msg based fees, persisted from the store
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `params` | [Params](#provenance.msgfees.v1.Params) |  | params defines all the parameters of the module. |
-| `msg_based_fees` | [MsgBasedFee](#provenance.msgfees.v1.MsgBasedFee) | repeated |  |
+| `msg_based_fees` | [MsgBasedFee](#provenance.msgfees.v1.MsgBasedFee) | repeated | msg_based_fees are the additional fees on specific tx msgs |
 
 
 

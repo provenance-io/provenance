@@ -3,10 +3,10 @@ package handlers
 import (
 	"fmt"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/provenance-io/provenance/internal/antewrapper"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	"github.com/provenance-io/provenance/internal/antewrapper"
 	msgbasedfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
@@ -42,27 +42,21 @@ func (afd MsgBasedFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.
 			panic(fmt.Errorf("error in chargeFees() while getting txBytes: %w", err))
 		}
 
-		// cast to FeeTx
 		feeTx, ok := tx.(sdk.FeeTx)
 		// only charge additional fee if of type FeeTx since it should give fee payer.
 		// for provenance should be a FeeTx since antehandler should enforce it, but
 		// not adding complexity here
 		if !ok {
-			panic("Provenance only supports feeTx for now")
+			panic("Transaction not of type FeeTx.  Provenance only supports feeTx for now.")
 		}
-		feePayer := feeTx.FeePayer()
-		feeGranter := feeTx.FeeGranter()
-		deductFeesFrom := feePayer
-		// if fee granter set deduct fee from feegranter account.
-		// this works with only when feegrant enabled.
 
 		feeGasMeter, ok := ctx.GasMeter().(*antewrapper.FeeGasMeter)
 		if !ok {
 			// all provenance tx's should have this set
 			panic("GasMeter is not of type FeeGasMeter")
 		}
-		chargedFees = feeGasMeter.FeeConsumed()
 
+		chargedFees = feeGasMeter.FeeConsumed()
 		// check chargedFees is not nil && is not all zero(IsZero returns true if there are no coins or all coins are zero.)
 		if chargedFees != nil && !chargedFees.IsZero() {
 			// there should not be any negative coins, just to be very sure here
@@ -71,6 +65,10 @@ func (afd MsgBasedFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.
 			}
 			// eat up the gas cost for charging fees. (This one is on us, Cheers!, mainly because we don't want to fail at this step, imo, but we can remove this is f necessary)
 			ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+
+			feePayer := feeTx.FeePayer()
+			feeGranter := feeTx.FeeGranter()
+			deductFeesFrom := feePayer
 			// if feegranter set deduct fee from feegranter account.
 			// this works with only when feegrant enabled.
 			if feeGranter != nil {
@@ -116,7 +114,6 @@ func (afd MsgBasedFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.
 				)}
 		}
 
-		// set back the original gasMeter
 		ctx = ctx.WithGasMeter(originalGasMeter)
 	}
 
