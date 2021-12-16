@@ -10,7 +10,7 @@ import (
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	return types.Params{
 		EnableGovernance: k.GetEnableGovernance(ctx),
-		MinGasPrice:      k.GetMinGasPrice(ctx),
+		FloorGasPrice:      k.GetFloorGasPrice(ctx),
 	}
 }
 

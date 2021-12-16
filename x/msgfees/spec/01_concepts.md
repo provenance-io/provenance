@@ -47,5 +47,5 @@ Fee passed in = 19070000nhash
 In this client passes in an extra 10000nhash (1905 * 10000 +10000 = 19060000nhash).
 Current behavior is maintained and tx passes and charges 19050000 initially and 1000 nhash plus 1000nhash extra fee passed in
 the deliverTx stage.
-Thus this will protect against future changes like priority mempool as well as keep current behaviour same as current production. 
+Thus, this will protect against future changes like priority mempool as well as keep current behaviour same as current production. 
 

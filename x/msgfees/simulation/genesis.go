@@ -14,12 +14,12 @@ import (
 
 // Simulation parameter constants
 const (
-	MinGasPrice      = "min_gas_price"
+	FloorGasPrice    = "floor_gas_price"
 	EnableGovernance = "enable_governance"
 )
 
-// GenMinGasPrice randomized MinGasPrice
-func GenMinGasPrice(r *rand.Rand) uint32 {
+// FloorMinGasPrice randomized FloorGasPrice
+func FloorMinGasPrice(r *rand.Rand) uint32 {
 	return r.Uint32()
 }
 
@@ -30,10 +30,10 @@ func GenEnableGovernance(r *rand.Rand) bool {
 
 // RandomizedGenState generates a random GenesisState for distribution
 func RandomizedGenState(simState *module.SimulationState) {
-	var minGasPrice uint32
+	var floorGasPrice uint32
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, MinGasPrice, &minGasPrice, simState.Rand,
-		func(r *rand.Rand) { minGasPrice = GenMinGasPrice(r) },
+		simState.Cdc, FloorGasPrice, &floorGasPrice, simState.Rand,
+		func(r *rand.Rand) { floorGasPrice = FloorMinGasPrice(r) },
 	)
 
 	var enableGovernance bool
@@ -44,7 +44,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	msgFeesGenesis := types.GenesisState{
 		Params: types.Params{
-			MinGasPrice:      minGasPrice,
+			FloorGasPrice:    floorGasPrice,
 			EnableGovernance: enableGovernance,
 		},
 		MsgBasedFees: []types.MsgBasedFee{},

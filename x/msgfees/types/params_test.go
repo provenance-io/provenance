@@ -8,7 +8,7 @@ import (
 
 func TestCreateParams(t *testing.T) {
 	msgFeeParam := NewParams(true, 2000)
-	require.Equal(t, int(2000), int(msgFeeParam.MinGasPrice))
+	require.Equal(t, int(2000), int(msgFeeParam.FloorGasPrice))
 }
 
 func TestCreateParamSet(t *testing.T) {
@@ -24,12 +24,12 @@ func TestValidateMinGasPriceParamI(t *testing.T) {
 func TestOSParamKeyTable(t *testing.T) {
 	keyTable := ParamKeyTable()
 	require.Panics(t, func() {
-		keyTable.RegisterType(paramtypes.NewParamSetPair(ParamStoreKeyMinGasPrice, "5000", validateIntParam))
+		keyTable.RegisterType(paramtypes.NewParamSetPair(ParamStoreKeyFloorGasPrice, "5000", validateIntParam))
 		keyTable.RegisterType(paramtypes.NewParamSetPair(ParamStoreKeyEnableGovernance, "true", validateEnableGovernance))
 	})
 }
 
 func TestDefault(t *testing.T) {
 	metadataData := DefaultParams()
-	require.Equal(t, 1905, int(metadataData.MinGasPrice))
+	require.Equal(t, 1905, int(metadataData.FloorGasPrice))
 }

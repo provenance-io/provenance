@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	keyMinGasPrice      = "MinGasPrice"
+	keyFloorGasPrice    = "FloorGasPrice"
 	keyEnableGovernance = "EnableGovernance"
 )
 
@@ -22,9 +22,9 @@ const (
 // on the simulation
 func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
 	return []simtypes.ParamChange{
-		simulation.NewSimParamChange(types.ModuleName, keyMinGasPrice,
+		simulation.NewSimParamChange(types.ModuleName, keyFloorGasPrice,
 			func(r *rand.Rand) string {
-				return fmt.Sprintf("%d", GenMinGasPrice(r))
+				return fmt.Sprintf("%d", FloorMinGasPrice(r))
 			},
 		),
 		simulation.NewSimParamChange(types.ModuleName, keyEnableGovernance,

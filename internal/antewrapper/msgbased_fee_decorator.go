@@ -100,7 +100,7 @@ func (afd MsgBasedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 
 		if !simulate {
 			if err = EnsureAccountHasSufficientFeesWithAcctBalanceCheck(gas, feeCoins, additionalFees, balancePerCoin,
-				afd.msgBasedFeeKeeper.GetMinGasPrice(ctx), afd.msgBasedFeeKeeper.GetDefaultFeeDenom()); err != nil {
+				afd.msgBasedFeeKeeper.GetFloorGasPrice(ctx), afd.msgBasedFeeKeeper.GetDefaultFeeDenom()); err != nil {
 				return ctx, err
 			}
 		}

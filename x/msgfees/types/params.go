@@ -18,9 +18,9 @@ const (
 var (
 	// ParamStoreKeyEnableGovernance indicates if governance proposal management of markers is enabled
 	ParamStoreKeyEnableGovernance = []byte("EnableGovernance")
-	// ParamStoreKeyMinGasPrice if msg fees are paid in the same denom as base default gas is paid, then use this to differentiate between base price
+	// ParamStoreKeyFloorGasPrice if msg fees are paid in the same denom as base default gas is paid, then use this to differentiate between base price
 	// and additional fees.
-	ParamStoreKeyMinGasPrice = []byte("MinGasPrice")
+	ParamStoreKeyFloorGasPrice = []byte("FloorGasPrice")
 )
 
 // ParamKeyTable for marker module
@@ -31,11 +31,11 @@ func ParamKeyTable() paramtypes.KeyTable {
 // NewParams creates a new parameter object
 func NewParams(
 	enableGovernance bool,
-	minGasPrice uint32,
+	floorGasPrice uint32,
 ) Params {
 	return Params{
 		EnableGovernance: enableGovernance,
-		MinGasPrice:      minGasPrice,
+		FloorGasPrice:      floorGasPrice,
 	}
 }
 
@@ -43,7 +43,7 @@ func NewParams(
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(ParamStoreKeyEnableGovernance, &p.EnableGovernance, validateEnableGovernance),
-		paramtypes.NewParamSetPair(ParamStoreKeyMinGasPrice, &p.MinGasPrice, validateIntParam),
+		paramtypes.NewParamSetPair(ParamStoreKeyFloorGasPrice, &p.FloorGasPrice, validateIntParam),
 	}
 }
 

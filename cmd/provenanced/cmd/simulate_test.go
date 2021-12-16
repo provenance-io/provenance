@@ -35,7 +35,7 @@ type SimulateTestSuite struct {
 	account2Key  *secp256k1.PrivKey
 	account2Addr sdk.AccAddress
 
-	minGasPrice uint32
+	floorGasPrice uint32
 }
 
 func (s *SimulateTestSuite) SetupTest() {
@@ -49,7 +49,7 @@ func (s *SimulateTestSuite) SetupTest() {
 	s.Require().NoError(err2)
 	s.account2Addr = addr2
 
-	s.minGasPrice = 1000
+	s.floorGasPrice = 1000
 	s.sendMsgTypeUrl = "/cosmos.bank.v1beta1.MsgSend"
 	s.sendMsgAdditionalFee = sdk.NewCoin("stake", sdk.NewInt(1))
 
@@ -59,7 +59,7 @@ func (s *SimulateTestSuite) SetupTest() {
 
 	genesisState := cfg.GenesisState
 	var msgfeesData msgfeestypes.GenesisState
-	msgfeesData.Params.MinGasPrice = s.minGasPrice
+	msgfeesData.Params.FloorGasPrice = s.floorGasPrice
 	msgfeesData.Params.EnableGovernance = true
 	msgfeesData.MsgBasedFees = append(msgfeesData.MsgBasedFees, msgfeestypes.NewMsgBasedFee(s.sendMsgTypeUrl, s.sendMsgAdditionalFee))
 	msgFeesDataBz, err := cfg.Codec.MarshalJSON(&msgfeesData)
@@ -108,7 +108,7 @@ func (s *SimulateTestSuite) TestSimulateCmd() {
 			err = s.cfg.Codec.UnmarshalJSON(out.Bytes(), &result)
 			s.Require().NoError(err)
 			s.Assert().Equal(tc.expectedAdditionalFees, result.AdditionalFees)
-			expectedTotalFees := sdk.NewCoins(s.sendMsgAdditionalFee.Add(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(int64(result.EstimatedGas)*int64(s.minGasPrice)))))
+			expectedTotalFees := sdk.NewCoins(s.sendMsgAdditionalFee.Add(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(int64(result.EstimatedGas)*int64(s.floorGasPrice)))))
 			s.Assert().Equal(expectedTotalFees, result.TotalFees)
 		})
 	}

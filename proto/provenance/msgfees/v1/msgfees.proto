@@ -19,7 +19,7 @@ message Params {
   // indicates if governance based controls of msgFees is allowed.
   bool enable_governance = 1;
   // constant used to calculate fees when gas fees shares denom with msg fee
-  uint32 min_gas_price = 2;
+  uint32 floor_gas_price = 2;
 }
 
 // MsgBasedFee is the core of what gets stored on the blockchain
