@@ -33,7 +33,7 @@ func (m *Migrator) Migrate1to2(ctx sdk.Context) error {
 func (m *Migrator) Migrate2to3(ctx sdk.Context) error {
 	ctx.Logger().Info("Migrating Metadata Module from Version 2 to 3")
 	var err error
-	var goodIndexes *IndexLookup
+	var goodIndexes *indexLookup
 	steps := []struct {
 		name   string
 		runner func() error
@@ -72,30 +72,52 @@ func (m *Migrator) Migrate2to3(ctx sdk.Context) error {
 	return nil
 }
 
-type IndexLookup struct {
-	Entries map[byte][][]byte
+// indexLookup is a struct holding index byte slices in a way that makes them easier to find.
+type indexLookup struct {
+	// entries is a map of the first keyLen bytes to all indexes that start with those bytes.
+	entries map[string][][]byte
+	// pkLen is the number of bytes from index to use as the key for entries.
+	pkLen int
 }
 
-func NewIndexLookup() *IndexLookup {
-	return &IndexLookup{
-		Entries: map[byte][][]byte{},
+// newIndexLookup creates a new empty IndexLookup.
+func newIndexLookup() *indexLookup {
+	return &indexLookup{
+		entries: map[string][][]byte{},
+		// All the keys we have so far have length 20.
+		// Add 1 for the type byte, and 1 for length byte. Then also use the first 2 of metadata address.
+		// 20 + 1 + 1 + 2 = 24.
+		pkLen: 24,
 	}
 }
 
-func (i *IndexLookup) AddEntries(pk byte, keys ...[]byte) {
-	i.Entries[pk] = append(i.Entries[pk], keys...)
+// getPK creates a primary key string for the provided index key.
+func (i indexLookup) getPK(indexKey []byte) string {
+	if len(indexKey) <= i.pkLen {
+		return string(indexKey)
+	}
+	return string(indexKey[:i.pkLen])
 }
 
-func (i IndexLookup) Has(key []byte) bool {
-	if len(key) == 0 {
+// add records the given index keys in this indexLookup.
+func (i *indexLookup) add(indexKeys ...[]byte) {
+	for _, indexKey := range indexKeys {
+		pk := i.getPK(indexKey)
+		i.entries[pk] = append(i.entries[pk], indexKey)
+	}
+}
+
+// has returns true if the provided indexKey is known to this indexLookup.
+func (i indexLookup) has(indexKey []byte) bool {
+	if len(indexKey) == 0 {
 		return false
 	}
-	l, ok := i.Entries[key[0]]
+	l, ok := i.entries[i.getPK(indexKey)]
 	if !ok {
 		return false
 	}
 	for _, k := range l {
-		if bytes.Equal(key, k) {
+		if bytes.Equal(indexKey, k) {
 			return true
 		}
 	}
@@ -103,19 +125,19 @@ func (i IndexLookup) Has(key []byte) bool {
 }
 
 // deleteBadIndexes deletes all the bad indexes on Metadata entries, and gets the metadata addresses of things de-indexed.
-func deleteBadIndexes(ctx sdk.Context, mdKeeper Keeper) (*IndexLookup, error) {
+func deleteBadIndexes(ctx sdk.Context, mdKeeper Keeper) (*indexLookup, error) {
 	prefixes := [][]byte{
 		types.AddressScopeCacheKeyPrefix, types.ValueOwnerScopeCacheKeyPrefix,
 		types.AddressScopeSpecCacheKeyPrefix, types.AddressContractSpecCacheKeyPrefix,
 	}
-	good := NewIndexLookup()
+	good := newIndexLookup()
 	store := ctx.KVStore(mdKeeper.storeKey)
 	for _, pre := range prefixes {
 		newGood, err := cleanStore(ctx, store, pre)
 		if err != nil {
 			return nil, err
 		}
-		good.AddEntries(pre[0], newGood...)
+		good.add(newGood...)
 	}
 	return good, nil
 }
@@ -141,7 +163,7 @@ func cleanStore(ctx sdk.Context, baseStore sdk.KVStore, pre []byte) (good [][]by
 		key := iter.Key()
 		accAddrLen := int(key[0])
 		// good key length = 1 length byte + the length of the account address + 33 metadata address bytes.
-		if len(key) == 1+accAddrLen+33 {
+		if len(key) == accAddrLen+34 {
 			good = append(good, append([]byte{pre[0]}, key...))
 		} else {
 			store.Delete(key)
@@ -153,11 +175,11 @@ func cleanStore(ctx sdk.Context, baseStore sdk.KVStore, pre []byte) (good [][]by
 }
 
 // reindexScopes creates all missing scope indexes.
-func reindexScopes(ctx sdk.Context, mdKeeper Keeper, lookup *IndexLookup) error {
+func reindexScopes(ctx sdk.Context, mdKeeper Keeper, lookup *indexLookup) error {
 	store := ctx.KVStore(mdKeeper.storeKey)
 	return mdKeeper.IterateScopes(ctx, func(scope types.Scope) (stop bool) {
 		for _, key := range getScopeIndexValues(&scope).IndexKeys() {
-			if (key[0] == types.AddressScopeCacheKeyPrefix[0] || key[0] == types.ValueOwnerScopeCacheKeyPrefix[0]) && !lookup.Has(key) {
+			if (key[0] == types.AddressScopeCacheKeyPrefix[0] || key[0] == types.ValueOwnerScopeCacheKeyPrefix[0]) && !lookup.has(key) {
 				store.Set(key, []byte{0x01})
 			}
 		}
@@ -166,11 +188,11 @@ func reindexScopes(ctx sdk.Context, mdKeeper Keeper, lookup *IndexLookup) error 
 }
 
 // reindexScopeSpecs creates all missing scope specification indexes.
-func reindexScopeSpecs(ctx sdk.Context, mdKeeper Keeper, lookup *IndexLookup) error {
+func reindexScopeSpecs(ctx sdk.Context, mdKeeper Keeper, lookup *indexLookup) error {
 	store := ctx.KVStore(mdKeeper.storeKey)
 	return mdKeeper.IterateScopeSpecs(ctx, func(scopeSpec types.ScopeSpecification) (stop bool) {
 		for _, key := range getScopeSpecIndexValues(&scopeSpec).IndexKeys() {
-			if key[0] == types.AddressScopeSpecCacheKeyPrefix[0] && !lookup.Has(key) {
+			if key[0] == types.AddressScopeSpecCacheKeyPrefix[0] && !lookup.has(key) {
 				store.Set(key, []byte{0x01})
 			}
 		}
@@ -179,11 +201,11 @@ func reindexScopeSpecs(ctx sdk.Context, mdKeeper Keeper, lookup *IndexLookup) er
 }
 
 // reindexContractSpecs creates all missing contract specification indexes.
-func reindexContractSpecs(ctx sdk.Context, mdKeeper Keeper, lookup *IndexLookup) error {
+func reindexContractSpecs(ctx sdk.Context, mdKeeper Keeper, lookup *indexLookup) error {
 	store := ctx.KVStore(mdKeeper.storeKey)
 	return mdKeeper.IterateContractSpecs(ctx, func(contractSpec types.ContractSpecification) (stop bool) {
 		for _, key := range getContractSpecIndexValues(&contractSpec).IndexKeys() {
-			if !lookup.Has(key) {
+			if !lookup.has(key) {
 				store.Set(key, []byte{0x01})
 			}
 		}
