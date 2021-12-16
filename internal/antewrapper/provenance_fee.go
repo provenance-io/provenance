@@ -7,6 +7,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+
 	msgbasedfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
@@ -21,7 +22,6 @@ type ProvenanceDeductFeeDecorator struct {
 	msgFeeKeeper   msgbasedfeetypes.MsgBasedFeeKeeper
 }
 
-// Common event types and attribute keys
 var (
 	AttributeKeyBaseFee       = "basefee"
 	AttributeKeyAdditionalFee = "additionalfee"
@@ -71,8 +71,6 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 		}
 	}
 
-	// if feegranter set deduct fee from feegranter account.
-	// this works with only when feegrant enabled.
 	if feeGranter != nil && !simulate {
 		if dfd.feegrantKeeper == nil {
 			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")

@@ -28,7 +28,7 @@ message Params {
 // 2. minimum additional fees(can be of any denom)
 message MsgBasedFee {
   string msg_type_url = 1;
-  // can pay in any Coin( basically a Denom and Amount, Amount can be zero)
+  // additional_fee can pay in any Coin( basically a Denom and Amount, Amount can be zero)
   cosmos.base.v1beta1.Coin additional_fee = 2 [
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",

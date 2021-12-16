@@ -135,7 +135,6 @@ func (k Keeper) IterateMsgBasedFees(ctx sdk.Context, handle func(msgFees types.M
 
 // DeductFees deducts fees from the given account, the only reason it exists is that the
 func (k Keeper) DeductFees(bankKeeper cosmosauthtypes.BankKeeper, ctx sdk.Context, acc cosmosauthtypes.AccountI, fees sdk.Coins) error {
-	ctx.Logger().Info("NOTICE: In DeductFees:" + ctx.GasMeter().String())
 	if !fees.IsValid() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
 	}
@@ -144,6 +143,5 @@ func (k Keeper) DeductFees(bankKeeper cosmosauthtypes.BankKeeper, ctx sdk.Contex
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 	}
-	ctx.Logger().Info("NOTICE: End of DeductFees:" + ctx.GasMeter().String())
 	return nil
 }

@@ -2,19 +2,11 @@ package app
 
 import (
 	"encoding/json"
-
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/provenance-io/provenance/x/msgfees"
-
-	_ "github.com/provenance-io/provenance/client/docs/statik" // registers swagger-ui files with statik
-	"github.com/provenance-io/provenance/internal/antewrapper"
-	piohandlers "github.com/provenance-io/provenance/internal/handlers"
-	"github.com/provenance-io/provenance/internal/statesync"
 
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
@@ -55,7 +47,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
@@ -106,6 +97,11 @@ import (
 
 	// PROVENANCE
 	appparams "github.com/provenance-io/provenance/app/params"
+	_ "github.com/provenance-io/provenance/client/docs/statik" // registers swagger-ui files with statik
+	"github.com/provenance-io/provenance/internal/antewrapper"
+	piohandlers "github.com/provenance-io/provenance/internal/handlers"
+	"github.com/provenance-io/provenance/internal/provwasm"
+	"github.com/provenance-io/provenance/internal/statesync"
 	"github.com/provenance-io/provenance/x/attribute"
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
@@ -114,25 +110,22 @@ import (
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	markerwasm "github.com/provenance-io/provenance/x/marker/wasm"
+	"github.com/provenance-io/provenance/x/metadata"
+	metadatakeeper "github.com/provenance-io/provenance/x/metadata/keeper"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
+	metadatawasm "github.com/provenance-io/provenance/x/metadata/wasm"
+	"github.com/provenance-io/provenance/x/msgfees"
 	msgfeekeeper "github.com/provenance-io/provenance/x/msgfees/keeper"
 	msgfeesmodule "github.com/provenance-io/provenance/x/msgfees/module"
 	msgbasedfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
-
 	"github.com/provenance-io/provenance/x/name"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 	namewasm "github.com/provenance-io/provenance/x/name/wasm"
 
-	"github.com/provenance-io/provenance/x/metadata"
-	metadatakeeper "github.com/provenance-io/provenance/x/metadata/keeper"
-	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
-	metadatawasm "github.com/provenance-io/provenance/x/metadata/wasm"
-
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-
-	"github.com/provenance-io/provenance/internal/provwasm"
 )
 
 const (

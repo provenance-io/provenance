@@ -26,7 +26,8 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // GenesisState contains a set of msg based fees, persisted from the store
 type GenesisState struct {
 	// params defines all the parameters of the module.
-	Params       Params        `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
+	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
+	// msg_based_fees are the additional fees on specific tx msgs
 	MsgBasedFees []MsgBasedFee `protobuf:"bytes,2,rep,name=msg_based_fees,json=msgBasedFees,proto3" json:"msg_based_fees"`
 }
 

@@ -7,6 +7,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+
 	msgbasedfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
@@ -107,15 +108,13 @@ func (afd MsgBasedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 	return next(ctx, tx, simulate)
 }
 
+// getFeeGranterIfExists checks if fee granter exists and returns account to deduct fees from
 func getFeeGranterIfExists(ctx sdk.Context, feeGranter sdk.AccAddress, afd MsgBasedFeeDecorator, feePayer sdk.AccAddress, deductFeesFrom sdk.AccAddress) (sdk.AccAddress, error) {
-	// if feegranter set deduct fee from feegranter account.
-	// if fee granter check if grant exists.
 	if feeGranter != nil {
 		if afd.feegrantKeeper == nil {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")
 		} else if !feeGranter.Equals(feePayer) {
 			grant, err := afd.feegrantKeeper.GetAllowance(ctx, feeGranter, feePayer)
-
 			if err != nil {
 				return nil, sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
 			}
@@ -179,7 +178,7 @@ func EnsureAccountHasSufficientFeesWithAcctBalanceCheck(gas uint64, feeCoins sdk
 	if err != nil {
 		return err
 	}
-	// Step 3: Check if account has enough to pay all fees.
+
 	if balancePerCoin.IsZero() || !balancePerCoin.IsAnyGTE(feeCoins) {
 		return fmt.Errorf("fee payer account does not have enough balance to pay for %q", feeCoins)
 	}

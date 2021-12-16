@@ -88,7 +88,7 @@ func (m *Params) GetMinGasPrice() uint32 {
 // 2. minimum additional fees(can be of any denom)
 type MsgBasedFee struct {
 	MsgTypeUrl string `protobuf:"bytes,1,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
-	// can pay in any Coin( basically a Denom and Amount, Amount can be zero)
+	// additional_fee can pay in any Coin( basically a Denom and Amount, Amount can be zero)
 	AdditionalFee types.Coin `protobuf:"bytes,2,opt,name=additional_fee,json=additionalFee,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"additional_fee" yaml:"additional_fee"`
 }
 
