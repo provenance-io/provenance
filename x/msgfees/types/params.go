@@ -11,7 +11,8 @@ import (
 const (
 	// DefaultEnableGovernance (true) indicates that governance proposals are allowed for managing additional fees
 	DefaultEnableGovernance = true
-	DefaultMinGasPrice      = 1905
+	// DefaultFloorGasPrice to differentiate between base fee and additional fee when additional fee is in same denom as default base denom i.e nhash
+	DefaultFloorGasPrice    = 1905
 )
 
 var (
@@ -50,7 +51,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 func DefaultParams() Params {
 	return NewParams(
 		DefaultEnableGovernance,
-		DefaultMinGasPrice,
+		DefaultFloorGasPrice,
 	)
 }
 

@@ -67,7 +67,7 @@ func (k Keeper) GetDefaultFeeDenom() string {
 
 // GetMinGasPrice  returns the current minimum gas price used in calculations for charging additional fees
 func (k Keeper) GetMinGasPrice(ctx sdk.Context) (min uint32) {
-	min = types.DefaultMinGasPrice
+	min = types.DefaultFloorGasPrice
 	if k.paramSpace.Has(ctx, types.ParamStoreKeyMinGasPrice) {
 		k.paramSpace.Get(ctx, types.ParamStoreKeyMinGasPrice, &min)
 	}
