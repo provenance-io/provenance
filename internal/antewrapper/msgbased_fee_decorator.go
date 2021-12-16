@@ -65,9 +65,6 @@ func (afd MsgBasedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, err.Error())
 	}
 	if !additionalFees.IsZero() {
-		// mempool fee validation tx
-		// this is because we want to make sure if additional additionalFees in hash then there is enough
-
 		// ensure enough fees to cover mempool fee for base fee + additional fee
 		// This is exact same logic as NewMempoolFeeDecorator except it accounts for additional Fees.
 		if ctx.IsCheckTx() && !simulate {
