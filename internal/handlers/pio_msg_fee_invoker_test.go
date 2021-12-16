@@ -53,11 +53,11 @@ func (suite *HandlerTestSuite) TestMsgFeeHandlerNoFeeCharged() {
 
 func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeCharged() {
 	encodingConfig, err := setUpApp(suite, false, "atom", 100)
-	tx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000), sdk.NewInt64Coin("nhash", 1000000)))
+	testTx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000), sdk.NewInt64Coin("nhash", 1000000)))
 
 	// See comment for Check().
 	txEncoder := encodingConfig.TxConfig.TxEncoder()
-	bz, err := txEncoder(tx)
+	bz, err := txEncoder(testTx)
 	if err != nil {
 		panic(err)
 	}
@@ -97,11 +97,11 @@ func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeCharged() {
 }
 func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeChargedFeeGranter() {
 	encodingConfig, err := setUpApp(suite, false, "atom", 100)
-	tx, _ := createTestTxWithFeeGrant(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000), sdk.NewInt64Coin("nhash", 1000000)))
+	testTxWithFeeGrant, _ := createTestTxWithFeeGrant(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000), sdk.NewInt64Coin("nhash", 1000000)))
 
 	// See comment for Check().
 	txEncoder := encodingConfig.TxConfig.TxEncoder()
-	bz, err := txEncoder(tx)
+	bz, err := txEncoder(testTxWithFeeGrant)
 	if err != nil {
 		panic(err)
 	}
@@ -129,11 +129,11 @@ func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeChargedFeeGranter() {
 
 func (suite *HandlerTestSuite) TestMsgFeeHandlerBadDecoder() {
 	encodingConfig, err := setUpApp(suite, false, "atom", 100)
-	tx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
+	testTx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
 
 	// See comment for Check().
 	txEncoder := encodingConfig.TxConfig.TxEncoder()
-	bz, err := txEncoder(tx)
+	bz, err := txEncoder(testTx)
 	if err != nil {
 		panic(err)
 	}
@@ -188,9 +188,9 @@ func createTestTx(suite *HandlerTestSuite, err error, feeAmount sdk.Coins) (xaut
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
 
-	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	testTx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 	suite.Require().NoError(err)
-	return tx, acct1
+	return testTx, acct1
 }
 
 func createTestTxWithFeeGrant(suite *HandlerTestSuite, err error, feeAmount sdk.Coins) (xauthsigning.Tx, types.AccountI) {
@@ -221,9 +221,9 @@ func createTestTxWithFeeGrant(suite *HandlerTestSuite, err error, feeAmount sdk.
 
 	check(simapp.FundAccount(suite.app, suite.ctx, acct2.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(1000000)))))
 
-	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	testTx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 	suite.Require().NoError(err)
-	return tx, acct1
+	return testTx, acct1
 }
 
 // SetupTest setups a new test, with new app, context, and anteHandler.

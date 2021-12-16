@@ -63,7 +63,12 @@ func (afd MsgBasedFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.
 		}
 		chargedFees = feeGasMeter.FeeConsumed()
 
-		if chargedFees != nil && chargedFees.IsValid() && !chargedFees.IsZero() {
+		// check chargedFees is not nil && is not all zero(IsZero returns true if there are no coins or all coins are zero.)
+		if chargedFees != nil && !chargedFees.IsZero() {
+			// there should not be any negative coins, just to be very sure here
+			if chargedFees.IsAnyNegative() {
+				return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "charged fees %v are negative, which should not be possible, aborting", chargedFees)
+			}
 			// eat up the gas cost for charging fees. (This one is on us, Cheers!, mainly because we don't want to fail at this step, imo, but we can remove this is f necessary)
 			ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
 			// if feegranter set deduct fee from feegranter account.
