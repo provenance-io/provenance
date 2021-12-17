@@ -86,7 +86,7 @@ func (afd MsgBasedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 
 		deductFeesFromAcc := afd.accountKeeper.GetAccount(ctx, deductFeesFrom)
 		if deductFeesFromAcc == nil {
-			err = sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", deductFeesFrom)
+			err = sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %q does not exist", deductFeesFrom)
 			if err != nil {
 				return ctx, err
 			}
@@ -116,10 +116,10 @@ func getFeeGranterIfExists(ctx sdk.Context, feeGranter sdk.AccAddress, afd MsgBa
 		} else if !feeGranter.Equals(feePayer) {
 			grant, err := afd.feegrantKeeper.GetAllowance(ctx, feeGranter, feePayer)
 			if err != nil {
-				return nil, sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
+				return nil, sdkerrors.Wrapf(err, "%q not allowed to pay fees from %q", feeGranter, feePayer)
 			}
 			if grant == nil {
-				return nil, sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
+				return nil, sdkerrors.Wrapf(err, "%q not allowed to pay fees from %q", feeGranter, feePayer)
 			}
 		}
 
