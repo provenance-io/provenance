@@ -3,7 +3,9 @@ package keeper_test
 import (
 	"bytes"
 	"fmt"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"math/rand"
+	"sort"
 	"strings"
 	"testing"
 
@@ -19,8 +21,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 type MigrationsTestSuite struct {
@@ -30,10 +30,44 @@ type MigrationsTestSuite struct {
 	ctx   sdk.Context
 	store sdk.KVStore
 
-	prefixes           namedIndexList
+	newPrefixes        namedIndexList
 	unaffectedPrefixes namedIndexList
 	oldPrefixes        namedIndexList
 	allPrefixes        namedIndexList
+}
+
+func (s *MigrationsTestSuite) SetupTest() {
+	s.app = simapp.Setup(false)
+	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.store = s.ctx.KVStore(s.app.GetKey(types.ModuleName))
+
+	s.newPrefixes = namedIndexList{
+		{"Address Scope", types.AddressScopeCacheKeyPrefix},
+		{"Value Owner Scope", types.ValueOwnerScopeCacheKeyPrefix},
+		{"Address Scope Spec", types.AddressScopeSpecCacheKeyPrefix},
+		{"Address Contract Spec", types.AddressContractSpecCacheKeyPrefix},
+	}
+
+	s.unaffectedPrefixes = namedIndexList{
+		{"Scope Spec Scope", types.ScopeSpecScopeCacheKeyPrefix},
+		{"Contract Spec Scope Spec", types.ContractSpecScopeSpecCacheKeyPrefix},
+	}
+
+	s.oldPrefixes = namedIndexList{
+		{"Legacy Address Scope", v042.AddressScopeCacheKeyPrefixLegacy},
+		{"Legacy Value Owner Scope", v042.ValueOwnerScopeCacheKeyPrefixLegacy},
+		{"Legacy Address ScopeSpec", v042.AddressScopeSpecCacheKeyPrefixLegacy},
+		{"Legacy Address Contract Spec", v042.AddressContractSpecCacheKeyPrefixLegacy},
+	}
+
+	s.allPrefixes = namedIndexList{}
+	s.allPrefixes = append(s.allPrefixes, s.newPrefixes...)
+	s.allPrefixes = append(s.allPrefixes, s.unaffectedPrefixes...)
+	s.allPrefixes = append(s.allPrefixes, s.oldPrefixes...)
+}
+
+func TestMigrationsTestSuite(t *testing.T) {
+	suite.Run(t, new(MigrationsTestSuite))
 }
 
 type namedIndexList []namedIndex
@@ -56,38 +90,28 @@ func (n namedIndex) String() string {
 	return fmt.Sprintf("%s: %X", n.name, n.key)
 }
 
-func (s *MigrationsTestSuite) SetupTest() {
-	s.app = simapp.Setup(false)
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
-	s.store = s.ctx.KVStore(s.app.GetKey(types.ModuleName))
-
-	s.prefixes = namedIndexList{
-		{"Address Scope", types.AddressScopeCacheKeyPrefix},
-		{"Value Owner Scope", types.ValueOwnerScopeCacheKeyPrefix},
-		{"Address Scope Spec", types.AddressScopeSpecCacheKeyPrefix},
-		{"Address Contract Spec", types.AddressContractSpecCacheKeyPrefix},
+func (s *MigrationsTestSuite) newNamedIndex(name string, key []byte) namedIndex {
+	for _, pre := range s.allPrefixes {
+		if bytes.HasPrefix(key, pre.key) {
+			if len(name) > 0 {
+				return namedIndex{pre.name + ": " + name, key}
+			}
+			return namedIndex{pre.name, key}
+		}
 	}
-
-	s.unaffectedPrefixes = namedIndexList{
-		{"Scope Spec Scope", types.ScopeSpecScopeCacheKeyPrefix},
-		{"Contract Spec Scope Spec", types.ContractSpecScopeSpecCacheKeyPrefix},
-	}
-
-	s.oldPrefixes = namedIndexList{
-		{"Legacy Address Scope", v042.AddressScopeCacheKeyPrefixLegacy},
-		{"Legacy Value Owner Scope", v042.ValueOwnerScopeCacheKeyPrefixLegacy},
-		{"Legacy Address ScopeSpec", v042.AddressScopeSpecCacheKeyPrefixLegacy},
-		{"Legacy Address Contract Spec", v042.AddressContractSpecCacheKeyPrefixLegacy},
-	}
-
-	s.allPrefixes = namedIndexList{}
-	s.allPrefixes = append(s.allPrefixes, s.prefixes...)
-	s.allPrefixes = append(s.allPrefixes, s.unaffectedPrefixes...)
-	s.allPrefixes = append(s.allPrefixes, s.oldPrefixes...)
+	return namedIndex{name, key}
 }
 
-func TestMigrationsTestSuite(t *testing.T) {
-	suite.Run(t, new(MigrationsTestSuite))
+// namedIndexListSorter implements sort.Interface for namedIndexListSorter based on the key.
+type namedIndexListSorter namedIndexList
+
+func (l namedIndexListSorter) Len() int      { return len(l) }
+func (l namedIndexListSorter) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
+func (l namedIndexListSorter) Less(i, j int) bool {
+	if len(l[i].key) < 4 || len(l[j].key) < 4 {
+		return bytes.Compare(l[i].key, l[j].key) < 0
+	}
+	return bytes.Compare(l[i].key[2:], l[j].key[2:]) < 0
 }
 
 func randomByteSlice(length int) []byte {
@@ -103,12 +127,12 @@ func randomByteSlice(length int) []byte {
 // and this is a little nicer for these unit test. I want to use this tests list of prefixes too.
 // If t is nil, s.T() is used when a *testing.T is needed.
 // Returns true if all assertions passed, false otherwise.
-func (s *MigrationsTestSuite) assertDeleteAllIndexes(t *testing.T) bool {
+func (s *MigrationsTestSuite) assertDeleteAllIndexes(t *testing.T, prefixes namedIndexList) bool {
 	if t == nil {
 		t = s.T()
 	}
 	allPassed := true
-	for _, pre := range s.prefixes {
+	for _, pre := range prefixes {
 		// Using assert here (instead of require) so it's easier to later decide if a test should continue.
 		if !assert.NoError(t, clearStore(prefix.NewStore(s.store, pre.key)), "clearing %s indexes", pre.name) {
 			allPassed = false
@@ -119,8 +143,8 @@ func (s *MigrationsTestSuite) assertDeleteAllIndexes(t *testing.T) bool {
 
 // requireDeleteAllIndexes is the same as assertDeleteAllIndexes but ends the test if an error occurs.
 // If t is nil, s.T() is used when a *testing.T is needed.
-func (s *MigrationsTestSuite) requireDeleteAllIndexes(t *testing.T) {
-	if !(s.assertDeleteAllIndexes(t)) {
+func (s *MigrationsTestSuite) requireDeleteAllIndexes(t *testing.T, prefixes namedIndexList) {
+	if !(s.assertDeleteAllIndexes(t, prefixes)) {
 		if t != nil {
 			t.FailNow()
 		} else {
@@ -142,44 +166,55 @@ func clearStore(store sdk.KVStore) (err error) {
 	return nil
 }
 
+// assertExactIndexList makes sure that the provided set of indexes is equal to the set of all indexes in the store.
 func (s *MigrationsTestSuite) assertExactIndexList(t *testing.T, indexes namedIndexList) bool {
 	if t == nil {
 		t = s.T()
 	}
 	// Make sure all the provided entries exist.
-	allFound := true
+	found := namedIndexList{}
+	missing := namedIndexList{}
 	for _, index := range indexes {
-		if !assert.True(t, s.store.Has(index.key), "entry exists for %s", index.name) {
-			allFound = false
+		if !s.store.Has(index.key) {
+			missing = append(missing, index)
+		} else {
+			found = append(found, index)
 		}
 	}
-	// Make sure there aren't any entries other than those.
-	allKnown := true
+	unknown := namedIndexList{}
 	for _, pre := range s.allPrefixes {
-		unknown := s.findUnknownWithPrefix(pre.key, indexes)
-		if !assert.Len(t, unknown, 0, "unknown entries for %s", pre.name) {
-			allKnown = false
+		for _, key := range s.getAllStoreKeys(pre.key) {
+			if !keyInList(key, indexes) {
+				unknown = append(unknown, namedIndex{pre.name, key})
+			}
 		}
+	}
+	allFound := assert.Len(t, missing, 0, "missing entries")
+	if !allFound {
+		fmt.Printf("found entries (%d):\n%s\n", len(found), found)
+	}
+	allKnown := assert.Len(t, unknown, 0, "unexpected entries")
+	if !allKnown {
+		fmt.Printf("expected entries (%d):\n%s\n", len(indexes), indexes)
 	}
 	return allFound && allKnown
 }
 
-func (s *MigrationsTestSuite) findUnknownWithPrefix(pre []byte, indexes namedIndexList) []string {
-	rv := []string{}
+func (s *MigrationsTestSuite) getAllStoreKeys(pre []byte) [][]byte {
+	rv := [][]byte{}
 	pStore := prefix.NewStore(s.store, pre)
 	iter := pStore.Iterator(nil, nil)
+	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		fullKey := make([]byte, len(pre)+len(iter.Key()))
 		copy(fullKey, pre)
 		copy(fullKey[len(pre):], iter.Key())
-		if !isKnownIndex(fullKey, indexes) {
-			rv = append(rv, fmt.Sprintf("%X", fullKey))
-		}
+		rv = append(rv, fullKey)
 	}
 	return rv
 }
 
-func isKnownIndex(key []byte, indexes namedIndexList) bool {
+func keyInList(key []byte, indexes namedIndexList) bool {
 	for _, index := range indexes {
 		if bytes.Equal(key, index.key) {
 			return true
@@ -239,7 +274,7 @@ func (s *MigrationsTestSuite) Test2To3() {
 			return rv
 		}
 		indexes := namedIndexList{}
-		for _, pre := range s.prefixes {
+		for _, pre := range s.newPrefixes {
 			indexes = append(indexes, makeIndexes(pre.name, pre.key)...)
 		}
 		keptIndexes := namedIndexList{}
@@ -299,17 +334,17 @@ func (s *MigrationsTestSuite) Test2To3() {
 		}
 
 		indexes := namedIndexList{
-			{"scope1 owner1 address", types.GetAddressScopeCacheKey(owner1.Addr, scope1.ScopeId)},
-			{"scope1 ownerCommon address", types.GetAddressScopeCacheKey(ownerCommon.Addr, scope1.ScopeId)},
-			{"scope1 valueOwner1 address", types.GetAddressScopeCacheKey(valueOwner1.Addr, scope1.ScopeId)},
-			{"scope1 value owner", types.GetValueOwnerScopeCacheKey(valueOwner1.Addr, scope1.ScopeId)},
-			{"scope1 scope spec", types.GetScopeSpecScopeCacheKey(scope1.SpecificationId, scope1.ScopeId)},
+			s.newNamedIndex("scope1 owner1", types.GetAddressScopeCacheKey(owner1.Addr, scope1.ScopeId)),
+			s.newNamedIndex("scope1 ownerCommon", types.GetAddressScopeCacheKey(ownerCommon.Addr, scope1.ScopeId)),
+			s.newNamedIndex("scope1 valueOwner1", types.GetAddressScopeCacheKey(valueOwner1.Addr, scope1.ScopeId)),
+			s.newNamedIndex("scope1 valueOwner1", types.GetValueOwnerScopeCacheKey(valueOwner1.Addr, scope1.ScopeId)),
+			s.newNamedIndex("scope1", types.GetScopeSpecScopeCacheKey(scope1.SpecificationId, scope1.ScopeId)),
 
-			{"scope2 owner2 address", types.GetAddressScopeCacheKey(owner2.Addr, scope2.ScopeId)},
-			{"scope2 ownerCommon address", types.GetAddressScopeCacheKey(ownerCommon.Addr, scope2.ScopeId)},
-			{"scope2 valueOwner2 address", types.GetAddressScopeCacheKey(valueOwner2.Addr, scope2.ScopeId)},
-			{"scope2 value owner", types.GetValueOwnerScopeCacheKey(valueOwner2.Addr, scope2.ScopeId)},
-			{"scope2 scope spec", types.GetScopeSpecScopeCacheKey(scope2.SpecificationId, scope2.ScopeId)},
+			s.newNamedIndex("scope2 owner2", types.GetAddressScopeCacheKey(owner2.Addr, scope2.ScopeId)),
+			s.newNamedIndex("scope2 ownerCommon", types.GetAddressScopeCacheKey(ownerCommon.Addr, scope2.ScopeId)),
+			s.newNamedIndex("scope2 valueOwner2", types.GetAddressScopeCacheKey(valueOwner2.Addr, scope2.ScopeId)),
+			s.newNamedIndex("scope2 valueOwner2", types.GetValueOwnerScopeCacheKey(valueOwner2.Addr, scope2.ScopeId)),
+			s.newNamedIndex("scope2", types.GetScopeSpecScopeCacheKey(scope2.SpecificationId, scope2.ScopeId)),
 		}
 
 		// Set the scopes.
@@ -321,7 +356,7 @@ func (s *MigrationsTestSuite) Test2To3() {
 		}()
 
 		// Delete any indexes added for them.
-		s.requireDeleteAllIndexes(t)
+		s.requireDeleteAllIndexes(t, s.newPrefixes)
 		// Run the migration
 		migrator := keeper.NewMigrator(s.app.MetadataKeeper)
 		require.NoError(t, migrator.Migrate2to3(s.ctx), "running migration")
@@ -353,15 +388,15 @@ func (s *MigrationsTestSuite) Test2To3() {
 		}
 
 		indexes := namedIndexList{
-			{"scopeSpec1 owner1 address", types.GetAddressScopeSpecCacheKey(owner1.Addr, scopeSpec1.SpecificationId)},
-			{"scopeSpec1 ownerCommon address", types.GetAddressScopeSpecCacheKey(ownerCommon.Addr, scopeSpec1.SpecificationId)},
-			{"scopeSpec1 cSpec1 address", types.GetContractSpecScopeSpecCacheKey(cSpec1ID, scopeSpec1.SpecificationId)},
-			{"scopeSpec1 cSpecCommon address", types.GetContractSpecScopeSpecCacheKey(cSpecCommonID, scopeSpec1.SpecificationId)},
+			s.newNamedIndex("scopeSpec1 owner1", types.GetAddressScopeSpecCacheKey(owner1.Addr, scopeSpec1.SpecificationId)),
+			s.newNamedIndex("scopeSpec1 ownerCommon", types.GetAddressScopeSpecCacheKey(ownerCommon.Addr, scopeSpec1.SpecificationId)),
+			s.newNamedIndex("scopeSpec1 cSpec1", types.GetContractSpecScopeSpecCacheKey(cSpec1ID, scopeSpec1.SpecificationId)),
+			s.newNamedIndex("scopeSpec1 cSpecCommon", types.GetContractSpecScopeSpecCacheKey(cSpecCommonID, scopeSpec1.SpecificationId)),
 
-			{"scopeSpec2 owner2 address", types.GetAddressScopeSpecCacheKey(owner2.Addr, scopeSpec2.SpecificationId)},
-			{"scopeSpec2 ownerCommon address", types.GetAddressScopeSpecCacheKey(ownerCommon.Addr, scopeSpec2.SpecificationId)},
-			{"scopeSpec2 cSpec2 address", types.GetContractSpecScopeSpecCacheKey(cSpec2ID, scopeSpec2.SpecificationId)},
-			{"scopeSpec2 cSpecCommon address", types.GetContractSpecScopeSpecCacheKey(cSpecCommonID, scopeSpec2.SpecificationId)},
+			s.newNamedIndex("scopeSpec2 owner2", types.GetAddressScopeSpecCacheKey(owner2.Addr, scopeSpec2.SpecificationId)),
+			s.newNamedIndex("scopeSpec2 ownerCommon", types.GetAddressScopeSpecCacheKey(ownerCommon.Addr, scopeSpec2.SpecificationId)),
+			s.newNamedIndex("scopeSpec2 cSpec2", types.GetContractSpecScopeSpecCacheKey(cSpec2ID, scopeSpec2.SpecificationId)),
+			s.newNamedIndex("scopeSpec2 cSpecCommon", types.GetContractSpecScopeSpecCacheKey(cSpecCommonID, scopeSpec2.SpecificationId)),
 		}
 
 		// Set the scopes specs.
@@ -373,7 +408,7 @@ func (s *MigrationsTestSuite) Test2To3() {
 		}()
 
 		// Delete any indexes added for them.
-		s.requireDeleteAllIndexes(t)
+		s.requireDeleteAllIndexes(t, s.newPrefixes)
 		// Run the migration
 		migrator := keeper.NewMigrator(s.app.MetadataKeeper)
 		require.NoError(t, migrator.Migrate2to3(s.ctx), "running migration")
@@ -404,11 +439,11 @@ func (s *MigrationsTestSuite) Test2To3() {
 		}
 
 		indexes := namedIndexList{
-			{"cSpec1 owner1 address", types.GetAddressContractSpecCacheKey(owner1.Addr, cSpec1.SpecificationId)},
-			{"cSpec1 ownerCommon address", types.GetAddressContractSpecCacheKey(ownerCommon.Addr, cSpec1.SpecificationId)},
+			s.newNamedIndex("cSpec1 owner1", types.GetAddressContractSpecCacheKey(owner1.Addr, cSpec1.SpecificationId)),
+			s.newNamedIndex("cSpec1 ownerCommon", types.GetAddressContractSpecCacheKey(ownerCommon.Addr, cSpec1.SpecificationId)),
 
-			{"cSpec2 owner2 address", types.GetAddressContractSpecCacheKey(owner2.Addr, cSpec2.SpecificationId)},
-			{"cSpec2 ownerCommon address", types.GetAddressContractSpecCacheKey(ownerCommon.Addr, cSpec2.SpecificationId)},
+			s.newNamedIndex("cSpec2 owner2", types.GetAddressContractSpecCacheKey(owner2.Addr, cSpec2.SpecificationId)),
+			s.newNamedIndex("cSpec2 ownerCommon", types.GetAddressContractSpecCacheKey(ownerCommon.Addr, cSpec2.SpecificationId)),
 		}
 
 		// Set the contract specs.
@@ -420,7 +455,7 @@ func (s *MigrationsTestSuite) Test2To3() {
 		}()
 
 		// Delete any indexes added for them.
-		s.requireDeleteAllIndexes(t)
+		s.requireDeleteAllIndexes(t, s.newPrefixes)
 		// Run the migration
 		migrator := keeper.NewMigrator(s.app.MetadataKeeper)
 		require.NoError(t, migrator.Migrate2to3(s.ctx), "running migration")
@@ -428,11 +463,11 @@ func (s *MigrationsTestSuite) Test2To3() {
 		// Make sure the indexes are as expected.
 		s.assertExactIndexList(t, indexes)
 	})
-	
+
 	s.T().Run("good bad new full run all fixed", func(t *testing.T) {
 		// This test mimics a state where there are three metadata entries of each type affected by the v1 to v2 migration.
-		// 1) A "good" entry that was migrated, and has been written since the v1 to v2 migration (so it is correctly indexed).
-		// 2) A "bad" entry that was migrated, but has NOT been written since the v1 to v2 migration.
+		// 1) A "good" entry that was migrated from V1 to V2, and has been written since then (so it is correctly indexed).
+		// 2) A "bad" entry that was migrated from V1 to V2, but has NOT been written since then.
 		// 3) A "new" entry that was written after the v1 to v2 migration (also correctly indexed).
 
 		ownerGood := randomUser()
@@ -509,46 +544,16 @@ func (s *MigrationsTestSuite) Test2To3() {
 			ContractSpecIds: []types.MetadataAddress{cSpecNew.SpecificationId},
 		}
 
-		// Enumerate all the keys that should exist for the metadata things above.
-		expectedIndexes := namedIndexList{
-			{"scopeGood ownerGood address", types.GetAddressScopeCacheKey(ownerGood.Addr, scopeGood.ScopeId)},
-			{"scopeGood ownerCommon address", types.GetAddressScopeCacheKey(ownerCommon.Addr, scopeGood.ScopeId)},
-			{"scopeGood valueOwnerGood address", types.GetAddressScopeCacheKey(valueOwnerGood.Addr, scopeGood.ScopeId)},
-			{"scopeGood value owner", types.GetValueOwnerScopeCacheKey(valueOwnerGood.Addr, scopeGood.ScopeId)},
-			{"scopeGood scope spec", types.GetScopeSpecScopeCacheKey(scopeGood.SpecificationId, scopeGood.ScopeId)},
-
-			{"scopeBad ownerBad address", types.GetAddressScopeCacheKey(ownerBad.Addr, scopeBad.ScopeId)},
-			{"scopeBad ownerCommon address", types.GetAddressScopeCacheKey(ownerCommon.Addr, scopeBad.ScopeId)},
-			{"scopeBad valueOwnerBad address", types.GetAddressScopeCacheKey(valueOwnerBad.Addr, scopeBad.ScopeId)},
-			{"scopeBad value owner", types.GetValueOwnerScopeCacheKey(valueOwnerBad.Addr, scopeBad.ScopeId)},
-			{"scopeBad scope spec", types.GetScopeSpecScopeCacheKey(scopeBad.SpecificationId, scopeBad.ScopeId)},
-
-			{"scopeNew ownerNew address", types.GetAddressScopeCacheKey(ownerNew.Addr, scopeNew.ScopeId)},
-			{"scopeNew ownerCommon address", types.GetAddressScopeCacheKey(ownerCommon.Addr, scopeNew.ScopeId)},
-			{"scopeNew valueOwnerNew address", types.GetAddressScopeCacheKey(valueOwnerNew.Addr, scopeNew.ScopeId)},
-			{"scopeNew value owner", types.GetValueOwnerScopeCacheKey(valueOwnerNew.Addr, scopeNew.ScopeId)},
-			{"scopeNew scope spec", types.GetScopeSpecScopeCacheKey(scopeNew.SpecificationId, scopeNew.ScopeId)},
-
-			{"cSpecGood ownerGood address", types.GetAddressContractSpecCacheKey(ownerGood.Addr, cSpecGood.SpecificationId)},
-			{"cSpecGood ownerCommon address", types.GetAddressContractSpecCacheKey(ownerCommon.Addr, cSpecGood.SpecificationId)},
-
-			{"cSpecBad ownerBad address", types.GetAddressContractSpecCacheKey(ownerBad.Addr, cSpecBad.SpecificationId)},
-			{"cSpecBad ownerCommon address", types.GetAddressContractSpecCacheKey(ownerCommon.Addr, cSpecBad.SpecificationId)},
-
-			{"cSpecNew ownerNew address", types.GetAddressContractSpecCacheKey(ownerNew.Addr, cSpecNew.SpecificationId)},
-			{"cSpecNew ownerCommon address", types.GetAddressContractSpecCacheKey(ownerCommon.Addr, cSpecNew.SpecificationId)},
-
-			{"scopeSpecGood ownerGood address", types.GetAddressScopeSpecCacheKey(ownerGood.Addr, scopeSpecGood.SpecificationId)},
-			{"scopeSpecGood ownerCommon address", types.GetAddressScopeSpecCacheKey(ownerCommon.Addr, scopeSpecGood.SpecificationId)},
-			{"scopeSpecGood cSpecGood address", types.GetContractSpecScopeSpecCacheKey(cSpecGood.SpecificationId, scopeSpecGood.SpecificationId)},
-
-			{"scopeSpecBad ownerBad address", types.GetAddressScopeSpecCacheKey(ownerBad.Addr, scopeSpecBad.SpecificationId)},
-			{"scopeSpecBad ownerCommon address", types.GetAddressScopeSpecCacheKey(ownerCommon.Addr, scopeSpecBad.SpecificationId)},
-			{"scopeSpecBad cSpecBad address", types.GetContractSpecScopeSpecCacheKey(cSpecBad.SpecificationId, scopeSpecBad.SpecificationId)},
-
-			{"scopeSpecNew ownerNew address", types.GetAddressScopeSpecCacheKey(ownerNew.Addr, scopeSpecNew.SpecificationId)},
-			{"scopeSpecNew ownerCommon address", types.GetAddressScopeSpecCacheKey(ownerCommon.Addr, scopeSpecNew.SpecificationId)},
-			{"scopeSpecNew cSpecNew address", types.GetContractSpecScopeSpecCacheKey(cSpecNew.SpecificationId, scopeSpecNew.SpecificationId)},
+		// getAllIndexes gets all the index keys from the store.
+		getAllIndexes := func() namedIndexList {
+			rv := namedIndexList{}
+			for _, pre := range s.allPrefixes {
+				for _, key := range s.getAllStoreKeys(pre.key) {
+					rv = append(rv, namedIndex{pre.name + ": pre", key})
+				}
+			}
+			sort.Sort(namedIndexListSorter(rv))
+			return rv
 		}
 
 		// concatBz creates a new []byte containing the bytes in the three things provided.
@@ -560,51 +565,173 @@ func (s *MigrationsTestSuite) Test2To3() {
 			return rv
 		}
 
-		// Create a list of indexes that should have existed prior to the v1 to v2 migration.
+		// toBadIndex replicates what was done to the keys in the first migration.
+		toBadIndex := func(oldKey []byte, indexer func(addr sdk.AccAddress) []byte) []byte {
+			iterKey := oldKey[1:]
+			legacyAddress := sdk.AccAddress(iterKey[1:21])
+			newStoreKey := indexer(legacyAddress)
+			metaaddress := iterKey[21:]
+			return append(newStoreKey, metaaddress...)
+		}
+
+		// badAddrScopeInd creates the bad version of the address -> scope index keys.
+		badAddrScopeInd := func(accAddr sdk.AccAddress, mdAddr types.MetadataAddress) []byte {
+			return toBadIndex(
+				concatBz(v042.AddressScopeCacheKeyPrefixLegacy, accAddr, mdAddr),
+				types.GetAddressScopeCacheIteratorPrefix)
+		}
+		// badVOScopeInd creates the bad version of the value owner -> scope index keys.
+		badVOScopeInd := func(accAddr sdk.AccAddress, mdAddr types.MetadataAddress) []byte {
+			return toBadIndex(
+				concatBz(v042.ValueOwnerScopeCacheKeyPrefixLegacy, accAddr, mdAddr),
+				types.GetValueOwnerScopeCacheIteratorPrefix)
+		}
+		// badAddrCSpecInd creates the bad version of the address -> contract spec index keys.
+		badAddrCSpecInd := func(accAddr sdk.AccAddress, mdAddr types.MetadataAddress) []byte {
+			return toBadIndex(
+				concatBz(v042.AddressContractSpecCacheKeyPrefixLegacy, accAddr, mdAddr),
+				types.GetAddressContractSpecCacheIteratorPrefix)
+		}
+		// badAddrScopeSpecInd creates the bad version of the address -> scope spec index keys.
+		badAddrScopeSpecInd := func(accAddr sdk.AccAddress, mdAddr types.MetadataAddress) []byte {
+			return toBadIndex(
+				concatBz(v042.AddressScopeSpecCacheKeyPrefixLegacy, accAddr, mdAddr),
+				types.GetAddressScopeSpecCacheIteratorPrefix)
+		}
+
+		// expectedIndexes is all the keys that should exist for the metadata things above after the migration to V3.
+		expectedIndexes := namedIndexList{
+			s.newNamedIndex("scopeGood ownerGood", types.GetAddressScopeCacheKey(ownerGood.Addr, scopeGood.ScopeId)),
+			s.newNamedIndex("scopeGood ownerCommon", types.GetAddressScopeCacheKey(ownerCommon.Addr, scopeGood.ScopeId)),
+			s.newNamedIndex("scopeGood valueOwnerGood", types.GetAddressScopeCacheKey(valueOwnerGood.Addr, scopeGood.ScopeId)),
+			s.newNamedIndex("scopeGood valueOwnerGood", types.GetValueOwnerScopeCacheKey(valueOwnerGood.Addr, scopeGood.ScopeId)),
+			s.newNamedIndex("scopeGood", types.GetScopeSpecScopeCacheKey(scopeGood.SpecificationId, scopeGood.ScopeId)),
+
+			s.newNamedIndex("scopeBad ownerBad", types.GetAddressScopeCacheKey(ownerBad.Addr, scopeBad.ScopeId)),
+			s.newNamedIndex("scopeBad ownerCommon", types.GetAddressScopeCacheKey(ownerCommon.Addr, scopeBad.ScopeId)),
+			s.newNamedIndex("scopeBad valueOwnerBad", types.GetAddressScopeCacheKey(valueOwnerBad.Addr, scopeBad.ScopeId)),
+			s.newNamedIndex("scopeBad valueOwnerBad", types.GetValueOwnerScopeCacheKey(valueOwnerBad.Addr, scopeBad.ScopeId)),
+			s.newNamedIndex("scopeBad", types.GetScopeSpecScopeCacheKey(scopeBad.SpecificationId, scopeBad.ScopeId)),
+
+			s.newNamedIndex("scopeNew ownerNew", types.GetAddressScopeCacheKey(ownerNew.Addr, scopeNew.ScopeId)),
+			s.newNamedIndex("scopeNew ownerCommon", types.GetAddressScopeCacheKey(ownerCommon.Addr, scopeNew.ScopeId)),
+			s.newNamedIndex("scopeNew valueOwnerNew", types.GetAddressScopeCacheKey(valueOwnerNew.Addr, scopeNew.ScopeId)),
+			s.newNamedIndex("scopeNew valueOwnerNew", types.GetValueOwnerScopeCacheKey(valueOwnerNew.Addr, scopeNew.ScopeId)),
+			s.newNamedIndex("scopeNew", types.GetScopeSpecScopeCacheKey(scopeNew.SpecificationId, scopeNew.ScopeId)),
+
+			s.newNamedIndex("cSpecGood ownerGood", types.GetAddressContractSpecCacheKey(ownerGood.Addr, cSpecGood.SpecificationId)),
+			s.newNamedIndex("cSpecGood ownerCommon", types.GetAddressContractSpecCacheKey(ownerCommon.Addr, cSpecGood.SpecificationId)),
+
+			s.newNamedIndex("cSpecBad ownerBad", types.GetAddressContractSpecCacheKey(ownerBad.Addr, cSpecBad.SpecificationId)),
+			s.newNamedIndex("cSpecBad ownerCommon", types.GetAddressContractSpecCacheKey(ownerCommon.Addr, cSpecBad.SpecificationId)),
+
+			s.newNamedIndex("cSpecNew ownerNew", types.GetAddressContractSpecCacheKey(ownerNew.Addr, cSpecNew.SpecificationId)),
+			s.newNamedIndex("cSpecNew ownerCommon", types.GetAddressContractSpecCacheKey(ownerCommon.Addr, cSpecNew.SpecificationId)),
+
+			s.newNamedIndex("scopeSpecGood ownerGood", types.GetAddressScopeSpecCacheKey(ownerGood.Addr, scopeSpecGood.SpecificationId)),
+			s.newNamedIndex("scopeSpecGood ownerCommon", types.GetAddressScopeSpecCacheKey(ownerCommon.Addr, scopeSpecGood.SpecificationId)),
+			s.newNamedIndex("scopeSpecGood cSpecGood", types.GetContractSpecScopeSpecCacheKey(cSpecGood.SpecificationId, scopeSpecGood.SpecificationId)),
+
+			s.newNamedIndex("scopeSpecBad ownerBad", types.GetAddressScopeSpecCacheKey(ownerBad.Addr, scopeSpecBad.SpecificationId)),
+			s.newNamedIndex("scopeSpecBad ownerCommon", types.GetAddressScopeSpecCacheKey(ownerCommon.Addr, scopeSpecBad.SpecificationId)),
+			s.newNamedIndex("scopeSpecBad cSpecBad", types.GetContractSpecScopeSpecCacheKey(cSpecBad.SpecificationId, scopeSpecBad.SpecificationId)),
+
+			s.newNamedIndex("scopeSpecNew ownerNew", types.GetAddressScopeSpecCacheKey(ownerNew.Addr, scopeSpecNew.SpecificationId)),
+			s.newNamedIndex("scopeSpecNew ownerCommon", types.GetAddressScopeSpecCacheKey(ownerCommon.Addr, scopeSpecNew.SpecificationId)),
+			s.newNamedIndex("scopeSpecNew cSpecNew", types.GetContractSpecScopeSpecCacheKey(cSpecNew.SpecificationId, scopeSpecNew.SpecificationId)),
+		}
+
+		// preExistingIndexes is all the keys that need to exist prior to the v1 to v2 migration.
 		preExistingIndexes := namedIndexList{
-			{"pre-existing scopeGood ownerGood address", concatBz(v042.AddressScopeCacheKeyPrefixLegacy, ownerGood.Addr, scopeGood.ScopeId)},
-			{"pre-existing scopeGood ownerCommon address", concatBz(v042.AddressScopeCacheKeyPrefixLegacy, ownerCommon.Addr, scopeGood.ScopeId)},
-			{"pre-existing scopeGood valueOwnerGood address", concatBz(v042.AddressScopeCacheKeyPrefixLegacy, valueOwnerGood.Addr, scopeGood.ScopeId)},
-			{"pre-existing scopeGood value owner", concatBz(v042.ValueOwnerScopeCacheKeyPrefixLegacy, valueOwnerGood.Addr, scopeGood.ScopeId)},
-			{"pre-existing scopeGood scope spec", types.GetScopeSpecScopeCacheKey(scopeGood.SpecificationId, scopeGood.ScopeId)},
+			s.newNamedIndex("pe scopeGood ownerGood", concatBz(v042.AddressScopeCacheKeyPrefixLegacy, ownerGood.Addr, scopeGood.ScopeId)),
+			s.newNamedIndex("pe scopeGood ownerCommon", concatBz(v042.AddressScopeCacheKeyPrefixLegacy, ownerCommon.Addr, scopeGood.ScopeId)),
+			s.newNamedIndex("pe scopeGood valueOwnerGood", concatBz(v042.AddressScopeCacheKeyPrefixLegacy, valueOwnerGood.Addr, scopeGood.ScopeId)),
+			s.newNamedIndex("pe scopeGood valueOwnerGood", concatBz(v042.ValueOwnerScopeCacheKeyPrefixLegacy, valueOwnerGood.Addr, scopeGood.ScopeId)),
+			s.newNamedIndex("pe scopeGood", types.GetScopeSpecScopeCacheKey(scopeGood.SpecificationId, scopeGood.ScopeId)),
 
-			{"pre-existing scopeBad ownerBad address", concatBz(v042.AddressScopeCacheKeyPrefixLegacy, ownerBad.Addr, scopeBad.ScopeId)},
-			{"pre-existing scopeBad ownerCommon address", concatBz(v042.AddressScopeCacheKeyPrefixLegacy, ownerCommon.Addr, scopeBad.ScopeId)},
-			{"pre-existing scopeBad valueOwnerBad address", concatBz(v042.AddressScopeCacheKeyPrefixLegacy, valueOwnerBad.Addr, scopeBad.ScopeId)},
-			{"pre-existing scopeBad value owner", concatBz(v042.ValueOwnerScopeCacheKeyPrefixLegacy, valueOwnerBad.Addr, scopeBad.ScopeId)},
-			{"pre-existing scopeBad scope spec", types.GetScopeSpecScopeCacheKey(scopeBad.SpecificationId, scopeBad.ScopeId)},
+			s.newNamedIndex("pe scopeBad ownerBad", concatBz(v042.AddressScopeCacheKeyPrefixLegacy, ownerBad.Addr, scopeBad.ScopeId)),
+			s.newNamedIndex("pe scopeBad ownerCommon", concatBz(v042.AddressScopeCacheKeyPrefixLegacy, ownerCommon.Addr, scopeBad.ScopeId)),
+			s.newNamedIndex("pe scopeBad valueOwnerBad", concatBz(v042.AddressScopeCacheKeyPrefixLegacy, valueOwnerBad.Addr, scopeBad.ScopeId)),
+			s.newNamedIndex("pe scopeBad valueOwnerBad", concatBz(v042.ValueOwnerScopeCacheKeyPrefixLegacy, valueOwnerBad.Addr, scopeBad.ScopeId)),
+			s.newNamedIndex("pe scopeBad", types.GetScopeSpecScopeCacheKey(scopeBad.SpecificationId, scopeBad.ScopeId)),
 
-			{"pre-existing cSpecGood ownerGood address", concatBz(v042.AddressContractSpecCacheKeyPrefixLegacy, ownerGood.Addr, cSpecGood.SpecificationId)},
-			{"pre-existing cSpecGood ownerCommon address", concatBz(v042.AddressContractSpecCacheKeyPrefixLegacy, ownerCommon.Addr, cSpecGood.SpecificationId)},
+			s.newNamedIndex("pe cSpecGood ownerGood", concatBz(v042.AddressContractSpecCacheKeyPrefixLegacy, ownerGood.Addr, cSpecGood.SpecificationId)),
+			s.newNamedIndex("pe cSpecGood ownerCommon", concatBz(v042.AddressContractSpecCacheKeyPrefixLegacy, ownerCommon.Addr, cSpecGood.SpecificationId)),
 
-			{"pre-existing cSpecBad ownerBad address", concatBz(v042.AddressContractSpecCacheKeyPrefixLegacy, ownerBad.Addr, cSpecBad.SpecificationId)},
-			{"pre-existing cSpecBad ownerCommon address", concatBz(v042.AddressContractSpecCacheKeyPrefixLegacy, ownerCommon.Addr, cSpecBad.SpecificationId)},
+			s.newNamedIndex("pe cSpecBad ownerBad", concatBz(v042.AddressContractSpecCacheKeyPrefixLegacy, ownerBad.Addr, cSpecBad.SpecificationId)),
+			s.newNamedIndex("pe cSpecBad ownerCommon", concatBz(v042.AddressContractSpecCacheKeyPrefixLegacy, ownerCommon.Addr, cSpecBad.SpecificationId)),
 
-			{"pre-existing scopeSpecGood ownerGood address", concatBz(v042.AddressScopeSpecCacheKeyPrefixLegacy, ownerGood.Addr, scopeSpecGood.SpecificationId)},
-			{"pre-existing scopeSpecGood ownerCommon address", concatBz(v042.AddressScopeSpecCacheKeyPrefixLegacy, ownerCommon.Addr, scopeSpecGood.SpecificationId)},
-			{"pre-existing scopeSpecGood cSpecGood address", types.GetContractSpecScopeSpecCacheKey(cSpecGood.SpecificationId, scopeSpecGood.SpecificationId)},
+			s.newNamedIndex("pe scopeSpecGood ownerGood", concatBz(v042.AddressScopeSpecCacheKeyPrefixLegacy, ownerGood.Addr, scopeSpecGood.SpecificationId)),
+			s.newNamedIndex("pe scopeSpecGood ownerCommon", concatBz(v042.AddressScopeSpecCacheKeyPrefixLegacy, ownerCommon.Addr, scopeSpecGood.SpecificationId)),
+			s.newNamedIndex("pe scopeSpecGood cSpecGood", types.GetContractSpecScopeSpecCacheKey(cSpecGood.SpecificationId, scopeSpecGood.SpecificationId)),
 
-			{"pre-existing scopeSpecBad ownerBad address", concatBz(v042.AddressScopeSpecCacheKeyPrefixLegacy, ownerBad.Addr, scopeSpecBad.SpecificationId)},
-			{"pre-existing scopeSpecBad ownerCommon address", concatBz(v042.AddressScopeSpecCacheKeyPrefixLegacy, ownerCommon.Addr, scopeSpecBad.SpecificationId)},
-			{"pre-existing scopeSpecBad cSpecBad address", types.GetContractSpecScopeSpecCacheKey(cSpecBad.SpecificationId, scopeSpecBad.SpecificationId)},
+			s.newNamedIndex("pe scopeSpecBad ownerBad", concatBz(v042.AddressScopeSpecCacheKeyPrefixLegacy, ownerBad.Addr, scopeSpecBad.SpecificationId)),
+			s.newNamedIndex("pe scopeSpecBad ownerCommon", concatBz(v042.AddressScopeSpecCacheKeyPrefixLegacy, ownerCommon.Addr, scopeSpecBad.SpecificationId)),
+			s.newNamedIndex("pe scopeSpecBad cSpecBad", types.GetContractSpecScopeSpecCacheKey(cSpecBad.SpecificationId, scopeSpecBad.SpecificationId)),
 		}
 
+		// expectedIntermediateIndexes is all the keys expected to exist after the V1 to V2 migration.
+		expectedIntermediateIndexes := namedIndexList{
+			s.newNamedIndex("int scopeGood ownerGood", badAddrScopeInd(ownerGood.Addr, scopeGood.ScopeId)),
+			s.newNamedIndex("int scopeGood ownerCommon", badAddrScopeInd(ownerCommon.Addr, scopeGood.ScopeId)),
+			s.newNamedIndex("int scopeGood valueOwnerGood", badAddrScopeInd(valueOwnerGood.Addr, scopeGood.ScopeId)),
+			s.newNamedIndex("int scopeGood valueOwnerGood", badVOScopeInd(valueOwnerGood.Addr, scopeGood.ScopeId)),
+			s.newNamedIndex("int scopeGood", types.GetScopeSpecScopeCacheKey(scopeGood.SpecificationId, scopeGood.ScopeId)),
+
+			s.newNamedIndex("int scopeBad ownerBad", badAddrScopeInd(ownerBad.Addr, scopeBad.ScopeId)),
+			s.newNamedIndex("int scopeBad ownerCommon", badAddrScopeInd(ownerCommon.Addr, scopeBad.ScopeId)),
+			s.newNamedIndex("int scopeBad valueOwnerBad", badAddrScopeInd(valueOwnerBad.Addr, scopeBad.ScopeId)),
+			s.newNamedIndex("int scopeBad valueOwnerBad", badVOScopeInd(valueOwnerBad.Addr, scopeBad.ScopeId)),
+			s.newNamedIndex("int scopeBad", types.GetScopeSpecScopeCacheKey(scopeBad.SpecificationId, scopeBad.ScopeId)),
+
+			s.newNamedIndex("int cSpecGood ownerGood", badAddrCSpecInd(ownerGood.Addr, cSpecGood.SpecificationId)),
+			s.newNamedIndex("int cSpecGood ownerCommon", badAddrCSpecInd(ownerCommon.Addr, cSpecGood.SpecificationId)),
+
+			s.newNamedIndex("int cSpecBad ownerBad", badAddrCSpecInd(ownerBad.Addr, cSpecBad.SpecificationId)),
+			s.newNamedIndex("int cSpecBad ownerCommon", badAddrCSpecInd(ownerCommon.Addr, cSpecBad.SpecificationId)),
+
+			s.newNamedIndex("int scopeSpecGood ownerGood", badAddrScopeSpecInd(ownerGood.Addr, scopeSpecGood.SpecificationId)),
+			s.newNamedIndex("int scopeSpecGood ownerCommon", badAddrScopeSpecInd(ownerCommon.Addr, scopeSpecGood.SpecificationId)),
+			s.newNamedIndex("int scopeSpecGood cSpecGood", types.GetContractSpecScopeSpecCacheKey(cSpecGood.SpecificationId, scopeSpecGood.SpecificationId)),
+
+			s.newNamedIndex("int scopeSpecBad ownerBad", badAddrScopeSpecInd(ownerBad.Addr, scopeSpecBad.SpecificationId)),
+			s.newNamedIndex("int scopeSpecBad ownerCommon", badAddrScopeSpecInd(ownerCommon.Addr, scopeSpecBad.SpecificationId)),
+			s.newNamedIndex("int scopeSpecBad cSpecBad", types.GetContractSpecScopeSpecCacheKey(cSpecBad.SpecificationId, scopeSpecBad.SpecificationId)),
+		}
+
+		// goodIndexes is all the keys that need to be written for the "good" metadata entries between the two migrations (to simulate that it was written).
+		goodIndexes := namedIndexList{
+			s.newNamedIndex("mid scopeGood ownerGood", types.GetAddressScopeCacheKey(ownerGood.Addr, scopeGood.ScopeId)),
+			s.newNamedIndex("mid scopeGood ownerCommon", types.GetAddressScopeCacheKey(ownerCommon.Addr, scopeGood.ScopeId)),
+			s.newNamedIndex("mid scopeGood valueOwnerGood", types.GetAddressScopeCacheKey(valueOwnerGood.Addr, scopeGood.ScopeId)),
+			s.newNamedIndex("mid scopeGood valueOwnerGood", types.GetValueOwnerScopeCacheKey(valueOwnerGood.Addr, scopeGood.ScopeId)),
+			s.newNamedIndex("mid scopeGood", types.GetScopeSpecScopeCacheKey(scopeGood.SpecificationId, scopeGood.ScopeId)),
+
+			s.newNamedIndex("mid cSpecGood ownerGood", types.GetAddressContractSpecCacheKey(ownerGood.Addr, cSpecGood.SpecificationId)),
+			s.newNamedIndex("mid cSpecGood ownerCommon", types.GetAddressContractSpecCacheKey(ownerCommon.Addr, cSpecGood.SpecificationId)),
+
+			s.newNamedIndex("mid scopeSpecGood ownerGood", types.GetAddressScopeSpecCacheKey(ownerGood.Addr, scopeSpecGood.SpecificationId)),
+			s.newNamedIndex("mid scopeSpecGood ownerCommon", types.GetAddressScopeSpecCacheKey(ownerCommon.Addr, scopeSpecGood.SpecificationId)),
+			s.newNamedIndex("mid scopeSpecGood cSpecGood", types.GetContractSpecScopeSpecCacheKey(cSpecGood.SpecificationId, scopeSpecGood.SpecificationId)),
+		}
+
+		// newIndexes is all the keys that need to be written for the "new" metadata entry (written between migrations).
 		newIndexes := namedIndexList{
-			{"add after v2 scopeNew ownerNew address", types.GetAddressScopeCacheKey(ownerNew.Addr, scopeNew.ScopeId)},
-			{"add after v2 scopeNew ownerCommon address", types.GetAddressScopeCacheKey(ownerCommon.Addr, scopeNew.ScopeId)},
-			{"add after v2 scopeNew valueOwnerNew address", types.GetAddressScopeCacheKey(valueOwnerNew.Addr, scopeNew.ScopeId)},
-			{"add after v2 scopeNew value owner", types.GetValueOwnerScopeCacheKey(valueOwnerNew.Addr, scopeNew.ScopeId)},
-			{"add after v2 scopeNew scope spec", types.GetScopeSpecScopeCacheKey(scopeNew.SpecificationId, scopeNew.ScopeId)},
+			s.newNamedIndex("new scopeNew ownerNew", types.GetAddressScopeCacheKey(ownerNew.Addr, scopeNew.ScopeId)),
+			s.newNamedIndex("new scopeNew ownerCommon", types.GetAddressScopeCacheKey(ownerCommon.Addr, scopeNew.ScopeId)),
+			s.newNamedIndex("new scopeNew valueOwnerNew", types.GetAddressScopeCacheKey(valueOwnerNew.Addr, scopeNew.ScopeId)),
+			s.newNamedIndex("new scopeNew valueOwnerNew", types.GetValueOwnerScopeCacheKey(valueOwnerNew.Addr, scopeNew.ScopeId)),
+			s.newNamedIndex("new scopeNew", types.GetScopeSpecScopeCacheKey(scopeNew.SpecificationId, scopeNew.ScopeId)),
 
-			{"add after v2 cSpecNew ownerNew address", types.GetAddressContractSpecCacheKey(ownerNew.Addr, cSpecNew.SpecificationId)},
-			{"add after v2 cSpecNew ownerCommon address", types.GetAddressContractSpecCacheKey(ownerCommon.Addr, cSpecNew.SpecificationId)},
+			s.newNamedIndex("new cSpecNew ownerNew", types.GetAddressContractSpecCacheKey(ownerNew.Addr, cSpecNew.SpecificationId)),
+			s.newNamedIndex("new cSpecNew ownerCommon", types.GetAddressContractSpecCacheKey(ownerCommon.Addr, cSpecNew.SpecificationId)),
 
-			{"add after v2 scopeSpecNew ownerNew address", types.GetAddressScopeSpecCacheKey(ownerNew.Addr, scopeSpecNew.SpecificationId)},
-			{"add after v2 scopeSpecNew ownerCommon address", types.GetAddressScopeSpecCacheKey(ownerCommon.Addr, scopeSpecNew.SpecificationId)},
-			{"add after v2 scopeSpecNew cSpecNew address", types.GetContractSpecScopeSpecCacheKey(cSpecNew.SpecificationId, scopeSpecNew.SpecificationId)},
+			s.newNamedIndex("new scopeSpecNew ownerNew", types.GetAddressScopeSpecCacheKey(ownerNew.Addr, scopeSpecNew.SpecificationId)),
+			s.newNamedIndex("new scopeSpecNew ownerCommon", types.GetAddressScopeSpecCacheKey(ownerCommon.Addr, scopeSpecNew.SpecificationId)),
+			s.newNamedIndex("new scopeSpecNew cSpecNew", types.GetContractSpecScopeSpecCacheKey(cSpecNew.SpecificationId, scopeSpecNew.SpecificationId)),
 		}
 
-		// Manually marshal and set the pre v1 to v2 items to bypass the keeper's auto-indexing stuff.
+		// Manually marshal and set the pre v1 to v2 items, bypassingthe keeper's auto-indexing stuff.
 		s.store.Set(scopeGood.ScopeId, s.app.AppCodec().MustMarshal(&scopeGood))
 		s.store.Set(scopeBad.ScopeId, s.app.AppCodec().MustMarshal(&scopeBad))
 		s.store.Set(cSpecGood.SpecificationId, s.app.AppCodec().MustMarshal(&cSpecGood))
@@ -625,10 +752,36 @@ func (s *MigrationsTestSuite) Test2To3() {
 			s.store.Set(index.key, []byte{0x01})
 		}
 
+		preV1ToV2Indexes := getAllIndexes()
+		defer func() {
+			if t.Failed() {
+				fmt.Printf("Pre V1 to V2 Indexes (%d):\n%s\n", len(preV1ToV2Indexes), preV1ToV2Indexes)
+			}
+		}()
+
 		// Run the migration from v1 to v2.
 		migrator1 := keeper.NewMigrator(s.app.MetadataKeeper)
-		require.NoError(t, migrator1.Migrate2to3(s.ctx), "running migration v1 to v2")
+		require.NoError(t, migrator1.Migrate1to2(s.ctx), "running migration v1 to v2")
 
+		postV1ToV2Indexes := getAllIndexes()
+		defer func() {
+			if t.Failed() {
+				fmt.Printf("Post V1 to V2 Indexes (%d):\n%s\n", len(postV1ToV2Indexes), postV1ToV2Indexes)
+			}
+		}()
+
+		// Make assumptions about the V1 to V2 migration are correct.
+		if !s.assertExactIndexList(t, expectedIntermediateIndexes) {
+			t.Log("Unexpected state after first migration.")
+			t.FailNow()
+		}
+
+		// Pretend the "good" stuff was written, and write those indexes.
+		for _, index := range goodIndexes {
+			s.store.Set(index.key, []byte{0x01})
+		}
+
+		// Store the new stuff same as before, bypassing the keeper's auto-indexing.
 		s.store.Set(scopeNew.ScopeId, s.app.AppCodec().MustMarshal(&scopeNew))
 		s.store.Set(cSpecNew.SpecificationId, s.app.AppCodec().MustMarshal(&cSpecNew))
 		s.store.Set(scopeSpecNew.SpecificationId, s.app.AppCodec().MustMarshal(&scopeSpecNew))
@@ -643,14 +796,34 @@ func (s *MigrationsTestSuite) Test2To3() {
 			s.store.Set(index.key, []byte{0x01})
 		}
 
+		//
+		// Finally, all the setup is complete and we can do the thing we're actually trying to test here.
+		//
+
+		preV2ToV3Indexes := getAllIndexes()
+		defer func() {
+			if t.Failed() {
+				fmt.Printf("Pre V2 to V3 Indexes (%d):\n%s\n", len(preV2ToV3Indexes), preV2ToV3Indexes)
+			}
+		}()
+
 		// Run the migration.
 		migrator2 := keeper.NewMigrator(s.app.MetadataKeeper)
 		require.NoError(t, migrator2.Migrate2to3(s.ctx), "running migration v2 to v3")
 
+		postV2ToV3Indexes := getAllIndexes()
+		defer func() {
+			if t.Failed() {
+				fmt.Printf("Post V2 to V3 Indexes (%d):\n%s\n", len(postV2ToV3Indexes), postV2ToV3Indexes)
+			}
+		}()
+
 		// Make sure the indexes are as expected!
-		if !s.assertExactIndexList(t, expectedIndexes) {
-			fmt.Printf("pre-existing indexes:\n%s", preExistingIndexes)
-			fmt.Printf("new indexes:\n%s", newIndexes)
-		}
+		s.assertExactIndexList(t, expectedIndexes)
+	})
+
+	s.T().Run("make sure nothing is indexed anymore", func(t *testing.T) {
+		// If this fails while none of the others fail, it means one of the other tests isn't properly identifying everything it should.
+		s.assertExactIndexList(t, namedIndexList{})
 	})
 }
