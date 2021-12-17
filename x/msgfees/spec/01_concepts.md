@@ -6,7 +6,7 @@ order: 1
 
 
 
-## Additional Msg Fees
+# Additional Msg Fees
 
 Fees is one of the most important tools available to secure a PoS network since it incentivizes staking and encourages spam prevention etc.
 
@@ -18,7 +18,7 @@ and the fee schedule that is persisted on chain, created via governance.
 
 Additional fee can be in any *denom*.
 
-## Base Fee
+# Base Fee
 Base fee is currently paid fees, paid in base denom and determined by gas value passed into the Tx.
 The value collected remains the same.
 
