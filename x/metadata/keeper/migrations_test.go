@@ -232,40 +232,33 @@ func (s *MigrationsTestSuite) Test2To3() {
 			copy(rv, pre)
 			// Make sure the length byte isn't accidentally correct (17 md addr bytes + 1 pre byte + 1 length byte).
 			if len(pre) < 2 && rv[1] == byte(length-19) {
-				rv[1] = byte(length - 18)
+				rv[1] = byte(length - 20)
 			}
 			return rv
 		}
-		// makeIndexGood20 creates a random key with length prefix + 20 address bytes + 17 random bytes.
+		// makeGoodIndex creates a random key with length prefix + {length - 19} address bytes + 17 random bytes.
 		// These are good addresses that don't need re-indexing.
-		makeIndexGood20 := func(pre []byte) []byte {
-			rv := makeIndexRand(pre, 39)
-			rv[1] = byte(20)
+		makeGoodIndex := func(pre []byte, length int) []byte {
+			rv := makeIndexRand(pre, length)
+			rv[1] = byte(length - 19)
 			return rv
 		}
-		// makeIndexGood32 creates a random key with length prefix + 32 address bytes + 17 random bytes.
-		// These are good addresses that don't need re-indexing.
-		makeIndexGood32 := func(pre []byte) []byte {
-			rv := makeIndexRand(pre, 51)
-			rv[1] = byte(32)
-			return rv
-		}
-		// makeIndexBad20 creates a random key with length prefix + 20 address bytes + 16 random bytes.
+		// makeIndexShort creates a random key with length prefix + {length - 20} address bytes + 16 random bytes.
 		// These are bad addresses and need to be re-indexed.
-		makeIndexBad20 := func(pre []byte) []byte {
-			rv := makeIndexRand(pre, 38)
-			rv[1] = byte(20)
+		makeIndexShort := func(pre []byte, length int) []byte {
+			rv := makeIndexRand(pre, length)
+			rv[1] = byte(length - 20)
 			return rv
 		}
-		// makeIndexBad32 creates a random key with length prefix + 32 address bytes + 16 random bytes.
+		// makeIndexShort creates a random key with length prefix + {length - 18} address bytes + 18 random bytes.
 		// These are bad addresses and need to be re-indexed.
-		makeIndexBad32 := func(pre []byte) []byte {
-			rv := makeIndexRand(pre, 50)
-			rv[1] = byte(32)
+		makeIndexLong := func(pre []byte, length int) []byte {
+			rv := makeIndexRand(pre, length)
+			rv[1] = byte(length - 18)
 			return rv
 		}
-		// makeIndexZeros creates a byte slice starting with a p followed by zeros until it has length 60.
-		// These are bad addresses and need to be re-indexed.
+		// makeIndexZeros creates a byte slice starting with a prefix followed by zeros until it has length 60.
+		// These are bad addresses and need to be re-indexed; the address length byte is zero.
 		makeIndexZeros := func(pre []byte, length int) []byte {
 			rv := make([]byte, length)
 			copy(rv, pre)
@@ -274,22 +267,22 @@ func (s *MigrationsTestSuite) Test2To3() {
 
 		// makeGoodIndexes makes indexes that are good and should not be deleted.
 		makeGoodIndexes := func(name string, pre []byte) namedIndexList {
-			rv := make(namedIndexList, 2)
-			rv[0] = namedIndex{name + " 20", makeIndexGood20(pre)}
-			rv[1] = namedIndex{name + " 32", makeIndexGood32(pre)}
+			rv := namedIndexList{}
+			// note: 39 and 51 are the "real" good lengths, the rest just kind of check math stuff.
+			for _, v := range []int{38, 39, 40, 50, 51, 52, 60, 68} {
+				rv = append(rv, namedIndex{fmt.Sprintf("%s good %d", name, v), makeGoodIndex(pre, v)})
+			}
 			return rv
 		}
 		// makeBadIndexes makes indexes that are bad and should end up being deleted.
 		makeBadIndexes := func(name string, pre []byte) namedIndexList {
-			rv := make(namedIndexList, 8)
-			rv[0] = namedIndex{name + " 38", makeIndexBad20(pre)}
-			rv[1] = namedIndex{name + " 49", makeIndexBad32(pre)}
-			rv[2] = namedIndex{name + " zeros 39", makeIndexZeros(pre, 39)}
-			rv[3] = namedIndex{name + " zeros 51", makeIndexZeros(pre, 51)}
-			rv[4] = namedIndex{name + " zeros 60", makeIndexZeros(pre, 60)}
-			rv[5] = namedIndex{name + " rand 39", makeIndexRand(pre, 39)}
-			rv[6] = namedIndex{name + " rand 51", makeIndexRand(pre, 51)}
-			rv[7] = namedIndex{name + " rand 60", makeIndexRand(pre, 60)}
+			rv := namedIndexList{}
+			for _, v := range []int{38, 39, 40, 50, 51, 52, 60, 68} {
+				rv = append(rv, namedIndex{fmt.Sprintf("%s short %d", name, v), makeIndexShort(pre, v)})
+				rv = append(rv, namedIndex{fmt.Sprintf("%s long %d", name, v), makeIndexLong(pre, v)})
+				rv = append(rv, namedIndex{fmt.Sprintf("%s zeros %d", name, v), makeIndexZeros(pre, v)})
+				rv = append(rv, namedIndex{fmt.Sprintf("%s rand %d", name, v), makeIndexRand(pre, v)})
+			}
 			return rv
 		}
 
