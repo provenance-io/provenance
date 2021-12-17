@@ -54,7 +54,7 @@ func (k Keeper) QueryAllMsgBasedFees(c context.Context, req *types.QueryAllMsgBa
 func (k Keeper) CalculateTxFees(goCtx context.Context, request *types.CalculateTxFeesRequest) (*types.CalculateTxFeesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	gasInfo, _, err, txCtx := k.simulateFunc(request.TxBytes)
+	gasInfo, _, txCtx, err := k.simulateFunc(request.TxBytes)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
