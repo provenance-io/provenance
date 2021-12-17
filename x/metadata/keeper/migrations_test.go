@@ -224,76 +224,96 @@ func keyInList(key []byte, indexes namedIndexList) bool {
 }
 
 func (s *MigrationsTestSuite) Test2To3() {
-	s.T().Run("existing indexes are deleted", func(t *testing.T) {
-		// Address w/length 20 and length prefix + 17 random bytes
-		makeIndexAddr20 := func(pre []byte) []byte {
-			rv := make([]byte, 0, 39)
-			rv = append(rv, pre...)
-			rv = append(rv, byte(20))
-			rv = append(rv, randomByteSlice(20)...)
-			rv = append(rv, randomByteSlice(17)...)
+	s.T().Run("existing bad indexes are deleted", func(t *testing.T) {
+		// makeIndexRand creates a random byte slice that starts with the given prefix.
+		// These are bad addresses and need to be re-indexed (the 2nd byte will never be the proper addr length value).
+		makeIndexRand := func(pre []byte, length int) []byte {
+			rv := randomByteSlice(length)
+			copy(rv, pre)
+			// Make sure the length byte isn't accidentally correct (17 md addr bytes + 1 pre byte + 1 length byte).
+			if len(pre) < 2 && rv[1] == byte(length-19) {
+				rv[1] = byte(length - 18)
+			}
 			return rv
 		}
-		// Address w/length 32 and length prefix + 17 random bytes.
-		makeIndexAddr32 := func(pre []byte) []byte {
-			rv := make([]byte, 0, 51)
-			rv = append(rv, pre...)
-			rv = append(rv, byte(32))
-			rv = append(rv, randomByteSlice(32)...)
-			rv = append(rv, randomByteSlice(17)...)
+		// makeIndexGood20 creates a random key with length prefix + 20 address bytes + 17 random bytes.
+		// These are good addresses that don't need re-indexing.
+		makeIndexGood20 := func(pre []byte) []byte {
+			rv := makeIndexRand(pre, 39)
+			rv[1] = byte(20)
 			return rv
 		}
-		// Prefix + 37 random bytes.
-		makeIndexLen38 := func(pre []byte) []byte {
-			rv := make([]byte, 0, len(pre)+37)
-			rv = append(rv, pre...)
-			rv = append(rv, randomByteSlice(37)...)
+		// makeIndexGood32 creates a random key with length prefix + 32 address bytes + 17 random bytes.
+		// These are good addresses that don't need re-indexing.
+		makeIndexGood32 := func(pre []byte) []byte {
+			rv := makeIndexRand(pre, 51)
+			rv[1] = byte(32)
 			return rv
 		}
-		// Prefix + 49 random bytes.
-		makeIndexLen49 := func(pre []byte) []byte {
-			rv := make([]byte, 0, len(pre)+49)
-			rv = append(rv, pre...)
-			rv = append(rv, randomByteSlice(49)...)
+		// makeIndexBad20 creates a random key with length prefix + 20 address bytes + 16 random bytes.
+		// These are bad addresses and need to be re-indexed.
+		makeIndexBad20 := func(pre []byte) []byte {
+			rv := makeIndexRand(pre, 38)
+			rv[1] = byte(20)
 			return rv
 		}
-		// Prefix + zeros until total length is 60.
-		makeIndexZeros := func(pre []byte) []byte {
-			rv := make([]byte, 60)
+		// makeIndexBad32 creates a random key with length prefix + 32 address bytes + 16 random bytes.
+		// These are bad addresses and need to be re-indexed.
+		makeIndexBad32 := func(pre []byte) []byte {
+			rv := makeIndexRand(pre, 50)
+			rv[1] = byte(32)
+			return rv
+		}
+		// makeIndexZeros creates a byte slice starting with a p followed by zeros until it has length 60.
+		// These are bad addresses and need to be re-indexed.
+		makeIndexZeros := func(pre []byte, length int) []byte {
+			rv := make([]byte, length)
 			copy(rv, pre)
 			return rv
 		}
 
-		makeIndexes := func(name string, pre []byte) namedIndexList {
-			rv := make(namedIndexList, 5)
-			rv[0] = namedIndex{name + " 20", makeIndexAddr20(pre)}
-			rv[1] = namedIndex{name + " 32", makeIndexAddr32(pre)}
-			rv[2] = namedIndex{name + " 38", makeIndexLen38(pre)}
-			rv[3] = namedIndex{name + " 49", makeIndexLen49(pre)}
-			rv[4] = namedIndex{name + " zeros", makeIndexZeros(pre)}
+		// makeGoodIndexes makes indexes that are good and should not be deleted.
+		makeGoodIndexes := func(name string, pre []byte) namedIndexList {
+			rv := make(namedIndexList, 2)
+			rv[0] = namedIndex{name + " 20", makeIndexGood20(pre)}
+			rv[1] = namedIndex{name + " 32", makeIndexGood32(pre)}
 			return rv
 		}
+		// makeBadIndexes makes indexes that are bad and should end up being deleted.
+		makeBadIndexes := func(name string, pre []byte) namedIndexList {
+			rv := make(namedIndexList, 8)
+			rv[0] = namedIndex{name + " 38", makeIndexBad20(pre)}
+			rv[1] = namedIndex{name + " 49", makeIndexBad32(pre)}
+			rv[2] = namedIndex{name + " zeros 39", makeIndexZeros(pre, 39)}
+			rv[3] = namedIndex{name + " zeros 51", makeIndexZeros(pre, 51)}
+			rv[4] = namedIndex{name + " zeros 60", makeIndexZeros(pre, 60)}
+			rv[5] = namedIndex{name + " rand 39", makeIndexRand(pre, 39)}
+			rv[6] = namedIndex{name + " rand 51", makeIndexRand(pre, 51)}
+			rv[7] = namedIndex{name + " rand 60", makeIndexRand(pre, 60)}
+			return rv
+		}
+
 		indexes := namedIndexList{}
+		expectedKeptIndexes := namedIndexList{}
 		for _, pre := range s.newPrefixes {
-			indexes = append(indexes, makeIndexes(pre.name, pre.key)...)
+			indexes = append(indexes, makeBadIndexes(pre.name, pre.key)...)
+			expectedKeptIndexes = append(expectedKeptIndexes, makeGoodIndexes(pre.name, pre.key)...)
 		}
-		keptIndexes := namedIndexList{}
 		for _, pre := range s.unaffectedPrefixes {
-			keptIndexes = append(keptIndexes, makeIndexes(pre.name, pre.key)...)
+			expectedKeptIndexes = append(expectedKeptIndexes, makeGoodIndexes(pre.name, pre.key)...)
+			// Note: These are expected to be kept, even though they're "bad".
+			// There is no scenario where they'd end up actually existing.
+			// If they're involved in this test failing, the migration is doing more than it needs to.
+			expectedKeptIndexes = append(expectedKeptIndexes, makeBadIndexes(pre.name, pre.key)...)
 		}
+		indexes = append(indexes, expectedKeptIndexes...)
 
 		// Add them to the store.
 		for _, index := range indexes {
 			s.store.Set(index.key, []byte{0x01})
 		}
-		for _, index := range keptIndexes {
-			s.store.Set(index.key, []byte{0x01})
-		}
 		defer func() {
 			for _, index := range indexes {
-				s.store.Delete(index.key)
-			}
-			for _, index := range keptIndexes {
 				s.store.Delete(index.key)
 			}
 		}()
@@ -302,14 +322,7 @@ func (s *MigrationsTestSuite) Test2To3() {
 		migrator := keeper.NewMigrator(s.app.MetadataKeeper)
 		require.NoError(t, migrator.Migrate2to3(s.ctx), "running migration")
 
-		// Ensure none of those indexes exist anymore.
-		for _, index := range indexes {
-			assert.False(t, s.store.Has(index.key), index.name)
-		}
-		// Ensure these indexes still exist.
-		for _, index := range keptIndexes {
-			assert.True(t, s.store.Has(index.key), index.name)
-		}
+		s.assertExactIndexList(t, expectedKeptIndexes)
 	})
 
 	s.T().Run("scopes are reindexed", func(t *testing.T) {
