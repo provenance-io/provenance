@@ -150,8 +150,8 @@ func cleanStore(ctx sdk.Context, baseStore sdk.KVStore, pre []byte) (good [][]by
 	// Incorrectly migrated indexes will be 1 byte shorter overall than the corrected indexes.
 	// Basically, what was identified as the last byte of the account addr, was actually the first byte of the metadata address.
 	// Then the rest of the metadata address was appended to finish off the key.
-	// Metadata addresses involved in these indexes have length 33.
-	// The correct length of the iterator keys is 33 + {addr length} + 1.
+	// Metadata addresses involved in these indexes have length 17 (one type byte, and 16 uuid bytes).
+	// The correct length of the iterator keys is 17 + {addr length} + 1.
 	good = [][]byte{}
 	deletedCount := 0
 	store := prefix.NewStore(baseStore, pre)
@@ -162,8 +162,8 @@ func cleanStore(ctx sdk.Context, baseStore sdk.KVStore, pre []byte) (good [][]by
 	for ; iter.Valid(); iter.Next() {
 		key := iter.Key()
 		accAddrLen := int(key[0])
-		// good key length = 1 length byte + the length of the account address + 33 metadata address bytes.
-		if len(key) == accAddrLen+34 {
+		// good key length = 1 length byte + the length of the account address + 17 metadata address bytes.
+		if len(key) == accAddrLen+18 {
 			good = append(good, append([]byte{pre[0]}, key...))
 		} else {
 			store.Delete(key)
