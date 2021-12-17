@@ -32,7 +32,6 @@ func (m *Migrator) Migrate1to2(ctx sdk.Context) error {
 // Migrate2to3 migrates from version 2 to 3 to fix the indexes.
 func (m *Migrator) Migrate2to3(ctx sdk.Context) error {
 	ctx.Logger().Info("Migrating Metadata Module from Version 2 to 3")
-	var err error
 	var goodIndexes *indexLookup
 	steps := []struct {
 		name   string
@@ -41,6 +40,7 @@ func (m *Migrator) Migrate2to3(ctx sdk.Context) error {
 		{
 			name: "Deleting bad indexes and getting good",
 			runner: func() error {
+				var err error
 				goodIndexes, err = deleteBadIndexes(ctx, m.keeper)
 				return err
 			},
@@ -170,7 +170,7 @@ func cleanStore(ctx sdk.Context, baseStore sdk.KVStore, pre []byte) (good [][]by
 			deletedCount++
 		}
 	}
-	ctx.Logger().Info(fmt.Sprintf("Found %d good index entries and %d were deleted.", len(good), deletedCount))
+	ctx.Logger().Info(fmt.Sprintf("Prefix %X: Deleted %d entries, found %d good entries.", pre, deletedCount, len(good)))
 	return good, nil
 }
 
