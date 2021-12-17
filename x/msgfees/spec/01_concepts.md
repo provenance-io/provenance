@@ -13,7 +13,7 @@ Fees is one of the most important tools available to secure a PoS network since 
 As part of the provenance blockchain economics certain messages *may* require an additional fee to be paid in
 addition to the normal gas consumption. 
 
-Additional Fees are assesed and finally consumed based on msgType of the msgs contained in the transaction,
+Additional Fees are assessed and finally consumed based on msgType of the msgs contained in the transaction,
 and the fee schedule that is persisted on chain, created via governance.
 
 Additional fee can be in any *denom*.
