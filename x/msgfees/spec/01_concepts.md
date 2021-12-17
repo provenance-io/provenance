@@ -49,3 +49,33 @@ Current behavior is maintained and tx passes and charges 19050000 initially and 
 the deliverTx stage.
 Thus, this will protect against future changes like priority mempool as well as keep current behaviour same as current production. 
 
+# Authz and wamsd messages
+Authz and wasmd messages are dispatched via the submessages route, so they get charged and assessed the same additional
+fee if set on a submessage, caveat being they forfeit all their fees if they fail (since we have no way upfront of knowing what 
+the submessages maybe)
+
+For e.g
+Let's say a `MsgSend` has a fee of 100usd.local and a smartcontract does 3 MsgSend operations as per the logic of the 
+smart contract, the code will expect additional fees of 300 usd.local to be present for the Tx to be successful.
+
+# Simulation and knowing how much additional fee to be paid.
+
+Current simulation method looks like this  
+```kotlin
+val cosmosService = cosmos.tx.v1beta1.ServiceGrpc.newBlockingStub(channel)
+cosmosService.simulate(SimulateRequest.newBuilder().setTx(txFinal).build()).gasInfo.gasUsed
+            
+```
+
+In the future we recommend using the method 
+```kotlin
+val msgFeeClient = io.provenance.msgfees.v1.QueryGrpc.newBlockingStub(channel)
+msgFeeClient.simulate(CalculateTxFeesRequest.newBuilder().setTx(txFinal).build())
+
+```
+
+or from the cmd line as
+
+```bash
+provenanced tx simulate <required params>
+```
