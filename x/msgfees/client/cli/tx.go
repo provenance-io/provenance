@@ -72,7 +72,7 @@ $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nha
 
 			_, ok := msgFee.(sdk.Msg)
 			if !ok {
-				return fmt.Errorf("message type is not a sdk message: %v", msgType)
+				return fmt.Errorf("message type is not a sdk message: %q", msgType)
 			}
 
 			var addFee sdk.Coin
@@ -113,7 +113,7 @@ $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nha
 					MsgTypeUrl:  msgType,
 				}
 			default:
-				return fmt.Errorf("unknown proposal type %s", args[0])
+				return fmt.Errorf("unknown proposal type %q", args[0])
 			}
 
 			deposit, err := sdk.ParseCoinsNormalized(args[3])
@@ -124,7 +124,7 @@ $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nha
 			callerAddr := clientCtx.GetFromAddress()
 			msg, err := govtypes.NewMsgSubmitProposal(proposal, deposit, callerAddr)
 			if err != nil {
-				return fmt.Errorf("invalid governance proposal. Error: %s", err)
+				return fmt.Errorf("invalid governance proposal. Error: %q", err)
 			}
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
