@@ -125,7 +125,7 @@ var handlers = map[string]appUpgrade{
 		},
 		Added: []string{authz.ModuleName, feegrant.ModuleName},
 	},
-	"green": { // TODO: Put correct color in here.
+	"green": {
 		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
 			orderedMigration := []moduleUpgradeVersion{
 				{"metadata", 2},
