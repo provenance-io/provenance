@@ -3,6 +3,9 @@ package antewrapper
 import (
 	"fmt"
 
+	"github.com/armon/go-metrics"
+	"github.com/cosmos/cosmos-sdk/telemetry"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/tendermint/tendermint/libs/log"
@@ -45,6 +48,13 @@ var _ sdkgas.GasMeter = &FeeGasMeter{}
 
 // GasConsumed reports the amount of gas consumed at Log.Info level
 func (g *FeeGasMeter) GasConsumed() sdkgas.Gas {
+	usage := "tracingGasMeter:\n  Purpose"
+	for i, d := range g.used {
+		usage = fmt.Sprintf("%s\n   - %s (x%d) = %d", usage, i, g.calls[i], d)
+	}
+	usage = fmt.Sprintf("%s\n  Total: %d gas", usage, g.base.GasConsumed())
+
+	g.log.Info(usage)
 	return g.base.GasConsumed()
 }
 
@@ -65,6 +75,14 @@ func (g *FeeGasMeter) Limit() sdkgas.Gas {
 
 // ConsumeGas increments the amount of gas used on the meter associated with a given purpose.
 func (g *FeeGasMeter) ConsumeGas(amount sdkgas.Gas, descriptor string) {
+	cur := g.used[descriptor]
+	g.used[descriptor] = cur + amount
+
+	cur = g.calls[descriptor]
+	g.calls[descriptor] = cur + 1
+
+	telemetry.IncrCounterWithLabels([]string{"tx", "gas", "consumed"}, float32(amount), []metrics.Label{telemetry.NewLabel("purpose", descriptor)})
+
 	g.base.ConsumeGas(amount, descriptor)
 }
 
