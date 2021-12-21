@@ -147,8 +147,10 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 
 	m := keeper.NewMigrator(am.keeper)
-	err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2)
-	if err != nil {
+	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
+		panic(err)
+	}
+	if err := cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3); err != nil {
 		panic(err)
 	}
 }
@@ -208,4 +210,4 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 2 }
+func (AppModule) ConsensusVersion() uint64 { return 3 }
