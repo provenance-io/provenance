@@ -48,7 +48,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		cosmosante.NewRejectExtensionOptionsDecorator(),
 		cosmosante.NewMempoolFeeDecorator(),
 		// Fee Decorator works to augment NewMempoolFeeDecorator and also check that enough fees are paid
-		NewMsgFeeDecorator(options.BankKeeper, options.AccountKeeper, options.FeegrantKeeper, options.MsgFeesKeeper),
+		NewMsgFeesDecorator(options.BankKeeper, options.AccountKeeper, options.FeegrantKeeper, options.MsgFeesKeeper),
 		cosmosante.NewValidateBasicDecorator(),
 		cosmosante.NewTxTimeoutHeightDecorator(),
 		cosmosante.NewValidateMemoDecorator(options.AccountKeeper),

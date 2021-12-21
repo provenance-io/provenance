@@ -216,7 +216,7 @@ func (suite *AnteTestSuite) TestEnsureNonCheckTxPassesAllChecks() {
 
 	// antehandler should not error since we do not check minGasPrice in DeliverTx
 	_, err = antehandler(suite.ctx, tx, false)
-	suite.Require().NotNil(err, "MsgFeeDecorator did not return error in DeliverTx")
+	suite.Require().NotNil(err, "MsgFeesDecorator did not return error in DeliverTx")
 }
 
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_1() {
@@ -227,7 +227,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_1() {
 
 	check(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("steak", sdk.NewInt(100)))))
 	_, err = antehandler(suite.ctx, tx, false)
-	suite.Require().Nil(err, "MsgFeeDecorator returned error in DeliverTx")
+	suite.Require().Nil(err, "MsgFeesDecorator returned error in DeliverTx")
 }
 
 // wrong denom passed in, errors with insufficient fee
@@ -329,9 +329,9 @@ func setUpApp(suite *AnteTestSuite, checkTx bool, additionalFeeCoinDenom string,
 		panic(err)
 	}
 
-	// setup NewMsgFeeDecorator
+	// setup NewMsgFeesDecorator
 	app := suite.app
-	mfd := antewrapper.NewMsgFeeDecorator(app.BankKeeper, app.AccountKeeper, app.FeeGrantKeeper, app.MsgFeesKeeper)
+	mfd := antewrapper.NewMsgFeesDecorator(app.BankKeeper, app.AccountKeeper, app.FeeGrantKeeper, app.MsgFeesKeeper)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 	return err, antehandler
 }
