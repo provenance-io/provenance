@@ -15,22 +15,22 @@ const (
 	DefaultInsufficientFeeMsg = "not enough fees; after deducting fees required,got"
 )
 
-// MsgFeeDecorator will check if the transaction's fee is at least as large
+// MsgFeesDecorator will check if the transaction's fee is at least as large
 // as tax + additional minimum gasFee (defined in msgfeeskeeper)
 // and record additional fee proceeds to msgfees module to track additional fee proceeds.
 // If fee is too low, decorator returns error and tx is rejected from mempool.
 // Note this only applies when ctx.CheckTx = true
 // If fee is high enough or not CheckTx, then call next AnteHandler
-// CONTRACT: Tx must implement FeeTx to use MsgFeeDecorator
-type MsgFeeDecorator struct {
+// CONTRACT: Tx must implement FeeTx to use MsgFeesDecorator
+type MsgFeesDecorator struct {
 	msgFeeKeeper   msgfeestypes.MsgFeesKeeper
 	bankKeeper     banktypes.Keeper
 	accountKeeper  cosmosante.AccountKeeper
 	feegrantKeeper msgfeestypes.FeegrantKeeper
 }
 
-func NewMsgFeeDecorator(bankKeeper banktypes.Keeper, accountKeeper cosmosante.AccountKeeper, feegrantKeeper msgfeestypes.FeegrantKeeper, keeper msgfeestypes.MsgFeesKeeper) MsgFeeDecorator {
-	return MsgFeeDecorator{
+func NewMsgFeesDecorator(bankKeeper banktypes.Keeper, accountKeeper cosmosante.AccountKeeper, feegrantKeeper msgfeestypes.FeegrantKeeper, keeper msgfeestypes.MsgFeesKeeper) MsgFeesDecorator {
+	return MsgFeesDecorator{
 		keeper,
 		bankKeeper,
 		accountKeeper,
@@ -47,14 +47,14 @@ func NewMsgFeeDecorator(bankKeeper banktypes.Keeper, accountKeeper cosmosante.Ac
 // Let y is the additional fees to be paid per MsgType
 // then z = x + y
 // This Fee Decorator makes sure that z is >= to x + y
-func (afd MsgFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+func (afd MsgFeesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	feeTx, err := getFeeTx(tx)
 
 	if err != nil {
 		return ctx, err
 	}
 
-	ctx.Logger().Debug(fmt.Sprintf("In MsgFeeDecorator %d", ctx.GasMeter().GasConsumed()))
+	ctx.Logger().Debug(fmt.Sprintf("In MsgFeesDecorator %d", ctx.GasMeter().GasConsumed()))
 
 	feeCoins := feeTx.GetFee()
 	gas := feeTx.GetGas()
@@ -109,7 +109,7 @@ func (afd MsgFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool,
 }
 
 // getFeeGranterIfExists checks if fee granter exists and returns account to deduct fees from
-func getFeeGranterIfExists(ctx sdk.Context, feeGranter sdk.AccAddress, afd MsgFeeDecorator, feePayer sdk.AccAddress, deductFeesFrom sdk.AccAddress) (sdk.AccAddress, error) {
+func getFeeGranterIfExists(ctx sdk.Context, feeGranter sdk.AccAddress, afd MsgFeesDecorator, feePayer sdk.AccAddress, deductFeesFrom sdk.AccAddress) (sdk.AccAddress, error) {
 	if feeGranter != nil {
 		if afd.feegrantKeeper == nil {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")
