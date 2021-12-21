@@ -23,17 +23,17 @@ func GetQueryCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 	queryCmd.AddCommand(
-		AllMsgBasedFeesCmd(),
+		AllMsgFeesCmd(),
 	)
 	return queryCmd
 }
 
-// AllMsgBasedFeesCmd is the CLI command for listing all msg based fees.
-func AllMsgBasedFeesCmd() *cobra.Command {
+// AllMsgFeesCmd is the CLI command for listing all msg fees.
+func AllMsgFeesCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "list",
 		Aliases: []string{"ls", "l"},
-		Short:   "List all the msg based fees on the Provenance Blockchain",
+		Short:   "List all the msg fees on the Provenance Blockchain",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -47,12 +47,12 @@ func AllMsgBasedFeesCmd() *cobra.Command {
 				return err
 			}
 
-			var response *types.QueryAllMsgBasedFeesResponse
-			if response, err = queryClient.QueryAllMsgBasedFees(
+			var response *types.QueryAllMsgFeesResponse
+			if response, err = queryClient.QueryAllMsgFees(
 				context.Background(),
-				&types.QueryAllMsgBasedFeesRequest{Pagination: pageReq},
+				&types.QueryAllMsgFeesRequest{Pagination: pageReq},
 			); err != nil {
-				fmt.Printf("failed to query msg based fees: %s\n", err.Error())
+				fmt.Printf("failed to query msg fees: %s\n", err.Error())
 				return nil
 			}
 			return clientCtx.PrintProto(response)

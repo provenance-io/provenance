@@ -15,8 +15,8 @@ import (
 func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 	return func(kvA, kvB kv.Pair) string {
 		switch {
-		case bytes.Equal(kvA.Key[:1], types.MsgBasedFeeKeyPrefix):
-			var attribA, attribB types.MsgBasedFee
+		case bytes.Equal(kvA.Key[:1], types.MsgFeeKeyPrefix):
+			var attribA, attribB types.MsgFee
 
 			cdc.MustUnmarshal(kvA.Value, &attribA)
 			cdc.MustUnmarshal(kvB.Value, &attribB)

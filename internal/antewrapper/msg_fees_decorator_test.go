@@ -13,7 +13,7 @@ import (
 
 // checkTx true, high min gas price(high enough so that additional fee in same denom tips it over,
 //and this is what sets it apart from MempoolDecorator which has already been run)
-func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFees() {
+func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees() {
 	err, antehandler := setUpApp(suite, true, "atom", 100)
 	tx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
 	suite.Require().NoError(err)
@@ -51,7 +51,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolHighMinGasPrice() {
 	suite.Require().Contains(err.Error(), "Base Fee+additional fee cannot be paid with fee value passed in : \"100000atom\", required: \"2000000100atom\" = \"2000000000atom\"(base-fee) +\"100atom\"(additional-fees): insufficient fee", "got wrong message")
 }
 
-func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFeesPass() {
+func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPass() {
 	err, antehandler := setUpApp(suite, true, "atom", 100)
 	tx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100100)))
 	suite.Require().NoError(err)
@@ -74,7 +74,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFeesPass() {
 	suite.Require().Nil(err, "Decorator should not have errored.")
 }
 
-func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFeesPassFeeGrant() {
+func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPassFeeGrant() {
 	err, antehandler := setUpApp(suite, true, "atom", 100)
 
 	// keys and addresses
@@ -120,7 +120,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFeesPassFeeGrant() {
 }
 
 // fee grantee incorrect
-func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFeesPassFeeGrant_1() {
+func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPassFeeGrant_1() {
 	err, antehandler := setUpApp(suite, true, "atom", 100)
 
 	// keys and addresses
@@ -166,7 +166,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFeesPassFeeGrant_1() {
 }
 
 // no grant
-func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFeesPassFeeGrant_2() {
+func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPassFeeGrant_2() {
 	err, antehandler := setUpApp(suite, true, "atom", 100)
 
 	// keys and addresses
@@ -216,10 +216,10 @@ func (suite *AnteTestSuite) TestEnsureNonCheckTxPassesAllChecks() {
 
 	// antehandler should not error since we do not check minGasPrice in DeliverTx
 	_, err = antehandler(suite.ctx, tx, false)
-	suite.Require().NotNil(err, "MsgBasedFeeDecorator did not return error in DeliverTx")
+	suite.Require().NotNil(err, "MsgFeeDecorator did not return error in DeliverTx")
 }
 
-func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFees_1() {
+func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_1() {
 	err, antehandler := setUpApp(suite, true, "atom", 100)
 	tx, acct1 := createTestTx(suite, err, testdata.NewTestFeeAmount())
 
@@ -227,11 +227,11 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFees_1() {
 
 	check(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("steak", sdk.NewInt(100)))))
 	_, err = antehandler(suite.ctx, tx, false)
-	suite.Require().Nil(err, "MsgBasedFeeDecorator returned error in DeliverTx")
+	suite.Require().Nil(err, "MsgFeeDecorator returned error in DeliverTx")
 }
 
 // wrong denom passed in, errors with insufficient fee
-func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFees_2() {
+func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_2() {
 	err, antehandler := setUpApp(suite, false, "nhash", 100)
 	tx, acct1 := createTestTx(suite, err, testdata.NewTestFeeAmount())
 
@@ -252,7 +252,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFees_2() {
 }
 
 // additional fee denom as default base fee denom, fails because gas passed in * floor gas price (module param) exceeds fess passed in.
-func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFees_3() {
+func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_3() {
 	err, antehandler := setUpApp(suite, false, "nhash", 100)
 	tx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("nhash", 10000)))
 	check(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(10000)))))
@@ -263,7 +263,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFees_3() {
 }
 
 // additional fee same denom as default base fee denom, fails because of insufficient fee and then passes when enough fee is present.
-func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFees_4() {
+func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_4() {
 	err, antehandler := setUpApp(suite, false, "nhash", 100)
 	tx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("nhash", 190500200)))
 	check(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(190500100)))))
@@ -277,7 +277,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFees_4() {
 }
 
 // additional fee same denom as default base fee denom, fails because of insufficient fee and then passes when enough fee is present.
-func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFees_5() {
+func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_5() {
 	err, antehandler := setUpApp(suite, false, "atom", 100)
 	tx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("nhash", 190500200)))
 	check(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(190500100)))))
@@ -287,7 +287,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFees_5() {
 }
 
 // checkTx true, but additional fee not provided
-func (suite *AnteTestSuite) TestEnsureMempoolAndMsgBasedFees_6() {
+func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_6() {
 	err, antehandler := setUpApp(suite, true, "atom", 100)
 	tx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("nhash", 190500200)))
 	check(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(190500100)))))
@@ -329,9 +329,9 @@ func setUpApp(suite *AnteTestSuite, checkTx bool, additionalFeeCoinDenom string,
 		panic(err)
 	}
 
-	// setup NewMsgBasedFeeDecorator
+	// setup NewMsgFeeDecorator
 	app := suite.app
-	mfd := antewrapper.NewMsgBasedFeeDecorator(app.BankKeeper, app.AccountKeeper, app.FeeGrantKeeper, app.MsgBasedFeeKeeper)
+	mfd := antewrapper.NewMsgFeeDecorator(app.BankKeeper, app.AccountKeeper, app.FeeGrantKeeper, app.MsgFeesKeeper)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 	return err, antehandler
 }

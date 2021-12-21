@@ -8,7 +8,7 @@ import (
 	piosimapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/handlers"
-	msgbasedfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
+	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -105,8 +105,8 @@ func TestMsgService(t *testing.T) {
 	assert.Equal(t, "fee", string(res.Events[4].Attributes[0].Key))
 	assert.Equal(t, "150atom", string(res.Events[4].Attributes[0].Value))
 
-	msgbasedFee := msgbasedfeetypes.NewMsgBasedFee(sdk.MsgTypeURL(msg), sdk.NewCoin("hotdog", sdk.NewInt(800)))
-	app.MsgBasedFeeKeeper.SetMsgBasedFee(ctx, msgbasedFee)
+	msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewCoin("hotdog", sdk.NewInt(800)))
+	app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee)
 
 	// tx with a fee associated with msg type and account has funds
 	msg = banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(50))))
@@ -131,8 +131,8 @@ func TestMsgService(t *testing.T) {
 	assert.Equal(t, antewrapper.AttributeKeyBaseFee, string(res.Events[8].Attributes[0].Key))
 	assert.Equal(t, "150atom", string(res.Events[8].Attributes[0].Value))
 
-	msgbasedFee = msgbasedfeetypes.NewMsgBasedFee(sdk.MsgTypeURL(msg), sdk.NewInt64Coin("atom", 10))
-	app.MsgBasedFeeKeeper.SetMsgBasedFee(ctx, msgbasedFee)
+	msgbasedFee = msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewInt64Coin("atom", 10))
+	app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee)
 
 	// tx with a fee associated with msg type, additional cost is in same base as fee
 	msg = banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(50))))
@@ -157,8 +157,8 @@ func TestMsgService(t *testing.T) {
 	assert.Equal(t, antewrapper.AttributeKeyBaseFee, string(res.Events[8].Attributes[0].Key))
 	assert.Equal(t, "140atom", string(res.Events[8].Attributes[0].Value))
 
-	msgbasedFee = msgbasedfeetypes.NewMsgBasedFee(sdk.MsgTypeURL(msg), sdk.NewInt64Coin("nhash", 10))
-	app.MsgBasedFeeKeeper.SetMsgBasedFee(ctx, msgbasedFee)
+	msgbasedFee = msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewInt64Coin("nhash", 10))
+	app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee)
 
 	check(simapp.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(290500010)))))
 	// tx with a fee associated with msg type, additional cost is in same base as fee
@@ -184,8 +184,8 @@ func TestMsgService(t *testing.T) {
 	assert.Equal(t, antewrapper.AttributeKeyBaseFee, string(res.Events[8].Attributes[0].Key))
 	assert.Equal(t, "190500000nhash", string(res.Events[8].Attributes[0].Value))
 
-	msgbasedFee = msgbasedfeetypes.NewMsgBasedFee(sdk.MsgTypeURL(msg), sdk.NewInt64Coin("atom", 100))
-	app.MsgBasedFeeKeeper.SetMsgBasedFee(ctx, msgbasedFee)
+	msgbasedFee = msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewInt64Coin("atom", 100))
+	app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee)
 
 	check(simapp.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(290500010)))))
 	// tx with a fee associated with msg type, additional cost is in diff denom(atom) but using default denom, nhash for base fee.
@@ -224,8 +224,8 @@ func TestMsgServiceAuthz(t *testing.T) {
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 
 	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(100))))
-	msgbasedFee := msgbasedfeetypes.NewMsgBasedFee(sdk.MsgTypeURL(msg), sdk.NewCoin("hotdog", sdk.NewInt(800)))
-	app.MsgBasedFeeKeeper.SetMsgBasedFee(ctx, msgbasedFee)
+	msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewCoin("hotdog", sdk.NewInt(800)))
+	app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee)
 	app.AuthzKeeper.SaveGrant(ctx, addr2, addr, banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewInt64Coin("hotdog", 500))), time.Now().Add(time.Hour))
 
 	// tx authz send message with correct amount of fees associated
@@ -314,8 +314,8 @@ func TestMsgServiceAuthzAdditionalMsgFeeInDefaultDenom(t *testing.T) {
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 
 	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100))))
-	msgbasedFee := msgbasedfeetypes.NewMsgBasedFee(sdk.MsgTypeURL(msg), sdk.NewCoin("atom", sdk.NewInt(10)))
-	app.MsgBasedFeeKeeper.SetMsgBasedFee(ctx, msgbasedFee)
+	msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewCoin("atom", sdk.NewInt(10)))
+	app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee)
 	app.AuthzKeeper.SaveGrant(ctx, addr2, addr, banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewInt64Coin("atom", 500))), time.Now().Add(time.Hour))
 
 	// tx authz send message with correct amount of fees associated

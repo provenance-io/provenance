@@ -20,7 +20,7 @@ func GetCmdPioSimulateTx() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "simulate [msg_tx_json_file]",
 		Args:  cobra.ExactArgs(1),
-		Short: "Simulate transaction and return estimated costs with possible msg based fees.",
+		Short: "Simulate transaction and return estimated costs with possible msg fees.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {

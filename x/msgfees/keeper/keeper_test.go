@@ -30,7 +30,7 @@ func (s *TestSuite) SetupTest() {
 	now := tmtime.Now()
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, app.MsgBasedFeeKeeper)
+	types.RegisterQueryServer(queryHelper, app.MsgFeesKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 	s.queryClient = queryClient
 
@@ -44,29 +44,29 @@ func (s *TestSuite) TestKeeper() {
 	app, ctx, _ := s.app, s.ctx, s.addrs
 
 	s.T().Log("verify that creating msg fee for type works")
-	msgFee, err := app.MsgBasedFeeKeeper.GetMsgBasedFee(ctx, bankSendAuthMsgType)
+	msgFee, err := app.MsgFeesKeeper.GetMsgFee(ctx, bankSendAuthMsgType)
 	s.Require().Nil(msgFee)
 	s.Require().Nil(err)
 	newCoin := sdk.NewInt64Coin("steak", 100)
-	msgFeeToCreate := types.NewMsgBasedFee(bankSendAuthMsgType, newCoin)
-	app.MsgBasedFeeKeeper.SetMsgBasedFee(ctx, msgFeeToCreate)
+	msgFeeToCreate := types.NewMsgFee(bankSendAuthMsgType, newCoin)
+	app.MsgFeesKeeper.SetMsgFee(ctx, msgFeeToCreate)
 
-	msgFee, err = app.MsgBasedFeeKeeper.GetMsgBasedFee(ctx, bankSendAuthMsgType)
+	msgFee, err = app.MsgFeesKeeper.GetMsgFee(ctx, bankSendAuthMsgType)
 	s.Require().NotNil(msgFee)
 	s.Require().Nil(err)
 	s.Require().Equal(bankSendAuthMsgType, msgFee.MsgTypeUrl)
 
-	msgFee, err = app.MsgBasedFeeKeeper.GetMsgBasedFee(ctx, "does-not-exist")
+	msgFee, err = app.MsgFeesKeeper.GetMsgFee(ctx, "does-not-exist")
 	s.Require().Nil(err)
 	s.Require().Nil(msgFee)
 
-	err = app.MsgBasedFeeKeeper.RemoveMsgBasedFee(ctx, bankSendAuthMsgType)
+	err = app.MsgFeesKeeper.RemoveMsgFee(ctx, bankSendAuthMsgType)
 	s.Require().Nil(err)
-	msgFee, err = app.MsgBasedFeeKeeper.GetMsgBasedFee(ctx, bankSendAuthMsgType)
+	msgFee, err = app.MsgFeesKeeper.GetMsgFee(ctx, bankSendAuthMsgType)
 	s.Require().Nil(msgFee)
 	s.Require().Nil(err)
 
-	err = app.MsgBasedFeeKeeper.RemoveMsgBasedFee(ctx, "does-not-exist")
+	err = app.MsgFeesKeeper.RemoveMsgFee(ctx, "does-not-exist")
 	s.Require().ErrorIs(err, types.ErrMsgFeeDoesNotExist)
 
 }

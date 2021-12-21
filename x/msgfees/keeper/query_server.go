@@ -24,17 +24,17 @@ func (k Keeper) Params(ctx context.Context, request *types.QueryParamsRequest) (
 	return &types.QueryParamsResponse{Params: params}, nil
 }
 
-func (k Keeper) QueryAllMsgBasedFees(c context.Context, req *types.QueryAllMsgBasedFeesRequest) (*types.QueryAllMsgBasedFeesResponse, error) {
+func (k Keeper) QueryAllMsgFees(c context.Context, req *types.QueryAllMsgFeesRequest) (*types.QueryAllMsgFeesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	var msgFees []*types.MsgBasedFee
+	var msgFees []*types.MsgFee
 	store := ctx.KVStore(k.storeKey)
-	msgFeeStore := prefix.NewStore(store, types.MsgBasedFeeKeyPrefix)
+	msgFeeStore := prefix.NewStore(store, types.MsgFeeKeyPrefix)
 	pageRes, err := query.Paginate(msgFeeStore, req.Pagination, func(key []byte, value []byte) error {
-		var msgFee types.MsgBasedFee
+		var msgFee types.MsgFee
 
 		if err := k.cdc.Unmarshal(value, &msgFee); err != nil {
 			return err
@@ -48,7 +48,7 @@ func (k Keeper) QueryAllMsgBasedFees(c context.Context, req *types.QueryAllMsgBa
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryAllMsgBasedFeesResponse{MsgBasedFees: msgFees, Pagination: pageRes}, nil
+	return &types.QueryAllMsgFeesResponse{MsgFees: msgFees, Pagination: pageRes}, nil
 }
 
 func (k Keeper) CalculateTxFees(goCtx context.Context, request *types.CalculateTxFeesRequest) (*types.CalculateTxFeesResponse, error) {

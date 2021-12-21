@@ -21,7 +21,7 @@ service Query {
   }
 
   // Query all Msgs which have fees associated with them.
-  rpc QueryAllMsgBasedFees(QueryAllMsgBasedFeesRequest) returns (QueryAllMsgBasedFeesResponse) {
+  rpc QueryAllMsgFees(QueryAllMsgFeesRequest) returns (QueryAllMsgFeesResponse) {
     option (google.api.http).get = "/provenance/msgfees/v1/params";
   }
 
@@ -43,15 +43,15 @@ message QueryParamsResponse {
   Params params = 1 [(gogoproto.nullable) = false];
 }
 
-// QueryAllMsgBasedFeesRequest queries all Msg which have fees associated with them.
-message QueryAllMsgBasedFeesRequest {
+// QueryAllMsgFeesRequest queries all Msg which have fees associated with them.
+message QueryAllMsgFeesRequest {
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 // response for querying all msg's with fees associated with them
-message QueryAllMsgBasedFeesResponse {
-  repeated MsgBasedFee msg_based_fees = 1;
+message QueryAllMsgFeesResponse {
+  repeated MsgFee msg_fees = 1;
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
@@ -69,10 +69,10 @@ message CalculateTxFeesRequest {
 
 // CalculateTxFeesResponse is the response type for the Query RPC method.
 message CalculateTxFeesResponse {
-  // additional_fees are the amount of coins to be for addition msg based fees
+  // additional_fees are the amount of coins to be for addition msg fees
   repeated cosmos.base.v1beta1.Coin additional_fees = 1
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-  // total_fees are the total amount of fees needed for the transactions (msg based fees + gas fee)
+  // total_fees are the total amount of fees needed for the transactions (msg fees + gas fee)
   // note: the gas fee is calculated with the min gas fee param as a constant
   repeated cosmos.base.v1beta1.Coin total_fees = 2
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];

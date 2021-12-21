@@ -61,7 +61,7 @@ func (s *SimulateTestSuite) SetupTest() {
 	var msgfeesData msgfeestypes.GenesisState
 	msgfeesData.Params.FloorGasPrice = s.floorGasPrice
 	msgfeesData.Params.EnableGovernance = true
-	msgfeesData.MsgBasedFees = append(msgfeesData.MsgBasedFees, msgfeestypes.NewMsgBasedFee(s.sendMsgTypeUrl, s.sendMsgAdditionalFee))
+	msgfeesData.MsgFees = append(msgfeesData.MsgFees, msgfeestypes.NewMsgFee(s.sendMsgTypeUrl, s.sendMsgAdditionalFee))
 	msgFeesDataBz, err := cfg.Codec.MarshalJSON(&msgfeesData)
 	s.Require().NoError(err)
 	genesisState[msgfeestypes.ModuleName] = msgFeesDataBz

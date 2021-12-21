@@ -155,7 +155,7 @@ func (s *IntegrationTestSuite) TestMsgFeesTxGovProposals() {
 			}
 			tc.args = append(tc.args, args...)
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, msgfeescli.GetCmdMsgBasedFeesProposal(), tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, msgfeescli.GetCmdMsgFeesProposal(), tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 				s.Assert().Equal(tc.expectErrMsg, err.Error())

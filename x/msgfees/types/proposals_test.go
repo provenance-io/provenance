@@ -25,13 +25,13 @@ func (s *MsgFeesProposalTestSuite) TearDownSuite() {
 	s.T().Log("tearing down integration test suite")
 }
 
-func (s *MsgFeesProposalTestSuite) TestAddMsgBasedFeeProposalType() {
+func (s *MsgFeesProposalTestSuite) TestAddMsgFeeProposalType() {
 
 	msgType := sdk.MsgTypeURL(&metadatatypes.MsgWriteRecordRequest{})
 
-	m := NewAddMsgBasedFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)))
+	m := NewAddMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)))
 	s.Assert().Equal(
-		`Add Msg Based Fee Proposal:
+		`Add Msg Fee Proposal:
 Title:         title
 Description:   description
 Msg:           /provenance.metadata.v1.MsgWriteRecordRequest
@@ -40,22 +40,22 @@ AdditionalFee: 10hotdog
 
 	tests := []struct {
 		name        string
-		proposal    *AddMsgBasedFeeProposal
+		proposal    *AddMsgFeeProposal
 		expectedErr string
 	}{
 		{
 			"Empty type error",
-			NewAddMsgBasedFeeProposal("title", "description", "", sdk.NewCoin("hotdog", sdk.NewInt(10))),
+			NewAddMsgFeeProposal("title", "description", "", sdk.NewCoin("hotdog", sdk.NewInt(10))),
 			ErrEmptyMsgType.Error(),
 		},
 		{
 			"Invalid fee amounts",
-			NewAddMsgBasedFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(0))),
+			NewAddMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(0))),
 			ErrInvalidFee.Error(),
 		},
 		{
 			"Invalid proposal details",
-			NewAddMsgBasedFeeProposal("title", "", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10))),
+			NewAddMsgFeeProposal("title", "", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10))),
 			"proposal description cannot be blank: invalid proposal content",
 		},
 	}
@@ -69,13 +69,13 @@ AdditionalFee: 10hotdog
 	}
 }
 
-func (s *MsgFeesProposalTestSuite) TestUpdateMsgBasedFeeProposalType() {
+func (s *MsgFeesProposalTestSuite) TestUpdateMsgFeeProposalType() {
 
 	msgType := sdk.MsgTypeURL(&metadatatypes.MsgWriteRecordRequest{})
 
-	m := NewUpdateMsgBasedFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)))
+	m := NewUpdateMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)))
 	s.Assert().Equal(
-		`Update Msg Based Fee Proposal:
+		`Update Msg Fee Proposal:
 Title:         title
 Description:   description
 Msg:           /provenance.metadata.v1.MsgWriteRecordRequest
@@ -84,22 +84,22 @@ AdditionalFee: 10hotdog
 
 	tests := []struct {
 		name        string
-		proposal    *UpdateMsgBasedFeeProposal
+		proposal    *UpdateMsgFeeProposal
 		expectedErr string
 	}{
 		{
 			"Empty type error",
-			NewUpdateMsgBasedFeeProposal("title", "description", "", sdk.NewCoin("hotdog", sdk.NewInt(10))),
+			NewUpdateMsgFeeProposal("title", "description", "", sdk.NewCoin("hotdog", sdk.NewInt(10))),
 			ErrEmptyMsgType.Error(),
 		},
 		{
 			"Invalid fee amounts",
-			NewUpdateMsgBasedFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(0))),
+			NewUpdateMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(0))),
 			ErrInvalidFee.Error(),
 		},
 		{
 			"Invalid proposal details",
-			NewUpdateMsgBasedFeeProposal("title", "", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10))),
+			NewUpdateMsgFeeProposal("title", "", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10))),
 			"proposal description cannot be blank: invalid proposal content",
 		},
 	}
@@ -113,12 +113,12 @@ AdditionalFee: 10hotdog
 
 }
 
-func (s *MsgFeesProposalTestSuite) TestRemoveMsgBasedFeeProposalType() {
+func (s *MsgFeesProposalTestSuite) TestRemoveMsgFeeProposalType() {
 	msgType := sdk.MsgTypeURL(&metadatatypes.MsgWriteRecordRequest{})
 
-	m := NewRemoveMsgBasedFeeProposal("title", "description", msgType)
+	m := NewRemoveMsgFeeProposal("title", "description", msgType)
 	s.Assert().Equal(
-		`Remove Msg Based Fee Proposal:
+		`Remove Msg Fee Proposal:
   Title:       title
   Description: description
   MsgTypeUrl:         /provenance.metadata.v1.MsgWriteRecordRequest

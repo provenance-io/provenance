@@ -9,17 +9,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
-	msgbasedfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
+	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 // HandlerOptions are the options required for constructing a default SDK AnteHandler.
 type HandlerOptions struct {
-	AccountKeeper     cosmosante.AccountKeeper
-	BankKeeper        banktypes.Keeper
-	FeegrantKeeper    msgbasedfeetypes.FeegrantKeeper
-	MsgBasedFeeKeeper msgbasedfeetypes.MsgBasedFeeKeeper
-	SignModeHandler   authsigning.SignModeHandler
-	SigGasConsumer    func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
+	AccountKeeper   cosmosante.AccountKeeper
+	BankKeeper      banktypes.Keeper
+	FeegrantKeeper  msgfeestypes.FeegrantKeeper
+	MsgFeesKeeper   msgfeestypes.MsgFeesKeeper
+	SignModeHandler authsigning.SignModeHandler
+	SigGasConsumer  func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
 }
 
 func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
@@ -48,12 +48,12 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		cosmosante.NewRejectExtensionOptionsDecorator(),
 		cosmosante.NewMempoolFeeDecorator(),
 		// Fee Decorator works to augment NewMempoolFeeDecorator and also check that enough fees are paid
-		NewMsgBasedFeeDecorator(options.BankKeeper, options.AccountKeeper, options.FeegrantKeeper, options.MsgBasedFeeKeeper),
+		NewMsgFeeDecorator(options.BankKeeper, options.AccountKeeper, options.FeegrantKeeper, options.MsgFeesKeeper),
 		cosmosante.NewValidateBasicDecorator(),
 		cosmosante.NewTxTimeoutHeightDecorator(),
 		cosmosante.NewValidateMemoDecorator(options.AccountKeeper),
 		cosmosante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
-		NewProvenanceDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.MsgBasedFeeKeeper),
+		NewProvenanceDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.MsgFeesKeeper),
 		cosmosante.NewSetPubKeyDecorator(options.AccountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
 		cosmosante.NewValidateSigCountDecorator(options.AccountKeeper),
 		cosmosante.NewSigGasConsumeDecorator(options.AccountKeeper, sigGasConsumer),

@@ -14,41 +14,41 @@ import (
 )
 
 const (
-	// OpWeightAddMsgBasedFeesProposal add msg based fees proposal
-	OpWeightAddMsgBasedFeesProposal    = "op_weight_add_msg_based_fees_proposal"
-	OpWeightRemoveMsgBasedFeesProposal = "op_weight_remove_msg_based_fees_proposal"
+	// OpWeightAddMsgFeesProposal add msg fees proposal
+	OpWeightAddMsgFeesProposal    = "op_weight_add_msg_based_fees_proposal"
+	OpWeightRemoveMsgFeesProposal = "op_weight_remove_msg_based_fees_proposal"
 )
 
 // ProposalContents defines the module weighted proposals' contents
 func ProposalContents(k keeper.Keeper) []simtypes.WeightedProposalContent {
 	return []simtypes.WeightedProposalContent{
 		simulation.NewWeightedProposalContent(
-			OpWeightAddMsgBasedFeesProposal,
+			OpWeightAddMsgFeesProposal,
 			simappparams.DefaultWeightAddMsgFeeProposalContent,
-			SimulateCreateAddMsgBasedFeesProposal(k),
+			SimulateCreateAddMsgFeesProposal(k),
 		),
 		simulation.NewWeightedProposalContent(
-			OpWeightRemoveMsgBasedFeesProposal,
+			OpWeightRemoveMsgFeesProposal,
 			simappparams.DefaultWeightRemoveMsgFeeProposalContent,
-			SimulateCreateRemoveMsgBasedFeesProposal(k),
+			SimulateCreateRemoveMsgFeesProposal(k),
 		),
 	}
 }
 
-// SimulateCreateAddMsgBasedFeesProposal generates random additional fee for AddMsgBasedFeesProposal
-func SimulateCreateAddMsgBasedFeesProposal(k keeper.Keeper) simtypes.ContentSimulatorFn {
+// SimulateCreateAddMsgFeesProposal generates random additional fee for AddMsgFeesProposal
+func SimulateCreateAddMsgFeesProposal(k keeper.Keeper) simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
-		msgFeeExists, err := k.GetMsgBasedFee(ctx, sdk.MsgTypeURL(&markertypes.MsgAddMarkerRequest{}))
+		msgFeeExists, err := k.GetMsgFee(ctx, sdk.MsgTypeURL(&markertypes.MsgAddMarkerRequest{}))
 		check(err)
 		if msgFeeExists == nil {
-			return types.NewAddMsgBasedFeeProposal(
+			return types.NewAddMsgFeeProposal(
 				simtypes.RandStringOfLength(r, 10),
 				simtypes.RandStringOfLength(r, 100),
 				sdk.MsgTypeURL(&banktypes.MsgSend{}),
 				sdk.NewCoin("hotdog", sdk.NewInt(r.Int63n(100000000))),
 			)
 		}
-		return types.NewUpdateMsgBasedFeeProposal(
+		return types.NewUpdateMsgFeeProposal(
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 100),
 			sdk.MsgTypeURL(&banktypes.MsgSend{}),
@@ -57,13 +57,13 @@ func SimulateCreateAddMsgBasedFeesProposal(k keeper.Keeper) simtypes.ContentSimu
 	}
 }
 
-// SimulateCreateRemoveMsgBasedFeesProposal generates random removal of additional fee for AddMsgBasedFeesProposal
-func SimulateCreateRemoveMsgBasedFeesProposal(k keeper.Keeper) simtypes.ContentSimulatorFn {
+// SimulateCreateRemoveMsgFeesProposal generates random removal of additional fee for AddMsgFeesProposal
+func SimulateCreateRemoveMsgFeesProposal(k keeper.Keeper) simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
-		msgFeeExists, err := k.GetMsgBasedFee(ctx, sdk.MsgTypeURL(&markertypes.MsgAddMarkerRequest{}))
+		msgFeeExists, err := k.GetMsgFee(ctx, sdk.MsgTypeURL(&markertypes.MsgAddMarkerRequest{}))
 		check(err)
 		if msgFeeExists != nil {
-			return types.NewRemoveMsgBasedFeeProposal(
+			return types.NewRemoveMsgFeeProposal(
 				simtypes.RandStringOfLength(r, 10),
 				simtypes.RandStringOfLength(r, 100),
 				sdk.MsgTypeURL(&banktypes.MsgSend{}),

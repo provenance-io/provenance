@@ -31,7 +31,7 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 
 	protoTxCfg := tx.NewTxConfig(codec.NewProtoCodec(app.InterfaceRegistry()), tx.DefaultSignModes)
 
-	dfd := pioante.NewProvenanceDeductFeeDecorator(app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.MsgBasedFeeKeeper)
+	dfd := pioante.NewProvenanceDeductFeeDecorator(app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.MsgFeesKeeper)
 
 	// this just tests our handler
 	decorators := []sdk.AnteDecorator{pioante.NewFeeMeterContextDecorator(), dfd}

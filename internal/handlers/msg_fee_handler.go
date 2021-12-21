@@ -4,15 +4,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	msgbasedfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
+	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 type PioBaseAppKeeperOptions struct {
-	AccountKeeper     msgbasedfeetypes.AccountKeeper
-	BankKeeper        msgbasedfeetypes.BankKeeper
-	FeegrantKeeper    msgbasedfeetypes.FeegrantKeeper
-	MsgBasedFeeKeeper msgbasedfeetypes.MsgBasedFeeKeeper
-	Decoder           sdk.TxDecoder
+	AccountKeeper  msgfeestypes.AccountKeeper
+	BankKeeper     msgfeestypes.BankKeeper
+	FeegrantKeeper msgfeestypes.FeegrantKeeper
+	MsgFeesKeeper  msgfeestypes.MsgFeesKeeper
+	Decoder        sdk.TxDecoder
 }
 
 func NewAdditionalMsgFeeHandler(options PioBaseAppKeeperOptions) (sdk.AdditionalMsgFeeHandler, error) {
@@ -28,7 +28,7 @@ func NewAdditionalMsgFeeHandler(options PioBaseAppKeeperOptions) (sdk.Additional
 		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "fee grant keeper is required for AdditionalMsgFeeHandler builder")
 	}
 
-	if options.MsgBasedFeeKeeper == nil {
+	if options.MsgFeesKeeper == nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "msgbased fee keeper is required for AdditionalMsgFeeHandler builder")
 	}
 
@@ -36,6 +36,6 @@ func NewAdditionalMsgFeeHandler(options PioBaseAppKeeperOptions) (sdk.Additional
 		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "Decoder is required for AdditionalMsgFeeHandler builder")
 	}
 
-	return NewMsgBasedFeeInvoker(options.BankKeeper, options.AccountKeeper, options.FeegrantKeeper,
-		options.MsgBasedFeeKeeper, options.Decoder).Invoke, nil
+	return NewMsgFeeInvoker(options.BankKeeper, options.AccountKeeper, options.FeegrantKeeper,
+		options.MsgFeesKeeper, options.Decoder).Invoke, nil
 }

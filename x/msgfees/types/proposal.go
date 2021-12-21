@@ -9,37 +9,37 @@ import (
 )
 
 const (
-	// ProposalTypeAddMsgBasedFee to add a new msg based fee
-	ProposalTypeAddMsgBasedFee string = "AddMsgBasedFee"
-	// ProposalTypeUpdateMsgBasedFee to update an existing msg based fee
-	ProposalTypeUpdateMsgBasedFee string = "UpdateMsgBasedFee"
-	// ProposalTypeRemoveMsgBasedFee to remove an existing msg based fee
-	ProposalTypeRemoveMsgBasedFee string = "RemoveMsgBasedFee"
+	// ProposalTypeAddMsgFee to add a new msg based fee
+	ProposalTypeAddMsgFee string = "AddMsgFee"
+	// ProposalTypeUpdateMsgFee to update an existing msg based fee
+	ProposalTypeUpdateMsgFee string = "UpdateMsgFee"
+	// ProposalTypeRemoveMsgFee to remove an existing msg based fee
+	ProposalTypeRemoveMsgFee string = "RemoveMsgFee"
 )
 
 var (
-	_ govtypes.Content = &AddMsgBasedFeeProposal{}
-	_ govtypes.Content = &UpdateMsgBasedFeeProposal{}
-	_ govtypes.Content = &RemoveMsgBasedFeeProposal{}
+	_ govtypes.Content = &AddMsgFeeProposal{}
+	_ govtypes.Content = &UpdateMsgFeeProposal{}
+	_ govtypes.Content = &RemoveMsgFeeProposal{}
 )
 
 func init() {
-	govtypes.RegisterProposalType(ProposalTypeAddMsgBasedFee)
-	govtypes.RegisterProposalTypeCodec(AddMsgBasedFeeProposal{}, "provenance/msgfees/AddMsgBasedFeeProposal")
+	govtypes.RegisterProposalType(ProposalTypeAddMsgFee)
+	govtypes.RegisterProposalTypeCodec(AddMsgFeeProposal{}, "provenance/msgfees/AddMsgFeeProposal")
 
-	govtypes.RegisterProposalType(ProposalTypeUpdateMsgBasedFee)
-	govtypes.RegisterProposalTypeCodec(UpdateMsgBasedFeeProposal{}, "provenance/msgfees/UpdateMsgBasedFeeProposal")
+	govtypes.RegisterProposalType(ProposalTypeUpdateMsgFee)
+	govtypes.RegisterProposalTypeCodec(UpdateMsgFeeProposal{}, "provenance/msgfees/UpdateMsgFeeProposal")
 
-	govtypes.RegisterProposalType(ProposalTypeRemoveMsgBasedFee)
-	govtypes.RegisterProposalTypeCodec(RemoveMsgBasedFeeProposal{}, "provenance/msgfees/RemoveMsgBasedFeeProposal")
+	govtypes.RegisterProposalType(ProposalTypeRemoveMsgFee)
+	govtypes.RegisterProposalTypeCodec(RemoveMsgFeeProposal{}, "provenance/msgfees/RemoveMsgFeeProposal")
 }
 
-func NewAddMsgBasedFeeProposal(
+func NewAddMsgFeeProposal(
 	title string,
 	description string,
 	msg string,
-	additionalFee sdk.Coin) *AddMsgBasedFeeProposal {
-	return &AddMsgBasedFeeProposal{
+	additionalFee sdk.Coin) *AddMsgFeeProposal {
+	return &AddMsgFeeProposal{
 		Title:         title,
 		Description:   description,
 		MsgTypeUrl:    msg,
@@ -47,9 +47,9 @@ func NewAddMsgBasedFeeProposal(
 	}
 }
 
-func (ambfp AddMsgBasedFeeProposal) ProposalRoute() string { return RouterKey }
-func (ambfp AddMsgBasedFeeProposal) ProposalType() string  { return ProposalTypeAddMsgBasedFee }
-func (ambfp AddMsgBasedFeeProposal) ValidateBasic() error {
+func (ambfp AddMsgFeeProposal) ProposalRoute() string { return RouterKey }
+func (ambfp AddMsgFeeProposal) ProposalType() string  { return ProposalTypeAddMsgFee }
+func (ambfp AddMsgFeeProposal) ValidateBasic() error {
 	if len(ambfp.MsgTypeUrl) == 0 {
 		return ErrEmptyMsgType
 	}
@@ -60,9 +60,9 @@ func (ambfp AddMsgBasedFeeProposal) ValidateBasic() error {
 
 	return govtypes.ValidateAbstract(&ambfp)
 }
-func (ambfp AddMsgBasedFeeProposal) String() string {
+func (ambfp AddMsgFeeProposal) String() string {
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Add Msg Based Fee Proposal:
+	b.WriteString(fmt.Sprintf(`Add Msg Fee Proposal:
 Title:         %s
 Description:   %s
 Msg:           %s
@@ -71,12 +71,12 @@ AdditionalFee: %s
 	return b.String()
 }
 
-func NewUpdateMsgBasedFeeProposal(
+func NewUpdateMsgFeeProposal(
 	title string,
 	description string,
 	msg string,
-	additionalFee sdk.Coin) *UpdateMsgBasedFeeProposal {
-	return &UpdateMsgBasedFeeProposal{
+	additionalFee sdk.Coin) *UpdateMsgFeeProposal {
+	return &UpdateMsgFeeProposal{
 		Title:         title,
 		Description:   description,
 		MsgTypeUrl:    msg,
@@ -84,11 +84,11 @@ func NewUpdateMsgBasedFeeProposal(
 	}
 }
 
-func (umbfp UpdateMsgBasedFeeProposal) ProposalRoute() string { return RouterKey }
+func (umbfp UpdateMsgFeeProposal) ProposalRoute() string { return RouterKey }
 
-func (umbfp UpdateMsgBasedFeeProposal) ProposalType() string { return ProposalTypeUpdateMsgBasedFee }
+func (umbfp UpdateMsgFeeProposal) ProposalType() string { return ProposalTypeUpdateMsgFee }
 
-func (umbfp UpdateMsgBasedFeeProposal) ValidateBasic() error {
+func (umbfp UpdateMsgFeeProposal) ValidateBasic() error {
 	if len(umbfp.MsgTypeUrl) == 0 {
 		return ErrEmptyMsgType
 	}
@@ -100,9 +100,9 @@ func (umbfp UpdateMsgBasedFeeProposal) ValidateBasic() error {
 	return govtypes.ValidateAbstract(&umbfp)
 }
 
-func (umbfp UpdateMsgBasedFeeProposal) String() string {
+func (umbfp UpdateMsgFeeProposal) String() string {
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Update Msg Based Fee Proposal:
+	b.WriteString(fmt.Sprintf(`Update Msg Fee Proposal:
 Title:         %s
 Description:   %s
 Msg:           %s
@@ -111,32 +111,32 @@ AdditionalFee: %s
 	return b.String()
 }
 
-func NewRemoveMsgBasedFeeProposal(
+func NewRemoveMsgFeeProposal(
 	title string,
 	description string,
 	msgTypeURL string,
-) *RemoveMsgBasedFeeProposal {
-	return &RemoveMsgBasedFeeProposal{
+) *RemoveMsgFeeProposal {
+	return &RemoveMsgFeeProposal{
 		Title:       title,
 		Description: description,
 		MsgTypeUrl:  msgTypeURL,
 	}
 }
 
-func (rmbfp RemoveMsgBasedFeeProposal) ProposalRoute() string { return RouterKey }
+func (rmbfp RemoveMsgFeeProposal) ProposalRoute() string { return RouterKey }
 
-func (rmbfp RemoveMsgBasedFeeProposal) ProposalType() string { return ProposalTypeRemoveMsgBasedFee }
+func (rmbfp RemoveMsgFeeProposal) ProposalType() string { return ProposalTypeRemoveMsgFee }
 
-func (rmbfp RemoveMsgBasedFeeProposal) ValidateBasic() error {
+func (rmbfp RemoveMsgFeeProposal) ValidateBasic() error {
 	if len(rmbfp.MsgTypeUrl) == 0 {
 		return ErrEmptyMsgType
 	}
 	return govtypes.ValidateAbstract(&rmbfp)
 }
 
-func (rmbfp RemoveMsgBasedFeeProposal) String() string {
+func (rmbfp RemoveMsgFeeProposal) String() string {
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Remove Msg Based Fee Proposal:
+	b.WriteString(fmt.Sprintf(`Remove Msg Fee Proposal:
   Title:       %s
   Description: %s
   MsgTypeUrl:         %s

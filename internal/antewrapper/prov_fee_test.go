@@ -87,7 +87,7 @@ func (suite *AnteTestSuite) TestDeductFees() {
 	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, coins)
 	suite.Require().NoError(err)
 
-	decorators := []sdk.AnteDecorator{pioante.NewFeeMeterContextDecorator(), pioante.NewProvenanceDeductFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper, nil, suite.app.MsgBasedFeeKeeper)}
+	decorators := []sdk.AnteDecorator{pioante.NewFeeMeterContextDecorator(), pioante.NewProvenanceDeductFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper, nil, suite.app.MsgFeesKeeper)}
 	antehandler := sdk.ChainAnteDecorators(decorators...)
 
 	_, err = antehandler(suite.ctx, tx, false)
@@ -136,7 +136,7 @@ func (suite *AnteTestSuite) TestEnsureAdditionalFeesPaid() {
 	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, coins)
 	suite.Require().NoError(err)
 
-	decorators := []sdk.AnteDecorator{pioante.NewFeeMeterContextDecorator(), pioante.NewProvenanceDeductFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper, nil, suite.app.MsgBasedFeeKeeper)}
+	decorators := []sdk.AnteDecorator{pioante.NewFeeMeterContextDecorator(), pioante.NewProvenanceDeductFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper, nil, suite.app.MsgFeesKeeper)}
 
 	antehandler := sdk.ChainAnteDecorators(decorators...)
 

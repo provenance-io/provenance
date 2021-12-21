@@ -8,10 +8,10 @@ option go_package          = "github.com/provenance-io/provenance/x/msgfees/type
 option java_package        = "io.provenance.msgfees.v1";
 option java_multiple_files = true;
 
-// GenesisState contains a set of msg based fees, persisted from the store
+// GenesisState contains a set of msg fees, persisted from the store
 message GenesisState {
   // params defines all the parameters of the module.
   Params params = 1 [(gogoproto.nullable) = false];
   // msg_based_fees are the additional fees on specific tx msgs
-  repeated MsgBasedFee msg_based_fees = 2 [(gogoproto.nullable) = false];
+  repeated MsgFee msg_fees = 2 [(gogoproto.nullable) = false];
 }

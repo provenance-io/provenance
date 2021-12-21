@@ -6,7 +6,7 @@ order: 4
 
 ## Msg/GenesisState
 
-GenesisState contains a set of msg based fees, exported and later imported from/to the store.
+GenesisState contains a set of msg fees, exported and later imported from/to the store.
 [genesis.proto](../../../proto/provenance/msgfees/v1/genesis.proto?plain=1)
 
 
@@ -14,7 +14,7 @@ GenesisState contains a set of msg based fees, exported and later imported from/
 get params for the module. [get params](../../../proto/provenance/msgfees/v1/query.proto?plain=1)  
 
 [query all msgfees in the system](../../../proto/provenance/msgfees/v1/query.proto?plain=1)
-QueryAllMsgBasedFeesRequest/QueryAllMsgBasedFeesResponse resquest/response for all messages
+QueryAllMsgFeesRequest/QueryAllMsgFeesResponse resquest/response for all messages
 which have fees associated with them.
 
 [simuate fees(including additional fees to be paid for a Tx)](../../../proto/provenance/msgfees/v1/query.proto?plain=1)
@@ -37,10 +37,10 @@ Response (CalculateTxFeesResponse)
 ```protobuf
 // CalculateTxFeesResponse is the response type for the Query RPC method.
 message CalculateTxFeesResponse {
-  // additional_fees are the amount of coins to be for addition msg based fees
+  // additional_fees are the amount of coins to be for addition msg fees
   repeated cosmos.base.v1beta1.Coin additional_fees = 1
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-  // total_fees are the total amount of fees needed for the transactions (msg based fees + gas fee)
+  // total_fees are the total amount of fees needed for the transactions (msg fees + gas fee)
   // note: the gas fee is calculated with the min gas fee param as a constant
   repeated cosmos.base.v1beta1.Coin total_fees = 2
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];

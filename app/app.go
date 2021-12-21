@@ -115,9 +115,9 @@ import (
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	metadatawasm "github.com/provenance-io/provenance/x/metadata/wasm"
 	"github.com/provenance-io/provenance/x/msgfees"
-	msgfeekeeper "github.com/provenance-io/provenance/x/msgfees/keeper"
+	msgfeeskeeper "github.com/provenance-io/provenance/x/msgfees/keeper"
 	msgfeesmodule "github.com/provenance-io/provenance/x/msgfees/module"
-	msgbasedfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
+	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 	"github.com/provenance-io/provenance/x/name"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
@@ -252,7 +252,7 @@ type App struct {
 	EvidenceKeeper   evidencekeeper.Keeper
 	FeeGrantKeeper   feegrantkeeper.Keeper
 
-	MsgBasedFeeKeeper msgfeekeeper.Keeper
+	MsgFeesKeeper msgfeeskeeper.Keeper
 
 	IBCKeeper      *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	TransferKeeper ibctransferkeeper.Keeper
@@ -320,7 +320,7 @@ func New(
 		markertypes.StoreKey,
 		attributetypes.StoreKey,
 		nametypes.StoreKey,
-		msgbasedfeestypes.StoreKey,
+		msgfeestypes.StoreKey,
 		wasm.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -385,11 +385,11 @@ func New(
 	app.FeeGrantKeeper = feegrantkeeper.NewKeeper(appCodec, keys[feegrant.StoreKey], app.AccountKeeper)
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath, app.BaseApp)
 
-	app.MsgBasedFeeKeeper = msgfeekeeper.NewKeeper(
-		appCodec, keys[msgbasedfeestypes.StoreKey], app.GetSubspace(msgbasedfeestypes.ModuleName), authtypes.FeeCollectorName, DefaultFeeDenom, app.Simulate, encodingConfig.TxConfig.TxDecoder())
+	app.MsgFeesKeeper = msgfeeskeeper.NewKeeper(
+		appCodec, keys[msgfeestypes.StoreKey], app.GetSubspace(msgfeestypes.ModuleName), authtypes.FeeCollectorName, DefaultFeeDenom, app.Simulate, encodingConfig.TxConfig.TxDecoder())
 
-	pioMsgBasedRouter := app.MsgServiceRouter().(*piohandlers.PioMsgServiceRouter)
-	pioMsgBasedRouter.SetMsgBasedFeeKeeper(app.MsgBasedFeeKeeper)
+	pioMsgFeesRouter := app.MsgServiceRouter().(*piohandlers.PioMsgServiceRouter)
+	pioMsgFeesRouter.SetMsgFeesKeeper(app.MsgFeesKeeper)
 
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
@@ -490,7 +490,7 @@ func New(
 		AddRoute(wasm.RouterKey, wasm.NewWasmProposalHandler(app.WasmKeeper, wasm.EnableAllProposals)).
 		AddRoute(nametypes.ModuleName, name.NewProposalHandler(app.NameKeeper)).
 		AddRoute(markertypes.ModuleName, marker.NewProposalHandler(app.MarkerKeeper)).
-		AddRoute(msgbasedfeestypes.ModuleName, msgfees.NewProposalHandler(app.MsgBasedFeeKeeper, app.InterfaceRegistry()))
+		AddRoute(msgfeestypes.ModuleName, msgfees.NewProposalHandler(app.MsgFeesKeeper, app.InterfaceRegistry()))
 	app.GovKeeper = govkeeper.NewKeeper(
 		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
 		&stakingKeeper, govRouter,
@@ -546,7 +546,7 @@ func New(
 		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper),
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),
 		attribute.NewAppModule(appCodec, app.AttributeKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
-		msgfeesmodule.NewAppModule(appCodec, app.MsgBasedFeeKeeper, app.interfaceRegistry),
+		msgfeesmodule.NewAppModule(appCodec, app.MsgFeesKeeper, app.interfaceRegistry),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper),
 
 		// IBC
@@ -600,7 +600,7 @@ func New(
 		nametypes.ModuleName,
 		attributetypes.ModuleName,
 		metadatatypes.ModuleName,
-		msgbasedfeestypes.ModuleName,
+		msgfeestypes.ModuleName,
 
 		ibchost.ModuleName,
 
@@ -632,7 +632,7 @@ func New(
 		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper),
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),
 		attribute.NewAppModule(appCodec, app.AttributeKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
-		msgfeesmodule.NewAppModule(appCodec, app.MsgBasedFeeKeeper, app.interfaceRegistry),
+		msgfeesmodule.NewAppModule(appCodec, app.MsgFeesKeeper, app.interfaceRegistry),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper),
 
 		ibc.NewAppModule(app.IBCKeeper),
@@ -651,12 +651,12 @@ func New(
 	app.SetBeginBlocker(app.BeginBlocker)
 	anteHandler, err := antewrapper.NewAnteHandler(
 		antewrapper.HandlerOptions{
-			AccountKeeper:     app.AccountKeeper,
-			BankKeeper:        app.BankKeeper,
-			SignModeHandler:   encodingConfig.TxConfig.SignModeHandler(),
-			FeegrantKeeper:    app.FeeGrantKeeper,
-			MsgBasedFeeKeeper: app.MsgBasedFeeKeeper,
-			SigGasConsumer:    ante.DefaultSigVerificationGasConsumer,
+			AccountKeeper:   app.AccountKeeper,
+			BankKeeper:      app.BankKeeper,
+			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
+			FeegrantKeeper:  app.FeeGrantKeeper,
+			MsgFeesKeeper:   app.MsgFeesKeeper,
+			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		})
 	if err != nil {
 		panic(err)
@@ -664,11 +664,11 @@ func New(
 
 	app.SetAnteHandler(anteHandler)
 	msgfeehandler, err := piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
-		AccountKeeper:     app.AccountKeeper,
-		BankKeeper:        app.BankKeeper,
-		FeegrantKeeper:    app.FeeGrantKeeper,
-		MsgBasedFeeKeeper: app.MsgBasedFeeKeeper,
-		Decoder:           encodingConfig.TxConfig.TxDecoder(),
+		AccountKeeper:  app.AccountKeeper,
+		BankKeeper:     app.BankKeeper,
+		FeegrantKeeper: app.FeeGrantKeeper,
+		MsgFeesKeeper:  app.MsgFeesKeeper,
+		Decoder:        encodingConfig.TxConfig.TxDecoder(),
 	})
 
 	if err != nil {
@@ -879,7 +879,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(markertypes.ModuleName)
 	paramsKeeper.Subspace(nametypes.ModuleName)
 	paramsKeeper.Subspace(attributetypes.ModuleName)
-	paramsKeeper.Subspace(msgbasedfeestypes.ModuleName)
+	paramsKeeper.Subspace(msgfeestypes.ModuleName)
 	paramsKeeper.Subspace(wasm.ModuleName)
 
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)

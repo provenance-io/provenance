@@ -17,11 +17,11 @@ const (
 	MemStoreKey = "mem_msgfees"
 )
 
-// GetMsgBasedFeeKey Takes in MsgName
-func GetMsgBasedFeeKey(p string) []byte {
-	return append(MsgBasedFeeKeyPrefix, []byte(p)...)
+// GetMsgFeeKey Takes in MsgName
+func GetMsgFeeKey(p string) []byte {
+	return append(MsgFeeKeyPrefix, []byte(p)...)
 }
 
 var (
-	MsgBasedFeeKeyPrefix = []byte{0x00}
+	MsgFeeKeyPrefix = []byte{0x00}
 )

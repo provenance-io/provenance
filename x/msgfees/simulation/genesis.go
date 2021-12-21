@@ -47,7 +47,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 			FloorGasPrice:    floorGasPrice,
 			EnableGovernance: enableGovernance,
 		},
-		MsgBasedFees: []types.MsgBasedFee{},
+		MsgFees: []types.MsgFee{},
 	}
 
 	bz, err := json.MarshalIndent(&msgFeesGenesis, "", " ")

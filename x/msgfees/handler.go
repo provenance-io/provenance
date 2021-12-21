@@ -13,12 +13,12 @@ import (
 func NewProposalHandler(k keeper.Keeper, registry cdctypes.InterfaceRegistry) govtypes.Handler {
 	return func(ctx sdk.Context, content govtypes.Content) error {
 		switch c := content.(type) {
-		case *types.AddMsgBasedFeeProposal:
-			return keeper.HandleAddMsgBasedFeeProposal(ctx, k, c, registry)
-		case *types.UpdateMsgBasedFeeProposal:
-			return keeper.HandleUpdateMsgBasedFeeProposal(ctx, k, c, registry)
-		case *types.RemoveMsgBasedFeeProposal:
-			return keeper.HandleRemoveMsgBasedFeeProposal(ctx, k, c, registry)
+		case *types.AddMsgFeeProposal:
+			return keeper.HandleAddMsgFeeProposal(ctx, k, c, registry)
+		case *types.UpdateMsgFeeProposal:
+			return keeper.HandleUpdateMsgFeeProposal(ctx, k, c, registry)
+		case *types.RemoveMsgFeeProposal:
+			return keeper.HandleRemoveMsgFeeProposal(ctx, k, c, registry)
 		default:
 			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized marker proposal content type: %T", c)
 		}

@@ -55,11 +55,11 @@ func (s *QueryServerTestSuite) SetupTest() {
 	s.app.BankKeeper.SetParams(s.ctx, banktypes.DefaultParams())
 	s.cfg = testutil.DefaultTestNetworkConfig()
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, s.app.MsgBasedFeeKeeper)
+	types.RegisterQueryServer(queryHelper, s.app.MsgFeesKeeper)
 	s.queryClient = types.NewQueryClient(queryHelper)
 
 	s.minGasPrice = 10
-	s.app.MsgBasedFeeKeeper.SetParams(s.ctx, types.NewParams(true, s.minGasPrice))
+	s.app.MsgFeesKeeper.SetParams(s.ctx, types.NewParams(true, s.minGasPrice))
 
 	s.privkey1 = secp256k1.GenPrivKey()
 	s.pubkey1 = s.privkey1.PubKey()
@@ -98,7 +98,7 @@ func (s *QueryServerTestSuite) TestCalculateTxFees() {
 
 	// do send with an additional fee
 	sendAddFee := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1))
-	s.app.MsgBasedFeeKeeper.SetMsgBasedFee(s.ctx, types.NewMsgBasedFee("/cosmos.bank.v1beta1.MsgSend", sendAddFee))
+	s.app.MsgFeesKeeper.SetMsgFee(s.ctx, types.NewMsgFee("/cosmos.bank.v1beta1.MsgSend", sendAddFee))
 	response, err = s.queryClient.CalculateTxFees(s.ctx.Context(), &simulateReq)
 	s.Assert().NoError(err)
 	s.Assert().NotNil(response)

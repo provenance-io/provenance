@@ -7,22 +7,22 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
-	msgbasedfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
+	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
-type MsgBasedFeeInvoker struct {
-	msgBasedFeeKeeper msgbasedfeetypes.MsgBasedFeeKeeper
-	bankKeeper        msgbasedfeetypes.BankKeeper
-	accountKeeper     msgbasedfeetypes.AccountKeeper
-	feegrantKeeper    msgbasedfeetypes.FeegrantKeeper
-	txDecoder         sdk.TxDecoder
+type MsgFeeInvoker struct {
+	msgFeeKeeper   msgfeestypes.MsgFeesKeeper
+	bankKeeper     msgfeestypes.BankKeeper
+	accountKeeper  msgfeestypes.AccountKeeper
+	feegrantKeeper msgfeestypes.FeegrantKeeper
+	txDecoder      sdk.TxDecoder
 }
 
-// NewMsgBasedFeeInvoker concrete impl of how to charge Msg Based Fees
-func NewMsgBasedFeeInvoker(bankKeeper msgbasedfeetypes.BankKeeper, accountKeeper msgbasedfeetypes.AccountKeeper,
-	feegrantKeeper msgbasedfeetypes.FeegrantKeeper, msgBasedFeeKeeper msgbasedfeetypes.MsgBasedFeeKeeper, decoder sdk.TxDecoder) MsgBasedFeeInvoker {
-	return MsgBasedFeeInvoker{
-		msgBasedFeeKeeper,
+// NewMsgFeeInvoker concrete impl of how to charge Msg Based Fees
+func NewMsgFeeInvoker(bankKeeper msgfeestypes.BankKeeper, accountKeeper msgfeestypes.AccountKeeper,
+	feegrantKeeper msgfeestypes.FeegrantKeeper, msgFeeKeeper msgfeestypes.MsgFeesKeeper, decoder sdk.TxDecoder) MsgFeeInvoker {
+	return MsgFeeInvoker{
+		msgFeeKeeper,
 		bankKeeper,
 		accountKeeper,
 		feegrantKeeper,
@@ -30,7 +30,7 @@ func NewMsgBasedFeeInvoker(bankKeeper msgbasedfeetypes.BankKeeper, accountKeeper
 	}
 }
 
-func (afd MsgBasedFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.Coins, events sdk.Events, err error) {
+func (afd MsgFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.Coins, events sdk.Events, err error) {
 	chargedFees := sdk.Coins{}
 	eventsToReturn := sdk.Events{}
 
@@ -100,7 +100,7 @@ func (afd MsgBasedFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.
 			}
 
 			if len(chargedFees) > 0 && chargedFees.IsAllPositive() {
-				err = afd.msgBasedFeeKeeper.DeductFees(afd.bankKeeper, ctx, deductFeesFromAcc, chargedFees)
+				err = afd.msgFeeKeeper.DeductFees(afd.bankKeeper, ctx, deductFeesFromAcc, chargedFees)
 				if err != nil {
 					return nil, nil, err
 				}

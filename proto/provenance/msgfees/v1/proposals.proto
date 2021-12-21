@@ -16,8 +16,8 @@ option go_package = "github.com/provenance-io/provenance/x/msgfees/types";
 option java_package        = "io.provenance.msgfees.v1";
 option java_multiple_files = true;
 
-// AddMsgBasedFeeProposal defines a governance proposal to add additional msg based fee
-message AddMsgBasedFeeProposal {
+// AddMsgFeeProposal defines a governance proposal to add additional msg based fee
+message AddMsgFeeProposal {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
@@ -33,8 +33,8 @@ message AddMsgBasedFeeProposal {
   ];
 }
 
-// UpdateMsgBasedFeeProposal defines a governance proposal to update a current msg based fee
-message UpdateMsgBasedFeeProposal {
+// UpdateMsgFeeProposal defines a governance proposal to update a current msg based fee
+message UpdateMsgFeeProposal {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
@@ -50,8 +50,8 @@ message UpdateMsgBasedFeeProposal {
   ];
 }
 
-// RemoveMsgBasedFeeProposal defines a governance proposal to delete a current msg based fee
-message RemoveMsgBasedFeeProposal {
+// RemoveMsgFeeProposal defines a governance proposal to delete a current msg based fee
+message RemoveMsgFeeProposal {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 

@@ -12,9 +12,9 @@ import (
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*govtypes.Content)(nil),
-		&AddMsgBasedFeeProposal{},
-		&UpdateMsgBasedFeeProposal{},
-		&RemoveMsgBasedFeeProposal{},
+		&AddMsgFeeProposal{},
+		&UpdateMsgFeeProposal{},
+		&RemoveMsgFeeProposal{},
 	)
 }
 

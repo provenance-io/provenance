@@ -8,7 +8,7 @@ import (
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	msgbasedfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
+	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 // ProvenanceDeductFeeDecorator deducts fees from the first signer of the tx
@@ -19,7 +19,7 @@ type ProvenanceDeductFeeDecorator struct {
 	ak             authante.AccountKeeper
 	bankKeeper     types.BankKeeper
 	feegrantKeeper authante.FeegrantKeeper
-	msgFeeKeeper   msgbasedfeetypes.MsgBasedFeeKeeper
+	msgFeeKeeper   msgfeestypes.MsgFeesKeeper
 }
 
 var (
@@ -27,7 +27,7 @@ var (
 	AttributeKeyAdditionalFee = "additionalfee"
 )
 
-func NewProvenanceDeductFeeDecorator(ak authante.AccountKeeper, bk types.BankKeeper, fk msgbasedfeetypes.FeegrantKeeper, mbfk msgbasedfeetypes.MsgBasedFeeKeeper) ProvenanceDeductFeeDecorator {
+func NewProvenanceDeductFeeDecorator(ak authante.AccountKeeper, bk types.BankKeeper, fk msgfeestypes.FeegrantKeeper, mbfk msgfeestypes.MsgFeesKeeper) ProvenanceDeductFeeDecorator {
 	return ProvenanceDeductFeeDecorator{
 		ak:             ak,
 		bankKeeper:     bk,

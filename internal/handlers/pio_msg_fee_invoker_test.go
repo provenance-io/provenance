@@ -1,6 +1,8 @@
 package handlers_test
 
 import (
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -21,7 +23,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"testing"
 )
 
 func (suite *HandlerTestSuite) TestMsgFeeHandlerNoFeeCharged() {
@@ -38,11 +39,11 @@ func (suite *HandlerTestSuite) TestMsgFeeHandlerNoFeeCharged() {
 	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100), false).(*antewrapper.FeeGasMeter)
 	suite.ctx = suite.ctx.WithGasMeter(feeGasMeter)
 	feeChargeFn, err := piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
-		AccountKeeper:     suite.app.AccountKeeper,
-		BankKeeper:        suite.app.BankKeeper,
-		FeegrantKeeper:    suite.app.FeeGrantKeeper,
-		MsgBasedFeeKeeper: suite.app.MsgBasedFeeKeeper,
-		Decoder:           encodingConfig.TxConfig.TxDecoder(),
+		AccountKeeper:  suite.app.AccountKeeper,
+		BankKeeper:     suite.app.BankKeeper,
+		FeegrantKeeper: suite.app.FeeGrantKeeper,
+		MsgFeesKeeper:  suite.app.MsgFeesKeeper,
+		Decoder:        encodingConfig.TxConfig.TxDecoder(),
 	})
 	suite.Require().NoError(err)
 	coins, _, err := feeChargeFn(suite.ctx, false)
@@ -70,11 +71,11 @@ func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeCharged() {
 	}, "panicked on adding fees")
 	suite.ctx = suite.ctx.WithGasMeter(feeGasMeter)
 	feeChargeFn, err := piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
-		AccountKeeper:     suite.app.AccountKeeper,
-		BankKeeper:        suite.app.BankKeeper,
-		FeegrantKeeper:    suite.app.FeeGrantKeeper,
-		MsgBasedFeeKeeper: suite.app.MsgBasedFeeKeeper,
-		Decoder:           encodingConfig.TxConfig.TxDecoder(),
+		AccountKeeper:  suite.app.AccountKeeper,
+		BankKeeper:     suite.app.BankKeeper,
+		FeegrantKeeper: suite.app.FeeGrantKeeper,
+		MsgFeesKeeper:  suite.app.MsgFeesKeeper,
+		Decoder:        encodingConfig.TxConfig.TxDecoder(),
 	})
 	suite.Require().NoError(err)
 	coins, _, err := feeChargeFn(suite.ctx, false)
@@ -114,11 +115,11 @@ func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeChargedFeeGranter() {
 	}, "panicked on adding fees")
 	suite.ctx = suite.ctx.WithGasMeter(feeGasMeter)
 	feeChargeFn, err := piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
-		AccountKeeper:     suite.app.AccountKeeper,
-		BankKeeper:        suite.app.BankKeeper,
-		FeegrantKeeper:    suite.app.FeeGrantKeeper,
-		MsgBasedFeeKeeper: suite.app.MsgBasedFeeKeeper,
-		Decoder:           encodingConfig.TxConfig.TxDecoder(),
+		AccountKeeper:  suite.app.AccountKeeper,
+		BankKeeper:     suite.app.BankKeeper,
+		FeegrantKeeper: suite.app.FeeGrantKeeper,
+		MsgFeesKeeper:  suite.app.MsgFeesKeeper,
+		Decoder:        encodingConfig.TxConfig.TxDecoder(),
 	})
 
 	coins, _, err := feeChargeFn(suite.ctx, false)
@@ -141,11 +142,11 @@ func (suite *HandlerTestSuite) TestMsgFeeHandlerBadDecoder() {
 	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100), false).(*antewrapper.FeeGasMeter)
 	suite.ctx = suite.ctx.WithGasMeter(feeGasMeter)
 	feeChargeFn, err := piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
-		AccountKeeper:     suite.app.AccountKeeper,
-		BankKeeper:        suite.app.BankKeeper,
-		FeegrantKeeper:    suite.app.FeeGrantKeeper,
-		MsgBasedFeeKeeper: suite.app.MsgBasedFeeKeeper,
-		Decoder:           simappCosmos.MakeTestEncodingConfig().TxConfig.TxDecoder(),
+		AccountKeeper:  suite.app.AccountKeeper,
+		BankKeeper:     suite.app.BankKeeper,
+		FeegrantKeeper: suite.app.FeeGrantKeeper,
+		MsgFeesKeeper:  suite.app.MsgFeesKeeper,
+		Decoder:        simappCosmos.MakeTestEncodingConfig().TxConfig.TxDecoder(),
 	})
 	suite.Require().NoError(err)
 	suite.Require().Panics(func() { feeChargeFn(suite.ctx, false) }, "Bad decoder while setting up app.")
@@ -244,8 +245,8 @@ func (suite *HandlerTestSuite) SetupTest(isCheckTx bool) params.EncodingConfig {
 
 func (suite *HandlerTestSuite) CreateMsgFee(fee sdk.Coin, msgs ...sdk.Msg) error {
 	for _, msg := range msgs {
-		msgFeeToCreate := msgfeetype.NewMsgBasedFee(sdk.MsgTypeURL(msg), fee)
-		err := suite.app.MsgBasedFeeKeeper.SetMsgBasedFee(suite.ctx, msgFeeToCreate)
+		msgFeeToCreate := msgfeetype.NewMsgFee(sdk.MsgTypeURL(msg), fee)
+		err := suite.app.MsgFeesKeeper.SetMsgFee(suite.ctx, msgFeeToCreate)
 		if err != nil {
 			return err
 		}

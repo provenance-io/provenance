@@ -4,13 +4,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func NewMsgBasedFee(msgTypeURL string, additionalFee sdk.Coin) MsgBasedFee {
-	return MsgBasedFee{
+func NewMsgFee(msgTypeURL string, additionalFee sdk.Coin) MsgFee {
+	return MsgFee{
 		MsgTypeUrl: msgTypeURL, AdditionalFee: additionalFee,
 	}
 }
 
-func (msg *MsgBasedFee) ValidateBasic() error {
+func (msg *MsgFee) ValidateBasic() error {
 	if msg == nil {
 		return ErrEmptyMsgType
 	}

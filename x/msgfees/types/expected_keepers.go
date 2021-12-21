@@ -20,9 +20,9 @@ type BankKeeper interface {
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 }
 
-// MsgBasedFeeKeeper for additional msg fees.
-type MsgBasedFeeKeeper interface {
-	GetMsgBasedFee(ctx sdk.Context, msgType string) (*MsgBasedFee, error)
+// MsgFeesKeeper for additional msg fees.
+type MsgFeesKeeper interface {
+	GetMsgFee(ctx sdk.Context, msgType string) (*MsgFee, error)
 	GetFeeCollectorName() string
 	DeductFees(bankKeeper authtypes.BankKeeper, ctx sdk.Context, acc authtypes.AccountI, fees sdk.Coins) error
 	GetDefaultFeeDenom() string

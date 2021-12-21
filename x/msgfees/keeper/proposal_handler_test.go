@@ -50,47 +50,47 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 	}{
 		{
 			"add msgfees - valid",
-			msgfeestypes.NewAddMsgBasedFeeProposal("title add", "description", sdk.MsgTypeURL(writeRecordRequest), sdk.NewCoin("hotdog", sdk.NewInt(10))),
+			msgfeestypes.NewAddMsgFeeProposal("title add", "description", sdk.MsgTypeURL(writeRecordRequest), sdk.NewCoin("hotdog", sdk.NewInt(10))),
 			nil,
 		},
 		{
-			"add msgfees - invalid - cannot add when the same msgbasedfee exists",
-			msgfeestypes.NewAddMsgBasedFeeProposal("title add", "description", sdk.MsgTypeURL(writeRecordRequest), sdk.NewCoin("hotdog", sdk.NewInt(10))),
+			"add msgfees - invalid - cannot add when the same msgfee exists",
+			msgfeestypes.NewAddMsgFeeProposal("title add", "description", sdk.MsgTypeURL(writeRecordRequest), sdk.NewCoin("hotdog", sdk.NewInt(10))),
 			msgfeestypes.ErrMsgFeeAlreadyExists,
 		},
 		{
 			"add msgfees - invalid - validate basic fail",
-			msgfeestypes.NewAddMsgBasedFeeProposal("title add", "description", sdk.MsgTypeURL(writeScopeRequest), sdk.NewCoin("hotdog", sdk.NewInt(0))),
+			msgfeestypes.NewAddMsgFeeProposal("title add", "description", sdk.MsgTypeURL(writeScopeRequest), sdk.NewCoin("hotdog", sdk.NewInt(0))),
 			msgfeestypes.ErrInvalidFee,
 		},
 		{
 			"update msgfees - valid",
-			msgfeestypes.NewUpdateMsgBasedFeeProposal("title update", "description", sdk.MsgTypeURL(writeRecordRequest), sdk.NewCoin("hotdog", sdk.NewInt(10))),
+			msgfeestypes.NewUpdateMsgFeeProposal("title update", "description", sdk.MsgTypeURL(writeRecordRequest), sdk.NewCoin("hotdog", sdk.NewInt(10))),
 			nil,
 		},
 		{
-			"update msgfees - invalid - cannot update a non-existing msgbasedfee",
-			msgfeestypes.NewUpdateMsgBasedFeeProposal("title update", "description", sdk.MsgTypeURL(writeScopeRequest), sdk.NewCoin("hotdog", sdk.NewInt(10))),
+			"update msgfees - invalid - cannot update a non-existing msgfee",
+			msgfeestypes.NewUpdateMsgFeeProposal("title update", "description", sdk.MsgTypeURL(writeScopeRequest), sdk.NewCoin("hotdog", sdk.NewInt(10))),
 			msgfeestypes.ErrMsgFeeDoesNotExist,
 		},
 		{
 			"update msgfees - invalid - validate basic fail",
-			msgfeestypes.NewUpdateMsgBasedFeeProposal("title update", "description", sdk.MsgTypeURL(writeRecordRequest), sdk.NewCoin("hotdog", sdk.NewInt(0))),
+			msgfeestypes.NewUpdateMsgFeeProposal("title update", "description", sdk.MsgTypeURL(writeRecordRequest), sdk.NewCoin("hotdog", sdk.NewInt(0))),
 			msgfeestypes.ErrInvalidFee,
 		},
 		{
 			"remove msgfees - valid",
-			msgfeestypes.NewRemoveMsgBasedFeeProposal("title remove", "description", sdk.MsgTypeURL(writeRecordRequest)),
+			msgfeestypes.NewRemoveMsgFeeProposal("title remove", "description", sdk.MsgTypeURL(writeRecordRequest)),
 			nil,
 		},
 		{
-			"remove msgfees - invalid - cannot remove a non-existing msgbasedfee",
-			msgfeestypes.NewRemoveMsgBasedFeeProposal("title remove", "description", sdk.MsgTypeURL(writeRecordRequest)),
+			"remove msgfees - invalid - cannot remove a non-existing msgfee",
+			msgfeestypes.NewRemoveMsgFeeProposal("title remove", "description", sdk.MsgTypeURL(writeRecordRequest)),
 			msgfeestypes.ErrMsgFeeDoesNotExist,
 		},
 		{
 			"remove msgfees - invalid - validate basic fail",
-			msgfeestypes.NewRemoveMsgBasedFeeProposal("title remove", "description", ""),
+			msgfeestypes.NewRemoveMsgFeeProposal("title remove", "description", ""),
 			msgfeestypes.ErrEmptyMsgType,
 		},
 	}
@@ -102,12 +102,12 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 
 			var err error
 			switch c := tc.prop.(type) {
-			case *msgfeestypes.AddMsgBasedFeeProposal:
-				err = msgfeeskeeper.HandleAddMsgBasedFeeProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
-			case *msgfeestypes.UpdateMsgBasedFeeProposal:
-				err = msgfeeskeeper.HandleUpdateMsgBasedFeeProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
-			case *msgfeestypes.RemoveMsgBasedFeeProposal:
-				err = msgfeeskeeper.HandleRemoveMsgBasedFeeProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
+			case *msgfeestypes.AddMsgFeeProposal:
+				err = msgfeeskeeper.HandleAddMsgFeeProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
+			case *msgfeestypes.UpdateMsgFeeProposal:
+				err = msgfeeskeeper.HandleUpdateMsgFeeProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
+			case *msgfeestypes.RemoveMsgFeeProposal:
+				err = msgfeeskeeper.HandleRemoveMsgFeeProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
 			default:
 				panic("invalid proposal type")
 			}

@@ -6,11 +6,11 @@ The msgfee module supports addition, update, and deletion of Msg Type which are 
 
 ## Add MsgFee Proposal
 
-AddMsgBasedFeeProposal defines a governance proposal to create a new msgfee entry for a specific `MsgType`.
+AddMsgFeeProposal defines a governance proposal to create a new msgfee entry for a specific `MsgType`.
 
 ```protobuf
-// AddMsgBasedFeeProposal defines a governance proposal to add additional msg based fee
-message AddMsgBasedFeeProposal {
+// AddMsgFeeProposal defines a governance proposal to add additional msg based fee
+message AddMsgFeeProposal {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
@@ -45,8 +45,8 @@ sample command to add an additional fee locally
 ## Update MsgFee Proposal
 
 ```protobuf
-// UpdateMsgBasedFeeProposal defines a governance proposal to update a current msg based fee
-message UpdateMsgBasedFeeProposal {
+// UpdateMsgFeeProposal defines a governance proposal to update a current msg based fee
+message UpdateMsgFeeProposal {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
@@ -66,8 +66,8 @@ message UpdateMsgBasedFeeProposal {
 ## Remove MsgFee Proposal
 
 ```protobuf
-// RemoveMsgBasedFeeProposal defines a governance proposal to delete a current msg based fee
-message RemoveMsgBasedFeeProposal {
+// RemoveMsgFeeProposal defines a governance proposal to delete a current msg based fee
+message RemoveMsgFeeProposal {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 

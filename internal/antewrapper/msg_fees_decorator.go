@@ -8,29 +8,29 @@ import (
 	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
-	msgbasedfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
+	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 const (
 	DefaultInsufficientFeeMsg = "not enough fees; after deducting fees required,got"
 )
 
-// MsgBasedFeeDecorator will check if the transaction's fee is at least as large
+// MsgFeeDecorator will check if the transaction's fee is at least as large
 // as tax + additional minimum gasFee (defined in msgfeeskeeper)
 // and record additional fee proceeds to msgfees module to track additional fee proceeds.
 // If fee is too low, decorator returns error and tx is rejected from mempool.
 // Note this only applies when ctx.CheckTx = true
 // If fee is high enough or not CheckTx, then call next AnteHandler
-// CONTRACT: Tx must implement FeeTx to use MsgBasedFeeDecorator
-type MsgBasedFeeDecorator struct {
-	msgBasedFeeKeeper msgbasedfeetypes.MsgBasedFeeKeeper
-	bankKeeper        banktypes.Keeper
-	accountKeeper     cosmosante.AccountKeeper
-	feegrantKeeper    msgbasedfeetypes.FeegrantKeeper
+// CONTRACT: Tx must implement FeeTx to use MsgFeeDecorator
+type MsgFeeDecorator struct {
+	msgFeeKeeper   msgfeestypes.MsgFeesKeeper
+	bankKeeper     banktypes.Keeper
+	accountKeeper  cosmosante.AccountKeeper
+	feegrantKeeper msgfeestypes.FeegrantKeeper
 }
 
-func NewMsgBasedFeeDecorator(bankKeeper banktypes.Keeper, accountKeeper cosmosante.AccountKeeper, feegrantKeeper msgbasedfeetypes.FeegrantKeeper, keeper msgbasedfeetypes.MsgBasedFeeKeeper) MsgBasedFeeDecorator {
-	return MsgBasedFeeDecorator{
+func NewMsgFeeDecorator(bankKeeper banktypes.Keeper, accountKeeper cosmosante.AccountKeeper, feegrantKeeper msgfeestypes.FeegrantKeeper, keeper msgfeestypes.MsgFeesKeeper) MsgFeeDecorator {
+	return MsgFeeDecorator{
 		keeper,
 		bankKeeper,
 		accountKeeper,
@@ -47,21 +47,21 @@ func NewMsgBasedFeeDecorator(bankKeeper banktypes.Keeper, accountKeeper cosmosan
 // Let y is the additional fees to be paid per MsgType
 // then z = x + y
 // This Fee Decorator makes sure that z is >= to x + y
-func (afd MsgBasedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+func (afd MsgFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	feeTx, err := getFeeTx(tx)
 
 	if err != nil {
 		return ctx, err
 	}
 
-	ctx.Logger().Debug(fmt.Sprintf("In MsgBasedFeeDecorator %d", ctx.GasMeter().GasConsumed()))
+	ctx.Logger().Debug(fmt.Sprintf("In MsgFeeDecorator %d", ctx.GasMeter().GasConsumed()))
 
 	feeCoins := feeTx.GetFee()
 	gas := feeTx.GetGas()
 	msgs := feeTx.GetMsgs()
 
 	// Compute msg additionalFees
-	additionalFees, err := CalculateAdditionalFeesToBePaid(ctx, afd.msgBasedFeeKeeper, msgs...)
+	additionalFees, err := CalculateAdditionalFeesToBePaid(ctx, afd.msgFeeKeeper, msgs...)
 	if err != nil {
 		return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, err.Error())
 	}
@@ -100,7 +100,7 @@ func (afd MsgBasedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 
 		if !simulate {
 			if err = EnsureAccountHasSufficientFeesWithAcctBalanceCheck(gas, feeCoins, additionalFees, balancePerCoin,
-				afd.msgBasedFeeKeeper.GetFloorGasPrice(ctx), afd.msgBasedFeeKeeper.GetDefaultFeeDenom()); err != nil {
+				afd.msgFeeKeeper.GetFloorGasPrice(ctx), afd.msgFeeKeeper.GetDefaultFeeDenom()); err != nil {
 				return ctx, err
 			}
 		}
@@ -109,7 +109,7 @@ func (afd MsgBasedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 }
 
 // getFeeGranterIfExists checks if fee granter exists and returns account to deduct fees from
-func getFeeGranterIfExists(ctx sdk.Context, feeGranter sdk.AccAddress, afd MsgBasedFeeDecorator, feePayer sdk.AccAddress, deductFeesFrom sdk.AccAddress) (sdk.AccAddress, error) {
+func getFeeGranterIfExists(ctx sdk.Context, feeGranter sdk.AccAddress, afd MsgFeeDecorator, feePayer sdk.AccAddress, deductFeesFrom sdk.AccAddress) (sdk.AccAddress, error) {
 	if feeGranter != nil {
 		if afd.feegrantKeeper == nil {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")
@@ -210,13 +210,13 @@ func EnsureSufficientFees(gas uint64, feeCoins sdk.Coins, additionalFees sdk.Coi
 }
 
 // CalculateAdditionalFeesToBePaid computes the stability tax on MsgSend and MsgMultiSend.
-func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgbasedfeetypes.MsgBasedFeeKeeper, msgs ...sdk.Msg) (sdk.Coins, error) {
+func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgfeestypes.MsgFeesKeeper, msgs ...sdk.Msg) (sdk.Coins, error) {
 	// get the msg fee
 	additionalFees := sdk.Coins{}
 
 	for _, msg := range msgs {
 		typeURL := sdk.MsgTypeURL(msg)
-		msgFees, err := mbfk.GetMsgBasedFee(ctx, typeURL)
+		msgFees, err := mbfk.GetMsgFee(ctx, typeURL)
 		if err != nil {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 		}

@@ -329,22 +329,22 @@
     - [Msg](#provenance.metadata.v1.Msg)
   
 - [provenance/msgfees/v1/msgfees.proto](#provenance/msgfees/v1/msgfees.proto)
-    - [MsgBasedFee](#provenance.msgfees.v1.MsgBasedFee)
+    - [MsgFee](#provenance.msgfees.v1.MsgFee)
     - [Params](#provenance.msgfees.v1.Params)
   
 - [provenance/msgfees/v1/genesis.proto](#provenance/msgfees/v1/genesis.proto)
     - [GenesisState](#provenance.msgfees.v1.GenesisState)
   
 - [provenance/msgfees/v1/proposals.proto](#provenance/msgfees/v1/proposals.proto)
-    - [AddMsgBasedFeeProposal](#provenance.msgfees.v1.AddMsgBasedFeeProposal)
-    - [RemoveMsgBasedFeeProposal](#provenance.msgfees.v1.RemoveMsgBasedFeeProposal)
-    - [UpdateMsgBasedFeeProposal](#provenance.msgfees.v1.UpdateMsgBasedFeeProposal)
+    - [AddMsgFeeProposal](#provenance.msgfees.v1.AddMsgFeeProposal)
+    - [RemoveMsgFeeProposal](#provenance.msgfees.v1.RemoveMsgFeeProposal)
+    - [UpdateMsgFeeProposal](#provenance.msgfees.v1.UpdateMsgFeeProposal)
   
 - [provenance/msgfees/v1/query.proto](#provenance/msgfees/v1/query.proto)
     - [CalculateTxFeesRequest](#provenance.msgfees.v1.CalculateTxFeesRequest)
     - [CalculateTxFeesResponse](#provenance.msgfees.v1.CalculateTxFeesResponse)
-    - [QueryAllMsgBasedFeesRequest](#provenance.msgfees.v1.QueryAllMsgBasedFeesRequest)
-    - [QueryAllMsgBasedFeesResponse](#provenance.msgfees.v1.QueryAllMsgBasedFeesResponse)
+    - [QueryAllMsgFeesRequest](#provenance.msgfees.v1.QueryAllMsgFeesRequest)
+    - [QueryAllMsgFeesResponse](#provenance.msgfees.v1.QueryAllMsgFeesResponse)
     - [QueryParamsRequest](#provenance.msgfees.v1.QueryParamsRequest)
     - [QueryParamsResponse](#provenance.msgfees.v1.QueryParamsResponse)
   
@@ -5122,10 +5122,10 @@ Msg defines the Metadata Msg service.
 
 
 
-<a name="provenance.msgfees.v1.MsgBasedFee"></a>
+<a name="provenance.msgfees.v1.MsgFee"></a>
 
-### MsgBasedFee
-MsgBasedFee is the core of what gets stored on the blockchain
+### MsgFee
+MsgFee is the core of what gets stored on the blockchain
 it consists of two parts
 1. the msg type url, i.e. /cosmos.bank.v1beta1.MsgSend
 2. minimum additional fees(can be of any denom)
@@ -5176,13 +5176,13 @@ Params defines the set of params for the msgfees module.
 <a name="provenance.msgfees.v1.GenesisState"></a>
 
 ### GenesisState
-GenesisState contains a set of msg based fees, persisted from the store
+GenesisState contains a set of msg fees, persisted from the store
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `params` | [Params](#provenance.msgfees.v1.Params) |  | params defines all the parameters of the module. |
-| `msg_based_fees` | [MsgBasedFee](#provenance.msgfees.v1.MsgBasedFee) | repeated | msg_based_fees are the additional fees on specific tx msgs |
+| `msg_fees` | [MsgFee](#provenance.msgfees.v1.MsgFee) | repeated | msg_based_fees are the additional fees on specific tx msgs |
 
 
 
@@ -5205,10 +5205,10 @@ GenesisState contains a set of msg based fees, persisted from the store
 
 
 
-<a name="provenance.msgfees.v1.AddMsgBasedFeeProposal"></a>
+<a name="provenance.msgfees.v1.AddMsgFeeProposal"></a>
 
-### AddMsgBasedFeeProposal
-AddMsgBasedFeeProposal defines a governance proposal to add additional msg based fee
+### AddMsgFeeProposal
+AddMsgFeeProposal defines a governance proposal to add additional msg based fee
 
 
 | Field | Type | Label | Description |
@@ -5223,10 +5223,10 @@ AddMsgBasedFeeProposal defines a governance proposal to add additional msg based
 
 
 
-<a name="provenance.msgfees.v1.RemoveMsgBasedFeeProposal"></a>
+<a name="provenance.msgfees.v1.RemoveMsgFeeProposal"></a>
 
-### RemoveMsgBasedFeeProposal
-RemoveMsgBasedFeeProposal defines a governance proposal to delete a current msg based fee
+### RemoveMsgFeeProposal
+RemoveMsgFeeProposal defines a governance proposal to delete a current msg based fee
 
 
 | Field | Type | Label | Description |
@@ -5240,10 +5240,10 @@ RemoveMsgBasedFeeProposal defines a governance proposal to delete a current msg 
 
 
 
-<a name="provenance.msgfees.v1.UpdateMsgBasedFeeProposal"></a>
+<a name="provenance.msgfees.v1.UpdateMsgFeeProposal"></a>
 
-### UpdateMsgBasedFeeProposal
-UpdateMsgBasedFeeProposal defines a governance proposal to update a current msg based fee
+### UpdateMsgFeeProposal
+UpdateMsgFeeProposal defines a governance proposal to update a current msg based fee
 
 
 | Field | Type | Label | Description |
@@ -5299,8 +5299,8 @@ CalculateTxFeesResponse is the response type for the Query RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `additional_fees` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | additional_fees are the amount of coins to be for addition msg based fees |
-| `total_fees` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | total_fees are the total amount of fees needed for the transactions (msg based fees + gas fee) note: the gas fee is calculated with the min gas fee param as a constant |
+| `additional_fees` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | additional_fees are the amount of coins to be for addition msg fees |
+| `total_fees` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | total_fees are the total amount of fees needed for the transactions (msg fees + gas fee) note: the gas fee is calculated with the min gas fee param as a constant |
 | `estimated_gas` | [uint64](#uint64) |  | estimated_gas is the amount of gas needed for the transaction |
 
 
@@ -5308,10 +5308,10 @@ CalculateTxFeesResponse is the response type for the Query RPC method.
 
 
 
-<a name="provenance.msgfees.v1.QueryAllMsgBasedFeesRequest"></a>
+<a name="provenance.msgfees.v1.QueryAllMsgFeesRequest"></a>
 
-### QueryAllMsgBasedFeesRequest
-QueryAllMsgBasedFeesRequest queries all Msg which have fees associated with them.
+### QueryAllMsgFeesRequest
+QueryAllMsgFeesRequest queries all Msg which have fees associated with them.
 
 
 | Field | Type | Label | Description |
@@ -5323,15 +5323,15 @@ QueryAllMsgBasedFeesRequest queries all Msg which have fees associated with them
 
 
 
-<a name="provenance.msgfees.v1.QueryAllMsgBasedFeesResponse"></a>
+<a name="provenance.msgfees.v1.QueryAllMsgFeesResponse"></a>
 
-### QueryAllMsgBasedFeesResponse
+### QueryAllMsgFeesResponse
 response for querying all msg's with fees associated with them
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `msg_based_fees` | [MsgBasedFee](#provenance.msgfees.v1.MsgBasedFee) | repeated |  |
+| `msg_fees` | [MsgFee](#provenance.msgfees.v1.MsgFee) | repeated |  |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an optional pagination for the request. |
 
 
@@ -5378,7 +5378,7 @@ Query defines the gRPC querier service for marker module.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `Params` | [QueryParamsRequest](#provenance.msgfees.v1.QueryParamsRequest) | [QueryParamsResponse](#provenance.msgfees.v1.QueryParamsResponse) | Params queries the parameters for x/msgfees | GET|/provenance/msgfees/v1/params|
-| `QueryAllMsgBasedFees` | [QueryAllMsgBasedFeesRequest](#provenance.msgfees.v1.QueryAllMsgBasedFeesRequest) | [QueryAllMsgBasedFeesResponse](#provenance.msgfees.v1.QueryAllMsgBasedFeesResponse) | Query all Msgs which have fees associated with them. | GET|/provenance/msgfees/v1/params|
+| `QueryAllMsgFees` | [QueryAllMsgFeesRequest](#provenance.msgfees.v1.QueryAllMsgFeesRequest) | [QueryAllMsgFeesResponse](#provenance.msgfees.v1.QueryAllMsgFeesResponse) | Query all Msgs which have fees associated with them. | GET|/provenance/msgfees/v1/params|
 | `CalculateTxFees` | [CalculateTxFeesRequest](#provenance.msgfees.v1.CalculateTxFeesRequest) | [CalculateTxFeesResponse](#provenance.msgfees.v1.CalculateTxFeesResponse) | CalculateTxFees simulates executing a transaction for estimating gas usage and additional fees. | POST|/provenance/tx/v1/calculate_msg_based_fee|
 
  <!-- end services -->

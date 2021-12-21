@@ -201,8 +201,8 @@ func (suite *AnteTestSuite) RunTestCase(privs []cryptotypes.PrivKey, msgs []sdk.
 
 func (suite *AnteTestSuite) CreateMsgFee(fee sdk.Coin, msgs ...sdk.Msg) error {
 	for _, msg := range msgs {
-		msgFeeToCreate := msgfeetype.NewMsgBasedFee(sdk.MsgTypeURL(msg), fee)
-		err := suite.app.MsgBasedFeeKeeper.SetMsgBasedFee(suite.ctx, msgFeeToCreate)
+		msgFeeToCreate := msgfeetype.NewMsgFee(sdk.MsgTypeURL(msg), fee)
+		err := suite.app.MsgFeesKeeper.SetMsgFee(suite.ctx, msgFeeToCreate)
 		if err != nil {
 			return err
 		}

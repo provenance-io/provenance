@@ -7,13 +7,13 @@ import (
 
 // ExportGenesis returns a GenesisState for a given context.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-	msgFees := make([]types.MsgBasedFee, 0)
+	msgFees := make([]types.MsgFee, 0)
 	params := k.GetParams(ctx)
-	msgFeeRecords := func(msgFee types.MsgBasedFee) bool {
+	msgFeeRecords := func(msgFee types.MsgFee) bool {
 		msgFees = append(msgFees, msgFee)
 		return false
 	}
-	if err := k.IterateMsgBasedFees(ctx, msgFeeRecords); err != nil {
+	if err := k.IterateMsgFees(ctx, msgFeeRecords); err != nil {
 		panic(err)
 	}
 	return types.NewGenesisState(params, msgFees)
@@ -26,8 +26,8 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 	if err := data.Validate(); err != nil {
 		panic(err)
 	}
-	for _, msgFee := range data.MsgBasedFees {
-		if err := k.SetMsgBasedFee(ctx, msgFee); err != nil {
+	for _, msgFee := range data.MsgFees {
+		if err := k.SetMsgFee(ctx, msgFee); err != nil {
 			panic(err)
 		}
 	}

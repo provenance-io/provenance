@@ -13,14 +13,14 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
-	msgfeekeeper "github.com/provenance-io/provenance/x/msgfees/keeper"
+	msgfeeskeeper "github.com/provenance-io/provenance/x/msgfees/keeper"
 )
 
 // PioMsgServiceRouter routes fully-qualified Msg service methods to their handler with additional fee processing of msgs.
 type PioMsgServiceRouter struct {
 	interfaceRegistry codectypes.InterfaceRegistry
 	routes            map[string]MsgServiceHandler
-	msgBasedFeeKeeper msgfeekeeper.Keeper
+	msgFeesKeeper     msgfeeskeeper.Keeper
 	decoder           sdk.TxDecoder
 }
 
@@ -48,9 +48,9 @@ func (msr *PioMsgServiceRouter) HandlerByTypeURL(typeURL string) MsgServiceHandl
 	return msr.routes[typeURL]
 }
 
-// SetMsgBasedFeeKeeper sets the msg based fee keeper for retrieving msg fees.
-func (msr *PioMsgServiceRouter) SetMsgBasedFeeKeeper(msgBasedFeeKeeper msgfeekeeper.Keeper) {
-	msr.msgBasedFeeKeeper = msgBasedFeeKeeper
+// SetMsgFeesKeeper sets the msg based fee keeper for retrieving msg fees.
+func (msr *PioMsgServiceRouter) SetMsgFeesKeeper(msgFeesKeeper msgfeeskeeper.Keeper) {
+	msr.msgFeesKeeper = msgFeesKeeper
 }
 
 // RegisterService implements the gRPC Server.RegisterService method. sd is a gRPC
@@ -135,7 +135,7 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 				panic("only Fee Tx are supported on provenance.")
 			}
 
-			fee, err := msr.msgBasedFeeKeeper.GetMsgBasedFee(ctx, msgTypeURL)
+			fee, err := msr.msgFeesKeeper.GetMsgFee(ctx, msgTypeURL)
 			if err != nil {
 				return nil, err
 			}
@@ -144,7 +144,7 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 
 				if !feeGasMeter.IsSimulate() {
 					err = antewrapper.EnsureSufficientFees(runtimeGasForMsg(ctx), feeTx.GetFee(), feeGasMeter.FeeConsumed().Add(fee.AdditionalFee),
-						msr.msgBasedFeeKeeper.GetFloorGasPrice(ctx), msr.msgBasedFeeKeeper.GetDefaultFeeDenom())
+						msr.msgFeesKeeper.GetFloorGasPrice(ctx), msr.msgFeesKeeper.GetDefaultFeeDenom())
 					if err != nil {
 						return nil, err
 					}
