@@ -70,7 +70,7 @@ cosmosService.simulate(SimulateRequest.newBuilder().setTx(txFinal).build()).gasI
 In the future we recommend using the method 
 ```kotlin
 val msgFeeClient = io.provenance.msgfees.v1.QueryGrpc.newBlockingStub(channel)
-msgFeeClient.simulate(CalculateTxFeesRequest.newBuilder().setTx(txFinal).build())
+msgFeeClient.calculateTxFees(CalculateTxFeesRequest.newBuilder().setTx(txFinal).build())
 
 ```
 
