@@ -153,14 +153,24 @@ func getScopeIndexValues(scope *types.Scope) *scopeIndexValues {
 		ValueOwner:      scope.ValueOwnerAddress,
 		SpecificationID: scope.SpecificationId,
 	}
-	for _, p := range scope.Owners {
-		rv.Addresses = append(rv.Addresses, p.Address)
-	}
 	rv.Addresses = append(rv.Addresses, scope.DataAccess...)
+	for _, p := range scope.Owners {
+		rv.Addresses = appendIfNew(rv.Addresses, p.Address)
+	}
 	if len(scope.ValueOwnerAddress) > 0 {
-		rv.Addresses = append(rv.Addresses, scope.ValueOwnerAddress)
+		rv.Addresses = appendIfNew(rv.Addresses, scope.ValueOwnerAddress)
 	}
 	return &rv
+}
+
+// appendIfNew appends a string to a string slice if it's not already in the string slice.
+func appendIfNew(vals []string, val string) []string {
+	for _, v := range vals {
+		if v == val {
+			return vals
+		}
+	}
+	return append(vals, val)
 }
 
 // getMissingScopeIndexValues extracts the index values in the required set that are not in the found set.
