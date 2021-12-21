@@ -11,8 +11,6 @@ import (
 	"testing"
 	"time"
 
-	simappparams "github.com/provenance-io/provenance/app/params"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -55,9 +53,6 @@ var DefaultConsensusParams = &abci.ConsensusParams{
 	},
 }
 
-func EncodingConfig() simappparams.EncodingConfig {
-	return MakeEncodingConfig()
-}
 func setup(withGenesis bool, invCheckPeriod uint) (*App, GenesisState) {
 	db := dbm.NewMemDB()
 	encCdc := MakeEncodingConfig()

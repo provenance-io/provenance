@@ -118,6 +118,7 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 		}
 
 		msr.routes[requestTypeName] = func(ctx sdk.Context, req sdk.Msg) (*sdk.Result, error) {
+			// provenance specific modification to msg service router
 			msgTypeURL := sdk.MsgTypeURL(req)
 
 			feeGasMeter, ok := ctx.GasMeter().(*antewrapper.FeeGasMeter)
@@ -152,6 +153,8 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 
 				feeGasMeter.ConsumeFee(fee.AdditionalFee, msgTypeURL)
 			}
+
+			// original sdk implementation of msg service router
 			ctx = ctx.WithEventManager(sdk.NewEventManager())
 			interceptor := func(goCtx context.Context, _ interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 				goCtx = context.WithValue(goCtx, sdk.SdkContextKey, ctx)
