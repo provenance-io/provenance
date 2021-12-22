@@ -59,8 +59,8 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 	// Compute msg additionalFees
 	msgs := feeTx.GetMsgs()
 	additionalFees, errFromCalculateAdditionalFeesToBePaid := CalculateAdditionalFeesToBePaid(ctx, dfd.msgFeeKeeper, msgs...)
-	if errFromCalculateAdditionalFeesToBePaid != nil {
-		return ctx, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, err.Error())
+	if errFromCalculateAdditionalFeesToBePaid != nil  {
+		return ctx, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, errFromCalculateAdditionalFeesToBePaid.Error())
 	}
 	feeToDeduct := feeTx.GetFee()
 	if additionalFees != nil && len(additionalFees) > 0 {
