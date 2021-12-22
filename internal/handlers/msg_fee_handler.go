@@ -15,7 +15,7 @@ type PioBaseAppKeeperOptions struct {
 	Decoder        sdk.TxDecoder
 }
 
-func NewAdditionalMsgFeeHandler(options PioBaseAppKeeperOptions) (sdk.AdditionalMsgFeeHandler, error) {
+func NewAdditionalMsgFeeHandler(options PioBaseAppKeeperOptions) (sdk.FeeHandler, error) {
 	if options.AccountKeeper == nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "account keeper is required for AdditionalMsgFeeHandler builder")
 	}

@@ -674,7 +674,7 @@ func New(
 	if err != nil {
 		panic(err)
 	}
-	app.SetMsgFeeHandler(msgfeehandler)
+	app.SetFeeHandler(msgfeehandler)
 
 	app.SetEndBlocker(app.EndBlocker)
 
