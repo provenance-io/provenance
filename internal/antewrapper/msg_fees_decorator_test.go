@@ -69,7 +69,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPass() {
 	suite.Require().NotNil(err, "Decorator should have errored on fee payer account not having enough balance.")
 	suite.Require().Contains(err.Error(), "fee payer account does not have enough balance to pay for \"100100atom\"", "got wrong message")
 
-	check(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100100)))))
+	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100100)))))
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().Nil(err, "Decorator should not have errored.")
 }
@@ -114,7 +114,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPassFeeGrant() {
 	// Set IsCheckTx to true
 	suite.ctx = suite.ctx.WithIsCheckTx(true)
 
-	check(simapp.FundAccount(suite.app, suite.ctx, acct2.GetAddress(), sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100100)))))
+	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct2.GetAddress(), sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100100)))))
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().Nil(err, "Decorator should not have errored.")
 }
@@ -160,7 +160,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPassFeeGrant_1() {
 	// Set IsCheckTx to true
 	suite.ctx = suite.ctx.WithIsCheckTx(true)
 
-	check(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100100)))))
+	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100100)))))
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NotNil(err, "Decorator should not have errored.")
 }
@@ -201,7 +201,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPassFeeGrant_2() {
 	// Set IsCheckTx to true
 	suite.ctx = suite.ctx.WithIsCheckTx(true)
 
-	check(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100100)))))
+	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100100)))))
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NotNil(err, "Decorator should not have errored.")
 }
@@ -225,7 +225,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_1() {
 
 	tx, acct1 = createTestTx(suite, err, NewTestFeeAmountMultiple())
 
-	check(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("steak", sdk.NewInt(100)))))
+	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("steak", sdk.NewInt(100)))))
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().Nil(err, "MsgFeesDecorator returned error in DeliverTx")
 }
@@ -237,7 +237,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_2() {
 
 	tx, acct1 = createTestTx(suite, err, NewTestFeeAmountMultiple())
 
-	check(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("steak", sdk.NewInt(10000)))))
+	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("steak", sdk.NewInt(10000)))))
 
 	tx, acct1 = createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("steak", 10000)))
 	_, err = antehandler(suite.ctx, tx, false)
@@ -255,7 +255,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_2() {
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_3() {
 	err, antehandler := setUpApp(suite, false, "nhash", 100)
 	tx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("nhash", 10000)))
-	check(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(10000)))))
+	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(10000)))))
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NotNil(err, "Decorator should not have errored for insufficient additional fee")
 	// TODO revisit this
@@ -266,12 +266,12 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_3() {
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_4() {
 	err, antehandler := setUpApp(suite, false, "nhash", 100)
 	tx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("nhash", 190500200)))
-	check(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(190500100)))))
+	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(190500100)))))
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NotNil(err, "Decorator should not have errored for insufficient additional fee")
 	suite.Require().Contains(err.Error(), "fee payer account does not have enough balance to pay for \"190500200nhash\"", "wrong error message")
 	// add some nhash
-	check(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(100)))))
+	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(100)))))
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().Nil(err, "Decorator should not have errored for insufficient additional fee")
 }
@@ -280,7 +280,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_4() {
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_5() {
 	err, antehandler := setUpApp(suite, false, "atom", 100)
 	tx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("nhash", 190500200)))
-	check(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(190500100)))))
+	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(190500100)))))
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NotNil(err, "Decorator should not have errored for insufficient additional fee")
 	suite.Require().Contains(err.Error(), "not enough fees; after deducting fees required,got: \"-100atom,190500200nhash\", required additional fee: \"100atom\"", "wrong error message")
@@ -290,7 +290,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_5() {
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_6() {
 	err, antehandler := setUpApp(suite, true, "atom", 100)
 	tx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("nhash", 190500200)))
-	check(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(190500100)))))
+	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(190500100)))))
 	hashPrice := sdk.NewDecCoinFromDec("nhash", sdk.NewDec(1))
 	highGasPrice := []sdk.DecCoin{hashPrice}
 	suite.ctx = suite.ctx.WithMinGasPrices(highGasPrice)
@@ -336,8 +336,3 @@ func setUpApp(suite *AnteTestSuite, checkTx bool, additionalFeeCoinDenom string,
 	return err, antehandler
 }
 
-func check(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
