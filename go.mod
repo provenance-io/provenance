@@ -37,7 +37,6 @@ require (
 	github.com/99designs/keyring v1.1.6 // indirect
 	github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d // indirect
 	github.com/CosmWasm/wasmvm v0.16.0 // indirect
-	github.com/DataDog/zstd v1.5.0 // indirect
 	github.com/Workiva/go-datastructures v1.0.52 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
