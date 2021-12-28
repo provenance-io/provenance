@@ -125,9 +125,19 @@ var handlers = map[string]appUpgrade{
 		},
 		Added: []string{authz.ModuleName, feegrant.ModuleName},
 	},
+	"green": {
+		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
+			orderedMigration := []moduleUpgradeVersion{
+				{"metadata", 2},
+			}
+			ctx.Logger().Info("NOTICE: Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
+			return RunOrderedMigrations(app, ctx, orderedMigration)
+		},
+	},
 	// TODO - Add new upgrade definitions here.
 }
 
+// RunOrderedMigrations runs migrations in a defined order.
 // NOTE: We needed to modify the behavior of the cosmos-sdk's migrations.  Order DOES matter in some cases and their migration uses a map and not a list.
 // This does not guarantee order in the migration process. i.e., The x/bank module needs to run before the x/auth module for version 1 to 2
 func RunOrderedMigrations(app *App, ctx sdk.Context, migrationOrder []moduleUpgradeVersion) (module.VersionMap, error) {

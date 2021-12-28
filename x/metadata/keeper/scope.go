@@ -82,21 +82,23 @@ func (k Keeper) SetScope(ctx sdk.Context, scope types.Scope) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&scope)
 
+	var oldScope *types.Scope
 	var event proto.Message = types.NewEventScopeCreated(scope.ScopeId)
 	action := types.TLAction_Created
 	if store.Has(scope.ScopeId) {
 		event = types.NewEventScopeUpdated(scope.ScopeId)
 		action = types.TLAction_Updated
 		if oldScopeBytes := store.Get(scope.ScopeId); oldScopeBytes != nil {
-			var oldScope types.Scope
-			if err := k.cdc.Unmarshal(oldScopeBytes, &oldScope); err == nil {
-				k.clearScopeIndex(ctx, oldScope)
+			oldScope = &types.Scope{}
+			if err := k.cdc.Unmarshal(oldScopeBytes, oldScope); err != nil {
+				k.Logger(ctx).Error("could not unmarshal old scope", "err", err, "scopeId", scope.ScopeId.String(), "oldScopeBytes", oldScopeBytes)
+				oldScope = nil
 			}
 		}
 	}
 
 	store.Set(scope.ScopeId, b)
-	k.indexScope(ctx, scope)
+	k.indexScope(ctx, &scope, oldScope)
 	k.EmitEvent(ctx, event)
 	defer types.GetIncObjFunc(types.TLType_Scope, action)
 }
@@ -127,72 +129,131 @@ func (k Keeper) RemoveScope(ctx sdk.Context, id types.MetadataAddress) {
 
 	// Sessions will be removed as the last record in each is deleted.
 
-	k.clearScopeIndex(ctx, scope)
+	k.indexScope(ctx, nil, &scope)
 	store.Delete(id)
 	k.EmitEvent(ctx, types.NewEventScopeDeleted(scope.ScopeId))
 	defer types.GetIncObjFunc(types.TLType_Scope, types.TLAction_Deleted)
 }
 
-// clearScopeIndex delete any index records for this scope
-func (k Keeper) clearScopeIndex(ctx sdk.Context, scope types.Scope) {
-	store := ctx.KVStore(k.storeKey)
-
-	// add all party addresses to the list of cache records to remove
-	addresses := []string{}
-	for _, p := range scope.Owners {
-		addresses = append(addresses, p.Address)
-	}
-	addresses = append(addresses, scope.DataAccess...)
-	if len(scope.ValueOwnerAddress) > 0 {
-		// Add to list of general addresses to clear the cache of
-		addresses = append(addresses, scope.ValueOwnerAddress)
-		// Clear out the value owner cache
-		addr, err := sdk.AccAddressFromBech32(scope.ValueOwnerAddress)
-		if err == nil {
-			store.Delete(types.GetValueOwnerScopeCacheKey(addr, scope.ScopeId))
-		}
-	}
-	for _, a := range addresses {
-		addr, err := sdk.AccAddressFromBech32(a)
-		if err == nil {
-			store.Delete(types.GetAddressScopeCacheKey(addr, scope.ScopeId))
-		}
-	}
-	store.Delete(types.GetScopeSpecScopeCacheKey(scope.SpecificationId, scope.ScopeId))
+// scopeIndexValues is a struct containing the values used to index a scope.
+type scopeIndexValues struct {
+	ScopeID         types.MetadataAddress
+	Addresses       []string
+	ValueOwner      string
+	SpecificationID types.MetadataAddress
 }
 
-// indexScope create index records for the given scope
-func (k Keeper) indexScope(ctx sdk.Context, scope types.Scope) {
-	store := ctx.KVStore(k.storeKey)
-
-	// Index all party addresses on the scope
-	addresses := []string{}
+// getScopeIndexValues extracts the values used to index a scope.
+func getScopeIndexValues(scope *types.Scope) *scopeIndexValues {
+	if scope == nil {
+		return nil
+	}
+	rv := scopeIndexValues{
+		ScopeID:         scope.ScopeId,
+		ValueOwner:      scope.ValueOwnerAddress,
+		SpecificationID: scope.SpecificationId,
+	}
+	rv.Addresses = append(rv.Addresses, scope.DataAccess...)
 	for _, p := range scope.Owners {
-		addresses = append(addresses, p.Address)
+		rv.Addresses = appendIfNew(rv.Addresses, p.Address)
 	}
-	addresses = append(addresses, scope.DataAccess...)
 	if len(scope.ValueOwnerAddress) > 0 {
-		addresses = append(addresses, scope.ValueOwnerAddress)
-		// create a value owner cache entry as well.
-		addr, err := sdk.AccAddressFromBech32(scope.ValueOwnerAddress)
-		if err == nil {
-			store.Set(types.GetValueOwnerScopeCacheKey(addr, scope.ScopeId), []byte{0x01})
+		rv.Addresses = appendIfNew(rv.Addresses, scope.ValueOwnerAddress)
+	}
+	return &rv
+}
+
+// appendIfNew appends a string to a string slice if it's not already in the string slice.
+func appendIfNew(vals []string, val string) []string {
+	for _, v := range vals {
+		if v == val {
+			return vals
 		}
 	}
-	for _, a := range addresses {
-		addr, err := sdk.AccAddressFromBech32(a)
-		if err == nil {
-			store.Set(types.GetAddressScopeCacheKey(addr, scope.ScopeId), []byte{0x01})
+	return append(vals, val)
+}
+
+// getMissingScopeIndexValues extracts the index values in the required set that are not in the found set.
+func getMissingScopeIndexValues(required, found *scopeIndexValues) scopeIndexValues {
+	rv := scopeIndexValues{}
+	if required == nil {
+		return rv
+	}
+	if found == nil {
+		return *required
+	}
+	rv.ScopeID = required.ScopeID
+	rv.Addresses = FindMissing(required.Addresses, found.Addresses)
+	if required.ValueOwner != found.ValueOwner {
+		rv.ValueOwner = required.ValueOwner
+	}
+	if !required.SpecificationID.Equals(found.SpecificationID) {
+		rv.SpecificationID = required.SpecificationID
+	}
+	return rv
+}
+
+// IndexKeys creates all of the index key byte arrays that this scopeIndexValues represents.
+func (v scopeIndexValues) IndexKeys() [][]byte {
+	rv := make([][]byte, 0)
+	if v.ScopeID.Empty() {
+		return rv
+	}
+	for _, addrStr := range v.Addresses {
+		if addr, err := sdk.AccAddressFromBech32(addrStr); err == nil {
+			rv = append(rv, types.GetAddressScopeCacheKey(addr, v.ScopeID))
 		}
 	}
-	if len(scope.SpecificationId) > 0 {
-		store.Set(types.GetScopeSpecScopeCacheKey(scope.SpecificationId, scope.ScopeId), []byte{0x01})
+	if len(v.ValueOwner) > 0 {
+		if addr, err := sdk.AccAddressFromBech32(v.ValueOwner); err == nil {
+			rv = append(rv, types.GetValueOwnerScopeCacheKey(addr, v.ScopeID))
+		}
+	}
+	if !v.SpecificationID.Empty() {
+		rv = append(rv, types.GetScopeSpecScopeCacheKey(v.SpecificationID, v.ScopeID))
+	}
+	return rv
+}
+
+// indexScope updates the index entries for a scope.
+//
+// When adding a new scope:  indexScope(ctx, scope, nil)
+//
+// When deleting a scope:  indexScope(ctx, nil, scope)
+//
+// When updating a scope:  indexScope(ctx, newScope, oldScope)
+//
+// If both newScope and oldScope are not nil, it is assumed that they have the same ScopeId.
+// Failure to meet this assumption will result in strange and bad behavior.
+func (k Keeper) indexScope(ctx sdk.Context, newScope, oldScope *types.Scope) {
+	if newScope == nil && oldScope == nil {
+		return
+	}
+
+	newScopeIndexValues := getScopeIndexValues(newScope)
+	oldScopeIndexValues := getScopeIndexValues(oldScope)
+
+	toAdd := getMissingScopeIndexValues(newScopeIndexValues, oldScopeIndexValues)
+	toRemove := getMissingScopeIndexValues(oldScopeIndexValues, newScopeIndexValues)
+
+	store := ctx.KVStore(k.storeKey)
+	for _, indexKey := range toAdd.IndexKeys() {
+		store.Set(indexKey, []byte{0x01})
+	}
+	for _, indexKey := range toRemove.IndexKeys() {
+		store.Delete(indexKey)
 	}
 }
 
 // ValidateScopeUpdate checks the current scope and the proposed scope to determine if the the proposed changes are valid
 // based on the existing state
-func (k Keeper) ValidateScopeUpdate(ctx sdk.Context, existing, proposed types.Scope, signers []string) error {
+func (k Keeper) ValidateScopeUpdate(
+	ctx sdk.Context,
+	existing,
+	proposed types.Scope,
+	signers []string,
+	msgTypeURL string,
+) error {
 	if err := proposed.ValidateBasic(); err != nil {
 		return err
 	}
@@ -228,11 +289,7 @@ func (k Keeper) ValidateScopeUpdate(ctx sdk.Context, existing, proposed types.Sc
 			proposedCopy.ValueOwnerAddress = existing.ValueOwnerAddress
 		}
 		if !existing.Equals(proposedCopy) {
-			existingOwners := make([]string, len(existing.Owners))
-			for i, o := range existing.Owners {
-				existingOwners[i] = o.Address
-			}
-			if err := k.ValidateAllOwnersAreSigners(existingOwners, signers); err != nil {
+			if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, existing.Owners, signers, msgTypeURL); err != nil {
 				return err
 			}
 		}
@@ -247,8 +304,8 @@ func (k Keeper) ValidateScopeUpdate(ctx sdk.Context, existing, proposed types.Sc
 
 // ValidateScopeRemove checks the current scope and the proposed removal scope to determine if the the proposed remove is valid
 // based on the existing state
-func (k Keeper) ValidateScopeRemove(ctx sdk.Context, scope types.Scope, signers []string) error {
-	if err := k.ValidateAllPartiesAreSigners(scope.Owners, signers); err != nil {
+func (k Keeper) ValidateScopeRemove(ctx sdk.Context, scope types.Scope, signers []string, msgTypeURL string) error {
+	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, scope.Owners, signers, msgTypeURL); err != nil {
 		return err
 	}
 
@@ -297,7 +354,13 @@ func (k Keeper) validateScopeUpdateValueOwner(ctx sdk.Context, existing, propose
 }
 
 // ValidateScopeAddDataAccess checks the current scope and the proposed
-func (k Keeper) ValidateScopeAddDataAccess(ctx sdk.Context, dataAccessAddrs []string, existing types.Scope, signers []string) error {
+func (k Keeper) ValidateScopeAddDataAccess(
+	ctx sdk.Context,
+	dataAccessAddrs []string,
+	existing types.Scope,
+	signers []string,
+	msgTypeURL string,
+) error {
 	if len(dataAccessAddrs) < 1 {
 		return fmt.Errorf("data access list cannot be empty")
 	}
@@ -314,7 +377,7 @@ func (k Keeper) ValidateScopeAddDataAccess(ctx sdk.Context, dataAccessAddrs []st
 		}
 	}
 
-	if err := k.ValidateAllPartiesAreSigners(existing.Owners, signers); err != nil {
+	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, existing.Owners, signers, msgTypeURL); err != nil {
 		return err
 	}
 
@@ -322,7 +385,13 @@ func (k Keeper) ValidateScopeAddDataAccess(ctx sdk.Context, dataAccessAddrs []st
 }
 
 // ValidateScopeDeleteDataAccess checks the current scope data access and the proposed removed items
-func (k Keeper) ValidateScopeDeleteDataAccess(ctx sdk.Context, dataAccessAddrs []string, existing types.Scope, signers []string) error {
+func (k Keeper) ValidateScopeDeleteDataAccess(
+	ctx sdk.Context,
+	dataAccessAddrs []string,
+	existing types.Scope,
+	signers []string,
+	msgTypeURL string,
+) error {
 	if len(dataAccessAddrs) < 1 {
 		return fmt.Errorf("data access list cannot be empty")
 	}
@@ -343,7 +412,7 @@ func (k Keeper) ValidateScopeDeleteDataAccess(ctx sdk.Context, dataAccessAddrs [
 		}
 	}
 
-	if err := k.ValidateAllPartiesAreSigners(existing.Owners, signers); err != nil {
+	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, existing.Owners, signers, msgTypeURL); err != nil {
 		return err
 	}
 
@@ -351,7 +420,13 @@ func (k Keeper) ValidateScopeDeleteDataAccess(ctx sdk.Context, dataAccessAddrs [
 }
 
 // ValidateScopeUpdateOwners checks the current scopes owners and the proposed update
-func (k Keeper) ValidateScopeUpdateOwners(ctx sdk.Context, existing, proposed types.Scope, signers []string) error {
+func (k Keeper) ValidateScopeUpdateOwners(
+	ctx sdk.Context,
+	existing,
+	proposed types.Scope,
+	signers []string,
+	msgTypeURL string,
+) error {
 	if err := proposed.ValidateOwnersBasic(); err != nil {
 		return err
 	}
@@ -363,11 +438,9 @@ func (k Keeper) ValidateScopeUpdateOwners(ctx sdk.Context, existing, proposed ty
 	if err := k.ValidateScopeOwners(proposed.Owners, scopeSpec); err != nil {
 		return err
 	}
-
-	if err := k.ValidateAllPartiesAreSigners(existing.Owners, signers); err != nil {
+	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, existing.Owners, signers, msgTypeURL); err != nil {
 		return err
 	}
-
 	return nil
 }
 

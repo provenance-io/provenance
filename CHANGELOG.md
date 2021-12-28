@@ -37,6 +37,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Features
+
+* Add check for `authz` grants when there are missing signatures in `metadata` transactions [#516](https://github.com/provenance-io/provenance/issues/516)
+* Add support for publishing Java and Kotlin Protobuf compiled sources to Maven Central [#562](https://github.com/provenance-io/provenance/issues/562)
+
 ### Improvements
 
 * Add `bank` and `authz` module query `proto` files required by `grpcurl` [#482](https://github.com/provenance-io/provenance/issues/482)
@@ -44,10 +49,17 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Set default coin type to network default [#534](https://github.com/provenance-io/provenance/issues/534)
 * Add logger to upgrade handler [#507](https://github.com/provenance-io/provenance/issues/507)
 * Allow markers to be created over existing accounts if they are not a marker and have a zero sequence [#520](https://github.com/provenance-io/provenance/issues/520)
+* Removed extraneous Metadata index deletes/rewrites [#543](https://github.com/provenance-io/provenance/issues/543)
+
 ### Bug Fixes
 
 * When deleting a scope, require the same permissions as when updating it [#473](https://github.com/provenance-io/provenance/issues/473)
 * Allow manager to adjust grants on finalized markers [#545](https://github.com/provenance-io/provenance/issues/545)
+* Add migration to re-index the metadata indexes involving addresses [#541](https://github.com/provenance-io/provenance/issues/541)
+
+## [v1.7.6](https://github.com/provenance-io/provenance/releases/tag/v1.7.6) - 2021-12-15
+
+* Upgrade Rosetta to v0.7.2 [#560](https://github.com/provenance-io/provenance/issues/560)
 
 ## [v1.7.5](https://github.com/provenance-io/provenance/releases/tag/v1.7.5) - 2021-10-22
 

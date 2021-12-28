@@ -81,6 +81,22 @@ func TestScopeKeeperTestSuite(t *testing.T) {
 
 // func ownerPartyList defined in keeper_test.go
 
+type user struct {
+	PrivKey cryptotypes.PrivKey
+	PubKey  cryptotypes.PubKey
+	Addr    sdk.AccAddress
+	Bech32  string
+}
+
+func randomUser() user {
+	rv := user{}
+	rv.PrivKey = secp256k1.GenPrivKey()
+	rv.PubKey = rv.PrivKey.PubKey()
+	rv.Addr = sdk.AccAddress(rv.PubKey.Address())
+	rv.Bech32 = rv.Addr.String()
+	return rv
+}
+
 func (s *ScopeKeeperTestSuite) TestMetadataScopeGetSet() {
 	scope, found := s.app.MetadataKeeper.GetScope(s.ctx, s.scopeID)
 	s.NotNil(scope)
@@ -200,14 +216,14 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdate() {
 			existing: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
 			proposed: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, ""),
 			signers:  []string{s.user2},
-			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1),
+			errorMsg: fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user1),
 		},
 		{
 			name:     "missing existing owner signer on update fails",
 			existing: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
 			proposed: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user2), []string{}, ""),
 			signers:  []string{s.user2},
-			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1),
+			errorMsg: fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user1),
 		},
 		{
 			name:     "no error when update includes existing owner signer",
@@ -235,7 +251,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdate() {
 			existing: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
 			proposed: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1),
 			signers:  []string{},
-			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1),
+			errorMsg: fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user1),
 		},
 		{
 			name:     "setting value owner to user does not require their signature",
@@ -311,7 +327,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdate() {
 
 	for _, tc := range cases {
 		s.T().Run(tc.name, func(t *testing.T) {
-			err = s.app.MetadataKeeper.ValidateScopeUpdate(s.ctx, tc.existing, tc.proposed, tc.signers)
+			err = s.app.MetadataKeeper.ValidateScopeUpdate(s.ctx, tc.existing, tc.proposed, tc.signers, types.TypeMsgWriteScopeRequest)
 			if len(tc.errorMsg) > 0 {
 				assert.EqualError(t, err, tc.errorMsg, "ValidateScopeUpdate expected error")
 			} else {
@@ -474,7 +490,7 @@ func (s ScopeKeeperTestSuite) TestValidateScopeRemove() {
 
 	for _, tc := range tests {
 		s.T().Run(tc.name, func(t *testing.T) {
-			actual := s.app.MetadataKeeper.ValidateScopeRemove(s.ctx, tc.scope, tc.signers)
+			actual := s.app.MetadataKeeper.ValidateScopeRemove(s.ctx, tc.scope, tc.signers, types.TypeURLMsgDeleteScopeRequest)
 			if len(tc.expected) > 0 {
 				require.EqualError(t, actual, tc.expected)
 			} else {
@@ -520,7 +536,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeAddDataAccess() {
 			scope,
 			[]string{s.user1},
 			true,
-			"failed to decode data access address invalidaddr : decoding bech32 failed: invalid index of 1",
+			"failed to decode data access address invalidaddr : decoding bech32 failed: invalid separator index -1",
 		},
 		"should successfully validate add scope data access": {
 			[]string{s.user2},
@@ -535,7 +551,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeAddDataAccess() {
 		tc := tc
 
 		s.Run(n, func() {
-			err := s.app.MetadataKeeper.ValidateScopeAddDataAccess(s.ctx, tc.dataAccessAddrs, tc.existing, tc.signers)
+			err := s.app.MetadataKeeper.ValidateScopeAddDataAccess(s.ctx, tc.dataAccessAddrs, tc.existing, tc.signers, types.TypeURLMsgAddScopeDataAccessRequest)
 			if tc.wantErr {
 				s.Error(err)
 				s.Equal(tc.errorMsg, err.Error())
@@ -582,7 +598,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeDeleteDataAccess() {
 			scope,
 			[]string{s.user1},
 			true,
-			"failed to decode data access address invalidaddr : decoding bech32 failed: invalid index of 1",
+			"failed to decode data access address invalidaddr : decoding bech32 failed: invalid separator index -1",
 		},
 		"should successfully validate delete scope data access": {
 			[]string{s.user1, s.user2},
@@ -597,7 +613,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeDeleteDataAccess() {
 		tc := tc
 
 		s.Run(n, func() {
-			err := s.app.MetadataKeeper.ValidateScopeDeleteDataAccess(s.ctx, tc.dataAccessAddrs, tc.existing, tc.signers)
+			err := s.app.MetadataKeeper.ValidateScopeDeleteDataAccess(s.ctx, tc.dataAccessAddrs, tc.existing, tc.signers, types.TypeURLMsgDeleteScopeDataAccessRequest)
 			if tc.wantErr {
 				s.Error(err)
 				s.Equal(tc.errorMsg, err.Error())
@@ -630,7 +646,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdateOwners() {
 			scopeWithOwners(originalOwners),
 			scopeWithOwners([]types.Party{{Address: "shoulderror", Role: types.PartyType_PARTY_TYPE_AFFILIATE}}),
 			[]string{s.user1},
-			fmt.Sprintf("invalid scope owners: invalid party address [%s]: %s", "shoulderror", "decoding bech32 failed: invalid index of 1"),
+			fmt.Sprintf("invalid scope owners: invalid party address [%s]: %s", "shoulderror", "decoding bech32 failed: invalid separator index -1"),
 		},
 		{
 			"should fail to validate update scope owners, role cannot be unspecified",
@@ -695,7 +711,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdateOwners() {
 
 	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidateScopeUpdateOwners(s.ctx, tc.existing, tc.proposed, tc.signers)
+			err := s.app.MetadataKeeper.ValidateScopeUpdateOwners(s.ctx, tc.existing, tc.proposed, tc.signers, types.TypeURLMsgAddScopeOwnerRequest)
 			if len(tc.errorMsg) > 0 {
 				assert.EqualError(t, err, tc.errorMsg, "ValidateScopeUpdateOwners expected error")
 			} else {
@@ -703,4 +719,115 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdateOwners() {
 			}
 		})
 	}
+}
+
+func (s *ScopeKeeperTestSuite) TestScopeIndexing() {
+	scopeID := types.ScopeMetadataAddress(uuid.New())
+
+	specIDOrig := types.ScopeSpecMetadataAddress(uuid.New())
+	specIDNew := types.ScopeSpecMetadataAddress(uuid.New())
+
+	ownerConstant := randomUser()
+	ownerToAdd := randomUser()
+	ownerToRemove := randomUser()
+	valueOwnerOrig := randomUser()
+	valueOwnerNew := randomUser()
+
+	scopeV1 := types.Scope{
+		ScopeId:           scopeID,
+		SpecificationId:   specIDOrig,
+		Owners:            ownerPartyList(ownerConstant.Bech32, ownerToRemove.Bech32),
+		DataAccess:        nil,
+		ValueOwnerAddress: valueOwnerOrig.Bech32,
+	}
+	scopeV2 := types.Scope{
+		ScopeId:           scopeID,
+		SpecificationId:   specIDNew,
+		Owners:            ownerPartyList(ownerConstant.Bech32, ownerToAdd.Bech32),
+		DataAccess:        nil,
+		ValueOwnerAddress: valueOwnerNew.Bech32,
+	}
+
+	store := s.ctx.KVStore(s.app.GetKey(types.ModuleName))
+
+	s.T().Run("1 write new scope", func(t *testing.T) {
+		expectedIndexes := []struct {
+			key  []byte
+			name string
+		}{
+			{types.GetAddressScopeCacheKey(ownerConstant.Addr, scopeID), "ownerConstant address index"},
+			{types.GetAddressScopeCacheKey(ownerToRemove.Addr, scopeID), "ownerToRemove address index"},
+			{types.GetAddressScopeCacheKey(valueOwnerOrig.Addr, scopeID), "valueOwnerOrig address index"},
+
+			{types.GetValueOwnerScopeCacheKey(valueOwnerOrig.Addr, scopeID), "valueOwnerOrig value owner index"},
+
+			{types.GetScopeSpecScopeCacheKey(specIDOrig, scopeID), "specIDOrig spec index"},
+		}
+
+		s.app.MetadataKeeper.SetScope(s.ctx, scopeV1)
+
+		for _, expected := range expectedIndexes {
+			assert.True(t, store.Has(expected.key), expected.name)
+		}
+	})
+
+	s.T().Run("2 update scope", func(t *testing.T) {
+		expectedIndexes := []struct {
+			key  []byte
+			name string
+		}{
+			{types.GetAddressScopeCacheKey(ownerConstant.Addr, scopeID), "ownerConstant address index"},
+			{types.GetAddressScopeCacheKey(ownerToAdd.Addr, scopeID), "ownerToAdd address index"},
+			{types.GetAddressScopeCacheKey(valueOwnerNew.Addr, scopeID), "valueOwnerNew address index"},
+
+			{types.GetValueOwnerScopeCacheKey(valueOwnerNew.Addr, scopeID), "valueOwnerNew value owner index"},
+
+			{types.GetScopeSpecScopeCacheKey(specIDNew, scopeID), "specIDNew spec index"},
+		}
+		unexpectedIndexes := []struct {
+			key  []byte
+			name string
+		}{
+			{types.GetAddressScopeCacheKey(ownerToRemove.Addr, scopeID), "ownerToRemove address index"},
+			{types.GetAddressScopeCacheKey(valueOwnerOrig.Addr, scopeID), "valueOwnerOrig address index"},
+
+			{types.GetValueOwnerScopeCacheKey(valueOwnerOrig.Addr, scopeID), "valueOwnerOrig value owner index"},
+
+			{types.GetScopeSpecScopeCacheKey(specIDOrig, scopeID), "specIDOrig spec index"},
+		}
+
+		s.app.MetadataKeeper.SetScope(s.ctx, scopeV2)
+
+		for _, expected := range expectedIndexes {
+			assert.True(t, store.Has(expected.key), expected.name)
+		}
+		for _, unexpected := range unexpectedIndexes {
+			assert.False(t, store.Has(unexpected.key), unexpected.name)
+		}
+	})
+
+	s.T().Run("3 delete scope", func(t *testing.T) {
+		unexpectedIndexes := []struct {
+			key  []byte
+			name string
+		}{
+			{types.GetAddressScopeCacheKey(ownerConstant.Addr, scopeID), "ownerConstant address index"},
+			{types.GetAddressScopeCacheKey(ownerToRemove.Addr, scopeID), "ownerToRemove address index"},
+			{types.GetAddressScopeCacheKey(ownerToAdd.Addr, scopeID), "ownerToAdd address index"},
+			{types.GetAddressScopeCacheKey(valueOwnerOrig.Addr, scopeID), "valueOwnerOrig address index"},
+			{types.GetAddressScopeCacheKey(valueOwnerNew.Addr, scopeID), "valueOwnerNew address index"},
+
+			{types.GetValueOwnerScopeCacheKey(valueOwnerOrig.Addr, scopeID), "valueOwnerOrig value owner index"},
+			{types.GetValueOwnerScopeCacheKey(valueOwnerNew.Addr, scopeID), "valueOwnerNew value owner index"},
+
+			{types.GetScopeSpecScopeCacheKey(specIDOrig, scopeID), "specIDOrig spec index"},
+			{types.GetScopeSpecScopeCacheKey(specIDNew, scopeID), "specIDNew spec index"},
+		}
+
+		s.app.MetadataKeeper.RemoveScope(s.ctx, scopeID)
+
+		for _, unexpected := range unexpectedIndexes {
+			assert.False(t, store.Has(unexpected.key), unexpected.name)
+		}
+	})
 }
