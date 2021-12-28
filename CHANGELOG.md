@@ -50,6 +50,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add logger to upgrade handler [#507](https://github.com/provenance-io/provenance/issues/507)
 * Allow markers to be created over existing accounts if they are not a marker and have a zero sequence [#520](https://github.com/provenance-io/provenance/issues/520)
 * Removed extraneous Metadata index deletes/rewrites [#543](https://github.com/provenance-io/provenance/issues/543)
+* Delete empty sessions when the last record is updated to a new session [#480](https://github.com/provenance-io/provenance/issues/480)
 
 ### Bug Fixes
 
