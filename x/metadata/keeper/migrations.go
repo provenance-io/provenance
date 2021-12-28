@@ -3,6 +3,7 @@ package keeper
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -58,11 +59,10 @@ func (m *Migrator) Migrate2to3(ctx sdk.Context) error {
 			runner: func() error { return reindexContractSpecs(ctx, m.keeper, goodIndexes) },
 		},
 		{
-			name:   "Finding empty sessions",
+			name: "Finding empty sessions",
 			runner: func() error {
-				var err error
-				sessionsToDelete, err = getEmptySessions(ctx, m.keeper)
-				return err
+				sessionsToDelete = getEmptySessions(ctx, m.keeper)
+				return nil
 			},
 		},
 		{
@@ -232,7 +232,7 @@ func reindexContractSpecs(ctx sdk.Context, mdKeeper Keeper, lookup *indexLookup)
 
 // getEmptySessions finds all sessions that don't have any records.
 // This is a function for a migration, not intended for outside use.
-func getEmptySessions(ctx sdk.Context, mdKeeper Keeper) ([]types.MetadataAddress, error) {
+func getEmptySessions(ctx sdk.Context, mdKeeper Keeper) []types.MetadataAddress {
 	store := ctx.KVStore(mdKeeper.storeKey)
 	rv := []types.MetadataAddress{}
 	sPre := types.SessionKeyPrefix
@@ -246,7 +246,7 @@ func getEmptySessions(ctx sdk.Context, mdKeeper Keeper) ([]types.MetadataAddress
 			rv = appendMDIfNew(rv, sessionID)
 		}
 	}
-	return rv, nil;
+	return rv
 }
 
 // deleteSessions is a migration function that deletes the provided sessions.
