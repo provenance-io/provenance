@@ -68,65 +68,66 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 	})
 	suite.Require().NoError(err)
 
-	cases := map[string]struct {
+	cases := []struct {
+		name       string
 		signerKey  cryptotypes.PrivKey
 		signer     sdk.AccAddress
 		feeAccount sdk.AccAddress
 		fee        int64
 		valid      bool
 	}{
-		"paying with low funds": {
+		{
 			signerKey: priv1,
 			signer:    addr1,
 			fee:       50,
 			valid:     false,
-		},
-		"paying with good funds": {
+		}, {
+			name:      "paying with good funds",
 			signerKey: priv2,
 			signer:    addr2,
 			fee:       50,
 			valid:     true,
-		},
-		"paying with no account": {
+		}, {
+			name:      "paying with no account",
 			signerKey: priv3,
 			signer:    addr3,
 			fee:       1,
 			valid:     false,
-		},
-		"no fee with real account": {
+		}, {
+			name:      "no fee with real account",
 			signerKey: priv1,
 			signer:    addr1,
 			fee:       0,
 			valid:     true,
-		},
-		"no fee with no account": {
+		}, {
+			name:      "no fee with no account",
 			signerKey: priv5,
 			signer:    addr5,
 			fee:       0,
 			valid:     false,
-		},
-		"valid fee grant without account": {
+		}, {
+			name:       "valid fee grant without account",
 			signerKey:  priv3,
 			signer:     addr3,
 			feeAccount: addr2,
 			fee:        50,
 			valid:      true,
-		},
-		"no fee grant": {
+		}, {
+			name:       "no fee grant",
 			signerKey:  priv3,
 			signer:     addr3,
 			feeAccount: addr1,
 			fee:        2,
 			valid:      false,
-		},
-		"allowance smaller than requested fee": {
+		}, {
+			name:       "allowance smaller than requested fee",
 			signerKey:  priv4,
 			signer:     addr4,
 			feeAccount: addr2,
 			fee:        50,
 			valid:      false,
-		},
-		"granter cannot cover allowed fee grant": {
+		}, {
+			name:       "granter cannot cover allowed fee grant",
 			signerKey:  priv4,
 			signer:     addr4,
 			feeAccount: addr1,
@@ -135,9 +136,9 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 		},
 	}
 
-	for name, stc := range cases {
+	for _, stc := range cases {
 		tc := stc // to make scopelint happy
-		suite.T().Run(name, func(t *testing.T) {
+		suite.T().Run(tc.name, func(t *testing.T) {
 			fee := sdk.NewCoins(sdk.NewInt64Coin("atom", tc.fee))
 			msgs := []sdk.Msg{testdata.NewTestMsg(tc.signer)}
 
