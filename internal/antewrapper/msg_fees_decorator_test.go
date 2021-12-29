@@ -335,4 +335,3 @@ func setUpApp(suite *AnteTestSuite, checkTx bool, additionalFeeCoinDenom string,
 	antehandler := sdk.ChainAnteDecorators(mfd)
 	return err, antehandler
 }
-
