@@ -85,7 +85,7 @@ func createDefinitionSpec(name string, classname string, reference p8e.Provenanc
 	}
 }
 
-// TODO: AddScope tests
+// TODO: WriteScope tests
 // TODO: DeleteScope tests
 
 func (s MetadataHandlerTestSuite) TestWriteSession() {
@@ -174,6 +174,13 @@ func (s MetadataHandlerTestSuite) TestWriteSession() {
 		})
 	}
 }
+
+// TODO: WriteRecord tests
+// TODO: DeleteRecord tests
+// TODO: WriteScopeSpecification tests
+// TODO: DeleteScopeSpecification tests
+// TODO: WriteContractSpecification tests
+// TODO: DeleteContractSpecification tests
 
 func (s MetadataHandlerTestSuite) TestAddContractSpecToScopeSpec() {
 	cSpec := types.ContractSpecification{
@@ -346,13 +353,7 @@ func (s MetadataHandlerTestSuite) TestDeleteContractSpecFromScopeSpec() {
 	}
 }
 
-// TODO: AddRecord tests
-// TODO: DeleteRecord tests
-// TODO: AddScopeSpecification tests
-// TODO: DeleteScopeSpecification tests
-// TODO: AddContractSpecification tests
-// TODO: DeleteContractSpecification tests
-// TODO: AddRecordSpecification tests
+// TODO: WriteRecordSpecification tests
 // TODO: DeleteRecordSpecification tests
 
 func (s MetadataHandlerTestSuite) TestAddP8EContractSpec() {
@@ -404,9 +405,9 @@ func (s MetadataHandlerTestSuite) TestAddP8EContractSpec() {
 }
 
 // TODO: P8EMemorializeContract tests
-// TODO: BindOSLocatorRequest tests
-// TODO: DeleteOSLocatorRequest tests
-// TODO: ModifyOSLocatorRequest tests
+// TODO: BindOSLocator tests
+// TODO: DeleteOSLocator tests
+// TODO: ModifyOSLocator tests
 
 func ownerPartyList(addresses ...string) []types.Party {
 	retval := make([]types.Party, len(addresses))
