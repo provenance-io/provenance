@@ -61,8 +61,9 @@ func (m *Migrator) Migrate2to3(ctx sdk.Context) error {
 		{
 			name: "Finding empty sessions",
 			runner: func() error {
-				sessionsToDelete = getEmptySessions(ctx, m.keeper)
-				return nil
+				var err error
+				sessionsToDelete, err = getEmptySessions(ctx, m.keeper)
+				return err
 			},
 		},
 		{
@@ -232,21 +233,19 @@ func reindexContractSpecs(ctx sdk.Context, mdKeeper Keeper, lookup *indexLookup)
 
 // getEmptySessions finds all sessions that don't have any records.
 // This is a function for a migration, not intended for outside use.
-func getEmptySessions(ctx sdk.Context, mdKeeper Keeper) []types.MetadataAddress {
+func getEmptySessions(ctx sdk.Context, mdKeeper Keeper) (rv []types.MetadataAddress, err error) {
 	store := ctx.KVStore(mdKeeper.storeKey)
-	rv := []types.MetadataAddress{}
 	sPre := types.SessionKeyPrefix
 	iter := sdk.KVStorePrefixIterator(store, sPre)
-	defer iter.Close()
+	defer func() {
+		err = iter.Close()
+	}()
 	for ; iter.Valid(); iter.Next() {
-		sessionID := make(types.MetadataAddress, len(iter.Key())+1)
-		copy(sessionID, sPre)
-		copy(sessionID[1:], iter.Key())
-		if len(iter.Key()) < 16 || !mdKeeper.sessionHasRecords(ctx, sessionID) {
-			rv = appendMDIfNew(rv, sessionID)
+		if !mdKeeper.sessionHasRecords(ctx, iter.Key()) {
+			rv = appendMDIfNew(rv, iter.Key())
 		}
 	}
-	return rv
+	return
 }
 
 // deleteSessions is a migration function that deletes the provided sessions.
