@@ -240,6 +240,12 @@ func (k msgServer) WriteRecord(
 
 	k.SetRecord(ctx, msg.Record)
 
+	// Remove the old session if it doesn't have any records in it anymore.
+	// Note that the RemoveSession does the record checking part.
+	if existing != nil && !existing.SessionId.Equals(msg.Record.SessionId) {
+		k.RemoveSession(ctx, existing.SessionId)
+	}
+
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteRecord, msg.GetSigners()))
 	return types.NewMsgWriteRecordResponse(recordID), nil
 }
