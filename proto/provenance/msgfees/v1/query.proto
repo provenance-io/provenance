@@ -22,7 +22,7 @@ service Query {
 
   // Query all Msgs which have fees associated with them.
   rpc QueryAllMsgFees(QueryAllMsgFeesRequest) returns (QueryAllMsgFeesResponse) {
-    option (google.api.http).get = "/provenance/msgfees/v1/params";
+    option (google.api.http).get = "/provenance/msgfees/v1/all";
   }
 
   // CalculateTxFees simulates executing a transaction for estimating gas usage and additional fees.
