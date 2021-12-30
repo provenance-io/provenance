@@ -21,7 +21,7 @@ which have fees associated with them.
 [simuate fees(including additional fees to be paid for a Tx)](../../../proto/provenance/msgfees/v1/query.proto?plain=1)
 To simulate the fees required on the Tx use CalculateTxFeesRequest
 
-[CalculateTxFeesRequest](../../../proto/provenance/msgfees/v1/query.proto#L59-L68)
+Request: [CalculateTxFeesRequest](../../../proto/provenance/msgfees/v1/query.proto#L59-L68)
 ```protobuf
 // CalculateTxFeesRequest is the request type for the Query RPC method.
 message CalculateTxFeesRequest {
@@ -34,8 +34,7 @@ message CalculateTxFeesRequest {
   float gas_adjustment = 3;
 }
 ```
-[CalculateTxFeesResponse](../../../proto/provenance/msgfees/v1/query.proto#L70-L81)
-Response (CalculateTxFeesResponse)
+Response: [CalculateTxFeesResponse](../../../proto/provenance/msgfees/v1/query.proto#L70-L81)
 ```protobuf
 // CalculateTxFeesResponse is the response type for the Query RPC method.
 message CalculateTxFeesResponse {
