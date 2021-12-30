@@ -5378,7 +5378,7 @@ Query defines the gRPC querier service for marker module.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `Params` | [QueryParamsRequest](#provenance.msgfees.v1.QueryParamsRequest) | [QueryParamsResponse](#provenance.msgfees.v1.QueryParamsResponse) | Params queries the parameters for x/msgfees | GET|/provenance/msgfees/v1/params|
-| `QueryAllMsgFees` | [QueryAllMsgFeesRequest](#provenance.msgfees.v1.QueryAllMsgFeesRequest) | [QueryAllMsgFeesResponse](#provenance.msgfees.v1.QueryAllMsgFeesResponse) | Query all Msgs which have fees associated with them. | GET|/provenance/msgfees/v1/params|
+| `QueryAllMsgFees` | [QueryAllMsgFeesRequest](#provenance.msgfees.v1.QueryAllMsgFeesRequest) | [QueryAllMsgFeesResponse](#provenance.msgfees.v1.QueryAllMsgFeesResponse) | Query all Msgs which have fees associated with them. | GET|/provenance/msgfees/v1/all|
 | `CalculateTxFees` | [CalculateTxFeesRequest](#provenance.msgfees.v1.CalculateTxFeesRequest) | [CalculateTxFeesResponse](#provenance.msgfees.v1.CalculateTxFeesResponse) | CalculateTxFees simulates executing a transaction for estimating gas usage and additional fees. | POST|/provenance/tx/v1/calculate_msg_based_fee|
 
  <!-- end services -->
