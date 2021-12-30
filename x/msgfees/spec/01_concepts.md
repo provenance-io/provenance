@@ -3,10 +3,19 @@ order: 1
 -->
 
 # Concepts
+The msg fees modules manages additional fees that can be applied to tx msgs specified through governance.
+
+<!-- TOC -->
+  - [Additional Msg Fees](#additional-msg-fees)
+  - [Base Fee](#base-fee)
+  - [Total Fees](#total-fees)
+  - [Additional Fee Assessed in Base Denom i.e nhash](#additional-fee-assessed-in-base-denom-i-e-nhash)
+  - [Authz and Wamsd Messages](#authz-and-wamsd-messages)
+  - [Simulation and Calculating the Additional Fee to be Paid](#simulation-and-calculating-the-additional-fee-to-be-paid)
 
 
 
-# Additional Msg Fees
+## Additional Msg Fees
 
 Fees is one of the most important tools available to secure a PoS network since it incentivizes staking and encourages spam prevention etc.
 
@@ -18,11 +27,11 @@ and the fee schedule that is persisted on chain, created via governance.
 
 Additional fee can be in any *denom*.
 
-# Base Fee
+## Base Fee
 Base fee is currently paid fees, paid in base denom and determined by gas value passed into the Tx.
 The value collected remains the same.
 
-# Total Fees
+## Total Fees
 Total fees = Additional Fees (if any) + Base Fee
 Total fees continue to be passed as `sdk.Coins` the Tx accepts for fee entry currently.
 e.g usd.example is the denom(assuming there is a marker/coin of type usd.example) in which additional fee is being charged in
@@ -30,11 +39,12 @@ e.g usd.example is the denom(assuming there is a marker/coin of type usd.example
 --fees 382199010nhash,99usd.example 
 ```
 
-# Additional fee assessed in base denom i.e nhash
+## Additional Fee Assessed in Base Denom i.e nhash
 To preserve backwards compatability of all invokes, clients continue accepting fees in sdk.Coins
 `type Coins []Coin`, and because the code needs to distinguish between base fee and additional fee,
-the msgfees module introduces an additional param, described in 06_params.md, called `DefaultFloorGasPrice`
+the msgfees module introduces an additional param, described in [params documentation](06_params.md), called `DefaultFloorGasPrice`
 to differentiate between base fee and additional fee when additional fee is in same denom as default base denom i.e nhash.
+
 
 This fee is charged initially by the antehandler, if any excess fee is left, once additional fee are paid, that's collected
 at the end of the Tx also(same as current behavior)
@@ -49,7 +59,7 @@ Current behavior is maintained and tx passes and charges 19050000 initially and 
 the deliverTx stage.
 Thus, this will protect against future changes like priority mempool as well as keep current behaviour same as current production. 
 
-# Authz and wamsd messages
+## Authz and Wamsd Messages
 Authz and wasmd messages are dispatched via the submessages route, so they get charged and assessed the same additional
 fee if set on a submessage, caveat being they forfeit all their fees if they fail (since we have no way upfront of knowing what 
 the submessages maybe)
@@ -58,7 +68,7 @@ For e.g
 Let's say a `MsgSend` has a fee of 100usd.local and a smartcontract does 3 MsgSend operations as per the logic of the 
 smart contract, the code will expect additional fees of 300 usd.local to be present for the Tx to be successful.
 
-# Simulation and knowing how much additional fee to be paid.
+## Simulation and Calculating the Additional Fee to be Paid
 
 Current simulation method looks like this  
 ```kotlin

@@ -3,11 +3,14 @@ order: 2
 -->
 
 # State
+
 `MsgFee` is the core of what gets stored on the blockchain
  it consists of two parts
  1. the msg type url, i.e. /cosmos.bank.v1beta1.MsgSend
  2. minimum additional fees(can be of any denom)
  
+
+
 ```protobuf
 message MsgFee {
 string msg_type_url = 1;

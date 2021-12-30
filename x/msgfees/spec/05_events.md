@@ -5,7 +5,7 @@ order: 5
 # Events
 
 Existing fee event continue to show total fee charged
-### Any Tx
+## Any Tx
 
 | Type     | Attribute Key | Attribute Value    |
 | -------- | ------------- | ------------------ |
@@ -13,7 +13,7 @@ Existing fee event continue to show total fee charged
 
 If additional fee is assessed, these events will also be emitted (reason for not always emitting them mainly saving  space on block output)
 
-### MsgGrantAllowance
+## MsgGrantAllowance
 
 | Type     | Attribute Key | Attribute Value    |
 | -------- | ------------- | -------------------------------------------------------------------|

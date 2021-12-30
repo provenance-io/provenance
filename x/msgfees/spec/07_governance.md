@@ -1,3 +1,7 @@
+<!--
+order: 7
+-->
+
 # Governance Proposal Control
 
 The msgfee module supports addition, update, and deletion of Msg Type which are assessed fees via governance proposal.
