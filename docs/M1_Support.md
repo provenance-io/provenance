@@ -6,9 +6,10 @@
 While Provenance cannot currently be compiled on an M1 Apple laptop, a chain can be run locally.  Setting up a Rosetta terminal is **not** needed to run a local chain if a release binary is downloaded.  However, at present only a limited subset of functionality on the Provenance blockchain has been tested on an M1 laptop.  What has and has not been tested is documented below along with instructions on downloading and running a local chain.
 
 ### Setting up
-As Provenance cannot currently be compiled locally on an M1 laptop, the best way to run it is to download the binary from the Provenance release page: [link](https://github.com/provenance-io/provenance/releases/tag/v1.7.6) The `darwin-amd64` file should be downloaded.
+Download the `darwin-amd64` zipped binary from the Provenance release page: [link](https://github.com/provenance-io/provenance/releases/tag/v1.7.6)
 
-The provided script assumes that the zip file is decompressed inside of `~/1.7.6/` but you can modify the `PROV_DIR` variable in the script below to whatever location you place the downloaded binary.
+move `provenanced` and `libwasmvm.dylib` into a directory in your path or update the `PROV_CMD` in the script below to point to them.
+
 
 ### Running
 
@@ -54,11 +55,11 @@ Which should give you something like:
 
 ```json
 {
-    "name": "validator",
-    "type": "local",
-    "address": "pb1kmyvrw45rh5azj7903kty9tf9n6c4kws2xqfpp",
-    "pubkey": "{\"@type\":\"/cosmos.crypto.secp256k1.PubKey\",\"key\":\"AhF75IWT4qGnmcqtbXnUdSj6rV++OppGP6pzP6qTRYRt\"}"
-  }
+  "name": "validator",
+  "type": "local",
+  "address": "pb1kmyvrw45rh5azj7903kty9tf9n6c4kws2xqfpp",
+  "pubkey": "{\"@type\":\"/cosmos.crypto.secp256k1.PubKey\",\"key\":\"AhF75IWT4qGnmcqtbXnUdSj6rV++OppGP6pzP6qTRYRt\"}"
+}
 ```
 
 ### Testing
