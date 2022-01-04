@@ -8,7 +8,7 @@ While Provenance cannot currently be compiled on an M1 Apple laptop, a chain can
 ### Setting up
 Download the `darwin-amd64` zipped binary from the Provenance release page: [link](https://github.com/provenance-io/provenance/releases/tag/v1.7.6)
 
-move `provenanced` and `libwasmvm.dylib` into a directory in your path or update the `PROV_CMD` in the script below to point to them.
+Unzip the binary and move `provenanced` and `libwasmvm.dylib` into a directory in your path or update the `PROV_CMD` in the script below to point to the folder they are located in.
 
 
 ### Running
@@ -45,22 +45,7 @@ fi
 "$PROV_CMD" -t start
 ```
 
-Running this script will start up a local chain with a default home directory. You can then invoke provenance commands with the following prompt: `$HOME/1.7.6/bin/provenanced`
-
-For example:
-
-`$HOME/1.7.6/bin/provenanced keys list`
-
-Which should give you something like:
-
-```json
-{
-  "name": "validator",
-  "type": "local",
-  "address": "pb1kmyvrw45rh5azj7903kty9tf9n6c4kws2xqfpp",
-  "pubkey": "{\"@type\":\"/cosmos.crypto.secp256k1.PubKey\",\"key\":\"AhF75IWT4qGnmcqtbXnUdSj6rV++OppGP6pzP6qTRYRt\"}"
-}
-```
+Running this script will start up a local chain with a default home directory. 
 
 ### Testing
 
@@ -75,4 +60,4 @@ The following functionality has been verified to work:
 7. Granting permission, activating, finalizing and withdrawing the new coin
 8. Storing, instantiating, querying and executing a simple smart contract
 
-However in order to generally test that the chain is working properly a mainnet node should be started up and run for a while without failure.
+However, in order to generally test that the chain is working properly a mainnet node should be started up and run for several days without failure.
