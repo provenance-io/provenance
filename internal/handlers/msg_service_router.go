@@ -145,7 +145,7 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 
 				if !feeGasMeter.IsSimulate() {
 					err = antewrapper.EnsureSufficientFees(runtimeGasForMsg(ctx), feeTx.GetFee(), feeGasMeter.FeeConsumed().Add(fee.AdditionalFee),
-						msr.msgFeesKeeper.GetFloorGasPrice(ctx), msr.msgFeesKeeper.GetDefaultFeeDenom())
+						msr.msgFeesKeeper.GetFloorGasPrice(ctx))
 					if err != nil {
 						return nil, err
 					}

@@ -25,8 +25,7 @@ type MsgFeesKeeper interface {
 	GetMsgFee(ctx sdk.Context, msgType string) (*MsgFee, error)
 	GetFeeCollectorName() string
 	DeductFees(bankKeeper authtypes.BankKeeper, ctx sdk.Context, acc authtypes.AccountI, fees sdk.Coins) error
-	GetDefaultFeeDenom() string
-	GetFloorGasPrice(ctx sdk.Context) uint32
+	GetFloorGasPrice(ctx sdk.Context) sdk.Coin
 }
 
 // FeegrantKeeper defines the expected feegrant keeper.

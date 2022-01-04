@@ -63,22 +63,23 @@ func (k Keeper) CalculateTxFees(goCtx context.Context, request *types.CalculateT
 	if !ok {
 		return nil, fmt.Errorf("unable to extract fee gas meter from transaction context")
 	}
+	// based on Carlton H's comment this is only for testing, has no real value in practical usage.
 	baseDenom := k.defaultFeeDenom
 	if request.DefaultBaseDenom != "" {
 		baseDenom = request.DefaultBaseDenom
 	}
 
-	minGasPrice := int64(k.GetFloorGasPrice(ctx))
+	minGasPrice := k.GetFloorGasPrice(ctx)
 	gasAdjustment := request.GasAdjustment
 	if gasAdjustment <= 0 {
 		gasAdjustment = 1.0
 	}
-	gasUsed := int64(float64(gasInfo.GasUsed) * float64(gasAdjustment))
-	totalFees := gasMeter.FeeConsumed().Add(sdk.NewCoin(baseDenom, sdk.NewInt(gasUsed*minGasPrice)))
+	gasUsed := sdk.NewInt(int64(float64(gasInfo.GasUsed) * float64(gasAdjustment)))
+	totalFees := gasMeter.FeeConsumed().Add(sdk.NewCoin(baseDenom, minGasPrice.Amount.Mul(gasUsed)))
 
 	return &types.CalculateTxFeesResponse{
 		AdditionalFees: gasMeter.FeeConsumed(),
 		TotalFees:      totalFees,
-		EstimatedGas:   uint64(gasUsed),
+		EstimatedGas:   gasUsed.Uint64(),
 	}, nil
 }

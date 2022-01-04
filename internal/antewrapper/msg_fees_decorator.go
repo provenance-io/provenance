@@ -100,7 +100,7 @@ func (afd MsgFeesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool
 
 		if !simulate {
 			if err = EnsureAccountHasSufficientFeesWithAcctBalanceCheck(gas, feeCoins, additionalFees, balancePerCoin,
-				afd.msgFeeKeeper.GetFloorGasPrice(ctx), afd.msgFeeKeeper.GetDefaultFeeDenom()); err != nil {
+				afd.msgFeeKeeper.GetFloorGasPrice(ctx)); err != nil {
 				return ctx, err
 			}
 		}
@@ -173,8 +173,8 @@ func EnsureSufficientMempoolFees(ctx sdk.Context, gas uint64, feeCoins sdk.Coins
 }
 
 func EnsureAccountHasSufficientFeesWithAcctBalanceCheck(gas uint64, feeCoins sdk.Coins, additionalFees sdk.Coins,
-	balancePerCoin sdk.Coins, minGasPriceForAdditionalFeeCalc uint32, defaultDenom string) error {
-	err := EnsureSufficientFees(gas, feeCoins, additionalFees, minGasPriceForAdditionalFeeCalc, defaultDenom)
+	balancePerCoin sdk.Coins, minGasPriceForAdditionalFeeCalc sdk.Coin) error {
+	err := EnsureSufficientFees(gas, feeCoins, additionalFees, minGasPriceForAdditionalFeeCalc)
 	if err != nil {
 		return err
 	}
@@ -187,7 +187,7 @@ func EnsureAccountHasSufficientFeesWithAcctBalanceCheck(gas uint64, feeCoins sdk
 
 // EnsureSufficientFees to be used by msg_service_router
 func EnsureSufficientFees(gas uint64, feeCoins sdk.Coins, additionalFees sdk.Coins,
-	minGasPriceForAdditionalFeeCalc uint32, defaultDenom string) error {
+	minGasPriceForAdditionalFeeCalc sdk.Coin) error {
 	// Step 1. Check if fees has enough money to pay additional fees.
 	var hasNeg bool
 	if feeCoins, hasNeg = feeCoins.SafeSub(additionalFees); hasNeg {
@@ -195,12 +195,11 @@ func EnsureSufficientFees(gas uint64, feeCoins sdk.Coins, additionalFees sdk.Coi
 	}
 	// Step 2: check if additional fees in nhash, that base fees and additional fees can be paid
 	// total fees in hash - gas limit * price per gas >= additional fees in hash
-	if containsDenom(additionalFees, defaultDenom) {
-		minGasprice := sdk.NewCoin(defaultDenom, sdk.NewIntFromUint64(uint64(minGasPriceForAdditionalFeeCalc)))
+	if containsDenom(additionalFees, minGasPriceForAdditionalFeeCalc.Denom) {
 		// Determine the required fees by multiplying each required minimum gas
 		// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
-		fee := minGasprice.Amount.Mul(sdk.NewIntFromUint64(gas))
-		baseFees := sdk.NewCoin(minGasprice.Denom, fee)
+		fee := minGasPriceForAdditionalFeeCalc.Amount.Mul(sdk.NewIntFromUint64(gas))
+		baseFees := sdk.NewCoin(minGasPriceForAdditionalFeeCalc.Denom, fee)
 		if feeCoins, hasNeg = feeCoins.SafeSub(sdk.Coins{baseFees}); hasNeg {
 			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, DefaultInsufficientFeeMsg+": %q, required additional fee: %q", feeCoins, additionalFees)
 		}
