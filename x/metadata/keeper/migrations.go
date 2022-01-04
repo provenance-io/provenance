@@ -33,6 +33,7 @@ func (m *Migrator) Migrate1to2(ctx sdk.Context) error {
 func (m *Migrator) Migrate2to3(ctx sdk.Context) error {
 	ctx.Logger().Info("Migrating Metadata Module from Version 2 to 3")
 	var goodIndexes *indexLookup
+	var sessionsToDelete []types.MetadataAddress
 	steps := []struct {
 		name   string
 		runner func() error
@@ -56,6 +57,18 @@ func (m *Migrator) Migrate2to3(ctx sdk.Context) error {
 		{
 			name:   "Reindex contract specs",
 			runner: func() error { return reindexContractSpecs(ctx, m.keeper, goodIndexes) },
+		},
+		{
+			name: "Finding empty sessions",
+			runner: func() error {
+				var err error
+				sessionsToDelete, err = getEmptySessions(ctx, m.keeper)
+				return err
+			},
+		},
+		{
+			name:   "Deleting empty sessions",
+			runner: func() error { return deleteSessions(ctx, m.keeper, sessionsToDelete) },
 		},
 	}
 
@@ -125,6 +138,7 @@ func (i indexLookup) has(indexKey []byte) bool {
 }
 
 // deleteBadIndexes deletes all the bad indexes on Metadata entries, and gets the metadata addresses of things de-indexed.
+// This is a function for a migration, not intended for outside use.
 func deleteBadIndexes(ctx sdk.Context, mdKeeper Keeper) (*indexLookup, error) {
 	prefixes := [][]byte{
 		types.AddressScopeCacheKeyPrefix, types.ValueOwnerScopeCacheKeyPrefix,
@@ -143,6 +157,7 @@ func deleteBadIndexes(ctx sdk.Context, mdKeeper Keeper) (*indexLookup, error) {
 }
 
 // cleanStore deletes all the bad index entries with the given prefix, and returns all the good (remaining) entries with that prefix.
+// This is a function for a migration, not intended for outside use.
 func cleanStore(ctx sdk.Context, baseStore sdk.KVStore, pre []byte) (good [][]byte, err error) {
 	// All of the prefix stores being given to this are prefix stores for index entries involving account addresses.
 	// All of those index entries will have the format {type}{addr length}{addr}{metadata addr}.
@@ -175,6 +190,7 @@ func cleanStore(ctx sdk.Context, baseStore sdk.KVStore, pre []byte) (good [][]by
 }
 
 // reindexScopes creates all missing scope indexes.
+// This is a function for a migration, not intended for outside use.
 func reindexScopes(ctx sdk.Context, mdKeeper Keeper, lookup *indexLookup) error {
 	store := ctx.KVStore(mdKeeper.storeKey)
 	return mdKeeper.IterateScopes(ctx, func(scope types.Scope) (stop bool) {
@@ -188,6 +204,7 @@ func reindexScopes(ctx sdk.Context, mdKeeper Keeper, lookup *indexLookup) error 
 }
 
 // reindexScopeSpecs creates all missing scope specification indexes.
+// This is a function for a migration, not intended for outside use.
 func reindexScopeSpecs(ctx sdk.Context, mdKeeper Keeper, lookup *indexLookup) error {
 	store := ctx.KVStore(mdKeeper.storeKey)
 	return mdKeeper.IterateScopeSpecs(ctx, func(scopeSpec types.ScopeSpecification) (stop bool) {
@@ -201,6 +218,7 @@ func reindexScopeSpecs(ctx sdk.Context, mdKeeper Keeper, lookup *indexLookup) er
 }
 
 // reindexContractSpecs creates all missing contract specification indexes.
+// This is a function for a migration, not intended for outside use.
 func reindexContractSpecs(ctx sdk.Context, mdKeeper Keeper, lookup *indexLookup) error {
 	store := ctx.KVStore(mdKeeper.storeKey)
 	return mdKeeper.IterateContractSpecs(ctx, func(contractSpec types.ContractSpecification) (stop bool) {
@@ -211,4 +229,51 @@ func reindexContractSpecs(ctx sdk.Context, mdKeeper Keeper, lookup *indexLookup)
 		}
 		return false
 	})
+}
+
+// getEmptySessions finds all sessions that don't have any records.
+// This is a function for a migration, not intended for outside use.
+func getEmptySessions(ctx sdk.Context, mdKeeper Keeper) (rv []types.MetadataAddress, err error) {
+	store := ctx.KVStore(mdKeeper.storeKey)
+	sPre := types.SessionKeyPrefix
+	iter := sdk.KVStorePrefixIterator(store, sPre)
+	defer func() {
+		err = iter.Close()
+	}()
+	for ; iter.Valid(); iter.Next() {
+		if !mdKeeper.sessionHasRecords(ctx, iter.Key()) {
+			rv = appendMDIfNew(rv, iter.Key())
+		}
+	}
+	return
+}
+
+// deleteSessions is a migration function that deletes the provided sessions.
+// This is a function for a migration, not intended for outside use.
+func deleteSessions(ctx sdk.Context, mdKeeper Keeper, sessionsToDelete []types.MetadataAddress) error {
+	store := ctx.KVStore(mdKeeper.storeKey)
+	for _, sessionID := range sessionsToDelete {
+		store.Delete(sessionID)
+	}
+	return nil
+}
+
+// appendMDIfNew appends elements to a slice that aren't already in the slice.
+func appendMDIfNew(slice []types.MetadataAddress, elems ...types.MetadataAddress) []types.MetadataAddress {
+	for _, elem := range elems {
+		if !containsMD(slice, elem) {
+			slice = append(slice, elem)
+		}
+	}
+	return slice
+}
+
+// containsMD returns true if the slice contains the provided elem.
+func containsMD(slice []types.MetadataAddress, elem types.MetadataAddress) bool {
+	for _, md := range slice {
+		if elem.Equals(md) {
+			return true
+		}
+	}
+	return false
 }

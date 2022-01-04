@@ -31,7 +31,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libleveldb-dev
-      - uses: actions/setup-go@v2.1.4
+      - uses: actions/setup-go@v2.1.5
         with:
           go-version: 1.17
       - name: Display go version
@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/setup-go@v2.1.4
+      - uses: actions/setup-go@v2.1.5
         with:
           go-version: 1.17
       - name: Display go version
@@ -59,7 +59,7 @@ jobs:
     needs: [build, install-runsim]
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2.1.4
+      - uses: actions/setup-go@v2.1.5
         with:
           go-version: 1.17
       - name: Display go version
@@ -85,7 +85,7 @@ jobs:
     needs: [build, install-runsim]
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2.1.4
+      - uses: actions/setup-go@v2.1.5
         with:
           go-version: 1.17
       - name: Display go version
@@ -113,7 +113,7 @@ jobs:
     needs: [build, install-runsim]
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2.1.4
+      - uses: actions/setup-go@v2.1.5
         with:
           go-version: 1.17
       - name: Display go version

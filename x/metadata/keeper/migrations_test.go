@@ -832,4 +832,83 @@ func (s *MigrationsTestSuite) Test2To3() {
 		// If this fails while none of the others fail, it means one of the other tests isn't properly identifying everything it should.
 		s.assertExactIndexList(t, namedIndexList{})
 	})
+
+	s.T().Run("make sure an empty session is removed", func(t *testing.T) {
+		scopeUUID := uuid.New()
+		sessionUUID := uuid.New()
+		sessionID := types.SessionMetadataAddress(scopeUUID, sessionUUID)
+		owner := randomUser()
+		session := types.Session{
+			SessionId:       sessionID,
+			SpecificationId: types.ContractSpecMetadataAddress(uuid.New()),
+			Parties:         ownerPartyList(owner.Bech32),
+			Name:            "deleteme",
+		}
+		s.store.Set(sessionID, s.app.AppCodec().MustMarshal(&session))
+
+		migrator2 := keeper.NewMigrator(s.app.MetadataKeeper)
+		require.NoError(t, migrator2.Migrate2to3(s.ctx), "running migration v2 to v3")
+
+		hasSession := s.store.Has(sessionID)
+		if !assert.False(t, hasSession, "session should not exist anymore because it was empty") {
+			sessionStillThereBz := s.store.Get(sessionID)
+			var sessionStillThere types.Session
+			err := s.app.AppCodec().Unmarshal(sessionStillThereBz, &sessionStillThere)
+			if assert.NoError(t, err, "unmarshalling session that should not exist anymore") {
+				// Doing it both ways here to get it in the output and stop the test. One of these must fail.
+				require.Equal(t, session, sessionStillThere, "session still there is different")
+				require.NotEqual(t, session, sessionStillThere, "session still there is the same as what was written")
+			}
+		}
+	})
+
+	s.T().Run("make sure a non empty session is not removed", func(t *testing.T) {
+		scopeUUID := uuid.New()
+		sessionUUID := uuid.New()
+		sessionID := types.SessionMetadataAddress(scopeUUID, sessionUUID)
+		owner := randomUser()
+		session := types.Session{
+			SessionId:       sessionID,
+			SpecificationId: types.ContractSpecMetadataAddress(uuid.New()),
+			Parties:         ownerPartyList(owner.Bech32),
+			Name:            "donotdeleteme",
+		}
+		s.store.Set(sessionID, s.app.AppCodec().MustMarshal(&session))
+		record := types.Record{
+			Name:      "arecord",
+			SessionId: sessionID,
+			Process: types.Process{
+				ProcessId: &types.Process_Hash{Hash: "recordprochash"},
+				Name:      "recordproc",
+				Method:    "recordprocmethod",
+			},
+			Inputs: []types.RecordInput{
+				{
+					Name:     "recordinput1name",
+					Source:   &types.RecordInput_Hash{Hash: "recordinput1hash"},
+					TypeName: "recordinput1type",
+					Status:   types.RecordInputStatus_Proposed,
+				},
+			},
+			Outputs: []types.RecordOutput{
+				{
+					Hash:   "recordout1",
+					Status: types.ResultStatus_RESULT_STATUS_PASS,
+				},
+				{
+					Hash:   "recordout2",
+					Status: types.ResultStatus_RESULT_STATUS_PASS,
+				},
+			},
+		}
+		record.SpecificationId = types.RecordSpecMetadataAddress(uuid.New(), record.Name)
+		recordID := types.RecordMetadataAddress(scopeUUID, record.Name)
+		s.store.Set(recordID, s.app.AppCodec().MustMarshal(&record))
+
+		migrator2 := keeper.NewMigrator(s.app.MetadataKeeper)
+		require.NoError(t, migrator2.Migrate2to3(s.ctx), "running migration v2 to v3")
+
+		hasSession := s.store.Has(sessionID)
+		require.True(t, hasSession, "session should still exist because it was not empty")
+	})
 }
