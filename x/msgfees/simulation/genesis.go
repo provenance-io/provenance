@@ -43,7 +43,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 			FloorGasPrice: floorGasPrice,
 		},
 		MsgFees: []types.MsgFee{
-			types.NewMsgFee(sdk.MsgTypeURL(&banktypes.MsgMultiSend{}), sdk.NewCoin("hotdog", sdk.NewInt(10000))),
+			types.NewMsgFee(sdk.MsgTypeURL(&banktypes.MsgMultiSend{}), sdk.NewCoin("stake", sdk.NewInt(1))),
 		},
 	}
 

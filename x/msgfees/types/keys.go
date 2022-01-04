@@ -1,5 +1,9 @@
 package types
 
+import (
+	"crypto/sha256"
+)
+
 const (
 	// ModuleName defines the module name
 	ModuleName = "msgfees"
@@ -17,9 +21,10 @@ const (
 	MemStoreKey = "mem_msgfees"
 )
 
-// GetMsgFeeKey Takes in MsgName
-func GetMsgFeeKey(p string) []byte {
-	return append(MsgFeeKeyPrefix, []byte(p)...)
+// GetMsgFeeKey takes in msgType name and returns key
+func GetMsgFeeKey(msgType string) []byte {
+	msgNameBytes := sha256.Sum256([]byte(msgType))
+	return append(MsgFeeKeyPrefix, msgNameBytes[0:16]...)
 }
 
 var (
