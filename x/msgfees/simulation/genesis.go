@@ -9,7 +9,9 @@ import (
 
 	"github.com/provenance-io/provenance/x/msgfees/types"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 // Simulation parameter constants
@@ -36,18 +38,13 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { floorGasPrice = FloorMinGasPrice(r) },
 	)
 
-	var enableGovernance bool
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, EnableGovernance, &enableGovernance, simState.Rand,
-		func(r *rand.Rand) { enableGovernance = GenEnableGovernance(r) },
-	)
-
 	msgFeesGenesis := types.GenesisState{
 		Params: types.Params{
-			FloorGasPrice:    floorGasPrice,
-			EnableGovernance: enableGovernance,
+			FloorGasPrice: floorGasPrice,
 		},
-		MsgFees: []types.MsgFee{},
+		MsgFees: []types.MsgFee{
+			types.NewMsgFee(sdk.MsgTypeURL(&banktypes.MsgMultiSend{}), sdk.NewCoin("hotdog", sdk.NewInt(10000))),
+		},
 	}
 
 	bz, err := json.MarshalIndent(&msgFeesGenesis, "", " ")

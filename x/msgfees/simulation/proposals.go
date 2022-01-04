@@ -35,7 +35,7 @@ func ProposalContents(k keeper.Keeper) []simtypes.WeightedProposalContent {
 	}
 }
 
-// SimulateCreateAddMsgFeesProposal generates random additional fee for AddMsgFeesProposal
+// SimulateCreateAddMsgFeesProposal generates random additional fee with AddMsgFeesProposal
 func SimulateCreateAddMsgFeesProposal(k keeper.Keeper) simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
 		msgFeeExists, err := k.GetMsgFee(ctx, sdk.MsgTypeURL(&markertypes.MsgAddMarkerRequest{}))
@@ -57,7 +57,7 @@ func SimulateCreateAddMsgFeesProposal(k keeper.Keeper) simtypes.ContentSimulator
 	}
 }
 
-// SimulateCreateRemoveMsgFeesProposal generates random removal of additional fee for AddMsgFeesProposal
+// SimulateCreateRemoveMsgFeesProposal generates random removal of additional fee with RemoveMsgFeesProposal
 func SimulateCreateRemoveMsgFeesProposal(k keeper.Keeper) simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
 		msgFeeExists, err := k.GetMsgFee(ctx, sdk.MsgTypeURL(&markertypes.MsgAddMarkerRequest{}))
