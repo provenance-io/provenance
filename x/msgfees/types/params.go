@@ -9,15 +9,11 @@ import (
 )
 
 const (
-	// DefaultEnableGovernance (true) indicates that governance proposals are allowed for managing additional fees
-	DefaultEnableGovernance = true
 	// DefaultFloorGasPrice to differentiate between base fee and additional fee when additional fee is in same denom as default base denom i.e nhash
 	DefaultFloorGasPrice = 1905
 )
 
 var (
-	// ParamStoreKeyEnableGovernance indicates if governance proposal management of markers is enabled
-	ParamStoreKeyEnableGovernance = []byte("EnableGovernance")
 	// ParamStoreKeyFloorGasPrice if msg fees are paid in the same denom as base default gas is paid, then use this to differentiate between base price
 	// and additional fees.
 	ParamStoreKeyFloorGasPrice = []byte("FloorGasPrice")
@@ -30,19 +26,16 @@ func ParamKeyTable() paramtypes.KeyTable {
 
 // NewParams creates a new parameter object
 func NewParams(
-	enableGovernance bool,
 	floorGasPrice uint32,
 ) Params {
 	return Params{
-		EnableGovernance: enableGovernance,
-		FloorGasPrice:    floorGasPrice,
+		FloorGasPrice: floorGasPrice,
 	}
 }
 
 // ParamSetPairs - Implements params.ParamSet
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(ParamStoreKeyEnableGovernance, &p.EnableGovernance, validateEnableGovernance),
 		paramtypes.NewParamSetPair(ParamStoreKeyFloorGasPrice, &p.FloorGasPrice, validateIntParam),
 	}
 }
@@ -50,7 +43,6 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 // DefaultParams is the default parameter configuration for the bank module
 func DefaultParams() Params {
 	return NewParams(
-		DefaultEnableGovernance,
 		DefaultFloorGasPrice,
 	)
 }
@@ -81,18 +73,7 @@ func (p *Params) Equal(that interface{}) bool {
 	} else if p == nil {
 		return false
 	}
-	if p.EnableGovernance != that1.EnableGovernance {
-		return false
-	}
 	return true
-}
-
-func validateEnableGovernance(i interface{}) error {
-	_, ok := i.(bool)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-	return nil
 }
 
 func validateIntParam(i interface{}) error {

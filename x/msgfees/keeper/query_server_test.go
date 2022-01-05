@@ -59,7 +59,7 @@ func (s *QueryServerTestSuite) SetupTest() {
 	s.queryClient = types.NewQueryClient(queryHelper)
 
 	s.minGasPrice = 10
-	s.app.MsgFeesKeeper.SetParams(s.ctx, types.NewParams(true, s.minGasPrice))
+	s.app.MsgFeesKeeper.SetParams(s.ctx, types.NewParams(s.minGasPrice))
 
 	s.privkey1 = secp256k1.GenPrivKey()
 	s.pubkey1 = s.privkey1.PubKey()

@@ -16,18 +16,12 @@ import (
 
 // Simulation parameter constants
 const (
-	FloorGasPrice    = "floor_gas_price"
-	EnableGovernance = "enable_governance"
+	FloorGasPrice = "floor_gas_price"
 )
 
 // FloorMinGasPrice randomized FloorGasPrice
 func FloorMinGasPrice(r *rand.Rand) uint32 {
 	return r.Uint32()
-}
-
-// GenEnableGovernance returns a randomized EnableGovernance parameter.
-func GenEnableGovernance(r *rand.Rand) bool {
-	return r.Int63n(101) <= 50 // 50% chance of enablement
 }
 
 // RandomizedGenState generates a random GenesisState for distribution

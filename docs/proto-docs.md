@@ -5149,7 +5149,6 @@ Params defines the set of params for the msgfees module.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `enable_governance` | [bool](#bool) |  | indicates if governance based controls of msgFees is allowed. |
 | `floor_gas_price` | [uint32](#uint32) |  | constant used to calculate fees when gas fees shares denom with msg fee |
 
 
