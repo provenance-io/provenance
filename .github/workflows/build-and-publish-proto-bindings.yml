@@ -1,0 +1,42 @@
+name: Protobuf Bindings Release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"     # Push events to matching v*, i.e. v1.0, v20.15.10
+      - "v[0-9]+.[0-9]+.[0-9]+-rc*" # Push events to matching v*, i.e. v1.0-rc1, v20.15.10-rc5
+
+jobs:
+  java_build:
+    name: Publishing
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Java Setup
+        uses: actions/setup-java@v2.5.0
+        with:
+          java-version: 11
+          server-id: github
+
+      - name: GPG Setup
+        env:
+          GPG_KEY: ${{ secrets.OSSRH_GPG_SECRET_KEY }}
+        run: |
+          export GPG_TTY=$(tty)
+          echo -n "$GPG_KEY" | base64 --decode | gpg --batch --import
+          gpg --list-secret-keys --keyid-format LONG
+          echo -n "$GPG_KEY" | base64 --decode > $GITHUB_WORKSPACE/release.gpg
+
+      - name: Build and Publish to Maven Central
+        env:
+          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+          GPG_PASSWORD: ${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}
+        run: |
+          cd protoBindings
+          ./gradlew downloadProtos
+          ./gradlew publish $(if [ "${{github.event.release.prerelease}}" = "true" ]; then echo 'closeSonatypeStagingRepository'; else echo 'closeAndReleaseSonatypeStagingRepository'; fi) \
+            -Psigning.keyId=B7D30ABE -Psigning.password="${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}" -Psigning.secretKeyRingFile=$GITHUB_WORKSPACE/release.gpg \
+            --info
