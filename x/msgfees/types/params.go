@@ -10,11 +10,6 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
-const (
-	// DefaultEnableGovernance (true) indicates that governance proposals are allowed for managing additional fees
-	DefaultEnableGovernance = true
-)
-
 // DefaultFloorGasPrice to differentiate between base fee and additional fee when additional fee is in same denom as default base denom i.e nhash
 // cannot be a const unfortunately because it's a custom type.
 var DefaultFloorGasPrice = sdk.Coin{
