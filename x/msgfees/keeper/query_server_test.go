@@ -45,7 +45,7 @@ type QueryServerTestSuite struct {
 	user2Addr sdk.AccAddress
 	acct2     authtypes.AccountI
 
-	minGasPrice uint32
+	minGasPrice sdk.Coin
 }
 
 func (s *QueryServerTestSuite) SetupTest() {
@@ -58,7 +58,10 @@ func (s *QueryServerTestSuite) SetupTest() {
 	types.RegisterQueryServer(queryHelper, s.app.MsgFeesKeeper)
 	s.queryClient = types.NewQueryClient(queryHelper)
 
-	s.minGasPrice = 10
+	s.minGasPrice = sdk.Coin{
+		Denom:  s.cfg.BondDenom,
+		Amount: sdk.NewInt(10),
+	}
 	s.app.MsgFeesKeeper.SetParams(s.ctx, types.NewParams(s.minGasPrice))
 
 	s.privkey1 = secp256k1.GenPrivKey()
@@ -76,8 +79,7 @@ func (s *QueryServerTestSuite) SetupTest() {
 	s.acct2 = s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user2Addr)
 	s.app.AccountKeeper.SetAccount(s.ctx, s.acct2)
 
-	simapp.FundAccount(s.app, s.ctx, s.acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100000))))
-
+	s.Require().NoError(simapp.FundAccount(s.app, s.ctx, s.acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100000)))))
 }
 
 func TestQuerierTestSuite(t *testing.T) {
@@ -93,16 +95,16 @@ func (s *QueryServerTestSuite) TestCalculateTxFees() {
 	s.Assert().NoError(err)
 	s.Assert().NotNil(response)
 	s.Assert().True(response.AdditionalFees.Empty())
-	expectedTotalFees := sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(int64(response.EstimatedGas)*int64(s.minGasPrice))))
+	expectedTotalFees := sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(int64(response.EstimatedGas)*s.minGasPrice.Amount.Int64())))
 	s.Assert().Equal(expectedTotalFees.String(), response.TotalFees.String())
 
 	// do send with an additional fee
 	sendAddFee := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1))
-	s.app.MsgFeesKeeper.SetMsgFee(s.ctx, types.NewMsgFee("/cosmos.bank.v1beta1.MsgSend", sendAddFee))
+	s.Require().NoError(s.app.MsgFeesKeeper.SetMsgFee(s.ctx, types.NewMsgFee("/cosmos.bank.v1beta1.MsgSend", sendAddFee)))
 	response, err = s.queryClient.CalculateTxFees(s.ctx.Context(), &simulateReq)
 	s.Assert().NoError(err)
 	s.Assert().NotNil(response)
-	expectedTotalFees = response.AdditionalFees.Add(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(int64(response.EstimatedGas)*int64(s.minGasPrice))))
+	expectedTotalFees = response.AdditionalFees.Add(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(int64(response.EstimatedGas)*s.minGasPrice.Amount.Int64())))
 	s.Assert().Equal(expectedTotalFees, response.TotalFees)
 	s.Assert().Equal(sdk.NewCoins(sendAddFee), response.AdditionalFees)
 
@@ -114,7 +116,7 @@ func (s *QueryServerTestSuite) TestCalculateTxFees() {
 	response, err = s.queryClient.CalculateTxFees(s.ctx.Context(), &simulateReq)
 	s.Assert().NoError(err)
 	s.Assert().NotNil(response)
-	expectedTotalFees = response.AdditionalFees.Add(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(int64(response.EstimatedGas)*int64(s.minGasPrice))))
+	expectedTotalFees = response.AdditionalFees.Add(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(int64(response.EstimatedGas)*s.minGasPrice.Amount.Int64())))
 	s.Assert().Equal(expectedTotalFees, response.TotalFees)
 	s.Assert().Equal(sdk.NewCoins(sdk.NewCoin(sendAddFee.Denom, sendAddFee.Amount.Mul(sdk.NewInt(2)))), response.AdditionalFees)
 }
@@ -159,7 +161,7 @@ func (s *QueryServerTestSuite) TestCalculateTxFeesAuthz() {
 
 func (s *QueryServerTestSuite) createTxFeesRequest(pubKey cryptotypes.PubKey, privKey cryptotypes.PrivKey, acct authtypes.AccountI, msgs ...sdk.Msg) types.CalculateTxFeesRequest {
 	theTx := s.cfg.TxConfig.NewTxBuilder()
-	theTx.SetMsgs(msgs...)
+	s.Require().NoError(theTx.SetMsgs(msgs...))
 	s.signTx(theTx, pubKey, privKey, acct)
 	txBytes, err := s.cfg.TxConfig.TxEncoder()(theTx.(sdk.Tx))
 	s.Require().NoError(err)

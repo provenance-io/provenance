@@ -63,11 +63,11 @@ func (k Keeper) GetFeeCollectorName() string {
 
 // GetFloorGasPrice  returns the current minimum gas price in sdk.Coin used in calculations for charging additional fees
 func (k Keeper) GetFloorGasPrice(ctx sdk.Context) sdk.Coin {
-	var min uint32 = types.DefaultFloorGasPrice
+	min := types.DefaultFloorGasPrice
 	if k.paramSpace.Has(ctx, types.ParamStoreKeyFloorGasPrice) {
 		k.paramSpace.Get(ctx, types.ParamStoreKeyFloorGasPrice, &min)
 	}
-	return sdk.NewCoin(k.defaultFeeDenom, sdk.NewInt(int64(min)))
+	return min
 }
 
 // SetMsgFee sets the additional fee schedule for a Msg

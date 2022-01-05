@@ -47531,18 +47531,24 @@ paths:
                 description: params defines the parameters of the module.
                 type: object
                 properties:
-                  enable_governance:
-                    type: boolean
-                    format: boolean
-                    description: >-
-                      indicates if governance based controls of msgFees is
-                      allowed.
                   floor_gas_price:
-                    type: integer
-                    format: int64
                     title: >-
                       constant used to calculate fees when gas fees shares denom
                       with msg fee
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
+
+
+                      NOTE: The amount field is an Int which implements the
+                      custom method
+
+                      signatures required by gogoproto.
             description: >-
               QueryParamsResponse is the response type for the Query/Params RPC
               method.
@@ -80328,16 +80334,21 @@ definitions:
   provenance.msgfees.v1.Params:
     type: object
     properties:
-      enable_governance:
-        type: boolean
-        format: boolean
-        description: indicates if governance based controls of msgFees is allowed.
       floor_gas_price:
-        type: integer
-        format: int64
         title: >-
           constant used to calculate fees when gas fees shares denom with msg
           fee
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
     description: Params defines the set of params for the msgfees module.
   provenance.msgfees.v1.QueryAllMsgFeesResponse:
     type: object
@@ -80398,14 +80409,22 @@ definitions:
         description: params defines the parameters of the module.
         type: object
         properties:
-          enable_governance:
-            type: boolean
-            format: boolean
-            description: indicates if governance based controls of msgFees is allowed.
           floor_gas_price:
-            type: integer
-            format: int64
             title: >-
               constant used to calculate fees when gas fees shares denom with
               msg fee
+            type: object
+            properties:
+              denom:
+                type: string
+              amount:
+                type: string
+            description: >-
+              Coin defines a token with a denomination and an amount.
+
+
+              NOTE: The amount field is an Int which implements the custom
+              method
+
+              signatures required by gogoproto.
     description: QueryParamsResponse is the response type for the Query/Params RPC method.

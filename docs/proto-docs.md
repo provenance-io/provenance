@@ -5149,7 +5149,7 @@ Params defines the set of params for the msgfees module.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `floor_gas_price` | [uint32](#uint32) |  | constant used to calculate fees when gas fees shares denom with msg fee |
+| `floor_gas_price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | constant used to calculate fees when gas fees shares denom with msg fee |
 
 
 
