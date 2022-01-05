@@ -85,7 +85,7 @@ func createDefinitionSpec(name string, classname string, reference p8e.Provenanc
 	}
 }
 
-// TODO: AddScope tests
+// TODO: WriteScope tests
 // TODO: DeleteScope tests
 
 func (s MetadataHandlerTestSuite) TestWriteSession() {
@@ -174,6 +174,217 @@ func (s MetadataHandlerTestSuite) TestWriteSession() {
 		})
 	}
 }
+
+func (s MetadataHandlerTestSuite) TestWriteDeleteRecord() {
+	cSpecUUID := uuid.New()
+	cSpec := types.ContractSpecification{
+		SpecificationId: types.ContractSpecMetadataAddress(cSpecUUID),
+		Description:     nil,
+		OwnerAddresses:  []string{s.user1},
+		PartiesInvolved: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+		Source:          types.NewContractSpecificationSourceHash("somesource1"),
+		ClassName:       "someclass1",
+	}
+	s.app.MetadataKeeper.SetContractSpecification(s.ctx, cSpec)
+	defer func() {
+		s.Assert().NoError(s.app.MetadataKeeper.RemoveContractSpecification(s.ctx, cSpec.SpecificationId), "removing contract spec")
+	}()
+
+	sSpecUUID := uuid.New()
+	sSpec := types.ScopeSpecification{
+		SpecificationId: types.ScopeSpecMetadataAddress(sSpecUUID),
+		Description:     nil,
+		OwnerAddresses:  []string{s.user1},
+		PartiesInvolved: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+		ContractSpecIds: []types.MetadataAddress{cSpec.SpecificationId},
+	}
+	s.app.MetadataKeeper.SetScopeSpecification(s.ctx, sSpec)
+	defer func() {
+		s.Assert().NoError(s.app.MetadataKeeper.RemoveScopeSpecification(s.ctx, sSpec.SpecificationId), "removing scope spec")
+	}()
+
+	rSpec := types.RecordSpecification{
+		SpecificationId: types.RecordSpecMetadataAddress(cSpecUUID, "record"),
+		Name:            "record",
+		Inputs: []*types.InputSpecification{
+			{
+				Name:     "ri1",
+				TypeName: "string",
+				Source:   types.NewInputSpecificationSourceHash("ri1hash"),
+			},
+		},
+		TypeName:           "string",
+		ResultType:         types.DefinitionType_DEFINITION_TYPE_RECORD_LIST,
+		ResponsibleParties: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+	}
+	s.app.MetadataKeeper.SetRecordSpecification(s.ctx, rSpec)
+	defer func() {
+		s.Assert().NoError(s.app.MetadataKeeper.RemoveRecordSpecification(s.ctx, rSpec.SpecificationId), "removing record spec 1")
+	}()
+
+	scopeUUID := uuid.New()
+	scope := types.Scope{
+		ScopeId:         types.ScopeMetadataAddress(scopeUUID),
+		SpecificationId: sSpec.SpecificationId,
+		Owners: []types.Party{{
+			Address: s.user1,
+			Role:    types.PartyType_PARTY_TYPE_OWNER,
+		}},
+		DataAccess:        nil,
+		ValueOwnerAddress: "",
+	}
+	s.app.MetadataKeeper.SetScope(s.ctx, scope)
+	defer s.app.MetadataKeeper.RemoveScope(s.ctx, scope.ScopeId)
+
+	session1UUID := uuid.New()
+	session1 := types.Session{
+		SessionId:       types.SessionMetadataAddress(scopeUUID, session1UUID),
+		SpecificationId: cSpec.SpecificationId,
+		Parties:         ownerPartyList(s.user1),
+		Name:            "someclass1",
+	}
+	s.app.MetadataKeeper.SetSession(s.ctx, session1)
+	defer s.app.MetadataKeeper.RemoveSession(s.ctx, session1.SessionId)
+
+	session2UUID := uuid.New()
+	session2 := types.Session{
+		SessionId:       types.SessionMetadataAddress(scopeUUID, session2UUID),
+		SpecificationId: cSpec.SpecificationId,
+		Parties:         ownerPartyList(s.user1),
+		Name:            "someclass1",
+	}
+	s.app.MetadataKeeper.SetSession(s.ctx, session2)
+	defer s.app.MetadataKeeper.RemoveSession(s.ctx, session2.SessionId)
+
+	record := types.Record{
+		Name:      rSpec.Name,
+		SessionId: session1.SessionId,
+		Process: types.Process{
+			ProcessId: &types.Process_Hash{Hash: "rprochash"},
+			Name:      "rproc",
+			Method:    "rprocmethod",
+		},
+		Inputs: []types.RecordInput{
+			{
+				Name:     rSpec.Inputs[0].Name,
+				Source:   &types.RecordInput_Hash{Hash: "rhash"},
+				TypeName: rSpec.Inputs[0].TypeName,
+				Status:   types.RecordInputStatus_Proposed,
+			},
+		},
+		Outputs: []types.RecordOutput{
+			{
+				Hash:   "rout1",
+				Status: types.ResultStatus_RESULT_STATUS_PASS,
+			},
+			{
+				Hash:   "rout2",
+				Status: types.ResultStatus_RESULT_STATUS_PASS,
+			},
+		},
+		SpecificationId: rSpec.SpecificationId,
+	}
+	recordID := types.RecordMetadataAddress(scopeUUID, rSpec.Name)
+	// Not adding the record here because we're testing that stuff.
+
+	s.T().Run("write invalid record", func(t *testing.T) {
+		// Make a record with an unknown spec id. Try to write it and expect an error.
+		badRecord := types.Record{
+			Name:      rSpec.Name,
+			SessionId: session1.SessionId,
+			Process: types.Process{
+				ProcessId: &types.Process_Hash{Hash: "badrprochash"},
+				Name:      "badrproc",
+				Method:    "badrprocmethod",
+			},
+			Inputs: []types.RecordInput{
+				{
+					Name:     rSpec.Inputs[0].Name,
+					Source:   &types.RecordInput_Hash{Hash: "badrhash"},
+					TypeName: rSpec.Inputs[0].TypeName,
+					Status:   types.RecordInputStatus_Proposed,
+				},
+			},
+			Outputs: []types.RecordOutput{
+				{
+					Hash:   "badrout1",
+					Status: types.ResultStatus_RESULT_STATUS_PASS,
+				},
+				{
+					Hash:   "badrout2",
+					Status: types.ResultStatus_RESULT_STATUS_PASS,
+				},
+			},
+			SpecificationId: types.RecordSpecMetadataAddress(uuid.New(), rSpec.Name),
+		}
+		msg := types.MsgWriteRecordRequest{
+			Record:              badRecord,
+			Signers:             []string{s.user1},
+			SessionIdComponents: nil,
+			ContractSpecUuid:    "",
+			Parties:             ownerPartyList(s.user1),
+		}
+		_, err := s.handler(s.ctx, &msg)
+		require.Error(t, err, "sending bad MsgWriteRecordRequest")
+		require.Contains(t, err.Error(), "proposed specification id")
+		require.Contains(t, err.Error(), "does not match expected")
+	})
+
+	s.T().Run("write record to session 1", func(t *testing.T) {
+		msg := types.MsgWriteRecordRequest{
+			Record:              record,
+			Signers:             []string{s.user1},
+			SessionIdComponents: nil,
+			ContractSpecUuid:    "",
+			Parties:             ownerPartyList(s.user1),
+		}
+		_, err := s.handler(s.ctx, &msg)
+		require.NoError(t, err, "sending MsgWriteRecordRequest")
+		r, rok := s.app.MetadataKeeper.GetRecord(s.ctx, recordID)
+		if assert.True(t, rok, "GetRecord bool") {
+			assert.Equal(t, record, r, "GetRecord record")
+		}
+	})
+
+	s.T().Run("Update record to other session", func(t *testing.T) {
+		record.SessionId = session2.SessionId
+		msg := types.MsgWriteRecordRequest{
+			Record:              record,
+			Signers:             []string{s.user1},
+			SessionIdComponents: nil,
+			ContractSpecUuid:    "",
+			Parties:             ownerPartyList(s.user1),
+		}
+		_, err := s.handler(s.ctx, &msg)
+		require.NoError(t, err, "sending MsgWriteRecordRequest")
+		r, rok := s.app.MetadataKeeper.GetRecord(s.ctx, recordID)
+		if assert.True(t, rok, "GetRecord bool") {
+			assert.Equal(t, record, r, "GetRecord record")
+		}
+		// Make sure the session was deleted since it's now empty.
+		_, sok := s.app.MetadataKeeper.GetSession(s.ctx, session1.SessionId)
+		assert.False(t, sok, "GetSession session 1 bool")
+	})
+
+	s.T().Run("delete the record", func(t *testing.T) {
+		msg := types.MsgDeleteRecordRequest{
+			RecordId: recordID,
+			Signers:  []string{s.user1},
+		}
+		_, err := s.handler(s.ctx, &msg)
+		require.NoError(t, err, "sending MsgDeleteRecordRequest")
+		_, rok := s.app.MetadataKeeper.GetRecord(s.ctx, recordID)
+		assert.False(t, rok, "GetRecord bool")
+		// Make sure the session was deleted since it's now empty.
+		_, sok := s.app.MetadataKeeper.GetSession(s.ctx, session2.SessionId)
+		assert.False(t, sok, "GetSession session 2 bool")
+	})
+}
+
+// TODO: WriteScopeSpecification tests
+// TODO: DeleteScopeSpecification tests
+// TODO: WriteContractSpecification tests
+// TODO: DeleteContractSpecification tests
 
 func (s MetadataHandlerTestSuite) TestAddContractSpecToScopeSpec() {
 	cSpec := types.ContractSpecification{
@@ -346,13 +557,7 @@ func (s MetadataHandlerTestSuite) TestDeleteContractSpecFromScopeSpec() {
 	}
 }
 
-// TODO: AddRecord tests
-// TODO: DeleteRecord tests
-// TODO: AddScopeSpecification tests
-// TODO: DeleteScopeSpecification tests
-// TODO: AddContractSpecification tests
-// TODO: DeleteContractSpecification tests
-// TODO: AddRecordSpecification tests
+// TODO: WriteRecordSpecification tests
 // TODO: DeleteRecordSpecification tests
 
 func (s MetadataHandlerTestSuite) TestAddP8EContractSpec() {
@@ -404,9 +609,9 @@ func (s MetadataHandlerTestSuite) TestAddP8EContractSpec() {
 }
 
 // TODO: P8EMemorializeContract tests
-// TODO: BindOSLocatorRequest tests
-// TODO: DeleteOSLocatorRequest tests
-// TODO: ModifyOSLocatorRequest tests
+// TODO: BindOSLocator tests
+// TODO: DeleteOSLocator tests
+// TODO: ModifyOSLocator tests
 
 func ownerPartyList(addresses ...string) []types.Party {
 	retval := make([]types.Party, len(addresses))
