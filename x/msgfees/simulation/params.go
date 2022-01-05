@@ -3,7 +3,8 @@ package simulation
 // DONTCOVER
 
 import (
-	"fmt"
+	"encoding/json"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"math/rand"
 
 	"github.com/provenance-io/provenance/x/msgfees/types"
@@ -23,7 +24,14 @@ func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
 	return []simtypes.ParamChange{
 		simulation.NewSimParamChange(types.ModuleName, keyFloorGasPrice,
 			func(r *rand.Rand) string {
-				return fmt.Sprintf("%d", FloorMinGasPrice(r))
+				jsonResp, err := json.Marshal( sdk.Coin{
+					Denom:  "stake",
+					Amount: sdk.NewIntFromUint64(FloorMinGasPrice(r)),
+				})
+				if err != nil {
+					panic("Error happened in JSON marshal")
+				}
+				return string(jsonResp)
 			},
 		),
 	}

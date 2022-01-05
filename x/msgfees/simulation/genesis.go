@@ -20,13 +20,13 @@ const (
 )
 
 // FloorMinGasPrice randomized FloorGasPrice
-func FloorMinGasPrice(r *rand.Rand) int64 {
-	return int64(r.Uint64())
+func FloorMinGasPrice(r *rand.Rand) uint64 {
+	return r.Uint64()
 }
 
 // RandomizedGenState generates a random GenesisState for distribution
 func RandomizedGenState(simState *module.SimulationState) {
-	var floorGasPrice int64
+	var floorGasPrice uint64
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, FloorGasPrice, &floorGasPrice, simState.Rand,
 		func(r *rand.Rand) { floorGasPrice = FloorMinGasPrice(r) },
@@ -34,7 +34,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	msgFeesGenesis := types.GenesisState{
 		Params: types.Params{
-			FloorGasPrice: sdk.Coin{Amount: sdk.NewInt(floorGasPrice), Denom: "nhash"},
+			FloorGasPrice: sdk.Coin{Amount: sdk.NewIntFromUint64(floorGasPrice), Denom: "blah"},
 		},
 		MsgFees: []types.MsgFee{
 			types.NewMsgFee(sdk.MsgTypeURL(&banktypes.MsgMultiSend{}), sdk.NewCoin("stake", sdk.NewInt(1))),
