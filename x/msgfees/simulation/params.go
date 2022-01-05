@@ -4,8 +4,9 @@ package simulation
 
 import (
 	"encoding/json"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"math/rand"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/msgfees/types"
 
@@ -24,7 +25,7 @@ func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
 	return []simtypes.ParamChange{
 		simulation.NewSimParamChange(types.ModuleName, keyFloorGasPrice,
 			func(r *rand.Rand) string {
-				jsonResp, err := json.Marshal( sdk.Coin{
+				jsonResp, err := json.Marshal(sdk.Coin{
 					Denom:  "stake",
 					Amount: sdk.NewIntFromUint64(FloorMinGasPrice(r)),
 				})
