@@ -322,7 +322,7 @@ func deleteSessions(ctx sdk.Context, mdKeeper Keeper, sessionsToDelete []types.M
 
 // IndexContractSpecBad is like IndexContractSpec but shifts the address indexes like migration 1 to 2.
 // Only public for unit testing.
-// TODO: Delete IndexContractSpecBad
+// TODO: Delete IndexContractSpecBad once Migrate2to3 is done on mainnet (and the Test2To3 unit test isn't needed).
 func IndexContractSpecBad(store *sdk.KVStore, spec *types.ContractSpecification) {
 	if spec == nil {
 		return
@@ -348,7 +348,7 @@ func IndexContractSpecBad(store *sdk.KVStore, spec *types.ContractSpecification)
 
 // IndexScopeSpecBad is like IndexScopeSpec but shifts the address indexes like migration 1 to 2.
 // Only public for unit testing.
-// TODO: Delete IndexScopeSpecBad
+// TODO: Delete IndexScopeSpecBad once Migrate2to3 is done on mainnet (and the Test2To3 unit test isn't needed).
 func IndexScopeSpecBad(store *sdk.KVStore, spec *types.ScopeSpecification) {
 	if spec == nil {
 		return
@@ -374,7 +374,7 @@ func IndexScopeSpecBad(store *sdk.KVStore, spec *types.ScopeSpecification) {
 
 // IndexScopeBad is like IndexScope but shifts the address indexes like migration 1 to 2.
 // Only public for unit testing.
-// TODO: Delete IndexScopeBad
+// TODO: Delete IndexScopeBad once Migrate2to3 is done on mainnet (and the Test2To3 unit test isn't needed).
 func IndexScopeBad(store *sdk.KVStore, scope *types.Scope) {
 	if scope == nil {
 		return
