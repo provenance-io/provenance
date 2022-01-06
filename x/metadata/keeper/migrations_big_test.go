@@ -1,12 +1,16 @@
 package keeper_test
 
 import (
+	"errors"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 	simapp "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/x/metadata/keeper"
 	"github.com/provenance-io/provenance/x/metadata/types"
 	"github.com/stretchr/testify/suite"
+	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"io/ioutil"
 	"os"
@@ -17,15 +21,17 @@ import (
 	"time"
 )
 
+// TODO: Delete this file.
 type MigrationsBigTestSuite struct {
 	suite.Suite
 
 	funcDepth int
 	startTime time.Time
 
-	app   *simapp.App
-	ctx   sdk.Context
-	store sdk.KVStore
+	app       *simapp.App
+	ctx       sdk.Context
+	store     sdk.KVStore
+	accPrefix string
 
 	loadDir string
 }
@@ -35,30 +41,16 @@ func (s *MigrationsBigTestSuite) SetupTest() {
 	s.startTime = time.Now()
 
 	s.app = simapp.Setup(false)
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{}).WithLogger(log.TestingLogger())
 	s.store = s.ctx.KVStore(s.app.GetKey(types.ModuleName))
+	s.accPrefix = sdk.GetConfig().GetBech32AccountAddrPrefix()
 
-	// s.loadDir = "/Users/danielwedul/random-work/metadata/all/testnet-2022-01-03--19-34"
-	s.loadDir = "/Users/danielwedul/random-work/metadata/all/2022-01-03--16-58"
+	s.loadDir = "/Users/danielwedul/random-work/metadata/all/testnet-2022-01-03--19-34"
+	// s.loadDir = "/Users/danielwedul/random-work/metadata/all/2022-01-03--16-58"
 	// s.loadDir = "/Users/danielwedul/random-work/metadata/all/small-2022-01-03--16-58"
 
 	s.Require().NoError(s.LoadData(s.loadDir), "loading data")
 }
-
-type MDType string
-
-const (
-	ContractSpecs MDType = "contractspecs"
-	RecordSpecs   MDType = "recordspecs"
-	ScopeSpecs    MDType = "scopespecs"
-	Scopes        MDType = "scopes"
-	Sessions      MDType = "sessions"
-	Records       MDType = "records"
-)
-
-type AddressFunc func(md interface{}) types.MetadataAddress
-
-type ParserFunc func(bz []byte) ([]codec.ProtoMarshaler, error)
 
 // FuncStarting logs that a function is starting.
 // It returns the params needed by FuncEnding or FuncEndingAlways.
@@ -186,11 +178,81 @@ func GetFuncName(depth int, a ...interface{}) string {
 	return name
 }
 
-func (s MigrationsBigTestSuite) getFuncs(mdType MDType) (AddressFunc, ParserFunc, error) {
+func AccAddressFromBech32WPre(address, bech32PrefixAccAddr string) (sdk.AccAddress, error) {
+	if len(strings.TrimSpace(address)) == 0 {
+		return sdk.AccAddress{}, errors.New("empty address string is not allowed")
+	}
+
+	bz, err := sdk.GetFromBech32(address, bech32PrefixAccAddr)
+	if err != nil {
+		return sdk.AccAddress{}, err
+	}
+
+	err = sdk.VerifyAddressFormat(bz)
+	if err != nil {
+		return sdk.AccAddress{}, err
+	}
+
+	return sdk.AccAddress(bz), nil
+}
+
+func AccAddressToBech32WPre(aa sdk.AccAddress, bech32PrefixAccAddr string) (string, error) {
+	if aa.Empty() {
+		return "", errors.New("account address must not be empty")
+	}
+	rv, err := bech32.ConvertAndEncode(bech32PrefixAccAddr, aa)
+	if err != nil {
+		return "", err
+	}
+	return rv, nil
+}
+
+func (s MigrationsBigTestSuite) GetFixedAccAddrBech32(addrStr string) (string, error) {
+	oneInd := strings.Index(addrStr, "1")
+	if oneInd < 0 {
+		return "", fmt.Errorf("invalid bech32 string: %q", addrStr)
+	}
+	pre := addrStr[:oneInd]
+	if pre == s.accPrefix {
+		return addrStr, nil
+	}
+	addr, err := AccAddressFromBech32WPre(addrStr, pre)
+	if err != nil {
+		return "", err
+	}
+	rv, err := AccAddressToBech32WPre(addr, s.accPrefix)
+	if err != nil {
+		return "", err
+	}
+	return rv, nil
+}
+
+type MDType string
+
+const (
+	ContractSpecs MDType = "contractspecs"
+	RecordSpecs   MDType = "recordspecs"
+	ScopeSpecs    MDType = "scopespecs"
+	Scopes        MDType = "scopes"
+	Sessions      MDType = "sessions"
+	Records       MDType = "records"
+)
+
+type MDTypeFuncs struct {
+	// Gets the address for a metadata object.
+	Addresser func(md interface{}) types.MetadataAddress
+	// Parses JSON into a metadata object.
+	Parser    func(bz []byte) ([]codec.ProtoMarshaler, error)
+	// Indexes a metadata object.
+	Indexer   func(md interface{})
+}
+
+func (s MigrationsBigTestSuite) getFuncs(mdType MDType) (MDTypeFuncs, error) {
 	switch mdType {
 	case ContractSpecs:
-		return func(md interface{}) types.MetadataAddress { return md.(*types.ContractSpecification).SpecificationId },
-			func(bz []byte) ([]codec.ProtoMarshaler, error) {
+		return MDTypeFuncs{
+			Addresser: func(md interface{}) types.MetadataAddress { return md.(*types.ContractSpecification).SpecificationId },
+			Parser:    func(bz []byte) ([]codec.ProtoMarshaler, error) {
 				var resp types.ContractSpecificationsAllResponse
 				err := s.app.AppCodec().UnmarshalJSON(bz, &resp)
 				if err != nil {
@@ -198,14 +260,24 @@ func (s MigrationsBigTestSuite) getFuncs(mdType MDType) (AddressFunc, ParserFunc
 				}
 				rv := make([]codec.ProtoMarshaler, len(resp.ContractSpecifications))
 				for i, v := range resp.ContractSpecifications {
+					for o, owner := range v.Specification.OwnerAddresses {
+						v.Specification.OwnerAddresses[o], err = s.GetFixedAccAddrBech32(owner)
+						if err != nil {
+							return nil, err
+						}
+					}
 					rv[i] = v.Specification
 				}
 				return rv, nil
 			},
-			nil
+			Indexer: func(md interface{}) {
+				keeper.IndexContractSpecBad(&s.store, md.(*types.ContractSpecification))
+			},
+		}, nil
 	case RecordSpecs:
-		return func(md interface{}) types.MetadataAddress { return md.(*types.RecordSpecification).SpecificationId },
-			func(bz []byte) ([]codec.ProtoMarshaler, error) {
+		return MDTypeFuncs{
+			Addresser: func(md interface{}) types.MetadataAddress { return md.(*types.RecordSpecification).SpecificationId },
+			Parser:    func(bz []byte) ([]codec.ProtoMarshaler, error) {
 				var resp types.RecordSpecificationsAllResponse
 				err := s.app.AppCodec().UnmarshalJSON(bz, &resp)
 				if err != nil {
@@ -217,10 +289,12 @@ func (s MigrationsBigTestSuite) getFuncs(mdType MDType) (AddressFunc, ParserFunc
 				}
 				return rv, nil
 			},
-			nil
+			Indexer:   func(md interface{}) {},
+		}, nil
 	case ScopeSpecs:
-		return func(md interface{}) types.MetadataAddress { return md.(*types.ScopeSpecification).SpecificationId },
-			func(bz []byte) ([]codec.ProtoMarshaler, error) {
+		return MDTypeFuncs{
+			Addresser: func(md interface{}) types.MetadataAddress { return md.(*types.ScopeSpecification).SpecificationId },
+			Parser:    func(bz []byte) ([]codec.ProtoMarshaler, error) {
 				var resp types.ScopeSpecificationsAllResponse
 				err := s.app.AppCodec().UnmarshalJSON(bz, &resp)
 				if err != nil {
@@ -228,14 +302,24 @@ func (s MigrationsBigTestSuite) getFuncs(mdType MDType) (AddressFunc, ParserFunc
 				}
 				rv := make([]codec.ProtoMarshaler, len(resp.ScopeSpecifications))
 				for i, v := range resp.ScopeSpecifications {
+					for o, owner := range v.Specification.OwnerAddresses {
+						v.Specification.OwnerAddresses[o], err = s.GetFixedAccAddrBech32(owner)
+						if err != nil {
+							return nil, err
+						}
+					}
 					rv[i] = v.Specification
 				}
 				return rv, nil
 			},
-			nil
+			Indexer: func(md interface{}) {
+				keeper.IndexScopeSpecBad(&s.store, md.(*types.ScopeSpecification))
+			},
+		}, nil
 	case Scopes:
-		return func(md interface{}) types.MetadataAddress { return md.(*types.Scope).ScopeId },
-			func(bz []byte) ([]codec.ProtoMarshaler, error) {
+		return MDTypeFuncs{
+			Addresser: func(md interface{}) types.MetadataAddress { return md.(*types.Scope).ScopeId },
+			Parser:    func(bz []byte) ([]codec.ProtoMarshaler, error) {
 				var resp types.ScopesAllResponse
 				err := s.app.AppCodec().UnmarshalJSON(bz, &resp)
 				if err != nil {
@@ -243,14 +327,31 @@ func (s MigrationsBigTestSuite) getFuncs(mdType MDType) (AddressFunc, ParserFunc
 				}
 				rv := make([]codec.ProtoMarshaler, len(resp.Scopes))
 				for i, v := range resp.Scopes {
+					for o, owner := range v.Scope.Owners {
+						v.Scope.Owners[o].Address, err = s.GetFixedAccAddrBech32(owner.Address)
+						if err != nil {
+							return nil, err
+						}
+					}
+					for o, addr := range v.Scope.DataAccess {
+						v.Scope.DataAccess[o], err = s.GetFixedAccAddrBech32(addr)
+						if err != nil {
+							return nil, err
+						}
+					}
+					v.Scope.ValueOwnerAddress, err = s.GetFixedAccAddrBech32(v.Scope.ValueOwnerAddress)
 					rv[i] = v.Scope
 				}
 				return rv, nil
 			},
-			nil
+			Indexer: func(md interface{}) {
+				keeper.IndexScopeBad(&s.store, md.(*types.Scope))
+			},
+		}, nil
 	case Sessions:
-		return func(md interface{}) types.MetadataAddress { return md.(*types.Session).SessionId },
-			func(bz []byte) ([]codec.ProtoMarshaler, error) {
+		return MDTypeFuncs{
+			Addresser: func(md interface{}) types.MetadataAddress { return md.(*types.Session).SessionId },
+			Parser:    func(bz []byte) ([]codec.ProtoMarshaler, error) {
 				var resp types.SessionsAllResponse
 				err := s.app.AppCodec().UnmarshalJSON(bz, &resp)
 				if err != nil {
@@ -258,14 +359,22 @@ func (s MigrationsBigTestSuite) getFuncs(mdType MDType) (AddressFunc, ParserFunc
 				}
 				rv := make([]codec.ProtoMarshaler, len(resp.Sessions))
 				for i, v := range resp.Sessions {
+					for p, party := range v.Session.Parties {
+						v.Session.Parties[p].Address, err = s.GetFixedAccAddrBech32(party.Address)
+						if err != nil {
+							return nil, err
+						}
+					}
 					rv[i] = v.Session
 				}
 				return rv, nil
 			},
-			nil
+			Indexer:   func(md interface{}) {},
+		}, nil
 	case Records:
-		return func(md interface{}) types.MetadataAddress { return md.(*types.Record).GetRecordAddress() },
-			func(bz []byte) ([]codec.ProtoMarshaler, error) {
+		return MDTypeFuncs{
+			Addresser: func(md interface{}) types.MetadataAddress { return md.(*types.Record).GetRecordAddress() },
+			Parser:    func(bz []byte) ([]codec.ProtoMarshaler, error) {
 				var resp types.RecordsAllResponse
 				err := s.app.AppCodec().UnmarshalJSON(bz, &resp)
 				if err != nil {
@@ -277,9 +386,10 @@ func (s MigrationsBigTestSuite) getFuncs(mdType MDType) (AddressFunc, ParserFunc
 				}
 				return rv, nil
 			},
-			nil
+			Indexer: func(md interface{}) {},
+		}, nil
 	default:
-		return nil, nil, fmt.Errorf("Unknown metadata type [%s].", mdType)
+		return MDTypeFuncs{}, fmt.Errorf("Unknown metadata type [%s].", mdType)
 	}
 }
 
@@ -292,13 +402,13 @@ func (s *MigrationsBigTestSuite) LoadData(dir string) error {
 	for i, mdType := range order {
 		logLead := fmt.Sprintf("%d/%d %s:", i+1, len(order), mdType)
 		s.Log("%s Loading", logLead)
-		addressF, constructorF, err := s.getFuncs(mdType)
+		funcs, err := s.getFuncs(mdType)
 		if err != nil {
 			s.Log("%s Error: %v", logLead, err)
 			return err
 		}
 		mdTypeDir := filepath.Join(s.loadDir, "q-res-all-"+string(mdType))
-		err = s.LoadAllFromDir(logLead, mdTypeDir, addressF, constructorF)
+		err = s.LoadAllFromDir(logLead, mdTypeDir, funcs)
 		if err != nil {
 			s.Log("%s Error: %v", logLead, err)
 			return err
@@ -309,7 +419,7 @@ func (s *MigrationsBigTestSuite) LoadData(dir string) error {
 	return nil
 }
 
-func (s *MigrationsBigTestSuite) LoadAllFromDir(logLead, dir string, addresser AddressFunc, parser ParserFunc) error {
+func (s *MigrationsBigTestSuite) LoadAllFromDir(logLead, dir string, funcs MDTypeFuncs) error {
 	defer s.FuncEnding(s.FuncStarting(dir))
 	files, err := getFilesIn(dir)
 	if err != nil {
@@ -324,7 +434,7 @@ func (s *MigrationsBigTestSuite) LoadAllFromDir(logLead, dir string, addresser A
 			s.Log("%s Error reading file: %v", flogLead, err)
 			return err
 		}
-		entries, err := parser(data)
+		entries, err := funcs.Parser(data)
 		if err != nil {
 			s.Log("%s Error parsing json: %v", flogLead, err)
 			return err
@@ -336,8 +446,9 @@ func (s *MigrationsBigTestSuite) LoadAllFromDir(logLead, dir string, addresser A
 				s.Log("%s entry %d of %d: could not marshall to proto: %v", flogLead, i+1, len(entries), err)
 				return err
 			}
-			addr := addresser(entry)
+			addr := funcs.Addresser(entry)
 			s.store.Set(addr, bz)
+			funcs.Indexer(entry)
 		}
 		count += len(entries)
 		s.Log("%s Done. Added %d new entries. Now have %d total.", flogLead, len(entries), count)
@@ -363,6 +474,9 @@ func TestMigrationsBigTestSuite(t *testing.T) {
 	suite.Run(t, new(MigrationsBigTestSuite))
 }
 
-func (s MigrationsBigTestSuite) TestTheLoad() {
+func (s MigrationsBigTestSuite) TestRunMigration() {
+	defer s.FuncEnding(s.FuncStarting())
+	migrator2 := keeper.NewMigrator(s.app.MetadataKeeper)
+	s.Require().NoError(migrator2.Migrate2to3(s.ctx), "running migration v2 to v3")
 	s.Fail("Just failing to see the logs.")
 }
