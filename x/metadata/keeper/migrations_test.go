@@ -919,11 +919,11 @@ func (s *MigrationsTestSuite) Test2To3() {
 	s.T().Run("A little bit of everything", func(t *testing.T) {
 		ownerCount := 5
 		ScopeSpecCount := 2
-		contractSpecCount := 4 // 2 per scope spec
-		RecordSpecCount := 8 // 2 per contract spec
-		scopecount := 40 // 2 per scope spec
-		sessionCount := 80 // 2 per scope (also 2 per contract spec)
-		recordCount := 80 // 1/2 the sessions will be empty, then 2 in each non-empty session (also 1 for each record spec).
+		contractSpecCount := ScopeSpecCount*2
+		RecordSpecCount := contractSpecCount*2
+		scopecount := ScopeSpecCount * 2 * 50 // At * 7, this passes. At * 8, it deadlocks.
+		sessionCount := scopecount * 2
+		recordCount := scopecount * 2
 
 		makeUUID := func(v uint8) uuid.UUID {
 			rv, err := uuid.FromBytes(bytes.Repeat([]byte{v+1}, 16))
