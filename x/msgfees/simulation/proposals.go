@@ -3,12 +3,13 @@ package simulation
 import (
 	"math/rand"
 
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	simappparams "github.com/provenance-io/provenance/app/params"
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provenance-io/provenance/x/msgfees/keeper"
 	"github.com/provenance-io/provenance/x/msgfees/types"
 )
@@ -38,7 +39,7 @@ func ProposalContents(k keeper.Keeper) []simtypes.WeightedProposalContent {
 // SimulateCreateAddMsgFeesProposal generates random additional fee with AddMsgFeesProposal
 func SimulateCreateAddMsgFeesProposal(k keeper.Keeper) simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
-		msgFeeExists, err := k.GetMsgFee(ctx, sdk.MsgTypeURL(&markertypes.MsgAddMarkerRequest{}))
+		msgFeeExists, err := k.GetMsgFee(ctx, sdk.MsgTypeURL(&banktypes.MsgSend{}))
 		check(err)
 		if msgFeeExists == nil {
 			return types.NewAddMsgFeeProposal(
