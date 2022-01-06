@@ -95,7 +95,7 @@ func (afd MsgFeesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool
 		// get all the coin balances for the fee payer account
 		balancePerCoin := sdk.NewCoins()
 		for _, fc := range feeCoins {
-			balancePerCoin.Add(afd.bankKeeper.GetBalance(ctx, deductFeesFrom, fc.Denom))
+			balancePerCoin = balancePerCoin.Add(afd.bankKeeper.GetBalance(ctx, deductFeesFrom, fc.Denom))
 		}
 
 		if !simulate {
