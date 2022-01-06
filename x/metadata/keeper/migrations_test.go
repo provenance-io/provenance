@@ -921,9 +921,9 @@ func (s *MigrationsTestSuite) Test2To3() {
 		ScopeSpecCount := 2
 		contractSpecCount := ScopeSpecCount*2
 		RecordSpecCount := contractSpecCount*2
-		scopecount := ScopeSpecCount * 2 * 50 // At * 7, this passes. At * 8, it deadlocks.
-		sessionCount := scopecount * 2
-		recordCount := scopecount * 2
+		scopeCount := ScopeSpecCount * 2 * 50
+		sessionCount := scopeCount * 2
+		recordCount := scopeCount * 2
 
 		makeUUID := func(v uint8) uuid.UUID {
 			rv, err := uuid.FromBytes(bytes.Repeat([]byte{v+1}, 16))
@@ -1003,7 +1003,7 @@ func (s *MigrationsTestSuite) Test2To3() {
 				ContractSpecIds: []types.MetadataAddress{contractSpecs[i*2].SpecificationId, contractSpecs[i*2+1].SpecificationId},
 			}
 		}
-		scopes := make([]types.Scope, scopecount)
+		scopes := make([]types.Scope, scopeCount)
 		for i := range scopes {
 			scopes[i] = types.Scope{
 				ScopeId:           types.ScopeMetadataAddress(makeUUID(uint8(i))),
@@ -1082,5 +1082,12 @@ func (s *MigrationsTestSuite) Test2To3() {
 
 		migrator := keeper.NewMigrator(s.app.MetadataKeeper)
 		require.NoError(t, migrator.Migrate2to3(s.ctx), "running migration v2 to v3")
+
+		// The other parts have been tested in the other tests. This test just makes sure the migration runs
+		// without error and with more data than the other tests (and doesn't deadlock).
+		// The original migration process would deadlock while finding empty sessions
+		// if there were enough entries in the store.
+		// And "enough" wasn't that much. This unit test would pass with scopeCount := ScopeSpecCount * 2 * 7,
+		// but it would deadlock with scopeCount := ScopeSpecCount * 2 * 8.
 	})
 }
