@@ -93,9 +93,9 @@ func (afd MsgFeesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool
 		}
 
 		// get all the coin balances for the fee payer account
-		balancePerCoin := make(sdk.Coins, len(feeCoins))
-		for i, fc := range feeCoins {
-			balancePerCoin[i] = afd.bankKeeper.GetBalance(ctx, deductFeesFrom, fc.Denom)
+		balancePerCoin := sdk.NewCoins()
+		for _, fc := range feeCoins {
+			balancePerCoin.Add(afd.bankKeeper.GetBalance(ctx, deductFeesFrom, fc.Denom))
 		}
 
 		if !simulate {
@@ -195,7 +195,7 @@ func EnsureSufficientFees(gas uint64, feeCoins sdk.Coins, additionalFees sdk.Coi
 	}
 	// Step 2: check if additional fees in nhash, that base fees and additional fees can be paid
 	// total fees in hash - gas limit * price per gas >= additional fees in hash
-	if containsDenom(additionalFees, minGasPriceForAdditionalFeeCalc.Denom) {
+	if !additionalFees.AmountOf(minGasPriceForAdditionalFeeCalc.Denom).IsZero() {
 		// Determine the required fees by multiplying each required minimum gas
 		// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
 		fee := minGasPriceForAdditionalFeeCalc.Amount.Mul(sdk.NewIntFromUint64(gas))
@@ -224,17 +224,9 @@ func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgfeestypes.MsgFeesK
 			continue
 		}
 		if msgFees.AdditionalFee.IsPositive() {
-			additionalFees = additionalFees.Add(sdk.NewCoin(msgFees.AdditionalFee.Denom, msgFees.AdditionalFee.Amount))
+			additionalFees = additionalFees.Add(msgFees.AdditionalFee)
 		}
 	}
 
 	return additionalFees, nil
-}
-
-func containsDenom(coins sdk.Coins, denom string) bool {
-	if len(coins) == 0 {
-		return false
-	}
-	amt := coins.AmountOf(denom)
-	return !amt.IsZero()
 }
