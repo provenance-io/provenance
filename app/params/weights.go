@@ -41,4 +41,7 @@ const (
 	DefaultWeightMsgAddAccess                       int = 10
 	DefaultWeightMsgMintMarker                      int = 67
 	DefaultWeightMsgBurnMarker                      int = 67
+	// MsgFees
+	DefaultWeightAddMsgFeeProposalContent    int = 75
+	DefaultWeightRemoveMsgFeeProposalContent int = 25
 )

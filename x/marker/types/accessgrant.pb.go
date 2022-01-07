@@ -45,7 +45,7 @@ const (
 	// ACCESS_ADMIN is the ability to add access grants for accounts to the list of marker permissions.
 	Access_Admin Access = 6
 	// ACCESS_TRANSFER is the ability to invoke a send operation using the marker module to facilitate exchange.
-	// This capability is useful when the marker denomination has "send enabled = false" preventing normal bank transfer
+	// This access right is only supported on RESTRICTED markers.
 	Access_Transfer Access = 7
 )
 
