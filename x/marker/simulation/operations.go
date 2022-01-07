@@ -197,7 +197,7 @@ func Dispatch(
 	account := ak.GetAccount(ctx, from.Address)
 	spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-	//fund account with nhash
+	//fund account with nhash for additional fees
 	simapp.FundAccount(bk,ctx,account.GetAddress(),sdk.NewCoins(sdk.Coin{
 		Denom:  "nhash",
 		Amount: sdk.NewInt(1000),

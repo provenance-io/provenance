@@ -37,8 +37,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 			FloorGasPrice: sdk.Coin{Amount: sdk.NewIntFromUint64(floorGasPrice), Denom: "blah"},
 		},
 		MsgFees: []types.MsgFee{
-			// changed it to some obscure vesting type since sim tests as they are written will fail if a message actually has a fee on it :heavysigh:
-			//  however it does help create an app with a genesis state so not totally useless.
+			// Adding fees for create marker.
 			types.NewMsgFee(sdk.MsgTypeURL(&markertypes.MsgAddMarkerRequest{}), sdk.NewCoin("nhash", sdk.NewInt(1000))),
 		},
 	}
