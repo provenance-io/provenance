@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"bytes"
 	"fmt"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"math/rand"
 	"sort"
 	"strings"
@@ -21,6 +20,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 type MigrationsTestSuite struct {
@@ -38,7 +40,7 @@ type MigrationsTestSuite struct {
 
 func (s *MigrationsTestSuite) SetupTest() {
 	s.app = simapp.Setup(false)
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{}).WithLogger(log.TestingLogger())
 	s.store = s.ctx.KVStore(s.app.GetKey(types.ModuleName))
 
 	s.newPrefixes = namedIndexList{
@@ -874,6 +876,7 @@ func (s *MigrationsTestSuite) Test2To3() {
 			Name:            "donotdeleteme",
 		}
 		s.store.Set(sessionID, s.app.AppCodec().MustMarshal(&session))
+		defer s.store.Delete(sessionID)
 		record := types.Record{
 			Name:      "arecord",
 			SessionId: sessionID,
@@ -904,11 +907,187 @@ func (s *MigrationsTestSuite) Test2To3() {
 		record.SpecificationId = types.RecordSpecMetadataAddress(uuid.New(), record.Name)
 		recordID := types.RecordMetadataAddress(scopeUUID, record.Name)
 		s.store.Set(recordID, s.app.AppCodec().MustMarshal(&record))
+		defer s.store.Delete(recordID)
 
 		migrator2 := keeper.NewMigrator(s.app.MetadataKeeper)
 		require.NoError(t, migrator2.Migrate2to3(s.ctx), "running migration v2 to v3")
 
 		hasSession := s.store.Has(sessionID)
 		require.True(t, hasSession, "session should still exist because it was not empty")
+	})
+
+	s.T().Run("A little bit of everything", func(t *testing.T) {
+		ownerCount := 5
+		ScopeSpecCount := 2
+		contractSpecCount := ScopeSpecCount*2
+		RecordSpecCount := contractSpecCount*2
+		scopeCount := ScopeSpecCount * 2 * 50
+		sessionCount := scopeCount * 2
+		recordCount := scopeCount * 2
+
+		makeUUID := func(v uint8) uuid.UUID {
+			rv, err := uuid.FromBytes(bytes.Repeat([]byte{v+1}, 16))
+			if err != nil {
+				panic(err)
+			}
+			return rv
+		}
+		makeRecordSpecInputs := func(ri, count int) []*types.InputSpecification {
+			rv := make([]*types.InputSpecification, count)
+			for i := range rv {
+				rv[i] = &types.InputSpecification{
+					Name:     fmt.Sprintf("record%dInput%d", ri, i+1),
+					TypeName: fmt.Sprintf("record%dInput%d.TypeName", ri, i+1),
+					Source:   &types.InputSpecification_Hash{Hash: fmt.Sprintf("record%dInput%d.Source.Hash", ri, i+1)},
+				}
+			}
+			return rv
+		}
+		makeRecordInputs := func(ri, count int) []types.RecordInput {
+			rv := make([]types.RecordInput, count)
+			for i := range rv {
+				rv[i] = types.RecordInput{
+					Name:     fmt.Sprintf("record%dInput%d", ri, i+1),
+					Source:   &types.RecordInput_Hash{Hash: fmt.Sprintf("record%dInput%d.Source.Hash", ri, i+1)},
+					TypeName: fmt.Sprintf("record%dInput%d.TypeName", ri, i+1),
+					Status:   types.RecordInputStatus_Proposed,
+				}
+			}
+			return rv
+		}
+		makeRecordOutputs := func(ri, count int) []types.RecordOutput {
+			rv := make([]types.RecordOutput, count)
+			for i := range rv {
+				rv[i] = types.RecordOutput{
+					Hash:   fmt.Sprintf("record%doutput%d", ri, i+1),
+					Status: types.ResultStatus_RESULT_STATUS_PASS,
+				}
+			}
+			return rv
+		}
+
+		owners := make([]user, ownerCount)
+		for i := range owners {
+			owners[i] = randomUser()
+		}
+		contractSpecs := make([]types.ContractSpecification, contractSpecCount)
+		for i := range contractSpecs {
+			contractSpecs[i] = types.ContractSpecification{
+				SpecificationId: types.ContractSpecMetadataAddress(makeUUID(uint8(i))),
+				Description:     nil,
+				OwnerAddresses:  []string{owners[i].Bech32},
+				PartiesInvolved: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				Source:          types.NewContractSpecificationSourceHash(fmt.Sprintf("contractSpecs[%d].source.hash", i+1)),
+				ClassName:       fmt.Sprintf("contractSpecs[%d]", i+1),
+			}
+		}
+		recordSpecs := make([]types.RecordSpecification, RecordSpecCount)
+		for i := range recordSpecs {
+			name := fmt.Sprintf("record%d", i+1)
+			recordSpecs[i] = types.RecordSpecification{
+				SpecificationId:    contractSpecs[i/2].SpecificationId.MustGetAsRecordSpecAddress(name),
+				Name:               name,
+				Inputs:             makeRecordSpecInputs(i+1, 2),
+				TypeName:           fmt.Sprintf("record%d.TypeName", i+1),
+				ResultType:         types.DefinitionType_DEFINITION_TYPE_RECORD_LIST,
+				ResponsibleParties: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+			}
+		}
+		scopeSpecs := make([]types.ScopeSpecification, ScopeSpecCount)
+		for i := range scopeSpecs {
+			scopeSpecs[i] = types.ScopeSpecification{
+				SpecificationId: types.ScopeSpecMetadataAddress(makeUUID(uint8(i))),
+				Description:     nil,
+				OwnerAddresses:  []string{owners[i].Bech32},
+				PartiesInvolved: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				ContractSpecIds: []types.MetadataAddress{contractSpecs[i*2].SpecificationId, contractSpecs[i*2+1].SpecificationId},
+			}
+		}
+		scopes := make([]types.Scope, scopeCount)
+		for i := range scopes {
+			scopes[i] = types.Scope{
+				ScopeId:           types.ScopeMetadataAddress(makeUUID(uint8(i))),
+				SpecificationId:   scopeSpecs[i/2%ScopeSpecCount].SpecificationId,
+				Owners:            ownerPartyList(owners[1+i%2].Bech32),
+				DataAccess:        []string{owners[2-i%2].Bech32},
+				ValueOwnerAddress: owners[0].Bech32,
+			}
+		}
+		sessions := make([]types.Session, sessionCount)
+		for i := range sessions {
+			sessions[i] = types.Session{
+				SessionId:       scopes[i/2].ScopeId.MustGetAsSessionAddress(makeUUID(uint8(i))),
+				SpecificationId: contractSpecs[i%contractSpecCount].SpecificationId,
+				Parties:         scopes[i/2].Owners,
+				Name:            fmt.Sprintf("session[%d].Scope[%d]", i, i/2),
+			}
+		}
+		records := make([]types.Record, recordCount)
+		for i := range records {
+			// Only used even numbered sessions.
+			session := sessions[i / 2 * 2]
+			spec := recordSpecs[i%RecordSpecCount]
+			records[i] = types.Record{
+				Name:            spec.Name,
+				SessionId:       session.SessionId,
+				Process:         types.Process{
+					ProcessId: &types.Process_Hash{Hash: fmt.Sprintf("record%d.Process.ProcessId.Hash", i+1)},
+					Name:      spec.TypeName,
+					Method:    fmt.Sprintf("record%d.Method", i+1),
+				},
+				Inputs:          makeRecordInputs(i+1, 2),
+				Outputs:         makeRecordOutputs(i+1, 2),
+				SpecificationId: spec.SpecificationId,
+			}
+		}
+
+		for i, entry := range contractSpecs {
+			bz, err := s.app.AppCodec().Marshal(&entry)
+			require.NoError(t, err, "marshalling contract spec %d", i)
+			s.store.Set(entry.SpecificationId, bz)
+			keeper.IndexContractSpecBad(&s.store, &entry)
+		}
+
+		for i, entry := range recordSpecs {
+			bz, err := s.app.AppCodec().Marshal(&entry)
+			require.NoError(t, err, "marshalling record spec %d", i)
+			s.store.Set(entry.SpecificationId, bz)
+		}
+
+		for i, entry := range scopeSpecs {
+			bz, err := s.app.AppCodec().Marshal(&entry)
+			require.NoError(t, err, "marshalling scope spec %d", i)
+			s.store.Set(entry.SpecificationId, bz)
+			keeper.IndexScopeSpecBad(&s.store, &entry)
+		}
+
+		for i, entry := range scopes {
+			bz, err := s.app.AppCodec().Marshal(&entry)
+			require.NoError(t, err, "marshalling scope %d", i)
+			s.store.Set(entry.ScopeId, bz)
+			keeper.IndexScopeBad(&s.store, &entry)
+		}
+
+		for i, entry := range sessions {
+			bz, err := s.app.AppCodec().Marshal(&entry)
+			require.NoError(t, err, "marshalling session %d", i)
+			s.store.Set(entry.SessionId, bz)
+		}
+
+		for i, entry := range records {
+			bz, err := s.app.AppCodec().Marshal(&entry)
+			require.NoError(t, err, "marshalling record %d", i)
+			s.store.Set(entry.GetRecordAddress(), bz)
+		}
+
+		migrator := keeper.NewMigrator(s.app.MetadataKeeper)
+		require.NoError(t, migrator.Migrate2to3(s.ctx), "running migration v2 to v3")
+
+		// The other parts have been tested in the other tests. This test just makes sure the migration runs
+		// without error and with more data than the other tests (and doesn't deadlock).
+		// The original migration process would deadlock while finding empty sessions
+		// if there were enough entries in the store.
+		// And "enough" wasn't that much. This unit test would pass with scopeCount := ScopeSpecCount * 2 * 7,
+		// but it would deadlock with scopeCount := ScopeSpecCount * 2 * 8.
 	})
 }
