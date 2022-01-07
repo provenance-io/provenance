@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"math/rand"
 	"regexp"
 	"strconv"
@@ -47,7 +48,7 @@ SetDenomMetadata
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
-	appParams simtypes.AppParams, cdc codec.JSONCodec, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper,
+	appParams simtypes.AppParams, cdc codec.JSONCodec, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper,
 ) simulation.WeightedOperations {
 	var (
 		weightMsgAddMarker    int
@@ -90,7 +91,7 @@ func WeightedOperations(
 }
 
 // SimulateMsgAddMarker will bind a NAME under an existing name using a 40% probability of restricting it.
-func SimulateMsgAddMarker(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper) simtypes.Operation {
+func SimulateMsgAddMarker(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -111,7 +112,7 @@ func SimulateMsgAddMarker(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bank
 	}
 }
 
-func SimulateMsgChangeStatus(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper) simtypes.Operation {
+func SimulateMsgChangeStatus(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -158,7 +159,7 @@ func SimulateMsgChangeStatus(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk b
 	}
 }
 
-func SimulateMsgAddAccess(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper) simtypes.Operation {
+func SimulateMsgAddAccess(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -183,7 +184,7 @@ func Dispatch(
 	app *baseapp.BaseApp,
 	ctx sdk.Context,
 	ak authkeeper.AccountKeeperI,
-	bk bankkeeper.ViewKeeper,
+	bk bankkeeper.Keeper,
 	from simtypes.Account,
 	chainID string,
 	msg sdk.Msg,
@@ -196,7 +197,16 @@ func Dispatch(
 	account := ak.GetAccount(ctx, from.Address)
 	spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
+	//fund account with nhash
+	simapp.FundAccount(bk,ctx,account.GetAddress(),sdk.NewCoins(sdk.Coin{
+		Denom:  "nhash",
+		Amount: sdk.NewInt(1000),
+	}))
 	fees, err := simtypes.RandomFees(r, ctx, spendable)
+	fees = fees.Add(sdk.Coin{
+		Denom:  "nhash",
+		Amount: sdk.NewInt(1000),
+	})
 	if err != nil {
 		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to generate fees"), nil, err
 	}
