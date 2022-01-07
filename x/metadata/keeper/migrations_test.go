@@ -919,14 +919,14 @@ func (s *MigrationsTestSuite) Test2To3() {
 	s.T().Run("A little bit of everything", func(t *testing.T) {
 		ownerCount := 5
 		ScopeSpecCount := 2
-		contractSpecCount := ScopeSpecCount*2
-		RecordSpecCount := contractSpecCount*2
+		contractSpecCount := ScopeSpecCount * 2
+		RecordSpecCount := contractSpecCount * 2
 		scopeCount := ScopeSpecCount * 2 * 50
 		sessionCount := scopeCount * 2
 		recordCount := scopeCount * 2
 
 		makeUUID := func(v uint8) uuid.UUID {
-			rv, err := uuid.FromBytes(bytes.Repeat([]byte{v+1}, 16))
+			rv, err := uuid.FromBytes(bytes.Repeat([]byte{v + 1}, 16))
 			if err != nil {
 				panic(err)
 			}
@@ -1025,12 +1025,12 @@ func (s *MigrationsTestSuite) Test2To3() {
 		records := make([]types.Record, recordCount)
 		for i := range records {
 			// Only used even numbered sessions.
-			session := sessions[i / 2 * 2]
+			session := sessions[i/2*2]
 			spec := recordSpecs[i%RecordSpecCount]
 			records[i] = types.Record{
-				Name:            spec.Name,
-				SessionId:       session.SessionId,
-				Process:         types.Process{
+				Name:      spec.Name,
+				SessionId: session.SessionId,
+				Process: types.Process{
 					ProcessId: &types.Process_Hash{Hash: fmt.Sprintf("record%d.Process.ProcessId.Hash", i+1)},
 					Name:      spec.TypeName,
 					Method:    fmt.Sprintf("record%d.Method", i+1),
