@@ -18,7 +18,7 @@ func IndexContractSpecBad(store *sdk.KVStore, spec *types.ContractSpecification)
 	}
 	for _, indexKey := range getContractSpecIndexValues(spec).IndexKeys() {
 		if indexKey[0] == types.AddressContractSpecCacheKeyPrefix[0] {
-			badKey := make([]byte, len(indexKey) - 1)
+			badKey := make([]byte, len(indexKey)-1)
 			badKey[0] = indexKey[0]
 			copy(badKey[1:], indexKey[2:])
 			(*store).Set(badKey, []byte{0x01})
@@ -26,7 +26,7 @@ func IndexContractSpecBad(store *sdk.KVStore, spec *types.ContractSpecification)
 			// main: 19 more odd than even (0.39%).
 			// test: 1 more even than odd (0.009%).
 			// small: 10 more odd than even (1.0%).
-			if spec.SpecificationId[15] % 2 == 0 {
+			if spec.SpecificationId[15]%2 == 0 {
 				(*store).Set(indexKey, []byte{0x01})
 			}
 		} else {
@@ -43,7 +43,7 @@ func IndexScopeSpecBad(store *sdk.KVStore, spec *types.ScopeSpecification) {
 	}
 	for _, indexKey := range getScopeSpecIndexValues(spec).IndexKeys() {
 		if indexKey[0] == types.AddressScopeSpecCacheKeyPrefix[0] {
-			badKey := make([]byte, len(indexKey) - 1)
+			badKey := make([]byte, len(indexKey)-1)
 			badKey[0] = indexKey[0]
 			copy(badKey[1:], indexKey[2:])
 			(*store).Set(badKey, []byte{0x01})
@@ -51,7 +51,7 @@ func IndexScopeSpecBad(store *sdk.KVStore, spec *types.ScopeSpecification) {
 			// main: 0 more even than odd (0.0%).
 			// test: 1 more even than odd (6.7%).
 			// small: 0 more even than odd (0.0%).
-			if spec.SpecificationId[1] % 2 == 0 {
+			if spec.SpecificationId[1]%2 == 0 {
 				(*store).Set(indexKey, []byte{0x01})
 			}
 		} else {
@@ -68,7 +68,7 @@ func IndexScopeBad(store *sdk.KVStore, scope *types.Scope) {
 	}
 	for _, indexKey := range getScopeIndexValues(scope).IndexKeys() {
 		if indexKey[0] == types.AddressScopeCacheKeyPrefix[0] || indexKey[0] == types.ValueOwnerScopeCacheKeyPrefix[0] {
-			badKey := make([]byte, len(indexKey) - 1)
+			badKey := make([]byte, len(indexKey)-1)
 			badKey[0] = indexKey[0]
 			copy(badKey[1:], indexKey[2:])
 			(*store).Set(badKey, []byte{0x01})
@@ -76,7 +76,7 @@ func IndexScopeBad(store *sdk.KVStore, scope *types.Scope) {
 			// main: 30 more even than odd (0.035%).
 			// test: 32 more odd than even (0.011%).
 			// small: 38 more even than odd (3.8%). One of the worst, but the small set is just a superficial test.
-			if scope.ScopeId[6] % 2 == 0 {
+			if scope.ScopeId[6]%2 == 0 {
 				(*store).Set(indexKey, []byte{0x01})
 			}
 		} else {
