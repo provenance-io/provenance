@@ -2,10 +2,11 @@ package simulation
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"math/rand"
 	"regexp"
 	"strconv"
+
+	"github.com/cosmos/cosmos-sdk/simapp"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -198,7 +199,7 @@ func Dispatch(
 	spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 	//fund account with nhash for additional fees
-	simapp.FundAccount(bk,ctx,account.GetAddress(),sdk.NewCoins(sdk.Coin{
+	simapp.FundAccount(bk, ctx, account.GetAddress(), sdk.NewCoins(sdk.Coin{
 		Denom:  "nhash",
 		Amount: sdk.NewInt(1000),
 	}))

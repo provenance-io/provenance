@@ -5,8 +5,9 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"math/rand"
+
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
 	"github.com/provenance-io/provenance/x/msgfees/types"
 
