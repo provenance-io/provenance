@@ -1,0 +1,81 @@
+syntax = "proto3";
+package provenance.msgfees.v1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "google/api/annotations.proto";
+import "provenance/msgfees/v1/msgfees.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+
+option go_package          = "github.com/provenance-io/provenance/x/msgfees/types";
+option java_package        = "io.provenance.msgfees.v1";
+option java_multiple_files = true;
+
+// Query defines the gRPC querier service for marker module.
+service Query {
+  // Params queries the parameters for x/msgfees
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/provenance/msgfees/v1/params";
+  }
+
+  // Query all Msgs which have fees associated with them.
+  rpc QueryAllMsgFees(QueryAllMsgFeesRequest) returns (QueryAllMsgFeesResponse) {
+    option (google.api.http).get = "/provenance/msgfees/v1/all";
+  }
+
+  // CalculateTxFees simulates executing a transaction for estimating gas usage and additional fees.
+  rpc CalculateTxFees(CalculateTxFeesRequest) returns (CalculateTxFeesResponse) {
+    option (google.api.http) = {
+      post: "/provenance/tx/v1/calculate_msg_based_fee"
+      body: "*"
+    };
+  }
+}
+
+// QueryParamsRequest is the request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is the response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params defines the parameters of the module.
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryAllMsgFeesRequest queries all Msg which have fees associated with them.
+message QueryAllMsgFeesRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// response for querying all msg's with fees associated with them
+message QueryAllMsgFeesResponse {
+  repeated MsgFee msg_fees = 1;
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// CalculateTxFeesRequest is the request type for the Query RPC method.
+message CalculateTxFeesRequest {
+  // tx_bytes is the transaction to simulate.
+  bytes tx_bytes = 1;
+  // default_base_denom is used to set the denom used for gas fees
+  // if not set it will default to nhash.
+  string default_base_denom = 2;
+  // gas_adjustment is the adjustment factor to be multiplied against the estimate returned by the tx simulation
+  float gas_adjustment = 3;
+}
+
+// CalculateTxFeesResponse is the response type for the Query RPC method.
+message CalculateTxFeesResponse {
+  // additional_fees are the amount of coins to be for addition msg fees
+  repeated cosmos.base.v1beta1.Coin additional_fees = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  // total_fees are the total amount of fees needed for the transactions (msg fees + gas fee)
+  // note: the gas fee is calculated with the min gas fee param as a constant
+  repeated cosmos.base.v1beta1.Coin total_fees = 2
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  // estimated_gas is the amount of gas needed for the transaction
+  uint64 estimated_gas = 3 [(gogoproto.moretags) = "yaml:\"estimated_gas\""];
+}

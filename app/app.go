@@ -8,10 +8,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	_ "github.com/provenance-io/provenance/client/docs/statik" // registers swagger-ui files with statik
-	"github.com/provenance-io/provenance/internal/antewrapper"
-	"github.com/provenance-io/provenance/internal/statesync"
-
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
@@ -51,7 +47,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
@@ -102,31 +97,35 @@ import (
 
 	// PROVENANCE
 	appparams "github.com/provenance-io/provenance/app/params"
-	"github.com/provenance-io/provenance/x/marker"
-	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
-	markerwasm "github.com/provenance-io/provenance/x/marker/wasm"
-
+	_ "github.com/provenance-io/provenance/client/docs/statik" // registers swagger-ui files with statik
+	"github.com/provenance-io/provenance/internal/antewrapper"
+	piohandlers "github.com/provenance-io/provenance/internal/handlers"
+	"github.com/provenance-io/provenance/internal/provwasm"
+	"github.com/provenance-io/provenance/internal/statesync"
 	"github.com/provenance-io/provenance/x/attribute"
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	attributewasm "github.com/provenance-io/provenance/x/attribute/wasm"
-
+	"github.com/provenance-io/provenance/x/marker"
+	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	markerwasm "github.com/provenance-io/provenance/x/marker/wasm"
+	"github.com/provenance-io/provenance/x/metadata"
+	metadatakeeper "github.com/provenance-io/provenance/x/metadata/keeper"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
+	metadatawasm "github.com/provenance-io/provenance/x/metadata/wasm"
+	"github.com/provenance-io/provenance/x/msgfees"
+	msgfeeskeeper "github.com/provenance-io/provenance/x/msgfees/keeper"
+	msgfeesmodule "github.com/provenance-io/provenance/x/msgfees/module"
+	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 	"github.com/provenance-io/provenance/x/name"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 	namewasm "github.com/provenance-io/provenance/x/name/wasm"
 
-	"github.com/provenance-io/provenance/x/metadata"
-	metadatakeeper "github.com/provenance-io/provenance/x/metadata/keeper"
-	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
-	metadatawasm "github.com/provenance-io/provenance/x/metadata/wasm"
-
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-
-	"github.com/provenance-io/provenance/internal/provwasm"
 )
 
 const (
@@ -185,6 +184,7 @@ var (
 		name.AppModuleBasic{},
 		metadata.AppModuleBasic{},
 		wasm.AppModuleBasic{},
+		msgfeesmodule.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -252,6 +252,8 @@ type App struct {
 	EvidenceKeeper   evidencekeeper.Keeper
 	FeeGrantKeeper   feegrantkeeper.Keeper
 
+	MsgFeesKeeper msgfeeskeeper.Keeper
+
 	IBCKeeper      *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	TransferKeeper ibctransferkeeper.Keeper
 
@@ -298,6 +300,7 @@ func New(
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 
 	bApp := baseapp.NewBaseApp("provenanced", logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
+	bApp.SetMsgServiceRouter(piohandlers.NewPioMsgServiceRouter(encodingConfig.TxConfig.TxDecoder()))
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
@@ -317,6 +320,7 @@ func New(
 		markertypes.StoreKey,
 		attributetypes.StoreKey,
 		nametypes.StoreKey,
+		msgfeestypes.StoreKey,
 		wasm.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -380,6 +384,12 @@ func New(
 
 	app.FeeGrantKeeper = feegrantkeeper.NewKeeper(appCodec, keys[feegrant.StoreKey], app.AccountKeeper)
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath, app.BaseApp)
+
+	app.MsgFeesKeeper = msgfeeskeeper.NewKeeper(
+		appCodec, keys[msgfeestypes.StoreKey], app.GetSubspace(msgfeestypes.ModuleName), authtypes.FeeCollectorName, DefaultFeeDenom, app.Simulate, encodingConfig.TxConfig.TxDecoder())
+
+	pioMsgFeesRouter := app.MsgServiceRouter().(*piohandlers.PioMsgServiceRouter)
+	pioMsgFeesRouter.SetMsgFeesKeeper(app.MsgFeesKeeper)
 
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
@@ -479,7 +489,8 @@ func New(
 		AddRoute(ibchost.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
 		AddRoute(wasm.RouterKey, wasm.NewWasmProposalHandler(app.WasmKeeper, wasm.EnableAllProposals)).
 		AddRoute(nametypes.ModuleName, name.NewProposalHandler(app.NameKeeper)).
-		AddRoute(markertypes.ModuleName, marker.NewProposalHandler(app.MarkerKeeper))
+		AddRoute(markertypes.ModuleName, marker.NewProposalHandler(app.MarkerKeeper)).
+		AddRoute(msgfeestypes.ModuleName, msgfees.NewProposalHandler(app.MsgFeesKeeper, app.InterfaceRegistry()))
 	app.GovKeeper = govkeeper.NewKeeper(
 		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
 		&stakingKeeper, govRouter,
@@ -535,6 +546,7 @@ func New(
 		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper),
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),
 		attribute.NewAppModule(appCodec, app.AttributeKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
+		msgfeesmodule.NewAppModule(appCodec, app.MsgFeesKeeper, app.interfaceRegistry),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper),
 
 		// IBC
@@ -588,6 +600,7 @@ func New(
 		nametypes.ModuleName,
 		attributetypes.ModuleName,
 		metadatatypes.ModuleName,
+		msgfeestypes.ModuleName,
 
 		ibchost.ModuleName,
 
@@ -598,7 +611,7 @@ func New(
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
-	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
+	app.configurator = module.NewConfigurator(app.appCodec, app.BaseApp.MsgServiceRouter(), app.GRPCQueryRouter())
 	app.mm.RegisterServices(app.configurator)
 
 	app.sm = module.NewSimulationManager(
@@ -619,9 +632,8 @@ func New(
 		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper),
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),
 		attribute.NewAppModule(appCodec, app.AttributeKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
-		//wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper),
 		provwasm.NewProvwasmWrapper(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
-
+		msgfeesmodule.NewAppModule(appCodec, app.MsgFeesKeeper, app.interfaceRegistry),
 		ibc.NewAppModule(app.IBCKeeper),
 		transferModule,
 	)
@@ -637,11 +649,12 @@ func New(
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 	anteHandler, err := antewrapper.NewAnteHandler(
-		ante.HandlerOptions{
+		antewrapper.HandlerOptions{
 			AccountKeeper:   app.AccountKeeper,
 			BankKeeper:      app.BankKeeper,
 			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
 			FeegrantKeeper:  app.FeeGrantKeeper,
+			MsgFeesKeeper:   app.MsgFeesKeeper,
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		})
 	if err != nil {
@@ -649,6 +662,19 @@ func New(
 	}
 
 	app.SetAnteHandler(anteHandler)
+	msgfeehandler, err := piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
+		AccountKeeper:  app.AccountKeeper,
+		BankKeeper:     app.BankKeeper,
+		FeegrantKeeper: app.FeeGrantKeeper,
+		MsgFeesKeeper:  app.MsgFeesKeeper,
+		Decoder:        encodingConfig.TxConfig.TxDecoder(),
+	})
+
+	if err != nil {
+		panic(err)
+	}
+	app.SetFeeHandler(msgfeehandler)
+
 	app.SetEndBlocker(app.EndBlocker)
 
 	// -- TODO: Add upgrade plans for each release here
@@ -852,6 +878,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(markertypes.ModuleName)
 	paramsKeeper.Subspace(nametypes.ModuleName)
 	paramsKeeper.Subspace(attributetypes.ModuleName)
+	paramsKeeper.Subspace(msgfeestypes.ModuleName)
 	paramsKeeper.Subspace(wasm.ModuleName)
 
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
