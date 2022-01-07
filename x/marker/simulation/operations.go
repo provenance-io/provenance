@@ -2,11 +2,11 @@ package simulation
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"log"
 	"math/rand"
 	"regexp"
 	"strconv"
+
+	"github.com/cosmos/cosmos-sdk/simapp"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -202,19 +202,18 @@ func Dispatch(
 	if err != nil {
 		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to generate fees"), nil, err
 	}
-	//fund account with nhash for additional fees, if the account exists
-	if ak.GetAccount(ctx, account.GetAddress()) != nil {
+	// fund account with nhash for additional fees, if the account exists (100m stake)
+	if sdk.MsgTypeURL(msg) == "/provenance.marker.v1.MsgAddMarkerRequest" && ak.GetAccount(ctx, account.GetAddress()) != nil {
 		err = simapp.FundAccount(bk, ctx, account.GetAddress(), sdk.NewCoins(sdk.Coin{
-			Denom:  "nhash",
-			Amount: sdk.NewInt(1000),
+			Denom:  "stake",
+			Amount: sdk.NewInt(100000000000000),
 		}))
 		fees = fees.Add(sdk.Coin{
-			Denom:  "nhash",
-			Amount: sdk.NewInt(1000),
+			Denom:  "stake",
+			Amount: sdk.NewInt(100000000000000),
 		})
 		if err != nil {
-			log.Println("An error occurred while funding account",err)
-			//return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to fund account"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to fund account with additional fee"), nil, err
 		}
 	}
 

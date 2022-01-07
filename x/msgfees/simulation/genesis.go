@@ -38,8 +38,9 @@ func RandomizedGenState(simState *module.SimulationState) {
 			FloorGasPrice: sdk.Coin{Amount: sdk.NewIntFromUint64(floorGasPrice), Denom: "blah"},
 		},
 		MsgFees: []types.MsgFee{
-			// Adding fees for create marker.
-			types.NewMsgFee(sdk.MsgTypeURL(&markertypes.MsgAddMarkerRequest{}), sdk.NewCoin("nhash", sdk.NewInt(1000))),
+			// Adding fees for create marker with asking for a large number of stake to make sure that
+			// the call is failed without the additional fee provided.
+			types.NewMsgFee(sdk.MsgTypeURL(&markertypes.MsgAddMarkerRequest{}), sdk.NewCoin("stake", sdk.NewInt(100000000000000))),
 		},
 	}
 
