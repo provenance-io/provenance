@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package provenance.msgfees.v1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/bank/v1beta1/bank.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "provenance/marker/v1/marker.proto";
+import "provenance/marker/v1/accessgrant.proto";
+import "google/protobuf/any.proto";
+import "cosmos/tx/v1beta1/tx.proto";
+import "cosmos_proto/cosmos.proto";
+
+option go_package = "github.com/provenance-io/provenance/x/msgfees/types";
+
+option java_package        = "io.provenance.msgfees.v1";
+option java_multiple_files = true;
+
+// AddMsgFeeProposal defines a governance proposal to add additional msg based fee
+message AddMsgFeeProposal {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  string title       = 1;
+  string description = 2;
+
+  string msg_type_url = 3;
+
+  cosmos.base.v1beta1.Coin additional_fee = 4 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags)     = "yaml:\"additional_fee\""
+  ];
+}
+
+// UpdateMsgFeeProposal defines a governance proposal to update a current msg based fee
+message UpdateMsgFeeProposal {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  string title       = 1;
+  string description = 2;
+
+  string msg_type_url = 3;
+
+  cosmos.base.v1beta1.Coin additional_fee = 4 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags)     = "yaml:\"additional_fee\""
+  ];
+}
+
+// RemoveMsgFeeProposal defines a governance proposal to delete a current msg based fee
+message RemoveMsgFeeProposal {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  string title       = 1;
+  string description = 2;
+
+  string msg_type_url = 3;
+}

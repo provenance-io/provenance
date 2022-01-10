@@ -17,7 +17,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/regen-network/cosmos-proto v0.3.1
-	github.com/rs/zerolog v1.25.0
+	github.com/rs/zerolog v1.26.1
 	github.com/spf13/cast v1.4.1
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/pflag v1.0.5
@@ -113,7 +113,7 @@ require (
 	github.com/tendermint/go-amino v0.16.0 // indirect
 	github.com/zondax/hid v0.9.0 // indirect
 	go.etcd.io/bbolt v1.3.5 // indirect
-	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5 // indirect
+	golang.org/x/crypto v0.0.0-20211215165025-cf75a172585e // indirect
 	golang.org/x/net v0.0.0-20210903162142-ad29c8ab022f // indirect
 	golang.org/x/sys v0.0.0-20210903071746-97244b99971b // indirect
 	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1 // indirect
@@ -127,12 +127,12 @@ replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
+replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.19.0-pio-msgbasedfees
+
+replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.44.3-pio-1.8.rc1
+
 replace github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
 
 // Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
-
-replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.19.0
-
-replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.44.3-rosetta-fix
