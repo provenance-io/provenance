@@ -3,12 +3,12 @@ module github.com/provenance-io/provenance
 go 1.17
 
 require (
-	github.com/CosmWasm/wasmd v0.17.0
+	github.com/CosmWasm/wasmd v0.19.0
 	github.com/armon/go-metrics v0.3.10
 	github.com/btcsuite/btcd v0.22.0-beta
 	github.com/cosmos/cosmos-sdk v0.44.5
 	github.com/cosmos/go-bip39 v1.0.0
-	github.com/cosmos/ibc-go v1.2.5
+	github.com/cosmos/ibc-go v1.2.0
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.2
 	github.com/google/uuid v1.3.0
@@ -45,6 +45,7 @@ require (
 	github.com/coinbase/rosetta-sdk-go v0.7.2 // indirect
 	github.com/confio/ics23/go v0.6.6 // indirect
 	github.com/cosmos/iavl v0.17.1 // indirect
+	github.com/cosmos/ibc-go/v2 v2.0.2 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.11.1 // indirect
 	github.com/cosmos/ledger-go v0.9.2 // indirect
 	github.com/danieljoos/wincred v1.0.2 // indirect
@@ -126,7 +127,7 @@ replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.19.0-pio-msgbasedfees
+// <!--replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.19.0-pio-msgbasedfees-->
 
 replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.44.3-pio-1.8.rc1
 
@@ -135,3 +136,7 @@ replace github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210
 // Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
+
+replace github.com/CosmWasm/wasmd => ../wasmd
+
+	replace github.com/cosmos/ibc-go => github.com/cosmos/ibc-go/v2 v2.0.2
