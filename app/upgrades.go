@@ -127,6 +127,15 @@ var handlers = map[string]appUpgrade{
 	},
 	"green": {
 		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
+		    app.IBCKeeper.ClientKeeper.IterateClients(ctx, func(clientId string, state ibccoretypes.ClientState) bool {
+                tc, ok := (c).(*ibcctmtypes.ClientState)
+            	if ok {
+            		tc.AllowUpdateAfterExpiry = true
+            		app.IBCKeeper.ClientKeeper.SetClientState(ctx, tc., c)
+            	}
+            	return false
+            })
+
 			orderedMigration := []moduleUpgradeVersion{
 				{"metadata", 2},
 			}
