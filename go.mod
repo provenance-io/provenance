@@ -8,7 +8,7 @@ require (
 	github.com/btcsuite/btcd v0.22.0-beta
 	github.com/cosmos/cosmos-sdk v0.44.5
 	github.com/cosmos/go-bip39 v1.0.0
-	github.com/cosmos/ibc-go v1.2.0
+	github.com/cosmos/ibc-go v1.2.5
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.2
 	github.com/google/uuid v1.3.0
@@ -127,7 +127,7 @@ replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-// <!--replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.19.0-pio-msgbasedfees-->
+// replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.19.0-pio-msgbasedfees
 
 replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.44.3-pio-1.8.rc1
 
@@ -138,5 +138,4 @@ replace github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 
 replace github.com/CosmWasm/wasmd => ../wasmd
-
-	replace github.com/cosmos/ibc-go => github.com/cosmos/ibc-go/v2 v2.0.2
+replace github.com/cosmos/ibc-go => github.com/cosmos/ibc-go/v2 v2.0.2
