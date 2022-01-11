@@ -215,6 +215,8 @@ github.com/coreos/go-systemd v0.0.0-20190321100706-95778dfbb74e/go.mod h1:F5haX7
 github.com/coreos/go-systemd/v22 v22.3.2/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=
 github.com/coreos/pkg v0.0.0-20160727233714-3ac0863d7acf/go.mod h1:E3G3o1h8I7cfcXa63jLwjI0eiQQMgzzUDFVpN/nH/eA=
 github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f/go.mod h1:E3G3o1h8I7cfcXa63jLwjI0eiQQMgzzUDFVpN/nH/eA=
+github.com/cosmos/btcutil v1.0.4 h1:n7C2ngKXo7UC9gNyMNLbzqz7Asuf+7Qv4gnX/rOdQ44=
+github.com/cosmos/btcutil v1.0.4/go.mod h1:Ffqc8Hn6TJUdDgHBwIZLtrLQC1KdJ9jGJl/TvgUaxbU=
 github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d/go.mod h1:tSxLoYXyBmiFeKpvmq4dzayMdCjCnu8uqmCysIGBT2Y=
 github.com/cosmos/go-bip39 v1.0.0 h1:pcomnQdrdH22njcAatO0yWojsUnCO3y2tNoV1cb6hHY=
 github.com/cosmos/go-bip39 v1.0.0/go.mod h1:RNJv0H/pOIVgxw6KS7QeX2a0Uo0aKUlfhZ4xuwvCdJw=
@@ -227,6 +229,8 @@ github.com/cosmos/iavl v0.17.3/go.mod h1:prJoErZFABYZGDHka1R6Oay4z9PrNeFFiMKHDAM
 github.com/cosmos/ibc-go v1.0.0/go.mod h1:2wHKQUa+BLJMEyN635KrHfmTTwSNHBtXcqdY8JWGuXA=
 github.com/cosmos/ibc-go v1.2.5 h1:BiA48yKEDUcabBRkmp7qqSX41ZrgXTSNCtdjDURbLwE=
 github.com/cosmos/ibc-go v1.2.5/go.mod h1:wkGkkX8Ou6yXgE8lO2xP9NOwo+Tl5x1dJaTTE6jBDpg=
+github.com/cosmos/ibc-go/v2 v2.0.2 h1:y7eUgggMEVe43wHLw9XrGbeaTWtfkJYMoL3m6YW4fIY=
+github.com/cosmos/ibc-go/v2 v2.0.2/go.mod h1:XUmW7wmubCRhIEAGtMGS+5IjiSSmcAwihoN/yPGd6Kk=
 github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76 h1:DdzS1m6o/pCqeZ8VOAit/gyATedRgjvkVI+UCrLpyuU=
 github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76/go.mod h1:0mkLWIoZuQ7uBoospo5Q9zIpqq6rYCPJDSUdeCJvPM8=
 github.com/cosmos/ledger-cosmos-go v0.11.1 h1:9JIYsGnXP613pb2vPjFeMMjBI5lEDsEaF6oYorTy6J4=
@@ -851,6 +855,8 @@ github.com/provenance-io/cosmos-sdk v0.44.3-pio-1.8.rc1 h1:WXPq4mlAHPt98Uvz5SXnZ
 github.com/provenance-io/cosmos-sdk v0.44.3-pio-1.8.rc1/go.mod h1:oAbi8mGqCQ08T/0rO7TNkSkIKIcIB9ACqOumOZkDIVM=
 github.com/provenance-io/wasmd v0.19.0-pio-msgbasedfees h1:zfdoP0Bw95OuNBa/+GYYuyftMt0TDfMt8+MGDv6eEXw=
 github.com/provenance-io/wasmd v0.19.0-pio-msgbasedfees/go.mod h1:5iTsknDGlJjB6VlBWfVBGqQ4Cgtqv1M4z6Qr1ei3DJw=
+github.com/provenance-io/wasmd v0.19.0-provwasm-1.8.release h1:0peApyPcjAWU7Hd88Lv61J0Cw0ODGsaibKg2Wsbr30I=
+github.com/provenance-io/wasmd v0.19.0-provwasm-1.8.release/go.mod h1:GgGTxkbOXIeN3XzreaXQU60ASg5tjcvbMIHIpHT2TNI=
 github.com/rakyll/statik v0.1.7 h1:OF3QCZUuyPxuGEP7B4ypUa7sB/iHtqOTDYZXGM8KOdQ=
 github.com/rakyll/statik v0.1.7/go.mod h1:AlZONWzMtEnMs7W4e/1LURLiI49pIMmp6V9Unghqrcc=
 github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a/go.mod h1:bCqnVzQkZxMG4s8nGwiZ5l3QUCyqpo9Y+/ZMZ9VjZe4=
