@@ -90,7 +90,7 @@ func (s *SpecificationTestSuite) TestScopeSpecValidateBasic() {
 				[]string{":invalid", specTestBech32},
 				[]PartyType{}, []MetadataAddress{},
 			),
-			"invalid owner address at index 0 on ScopeSpecification: decoding bech32 failed: invalid index of 1",
+			"invalid owner address at index 0 on ScopeSpecification: decoding bech32 failed: invalid separator index -1",
 		},
 		{
 			"owner addresses - invalid address at index 3",
@@ -100,7 +100,7 @@ func (s *SpecificationTestSuite) TestScopeSpecValidateBasic() {
 				[]string{specTestBech32, specTestBech32, specTestBech32, ":invalid"},
 				[]PartyType{}, []MetadataAddress{},
 			),
-			"invalid owner address at index 3 on ScopeSpecification: decoding bech32 failed: invalid index of 1",
+			"invalid owner address at index 3 on ScopeSpecification: decoding bech32 failed: invalid separator index -1",
 		},
 		// parties involved - cannot be empty
 		{
@@ -304,7 +304,7 @@ func (s *SpecificationTestSuite) TestContractSpecValidateBasic() {
 				"someclass",
 			),
 			fmt.Sprintf("invalid owner address at index %d: %s",
-				0, "decoding bech32 failed: invalid index of 1"),
+				0, "decoding bech32 failed: invalid separator index -1"),
 		},
 		{
 			"OwnerAddresses - invalid address at index 2",
@@ -317,7 +317,7 @@ func (s *SpecificationTestSuite) TestContractSpecValidateBasic() {
 				"someclass",
 			),
 			fmt.Sprintf("invalid owner address at index %d: %s",
-				2, "decoding bech32 failed: invalid index of 1"),
+				2, "decoding bech32 failed: invalid separator index -1"),
 		},
 
 		// PartiesInvolved tests
