@@ -19,9 +19,10 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	msgfees "github.com/provenance-io/provenance/x/msgfees/types"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	msgfees "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 var (

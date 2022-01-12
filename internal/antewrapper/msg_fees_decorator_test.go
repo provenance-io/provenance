@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
+
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/antewrapper"
 )

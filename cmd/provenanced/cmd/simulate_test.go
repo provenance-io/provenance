@@ -14,10 +14,11 @@ import (
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 
+	"github.com/stretchr/testify/suite"
+
 	"github.com/provenance-io/provenance/cmd/provenanced/cmd"
 	"github.com/provenance-io/provenance/testutil"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
-	"github.com/stretchr/testify/suite"
 )
 
 type SimulateTestSuite struct {

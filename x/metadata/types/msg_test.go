@@ -3,8 +3,9 @@ package types
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/google/uuid"

@@ -8,10 +8,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/provenance-io/provenance/internal/antewrapper"
-	"github.com/provenance-io/provenance/x/msgfees/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/provenance-io/provenance/internal/antewrapper"
+	"github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 var _ types.QueryServer = Keeper{}
