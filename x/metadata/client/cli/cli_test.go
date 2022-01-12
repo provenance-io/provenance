@@ -761,7 +761,7 @@ func (s *IntegrationCLITestSuite) TestGetMetadataByIDCmd() {
 		{
 			"get metadata by id - uuid",
 			[]string{"91978ba2-5f35-459a-86a7-feca1b0512e0"},
-			"decoding bech32 failed: invalid separator index -1",
+			"decoding bech32 failed: invalid separator index 32",
 			[]string{},
 		},
 		{

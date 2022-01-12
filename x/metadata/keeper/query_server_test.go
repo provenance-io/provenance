@@ -279,7 +279,7 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		{
 			name: "only session id as uuid - error",
 			req:  &types.SessionsRequest{SessionId: unknownUUID.String()},
-			err:  fmt.Sprintf("rpc error: code = InvalidArgument desc = could not parse [%s] into a session address: decoding bech32 failed: invalid separator index -1", unknownUUID),
+			err:  fmt.Sprintf("rpc error: code = InvalidArgument desc = could not parse [%s] into a session address: decoding bech32 failed: invalid separator index 35", unknownUUID),
 		},
 		{
 			name:       "only session id as addr not found - empty",
@@ -511,7 +511,7 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		{
 			name: "session id as uuid record name ok - error",
 			req:  &types.SessionsRequest{SessionId: unknownUUID.String(), RecordName: s.recordName},
-			err:  fmt.Sprintf("rpc error: code = InvalidArgument desc = could not parse [%s] into a session address: decoding bech32 failed: invalid separator index -1", unknownUUID),
+			err:  fmt.Sprintf("rpc error: code = InvalidArgument desc = could not parse [%s] into a session address: decoding bech32 failed: invalid separator index 35", unknownUUID),
 		},
 		{
 			name: "session id as addr not found record name ok - error",

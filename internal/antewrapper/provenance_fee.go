@@ -23,7 +23,7 @@ type ProvenanceDeductFeeDecorator struct {
 }
 
 var (
-	AttributeKeyBaseFee       = "basefee"
+	AttributeKeyBaseFee       = "basefee" // spender
 	AttributeKeyAdditionalFee = "additionalfee"
 )
 

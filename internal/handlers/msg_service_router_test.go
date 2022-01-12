@@ -339,7 +339,7 @@ func TestMsgServiceAuthzAdditionalMsgFeeInDefaultDenom(t *testing.T) {
 	assert.Equal(t, "10atom", string(res.Events[7].Attributes[0].Value))
 	assert.Equal(t, "tx", res.Events[8].Type)
 	assert.Equal(t, antewrapper.AttributeKeyBaseFee, string(res.Events[8].Attributes[0].Key))
-	assert.Equal(t, "140atom", string(res.Events[8].Attributes[0].Value))
+	assert.Equal(t, "cosmos15tnmrt2mrl209gnr2d94av6cr79y862n3w9nw3", string(res.Events[8].Attributes[0].Value)) // hmm how will we get this value
 }
 
 func SignTxAndGetBytes(gaslimit uint64, fees sdk.Coins, encCfg simappparams.EncodingConfig, pubKey types.PubKey, privKey types.PrivKey, acct authtypes.BaseAccount, chainId string, msg ...sdk.Msg) ([]byte, error) {
