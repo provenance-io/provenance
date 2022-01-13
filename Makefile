@@ -10,6 +10,7 @@ BUILDDIR ?= $(CURDIR)/build
 
 LEDGER_ENABLED ?= true
 WITH_CLEVELDB ?= yes
+WITH_ROCKSDB ?= yes
 
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 BRANCH_PRETTY := $(subst /,-,$(BRANCH))
@@ -51,6 +52,12 @@ build_tags = netgo
 ifeq ($(WITH_CLEVELDB),yes)
   build_tags += gcc
   build_tags += cleveldb
+endif
+ifeq ($(WITH_ROCKSDB),yes)
+  ifneq ($(WITH_CLEVELDB),yes)
+    build_tags += gcc
+  endif
+  build_tags += rocksdb
 endif
 
 ifeq ($(LEDGER_ENABLED),true)
@@ -95,6 +102,16 @@ ifeq ($(WITH_CLEVELDB),yes)
     # Intentionally left blank to leave it up to already installed libraries.
   endif
 endif
+# rocks linker settings
+ifeq ($(WITH_ROCKSDB),yes)
+  ifeq ($(UNAME_S),Darwin)
+    ROCKSDB_PATH = $(shell brew --prefix rocksdb 2>/dev/null)
+    CGO_CFLAGS   = -I$(ROCKSDB_PATH)/include
+    CGO_LDFLAGS += -L$(ROCKSDB_PATH)/lib
+  else ifeq ($(UNAME_S),Linux)
+    # Intentionally left blank to leave it up to already installed libraries.
+  endif
+endif
 
 
 build_tags += $(BUILD_TAGS)
@@ -112,8 +129,12 @@ ldflags = -w -s \
 	-X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" \
 	-X github.com/tendermint/tendermint/version.TMCoreSemVer=$(TM_VERSION)
 
+ldflags += -X github.com/cosmos/cosmos-sdk/types.NotReallyAThing=foo
 ifeq ($(WITH_CLEVELDB),yes)
 	ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=cleveldb
+endif
+ifeq ($(WITH_ROCKSDB),yes)
+	ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=rocksdb
 endif
 ldflags += $(LDFLAGS)
 ldflags := $(strip $(ldflags))
