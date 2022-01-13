@@ -1,4 +1,5 @@
 FROM golang:1.17-buster as build
+ARG VERSION
 
 WORKDIR /go/src/github.com/provenance-io/provenance
 
@@ -17,10 +18,8 @@ COPY contrib/ ./contrib/
 COPY Makefile sims.mk ./
 
 # Build the binaries
-RUN go build -mod vendor \
-    -tags cleveldb \
-    -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/version.Name=Provenance-Blockchain' \
-    -o /go/bin/ ./cmd/...
+ENV VERSION=$VERSION
+RUN make VERSION=${VERSION} install
 
 ###
 FROM debian:buster-slim as run
