@@ -13,7 +13,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	ibcconnectiontypes "github.com/cosmos/ibc-go/v2/modules/core/03-connection/types"
-	"github.com/cosmos/ibc-go/v2/modules/core"
+	"github.com/cosmos/ibc-go/v2/modules/core/exported"
+	ibcctmtypes "github.com/cosmos/ibc-go/v2/modules/light-clients/07-tendermint/types"
 )
 
 var (
@@ -128,11 +129,11 @@ var handlers = map[string]appUpgrade{
 	},
 	"green": {
 		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
-			app.IBCKeeper.ClientKeeper.IterateClients(ctx, func(clientId string, state ibccoretypes.ClientState) bool {
-				tc, ok := (c).(*ibcctmtypes.ClientState)
+			app.IBCKeeper.ClientKeeper.IterateClients(ctx, func(clientId string, state exported.ClientState) bool {
+				tc, ok := (state).(*ibcctmtypes.ClientState)
 				if ok {
 					tc.AllowUpdateAfterExpiry = true
-					app.IBCKeeper.ClientKeeper.SetClientState(ctx, tc., c)
+					app.IBCKeeper.ClientKeeper.SetClientState(ctx, clientId, state)
 				}
 				return false
 			})
