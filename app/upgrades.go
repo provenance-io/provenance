@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	ibcconnectiontypes "github.com/cosmos/ibc-go/v2/modules/core/03-connection/types"
+	"github.com/cosmos/ibc-go/v2/modules/core"
 )
 
 var (
@@ -127,6 +128,14 @@ var handlers = map[string]appUpgrade{
 	},
 	"green": {
 		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
+			app.IBCKeeper.ClientKeeper.IterateClients(ctx, func(clientId string, state ibccoretypes.ClientState) bool {
+				tc, ok := (c).(*ibcctmtypes.ClientState)
+				if ok {
+					tc.AllowUpdateAfterExpiry = true
+					app.IBCKeeper.ClientKeeper.SetClientState(ctx, tc., c)
+				}
+				return false
+			})
 			orderedMigration := []moduleUpgradeVersion{
 				{"metadata", 2},
 			}
