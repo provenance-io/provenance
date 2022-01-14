@@ -9,8 +9,9 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/provenance-io/provenance/testutil"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/provenance-io/provenance/testutil"
 
 	msgfeescli "github.com/provenance-io/provenance/x/msgfees/client/cli"
 )

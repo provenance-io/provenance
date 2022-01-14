@@ -99,7 +99,7 @@ func (s *ScopeTestSuite) TestScopeValidateBasic() {
 				[]string{},
 				"",
 			),
-			"invalid scope owners: invalid party address [:invalid]: decoding bech32 failed: invalid index of 1",
+			"invalid scope owners: invalid party address [:invalid]: decoding bech32 failed: invalid separator index -1",
 			true,
 		},
 	}
@@ -551,7 +551,7 @@ func (s *ScopeTestSuite) TestSessionValidateBasic() {
 			"invalid session, invalid party address",
 			NewSession("my_perfect_session", sessionID, contractSpec, []Party{
 				{Address: "invalidpartyaddress", Role: PartyType_PARTY_TYPE_CUSTODIAN}}, nil),
-			"invalid party on session: invalid party address [invalidpartyaddress]: decoding bech32 failed: invalid index of 1",
+			"invalid party on session: invalid party address [invalidpartyaddress]: decoding bech32 failed: invalid separator index -1",
 		},
 		{
 			"invalid session, invalid party type",

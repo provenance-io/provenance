@@ -2,15 +2,17 @@ package simulation_test
 
 import (
 	"encoding/json"
+	"math/rand"
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/stretchr/testify/require"
+
 	"github.com/provenance-io/provenance/x/msgfees/simulation"
 	"github.com/provenance-io/provenance/x/msgfees/types"
-	"github.com/stretchr/testify/require"
-	"math/rand"
-	"testing"
 )
 
 func TestRandomizedGenState(t *testing.T) {

@@ -1,11 +1,12 @@
 package simulation_test
 
 import (
+	"math/rand"
+	"testing"
+
 	"github.com/provenance-io/provenance/x/msgfees/keeper"
 	"github.com/provenance-io/provenance/x/msgfees/simulation"
 	"github.com/provenance-io/provenance/x/msgfees/types"
-	"math/rand"
-	"testing"
 
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -28,7 +29,7 @@ func TestProposalContents(t *testing.T) {
 
 	// execute ProposalContents function
 	weightedProposalContent := simulation.ProposalContents(keeper.NewKeeper(app.AppCodec(), app.GetKey(types.ModuleName),
-		app.GetSubspace(types.ModuleName),  "", "nhash", nil, nil))
+		app.GetSubspace(types.ModuleName), "", "nhash", nil, nil))
 	require.Len(t, weightedProposalContent, 2)
 
 	w0 := weightedProposalContent[0]

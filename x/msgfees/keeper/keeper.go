@@ -6,8 +6,9 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	cosmosauthtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/provenance-io/provenance/x/msgfees/types"
 	"github.com/tendermint/tendermint/libs/log"
+
+	"github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 // StoreKey is the store key string for authz

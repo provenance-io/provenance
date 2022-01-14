@@ -743,7 +743,7 @@ func (s *IntegrationCLITestSuite) TestGetMetadataByIDCmd() {
 		{
 			"get metadata by id - bad prefix",
 			[]string{"foo1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
-			"decoding bech32 failed: checksum failed. Expected kzwk8c, got xlkwel.",
+			"decoding bech32 failed: invalid checksum (expected kzwk8c got xlkwel)",
 			[]string{},
 		},
 		{
@@ -761,13 +761,13 @@ func (s *IntegrationCLITestSuite) TestGetMetadataByIDCmd() {
 		{
 			"get metadata by id - uuid",
 			[]string{"91978ba2-5f35-459a-86a7-feca1b0512e0"},
-			"decoding bech32 failed: invalid index of 1",
+			"decoding bech32 failed: invalid separator index 32",
 			[]string{},
 		},
 		{
 			"get metadata by id - bad arg",
 			[]string{"not-an-id"},
-			"decoding bech32 failed: invalid index of 1",
+			"decoding bech32 failed: invalid separator index -1",
 			[]string{},
 		},
 	}
@@ -995,7 +995,7 @@ func (s *IntegrationCLITestSuite) TestGetMetadataScopeCmd() {
 		{
 			"get scope bad input",
 			[]string{"not-a-valid-arg", s.asText},
-			"rpc error: code = InvalidArgument desc = could not parse [not-a-valid-arg] into either a scope address (decoding bech32 failed: invalid index of 1) or uuid (invalid UUID length: 15): invalid request",
+			"rpc error: code = InvalidArgument desc = could not parse [not-a-valid-arg] into either a scope address (decoding bech32 failed: invalid separator index -1) or uuid (invalid UUID length: 15): invalid request",
 			[]string{},
 		},
 		{
@@ -1415,7 +1415,7 @@ func (s *IntegrationCLITestSuite) TestGetMetadataScopeSpecCmd() {
 		{
 			"bad arg",
 			[]string{"reallybad"},
-			"rpc error: code = InvalidArgument desc = could not parse [reallybad] into either a scope spec address (decoding bech32 failed: invalid index of 1) or uuid (invalid UUID length: 9): invalid request",
+			"rpc error: code = InvalidArgument desc = could not parse [reallybad] into either a scope spec address (decoding bech32 failed: invalid separator index -1) or uuid (invalid UUID length: 9): invalid request",
 			[]string{},
 		},
 		{
@@ -1502,7 +1502,7 @@ func (s *IntegrationCLITestSuite) TestGetMetadataContractSpecCmd() {
 		{
 			"bad arg",
 			[]string{"badbadarg"},
-			"rpc error: code = InvalidArgument desc = invalid specification id: could not parse [badbadarg] into either a contract spec address (decoding bech32 failed: invalid index of 1) or uuid (invalid UUID length: 9): invalid request",
+			"rpc error: code = InvalidArgument desc = invalid specification id: could not parse [badbadarg] into either a contract spec address (decoding bech32 failed: invalid separator index -1) or uuid (invalid UUID length: 9): invalid request",
 			[]string{},
 		},
 		{
@@ -1613,7 +1613,7 @@ func (s *IntegrationCLITestSuite) TestGetMetadataRecordSpecCmd() {
 		{
 			"bad arg 1",
 			[]string{"not-gonna-parse"},
-			"rpc error: code = InvalidArgument desc = invalid specification id: could not parse [not-gonna-parse] into either a contract spec address (decoding bech32 failed: invalid index of 1) or uuid (invalid UUID length: 15): invalid request",
+			"rpc error: code = InvalidArgument desc = invalid specification id: could not parse [not-gonna-parse] into either a contract spec address (decoding bech32 failed: invalid separator index -1) or uuid (invalid UUID length: 15): invalid request",
 			[]string{},
 		},
 		{
@@ -1990,7 +1990,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, "decoding bech32 failed: invalid index of 1", &sdk.TxResponse{}, 0,
+			true, "decoding bech32 failed: invalid separator index -1", &sdk.TxResponse{}, 0,
 		},
 		{
 			"should fail to add metadata scope, incorrect scope spec id",
@@ -2006,7 +2006,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, "decoding bech32 failed: invalid index of 1", &sdk.TxResponse{}, 0,
+			true, "decoding bech32 failed: invalid separator index -1", &sdk.TxResponse{}, 0,
 		},
 		{
 			"should fail to add metadata scope, validate basic will err on owner format",
@@ -2022,7 +2022,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, "invalid scope owners: invalid party address [incorrect1]: decoding bech32 failed: invalid index of 1", &sdk.TxResponse{}, 0,
+			true, "invalid scope owners: invalid party address [incorrect1]: decoding bech32 failed: invalid separator index 9", &sdk.TxResponse{}, 0,
 		},
 		{
 			"should fail to remove metadata scope, invalid scopeid",
@@ -2034,7 +2034,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, "decoding bech32 failed: invalid index of 1", &sdk.TxResponse{}, 0,
+			true, "decoding bech32 failed: invalid separator index -1", &sdk.TxResponse{}, 0,
 		},
 		{
 			"should fail to add/remove metadata scope data access, invalid scopeid",
@@ -2048,7 +2048,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, "decoding bech32 failed: invalid index of 1", &sdk.TxResponse{}, 0,
+			true, "decoding bech32 failed: invalid separator index -1", &sdk.TxResponse{}, 0,
 		},
 		{
 			"should fail to add/remove metadata scope data access, invalid command requires add or remove",
@@ -2133,7 +2133,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, "decoding bech32 failed: invalid index of 1", &sdk.TxResponse{}, 0,
+			true, "decoding bech32 failed: invalid separator index -1", &sdk.TxResponse{}, 0,
 		},
 		{
 			"should fail to add/remove metadata scope owner, invalid command requires add or remove",
@@ -2175,7 +2175,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, "invalid owners: invalid party address [notauser]: decoding bech32 failed: invalid index of 1", &sdk.TxResponse{}, 0,
+			true, "invalid owners: invalid party address [notauser]: decoding bech32 failed: invalid separator index -1", &sdk.TxResponse{}, 0,
 		},
 		{
 			"should successfully remove metadata scope",
@@ -2285,7 +2285,7 @@ func (s *IntegrationCLITestSuite) TestScopeSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, "decoding bech32 failed: invalid index of 1", &sdk.TxResponse{}, 0,
+			true, "decoding bech32 failed: invalid separator index -1", &sdk.TxResponse{}, 0,
 		},
 		{
 			"should successfully remove scope specification",
@@ -2482,7 +2482,7 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			true,
-			"decoding bech32 failed: invalid index of 1",
+			"decoding bech32 failed: invalid separator index -1",
 			&sdk.TxResponse{},
 			0,
 		},
@@ -2497,7 +2497,7 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			true,
-			"decoding bech32 failed: invalid index of 1",
+			"decoding bech32 failed: invalid separator index -1",
 			&sdk.TxResponse{},
 			0,
 		},
@@ -2868,7 +2868,7 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			true,
-			"decoding bech32 failed: invalid index of 1",
+			"decoding bech32 failed: invalid separator index -1",
 			&sdk.TxResponse{}, 0,
 		},
 		{
@@ -2882,7 +2882,7 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			true,
-			"decoding bech32 failed: invalid index of 1",
+			"decoding bech32 failed: invalid separator index -1",
 			&sdk.TxResponse{}, 0,
 		},
 		{
@@ -3058,7 +3058,7 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, "decoding bech32 failed: invalid index of 1",
+			true, "decoding bech32 failed: invalid separator index -1",
 			&sdk.TxResponse{},
 			0,
 		},
@@ -3079,7 +3079,7 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, "decoding bech32 failed: invalid index of 1",
+			true, "decoding bech32 failed: invalid separator index -1",
 			&sdk.TxResponse{},
 			0,
 		},
