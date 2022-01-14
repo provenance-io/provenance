@@ -21,6 +21,7 @@ import (
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
 	simapp "github.com/provenance-io/provenance/app"
 	msgfeetype "github.com/provenance-io/provenance/x/msgfees/types"
 )

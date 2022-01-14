@@ -3,8 +3,9 @@ package types
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/google/uuid"
@@ -60,12 +61,12 @@ func TestWriteScopeValidation(t *testing.T) {
 	)
 	var msg = NewMsgWriteScopeRequest(*scope, []string{"invalid"})
 	err := msg.ValidateBasic()
-	require.EqualError(t, err, "invalid scope owners: invalid party address [data_owner]: decoding bech32 failed: invalid index of 1")
+	require.EqualError(t, err, "invalid scope owners: invalid party address [data_owner]: decoding bech32 failed: invalid separator index -1")
 	require.Panics(t, func() { msg.GetSigners() }, "panics due to invalid addresses")
 
 	err = msg.Scope.ValidateBasic()
 	require.Error(t, err, "invalid addresses")
-	require.Equal(t, "invalid scope owners: invalid party address [data_owner]: decoding bech32 failed: invalid index of 1", err.Error())
+	require.Equal(t, "invalid scope owners: invalid party address [data_owner]: decoding bech32 failed: invalid separator index -1", err.Error())
 
 	msg.Scope = *NewScope(
 		ScopeMetadataAddress(uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")),
@@ -230,7 +231,7 @@ func TestAddScopeOwnersValidateBasic(t *testing.T) {
 				[]Party{{Address: "notabech32address", Role: PartyType_PARTY_TYPE_OWNER}},
 				[]string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"},
 			),
-			"invalid owners: invalid party address [notabech32address]: decoding bech32 failed: invalid index of 1",
+			"invalid owners: invalid party address [notabech32address]: decoding bech32 failed: invalid separator index -1",
 		},
 		{
 			"should fail to validate basic, incorrect party type",
