@@ -77,6 +77,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPass() {
 
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPass_AccountBalanceNotEnough() {
 	err, antehandler := setUpApp(suite, true, "hotdog", 100)
+	// fibbing, I don't have hotdog to pay for it right now.
 	tx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000), sdk.NewInt64Coin("hotdog", 100)))
 	suite.Require().NoError(err)
 
@@ -254,11 +255,10 @@ func (suite *AnteTestSuite) TestEnsureNonCheckTxPassesAllChecks() {
 
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_1() {
 	err, antehandler := setUpApp(suite, true, "atom", 100)
-	tx, acct1 := createTestTx(suite, err, testdata.NewTestFeeAmount())
-
-	tx, acct1 = createTestTx(suite, err, NewTestFeeAmountMultiple())
+	tx, acct1 := createTestTx(suite, err, NewTestFeeAmountMultiple())
 
 	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("steak", sdk.NewInt(100)))))
+	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(150)))))
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().Nil(err, "MsgFeesDecorator returned error in DeliverTx")
 }
