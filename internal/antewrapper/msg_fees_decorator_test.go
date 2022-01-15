@@ -75,6 +75,38 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPass() {
 	suite.Require().Nil(err, "Decorator should not have errored.")
 }
 
+func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPass_AccountBalanceNotEnough() {
+	err, antehandler := setUpApp(suite, true, "hotdog", 100)
+	tx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000), sdk.NewInt64Coin("hotdog", 100)))
+	suite.Require().NoError(err)
+
+	// Set high gas price so standard test fee fails, gas price (1 atom)
+	atomPrice := sdk.NewDecCoinFromDec("atom", sdk.NewDec(1))
+	highGasPrice := []sdk.DecCoin{atomPrice}
+	suite.ctx = suite.ctx.WithMinGasPrices(highGasPrice)
+
+	suite.ctx = suite.ctx.WithIsCheckTx(true)
+	// Set no hotdog balance
+	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100000)))))
+
+	// antehandler errors with insufficient fees
+	_, err = antehandler(suite.ctx, tx, false)
+
+	suite.Require().NotNil(err, "Decorator should have errored on fee payer account not having enough balance.")
+	suite.Require().Contains(err.Error(), "fee payer account does not have enough balance to pay for \"100000atom,100hotdog\"", "got wrong message")
+
+	// set not enough hotdog balance
+	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(1)))))
+	_, err = antehandler(suite.ctx, tx, false)
+	suite.Require().NotNil(err, "Decorator should have errored on fee payer account not having enough balance.")
+	suite.Require().Contains(err.Error(), "fee payer account does not have enough balance to pay for \"100000atom,100hotdog\"", "got wrong message")
+
+	// set enough hotdog balance, also atom balance should be enough with prev fund
+	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(99)))))
+	_, err = antehandler(suite.ctx, tx, false)
+	suite.Require().Nil(err, "Decorator should have errored on fee payer account not having enough balance.")
+}
+
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPassFeeGrant() {
 	err, antehandler := setUpApp(suite, true, "atom", 100)
 
