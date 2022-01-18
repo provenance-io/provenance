@@ -232,7 +232,7 @@ func (s *AddressTestSuite) TestMetadataAddressWithInvalidData() {
 	require.EqualValues(t, errors.New("empty address string is not allowed"), err)
 
 	_, err = MetadataAddressFromBech32("scope1qzxcpvj6czy5g354dews3nlruxjsahh")
-	require.EqualValues(t, "decoding bech32 failed: checksum failed. Expected 57e9fl, got xjsahh.", err.Error())
+	require.EqualValues(t, "decoding bech32 failed: invalid checksum (expected 57e9fl got xjsahh)", err.Error())
 
 	_, err = MetadataAddressFromHex("")
 	require.EqualValues(t, errors.New("address decode failed: must provide an address"), err)

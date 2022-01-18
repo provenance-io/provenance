@@ -1,0 +1,17 @@
+syntax = "proto3";
+package provenance.msgfees.v1;
+
+import "gogoproto/gogo.proto";
+import "provenance/msgfees/v1/msgfees.proto";
+
+option go_package          = "github.com/provenance-io/provenance/x/msgfees/types";
+option java_package        = "io.provenance.msgfees.v1";
+option java_multiple_files = true;
+
+// GenesisState contains a set of msg fees, persisted from the store
+message GenesisState {
+  // params defines all the parameters of the module.
+  Params params = 1 [(gogoproto.nullable) = false];
+  // msg_based_fees are the additional fees on specific tx msgs
+  repeated MsgFee msg_fees = 2 [(gogoproto.nullable) = false];
+}

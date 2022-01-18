@@ -328,6 +328,28 @@
   
     - [Msg](#provenance.metadata.v1.Msg)
   
+- [provenance/msgfees/v1/msgfees.proto](#provenance/msgfees/v1/msgfees.proto)
+    - [MsgFee](#provenance.msgfees.v1.MsgFee)
+    - [Params](#provenance.msgfees.v1.Params)
+  
+- [provenance/msgfees/v1/genesis.proto](#provenance/msgfees/v1/genesis.proto)
+    - [GenesisState](#provenance.msgfees.v1.GenesisState)
+  
+- [provenance/msgfees/v1/proposals.proto](#provenance/msgfees/v1/proposals.proto)
+    - [AddMsgFeeProposal](#provenance.msgfees.v1.AddMsgFeeProposal)
+    - [RemoveMsgFeeProposal](#provenance.msgfees.v1.RemoveMsgFeeProposal)
+    - [UpdateMsgFeeProposal](#provenance.msgfees.v1.UpdateMsgFeeProposal)
+  
+- [provenance/msgfees/v1/query.proto](#provenance/msgfees/v1/query.proto)
+    - [CalculateTxFeesRequest](#provenance.msgfees.v1.CalculateTxFeesRequest)
+    - [CalculateTxFeesResponse](#provenance.msgfees.v1.CalculateTxFeesResponse)
+    - [QueryAllMsgFeesRequest](#provenance.msgfees.v1.QueryAllMsgFeesRequest)
+    - [QueryAllMsgFeesResponse](#provenance.msgfees.v1.QueryAllMsgFeesResponse)
+    - [QueryParamsRequest](#provenance.msgfees.v1.QueryParamsRequest)
+    - [QueryParamsResponse](#provenance.msgfees.v1.QueryParamsResponse)
+  
+    - [Query](#provenance.msgfees.v1.Query)
+  
 - [provenance/name/v1/name.proto](#provenance/name/v1/name.proto)
     - [CreateRootNameProposal](#provenance.name.v1.CreateRootNameProposal)
     - [EventNameBound](#provenance.name.v1.EventNameBound)
@@ -878,7 +900,7 @@ Access defines the different types of permissions that a marker supports grantin
 | ACCESS_WITHDRAW | 4 | ACCESS_WITHDRAW is the ability to remove marker references to this marker in from metadata/scopes or transfer coin from this marker account to another account. |
 | ACCESS_DELETE | 5 | ACCESS_DELETE is the ability to move a proposed, finalized or active marker into the cancelled state. This access also allows cancelled markers to be marked for deletion |
 | ACCESS_ADMIN | 6 | ACCESS_ADMIN is the ability to add access grants for accounts to the list of marker permissions. |
-| ACCESS_TRANSFER | 7 | ACCESS_TRANSFER is the ability to invoke a send operation using the marker module to facilitate exchange. This capability is useful when the marker denomination has "send enabled = false" preventing normal bank transfer |
+| ACCESS_TRANSFER | 7 | ACCESS_TRANSFER is the ability to invoke a send operation using the marker module to facilitate exchange. This access right is only supported on RESTRICTED markers. |
 
 
  <!-- end enums -->
@@ -5088,6 +5110,275 @@ Msg defines the Metadata Msg service.
 | `BindOSLocator` | [MsgBindOSLocatorRequest](#provenance.metadata.v1.MsgBindOSLocatorRequest) | [MsgBindOSLocatorResponse](#provenance.metadata.v1.MsgBindOSLocatorResponse) | BindOSLocator binds an owner address to a uri. | |
 | `DeleteOSLocator` | [MsgDeleteOSLocatorRequest](#provenance.metadata.v1.MsgDeleteOSLocatorRequest) | [MsgDeleteOSLocatorResponse](#provenance.metadata.v1.MsgDeleteOSLocatorResponse) | DeleteOSLocator deletes an existing ObjectStoreLocator record. | |
 | `ModifyOSLocator` | [MsgModifyOSLocatorRequest](#provenance.metadata.v1.MsgModifyOSLocatorRequest) | [MsgModifyOSLocatorResponse](#provenance.metadata.v1.MsgModifyOSLocatorResponse) | ModifyOSLocator updates an ObjectStoreLocator record by the current owner. | |
+
+ <!-- end services -->
+
+
+
+<a name="provenance/msgfees/v1/msgfees.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/msgfees/v1/msgfees.proto
+
+
+
+<a name="provenance.msgfees.v1.MsgFee"></a>
+
+### MsgFee
+MsgFee is the core of what gets stored on the blockchain
+it consists of two parts
+1. the msg type url, i.e. /cosmos.bank.v1beta1.MsgSend
+2. minimum additional fees(can be of any denom)
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_type_url` | [string](#string) |  |  |
+| `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | additional_fee can pay in any Coin( basically a Denom and Amount, Amount can be zero) |
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.Params"></a>
+
+### Params
+Params defines the set of params for the msgfees module.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `floor_gas_price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | constant used to calculate fees when gas fees shares denom with msg fee |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/msgfees/v1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/msgfees/v1/genesis.proto
+
+
+
+<a name="provenance.msgfees.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState contains a set of msg fees, persisted from the store
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#provenance.msgfees.v1.Params) |  | params defines all the parameters of the module. |
+| `msg_fees` | [MsgFee](#provenance.msgfees.v1.MsgFee) | repeated | msg_based_fees are the additional fees on specific tx msgs |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/msgfees/v1/proposals.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/msgfees/v1/proposals.proto
+
+
+
+<a name="provenance.msgfees.v1.AddMsgFeeProposal"></a>
+
+### AddMsgFeeProposal
+AddMsgFeeProposal defines a governance proposal to add additional msg based fee
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `title` | [string](#string) |  |  |
+| `description` | [string](#string) |  |  |
+| `msg_type_url` | [string](#string) |  |  |
+| `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.RemoveMsgFeeProposal"></a>
+
+### RemoveMsgFeeProposal
+RemoveMsgFeeProposal defines a governance proposal to delete a current msg based fee
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `title` | [string](#string) |  |  |
+| `description` | [string](#string) |  |  |
+| `msg_type_url` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.UpdateMsgFeeProposal"></a>
+
+### UpdateMsgFeeProposal
+UpdateMsgFeeProposal defines a governance proposal to update a current msg based fee
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `title` | [string](#string) |  |  |
+| `description` | [string](#string) |  |  |
+| `msg_type_url` | [string](#string) |  |  |
+| `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/msgfees/v1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/msgfees/v1/query.proto
+
+
+
+<a name="provenance.msgfees.v1.CalculateTxFeesRequest"></a>
+
+### CalculateTxFeesRequest
+CalculateTxFeesRequest is the request type for the Query RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `tx_bytes` | [bytes](#bytes) |  | tx_bytes is the transaction to simulate. |
+| `default_base_denom` | [string](#string) |  | default_base_denom is used to set the denom used for gas fees if not set it will default to nhash. |
+| `gas_adjustment` | [float](#float) |  | gas_adjustment is the adjustment factor to be multiplied against the estimate returned by the tx simulation |
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.CalculateTxFeesResponse"></a>
+
+### CalculateTxFeesResponse
+CalculateTxFeesResponse is the response type for the Query RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `additional_fees` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | additional_fees are the amount of coins to be for addition msg fees |
+| `total_fees` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | total_fees are the total amount of fees needed for the transactions (msg fees + gas fee) note: the gas fee is calculated with the min gas fee param as a constant |
+| `estimated_gas` | [uint64](#uint64) |  | estimated_gas is the amount of gas needed for the transaction |
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.QueryAllMsgFeesRequest"></a>
+
+### QueryAllMsgFeesRequest
+QueryAllMsgFeesRequest queries all Msg which have fees associated with them.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.QueryAllMsgFeesResponse"></a>
+
+### QueryAllMsgFeesResponse
+response for querying all msg's with fees associated with them
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_fees` | [MsgFee](#provenance.msgfees.v1.MsgFee) | repeated |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.QueryParamsRequest"></a>
+
+### QueryParamsRequest
+QueryParamsRequest is the request type for the Query/Params RPC method.
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.QueryParamsResponse"></a>
+
+### QueryParamsResponse
+QueryParamsResponse is the response type for the Query/Params RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#provenance.msgfees.v1.Params) |  | params defines the parameters of the module. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.msgfees.v1.Query"></a>
+
+### Query
+Query defines the gRPC querier service for marker module.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `Params` | [QueryParamsRequest](#provenance.msgfees.v1.QueryParamsRequest) | [QueryParamsResponse](#provenance.msgfees.v1.QueryParamsResponse) | Params queries the parameters for x/msgfees | GET|/provenance/msgfees/v1/params|
+| `QueryAllMsgFees` | [QueryAllMsgFeesRequest](#provenance.msgfees.v1.QueryAllMsgFeesRequest) | [QueryAllMsgFeesResponse](#provenance.msgfees.v1.QueryAllMsgFeesResponse) | Query all Msgs which have fees associated with them. | GET|/provenance/msgfees/v1/all|
+| `CalculateTxFees` | [CalculateTxFeesRequest](#provenance.msgfees.v1.CalculateTxFeesRequest) | [CalculateTxFeesResponse](#provenance.msgfees.v1.CalculateTxFeesResponse) | CalculateTxFees simulates executing a transaction for estimating gas usage and additional fees. | POST|/provenance/tx/v1/calculate_msg_based_fee|
 
  <!-- end services -->
 

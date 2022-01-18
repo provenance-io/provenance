@@ -146,7 +146,7 @@ func (s MetaaddressTestSuite) TestAddMetaAddressDecoder() {
 		{
 			name: "invalid address",
 			args: []string{s.scopeIDStr + "bad"},
-			err:  "decoding bech32 failed: failed converting data to bytes: invalid character not part of charset: 98",
+			err:  "decoding bech32 failed: invalid character not part of charset: 98",
 		},
 	}
 

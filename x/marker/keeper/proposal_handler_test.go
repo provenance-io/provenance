@@ -144,7 +144,7 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 		{
 			"withdraw - invalid recpient",
 			markertypes.NewWithdrawEscrowProposal("title", "description", "test1", sdk.NewCoins(sdk.NewCoin("test1", sdk.NewInt(100))), "bad1address"),
-			fmt.Errorf("decoding bech32 failed: checksum failed. Expected dpg8tu, got ddress."),
+			fmt.Errorf("decoding bech32 failed: invalid checksum (expected dpg8tu got ddress)"),
 		},
 
 		// STATUS CHANGE PROPOSALS
@@ -230,7 +230,7 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 		{
 			"remove access - marker doesnot exist",
 			markertypes.NewRemoveAdministratorProposal("title", "description", "test1", []string{"bad1address"}),
-			fmt.Errorf("decoding bech32 failed: checksum failed. Expected dpg8tu, got ddress."),
+			fmt.Errorf("decoding bech32 failed: invalid checksum (expected dpg8tu got ddress)"),
 		},
 		{
 			"remove access - valid",

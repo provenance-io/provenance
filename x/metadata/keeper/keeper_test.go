@@ -2,10 +2,11 @@ package keeper_test
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/x/authz"
 	"sort"
 	"testing"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/x/authz"
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/metadata/keeper"
