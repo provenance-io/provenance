@@ -178,9 +178,9 @@ func EnsureAccountHasSufficientFeesWithAcctBalanceCheck(gas uint64, feeCoins sdk
 	if err != nil {
 		return err
 	}
-
-	if balancePerCoin.IsZero() || !balancePerCoin.IsAnyGTE(feeCoins) {
-		return fmt.Errorf("fee payer account does not have enough balance to pay for %q", feeCoins)
+	_, hasNeg := balancePerCoin.SafeSub(feeCoins)
+	if balancePerCoin.IsZero() || hasNeg {
+		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "fee payer account does not have enough balance to pay for %q", feeCoins)
 	}
 	return nil
 }
