@@ -1,7 +1,7 @@
 package io.provenance.client.protobuf.extensions
 
-import io.provenance.metadata.v1.QueryGrpc.QueryBlockingStub as Metadata
 import io.provenance.metadata.v1.ValueOwnershipRequest
+import io.provenance.metadata.v1.QueryGrpc.QueryBlockingStub as Metadata
 
 /**
  * Get scope IDs for a given address.

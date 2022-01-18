@@ -35,5 +35,3 @@ fun Auth.getMarkerAccount(bech32Address: String): MarkerAccount =
             else -> throw IllegalArgumentException("Account type not handled:$typeUrl")
         }
     }
-
-
