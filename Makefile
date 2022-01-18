@@ -93,7 +93,7 @@ endif
 ifeq ($(WITH_CLEVELDB),yes)
   ifeq ($(UNAME_S),Darwin)
     LEVELDB_PATH = $(shell brew --prefix leveldb 2> /dev/null)
-    CGO_CFLAGS   = -I$(LEVELDB_PATH)/include
+    CGO_CFLAGS  += -I$(LEVELDB_PATH)/include
     CGO_LDFLAGS += -L$(LEVELDB_PATH)/lib
   else ifeq ($(UNAME_S),Linux)
     # Intentionally left blank to leave it up to already installed libraries.
@@ -142,6 +142,7 @@ ldflags = -w -s \
 # A DBBackend of "cleveldb" works for both Rocks DB and Clevel DB.
 # However, "rocksdb" only works for Rocks DB.
 # As of writing this (Cosmos-SDK v0.44.5), the default is goleveldb.
+# Once https://github.com/cosmos/cosmos-sdk/issues/10948 has been implemented, this won't be needed anymore.
 ifeq ($(WITH_CLEVELDB),yes)
 	ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=cleveldb
 else ifeq ($(WITH_ROCKSDB),yes)
