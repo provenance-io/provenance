@@ -113,6 +113,7 @@ import (
 	attributewasm "github.com/provenance-io/provenance/x/attribute/wasm"
 
 	"github.com/provenance-io/provenance/x/name"
+	nameclient "github.com/provenance-io/provenance/x/name/client"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 	namewasm "github.com/provenance-io/provenance/x/name/wasm"
@@ -166,6 +167,7 @@ var (
 			upgradeclient.CancelProposalHandler,
 			ibcclientclient.UpdateClientProposalHandler,
 			ibcclientclient.UpgradeProposalHandler,
+			nameclient.ProposalHandler,
 		)...,
 		),
 		params.AppModuleBasic{},
