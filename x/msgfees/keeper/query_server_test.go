@@ -14,10 +14,11 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/x/msgfees/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"

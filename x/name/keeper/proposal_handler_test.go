@@ -70,7 +70,7 @@ func (s *IntegrationTestSuite) TestNameProposals() {
 			"add marker - invalid address",
 			&nametypes.CreateRootNameProposal{Title: "title", Description: "description", Name: "badroot", Owner: "bad1address", Restricted: false},
 			true,
-			fmt.Errorf("decoding bech32 failed: checksum failed. Expected dpg8tu, got ddress."),
+			fmt.Errorf("decoding bech32 failed: invalid checksum (expected dpg8tu got ddress)"),
 		},
 		{
 			"add marker - fails duplicate",

@@ -6,11 +6,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	simapp "github.com/provenance-io/provenance/app"
-	"github.com/provenance-io/provenance/x/msgfees/types"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
+
+	simapp "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 type TestSuite struct {
