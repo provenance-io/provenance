@@ -99,6 +99,7 @@ ifeq ($(WITH_ROCKSDB),yes)
     CGO_LDFLAGS += -lsnappy
     CGO_LDFLAGS += -llz4
     CGO_LDFLAGS += -lzstd
+    CGO_LDFLAGS += -ljemalloc
     CGO_LDFLAGS += -L$(shell brew --prefix snappy 2> /dev/null)/lib
     CGO_LDFLAGS += -L$(shell brew --prefix lz4 2> /dev/null)/lib/
     CGO_LDFLAGS += -L$(shell brew --prefix zstd 2> /dev/null)/lib/
