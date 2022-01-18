@@ -92,7 +92,7 @@ endif
 # cleveldb linker settings
 ifeq ($(WITH_CLEVELDB),yes)
   ifeq ($(UNAME_S),Darwin)
-    LEVELDB_PATH = $(shell brew --prefix leveldb 2>/dev/null || echo "$(HOME)/Cellar/leveldb/1.22/include")
+    LEVELDB_PATH = $(shell brew --prefix leveldb 2> /dev/null)
     CGO_CFLAGS   = -I$(LEVELDB_PATH)/include
     CGO_LDFLAGS += -L$(LEVELDB_PATH)/lib
   else ifeq ($(UNAME_S),Linux)
@@ -103,8 +103,8 @@ endif
 # rocksdb linker settings
 ifeq ($(WITH_ROCKSDB),yes)
   ifeq ($(UNAME_S),Darwin)
-    ROCKSDB_PATH ?= $(shell brew --prefix rocksdb)
-    CGO_CFLAGS   = -I$(ROCKSDB_PATH)/include
+    ROCKSDB_PATH ?= $(shell brew --prefix rocksdb 2> /dev/null)
+    CGO_CFLAGS  += -I$(ROCKSDB_PATH)/include
     CGO_LDFLAGS += -L$(ROCKSDB_PATH)/lib
     CGO_LDFLAGS += -lrocksdb
     CGO_LDFLAGS += -lstdc++
@@ -139,10 +139,12 @@ ldflags = -w -s \
 	-X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" \
 	-X github.com/tendermint/tendermint/version.TMCoreSemVer=$(TM_VERSION)
 
+# A DBBackend of "cleveldb" works for both Rocks DB and Clevel DB.
+# However, "rocksdb" only works for Rocks DB.
+# As of writing this (Cosmos-SDK v0.44.5), the default is goleveldb.
 ifeq ($(WITH_CLEVELDB),yes)
 	ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=cleveldb
-endif
-ifeq ($(WITH_ROCKSDB),yes)
+else ifeq ($(WITH_ROCKSDB),yes)
 	ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=rocksdb
 endif
 ldflags += $(LDFLAGS)
