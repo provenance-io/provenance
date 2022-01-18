@@ -9,6 +9,7 @@ BINDIR ?= $(GOPATH)/bin
 BUILDDIR ?= $(CURDIR)/build
 
 LEDGER_ENABLED ?= true
+WITH_CLEVELDB ?= yes
 WITH_ROCKSDB ?= yes
 
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
@@ -48,8 +49,11 @@ include contrib/devtools/Makefile
 # Build Flags/Tags
 ##############################
 build_tags = netgo
+ifeq ($(WITH_CLEVELDB),yes)
+  build_tags += gcc
+  build_tags += cleveldb
+endif
 ifeq ($(WITH_ROCKSDB),yes)
-  #build_tags += gcc
   build_tags += rocksdb
 endif
 
@@ -83,6 +87,17 @@ ifeq ($(UNAME_S),Darwin)
 else ifeq ($(UNAME_S),Linux)
   # linux liner settings
   CGO_LDFLAGS = -Wl,-rpath,\$$ORIGIN
+endif
+
+# cleveldb linker settings
+ifeq ($(WITH_CLEVELDB),yes)
+  ifeq ($(UNAME_S),Darwin)
+    LEVELDB_PATH = $(shell brew --prefix leveldb 2>/dev/null || echo "$(HOME)/Cellar/leveldb/1.22/include")
+    CGO_CFLAGS   = -I$(LEVELDB_PATH)/include
+    CGO_LDFLAGS += -L$(LEVELDB_PATH)/lib
+  else ifeq ($(UNAME_S),Linux)
+    # Intentionally left blank to leave it up to already installed libraries.
+  endif
 endif
 
 # rocksdb linker settings
@@ -124,6 +139,9 @@ ldflags = -w -s \
 	-X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" \
 	-X github.com/tendermint/tendermint/version.TMCoreSemVer=$(TM_VERSION)
 
+ifeq ($(WITH_CLEVELDB),yes)
+	ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=cleveldb
+endif
 ifeq ($(WITH_ROCKSDB),yes)
 	ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=rocksdb
 endif
