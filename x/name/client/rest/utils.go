@@ -14,7 +14,7 @@ type (
 		Description string         `json:"description" yaml:"description"`
 		Owner       sdk.AccAddress `json:"owner" yaml:"owner"`
 		Name        string         `json:"name" yaml:"name"`
-		Restricted  bool           `json:restricted yaml:restricted"`
+		Restricted  bool           `json:"restricted" yaml:"restricted"`
 		Proposer    sdk.AccAddress `json:"proposer" yaml:"proposer"`
 		Deposit     sdk.Coins      `json:"deposit" yaml:"deposit"`
 	}
