@@ -12,11 +12,13 @@ import (
 	"github.com/provenance-io/provenance/internal/antewrapper"
 )
 
+
+
 // checkTx true, high min gas price(high enough so that additional fee in same denom tips it over,
 //and this is what sets it apart from MempoolDecorator which has already been run)
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees() {
 	err, antehandler := setUpApp(suite, true, "atom", 100)
-	tx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 200000)))
+	tx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
 	suite.Require().NoError(err)
 
 	// Set gas price (1 atom)
@@ -30,7 +32,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees() {
 	// antehandler errors with insufficient fees
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NotNil(err, "Decorator should have errored on too low fee for local gasPrice")
-	suite.Require().Contains(err.Error(), "Base Fee+additional fee cannot be paid with fee value passed in : \"200000atom\", required: \"200100atom\" = \"200000atom\"(base-fee) +\"100atom\"(additional-fees): insufficient fee", "got wrong message")
+	suite.Require().Contains(err.Error(), "Base Fee+additional fee cannot be paid with fee value passed in : \"100000atom\", required: \"100100atom\" = \"100000atom\"(base-fee) +\"100atom\"(additional-fees): insufficient fee", "got wrong message")
 }
 
 // checkTx true, high min gas price irrespective of additional fees
@@ -118,7 +120,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPassFeeGrant() {
 	msg := testdata.NewTestMsg(addr1)
 	//add additional fee
 	feeAmount := sdk.NewCoins(sdk.NewInt64Coin("atom", 100100))
-	gasLimit := testdata.NewTestGasLimit()
+	gasLimit := suite.NewTestGasLimit()
 
 	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
 	suite.txBuilder.SetFeeAmount(feeAmount)
@@ -334,7 +336,7 @@ func createTestTx(suite *AnteTestSuite, err error, feeAmount sdk.Coins) (signing
 
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
-	gasLimit := testdata.NewTestGasLimit()
+	gasLimit := suite.NewTestGasLimit()
 	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
 	suite.txBuilder.SetFeeAmount(feeAmount)
 	suite.txBuilder.SetGasLimit(gasLimit)
@@ -361,3 +363,4 @@ func setUpApp(suite *AnteTestSuite, checkTx bool, additionalFeeCoinDenom string,
 	antehandler := sdk.ChainAnteDecorators(mfd)
 	return err, antehandler
 }
+

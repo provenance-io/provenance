@@ -132,11 +132,8 @@ replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.19.0-prov
 
 replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.45.1-0.20220118222650-e3997681d095
 
-
-
 replace github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
 
 // Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
-
