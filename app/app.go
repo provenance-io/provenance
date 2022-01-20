@@ -753,6 +753,8 @@ func New(
 	}
 	app.SetFeeHandler(msgfeehandler)
 
+	// add iavl cache size
+
 	app.SetEndBlocker(app.EndBlocker)
 
 	// -- TODO: Add upgrade plans for each release here
