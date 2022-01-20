@@ -31,7 +31,7 @@ type appUpgrade struct {
 var handlers = map[string]appUpgrade{
 	"green": {
 		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
-			versionMap := make(module.VersionMap)
+			versionMap := app.mm.GetVersionMap()
 			versionMap[metadatatypes.ModuleName] = 2
 			ctx.Logger().Info("NOTICE: Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
 			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
