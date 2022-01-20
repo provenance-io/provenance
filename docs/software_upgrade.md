@@ -10,15 +10,20 @@ An upgrade in Provenance is done by a node submitting a proposal with a deposit 
 ### Steps
 1. [ ] Check out previous version of Provenance
     - For example: `git checkout v1.7.5`
+   
 2. [ ] Build and configure Provenance
     - `go mod vendor && make clean build run-config`
+   
 3. [ ] Update the genesis.json file to shorten the voting period to 20s
     - `./scripts/upgrade-config.sh`
+   
 4. [ ] Run the chain
     - `make run`
+   
 5. [ ] In a separate terminal window save the validator address:
     - `provenanced -t keys list --home ./build/run/provenanced`
     - `export valAddr="<addr listed above>"`
+   
 6. [ ] Submit a software upgrade proposal with the desired name and upgrade height.  The upgrade height should be at least 100 blocks above the current height to allow for the 20s voting period to finish before the height is reached or the upgrade will become invalid.
    ```bash
    provenanced -t tx gov submit-proposal software-upgrade "<name>" \
@@ -36,10 +41,12 @@ An upgrade in Provenance is done by a node submitting a proposal with a deposit 
        --home=./build/run/provenanced \
        --yes
    ```
+   
 7. [ ] Query the proposal with the following command:
    ```bash
    provenanced query gov proposals
    ```
+   
 8. [ ] Before the 20s voting period has elapsed vote with the following cmd:
    ```bash
    provenanced -t tx gov vote "1" yes\
@@ -52,7 +59,7 @@ An upgrade in Provenance is done by a node submitting a proposal with a deposit 
        --home=./build/run/provenanced \
        --yes
    ```
-   If there are more than one proposals you will need to replace "1" with the proposal you wish to vote on.
+   If there are more than one proposals you will need to replace "1" with the number of the proposal you wish to vote on.
 
 9. [ ] Query the vote tally before the voting period has ended
    ```bash
