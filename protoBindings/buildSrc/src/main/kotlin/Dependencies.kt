@@ -13,6 +13,9 @@ object PluginIds { // please keep this sorted in sections
 
     // User defined plugins in `buildSrc/src/main/kotlin/`
     const val ProtobufRustGrpc = "rust.protobuf-rust-grpc"
+
+    // Linting (Kotlin)
+    const val KtLint = "org.jlleitschuh.gradle.ktlint"
 }
 
 object PluginVersions { // please keep this sorted in sections
@@ -24,6 +27,9 @@ object PluginVersions { // please keep this sorted in sections
 
     // Publishing
     const val NexusPublish = "1.1.0"
+
+    // KtLint
+    const val KtLint = "10.2.0"
 }
 
 object Versions {
