@@ -25,7 +25,7 @@ jobs:
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
     steps:
       - uses: actions/checkout@v2
-      - name: Install leveldb
+      - name: Install Deps
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
