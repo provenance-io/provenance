@@ -10,8 +10,6 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/cosmos/ibc-go/v2/modules/core/exported"
 	ibcctmtypes "github.com/cosmos/ibc-go/v2/modules/light-clients/07-tendermint/types"
-
-	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
 var (
@@ -43,8 +41,10 @@ var handlers = map[string]appUpgrade{
 				return false
 			})
 
-			versionMap := app.mm.GetVersionMap()
-			versionMap[metadatatypes.ModuleName] = 2
+			// Note: retreiving current module versions from upgrade keeper
+			// metadata module will be at from version 2 going to version 3
+			// msgfees module will not be in version map this will cause runmigrations to create it and run InitGenesis
+			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
 			ctx.Logger().Info("NOTICE: Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
 			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
 		},
