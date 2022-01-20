@@ -42,6 +42,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add check for `authz` grants when there are missing signatures in `metadata` transactions [#516](https://github.com/provenance-io/provenance/issues/516)
 * Add support for publishing Java and Kotlin Protobuf compiled sources to Maven Central [#562](https://github.com/provenance-io/provenance/issues/562)
 * Adding of the msg based fee module [#354](https://github.com/provenance-io/provenance/issues/354)
+* Upgrade provenance to 0.45 cosmos sdk release [#607](https://github.com/provenance-io/provenance/issues/607)
 
 ### Improvements
 

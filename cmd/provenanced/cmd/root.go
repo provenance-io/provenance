@@ -345,7 +345,6 @@ func overwriteFlagDefaults(c *cobra.Command, defaults map[string]string) {
 
 // getIAVLCacheSize If app.toml has an entry iavl-cache-size = <value>, default is 781250
 func getIAVLCacheSize(options servertypes.AppOptions) int {
-	// wish there was a
 	iavlCacheSize := cast.ToInt(options.Get("iavl-cache-size"))
 	if iavlCacheSize == 0 {
 		// going with the DefaultConfig value(which is 781250),

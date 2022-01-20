@@ -8,6 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/cosmos/ibc-go/v2/modules/core/exported"
+	ibcctmtypes "github.com/cosmos/ibc-go/v2/modules/light-clients/07-tendermint/types"
 
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
@@ -31,6 +33,16 @@ type appUpgrade struct {
 var handlers = map[string]appUpgrade{
 	"green": {
 		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
+
+			app.IBCKeeper.ClientKeeper.IterateClients(ctx, func(clientId string, state exported.ClientState) bool {
+				tc, ok := (state).(*ibcctmtypes.ClientState)
+				if ok {
+					tc.AllowUpdateAfterExpiry = true
+					app.IBCKeeper.ClientKeeper.SetClientState(ctx, clientId, state)
+				}
+				return false
+			})
+
 			versionMap := app.mm.GetVersionMap()
 			versionMap[metadatatypes.ModuleName] = 2
 			ctx.Logger().Info("NOTICE: Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
