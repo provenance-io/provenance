@@ -41,7 +41,7 @@ var handlers = map[string]appUpgrade{
 				return false
 			})
 
-			// Note: retreiving current module versions from upgrade keeper
+			// Note: retrieving current module versions from upgrade keeper
 			// metadata module will be at from version 2 going to version 3
 			// msgfees module will not be in version map this will cause runmigrations to create it and run InitGenesis
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
