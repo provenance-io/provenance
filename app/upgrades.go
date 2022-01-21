@@ -3,16 +3,11 @@ package app
 import (
 	"fmt"
 
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/authz"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	ibcconnectiontypes "github.com/cosmos/ibc-go/v2/modules/core/03-connection/types"
 	"github.com/cosmos/ibc-go/v2/modules/core/exported"
 	ibcctmtypes "github.com/cosmos/ibc-go/v2/modules/light-clients/07-tendermint/types"
 )
@@ -33,102 +28,10 @@ type appUpgrade struct {
 	Handler appUpgradeHandler
 }
 
-type moduleUpgradeVersion struct {
-	ModuleName  string
-	FromVersion uint64
-}
-
 var handlers = map[string]appUpgrade{
-	"eigengrau": {
-		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
-			panic("Upgrade height for eigengrau must be skipped.  Use `--unsafe-skip-upgrades <height>` flag to skip upgrade")
-		},
-	},
-	"feldgrau": {
-		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
-			app.IBCKeeper.ConnectionKeeper.SetParams(ctx, ibcconnectiontypes.DefaultParams())
-
-			nhashName := "Hash"
-			nhashSymbol := "HASH"
-			nhash, found := app.BankKeeper.GetDenomMetaData(ctx, "nhash")
-			if found {
-				nhash.Name = nhashName
-				nhash.Symbol = nhashSymbol
-			} else {
-				nhash = banktypes.Metadata{
-					Description: "Hash is the staking token of the Provenance Blockchain",
-					Base:        "nhash",
-					Display:     "hash",
-					Name:        nhashName,
-					Symbol:      nhashSymbol,
-					DenomUnits: []*banktypes.DenomUnit{
-						{
-							Denom:    "nhash",
-							Exponent: 0,
-							Aliases:  []string{},
-						},
-						{
-							Denom:    "hash",
-							Exponent: 9,
-							Aliases:  []string{},
-						},
-					},
-				}
-			}
-			app.BankKeeper.SetDenomMetaData(ctx, nhash)
-
-			if sdk.GetConfig().GetBech32AccountAddrPrefix() == AccountAddressPrefixMainNet {
-				s, ok := app.ParamsKeeper.GetSubspace(wasmtypes.DefaultParamspace)
-				if !ok {
-					panic("could not get wasm module parameter configuration")
-				}
-				s.Set(ctx, wasmtypes.ParamStoreKeyUploadAccess, wasmtypes.AccessTypeNobody.With(sdk.AccAddress{}))
-			}
-
-			orderedMigration := []moduleUpgradeVersion{
-
-				// x/auth’s migrations depends on x/bank (delegations etc).
-				// This causes cases where running auth migration before bank’s would produce
-				// a different app state hash than running bank’s before auth’s
-				{"bank", 1},
-				{"auth", 1},
-
-				// order doesn't matter
-				{"capability", 1},
-				{"crisis", 1},
-				{"distribution", 1},
-				{"evidence", 1},
-				{"genutil", 1},
-				{"gov", 1},
-				{"ibc", 1},
-				{"mint", 1},
-				{"params", 1},
-				{"slashing", 1},
-				{"staking", 1},
-				{"transfer", 1},
-				{"upgrade", 1},
-				{"vesting", 1},
-
-				// new modules that need to run init genesis
-				{"authz", 0},
-				{"feegrant", 0},
-
-				// cosmwasm module
-				{"wasm", 1},
-
-				// provenance modules
-				{"attribute", 1},
-				{"marker", 1},
-				{"metadata", 1},
-				{"name", 1},
-			}
-			ctx.Logger().Info("NOTICE: Starting large migration on all modules for cosmos-sdk v0.44.0.  This will take a significant amount of time to complete.  Do not restart node.")
-			return RunOrderedMigrations(app, ctx, orderedMigration)
-		},
-		Added: []string{authz.ModuleName, feegrant.ModuleName},
-	},
 	"green": {
 		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
+
 			app.IBCKeeper.ClientKeeper.IterateClients(ctx, func(clientId string, state exported.ClientState) bool {
 				tc, ok := (state).(*ibcctmtypes.ClientState)
 				if ok {
@@ -137,45 +40,16 @@ var handlers = map[string]appUpgrade{
 				}
 				return false
 			})
-			orderedMigration := []moduleUpgradeVersion{
-				{"metadata", 2},
-			}
+
+			// Note: retrieving current module versions from upgrade keeper
+			// metadata module will be at from version 2 going to version 3
+			// msgfees module will not be in version map this will cause runmigrations to create it and run InitGenesis
+			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
 			ctx.Logger().Info("NOTICE: Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
-			return RunOrderedMigrations(app, ctx, orderedMigration)
+			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
 		},
 	},
 	// TODO - Add new upgrade definitions here.
-}
-
-// RunOrderedMigrations runs migrations in a defined order.
-// NOTE: We needed to modify the behavior of the cosmos-sdk's migrations.  Order DOES matter in some cases and their migration uses a map and not a list.
-// This does not guarantee order in the migration process. i.e., The x/bank module needs to run before the x/auth module for version 1 to 2
-func RunOrderedMigrations(app *App, ctx sdk.Context, migrationOrder []moduleUpgradeVersion) (module.VersionMap, error) {
-	ctx.Logger().Info(fmt.Sprintf("Starting all module migrations in order: %v", migrationOrder))
-	updatedVersionMap := make(module.VersionMap)
-	for _, moduleAndVersion := range migrationOrder {
-		partialVersionMap := make(module.VersionMap)
-		partialVersionMap[moduleAndVersion.ModuleName] = moduleAndVersion.FromVersion
-		ctx.Logger().Info(fmt.Sprintf("Run migration on module %v from starting version %v", moduleAndVersion.ModuleName, partialVersionMap[moduleAndVersion.ModuleName]))
-		mm := make(map[string]module.AppModule)
-		mm[moduleAndVersion.ModuleName] = app.mm.Modules[moduleAndVersion.ModuleName]
-		// create a special filtered module manager so we can control the library internal initialization process
-		// that uses a non-deterministic map.  The following still has a map but with only one element at a time.
-		mgr := module.Manager{
-			Modules:            mm,
-			OrderBeginBlockers: app.mm.OrderBeginBlockers,
-			OrderEndBlockers:   app.mm.OrderEndBlockers,
-			OrderExportGenesis: app.mm.OrderExportGenesis,
-			OrderInitGenesis:   app.mm.OrderInitGenesis,
-		}
-		migratedVersionMap, err := mgr.RunMigrations(ctx, app.configurator, partialVersionMap)
-		if err != nil {
-			return nil, err
-		}
-		updatedVersionMap[moduleAndVersion.ModuleName] = migratedVersionMap[moduleAndVersion.ModuleName]
-	}
-	ctx.Logger().Info(fmt.Sprintf("Finished running all module migrations. Final versions: %v", updatedVersionMap))
-	return updatedVersionMap, nil
 }
 
 func InstallCustomUpgradeHandlers(app *App) {

@@ -38,6 +38,7 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
@@ -568,12 +569,52 @@ func New(
 		stakingtypes.ModuleName,
 		ibchost.ModuleName,
 		markertypes.ModuleName,
+
+		// no-ops
+		authtypes.ModuleName,
+		banktypes.ModuleName,
+		govtypes.ModuleName,
+		crisistypes.ModuleName,
+		genutiltypes.ModuleName,
+		authz.ModuleName,
+		feegrant.ModuleName,
+		paramstypes.ModuleName,
+		msgfeestypes.ModuleName,
+		metadatatypes.ModuleName,
+		wasm.ModuleName,
+		ibctransfertypes.ModuleName,
+		nametypes.ModuleName,
+		attributetypes.ModuleName,
+		vestingtypes.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
 		crisistypes.ModuleName,
 		govtypes.ModuleName,
 		stakingtypes.ModuleName,
+		authtypes.ModuleName,
+
+		// no-ops
+		vestingtypes.ModuleName,
+		distrtypes.ModuleName,
+		authz.ModuleName,
+		metadatatypes.ModuleName,
+		nametypes.ModuleName,
+		genutiltypes.ModuleName,
+		ibchost.ModuleName,
+		ibctransfertypes.ModuleName,
+		msgfeestypes.ModuleName,
+		wasm.ModuleName,
+		slashingtypes.ModuleName,
+		upgradetypes.ModuleName,
+		attributetypes.ModuleName,
+		capabilitytypes.ModuleName,
+		evidencetypes.ModuleName,
+		banktypes.ModuleName,
+		minttypes.ModuleName,
+		markertypes.ModuleName,
+		feegrant.ModuleName,
+		paramstypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -607,6 +648,42 @@ func New(
 		ibctransfertypes.ModuleName,
 		// wasm after ibc transfer
 		wasm.ModuleName,
+
+		// no-ops
+		paramstypes.ModuleName,
+		vestingtypes.ModuleName,
+		upgradetypes.ModuleName,
+	)
+
+	app.mm.SetOrderMigrations(
+		banktypes.ModuleName,
+		authz.ModuleName,
+		capabilitytypes.ModuleName,
+		crisistypes.ModuleName,
+		distrtypes.ModuleName,
+		evidencetypes.ModuleName,
+		feegrant.ModuleName,
+		genutiltypes.ModuleName,
+		govtypes.ModuleName,
+		ibchost.ModuleName,
+		minttypes.ModuleName,
+		paramstypes.ModuleName,
+		slashingtypes.ModuleName,
+		stakingtypes.ModuleName,
+		ibctransfertypes.ModuleName,
+		upgradetypes.ModuleName,
+		vestingtypes.ModuleName,
+
+		wasm.ModuleName,
+
+		attributetypes.ModuleName,
+		markertypes.ModuleName,
+		msgfeestypes.ModuleName,
+		metadatatypes.ModuleName,
+		nametypes.ModuleName,
+
+		// required to be last (cosmos-sdk enforces this when migrations are ran)
+		authtypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)

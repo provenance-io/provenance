@@ -12,6 +12,8 @@ import (
 	"github.com/provenance-io/provenance/internal/antewrapper"
 )
 
+
+
 // checkTx true, high min gas price(high enough so that additional fee in same denom tips it over,
 //and this is what sets it apart from MempoolDecorator which has already been run)
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees() {
@@ -118,7 +120,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPassFeeGrant() {
 	msg := testdata.NewTestMsg(addr1)
 	//add additional fee
 	feeAmount := sdk.NewCoins(sdk.NewInt64Coin("atom", 100100))
-	gasLimit := testdata.NewTestGasLimit()
+	gasLimit := suite.NewTestGasLimit()
 
 	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
 	suite.txBuilder.SetFeeAmount(feeAmount)
@@ -334,7 +336,7 @@ func createTestTx(suite *AnteTestSuite, err error, feeAmount sdk.Coins) (signing
 
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
-	gasLimit := testdata.NewTestGasLimit()
+	gasLimit := suite.NewTestGasLimit()
 	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
 	suite.txBuilder.SetFeeAmount(feeAmount)
 	suite.txBuilder.SetGasLimit(gasLimit)
@@ -361,3 +363,4 @@ func setUpApp(suite *AnteTestSuite, checkTx bool, additionalFeeCoinDenom string,
 	antehandler := sdk.ChainAnteDecorators(mfd)
 	return err, antehandler
 }
+
