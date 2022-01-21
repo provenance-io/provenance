@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	ibcclienttypes "github.com/cosmos/ibc-go/v2/modules/core/02-client/types"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -132,6 +133,14 @@ var handlers = map[string]appUpgrade{
 			app.IBCKeeper.ClientKeeper.IterateClients(ctx, func(clientId string, state exported.ClientState) bool {
 				tc, ok := (state).(*ibcctmtypes.ClientState)
 				if ok {
+					if expired {
+						title := "<title>"
+						desc := "<desc>"
+						newId := "<newId>"
+						content := ibcclienttypes.NewClientUpdateProposal(title, desc, clientId, newId)
+						ibckeeper.ClientUpdateProposal(ctx, content) // ibc-go/modules/core/02-client/keeper/proposal.go
+					}
+
 					tc.AllowUpdateAfterExpiry = true
 					app.IBCKeeper.ClientKeeper.SetClientState(ctx, clientId, state)
 				}
