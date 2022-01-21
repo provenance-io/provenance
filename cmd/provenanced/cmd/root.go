@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
+	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/snapshots"
@@ -285,6 +287,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		baseapp.SetSnapshotStore(snapshotStore),
 		baseapp.SetSnapshotInterval(cast.ToUint64(appOpts.Get(server.FlagStateSyncSnapshotInterval))),
 		baseapp.SetSnapshotKeepRecent(cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent))),
+		baseapp.SetIAVLCacheSize(getIAVLCacheSize(appOpts)),
 	)
 }
 
@@ -338,4 +341,15 @@ func overwriteFlagDefaults(c *cobra.Command, defaults map[string]string) {
 	for _, c := range c.Commands() {
 		overwriteFlagDefaults(c, defaults)
 	}
+}
+
+// getIAVLCacheSize If app.toml has an entry iavl-cache-size = <value>, default is 781250
+func getIAVLCacheSize(options servertypes.AppOptions) int {
+	iavlCacheSize := cast.ToInt(options.Get("iavl-cache-size"))
+	if iavlCacheSize == 0 {
+		// going with the DefaultConfig value(which is 781250),
+		// the store default value is DefaultIAVLCacheSize = 500000
+		return cast.ToInt(serverconfig.DefaultConfig().IAVLCacheSize)
+	}
+	return iavlCacheSize
 }
