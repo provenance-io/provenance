@@ -1,13 +1,13 @@
 # Software upgrade in Provenance
 ---
 
-### Purpose
-This document outlines how to do a local software upgrade.  The purpose is to help developers who want to test an upgrade with a local node running from the `make run` command inside of the Provenance repository.
+## Purpose
+This document outlines how to do a local software upgrade for testing purposes only.  The purpose is to help developers who want to test an upgrade with a local node running from the `make run` command inside of the Provenance repository.
 
-### Overview
+## Overview
 An upgrade in Provenance is done by a node submitting a proposal with a deposit in hash.  This proposal contains the blockchain height as well as the upgrade name.  Once a sufficient deposit has been made the proposal enters a voting period where any user with hash may vote.  After the voting period, defined in the genesis.json, the proposal will either pass or fail.  If the proposal passes, the chain will stop at the height of the proposal.  Then the chain must be restarted with the upgrade handler with the upgrade name.  This upgrade handler will execute and the chain will continue running with the software upgrade.
 
-### Steps
+## Steps
 1. [ ] Check out previous version of Provenance
     - For example: `git checkout v1.7.5`
    
