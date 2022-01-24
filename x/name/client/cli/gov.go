@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
@@ -22,9 +23,28 @@ const flagOwner = "owner"
 // GetRootNameProposalCmd returns a command for registration with the gov module
 func GetRootNameProposalCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "root-name-proposal [name] --restrict --owner [address] --title [text] --description [text]",
-		Short: "Submit a root name proposal",
-		Args:  cobra.ExactArgs(1),
+		Use:   "root-name-proposal [name] (--owner [address]) (--restrict) [flags]",
+		Short: "Submit a root name creation governance proposal",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Submit a root name creation governance proposal along with an initial deposit.
+The proposal title and description must be provided through their respective flags.
+
+IMPORTANT: The created root name will not restrict the creation of sub-names by default unless the
+restrict flag is included.  When included the proposer will be the default owner that must approve
+all child name creation unless an alterate owner is provided.
+
+Example:
+$ %s tx gov submit-proposal param-change tx gov submit-proposal \
+    root-name-proposal \
+	<root name> \
+	--restrict  \ 
+	--owner <key_or_address> \
+	--title "Proposal title" \
+	--description "Description of proposal" 
+	--from <key_or_address>
+			`,
+				version.AppName)),
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
