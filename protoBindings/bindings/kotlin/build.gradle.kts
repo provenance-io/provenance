@@ -1,11 +1,10 @@
 import com.google.protobuf.gradle.generateProtoTasks
 import com.google.protobuf.gradle.id
-import com.google.protobuf.gradle.ofSourceSet
 import com.google.protobuf.gradle.plugins
 import com.google.protobuf.gradle.protobuf
 import com.google.protobuf.gradle.protoc
-import java.nio.file.Paths
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.nio.file.Paths
 
 plugins {
     // Apply the java-library plugin for API and implementation separation.
@@ -14,6 +13,7 @@ plugins {
     id(PluginIds.Protobuf) version PluginVersions.Protobuf
     id(PluginIds.MavenPublish)
     id(PluginIds.Signing)
+    id(PluginIds.KtLint) version PluginVersions.KtLint
 }
 
 group = project.property("group.id") as String
@@ -63,6 +63,9 @@ tasks.withType<KotlinCompile> {
         languageVersion = "1.5"
         apiVersion = "1.5"
     }
+
+    // Make sure protobuf definitions are present prior to building:
+    dependsOn(":downloadProtos")
 }
 
 // Protobuf file source directories
