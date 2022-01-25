@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
@@ -27,7 +29,7 @@ const (
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
-	appParams simtypes.AppParams, cdc codec.JSONCodec, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper,
+	appParams simtypes.AppParams, cdc codec.JSONCodec, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper,
 ) simulation.WeightedOperations {
 	var (
 		weightMsgBindName   int
@@ -59,7 +61,7 @@ func WeightedOperations(
 }
 
 // SimulateMsgBindName will bind a NAME under an existing name using a 40% probability of restricting it.
-func SimulateMsgBindName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper) simtypes.Operation {
+func SimulateMsgBindName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -98,7 +100,7 @@ func SimulateMsgBindName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankk
 }
 
 // SimulateMsgDeleteName will dispatch a delete name operation against a random name record
-func SimulateMsgDeleteName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper) simtypes.Operation {
+func SimulateMsgDeleteName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -135,7 +137,7 @@ func Dispatch(
 	app *baseapp.BaseApp,
 	ctx sdk.Context,
 	ak authkeeper.AccountKeeperI,
-	bk bankkeeper.ViewKeeper,
+	bk bankkeeper.Keeper,
 	from simtypes.Account,
 	chainID string,
 	msg sdk.Msg,
@@ -148,6 +150,21 @@ func Dispatch(
 	spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 	fees, err := simtypes.RandomFees(r, ctx, spendable)
+	// fund account with nhash for additional fees, if the account exists (100m stake)
+	if sdk.MsgTypeURL(msg) == "/provenance.name.v1.MsgBindNameRequest" && ak.GetAccount(ctx, account.GetAddress()) != nil {
+		err = simapp.FundAccount(bk, ctx, account.GetAddress(), sdk.NewCoins(sdk.Coin{
+			Denom:  "nhash",
+			Amount: sdk.NewInt(100_000_000_000_000),
+		}))
+
+		fees = fees.Add(sdk.Coin{
+			Denom:  "nhash",
+			Amount: sdk.NewInt(100_000_000_000_000),
+		})
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to fund account with additional fee"), nil, err
+		}
+	}
 	if err != nil {
 		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to generate fees"), nil, err
 	}

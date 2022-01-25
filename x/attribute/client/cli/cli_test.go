@@ -162,7 +162,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	attributeDataBz, err := cfg.Codec.MarshalJSON(&attributeData)
 	s.Require().NoError(err)
 	genesisState[attributetypes.ModuleName] = attributeDataBz
-
+	// have to do this because msgfee has some genesis events, but the test setup won't let me send
+	// nhash to the validator account which is only thing in the keyring :(
+	_, ok := genesisState["msgfees"]
+	if ok {
+		delete(genesisState, "msgfees")
+	}
 	cfg.GenesisState = genesisState
 
 	s.cfg = cfg

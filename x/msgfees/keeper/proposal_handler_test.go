@@ -41,7 +41,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 func (s *IntegrationTestSuite) TestMarkerProposals() {
 	writeRecordRequest := &metadatatypes.MsgWriteRecordRequest{}
-	writeScopeRequest := &metadatatypes.MsgWriteScopeRequest{}
+	writeRecordSpecificationRequest := &metadatatypes.MsgWriteRecordSpecificationRequest{}
 
 	testCases := []struct {
 		name string
@@ -60,7 +60,7 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 		},
 		{
 			"add msgfees - invalid - validate basic fail",
-			msgfeestypes.NewAddMsgFeeProposal("title add", "description", sdk.MsgTypeURL(writeScopeRequest), sdk.NewCoin("hotdog", sdk.NewInt(0))),
+			msgfeestypes.NewAddMsgFeeProposal("title add", "description", sdk.MsgTypeURL(writeRecordSpecificationRequest), sdk.NewCoin("hotdog", sdk.NewInt(0))),
 			msgfeestypes.ErrInvalidFee,
 		},
 		{
@@ -70,7 +70,7 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 		},
 		{
 			"update msgfees - invalid - cannot update a non-existing msgfee",
-			msgfeestypes.NewUpdateMsgFeeProposal("title update", "description", sdk.MsgTypeURL(writeScopeRequest), sdk.NewCoin("hotdog", sdk.NewInt(10))),
+			msgfeestypes.NewUpdateMsgFeeProposal("title update", "description", sdk.MsgTypeURL(writeRecordSpecificationRequest), sdk.NewCoin("hotdog", sdk.NewInt(10))),
 			msgfeestypes.ErrMsgFeeDoesNotExist,
 		},
 		{

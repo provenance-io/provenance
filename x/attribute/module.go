@@ -99,13 +99,13 @@ type AppModule struct {
 	AppModuleBasic
 	keeper keeper.Keeper
 	ak     authkeeper.AccountKeeperI
-	bk     bankkeeper.ViewKeeper
+	bk     bankkeeper.Keeper
 	nk     namekeeper.Keeper
 }
 
 // NewAppModule creates a new AppModule Object
 func NewAppModule(
-	cdc codec.Codec, keeper keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper,
+	cdc codec.Codec, keeper keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},

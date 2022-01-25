@@ -75,7 +75,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	nameDataBz, err := cfg.Codec.MarshalJSON(&nameData)
 	s.Require().NoError(err)
 	genesisState[nametypes.ModuleName] = nameDataBz
-
+	_, ok := genesisState["msgfees"]
+	if ok {
+		delete(genesisState, "msgfees")
+	}
 	cfg.GenesisState = genesisState
 
 	s.cfg = cfg
