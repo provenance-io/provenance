@@ -79,7 +79,7 @@ func (suite *SimTestSuite) TestSimulateMsgBindName() {
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
 
 	// execute operation
-	op := simulation.SimulateMsgBindName(suite.app.NameKeeper, suite.app.AccountKeeper, suite.app.BankKeeper)
+	op := simulation.SimulateMsgBindName(suite.app.NameKeeper, suite.app.AccountKeeper, suite.app.BankKeeper, false)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 

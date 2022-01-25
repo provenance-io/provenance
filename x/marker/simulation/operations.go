@@ -190,7 +190,7 @@ func Dispatch(
 	chainID string,
 	msg sdk.Msg,
 	futures []simtypes.FutureOperation,
-	genIncludesNhash bool,
+	genTxIncludesNhashFees bool,
 ) (
 	simtypes.OperationMsg,
 	[]simtypes.FutureOperation,
@@ -213,7 +213,7 @@ func Dispatch(
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to fund account with additional fee"), nil, err
 		}
-		if genIncludesNhash {
+		if genTxIncludesNhashFees {
 			err = simapp.FundAccount(bk, ctx, account.GetAddress(), sdk.NewCoins(sdk.Coin{
 				Denom:  "nhash",
 				Amount: sdk.NewInt(100_000_000_000_000),

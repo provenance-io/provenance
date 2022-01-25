@@ -70,7 +70,7 @@ func WeightedOperations(
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgAddAttribute,
-			SimulateMsgAddAttribute(k, ak, bk, nk),
+			SimulateMsgAddAttribute(k, ak, bk, nk, false),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgUpdateAttribute,
@@ -88,7 +88,7 @@ func WeightedOperations(
 }
 
 // SimulateMsgAddAttribute will add an attribute under an account with a random type.
-func SimulateMsgAddAttribute(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper) simtypes.Operation {
+func SimulateMsgAddAttribute(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper, genTxIncludesNhashFees bool) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -116,7 +116,7 @@ func SimulateMsgAddAttribute(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk b
 			getRandomValueOfType(r, t),
 		)
 
-		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg)
+		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, genTxIncludesNhashFees)
 	}
 }
 
@@ -160,7 +160,7 @@ func SimulateMsgUpdateAttribute(k keeper.Keeper, ak authkeeper.AccountKeeperI, b
 			t,
 		)
 
-		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg)
+		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, false)
 	}
 }
 
@@ -195,7 +195,7 @@ func SimulateMsgDeleteAttribute(k keeper.Keeper, ak authkeeper.AccountKeeperI, b
 		simAccount, _ := simtypes.FindAccount(accs, mustGetAddress(ownerAddress))
 		msg := types.NewMsgDeleteAttributeRequest(mustGetAddress(randomAttribute.Address), mustGetAddress(ownerAddress), randomAttribute.Name)
 
-		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg)
+		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, false)
 	}
 }
 
@@ -230,7 +230,7 @@ func SimulateMsgDeleteDistinctAttribute(k keeper.Keeper, ak authkeeper.AccountKe
 		simAccount, _ := simtypes.FindAccount(accs, mustGetAddress(ownerAddress))
 		msg := types.NewMsgDeleteDistinctAttributeRequest(mustGetAddress(randomAttribute.Address), mustGetAddress(ownerAddress), randomAttribute.Name, randomAttribute.Value)
 
-		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg)
+		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, false)
 	}
 }
 
@@ -276,6 +276,7 @@ func Dispatch(
 	from simtypes.Account,
 	chainID string,
 	msg sdk.Msg,
+	genTxIncludesNhashFees bool,
 ) (
 	simtypes.OperationMsg,
 	[]simtypes.FutureOperation,
@@ -286,7 +287,7 @@ func Dispatch(
 
 	fees, err := simtypes.RandomFees(r, ctx, spendable)
 	// fund account with nhash for additional fees
-	if sdk.MsgTypeURL(msg) == "/provenance.attribute.v1.MsgAddAttributeRequest" && ak.GetAccount(ctx, account.GetAddress()) != nil {
+	if sdk.MsgTypeURL(msg) == "/provenance.attribute.v1.MsgAddAttributeRequest" && ak.GetAccount(ctx, account.GetAddress()) != nil && genTxIncludesNhashFees {
 		err = simapp.FundAccount(bk, ctx, account.GetAddress(), sdk.NewCoins(sdk.Coin{
 			Denom:  "nhash",
 			Amount: sdk.NewInt(100_000_000_000_000),

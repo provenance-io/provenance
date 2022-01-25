@@ -51,7 +51,7 @@ func WeightedOperations(
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgBindName,
-			SimulateMsgBindName(k, ak, bk),
+			SimulateMsgBindName(k, ak, bk, false),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgDeleteName,
@@ -61,7 +61,7 @@ func WeightedOperations(
 }
 
 // SimulateMsgBindName will bind a NAME under an existing name using a 40% probability of restricting it.
-func SimulateMsgBindName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
+func SimulateMsgBindName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, genIncludesNhash bool) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -95,7 +95,7 @@ func SimulateMsgBindName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankk
 				simAccount.Address,
 				parent.Restricted))
 
-		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg)
+		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, genIncludesNhash)
 	}
 }
 
@@ -126,7 +126,7 @@ func SimulateMsgDeleteName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk ban
 
 		msg := types.NewMsgDeleteNameRequest(randomRecord)
 
-		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg)
+		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, false)
 	}
 }
 
@@ -141,6 +141,7 @@ func Dispatch(
 	from simtypes.Account,
 	chainID string,
 	msg sdk.Msg,
+	genIncludesNhash bool,
 ) (
 	simtypes.OperationMsg,
 	[]simtypes.FutureOperation,
@@ -151,7 +152,7 @@ func Dispatch(
 
 	fees, err := simtypes.RandomFees(r, ctx, spendable)
 	// fund account with nhash for additional fees, if the account exists (100m stake)
-	if sdk.MsgTypeURL(msg) == "/provenance.name.v1.MsgBindNameRequest" && ak.GetAccount(ctx, account.GetAddress()) != nil {
+	if sdk.MsgTypeURL(msg) == "/provenance.name.v1.MsgBindNameRequest" && ak.GetAccount(ctx, account.GetAddress()) != nil && genIncludesNhash {
 		err = simapp.FundAccount(bk, ctx, account.GetAddress(), sdk.NewCoins(sdk.Coin{
 			Denom:  "nhash",
 			Amount: sdk.NewInt(100_000_000_000_000),

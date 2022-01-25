@@ -81,7 +81,7 @@ func (suite *SimTestSuite) TestSimulateMsgAddAttribute() {
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
 
 	// execute operation
-	op := simulation.SimulateMsgAddAttribute(suite.app.AttributeKeeper, suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.NameKeeper)
+	op := simulation.SimulateMsgAddAttribute(suite.app.AttributeKeeper, suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.NameKeeper, true)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 

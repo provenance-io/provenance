@@ -143,14 +143,6 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.
 	var genesisState msgfees.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
 
-	// msgFees := append(genesisState.MsgFees, msgfees.NewMsgFee(
-	//	sdk.MsgTypeURL(&nametypes.MsgBindNameRequest{}), sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000))),
-	//	msgfees.NewMsgFee(sdk.MsgTypeURL(&markertypes.MsgAddMarkerRequest{}), sdk.NewCoin("nhash", sdk.NewInt(100_000_000_000))),
-	//	msgfees.NewMsgFee(sdk.MsgTypeURL(&attributetypes.MsgAddAttributeRequest{}), sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000))),
-	//	msgfees.NewMsgFee(sdk.MsgTypeURL(&metadatatypes.MsgWriteScopeRequest{}), sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000))),
-	//	msgfees.NewMsgFee(sdk.MsgTypeURL(&metadatatypes.MsgP8EMemorializeContractRequest{}), sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000))),
-	//)
-
 	genesisState.MsgFees = append(genesisState.MsgFees, msgfees.NewMsgFee(
 		sdk.MsgTypeURL(&nametypes.MsgBindNameRequest{}), sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000))),
 		msgfees.NewMsgFee(sdk.MsgTypeURL(&markertypes.MsgAddMarkerRequest{}), sdk.NewCoin("nhash", sdk.NewInt(100_000_000_000))),
