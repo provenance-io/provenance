@@ -57,26 +57,36 @@ var handlers = map[string]appUpgrade{
 				return resultVM, err
 			}
 
-			if err := app.MsgFeesKeeper.SetMsgFee(ctx, msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&nametypes.MsgBindNameRequest{}), sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)))); err != nil {
-				return nil, err
-			}
-			if err := app.MsgFeesKeeper.SetMsgFee(ctx, msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&markertypes.MsgAddMarkerRequest{}), sdk.NewCoin("nhash", sdk.NewInt(100_000_000_000)))); err != nil {
-				return nil, err
-			}
-			if err := app.MsgFeesKeeper.SetMsgFee(ctx, msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&attributetypes.MsgAddAttributeRequest{}), sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)))); err != nil {
-				return nil, err
-			}
-			if err := app.MsgFeesKeeper.SetMsgFee(ctx, msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&metadatatypes.MsgWriteScopeRequest{}), sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)))); err != nil {
-				return nil, err
-			}
-			if err := app.MsgFeesKeeper.SetMsgFee(ctx, msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&metadatatypes.MsgP8EMemorializeContractRequest{}), sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)))); err != nil {
-				return nil, err
+			if err := AddMsgBasedFees(app, ctx); err != nil {
+				return resultVM, err
 			}
 
 			return resultVM, nil
 		},
 	},
 	// TODO - Add new upgrade definitions here.
+}
+
+// AddMsgBasedFees adds pio specific msg based fees for BindName, AddMarker, AddAttribute, WriteScope, P8EMemorializeContract requests for v1.8.0 upgrade
+func AddMsgBasedFees(app *App, ctx sdk.Context) error {
+
+	if err := app.MsgFeesKeeper.SetMsgFee(ctx, msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&nametypes.MsgBindNameRequest{}), sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)))); err != nil {
+		return err
+	}
+	if err := app.MsgFeesKeeper.SetMsgFee(ctx, msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&markertypes.MsgAddMarkerRequest{}), sdk.NewCoin("nhash", sdk.NewInt(100_000_000_000)))); err != nil {
+		return err
+	}
+	if err := app.MsgFeesKeeper.SetMsgFee(ctx, msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&attributetypes.MsgAddAttributeRequest{}), sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)))); err != nil {
+		return err
+	}
+	if err := app.MsgFeesKeeper.SetMsgFee(ctx, msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&metadatatypes.MsgWriteScopeRequest{}), sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)))); err != nil {
+		return err
+	}
+	if err := app.MsgFeesKeeper.SetMsgFee(ctx, msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&metadatatypes.MsgP8EMemorializeContractRequest{}), sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)))); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func InstallCustomUpgradeHandlers(app *App) {
