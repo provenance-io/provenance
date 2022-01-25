@@ -208,9 +208,6 @@ func Dispatch(
 		err = simapp.FundAccount(bk, ctx, account.GetAddress(), sdk.NewCoins(sdk.Coin{
 			Denom:  "stake",
 			Amount: sdk.NewInt(100000000000000),
-		}, sdk.Coin{
-			Denom:  "nhash",
-			Amount: sdk.NewInt(100_000_000_000_000),
 		}))
 
 		if err != nil {
