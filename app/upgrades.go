@@ -69,7 +69,6 @@ var handlers = map[string]appUpgrade{
 
 // AddMsgBasedFees adds pio specific msg based fees for BindName, AddMarker, AddAttribute, WriteScope, P8EMemorializeContract requests for v1.8.0 upgrade
 func AddMsgBasedFees(app *App, ctx sdk.Context) error {
-
 	if err := app.MsgFeesKeeper.SetMsgFee(ctx, msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&nametypes.MsgBindNameRequest{}), sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)))); err != nil {
 		return err
 	}
