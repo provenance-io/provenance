@@ -3,8 +3,8 @@ package wasm
 import (
 	"encoding/json"
 	"fmt"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
@@ -179,11 +179,11 @@ func bech32Address(ma types.MetadataAddress) (string, error) {
 
 // Convert a provwasm scope into the baseType scope.
 func (scope *Scope) convertToBaseType() (*types.Scope, error) {
-	scopeId, err := types.MetadataAddressFromBech32(scope.ScopeID)
+	scopeID, err := types.MetadataAddressFromBech32(scope.ScopeID)
 	if err != nil {
 		return nil, fmt.Errorf("wasm: invalid 'scope id': %w", err)
 	}
-	specificationId, err := types.MetadataAddressFromBech32(scope.SpecificationID)
+	specificationID, err := types.MetadataAddressFromBech32(scope.SpecificationID)
 	if err != nil {
 		return nil, fmt.Errorf("wasm: invalid 'specification id': %w", err)
 	}
@@ -195,8 +195,8 @@ func (scope *Scope) convertToBaseType() (*types.Scope, error) {
 		}
 	}
 	baseType := &types.Scope{
-		ScopeId:           scopeId,
-		SpecificationId:   specificationId,
+		ScopeId:           scopeID,
+		SpecificationId:   specificationID,
 		Owners:            nil,
 		DataAccess:        scope.DataAccess,
 		ValueOwnerAddress: scope.ValueOwnerAddress,
