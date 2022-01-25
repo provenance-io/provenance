@@ -78,7 +78,7 @@ func WeightedOperations(
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgAddMarker,
-			SimulateMsgAddMarker(k, ak, bk),
+			SimulateMsgAddMarker(k, ak, bk, false),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgChangeStatus,
@@ -92,7 +92,7 @@ func WeightedOperations(
 }
 
 // SimulateMsgAddMarker will bind a NAME under an existing name using a 40% probability of restricting it.
-func SimulateMsgAddMarker(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
+func SimulateMsgAddMarker(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, genTxIncludesNhashFees bool) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -109,7 +109,7 @@ func SimulateMsgAddMarker(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bank
 			r.Intn(1) > 0,                 // allow gov
 		)
 
-		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, nil)
+		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, nil, genTxIncludesNhashFees)
 	}
 }
 
@@ -156,7 +156,7 @@ func SimulateMsgChangeStatus(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk b
 			msg = types.NewMsgDeleteRequest(m.GetDenom(), simAccount.Address)
 		}
 
-		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, nil)
+		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, nil, false)
 	}
 }
 
@@ -174,7 +174,7 @@ func SimulateMsgAddAccess(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bank
 		}
 		grants := randomAccessGrants(r, accs, 100)
 		msg := types.NewMsgAddAccessRequest(m.GetDenom(), simAccount.Address, grants[0])
-		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, nil)
+		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, nil, false)
 	}
 }
 
@@ -190,6 +190,7 @@ func Dispatch(
 	chainID string,
 	msg sdk.Msg,
 	futures []simtypes.FutureOperation,
+	genIncludesNhash bool,
 ) (
 	simtypes.OperationMsg,
 	[]simtypes.FutureOperation,
@@ -212,17 +213,28 @@ func Dispatch(
 			Amount: sdk.NewInt(100_000_000_000_000),
 		}))
 
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to fund account with additional fee"), nil, err
+		}
+		if genIncludesNhash {
+			err = simapp.FundAccount(bk, ctx, account.GetAddress(), sdk.NewCoins(sdk.Coin{
+				Denom:  "nhash",
+				Amount: sdk.NewInt(100_000_000_000_000),
+			}))
+			fees = fees.Add(sdk.Coin{
+				Denom:  "nhash",
+				Amount: sdk.NewInt(100_000_000_000_000),
+			})
+
+			if err != nil {
+				return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to fund account with additional fee"), nil, err
+			}
+		}
+
 		fees = fees.Add(sdk.Coin{
 			Denom:  "stake",
 			Amount: sdk.NewInt(100000000000000),
 		})
-		fees = fees.Add(sdk.Coin{
-			Denom:  "nhash",
-			Amount: sdk.NewInt(100_000_000_000_000),
-		})
-		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to fund account with additional fee"), nil, err
-		}
 	}
 
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig

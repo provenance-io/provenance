@@ -80,7 +80,7 @@ func (suite *SimTestSuite) TestSimulateMsgAddMarker() {
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
 
 	// execute operation
-	op := simulation.SimulateMsgAddMarker(suite.app.MarkerKeeper, suite.app.AccountKeeper, suite.app.BankKeeper)
+	op := simulation.SimulateMsgAddMarker(suite.app.MarkerKeeper, suite.app.AccountKeeper, suite.app.BankKeeper, true)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
@@ -97,7 +97,7 @@ func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Ac
 	accounts := simtypes.RandomAccounts(r, n)
 
 	initAmt := sdk.TokensFromConsensusPower(1000000, sdk.DefaultPowerReduction)
-	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt),sdk.NewCoin("nhash", sdk.NewInt(100_000_000_000)))
+	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt), sdk.NewCoin("nhash", sdk.NewInt(100_000_000_000)))
 
 	// add coins to the accounts
 	for _, account := range accounts {
