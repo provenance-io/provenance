@@ -69,18 +69,23 @@ var handlers = map[string]appUpgrade{
 
 // AddMsgBasedFees adds pio specific msg based fees for BindName, AddMarker, AddAttribute, WriteScope, P8EMemorializeContract requests for v1.8.0 upgrade
 func AddMsgBasedFees(app *App, ctx sdk.Context) error {
+	ctx.Logger().Info("Adding a 10 hash (10,000,000,000 nhash) msg fee to MsgBindNameRequest (1/5)")
 	if err := app.MsgFeesKeeper.SetMsgFee(ctx, msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&nametypes.MsgBindNameRequest{}), sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)))); err != nil {
 		return err
 	}
+	ctx.Logger().Info("Adding a 100 hash (100,000,000,000 nhash) msg fee to MsgAddMarkerRequest (2/5)")
 	if err := app.MsgFeesKeeper.SetMsgFee(ctx, msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&markertypes.MsgAddMarkerRequest{}), sdk.NewCoin("nhash", sdk.NewInt(100_000_000_000)))); err != nil {
 		return err
 	}
+	ctx.Logger().Info("Adding a 10 hash (10,000,000,000 nhash) msg fee to MsgAddAttributeRequest (3/5)")
 	if err := app.MsgFeesKeeper.SetMsgFee(ctx, msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&attributetypes.MsgAddAttributeRequest{}), sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)))); err != nil {
 		return err
 	}
+	ctx.Logger().Info("Adding a 10 hash (10,000,000,000 nhash) msg fee to MsgWriteScopeRequest (4/5)")
 	if err := app.MsgFeesKeeper.SetMsgFee(ctx, msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&metadatatypes.MsgWriteScopeRequest{}), sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)))); err != nil {
 		return err
 	}
+	ctx.Logger().Info("Adding a 10 hash (10,000,000,000 nhash) msg fee to MsgP8EMemorializeContractRequest (5/5)")
 	if err := app.MsgFeesKeeper.SetMsgFee(ctx, msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&metadatatypes.MsgP8EMemorializeContractRequest{}), sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)))); err != nil {
 		return err
 	}
