@@ -49,9 +49,10 @@ var handlers = map[string]appUpgrade{
 
 			// set attribute param length to 1,000 from 10,000
 			attrParams := app.AttributeKeeper.GetParams(ctx)
-			ctx.Logger().Info("Changing the attribute max value from %v to 1000", attrParams.MaxValueLength)
+			beforeLength := attrParams.MaxValueLength
 			attrParams.MaxValueLength = 1_000
 			app.AttributeKeeper.SetParams(ctx, attrParams)
+			ctx.Logger().Info(fmt.Sprintf("Updated attribute module max length value from %d to %d", beforeLength, attrParams.MaxValueLength))
 
 			// Note: retrieving current module versions from upgrade keeper
 			// metadata module will be at from version 2 going to version 3
