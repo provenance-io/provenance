@@ -57,11 +57,8 @@ var handlers = map[string]appUpgrade{
 				return resultVM, err
 			}
 
-			if err := AddMsgBasedFees(app, ctx); err != nil {
-				return resultVM, err
-			}
+			return resultVM, AddMsgBasedFees(app, ctx)
 
-			return resultVM, nil
 		},
 	},
 	// TODO - Add new upgrade definitions here.
