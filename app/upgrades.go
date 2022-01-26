@@ -47,6 +47,12 @@ var handlers = map[string]appUpgrade{
 				return false
 			})
 
+			// set attribute param length to 1,000 from 10,000
+			attrParams := app.AttributeKeeper.GetParams(ctx)
+			ctx.Logger().Info("Changing the attribute max value from %v to 1000", attrParams.MaxValueLength)
+			attrParams.MaxValueLength = 1_000
+			app.AttributeKeeper.SetParams(ctx, attrParams)
+
 			// Note: retrieving current module versions from upgrade keeper
 			// metadata module will be at from version 2 going to version 3
 			// msgfees module will not be in version map this will cause runmigrations to create it and run InitGenesis
