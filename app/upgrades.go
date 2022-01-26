@@ -10,6 +10,12 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/cosmos/ibc-go/v2/modules/core/exported"
 	ibcctmtypes "github.com/cosmos/ibc-go/v2/modules/light-clients/07-tendermint/types"
+
+	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
+	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
+	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
 var (
@@ -46,10 +52,42 @@ var handlers = map[string]appUpgrade{
 			// msgfees module will not be in version map this will cause runmigrations to create it and run InitGenesis
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
 			ctx.Logger().Info("NOTICE: Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
-			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
+			resultVM, err := app.mm.RunMigrations(ctx, app.configurator, versionMap)
+			if err != nil {
+				return resultVM, err
+			}
+
+			return resultVM, AddMsgBasedFees(app, ctx)
+
 		},
 	},
 	// TODO - Add new upgrade definitions here.
+}
+
+// AddMsgBasedFees adds pio specific msg based fees for BindName, AddMarker, AddAttribute, WriteScope, P8EMemorializeContract requests for v1.8.0 upgrade
+func AddMsgBasedFees(app *App, ctx sdk.Context) error {
+	ctx.Logger().Info("Adding a 10 hash (10,000,000,000 nhash) msg fee to MsgBindNameRequest (1/5)")
+	if err := app.MsgFeesKeeper.SetMsgFee(ctx, msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&nametypes.MsgBindNameRequest{}), sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)))); err != nil {
+		return err
+	}
+	ctx.Logger().Info("Adding a 100 hash (100,000,000,000 nhash) msg fee to MsgAddMarkerRequest (2/5)")
+	if err := app.MsgFeesKeeper.SetMsgFee(ctx, msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&markertypes.MsgAddMarkerRequest{}), sdk.NewCoin("nhash", sdk.NewInt(100_000_000_000)))); err != nil {
+		return err
+	}
+	ctx.Logger().Info("Adding a 10 hash (10,000,000,000 nhash) msg fee to MsgAddAttributeRequest (3/5)")
+	if err := app.MsgFeesKeeper.SetMsgFee(ctx, msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&attributetypes.MsgAddAttributeRequest{}), sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)))); err != nil {
+		return err
+	}
+	ctx.Logger().Info("Adding a 10 hash (10,000,000,000 nhash) msg fee to MsgWriteScopeRequest (4/5)")
+	if err := app.MsgFeesKeeper.SetMsgFee(ctx, msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&metadatatypes.MsgWriteScopeRequest{}), sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)))); err != nil {
+		return err
+	}
+	ctx.Logger().Info("Adding a 10 hash (10,000,000,000 nhash) msg fee to MsgP8EMemorializeContractRequest (5/5)")
+	if err := app.MsgFeesKeeper.SetMsgFee(ctx, msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&metadatatypes.MsgP8EMemorializeContractRequest{}), sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)))); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func InstallCustomUpgradeHandlers(app *App) {
