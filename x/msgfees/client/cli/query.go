@@ -9,8 +9,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/provenance-io/provenance/x/msgfees/types"
 	"github.com/spf13/cobra"
+
+	"github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 // GetQueryCmd returns the top-level command for msgfees CLI queries.

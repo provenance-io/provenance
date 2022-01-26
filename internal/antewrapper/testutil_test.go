@@ -21,6 +21,7 @@ import (
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
 	simapp "github.com/provenance-io/provenance/app"
 	msgfeetype "github.com/provenance-io/provenance/x/msgfees/types"
 )
@@ -209,6 +210,14 @@ func (suite *AnteTestSuite) CreateMsgFee(fee sdk.Coin, msgs ...sdk.Msg) error {
 	}
 	return nil
 }
+
+// NewTestGasLimit is a test fee gas limit.
+// they keep changing this value and our tests break, hence moving it to test.
+func (suite *AnteTestSuite)NewTestGasLimit() uint64 {
+	return 100000
+}
+
+
 func TestAnteTestSuite(t *testing.T) {
 	suite.Run(t, new(AnteTestSuite))
 }

@@ -536,7 +536,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeAddDataAccess() {
 			scope,
 			[]string{s.user1},
 			true,
-			"failed to decode data access address invalidaddr : decoding bech32 failed: invalid index of 1",
+			"failed to decode data access address invalidaddr : decoding bech32 failed: invalid separator index -1",
 		},
 		"should successfully validate add scope data access": {
 			[]string{s.user2},
@@ -598,7 +598,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeDeleteDataAccess() {
 			scope,
 			[]string{s.user1},
 			true,
-			"failed to decode data access address invalidaddr : decoding bech32 failed: invalid index of 1",
+			"failed to decode data access address invalidaddr : decoding bech32 failed: invalid separator index -1",
 		},
 		"should successfully validate delete scope data access": {
 			[]string{s.user1, s.user2},
@@ -646,7 +646,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdateOwners() {
 			scopeWithOwners(originalOwners),
 			scopeWithOwners([]types.Party{{Address: "shoulderror", Role: types.PartyType_PARTY_TYPE_AFFILIATE}}),
 			[]string{s.user1},
-			fmt.Sprintf("invalid scope owners: invalid party address [%s]: %s", "shoulderror", "decoding bech32 failed: invalid index of 1"),
+			fmt.Sprintf("invalid scope owners: invalid party address [%s]: %s", "shoulderror", "decoding bech32 failed: invalid separator index -1"),
 		},
 		{
 			"should fail to validate update scope owners, role cannot be unspecified",

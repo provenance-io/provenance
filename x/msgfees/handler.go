@@ -2,6 +2,7 @@ package msgfees
 
 import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/provenance-io/provenance/x/msgfees/keeper"
 	"github.com/provenance-io/provenance/x/msgfees/types"
 

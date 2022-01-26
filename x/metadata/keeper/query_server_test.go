@@ -130,7 +130,7 @@ func (s *QueryServerTestSuite) TestScopeQuery() {
 	s.EqualError(err, "rpc error: code = InvalidArgument desc = empty request parameters", "empty request error")
 
 	_, err = queryClient.Scope(gocontext.Background(), &types.ScopeRequest{ScopeId: "6332c1a4-foo1-bare-895b-invalid65cb6"})
-	s.EqualError(err, "rpc error: code = InvalidArgument desc = could not parse [6332c1a4-foo1-bare-895b-invalid65cb6] into either a scope address (decoding bech32 failed: failed converting data to bytes: invalid character not part of charset: 45) or uuid (invalid UUID format)", "invalid uuid in request error")
+	s.EqualError(err, "rpc error: code = InvalidArgument desc = could not parse [6332c1a4-foo1-bare-895b-invalid65cb6] into either a scope address (decoding bech32 failed: invalid character not part of charset: 45) or uuid (invalid UUID format)", "invalid uuid in request error")
 
 	// TODO: expand this to test new features/failures of the Scope query.
 
@@ -245,7 +245,7 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		{
 			name: "only scope id invalid - error",
 			req:  &types.SessionsRequest{ScopeId: "6332c1a4-foo1-bare-895b-invalid65cb6"},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [6332c1a4-foo1-bare-895b-invalid65cb6] into either a scope address (decoding bech32 failed: failed converting data to bytes: invalid character not part of charset: 45) or uuid (invalid UUID format)",
+			err:  "rpc error: code = InvalidArgument desc = could not parse [6332c1a4-foo1-bare-895b-invalid65cb6] into either a scope address (decoding bech32 failed: invalid character not part of charset: 45) or uuid (invalid UUID format)",
 		},
 		{
 			name:  "only scope id as uuid not found - empty",
@@ -274,12 +274,12 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		{
 			name: "only session id invalid - error",
 			req:  &types.SessionsRequest{SessionId: "not-a-valid-session-id"},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [not-a-valid-session-id] into a session address: decoding bech32 failed: invalid index of 1",
+			err:  "rpc error: code = InvalidArgument desc = could not parse [not-a-valid-session-id] into a session address: decoding bech32 failed: invalid separator index -1",
 		},
 		{
 			name: "only session id as uuid - error",
 			req:  &types.SessionsRequest{SessionId: unknownUUID.String()},
-			err:  fmt.Sprintf("rpc error: code = InvalidArgument desc = could not parse [%s] into a session address: decoding bech32 failed: invalid index of 1", unknownUUID),
+			err:  fmt.Sprintf("rpc error: code = InvalidArgument desc = could not parse [%s] into a session address: decoding bech32 failed: invalid separator index 35", unknownUUID),
 		},
 		{
 			name:       "only session id as addr not found - empty",
@@ -301,7 +301,7 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		{
 			name: "only record addr invalid - error",
 			req:  &types.SessionsRequest{RecordAddr: "not-a-valid-record-id"},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [not-a-valid-record-id] into a record address: decoding bech32 failed: invalid index of 1",
+			err:  "rpc error: code = InvalidArgument desc = could not parse [not-a-valid-record-id] into a record address: decoding bech32 failed: invalid separator index -1",
 		},
 		{
 			name: "only record addr not found - error",
@@ -327,7 +327,7 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		{
 			name: "scope id invalid session id ok - error",
 			req:  &types.SessionsRequest{ScopeId: "not-a-scope-id", SessionId: s.sessionID.String()},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [not-a-scope-id] into either a scope address (decoding bech32 failed: invalid index of 1) or uuid (invalid UUID length: 14)",
+			err:  "rpc error: code = InvalidArgument desc = could not parse [not-a-scope-id] into either a scope address (decoding bech32 failed: invalid separator index -1) or uuid (invalid UUID length: 14)",
 		},
 		{
 			name: "scope id as uuid exists session id invalid - error",
@@ -405,7 +405,7 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		{
 			name: "scope id exists record addr invalid - error",
 			req:  &types.SessionsRequest{ScopeId: s.scopeID.String(), RecordAddr: "invalid-record-addr"},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [invalid-record-addr] into a record address: decoding bech32 failed: invalid index of 1",
+			err:  "rpc error: code = InvalidArgument desc = could not parse [invalid-record-addr] into a record address: decoding bech32 failed: invalid separator index -1",
 		},
 		{
 			name: "scope id exists record addr wrong scope - error",
@@ -429,7 +429,7 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		{
 			name: "scope id invalid record name ok - error",
 			req:  &types.SessionsRequest{ScopeId: "illegitimate-scope", RecordName: s.recordName},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [illegitimate-scope] into either a scope address (decoding bech32 failed: invalid index of 1) or uuid (invalid UUID length: 18)",
+			err:  "rpc error: code = InvalidArgument desc = could not parse [illegitimate-scope] into either a scope address (decoding bech32 failed: invalid separator index -1) or uuid (invalid UUID length: 18)",
 		},
 		{
 			name: "scope id as uuid not found record name ok - error",
@@ -475,7 +475,7 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		{
 			name: "session id exists record addr invalid - error",
 			req:  &types.SessionsRequest{SessionId: s.sessionID.String(), RecordAddr: "yeah-not-a-record-addr"},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [yeah-not-a-record-addr] into a record address: decoding bech32 failed: invalid index of 1",
+			err:  "rpc error: code = InvalidArgument desc = could not parse [yeah-not-a-record-addr] into a record address: decoding bech32 failed: invalid separator index -1",
 		},
 		{
 			name: "session id exists record addr wrong scope - error",
@@ -506,12 +506,12 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		{
 			name: "session id invalid record name ok - error",
 			req:  &types.SessionsRequest{SessionId: "nopenope-nope-nope-nota-sessionuuidx", RecordName: s.recordName},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [nopenope-nope-nope-nota-sessionuuidx] into a session address: decoding bech32 failed: invalid index of 1",
+			err:  "rpc error: code = InvalidArgument desc = could not parse [nopenope-nope-nope-nota-sessionuuidx] into a session address: decoding bech32 failed: invalid separator index -1",
 		},
 		{
 			name: "session id as uuid record name ok - error",
 			req:  &types.SessionsRequest{SessionId: unknownUUID.String(), RecordName: s.recordName},
-			err:  fmt.Sprintf("rpc error: code = InvalidArgument desc = could not parse [%s] into a session address: decoding bech32 failed: invalid index of 1", unknownUUID),
+			err:  fmt.Sprintf("rpc error: code = InvalidArgument desc = could not parse [%s] into a session address: decoding bech32 failed: invalid separator index 35", unknownUUID),
 		},
 		{
 			name: "session id as addr not found record name ok - error",
@@ -541,7 +541,7 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		{
 			name: "record addr invalid record name ok - error",
 			req:  &types.SessionsRequest{RecordAddr: "abby-lane", RecordName: s.recordName},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [abby-lane] into a record address: decoding bech32 failed: invalid index of 1",
+			err:  "rpc error: code = InvalidArgument desc = could not parse [abby-lane] into a record address: decoding bech32 failed: invalid separator index -1",
 		},
 		{
 			name: "record addr exists record name wrong - error",
@@ -589,7 +589,7 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		{
 			name: "scope id invalid session id ok record name ok - error",
 			req:  &types.SessionsRequest{ScopeId: "nopescope", SessionId: s.sessionID.String(), RecordName: s.recordName},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [nopescope] into either a scope address (decoding bech32 failed: invalid index of 1) or uuid (invalid UUID length: 9)",
+			err:  "rpc error: code = InvalidArgument desc = could not parse [nopescope] into either a scope address (decoding bech32 failed: invalid separator index -1) or uuid (invalid UUID length: 9)",
 		},
 		{
 			name: "scope id exists session id invalid record name ok - error",
@@ -618,7 +618,7 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		{
 			name: "scope id exists record addr invalid record name ok - error",
 			req:  &types.SessionsRequest{ScopeId: s.scopeID.String(), RecordAddr: "kindofbadrecord", RecordName: s.recordName},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [kindofbadrecord] into a record address: decoding bech32 failed: invalid index of 1",
+			err:  "rpc error: code = InvalidArgument desc = could not parse [kindofbadrecord] into a record address: decoding bech32 failed: invalid separator index -1",
 		},
 		{
 			name: "scope id exists record addr exists record name wrong - error",
@@ -642,12 +642,12 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		{
 			name: "session id invalid record addr ok record name ok - error",
 			req:  &types.SessionsRequest{SessionId: "nopesess", RecordAddr: s.recordID.String(), RecordName: s.recordName},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [nopesess] into either a session address (decoding bech32 failed: invalid index of 1) or uuid (invalid UUID length: 8)",
+			err:  "rpc error: code = InvalidArgument desc = could not parse [nopesess] into either a session address (decoding bech32 failed: invalid separator index -1) or uuid (invalid UUID length: 8)",
 		},
 		{
 			name: "session id exists record addr invalid record name ok - error",
 			req:  &types.SessionsRequest{SessionId: s.sessionID.String(), RecordAddr: "incorrect-record-id", RecordName: s.recordName},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [incorrect-record-id] into a record address: decoding bech32 failed: invalid index of 1",
+			err:  "rpc error: code = InvalidArgument desc = could not parse [incorrect-record-id] into a record address: decoding bech32 failed: invalid separator index -1",
 		},
 		{
 			name: "session id exists record addr wrong scope record name ok - error",
@@ -671,17 +671,17 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		{
 			name: "scope id invalid session id ok record addr ok record name ok - error",
 			req:  &types.SessionsRequest{ScopeId: "negatoryscope", SessionId: s.sessionID.String(), RecordAddr: s.recordID.String(), RecordName: s.recordName},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [negatoryscope] into either a scope address (decoding bech32 failed: invalid index of 1) or uuid (invalid UUID length: 13)",
+			err:  "rpc error: code = InvalidArgument desc = could not parse [negatoryscope] into either a scope address (decoding bech32 failed: invalid separator index -1) or uuid (invalid UUID length: 13)",
 		},
 		{
 			name: "scope id exists session id invalid record addr ok record name ok - error",
 			req:  &types.SessionsRequest{ScopeId: s.scopeID.String(), SessionId: "negatorysession", RecordAddr: s.recordID.String(), RecordName: s.recordName},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [negatorysession] into either a session address (decoding bech32 failed: invalid index of 1) or uuid (invalid UUID length: 15)",
+			err:  "rpc error: code = InvalidArgument desc = could not parse [negatorysession] into either a session address (decoding bech32 failed: invalid separator index -1) or uuid (invalid UUID length: 15)",
 		},
 		{
 			name: "scope id exists session id exists record addr invalid record name ok - error",
 			req:  &types.SessionsRequest{ScopeId: s.scopeID.String(), SessionId: s.sessionID.String(), RecordAddr: "negatoryrecord", RecordName: s.recordName},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [negatoryrecord] into a record address: decoding bech32 failed: invalid index of 1",
+			err:  "rpc error: code = InvalidArgument desc = could not parse [negatoryrecord] into a record address: decoding bech32 failed: invalid separator index -1",
 		},
 		{
 			name: "scope id exists session id exists record addr exists record name wrong - error",
@@ -792,7 +792,7 @@ func (s *QueryServerTestSuite) TestRecordsQuery() {
 	s.EqualError(err, "rpc error: code = InvalidArgument desc = could not parse [foo] into either a scope address (decoding bech32 failed: invalid bech32 string length 3) or uuid (invalid UUID length: 3)")
 
 	_, err = queryClient.Records(gocontext.Background(), &types.RecordsRequest{ScopeId: "6332c1a4-foo1-bare-895b-invalid65cb6"})
-	s.EqualError(err, "rpc error: code = InvalidArgument desc = could not parse [6332c1a4-foo1-bare-895b-invalid65cb6] into either a scope address (decoding bech32 failed: failed converting data to bytes: invalid character not part of charset: 45) or uuid (invalid UUID format)")
+	s.EqualError(err, "rpc error: code = InvalidArgument desc = could not parse [6332c1a4-foo1-bare-895b-invalid65cb6] into either a scope address (decoding bech32 failed: invalid character not part of charset: 45) or uuid (invalid UUID format)")
 
 	// TODO: expand this to test new features/failures of the Records query.
 
