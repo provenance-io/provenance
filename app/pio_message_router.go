@@ -13,7 +13,7 @@ type PioMessageRouter struct {
 // Handler is the entry point
 func (m PioMessageRouter) Handler(msg sdk.Msg) baseapp.MsgServiceHandler {
 	if m.HandlerFn == nil {
-		panic("not expected to be called")
+		panic("PioMessageRouter Handler function not expected to be called")
 	}
 	return m.HandlerFn(msg)
 }
