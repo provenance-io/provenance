@@ -7,11 +7,12 @@ import (
 	"fmt"
 	"math/rand"
 
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
+
 	"github.com/provenance-io/provenance/x/msgfees/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
 // Simulation parameter constants
@@ -37,9 +38,9 @@ func RandomizedGenState(simState *module.SimulationState) {
 			FloorGasPrice: sdk.Coin{Amount: sdk.NewIntFromUint64(floorGasPrice), Denom: "blah"},
 		},
 		MsgFees: []types.MsgFee{
-			// changed it to some obscure vesting type since sim tests as they are written will fail if a message actually has a fee on it :heavysigh:
-			//  however it does help create an app with a genesis state so not totally useless.
-			types.NewMsgFee(sdk.MsgTypeURL(&vestingtypes.MsgCreateVestingAccount{}), sdk.NewCoin("stake", sdk.NewInt(1))),
+			// Adding fees for create marker with asking for a large number of stake to make sure that
+			// the call is failed without the additional fee provided.
+			types.NewMsgFee(sdk.MsgTypeURL(&markertypes.MsgAddMarkerRequest{}), sdk.NewCoin("stake", sdk.NewInt(100000000000000))),
 		},
 	}
 
