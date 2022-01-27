@@ -41,7 +41,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Add check for `authz` grants when there are missing signatures in `metadata` transactions [#516](https://github.com/provenance-io/provenance/issues/516)
 * Add support for publishing Java and Kotlin Protobuf compiled sources to Maven Central [#562](https://github.com/provenance-io/provenance/issues/562)
+* Adds support for creating root name governance proposals from the cli [#599](https://github.com/provenance-io/provenance/issues/599)
 * Adding of the msg based fee module [#354](https://github.com/provenance-io/provenance/issues/354)
+* Upgrade provenance to 0.45 cosmos sdk release [#607](https://github.com/provenance-io/provenance/issues/607)
 
 ### Improvements
 
@@ -53,6 +55,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Removed extraneous Metadata index deletes/rewrites [#543](https://github.com/provenance-io/provenance/issues/543)
 * Delete empty sessions when the last record is updated to a new session [#480](https://github.com/provenance-io/provenance/issues/480)
 * Refactor the migration to be faster and have more log output [PR 586](https://github.com/provenance-io/provenance/pull/586)
+* Capture all included protobufs into release zip file [#556](https://github.com/provenance-io/provenance/issues/556)
 
 ### Bug Fixes
 
