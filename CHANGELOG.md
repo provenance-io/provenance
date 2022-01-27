@@ -54,7 +54,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Removed extraneous Metadata index deletes/rewrites [#543](https://github.com/provenance-io/provenance/issues/543)
 * Delete empty sessions when the last record is updated to a new session [#480](https://github.com/provenance-io/provenance/issues/480)
 * Refactor the migration to be faster and have more log output [PR 586](https://github.com/provenance-io/provenance/pull/586)
-* Capture all included protobufs into release zip file [#556](https://github.com/provenance-io/provenance/issues/556
+* Capture all included protobufs into release zip file [#556](https://github.com/provenance-io/provenance/issues/556)
 * Limit the maximum attribute value length to 1000 (down from 10,000 currently) in the `green` upgrade [#616](https://github.com/provenance-io/provenance/issues/616)
 * Add additional fees for specified operations in the `green` upgrade [#616](https://github.com/provenance-io/provenance/issues/616)
   * `provenance.name.v1.MsgBindNameRequest` 10 hash (10,000,000,000 nhash)
