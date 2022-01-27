@@ -447,6 +447,7 @@ func New(
 	encoderRegistry.RegisterEncoder(nametypes.RouterKey, namewasm.Encoder)
 	encoderRegistry.RegisterEncoder(attributetypes.RouterKey, attributewasm.Encoder)
 	encoderRegistry.RegisterEncoder(markertypes.RouterKey, markerwasm.Encoder)
+	encoderRegistry.RegisterEncoder(metadatatypes.RouterKey, metadatawasm.Encoder)
 
 	// Init CosmWasm query integrations
 	querierRegistry := provwasm.NewQuerierRegistry()
