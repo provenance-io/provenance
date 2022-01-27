@@ -437,10 +437,10 @@ proto-format:
 		find ./ -not -path "./third_party/*" -name *.proto -exec clang-format -i {} \; ; fi
 
 proto-lint:
-	@$(DOCKER_BUF) lint --error-format=json
+	@$(DOCKER_BUF) lint proto --error-format=json
 
 proto-check-breaking:
-	@$(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=main
+	@$(DOCKER_BUF) breaking proto --against $(HTTPS_GIT)#branch=main
 
 TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/v0.34.x/proto/tendermint
 GOGO_PROTO_URL   = https://raw.githubusercontent.com/regen-network/protobuf/cosmos

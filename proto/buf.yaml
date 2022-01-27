@@ -1,11 +1,19 @@
-version: v1beta1
-build:
-  roots:
-    - proto
-    - third_party/proto
-  excludes:
-    - third_party/proto/google/protobuf
-    - proto/provenance/metadata/v0        # exclude legacy protos from quality checks
+version: v1
+name: buf.build/provenance-io/provenance
+deps:
+  - buf.build/cosmos/cosmos-sdk
+  - buf.build/googleapis/googleapis
+breaking:
+  use:
+    - FILE
+  except:
+    - FIELD_NO_DELETE
+  ignore:
+    - tendermint
+    - gogoproto
+    - cosmos_proto
+    - google
+    - confio
 lint:
   use:
     - DEFAULT
@@ -35,14 +43,3 @@ lint:
       - provenance/marker/v1/si.proto
     ENUM_VALUE_PREFIX:
       - provenance/metadata/v1/p8e/p8e.proto
-breaking:
-  use:
-    - FILE
-  except:
-    - FIELD_NO_DELETE
-  ignore:
-    - tendermint
-    - gogoproto
-    - cosmos_proto
-    - google
-    - confio
