@@ -37,6 +37,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+## [v1.8.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.8.0-rc1) - 2022-01-28
+
 ### Features
 
 * Add check for `authz` grants when there are missing signatures in `metadata` transactions [#516](https://github.com/provenance-io/provenance/issues/516)
