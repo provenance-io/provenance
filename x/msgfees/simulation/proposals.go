@@ -5,10 +5,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	simappparams "github.com/provenance-io/provenance/app/params"
+	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/msgfees/keeper"
 	"github.com/provenance-io/provenance/x/msgfees/types"
 )
@@ -38,20 +38,20 @@ func ProposalContents(k keeper.Keeper) []simtypes.WeightedProposalContent {
 // SimulateCreateAddMsgFeesProposal generates random additional fee with AddMsgFeesProposal
 func SimulateCreateAddMsgFeesProposal(k keeper.Keeper) simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
-		msgFeeExists, err := k.GetMsgFee(ctx, sdk.MsgTypeURL(&banktypes.MsgSend{}))
+		msgFeeExists, err := k.GetMsgFee(ctx, sdk.MsgTypeURL(&attributetypes.MsgAddAttributeRequest{}))
 		check(err)
 		if msgFeeExists == nil {
 			return types.NewAddMsgFeeProposal(
 				simtypes.RandStringOfLength(r, 10),
 				simtypes.RandStringOfLength(r, 100),
-				sdk.MsgTypeURL(&banktypes.MsgSend{}),
+				sdk.MsgTypeURL(&attributetypes.MsgAddAttributeRequest{}),
 				sdk.NewCoin("hotdog", sdk.NewInt(r.Int63n(100000000))),
 			)
 		}
 		return types.NewUpdateMsgFeeProposal(
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 100),
-			sdk.MsgTypeURL(&banktypes.MsgSend{}),
+			sdk.MsgTypeURL(&attributetypes.MsgAddAttributeRequest{}),
 			sdk.NewCoin("hotdog", sdk.NewInt(r.Int63n(100000000))),
 		)
 	}
@@ -60,13 +60,13 @@ func SimulateCreateAddMsgFeesProposal(k keeper.Keeper) simtypes.ContentSimulator
 // SimulateCreateRemoveMsgFeesProposal generates random removal of additional fee with RemoveMsgFeesProposal
 func SimulateCreateRemoveMsgFeesProposal(k keeper.Keeper) simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
-		msgFeeExists, err := k.GetMsgFee(ctx, sdk.MsgTypeURL(&banktypes.MsgSend{}))
+		msgFeeExists, err := k.GetMsgFee(ctx, sdk.MsgTypeURL(&attributetypes.MsgAddAttributeRequest{}))
 		check(err)
 		if msgFeeExists != nil {
 			return types.NewRemoveMsgFeeProposal(
 				simtypes.RandStringOfLength(r, 10),
 				simtypes.RandStringOfLength(r, 100),
-				sdk.MsgTypeURL(&banktypes.MsgSend{}),
+				sdk.MsgTypeURL(&attributetypes.MsgAddAttributeRequest{}),
 			)
 		}
 

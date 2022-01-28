@@ -433,7 +433,6 @@ func New(
 	)
 
 	// Init CosmWasm module
-	var wasmRouter = bApp.Router()
 	wasmDir := filepath.Join(homePath, "data", "wasm")
 
 	wasmWrap := WasmWrapper{Wasm: wasm.DefaultWasmConfig()}
@@ -460,6 +459,10 @@ func New(
 	// Add the staking feature and indicate that provwasm contracts can be run on this chain.
 	supportedFeatures := "staking,provenance,stargate"
 
+	wasmMessageRouter := MessageRouterFunc(func(msg sdk.Msg) baseapp.MsgServiceHandler {
+		return pioMsgFeesRouter.Handler(msg)
+	})
+
 	// The last arguments contain custom message handlers, and custom query handlers,
 	// to allow smart contracts to use provenance modules.
 	app.WasmKeeper = wasm.NewKeeper(
@@ -474,8 +477,7 @@ func New(
 		&app.IBCKeeper.PortKeeper,
 		scopedWasmKeeper,
 		app.TransferKeeper,
-		wasmRouter,
-		app.MsgServiceRouter(),
+		wasmMessageRouter,
 		app.GRPCQueryRouter(),
 		wasmDir,
 		wasmConfig,
