@@ -244,20 +244,7 @@ func SimulateMsgStoreContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKe
 			WASMByteCode: code,
 		}
 
-
-
 		msg2, ops, _, instantiateErr := Dispatch(r, app, ctx, ak, bk, feebucket, chainID, msg, nil)
-
-		fmt.Println("Store Wasm Code:")
-		//var response types.MsgStoreCodeResponse
-		//err2 := response.Unmarshal(msg2.Msg)
-		//
-		//if err2 != nil {
-		//	panic(err2)
-		//}
-
-		//fmt.Println(response)
-		//fmt.Println("--------")
 
 		return msg2, ops, instantiateErr
 	}
@@ -290,12 +277,9 @@ func SimulateMsgInitiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.Vie
 
 		msg2, ops, sdkResponse, instantiateErr := Dispatch(r, app, ctx, ak, bk, feebucket, chainID, msg, nil)
 
+		// get the contract address for use when executing the contract
 		var protoResult sdk.TxMsgData
 		err3 := proto.Unmarshal(sdkResponse.Data, &protoResult)
-
-		fmt.Println("ProtoResult: ")
-		fmt.Println(protoResult)
-		fmt.Println("------------")
 
 		if err3 != nil {
 			panic(err3)
@@ -306,9 +290,6 @@ func SimulateMsgInitiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.Vie
 
 		if err4 == nil {
 			*contractAddr = pInstResp.Address
-			fmt.Println("CodeID:")
-			fmt.Println(pInstResp.Address)
-			fmt.Println("---------------")
 		}
 
 
@@ -316,38 +297,11 @@ func SimulateMsgInitiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.Vie
 	}
 }
 
-// We need to figure out how to get the contract address after it is installed?
-// Or could the installation process have gone wrong?
-// What has kept this from working properly??
 func SimulateMsgExecuteContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, consumer simtypes.Account, contractAddr *string) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		amount, err := sdk.ParseCoinsNormalized(fmt.Sprintf("100%s", denom))
-
-		fmt.Println("ContactAddr: ")
-		fmt.Println(contractAddr)
-		fmt.Println("----------")
-
-		//var contractAddr sdk.AccAddress
-		//
-		//fmt.Println("before iteration:")
-		//fmt.Println(len(accs))
-		//fmt.Println("---------------------------")
-		//fmt.Println(keeper)
-		//fmt.Println("---------------------------")
-		//
-		//keeper.IterateContractInfo(ctx, func(addr sdk.AccAddress, contract types.ContractInfo) bool {
-		//	fmt.Println("looping")
-		//	contractAddr = addr
-		//	// return true to stop iteration early as we only want first contract
-		//	return false
-		//})
-		//
-		//fmt.Println("hello: ", contractAddr)
-		//
-		//fmt.Println("Hello world!")
-		//fmt.Println(err)
 
 		if err != nil {
 			panic(err)
