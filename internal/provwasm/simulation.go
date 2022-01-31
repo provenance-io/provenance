@@ -14,6 +14,7 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	"github.com/golang/protobuf/proto"
 	simappparams "github.com/provenance-io/provenance/app/params"
 	markersim "github.com/provenance-io/provenance/x/marker/simulation"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -39,11 +40,11 @@ type ProvwasmWrapper struct {
 	keeper wasm.Keeper
 }
 
-func NewProvwasmWrapper(cdc codec.Codec, keeper wasm.Keeper, validatorSetSource keeper.ValidatorSetSource, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper) *ProvwasmWrapper {
+func NewProvwasmWrapper(cdc codec.Codec, keeper *wasm.Keeper, validatorSetSource keeper.ValidatorSetSource, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper) *ProvwasmWrapper {
 
 	return &ProvwasmWrapper{
 		cdc: cdc,
-		wasm: wasm.NewAppModule(cdc, &keeper, validatorSetSource),
+		wasm: wasm.NewAppModule(cdc, keeper, validatorSetSource),
 		ak: ak,
 		bk: bk,
 		nk: nk,
@@ -161,8 +162,10 @@ func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper,
 		future = append(future, simtypes.FutureOperation{Op: SimulateFinalizeOrActivateMarker(ak, bk, false, node), BlockHeight: 5})
 		future = append(future, simtypes.FutureOperation{Op: SimulateMsgWithdrawRequest(ak, bk, node, consumer), BlockHeight: 6})
 		future = append(future, simtypes.FutureOperation{Op: SimulateMsgStoreContract(ak, bk, feebucket), BlockHeight: 6})
-		future = append(future, simtypes.FutureOperation{Op: SimulateMsgInitiateContract(ak, bk, feebucket, merchant, parent.Name, nk), BlockHeight: 7})
-		future = append(future, simtypes.FutureOperation{Op: SimulateMsgExecuteContract(ak, bk, keeper, consumer), BlockHeight: 8})
+
+		var contractAddr string
+		future = append(future, simtypes.FutureOperation{Op: SimulateMsgInitiateContract(ak, bk, feebucket, merchant, parent.Name, &contractAddr), BlockHeight: 7})
+		future = append(future, simtypes.FutureOperation{Op: SimulateMsgExecuteContract(ak, bk, consumer, &contractAddr), BlockHeight: 8})
 
 		return op, future, err
 	}
@@ -241,16 +244,40 @@ func SimulateMsgStoreContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKe
 			WASMByteCode: code,
 		}
 
-		return Dispatch(r, app, ctx, ak, bk, feebucket, chainID, msg, nil)
+
+
+		msg2, ops, _, instantiateErr := Dispatch(r, app, ctx, ak, bk, feebucket, chainID, msg, nil)
+
+		fmt.Println("Store Wasm Code:")
+		//var response types.MsgStoreCodeResponse
+		//err2 := response.Unmarshal(msg2.Msg)
+		//
+		//if err2 != nil {
+		//	panic(err2)
+		//}
+
+		//fmt.Println(response)
+		//fmt.Println("--------")
+
+		return msg2, ops, instantiateErr
 	}
 }
 
-func SimulateMsgInitiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, feebucket, merchant simtypes.Account, name string, nk namekeeper.Keeper) simtypes.Operation {
+func SimulateMsgInitiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, feebucket, merchant simtypes.Account, name string, contractAddr *string) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		//m := fmt.Sprintf(`{ "contract_name": "%s.%s.%s", "purchase_denom": "%s", "merchant_address": "%s", "fee_percent": "0.10" }`, label, namePrefix, name, denom, merchant.Address.String())
 		m := fmt.Sprintf(`{ "contract_name": "%s.%s", "purchase_denom": "%s", "merchant_address": "%s", "fee_percent": "0.10" }`, label, name, denom, merchant.Address.String())
+
+		// hmm, we currently have access to 0 funds...
+		amountStr := fmt.Sprintf("0%s", denom)
+		amount, err := sdk.ParseCoinsNormalized(amountStr)
+
+		if err != nil {
+			fmt.Println("Err on Parse Coins Normalized")
+			panic(err)
+		}
 
 		msg := &types.MsgInstantiateContract{
 			Sender: feebucket.Address.String(),
@@ -258,32 +285,70 @@ func SimulateMsgInitiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.Vie
 			CodeID: 1,
 			Label: label,
 			Msg: []byte(m),
+			Funds: amount, // do we need funds?
 		}
 
-		return Dispatch(r, app, ctx, ak, bk, feebucket, chainID, msg, nil)
+		msg2, ops, sdkResponse, instantiateErr := Dispatch(r, app, ctx, ak, bk, feebucket, chainID, msg, nil)
+
+		var protoResult sdk.TxMsgData
+		err3 := proto.Unmarshal(sdkResponse.Data, &protoResult)
+
+		fmt.Println("ProtoResult: ")
+		fmt.Println(protoResult)
+		fmt.Println("------------")
+
+		if err3 != nil {
+			panic(err3)
+		}
+
+		var pInstResp types.MsgInstantiateContractResponse
+		err4 := pInstResp.Unmarshal(protoResult.Data[0].Data)
+
+		if err4 == nil {
+			*contractAddr = pInstResp.Address
+			fmt.Println("CodeID:")
+			fmt.Println(pInstResp.Address)
+			fmt.Println("---------------")
+		}
+
+
+		return msg2, ops, instantiateErr
 	}
 }
 
-func SimulateMsgExecuteContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, keeper wasm.Keeper, consumer simtypes.Account) simtypes.Operation {
+// We need to figure out how to get the contract address after it is installed?
+// Or could the installation process have gone wrong?
+// What has kept this from working properly??
+func SimulateMsgExecuteContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, consumer simtypes.Account, contractAddr *string) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		amount, err := sdk.ParseCoinsNormalized(fmt.Sprintf("100%s", denom))
 
-		var contractAddr sdk.AccAddress
-		fmt.Println("before iteration:")
-		fmt.Println(keeper)
-		keeper.IterateContractInfo(ctx, func(addr sdk.AccAddress, contract types.ContractInfo) bool {
-			fmt.Println("looping")
-			contractAddr = addr
-			// return true to stop iteration early as we only want first contract
-			return true
-		})
+		fmt.Println("ContactAddr: ")
+		fmt.Println(contractAddr)
+		fmt.Println("----------")
 
-		fmt.Println("hello: ", contractAddr)
+		//var contractAddr sdk.AccAddress
+		//
+		//fmt.Println("before iteration:")
+		//fmt.Println(len(accs))
+		//fmt.Println("---------------------------")
+		//fmt.Println(keeper)
+		//fmt.Println("---------------------------")
+		//
+		//keeper.IterateContractInfo(ctx, func(addr sdk.AccAddress, contract types.ContractInfo) bool {
+		//	fmt.Println("looping")
+		//	contractAddr = addr
+		//	// return true to stop iteration early as we only want first contract
+		//	return false
+		//})
+		//
+		//fmt.Println("hello: ", contractAddr)
+		//
+		//fmt.Println("Hello world!")
+		//fmt.Println(err)
 
-		fmt.Println("Hello world!")
-		fmt.Println(err)
 		if err != nil {
 			panic(err)
 		}
@@ -291,11 +356,12 @@ func SimulateMsgExecuteContract(ak authkeeper.AccountKeeperI, bk bankkeeper.View
 		msg := &types.MsgExecuteContract{
 			Sender: consumer.Address.String(),
 			Funds: amount,
-			Contract: contractAddr.String(),
+			Contract: *contractAddr,
 			Msg: []byte("{\"purchase\":{\"id\":\"12345\"}}"),
 		}
 
-		return Dispatch(r, app, ctx, ak, bk, consumer, chainID, msg, nil)
+		msg2, ops, _, err2 := Dispatch(r, app, ctx, ak, bk, consumer, chainID, msg, nil)
+		return msg2, ops, err2
 	}
 }
 
@@ -316,6 +382,7 @@ func Dispatch(
 ) (
 	simtypes.OperationMsg,
 	[]simtypes.FutureOperation,
+	*sdk.Result,
 	error,
 ) {
 	account := ak.GetAccount(ctx, from.Address)
@@ -342,10 +409,10 @@ func Dispatch(
 		panic(err)
 	}
 
-	_, _, err = app.Deliver(txGen.TxEncoder(), tx)
-	if err != nil {
-		panic(err)
+	_, sdkResponse, err2 := app.Deliver(txGen.TxEncoder(), tx)
+	if err2 != nil {
+		panic(err2)
 	}
 
-	return simtypes.NewOperationMsg(msg, true, "", &codec.ProtoCodec{}), futures, nil
+	return simtypes.NewOperationMsg(msg, true, "", &codec.ProtoCodec{}), futures, sdkResponse, nil
 }
