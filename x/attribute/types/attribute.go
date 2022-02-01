@@ -4,7 +4,9 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	fmt "fmt"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	"math/big"
 	"net/url"
 	"strings"
@@ -40,7 +42,7 @@ func (a Attribute) Hash() []byte {
 	return sum[:]
 }
 
-// ValidateBascic ensures an attribute is valid.
+// ValidateBasic ensures an attribute is valid.
 func (a Attribute) ValidateBasic() error {
 	if strings.TrimSpace(a.Name) == "" {
 		return fmt.Errorf("invalid name: empty")
@@ -49,9 +51,9 @@ func (a Attribute) ValidateBasic() error {
 		return fmt.Errorf("invalid value: nil")
 	}
 
-	_, err := sdk.AccAddressFromBech32(a.Address)
+	err := validateAttributeAddress(a.Address)
 	if err != nil {
-		return fmt.Errorf("invalid attribute address: %s", a.Address)
+		return fmt.Errorf("invalid attribute address: %w", err)
 	}
 
 	if !ValidAttributeType(a.AttributeType) {
@@ -61,6 +63,25 @@ func (a Attribute) ValidateBasic() error {
 		return fmt.Errorf("invalid attribute value for assigned type: %s", a.AttributeType)
 	}
 	return nil
+}
+
+// validateAttributeAddress validates that the provide string is a valid address for an attribute.
+// Failures:
+//  * The provided address is empty
+//  * The provided address is neither an account address nor scope metadata address.
+func validateAttributeAddress(addr string) error {
+	if len(strings.TrimSpace(addr)) == 0 {
+		return errors.New("must not be empty")
+	}
+	_, accErr := sdk.AccAddressFromBech32(addr)
+	if accErr == nil {
+		return nil
+	}
+	mdAddr, mdErr := metadatatypes.MetadataAddressFromBech32(addr)
+	if mdErr == nil && mdAddr.IsScopeAddress() {
+		return nil
+	}
+	return fmt.Errorf("must be either an account address or scope metadata address: %q", addr)
 }
 
 // Determines whether a byte array value is valid for the given type.
