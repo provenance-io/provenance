@@ -1,4 +1,4 @@
-name: buf-release
+name: buf-push
 on: pull_request
 jobs:
   build:
@@ -18,7 +18,7 @@ jobs:
         with:
           input: 'third_party/proto'
           # The 'main' branch of the GitHub repository that defines the module.
-          against: 'https://github.com/provenance-io/provenance.git#branch=main'
+          against: 'buf.build/provenance-io/third-party'
       - uses: bufbuild/buf-push-action@v1
         with:
           input: 'proto'
