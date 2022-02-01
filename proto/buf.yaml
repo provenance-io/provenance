@@ -1,19 +1,22 @@
 version: v1
 name: buf.build/provenance-io/provenance
 deps:
-  - buf.build/cosmos/cosmos-sdk
-  - buf.build/googleapis/googleapis
+  - buf.build/provenance-io/third-party
 breaking:
   use:
     - FILE
   except:
-    - FIELD_NO_DELETE
+    - FILE_NO_DELETE
   ignore:
-    - tendermint
-    - gogoproto
-    - cosmos_proto
-    - google
     - confio
+    - cosmos
+    - cosmos_proto
+    - cosmowasm
+    - gogoproto
+    - google
+    - ibc
+    - tendermint
+    - proofs.proto
 lint:
   use:
     - DEFAULT
@@ -26,11 +29,14 @@ lint:
     - PACKAGE_VERSION_SUFFIX
     - RPC_REQUEST_STANDARD_NAME
   ignore:
-    - tendermint
-    - gogoproto
+    - cosmos
     - cosmos_proto
+    - cosmowasm
+    - gogoproto
     - google
-    - confio
+    - ibc
+    - tendermint
+    - proofs.proto
   ignore_only:
     COMMENT_MESSAGE:
       - provenance/metadata/v1/p8e/p8e.proto
@@ -43,3 +49,9 @@ lint:
       - provenance/marker/v1/si.proto
     ENUM_VALUE_PREFIX:
       - provenance/metadata/v1/p8e/p8e.proto
+    SYNTAX_SPECIFIED:
+      - provenance/marker/v1/authz.proto
+    IMPORT_USED:
+      - provenance/msgfees/v1/msgfees.proto
+      - provenance/msgfees/v1/proposals.proto
+      - provenance/msgfees/v1/query.proto
