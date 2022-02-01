@@ -65,6 +65,29 @@ func (a Attribute) ValidateBasic() error {
 	return nil
 }
 
+// GetAddressBytes Gets the bytes of this attribute's address.
+// If the address is neither an account address nor metadata address (or is an empty string), an empty byte slice is returned.
+func (a Attribute) GetAddressBytes() []byte {
+	return GetAttributeAddressBytes(a.Address)
+}
+
+// GetAttributeAddressBytes Gets the bytes of an address used in an attribute.
+// If the address is neither an account address nor metadata address (or is an empty string), an empty byte slice is returned.
+func GetAttributeAddressBytes(addr string) []byte {
+	if len(strings.TrimSpace(addr)) == 0 {
+		return []byte{}
+	}
+	accAddr, accErr := sdk.AccAddressFromBech32(addr)
+	if accErr == nil {
+		return accAddr.Bytes()
+	}
+	mdAddr, mdErr := metadatatypes.MetadataAddressFromBech32(addr)
+	if mdErr == nil {
+		return mdAddr.Bytes()
+	}
+	return []byte{}
+}
+
 // ValidateAttributeAddress validates that the provide string is a valid address for an attribute.
 // Failures:
 //  * The provided address is empty
