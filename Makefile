@@ -437,20 +437,15 @@ proto-format:
 		find ./ -not -path "./third_party/*" -name *.proto -exec clang-format -i {} \; ; fi
 
 proto-lint:
-	@$(DOCKER_BUF) lint proto --error-format=json
+	@$(DOCKER_BUF) lint --error-format=json
 
 proto-check-breaking:
 	@$(DOCKER_BUF) breaking proto --against $(HTTPS_GIT)#branch=main --error-format=json
-#	@$(DOCKER_BUF) breaking third_party/proto --against buf.build/provenance-io/third-party --error-format=json
-
-proto-buf-push:
-	@$(DOCKER_BUF) push proto
-	@$(DOCKER_BUF) push third_party/proto
 
 proto-update-deps:
 	sh ./scripts/proto-update-deps.sh
 
-.PHONY: proto-all proto-gen proto-format proto-gen-any proto-lint proto-check-breaking proto-buf-push proto-update-deps
+.PHONY: proto-all proto-gen proto-format proto-gen-any proto-lint proto-check-breaking proto-update-deps
 
 
 ##############################
