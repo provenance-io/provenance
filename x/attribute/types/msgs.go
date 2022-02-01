@@ -24,8 +24,14 @@ var (
 )
 
 // NewMsgAddAttributeRequest creates a new add attribute message
-func NewMsgAddAttributeRequest(account sdk.AccAddress, owner sdk.AccAddress, name string, attributeType AttributeType, value []byte) *MsgAddAttributeRequest { // nolint:interfacer
-	return &MsgAddAttributeRequest{Account: account.String(), Name: strings.ToLower(strings.TrimSpace(name)), Owner: owner.String(), AttributeType: attributeType, Value: value}
+func NewMsgAddAttributeRequest(account string, owner sdk.AccAddress, name string, attributeType AttributeType, value []byte) *MsgAddAttributeRequest { // nolint:interfacer
+	return &MsgAddAttributeRequest{
+		Account: account,
+		Name: strings.ToLower(strings.TrimSpace(name)),
+		Owner: owner.String(),
+		AttributeType: attributeType,
+		Value: value,
+	}
 }
 
 // Route returns the name of the module.

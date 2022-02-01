@@ -51,7 +51,7 @@ func (a Attribute) ValidateBasic() error {
 		return fmt.Errorf("invalid value: nil")
 	}
 
-	err := validateAttributeAddress(a.Address)
+	err := ValidateAttributeAddress(a.Address)
 	if err != nil {
 		return fmt.Errorf("invalid attribute address: %w", err)
 	}
@@ -65,11 +65,11 @@ func (a Attribute) ValidateBasic() error {
 	return nil
 }
 
-// validateAttributeAddress validates that the provide string is a valid address for an attribute.
+// ValidateAttributeAddress validates that the provide string is a valid address for an attribute.
 // Failures:
 //  * The provided address is empty
 //  * The provided address is neither an account address nor scope metadata address.
-func validateAttributeAddress(addr string) error {
+func ValidateAttributeAddress(addr string) error {
 	if len(strings.TrimSpace(addr)) == 0 {
 		return errors.New("must not be empty")
 	}

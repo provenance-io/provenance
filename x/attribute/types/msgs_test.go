@@ -21,15 +21,16 @@ var (
 // test ValidateBasic for TestMsgAddAttribute
 func TestMsgAddAttribute(t *testing.T) {
 	tests := []struct {
-		account, owner     sdk.AccAddress
+		account   string
+		owner     sdk.AccAddress
 		name, proposalType string
 		proposalValue      string
 		expectPass         bool
 	}{
-		{nil, addrs[1], "test", "string", "nil owner", false},
-		{addrs[0], nil, "test", "string", "nil account", false},
-		{nil, nil, "test", "string", "nil owner and account", false},
-		{addrs[0], addrs[1], "test", "string", "valid attribute", true},
+		{"", addrs[1], "test", "string", "nil owner", false},
+		{addrs[0].String(), nil, "test", "string", "nil account", false},
+		{"", nil, "test", "string", "nil owner and account", false},
+		{addrs[0].String(), addrs[1], "test", "string", "valid attribute", true},
 	}
 
 	for i, tc := range tests {

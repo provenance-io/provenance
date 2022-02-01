@@ -53,9 +53,11 @@ Refer to %s tx name bind --help for more information on how to do this.`, versio
 			}
 
 			name := args[0]
-			account, err := sdk.AccAddressFromBech32(args[1])
+			account := args[1]
+
+			err = types.ValidateAttributeAddress(account)
 			if err != nil {
-				return fmt.Errorf("account address must be a Bech32 string: %w", err)
+				return err
 			}
 			attributeType, err := types.AttributeTypeFromString(strings.TrimSpace(args[2]))
 			if err != nil {
