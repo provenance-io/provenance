@@ -133,7 +133,7 @@ func (s HandlerTestSuite) TestMsgUpdateAttributeRequest() {
 		{
 			"should successfully update attribute",
 			types.NewMsgUpdateAttributeRequest(
-				s.user1Addr,
+				s.user1,
 				s.user1Addr, "example.name",
 				[]byte("value"), []byte("1"),
 				types.AttributeType_String,

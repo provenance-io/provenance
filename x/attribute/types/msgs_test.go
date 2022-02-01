@@ -55,7 +55,8 @@ func TestMsgAddAttribute(t *testing.T) {
 // test ValidateBasic for TestMsgUpdateAttribute
 func TestMsgUpdateAttribute(t *testing.T) {
 	tests := []struct {
-		account, owner sdk.AccAddress
+		account        string
+		owner          sdk.AccAddress
 		name           string
 		originalValue  []byte
 		originalType   AttributeType
@@ -64,9 +65,9 @@ func TestMsgUpdateAttribute(t *testing.T) {
 		expectPass     bool
 		expectedError  string
 	}{
-		{addrs[0], addrs[1], "example", []byte("original"), AttributeType_String, []byte("update"), AttributeType_Bytes, true, ""},
-		{nil, addrs[1], "example", []byte("original"), AttributeType_String, []byte("update"), AttributeType_Bytes, false, ""},
-		{addrs[0], nil, "example", []byte(""), AttributeType_String, []byte("update"), AttributeType_Bytes, false, ""},
+		{addrs[0].String(), addrs[1], "example", []byte("original"), AttributeType_String, []byte("update"), AttributeType_Bytes, true, ""},
+		{"", addrs[1], "example", []byte("original"), AttributeType_String, []byte("update"), AttributeType_Bytes, false, ""},
+		{addrs[0].String(), nil, "example", []byte(""), AttributeType_String, []byte("update"), AttributeType_Bytes, false, ""},
 	}
 
 	for _, tc := range tests {

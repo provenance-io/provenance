@@ -100,9 +100,11 @@ func NewUpdateAccountAttributeCmd() *cobra.Command {
 			}
 
 			name := args[0]
-			account, err := sdk.AccAddressFromBech32(args[1])
+			account := args[1]
+
+			err = types.ValidateAttributeAddress(account)
 			if err != nil {
-				return fmt.Errorf("account address must be a Bech32 string: %w", err)
+				return err
 			}
 			origAttributeType, err := types.AttributeTypeFromString(strings.TrimSpace(args[2]))
 			if err != nil {

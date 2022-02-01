@@ -76,9 +76,9 @@ func (msg MsgAddAttributeRequest) String() string {
 }
 
 // NewMsgUpdateAttributeRequest creates a new add attribute message
-func NewMsgUpdateAttributeRequest(account sdk.AccAddress, owner sdk.AccAddress, name string, originalValue []byte, updateValue []byte, origAttrType AttributeType, updatedAttrType AttributeType) *MsgUpdateAttributeRequest { // nolint:interfacer
+func NewMsgUpdateAttributeRequest(account string, owner sdk.AccAddress, name string, originalValue []byte, updateValue []byte, origAttrType AttributeType, updatedAttrType AttributeType) *MsgUpdateAttributeRequest { // nolint:interfacer
 	return &MsgUpdateAttributeRequest{
-		Account:               account.String(),
+		Account:               account,
 		Name:                  strings.ToLower(strings.TrimSpace(name)),
 		Owner:                 owner.String(),
 		OriginalValue:         originalValue,

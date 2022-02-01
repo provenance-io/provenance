@@ -149,7 +149,7 @@ func SimulateMsgUpdateAttribute(k keeper.Keeper, ak authkeeper.AccountKeeperI, b
 		t := types.AttributeType(r.Intn(9))
 		simAccount, _ := simtypes.FindAccount(accs, mustGetAddress(ownerAddress))
 		msg := types.NewMsgUpdateAttributeRequest(
-			mustGetAddress(randomAttribute.GetAddress()),
+			randomAttribute.GetAddress(),
 			mustGetAddress(ownerAddress),
 			randomAttribute.Name,
 			randomAttribute.Value,
