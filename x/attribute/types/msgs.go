@@ -38,20 +38,13 @@ func (msg MsgAddAttributeRequest) Type() string { return TypeMsgAddAttribute }
 
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgAddAttributeRequest) ValidateBasic() error {
-	if len(msg.Account) == 0 {
-		return fmt.Errorf("empty account address")
-	}
-	accAddr, err := sdk.AccAddressFromBech32(msg.Account)
-	if err != nil {
-		return err
-	}
 	if len(msg.Owner) == 0 {
 		return fmt.Errorf("empty owner address")
 	}
 	if _, err := sdk.AccAddressFromBech32(msg.Owner); err != nil {
 		return err
 	}
-	a := NewAttribute(msg.Name, accAddr, msg.AttributeType, msg.Value)
+	a := NewAttribute(msg.Name, msg.Account, msg.AttributeType, msg.Value)
 	return a.ValidateBasic()
 }
 
@@ -99,20 +92,13 @@ func (msg MsgUpdateAttributeRequest) Type() string { return TypeMsgUpdateAttribu
 
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgUpdateAttributeRequest) ValidateBasic() error {
-	if len(msg.Account) == 0 {
-		return fmt.Errorf("empty account address")
-	}
-	accAddr, err := sdk.AccAddressFromBech32(msg.Account)
-	if err != nil {
-		return err
-	}
 	if len(msg.Owner) == 0 {
 		return fmt.Errorf("empty owner address")
 	}
 	if _, err := sdk.AccAddressFromBech32(msg.Owner); err != nil {
 		return err
 	}
-	a := NewAttribute(msg.Name, accAddr, msg.UpdateAttributeType, msg.UpdateValue)
+	a := NewAttribute(msg.Name, msg.Account, msg.UpdateAttributeType, msg.UpdateValue)
 	return a.ValidateBasic()
 }
 
