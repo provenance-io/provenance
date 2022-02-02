@@ -12,8 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/provenance-io/provenance/x/attribute/types"
 )
 
@@ -53,9 +51,11 @@ Refer to %s tx name bind --help for more information on how to do this.`, versio
 			}
 
 			name := args[0]
-			account, err := sdk.AccAddressFromBech32(args[1])
+			account := args[1]
+
+			err = types.ValidateAttributeAddress(account)
 			if err != nil {
-				return fmt.Errorf("account address must be a Bech32 string: %w", err)
+				return fmt.Errorf("invalid address: %w", err)
 			}
 			attributeType, err := types.AttributeTypeFromString(strings.TrimSpace(args[2]))
 			if err != nil {
@@ -98,9 +98,11 @@ func NewUpdateAccountAttributeCmd() *cobra.Command {
 			}
 
 			name := args[0]
-			account, err := sdk.AccAddressFromBech32(args[1])
+			account := args[1]
+
+			err = types.ValidateAttributeAddress(account)
 			if err != nil {
-				return fmt.Errorf("account address must be a Bech32 string: %w", err)
+				return fmt.Errorf("invalid account address: %w", err)
 			}
 			origAttributeType, err := types.AttributeTypeFromString(strings.TrimSpace(args[2]))
 			if err != nil {
@@ -166,9 +168,9 @@ func NewDeleteDistinctAccountAttributeCmd() *cobra.Command {
 				return err
 			}
 
-			account, err := sdk.AccAddressFromBech32(args[1])
+			err = types.ValidateAttributeAddress(args[1])
 			if err != nil {
-				return fmt.Errorf("account address must be a Bech32 string: %w", err)
+				return fmt.Errorf("invalid attribute address: %w", err)
 			}
 			attributeType, err := types.AttributeTypeFromString(strings.TrimSpace(args[2]))
 			if err != nil {
@@ -178,7 +180,7 @@ func NewDeleteDistinctAccountAttributeCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("error encoding value %s to type %s : %v", deleteValue, attributeType.String(), err)
 			}
-			msg := types.NewMsgDeleteDistinctAttributeRequest(account, clientCtx.GetFromAddress(), args[0], deleteValue)
+			msg := types.NewMsgDeleteDistinctAttributeRequest(args[1], clientCtx.GetFromAddress(), args[0], deleteValue)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -202,12 +204,12 @@ func NewDeleteAccountAttributeCmd() *cobra.Command {
 				return err
 			}
 
-			account, err := sdk.AccAddressFromBech32(args[1])
+			err = types.ValidateAttributeAddress(args[1])
 			if err != nil {
-				return fmt.Errorf("account address must be a Bech32 string: %w", err)
+				return fmt.Errorf("invalid address: %w", err)
 			}
 			msg := types.NewMsgDeleteAttributeRequest(
-				account,
+				args[1],
 				clientCtx.GetFromAddress(),
 				args[0],
 			)

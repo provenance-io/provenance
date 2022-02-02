@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 
 	"github.com/provenance-io/provenance/app"
@@ -18,7 +17,7 @@ func TestDecodeStore(t *testing.T) {
 	cdc := app.MakeEncodingConfig().Marshaler
 	dec := simulation.NewDecodeStore(cdc)
 
-	testAttributeRecord := types.NewAttribute("test", sdk.AccAddress{}, types.AttributeType_Int, []byte{1})
+	testAttributeRecord := types.NewAttribute("test", "", types.AttributeType_Int, []byte{1})
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{

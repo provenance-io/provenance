@@ -61,33 +61,33 @@ func Querier(keeper keeper.Keeper) provwasm.Querier {
 
 // Run queries for account attributes by address and name.
 func (params *GetAttributesParams) Run(ctx sdk.Context, keeper keeper.Keeper) ([]byte, error) {
-	address, err := sdk.AccAddressFromBech32(params.Address)
+	err := types.ValidateAttributeAddress(params.Address)
 	if err != nil {
 		return nil, fmt.Errorf("wasm: invalid address: %w", err)
 	}
-	attrs, err := keeper.GetAttributes(ctx, address, params.Name)
+	attrs, err := keeper.GetAttributes(ctx, params.Address, params.Name)
 	if err != nil {
 		return nil, fmt.Errorf("wasm: attribute query failed: %w", err)
 	}
-	return createResponse(address, attrs)
+	return createResponse(params.Address, attrs)
 }
 
 // Run queries for account attributes by address.
 func (params *GetAllAttributesParams) Run(ctx sdk.Context, keeper keeper.Keeper) ([]byte, error) {
-	address, err := sdk.AccAddressFromBech32(params.Address)
+	err := types.ValidateAttributeAddress(params.Address)
 	if err != nil {
 		return nil, fmt.Errorf("wasm: invalid address: %w", err)
 	}
-	attrs, err := keeper.GetAllAttributes(ctx, address)
+	attrs, err := keeper.GetAllAttributes(ctx, params.Address)
 	if err != nil {
 		return nil, fmt.Errorf("wasm: attribute query failed: %w", err)
 	}
-	return createResponse(address, attrs)
+	return createResponse(params.Address, attrs)
 }
 
 // Create a JSON response from the results of a account attribute query.
-func createResponse(address sdk.AccAddress, attrs []types.Attribute) ([]byte, error) {
-	res := AttributeResponse{Address: address.String()}
+func createResponse(address string, attrs []types.Attribute) ([]byte, error) {
+	res := AttributeResponse{Address: address}
 	for _, a := range attrs {
 		attr := Attribute{
 			Name:  a.Name,

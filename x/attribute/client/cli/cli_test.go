@@ -135,26 +135,26 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	attributeData.Attributes = append(attributeData.Attributes,
 		attributetypes.NewAttribute(
 			"example.attribute",
-			s.account1Addr,
+			s.account1Str,
 			attributetypes.AttributeType_String,
 			[]byte("example attribute value string")))
 	attributeData.Attributes = append(attributeData.Attributes,
 		attributetypes.NewAttribute(
 			"example.attribute.count",
-			s.account1Addr,
+			s.account1Str,
 			attributetypes.AttributeType_Int,
 			[]byte("2")))
 	for i := 0; i < s.accAttrCount; i++ {
 		attributeData.Attributes = append(attributeData.Attributes,
 			attributetypes.NewAttribute(
 				fmt.Sprintf("example.attribute.%s", toWritten(i)),
-				s.account3Addr,
+				s.account3Str,
 				attributetypes.AttributeType_Int,
 				[]byte(fmt.Sprintf("%d", i))))
 		attributeData.Attributes = append(attributeData.Attributes,
 			attributetypes.NewAttribute(
 				"example.attribute.overload",
-				s.account4Addr,
+				s.account4Str,
 				attributetypes.AttributeType_String,
 				[]byte(toWritten(i))))
 	}
