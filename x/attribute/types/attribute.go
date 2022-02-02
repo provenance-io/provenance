@@ -6,13 +6,14 @@ import (
 	"encoding/json"
 	"errors"
 	fmt "fmt"
-	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	"math/big"
 	"net/url"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	uuid "github.com/google/uuid"
+	"github.com/google/uuid"
+
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
 // NewAttribute creates a new instance of an Attribute

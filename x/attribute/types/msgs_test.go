@@ -21,8 +21,8 @@ var (
 // test ValidateBasic for TestMsgAddAttribute
 func TestMsgAddAttribute(t *testing.T) {
 	tests := []struct {
-		account   string
-		owner     sdk.AccAddress
+		account            string
+		owner              sdk.AccAddress
 		name, proposalType string
 		proposalValue      string
 		expectPass         bool
@@ -55,15 +55,15 @@ func TestMsgAddAttribute(t *testing.T) {
 // test ValidateBasic for TestMsgUpdateAttribute
 func TestMsgUpdateAttribute(t *testing.T) {
 	tests := []struct {
-		account        string
-		owner          sdk.AccAddress
-		name           string
-		originalValue  []byte
-		originalType   AttributeType
-		updateValue    []byte
-		updateType     AttributeType
-		expectPass     bool
-		expectedError  string
+		account       string
+		owner         sdk.AccAddress
+		name          string
+		originalValue []byte
+		originalType  AttributeType
+		updateValue   []byte
+		updateType    AttributeType
+		expectPass    bool
+		expectedError string
 	}{
 		{addrs[0].String(), addrs[1], "example", []byte("original"), AttributeType_String, []byte("update"), AttributeType_Bytes, true, ""},
 		{"", addrs[1], "example", []byte("original"), AttributeType_String, []byte("update"), AttributeType_Bytes, false, ""},
