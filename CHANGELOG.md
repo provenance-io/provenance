@@ -46,6 +46,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Upgrade provenance to 0.45 cosmos sdk release [#607](https://github.com/provenance-io/provenance/issues/607)
 * Upgrade wasmd to v0.22.0 Note: this removes dependency on provenance-io's wasmd fork [#479](https://github.com/provenance-io/provenance/issues/479)
 * Add support for Scope mutation via wasm Smart Contracts [#531](https://github.com/provenance-io/provenance/issues/531)
+* Increase governance deposit amount and add create proposal msg fee [#632](https://github.com/provenance-io/provenance/issues/632)
 * Allow attributes to be associated with scopes [#631](https://github.com/provenance-io/provenance/issues/631)
 
 ### Improvements
