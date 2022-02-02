@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -46,22 +47,19 @@ func queryAttribute(ctx sdk.Context, path []string, _ abci.RequestQuery, keeper 
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "missing account address and/or attribute name")
 	}
 	addr := strings.TrimSpace(path[0])
-	if addr == "" {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "account address cannot be empty")
-	}
-	account, err := sdk.AccAddressFromBech32(addr)
+	err := types.ValidateAttributeAddress(addr)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "account address must be a Bech32 string")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("invalid account address: %v", err))
 	}
 	name := strings.TrimSpace(path[1])
 	if name == "" {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "attribute name cannot be empty")
 	}
-	attrs, err := keeper.GetAttributes(ctx, account, name)
+	attrs, err := keeper.GetAttributes(ctx, addr, name)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
-	res := types.QueryAttributesResponse{Account: account.String()}
+	res := types.QueryAttributesResponse{Account: addr}
 	res.Attributes = append(res.Attributes, attrs...)
 	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, res)
 	if err != nil {
@@ -76,18 +74,15 @@ func queryAttributes(ctx sdk.Context, path []string, _ abci.RequestQuery, keeper
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "missing account address")
 	}
 	addr := strings.TrimSpace(path[0])
-	if addr == "" {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "account address cannot be empty")
-	}
-	account, err := sdk.AccAddressFromBech32(addr)
+	err := types.ValidateAttributeAddress(addr)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "account address must be a Bech32 string")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("invalid account address: %v", err))
 	}
-	attrs, err := keeper.GetAllAttributes(ctx, account)
+	attrs, err := keeper.GetAllAttributes(ctx, addr)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
-	res := types.QueryAttributesResponse{Account: account.String()}
+	res := types.QueryAttributesResponse{Account: addr}
 	res.Attributes = append(res.Attributes, attrs...)
 	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, res)
 	if err != nil {

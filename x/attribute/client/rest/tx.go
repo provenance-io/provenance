@@ -49,11 +49,6 @@ func NewAddAttributeRequestHandlerFn(clientCtx client.Context) http.HandlerFunc 
 		if !req.BaseReq.ValidateBasic(w) {
 			return
 		}
-		account, err := sdk.AccAddressFromBech32(req.Account)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
 		owner, err := sdk.AccAddressFromBech32(req.BaseReq.From)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -70,7 +65,7 @@ func NewAddAttributeRequestHandlerFn(clientCtx client.Context) http.HandlerFunc 
 			return
 		}
 		msg := types.NewMsgAddAttributeRequest(
-			account,
+			req.Account,
 			owner, // name must resolve to this address
 			req.Name,
 			at,
@@ -103,18 +98,13 @@ func NewDeleteAttributeHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		if !req.BaseReq.ValidateBasic(w) {
 			return
 		}
-		account, err := sdk.AccAddressFromBech32(req.Account)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
 		owner, err := sdk.AccAddressFromBech32(req.BaseReq.From)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 		msg := types.NewMsgDeleteAttributeRequest(
-			account,
+			req.Account,
 			owner, // name must resolve to this address
 			req.Name,
 		)

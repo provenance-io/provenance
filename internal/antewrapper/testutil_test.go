@@ -213,10 +213,9 @@ func (suite *AnteTestSuite) CreateMsgFee(fee sdk.Coin, msgs ...sdk.Msg) error {
 
 // NewTestGasLimit is a test fee gas limit.
 // they keep changing this value and our tests break, hence moving it to test.
-func (suite *AnteTestSuite)NewTestGasLimit() uint64 {
+func (suite *AnteTestSuite) NewTestGasLimit() uint64 {
 	return 100000
 }
-
 
 func TestAnteTestSuite(t *testing.T) {
 	suite.Run(t, new(AnteTestSuite))

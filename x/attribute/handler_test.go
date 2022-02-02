@@ -100,7 +100,7 @@ func (s HandlerTestSuite) TestMsgAddAttributeRequest() {
 	cases := []CommonTest{
 		{
 			"should successfully add new attribute",
-			types.NewMsgAddAttributeRequest(s.user1Addr,
+			types.NewMsgAddAttributeRequest(s.user1,
 				s.user1Addr, "example.name", types.AttributeType_String, []byte("value")),
 			[]string{s.user1},
 			"",
@@ -133,7 +133,7 @@ func (s HandlerTestSuite) TestMsgUpdateAttributeRequest() {
 		{
 			"should successfully update attribute",
 			types.NewMsgUpdateAttributeRequest(
-				s.user1Addr,
+				s.user1,
 				s.user1Addr, "example.name",
 				[]byte("value"), []byte("1"),
 				types.AttributeType_String,
@@ -169,7 +169,7 @@ func (s HandlerTestSuite) TestMsgDistinctDeleteAttributeRequest() {
 	cases := []CommonTest{
 		{
 			"should successfully delete attribute with value",
-			types.NewMsgDeleteDistinctAttributeRequest(s.user1Addr, s.user1Addr, "example.name", []byte("value")),
+			types.NewMsgDeleteDistinctAttributeRequest(s.user1, s.user1Addr, "example.name", []byte("value")),
 			[]string{s.user1},
 			"",
 			types.NewEventDistinctAttributeDelete("example.name", string([]byte("value")), s.user1, s.user1),
@@ -193,7 +193,7 @@ func (s HandlerTestSuite) TestMsgDeleteAttributeRequest() {
 	cases := []CommonTest{
 		{
 			"should successfully add new attribute",
-			types.NewMsgDeleteAttributeRequest(s.user1Addr, s.user1Addr, "example.name"),
+			types.NewMsgDeleteAttributeRequest(s.user1, s.user1Addr, "example.name"),
 			[]string{s.user1},
 			"",
 			types.NewEventAttributeDelete("example.name", s.user1, s.user1),

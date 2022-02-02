@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
@@ -29,22 +28,32 @@ var (
 	AttributeKeyPrefix      = []byte{0x02}
 )
 
-// AccountAttributeKey creates a key for an account attribute
-func AccountAttributeKey(acc sdk.AccAddress, attr Attribute) []byte {
-	key := append(AttributeKeyPrefix, address.MustLengthPrefix(acc.Bytes())...)
+// AddrAttributeKey creates a key for an account attribute
+func AddrAttributeKey(addr []byte, attr Attribute) []byte {
+	key := append(AttributeKeyPrefix, address.MustLengthPrefix(addr)...)
 	key = append(key, GetNameKeyBytes(attr.Name)...)
 	return append(key, attr.Hash()...)
 }
 
-// AccountAttributesKeyPrefix returns a prefix key for all attributes on an account
-func AccountAttributesKeyPrefix(acc sdk.AccAddress) []byte {
-	return append(AttributeKeyPrefix, address.MustLengthPrefix(acc.Bytes())...)
+// AddrAttributesKeyPrefix returns a prefix key for all attributes on an account
+func AddrAttributesKeyPrefix(addr []byte) []byte {
+	return append(AttributeKeyPrefix, address.MustLengthPrefix(addr)...)
 }
 
-// AccountAttributesNameKeyPrefix returns a prefix key for all attributes with a given name on an account
-func AccountAttributesNameKeyPrefix(acc sdk.AccAddress, attributeName string) []byte {
-	key := append(AttributeKeyPrefix, address.MustLengthPrefix(acc.Bytes())...)
+// AddrStrAttributesKeyPrefix is the same as AddrAttributesKeyPrefix but takes in the address as a string.
+func AddrStrAttributesKeyPrefix(addr string) []byte {
+	return AddrAttributesKeyPrefix(GetAttributeAddressBytes(addr))
+}
+
+// AddrAttributesNameKeyPrefix returns a prefix key for all attributes with a given name on an account
+func AddrAttributesNameKeyPrefix(addr []byte, attributeName string) []byte {
+	key := append(AttributeKeyPrefix, address.MustLengthPrefix(addr)...)
 	return append(key, GetNameKeyBytes(attributeName)...)
+}
+
+// AddrStrAttributesNameKeyPrefix is the same as AddrAttributesNameKeyPrefix but takes in the address as a string.
+func AddrStrAttributesNameKeyPrefix(addr string, attributeName string) []byte {
+	return AddrAttributesNameKeyPrefix(GetAttributeAddressBytes(addr), attributeName)
 }
 
 // GetNameKeyBytes returns a set of bytes that uniquely identifies the given name
