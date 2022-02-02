@@ -32,6 +32,7 @@ type IntegrationTestSuite struct {
 
 	accountAddr sdk.AccAddress
 	accountKey  *secp256r1.PrivKey
+	accountStr  string
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
@@ -40,6 +41,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	addr, err := sdk.AccAddressFromHex(s.accountKey.PubKey().Address().String())
 	s.Require().NoError(err)
 	s.accountAddr = addr
+	s.accountStr = s.accountAddr.String()
 	s.T().Log("setting up integration test suite")
 
 	cfg := testutil.DefaultTestNetworkConfig()
@@ -74,7 +76,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	accountData.Attributes = append(accountData.Attributes,
 		attributetypes.NewAttribute(
 			"example.attribute",
-			s.accountAddr,
+			s.accountStr,
 			attributetypes.AttributeType_String,
 			[]byte("example attribute value string")))
 	accountData.Params.MaxValueLength = 32
@@ -131,7 +133,7 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 				Account: s.accountAddr.String(),
 				Attributes: []attributetypes.Attribute{
 					attributetypes.NewAttribute("example.attribute",
-						s.accountAddr,
+						s.accountStr,
 						attributetypes.AttributeType_String,
 						[]byte("example attribute value string")),
 				},
@@ -148,7 +150,7 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 				Account: s.accountAddr.String(),
 				Attributes: []attributetypes.Attribute{
 					attributetypes.NewAttribute("example.attribute",
-						s.accountAddr,
+						s.accountStr,
 						attributetypes.AttributeType_String,
 						[]byte("example attribute value string")),
 				},
@@ -177,7 +179,7 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 				Account: s.accountAddr.String(),
 				Attributes: []attributetypes.Attribute{
 					attributetypes.NewAttribute("example.attribute",
-						s.accountAddr,
+						s.accountStr,
 						attributetypes.AttributeType_String,
 						[]byte("example attribute value string")),
 				},

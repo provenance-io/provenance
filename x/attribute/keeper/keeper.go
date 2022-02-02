@@ -64,16 +64,16 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-// GetAllAttributes gets all attributes for account.
-func (k Keeper) GetAllAttributes(ctx sdk.Context, acc sdk.AccAddress) ([]types.Attribute, error) {
+// GetAllAttributes gets all attributes for an address.
+func (k Keeper) GetAllAttributes(ctx sdk.Context, addr string) ([]types.Attribute, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "get_all")
 
 	pred := func(s string) bool { return true }
-	return k.prefixScan(ctx, types.AccountAttributesKeyPrefix(acc), pred)
+	return k.prefixScan(ctx, types.AddrStrAttributesKeyPrefix(addr), pred)
 }
 
 // GetAttributes gets all attributes with the given name from an account.
-func (k Keeper) GetAttributes(ctx sdk.Context, acc sdk.AccAddress, name string) ([]types.Attribute, error) {
+func (k Keeper) GetAttributes(ctx sdk.Context, addr string, name string) ([]types.Attribute, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "get")
 
 	name = strings.ToLower(strings.TrimSpace(name))
@@ -81,7 +81,7 @@ func (k Keeper) GetAttributes(ctx sdk.Context, acc sdk.AccAddress, name string) 
 		return nil, err
 	}
 	pred := func(s string) bool { return strings.EqualFold(s, name) }
-	return k.prefixScan(ctx, types.AccountAttributesNameKeyPrefix(acc, name), pred)
+	return k.prefixScan(ctx, types.AddrStrAttributesNameKeyPrefix(addr, name), pred)
 }
 
 // IterateRecords iterates over all the stored attribute records and passes them to a callback function.
@@ -146,11 +146,7 @@ func (k Keeper) SetAttribute(
 		return err
 	}
 
-	addr, err := sdk.AccAddressFromBech32(attr.Address)
-	if err != nil {
-		return err
-	}
-	key := types.AccountAttributeKey(addr, attr)
+	key := types.AddrAttributeKey(attr.GetAddressBytes(), attr)
 
 	store := ctx.KVStore(k.storeKey)
 	store.Set(key, bz)
@@ -168,10 +164,7 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 ) error {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "update")
 
-	accountAddress, err := sdk.AccAddressFromBech32(originalAttribute.Address)
-	if err != nil {
-		return err
-	}
+	var err error
 
 	if err = originalAttribute.ValidateBasic(); err != nil {
 		return err
@@ -209,8 +202,10 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 		return fmt.Errorf("\"%s\" does not resolve to address \"%s\"", updateAttribute.Name, owner.String())
 	}
 
+	addrBz := originalAttribute.GetAddressBytes()
+
 	store := ctx.KVStore(k.storeKey)
-	it := sdk.KVStorePrefixIterator(store, types.AccountAttributesNameKeyPrefix(accountAddress, normalizedOrigName))
+	it := sdk.KVStorePrefixIterator(store, types.AddrAttributesNameKeyPrefix(addrBz, normalizedOrigName))
 	var found bool
 	for ; it.Valid(); it.Next() {
 		attr := types.Attribute{}
@@ -226,7 +221,7 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 			if err != nil {
 				return err
 			}
-			updatedKey := types.AccountAttributeKey(accountAddress, updateAttribute)
+			updatedKey := types.AddrAttributeKey(addrBz, updateAttribute)
 			store.Set(updatedKey, bz)
 
 			attributeUpdateEvent := types.NewEventAttributeUpdate(originalAttribute, updateAttribute, owner.String())
@@ -244,8 +239,8 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 	return nil
 }
 
-// Removes attributes under the given account.
-func (k Keeper) DeleteAttribute(ctx sdk.Context, acc sdk.AccAddress, name string, value *[]byte, owner sdk.AccAddress) error {
+// DeleteAttribute removes attributes under the given account from the state store.
+func (k Keeper) DeleteAttribute(ctx sdk.Context, addr string, name string, value *[]byte, owner sdk.AccAddress) error {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "delete")
 
 	var deleteDistinct bool
@@ -265,7 +260,7 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, acc sdk.AccAddress, name string
 	}
 
 	store := ctx.KVStore(k.storeKey)
-	it := sdk.KVStorePrefixIterator(store, types.AccountAttributesNameKeyPrefix(acc, name))
+	it := sdk.KVStorePrefixIterator(store, types.AddrStrAttributesNameKeyPrefix(addr, name))
 	var count int
 	for ; it.Valid(); it.Next() {
 		attr := types.Attribute{}
@@ -278,12 +273,12 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, acc sdk.AccAddress, name string
 			store.Delete(it.Key())
 
 			if !deleteDistinct {
-				deleteEvent := types.NewEventAttributeDelete(name, acc.String(), owner.String())
+				deleteEvent := types.NewEventAttributeDelete(name, addr, owner.String())
 				if err := ctx.EventManager().EmitTypedEvent(deleteEvent); err != nil {
 					return err
 				}
 			} else {
-				deleteEvent := types.NewEventDistinctAttributeDelete(name, string(*value), acc.String(), owner.String())
+				deleteEvent := types.NewEventDistinctAttributeDelete(name, string(*value), addr, owner.String())
 				if err := ctx.EventManager().EmitTypedEvent(deleteEvent); err != nil {
 					return err
 				}
@@ -323,14 +318,7 @@ func (k Keeper) prefixScan(ctx sdk.Context, prefix []byte, f namePred) (attrs []
 // A genesis helper that imports attribute state without owner checks.
 func (k Keeper) importAttribute(ctx sdk.Context, attr types.Attribute) error {
 	// Ensure attribute is valid
-	if err := attr.ValidateBasic(); err != nil {
-		return err
-	}
-	// Attribute must have a valid, non-empty address to import
-	if strings.TrimSpace(attr.Address) == "" {
-		return fmt.Errorf("unable to import attribute with empty address")
-	}
-	acc, err := sdk.AccAddressFromBech32(attr.Address)
+	err := attr.ValidateBasic()
 	if err != nil {
 		return err
 	}
@@ -344,7 +332,7 @@ func (k Keeper) importAttribute(ctx sdk.Context, attr types.Attribute) error {
 	if err != nil {
 		return err
 	}
-	key := types.AccountAttributeKey(acc, attr)
+	key := types.AddrAttributeKey(attr.GetAddressBytes(), attr)
 	store := ctx.KVStore(k.storeKey)
 	store.Set(key, bz)
 	return nil

@@ -12,8 +12,6 @@ import (
 	"github.com/provenance-io/provenance/internal/antewrapper"
 )
 
-
-
 // checkTx true, high min gas price(high enough so that additional fee in same denom tips it over,
 //and this is what sets it apart from MempoolDecorator which has already been run)
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees() {
@@ -363,4 +361,3 @@ func setUpApp(suite *AnteTestSuite, checkTx bool, additionalFeeCoinDenom string,
 	antehandler := sdk.ChainAnteDecorators(mfd)
 	return err, antehandler
 }
-

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"google.golang.org/grpc/codes"
@@ -30,23 +31,19 @@ func (k Keeper) Attribute(c context.Context, req *types.QueryAttributeRequest) (
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-	if req.Account == "" {
-		return nil, status.Error(codes.InvalidArgument, "empty account address")
-	}
 	if req.Name == "" {
 		return nil, status.Error(codes.InvalidArgument, "empty attribute name")
+	}
+	if err := types.ValidateAttributeAddress(req.Account); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("invalid account address: %v", err))
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 	attributes := make([]types.Attribute, 0)
 	store := ctx.KVStore(k.storeKey)
-	accAddr, err := sdk.AccAddressFromBech32(req.Account)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid account address")
-	}
-	attributeStore := prefix.NewStore(store, types.AccountAttributesNameKeyPrefix(accAddr, req.Name))
+	attributeStore := prefix.NewStore(store, types.AddrStrAttributesNameKeyPrefix(req.Account, req.Name))
 	pageRes, err := query.Paginate(attributeStore, req.Pagination, func(key []byte, value []byte) error {
 		var result types.Attribute
-		err = k.cdc.Unmarshal(value, &result)
+		err := k.cdc.Unmarshal(value, &result)
 		if err != nil {
 			return err
 		}
@@ -56,29 +53,25 @@ func (k Keeper) Attribute(c context.Context, req *types.QueryAttributeRequest) (
 	if err != nil {
 		return nil, err
 	}
-	return &types.QueryAttributeResponse{Account: accAddr.String(), Attributes: attributes, Pagination: pageRes}, nil
+	return &types.QueryAttributeResponse{Account: req.Account, Attributes: attributes, Pagination: pageRes}, nil
 }
 
-// Attributes queries for all attributes on a specied account
+// Attributes queries for all attributes on a specified account
 func (k Keeper) Attributes(c context.Context, req *types.QueryAttributesRequest) (*types.QueryAttributesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-	if req.Account == "" {
-		return nil, status.Error(codes.InvalidArgument, "empty account address")
+	if err := types.ValidateAttributeAddress(req.Account); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("invalid account address: %v", err))
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 	attributes := make([]types.Attribute, 0)
 	store := ctx.KVStore(k.storeKey)
-	accAddr, err := sdk.AccAddressFromBech32(req.Account)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid account address")
-	}
-	attributeStore := prefix.NewStore(store, types.AccountAttributesKeyPrefix(accAddr))
+	attributeStore := prefix.NewStore(store, types.AddrStrAttributesKeyPrefix(req.Account))
 
 	pageRes, err := query.Paginate(attributeStore, req.Pagination, func(key []byte, value []byte) error {
 		var result types.Attribute
-		err = k.cdc.Unmarshal(value, &result)
+		err := k.cdc.Unmarshal(value, &result)
 		if err != nil {
 			return err
 		}
@@ -90,7 +83,7 @@ func (k Keeper) Attributes(c context.Context, req *types.QueryAttributesRequest)
 		return nil, err
 	}
 
-	return &types.QueryAttributesResponse{Account: accAddr.String(), Attributes: attributes, Pagination: pageRes}, nil
+	return &types.QueryAttributesResponse{Account: req.Account, Attributes: attributes, Pagination: pageRes}, nil
 }
 
 // Scan queries for all attributes on a specied account that have a given suffix in their name
@@ -98,24 +91,20 @@ func (k Keeper) Scan(c context.Context, req *types.QueryScanRequest) (*types.Que
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-	if req.Account == "" {
-		return nil, status.Error(codes.InvalidArgument, "empty account address")
-	}
 	if req.Suffix == "" {
 		return nil, status.Error(codes.InvalidArgument, "empty attribute name suffix")
+	}
+	if err := types.ValidateAttributeAddress(req.Account); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("invalid account address: %v", err))
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 	attributes := make([]types.Attribute, 0)
 	store := ctx.KVStore(k.storeKey)
-	accAddr, err := sdk.AccAddressFromBech32(req.Account)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid account address")
-	}
-	attributeStore := prefix.NewStore(store, types.AccountAttributesKeyPrefix(accAddr))
+	attributeStore := prefix.NewStore(store, types.AddrStrAttributesKeyPrefix(req.Account))
 
 	pageRes, err := query.FilteredPaginate(attributeStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var result types.Attribute
-		err = k.cdc.Unmarshal(value, &result)
+		err := k.cdc.Unmarshal(value, &result)
 		if err != nil {
 			return false, err
 		}
@@ -132,5 +121,5 @@ func (k Keeper) Scan(c context.Context, req *types.QueryScanRequest) (*types.Que
 		return nil, err
 	}
 
-	return &types.QueryScanResponse{Account: accAddr.String(), Attributes: attributes, Pagination: pageRes}, nil
+	return &types.QueryScanResponse{Account: req.Account, Attributes: attributes, Pagination: pageRes}, nil
 }
