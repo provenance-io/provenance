@@ -130,8 +130,12 @@ func (msg MsgUpdateAttributeRequest) String() string {
 }
 
 // NewMsgDeleteAttributeRequest deletes all attributes with specific name
-func NewMsgDeleteAttributeRequest(account sdk.AccAddress, owner sdk.AccAddress, name string) *MsgDeleteAttributeRequest { // nolint:interfacer
-	return &MsgDeleteAttributeRequest{Account: account.String(), Name: strings.ToLower(strings.TrimSpace(name)), Owner: owner.String()}
+func NewMsgDeleteAttributeRequest(account string, owner sdk.AccAddress, name string) *MsgDeleteAttributeRequest { // nolint:interfacer
+	return &MsgDeleteAttributeRequest{
+		Account: account,
+		Name:    strings.ToLower(strings.TrimSpace(name)),
+		Owner:   owner.String(),
+	}
 }
 
 // Route returns the name of the module.
@@ -147,11 +151,8 @@ func (msg MsgDeleteAttributeRequest) ValidateBasic() error {
 	if strings.TrimSpace(msg.Name) == "" {
 		return fmt.Errorf("empty name")
 	}
-	if len(msg.Account) == 0 {
-		return fmt.Errorf("empty account address")
-	}
-	if _, err := sdk.AccAddressFromBech32(msg.Account); err != nil {
-		return err
+	if err := ValidateAttributeAddress(msg.Account); err != nil {
+		return fmt.Errorf("invalid account address: %w", err)
 	}
 	if len(msg.Owner) == 0 {
 		return fmt.Errorf("empty owner address")
@@ -184,9 +185,9 @@ func (msg MsgDeleteAttributeRequest) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgDeleteDistinctAttributeRequest deletes a attribute with specific value and type
-func NewMsgDeleteDistinctAttributeRequest(account sdk.AccAddress, owner sdk.AccAddress, name string, value []byte) *MsgDeleteDistinctAttributeRequest { // nolint:interfacer
+func NewMsgDeleteDistinctAttributeRequest(account string, owner sdk.AccAddress, name string, value []byte) *MsgDeleteDistinctAttributeRequest { // nolint:interfacer
 	return &MsgDeleteDistinctAttributeRequest{
-		Account: account.String(),
+		Account: account,
 		Name:    strings.ToLower(strings.TrimSpace(name)),
 		Owner:   owner.String(),
 		Value:   value,
@@ -209,11 +210,8 @@ func (msg MsgDeleteDistinctAttributeRequest) ValidateBasic() error {
 	if len(msg.Value) == 0 {
 		return fmt.Errorf("empty value")
 	}
-	if len(msg.Account) == 0 {
-		return fmt.Errorf("empty account address")
-	}
-	if _, err := sdk.AccAddressFromBech32(msg.Account); err != nil {
-		return err
+	if err := ValidateAttributeAddress(msg.Account); err != nil {
+		return fmt.Errorf("invalid account address: %w", err)
 	}
 	if len(msg.Owner) == 0 {
 		return fmt.Errorf("empty owner address")

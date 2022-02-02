@@ -191,7 +191,7 @@ func SimulateMsgDeleteAttribute(k keeper.Keeper, ak authkeeper.AccountKeeperI, b
 		}
 
 		simAccount, _ := simtypes.FindAccount(accs, mustGetAddress(ownerAddress))
-		msg := types.NewMsgDeleteAttributeRequest(mustGetAddress(randomAttribute.Address), mustGetAddress(ownerAddress), randomAttribute.Name)
+		msg := types.NewMsgDeleteAttributeRequest(randomAttribute.Address, mustGetAddress(ownerAddress), randomAttribute.Name)
 
 		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg)
 	}
@@ -226,7 +226,7 @@ func SimulateMsgDeleteDistinctAttribute(k keeper.Keeper, ak authkeeper.AccountKe
 		}
 
 		simAccount, _ := simtypes.FindAccount(accs, mustGetAddress(ownerAddress))
-		msg := types.NewMsgDeleteDistinctAttributeRequest(mustGetAddress(randomAttribute.Address), mustGetAddress(ownerAddress), randomAttribute.Name, randomAttribute.Value)
+		msg := types.NewMsgDeleteDistinctAttributeRequest(randomAttribute.Address, mustGetAddress(ownerAddress), randomAttribute.Name, randomAttribute.Value)
 
 		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg)
 	}

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -125,7 +126,7 @@ func (k msgServer) DeleteAttribute(goCtx context.Context, msg *types.MsgDeleteAt
 
 	err := types.ValidateAttributeAddress(msg.Account)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid account address: %w", err)
 	}
 
 	ownerAddr, err := sdk.AccAddressFromBech32(msg.Owner)
@@ -166,7 +167,7 @@ func (k msgServer) DeleteDistinctAttribute(goCtx context.Context, msg *types.Msg
 
 	err := types.ValidateAttributeAddress(msg.Account)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid account address: %w", err)
 	}
 
 	ownerAddr, err := sdk.AccAddressFromBech32(msg.Owner)

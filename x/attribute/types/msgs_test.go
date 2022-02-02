@@ -84,15 +84,16 @@ func TestMsgUpdateAttribute(t *testing.T) {
 // test ValidateBasic for TestMsgDeleteDistinctAttribute
 func TestMsgDeleteDistinctAttribute(t *testing.T) {
 	tests := []struct {
-		account, owner sdk.AccAddress
-		name           string
-		value          []byte
-		attrType       AttributeType
-		expectPass     bool
+		account    string
+		owner      sdk.AccAddress
+		name       string
+		value      []byte
+		attrType   AttributeType
+		expectPass bool
 	}{
-		{addrs[0], addrs[1], "example", []byte("original"), AttributeType_String, true},
-		{nil, addrs[1], "example", []byte("original"), AttributeType_String, false},
-		{addrs[0], nil, "example", []byte(""), AttributeType_String, false},
+		{addrs[0].String(), addrs[1], "example", []byte("original"), AttributeType_String, true},
+		{"", addrs[1], "example", []byte("original"), AttributeType_String, false},
+		{addrs[0].String(), nil, "example", []byte(""), AttributeType_String, false},
 	}
 
 	for _, tc := range tests {

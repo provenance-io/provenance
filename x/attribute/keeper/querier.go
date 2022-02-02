@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -48,7 +49,7 @@ func queryAttribute(ctx sdk.Context, path []string, _ abci.RequestQuery, keeper 
 	addr := strings.TrimSpace(path[0])
 	err := types.ValidateAttributeAddress(addr)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "account address must be a Bech32 string")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("invalid account address: %v", err))
 	}
 	name := strings.TrimSpace(path[1])
 	if name == "" {
@@ -75,7 +76,7 @@ func queryAttributes(ctx sdk.Context, path []string, _ abci.RequestQuery, keeper
 	addr := strings.TrimSpace(path[0])
 	err := types.ValidateAttributeAddress(addr)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "account address must be a Bech32 string")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("invalid account address: %v", err))
 	}
 	attrs, err := keeper.GetAllAttributes(ctx, addr)
 	if err != nil {
