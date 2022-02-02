@@ -48,7 +48,7 @@ func (s *AttributeTestSuite) TestAttributeValidateBasic() {
 				AttributeType: AttributeType_String,
 			},
 			true,
-			"invalid attribute address: not an address",
+			"invalid attribute address: must be either an account address or scope metadata address: \"not an address\"",
 		},
 		"should fail to validate basic attribute invalid type": {
 			Attribute{
