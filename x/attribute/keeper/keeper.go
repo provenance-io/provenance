@@ -69,7 +69,7 @@ func (k Keeper) GetAllAttributes(ctx sdk.Context, addr string) ([]types.Attribut
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "get_all")
 
 	pred := func(s string) bool { return true }
-	return k.prefixScan(ctx, types.AccountAttributesKeyPrefix(types.GetAttributeAddressBytes(addr)), pred)
+	return k.prefixScan(ctx, types.AddrStrAttributesKeyPrefix(addr), pred)
 }
 
 // GetAttributes gets all attributes with the given name from an account.
@@ -81,7 +81,7 @@ func (k Keeper) GetAttributes(ctx sdk.Context, addr string, name string) ([]type
 		return nil, err
 	}
 	pred := func(s string) bool { return strings.EqualFold(s, name) }
-	return k.prefixScan(ctx, types.AccountAttributesNameKeyPrefix(types.GetAttributeAddressBytes(addr), name), pred)
+	return k.prefixScan(ctx, types.AddrStrAttributesNameKeyPrefix(addr, name), pred)
 }
 
 // IterateRecords iterates over all the stored attribute records and passes them to a callback function.
@@ -146,7 +146,7 @@ func (k Keeper) SetAttribute(
 		return err
 	}
 
-	key := types.AccountAttributeKey(attr.GetAddressBytes(), attr)
+	key := types.AddrAttributeKey(attr.GetAddressBytes(), attr)
 
 	store := ctx.KVStore(k.storeKey)
 	store.Set(key, bz)
@@ -205,7 +205,7 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 	addrBz := originalAttribute.GetAddressBytes()
 
 	store := ctx.KVStore(k.storeKey)
-	it := sdk.KVStorePrefixIterator(store, types.AccountAttributesNameKeyPrefix(addrBz, normalizedOrigName))
+	it := sdk.KVStorePrefixIterator(store, types.AddrAttributesNameKeyPrefix(addrBz, normalizedOrigName))
 	var found bool
 	for ; it.Valid(); it.Next() {
 		attr := types.Attribute{}
@@ -221,7 +221,7 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 			if err != nil {
 				return err
 			}
-			updatedKey := types.AccountAttributeKey(addrBz, updateAttribute)
+			updatedKey := types.AddrAttributeKey(addrBz, updateAttribute)
 			store.Set(updatedKey, bz)
 
 			attributeUpdateEvent := types.NewEventAttributeUpdate(originalAttribute, updateAttribute, owner.String())
@@ -260,7 +260,7 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, addr string, name string, value
 	}
 
 	store := ctx.KVStore(k.storeKey)
-	it := sdk.KVStorePrefixIterator(store, types.AccountAttributesNameKeyPrefix(types.GetAttributeAddressBytes(addr), name))
+	it := sdk.KVStorePrefixIterator(store, types.AddrStrAttributesNameKeyPrefix(addr, name))
 	var count int
 	for ; it.Valid(); it.Next() {
 		attr := types.Attribute{}
@@ -332,7 +332,7 @@ func (k Keeper) importAttribute(ctx sdk.Context, attr types.Attribute) error {
 	if err != nil {
 		return err
 	}
-	key := types.AccountAttributeKey(attr.GetAddressBytes(), attr)
+	key := types.AddrAttributeKey(attr.GetAddressBytes(), attr)
 	store := ctx.KVStore(k.storeKey)
 	store.Set(key, bz)
 	return nil

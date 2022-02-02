@@ -26,7 +26,7 @@ func MigrateAddressLength(ctx sdk.Context, storeKey sdk.StoreKey) error {
 			return err
 		}
 
-		newStoreKey := types.AccountAttributeKey(attrAddress, attribute)
+		newStoreKey := types.AddrAttributeKey(attrAddress, attribute)
 
 		bz, err := types.ModuleCdc.Marshal(&attribute)
 		if err != nil {
