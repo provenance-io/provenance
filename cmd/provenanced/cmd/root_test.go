@@ -9,5 +9,5 @@ import (
 )
 
 func TestIAVLConfig(t *testing.T) {
-	require.Equal(t,getIAVLCacheSize(app.EmptyAppOptions{}),cast.ToInt(serverconfig.DefaultConfig().IAVLCacheSize))
+	require.Equal(t, getIAVLCacheSize(app.EmptyAppOptions{}), cast.ToInt(serverconfig.DefaultConfig().IAVLCacheSize))
 }
