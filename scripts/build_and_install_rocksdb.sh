@@ -15,9 +15,9 @@ fi
 set -ex
 
 ROCKS_DB_VERSION="$1"
-wget "https://github.com/facebook/rocksdb/archive/refs/tags/v${$ROCKS_DB_VERSION}.tar.gz"
-tar zxvf "v${$ROCKS_DB_VERSION}.tar.gz"
-cd "rocksdb-${$ROCKS_DB_VERSION}"
+wget "https://github.com/facebook/rocksdb/archive/refs/tags/v${ROCKS_DB_VERSION}.tar.gz"
+tar zxvf "v${ROCKS_DB_VERSION}.tar.gz"
+cd "rocksdb-${ROCKS_DB_VERSION}"
 export DEBUG_LEVEL=0
 make -j$(nproc) shared_lib
 make install-shared
