@@ -408,7 +408,7 @@ devnet-stop:
 ##############################
 # Proto -> golang compilation
 ##############################
-proto-all: proto-format proto-lint proto-gen proto-check-breaking proto-swagger-gen
+proto-all: proto-update-deps proto-format proto-lint proto-check-breaking proto-gen proto-swagger-gen
 
 containerProtoVer=v0.2
 containerProtoImage=tendermintdev/sdk-proto-gen:$(containerProtoVer)
