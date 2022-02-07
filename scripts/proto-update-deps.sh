@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-set -e
+set -ex
 
 #
 # Download third_party proto files from the versions declared in go.mod
 #
 
-dir="$(pwd)"
+
+dir="$( cd "$( dirname "${BASH_SOURCE:-$0}" )/.."; pwd -P )"
 EXT_PROTO_DIR="$dir"/third_party
 
 # clean
@@ -22,19 +23,19 @@ COSMOS_TARBALL_URL=$(go list -m github.com/cosmos/cosmos-sdk | sed 's:.* => ::' 
 TM_TARBALL_URL=$(go list -m github.com/tendermint/tendermint | sed 's:.* => ::' | sed 's/ /\/tarball\//')
 
 # Download third_party protos
-mkdir -p "$EXT_PROTO_DIR"/proto || exit 1
-#cp -r "$dir"/third_party/proto/google "$EXT_PROTO_DIR"/proto || exit 1
-cd "$EXT_PROTO_DIR" || exit 1
+mkdir -p "$EXT_PROTO_DIR"/proto || exit $?
+#cp -r "$dir"/third_party/proto/google "$EXT_PROTO_DIR"/proto || exit $?
+cd "$EXT_PROTO_DIR" || exit $?
 PROTO_EXPR="*/proto/**/*.proto"
-curl -sSL "$CONFIO_PROTO_URL" -o proto/proofs.proto.orig --create-dirs || exit 1
-curl -sSL "$GOGO_PROTO_URL" -o proto/gogoproto/gogo.proto --create-dirs || exit 1
-curl -sSL "$COSMOS_PROTO_URL" -o proto/cosmos_proto/cosmos.proto --create-dirs || exit 1
-curl -sSL "$COSMWASM_TARBALL_URL" | tar zx --strip-components 1 --exclude="*/third_party" "$PROTO_EXPR" || exit 1
-curl -sSL "$COSMWASM_TARBALL_URL" | tar zx --strip-components 1 --exclude="*/third_party" "$PROTO_EXPR" || exit 1
-curl -sSL "$WASMD_TARBALL_URL" | tar zx --strip-components 1 --exclude="*/third_party" --exclude="*/proto/ibc" "$PROTO_EXPR" || exit 1
-curl -sSL "$IBC_GO_TARBALL_URL" | tar zx --strip-components 1 --exclude="*/third_party" "$PROTO_EXPR" || exit 1
-curl -sSL "$COSMOS_TARBALL_URL" | tar zx --strip-components 1 --exclude="*/third_party" --exclude="*/testutil" "$PROTO_EXPR" || exit 1
-curl -sSL "$TM_TARBALL_URL" | tar zx --strip-components 1 --exclude="*/third_party" "$PROTO_EXPR" || exit 1
+curl -sSL "$CONFIO_PROTO_URL" -o proto/proofs.proto.orig --create-dirs || exit $?
+curl -sSL "$GOGO_PROTO_URL" -o proto/gogoproto/gogo.proto --create-dirs || exit $?
+curl -sSL "$COSMOS_PROTO_URL" -o proto/cosmos_proto/cosmos.proto --create-dirs || exit $?
+curl -sSL "$COSMWASM_TARBALL_URL" | tar zx --strip-components 1 --exclude="*/third_party" "$PROTO_EXPR" || exit $?
+curl -sSL "$COSMWASM_TARBALL_URL" | tar zx --strip-components 1 --exclude="*/third_party" "$PROTO_EXPR" || exit $?
+curl -sSL "$WASMD_TARBALL_URL" | tar zx --strip-components 1 --exclude="*/third_party" --exclude="*/proto/ibc" "$PROTO_EXPR" || exit $?
+curl -sSL "$IBC_GO_TARBALL_URL" | tar zx --strip-components 1 --exclude="*/third_party" "$PROTO_EXPR" || exit $?
+curl -sSL "$COSMOS_TARBALL_URL" | tar zx --strip-components 1 --exclude="*/third_party" --exclude="*/testutil" "$PROTO_EXPR" || exit $?
+curl -sSL "$TM_TARBALL_URL" | tar zx --strip-components 1 --exclude="*/third_party" "$PROTO_EXPR" || exit $?
 
 ## insert go, java package option into proofs.proto file
 ## Issue link: https://github.com/confio/ics23/issues/32 (instead of a simple sed we need 4 lines cause bsd sed -i is incompatible)
