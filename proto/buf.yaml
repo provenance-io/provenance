@@ -7,6 +7,7 @@ breaking:
     - FILE
   except:
     - FILE_NO_DELETE
+    - FILE_SAME_SYNTAX
   ignore:
     - confio
     - cosmos
@@ -49,9 +50,3 @@ lint:
       - provenance/marker/v1/si.proto
     ENUM_VALUE_PREFIX:
       - provenance/metadata/v1/p8e/p8e.proto
-    SYNTAX_SPECIFIED:
-      - provenance/marker/v1/authz.proto
-    IMPORT_USED:
-      - provenance/msgfees/v1/msgfees.proto
-      - provenance/msgfees/v1/proposals.proto
-      - provenance/msgfees/v1/query.proto
