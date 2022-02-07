@@ -241,7 +241,7 @@ build-release-rezip:
 	scripts/fix-gon-zip $(ZIP_FROM) && \
 		mv -v $(ZIP_FROM) $(ZIP_TO)
 
-.PHONY: bulid-release-proto
+.PHONY: build-release-proto
 build-release-proto:
 	scripts/protoball.sh $(RELEASE_PROTO)
 
