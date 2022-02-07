@@ -20,5 +20,5 @@ tar zxf "v${ROCKS_DB_VERSION}.tar.gz"
 cd "rocksdb-${ROCKS_DB_VERSION}"
 export DEBUG_LEVEL=0
 make -j$(nproc) shared_lib
-make install-shared
+sudo make install-shared
 
