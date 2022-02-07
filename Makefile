@@ -437,12 +437,15 @@ proto-format:
 		find ./ -not -path "./third_party/*" -name *.proto -exec clang-format -i {} \; ; fi
 
 proto-lint:
+	@echo "Linting Protobuf files"
 	@$(DOCKER_BUF) lint --error-format=json
 
 proto-check-breaking:
+	@echo "Check breaking Protobuf files"
 	@$(DOCKER_BUF) breaking proto --against $(HTTPS_GIT)#branch=main --error-format=json
 
 proto-update-deps:
+	@echo "Updating Protobuf files"
 	sh ./scripts/proto-update-deps.sh
 
 .PHONY: proto-all proto-gen proto-format proto-gen-any proto-lint proto-check-breaking proto-update-deps
