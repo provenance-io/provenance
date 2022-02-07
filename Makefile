@@ -92,7 +92,7 @@ endif
 # cleveldb linker settings
 ifeq ($(WITH_CLEVELDB),yes)
   ifeq ($(UNAME_S),Darwin)
-    LEVELDB_PATH = $(shell brew --prefix leveldb 2> /dev/null)
+    LEVELDB_PATH ?= $(shell brew --prefix leveldb 2> /dev/null)
     CGO_CFLAGS  += -I$(LEVELDB_PATH)/include
     CGO_LDFLAGS += -L$(LEVELDB_PATH)/lib
   else ifeq ($(UNAME_S),Linux)
