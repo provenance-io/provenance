@@ -7,6 +7,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/cosmos/ibc-go/v2/modules/core/exported"
 	ibcctmtypes "github.com/cosmos/ibc-go/v2/modules/light-clients/07-tendermint/types"
@@ -47,6 +48,20 @@ var handlers = map[string]appUpgrade{
 				return false
 			})
 
+			// set governance deposit requirement to 50,000HASH
+			govParams := app.GovKeeper.GetDepositParams(ctx)
+			beforeDeposit := govParams.MinDeposit
+			govParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(50_000_000_000_000)))
+			app.GovKeeper.SetDepositParams(ctx, govParams)
+			ctx.Logger().Info(fmt.Sprintf("Updated governance module minimum deposit from %s to %s", beforeDeposit, govParams.MinDeposit))
+
+			// set attribute param length to 1,000 from 10,000
+			attrParams := app.AttributeKeeper.GetParams(ctx)
+			beforeLength := attrParams.MaxValueLength
+			attrParams.MaxValueLength = 1_000
+			app.AttributeKeeper.SetParams(ctx, attrParams)
+			ctx.Logger().Info(fmt.Sprintf("Updated attribute module max length value from %d to %d", beforeLength, attrParams.MaxValueLength))
+
 			// Note: retrieving current module versions from upgrade keeper
 			// metadata module will be at from version 2 going to version 3
 			// msgfees module will not be in version map this will cause runmigrations to create it and run InitGenesis
@@ -66,27 +81,30 @@ var handlers = map[string]appUpgrade{
 
 // AddMsgBasedFees adds pio specific msg based fees for BindName, AddMarker, AddAttribute, WriteScope, P8EMemorializeContract requests for v1.8.0 upgrade
 func AddMsgBasedFees(app *App, ctx sdk.Context) error {
-	ctx.Logger().Info("Adding a 10 hash (10,000,000,000 nhash) msg fee to MsgBindNameRequest (1/5)")
+	ctx.Logger().Info("Adding a 10 hash (10,000,000,000 nhash) msg fee to MsgBindNameRequest (1/6)")
 	if err := app.MsgFeesKeeper.SetMsgFee(ctx, msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&nametypes.MsgBindNameRequest{}), sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)))); err != nil {
 		return err
 	}
-	ctx.Logger().Info("Adding a 100 hash (100,000,000,000 nhash) msg fee to MsgAddMarkerRequest (2/5)")
+	ctx.Logger().Info("Adding a 100 hash (100,000,000,000 nhash) msg fee to MsgAddMarkerRequest (2/6)")
 	if err := app.MsgFeesKeeper.SetMsgFee(ctx, msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&markertypes.MsgAddMarkerRequest{}), sdk.NewCoin("nhash", sdk.NewInt(100_000_000_000)))); err != nil {
 		return err
 	}
-	ctx.Logger().Info("Adding a 10 hash (10,000,000,000 nhash) msg fee to MsgAddAttributeRequest (3/5)")
+	ctx.Logger().Info("Adding a 10 hash (10,000,000,000 nhash) msg fee to MsgAddAttributeRequest (3/6)")
 	if err := app.MsgFeesKeeper.SetMsgFee(ctx, msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&attributetypes.MsgAddAttributeRequest{}), sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)))); err != nil {
 		return err
 	}
-	ctx.Logger().Info("Adding a 10 hash (10,000,000,000 nhash) msg fee to MsgWriteScopeRequest (4/5)")
+	ctx.Logger().Info("Adding a 10 hash (10,000,000,000 nhash) msg fee to MsgWriteScopeRequest (4/6)")
 	if err := app.MsgFeesKeeper.SetMsgFee(ctx, msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&metadatatypes.MsgWriteScopeRequest{}), sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)))); err != nil {
 		return err
 	}
-	ctx.Logger().Info("Adding a 10 hash (10,000,000,000 nhash) msg fee to MsgP8EMemorializeContractRequest (5/5)")
+	ctx.Logger().Info("Adding a 10 hash (10,000,000,000 nhash) msg fee to MsgP8EMemorializeContractRequest (5/6)")
 	if err := app.MsgFeesKeeper.SetMsgFee(ctx, msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&metadatatypes.MsgP8EMemorializeContractRequest{}), sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)))); err != nil {
 		return err
 	}
-
+	ctx.Logger().Info("Adding a 100 hash (100,000,000,000 nhash) msg fee to MsgSubmitProposal (6/6)")
+	if err := app.MsgFeesKeeper.SetMsgFee(ctx, msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&govtypes.MsgSubmitProposal{}), sdk.NewCoin("nhash", sdk.NewInt(100_000_000_000)))); err != nil {
+		return err
+	}
 	return nil
 }
 

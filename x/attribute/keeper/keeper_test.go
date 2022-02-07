@@ -366,12 +366,12 @@ func (s *KeeperTestSuite) TestDeleteAttribute() {
 
 	// Create a name, make an attribute under it, then remove the name leaving an orphan attribute.
 	s.NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "deleted", s.user1Addr, false), "name record should save successfully")
-	s.NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, types.NewAttribute("deleted", s.user1Addr, types.AttributeType_String, []byte("test")), s.user1Addr), "should save successfully")
+	s.NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, types.NewAttribute("deleted", s.user1, types.AttributeType_String, []byte("test")), s.user1Addr), "should save successfully")
 	s.NoError(s.app.NameKeeper.DeleteRecord(s.ctx, "deleted"), "name record should be removed successfully")
 
 	cases := map[string]struct {
 		name      string
-		accAddr   sdk.AccAddress
+		accAddr   string
 		ownerAddr sdk.AccAddress
 		wantErr   bool
 		errorMsg  string
@@ -390,14 +390,14 @@ func (s *KeeperTestSuite) TestDeleteAttribute() {
 		},
 		"attribute will be removed without error when name has been removed": {
 			name:      "deleted",
-			accAddr:   s.user1Addr,
+			accAddr:   s.user1,
 			ownerAddr: s.user1Addr,
 			wantErr:   false,
 			errorMsg:  "",
 		},
 		"should successfully delete attribute": {
 			name:      "example.attribute",
-			accAddr:   s.user1Addr,
+			accAddr:   s.user1,
 			ownerAddr: s.user1Addr,
 			wantErr:   false,
 			errorMsg:  "",
@@ -440,7 +440,7 @@ func (s *KeeperTestSuite) TestDeleteDistinctAttribute() {
 		name      string
 		value     []byte
 		attrType  types.AttributeType
-		accAddr   sdk.AccAddress
+		accAddr   string
 		ownerAddr sdk.AccAddress
 		wantErr   bool
 		errorMsg  string
@@ -465,7 +465,7 @@ func (s *KeeperTestSuite) TestDeleteDistinctAttribute() {
 			testName:  "should successfully delete attribute",
 			name:      "example.attribute",
 			value:     []byte("123456789"),
-			accAddr:   s.user1Addr,
+			accAddr:   s.user1,
 			ownerAddr: s.user1Addr,
 			wantErr:   false,
 			errorMsg:  "",
@@ -474,7 +474,7 @@ func (s *KeeperTestSuite) TestDeleteDistinctAttribute() {
 			testName:  "should fail to delete attribute, was already deleted",
 			name:      "example.attribute",
 			value:     []byte("123456789"),
-			accAddr:   s.user1Addr,
+			accAddr:   s.user1,
 			ownerAddr: s.user1Addr,
 			wantErr:   true,
 			errorMsg:  "no keys deleted with name example.attribute value 123456789",
@@ -483,7 +483,7 @@ func (s *KeeperTestSuite) TestDeleteDistinctAttribute() {
 			testName:  "should successfully delete attribute, with same key but different value",
 			name:      "example.attribute",
 			value:     []byte("diff value"),
-			accAddr:   s.user1Addr,
+			accAddr:   s.user1,
 			ownerAddr: s.user1Addr,
 			wantErr:   false,
 			errorMsg:  "",
@@ -506,7 +506,7 @@ func (s *KeeperTestSuite) TestDeleteDistinctAttribute() {
 
 func (s *KeeperTestSuite) TestGetAllAttributes() {
 
-	attributes, err := s.app.AttributeKeeper.GetAllAttributes(s.ctx, s.user1Addr)
+	attributes, err := s.app.AttributeKeeper.GetAllAttributes(s.ctx, s.user1)
 	s.NoError(err)
 	s.Equal(0, len(attributes))
 
@@ -517,7 +517,7 @@ func (s *KeeperTestSuite) TestGetAllAttributes() {
 		AttributeType: types.AttributeType_String,
 	}
 	s.NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
-	attributes, err = s.app.AttributeKeeper.GetAllAttributes(s.ctx, s.user1Addr)
+	attributes, err = s.app.AttributeKeeper.GetAllAttributes(s.ctx, s.user1)
 	s.NoError(err)
 	s.Equal(attr.Name, attributes[0].Name)
 	s.Equal(attr.Address, attributes[0].Address)
@@ -533,10 +533,10 @@ func (s *KeeperTestSuite) TestGetAttributesByName() {
 		AttributeType: types.AttributeType_String,
 	}
 	s.NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
-	_, err := s.app.AttributeKeeper.GetAttributes(s.ctx, s.user1Addr, "blah")
+	_, err := s.app.AttributeKeeper.GetAttributes(s.ctx, s.user1, "blah")
 	s.Error(err)
 	s.Equal("no address bound to name", err.Error())
-	attributes, err := s.app.AttributeKeeper.GetAttributes(s.ctx, s.user1Addr, "example.attribute")
+	attributes, err := s.app.AttributeKeeper.GetAttributes(s.ctx, s.user1, "example.attribute")
 	s.NoError(err)
 	s.Equal(1, len(attributes))
 	s.Equal(attr.Name, attributes[0].Name)

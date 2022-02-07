@@ -107,7 +107,7 @@ func SimulateMsgAddAttribute(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk b
 
 		t := types.AttributeType(r.Intn(9))
 		msg := types.NewMsgAddAttributeRequest(
-			mustGetAddress(randomRecord.GetAddress()),
+			randomRecord.GetAddress(),
 			simAccount.Address,
 			randomRecord.Name,
 			t,
@@ -149,7 +149,7 @@ func SimulateMsgUpdateAttribute(k keeper.Keeper, ak authkeeper.AccountKeeperI, b
 		t := types.AttributeType(r.Intn(9))
 		simAccount, _ := simtypes.FindAccount(accs, mustGetAddress(ownerAddress))
 		msg := types.NewMsgUpdateAttributeRequest(
-			mustGetAddress(randomAttribute.GetAddress()),
+			randomAttribute.GetAddress(),
 			mustGetAddress(ownerAddress),
 			randomAttribute.Name,
 			randomAttribute.Value,
@@ -191,7 +191,7 @@ func SimulateMsgDeleteAttribute(k keeper.Keeper, ak authkeeper.AccountKeeperI, b
 		}
 
 		simAccount, _ := simtypes.FindAccount(accs, mustGetAddress(ownerAddress))
-		msg := types.NewMsgDeleteAttributeRequest(mustGetAddress(randomAttribute.Address), mustGetAddress(ownerAddress), randomAttribute.Name)
+		msg := types.NewMsgDeleteAttributeRequest(randomAttribute.Address, mustGetAddress(ownerAddress), randomAttribute.Name)
 
 		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg)
 	}
@@ -226,7 +226,7 @@ func SimulateMsgDeleteDistinctAttribute(k keeper.Keeper, ak authkeeper.AccountKe
 		}
 
 		simAccount, _ := simtypes.FindAccount(accs, mustGetAddress(ownerAddress))
-		msg := types.NewMsgDeleteDistinctAttributeRequest(mustGetAddress(randomAttribute.Address), mustGetAddress(ownerAddress), randomAttribute.Name, randomAttribute.Value)
+		msg := types.NewMsgDeleteDistinctAttributeRequest(randomAttribute.Address, mustGetAddress(ownerAddress), randomAttribute.Name, randomAttribute.Value)
 
 		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg)
 	}

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -123,9 +124,9 @@ func (k msgServer) UpdateAttribute(goCtx context.Context, msg *types.MsgUpdateAt
 func (k msgServer) DeleteAttribute(goCtx context.Context, msg *types.MsgDeleteAttributeRequest) (*types.MsgDeleteAttributeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	accountAddr, err := sdk.AccAddressFromBech32(msg.Account)
+	err := types.ValidateAttributeAddress(msg.Account)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid account address: %w", err)
 	}
 
 	ownerAddr, err := sdk.AccAddressFromBech32(msg.Owner)
@@ -133,7 +134,7 @@ func (k msgServer) DeleteAttribute(goCtx context.Context, msg *types.MsgDeleteAt
 		return nil, err
 	}
 
-	err = k.Keeper.DeleteAttribute(ctx, accountAddr, msg.Name, nil, ownerAddr)
+	err = k.Keeper.DeleteAttribute(ctx, msg.Account, msg.Name, nil, ownerAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -164,9 +165,9 @@ func (k msgServer) DeleteAttribute(goCtx context.Context, msg *types.MsgDeleteAt
 func (k msgServer) DeleteDistinctAttribute(goCtx context.Context, msg *types.MsgDeleteDistinctAttributeRequest) (*types.MsgDeleteDistinctAttributeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	accountAddr, err := sdk.AccAddressFromBech32(msg.Account)
+	err := types.ValidateAttributeAddress(msg.Account)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid account address: %w", err)
 	}
 
 	ownerAddr, err := sdk.AccAddressFromBech32(msg.Owner)
@@ -174,7 +175,7 @@ func (k msgServer) DeleteDistinctAttribute(goCtx context.Context, msg *types.Msg
 		return nil, err
 	}
 
-	err = k.Keeper.DeleteAttribute(ctx, accountAddr, msg.Name, &msg.Value, ownerAddr)
+	err = k.Keeper.DeleteAttribute(ctx, msg.Account, msg.Name, &msg.Value, ownerAddr)
 	if err != nil {
 		return nil, err
 	}

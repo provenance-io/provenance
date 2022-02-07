@@ -136,7 +136,7 @@ func (s *MigrateTestSuite) TestMigrateTestSuite() {
 		s.Assert().Nil(result)
 
 		// Should find attribute with updated key
-		key = types.AccountAttributeKey(acc, attr)
+		key = types.AddrAttributeKey(acc, attr)
 		result = store.Get(key)
 		s.Assert().NotNil(result)
 		var resultAttr types.Attribute
