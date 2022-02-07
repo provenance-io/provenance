@@ -71,21 +71,27 @@ jobs:
 
   build_linux:
     runs-on: ubuntu-latest
+    env:
+      # If you change this, make sure to change it in sims.yml too (and check for it elsewhere).
+      ROCKS_DB_VERSION: 6.28.2
     needs:
       - build_init
     name: Build Linux
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Setup go
-        uses: actions/setup-go@v2.1.5
-        with:
-          go-version: ${{ needs.build_init.outputs.go_version }}
       - name: Install deps
         run: |
           sudo apt-get update
           sudo apt-get install -y libleveldb-dev
-          sudo apt-get install -y librocksdb-dev
+          sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
+      - name: Build rocksdb
+        run: |
+          scripts/build_and_install_rocksdb.sh $ROCKS_DB_VERSION
+      - name: Setup go
+        uses: actions/setup-go@v2.1.5
+        with:
+          go-version: ${{ needs.build_init.outputs.go_version }}
       - name: Build linux binary
         run: |
           make VERSION=${{ needs.build_init.outputs.version }} build-release-zip
