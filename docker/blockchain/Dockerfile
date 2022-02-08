@@ -1,5 +1,6 @@
 FROM golang:1.17-buster as build
 ARG VERSION
+ARG JOBS
 
 WORKDIR /go/src/github.com/provenance-io/provenance
 
@@ -16,14 +17,15 @@ COPY cmd/ ./cmd/
 COPY internal/ ./internal/
 COPY x/ ./x/
 COPY vendor/ ./vendor/
+COPY scripts/build_and_install_rocksdb.sh ./scripts/
+COPY Makefile sims.mk ./
 COPY testutil/ ./testutil/
 COPY .git/ ./.git/
 COPY contrib/ ./contrib/
-COPY scripts/build_and_install_rocksdb.sh ./scripts/
-COPY Makefile sims.mk ./
+
 
 # Build and install rocksdb
-RUN scripts/build_and_install_rocksdb.sh 6.28.2
+RUN scripts/build_and_install_rocksdb.sh 6.28.2 $JOBS
 
 # Build and install provenanced
 ENV VERSION=$VERSION
@@ -41,6 +43,6 @@ COPY --from=build /go/bin/provenanced /usr/bin/provenanced
 ENV PIO_HOME=/home/provenance
 WORKDIR /home/provenance
 
-EXPOSE 9090 26656 26657
+EXPOSE 1317 9090 26656 26657
 CMD ["/usr/bin/provenanced"]
 

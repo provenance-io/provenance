@@ -394,8 +394,7 @@ vendor:
 
 # Full build inside a docker container for a clean release build
 docker-build: vendor
-	docker build -t provenance-io/blockchain . -f docker/blockchain/Dockerfile
-	docker build -t provenance-io/blockchain-gateway . -f docker/gateway/Dockerfile
+	docker build --build-arg JOBS=2 -t provenance-io/blockchain . -f docker/blockchain/Dockerfile
 
 # Quick build using local environment and go platform target options.
 docker-build-local: vendor
