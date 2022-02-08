@@ -23,7 +23,7 @@ COPY scripts/build_and_install_rocksdb.sh ./scripts/
 COPY Makefile sims.mk ./
 
 # Build and install rocksdb
-RUN scripts/build_and_install_rocksdb.sh 6.28.2 1
+RUN scripts/build_and_install_rocksdb.sh 6.28.2
 
 # Build and install provenanced
 ENV VERSION=$VERSION
