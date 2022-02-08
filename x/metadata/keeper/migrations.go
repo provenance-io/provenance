@@ -32,8 +32,8 @@ func (m *Migrator) Migrate1to2(ctx sdk.Context) error {
 func (m *Migrator) Migrate2to3(ctx sdk.Context) error {
 	ctx.Logger().Info("Migrating Metadata Module from Version 2 to 3")
 	var goodIndexes keyLookup
-	var sessionsToDelete []types.MetadataAddress
-	var sessionsToKeep keyLookup
+	// var sessionsToDelete []types.MetadataAddress
+	// var sessionsToKeep keyLookup
 	steps := []struct {
 		name   string
 		runner func() error
@@ -58,26 +58,26 @@ func (m *Migrator) Migrate2to3(ctx sdk.Context) error {
 			name:   "Reindexing contract specs",
 			runner: func() error { return reindexContractSpecs(ctx, m.keeper, goodIndexes) },
 		},
-		{
-			name: "Identifying sessions to keep",
-			runner: func() error {
-				var err error
-				sessionsToKeep, err = identifySessionsWithRecords(ctx, m.keeper)
-				return err
-			},
-		},
-		{
-			name: "Finding empty sessions",
-			runner: func() error {
-				var err error
-				sessionsToDelete, err = identifySessionsToDelete(ctx, m.keeper, sessionsToKeep)
-				return err
-			},
-		},
-		{
-			name:   "Deleting empty sessions",
-			runner: func() error { return deleteSessions(ctx, m.keeper, sessionsToDelete) },
-		},
+		// {
+		// 	name: "Identifying sessions to keep",
+		// 	runner: func() error {
+		// 		var err error
+		// 		sessionsToKeep, err = identifySessionsWithRecords(ctx, m.keeper)
+		// 		return err
+		// 	},
+		// },
+		// {
+		// 	name: "Finding empty sessions",
+		// 	runner: func() error {
+		// 		var err error
+		// 		sessionsToDelete, err = identifySessionsToDelete(ctx, m.keeper, sessionsToKeep)
+		// 		return err
+		// 	},
+		// },
+		// {
+		// 	name:   "Deleting empty sessions",
+		// 	runner: func() error { return deleteSessions(ctx, m.keeper, sessionsToDelete) },
+		// },
 	}
 
 	for i, step := range steps {
