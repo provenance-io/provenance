@@ -19,9 +19,3 @@ nexusPublishing {
         }
     }
 }
-
-tasks.register<io.provenance.DownloadProtosTask>("downloadProtos") {
-    cosmosVersion = project.property("cosmos.version") as String?
-    wasmdVersion = project.property("wasmd.version") as String?
-    ibcVersion = project.property("ibc.version") as String?
-}
