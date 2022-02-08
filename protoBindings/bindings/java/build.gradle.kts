@@ -48,9 +48,6 @@ tasks.withType<Javadoc> { enabled = true }
 tasks.withType<JavaCompile> {
     sourceCompatibility = JavaVersion.VERSION_11.toString()
     targetCompatibility = sourceCompatibility
-
-    // Make sure protobuf definitions are present prior to building:
-    dependsOn(":downloadProtos")
 }
 
 // Protobuf file source directories

@@ -2,10 +2,8 @@ syntax = "proto3";
 package provenance.msgfees.v1;
 
 import "gogoproto/gogo.proto";
-import "google/protobuf/any.proto";
 import "google/api/annotations.proto";
 import "provenance/msgfees/v1/msgfees.proto";
-import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 
