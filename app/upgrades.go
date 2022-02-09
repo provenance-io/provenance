@@ -75,6 +75,7 @@ var handlers = map[string]appUpgrade{
 			return resultVM, AddMsgBasedFees(app, ctx)
 
 		},
+		Added: []string{msgfeestypes.ModuleName},
 	},
 	// TODO - Add new upgrade definitions here.
 }
