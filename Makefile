@@ -100,30 +100,6 @@ ifeq ($(WITH_CLEVELDB),yes)
   endif
 endif
 
-# rocksdb linker settings
-ifeq ($(WITH_ROCKSDB),yes)
-  ifeq ($(UNAME_S),Darwin)
-    ROCKSDB_PATH ?= $(shell brew --prefix rocksdb 2> /dev/null)
-    CGO_CFLAGS  += -I$(ROCKSDB_PATH)/include
-    CGO_LDFLAGS += -L$(ROCKSDB_PATH)/lib
-    CGO_LDFLAGS += -lrocksdb
-    CGO_LDFLAGS += -lstdc++
-    CGO_LDFLAGS += -lm
-    CGO_LDFLAGS += -lz
-    CGO_LDFLAGS += -lbz2
-    CGO_LDFLAGS += -lsnappy
-    CGO_LDFLAGS += -llz4
-    CGO_LDFLAGS += -lzstd
-    #CGO_LDFLAGS += -ljemalloc # only needed for older versions of rocksdb.
-    CGO_LDFLAGS += -L$(shell brew --prefix snappy 2> /dev/null)/lib
-    CGO_LDFLAGS += -L$(shell brew --prefix lz4 2> /dev/null)/lib/
-    CGO_LDFLAGS += -L$(shell brew --prefix zstd 2> /dev/null)/lib/
-  else ifeq ($(UNAME_S),Linux)
-    # Intentionally left blank to leave it up to already installed libraries.
-  endif
-endif
-
-
 build_tags += $(BUILD_TAGS)
 build_tags := $(strip $(build_tags))
 whitespace :=
