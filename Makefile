@@ -442,7 +442,7 @@ proto-lint:
 
 proto-check-breaking:
 	@echo "Check breaking Protobuf files"
-	@$(DOCKER_BUF) breaking proto --against $(HTTPS_GIT)#branch=main --error-format=json
+	@$(DOCKER_BUF) breaking proto --against $(HTTPS_GIT)#branch=main,subdir=proto --error-format=json
 
 proto-update-deps:
 	@echo "Updating Protobuf files"
