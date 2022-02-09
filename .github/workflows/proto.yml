@@ -18,7 +18,7 @@ jobs:
         with:
           input: 'proto'
           # The 'main' branch of the GitHub repository that defines the module.
-          against: 'https://github.com/provenance-io/provenance.git#branch=main'
+          against: 'buf.build/provenance-io/provenance'
       - uses: bufbuild/buf-breaking-action@v1
         with:
           input: 'third_party/proto'
