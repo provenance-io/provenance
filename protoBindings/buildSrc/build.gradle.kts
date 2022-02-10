@@ -12,12 +12,3 @@ dependencies {
     api("commons-io:commons-io:2.6")
     api("org.apache.httpcomponents:httpclient:4.5.12")
 }
-
-gradlePlugin {
-    plugins {
-        create("downloadProtos") {
-            id = "io.provenance.download-protos"
-            implementationClass = "io.provenance.DownloadProtosPlugin"
-        }
-    }
-}
