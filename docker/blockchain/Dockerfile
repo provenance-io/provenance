@@ -1,6 +1,6 @@
 FROM golang:1.17-buster as build
 ARG VERSION
-ARG JOBS
+ARG ROCKSDB_JOBS
 
 WORKDIR /go/src/github.com/provenance-io/provenance
 
@@ -25,7 +25,7 @@ COPY contrib/ ./contrib/
 
 
 # Build and install rocksdb
-RUN scripts/build_and_install_rocksdb.sh 6.28.2 $JOBS
+RUN make ROCKSDB_JOBS=${ROCKSDB_JOBS} rocksdb
 
 # Build and install provenanced
 ENV VERSION=$VERSION
