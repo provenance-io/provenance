@@ -198,8 +198,10 @@ jobs:
           asset_content_type: application/octet-stream
 
   java_kotlin_release:
-    name: Maven Publishing
     runs-on: ubuntu-latest
+    needs:
+      - build_init
+    name: Maven Publishing
     steps:
       - name: Checkout
         uses: actions/checkout@v2
