@@ -23,9 +23,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
-    env:
-      # If you change this, make sure to change it in release.yml too (and check for it elsewhere).
-      ROCKS_DB_VERSION: 6.28.2
     steps:
       - uses: actions/checkout@v2
       - name: Install Deps
@@ -37,7 +34,7 @@ jobs:
           sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
       - name: Build rocksdb
         run: |
-          scripts/build_and_install_rocksdb.sh $ROCKS_DB_VERSION
+          make rocksdb
       - uses: actions/setup-go@v2.1.5
         with:
           go-version: 1.17

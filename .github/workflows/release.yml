@@ -6,10 +6,6 @@ on:
       - "v[0-9]+.[0-9]+.[0-9]+"     # Push events to matching v*, i.e. v1.0, v20.15.10
       - "v[0-9]+.[0-9]+.[0-9]+-rc*" # Push events to matching v*, i.e. v1.0-rc1, v20.15.10-rc5
 
-env:
-  # If you change this, make sure to change it in sims.yml too (and check for it elsewhere).
-  ROCKS_DB_VERSION: 6.28.2
-
 jobs:
   #  This action cleans up previously running instances of a workflow on the same branch. This accomplishes
   #  the task of automatically cancelling CI runs on pushes to the same branch, which is a common feature in
@@ -48,7 +44,7 @@ jobs:
           brew install leveldb
       - name: Build rocksdb
         run: |
-          scripts/build_and_install_rocksdb.sh $ROCKS_DB_VERSION
+          make rocksdb
       - name: Setup go
         uses: actions/setup-go@v2.1.5
         with:
@@ -90,7 +86,7 @@ jobs:
           sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
       - name: Build rocksdb
         run: |
-          scripts/build_and_install_rocksdb.sh $ROCKS_DB_VERSION
+          make rocksdb
       - name: Setup go
         uses: actions/setup-go@v2.1.5
         with:
