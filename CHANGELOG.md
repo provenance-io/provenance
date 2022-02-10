@@ -77,6 +77,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add migration to delete empty sessions [#480](https://github.com/provenance-io/provenance/issues/480)
 * Add Java distribution tag to workflow [#624](https://github.com/provenance-io/provenance/issues/624)
 * Add `msgfees` module to added store upgrades [#640](https://github.com/provenance-io/provenance/issues/640)
+* Use `nhash` for base denom in gov proposal upgrade [#648](https://github.com/provenance-io/provenance/issues/648)
 
 ## [v1.7.6](https://github.com/provenance-io/provenance/releases/tag/v1.7.6) - 2021-12-15
 
