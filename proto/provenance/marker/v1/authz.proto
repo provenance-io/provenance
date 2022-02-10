@@ -1,3 +1,4 @@
+syntax = "proto3";
 package provenance.marker.v1;
 
 import "gogoproto/gogo.proto";

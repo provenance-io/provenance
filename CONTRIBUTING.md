@@ -150,6 +150,8 @@ We use [Protocol Buffers](https://developers.google.com/protocol-buffers) along 
 
 For determinstic behavior around Protobuf tooling, everything is containerized using Docker. Make sure to have Docker installed on your machine, or head to [Docker's website](https://docs.docker.com/get-docker/) to install it.
 
+For updating the `third_party` `.proto` files, you can run `make proto-update-deps` command. 
+
 For formatting code in `.proto` files, you can run `make proto-format` command.
 
 For linting and checking breaking changes, we use [buf](https://buf.build/). You can use the commands `make proto-lint` and `make proto-check-breaking` to respectively lint your proto files and check for breaking changes.

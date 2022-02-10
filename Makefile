@@ -241,7 +241,7 @@ build-release-rezip:
 	scripts/fix-gon-zip $(ZIP_FROM) && \
 		mv -v $(ZIP_FROM) $(ZIP_TO)
 
-.PHONY: bulid-release-proto
+.PHONY: build-release-proto
 build-release-proto:
 	scripts/protoball.sh $(RELEASE_PROTO)
 
@@ -408,7 +408,7 @@ devnet-stop:
 ##############################
 # Proto -> golang compilation
 ##############################
-proto-all: proto-tools proto-format proto-lint proto-gen proto-check-breaking proto-swagger-gen
+proto-all: proto-update-deps proto-format proto-lint proto-check-breaking proto-gen proto-swagger-gen
 
 containerProtoVer=v0.2
 containerProtoImage=tendermintdev/sdk-proto-gen:$(containerProtoVer)
@@ -437,92 +437,18 @@ proto-format:
 		find ./ -not -path "./third_party/*" -name *.proto -exec clang-format -i {} \; ; fi
 
 proto-lint:
+	@echo "Linting Protobuf files"
 	@$(DOCKER_BUF) lint --error-format=json
 
 proto-check-breaking:
-	@$(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=main
-
-TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/v0.34.x/proto/tendermint
-GOGO_PROTO_URL   = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
-COSMOS_PROTO_URL = https://raw.githubusercontent.com/regen-network/cosmos-proto/master
-COSMOS_SDK_URL   = https://raw.githubusercontent.com/cosmos/cosmos-sdk/release/v0.43.x/proto/cosmos
-CONFIO_URL       = https://raw.githubusercontent.com/confio/ics23/v0.6.3
-
-TM_CRYPTO_TYPES     = third_party/proto/tendermint/crypto
-TM_ABCI_TYPES       = third_party/proto/tendermint/abci
-TM_TYPES            = third_party/proto/tendermint/types
-TM_VERSION          = third_party/proto/tendermint/version
-TM_LIBS             = third_party/proto/tendermint/libs/bits
-
-GOGO_PROTO_TYPES     = third_party/proto/gogoproto
-COSMOS_PROTO_TYPES   = third_party/proto/cosmos_proto
-COSMOS_BASE_TYPES    = third_party/proto/cosmos/base
-COSMOS_SIGNING_TYPES = third_party/proto/cosmos/tx/signing
-COSMOS_CRYPTO_TYPES  = third_party/proto/cosmos/crypto
-COSMOS_AUTH_TYPES    = third_party/proto/cosmos/auth
-COSMOS_BANK_TYPES    = third_party/proto/cosmos/bank
-CONFIO_TYPES         = third_party/proto/confio
+	@echo "Check breaking Protobuf files"
+	@$(DOCKER_BUF) breaking proto --against $(HTTPS_GIT)#branch=main,subdir=proto --error-format=json
 
 proto-update-deps:
-	@mkdir -p $(GOGO_PROTO_TYPES)
-	@curl -sSL $(GOGO_PROTO_URL)/gogoproto/gogo.proto > $(GOGO_PROTO_TYPES)/gogo.proto
+	@echo "Updating Protobuf files"
+	sh ./scripts/proto-update-deps.sh
 
-	@mkdir -p $(COSMOS_PROTO_TYPES)
-	@curl -sSL $(COSMOS_PROTO_URL)/cosmos.proto > $(COSMOS_PROTO_TYPES)/cosmos.proto
-
-	@mkdir -p $(COSMOS_BASE_TYPES)/v1beta1
-	@curl -sSL $(COSMOS_SDK_URL)/base/v1beta1/coin.proto > $(COSMOS_BASE_TYPES)/v1beta1/coin.proto
-
-	@mkdir -p $(COSMOS_BASE_TYPES)/query/v1beta1
-	@curl -sSL $(COSMOS_SDK_URL)/base/query/v1beta1/pagination.proto > $(COSMOS_BASE_TYPES)/query/v1beta1/pagination.proto
-
-	@mkdir -p $(COSMOS_SIGNING_TYPES)/v1beta1
-	@curl -sSL $(COSMOS_SDK_URL)/tx/signing/v1beta1/signing.proto > $(COSMOS_SIGNING_TYPES)/v1beta1/signing.proto
-
-	@mkdir -p $(COSMOS_CRYPTO_TYPES)/secp256k1
-	@curl -sSL $(COSMOS_SDK_URL)/crypto/secp256k1/keys.proto > $(COSMOS_CRYPTO_TYPES)/secp256k1/keys.proto
-
-	@mkdir -p $(COSMOS_CRYPTO_TYPES)/multisig/v1beta1
-	@curl -sSL $(COSMOS_SDK_URL)/crypto//multisig/v1beta1/multisig.proto > $(COSMOS_CRYPTO_TYPES)/multisig/v1beta1/multisig.proto
-
-	@mkdir -p $(COSMOS_AUTH_TYPES)/v1beta1
-	@curl -sSL $(COSMOS_SDK_URL)/auth/v1beta1/auth.proto > $(COSMOS_AUTH_TYPES)/v1beta1/auth.proto
-
-	@mkdir -p $(COSMOS_BANK_TYPES)/v1beta1
-	@curl -sSL $(COSMOS_SDK_URL)/bank/v1beta1/bank.proto > $(COSMOS_BANK_TYPES)/v1beta1/bank.proto
-
-	@mkdir -p $(TM_ABCI_TYPES)
-	@curl -sSL $(TM_URL)/abci/types.proto > $(TM_ABCI_TYPES)/types.proto
-
-	@mkdir -p $(TM_VERSION)
-	@curl -sSL $(TM_URL)/version/types.proto > $(TM_VERSION)/types.proto
-
-	@mkdir -p $(TM_TYPES)
-	@curl -sSL $(TM_URL)/types/types.proto > $(TM_TYPES)/types.proto
-	@curl -sSL $(TM_URL)/types/evidence.proto > $(TM_TYPES)/evidence.proto
-	@curl -sSL $(TM_URL)/types/params.proto > $(TM_TYPES)/params.proto
-	@curl -sSL $(TM_URL)/types/validator.proto > $(TM_TYPES)/validator.proto
-
-	@mkdir -p $(TM_CRYPTO_TYPES)
-	@curl -sSL $(TM_URL)/crypto/proof.proto > $(TM_CRYPTO_TYPES)/proof.proto
-	@curl -sSL $(TM_URL)/crypto/keys.proto > $(TM_CRYPTO_TYPES)/keys.proto
-
-	@mkdir -p $(TM_LIBS)
-	@curl -sSL $(TM_URL)/libs/bits/types.proto > $(TM_LIBS)/types.proto
-
-	@mkdir -p $(CONFIO_TYPES)
-	@curl -sSL $(CONFIO_URL)/proofs.proto > $(CONFIO_TYPES)/proofs.proto.orig
-## insert go, java package option into proofs.proto file
-## Issue link: https://github.com/confio/ics23/issues/32 (instead of a simple sed we need 4 lines cause bsd sed -i is incompatible)
-	@head -n3 $(CONFIO_TYPES)/proofs.proto.orig > $(CONFIO_TYPES)/proofs.proto
-	@echo 'option go_package = "github.com/confio/ics23/go";' >> $(CONFIO_TYPES)/proofs.proto
-	@echo 'option java_package = "tech.confio.ics23";' >> $(CONFIO_TYPES)/proofs.proto
-	@echo 'option java_multiple_files = true;' >> $(CONFIO_TYPES)/proofs.proto
-	@tail -n+4 $(CONFIO_TYPES)/proofs.proto.orig >> $(CONFIO_TYPES)/proofs.proto
-	@rm $(CONFIO_TYPES)/proofs.proto.orig
-
-.PHONY: proto-all proto-gen proto-format proto-gen-any proto-lint proto-check-breaking
-.PHONY: proto-update-deps
+.PHONY: proto-all proto-gen proto-format proto-gen-any proto-lint proto-check-breaking proto-update-deps
 
 
 ##############################

@@ -1,0 +1,52 @@
+version: v1
+name: buf.build/provenance-io/provenance
+deps:
+  - buf.build/provenance-io/third-party
+breaking:
+  use:
+    - FILE
+  except:
+    - FILE_NO_DELETE
+    - FILE_SAME_SYNTAX
+  ignore:
+    - confio
+    - cosmos
+    - cosmos_proto
+    - cosmowasm
+    - gogoproto
+    - google
+    - ibc
+    - tendermint
+    - proofs.proto
+lint:
+  use:
+    - DEFAULT
+    - COMMENTS
+    - FILE_LOWER_SNAKE_CASE
+  except:
+    - UNARY_RPC
+    - COMMENT_FIELD
+    - SERVICE_SUFFIX
+    - PACKAGE_VERSION_SUFFIX
+    - RPC_REQUEST_STANDARD_NAME
+  ignore:
+    - cosmos
+    - cosmos_proto
+    - cosmowasm
+    - gogoproto
+    - google
+    - ibc
+    - tendermint
+    - proofs.proto
+  ignore_only:
+    COMMENT_MESSAGE:
+      - provenance/metadata/v1/p8e/p8e.proto
+    COMMENT_ENUM:
+      - provenance/metadata/v1/p8e/p8e.proto
+    COMMENT_ENUM_VALUE:
+      - provenance/metadata/v1/p8e/p8e.proto
+    ENUM_ZERO_VALUE_SUFFIX:
+      - provenance/metadata/v1/p8e/p8e.proto
+      - provenance/marker/v1/si.proto
+    ENUM_VALUE_PREFIX:
+      - provenance/metadata/v1/p8e/p8e.proto
