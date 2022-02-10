@@ -301,7 +301,11 @@ linkify:
 update-tocs:
 	scripts/update-toc.sh x
 
-.PHONY: go-mod-cache go.sum lint clean format check-built statik linkify update-tocs
+# Download, compile, and install rocksdb so that it can be used when doing a build.
+rocksdb:
+	scripts/build_and_install_rocksdb.sh "$(ROCKSDB_VERSION)" "$(ROCKSDB_JOBS)"
+
+.PHONY: go-mod-cache go.sum lint clean format check-built statik linkify update-tocs rocksdb
 
 
 validate-go-version: ## Validates the installed version of go against Provenance's minimum requirement.
@@ -370,7 +374,7 @@ vendor:
 
 # Full build inside a docker container for a clean release build
 docker-build: vendor
-	docker build --build-arg JOBS=2 -t provenance-io/blockchain . -f docker/blockchain/Dockerfile
+	docker build --build-arg ROCKSDB_JOBS=2 -t provenance-io/blockchain . -f docker/blockchain/Dockerfile
 
 # Quick build using local environment and go platform target options.
 docker-build-local: vendor
