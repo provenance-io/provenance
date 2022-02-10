@@ -9,7 +9,7 @@ BINDIR ?= $(GOPATH)/bin
 BUILDDIR ?= $(CURDIR)/build
 
 LEDGER_ENABLED ?= true
-WITH_CLEVELDB ?= yes
+WITH_BADGER ?= yes
 
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 BRANCH_PRETTY := $(subst /,-,$(BRANCH))
@@ -48,9 +48,8 @@ include contrib/devtools/Makefile
 # Build Flags/Tags
 ##############################
 build_tags = netgo
-ifeq ($(WITH_CLEVELDB),yes)
-  build_tags += gcc
-  build_tags += cleveldb
+ifeq ($(WITH_BADGER),yes)
+  build_tags += badgerdb
 endif
 
 ifeq ($(LEDGER_ENABLED),true)
@@ -85,18 +84,6 @@ else ifeq ($(UNAME_S),Linux)
   CGO_LDFLAGS = -Wl,-rpath,\$$ORIGIN
 endif
 
-# cleveldb linker settings
-ifeq ($(WITH_CLEVELDB),yes)
-  ifeq ($(UNAME_S),Darwin)
-    LEVELDB_PATH = $(shell brew --prefix leveldb 2>/dev/null || echo "$(HOME)/Cellar/leveldb/1.22/include")
-    CGO_CFLAGS   = -I$(LEVELDB_PATH)/include
-    CGO_LDFLAGS += -L$(LEVELDB_PATH)/lib
-  else ifeq ($(UNAME_S),Linux)
-    # Intentionally left blank to leave it up to already installed libraries.
-  endif
-endif
-
-
 build_tags += $(BUILD_TAGS)
 build_tags := $(strip $(build_tags))
 whitespace :=
@@ -110,11 +97,9 @@ ldflags = -w -s \
 	-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
 	-X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" \
-	-X github.com/tendermint/tendermint/version.TMCoreSemVer=$(TM_VERSION)
+	-X github.com/tendermint/tendermint/version.TMCoreSemVer=$(TM_VERSION) \
+	-X github.com/cosmos/cosmos-sdk/types.DBBackend=badgerdb
 
-ifeq ($(WITH_CLEVELDB),yes)
-	ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=cleveldb
-endif
 ldflags += $(LDFLAGS)
 ldflags := $(strip $(ldflags))
 BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags)' -trimpath
@@ -158,6 +143,14 @@ run: check-built run-config;
 	$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced start
 
 .PHONY: install build build-linux run
+
+##############################
+# Build DB Migration Tools
+##############################
+
+build-dbmigrate: validate-go-version go.sum
+	mkdir -p $(BUILDDIR)
+	$(GO) build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./cmd/dbmigrate
 
 ##############################
 # Release artifacts and plan #
