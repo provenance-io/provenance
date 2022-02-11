@@ -1,6 +1,6 @@
 name: Maven Publish
 on:
-  create
+  push
 
 jobs:
   java_build:
