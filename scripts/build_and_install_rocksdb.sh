@@ -2,13 +2,17 @@
 
 # This script will download, compile, and install rocksdb.
 # It downloads and unpacks a tar in the current working directory, then clean them up when done.
-# Usage: build_rocksdb.sh <version>
+# Usage: build_and_install_rocksdb.sh <version>
 # As of writing this (Feb 7, 2022), the current version is 6.28.2
 
 if [[ "$1" == '-h' || "$1" == '--help' || "$1" == 'help' ]]; then
     echo "Usage: $( basename $0 ) <version> [<jobs>]"
     echo 'See https://github.com/facebook/rocksdb/releases for version info.'
     echo '<jobs> is the number of parallel jobs for make to use. The default comes from the nproc command.'
+    echo 'The arguments can also be defined using environment variables:'
+    echo '  ROCKSDB_VERSION for the <version>.'
+    echo '  ROCKSDB_JOBS for the <jobs>.'
+    echo '  ROCKSDB_SUDO controls whether or not to use sudo when installing the built libraries. Must be yes or no if set.'
     exit 0
 fi
 
@@ -35,12 +39,10 @@ if [[ -n "$ROCKSDB_JOBS" && "$ROCKSDB_JOBS" =~ [^[:digit:]] ]]; then
     exit 1
 fi
 
-# In order to install the compiled libraries:
-#  * For linux (at least in the github action runners), sudo is required.
-#  * From inside a docker container, sudo isn't needed (and isn't even available), so we cannot use sudo there.
-#  * On a mac, it ends up using brew, which complains if you use sudo (security concerns).
-# So basically, if sudo is available and brew is not, use sudo for the install.
-# This is overrideable by setting the ROCKSDB_SUDO environment variable to either 'yes' or 'no'.
+# The github action runners need sudo when installing libraries, but all other cases I've found do not.
+# To use sudo for just the installation portion, set the ROCKSDB_SUDO environment variable to 'yes'.
+# export ROCKSDB_SUDO='yes'
+# You'll need this if the install command fails due to permissions (might manifest as a file does not exist error).
 SUDO=''
 if [[ -n "$ROCKSDB_SUDO" ]]; then
     if [[ "$ROCKSDB_SUDO" =~ ^[yY]([eE][sS])?$ ]]; then
@@ -49,8 +51,6 @@ if [[ -n "$ROCKSDB_SUDO" ]]; then
         echo "Illegal ROCKSDB_SUDO value: [$ROCKSDB_SUDO]. Must be either 'yes' or 'no'." >&2
         exit 1
     fi
-elif command -v sudo > /dev/null 2>&1 && ! command -v brew > /dev/null 2>&1; then
-    SUDO="sudo"
 fi
 
 set -ex
