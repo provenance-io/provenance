@@ -34,6 +34,7 @@ jobs:
           sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
       - name: Build rocksdb
         run: |
+          export ROCKSDB_SUDO='yes'
           make rocksdb
       - uses: actions/setup-go@v2.1.5
         with:
