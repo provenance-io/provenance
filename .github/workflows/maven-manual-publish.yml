@@ -33,7 +33,7 @@ jobs:
         run: |
           cd protoBindings
           ./gradlew publish $(if [ "${{github.event.release.prerelease}}" = "true" ]; then echo 'closeSonatypeStagingRepository'; else echo 'closeAndReleaseSonatypeStagingRepository'; fi) \
-            -PartifactVersion=1.8.0-rc5 \
+            -PartifactVersion=$(echo "v1.8.0-rc5" | sed -e 's/^v//') \ \
             -Psigning.keyId=B7D30ABE \
             -Psigning.password="${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}" \
             -Psigning.secretKeyRingFile=$GITHUB_WORKSPACE/release.gpg \
