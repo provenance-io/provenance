@@ -19,9 +19,3 @@ File(rootDir, "bindings").walk().filter {
     include(it.name)
     project(":${it.name}").projectDir = it
 }
-
-/*
- * The artifact version is derived from the github release branch version.
- * To override this behavior, uncomment the line below and set the version number.
- */
-//artifactVersion = "1.0-SNAPSHOT"

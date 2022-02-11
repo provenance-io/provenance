@@ -63,9 +63,6 @@ tasks.withType<KotlinCompile> {
         languageVersion = "1.5"
         apiVersion = "1.5"
     }
-
-    // Make sure protobuf definitions are present prior to building:
-    dependsOn(":downloadProtos")
 }
 
 // Protobuf file source directories

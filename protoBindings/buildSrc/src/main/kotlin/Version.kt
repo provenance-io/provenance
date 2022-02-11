@@ -1,8 +1,7 @@
 import org.gradle.api.Project
 
-// Check to see if a version number is set in settings.gradle.kts via artifactVersion.
-// If it is not set, get the version number from the release branch.
-// Fall back to `branch-hash` when the previous two are not true.
+// Check to see if a version number is passed via `-PartifactVersion=x.x.x`.
+// If it is not set, fall back to `{branch}-{hash}`.
 fun Project.artifactVersion(project: Project): String =
     project.findProperty("artifactVersion")?.toString() ?: getBuildVersion().toString()
 
