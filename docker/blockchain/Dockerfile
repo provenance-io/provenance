@@ -30,9 +30,6 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/
 
-ADD https://github.com/CosmWasm/wasmvm/releases/download/v1.0.0-beta6/libwasmvm_muslc.a /lib/libwasmvm_muslc.a
-RUN sha256sum /lib/libwasmvm_muslc.a | grep e9cb9517585ce3477905e2d4e37553d85f6eac29bdc3b9c25c37c8f5e554045c
-
 COPY --from=build /go/src/github.com/provenance-io/provenance/vendor/github.com/CosmWasm/wasmvm/api/libwasmvm.so /lib/x86_64-linux-gnu/libwasmvm.so
 COPY --from=build /go/bin/provenanced /usr/bin/provenanced
 
