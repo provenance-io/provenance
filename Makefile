@@ -169,6 +169,14 @@ run: check-built run-config;
 .PHONY: install build build-linux run
 
 ##############################
+# Build DB Migration Tools
+##############################
+
+build-dbmigrate: validate-go-version go.sum
+       mkdir -p $(BUILDDIR)
+       $(GO) build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./cmd/dbmigrate
+
+##############################
 # Release artifacts and plan #
 ##############################
 
