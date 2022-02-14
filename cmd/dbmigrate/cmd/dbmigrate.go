@@ -170,7 +170,9 @@ func convertDB(command *cobra.Command, logger tmlog.Logger, homePath, sourceDBTy
 		return fmt.Errorf("could not move new db into place: %w", err)
 	}
 
-	logger.Info("Updating config.", "db_backend", targetDBType)
+	// TODO: Do superficial check of permissions/ownership and issue warning if different.
+
+	logger.Info("Updating config.", "key", "db_backend", "from", sourceDBType, "to", targetDBType)
 	tmConfig, err := config.ExtractTmConfig(command)
 	if err != nil {
 		return fmt.Errorf("could not extract Tendermint config: %w", err)
@@ -210,6 +212,8 @@ func getDataDirContents(dataDirPath string) ([]string, []string, error) {
 					for _, nonDBDir := range subNonDBs {
 						nonDBs = append(nonDBs, filepath.Join(entry.Name(), nonDBDir))
 					}
+				} else {
+					nonDBs = append(nonDBs, entry.Name())
 				}
 			}
 		} else {
@@ -226,6 +230,11 @@ func getDataDirContents(dataDirPath string) ([]string, []string, error) {
 func convertDBDir(logger tmlog.Logger, sourceDataDir, targetDataDir, dbDir, sourceDBType, targetDBType string) error {
 	sourceDir, dbName := splitDBPath(filepath.Join(sourceDataDir, dbDir))
 	targetDir, _ := splitDBPath(filepath.Join(targetDataDir, dbDir))
+	targetDataDirInfo, err := os.Stat(targetDataDir)
+	if err != nil {
+		return fmt.Errorf("could not stat target data dir: %w", err)
+	}
+	targetDataDirMode := targetDataDirInfo.Mode()
 
 	logger.Info("Setting up migration of directory.", "from", sourceDir, "to", targetDir)
 
@@ -235,6 +244,12 @@ func convertDBDir(logger tmlog.Logger, sourceDataDir, targetDataDir, dbDir, sour
 	}
 	defer sourceDB.Close()
 
+	if targetDir != targetDataDir {
+		err = os.MkdirAll(targetDir, targetDataDirMode)
+		if err != nil {
+			return fmt.Errorf("could not create target sub-directory: %w", err)
+		}
+	}
 	targetDB, err := tmdb.NewDB(dbName, tmdb.BackendType(targetDBType), targetDir)
 	if err != nil {
 		return fmt.Errorf("could not open %q target db: %w", dbName, err)
