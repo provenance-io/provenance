@@ -1,9 +1,11 @@
 package main
 
 import (
-	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/provenance-io/provenance/cmd/dbmigrate/cmd"
 	"os"
+
+	"github.com/cosmos/cosmos-sdk/server"
+
+	"github.com/provenance-io/provenance/cmd/dbmigrate/cmd"
 )
 
 func main() {
@@ -17,4 +19,3 @@ func main() {
 		}
 	}
 }
-

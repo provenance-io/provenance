@@ -31,7 +31,7 @@ var PossibleDBTypes = []string{
 	string(tmdb.GoLevelDBBackend), string(tmdb.CLevelDBBackend),
 }
 
-// NewDBMigrateCmd creates a commmand for migrating the provenanced database from one underlying type to another.
+// NewDBMigrateCmd creates a command for migrating the provenanced database from one underlying type to another.
 func NewDBMigrateCmd() *cobra.Command {
 	// Creating the client context early because the WithViper function
 	// creates a new Viper instance which wipes out the existing global one.
@@ -43,7 +43,7 @@ func NewDBMigrateCmd() *cobra.Command {
 		WithViper("PIO")
 
 	rv := &cobra.Command{
-		Use: "dbmigrate <target type>",
+		Use:   "dbmigrate <target type>",
 		Short: "Provenanced Blockchain Database Migration Tool",
 		Long: fmt.Sprintf(`Provenanced Blockchain Database Migration Tool
 Converts an existing Provenance Blockchain Database to a new backend type.
@@ -67,7 +67,7 @@ Default Backup directory: {PIO_HOME}/data-{timestamp}-{old type}`, strings.Join(
 			if err := config.InterceptConfigsPreRunHandler(command); err != nil {
 				return err
 			}
-			
+
 			return nil
 		},
 		RunE: func(command *cobra.Command, args []string) error {
@@ -267,7 +267,7 @@ func convertDBDir(logger tmlog.Logger, sourceDataDir, targetDataDir, dbDir, sour
 
 	logger.Info("Starting migration")
 	for ; iter.Valid(); iter.Next() {
-		if err = batch.Set(iter.Key(), iter.Value());err != nil {
+		if err = batch.Set(iter.Key(), iter.Value()); err != nil {
 			return fmt.Errorf("could not set %q key/value: %w", dbName, err)
 		}
 	}
