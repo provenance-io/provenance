@@ -11,6 +11,7 @@ BUILDDIR ?= $(CURDIR)/build
 LEDGER_ENABLED ?= true
 WITH_CLEVELDB ?= yes
 WITH_ROCKSDB ?= yes
+WITH_BADGERDB ?= yes
 
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 BRANCH_PRETTY := $(subst /,-,$(BRANCH))
@@ -55,6 +56,9 @@ ifeq ($(WITH_CLEVELDB),yes)
 endif
 ifeq ($(WITH_ROCKSDB),yes)
   build_tags += rocksdb
+endif
+ifeq ($(WITH_BADGERDB),yes)
+  build_tags += badgerdb
 endif
 
 ifeq ($(LEDGER_ENABLED),true)
