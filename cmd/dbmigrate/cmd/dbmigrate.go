@@ -224,11 +224,8 @@ func getDataDirContents(dataDirPath string) ([]string, []string, error) {
 
 // convertDBDir converts a single db directory from one underlying type to another.
 func convertDBDir(logger tmlog.Logger, sourceDataDir, targetDataDir, dbDir, sourceDBType, targetDBType string) error {
-	_, dbName := filepath.Split(dbDir)
-	dbName = strings.TrimSuffix(dbName, ".db")
-
-	sourceDir := filepath.Join(sourceDataDir, dbDir)
-	targetDir := filepath.Join(targetDataDir, dbDir)
+	sourceDir, dbName := splitDBPath(filepath.Join(sourceDataDir, dbDir))
+	targetDir, _ := splitDBPath(filepath.Join(targetDataDir, dbDir))
 
 	logger.Info("Setting up migration of directory.", "from", sourceDir, "to", targetDir)
 
@@ -267,4 +264,11 @@ func convertDBDir(logger tmlog.Logger, sourceDataDir, targetDataDir, dbDir, sour
 
 	logger.Info("Done")
 	return nil
+}
+
+// splitDBPath breaks down a path to a db directory into the path to the directory containing that and the db name.
+// For example: "/foo/bar/baz.db" will return "/foo/bar" and "baz".
+func splitDBPath(path string) (string, string) {
+	base, name := filepath.Split(path)
+	return filepath.Clean(base), strings.TrimSuffix(name, ".db")
 }
