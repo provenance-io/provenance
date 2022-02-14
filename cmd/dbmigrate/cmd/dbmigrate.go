@@ -31,6 +31,10 @@ var PossibleDBTypes = []string{
 	string(tmdb.GoLevelDBBackend), string(tmdb.CLevelDBBackend),
 }
 
+// TODO: Create a converter params struct for all the args and pass that around instead of all the args.
+// TODO: Add flag for defining a new backup directory.
+// TODO: Add flag for defining the staging directory?
+
 // NewDBMigrateCmd creates a command for migrating the provenanced database from one underlying type to another.
 func NewDBMigrateCmd() *cobra.Command {
 	// Creating the client context early because the WithViper function
