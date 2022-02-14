@@ -96,7 +96,7 @@ func TestMsgService(t *testing.T) {
 
 	// tx without a fee associated with msg type
 	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(100))))
-	txBytes, err := SignTxAndGetBytes(testdata.NewTestGasLimit(), testdata.NewTestFeeAmount(), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+	txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), testdata.NewTestFeeAmount(), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 	require.NoError(t, err)
 	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
@@ -112,7 +112,7 @@ func TestMsgService(t *testing.T) {
 	msg = banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(50))))
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("hotdog", 800))
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
-	txBytes, err = SignTxAndGetBytes(testdata.NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+	txBytes, err = SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 	require.NoError(t, err)
 	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
@@ -138,7 +138,7 @@ func TestMsgService(t *testing.T) {
 	msg = banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(50))))
 	fees = sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
-	txBytes, err = SignTxAndGetBytes(testdata.NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+	txBytes, err = SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 	require.NoError(t, err)
 	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
@@ -165,7 +165,7 @@ func TestMsgService(t *testing.T) {
 	msg = banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(50))))
 	fees = sdk.NewCoins(sdk.NewInt64Coin("nhash", 190500010))
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
-	txBytes, err = SignTxAndGetBytes(testdata.NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+	txBytes, err = SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 	require.NoError(t, err)
 	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
@@ -192,7 +192,7 @@ func TestMsgService(t *testing.T) {
 	msg = banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(50))))
 	fees = sdk.NewCoins(sdk.NewInt64Coin("nhash", 190500010), sdk.NewInt64Coin("atom", 100))
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
-	txBytes, err = SignTxAndGetBytes(testdata.NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+	txBytes, err = SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 	require.NoError(t, err)
 	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
@@ -232,7 +232,7 @@ func TestMsgServiceAuthz(t *testing.T) {
 	msgExec := authztypes.NewMsgExec(addr2, []sdk.Msg{msg})
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("hotdog", 800))
 	acct2 = app.AccountKeeper.GetAccount(ctx, acct2.GetAddress()).(*authtypes.BaseAccount)
-	txBytes, err := SignTxAndGetBytes(testdata.NewTestGasLimit(), fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), &msgExec)
+	txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), &msgExec)
 	require.NoError(t, err)
 	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
@@ -255,7 +255,7 @@ func TestMsgServiceAuthz(t *testing.T) {
 	msgExec = authztypes.NewMsgExec(addr2, []sdk.Msg{msg, msg})
 	fees = sdk.NewCoins(sdk.NewInt64Coin("atom", 300), sdk.NewInt64Coin("hotdog", 1600))
 	acct2 = app.AccountKeeper.GetAccount(ctx, acct2.GetAddress()).(*authtypes.BaseAccount)
-	txBytes, err = SignTxAndGetBytes(testdata.NewTestGasLimit()*2, fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), &msgExec)
+	txBytes, err = SignTxAndGetBytes(NewTestGasLimit()*2, fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), &msgExec)
 	require.NoError(t, err)
 	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
@@ -277,7 +277,7 @@ func TestMsgServiceAuthz(t *testing.T) {
 	// tx authz single send message without enough fees associated
 	fees = sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("hotdog", 1))
 	acct2 = app.AccountKeeper.GetAccount(ctx, acct2.GetAddress()).(*authtypes.BaseAccount)
-	txBytes, err = SignTxAndGetBytes(testdata.NewTestGasLimit(), fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), &msgExec)
+	txBytes, err = SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), &msgExec)
 	require.NoError(t, err)
 	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, uint32(0xd), res.Code, "res=%+v", res)
@@ -286,6 +286,7 @@ func TestMsgServiceAuthz(t *testing.T) {
 	msgExec = authztypes.NewMsgExec(addr2, []sdk.Msg{msg, msg})
 	fees = sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("hotdog", 1000))
 	acct2 = app.AccountKeeper.GetAccount(ctx, acct2.GetAddress()).(*authtypes.BaseAccount)
+	// using the higher gas limit coming from testdata pkg, since actually tx costs more than 100000
 	txBytes, err = SignTxAndGetBytes(testdata.NewTestGasLimit(), fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), &msgExec)
 	require.NoError(t, err)
 	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
@@ -296,6 +297,7 @@ func TestMsgServiceAuthz(t *testing.T) {
 	msgExec = authztypes.NewMsgExec(addr2, []sdk.Msg{msg})
 	fees = sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("hotdog", 1000))
 	acct2 = app.AccountKeeper.GetAccount(ctx, acct2.GetAddress()).(*authtypes.BaseAccount)
+	// using the higher gas limit coming from testdata pkg, since actually tx costs more than 100000
 	txBytes, err = SignTxAndGetBytes(testdata.NewTestGasLimit(), fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), msgsend, &msgExec)
 	require.NoError(t, err)
 	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
@@ -322,7 +324,7 @@ func TestMsgServiceAuthzAdditionalMsgFeeInDefaultDenom(t *testing.T) {
 	msgExec := authztypes.NewMsgExec(addr2, []sdk.Msg{msg})
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
 	acct2 = app.AccountKeeper.GetAccount(ctx, acct2.GetAddress()).(*authtypes.BaseAccount)
-	txBytes, err := SignTxAndGetBytes(testdata.NewTestGasLimit(), fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), &msgExec)
+	txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), &msgExec)
 	require.NoError(t, err)
 	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
@@ -389,4 +391,10 @@ func SignTxAndGetBytes(gaslimit uint64, fees sdk.Coins, encCfg simappparams.Enco
 		return nil, err
 	}
 	return txBytes, nil
+}
+
+// NewTestGasLimit is a test fee gas limit.
+// they keep changing this value and our tests break, hence moving it to test.
+func NewTestGasLimit() uint64 {
+	return 100000
 }

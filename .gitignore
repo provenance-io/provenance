@@ -46,3 +46,6 @@ proto-tools-stamp
 
 #direnv setup
 .envrc
+
+# proto generated files
+proto/gen/

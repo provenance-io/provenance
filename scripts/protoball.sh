@@ -7,7 +7,6 @@ if [ "$1" == "" ]; then
 fi
 
 PROTO_DIR=proto
-EXT_PROTO_DIR=third_party
 
 dir="$(pwd)"
 zip="${1}"

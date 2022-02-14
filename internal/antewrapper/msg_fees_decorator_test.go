@@ -118,7 +118,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPassFeeGrant() {
 	msg := testdata.NewTestMsg(addr1)
 	//add additional fee
 	feeAmount := sdk.NewCoins(sdk.NewInt64Coin("atom", 100100))
-	gasLimit := testdata.NewTestGasLimit()
+	gasLimit := suite.NewTestGasLimit()
 
 	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
 	suite.txBuilder.SetFeeAmount(feeAmount)
@@ -334,7 +334,7 @@ func createTestTx(suite *AnteTestSuite, err error, feeAmount sdk.Coins) (signing
 
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
-	gasLimit := testdata.NewTestGasLimit()
+	gasLimit := suite.NewTestGasLimit()
 	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
 	suite.txBuilder.SetFeeAmount(feeAmount)
 	suite.txBuilder.SetGasLimit(gasLimit)

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
@@ -174,6 +175,77 @@ func bech32Address(ma types.MetadataAddress) (string, error) {
 		return "", fmt.Errorf("wasm: %w", err)
 	}
 	return bech32Addr, nil
+}
+
+// Convert a provwasm scope into the baseType scope.
+func (scope *Scope) convertToBaseType() (*types.Scope, error) {
+	scopeID, err := types.MetadataAddressFromBech32(scope.ScopeID)
+	if err != nil {
+		return nil, fmt.Errorf("wasm: invalid 'scope id': %w", err)
+	}
+	specificationID, err := types.MetadataAddressFromBech32(scope.SpecificationID)
+	if err != nil {
+		return nil, fmt.Errorf("wasm: invalid 'specification id': %w", err)
+	}
+	// verify the data_access addresses are valid
+	for _, addr := range scope.DataAccess {
+		_, err = sdk.AccAddressFromBech32(addr)
+		if err != nil {
+			return nil, fmt.Errorf("wasm: invalid 'data_access' address: %v", err)
+		}
+	}
+	baseType := &types.Scope{
+		ScopeId:           scopeID,
+		SpecificationId:   specificationID,
+		Owners:            nil,
+		DataAccess:        scope.DataAccess,
+		ValueOwnerAddress: scope.ValueOwnerAddress,
+	}
+	for i, o := range scope.Owners {
+		party, err := o.convertToBaseType()
+		if err != nil {
+			return nil, err
+		}
+		baseType.Owners[i] = *party
+	}
+
+	return baseType, nil
+}
+
+// Convert a provwasm party into the baseType party.
+func (party *Party) convertToBaseType() (*types.Party, error) {
+	_, err := sdk.AccAddressFromBech32(party.Address)
+	if err != nil {
+		return nil, fmt.Errorf("wasm: invalid 'data_access' address: %v", err)
+	}
+	return &types.Party{
+		Address: party.Address,
+		Role:    party.Role.convertToBaseType(),
+	}, nil
+}
+
+// Convert a provwasm partytype into the baseType partytype.
+func (partyType *PartyType) convertToBaseType() types.PartyType {
+	switch *partyType {
+	case PartyTypeOriginator:
+		return types.PartyType_PARTY_TYPE_ORIGINATOR
+	case PartyTypeServicer:
+		return types.PartyType_PARTY_TYPE_SERVICER
+	case PartyTypeInvestor:
+		return types.PartyType_PARTY_TYPE_INVESTOR
+	case PartyTypeCustodian:
+		return types.PartyType_PARTY_TYPE_CUSTODIAN
+	case PartyTypeOwner:
+		return types.PartyType_PARTY_TYPE_OWNER
+	case PartyTypeAffiliate:
+		return types.PartyType_PARTY_TYPE_AFFILIATE
+	case PartyTypeOmnibus:
+		return types.PartyType_PARTY_TYPE_OMNIBUS
+	case PartyTypeProvenance:
+		return types.PartyType_PARTY_TYPE_PROVENANCE
+	default:
+		return types.PartyType_PARTY_TYPE_UNSPECIFIED
+	}
 }
 
 // Convert a scope into provwasm JSON format.

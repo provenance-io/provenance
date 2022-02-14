@@ -19,6 +19,7 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 
 	"github.com/provenance-io/provenance/testutil"
 	namecli "github.com/provenance-io/provenance/x/name/client/cli"
@@ -485,4 +486,122 @@ func (s *IntegrationTestSuite) TestPaginationWithPageKey() {
 			require.NotEqual(t, results[i-1], results[i], "no two names should be equal here")
 		}
 	})
+}
+
+func (s *IntegrationTestSuite) TestCreateRootNameCmd() {
+
+	testCases := []struct {
+		name         string
+		cmd          *cobra.Command
+		args         []string
+		expectErr    bool
+		respType     proto.Message
+		expectedCode uint32
+	}{
+		{
+			"should create a root name proposal",
+			namecli.GetRootNameProposalCmd(),
+			[]string{"rootprop",
+				fmt.Sprintf("--%s=%s", cli.FlagTitle, "title"),
+				fmt.Sprintf("--%s=%s", cli.FlagDescription, "description"),
+				fmt.Sprintf("--%s=%s%s", cli.FlagDeposit, "10", s.cfg.BondDenom),
+				fmt.Sprintf("--%s=%s", "owner", s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"should succeed with missing deposit",
+			namecli.GetRootNameProposalCmd(),
+			[]string{"rootprop",
+				fmt.Sprintf("--%s=%s", cli.FlagTitle, "title"),
+				fmt.Sprintf("--%s=%s", cli.FlagDescription, "description"),
+				fmt.Sprintf("--%s=%s", "owner", s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"should fail for bad deposit",
+			namecli.GetRootNameProposalCmd(),
+			[]string{"rootprop",
+				fmt.Sprintf("--%s=%s", cli.FlagTitle, "title"),
+				fmt.Sprintf("--%s=%s", cli.FlagDescription, "description"),
+				fmt.Sprintf("--%s=%s", cli.FlagDeposit, "10"),
+				fmt.Sprintf("--%s=%s", "owner", s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, &sdk.TxResponse{}, 1,
+		},
+		{
+			"should fail for empty title",
+			namecli.GetRootNameProposalCmd(),
+			[]string{"rootprop",
+				fmt.Sprintf("--%s=%s", cli.FlagDescription, "description"),
+				fmt.Sprintf("--%s=%s%s", cli.FlagDeposit, "10", s.cfg.BondDenom),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, &sdk.TxResponse{}, 1,
+		},
+		{
+			"should fail for empty description",
+			namecli.GetRootNameProposalCmd(),
+			[]string{"rootprop",
+				fmt.Sprintf("--%s=%s", cli.FlagTitle, "title"),
+				fmt.Sprintf("--%s=%s%s", cli.FlagDeposit, "10", s.cfg.BondDenom),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, &sdk.TxResponse{}, 1,
+		},
+		{
+			"should fail for bad owner",
+			namecli.GetRootNameProposalCmd(),
+			[]string{"rootprop",
+				fmt.Sprintf("--%s=%s", cli.FlagTitle, "title"),
+				fmt.Sprintf("--%s=%s%s", cli.FlagDeposit, "10", s.cfg.BondDenom),
+
+				fmt.Sprintf("--%s=%s", "owner", "asdf"),
+
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, &sdk.TxResponse{}, 1,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			// because the cmd runs inside of the gov cmd (which adds flags) we register here so we can use it directly.
+			flags.AddTxFlagsToCmd(tc.cmd)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
+
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code)
+			}
+		})
+	}
 }

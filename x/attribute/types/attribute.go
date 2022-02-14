@@ -4,17 +4,20 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	fmt "fmt"
 	"math/big"
 	"net/url"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	uuid "github.com/google/uuid"
+	"github.com/google/uuid"
+
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
 // NewAttribute creates a new instance of an Attribute
-func NewAttribute(name string, account sdk.AccAddress, attrType AttributeType, value []byte) Attribute { // nolint:interfacer
+func NewAttribute(name string, address string, attrType AttributeType, value []byte) Attribute { // nolint:interfacer
 	// Ensure string type values are trimmed.
 	if attrType != AttributeType_Bytes && attrType != AttributeType_Proto {
 		trimmed := strings.TrimSpace(string(value))
@@ -22,7 +25,7 @@ func NewAttribute(name string, account sdk.AccAddress, attrType AttributeType, v
 	}
 	return Attribute{
 		Name:          name,
-		Address:       account.String(),
+		Address:       address,
 		AttributeType: attrType,
 		Value:         value,
 	}
@@ -40,7 +43,7 @@ func (a Attribute) Hash() []byte {
 	return sum[:]
 }
 
-// ValidateBascic ensures an attribute is valid.
+// ValidateBasic ensures an attribute is valid.
 func (a Attribute) ValidateBasic() error {
 	if strings.TrimSpace(a.Name) == "" {
 		return fmt.Errorf("invalid name: empty")
@@ -49,9 +52,9 @@ func (a Attribute) ValidateBasic() error {
 		return fmt.Errorf("invalid value: nil")
 	}
 
-	_, err := sdk.AccAddressFromBech32(a.Address)
+	err := ValidateAttributeAddress(a.Address)
 	if err != nil {
-		return fmt.Errorf("invalid attribute address: %s", a.Address)
+		return fmt.Errorf("invalid attribute address: %w", err)
 	}
 
 	if !ValidAttributeType(a.AttributeType) {
@@ -61,6 +64,48 @@ func (a Attribute) ValidateBasic() error {
 		return fmt.Errorf("invalid attribute value for assigned type: %s", a.AttributeType)
 	}
 	return nil
+}
+
+// GetAddressBytes Gets the bytes of this attribute's address.
+// If the address is neither an account address nor metadata address (or is an empty string), an empty byte slice is returned.
+func (a Attribute) GetAddressBytes() []byte {
+	return GetAttributeAddressBytes(a.Address)
+}
+
+// GetAttributeAddressBytes Gets the bytes of an address used in an attribute.
+// If the address is neither an account address nor metadata address (or is an empty string), an empty byte slice is returned.
+func GetAttributeAddressBytes(addr string) []byte {
+	if len(strings.TrimSpace(addr)) == 0 {
+		return []byte{}
+	}
+	accAddr, accErr := sdk.AccAddressFromBech32(addr)
+	if accErr == nil {
+		return accAddr.Bytes()
+	}
+	mdAddr, mdErr := metadatatypes.MetadataAddressFromBech32(addr)
+	if mdErr == nil {
+		return mdAddr.Bytes()
+	}
+	return []byte{}
+}
+
+// ValidateAttributeAddress validates that the provide string is a valid address for an attribute.
+// Failures:
+//  * The provided address is empty
+//  * The provided address is neither an account address nor scope metadata address.
+func ValidateAttributeAddress(addr string) error {
+	if len(strings.TrimSpace(addr)) == 0 {
+		return errors.New("must not be empty")
+	}
+	_, accErr := sdk.AccAddressFromBech32(addr)
+	if accErr == nil {
+		return nil
+	}
+	mdAddr, mdErr := metadatatypes.MetadataAddressFromBech32(addr)
+	if mdErr == nil && mdAddr.IsScopeAddress() {
+		return nil
+	}
+	return fmt.Errorf("must be either an account address or scope metadata address: %q", addr)
 }
 
 // Determines whether a byte array value is valid for the given type.

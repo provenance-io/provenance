@@ -38,6 +38,7 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
@@ -119,6 +120,7 @@ import (
 	msgfeesmodule "github.com/provenance-io/provenance/x/msgfees/module"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 	"github.com/provenance-io/provenance/x/name"
+	nameclient "github.com/provenance-io/provenance/x/name/client"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 	namewasm "github.com/provenance-io/provenance/x/name/wasm"
@@ -165,6 +167,7 @@ var (
 			upgradeclient.CancelProposalHandler,
 			ibcclientclient.UpdateClientProposalHandler,
 			ibcclientclient.UpgradeProposalHandler,
+			nameclient.ProposalHandler,
 		)...,
 		),
 		params.AppModuleBasic{},
@@ -430,7 +433,6 @@ func New(
 	)
 
 	// Init CosmWasm module
-	var wasmRouter = bApp.Router()
 	wasmDir := filepath.Join(homePath, "data", "wasm")
 
 	wasmWrap := WasmWrapper{Wasm: wasm.DefaultWasmConfig()}
@@ -445,6 +447,7 @@ func New(
 	encoderRegistry.RegisterEncoder(nametypes.RouterKey, namewasm.Encoder)
 	encoderRegistry.RegisterEncoder(attributetypes.RouterKey, attributewasm.Encoder)
 	encoderRegistry.RegisterEncoder(markertypes.RouterKey, markerwasm.Encoder)
+	encoderRegistry.RegisterEncoder(metadatatypes.RouterKey, metadatawasm.Encoder)
 
 	// Init CosmWasm query integrations
 	querierRegistry := provwasm.NewQuerierRegistry()
@@ -455,6 +458,10 @@ func New(
 
 	// Add the staking feature and indicate that provwasm contracts can be run on this chain.
 	supportedFeatures := "staking,provenance,stargate"
+
+	wasmMessageRouter := MessageRouterFunc(func(msg sdk.Msg) baseapp.MsgServiceHandler {
+		return pioMsgFeesRouter.Handler(msg)
+	})
 
 	// The last arguments contain custom message handlers, and custom query handlers,
 	// to allow smart contracts to use provenance modules.
@@ -470,8 +477,7 @@ func New(
 		&app.IBCKeeper.PortKeeper,
 		scopedWasmKeeper,
 		app.TransferKeeper,
-		wasmRouter,
-		app.MsgServiceRouter(),
+		wasmMessageRouter,
 		app.GRPCQueryRouter(),
 		wasmDir,
 		wasmConfig,
@@ -568,12 +574,52 @@ func New(
 		stakingtypes.ModuleName,
 		ibchost.ModuleName,
 		markertypes.ModuleName,
+
+		// no-ops
+		authtypes.ModuleName,
+		banktypes.ModuleName,
+		govtypes.ModuleName,
+		crisistypes.ModuleName,
+		genutiltypes.ModuleName,
+		authz.ModuleName,
+		feegrant.ModuleName,
+		paramstypes.ModuleName,
+		msgfeestypes.ModuleName,
+		metadatatypes.ModuleName,
+		wasm.ModuleName,
+		ibctransfertypes.ModuleName,
+		nametypes.ModuleName,
+		attributetypes.ModuleName,
+		vestingtypes.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
 		crisistypes.ModuleName,
 		govtypes.ModuleName,
 		stakingtypes.ModuleName,
+		authtypes.ModuleName,
+
+		// no-ops
+		vestingtypes.ModuleName,
+		distrtypes.ModuleName,
+		authz.ModuleName,
+		metadatatypes.ModuleName,
+		nametypes.ModuleName,
+		genutiltypes.ModuleName,
+		ibchost.ModuleName,
+		ibctransfertypes.ModuleName,
+		msgfeestypes.ModuleName,
+		wasm.ModuleName,
+		slashingtypes.ModuleName,
+		upgradetypes.ModuleName,
+		attributetypes.ModuleName,
+		capabilitytypes.ModuleName,
+		evidencetypes.ModuleName,
+		banktypes.ModuleName,
+		minttypes.ModuleName,
+		markertypes.ModuleName,
+		feegrant.ModuleName,
+		paramstypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -607,6 +653,42 @@ func New(
 		ibctransfertypes.ModuleName,
 		// wasm after ibc transfer
 		wasm.ModuleName,
+
+		// no-ops
+		paramstypes.ModuleName,
+		vestingtypes.ModuleName,
+		upgradetypes.ModuleName,
+	)
+
+	app.mm.SetOrderMigrations(
+		banktypes.ModuleName,
+		authz.ModuleName,
+		capabilitytypes.ModuleName,
+		crisistypes.ModuleName,
+		distrtypes.ModuleName,
+		evidencetypes.ModuleName,
+		feegrant.ModuleName,
+		genutiltypes.ModuleName,
+		govtypes.ModuleName,
+		ibchost.ModuleName,
+		minttypes.ModuleName,
+		paramstypes.ModuleName,
+		slashingtypes.ModuleName,
+		stakingtypes.ModuleName,
+		ibctransfertypes.ModuleName,
+		upgradetypes.ModuleName,
+		vestingtypes.ModuleName,
+
+		wasm.ModuleName,
+
+		attributetypes.ModuleName,
+		markertypes.ModuleName,
+		msgfeestypes.ModuleName,
+		metadatatypes.ModuleName,
+		nametypes.ModuleName,
+
+		// required to be last (cosmos-sdk enforces this when migrations are ran)
+		authtypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
