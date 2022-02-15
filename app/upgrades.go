@@ -77,6 +77,7 @@ var handlers = map[string]appUpgrade{
 		},
 		Added: []string{msgfeestypes.ModuleName},
 	},
+	"hazel": {},
 	// TODO - Add new upgrade definitions here.
 }
 
