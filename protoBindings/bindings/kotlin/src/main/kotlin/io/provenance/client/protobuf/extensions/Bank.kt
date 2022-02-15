@@ -5,7 +5,19 @@ import cosmos.base.v1beta1.CoinOuterClass
 import cosmos.bank.v1beta1.QueryGrpc.QueryBlockingStub as Bank
 
 /**
- * Get a list of coins in the account at the supplied address.
+ * Get a coin balance in the account at the supplied address.
+ *
+ * See [Accounts](https://github.com/FigureTechnologies/service-wallet/blob/v45/pb-client/src/main/kotlin/com/figure/wallet/pbclient/client/grpc/Accounts.kt#L34).
+ *
+ * @param bech32Address The bech32 address to query.
+ * @param denom The denomination of the coin.
+ * @return [CoinOuterClass.Coin]
+ */
+fun Bank.getAccountBalance(bech32Address: String, denom: String): CoinOuterClass.Coin =
+    balance(QueryOuterClass.QueryBalanceRequest.newBuilder().setAddress(bech32Address).setDenom(denom).build()).balance
+
+/**
+ * Get a list of coin balances in the account at the supplied address.
  *
  * See [Accounts](https://github.com/FigureTechnologies/service-wallet/blob/v45/pb-client/src/main/kotlin/com/figure/wallet/pbclient/client/grpc/Accounts.kt#L34).
  *
