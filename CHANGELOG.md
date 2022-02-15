@@ -80,6 +80,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Use `nhash` for base denom in gov proposal upgrade [#648](https://github.com/provenance-io/provenance/issues/648)
 * Bump `cosmowasm` from `v1.0.0-beta5` to `v1.0.0-beta6` [#655](https://github.com/provenance-io/provenance/issues/655)
 * Fix maven publish release version number reference [#650](https://github.com/provenance-io/provenance/issues/650)
+* Add `iterator` as feature for wasm [#658](https://github.com/provenance-io/provenance/issues/658)
 
 ## [v1.7.6](https://github.com/provenance-io/provenance/releases/tag/v1.7.6) - 2021-12-15
 

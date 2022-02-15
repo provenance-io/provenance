@@ -457,7 +457,7 @@ func New(
 	querierRegistry.RegisterQuerier(metadatatypes.RouterKey, metadatawasm.Querier(app.MetadataKeeper))
 
 	// Add the staking feature and indicate that provwasm contracts can be run on this chain.
-	supportedFeatures := "staking,provenance,stargate"
+	supportedFeatures := "staking,provenance,stargate,iterator"
 
 	wasmMessageRouter := MessageRouterFunc(func(msg sdk.Msg) baseapp.MsgServiceHandler {
 		return pioMsgFeesRouter.Handler(msg)
