@@ -119,15 +119,6 @@ ldflags = -w -s \
 	-X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" \
 	-X github.com/tendermint/tendermint/version.TMCoreSemVer=$(TM_VERSION)
 
-# A DBBackend of "cleveldb" works for both Rocks DB and Clevel DB.
-# However, "rocksdb" only works for Rocks DB.
-# As of writing this (Cosmos-SDK v0.44.5), the default is goleveldb.
-# Once https://github.com/cosmos/cosmos-sdk/issues/10948 has been implemented, this won't be needed anymore.
-ifeq ($(WITH_CLEVELDB),yes)
-	ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=cleveldb
-else ifeq ($(WITH_ROCKSDB),yes)
-	ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=rocksdb
-endif
 ldflags += $(LDFLAGS)
 ldflags := $(strip $(ldflags))
 BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags)' -trimpath
