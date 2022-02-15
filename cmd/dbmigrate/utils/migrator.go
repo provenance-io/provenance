@@ -92,8 +92,8 @@ func (m Migrator) Migrate(logger tmlog.Logger) error {
 
 // MigrateDBDir creates a copy of the given db directory, converting it from one underlying type to another.
 func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) error {
-	sourceDir, dbName := splitDBPath(filepath.Join(m.SourceDataDir, dbDir))
-	targetDir, _ := splitDBPath(filepath.Join(m.TargetDataDir, dbDir))
+	sourceDir, dbName := splitDBPath(m.SourceDataDir, dbDir)
+	targetDir, _ := splitDBPath(m.TargetDataDir, dbDir)
 	targetDataDirInfo, err := os.Stat(m.TargetDataDir)
 	if err != nil {
 		return fmt.Errorf("could not stat target data dir: %w", err)
@@ -158,17 +158,24 @@ func (m Migrator) UpdateConfig(logger tmlog.Logger, command *cobra.Command) erro
 	return nil
 }
 
-// splitDBPath breaks down a path to a db directory into the path to the directory containing that and the db name.
-// For example: "/foo/bar/baz.db" will return "/foo/bar" and "baz".
-func splitDBPath(path string) (string, string) {
-	base, name := filepath.Split(path)
+// splitDBPath combins the provided path elements into a full path to a db dirctory, then
+// breaks it down two parts:
+// 1) A path to the directory to hold the db directory,
+// 2) The name of the db.
+// For example: "/foo", "bar/baz.db" will return "/foo/bar" and "baz".
+func splitDBPath(elem  ...string) (string, string) {
+	base, name := filepath.Split(filepath.Join(elem...))
 	return filepath.Clean(base), strings.TrimSuffix(name, ".db")
 }
 
 // GetDataDirContents gets the contents of a directory separated into database directories and non-database entries.
 // The first return value will contain an entry for each database directory (including if they are in sub-directories).
 // The second return value will contain all entries (files or directories) under dataDirPath that are not part of a database directory.
-// That is, it's all entries that will not be migrated, and should copied.
+// Returned strings are relative to dataDirPath.
+//
+// Example return values:
+//   return param 1: []string{"application.db", "blockstore.db", "evidence.db", "snapshots/metadata.db", "state.db", "tx_index.db"}
+//   return param 2: []string{"cs.wal", "priv_validator_state.json", "wasm"}
 func GetDataDirContents(dataDirPath string) ([]string, []string, error) {
 	contents, err := ioutil.ReadDir(dataDirPath)
 	if err != nil {
@@ -177,7 +184,9 @@ func GetDataDirContents(dataDirPath string) ([]string, []string, error) {
 	dbs := make([]string, 0)
 	nonDBs := make([]string, 0)
 	for _, entry := range contents {
-		if entry.IsDir() {
+		switch {
+		case entry.IsDir():
+			// goleveldb, cleveldb, and rocksdb name their db directories with a .db suffix.
 			if filepath.Ext(entry.Name()) == ".db" {
 				dbs = append(dbs, entry.Name())
 			} else {
@@ -185,8 +194,12 @@ func GetDataDirContents(dataDirPath string) ([]string, []string, error) {
 				if err != nil {
 					return nil, nil, err
 				}
-				for _, dbDir := range subDBs {
-					dbs = append(dbs, filepath.Join(entry.Name(), dbDir))
+				if len(subDBs) == 1 && subDBs[0] == "." {
+					dbs = append(dbs, entry.Name())
+				} else {
+					for _, dbDir := range subDBs {
+						dbs = append(dbs, filepath.Join(entry.Name(), dbDir))
+					}
 				}
 				if len(subDBs) > 0 {
 					for _, nonDBDir := range subNonDBs {
@@ -196,11 +209,15 @@ func GetDataDirContents(dataDirPath string) ([]string, []string, error) {
 					nonDBs = append(nonDBs, entry.Name())
 				}
 			}
-		} else {
+		case strings.HasPrefix(entry.Name(), "MANIFEST"):
+			// badger db does not use the .db suffix on their database directories.
+			// So to identify them, we have to look for the MANIFEST files.
+			// HasPrefix is used here instead of == because the other DB types have files that start with MANIFEST-
+			// and so hopefully this will catch other db types that dont use the .db suffix on their directories.
+			// The .db test is still also used to save some recursive calls and extra processing.
+			return []string{"."}, nil, nil
+		default:
 			nonDBs = append(nonDBs, entry.Name())
-		}
-		if filepath.Ext(entry.Name()) == ".db" && entry.IsDir() {
-			dbs = append(dbs, entry.Name())
 		}
 	}
 	return dbs, nonDBs, nil
