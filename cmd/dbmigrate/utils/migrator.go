@@ -131,7 +131,11 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) error {
 
 	logger.Info("Starting migration")
 	for ; iter.Valid(); iter.Next() {
-		if err = batch.Set(iter.Key(), iter.Value()); err != nil {
+		v := iter.Value()
+		if v == nil {
+			v = []byte{}
+		}
+		if err = batch.Set(iter.Key(), v); err != nil {
 			return fmt.Errorf("could not set %q key/value: %w", dbName, err)
 		}
 	}
