@@ -78,6 +78,7 @@ var handlers = map[string]appUpgrade{
 		Added: []string{msgfeestypes.ModuleName},
 	},
 	"hazel": {},
+	// upgrade for: Fix `wasm` contract migration failure to find contract history [#662](https://github.com/provenance-io/provenance/issues/662)
 	"indigo": {},
 	// TODO - Add new upgrade definitions here.
 }
