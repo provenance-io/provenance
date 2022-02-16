@@ -77,9 +77,8 @@ var handlers = map[string]appUpgrade{
 		},
 		Added: []string{msgfeestypes.ModuleName},
 	},
-	"hazel": {},
-	// upgrade for: Fix `wasm` contract migration failure to find contract history [#662](https://github.com/provenance-io/provenance/issues/662)
-	"indigo": {},
+	"hazel":  {},
+	"indigo": {}, // upgrade for pio-testnet-1 from v1.8.0-rc7 to v1.8.0-rc8
 	// TODO - Add new upgrade definitions here.
 }
 
