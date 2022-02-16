@@ -3,11 +3,11 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/provenance-io/provenance/cmd/dbmigrate/utils"
-	"github.com/rs/zerolog"
-	"github.com/spf13/cobra"
 	"os"
 	"strings"
+
+	"github.com/rs/zerolog"
+	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -18,6 +18,7 @@ import (
 	tmdb "github.com/tendermint/tm-db"
 
 	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/cmd/dbmigrate/utils"
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
 )
 

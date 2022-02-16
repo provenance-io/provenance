@@ -1,12 +1,13 @@
 package utils
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 )
 
 type MigratorTestSuite struct {
@@ -14,13 +15,12 @@ type MigratorTestSuite struct {
 }
 
 func (s MigratorTestSuite) SetupTest() {
-	
+
 }
 
 func TestMigratorTestSuite(t *testing.T) {
 	suite.Run(t, new(MigratorTestSuite))
 }
-
 
 // TODO: SetUpMigrator tests
 // TODO: Migrate tests
@@ -29,8 +29,8 @@ func TestMigratorTestSuite(t *testing.T) {
 
 func (s MigratorTestSuite) TestSplitDBPath() {
 	tests := []struct {
-		name string
-		elem []string
+		name   string
+		elem   []string
 		dbPath string
 		dbName string
 	}{
@@ -178,7 +178,7 @@ func (s MigratorTestSuite) TestGetDataDirContents() {
 	})
 
 	s.T().Run("directory does not exist", func(t *testing.T) {
-		_, _, err := GetDataDirContents(tDir+"-nope-not-gonna-exist")
+		_, _, err := GetDataDirContents(tDir + "-nope-not-gonna-exist")
 		require.Error(t, err, "GetDataDirContents on directory that doesn't exist.")
 		assert.Contains(t, err.Error(), "no such file or directory", "err")
 	})

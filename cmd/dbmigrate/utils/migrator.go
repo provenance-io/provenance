@@ -162,12 +162,12 @@ func (m Migrator) UpdateConfig(logger tmlog.Logger, command *cobra.Command) erro
 	return nil
 }
 
-// splitDBPath combins the provided path elements into a full path to a db dirctory, then
+// splitDBPath combine the provided path elements into a full path to a db dirctory, then
 // breaks it down two parts:
 // 1) A path to the directory to hold the db directory,
 // 2) The name of the db.
 // For example: "/foo", "bar/baz.db" will return "/foo/bar" and "baz".
-func splitDBPath(elem  ...string) (string, string) {
+func splitDBPath(elem ...string) (string, string) {
 	base, name := filepath.Split(filepath.Join(elem...))
 	return filepath.Clean(base), strings.TrimSuffix(name, ".db")
 }
