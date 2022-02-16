@@ -82,7 +82,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Fix maven publish release version number reference [#650](https://github.com/provenance-io/provenance/issues/650)
 * Add `iterator` as feature for wasm [#658](https://github.com/provenance-io/provenance/issues/658)
 * String "v" from Jar artifact version number [#653](https://github.com/provenance-io/provenance/issues/653)
-* Fix `wasm` contract migration failure to find contract history #662
+* Fix `wasm` contract migration failure to find contract history [#662](https://github.com/provenance-io/provenance/issues/662)
 
 ## [v1.7.6](https://github.com/provenance-io/provenance/releases/tag/v1.7.6) - 2021-12-15
 
