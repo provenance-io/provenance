@@ -48,6 +48,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add support for Scope mutation via wasm Smart Contracts [#531](https://github.com/provenance-io/provenance/issues/531)
 * Increase governance deposit amount and add create proposal msg fee [#632](https://github.com/provenance-io/provenance/issues/632)
 * Allow attributes to be associated with scopes [#631](https://github.com/provenance-io/provenance/issues/631)
+* Add `add-genesis-msg-fee` command to add msg fees to genesis.json and update Makefile to have pre-defined msg fees [#667](https://github.com/provenance-io/provenance/issues/667)
 
 ### Improvements
 
