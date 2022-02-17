@@ -522,13 +522,13 @@ func AddGenesisMsgFeeCmd(defaultNodeHome string, interfaceRegistry types.Interfa
 
 			config.SetRoot(clientCtx.HomeDir)
 
-			msgUrl := args[0]
+			msgType := args[0]
 
-			if msgUrl[0] != '/' {
-				msgUrl = "/" + msgUrl
+			if msgType[0] != '/' {
+				msgType = "/" + msgType
 			}
 
-			if err := checkMsgTypeValid(interfaceRegistry, msgUrl); err != nil {
+			if err := checkMsgTypeValid(interfaceRegistry, msgType); err != nil {
 				return err
 			}
 
@@ -547,14 +547,14 @@ func AddGenesisMsgFeeCmd(defaultNodeHome string, interfaceRegistry types.Interfa
 
 			found := false
 			for _, mf := range msgFeesGenState.MsgFees {
-				if strings.EqualFold(mf.MsgTypeUrl, msgUrl) {
+				if strings.EqualFold(mf.MsgTypeUrl, msgType) {
 					found = true
 					mf.AdditionalFee = additionalFee
 				}
 			}
 
 			if !found {
-				msgFeesGenState.MsgFees = append(msgFeesGenState.MsgFees, msgfeetypes.NewMsgFee(msgUrl, additionalFee))
+				msgFeesGenState.MsgFees = append(msgFeesGenState.MsgFees, msgfeetypes.NewMsgFee(msgType, additionalFee))
 			}
 
 			msgFeesGenStateBz, err := cdc.MarshalJSON(&msgFeesGenState)
