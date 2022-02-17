@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,6 +25,7 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
@@ -498,4 +500,94 @@ enforced immediately.  An optional type flag can be provided or the default of C
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
+}
+
+// AddGenesisMsgFeeCmd returns add-genesis-msg-fee cobra command.
+func AddGenesisMsgFeeCmd(defaultNodeHome string, interfaceRegistry types.InterfaceRegistry) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "add-genesis-msg-fee [msg-url] [additional-fee]",
+		Short: "Add a msg fee to genesis.json",
+		Long: `Add a msg fee to to genesis.json. This will create a msg based fee for an sdk msg type.  The command will validate
+		that the msg-url is a valid sdk.msg and that the fee is a valid amount and coin.
+	`,
+		Example: fmt.Sprintf(`$ %[1]s add-genesis-msg-fee /cosmos.bank.v1beta1.MsgSend 10000000000nhash`, version.AppName),
+		Args:    cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			depCdc := clientCtx.JSONCodec
+			cdc := depCdc.(codec.Codec)
+
+			serverCtx := server.GetServerContextFromCmd(cmd)
+			config := serverCtx.Config
+
+			config.SetRoot(clientCtx.HomeDir)
+
+			msgType := args[0]
+
+			if msgType[0] != '/' {
+				msgType = "/" + msgType
+			}
+
+			if err := checkMsgTypeValid(interfaceRegistry, msgType); err != nil {
+				return err
+			}
+
+			additionalFee, err := sdk.ParseCoinNormalized(args[1])
+			if err != nil {
+				return fmt.Errorf("failed to parse coin: %w", err)
+			}
+
+			genFile := config.GenesisFile()
+			appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
+			if err != nil {
+				return fmt.Errorf("failed to unmarshal genesis state: %w", err)
+			}
+
+			msgFeesGenState := msgfeetypes.GetGenesisStateFromAppState(cdc, appState)
+
+			found := false
+			for _, mf := range msgFeesGenState.MsgFees {
+				if strings.EqualFold(mf.MsgTypeUrl, msgType) {
+					found = true
+					mf.AdditionalFee = additionalFee
+				}
+			}
+
+			if !found {
+				msgFeesGenState.MsgFees = append(msgFeesGenState.MsgFees, msgfeetypes.NewMsgFee(msgType, additionalFee))
+			}
+
+			msgFeesGenStateBz, err := cdc.MarshalJSON(&msgFeesGenState)
+			if err != nil {
+				return fmt.Errorf("failed to marshal msgfees genesis state: %w", err)
+			}
+
+			appState[msgfeetypes.ModuleName] = msgFeesGenStateBz
+
+			appStateJSON, err := json.Marshal(appState)
+			if err != nil {
+				return fmt.Errorf("failed to marshal application genesis state: %w", err)
+			}
+
+			genDoc.AppState = appStateJSON
+			return genutil.ExportGenesisFile(genDoc, genFile)
+		},
+	}
+	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func checkMsgTypeValid(registry types.InterfaceRegistry, msgTypeURL string) error {
+	msg, err := registry.Resolve(msgTypeURL)
+	if err != nil {
+		return err
+	}
+
+	_, ok := msg.(sdk.Msg)
+	if !ok {
+		return fmt.Errorf("message type is not a sdk message: %v", msgTypeURL)
+	}
+	return err
 }
