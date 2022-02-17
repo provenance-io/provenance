@@ -525,13 +525,17 @@ func AddGenesisMsgFeeCmd(defaultNodeHome string, interfaceRegistry types.Interfa
 
 			msgUrl := args[0]
 
+			if msgUrl[0] != '/' {
+				msgUrl = "/" + msgUrl
+			}
+
 			if err := checkMsgTypeValid(interfaceRegistry, msgUrl); err != nil {
 				return err
 			}
 
 			additionalFee, err := sdk.ParseCoinNormalized(args[1])
 			if err != nil {
-				return fmt.Errorf("failed to parse coins: %w", err)
+				return fmt.Errorf("failed to parse coin: %w", err)
 			}
 
 			genFile := config.GenesisFile()
