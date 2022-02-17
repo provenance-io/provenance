@@ -68,12 +68,11 @@ func Encoder(contract sdk.AccAddress, msg json.RawMessage, version string) ([]sd
 // Encode creates a MsgAddAttribute.
 // The contract must be the owner of the name of the attribute being added.
 func (params *AddAttributeParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error) {
-	address, err := sdk.AccAddressFromBech32(params.Address)
-	if err != nil {
+	if err := types.ValidateAttributeAddress(params.Address); err != nil {
 		return nil, fmt.Errorf("wasm: invalid address: %w", err)
 	}
 	msg := types.NewMsgAddAttributeRequest(
-		address,
+		params.Address,
 		contract,
 		params.Name,
 		encodeType(params.ValueType),
@@ -85,11 +84,10 @@ func (params *AddAttributeParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, er
 // Encode creates a MsgDeleteAttribute.
 // The contract must be the owner of the name of the attribute being deleted.
 func (params *DeleteAttributeParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error) {
-	address, err := sdk.AccAddressFromBech32(params.Address)
-	if err != nil {
+	if err := types.ValidateAttributeAddress(params.Address); err != nil {
 		return nil, fmt.Errorf("wasm: invalid address: %w", err)
 	}
-	msg := types.NewMsgDeleteAttributeRequest(address, contract, params.Name)
+	msg := types.NewMsgDeleteAttributeRequest(params.Address, contract, params.Name)
 	return []sdk.Msg{msg}, nil
 }
 

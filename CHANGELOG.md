@@ -46,6 +46,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Upgrade provenance to 0.45 cosmos sdk release [#607](https://github.com/provenance-io/provenance/issues/607)
 * Upgrade wasmd to v0.22.0 Note: this removes dependency on provenance-io's wasmd fork [#479](https://github.com/provenance-io/provenance/issues/479)
 * Add support for Scope mutation via wasm Smart Contracts [#531](https://github.com/provenance-io/provenance/issues/531)
+* Increase governance deposit amount and add create proposal msg fee [#632](https://github.com/provenance-io/provenance/issues/632)
+* Allow attributes to be associated with scopes [#631](https://github.com/provenance-io/provenance/issues/631)
 
 ### Improvements
 
@@ -58,6 +60,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Delete empty sessions when the last record is updated to a new session [#480](https://github.com/provenance-io/provenance/issues/480)
 * Refactor the migration to be faster and have more log output [PR 586](https://github.com/provenance-io/provenance/pull/586)
 * Capture all included protobufs into release zip file [#556](https://github.com/provenance-io/provenance/issues/556)
+* Add Protobuf support with buf.build [#614](https://github.com/provenance-io/provenance/issues/614)
 * Limit the maximum attribute value length to 1000 (down from 10,000 currently) in the `green` upgrade [#616](https://github.com/provenance-io/provenance/issues/616)
 * Add additional fees for specified operations in the `green` upgrade [#616](https://github.com/provenance-io/provenance/issues/616)
   * `provenance.name.v1.MsgBindNameRequest` 10 hash (10,000,000,000 nhash)
@@ -72,6 +75,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Allow manager to adjust grants on finalized markers [#545](https://github.com/provenance-io/provenance/issues/545)
 * Add migration to re-index the metadata indexes involving addresses [#541](https://github.com/provenance-io/provenance/issues/541)
 * Add migration to delete empty sessions [#480](https://github.com/provenance-io/provenance/issues/480)
+* Add Java distribution tag to workflow [#624](https://github.com/provenance-io/provenance/issues/624)
+* Fix maven publish release version number reference [#650](https://github.com/provenance-io/provenance/issues/650)
+* String "v" from Jar artifact version number [#653](https://github.com/provenance-io/provenance/issues/653)
+* Add `iterator` as feature for wasm [#658](https://github.com/provenance-io/provenance/issues/658)
 
 ## [v1.7.6](https://github.com/provenance-io/provenance/releases/tag/v1.7.6) - 2021-12-15
 

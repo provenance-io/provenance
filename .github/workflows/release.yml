@@ -196,3 +196,42 @@ jobs:
           asset_path: ./build/protos-${{ needs.build_init.outputs.version }}.zip
           asset_name: protos-${{ needs.build_init.outputs.version }}.zip
           asset_content_type: application/octet-stream
+
+  java_kotlin_release:
+    runs-on: ubuntu-latest
+    needs:
+      - build_init
+    name: Maven Publishing
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Java Setup
+        uses: actions/setup-java@v2.5.0
+        with:
+          distribution: 'zulu'
+          java-version: 11
+          server-id: github
+
+      - name: GPG Setup
+        env:
+          GPG_KEY: ${{ secrets.OSSRH_GPG_SECRET_KEY }}
+        run: |
+          export GPG_TTY=$(tty)
+          echo -n "$GPG_KEY" | base64 --decode | gpg --batch --import
+          gpg --list-secret-keys --keyid-format LONG
+          echo -n "$GPG_KEY" | base64 --decode > $GITHUB_WORKSPACE/release.gpg
+
+      - name: Build and Publish
+        env:
+          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+          GPG_PASSWORD: ${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}
+        run: |
+          cd protoBindings
+          ./gradlew publish $(if [ "${{github.event.release.prerelease}}" = "true" ]; then echo 'closeSonatypeStagingRepository'; else echo 'closeAndReleaseSonatypeStagingRepository'; fi) \
+            -PartifactVersion=$(echo "${{ needs.build_init.outputs.version }}" | sed -e 's/^v//') \
+            -Psigning.keyId=B7D30ABE \
+            -Psigning.password="${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}" \
+            -Psigning.secretKeyRingFile=$GITHUB_WORKSPACE/release.gpg \
+            --info
