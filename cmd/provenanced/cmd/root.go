@@ -156,6 +156,13 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 
 	// Add Rosetta command
 	rootCmd.AddCommand(server.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
+
+	// Disable help when the start command returns an error.
+	startCmd, _, err := rootCmd.Find([]string{"start"})
+	if err != nil {
+		panic(fmt.Errorf("start command not found: %w", err.Error()))
+	}
+	startCmd.SilenceUsage = true
 }
 
 func addModuleInitFlags(startCmd *cobra.Command) {
