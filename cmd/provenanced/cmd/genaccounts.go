@@ -15,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -580,7 +579,7 @@ func AddGenesisMsgFeeCmd(defaultNodeHome string, interfaceRegistry types.Interfa
 	return cmd
 }
 
-func checkMsgTypeValid(registry codectypes.InterfaceRegistry, msgTypeURL string) error {
+func checkMsgTypeValid(registry types.InterfaceRegistry, msgTypeURL string) error {
 	msg, err := registry.Resolve(msgTypeURL)
 	if err != nil {
 		return err
