@@ -117,6 +117,16 @@ func (pw ProvwasmWrapper) WeightedOperations(simState module.SimulationState) []
 	}
 }
 
+func RandStringBytes(n int) string {
+	const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return string(b)
+}
+
 // SimulateMsgBindName will bind a NAME under an existing name using a 40% probability of restricting it.
 func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper, keeper wasm.Keeper, count *int) simtypes.Operation {
 	return func(
@@ -149,30 +159,19 @@ func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper,
 				node.Address,
 				false),
 			parent)
-			//nametypes.NewNameRecord(
-			//	parent.Name,
-			//	node.Address,
-			//	false))
 
 		op, future, err := namesim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg)
 
-		future = append(future, simtypes.FutureOperation{Op: SimulateMsgAddMarker(ak, bk, node), BlockHeight: 2})
-		future = append(future, simtypes.FutureOperation{Op: SimulateMsgAddAccess(ak, bk, node), BlockHeight: 3})
-		future = append(future, simtypes.FutureOperation{Op: SimulateFinalizeOrActivateMarker(ak, bk, true, node), BlockHeight: 4})
-		future = append(future, simtypes.FutureOperation{Op: SimulateFinalizeOrActivateMarker(ak, bk, false, node), BlockHeight: 5})
-		future = append(future, simtypes.FutureOperation{Op: SimulateMsgWithdrawRequest(ak, bk, node, consumer), BlockHeight: 6})
-		future = append(future, simtypes.FutureOperation{Op: SimulateMsgStoreContract(ak, bk, feebucket), BlockHeight: 6})
+		name := parent.Name
 
-		var contractAddr string
-		future = append(future, simtypes.FutureOperation{Op: SimulateMsgInitiateContract(ak, bk, feebucket, merchant, consumer, parent.Name, &contractAddr), BlockHeight: 7})
-		//future = append(future, simtypes.FutureOperation{Op: SimulateMsgExecuteContract(ak, bk, consumer, &contractAddr), BlockHeight: 8})
+		future = append(future, simtypes.FutureOperation{Op: SimulateMsgAddMarker(ak, bk, node, feebucket, merchant, consumer, name), BlockHeight: 2})
 
 		return op, future, err
 	}
 }
 
 // SimulateMsgAddMarker will bind a NAME under an existing name using a 40% probability of restricting it.
-func SimulateMsgAddMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, node simtypes.Account) simtypes.Operation {
+func SimulateMsgAddMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -186,37 +185,58 @@ func SimulateMsgAddMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper
 			true, // allow gov
 		)
 
-		return markersim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg, nil)
+		msg2, ops, err := markersim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg, nil)
+
+		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgAddAccess(ak, bk, node, feebucket, merchant, consumer, name), BlockHeight: 3})
+
+		return msg2, ops, err
 	}
 }
 
-func SimulateFinalizeOrActivateMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, finalize bool, node simtypes.Account) simtypes.Operation {
-	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
-	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		var msg sdk.Msg
-		if finalize {
-			msg = markertypes.NewMsgFinalizeRequest(denom, node.Address)
-		} else {
-			msg = markertypes.NewMsgActivateRequest(denom, node.Address)
-		}
-
-		return markersim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg, nil)
-	}
-}
-
-func SimulateMsgAddAccess(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, node simtypes.Account) simtypes.Operation {
+func SimulateMsgAddAccess(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		accessTypes := []markertypes.Access{markertypes.AccessByName("withdraw")}
 		grant := *markertypes.NewAccessGrant(node.Address, accessTypes)
 		msg := markertypes.NewMsgAddAccessRequest(denom, node.Address, grant)
-		return markersim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg, nil)
+		msg2, ops, err := markersim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg, nil)
+
+		ops = append(ops, simtypes.FutureOperation{Op: SimulateFinalizeMarker(ak, bk, node, feebucket, merchant, consumer, name), BlockHeight: 4})
+
+		return msg2, ops, err
 	}
 }
 
-func SimulateMsgWithdrawRequest(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, node simtypes.Account, customer simtypes.Account) simtypes.Operation {
+func SimulateFinalizeMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		msg := markertypes.NewMsgFinalizeRequest(denom, node.Address)
+
+		msg2, ops, err := markersim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg, nil)
+
+		ops = append(ops, simtypes.FutureOperation{Op: SimulateActivateMarker(ak, bk, node, feebucket, merchant, consumer, name), BlockHeight: 5})
+
+		return msg2, ops, err
+	}
+}
+
+func SimulateActivateMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		msg := markertypes.NewMsgActivateRequest(denom, node.Address)
+
+		msg2, ops, err := markersim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg, nil)
+
+		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgWithdrawRequest(ak, bk, node, feebucket, merchant, consumer, name), BlockHeight: 6})
+
+		return msg2, ops, err
+	}
+}
+
+func SimulateMsgWithdrawRequest(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -224,12 +244,16 @@ func SimulateMsgWithdrawRequest(ak authkeeper.AccountKeeperI, bk bankkeeper.View
 			denom,
 			sdk.NewIntFromUint64(1000000),
 		}}
-		msg := markertypes.NewMsgWithdrawRequest(node.Address, customer.Address, denom, coins)
-		return markersim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg, nil)
+		msg := markertypes.NewMsgWithdrawRequest(node.Address, consumer.Address, denom, coins)
+		msg2, ops, err := markersim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg, nil)
+
+		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgStoreContract(ak, bk, feebucket, merchant, consumer, name), BlockHeight: 6})
+
+		return msg2, ops, err
 	}
 }
 
-func SimulateMsgStoreContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, feebucket simtypes.Account) simtypes.Operation {
+func SimulateMsgStoreContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -246,11 +270,13 @@ func SimulateMsgStoreContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKe
 
 		msg2, ops, _, instantiateErr := Dispatch(r, app, ctx, ak, bk, feebucket, chainID, msg, nil)
 
+		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgInitiateContract(ak, bk, feebucket, merchant, consumer, name)})
+
 		return msg2, ops, instantiateErr
 	}
 }
 
-func SimulateMsgInitiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, feebucket, merchant, consumer simtypes.Account, name string, contractAddr *string) simtypes.Operation {
+func SimulateMsgInitiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -288,17 +314,18 @@ func SimulateMsgInitiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.Vie
 		var pInstResp types.MsgInstantiateContractResponse
 		err4 := pInstResp.Unmarshal(protoResult.Data[0].Data)
 
+		var contractAddr string
 		if err4 == nil {
-			*contractAddr = pInstResp.Address
+			contractAddr = pInstResp.Address
 		}
 
-		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgExecuteContract(ak, bk, consumer, contractAddr), BlockHeight: 8})
+		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgExecuteContract(ak, bk, consumer, contractAddr)})
 
 		return msg2, ops, instantiateErr
 	}
 }
 
-func SimulateMsgExecuteContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, consumer simtypes.Account, contractAddr *string) simtypes.Operation {
+func SimulateMsgExecuteContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, consumer simtypes.Account, contractAddr string) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -311,7 +338,7 @@ func SimulateMsgExecuteContract(ak authkeeper.AccountKeeperI, bk bankkeeper.View
 		msg := &types.MsgExecuteContract{
 			Sender: consumer.Address.String(),
 			Funds: amount,
-			Contract: *contractAddr,
+			Contract: contractAddr,
 			Msg: []byte("{\"purchase\":{\"id\":\"12345\"}}"),
 		}
 

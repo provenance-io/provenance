@@ -5,7 +5,6 @@ package app
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	"math/rand"
 	"os"
 	"testing"
@@ -140,10 +139,10 @@ func TestSmartContracts(t *testing.T) {
 
 	// do we want to just use the weighted operations from the module or do our own stuff afterwards???
 
-	simState := module.SimulationState{
-		AppParams: make(simtypes.AppParams),
-		Cdc:       app.AppCodec(),
-	}
+	//simState := module.SimulationState{
+	//	AppParams: make(simtypes.AppParams),
+	//	Cdc:       app.AppCodec(),
+	//}
 
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
@@ -152,8 +151,8 @@ func TestSmartContracts(t *testing.T) {
 		app.BaseApp,
 		sdksim.AppStateFn(app.AppCodec(), app.SimulationManager()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-		//sdksim.SimulationOperations(app, app.AppCodec(), config),
-		app.sm.Modules[16].WeightedOperations(simState),
+		sdksim.SimulationOperations(app, app.AppCodec(), config),
+		//app.sm.Modules[16].WeightedOperations(simState),
 		app.ModuleAccountAddrs(),
 		config,
 		app.AppCodec(),
