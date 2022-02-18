@@ -53,14 +53,14 @@ There are a few environment variables that can be used to control some behavior 
   Some systems (e.g. Ubuntu) might require this.
   The default is `ROCKSDB_SUDO=no`.
 
-## Building
+## Building or Installing `provenanced`
 
-To compile the `provenanced` executable and place it in the `build/` directory:
+To build the `provenanced` executable and place it in the `build/` directory:
 ```console
 $ make build
 ```
 
-To compile the `provenanced` executable and place it in your system's default Go `bin/` directory.
+To build the `provenanced` executable and place it in your system's default Go `bin/` directory.
 ```console
 $ make install
 ```
@@ -98,3 +98,22 @@ A few aspects of `make build` and `make install` can be controlled through envir
   These are added to a list constructed by the Makefile.
 * `LDFLAGS`: Any extra `-ldflags` to supply to the `go build` or `go install` invocations.
   These are added to a list constructed by the Makefile.
+
+## Building `dbmigrate`
+
+The `dbmigrate` utility can be used to migrate a node's data directory from one backend database to another.
+
+To build the `dbmigrate` executable and place it in the `build/` directory:
+```console
+$ make build-dbmigrate
+```
+
+Building `dbmigrate` uses the same [Options](#options) as `provenanced`.
+
+It will:
+1. Create a new `data/` directory, and copy the contents of the existing `data/` directory into it, converting the database files appropriately.
+2. Back up the existing `data/` directory to `${home}/data-{timestamp}-{old-db-type}/`.
+3. Move the newly created `data/` directory into place.
+4. Update the config's `db_backend` value to the new db backend type.
+
+The `dbmigrate` utility uses the same configs, environment variables, and flags as `provenanced`.
