@@ -8,8 +8,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/server"
 	copier "github.com/otiai10/copy"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	tmlog "github.com/tendermint/tendermint/libs/log"
 	tmdb "github.com/tendermint/tm-db"
@@ -151,6 +154,22 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) error {
 
 // UpdateConfig updates the config file to reflect the new database type.
 func (m Migrator) UpdateConfig(logger tmlog.Logger, command *cobra.Command) error {
+	// Warning: This wipes out all the viper setup stuff up to this point.
+	// It needs to be done so that just the file values or defaults are loaded
+	// without considering environment variables.
+	// This is needed, at least, so that the log_level and log_format entries aren't changed.
+	clientCtx := client.GetClientContextFromCmd(command)
+	clientCtx.Viper = viper.New()
+	server.GetServerContextFromCmd(command).Viper = clientCtx.Viper
+	if err := client.SetCmdClientContext(command, clientCtx); err != nil {
+		return err
+	}
+
+	// Now that we have a clean viper, load the config from files again.
+	if err := config.LoadConfigFromFiles(command); err != nil {
+		return err
+	}
+
 	logger.Info("Updating config.", "key", "db_backend", "from", m.SourceDBType, "to", m.TargetDBType)
 	tmConfig, err := config.ExtractTmConfig(command)
 	if err != nil {
