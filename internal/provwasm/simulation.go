@@ -164,8 +164,8 @@ func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper,
 		future = append(future, simtypes.FutureOperation{Op: SimulateMsgStoreContract(ak, bk, feebucket), BlockHeight: 6})
 
 		var contractAddr string
-		future = append(future, simtypes.FutureOperation{Op: SimulateMsgInitiateContract(ak, bk, feebucket, merchant, parent.Name, &contractAddr), BlockHeight: 7})
-		future = append(future, simtypes.FutureOperation{Op: SimulateMsgExecuteContract(ak, bk, consumer, &contractAddr), BlockHeight: 8})
+		future = append(future, simtypes.FutureOperation{Op: SimulateMsgInitiateContract(ak, bk, feebucket, merchant, consumer, parent.Name, &contractAddr), BlockHeight: 7})
+		//future = append(future, simtypes.FutureOperation{Op: SimulateMsgExecuteContract(ak, bk, consumer, &contractAddr), BlockHeight: 8})
 
 		return op, future, err
 	}
@@ -250,7 +250,7 @@ func SimulateMsgStoreContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKe
 	}
 }
 
-func SimulateMsgInitiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, feebucket, merchant simtypes.Account, name string, contractAddr *string) simtypes.Operation {
+func SimulateMsgInitiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, feebucket, merchant, consumer simtypes.Account, name string, contractAddr *string) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -292,6 +292,7 @@ func SimulateMsgInitiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.Vie
 			*contractAddr = pInstResp.Address
 		}
 
+		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgExecuteContract(ak, bk, consumer, contractAddr), BlockHeight: 8})
 
 		return msg2, ops, instantiateErr
 	}

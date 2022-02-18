@@ -150,15 +150,10 @@ github.com/prometheus/common v0.32.1 h1:hWIdL3N2HoUx3B8j3YN9mWor0qhY/NlEKZEaXxuI
 github.com/prometheus/common v0.32.1/go.mod h1:vu+V0TpY+O6vW9J44gczi3Ap/oXXR10b+M/gUGO4Hls=
 github.com/prometheus/procfs v0.7.3 h1:4jVXhlkAyzOScmCkXBTOLRLTz8EeU+eyjrwB/EPq0VU=
 github.com/prometheus/procfs v0.7.3/go.mod h1:cz+aTbrPOrUb4q7XlbU9ygM+/jj0fzG6c1xBZuNvfVA=
-github.com/provenance-io/cosmos-sdk v0.45.0-pio-1 h1:b3m1PVb9CvcD0xiKNvK1gDSfAPtdd3qYKntrJF1eQ24=
-github.com/provenance-io/cosmos-sdk v0.45.0-pio-1/go.mod h1:XXS/asyCqWNWkx2rW6pSuen+EVcpAFxq6khrhnZgHaQ=
-<<<<<<< HEAD
-github.com/provenance-io/wasmd v0.19.0-provwasm-1.8.release h1:0peApyPcjAWU7Hd88Lv61J0Cw0ODGsaibKg2Wsbr30I=
-github.com/provenance-io/wasmd v0.19.0-provwasm-1.8.release/go.mod h1:GgGTxkbOXIeN3XzreaXQU60ASg5tjcvbMIHIpHT2TNI=
-=======
+github.com/provenance-io/cosmos-sdk v0.45.0-pio-2 h1:se3UWMt0pQjYr+8Zi5o0tHaYr8W6FIwRZ6288+lodwc=
+github.com/provenance-io/cosmos-sdk v0.45.0-pio-2/go.mod h1:APQJszmf9+rA/3YVNoAbJKVehN4oANbbhoapB0ywCQY=
 github.com/provenance-io/wasmd v0.22.0-pio-address-fix h1:oMgJkRT3nq1l58VcP56G39fLsKSQ1Nq44D9fafbdIh4=
 github.com/provenance-io/wasmd v0.22.0-pio-address-fix/go.mod h1:kNDnMAQDJyVek9k6SxCNijMCzOROzzUGBRT8r/vr7oY=
->>>>>>> 5c889f1 (Fix contract address length support (#663))
 github.com/rakyll/statik v0.1.7 h1:OF3QCZUuyPxuGEP7B4ypUa7sB/iHtqOTDYZXGM8KOdQ=
 github.com/rakyll/statik v0.1.7/go.mod h1:AlZONWzMtEnMs7W4e/1LURLiI49pIMmp6V9Unghqrcc=
 github.com/rcrowley/go-metrics v0.0.0-20200313005456-10cdbea86bc0 h1:MkV+77GLUNo5oJ0jf870itWm3D0Sjh7+Za9gazKc5LQ=
