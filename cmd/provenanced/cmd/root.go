@@ -160,7 +160,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 	// Disable help when the start command returns an error.
 	startCmd, _, err := rootCmd.Find([]string{"start"})
 	if err != nil {
-		panic(fmt.Errorf("start command not found: %w", err.Error()))
+		panic(fmt.Errorf("start command not found: %w", err))
 	}
 	startCmd.SilenceUsage = true
 }
