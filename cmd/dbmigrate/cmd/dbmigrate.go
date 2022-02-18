@@ -6,14 +6,12 @@ import (
 	"os"
 	"strings"
 
-	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 
-	tmcfg "github.com/tendermint/tendermint/config"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 	tmdb "github.com/tendermint/tm-db"
 
@@ -40,6 +38,24 @@ func NewDBMigrateCmd() *cobra.Command {
 		WithHomeDir(app.DefaultNodeHome).
 		WithViper("PIO")
 
+	// Allow a user to define the log_level and log_format of this utility through the environment variables
+	// DBM_LOG_LEVEL and DBM_LOG_FORMAT. Otherwise, we want to default them to info and plain.
+	// Without this, the config's log_level and log_format are used.
+	// So, for example, if the config has log_level = error, this utility wouldn't output anything unless it hits an error.
+	// But that setting is desired mostly for the constant running of a node, as opposed to the single-time run of this utility.
+	logLevel := "info"
+	logFormat := "plain"
+	if v := os.Getenv("DBM_LOG_LEVEL"); v != "" {
+		logLevel = v
+	}
+	if v := os.Getenv("DBM_LOG_FORMAT"); v != "" {
+		logLevel = logFormat
+	}
+	// Ignoring any errors here. If we can't set an environment variable, oh well.
+	// Using the values from the config file isn't the end of the world, and is preferable to not allowing execution.
+	_ = os.Setenv("PIO_LOG_LEVEL", logLevel)
+	_ = os.Setenv("PIO_LOG_FORMAT", logFormat)
+
 	rv := &cobra.Command{
 		Use:   "dbmigrate <target type>",
 		Short: "Provenanced Blockchain Database Migration Tool",
@@ -48,7 +64,12 @@ Converts an existing Provenance Blockchain Database to a new backend type.
 
 Valid <target type> values: %s
 
-Default Backup directory: {PIO_HOME}/data-{timestamp}-{old type}`, strings.Join(PossibleDBTypes, ", ")),
+Default Backup directory: {PIO_HOME}/data-{timestamp}-{old type}
+
+To control the log level and log format of this utility, use these environment variables:
+  DBM_LOG_LEVEL - valid values: debug info error
+  DBM_LOG_FORMAT - valid values: plain json
+`, strings.Join(PossibleDBTypes, ", ")),
 		Args: cobra.ExactArgs(1),
 		PersistentPreRunE: func(command *cobra.Command, args []string) error {
 			command.SetOut(command.OutOrStdout())
@@ -110,8 +131,6 @@ func Execute(command *cobra.Command) error {
 	ctx = context.WithValue(ctx, server.ServerContextKey, server.NewDefaultContext())
 
 	command.PersistentFlags().String(tmcli.HomeFlag, app.DefaultNodeHome, "directory for config and data")
-	command.PersistentFlags().String(flags.FlagLogLevel, zerolog.InfoLevel.String(), "The logging level (trace|debug|info|warn|error|fatal|panic)")
-	command.PersistentFlags().String(flags.FlagLogFormat, tmcfg.LogFormatPlain, "The logging format (json|plain)")
 
 	return command.ExecuteContext(ctx)
 }
