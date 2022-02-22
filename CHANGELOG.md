@@ -48,6 +48,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add support for Scope mutation via wasm Smart Contracts [#531](https://github.com/provenance-io/provenance/issues/531)
 * Increase governance deposit amount and add create proposal msg fee [#632](https://github.com/provenance-io/provenance/issues/632)
 * Allow attributes to be associated with scopes [#631](https://github.com/provenance-io/provenance/issues/631)
+* Add `add-genesis-msg-fee` command to add msg fees to genesis.json and update Makefile to have pre-defined msg fees [#667](https://github.com/provenance-io/provenance/issues/667)
 
 ### Improvements
 
@@ -68,6 +69,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * `provenance.attribute.v1.MsgAddAttributeRequest` 10 hash (10,000,000,000 nhash)
   * `provenance.metadata.v1.MsgWriteScopeRequest`  10 hash (10,000,000,000 nhash)
   * `provenance.metadata.v1.MsgP8eMemorializeContractRequest` 10 hash (10,000,000,000 nhash)
+* When the `start` command encounters an error, it no longer outputs command usage [#670](https://github.com/provenance-io/provenance/issues/670)
 
 ### Bug Fixes
 
@@ -78,6 +80,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add Java distribution tag to workflow [#624](https://github.com/provenance-io/provenance/issues/624)
 * Fix maven publish release version number reference [#650](https://github.com/provenance-io/provenance/issues/650)
 * String "v" from Jar artifact version number [#653](https://github.com/provenance-io/provenance/issues/653)
+* Add `iterator` as feature for wasm [#658](https://github.com/provenance-io/provenance/issues/658)
 
 ## [v1.7.6](https://github.com/provenance-io/provenance/releases/tag/v1.7.6) - 2021-12-15
 
