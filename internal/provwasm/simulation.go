@@ -164,7 +164,7 @@ func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper,
 
 		name := parent.Name
 
-		future = append(future, simtypes.FutureOperation{Op: SimulateMsgAddMarker(ak, bk, node, feebucket, merchant, consumer, name), BlockHeight: 2})
+		future = append(future, simtypes.FutureOperation{Op: SimulateMsgAddMarker(ak, bk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight())+1})
 
 		return op, future, err
 	}
@@ -187,7 +187,7 @@ func SimulateMsgAddMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, no
 
 		msg2, ops, err := markersim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg, nil)
 
-		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgAddAccess(ak, bk, node, feebucket, merchant, consumer, name), BlockHeight: 3})
+		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgAddAccess(ak, bk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight())+1})
 
 		return msg2, ops, err
 	}
@@ -202,7 +202,7 @@ func SimulateMsgAddAccess(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, no
 		msg := markertypes.NewMsgAddAccessRequest(denom, node.Address, grant)
 		msg2, ops, err := markersim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg, nil)
 
-		ops = append(ops, simtypes.FutureOperation{Op: SimulateFinalizeMarker(ak, bk, node, feebucket, merchant, consumer, name), BlockHeight: 4})
+		ops = append(ops, simtypes.FutureOperation{Op: SimulateFinalizeMarker(ak, bk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight())+1})
 
 		return msg2, ops, err
 	}
@@ -216,7 +216,7 @@ func SimulateFinalizeMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, 
 
 		msg2, ops, err := markersim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg, nil)
 
-		ops = append(ops, simtypes.FutureOperation{Op: SimulateActivateMarker(ak, bk, node, feebucket, merchant, consumer, name), BlockHeight: 5})
+		ops = append(ops, simtypes.FutureOperation{Op: SimulateActivateMarker(ak, bk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight())+1})
 
 		return msg2, ops, err
 	}
@@ -230,7 +230,7 @@ func SimulateActivateMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, 
 
 		msg2, ops, err := markersim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg, nil)
 
-		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgWithdrawRequest(ak, bk, node, feebucket, merchant, consumer, name), BlockHeight: 6})
+		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgWithdrawRequest(ak, bk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight())+1})
 
 		return msg2, ops, err
 	}
@@ -247,7 +247,7 @@ func SimulateMsgWithdrawRequest(ak authkeeper.AccountKeeperI, bk bankkeeper.Keep
 		msg := markertypes.NewMsgWithdrawRequest(node.Address, consumer.Address, denom, coins)
 		msg2, ops, err := markersim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg, nil)
 
-		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgStoreContract(ak, bk, feebucket, merchant, consumer, name), BlockHeight: 6})
+		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgStoreContract(ak, bk, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight())+1})
 
 		return msg2, ops, err
 	}
@@ -257,6 +257,11 @@ func SimulateMsgStoreContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKe
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		fmt.Println("-----------------")
+		fmt.Println("Store Contract")
+		fmt.Println("-------------------")
+
+
 		code, err := ioutil.ReadFile("./sim_contracts/tutorial.wasm")
 
 		if err != nil {
@@ -270,7 +275,7 @@ func SimulateMsgStoreContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKe
 
 		msg2, ops, _, instantiateErr := Dispatch(r, app, ctx, ak, bk, feebucket, chainID, msg, nil)
 
-		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgInitiateContract(ak, bk, feebucket, merchant, consumer, name)})
+		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgInitiateContract(ak, bk, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight())+1})
 
 		return msg2, ops, instantiateErr
 	}
@@ -319,7 +324,7 @@ func SimulateMsgInitiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.Vie
 			contractAddr = pInstResp.Address
 		}
 
-		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgExecuteContract(ak, bk, consumer, contractAddr)})
+		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgExecuteContract(ak, bk, consumer, contractAddr), BlockHeight: int(ctx.BlockHeight())+1})
 
 		return msg2, ops, instantiateErr
 	}
