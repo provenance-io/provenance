@@ -117,21 +117,18 @@ func (pw ProvwasmWrapper) WeightedOperations(simState module.SimulationState) []
 	}
 }
 
-func RandStringBytes(n int) string {
-	const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
-	b := make([]byte, n)
-	for i := range b {
-		b[i] = letterBytes[rand.Intn(len(letterBytes))]
-	}
-	return string(b)
-}
-
 // SimulateMsgBindName will bind a NAME under an existing name using a 40% probability of restricting it.
 func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper, keeper wasm.Keeper, count *int) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+
+		fmt.Println("")
+		fmt.Println("----------")
+		fmt.Println("Msg Bind Name")
+		fmt.Println("------------")
+		fmt.Println("")
+
 		if *count != 0 {
 			return simtypes.NoOpMsg("provwasm", "", "already bound name"), nil, nil
 		}
