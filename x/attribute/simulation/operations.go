@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 
@@ -102,9 +103,15 @@ func SimulateMsgAddAttribute(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk b
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgAddAttribute, "no name records available to create under"), nil, nil
 		}
 
-		randomRecord := records[r.Intn(len(records))]
-		simAccount, _ := simtypes.FindAccount(accs, mustGetAddress(randomRecord.Address))
+		found := false
+		var simAccount simtypes.Account
+		var randomRecord nametypes.NameRecord
 
+		for !found {
+			randomRecord = records[r.Intn(len(records))]
+			simAccount, found = simtypes.FindAccount(accs, mustGetAddress(randomRecord.Address))
+		}
+		
 		t := types.AttributeType(r.Intn(9))
 		msg := types.NewMsgAddAttributeRequest(
 			randomRecord.GetAddress(),
@@ -280,6 +287,11 @@ func Dispatch(
 	error,
 ) {
 	account := ak.GetAccount(ctx, from.Address)
+	fmt.Println("Address: ", from.Address)
+	if account == nil {
+		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "No Account"), nil, errors.New("No account")
+	}
+
 	spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 	fees, err := simtypes.RandomFees(r, ctx, spendable)
