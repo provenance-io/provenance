@@ -5,9 +5,11 @@ package app
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"math/rand"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -94,6 +96,75 @@ func TestFullAppSimulation(t *testing.T) {
 	if config.Commit {
 		sdksim.PrintStats(db)
 	}
+}
+
+func TestSmartContracts(t *testing.T) {
+	config, db, dir, logger, skip, err := sdksim.SetupSimulation("leveldb-app-sim", "Simulation")
+	if skip {
+		t.Skip("skipping provenance application simulation")
+	}
+	require.NoError(t, err, "provenance simulation setup failed")
+
+	defer func() {
+		db.Close()
+		require.NoError(t, os.RemoveAll(dir))
+	}()
+
+	app := New(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, fauxMerkleModeOpt)
+	require.Equal(t, "provenanced", app.Name())
+
+
+
+	fmt.Printf("running provenance full app simulation for smart contracts")
+
+	header := tmproto.Header{Height: app.LastBlockHeight()}
+	ctx := app.NewContext(true, header)
+	ctx = ctx.WithBlockTime(time.Now())
+
+	nano := ctx.BlockTime().UnixNano()
+
+	if nano < 1 {
+
+		fmt.Println(("Block (unix) time must never be empty or negative "))
+		fmt.Println(ctx.BlockTime())
+		fmt.Println(header.Time)
+		fmt.Println(nano)
+		fmt.Println("--------")
+		panic(nano)
+	}
+
+	//ctx := sdk.NewContext(nil, tmproto.Header{Height: app.LastBlockHeight()}, false, logger)
+
+	fmt.Println("ctx: ")
+	fmt.Println(ctx)
+
+	// do we want to just use the weighted operations from the module or do our own stuff afterwards???
+
+	simState := module.SimulationState{
+		AppParams: make(simtypes.AppParams),
+		Cdc:       app.AppCodec(),
+	}
+
+	// run randomized simulation
+	_, simParams, simErr := simulation.SimulateFromSeed(
+		t,
+		os.Stdout,
+		app.BaseApp,
+		sdksim.AppStateFn(app.AppCodec(), app.SimulationManager()),
+		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
+		//sdksim.SimulationOperations(app, app.AppCodec(), config),
+		app.sm.Modules[17].WeightedOperations(simState),
+		app.ModuleAccountAddrs(),
+		config,
+		app.AppCodec(),
+	)
+
+	// export state and simParams before the simulation error is checked
+	//err = sdksim.CheckExportSimulation(app, config, simParams)
+	//require.NoError(t, err)
+	require.NoError(t, simErr)
+	fmt.Println(simParams)
+	sdksim.PrintStats(db)
 }
 
 // Profile with:
