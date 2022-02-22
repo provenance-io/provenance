@@ -111,7 +111,7 @@ func SimulateMsgAddAttribute(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk b
 			randomRecord = records[r.Intn(len(records))]
 			simAccount, found = simtypes.FindAccount(accs, mustGetAddress(randomRecord.Address))
 		}
-		
+
 		t := types.AttributeType(r.Intn(9))
 		msg := types.NewMsgAddAttributeRequest(
 			randomRecord.GetAddress(),

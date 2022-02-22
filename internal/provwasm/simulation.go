@@ -127,10 +127,6 @@ func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk 
 		}
 		*count = *count + 1
 
-		fmt.Println("---------")
-		fmt.Println("MsgBindName")
-		fmt.Println("----------")
-
 		node := accs[0]
 		consumer := accs[1]
 		feebucket := accs[2]
@@ -250,11 +246,6 @@ func SimulateMsgStoreContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKe
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		fmt.Println("-----------------")
-		fmt.Println("Store Contract")
-		fmt.Println("-------------------")
-
-
 		code, err := ioutil.ReadFile("./sim_contracts/tutorial.wasm")
 
 		if err != nil {
@@ -278,10 +269,7 @@ func SimulateMsgInitiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.Vie
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		//m := fmt.Sprintf(`{ "contract_name": "%s.%s.%s", "purchase_denom": "%s", "merchant_address": "%s", "fee_percent": "0.10" }`, label, namePrefix, name, denom, merchant.Address.String())
 		m := fmt.Sprintf(`{ "contract_name": "%s.%s", "purchase_denom": "%s", "merchant_address": "%s", "fee_percent": "0.10" }`, label, name, denom, merchant.Address.String())
-
-		// hmm, we currently have access to 0 funds...
 		amountStr := fmt.Sprintf("0%s", denom)
 		amount, err := sdk.ParseCoinsNormalized(amountStr)
 
@@ -296,7 +284,7 @@ func SimulateMsgInitiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.Vie
 			CodeID: 1,
 			Label: label,
 			Msg: []byte(m),
-			Funds: amount, // do we need funds?
+			Funds: amount,
 		}
 
 		msg2, ops, sdkResponse, instantiateErr := Dispatch(r, app, ctx, ak, bk, feebucket, chainID, msg, nil)
