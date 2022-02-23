@@ -112,8 +112,6 @@ func TestSmartContracts(t *testing.T) {
 	app := New(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, fauxMerkleModeOpt)
 	require.Equal(t, "provenanced", app.Name())
 
-
-
 	fmt.Printf("running provenance full app simulation for smart contracts")
 
 	header := tmproto.Header{Height: app.LastBlockHeight()}

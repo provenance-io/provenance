@@ -2,6 +2,10 @@ package provwasm
 
 import (
 	"fmt"
+	"io/ioutil"
+	"math/rand"
+	"strings"
+
 	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/CosmWasm/wasmd/x/wasm/types"
@@ -15,39 +19,37 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/golang/protobuf/proto"
+
 	simappparams "github.com/provenance-io/provenance/app/params"
 	markersim "github.com/provenance-io/provenance/x/marker/simulation"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	namesim "github.com/provenance-io/provenance/x/name/simulation"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
-	"io/ioutil"
-	"math/rand"
-	"strings"
 )
 
 const (
-	denom = "coinfortestingsmartc" // must be a string of length 20
-	namePrefix = "scsnameprefix" // must be a string of length 13
-	label = "tutorialsc" // must gbe a string of at least length 10 so that the name module doesn't fail on minlength
+	denom      = "coinfortestingsmartc" // must be a string of length 20
+	namePrefix = "scsnameprefix"        // must be a string of length 13
+	label      = "tutorialsc"           // must gbe a string of at least length 10 so that the name module doesn't fail on minlength
 )
 
 type ProvwasmWrapper struct {
-	cdc codec.Codec
+	cdc  codec.Codec
 	wasm module.AppModuleSimulation
-	ak authkeeper.AccountKeeperI
-	bk bankkeeper.Keeper
-	nk namekeeper.Keeper
+	ak   authkeeper.AccountKeeperI
+	bk   bankkeeper.Keeper
+	nk   namekeeper.Keeper
 }
 
 func NewProvwasmWrapper(cdc codec.Codec, keeper *wasm.Keeper, validatorSetSource keeper.ValidatorSetSource, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper) *ProvwasmWrapper {
 
 	return &ProvwasmWrapper{
-		cdc: cdc,
+		cdc:  cdc,
 		wasm: wasm.NewAppModule(cdc, keeper, validatorSetSource),
-		ak: ak,
-		bk: bk,
-		nk: nk,
+		ak:   ak,
+		bk:   bk,
+		nk:   nk,
 	}
 }
 
@@ -62,8 +64,8 @@ func (pw ProvwasmWrapper) GenerateGenesisState(input *module.SimulationState) {
 
 	codes := make([]types.Code, 1)
 	codes[0] = types.Code{
-		CodeID: 1,
-		CodeInfo: types.CodeInfoFixture(types.WithSHA256CodeHash(codeBytes)),
+		CodeID:    1,
+		CodeInfo:  types.CodeInfoFixture(types.WithSHA256CodeHash(codeBytes)),
 		CodeBytes: codeBytes,
 	}
 
@@ -81,7 +83,7 @@ func (pw ProvwasmWrapper) GenerateGenesisState(input *module.SimulationState) {
 			{IDKey: types.KeyLastCodeID, Value: 2},
 			{IDKey: types.KeyLastInstanceID, Value: 2},
 		},
-		GenMsgs:   nil,
+		GenMsgs: nil,
 	}
 
 	_, err = input.Cdc.MarshalJSON(&wasmGenesis)
@@ -155,7 +157,7 @@ func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk 
 
 		name := parent.Name
 
-		future = append(future, simtypes.FutureOperation{Op: SimulateMsgAddMarker(ak, bk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight())+1})
+		future = append(future, simtypes.FutureOperation{Op: SimulateMsgAddMarker(ak, bk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight()) + 1})
 
 		return op, future, err
 	}
@@ -178,7 +180,7 @@ func SimulateMsgAddMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, no
 
 		msg2, ops, err := markersim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg, nil)
 
-		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgAddAccess(ak, bk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight())+1})
+		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgAddAccess(ak, bk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight()) + 1})
 
 		return msg2, ops, err
 	}
@@ -193,7 +195,7 @@ func SimulateMsgAddAccess(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, no
 		msg := markertypes.NewMsgAddAccessRequest(denom, node.Address, grant)
 		msg2, ops, err := markersim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg, nil)
 
-		ops = append(ops, simtypes.FutureOperation{Op: SimulateFinalizeMarker(ak, bk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight())+1})
+		ops = append(ops, simtypes.FutureOperation{Op: SimulateFinalizeMarker(ak, bk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight()) + 1})
 
 		return msg2, ops, err
 	}
@@ -207,7 +209,7 @@ func SimulateFinalizeMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, 
 
 		msg2, ops, err := markersim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg, nil)
 
-		ops = append(ops, simtypes.FutureOperation{Op: SimulateActivateMarker(ak, bk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight())+1})
+		ops = append(ops, simtypes.FutureOperation{Op: SimulateActivateMarker(ak, bk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight()) + 1})
 
 		return msg2, ops, err
 	}
@@ -221,7 +223,7 @@ func SimulateActivateMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, 
 
 		msg2, ops, err := markersim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg, nil)
 
-		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgWithdrawRequest(ak, bk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight())+1})
+		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgWithdrawRequest(ak, bk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight()) + 1})
 
 		return msg2, ops, err
 	}
@@ -238,7 +240,7 @@ func SimulateMsgWithdrawRequest(ak authkeeper.AccountKeeperI, bk bankkeeper.Keep
 		msg := markertypes.NewMsgWithdrawRequest(node.Address, consumer.Address, denom, coins)
 		msg2, ops, err := markersim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg, nil)
 
-		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgStoreContract(ak, bk, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight())+1})
+		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgStoreContract(ak, bk, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight()) + 1})
 
 		return msg2, ops, err
 	}
@@ -255,13 +257,13 @@ func SimulateMsgStoreContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKe
 		}
 
 		msg := &types.MsgStoreCode{
-			Sender: feebucket.Address.String(),
+			Sender:       feebucket.Address.String(),
 			WASMByteCode: code,
 		}
 
 		msg2, ops, _, instantiateErr := Dispatch(r, app, ctx, ak, bk, feebucket, chainID, msg, nil)
 
-		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgInstantiateContract(ak, bk, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight())+1})
+		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgInstantiateContract(ak, bk, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight()) + 1})
 
 		return msg2, ops, instantiateErr
 	}
@@ -281,11 +283,11 @@ func SimulateMsgInstantiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.
 
 		msg := &types.MsgInstantiateContract{
 			Sender: feebucket.Address.String(),
-			Admin: feebucket.Address.String(),
+			Admin:  feebucket.Address.String(),
 			CodeID: 1,
-			Label: label,
-			Msg: []byte(m),
-			Funds: amount,
+			Label:  label,
+			Msg:    []byte(m),
+			Funds:  amount,
 		}
 
 		msg2, ops, sdkResponse, instantiateErr := Dispatch(r, app, ctx, ak, bk, feebucket, chainID, msg, nil)
@@ -306,7 +308,7 @@ func SimulateMsgInstantiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.
 			contractAddr = pInstResp.Address
 		}
 
-		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgExecuteContract(ak, bk, consumer, contractAddr), BlockHeight: int(ctx.BlockHeight())+1})
+		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgExecuteContract(ak, bk, consumer, contractAddr), BlockHeight: int(ctx.BlockHeight()) + 1})
 
 		return msg2, ops, instantiateErr
 	}
@@ -324,17 +326,16 @@ func SimulateMsgExecuteContract(ak authkeeper.AccountKeeperI, bk bankkeeper.View
 		}
 
 		msg := &types.MsgExecuteContract{
-			Sender: consumer.Address.String(),
-			Funds: amount,
+			Sender:   consumer.Address.String(),
+			Funds:    amount,
 			Contract: contractAddr,
-			Msg: []byte("{\"purchase\":{\"id\":\"12345\"}}"),
+			Msg:      []byte("{\"purchase\":{\"id\":\"12345\"}}"),
 		}
 
 		msg2, ops, _, err2 := Dispatch(r, app, ctx, ak, bk, consumer, chainID, msg, nil)
 		return msg2, ops, err2
 	}
 }
-
 
 // Dispatch sends an operation to the chain using a given account/funds on account for fees.  Failures on the server side
 // are handled as no-op msg operations with the error string as the status/response.
