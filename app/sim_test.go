@@ -5,14 +5,15 @@ package app
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
+	"os"
+	"testing"
+
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
-	"math/rand"
-	"os"
-	"testing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdksim "github.com/cosmos/cosmos-sdk/simapp"
