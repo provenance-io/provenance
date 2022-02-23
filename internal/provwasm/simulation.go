@@ -34,7 +34,7 @@ const (
 	label      = "tutorialsc"           // must gbe a string of at least length 10 so that the name module doesn't fail on minlength
 )
 
-type ProvwasmWrapper struct {
+type Wrapper struct {
 	cdc  codec.Codec
 	wasm module.AppModuleSimulation
 	ak   authkeeper.AccountKeeperI
@@ -42,9 +42,9 @@ type ProvwasmWrapper struct {
 	nk   namekeeper.Keeper
 }
 
-func NewProvwasmWrapper(cdc codec.Codec, keeper *wasm.Keeper, validatorSetSource keeper.ValidatorSetSource, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper) *ProvwasmWrapper {
+func NewWrapper(cdc codec.Codec, keeper *wasm.Keeper, validatorSetSource keeper.ValidatorSetSource, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper) *Wrapper {
 
-	return &ProvwasmWrapper{
+	return &Wrapper{
 		cdc:  cdc,
 		wasm: wasm.NewAppModule(cdc, keeper, validatorSetSource),
 		ak:   ak,
@@ -56,7 +56,7 @@ func NewProvwasmWrapper(cdc codec.Codec, keeper *wasm.Keeper, validatorSetSource
 // AppModuleSimulation functions
 
 // GenerateGenesisState creates a randomized GenState of the wasm module.
-func (pw ProvwasmWrapper) GenerateGenesisState(input *module.SimulationState) {
+func (pw Wrapper) GenerateGenesisState(input *module.SimulationState) {
 	codeBytes, err := ioutil.ReadFile("./sim_contracts/tutorial.wasm")
 	if err != nil {
 		panic("failed to read file")
@@ -95,21 +95,21 @@ func (pw ProvwasmWrapper) GenerateGenesisState(input *module.SimulationState) {
 }
 
 // ProposalContents doesn't return any content functions for governance proposals.
-func (ProvwasmWrapper) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
+func (Wrapper) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
 	return nil
 }
 
 // RandomizedParams creates randomized bank param changes for the simulator.
-func (pw ProvwasmWrapper) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
+func (pw Wrapper) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 	return pw.wasm.RandomizedParams(r)
 }
 
 // RegisterStoreDecoder registers a decoder for supply module's types
-func (pw ProvwasmWrapper) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (pw Wrapper) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 }
 
 // WeightedOperations returns the all the provwasm operations with their respective weights.
-func (pw ProvwasmWrapper) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
+func (pw Wrapper) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	count := 0
 	return []simtypes.WeightedOperation{
 		simulation.NewWeightedOperation(
@@ -135,12 +135,16 @@ func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk 
 		merchant := accs[3]
 
 		var parent nametypes.NameRecord
-		nk.IterateRecords(ctx, nametypes.NameKeyPrefix, func(record nametypes.NameRecord) error {
+		err := nk.IterateRecords(ctx, nametypes.NameKeyPrefix, func(record nametypes.NameRecord) error {
 			if !strings.Contains(record.Name, ".") {
 				parent = record
 			}
 			return nil
 		})
+
+		if err != nil {
+			panic(err)
+		}
 
 		if len(parent.Name) == 0 {
 			panic("no records")
@@ -153,13 +157,13 @@ func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk 
 				false),
 			parent)
 
-		op, future, err := namesim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg)
+		op, future, err2 := namesim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg)
 
 		name := parent.Name
 
 		future = append(future, simtypes.FutureOperation{Op: SimulateMsgAddMarker(ak, bk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight()) + 1})
 
-		return op, future, err
+		return op, future, err2
 	}
 }
 
