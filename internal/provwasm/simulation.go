@@ -23,12 +23,13 @@ import (
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 	"io/ioutil"
 	"math/rand"
+	"strings"
 )
 
 const (
 	denom = "coinfortestingsmartc" // must be a string of length 20
 	namePrefix = "scsnameprefix" // must be a string of length 13
-	label = "tutorials"
+	label = "tutorialsc" // must gbe a string of at least length 10 so that the name module doesn't fail on minlength
 )
 
 type ProvwasmWrapper struct {
@@ -37,7 +38,6 @@ type ProvwasmWrapper struct {
 	ak authkeeper.AccountKeeperI
 	bk bankkeeper.Keeper
 	nk namekeeper.Keeper
-	keeper wasm.Keeper
 }
 
 func NewProvwasmWrapper(cdc codec.Codec, keeper *wasm.Keeper, validatorSetSource keeper.ValidatorSetSource, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper) *ProvwasmWrapper {
@@ -112,13 +112,13 @@ func (pw ProvwasmWrapper) WeightedOperations(simState module.SimulationState) []
 	return []simtypes.WeightedOperation{
 		simulation.NewWeightedOperation(
 			100,
-			SimulateMsgBindName(pw.ak, pw.bk, pw.nk, pw.keeper, &count),
+			SimulateMsgBindName(pw.ak, pw.bk, pw.nk, &count),
 		),
 	}
 }
 
-// SimulateMsgBindName will bind a NAME under an existing name using a 40% probability of restricting it.
-func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper, keeper wasm.Keeper, count *int) simtypes.Operation {
+// SimulateMsgBindName will bind a NAME under an existing name
+func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper, count *int) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -134,7 +134,9 @@ func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk 
 
 		var parent nametypes.NameRecord
 		nk.IterateRecords(ctx, nametypes.NameKeyPrefix, func(record nametypes.NameRecord) error {
-			parent = record
+			if !strings.Contains(record.Name, ".") {
+				parent = record
+			}
 			return nil
 		})
 
@@ -153,14 +155,14 @@ func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk 
 
 		name := parent.Name
 
-		future = append(future, simtypes.FutureOperation{Op: SimulateMsgAddMarker(ak, bk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight())+1})
+		future = append(future, simtypes.FutureOperation{Op: SimulateMsgAddMarker(ak, bk, nk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight())+1})
 
 		return op, future, err
 	}
 }
 
 // SimulateMsgAddMarker will bind a NAME under an existing name using a 40% probability of restricting it.
-func SimulateMsgAddMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
+func SimulateMsgAddMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -176,13 +178,13 @@ func SimulateMsgAddMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, no
 
 		msg2, ops, err := markersim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg, nil)
 
-		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgAddAccess(ak, bk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight())+1})
+		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgAddAccess(ak, bk, nk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight())+1})
 
 		return msg2, ops, err
 	}
 }
 
-func SimulateMsgAddAccess(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
+func SimulateMsgAddAccess(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -191,13 +193,13 @@ func SimulateMsgAddAccess(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, no
 		msg := markertypes.NewMsgAddAccessRequest(denom, node.Address, grant)
 		msg2, ops, err := markersim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg, nil)
 
-		ops = append(ops, simtypes.FutureOperation{Op: SimulateFinalizeMarker(ak, bk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight())+1})
+		ops = append(ops, simtypes.FutureOperation{Op: SimulateFinalizeMarker(ak, bk, nk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight())+1})
 
 		return msg2, ops, err
 	}
 }
 
-func SimulateFinalizeMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
+func SimulateFinalizeMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -205,13 +207,13 @@ func SimulateFinalizeMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, 
 
 		msg2, ops, err := markersim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg, nil)
 
-		ops = append(ops, simtypes.FutureOperation{Op: SimulateActivateMarker(ak, bk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight())+1})
+		ops = append(ops, simtypes.FutureOperation{Op: SimulateActivateMarker(ak, bk, nk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight())+1})
 
 		return msg2, ops, err
 	}
 }
 
-func SimulateActivateMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
+func SimulateActivateMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -219,13 +221,13 @@ func SimulateActivateMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, 
 
 		msg2, ops, err := markersim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg, nil)
 
-		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgWithdrawRequest(ak, bk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight())+1})
+		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgWithdrawRequest(ak, bk, nk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight())+1})
 
 		return msg2, ops, err
 	}
 }
 
-func SimulateMsgWithdrawRequest(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
+func SimulateMsgWithdrawRequest(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -236,13 +238,13 @@ func SimulateMsgWithdrawRequest(ak authkeeper.AccountKeeperI, bk bankkeeper.Keep
 		msg := markertypes.NewMsgWithdrawRequest(node.Address, consumer.Address, denom, coins)
 		msg2, ops, err := markersim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg, nil)
 
-		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgStoreContract(ak, bk, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight())+1})
+		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgStoreContract(ak, bk, nk, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight())+1})
 
 		return msg2, ops, err
 	}
 }
 
-func SimulateMsgStoreContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
+func SimulateMsgStoreContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -259,16 +261,34 @@ func SimulateMsgStoreContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKe
 
 		msg2, ops, _, instantiateErr := Dispatch(r, app, ctx, ak, bk, feebucket, chainID, msg, nil)
 
-		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgInitiateContract(ak, bk, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight())+1})
+		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgInstantiateContract(ak, bk, nk, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight())+1})
 
 		return msg2, ops, instantiateErr
 	}
 }
 
-func SimulateMsgInitiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
+func SimulateMsgInstantiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+
+		found := false
+		nk.IterateRecords(ctx, nametypes.NameKeyPrefix, func(record nametypes.NameRecord) error {
+			if record.Name == name {
+				found = true
+			}
+			return nil
+		})
+
+
+		fmt.Println("Found: ", found)
+		fmt.Println("Min name size: ", nk.GetMinSegmentLength(ctx))
+		fmt.Println("GetMaxNameLevels: ", nk.GetMaxNameLevels(ctx))
+
+		if !found {
+			return simtypes.NoOpMsg("provwasm", "", "Name has been deleted before instantiating contract"), nil, nil
+		}
+
 		m := fmt.Sprintf(`{ "contract_name": "%s.%s", "purchase_denom": "%s", "merchant_address": "%s", "fee_percent": "0.10" }`, label, name, denom, merchant.Address.String())
 		amountStr := fmt.Sprintf("0%s", denom)
 		amount, err := sdk.ParseCoinsNormalized(amountStr)
@@ -278,6 +298,9 @@ func SimulateMsgInitiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.Vie
 			panic(err)
 		}
 
+		fmt.Println("Name: ", name)
+		fmt.Println("m: ", m)
+
 		msg := &types.MsgInstantiateContract{
 			Sender: feebucket.Address.String(),
 			Admin: feebucket.Address.String(),
@@ -286,6 +309,8 @@ func SimulateMsgInitiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.Vie
 			Msg: []byte(m),
 			Funds: amount,
 		}
+
+		fmt.Println("msg: ", msg)
 
 		msg2, ops, sdkResponse, instantiateErr := Dispatch(r, app, ctx, ak, bk, feebucket, chainID, msg, nil)
 
@@ -315,10 +340,11 @@ func SimulateMsgExecuteContract(ak authkeeper.AccountKeeperI, bk bankkeeper.View
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		amount, err := sdk.ParseCoinsNormalized(fmt.Sprintf("100%s", denom))
+		amount, _ := sdk.ParseCoinsNormalized(fmt.Sprintf("100%s", denom))
+		coins := bk.SpendableCoins(ctx, consumer.Address)
 
-		if err != nil {
-			panic(err)
+		if coins.AmountOf(denom).LT(sdk.NewInt(100)) {
+			return simtypes.NoOpMsg("provwasm", "", "not enough coins"), nil, nil
 		}
 
 		msg := &types.MsgExecuteContract{
