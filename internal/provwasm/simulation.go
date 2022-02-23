@@ -43,7 +43,6 @@ type Wrapper struct {
 }
 
 func NewWrapper(cdc codec.Codec, keeper *wasm.Keeper, validatorSetSource keeper.ValidatorSetSource, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper) *Wrapper {
-
 	return &Wrapper{
 		cdc:  cdc,
 		wasm: wasm.NewAppModule(cdc, keeper, validatorSetSource),
@@ -127,7 +126,7 @@ func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk 
 		if *count != 0 {
 			return simtypes.NoOpMsg("provwasm", "", "already bound name"), nil, nil
 		}
-		*count = *count + 1
+		*count++
 
 		node := accs[0]
 		consumer := accs[1]
@@ -238,8 +237,8 @@ func SimulateMsgWithdrawRequest(ak authkeeper.AccountKeeperI, bk bankkeeper.Keep
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		coins := []sdk.Coin{{
-			denom,
-			sdk.NewIntFromUint64(1000000),
+			Denom:  denom,
+			Amount: sdk.NewIntFromUint64(1000000),
 		}}
 		msg := markertypes.NewMsgWithdrawRequest(node.Address, consumer.Address, denom, coins)
 		msg2, ops, err := markersim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg, nil)
