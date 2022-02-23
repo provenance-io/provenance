@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"errors"
 	"fmt"
 	"math/rand"
 
@@ -287,11 +286,6 @@ func Dispatch(
 	error,
 ) {
 	account := ak.GetAccount(ctx, from.Address)
-	fmt.Println("Address: ", from.Address)
-	if account == nil {
-		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "No Account"), nil, errors.New("No account")
-	}
-
 	spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 	fees, err := simtypes.RandomFees(r, ctx, spendable)
