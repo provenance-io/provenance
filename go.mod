@@ -138,4 +138,8 @@ replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 // Fixes chain panic.  Should be removed once cosmwasm has fixed their release
 // Dockerfile also needs a reference that will need removing
 // TODO Remove it: https://github.com/CosmWasm/cosmwasm/pull/1223
-replace github.com/CosmWasm/wasmvm => github.com/CosmWasm/wasmvm v1.0.0-beta6
+//replace github.com/CosmWasm/wasmvm => github.com/CosmWasm/wasmvm v1.0.0-beta6
+
+replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.22.0-m1support
+
+replace github.com/CosmWasm/wasmvm => github.com/provenance-io/wasmvm v1.0.0-betaprov
