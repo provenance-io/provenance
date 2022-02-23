@@ -174,7 +174,10 @@ run: check-built run-config;
 
 build-dbmigrate: validate-go-version go.sum
 	mkdir -p $(BUILDDIR)
-	$(GO) build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./cmd/dbmigrate
+	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./cmd/dbmigrate
+
+install-dbmigrate: go.sum
+	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) install -mod=readonly $(BUILD_FLAGS) ./cmd/dbmigrate
 
 ##############################
 # Release artifacts and plan #
