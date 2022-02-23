@@ -140,6 +140,11 @@ replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 // TODO Remove it: https://github.com/CosmWasm/cosmwasm/pull/1223
 //replace github.com/CosmWasm/wasmvm => github.com/CosmWasm/wasmvm v1.0.0-beta6
 
+// Fixes address length issue to support contract address of length 20 (pre v1.8.0) with current length 22
+// Allows M1 support through wasmer 2.2.0 upgrade
+// TODO Remove it when fixed upstream
 replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.22.0-m1support
 
+// Allows M1 support through wasmer 2.2.0 upgrade
+// TODO Remove it when fixed upstream
 replace github.com/CosmWasm/wasmvm => github.com/provenance-io/wasmvm v1.0.0-betaprov
