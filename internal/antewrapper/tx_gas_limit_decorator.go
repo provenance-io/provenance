@@ -13,8 +13,8 @@ import (
 // CONTRACT: Tx must implement FeeTx to use TxGasLimitDecorator
 type TxGasLimitDecorator struct{}
 
-// MIN_TX_PER_BLOCK is used to determine the maximum amount of gas that any given transaction can use based on the block gas limit.
-const MIN_TX_PER_BLOCK = 20
+// MinTxPerBlock is used to determine the maximum amount of gas that any given transaction can use based on the block gas limit.
+const MinTxPerBlock = 20
 
 func NewTxGasLimitDecorator() TxGasLimitDecorator {
 	return TxGasLimitDecorator{}
@@ -28,11 +28,11 @@ func (mfd TxGasLimitDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 
 	// Ensure that the requested gas does not exceed the configured block maximum
 	gas := feeTx.GetGas()
-	gas_tx_limit := ctx.BlockGasMeter().Limit() * (1 / MIN_TX_PER_BLOCK)
+	gasTxLimit := ctx.BlockGasMeter().Limit() * (1 / MinTxPerBlock)
 
-	// TODO - remove "gas_tx_limit > 0" with SDK 0.46 which fixes the infinite gas meter to use max int vs zero for the limit.
-	if gas_tx_limit > 0 && gas > gas_tx_limit {
-		return ctx, sdkerrors.Wrapf(sdkerrors.ErrTxTooLarge, "transaction gas exceeds maximum allowed; got: %s max allowed: %s", gas, gas_tx_limit)
+	// TODO - remove "gasTxLimit > 0" with SDK 0.46 which fixes the infinite gas meter to use max int vs zero for the limit.
+	if gasTxLimit > 0 && gas > gasTxLimit {
+		return ctx, sdkerrors.Wrapf(sdkerrors.ErrTxTooLarge, "transaction gas exceeds maximum allowed; got: %d max allowed: %d", gas, gasTxLimit)
 	}
 
 	return next(ctx, tx, simulate)
