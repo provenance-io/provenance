@@ -8,8 +8,7 @@ import (
 // TxGasLimitDecorator will check if the transaction's gas amount is higher than
 // 5% of the maximum gas allowed per block.
 // If gas is too high, decorator returns error and tx is rejected from mempool.
-// Note this only applies when ctx.CheckTx = true
-// If gas is below the limit or not CheckTx, then call next AnteHandler
+// If gas is below the limit, then call next AnteHandler
 // CONTRACT: Tx must implement FeeTx to use TxGasLimitDecorator
 type TxGasLimitDecorator struct{}
 
