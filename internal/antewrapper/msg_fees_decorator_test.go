@@ -33,6 +33,28 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees() {
 	suite.Require().Contains(err.Error(), "Base Fee+additional fee cannot be paid with fee value passed in : \"100000atom\", required: \"100100atom\" = \"100000atom\"(base-fee) +\"100atom\"(additional-fees): insufficient fee", "got wrong message")
 }
 
+// checkTx true, high min gas price(high enough so that additional fee in same denom tips it over,
+//and this is what sets it apart from MempoolDecorator which has already been run)
+func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesNoAdditionalFees() {
+	err, antehandler := setUpApp(suite, true, "nhash", 0)
+	tx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("nhash", 100000)))
+	suite.Require().NoError(err)
+
+	// Set gas price (1 atom)
+	atomPrice := sdk.NewDecCoinFromDec("nhash", sdk.NewDec(100000))
+	highGasPrice := []sdk.DecCoin{atomPrice}
+	suite.ctx = suite.ctx.WithMinGasPrices(highGasPrice)
+
+	// Set IsCheckTx to true
+	suite.ctx = suite.ctx.WithIsCheckTx(true)
+	suite.ctx = suite.ctx.WithChainID("test-chain")
+
+	// antehandler errors with insufficient fees
+	_, err = antehandler(suite.ctx, tx, false)
+	suite.Require().NotNil(err, "Decorator should have errored on too low fee for local gasPrice")
+	suite.Require().Contains(err.Error(), "not enough fees based on floor gas price: \"1905nhash\"; required base fees >=\"190500000nhash\": Supplied fee was \"100000nhash\": insufficient fee", "got wrong message")
+}
+
 // checkTx true, high min gas price irrespective of additional fees
 func (suite *AnteTestSuite) TestEnsureMempoolHighMinGasPrice() {
 	err, antehandler := setUpApp(suite, true, "atom", 100)
@@ -281,11 +303,12 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_2() {
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_3() {
 	err, antehandler := setUpApp(suite, false, "nhash", 100)
 	tx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("nhash", 10000)))
+	suite.ctx = suite.ctx.WithChainID("test-chain")
 	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(10000)))))
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NotNil(err, "Decorator should not have errored for insufficient additional fee")
 	// TODO revisit this
-	suite.Require().Contains(err.Error(), "not enough fees; after deducting fees required,got: \"-190490100nhash\", required additional fee: \"100nhash\"", "wrong error message")
+	suite.Require().Contains(err.Error(), "not enough fees based on floor gas price: \"1905nhash\"; after deducting (total fee supplied fees - additional fees(\"100nhash\")) required base fees >=\"190500000nhash\": Supplied fee was \"9900nhash\": insufficient fee", "wrong error message")
 }
 
 // additional fee same denom as default base fee denom, fails because of insufficient fee and then passes when enough fee is present.
@@ -350,14 +373,15 @@ func setUpApp(suite *AnteTestSuite, checkTx bool, additionalFeeCoinDenom string,
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 	// create fee in stake
 	newCoin := sdk.NewInt64Coin(additionalFeeCoinDenom, additionalFeeCoinAmt)
-	err := suite.CreateMsgFee(newCoin, &testdata.TestMsg{})
-	if err != nil {
-		panic(err)
+	if additionalFeeCoinAmt != 0 {
+		err := suite.CreateMsgFee(newCoin, &testdata.TestMsg{})
+		if err != nil {
+			panic(err)
+		}
 	}
-
 	// setup NewMsgFeesDecorator
 	app := suite.app
 	mfd := antewrapper.NewMsgFeesDecorator(app.BankKeeper, app.AccountKeeper, app.FeeGrantKeeper, app.MsgFeesKeeper)
 	antehandler := sdk.ChainAnteDecorators(mfd)
-	return err, antehandler
+	return nil, antehandler
 }

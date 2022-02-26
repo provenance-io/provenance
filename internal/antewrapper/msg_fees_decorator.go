@@ -13,6 +13,7 @@ import (
 
 const (
 	DefaultInsufficientFeeMsg = "not enough fees; after deducting fees required,got"
+	SimAppChainID             = "simapp-unit-testing"
 )
 
 // MsgFeesDecorator will check if the transaction's fee is at least as large
@@ -65,6 +66,14 @@ func (afd MsgFeesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool
 	if err != nil {
 		return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, err.Error())
 	}
+	// floor gas price should be checked for all Tx's ( i.e nodes cannot set min-gas-price < floor gas price)
+	// the chain id check is exclusively for not breaking all existing sim tests which freak out when denom is anything other than stake.
+	if ctx.IsCheckTx() && !simulate && chainIdsToIgnoreForFloorGasPriceCheck(ctx) && (additionalFees.IsZero() || additionalFees == nil) {
+		err = checkFloorGasFees(gas, feeCoins, additionalFees, afd.msgFeeKeeper.GetFloorGasPrice(ctx))
+		if err != nil {
+			return ctx, err
+		}
+	}
 	if !additionalFees.IsZero() {
 		// ensure enough fees to cover mempool fee for base fee + additional fee
 		// This is exact same logic as NewMempoolFeeDecorator except it accounts for additional Fees.
@@ -106,6 +115,13 @@ func (afd MsgFeesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool
 		}
 	}
 	return next(ctx, tx, simulate)
+}
+
+//   The chain-id check is exclusively for not breaking all existing sim tests which freak out when denom is anything other than stake.
+//   and some network tests won't work without a chain id being set(but they also setup everything with stake denom) so `simapp-unit-testing` chain id is skipped also.
+//	 This only needs to work to pio-testnet and pio-mainnet, so this is safe.
+func chainIdsToIgnoreForFloorGasPriceCheck(ctx sdk.Context) bool {
+	return len(ctx.ChainID()) != 0 && ctx.ChainID() != SimAppChainID
 }
 
 // getFeeGranterIfExists checks if fee granter exists and returns account to deduct fees from
@@ -197,14 +213,26 @@ func EnsureSufficientFees(gas uint64, feeCoins sdk.Coins, additionalFees sdk.Coi
 	// total fees in hash - gas limit * price per gas >= additional fees in hash
 	if !additionalFees.AmountOf(minGasPriceForAdditionalFeeCalc.Denom).IsZero() {
 		// Determine the required fees by multiplying each required minimum gas
-		// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
-		fee := minGasPriceForAdditionalFeeCalc.Amount.Mul(sdk.NewIntFromUint64(gas))
-		baseFees := sdk.NewCoin(minGasPriceForAdditionalFeeCalc.Denom, fee)
-		if feeCoins, hasNeg = feeCoins.SafeSub(sdk.Coins{baseFees}); hasNeg {
-			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, DefaultInsufficientFeeMsg+": %q, required additional fee: %q", feeCoins, additionalFees)
+		err := checkFloorGasFees(gas, feeCoins, additionalFees, minGasPriceForAdditionalFeeCalc)
+		if err != nil {
+			return err
 		}
 	}
 
+	return nil
+}
+
+func checkFloorGasFees(gas uint64, feeCoins sdk.Coins, additionalFees sdk.Coins, minGasPriceForAdditionalFeeCalc sdk.Coin) error {
+	// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
+	fee := minGasPriceForAdditionalFeeCalc.Amount.Mul(sdk.NewIntFromUint64(gas))
+	baseFees := sdk.NewCoin(minGasPriceForAdditionalFeeCalc.Denom, fee)
+	if _, hasNeg := feeCoins.SafeSub(sdk.Coins{baseFees}); hasNeg {
+		// for tx without additional fees.
+		if additionalFees == nil || additionalFees.IsZero() {
+			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "not enough fees based on floor gas price: %q; required base fees >=%q: Supplied fee was %q", minGasPriceForAdditionalFeeCalc, baseFees, feeCoins)
+		}
+		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "not enough fees based on floor gas price: %q; after deducting (total fee supplied fees - additional fees(%q)) required base fees >=%q: Supplied fee was %q", minGasPriceForAdditionalFeeCalc, additionalFees, baseFees, feeCoins)
+	}
 	return nil
 }
 
