@@ -223,7 +223,7 @@ func EnsureSufficientFees(gas uint64, feeCoins sdk.Coins, additionalFees sdk.Coi
 }
 
 func checkFloorGasFees(gas uint64, feeCoins sdk.Coins, additionalFees sdk.Coins, minGasPriceForAdditionalFeeCalc sdk.Coin) error {
-	// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
+	// where fee = ceil(floorGasPrice * gasLimit).
 	fee := minGasPriceForAdditionalFeeCalc.Amount.Mul(sdk.NewIntFromUint64(gas))
 	baseFees := sdk.NewCoin(minGasPriceForAdditionalFeeCalc.Denom, fee)
 	if _, hasNeg := feeCoins.SafeSub(sdk.Coins{baseFees}); hasNeg {
