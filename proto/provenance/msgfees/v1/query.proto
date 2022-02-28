@@ -71,7 +71,7 @@ message CalculateTxFeesResponse {
   repeated cosmos.base.v1beta1.Coin additional_fees = 1
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
   // total_fees are the total amount of fees needed for the transactions (msg fees + gas fee)
-  // note: the gas fee is calculated with the min gas fee param as a constant
+  // note: the gas fee is calculated with the floor gas price module param.
   repeated cosmos.base.v1beta1.Coin total_fees = 2
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
   // estimated_gas is the amount of gas needed for the transaction

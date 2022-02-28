@@ -33,18 +33,11 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees() {
 	suite.Require().Contains(err.Error(), "Base Fee+additional fee cannot be paid with fee value passed in : \"100000atom\", required: \"100100atom\" = \"100000atom\"(base-fee) +\"100atom\"(additional-fees): insufficient fee", "got wrong message")
 }
 
-// checkTx true, high min gas price(high enough so that additional fee in same denom tips it over,
-//and this is what sets it apart from MempoolDecorator which has already been run)
-func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesNoAdditionalFees() {
+// checkTx true, fees supplied that do not meet floor gas price requirement (floor gas price * gas wanted)
+func (suite *AnteTestSuite) TestEnsureFloorGasPriceNotMet() {
 	err, antehandler := setUpApp(suite, true, "nhash", 0)
 	tx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("nhash", 100000)))
 	suite.Require().NoError(err)
-
-	// Set gas price (1 atom)
-	atomPrice := sdk.NewDecCoinFromDec("nhash", sdk.NewDec(100000))
-	highGasPrice := []sdk.DecCoin{atomPrice}
-	suite.ctx = suite.ctx.WithMinGasPrices(highGasPrice)
-
 	// Set IsCheckTx to true
 	suite.ctx = suite.ctx.WithIsCheckTx(true)
 	suite.ctx = suite.ctx.WithChainID("test-chain")
@@ -54,6 +47,39 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesNoAdditionalFees() {
 	suite.Require().NotNil(err, "Decorator should have errored on too low fee for local gasPrice")
 	suite.Require().Contains(err.Error(), "not enough fees based on floor gas price: \"1905nhash\"; required base fees >=\"190500000nhash\": Supplied fee was \"100000nhash\": insufficient fee", "got wrong message")
 }
+
+// checkTx true, fees supplied that do meet floor gas price requirement (floor gas price * gas wanted), and should not error.
+func (suite *AnteTestSuite) TestEnsureFloorGasPriceMet() {
+	err, antehandler := setUpApp(suite, true, "nhash", 0)
+	tx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("nhash", 190500000)))
+	suite.Require().NoError(err)
+	// Set IsCheckTx to true
+	suite.ctx = suite.ctx.WithIsCheckTx(true)
+	suite.ctx = suite.ctx.WithChainID("test-chain")
+
+	gasPrice := []sdk.DecCoin{sdk.NewDecCoinFromDec("nhash", sdk.NewDec(1905))}
+	suite.ctx = suite.ctx.WithMinGasPrices(gasPrice)
+	// antehandler errors with insufficient fees
+	_, err = antehandler(suite.ctx, tx, false)
+	suite.Require().Nil(err, "Should not have errored")
+}
+
+// checkTx true, high min gas price(high enough so that additional fee in same denom tips it over,
+//and this is what sets it apart from MempoolDecorator which has already been run)
+func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesNoAdditionalFeesLowGas() {
+	err, antehandler := setUpApp(suite, true, "nhash", 0)
+	tx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("nhash", 100000)))
+	suite.Require().NoError(err)
+	// Set IsCheckTx to true
+	suite.ctx = suite.ctx.WithIsCheckTx(true)
+	suite.ctx = suite.ctx.WithChainID("test-chain")
+
+	// antehandler errors with insufficient fees
+	_, err = antehandler(suite.ctx, tx, false)
+	suite.Require().NotNil(err, "Decorator should have errored on too low fee for local gasPrice")
+	suite.Require().Contains(err.Error(), "not enough fees based on floor gas price: \"1905nhash\"; required base fees >=\"190500000nhash\": Supplied fee was \"100000nhash\": insufficient fee", "got wrong message")
+}
+
 
 // checkTx true, high min gas price irrespective of additional fees
 func (suite *AnteTestSuite) TestEnsureMempoolHighMinGasPrice() {
