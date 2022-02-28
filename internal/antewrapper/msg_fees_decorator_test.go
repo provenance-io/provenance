@@ -59,7 +59,7 @@ func (suite *AnteTestSuite) TestEnsureFloorGasPriceMet() {
 
 	gasPrice := []sdk.DecCoin{sdk.NewDecCoinFromDec("nhash", sdk.NewDec(1905))}
 	suite.ctx = suite.ctx.WithMinGasPrices(gasPrice)
-	// antehandler errors with insufficient fees
+	// antehandler does not error.
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().Nil(err, "Should not have errored")
 }
