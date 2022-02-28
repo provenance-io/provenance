@@ -11,6 +11,7 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -56,55 +57,82 @@ func NewWrapper(cdc codec.Codec, keeper *wasm.Keeper, validatorSetSource keeper.
 
 // GenerateGenesisState creates a randomized GenState of the wasm module.
 func (pw Wrapper) GenerateGenesisState(input *module.SimulationState) {
-	codeBytes, err := ioutil.ReadFile("./sim_contracts/tutorial.wasm")
-	if err != nil {
-		panic("failed to read file")
-	}
-
-	codes := make([]types.Code, 1)
-	codes[0] = types.Code{
-		CodeID:    1,
-		CodeInfo:  types.CodeInfoFixture(types.WithSHA256CodeHash(codeBytes)),
-		CodeBytes: codeBytes,
-	}
-
-	contracts := make([]types.Contract, 1)
-	contracts[0] = types.Contract{
-		ContractAddress: input.Accounts[0].Address.String(),
-		ContractInfo:    types.ContractInfoFixture(func(c *types.ContractInfo) { c.CodeID = 1 }, types.OnlyGenesisFields),
+	accessConfig := types.AccessTypeEverybody.With(nil)
+	params := types.Params{
+		CodeUploadAccess:             accessConfig,
+		InstantiateDefaultPermission: accessConfig.Permission,
+		MaxWasmCodeSize:              uint64(600 * 1024),
 	}
 
 	wasmGenesis := types.GenesisState{
-		Params:    types.DefaultParams(),
-		Codes:     codes,
-		Contracts: contracts,
-		Sequences: []types.Sequence{
-			{IDKey: types.KeyLastCodeID, Value: 2},
-			{IDKey: types.KeyLastInstanceID, Value: 2},
-		},
-		GenMsgs: nil,
+		Params:    params,
+		Codes:     nil,
+		Contracts: nil,
+		Sequences: nil,
+		GenMsgs:   nil,
 	}
 
-	_, err = input.Cdc.MarshalJSON(&wasmGenesis)
+	_, err := input.Cdc.MarshalJSON(&wasmGenesis)
 	if err != nil {
 		panic(err)
 	}
 
 	input.GenState[types.ModuleName] = input.Cdc.MustMarshalJSON(&wasmGenesis)
+
+	//codeBytes, err := ioutil.ReadFile("./sim_contracts/tutorial.wasm")
+	//if err != nil {
+	//	panic("failed to read file")
+	//}
+	//
+	//codes := make([]types.Code, 1)
+	//codes[0] = types.Code{
+	//	CodeID:    1,
+	//	CodeInfo:  types.CodeInfoFixture(types.WithSHA256CodeHash(codeBytes)),
+	//	CodeBytes: codeBytes,
+	//}
+	//
+	//const anyAddress = "cosmos1qyqszqgpqyqszqgpqyqszqgpqyqszqgpjnp7du"
+	//contracts := make([]types.Contract, 1)
+	//contracts[0] = types.Contract{
+	//	//ContractAddress: input.Accounts[0].Address.String(),
+	//	ContractAddress: anyAddress,
+	//	ContractInfo:    types.ContractInfoFixture(func(c *types.ContractInfo) { c.CodeID = 1 }, types.OnlyGenesisFields),
+	//}
+	//
+	//wasmGenesis := types.GenesisState{
+	//	Params:    types.DefaultParams(),
+	//	Codes:     codes,
+	//	Contracts: contracts,
+	//	Sequences: []types.Sequence{
+	//		{IDKey: types.KeyLastCodeID, Value: 2},
+	//		{IDKey: types.KeyLastInstanceID, Value: 2},
+	//	},
+	//	GenMsgs: nil,
+	//}
+	//
+	//_, err = input.Cdc.MarshalJSON(&wasmGenesis)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//
+	//input.GenState[types.ModuleName] = input.Cdc.MustMarshalJSON(&wasmGenesis)
 }
 
 // ProposalContents doesn't return any content functions for governance proposals.
-func (Wrapper) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return nil
+func (pw Wrapper) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
+	return pw.wasm.ProposalContents(simState)
 }
 
 // RandomizedParams creates randomized bank param changes for the simulator.
 func (pw Wrapper) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	return pw.wasm.RandomizedParams(r)
+	// This may be part of why things aren't working for us on import/export?
+	//return pw.wasm.RandomizedParams(r)
+	return []simtypes.ParamChange{}
 }
 
 // RegisterStoreDecoder registers a decoder for supply module's types
 func (pw Wrapper) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	pw.wasm.RegisterStoreDecoder(sdr)
 }
 
 // WeightedOperations returns the all the provwasm operations with their respective weights.
@@ -129,9 +157,9 @@ func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk 
 		*count++
 
 		node := accs[0]
-		consumer := accs[1]
-		feebucket := accs[2]
-		merchant := accs[3]
+		//consumer := accs[1]
+		//feebucket := accs[2]
+		//merchant := accs[3]
 
 		var parent nametypes.NameRecord
 		err := nk.IterateRecords(ctx, nametypes.NameKeyPrefix, func(record nametypes.NameRecord) error {
@@ -159,9 +187,12 @@ func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk 
 
 		op, future, err2 := namesim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg)
 
-		name := parent.Name
+		//name := parent.Name
 
-		future = append(future, simtypes.FutureOperation{Op: SimulateMsgAddMarker(ak, bk, nk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight()) + 1})
+		//future = append(future, simtypes.FutureOperation{Op: SimulateMsgAddMarker(ak, bk, nk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight()) + 1})
+
+		fmt.Println("Err:")
+		fmt.Println(err2)
 
 		return op, future, err2
 	}
@@ -182,9 +213,25 @@ func SimulateMsgAddMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk
 			true, // allow gov
 		)
 
+		// fund the node account to do all of these txs
+		fundErr := simapp.FundAccount(bk, ctx, node.Address, sdk.NewCoins(sdk.Coin{
+			Denom:  "stake",
+			Amount: sdk.NewInt(1000000000000000),
+		}))
+
+		if fundErr != nil {
+			fmt.Println("fundErr:")
+			fmt.Println(fundErr)
+		}
+
 		msg2, ops, err := markersim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg, nil)
 
 		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgAddAccess(ak, bk, nk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight()) + 1})
+
+		fmt.Println("AddMarker:")
+		fmt.Println(err)
+		fmt.Println("msg2: ")
+		fmt.Println(msg2)
 
 		return msg2, ops, err
 	}
@@ -244,13 +291,13 @@ func SimulateMsgWithdrawRequest(ak authkeeper.AccountKeeperI, bk bankkeeper.Keep
 		msg := markertypes.NewMsgWithdrawRequest(node.Address, consumer.Address, denom, coins)
 		msg2, ops, err := markersim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg, nil)
 
-		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgStoreContract(ak, bk, nk, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight()) + 1})
+		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgStoreContract(ak, bk, nk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight()) + 1})
 
 		return msg2, ops, err
 	}
 }
 
-func SimulateMsgStoreContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
+func SimulateMsgStoreContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -265,15 +312,15 @@ func SimulateMsgStoreContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKe
 			WASMByteCode: code,
 		}
 
-		msg2, ops, _, instantiateErr := Dispatch(r, app, ctx, ak, bk, feebucket, chainID, msg, nil)
+		msg2, ops, _, storeErr := Dispatch(r, app, ctx, ak, bk, feebucket, chainID, msg, nil)
 
-		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgInstantiateContract(ak, bk, nk, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight()) + 1})
+		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgInstantiateContract(ak, bk, nk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight()) + 1})
 
-		return msg2, ops, instantiateErr
+		return msg2, ops, storeErr
 	}
 }
 
-func SimulateMsgInstantiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
+func SimulateMsgInstantiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -318,22 +365,34 @@ func SimulateMsgInstantiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.
 			contractAddr = pInstResp.Address
 		}
 
-		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgExecuteContract(ak, bk, consumer, contractAddr), BlockHeight: int(ctx.BlockHeight()) + 1})
+		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgExecuteContract(ak, bk, node, consumer, contractAddr), BlockHeight: int(ctx.BlockHeight()) + 1})
 
 		return msg2, ops, instantiateErr
 	}
 }
 
-func SimulateMsgExecuteContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, consumer simtypes.Account, contractAddr string) simtypes.Operation {
+func SimulateMsgExecuteContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, node, consumer simtypes.Account, contractAddr string) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		amount, _ := sdk.ParseCoinsNormalized(fmt.Sprintf("100%s", denom))
 		coins := bk.SpendableCoins(ctx, consumer.Address)
+		coins2 := bk.SpendableCoins(ctx, node.Address)
+
+		fmt.Println("SimulateMsgExecuteContract")
+		fmt.Println(coins)
+		fmt.Println("----------")
+		fmt.Println(coins2)
+		fmt.Println("-----------")
 
 		if coins.AmountOf(denom).LT(sdk.NewInt(100)) {
+			fmt.Println("")
+			fmt.Println("Not enough coins")
+			fmt.Println("")
 			return simtypes.NoOpMsg("provwasm", "", "not enough coins"), nil, nil
 		}
+
+		fmt.Println("Sending in the execute contract message")
 
 		msg := &types.MsgExecuteContract{
 			Sender:   consumer.Address.String(),

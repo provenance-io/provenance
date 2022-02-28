@@ -195,7 +195,11 @@ func TestAppImportExport(t *testing.T) {
 	ctxA := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 	ctxB := newApp.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 	newApp.mm.InitGenesis(ctxB, app.AppCodec(), genesisState)
+	// What is this input?
+	//newApp.sm.Modules[17].GenerateGenesisState(input)
 	newApp.StoreConsensusParams(ctxB, exported.ConsensusParams)
+
+	ctxB = newApp.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 
 	fmt.Printf("comparing stores...\n")
 
@@ -224,6 +228,7 @@ func TestAppImportExport(t *testing.T) {
 	}
 
 	for _, skp := range storeKeysPrefixes {
+		fmt.Println("skp: ", skp.A.String())
 		storeA := ctxA.KVStore(skp.A)
 		storeB := ctxB.KVStore(skp.B)
 
