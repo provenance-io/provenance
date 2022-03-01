@@ -3,6 +3,7 @@ package cli_test
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/provenance-io/provenance/internal/antewrapper"
 	"sort"
 	"strings"
 	"testing"
@@ -166,7 +167,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	cfg.GenesisState = genesisState
 
 	s.cfg = cfg
-
+	cfg.ChainID = antewrapper.SimAppChainID
 	s.testnet = testnet.New(s.T(), cfg)
 
 	_, err = s.testnet.WaitForHeight(1)
