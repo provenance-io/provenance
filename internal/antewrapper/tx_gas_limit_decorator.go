@@ -24,15 +24,16 @@ func (mfd TxGasLimitDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
-
 	// Ensure that the requested gas does not exceed the configured block maximum
 	gas := feeTx.GetGas()
-	gasTxLimit := ctx.BlockGasMeter().Limit() * (1 / MinTxPerBlock)
+	gasTxLimit := uint64(0)
+	if ctx.BlockGasMeter() != nil {
+		gasTxLimit = ctx.BlockGasMeter().Limit() * (1 / MinTxPerBlock)
+	}
 
 	// TODO - remove "gasTxLimit > 0" with SDK 0.46 which fixes the infinite gas meter to use max int vs zero for the limit.
 	if gasTxLimit > 0 && gas > gasTxLimit {
 		return ctx, sdkerrors.Wrapf(sdkerrors.ErrTxTooLarge, "transaction gas exceeds maximum allowed; got: %d max allowed: %d", gas, gasTxLimit)
 	}
-
 	return next(ctx, tx, simulate)
 }
