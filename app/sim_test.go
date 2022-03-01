@@ -96,7 +96,7 @@ func TestFullAppSimulation(t *testing.T) {
 	}
 }
 
-func TestSmartContracts(t *testing.T) {
+func TestSimple(t *testing.T) {
 	config, db, dir, logger, skip, err := sdksim.SetupSimulation("leveldb-app-sim", "Simulation")
 	if skip {
 		t.Skip("skipping provenance application simulation")
