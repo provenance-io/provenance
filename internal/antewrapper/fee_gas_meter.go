@@ -4,13 +4,13 @@ import (
 	"fmt"
 
 	"github.com/armon/go-metrics"
-	"github.com/cosmos/cosmos-sdk/telemetry"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/tendermint/tendermint/libs/log"
 
 	sdkgas "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/telemetry"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 type FeeGasMeter struct {
@@ -23,7 +23,10 @@ type FeeGasMeter struct {
 	// tracks number of usages per purpose
 	calls map[string]uint64
 
-	usedFees map[string]sdk.Coin // map of msg fee type url --> fees charged
+	// tracks number of msg fee calls by msg type url
+	feeCalls map[string]uint64
+	// tracks the total amount of fees per msg type url
+	usedFees map[string]sdk.Coin
 
 	// this is the base fee charged in decorator
 	baseFeeCharged sdk.Coins
@@ -38,6 +41,7 @@ func NewFeeGasMeterWrapper(logger log.Logger, baseMeter sdkgas.GasMeter, isSimul
 		base:           baseMeter,
 		used:           make(map[string]uint64),
 		calls:          make(map[string]uint64),
+		feeCalls:       make(map[string]uint64),
 		usedFees:       make(map[string]sdk.Coin),
 		baseFeeCharged: sdk.Coins{},
 		simulate:       isSimulate,
@@ -109,6 +113,7 @@ func (g *FeeGasMeter) ConsumeFee(amount sdk.Coin, msgType string) {
 	} else {
 		g.usedFees[msgType] = amount
 	}
+	g.feeCalls[msgType] = g.feeCalls[msgType] + 1
 }
 
 func (g *FeeGasMeter) FeeConsumedForType(msgType string) sdk.Coin {
@@ -142,4 +147,9 @@ func (g *FeeGasMeter) ConsumeBaseFee(amount sdk.Coins) sdk.Coins {
 
 func (g *FeeGasMeter) BaseFeeConsumed() sdk.Coins {
 	return g.baseFeeCharged
+}
+
+// EventFeeSummary returns total fee consumed in the current fee gas meter, is returned Sorted.
+func (g *FeeGasMeter) EventFeeSummary() *msgfeestypes.EventMsgFees {
+	return msgfeestypes.NewEventMsgs(g.feeCalls, g.usedFees)
 }

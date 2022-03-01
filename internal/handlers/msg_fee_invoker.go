@@ -105,7 +105,13 @@ func (afd MsgFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.Coins
 					return nil, nil, err
 				}
 			}
+			msgFeesSummaryEvent, err := sdk.TypedEventToEvent(feeGasMeter.EventFeeSummary())
+			if err != nil {
+				return nil, nil, err
+			}
+
 			eventsToReturn = sdk.Events{
+				msgFeesSummaryEvent,
 				sdk.NewEvent(sdk.EventTypeTx,
 					sdk.NewAttribute(antewrapper.AttributeKeyAdditionalFee, feeGasMeter.FeeConsumed().String()),
 				),
