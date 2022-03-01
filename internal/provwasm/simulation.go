@@ -334,7 +334,7 @@ func SimulateMsgExecuteContract(ak authkeeper.AccountKeeperI, bk bankkeeper.View
 		if coins.AmountOf(denom).LT(sdk.NewInt(100)) {
 			return simtypes.NoOpMsg("provwasm", "", "not enough coins"), nil, nil
 		}
-		
+
 		msg := &types.MsgExecuteContract{
 			Sender:   consumer.Address.String(),
 			Funds:    amount,
