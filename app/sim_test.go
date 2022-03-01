@@ -199,7 +199,7 @@ func TestAppImportExport(t *testing.T) {
 	//newApp.sm.Modules[17].GenerateGenesisState(input)
 	newApp.StoreConsensusParams(ctxB, exported.ConsensusParams)
 
-	ctxB = newApp.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
+	//ctxB = newApp.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 
 	fmt.Printf("comparing stores...\n")
 

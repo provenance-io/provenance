@@ -196,11 +196,6 @@ func Dispatch(
 	error,
 ) {
 	account := ak.GetAccount(ctx, from.Address)
-
-	if account == nil {
-		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to find Account"), nil, nil
-	}
-
 	spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 	fees, err := simtypes.RandomFees(r, ctx, spendable)
@@ -215,7 +210,7 @@ func Dispatch(
 		}))
 		fees = fees.Add(sdk.Coin{
 			Denom:  "stake",
-			Amount: sdk.NewInt(1000000000),
+			Amount: sdk.NewInt(100000000000000),
 		})
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to fund account with additional fee"), nil, err

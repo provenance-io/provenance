@@ -157,9 +157,9 @@ func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk 
 		*count++
 
 		node := accs[0]
-		//consumer := accs[1]
-		//feebucket := accs[2]
-		//merchant := accs[3]
+		consumer := accs[1]
+		feebucket := accs[2]
+		merchant := accs[3]
 
 		var parent nametypes.NameRecord
 		err := nk.IterateRecords(ctx, nametypes.NameKeyPrefix, func(record nametypes.NameRecord) error {
@@ -187,9 +187,9 @@ func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk 
 
 		op, future, err2 := namesim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg)
 
-		//name := parent.Name
+		name := parent.Name
 
-		//future = append(future, simtypes.FutureOperation{Op: SimulateMsgAddMarker(ak, bk, nk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight()) + 1})
+		future = append(future, simtypes.FutureOperation{Op: SimulateMsgAddMarker(ak, bk, nk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight()) + 1})
 
 		fmt.Println("Err:")
 		fmt.Println(err2)
