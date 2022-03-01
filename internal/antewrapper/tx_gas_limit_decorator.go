@@ -28,7 +28,7 @@ func (mfd TxGasLimitDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	gas := feeTx.GetGas()
 	gasTxLimit := uint64(0)
 	if ctx.BlockGasMeter() != nil {
-		gasTxLimit = ctx.BlockGasMeter().Limit() * (1 / MinTxPerBlock)
+		gasTxLimit = ctx.BlockGasMeter().Limit() / MinTxPerBlock
 	}
 
 	// TODO - remove "gasTxLimit > 0" with SDK 0.46 which fixes the infinite gas meter to use max int vs zero for the limit.
