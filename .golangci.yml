@@ -44,13 +44,13 @@ issues:
         - gosec
     - text: "comment on exported var"
       linters:
-        - golint
+        - revive
     - text: "don't use an underscore in package name"
       linters:
-        - golint
+        - revive
     - text: "don't use underscores in Go names; const (TxEndpoint|TLCategory|TLType|TLAction)_"
       linters:
-        - golint
+        - revive
     - text: "ST1003:"
       linters:
         - stylecheck
