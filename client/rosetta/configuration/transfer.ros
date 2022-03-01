@@ -98,7 +98,7 @@ transfer(3){
       }
     ];
     transfer.preprocess_metadata = {
-        "gas_price": "1000nhash",
+        "gas_price": "476250000nhash",
         "gas_limit": 250000
     };
   }

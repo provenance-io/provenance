@@ -2,6 +2,7 @@ package cli_test
 
 import (
 	"fmt"
+	"github.com/provenance-io/provenance/internal/antewrapper"
 	"strings"
 	"testing"
 	"time"
@@ -445,6 +446,7 @@ owner: %s`,
 	cfg.GenesisState = genesisState
 
 	s.cfg = cfg
+	cfg.ChainID = antewrapper.SimAppChainID
 	s.testnet = testnet.New(s.T(), cfg)
 
 	_, err = s.testnet.WaitForHeight(1)

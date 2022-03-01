@@ -286,7 +286,7 @@ type CalculateTxFeesResponse struct {
 	// additional_fees are the amount of coins to be for addition msg fees
 	AdditionalFees github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=additional_fees,json=additionalFees,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"additional_fees"`
 	// total_fees are the total amount of fees needed for the transactions (msg fees + gas fee)
-	// note: the gas fee is calculated with the min gas fee param as a constant
+	// note: the gas fee is calculated with the floor gas price module param.
 	TotalFees github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,2,rep,name=total_fees,json=totalFees,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"total_fees"`
 	// estimated_gas is the amount of gas needed for the transaction
 	EstimatedGas uint64 `protobuf:"varint,3,opt,name=estimated_gas,json=estimatedGas,proto3" json:"estimated_gas,omitempty" yaml:"estimated_gas"`
