@@ -78,13 +78,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add migration to re-index the metadata indexes involving addresses [#541](https://github.com/provenance-io/provenance/issues/541)
 * Add migration to delete empty sessions [#480](https://github.com/provenance-io/provenance/issues/480)
 * Add Java distribution tag to workflow [#624](https://github.com/provenance-io/provenance/issues/624)
-* Add `msgfees` module to added store upgrades [#640](https://github.com/provenance-io/provenance/issues/640)
-* Use `nhash` for base denom in gov proposal upgrade [#648](https://github.com/provenance-io/provenance/issues/648)
-* Bump `cosmowasm` from `v1.0.0-beta5` to `v1.0.0-beta6` [#655](https://github.com/provenance-io/provenance/issues/655)
 * Fix maven publish release version number reference [#650](https://github.com/provenance-io/provenance/issues/650)
-* Add `iterator` as feature for wasm [#658](https://github.com/provenance-io/provenance/issues/658)
 * String "v" from Jar artifact version number [#653](https://github.com/provenance-io/provenance/issues/653)
-* Fix `wasm` contract migration failure to find contract history [#662](https://github.com/provenance-io/provenance/issues/662)
+* Add `iterator` as feature for wasm [#658](https://github.com/provenance-io/provenance/issues/658)
 
 ## [v1.7.6](https://github.com/provenance-io/provenance/releases/tag/v1.7.6) - 2021-12-15
 
