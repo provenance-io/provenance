@@ -716,7 +716,6 @@ func New(
 		attribute.NewAppModule(appCodec, app.AttributeKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
 		msgfeesmodule.NewAppModule(appCodec, app.MsgFeesKeeper, app.interfaceRegistry),
 		provwasm.NewWrapper(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
-		//wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper),
 
 		ibc.NewAppModule(app.IBCKeeper),
 		transferModule,
