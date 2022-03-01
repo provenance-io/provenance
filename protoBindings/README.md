@@ -7,6 +7,12 @@ extensible mechanism for serializing structured data.  The Cosmos
 [gRPC](https://grpc.io) and protobuf provide the RPC mechanism that Cosmos SDK uses
 to communicate with the blockchain.
 
+## Development
+If dependencies appear to be missing in your IDE, run
+```bash
+./gradlew clean build --refresh-dependencies
+```
+
 ## Build Proto
 Checkout `./bindings` for all supported language bindings.
 
