@@ -62,15 +62,15 @@ func (k Keeper) SetRecord(ctx sdk.Context, record types.Record) {
 	recordID := record.SessionId.MustGetAsRecordAddress(record.Name)
 
 	var event proto.Message = types.NewEventRecordCreated(recordID, record.SessionId)
-	action := types.TLAction_Created
+	action := types.TlactionCreated
 	if store.Has(recordID) {
 		event = types.NewEventRecordUpdated(recordID, record.SessionId)
-		action = types.TLAction_Updated
+		action = types.TlactionUpdated
 	}
 
 	store.Set(recordID, b)
 	k.EmitEvent(ctx, event)
-	defer types.GetIncObjFunc(types.TLType_Record, action)
+	defer types.GetIncObjFunc(types.TltypeRecord, action)
 }
 
 // RemoveRecord removes a record from the module kv store.
@@ -85,7 +85,7 @@ func (k Keeper) RemoveRecord(ctx sdk.Context, id types.MetadataAddress) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(id)
 	k.EmitEvent(ctx, types.NewEventRecordDeleted(id))
-	defer types.GetIncObjFunc(types.TLType_Record, types.TLAction_Deleted)
+	defer types.GetIncObjFunc(types.TltypeRecord, types.TlactionDeleted)
 
 	// Remove the session too if there are no more records in it.
 	k.RemoveSession(ctx, record.SessionId)

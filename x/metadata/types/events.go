@@ -22,26 +22,26 @@ const (
 	TKObjectAction string = "object-action"
 
 	// TLCategory is a string name for labels defining an object category.
-	TLCategory               string            = "category"
-	TLCategory_Entry         TelemetryCategory = "entry"
-	TLCategory_Specification TelemetryCategory = "specification"
-	TLCategory_OSLocator     TelemetryCategory = "object-store-locator"
+	TLCategory              string            = "category"
+	TlcategoryEntry         TelemetryCategory = "entry"
+	TlcategorySpecification TelemetryCategory = "specification"
+	TlcategoryOslocator     TelemetryCategory = "object-store-locator"
 
 	// TLType is a string name for labels defining an object type.
-	TLType              string              = "object-type"
-	TLType_Scope        TelemetryObjectType = "scope"
-	TLType_Session      TelemetryObjectType = "session"
-	TLType_Record       TelemetryObjectType = "record"
-	TLType_ScopeSpec    TelemetryObjectType = "scope-specification"
-	TLType_ContractSpec TelemetryObjectType = "contract-specification"
-	TLType_RecordSpec   TelemetryObjectType = "record-specification"
-	TLType_OSLocator    TelemetryObjectType = "object-store-locator"
+	TLType             string              = "object-type"
+	TltypeScope        TelemetryObjectType = "scope"
+	TltypeSession      TelemetryObjectType = "session"
+	TltypeRecord       TelemetryObjectType = "record"
+	TltypeScopespec    TelemetryObjectType = "scope-specification"
+	TltypeContractspec TelemetryObjectType = "contract-specification"
+	TltypeRecordspec   TelemetryObjectType = "record-specification"
+	TltypeOslocator    TelemetryObjectType = "object-store-locator"
 
 	// TLAction is a string name for labels defining an action taken.
-	TLAction         string          = "action"
-	TLAction_Created TelemetryAction = "created"
-	TLAction_Updated TelemetryAction = "updated"
-	TLAction_Deleted TelemetryAction = "deleted"
+	TLAction        string          = "action"
+	TlactionCreated TelemetryAction = "created"
+	TlactionUpdated TelemetryAction = "updated"
+	TlactionDeleted TelemetryAction = "deleted"
 )
 
 // AsLabel Returns this TelemetryCategory as a label.
@@ -62,16 +62,16 @@ func (t TelemetryAction) AsLabel() metrics.Label {
 // GetIncObjFunc creates a function that will call telemetry.IncrCounterWithLabels for counting metadata module chain objects.
 func GetIncObjFunc(objType TelemetryObjectType, action TelemetryAction) func() {
 	val := 0 // Default is for action == TLAction_Updated
-	if action == TLAction_Created {
+	if action == TlactionCreated {
 		val = 1
-	} else if action == TLAction_Deleted {
+	} else if action == TlactionDeleted {
 		val = -1
 	}
-	cat := TLCategory_OSLocator // Default is for objType == TLType_OSLocator
-	if objType == TLType_Record || objType == TLType_Session || objType == TLType_Scope {
-		cat = TLCategory_Entry
-	} else if objType == TLType_RecordSpec || objType == TLType_ContractSpec || objType == TLType_ScopeSpec {
-		cat = TLCategory_Specification
+	cat := TlcategoryOslocator // Default is for objType == TLType_OSLocator
+	if objType == TltypeRecord || objType == TltypeSession || objType == TltypeScope {
+		cat = TlcategoryEntry
+	} else if objType == TltypeRecordspec || objType == TltypeContractspec || objType == TltypeScopespec {
+		cat = TlcategorySpecification
 	}
 	return func() {
 		if val != 0 {
@@ -93,36 +93,36 @@ func GetIncObjFunc(objType TelemetryObjectType, action TelemetryAction) func() {
 type TxEndpoint string
 
 const (
-	TxEndpoint_WriteScope            TxEndpoint = "WriteScope"
-	TxEndpoint_DeleteScope           TxEndpoint = "DeleteScope"
-	TxEndpoint_AddScopeDataAccess    TxEndpoint = "AddScopeDataAccess"
-	TxEndpoint_DeleteScopeDataAccess TxEndpoint = "DeleteScopeDataAccess"
-	TxEndpoint_AddScopeOwner         TxEndpoint = "AddScopeOwner"
-	TxEndpoint_DeleteScopeOwner      TxEndpoint = "DeleteScopeOwner"
+	TxendpointWritescope            TxEndpoint = "WriteScope"
+	TxendpointDeletescope           TxEndpoint = "DeleteScope"
+	TxendpointAddscopedataaccess    TxEndpoint = "AddScopeDataAccess"
+	TxendpointDeletescopedataaccess TxEndpoint = "DeleteScopeDataAccess"
+	TxendpointAddscopeowner         TxEndpoint = "AddScopeOwner"
+	TxendpointDeletescopeowner      TxEndpoint = "DeleteScopeOwner"
 
-	TxEndpoint_WriteSession TxEndpoint = "WriteSession"
+	TxendpointWritesession TxEndpoint = "WriteSession"
 
-	TxEndpoint_WriteRecord  TxEndpoint = "WriteRecord"
-	TxEndpoint_DeleteRecord TxEndpoint = "DeleteRecord"
+	TxendpointWriterecord  TxEndpoint = "WriteRecord"
+	TxendpointDeleterecord TxEndpoint = "DeleteRecord"
 
-	TxEndpoint_WriteScopeSpecification  TxEndpoint = "WriteScopeSpecification"
-	TxEndpoint_DeleteScopeSpecification TxEndpoint = "DeleteScopeSpecification"
+	TxendpointWritescopespecification  TxEndpoint = "WriteScopeSpecification"
+	TxendpointDeletescopespecification TxEndpoint = "DeleteScopeSpecification"
 
-	TxEndpoint_WriteContractSpecification  TxEndpoint = "WriteContractSpecification"
-	TxEndpoint_DeleteContractSpecification TxEndpoint = "DeleteContractSpecification"
+	TxendpointWritecontractspecification  TxEndpoint = "WriteContractSpecification"
+	TxendpointDeletecontractspecification TxEndpoint = "DeleteContractSpecification"
 
-	TxEndpoint_AddContractSpecToScopeSpec      TxEndpoint = "AddContractSpecToScopeSpec"
-	TxEndpoint_DeleteContractSpecFromScopeSpec TxEndpoint = "DeleteContractSpecFromScopeSpec"
+	TxendpointAddcontractspectoscopespec      TxEndpoint = "AddContractSpecToScopeSpec"
+	TxendpointDeletecontractspecfromscopespec TxEndpoint = "DeleteContractSpecFromScopeSpec"
 
-	TxEndpoint_WriteRecordSpecification  TxEndpoint = "WriteRecordSpecification"
-	TxEndpoint_DeleteRecordSpecification TxEndpoint = "DeleteRecordSpecification"
+	TxendpointWriterecordspecification  TxEndpoint = "WriteRecordSpecification"
+	TxendpointDeleterecordspecification TxEndpoint = "DeleteRecordSpecification"
 
-	TxEndpoint_WriteP8eContractSpec   TxEndpoint = "WriteP8eContractSpec"
-	TxEndpoint_P8eMemorializeContract TxEndpoint = "P8eMemorializeContract"
+	TxendpointWritep8econtractspec   TxEndpoint = "WriteP8eContractSpec"
+	TxendpointP8ememorializecontract TxEndpoint = "P8eMemorializeContract"
 
-	TxEndpoint_BindOSLocator   TxEndpoint = "BindOSLocator"
-	TxEndpoint_DeleteOSLocator TxEndpoint = "DeleteOSLocator"
-	TxEndpoint_ModifyOSLocator TxEndpoint = "ModifyOSLocator"
+	TxendpointBindoslocator   TxEndpoint = "BindOSLocator"
+	TxendpointDeleteoslocator TxEndpoint = "DeleteOSLocator"
+	TxendpointModifyoslocator TxEndpoint = "ModifyOSLocator"
 )
 
 func NewEventTxCompleted(endpoint TxEndpoint, signers []sdk.AccAddress) *EventTxCompleted {

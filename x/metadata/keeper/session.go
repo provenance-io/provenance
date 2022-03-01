@@ -30,15 +30,15 @@ func (k Keeper) SetSession(ctx sdk.Context, session types.Session) {
 	b := k.cdc.MustMarshal(&session)
 
 	var event proto.Message = types.NewEventSessionCreated(session.SessionId)
-	action := types.TLAction_Created
+	action := types.TlactionCreated
 	if store.Has(session.SessionId) {
 		event = types.NewEventSessionUpdated(session.SessionId)
-		action = types.TLAction_Updated
+		action = types.TlactionUpdated
 	}
 
 	store.Set(session.SessionId, b)
 	k.EmitEvent(ctx, event)
-	defer types.GetIncObjFunc(types.TLType_Session, action)
+	defer types.GetIncObjFunc(types.TltypeSession, action)
 }
 
 // RemoveSession removes a session from the module kv store if there are no records associated with it.
@@ -54,7 +54,7 @@ func (k Keeper) RemoveSession(ctx sdk.Context, id types.MetadataAddress) {
 
 	store.Delete(id)
 	k.EmitEvent(ctx, types.NewEventSessionDeleted(id))
-	defer types.GetIncObjFunc(types.TLType_Session, types.TLAction_Deleted)
+	defer types.GetIncObjFunc(types.TltypeSession, types.TlactionDeleted)
 }
 
 func (k Keeper) sessionHasRecords(ctx sdk.Context, id types.MetadataAddress) bool {

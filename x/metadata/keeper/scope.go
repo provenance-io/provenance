@@ -84,10 +84,10 @@ func (k Keeper) SetScope(ctx sdk.Context, scope types.Scope) {
 
 	var oldScope *types.Scope
 	var event proto.Message = types.NewEventScopeCreated(scope.ScopeId)
-	action := types.TLAction_Created
+	action := types.TlactionCreated
 	if store.Has(scope.ScopeId) {
 		event = types.NewEventScopeUpdated(scope.ScopeId)
-		action = types.TLAction_Updated
+		action = types.TlactionUpdated
 		if oldScopeBytes := store.Get(scope.ScopeId); oldScopeBytes != nil {
 			oldScope = &types.Scope{}
 			if err := k.cdc.Unmarshal(oldScopeBytes, oldScope); err != nil {
@@ -100,7 +100,7 @@ func (k Keeper) SetScope(ctx sdk.Context, scope types.Scope) {
 	store.Set(scope.ScopeId, b)
 	k.indexScope(ctx, &scope, oldScope)
 	k.EmitEvent(ctx, event)
-	defer types.GetIncObjFunc(types.TLType_Scope, action)
+	defer types.GetIncObjFunc(types.TltypeScope, action)
 }
 
 // RemoveScope removes a scope from the module kv store along with all its records and sessions.
@@ -132,7 +132,7 @@ func (k Keeper) RemoveScope(ctx sdk.Context, id types.MetadataAddress) {
 	k.indexScope(ctx, nil, &scope)
 	store.Delete(id)
 	k.EmitEvent(ctx, types.NewEventScopeDeleted(scope.ScopeId))
-	defer types.GetIncObjFunc(types.TLType_Scope, types.TLAction_Deleted)
+	defer types.GetIncObjFunc(types.TltypeScope, types.TlactionDeleted)
 }
 
 // scopeIndexValues is a struct containing the values used to index a scope.

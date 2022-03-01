@@ -44,7 +44,7 @@ func (k msgServer) WriteScope(
 
 	k.SetScope(ctx, msg.Scope)
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteScope, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxendpointWritescope, msg.GetSigners()))
 	return types.NewMsgWriteScopeResponse(msg.Scope.ScopeId), nil
 }
 
@@ -69,7 +69,7 @@ func (k msgServer) DeleteScope(
 
 	k.RemoveScope(ctx, msg.ScopeId)
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteScope, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxendpointDeletescope, msg.GetSigners()))
 	return types.NewMsgDeleteScopeResponse(), nil
 }
 
@@ -93,7 +93,7 @@ func (k msgServer) AddScopeDataAccess(
 
 	k.SetScope(ctx, existing)
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_AddScopeDataAccess, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxendpointAddscopedataaccess, msg.GetSigners()))
 	return types.NewMsgAddScopeDataAccessResponse(), nil
 }
 
@@ -117,7 +117,7 @@ func (k msgServer) DeleteScopeDataAccess(
 
 	k.SetScope(ctx, existing)
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteScopeDataAccess, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxendpointDeletescopedataaccess, msg.GetSigners()))
 	return types.NewMsgDeleteScopeDataAccessResponse(), nil
 }
 
@@ -149,7 +149,7 @@ func (k msgServer) AddScopeOwner(
 
 	k.SetScope(ctx, proposed)
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_AddScopeOwner, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxendpointAddscopeowner, msg.GetSigners()))
 	return types.NewMsgAddScopeOwnerResponse(), nil
 }
 
@@ -181,7 +181,7 @@ func (k msgServer) DeleteScopeOwner(
 
 	k.SetScope(ctx, proposed)
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteScopeOwner, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxendpointDeletescopeowner, msg.GetSigners()))
 	return types.NewMsgDeleteScopeOwnerResponse(), nil
 }
 
@@ -195,8 +195,8 @@ func (k msgServer) WriteSession(
 	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
 	msg.ConvertOptionalFields()
 
-	var existing *types.Session = nil
-	var existingAudit *types.AuditFields = nil
+	var existing *types.Session
+	var existingAudit *types.AuditFields
 	if e, found := k.GetSession(ctx, msg.Session.SessionId); found {
 		existing = &e
 		existingAudit = existing.Audit
@@ -209,7 +209,7 @@ func (k msgServer) WriteSession(
 
 	k.SetSession(ctx, msg.Session)
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteSession, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxendpointWritesession, msg.GetSigners()))
 	return types.NewMsgWriteSessionResponse(msg.Session.SessionId), nil
 }
 
@@ -230,7 +230,7 @@ func (k msgServer) WriteRecord(
 
 	recordID := types.RecordMetadataAddress(scopeUUID, msg.Record.Name)
 
-	var existing *types.Record = nil
+	var existing *types.Record
 	if e, found := k.GetRecord(ctx, recordID); found {
 		existing = &e
 	}
@@ -246,7 +246,7 @@ func (k msgServer) WriteRecord(
 		k.RemoveSession(ctx, existing.SessionId)
 	}
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteRecord, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxendpointWriterecord, msg.GetSigners()))
 	return types.NewMsgWriteRecordResponse(recordID), nil
 }
 
@@ -264,7 +264,7 @@ func (k msgServer) DeleteRecord(
 
 	k.RemoveRecord(ctx, msg.RecordId)
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteRecord, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxendpointDeleterecord, msg.GetSigners()))
 	return types.NewMsgDeleteRecordResponse(), nil
 }
 
@@ -278,7 +278,7 @@ func (k msgServer) WriteScopeSpecification(
 	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
 	msg.ConvertOptionalFields()
 
-	var existing *types.ScopeSpecification = nil
+	var existing *types.ScopeSpecification
 	if e, found := k.GetScopeSpecification(ctx, msg.Specification.SpecificationId); found {
 		existing = &e
 		if err := k.ValidateAllOwnersAreSignersWithAuthz(ctx, existing.OwnerAddresses, msg.Signers, msg.MsgTypeURL()); err != nil {
@@ -291,7 +291,7 @@ func (k msgServer) WriteScopeSpecification(
 
 	k.SetScopeSpecification(ctx, msg.Specification)
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteScopeSpecification, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxendpointWritescopespecification, msg.GetSigners()))
 	return types.NewMsgWriteScopeSpecificationResponse(msg.Specification.SpecificationId), nil
 }
 
@@ -314,7 +314,7 @@ func (k msgServer) DeleteScopeSpecification(
 		return nil, fmt.Errorf("cannot delete scope specification with id %s: %w", msg.SpecificationId, err)
 	}
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteScopeSpecification, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxendpointDeletescopespecification, msg.GetSigners()))
 	return types.NewMsgDeleteScopeSpecificationResponse(), nil
 }
 
@@ -328,7 +328,7 @@ func (k msgServer) WriteContractSpecification(
 	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
 	msg.ConvertOptionalFields()
 
-	var existing *types.ContractSpecification = nil
+	var existing *types.ContractSpecification
 	if e, found := k.GetContractSpecification(ctx, msg.Specification.SpecificationId); found {
 		existing = &e
 		if err := k.ValidateAllOwnersAreSignersWithAuthz(ctx, existing.OwnerAddresses, msg.Signers, msg.MsgTypeURL()); err != nil {
@@ -341,7 +341,7 @@ func (k msgServer) WriteContractSpecification(
 
 	k.SetContractSpecification(ctx, msg.Specification)
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteContractSpecification, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxendpointWritecontractspecification, msg.GetSigners()))
 	return types.NewMsgWriteContractSpecificationResponse(msg.Specification.SpecificationId), nil
 }
 
@@ -366,7 +366,7 @@ func (k msgServer) DeleteContractSpecification(
 		return nil, fmt.Errorf("could not get record specifications to delete with contract specification with id %s: %w",
 			msg.SpecificationId, recSpecErr)
 	}
-	var delRecSpecErr error = nil
+	var delRecSpecErr error
 	removedRecSpecs := []*types.RecordSpecification{}
 	for _, recSpec := range recSpecs {
 		if err := k.RemoveRecordSpecification(ctx, recSpec.SpecificationId); err != nil {
@@ -389,7 +389,7 @@ func (k msgServer) DeleteContractSpecification(
 		return nil, fmt.Errorf("cannot delete contract specification with id %s: %w", msg.SpecificationId, err)
 	}
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteContractSpecification, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxendpointDeletecontractspecification, msg.GetSigners()))
 	return types.NewMsgDeleteContractSpecificationResponse(), nil
 }
 
@@ -421,7 +421,7 @@ func (k msgServer) AddContractSpecToScopeSpec(
 	scopeSpec.ContractSpecIds = append(scopeSpec.ContractSpecIds, msg.ContractSpecificationId)
 	k.SetScopeSpecification(ctx, scopeSpec)
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_AddContractSpecToScopeSpec, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxendpointAddcontractspectoscopespec, msg.GetSigners()))
 	return types.NewMsgAddContractSpecToScopeSpecResponse(), nil
 }
 
@@ -460,7 +460,7 @@ func (k msgServer) DeleteContractSpecFromScopeSpec(
 	scopeSpec.ContractSpecIds = updateContractSpecIds
 	k.SetScopeSpecification(ctx, scopeSpec)
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteContractSpecFromScopeSpec, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxendpointDeletecontractspecfromscopespec, msg.GetSigners()))
 
 	return types.NewMsgDeleteContractSpecFromScopeSpecResponse(), nil
 }
@@ -489,7 +489,7 @@ func (k msgServer) WriteRecordSpecification(
 		return nil, err
 	}
 
-	var existing *types.RecordSpecification = nil
+	var existing *types.RecordSpecification
 	if e, found := k.GetRecordSpecification(ctx, msg.Specification.SpecificationId); found {
 		existing = &e
 	}
@@ -499,7 +499,7 @@ func (k msgServer) WriteRecordSpecification(
 
 	k.SetRecordSpecification(ctx, msg.Specification)
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteRecordSpecification, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxendpointWriterecordspecification, msg.GetSigners()))
 	return types.NewMsgWriteRecordSpecificationResponse(msg.Specification.SpecificationId), nil
 }
 
@@ -531,7 +531,7 @@ func (k msgServer) DeleteRecordSpecification(
 		return nil, fmt.Errorf("cannot delete record specification with id %s: %w", msg.SpecificationId, err)
 	}
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteRecordSpecification, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxendpointDeleterecordspecification, msg.GetSigners()))
 	return types.NewMsgDeleteRecordSpecificationResponse(), nil
 }
 
@@ -547,7 +547,7 @@ func (k msgServer) WriteP8EContractSpec(
 		return nil, err
 	}
 
-	var existing *types.ContractSpecification = nil
+	var existing *types.ContractSpecification
 	if e, found := k.GetContractSpecification(ctx, proposed.SpecificationId); found {
 		existing = &e
 		if err := k.ValidateAllOwnersAreSignersWithAuthz(ctx, existing.OwnerAddresses, msg.Signers, msg.MsgTypeURL()); err != nil {
@@ -563,7 +563,7 @@ func (k msgServer) WriteP8EContractSpec(
 
 	recSpecIDs := make([]types.MetadataAddress, len(newrecords))
 	for i, proposedRecord := range newrecords {
-		var existing *types.RecordSpecification = nil
+		var existing *types.RecordSpecification
 		if e, found := k.GetRecordSpecification(ctx, proposedRecord.SpecificationId); found {
 			existing = &e
 		}
@@ -575,7 +575,7 @@ func (k msgServer) WriteP8EContractSpec(
 		recSpecIDs[i] = proposedRecord.SpecificationId
 	}
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteP8eContractSpec, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxendpointWritep8econtractspec, msg.GetSigners()))
 	return types.NewMsgWriteP8EContractSpecResponse(proposed.SpecificationId, recSpecIDs...), nil
 }
 
@@ -630,7 +630,7 @@ func (k msgServer) P8EMemorializeContract(
 		recordIDInfos[i] = recordResp.RecordIdInfo
 	}
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_P8eMemorializeContract, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxendpointP8ememorializecontract, msg.GetSigners()))
 	return types.NewMsgP8EMemorializeContractResponse(scopeResp.ScopeIdInfo, sessionResp.SessionIdInfo, recordIDInfos), nil
 }
 
@@ -663,7 +663,7 @@ func (k msgServer) BindOSLocator(
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_BindOSLocator, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxendpointBindoslocator, msg.GetSigners()))
 	return types.NewMsgBindOSLocatorResponse(msg.Locator), nil
 }
 
@@ -698,7 +698,7 @@ func (k msgServer) DeleteOSLocator(
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteOSLocator, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxendpointDeleteoslocator, msg.GetSigners()))
 	return types.NewMsgDeleteOSLocatorResponse(msg.Locator), nil
 }
 
@@ -736,6 +736,6 @@ func (k msgServer) ModifyOSLocator(
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_ModifyOSLocator, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxendpointModifyoslocator, msg.GetSigners()))
 	return types.NewMsgModifyOSLocatorResponse(msg.Locator), nil
 }
