@@ -11,7 +11,7 @@ import cosmos.feegrant.v1beta1.QueryGrpc.QueryBlockingStub as FeeGrants
  *
  * @param granterAddress The bech32 address of the fee granter.
  * @param granteeAddress The bech32 address of the fee grantee.
- * @return  [Feegrant.Grant]
+ * @return [Feegrant.Grant]
  */
 fun FeeGrants.getFeeGrant(granterAddress: String, granteeAddress: String): Feegrant.Grant =
     allowance(
