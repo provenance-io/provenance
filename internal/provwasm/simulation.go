@@ -85,10 +85,8 @@ func (pw Wrapper) ProposalContents(simState module.SimulationState) []simtypes.W
 	return pw.wasm.ProposalContents(simState)
 }
 
-// RandomizedParams creates randomized bank param changes for the simulator.
+// RandomizedParams returns empty list as the params don't change
 func (pw Wrapper) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	// This may be part of why things aren't working for us on import/export?
-	//return pw.wasm.RandomizedParams(r)
 	return []simtypes.ParamChange{}
 }
 
