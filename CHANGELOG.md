@@ -71,6 +71,16 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * `provenance.metadata.v1.MsgP8eMemorializeContractRequest` 10 hash (10,000,000,000 nhash)
 * When the `start` command encounters an error, it no longer outputs command usage [#670](https://github.com/provenance-io/provenance/issues/670)
 
+### Client Breaking
+
+* Enforce a maximum gas limit on individual transactions so that at least 20 can fit in any given block. [#681](https://github.com/provenance-io/provenance/issues/681)
+  Previously transactions were only limited by their size in bytes as well as the overall gas limit on a given block.  
+
+  _With this update transactions must be no more than 5% of the maximum amount of gas allowed per block when a gas limit
+  per block is set (this restriction has no effect when a gas limit has not been set).  The current limits on Provenance
+  mainnet are 60,000,000 gas per block which will yield a maximum transaction size of 3,000,000 gas using this new AnteHandler
+  restriction._
+
 ### Bug Fixes
 
 * When deleting a scope, require the same permissions as when updating it [#473](https://github.com/provenance-io/provenance/issues/473)
