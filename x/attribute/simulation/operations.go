@@ -24,9 +24,13 @@ import (
 
 // Simulation operation weights constants
 const (
+	//nolint:gosec // not credentials
 	OpWeightMsgAddAttribute            = "op_weight_msg_add_attribute"
+	//nolint:gosec // not credentials
 	OpWeightMsgUpdateAttribute         = "op_weight_msg_update_attribute"
+	//nolint:gosec // not credentials
 	OpWeightMsgDeleteAttribute         = "op_weight_msg_delete_attribute"
+	//nolint:gosec // not credentials
 	OpWeightMsgDeleteDistinctAttribute = "op_weight_msg_delete_distinct_attribute"
 )
 
