@@ -132,14 +132,19 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) error {
 	batch := targetDB.NewBatch()
 	defer batch.Close()
 
+	c := 0
 	logger.Info("Starting migration")
 	for ; iter.Valid(); iter.Next() {
+		c++
 		v := iter.Value()
 		if v == nil {
 			v = []byte{}
 		}
 		if err = batch.Set(iter.Key(), v); err != nil {
 			return fmt.Errorf("could not set %q key/value: %w", dbName, err)
+		}
+		if c % 1_000_000 == 0 {
+			logger.Info(fmt.Sprintf("Progress Update: %d entries copied.", c))
 		}
 	}
 
@@ -148,7 +153,7 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) error {
 		return fmt.Errorf("could not write %q batch: %w", dbName, err)
 	}
 
-	logger.Info("Done")
+	logger.Info("Done", "entries", c)
 	return nil
 }
 
