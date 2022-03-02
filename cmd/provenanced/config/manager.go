@@ -227,6 +227,7 @@ func appConfigIndexEventsWorkAround(configFilePath string, config *serverconfig.
 	if merr != nil {
 		panic(fmt.Errorf("marshaling index events to json: %v", merr))
 	}
+	//nolint:typecheck // This is correct function
 	bz, rerr := os.ReadFile(configFilePath)
 	if rerr != nil {
 		panic(fmt.Errorf("reading app config file: %v", rerr))
@@ -241,7 +242,7 @@ func appConfigIndexEventsWorkAround(configFilePath string, config *serverconfig.
 		}
 		fixedFileBz = append(fixedFileBz, '\n')
 	}
-	//nolint:gosec // This is the correct permissions for the config files.
+	//nolint:typecheck // This is correct function
 	werr := os.WriteFile(configFilePath, fixedFileBz, 0644)
 	if werr != nil {
 		panic(fmt.Errorf("writing fixec app config: %v", werr))
@@ -325,7 +326,7 @@ func generateAndWritePackedConfig(
 		cmd.Printf("Packed config:\n%s\n", packedJSON)
 	}
 	packedFile := GetFullPathToPackedConf(cmd)
-	//nolint:gosec // This is the correct permissions for the config files.
+	//nolint:typecheck // This is correct function
 	err = os.WriteFile(packedFile, packedJSON, 0644)
 	if err != nil {
 		panic(err)
