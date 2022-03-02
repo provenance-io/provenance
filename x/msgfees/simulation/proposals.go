@@ -15,7 +15,9 @@ import (
 
 const (
 	// OpWeightAddMsgFeesProposal add msg fees proposal
+	//nolint:gosec
 	OpWeightAddMsgFeesProposal    = "op_weight_add_msg_based_fees_proposal"
+	//nolint:gosec
 	OpWeightRemoveMsgFeesProposal = "op_weight_remove_msg_based_fees_proposal"
 )
 
