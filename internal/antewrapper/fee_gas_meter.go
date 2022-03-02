@@ -113,7 +113,7 @@ func (g *FeeGasMeter) ConsumeFee(amount sdk.Coin, msgType string) {
 	} else {
 		g.usedFees[msgType] = amount
 	}
-	g.feeCalls[msgType] = g.feeCalls[msgType] + 1
+	g.feeCalls[msgType]++
 }
 
 func (g *FeeGasMeter) FeeConsumedForType(msgType string) sdk.Coin {
