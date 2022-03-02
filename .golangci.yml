@@ -15,7 +15,7 @@ linters:
     - gocritic
     - gofmt
     - goimports
-    - golint
+    - revive
     - gosec
     - gosimple
     - govet
@@ -44,16 +44,19 @@ issues:
         - gosec
     - text: "comment on exported var"
       linters:
-        - golint
+        - revive
     - text: "don't use an underscore in package name"
       linters:
-        - golint
+        - revive
     - text: "don't use underscores in Go names; const (TxEndpoint|TLCategory|TLType|TLAction)_"
       linters:
-        - golint
+        - revive
     - text: "ST1003:"
       linters:
         - stylecheck
+    - text: "don't use leading k in Go names"
+      linters:
+        - revive
     # removed due to the upstream legacy amino deprecation while still required for ledger signing
     # TODO: Restore this check when Amino support is removed.
     - text: "SA1019:"

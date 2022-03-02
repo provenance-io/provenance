@@ -32,8 +32,8 @@ func MigrateAddresses(ctx sdk.Context, storeKey sdk.StoreKey) error {
 		if err != nil {
 			return err
 		}
-		updatedKey := append(updateAddress, nameKey...)
-		store.Set(updatedKey, oldStoreIter.Value())
+		updateAddress = append(updateAddress, nameKey...)
+		store.Set(updateAddress, oldStoreIter.Value())
 		oldStore.Delete(oldStoreIter.Key())
 	}
 	return nil
