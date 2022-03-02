@@ -16,18 +16,21 @@ import (
 
 const (
 	// OpWeightAddMarkerProposal app params key for add marker proposal
+	//nolint:gosec // not credentials
 	OpWeightAddMarkerProposal = "op_weight_add_marker_proposal"
 	// OpWeightSupplyIncreaseProposal app params key for supply increase proposal
 	OpWeightSupplyIncreaseProposal = "op_weight_supply_increase_proposal"
 	// OpWeightSupplyDecreaseProposal app params key for supply decrease proposal
 	OpWeightSupplyDecreaseProposal = "op_weight_supply_decrease_proposal"
 	// OpWeightSetAdministratorProposal app params key for set administrator proposal
+	//nolint:gosec // not credentials
 	OpWeightSetAdministratorProposal = "op_weight_set_administrator_proposal"
 	// OpWeightRemoveAdministratorProposal app params key for remove administrator proposal
 	OpWeightRemoveAdministratorProposal = "op_weight_remove_administrator_proposal"
 	// OpWeightChangeStatusProposal app params key for change status proposal
 	OpWeightChangeStatusProposal = "op_weight_change_status_proposal"
 	// OpWeightSetDenomMetadataProposal app params key for change status proposal
+	//nolint:gosec // not credentials
 	OpWeightSetDenomMetadataProposal = "op_weight_set_denom_metadata"
 )
 
