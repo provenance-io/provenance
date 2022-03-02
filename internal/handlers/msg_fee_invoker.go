@@ -105,19 +105,21 @@ func (afd MsgFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.Coins
 					return nil, nil, err
 				}
 			}
-			msgFeesSummaryEvent, err := sdk.TypedEventToEvent(feeGasMeter.EventFeeSummary())
-			if err != nil {
-				return nil, nil, err
-			}
 
 			eventsToReturn = sdk.Events{
-				msgFeesSummaryEvent,
 				sdk.NewEvent(sdk.EventTypeTx,
 					sdk.NewAttribute(antewrapper.AttributeKeyAdditionalFee, feeGasMeter.FeeConsumed().String()),
 				),
 				sdk.NewEvent(sdk.EventTypeTx,
 					sdk.NewAttribute(antewrapper.AttributeKeyBaseFee, feeGasMeter.BaseFeeConsumed().Add(chargedFees...).Sub(feeGasMeter.FeeConsumed()).String()),
 				)}
+			msgFeesSummaryEvent, err := sdk.TypedEventToEvent(feeGasMeter.EventFeeSummary())
+			if err != nil {
+				return nil, nil, err
+			}
+			if len(msgFeesSummaryEvent.Attributes) > 0 {
+				eventsToReturn = append(eventsToReturn, msgFeesSummaryEvent)
+			}
 		}
 
 		ctx = ctx.WithGasMeter(originalGasMeter)
