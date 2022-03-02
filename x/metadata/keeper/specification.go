@@ -29,7 +29,7 @@ func (k Keeper) IterateRecordSpecs(ctx sdk.Context, handler func(specification t
 
 // IterateRecordSpecsForOwner processes all record specs owned by an address using a given handler.
 func (k Keeper) IterateRecordSpecsForOwner(ctx sdk.Context, ownerAddress sdk.AccAddress, handler func(recordSpecID types.MetadataAddress) (stop bool)) error {
-	var recordItErr error = nil
+	var recordItErr error
 	contractItErr := k.IterateContractSpecsForOwner(ctx, ownerAddress, func(contractSpecID types.MetadataAddress) bool {
 		needToStop := false
 		recordItErr = k.IterateRecordSpecsForContractSpec(ctx, contractSpecID, func(recordSpecID types.MetadataAddress) bool {

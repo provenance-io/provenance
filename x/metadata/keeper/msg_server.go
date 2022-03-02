@@ -195,8 +195,8 @@ func (k msgServer) WriteSession(
 	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
 	msg.ConvertOptionalFields()
 
-	var existing *types.Session = nil
-	var existingAudit *types.AuditFields = nil
+	var existing *types.Session
+	var existingAudit *types.AuditFields
 	if e, found := k.GetSession(ctx, msg.Session.SessionId); found {
 		existing = &e
 		existingAudit = existing.Audit
@@ -230,7 +230,7 @@ func (k msgServer) WriteRecord(
 
 	recordID := types.RecordMetadataAddress(scopeUUID, msg.Record.Name)
 
-	var existing *types.Record = nil
+	var existing *types.Record
 	if e, found := k.GetRecord(ctx, recordID); found {
 		existing = &e
 	}
@@ -278,7 +278,7 @@ func (k msgServer) WriteScopeSpecification(
 	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
 	msg.ConvertOptionalFields()
 
-	var existing *types.ScopeSpecification = nil
+	var existing *types.ScopeSpecification
 	if e, found := k.GetScopeSpecification(ctx, msg.Specification.SpecificationId); found {
 		existing = &e
 		if err := k.ValidateAllOwnersAreSignersWithAuthz(ctx, existing.OwnerAddresses, msg.Signers, msg.MsgTypeURL()); err != nil {
@@ -328,7 +328,7 @@ func (k msgServer) WriteContractSpecification(
 	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
 	msg.ConvertOptionalFields()
 
-	var existing *types.ContractSpecification = nil
+	var existing *types.ContractSpecification
 	if e, found := k.GetContractSpecification(ctx, msg.Specification.SpecificationId); found {
 		existing = &e
 		if err := k.ValidateAllOwnersAreSignersWithAuthz(ctx, existing.OwnerAddresses, msg.Signers, msg.MsgTypeURL()); err != nil {
@@ -366,7 +366,7 @@ func (k msgServer) DeleteContractSpecification(
 		return nil, fmt.Errorf("could not get record specifications to delete with contract specification with id %s: %w",
 			msg.SpecificationId, recSpecErr)
 	}
-	var delRecSpecErr error = nil
+	var delRecSpecErr error
 	removedRecSpecs := []*types.RecordSpecification{}
 	for _, recSpec := range recSpecs {
 		if err := k.RemoveRecordSpecification(ctx, recSpec.SpecificationId); err != nil {
@@ -489,7 +489,7 @@ func (k msgServer) WriteRecordSpecification(
 		return nil, err
 	}
 
-	var existing *types.RecordSpecification = nil
+	var existing *types.RecordSpecification
 	if e, found := k.GetRecordSpecification(ctx, msg.Specification.SpecificationId); found {
 		existing = &e
 	}
@@ -547,7 +547,7 @@ func (k msgServer) WriteP8EContractSpec(
 		return nil, err
 	}
 
-	var existing *types.ContractSpecification = nil
+	var existing *types.ContractSpecification
 	if e, found := k.GetContractSpecification(ctx, proposed.SpecificationId); found {
 		existing = &e
 		if err := k.ValidateAllOwnersAreSignersWithAuthz(ctx, existing.OwnerAddresses, msg.Signers, msg.MsgTypeURL()); err != nil {
@@ -563,7 +563,7 @@ func (k msgServer) WriteP8EContractSpec(
 
 	recSpecIDs := make([]types.MetadataAddress, len(newrecords))
 	for i, proposedRecord := range newrecords {
-		var existing *types.RecordSpecification = nil
+		var existing *types.RecordSpecification
 		if e, found := k.GetRecordSpecification(ctx, proposedRecord.SpecificationId); found {
 			existing = &e
 		}

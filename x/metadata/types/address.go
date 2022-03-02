@@ -175,7 +175,8 @@ func SessionMetadataAddress(scopeUUID uuid.UUID, sessionUUID uuid.UUID) Metadata
 	if err != nil {
 		panic(err)
 	}
-	addr := append(SessionKeyPrefix, bz...)
+	addr := SessionKeyPrefix
+	addr = append(addr, bz...)
 	bz, err = sessionUUID.MarshalBinary()
 	if err != nil {
 		panic(err)
@@ -189,7 +190,8 @@ func RecordMetadataAddress(scopeUUID uuid.UUID, name string) MetadataAddress {
 	if err != nil {
 		panic(err)
 	}
-	addr := append(RecordKeyPrefix, bz...)
+	addr := RecordKeyPrefix
+	addr = append(addr, bz...)
 	name = strings.ToLower(strings.TrimSpace(name))
 	if len(name) < 1 {
 		panic("missing name value for record metadata address")
@@ -222,7 +224,8 @@ func RecordSpecMetadataAddress(contractSpecUUID uuid.UUID, name string) Metadata
 	if err != nil {
 		panic(err)
 	}
-	addr := append(RecordSpecificationKeyPrefix, bz...)
+	addr := RecordSpecificationKeyPrefix
+	addr = append(addr, bz...)
 	name = strings.ToLower(strings.TrimSpace(name))
 	if len(name) < 1 {
 		panic("missing name value for record spec metadata address")
