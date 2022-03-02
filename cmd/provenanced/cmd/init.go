@@ -155,7 +155,6 @@ func createAndExportGenesisFile(
 		cmd.Printf("Using testnet defaults\n")
 		minDeposit = 10000000            // 10,000,000
 		downtimeJailDurationStr = "600s" // 10 minutes
-		maxGas = -1
 	} else {
 		cmd.Printf("Using mainnet defaults\n")
 	}
