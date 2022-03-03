@@ -22,42 +22,72 @@ import (
 
 // Migrator is an object to help guide a migration.
 type Migrator struct {
-	HomePath      string
-	SourceDBType  string
-	TargetDBType  string
+	// HomePath is the path to the home directory (should contain the config and data directories)
+	HomePath string
+	// SourceDBType is the type of the source (current) DB.
+	SourceDBType string
+	// TargetDBType is the type of the target (new) DB.
+	TargetDBType string
+	// SourceDataDir is the path to the source (current) data directory.
 	SourceDataDir string
+	// TargetDataDir is the path to the target (new) data directory.
 	TargetDataDir string
+	// BackupDataDir is the path to where the current data directory will be moved to when done.
+	// That is, the current data directory will become this directory (as opposed to being placed in it as a sub-directory).
 	BackupDataDir string
 
+	// BatchSize is the threshold (in bytes) after which a batch is written and a new batch is created.
+	BatchSize uint
+
+	// ToConvert is all of the DB directories to migrate/convert.
+	// Each entry is relative to the data directory.
 	ToConvert []string
-	ToCopy    []string
+	// ToCopy is all the non-DB files and directories that should be copied from the source to the target.
+	// Each entry is relative to the data directory.
+	ToCopy []string
 }
 
-// SetUpMigrator creates a new Migrator with the given info and sets it up so that it's ready for a migration.
-func SetUpMigrator(homePath, sourceDBType, targetDBType, backupDir string) (*Migrator, error) {
-	var err error
-	m := Migrator{
+// SetUpMigrator creates a new Migrator with the given info and initializes it.
+func SetUpMigrator(homePath, sourceDBType, targetDBType, backupDir string, batchSizeBytes uint) (*Migrator, error) {
+	m := &Migrator{
 		HomePath:      homePath,
 		SourceDBType:  sourceDBType,
 		TargetDBType:  targetDBType,
 		SourceDataDir: filepath.Join(homePath, "data"),
 		BackupDataDir: backupDir,
+		BatchSize:     batchSizeBytes,
 	}
+	return m, m.Initialize()
+}
+
+// Initialize prepares this Migrator by doing the following:
+//  1. If BackupDataDir is not set, sets it to the default.
+//  2. If ToConvert is empty, Analyzes the SourceDataDir to identify ToConvert and ToCopy. Otherwise, ToConvert and ToCopy are not changed.
+//  3. If TargetDataDir is defined, makes sure it exists. Otherwise, sets it and creates it.
+func (m *Migrator) Initialize() error {
+	var err error
 	if len(m.BackupDataDir) == 0 {
-		m.BackupDataDir = filepath.Join(homePath, fmt.Sprintf("data-%s-%s", time.Now().Format("2006-01-02-15-04"), sourceDBType))
-	}
-	m.ToConvert, m.ToCopy, err = GetDataDirContents(m.SourceDataDir)
-	if err != nil {
-		return nil, fmt.Errorf("error reading %q: %w", m.SourceDataDir, err)
+		m.BackupDataDir = filepath.Join(m.HomePath, fmt.Sprintf("data-%s-%s", time.Now().Format("2006-01-02-15-04"), m.SourceDBType))
 	}
 	if len(m.ToConvert) == 0 {
-		return nil, fmt.Errorf("no database directories found in %q", m.SourceDataDir)
+		m.ToConvert, m.ToCopy, err = GetDataDirContents(m.SourceDataDir)
+		if err != nil {
+			return fmt.Errorf("error reading %q: %w", m.SourceDataDir, err)
+		}
+		if len(m.ToConvert) == 0 {
+			return fmt.Errorf("no database directories found in %q", m.SourceDataDir)
+		}
 	}
-	m.TargetDataDir, err = os.MkdirTemp(homePath, "data-dbmigrate-tmp-*")
-	if err != nil {
-		return nil, fmt.Errorf("error creating temporariy target data directory: %w", err)
+	if len(m.TargetDataDir) == 0 {
+		m.TargetDataDir, err = os.MkdirTemp(m.HomePath, "data-dbmigrate-tmp-*")
+		if err != nil {
+			return fmt.Errorf("error creating temporariy target data directory: %w", err)
+		}
+	} else {
+		//nolint:gosec // This is the correct permissions for this backup directory.
+		err = os.MkdirAll(m.TargetDataDir, 0755)
 	}
-	return &m, nil
+	return nil
 }
 
 // Migrate converts all database dirs in the given homePath from the source underlying type to the target type.
@@ -130,30 +160,54 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) error {
 	defer iter.Close()
 
 	batch := targetDB.NewBatch()
-	defer batch.Close()
+	defer func() {
+		if batch != nil {
+			batch.Close()
+		}
+	}()
 
-	c := 0
+	totalEntries := uint(0)
+	batchEntries := uint(0)
+	batchBytes := uint(0)
 	logger.Info("Starting migration")
 	for ; iter.Valid(); iter.Next() {
-		c++
+		totalEntries++
+		batchEntries++
 		v := iter.Value()
 		if v == nil {
 			v = []byte{}
 		}
-		if err = batch.Set(iter.Key(), v); err != nil {
+		k := iter.Key()
+		if err = batch.Set(k, v); err != nil {
 			return fmt.Errorf("could not set %q key/value: %w", dbName, err)
 		}
-		if c % 1_000_000 == 0 {
-			logger.Info(fmt.Sprintf("Progress Update: %d entries copied.", c))
+		batchBytes += uint(len(v) + len(k))
+		if batchBytes >= m.BatchSize {
+			logger.Info("Writing batch and creating a new one.",
+				"batch size (bytes)", commaString(batchBytes), "batch entries", commaString(batchEntries), "total entries", commaString(totalEntries))
+			if err = batch.Write(); err != nil {
+				return fmt.Errorf("could not write %q batch: %w", dbName, err)
+			}
+			if err = batch.Close(); err != nil {
+				return fmt.Errorf("could not close %q batch: %w", dbName, err)
+			}
+			batch = targetDB.NewBatch()
+			batchBytes = 0
+			batchEntries = 0
 		}
 	}
 
-	logger.Info("Writing batch")
-	if err = batch.Write(); err != nil {
-		return fmt.Errorf("could not write %q batch: %w", dbName, err)
+	if batchBytes > 0 {
+		logger.Info("Writing batch")
+		if err = batch.Write(); err != nil {
+			return fmt.Errorf("could not write %q batch: %w", dbName, err)
+		}
+		if err = batch.Close(); err != nil {
+			return fmt.Errorf("could not close %q batch: %w", dbName, err)
+		}
 	}
 
-	logger.Info("Done", "entries", c)
+	logger.Info("Done", "total entries", totalEntries)
 	return nil
 }
 
@@ -249,4 +303,22 @@ func GetDataDirContents(dataDirPath string) ([]string, []string, error) {
 		}
 	}
 	return dbs, nonDBs, nil
+}
+
+// commaString converts a positive integer to a string and adds commas.
+func commaString(v uint) string {
+	str := fmt.Sprintf("%d", v)
+	if len(str) <= 3 {
+		return str
+	}
+	rv := make([]rune, len(str)+(len(str)-1)/3)
+	added := 0
+	for i, c := range str {
+		if i != 0 && (len(str)-i)%3 == 0 {
+			rv[i+added] = ','
+			added++
+		}
+		rv[i+added] = c
+	}
+	return string(rv)
 }

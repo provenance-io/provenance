@@ -20,7 +20,10 @@ import (
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
 )
 
-const FlagBackupDir = "backup-dir"
+const (
+	FlagBackupDir = "backup-dir"
+	FlagBatchSize = "batch-size"
+)
 
 var PossibleDBTypes = []string{
 	string(tmdb.RocksDBBackend), string(tmdb.BadgerDBBackend),
@@ -107,9 +110,13 @@ To control the log level and log format of this utility, use these environment v
 				logger.Info(fmt.Sprintf("Database already has type %q. Nothing to do.", targetDBType))
 				return nil
 			}
+			batchSizeMB, err := command.Flags().GetInt(FlagBatchSize)
+			if err != nil {
+				return fmt.Errorf("could not get batch size: %w", err)
+			}
 			// If this is just an empty string, the default ends up being used.
 			backupDir, _ := command.Flags().GetString(FlagBackupDir)
-			err = DoMigrateCmd(command, tmConfig.RootDir, sourceDBType, targetDBType, backupDir)
+			err = DoMigrateCmd(command, tmConfig.RootDir, sourceDBType, targetDBType, backupDir, batchSizeMB)
 			if err != nil {
 				logger.Error(err.Error())
 				// If this returns an error, the help is printed. But that isn't wanted here.
@@ -121,6 +128,7 @@ To control the log level and log format of this utility, use these environment v
 		},
 	}
 	rv.Flags().String(FlagBackupDir, "", "directory to back up the current data directory to (default is {home}/data-{timestamp}-{dbtype})")
+	rv.Flags().Int(FlagBatchSize, 1024, "batch size (in megabytes): after a batch reaches this size it is written and a new one is started")
 	return rv
 }
 
@@ -146,10 +154,10 @@ func IsPossibleDBType(dbType string) bool {
 }
 
 // DoMigrateCmd does all the work associated with the dbmigrate command (assuming that inputs have been validated).
-func DoMigrateCmd(command *cobra.Command, homePath, sourceDBType, targetDBType, backupDir string) error {
+func DoMigrateCmd(command *cobra.Command, homePath, sourceDBType, targetDBType, backupDir string, batchSizeMB int) error {
 	logger := server.GetServerContextFromCmd(command).Logger
 	logger.Info("Setting up database migrations.", "home", homePath, "source type", sourceDBType, "target type", targetDBType)
-	migrator, err := utils.SetUpMigrator(homePath, sourceDBType, targetDBType, backupDir)
+	migrator, err := utils.SetUpMigrator(homePath, sourceDBType, targetDBType, backupDir, uint(batchSizeMB)*1_048_576) // 1,048,576 = 1,024 * 1,024.
 	if err != nil {
 		return err
 	}
