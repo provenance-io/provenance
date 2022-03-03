@@ -38,6 +38,11 @@ type appUpgrade struct {
 var handlers = map[string]appUpgrade{
 	"green": {
 		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
+			// Ensure consensus params are correct and match mainnet/testnet.  Max Block Sizes: 60M gas, 5MB
+			params := app.GetConsensusParams(ctx)
+			params.Block.MaxBytes = 1024 * 1024 * 5 // 5MB
+			params.Block.MaxGas = 60_000_000        // With ante tx gas limit this will yield 3M gas max per tx.
+			app.StoreConsensusParams(ctx, params)
 
 			app.IBCKeeper.ClientKeeper.IterateClients(ctx, func(clientId string, state exported.ClientState) bool {
 				tc, ok := (state).(*ibcctmtypes.ClientState)
