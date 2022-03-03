@@ -17,6 +17,7 @@ import (
 	tmconfig "github.com/tendermint/tendermint/config"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"github.com/tendermint/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
 
@@ -394,8 +395,25 @@ func initGenFiles(
 	}
 
 	genDoc := types.GenesisDoc{
-		ChainID:    chainID,
-		AppState:   appGenStateJSON,
+		ChainID:  chainID,
+		AppState: appGenStateJSON,
+		ConsensusParams: &tmproto.ConsensusParams{
+			Block: tmproto.BlockParams{
+				MaxBytes:   200000,
+				MaxGas:     60_000_000,
+				TimeIotaMs: 1000,
+			},
+			Evidence: tmproto.EvidenceParams{
+				MaxAgeNumBlocks: 302400,
+				MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
+				MaxBytes:        10000,
+			},
+			Validator: tmproto.ValidatorParams{
+				PubKeyTypes: []string{
+					types.ABCIPubKeyTypeEd25519,
+				},
+			},
+		},
 		Validators: nil,
 	}
 

@@ -29,7 +29,7 @@ func DefaultGenesisState() *GenesisState {
 	return NewGenesisState(DefaultParams(), []MarkerAccount{})
 }
 
-// GetGenesisStateFromAppState returns x/auth GenesisState given raw application
+// GetGenesisStateFromAppState returns x/marker GenesisState given raw application
 // genesis state.
 func GetGenesisStateFromAppState(cdc codec.Codec, appState map[string]json.RawMessage) GenesisState {
 	var genesisState GenesisState

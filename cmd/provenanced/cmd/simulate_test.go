@@ -2,6 +2,7 @@ package cmd_test
 
 import (
 	"fmt"
+	"github.com/provenance-io/provenance/internal/antewrapper"
 	"os"
 	"path/filepath"
 	"testing"
@@ -75,7 +76,7 @@ func (s *SimulateTestSuite) SetupTest() {
 	cfg.GenesisState = genesisState
 
 	s.cfg = cfg
-
+	cfg.ChainID = antewrapper.SimAppChainID
 	s.testnet = testnet.New(s.T(), cfg)
 
 	_, err = s.testnet.WaitForHeight(1)

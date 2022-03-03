@@ -137,6 +137,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		AddGenesisAccountCmd(app.DefaultNodeHome),
 		AddRootDomainAccountCmd(app.DefaultNodeHome),
 		AddGenesisMarkerCmd(app.DefaultNodeHome),
+		AddGenesisMsgFeeCmd(app.DefaultNodeHome, encodingConfig.InterfaceRegistry),
 		tmcli.NewCompletionCmd(rootCmd, true),
 		testnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
@@ -156,6 +157,13 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 
 	// Add Rosetta command
 	rootCmd.AddCommand(server.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
+
+	// Disable usage when the start command returns an error.
+	startCmd, _, err := rootCmd.Find([]string{"start"})
+	if err != nil {
+		panic(fmt.Errorf("start command not found: %w", err))
+	}
+	startCmd.SilenceUsage = true
 }
 
 func addModuleInitFlags(startCmd *cobra.Command) {
