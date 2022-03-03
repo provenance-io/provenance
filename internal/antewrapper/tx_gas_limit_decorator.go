@@ -3,6 +3,7 @@ package antewrapper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // TxGasLimitDecorator will check if the transaction's gas amount is higher than
@@ -31,8 +32,18 @@ func (mfd TxGasLimitDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		gasTxLimit = ctx.BlockGasMeter().Limit() / MinTxPerBlock
 	}
 
+	// Skip gas limit check for txs with MsgSubmitProposal
+	hasSubmitPropMsg := false
+	for _, msg := range tx.GetMsgs() {
+		_, isSubmitPropMsg := msg.(*govtypes.MsgSubmitProposal)
+		if isSubmitPropMsg {
+			hasSubmitPropMsg = true
+			break
+		}
+	}
+
 	// TODO - remove "gasTxLimit > 0" with SDK 0.46 which fixes the infinite gas meter to use max int vs zero for the limit.
-	if gasTxLimit > 0 && gas > gasTxLimit {
+	if gasTxLimit > 0 && gas > gasTxLimit && !hasSubmitPropMsg {
 		return ctx, sdkerrors.Wrapf(sdkerrors.ErrTxTooLarge, "transaction gas exceeds maximum allowed; got: %d max allowed: %d", gas, gasTxLimit)
 	}
 	return next(ctx, tx, simulate)
