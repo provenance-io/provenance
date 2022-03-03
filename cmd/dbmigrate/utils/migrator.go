@@ -198,7 +198,8 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) error {
 	}
 
 	if batchBytes > 0 {
-		logger.Info("Writing batch")
+		logger.Info("Writing batch.",
+			"batch size (bytes)", commaString(batchBytes), "batch entries", commaString(batchEntries), "total entries", commaString(totalEntries))
 		if err = batch.Write(); err != nil {
 			return fmt.Errorf("could not write %q batch: %w", dbName, err)
 		}
