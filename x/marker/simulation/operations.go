@@ -206,7 +206,7 @@ func Dispatch(
 	if sdk.MsgTypeURL(msg) == "/provenance.marker.v1.MsgAddMarkerRequest" && ak.GetAccount(ctx, account.GetAddress()) != nil {
 		err = simapp.FundAccount(bk, ctx, account.GetAddress(), sdk.NewCoins(sdk.Coin{
 			Denom:  "stake",
-			Amount: sdk.NewInt(100000000000000),
+			Amount: sdk.NewInt(1000000000000000),
 		}))
 		fees = fees.Add(sdk.Coin{
 			Denom:  "stake",
