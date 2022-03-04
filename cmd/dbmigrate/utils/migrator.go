@@ -51,10 +51,10 @@ type Migrator struct {
 	// Each entry is relative to the data directory.
 	ToCopy []string
 
-	// timeStarted is the time that the migration was started.
-	timeStarted time.Time
-	// timeFinished is the time that the migration was finished.
-	timeFinished time.Time
+	// TimeStarted is the time that the migration was started.
+	TimeStarted time.Time
+	// TimeFinished is the time that the migration was finished.
+	TimeFinished time.Time
 }
 
 // SetUpMigrator creates a new Migrator with the given info and initializes it.
@@ -104,7 +104,7 @@ func (m *Migrator) Initialize() error {
 
 // Migrate converts all database dirs in the given homePath from the source underlying type to the target type.
 // It then copies everything else in the data dir and swaps out the existing data dir for the newly created one.
-func (m Migrator) Migrate(logger tmlog.Logger) (err error) {
+func (m *Migrator) Migrate(logger tmlog.Logger) (err error) {
 	// If this func doesn't complete fully, we want to output a message that the staging directory might still exist (and be quite large).
 	// Make a done channel for indicating normal finish and a signal channel for capturing interrupt signals like ctrl+c.
 	doneChan := make(chan bool, 1)
@@ -112,8 +112,11 @@ func (m Migrator) Migrate(logger tmlog.Logger) (err error) {
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 	// If we're returning an error, add the log message, and then always do a little cleanup.
 	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("recovered from panic: %v", r)
+		}
 		if err != nil {
-			logger.Error("The staging directory might still exist due to error.", "dir", m.TargetDataDir)
+			logger.Error("The staging directory might still exists to error.", "dir", m.TargetDataDir)
 		}
 		close(doneChan)
 		signal.Stop(sigChan)
@@ -128,7 +131,7 @@ func (m Migrator) Migrate(logger tmlog.Logger) (err error) {
 	go func() {
 		select {
 		case s:= <-sigChan:
-			logger.Error("The staging directory might still exist due to early termination.", "dir", m.TargetDataDir)
+			logger.Error("The staging directory might still due to early termination.", "dir", m.TargetDataDir)
 			signal.Stop(sigChan)
 			proc.Signal(s)
 			return
@@ -138,7 +141,7 @@ func (m Migrator) Migrate(logger tmlog.Logger) (err error) {
 	}()
 
 	// Now we can get started.
-	m.timeStarted = time.Now()
+	m.TimeStarted = time.Now()
 	// Con
 	logger.Info(fmt.Sprintf("Converting %d Individual DBs.", len(m.ToConvert)),
 		"source type",  m.SourceDBType, "source dir", m.SourceDataDir,
@@ -170,7 +173,7 @@ func (m Migrator) Migrate(logger tmlog.Logger) (err error) {
 	if err2 := os.Rename(m.TargetDataDir, m.SourceDataDir); err2 != nil {
 		return fmt.Errorf("could not move new data directory into place: %w", err2)
 	}
-	m.timeFinished = time.Now()
+	m.TimeFinished = time.Now()
 
 	logger.Info(m.MakeSummaryString(counts))
 	return nil
@@ -311,8 +314,8 @@ func (m Migrator) MakeSummaryString(counts map[string]uint) string {
 		sb.WriteString(fmt.Sprintf(format, a...)+"\n")
 	}
 	addLine("Summary:")
-	if !m.timeFinished.IsZero() && !m.timeStarted.IsZero() {
-		addLine("     Duration: %s", m.timeFinished.Sub(m.timeStarted))
+	if !m.TimeFinished.IsZero() && !m.TimeStarted.IsZero() {
+		addLine("     Duration: %s", m.TimeFinished.Sub(m.TimeStarted))
 	} else {
 		addLine("     Duration: unknown")
 	}
