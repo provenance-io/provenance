@@ -235,6 +235,23 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (uint, error) 
 			"total entries", commaString(totalEntries + batchEntries),
 		}
 	}
+	// Output a status line every 10 seconds.
+	stopTickerChan := make(chan bool, 1)
+	ticker := time.NewTicker(10 * time.Second)
+	defer func() {
+		close(stopTickerChan)
+	}()
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				logger.Info("Status", commonKeyVals()...)
+			case <-stopTickerChan:
+				ticker.Stop()
+				return
+			}
+		}
+	}()
 	logger.Info("Individual DB Migration: Starting.")
 	for ; iter.Valid(); iter.Next() {
 		batchEntries++
@@ -259,9 +276,6 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (uint, error) 
 			batch = targetDB.NewBatch()
 			batchBytes = 0
 			batchEntries = 0
-		}
-		if batchEntries%250_000 == 0 {
-			logger.Info("Status", commonKeyVals()...)
 		}
 	}
 
