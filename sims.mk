@@ -5,6 +5,9 @@
 
 BINDIR ?= $(GOPATH)/bin
 SIMAPP = ./app
+
+include sims-state-listening.mk
+
 test-sim-nondeterminism:
 	@echo "Running non-determinism test..."
 	@go test -mod=readonly $(SIMAPP) -run TestAppStateDeterminism -Enabled=true \
