@@ -41,6 +41,10 @@
   
     - [Msg](#provenance.attribute.v1.Msg)
   
+- [provenance/epoch/genesis.proto](#provenance/epoch/genesis.proto)
+    - [EpochInfo](#provenance.epoch.v1.EpochInfo)
+    - [GenesisState](#provenance.epoch.v1.GenesisState)
+  
 - [provenance/marker/v1/accessgrant.proto](#provenance/marker/v1/accessgrant.proto)
     - [AccessGrant](#provenance.marker.v1.AccessGrant)
   
@@ -856,6 +860,58 @@ Msg defines the bank Msg service.
 | `UpdateAttribute` | [MsgUpdateAttributeRequest](#provenance.attribute.v1.MsgUpdateAttributeRequest) | [MsgUpdateAttributeResponse](#provenance.attribute.v1.MsgUpdateAttributeResponse) | UpdateAttribute defines a method to verify a particular invariance. | |
 | `DeleteAttribute` | [MsgDeleteAttributeRequest](#provenance.attribute.v1.MsgDeleteAttributeRequest) | [MsgDeleteAttributeResponse](#provenance.attribute.v1.MsgDeleteAttributeResponse) | DeleteAttribute defines a method to verify a particular invariance. | |
 | `DeleteDistinctAttribute` | [MsgDeleteDistinctAttributeRequest](#provenance.attribute.v1.MsgDeleteDistinctAttributeRequest) | [MsgDeleteDistinctAttributeResponse](#provenance.attribute.v1.MsgDeleteDistinctAttributeResponse) | DeleteDistinctAttribute defines a method to verify a particular invariance. | |
+
+ <!-- end services -->
+
+
+
+<a name="provenance/epoch/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/epoch/genesis.proto
+
+
+
+<a name="provenance.epoch.v1.EpochInfo"></a>
+
+### EpochInfo
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `identifier` | [string](#string) |  |  |
+| `start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+| `duration` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
+| `current_epoch` | [int64](#int64) |  |  |
+| `current_epoch_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+| `epoch_counting_started` | [bool](#bool) |  |  |
+| `current_epoch_start_height` | [int64](#int64) |  |  |
+
+
+
+
+
+
+<a name="provenance.epoch.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the epochs module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `epochs` | [EpochInfo](#provenance.epoch.v1.EpochInfo) | repeated |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
 
  <!-- end services -->
 

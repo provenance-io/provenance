@@ -3,6 +3,7 @@ package msgfees
 import (
 	"context"
 	"encoding/json"
+	msgfees2 "github.com/provenance-io/provenance/x/msgfees"
 	"math/rand"
 
 	"github.com/provenance-io/provenance/x/msgfees/simulation"
@@ -156,6 +157,7 @@ func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {}
 
 // EndBlock does nothing
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+	msgfees2.EndBlocker(ctx,am.keeper)
 	return []abci.ValidatorUpdate{}
 }
 
