@@ -366,8 +366,8 @@ func TestAppStateDeterminism(t *testing.T) {
 	}
 }
 
-// TestAppStateDeterminismStateListening non-deterministic
-// testing with state listing indexing plugins enabled
+// TODO: Make another test for the fuzzer itself, which just has noOp txs
+// and doesn't depend on the application.
 func TestAppStateDeterminismWithStateListening(t *testing.T) {
 	if !sdksim.FlagEnabledValue {
 		t.Skip("skipping application simulation")
@@ -411,10 +411,12 @@ func TestAppStateDeterminismWithStateListening(t *testing.T) {
 			}
 
 			db := dbm.NewMemDB()
-			app := New(logger,
+			app := New(
+				logger,
 				db,
 				nil,
-				true, map[int64]bool{},
+				true,
+				map[int64]bool{},
 				DefaultNodeHome,
 				sdksim.FlagPeriodValue,
 				MakeEncodingConfig(),
