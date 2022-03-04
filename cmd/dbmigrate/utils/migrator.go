@@ -22,8 +22,8 @@ import (
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
 )
 
-// B_PER_MB is the number of bytes in a megabyte.
-const B_PER_MB = 1_048_576
+// BytesPerMB is the number of bytes in a megabyte.
+const BytesPerMB = 1_048_576
 
 // Migrator is an object to help guide a migration.
 type Migrator struct {
@@ -130,10 +130,13 @@ func (m *Migrator) Migrate(logger tmlog.Logger) (err error) {
 	// Monitor for the signals and handle them appropriately.
 	go func() {
 		select {
-		case s:= <-sigChan:
+		case s := <-sigChan:
 			logger.Error("The staging directory might still due to early termination.", "dir", m.TargetDataDir)
 			signal.Stop(sigChan)
-			proc.Signal(s)
+			err2 := proc.Signal(s)
+			if err2 != nil {
+				panic(err2)
+			}
 			return
 		case <-doneChan:
 			return
@@ -144,7 +147,7 @@ func (m *Migrator) Migrate(logger tmlog.Logger) (err error) {
 	m.TimeStarted = time.Now()
 	// Con
 	logger.Info(fmt.Sprintf("Converting %d Individual DBs.", len(m.ToConvert)),
-		"source type",  m.SourceDBType, "source dir", m.SourceDataDir,
+		"source type", m.SourceDBType, "source dir", m.SourceDataDir,
 		"target type", m.TargetDBType, "staging dir", m.TargetDataDir,
 	)
 	counts := map[string]uint{}
@@ -227,9 +230,9 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (uint, error) 
 	batchBytes := uint(0)
 	commonKeyVals := func() []interface{} {
 		return []interface{}{
-		"batch size (megabytes)", commaString(batchBytes/B_PER_MB),
-		"batch entries", commaString(batchEntries),
-		"total entries", commaString(totalEntries+batchEntries),
+			"batch size (megabytes)", commaString(batchBytes / BytesPerMB),
+			"batch entries", commaString(batchEntries),
+			"total entries", commaString(totalEntries + batchEntries),
 		}
 	}
 	logger.Info("Individual DB Migration: Starting.")
@@ -257,7 +260,7 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (uint, error) 
 			batchBytes = 0
 			batchEntries = 0
 		}
-		if batchEntries % 250_000 == 0 {
+		if batchEntries%250_000 == 0 {
 			logger.Info("Status", commonKeyVals()...)
 		}
 	}
@@ -265,7 +268,7 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (uint, error) 
 	if batchBytes > 0 {
 		logger.Info("Writing batch.", commonKeyVals()...)
 		if err = batch.Write(); err != nil {
-			return totalEntries-batchEntries, fmt.Errorf("could not write %q batch: %w", dbName, err)
+			return totalEntries - batchEntries, fmt.Errorf("could not write %q batch: %w", dbName, err)
 		}
 		totalEntries += batchEntries
 		if err = batch.Close(); err != nil {
@@ -311,7 +314,7 @@ func (m Migrator) UpdateConfig(logger tmlog.Logger, command *cobra.Command) erro
 func (m Migrator) MakeSummaryString(counts map[string]uint) string {
 	var sb strings.Builder
 	addLine := func(format string, a ...interface{}) {
-		sb.WriteString(fmt.Sprintf(format, a...)+"\n")
+		sb.WriteString(fmt.Sprintf(format, a...) + "\n")
 	}
 	addLine("Summary:")
 	if !m.TimeFinished.IsZero() && !m.TimeStarted.IsZero() {
