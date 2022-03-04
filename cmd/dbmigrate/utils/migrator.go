@@ -45,6 +45,11 @@ type Migrator struct {
 	// ToCopy is all the non-DB files and directories that should be copied from the source to the target.
 	// Each entry is relative to the data directory.
 	ToCopy []string
+
+	// timeStarted is the time that the migration was started.
+	timeStarted time.Time
+	// timeFinished is the time that the migration was finished.
+	timeFinished time.Time
 }
 
 // SetUpMigrator creates a new Migrator with the given info and initializes it.
@@ -94,14 +99,22 @@ func (m *Migrator) Initialize() error {
 
 // Migrate converts all database dirs in the given homePath from the source underlying type to the target type.
 // It then copies everything else in the data dir and swaps out the existing data dir for the newly created one.
-func (m Migrator) Migrate(logger tmlog.Logger) error {
+func (m Migrator) Migrate(logger tmlog.Logger) (err error) {
+	defer func() {
+		if err != nil {
+			logger.Error("Staging directory might still exist due to error.", "dir", m.TargetDataDir)
+		}
+	}()
+	m.timeStarted = time.Now()
 	logger.Info(fmt.Sprintf("Converting %d database directories from %q %s to %q %s",
 		len(m.ToConvert), m.SourceDBType, m.SourceDataDir, m.TargetDBType, m.TargetDataDir))
+	counts := map[string]uint{}
 	for i, dbDir := range m.ToConvert {
-		err := m.MigrateDBDir(logger.With("db dir", fmt.Sprintf("%d/%d: %s", i+1, len(m.ToConvert), dbDir)), dbDir)
-		if err != nil {
-			return fmt.Errorf("could not convert %q from %q to %q: %w", dbDir, m.SourceDBType, m.TargetDBType, err)
+		count, err2 := m.MigrateDBDir(logger.With("db", strings.TrimSuffix(dbDir, ".db"), "progress", fmt.Sprintf("%d/%d", i+1, len(m.ToConvert))), dbDir)
+		if err2 != nil {
+			return fmt.Errorf("could not convert %q from %q to %q: %w", dbDir, m.SourceDBType, m.TargetDBType, err2)
 		}
+		counts[dbDir] = count
 	}
 
 	logger.Info(fmt.Sprintf("Copying %d items from %s to %s", len(m.ToCopy), m.SourceDataDir, m.TargetDataDir))
@@ -113,25 +126,27 @@ func (m Migrator) Migrate(logger tmlog.Logger) error {
 	}
 
 	logger.Info("Moving existing data directory to backup location.", "from", m.SourceDataDir, "to", m.BackupDataDir)
-	if err := os.Rename(m.SourceDataDir, m.BackupDataDir); err != nil {
-		return fmt.Errorf("could not back up existing data directory: %w", err)
+	if err2 := os.Rename(m.SourceDataDir, m.BackupDataDir); err2 != nil {
+		return fmt.Errorf("could not back up existing data directory: %w", err2)
 	}
 
 	logger.Info("Moving new data directory into place.", "from", m.TargetDataDir, "to", m.SourceDataDir)
-	if err := os.Rename(m.TargetDataDir, m.SourceDataDir); err != nil {
-		return fmt.Errorf("could not move new data directory into place: %w", err)
+	if err2 := os.Rename(m.TargetDataDir, m.SourceDataDir); err2 != nil {
+		return fmt.Errorf("could not move new data directory into place: %w", err2)
 	}
+	m.timeFinished = time.Now()
 
+	logger.Info(m.MakeSummaryString(counts))
 	return nil
 }
 
 // MigrateDBDir creates a copy of the given db directory, converting it from one underlying type to another.
-func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) error {
+func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (uint, error) {
 	sourceDir, dbName := splitDBPath(m.SourceDataDir, dbDir)
 	targetDir, _ := splitDBPath(m.TargetDataDir, dbDir)
 	targetDataDirInfo, err := os.Stat(m.TargetDataDir)
 	if err != nil {
-		return fmt.Errorf("could not stat target data dir: %w", err)
+		return 0, fmt.Errorf("could not stat target data dir: %w", err)
 	}
 	targetDataDirMode := targetDataDirInfo.Mode()
 
@@ -139,25 +154,25 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) error {
 
 	sourceDB, err := tmdb.NewDB(dbName, tmdb.BackendType(m.SourceDBType), sourceDir)
 	if err != nil {
-		return fmt.Errorf("could not open %q source db: %w", dbName, err)
+		return 0, fmt.Errorf("could not open %q source db: %w", dbName, err)
 	}
 	defer sourceDB.Close()
 
 	if targetDir != m.TargetDataDir {
 		err = os.MkdirAll(targetDir, targetDataDirMode)
 		if err != nil {
-			return fmt.Errorf("could not create target sub-directory: %w", err)
+			return 0, fmt.Errorf("could not create target sub-directory: %w", err)
 		}
 	}
 	targetDB, err := tmdb.NewDB(dbName, tmdb.BackendType(m.TargetDBType), targetDir)
 	if err != nil {
-		return fmt.Errorf("could not open %q target db: %w", dbName, err)
+		return 0, fmt.Errorf("could not open %q target db: %w", dbName, err)
 	}
 	defer targetDB.Close()
 
 	iter, err := sourceDB.Iterator(nil, nil)
 	if err != nil {
-		return fmt.Errorf("could not create %q source iterator: %w", dbName, err)
+		return 0, fmt.Errorf("could not create %q source iterator: %w", dbName, err)
 	}
 	defer iter.Close()
 
@@ -173,7 +188,6 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) error {
 	batchBytes := uint(0)
 	logger.Info("Starting migration")
 	for ; iter.Valid(); iter.Next() {
-		totalEntries++
 		batchEntries++
 		v := iter.Value()
 		if v == nil {
@@ -181,42 +195,44 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) error {
 		}
 		k := iter.Key()
 		if err = batch.Set(k, v); err != nil {
-			return fmt.Errorf("could not set %q key/value: %w", dbName, err)
+			return totalEntries, fmt.Errorf("could not set %q key/value: %w", dbName, err)
 		}
 		batchBytes += uint(len(v) + len(k))
 		if m.BatchSize > 0 && batchBytes >= m.BatchSize {
 			logger.Info("Writing batch and creating a new one.",
-				"batch size (bytes)", commaString(batchBytes), "batch entries", commaString(batchEntries), "total entries", commaString(totalEntries))
+				"batch size (bytes)", commaString(batchBytes), "batch entries", commaString(batchEntries), "total entries", commaString(totalEntries+batchEntries))
 			if err = batch.Write(); err != nil {
-				return fmt.Errorf("could not write %q batch: %w", dbName, err)
+				return totalEntries, fmt.Errorf("could not write %q batch: %w", dbName, err)
 			}
+			totalEntries += batchEntries
 			if err = batch.Close(); err != nil {
-				return fmt.Errorf("could not close %q batch: %w", dbName, err)
+				return totalEntries, fmt.Errorf("could not close %q batch: %w", dbName, err)
 			}
 			batch = targetDB.NewBatch()
 			batchBytes = 0
 			batchEntries = 0
 		}
-		if totalEntries % 250_000 == 0 {
+		if batchEntries % 250_000 == 0 {
 			logger.Info("Status",
-				"batch size (bytes)", commaString(batchBytes), "batch entries", commaString(batchEntries), "total entries", commaString(totalEntries))
+				"batch size (bytes)", commaString(batchBytes), "batch entries", commaString(batchEntries), "total entries", commaString(totalEntries+batchEntries))
 		}
 	}
 
 	if batchBytes > 0 {
 		logger.Info("Writing batch.",
-			"batch size (bytes)", commaString(batchBytes), "batch entries", commaString(batchEntries), "total entries", commaString(totalEntries))
+			"batch size (bytes)", commaString(batchBytes), "batch entries", commaString(batchEntries), "total entries", commaString(totalEntries+batchEntries))
 		if err = batch.Write(); err != nil {
-			return fmt.Errorf("could not write %q batch: %w", dbName, err)
+			return totalEntries-batchEntries, fmt.Errorf("could not write %q batch: %w", dbName, err)
 		}
+		totalEntries += batchEntries
 		if err = batch.Close(); err != nil {
-			return fmt.Errorf("could not close %q batch: %w", dbName, err)
+			return totalEntries, fmt.Errorf("could not close %q batch: %w", dbName, err)
 		}
 		batch = nil
 	}
 
 	logger.Info("Done", "total entries", commaString(totalEntries))
-	return nil
+	return totalEntries, nil
 }
 
 // UpdateConfig updates the config file to reflect the new database type.
@@ -246,6 +262,30 @@ func (m Migrator) UpdateConfig(logger tmlog.Logger, command *cobra.Command) erro
 	config.SaveConfigs(command, nil, tmConfig, nil, false)
 	logger.Info(fmt.Sprintf("%s Was: %s, Is Now: %s", "db_backend", m.SourceDBType, m.TargetDBType))
 	return nil
+}
+
+// MakeSummaryString creates a multi-line string with a summary of a migration.
+func (m Migrator) MakeSummaryString(counts map[string]uint) string {
+	var sb strings.Builder
+	addLine := func(format string, a ...interface{}) {
+		sb.WriteString(fmt.Sprintf(format, a...)+"\n")
+	}
+	addLine("Summary:")
+	if !m.timeFinished.IsZero() && !m.timeStarted.IsZero() {
+		addLine("     Duration: %s", m.timeFinished.Sub(m.timeStarted))
+	} else {
+		addLine("     Duration: unknown")
+	}
+	addLine("         Home: %s", m.HomePath)
+	addLine("         Data: %s", m.SourceDataDir)
+	addLine("  Data Backup: %s", m.BackupDataDir)
+	addLine("  New DB Type: %s", m.TargetDBType)
+	addLine("  Copied (%d): %s", len(m.ToCopy), strings.Join(m.ToCopy, "  "))
+	addLine("Migrated (%d):", len(m.ToConvert))
+	for _, dbDir := range m.ToConvert {
+		addLine("%22s: %11s entries", strings.TrimSuffix(dbDir, ".db"), commaString(counts[dbDir]))
+	}
+	return sb.String()
 }
 
 // splitDBPath combine the provided path elements into a full path to a db dirctory, then

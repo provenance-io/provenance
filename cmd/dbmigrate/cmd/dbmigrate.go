@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/spf13/cobra"
 
@@ -156,7 +155,6 @@ func IsPossibleDBType(dbType string) bool {
 
 // DoMigrateCmd does all the work associated with the dbmigrate command (assuming that inputs have been validated).
 func DoMigrateCmd(command *cobra.Command, homePath, sourceDBType, targetDBType, backupDir string, batchSizeMB int) error {
-	start := time.Now()
 	logger := server.GetServerContextFromCmd(command).Logger
 	logger.Info("Setting up database migrations.", "home", homePath, "source type", sourceDBType, "target type", targetDBType)
 	migrator, err := utils.SetUpMigrator(homePath, sourceDBType, targetDBType, backupDir, uint(batchSizeMB)*1_048_576) // 1,048,576 = 1,024 * 1,024.
@@ -172,6 +170,6 @@ func DoMigrateCmd(command *cobra.Command, homePath, sourceDBType, targetDBType, 
 	if err != nil {
 		return err
 	}
-	logger.Info("Done migrating databases.", "duration", time.Since(start))
+	logger.Info("Done migrating databases.")
 	return nil
 }
