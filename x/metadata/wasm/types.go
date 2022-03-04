@@ -197,7 +197,7 @@ func (scope *Scope) convertToBaseType() (*types.Scope, error) {
 	baseType := &types.Scope{
 		ScopeId:           scopeID,
 		SpecificationId:   specificationID,
-		Owners:            nil,
+		Owners:            make([]types.Party, len(scope.Owners)),
 		DataAccess:        scope.DataAccess,
 		ValueOwnerAddress: scope.ValueOwnerAddress,
 	}
