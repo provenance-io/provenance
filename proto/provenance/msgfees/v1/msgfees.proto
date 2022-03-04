@@ -30,12 +30,12 @@ message MsgFee {
 
 // EventMsgFee final event property for msg fee on type
 message EventMsgFee {
-  string msg_type       = 1;
-  string count      = 2;
-  string total      = 3;
+  string msg_type = 1;
+  string count    = 2;
+  string total    = 3;
 }
 
 // EventMsgFees event emitted with summary of msg fees
 message EventMsgFees {
-repeated  EventMsgFee msg_fees = 1 [(gogoproto.nullable) = false];
+  repeated EventMsgFee msg_fees = 1 [(gogoproto.nullable) = false];
 }
