@@ -1,0 +1,31 @@
+syntax = "proto3";
+package provenance.epoch.v1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "provenance/epoch/v1/genesis.proto";
+
+option go_package          = "github.com/provenance-io/provenance/x/epoch/types";
+option java_package        = "io.provenance.epoch.v1";
+option java_multiple_files = true;
+
+// Query defines the gRPC querier service.
+service Query {
+  // EpochInfos provide running epochInfos
+  rpc EpochInfos(QueryEpochsInfoRequest) returns (QueryEpochsInfoResponse) {
+    option (google.api.http).get = "/provenance/epoch/v1/epochs";
+  }
+  // CurrentEpoch provide current epoch of specified identifier
+  rpc CurrentEpoch(QueryCurrentEpochRequest)
+      returns (QueryCurrentEpochResponse) {
+    option (google.api.http).get = "/provenance/epoch/v1/current_epoch";
+  }
+}
+
+message QueryEpochsInfoRequest {}
+message QueryEpochsInfoResponse {
+  repeated EpochInfo epochs = 1 [ (gogoproto.nullable) = false ];
+}
+
+message QueryCurrentEpochRequest { string identifier = 1; }
+message QueryCurrentEpochResponse { int64 current_epoch = 1; }

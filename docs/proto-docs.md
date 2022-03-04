@@ -41,9 +41,17 @@
   
     - [Msg](#provenance.attribute.v1.Msg)
   
-- [provenance/epoch/genesis.proto](#provenance/epoch/genesis.proto)
+- [provenance/epoch/v1/genesis.proto](#provenance/epoch/v1/genesis.proto)
     - [EpochInfo](#provenance.epoch.v1.EpochInfo)
     - [GenesisState](#provenance.epoch.v1.GenesisState)
+  
+- [provenance/epoch/v1/query.proto](#provenance/epoch/v1/query.proto)
+    - [QueryCurrentEpochRequest](#provenance.epoch.v1.QueryCurrentEpochRequest)
+    - [QueryCurrentEpochResponse](#provenance.epoch.v1.QueryCurrentEpochResponse)
+    - [QueryEpochsInfoRequest](#provenance.epoch.v1.QueryEpochsInfoRequest)
+    - [QueryEpochsInfoResponse](#provenance.epoch.v1.QueryEpochsInfoResponse)
+  
+    - [Query](#provenance.epoch.v1.Query)
   
 - [provenance/marker/v1/accessgrant.proto](#provenance/marker/v1/accessgrant.proto)
     - [AccessGrant](#provenance.marker.v1.AccessGrant)
@@ -865,10 +873,10 @@ Msg defines the bank Msg service.
 
 
 
-<a name="provenance/epoch/genesis.proto"></a>
+<a name="provenance/epoch/v1/genesis.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## provenance/epoch/genesis.proto
+## provenance/epoch/v1/genesis.proto
 
 
 
@@ -881,11 +889,9 @@ Msg defines the bank Msg service.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `identifier` | [string](#string) |  |  |
-| `start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-| `duration` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
+| `start_height` | [int64](#int64) |  | start height of the epoch |
+| `duration` | [int64](#int64) |  | in blocks |
 | `current_epoch` | [int64](#int64) |  |  |
-| `current_epoch_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-| `epoch_counting_started` | [bool](#bool) |  |  |
 | `current_epoch_start_height` | [int64](#int64) |  |  |
 
 
@@ -912,6 +918,88 @@ GenesisState defines the epochs module's genesis state.
  <!-- end enums -->
 
  <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/epoch/v1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/epoch/v1/query.proto
+
+
+
+<a name="provenance.epoch.v1.QueryCurrentEpochRequest"></a>
+
+### QueryCurrentEpochRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `identifier` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.epoch.v1.QueryCurrentEpochResponse"></a>
+
+### QueryCurrentEpochResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `current_epoch` | [int64](#int64) |  |  |
+
+
+
+
+
+
+<a name="provenance.epoch.v1.QueryEpochsInfoRequest"></a>
+
+### QueryEpochsInfoRequest
+
+
+
+
+
+
+
+<a name="provenance.epoch.v1.QueryEpochsInfoResponse"></a>
+
+### QueryEpochsInfoResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `epochs` | [EpochInfo](#provenance.epoch.v1.EpochInfo) | repeated |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.epoch.v1.Query"></a>
+
+### Query
+Query defines the gRPC querier service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `EpochInfos` | [QueryEpochsInfoRequest](#provenance.epoch.v1.QueryEpochsInfoRequest) | [QueryEpochsInfoResponse](#provenance.epoch.v1.QueryEpochsInfoResponse) | EpochInfos provide running epochInfos | GET|/provenance/epoch/v1/epochs|
+| `CurrentEpoch` | [QueryCurrentEpochRequest](#provenance.epoch.v1.QueryCurrentEpochRequest) | [QueryCurrentEpochResponse](#provenance.epoch.v1.QueryCurrentEpochResponse) | CurrentEpoch provide current epoch of specified identifier | GET|/provenance/epoch/v1/current_epoch|
 
  <!-- end services -->
 
