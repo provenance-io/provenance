@@ -84,8 +84,10 @@ func (m *Migrator) Initialize() error {
 			return fmt.Errorf("error creating temporariy target data directory: %w", err)
 		}
 	} else {
-		//nolint:gosec // This is the correct permissions for this backup directory.
 		err = os.MkdirAll(m.TargetDataDir, 0755)
+		if err != nil {
+			return fmt.Errorf("error creating target data directory: %w", err)
+		}
 	}
 	return nil
 }
