@@ -1,11 +1,13 @@
 package cmd
 
 import (
+	"testing"
+
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
-	"github.com/provenance-io/provenance/app"
 	"github.com/spf13/cast"
 	"github.com/stretchr/testify/require"
-	"testing"
+
+	"github.com/provenance-io/provenance/app"
 )
 
 func TestIAVLConfig(t *testing.T) {

@@ -2,6 +2,7 @@ package client
 
 import (
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
+
 	"github.com/provenance-io/provenance/x/name/client/cli"
 	"github.com/provenance-io/provenance/x/name/client/rest"
 )

@@ -21,7 +21,9 @@ import (
 
 // Simulation operation weights constants
 const (
-	OpWeightMsgBindName   = "op_weight_msg_bind_name"
+	//nolint:gosec // not credentials
+	OpWeightMsgBindName = "op_weight_msg_bind_name"
+	//nolint:gosec // not credentials
 	OpWeightMsgDeleteName = "op_weight_msg_delete_name"
 )
 
