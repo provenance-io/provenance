@@ -18,7 +18,8 @@ func AccountAttributeKeyLegacy(acc sdk.AccAddress, attr types.Attribute) []byte 
 	if len(acc.Bytes()) != AttributeAddrLengthLegacy {
 		panic(fmt.Sprintf("unexpected key length (%d ≠ %d)", len(acc.Bytes()), AttributeKeyPrefixLegacy))
 	}
-	key := append(AttributeKeyPrefixLegacy, acc.Bytes()...)
+	key := AttributeKeyPrefixLegacy
+	key = append(key, acc.Bytes()...)
 	key = append(key, types.GetNameKeyBytes(attr.Name)...)
 	return append(key, attr.Hash()...)
 }

@@ -24,8 +24,8 @@ jobs:
     runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
     steps:
-      - uses: actions/checkout@v2
-      - name: Install Deps
+      - uses: actions/checkout@v3
+      - name: Install leveldb
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
@@ -63,7 +63,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build, install-runsim]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -89,7 +89,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build, install-runsim]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -117,7 +117,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build, install-runsim]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17

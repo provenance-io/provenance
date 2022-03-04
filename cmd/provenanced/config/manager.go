@@ -227,6 +227,7 @@ func appConfigIndexEventsWorkAround(configFilePath string, config *serverconfig.
 	if merr != nil {
 		panic(fmt.Errorf("marshaling index events to json: %v", merr))
 	}
+
 	bz, rerr := os.ReadFile(configFilePath)
 	if rerr != nil {
 		panic(fmt.Errorf("reading app config file: %v", rerr))
@@ -241,7 +242,8 @@ func appConfigIndexEventsWorkAround(configFilePath string, config *serverconfig.
 		}
 		fixedFileBz = append(fixedFileBz, '\n')
 	}
-	//nolint:gosec // This is the correct permissions for the config files.
+
+	//nolint:gosec // These are the correct permissions
 	werr := os.WriteFile(configFilePath, fixedFileBz, 0644)
 	if werr != nil {
 		panic(fmt.Errorf("writing fixec app config: %v", werr))
@@ -325,7 +327,8 @@ func generateAndWritePackedConfig(
 		cmd.Printf("Packed config:\n%s\n", packedJSON)
 	}
 	packedFile := GetFullPathToPackedConf(cmd)
-	//nolint:gosec // This is the correct permissions for the config files.
+
+	//nolint:gosec // These are the correct permissions
 	err = os.WriteFile(packedFile, packedJSON, 0644)
 	if err != nil {
 		panic(err)
@@ -469,6 +472,7 @@ func loadPackedConfig(cmd *cobra.Command) error {
 
 	// Read in the packed config if it exists.
 	packedConf := map[string]string{}
+
 	switch packedJSON, rerr := os.ReadFile(packedConfFile); {
 	case os.IsNotExist(rerr):
 		// Packed config file doesn't exist. Do nothing. Just let it use the defaults.

@@ -36,7 +36,7 @@ jobs:
     name: Build OSX
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Install osx tools
         run: |
           brew tap mitchellh/gon
@@ -78,7 +78,7 @@ jobs:
     name: Build Linux
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Setup go
         uses: actions/setup-go@v3
         with:
@@ -113,7 +113,7 @@ jobs:
     name: Create Release
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Create release ${{ needs.build_init.outputs.version }}
         uses: actions/create-release@v1
         id: create_release
@@ -137,7 +137,7 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       -
         name: Setup go
         uses: actions/setup-go@v3
@@ -217,7 +217,7 @@ jobs:
     name: Maven Publishing
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Java Setup
         uses: actions/setup-java@v3
