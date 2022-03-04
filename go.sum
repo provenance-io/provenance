@@ -916,8 +916,8 @@ github.com/prometheus/procfs v0.7.3 h1:4jVXhlkAyzOScmCkXBTOLRLTz8EeU+eyjrwB/EPq0
 github.com/prometheus/procfs v0.7.3/go.mod h1:cz+aTbrPOrUb4q7XlbU9ygM+/jj0fzG6c1xBZuNvfVA=
 github.com/prometheus/tsdb v0.6.2-0.20190402121629-4f204dcbc150/go.mod h1:qhTCs0VvXwvX/y3TZrWD7rabWM+ijKTux40TwIPHuXU=
 github.com/prometheus/tsdb v0.7.1/go.mod h1:qhTCs0VvXwvX/y3TZrWD7rabWM+ijKTux40TwIPHuXU=
-github.com/provenance-io/cosmos-sdk v0.45.0-pio-1-adr038 h1:2G9TDzsUWip5QoF21lb0LqcwrEwOC9AF4ES/vsFIndw=
-github.com/provenance-io/cosmos-sdk v0.45.0-pio-1-adr038/go.mod h1:rmH4ldTo6Lx5WG3hfTAafN0w+GL4FD9Q8B30X9YEiaM=
+github.com/provenance-io/cosmos-sdk v0.45.0-pio-1-adr038-rc1 h1:IWdq/RQGK3wZKL0ODq+pAou5KG+Knq2i/g3JnQcYBDc=
+github.com/provenance-io/cosmos-sdk v0.45.0-pio-1-adr038-rc1/go.mod h1:rmH4ldTo6Lx5WG3hfTAafN0w+GL4FD9Q8B30X9YEiaM=
 github.com/provenance-io/wasmd v0.22.0-pio-address-fix h1:oMgJkRT3nq1l58VcP56G39fLsKSQ1Nq44D9fafbdIh4=
 github.com/provenance-io/wasmd v0.22.0-pio-address-fix/go.mod h1:kNDnMAQDJyVek9k6SxCNijMCzOROzzUGBRT8r/vr7oY=
 github.com/rakyll/statik v0.1.7 h1:OF3QCZUuyPxuGEP7B4ypUa7sB/iHtqOTDYZXGM8KOdQ=
