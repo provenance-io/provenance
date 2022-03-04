@@ -184,7 +184,7 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) error {
 			return fmt.Errorf("could not set %q key/value: %w", dbName, err)
 		}
 		batchBytes += uint(len(v) + len(k))
-		if batchBytes >= m.BatchSize {
+		if m.BatchSize > 0 && batchBytes >= m.BatchSize {
 			logger.Info("Writing batch and creating a new one.",
 				"batch size (bytes)", commaString(batchBytes), "batch entries", commaString(batchEntries), "total entries", commaString(totalEntries))
 			if err = batch.Write(); err != nil {
@@ -197,6 +197,10 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) error {
 			batchBytes = 0
 			batchEntries = 0
 		}
+		if totalEntries % 250_000 == 0 {
+			logger.Info("Status",
+				"batch size (bytes)", commaString(batchBytes), "batch entries", commaString(batchEntries), "total entries", commaString(totalEntries))
+		}
 	}
 
 	if batchBytes > 0 {
@@ -208,9 +212,10 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) error {
 		if err = batch.Close(); err != nil {
 			return fmt.Errorf("could not close %q batch: %w", dbName, err)
 		}
+		batch = nil
 	}
 
-	logger.Info("Done", "total entries", totalEntries)
+	logger.Info("Done", "total entries", commaString(totalEntries))
 	return nil
 }
 
