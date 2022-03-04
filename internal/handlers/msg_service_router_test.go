@@ -131,8 +131,8 @@ func TestMsgService(t *testing.T) {
 	assert.Equal(t, antewrapper.AttributeKeyBaseFee, string(res.Events[14].Attributes[0].Key))
 	assert.Equal(t, "150atom", string(res.Events[14].Attributes[0].Value))
 	assert.Equal(t, "provenance.msgfees.v1.EventMsgFees", res.Events[15].Type)
-	assert.Equal(t, "msgFees", string(res.Events[15].Attributes[0].Key))
-	assert.Equal(t, "[{\"msgType\":\"/cosmos.bank.v1beta1.MsgSend\",\"count\":\"1\",\"total\":\"800hotdog\"}]", string(res.Events[15].Attributes[0].Value))
+	assert.Equal(t, "msg_fees", string(res.Events[15].Attributes[0].Key))
+	assert.Equal(t, "[{\"msg_type\":\"/cosmos.bank.v1beta1.MsgSend\",\"count\":\"1\",\"total\":\"800hotdog\"}]", string(res.Events[15].Attributes[0].Value))
 
 	msgbasedFee = msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewInt64Coin("atom", 10))
 	app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee)
@@ -160,8 +160,8 @@ func TestMsgService(t *testing.T) {
 	assert.Equal(t, antewrapper.AttributeKeyBaseFee, string(res.Events[14].Attributes[0].Key))
 	assert.Equal(t, "140atom", string(res.Events[14].Attributes[0].Value))
 	assert.Equal(t, "provenance.msgfees.v1.EventMsgFees", res.Events[15].Type)
-	assert.Equal(t, "msgFees", string(res.Events[15].Attributes[0].Key))
-	assert.Equal(t, "[{\"msgType\":\"/cosmos.bank.v1beta1.MsgSend\",\"count\":\"1\",\"total\":\"10atom\"}]", string(res.Events[15].Attributes[0].Value))
+	assert.Equal(t, "msg_fees", string(res.Events[15].Attributes[0].Key))
+	assert.Equal(t, "[{\"msg_type\":\"/cosmos.bank.v1beta1.MsgSend\",\"count\":\"1\",\"total\":\"10atom\"}]", string(res.Events[15].Attributes[0].Value))
 
 	msgbasedFee = msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewInt64Coin("nhash", 10))
 	app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee)
@@ -190,8 +190,8 @@ func TestMsgService(t *testing.T) {
 	assert.Equal(t, antewrapper.AttributeKeyBaseFee, string(res.Events[14].Attributes[0].Key))
 	assert.Equal(t, "190500000nhash", string(res.Events[14].Attributes[0].Value))
 	assert.Equal(t, "provenance.msgfees.v1.EventMsgFees", res.Events[15].Type)
-	assert.Equal(t, "msgFees", string(res.Events[15].Attributes[0].Key))
-	assert.Equal(t, "[{\"msgType\":\"/cosmos.bank.v1beta1.MsgSend\",\"count\":\"1\",\"total\":\"10nhash\"}]", string(res.Events[15].Attributes[0].Value))
+	assert.Equal(t, "msg_fees", string(res.Events[15].Attributes[0].Key))
+	assert.Equal(t, "[{\"msg_type\":\"/cosmos.bank.v1beta1.MsgSend\",\"count\":\"1\",\"total\":\"10nhash\"}]", string(res.Events[15].Attributes[0].Value))
 
 	msgbasedFee = msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewInt64Coin("atom", 100))
 	app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee)
@@ -220,8 +220,8 @@ func TestMsgService(t *testing.T) {
 	assert.Equal(t, antewrapper.AttributeKeyBaseFee, string(res.Events[14].Attributes[0].Key))
 	assert.Equal(t, "190500010nhash", string(res.Events[14].Attributes[0].Value))
 	assert.Equal(t, "provenance.msgfees.v1.EventMsgFees", res.Events[15].Type)
-	assert.Equal(t, "msgFees", string(res.Events[15].Attributes[0].Key))
-	assert.Equal(t, "[{\"msgType\":\"/cosmos.bank.v1beta1.MsgSend\",\"count\":\"1\",\"total\":\"100atom\"}]", string(res.Events[15].Attributes[0].Value))
+	assert.Equal(t, "msg_fees", string(res.Events[15].Attributes[0].Key))
+	assert.Equal(t, "[{\"msg_type\":\"/cosmos.bank.v1beta1.MsgSend\",\"count\":\"1\",\"total\":\"100atom\"}]", string(res.Events[15].Attributes[0].Value))
 }
 
 func TestMsgServiceAuthz(t *testing.T) {
@@ -263,8 +263,8 @@ func TestMsgServiceAuthz(t *testing.T) {
 	assert.Equal(t, antewrapper.AttributeKeyBaseFee, string(res.Events[14].Attributes[0].Key))
 	assert.Equal(t, "150atom", string(res.Events[14].Attributes[0].Value))
 	assert.Equal(t, "provenance.msgfees.v1.EventMsgFees", res.Events[15].Type)
-	assert.Equal(t, "msgFees", string(res.Events[15].Attributes[0].Key))
-	assert.Equal(t, "[{\"msgType\":\"/cosmos.bank.v1beta1.MsgSend\",\"count\":\"1\",\"total\":\"800hotdog\"}]", string(res.Events[15].Attributes[0].Value))
+	assert.Equal(t, "msg_fees", string(res.Events[15].Attributes[0].Key))
+	assert.Equal(t, "[{\"msg_type\":\"/cosmos.bank.v1beta1.MsgSend\",\"count\":\"1\",\"total\":\"800hotdog\"}]", string(res.Events[15].Attributes[0].Value))
 
 	// send 2 successful authz messages
 	msgExec = authztypes.NewMsgExec(addr2, []sdk.Msg{msg, msg})
@@ -289,8 +289,8 @@ func TestMsgServiceAuthz(t *testing.T) {
 	assert.Equal(t, antewrapper.AttributeKeyBaseFee, string(res.Events[19].Attributes[0].Key))
 	assert.Equal(t, "300atom", string(res.Events[19].Attributes[0].Value))
 	assert.Equal(t, "provenance.msgfees.v1.EventMsgFees", res.Events[20].Type)
-	assert.Equal(t, "msgFees", string(res.Events[20].Attributes[0].Key))
-	assert.Equal(t, "[{\"msgType\":\"/cosmos.bank.v1beta1.MsgSend\",\"count\":\"2\",\"total\":\"1600hotdog\"}]", string(res.Events[20].Attributes[0].Value))
+	assert.Equal(t, "msg_fees", string(res.Events[20].Attributes[0].Key))
+	assert.Equal(t, "[{\"msg_type\":\"/cosmos.bank.v1beta1.MsgSend\",\"count\":\"2\",\"total\":\"1600hotdog\"}]", string(res.Events[20].Attributes[0].Value))
 
 	// tx authz single send message without enough fees associated
 	fees = sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("hotdog", 1))
@@ -361,8 +361,8 @@ func TestMsgServiceAuthzAdditionalMsgFeeInDefaultDenom(t *testing.T) {
 	assert.Equal(t, antewrapper.AttributeKeyBaseFee, string(res.Events[14].Attributes[0].Key))
 	assert.Equal(t, "140atom", string(res.Events[14].Attributes[0].Value))
 	assert.Equal(t, "provenance.msgfees.v1.EventMsgFees", res.Events[15].Type)
-	assert.Equal(t, "msgFees", string(res.Events[15].Attributes[0].Key))
-	assert.Equal(t, "[{\"msgType\":\"/cosmos.bank.v1beta1.MsgSend\",\"count\":\"1\",\"total\":\"10atom\"}]", string(res.Events[15].Attributes[0].Value))
+	assert.Equal(t, "msg_fees", string(res.Events[15].Attributes[0].Key))
+	assert.Equal(t, "[{\"msg_type\":\"/cosmos.bank.v1beta1.MsgSend\",\"count\":\"1\",\"total\":\"10atom\"}]", string(res.Events[15].Attributes[0].Value))
 }
 
 func SignTxAndGetBytes(gaslimit uint64, fees sdk.Coins, encCfg simappparams.EncodingConfig, pubKey types.PubKey, privKey types.PrivKey, acct authtypes.BaseAccount, chainId string, msg ...sdk.Msg) ([]byte, error) {

@@ -5132,7 +5132,7 @@ EventMsgFee final event property for msg fee on type
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `msgType` | [string](#string) |  |  |
+| `msg_type` | [string](#string) |  |  |
 | `count` | [string](#string) |  |  |
 | `total` | [string](#string) |  |  |
 
@@ -5149,7 +5149,7 @@ EventMsgFees event emitted with summary of msg fees
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `msgFees` | [EventMsgFee](#provenance.msgfees.v1.EventMsgFee) | repeated |  |
+| `msg_fees` | [EventMsgFee](#provenance.msgfees.v1.EventMsgFee) | repeated |  |
 
 
 
