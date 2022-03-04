@@ -5,12 +5,13 @@ import (
 
 	"github.com/armon/go-metrics"
 
+	"github.com/tendermint/tendermint/libs/log"
+
 	sdkgas "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
-	"github.com/tendermint/tendermint/libs/log"
 )
 
 type FeeGasMeter struct {
