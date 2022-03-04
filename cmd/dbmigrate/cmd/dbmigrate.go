@@ -157,7 +157,7 @@ func IsPossibleDBType(dbType string) bool {
 func DoMigrateCmd(command *cobra.Command, homePath, sourceDBType, targetDBType, backupDir string, batchSizeMB int) error {
 	logger := server.GetServerContextFromCmd(command).Logger
 	logger.Info("Setting up database migrations.", "home", homePath, "source type", sourceDBType, "target type", targetDBType)
-	migrator, err := utils.SetUpMigrator(homePath, sourceDBType, targetDBType, backupDir, uint(batchSizeMB)*1_048_576) // 1,048,576 = 1,024 * 1,024.
+	migrator, err := utils.SetUpMigrator(homePath, sourceDBType, targetDBType, backupDir, uint(batchSizeMB)*utils.B_PER_MB)
 	if err != nil {
 		return err
 	}

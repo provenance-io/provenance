@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -19,6 +21,9 @@ import (
 
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
 )
+
+// B_PER_MB is the number of bytes in a megabyte.
+const B_PER_MB = 1_048_576
 
 // Migrator is an object to help guide a migration.
 type Migrator struct {
@@ -100,14 +105,45 @@ func (m *Migrator) Initialize() error {
 // Migrate converts all database dirs in the given homePath from the source underlying type to the target type.
 // It then copies everything else in the data dir and swaps out the existing data dir for the newly created one.
 func (m Migrator) Migrate(logger tmlog.Logger) (err error) {
+	// If this func doesn't complete fully, we want to output a message that the staging directory might still exist (and be quite large).
+	// Make a done channel for indicating normal finish and a signal channel for capturing interrupt signals like ctrl+c.
+	doneChan := make(chan bool, 1)
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+	// If we're returning an error, add the log message, and then always do a little cleanup.
 	defer func() {
 		if err != nil {
-			logger.Error("Staging directory might still exist due to error.", "dir", m.TargetDataDir)
+			logger.Error("The staging directory might still exist due to error.", "dir", m.TargetDataDir)
+		}
+		close(doneChan)
+		signal.Stop(sigChan)
+		close(sigChan)
+	}()
+	// We need to identify the currently running process so that any captured signal can be sent back to it.
+	proc, pErr := os.FindProcess(os.Getpid())
+	if pErr != nil {
+		return fmt.Errorf("could not identify the running process: %w", pErr)
+	}
+	// Monitor for the signals and handle them appropriately.
+	go func() {
+		select {
+		case s:= <-sigChan:
+			logger.Error("The staging directory might still exist due to early termination.", "dir", m.TargetDataDir)
+			signal.Stop(sigChan)
+			proc.Signal(s)
+			return
+		case <-doneChan:
+			return
 		}
 	}()
+
+	// Now we can get started.
 	m.timeStarted = time.Now()
-	logger.Info(fmt.Sprintf("Converting %d database directories from %q %s to %q %s",
-		len(m.ToConvert), m.SourceDBType, m.SourceDataDir, m.TargetDBType, m.TargetDataDir))
+	// Con
+	logger.Info(fmt.Sprintf("Converting %d Individual DBs.", len(m.ToConvert)),
+		"source type",  m.SourceDBType, "source dir", m.SourceDataDir,
+		"target type", m.TargetDBType, "staging dir", m.TargetDataDir,
+	)
 	counts := map[string]uint{}
 	for i, dbDir := range m.ToConvert {
 		count, err2 := m.MigrateDBDir(logger.With("db", strings.TrimSuffix(dbDir, ".db"), "progress", fmt.Sprintf("%d/%d", i+1, len(m.ToConvert))), dbDir)
@@ -120,8 +156,8 @@ func (m Migrator) Migrate(logger tmlog.Logger) (err error) {
 	logger.Info(fmt.Sprintf("Copying %d items from %s to %s", len(m.ToCopy), m.SourceDataDir, m.TargetDataDir))
 	for i, entry := range m.ToCopy {
 		logger.Info(fmt.Sprintf("%d/%d: Copying %s", i+1, len(m.ToCopy), entry))
-		if err := copier.Copy(filepath.Join(m.SourceDataDir, entry), filepath.Join(m.TargetDataDir, entry)); err != nil {
-			return fmt.Errorf("could not copy %s: %w", entry, err)
+		if err2 := copier.Copy(filepath.Join(m.SourceDataDir, entry), filepath.Join(m.TargetDataDir, entry)); err2 != nil {
+			return fmt.Errorf("could not copy %s: %w", entry, err2)
 		}
 	}
 
@@ -150,7 +186,7 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (uint, error) 
 	}
 	targetDataDirMode := targetDataDirInfo.Mode()
 
-	logger.Info("Setting up migration of directory.", "from", sourceDir, "to", targetDir)
+	logger.Info("Individual DB Migration: Setting up.", "from", sourceDir, "to", targetDir)
 
 	sourceDB, err := tmdb.NewDB(dbName, tmdb.BackendType(m.SourceDBType), sourceDir)
 	if err != nil {
@@ -186,7 +222,14 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (uint, error) 
 	totalEntries := uint(0)
 	batchEntries := uint(0)
 	batchBytes := uint(0)
-	logger.Info("Starting migration")
+	commonKeyVals := func() []interface{} {
+		return []interface{}{
+		"batch size (megabytes)", commaString(batchBytes/B_PER_MB),
+		"batch entries", commaString(batchEntries),
+		"total entries", commaString(totalEntries+batchEntries),
+		}
+	}
+	logger.Info("Individual DB Migration: Starting.")
 	for ; iter.Valid(); iter.Next() {
 		batchEntries++
 		v := iter.Value()
@@ -199,8 +242,7 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (uint, error) 
 		}
 		batchBytes += uint(len(v) + len(k))
 		if m.BatchSize > 0 && batchBytes >= m.BatchSize {
-			logger.Info("Writing batch and creating a new one.",
-				"batch size (bytes)", commaString(batchBytes), "batch entries", commaString(batchEntries), "total entries", commaString(totalEntries+batchEntries))
+			logger.Info("Writing batch and creating a new one.", commonKeyVals()...)
 			if err = batch.Write(); err != nil {
 				return totalEntries, fmt.Errorf("could not write %q batch: %w", dbName, err)
 			}
@@ -213,14 +255,12 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (uint, error) 
 			batchEntries = 0
 		}
 		if batchEntries % 250_000 == 0 {
-			logger.Info("Status",
-				"batch size (bytes)", commaString(batchBytes), "batch entries", commaString(batchEntries), "total entries", commaString(totalEntries+batchEntries))
+			logger.Info("Status", commonKeyVals()...)
 		}
 	}
 
 	if batchBytes > 0 {
-		logger.Info("Writing batch.",
-			"batch size (bytes)", commaString(batchBytes), "batch entries", commaString(batchEntries), "total entries", commaString(totalEntries+batchEntries))
+		logger.Info("Writing batch.", commonKeyVals()...)
 		if err = batch.Write(); err != nil {
 			return totalEntries-batchEntries, fmt.Errorf("could not write %q batch: %w", dbName, err)
 		}
@@ -231,7 +271,7 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (uint, error) 
 		batch = nil
 	}
 
-	logger.Info("Done", "total entries", commaString(totalEntries))
+	logger.Info("Individual DB Migration: Done.", "total entries", commaString(totalEntries))
 	return totalEntries, nil
 }
 
