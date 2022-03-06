@@ -136,6 +136,7 @@ func (m *Migrator) Migrate(logger tmlog.Logger) (err error) {
 		}()
 		select {
 		case s := <-sigChan:
+			signal.Stop(sigChan)
 			logger.Error("The staging directory might still due to early termination.", "dir", m.TargetDataDir)
 			err2 := proc.Signal(s)
 			if err2 != nil {
