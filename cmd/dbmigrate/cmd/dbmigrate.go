@@ -128,7 +128,7 @@ To control the log level and log format of this utility, use these environment v
 		},
 	}
 	rv.Flags().String(FlagBackupDir, "", "directory to back up the current data directory to (default is {home}/data-{timestamp}-{dbtype})")
-	rv.Flags().Int(FlagBatchSize, 0, "batch size (in megabytes): after a batch reaches this size it is written and a new one is started. (default is 0 = unlimited)")
+	rv.Flags().Int(FlagBatchSize, 8_192, "(in megabytes) after a batch reaches this size it is written and a new one is started (0 = unlimited) ")
 	return rv
 }
 
