@@ -109,14 +109,14 @@ func (m *Migrator) Migrate(logger tmlog.Logger) (err error) {
 	// Make a done channel for indicating normal finish and a signal channel for capturing interrupt signals like ctrl+c.
 	doneChan := make(chan bool, 1)
 	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM, syscall.SIGSEGV, syscall.SIGKILL, syscall.SIGQUIT)
 	// If we're returning an error, add the log message, and then always do a little cleanup.
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("recovered from panic: %v", r)
 		}
 		if err != nil {
-			logger.Error("The staging directory might still exists to error.", "dir", m.TargetDataDir)
+			logger.Error("The staging directory might still exists due to error.", "dir", m.TargetDataDir)
 		}
 		close(doneChan)
 		signal.Stop(sigChan)
@@ -129,13 +129,17 @@ func (m *Migrator) Migrate(logger tmlog.Logger) (err error) {
 	}
 	// Monitor for the signals and handle them appropriately.
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				logger.Error("The staging directory might still due to panic.", "dir", m.TargetDataDir)
+			}
+		}()
 		select {
 		case s := <-sigChan:
 			logger.Error("The staging directory might still due to early termination.", "dir", m.TargetDataDir)
-			signal.Stop(sigChan)
 			err2 := proc.Signal(s)
 			if err2 != nil {
-				panic(err2)
+				logger.Error("Error propagating signal.", "error", err2)
 			}
 			return
 		case <-doneChan:
@@ -145,7 +149,6 @@ func (m *Migrator) Migrate(logger tmlog.Logger) (err error) {
 
 	// Now we can get started.
 	m.TimeStarted = time.Now()
-	// Con
 	logger.Info(fmt.Sprintf("Converting %d Individual DBs.", len(m.ToConvert)),
 		"source type", m.SourceDBType, "source dir", m.SourceDataDir,
 		"target type", m.TargetDBType, "staging dir", m.TargetDataDir,
@@ -198,7 +201,11 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (uint, error) 
 	if err != nil {
 		return 0, fmt.Errorf("could not open %q source db: %w", dbName, err)
 	}
-	defer sourceDB.Close()
+	defer func() {
+		if sourceDB != nil {
+			sourceDB.Close()
+		}
+	}()
 
 	if targetDir != m.TargetDataDir {
 		err = os.MkdirAll(targetDir, targetDataDirMode)
@@ -216,7 +223,12 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (uint, error) 
 	if err != nil {
 		return 0, fmt.Errorf("could not create %q source iterator: %w", dbName, err)
 	}
-	defer iter.Close()
+	defer func() {
+		// Sometimes, calling iter.Close() was throwing a segmentation fault, that, for some reason, doesn't reach the sigChan notification.
+		if iter != nil && iter.Valid() {
+			iter.Close()
+		}
+	}()
 
 	batch := targetDB.NewBatch()
 	defer func() {
@@ -228,16 +240,19 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (uint, error) 
 	totalEntries := uint(0)
 	batchEntries := uint(0)
 	batchBytes := uint(0)
+	batchIndex := uint(1)
 	commonKeyVals := func() []interface{} {
 		return []interface{}{
+			"batch index", commaString(batchIndex),
 			"batch size (megabytes)", commaString(batchBytes / BytesPerMB),
 			"batch entries", commaString(batchEntries),
 			"total entries", commaString(totalEntries + batchEntries),
 		}
 	}
-	// Output a status line every 10 seconds.
+	// Output a status line every 5 seconds.
 	stopTickerChan := make(chan bool, 1)
-	ticker := time.NewTicker(10 * time.Second)
+	tickerPeriod := 5 * time.Second
+	ticker := time.NewTicker(tickerPeriod)
 	defer func() {
 		close(stopTickerChan)
 	}()
@@ -266,17 +281,29 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (uint, error) 
 		batchBytes += uint(len(v) + len(k))
 		if m.BatchSize > 0 && batchBytes >= m.BatchSize {
 			logger.Info("Writing batch and creating a new one.", commonKeyVals()...)
+			ticker.Reset(tickerPeriod)
 			if err = batch.Write(); err != nil {
+				// If the write fails, closing the db can sometimes cause a segmentation fault.
+				sourceDB = nil
 				return totalEntries, fmt.Errorf("could not write %q batch: %w", dbName, err)
 			}
 			totalEntries += batchEntries
-			if err = batch.Close(); err != nil {
+			err = batch.Close()
+			batch = nil
+			if err != nil {
+				// If closing the batch fails, closing the db can sometimes cause a segmentation fault.
+				sourceDB = nil
 				return totalEntries, fmt.Errorf("could not close %q batch: %w", dbName, err)
 			}
 			batch = targetDB.NewBatch()
+			batchIndex++
 			batchBytes = 0
 			batchEntries = 0
 		}
+	}
+
+	if err = iter.Error(); err != nil {
+		return totalEntries, fmt.Errorf("iterator error: %w", err)
 	}
 
 	if batchBytes > 0 {
@@ -285,10 +312,11 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (uint, error) 
 			return totalEntries - batchEntries, fmt.Errorf("could not write %q batch: %w", dbName, err)
 		}
 		totalEntries += batchEntries
-		if err = batch.Close(); err != nil {
-			return totalEntries, fmt.Errorf("could not close %q batch: %w", dbName, err)
-		}
-		batch = nil
+	}
+	err = batch.Close()
+	batch = nil
+	if err != nil {
+		return totalEntries, fmt.Errorf("could not close %q batch: %w", dbName, err)
 	}
 
 	logger.Info("Individual DB Migration: Done.", "total entries", commaString(totalEntries))
