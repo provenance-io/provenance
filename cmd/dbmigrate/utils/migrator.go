@@ -109,7 +109,7 @@ func (m *Migrator) Migrate(logger tmlog.Logger) (err error) {
 	// Make a done channel for indicating normal finish and a signal channel for capturing interrupt signals like ctrl+c.
 	doneChan := make(chan bool, 1)
 	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM, syscall.SIGSEGV, syscall.SIGKILL, syscall.SIGQUIT)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM, syscall.SIGSEGV, syscall.SIGQUIT)
 	// If we're returning an error, add the log message, and then always do a little cleanup.
 	defer func() {
 		if r := recover(); r != nil {
