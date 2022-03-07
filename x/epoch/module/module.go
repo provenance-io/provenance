@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
-	// "github.com/provenance-io/provenance/x/epoch/client/cli"
+	cli "github.com/provenance-io/provenance/x/epoch/client/cli"
 	"github.com/provenance-io/provenance/x/epoch/keeper"
 	epoch "github.com/provenance-io/provenance/x/epoch/types"
 
@@ -81,7 +81,7 @@ func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, m
 
 // GetQueryCmd returns the cli query commands for the epoch module
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return nil
+	return cli.GetQueryCmd()
 }
 
 // GetTxCmd returns the transaction commands for the epoch module
