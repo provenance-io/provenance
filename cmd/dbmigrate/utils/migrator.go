@@ -20,8 +20,6 @@ import (
 const (
 	// BytesPerMB is the number of bytes in a megabyte.
 	BytesPerMB = 1_048_576
-	// DirDateFormat is the format string used in dated directory names.
-	DirDateFormat = "2006-01-02-15-04-05"
 	// TickerOff is a really long time period that can effectively turn a ticker off.
 	// 1,000,000 hours is a little over 114 years (and is also about 1/3 max int64 as nanoseconds).
 	TickerOff = 1_000_000 * time.Hour
@@ -68,12 +66,15 @@ type Migrator struct {
 	// Each entry is relative to the data directory.
 	ToCopy []string
 
+	// Permissions are the permissions to use on any directories created.
+	Permissions os.FileMode
+
 	// StatusPeriod is the max time period between status messages.
 	// Must be at least 1 second. Default is 5 seconds.
 	StatusPeriod time.Duration
-
-	// Permissions are the permissions to use on any directories created.
-	Permissions os.FileMode
+	// DirDateFormat is the format string used in dated directory names.
+	// Default is "2006-01-02-15-04-05".
+	DirDateFormat string
 
 	// TimeStarted is the time that the migration was started.
 	// This is set during the call to Migrate.
@@ -110,11 +111,14 @@ func (m *Migrator) ApplyDefaults() {
 	if len(m.SourceDataDir) == 0 && len(m.HomePath) > 0 {
 		m.SourceDataDir = filepath.Join(m.HomePath, "data")
 	}
+	if len(m.DirDateFormat) == 0 {
+		m.DirDateFormat = "2006-01-02-15-04-05"
+	}
 	if len(m.StagingDataDir) == 0 && len(m.StagingDir) > 0 {
-		m.StagingDataDir = filepath.Join(m.StagingDir, "data-dbmigrate-tmp-%s-%s", time.Now().Format(DirDateFormat), m.TargetDBType)
+		m.StagingDataDir = filepath.Join(m.StagingDir, "data-dbmigrate-tmp-%s-%s", time.Now().Format(m.DirDateFormat), m.TargetDBType)
 	}
 	if len(m.BackupDataDir) == 0 && len(m.BackupDir) > 0 {
-		m.BackupDataDir = filepath.Join(m.BackupDir, fmt.Sprintf("data-%s-%s", time.Now().Format(DirDateFormat), m.SourceDBType))
+		m.BackupDataDir = filepath.Join(m.BackupDir, fmt.Sprintf("data-%s-%s", time.Now().Format(m.DirDateFormat), m.SourceDBType))
 	}
 	// If we can't source the data directory, we probably can't read it and an error will be returned from something else.
 	// For simplicity, we're not really going to care about that error right here, though.
@@ -155,11 +159,14 @@ func (m Migrator) ValidateBasic() error {
 	if len(m.BackupDataDir) == 0 {
 		return errors.New("no BackupDataDir defined")
 	}
+	if m.Permissions == 0 {
+		return errors.New("no Permissions defined")
+	}
 	if m.StatusPeriod < time.Second {
 		return fmt.Errorf("status period %s cannot be less than 1s", m.StatusPeriod)
 	}
-	if m.Permissions == 0 {
-		return errors.New("no Permissions defined")
+	if len(m.DirDateFormat) == 0 {
+		return errors.New("no DirDateFormat defined")
 	}
 	return nil
 }
@@ -371,7 +378,7 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (uint, error) 
 	// There's a couple places in here where we need to write and close the batch. But the safety stuff (on errors)
 	// is needed in both places, so it's pulled out into this anonymous function.
 	writeAndCloseBatch := func() error {
-		// Using WriteSync here instead of Write because sometimes the Close was causing a segfault, and mabye this helps?
+		// Using WriteSync here instead of Write because sometimes the Close was causing a segfault, and maybe this helps?
 		if err = batch.WriteSync(); err != nil {
 			// If the write fails, closing the db can sometimes cause a segmentation fault.
 			targetDB = nil
@@ -512,7 +519,7 @@ func (m Migrator) MakeSummaryString(counts map[string]uint) string {
 	return sb.String()
 }
 
-// splitDBPath combine the provided path elements into a full path to a db dirctory, then
+// splitDBPath combine the provided path elements into a full path to a db directory, then
 // breaks it down two parts:
 // 1) A path to the directory to hold the db directory,
 // 2) The name of the db.
