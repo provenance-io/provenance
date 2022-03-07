@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -23,6 +24,7 @@ import (
 const (
 	FlagBackupDir = "backup-dir"
 	FlagBatchSize = "batch-size"
+	FlagStagingDir = "staging-dir"
 )
 
 var PossibleDBTypes = []string{
@@ -110,13 +112,19 @@ To control the log level and log format of this utility, use these environment v
 				logger.Info(fmt.Sprintf("Database already has type %q. Nothing to do.", targetDBType))
 				return nil
 			}
-			batchSizeMB, err := command.Flags().GetInt(FlagBatchSize)
+			batchSizeMB, err := command.Flags().GetUint(FlagBatchSize)
 			if err != nil {
 				return fmt.Errorf("could not get batch size: %w", err)
 			}
-			// If this is just an empty string, the default ends up being used.
-			backupDir, _ := command.Flags().GetString(FlagBackupDir)
-			err = DoMigrateCmd(command, tmConfig.RootDir, sourceDBType, targetDBType, backupDir, batchSizeMB)
+			migrator := &utils.Migrator{
+				HomePath:       tmConfig.RootDir,
+				SourceDBType:   sourceDBType,
+				TargetDBType:   targetDBType,
+				BatchSize:      batchSizeMB*utils.BytesPerMB,
+			}
+			migrator.BackupDir, _ = command.Flags().GetString(FlagBackupDir)
+			migrator.StagingDir, _ = command.Flags().GetString(FlagStagingDir)
+			err = DoMigrateCmd(command, migrator)
 			if err != nil {
 				logger.Error(err.Error())
 				// If this returns an error, the help is printed. But that isn't wanted here.
@@ -127,8 +135,9 @@ To control the log level and log format of this utility, use these environment v
 			return nil
 		},
 	}
-	rv.Flags().String(FlagBackupDir, "", "directory to back up the current data directory to (default is {home}/data-{timestamp}-{dbtype})")
-	rv.Flags().Int(FlagBatchSize, 8_192, "(in megabytes) after a batch reaches this size it is written and a new one is started (0 = unlimited) ")
+	rv.Flags().String(FlagBackupDir, "", "directory to back up the current data directory to (default is {home}/data-{timestamp}-{source dbtype})")
+	rv.Flags().String(FlagStagingDir, "", "staging directory to use (default is {home}/data-dbmigrate-tmp-{timestamp}-{target dbtype})")
+	rv.Flags().Uint(FlagBatchSize, 2_048, "(in megabytes) after a batch reaches this size it is written and a new one is started (0 = unlimited) ")
 	return rv
 }
 
@@ -154,10 +163,10 @@ func IsPossibleDBType(dbType string) bool {
 }
 
 // DoMigrateCmd does all the work associated with the dbmigrate command (assuming that inputs have been validated).
-func DoMigrateCmd(command *cobra.Command, homePath, sourceDBType, targetDBType, backupDir string, batchSizeMB int) error {
+func DoMigrateCmd(command *cobra.Command, migrator *utils.Migrator) error {
 	logger := server.GetServerContextFromCmd(command).Logger
-	logger.Info("Setting up database migrations.", "home", homePath, "source type", sourceDBType, "target type", targetDBType)
-	migrator, err := utils.SetUpMigrator(homePath, sourceDBType, targetDBType, backupDir, uint(batchSizeMB)*utils.BytesPerMB)
+	logger.Info("Setting up database migrations.")
+	err := migrator.Initialize()
 	if err != nil {
 		return err
 	}
@@ -166,10 +175,45 @@ func DoMigrateCmd(command *cobra.Command, homePath, sourceDBType, targetDBType, 
 	if err != nil {
 		return err
 	}
-	err = migrator.UpdateConfig(logger, command)
+	logger.Info("Updating config.")
+	var oldValue string
+	oldValue, err = UpdateDBBackendConfigValue(command, migrator.TargetDBType)
 	if err != nil {
 		return err
 	}
+	logger.Info("Config Updated.", "key", "db_backend", "was", oldValue, "is now", migrator.TargetDBType)
 	logger.Info("Done migrating databases.")
 	return nil
+}
+
+// UpdateDBBackendConfigValue updates the db backend value in the config file and returns the value it used to be.
+func UpdateDBBackendConfigValue(command *cobra.Command, newValue string) (string, error) {
+	// Warning: This wipes out all the viper setup stuff up to this point.
+	// It needs to be done so that just the file values or defaults are loaded
+	// without considering environment variables.
+	// This is needed, at least, so that the log_level and log_format entries aren't changed.
+	// It can't be undone because viper.New() overwrites the global Viper instance, and there is no way to set it back to what it was.
+	// The contexts could get the original viper instance, but there's no guarantee that nothing uses the global functions.
+	// So I figure it's best to at least keep them all in sync.
+	// Ideally, it doesn't matter, though, since everything *should* be reloaded the same way (but who really knows).
+	clientCtx := client.GetClientContextFromCmd(command)
+	clientCtx.Viper = viper.New()
+	server.GetServerContextFromCmd(command).Viper = clientCtx.Viper
+	if err := client.SetCmdClientContext(command, clientCtx); err != nil {
+		return "", fmt.Errorf("could not set client context: %w", err)
+	}
+
+	// Now that we have a clean viper, load the config from files again.
+	if err := config.LoadConfigFromFiles(command); err != nil {
+		return "", fmt.Errorf("could not load config from files: %w", err)
+	}
+
+	tmConfig, err := config.ExtractTmConfig(command)
+	if err != nil {
+		return "", fmt.Errorf("could not extract Tendermint config: %w", err)
+	}
+	oldValue := tmConfig.DBBackend
+	tmConfig.DBBackend = newValue
+	config.SaveConfigs(command, nil, tmConfig, nil, false)
+	return oldValue, nil
 }
