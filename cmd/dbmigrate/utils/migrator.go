@@ -153,6 +153,7 @@ func (m *Migrator) Migrate(logger tmlog.Logger) (err error) {
 	logger.Info(fmt.Sprintf("Converting %d Individual DBs.", len(m.ToConvert)),
 		"source type", m.SourceDBType, "source dir", m.SourceDataDir,
 		"target type", m.TargetDBType, "staging dir", m.TargetDataDir,
+		"batch size", commaString(m.BatchSize/BytesPerMB),
 	)
 	counts := map[string]uint{}
 	for i, dbDir := range m.ToConvert {
@@ -190,55 +191,13 @@ func (m *Migrator) Migrate(logger tmlog.Logger) (err error) {
 func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (uint, error) {
 	sourceDir, dbName := splitDBPath(m.SourceDataDir, dbDir)
 	targetDir, _ := splitDBPath(m.TargetDataDir, dbDir)
-	targetDataDirInfo, err := os.Stat(m.TargetDataDir)
-	if err != nil {
-		return 0, fmt.Errorf("could not stat target data dir: %w", err)
-	}
-	targetDataDirMode := targetDataDirInfo.Mode()
-
 	logger.Info("Individual DB Migration: Setting up.", "from", sourceDir, "to", targetDir)
 
-	sourceDB, err := tmdb.NewDB(dbName, tmdb.BackendType(m.SourceDBType), sourceDir)
-	if err != nil {
-		return 0, fmt.Errorf("could not open %q source db: %w", dbName, err)
-	}
-	defer func() {
-		if sourceDB != nil {
-			sourceDB.Close()
-		}
-	}()
-
-	if targetDir != m.TargetDataDir {
-		err = os.MkdirAll(targetDir, targetDataDirMode)
-		if err != nil {
-			return 0, fmt.Errorf("could not create target sub-directory: %w", err)
-		}
-	}
-	targetDB, err := tmdb.NewDB(dbName, tmdb.BackendType(m.TargetDBType), targetDir)
-	if err != nil {
-		return 0, fmt.Errorf("could not open %q target db: %w", dbName, err)
-	}
-	defer targetDB.Close()
-
-	iter, err := sourceDB.Iterator(nil, nil)
-	if err != nil {
-		return 0, fmt.Errorf("could not create %q source iterator: %w", dbName, err)
-	}
-	defer func() {
-		// Sometimes, calling iter.Close() was throwing a segmentation fault, that, for some reason, doesn't reach the sigChan notification.
-		if iter != nil && iter.Valid() {
-			iter.Close()
-		}
-	}()
-
-	batch := targetDB.NewBatch()
-	defer func() {
-		if batch != nil {
-			batch.Close()
-		}
-	}()
-
-	totalEntries := uint(0)
+	// Define some counters used in log messages, and a function to make it easy to add them all to log messages.
+	var err error
+	tickerOn := 5 * time.Second
+	tickerOff := 1_000_000 * time.Hour // = a little more than 114 years.
+	writtenEntries := uint(0)
 	batchEntries := uint(0)
 	batchBytes := uint(0)
 	batchIndex := uint(1)
@@ -247,81 +206,154 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (uint, error) 
 			"batch index", commaString(batchIndex),
 			"batch size (megabytes)", commaString(batchBytes / BytesPerMB),
 			"batch entries", commaString(batchEntries),
-			"total entries", commaString(totalEntries + batchEntries),
+			"total entries", commaString(writtenEntries + batchEntries),
+			"run time", fmt.Sprintf("%s", time.Since(m.TimeStarted)),
 		}
 	}
-	// Output a status line every 5 seconds.
-	stopTickerChan := make(chan bool, 1)
-	tickerPeriod := 5 * time.Second
-	ticker := time.NewTicker(tickerPeriod)
+
+	// There's several things that need closing and sometimes calling close can cause a segmentation fault that,
+	// for some reason, doesn't reach the sigChan notification set up in the Migrate method.
+	// So just to have clearer control over closing order, they're all defined at once and closed in a single defer function.
+	var sourceDB, targetDB tmdb.DB
+	var iter tmdb.Iterator
+	var batch tmdb.Batch
+	var statusTicker, writeTicker *time.Ticker
+	stopTickers := make(chan bool, 1)
 	defer func() {
-		close(stopTickerChan)
+		if iter != nil {
+			iter.Close()
+		}
+		if sourceDB != nil {
+			sourceDB.Close()
+		}
+		if batch != nil {
+			batch.Close()
+		}
+		if targetDB != nil {
+			targetDB.Close()
+		}
+		close(stopTickers)
+		if statusTicker != nil {
+			statusTicker.Stop()
+		}
+		if writeTicker != nil {
+			writeTicker.Stop()
+		}
 	}()
+
+	// Set up a couple different tickers for outputting different status messages at different times.
+	writeTicker = time.NewTicker(tickerOff)
+	statusTicker = time.NewTicker(tickerOff)
 	go func() {
 		for {
 			select {
-			case <-ticker.C:
+			case <-statusTicker.C:
 				logger.Info("Status", commonKeyVals()...)
-			case <-stopTickerChan:
-				ticker.Stop()
+			case <-writeTicker.C:
+				logger.Info("Still writing...", commonKeyVals()...)
+			case <-stopTickers:
 				return
 			}
 		}
 	}()
+
+	// In at least one case (the snapshots/metadata db), there's a sub-directory that needs to be created in order to
+	// safely open a new database in it.
+	if targetDir != m.TargetDataDir {
+		var targetDataDirInfo os.FileInfo
+		targetDataDirInfo, err = os.Stat(m.TargetDataDir)
+		if err != nil {
+			return 0, fmt.Errorf("could not stat target data dir: %w", err)
+		}
+		err = os.MkdirAll(targetDir, targetDataDirInfo.Mode())
+		if err != nil {
+			return 0, fmt.Errorf("could not create target sub-directory: %w", err)
+		}
+	}
+
+	sourceDB, err = tmdb.NewDB(dbName, tmdb.BackendType(m.SourceDBType), sourceDir)
+	if err != nil {
+		return 0, fmt.Errorf("could not open %q source db: %w", dbName, err)
+	}
+
+	targetDB, err = tmdb.NewDB(dbName, tmdb.BackendType(m.TargetDBType), targetDir)
+	if err != nil {
+		return 0, fmt.Errorf("could not open %q target db: %w", dbName, err)
+	}
+
+	iter, err = sourceDB.Iterator(nil, nil)
+	if err != nil {
+		return 0, fmt.Errorf("could not create %q source iterator: %w", dbName, err)
+	}
+
+	// There's a couple places in here where we need to write and close the batch. But the safety stuff (on errors)
+	// is needed in both places, so it's pulled out into this anonymous function.
+	writeAndCloseBatch := func() error {
+		// Using WriteSync here instead of Write because sometimes the Close was causing a segfault, and mabye this helps?
+		if err = batch.WriteSync(); err != nil {
+			// If the write fails, closing the db can sometimes cause a segmentation fault.
+			targetDB = nil
+			return fmt.Errorf("could not write %q batch: %w", dbName, err)
+		}
+		writtenEntries += batchEntries
+		err = batch.Close()
+		if err != nil {
+			// If closing the batch fails, closing the db can sometimes cause a segmentation fault.
+			targetDB = nil
+			// Similarly, calling close a second time can segfault.
+			batch = nil
+			return fmt.Errorf("could not close %q batch: %w", dbName, err)
+		}
+		return nil
+	}
+
 	logger.Info("Individual DB Migration: Starting.")
+	batch = targetDB.NewBatch()
+	statusTicker.Reset(tickerOn)
 	for ; iter.Valid(); iter.Next() {
-		batchEntries++
 		v := iter.Value()
 		if v == nil {
 			v = []byte{}
 		}
 		k := iter.Key()
 		if err = batch.Set(k, v); err != nil {
-			return totalEntries, fmt.Errorf("could not set %q key/value: %w", dbName, err)
+			return writtenEntries, fmt.Errorf("could not set %q key/value: %w", dbName, err)
 		}
+		batchEntries++
 		batchBytes += uint(len(v) + len(k))
 		if m.BatchSize > 0 && batchBytes >= m.BatchSize {
-			logger.Info("Writing batch and creating a new one.", commonKeyVals()...)
-			ticker.Reset(tickerPeriod)
-			if err = batch.Write(); err != nil {
-				// If the write fails, closing the db can sometimes cause a segmentation fault.
-				sourceDB = nil
-				return totalEntries, fmt.Errorf("could not write %q batch: %w", dbName, err)
+			statusTicker.Reset(tickerOff)
+
+			writeTicker.Reset(tickerOn)
+			logger.Info("Writing intermediate batch.", commonKeyVals()...)
+			if err = writeAndCloseBatch(); err != nil {
+				return writtenEntries, err
 			}
-			totalEntries += batchEntries
-			err = batch.Close()
-			batch = nil
-			if err != nil {
-				// If closing the batch fails, closing the db can sometimes cause a segmentation fault.
-				sourceDB = nil
-				return totalEntries, fmt.Errorf("could not close %q batch: %w", dbName, err)
-			}
+			writeTicker.Reset(tickerOff)
+
+			logger.Info("Starting new batch.", commonKeyVals())
 			batch = targetDB.NewBatch()
 			batchIndex++
 			batchBytes = 0
 			batchEntries = 0
+			statusTicker.Reset(tickerOn)
 		}
 	}
+	statusTicker.Reset(tickerOff)
 
 	if err = iter.Error(); err != nil {
-		return totalEntries, fmt.Errorf("iterator error: %w", err)
+		return writtenEntries, fmt.Errorf("iterator error: %w", err)
 	}
 
-	if batchBytes > 0 {
-		logger.Info("Writing batch.", commonKeyVals()...)
-		if err = batch.Write(); err != nil {
-			return totalEntries - batchEntries, fmt.Errorf("could not write %q batch: %w", dbName, err)
-		}
-		totalEntries += batchEntries
+	writeTicker.Reset(tickerOn)
+	logger.Info("Writing final batch.", commonKeyVals()...)
+	if err = writeAndCloseBatch(); err != nil {
+		return writtenEntries, err
 	}
-	err = batch.Close()
-	batch = nil
-	if err != nil {
-		return totalEntries, fmt.Errorf("could not close %q batch: %w", dbName, err)
-	}
+	writeTicker.Reset(tickerOff)
 
-	logger.Info("Individual DB Migration: Done.", "total entries", commaString(totalEntries))
-	return totalEntries, nil
+	logger.Info("Individual DB Migration: Done.", "total entries", commaString(writtenEntries))
+	return writtenEntries, nil
 }
 
 // UpdateConfig updates the config file to reflect the new database type.
