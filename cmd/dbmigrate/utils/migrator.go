@@ -220,24 +220,28 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (uint, error) 
 	var statusTicker, writeTicker *time.Ticker
 	stopTickers := make(chan bool, 1)
 	defer func() {
+		// closing the stopTickers chan will trigger the status logging subprocess to finish up.
+		close(stopTickers)
+		// Then we can stop the tickers (just to be safe).
+		if statusTicker != nil {
+			statusTicker.Stop()
+		}
+		if writeTicker != nil {
+			writeTicker.Stop()
+		}
+		// iter before sourceDB because closing the sourceDB might remove things needed for the iterator to close.
 		if iter != nil {
 			iter.Close()
 		}
 		if sourceDB != nil {
 			sourceDB.Close()
 		}
+		// batch before targetDB because closing the targetDB might remove things needed for the batch to close.
 		if batch != nil {
 			batch.Close()
 		}
 		if targetDB != nil {
 			targetDB.Close()
-		}
-		close(stopTickers)
-		if statusTicker != nil {
-			statusTicker.Stop()
-		}
-		if writeTicker != nil {
-			writeTicker.Stop()
 		}
 	}()
 
