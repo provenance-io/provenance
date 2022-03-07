@@ -22,8 +22,8 @@ import (
 )
 
 const (
-	FlagBackupDir = "backup-dir"
-	FlagBatchSize = "batch-size"
+	FlagBackupDir  = "backup-dir"
+	FlagBatchSize  = "batch-size"
 	FlagStagingDir = "staging-dir"
 )
 
@@ -117,10 +117,10 @@ To control the log level and log format of this utility, use these environment v
 				return fmt.Errorf("could not get batch size: %w", err)
 			}
 			migrator := &utils.Migrator{
-				HomePath:       tmConfig.RootDir,
-				SourceDBType:   sourceDBType,
-				TargetDBType:   targetDBType,
-				BatchSize:      batchSizeMB*utils.BytesPerMB,
+				HomePath:     tmConfig.RootDir,
+				SourceDBType: sourceDBType,
+				TargetDBType: targetDBType,
+				BatchSize:    batchSizeMB * utils.BytesPerMB,
 			}
 			migrator.BackupDir, _ = command.Flags().GetString(FlagBackupDir)
 			migrator.StagingDir, _ = command.Flags().GetString(FlagStagingDir)

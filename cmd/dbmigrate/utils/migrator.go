@@ -16,7 +16,6 @@ import (
 	tmdb "github.com/tendermint/tm-db"
 )
 
-
 const (
 	// BytesPerMB is the number of bytes in a megabyte.
 	BytesPerMB = 1_048_576
@@ -129,7 +128,7 @@ func (m *Migrator) ApplyDefaults() {
 	}
 	// If we can't source the data directory, we probably can't read it and an error will be returned from something else.
 	// For simplicity, we're not really going to care about that error right here, though.
-	if m.Permissions == 0 && len(m.SourceDataDir) > 0{
+	if m.Permissions == 0 && len(m.SourceDataDir) > 0 {
 		sourceDirInfo, err := os.Stat(m.SourceDataDir)
 		if err == nil {
 			m.Permissions = sourceDirInfo.Mode()
@@ -311,7 +310,7 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (uint, error) 
 			"batch size (megabytes)", commaString(batchBytes / BytesPerMB),
 			"batch entries", commaString(batchEntries),
 			"db entries", commaString(writtenEntries + batchEntries),
-			"run time", fmt.Sprintf("%s", time.Since(m.TimeStarted)),
+			"run time", time.Since(m.TimeStarted).String(),
 		}
 	}
 
@@ -474,7 +473,7 @@ func (m Migrator) MoveWithStatusUpdates(logger tmlog.Logger, from, to string) er
 		return []interface{}{
 			"from", from,
 			"to", to,
-			"run time", fmt.Sprintf("%s", time.Since(m.TimeStarted)),
+			"run time", time.Since(m.TimeStarted).String(),
 		}
 	}
 	moveTicker = time.NewTicker(m.StatusPeriod)
@@ -518,7 +517,7 @@ func (m Migrator) MakeSummaryString(counts map[string]uint) string {
 	addLine("%16s: %s", "Run Time", runTime)
 	addLine("%16s: %s", "Data Dir", m.SourceDataDir)
 	addLine("%16s: %s", "Staging Dir", m.StagingDir)
-	addLine("%16s: %s", "Backup Dir",  m.BackupDataDir)
+	addLine("%16s: %s", "Backup Dir", m.BackupDataDir)
 	addLine("%16s: %s", "Source DB Type", m.SourceDBType)
 	addLine("%16s: %s", "New DB Type", m.TargetDBType)
 	addLine("%16s: %s", fmt.Sprintf("%s (%d)", copyHead, len(m.ToCopy)), strings.Join(m.ToCopy, "  "))
