@@ -27,8 +27,15 @@ const (
 
 // Migrator is an object to help guide a migration.
 // The following MUST be defined: SourceDBType, TargetDBType.
+//
 // These must also be defined, but can have defaults applied using ApplyDefaults:
-// StagingDir, BackupDir, SourceDataDir, StagingDataDir, BackupDataDir, StatusPeriod.
+// StagingDir, BackupDir, SourceDataDir, StagingDataDir, BackupDataDir, Permissions, StatusPeriod, DirDateFormat.
+//
+// HomePath is not required, but should be set if you want to use any defaults.
+//
+// If SourceDataDir is defined, ReadSourceDataDir can be used to populate ToConvert and ToCopy.
+//
+// See Also: Initialize.
 type Migrator struct {
 	// HomePath is the path to the home directory (should contain the config and data directories).
 	HomePath string
@@ -173,14 +180,18 @@ func (m Migrator) ValidateBasic() error {
 
 // ReadSourceDataDir gets the contents of the SourceDataDir and identifies ToConvert and ToCopy.
 // Anything in those two fields prior to calling this, will be overwritten.
+//
+// Does nothing if SourceDataDir is not set.
 func (m *Migrator) ReadSourceDataDir() error {
-	var err error
-	m.ToConvert, m.ToCopy, err = GetDataDirContents(m.SourceDataDir)
-	if err != nil {
-		return fmt.Errorf("error reading %q: %w", m.SourceDataDir, err)
-	}
-	if len(m.ToConvert) == 0 {
-		return fmt.Errorf("could not identify any db directories in %s", m.SourceDataDir)
+	if len(m.SourceDataDir) > 0 {
+		var err error
+		m.ToConvert, m.ToCopy, err = GetDataDirContents(m.SourceDataDir)
+		if err != nil {
+			return fmt.Errorf("error reading %q: %w", m.SourceDataDir, err)
+		}
+		if len(m.ToConvert) == 0 {
+			return fmt.Errorf("could not identify any db directories in %s", m.SourceDataDir)
+		}
 	}
 	return nil
 }
@@ -190,6 +201,9 @@ func (m *Migrator) ReadSourceDataDir() error {
 // It then copies everything in ToCopy from the SourceDataDir to the StagingDataDir.
 // It then moves the SourceDataDir to BackupDataDir and moves StagingDataDir into place where SourceDataDir was.
 func (m *Migrator) Migrate(logger tmlog.Logger) (errRv error) {
+	if err := m.ValidateBasic(); err != nil {
+		return err
+	}
 	// If this func doesn't complete fully, we want to output a message that the staging directory might still exist (and be quite large).
 	// Make a done channel for indicating normal finish and a signal channel for capturing interrupt signals like ctrl+c.
 	stagingDirExists := false
