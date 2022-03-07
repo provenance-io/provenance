@@ -2,6 +2,7 @@ package types
 
 import (
 	"errors"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // DefaultIndex is the default capability global index
@@ -12,21 +13,21 @@ func NewGenesisState(epochs []EpochInfo) *GenesisState {
 }
 
 // DefaultGenesis returns the default Capability genesis state
-func DefaultGenesis(startHeight int64) *GenesisState {
+func DefaultGenesis(ctx sdk.Context) *GenesisState {
 	epochs := []EpochInfo{
 		{
 			Identifier:              "week",
-			StartHeight:             startHeight,
+			StartHeight:             ctx.BlockHeight(),
 			Duration: 				 int64((24*60*60*7)/5), //duration in blocks
 			CurrentEpoch:            0,
-			CurrentEpochStartHeight: startHeight,
+			CurrentEpochStartHeight: ctx.BlockHeight(),
 		},
 		{
 			Identifier:              "day",
-			StartHeight:              startHeight,
+			StartHeight:              ctx.BlockHeight(),
 			Duration:                int64((24*60*60)/5),
 			CurrentEpoch:            0,
-			CurrentEpochStartHeight: startHeight,
+			CurrentEpochStartHeight: ctx.BlockHeight(),
 		},
 	}
 	return NewGenesisState(epochs)
