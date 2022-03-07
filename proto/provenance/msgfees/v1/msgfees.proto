@@ -27,3 +27,15 @@ message MsgFee {
   cosmos.base.v1beta1.Coin additional_fee = 2
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"additional_fee\""];
 }
+
+// EventMsgFee final event property for msg fee on type
+message EventMsgFee {
+  string msg_type = 1;
+  string count    = 2;
+  string total    = 3;
+}
+
+// EventMsgFees event emitted with summary of msg fees
+message EventMsgFees {
+  repeated EventMsgFee msg_fees = 1 [(gogoproto.nullable) = false];
+}
