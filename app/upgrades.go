@@ -95,6 +95,7 @@ var handlers = map[string]appUpgrade{
 			return versionMap, nil
 		}, // upgrade for pio-testnet-1 from v1.8.0-rc8 to v1.8.0-rc9
 	},
+	"kahlua": {}, // upgrade for pio-testnet-1 from v1.8.0-rc9 to v1.8.0-rc10
 	// TODO - Add new upgrade definitions here.
 }
 
