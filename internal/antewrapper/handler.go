@@ -20,8 +20,8 @@ type HandlerOptions struct {
 	FeegrantKeeper  msgfeestypes.FeegrantKeeper
 	MsgFeesKeeper   msgfeestypes.MsgFeesKeeper
 	SignModeHandler authsigning.SignModeHandler
-	SigGasConsumer func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
-	BaseApp        *baseapp.BaseApp
+	SigGasConsumer  func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
+	BaseApp         *baseapp.BaseApp
 }
 
 func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {

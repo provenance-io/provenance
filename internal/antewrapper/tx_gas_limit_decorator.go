@@ -30,7 +30,7 @@ func (mfd TxGasLimitDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	gas := feeTx.GetGas()
 	gasTxLimit := uint64(0)
 	params := mfd.baseAppToGetParam.GetConsensusParams(ctx)
-	if params.Block.MaxGas > 0 {
+	if params != nil && params.Block != nil && params.Block.MaxGas > 0 {
 		gasTxLimit = uint64(params.Block.MaxGas / MinTxPerBlock)
 	}
 
