@@ -1,10 +1,8 @@
 package main
 
 import (
-	//nolint:typecheck // this import is used
 	"os"
 
-	//nolint:typecheck // this import is used
 	"github.com/cosmos/cosmos-sdk/server"
 
 	"github.com/provenance-io/provenance/cmd/provenanced/cmd"

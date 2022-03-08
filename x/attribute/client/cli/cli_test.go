@@ -3,7 +3,6 @@ package cli_test
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/provenance-io/provenance/internal/antewrapper"
 	"sort"
 	"strings"
 	"testing"
@@ -24,6 +23,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/x/attribute/client/cli"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"

@@ -2,10 +2,11 @@ package cmd_test
 
 import (
 	"fmt"
-	"github.com/provenance-io/provenance/internal/antewrapper"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/provenance-io/provenance/internal/antewrapper"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
