@@ -22,19 +22,29 @@ const (
 	// TickerOff is a really long time period that can effectively turn a ticker off.
 	// 1,000,000 hours is a little over 114 years (and is also about 1/3 max int64 as nanoseconds).
 	TickerOff = 1_000_000 * time.Hour
+	// unknownDBBackend is mostly a tmdb.BackendType used in output as a string.
+	// It indicates that the backend is unknown.
+	unknownDBBackend = tmdb.BackendType("UNKNOWN")
 )
 
+var PossibleDBTypes = []string{
+	string(tmdb.RocksDBBackend), string(tmdb.BadgerDBBackend),
+	string(tmdb.GoLevelDBBackend), string(tmdb.CLevelDBBackend),
+}
+
+// IsPossibleDBType checks if the given dbType string is one that this migrator can handle.
+func IsPossibleDBType(dbType string) bool {
+	for _, p := range PossibleDBTypes {
+		if dbType == p {
+			return true
+		}
+	}
+	return false
+}
+
 // Migrator is an object to help guide a migration.
-// The following MUST be defined: SourceDBType, TargetDBType.
-//
-// These must also be defined, but can have defaults applied using ApplyDefaults:
-// StagingDir, BackupDir, SourceDataDir, StagingDataDir, BackupDataDir, Permissions, StatusPeriod, DirDateFormat.
-//
-// HomePath is not required, but should be set if you want to use any defaults.
-//
-// If SourceDataDir is defined, ReadSourceDataDir can be used to populate ToConvert and ToCopy.
-//
-// See Also: Initialize.
+// TargetDBType must be defined. All others can be left unset, or can use defaults from ApplyDefaults().
+// If using defaults for any directories, you probably need to set HomePath too though.
 type Migrator struct {
 	// HomePath is the path to the home directory (should contain the config and data directories).
 	HomePath string
@@ -45,8 +55,6 @@ type Migrator struct {
 	// Default is HomePath
 	BackupDir string
 
-	// SourceDBType is the type of the source (current) DB.
-	SourceDBType string
 	// TargetDBType is the type of the target (new) DB.
 	TargetDBType string
 
@@ -56,8 +64,8 @@ type Migrator struct {
 	// StagingDataDir is the path to the staging (new) data directory.
 	// Default is { StagingDir }/data-dbmigrate-tmp-{timestamp}-{ TargetDBType }
 	StagingDataDir string
-	// BackupDataDir is the path to where the current data directory will be moved to when done.
-	// Default is { BackupDir }/data-{timestamp}-{ SourceDBType }
+	// BackupDataDir is the path to where the current data directory will be moved when done.
+	// Default is { BackupDir }/data-dbmigrate-backup-{timestamp}
 	BackupDataDir string
 
 	// BatchSize is the threshold (in bytes) after which a batch is written and a new batch is created.
@@ -88,6 +96,9 @@ type Migrator struct {
 	// TimeFinished is the time that the migration was finished.
 	// This is set during the call to Migrate.
 	TimeFinished time.Time
+	// Summaries is a map of ToConvert entries, to a short summary string about the migration of that entry.
+	// Entries are set during the call to Migrate and are the return values of each MigrateDBDir call.
+	Summaries map[string]string
 }
 
 // Initialize prepares this Migrator by doing the following:
@@ -124,7 +135,7 @@ func (m *Migrator) ApplyDefaults() {
 		m.StagingDataDir = filepath.Join(m.StagingDir, fmt.Sprintf("data-dbmigrate-tmp-%s-%s", time.Now().Format(m.DirDateFormat), m.TargetDBType))
 	}
 	if len(m.BackupDataDir) == 0 && len(m.BackupDir) > 0 {
-		m.BackupDataDir = filepath.Join(m.BackupDir, fmt.Sprintf("data-%s-%s", time.Now().Format(m.DirDateFormat), m.SourceDBType))
+		m.BackupDataDir = filepath.Join(m.BackupDir, "data-dbmigrate-backup-"+time.Now().Format(m.DirDateFormat))
 	}
 	// If we can't source the data directory, we probably can't read it and an error will be returned from something else.
 	// For simplicity, we're not really going to care about that error right here, though.
@@ -150,11 +161,11 @@ func (m Migrator) ValidateBasic() error {
 	if len(m.BackupDir) == 0 {
 		return errors.New("no BackupDir defined")
 	}
-	if len(m.SourceDBType) == 0 {
-		return errors.New("no SourceDBType defined")
-	}
 	if len(m.TargetDBType) == 0 {
 		return errors.New("no TargetDBType defined")
+	}
+	if !IsPossibleDBType(m.TargetDBType) {
+		return fmt.Errorf("invalid target type: %q - must be one of: %s", m.TargetDBType, strings.Join(PossibleDBTypes, ", "))
 	}
 	if len(m.SourceDataDir) == 0 {
 		return errors.New("no SourceDataDir defined")
@@ -248,7 +259,7 @@ func (m *Migrator) Migrate(logger tmlog.Logger) (errRv error) {
 	}()
 
 	// Now we can get started.
-	logger.Info(m.MakeSummaryString(nil))
+	logger.Info(m.MakeSummaryString())
 	err = os.MkdirAll(m.StagingDataDir, m.Permissions)
 	if err != nil {
 		return fmt.Errorf("could not create staging data directory: %w", err)
@@ -256,15 +267,14 @@ func (m *Migrator) Migrate(logger tmlog.Logger) (errRv error) {
 	stagingDirExists = true
 	m.TimeStarted = time.Now()
 	logger.Info(fmt.Sprintf("Converting %d Individual DBs.", len(m.ToConvert)),
-		"source type", m.SourceDBType, "source", m.SourceDataDir,
-		"target type", m.TargetDBType, "staging", m.StagingDataDir,
+		"source", m.SourceDataDir, "target type", m.TargetDBType, "staging", m.StagingDataDir,
 		"batch size", commaString(m.BatchSize/BytesPerMB),
 	)
-	counts := map[string]uint{}
+	m.Summaries = map[string]string{}
 	for i, dbDir := range m.ToConvert {
-		counts[dbDir], err = m.MigrateDBDir(logger.With("db", strings.TrimSuffix(dbDir, ".db"), "progress", fmt.Sprintf("%d/%d", i+1, len(m.ToConvert))), dbDir)
+		m.Summaries[dbDir], err = m.MigrateDBDir(logger.With("db", strings.TrimSuffix(dbDir, ".db"), "progress", fmt.Sprintf("%d/%d", i+1, len(m.ToConvert))), dbDir)
 		if err != nil {
-			return fmt.Errorf("could not convert %q from %q to %q: %w", dbDir, m.SourceDBType, m.TargetDBType, err)
+			return err
 		}
 	}
 
@@ -288,18 +298,18 @@ func (m *Migrator) Migrate(logger tmlog.Logger) (errRv error) {
 	stagingDirExists = false
 	m.TimeFinished = time.Now()
 
-	logger.Info(m.MakeSummaryString(counts))
+	logger.Info(m.MakeSummaryString())
 	return nil
 }
 
 // MigrateDBDir creates a copy of the given db directory, converting it from one underlying type to another.
-func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (uint, error) {
+func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary string, err error) {
+	summaryError := "error"
 	sourceDir, dbName := splitDBPath(m.SourceDataDir, dbDir)
 	targetDir, _ := splitDBPath(m.StagingDataDir, dbDir)
 	logger.Info("Individual DB Migration: Setting up.", "from", sourceDir, "to", targetDir)
 
 	// Define some counters used in log messages, and a function to make it easy to add them all to log messages.
-	var err error
 	writtenEntries := uint(0)
 	batchEntries := uint(0)
 	batchBytes := uint(0)
@@ -322,6 +332,7 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (uint, error) 
 	var batch tmdb.Batch
 	var setupTicker, statusTicker, writeTicker *time.Ticker
 	stopTickers := make(chan bool, 1)
+	sourceDBType := tmdb.BackendType("UNKNOWN")
 	defer func() {
 		// closing the stopTickers chan will trigger the status logging subprocess to finish up.
 		close(stopTickers)
@@ -349,6 +360,10 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (uint, error) 
 		if targetDB != nil {
 			targetDB.Close()
 		}
+		// always wrap any error with some extra context.
+		if err != nil {
+			err = fmt.Errorf("could not convert %q from %q to %q: %w", dbDir, sourceDBType, m.TargetDBType, err)
+		}
 	}()
 
 	// Set up a couple different tickers for outputting different status messages at different times.
@@ -370,28 +385,44 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (uint, error) 
 		}
 	}()
 
+	var ok bool
+	sourceDBType, ok = DetectDBType(dbName, sourceDir)
+	if !ok {
+		return summaryError, fmt.Errorf("could not determine db type: %s", filepath.Join(m.SourceDataDir, dbDir))
+	}
+
 	// In at least one case (the snapshots/metadata db), there's a sub-directory that needs to be created in order to
 	// safely open a new database in it.
 	if targetDir != m.StagingDataDir {
 		err = os.MkdirAll(targetDir, m.Permissions)
 		if err != nil {
-			return 0, fmt.Errorf("could not create target sub-directory: %w", err)
+			return summaryError, fmt.Errorf("could not create target sub-directory: %w", err)
 		}
 	}
 
-	sourceDB, err = tmdb.NewDB(dbName, tmdb.BackendType(m.SourceDBType), sourceDir)
-	if err != nil {
-		return 0, fmt.Errorf("could not open %q source db: %w", dbName, err)
+	// If they're both the same type, just copy it.
+	targetDBBackendType := getBestType(tmdb.BackendType(m.TargetDBType))
+	if sourceDBType == targetDBBackendType {
+		logger.Info("Source and Target DB Types are the same. Copying instead of migrating.", "db type", m.TargetDBType)
+		if err = m.CopyWithStatusUpdates(logger, filepath.Join(m.SourceDataDir, dbDir), filepath.Join(m.StagingDataDir, dbDir)); err != nil {
+			return summaryError, fmt.Errorf("could not copy db: %w", err)
+		}
+		return "Copied", nil
 	}
 
-	targetDB, err = tmdb.NewDB(dbName, tmdb.BackendType(m.TargetDBType), targetDir)
+	sourceDB, err = tmdb.NewDB(dbName, sourceDBType, sourceDir)
 	if err != nil {
-		return 0, fmt.Errorf("could not open %q target db: %w", dbName, err)
+		return summaryError, fmt.Errorf("could not open %q source db: %w", dbName, err)
+	}
+
+	targetDB, err = tmdb.NewDB(dbName, targetDBBackendType, targetDir)
+	if err != nil {
+		return summaryError, fmt.Errorf("could not open %q target db: %w", dbName, err)
 	}
 
 	iter, err = sourceDB.Iterator(nil, nil)
 	if err != nil {
-		return 0, fmt.Errorf("could not create %q source iterator: %w", dbName, err)
+		return summaryError, fmt.Errorf("could not create %q source iterator: %w", dbName, err)
 	}
 
 	// There's a couple places in here where we need to write and close the batch. But the safety stuff (on errors)
@@ -414,9 +445,12 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (uint, error) 
 		}
 		return nil
 	}
+	summaryWrittenEntries := func() string {
+		return fmt.Sprintf("Migrated %11s entries", commaString(writtenEntries))
+	}
 
 	setupTicker.Reset(TickerOff)
-	logger.Info("Individual DB Migration: Starting.")
+	logger.Info("Individual DB Migration: Starting.", "source db type", sourceDBType)
 	batch = targetDB.NewBatch()
 	statusTicker.Reset(m.StatusPeriod)
 	for ; iter.Valid(); iter.Next() {
@@ -426,7 +460,7 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (uint, error) 
 		}
 		k := iter.Key()
 		if err = batch.Set(k, v); err != nil {
-			return writtenEntries, fmt.Errorf("could not set %q key/value: %w", dbName, err)
+			return summaryWrittenEntries(), fmt.Errorf("could not set %q key/value: %w", dbName, err)
 		}
 		batchEntries++
 		batchBytes += uint(len(v) + len(k))
@@ -436,7 +470,7 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (uint, error) 
 			writeTicker.Reset(m.StatusPeriod)
 			logger.Info("Writing intermediate batch.", commonKeyVals()...)
 			if err = writeAndCloseBatch(); err != nil {
-				return writtenEntries, err
+				return summaryWrittenEntries(), err
 			}
 			writeTicker.Reset(TickerOff)
 
@@ -451,18 +485,18 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (uint, error) 
 	statusTicker.Reset(TickerOff)
 
 	if err = iter.Error(); err != nil {
-		return writtenEntries, fmt.Errorf("iterator error: %w", err)
+		return summaryWrittenEntries(), fmt.Errorf("iterator error: %w", err)
 	}
 
 	writeTicker.Reset(m.StatusPeriod)
 	logger.Info("Writing final batch.", commonKeyVals()...)
 	if err = writeAndCloseBatch(); err != nil {
-		return writtenEntries, err
+		return summaryWrittenEntries(), err
 	}
 	writeTicker.Reset(TickerOff)
 
 	logger.Info("Individual DB Migration: Done.", "total entries", commaString(writtenEntries))
-	return writtenEntries, nil
+	return summaryWrittenEntries(), nil
 }
 
 // MoveWithStatusUpdates calls os.Rename but also outputs a log message every StatusPeriod.
@@ -497,8 +531,39 @@ func (m Migrator) MoveWithStatusUpdates(logger tmlog.Logger, from, to string) er
 	return os.Rename(from, to)
 }
 
+func (m Migrator) CopyWithStatusUpdates(logger tmlog.Logger, from, to string) error {
+	var moveTicker *time.Ticker
+	stopTicker := make(chan bool, 1)
+	defer func() {
+		// closing the stopTicker chan will trigger the status logging subprocess to finish up.
+		close(stopTicker)
+		if moveTicker != nil {
+			moveTicker.Stop()
+		}
+	}()
+	commonKeyVals := func() []interface{} {
+		return []interface{}{
+			"from", from,
+			"to", to,
+			"run time", time.Since(m.TimeStarted).String(),
+		}
+	}
+	moveTicker = time.NewTicker(m.StatusPeriod)
+	go func() {
+		for {
+			select {
+			case <-moveTicker.C:
+				logger.Info("Still copying...", commonKeyVals()...)
+			case <-stopTicker:
+				return
+			}
+		}
+	}()
+	return copier.Copy(from, to)
+}
+
 // MakeSummaryString creates a multi-line string with a summary of a migration.
-func (m Migrator) MakeSummaryString(counts map[string]uint) string {
+func (m Migrator) MakeSummaryString() string {
 	var sb strings.Builder
 	addLine := func(format string, a ...interface{}) {
 		sb.WriteString(fmt.Sprintf(format, a...) + "\n")
@@ -525,15 +590,18 @@ func (m Migrator) MakeSummaryString(counts map[string]uint) string {
 	addLine("%16s: %s", "Data Dir", m.SourceDataDir)
 	addLine("%16s: %s", "Staging Dir", m.StagingDir)
 	addLine("%16s: %s", "Backup Dir", m.BackupDataDir)
-	addLine("%16s: %s", "Source DB Type", m.SourceDBType)
 	addLine("%16s: %s", "New DB Type", m.TargetDBType)
 	addLine("%16s: %s", fmt.Sprintf("%s (%d)", copyHead, len(m.ToCopy)), strings.Join(m.ToCopy, "  "))
-	if counts == nil {
+	if len(m.Summaries) == 0 {
 		addLine("%16s: %s", fmt.Sprintf("%s (%d)", migrateHead, len(m.ToConvert)), strings.Join(m.ToConvert, "  "))
 	} else {
 		addLine("%16s:", fmt.Sprintf("%s (%d)", migrateHead, len(m.ToConvert)))
 		for _, dbDir := range m.ToConvert {
-			addLine("%22s: %11s entries", strings.TrimSuffix(dbDir, ".db"), commaString(counts[dbDir]))
+			s, k := m.Summaries[dbDir]
+			if !k {
+				s = "UNKNOWN"
+			}
+			addLine("%22s: %s", strings.TrimSuffix(dbDir, ".db"), s)
 		}
 	}
 	return sb.String()
@@ -602,6 +670,96 @@ func GetDataDirContents(dataDirPath string) ([]string, []string, error) {
 		}
 	}
 	return dbs, nonDBs, nil
+}
+
+// DetectDBType attempts to identify the type database in the given dir with the given name.
+// The name and dir would be the same things that would be provided to tmdb.NewDB.
+//
+// The return bool indicates whether or not the DB type was identified.
+//
+// The only types this detects are LevelDB, RocksDB, and BadgerDB.
+// If the DB is another type, the behavior of this is unknown.
+// There's a chance this will return false, but there's also a chance it is falsely identified as something else.
+func DetectDBType(name, dir string) (tmdb.BackendType, bool) {
+	// Here are the key differences used to differentiate the DB types.
+	// badgerdb:
+	// * In a directory named "dir/name".
+	// * There are numbered files with the extension ".vlog".
+	// * There are numbered files with the extension ".sst" (might possibly be missing if the db is empty).
+	// * Has the following files: KEYREGISTRY, MANIFEST
+	// * Might also have files: LOCK
+	// rocksdb:
+	// * In a directory named "dir/name.db".
+	// * There are numbered files with the extension ".log".
+	// * There are numbered files with the extension ".sst" (might possibly be missing if the db is empty).
+	// * Has the following files: CURRENT, IDENTITY, LOG, MANIFEST-{6 digis} (multiple), OPTIONS-{6 digits} (multiple)
+	// * Might also have files: LOCK, LOG.old, LOG.old.{16 digits} (multiple)
+	// leveldb:
+	// * In a directory named "dir/name.db".
+	// * There are numbered files with the extension ".log".
+	// * There are numbered files with the extension ".ldb" (might possibly be missing if the db is empty).
+	// * Has the following files: CURRENT, LOG, MANIFEST-{6 digis} (multiple)
+	// * Might also have files: LOCK, LOG.old
+
+	// Note: I'm not sure of an easy way to look for files that start or end with certain strings (e.g files ending in ".sst").
+	// The only way I know of is to get the entire dir contents and loop through the entries.
+	// However, specially for large DBs, that can be well over 10k files.
+	// If the list is sorted (e.g. from os.ReadDir), the ".sst" or ".ldb" files would be one of the first few.
+	// And stuff like MANIFEST-{numbers} and OPTIONS-{numbers} would be one of the last few.
+	// But just getting that list is a whole lot of work that should be avoided if possible.
+	// Additionally, this is only being written with badgerdb, rocksdb, and leveldb in mind.
+	//
+	// So in here, rather than being more certain and checking for those types of files, we'll skip those checks and
+	// put up with possible false positives. Hopefully a false positive would error out at some later point (open or reading).
+
+	// Let's first check for badgerdb since it's the easiest.
+	dbDir := filepath.Join(name, dir)
+	if dirExists(dbDir) {
+		// Since that's a pretty standard dir name, do an easy check for a couple files that should be there.
+		if !fileExists(filepath.Join(dbDir, "KEYREGISTRY")) || !fileExists(filepath.Join(dbDir, "MANIFEST")) {
+			return unknownDBBackend, false
+		}
+		// Could also check for a numbered files with the extension ".vlog", but that's expensive.
+		// And for the types involved in here, what's been done should be enough to hopefully prevent false positives.
+		return tmdb.BadgerDBBackend, true
+	}
+
+	// The other two (rocksdb and leveldb) should be in directories named "dir/name.db". If that doesn't exist, we can quit now.
+	dbDir = filepath.Join(name, dir+".db")
+	if !dirExists(dbDir) {
+		return unknownDBBackend, false
+	}
+
+	// The only statically named file difference between rocksdb and leveldb is IDENTITY with rocksdb.
+	if fileExists(filepath.Join(dbDir, "IDENTITY")) {
+		return tmdb.RocksDBBackend, true
+	}
+
+	// There are no statically named files that are used by leveldb but not rocksdb. So at this point, just assume it's leveldb.
+	// GolevelDB and CLevelDB are both a LevelDB as far as the files go. And CLevelDB is much faster, so use that.
+	return tmdb.CLevelDBBackend, true
+}
+
+// getBestType returns CLevelDB when provided GoLevelDB. Anything is is returned as is.
+// This is because the performance of GoLevelDB is so much worse than CLevelDB.
+// We can say that we're using GoLevelDB, but use CLevelDB for all the interactions.
+func getBestType(dbType tmdb.BackendType) tmdb.BackendType {
+	if dbType == tmdb.GoLevelDBBackend {
+		return tmdb.CLevelDBBackend
+	}
+	return dbType
+}
+
+// dirExists returns true if the path exists and is a directory.
+func dirExists(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && info.IsDir()
+}
+
+// fileExists returns true if the path exists and is a file.
+func fileExists(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && !info.IsDir()
 }
 
 // commaString converts a positive integer to a string and adds commas.

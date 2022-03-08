@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 
 	tmcli "github.com/tendermint/tendermint/libs/cli"
-	tmdb "github.com/tendermint/tm-db"
 
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/cmd/dbmigrate/utils"
@@ -26,11 +25,6 @@ const (
 	FlagBatchSize  = "batch-size"
 	FlagStagingDir = "staging-dir"
 )
-
-var PossibleDBTypes = []string{
-	string(tmdb.RocksDBBackend), string(tmdb.BadgerDBBackend),
-	string(tmdb.GoLevelDBBackend), string(tmdb.CLevelDBBackend),
-}
 
 // NewDBMigrateCmd creates a command for migrating the provenanced database from one underlying type to another.
 func NewDBMigrateCmd() *cobra.Command {
@@ -69,12 +63,16 @@ Converts an existing Provenance Blockchain Database to a new backend type.
 
 Valid <target type> values: %s
 
-Default Backup directory: {PIO_HOME}/data-{timestamp}-{old type}
+Migration process:
+1. Copy the current data directory into a staging data directory, migrating any databases appropriately.
+2. Move the current data directory to the backup location.
+3. Move the staging data directory into place as the current data directory.
+4. Update the config file to reflect the new database backend type.
 
 To control the log level and log format of this utility, use these environment variables:
   DBM_LOG_LEVEL - valid values: debug info error
   DBM_LOG_FORMAT - valid values: plain json
-`, strings.Join(PossibleDBTypes, ", ")),
+`, strings.Join(utils.PossibleDBTypes, ", ")),
 		Args: cobra.ExactArgs(1),
 		PersistentPreRunE: func(command *cobra.Command, args []string) error {
 			command.SetOut(command.OutOrStdout())
@@ -95,38 +93,21 @@ To control the log level and log format of this utility, use these environment v
 			return nil
 		},
 		RunE: func(command *cobra.Command, args []string) error {
-			targetDBType := strings.ToLower(args[0])
-			if !IsPossibleDBType(targetDBType) {
-				return fmt.Errorf("invalid target type: %q - must be one of: %s", targetDBType, strings.Join(PossibleDBTypes, ", "))
-			}
-			tmConfig, err := config.ExtractTmConfig(command)
-			if err != nil {
-				return fmt.Errorf("could not read Tendermint Config: %w", err)
-			}
-			sourceDBType := strings.ToLower(tmConfig.DBBackend)
-			if !IsPossibleDBType(sourceDBType) {
-				return fmt.Errorf("cannot convert source database of type: %q", sourceDBType)
-			}
-			logger := server.GetServerContextFromCmd(command).Logger
-			if sourceDBType == targetDBType {
-				logger.Info(fmt.Sprintf("Database already has type %q. Nothing to do.", targetDBType))
-				return nil
-			}
 			batchSizeMB, err := command.Flags().GetUint(FlagBatchSize)
 			if err != nil {
 				return fmt.Errorf("could not get batch size: %w", err)
 			}
+			serverCtx := server.GetServerContextFromCmd(command)
 			migrator := &utils.Migrator{
-				HomePath:     tmConfig.RootDir,
-				SourceDBType: sourceDBType,
-				TargetDBType: targetDBType,
+				HomePath:     serverCtx.Config.RootDir,
+				TargetDBType: strings.ToLower(args[0]),
 				BatchSize:    batchSizeMB * utils.BytesPerMB,
 			}
 			migrator.BackupDir, _ = command.Flags().GetString(FlagBackupDir)
 			migrator.StagingDir, _ = command.Flags().GetString(FlagStagingDir)
 			err = DoMigrateCmd(command, migrator)
 			if err != nil {
-				logger.Error(err.Error())
+				serverCtx.Logger.Error(err.Error())
 				// If this returns an error, the help is printed. But that isn't wanted here.
 				// But since we got an error, it shouldn't exit with code 0 either.
 				// So we exit 1 here instead of returning an error and letting the caller handle the exit.
@@ -135,9 +116,9 @@ To control the log level and log format of this utility, use these environment v
 			return nil
 		},
 	}
-	rv.Flags().String(FlagBackupDir, "", "directory to back up the current data directory to (default is {home}/data-{timestamp}-{source dbtype})")
+	rv.Flags().String(FlagBackupDir, "", "directory to back up the current data directory to (default is {home}/data-dbmigrate-backup-{timestamp})")
 	rv.Flags().String(FlagStagingDir, "", "staging directory to use (default is {home}/data-dbmigrate-tmp-{timestamp}-{target dbtype})")
-	rv.Flags().Uint(FlagBatchSize, 2_048, "(in megabytes) after a batch reaches this size it is written and a new one is started (0 = unlimited) ")
+	rv.Flags().Uint(FlagBatchSize, 2_048, "(in megabytes) after a batch reaches this size it is written and a new one is started (0 = unlimited)")
 	return rv
 }
 
@@ -150,16 +131,6 @@ func Execute(command *cobra.Command) error {
 	command.PersistentFlags().String(tmcli.HomeFlag, app.DefaultNodeHome, "directory for config and data")
 
 	return command.ExecuteContext(ctx)
-}
-
-// IsPossibleDBType checks if the given dbType string is one that this migrator can handle.
-func IsPossibleDBType(dbType string) bool {
-	for _, p := range PossibleDBTypes {
-		if dbType == p {
-			return true
-		}
-	}
-	return false
 }
 
 // DoMigrateCmd does all the work associated with the dbmigrate command (assuming that inputs have been validated).
