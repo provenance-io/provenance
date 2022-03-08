@@ -96,6 +96,38 @@ func TestFullAppSimulation(t *testing.T) {
 	}
 }
 
+func TestSimple(t *testing.T) {
+	config, db, dir, logger, skip, err := sdksim.SetupSimulation("leveldb-app-sim", "Simulation")
+	if skip {
+		t.Skip("skipping provenance application simulation")
+	}
+	require.NoError(t, err, "provenance simulation setup failed")
+
+	defer func() {
+		db.Close()
+		require.NoError(t, os.RemoveAll(dir))
+	}()
+
+	app := New(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, fauxMerkleModeOpt)
+	require.Equal(t, "provenanced", app.Name())
+
+	// run randomized simulation
+	_, _, simErr := simulation.SimulateFromSeed(
+		t,
+		os.Stdout,
+		app.BaseApp,
+		sdksim.AppStateFn(app.AppCodec(), app.SimulationManager()),
+		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
+		sdksim.SimulationOperations(app, app.AppCodec(), config),
+		app.ModuleAccountAddrs(),
+		config,
+		app.AppCodec(),
+	)
+
+	require.NoError(t, simErr)
+	sdksim.PrintStats(db)
+}
+
 // Profile with:
 // /usr/local/go/bin/go test -benchmem -run=^$ github.com/provenance-io/provenance -bench ^BenchmarkFullAppSimulation$ -Commit=true -cpuprofile cpu.out
 func TestAppImportExport(t *testing.T) {
