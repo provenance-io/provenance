@@ -13,9 +13,6 @@ import (
 // CONTRACT: Tx must implement FeeTx to use TxGasLimitDecorator
 type TxGasLimitDecorator struct{}
 
-// MinTxPerBlock is used to determine the maximum amount of gas that any given transaction can use based on the block gas limit.
-const MinTxPerBlock = 15
-
 func NewTxGasLimitDecorator() TxGasLimitDecorator {
 	return TxGasLimitDecorator{}
 }
