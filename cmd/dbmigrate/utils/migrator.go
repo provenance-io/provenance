@@ -440,7 +440,7 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (uint, error) 
 			}
 			writeTicker.Reset(TickerOff)
 
-			logger.Info("Starting new batch.", commonKeyVals())
+			logger.Info("Starting new batch.", commonKeyVals()...)
 			batch = targetDB.NewBatch()
 			batchIndex++
 			batchBytes = 0
