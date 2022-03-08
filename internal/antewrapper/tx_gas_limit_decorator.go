@@ -1,6 +1,7 @@
 package antewrapper
 
 import (
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -11,13 +12,13 @@ import (
 // If gas is too high, decorator returns error and tx is rejected from mempool.
 // If gas is below the limit, then call next AnteHandler
 // CONTRACT: Tx must implement FeeTx to use TxGasLimitDecorator
-type TxGasLimitDecorator struct{}
+type TxGasLimitDecorator struct{ baseAppToGetParam *baseapp.BaseApp }
 
 // MinTxPerBlock is used to determine the maximum amount of gas that any given transaction can use based on the block gas limit.
 const MinTxPerBlock = 15
 
-func NewTxGasLimitDecorator() TxGasLimitDecorator {
-	return TxGasLimitDecorator{}
+func NewTxGasLimitDecorator(baseapp *baseapp.BaseApp) TxGasLimitDecorator {
+	return TxGasLimitDecorator{baseAppToGetParam: baseapp}
 }
 
 func (mfd TxGasLimitDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
@@ -28,8 +29,9 @@ func (mfd TxGasLimitDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	// Ensure that the requested gas does not exceed the configured block maximum
 	gas := feeTx.GetGas()
 	gasTxLimit := uint64(0)
-	if ctx.BlockGasMeter() != nil {
-		gasTxLimit = ctx.BlockGasMeter().Limit() / MinTxPerBlock
+	params := mfd.baseAppToGetParam.GetConsensusParams(ctx)
+	if params.Block.MaxGas > 0 {
+		gasTxLimit = uint64(params.Block.MaxGas / MinTxPerBlock)
 	}
 
 	// Skip gas limit check for txs with MsgSubmitProposal

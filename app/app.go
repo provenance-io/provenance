@@ -739,6 +739,7 @@ func New(
 			FeegrantKeeper:  app.FeeGrantKeeper,
 			MsgFeesKeeper:   app.MsgFeesKeeper,
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+			BaseApp:         app.BaseApp,
 		})
 	if err != nil {
 		panic(err)

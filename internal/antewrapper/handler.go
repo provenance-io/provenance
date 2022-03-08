@@ -1,6 +1,7 @@
 package antewrapper
 
 import (
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -19,7 +20,8 @@ type HandlerOptions struct {
 	FeegrantKeeper  msgfeestypes.FeegrantKeeper
 	MsgFeesKeeper   msgfeestypes.MsgFeesKeeper
 	SignModeHandler authsigning.SignModeHandler
-	SigGasConsumer  func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
+	SigGasConsumer func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
+	BaseApp        *baseapp.BaseApp
 }
 
 func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
@@ -45,7 +47,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		// outermost AnteDecorator. SetUpContext must be called first
 		NewFeeMeterContextDecorator(), // NOTE : fee gas meter also has the functionality of GasTracerContextDecorator in previous versions
 		cosmosante.NewRejectExtensionOptionsDecorator(),
-		NewTxGasLimitDecorator(),
+		NewTxGasLimitDecorator(options.BaseApp),
 		cosmosante.NewMempoolFeeDecorator(),
 		// Fee Decorator works to augment NewMempoolFeeDecorator and also check that enough fees are paid
 		NewMsgFeesDecorator(options.BankKeeper, options.AccountKeeper, options.FeegrantKeeper, options.MsgFeesKeeper),
