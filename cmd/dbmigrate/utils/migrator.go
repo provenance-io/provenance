@@ -73,6 +73,11 @@ type Migrator struct {
 	// Default is 0 (unlimited)
 	BatchSize uint
 
+	// StageOnly indicates that only the data migration and data copying should happen.
+	// If true, the migrator should stop after finishing the staging data directory.
+	// That is, it won't move the data dir to the backup location, move the staging directory into place, or update the config.
+	StageOnly bool
+
 	// ToConvert is all of the DB directories to migrate/convert.
 	// Each entry is relative to the data directory.
 	ToConvert []string
@@ -216,7 +221,7 @@ func (m *Migrator) Migrate(logger tmlog.Logger) (errRv error) {
 	}
 	// If this func doesn't complete fully, we want to output a message that the staging directory might still exist (and be quite large).
 	// Make a done channel for indicating normal finish and a signal channel for capturing interrupt signals like ctrl+c.
-	stagingDirExists := false
+	logStagingDirError := false
 	doneChan := make(chan bool, 1)
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM, syscall.SIGSEGV, syscall.SIGQUIT)
@@ -225,7 +230,7 @@ func (m *Migrator) Migrate(logger tmlog.Logger) (errRv error) {
 		if r := recover(); r != nil {
 			errRv = fmt.Errorf("recovered from panic: %v", r)
 		}
-		if stagingDirExists {
+		if logStagingDirError {
 			logger.Error("The staging directory still exists due to error.", "dir", m.StagingDataDir)
 		}
 		close(doneChan)
@@ -264,7 +269,7 @@ func (m *Migrator) Migrate(logger tmlog.Logger) (errRv error) {
 	if err != nil {
 		return fmt.Errorf("could not create staging data directory: %w", err)
 	}
-	stagingDirExists = true
+	logStagingDirError = true
 	m.TimeStarted = time.Now()
 	logger.Info(fmt.Sprintf("Converting %d Individual DBs.", len(m.ToConvert)),
 		"source", m.SourceDataDir, "target type", m.TargetDBType, "staging", m.StagingDataDir,
@@ -286,16 +291,27 @@ func (m *Migrator) Migrate(logger tmlog.Logger) (errRv error) {
 		}
 	}
 
-	logger.Info("Moving existing data directory to backup location.", "from", m.SourceDataDir, "to", m.BackupDataDir)
-	if err = m.MoveWithStatusUpdates(logger, m.SourceDataDir, m.BackupDataDir); err != nil {
-		return fmt.Errorf("could not back up existing data directory: %w", err)
+	if m.StageOnly {
+		logger.Info("Stage Only flag provided. Stopping.", "dir", m.StagingDataDir)
+		// prevent the error message log about the staging directory.
+		logStagingDirError = false
+		return nil
 	}
 
-	logger.Info("Moving new data directory into place.", "from", m.StagingDataDir, "to", m.SourceDataDir)
-	if err = m.MoveWithStatusUpdates(logger, m.StagingDataDir, m.SourceDataDir); err != nil {
-		return fmt.Errorf("could not move new data directory into place: %w", err)
+	if m.StageOnly {
+		logger.Info("Stage Only flag provided.", "dir", m.StagingDir)
+	} else {
+		logger.Info("Moving existing data directory to backup location.", "from", m.SourceDataDir, "to", m.BackupDataDir)
+		if err = m.MoveWithStatusUpdates(logger, m.SourceDataDir, m.BackupDataDir); err != nil {
+			return fmt.Errorf("could not back up existing data directory: %w", err)
+		}
+
+		logger.Info("Moving new data directory into place.", "from", m.StagingDataDir, "to", m.SourceDataDir)
+		if err = m.MoveWithStatusUpdates(logger, m.StagingDataDir, m.SourceDataDir); err != nil {
+			return fmt.Errorf("could not move new data directory into place: %w", err)
+		}
 	}
-	stagingDirExists = false
+	logStagingDirError = false
 	m.TimeFinished = time.Now()
 
 	logger.Info(m.MakeSummaryString())

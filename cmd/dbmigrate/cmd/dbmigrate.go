@@ -24,6 +24,7 @@ const (
 	FlagBackupDir  = "backup-dir"
 	FlagBatchSize  = "batch-size"
 	FlagStagingDir = "staging-dir"
+	FlagStageOnly  = "stage-only"
 )
 
 // NewDBMigrateCmd creates a command for migrating the provenanced database from one underlying type to another.
@@ -95,19 +96,32 @@ To control the log level and log format of this utility, use these environment v
 		RunE: func(command *cobra.Command, args []string) error {
 			batchSizeMB, err := command.Flags().GetUint(FlagBatchSize)
 			if err != nil {
-				return fmt.Errorf("could not get batch size: %w", err)
+				return fmt.Errorf("could not parse --%s option: %w", FlagBatchSize, err)
 			}
-			serverCtx := server.GetServerContextFromCmd(command)
 			migrator := &utils.Migrator{
-				HomePath:     serverCtx.Config.RootDir,
 				TargetDBType: strings.ToLower(args[0]),
+				HomePath:     client.GetClientContextFromCmd(command).HomeDir,
 				BatchSize:    batchSizeMB * utils.BytesPerMB,
 			}
-			migrator.BackupDir, _ = command.Flags().GetString(FlagBackupDir)
-			migrator.StagingDir, _ = command.Flags().GetString(FlagStagingDir)
+
+			migrator.StageOnly, err = command.Flags().GetBool(FlagStageOnly)
+			if err != nil {
+				return fmt.Errorf("could not parse --%s flag: %w", FlagStageOnly, err)
+			}
+
+			migrator.BackupDir, err = command.Flags().GetString(FlagBackupDir)
+			if err != nil {
+				return fmt.Errorf("could not parse --%s option: %w", FlagBackupDir, err)
+			}
+
+			migrator.StagingDir, err = command.Flags().GetString(FlagStagingDir)
+			if err != nil {
+				return fmt.Errorf("could not parse --%s option: %w", FlagStagingDir, err)
+			}
+
 			err = DoMigrateCmd(command, migrator)
 			if err != nil {
-				serverCtx.Logger.Error(err.Error())
+				server.GetServerContextFromCmd(command).Logger.Error(err.Error())
 				// If this returns an error, the help is printed. But that isn't wanted here.
 				// But since we got an error, it shouldn't exit with code 0 either.
 				// So we exit 1 here instead of returning an error and letting the caller handle the exit.
@@ -119,6 +133,7 @@ To control the log level and log format of this utility, use these environment v
 	rv.Flags().String(FlagBackupDir, "", "directory to back up the current data directory to (default is {home}/data-dbmigrate-backup-{timestamp})")
 	rv.Flags().String(FlagStagingDir, "", "staging directory to use (default is {home}/data-dbmigrate-tmp-{timestamp}-{target dbtype})")
 	rv.Flags().Uint(FlagBatchSize, 2_048, "(in megabytes) after a batch reaches this size it is written and a new one is started (0 = unlimited)")
+	rv.Flags().Bool(FlagStageOnly, false, "only migrate/copy the data (do not backup and replace the data directory and do not update the config)")
 	return rv
 }
 
