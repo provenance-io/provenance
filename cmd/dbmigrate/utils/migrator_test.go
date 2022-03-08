@@ -1,6 +1,7 @@
 package utils
 
 import (
+	tmdb "github.com/tendermint/tm-db"
 	"os"
 	"path/filepath"
 	"testing"
@@ -22,10 +23,15 @@ func TestMigratorTestSuite(t *testing.T) {
 	suite.Run(t, new(MigratorTestSuite))
 }
 
-// TODO: SetUpMigrator tests
+// TODO: Initialize tests (might be covered just fine by the other tests).
+// TODO: ApplyDefaults tests
+// TODO: ValidateBasic tests
+// TODO: ReadSourceDataDir tests (might be covered just fine by the GetDataDirContents tests)
 // TODO: Migrate tests
 // TODO: MigrateDBDir tests
-// TODO: UpdateConfig tests
+// TODO: MoveWithStatusUpdates tests (not sure how to really test this other than the file is moved).
+// TODO: CopyWithStatusUpdates tests(not sure how to really test this other than the file is copied).
+// TODO: MakeSummaryString tests
 
 func (s MigratorTestSuite) TestSplitDBPath() {
 	tests := []struct {
@@ -181,5 +187,81 @@ func (s MigratorTestSuite) TestGetDataDirContents() {
 		_, _, err := GetDataDirContents(tDir + "-nope-not-gonna-exist")
 		require.Error(t, err, "GetDataDirContents on directory that doesn't exist.")
 		assert.Contains(t, err.Error(), "no such file or directory", "err")
+	})
+}
+
+func (s MigratorTestSuite) TestDetectDBType() {
+	tDir := s.T().TempDir()
+
+	s.T().Run("badger", func(t *testing.T) {
+		expected := tmdb.BadgerDBBackend
+		name := "badger1"
+		dataDir := filepath.Join(tDir, "badger")
+		dbDir := filepath.Join(dataDir, name)
+		require.NoError(t, os.MkdirAll(dbDir, 0700), "making dbDir")
+		require.NoError(t, os.WriteFile(filepath.Join(dbDir, "KEYREGISTRY"), []byte{}, 0600), "making KEYREGISTRY")
+		require.NoError(t, os.WriteFile(filepath.Join(dbDir, "MANIFEST"), []byte{}, 0600), "making KEYREGISTRY")
+		actual, ok := DetectDBType(name, dataDir)
+		assert.True(t, ok, "DetectDBType bool")
+		assert.Equal(t, expected, actual, "DetectDBType BackendType")
+	})
+
+	s.T().Run("rocks", func(t *testing.T) {
+		expected := tmdb.RocksDBBackend
+		name := "rocks2"
+		dataDir := filepath.Join(tDir, "rocks")
+		dbDir := filepath.Join(dataDir, name+".db")
+		require.NoError(t, os.MkdirAll(dbDir, 0700), "making dbDir")
+		require.NoError(t, os.WriteFile(filepath.Join(dbDir, "CURRENT"), []byte{}, 0600), "making CURRENT")
+		require.NoError(t, os.WriteFile(filepath.Join(dbDir, "LOG"), []byte{}, 0600), "making LOG")
+		require.NoError(t, os.WriteFile(filepath.Join(dbDir, "IDENTITY"), []byte{}, 0600), "making IDENTITY")
+		actual, ok := DetectDBType(name, dataDir)
+		assert.True(t, ok, "DetectDBType bool")
+		assert.Equal(t, expected, actual, "DetectDBType BackendType")
+	})
+
+	s.T().Run("level", func(t *testing.T) {
+		expected := tmdb.CLevelDBBackend
+		name := "level3"
+		dataDir := filepath.Join(tDir, "level")
+		dbDir := filepath.Join(dataDir, name+".db")
+		require.NoError(t, os.MkdirAll(dbDir, 0700), "making dbDir")
+		require.NoError(t, os.WriteFile(filepath.Join(dbDir, "CURRENT"), []byte{}, 0600), "making CURRENT")
+		require.NoError(t, os.WriteFile(filepath.Join(dbDir, "LOG"), []byte{}, 0600), "making LOG")
+		actual, ok := DetectDBType(name, dataDir)
+		assert.True(t, ok, "DetectDBType bool")
+		assert.Equal(t, expected, actual, "DetectDBType BackendType")
+	})
+
+	s.T().Run("empty", func(t *testing.T) {
+		expected := unknownDBBackend
+		name := "empty4"
+		dataDir := filepath.Join(tDir, "empty")
+		dbDir := filepath.Join(dataDir, name)
+		require.NoError(t, os.MkdirAll(dbDir, 0700), "making dbDir")
+		actual, ok := DetectDBType(name, dataDir)
+		assert.False(t, ok, "DetectDBType bool")
+		assert.Equal(t, expected, actual, "DetectDBType BackendType")
+	})
+
+	s.T().Run("only current", func(t *testing.T) {
+		expected := unknownDBBackend
+		name := "only-current5"
+		dataDir := filepath.Join(tDir, "only-current")
+		dbDir := filepath.Join(dataDir, name+".db")
+		require.NoError(t, os.MkdirAll(dbDir, 0700), "making dbDir")
+		require.NoError(t, os.WriteFile(filepath.Join(dbDir, "CURRENT"), []byte{}, 0600), "making CURRENT")
+		actual, ok := DetectDBType(name, dataDir)
+		assert.False(t, ok, "DetectDBType bool")
+		assert.Equal(t, expected, actual, "DetectDBType BackendType")
+	})
+
+	s.T().Run("does not exist", func(t *testing.T) {
+		expected := unknownDBBackend
+		name := "only-current5"
+		dataDir := filepath.Join(tDir, "only-current")
+		actual, ok := DetectDBType(name, dataDir)
+		assert.False(t, ok, "DetectDBType bool")
+		assert.Equal(t, expected, actual, "DetectDBType BackendType")
 	})
 }

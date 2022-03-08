@@ -348,7 +348,7 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary strin
 	var batch tmdb.Batch
 	var setupTicker, statusTicker, writeTicker *time.Ticker
 	stopTickers := make(chan bool, 1)
-	sourceDBType := tmdb.BackendType("UNKNOWN")
+	sourceDBType := unknownDBBackend
 	defer func() {
 		// closing the stopTickers chan will trigger the status logging subprocess to finish up.
 		close(stopTickers)
@@ -729,7 +729,7 @@ func DetectDBType(name, dir string) (tmdb.BackendType, bool) {
 	// put up with possible false positives. Hopefully a false positive would error out at some later point (open or reading).
 
 	// Let's first check for badgerdb since it's the easiest.
-	dbDir := filepath.Join(name, dir)
+	dbDir := filepath.Join(dir, name)
 	if dirExists(dbDir) {
 		// Since that's a pretty standard dir name, do an easy check for a couple files that should be there.
 		if !fileExists(filepath.Join(dbDir, "KEYREGISTRY")) || !fileExists(filepath.Join(dbDir, "MANIFEST")) {
@@ -740,11 +740,14 @@ func DetectDBType(name, dir string) (tmdb.BackendType, bool) {
 		return tmdb.BadgerDBBackend, true
 	}
 
-	// The other two (rocksdb and leveldb) should be in directories named "dir/name.db". If that doesn't exist, we can quit now.
-	dbDir = filepath.Join(name, dir+".db")
-	if !dirExists(dbDir) {
+	// The other two (rocksdb and leveldb) should be in directories named "dir/name.db".
+	// and should have files CURRENT and LOG
+	dbDir = filepath.Join(dir, name+".db")
+	if !dirExists(dbDir) || !fileExists(filepath.Join(dbDir, "CURRENT")) || !fileExists(filepath.Join(dbDir, "LOG")) {
 		return unknownDBBackend, false
 	}
+
+	// Okay, assuming it's either a rocksdb or leveldb directory now.
 
 	// The only statically named file difference between rocksdb and leveldb is IDENTITY with rocksdb.
 	if fileExists(filepath.Join(dbDir, "IDENTITY")) {
