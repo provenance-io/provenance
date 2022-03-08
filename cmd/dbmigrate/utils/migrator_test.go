@@ -1,10 +1,11 @@
 package utils
 
 import (
-	tmdb "github.com/tendermint/tm-db"
 	"os"
 	"path/filepath"
 	"testing"
+
+	tmdb "github.com/tendermint/tm-db"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

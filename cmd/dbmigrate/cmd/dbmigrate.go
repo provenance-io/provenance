@@ -161,13 +161,15 @@ func DoMigrateCmd(command *cobra.Command, migrator *utils.Migrator) error {
 	if err != nil {
 		return err
 	}
-	logger.Info("Updating config.")
-	var oldValue string
-	oldValue, err = UpdateDBBackendConfigValue(command, migrator.TargetDBType)
-	if err != nil {
-		return err
+	if !migrator.StageOnly {
+		logger.Info("Updating config.")
+		var oldValue string
+		oldValue, err = UpdateDBBackendConfigValue(command, migrator.TargetDBType)
+		if err != nil {
+			return err
+		}
+		logger.Info("Config Updated.", "key", "db_backend", "was", oldValue, "is now", migrator.TargetDBType)
 	}
-	logger.Info("Config Updated.", "key", "db_backend", "was", oldValue, "is now", migrator.TargetDBType)
 	logger.Info("Done migrating databases.")
 	return nil
 }
