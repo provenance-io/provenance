@@ -13,9 +13,6 @@ import (
 // CONTRACT: Tx must implement FeeTx to use TxGasLimitDecorator
 type TxGasLimitDecorator struct{}
 
-// MinTxPerBlock is used to determine the maximum amount of gas that any given transaction can use based on the block gas limit.
-const MinTxPerBlock = 15
-
 func NewTxGasLimitDecorator() TxGasLimitDecorator {
 	return TxGasLimitDecorator{}
 }
@@ -27,10 +24,7 @@ func (mfd TxGasLimitDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	}
 	// Ensure that the requested gas does not exceed the configured block maximum
 	gas := feeTx.GetGas()
-	gasTxLimit := uint64(0)
-	if ctx.BlockGasMeter() != nil {
-		gasTxLimit = ctx.BlockGasMeter().Limit() / MinTxPerBlock
-	}
+	gasTxLimit := uint64(4_000_000)
 
 	// Skip gas limit check for txs with MsgSubmitProposal
 	hasSubmitPropMsg := false
