@@ -121,7 +121,7 @@ func (m *Migrator) ApplyDefaults() {
 		m.DirDateFormat = "2006-01-02-15-04-05"
 	}
 	if len(m.StagingDataDir) == 0 && len(m.StagingDir) > 0 {
-		m.StagingDataDir = filepath.Join(m.StagingDir, "data-dbmigrate-tmp-%s-%s", time.Now().Format(m.DirDateFormat), m.TargetDBType)
+		m.StagingDataDir = filepath.Join(m.StagingDir, fmt.Sprintf("data-dbmigrate-tmp-%s-%s", time.Now().Format(m.DirDateFormat), m.TargetDBType))
 	}
 	if len(m.BackupDataDir) == 0 && len(m.BackupDir) > 0 {
 		m.BackupDataDir = filepath.Join(m.BackupDir, fmt.Sprintf("data-%s-%s", time.Now().Format(m.DirDateFormat), m.SourceDBType))
@@ -309,7 +309,7 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (uint, error) 
 			"batch index", commaString(batchIndex),
 			"batch size (megabytes)", commaString(batchBytes / BytesPerMB),
 			"batch entries", commaString(batchEntries),
-			"db entries", commaString(writtenEntries + batchEntries),
+			"total entries", commaString(writtenEntries + batchEntries),
 			"run time", time.Since(m.TimeStarted).String(),
 		}
 	}
@@ -320,12 +320,15 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (uint, error) 
 	var sourceDB, targetDB tmdb.DB
 	var iter tmdb.Iterator
 	var batch tmdb.Batch
-	var statusTicker, writeTicker *time.Ticker
+	var setupTicker, statusTicker, writeTicker *time.Ticker
 	stopTickers := make(chan bool, 1)
 	defer func() {
 		// closing the stopTickers chan will trigger the status logging subprocess to finish up.
 		close(stopTickers)
 		// Then we can stop the tickers (just to be safe).
+		if setupTicker != nil {
+			setupTicker.Stop()
+		}
 		if statusTicker != nil {
 			statusTicker.Stop()
 		}
@@ -349,11 +352,14 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (uint, error) 
 	}()
 
 	// Set up a couple different tickers for outputting different status messages at different times.
+	setupTicker = time.NewTicker(m.StatusPeriod)
 	writeTicker = time.NewTicker(TickerOff)
 	statusTicker = time.NewTicker(TickerOff)
 	go func() {
 		for {
 			select {
+			case <-setupTicker.C:
+				logger.Info("Still setting up...", commonKeyVals()...)
 			case <-statusTicker.C:
 				logger.Info("Status", commonKeyVals()...)
 			case <-writeTicker.C:
@@ -409,6 +415,7 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (uint, error) 
 		return nil
 	}
 
+	setupTicker.Reset(TickerOff)
 	logger.Info("Individual DB Migration: Starting.")
 	batch = targetDB.NewBatch()
 	statusTicker.Reset(m.StatusPeriod)
