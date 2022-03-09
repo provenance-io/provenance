@@ -1,0 +1,94 @@
+syntax = "proto3";
+package provenance.reward.v1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "provenance/reward/v1/reward.proto";
+import "provenance/reward/v1/params.proto";
+
+option go_package = "github.com/provenance-io/provenance/x/reward/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  rpc ModuleAccountBalance(QueryModuleAccountBalanceRequest)
+      returns (QueryModuleAccountBalanceResponse) {
+    option (google.api.http).get =
+        "/provenance/reward/v1/module_account_balance";
+  }
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/provenance/reward/v1/params";
+  }
+  rpc RewardRecord(QueryRewardRecordRequest) returns (QueryRewardRecordResponse) {
+    option (google.api.http).get =
+        "/provenance/reward/v1/reward_record/{address}";
+  }
+  rpc RewardableForAction(QueryRewardableForActionRequest)
+      returns (QueryRewardableForActionResponse) {
+    option (google.api.http).get =
+        "/provenance/reward/v1/rewardable_for_action/{address}/{action}";
+  }
+  rpc TotalRewardable(QueryTotalRewardableRequest)
+      returns (QueryTotalRewardableResponse) {
+    option (google.api.http).get =
+        "/provenance/reward/v1/total_rewardable/{address}";
+  }
+}
+
+// QueryParamsRequest is the request type for the Query/Params RPC method.
+message QueryModuleAccountBalanceRequest {}
+
+// QueryParamsResponse is the response type for the Query/Params RPC method.
+message QueryModuleAccountBalanceResponse {
+  // params defines the parameters of the module.
+  repeated cosmos.base.v1beta1.Coin moduleAccountBalance = 1 [
+    (gogoproto.moretags) = "yaml:\"coins\"",
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
+// QueryParamsRequest is the request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is the response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params defines the parameters of the module.
+  Params params = 1 [ (gogoproto.nullable) = false ];
+}
+
+message QueryRewardRecordRequest {
+  string address = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+}
+
+message QueryRewardRecordResponse {
+  RewardRecord reward_record = 1 [
+    (gogoproto.moretags) = "yaml:\"reward_record\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message QueryRewardableForActionRequest {
+  string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
+  Action action = 2 [ (gogoproto.moretags) = "yaml:\"action\"" ];
+}
+
+message QueryRewardableForActionResponse {
+  repeated cosmos.base.v1beta1.Coin coins = 1 [
+    (gogoproto.moretags) = "yaml:\"coins\"",
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
+message QueryTotalRewardableRequest {
+  string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
+}
+
+message QueryTotalRewardableResponse {
+  repeated cosmos.base.v1beta1.Coin coins = 1 [
+    (gogoproto.moretags) = "yaml:\"coins\"",
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}

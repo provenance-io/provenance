@@ -1,0 +1,38 @@
+syntax = "proto3";
+package provenance.reward.v1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/bank/v1beta1/genesis.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+import "provenance/reward/v1/reward.proto";
+import "provenance/reward/v1/params.proto";
+
+import "google/api/annotations.proto";
+import "provenance/reward/v1/genesis.proto";
+
+option go_package          = "github.com/provenance-io/provenance/x/epoch/types";
+option java_package        = "io.provenance.epoch.v1";
+option java_multiple_files = true;
+
+// GenesisState defines the reward module's genesis state.
+message GenesisState {
+  // balance of the reward module's account
+  cosmos.base.v1beta1.Coin module_account_balance = 1 [
+    (gogoproto.moretags) = "yaml:\"module_account_balance\"",
+    (gogoproto.nullable) = false
+  ];
+
+  // params defines all the parameters of the module.
+  Params params = 2 [
+    (gogoproto.moretags) = "yaml:\"params\"",
+    (gogoproto.nullable) = false
+  ];
+
+  // list of reward records
+  repeated RewardRecord reward_records = 3 [
+    (gogoproto.moretags) = "yaml:\"reward_records\"",
+    (gogoproto.nullable) = false
+  ];
+}
