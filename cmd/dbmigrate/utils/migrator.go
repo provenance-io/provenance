@@ -231,7 +231,7 @@ func (m *Migrator) Migrate(logger tmlog.Logger) (errRv error) {
 			errRv = fmt.Errorf("recovered from panic: %v", r)
 		}
 		if logStagingDirError {
-			logger.Error("The staging directory still exists due to error.", "dir", m.StagingDataDir)
+			m.logErrorWithRunTime(logger, "The staging directory still exists due to error.", "dir", m.StagingDataDir)
 		}
 		close(doneChan)
 		signal.Stop(sigChan)
@@ -246,18 +246,18 @@ func (m *Migrator) Migrate(logger tmlog.Logger) (errRv error) {
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
-				logger.Error("The signal watcher subprocess encountered a panic.", "panic", fmt.Sprintf("%v", r))
+				m.logErrorWithRunTime(logger, "The signal watcher subprocess encountered a panic.", "panic", fmt.Sprintf("%v", r))
 			}
 		}()
 		select {
 		case s := <-sigChan:
 			signal.Stop(sigChan)
 			if logStagingDirError {
-				logger.Error("The staging directory still exists due to early termination.", "dir", m.StagingDataDir)
+				m.logErrorWithRunTime(logger, "The staging directory still exists due to early termination.", "dir", m.StagingDataDir)
 			}
 			err2 := proc.Signal(s)
 			if err2 != nil {
-				logger.Error("Error propagating signal.", "error", err2)
+				m.logErrorWithRunTime(logger, "Error propagating signal.", "error", err2)
 			}
 			return
 		case <-doneChan:
@@ -266,17 +266,14 @@ func (m *Migrator) Migrate(logger tmlog.Logger) (errRv error) {
 	}()
 
 	// Now we can get started.
+	m.TimeStarted = time.Now()
 	logger.Info(m.MakeSummaryString())
 	err = os.MkdirAll(m.StagingDataDir, m.Permissions)
 	if err != nil {
 		return fmt.Errorf("could not create staging data directory: %w", err)
 	}
 	logStagingDirError = true
-	m.TimeStarted = time.Now()
-	logger.Info(fmt.Sprintf("Converting %d Individual DBs.", len(m.ToConvert)),
-		"source", m.SourceDataDir, "target type", m.TargetDBType, "staging", m.StagingDataDir,
-		"batch size", commaString(m.BatchSize/BytesPerMB),
-	)
+	m.logWithRunTime(logger, fmt.Sprintf("Converting %d Individual DBs.", len(m.ToConvert)))
 	m.Summaries = map[string]string{}
 	for i, dbDir := range m.ToConvert {
 		m.Summaries[dbDir], err = m.MigrateDBDir(logger.With("db", strings.TrimSuffix(dbDir, ".db"), "progress", fmt.Sprintf("%d/%d", i+1, len(m.ToConvert))), dbDir)
@@ -285,23 +282,23 @@ func (m *Migrator) Migrate(logger tmlog.Logger) (errRv error) {
 		}
 	}
 
-	logger.Info(fmt.Sprintf("Copying %d items from %s to %s", len(m.ToCopy), m.SourceDataDir, m.StagingDataDir))
+	m.logWithRunTime(logger, fmt.Sprintf("Copying %d items.", len(m.ToCopy)))
 	for i, entry := range m.ToCopy {
-		logger.Info(fmt.Sprintf("%d/%d: Copying %s", i+1, len(m.ToCopy), entry), "run time", m.GetRunTime())
+		m.logWithRunTime(logger, fmt.Sprintf("%d/%d: Copying %s", i+1, len(m.ToCopy), entry))
 		if err = copier.Copy(filepath.Join(m.SourceDataDir, entry), filepath.Join(m.StagingDataDir, entry)); err != nil {
 			return fmt.Errorf("could not copy %s: %w", entry, err)
 		}
 	}
 
 	if m.StageOnly {
-		logger.Info("Stage Only flag provided.", "dir", m.StagingDir)
+		m.logWithRunTime(logger, "Stage Only flag provided.", "dir", m.StagingDir)
 	} else {
-		logger.Info("Moving existing data directory to backup location.", "from", m.SourceDataDir, "to", m.BackupDataDir)
+		m.logWithRunTime(logger, "Moving existing data directory to backup location.", "from", m.SourceDataDir, "to", m.BackupDataDir)
 		if err = m.MoveWithStatusUpdates(logger, m.SourceDataDir, m.BackupDataDir); err != nil {
 			return fmt.Errorf("could not back up existing data directory: %w", err)
 		}
 
-		logger.Info("Moving new data directory into place.", "from", m.StagingDataDir, "to", m.SourceDataDir)
+		m.logWithRunTime(logger, "Moving new data directory into place.", "from", m.StagingDataDir, "to", m.SourceDataDir)
 		if err = m.MoveWithStatusUpdates(logger, m.StagingDataDir, m.SourceDataDir); err != nil {
 			return fmt.Errorf("could not move new data directory into place: %w", err)
 		}
@@ -315,24 +312,26 @@ func (m *Migrator) Migrate(logger tmlog.Logger) (errRv error) {
 
 // MigrateDBDir creates a copy of the given db directory, converting it from one underlying type to another.
 func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary string, err error) {
+	m.logWithRunTime(logger, "Individual DB Migration: Setting up.")
+
 	summaryError := "error"
 	sourceDir, dbName := splitDBPath(m.SourceDataDir, dbDir)
 	targetDir, _ := splitDBPath(m.StagingDataDir, dbDir)
-	logger.Info("Individual DB Migration: Setting up.", "from", sourceDir, "to", targetDir, "run time", m.GetRunTime().String())
 
 	// Define some counters used in log messages, and a function to make it easy to add them all to log messages.
 	writtenEntries := uint(0)
 	batchEntries := uint(0)
 	batchBytes := uint(0)
 	batchIndex := uint(1)
-	commonKeyVals := func() []interface{} {
-		return []interface{}{
-			"batch index", commaString(batchIndex),
-			"batch size (megabytes)", commaString(batchBytes / BytesPerMB),
-			"batch entries", commaString(batchEntries),
-			"db total entries", commaString(writtenEntries + batchEntries),
-			"run time", m.GetRunTime().String(),
-		}
+	logWithStats := func(msg string, keyvals ...interface{}) {
+		m.logWithRunTime(logger, msg,
+			append(keyvals,
+				"batch index", commaString(batchIndex),
+				"batch size (megabytes)", commaString(batchBytes/BytesPerMB),
+				"batch entries", commaString(batchEntries),
+				"db total entries", commaString(writtenEntries+batchEntries),
+			)...,
+		)
 	}
 
 	// There's several things that need closing and sometimes calling close can cause a segmentation fault that,
@@ -385,11 +384,11 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary strin
 		for {
 			select {
 			case <-setupTicker.C:
-				logger.Info("Still setting up...", commonKeyVals()...)
+				logWithStats("Still setting up...")
 			case <-statusTicker.C:
-				logger.Info("Status", commonKeyVals()...)
+				logWithStats("Status")
 			case <-writeTicker.C:
-				logger.Info("Still writing...", commonKeyVals()...)
+				logWithStats("Still writing...")
 			case <-stopTickers:
 				return
 			}
@@ -414,11 +413,11 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary strin
 	// If they're both the same type, just copy it.
 	targetDBBackendType := getBestType(tmdb.BackendType(m.TargetDBType))
 	if sourceDBType == targetDBBackendType {
-		logger.Info("Source and Target DB Types are the same. Copying instead of migrating.", "db type", m.TargetDBType, "run time", m.GetRunTime().String())
+		m.logWithRunTime(logger, "Source and Target DB Types are the same. Copying instead of migrating.", "db type", m.TargetDBType)
 		if err = m.CopyWithStatusUpdates(logger, filepath.Join(m.SourceDataDir, dbDir), filepath.Join(m.StagingDataDir, dbDir)); err != nil {
 			return summaryError, fmt.Errorf("could not copy db: %w", err)
 		}
-		logger.Info("Individual DB Migration: Done.", "run time", m.GetRunTime().String())
+		m.logWithRunTime(logger, "Individual DB Migration: Done.")
 		return "Copied", nil
 	}
 
@@ -458,11 +457,11 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary strin
 		return nil
 	}
 	summaryWrittenEntries := func() string {
-		return fmt.Sprintf("Migrated %11s entries", commaString(writtenEntries))
+		return fmt.Sprintf("Migrated %11s entries from %s.", commaString(writtenEntries), sourceDBType)
 	}
 
 	setupTicker.Reset(TickerOff)
-	logger.Info("Individual DB Migration: Starting.", "source db type", sourceDBType, "run time", m.GetRunTime().String())
+	m.logWithRunTime(logger, "Individual DB Migration: Starting.", "source db type", sourceDBType)
 	batch = targetDB.NewBatch()
 	statusTicker.Reset(m.StatusPeriod)
 	for ; iter.Valid(); iter.Next() {
@@ -480,7 +479,7 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary strin
 			statusTicker.Reset(TickerOff)
 
 			writeTicker.Reset(m.StatusPeriod)
-			logger.Info("Writing intermediate batch.", commonKeyVals()...)
+			logWithStats("Writing intermediate batch.")
 			if err = writeAndCloseBatch(); err != nil {
 				return summaryWrittenEntries(), err
 			}
@@ -489,7 +488,7 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary strin
 			batchIndex++
 			batchBytes = 0
 			batchEntries = 0
-			logger.Info("Starting new batch.", commonKeyVals()...)
+			logWithStats("Starting new batch.")
 			batch = targetDB.NewBatch()
 			statusTicker.Reset(m.StatusPeriod)
 		}
@@ -501,13 +500,13 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary strin
 	}
 
 	writeTicker.Reset(m.StatusPeriod)
-	logger.Info("Writing final batch.", commonKeyVals()...)
+	logWithStats("Writing final batch.")
 	if err = writeAndCloseBatch(); err != nil {
 		return summaryWrittenEntries(), err
 	}
 	writeTicker.Reset(TickerOff)
 
-	logger.Info("Individual DB Migration: Done.", "total entries", commaString(writtenEntries), "run time", m.GetRunTime().String())
+	m.logWithRunTime(logger, "Individual DB Migration: Done.", "total entries", commaString(writtenEntries))
 	return summaryWrittenEntries(), nil
 }
 
@@ -522,19 +521,12 @@ func (m Migrator) MoveWithStatusUpdates(logger tmlog.Logger, from, to string) er
 			moveTicker.Stop()
 		}
 	}()
-	commonKeyVals := func() []interface{} {
-		return []interface{}{
-			"from", from,
-			"to", to,
-			"run time", m.GetRunTime().String(),
-		}
-	}
 	moveTicker = time.NewTicker(m.StatusPeriod)
 	go func() {
 		for {
 			select {
 			case <-moveTicker.C:
-				logger.Info("Still moving...", commonKeyVals()...)
+				m.logWithRunTime(logger, "Still moving...", "from", from, "to", to)
 			case <-stopTicker:
 				return
 			}
@@ -553,19 +545,12 @@ func (m Migrator) CopyWithStatusUpdates(logger tmlog.Logger, from, to string) er
 			moveTicker.Stop()
 		}
 	}()
-	commonKeyVals := func() []interface{} {
-		return []interface{}{
-			"from", from,
-			"to", to,
-			"run time", m.GetRunTime().String(),
-		}
-	}
 	moveTicker = time.NewTicker(m.StatusPeriod)
 	go func() {
 		for {
 			select {
 			case <-moveTicker.C:
-				logger.Info("Still copying...", commonKeyVals()...)
+				m.logWithRunTime(logger, "Still copying...", "from", from, "to", to)
 			case <-stopTicker:
 				return
 			}
@@ -598,7 +583,12 @@ func (m Migrator) MakeSummaryString() string {
 	addLine("%16s: %s", "Run Time", m.GetRunTime())
 	addLine("%16s: %s", "Data Dir", m.SourceDataDir)
 	addLine("%16s: %s", "Staging Dir", m.StagingDir)
-	addLine("%16s: %s", "Backup Dir", m.BackupDataDir)
+	if m.StageOnly {
+		addLine("%16s: %s", "Staging Only", "true")
+	} else {
+		addLine("%16s: %s", "Backup Dir", m.BackupDataDir)
+	}
+	addLine("%16s: %s megabytes", "Batch Size", commaString(m.BatchSize/BytesPerMB))
 	addLine("%16s: %s", "New DB Type", m.TargetDBType)
 	addLine("%16s: %s", fmt.Sprintf("%s (%d)", copyHead, len(m.ToCopy)), strings.Join(m.ToCopy, "  "))
 	if len(m.Summaries) == 0 {
@@ -624,6 +614,16 @@ func (m Migrator) GetRunTime() time.Duration {
 		return time.Since(m.TimeStarted)
 	}
 	return m.TimeFinished.Sub(m.TimeStarted)
+}
+
+// logWithRunTime is a wrapper on logger.Info that always includes the run time.
+func (m Migrator) logWithRunTime(logger tmlog.Logger, msg string, keyvals ...interface{}) {
+	logger.Info(msg, append(keyvals, "run time", m.GetRunTime())...)
+}
+
+// logErrorWithRunTime is a wrapper on logger.Error that always includes the run time.
+func (m Migrator) logErrorWithRunTime(logger tmlog.Logger, msg string, keyvals ...interface{}) {
+	logger.Error(msg, append(keyvals, "run time", m.GetRunTime())...)
 }
 
 // splitDBPath combine the provided path elements into a full path to a db directory, then
