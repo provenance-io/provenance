@@ -252,7 +252,9 @@ func (m *Migrator) Migrate(logger tmlog.Logger) (errRv error) {
 		select {
 		case s := <-sigChan:
 			signal.Stop(sigChan)
-			logger.Error("The staging directory might still due to early termination.", "dir", m.StagingDataDir)
+			if logStagingDirError {
+				logger.Error("The staging directory still exists due to early termination.", "dir", m.StagingDataDir)
+			}
 			err2 := proc.Signal(s)
 			if err2 != nil {
 				logger.Error("Error propagating signal.", "error", err2)
@@ -285,7 +287,7 @@ func (m *Migrator) Migrate(logger tmlog.Logger) (errRv error) {
 
 	logger.Info(fmt.Sprintf("Copying %d items from %s to %s", len(m.ToCopy), m.SourceDataDir, m.StagingDataDir))
 	for i, entry := range m.ToCopy {
-		logger.Info(fmt.Sprintf("%d/%d: Copying %s", i+1, len(m.ToCopy), entry))
+		logger.Info(fmt.Sprintf("%d/%d: Copying %s", i+1, len(m.ToCopy), entry), "run time", m.GetRunTime())
 		if err = copier.Copy(filepath.Join(m.SourceDataDir, entry), filepath.Join(m.StagingDataDir, entry)); err != nil {
 			return fmt.Errorf("could not copy %s: %w", entry, err)
 		}
@@ -316,7 +318,7 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary strin
 	summaryError := "error"
 	sourceDir, dbName := splitDBPath(m.SourceDataDir, dbDir)
 	targetDir, _ := splitDBPath(m.StagingDataDir, dbDir)
-	logger.Info("Individual DB Migration: Setting up.", "from", sourceDir, "to", targetDir)
+	logger.Info("Individual DB Migration: Setting up.", "from", sourceDir, "to", targetDir, "run time", m.GetRunTime().String())
 
 	// Define some counters used in log messages, and a function to make it easy to add them all to log messages.
 	writtenEntries := uint(0)
@@ -328,8 +330,8 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary strin
 			"batch index", commaString(batchIndex),
 			"batch size (megabytes)", commaString(batchBytes / BytesPerMB),
 			"batch entries", commaString(batchEntries),
-			"total entries", commaString(writtenEntries + batchEntries),
-			"run time", time.Since(m.TimeStarted).String(),
+			"db total entries", commaString(writtenEntries + batchEntries),
+			"run time", m.GetRunTime().String(),
 		}
 	}
 
@@ -412,10 +414,11 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary strin
 	// If they're both the same type, just copy it.
 	targetDBBackendType := getBestType(tmdb.BackendType(m.TargetDBType))
 	if sourceDBType == targetDBBackendType {
-		logger.Info("Source and Target DB Types are the same. Copying instead of migrating.", "db type", m.TargetDBType)
+		logger.Info("Source and Target DB Types are the same. Copying instead of migrating.", "db type", m.TargetDBType, "run time", m.GetRunTime().String())
 		if err = m.CopyWithStatusUpdates(logger, filepath.Join(m.SourceDataDir, dbDir), filepath.Join(m.StagingDataDir, dbDir)); err != nil {
 			return summaryError, fmt.Errorf("could not copy db: %w", err)
 		}
+		logger.Info("Individual DB Migration: Done.", "run time", m.GetRunTime().String())
 		return "Copied", nil
 	}
 
@@ -459,7 +462,7 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary strin
 	}
 
 	setupTicker.Reset(TickerOff)
-	logger.Info("Individual DB Migration: Starting.", "source db type", sourceDBType)
+	logger.Info("Individual DB Migration: Starting.", "source db type", sourceDBType, "run time", m.GetRunTime().String())
 	batch = targetDB.NewBatch()
 	statusTicker.Reset(m.StatusPeriod)
 	for ; iter.Valid(); iter.Next() {
@@ -504,7 +507,7 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary strin
 	}
 	writeTicker.Reset(TickerOff)
 
-	logger.Info("Individual DB Migration: Done.", "total entries", commaString(writtenEntries))
+	logger.Info("Individual DB Migration: Done.", "total entries", commaString(writtenEntries), "run time", m.GetRunTime().String())
 	return summaryWrittenEntries(), nil
 }
 
@@ -523,7 +526,7 @@ func (m Migrator) MoveWithStatusUpdates(logger tmlog.Logger, from, to string) er
 		return []interface{}{
 			"from", from,
 			"to", to,
-			"run time", time.Since(m.TimeStarted).String(),
+			"run time", m.GetRunTime().String(),
 		}
 	}
 	moveTicker = time.NewTicker(m.StatusPeriod)
@@ -554,7 +557,7 @@ func (m Migrator) CopyWithStatusUpdates(logger tmlog.Logger, from, to string) er
 		return []interface{}{
 			"from", from,
 			"to", to,
-			"run time", time.Since(m.TimeStarted).String(),
+			"run time", m.GetRunTime().String(),
 		}
 	}
 	moveTicker = time.NewTicker(m.StatusPeriod)
@@ -579,23 +582,20 @@ func (m Migrator) MakeSummaryString() string {
 	}
 	addLine("Summary:")
 	status := "Not Started"
-	runTime := time.Duration(0)
 	copyHead := " To Copy"
 	migrateHead := "  To Migrate"
 	switch {
 	case !m.TimeFinished.IsZero() && !m.TimeStarted.IsZero():
 		status = "Finished"
-		runTime = m.TimeFinished.Sub(m.TimeStarted)
 		copyHead = "Copied"
 		migrateHead = " Migrated"
 	case !m.TimeStarted.IsZero():
 		status = "Running"
-		runTime = time.Since(m.TimeStarted)
 		copyHead = "Copying"
 		migrateHead = " Migrating"
 	}
 	addLine("%16s: %s", "Status", status)
-	addLine("%16s: %s", "Run Time", runTime)
+	addLine("%16s: %s", "Run Time", m.GetRunTime())
 	addLine("%16s: %s", "Data Dir", m.SourceDataDir)
 	addLine("%16s: %s", "Staging Dir", m.StagingDir)
 	addLine("%16s: %s", "Backup Dir", m.BackupDataDir)
@@ -614,6 +614,16 @@ func (m Migrator) MakeSummaryString() string {
 		}
 	}
 	return sb.String()
+}
+
+func (m Migrator) GetRunTime() time.Duration {
+	if m.TimeStarted.IsZero() {
+		return 0
+	}
+	if m.TimeFinished.IsZero() {
+		return time.Since(m.TimeStarted)
+	}
+	return m.TimeFinished.Sub(m.TimeStarted)
 }
 
 // splitDBPath combine the provided path elements into a full path to a db directory, then
@@ -644,7 +654,7 @@ func GetDataDirContents(dataDirPath string) ([]string, []string, error) {
 	// The db dirs can have a TON of files (10k+). Most of them are just numbers with an extension.
 	// This loop short-circuits when it finds a file that starts with "MANIFEST", which is significantly
 	// more likely to be closer to the back than the front. So to save lots of iterations, the contents is looped through backwards.
-	for i := len(contents); i >= 0; i-- {
+	for i := len(contents) - 1; i >= 0; i-- {
 		entry := contents[i]
 		switch {
 		case entry.IsDir():
