@@ -3,10 +3,10 @@ package utils
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/signal"
 	"path/filepath"
+	"sort"
 	"strings"
 	"syscall"
 	"time"
@@ -635,13 +635,17 @@ func splitDBPath(elem ...string) (string, string) {
 //   return param 1: []string{"application.db", "blockstore.db", "evidence.db", "snapshots/metadata.db", "state.db", "tx_index.db"}
 //   return param 2: []string{"cs.wal", "priv_validator_state.json", "wasm"}
 func GetDataDirContents(dataDirPath string) ([]string, []string, error) {
-	contents, err := ioutil.ReadDir(dataDirPath)
+	contents, err := os.ReadDir(dataDirPath)
 	if err != nil {
 		return nil, nil, err
 	}
 	dbs := make([]string, 0)
 	nonDBs := make([]string, 0)
-	for _, entry := range contents {
+	// The db dirs can have a TON of files (10k+). Most of them are just numbers with an extension.
+	// This loop short-circuits when it finds a file that starts with "MANIFEST", which is significantly
+	// more likely to be closer to the back than the front. So to save lots of iterations, the contents is looped through backwards.
+	for i := len(contents); i >= 0; i-- {
+		entry := contents[i]
 		switch {
 		case entry.IsDir():
 			// goleveldb, cleveldb, and rocksdb name their db directories with a .db suffix.
@@ -678,6 +682,8 @@ func GetDataDirContents(dataDirPath string) ([]string, []string, error) {
 			nonDBs = append(nonDBs, entry.Name())
 		}
 	}
+	sort.Strings(dbs)
+	sort.Strings(nonDBs)
 	return dbs, nonDBs, nil
 }
 
