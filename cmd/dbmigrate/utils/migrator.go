@@ -292,13 +292,6 @@ func (m *Migrator) Migrate(logger tmlog.Logger) (errRv error) {
 	}
 
 	if m.StageOnly {
-		logger.Info("Stage Only flag provided. Stopping.", "dir", m.StagingDataDir)
-		// prevent the error message log about the staging directory.
-		logStagingDirError = false
-		return nil
-	}
-
-	if m.StageOnly {
 		logger.Info("Stage Only flag provided.", "dir", m.StagingDir)
 	} else {
 		logger.Info("Moving existing data directory to backup location.", "from", m.SourceDataDir, "to", m.BackupDataDir)
@@ -490,11 +483,11 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary strin
 			}
 			writeTicker.Reset(TickerOff)
 
-			logger.Info("Starting new batch.", commonKeyVals()...)
-			batch = targetDB.NewBatch()
 			batchIndex++
 			batchBytes = 0
 			batchEntries = 0
+			logger.Info("Starting new batch.", commonKeyVals()...)
+			batch = targetDB.NewBatch()
 			statusTicker.Reset(m.StatusPeriod)
 		}
 	}
