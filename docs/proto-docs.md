@@ -390,6 +390,31 @@
   
     - [Msg](#provenance.name.v1.Msg)
   
+- [provenance/reward/v1/reward.proto](#provenance/reward/v1/reward.proto)
+    - [RewardRecord](#provenance.reward.v1.RewardRecord)
+  
+    - [Action](#provenance.reward.v1.Action)
+  
+- [provenance/reward/v1/params.proto](#provenance/reward/v1/params.proto)
+    - [Params](#provenance.reward.v1.Params)
+  
+- [provenance/reward/v1/genesis.proto](#provenance/reward/v1/genesis.proto)
+    - [GenesisState](#provenance.reward.v1.GenesisState)
+  
+- [provenance/reward/v1/query.proto](#provenance/reward/v1/query.proto)
+    - [QueryModuleAccountBalanceRequest](#provenance.reward.v1.QueryModuleAccountBalanceRequest)
+    - [QueryModuleAccountBalanceResponse](#provenance.reward.v1.QueryModuleAccountBalanceResponse)
+    - [QueryParamsRequest](#provenance.reward.v1.QueryParamsRequest)
+    - [QueryParamsResponse](#provenance.reward.v1.QueryParamsResponse)
+    - [QueryRewardRecordRequest](#provenance.reward.v1.QueryRewardRecordRequest)
+    - [QueryRewardRecordResponse](#provenance.reward.v1.QueryRewardRecordResponse)
+    - [QueryRewardableForActionRequest](#provenance.reward.v1.QueryRewardableForActionRequest)
+    - [QueryRewardableForActionResponse](#provenance.reward.v1.QueryRewardableForActionResponse)
+    - [QueryTotalRewardableRequest](#provenance.reward.v1.QueryTotalRewardableRequest)
+    - [QueryTotalRewardableResponse](#provenance.reward.v1.QueryTotalRewardableResponse)
+  
+    - [Query](#provenance.reward.v1.Query)
+  
 - [Scalar Value Types](#scalar-value-types)
 
 
@@ -5855,6 +5880,291 @@ Msg defines the bank Msg service.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `BindName` | [MsgBindNameRequest](#provenance.name.v1.MsgBindNameRequest) | [MsgBindNameResponse](#provenance.name.v1.MsgBindNameResponse) | BindName binds a name to an address under a root name. | |
 | `DeleteName` | [MsgDeleteNameRequest](#provenance.name.v1.MsgDeleteNameRequest) | [MsgDeleteNameResponse](#provenance.name.v1.MsgDeleteNameResponse) | DeleteName defines a method to verify a particular invariance. | |
+
+ <!-- end services -->
+
+
+
+<a name="provenance/reward/v1/reward.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/reward/v1/reward.proto
+
+
+
+<a name="provenance.reward.v1.RewardRecord"></a>
+
+### RewardRecord
+A Reward Records is the metadata of reward data per address
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address of reward user |
+| `initial_reward_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | total initial reward amount for the user |
+| `action_completed` | [bool](#bool) | repeated | true if action is completed index of bool in array refers to action enum # |
+
+
+
+
+
+ <!-- end messages -->
+
+
+<a name="provenance.reward.v1.Action"></a>
+
+### Action
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| ActionAddLiquidity | 0 |  |
+| ActionSwap | 1 |  |
+| ActionVote | 2 |  |
+| ActionDelegateStake | 3 |  |
+
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/reward/v1/params.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/reward/v1/params.proto
+
+
+
+<a name="provenance.reward.v1.Params"></a>
+
+### Params
+Params defines the reward module's parameters.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `airdrop_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+| `duration_until_decay` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
+| `duration_of_decay` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
+| `reward_denom` | [string](#string) |  | denom of reward asset |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/reward/v1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/reward/v1/genesis.proto
+
+
+
+<a name="provenance.reward.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the reward module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `module_account_balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | balance of the reward module's account |
+| `params` | [Params](#provenance.reward.v1.Params) |  | params defines all the parameters of the module. |
+| `reward_records` | [RewardRecord](#provenance.reward.v1.RewardRecord) | repeated | list of reward records |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/reward/v1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/reward/v1/query.proto
+
+
+
+<a name="provenance.reward.v1.QueryModuleAccountBalanceRequest"></a>
+
+### QueryModuleAccountBalanceRequest
+QueryParamsRequest is the request type for the Query/Params RPC method.
+
+
+
+
+
+
+<a name="provenance.reward.v1.QueryModuleAccountBalanceResponse"></a>
+
+### QueryModuleAccountBalanceResponse
+QueryParamsResponse is the response type for the Query/Params RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `moduleAccountBalance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | params defines the parameters of the module. |
+
+
+
+
+
+
+<a name="provenance.reward.v1.QueryParamsRequest"></a>
+
+### QueryParamsRequest
+QueryParamsRequest is the request type for the Query/Params RPC method.
+
+
+
+
+
+
+<a name="provenance.reward.v1.QueryParamsResponse"></a>
+
+### QueryParamsResponse
+QueryParamsResponse is the response type for the Query/Params RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#provenance.reward.v1.Params) |  | params defines the parameters of the module. |
+
+
+
+
+
+
+<a name="provenance.reward.v1.QueryRewardRecordRequest"></a>
+
+### QueryRewardRecordRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.reward.v1.QueryRewardRecordResponse"></a>
+
+### QueryRewardRecordResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `reward_record` | [RewardRecord](#provenance.reward.v1.RewardRecord) |  |  |
+
+
+
+
+
+
+<a name="provenance.reward.v1.QueryRewardableForActionRequest"></a>
+
+### QueryRewardableForActionRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
+| `action` | [Action](#provenance.reward.v1.Action) |  |  |
+
+
+
+
+
+
+<a name="provenance.reward.v1.QueryRewardableForActionResponse"></a>
+
+### QueryRewardableForActionResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+
+
+
+
+
+
+<a name="provenance.reward.v1.QueryTotalRewardableRequest"></a>
+
+### QueryTotalRewardableRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.reward.v1.QueryTotalRewardableResponse"></a>
+
+### QueryTotalRewardableResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.reward.v1.Query"></a>
+
+### Query
+Query defines the gRPC querier service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `ModuleAccountBalance` | [QueryModuleAccountBalanceRequest](#provenance.reward.v1.QueryModuleAccountBalanceRequest) | [QueryModuleAccountBalanceResponse](#provenance.reward.v1.QueryModuleAccountBalanceResponse) |  | GET|/provenance/reward/v1/module_account_balance|
+| `Params` | [QueryParamsRequest](#provenance.reward.v1.QueryParamsRequest) | [QueryParamsResponse](#provenance.reward.v1.QueryParamsResponse) |  | GET|/provenance/reward/v1/params|
+| `RewardRecord` | [QueryRewardRecordRequest](#provenance.reward.v1.QueryRewardRecordRequest) | [QueryRewardRecordResponse](#provenance.reward.v1.QueryRewardRecordResponse) |  | GET|/provenance/reward/v1/reward_record/{address}|
+| `RewardableForAction` | [QueryRewardableForActionRequest](#provenance.reward.v1.QueryRewardableForActionRequest) | [QueryRewardableForActionResponse](#provenance.reward.v1.QueryRewardableForActionResponse) |  | GET|/provenance/reward/v1/reward_for_action/{address}/{action}|
+| `TotalRewardable` | [QueryTotalRewardableRequest](#provenance.reward.v1.QueryTotalRewardableRequest) | [QueryTotalRewardableResponse](#provenance.reward.v1.QueryTotalRewardableResponse) |  | GET|/provenance/reward/v1/total_reward/{address}|
 
  <!-- end services -->
 

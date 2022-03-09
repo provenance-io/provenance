@@ -8,6 +8,8 @@ import "provenance/reward/v1/reward.proto";
 import "provenance/reward/v1/params.proto";
 
 option go_package = "github.com/provenance-io/provenance/x/reward/types";
+option java_package        = "io.provenance.reward.v1";
+option java_multiple_files = true;
 
 // Query defines the gRPC querier service.
 service Query {
@@ -26,12 +28,12 @@ service Query {
   rpc RewardableForAction(QueryRewardableForActionRequest)
       returns (QueryRewardableForActionResponse) {
     option (google.api.http).get =
-        "/provenance/reward/v1/rewardable_for_action/{address}/{action}";
+        "/provenance/reward/v1/reward_for_action/{address}/{action}";
   }
   rpc TotalRewardable(QueryTotalRewardableRequest)
       returns (QueryTotalRewardableResponse) {
     option (google.api.http).get =
-        "/provenance/reward/v1/total_rewardable/{address}";
+        "/provenance/reward/v1/total_reward/{address}";
   }
 }
 

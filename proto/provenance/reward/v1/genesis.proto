@@ -9,11 +9,8 @@ import "google/protobuf/timestamp.proto";
 import "provenance/reward/v1/reward.proto";
 import "provenance/reward/v1/params.proto";
 
-import "google/api/annotations.proto";
-import "provenance/reward/v1/genesis.proto";
-
-option go_package          = "github.com/provenance-io/provenance/x/epoch/types";
-option java_package        = "io.provenance.epoch.v1";
+option go_package          = "github.com/provenance-io/provenance/x/reward/types";
+option java_package        = "io.provenance.reward.v1";
 option java_multiple_files = true;
 
 // GenesisState defines the reward module's genesis state.

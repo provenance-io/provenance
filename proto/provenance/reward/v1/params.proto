@@ -6,6 +6,8 @@ import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/provenance-io/provenance/x/reward/types";
+option java_package        = "io.provenance.reward.v1";
+option java_multiple_files = true;
 
 // Params defines the reward module's parameters.
 message Params {
@@ -26,6 +28,6 @@ message Params {
     (gogoproto.jsontag) = "duration_of_decay,omitempty",
     (gogoproto.moretags) = "yaml:\"duration_of_decay\""
   ];
-  // denom of rewardable asset
+  // denom of reward asset
   string reward_denom = 4;
 }
