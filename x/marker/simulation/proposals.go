@@ -30,7 +30,7 @@ const (
 	// OpWeightChangeStatusProposal app params key for change status proposal
 	OpWeightChangeStatusProposal = "op_weight_change_status_proposal"
 	// OpWeightSetDenomMetadataProposal app params key for change status proposal
-
+	//nolint:gosec // not credentials
 	OpWeightSetDenomMetadataProposal = "op_weight_set_denom_metadata"
 )
 
