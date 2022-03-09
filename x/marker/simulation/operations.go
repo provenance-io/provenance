@@ -25,11 +25,10 @@ import (
 
 // Simulation operation weights constants
 const (
-	//nolint:gosec // not credentials
 	OpWeightMsgAddMarker = "op_weight_msg_add_marker"
-	//nolint:gosec // not credentials
+
 	OpWeightMsgChangeStatus = "op_weight_msg_change_status"
-	//nolint:gosec // not credentials
+
 	OpWeightMsgAddAccess = "op_weight_msg_add_access"
 )
 
