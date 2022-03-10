@@ -323,6 +323,7 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary strin
 	batchEntries := uint(0)
 	batchBytes := uint(0)
 	batchIndex := uint(1)
+	action := "setting up"
 	logWithStats := func(msg string, keyvals ...interface{}) {
 		m.logWithRunTime(logger, msg,
 			append(keyvals,
@@ -330,6 +331,7 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary strin
 				"batch size (megabytes)", commaString(batchBytes/BytesPerMB),
 				"batch entries", commaString(batchEntries),
 				"db total entries", commaString(writtenEntries+batchEntries),
+				"action", action,
 			)...,
 		)
 	}
@@ -395,6 +397,7 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary strin
 		}
 	}()
 
+	action = "detecting db type"
 	var ok bool
 	sourceDBType, ok = DetectDBType(dbName, sourceDir)
 	if !ok {
@@ -404,6 +407,7 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary strin
 	// In at least one case (the snapshots/metadata db), there's a sub-directory that needs to be created in order to
 	// safely open a new database in it.
 	if targetDir != m.StagingDataDir {
+		action = "making dir"
 		err = os.MkdirAll(targetDir, m.Permissions)
 		if err != nil {
 			return summaryError, fmt.Errorf("could not create target sub-directory: %w", err)
@@ -413,24 +417,30 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary strin
 	// If they're both the same type, just copy it.
 	targetDBBackendType := getBestType(tmdb.BackendType(m.TargetDBType))
 	if sourceDBType == targetDBBackendType {
+		setupTicker.Reset(TickerOff)
+		action = "copying"
 		m.logWithRunTime(logger, "Source and Target DB Types are the same. Copying instead of migrating.", "db type", m.TargetDBType)
 		if err = m.CopyWithStatusUpdates(logger, filepath.Join(m.SourceDataDir, dbDir), filepath.Join(m.StagingDataDir, dbDir)); err != nil {
 			return summaryError, fmt.Errorf("could not copy db: %w", err)
 		}
+		action = "done"
 		m.logWithRunTime(logger, "Individual DB Migration: Done.")
 		return "Copied", nil
 	}
 
+	action = "opening source db"
 	sourceDB, err = tmdb.NewDB(dbName, sourceDBType, sourceDir)
 	if err != nil {
 		return summaryError, fmt.Errorf("could not open %q source db: %w", dbName, err)
 	}
 
+	action = "opening target db"
 	targetDB, err = tmdb.NewDB(dbName, targetDBBackendType, targetDir)
 	if err != nil {
 		return summaryError, fmt.Errorf("could not open %q target db: %w", dbName, err)
 	}
 
+	action = "making iterator"
 	iter, err = sourceDB.Iterator(nil, nil)
 	if err != nil {
 		return summaryError, fmt.Errorf("could not create %q source iterator: %w", dbName, err)
@@ -439,6 +449,7 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary strin
 	// There's a couple places in here where we need to write and close the batch. But the safety stuff (on errors)
 	// is needed in both places, so it's pulled out into this anonymous function.
 	writeAndCloseBatch := func() error {
+		action = "writing batch"
 		// Using WriteSync here instead of Write because sometimes the Close was causing a segfault, and maybe this helps?
 		if err = batch.WriteSync(); err != nil {
 			// If the write fails, closing the db can sometimes cause a segmentation fault.
@@ -446,6 +457,7 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary strin
 			return fmt.Errorf("could not write %q batch: %w", dbName, err)
 		}
 		writtenEntries += batchEntries
+		action = "closing batch"
 		err = batch.Close()
 		if err != nil {
 			// If closing the batch fails, closing the db can sometimes cause a segmentation fault.
@@ -464,15 +476,20 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary strin
 	m.logWithRunTime(logger, "Individual DB Migration: Starting.", "source db type", sourceDBType)
 	batch = targetDB.NewBatch()
 	statusTicker.Reset(m.StatusPeriod)
+	action = "starting iteration"
 	for ; iter.Valid(); iter.Next() {
+		action = "getting entry key"
+		k := iter.Key()
+		action = "getting entry value"
 		v := iter.Value()
 		if v == nil {
 			v = []byte{}
 		}
-		k := iter.Key()
+		action = "setting key/value in batch"
 		if err = batch.Set(k, v); err != nil {
 			return summaryWrittenEntries(), fmt.Errorf("could not set %q key/value: %w", dbName, err)
 		}
+		action = "counting"
 		batchEntries++
 		batchBytes += uint(len(v) + len(k))
 		if m.BatchSize > 0 && batchBytes >= m.BatchSize {
@@ -485,6 +502,7 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary strin
 			}
 			writeTicker.Reset(TickerOff)
 
+			action = "batch reset"
 			batchIndex++
 			batchBytes = 0
 			batchEntries = 0
@@ -492,9 +510,11 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary strin
 			batch = targetDB.NewBatch()
 			statusTicker.Reset(m.StatusPeriod)
 		}
+		action = "getting next entry"
 	}
 	statusTicker.Reset(TickerOff)
 
+	action = "done iterating"
 	if err = iter.Error(); err != nil {
 		return summaryWrittenEntries(), fmt.Errorf("iterator error: %w", err)
 	}
@@ -506,6 +526,7 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary strin
 	}
 	writeTicker.Reset(TickerOff)
 
+	action = "done"
 	m.logWithRunTime(logger, "Individual DB Migration: Done.", "total entries", commaString(writtenEntries))
 	return summaryWrittenEntries(), nil
 }
@@ -606,14 +627,14 @@ func (m Migrator) MakeSummaryString() string {
 	return sb.String()
 }
 
-func (m Migrator) GetRunTime() time.Duration {
+func (m Migrator) GetRunTime() string {
 	if m.TimeStarted.IsZero() {
-		return 0
+		return "0.000000000s"
 	}
 	if m.TimeFinished.IsZero() {
-		return time.Since(m.TimeStarted)
+		return time.Since(m.TimeStarted).String()
 	}
-	return m.TimeFinished.Sub(m.TimeStarted)
+	return m.TimeFinished.Sub(m.TimeStarted).String()
 }
 
 // logWithRunTime is a wrapper on logger.Info that always includes the run time.
