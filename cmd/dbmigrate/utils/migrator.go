@@ -83,6 +83,7 @@ type Migrator struct {
 	ToCopy []string
 
 	// Permissions are the permissions to use on any directories created.
+	// Default is to match the source directory, or else 0700.
 	Permissions os.FileMode
 
 	// StatusPeriod is the max time period between status messages.
@@ -214,7 +215,7 @@ func (m Migrator) ValidateBasic() error {
 	return nil
 }
 
-// ReadSourceDataDir gets the contents of the SourceDataDir and identifies ToConvert and ToCopy.
+// ReadSourceDataDir gets the contents of the SourceDataDir and populates ToConvert and ToCopy.
 // Anything in those two fields prior to calling this, will be overwritten.
 //
 // Does nothing if SourceDataDir is not set.
