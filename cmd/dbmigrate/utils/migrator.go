@@ -457,6 +457,9 @@ func (m *migrationManager) MigrateDBDir(dbDir string) (summary string, err error
 	if !ok {
 		return summaryError, fmt.Errorf("could not determine db type: %s", filepath.Join(m.SourceDataDir, dbDir))
 	}
+	if !IsPossibleDBType(string(sourceDBType)) {
+		return summaryError, fmt.Errorf("cannot read source db of type %q", sourceDBType)
+	}
 
 	// In at least one case (the snapshots/metadata db), there's a sub-directory that needs to be created in order to
 	// safely open a new database in it.
@@ -738,6 +741,18 @@ func GetDataDirContents(dataDirPath string) ([]string, []string, error) {
 			// and so hopefully this will catch other db types that dont use the .db suffix on their directories.
 			// The .db test is still also used to save some recursive calls and extra processing.
 			return []string{"."}, nil, nil
+		case filepath.Ext(entry.Name()) == ".db":
+			// boltdb has executable files with a .db extension.
+			info, err := entry.Info()
+			if err != nil {
+				return nil, nil, err
+			}
+			// Check if the file has at least one executable bit set.
+			if info.Mode()&0111 != 1 {
+				dbs = append(dbs, entry.Name())
+			} else {
+				nonDBs = append(nonDBs, entry.Name())
+			}
 		default:
 			nonDBs = append(nonDBs, entry.Name())
 		}
@@ -775,6 +790,8 @@ func DetectDBType(name, dir string) (tmdb.BackendType, bool) {
 	// * There are numbered files with the extension ".ldb" (might possibly be missing if the db is empty).
 	// * Has the following files: CURRENT, LOG, MANIFEST-{6 digits} (multiple)
 	// * Might also have files: LOCK, LOG.old
+	// boltdb:
+	// * Is an executable file named "dir/name.db"
 
 	// Note: I'm not sure of an easy way to look for files that start or end with certain strings (e.g files ending in ".sst").
 	// The only way I know of is to get the entire dir contents and loop through the entries.
@@ -799,9 +816,14 @@ func DetectDBType(name, dir string) (tmdb.BackendType, bool) {
 		return tmdb.BadgerDBBackend, true
 	}
 
+	// Now lets check for boltdb. It's a file instead of directory with the same name used by rocksdb and leveldb.
+	dbDir = filepath.Join(dir, name+".db")
+	if fileExists(dbDir) {
+		return tmdb.BoltDBBackend, true
+	}
+
 	// The other two (rocksdb and leveldb) should be in directories named "dir/name.db".
 	// and should have files CURRENT and LOG
-	dbDir = filepath.Join(dir, name+".db")
 	if !dirExists(dbDir) || !fileExists(filepath.Join(dbDir, "CURRENT")) || !fileExists(filepath.Join(dbDir, "LOG")) {
 		return unknownDBBackend, false
 	}

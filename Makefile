@@ -12,6 +12,7 @@ LEDGER_ENABLED ?= true
 WITH_CLEVELDB ?= yes
 WITH_ROCKSDB ?= yes
 WITH_BADGERDB ?= yes
+WITH_BOLTDB ?= yes
 
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 BRANCH_PRETTY := $(subst /,-,$(BRANCH))
@@ -59,6 +60,9 @@ ifeq ($(WITH_ROCKSDB),yes)
 endif
 ifeq ($(WITH_BADGERDB),yes)
   build_tags += badgerdb
+endif
+ifeq ($(WITH_BOLTDB),yes)
+  build_tags += boltdb
 endif
 
 ifeq ($(LEDGER_ENABLED),true)
