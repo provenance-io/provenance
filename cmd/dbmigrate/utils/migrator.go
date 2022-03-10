@@ -19,9 +19,6 @@ import (
 const (
 	// BytesPerMB is the number of bytes in a megabyte.
 	BytesPerMB = 1_048_576
-	// TickerOff is a really long time period that can effectively turn a ticker off.
-	// 1,000,000 hours is a little over 114 years (and is also about 1/3 max int64 as nanoseconds).
-	TickerOff = 1_000_000 * time.Hour
 	// unknownDBBackend is mostly a tmdb.BackendType used in output as a string.
 	// It indicates that the backend is unknown.
 	unknownDBBackend = tmdb.BackendType("UNKNOWN")
@@ -94,7 +91,14 @@ type Migrator struct {
 	// DirDateFormat is the format string used in dated directory names.
 	// Default is "2006-01-02-15-04-05".
 	DirDateFormat string
+}
 
+// migrationManager is a struct with information about the status of a migrator.
+type migrationManager struct {
+	Migrator
+
+	// Status is a short message about what's currently going on.
+	Status string
 	// TimeStarted is the time that the migration was started.
 	// This is set during the call to Migrate.
 	TimeStarted time.Time
@@ -104,6 +108,23 @@ type Migrator struct {
 	// Summaries is a map of ToConvert entries, to a short summary string about the migration of that entry.
 	// Entries are set during the call to Migrate and are the return values of each MigrateDBDir call.
 	Summaries map[string]string
+
+	// Logger is the Logger to use for logging log messages.
+	Logger tmlog.Logger
+
+	// StatusTicker is the ticker used to issue regular status log messages.
+	StatusTicker *time.Ticker
+	// StopTickerChan is a channel used to stop the regular status log messages.
+	StopTickerChan chan bool
+	// StatusKeyvals is a function that returns keyvals used in status log messages.
+	StatusKeyvals func() []interface{}
+
+	// LogStagingDirError indicates whether or not to log an error about the staging dir existing (for abnormal termination).
+	LogStagingDirError bool
+	// SigChan is a channel used to Notify certain os signals.
+	SigChan chan os.Signal
+	// StopSigChan is a channel used to stop the special signal handling.
+	StopSigChan chan bool
 }
 
 // Initialize prepares this Migrator by doing the following:
@@ -216,103 +237,150 @@ func (m *Migrator) ReadSourceDataDir() error {
 // It then copies everything in ToCopy from the SourceDataDir to the StagingDataDir.
 // It then moves the SourceDataDir to BackupDataDir and moves StagingDataDir into place where SourceDataDir was.
 func (m *Migrator) Migrate(logger tmlog.Logger) (errRv error) {
-	if err := m.ValidateBasic(); err != nil {
-		return err
-	}
-	// If this func doesn't complete fully, we want to output a message that the staging directory might still exist (and be quite large).
-	// Make a done channel for indicating normal finish and a signal channel for capturing interrupt signals like ctrl+c.
-	logStagingDirError := false
-	doneChan := make(chan bool, 1)
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM, syscall.SIGSEGV, syscall.SIGQUIT)
-	// If we're returning an error, add the log message, and then always do a little cleanup.
 	defer func() {
 		if r := recover(); r != nil {
 			errRv = fmt.Errorf("recovered from panic: %v", r)
 		}
-		if logStagingDirError {
-			m.logErrorWithRunTime(logger, "The staging directory still exists due to error.", "dir", m.StagingDataDir)
-		}
-		close(doneChan)
-		signal.Stop(sigChan)
-		close(sigChan)
 	}()
-	// We need to identify the currently running process so that any captured signal can be sent back to it.
-	proc, err := os.FindProcess(os.Getpid())
-	if err != nil {
-		return fmt.Errorf("could not identify the running process: %w", err)
+
+	if err := m.ValidateBasic(); err != nil {
+		return err
 	}
-	// Monitor for the signals and handle them appropriately.
-	go func() {
-		defer func() {
-			if r := recover(); r != nil {
-				m.logErrorWithRunTime(logger, "The signal watcher subprocess encountered a panic.", "panic", fmt.Sprintf("%v", r))
-			}
-		}()
-		select {
-		case s := <-sigChan:
-			signal.Stop(sigChan)
-			if logStagingDirError {
-				m.logErrorWithRunTime(logger, "The staging directory still exists due to early termination.", "dir", m.StagingDataDir)
-			}
-			err2 := proc.Signal(s)
-			if err2 != nil {
-				m.logErrorWithRunTime(logger, "Error propagating signal.", "error", err2)
-			}
-			return
-		case <-doneChan:
-			return
-		}
+
+	manager, err := m.startMigratorManager(logger)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		manager.Logger = logger
+		manager.Close()
 	}()
 
 	// Now we can get started.
-	m.TimeStarted = time.Now()
-	logger.Info(m.MakeSummaryString())
+	logger.Info(manager.MakeSummaryString())
+	manager.Status = "making staging dir"
 	err = os.MkdirAll(m.StagingDataDir, m.Permissions)
 	if err != nil {
 		return fmt.Errorf("could not create staging data directory: %w", err)
 	}
-	logStagingDirError = true
-	m.logWithRunTime(logger, fmt.Sprintf("Converting %d Individual DBs.", len(m.ToConvert)))
-	m.Summaries = map[string]string{}
+	manager.LogStagingDirError = true
+	manager.LogWithRunTime(fmt.Sprintf("Converting %d Individual DBs.", len(m.ToConvert)))
 	for i, dbDir := range m.ToConvert {
-		m.Summaries[dbDir], err = m.MigrateDBDir(logger.With("db", strings.TrimSuffix(dbDir, ".db"), "progress", fmt.Sprintf("%d/%d", i+1, len(m.ToConvert))), dbDir)
+		manager.Logger = logger.With(
+			"db", strings.TrimSuffix(dbDir, ".db"),
+			"progress", fmt.Sprintf("%d/%d", i+1, len(m.ToConvert)),
+		)
+		manager.Summaries[dbDir], err = manager.MigrateDBDir(dbDir)
 		if err != nil {
 			return err
 		}
 	}
+	manager.Logger = logger
 
-	m.logWithRunTime(logger, fmt.Sprintf("Copying %d items.", len(m.ToCopy)))
+	manager.LogWithRunTime(fmt.Sprintf("Copying %d items.", len(m.ToCopy)))
 	for i, entry := range m.ToCopy {
-		m.logWithRunTime(logger, fmt.Sprintf("%d/%d: Copying %s", i+1, len(m.ToCopy), entry))
+		manager.LogWithRunTime(fmt.Sprintf("%d/%d: Copying %s", i+1, len(m.ToCopy), entry))
 		if err = copier.Copy(filepath.Join(m.SourceDataDir, entry), filepath.Join(m.StagingDataDir, entry)); err != nil {
 			return fmt.Errorf("could not copy %s: %w", entry, err)
 		}
 	}
 
 	if m.StageOnly {
-		m.logWithRunTime(logger, "Stage Only flag provided.", "dir", m.StagingDir)
+		manager.LogWithRunTime("Stage Only flag provided.", "dir", m.StagingDir)
 	} else {
-		m.logWithRunTime(logger, "Moving existing data directory to backup location.", "from", m.SourceDataDir, "to", m.BackupDataDir)
-		if err = m.MoveWithStatusUpdates(logger, m.SourceDataDir, m.BackupDataDir); err != nil {
+		manager.Status = "moving old data dir"
+		manager.StatusKeyvals = func() []interface{} {
+			return []interface{}{
+				"from", m.SourceDataDir,
+				"to", m.BackupDataDir,
+			}
+		}
+		manager.LogWithRunTime("Moving existing data directory to backup location.", manager.StatusKeyvals()...)
+		if err = os.Rename(m.SourceDataDir, m.BackupDataDir); err != nil {
 			return fmt.Errorf("could not back up existing data directory: %w", err)
 		}
 
-		m.logWithRunTime(logger, "Moving new data directory into place.", "from", m.StagingDataDir, "to", m.SourceDataDir)
-		if err = m.MoveWithStatusUpdates(logger, m.StagingDataDir, m.SourceDataDir); err != nil {
+		manager.Status = "moving new data dir"
+		manager.StatusKeyvals = func() []interface{} {
+			return []interface{}{
+				"from", m.StagingDataDir,
+				"to", m.SourceDataDir,
+			}
+		}
+		manager.LogWithRunTime("Moving new data directory into place.", manager.StatusKeyvals()...)
+		if err = os.Rename(m.StagingDataDir, m.SourceDataDir); err != nil {
 			return fmt.Errorf("could not move new data directory into place: %w", err)
 		}
+		manager.StatusKeyvals = noKeyvals
 	}
-	logStagingDirError = false
-	m.TimeFinished = time.Now()
+	manager.LogStagingDirError = false
+	manager.Finish()
 
-	logger.Info(m.MakeSummaryString())
+	logger.Info(manager.MakeSummaryString())
 	return nil
 }
 
+// startMigratorManager creates a migrationManager and initializes it.
+// It must later be closed.
+func (m Migrator) startMigratorManager(logger tmlog.Logger) (*migrationManager, error) {
+	rv := &migrationManager{
+		Migrator:       m,
+		Status:         "starting",
+		TimeStarted:    time.Now(),
+		Summaries:      map[string]string{},
+		Logger:         logger,
+		StatusTicker:   time.NewTicker(m.StatusPeriod),
+		StatusKeyvals:  noKeyvals,
+		StopTickerChan: make(chan bool, 1),
+		SigChan:        make(chan os.Signal, 1),
+		StopSigChan:    make(chan bool, 1),
+	}
+	// Monitor for the signals and handle them appropriately.
+	proc, err := os.FindProcess(os.Getpid())
+	if err != nil {
+		return nil, fmt.Errorf("could not identify the running process: %w", err)
+	}
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				rv.LogErrorWithRunTime("The signal watcher subprocess encountered a panic.", "panic", fmt.Sprintf("%v", r))
+			}
+		}()
+		select {
+		case s := <-rv.SigChan:
+			signal.Stop(rv.SigChan)
+			if rv.LogStagingDirError {
+				rv.LogErrorWithRunTime("The staging directory still exists due to early termination.", "dir", m.StagingDataDir)
+			}
+			err2 := proc.Signal(s)
+			if err2 != nil {
+				rv.LogErrorWithRunTime("Error propagating signal.", "error", err2)
+			}
+			return
+		case <-rv.StopSigChan:
+			return
+		}
+	}()
+	signal.Notify(rv.SigChan, os.Interrupt, syscall.SIGTERM, syscall.SIGSEGV, syscall.SIGQUIT)
+	// Fire up another sub-process for outputting a status message every now and then.
+	rv.StatusTicker = time.NewTicker(m.StatusPeriod)
+	go func() {
+		for {
+			select {
+			case <-rv.StatusTicker.C:
+				rv.LogWithRunTime(fmt.Sprintf("Status: %s", rv.Status), rv.StatusKeyvals()...)
+			case <-rv.StopTickerChan:
+				return
+			}
+		}
+	}()
+	return rv, nil
+}
+
 // MigrateDBDir creates a copy of the given db directory, converting it from one underlying type to another.
-func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary string, err error) {
-	m.logWithRunTime(logger, "Individual DB Migration: Setting up.")
+func (m *migrationManager) MigrateDBDir(dbDir string) (summary string, err error) {
+	m.LogWithRunTime("Individual DB Migration: Setting up.")
+	m.Status = "setting up"
 
 	summaryError := "error"
 	sourceDir, dbName := splitDBPath(m.SourceDataDir, dbDir)
@@ -323,40 +391,27 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary strin
 	batchEntries := uint(0)
 	batchBytes := uint(0)
 	batchIndex := uint(1)
-	action := "setting up"
+	m.StatusKeyvals = func() []interface{} {
+		return []interface{}{
+			"batch index", commaString(batchIndex),
+			"batch size (megabytes)", commaString(batchBytes / BytesPerMB),
+			"batch entries", commaString(batchEntries),
+			"db total entries", commaString(writtenEntries + batchEntries),
+		}
+	}
 	logWithStats := func(msg string, keyvals ...interface{}) {
-		m.logWithRunTime(logger, msg,
-			append(keyvals,
-				"batch index", commaString(batchIndex),
-				"batch size (megabytes)", commaString(batchBytes/BytesPerMB),
-				"batch entries", commaString(batchEntries),
-				"db total entries", commaString(writtenEntries+batchEntries),
-			)...,
-		)
+		m.LogWithRunTime(msg, append(m.StatusKeyvals(), keyvals...)...)
 	}
 
 	// There's several things that need closing and sometimes calling close can cause a segmentation fault that,
-	// for some reason, doesn't reach the sigChan notification set up in the Migrate method.
+	// for some reason, doesn't reach the SigChan notification set up in the Migrate method.
 	// So just to have clearer control over closing order, they're all defined at once and closed in a single defer function.
 	var sourceDB, targetDB tmdb.DB
 	var iter tmdb.Iterator
 	var batch tmdb.Batch
-	var setupTicker, statusTicker, writeTicker *time.Ticker
-	stopTickers := make(chan bool, 1)
 	sourceDBType := unknownDBBackend
 	defer func() {
-		// closing the stopTickers chan will trigger the status logging subprocess to finish up.
-		close(stopTickers)
-		// Then we can stop the tickers (just to be safe).
-		if setupTicker != nil {
-			setupTicker.Stop()
-		}
-		if statusTicker != nil {
-			statusTicker.Stop()
-		}
-		if writeTicker != nil {
-			writeTicker.Stop()
-		}
+		m.StatusKeyvals = noKeyvals
 		// iter before sourceDB because closing the sourceDB might remove things needed for the iterator to close.
 		if iter != nil {
 			iter.Close()
@@ -377,26 +432,7 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary strin
 		}
 	}()
 
-	// Set up a couple different tickers for outputting different status messages at different times.
-	setupTicker = time.NewTicker(m.StatusPeriod)
-	writeTicker = time.NewTicker(TickerOff)
-	statusTicker = time.NewTicker(TickerOff)
-	go func() {
-		for {
-			select {
-			case <-setupTicker.C:
-				logWithStats("Still setting up...")
-			case <-statusTicker.C:
-				logWithStats(fmt.Sprintf("Status: %s", action))
-			case <-writeTicker.C:
-				logWithStats("Still writing...")
-			case <-stopTickers:
-				return
-			}
-		}
-	}()
-
-	action = "detecting db type"
+	m.Status = "detecting db type"
 	var ok bool
 	sourceDBType, ok = DetectDBType(dbName, sourceDir)
 	if !ok {
@@ -406,40 +442,47 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary strin
 	// In at least one case (the snapshots/metadata db), there's a sub-directory that needs to be created in order to
 	// safely open a new database in it.
 	if targetDir != m.StagingDataDir {
-		action = "making dir"
+		m.Status = "making sub-dir"
 		err = os.MkdirAll(targetDir, m.Permissions)
 		if err != nil {
 			return summaryError, fmt.Errorf("could not create target sub-directory: %w", err)
 		}
 	}
 
-	// If they're both the same type, just copy it.
+	// If they're both the same type, just copy it and be done.
 	targetDBBackendType := getBestType(tmdb.BackendType(m.TargetDBType))
 	if sourceDBType == targetDBBackendType {
-		setupTicker.Reset(TickerOff)
-		action = "copying"
-		m.logWithRunTime(logger, "Source and Target DB Types are the same. Copying instead of migrating.", "db type", m.TargetDBType)
-		if err = m.CopyWithStatusUpdates(logger, filepath.Join(m.SourceDataDir, dbDir), filepath.Join(m.StagingDataDir, dbDir)); err != nil {
+		m.Status = "copying db"
+		from := filepath.Join(m.SourceDataDir, dbDir)
+		to := filepath.Join(m.StagingDataDir, dbDir)
+		m.StatusKeyvals = func() []interface{} {
+			return []interface{}{
+				"from", from,
+				"to", to,
+			}
+		}
+		m.LogWithRunTime("Source and Target DB Types are the same. Copying instead of migrating.", "db type", m.TargetDBType)
+		if err = copier.Copy(from, to); err != nil {
 			return summaryError, fmt.Errorf("could not copy db: %w", err)
 		}
-		action = "done"
-		m.logWithRunTime(logger, "Individual DB Migration: Done.")
+		m.Status = "done"
+		m.LogWithRunTime("Individual DB Migration: Done.")
 		return "Copied", nil
 	}
 
-	action = "opening source db"
+	m.Status = "opening source db"
 	sourceDB, err = tmdb.NewDB(dbName, sourceDBType, sourceDir)
 	if err != nil {
 		return summaryError, fmt.Errorf("could not open %q source db: %w", dbName, err)
 	}
 
-	action = "opening target db"
+	m.Status = "opening target db"
 	targetDB, err = tmdb.NewDB(dbName, targetDBBackendType, targetDir)
 	if err != nil {
 		return summaryError, fmt.Errorf("could not open %q target db: %w", dbName, err)
 	}
 
-	action = "making iterator"
+	m.Status = "making iterator"
 	iter, err = sourceDB.Iterator(nil, nil)
 	if err != nil {
 		return summaryError, fmt.Errorf("could not create %q source iterator: %w", dbName, err)
@@ -448,7 +491,7 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary strin
 	// There's a couple places in here where we need to write and close the batch. But the safety stuff (on errors)
 	// is needed in both places, so it's pulled out into this anonymous function.
 	writeAndCloseBatch := func() error {
-		action = "writing batch"
+		m.Status = "writing batch"
 		// Using WriteSync here instead of Write because sometimes the Close was causing a segfault, and maybe this helps?
 		if err = batch.WriteSync(); err != nil {
 			// If the write fails, closing the db can sometimes cause a segmentation fault.
@@ -456,7 +499,7 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary strin
 			return fmt.Errorf("could not write %q batch: %w", dbName, err)
 		}
 		writtenEntries += batchEntries
-		action = "closing batch"
+		m.Status = "closing batch"
 		err = batch.Close()
 		if err != nil {
 			// If closing the batch fails, closing the db can sometimes cause a segmentation fault.
@@ -468,119 +511,80 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary strin
 		return nil
 	}
 	summaryWrittenEntries := func() string {
-		return fmt.Sprintf("Migrated %11s entries from %s.", commaString(writtenEntries), sourceDBType)
+		// 13 characters accounts right-justifies the numbers as long as they're under 10 billion (9,999,999,999).
+		// Testnet's application db (as of writing this) has just over 1 billion entries.
+		return fmt.Sprintf("Migrated %13s entries from %s to %s.", commaString(writtenEntries), sourceDBType, m.TargetDBType)
 	}
 
-	setupTicker.Reset(TickerOff)
-	m.logWithRunTime(logger, "Individual DB Migration: Starting.", "source db type", sourceDBType)
+	m.LogWithRunTime("Individual DB Migration: Starting.", "source db type", sourceDBType)
 	batch = targetDB.NewBatch()
-	statusTicker.Reset(m.StatusPeriod)
-	action = "starting iteration"
+	m.Status = "starting iteration"
 	for ; iter.Valid(); iter.Next() {
-		action = "getting entry key"
+		m.Status = "getting entry key"
 		k := iter.Key()
-		action = "getting entry value"
+		m.Status = "getting entry value"
 		v := iter.Value()
 		if v == nil {
 			v = []byte{}
 		}
-		action = "adding entry to batch"
+		m.Status = "adding entry to batch"
 		if err = batch.Set(k, v); err != nil {
 			return summaryWrittenEntries(), fmt.Errorf("could not set %q key/value: %w", dbName, err)
 		}
-		action = "counting"
+		m.Status = "counting"
 		batchEntries++
 		batchBytes += uint(len(v) + len(k))
 		if m.BatchSize > 0 && batchBytes >= m.BatchSize {
-			statusTicker.Reset(TickerOff)
-
-			writeTicker.Reset(m.StatusPeriod)
 			logWithStats("Writing intermediate batch.")
 			if err = writeAndCloseBatch(); err != nil {
 				return summaryWrittenEntries(), err
 			}
-			writeTicker.Reset(TickerOff)
 
-			action = "batch reset"
+			m.Status = "batch reset"
 			batchIndex++
 			batchBytes = 0
 			batchEntries = 0
 			logWithStats("Starting new batch.")
 			batch = targetDB.NewBatch()
-			statusTicker.Reset(m.StatusPeriod)
 		}
-		action = "getting next entry"
+		m.Status = "getting next entry"
 	}
-	statusTicker.Reset(TickerOff)
 
-	action = "done iterating"
+	m.Status = "done iterating"
 	if err = iter.Error(); err != nil {
 		return summaryWrittenEntries(), fmt.Errorf("iterator error: %w", err)
 	}
 
-	writeTicker.Reset(m.StatusPeriod)
 	logWithStats("Writing final batch.")
 	if err = writeAndCloseBatch(); err != nil {
 		return summaryWrittenEntries(), err
 	}
-	writeTicker.Reset(TickerOff)
 
-	action = "done"
-	m.logWithRunTime(logger, "Individual DB Migration: Done.", "total entries", commaString(writtenEntries))
+	m.Status = "done"
+	m.LogWithRunTime("Individual DB Migration: Done.", "total entries", commaString(writtenEntries))
 	return summaryWrittenEntries(), nil
 }
 
-// MoveWithStatusUpdates calls os.Rename but also outputs a log message every StatusPeriod.
-func (m Migrator) MoveWithStatusUpdates(logger tmlog.Logger, from, to string) error {
-	var moveTicker *time.Ticker
-	stopTicker := make(chan bool, 1)
-	defer func() {
-		// closing the stopTicker chan will trigger the status logging subprocess to finish up.
-		close(stopTicker)
-		if moveTicker != nil {
-			moveTicker.Stop()
-		}
-	}()
-	moveTicker = time.NewTicker(m.StatusPeriod)
-	go func() {
-		for {
-			select {
-			case <-moveTicker.C:
-				m.logWithRunTime(logger, "Still moving...", "from", from, "to", to)
-			case <-stopTicker:
-				return
-			}
-		}
-	}()
-	return os.Rename(from, to)
+func (m *migrationManager) Finish() {
+	m.StopSigChan <- true
+	m.StopTickerChan <- true
+	m.StatusTicker.Stop()
+	m.TimeFinished = time.Now()
 }
 
-func (m Migrator) CopyWithStatusUpdates(logger tmlog.Logger, from, to string) error {
-	var moveTicker *time.Ticker
-	stopTicker := make(chan bool, 1)
-	defer func() {
-		// closing the stopTicker chan will trigger the status logging subprocess to finish up.
-		close(stopTicker)
-		if moveTicker != nil {
-			moveTicker.Stop()
-		}
-	}()
-	moveTicker = time.NewTicker(m.StatusPeriod)
-	go func() {
-		for {
-			select {
-			case <-moveTicker.C:
-				m.logWithRunTime(logger, "Still copying...", "from", from, "to", to)
-			case <-stopTicker:
-				return
-			}
-		}
-	}()
-	return copier.Copy(from, to)
+// Close closes up shop on a migrationManager.
+func (m *migrationManager) Close() {
+	m.StatusKeyvals = noKeyvals
+	close(m.StopSigChan)
+	signal.Stop(m.SigChan)
+	close(m.SigChan)
+	if m.LogStagingDirError {
+		m.LogErrorWithRunTime("The staging directory still exists.", "dir", m.StagingDataDir)
+	}
 }
 
 // MakeSummaryString creates a multi-line string with a summary of a migration.
-func (m Migrator) MakeSummaryString() string {
+func (m migrationManager) MakeSummaryString() string {
 	var sb strings.Builder
 	addLine := func(format string, a ...interface{}) {
 		sb.WriteString(fmt.Sprintf(format, a...) + "\n")
@@ -626,7 +630,9 @@ func (m Migrator) MakeSummaryString() string {
 	return sb.String()
 }
 
-func (m Migrator) GetRunTime() string {
+// GetRunTime gets a string of the run time of this manager.
+// Output is a time.Duration string, e.g. "25m36.910647946s"
+func (m migrationManager) GetRunTime() string {
 	if m.TimeStarted.IsZero() {
 		return "0.000000000s"
 	}
@@ -636,14 +642,19 @@ func (m Migrator) GetRunTime() string {
 	return m.TimeFinished.Sub(m.TimeStarted).String()
 }
 
-// logWithRunTime is a wrapper on logger.Info that always includes the run time.
-func (m Migrator) logWithRunTime(logger tmlog.Logger, msg string, keyvals ...interface{}) {
-	logger.Info(msg, append(keyvals, "run time", m.GetRunTime())...)
+// LogWithRunTime is a wrapper on Logger.Info that always includes the run time.
+func (m migrationManager) LogWithRunTime(msg string, keyvals ...interface{}) {
+	m.Logger.Info(msg, append(keyvals, "run time", m.GetRunTime())...)
 }
 
-// logErrorWithRunTime is a wrapper on logger.Error that always includes the run time.
-func (m Migrator) logErrorWithRunTime(logger tmlog.Logger, msg string, keyvals ...interface{}) {
-	logger.Error(msg, append(keyvals, "run time", m.GetRunTime())...)
+// LogErrorWithRunTime is a wrapper on Logger.Error that always includes the run time.
+func (m migrationManager) LogErrorWithRunTime(msg string, keyvals ...interface{}) {
+	m.Logger.Error(msg, append(keyvals, "run time", m.GetRunTime())...)
+}
+
+// noKeyvals returns an empty slice. It's handy for setting migrationManager.StatusKeyvals
+func noKeyvals() []interface{} {
+	return []interface{}{}
 }
 
 // splitDBPath combine the provided path elements into a full path to a db directory, then
@@ -737,13 +748,13 @@ func DetectDBType(name, dir string) (tmdb.BackendType, bool) {
 	// * In a directory named "dir/name.db".
 	// * There are numbered files with the extension ".log".
 	// * There are numbered files with the extension ".sst" (might possibly be missing if the db is empty).
-	// * Has the following files: CURRENT, IDENTITY, LOG, MANIFEST-{6 digis} (multiple), OPTIONS-{6 digits} (multiple)
+	// * Has the following files: CURRENT, IDENTITY, LOG, MANIFEST-{6 digits} (multiple), OPTIONS-{6 digits} (multiple)
 	// * Might also have files: LOCK, LOG.old, LOG.old.{16 digits} (multiple)
 	// leveldb:
 	// * In a directory named "dir/name.db".
 	// * There are numbered files with the extension ".log".
 	// * There are numbered files with the extension ".ldb" (might possibly be missing if the db is empty).
-	// * Has the following files: CURRENT, LOG, MANIFEST-{6 digis} (multiple)
+	// * Has the following files: CURRENT, LOG, MANIFEST-{6 digits} (multiple)
 	// * Might also have files: LOCK, LOG.old
 
 	// Note: I'm not sure of an easy way to look for files that start or end with certain strings (e.g files ending in ".sst").

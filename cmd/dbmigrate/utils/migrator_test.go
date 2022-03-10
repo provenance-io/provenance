@@ -29,10 +29,6 @@ func TestMigratorTestSuite(t *testing.T) {
 // TODO: ValidateBasic tests
 // TODO: ReadSourceDataDir tests (might be covered just fine by the GetDataDirContents tests)
 // TODO: Migrate tests
-// TODO: MigrateDBDir tests
-// TODO: MoveWithStatusUpdates tests (not sure how to really test this other than the file is moved).
-// TODO: CopyWithStatusUpdates tests(not sure how to really test this other than the file is copied).
-// TODO: MakeSummaryString tests
 
 func (s MigratorTestSuite) TestSplitDBPath() {
 	tests := []struct {
