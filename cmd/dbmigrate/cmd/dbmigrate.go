@@ -73,7 +73,7 @@ Migration process:
 To control the log level and log format of this utility, use these environment variables:
   DBM_LOG_LEVEL - valid values: debug info error
   DBM_LOG_FORMAT - valid values: plain json
-`, strings.Join(utils.PossibleDBTypes, ", ")),
+`, strings.Join(utils.GetPossibleDBTypes(), ", ")),
 		Args: cobra.ExactArgs(1),
 		PersistentPreRunE: func(command *cobra.Command, args []string) error {
 			command.SetOut(command.OutOrStdout())

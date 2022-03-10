@@ -24,19 +24,37 @@ const (
 	unknownDBBackend = tmdb.BackendType("UNKNOWN")
 )
 
-var PossibleDBTypes = []string{
-	string(tmdb.RocksDBBackend), string(tmdb.BadgerDBBackend),
-	string(tmdb.GoLevelDBBackend), string(tmdb.CLevelDBBackend),
+// Note: The PossibleDBTypes variable is a map instead of a slice because trying to append to it was causing one type to
+//       stomp out the append from another type (concurrency issue?).
+
+// PossibleDBTypes is a map of strings to BackendTypes representing the Backend types that can be used by this utility.
+var PossibleDBTypes = map[string]tmdb.BackendType{}
+
+func init() {
+	PossibleDBTypes["goleveldb"] = tmdb.GoLevelDBBackend
+}
+
+// AddPossibleDBType adds a possible db backend type.
+func AddPossibleDBType(dbType tmdb.BackendType) {
+	PossibleDBTypes[string(dbType)] = dbType
+}
+
+// GetPossibleDBTypes gets a slice of strings listing all db types that this can use.
+func GetPossibleDBTypes() []string {
+	rv := make([]string, len(PossibleDBTypes))
+	i := 0
+	for k := range PossibleDBTypes {
+		rv[i] = k
+		i++
+	}
+	sort.Strings(rv)
+	return rv
 }
 
 // IsPossibleDBType checks if the given dbType string is one that this migrator can handle.
 func IsPossibleDBType(dbType string) bool {
-	for _, p := range PossibleDBTypes {
-		if dbType == p {
-			return true
-		}
-	}
-	return false
+	_, ok := PossibleDBTypes[dbType]
+	return ok
 }
 
 // Migrator is an object to help guide a migration.
@@ -192,7 +210,7 @@ func (m Migrator) ValidateBasic() error {
 		return errors.New("no TargetDBType defined")
 	}
 	if !IsPossibleDBType(m.TargetDBType) {
-		return fmt.Errorf("invalid target type: %q - must be one of: %s", m.TargetDBType, strings.Join(PossibleDBTypes, ", "))
+		return fmt.Errorf("invalid target type: %q - must be one of: %s", m.TargetDBType, strings.Join(GetPossibleDBTypes(), ", "))
 	}
 	if len(m.SourceDataDir) == 0 {
 		return errors.New("no SourceDataDir defined")
@@ -797,14 +815,14 @@ func DetectDBType(name, dir string) (tmdb.BackendType, bool) {
 
 	// There are no statically named files that are used by leveldb but not rocksdb. So at this point, just assume it's leveldb.
 	// GolevelDB and CLevelDB are both a LevelDB as far as the files go. And CLevelDB is much faster, so use that.
-	return tmdb.CLevelDBBackend, true
+	return getBestType(tmdb.GoLevelDBBackend), true
 }
 
 // getBestType returns CLevelDB when provided GoLevelDB. Anything is is returned as is.
 // This is because the performance of GoLevelDB is so much worse than CLevelDB.
 // We can say that we're using GoLevelDB, but use CLevelDB for all the interactions.
 func getBestType(dbType tmdb.BackendType) tmdb.BackendType {
-	if dbType == tmdb.GoLevelDBBackend {
+	if dbType == tmdb.GoLevelDBBackend && IsPossibleDBType(string(tmdb.CLevelDBBackend)) {
 		return tmdb.CLevelDBBackend
 	}
 	return dbType
