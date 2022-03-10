@@ -331,7 +331,6 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary strin
 				"batch size (megabytes)", commaString(batchBytes/BytesPerMB),
 				"batch entries", commaString(batchEntries),
 				"db total entries", commaString(writtenEntries+batchEntries),
-				"action", action,
 			)...,
 		)
 	}
@@ -388,7 +387,7 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary strin
 			case <-setupTicker.C:
 				logWithStats("Still setting up...")
 			case <-statusTicker.C:
-				logWithStats("Status")
+				logWithStats(fmt.Sprintf("Status: %s", action))
 			case <-writeTicker.C:
 				logWithStats("Still writing...")
 			case <-stopTickers:
