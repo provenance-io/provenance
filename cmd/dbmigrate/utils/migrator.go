@@ -485,7 +485,7 @@ func (m Migrator) MigrateDBDir(logger tmlog.Logger, dbDir string) (summary strin
 		if v == nil {
 			v = []byte{}
 		}
-		action = "setting key/value in batch"
+		action = "adding entry to batch"
 		if err = batch.Set(k, v); err != nil {
 			return summaryWrittenEntries(), fmt.Errorf("could not set %q key/value: %w", dbName, err)
 		}
