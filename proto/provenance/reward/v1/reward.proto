@@ -11,6 +11,13 @@ option go_package          = "github.com/provenance-io/provenance/x/reward/types
 option java_package        = "io.provenance.reward.v1";
 option java_multiple_files = true;
 
+// Params holds parameters for the reward module
+message Params {
+    // distribution epoch identifier
+    string distr_epoch_identifier = 1
+        [ (gogoproto.moretags) = "yaml:\"distr_epoch_identifier\"" ];
+  }
+
 message Criteria  {
   uint64 id = 1;         
   string distribute_to = 2;

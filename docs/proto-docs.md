@@ -392,7 +392,11 @@
   
 - [provenance/reward/v1/reward.proto](#provenance/reward/v1/reward.proto)
     - [Criteria](#provenance.reward.v1.Criteria)
+    - [Params](#provenance.reward.v1.Params)
     - [Reward](#provenance.reward.v1.Reward)
+  
+- [provenance/reward/v1/genesis.proto](#provenance/reward/v1/genesis.proto)
+    - [GenesisState](#provenance.reward.v1.GenesisState)
   
 - [Scalar Value Types](#scalar-value-types)
 
@@ -5891,6 +5895,21 @@ Msg defines the bank Msg service.
 
 
 
+<a name="provenance.reward.v1.Params"></a>
+
+### Params
+Params holds parameters for the reward module
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `distr_epoch_identifier` | [string](#string) |  | distribution epoch identifier |
+
+
+
+
+
+
 <a name="provenance.reward.v1.Reward"></a>
 
 ### Reward
@@ -5902,6 +5921,39 @@ A Reward is the metadata of reward data per address
 | `address` | [string](#string) |  | address of user reward |
 | `initial_reward_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | total initial reward amount for the user |
 | `action_completed` | [bool](#bool) | repeated | true if action is completed index of bool in array refers to action enum # |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/reward/v1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/reward/v1/genesis.proto
+
+
+
+<a name="provenance.reward.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the reward module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#provenance.reward.v1.Params) |  | params defines all the parameters of the module. |
+| `criterias` | [Criteria](#provenance.reward.v1.Criteria) | repeated |  |
+| `rewards` | [Reward](#provenance.reward.v1.Reward) | repeated |  |
 
 
 
