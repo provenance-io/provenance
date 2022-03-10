@@ -112,7 +112,7 @@ Building `dbmigrate` uses the same [Options](#options) as `provenanced`.
 
 It will:
 1. Create a new `data/` directory, and copy the contents of the existing `data/` directory into it, converting the database files appropriately.
-2. Back up the existing `data/` directory to `${home}/data-dbmigrate-backup-{timestamp}/`.
+2. Back up the existing `data/` directory to `${home}/data-dbmigrate-backup-{timestamp}-{dbtypes}/`.
 3. Move the newly created `data/` directory into place.
 4. Update the config's `db_backend` value to the new db backend type.
 

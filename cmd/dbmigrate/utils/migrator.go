@@ -80,7 +80,7 @@ type Migrator struct {
 	// Default is { StagingDir }/data-dbmigrate-tmp-{timestamp}-{ TargetDBType }
 	StagingDataDir string
 	// BackupDataDir is the path to where the current data directory will be moved when done.
-	// Default is { BackupDir }/data-dbmigrate-backup-{timestamp}
+	// Default is { BackupDir }/data-dbmigrate-backup-{timestamp}-{dbtypes}
 	BackupDataDir string
 
 	// BatchSize is the threshold (in bytes) after which a batch is written and a new batch is created.
@@ -127,6 +127,8 @@ type migrationManager struct {
 	// Summaries is a map of ToConvert entries, to a short summary string about the migration of that entry.
 	// Entries are set during the call to Migrate and are the return values of each MigrateDBDir call.
 	Summaries map[string]string
+	// SourceTypes is a map of ToConvert entries, to their backend type.
+	SourceTypes map[string]tmdb.BackendType
 
 	// Logger is the Logger to use for logging log messages.
 	Logger tmlog.Logger
@@ -174,7 +176,7 @@ func (m *Migrator) ApplyDefaults() {
 		m.SourceDataDir = filepath.Join(m.HomePath, "data")
 	}
 	if len(m.DirDateFormat) == 0 {
-		m.DirDateFormat = "2006-01-02-15-04-05"
+		m.DirDateFormat = "2006-01-02-15-04"
 	}
 	if len(m.StagingDataDir) == 0 && len(m.StagingDir) > 0 {
 		m.StagingDataDir = filepath.Join(m.StagingDir, fmt.Sprintf("data-dbmigrate-tmp-%s-%s", time.Now().Format(m.DirDateFormat), m.TargetDBType))
@@ -296,6 +298,10 @@ func (m *Migrator) Migrate(logger tmlog.Logger) (errRv error) {
 	}
 	manager.Logger = logger
 
+	if len(manager.SourceTypes) != 0 {
+		m.BackupDataDir = m.BackupDataDir + "-" + strings.Join(manager.GetSourceDBTypes(), "-")
+	}
+
 	manager.LogWithRunTime(fmt.Sprintf("Copying %d items.", len(m.ToCopy)))
 	for i, entry := range m.ToCopy {
 		manager.LogWithRunTime(fmt.Sprintf("%d/%d: Copying %s", i+1, len(m.ToCopy), entry))
@@ -347,6 +353,7 @@ func (m Migrator) startMigratorManager(logger tmlog.Logger) (*migrationManager, 
 		Status:         "starting",
 		TimeStarted:    time.Now(),
 		Summaries:      map[string]string{},
+		SourceTypes:    map[string]tmdb.BackendType{},
 		Logger:         logger,
 		StatusTicker:   time.NewTicker(m.StatusPeriod),
 		StatusKeyvals:  noKeyvals,
@@ -460,6 +467,7 @@ func (m *migrationManager) MigrateDBDir(dbDir string) (summary string, err error
 	if !IsPossibleDBType(string(sourceDBType)) {
 		return summaryError, fmt.Errorf("cannot read source db of type %q", sourceDBType)
 	}
+	m.SourceTypes[dbDir] = sourceDBType
 
 	// In at least one case (the snapshots/metadata db), there's a sub-directory that needs to be created in order to
 	// safely open a new database in it.
@@ -672,6 +680,24 @@ func (m migrationManager) LogWithRunTime(msg string, keyvals ...interface{}) {
 // LogErrorWithRunTime is a wrapper on Logger.Error that always includes the run time.
 func (m migrationManager) LogErrorWithRunTime(msg string, keyvals ...interface{}) {
 	m.Logger.Error(msg, append(keyvals, "run time", m.GetRunTime())...)
+}
+
+func (m migrationManager) GetSourceDBTypes() []string {
+	rv := []string{}
+	for _, dbType := range m.SourceTypes {
+		found := false
+		for _, v := range rv {
+			if v == string(dbType) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			rv = append(rv, string(dbType))
+		}
+	}
+	sort.Strings(rv)
+	return rv
 }
 
 // noKeyvals returns an empty slice. It's handy for setting migrationManager.StatusKeyvals

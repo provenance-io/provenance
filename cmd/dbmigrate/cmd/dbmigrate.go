@@ -58,8 +58,8 @@ func NewDBMigrateCmd() *cobra.Command {
 
 	rv := &cobra.Command{
 		Use:   "dbmigrate <target type>",
-		Short: "Provenanced Blockchain Database Migration Tool",
-		Long: fmt.Sprintf(`Provenanced Blockchain Database Migration Tool
+		Short: "Provenance Blockchain Database Migration Tool",
+		Long: fmt.Sprintf(`Provenance Blockchain Database Migration Tool
 Converts an existing Provenance Blockchain Database to a new backend type.
 
 Valid <target type> values: %s
@@ -69,10 +69,6 @@ Migration process:
 2. Move the current data directory to the backup location.
 3. Move the staging data directory into place as the current data directory.
 4. Update the config file to reflect the new database backend type.
-
-To control the log level and log format of this utility, use these environment variables:
-  DBM_LOG_LEVEL - valid values: debug info error
-  DBM_LOG_FORMAT - valid values: plain json
 `, strings.Join(utils.GetPossibleDBTypes(), ", ")),
 		Args: cobra.ExactArgs(1),
 		PersistentPreRunE: func(command *cobra.Command, args []string) error {
@@ -130,8 +126,8 @@ To control the log level and log format of this utility, use these environment v
 			return nil
 		},
 	}
-	rv.Flags().String(FlagBackupDir, "", "directory to back up the current data directory to (default is {home}/data-dbmigrate-backup-{timestamp})")
-	rv.Flags().String(FlagStagingDir, "", "staging directory to use (default is {home}/data-dbmigrate-tmp-{timestamp}-{target dbtype})")
+	rv.Flags().String(FlagBackupDir, "", "directory to back up the current data directory to (default {home}/data-dbmigrate-backup-{timestamp}-{dbtypes})")
+	rv.Flags().String(FlagStagingDir, "", "staging directory to use (default {home}/data-dbmigrate-tmp-{timestamp}-{target dbtype})")
 	rv.Flags().Uint(FlagBatchSize, 2_048, "(in megabytes) after a batch reaches this size it is written and a new one is started (0 = unlimited)")
 	rv.Flags().Bool(FlagStageOnly, false, "only migrate/copy the data (do not backup and replace the data directory and do not update the config)")
 	return rv
