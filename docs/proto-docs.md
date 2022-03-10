@@ -398,6 +398,12 @@
 - [provenance/reward/v1/genesis.proto](#provenance/reward/v1/genesis.proto)
     - [GenesisState](#provenance.reward.v1.GenesisState)
   
+- [provenance/reward/v1/tx.proto](#provenance/reward/v1/tx.proto)
+    - [MsgWriteCriteraRequest](#provenance.reward.v1.MsgWriteCriteraRequest)
+    - [MsgWriteCriteraResponse](#provenance.reward.v1.MsgWriteCriteraResponse)
+  
+    - [Msg](#provenance.reward.v1.Msg)
+  
 - [Scalar Value Types](#scalar-value-types)
 
 
@@ -5964,6 +5970,52 @@ GenesisState defines the reward module's genesis state.
  <!-- end enums -->
 
  <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/reward/v1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/reward/v1/tx.proto
+
+
+
+<a name="provenance.reward.v1.MsgWriteCriteraRequest"></a>
+
+### MsgWriteCriteraRequest
+
+
+
+
+
+
+
+<a name="provenance.reward.v1.MsgWriteCriteraResponse"></a>
+
+### MsgWriteCriteraResponse
+
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.reward.v1.Msg"></a>
+
+### Msg
+
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `WriteCritera` | [MsgWriteCriteraRequest](#provenance.reward.v1.MsgWriteCriteraRequest) | [MsgWriteCriteraResponse](#provenance.reward.v1.MsgWriteCriteraResponse) |  | |
 
  <!-- end services -->
 
