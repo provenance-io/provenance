@@ -1,9 +1,11 @@
 package utils
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	tmdb "github.com/tendermint/tm-db"
 
@@ -24,11 +26,573 @@ func TestMigratorTestSuite(t *testing.T) {
 	suite.Run(t, new(MigratorTestSuite))
 }
 
-// TODO: Initialize tests (might be covered just fine by the other tests).
-// TODO: ApplyDefaults tests
-// TODO: ValidateBasic tests
-// TODO: ReadSourceDataDir tests (might be covered just fine by the GetDataDirContents tests)
+func (s MigratorTestSuite) TestInitialize() {
+	tdir := s.T().TempDir()
+	dbdir := "some.db"
+	someFile := "somefile.txt"
+	s.Require().NoError(os.MkdirAll(filepath.Join(tdir, "data", dbdir), 0700), "making dbdir")
+	s.Require().NoError(os.WriteFile(filepath.Join(tdir, "data", someFile), []byte{}, 0600), "making somefile")
+
+	s.T().Run("ApplyDefaults called before ValidateBasic", func(t *testing.T) {
+		m := &Migrator{
+			TargetDBType: "", // Will cause error.
+			HomePath:     tdir,
+		}
+		err := m.Initialize()
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "TargetDBType")
+		assert.Equal(t, m.SourceDataDir, filepath.Join(tdir, "data"))
+	})
+
+	s.T().Run("ReadSourceDataDir not called if ValidateBasic gives error", func(t *testing.T) {
+		m := &Migrator{
+			TargetDBType: "", // Will cause error.
+			HomePath:     tdir,
+		}
+		err := m.Initialize()
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "TargetDBType", "err")
+		assert.Len(t, m.ToConvert, 0, "ToConvert")
+		assert.Len(t, m.ToCopy, 0, "ToCopy")
+	})
+
+	s.T().Run("ReadSourceDataDir called if valid", func(t *testing.T) {
+		m := &Migrator{
+			TargetDBType: "goleveldb",
+			HomePath:     tdir,
+		}
+		err := m.Initialize()
+		require.NoError(t, err)
+		assert.Len(t, m.ToConvert, 1, "ToConvert")
+		assert.Contains(t, m.ToConvert, dbdir, "ToConvert")
+		assert.Len(t, m.ToCopy, 1, "ToCopy")
+		assert.Contains(t, m.ToCopy, someFile, "ToCopy")
+	})
+}
+
+func (s MigratorTestSuite) TestApplyDefaults() {
+	defaultDateFormat := "2006-01-02-15-04"
+	tdir := s.T().TempDir()
+	dirForPermTest := filepath.Join(tdir, "permissions-test")
+	permForPermTest := os.FileMode(0750)
+	os.MkdirAll(dirForPermTest, permForPermTest)
+	var tests = []struct {
+		name     string
+		migrator *Migrator
+		getter   func(m *Migrator) interface{}
+		expected interface{}
+	}{
+		{
+			name:     "staging dir empty home path empty",
+			migrator: &Migrator{
+				HomePath:   "",
+				StagingDir: "",
+			},
+			getter:   func(m *Migrator) interface{} { return m.StagingDir },
+			expected: "",
+		},
+		{
+			name:     "staging dir empty home path not empty",
+			migrator: &Migrator{
+				HomePath:   "homepath",
+				StagingDir: "",
+			},
+			getter:   func(m *Migrator) interface{} { return m.StagingDir },
+			expected: "homepath",
+		},
+		{
+			name:     "staging dir not empty home path not",
+			migrator: &Migrator{
+				HomePath:   "",
+				StagingDir: "stagingdir",
+			},
+			getter:   func(m *Migrator) interface{} { return m.StagingDir },
+			expected: "stagingdir",
+		},
+		{
+			name:     "staging dir not empty home path not empty",
+			migrator: &Migrator{
+				HomePath:   "homepath",
+				StagingDir: "stagingdir",
+			},
+			getter:   func(m *Migrator) interface{} { return m.StagingDir },
+			expected: "stagingdir",
+		},
+
+		{
+			name:     "backup dir empty home path empty",
+			migrator: &Migrator{
+				HomePath:  "",
+				BackupDir: "",
+			},
+			getter:   func(m *Migrator) interface{} { return m.BackupDir },
+			expected: "",
+		},
+		{
+			name:     "backup dir empty home path not empty",
+			migrator: &Migrator{
+				HomePath:  "homepath",
+				BackupDir: "",
+			},
+			getter:   func(m *Migrator) interface{} { return m.BackupDir },
+			expected: "homepath",
+		},
+		{
+			name:     "backup dir not empty home path not",
+			migrator: &Migrator{
+				HomePath:  "",
+				BackupDir: "backupdir",
+			},
+			getter:   func(m *Migrator) interface{} { return m.BackupDir },
+			expected: "backupdir",
+		},
+		{
+			name:     "backup dir not empty home path not empty",
+			migrator: &Migrator{
+				HomePath:  "homepath",
+				BackupDir: "backupdir",
+			},
+			getter:   func(m *Migrator) interface{} { return m.BackupDir },
+			expected: "backupdir",
+		},
+
+		{
+			name:     "source data dir empty home path empty",
+			migrator: &Migrator{
+				HomePath:      "",
+				SourceDataDir: "",
+			},
+			getter:   func(m *Migrator) interface{} { return m.SourceDataDir },
+			expected: "",
+		},
+		{
+			name:     "source data dir empty home path not empty",
+			migrator: &Migrator{
+				HomePath:  "homepath",
+				SourceDataDir: "",
+			},
+			getter:   func(m *Migrator) interface{} { return m.SourceDataDir },
+			expected: filepath.Join("homepath", "data"),
+		},
+		{
+			name:     "source data dir not empty home path not",
+			migrator: &Migrator{
+				HomePath:  "",
+				SourceDataDir: "sourcedatadir",
+			},
+			getter:   func(m *Migrator) interface{} { return m.SourceDataDir },
+			expected: "sourcedatadir",
+		},
+		{
+			name:     "source data dir not empty home path not empty",
+			migrator: &Migrator{
+				HomePath:  "homepath",
+				SourceDataDir: "sourcedatadir",
+			},
+			getter:   func(m *Migrator) interface{} { return m.SourceDataDir },
+			expected: "sourcedatadir",
+		},
+
+		{
+			name:     "dir date format empty",
+			migrator: &Migrator{
+				DirDateFormat: "",
+			},
+			getter:   func(m *Migrator) interface{} { return m.DirDateFormat },
+			expected: defaultDateFormat,
+		},
+		{
+			name:     "dir date format not empty",
+			migrator: &Migrator{
+				DirDateFormat: "04-15-02-01-2006",
+			},
+			getter:   func(m *Migrator) interface{} { return m.DirDateFormat },
+			expected: "04-15-02-01-2006",
+		},
+
+		{
+			name:     "staging data dir empty staging dir empty",
+			migrator: &Migrator{
+				StagingDir:     "",
+				StagingDataDir: "",
+			},
+			getter:   func(m *Migrator) interface{} { return m.StagingDataDir },
+			expected: "",
+		},
+		{
+			name:     "staging data dir empty staging dir not empty",
+			migrator: &Migrator{
+				TargetDBType:   "targetdb",
+				StagingDir:     "stagingdir",
+				StagingDataDir: "",
+			},
+			getter:   func(m *Migrator) interface{} { return m.StagingDataDir },
+			expected: filepath.Join("stagingdir", fmt.Sprintf("data-dbmigrate-tmp-%s-%s", time.Now().Format(defaultDateFormat), "targetdb")),
+		},
+		{
+			name:     "staging data dir not empty staging dir empty",
+			migrator: &Migrator{
+				StagingDir:     "",
+				StagingDataDir: "stagingdatadir",
+			},
+			getter:   func(m *Migrator) interface{} { return m.StagingDataDir },
+			expected: "stagingdatadir",
+		},
+		{
+			name:     "staging data dir not empty staging dir empty not",
+			migrator: &Migrator{
+				StagingDir:     "homepath",
+				StagingDataDir: "stagingdatadir",
+			},
+			getter:   func(m *Migrator) interface{} { return m.StagingDataDir },
+			expected: "stagingdatadir",
+		},
+
+		{
+			name:     "backup data dir empty staging dir empty",
+			migrator: &Migrator{
+				BackupDir:     "",
+				BackupDataDir: "",
+			},
+			getter:   func(m *Migrator) interface{} { return m.BackupDataDir },
+			expected: "",
+		},
+		{
+			name:     "backup data dir empty staging dir not empty",
+			migrator: &Migrator{
+				BackupDir:     "backupdir",
+				BackupDataDir: "",
+			},
+			getter:   func(m *Migrator) interface{} { return m.BackupDataDir },
+			expected: filepath.Join("backupdir", "data-dbmigrate-backup-"+time.Now().Format(defaultDateFormat)),
+		},
+		{
+			name:     "backup data dir not empty staging dir empty",
+			migrator: &Migrator{
+				BackupDir:     "",
+				BackupDataDir: "backupdatadir",
+			},
+			getter:   func(m *Migrator) interface{} { return m.BackupDataDir },
+			expected: "backupdatadir",
+		},
+		{
+			name:     "backup data dir not empty staging dir empty not",
+			migrator: &Migrator{
+				BackupDir:     "homepath",
+				BackupDataDir: "backupdatadir",
+			},
+			getter:   func(m *Migrator) interface{} { return m.BackupDataDir },
+			expected: "backupdatadir",
+		},
+
+		{
+			name:     "permissions not set source data dir does not exist",
+			migrator: &Migrator{
+				Permissions: 0,
+				SourceDataDir: "this-definitely-does-not-exist",
+			},
+			getter:   func(m *Migrator) interface{} { return m.Permissions },
+			expected: os.FileMode(0700),
+		},
+		{
+			name:     "permissions not set source data dir exists",
+			migrator: &Migrator{
+				Permissions: 0,
+				SourceDataDir: dirForPermTest,
+			},
+			getter:   func(m *Migrator) interface{} { return m.Permissions },
+			expected: permForPermTest,
+		},
+		{
+			name:     "permissions set source data dir does not exist",
+			migrator: &Migrator{
+				Permissions: 0777,
+				SourceDataDir: "this-definitely-does-not-exist",
+			},
+			getter:   func(m *Migrator) interface{} { return m.Permissions },
+			expected: os.FileMode(0777),
+		},
+		{
+			name:     "permissions set source data dir exists",
+			migrator: &Migrator{
+				Permissions: 0775,
+				SourceDataDir: dirForPermTest,
+			},
+			getter:   func(m *Migrator) interface{} { return m.Permissions },
+			expected: os.FileMode(0775),
+		},
+
+		{
+			name:     "status period not set",
+			migrator: &Migrator{
+				StatusPeriod: 0,
+			},
+			getter:   func(m *Migrator) interface{} { return m.StatusPeriod },
+			expected: 5 * time.Second,
+		},
+		{
+			name:     "status period set",
+			migrator: &Migrator{
+				StatusPeriod: 10 * time.Second,
+			},
+			getter:   func(m *Migrator) interface{} { return m.StatusPeriod },
+			expected: 10 * time.Second,
+		},
+
+		{
+			name:     "target db type not set unchanged",
+			migrator: &Migrator{
+				TargetDBType: "",
+			},
+			getter:   func(m *Migrator) interface{} { return m.TargetDBType },
+			expected: "",
+		},
+		{
+			name:     "target db type set unchanged",
+			migrator: &Migrator{
+				TargetDBType: "target type",
+			},
+			getter:   func(m *Migrator) interface{} { return m.TargetDBType },
+			expected: "target type",
+		},
+
+		{
+			name:     "batch size not set unchanged",
+			migrator: &Migrator{
+				BatchSize: 0,
+			},
+			getter:   func(m *Migrator) interface{} { return m.BatchSize },
+			expected: uint(0),
+		},
+		{
+			name:     "batch size set unchanged",
+			migrator: &Migrator{
+				BatchSize: 1234,
+			},
+			getter:   func(m *Migrator) interface{} { return m.BatchSize },
+			expected: uint(1234),
+		},
+
+		{
+			name:     "to convert not set unchanged",
+			migrator: &Migrator{
+				ToConvert: nil,
+			},
+			getter:   func(m *Migrator) interface{} { return m.ToConvert },
+			expected: []string(nil),
+		},
+		{
+			name:     "to convert set unchanged",
+			migrator: &Migrator{
+				ToConvert: []string{"foo"},
+			},
+			getter:   func(m *Migrator) interface{} { return m.ToConvert },
+			expected: []string{"foo"},
+		},
+
+		{
+			name:     "to copy not set unchanged",
+			migrator: &Migrator{
+				ToCopy: nil,
+			},
+			getter:   func(m *Migrator) interface{} { return m.ToCopy },
+			expected: []string(nil),
+		},
+		{
+			name:     "to copy set unchanged",
+			migrator: &Migrator{
+				ToCopy: []string{"bar"},
+			},
+			getter:   func(m *Migrator) interface{} { return m.ToCopy },
+			expected: []string{"bar"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.T().Run(tc.name, func(t *testing.T) {
+			tc.migrator.ApplyDefaults()
+			actual := tc.getter(tc.migrator)
+			assert.Equal(t, tc.expected, actual)
+		})
+	}
+}
+
+func (s MigratorTestSuite) TestValidateBasic() {
+	makeValidMigrator := func() *Migrator {
+		rv := &Migrator{
+			HomePath:     "testing",
+			TargetDBType: "goleveldb",
+		}
+		rv.ApplyDefaults()
+		return rv
+	}
+	tests := []struct{
+		name       string
+		modifier   func(m *Migrator)
+		expInError []string
+	} {
+		{
+			name:       "all valid",
+			modifier:   func(m *Migrator) {},
+			expInError: nil,
+		},
+		{
+			name:       "StagingDir empty",
+			modifier:   func(m *Migrator) { m.StagingDir = "" },
+			expInError: []string{"StagingDir"},
+		},
+		{
+			name:       "BackupDir empty",
+			modifier:   func(m *Migrator) { m.BackupDir = "" },
+			expInError: []string{"BackupDir"},
+		},
+		{
+			name:       "TargetDBType empty",
+			modifier:   func(m *Migrator) { m.TargetDBType = "" },
+			expInError: []string{"TargetDBType"},
+		},
+		{
+			name:       "TargetDBType not possible",
+			modifier:   func(m *Migrator) { m.TargetDBType = "not-possible" },
+			expInError: []string{"TargetDBType", "goleveldb", "\"not-possible\""},
+		},
+		{
+			name:       "SourceDataDir empty",
+			modifier:   func(m *Migrator) { m.SourceDataDir = "" },
+			expInError: []string{"SourceDataDir"},
+		},
+		{
+			name:       "StagingDataDir empty",
+			modifier:   func(m *Migrator) { m.StagingDataDir = "" },
+			expInError: []string{"StagingDataDir"},
+		},
+		{
+			name:       "BackupDataDir empty",
+			modifier:   func(m *Migrator) { m.BackupDataDir = "" },
+			expInError: []string{"BackupDataDir"},
+		},
+		{
+			name:       "Permissions empty",
+			modifier:   func(m *Migrator) { m.Permissions = 0 },
+			expInError: []string{"Permissions"},
+		},
+		{
+			name:       "StatusPeriod empty",
+			modifier:   func(m *Migrator) { m.StatusPeriod = 0 },
+			expInError: []string{"StatusPeriod"},
+		},
+		{
+			name:       "StatusPeriod just under 1 second",
+			modifier:   func(m *Migrator) { m.StatusPeriod = time.Second - time.Nanosecond },
+			expInError: []string{"StatusPeriod", "999.999999ms", "1s"},
+		},
+		{
+			name:       "DirDateFormat empty",
+			modifier:   func(m *Migrator) { m.DirDateFormat = "" },
+			expInError: []string{"DirDateFormat"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.T().Run(tc.name, func(t *testing.T) {
+			m := makeValidMigrator()
+			tc.modifier(m)
+			actual := m.ValidateBasic()
+			if len(tc.expInError) > 0 {
+				require.Error(t, actual)
+				for _, exp := range tc.expInError {
+					assert.Contains(t, actual.Error(), exp)
+				}
+			} else {
+				require.NoError(t, actual)
+			}
+		})
+	}
+}
+
+func (s MigratorTestSuite) TestReadSourceDataDir() {
+
+	s.T().Run("no source data dir", func(t *testing.T) {
+		m := &Migrator{
+			SourceDataDir: "",
+			ToConvert: []string{"something"},
+			ToCopy: []string{"anotherthing"},
+		}
+		err := m.ReadSourceDataDir()
+		// It shouldn't give an error.
+		require.NoError(t, err)
+		// And the ToConvert and ToCopy slices shouldn't have changed.
+		assert.Len(t, m.ToConvert, 1, "ToConvert")
+		assert.Contains(t, m.ToConvert, "something", "ToConvert")
+		assert.Len(t, m.ToCopy, 1, "ToCopy")
+		assert.Contains(t, m.ToCopy, "anotherthing", "ToCopy")
+	})
+
+	s.T().Run("source data dir does not exist", func(t *testing.T) {
+		m := &Migrator{
+			SourceDataDir: "not-gonna-find-me",
+			ToConvert: []string{"something"},
+			ToCopy: []string{"anotherthing"},
+		}
+		err := m.ReadSourceDataDir()
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "error reading \"not-gonna-find-me\":", "err")
+		// And the ToConvert and ToCopy slices should be gone.
+		assert.Len(t, m.ToConvert, 0, "ToConvert")
+		assert.Len(t, m.ToCopy, 0, "ToCopy")
+	})
+
+	s.T().Run("source data dir has a file but no db", func(t *testing.T) {
+		tdir := t.TempDir()
+		someFile := "somefile.txt"
+		dataDir := filepath.Join(tdir, "data")
+		require.NoError(t, os.MkdirAll(dataDir, 0700), "making dbdir")
+		require.NoError(t, os.WriteFile(filepath.Join(dataDir, someFile), []byte{}, 0600), "making somefile")
+		m := &Migrator{
+			SourceDataDir: dataDir,
+			ToConvert: []string{"something"},
+			ToCopy: []string{"anotherthing"},
+		}
+		err := m.ReadSourceDataDir()
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "could not identify any db directories in")
+		assert.Contains(t, err.Error(), dataDir)
+		// And the ToConvert and ToCopy slices should be changed.
+		assert.Len(t, m.ToConvert, 0, "ToConvert")
+		assert.Len(t, m.ToCopy, 1, "ToCopy")
+		assert.Contains(t, m.ToCopy, someFile, "ToCopy")
+	})
+
+	s.T().Run("source data dir has a db", func(t *testing.T) {
+		tdir := s.T().TempDir()
+		dbdir := "some.db"
+		someFile := "somefile.txt"
+		dataDir := filepath.Join(tdir, "data")
+		require.NoError(t, os.MkdirAll(filepath.Join(dataDir, dbdir), 0700), "making dbdir")
+		require.NoError(t, os.WriteFile(filepath.Join(dataDir, someFile), []byte{}, 0600), "making somefile")
+		m := &Migrator{
+			SourceDataDir: dataDir,
+			ToConvert: []string{"something"},
+			ToCopy: []string{"anotherthing"},
+		}
+		err := m.ReadSourceDataDir()
+		require.NoError(t, err)
+		// And the ToConvert and ToCopy slices should be changed.
+		assert.Len(t, m.ToConvert, 1, "ToConvert")
+		assert.Contains(t, m.ToConvert, dbdir, "ToConvert")
+		assert.Len(t, m.ToCopy, 1, "ToCopy")
+		assert.Contains(t, m.ToCopy, someFile, "ToCopy")
+	})
+}
+
 // TODO: Migrate tests
+// TODO: migrationManager tests
+
+func (s MigratorTestSuite) TestNoKeyvals() {
+	f := noKeyvals()
+	s.Require().NotNil(f)
+	s.Assert().Len(f, 0)
+}
 
 func (s MigratorTestSuite) TestSplitDBPath() {
 	tests := []struct {
@@ -247,6 +811,18 @@ func (s MigratorTestSuite) TestDetectDBType() {
 		assert.Equal(t, expected, actual, "DetectDBType BackendType")
 	})
 
+	s.T().Run("boltdb", func(t *testing.T) {
+		expected := tmdb.BoltDBBackend
+		name := "bolt7"
+		dataDir := filepath.Join(tDir, "bolt")
+		dbFile := filepath.Join(dataDir, name+".db")
+		require.NoError(t, os.MkdirAll(dataDir, 0700), "making dataDir")
+		require.NoError(t, os.WriteFile(dbFile, []byte{}, 0700), "making dbFile")
+		actual, ok := DetectDBType(name, dataDir)
+		assert.True(t, ok, "DetectDBType bool")
+		assert.Equal(t, expected, actual, "DetectDBType BackendType")
+	})
+
 	s.T().Run("empty", func(t *testing.T) {
 		expected := unknownDBBackend
 		name := "empty4"
@@ -272,10 +848,137 @@ func (s MigratorTestSuite) TestDetectDBType() {
 
 	s.T().Run("does not exist", func(t *testing.T) {
 		expected := unknownDBBackend
-		name := "only-current5"
+		name := "only-current6"
 		dataDir := filepath.Join(tDir, "only-current")
 		actual, ok := DetectDBType(name, dataDir)
 		assert.False(t, ok, "DetectDBType bool")
 		assert.Equal(t, expected, actual, "DetectDBType BackendType")
 	})
+}
+
+func (s MigratorTestSuite) TestGetBestType() {
+	origPosibleDBTypes := PossibleDBTypes
+	defer func() {
+		PossibleDBTypes = origPosibleDBTypes
+	}()
+
+	PossibleDBTypes = map[string]tmdb.BackendType{
+		"goleveldb": tmdb.GoLevelDBBackend,
+	}
+
+	dbTypes := []tmdb.BackendType{
+		tmdb.GoLevelDBBackend, tmdb.CLevelDBBackend, tmdb.BadgerDBBackend,
+		tmdb.RocksDBBackend, tmdb.BoltDBBackend, tmdb.BackendType("random"),
+	}
+	for _, expected := range dbTypes {
+		s.T().Run(string(expected) + " passthrough", func(t *testing.T) {
+			actual := getBestType(expected)
+			assert.Equal(t, expected, actual)
+		})
+	}
+
+	AddPossibleDBType(tmdb.CLevelDBBackend)
+	s.T().Run("goleveldb becomes cleveldb if possible", func(t *testing.T) {
+		actual := getBestType(tmdb.GoLevelDBBackend)
+		assert.Equal(t, tmdb.CLevelDBBackend, actual)
+	})
+}
+
+func (s MigratorTestSuite) TestDirExists() {
+	s.T().Run("does not exist", func(t *testing.T) {
+		assert.False(t, dirExists("does not exist"))
+	})
+
+	s.T().Run("containing dir exists", func(t *testing.T) {
+		tdir := t.TempDir()
+		dir := filepath.Join(tdir, "nope")
+		assert.False(t, dirExists(dir))
+	})
+
+	s.T().Run("is file", func(t *testing.T) {
+		tdir := t.TempDir()
+		file := filepath.Join(tdir, "filiename.txt")
+		require.NoError(t, os.WriteFile(file, []byte{}, 0600), "making file")
+		assert.False(t, dirExists(file))
+	})
+
+	s.T().Run("is dir", func(t *testing.T) {
+		tdir := t.TempDir()
+		dir := filepath.Join(tdir, "immadir")
+		require.NoError(t, os.MkdirAll(dir, 0700), "making dir")
+		assert.True(t, dirExists(dir))
+	})
+}
+
+func (s MigratorTestSuite) TestFileExists() {
+	s.T().Run("does not exist", func(t *testing.T) {
+		assert.False(t, fileExists("does not exist"))
+	})
+
+	s.T().Run("containing dir exists", func(t *testing.T) {
+		tdir := t.TempDir()
+		file := filepath.Join(tdir, "nope.tar")
+		assert.False(t, fileExists(file))
+	})
+
+	s.T().Run("is file", func(t *testing.T) {
+		tdir := t.TempDir()
+		file := filepath.Join(tdir, "filiename.txt")
+		require.NoError(t, os.WriteFile(file, []byte{}, 0600), "making file")
+		assert.True(t, fileExists(file))
+	})
+
+	s.T().Run("is dir", func(t *testing.T) {
+		tdir := t.TempDir()
+		dir := filepath.Join(tdir, "immadir")
+		require.NoError(t, os.MkdirAll(dir, 0700), "making dir")
+		assert.False(t, fileExists(dir))
+	})
+}
+
+func (s MigratorTestSuite) TestCommaString() {
+	tests := []struct {
+		v    uint
+		exp  string
+	} {
+		{ v: 0, exp: "0" },
+		{ v: 1, exp: "1" },
+		{ v: 22, exp: "22" },
+		{ v: 333, exp: "333" },
+		{ v: 999, exp: "999" },
+		{ v: 1_000, exp: "1,000" },
+		{ v: 4_444, exp: "4,444" },
+		{ v: 55_555, exp: "55,555" },
+		{ v: 666_666, exp: "666,666" },
+		{ v: 999_999, exp: "999,999" },
+		{ v: 1_000_000, exp: "1,000,000" },
+		{ v: 7_777_777, exp: "7,777,777" },
+		{ v: 88_888_888, exp: "88,888,888" },
+		{ v: 999_999_999, exp: "999,999,999" },
+		{ v: 1_000_000_000, exp: "1,000,000,000" },
+		{ v: 1_010_101_010, exp: "1,010,101,010" },
+		{ v: 11_011_011_011, exp: "11,011,011,011" },
+		{ v: 120_120_120_120, exp: "120,120,120,120" },
+		{ v: 999_999_999_999, exp: "999,999,999,999" },
+		{ v: 1_000_000_000_000, exp: "1,000,000,000,000" },
+		{ v: 1_301_301_301_301, exp: "1,301,301,301,301" },
+		{ v: 14_814_714_614_514, exp: "14,814,714,614,514" },
+		{ v: 150_151_152_153_154, exp: "150,151,152,153,154" },
+		{ v: 999_999_999_999_999, exp: "999,999,999,999,999" },
+		{ v: 1_000_000_000_000_000, exp: "1,000,000,000,000,000" },
+		{ v: 1_651_651_651_651_651, exp: "1,651,651,651,651,651" },
+		{ v: 17_017_017_017_017_017, exp: "17,017,017,017,017,017" },
+		{ v: 189_189_189_189_189_189, exp: "189,189,189,189,189,189" },
+		{ v: 999_999_999_999_999_999, exp: "999,999,999,999,999,999" },
+		{ v: 1_000_000_000_000_000_000, exp: "1,000,000,000,000,000,000" },
+		{ v: 1_981_981_981_981_981_981, exp: "1,981,981,981,981,981,981" },
+		{ v: 18_446_744_073_709_551_615, exp: "18,446,744,073,709,551,615" },
+	}
+
+	for _, tc := range tests {
+		s.T().Run(tc.exp, func(t *testing.T) {
+			act := commaString(tc.v)
+			assert.Equal(t, tc.exp, act)
+		})
+	}
 }
