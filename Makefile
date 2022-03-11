@@ -12,7 +12,8 @@ LEDGER_ENABLED ?= true
 WITH_CLEVELDB ?= yes
 WITH_ROCKSDB ?= yes
 WITH_BADGERDB ?= yes
-WITH_BOLTDB ?= yes
+# A BoltDB node has trouble catching back up, so it's not available by default.
+WITH_BOLTDB ?= no
 
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 BRANCH_PRETTY := $(subst /,-,$(BRANCH))
