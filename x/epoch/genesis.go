@@ -1,4 +1,4 @@
-package epochs
+package epoch
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"

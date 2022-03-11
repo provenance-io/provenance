@@ -6,9 +6,9 @@ import (
 
 	cli "github.com/provenance-io/provenance/x/epoch/client/cli"
 	"github.com/provenance-io/provenance/x/epoch/keeper"
+	epochModule "github.com/provenance-io/provenance/x/epoch"
 	epoch "github.com/provenance-io/provenance/x/epoch/types"
 
-	// "github.com/provenance-io/provenance/x/epoch/client/cli"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -25,7 +25,6 @@ import (
 var (
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
-	_ module.AppModuleSimulation = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the epoch module.
@@ -55,7 +54,7 @@ func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 // DefaultGenesis returns default genesis state as raw bytes for the epoch
 // module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(epoch.DefaultGenesisState())
+	return cdc.MustMarshalJSON(epoch.DefaultGenesis(0))
 }
 
 // ValidateGenesis performs genesis state validation for the epoch module.
@@ -135,14 +134,14 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState epoch.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
-	am.keeper.InitGenesis(ctx, &genesisState)
+	epochModule.InitGenesis(ctx,am.keeper, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the epoch
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	gs := am.keeper.ExportGenesis(ctx)
+	gs := epochModule.ExportGenesis(ctx, am.keeper)
 	return cdc.MustMarshalJSON(gs)
 }
 
