@@ -83,7 +83,7 @@ func (s MigratorTestSuite) TestApplyDefaults() {
 		expected interface{}
 	}{
 		{
-			name:     "staging dir empty home path empty",
+			name: "staging dir empty home path empty",
 			migrator: &Migrator{
 				HomePath:   "",
 				StagingDir: "",
@@ -92,7 +92,7 @@ func (s MigratorTestSuite) TestApplyDefaults() {
 			expected: "",
 		},
 		{
-			name:     "staging dir empty home path not empty",
+			name: "staging dir empty home path not empty",
 			migrator: &Migrator{
 				HomePath:   "homepath",
 				StagingDir: "",
@@ -101,7 +101,7 @@ func (s MigratorTestSuite) TestApplyDefaults() {
 			expected: "homepath",
 		},
 		{
-			name:     "staging dir not empty home path not",
+			name: "staging dir not empty home path not",
 			migrator: &Migrator{
 				HomePath:   "",
 				StagingDir: "stagingdir",
@@ -110,7 +110,7 @@ func (s MigratorTestSuite) TestApplyDefaults() {
 			expected: "stagingdir",
 		},
 		{
-			name:     "staging dir not empty home path not empty",
+			name: "staging dir not empty home path not empty",
 			migrator: &Migrator{
 				HomePath:   "homepath",
 				StagingDir: "stagingdir",
@@ -120,7 +120,7 @@ func (s MigratorTestSuite) TestApplyDefaults() {
 		},
 
 		{
-			name:     "backup dir empty home path empty",
+			name: "backup dir empty home path empty",
 			migrator: &Migrator{
 				HomePath:  "",
 				BackupDir: "",
@@ -129,7 +129,7 @@ func (s MigratorTestSuite) TestApplyDefaults() {
 			expected: "",
 		},
 		{
-			name:     "backup dir empty home path not empty",
+			name: "backup dir empty home path not empty",
 			migrator: &Migrator{
 				HomePath:  "homepath",
 				BackupDir: "",
@@ -138,7 +138,7 @@ func (s MigratorTestSuite) TestApplyDefaults() {
 			expected: "homepath",
 		},
 		{
-			name:     "backup dir not empty home path not",
+			name: "backup dir not empty home path not",
 			migrator: &Migrator{
 				HomePath:  "",
 				BackupDir: "backupdir",
@@ -147,7 +147,7 @@ func (s MigratorTestSuite) TestApplyDefaults() {
 			expected: "backupdir",
 		},
 		{
-			name:     "backup dir not empty home path not empty",
+			name: "backup dir not empty home path not empty",
 			migrator: &Migrator{
 				HomePath:  "homepath",
 				BackupDir: "backupdir",
@@ -157,7 +157,7 @@ func (s MigratorTestSuite) TestApplyDefaults() {
 		},
 
 		{
-			name:     "source data dir empty home path empty",
+			name: "source data dir empty home path empty",
 			migrator: &Migrator{
 				HomePath:      "",
 				SourceDataDir: "",
@@ -166,27 +166,27 @@ func (s MigratorTestSuite) TestApplyDefaults() {
 			expected: "",
 		},
 		{
-			name:     "source data dir empty home path not empty",
+			name: "source data dir empty home path not empty",
 			migrator: &Migrator{
-				HomePath:  "homepath",
+				HomePath:      "homepath",
 				SourceDataDir: "",
 			},
 			getter:   func(m *Migrator) interface{} { return m.SourceDataDir },
 			expected: filepath.Join("homepath", "data"),
 		},
 		{
-			name:     "source data dir not empty home path not",
+			name: "source data dir not empty home path not",
 			migrator: &Migrator{
-				HomePath:  "",
+				HomePath:      "",
 				SourceDataDir: "sourcedatadir",
 			},
 			getter:   func(m *Migrator) interface{} { return m.SourceDataDir },
 			expected: "sourcedatadir",
 		},
 		{
-			name:     "source data dir not empty home path not empty",
+			name: "source data dir not empty home path not empty",
 			migrator: &Migrator{
-				HomePath:  "homepath",
+				HomePath:      "homepath",
 				SourceDataDir: "sourcedatadir",
 			},
 			getter:   func(m *Migrator) interface{} { return m.SourceDataDir },
@@ -194,7 +194,7 @@ func (s MigratorTestSuite) TestApplyDefaults() {
 		},
 
 		{
-			name:     "dir date format empty",
+			name: "dir date format empty",
 			migrator: &Migrator{
 				DirDateFormat: "",
 			},
@@ -202,7 +202,7 @@ func (s MigratorTestSuite) TestApplyDefaults() {
 			expected: defaultDateFormat,
 		},
 		{
-			name:     "dir date format not empty",
+			name: "dir date format not empty",
 			migrator: &Migrator{
 				DirDateFormat: "04-15-02-01-2006",
 			},
@@ -211,7 +211,7 @@ func (s MigratorTestSuite) TestApplyDefaults() {
 		},
 
 		{
-			name:     "staging data dir empty staging dir empty",
+			name: "staging data dir empty staging dir empty",
 			migrator: &Migrator{
 				StagingDir:     "",
 				StagingDataDir: "",
@@ -220,7 +220,7 @@ func (s MigratorTestSuite) TestApplyDefaults() {
 			expected: "",
 		},
 		{
-			name:     "staging data dir empty staging dir not empty",
+			name: "staging data dir empty staging dir not empty",
 			migrator: &Migrator{
 				TargetDBType:   "targetdb",
 				StagingDir:     "stagingdir",
@@ -230,7 +230,7 @@ func (s MigratorTestSuite) TestApplyDefaults() {
 			expected: filepath.Join("stagingdir", fmt.Sprintf("data-dbmigrate-tmp-%s-%s", time.Now().Format(defaultDateFormat), "targetdb")),
 		},
 		{
-			name:     "staging data dir not empty staging dir empty",
+			name: "staging data dir not empty staging dir empty",
 			migrator: &Migrator{
 				StagingDir:     "",
 				StagingDataDir: "stagingdatadir",
@@ -239,7 +239,7 @@ func (s MigratorTestSuite) TestApplyDefaults() {
 			expected: "stagingdatadir",
 		},
 		{
-			name:     "staging data dir not empty staging dir empty not",
+			name: "staging data dir not empty staging dir empty not",
 			migrator: &Migrator{
 				StagingDir:     "homepath",
 				StagingDataDir: "stagingdatadir",
@@ -249,7 +249,7 @@ func (s MigratorTestSuite) TestApplyDefaults() {
 		},
 
 		{
-			name:     "backup data dir empty staging dir empty",
+			name: "backup data dir empty staging dir empty",
 			migrator: &Migrator{
 				BackupDir:     "",
 				BackupDataDir: "",
@@ -258,7 +258,7 @@ func (s MigratorTestSuite) TestApplyDefaults() {
 			expected: "",
 		},
 		{
-			name:     "backup data dir empty staging dir not empty",
+			name: "backup data dir empty staging dir not empty",
 			migrator: &Migrator{
 				BackupDir:     "backupdir",
 				BackupDataDir: "",
@@ -267,7 +267,7 @@ func (s MigratorTestSuite) TestApplyDefaults() {
 			expected: filepath.Join("backupdir", "data-dbmigrate-backup-"+time.Now().Format(defaultDateFormat)),
 		},
 		{
-			name:     "backup data dir not empty staging dir empty",
+			name: "backup data dir not empty staging dir empty",
 			migrator: &Migrator{
 				BackupDir:     "",
 				BackupDataDir: "backupdatadir",
@@ -276,7 +276,7 @@ func (s MigratorTestSuite) TestApplyDefaults() {
 			expected: "backupdatadir",
 		},
 		{
-			name:     "backup data dir not empty staging dir empty not",
+			name: "backup data dir not empty staging dir empty not",
 			migrator: &Migrator{
 				BackupDir:     "homepath",
 				BackupDataDir: "backupdatadir",
@@ -286,36 +286,36 @@ func (s MigratorTestSuite) TestApplyDefaults() {
 		},
 
 		{
-			name:     "permissions not set source data dir does not exist",
+			name: "permissions not set source data dir does not exist",
 			migrator: &Migrator{
-				Permissions: 0,
+				Permissions:   0,
 				SourceDataDir: "this-definitely-does-not-exist",
 			},
 			getter:   func(m *Migrator) interface{} { return m.Permissions },
 			expected: os.FileMode(0700),
 		},
 		{
-			name:     "permissions not set source data dir exists",
+			name: "permissions not set source data dir exists",
 			migrator: &Migrator{
-				Permissions: 0,
+				Permissions:   0,
 				SourceDataDir: dirForPermTest,
 			},
 			getter:   func(m *Migrator) interface{} { return m.Permissions },
 			expected: permForPermTest,
 		},
 		{
-			name:     "permissions set source data dir does not exist",
+			name: "permissions set source data dir does not exist",
 			migrator: &Migrator{
-				Permissions: 0777,
+				Permissions:   0777,
 				SourceDataDir: "this-definitely-does-not-exist",
 			},
 			getter:   func(m *Migrator) interface{} { return m.Permissions },
 			expected: os.FileMode(0777),
 		},
 		{
-			name:     "permissions set source data dir exists",
+			name: "permissions set source data dir exists",
 			migrator: &Migrator{
-				Permissions: 0775,
+				Permissions:   0775,
 				SourceDataDir: dirForPermTest,
 			},
 			getter:   func(m *Migrator) interface{} { return m.Permissions },
@@ -323,7 +323,7 @@ func (s MigratorTestSuite) TestApplyDefaults() {
 		},
 
 		{
-			name:     "status period not set",
+			name: "status period not set",
 			migrator: &Migrator{
 				StatusPeriod: 0,
 			},
@@ -331,7 +331,7 @@ func (s MigratorTestSuite) TestApplyDefaults() {
 			expected: 5 * time.Second,
 		},
 		{
-			name:     "status period set",
+			name: "status period set",
 			migrator: &Migrator{
 				StatusPeriod: 10 * time.Second,
 			},
@@ -340,7 +340,7 @@ func (s MigratorTestSuite) TestApplyDefaults() {
 		},
 
 		{
-			name:     "target db type not set unchanged",
+			name: "target db type not set unchanged",
 			migrator: &Migrator{
 				TargetDBType: "",
 			},
@@ -348,7 +348,7 @@ func (s MigratorTestSuite) TestApplyDefaults() {
 			expected: "",
 		},
 		{
-			name:     "target db type set unchanged",
+			name: "target db type set unchanged",
 			migrator: &Migrator{
 				TargetDBType: "target type",
 			},
@@ -357,7 +357,7 @@ func (s MigratorTestSuite) TestApplyDefaults() {
 		},
 
 		{
-			name:     "batch size not set unchanged",
+			name: "batch size not set unchanged",
 			migrator: &Migrator{
 				BatchSize: 0,
 			},
@@ -365,7 +365,7 @@ func (s MigratorTestSuite) TestApplyDefaults() {
 			expected: uint(0),
 		},
 		{
-			name:     "batch size set unchanged",
+			name: "batch size set unchanged",
 			migrator: &Migrator{
 				BatchSize: 1234,
 			},
@@ -374,7 +374,7 @@ func (s MigratorTestSuite) TestApplyDefaults() {
 		},
 
 		{
-			name:     "to convert not set unchanged",
+			name: "to convert not set unchanged",
 			migrator: &Migrator{
 				ToConvert: nil,
 			},
@@ -382,7 +382,7 @@ func (s MigratorTestSuite) TestApplyDefaults() {
 			expected: []string(nil),
 		},
 		{
-			name:     "to convert set unchanged",
+			name: "to convert set unchanged",
 			migrator: &Migrator{
 				ToConvert: []string{"foo"},
 			},
@@ -391,7 +391,7 @@ func (s MigratorTestSuite) TestApplyDefaults() {
 		},
 
 		{
-			name:     "to copy not set unchanged",
+			name: "to copy not set unchanged",
 			migrator: &Migrator{
 				ToCopy: nil,
 			},
@@ -399,7 +399,7 @@ func (s MigratorTestSuite) TestApplyDefaults() {
 			expected: []string(nil),
 		},
 		{
-			name:     "to copy set unchanged",
+			name: "to copy set unchanged",
 			migrator: &Migrator{
 				ToCopy: []string{"bar"},
 			},
@@ -426,11 +426,11 @@ func (s MigratorTestSuite) TestValidateBasic() {
 		rv.ApplyDefaults()
 		return rv
 	}
-	tests := []struct{
+	tests := []struct {
 		name       string
 		modifier   func(m *Migrator)
 		expInError []string
-	} {
+	}{
 		{
 			name:       "all valid",
 			modifier:   func(m *Migrator) {},
@@ -515,8 +515,8 @@ func (s MigratorTestSuite) TestReadSourceDataDir() {
 	s.T().Run("no source data dir", func(t *testing.T) {
 		m := &Migrator{
 			SourceDataDir: "",
-			ToConvert: []string{"something"},
-			ToCopy: []string{"anotherthing"},
+			ToConvert:     []string{"something"},
+			ToCopy:        []string{"anotherthing"},
 		}
 		err := m.ReadSourceDataDir()
 		// It shouldn't give an error.
@@ -531,8 +531,8 @@ func (s MigratorTestSuite) TestReadSourceDataDir() {
 	s.T().Run("source data dir does not exist", func(t *testing.T) {
 		m := &Migrator{
 			SourceDataDir: "not-gonna-find-me",
-			ToConvert: []string{"something"},
-			ToCopy: []string{"anotherthing"},
+			ToConvert:     []string{"something"},
+			ToCopy:        []string{"anotherthing"},
 		}
 		err := m.ReadSourceDataDir()
 		require.Error(t, err)
@@ -550,8 +550,8 @@ func (s MigratorTestSuite) TestReadSourceDataDir() {
 		require.NoError(t, os.WriteFile(filepath.Join(dataDir, someFile), []byte{}, 0600), "making somefile")
 		m := &Migrator{
 			SourceDataDir: dataDir,
-			ToConvert: []string{"something"},
-			ToCopy: []string{"anotherthing"},
+			ToConvert:     []string{"something"},
+			ToCopy:        []string{"anotherthing"},
 		}
 		err := m.ReadSourceDataDir()
 		require.Error(t, err)
@@ -572,8 +572,8 @@ func (s MigratorTestSuite) TestReadSourceDataDir() {
 		require.NoError(t, os.WriteFile(filepath.Join(dataDir, someFile), []byte{}, 0600), "making somefile")
 		m := &Migrator{
 			SourceDataDir: dataDir,
-			ToConvert: []string{"something"},
-			ToCopy: []string{"anotherthing"},
+			ToConvert:     []string{"something"},
+			ToCopy:        []string{"anotherthing"},
 		}
 		err := m.ReadSourceDataDir()
 		require.NoError(t, err)
@@ -871,7 +871,7 @@ func (s MigratorTestSuite) TestGetBestType() {
 		tmdb.RocksDBBackend, tmdb.BoltDBBackend, tmdb.BackendType("random"),
 	}
 	for _, expected := range dbTypes {
-		s.T().Run(string(expected) + " passthrough", func(t *testing.T) {
+		s.T().Run(string(expected)+" passthrough", func(t *testing.T) {
 			actual := getBestType(expected)
 			assert.Equal(t, expected, actual)
 		})
@@ -938,41 +938,41 @@ func (s MigratorTestSuite) TestFileExists() {
 
 func (s MigratorTestSuite) TestCommaString() {
 	tests := []struct {
-		v    uint
-		exp  string
-	} {
-		{ v: 0, exp: "0" },
-		{ v: 1, exp: "1" },
-		{ v: 22, exp: "22" },
-		{ v: 333, exp: "333" },
-		{ v: 999, exp: "999" },
-		{ v: 1_000, exp: "1,000" },
-		{ v: 4_444, exp: "4,444" },
-		{ v: 55_555, exp: "55,555" },
-		{ v: 666_666, exp: "666,666" },
-		{ v: 999_999, exp: "999,999" },
-		{ v: 1_000_000, exp: "1,000,000" },
-		{ v: 7_777_777, exp: "7,777,777" },
-		{ v: 88_888_888, exp: "88,888,888" },
-		{ v: 999_999_999, exp: "999,999,999" },
-		{ v: 1_000_000_000, exp: "1,000,000,000" },
-		{ v: 1_010_101_010, exp: "1,010,101,010" },
-		{ v: 11_011_011_011, exp: "11,011,011,011" },
-		{ v: 120_120_120_120, exp: "120,120,120,120" },
-		{ v: 999_999_999_999, exp: "999,999,999,999" },
-		{ v: 1_000_000_000_000, exp: "1,000,000,000,000" },
-		{ v: 1_301_301_301_301, exp: "1,301,301,301,301" },
-		{ v: 14_814_714_614_514, exp: "14,814,714,614,514" },
-		{ v: 150_151_152_153_154, exp: "150,151,152,153,154" },
-		{ v: 999_999_999_999_999, exp: "999,999,999,999,999" },
-		{ v: 1_000_000_000_000_000, exp: "1,000,000,000,000,000" },
-		{ v: 1_651_651_651_651_651, exp: "1,651,651,651,651,651" },
-		{ v: 17_017_017_017_017_017, exp: "17,017,017,017,017,017" },
-		{ v: 189_189_189_189_189_189, exp: "189,189,189,189,189,189" },
-		{ v: 999_999_999_999_999_999, exp: "999,999,999,999,999,999" },
-		{ v: 1_000_000_000_000_000_000, exp: "1,000,000,000,000,000,000" },
-		{ v: 1_981_981_981_981_981_981, exp: "1,981,981,981,981,981,981" },
-		{ v: 18_446_744_073_709_551_615, exp: "18,446,744,073,709,551,615" },
+		v   uint
+		exp string
+	}{
+		{v: 0, exp: "0"},
+		{v: 1, exp: "1"},
+		{v: 22, exp: "22"},
+		{v: 333, exp: "333"},
+		{v: 999, exp: "999"},
+		{v: 1_000, exp: "1,000"},
+		{v: 4_444, exp: "4,444"},
+		{v: 55_555, exp: "55,555"},
+		{v: 666_666, exp: "666,666"},
+		{v: 999_999, exp: "999,999"},
+		{v: 1_000_000, exp: "1,000,000"},
+		{v: 7_777_777, exp: "7,777,777"},
+		{v: 88_888_888, exp: "88,888,888"},
+		{v: 999_999_999, exp: "999,999,999"},
+		{v: 1_000_000_000, exp: "1,000,000,000"},
+		{v: 1_010_101_010, exp: "1,010,101,010"},
+		{v: 11_011_011_011, exp: "11,011,011,011"},
+		{v: 120_120_120_120, exp: "120,120,120,120"},
+		{v: 999_999_999_999, exp: "999,999,999,999"},
+		{v: 1_000_000_000_000, exp: "1,000,000,000,000"},
+		{v: 1_301_301_301_301, exp: "1,301,301,301,301"},
+		{v: 14_814_714_614_514, exp: "14,814,714,614,514"},
+		{v: 150_151_152_153_154, exp: "150,151,152,153,154"},
+		{v: 999_999_999_999_999, exp: "999,999,999,999,999"},
+		{v: 1_000_000_000_000_000, exp: "1,000,000,000,000,000"},
+		{v: 1_651_651_651_651_651, exp: "1,651,651,651,651,651"},
+		{v: 17_017_017_017_017_017, exp: "17,017,017,017,017,017"},
+		{v: 189_189_189_189_189_189, exp: "189,189,189,189,189,189"},
+		{v: 999_999_999_999_999_999, exp: "999,999,999,999,999,999"},
+		{v: 1_000_000_000_000_000_000, exp: "1,000,000,000,000,000,000"},
+		{v: 1_981_981_981_981_981_981, exp: "1,981,981,981,981,981,981"},
+		{v: 18_446_744_073_709_551_615, exp: "18,446,744,073,709,551,615"},
 	}
 
 	for _, tc := range tests {

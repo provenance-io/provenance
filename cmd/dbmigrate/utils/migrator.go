@@ -190,7 +190,7 @@ func (m *Migrator) ApplyDefaults() {
 		sourceDirInfo, err := os.Stat(m.SourceDataDir)
 		if err == nil {
 			// Mask the Mode to get just the permission bits.
-			m.Permissions = sourceDirInfo.Mode()&0777
+			m.Permissions = sourceDirInfo.Mode() & 0777
 		}
 	}
 	if m.Permissions == 0 {
