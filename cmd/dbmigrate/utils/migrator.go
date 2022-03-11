@@ -189,7 +189,8 @@ func (m *Migrator) ApplyDefaults() {
 	if m.Permissions == 0 && len(m.SourceDataDir) > 0 {
 		sourceDirInfo, err := os.Stat(m.SourceDataDir)
 		if err == nil {
-			m.Permissions = sourceDirInfo.Mode()
+			// Mask the Mode to get just the permission bits.
+			m.Permissions = sourceDirInfo.Mode()&0777
 		}
 	}
 	if m.Permissions == 0 {
@@ -212,7 +213,7 @@ func (m Migrator) ValidateBasic() error {
 		return errors.New("no TargetDBType defined")
 	}
 	if !IsPossibleDBType(m.TargetDBType) {
-		return fmt.Errorf("invalid target type: %q - must be one of: %s", m.TargetDBType, strings.Join(GetPossibleDBTypes(), ", "))
+		return fmt.Errorf("invalid TargetDBType: %q - must be one of: %s", m.TargetDBType, strings.Join(GetPossibleDBTypes(), ", "))
 	}
 	if len(m.SourceDataDir) == 0 {
 		return errors.New("no SourceDataDir defined")
@@ -227,7 +228,7 @@ func (m Migrator) ValidateBasic() error {
 		return errors.New("no Permissions defined")
 	}
 	if m.StatusPeriod < time.Second {
-		return fmt.Errorf("status period %s cannot be less than 1s", m.StatusPeriod)
+		return fmt.Errorf("the StatusPeriod %s cannot be less than 1s", m.StatusPeriod)
 	}
 	if len(m.DirDateFormat) == 0 {
 		return errors.New("no DirDateFormat defined")
