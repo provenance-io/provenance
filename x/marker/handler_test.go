@@ -122,7 +122,7 @@ func (s HandlerTestSuite) runTests(cases []CommonTest) {
 }
 
 func (s HandlerTestSuite) TestMsgAddMarkerRequest() {
-	denom := "hotdog"
+	denom := "jackthecat"
 	denomWithDashPeriod := fmt.Sprintf("%s-my.marker", denom)
 	activeStatus := types.NewMsgAddMarkerRequest(denom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true)
 	activeStatus.Status = types.StatusActive
@@ -185,31 +185,31 @@ func (s HandlerTestSuite) TestMsgAddAccessRequest() {
 	cases := []CommonTest{
 		{
 			"setup new marker for test",
-			types.NewMsgAddMarkerRequest("hotdog", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
+			types.NewMsgAddMarkerRequest("jackthecat", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
 			[]string{s.user2},
 			"",
 			nil,
 		},
 		{
 			"should successfully grant access to marker",
-			types.NewMsgAddAccessRequest("hotdog", s.user1Addr, accessMintGrant),
+			types.NewMsgAddAccessRequest("jackthecat", s.user1Addr, accessMintGrant),
 
 			[]string{s.user2},
 			"",
-			types.NewEventMarkerAddAccess(&accessMintGrant, "hotdog", s.user1),
+			types.NewEventMarkerAddAccess(&accessMintGrant, "jackthecat", s.user1),
 		},
 		{
 			"should fail to ADD access to marker, validate basic fails",
-			types.NewMsgAddAccessRequest("hotdog", s.user1Addr, accessInvalidGrant),
+			types.NewMsgAddAccessRequest("jackthecat", s.user1Addr, accessInvalidGrant),
 			[]string{s.user2},
 			"invalid access type: invalid request",
 			nil,
 		},
 		{
 			"should fail to ADD access to marker, keeper AddAccess failure",
-			types.NewMsgAddAccessRequest("hotdog", s.user2Addr, accessMintGrant),
+			types.NewMsgAddAccessRequest("jackthecat", s.user2Addr, accessMintGrant),
 			[]string{s.user2},
-			fmt.Sprintf("updates to pending marker hotdog can only be made by %s: unauthorized", s.user1),
+			fmt.Sprintf("updates to pending marker jackthecat can only be made by %s: unauthorized", s.user1),
 			nil,
 		},
 	}
@@ -219,7 +219,7 @@ func (s HandlerTestSuite) TestMsgAddAccessRequest() {
 
 func (s HandlerTestSuite) TestMsgDeleteAccessMarkerRequest() {
 
-	hotdogDenom := "hotdog"
+	jackthecatDenom := "jackthecat"
 	accessMintGrant := types.AccessGrant{
 		Address:     s.user1,
 		Permissions: types.AccessListByNames("MINT"),
@@ -228,24 +228,24 @@ func (s HandlerTestSuite) TestMsgDeleteAccessMarkerRequest() {
 	cases := []CommonTest{
 		{
 			"setup new marker for test",
-			types.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
+			types.NewMsgAddMarkerRequest(jackthecatDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
 			[]string{s.user1},
 			"",
 			nil,
 		},
 		{
 			"setup grant access to marker",
-			types.NewMsgAddAccessRequest(hotdogDenom, s.user1Addr, accessMintGrant),
+			types.NewMsgAddAccessRequest(jackthecatDenom, s.user1Addr, accessMintGrant),
 			[]string{s.user1},
 			"",
 			nil,
 		},
 		{
 			"should successfully delete grant access to marker",
-			types.NewDeleteAccessRequest(hotdogDenom, s.user1Addr, s.user1Addr),
+			types.NewDeleteAccessRequest(jackthecatDenom, s.user1Addr, s.user1Addr),
 			[]string{s.user1},
 			"",
-			types.NewEventMarkerDeleteAccess(s.user1, hotdogDenom, s.user1),
+			types.NewEventMarkerDeleteAccess(s.user1, jackthecatDenom, s.user1),
 		},
 	}
 	s.runTests(cases)
@@ -253,22 +253,22 @@ func (s HandlerTestSuite) TestMsgDeleteAccessMarkerRequest() {
 
 func (s HandlerTestSuite) TestMsgFinalizeMarkerRequest() {
 
-	hotdogDenom := "hotdog"
+	jackthecatDenom := "jackthecat"
 
 	cases := []CommonTest{
 		{
 			"setup new marker for test",
-			types.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
+			types.NewMsgAddMarkerRequest(jackthecatDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
 			[]string{s.user1},
 			"",
 			nil,
 		},
 		{
 			"should successfully finalize marker",
-			types.NewMsgFinalizeRequest(hotdogDenom, s.user1Addr),
+			types.NewMsgFinalizeRequest(jackthecatDenom, s.user1Addr),
 			[]string{s.user1},
 			"",
-			types.NewEventMarkerFinalize(hotdogDenom, s.user1),
+			types.NewEventMarkerFinalize(jackthecatDenom, s.user1),
 		},
 	}
 	s.runTests(cases)
@@ -276,29 +276,29 @@ func (s HandlerTestSuite) TestMsgFinalizeMarkerRequest() {
 
 func (s HandlerTestSuite) TestMsgActivateMarkerRequest() {
 
-	hotdogDenom := "hotdog"
+	jackthecatDenom := "jackthecat"
 
 	cases := []CommonTest{
 		{
 			"setup new marker for test",
-			types.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
+			types.NewMsgAddMarkerRequest(jackthecatDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
 			[]string{s.user1},
 			"",
 			nil,
 		},
 		{
 			"setup finalize marker",
-			types.NewMsgFinalizeRequest(hotdogDenom, s.user1Addr),
+			types.NewMsgFinalizeRequest(jackthecatDenom, s.user1Addr),
 			[]string{s.user1},
 			"",
 			nil,
 		},
 		{
 			"should successfully activate marker",
-			types.NewMsgActivateRequest(hotdogDenom, s.user1Addr),
+			types.NewMsgActivateRequest(jackthecatDenom, s.user1Addr),
 			[]string{s.user1},
 			"",
-			types.NewEventMarkerActivate(hotdogDenom, s.user1),
+			types.NewEventMarkerActivate(jackthecatDenom, s.user1),
 		},
 	}
 	s.runTests(cases)
@@ -306,7 +306,7 @@ func (s HandlerTestSuite) TestMsgActivateMarkerRequest() {
 
 func (s HandlerTestSuite) TestMsgCancelMarkerRequest() {
 
-	hotdogDenom := "hotdog"
+	jackthecatDenom := "jackthecat"
 	accessDeleteGrant := types.AccessGrant{
 		Address:     s.user1,
 		Permissions: types.AccessListByNames("DELETE"),
@@ -315,24 +315,24 @@ func (s HandlerTestSuite) TestMsgCancelMarkerRequest() {
 	cases := []CommonTest{
 		{
 			"setup new marker for test",
-			types.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
+			types.NewMsgAddMarkerRequest(jackthecatDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
 			[]string{s.user1},
 			"",
 			nil,
 		},
 		{
 			"setup grant delete access to marker",
-			types.NewMsgAddAccessRequest(hotdogDenom, s.user1Addr, accessDeleteGrant),
+			types.NewMsgAddAccessRequest(jackthecatDenom, s.user1Addr, accessDeleteGrant),
 			[]string{s.user1},
 			"",
 			nil,
 		},
 		{
 			"should successfully cancel marker",
-			types.NewMsgCancelRequest(hotdogDenom, s.user1Addr),
+			types.NewMsgCancelRequest(jackthecatDenom, s.user1Addr),
 			[]string{s.user1},
 			"",
-			types.NewEventMarkerCancel(hotdogDenom, s.user1),
+			types.NewEventMarkerCancel(jackthecatDenom, s.user1),
 		},
 	}
 	s.runTests(cases)
@@ -340,7 +340,7 @@ func (s HandlerTestSuite) TestMsgCancelMarkerRequest() {
 
 func (s HandlerTestSuite) TestMsgDeleteMarkerRequest() {
 
-	hotdogDenom := "hotdog"
+	jackthecatDenom := "jackthecat"
 	accessDeleteMintGrant := types.AccessGrant{
 		Address:     s.user1,
 		Permissions: types.AccessListByNames("DELETE,MINT"),
@@ -349,31 +349,31 @@ func (s HandlerTestSuite) TestMsgDeleteMarkerRequest() {
 	cases := []CommonTest{
 		{
 			"setup new marker for test",
-			types.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
+			types.NewMsgAddMarkerRequest(jackthecatDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
 			[]string{s.user1},
 			"",
 			nil,
 		},
 		{
 			"setup grant delete access to marker",
-			types.NewMsgAddAccessRequest(hotdogDenom, s.user1Addr, accessDeleteMintGrant),
+			types.NewMsgAddAccessRequest(jackthecatDenom, s.user1Addr, accessDeleteMintGrant),
 			[]string{s.user1},
 			"",
 			nil,
 		},
 		{
 			"setup cancel marker",
-			types.NewMsgCancelRequest(hotdogDenom, s.user1Addr),
+			types.NewMsgCancelRequest(jackthecatDenom, s.user1Addr),
 			[]string{s.user1},
 			"",
 			nil,
 		},
 		{
 			"should successfully delete marker",
-			types.NewMsgDeleteRequest(hotdogDenom, s.user1Addr),
+			types.NewMsgDeleteRequest(jackthecatDenom, s.user1Addr),
 			[]string{s.user1},
 			"",
-			types.NewEventMarkerDelete(hotdogDenom, s.user1),
+			types.NewEventMarkerDelete(jackthecatDenom, s.user1),
 		},
 	}
 	s.runTests(cases)
@@ -381,7 +381,7 @@ func (s HandlerTestSuite) TestMsgDeleteMarkerRequest() {
 
 func (s HandlerTestSuite) TestMsgMintMarkerRequest() {
 
-	hotdogDenom := "hotdog"
+	jackthecatDenom := "jackthecat"
 	access := types.AccessGrant{
 		Address:     s.user1,
 		Permissions: types.AccessListByNames("MINT,BURN"),
@@ -390,24 +390,24 @@ func (s HandlerTestSuite) TestMsgMintMarkerRequest() {
 	cases := []CommonTest{
 		{
 			"setup new marker for test",
-			types.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
+			types.NewMsgAddMarkerRequest(jackthecatDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
 			[]string{s.user1},
 			"",
 			nil,
 		},
 		{
 			"setup grant mint access to marker",
-			types.NewMsgAddAccessRequest(hotdogDenom, s.user1Addr, access),
+			types.NewMsgAddAccessRequest(jackthecatDenom, s.user1Addr, access),
 			[]string{s.user1},
 			"",
 			nil,
 		},
 		{
 			"should successfully mint marker",
-			types.NewMsgMintRequest(s.user1Addr, sdk.NewCoin(hotdogDenom, sdk.NewInt(100))),
+			types.NewMsgMintRequest(s.user1Addr, sdk.NewCoin(jackthecatDenom, sdk.NewInt(100))),
 			[]string{s.user1},
 			"",
-			types.NewEventMarkerMint("100", hotdogDenom, s.user1),
+			types.NewEventMarkerMint("100", jackthecatDenom, s.user1),
 		},
 	}
 	s.runTests(cases)
@@ -415,7 +415,7 @@ func (s HandlerTestSuite) TestMsgMintMarkerRequest() {
 
 func (s HandlerTestSuite) TestMsgBurnMarkerRequest() {
 
-	hotdogDenom := "hotdog"
+	jackthecatDenom := "jackthecat"
 	access := types.AccessGrant{
 		Address:     s.user1,
 		Permissions: types.AccessListByNames("DELETE,MINT,BURN"),
@@ -424,24 +424,24 @@ func (s HandlerTestSuite) TestMsgBurnMarkerRequest() {
 	cases := []CommonTest{
 		{
 			"setup new marker for test",
-			types.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
+			types.NewMsgAddMarkerRequest(jackthecatDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
 			[]string{s.user1},
 			"",
 			nil,
 		},
 		{
 			"setup grant mint access to marker",
-			types.NewMsgAddAccessRequest(hotdogDenom, s.user1Addr, access),
+			types.NewMsgAddAccessRequest(jackthecatDenom, s.user1Addr, access),
 			[]string{s.user1},
 			"",
 			nil,
 		},
 		{
 			"should successfully burn marker",
-			types.NewMsgBurnRequest(s.user1Addr, sdk.NewCoin(hotdogDenom, sdk.NewInt(100))),
+			types.NewMsgBurnRequest(s.user1Addr, sdk.NewCoin(jackthecatDenom, sdk.NewInt(100))),
 			[]string{s.user1},
 			"",
-			types.NewEventMarkerBurn("100", hotdogDenom, s.user1),
+			types.NewEventMarkerBurn("100", jackthecatDenom, s.user1),
 		},
 	}
 	s.runTests(cases)
@@ -449,7 +449,7 @@ func (s HandlerTestSuite) TestMsgBurnMarkerRequest() {
 
 func (s HandlerTestSuite) TestMsgWithdrawMarkerRequest() {
 
-	hotdogDenom := "hotdog"
+	jackthecatDenom := "jackthecat"
 	access := types.AccessGrant{
 		Address:     s.user1,
 		Permissions: types.AccessListByNames("DELETE,MINT,WITHDRAW"),
@@ -458,38 +458,38 @@ func (s HandlerTestSuite) TestMsgWithdrawMarkerRequest() {
 	cases := []CommonTest{
 		{
 			"setup new marker for test",
-			types.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
+			types.NewMsgAddMarkerRequest(jackthecatDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
 			[]string{s.user1},
 			"",
 			nil,
 		},
 		{
 			"setup grant access to marker",
-			types.NewMsgAddAccessRequest(hotdogDenom, s.user1Addr, access),
+			types.NewMsgAddAccessRequest(jackthecatDenom, s.user1Addr, access),
 			[]string{s.user1},
 			"",
 			nil,
 		},
 		{
 			"setup finalize marker",
-			types.NewMsgFinalizeRequest(hotdogDenom, s.user1Addr),
+			types.NewMsgFinalizeRequest(jackthecatDenom, s.user1Addr),
 			[]string{s.user1},
 			"",
 			nil,
 		},
 		{
 			"setup activate marker",
-			types.NewMsgActivateRequest(hotdogDenom, s.user1Addr),
+			types.NewMsgActivateRequest(jackthecatDenom, s.user1Addr),
 			[]string{s.user1},
 			"",
 			nil,
 		},
 		{
 			"should successfully withdraw marker",
-			types.NewMsgWithdrawRequest(s.user1Addr, s.user1Addr, hotdogDenom, sdk.NewCoins(sdk.NewCoin(hotdogDenom, sdk.NewInt(100)))),
+			types.NewMsgWithdrawRequest(s.user1Addr, s.user1Addr, jackthecatDenom, sdk.NewCoins(sdk.NewCoin(jackthecatDenom, sdk.NewInt(100)))),
 			[]string{s.user1},
 			"",
-			types.NewEventMarkerWithdraw("100hotdog", hotdogDenom, s.user1, s.user1),
+			types.NewEventMarkerWithdraw("100jackthecat", jackthecatDenom, s.user1, s.user1),
 		},
 	}
 	s.runTests(cases)
@@ -497,7 +497,7 @@ func (s HandlerTestSuite) TestMsgWithdrawMarkerRequest() {
 
 func (s HandlerTestSuite) TestMsgTransferMarkerRequest() {
 
-	hotdogDenom := "hotdog"
+	jackthecatDenom := "jackthecat"
 	access := types.AccessGrant{
 		Address:     s.user1,
 		Permissions: types.AccessListByNames("DELETE,MINT,WITHDRAW,TRANSFER"),
@@ -506,45 +506,45 @@ func (s HandlerTestSuite) TestMsgTransferMarkerRequest() {
 	cases := []CommonTest{
 		{
 			"setup new marker for test",
-			types.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_RestrictedCoin, true, true),
+			types.NewMsgAddMarkerRequest(jackthecatDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_RestrictedCoin, true, true),
 			[]string{s.user1},
 			"",
 			nil,
 		},
 		{
 			"setup grant access to marker",
-			types.NewMsgAddAccessRequest(hotdogDenom, s.user1Addr, access),
+			types.NewMsgAddAccessRequest(jackthecatDenom, s.user1Addr, access),
 			[]string{s.user1},
 			"",
 			nil,
 		},
 		{
 			"setup finalize marker",
-			types.NewMsgFinalizeRequest(hotdogDenom, s.user1Addr),
+			types.NewMsgFinalizeRequest(jackthecatDenom, s.user1Addr),
 			[]string{s.user1},
 			"",
 			nil,
 		},
 		{
 			"setup activate marker",
-			types.NewMsgActivateRequest(hotdogDenom, s.user1Addr),
+			types.NewMsgActivateRequest(jackthecatDenom, s.user1Addr),
 			[]string{s.user1},
 			"",
 			nil,
 		},
 		{
 			"should successfully mint marker",
-			types.NewMsgMintRequest(s.user1Addr, sdk.NewCoin(hotdogDenom, sdk.NewInt(1000))),
+			types.NewMsgMintRequest(s.user1Addr, sdk.NewCoin(jackthecatDenom, sdk.NewInt(1000))),
 			[]string{s.user1},
 			"",
 			nil,
 		},
 		{
 			"should successfully transfer marker",
-			types.NewMsgTransferRequest(s.user1Addr, s.user1Addr, s.user2Addr, sdk.NewCoin(hotdogDenom, sdk.NewInt(0))),
+			types.NewMsgTransferRequest(s.user1Addr, s.user1Addr, s.user2Addr, sdk.NewCoin(jackthecatDenom, sdk.NewInt(0))),
 			[]string{s.user1},
 			"",
-			types.NewEventMarkerTransfer("0", hotdogDenom, s.user1, s.user2, s.user1),
+			types.NewEventMarkerTransfer("0", jackthecatDenom, s.user1, s.user2, s.user1),
 		},
 	}
 	s.runTests(cases)
@@ -552,49 +552,49 @@ func (s HandlerTestSuite) TestMsgTransferMarkerRequest() {
 
 func (s HandlerTestSuite) TestMsgSetDenomMetadataRequest() {
 
-	hotdogDenom := "hotdog"
-	hotdogName := "Jason"
-	hotdogSymbol := "WIFI"
+	jackthecatDenom := "jackthecat"
+	jackthecatName := "Jason"
+	jackthecatSymbol := "WIFI"
 	access := types.AccessGrant{
 		Address:     s.user1,
 		Permissions: types.AccessListByNames("DELETE,MINT,WITHDRAW,TRANSFER"),
 	}
 
-	hotdogMetadata := banktypes.Metadata{
+	jackthecatMetadata := banktypes.Metadata{
 		Description: "a description",
 		DenomUnits: []*banktypes.DenomUnit{
-			{Denom: fmt.Sprintf("n%s", hotdogDenom), Exponent: 0, Aliases: []string{fmt.Sprintf("nano%s", hotdogDenom)}},
-			{Denom: fmt.Sprintf("u%s", hotdogDenom), Exponent: 3, Aliases: []string{}},
-			{Denom: hotdogDenom, Exponent: 9, Aliases: []string{}},
-			{Denom: fmt.Sprintf("mega%s", hotdogDenom), Exponent: 15, Aliases: []string{}},
+			{Denom: fmt.Sprintf("n%s", jackthecatDenom), Exponent: 0, Aliases: []string{fmt.Sprintf("nano%s", jackthecatDenom)}},
+			{Denom: fmt.Sprintf("u%s", jackthecatDenom), Exponent: 3, Aliases: []string{}},
+			{Denom: jackthecatDenom, Exponent: 9, Aliases: []string{}},
+			{Denom: fmt.Sprintf("mega%s", jackthecatDenom), Exponent: 15, Aliases: []string{}},
 		},
-		Base:    fmt.Sprintf("n%s", hotdogDenom),
-		Display: hotdogDenom,
-		Name:    hotdogName,
-		Symbol:  hotdogSymbol,
+		Base:    fmt.Sprintf("n%s", jackthecatDenom),
+		Display: jackthecatDenom,
+		Name:    jackthecatName,
+		Symbol:  jackthecatSymbol,
 	}
 
 	cases := []CommonTest{
 		{
 			"setup new marker for test",
-			types.NewMsgAddMarkerRequest(fmt.Sprintf("n%s", hotdogDenom), sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_RestrictedCoin, true, true),
+			types.NewMsgAddMarkerRequest(fmt.Sprintf("n%s", jackthecatDenom), sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_RestrictedCoin, true, true),
 			[]string{s.user1},
 			"",
 			nil,
 		},
 		{
 			"setup grant access to marker",
-			types.NewMsgAddAccessRequest(fmt.Sprintf("n%s", hotdogDenom), s.user1Addr, access),
+			types.NewMsgAddAccessRequest(fmt.Sprintf("n%s", jackthecatDenom), s.user1Addr, access),
 			[]string{s.user1},
 			"",
 			nil,
 		},
 		{
 			"should successfully set denom metadata on marker",
-			types.NewSetDenomMetadataRequest(hotdogMetadata, s.user1Addr),
+			types.NewSetDenomMetadataRequest(jackthecatMetadata, s.user1Addr),
 			[]string{s.user1},
 			"",
-			types.NewEventMarkerSetDenomMetadata(hotdogMetadata, s.user1),
+			types.NewEventMarkerSetDenomMetadata(jackthecatMetadata, s.user1),
 		},
 	}
 	s.runTests(cases)

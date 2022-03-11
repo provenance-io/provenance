@@ -125,34 +125,34 @@ func (s *QueryServerTestSuite) TestCalculateTxFees() {
 func (s *QueryServerTestSuite) TestCalculateTxFeesAuthz() {
 	server := markerkeeper.NewMsgServerImpl(s.app.MarkerKeeper)
 
-	hotdogDenom := "hotdog"
-	_, err := server.AddMarker(sdk.WrapSDKContext(s.ctx), markertypes.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, markertypes.MarkerType_RestrictedCoin, true, true))
+	jackthecatDenom := "jackthecat"
+	_, err := server.AddMarker(sdk.WrapSDKContext(s.ctx), markertypes.NewMsgAddMarkerRequest(jackthecatDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, markertypes.MarkerType_RestrictedCoin, true, true))
 	s.Require().NoError(err)
 	access := markertypes.AccessGrant{
 		Address:     s.user1,
 		Permissions: markertypes.AccessListByNames("DELETE,MINT,WITHDRAW,TRANSFER,ADMIN,BURN"),
 	}
-	_, err = server.AddAccess(sdk.WrapSDKContext(s.ctx), markertypes.NewMsgAddAccessRequest(hotdogDenom, s.user1Addr, access))
+	_, err = server.AddAccess(sdk.WrapSDKContext(s.ctx), markertypes.NewMsgAddAccessRequest(jackthecatDenom, s.user1Addr, access))
 	s.Require().NoError(err)
-	_, err = server.Finalize(sdk.WrapSDKContext(s.ctx), markertypes.NewMsgFinalizeRequest(hotdogDenom, s.user1Addr))
+	_, err = server.Finalize(sdk.WrapSDKContext(s.ctx), markertypes.NewMsgFinalizeRequest(jackthecatDenom, s.user1Addr))
 	s.Require().NoError(err)
-	_, err = server.Activate(sdk.WrapSDKContext(s.ctx), markertypes.NewMsgActivateRequest(hotdogDenom, s.user1Addr))
+	_, err = server.Activate(sdk.WrapSDKContext(s.ctx), markertypes.NewMsgActivateRequest(jackthecatDenom, s.user1Addr))
 	s.Require().NoError(err)
-	_, err = server.Mint(sdk.WrapSDKContext(s.ctx), markertypes.NewMsgMintRequest(s.user1Addr, sdk.NewCoin(hotdogDenom, sdk.NewInt(1000))))
+	_, err = server.Mint(sdk.WrapSDKContext(s.ctx), markertypes.NewMsgMintRequest(s.user1Addr, sdk.NewCoin(jackthecatDenom, sdk.NewInt(1000))))
 	s.Require().NoError(err)
-	_, err = server.Withdraw(sdk.WrapSDKContext(s.ctx), markertypes.NewMsgWithdrawRequest(s.user1Addr, s.user1Addr, hotdogDenom, sdk.NewCoins(sdk.NewCoin(hotdogDenom, sdk.NewInt(10)))))
+	_, err = server.Withdraw(sdk.WrapSDKContext(s.ctx), markertypes.NewMsgWithdrawRequest(s.user1Addr, s.user1Addr, jackthecatDenom, sdk.NewCoins(sdk.NewCoin(jackthecatDenom, sdk.NewInt(10)))))
 	s.Require().NoError(err)
 	msgGrant := &authz.MsgGrant{
 		Granter: s.user1,
 		Grantee: s.user2,
 		Grant:   authz.Grant{},
 	}
-	err = msgGrant.SetAuthorization(markertypes.NewMarkerTransferAuthorization(sdk.NewCoins(sdk.NewCoin(hotdogDenom, sdk.NewInt(10)))))
+	err = msgGrant.SetAuthorization(markertypes.NewMarkerTransferAuthorization(sdk.NewCoins(sdk.NewCoin(jackthecatDenom, sdk.NewInt(10)))))
 	s.Require().NoError(err)
 	_, err = s.app.AuthzKeeper.Grant(sdk.WrapSDKContext(s.ctx), msgGrant)
 	s.Require().NoError(err)
 
-	transferRequest := markertypes.NewMsgTransferRequest(s.user1Addr, s.user1Addr, s.user2Addr, sdk.NewCoin(hotdogDenom, sdk.NewInt(9)))
+	transferRequest := markertypes.NewMsgTransferRequest(s.user1Addr, s.user1Addr, s.user2Addr, sdk.NewCoin(jackthecatDenom, sdk.NewInt(9)))
 	simulateReq := s.createTxFeesRequest(s.pubkey2, s.privkey2, s.acct2, transferRequest)
 	response, err := s.queryClient.CalculateTxFees(s.ctx.Context(), &simulateReq)
 	s.Assert().NoError(err)
