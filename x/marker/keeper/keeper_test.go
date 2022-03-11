@@ -122,9 +122,9 @@ func TestAccountUnrestrictedDenoms(t *testing.T) {
 
 	// Set to an empty string (returns to default expression)
 	app.MarkerKeeper.SetParams(ctx, types.Params{UnrestrictedDenomRegex: ""})
-	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("short", sdk.NewInt(30), user, user, types.MarkerType_Coin, true, true))
-	// succeeds now as the default unrestricted denom expression allows any valid denom (minimum length is 2)
-	require.NoError(t, err, "should allow any valid denom with a min length of two")
+	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("shortsss", sdk.NewInt(30), user, user, types.MarkerType_Coin, true, true))
+	// succeeds now as the default unrestricted denom expression allows any valid denom (minimum length is 8)
+	require.NoError(t, err, "should allow any valid denom with a min length of eight")
 }
 
 func TestAccountKeeperReader(t *testing.T) {
