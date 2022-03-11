@@ -3,12 +3,13 @@ package cli_test
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/provenance-io/provenance/internal/antewrapper"
 	"io/ioutil"
 	"os"
 	"sort"
 	"strings"
 	"testing"
+
+	"github.com/provenance-io/provenance/internal/antewrapper"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/spf13/cobra"
@@ -95,12 +96,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	var genBalances []banktypes.Balance
 	genBalances = append(genBalances, banktypes.Balance{Address: s.accountAddresses[0].String(), Coins: sdk.NewCoins(
 		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
-		sdk.NewCoin("authzhotdog", sdk.NewInt(100)),
+		sdk.NewCoin("authzjackthecat", sdk.NewInt(100)),
 		sdk.NewCoin(s.holderDenom, sdk.NewInt(123)),
 	).Sort()})
 	genBalances = append(genBalances, banktypes.Balance{Address: s.accountAddresses[1].String(), Coins: sdk.NewCoins(
 		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
-		sdk.NewCoin("authzhotdog", sdk.NewInt(100)),
+		sdk.NewCoin("authzjackthecat", sdk.NewInt(100)),
 		sdk.NewCoin(s.holderDenom, sdk.NewInt(234)),
 	).Sort()})
 	genBalances = append(genBalances, banktypes.Balance{Address: s.accountAddresses[2].String(), Coins: sdk.NewCoins(
@@ -179,7 +180,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		},
 		{
 			BaseAccount: &authtypes.BaseAccount{
-				Address:       markertypes.MustGetMarkerAddress("authzhotdog").String(),
+				Address:       markertypes.MustGetMarkerAddress("authzjackthecat").String(),
 				AccountNumber: 140,
 				Sequence:      0,
 			},
@@ -188,7 +189,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			MarkerType:             markertypes.MarkerType_RestrictedCoin,
 			AllowGovernanceControl: false,
 			Supply:                 sdk.NewInt(1000),
-			Denom:                  "authzhotdog",
+			Denom:                  "authzjackthecat",
 			AccessControl: []markertypes.AccessGrant{
 				*markertypes.NewAccessGrant(s.accountAddresses[0], []markertypes.Access{markertypes.Access_Transfer, markertypes.Access_Admin}),
 				*markertypes.NewAccessGrant(s.accountAddresses[1], []markertypes.Access{markertypes.Access_Transfer, markertypes.Access_Admin}),
@@ -496,7 +497,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			"create a new marker",
 			markercli.GetCmdAddMarker(),
 			[]string{
-				"1000hotdog",
+				"1000jackthecat",
 				fmt.Sprintf("--%s=%s", markercli.FlagType, "RESTRICTED"),
 				fmt.Sprintf("--%s=%s", markercli.FlagSupplyFixed, "true"),
 				fmt.Sprintf("--%s=%s", markercli.FlagAllowGovernanceControl, "true"),
@@ -526,7 +527,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			"fail to create add marker, incorrect allow governance value",
 			markercli.GetCmdAddMarker(),
 			[]string{
-				"1000hotdog",
+				"1000jackthecat",
 				fmt.Sprintf("--%s=%s", markercli.FlagType, "RESTRICTED"),
 				fmt.Sprintf("--%s=%s", markercli.FlagSupplyFixed, "false"),
 				fmt.Sprintf("--%s=%s", markercli.FlagAllowGovernanceControl, "wrong"),
@@ -541,7 +542,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			"fail to create add marker, incorrect supply fixed value",
 			markercli.GetCmdAddMarker(),
 			[]string{
-				"1000hotdog",
+				"1000jackthecat",
 				fmt.Sprintf("--%s=%s", markercli.FlagType, "RESTRICTED"),
 				fmt.Sprintf("--%s=%s", markercli.FlagSupplyFixed, "wrong"),
 				fmt.Sprintf("--%s=%s", markercli.FlagAllowGovernanceControl, "true"),
@@ -557,7 +558,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			markercli.GetCmdAddAccess(),
 			[]string{
 				s.testnet.Validators[0].Address.String(),
-				"hotdog",
+				"jackthecat",
 				"admin",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -571,7 +572,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			markercli.GetCmdAddAccess(),
 			[]string{
 				s.testnet.Validators[0].Address.String(),
-				"hotdog",
+				"jackthecat",
 				"mint,burn,transfer,withdraw",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -584,7 +585,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			"mint supply",
 			markercli.GetCmdMint(),
 			[]string{
-				"100hotdog",
+				"100jackthecat",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -596,7 +597,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			"burn supply",
 			markercli.GetCmdBurn(),
 			[]string{
-				"100hotdog",
+				"100jackthecat",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -608,7 +609,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			"finalize",
 			markercli.GetCmdFinalize(),
 			[]string{
-				"hotdog",
+				"jackthecat",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -620,7 +621,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			"activate",
 			markercli.GetCmdActivate(),
 			[]string{
-				"hotdog",
+				"jackthecat",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -632,7 +633,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			"withdraw, fail to parse coins",
 			markercli.GetCmdWithdrawCoins(),
 			[]string{
-				"hotdog",
+				"jackthecat",
 				"incorrect-denom-blah",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -645,8 +646,8 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			"withdraw, fail to parse recipient address",
 			markercli.GetCmdWithdrawCoins(),
 			[]string{
-				"hotdog",
-				"40hotdog",
+				"jackthecat",
+				"40jackthecat",
 				"invalid-recipient",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -659,8 +660,8 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			"withdraw, successful withdraw to a recipient",
 			markercli.GetCmdWithdrawCoins(),
 			[]string{
-				"hotdog",
-				"40hotdog",
+				"jackthecat",
+				"40jackthecat",
 				s.accountAddresses[0].String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -673,8 +674,8 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			"withdraw, successful withdraw to caller's account",
 			markercli.GetCmdWithdrawCoins(),
 			[]string{
-				"hotdog",
-				"200hotdog",
+				"jackthecat",
+				"200jackthecat",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -688,7 +689,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			[]string{
 				"invalid-from",
 				s.testnet.Validators[0].Address.String(),
-				"100hotdog",
+				"100jackthecat",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -702,7 +703,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			[]string{
 				s.testnet.Validators[0].Address.String(),
 				"not-to",
-				"100hotdog",
+				"100jackthecat",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -716,7 +717,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			[]string{
 				s.accountAddresses[0].String(),
 				s.testnet.Validators[0].Address.String(),
-				"hotdog",
+				"jackthecat",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -730,7 +731,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			[]string{
 				s.accountAddresses[0].String(),
 				s.testnet.Validators[0].Address.String(),
-				"100hotdog,200koinz",
+				"100jackthecat,200koinz",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -744,7 +745,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			[]string{
 				s.testnet.Validators[0].Address.String(),
 				s.accountAddresses[0].String(),
-				"100hotdog",
+				"100jackthecat",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -757,7 +758,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			markercli.GetCmdDeleteAccess(),
 			[]string{
 				s.testnet.Validators[0].Address.String(),
-				"hotdog",
+				"jackthecat",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -801,7 +802,7 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 			[]string{
 				s.accountAddresses[1].String(),
 				"transfer",
-				fmt.Sprintf("--%s=%s", markercli.FlagTransferLimit, "10authzhotdog"),
+				fmt.Sprintf("--%s=%s", markercli.FlagTransferLimit, "10authzjackthecat"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -815,7 +816,7 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 			[]string{
 				s.accountAddresses[0].String(),
 				"transfer",
-				fmt.Sprintf("--%s=%s", markercli.FlagTransferLimit, "20authzhotdog"),
+				fmt.Sprintf("--%s=%s", markercli.FlagTransferLimit, "20authzjackthecat"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -829,7 +830,7 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 			[]string{
 				s.accountAddresses[0].String(),
 				s.accountAddresses[1].String(),
-				"4authzhotdog",
+				"4authzjackthecat",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -843,7 +844,7 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 			[]string{
 				s.accountAddresses[0].String(),
 				s.accountAddresses[1].String(),
-				"7authzhotdog",
+				"7authzjackthecat",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -857,7 +858,7 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 			[]string{
 				s.accountAddresses[2].String(),
 				s.accountAddresses[1].String(),
-				"9authzhotdog",
+				"9authzjackthecat",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -871,7 +872,7 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 			[]string{
 				s.accountAddresses[1].String(),
 				s.accountAddresses[0].String(),
-				"20authzhotdog",
+				"20authzjackthecat",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -898,7 +899,7 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 			[]string{
 				s.accountAddresses[0].String(),
 				s.accountAddresses[1].String(),
-				"1hotdog",
+				"1jackthecat",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
