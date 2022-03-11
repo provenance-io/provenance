@@ -72,6 +72,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * `provenance.metadata.v1.MsgP8eMemorializeContractRequest` 10 hash (10,000,000,000 nhash)
 * When the `start` command encounters an error, it no longer outputs command usage [#670](https://github.com/provenance-io/provenance/issues/670)
 * Add integration tests for smart contracts [#392](https://github.com/provenance-io/provenance/issues/392)
+* Change max length on marker unresticted denom from 64 to 83 [#719](https://github.com/provenance-io/provenance/issues/719)
 
 ### Client Breaking
 
