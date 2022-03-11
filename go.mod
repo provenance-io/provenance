@@ -127,7 +127,10 @@ replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.45.0-pio-2
+//replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.45.0-pio-2
+replace github.com/cosmos/cosmos-sdk => ../cosmos-sdk
+
+replace github.com/cosmos/iavl v0.17.3 => ../iavl
 
 replace github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
 
@@ -142,4 +145,5 @@ replace github.com/CosmWasm/wasmvm => github.com/CosmWasm/wasmvm v1.0.0-beta6
 
 // Fixes address length issue to support contract address of length 20 (pre v1.8.0) with current length 22
 // TODO Remove it when fixed upstream
-replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.22.0-pio-address-fix
+//replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.22.0-pio-address-fix
+replace github.com/CosmWasm/wasmd => ../wasmd
