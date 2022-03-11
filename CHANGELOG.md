@@ -70,11 +70,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * `provenance.metadata.v1.MsgWriteScopeRequest`  10 hash (10,000,000,000 nhash)
   * `provenance.metadata.v1.MsgP8eMemorializeContractRequest` 10 hash (10,000,000,000 nhash)
 * When the `start` command encounters an error, it no longer outputs command usage [#670](https://github.com/provenance-io/provenance/issues/670)
-
+* Change max length on marker unresticted denom from 64 to 83 [#719](https://github.com/provenance-io/provenance/issues/719)
 ### Client Breaking
 
 * Enforce a maximum gas limit on individual transactions so that at least 20 can fit in any given block. [#681](https://github.com/provenance-io/provenance/issues/681)
-  Previously transactions were only limited by their size in bytes as well as the overall gas limit on a given block.  
+  Previously transactions were only limited by their size in bytes as well as the overall gas limit on a given block.
 
   _With this update transactions must be no more than 5% of the maximum amount of gas allowed per block when a gas limit
   per block is set (this restriction has no effect when a gas limit has not been set).  The current limits on Provenance
