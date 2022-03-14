@@ -132,7 +132,6 @@ comma := ,
 build_tags_comma_sep := $(subst $(whitespace),$(comma),$(build_tags))
 
 ldflags = -w -s \
-	-linkmode external -extldflags "-static -v" \
 	-X github.com/cosmos/cosmos-sdk/version.Name=Provenance \
 	-X github.com/cosmos/cosmos-sdk/version.AppName=provenanced \
 	-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
