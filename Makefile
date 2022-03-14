@@ -8,7 +8,7 @@ PACKAGES_SIMULATION    := $(filter     %/simulation%,$(PACKAGES))
 BINDIR ?= $(GOPATH)/bin
 BUILDDIR ?= $(CURDIR)/build
 
-LEDGER_ENABLED ?= true
+WITH_LEDGER ?= true
 WITH_CLEVELDB ?= true
 WITH_ROCKSDB ?= true
 WITH_BADGERDB ?= true
@@ -87,12 +87,12 @@ ifeq ($(WITH_BOLTDB),true)
   build_tags += boltdb
 endif
 
-ifeq ($(LEDGER_ENABLED),true)
+ifeq ($(WITH_LEDGER),true)
   ifeq ($(UNAME_S),openbsd)
     $(warning OpenBSD detected, disabling ledger support (https://github.com/cosmos/cosmos-sdk/issues/1988))
-    LEDGER_ENABLED = false
+    WITH_LEDGER = false
   else ifneq ($(have_gcc),true)
-    $(error gcc not installed for ledger support, please install or set LEDGER_ENABLED=false)
+    $(error gcc not installed for ledger support, please install or set WITH_LEDGER=false)
   else
     build_tags += ledger
   endif
@@ -156,7 +156,7 @@ build: validate-go-version go.sum
 	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./cmd/provenanced
 
 build-linux: go.sum
-	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build
+	WITH_LEDGER=false GOOS=linux GOARCH=amd64 $(MAKE) build
 
 # Run an instance of the daemon against a local config (create the config if it does not exit.)
 run-config: check-built

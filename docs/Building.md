@@ -94,7 +94,7 @@ A few aspects of `make build` and `make install` can be controlled through envir
 * `WITH_BADGERDB`: Enables/Disables building with BadgerDB support.
   The default is `true`.
   If this is not `true` the built `provenanced`, executable will not be able to use BadgerDB as a database backend.
-* `LEDGER_ENABLED`: Enables/Disables building with Ledger hardware wallet support.
+* `WITH_LEDGER`: Enables/Disables building with Ledger hardware wallet support.
   The default is `true`.
   If this is not `true` the built `provenanced`, executable will not work with Ledger hardware wallets.
 * `BINDIR`: The path to the Go binary directory.
