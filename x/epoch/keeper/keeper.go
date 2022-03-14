@@ -9,6 +9,8 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 )
 
+const StoreKey = types.ModuleName
+
 type (
 	Keeper struct {
 		cdc      codec.Codec
