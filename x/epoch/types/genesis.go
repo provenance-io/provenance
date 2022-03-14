@@ -12,21 +12,21 @@ func NewGenesisState(epochs []EpochInfo) *GenesisState {
 }
 
 // DefaultGenesis returns the default Capability genesis state
-func DefaultGenesis(blockHeight int64) *GenesisState {
+func DefaultGenesis() *GenesisState {
 	epochs := []EpochInfo{
 		{
 			Identifier:              "week",
-			StartHeight:             blockHeight,
+			StartHeight:             0,
 			Duration: 				 int64((24*60*60*7)/5), //duration in blocks
 			CurrentEpoch:            0,
-			CurrentEpochStartHeight: blockHeight,
+			CurrentEpochStartHeight: 0,
 		},
 		{
 			Identifier:              "day",
-			StartHeight:             blockHeight,
+			StartHeight:             0,
 			Duration:                int64((24*60*60)/5),
 			CurrentEpoch:            0,
-			CurrentEpochStartHeight: blockHeight,
+			CurrentEpochStartHeight: 0,
 		},
 	}
 	return NewGenesisState(epochs)

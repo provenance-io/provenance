@@ -4,11 +4,10 @@ import (
 	"context"
 	"encoding/json"
 
+	epochModule "github.com/provenance-io/provenance/x/epoch"
 	cli "github.com/provenance-io/provenance/x/epoch/client/cli"
 	"github.com/provenance-io/provenance/x/epoch/keeper"
-	epochModule "github.com/provenance-io/provenance/x/epoch"
 	epoch "github.com/provenance-io/provenance/x/epoch/types"
-
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -54,7 +53,7 @@ func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 // DefaultGenesis returns default genesis state as raw bytes for the epoch
 // module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(epoch.DefaultGenesis(0))
+	return cdc.MustMarshalJSON(epoch.DefaultGenesis())
 }
 
 // ValidateGenesis performs genesis state validation for the epoch module.
