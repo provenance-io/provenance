@@ -33,7 +33,7 @@ ifeq ("$(wildcard $(GOLANGCI_LINT))","")
     GOLANGCI_LINT = $(BINDIR)/golangci-lint
 endif
 
-GO := go
+GO ?= go
 
 HTTPS_GIT := https://github.com/provenance-io/provenance.git
 DOCKER := $(shell which docker)
@@ -99,24 +99,30 @@ ifeq ($(WITH_LEDGER),true)
 endif
 
 ### CGO Settings
-ifeq ($(UNAME_S),Darwin)
+ifeq ($(UNAME_S),darwin)
   # osx linker settings
-  CGO_LDFLAGS = -Wl,-rpath,@loader_path/.
-else ifeq ($(UNAME_S),Linux)
+  cgo_ldflags += -Wl,-rpath,@loader_path/.
+else ifeq ($(UNAME_S),linux)
   # linux liner settings
-  CGO_LDFLAGS = -Wl,-rpath,\$$ORIGIN
+  cgo_ldflags += -Wl,-rpath,\$$ORIGIN
 endif
 
 # cleveldb linker settings
 ifeq ($(WITH_CLEVELDB),true)
-  ifeq ($(UNAME_S),Darwin)
+  ifeq ($(UNAME_S),darwin)
     LEVELDB_PATH ?= $(shell brew --prefix leveldb 2> /dev/null)
-    CGO_CFLAGS  += -I$(LEVELDB_PATH)/include
-    CGO_LDFLAGS += -L$(LEVELDB_PATH)/lib
-  else ifeq ($(UNAME_S),Linux)
+    cgo_cflags  += -I$(LEVELDB_PATH)/include
+    cgo_ldflags += -L$(LEVELDB_PATH)/lib
+  else ifeq ($(UNAME_S),linux)
     # Intentionally left blank to leave it up to already installed libraries.
   endif
 endif
+
+cgo_ldflags += $(CGO_LDFLAGS)
+cgo_ldflags := $(strip $(cgo_ldflags))
+
+cgo_cflags += $(CGO_CFLAGS)
+cgo_cflags := $(strip $(cgo_cflags))
 
 build_tags += $(BUILD_TAGS)
 build_tags := $(strip $(build_tags))
@@ -136,7 +142,11 @@ ldflags = -w -s \
 
 ldflags += $(LDFLAGS)
 ldflags := $(strip $(ldflags))
-BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags)' -trimpath
+
+build_flags = -mod=readonly -tags "$(build_tags)" -ldflags '$(ldflags)' -trimpath
+build_flags += $(BUILD_FLAGS)
+build_flags := $(strip $(build_flags))
+BUILD_FLAGS := $(build_flags)
 
 all: build format lint test
 
@@ -149,11 +159,11 @@ all: build format lint test
 
 # Install puts the binaries in the local environment path.
 install: go.sum
-	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) install -mod=readonly $(BUILD_FLAGS) ./cmd/provenanced
+	CGO_LDFLAGS="$(cgo_ldflags)" CGO_CFLAGS="$(cgo_cflags)" $(GO) install $(BUILD_FLAGS) ./cmd/provenanced
 
 build: validate-go-version go.sum
 	mkdir -p $(BUILDDIR)
-	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./cmd/provenanced
+	CGO_LDFLAGS="$(cgo_ldflags)" CGO_CFLAGS="$(cgo_cflags)" $(GO) build -o $(BUILDDIR)/ $(BUILD_FLAGS) ./cmd/provenanced
 
 build-linux: go.sum
 	WITH_LEDGER=false GOOS=linux GOARCH=amd64 $(MAKE) build
@@ -189,10 +199,10 @@ run: check-built run-config;
 
 build-dbmigrate: validate-go-version go.sum
 	mkdir -p $(BUILDDIR)
-	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./cmd/dbmigrate
+	CGO_LDFLAGS="$(cgo_ldflags)" CGO_CFLAGS="$(cgo_cflags)" $(GO) build -o $(BUILDDIR)/ $(BUILD_FLAGS) ./cmd/dbmigrate
 
 install-dbmigrate: go.sum
-	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) install -mod=readonly $(BUILD_FLAGS) ./cmd/dbmigrate
+	CGO_LDFLAGS="$(cgo_ldflags)" CGO_CFLAGS="$(cgo_cflags)" $(GO) install $(BUILD_FLAGS) ./cmd/dbmigrate
 
 ##############################
 # Release artifacts and plan #

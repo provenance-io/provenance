@@ -97,6 +97,8 @@ A few aspects of `make build` and `make install` can be controlled through envir
 * `WITH_LEDGER`: Enables/Disables building with Ledger hardware wallet support.
   The default is `true`.
   If this is not `true` the built `provenanced`, executable will not work with Ledger hardware wallets.
+* `GO`: The GoLang executable.
+  The default is `go`.
 * `BINDIR`: The path to the Go binary directory.
   The default is `${GOPATH}/bin`.
 * `BUILDDIR`: The path to the directory where the built executable should be placed.
@@ -104,9 +106,15 @@ A few aspects of `make build` and `make install` can be controlled through envir
 * `VERSION`: The string to use as the output of `provenanced version`.
   The default is `{branch name}-{short commit hash}`.
 * `BUILD_TAGS`: Any extra `-tags` to supply to the `go build` or `go install` invocations.
-  These are added to a list constructed by the Makefile.
+  These are appended to a list constructed by the Makefile.
 * `LDFLAGS`: Any extra `-ldflags` to supply to the `go build` or `go install` invocations.
-  These are added to a list constructed by the Makefile.
+  These are appended to a list constructed by the Makefile.
+* `CGO_LDFLAGS`: Anything extra to include in the CGO_LDFLAGS env var when invoking `go build` or `go install`.
+  These are appended to a list constructed by the Makefile.
+* `CGO_CFLAGS`: Anything extra to include in the CGO_CFLAGS env var when invoking `go build` or `go install`.
+  These are appended to a list constructed by the Makefile.
+* `BUILD_FLAGS`: Any extra flags to include when invoking `go build` or `go install.`.
+  These are appended to a list constructed by the Makefile.
 
 ## Building `dbmigrate`
 
