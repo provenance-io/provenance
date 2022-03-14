@@ -13,11 +13,14 @@ option java_multiple_files = true;
 
 service Msg {
 
-    rpc WriteCritera(MsgWriteCriteraRequest) returns (MsgWriteCriteraResponse);
-  
-  }
-
+  rpc WriteCritera(MsgWriteCriteraRequest) returns (MsgWriteCriteraResponse);
+  rpc AddToCritera(MsgAddToCriteraRequest) returns (MsgAddToCriteraResponse);
+}
 
 message MsgWriteCriteraRequest {}
-  
+
 message MsgWriteCriteraResponse {}
+
+message MsgAddToCriteraRequest {}
+
+message MsgAddToCriteraResponse {}
