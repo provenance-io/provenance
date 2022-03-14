@@ -9,11 +9,11 @@ BINDIR ?= $(GOPATH)/bin
 BUILDDIR ?= $(CURDIR)/build
 
 LEDGER_ENABLED ?= true
-WITH_CLEVELDB ?= yes
-WITH_ROCKSDB ?= yes
-WITH_BADGERDB ?= yes
+WITH_CLEVELDB ?= true
+WITH_ROCKSDB ?= true
+WITH_BADGERDB ?= true
 # A BoltDB node has trouble catching back up, so it's not available by default.
-WITH_BOLTDB ?= no
+WITH_BOLTDB ?= false
 
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 BRANCH_PRETTY := $(subst /,-,$(BRANCH))
@@ -48,44 +48,53 @@ GO_VERSION_VALIDATION_ERR_MSG = Golang version $(GO_MAJOR_VERSION).$(GO_MINOR_VE
 # The below include contains the tools target.
 include contrib/devtools/Makefile
 
+#Identify the system and if gcc is available.
+ifeq ($(OS),Windows_NT)
+  UNAME_S = 'windows_nt'
+else
+  UNAME_S = $(shell uname -s | tr '[A-Z]' '[a-z]')
+endif
+
+ifeq ($(UNAME_S),windows_nt)
+  ifneq ($(shell where gcc.exe 2> NUL),)
+    have_gcc = true
+  endif
+else
+  ifneq ($(shell command -v gcc 2> /dev/null),)
+    have_gcc = true
+  endif
+endif
+
 ##############################
 # Build Flags/Tags
 ##############################
 build_tags = netgo
-ifeq ($(WITH_CLEVELDB),yes)
-  build_tags += gcc
-  build_tags += cleveldb
+ifeq ($(WITH_CLEVELDB),true)
+  ifneq ($(have_gcc),true)
+    $(error gcc not installed for cleveldb support, please install or set WITH_CLEVELDB=false)
+  else
+    build_tags += gcc
+    build_tags += cleveldb
+  endif
 endif
-ifeq ($(WITH_ROCKSDB),yes)
+ifeq ($(WITH_ROCKSDB),true)
   build_tags += rocksdb
 endif
-ifeq ($(WITH_BADGERDB),yes)
+ifeq ($(WITH_BADGERDB),true)
   build_tags += badgerdb
 endif
-ifeq ($(WITH_BOLTDB),yes)
+ifeq ($(WITH_BOLTDB),true)
   build_tags += boltdb
 endif
 
 ifeq ($(LEDGER_ENABLED),true)
-  ifeq ($(OS),Windows_NT)
-    GCCEXE = $(shell where gcc.exe 2> NUL)
-    ifeq ($(GCCEXE),)
-      $(error gcc.exe not installed for ledger support, please install or set LEDGER_ENABLED=false)
-    else
-      build_tags += ledger
-    endif
+  ifeq ($(UNAME_S),openbsd)
+    $(warning OpenBSD detected, disabling ledger support (https://github.com/cosmos/cosmos-sdk/issues/1988))
+    LEDGER_ENABLED = false
+  else ifneq ($(have_gcc),true)
+    $(error gcc not installed for ledger support, please install or set LEDGER_ENABLED=false)
   else
-    UNAME_S = $(shell uname -s)
-    ifeq ($(UNAME_S),OpenBSD)
-      $(warning OpenBSD detected, disabling ledger support (https://github.com/cosmos/cosmos-sdk/issues/1988))
-    else
-      GCC = $(shell command -v gcc 2> /dev/null)
-      ifeq ($(GCC),)
-        $(error gcc not installed for ledger support, please install or set LEDGER_ENABLED=false)
-      else
-        build_tags += ledger
-      endif
-    endif
+    build_tags += ledger
   endif
 endif
 
@@ -99,7 +108,7 @@ else ifeq ($(UNAME_S),Linux)
 endif
 
 # cleveldb linker settings
-ifeq ($(WITH_CLEVELDB),yes)
+ifeq ($(WITH_CLEVELDB),true)
   ifeq ($(UNAME_S),Darwin)
     LEVELDB_PATH ?= $(shell brew --prefix leveldb 2> /dev/null)
     CGO_CFLAGS  += -I$(LEVELDB_PATH)/include
@@ -117,6 +126,7 @@ comma := ,
 build_tags_comma_sep := $(subst $(whitespace),$(comma),$(build_tags))
 
 ldflags = -w -s \
+	-linkmode external -extldflags "-static -v" \
 	-X github.com/cosmos/cosmos-sdk/version.Name=Provenance \
 	-X github.com/cosmos/cosmos-sdk/version.AppName=provenanced \
 	-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
@@ -319,7 +329,7 @@ update-tocs:
 
 # Download, compile, and install rocksdb so that it can be used when doing a build.
 rocksdb:
-	scripts/build_and_install_rocksdb.sh "$(ROCKSDB_VERSION)" "$(ROCKSDB_JOBS)"
+	scripts/rocksdb_build_and_install.sh
 
 .PHONY: go-mod-cache go.sum lint clean format check-built statik linkify update-tocs rocksdb
 

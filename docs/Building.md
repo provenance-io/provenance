@@ -47,11 +47,17 @@ There are a few environment variables that can be used to control some behavior 
   The default is the result of the `nproc` command.
   More parallel jobs can speed up the build.
   Fewer parallel jobs can alleviate memory problems/crashes that can be encountered during a build.
+* `ROCKSDB_WITH_SHARED` defines whether to build and install the shared (dynamic) library.
+  The default is `true`.
+* `ROCKSDB_WITH_STATIC` defines whether to build and install the static library.
+  The default is `false`.
 * `ROCKSDB_SUDO` defines whether to use `sudo` for the installation of the built library.
-  The difference between `sudo make rocksdb` and `ROCKSDB_SUDO=yes make rocksdb`
+  The difference between `sudo make rocksdb` and `ROCKSDB_SUDO=true make rocksdb`
   is that the latter will use `sudo` only for the installation (the download and build still use your current user).
   Some systems (e.g. Ubuntu) might require this.
-  The default is `ROCKSDB_SUDO=no`.
+  The default is `false`.
+* `ROCKSDB_DO_CLEANUP` defines whether to delete the downloaded and unpacked repo when done.
+  The default is `true`.
 
 ## Building or Installing `provenanced`
 
@@ -77,17 +83,20 @@ $ make install
 A few aspects of `make build` and `make install` can be controlled through environment variables.
 
 * `WITH_CLEVELDB`: Enables/Disables building with CLevelDB support.
-  The default is `yes`.
-  If this is not `yes` the built `provenanced`, executable will not be able to use CLevelDB as a database backend.
+  The default is `true`.
+  If this is not `true` the built `provenanced`, executable will not be able to use CLevelDB as a database backend.
 * `LEVELDB_PATH`: Defines the location of the leveldb library and includes.
   This is only used if compiling with CLevelDB support on a Mac.
   The default is the result of `brew --prefix leveldb`.
 * `WITH_ROCKSDB`: Enables/Disables building with RocksDB support.
-  The default is `yes`.
-  If this is not `yes` the built `provenanced`, executable will not be able to use RocksDB as a database backend.
+  The default is `true`.
+  If this is not `true` the built `provenanced`, executable will not be able to use RocksDB as a database backend.
 * `WITH_BADGERDB`: Enables/Disables building with BadgerDB support.
-  The default is `yes`.
-  If this is not `yes` the built `provenanced`, executable will not be able to use BadgerDB as a database backend.
+  The default is `true`.
+  If this is not `true` the built `provenanced`, executable will not be able to use BadgerDB as a database backend.
+* `LEDGER_ENABLED`: Enables/Disables building with Ledger hardware wallet support.
+  The default is `true`.
+  If this is not `true` the built `provenanced`, executable will not work with Ledger hardware wallets.
 * `BINDIR`: The path to the Go binary directory.
   The default is `${GOPATH}/bin`.
 * `BUILDDIR`: The path to the directory where the built executable should be placed.
@@ -117,3 +126,4 @@ It will:
 4. Update the config's `db_backend` value to the new db backend type.
 
 The `dbmigrate` utility uses the same configs, environment variables, and flags as `provenanced`.
+For example, if you have the environment variable PIO_HOME defined, then `dbmigrate` will use that as the `--home` directory (unless a `--home` is provided in the command line arguments).
