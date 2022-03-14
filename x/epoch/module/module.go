@@ -3,6 +3,9 @@ package epoch
 import (
 	"context"
 	"encoding/json"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/provenance-io/provenance/x/epoch/simulation"
+	"math/rand"
 
 	epochModule "github.com/provenance-io/provenance/x/epoch"
 	cli "github.com/provenance-io/provenance/x/epoch/client/cli"
@@ -92,6 +95,26 @@ type AppModule struct {
 	AppModuleBasic
 	keeper   keeper.Keeper
 	registry cdctypes.InterfaceRegistry
+}
+
+func (am AppModule) GenerateGenesisState(input *module.SimulationState) {
+	panic("implement me")
+}
+
+func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
+	panic("implement me")
+}
+
+func (am AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
+	panic("implement me")
+}
+
+func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	sdr[keeper.StoreKey] = simulation.NewDecodeStore(am.cdc)
+}
+
+func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
+	panic("implement me")
 }
 
 // NewAppModule creates a new AppModule object
