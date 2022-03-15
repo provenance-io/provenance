@@ -395,10 +395,32 @@
     - [Params](#provenance.reward.v1.Params)
     - [Reward](#provenance.reward.v1.Reward)
   
+    - [Action](#provenance.reward.v1.Action)
+  
 - [provenance/reward/v1/genesis.proto](#provenance/reward/v1/genesis.proto)
     - [GenesisState](#provenance.reward.v1.GenesisState)
   
+- [provenance/reward/v1/query.proto](#provenance/reward/v1/query.proto)
+    - [ActiveCriteriasRequest](#provenance.reward.v1.ActiveCriteriasRequest)
+    - [ActiveCriteriasResponse](#provenance.reward.v1.ActiveCriteriasResponse)
+    - [CriteriaByIDRequest](#provenance.reward.v1.CriteriaByIDRequest)
+    - [CriteriaByIDResponse](#provenance.reward.v1.CriteriaByIDResponse)
+    - [CriteriasRequest](#provenance.reward.v1.CriteriasRequest)
+    - [CriteriasResponse](#provenance.reward.v1.CriteriasResponse)
+    - [QueryModuleAccountBalanceRequest](#provenance.reward.v1.QueryModuleAccountBalanceRequest)
+    - [QueryModuleAccountBalanceResponse](#provenance.reward.v1.QueryModuleAccountBalanceResponse)
+    - [QueryRewardRequest](#provenance.reward.v1.QueryRewardRequest)
+    - [QueryRewardResponse](#provenance.reward.v1.QueryRewardResponse)
+    - [QueryRewardableForActionRequest](#provenance.reward.v1.QueryRewardableForActionRequest)
+    - [QueryRewardableForActionResponse](#provenance.reward.v1.QueryRewardableForActionResponse)
+    - [QueryTotalRewardableRequest](#provenance.reward.v1.QueryTotalRewardableRequest)
+    - [QueryTotalRewardableResponse](#provenance.reward.v1.QueryTotalRewardableResponse)
+  
+    - [Query](#provenance.reward.v1.Query)
+  
 - [provenance/reward/v1/tx.proto](#provenance/reward/v1/tx.proto)
+    - [MsgAddToCriteraRequest](#provenance.reward.v1.MsgAddToCriteraRequest)
+    - [MsgAddToCriteraResponse](#provenance.reward.v1.MsgAddToCriteraResponse)
     - [MsgWriteCriteraRequest](#provenance.reward.v1.MsgWriteCriteraRequest)
     - [MsgWriteCriteraResponse](#provenance.reward.v1.MsgWriteCriteraResponse)
   
@@ -5893,8 +5915,8 @@ Msg defines the bank Msg service.
 | `id` | [uint64](#uint64) |  |  |
 | `distribute_to` | [string](#string) |  |  |
 | `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-| `start_height` | [int64](#int64) |  | distribution start time |
-| `end_height` | [int64](#int64) |  | number of epochs distributed already |
+| `start_height` | [int64](#int64) |  |  |
+| `end_height` | [int64](#int64) |  |  |
 | `distributed_coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 
 
@@ -5934,6 +5956,20 @@ A Reward is the metadata of reward data per address
 
 
  <!-- end messages -->
+
+
+<a name="provenance.reward.v1.Action"></a>
+
+### Action
+claim
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| ActionAddLiquidity | 0 |  |
+| ActionSwap | 1 |  |
+| ActionVote | 2 |  |
+| ActionDelegateStake | 3 |  |
+
 
  <!-- end enums -->
 
@@ -5976,10 +6012,258 @@ GenesisState defines the reward module's genesis state.
 
 
 
+<a name="provenance/reward/v1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/reward/v1/query.proto
+
+
+
+<a name="provenance.reward.v1.ActiveCriteriasRequest"></a>
+
+### ActiveCriteriasRequest
+
+
+
+
+
+
+
+<a name="provenance.reward.v1.ActiveCriteriasResponse"></a>
+
+### ActiveCriteriasResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `criterias` | [Criteria](#provenance.reward.v1.Criteria) | repeated |  |
+
+
+
+
+
+
+<a name="provenance.reward.v1.CriteriaByIDRequest"></a>
+
+### CriteriaByIDRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [uint64](#uint64) |  |  |
+
+
+
+
+
+
+<a name="provenance.reward.v1.CriteriaByIDResponse"></a>
+
+### CriteriaByIDResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `criteria` | [Criteria](#provenance.reward.v1.Criteria) |  |  |
+
+
+
+
+
+
+<a name="provenance.reward.v1.CriteriasRequest"></a>
+
+### CriteriasRequest
+
+
+
+
+
+
+
+<a name="provenance.reward.v1.CriteriasResponse"></a>
+
+### CriteriasResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `criterias` | [Criteria](#provenance.reward.v1.Criteria) | repeated |  |
+
+
+
+
+
+
+<a name="provenance.reward.v1.QueryModuleAccountBalanceRequest"></a>
+
+### QueryModuleAccountBalanceRequest
+QueryModuleAccountBalanceRequest is the request type for the Query/Params RPC method.
+
+
+
+
+
+
+<a name="provenance.reward.v1.QueryModuleAccountBalanceResponse"></a>
+
+### QueryModuleAccountBalanceResponse
+QueryModuleAccountBalanceResponse is the response type for the Query/Params RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `moduleAccountBalance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | params defines the parameters of the module. |
+
+
+
+
+
+
+<a name="provenance.reward.v1.QueryRewardRequest"></a>
+
+### QueryRewardRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.reward.v1.QueryRewardResponse"></a>
+
+### QueryRewardResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `reward` | [Reward](#provenance.reward.v1.Reward) |  |  |
+
+
+
+
+
+
+<a name="provenance.reward.v1.QueryRewardableForActionRequest"></a>
+
+### QueryRewardableForActionRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
+| `action` | [Action](#provenance.reward.v1.Action) |  |  |
+
+
+
+
+
+
+<a name="provenance.reward.v1.QueryRewardableForActionResponse"></a>
+
+### QueryRewardableForActionResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+
+
+
+
+
+
+<a name="provenance.reward.v1.QueryTotalRewardableRequest"></a>
+
+### QueryTotalRewardableRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.reward.v1.QueryTotalRewardableResponse"></a>
+
+### QueryTotalRewardableResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.reward.v1.Query"></a>
+
+### Query
+Query defines the gRPC querier service for reward module.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `CriteriaByID` | [CriteriaByIDRequest](#provenance.reward.v1.CriteriaByIDRequest) | [CriteriaByIDResponse](#provenance.reward.v1.CriteriaByIDResponse) | returns Criteria by id | GET|/provenance/rewards/v1/criteria_by_id/{id}|
+| `Criterias` | [CriteriasRequest](#provenance.reward.v1.CriteriasRequest) | [CriteriasResponse](#provenance.reward.v1.CriteriasResponse) | returns Criterias both upcoming and active | GET|/provenance/rewards/v1/criterias|
+| `ActiveCriterias` | [ActiveCriteriasRequest](#provenance.reward.v1.ActiveCriteriasRequest) | [ActiveCriteriasResponse](#provenance.reward.v1.ActiveCriteriasResponse) | returns active Criterias | GET|/provenance/rewards/v1/criteria_gauges|
+| `ModuleAccountBalance` | [QueryModuleAccountBalanceRequest](#provenance.reward.v1.QueryModuleAccountBalanceRequest) | [QueryModuleAccountBalanceResponse](#provenance.reward.v1.QueryModuleAccountBalanceResponse) |  | GET|/provenance/rewards/v1/module_account_balance|
+| `Reward` | [QueryRewardRequest](#provenance.reward.v1.QueryRewardRequest) | [QueryRewardResponse](#provenance.reward.v1.QueryRewardResponse) |  | GET|/osmosis/reward/v1beta1/reward_/{address}|
+| `RewardableForAction` | [QueryRewardableForActionRequest](#provenance.reward.v1.QueryRewardableForActionRequest) | [QueryRewardableForActionResponse](#provenance.reward.v1.QueryRewardableForActionResponse) |  | GET|/osmosis/reward/v1beta1/rewardable_for_action/{address}/{action}|
+| `TotalRewardable` | [QueryTotalRewardableRequest](#provenance.reward.v1.QueryTotalRewardableRequest) | [QueryTotalRewardableResponse](#provenance.reward.v1.QueryTotalRewardableResponse) |  | GET|/osmosis/reward/v1beta1/total_rewardable/{address}|
+
+ <!-- end services -->
+
+
+
 <a name="provenance/reward/v1/tx.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## provenance/reward/v1/tx.proto
+
+
+
+<a name="provenance.reward.v1.MsgAddToCriteraRequest"></a>
+
+### MsgAddToCriteraRequest
+
+
+
+
+
+
+
+<a name="provenance.reward.v1.MsgAddToCriteraResponse"></a>
+
+### MsgAddToCriteraResponse
+
+
+
+
 
 
 
@@ -6017,6 +6301,7 @@ GenesisState defines the reward module's genesis state.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `WriteCritera` | [MsgWriteCriteraRequest](#provenance.reward.v1.MsgWriteCriteraRequest) | [MsgWriteCriteraResponse](#provenance.reward.v1.MsgWriteCriteraResponse) |  | |
+| `AddToCritera` | [MsgAddToCriteraRequest](#provenance.reward.v1.MsgAddToCriteraRequest) | [MsgAddToCriteraResponse](#provenance.reward.v1.MsgAddToCriteraResponse) |  | |
 
  <!-- end services -->
 
