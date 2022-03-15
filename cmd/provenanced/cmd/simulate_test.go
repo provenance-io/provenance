@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -81,6 +82,14 @@ func (s *SimulateTestSuite) SetupTest() {
 
 	_, err = s.testnet.WaitForHeight(1)
 	s.Require().NoError(err)
+}
+
+func (s *SimulateTestSuite) TearDownTest() {
+	s.testnet.WaitForNextBlock()
+	s.T().Log("tearing down sim test")
+	s.testnet.Cleanup()
+	// GIve things a chance to finish closing up. Hopefully will prevent things like address collisions. 100ms chosen randomly.
+	time.Sleep(100*time.Millisecond)
 }
 
 func TestSimulateTestSuite(t *testing.T) {
