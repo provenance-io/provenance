@@ -454,9 +454,7 @@ owner: %s`,
 }
 
 func (s *IntegrationCLITestSuite) TearDownSuite() {
-	s.testnet.WaitForNextBlock()
-	s.T().Log("tearing down integration test suite")
-	s.testnet.Cleanup()
+	testutil.CleanUp(s.testnet, s.T())
 }
 
 func (s *IntegrationCLITestSuite) generateAccountsWithKeyrings(number int) {

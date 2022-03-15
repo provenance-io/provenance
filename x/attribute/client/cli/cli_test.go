@@ -6,7 +6,6 @@ import (
 	"sort"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/spf13/cobra"
@@ -176,11 +175,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
-	s.testnet.WaitForNextBlock()
-	s.T().Log("tearing down integration test suite")
-	s.testnet.Cleanup()
-	// GIve things a chance to finish closing up. Hopefully will prevent things like address collisions. 100ms chosen randomly.
-	time.Sleep(100*time.Millisecond)
+	testutil.CleanUp(s.testnet, s.T())
 }
 
 // toWritten converts an integer to a written string version.
