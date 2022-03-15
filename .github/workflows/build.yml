@@ -38,10 +38,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Install osx tools
-        run: |
-          brew tap mitchellh/gon
-          brew install mitchellh/gon/gon
       - name: Setup go
         uses: actions/setup-go@v3
         with:
