@@ -15,6 +15,7 @@ type (
 	Keeper struct {
 		cdc      codec.Codec
 		storeKey sdk.StoreKey
+		hooks    types.EpochHooks
 	}
 )
 
@@ -23,6 +24,16 @@ func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey) *Keeper {
 		cdc:      cdc,
 		storeKey: storeKey,
 	}
+}
+
+func (k *Keeper) SetHooks(eh types.EpochHooks) *Keeper {
+	if k.hooks != nil {
+		panic("cannot set epochs hooks twice")
+	}
+
+	k.hooks = eh
+
+	return k
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {

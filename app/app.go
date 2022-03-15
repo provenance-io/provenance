@@ -405,6 +405,9 @@ func New(
 
 	app.EpochKeeper = *epochkeeper.NewKeeper(appCodec, keys[epochtypes.StoreKey])
 
+	// TODO set epoch start/end hooks here for the rewards module.
+	app.EpochKeeper.SetHooks(epochtypes.NewMultiEpochHooks())
+
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
 	app.StakingKeeper = *stakingKeeper.SetHooks(

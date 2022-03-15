@@ -20,6 +20,7 @@ func DefaultGenesis() *GenesisState {
 			Duration: 				 int64((24*60*60*7)/5), //duration in blocks
 			CurrentEpoch:            0,
 			CurrentEpochStartHeight: 0,
+			EpochCountingStarted: false,
 		},
 		{
 			Identifier:              "day",
@@ -27,6 +28,7 @@ func DefaultGenesis() *GenesisState {
 			Duration:                int64((24*60*60)/5),
 			CurrentEpoch:            0,
 			CurrentEpochStartHeight: 0,
+			EpochCountingStarted: false,
 		},
 	}
 	return NewGenesisState(epochs)

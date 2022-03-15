@@ -907,6 +907,7 @@ Msg defines the bank Msg service.
 | `duration` | [int64](#int64) |  | in blocks |
 | `current_epoch` | [int64](#int64) |  |  |
 | `current_epoch_start_height` | [int64](#int64) |  |  |
+| `epoch_counting_started` | [bool](#bool) |  |  |
 
 
 
