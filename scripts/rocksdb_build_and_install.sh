@@ -114,7 +114,7 @@ export DEBUG_LEVEL=0
 make -j${ROCKSDB_JOBS} "${BUILD_TARGETS[@]}"
 $SUDO make "${INSTALL_TARGETS[@]}"
 cd ..
-if [[ "$ROCKSDB_DO_CLEANUP" == 'true' ]]
+if [[ "$ROCKSDB_DO_CLEANUP" == 'true' ]]; then
     rm "$TAR_FILE"
     rm -rf "$ROCKS_DB_DIR"
 fi
