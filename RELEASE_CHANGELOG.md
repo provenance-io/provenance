@@ -1,4 +1,4 @@
-## [v1.8.0-rc9](https://github.com/provenance-io/provenance/releases/tag/v1.8.0-rc9) - 2022-03-04
+## [v1.8.0-rc10](https://github.com/provenance-io/provenance/releases/tag/v1.8.0-rc10) - 2022-03-09
 
 ### Features
 
