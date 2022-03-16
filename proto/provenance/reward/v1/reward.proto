@@ -17,40 +17,53 @@ message Params {
   string distr_epoch_identifier = 1 [(gogoproto.moretags) = "yaml:\"distr_epoch_identifier\""];
 }
 
-message Criteria {
-  uint64   id                             = 1;
-  string   distribute_to                  = 2;
-  repeated cosmos.base.v1beta1.Coin coins = 3
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-  int64    start_height                               = 4;
-  int64    end_height                                 = 5;
-  repeated cosmos.base.v1beta1.Coin distributed_coins = 6
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+message RewardProgram {
+  uint64                   id                   = 1;
+  string                   distribute_from      = 2;
+  cosmos.base.v1beta1.Coin coin                 = 3;
+  string                   epoch_id             = 4;
+  int64                    start_epoch          = 5;
+  int64                    number_epochs        = 6;
+  int64                    eligibility_criteria = 7;
 }
 
-// A Reward is the metadata of reward data per address
-message Reward {
-  // address of user reward
-  string address = 1 [(gogoproto.moretags) = "yaml:\"address\""];
-
-  // total initial reward amount for the user
-  repeated cosmos.base.v1beta1.Coin initial_reward_amount = 2 [
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (gogoproto.nullable)     = false,
-    (gogoproto.moretags)     = "yaml:\"initial_reward_amount\""
-  ];
-
-  // true if action is completed
-  // index of bool in array refers to action enum #
-  repeated bool action_completed = 3 [(gogoproto.moretags) = "yaml:\"action_completed\""];
+message EpochRewardDistribution {
+  string                   id                = 1;
+  int64                    reward_program_id = 2;
+  cosmos.base.v1beta1.Coin liquidity_pool    = 3;
 }
 
-// claim
-enum Action {
-  option (gogoproto.goproto_enum_prefix) = false;
+// // A Reward is the metadata of reward data per address
+// message RewardClaim {
+//   // address of user reward
+//   string address = 1 [(gogoproto.moretags) = "yaml:\"address\""];
 
-  ActionAddLiquidity  = 0;
-  ActionSwap          = 1;
-  ActionVote          = 2;
-  ActionDelegateStake = 3;
+//   // reward per-epoch map---move to message, epoch id, amount, dist or not
+//   cosmos.base.v1beta1.Coin reward_amount = 2 [
+//     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+//     (gogoproto.nullable)     = false,
+//     (gogoproto.moretags)     = "yaml:\"reward_amount\""
+//   ];
+
+//   //shares per epoch
+//   // num_shares,
+//   // reward_program_id
+// }
+
+message ActionDelegate {
+  int64 minimum = 1;
+  int64 maximum = 2;
+}
+
+message ActionTransfer {
+  int64 minimum = 1;
+  int64 maximum = 2;
+}
+
+message EligibilityCriteria {
+  string name = 1;
+  oneof  action_type {
+    ActionTransfer action_transfer = 2;
+    ActionDelegate action_delegate = 3;
+  }
 }
