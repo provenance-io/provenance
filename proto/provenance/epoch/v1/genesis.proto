@@ -15,7 +15,7 @@ message EpochInfo {
   int64  duration                   = 3; // in blocks
   int64  current_epoch              = 4;
   int64  current_epoch_start_height = 5;
-  bool epoch_counting_started = 6;
+  bool   epoch_counting_started     = 6;
 }
 
 // GenesisState defines the epochs module's genesis state.

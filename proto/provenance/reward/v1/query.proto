@@ -15,59 +15,42 @@ option java_multiple_files = true;
 // Query defines the gRPC querier service for reward module.
 service Query {
 
-  // returns Criteria by id
-  rpc CriteriaByID(CriteriaByIDRequest) returns (CriteriaByIDResponse) {
-    option (google.api.http).get = "/provenance/rewards/v1/criteria_by_id/{id}";
+  // returns RewardProgram by id
+  rpc RewardProgramByID(RewardProgramByIDRequest) returns (RewardProgramByIDResponse) {
+    option (google.api.http).get = "/provenance/rewards/v1/reward_program_by_id/{id}";
   }
-  // returns Criterias both upcoming and active
-  rpc Criterias(CriteriasRequest) returns (CriteriasResponse) {
-    option (google.api.http).get = "/provenance/rewards/v1/criterias";
+  // returns RewardPrograms both upcoming and active
+  rpc RewardPrograms(RewardProgramsRequest) returns (RewardProgramsResponse) {
+    option (google.api.http).get = "/provenance/rewards/v1/reward_programs";
   }
-  // returns active Criterias
-  rpc ActiveCriterias(ActiveCriteriasRequest) returns (ActiveCriteriasResponse) {
-    option (google.api.http).get = "/provenance/rewards/v1/criteria_gauges";
+  // returns active RewardPrograms
+  rpc ActiveRewardPrograms(ActiveRewardProgramsRequest) returns (ActiveRewardProgramsResponse) {
+    option (google.api.http).get = "/provenance/rewards/v1/active_reward_programs";
   }
 
-  rpc ModuleAccountBalance(QueryModuleAccountBalanceRequest)
-  returns (QueryModuleAccountBalanceResponse) {
-option (google.api.http).get =
-    "/provenance/rewards/v1/module_account_balance";
-}
-
-rpc Reward(QueryRewardRequest) returns (QueryRewardResponse) {
-    option (google.api.http).get =
-        "/osmosis/reward/v1beta1/reward_/{address}";
-  }
-  rpc RewardableForAction(QueryRewardableForActionRequest)
-      returns (QueryRewardableForActionResponse) {
-    option (google.api.http).get =
-        "/osmosis/reward/v1beta1/rewardable_for_action/{address}/{action}";
-  }
-  rpc TotalRewardable(QueryTotalRewardableRequest)
-      returns (QueryTotalRewardableResponse) {
-    option (google.api.http).get =
-        "/osmosis/reward/v1beta1/total_rewardable/{address}";
+  rpc ModuleAccountBalance(QueryModuleAccountBalanceRequest) returns (QueryModuleAccountBalanceResponse) {
+    option (google.api.http).get = "/provenance/rewards/v1/module_account_balance";
   }
 }
 
-message CriteriaByIDRequest {
+message RewardProgramByIDRequest {
   uint64 id = 1;
 }
 
-message CriteriaByIDResponse {
-  Criteria criteria = 1;
+message RewardProgramByIDResponse {
+  RewardProgram reward_program = 1;
 }
 
-message CriteriasRequest {}
+message RewardProgramsRequest {}
 
-message CriteriasResponse {
-  repeated Criteria criterias = 1 [(gogoproto.nullable) = false];
+message RewardProgramsResponse {
+  repeated RewardProgram reward_programs = 1 [(gogoproto.nullable) = false];
 }
 
-message ActiveCriteriasRequest {}
+message ActiveRewardProgramsRequest {}
 
-message ActiveCriteriasResponse {
-  repeated Criteria criterias = 1 [(gogoproto.nullable) = false];
+message ActiveRewardProgramsResponse {
+  repeated RewardProgram reward_programs = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryModuleAccountBalanceRequest is the request type for the Query/Params RPC method.
@@ -77,45 +60,9 @@ message QueryModuleAccountBalanceRequest {}
 message QueryModuleAccountBalanceResponse {
   // params defines the parameters of the module.
   repeated cosmos.base.v1beta1.Coin moduleAccountBalance = 1 [
-    (gogoproto.moretags) = "yaml:\"coins\"",
-    (gogoproto.nullable) = false,
+    (gogoproto.moretags)     = "yaml:\"coins\"",
+    (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }
-
-message QueryRewardRequest {
-    string address = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-  }
-  
-  message QueryRewardResponse {
-    Reward reward = 1 [
-      (gogoproto.moretags) = "yaml:\"reward_\"",
-      (gogoproto.nullable) = false
-    ];
-  }
-  
-  message QueryRewardableForActionRequest {
-    string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
-    Action action = 2 [ (gogoproto.moretags) = "yaml:\"action\"" ];
-  }
-  
-  message QueryRewardableForActionResponse {
-    repeated cosmos.base.v1beta1.Coin coins = 1 [
-      (gogoproto.moretags) = "yaml:\"coins\"",
-      (gogoproto.nullable) = false,
-      (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-    ];
-  }
-  
-  message QueryTotalRewardableRequest {
-    string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
-  }
-  
-  message QueryTotalRewardableResponse {
-    repeated cosmos.base.v1beta1.Coin coins = 1 [
-      (gogoproto.moretags) = "yaml:\"coins\"",
-      (gogoproto.nullable) = false,
-      (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-    ];
-  }
 
