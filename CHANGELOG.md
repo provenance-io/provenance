@@ -69,6 +69,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * `provenance.metadata.v1.MsgWriteScopeRequest`  10 hash (10,000,000,000 nhash)
   * `provenance.metadata.v1.MsgP8eMemorializeContractRequest` 10 hash (10,000,000,000 nhash)
 * Add integration tests for smart contracts [#392](https://github.com/provenance-io/provenance/issues/392)  
+* Use provwasm release artifact for smart contract tests [#731](https://github.com/provenance-io/provenance/issues/731)
 
 ### Client Breaking
 
