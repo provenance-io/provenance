@@ -77,6 +77,9 @@ jobs:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary
         if: env.GIT_DIFF
+      - name: Update provwasm contract
+        run: |
+          make download-smart-contracts
       - name: test-sim-simple
         run: |
           make test-sim-simple
