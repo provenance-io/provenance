@@ -206,11 +206,11 @@ func Dispatch(
 	if sdk.MsgTypeURL(msg) == "/provenance.marker.v1.MsgAddMarkerRequest" && ak.GetAccount(ctx, account.GetAddress()) != nil {
 		err = simapp.FundAccount(bk, ctx, account.GetAddress(), sdk.NewCoins(sdk.Coin{
 			Denom:  "stake",
-			Amount: sdk.NewInt(100000000000000),
+			Amount: sdk.NewInt(1_000_000_000_000_000),
 		}))
 		fees = fees.Add(sdk.Coin{
 			Denom:  "stake",
-			Amount: sdk.NewInt(100000000000000),
+			Amount: sdk.NewInt(100_000_000_000_000),
 		})
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to fund account with additional fee"), nil, err

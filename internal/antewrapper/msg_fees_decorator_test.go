@@ -80,7 +80,6 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesNoAdditionalFeesLowGas() 
 	suite.Require().Contains(err.Error(), "not enough fees based on floor gas price: \"1905nhash\"; required base fees >=\"190500000nhash\": Supplied fee was \"100000nhash\": insufficient fee", "got wrong message")
 }
 
-
 // checkTx true, high min gas price irrespective of additional fees
 func (suite *AnteTestSuite) TestEnsureMempoolHighMinGasPrice() {
 	err, antehandler := setUpApp(suite, true, "atom", 100)

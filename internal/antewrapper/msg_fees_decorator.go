@@ -3,6 +3,8 @@ package antewrapper
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -68,7 +70,7 @@ func (afd MsgFeesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool
 	}
 	// floor gas price should be checked for all Tx's ( i.e nodes cannot set min-gas-price < floor gas price)
 	// the chain id check is exclusively for not breaking all existing sim tests which freak out when denom is anything other than stake.
-	if ctx.IsCheckTx() && !simulate && shouldIgnoreFloorGasPriceCheck(ctx) && (additionalFees.IsZero() || additionalFees == nil) {
+	if ctx.IsCheckTx() && !simulate && shouldIgnoreChecksForTests(ctx) && (additionalFees.IsZero() || additionalFees == nil) {
 		err = checkFloorGasFees(gas, feeCoins, additionalFees, afd.msgFeeKeeper.GetFloorGasPrice(ctx))
 		if err != nil {
 			return ctx, err
@@ -120,8 +122,8 @@ func (afd MsgFeesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool
 //   This check for chain-id is exclusively for not breaking all existing sim tests which freak out when denom is anything other than stake.
 //   and some network tests won't work without a chain id being set(but they also setup everything with stake denom) so `simapp-unit-testing` chain id is skipped also.
 //   This only needs to work to pio-testnet and pio-mainnet, so this is safe.
-func shouldIgnoreFloorGasPriceCheck(ctx sdk.Context) bool {
-	return len(ctx.ChainID()) != 0 && ctx.ChainID() != SimAppChainID
+func shouldIgnoreChecksForTests(ctx sdk.Context) bool {
+	return len(ctx.ChainID()) != 0 && ctx.ChainID() != SimAppChainID && ctx.ChainID() != helpers.SimAppChainID
 }
 
 // getFeeGranterIfExists checks if fee granter exists and returns account to deduct fees from

@@ -56,7 +56,7 @@ var handlers = map[string]appUpgrade{
 			// set governance deposit requirement to 50,000HASH
 			govParams := app.GovKeeper.GetDepositParams(ctx)
 			beforeDeposit := govParams.MinDeposit
-			govParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(50_000_000_000_000)))
+			govParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(DefaultBondDenom, sdk.NewInt(50_000_000_000_000)))
 			app.GovKeeper.SetDepositParams(ctx, govParams)
 			ctx.Logger().Info(fmt.Sprintf("Updated governance module minimum deposit from %s to %s", beforeDeposit, govParams.MinDeposit))
 
@@ -80,7 +80,22 @@ var handlers = map[string]appUpgrade{
 			return resultVM, AddMsgBasedFees(app, ctx)
 
 		},
+		Added: []string{msgfeestypes.ModuleName},
 	},
+	"hazel":  {},
+	"indigo": {}, // upgrade for pio-testnet-1 from v1.8.0-rc7 to v1.8.0-rc8
+	"jasmine": {
+		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
+			// Ensure consensus params are correct and match mainnet/testnet.  Max Block Sizes: 60M gas, 5MB
+			params := app.GetConsensusParams(ctx)
+			params.Block.MaxBytes = 1024 * 1024 * 5 // 5MB
+			params.Block.MaxGas = 60_000_000        // With ante tx gas limit this will yield 3M gas max per tx.
+			app.StoreConsensusParams(ctx, params)
+			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
+			return versionMap, nil
+		}, // upgrade for pio-testnet-1 from v1.8.0-rc8 to v1.8.0-rc9
+	},
+	"kahlua": {}, // upgrade for pio-testnet-1 from v1.8.0-rc9 to v1.8.0
 	// TODO - Add new upgrade definitions here.
 }
 

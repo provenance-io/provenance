@@ -50,6 +50,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Allow attributes to be associated with scopes [#631](https://github.com/provenance-io/provenance/issues/631)
 * Add `add-genesis-msg-fee` command to add msg fees to genesis.json and update Makefile to have pre-defined msg fees [#667](https://github.com/provenance-io/provenance/issues/667)
 * Add msgfees summary event to be emitted when there are txs that have fees [#678](https://github.com/provenance-io/provenance/issues/678)
+
 ### Improvements
 
 * Add `bank` and `authz` module query `proto` files required by `grpcurl` [#482](https://github.com/provenance-io/provenance/issues/482)
@@ -70,8 +71,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * `provenance.metadata.v1.MsgWriteScopeRequest`  10 hash (10,000,000,000 nhash)
   * `provenance.metadata.v1.MsgP8eMemorializeContractRequest` 10 hash (10,000,000,000 nhash)
 * When the `start` command encounters an error, it no longer outputs command usage [#670](https://github.com/provenance-io/provenance/issues/670)
+* Add integration tests for smart contracts [#392](https://github.com/provenance-io/provenance/issues/392)
 * Change max length on marker unresticted denom from 64 to 83 [#719](https://github.com/provenance-io/provenance/issues/719)
-  
+
 ### Client Breaking
 
 * Enforce a maximum gas limit on individual transactions so that at least 20 can fit in any given block. [#681](https://github.com/provenance-io/provenance/issues/681)
@@ -89,9 +91,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add migration to re-index the metadata indexes involving addresses [#541](https://github.com/provenance-io/provenance/issues/541)
 * Add migration to delete empty sessions [#480](https://github.com/provenance-io/provenance/issues/480)
 * Add Java distribution tag to workflow [#624](https://github.com/provenance-io/provenance/issues/624)
+* Add `msgfees` module to added store upgrades [#640](https://github.com/provenance-io/provenance/issues/640)
+* Use `nhash` for base denom in gov proposal upgrade [#648](https://github.com/provenance-io/provenance/issues/648)
+* Bump `cosmowasm` from `v1.0.0-beta5` to `v1.0.0-beta6` [#655](https://github.com/provenance-io/provenance/issues/655)
 * Fix maven publish release version number reference [#650](https://github.com/provenance-io/provenance/issues/650)
-* String "v" from Jar artifact version number [#653](https://github.com/provenance-io/provenance/issues/653)
 * Add `iterator` as feature for wasm [#658](https://github.com/provenance-io/provenance/issues/658)
+* String "v" from Jar artifact version number [#653](https://github.com/provenance-io/provenance/issues/653)
+* Fix `wasm` contract migration failure to find contract history [#662](https://github.com/provenance-io/provenance/issues/662)
 
 ## [v1.7.6](https://github.com/provenance-io/provenance/releases/tag/v1.7.6) - 2021-12-15
 
