@@ -19,8 +19,8 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 		// Has it not started, and is the block height > initial epoch start height
 		shouldInitialEpochStart := !epochInfo.EpochCountingStarted && !(epochInfo.StartHeight > ctx.BlockHeight())
 
-		epochEndTime := epochInfo.CurrentEpochStartHeight + epochInfo.Duration
-		shouldEpochStart := ctx.BlockHeight() > epochEndTime && !shouldInitialEpochStart && !(epochInfo.StartHeight > ctx.BlockHeight())
+		epochEndHeight := epochInfo.CurrentEpochStartHeight + epochInfo.Duration
+		shouldEpochStart := ctx.BlockHeight() > epochEndHeight && !shouldInitialEpochStart && !(epochInfo.StartHeight > ctx.BlockHeight())
 
 		if shouldInitialEpochStart || shouldEpochStart {
 			epochInfo.CurrentEpochStartHeight = ctx.BlockHeight()
@@ -28,11 +28,9 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 			if shouldInitialEpochStart {
 				epochInfo.EpochCountingStarted = true
 				epochInfo.CurrentEpoch = 1
-				epochInfo.CurrentEpochStartHeight = epochInfo.StartHeight
 				logger.Info(fmt.Sprintf("Starting new epoch with identifier %s epoch number %d", epochInfo.Identifier, epochInfo.CurrentEpoch))
 			} else {
 				epochInfo.CurrentEpoch += 1
-				epochInfo.CurrentEpochStartHeight = epochInfo.CurrentEpochStartHeight + epochInfo.Duration
 				logger.Info(fmt.Sprintf("Starting epoch with identifier %s epoch number %d", epochInfo.Identifier, epochInfo.CurrentEpoch))
 				ctx.EventManager().EmitEvent(
 					sdk.NewEvent(
