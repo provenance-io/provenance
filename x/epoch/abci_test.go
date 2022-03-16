@@ -36,6 +36,60 @@ func TestEpochInfoChangesBeginBlockerAndInitGenesis(t *testing.T) {
 				epochInfo = app.EpochKeeper.GetEpochInfo(ctx, "monthly")
 			},
 		},
+		{
+			expectedCurrentEpochStartHeight: 2,
+			expectedStartHeight:             1,
+			expectedCurrentEpoch:            1,
+			fn: func() {
+				ctx = ctx.WithBlockHeight(2)
+				epoch.BeginBlocker(ctx, app.EpochKeeper)
+				ctx = ctx.WithBlockHeight((60 * 60 * 24 * 30) / 5)
+				epoch.BeginBlocker(ctx, app.EpochKeeper)
+				epochInfo = app.EpochKeeper.GetEpochInfo(ctx, "monthly")
+			},
+		},
+		{
+			expectedCurrentEpochStartHeight: 535680,
+			expectedStartHeight:             1,
+			expectedCurrentEpoch:            2,
+			fn: func() {
+				ctx = ctx.WithBlockHeight(2)
+				epoch.BeginBlocker(ctx, app.EpochKeeper)
+				ctx = ctx.WithBlockHeight((60 * 60 * 24 * 31) / 5)
+				epoch.BeginBlocker(ctx, app.EpochKeeper)
+				epochInfo = app.EpochKeeper.GetEpochInfo(ctx, "monthly")
+			},
+		},
+		{
+			expectedCurrentEpochStartHeight: 535680,
+			expectedStartHeight:             1,
+			expectedCurrentEpoch:            2,
+			fn: func() {
+				ctx = ctx.WithBlockHeight(2)
+				epoch.BeginBlocker(ctx, app.EpochKeeper)
+				ctx = ctx.WithBlockHeight((60 * 60 * 24 * 31) / 5)
+				epoch.BeginBlocker(ctx, app.EpochKeeper)
+				ctx = ctx.WithBlockHeight((60 * 60 * 24 * 32) / 5)
+				epoch.BeginBlocker(ctx, app.EpochKeeper)
+				epochInfo = app.EpochKeeper.GetEpochInfo(ctx, "monthly")
+			},
+		},
+		{
+			expectedCurrentEpochStartHeight: 535680,
+			expectedStartHeight:             1,
+			expectedCurrentEpoch:            2,
+			fn: func() {
+				ctx = ctx.WithBlockHeight(2)
+				epoch.BeginBlocker(ctx, app.EpochKeeper)
+				ctx = ctx.WithBlockHeight((60 * 60 * 24 * 31) / 5)
+				epoch.BeginBlocker(ctx, app.EpochKeeper)
+				numBlocksSinceStart, _ := app.EpochKeeper.NumBlocksSinceEpochStart(ctx, "monthly")
+				require.Equal(t, int64(0), numBlocksSinceStart)
+				ctx = ctx.WithBlockHeight((60 * 60 * 24 * 32) / 5)
+				epoch.BeginBlocker(ctx, app.EpochKeeper)
+				epochInfo = app.EpochKeeper.GetEpochInfo(ctx, "monthly")
+			},
+		},
 	}
 
 	for _, test := range tests {
