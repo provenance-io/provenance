@@ -74,10 +74,8 @@ github.com/BurntSushi/toml v0.4.1/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbi
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d h1:nalkkPQcITbvhmL4+C4cKA87NW0tfm3Kl9VXRoPywFg=
 github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d/go.mod h1:URdX5+vg25ts3aCh8H5IFZybJYKWhJHYMTnf+ULtoC4=
-github.com/CosmWasm/wasmd v0.22.0 h1:6Bn2DDjHvLwZJkYXL+/PRQ9bSll0ReX2IZqRt/BQkhg=
-github.com/CosmWasm/wasmd v0.22.0/go.mod h1:kNDnMAQDJyVek9k6SxCNijMCzOROzzUGBRT8r/vr7oY=
-github.com/CosmWasm/wasmvm v1.0.0-beta5 h1:38M8z89LB5cFMYB5vfjewMzz9Pr8TB1QBHdjnrWnkas=
-github.com/CosmWasm/wasmvm v1.0.0-beta5/go.mod h1:mtwKxbmsko1zdwpaKiRkRwxijMmIAtnLaX5/UT2nPFk=
+github.com/CosmWasm/wasmvm v1.0.0-beta6 h1:JYh9Z7qF6h9a2sOOx9hZRwCVS4aFdd+aiwrIXznLn8k=
+github.com/CosmWasm/wasmvm v1.0.0-beta6/go.mod h1:mtwKxbmsko1zdwpaKiRkRwxijMmIAtnLaX5/UT2nPFk=
 github.com/DATA-DOG/go-sqlmock v1.3.3/go.mod h1:f/Ixk793poVmq4qj/V1dPUg2JEAKC73Q5eFN3EC/SaM=
 github.com/DataDog/datadog-go v3.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
 github.com/DataDog/zstd v1.4.1/go.mod h1:1jcaCB/ufaK+sKp1NBhlGmpz41jOoPQ35bpF36t7BBo=
@@ -915,8 +913,10 @@ github.com/prometheus/procfs v0.7.3 h1:4jVXhlkAyzOScmCkXBTOLRLTz8EeU+eyjrwB/EPq0
 github.com/prometheus/procfs v0.7.3/go.mod h1:cz+aTbrPOrUb4q7XlbU9ygM+/jj0fzG6c1xBZuNvfVA=
 github.com/prometheus/tsdb v0.6.2-0.20190402121629-4f204dcbc150/go.mod h1:qhTCs0VvXwvX/y3TZrWD7rabWM+ijKTux40TwIPHuXU=
 github.com/prometheus/tsdb v0.7.1/go.mod h1:qhTCs0VvXwvX/y3TZrWD7rabWM+ijKTux40TwIPHuXU=
-github.com/provenance-io/cosmos-sdk v0.45.0-pio-1 h1:b3m1PVb9CvcD0xiKNvK1gDSfAPtdd3qYKntrJF1eQ24=
-github.com/provenance-io/cosmos-sdk v0.45.0-pio-1/go.mod h1:XXS/asyCqWNWkx2rW6pSuen+EVcpAFxq6khrhnZgHaQ=
+github.com/provenance-io/cosmos-sdk v0.45.0-pio-2 h1:se3UWMt0pQjYr+8Zi5o0tHaYr8W6FIwRZ6288+lodwc=
+github.com/provenance-io/cosmos-sdk v0.45.0-pio-2/go.mod h1:APQJszmf9+rA/3YVNoAbJKVehN4oANbbhoapB0ywCQY=
+github.com/provenance-io/wasmd v0.22.0-pio-address-fix h1:oMgJkRT3nq1l58VcP56G39fLsKSQ1Nq44D9fafbdIh4=
+github.com/provenance-io/wasmd v0.22.0-pio-address-fix/go.mod h1:kNDnMAQDJyVek9k6SxCNijMCzOROzzUGBRT8r/vr7oY=
 github.com/rakyll/statik v0.1.7 h1:OF3QCZUuyPxuGEP7B4ypUa7sB/iHtqOTDYZXGM8KOdQ=
 github.com/rakyll/statik v0.1.7/go.mod h1:AlZONWzMtEnMs7W4e/1LURLiI49pIMmp6V9Unghqrcc=
 github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a/go.mod h1:bCqnVzQkZxMG4s8nGwiZ5l3QUCyqpo9Y+/ZMZ9VjZe4=
