@@ -143,4 +143,4 @@ replace github.com/CosmWasm/wasmvm => github.com/provenance-io/wasmvm v1.0.1-bet
 // Fixes address length issue to support contract address of length 20 (pre v1.8.0) with current length 22
 // TODO Remove it when fixed upstream
 // NOTE Uses our wasmvm dependency based off of beta7 tag
-replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.22.1-0.20220317135309-88d9bbbb0df4
+replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.22.0-m1supportv3

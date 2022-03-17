@@ -918,6 +918,8 @@ github.com/prometheus/tsdb v0.6.2-0.20190402121629-4f204dcbc150/go.mod h1:qhTCs0
 github.com/prometheus/tsdb v0.7.1/go.mod h1:qhTCs0VvXwvX/y3TZrWD7rabWM+ijKTux40TwIPHuXU=
 github.com/provenance-io/cosmos-sdk v0.45.0-pio-2 h1:se3UWMt0pQjYr+8Zi5o0tHaYr8W6FIwRZ6288+lodwc=
 github.com/provenance-io/cosmos-sdk v0.45.0-pio-2/go.mod h1:APQJszmf9+rA/3YVNoAbJKVehN4oANbbhoapB0ywCQY=
+github.com/provenance-io/wasmd v0.22.0-m1supportv3 h1:9jY06sqWkhcN7B9SCjPbWN2fR1q+PbzkUFZDViWHjwA=
+github.com/provenance-io/wasmd v0.22.0-m1supportv3/go.mod h1:t2Duaeg3I1Oc0ZeUm8quSVDP0NIM8/xyepK4p1dOObk=
 github.com/provenance-io/wasmd v0.22.1-0.20220317135309-88d9bbbb0df4 h1:TzfKsbO9BEgMvYJIAfgRDLIH3481pwCHDx+KJGH9FWg=
 github.com/provenance-io/wasmd v0.22.1-0.20220317135309-88d9bbbb0df4/go.mod h1:t2Duaeg3I1Oc0ZeUm8quSVDP0NIM8/xyepK4p1dOObk=
 github.com/provenance-io/wasmvm v1.0.1-betaprov h1:VW8Kr/OAw+tx4J5QTTDZ4cYze1we9M6xFzYuR+cyXyw=
