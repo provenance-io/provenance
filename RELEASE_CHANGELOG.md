@@ -1,5 +1,10 @@
 ## [v1.8.0](https://github.com/provenance-io/provenance/releases/tag/v1.8.0) - 2022-03-17
 
+## Summary
+Provenance 1.8.0 is focused on improving the fee structures for transactions on the blockchain. While the Cosmos SDK has traditionally offered a generic fee structure focused on gas/resource utilization, the Provenance blockchain has found that certain transactions have additional long term costs and value beyond simple resources charges. This is the reason we are adding the new MsgFee module which allows governance based control of additional fee charges on certain message types.
+
+NOTE: The second major change in the 1.8.0 release is part of the migration process which removes many orphaned state objects that were left in 1.7.x chains. This cleanup process will require a significant amount of time to perform during the green upgrade handler execution. The upgrade will print status messages showing the progress of this process.
+
 ### Features
 
 * Add check for `authz` grants when there are missing signatures in `metadata` transactions [#516](https://github.com/provenance-io/provenance/issues/516)
