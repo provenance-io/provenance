@@ -139,9 +139,11 @@ endif
 
 cgo_ldflags += $(CGO_LDFLAGS)
 cgo_ldflags := $(strip $(cgo_ldflags))
+CGO_LDFLAGS := $(cgo_ldflags)
 
 cgo_cflags += $(CGO_CFLAGS)
 cgo_cflags := $(strip $(cgo_cflags))
+CGO_CFLAGS := $(cgo_cflags)
 
 build_tags += $(BUILD_TAGS)
 build_tags := $(strip $(build_tags))
@@ -177,11 +179,11 @@ all: build format lint test
 
 # Install puts the binaries in the local environment path.
 install: go.sum
-	CGO_LDFLAGS="$(cgo_ldflags)" CGO_CFLAGS="$(cgo_cflags)" $(GO) install $(BUILD_FLAGS) ./cmd/provenanced
+	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) install $(BUILD_FLAGS) ./cmd/provenanced
 
 build: validate-go-version go.sum
 	mkdir -p $(BUILDDIR)
-	CGO_LDFLAGS="$(cgo_ldflags)" CGO_CFLAGS="$(cgo_cflags)" $(GO) build -o $(BUILDDIR)/ $(BUILD_FLAGS) ./cmd/provenanced
+	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) build -o $(BUILDDIR)/ $(BUILD_FLAGS) ./cmd/provenanced
 
 build-linux: go.sum
 	WITH_LEDGER=false GOOS=linux GOARCH=amd64 $(MAKE) build
@@ -217,10 +219,10 @@ run: check-built run-config;
 
 build-dbmigrate: validate-go-version go.sum
 	mkdir -p $(BUILDDIR)
-	CGO_LDFLAGS="$(cgo_ldflags)" CGO_CFLAGS="$(cgo_cflags)" $(GO) build -o $(BUILDDIR)/ $(BUILD_FLAGS) ./cmd/dbmigrate
+	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) build -o $(BUILDDIR)/ $(BUILD_FLAGS) ./cmd/dbmigrate
 
 install-dbmigrate: go.sum
-	CGO_LDFLAGS="$(cgo_ldflags)" CGO_CFLAGS="$(cgo_cflags)" $(GO) install $(BUILD_FLAGS) ./cmd/dbmigrate
+	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) install $(BUILD_FLAGS) ./cmd/dbmigrate
 
 ##############################
 # Release artifacts and plan #
