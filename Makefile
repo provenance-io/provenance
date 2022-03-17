@@ -15,6 +15,24 @@ WITH_BADGERDB ?= true
 # A BoltDB node has trouble catching back up, so it's not available by default.
 WITH_BOLTDB ?= false
 
+# We used to use 'yes' on these flags, so at least for now, change 'yes' into 'true'
+ifeq ($(WITH_LEDGER),yes)
+  WITH_LEDGER=true
+endif
+ifeq ($(WITH_CLEVELDB),yes)
+  WITH_CLEVELDB=true
+endif
+ifeq ($(WITH_ROCKSDB),yes)
+  WITH_ROCKSDB=true
+endif
+ifeq ($(WITH_BADGERDB),yes)
+  WITH_BADGERDB=true
+endif
+ifeq ($(WITH_BOLTDB),yes)
+  WITH_BOLTDB=true
+endif
+
+
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 BRANCH_PRETTY := $(subst /,-,$(BRANCH))
 TM_VERSION := $(shell go list -m github.com/tendermint/tendermint | sed 's:.* ::') # grab everything after the space in "github.com/tendermint/tendermint v0.34.7"
@@ -68,6 +86,7 @@ endif
 ##############################
 # Build Flags/Tags
 ##############################
+
 build_tags = netgo
 ifeq ($(WITH_CLEVELDB),true)
   ifneq ($(have_gcc),true)
