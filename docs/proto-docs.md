@@ -396,10 +396,14 @@
     - [EligibilityCriteria](#provenance.reward.v1.EligibilityCriteria)
     - [EpochRewardDistribution](#provenance.reward.v1.EpochRewardDistribution)
     - [Params](#provenance.reward.v1.Params)
+    - [RewardClaim](#provenance.reward.v1.RewardClaim)
     - [RewardProgram](#provenance.reward.v1.RewardProgram)
   
 - [provenance/reward/v1/genesis.proto](#provenance/reward/v1/genesis.proto)
     - [GenesisState](#provenance.reward.v1.GenesisState)
+  
+- [provenance/reward/v1/proposals.proto](#provenance/reward/v1/proposals.proto)
+    - [AddRewardProgramProposal](#provenance.reward.v1.AddRewardProgramProposal)
   
 - [provenance/reward/v1/query.proto](#provenance/reward/v1/query.proto)
     - [ActiveRewardProgramsRequest](#provenance.reward.v1.ActiveRewardProgramsRequest)
@@ -5951,7 +5955,7 @@ Msg defines the bank Msg service.
 <a name="provenance.reward.v1.EpochRewardDistribution"></a>
 
 ### EpochRewardDistribution
-
+EpochRewardDistribution
 
 
 | Field | Type | Label | Description |
@@ -5980,10 +5984,31 @@ Params holds parameters for the reward module
 
 
 
+<a name="provenance.reward.v1.RewardClaim"></a>
+
+### RewardClaim
+A Reward is the metadata of reward data per address
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address of user reward |
+| `reward_program_id` | [int64](#int64) |  |  |
+| `reward_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | reward per-epoch map---move to message, epoch id, amount, dist or not |
+| `shares_per_epoch` | [int64](#int64) | repeated | array of shares calculated per epoch |
+| `total_shares` | [int64](#int64) |  | total shares at the end of rewards program |
+| `expire_height` | [int64](#int64) |  | if the this height is exceeded before user claims shares will be returned |
+| `claimed` | [bool](#bool) |  | indicate if the user has claimed their rewards |
+
+
+
+
+
+
 <a name="provenance.reward.v1.RewardProgram"></a>
 
 ### RewardProgram
-
+RewardProgram
 
 
 | Field | Type | Label | Description |
@@ -6028,6 +6053,38 @@ GenesisState defines the reward module's genesis state.
 | `params` | [Params](#provenance.reward.v1.Params) |  | params defines all the parameters of the module. |
 | `reward_programs` | [RewardProgram](#provenance.reward.v1.RewardProgram) | repeated |  |
 | `eligibility_criterias` | [EligibilityCriteria](#provenance.reward.v1.EligibilityCriteria) | repeated |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/reward/v1/proposals.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/reward/v1/proposals.proto
+
+
+
+<a name="provenance.reward.v1.AddRewardProgramProposal"></a>
+
+### AddRewardProgramProposal
+AddRewardProgramProposal defines a governance proposal to add a rewards program
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `title` | [string](#string) |  |  |
+| `description` | [string](#string) |  |  |
 
 
 
