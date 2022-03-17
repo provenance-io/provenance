@@ -135,8 +135,9 @@ replace github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 
+// Dockerfile also needs a reference that will need removing
+// TODO Remove it: https://github.com/CosmWasm/cosmwasm/pull/1223
 // Introduces a way to build for aarch64 and includes a prebuilt shared library for it
-// TODO Remove it when there is an official release to support arm64 for all OS.
 // NOTE Make sure to update wasmd's wasmvm depdency if this ever changes
 replace github.com/CosmWasm/wasmvm => github.com/provenance-io/wasmvm v1.0.1-betaprov
 
