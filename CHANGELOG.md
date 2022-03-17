@@ -50,6 +50,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Allow attributes to be associated with scopes [#631](https://github.com/provenance-io/provenance/issues/631)
 * Add `add-genesis-msg-fee` command to add msg fees to genesis.json and update Makefile to have pre-defined msg fees [#667](https://github.com/provenance-io/provenance/issues/667)
 * Add msgfees summary event to be emitted when there are txs that have fees [#678](https://github.com/provenance-io/provenance/issues/678)
+* Add support for rocksdb and badgerdb [#702](https://github.com/provenance-io/provenance/issues/702)
+* Create `dbmigrate` utility for migrating a data folder to use a different db backend [#696](https://github.com/provenance-io/provenance/issues/696)
 
 ### Improvements
 
