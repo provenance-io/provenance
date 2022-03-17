@@ -2,13 +2,12 @@ syntax = "proto3";
 package provenance.epoch.v1;
 
 import "gogoproto/gogo.proto";
-import "google/protobuf/duration.proto";
-import "google/protobuf/timestamp.proto";
 
 option go_package          = "github.com/provenance-io/provenance/x/epoch/types";
 option java_package        = "io.provenance.epoch.v1";
 option java_multiple_files = true;
 
+// EpochInfo defines characteristics of an eppoch defined by the platform
 message EpochInfo {
   string identifier                 = 1;
   int64  start_height               = 2; // start height of the beginning of all epoch

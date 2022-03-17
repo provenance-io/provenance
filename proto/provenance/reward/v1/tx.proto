@@ -1,26 +1,28 @@
 syntax = "proto3";
 package provenance.reward.v1;
 
-import "gogoproto/gogo.proto";
-import "google/protobuf/duration.proto";
-import "google/protobuf/timestamp.proto";
-import "cosmos/base/v1beta1/coin.proto";
-import "provenance/epoch/v1/genesis.proto";
 
 option go_package          = "github.com/provenance-io/provenance/x/reward/types";
 option java_package        = "io.provenance.reward.v1";
 option java_multiple_files = true;
 
+// Msg
 service Msg {
 
+  // WriteCritera
   rpc WriteCritera(MsgWriteCriteraRequest) returns (MsgWriteCriteraResponse);
+  // AddToCritera
   rpc AddToCritera(MsgAddToCriteraRequest) returns (MsgAddToCriteraResponse);
 }
 
+// MsgWriteCriteraRequest
 message MsgWriteCriteraRequest {}
 
+// MsgWriteCriteraResponse
 message MsgWriteCriteraResponse {}
 
+// MsgAddToCriteraRequest
 message MsgAddToCriteraRequest {}
 
+// MsgAddToCriteraResponse
 message MsgAddToCriteraResponse {}

@@ -48,8 +48,8 @@
 - [provenance/epoch/v1/query.proto](#provenance/epoch/v1/query.proto)
     - [QueryCurrentEpochRequest](#provenance.epoch.v1.QueryCurrentEpochRequest)
     - [QueryCurrentEpochResponse](#provenance.epoch.v1.QueryCurrentEpochResponse)
+    - [QueryEpochInfosResponse](#provenance.epoch.v1.QueryEpochInfosResponse)
     - [QueryEpochsInfoRequest](#provenance.epoch.v1.QueryEpochsInfoRequest)
-    - [QueryEpochsInfoResponse](#provenance.epoch.v1.QueryEpochsInfoResponse)
   
     - [Query](#provenance.epoch.v1.Query)
   
@@ -918,16 +918,16 @@ Msg defines the bank Msg service.
 <a name="provenance.epoch.v1.EpochInfo"></a>
 
 ### EpochInfo
-
+EpochInfo defines characteristics of an eppoch defined by the platform
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `identifier` | [string](#string) |  |  |
-| `start_height` | [int64](#int64) |  | start height of the epoch |
-| `duration` | [int64](#int64) |  | in blocks |
+| `start_height` | [int64](#int64) |  | start height of the beginning of all epoch |
+| `duration` | [int64](#int64) |  | in blocks for e.g a month will be (30*24*7*60*60)/5 blocks |
 | `current_epoch` | [int64](#int64) |  |  |
-| `current_epoch_start_height` | [int64](#int64) |  |  |
+| `current_epoch_start_height` | [int64](#int64) |  | start height of the current epoch |
 | `epoch_counting_started` | [bool](#bool) |  |  |
 
 
@@ -996,25 +996,25 @@ GenesisState defines the epochs module's genesis state.
 
 
 
-<a name="provenance.epoch.v1.QueryEpochsInfoRequest"></a>
+<a name="provenance.epoch.v1.QueryEpochInfosResponse"></a>
 
-### QueryEpochsInfoRequest
-
-
-
-
-
-
-
-<a name="provenance.epoch.v1.QueryEpochsInfoResponse"></a>
-
-### QueryEpochsInfoResponse
-
+### QueryEpochInfosResponse
+QueryEpochInfosResponse
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `epochs` | [EpochInfo](#provenance.epoch.v1.EpochInfo) | repeated |  |
+
+
+
+
+
+
+<a name="provenance.epoch.v1.QueryEpochsInfoRequest"></a>
+
+### QueryEpochsInfoRequest
+QueryEpochsInfoRequest
 
 
 
@@ -1034,7 +1034,7 @@ Query defines the gRPC querier service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `EpochInfos` | [QueryEpochsInfoRequest](#provenance.epoch.v1.QueryEpochsInfoRequest) | [QueryEpochsInfoResponse](#provenance.epoch.v1.QueryEpochsInfoResponse) | EpochInfos provide running epochInfos | GET|/provenance/epoch/v1/epochs|
+| `EpochInfos` | [QueryEpochsInfoRequest](#provenance.epoch.v1.QueryEpochsInfoRequest) | [QueryEpochInfosResponse](#provenance.epoch.v1.QueryEpochInfosResponse) | EpochInfos provide running epochInfos | GET|/provenance/epoch/v1/epochs|
 | `CurrentEpoch` | [QueryCurrentEpochRequest](#provenance.epoch.v1.QueryCurrentEpochRequest) | [QueryCurrentEpochResponse](#provenance.epoch.v1.QueryCurrentEpochResponse) | CurrentEpoch provide current epoch of specified identifier | GET|/provenance/epoch/v1/current_epoch|
 
  <!-- end services -->
@@ -5938,7 +5938,7 @@ Msg defines the bank Msg service.
 <a name="provenance.reward.v1.EligibilityCriteria"></a>
 
 ### EligibilityCriteria
-
+EligibilityCriteria defines an Action which accrues rewards for a running RewardProgram
 
 
 | Field | Type | Label | Description |
@@ -6016,10 +6016,10 @@ RewardProgram
 | `id` | [uint64](#uint64) |  |  |
 | `distribute_from` | [string](#string) |  |  |
 | `coin` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `epoch_id` | [string](#string) |  |  |
-| `start_epoch` | [int64](#int64) |  |  |
-| `number_epochs` | [int64](#int64) |  |  |
-| `eligibility_criteria` | [int64](#int64) |  |  |
+| `epoch` | [provenance.epoch.v1.EpochInfo](#provenance.epoch.v1.EpochInfo) |  | EpochInfo defines the type of epoch attributed to this program.(e.g day,week,month) |
+| `start_epoch` | [int64](#int64) |  | start_epoch defines the epoch number at which the rewards program should begin at |
+| `number_epochs` | [int64](#int64) |  | number of epochs this program will last for |
+| `eligibility_criteria` | [EligibilityCriteria](#provenance.reward.v1.EligibilityCriteria) |  |  |
 
 
 
@@ -6244,7 +6244,7 @@ Query defines the gRPC querier service for reward module.
 <a name="provenance.reward.v1.MsgAddToCriteraRequest"></a>
 
 ### MsgAddToCriteraRequest
-
+MsgAddToCriteraRequest
 
 
 
@@ -6254,7 +6254,7 @@ Query defines the gRPC querier service for reward module.
 <a name="provenance.reward.v1.MsgAddToCriteraResponse"></a>
 
 ### MsgAddToCriteraResponse
-
+MsgAddToCriteraResponse
 
 
 
@@ -6264,7 +6264,7 @@ Query defines the gRPC querier service for reward module.
 <a name="provenance.reward.v1.MsgWriteCriteraRequest"></a>
 
 ### MsgWriteCriteraRequest
-
+MsgWriteCriteraRequest
 
 
 
@@ -6274,7 +6274,7 @@ Query defines the gRPC querier service for reward module.
 <a name="provenance.reward.v1.MsgWriteCriteraResponse"></a>
 
 ### MsgWriteCriteraResponse
-
+MsgWriteCriteraResponse
 
 
 
@@ -6290,12 +6290,12 @@ Query defines the gRPC querier service for reward module.
 <a name="provenance.reward.v1.Msg"></a>
 
 ### Msg
-
+Msg
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `WriteCritera` | [MsgWriteCriteraRequest](#provenance.reward.v1.MsgWriteCriteraRequest) | [MsgWriteCriteraResponse](#provenance.reward.v1.MsgWriteCriteraResponse) |  | |
-| `AddToCritera` | [MsgAddToCriteraRequest](#provenance.reward.v1.MsgAddToCriteraRequest) | [MsgAddToCriteraResponse](#provenance.reward.v1.MsgAddToCriteraResponse) |  | |
+| `WriteCritera` | [MsgWriteCriteraRequest](#provenance.reward.v1.MsgWriteCriteraRequest) | [MsgWriteCriteraResponse](#provenance.reward.v1.MsgWriteCriteraResponse) | WriteCritera | |
+| `AddToCritera` | [MsgAddToCriteraRequest](#provenance.reward.v1.MsgAddToCriteraRequest) | [MsgAddToCriteraResponse](#provenance.reward.v1.MsgAddToCriteraResponse) | AddToCritera | |
 
  <!-- end services -->
 

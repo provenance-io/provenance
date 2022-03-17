@@ -25,10 +25,10 @@ message RewardProgram {
   uint64                   id                   = 1;
   string                   distribute_from      = 2;
   cosmos.base.v1beta1.Coin coin                 = 3;
-  string                   epoch_id             = 4;
-  int64                    start_epoch          = 5;
-  int64                    number_epochs        = 6;
-  int64                    eligibility_criteria = 7;
+  provenance.epoch.v1.EpochInfo epoch           = 4; // EpochInfo defines the type of epoch attributed to this program.(e.g day,week,month)
+  int64                    start_epoch          = 5; // start_epoch defines the epoch number at which the rewards program should begin at
+  int64                    number_epochs        = 6; // number of epochs this program will last for
+  EligibilityCriteria                    eligibility_criteria = 7;
 }
 
 // EpochRewardDistribution
@@ -83,6 +83,7 @@ message ActionTransfer {
   int64 maximum = 2;
 }
 
+// EligibilityCriteria defines an Action which accrues rewards for a running RewardProgram
 message EligibilityCriteria {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;

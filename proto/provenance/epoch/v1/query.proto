@@ -12,7 +12,7 @@ option java_multiple_files = true;
 // Query defines the gRPC querier service.
 service Query {
   // EpochInfos provide running epochInfos
-  rpc EpochInfos(QueryEpochsInfoRequest) returns (QueryEpochsInfoResponse) {
+  rpc EpochInfos(QueryEpochsInfoRequest) returns (QueryEpochInfosResponse) {
     option (google.api.http).get = "/provenance/epoch/v1/epochs";
   }
   // CurrentEpoch provide current epoch of specified identifier
@@ -21,8 +21,10 @@ service Query {
   }
 }
 
+// QueryEpochsInfoRequest
 message QueryEpochsInfoRequest {}
-message QueryEpochsInfoResponse {
+// QueryEpochInfosResponse
+message QueryEpochInfosResponse {
   repeated EpochInfo epochs = 1 [(gogoproto.nullable) = false];
 }
 
