@@ -135,11 +135,13 @@ replace github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 
-// Fixes chain panic.  Should be removed once cosmwasm has fixed their release
 // Dockerfile also needs a reference that will need removing
 // TODO Remove it: https://github.com/CosmWasm/cosmwasm/pull/1223
-replace github.com/CosmWasm/wasmvm => github.com/CosmWasm/wasmvm v1.0.0-beta7
+// Introduces a way to build for aarch64 and includes a prebuilt shared library for it
+// NOTE Make sure to update wasmd's wasmvm depdency if this ever changes
+replace github.com/CosmWasm/wasmvm => github.com/provenance-io/wasmvm v1.0.1-betaprov
 
 // Fixes address length issue to support contract address of length 20 (pre v1.8.0) with current length 22
 // TODO Remove it when fixed upstream
-replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.22.0-m1supportv2
+// NOTE Uses our wasmvm dependency based off of beta7 tag
+replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.22.0-m1supportv3
