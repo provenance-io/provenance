@@ -36,13 +36,13 @@ jobs:
     name: Build OSX
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Install osx tools
         run: |
           brew tap mitchellh/gon
           brew install mitchellh/gon/gon
       - name: Setup go
-        uses: actions/setup-go@v2.1.5
+        uses: actions/setup-go@v3
         with:
           go-version: ${{ needs.build_init.outputs.go_version }}
       - name: Import Code-Signing Certificates
@@ -74,9 +74,9 @@ jobs:
     name: Build Linux
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Setup go
-        uses: actions/setup-go@v2.1.5
+        uses: actions/setup-go@v3
         with:
           go-version: ${{ needs.build_init.outputs.go_version }}
       - name: Install deps
@@ -100,7 +100,7 @@ jobs:
     name: Create Release
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Create release ${{ needs.build_init.outputs.version }}
         uses: actions/create-release@v1
         id: create_release
@@ -124,10 +124,10 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       -
         name: Setup go
-        uses: actions/setup-go@v2.1.5
+        uses: actions/setup-go@v3
         with:
           go-version: ${{ needs.build_init.outputs.go_version }}
       -
@@ -204,10 +204,10 @@ jobs:
     name: Maven Publishing
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Java Setup
-        uses: actions/setup-java@v2.5.0
+        uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
           java-version: 11
