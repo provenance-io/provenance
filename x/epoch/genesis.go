@@ -11,8 +11,11 @@ import (
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	// set epoch info from genesis
 	for _, epoch := range genState.Epochs {
-		// Set Start height to current block height
-		epoch.StartHeight = ctx.BlockHeight()
+		// if epoch has default value, set Start height to current blockheight
+		// if set will be honored.
+		if epoch.StartHeight == 0 {
+			epoch.StartHeight = ctx.BlockHeight()
+		}
 		// same for current epoch start height
 		epoch.CurrentEpochStartHeight = ctx.BlockHeight()
 
