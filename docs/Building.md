@@ -118,16 +118,21 @@ A few aspects of `make build` and `make install` can be controlled through envir
 
 ## Building `dbmigrate`
 
-The `dbmigrate` utility can be used to migrate a node's data directory from one backend database to another.
+The `dbmigrate` utility can be used to migrate a node's data directory to a use a different db backend.
 
 To build the `dbmigrate` executable and place it in the `build/` directory:
 ```console
 $ make build-dbmigrate
 ```
 
+To build the `dbmigrate` executable and place it in your system's default Go `bin/` directory.
+```console
+$ make install-dbmigrate
+```
+
 Building `dbmigrate` uses the same [Options](#options) as `provenanced`.
 
-It will:
+The dbmigrate program will:
 1. Create a new `data/` directory, and copy the contents of the existing `data/` directory into it, converting the database files appropriately.
 2. Back up the existing `data/` directory to `${home}/data-dbmigrate-backup-{timestamp}-{dbtypes}/`.
 3. Move the newly created `data/` directory into place.

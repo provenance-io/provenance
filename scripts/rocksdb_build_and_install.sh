@@ -96,7 +96,7 @@ fi
 
 set -ex
 
-# These lines look dumb, but they're here so that the values are clearly in the output (because of set -e).
+# These lines look dumb, but they're here so that the values are clearly in the output (because of set -x).
 ROCKSDB_VERSION="$ROCKSDB_VERSION"
 ROCKSDB_JOBS="$ROCKSDB_JOBS"
 ROCKSDB_WITH_SHARED="$ROCKSDB_WITH_SHARED"
