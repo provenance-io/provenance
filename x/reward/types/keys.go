@@ -1,6 +1,7 @@
 package types
 
 import (
+	"github.com/cosmos/cosmos-sdk/types/address"
 	"strconv"
 )
 
@@ -26,4 +27,14 @@ var (
 func GetRewardProgramKeyPrefix(id int64) []byte {
 	idByte := []byte(strconv.FormatInt(id, 10))
 	return append(RewardProgramKeyPrefix, idByte...)
+}
+
+// AddrRewardClaimsKey addr+ epochId + rewardsId
+func AddrRewardClaimsKey(addr []byte, epochId int64 ,rewardsId int64) []byte {
+	key := append(RewardProgramKeyPrefix, address.MustLengthPrefix(addr)...)
+	epochIdByte := []byte(strconv.FormatInt(epochId, 10))
+	key = append(key, epochIdByte...)
+	rewardIdByte := []byte(strconv.FormatInt(rewardsId, 10))
+	key = append(key, rewardIdByte...)
+	return key
 }
