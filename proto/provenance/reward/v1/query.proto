@@ -65,4 +65,3 @@ message QueryModuleAccountBalanceResponse {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }
-

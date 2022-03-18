@@ -13,12 +13,11 @@ option java_multiple_files = true;
 
 // AddRewardProgramProposal defines a governance proposal to add a rewards program
 message AddRewardProgramProposal {
-    option (gogoproto.equal)            = true;
-    option (gogoproto.goproto_stringer) = false;
-  
-    string title       = 1;
-    string description = 2;
-  
-    //TODO
-  
-  }
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  string title       = 1;
+  string description = 2;
+
+  // TODO
+}

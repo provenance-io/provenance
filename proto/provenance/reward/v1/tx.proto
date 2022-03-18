@@ -1,7 +1,6 @@
 syntax = "proto3";
 package provenance.reward.v1;
 
-
 option go_package          = "github.com/provenance-io/provenance/x/reward/types";
 option java_package        = "io.provenance.reward.v1";
 option java_multiple_files = true;

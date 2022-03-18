@@ -392,12 +392,12 @@
   
 - [provenance/reward/v1/reward.proto](#provenance/reward/v1/reward.proto)
     - [ActionDelegate](#provenance.reward.v1.ActionDelegate)
-    - [ActionTransfer](#provenance.reward.v1.ActionTransfer)
+    - [ActionTransferDelegations](#provenance.reward.v1.ActionTransferDelegations)
     - [EligibilityCriteria](#provenance.reward.v1.EligibilityCriteria)
     - [EpochRewardDistribution](#provenance.reward.v1.EpochRewardDistribution)
-    - [Params](#provenance.reward.v1.Params)
     - [RewardClaim](#provenance.reward.v1.RewardClaim)
     - [RewardProgram](#provenance.reward.v1.RewardProgram)
+    - [SharesPerEpochPerRewardsProgram](#provenance.reward.v1.SharesPerEpochPerRewardsProgram)
   
 - [provenance/reward/v1/genesis.proto](#provenance/reward/v1/genesis.proto)
     - [GenesisState](#provenance.reward.v1.GenesisState)
@@ -5919,10 +5919,10 @@ Msg defines the bank Msg service.
 
 
 
-<a name="provenance.reward.v1.ActionTransfer"></a>
+<a name="provenance.reward.v1.ActionTransferDelegations"></a>
 
-### ActionTransfer
-
+### ActionTransferDelegations
+accounts for transfer from accounts that have active delegations
 
 
 | Field | Type | Label | Description |
@@ -5944,8 +5944,8 @@ EligibilityCriteria defines an Action which accrues rewards for a running Reward
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `name` | [string](#string) |  |  |
-| `action_transfer` | [ActionTransfer](#provenance.reward.v1.ActionTransfer) |  |  |
 | `action_delegate` | [ActionDelegate](#provenance.reward.v1.ActionDelegate) |  |  |
+| `action_transfer_delegate` | [ActionTransferDelegations](#provenance.reward.v1.ActionTransferDelegations) |  |  |
 
 
 
@@ -5955,29 +5955,15 @@ EligibilityCriteria defines an Action which accrues rewards for a running Reward
 <a name="provenance.reward.v1.EpochRewardDistribution"></a>
 
 ### EpochRewardDistribution
-EpochRewardDistribution
+EpochRewardDistribution, this will updated at the end of every epoch
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `id` | [string](#string) |  |  |
 | `reward_program_id` | [int64](#int64) |  |  |
-| `liquidity_pool` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-
-
-
-
-
-
-<a name="provenance.reward.v1.Params"></a>
-
-### Params
-Params holds parameters for the reward module
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `distr_epoch_identifier` | [string](#string) |  | distribution epoch identifier |
+| `total_rewards_pool` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `total_shares` | [uint64](#uint64) |  |  |
 
 
 
@@ -5987,18 +5973,13 @@ Params holds parameters for the reward module
 <a name="provenance.reward.v1.RewardClaim"></a>
 
 ### RewardClaim
-A Reward is the metadata of reward data per address
+A RewardClaim is the metadata of reward data per address
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  | address of user reward |
-| `reward_program_id` | [int64](#int64) |  |  |
-| `reward_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | reward per-epoch map---move to message, epoch id, amount, dist or not |
-| `shares_per_epoch` | [int64](#int64) | repeated | array of shares calculated per epoch |
-| `total_shares` | [int64](#int64) |  | total shares at the end of rewards program |
-| `expire_height` | [int64](#int64) |  | if the this height is exceeded before user claims shares will be returned |
-| `claimed` | [bool](#bool) |  | indicate if the user has claimed their rewards |
+| `shares_per_epoch_per_reward` | [SharesPerEpochPerRewardsProgram](#provenance.reward.v1.SharesPerEpochPerRewardsProgram) | repeated | array of shares calculated per epoch for each reward program |
 
 
 
@@ -6014,12 +5995,35 @@ RewardProgram
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `id` | [uint64](#uint64) |  |  |
-| `distribute_from` | [string](#string) |  |  |
+| `distribute_from_address` | [string](#string) |  | community pool for now |
 | `coin` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `epoch` | [provenance.epoch.v1.EpochInfo](#provenance.epoch.v1.EpochInfo) |  | EpochInfo defines the type of epoch attributed to this program.(e.g day,week,month) |
 | `start_epoch` | [int64](#int64) |  | start_epoch defines the epoch number at which the rewards program should begin at |
 | `number_epochs` | [int64](#int64) |  | number of epochs this program will last for |
 | `eligibility_criteria` | [EligibilityCriteria](#provenance.reward.v1.EligibilityCriteria) |  |  |
+
+
+
+
+
+
+<a name="provenance.reward.v1.SharesPerEpochPerRewardsProgram"></a>
+
+### SharesPerEpochPerRewardsProgram
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `reward_program_id` | [uint64](#uint64) |  |  |
+| `shares` | [int64](#int64) |  |  |
+| `epoch_id` | [uint64](#uint64) |  |  |
+| `epoch_end_height` | [uint64](#uint64) |  |  |
+| `claimed` | [bool](#bool) |  |  |
+| `expiration_height` | [uint64](#uint64) |  |  |
+| `expired` | [bool](#bool) |  |  |
+| `total_shares` | [int64](#int64) |  | only populated at epoch end |
+| `total_rewards` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 
 
 
@@ -6050,9 +6054,12 @@ GenesisState defines the reward module's genesis state.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `params` | [Params](#provenance.reward.v1.Params) |  | params defines all the parameters of the module. |
 | `reward_programs` | [RewardProgram](#provenance.reward.v1.RewardProgram) | repeated |  |
+| `reward_claims` | [RewardClaim](#provenance.reward.v1.RewardClaim) | repeated |  |
+| `epoch_reward_distributions` | [EpochRewardDistribution](#provenance.reward.v1.EpochRewardDistribution) | repeated |  |
 | `eligibility_criterias` | [EligibilityCriteria](#provenance.reward.v1.EligibilityCriteria) | repeated |  |
+| `action_delegate` | [ActionDelegate](#provenance.reward.v1.ActionDelegate) |  |  |
+| `action_transfer_delegations` | [ActionTransferDelegations](#provenance.reward.v1.ActionTransferDelegations) |  |  |
 
 
 
