@@ -42,3 +42,16 @@ func (erd *EpochRewardDistribution) String() string {
 	out, _ := yaml.Marshal(erd)
 	return string(out)
 }
+
+func NewEligibilityCriteria() EligibilityCriteria {
+	return EligibilityCriteria{}
+}
+
+func (ec *EligibilityCriteria) ValidateBasic() error {
+	return nil
+}
+
+func (ec *EligibilityCriteria) String() string {
+	out, _ := yaml.Marshal(ec)
+	return string(out)
+}

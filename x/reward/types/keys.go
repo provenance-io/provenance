@@ -26,6 +26,8 @@ var (
 	RewardClaimKeyPrefix = []byte{0x02}
 
 	EpochRewardDistributionKeyPrefix = []byte{0x03}
+
+	EligibilityCriteriaKeyPrefix = []byte{0x04}
 )
 
 // GetNameKeyPrefix converts a name into key format.

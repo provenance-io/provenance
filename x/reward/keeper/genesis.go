@@ -35,11 +35,20 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		panic(err)
 	}
 
+	eligibilityCriterias := make([]types.EligibilityCriteria, 0)
+	eligibilityCriteriaRecords := func(eligibilityCriteria types.EligibilityCriteria) bool {
+		eligibilityCriterias = append(eligibilityCriterias, eligibilityCriteria)
+		return false
+	}
+	if err := k.IterateEligibilityCriterias(ctx, eligibilityCriteriaRecords); err != nil {
+		panic(err)
+	}
+
 	return types.NewGenesisState(
 		rewardPrograms,
 		rewardClaims,
 		epochRewardDistributions,
-		nil,                               // eligibilityCriteria []EligibilityCriteria,
+		eligibilityCriterias,
 		types.ActionDelegate{},            // actionDelegate ActionDelegate,
 		types.ActionTransferDelegations{}, // actionTransferDelegations ActionTransferDelegations,
 	)

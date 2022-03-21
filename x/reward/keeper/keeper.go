@@ -87,3 +87,21 @@ func (k Keeper) IterateEpochRewardDistributions(ctx sdk.Context, handle func(epo
 	}
 	return nil
 }
+
+// IterateEligibilityCriterias  iterates all reward eligibility criterions with the given handler function.
+func (k Keeper) IterateEligibilityCriterias(ctx sdk.Context, handle func(eligibilityCriteria types.EligibilityCriteria) (stop bool)) error {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.EligibilityCriteriaKeyPrefix)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		record := types.EligibilityCriteria{}
+		if err := k.cdc.Unmarshal(iterator.Value(), &record); err != nil {
+			return err
+		}
+		if handle(record) {
+			break
+		}
+	}
+	return nil
+}
