@@ -8,7 +8,41 @@ import (
 
 // ExportGenesis returns a GenesisState for a given context.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-	return types.NewGenesisState()
+	rewardPrograms := make([]types.RewardProgram, 0)
+	rewardProgramRecords := func(rewardProgram types.RewardProgram) bool {
+		rewardPrograms = append(rewardPrograms, rewardProgram)
+		return false
+	}
+	if err := k.IterateRewardPrograms(ctx, rewardProgramRecords); err != nil {
+		panic(err)
+	}
+
+	rewardClaims := make([]types.RewardClaim, 0)
+	rewardClaimRecords := func(rewardClaim types.RewardClaim) bool {
+		rewardClaims = append(rewardClaims, rewardClaim)
+		return false
+	}
+	if err := k.IterateRewardClaims(ctx, rewardClaimRecords); err != nil {
+		panic(err)
+	}
+
+	epochRewardDistributions := make([]types.EpochRewardDistribution, 0)
+	epochRewardDistributionRecords := func(epochRewardDistribution types.EpochRewardDistribution) bool {
+		epochRewardDistributions = append(epochRewardDistributions, epochRewardDistribution)
+		return false
+	}
+	if err := k.IterateEpochRewardDistributions(ctx, epochRewardDistributionRecords); err != nil {
+		panic(err)
+	}
+
+	return types.NewGenesisState(
+		rewardPrograms,
+		rewardClaims,
+		epochRewardDistributions,
+		nil,                               // eligibilityCriteria []EligibilityCriteria,
+		types.ActionDelegate{},            // actionDelegate ActionDelegate,
+		types.ActionTransferDelegations{}, // actionTransferDelegations ActionTransferDelegations,
+	)
 }
 
 // InitGenesis new msgfees genesis

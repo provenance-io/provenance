@@ -1,13 +1,32 @@
 package types
 
-func NewGenesisState() *GenesisState {
-	return &GenesisState{}
+func NewGenesisState(rewardProgram []RewardProgram,
+	rewardClaim []RewardClaim,
+	epochRewardDistribution []EpochRewardDistribution,
+	eligibilityCriteria []EligibilityCriteria,
+	actionDelegate ActionDelegate,
+	actionTransferDelegations ActionTransferDelegations,
+) *GenesisState {
+	return &GenesisState{
+		RewardPrograms:            rewardProgram,
+		RewardClaims:              rewardClaim,
+		EpochRewardDistributions:  epochRewardDistribution,
+		EligibilityCriterias:      eligibilityCriteria,
+		ActionDelegate:            actionDelegate,
+		ActionTransferDelegations: actionTransferDelegations,
+	}
 }
 
-// DefaultGenesis returns the default Capability genesis state
+// DefaultGenesis returns the default reward genesis state
 func DefaultGenesis() *GenesisState {
-
-	return NewGenesisState()
+	return NewGenesisState(
+		[]RewardProgram{},
+		[]RewardClaim{},
+		[]EpochRewardDistribution{},
+		[]EligibilityCriteria{},
+		ActionDelegate{},
+		ActionTransferDelegations{},
+	)
 }
 
 // Validate performs basic genesis state validation returning an error upon any

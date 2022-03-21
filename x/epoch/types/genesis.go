@@ -11,7 +11,7 @@ func NewGenesisState(epochs []EpochInfo) *GenesisState {
 	return &GenesisState{Epochs: epochs}
 }
 
-// DefaultGenesis returns the default Capability genesis state
+// DefaultGenesis returns the default epoch genesis state
 func DefaultGenesis() *GenesisState {
 	epochs := []EpochInfo{
 		{
