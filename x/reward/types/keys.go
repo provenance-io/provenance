@@ -30,8 +30,8 @@ var (
 	EligibilityCriteriaKeyPrefix = []byte{0x04}
 )
 
-// GetNameKeyPrefix converts a name into key format.
-func GetRewardProgramKeyPrefix(id int64) []byte {
+// GetRewardProgramKey converts a name into key format.
+func GetRewardProgramKey(id int64) []byte {
 	idByte := []byte(strconv.FormatInt(id, 10))
 	return append(RewardProgramKeyPrefix, idByte...)
 }
@@ -44,4 +44,12 @@ func AddrRewardClaimsKey(addr []byte, epochId int64, rewardsId int64) []byte {
 	rewardIdByte := []byte(strconv.FormatInt(rewardsId, 10))
 	key = append(key, rewardIdByte...)
 	return key
+}
+
+func GetEpochRewardDistributionKey(id string) []byte {
+	return append(EligibilityCriteriaKeyPrefix, []byte(id)...)
+}
+
+func GetEligibilityCriteriaKey(name string) []byte {
+	return append(EligibilityCriteriaKeyPrefix, []byte(name)...)
 }
