@@ -3,6 +3,7 @@ package reward
 import (
 	"context"
 	"encoding/json"
+	rewardModule "github.com/provenance-io/provenance/x/reward"
 	"math/rand"
 
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -183,6 +184,6 @@ func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 
 // EndBlock does nothing
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	// TODO
+	rewardModule.EndBlocker(ctx, am.keeper)
 	return []abci.ValidatorUpdate{}
 }
