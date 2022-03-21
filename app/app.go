@@ -132,6 +132,11 @@ import (
 	epochkeeper "github.com/provenance-io/provenance/x/epoch/keeper"
 	epochtypes "github.com/provenance-io/provenance/x/epoch/types"
 
+	rewardkeeper "github.com/provenance-io/provenance/x/reward/keeper"
+	reward "github.com/provenance-io/provenance/x/reward/module"
+	rewardmodule "github.com/provenance-io/provenance/x/reward/module"
+	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
+
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -196,6 +201,7 @@ var (
 		wasm.AppModuleBasic{},
 		msgfeesmodule.AppModuleBasic{},
 		epochmodule.AppModuleBasic{},
+		rewardmodule.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -264,6 +270,7 @@ type App struct {
 	FeeGrantKeeper   feegrantkeeper.Keeper
 	MsgFeesKeeper    msgfeeskeeper.Keeper
 	EpochKeeper      epochkeeper.Keeper
+	RewardKeeper     rewardkeeper.Keeper
 
 	IBCKeeper      *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	TransferKeeper ibctransferkeeper.Keeper
@@ -334,6 +341,7 @@ func New(
 		msgfeestypes.StoreKey,
 		wasm.StoreKey,
 		epochtypes.StoreKey,
+		rewardtypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -407,6 +415,8 @@ func New(
 
 	// TODO set epoch start/end hooks here for the rewards module.
 	app.EpochKeeper.SetHooks(epochtypes.NewMultiEpochHooks())
+
+	app.RewardKeeper = rewardkeeper.NewKeeper(appCodec, keys[rewardtypes.StoreKey], app.EpochKeeper)
 
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
@@ -569,6 +579,7 @@ func New(
 		msgfeesmodule.NewAppModule(appCodec, app.MsgFeesKeeper, app.interfaceRegistry),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper),
 		epoch.NewAppModule(appCodec, app.EpochKeeper, app.interfaceRegistry),
+		reward.NewAppModule(appCodec, app.RewardKeeper, app.interfaceRegistry),
 
 		// IBC
 		ibc.NewAppModule(app.IBCKeeper),
@@ -607,6 +618,7 @@ func New(
 		attributetypes.ModuleName,
 		vestingtypes.ModuleName,
 		epochtypes.ModuleName,
+		rewardtypes.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
@@ -615,6 +627,7 @@ func New(
 		stakingtypes.ModuleName,
 		authtypes.ModuleName,
 		epochtypes.ModuleName,
+		rewardtypes.ModuleName,
 
 		// no-ops
 		vestingtypes.ModuleName,
@@ -671,6 +684,7 @@ func New(
 		// wasm after ibc transfer
 		wasm.ModuleName,
 		epochtypes.ModuleName,
+		rewardtypes.ModuleName,
 
 		// no-ops
 		paramstypes.ModuleName,
@@ -705,6 +719,7 @@ func New(
 		metadatatypes.ModuleName,
 		nametypes.ModuleName,
 		epochtypes.ModuleName,
+		rewardtypes.ModuleName,
 
 		// required to be last (cosmos-sdk enforces this when migrations are ran)
 		authtypes.ModuleName,
@@ -736,7 +751,7 @@ func New(
 		msgfeesmodule.NewAppModule(appCodec, app.MsgFeesKeeper, app.interfaceRegistry),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper),
 		epochmodule.NewAppModule(appCodec, app.EpochKeeper, app.interfaceRegistry),
-
+		rewardmodule.NewAppModule(appCodec, app.RewardKeeper, app.interfaceRegistry),
 		ibc.NewAppModule(app.IBCKeeper),
 		transferModule,
 	)
@@ -984,6 +999,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(msgfeestypes.ModuleName)
 	paramsKeeper.Subspace(wasm.ModuleName)
 	paramsKeeper.Subspace(epochtypes.ModuleName)
+	paramsKeeper.Subspace(rewardtypes.ModuleName)
 
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
