@@ -39,6 +39,13 @@ jobs:
         uses: actions/checkout@v3
       - name: Install osx tools
         run: |
+          # workaround for https://github.com/mitchellh/gon/issues/56
+          pushd .
+          cd /usr/local/Homebrew
+          git fetch origin tag 3.3.9 --no-tags
+          git checkout 3.3.9
+          popd
+          # /workaround
           brew tap mitchellh/gon
           brew install mitchellh/gon/gon
       - name: Setup go
