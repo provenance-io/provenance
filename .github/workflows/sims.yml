@@ -26,7 +26,7 @@ jobs:
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
     env:
       CACHE_PATH: |
-        /usr/local/include/
+        /usr/local/include/**
         /usr/local/lib/pkgconfig
         /usr/local/lib/**/*rocksdb*
         /usr/local/lib/**/*leveldb*
@@ -43,7 +43,7 @@ jobs:
           SET_ENV_NAME_LINES: 1
       - name: Define cache key
         id: define-cache-key
-        run: echo "CACHE_KEY=${{ env.RUNNER_OS }}-sims-t4" >> $GITHUB_ENV
+        run: echo "CACHE_KEY=$RUNNER_OS-sims-t5" >> $GITHUB_ENV
       - uses: actions/cache@v3
         id: cache-setup
         with:
