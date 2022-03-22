@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
     env:
-      CACHE_KEY: ${{ runner.os }}-sims-t4
+      CACHE_KEY: ${{ env.RUNNER_OS }}-sims-t4
       CACHE_PATH: |
         /usr/local/include/
         /usr/local/lib/pkgconfig
@@ -42,7 +42,7 @@ jobs:
             go.sum
           SET_ENV_NAME_INSERTIONS: 1
           SET_ENV_NAME_LINES: 1
-      - uses: actions/cache@v2.1.7
+      - uses: actions/cache@v3
         id: cache-setup
         with:
           key: ${{ env.CACHE_KEY }}
@@ -65,7 +65,7 @@ jobs:
           echo " cache-hit: [${{ needs.setup.outputs.cache-hit }}]"
           echo " cache-key: [${{ needs.setup.outputs.cache-key }}]"
           echo "cache-path: [${{ needs.setup.outputs.cache-path }}]"
-      - uses: actions/cache@v2.1.7
+      - uses: actions/cache@v3
         with:
           key: ${{ needs.setup.outputs.cache-key }}
           path: ${{ needs.setup.outputs.cache-path }}
@@ -94,7 +94,7 @@ jobs:
     if: needs.setup.outputs.should-run
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/cache@v2.1.7
+      - uses: actions/cache@v3
         with:
           key: ${{ needs.setup.outputs.cache-key }}
           path: ${{ needs.setup.outputs.cache-path }}
@@ -114,7 +114,7 @@ jobs:
     if: needs.setup.outputs.should-run
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/cache@v2.1.7
+      - uses: actions/cache@v3
         with:
           key: ${{ needs.setup.outputs.cache-key }}
           path: ${{ needs.setup.outputs.cache-path }}
@@ -134,7 +134,7 @@ jobs:
     if: needs.setup.outputs.should-run
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/cache@v2.1.7
+      - uses: actions/cache@v3
         with:
           key: ${{ needs.setup.outputs.cache-key }}
           path: ${{ needs.setup.outputs.cache-path }}
@@ -154,7 +154,7 @@ jobs:
     if: needs.setup.outputs.should-run
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/cache@v2.1.7
+      - uses: actions/cache@v3
         with:
           key: ${{ needs.setup.outputs.cache-key }}
           path: ${{ needs.setup.outputs.cache-path }}
@@ -174,7 +174,7 @@ jobs:
     if: needs.setup.outputs.should-run
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/cache@v2.1.7
+      - uses: actions/cache@v3
         with:
           key: ${{ needs.setup.outputs.cache-key }}
           path: ${{ needs.setup.outputs.cache-path }}
@@ -194,7 +194,7 @@ jobs:
     if: needs.setup.outputs.should-run
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/cache@v2.1.7
+      - uses: actions/cache@v3
         with:
           key: ${{ needs.setup.outputs.cache-key }}
           path: ${{ needs.setup.outputs.cache-path }}
@@ -214,7 +214,7 @@ jobs:
     if: needs.setup.outputs.should-run
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/cache@v2.1.7
+      - uses: actions/cache@v3
         with:
           key: ${{ needs.setup.outputs.cache-key }}
           path: ${{ needs.setup.outputs.cache-path }}
@@ -234,7 +234,7 @@ jobs:
     if: needs.setup.outputs.should-run
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/cache@v2.1.7
+      - uses: actions/cache@v3
         with:
           key: ${{ needs.setup.outputs.cache-key }}
           path: ${{ needs.setup.outputs.cache-path }}
@@ -254,7 +254,7 @@ jobs:
     if: needs.setup.outputs.should-run
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/cache@v2.1.7
+      - uses: actions/cache@v3
         with:
           key: ${{ needs.setup.outputs.cache-key }}
           path: ${{ needs.setup.outputs.cache-path }}
@@ -274,7 +274,7 @@ jobs:
     if: needs.setup.outputs.should-run
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/cache@v2.1.7
+      - uses: actions/cache@v3
         with:
           key: ${{ needs.setup.outputs.cache-key }}
           path: ${{ needs.setup.outputs.cache-path }}
@@ -294,7 +294,7 @@ jobs:
     if: needs.setup.outputs.should-run
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/cache@v2.1.7
+      - uses: actions/cache@v3
         with:
           key: ${{ needs.setup.outputs.cache-key }}
           path: ${{ needs.setup.outputs.cache-path }}
