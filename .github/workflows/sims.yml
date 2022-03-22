@@ -20,9 +20,26 @@ jobs:
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
-  setup:
+  check-diff:
     runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
+    outputs:
+      should-run: ${{ env.GIT_DIFF }}
+    steps:
+    - uses: actions/checkout@v3
+    - uses: technote-space/get-diff-action@v6.0.1
+      with:
+        PATTERNS: |
+          **/**.go
+          go.mod
+          go.sum
+        SET_ENV_NAME_INSERTIONS: 1
+        SET_ENV_NAME_LINES: 1
+
+  setup:
+    runs-on: ubuntu-latest
+    needs: check-diff
+    if: needs.check-diff.outputs.should-run
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
@@ -71,8 +88,8 @@ jobs:
 
   simple-goleveldb:
     runs-on: ubuntu-latest
-    needs: setup
-    if: env.GIT_DIFF
+    needs: [setup, check-diff]
+    if: needs.check-diff.outputs.should-run
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
@@ -95,8 +112,8 @@ jobs:
 
   simple-cleveldb:
     runs-on: ubuntu-latest
-    needs: setup
-    if: env.GIT_DIFF
+    needs: [setup, check-diff]
+    if: needs.check-diff.outputs.should-run
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
@@ -119,8 +136,8 @@ jobs:
 
   simple-rocksdb:
     runs-on: ubuntu-latest
-    needs: setup
-    if: env.GIT_DIFF
+    needs: [setup, check-diff]
+    if: needs.check-diff.outputs.should-run
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
@@ -143,8 +160,8 @@ jobs:
 
   simple-badgerdb:
     runs-on: ubuntu-latest
-    needs: setup
-    if: env.GIT_DIFF
+    needs: [setup, check-diff]
+    if: needs.check-diff.outputs.should-run
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
@@ -167,8 +184,8 @@ jobs:
 
   nondeterminism:
     runs-on: ubuntu-latest
-    needs: setup
-    if: env.GIT_DIFF
+    needs: [setup, check-diff]
+    if: needs.check-diff.outputs.should-run
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
@@ -191,8 +208,8 @@ jobs:
 
   import-export-goleveldb:
     runs-on: ubuntu-latest
-    needs: setup
-    if: env.GIT_DIFF
+    needs: [setup, check-diff]
+    if: needs.check-diff.outputs.should-run
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
@@ -215,8 +232,8 @@ jobs:
 
   import-export-cleveldb:
     runs-on: ubuntu-latest
-    needs: setup
-    if: env.GIT_DIFF
+    needs: [setup, check-diff]
+    if: needs.check-diff.outputs.should-run
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
@@ -239,8 +256,8 @@ jobs:
 
   import-export-rocksdb:
     runs-on: ubuntu-latest
-    needs: setup
-    if: env.GIT_DIFF
+    needs: [setup, check-diff]
+    if: needs.check-diff.outputs.should-run
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
@@ -263,8 +280,8 @@ jobs:
 
   import-export-badgerdb:
     runs-on: ubuntu-latest
-    needs: setup
-    if: env.GIT_DIFF
+    needs: [setup, check-diff]
+    if: needs.check-diff.outputs.should-run
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
@@ -287,8 +304,8 @@ jobs:
 
   multi-seed-short:
     runs-on: ubuntu-latest
-    needs: setup
-    if: env.GIT_DIFF
+    needs: [setup, check-diff]
+    if: needs.check-diff.outputs.should-run
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
