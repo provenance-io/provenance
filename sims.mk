@@ -12,10 +12,8 @@ else ifeq ($(DB_BACKEND),rocksdb)
   tags = -tags rocksdb
 else ifeq ($(DB_BACKEND),badgerdb)
   tags = -tags badgerdb
-else ifeq ($(DB_BACKEND),boltdb)
-  tags = -tags boltdb
 else ifneq ($(DB_BACKEND),goleveldb)
-  $(error unknown DB_BACKEND value [$(DB_BACKEND)]. Must be one of goleveldb, cleveldb, rocksdb, badgerdb, boltdb)
+  $(error unknown DB_BACKEND value [$(DB_BACKEND)]. Must be one of goleveldb, cleveldb, rocksdb, badgerdb)
 endif
 
 # Bit of a hack for the runsim stuff that also works with the go test stuff.

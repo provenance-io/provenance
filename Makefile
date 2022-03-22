@@ -12,8 +12,6 @@ WITH_LEDGER ?= true
 WITH_CLEVELDB ?= true
 WITH_ROCKSDB ?= true
 WITH_BADGERDB ?= true
-# A BoltDB node has trouble catching back up, so it's not available by default.
-WITH_BOLTDB ?= false
 
 # We used to use 'yes' on these flags, so at least for now, change 'yes' into 'true'
 ifeq ($(WITH_LEDGER),yes)
@@ -27,9 +25,6 @@ ifeq ($(WITH_ROCKSDB),yes)
 endif
 ifeq ($(WITH_BADGERDB),yes)
   WITH_BADGERDB=true
-endif
-ifeq ($(WITH_BOLTDB),yes)
-  WITH_BOLTDB=true
 endif
 
 
@@ -101,9 +96,6 @@ ifeq ($(WITH_ROCKSDB),true)
 endif
 ifeq ($(WITH_BADGERDB),true)
   build_tags += badgerdb
-endif
-ifeq ($(WITH_BOLTDB),true)
-  build_tags += boltdb
 endif
 
 ifeq ($(WITH_LEDGER),true)
