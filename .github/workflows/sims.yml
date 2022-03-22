@@ -72,6 +72,7 @@ jobs:
   simple-goleveldb:
     runs-on: ubuntu-latest
     needs: setup
+    if: env.GIT_DIFF
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
@@ -83,7 +84,6 @@ jobs:
             ~/go/bin
           key: ${{ runner.os }}-setup-sims
       - uses: actions/setup-go@v3
-        if: env.GIT_DIFF
         with:
           go-version: 1.17
       - name: Display versions
@@ -92,11 +92,11 @@ jobs:
           provenanced version --long
       - name: test-sim-simple goleveldb
         run: make test-sim-simple
-        if: env.GIT_DIFF
 
   simple-cleveldb:
     runs-on: ubuntu-latest
     needs: setup
+    if: env.GIT_DIFF
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
@@ -108,7 +108,6 @@ jobs:
             ~/go/bin
           key: ${{ runner.os }}-setup-sims
       - uses: actions/setup-go@v3
-        if: env.GIT_DIFF
         with:
           go-version: 1.17
       - name: Display versions
@@ -117,11 +116,11 @@ jobs:
           provenanced version --long
       - name: test-sim-simple cleveldb
         run: make DB_BACKEND=cleveldb test-sim-simple
-        if: env.GIT_DIFF
 
   simple-rocksdb:
     runs-on: ubuntu-latest
     needs: setup
+    if: env.GIT_DIFF
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
@@ -133,7 +132,6 @@ jobs:
             ~/go/bin
           key: ${{ runner.os }}-setup-sims
       - uses: actions/setup-go@v3
-        if: env.GIT_DIFF
         with:
           go-version: 1.17
       - name: Display versions
@@ -142,11 +140,11 @@ jobs:
           provenanced version --long
       - name: test-sim-simple rocksdb
         run: make DB_BACKEND=rocksdb test-sim-simple
-        if: env.GIT_DIFF
 
   simple-badgerdb:
     runs-on: ubuntu-latest
     needs: setup
+    if: env.GIT_DIFF
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
@@ -158,7 +156,6 @@ jobs:
             ~/go/bin
           key: ${{ runner.os }}-setup-sims
       - uses: actions/setup-go@v3
-        if: env.GIT_DIFF
         with:
           go-version: 1.17
       - name: Display versions
@@ -167,11 +164,11 @@ jobs:
           provenanced version --long
       - name: test-sim-simple badgerdb
         run: make DB_BACKEND=badgerdb test-sim-simple
-        if: env.GIT_DIFF
 
   nondeterminism:
     runs-on: ubuntu-latest
     needs: setup
+    if: env.GIT_DIFF
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
@@ -183,7 +180,6 @@ jobs:
             ~/go/bin
           key: ${{ runner.os }}-setup-sims
       - uses: actions/setup-go@v3
-        if: env.GIT_DIFF
         with:
           go-version: 1.17
       - name: Display versions
@@ -192,11 +188,11 @@ jobs:
           provenanced version --long
       - name: test-sim-nondeterminism
         run: make test-sim-nondeterminism
-        if: env.GIT_DIFF
 
   import-export-goleveldb:
     runs-on: ubuntu-latest
     needs: setup
+    if: env.GIT_DIFF
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
@@ -208,7 +204,6 @@ jobs:
             ~/go/bin
           key: ${{ runner.os }}-setup-sims
       - uses: actions/setup-go@v3
-        if: env.GIT_DIFF
         with:
           go-version: 1.17
       - name: Display versions
@@ -217,11 +212,11 @@ jobs:
           provenanced version --long
       - name: test-sim-import-export goleveldb
         run: make test-sim-import-export
-        if: env.GIT_DIFF
 
   import-export-cleveldb:
     runs-on: ubuntu-latest
     needs: setup
+    if: env.GIT_DIFF
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
@@ -233,7 +228,6 @@ jobs:
             ~/go/bin
           key: ${{ runner.os }}-setup-sims
       - uses: actions/setup-go@v3
-        if: env.GIT_DIFF
         with:
           go-version: 1.17
       - name: Display versions
@@ -242,11 +236,11 @@ jobs:
           provenanced version --long
       - name: test-sim-import-export cleveldb
         run: make DB_BACKEND=cleveldb test-sim-import-export
-        if: env.GIT_DIFF
 
   import-export-rocksdb:
     runs-on: ubuntu-latest
     needs: setup
+    if: env.GIT_DIFF
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
@@ -258,7 +252,6 @@ jobs:
             ~/go/bin
           key: ${{ runner.os }}-setup-sims
       - uses: actions/setup-go@v3
-        if: env.GIT_DIFF
         with:
           go-version: 1.17
       - name: Display versions
@@ -267,11 +260,11 @@ jobs:
           provenanced version --long
       - name: test-sim-import-export rocksdb
         run: make DB_BACKEND=rocksdb test-sim-import-export
-        if: env.GIT_DIFF
 
   import-export-badgerdb:
     runs-on: ubuntu-latest
     needs: setup
+    if: env.GIT_DIFF
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
@@ -283,7 +276,6 @@ jobs:
             ~/go/bin
           key: ${{ runner.os }}-setup-sims
       - uses: actions/setup-go@v3
-        if: env.GIT_DIFF
         with:
           go-version: 1.17
       - name: Display versions
@@ -292,11 +284,11 @@ jobs:
           provenanced version --long
       - name: test-sim-import-export badgerdb
         run: make DB_BACKEND=badgerdb test-sim-import-export
-        if: env.GIT_DIFF
 
   multi-seed-short:
     runs-on: ubuntu-latest
     needs: setup
+    if: env.GIT_DIFF
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
@@ -308,7 +300,6 @@ jobs:
             ~/go/bin
           key: ${{ runner.os }}-setup-sims
       - uses: actions/setup-go@v3
-        if: env.GIT_DIFF
         with:
           go-version: 1.17
       - name: Display versions
@@ -317,4 +308,3 @@ jobs:
           provenanced version --long
       - name: test-sim-multi-seed-short
         run: make test-sim-multi-seed-short
-        if: env.GIT_DIFF
