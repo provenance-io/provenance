@@ -46,10 +46,8 @@ jobs:
         id: cache-setup
         with:
           path: |
-            /usr/local/rocksdb
-            /usr/local/cleveldb
             ~/go/bin
-          key: ${{ runner.os }}-setup-sims
+          key: ${{ runner.os }}-sims-t1
       - uses: technote-space/get-diff-action@v6.0.1
         if: steps.cache-setup.outputs.cache-hit != 'true'
         with:
@@ -59,7 +57,7 @@ jobs:
             go.sum
           SET_ENV_NAME_INSERTIONS: 1
           SET_ENV_NAME_LINES: 1
-      - name: Install leveldb
+      - name: Install cleveldb
         if: env.GIT_DIFF
         env:
           DEBIAN_FRONTEND: noninteractive
@@ -99,7 +97,7 @@ jobs:
             /usr/local/rocksdb
             /usr/local/cleveldb
             ~/go/bin
-          key: ${{ runner.os }}-setup-sims
+          key: ${{ runner.os }}-sims-t1
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -123,7 +121,7 @@ jobs:
             /usr/local/rocksdb
             /usr/local/cleveldb
             ~/go/bin
-          key: ${{ runner.os }}-setup-sims
+          key: ${{ runner.os }}-sims-t1
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -147,7 +145,7 @@ jobs:
             /usr/local/rocksdb
             /usr/local/cleveldb
             ~/go/bin
-          key: ${{ runner.os }}-setup-sims
+          key: ${{ runner.os }}-sims-t1
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -171,7 +169,7 @@ jobs:
             /usr/local/rocksdb
             /usr/local/cleveldb
             ~/go/bin
-          key: ${{ runner.os }}-setup-sims
+          key: ${{ runner.os }}-sims-t1
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -195,7 +193,7 @@ jobs:
             /usr/local/rocksdb
             /usr/local/cleveldb
             ~/go/bin
-          key: ${{ runner.os }}-setup-sims
+          key: ${{ runner.os }}-sims-t1
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -219,7 +217,7 @@ jobs:
             /usr/local/rocksdb
             /usr/local/cleveldb
             ~/go/bin
-          key: ${{ runner.os }}-setup-sims
+          key: ${{ runner.os }}-sims-t1
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -243,7 +241,7 @@ jobs:
             /usr/local/rocksdb
             /usr/local/cleveldb
             ~/go/bin
-          key: ${{ runner.os }}-setup-sims
+          key: ${{ runner.os }}-sims-t1
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -267,7 +265,7 @@ jobs:
             /usr/local/rocksdb
             /usr/local/cleveldb
             ~/go/bin
-          key: ${{ runner.os }}-setup-sims
+          key: ${{ runner.os }}-sims-t1
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -291,7 +289,7 @@ jobs:
             /usr/local/rocksdb
             /usr/local/cleveldb
             ~/go/bin
-          key: ${{ runner.os }}-setup-sims
+          key: ${{ runner.os }}-sims-t1
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -315,7 +313,7 @@ jobs:
             /usr/local/rocksdb
             /usr/local/cleveldb
             ~/go/bin
-          key: ${{ runner.os }}-setup-sims
+          key: ${{ runner.os }}-sims-t1
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
