@@ -1,8 +1,7 @@
 #!/bin/bash
 
 # This script will download, compile, and install rocksdb, then clean up.
-# As of writing this (Feb 7, 2022), the current version is 6.28.2
-DEFAULT_ROCKSDB_VERSION='6.28.2'
+DEFAULT_ROCKSDB_VERSION='6.29.3'
 
 if [[ "$1" == '-h' || "$1" == '--help' || "$1" == 'help' ]]; then
     echo "Usage: $( basename $0 ) [<version>]"
@@ -105,9 +104,10 @@ ROCKSDB_SUDO="$ROCKSDB_SUDO"
 ROCKSDB_DO_CLEANUP="$ROCKSDB_DO_CLEANUP"
 TAR_FILE="v${ROCKSDB_VERSION}.tar.gz"
 
-[[ ! -e "$TAR_FILE" ]] || rm "$TAR_FILE"
-wget "https://github.com/facebook/rocksdb/archive/refs/tags/$TAR_FILE"
-tar zxf "$TAR_FILE"
+if [[ ! -e "$TAR_FILE" ]]; then
+    wget "https://github.com/facebook/rocksdb/archive/refs/tags/$TAR_FILE"
+    tar zxf "$TAR_FILE"
+fi
 ROCKS_DB_DIR="$( tar --exclude='./*/*/*' -tf "$TAR_FILE" | head -n 1 )"
 cd "$ROCKS_DB_DIR"
 export DEBUG_LEVEL=0
