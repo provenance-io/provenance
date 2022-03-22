@@ -43,16 +43,16 @@ jobs:
           SET_ENV_NAME_LINES: 1
       - name: Define cache key
         id: define-cache-key
-        run: echo "::set-output name=cache-key::${{ env.RUNNER_OS }}-sims-t4"
+        run: echo "CACHE_KEY=${{ env.RUNNER_OS }}-sims-t4" >> $GITHUB_ENV
       - uses: actions/cache@v3
         id: cache-setup
         with:
-          key: ${{ steps.cache-setup.outputs.cache-hit }}
+          key: ${{ env.CACHE_KEY }}
           path: ${{ env.CACHE_PATH }}
     outputs:
       should-run: ${{ env.GIT_DIFF }}
       cache-hit: ${{ steps.cache-setup.outputs.cache-hit }}
-      cache-key: ${{ steps.define-cache-key.outputs.cache-key }}
+      cache-key: ${{ env.CACHE_KEY }}
       cache-path: ${{ env.CACHE_PATH }}
 
   build-dependencies:
