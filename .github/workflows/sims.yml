@@ -20,12 +20,29 @@ jobs:
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
-  build:
+  setup:
     runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/cache@v2.1.7
+        id: cache-setup
+        with:
+          path: |
+            /usr/local
+            ~/go/bin
+          key: ${{ runner.os }}-sims-setup
+      - uses: technote-space/get-diff-action@v6.0.1
+        if: steps.cache-setup.outputs.cache-hit != 'true'
+        with:
+          PATTERNS: |
+            **/**.go
+            go.mod
+            go.sum
+          SET_ENV_NAME_INSERTIONS: 1
+          SET_ENV_NAME_LINES: 1
       - name: Install leveldb
+        if: env.GIT_DIFF
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
@@ -33,306 +50,220 @@ jobs:
           sudo apt-get install -y libleveldb-dev
           sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
       - name: Build rocksdb
+        if: env.GIT_DIFF
         run: |
           export ROCKSDB_SUDO='true'
           make rocksdb
       - uses: actions/setup-go@v3
+        if: env.GIT_DIFF
         with:
           go-version: 1.17
       - name: Display go version
+        if: env.GIT_DIFF
         run: go version
-      - run: make build
-
-  install-runsim:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - uses: actions/setup-go@v3
-        with:
-          go-version: 1.17
-      - name: Display go version
-        run: go version
+      - name: Install provenanced
+        if: env.GIT_DIFF
+        run: make install
       - name: Install runsim
+        if: env.GIT_DIFF
         run: export GO111MODULE="on" && go get github.com/cosmos/tools/cmd/runsim@v1.0.0
-      - uses: actions/cache@v2.1.7
-        with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-runsim-binary
 
   simple-goleveldb:
     runs-on: ubuntu-latest
-    needs: [ build, install-runsim ]
+    needs: setup
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2.1.5
-        with:
-          go-version: 1.17
-      - name: Display go version
-        run: go version
-      - uses: technote-space/get-diff-action@v6.0.1
-        with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
-          SET_ENV_NAME_INSERTIONS: 1
-          SET_ENV_NAME_LINES: 1
+      - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
+        id: cache-setup
         with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-runsim-binary
-        if: env.GIT_DIFF
-      - name: test-sim-simple
+          path: |
+            /usr/local
+            ~/go/bin
+          key: ${{ runner.os }}-sims-setup
+      - name: Display versions
         run: |
-          make test-sim-simple
+          go version
+          provenanced version --long
+      - name: test-sim-simple goleveldb
+        run: make test-sim-simple
         if: env.GIT_DIFF
 
   simple-cleveldb:
     runs-on: ubuntu-latest
-    needs: [ build, install-runsim ]
+    needs: setup
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2.1.5
-        with:
-          go-version: 1.17
-      - name: Display go version
-        run: go version
-      - uses: technote-space/get-diff-action@v6.0.1
-        with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
-          SET_ENV_NAME_INSERTIONS: 1
-          SET_ENV_NAME_LINES: 1
+      - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
+        id: cache-setup
         with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-runsim-binary
-        if: env.GIT_DIFF
-      - name: test-sim-simple
+          path: |
+            /usr/local
+            ~/go/bin
+          key: ${{ runner.os }}-sims-setup
+      - name: Display versions
         run: |
-          make DB_BACKEND=cleveldb test-sim-simple
+          go version
+          provenanced version --long
+      - name: test-sim-simple cleveldb
+        run: make DB_BACKEND=cleveldb test-sim-simple
         if: env.GIT_DIFF
 
   simple-rocksdb:
     runs-on: ubuntu-latest
-    needs: [ build, install-runsim ]
+    needs: setup
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2.1.5
-        with:
-          go-version: 1.17
-      - name: Display go version
-        run: go version
-      - uses: technote-space/get-diff-action@v6.0.1
-        with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
-          SET_ENV_NAME_INSERTIONS: 1
-          SET_ENV_NAME_LINES: 1
+      - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
+        id: cache-setup
         with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-runsim-binary
-        if: env.GIT_DIFF
-      - name: test-sim-simple
+          path: |
+            /usr/local
+            ~/go/bin
+          key: ${{ runner.os }}-sims-setup
+      - name: Display versions
         run: |
-          make DB_BACKEND=rocksdb test-sim-simple
+          go version
+          provenanced version --long
+      - name: test-sim-simple rocksdb
+        run: make DB_BACKEND=rocksdb test-sim-simple
         if: env.GIT_DIFF
 
   simple-badgerdb:
     runs-on: ubuntu-latest
-    needs: [ build, install-runsim ]
+    needs: setup
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2.1.5
-        with:
-          go-version: 1.17
-      - name: Display go version
-        run: go version
-      - uses: technote-space/get-diff-action@v6.0.1
-        with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
-          SET_ENV_NAME_INSERTIONS: 1
-          SET_ENV_NAME_LINES: 1
+      - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
+        id: cache-setup
         with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-runsim-binary
-        if: env.GIT_DIFF
-      - name: test-sim-simple
+          path: |
+            /usr/local
+            ~/go/bin
+          key: ${{ runner.os }}-sims-setup
+      - name: Display versions
         run: |
-          make DB_BACKEND=badgerdb test-sim-simple
+          go version
+          provenanced version --long
+      - name: test-sim-simple badgerdb
+        run: make DB_BACKEND=badgerdb test-sim-simple
         if: env.GIT_DIFF
 
   nondeterminism:
     runs-on: ubuntu-latest
-    needs: [build, install-runsim]
+    needs: setup
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
-        with:
-          go-version: 1.17
-      - name: Display go version
-        run: go version
-      - uses: technote-space/get-diff-action@v6.0.1
-        with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
       - uses: actions/cache@v2.1.7
+        id: cache-setup
         with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-runsim-binary
-        if: env.GIT_DIFF
-      - name: test-sim-nondeterminism
+          path: |
+            /usr/local
+            ~/go/bin
+          key: ${{ runner.os }}-sims-setup
+      - name: Display versions
         run: |
-          make test-sim-nondeterminism
+          go version
+          provenanced version --long
+      - name: test-sim-nondeterminism
+        run: make test-sim-nondeterminism
         if: env.GIT_DIFF
 
   import-export-goleveldb:
     runs-on: ubuntu-latest
-    needs: [build, install-runsim]
+    needs: setup
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
-        with:
-          go-version: 1.17
-      - name: Display go version
-        run: go version
-      - uses: technote-space/get-diff-action@v6.0.1
-        with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
-          SET_ENV_NAME_INSERTIONS: 1
-          SET_ENV_NAME_LINES: 1
       - uses: actions/cache@v2.1.7
+        id: cache-setup
         with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-runsim-binary
-        if: env.GIT_DIFF
-      - name: test-sim-import-export
+          path: |
+            /usr/local
+            ~/go/bin
+          key: ${{ runner.os }}-sims-setup
+      - name: Display versions
         run: |
-          make test-sim-import-export
+          go version
+          provenanced version --long
+      - name: test-sim-import-export goleveldb
+        run: make test-sim-import-export
         if: env.GIT_DIFF
 
   import-export-cleveldb:
     runs-on: ubuntu-latest
-    needs: [build, install-runsim]
+    needs: setup
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
-        with:
-          go-version: 1.17
-      - name: Display go version
-        run: go version
-      - uses: technote-space/get-diff-action@v6.0.1
-        with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
-          SET_ENV_NAME_INSERTIONS: 1
-          SET_ENV_NAME_LINES: 1
       - uses: actions/cache@v2.1.7
+        id: cache-setup
         with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-runsim-binary
-        if: env.GIT_DIFF
-      - name: test-sim-import-export
+          path: |
+            /usr/local
+            ~/go/bin
+          key: ${{ runner.os }}-sims-setup
+      - name: Display versions
         run: |
-          make DB_BACKEND=cleveldb test-sim-import-export
+          go version
+          provenanced version --long
+      - name: test-sim-import-export cleveldb
+        run: make DB_BACKEND=cleveldb test-sim-import-export
         if: env.GIT_DIFF
 
   import-export-rocksdb:
     runs-on: ubuntu-latest
-    needs: [build, install-runsim]
+    needs: setup
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
-        with:
-          go-version: 1.17
-      - name: Display go version
-        run: go version
-      - uses: technote-space/get-diff-action@v6.0.1
-        with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
-          SET_ENV_NAME_INSERTIONS: 1
-          SET_ENV_NAME_LINES: 1
       - uses: actions/cache@v2.1.7
+        id: cache-setup
         with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-runsim-binary
-        if: env.GIT_DIFF
-      - name: test-sim-import-export
+          path: |
+            /usr/local
+            ~/go/bin
+          key: ${{ runner.os }}-sims-setup
+      - name: Display versions
         run: |
-          make DB_BACKEND=rocksdb test-sim-import-export
+          go version
+          provenanced version --long
+      - name: test-sim-import-export rocksdb
+        run: make DB_BACKEND=rocksdb test-sim-import-export
         if: env.GIT_DIFF
 
   import-export-badgerdb:
     runs-on: ubuntu-latest
-    needs: [build, install-runsim]
+    needs: setup
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
-        with:
-          go-version: 1.17
-      - name: Display go version
-        run: go version
-      - uses: technote-space/get-diff-action@v6.0.1
-        with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
-          SET_ENV_NAME_INSERTIONS: 1
-          SET_ENV_NAME_LINES: 1
       - uses: actions/cache@v2.1.7
+        id: cache-setup
         with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-runsim-binary
-        if: env.GIT_DIFF
-      - name: test-sim-import-export
+          path: |
+            /usr/local
+            ~/go/bin
+          key: ${{ runner.os }}-sims-setup
+      - name: Display versions
         run: |
-          make DB_BACKEND=badgerdb test-sim-import-export
+          go version
+          provenanced version --long
+      - name: test-sim-import-export badgerdb
+        run: make DB_BACKEND=badgerdb test-sim-import-export
         if: env.GIT_DIFF
 
   multi-seed-short:
     runs-on: ubuntu-latest
-    needs: [build, install-runsim]
+    needs: setup
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
-        with:
-          go-version: 1.17
-      - name: Display go version
-        run: go version
-      - uses: technote-space/get-diff-action@v6.0.1
-        with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
-          SET_ENV_NAME_INSERTIONS: 1
-          SET_ENV_NAME_LINES: 1
       - uses: actions/cache@v2.1.7
+        id: cache-setup
         with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-runsim-binary
-        if: env.GIT_DIFF
-      - name: test-sim-multi-seed-short
+          path: |
+            /usr/local
+            ~/go/bin
+          key: ${{ runner.os }}-sims-setup
+      - name: Display versions
         run: |
-          make test-sim-multi-seed-short
+          go version
+          provenanced version --long
+      - name: test-sim-multi-seed-short
+        run: make test-sim-multi-seed-short
         if: env.GIT_DIFF
