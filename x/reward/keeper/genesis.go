@@ -44,17 +44,48 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		panic(err)
 	}
 
+	actionDelegate, err := k.GetActionDelegate(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	actionTransferDelegations, err := k.GetActionTransferDelegations(ctx)
+	if err != nil {
+		panic(err)
+	}
+
 	return types.NewGenesisState(
 		rewardPrograms,
 		rewardClaims,
 		epochRewardDistributions,
 		eligibilityCriterias,
-		types.ActionDelegate{},            // actionDelegate ActionDelegate,
-		types.ActionTransferDelegations{}, // actionTransferDelegations ActionTransferDelegations,
+		*actionDelegate,
+		*actionTransferDelegations,
 	)
 }
 
 // InitGenesis new msgfees genesis
 func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
+	if err := data.Validate(); err != nil {
+		panic(err)
+	}
 
+	for _, rewardProgram := range data.RewardPrograms {
+		k.SetRewardProgram(ctx, rewardProgram)
+	}
+
+	for _, rewardClaims := range data.RewardClaims {
+		k.SetRewardClaim(ctx, rewardClaims)
+	}
+
+	for _, epochRewardDistributions := range data.EpochRewardDistributions {
+		k.SetEpochRewardDistribution(ctx, epochRewardDistributions)
+	}
+
+	for _, eligibilityCriteria := range data.EligibilityCriterias {
+		k.SetEligibilityCriteria(ctx, eligibilityCriteria)
+	}
+
+	k.SetActionDelegate(ctx, data.ActionDelegate)
+	k.SetActionTransferDelegations(ctx, data.ActionTransferDelegations)
 }

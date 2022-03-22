@@ -28,6 +28,11 @@ var (
 	EpochRewardDistributionKeyPrefix = []byte{0x03}
 
 	EligibilityCriteriaKeyPrefix = []byte{0x04}
+
+	ActionKeyPrefix = []byte{0x05}
+
+	ActionDelegateKey            = []byte("Delegate")
+	ActionTransferDelegationsKey = []byte("TransferDelegations")
 )
 
 // GetRewardProgramKey converts a name into key format.
@@ -36,14 +41,9 @@ func GetRewardProgramKey(id int64) []byte {
 	return append(RewardProgramKeyPrefix, idByte...)
 }
 
-// AddrRewardClaimsKey addr+ epochId + rewardsId
-func AddrRewardClaimsKey(addr []byte, epochId int64, rewardsId int64) []byte {
-	key := append(RewardClaimKeyPrefix, address.MustLengthPrefix(addr)...)
-	epochIdByte := []byte(strconv.FormatInt(epochId, 10))
-	key = append(key, epochIdByte...)
-	rewardIdByte := []byte(strconv.FormatInt(rewardsId, 10))
-	key = append(key, rewardIdByte...)
-	return key
+// GetRewardClaimsKey converts an reward claim
+func GetRewardClaimsKey(addr []byte) []byte {
+	return append(RewardClaimKeyPrefix, address.MustLengthPrefix(addr)...)
 }
 
 func GetEpochRewardDistributionKey(id string) []byte {
@@ -52,4 +52,16 @@ func GetEpochRewardDistributionKey(id string) []byte {
 
 func GetEligibilityCriteriaKey(name string) []byte {
 	return append(EligibilityCriteriaKeyPrefix, []byte(name)...)
+}
+
+func GetActionKey(actionType string) []byte {
+	return append(ActionKeyPrefix, []byte(actionType)...)
+}
+
+func GetActionDelegateKey() []byte {
+	return append(ActionKeyPrefix, ActionDelegateKey...)
+}
+
+func GetActionTransferDelegationsKey() []byte {
+	return append(ActionKeyPrefix, ActionTransferDelegationsKey...)
 }

@@ -5960,8 +5960,8 @@ EpochRewardDistribution, this will updated at the end of every epoch
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `id` | [string](#string) |  |  |
-| `reward_program_id` | [int64](#int64) |  |  |
+| `epoch_id` | [string](#string) |  |  |
+| `reward_program_id` | [uint64](#uint64) |  |  |
 | `total_rewards_pool` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `total_shares` | [uint64](#uint64) |  |  |
 
@@ -5998,8 +5998,8 @@ RewardProgram
 | `distribute_from_address` | [string](#string) |  | community pool for now |
 | `coin` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `epoch` | [provenance.epoch.v1.EpochInfo](#provenance.epoch.v1.EpochInfo) |  | EpochInfo defines the type of epoch attributed to this program.(e.g day,week,month) |
-| `start_epoch` | [int64](#int64) |  | start_epoch defines the epoch number at which the rewards program should begin at |
-| `number_epochs` | [int64](#int64) |  | number of epochs this program will last for |
+| `start_epoch` | [uint64](#uint64) |  | start_epoch defines the epoch number at which the rewards program should begin at |
+| `number_epochs` | [uint64](#uint64) |  | number of epochs this program will last for |
 | `eligibility_criteria` | [EligibilityCriteria](#provenance.reward.v1.EligibilityCriteria) |  |  |
 
 
