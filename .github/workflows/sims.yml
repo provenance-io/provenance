@@ -47,7 +47,7 @@ jobs:
       - uses: actions/cache@v3
         id: cache-setup
         with:
-          key: ${{ env.CACHE_KEY }}
+          key: ${{ steps.cache-setup.outputs.cache-hit }}
           path: ${{ env.CACHE_PATH }}
     outputs:
       should-run: ${{ env.GIT_DIFF }}
