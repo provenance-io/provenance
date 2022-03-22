@@ -103,8 +103,8 @@ func (erd *EpochRewardDistribution) String() string {
 	return string(out)
 }
 
-func NewEligibilityCriteria(name string, action EligibilityCriteria) EligibilityCriteria {
-	return EligibilityCriteria{Name: name, Action: action.GetAction()}
+func NewEligibilityCriteria(name string, action isEligibilityCriteria_Action) EligibilityCriteria {
+	return EligibilityCriteria{Name: name, Action: action}
 }
 
 func (ec *EligibilityCriteria) ValidateBasic() error {
