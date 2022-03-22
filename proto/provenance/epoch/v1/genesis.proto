@@ -11,6 +11,7 @@ option java_multiple_files = true;
 message EpochInfo {
   option (gogoproto.equal)           = true;
   option (gogoproto.goproto_getters) = true;
+
   string identifier                 = 1;
   int64  start_height               = 2; // start height of the beginning of all epoch
   int64  duration                   = 3; // in blocks for e.g a month will be (30*24*7*60*60)/5 blocks
@@ -23,5 +24,6 @@ message EpochInfo {
 message GenesisState {
   option (gogoproto.equal)           = true;
   option (gogoproto.goproto_getters) = true;
+
   repeated EpochInfo epochs = 1 [(gogoproto.nullable) = false];
 }

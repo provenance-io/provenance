@@ -6017,7 +6017,7 @@ RewardProgram
 | ----- | ---- | ----- | ----------- |
 | `reward_program_id` | [uint64](#uint64) |  |  |
 | `shares` | [int64](#int64) |  |  |
-| `epoch_id` | [uint64](#uint64) |  |  |
+| `epoch_id` | [string](#string) |  |  |
 | `epoch_end_height` | [uint64](#uint64) |  |  |
 | `claimed` | [bool](#bool) |  |  |
 | `expiration_height` | [uint64](#uint64) |  |  |

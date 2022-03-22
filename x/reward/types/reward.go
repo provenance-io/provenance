@@ -153,3 +153,8 @@ func (atd *ActionTransferDelegations) String() string {
 	out, _ := yaml.Marshal(atd)
 	return string(out)
 }
+
+func (apeprp *SharesPerEpochPerRewardsProgram) String() string {
+	out, _ := yaml.Marshal(apeprp)
+	return string(out)
+}
