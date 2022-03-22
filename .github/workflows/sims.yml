@@ -46,8 +46,11 @@ jobs:
         id: cache-setup
         with:
           path: |
+            /usr/local/lib
+            /usr/local/rocksdb
+            /usr/local/cleveldb
             ~/go/bin
-          key: ${{ runner.os }}-sims-t1
+          key: ${{ runner.os }}-sims-t2
       - uses: technote-space/get-diff-action@v6.0.1
         if: steps.cache-setup.outputs.cache-hit != 'true'
         with:
@@ -94,10 +97,11 @@ jobs:
         id: cache-setup
         with:
           path: |
+            /usr/local/lib
             /usr/local/rocksdb
             /usr/local/cleveldb
             ~/go/bin
-          key: ${{ runner.os }}-sims-t1
+          key: ${{ runner.os }}-sims-t2
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -118,10 +122,11 @@ jobs:
         id: cache-setup
         with:
           path: |
+            /usr/local/lib
             /usr/local/rocksdb
             /usr/local/cleveldb
             ~/go/bin
-          key: ${{ runner.os }}-sims-t1
+          key: ${{ runner.os }}-sims-t2
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -142,10 +147,11 @@ jobs:
         id: cache-setup
         with:
           path: |
+            /usr/local/lib
             /usr/local/rocksdb
             /usr/local/cleveldb
             ~/go/bin
-          key: ${{ runner.os }}-sims-t1
+          key: ${{ runner.os }}-sims-t2
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -166,10 +172,11 @@ jobs:
         id: cache-setup
         with:
           path: |
+            /usr/local/lib
             /usr/local/rocksdb
             /usr/local/cleveldb
             ~/go/bin
-          key: ${{ runner.os }}-sims-t1
+          key: ${{ runner.os }}-sims-t2
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -190,10 +197,11 @@ jobs:
         id: cache-setup
         with:
           path: |
+            /usr/local/lib
             /usr/local/rocksdb
             /usr/local/cleveldb
             ~/go/bin
-          key: ${{ runner.os }}-sims-t1
+          key: ${{ runner.os }}-sims-t2
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -214,10 +222,11 @@ jobs:
         id: cache-setup
         with:
           path: |
+            /usr/local/lib
             /usr/local/rocksdb
             /usr/local/cleveldb
             ~/go/bin
-          key: ${{ runner.os }}-sims-t1
+          key: ${{ runner.os }}-sims-t2
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -238,10 +247,11 @@ jobs:
         id: cache-setup
         with:
           path: |
+            /usr/local/lib
             /usr/local/rocksdb
             /usr/local/cleveldb
             ~/go/bin
-          key: ${{ runner.os }}-sims-t1
+          key: ${{ runner.os }}-sims-t2
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -262,10 +272,11 @@ jobs:
         id: cache-setup
         with:
           path: |
+            /usr/local/lib
             /usr/local/rocksdb
             /usr/local/cleveldb
             ~/go/bin
-          key: ${{ runner.os }}-sims-t1
+          key: ${{ runner.os }}-sims-t2
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -286,10 +297,11 @@ jobs:
         id: cache-setup
         with:
           path: |
+            /usr/local/lib
             /usr/local/rocksdb
             /usr/local/cleveldb
             ~/go/bin
-          key: ${{ runner.os }}-sims-t1
+          key: ${{ runner.os }}-sims-t2
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -310,10 +322,11 @@ jobs:
         id: cache-setup
         with:
           path: |
+            /usr/local/lib
             /usr/local/rocksdb
             /usr/local/cleveldb
             ~/go/bin
-          key: ${{ runner.os }}-sims-t1
+          key: ${{ runner.os }}-sims-t2
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
