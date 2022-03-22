@@ -87,13 +87,13 @@ func NewEpochRewardDistribution(epochId string, rewardProgramId uint64, totalRew
 
 func (erd *EpochRewardDistribution) ValidateBasic() error {
 	if len(erd.EpochId) < 1 {
-		errors.New("epoch reward distribution must have a epoch id")
+		return errors.New("epoch reward distribution must have a epoch id")
 	}
 	if erd.RewardProgramId < 1 {
-		errors.New("epoch reward distribution must have a valid reward program id")
+		return errors.New("epoch reward distribution must have a valid reward program id")
 	}
 	if erd.TotalRewardsPool == nil {
-		errors.New("epoch reward distribution must have a reward pool")
+		return errors.New("epoch reward distribution must have a reward pool")
 	}
 	return nil
 }
@@ -152,6 +152,41 @@ func (atd *ActionTransferDelegations) ValidateBasic() error {
 func (atd *ActionTransferDelegations) String() string {
 	out, _ := yaml.Marshal(atd)
 	return string(out)
+}
+
+func NewSharesPerEpochPerRewardsProgram(
+	rewardProgramId uint64,
+	shares int64,
+	epochId string,
+	epochEndHeight uint64,
+	claimed bool,
+	expirationHeight uint64,
+	expired bool,
+	totalShares int64,
+	totalRewards sdk.Coin,
+) SharesPerEpochPerRewardsProgram {
+	return SharesPerEpochPerRewardsProgram{
+		RewardProgramId:  rewardProgramId,
+		Shares:           shares,
+		EpochId:          epochId,
+		EpochEndHeight:   epochEndHeight,
+		Claimed:          claimed,
+		ExpirationHeight: expirationHeight,
+		Expired:          expired,
+		TotalShares:      totalShares,
+		TotalRewards:     totalRewards,
+	}
+}
+
+func (apeprp *SharesPerEpochPerRewardsProgram) ValidateBasice() error {
+	if apeprp.RewardProgramId < 1 {
+		return errors.New("shares per epoch must have a valid reward program id")
+	}
+	if len(apeprp.EpochId) < 1 {
+		return errors.New("shares per epoch must have a valid epoch id")
+	}
+	// TODO need more?
+	return nil
 }
 
 func (apeprp *SharesPerEpochPerRewardsProgram) String() string {

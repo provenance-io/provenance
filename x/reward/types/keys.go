@@ -47,7 +47,7 @@ func GetRewardClaimsKey(addr []byte) []byte {
 }
 
 func GetEpochRewardDistributionKey(id string) []byte {
-	return append(EligibilityCriteriaKeyPrefix, []byte(id)...)
+	return append(EpochRewardDistributionKeyPrefix, []byte(id)...)
 }
 
 func GetEligibilityCriteriaKey(name string) []byte {
