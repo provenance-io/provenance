@@ -38,9 +38,8 @@ jobs:
       should-run: ${{ env.GIT_DIFF }}
       cache-key: ${{ runner.os }}-sims-t7
       cache-path: |
-        /usr/local/**/*rocksdb*
-        /usr/local/**/*leveldb*
-        !/usr/local/share/vcpkg/ports
+        ~/v*.tar.gz
+        ~/rocksdb-*
         ~/go/bin
 
   build-dependencies:
@@ -71,6 +70,7 @@ jobs:
         if: steps.cache-setup.outputs.cache-hit != 'true'
         run: |
           export ROCKSDB_SUDO='true'
+          export ROCKSDB_DO_CLEANUP='false'
           make rocksdb
       - uses: actions/setup-go@v3
         if: steps.cache-setup.outputs.cache-hit != 'true'
@@ -93,6 +93,18 @@ jobs:
         with:
           key: ${{ needs.setup.outputs.cache-key }}
           path: ${{ needs.setup.outputs.cache-path }}
+      - name: Install cleveldb
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libleveldb-dev
+          sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
+      - name: Build rocksdb
+        run: |
+          export ROCKSDB_SUDO='true'
+          export ROCKSDB_DO_CLEANUP='false'
+          make rocksdb
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -133,6 +145,13 @@ jobs:
         with:
           key: ${{ needs.setup.outputs.cache-key }}
           path: ${{ needs.setup.outputs.cache-path }}
+      - name: Install cleveldb
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libleveldb-dev
+          sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -153,6 +172,11 @@ jobs:
         with:
           key: ${{ needs.setup.outputs.cache-key }}
           path: ${{ needs.setup.outputs.cache-path }}
+      - name: Build rocksdb
+        run: |
+          export ROCKSDB_SUDO='true'
+          export ROCKSDB_DO_CLEANUP='false'
+          make rocksdb
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -233,6 +257,13 @@ jobs:
         with:
           key: ${{ needs.setup.outputs.cache-key }}
           path: ${{ needs.setup.outputs.cache-path }}
+      - name: Install cleveldb
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libleveldb-dev
+          sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -253,6 +284,11 @@ jobs:
         with:
           key: ${{ needs.setup.outputs.cache-key }}
           path: ${{ needs.setup.outputs.cache-path }}
+      - name: Build rocksdb
+        run: |
+          export ROCKSDB_SUDO='true'
+          export ROCKSDB_DO_CLEANUP='false'
+          make rocksdb
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
