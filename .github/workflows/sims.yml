@@ -25,7 +25,6 @@ jobs:
     runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
     env:
-      CACHE_KEY: ${{ env.RUNNER_OS }}-sims-t4
       CACHE_PATH: |
         /usr/local/include/
         /usr/local/lib/pkgconfig
@@ -42,6 +41,9 @@ jobs:
             go.sum
           SET_ENV_NAME_INSERTIONS: 1
           SET_ENV_NAME_LINES: 1
+      - name: Define cache key
+        id: define-cache-key
+        run: echo "::set-output name=cache-key::${{ env.RUNNER_OS }}-sims-t4"
       - uses: actions/cache@v3
         id: cache-setup
         with:
@@ -50,7 +52,7 @@ jobs:
     outputs:
       should-run: ${{ env.GIT_DIFF }}
       cache-hit: ${{ steps.cache-setup.outputs.cache-hit }}
-      cache-key: ${{ env.CACHE_KEY }}
+      cache-key: ${{ steps.define-cache-key.outputs.cache-key }}
       cache-path: ${{ env.CACHE_PATH }}
 
   build-dependencies:
