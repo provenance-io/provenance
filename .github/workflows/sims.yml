@@ -38,8 +38,8 @@ jobs:
       should-run: ${{ env.GIT_DIFF }}
       cache-key: ${{ runner.os }}-sims-t8
       cache-path: |
-        ~/v*.tar.gz
-        ~/rocksdb-*
+        v*.tar.gz
+        rocksdb-*
         ~/go/bin
 
   build-dependencies:
@@ -71,6 +71,7 @@ jobs:
         run: |
           export ROCKSDB_SUDO='true'
           export ROCKSDB_DO_CLEANUP='false'
+          export ROCKSDB_DO_INSTALL='false'
           make rocksdb
       - uses: actions/setup-go@v3
         if: steps.cache-setup.outputs.cache-hit != 'true'
@@ -104,6 +105,7 @@ jobs:
         run: |
           export ROCKSDB_SUDO='true'
           export ROCKSDB_DO_CLEANUP='false'
+          export ROCKSDB_DO_BUILD='false'
           make rocksdb
       - uses: actions/setup-go@v3
         with:
@@ -176,6 +178,7 @@ jobs:
         run: |
           export ROCKSDB_SUDO='true'
           export ROCKSDB_DO_CLEANUP='false'
+          export ROCKSDB_DO_BUILD='false'
           make rocksdb
       - uses: actions/setup-go@v3
         with:
@@ -288,6 +291,7 @@ jobs:
         run: |
           export ROCKSDB_SUDO='true'
           export ROCKSDB_DO_CLEANUP='false'
+          export ROCKSDB_DO_BUILD='false'
           make rocksdb
       - uses: actions/setup-go@v3
         with:

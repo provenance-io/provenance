@@ -12,6 +12,8 @@ if [[ "$1" == '-h' || "$1" == '--help' || "$1" == 'help' ]]; then
     echo "  ROCKSDB_JOBS is the number of parallel jobs for make to use. Default is the result of nproc (=$( nproc ))."
     echo '  ROCKSDB_WITH_SHARED controls whether to build and install the shared library. Default is true.'
     echo '  ROCKSDB_WITH_STATIC controls whether to build and install the static library. Default is false.'
+    echo '  ROCKSDB_DO_BUILD controls whether to build. Default is true.'
+    echo '  ROCKSDB_DO_INSTALL controls whether to install. Default is true.'
     echo '  ROCKSDB_SUDO controls whether to use sudo when installing the built libraries. Default is false.'
     echo '  ROCKSDB_DO_CLEANUP controls whether to delete the downloaded and unpacked repo. Default is true.'
     exit 0
@@ -63,6 +65,8 @@ ROCKSDB_SUDO="$( trueFalseOrDefault ROCKSDB_SUDO false )" || exit $?
 ROCKSDB_WITH_SHARED="$( trueFalseOrDefault ROCKSDB_WITH_SHARED true )" || exit $?
 ROCKSDB_WITH_STATIC="$( trueFalseOrDefault ROCKSDB_WITH_STATIC false )" || exit $?
 ROCKSDB_DO_CLEANUP="$( trueFalseOrDefault ROCKSDB_DO_CLEANUP true )" || exit $?
+ROCKSDB_DO_BUILD="$( trueFalseOrDefault ROCKSDB_DO_BUILD true )" || exit $?
+ROCKSDB_DO_INSTALL="$( trueFalseOrDefault ROCKSDB_DO_INSTALL true )" || exit $?
 
 # The github action runners need sudo when installing libraries, but all other cases I've found do not.
 # To use sudo for just the installation portion, set the ROCKSDB_SUDO environment variable to 'true'.
@@ -84,15 +88,6 @@ if [[ "$ROCKSDB_WITH_STATIC" == 'true' ]]; then
     INSTALL_TARGETS+=( install-static )
 fi
 
-if [[ "${#BUILD_TARGETS[@]}" == '0' ]]; then
-    echo 'Nothing to build.' >&2
-    exit 1
-fi
-if [[ "${#INSTALL_TARGETS[@]}" == '0' ]]; then
-    echo 'Nothing to install.' >&2
-    exit 1
-fi
-
 set -ex
 
 # These lines look dumb, but they're here so that the values are clearly in the output (because of set -x).
@@ -102,6 +97,8 @@ ROCKSDB_WITH_SHARED="$ROCKSDB_WITH_SHARED"
 ROCKSDB_WITH_STATIC="$ROCKSDB_WITH_STATIC"
 ROCKSDB_SUDO="$ROCKSDB_SUDO"
 ROCKSDB_DO_CLEANUP="$ROCKSDB_DO_CLEANUP"
+ROCKSDB_DO_BUILD="$ROCKSDB_DO_BUILD"
+ROCKSDB_DO_INSTALL="$ROCKSDB_DO_INSTALL"
 TAR_FILE="v${ROCKSDB_VERSION}.tar.gz"
 
 if [[ ! -e "$TAR_FILE" ]]; then
@@ -111,8 +108,8 @@ fi
 ROCKS_DB_DIR="$( tar --exclude='./*/*/*' -tf "$TAR_FILE" | head -n 1 )"
 cd "$ROCKS_DB_DIR"
 export DEBUG_LEVEL=0
-make -j${ROCKSDB_JOBS} "${BUILD_TARGETS[@]}"
-$SUDO make "${INSTALL_TARGETS[@]}"
+[[ "$ROCKSDB_DO_BUILD" == 'true' && "${#BUILD_TARGETS[@]}" > '0' ]] && make -j${ROCKSDB_JOBS} "${BUILD_TARGETS[@]}"
+[[ "$ROCKSDB_DO_INSTALL" == 'true' && "${#INSTALL_TARGETS[@]}" > '0' ]] && $SUDO make "${INSTALL_TARGETS[@]}"
 cd ..
 if [[ "$ROCKSDB_DO_CLEANUP" == 'true' ]]; then
     rm "$TAR_FILE"
