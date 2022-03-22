@@ -41,10 +41,10 @@ func EpochInfosCmd() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			var response *types.QueryEpochsInfoResponse
+			var response *types.QueryEpochInfosResponse
 			if response, err = queryClient.EpochInfos(
 				context.Background(),
-				&types.QueryEpochsInfoRequest{},
+				&types.QueryEpochInfosRequest{},
 			); err != nil {
 				fmt.Printf("failed to query epoch infos: %s\n", err.Error())
 				return nil

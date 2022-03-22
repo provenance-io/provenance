@@ -2,8 +2,6 @@ syntax = "proto3";
 package provenance.reward.v1;
 
 import "gogoproto/gogo.proto";
-import "google/protobuf/duration.proto";
-import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "provenance/epoch/v1/genesis.proto";
 
@@ -50,6 +48,9 @@ message RewardClaim {
 }
 
 message SharesPerEpochPerRewardsProgram {
+  option (gogoproto.equal)           = true;
+  option (gogoproto.goproto_getters) = true;
+
   uint64                   reward_program_id = 1;
   int64                    shares            = 2;
   uint64                   epoch_id          = 3;

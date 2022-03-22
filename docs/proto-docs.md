@@ -48,8 +48,8 @@
 - [provenance/epoch/v1/query.proto](#provenance/epoch/v1/query.proto)
     - [QueryCurrentEpochRequest](#provenance.epoch.v1.QueryCurrentEpochRequest)
     - [QueryCurrentEpochResponse](#provenance.epoch.v1.QueryCurrentEpochResponse)
+    - [QueryEpochInfosRequest](#provenance.epoch.v1.QueryEpochInfosRequest)
     - [QueryEpochInfosResponse](#provenance.epoch.v1.QueryEpochInfosResponse)
-    - [QueryEpochsInfoRequest](#provenance.epoch.v1.QueryEpochsInfoRequest)
   
     - [Query](#provenance.epoch.v1.Query)
   
@@ -996,6 +996,16 @@ GenesisState defines the epochs module's genesis state.
 
 
 
+<a name="provenance.epoch.v1.QueryEpochInfosRequest"></a>
+
+### QueryEpochInfosRequest
+QueryEpochsInfosRequest
+
+
+
+
+
+
 <a name="provenance.epoch.v1.QueryEpochInfosResponse"></a>
 
 ### QueryEpochInfosResponse
@@ -1005,16 +1015,6 @@ QueryEpochInfosResponse
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `epochs` | [EpochInfo](#provenance.epoch.v1.EpochInfo) | repeated |  |
-
-
-
-
-
-
-<a name="provenance.epoch.v1.QueryEpochsInfoRequest"></a>
-
-### QueryEpochsInfoRequest
-QueryEpochsInfoRequest
 
 
 
@@ -1034,7 +1034,7 @@ Query defines the gRPC querier service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `EpochInfos` | [QueryEpochsInfoRequest](#provenance.epoch.v1.QueryEpochsInfoRequest) | [QueryEpochInfosResponse](#provenance.epoch.v1.QueryEpochInfosResponse) | EpochInfos provide running epochInfos | GET|/provenance/epoch/v1/epochs|
+| `EpochInfos` | [QueryEpochInfosRequest](#provenance.epoch.v1.QueryEpochInfosRequest) | [QueryEpochInfosResponse](#provenance.epoch.v1.QueryEpochInfosResponse) | EpochInfos provide running epochInfos | GET|/provenance/epoch/v1/epochs|
 | `CurrentEpoch` | [QueryCurrentEpochRequest](#provenance.epoch.v1.QueryCurrentEpochRequest) | [QueryCurrentEpochResponse](#provenance.epoch.v1.QueryCurrentEpochResponse) | CurrentEpoch provide current epoch of specified identifier | GET|/provenance/epoch/v1/current_epoch|
 
  <!-- end services -->

@@ -124,7 +124,7 @@ func (k Keeper) IterateRewardClaims(ctx sdk.Context, handle func(rewardClaim typ
 func (k Keeper) SetEpochRewardDistribution(ctx sdk.Context, epochRewardDistribution types.EpochRewardDistribution) error {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&epochRewardDistribution)
-	store.Set(types.GetEpochRewardDistributionKey(epochRewardDistribution.Id), bz)
+	store.Set(types.GetEpochRewardDistributionKey(epochRewardDistribution.EpochId), bz)
 	return nil
 }
 

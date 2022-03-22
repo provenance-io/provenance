@@ -18,10 +18,10 @@ func (k Keeper) CurrentEpoch(goCtx context.Context, request *types.QueryCurrentE
 	}, nil
 }
 
-func (k Keeper) EpochInfos(goCtx context.Context, request *types.QueryEpochsInfoRequest) (*types.QueryEpochsInfoResponse, error) {
+func (k Keeper) EpochInfos(goCtx context.Context, request *types.QueryEpochInfosRequest) (*types.QueryEpochInfosResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	return &types.QueryEpochsInfoResponse{
+	return &types.QueryEpochInfosResponse{
 		Epochs: k.AllEpochInfos(ctx),
 	}, nil
 }
