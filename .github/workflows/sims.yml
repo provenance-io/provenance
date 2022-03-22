@@ -37,15 +37,15 @@ jobs:
       should-run: ${{ env.GIT_DIFF }}
       cache-hit: ${{ steps.cache-setup.outputs.cache-hit }}
     steps:
-    - uses: actions/checkout@v3
-    - uses: technote-space/get-diff-action@v6.0.1
-      with:
-        PATTERNS: |
-          **/**.go
-          go.mod
-          go.sum
-        SET_ENV_NAME_INSERTIONS: 1
-        SET_ENV_NAME_LINES: 1
+      - uses: actions/checkout@v3
+      - uses: technote-space/get-diff-action@v6.0.1
+        with:
+          PATTERNS: |
+            **/**.go
+            go.mod
+            go.sum
+          SET_ENV_NAME_INSERTIONS: 1
+          SET_ENV_NAME_LINES: 1
       - uses: actions/cache@v2.1.7
         id: cache-setup
         with:
