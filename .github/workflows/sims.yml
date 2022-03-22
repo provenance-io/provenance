@@ -82,6 +82,10 @@ jobs:
             /usr/local/cleveldb
             ~/go/bin
           key: ${{ runner.os }}-setup-sims
+      - uses: actions/setup-go@v3
+        if: env.GIT_DIFF
+        with:
+          go-version: 1.17
       - name: Display versions
         run: |
           go version
@@ -103,6 +107,10 @@ jobs:
             /usr/local/cleveldb
             ~/go/bin
           key: ${{ runner.os }}-setup-sims
+      - uses: actions/setup-go@v3
+        if: env.GIT_DIFF
+        with:
+          go-version: 1.17
       - name: Display versions
         run: |
           go version
@@ -124,6 +132,10 @@ jobs:
             /usr/local/cleveldb
             ~/go/bin
           key: ${{ runner.os }}-setup-sims
+      - uses: actions/setup-go@v3
+        if: env.GIT_DIFF
+        with:
+          go-version: 1.17
       - name: Display versions
         run: |
           go version
@@ -145,6 +157,10 @@ jobs:
             /usr/local/cleveldb
             ~/go/bin
           key: ${{ runner.os }}-setup-sims
+      - uses: actions/setup-go@v3
+        if: env.GIT_DIFF
+        with:
+          go-version: 1.17
       - name: Display versions
         run: |
           go version
@@ -166,6 +182,10 @@ jobs:
             /usr/local/cleveldb
             ~/go/bin
           key: ${{ runner.os }}-setup-sims
+      - uses: actions/setup-go@v3
+        if: env.GIT_DIFF
+        with:
+          go-version: 1.17
       - name: Display versions
         run: |
           go version
@@ -187,6 +207,10 @@ jobs:
             /usr/local/cleveldb
             ~/go/bin
           key: ${{ runner.os }}-setup-sims
+      - uses: actions/setup-go@v3
+        if: env.GIT_DIFF
+        with:
+          go-version: 1.17
       - name: Display versions
         run: |
           go version
@@ -208,6 +232,10 @@ jobs:
             /usr/local/cleveldb
             ~/go/bin
           key: ${{ runner.os }}-setup-sims
+      - uses: actions/setup-go@v3
+        if: env.GIT_DIFF
+        with:
+          go-version: 1.17
       - name: Display versions
         run: |
           go version
@@ -229,6 +257,10 @@ jobs:
             /usr/local/cleveldb
             ~/go/bin
           key: ${{ runner.os }}-setup-sims
+      - uses: actions/setup-go@v3
+        if: env.GIT_DIFF
+        with:
+          go-version: 1.17
       - name: Display versions
         run: |
           go version
@@ -250,6 +282,10 @@ jobs:
             /usr/local/cleveldb
             ~/go/bin
           key: ${{ runner.os }}-setup-sims
+      - uses: actions/setup-go@v3
+        if: env.GIT_DIFF
+        with:
+          go-version: 1.17
       - name: Display versions
         run: |
           go version
@@ -271,6 +307,10 @@ jobs:
             /usr/local/cleveldb
             ~/go/bin
           key: ${{ runner.os }}-setup-sims
+      - uses: actions/setup-go@v3
+        if: env.GIT_DIFF
+        with:
+          go-version: 1.17
       - name: Display versions
         run: |
           go version
