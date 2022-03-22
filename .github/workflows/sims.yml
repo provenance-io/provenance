@@ -29,9 +29,10 @@ jobs:
         id: cache-setup
         with:
           path: |
-            /usr/local
+            /usr/local/rocksdb
+            /usr/local/cleveldb
             ~/go/bin
-          key: ${{ runner.os }}-sims-setup
+          key: ${{ runner.os }}-setup-sims
       - uses: technote-space/get-diff-action@v6.0.1
         if: steps.cache-setup.outputs.cache-hit != 'true'
         with:
@@ -77,9 +78,10 @@ jobs:
         id: cache-setup
         with:
           path: |
-            /usr/local
+            /usr/local/rocksdb
+            /usr/local/cleveldb
             ~/go/bin
-          key: ${{ runner.os }}-sims-setup
+          key: ${{ runner.os }}-setup-sims
       - name: Display versions
         run: |
           go version
@@ -97,9 +99,10 @@ jobs:
         id: cache-setup
         with:
           path: |
-            /usr/local
+            /usr/local/rocksdb
+            /usr/local/cleveldb
             ~/go/bin
-          key: ${{ runner.os }}-sims-setup
+          key: ${{ runner.os }}-setup-sims
       - name: Display versions
         run: |
           go version
@@ -117,9 +120,10 @@ jobs:
         id: cache-setup
         with:
           path: |
-            /usr/local
+            /usr/local/rocksdb
+            /usr/local/cleveldb
             ~/go/bin
-          key: ${{ runner.os }}-sims-setup
+          key: ${{ runner.os }}-setup-sims
       - name: Display versions
         run: |
           go version
@@ -137,9 +141,10 @@ jobs:
         id: cache-setup
         with:
           path: |
-            /usr/local
+            /usr/local/rocksdb
+            /usr/local/cleveldb
             ~/go/bin
-          key: ${{ runner.os }}-sims-setup
+          key: ${{ runner.os }}-setup-sims
       - name: Display versions
         run: |
           go version
@@ -157,9 +162,10 @@ jobs:
         id: cache-setup
         with:
           path: |
-            /usr/local
+            /usr/local/rocksdb
+            /usr/local/cleveldb
             ~/go/bin
-          key: ${{ runner.os }}-sims-setup
+          key: ${{ runner.os }}-setup-sims
       - name: Display versions
         run: |
           go version
@@ -177,9 +183,10 @@ jobs:
         id: cache-setup
         with:
           path: |
-            /usr/local
+            /usr/local/rocksdb
+            /usr/local/cleveldb
             ~/go/bin
-          key: ${{ runner.os }}-sims-setup
+          key: ${{ runner.os }}-setup-sims
       - name: Display versions
         run: |
           go version
@@ -197,9 +204,10 @@ jobs:
         id: cache-setup
         with:
           path: |
-            /usr/local
+            /usr/local/rocksdb
+            /usr/local/cleveldb
             ~/go/bin
-          key: ${{ runner.os }}-sims-setup
+          key: ${{ runner.os }}-setup-sims
       - name: Display versions
         run: |
           go version
@@ -217,9 +225,10 @@ jobs:
         id: cache-setup
         with:
           path: |
-            /usr/local
+            /usr/local/rocksdb
+            /usr/local/cleveldb
             ~/go/bin
-          key: ${{ runner.os }}-sims-setup
+          key: ${{ runner.os }}-setup-sims
       - name: Display versions
         run: |
           go version
@@ -237,9 +246,10 @@ jobs:
         id: cache-setup
         with:
           path: |
-            /usr/local
+            /usr/local/rocksdb
+            /usr/local/cleveldb
             ~/go/bin
-          key: ${{ runner.os }}-sims-setup
+          key: ${{ runner.os }}-setup-sims
       - name: Display versions
         run: |
           go version
@@ -257,9 +267,10 @@ jobs:
         id: cache-setup
         with:
           path: |
-            /usr/local
+            /usr/local/rocksdb
+            /usr/local/cleveldb
             ~/go/bin
-          key: ${{ runner.os }}-sims-setup
+          key: ${{ runner.os }}-setup-sims
       - name: Display versions
         run: |
           go version
