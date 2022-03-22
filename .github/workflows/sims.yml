@@ -1,4 +1,5 @@
 name: Sims
+
 # Sims workflow runs multiple types of simulations (nondeterminism, import-export, after-import, multi-seed-short)
 # This workflow will run on all Pull Requests, if a .go, .mod or .sum file have been changed
 on:
@@ -11,6 +12,15 @@ on:
     branches:
       - main
 
+env:
+  CACHE_PATHS: |
+    /usr/local/include/
+    /usr/local/lib/pkgconfig
+    /usr/local/lib/*rocksdb*
+    /usr/local/lib/*leveldb*
+    ~/go/bin
+  CACHE_KEY: ${{ runner.os }}-sims-t3
+
 jobs:
   cleanup-runs:
     runs-on: ubuntu-latest
@@ -20,11 +30,12 @@ jobs:
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
-  check-diff:
+  setup:
     runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
     outputs:
       should-run: ${{ env.GIT_DIFF }}
+      cache-hit: ${{ steps.cache-setup.outputs.cache-hit }}
     steps:
     - uses: actions/checkout@v3
     - uses: technote-space/get-diff-action@v6.0.1
@@ -35,33 +46,23 @@ jobs:
           go.sum
         SET_ENV_NAME_INSERTIONS: 1
         SET_ENV_NAME_LINES: 1
-
-  setup:
-    runs-on: ubuntu-latest
-    needs: check-diff
-    if: needs.check-diff.outputs.should-run
-    steps:
-      - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
         id: cache-setup
         with:
-          path: |
-            /usr/local/lib
-            /usr/local/rocksdb
-            /usr/local/cleveldb
-            ~/go/bin
-          key: ${{ runner.os }}-sims-t2
-      - uses: technote-space/get-diff-action@v6.0.1
-        if: steps.cache-setup.outputs.cache-hit != 'true'
+          path: ${{ env.CACHE_PATHS }}
+          key: ${{ env.CACHE_KEY }}
+
+  build-dependencies:
+    runs-on: ubuntu-latest
+    needs: setup
+    if: needs.setup.outputs.should-run && steps.setup.outputs.cache-hit != 'true'
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v2.1.7
         with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
-          SET_ENV_NAME_INSERTIONS: 1
-          SET_ENV_NAME_LINES: 1
+          path: ${{ env.CACHE_PATHS }}
+          key: ${{ env.CACHE_KEY }}
       - name: Install cleveldb
-        if: env.GIT_DIFF
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
@@ -69,39 +70,47 @@ jobs:
           sudo apt-get install -y libleveldb-dev
           sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
       - name: Build rocksdb
-        if: env.GIT_DIFF
         run: |
           export ROCKSDB_SUDO='true'
           make rocksdb
       - uses: actions/setup-go@v3
-        if: env.GIT_DIFF
         with:
           go-version: 1.17
       - name: Display go version
-        if: env.GIT_DIFF
         run: go version
-      - name: Install provenanced
-        if: env.GIT_DIFF
-        run: make install
       - name: Install runsim
-        if: env.GIT_DIFF
         run: export GO111MODULE="on" && go get github.com/cosmos/tools/cmd/runsim@v1.0.0
 
-  simple-goleveldb:
+  build-provenanced:
     runs-on: ubuntu-latest
-    needs: [setup, check-diff]
-    if: needs.check-diff.outputs.should-run
+    needs: [setup, build-dependencies]
+    if: needs.setup.outputs.should-run
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
-        id: cache-setup
         with:
-          path: |
-            /usr/local/lib
-            /usr/local/rocksdb
-            /usr/local/cleveldb
-            ~/go/bin
-          key: ${{ runner.os }}-sims-t2
+          path: ${{ env.CACHE_PATHS }}
+          key: ${{ env.CACHE_KEY }}
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.17
+      - name: Display go version
+        run: go version
+      - name: Install provenanced
+        run: make install
+      - name: Display provenanced version
+        run: provenanced version --long
+
+  simple-goleveldb:
+    runs-on: ubuntu-latest
+    needs: [setup, build-dependencies, build-provenanced]
+    if: needs.setup.outputs.should-run
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v2.1.7
+        with:
+          path: ${{ env.CACHE_PATHS }}
+          key: ${{ env.CACHE_KEY }}
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -114,19 +123,14 @@ jobs:
 
   simple-cleveldb:
     runs-on: ubuntu-latest
-    needs: [setup, check-diff]
-    if: needs.check-diff.outputs.should-run
+    needs: [setup, build-dependencies, build-provenanced]
+    if: needs.setup.outputs.should-run
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
-        id: cache-setup
         with:
-          path: |
-            /usr/local/lib
-            /usr/local/rocksdb
-            /usr/local/cleveldb
-            ~/go/bin
-          key: ${{ runner.os }}-sims-t2
+          path: ${{ env.CACHE_PATHS }}
+          key: ${{ env.CACHE_KEY }}
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -139,19 +143,14 @@ jobs:
 
   simple-rocksdb:
     runs-on: ubuntu-latest
-    needs: [setup, check-diff]
-    if: needs.check-diff.outputs.should-run
+    needs: [setup, build-dependencies, build-provenanced]
+    if: needs.setup.outputs.should-run
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
-        id: cache-setup
         with:
-          path: |
-            /usr/local/lib
-            /usr/local/rocksdb
-            /usr/local/cleveldb
-            ~/go/bin
-          key: ${{ runner.os }}-sims-t2
+          path: ${{ env.CACHE_PATHS }}
+          key: ${{ env.CACHE_KEY }}
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -164,19 +163,14 @@ jobs:
 
   simple-badgerdb:
     runs-on: ubuntu-latest
-    needs: [setup, check-diff]
-    if: needs.check-diff.outputs.should-run
+    needs: [setup, build-dependencies, build-provenanced]
+    if: needs.setup.outputs.should-run
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
-        id: cache-setup
         with:
-          path: |
-            /usr/local/lib
-            /usr/local/rocksdb
-            /usr/local/cleveldb
-            ~/go/bin
-          key: ${{ runner.os }}-sims-t2
+          path: ${{ env.CACHE_PATHS }}
+          key: ${{ env.CACHE_KEY }}
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -189,19 +183,14 @@ jobs:
 
   nondeterminism:
     runs-on: ubuntu-latest
-    needs: [setup, check-diff]
-    if: needs.check-diff.outputs.should-run
+    needs: [setup, build-dependencies, build-provenanced]
+    if: needs.setup.outputs.should-run
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
-        id: cache-setup
         with:
-          path: |
-            /usr/local/lib
-            /usr/local/rocksdb
-            /usr/local/cleveldb
-            ~/go/bin
-          key: ${{ runner.os }}-sims-t2
+          path: ${{ env.CACHE_PATHS }}
+          key: ${{ env.CACHE_KEY }}
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -214,19 +203,14 @@ jobs:
 
   import-export-goleveldb:
     runs-on: ubuntu-latest
-    needs: [setup, check-diff]
-    if: needs.check-diff.outputs.should-run
+    needs: [setup, build-dependencies, build-provenanced]
+    if: needs.setup.outputs.should-run
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
-        id: cache-setup
         with:
-          path: |
-            /usr/local/lib
-            /usr/local/rocksdb
-            /usr/local/cleveldb
-            ~/go/bin
-          key: ${{ runner.os }}-sims-t2
+          path: ${{ env.CACHE_PATHS }}
+          key: ${{ env.CACHE_KEY }}
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -239,19 +223,14 @@ jobs:
 
   import-export-cleveldb:
     runs-on: ubuntu-latest
-    needs: [setup, check-diff]
-    if: needs.check-diff.outputs.should-run
+    needs: [setup, build-dependencies, build-provenanced]
+    if: needs.setup.outputs.should-run
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
-        id: cache-setup
         with:
-          path: |
-            /usr/local/lib
-            /usr/local/rocksdb
-            /usr/local/cleveldb
-            ~/go/bin
-          key: ${{ runner.os }}-sims-t2
+          path: ${{ env.CACHE_PATHS }}
+          key: ${{ env.CACHE_KEY }}
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -264,19 +243,14 @@ jobs:
 
   import-export-rocksdb:
     runs-on: ubuntu-latest
-    needs: [setup, check-diff]
-    if: needs.check-diff.outputs.should-run
+    needs: [setup, build-dependencies, build-provenanced]
+    if: needs.setup.outputs.should-run
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
-        id: cache-setup
         with:
-          path: |
-            /usr/local/lib
-            /usr/local/rocksdb
-            /usr/local/cleveldb
-            ~/go/bin
-          key: ${{ runner.os }}-sims-t2
+          path: ${{ env.CACHE_PATHS }}
+          key: ${{ env.CACHE_KEY }}
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -289,19 +263,14 @@ jobs:
 
   import-export-badgerdb:
     runs-on: ubuntu-latest
-    needs: [setup, check-diff]
-    if: needs.check-diff.outputs.should-run
+    needs: [setup, build-dependencies, build-provenanced]
+    if: needs.setup.outputs.should-run
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
-        id: cache-setup
         with:
-          path: |
-            /usr/local/lib
-            /usr/local/rocksdb
-            /usr/local/cleveldb
-            ~/go/bin
-          key: ${{ runner.os }}-sims-t2
+          path: ${{ env.CACHE_PATHS }}
+          key: ${{ env.CACHE_KEY }}
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -314,19 +283,14 @@ jobs:
 
   multi-seed-short:
     runs-on: ubuntu-latest
-    needs: [setup, check-diff]
-    if: needs.check-diff.outputs.should-run
+    needs: [setup, build-dependencies, build-provenanced]
+    if: needs.setup.outputs.should-run
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
-        id: cache-setup
         with:
-          path: |
-            /usr/local/lib
-            /usr/local/rocksdb
-            /usr/local/cleveldb
-            ~/go/bin
-          key: ${{ runner.os }}-sims-t2
+          path: ${{ env.CACHE_PATHS }}
+          key: ${{ env.CACHE_KEY }}
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
