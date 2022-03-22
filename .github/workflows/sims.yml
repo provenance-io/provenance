@@ -28,6 +28,7 @@ jobs:
       CACHE_PATH: |
         /usr/local/**/*rocksdb*
         /usr/local/**/*leveldb*
+        !/usr/local/share/vcpkg/ports
         ~/go/bin
     steps:
       - uses: actions/checkout@v3
