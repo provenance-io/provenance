@@ -109,6 +109,7 @@ jobs:
           make rocksdb
           ls -al /usr/local/lib/librocksdb.*
           readlink -f /usr/local/lib/librocksdb.so.6.29
+          echo "LD_LIBRARY_PATH: [$LD_LIBRARY_PATH]"
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
