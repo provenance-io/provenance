@@ -110,8 +110,6 @@ jobs:
           export ROCKSDB_DO_CLEANUP='false'
           export ROCKSDB_DO_BUILD='false'
           make rocksdb
-          export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}${LD_LIBRARY_PATH:+:}/usr/local/lib"
-          echo "LD_LIBRARY_PATH: [$LD_LIBRARY_PATH]"
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -121,7 +119,6 @@ jobs:
         run: make install
       - name: Display provenanced version
         run: |
-          echo "LD_LIBRARY_PATH: [$LD_LIBRARY_PATH]"
           provenanced version --long
 
   simple-goleveldb:
@@ -159,8 +156,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libleveldb-dev
           sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
-          export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}${LD_LIBRARY_PATH:+:}/usr/local/lib"
-          echo "LD_LIBRARY_PATH: [$LD_LIBRARY_PATH]"
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -185,8 +180,6 @@ jobs:
           export ROCKSDB_DO_CLEANUP='false'
           export ROCKSDB_DO_BUILD='false'
           make rocksdb
-          export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}${LD_LIBRARY_PATH:+:}/usr/local/lib"
-          echo "LD_LIBRARY_PATH: [$LD_LIBRARY_PATH]"
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -266,8 +259,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libleveldb-dev
           sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
-          export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}${LD_LIBRARY_PATH:+:}/usr/local/lib"
-          echo "LD_LIBRARY_PATH: [$LD_LIBRARY_PATH]"
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
@@ -292,8 +283,6 @@ jobs:
           export ROCKSDB_DO_CLEANUP='false'
           export ROCKSDB_DO_BUILD='false'
           make rocksdb
-          export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}${LD_LIBRARY_PATH:+:}/usr/local/lib"
-          echo "LD_LIBRARY_PATH: [$LD_LIBRARY_PATH]"
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
