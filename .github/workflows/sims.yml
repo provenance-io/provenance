@@ -107,8 +107,7 @@ jobs:
           export ROCKSDB_DO_CLEANUP='false'
           export ROCKSDB_DO_BUILD='false'
           make rocksdb
-          ls -al /usr/local/lib/librocksdb.*
-          readlink -f /usr/local/lib/librocksdb.so.6.29
+          export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}${LD_LIBRARY_PATH:+:}/usr/local/lib"
           echo "LD_LIBRARY_PATH: [$LD_LIBRARY_PATH]"
       - uses: actions/setup-go@v3
         with:
@@ -118,13 +117,7 @@ jobs:
       - name: Install provenanced
         run: make install
       - name: Display provenanced version
-        run: |
-          LD_LIBRARY_PATH="${LD_LIBRARY_PATH}${LD_LIBRARY_PATH:+:}/usr/local/lib"
-          export LD_LIBRARY_PATH
-          ls -al /usr/local/lib/librocksdb.*
-          readlink -f /usr/local/lib/librocksdb.so.6.29
-          echo "LD_LIBRARY_PATH: [$LD_LIBRARY_PATH]"
-          provenanced version --long
+        run: provenanced version --long
 
   simple-goleveldb:
     runs-on: ubuntu-latest
@@ -139,12 +132,10 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
-      - name: Display versions
-        run: |
-          go version
-          provenanced version --long
+      - name: Display go version
+        run: go version
       - name: test-sim-simple goleveldb
-        run: make test-sim-simple
+        run: make DB_BACKEND=goleveldb test-sim-simple
 
   simple-cleveldb:
     runs-on: ubuntu-latest
@@ -163,13 +154,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libleveldb-dev
           sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
+          export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}${LD_LIBRARY_PATH:+:}/usr/local/lib"
+          echo "LD_LIBRARY_PATH: [$LD_LIBRARY_PATH]"
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
-      - name: Display versions
-        run: |
-          go version
-          provenanced version --long
+      - name: Display go version
+        run: go version
       - name: test-sim-simple cleveldb
         run: make DB_BACKEND=cleveldb test-sim-simple
 
@@ -189,13 +180,13 @@ jobs:
           export ROCKSDB_DO_CLEANUP='false'
           export ROCKSDB_DO_BUILD='false'
           make rocksdb
+          export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}${LD_LIBRARY_PATH:+:}/usr/local/lib"
+          echo "LD_LIBRARY_PATH: [$LD_LIBRARY_PATH]"
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
-      - name: Display versions
-        run: |
-          go version
-          provenanced version --long
+      - name: Display go version
+        run: go version
       - name: test-sim-simple rocksdb
         run: make DB_BACKEND=rocksdb test-sim-simple
 
@@ -212,10 +203,8 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
-      - name: Display versions
-        run: |
-          go version
-          provenanced version --long
+      - name: Display go version
+        run: go version
       - name: test-sim-simple badgerdb
         run: make DB_BACKEND=badgerdb test-sim-simple
 
@@ -232,10 +221,8 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
-      - name: Display versions
-        run: |
-          go version
-          provenanced version --long
+      - name: Display go version
+        run: go version
       - name: test-sim-nondeterminism
         run: make test-sim-nondeterminism
 
@@ -252,12 +239,10 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
-      - name: Display versions
-        run: |
-          go version
-          provenanced version --long
+      - name: Display go version
+        run: go version
       - name: test-sim-import-export goleveldb
-        run: make test-sim-import-export
+        run: make DB_BACKEND=goleveldb test-sim-import-export
 
   import-export-cleveldb:
     runs-on: ubuntu-latest
@@ -276,13 +261,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libleveldb-dev
           sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
+          export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}${LD_LIBRARY_PATH:+:}/usr/local/lib"
+          echo "LD_LIBRARY_PATH: [$LD_LIBRARY_PATH]"
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
-      - name: Display versions
-        run: |
-          go version
-          provenanced version --long
+      - name: Display go version
+        run: go version
       - name: test-sim-import-export cleveldb
         run: make DB_BACKEND=cleveldb test-sim-import-export
 
@@ -302,13 +287,13 @@ jobs:
           export ROCKSDB_DO_CLEANUP='false'
           export ROCKSDB_DO_BUILD='false'
           make rocksdb
+          export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}${LD_LIBRARY_PATH:+:}/usr/local/lib"
+          echo "LD_LIBRARY_PATH: [$LD_LIBRARY_PATH]"
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
-      - name: Display versions
-        run: |
-          go version
-          provenanced version --long
+      - name: Display go version
+        run: go version
       - name: test-sim-import-export rocksdb
         run: make DB_BACKEND=rocksdb test-sim-import-export
 
@@ -325,10 +310,8 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
-      - name: Display versions
-        run: |
-          go version
-          provenanced version --long
+      - name: Display go version
+        run: go version
       - name: test-sim-import-export badgerdb
         run: make DB_BACKEND=badgerdb test-sim-import-export
 
@@ -345,9 +328,7 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
-      - name: Display versions
-        run: |
-          go version
-          provenanced version --long
+      - name: Display go version
+        run: go version
       - name: test-sim-multi-seed-short
         run: make test-sim-multi-seed-short
