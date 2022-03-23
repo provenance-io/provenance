@@ -5,7 +5,6 @@ import (
 
 	"github.com/provenance-io/provenance/app"
 	simapp "github.com/provenance-io/provenance/app"
-	epochtypes "github.com/provenance-io/provenance/x/epoch/types"
 	"github.com/provenance-io/provenance/x/reward/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -40,7 +39,7 @@ func (s *KeeperTestSuite) TestInitGenesisAddingAttributes() {
 	coin := sdk.NewInt64Coin("jackthecat", 100)
 	var rewardData types.GenesisState
 	rewardData.RewardPrograms = []types.RewardProgram{
-		types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, epochtypes.EpochInfo{}, 1, 10, types.NewEligibilityCriteria("criteria", &types.EligibilityCriteria_ActionDelegate{ActionDelegate: &action})),
+		types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, "day", 1, 10, types.NewEligibilityCriteria("criteria", &types.EligibilityCriteria_ActionDelegate{ActionDelegate: &action})),
 	}
 	sharesPerEpoch := types.SharesPerEpochPerRewardsProgram{RewardProgramId: 1, Shares: 2, EpochId: "week", EpochEndHeight: 1000, Claimed: false, ExpirationHeight: 11000, Expired: false, TotalShares: 420, TotalRewards: coin}
 	rewardData.RewardClaims = []types.RewardClaim{types.NewRewardClaim("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", []*types.SharesPerEpochPerRewardsProgram{&sharesPerEpoch})}
@@ -55,7 +54,7 @@ func (s *KeeperTestSuite) TestInitGenesisAddingAttributes() {
 	s.Assert().NotPanics(func() { s.app.RewardKeeper.ExportGenesis(s.ctx) })
 
 	rewardData.RewardPrograms = []types.RewardProgram{
-		types.NewRewardProgram(1, "", sdk.NewInt64Coin("nhash", 100), epochtypes.EpochInfo{}, 1, 10, types.NewEligibilityCriteria("criteria", &types.EligibilityCriteria_ActionDelegate{ActionDelegate: &action})),
+		types.NewRewardProgram(1, "", sdk.NewInt64Coin("nhash", 100), "day", 1, 10, types.NewEligibilityCriteria("criteria", &types.EligibilityCriteria_ActionDelegate{ActionDelegate: &action})),
 	}
 
 	s.Assert().Panics(func() { s.app.RewardKeeper.InitGenesis(s.ctx, &rewardData) })
