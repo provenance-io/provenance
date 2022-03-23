@@ -7,15 +7,13 @@ import (
 	"gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	epochtypes "github.com/provenance-io/provenance/x/epoch/types"
 )
 
 func NewRewardProgram(
 	id uint64,
 	distributeFromAddress string,
 	coin sdk.Coin,
-	epoch epochtypes.EpochInfo,
+	epochId string,
 	startEpoch uint64,
 	numberEpochs uint64,
 	eligibilityCriteria EligibilityCriteria,
@@ -24,7 +22,7 @@ func NewRewardProgram(
 		Id:                    id,
 		DistributeFromAddress: distributeFromAddress,
 		Coin:                  &coin,
-		Epoch:                 &epoch,
+		EpochId:               epochId,
 		StartEpoch:            startEpoch,
 		NumberEpochs:          numberEpochs,
 		EligibilityCriteria:   &eligibilityCriteria,
@@ -35,13 +33,9 @@ func (rp *RewardProgram) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(rp.DistributeFromAddress); err != nil {
 		return fmt.Errorf("invalid address for rewards program distribution from address: %w", err)
 	}
-	if rp.Epoch == nil {
-		return errors.New("epoch info cannot be null for rewards program")
+	if len(rp.EpochId) == 0 {
+		return errors.New("epoch id cannot be empty")
 	}
-	// TODO once validate basic is implemented on epoch
-	// if err = rp.Epoch.ValidateBasic(); err != nil {
-	// 	return fmt.Errorf("epoch info is not valid: %w", err)
-	// }
 	if rp.EligibilityCriteria == nil {
 		return errors.New("eligibility criteria info cannot be null for rewards program")
 	}

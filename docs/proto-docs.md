@@ -5997,7 +5997,7 @@ RewardProgram
 | `id` | [uint64](#uint64) |  |  |
 | `distribute_from_address` | [string](#string) |  | community pool for now |
 | `coin` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `epoch` | [provenance.epoch.v1.EpochInfo](#provenance.epoch.v1.EpochInfo) |  | EpochInfo defines the type of epoch attributed to this program.(e.g day,week,month) |
+| `epoch_id` | [string](#string) |  | EpochInfo defines the type of epoch attributed to this program.(e.g day,week,month) |
 | `start_epoch` | [uint64](#uint64) |  | start_epoch defines the epoch number at which the rewards program should begin at |
 | `number_epochs` | [uint64](#uint64) |  | number of epochs this program will last for |
 | `eligibility_criteria` | [EligibilityCriteria](#provenance.reward.v1.EligibilityCriteria) |  |  |

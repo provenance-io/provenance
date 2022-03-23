@@ -14,11 +14,10 @@ message RewardProgram {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
-  uint64                        id                      = 1;
-  string                        distribute_from_address = 2; // community pool for now
-  cosmos.base.v1beta1.Coin      coin                    = 3;
-  provenance.epoch.v1.EpochInfo epoch =
-      4;                    // EpochInfo defines the type of epoch attributed to this program.(e.g day,week,month)
+  uint64                   id                      = 1;
+  string                   distribute_from_address = 2; // community pool for now
+  cosmos.base.v1beta1.Coin coin                    = 3;
+  string epoch_id      = 4; // EpochInfo defines the type of epoch attributed to this program.(e.g day,week,month)
   uint64 start_epoch   = 5; // start_epoch defines the epoch number at which the rewards program should begin at
   uint64 number_epochs = 6; // number of epochs this program will last for
   EligibilityCriteria eligibility_criteria = 7;
