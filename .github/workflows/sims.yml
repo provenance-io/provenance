@@ -117,7 +117,9 @@ jobs:
       - name: Install provenanced
         run: make install
       - name: Display provenanced version
-        run: provenanced version --long
+        run: |
+          echo "LD_LIBRARY_PATH: [$LD_LIBRARY_PATH]"
+          provenanced version --long
 
   simple-goleveldb:
     runs-on: ubuntu-latest
