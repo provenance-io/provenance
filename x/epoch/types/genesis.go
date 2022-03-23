@@ -38,6 +38,15 @@ func DefaultGenesis() *GenesisState {
 			CurrentEpochStartHeight: 0,
 			EpochCountingStarted:    false,
 		},
+		// remove this before going to prod
+		{
+			Identifier:              "minute",
+			StartHeight:             0,
+			Duration:                int64((60 * 60) / 5),
+			CurrentEpoch:            0,
+			CurrentEpochStartHeight: 0,
+			EpochCountingStarted:    false,
+		},
 	}
 	return NewGenesisState(epochs)
 }
