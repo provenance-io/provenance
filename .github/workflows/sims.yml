@@ -116,12 +116,15 @@ jobs:
       - name: Display go version
         run: go version
       - name: Install provenanced
-        run: |
-          export CGO_CFLAGS='-I/usr/local/include'
-          export CGO_LDFLAGS='-L/usr/local/lib'
-          make install
+        run: make install
       - name: Display provenanced version
-        run: provenanced version --long
+        run: |
+          if [[ -z "$LD_LIBRARY_PATH" ]]; then LD_LIBRARY_PATH='/usr/local/lib' elif [[ ! "$LD_LIBRARY_PATH" =~ (^|:)/usr/local/bin(:|$) ]]; then LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/local/lib"; fi
+          export LD_LIBRARY_PATH
+          ls -al /usr/local/lib/librocksdb.*
+          readlink -f /usr/local/lib/librocksdb.so.6.29
+          echo "LD_LIBRARY_PATH: [$LD_LIBRARY_PATH]"
+          provenanced version --long
 
   simple-goleveldb:
     runs-on: ubuntu-latest
