@@ -12,6 +12,9 @@ on:
     branches:
       - main
 
+env:
+  LD_LIBRARY_PATH: /usr/local/lib
+
 jobs:
   cleanup-runs:
     runs-on: ubuntu-latest
