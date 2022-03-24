@@ -6092,6 +6092,7 @@ AddRewardProgramProposal defines a governance proposal to add a rewards program
 | ----- | ---- | ----- | ----------- |
 | `title` | [string](#string) |  |  |
 | `description` | [string](#string) |  |  |
+| `reward_program` | [RewardProgram](#provenance.reward.v1.RewardProgram) |  |  |
 
 
 
