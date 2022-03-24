@@ -406,16 +406,17 @@ func PrintStats(config simtypes.Config, db dbm.DB) {
 
 // PrintConfig outputs the config.
 func PrintConfig(config simtypes.Config) {
-	fmt.Println("---  Config Info  ---")
+	fmt.Println("-vvv-  Config Info  -vvv-")
 	cfields := cmdconfig.MakeFieldValueMap(config, true)
 	for _, f := range cfields.GetSortedKeys() {
 		fmt.Printf("%s: %s\n", f, cfields.GetStringOf(f))
 	}
+	fmt.Println("-^^^-  Config Info  -^^^-")
 }
 
 // PrintDBInfo outputs the db.Stats map.
 func PrintDBInfo(db dbm.DB) {
-	fmt.Println("---  Database Info  ---")
+	fmt.Println("-vvv-  Database Info  -vvv-")
 	dbStats := db.Stats()
 	if len(dbStats) == 0 {
 		fmt.Println("No info to report.")
@@ -435,4 +436,5 @@ func PrintDBInfo(db dbm.DB) {
 			}
 		}
 	}
+	fmt.Println("-^^^-  Database Info  -^^^-")
 }
