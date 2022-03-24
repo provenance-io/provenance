@@ -5963,6 +5963,7 @@ EpochRewardDistribution, this will updated at the end of every epoch
 | `reward_program_id` | [uint64](#uint64) |  |  |
 | `total_rewards_pool` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `total_shares` | [uint64](#uint64) |  |  |
+| `epoch_ended` | [bool](#bool) |  |  |
 
 
 

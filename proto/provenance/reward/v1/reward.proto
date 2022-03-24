@@ -33,6 +33,7 @@ message EpochRewardDistribution {
   uint64                   reward_program_id  = 2;
   cosmos.base.v1beta1.Coin total_rewards_pool = 3;
   uint64                   total_shares       = 4;
+  bool                     epoch_ended        = 5;
 }
 
 // A RewardClaim is the metadata of reward data per address

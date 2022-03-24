@@ -8,7 +8,7 @@ import (
 
 // EndBlocker called every block
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
-	ctx.Logger().Info(fmt.Sprintf("In endblocker"))
+	ctx.Logger().Info(fmt.Sprintf("In endblocker for msgfees"))
 
 	for i, s := range ctx.EventManager().GetABCIEventHistory() {
 		ctx.Logger().Info(fmt.Sprintf("events in end blocker %d", i))
