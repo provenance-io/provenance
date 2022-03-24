@@ -413,9 +413,6 @@ func New(
 
 	app.EpochKeeper = *epochkeeper.NewKeeper(appCodec, keys[epochtypes.StoreKey])
 
-	// TODO set epoch start/end hooks here for the rewards module.
-	app.EpochKeeper.SetHooks(epochtypes.NewMultiEpochHooks())
-
 	app.RewardKeeper = rewardkeeper.NewKeeper(appCodec, keys[rewardtypes.StoreKey], app.EpochKeeper)
 
 	// register the staking hooks
@@ -423,6 +420,9 @@ func New(
 	app.StakingKeeper = *stakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
 	)
+
+	// set epoch start/end hooks here for the rewards module etc (other modules that reequire epoch hooks)
+	app.EpochKeeper.SetHooks(epochtypes.NewMultiEpochHooks(app.RewardKeeper.Hooks()))
 
 	app.AuthzKeeper = authzkeeper.NewKeeper(
 		keys[authzkeeper.StoreKey], appCodec, app.BaseApp.MsgServiceRouter(),

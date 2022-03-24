@@ -11,6 +11,7 @@ import (
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	ctx.Logger().Info(fmt.Sprintf("In endblocker"))
 
+	// check if epoch has ended
 	for i, s := range ctx.EventManager().GetABCIEventHistory() {
 		ctx.Logger().Info(fmt.Sprintf("events in end blocker %d", i))
 		ctx.Logger().Info(fmt.Sprintf("events attributes are %s", s.Type))

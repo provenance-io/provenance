@@ -38,6 +38,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 						sdk.NewAttribute(types.AttributeEpochNumber, fmt.Sprintf("%d", epochInfo.CurrentEpoch)),
 					),
 				)
+				ctx.Logger().Info(fmt.Sprintf("In(epoch module) epoch end for %s %d", epochInfo.Identifier, epochInfo.CurrentEpoch))
 				k.AfterEpochEnd(ctx, epochInfo.Identifier, epochInfo.CurrentEpoch)
 			}
 			k.SetEpochInfo(ctx, epochInfo)
