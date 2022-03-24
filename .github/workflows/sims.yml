@@ -45,7 +45,7 @@ jobs:
         rocksdb-*
         ~/go/bin
 
-  build-dependencies:
+  build:
     runs-on: ubuntu-latest
     needs: setup
     if: needs.setup.outputs.should-run
@@ -74,7 +74,6 @@ jobs:
         run: |
           export ROCKSDB_SUDO='true'
           export ROCKSDB_DO_CLEANUP='false'
-          export ROCKSDB_DO_INSTALL='false'
           make rocksdb
       - uses: actions/setup-go@v3
         if: steps.cache-setup.outputs.cache-hit != 'true'
@@ -86,51 +85,22 @@ jobs:
       - name: Install runsim
         if: steps.cache-setup.outputs.cache-hit != 'true'
         run: export GO111MODULE="on" && go get github.com/cosmos/tools/cmd/runsim@v1.0.0
-
-  build-provenanced:
-    # This is here so that, if it fails to build, you get one failure instead of 16, and saves a little github action effort.
-    runs-on: ubuntu-latest
-    needs: [setup, build-dependencies]
-    if: needs.setup.outputs.should-run
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/cache@v3
-        with:
-          key: ${{ needs.setup.outputs.cache-key }}
-          path: ${{ needs.setup.outputs.cache-path }}
-      - name: Install cleveldb
-        env:
-          DEBIAN_FRONTEND: noninteractive
+      - name: Build provenanced
+        # This is here so that, if it fails to build, you get one failure instead of 16, and saves a little github action effort.
+        # It should run regardless of if the cache already existed.
         run: |
-          sudo apt-get update
-          sudo apt-get install -y libleveldb-dev
-          sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
-      - name: Install rocksdb
-        run: |
-          export ROCKSDB_SUDO='true'
-          export ROCKSDB_DO_CLEANUP='false'
-          export ROCKSDB_DO_BUILD='false'
-          make rocksdb
-      - uses: actions/setup-go@v3
-        with:
-          go-version: 1.17
-      - name: Display go version
-        run: go version
-      - name: Install provenanced
-        run: make install
-      - name: Display provenanced version
-        run: |
-          provenanced version --long
+          make build
+          build/provenanced version --long
 
   run-sims:
     runs-on: ubuntu-latest
-    needs: [setup, build-dependencies, build-provenanced]
+    needs: [setup, build]
     if: needs.setup.outputs.should-run
     strategy:
       fail-fast: false
       matrix:
+        test: ["simple", "nondeterminism", "import-export", "multi-seed-short"]
         db-backend: ["goleveldb", "cleveldb", "rocksdb", "badgerdb"]
-        test: ["test-sim-simple", "test-sim-nondeterminism", "test-sim-import-export", "test-sim-multi-seed-short"]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
@@ -160,11 +130,11 @@ jobs:
       - name: run sim
         run: |
           ec=0
-          make DB_BACKEND=${{ matrix.db-backend }} ${{ matrix.test }} || ec="$?"
-          [[ "$ec" -eq '0' ]] || tar -czvf ${{ matrix.test }}-${{ matrix.db-backend }}-logs.tar.gz /tmp/sim-logs-*
+          make DB_BACKEND=${{ matrix.db-backend }} test-sim-${{ matrix.test }} || ec="$?"
+          [[ "$ec" -eq '0' ]] || tar -czvf test-sim-${{ matrix.test }}-${{ matrix.db-backend }}-logs.tar.gz /tmp/sim-logs-*
           exit "$ec"
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: ${{ matrix.test }}-${{ matrix.db-backend }}-logs
-          path: ${{ matrix.test }}-${{ matrix.db-backend }}-logs.tar.gz
+          name: test-sim-${{ matrix.test }}-${{ matrix.db-backend }}-logs
+          path: test-sim-${{ matrix.test }}-${{ matrix.db-backend }}-logs.tar.gz
