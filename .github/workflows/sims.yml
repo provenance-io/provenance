@@ -37,8 +37,12 @@ jobs:
             go.sum
           SET_ENV_NAME_INSERTIONS: 1
           SET_ENV_NAME_LINES: 1
+      - name: Define file prefix
+        id: file-prefix
+        run: echo "::set-output name=file-prefix::sim-test-${GITHUB_SHA:0:7}-${GITHUB_RUN_ATTEMPT}"
     outputs:
       should-run: ${{ env.GIT_DIFF }}
+      file-prefix: ${{ steps.file-prefix-outputs.file-prefix }}
       cache-key: ${{ runner.os }}-sims-t8
       cache-path: |
         v*.tar.gz
@@ -96,14 +100,18 @@ jobs:
           make build
           build/provenanced version --long
 
-  run-sims:
+  runsim-tests:
+    # These tests are the ones that use the runsim program (see sims.mk).
     runs-on: ubuntu-latest
     needs: [setup, build]
     if: needs.setup.outputs.should-run
     strategy:
       fail-fast: false
       matrix:
-        test: ["simple", "nondeterminism", "import-export", "multi-seed-short"]
+        # The test-sim-import-export test can take up to two hours.
+        # The test-sim-after-import test can take even longer.
+        # The test-sim-multi-seed-short test should take 30-40 minutes.
+        test: ["import-export", "after-import", "multi-seed-short"]
         db-backend: ["goleveldb", "cleveldb", "rocksdb", "badgerdb"]
     steps:
       - uses: actions/checkout@v3
@@ -134,9 +142,9 @@ jobs:
       - name: run sim
         id: run-sim
         run: |
-          d="sim-test-${GITHUB_SHA:0:7}-${GITHUB_RUN_ATTEMPT}-${{ matrix.test }}-${{ matrix.db-backend }}"
+          d="${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.db-backend }}"
           test_logs="$d.tar.gz"
-          echo "::set-output name=test_logs::$test_logs"
+          echo "::set-output name=test-logs::$test_logs"
           ec=0
           export DB_BACKEND=${{ matrix.db-backend }}
           make test-sim-${{ matrix.test }} || ec="$?"
@@ -155,4 +163,102 @@ jobs:
         if: failure()
         with:
           name: ${{ matrix.test }}-${{ matrix.db-backend }}-logs
-          path: ${{ steps.run-sim.outputs.test_logs }}
+          path: ${{ steps.run-sim.outputs.test-logs }}
+
+  go-test-multi-db:
+    # These are tests that use go test to run (see sims.mk), and that we want to test using different database backends.
+    runs-on: ubuntu-latest
+    needs: [setup, build]
+    if: needs.setup.outputs.should-run
+    strategy:
+      fail-fast: false
+      matrix:
+        # The test-sim-simple test is pretty quick and should be able to identify glaring problems.
+        # The benchmark is handy to have for each db type.
+        test: ["simple", "benchmark"]
+        db-backend: ["goleveldb", "cleveldb", "rocksdb", "badgerdb"]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          key: ${{ needs.setup.outputs.cache-key }}
+          path: ${{ needs.setup.outputs.cache-path }}
+      - name: Install cleveldb
+        if: matrix.db-backend == 'cleveldb'
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libleveldb-dev
+          sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
+      - name: Install rocksdb
+        if: matrix.db-backend == 'rocksdb'
+        run: |
+          export ROCKSDB_SUDO='true'
+          export ROCKSDB_DO_CLEANUP='false'
+          export ROCKSDB_DO_BUILD='false'
+          make rocksdb
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.17
+      - name: Display go version
+        run: go version
+      - name: run sim
+        id: run-sim
+        run: |
+          test_logs="${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.db-backend }}.txt"
+          echo "::set-output name=test-logs::$test_logs"
+          export DB_BACKEND=${{ matrix.db-backend }}
+          make test-sim-${{ matrix.test }} | tee "$test_logs"
+          exit "${PIPESTATUS[0]}"
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: ${{ matrix.test }}-${{ matrix.db-backend }}-logs
+          path: ${{ steps.run-sim.outputs.test-logs }}
+
+  go-test-single-db:
+    # These are tests that use go test to run (see sims.mk), and that we don't care about testing using different database backends.
+    runs-on: ubuntu-latest
+    needs: [setup, build]
+    if: needs.setup.outputs.should-run
+    strategy:
+      fail-fast: false
+      matrix:
+        # The test-sim-nondeterminism test hard-codes the db backend to use memdb.
+        # The test-sim-benchmark-invariants test can use different db backends, but to save resources, is down here.
+        test: ["nondeterminism", "benchmark-invariants"]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          key: ${{ needs.setup.outputs.cache-key }}
+          path: ${{ needs.setup.outputs.cache-path }}
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.17
+      - name: Display go version
+        run: go version
+      - name: run sim
+        id: run-sim
+        run: |
+          test_logs="${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}.txt"
+          echo "::set-output name=test-logs::$test_logs"
+          make test-sim-${{ matrix.test }} | tee "$test_logs"
+          exit "${PIPESTATUS[0]}"
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: ${{ matrix.test }}-logs
+          path: ${{ steps.run-sim.outputs.test-logs }}
+
+# Sim tests that are not run in here:
+#   test-sim-multi-seed-long: runsim
+#     The short version does 50 blocks and takes 30-40 minutes. The long one does 500 blocks. Way too long.
+#   test-sim-custom-genesis-multi-seed: runsim
+#     This one requires a genesis file to be created, and I don't feel like doing that right now.
+#   test-sim-custom-genesis-fast:
+#     Same as test-sim-custom-genesis-multi-seed.
+#   test-sim-profile:
+#     This is the exact same thing as test-sim-benchmark except with a couple extra output files.
+#     Unless I add an upload for them, it's not worth doing it again.
