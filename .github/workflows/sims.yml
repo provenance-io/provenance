@@ -140,6 +140,7 @@ jobs:
           ec=0
           export DB_BACKEND=${{ matrix.db-backend }}
           make test-sim-${{ matrix.test }} || ec="$?"
+          echo "Test exited with code $ec"
           if [[ "$ec" -ne '0' ]] && ls -d /tmp/sim-logs-*; then
             mkdir "$d"
             for logdir in $( ls -d /tmp/sim-logs-* ); do
