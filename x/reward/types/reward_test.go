@@ -28,11 +28,8 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 		// SpecificationId tests.
 		{
 			"invalid scope specification id - wrong address type",
-			NewScopeSpecification(
-				MetadataAddress(specTestAddr),
-				nil, []string{}, []PartyType{}, []MetadataAddress{},
-			),
-			"invalid scope specification id: invalid metadata address type: 133",
+			&RewardProgram{},
+			"TODO",
 		},
 	}
 

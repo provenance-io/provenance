@@ -6,6 +6,7 @@ import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "provenance/epoch/v1/genesis.proto";
+import "provenance/reward/v1/reward.proto";
 
 option go_package          = "github.com/provenance-io/provenance/x/reward/types";
 option java_package        = "io.provenance.reward.v1";
@@ -14,10 +15,10 @@ option java_multiple_files = true;
 // AddRewardProgramProposal defines a governance proposal to add a rewards program
 message AddRewardProgramProposal {
   option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = true;
+  option (gogoproto.goproto_stringer) = false;
 
   string title       = 1;
   string description = 2;
 
-  // TODO
+  provenance.reward.v1.RewardProgram reward_program = 3;
 }
