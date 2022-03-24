@@ -26,6 +26,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	if skip {
 		b.Skip("skipping benchmark application simulation")
 	}
+	PrintConfig(config)
 
 	defer func() {
 		db.Close()
@@ -60,7 +61,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	}
 
 	if config.Commit {
-		sdksim.PrintStats(db)
+		PrintStats(config, db)
 	}
 }
 
@@ -76,6 +77,7 @@ func BenchmarkInvariants(b *testing.B) {
 	}
 
 	config.AllInvariants = false
+	PrintConfig(config)
 
 	defer func() {
 		db.Close()
@@ -110,7 +112,7 @@ func BenchmarkInvariants(b *testing.B) {
 	}
 
 	if config.Commit {
-		sdksim.PrintStats(db)
+		PrintStats(config, db)
 	}
 
 	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight() + 1})
