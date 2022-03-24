@@ -144,7 +144,7 @@ jobs:
           if [[ "$ec" -ne '0' ]] && ls -d /tmp/sim-logs-*; then
             mkdir "$d"
             for logdir in $( ls -d /tmp/sim-logs-* ); do
-              cp -rv "$logdir/*" "$d/" && copied_files=true || :
+              cp -rv $logdir/* "$d/" && copied_files=true || :
             done
             if [[ "$copied_files" == 'true' ]]; then
               tar -czvf "$test_logs" "$d" || echo "tar exited with code $?"
