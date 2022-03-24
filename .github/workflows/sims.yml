@@ -57,9 +57,10 @@ jobs:
       - uses: actions/checkout@v3
       - name: Output setup
         run: |
-          echo "should-run: [${{ needs.setup.outputs.should-run }}]"
-          echo " cache-key: [${{ needs.setup.outputs.cache-key }}]"
-          echo "cache-path: [${{ needs.setup.outputs.cache-path }}]"
+          echo "should-run:  [${{ needs.setup.outputs.should-run }}]"
+          echo "file-prefix: [${{ needs.setup.outputs.file-prefix }}]"
+          echo " cache-key:  [${{ needs.setup.outputs.cache-key }}]"
+          echo "cache-path:  [${{ needs.setup.outputs.cache-path }}]"
       - uses: actions/cache@v3
         id: cache-setup
         with:
