@@ -62,7 +62,6 @@ jobs:
           key: ${{ needs.setup.outputs.cache-key }}
           path: ${{ needs.setup.outputs.cache-path }}
       - name: Install cleveldb
-        if: steps.cache-setup.outputs.cache-hit != 'true'
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
@@ -71,9 +70,16 @@ jobs:
           sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
       - name: Build rocksdb
         if: steps.cache-setup.outputs.cache-hit != 'true'
+        # This takes a while, but is cached (and doesn't change). So if the cache was restored, skip it.
+        run: |
+          export ROCKSDB_DO_CLEANUP='false'
+          export ROCKSDB_DO_INSTALL='false'
+          make rocksdb
+      - name: Install rocksdb
         run: |
           export ROCKSDB_SUDO='true'
           export ROCKSDB_DO_CLEANUP='false'
+          export ROCKSDB_DO_BUILD='false'
           make rocksdb
       - uses: actions/setup-go@v3
         with:
@@ -82,10 +88,10 @@ jobs:
         run: go version
       - name: Install runsim
         if: steps.cache-setup.outputs.cache-hit != 'true'
+        # Part of the cache, so don't need to redo it if it was restored.
         run: export GO111MODULE="on" && go get github.com/cosmos/tools/cmd/runsim@v1.0.0
       - name: Build provenanced
-        # This is here so that, if it fails to build, you get one failure instead of 16, and saves a little github action effort.
-        # It should run regardless of if the cache already existed.
+        # Building provenanced so that, if it fails to build, you get one failure instead of 16, and saves a little github action effort.
         run: |
           make build
           build/provenanced version --long
