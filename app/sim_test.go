@@ -332,6 +332,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	config.OnOperation = false
 	config.AllInvariants = false
 	config.ChainID = helpers.SimAppChainID
+	config.DBBackend = "memdb"
 
 	numSeeds := 3
 	numTimesToRunPerSeed := 5
@@ -339,6 +340,7 @@ func TestAppStateDeterminism(t *testing.T) {
 
 	for i := 0; i < numSeeds; i++ {
 		config.Seed = rand.Int63()
+		PrintConfig(config)
 
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			var logger log.Logger
