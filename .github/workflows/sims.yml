@@ -42,7 +42,7 @@ jobs:
         run: echo "::set-output name=file-prefix::sim-test-${GITHUB_SHA:0:7}-${GITHUB_RUN_ATTEMPT}"
     outputs:
       should-run: ${{ env.GIT_DIFF }}
-      file-prefix: ${{ steps.file-prefix-outputs.file-prefix }}
+      file-prefix: ${{ steps.file-prefix.outputs.file-prefix }}
       cache-key: ${{ runner.os }}-sims-t8
       cache-path: |
         v*.tar.gz
@@ -162,7 +162,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: ${{ matrix.test }}-${{ matrix.db-backend }}-logs
+          name: ${{ steps.run-sim.outputs.test-logs }}
           path: ${{ steps.run-sim.outputs.test-logs }}
 
   go-test-multi-db:
@@ -214,7 +214,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: ${{ matrix.test }}-${{ matrix.db-backend }}-logs
+          name: ${{ steps.run-sim.outputs.test-logs }}
           path: ${{ steps.run-sim.outputs.test-logs }}
 
   go-test-single-db:
@@ -249,7 +249,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: ${{ matrix.test }}-logs
+          name: ${{ steps.run-sim.outputs.test-logs }}
           path: ${{ steps.run-sim.outputs.test-logs }}
 
 # Sim tests that are not run in here:
