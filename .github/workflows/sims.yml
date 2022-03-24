@@ -149,7 +149,7 @@ jobs:
           fi
           exit "$ec"
       - uses: actions/upload-artifact@v3
-        if: failure() && ${{ steps.run-sim.outputs.test_logs }}
+        if: ${{ failure() }} && ${{ steps.run-sim.outputs.test_logs }}
         with:
           name: ${{ matrix.test }}-${{ matrix.db-backend }}-logs
           path: ${{ steps.run-sim.outputs.test_logs }}
