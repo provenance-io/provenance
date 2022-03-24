@@ -4,9 +4,32 @@ import (
 	"errors"
 	fmt "fmt"
 
+	// "github.com/gogo/protobuf/proto"
 	"gopkg.in/yaml.v2"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	proto "github.com/gogo/protobuf/proto"
+)
+
+var (
+	_ RewardAction = &ActionDelegate{}
+	_ RewardAction = &ActionTransferDelegations{}
+)
+
+const (
+	ActionTypeDelegate            = "ActionDelegate"
+	ActionTypeTransferDelegations = "ActionTransferDelegations"
+)
+
+type (
+	// RewardAction defines the interface that actions need to implement
+	RewardAction interface {
+		proto.Message
+
+		ActionType() string
+		IsEligible() error
+	}
 )
 
 func NewRewardProgram(
@@ -97,8 +120,36 @@ func (erd *EpochRewardDistribution) String() string {
 	return string(out)
 }
 
-func NewEligibilityCriteria(name string, action isEligibilityCriteria_Action) EligibilityCriteria {
-	return EligibilityCriteria{Name: name, Action: action}
+func NewEligibilityCriteria(name string, action RewardAction) EligibilityCriteria {
+	ec := EligibilityCriteria{Name: name}
+	err := ec.SetAction(action)
+	if err != nil {
+		panic(err)
+	}
+	return ec
+}
+
+func (ec *EligibilityCriteria) SetAction(rewardAction RewardAction) error {
+	if rewardAction == nil {
+		ec.Action = nil
+		return nil
+	}
+	any, err := codectypes.NewAnyWithValue(rewardAction)
+	if err == nil {
+		ec.Action = any
+	}
+	return err
+}
+
+func (ec *EligibilityCriteria) GetAction() RewardAction {
+	if ec.Action == nil {
+		return nil
+	}
+	content, ok := ec.Action.GetCachedValue().(RewardAction)
+	if !ok {
+		return nil
+	}
+	return content
 }
 
 func (ec *EligibilityCriteria) ValidateBasic() error {
@@ -127,6 +178,15 @@ func (ad *ActionDelegate) ValidateBasic() error {
 	return nil
 }
 
+func (ad *ActionDelegate) ActionType() string {
+	return ActionTypeDelegate
+}
+
+func (ad *ActionDelegate) IsEligible() error {
+	// TODO execute all the rules for action?
+	return nil
+}
+
 func (ad *ActionDelegate) String() string {
 	out, _ := yaml.Marshal(ad)
 	return string(out)
@@ -146,6 +206,15 @@ func (atd *ActionTransferDelegations) ValidateBasic() error {
 func (atd *ActionTransferDelegations) String() string {
 	out, _ := yaml.Marshal(atd)
 	return string(out)
+}
+
+func (atd *ActionTransferDelegations) ActionType() string {
+	return ActionTypeDelegate
+}
+
+func (atd *ActionTransferDelegations) IsEligible() error {
+	// TODO execute all the rules for action?
+	return nil
 }
 
 func NewSharesPerEpochPerRewardsProgram(

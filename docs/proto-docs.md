@@ -5944,8 +5944,7 @@ EligibilityCriteria defines an Action which accrues rewards for a running Reward
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `name` | [string](#string) |  |  |
-| `action_delegate` | [ActionDelegate](#provenance.reward.v1.ActionDelegate) |  |  |
-| `action_transfer_delegate` | [ActionTransferDelegations](#provenance.reward.v1.ActionTransferDelegations) |  |  |
+| `action` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
 
 
 
