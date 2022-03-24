@@ -143,16 +143,15 @@ jobs:
           if [[ "$ec" -ne '0' ]] && ls -d /tmp/sim-logs-*; then
             mkdir "$d"
             for logdir in $( ls -d /tmp/sim-logs-* ); do
-              cp -rv "$logdir/" "$d/" && copied_files=true || [[ 1 == 1 ]]
+              cp -rv "$logdir/*" "$d/" && copied_files=true || :
             done
             if [[ "$copied_files" == 'true' ]]; then
-              tar -czvf "$test_logs" "$d" || exit "$ec"
-              echo "::set-output name=test_logs_created::true"
+              tar -czvf "$test_logs" "$d" || echo "tar exited with code $?"
             fi
           fi
           exit "$ec"
       - uses: actions/upload-artifact@v3
-        if: steps.run-sim.outputs.test_logs_created
+        if: failure()
         with:
           name: ${{ matrix.test }}-${{ matrix.db-backend }}-logs
           path: ${{ steps.run-sim.outputs.test_logs }}
