@@ -134,7 +134,8 @@ jobs:
       - name: run sim
         run: |
           ec=0
-          make DB_BACKEND=${{ matrix.db-backend }} test-sim-${{ matrix.test }} || ec="$?"
+          export DB_BACKEND=${{ matrix.db-backend }}
+          make test-sim-${{ matrix.test }} || ec="$?"
           [[ "$ec" -eq '0' ]] || tar -czvf test-sim-${{ matrix.test }}-${{ matrix.db-backend }}-logs.tar.gz /tmp/sim-logs-*
           exit "$ec"
       - uses: actions/upload-artifact@v3
