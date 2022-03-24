@@ -409,7 +409,7 @@ func PrintConfig(config simtypes.Config) {
 	fmt.Println("---  Config Info  ---")
 	cfields := cmdconfig.MakeFieldValueMap(config, true)
 	for _, f := range cfields.GetSortedKeys() {
-		fmt.Printf("%s: %s\n", cfields.GetStringOf(f))
+		fmt.Printf("%s: %s\n", f, cfields.GetStringOf(f))
 	}
 }
 
