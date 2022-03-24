@@ -138,14 +138,15 @@ jobs:
         run: go version
       - name: test-sim-simple goleveldb
         run: |
+          ec=0
           make DB_BACKEND=goleveldb test-sim-simple || ec="$?"
-          [[ "$ec" -eq '0' ]] || tar -czvf sim-logs.tar.gz /tmp/sim-logs-*
+          [[ "$ec" -eq '0' ]] || tar -czvf test-sim-${{ github.job }}-goleveldb-logs.tar.gz /tmp/sim-logs-*
           exit "$ec"
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: test-sim-${{ env.GITHUB_JOB }}-logs
-          path: sim-logs.tar.gz
+          name: ${{ github.job }}-goleveldb-logs
+          path: test-sim-${{ github.job }}-goleveldb-logs.tar.gz
 
   simple-cleveldb:
     runs-on: ubuntu-latest
@@ -171,14 +172,15 @@ jobs:
         run: go version
       - name: test-sim-simple cleveldb
         run: |
+          ec=0
           make DB_BACKEND=cleveldb test-sim-simple || ec="$?"
-          [[ "$ec" -eq '0' ]] || tar -czvf sim-logs.tar.gz /tmp/sim-logs-*
+          [[ "$ec" -eq '0' ]] || tar -czvf test-sim-${{ github.job }}-cleveldb-logs.tar.gz /tmp/sim-logs-*
           exit "$ec"
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: test-sim-${{ env.GITHUB_JOB }}-logs
-          path: sim-logs.tar.gz
+          name: ${{ github.job }}-cleveldb-logs
+          path: test-sim-${{ github.job }}-cleveldb-logs.tar.gz
 
   simple-rocksdb:
     runs-on: ubuntu-latest
@@ -202,7 +204,16 @@ jobs:
       - name: Display go version
         run: go version
       - name: test-sim-simple rocksdb
-        run: make DB_BACKEND=rocksdb test-sim-simple
+        run: |
+          ec=0
+          make DB_BACKEND=rocksdb test-sim-simple || ec="$?"
+          [[ "$ec" -eq '0' ]] || tar -czvf test-sim-${{ github.job }}-rocksdb-logs.tar.gz /tmp/sim-logs-*
+          exit "$ec"
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: ${{ github.job }}-rocksdb-logs
+          path: test-sim-${{ github.job }}-rocksdb-logs.tar.gz
 
   simple-badgerdb:
     runs-on: ubuntu-latest
@@ -220,7 +231,16 @@ jobs:
       - name: Display go version
         run: go version
       - name: test-sim-simple badgerdb
-        run: make DB_BACKEND=badgerdb test-sim-simple
+        run: |
+          ec=0
+          make DB_BACKEND=badgerdb test-sim-simple || ec="$?"
+          [[ "$ec" -eq '0' ]] || tar -czvf test-sim-${{ github.job }}-badgerdb-logs.tar.gz /tmp/sim-logs-*
+          exit "$ec"
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: ${{ github.job }}-badgerdb-logs
+          path: test-sim-${{ github.job }}-badgerdb-logs.tar.gz
 
   nondeterminism:
     runs-on: ubuntu-latest
@@ -240,36 +260,14 @@ jobs:
       - name: test-sim-nondeterminism
         run: make test-sim-nondeterminism
 
-  import-export-goleveldb:
+  import-export:
     runs-on: ubuntu-latest
     needs: [setup, build-dependencies, build-provenanced]
     if: needs.setup.outputs.should-run
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/cache@v3
-        with:
-          key: ${{ needs.setup.outputs.cache-key }}
-          path: ${{ needs.setup.outputs.cache-path }}
-      - uses: actions/setup-go@v3
-        with:
-          go-version: 1.17
-      - name: Display go version
-        run: go version
-      - name: test-sim-import-export goleveldb
-        run: |
-          make DB_BACKEND=goleveldb test-sim-import-export || ec="$?"
-          [[ "$ec" -eq '0' ]] || tar -czvf sim-logs.tar.gz /tmp/sim-logs-*
-          exit "$ec"
-      - uses: actions/upload-artifact@v3
-        if: failure()
-        with:
-          name: test-sim-${{ env.GITHUB_JOB }}-logs
-          path: sim-logs.tar.gz
-
-  import-export-cleveldb:
-    runs-on: ubuntu-latest
-    needs: [setup, build-dependencies, build-provenanced]
-    if: needs.setup.outputs.should-run
+    strategy:
+      fail-fast: false
+      matrix:
+        db-backend: ["goleveldb", "cleveldb", "rocksdb", "badgerdb"]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
@@ -277,39 +275,15 @@ jobs:
           key: ${{ needs.setup.outputs.cache-key }}
           path: ${{ needs.setup.outputs.cache-path }}
       - name: Install cleveldb
+        if: matrix.db-backend == 'cleveldb'
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
           sudo apt-get update
           sudo apt-get install -y libleveldb-dev
           sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
-      - uses: actions/setup-go@v3
-        with:
-          go-version: 1.17
-      - name: Display go version
-        run: go version
-      - name: test-sim-import-export cleveldb
-        run: |
-          make DB_BACKEND=cleveldb test-sim-import-export || ec="$?"
-          [[ "$ec" -eq '0' ]] || tar -czvf sim-logs.tar.gz /tmp/sim-logs-*
-          exit "$ec"
-      - uses: actions/upload-artifact@v3
-        if: failure()
-        with:
-          name: test-sim-${{ env.GITHUB_JOB }}-logs
-          path: sim-logs.tar.gz
-
-  import-export-rocksdb:
-    runs-on: ubuntu-latest
-    needs: [setup, build-dependencies, build-provenanced]
-    if: needs.setup.outputs.should-run
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/cache@v3
-        with:
-          key: ${{ needs.setup.outputs.cache-key }}
-          path: ${{ needs.setup.outputs.cache-path }}
       - name: Install rocksdb
+        if: matrix.db-backend == 'rocksdb'
         run: |
           export ROCKSDB_SUDO='true'
           export ROCKSDB_DO_CLEANUP='false'
@@ -320,26 +294,17 @@ jobs:
           go-version: 1.17
       - name: Display go version
         run: go version
-      - name: test-sim-import-export rocksdb
-        run: make DB_BACKEND=rocksdb test-sim-import-export
-
-  import-export-badgerdb:
-    runs-on: ubuntu-latest
-    needs: [setup, build-dependencies, build-provenanced]
-    if: needs.setup.outputs.should-run
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/cache@v3
+      - name: test-sim-import-export goleveldb
+        run: |
+          ec=0
+          make DB_BACKEND=${{ matrix.db-backend }} test-sim-import-export || ec="$?"
+          [[ "$ec" -eq '0' ]] || tar -czvf test-sim-${{ github.job }}-${{ matrix.db-backend }}-logs.tar.gz /tmp/sim-logs-*
+          exit "$ec"
+      - uses: actions/upload-artifact@v3
+        if: failure()
         with:
-          key: ${{ needs.setup.outputs.cache-key }}
-          path: ${{ needs.setup.outputs.cache-path }}
-      - uses: actions/setup-go@v3
-        with:
-          go-version: 1.17
-      - name: Display go version
-        run: go version
-      - name: test-sim-import-export badgerdb
-        run: make DB_BACKEND=badgerdb test-sim-import-export
+          name: ${{ github.job }}-${{ matrix.db-backend }}-logs
+          path: test-sim-${{ github.job }}-${{ matrix.db-backend }}-logs.tar.gz
 
   multi-seed-short:
     runs-on: ubuntu-latest
