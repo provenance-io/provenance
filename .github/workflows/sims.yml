@@ -137,19 +137,20 @@ jobs:
           ec=0
           export DB_BACKEND=${{ matrix.db-backend }}
           make test-sim-${{ matrix.test }} || ec="$?"
+          d="sim-test-${GITHUB_SHA:0:7}-${GITHUB_RUN_ATTEMPT}-${{ matrix.test }}-${{ matrix.db-backend }}"
+          test_logs="$d.tar.gz"
+          echo "::set-output name=test_logs::$test_logs"
           if [[ "$ec" -ne '0' ]] && ls -d /tmp/sim-logs-*; then
-            d="sim-test-${GITHUB_SHA:0:7}-${GITHUB_RUN_ATTEMPT}-${{ matrix.test }}-${{ matrix.db-backend }}"
             mkdir "$d"
             for logdir in $( ls -d /tmp/sim-logs-* ); do
               cp -r "$logdir/*" "$d/"
             done
-            test_logs="$test_logs.tar.gz"
             tar -czvf "$test_logs" "$d" || exit "$ec"
-            echo "::set-output name=test_logs::$test_logs"
+            echo "::set-output name=test_logs_created::true"
           fi
           exit "$ec"
       - uses: actions/upload-artifact@v3
-        if: ${{ failure() }} && ${{ steps.run-sim.outputs.test_logs }}
+        if: ${{ failure() }} && ${{ steps.run-sim.outputs.test_logs_created }}
         with:
           name: ${{ matrix.test }}-${{ matrix.db-backend }}-logs
           path: ${{ steps.run-sim.outputs.test_logs }}
