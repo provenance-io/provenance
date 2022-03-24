@@ -132,14 +132,24 @@ jobs:
       - name: Display go version
         run: go version
       - name: run sim
+        id: run-sim
         run: |
           ec=0
           export DB_BACKEND=${{ matrix.db-backend }}
           make test-sim-${{ matrix.test }} || ec="$?"
-          [[ "$ec" -eq '0' ]] || tar -czvf test-sim-${{ matrix.test }}-${{ matrix.db-backend }}-logs.tar.gz /tmp/sim-logs-*
+          if [[ "$ec" -ne '0' ]] && ls -d /tmp/sim-logs-*; then
+            d="sim-test-${GITHUB_SHA:0:7}-${GITHUB_RUN_ATTEMPT}-${{ matrix.test }}-${{ matrix.db-backend }}"
+            mkdir "$d"
+            for logdir in $( ls -d /tmp/sim-logs-* ); do
+              cp -r "$logdir/*" "$d/"
+            done
+            test_logs="$test_logs.tar.gz"
+            tar -czvf "$test_logs" "$d" || exit "$ec"
+            echo "::set-output name=test_logs::$test_logs"
+          fi
           exit "$ec"
       - uses: actions/upload-artifact@v3
-        if: failure()
+        if: failure() && ${{ steps.run-sim.outputs.test_logs }}
         with:
-          name: test-sim-${{ matrix.test }}-${{ matrix.db-backend }}-logs
-          path: test-sim-${{ matrix.test }}-${{ matrix.db-backend }}-logs.tar.gz
+          name: ${{ matrix.test }}-${{ matrix.db-backend }}-logs
+          path: ${{ steps.run-sim.outputs.test_logs }}
