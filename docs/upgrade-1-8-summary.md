@@ -13,7 +13,7 @@ The `1.8.0` upgrade process will begin with the current 1.7.x binary halting at 
 
 1. Terminate the existing 1.7.x process after the upgrade height is reached.
 2. Create a backup of your local data directory.  This will allow you to quickly reset to the state prior to the upgrade changes in the event that the upgrade fails and the network needs to 'skip the upgrade' for some reason.
-3.  Copy the new `1.8.0` binary and lib wasm shared library into your provenance home holder.  It can be helpful to name your binaries with the version associated with them (`provenanced-1.8.0` for example).
+3.  Copy the new `1.8.0` binary and lib wasm shared library into your provenance home folder.  It can be helpful to name your binaries with the version associated with them (`provenanced-1.8.0` for example).
   NOTE: the libwasmvm.so share object library must match the version of the provenance binary used.  If you do not match these versions correctly your node will halt with an APP-HASH-MISMATCH error as soon as it receives a smart contract request.
 4.  Ensure your `wasm/cache` folder has been cleared out.  `data/wasm/wasm/cache`.  These cache files are not compatible between software versions.
 5. If you are using a log level of `error` then it would be a good time to switch to `info` for this upgrade. The `--log_level=info` can be appended to your start command to temporarily change this setting. Start the 1.8.0 provenanced binary.  The upgrade should begin shortly after it starts.  There will be various errors printed due to peering issues during the upgrade ... this is normal and not something to worry about.
@@ -51,12 +51,12 @@ The `1.8.0` upgrade process will begin with the current 1.7.x binary halting at 
 3:55PM INF Adding a 100 hash (100,000,000,000 nhash) msg fee to MsgSubmitProposal (6/6)
 3:55PM INF Successfully upgraded to: green with version map: map[attribute:2 auth:2 authz:1 bank:2 capability:1 crisis:1 distribution:2 evidence:1 feegrant:1 genutil:1 gov:2 ibc:2 marker:2 metadata:3 mint:1 msgfees:1 name:2 params:1 slashing:2 staking:2 transfer:1 upgrade:1 vesting:1 wasm:1]
 ```
-7. When the upgrade has finished it your node will wait for other peers and the validators to complete the upgrade as well.  The active voting power must reach the 2/3 majority threshold for the network to continue.
+7. When the upgrade has finished your node will wait for other peers and the validators to complete the upgrade as well.  The active voting power must reach the 2/3 majority threshold for the network to continue.
 
 
 # What to do if something goes wrong
 
-First off, make sure you have in contact with the other network participants on the Provenance discord server. https://discord.gg/HszDgS6R
+First off, make sure you have contacted the other network participants on the Provenance discord server. https://discord.gg/HszDgS6R
 
 The network can proceed one of two ways, ideally the majority of nodes are able to execute the 1.8.0 migration and the network continues on 1.8.0.  If your node fails to complete these steps a quicksync file could be used to skip over the upgrade process using someone else's completed data files.
 
