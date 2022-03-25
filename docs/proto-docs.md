@@ -5906,7 +5906,9 @@ Msg defines the bank Msg service.
 <a name="provenance.reward.v1.ActionDelegate"></a>
 
 ### ActionDelegate
-
+ActionDelegate, accounts that have delegated in an epoch period.
+rule: ActionDelegate " when account delegates in epoch period,
+if above min and below max, increase shares earned for rewards pool by 1.
 
 
 | Field | Type | Label | Description |
@@ -5922,7 +5924,9 @@ Msg defines the bank Msg service.
 <a name="provenance.reward.v1.ActionTransferDelegations"></a>
 
 ### ActionTransferDelegations
-accounts for transfer from accounts that have active delegations
+accounts that have made transfers, from accounts that have active delegations
+rule: ActionTransferDelegations "When transfer has occurred and the account has an active delegation,
+give it a share of the rewards pool, assuming it has not gone over max value and is above a min value" {
 
 
 | Field | Type | Label | Description |

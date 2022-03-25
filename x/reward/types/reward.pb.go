@@ -355,6 +355,9 @@ func (m *SharesPerEpochPerRewardsProgram) GetTotalRewards() types.Coin {
 	return types.Coin{}
 }
 
+// ActionDelegate, accounts that have delegated in an epoch period.
+// rule: ActionDelegate " when account delegates in epoch period,
+// if above min and below max, increase shares earned for rewards pool by 1.
 type ActionDelegate struct {
 	Minimum int64 `protobuf:"varint,1,opt,name=minimum,proto3" json:"minimum,omitempty"`
 	Maximum int64 `protobuf:"varint,2,opt,name=maximum,proto3" json:"maximum,omitempty"`
@@ -406,7 +409,9 @@ func (m *ActionDelegate) GetMaximum() int64 {
 	return 0
 }
 
-// accounts for transfer from accounts that have active delegations
+// accounts that have made transfers, from accounts that have active delegations
+// rule: ActionTransferDelegations "When transfer has occurred and the account has an active delegation,
+// give it a share of the rewards pool, assuming it has not gone over max value and is above a min value" {
 type ActionTransferDelegations struct {
 	Minimum int64 `protobuf:"varint,1,opt,name=minimum,proto3" json:"minimum,omitempty"`
 	Maximum int64 `protobuf:"varint,2,opt,name=maximum,proto3" json:"maximum,omitempty"`
