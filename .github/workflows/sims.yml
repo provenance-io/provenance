@@ -144,21 +144,17 @@ jobs:
       - name: run sim
         id: run-sim
         run: |
-          d="${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.db-backend }}"
-          test_logs="$d.tar.gz"
+          test_logs="${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.db-backend }}"
           echo "::set-output name=test-logs::$test_logs"
           ec=0
           export DB_BACKEND=${{ matrix.db-backend }}
           make test-sim-${{ matrix.test }} || ec="$?"
           echo "Test exited with code $ec"
           if [[ "$ec" -ne '0' ]] && ls -d /tmp/sim-logs-*; then
-            mkdir "$d"
+            mkdir "$test_logs"
             for logdir in $( ls -d /tmp/sim-logs-* ); do
-              cp -rv $logdir/* "$d/" && copied_files=true || :
+              cp -rv $logdir/* "$test_logs/" || :
             done
-            if [[ "$copied_files" == 'true' ]]; then
-              tar -czvf "$test_logs" "$d" || echo "tar exited with code $?"
-            fi
           fi
           exit "$ec"
       - uses: actions/upload-artifact@v3
@@ -209,16 +205,16 @@ jobs:
       - name: run sim
         id: run-sim
         run: |
-          test_logs="${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.db-backend }}.txt"
+          test_logs="${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.db-backend }}"
           echo "::set-output name=test-logs::$test_logs"
           export DB_BACKEND=${{ matrix.db-backend }}
-          make test-sim-${{ matrix.test }} | tee "$test_logs"
+          make test-sim-${{ matrix.test }} | tee "$test_logs.txt"
           exit "${PIPESTATUS[0]}"
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: ${{ steps.run-sim.outputs.test-logs }}
-          path: ${{ steps.run-sim.outputs.test-logs }}
+          path: ${{ steps.run-sim.outputs.test-logs }}.txt
 
   go-test-single-db:
     # These are tests that use go test to run (see sims.mk), and that we don't care about testing using different database backends.
@@ -246,15 +242,15 @@ jobs:
       - name: run sim
         id: run-sim
         run: |
-          test_logs="${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}.txt"
+          test_logs="${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}"
           echo "::set-output name=test-logs::$test_logs"
-          make test-sim-${{ matrix.test }} | tee "$test_logs"
+          make test-sim-${{ matrix.test }} | tee "$test_logs.txt"
           exit "${PIPESTATUS[0]}"
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: ${{ steps.run-sim.outputs.test-logs }}
-          path: ${{ steps.run-sim.outputs.test-logs }}
+          path: ${{ steps.run-sim.outputs.test-logs }}.txt
 
 # Sim tests that are not run in here:
 #   test-sim-multi-seed-long: runsim
