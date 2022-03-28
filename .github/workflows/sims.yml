@@ -113,7 +113,7 @@ jobs:
 
   runsim:
     # These tests are the ones that use the runsim program (see sims.mk).
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     needs: [setup, build]
     if: needs.setup.outputs.should-run
     strategy:
@@ -179,7 +179,7 @@ jobs:
 
   go-test-multi-db:
     # These are tests that use go test to run (see sims.mk), and that we want to test using different database backends.
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     needs: [setup, build]
     if: needs.setup.outputs.should-run
     strategy:
@@ -236,7 +236,7 @@ jobs:
 
   go-test-single-db:
     # These are tests that use go test to run (see sims.mk), and that we don't care about testing using different database backends.
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     needs: [setup, build]
     if: needs.setup.outputs.should-run
     strategy:
