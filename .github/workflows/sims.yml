@@ -25,11 +25,8 @@ jobs:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
   setup:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
-    strategy:
-      matrix:
-        os: ["ubuntu-latest", "macos-latest"]
     steps:
       - uses: actions/checkout@v3
       - uses: technote-space/get-diff-action@v6.0.1
@@ -46,40 +43,87 @@ jobs:
     outputs:
       should-run: ${{ env.GIT_DIFF }}
       file-prefix: ${{ steps.file-prefix.outputs.file-prefix }}
-      cache-key: ${{ runner.os }}-sims-t11
+      cache-key-suffix: sims-t11
       cache-path: |
         v*.tar.gz
         rocksdb-*
         ~/go/bin
 
-  build:
-    runs-on: ${{ matrix.os }}
+  build-linux:
+    # Note: Can't use a matrix to combine build-linux and build-mac because they'd both have the same job id and that would cause
+    #       problems below with the "needs" directive on the tests. Basically, as soon as the first one finished, the tests
+    #       would kick off for both OSes even though one might not be ready yet.
+    runs-on: ubuntu-latest
     needs: setup
     if: needs.setup.outputs.should-run
-    strategy:
-      matrix:
-        os: ["ubuntu-latest", "macos-latest"]
     steps:
       - uses: actions/checkout@v3
       - name: Output setup
         run: |
-          echo "should-run:  [${{ needs.setup.outputs.should-run }}]"
-          echo "file-prefix: [${{ needs.setup.outputs.file-prefix }}]"
-          echo " cache-key:  [${{ needs.setup.outputs.cache-key }}]"
-          echo "cache-path:  [${{ needs.setup.outputs.cache-path }}]"
+          echo "      should-run: [${{ needs.setup.outputs.should-run }}]"
+          echo "     file-prefix: [${{ needs.setup.outputs.file-prefix }}]"
+          echo "cache-key-suffix: [${{ needs.setup.outputs.cache-key-suffix }}]"
+          echo "      cache-path: [${{ needs.setup.outputs.cache-path }}]"
       - uses: actions/cache@v3
         id: cache-setup
         with:
-          key: ${{ needs.setup.outputs.cache-key }}
+          key: ${{ runner.os }}-${{ needs.setup.outputs.cache-key-suffix }}
           path: ${{ needs.setup.outputs.cache-path }}
       - name: Install cleveldb apt-get
-        if: runner.os == 'Linux'
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
           sudo apt-get update
           sudo apt-get install -y libleveldb-dev
           sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
+      - name: Build rocksdb
+        if: steps.cache-setup.outputs.cache-hit != 'true'
+        # This takes a while, but is cached (and doesn't change). So if the cache was restored, skip it.
+        run: |
+          export ROCKSDB_DO_CLEANUP='false'
+          export ROCKSDB_DO_INSTALL='false'
+          make rocksdb
+      - name: Install rocksdb
+        run: |
+          export ROCKSDB_SUDO='true'
+          export ROCKSDB_DO_CLEANUP='false'
+          export ROCKSDB_DO_BUILD='false'
+          make rocksdb
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.17
+      - name: Display go version
+        run: go version
+      - name: Install runsim
+        if: steps.cache-setup.outputs.cache-hit != 'true'
+        # Part of the cache, so don't need to redo it if it was restored.
+        run: export GO111MODULE="on" && go get github.com/cosmos/tools/cmd/runsim@v1.0.0
+      - name: Build provenanced
+        # Building provenanced so that, if it fails to build, you get one failure instead of 16, and saves a little github action effort.
+        run: |
+          make build
+          build/provenanced version --long
+
+  build-mac:
+    # Note: Can't use a matrix to combine build-linux and build-mac because they'd both have the same job id and that would cause
+    #       problems below with the "needs" directive on the tests. Basically, as soon as the first one finished, the tests
+    #       would kick off for both OSes even though one might not be ready yet.
+    runs-on: macos-latest
+    needs: setup
+    if: needs.setup.outputs.should-run
+    steps:
+      - uses: actions/checkout@v3
+      - name: Output setup
+        run: |
+          echo "      should-run: [${{ needs.setup.outputs.should-run }}]"
+          echo "     file-prefix: [${{ needs.setup.outputs.file-prefix }}]"
+          echo "cache-key-suffix: [${{ needs.setup.outputs.cache-key-suffix }}]"
+          echo "      cache-path: [${{ needs.setup.outputs.cache-path }}]"
+      - uses: actions/cache@v3
+        id: cache-setup
+        with:
+          key: ${{ runner.os }}-${{ needs.setup.outputs.cache-key-suffix }}
+          path: ${{ needs.setup.outputs.cache-path }}
       - name: Install cleveldb brew
         if: runner.os == 'macOS'
         run: brew install leveldb
@@ -114,7 +158,7 @@ jobs:
   runsim:
     # These tests are the ones that use the runsim program (see sims.mk).
     runs-on: ${{ matrix.os }}
-    needs: [setup, build]
+    needs: [setup, build-linux, build-mac]
     if: needs.setup.outputs.should-run
     strategy:
       fail-fast: false
@@ -130,7 +174,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
         with:
-          key: ${{ needs.setup.outputs.cache-key }}
+          key: ${{ runner.os }}-${{ needs.setup.outputs.cache-key-suffix }}
           path: ${{ needs.setup.outputs.cache-path }}
       - name: Install cleveldb apt-get
         if: runner.os == 'Linux' && matrix.db-backend == 'cleveldb'
@@ -180,7 +224,7 @@ jobs:
   go-test-multi-db:
     # These are tests that use go test to run (see sims.mk), and that we want to test using different database backends.
     runs-on: ${{ matrix.os }}
-    needs: [setup, build]
+    needs: [setup, build-linux, build-mac]
     if: needs.setup.outputs.should-run
     strategy:
       fail-fast: false
@@ -195,7 +239,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
         with:
-          key: ${{ needs.setup.outputs.cache-key }}
+          key: ${{ runner.os }}-${{ needs.setup.outputs.cache-key-suffix }}
           path: ${{ needs.setup.outputs.cache-path }}
       - name: Install cleveldb apt-get
         if: runner.os == 'Linux' && matrix.db-backend == 'cleveldb'
@@ -237,7 +281,7 @@ jobs:
   go-test-single-db:
     # These are tests that use go test to run (see sims.mk), and that we don't care about testing using different database backends.
     runs-on: ${{ matrix.os }}
-    needs: [setup, build]
+    needs: [setup, build-linux, build-mac]
     if: needs.setup.outputs.should-run
     strategy:
       fail-fast: false
@@ -251,7 +295,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
         with:
-          key: ${{ needs.setup.outputs.cache-key }}
+          key: ${{ runner.os }}-${{ needs.setup.outputs.cache-key-suffix }}
           path: ${{ needs.setup.outputs.cache-path }}
       - uses: actions/setup-go@v3
         with:
