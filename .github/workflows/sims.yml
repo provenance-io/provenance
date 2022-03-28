@@ -43,7 +43,7 @@ jobs:
     outputs:
       should-run: ${{ env.GIT_DIFF }}
       file-prefix: ${{ steps.file-prefix.outputs.file-prefix }}
-      cache-key: ${{ runner.os }}-sims
+      cache-key: ${{ runner.os }}-sims-t9
       cache-path: |
         v*.tar.gz
         rocksdb-*
@@ -86,6 +86,7 @@ jobs:
           export ROCKSDB_SUDO='true'
           export ROCKSDB_DO_CLEANUP='false'
           export ROCKSDB_DO_BUILD='false'
+          export ROCKSDB_VERSION='6.29.4'
           make rocksdb
       - uses: actions/setup-go@v3
         with:
@@ -136,6 +137,7 @@ jobs:
           export ROCKSDB_SUDO='true'
           export ROCKSDB_DO_CLEANUP='false'
           export ROCKSDB_DO_BUILD='false'
+          export ROCKSDB_VERSION='6.29.4'
           make rocksdb
       - uses: actions/setup-go@v3
         with:
@@ -197,6 +199,7 @@ jobs:
           export ROCKSDB_SUDO='true'
           export ROCKSDB_DO_CLEANUP='false'
           export ROCKSDB_DO_BUILD='false'
+          export ROCKSDB_VERSION='6.29.4'
           make rocksdb
       - uses: actions/setup-go@v3
         with:
