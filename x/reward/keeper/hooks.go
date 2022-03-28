@@ -17,19 +17,28 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	var rewardPrograms []types.RewardProgram
 	// get all the rewards programs
 	err := k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool) {
-		rewardPrograms = append(rewardPrograms, rewardProgram)
+		// this is epoch that ended, and matches up with the reward program identifier
+		// check if any of the events match with any of the reward program running
+		if rewardProgram.EpochId == epochIdentifier {
+			rewardPrograms = append(rewardPrograms, rewardProgram)
+		}
 		return false
 	})
 	if err != nil {
 		return
 	}
 
+	// only rewards programs who are eligible will be iterated through here
 	for _, rewardProgram := range rewardPrograms {
-		if rewardProgram.EpochId == epochIdentifier {
-			// this is epoch that ended, and matches up with the reward program identifier
-			// check if any of the events match with any of the reward program running
-
-		}
+		k.IterateEpochRewardDistributions(ctx, func(epochRewardDistribution types.EpochRewardDistribution) (stop bool) {
+			if epochRewardDistribution.EpochId == epochIdentifier && epochRewardDistribution.RewardProgramId == rewardProgram.Id && epochRewardDistribution.GetEpochEnded() == false {
+				// still
+				epochRewardDistribution.EpochEnded = true
+				k.SetEpochRewardDistribution(ctx,epochRewardDistribution)
+			}
+			// there can one epoch end per reward program
+			return true
+		})
 	}
 
 }
