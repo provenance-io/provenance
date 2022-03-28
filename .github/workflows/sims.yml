@@ -46,7 +46,7 @@ jobs:
     outputs:
       should-run: ${{ env.GIT_DIFF }}
       file-prefix: ${{ steps.file-prefix.outputs.file-prefix }}
-      cache-key: ${{ runner.os }}-sims-t10
+      cache-key: ${{ runner.os }}-sims-t11
       cache-path: |
         v*.tar.gz
         rocksdb-*
