@@ -25,8 +25,11 @@ jobs:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
   setup:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
+    strategy:
+      matrix:
+        os: ["ubuntu-latest", "macos-latest"]
     steps:
       - uses: actions/checkout@v3
       - uses: technote-space/get-diff-action@v6.0.1
@@ -43,7 +46,7 @@ jobs:
     outputs:
       should-run: ${{ env.GIT_DIFF }}
       file-prefix: ${{ steps.file-prefix.outputs.file-prefix }}
-      cache-key: ${{ runner.os }}-sims-t9
+      cache-key: ${{ runner.os }}-sims-t10
       cache-path: |
         v*.tar.gz
         rocksdb-*
@@ -70,7 +73,7 @@ jobs:
           key: ${{ needs.setup.outputs.cache-key }}
           path: ${{ needs.setup.outputs.cache-path }}
       - name: Install cleveldb apt-get
-        if: ${{ runner.os }} == 'Linux'
+        if: runner.os == 'Linux'
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
@@ -78,7 +81,7 @@ jobs:
           sudo apt-get install -y libleveldb-dev
           sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
       - name: Install cleveldb brew
-        if: ${{ runner.os }} == 'macOS'
+        if: runner.os == 'macOS'
         run: brew install leveldb
       - name: Build rocksdb
         if: steps.cache-setup.outputs.cache-hit != 'true'
