@@ -3,12 +3,13 @@ package reward
 import (
 	"context"
 	"encoding/json"
-	rewardModule "github.com/provenance-io/provenance/x/reward"
 	"math/rand"
+
+	rewardModule "github.com/provenance-io/provenance/x/reward"
 
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	//cli "github.com/provenance-io/provenance/x/reward/client/cli"
+	cli "github.com/provenance-io/provenance/x/reward/client/cli"
 
 	"github.com/provenance-io/provenance/x/reward/keeper"
 	reward "github.com/provenance-io/provenance/x/reward/types"
@@ -91,7 +92,7 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 
 // GetTxCmd returns the transaction commands for the reward module
 func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	return nil
+	return cli.NewTxCmd()
 }
 
 // AppModule implements the sdk.AppModule interface
