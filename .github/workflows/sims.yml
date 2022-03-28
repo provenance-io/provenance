@@ -79,6 +79,7 @@ jobs:
         run: |
           export ROCKSDB_DO_CLEANUP='false'
           export ROCKSDB_DO_INSTALL='false'
+          export ROCKSDB_VERSION='6.29.4'
           make rocksdb
       - name: Install rocksdb
         run: |
