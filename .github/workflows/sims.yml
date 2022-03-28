@@ -79,14 +79,12 @@ jobs:
         run: |
           export ROCKSDB_DO_CLEANUP='false'
           export ROCKSDB_DO_INSTALL='false'
-          export ROCKSDB_VERSION='6.29.4'
           make rocksdb
       - name: Install rocksdb
         run: |
           export ROCKSDB_SUDO='true'
           export ROCKSDB_DO_CLEANUP='false'
           export ROCKSDB_DO_BUILD='false'
-          export ROCKSDB_VERSION='6.29.4'
           make rocksdb
       - uses: actions/setup-go@v3
         with:
@@ -137,7 +135,6 @@ jobs:
           export ROCKSDB_SUDO='true'
           export ROCKSDB_DO_CLEANUP='false'
           export ROCKSDB_DO_BUILD='false'
-          export ROCKSDB_VERSION='6.29.4'
           make rocksdb
       - uses: actions/setup-go@v3
         with:
@@ -199,7 +196,6 @@ jobs:
           export ROCKSDB_SUDO='true'
           export ROCKSDB_DO_CLEANUP='false'
           export ROCKSDB_DO_BUILD='false'
-          export ROCKSDB_VERSION='6.29.4'
           make rocksdb
       - uses: actions/setup-go@v3
         with:

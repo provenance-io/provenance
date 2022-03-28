@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This script will download, compile, and install rocksdb, then clean up.
-DEFAULT_ROCKSDB_VERSION='6.29.3'
+DEFAULT_ROCKSDB_VERSION='6.29.4'
 
 if [[ "$1" == '-h' || "$1" == '--help' || "$1" == 'help' ]]; then
     echo "Usage: $( basename $0 ) [<version>]"
