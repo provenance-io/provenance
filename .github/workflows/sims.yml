@@ -50,9 +50,12 @@ jobs:
         ~/go/bin
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     needs: setup
     if: needs.setup.outputs.should-run
+    strategy:
+      matrix:
+        os: ["ubuntu-latest", "macos-latest"]
     steps:
       - uses: actions/checkout@v3
       - name: Output setup
@@ -66,13 +69,17 @@ jobs:
         with:
           key: ${{ needs.setup.outputs.cache-key }}
           path: ${{ needs.setup.outputs.cache-path }}
-      - name: Install cleveldb
+      - name: Install cleveldb apt-get
+        if: ${{ runner.os }} == 'Linux'
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
           sudo apt-get update
           sudo apt-get install -y libleveldb-dev
           sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
+      - name: Install cleveldb brew
+        if: ${{ runner.os }} == 'macOS'
+        run: brew install leveldb
       - name: Build rocksdb
         if: steps.cache-setup.outputs.cache-hit != 'true'
         # This takes a while, but is cached (and doesn't change). So if the cache was restored, skip it.
@@ -101,7 +108,7 @@ jobs:
           make build
           build/provenanced version --long
 
-  runsim-tests:
+  runsim:
     # These tests are the ones that use the runsim program (see sims.mk).
     runs-on: ubuntu-latest
     needs: [setup, build]
@@ -115,20 +122,24 @@ jobs:
         #   "after-import" removed due to failure, but should be added back with https://github.com/provenance-io/provenance/issues/754
         test: ["import-export", "multi-seed-short"]
         db-backend: ["goleveldb", "cleveldb", "rocksdb", "badgerdb"]
+        os: ["ubuntu-latest", "macos-latest"]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
         with:
           key: ${{ needs.setup.outputs.cache-key }}
           path: ${{ needs.setup.outputs.cache-path }}
-      - name: Install cleveldb
-        if: matrix.db-backend == 'cleveldb'
+      - name: Install cleveldb apt-get
+        if: runner.os == 'Linux' && matrix.db-backend == 'cleveldb'
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
           sudo apt-get update
           sudo apt-get install -y libleveldb-dev
           sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
+      - name: Install cleveldb brew
+        if: runner.os == 'macOS' && matrix.db-backend == 'cleveldb'
+        run: brew install leveldb
       - name: Install rocksdb
         if: matrix.db-backend == 'rocksdb'
         run: |
@@ -176,20 +187,24 @@ jobs:
         #   "benchmark" removed due to failure, but should be added back with https://github.com/provenance-io/provenance/issues/754
         test: ["simple"]
         db-backend: ["goleveldb", "cleveldb", "rocksdb", "badgerdb"]
+        os: ["ubuntu-latest", "macos-latest"]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
         with:
           key: ${{ needs.setup.outputs.cache-key }}
           path: ${{ needs.setup.outputs.cache-path }}
-      - name: Install cleveldb
-        if: matrix.db-backend == 'cleveldb'
+      - name: Install cleveldb apt-get
+        if: runner.os == 'Linux' && matrix.db-backend == 'cleveldb'
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
           sudo apt-get update
           sudo apt-get install -y libleveldb-dev
           sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
+      - name: Install cleveldb brew
+        if: runner.os == 'macOS' && matrix.db-backend == 'cleveldb'
+        run: brew install leveldb
       - name: Install rocksdb
         if: matrix.db-backend == 'rocksdb'
         run: |
@@ -228,6 +243,7 @@ jobs:
         # The test-sim-benchmark-invariants test can use different db backends, but to save resources, is down here.
         #   "benchmark-invariants" removed due to failure, but should be added back with https://github.com/provenance-io/provenance/issues/754
         test: ["nondeterminism"]
+        os: ["ubuntu-latest", "macos-latest"]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
