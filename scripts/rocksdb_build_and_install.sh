@@ -3,6 +3,9 @@
 # This script will download, compile, and install rocksdb, then clean up.
 DEFAULT_ROCKSDB_VERSION='6.29.4'
 
+can_sudo='false'
+command -v sudo > /dev/null 2>&1 && can_sudo='true'
+
 if [[ "$1" == '-h' || "$1" == '--help' || "$1" == 'help' ]]; then
     echo "Usage: $( basename $0 ) [<version>]"
     echo 'See https://github.com/facebook/rocksdb/releases for version info.'
@@ -14,7 +17,7 @@ if [[ "$1" == '-h' || "$1" == '--help' || "$1" == 'help' ]]; then
     echo '  ROCKSDB_WITH_STATIC controls whether to build and install the static library. Default is false.'
     echo '  ROCKSDB_DO_BUILD controls whether to build. Default is true.'
     echo '  ROCKSDB_DO_INSTALL controls whether to install. Default is true.'
-    echo '  ROCKSDB_SUDO controls whether to use sudo when installing the built libraries. Default is false.'
+    echo "  ROCKSDB_SUDO controls whether to use sudo when installing the built libraries. Default is $can_sudo."
     echo '  ROCKSDB_DO_CLEANUP controls whether to delete the downloaded and unpacked repo. Default is true.'
     exit 0
 fi
@@ -61,17 +64,16 @@ trueFalseOrDefault () {
     return 0
 }
 
-ROCKSDB_SUDO="$( trueFalseOrDefault ROCKSDB_SUDO false )" || exit $?
+ROCKSDB_SUDO="$( trueFalseOrDefault ROCKSDB_SUDO "$can_sudo" )" || exit $?
 ROCKSDB_WITH_SHARED="$( trueFalseOrDefault ROCKSDB_WITH_SHARED true )" || exit $?
 ROCKSDB_WITH_STATIC="$( trueFalseOrDefault ROCKSDB_WITH_STATIC false )" || exit $?
 ROCKSDB_DO_CLEANUP="$( trueFalseOrDefault ROCKSDB_DO_CLEANUP true )" || exit $?
 ROCKSDB_DO_BUILD="$( trueFalseOrDefault ROCKSDB_DO_BUILD true )" || exit $?
 ROCKSDB_DO_INSTALL="$( trueFalseOrDefault ROCKSDB_DO_INSTALL true )" || exit $?
 
-# The github action runners need sudo when installing libraries, but all other cases I've found do not.
-# To use sudo for just the installation portion, set the ROCKSDB_SUDO environment variable to 'true'.
-# export ROCKSDB_SUDO='true'
-# You'll need this if the install command fails due to permissions (might manifest as a file does not exist error).
+# The github action runners need sudo when installing libraries. Brew sometimes does (even though it complains).
+# In some situations, though, the sudo program isn't availble. If you've got sudo, this'll default to using it.
+# You'll need sudo if the install command fails due to permissions (might manifest as a file does not exist error).
 SUDO=''
 if [[ "$ROCKSDB_SUDO" == 'true' ]]; then
     SUDO='sudo'
@@ -105,13 +107,13 @@ if [[ ! -e "$TAR_FILE" ]]; then
     wget "https://github.com/facebook/rocksdb/archive/refs/tags/v${ROCKSDB_VERSION}.tar.gz" -O "$TAR_FILE"
     tar zxf "$TAR_FILE"
 fi
-ROCKS_DB_DIR="$( tar --exclude='./*/*/*' -tf "$TAR_FILE" | head -n 1 )"
-cd "$ROCKS_DB_DIR"
+TAR_DIR="$( tar --exclude='./*/*/*' -tf "$TAR_FILE" | head -n 1 )"
+cd "$TAR_DIR"
 export DEBUG_LEVEL=0
 [[ "$ROCKSDB_DO_BUILD" == 'true' && "${#BUILD_TARGETS[@]}" > '0' ]] && make -j${ROCKSDB_JOBS} "${BUILD_TARGETS[@]}"
 [[ "$ROCKSDB_DO_INSTALL" == 'true' && "${#INSTALL_TARGETS[@]}" > '0' ]] && $SUDO make "${INSTALL_TARGETS[@]}"
 cd ..
 if [[ "$ROCKSDB_DO_CLEANUP" == 'true' ]]; then
     rm "$TAR_FILE"
-    rm -rf "$ROCKS_DB_DIR"
+    rm -rf "$TAR_DIR"
 fi
