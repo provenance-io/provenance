@@ -64,7 +64,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	)
 }
 
-// InitGenesis new msgfees genesis
+// InitGenesis new reward genesis
 func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 	if err := data.Validate(); err != nil {
 		panic(err)
