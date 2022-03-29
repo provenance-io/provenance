@@ -83,7 +83,7 @@ jobs:
           export CLEVELDB_DO_CLEANUP='false'
           export CLEVELDB_DO_INSTALL='false'
           make cleveldb
-      -name: Install cleveldb
+      - name: Install cleveldb
         run: |
           export CLEVELDB_SUDO='true'
           export CLEVELDB_DO_CLEANUP='false'
@@ -137,8 +137,16 @@ jobs:
         with:
           key: ${{ runner.os }}-${{ needs.setup.outputs.cache-key-suffix }}
           path: ${{ needs.setup.outputs.cache-path }}
+      - name: Setup build environment
+        run: |
+          brew install cmake sqlite3
+      - name: Build cleveldb
+        if: steps.cache-setup.outputs.cache-hit != 'true'
+        run: |
+          export CLEVELDB_DO_CLEANUP='false'
+          export CLEVELDB_DO_INSTALL='false'
+          make cleveldb
       - name: Install cleveldb
-        if: runner.os == 'macOS'
         run: |
           export CLEVELDB_SUDO='true'
           export CLEVELDB_DO_CLEANUP='false'
