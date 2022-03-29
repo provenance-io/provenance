@@ -352,7 +352,11 @@ update-tocs:
 rocksdb:
 	scripts/rocksdb_build_and_install.sh
 
-.PHONY: go-mod-cache go.sum lint clean format check-built statik linkify update-tocs rocksdb
+# Download, compile, and install cleveldb so that it can be used when doing a build.
+cleveldb:
+	scripts/cleveldb_build_and_install.sh
+
+.PHONY: go-mod-cache go.sum lint clean format check-built statik linkify update-tocs rocksdb cleveldb
 
 
 validate-go-version: ## Validates the installed version of go against Provenance's minimum requirement.
