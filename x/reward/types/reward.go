@@ -44,7 +44,7 @@ func NewRewardProgram(
 	return RewardProgram{
 		Id:                    id,
 		DistributeFromAddress: distributeFromAddress,
-		Coin:                  &coin,
+		Coin:                  coin,
 		EpochId:               epochId,
 		StartEpoch:            startEpoch,
 		NumberEpochs:          numberEpochs,
@@ -93,7 +93,7 @@ func (rc *RewardClaim) String() string {
 	return string(out)
 }
 
-func NewEpochRewardDistribution(epochId string, rewardProgramId uint64, totalRewardsPool *sdk.Coin, total_shares uint64) EpochRewardDistribution {
+func NewEpochRewardDistribution(epochId string, rewardProgramId uint64, totalRewardsPool sdk.Coin, total_shares uint64) EpochRewardDistribution {
 	return EpochRewardDistribution{
 		EpochId:          epochId,
 		RewardProgramId:  rewardProgramId,
@@ -109,7 +109,7 @@ func (erd *EpochRewardDistribution) ValidateBasic() error {
 	if erd.RewardProgramId < 1 {
 		return errors.New("epoch reward distribution must have a valid reward program id")
 	}
-	if erd.TotalRewardsPool == nil {
+	if erd.TotalRewardsPool.IsPositive() {
 		return errors.New("epoch reward distribution must have a reward pool")
 	}
 	return nil

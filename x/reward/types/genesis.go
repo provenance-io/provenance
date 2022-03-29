@@ -24,7 +24,7 @@ func NewGenesisState(rewardProgram []RewardProgram,
 
 // DefaultGenesis returns the default reward genesis state
 func DefaultGenesis() *GenesisState {
-	action,_:= types1.NewAnyWithValue(&ActionTransferDelegations{
+	action, _ := types1.NewAnyWithValue(&ActionTransferDelegations{
 		Minimum: 0,
 		Maximum: 1000,
 	})
@@ -33,10 +33,10 @@ func DefaultGenesis() *GenesisState {
 			{
 				Id:                    1,
 				DistributeFromAddress: "tp1sha7e07l5knw4vdw2vgc3k06gd0fscz9r32yv6",
-				Coin: &sdk.Coin{Denom: "nhash", Amount: sdk.NewInt(100000)},
-				EpochId:             "minute",
-				StartEpoch:          100,
-				NumberEpochs:        100,
+				Coin:                  sdk.Coin{Denom: "nhash", Amount: sdk.NewInt(100000)},
+				EpochId:               "minute",
+				StartEpoch:            100,
+				NumberEpochs:          100,
 				EligibilityCriteria: &EligibilityCriteria{
 					Name:   "transferDelegate",
 					Action: action,
