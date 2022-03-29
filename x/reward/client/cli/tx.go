@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"io/ioutil"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -35,8 +36,8 @@ func NewTxCmd() *cobra.Command {
 
 func GetCmdRewardProgramProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "proposal [add|update|remove] [title] [description] [deposit]",
-		Args:  cobra.ExactArgs(4),
+		Use:   "proposal [add|update|remove] [title] [description] [deposit] [reward-program-file]",
+		Args:  cobra.ExactArgs(5),
 		Short: "Submit a reward program proposal along with an initial deposit",
 		Long: strings.TrimSpace(`Submit a reward program proposal along with an initial deposit.
 `),
@@ -50,11 +51,20 @@ func GetCmdRewardProgramProposal() *cobra.Command {
 				return err
 			}
 
-			// proposalType := args[0]
-			// if proposalType != "remove" {
-			// 	// TODO
+			contents, err := ioutil.ReadFile(args[4])
+			if err != nil {
+				return err
+			}
+			var rewardProgram types.RewardProgram
+			clientCtx.Codec.MustUnmarshalJSON(contents, &rewardProgram)
 
-			// }
+			var proposal govtypes.Content
+			switch args[0] {
+			case "add":
+				proposal = &types.AddRewardProgramProposal{Description: args[0], Title: args[1], RewardProgram: &rewardProgram}
+			default:
+				return fmt.Errorf("unknown proposal type %s", args[0])
+			}
 
 			deposit, err := sdk.ParseCoinsNormalized(args[3])
 			if err != nil {
@@ -62,7 +72,7 @@ func GetCmdRewardProgramProposal() *cobra.Command {
 			}
 
 			callerAddr := clientCtx.GetFromAddress()
-			msg, err := govtypes.NewMsgSubmitProposal(nil, deposit, callerAddr)
+			msg, err := govtypes.NewMsgSubmitProposal(proposal, deposit, callerAddr)
 			if err != nil {
 				return fmt.Errorf("invalid governance proposal. Error: %q", err)
 			}
